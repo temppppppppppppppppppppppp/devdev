@@ -30,6 +30,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
+from modules.core.constants import AIModels
 from modules.core.tactical_utils import extract_episode_tactical
 
 
@@ -148,7 +149,7 @@ JSON 형식으로:
 }}
 ```"""
 
-    def __init__(self, api_client, model: str = "gemini-2.5-pro"):
+    def __init__(self, api_client, model: str = AIModels.DEFAULT_ARCHITECT):
         """
         [V60.24] Gemini 3로 변경
         Args:

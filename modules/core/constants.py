@@ -6,6 +6,24 @@
 import logging
 
 
+def _load_model_from_yaml(section: str, key: str, fallback: str) -> str:
+    """[SSOT] config/models.yaml에서 모델명 로드. 파일 없으면 fallback 반환."""
+    try:
+        from pathlib import Path
+
+        import yaml
+
+        yaml_path = Path(__file__).parent.parent.parent / "config" / "models.yaml"
+        if yaml_path.exists():
+            data = yaml.safe_load(yaml_path.read_text(encoding="utf-8"))
+            value = (data or {}).get(section, {}).get(key)
+            if value and isinstance(value, str):
+                return value
+    except Exception:
+        pass
+    return fallback
+
+
 # [INF-P2-7] Lazy threshold: _threshold()를 모듈 임포트 시점이 아닌
 # 최초 접근 시점에 호출하여 YAML I/O를 지연시킨다.
 class _LazyThreshold:
@@ -185,39 +203,38 @@ class Stage2Limits:
 
 
 class AIModels:
-    """AI 모델 이름 상수"""
+    """AI 모델 이름 상수 — [SSOT] config/models.yaml role_constants/agents 참조."""
 
-    # [V60.65] 기본 3-pro, 할당량 초과 시 2.5-pro 폴백
+    # ── 경량/보조 모델 ────────────────────────────────────────────────────────
+    V50_MODULE_MODEL = _load_model_from_yaml("role_constants", "flash_main", "gemini-2.5-flash")
+    FLASH_ANALYSIS_MODEL = _load_model_from_yaml("role_constants", "flash_main", "gemini-2.5-flash")
+    SUMMARY_MODEL = _load_model_from_yaml("role_constants", "flash_main", "gemini-2.5-flash")
 
-    # [V65] 경량/보조 모델 (SSOT — main_a.py, stage2_orchestrator.py 등에서 참조)
-    V50_MODULE_MODEL = "gemini-2.5-flash"  # V50 품질 모듈 전용 (SelfReflector, CrossVerifier 등)
-    FLASH_ANALYSIS_MODEL = "gemini-2.5-flash"  # 경량 분석/추출용 (Preflight, StateExtractor 등)
-    SUMMARY_MODEL = "gemini-2.5-flash"  # 요약/저비용 LLM 호출용
+    # ── Architect 티어 ────────────────────────────────────────────────────────
+    TIER_1_ARCHITECT = _load_model_from_yaml("role_constants", "pro_main", "gemini-2.5-pro")
+    TIER_2_ARCHITECT = _load_model_from_yaml("role_constants", "pro_main", "gemini-2.5-pro")
+    TIER_3_ARCHITECT = _load_model_from_yaml("role_constants", "pro_main", "gemini-2.5-pro")
 
-    # 점진적 모델 업그레이드 체계 - Architect
-    TIER_1_ARCHITECT = "gemini-2.5-pro"  # 1차 시도: 3 Pro
-    TIER_2_ARCHITECT = "gemini-2.5-pro"  # 2차 시도: 3 Pro
-    TIER_3_ARCHITECT = "gemini-2.5-pro"  # 3차+ 시도: 3 Pro
+    # ── Writer 티어 ──────────────────────────────────────────────────────────
+    TIER_1_WRITER = _load_model_from_yaml("role_constants", "pro_main", "gemini-2.5-pro")
+    TIER_2_WRITER = _load_model_from_yaml("role_constants", "pro_main", "gemini-2.5-pro")
+    TIER_3_WRITER = _load_model_from_yaml("role_constants", "pro_main", "gemini-2.5-pro")
 
-    # 점진적 모델 업그레이드 체계 - Writer
-    TIER_1_WRITER = "gemini-2.5-pro"  # 1차 시도: 3 Pro
-    TIER_2_WRITER = "gemini-2.5-pro"  # 2차 시도: 3 Pro
-    TIER_3_WRITER = "gemini-2.5-pro"  # 3차 시도 이후: 3 Pro
+    # ── 폴백 ─────────────────────────────────────────────────────────────────
+    EMERGENCY_FALLBACK = _load_model_from_yaml("role_constants", "emergency", "gemini-2.5-pro")
+    QUOTA_FALLBACK = _load_model_from_yaml("role_constants", "emergency", "gemini-2.5-pro")
 
-    EMERGENCY_FALLBACK = "gemini-2.5-pro"  # [V60.65] 긴급/할당량 초과 시 2.5 Pro
-    QUOTA_FALLBACK = "gemini-2.5-pro"  # [V60.65] 429 에러 시 폴백 모델
-    DEFAULT_WRITER = "gemini-2.5-pro"
-    DEFAULT_ARCHITECT = "gemini-2.5-pro"
-    DEFAULT_ANALYST = "gemini-2.5-pro"
-    DEFAULT_REVIEWER = "gemini-2.5-pro"
+    # ── 기본값 ────────────────────────────────────────────────────────────────
+    DEFAULT_WRITER = _load_model_from_yaml("role_constants", "pro_main", "gemini-2.5-pro")
+    DEFAULT_ARCHITECT = _load_model_from_yaml("role_constants", "pro_main", "gemini-2.5-pro")
+    DEFAULT_ANALYST = _load_model_from_yaml("role_constants", "pro_main", "gemini-2.5-pro")
+    DEFAULT_REVIEWER = _load_model_from_yaml("role_constants", "pro_main", "gemini-2.5-pro")
 
-    # [V40 Fix] Stage 4 전용 고정 모델
-    STAGE4_FIXED_WRITER_MODEL = "gemini-2.5-pro"
-
-    # Stage 2 전용 모델 상수
-    STAGE2_MAIN_MODEL = "gemini-2.5-pro"  # Stage 2 주요 생성 모델
-    STAGE2_EXTRACTION_MODEL = "gemini-2.5-pro"  # Stage 2 추출 모델
-    STAGE2_VALIDATION_MODEL = "gemini-2.5-pro"  # Stage 2 검증 모델
+    # ── Stage 전용 ───────────────────────────────────────────────────────────
+    STAGE4_FIXED_WRITER_MODEL = _load_model_from_yaml("agents", "chief_writer", "gemini-2.5-pro")
+    STAGE2_MAIN_MODEL = _load_model_from_yaml("agents", "four_phase_arc_generator", "gemini-2.5-pro")
+    STAGE2_EXTRACTION_MODEL = _load_model_from_yaml("agents", "state_locked_arc_generator", "gemini-2.5-pro")
+    STAGE2_VALIDATION_MODEL = _load_model_from_yaml("role_constants", "pro_main", "gemini-2.5-pro")
 
 
 class BatchSizes:

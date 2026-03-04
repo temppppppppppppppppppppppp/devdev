@@ -35,16 +35,18 @@ class ConfigManager:
 
         logging.info(f"📁 [System] 필수 경로 점검 완료: {self.logs_dir}")
 
-        # [V60.24] 모든 모델을 Gemini 3로 통일
-        # Stage 1~4: 모든 단계에서 Gemini 3 Pro 사용
+        # [SSOT] models.yaml agents 섹션에서 동적 로드
+        models_from_yaml = self._load_agents_from_yaml()
+
         self.settings = {
-            "models": {
-                "analyst": "gemini-2.5-pro",  # [V60.24] Gemini 3
-                # [V65] architect 삭제 (레거시 에이전트 제거)
-                "writer": "gemini-2.5-pro",  # 7,000자 고해상도 집필
-                "director": "gemini-2.5-pro",  # [V60.24] Gemini 3
-                "manager": "gemini-2.5-pro",  # [V60.24] Gemini 3
-                "editor": "gemini-2.5-pro",  # [V60.24] Gemini 3
+            "models": models_from_yaml
+            if models_from_yaml
+            else {
+                "analyst": "gemini-2.5-pro",
+                "writer": "gemini-2.5-pro",
+                "director": "gemini-2.5-pro",
+                "manager": "gemini-2.5-pro",
+                "editor": "gemini-2.5-pro",
             },
             "limits": {
                 "max_retries": 10,  # V20 매니페스토 기준 재시도 횟수
@@ -67,6 +69,19 @@ class ConfigManager:
             "blueprints": base / "blueprints",  # Stage 3 설계도 폴더
             "memory": base / "memory",
         }
+
+    def _load_agents_from_yaml(self) -> dict | None:
+        """[SSOT] config/models.yaml agents 섹션을 로드해 dict 반환. 실패 시 None."""
+        try:
+            yaml_path = Path(__file__).parent.parent.parent / "config" / "models.yaml"
+            if yaml_path.exists():
+                data = yaml.safe_load(yaml_path.read_text(encoding="utf-8"))
+                agents = (data or {}).get("agents")
+                if isinstance(agents, dict) and agents:
+                    return dict(agents)
+        except Exception:
+            pass
+        return None
 
     def get_model_for_agent(self, agent_role: str) -> str:
         return self.settings["models"].get(agent_role, "gemini-2.5-flash")
