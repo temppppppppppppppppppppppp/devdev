@@ -73,6 +73,7 @@ class ChiefWriterQualityGate:
         ep_num: int = None,
         motivations: list = None,
         promises: list = None,
+        blueprint=None,
         directive=None,
         expression_freq: dict | None = None,
     ) -> str:
@@ -93,6 +94,8 @@ class ChiefWriterQualityGate:
         """
         encyclopedia = {"npcs": npcs}
         MAX_CRITIQUE_ROUNDS = 3
+        if blueprint is None:
+            blueprint = getattr(self.host, "_current_blueprint", None)
         if directive is None:
             directive = getattr(self.host, "_tf54_writing_directive", None)
         if expression_freq is None:
@@ -115,6 +118,7 @@ class ChiefWriterQualityGate:
                 ep_num,
                 motivations,
                 promises,
+                blueprint,
                 directive,
                 expression_freq,
             )
@@ -140,6 +144,7 @@ class ChiefWriterQualityGate:
                 ep_num,
                 motivations,
                 promises,
+                blueprint,
                 directive,
                 expression_freq,
             )
@@ -177,6 +182,7 @@ class ChiefWriterQualityGate:
         ep_num: int = None,
         motivations: list = None,
         promises: list = None,
+        blueprint=None,
         directive=None,
         expression_freq: dict | None = None,
     ) -> dict:
@@ -225,6 +231,9 @@ class ChiefWriterQualityGate:
 
         # 7. [TF-54e] 표현 신선도 체크
         issues.extend(self._check_expression_freshness(content, expression_freq or {}))
+
+        # 8. [합격률] ending_hook 포함 여부 체크
+        issues.extend(self._check_ending_hook_presence(content, blueprint))
 
         # [Sweep46] 심각도 판단 — 1~2건은 "low" (self-critique 스킵 의도 복원)
         severity = "low"
@@ -464,6 +473,21 @@ class ChiefWriterQualityGate:
             if _freq >= 3 and expr and str(expr) in manuscript:
                 issues.append(f"반복 표현 '{str(expr)[:20]}' 이번 화에도 사용 (직전 {_freq}회)")
         return issues
+
+    def _check_ending_hook_presence(self, manuscript: str, blueprint) -> list:
+        """[합격률] ending_hook 텍스트가 원고 말미에 있는지 확인."""
+        if not blueprint or not isinstance(blueprint, dict):
+            return []
+        ending_hook = str(blueprint.get("ending_hook", "") or "").strip()
+        if not ending_hook or len(ending_hook) < 10:
+            return []
+        # 원고 마지막 500자에서 확인 (ending_hook은 말미에 있어야 함)
+        tail = manuscript[-500:] if len(manuscript) > 500 else manuscript
+        # 부분 일치 (ending_hook의 앞 20자가 포함되면 OK)
+        key_fragment = ending_hook[:20]
+        if key_fragment not in tail:
+            return [f"ending_hook '{key_fragment}...' 이 원고 말미(마지막 500자)에서 발견되지 않음"]
+        return []
 
     def _fix_manuscript_issues(self, manuscript: str, critique_result: dict, hud_report: str) -> str:
         """

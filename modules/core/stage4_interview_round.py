@@ -108,6 +108,7 @@ class Stage4InterviewRound:
 
         # [TF-54c/e] ChiefWriter 컨텍스트 + Self-Critique 주입용 공유 상태
         try:
+            setattr(chief_writer, "_current_blueprint", blueprint if isinstance(blueprint, dict) else {})
             setattr(chief_writer, "_tf54_writing_directive", _writing_directive)
             setattr(chief_writer, "_tf54_expression_freq", _wd_expression_freq)
         except Exception as _tf54_ctx_e:

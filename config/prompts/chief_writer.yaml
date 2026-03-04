@@ -36,6 +36,11 @@ COMMON_RULES_SECTION: |
       모든 장면을 극적으로 묘사하면 진짜 클라이맥스의 임팩트가 죽는다.
   11. [TF-54] NPC 음성 분화: 각 NPC는 고유한 말투·어휘·문장 길이를 가져야 한다.
       WritingDirective의 npc_directives를 따라 이번 화에서의 행동을 차별화하라.
+  12. [품질] ending_hook 의무화: 블루프린트의 'ending_hook'에 지정된 문장 또는 장면을
+      반드시 이번 화 **마지막 단락**에 포함하라. ending_hook이 없으면 마지막 씬을
+      독자가 다음 화를 읽고 싶게 만드는 긴장감 있는 장면으로 마무리하라.
+  13. [품질] 씬별 대화 의무: 블루프린트에 나열된 각 씬에 최소 1개의 실제 대화(따옴표 포함)가
+      있어야 한다. 대화 없이 서술·묘사만으로 구성된 씬은 CrossVerify 실패 원인이다.
 
 WRITING_GUIDELINES_SECTION: |
   ### 📌 집필 지침 (위반 시 즉시 REJECT)
