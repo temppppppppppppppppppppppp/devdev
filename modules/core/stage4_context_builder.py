@@ -158,7 +158,29 @@ class Stage4ContextBuilder:
                 continue
 
             try:
-                if source == RetrievalSources.DB_NPC_HISTORY:
+                if source == RetrievalSources.STATIC:
+                    # [TF-55b] query 문자열 자체가 이미 필요한 내용 → 벡터 검색 불필요
+                    result = query_text
+                elif source == RetrievalSources.DB_NPC_RELATIONSHIP:
+                    # [TF-55b] npc_relationship_history 테이블 직접 조회
+                    db = getattr(self.ctx, "db", None)
+                    result = ""
+                    if db:
+                        _body = query_text.replace("관계 변화 이력:", "").strip()
+                        _raw_names = [part.split(":")[0].strip() for part in _body.split(",") if part.strip()]
+                        _names = [name for name in _raw_names if name]
+                        _lines: list[str] = []
+                        for _i in range(len(_names)):
+                            for _j in range(_i + 1, len(_names)):
+                                _rows = db.get_relationship_history(_names[_i], _names[_j], limit=5)
+                                for _row in _rows:
+                                    _lines.append(
+                                        f"EP{_row.get('change_ep', '?')} {_row.get('npc1', '')}-"
+                                        f"{_row.get('npc2', '')}: {_row.get('old_relation', '')}->"
+                                        f"{_row.get('new_relation', '')}"
+                                    )
+                        result = "\n".join(_lines) if _lines else ""
+                elif source == RetrievalSources.DB_NPC_HISTORY:
                     npc_tokens = self._extract_npc_tokens(query_text)
                     result = memory.retrieve_npc_context(
                         npc_names=npc_tokens,

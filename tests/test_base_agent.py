@@ -299,18 +299,18 @@ class TestErrorResponse:
 
 
 class TestModelFallbackChain:
-    def test_gemini3_falls_to_25pro(self):
-        """gemini-3.1-pro → gemini-3-pro → gemini-2.5-pro (3단계 체인)"""
-        assert BaseAgent.MODEL_FALLBACK_CHAIN["gemini-3.1-pro-preview"] == "gemini-3-pro-preview"
-        assert BaseAgent.MODEL_FALLBACK_CHAIN["gemini-3-pro-preview"] == "gemini-2.5-pro"
+    def test_25pro_falls_to_flash(self):
+        """gemini-2.5-pro → gemini-2.5-flash 폴백"""
+        assert BaseAgent.MODEL_FALLBACK_CHAIN["gemini-2.5-pro"] == "gemini-2.5-flash"
 
-    def test_25pro_is_terminal(self):
-        """gemini-2.5-pro는 최종 방어선 (체인 없음)"""
-        assert "gemini-2.5-pro" not in BaseAgent.MODEL_FALLBACK_CHAIN
+    def test_flash_is_terminal(self):
+        """gemini-2.5-flash는 자기 자신으로 폴백 (최종 방어선)"""
+        assert BaseAgent.MODEL_FALLBACK_CHAIN.get("gemini-2.5-flash") == "gemini-2.5-flash"
 
     def test_flash_chain(self):
-        """Flash 계열 폴백"""
-        assert BaseAgent.MODEL_FALLBACK_CHAIN.get("gemini-3-flash-preview") == "gemini-2.5-flash"
+        """Flash 계열 폴백 — 현재 chain에 gemini-3.x 없음"""
+        assert "gemini-3-flash-preview" not in BaseAgent.MODEL_FALLBACK_CHAIN
+        assert "gemini-3.1-pro-preview" not in BaseAgent.MODEL_FALLBACK_CHAIN
 
 
 # ══════════════════════════════════════════════════════════════

@@ -466,3 +466,84 @@ def build_common_context(
 ## 10. 참고: DynamicPromptWeighter 통합 가능성
 
 기존 `modules/core/dynamic_prompt_weighting.py`에 CONTINUITY, ITEM_MANAGEMENT, RELATIONSHIP, PACING 등 카테고리가 있으나, 현재 chief_writer.py 파이프라인에서 **사용되지 않음**. 스타일/표현 카테고리도 없음. 향후 WritingDirective와 DynamicPromptWeighter 통합 검토 가능 (후순위).
+
+---
+
+## 11. 파이프라인 효율성 분석 결과 (2026-03-04 로그 분석)
+
+> 프로젝트 000000, session_20260303_***.log + metrics/ 기반.
+> TF-54와 직접 연관은 없으나, 후속 TF 설계 시 참고용으로 기록.
+
+### 11.1 에피소드당 Director 호출 구조 (실측)
+
+```
+[Phase A] Advisory chain 7개 병렬 (ThreadPoolExecutor)
+  └─ FlashbackVerifier  : Director LLM 1회, ~2,856자 → ~289자 응답  ← 실제 감지 발생
+  └─ NpcDriftAdvisor    : Director LLM 3회 (후보 A/B/C 개별), ~4,635자 → 2자 응답  ← 매번 빈 응답
+  └─ TruthGate          : Python 체크, LLM 없음
+  └─ NumericDrift        : Python 사전 감지 후 필요 시 LLM
+  └─ InfoParadoxChecker  : 1인칭 전용, 조건부 LLM
+  └─ RelDrift / LongTermRep : 조건부 LLM
+
+[Phase B] Director 앙상블 판정
+  └─ _get_or_create_context_cache() → MISS(content_too_short, stable < 50K자)
+  └─ full_fallback 전송: ~57K~62K자  ← 캐시 우회 항상 발생
+
+[Phase C] PASS_WITH_FIX 처리 (발생 시)
+  └─ Director inplace 패치 지시: ~15K~20K자
+  └─ Director inplace 재심사: ~20K~25K자
+
+총 Director 호출: 정상 화 7~8회, PASS_WITH_FIX 발생 시 9~10회
+```
+
+### 11.2 발견된 비효율 3건
+
+#### [INEFF-1] NpcDriftAdvisor 후보별 개별 호출 (P1)
+
+- **현상**: 후보 A, B, C를 각각 별도 LLM 호출로 평가 → 3회 호출
+- **실측**: 매 호출 response_len=2 (빈 JSON `{}`) — 실제 감지 없음
+- **근본 원인**: `_advisory_npc_drift()`의 `for _ci, _cand in enumerate(candidates):`가 후보마다 `_NpcDriftAdvisor(llm_ask=...)` 인스턴스를 생성해 개별 LLM 호출
+- **개선안**: Director가 선택한 최선 후보 1개만 평가. 또는 3개 원고를 단일 LLM 호출에 묶어 배치 처리.
+- **절감 효과**: 에피소드당 Director 호출 2회 감소 (~50초 절약)
+- **파일**: `modules/core/stage4_interview_round.py` `_advisory_npc_drift()`
+
+#### [INEFF-2] Director-CACHE 항상 MISS — 초반 화 구조적 한계 (P2)
+
+- **현상**: `📦 [Director-CACHE] MISS(신규): stable=18,977자` → `⚠️ full_fallback 전송 (57,794자)`
+- **근본 원인**: `_MIN_CACHE_CONTENT = 50,000자` (settings.json 미설정, default 사용). stable_context는 이전 원고로 채워지므로 1~5화는 구조적으로 50K 미달. Gemini Context Caching API 자체가 ~32K 토큰(≈40K자) 이상 요구.
+- **한계**: 초반 화 캐시 불가는 피할 수 없음. 10화 이후부터 stable이 자연 증가 → 자동 캐시 적용.
+- **확인 필요**: 10화 이후 실운영 로그에서 CACHE HIT 발생 여부 검증 필요.
+- **파일**: `modules/domain/agents/base_agent.py` L1444, `modules/domain/agents/director_ensemble.py` L755
+
+#### [INEFF-3] VecMemory hits=0 쿼리 3종 (P2)
+
+- **현상**: 매 화 동일 쿼리 3종이 hits=0 → `fallback_entry n=50` (전체 DB 스캔)
+  ```
+  q='아크 전술 연속성: [제 1화: 2024년의 죽음...' hits=0 top_score=0.0000
+  q='관계 변화 이력: 한정호, 박성호' hits=0 top_score=0.0000
+  q='장르 맥락 키워드: 레버리지 손절 리스크...' hits=0 top_score=0.0000
+  ```
+- **근본 원인**: 임베딩 유사도 임계값 미달 (top_score=0.0). 쿼리 텍스트가 저장된 청크와 의미적으로 매칭되지 않거나 해당 내용이 DB에 없음.
+- **개선안**: "아크 전술 연속성" → DB에서 Arc 레코드 직접 조회(ID 기반). "관계 변화 이력" → `npc_relationship_history` 테이블 직접 조회. "장르 맥락 키워드" → 장르명으로 고정 매핑 (벡터 검색 불필요).
+- **파일**: `modules/core/context_advisor.py` SmartContextRetrieval 슬롯 설정부
+
+### 11.3 Python 체크 실효성 분석
+
+| 체크 | 실제 blocking 여부 | Director 판정 영향 | 비용 | 평가 |
+|------|-------------------|--------------------|------|------|
+| 글자수 체크 (ManuscriptLimits) | ✅ blocking | — | Python | 유효 |
+| FlashbackVerifier | ❌ advisory만 | ✅ 실제 감지 → 판정 반영 | LLM 1회 | 유효 |
+| NpcDriftAdvisor (후보 3개) | ❌ advisory만 | ⚠️ 빈 응답 → 실질 기여 0 | LLM 3회 | **개선 필요** |
+| TruthGate (Python 체크) | ❌ advisory만 | ✅ CRITICAL 시 강제 REJECT 지시 | Python | 유효 |
+| pre_director_checklist | ❌ advisory만 | ⚠️ Director 재판정으로 중복 | Python | 중복 의심 |
+| ValidationOrchestrator self_consistency | ❌ scoring advisory | — | LLM 0~2회 (조건부) | 조건부 유효 |
+| blueprint 씬 반영률 체크 | ❌ advisory만 | ⚠️ Director 재판정으로 중복 | Python | 중복 의심 |
+
+### 11.4 후속 TF 후보
+
+| ID | 내용 | 우선순위 | 예상 절감 |
+|----|------|---------|----------|
+| TF-55a | NpcDriftAdvisor 단일 후보 평가 전환 | P1 | Director 2회/에피소드 |
+| TF-55b | VecMemory hits=0 쿼리 3종 → DB 직접 조회 | P2 | 벡터 검색 3회/에피소드 |
+| TF-55c | Director-CACHE 10화+ 실측 검증 | P2 | 확인 후 결정 |
+| TF-55d | pre_director_checklist / blueprint 씬 반영률 중복 제거 | P3 | Python 연산 일부 |
