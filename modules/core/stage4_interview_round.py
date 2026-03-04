@@ -914,6 +914,274 @@ class Stage4InterviewRound:
         self._god1_director_memory_context = _director_memory_context
         return validation_results
 
+    def _run_post_select_checks(
+        self,
+        *,
+        verdict: str,
+        final_manuscript: str,
+        final_state_updates: dict,
+        next_ep: int,
+        round_num: int,
+        round_ctx,
+        director_result: dict,
+        director_feedback: str,
+        score: int,
+        error_category: str,
+        previous_attempt: dict | None,
+        stage4_spinner,
+        director_memory_context: str,
+    ) -> tuple:
+        """[God-3] Post-select 병렬 검사 (continuity + history conflict).
+
+        Returns:
+            tuple: (verdict, director_feedback, previous_attempt, error_category)
+                   verdict 이 REJECT로 바뀔 수 있음.
+        """
+        _post_select_conflicts = []
+
+        _prev_manuscripts_text = round_ctx.prev_manuscripts_text
+        story_context = round_ctx.story_context
+        _run_continuity = round_num == 0 and next_ep > 1 and final_manuscript
+        _run_history = (
+            round_num == 0
+            and _prev_manuscripts_text
+            and final_manuscript
+            and hasattr(self.ctx.agents.get("director", None), "check_manuscript_history_conflicts")
+        )
+
+        if _run_continuity or _run_history:
+            from concurrent.futures import ThreadPoolExecutor
+
+            stage4_spinner.update_detail(f"Ep {next_ep} · post-select checks (parallel)")
+
+            with ThreadPoolExecutor(max_workers=2, thread_name_prefix="postselect") as _ps_exec:
+                _fut_cont = None
+                _fut_hist = None
+
+                if _run_continuity:
+                    _fut_cont = _ps_exec.submit(
+                        self.ctx.agents["director"].check_manuscript_continuity_with_cache,
+                        new_manuscript=final_manuscript,
+                        ep_num=next_ep,
+                        db=self.ctx.current_project.db,
+                        limit=10,
+                        story_context=story_context,
+                        memory_context=director_memory_context,
+                    )
+
+                if _run_history:
+                    _ms_history_for_check = self._build_manuscript_history_for_check(_prev_manuscripts_text, next_ep)
+                    if _ms_history_for_check:
+                        _fut_hist = _ps_exec.submit(
+                            self.ctx.agents["director"].check_manuscript_history_conflicts,
+                            ep_num=next_ep,
+                            current_manuscript=final_manuscript,
+                            manuscript_history=_ms_history_for_check,
+                            use_summary=False,
+                            story_context=story_context,
+                            memory_context=director_memory_context,
+                        )
+
+                # (a) Continuity check result
+                if _fut_cont is not None:
+                    try:
+                        continuity_check = _fut_cont.result(timeout=120)
+                        if continuity_check.get("decision") == "CONFLICT":
+                            _conflict_msg = continuity_check.get("summary", "Continuity conflict detected")
+                            _post_select_conflicts.append(f"[Continuity Conflict] {_conflict_msg}")
+                            self.ctx.ui.log(f"   [A-3] Post-select continuity conflict: {_conflict_msg[:80]}")
+                    except Exception as _cont_err:
+                        logging.warning(f"[FailClosed:SC:PostSelectContinuity] {_cont_err!s:.100}")
+                        _post_select_conflicts.append(
+                            f"[Continuity Check Error] 검증 실패 (fail-closed): {str(_cont_err)[:80]}"
+                        )
+
+                # (b) History conflict check result
+                if _fut_hist is not None:
+                    try:
+                        _conflict_result = _fut_hist.result(timeout=120)
+                        if _conflict_result.get("decision") == "CONFLICT":
+                            _conflict_msg = _conflict_result.get("summary", "History conflict detected")
+                            _post_select_conflicts.append(f"[V67] History Conflict: {_conflict_msg}")
+                            self.ctx.ui.log(f"   [A-3] Post-select history conflict: {_conflict_msg[:80]}")
+                    except Exception as _hist_err:
+                        logging.warning(f"[FailClosed:SC:PostSelectHistory] {_hist_err!s:.100}")
+                        _post_select_conflicts.append(
+                            f"[History Check Error] 검증 실패 (fail-closed): {str(_hist_err)[:80]}"
+                        )
+
+        # (c) Downgrade PASS to REJECT if post-select validation found conflicts
+        if _post_select_conflicts:
+            self.ctx.ui.log(f"   [A-3] {len(_post_select_conflicts)} post-select conflicts detected -> downgrade to REJECT")
+            verdict = "REJECT"
+            # [TF-49] A-3 다운그레이드 시 error_category를 LOGIC_ERROR로 설정
+            # → V75-D/V75-B 에스컬레이션 체인 트리거 (Blueprint 자동 수정)
+            error_category = "LOGIC_ERROR"
+            director_feedback += "\n" + "\n".join(_post_select_conflicts)
+            # [P0-D3] 다운그레이드 시 previous_attempt 갱신 — 다음 라운드 패치 모드용
+            previous_attempt = {
+                "best_manuscript": final_manuscript,
+                "state_updates": final_state_updates,
+                "score": score,
+                # [TF-36] S4-005: fix_scope/rejection_reason/selected_strategy 보존
+                "fix_scope": director_result.get("fix_scope", "") if isinstance(director_result, dict) else "",
+                "rejection_reason": director_feedback,
+                "selected_strategy": director_result.get("selected_strategy", "")
+                if isinstance(director_result, dict)
+                else "",
+                "open_review": director_result.get("open_review", "") if isinstance(director_result, dict) else "",  # [TF-29]
+            }
+
+        return verdict, director_feedback, previous_attempt, error_category
+
+    def _execute_pass_with_fix_loop(
+        self,
+        *,
+        verdict: str,
+        final_manuscript: str,
+        final_state_updates: dict,
+        director_result: dict,
+        director_feedback: str,
+        round_ctx,
+        round_num: int,
+        score: int,
+        quality_gate_score: int,
+        director_mandatory_context: str,
+    ) -> tuple:
+        """[God-3] PASS_WITH_FIX → InPlace 패치 + Director 재심사 루프 (최대 3회).
+
+        Returns:
+            tuple: (verdict, final_manuscript, final_state_updates, director_result, director_feedback)
+                   verdict 가 PASS 또는 REJECT로 확정됨.
+        """
+        _MAX_FIX = 3
+        _current_ms = final_manuscript
+        _current_fb = self._extract_fix_feedback(director_result)
+        _fix_ok = False
+        _director = self.ctx.agents.get("director")
+        chief_writer = round_ctx.chief_writer
+        style_guide = round_ctx.style_guide
+        _director_mandatory_context = director_mandatory_context
+
+        _current_audit_result = director_result  # [TF-33] 최신 audit 추적
+
+        for _fix_i in range(_MAX_FIX):
+            if not _current_fb:
+                break
+            # [TF-33] Director fix_scope 기반 수정 전략 라우팅
+            _fix_scope = (
+                _current_audit_result.get("fix_scope", "inplace")
+                if isinstance(_current_audit_result, dict)
+                else "inplace"
+            )
+            if _fix_scope in ("partial", "full"):
+                self.ctx.ui.log(f"   🔀 [TF-33] fix_scope={_fix_scope!r} → inplace 불가, retry 경로 위임")
+                break  # → REJECT → retry 경로에서 patch/rewrite 처리
+
+            self.ctx.ui.log(f"   🔧 [TF-32-V] PASS_WITH_FIX patch #{_fix_i + 1}/{_MAX_FIX}")
+            try:
+                _patched = chief_writer.inplace_patch(
+                    original_manuscript=_current_ms,
+                    director_feedback=_current_fb,
+                    attempt_number=_fix_i + 1,
+                    style_guide=style_guide,  # [TF-37]
+                )
+                _patched_ms = _patched[0].get("manuscript", "") if _patched else ""
+            except Exception as _e:
+                logging.warning(f"[TF-32-V] inplace 실패: {_e!s:.100}")
+                break
+            if not _patched_ms or len(_patched_ms) < 2000:
+                logging.warning("[TF-32-V] patch 결과 부족")
+                break
+
+            # [TF-35] Director 동일 경로 재심사 — ScoringValidator 대신 Director LLM 직접 채점
+            try:
+                # [TF-46] patch가 반환한 state_updates를 merge (stale 방지)
+                _patch_state = _patched[0].get("state_updates", {}) if _patched else {}
+                _merged_state = {**final_state_updates, **_patch_state}
+                _re_candidate = {
+                    "strategy": "inplace_patch",
+                    "strategy_name": "InPlace 수정",
+                    "manuscript": _patched_ms,
+                    "title": f"\uc81c{round_ctx.next_ep}\ud654",
+                    "state_updates": _merged_state,  # [TF-46] patch override
+                }
+                _re_val_ctx = {
+                    "warnings": [
+                        f"[TF-35 재심사] InPlace 패치 수정본입니다. 원본 점수: {score}점.",
+                        "[TF-35 재심사] 수정 범위: inplace (국소 수정). 전면 재평가가 아닌 수정 부분 중심으로 평가하세요.",
+                        f"[TF-35 재심사] 이전 피드백: {_current_fb[:500]}",
+                    ],
+                    "focus_points": [f"[TF-35 재심사] 이전 피드백: {_current_fb[:300]}"],
+                }
+                _re_audit = _director.select_and_judge_ensemble(
+                    ep_num=round_ctx.next_ep,
+                    candidates=[_re_candidate],
+                    validation_results=[_re_val_ctx],
+                    blueprint=round_ctx.blueprint,
+                    previous_ending=round_ctx.prev_ending,
+                    arc_pos=round_ctx.arc_pos,
+                    total_eps=round_ctx.total_ep_in_arc,
+                    retry_count=round_num,
+                    episode_digest=round_ctx.episode_digest,
+                    mandatory_context=_director_mandatory_context,
+                    prev_manuscripts_text=round_ctx.prev_manuscripts_text,
+                    story_context=round_ctx.story_context,
+                )
+            except Exception:
+                logging.exception("[TF-35] 재심사 예외")
+                break
+
+            _re_d = _re_audit.get("verdict", "REJECT")
+            _re_s = _re_audit.get("score", 0)
+            try:
+                _re_s = int(_re_s)
+            except (ValueError, TypeError):
+                _re_s = 0
+            self.ctx.ui.log(f"   🎬 [TF-35] 재심사 #{_fix_i + 1}: {_re_d} (score={_re_s})")
+
+            if _re_d == "PASS":
+                if _re_s < quality_gate_score:
+                    self.ctx.ui.log(f"   ⚠️ [TF-35] 재심사 PASS이나 score={_re_s} < {quality_gate_score} → patch 종료")
+                    break
+                _current_ms = _patched_ms
+                # [TF-36] S4-010: 재심사 결과의 state_updates 반영
+                _re_su = _re_audit.get("state_updates")
+                if isinstance(_re_su, dict) and _re_su:
+                    final_state_updates = _re_su
+                _fix_ok = True
+                break
+            elif _re_d == "PASS_WITH_FIX":
+                _current_ms = _patched_ms
+                _current_audit_result = _re_audit  # [TF-33] 다음 반복에서 fix_scope 재확인
+                # [TF-42] P1: PASS_WITH_FIX 반복에서도 state_updates 캡처
+                _re_su = _re_audit.get("state_updates")
+                if isinstance(_re_su, dict) and _re_su:
+                    final_state_updates = _re_su
+                _fb_obj = _re_audit.get("feedback", {})
+                _current_fb = (
+                    "\n".join(str(a) for a in (_fb_obj.get("action_items") or []))
+                    if isinstance(_fb_obj, dict)
+                    else str(_fb_obj)
+                )
+            else:  # REJECT
+                break
+
+        if _fix_ok:
+            final_manuscript = _current_ms
+            verdict = "PASS"
+            self.ctx.ui.log("   ✅ [TF-32-V] 원고 수정 완료 → PASS 확정")
+        else:
+            verdict = "REJECT"
+            # [TF-33] fix_scope 보존 → retry 경로에서 patch/rewrite 라우팅
+            _last_fs = _current_audit_result.get("fix_scope", "") if isinstance(_current_audit_result, dict) else ""
+            if _last_fs:
+                director_result["fix_scope"] = _last_fs
+            director_feedback += "\n[TF-32-V] PASS_WITH_FIX 수정 실패 → REJECT"
+            self.ctx.ui.log("   ❌ [TF-32-V] 원고 수정 실패 → REJECT 전환")
+
+        return verdict, final_manuscript, final_state_updates, director_result, director_feedback
+
     def _process_verdict(
         self,
         *,
@@ -932,269 +1200,65 @@ class Stage4InterviewRound:
         director_memory_context: str,
         error_category: str,
     ):
-        """[B-1-3b] PASS/PASS_WITH_FIX 처리. Returns (result|None, director_feedback, previous_attempt)."""
+        """[B-1-3b] PASS/PASS_WITH_FIX ??. Returns (result|None, director_feedback, previous_attempt)."""
         from modules.core.stage4_types import _InterviewRoundResult
         from modules.validation.threshold_helper import _threshold
 
         next_ep = round_ctx.next_ep
-        chief_writer = round_ctx.chief_writer
-        style_guide = round_ctx.style_guide
-        story_context = round_ctx.story_context
-        _prev_manuscripts_text = round_ctx.prev_manuscripts_text
-        _director_memory_context = director_memory_context
-        _director_mandatory_context = director_mandatory_context
         _is_patch = is_patch
         _is_patch_fallback = is_patch_fallback
         _prev_score = prev_score
+        _director_memory_context = director_memory_context
+        _director_mandatory_context = director_mandatory_context
 
         _quality_gate_score = _threshold("scoring.quality_gate_score", 90)
-        if (
-            verdict == "PASS" and score < _quality_gate_score
-        ):  # [TF-46] PASS_WITH_FIX는 Director 주권 존중 — gate 미적용
-            self.ctx.ui.log(f"   ⚠️ [QualityGate] PASS 판정이나 score={score} < {_quality_gate_score} → 패치 모드")
+        if verdict == "PASS" and score < _quality_gate_score:
+            self.ctx.ui.log(f"   [QualityGate] PASS -> score={score} < {_quality_gate_score}; downgrade to REJECT")
             verdict = "REJECT"
             director_feedback += (
-                f"\n[Quality Gate] Director PASS 판정이나 점수 {score}점으로 {_quality_gate_score}점 미달. "
-                "품질 개선 후 재제출."
+                f"\n[Quality Gate] Director PASS but score {score} is below {_quality_gate_score}. "
+                "Retry after improvement."
             )
 
-        if verdict in ("PASS", "PASS_WITH_FIX"):  # [TF-32]
+        if verdict in ("PASS", "PASS_WITH_FIX"):
             selected_candidate = director_result.get("selected_candidate") or {}
             final_manuscript = selected_candidate.get("manuscript", "")
             final_title = selected_candidate.get("title", f"\uc81c{next_ep}\ud654")
             final_state_updates = director_result.get("state_updates", {})
 
-            # [Phase A-3][TF-50] Post-select validation: 두 LLM 검사 병렬 실행
-            _post_select_conflicts = []
-
-            _run_continuity = round_num == 0 and next_ep > 1 and final_manuscript
-            _run_history = (
-                round_num == 0
-                and _prev_manuscripts_text
-                and final_manuscript
-                and hasattr(self.ctx.agents.get("director", None), "check_manuscript_history_conflicts")
+            verdict, director_feedback, previous_attempt, error_category = self._run_post_select_checks(
+                verdict=verdict,
+                final_manuscript=final_manuscript,
+                final_state_updates=final_state_updates,
+                next_ep=next_ep,
+                round_num=round_num,
+                round_ctx=round_ctx,
+                director_result=director_result,
+                director_feedback=director_feedback,
+                score=score,
+                error_category=error_category,
+                previous_attempt=previous_attempt,
+                stage4_spinner=stage4_spinner,
+                director_memory_context=_director_memory_context,
             )
 
-            if _run_continuity or _run_history:
-                from concurrent.futures import ThreadPoolExecutor
-
-                stage4_spinner.update_detail(f"Ep {next_ep} · post-select checks (parallel)")
-
-                with ThreadPoolExecutor(max_workers=2, thread_name_prefix="postselect") as _ps_exec:
-                    _fut_cont = None
-                    _fut_hist = None
-
-                    if _run_continuity:
-                        _fut_cont = _ps_exec.submit(
-                            self.ctx.agents["director"].check_manuscript_continuity_with_cache,
-                            new_manuscript=final_manuscript,
-                            ep_num=next_ep,
-                            db=self.ctx.current_project.db,
-                            limit=10,
-                            story_context=story_context,
-                            memory_context=_director_memory_context,
-                        )
-
-                    if _run_history:
-                        _ms_history_for_check = self._build_manuscript_history_for_check(
-                            _prev_manuscripts_text, next_ep
-                        )
-                        if _ms_history_for_check:
-                            _fut_hist = _ps_exec.submit(
-                                self.ctx.agents["director"].check_manuscript_history_conflicts,
-                                ep_num=next_ep,
-                                current_manuscript=final_manuscript,
-                                manuscript_history=_ms_history_for_check,
-                                use_summary=False,
-                                story_context=story_context,
-                                memory_context=_director_memory_context,
-                            )
-
-                    # (a) Continuity check result
-                    if _fut_cont is not None:
-                        try:
-                            continuity_check = _fut_cont.result(timeout=120)
-                            if continuity_check.get("decision") == "CONFLICT":
-                                _conflict_msg = continuity_check.get("summary", "Continuity conflict detected")
-                                _post_select_conflicts.append(f"[Continuity Conflict] {_conflict_msg}")
-                                self.ctx.ui.log(f"   [A-3] Post-select continuity conflict: {_conflict_msg[:80]}")
-                        except Exception as _cont_err:
-                            logging.warning(f"[FailClosed:SC:PostSelectContinuity] {_cont_err!s:.100}")
-                            _post_select_conflicts.append(
-                                f"[Continuity Check Error] 검증 실패 (fail-closed): {str(_cont_err)[:80]}"
-                            )
-
-                    # (b) History conflict check result
-                    if _fut_hist is not None:
-                        try:
-                            _conflict_result = _fut_hist.result(timeout=120)
-                            if _conflict_result.get("decision") == "CONFLICT":
-                                _conflict_msg = _conflict_result.get("summary", "History conflict detected")
-                                _post_select_conflicts.append(f"[V67] History Conflict: {_conflict_msg}")
-                                self.ctx.ui.log(f"   [A-3] Post-select history conflict: {_conflict_msg[:80]}")
-                        except Exception as _hist_err:
-                            logging.warning(f"[FailClosed:SC:PostSelectHistory] {_hist_err!s:.100}")
-                            _post_select_conflicts.append(
-                                f"[History Check Error] 검증 실패 (fail-closed): {str(_hist_err)[:80]}"
-                            )
-
-            # (c) Downgrade PASS to REJECT if post-select validation found conflicts
-            if _post_select_conflicts:
-                self.ctx.ui.log(
-                    f"   [A-3] {len(_post_select_conflicts)} post-select conflicts detected -> downgrade to REJECT"
-                )
-                verdict = "REJECT"
-                # [TF-49] A-3 다운그레이드 시 error_category를 LOGIC_ERROR로 설정
-                # → V75-D/V75-B 에스컬레이션 체인 트리거 (Blueprint 자동 수정)
-                error_category = "LOGIC_ERROR"
-                director_feedback += "\n" + "\n".join(_post_select_conflicts)
-                # [P0-D3] 다운그레이드 시 previous_attempt 갱신 — 다음 라운드 패치 모드용
-                previous_attempt = {
-                    "best_manuscript": final_manuscript,
-                    "state_updates": final_state_updates,
-                    "score": score,
-                    # [TF-36] S4-005: fix_scope/rejection_reason/selected_strategy 보존
-                    "fix_scope": director_result.get("fix_scope", "") if isinstance(director_result, dict) else "",
-                    "rejection_reason": director_feedback,
-                    "selected_strategy": director_result.get("selected_strategy", "")
-                    if isinstance(director_result, dict)
-                    else "",
-                    "open_review": director_result.get("open_review", "")
-                    if isinstance(director_result, dict)
-                    else "",  # [TF-29]
-                }
-
-            # [TF-32-VERIFY] PASS_WITH_FIX → patch + Director 재심사 반복 (최대 3회)
             if verdict == "PASS_WITH_FIX" and final_manuscript:
-                _MAX_FIX = 3
-                _current_ms = final_manuscript
-                _current_fb = self._extract_fix_feedback(director_result)
-                _fix_ok = False
-                _director = self.ctx.agents.get("director")
-
-                _current_audit_result = director_result  # [TF-33] 최신 audit 추적
-
-                for _fix_i in range(_MAX_FIX):
-                    if not _current_fb:
-                        break
-                    # [TF-33] Director fix_scope 기반 수정 전략 라우팅
-                    _fix_scope = (
-                        _current_audit_result.get("fix_scope", "inplace")
-                        if isinstance(_current_audit_result, dict)
-                        else "inplace"
+                verdict, final_manuscript, final_state_updates, director_result, director_feedback = (
+                    self._execute_pass_with_fix_loop(
+                        verdict=verdict,
+                        final_manuscript=final_manuscript,
+                        final_state_updates=final_state_updates,
+                        director_result=director_result,
+                        director_feedback=director_feedback,
+                        round_ctx=round_ctx,
+                        round_num=round_num,
+                        score=score,
+                        quality_gate_score=int(_quality_gate_score),
+                        director_mandatory_context=_director_mandatory_context,
                     )
-                    if _fix_scope in ("partial", "full"):
-                        self.ctx.ui.log(f"   🔀 [TF-33] fix_scope={_fix_scope!r} → inplace 불가, retry 경로 위임")
-                        break  # → REJECT → retry 경로에서 patch/rewrite 처리
+                )
 
-                    self.ctx.ui.log(f"   🔧 [TF-32-V] PASS_WITH_FIX patch #{_fix_i + 1}/{_MAX_FIX}")
-                    try:
-                        _patched = chief_writer.inplace_patch(
-                            original_manuscript=_current_ms,
-                            director_feedback=_current_fb,
-                            attempt_number=_fix_i + 1,
-                            style_guide=style_guide,  # [TF-37]
-                        )
-                        _patched_ms = _patched[0].get("manuscript", "") if _patched else ""
-                    except Exception as _e:
-                        logging.warning(f"[TF-32-V] inplace 실패: {_e!s:.100}")
-                        break
-                    if not _patched_ms or len(_patched_ms) < 2000:
-                        logging.warning("[TF-32-V] patch 결과 부족")
-                        break
-
-                    # [TF-35] Director 동일 경로 재심사 — ScoringValidator 대신 Director LLM 직접 채점
-                    try:
-                        # [TF-46] patch가 반환한 state_updates를 merge (stale 방지)
-                        _patch_state = _patched[0].get("state_updates", {}) if _patched else {}
-                        _merged_state = {**final_state_updates, **_patch_state}
-                        _re_candidate = {
-                            "strategy": "inplace_patch",
-                            "strategy_name": "InPlace 수정",
-                            "manuscript": _patched_ms,
-                            "title": f"제{round_ctx.next_ep}화",
-                            "state_updates": _merged_state,  # [TF-46] patch override
-                        }
-                        _re_val_ctx = {
-                            "warnings": [
-                                f"[TF-35 재심사] InPlace 패치 수정본입니다. 원본 점수: {score}점.",
-                                "[TF-35 재심사] 수정 범위: inplace (국소 수정). 전면 재평가가 아닌 수정 부분 중심으로 평가하세요.",
-                                f"[TF-35 재심사] 이전 피드백: {_current_fb[:500]}",
-                            ],
-                            "focus_points": [f"[TF-35 재심사] 이전 피드백: {_current_fb[:300]}"],
-                        }
-                        _re_audit = _director.select_and_judge_ensemble(
-                            ep_num=round_ctx.next_ep,
-                            candidates=[_re_candidate],
-                            validation_results=[_re_val_ctx],
-                            blueprint=round_ctx.blueprint,
-                            previous_ending=round_ctx.prev_ending,
-                            arc_pos=round_ctx.arc_pos,
-                            total_eps=round_ctx.total_ep_in_arc,
-                            retry_count=round_num,
-                            episode_digest=round_ctx.episode_digest,
-                            mandatory_context=_director_mandatory_context,
-                            prev_manuscripts_text=round_ctx.prev_manuscripts_text,
-                            story_context=round_ctx.story_context,
-                        )
-                    except Exception:
-                        logging.exception("[TF-35] 재심사 예외")
-                        break
-
-                    _re_d = _re_audit.get("verdict", "REJECT")
-                    _re_s = _re_audit.get("score", 0)
-                    try:
-                        _re_s = int(_re_s)
-                    except (ValueError, TypeError):
-                        _re_s = 0
-                    self.ctx.ui.log(f"   🎬 [TF-35] 재심사 #{_fix_i + 1}: {_re_d} (score={_re_s})")
-
-                    if _re_d == "PASS":
-                        if _re_s < _quality_gate_score:
-                            self.ctx.ui.log(
-                                f"   ⚠️ [TF-35] 재심사 PASS이나 score={_re_s} < {_quality_gate_score} → patch 종료"
-                            )
-                            break
-                        _current_ms = _patched_ms
-                        # [TF-36] S4-010: 재심사 결과의 state_updates 반영
-                        _re_su = _re_audit.get("state_updates")
-                        if isinstance(_re_su, dict) and _re_su:
-                            final_state_updates = _re_su
-                        _fix_ok = True
-                        break
-                    elif _re_d == "PASS_WITH_FIX":
-                        _current_ms = _patched_ms
-                        _current_audit_result = _re_audit  # [TF-33] 다음 반복에서 fix_scope 재확인
-                        # [TF-42] P1: PASS_WITH_FIX 반복에서도 state_updates 캡처
-                        _re_su = _re_audit.get("state_updates")
-                        if isinstance(_re_su, dict) and _re_su:
-                            final_state_updates = _re_su
-                        _fb_obj = _re_audit.get("feedback", {})
-                        _current_fb = (
-                            "\n".join(str(a) for a in (_fb_obj.get("action_items") or []))
-                            if isinstance(_fb_obj, dict)
-                            else str(_fb_obj)
-                        )
-                    else:  # REJECT
-                        break
-
-                if _fix_ok:
-                    final_manuscript = _current_ms
-                    verdict = "PASS"
-                    self.ctx.ui.log("   ✅ [TF-32-V] 원고 수정 완료 → PASS 확정")
-                else:
-                    verdict = "REJECT"
-                    # [TF-33] fix_scope 보존 → retry 경로에서 patch/rewrite 라우팅
-                    _last_fs = (
-                        _current_audit_result.get("fix_scope", "") if isinstance(_current_audit_result, dict) else ""
-                    )
-                    if _last_fs:
-                        director_result["fix_scope"] = _last_fs
-                    director_feedback += "\n[TF-32-V] PASS_WITH_FIX 수정 실패 → REJECT"
-                    self.ctx.ui.log("   ❌ [TF-32-V] 원고 수정 실패 → REJECT 전환")
-
-            if verdict in ("PASS", "PASS_WITH_FIX"):  # [TF-32]
-                # [V66.1] F-1: time consistency check -> forward warnings to validator context
+            if verdict in ("PASS", "PASS_WITH_FIX"):
                 if self.ctx.state_tracker:
                     try:
                         _time_warnings = self.ctx.state_tracker.check_time_consistency(
@@ -1203,7 +1267,6 @@ class Stage4InterviewRound:
                         if _time_warnings:
                             for tw in _time_warnings:
                                 self.ctx.ui.log(f"   [V66.1] Time warning: {tw}")
-                            # [V66.1] save warnings for validator context
                             self.time_warnings.extend(_time_warnings)
                     except (KeyError, ValueError, TypeError) as _tc_err:
                         logging.warning(f"[V66.1] Time consistency check failed: {_tc_err}")
@@ -1221,19 +1284,18 @@ class Stage4InterviewRound:
                 )
                 return (
                     _InterviewRoundResult(
-                        verdict=verdict,  # [TF-32] PASS or PASS_WITH_FIX
+                        verdict=verdict,
                         director_feedback=director_feedback,
                         previous_attempt=previous_attempt,
                         final_manuscript=final_manuscript,
                         final_title=final_title,
                         final_state_updates=final_state_updates,
-                        error_category=error_category,  # [V75-B]
+                        error_category=error_category,
                     ),
                     director_feedback,
                     previous_attempt,
                 )
 
-        # REJECT fallthrough
         return (None, director_feedback, previous_attempt)
 
     def _handle_reject(
