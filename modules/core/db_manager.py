@@ -5,6 +5,7 @@ import threading
 import time
 import traceback
 from contextlib import contextmanager
+from datetime import datetime
 from pathlib import Path
 
 from .constants import MARTIAL_METRICS  # 👈 상수 임포트
@@ -462,6 +463,64 @@ class DBManager:
         except sqlite3.OperationalError:
             pass  # 이미 존재
 
+        # [Log-3] Add advisory_warnings column for director selection correlation analysis
+        try:
+            self.cursor.execute("ALTER TABLE director_selections ADD COLUMN advisory_warnings TEXT")
+        except sqlite3.OperationalError:
+            pass  # already exists
+
+        # [Log-1] Per-call LLM telemetry
+        self.cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS llm_calls (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                session_id TEXT,
+                ts TEXT NOT NULL,
+                stage INTEGER,
+                ep_num INTEGER,
+                agent_name TEXT NOT NULL,
+                model TEXT NOT NULL,
+                prompt_chars INTEGER,
+                response_chars INTEGER,
+                duration_ms INTEGER,
+                success INTEGER NOT NULL DEFAULT 1,
+                error_type TEXT,
+                error_msg TEXT,
+                verdict TEXT,
+                context_tag TEXT
+            )
+            """
+        )
+        self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_llm_calls_agent ON llm_calls(agent_name)")
+        self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_llm_calls_ep ON llm_calls(ep_num)")
+        self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_llm_calls_ts ON llm_calls(ts)")
+
+        # [Log-2] Stage-level attempt telemetry
+        self.cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS stage_attempts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                session_id TEXT,
+                ts TEXT NOT NULL,
+                stage INTEGER NOT NULL,
+                ep_num INTEGER,
+                arc_num INTEGER,
+                attempt_num INTEGER NOT NULL DEFAULT 1,
+                verdict TEXT NOT NULL,
+                score INTEGER,
+                failure_category TEXT,
+                reject_reason TEXT,
+                fix_scope TEXT,
+                model TEXT,
+                duration_ms INTEGER,
+                advisory_flags TEXT
+            )
+            """
+        )
+        self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_stage_attempts_stage_ep ON stage_attempts(stage, ep_num)")
+        self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_stage_attempts_verdict ON stage_attempts(verdict)")
+        self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_stage_attempts_category ON stage_attempts(failure_category)")
+
         # 16. [Phase 6] 비용 추적 로그
         self.cursor.execute("""
             CREATE TABLE IF NOT EXISTS cost_log (
@@ -755,6 +814,16 @@ class DBManager:
         finally:
             if cur is not None:
                 cur.close()
+
+    def initialize_db(self) -> None:
+        """Backward-compatible explicit initializer.
+
+        DBManager currently boots schema in __init__. Keep this method as an
+        idempotent entrypoint for test/legacy code that still calls initialize_db().
+        """
+        with self._lock:
+            if self.conn is None:
+                self._boot_db()
 
     def begin(self):
         # [INF-P1-2] RLock으로 트랜잭션 제어 보호 (중첩 안전)
@@ -2353,15 +2422,17 @@ class DBManager:
         selection_reason: str = "",
         candidate_count: int = 3,
         fix_scope: str = "",
+        advisory_warnings: dict | None = None,
     ) -> None:
-        """[D-4] Director의 앙상블 선택 결과를 기록."""
+        """Persist director selection result."""
         with self._lock:
             nested = self.conn.in_transaction
+            _adv_json = json.dumps(advisory_warnings, ensure_ascii=False) if advisory_warnings else None
             self.cursor.execute(
                 "INSERT INTO director_selections "
                 "(ep_num, round_num, selected_label, selected_strategy, verdict, score, "
-                "selection_reason, candidate_count, fix_scope) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                "selection_reason, candidate_count, fix_scope, advisory_warnings) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (
                     ep_num,
                     round_num,
@@ -2372,10 +2443,106 @@ class DBManager:
                     selection_reason[:200] if selection_reason else "",
                     candidate_count,
                     fix_scope or "",
+                    _adv_json,
                 ),
             )
             if not nested:
                 self.commit()
+
+    def save_llm_call(
+        self,
+        agent_name: str,
+        model: str,
+        prompt_chars: int,
+        response_chars: int,
+        duration_ms: int,
+        success: bool = True,
+        error_type: str | None = None,
+        error_msg: str | None = None,
+        stage: int | None = None,
+        ep_num: int | None = None,
+        verdict: str | None = None,
+        context_tag: str | None = None,
+        session_id: str | None = None,
+    ) -> None:
+        """[Log-1] Save one LLM call record in non-blocking mode."""
+        try:
+            ts = datetime.now().isoformat(timespec="seconds")
+            with self._lock:
+                self.cursor.execute(
+                    """INSERT INTO llm_calls
+                       (session_id, ts, stage, ep_num, agent_name, model,
+                        prompt_chars, response_chars, duration_ms,
+                        success, error_type, error_msg, verdict, context_tag)
+                       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                    (
+                        session_id,
+                        ts,
+                        stage,
+                        ep_num,
+                        agent_name,
+                        model,
+                        prompt_chars,
+                        response_chars,
+                        duration_ms,
+                        1 if success else 0,
+                        error_type,
+                        (error_msg or "")[:80],
+                        verdict,
+                        context_tag,
+                    ),
+                )
+                self.conn.commit()
+        except Exception as _e:
+            logging.debug("[llm_calls] save_llm_call failed (non-blocking): %s", _e)
+
+    def save_stage_attempt(
+        self,
+        stage: int,
+        verdict: str,
+        attempt_num: int = 1,
+        ep_num: int | None = None,
+        arc_num: int | None = None,
+        score: int | None = None,
+        failure_category: str | None = None,
+        reject_reason: str | None = None,
+        fix_scope: str | None = None,
+        model: str | None = None,
+        duration_ms: int | None = None,
+        advisory_flags: dict | None = None,
+        session_id: str | None = None,
+    ) -> None:
+        """[Log-2] Save one stage attempt record in non-blocking mode."""
+        try:
+            ts = datetime.now().isoformat(timespec="seconds")
+            _advisory_json = json.dumps(advisory_flags, ensure_ascii=False) if advisory_flags else None
+            with self._lock:
+                self.cursor.execute(
+                    """INSERT INTO stage_attempts
+                       (session_id, ts, stage, ep_num, arc_num, attempt_num,
+                        verdict, score, failure_category, reject_reason,
+                        fix_scope, model, duration_ms, advisory_flags)
+                       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                    (
+                        session_id,
+                        ts,
+                        stage,
+                        ep_num,
+                        arc_num,
+                        attempt_num,
+                        verdict,
+                        score,
+                        failure_category,
+                        (reject_reason or "")[:500],
+                        fix_scope,
+                        model,
+                        duration_ms,
+                        _advisory_json,
+                    ),
+                )
+                self.conn.commit()
+        except Exception as _e:
+            logging.debug("[stage_attempts] save_stage_attempt failed (non-blocking): %s", _e)
 
     def get_fix_scope_stats(self, lookback: int = 200) -> list[dict]:
         """[A-3] fix_scope × verdict 교차 집계."""

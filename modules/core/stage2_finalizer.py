@@ -842,6 +842,30 @@ class Stage2Finalizer:
             except Exception as e:  # [V64.P4] OPTIONAL: metrics
                 logging.debug(f"[SILENT] metrics (success): {e}")
 
+        try:
+            _db = getattr(getattr(self.ctx, "current_project", None), "db", None)
+            if _db and hasattr(_db, "save_stage_attempt"):
+                _score = audit.get("score", 0)
+                if not isinstance(_score, int):
+                    try:
+                        _score = int(_score)
+                    except (ValueError, TypeError):
+                        _score = 0
+                _director = getattr(getattr(self.ctx, "agents", {}), "get", lambda *_: None)("director")
+                _model = getattr(_director, "primary_model", None) if _director else None
+                _db.save_stage_attempt(
+                    stage=2,
+                    verdict=str(audit.get("decision", "PASS")),
+                    attempt_num=attempt + 1,
+                    ep_num=global_arc_no,
+                    arc_num=global_arc_no,
+                    score=_score,
+                    fix_scope=str(audit.get("fix_scope", "") or ""),
+                    model=str(_model) if _model else None,
+                )
+        except Exception as _sa_err:
+            logging.debug("[stage_attempts] Stage2 PASS 기록 실패 (비차단): %s", _sa_err)
+
         if V50_MODULES_AVAILABLE and self.ctx.quality_dashboard:
             try:
                 self.ctx.quality_dashboard.record_validation(
@@ -900,6 +924,31 @@ class Stage2Finalizer:
                 )
             except Exception as e:  # [V64.P4] OPTIONAL: metrics
                 logging.debug(f"[SILENT] metrics (reject): {e}")
+
+        try:
+            _db = getattr(getattr(self.ctx, "current_project", None), "db", None)
+            if _db and hasattr(_db, "save_stage_attempt"):
+                _score = audit.get("score", 0)
+                if not isinstance(_score, int):
+                    try:
+                        _score = int(_score)
+                    except (ValueError, TypeError):
+                        _score = 0
+                _director = getattr(getattr(self.ctx, "agents", {}), "get", lambda *_: None)("director")
+                _model = getattr(_director, "primary_model", None) if _director else None
+                _db.save_stage_attempt(
+                    stage=2,
+                    verdict=str(audit.get("decision", "REJECT")),
+                    attempt_num=attempt + 1,
+                    ep_num=global_arc_no,
+                    arc_num=global_arc_no,
+                    score=_score,
+                    reject_reason=str(audit.get("reason", ""))[:500],
+                    fix_scope=str(audit.get("fix_scope", "") or ""),
+                    model=str(_model) if _model else None,
+                )
+        except Exception as _sa_err:
+            logging.debug("[stage_attempts] Stage2 REJECT 기록 실패 (비차단): %s", _sa_err)
 
         try:
             _score = audit.get("score", 0)
