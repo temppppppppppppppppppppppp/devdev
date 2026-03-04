@@ -122,6 +122,8 @@ class Stage4PostProcessor:
         r"(?:잔고|자본금?|현금|자산|실탄|예수금)[이가은는:의]?\s*(?:약?\s*)?"
         r"(?:(\d[\d,.]*)\s*억)?\s*(?:(\d[\d,.]*)\s*만)?\s*(?:(\d[\d,.]*)\s*원?)?"
     )
+    # [V73-방어2] 대사(따옴표 내부) 제거용 패턴
+    _DIALOGUE_RE = re.compile(r'["\u201c\u201d][^"\u201c\u201d]*["\u201c\u201d]')
 
     @staticmethod
     def _parse_hud_capital_to_eok(raw) -> float:
@@ -158,10 +160,12 @@ class Stage4PostProcessor:
     @staticmethod
     def _extract_capital_from_manuscript(manuscript: str) -> float | None:
         """확정 원고에서 마지막으로 언급된 자본금(억 단위)을 추출. 없으면 None."""
+        # [V73-방어2] 대사(따옴표 내부) 제거 → 타인 자산 언급 오인 방지
+        narration_only = Stage4PostProcessor._DIALOGUE_RE.sub("", manuscript)
         # 모든 패턴의 매치를 (문서 내 위치, 값) 튜플로 수집 후 위치순 정렬
         candidates: list[tuple[int, float]] = []
         for pat in Stage4PostProcessor._CAPITAL_PATTERNS:
-            for m in pat.finditer(manuscript):
+            for m in pat.finditer(narration_only):
                 raw = m.group(1).replace(",", "")  # 천 단위 콤마만 제거, 소수점 유지
                 try:
                     num = float(raw)
@@ -172,7 +176,7 @@ class Stage4PostProcessor:
                     num /= 10000  # 만 → 억 환산
                 candidates.append((m.start(), num))
         # [V73-P0] 복합 금액 매칭 (억+만+원 조합)
-        for m in Stage4PostProcessor._COMPOUND_CAPITAL_RE.finditer(manuscript):
+        for m in Stage4PostProcessor._COMPOUND_CAPITAL_RE.finditer(narration_only):
             eok_part = m.group(1)  # 억
             man_part = m.group(2)  # 만
             won_part = m.group(3)  # 원
@@ -195,8 +199,21 @@ class Stage4PostProcessor:
                 pos_best[pos] = val
         return pos_best[max(pos_best)]
 
-    def _reconcile_capital(self, final_manuscript: str, ep_num: int) -> None:
+    def _reconcile_capital(
+        self,
+        final_manuscript: str,
+        ep_num: int,
+        final_state_updates: dict | None = None,
+    ) -> None:
         """확정 원고의 자본금과 HUD를 비교하여 불일치 시 경고 + 보정. 투자물 전용."""
+        # [V73-방어1] Director가 이미 capital을 state_updates에 포함한 경우 → 스킵 (Director 주권 존중)
+        if final_state_updates:
+            _capital_keys = {"capital", "자본", "자본금", "잔고"}
+            _director_keys = {str(k).lower() for k in final_state_updates}
+            if _capital_keys & _director_keys:
+                logging.debug("[V73] Director state_updates에 capital 포함 → 자본금 역동기화 스킵 (ep%d)", ep_num)
+                return
+
         if not hasattr(self.ctx.sys, "hud") or not self.ctx.sys.hud:
             return
 
@@ -312,7 +329,7 @@ class Stage4PostProcessor:
 
         # [V73] 확정 원고 기준 자본금 역동기화
         try:
-            self._reconcile_capital(final_manuscript, next_ep)
+            self._reconcile_capital(final_manuscript, next_ep, final_state_updates=final_state_updates)
         except Exception as _cap_err:
             logging.warning("[V73] 자본금 역동기화 실패 (비차단): %s", _cap_err)
 
