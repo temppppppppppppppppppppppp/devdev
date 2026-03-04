@@ -69,3 +69,19 @@ class _InterviewRoundResult:
     final_title: object = None  # str | None, set only on PASS
     final_state_updates: dict = dataclasses.field(default_factory=dict)  # set only on PASS
     error_category: str = ""  # [V75-B] LOGIC_ERROR | QUALITY_ISSUE | ""
+
+
+@dataclasses.dataclass
+class WritingDirective:
+    """에피소드별 동적 집필 지시. PatternTracker + LLM이 생성."""
+
+    ending_style: str = ""
+    metaphor_avoid: list[str] = dataclasses.field(default_factory=list)
+    metaphor_suggest: list[str] = dataclasses.field(default_factory=list)
+    emotion_required: str = ""
+    npc_directives: dict[str, str] = dataclasses.field(default_factory=dict)
+    intensity_note: str = ""
+    expression_ban: list[str] = dataclasses.field(default_factory=list)
+
+    def is_empty(self) -> bool:
+        return not any([self.ending_style, self.metaphor_avoid, self.expression_ban])

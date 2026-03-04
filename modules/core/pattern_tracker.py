@@ -14,6 +14,92 @@
 import logging
 import re
 from collections import Counter
+from dataclasses import dataclass, field
+
+logger = logging.getLogger(__name__)
+
+# [TF-54a] 반복 표현 추적 패턴
+TRACKED_EXPRESSIONS: list[str] = [
+    "사무실의 공기",
+    "동공이 흔들",
+    "입꼬리를 비틀",
+    "폐부 깊숙이",
+    r"단순한 .{1,15}(아니다|아니었다)",
+    "거의 비명에 가까운",
+    "강철 같은",
+    "얼음처럼 차가운",
+    "모든 것은 시나리오대로",
+    "눈에 불꽃이 타올",
+    "얼굴이 하얗게 질",
+    r"사냥감|맹수|포식자",
+    r"제국의 (왕|지휘석|기둥|영토)",
+    "나는 알고 있었다",
+    "그때였다",
+    "텅 빈 사무실",
+]
+
+# [TF-54a] 은유 카테고리
+METAPHOR_CATEGORIES: dict[str, list[str]] = {
+    "군사": ["전쟁", "총알", "참호", "사령관", "전함", "함교", "무기", "탄창"],
+    "사냥": ["사냥감", "맹수", "포식자", "먹잇감", "조준경", "미끼"],
+    "제국": ["제국", "왕", "왕국", "기사", "신하", "왕좌"],
+    "자연": ["바람", "파도", "폭풍", "태양", "달빛", "강물"],
+    "음식": ["요리", "맛", "조리", "재료", "양념"],
+    "건축": ["기둥", "주춧돌", "벽돌", "설계", "건물"],
+    "게임": ["바둑", "장기", "체스", "카드", "판"],
+}
+
+# [TF-54a] 엔딩 패턴 분류 키워드
+ENDING_CLASSIFIERS: dict[str, list[str]] = {
+    "선언문": ["시작이었다", "서막이 올랐다", "전쟁이 시작", "사냥이 시작"],
+    "수사의문문": ["것인가?", "것일까?", "될 것인가?"],
+    "차가운미소": ["미소가 걸렸다", "미소를 지었다", "입꼬리를"],
+    "조용한여운": [],
+}
+
+
+@dataclass
+class PatternReport:
+    """[TF-54a] PatternTracker가 집계한 직전 N화 패턴 요약."""
+
+    expression_freq: dict[str, int] = field(default_factory=dict)
+    ending_patterns: list[str] = field(default_factory=list)
+    npc_reaction_patterns: dict[str, list[str]] = field(default_factory=dict)
+    metaphor_categories: dict[str, int] = field(default_factory=dict)
+    emotion_diversity: float = 0.0
+    protagonist_emotions: list[str] = field(default_factory=list)
+
+    def to_summary_text(self, min_freq: int = 2) -> str:
+        """LLM 주입용 요약 텍스트 생성."""
+        lines: list[str] = []
+
+        freq_items = [(expr, cnt) for expr, cnt in self.expression_freq.items() if cnt >= min_freq]
+        if freq_items:
+            freq_items.sort(key=lambda x: -x[1])
+            lines.append("【반복 표현】 " + ", ".join(f"'{expr}'({cnt}회)" for expr, cnt in freq_items[:6]))
+
+        if self.ending_patterns:
+            ending_counter: dict[str, int] = {}
+            for pattern in self.ending_patterns:
+                ending_counter[pattern] = ending_counter.get(pattern, 0) + 1
+            lines.append("【엔딩 패턴】 " + ", ".join(f"{k}:{v}회" for k, v in ending_counter.items()))
+
+        heavy = [(cat, cnt) for cat, cnt in self.metaphor_categories.items() if cnt >= 3]
+        unused = [cat for cat, cnt in self.metaphor_categories.items() if cnt == 0]
+        if heavy:
+            lines.append("【과사용 은유】 " + ", ".join(f"{cat}({cnt}회)" for cat, cnt in heavy))
+        if unused:
+            lines.append("【미사용 은유】 " + ", ".join(unused[:3]))
+
+        if self.emotion_diversity < 0.4 and self.protagonist_emotions:
+            dominant = max(set(self.protagonist_emotions), key=self.protagonist_emotions.count)
+            lines.append(f"【감정 빈곤】 주인공 감정이 '{dominant}'에 편중 (다양성={self.emotion_diversity:.2f})")
+
+        for npc, reactions in list(self.npc_reaction_patterns.items())[:2]:
+            if isinstance(reactions, list) and len(reactions) >= 3:
+                lines.append(f"【NPC 반응 고정】 {npc}: {' → '.join(reactions[-3:])}")
+
+        return "\n".join(lines)[:500]
 
 
 class PatternTracker:
@@ -133,6 +219,96 @@ class PatternTracker:
             "starter_dominance": 0.25,  # 특정 시작어 25% 이상 = 경고
             "core_imbalance": 0.7,  # Core 씬 70% 이상 = 경고
         }
+
+    # [TF-54a] -----------------------------------------------------------------
+    # 직전 N화 원고에서 반복 패턴 집계 (LLM 0회)
+
+    def build_report(self, db, ep_num: int, lookback: int = 5) -> PatternReport:
+        """DB에서 직전 lookback화 원고를 로드해 PatternReport 반환."""
+        manuscripts = self._load_manuscripts(db, ep_num, lookback)
+        if not manuscripts:
+            return PatternReport()
+
+        report = PatternReport()
+        report.expression_freq = self._count_expressions(manuscripts)
+        report.ending_patterns = self._classify_endings(manuscripts)
+        report.metaphor_categories = self._count_metaphors(manuscripts)
+
+        combined = "\n".join(manuscripts)
+        report.protagonist_emotions = self._extract_emotions(combined)
+        unique = len(set(report.protagonist_emotions))
+        total = len(report.protagonist_emotions)
+        report.emotion_diversity = (unique / total) if total else 0.0
+
+        return report
+
+    def _load_manuscripts(self, db, ep_num: int, lookback: int) -> list[str]:
+        if db is None:
+            return []
+
+        manuscripts: list[str] = []
+        for ep in range(max(1, ep_num - lookback), ep_num):
+            try:
+                row = db.get_manuscript(ep)
+                if isinstance(row, dict):
+                    content = row.get("content", "")
+                else:
+                    content = str(row or "")
+                if isinstance(content, str) and content.strip():
+                    manuscripts.append(content)
+            except Exception as e:
+                logger.debug("[PatternTracker:TF-54] ep%d 로드 실패 (비치명): %s", ep, str(e)[:80])
+        return manuscripts
+
+    def _count_expressions(self, manuscripts: list[str]) -> dict[str, int]:
+        combined = "\n".join(manuscripts)
+        freq: dict[str, int] = {}
+        for pattern in TRACKED_EXPRESSIONS:
+            try:
+                count = len(re.findall(pattern, combined))
+                if count > 0:
+                    freq[pattern] = count
+            except re.error:
+                continue
+        return freq
+
+    def _classify_endings(self, manuscripts: list[str]) -> list[str]:
+        patterns: list[str] = []
+        for manuscript in manuscripts:
+            tail = manuscript[-200:] if len(manuscript) > 200 else manuscript
+            classified = "조용한여운"
+            for label, keywords in ENDING_CLASSIFIERS.items():
+                if label == "조용한여운":
+                    continue
+                if any(keyword in tail for keyword in keywords):
+                    classified = label
+                    break
+            patterns.append(classified)
+        return patterns
+
+    def _count_metaphors(self, manuscripts: list[str]) -> dict[str, int]:
+        combined = "\n".join(manuscripts)
+        return {cat: sum(combined.count(keyword) for keyword in keywords) for cat, keywords in METAPHOR_CATEGORIES.items()}
+
+    def _extract_emotions(self, text: str) -> list[str]:
+        """간단한 감정 키워드 추출 (regex/문자열 기반)."""
+        emotion_patterns = [
+            "차가운 만족",
+            "차가운 분노",
+            "씁쓸",
+            "안도",
+            "두려움",
+            "기쁨",
+            "슬픔",
+            "허탈",
+            "흥분",
+            "죄책감",
+        ]
+        found: list[str] = []
+        for emotion in emotion_patterns:
+            count = text.count(emotion)
+            found.extend([emotion] * count)
+        return found
 
     def analyze_manuscripts(self, manuscripts: list[str], blueprints: list[dict] = None) -> dict:
         """

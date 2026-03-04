@@ -30,6 +30,12 @@ COMMON_RULES_SECTION: |
        \n
        서술서술서술. 서술서술.
      ■ 긴 묘사·심리·전투 장면이라도 예외 없이 적용.
+  9. [TF-54] 은유 다양성: WritingDirective의 metaphor_avoid에 있는 은유 영역을 이번 화에서 피하라.
+     metaphor_suggest의 영역을 적극 활용하라.
+  10. [TF-54] 강도 조절: 일상 행동(계약, 이동, 식사)은 담담하게 서술하라.
+      모든 장면을 극적으로 묘사하면 진짜 클라이맥스의 임팩트가 죽는다.
+  11. [TF-54] NPC 음성 분화: 각 NPC는 고유한 말투·어휘·문장 길이를 가져야 한다.
+      WritingDirective의 npc_directives를 따라 이번 화에서의 행동을 차별화하라.
 
 WRITING_GUIDELINES_SECTION: |
   ### 📌 집필 지침 (위반 시 즉시 REJECT)
