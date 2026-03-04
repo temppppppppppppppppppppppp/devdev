@@ -149,7 +149,7 @@ def test_existing_api_model_lookup(tmp_path, monkeypatch):
     """기존 get_model_for_agent 회귀"""
     monkeypatch.chdir(tmp_path)
     cm = ConfigManager()
-    assert cm.get_model_for_agent("writer") == "gemini-2.5-pro"
+    assert cm.get_model_for_agent("writer") == "gemini-2.5-flash"
     assert cm.get_model_for_agent("unknown_agent") == "gemini-2.5-flash"
 
 

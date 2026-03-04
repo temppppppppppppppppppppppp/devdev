@@ -32,3 +32,9 @@ sub_components:
   three_phase_blueprint_generator:
     ensemble: "gemini-2.5-pro"
     validator: "gemini-2.5-flash"
+
+# ── [SSOT] 추상 역할 상수 — constants.py AIModels에서 참조 ──────────────────
+role_constants:
+  pro_main: "gemini-2.5-pro"      # 고사양: writer/architect/analyst/director 전용
+  flash_main: "gemini-2.5-flash"  # 경량: module/analysis/summary 전용
+  emergency: "gemini-2.5-pro"     # 긴급/429 폴백

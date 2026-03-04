@@ -28,6 +28,8 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
+from modules.core.constants import AIModels
+
 
 class ReflectionTarget(Enum):
     """성찰 대상"""
@@ -152,7 +154,7 @@ JSON 형식으로 응답:
 
 수정된 전체 내용을 출력하세요. 형식은 원본과 동일하게 유지하세요."""
 
-    def __init__(self, api_client, model: str = "gemini-2.5-pro"):
+    def __init__(self, api_client, model: str = AIModels.DEFAULT_ARCHITECT):
         """
         [V60.24] Gemini 3로 변경
         Args:
