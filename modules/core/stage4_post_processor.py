@@ -887,6 +887,25 @@ class Stage4PostProcessor:
                 except Exception as _cg_err:
                     logging.debug("[Stage4] causal_graph dual-write 실패 (비치명): %s", _cg_err)
 
+            # [LM-post-1] causal_graph Read → Director MC 보조 컨텍스트 주입
+            try:
+                _causal_links = self.ctx.current_project.db.get_recent_causal_links(next_ep, lookback=10)
+                if _causal_links:
+                    _causal_lines = ["[인과 관계 요약]"]
+                    for _lk in _causal_links[:8]:
+                        _cause = _lk.get("cause", "") or _lk.get("trigger", "")
+                        _effect = _lk.get("effect", "") or _lk.get("consequence", "")
+                        _ep = _lk.get("ep", "?")
+                        if _cause and _effect:
+                            _causal_lines.append(f"- ep{_ep}: {_cause} → {_effect}")
+                    if len(_causal_lines) > 1:
+                        _director_mc_parts = getattr(self.ctx, "_director_mc_parts", None)
+                        if isinstance(_director_mc_parts, list):
+                            _director_mc_parts.append("\n".join(_causal_lines))
+                        logging.debug("[causal_graph] Director MC 인과 컨텍스트 주입: %d건", len(_causal_lines) - 1)
+            except Exception as _cg_read_err:
+                logging.debug("[causal_graph] Director MC 주입 실패 (비치명): %s", _cg_read_err)
+
             if actual_truth or state_updates_from_audit:
                 state_log_data = {
                     "actual_truth": actual_truth if actual_truth else final_state_updates,

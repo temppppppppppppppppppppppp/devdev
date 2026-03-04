@@ -571,7 +571,12 @@ class ValidationOrchestrator:
                 # context는 validation_context에서 추출
                 context_obj = validation_context.get("_context")
                 if context_obj:
-                    self.retrospective = RetrospectiveValidator(context_obj, lookback_episodes=5)
+                    _retro_lookback = _threshold("retrospective.lookback_episodes", 10)
+                    try:
+                        _retro_lookback = int(_retro_lookback)
+                    except (TypeError, ValueError):
+                        _retro_lookback = 10
+                    self.retrospective = RetrospectiveValidator(context_obj, lookback_episodes=_retro_lookback)
 
             if self.retrospective:
                 retrospective_result = self.retrospective.validate_long_term_consistency(

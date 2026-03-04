@@ -141,6 +141,10 @@ satisfaction:
   frustration_warning_streak: 3    # 좌절 N화 연속 시 WARNING (보상 에피소드 권장)
   frustration_critical_streak: 5   # 좌절 N화 연속 시 강한 WARNING (대리만족 부재 심각)
 
+# ── 장기 일관성(Retrospective) ─────────────────────────────────
+retrospective:
+  lookback_episodes: 10          # 최근 N화 비교 (LM-post-1: 5→10)
+
 # ── 오케스트레이터 설정 ──────────────────────────────────────
 orchestrator:
   use_pre_llm: true                # PreLLM 사전검증 활성화
