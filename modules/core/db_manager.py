@@ -1712,6 +1712,30 @@ class DBManager:
             )
             return "\n".join([f"- [제 {r['ep_num']} 화]: {r['summary']}" for r in reversed(cur.fetchall())])
 
+    def get_recent_causal_links(self, current_ep: int, lookback: int = 10) -> list[dict]:
+        """[LM-post-1] 최근 N화의 인과 링크 목록 반환."""
+        start_ep = max(1, int(current_ep) - int(lookback))
+        try:
+            with self._lock:
+                cur = self.cursor.execute(
+                    "SELECT ep_num, data FROM causal_graph WHERE ep_num >= ? AND ep_num < ? ORDER BY ep_num",
+                    (start_ep, current_ep),
+                )
+                results: list[dict] = []
+                for row in cur.fetchall():
+                    raw = row["data"]
+                    try:
+                        link = json.loads(raw) if isinstance(raw, str) else {}
+                    except (json.JSONDecodeError, ValueError, TypeError):
+                        continue
+                    if isinstance(link, dict) and link:
+                        link.setdefault("ep", row["ep_num"])
+                        results.append(link)
+                return results
+        except Exception as _e:
+            logging.debug("[causal_graph] get_recent_causal_links 실패 (비치명): %s", _e)
+            return []
+
         # --- [Section 5: 관계 및 인과] ---
 
     def update_karma(self, npc_name, mis_val, obs_val, ep_num) -> None:
