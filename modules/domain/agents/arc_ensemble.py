@@ -110,7 +110,9 @@ class ArcEnsembleGenerator(BaseAgent):
     ENSEMBLE_TIMEOUT = _TIMEOUTS.get("ensemble", 300)
     SINGLE_CANDIDATE_TIMEOUT = _TIMEOUTS.get("single", 240)
 
-    def __init__(self, context, client, model_tier: str = "gemini-2.5-pro"):
+    def __init__(
+        self, context, client, model_tier: str = "gemini-2.5-pro"
+    ):  # [SSOT-P2] 호출부(main_a.py:L1513)가 model_tier 인자를 명시 전달
         # [V62.4] gemini-2.5-pro로 변경 - 3-pro 쿼터 소진 문제 방지
         super().__init__(context, client, model_tier)
         # [V60.37] 스마트 폴백 (BaseAgent에서 자동 설정: gemini-3 → gemini-2.5-pro)
@@ -887,6 +889,8 @@ class ArcEnsembleGenerator(BaseAgent):
         return "\n".join(lines)
 
 
-def create_ensemble_generator(context, client, model_tier: str = "gemini-2.5-pro"):
+def create_ensemble_generator(
+    context, client, model_tier: str = "gemini-2.5-pro"
+):  # [SSOT-P2] 호출부(main_a.py:L1513)가 model_tier 인자를 명시 전달
     """[V62.4] ArcEnsembleGenerator 생성 헬퍼 - gemini-2.5-pro 사용"""
     return ArcEnsembleGenerator(context, client, model_tier)

@@ -589,6 +589,8 @@ class ArcCorrector(BaseAgent):
             }
 
 
-def create_arc_corrector(context, client, model_tier: str = "gemini-2.5-flash"):
+def create_arc_corrector(
+    context, client, model_tier: str = "gemini-2.5-flash"
+):  # [SSOT-P2] 호출부(main_a.py:L1548)가 model_tier 인자를 명시 전달
     """ArcCorrector 생성 헬퍼"""
     return ArcCorrector(context, client, model_tier)

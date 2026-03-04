@@ -37,7 +37,9 @@ class NpcDriftAdvisor:
         Returns:
             list[dict]: [{"npc", "field", "expected", "found_in_ms", "severity", "check"}]
         """
-        if not manuscript or not npc_snapshots:
+        if not isinstance(manuscript, str) or not manuscript:
+            return []
+        if not isinstance(npc_snapshots, dict) or not npc_snapshots:
             return []
 
         appearing = self._find_appearing_npcs(manuscript, npc_snapshots)
@@ -63,6 +65,8 @@ class NpcDriftAdvisor:
 
     def _find_appearing_npcs(self, manuscript, npc_snapshots):
         """원고에 등장하는 스냅샷 NPC를 빈도 내림차순으로 반환."""
+        if not isinstance(manuscript, str) or not isinstance(npc_snapshots, dict):
+            return []
         counts = {}
         for name in npc_snapshots:
             if not name or len(name) < 2:
@@ -119,7 +123,7 @@ class NpcDriftAdvisor:
             if not response:
                 return []
             return self._parse_llm_response(response, ep_num)
-        except (json.JSONDecodeError, ValueError, RuntimeError, OSError) as e:
+        except Exception as e:
             logger.warning("[LM-B] NpcDriftAdvisor LLM 호출 실패 (비치명): %s", str(e)[:80])
             return []
 
