@@ -43,10 +43,25 @@ class ConfigManager:
             if models_from_yaml
             else {
                 "analyst": "gemini-2.5-pro",
-                "writer": "gemini-2.5-pro",
+                "manager": "gemini-2.5-flash",
+                "chief_writer": "gemini-2.5-pro",
+                "blueprint_ensemble": "gemini-2.5-pro",
+                "three_phase_blueprint_generator": "gemini-2.5-pro",
+                "state_locked_arc_generator": "gemini-2.5-pro",
+                "block_enricher": "gemini-2.5-flash",
+                "preflight_checker": "gemini-2.5-flash",
+                "state_extractor": "gemini-2.5-flash",
+                "four_phase_arc_generator": "gemini-2.5-pro",
+                "continuity_inspector": "gemini-2.5-pro",
                 "director": "gemini-2.5-pro",
-                "manager": "gemini-2.5-pro",
-                "editor": "gemini-2.5-pro",
+                "arc_corrector": "gemini-2.5-flash",
+                "arc_critic": "gemini-2.5-flash",
+                "consensus_validator": "gemini-2.5-flash",
+                "unified_arc_validator": "gemini-2.5-flash",
+                "unified_blueprint_validator": "gemini-2.5-flash",
+                "critic": "gemini-2.5-flash",
+                "weaver": "gemini-2.5-flash",
+                "writer": "gemini-2.5-flash",
             },
             "limits": {
                 "max_retries": 10,  # V20 매니페스토 기준 재시도 횟수

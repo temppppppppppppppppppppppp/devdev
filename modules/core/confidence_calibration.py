@@ -29,7 +29,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
-from modules.core.constants import ManuscriptLimits
+from modules.core.constants import AIModels, ManuscriptLimits
 
 
 class ContentType(Enum):
@@ -83,15 +83,16 @@ class ConfidenceCalibrator:
         "fast_pass": 85,  # 이 이상이면 빠른 통과
     }
 
-    def __init__(self, api_client=None, use_llm: bool = False):
+    def __init__(self, api_client=None, use_llm: bool = False, model: str = AIModels.FLASH_ANALYSIS_MODEL):
         """
         Args:
             api_client: Google GenAI 클라이언트 (LLM 사용 시)
             use_llm: LLM 기반 평가 사용 여부 (기본 Python만)
+            model: LLM 평가에 사용할 모델
         """
         self.client = api_client
         self.use_llm = use_llm and api_client is not None
-        self.model = "gemini-2.5-flash"
+        self.model = model if isinstance(model, str) and model.strip() else AIModels.FLASH_ANALYSIS_MODEL
         self.enabled = True
 
     def _score_to_level(self, score: int) -> ConfidenceLevel:
