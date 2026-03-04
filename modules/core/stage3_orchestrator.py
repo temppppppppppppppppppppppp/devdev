@@ -369,7 +369,7 @@ class Stage3Orchestrator:
                 working_ep, arc_no, arc_data, blueprint, pipeline_result, prev_blueprints, success_count, fail_count
             )
         else:
-            return self._handle_failure(working_ep, pipeline_result, success_count, fail_count)
+            return self._handle_failure(working_ep, pipeline_result, success_count, fail_count, arc_no=arc_no)
 
     # ─────────────────────────────────────────────────────────────
     # Entity Registry 캐시
@@ -688,6 +688,7 @@ class Stage3Orchestrator:
             if _db and hasattr(_db, "save_stage_attempt"):
                 _director = getattr(getattr(ctx, "agents", {}), "get", lambda *_: None)("director")
                 _model = getattr(_director, "primary_model", None) if _director else None
+                _attempt_num = self._extract_stage3_attempt_num(pipeline_result)
                 _score = pipeline_result.get("last_score", 0)
                 if not isinstance(_score, int):
                     try:
@@ -697,7 +698,7 @@ class Stage3Orchestrator:
                 _db.save_stage_attempt(
                     stage=3,
                     verdict=str(_final_verdict),
-                    attempt_num=1,
+                    attempt_num=_attempt_num,
                     ep_num=working_ep,
                     arc_num=arc_no,
                     score=_score,
@@ -796,6 +797,81 @@ class Stage3Orchestrator:
                 _logging.debug("[Stage3] QualityDashboard PASS 기록 실패 (무시): %s", _e)
         return {"next_ep": working_ep + 1, "success_count": success_count + 1, "fail_count": 0}
 
+    @staticmethod
+    def _extract_stage3_attempt_num(pipeline_result: dict) -> int:
+        """Convert pipeline retries(0-based) to attempt number(1-based)."""
+        if not isinstance(pipeline_result, dict):
+            return 1
+        retries = pipeline_result.get("retries", 0)
+        try:
+            return max(1, int(retries) + 1)
+        except (TypeError, ValueError):
+            return 1
+
+    @staticmethod
+    def _resolve_stage3_arc_num(arc_no: int | None, pipeline_result: dict) -> int | None:
+        """Recover arc number for REJECT path when available."""
+        if isinstance(arc_no, int) and arc_no > 0:
+            return arc_no
+        if isinstance(pipeline_result, dict):
+            candidate = pipeline_result.get("arc_no")
+            try:
+                candidate_int = int(candidate)
+                if candidate_int > 0:
+                    return candidate_int
+            except (TypeError, ValueError):
+                return None
+        return None
+
+    @staticmethod
+    def _build_stage3_reject_reason(pipeline_result: dict) -> str:
+        """Assemble a compact, informative reject reason for stage_attempts logging."""
+        if not isinstance(pipeline_result, dict):
+            return ""
+
+        parts: list[str] = []
+        error_text = str(pipeline_result.get("error", "") or "").strip()
+        if error_text:
+            parts.append(error_text[:240])
+
+        score = pipeline_result.get("last_score")
+        if isinstance(score, int | float):
+            parts.append(f"score={int(score)}")
+
+        if pipeline_result.get("quality_gate_failed"):
+            parts.append("quality_gate_failed=1")
+
+        phases = pipeline_result.get("phases", {})
+        if isinstance(phases, dict):
+            generate = phases.get("generate", {})
+            if isinstance(generate, dict):
+                strategy = str(generate.get("selected_strategy", "") or "").strip()
+                if strategy:
+                    parts.append(f"strategy={strategy[:40]}")
+
+            validate = phases.get("validate", {})
+            if isinstance(validate, dict):
+                verdict = str(validate.get("verdict", "") or "").strip()
+                if verdict:
+                    parts.append(f"validate_verdict={verdict[:20]}")
+                issues_count = validate.get("issues_count")
+                if isinstance(issues_count, int):
+                    parts.append(f"issues={issues_count}")
+                notes = str(validate.get("comparison_notes", "") or "").strip()
+                if notes:
+                    parts.append(f"notes={notes[:160]}")
+                contradictions = validate.get("contradictions")
+                if isinstance(contradictions, list) and contradictions:
+                    _contr = "; ".join(str(c)[:60] for c in contradictions[:2])
+                    if _contr:
+                        parts.append(f"contradictions={_contr}")
+
+        if not parts:
+            verdict = str(pipeline_result.get("final_verdict", "REJECT") or "REJECT")
+            parts.append(f"final_verdict={verdict[:20]}")
+
+        return " | ".join(parts)[:500]
+
     def _detect_inventory_gaps(self, blueprint: dict, arc_data: dict) -> list[dict]:
         """[TF-49] Blueprint 참조 아이템 중 현재 미보유 항목 탐지."""
         ctx = self.ctx
@@ -861,7 +937,9 @@ class Stage3Orchestrator:
             if item not in owned
         ]
 
-    def _handle_failure(self, working_ep, pipeline_result, success_count, fail_count) -> dict:
+    def _handle_failure(
+        self, working_ep, pipeline_result, success_count, fail_count, arc_no: int | None = None
+    ) -> dict:
         """Blueprint 생성 실패 시 처리. 항상 break=True를 반환하여 루프를 종료한다
         (순차 의존성: 후속 에피소드는 현재 에피소드 Blueprint에 의존)."""
         ctx = self.ctx
@@ -887,6 +965,9 @@ class Stage3Orchestrator:
             if _db and hasattr(_db, "save_stage_attempt"):
                 _director = getattr(getattr(ctx, "agents", {}), "get", lambda *_: None)("director")
                 _model = getattr(_director, "primary_model", None) if _director else None
+                _attempt_num = self._extract_stage3_attempt_num(pipeline_result)
+                _arc_num = self._resolve_stage3_arc_num(arc_no=arc_no, pipeline_result=pipeline_result)
+                _reject_reason = self._build_stage3_reject_reason(pipeline_result)
                 _score = pipeline_result.get("last_score", 0)
                 if not isinstance(_score, int):
                     try:
@@ -896,11 +977,11 @@ class Stage3Orchestrator:
                 _db.save_stage_attempt(
                     stage=3,
                     verdict=str(pipeline_result.get("final_verdict", "REJECT")),
-                    attempt_num=1,
+                    attempt_num=_attempt_num,
                     ep_num=working_ep,
-                    arc_num=None,
+                    arc_num=_arc_num,
                     score=_score,
-                    reject_reason=str(pipeline_result.get("error", ""))[:500],
+                    reject_reason=_reject_reason,
                     model=str(_model) if _model else None,
                 )
         except Exception as _sa_err:

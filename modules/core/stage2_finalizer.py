@@ -2,6 +2,7 @@
 
 import json
 import logging
+import time
 
 from modules.core.metrics_collector import get_metrics_collector
 from modules.models.arc import validate_arc
@@ -74,6 +75,8 @@ class Stage2Finalizer:
                 logging.warning(f"⚠️ [V64.P4-fix] 플롯 중복 감지 실패: {e}")
 
         # [V65] PerfTimer: Director 대면 측정
+        _director_duration_ms = None
+        _director_t0 = time.monotonic()
         try:
             self.ctx.perf_timer.start(f"s2_arc_{global_arc_no}_director")
         except (AttributeError, TypeError) as e:
@@ -166,9 +169,13 @@ class Stage2Finalizer:
                 "self_consistency": {},
             }
         try:
-            self.ctx.perf_timer.stop(f"s2_arc_{global_arc_no}_director")
+            _elapsed = self.ctx.perf_timer.stop(f"s2_arc_{global_arc_no}_director")
+            if _elapsed and _elapsed > 0:
+                _director_duration_ms = max(0, int(_elapsed * 1000))
         except (AttributeError, TypeError) as e:
             logging.debug(f"[PerfTimer] stop s2 director: {e}")
+        if _director_duration_ms is None:
+            _director_duration_ms = max(0, int((time.monotonic() - _director_t0) * 1000))
 
         # Director 심사 결과 사용자 출력
         _d_decision = audit.get("decision", "?")
@@ -626,6 +633,7 @@ class Stage2Finalizer:
                 attempt=attempt,
                 generation_method=generation_method,
                 audit=audit,
+                duration_ms=_director_duration_ms,
                 is_patch=is_patch,
                 prev_score=prev_score,
                 patch_fallback=patch_fallback,
@@ -791,6 +799,7 @@ class Stage2Finalizer:
                 attempt=attempt,
                 generation_method=generation_method,
                 audit=audit,
+                duration_ms=_director_duration_ms,
                 is_patch=is_patch,
                 prev_score=prev_score,
                 patch_fallback=patch_fallback,
@@ -819,6 +828,7 @@ class Stage2Finalizer:
         attempt: int,
         generation_method: str,
         audit: dict,
+        duration_ms: int | None = None,
         is_patch: bool = False,
         prev_score: float = 0.0,
         patch_fallback: bool = False,
@@ -853,6 +863,8 @@ class Stage2Finalizer:
                         _score = 0
                 _director = getattr(getattr(self.ctx, "agents", {}), "get", lambda *_: None)("director")
                 _model = getattr(_director, "primary_model", None) if _director else None
+                _failure_category = self._extract_failure_category(audit)
+                _advisory_flags = self._extract_advisory_flags(audit)
                 _db.save_stage_attempt(
                     stage=2,
                     verdict=str(audit.get("decision", "PASS")),
@@ -860,8 +872,11 @@ class Stage2Finalizer:
                     ep_num=global_arc_no,
                     arc_num=global_arc_no,
                     score=_score,
+                    failure_category=_failure_category,
                     fix_scope=str(audit.get("fix_scope", "") or ""),
                     model=str(_model) if _model else None,
+                    duration_ms=duration_ms,
+                    advisory_flags=_advisory_flags,
                 )
         except Exception as _sa_err:
             logging.debug("[stage_attempts] Stage2 PASS 기록 실패 (비차단): %s", _sa_err)
@@ -901,6 +916,7 @@ class Stage2Finalizer:
         attempt: int,
         generation_method: str,
         audit: dict,
+        duration_ms: int | None = None,
         is_patch: bool = False,
         prev_score: float = 0.0,
         patch_fallback: bool = False,
@@ -936,6 +952,8 @@ class Stage2Finalizer:
                         _score = 0
                 _director = getattr(getattr(self.ctx, "agents", {}), "get", lambda *_: None)("director")
                 _model = getattr(_director, "primary_model", None) if _director else None
+                _failure_category = self._extract_failure_category(audit)
+                _advisory_flags = self._extract_advisory_flags(audit)
                 _db.save_stage_attempt(
                     stage=2,
                     verdict=str(audit.get("decision", "REJECT")),
@@ -943,9 +961,12 @@ class Stage2Finalizer:
                     ep_num=global_arc_no,
                     arc_num=global_arc_no,
                     score=_score,
+                    failure_category=_failure_category,
                     reject_reason=str(audit.get("reason", ""))[:500],
                     fix_scope=str(audit.get("fix_scope", "") or ""),
                     model=str(_model) if _model else None,
+                    duration_ms=duration_ms,
+                    advisory_flags=_advisory_flags,
                 )
         except Exception as _sa_err:
             logging.debug("[stage_attempts] Stage2 REJECT 기록 실패 (비차단): %s", _sa_err)
@@ -1015,3 +1036,50 @@ class Stage2Finalizer:
                 )
             except Exception as e:  # [V64.P4] OPTIONAL: optimizer failure recording
                 logging.debug(f"[SILENT] optimizer failure recording: {e}")
+
+    @staticmethod
+    def _extract_failure_category(audit: dict) -> str | None:
+        """Best-effort category extraction without fabricating missing fields."""
+        if not isinstance(audit, dict):
+            return None
+        for key in ("error_category", "failure_category", "reject_category"):
+            value = audit.get(key)
+            if isinstance(value, str) and value.strip():
+                return value.strip()[:80]
+        contradiction_types = audit.get("contradiction_types")
+        if isinstance(contradiction_types, list):
+            for item in contradiction_types:
+                if isinstance(item, str) and item.strip():
+                    return item.strip()[:80]
+        return None
+
+    @staticmethod
+    def _extract_advisory_flags(audit: dict) -> dict | None:
+        """Collect advisory-like metadata already available in Director audit output."""
+        if not isinstance(audit, dict):
+            return None
+
+        flags: dict = {}
+        if audit.get("v60_43_api_warning"):
+            flags["v60_43_api_warning"] = 1
+
+        contradictions = audit.get("contradictions")
+        if isinstance(contradictions, list):
+            flags["contradictions_count"] = len(contradictions)
+
+        contradiction_types = audit.get("contradiction_types")
+        if isinstance(contradiction_types, list):
+            compact_types = [str(t)[:40] for t in contradiction_types[:5] if str(t).strip()]
+            if compact_types:
+                flags["contradiction_types"] = compact_types
+
+        self_consistency = audit.get("self_consistency")
+        if isinstance(self_consistency, dict):
+            votes = self_consistency.get("votes")
+            pass_votes = self_consistency.get("pass_votes")
+            if isinstance(votes, int):
+                flags["votes"] = votes
+            if isinstance(pass_votes, int):
+                flags["pass_votes"] = pass_votes
+
+        return flags or None
