@@ -119,7 +119,9 @@ JSON 형식으로 응답:
 }}
 ```"""
 
-    def __init__(self, api_client, model: str = "gemini-2.5-flash"):
+    def __init__(
+        self, api_client, model: str = "gemini-2.5-flash"
+    ):  # [SSOT-P2] 호출부(main_a.py:L1906)가 model 인자를 명시 전달
         """
         Args:
             api_client: Google GenAI 클라이언트

@@ -40,7 +40,7 @@ class NumericDriftAdvisor:
         Returns:
             list[dict]: [{"key", "issue", "history_snippet", "severity", "check"}]
         """
-        if not numbers:
+        if not isinstance(numbers, dict) or not numbers:
             return []
 
         # [LM-Tier TF-B] Python 사전 감지: 지수 성장 패턴
@@ -113,7 +113,7 @@ class NumericDriftAdvisor:
             if not response:
                 return []
             return self._parse_llm_response(response, ep_num)
-        except (json.JSONDecodeError, ValueError, RuntimeError, OSError) as e:
+        except Exception as e:
             logger.warning("[LM-C] NumericDriftAdvisor LLM 호출 실패 (비치명): %s", str(e)[:80])
             return []
 
@@ -178,6 +178,8 @@ class NumericDriftAdvisor:
     def _detect_exponential_growth(self, numbers) -> list[str]:
         """Python 사전 감지: 100배+ 급등 or 5연속 50%+ 성장."""
         warnings: list[str] = []
+        if not isinstance(numbers, dict):
+            return warnings
         for key, entry in (numbers or {}).items():
             if not isinstance(entry, dict):
                 continue
