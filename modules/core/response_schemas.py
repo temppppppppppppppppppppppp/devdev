@@ -155,6 +155,7 @@ DIRECTOR_AUDIT_SCHEMA = types.Schema(
                 "npc_identity": types.Schema(type=types.Type.STRING, enum=["OK", "ISSUE"]),
                 "time_progression": types.Schema(type=types.Type.STRING, enum=["OK", "ISSUE"]),
                 "opening_diversity": types.Schema(type=types.Type.STRING, enum=["OK", "ISSUE"]),
+                "timeline_arc_consistency": types.Schema(type=types.Type.STRING, enum=["OK", "ISSUE"]),  # [NS-4]
             },
         ),
     },

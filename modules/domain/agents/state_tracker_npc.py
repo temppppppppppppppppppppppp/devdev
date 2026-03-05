@@ -12,6 +12,8 @@ import logging
 import re
 import time
 
+from modules.core.constants import AIModels  # [TF-9B] 모델 SSOT
+
 # ═══════════════════════════════════════════════════════════════
 # [V66.1] C-2: Module-level compiled regex patterns
 #  메서드 내부 re.compile 호출을 모듈 상수로 이동 (~25ms/Arc 절감)
@@ -747,7 +749,7 @@ class StateTrackerNPC:
             # [V63.3] 중복 딜레이 제거 (직접 API 호출이므로 최소 지연만)
             time.sleep(0.1)
             response = self.tracker._llm_client.models.generate_content(
-                model="gemini-2.5-flash",
+                model=AIModels.FLASH_ANALYSIS_MODEL,  # [TF-9B] SSOT
                 contents=prompt,
                 config=_types.GenerateContentConfig(
                     temperature=0.0,
@@ -2119,7 +2121,7 @@ class StateTrackerNPC:
 
             time.sleep(0.1)
             response = self.tracker._llm_client.models.generate_content(
-                model="gemini-2.5-flash",
+                model=AIModels.FLASH_ANALYSIS_MODEL,  # [TF-9B] SSOT
                 contents=prompt,
                 config=_types.GenerateContentConfig(
                     temperature=0.0,
@@ -2152,8 +2154,8 @@ class StateTrackerNPC:
                         removed.append(name)
 
             if removed:
-                logging.info(f" \U0001f9f9 [V69] NPC 레지스트리 LLM 정리 (Arc {arc_no}): "
-                    f"{len(removed)}개 오탐 제거 - {removed}"
+                logging.info(
+                    f" \U0001f9f9 [V69] NPC 레지스트리 LLM 정리 (Arc {arc_no}): {len(removed)}개 오탐 제거 - {removed}"
                 )
 
             return removed

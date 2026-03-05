@@ -445,12 +445,13 @@ class Stage3Orchestrator:
     def _extract_arc_time_markers(self, arc_data: dict) -> list:
         """[NS-4] Arc tactical_doc에서 시간 마커 추출 (regex, LLM 0회)"""
         import re as _re
+
         _text = (arc_data.get("tactical_doc") or "") + "\n" + (arc_data.get("beat_sequence") or "")
         _patterns = [
-            r"\d{4}년\s*\d{1,2}월(?:\s*\d{1,2}일)?",    # 2006년 7월 12일
-            r"\d{1,2}월\s*\d{1,2}일",                     # 7월 12일
+            r"\d{4}년\s*\d{1,2}월(?:\s*\d{1,2}일)?",  # 2006년 7월 12일
+            r"\d{1,2}월\s*\d{1,2}일",  # 7월 12일
             r"\d{1,2}월(?:\s*(?:말|초|중순|하순|상순))?",  # 5월 말
-            r"\d+(?:일|주|달|개월|년)\s*(?:후|전)",         # 2달 후
+            r"\d+(?:일|주|달|개월|년)\s*(?:후|전)",  # 2달 후
         ]
         _found = []
         for _p in _patterns:
@@ -591,7 +592,8 @@ class Stage3Orchestrator:
                             )
                             _tb_text = _tb_header + "\n" + "\n".join(_block_fields)
                             _bp_semantic_ctx = _tb_text + ("\n\n" + _bp_semantic_ctx if _bp_semantic_ctx else "")
-                            _logging.info("[TF9] Treatment Block 주입 완료 (arc_idx=%d, ep=%d~%d, %d자)",
+                            _logging.info(
+                                "[TF9] Treatment Block 주입 완료 (arc_idx=%d, ep=%d~%d, %d자)",
                                 arc_idx,
                                 _ep_start,
                                 _ep_end,
@@ -644,7 +646,8 @@ class Stage3Orchestrator:
                         + f"\n... ({ContextLimits.MAX_CONTEXT_CHARS // 1000}K자 절삭)"
                     )
                 if _prev_ms_for_bp:
-                    _logging.info(f" [V67] Blueprint용 이전 원고 {len(_prev_ms_for_bp)}개 로드 ({len(_prev_ms_text_for_bp):,}자)"
+                    _logging.info(
+                        f" [V67] Blueprint용 이전 원고 {len(_prev_ms_for_bp)}개 로드 ({len(_prev_ms_text_for_bp):,}자)"
                     )
 
                 # [TF-4] prev_hud 추출 — BlockingValidator consistency checks용
@@ -730,9 +733,9 @@ class Stage3Orchestrator:
                 _director = getattr(getattr(ctx, "agents", {}), "get", lambda *_: None)("director")
                 _model = getattr(_director, "primary_model", None) if _director else None
                 _attempt_num = self._extract_stage3_attempt_num(pipeline_result)
-                _score = pipeline_result.get("last_score") or pipeline_result.get("phases", {}).get(
-                    "generate", {}
-                ).get("selected_score", 0)
+                _score = pipeline_result.get("last_score") or pipeline_result.get("phases", {}).get("generate", {}).get(
+                    "selected_score", 0
+                )
                 if not isinstance(_score, int):
                     try:
                         _score = int(_score)
@@ -924,15 +927,15 @@ class Stage3Orchestrator:
         if ctx.world_state:
             try:
                 owned = set(ctx.world_state.get_owned_items())
-            except Exception:
-                pass
+            except Exception as e:
+                _logging.debug("[SilentPass:S3] get_owned_items failed: %s", e)
         if not owned:
             _cdb = getattr(self.app, "constraint_db", None)
             if _cdb:
                 try:
                     owned = set(_cdb.get_current_inventory(arc_data.get("arc_no", 1) - 1))
-                except Exception:
-                    pass
+                except Exception as e:
+                    _logging.debug("[SilentPass:S3] get_current_inventory fallback failed: %s", e)
 
         # 2. Arc 계획된 신규 아이템 (미보유 중 이번 Arc에서 획득 예정)
         _sc = arc_data.get("state_constraints", {}) if isinstance(arc_data, dict) else {}
@@ -1011,9 +1014,9 @@ class Stage3Orchestrator:
                 _attempt_num = self._extract_stage3_attempt_num(pipeline_result)
                 _arc_num = self._resolve_stage3_arc_num(arc_no=arc_no, pipeline_result=pipeline_result)
                 _reject_reason = self._build_stage3_reject_reason(pipeline_result)
-                _score = pipeline_result.get("last_score") or pipeline_result.get("phases", {}).get(
-                    "generate", {}
-                ).get("selected_score", 0)
+                _score = pipeline_result.get("last_score") or pipeline_result.get("phases", {}).get("generate", {}).get(
+                    "selected_score", 0
+                )
                 if not isinstance(_score, int):
                     try:
                         _score = int(_score)
