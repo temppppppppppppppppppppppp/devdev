@@ -83,8 +83,7 @@ def build_justification_guidance(hud_report: str, genre_name: str) -> str:
         try:
             parts.append(get_justification_guide(genre_name, constraint_type))
         except Exception as guide_err:
-            logging.warning(
-                "[Sweep5-D] justification guide load failed (constraint=%s): %s",
+            logging.warning("[Sweep5-D] justification guide load failed (constraint=%s): %s",
                 constraint_type,
                 guide_err,
             )
@@ -203,8 +202,7 @@ def _extract_recent_events(db, current_ep: int, n_episodes: int = 3) -> list:
                                 }
                             )
     except Exception as events_err:
-        logging.warning(
-            "[Sweep5-D] recent events extraction failed (ep=%s): %s",
+        logging.warning("[Sweep5-D] recent events extraction failed (ep=%s): %s",
             current_ep,
             events_err,
         )
@@ -229,8 +227,7 @@ def _extract_npc_last_states(master_bible: dict, current_ep: int) -> dict:
             if isinstance(last_appearance, int) and 0 < last_appearance < current_ep:
                 npc_states[name] = {"relationship": relationship, "last_ep": last_appearance}
     except Exception as npc_err:
-        logging.warning(
-            "[Sweep5-D] npc last-state extraction failed (ep=%s): %s",
+        logging.warning("[Sweep5-D] npc last-state extraction failed (ep=%s): %s",
             current_ep,
             npc_err,
         )

@@ -1,0 +1,218 @@
+{
+  "block_id": "Block 4",
+  "model": "gemini-2.5-pro",
+  "elapsed_s": 36.7,
+  "input": {
+    "block_no": 4,
+    "block_id": "Block 4",
+    "title": "금의 귀환",
+    "content": {
+      "context": "2006년 5~6월. 유가 계속 상승. 78달러 터치. 한시우는 나머지 원유 포지션을 전량 정리한다. 수익 10억 추가. 총 35억. 다음 타깃은 금이다. 현재 온스당 620달러. 달러 약세와 인플레 우려로 700달러까지 간다는 걸 안다.",
+      "event_villain": "금 시장은 원유보다 느리다. 620달러에서 진입했지만, 두 달간 횡보. 오히려 소폭 하락해 600달러대로 내려간다. 업계에서 '금은 죽은 자산'이라는 말이 들린다. 박성호가 조심스럽게 말한다. '고객님, 금은 좀... 옛날 자산 아닙니까? 요즘은 주식이나 부동산이...'",
+      "solution": "한시우는 무시한다. '기다려.' 두 달을 버틴다. 8월, 연준이 금리 인상 중단을 시사한다. 달러 약세 시작. 금 620달러 → 680달러. 한시우는 680달러에서 절반 익절. 15억 투입분에서 5억 수익.",
+      "reward": "금 포지션으로 첫 수확. 5억 확정. 나머지는 700달러까지 홀딩. 총 자산 40억. 4개월 만에 2배. 한시우는 담담하다. 이건 워밍업이다."
+    },
+    "stakes": "15억을 금에 묶어두는 기회비용. 금이 안 오르면 다른 곳에 투자했을 수익을 날린다. 또한 두 달 횡보 동안 '틀렸나?' 하는 심리적 압박.",
+    "power_shift": {
+      "protagonist": "원유에 이어 금까지 성공. 원자재 트레이더로 입지 확보. 증권가에 '재벌가 막내가 귀신같이 찍는다'는 소문.",
+      "antagonist": "가족은 여전히 무관심. 형들은 후계 경쟁에 바쁘다."
+    },
+    "relationship_delta": [
+      {
+        "target": "박성호 (담당 PB)",
+        "before": "경외하지만 반신반의 (금은 의문)",
+        "after": "완전한 신뢰. '이 사람 말은 무조건 따른다'"
+      }
+    ],
+    "foreshadow": [
+      "뉴스: '미국 서브프라임 모기지 연체율 상승' - 먼 미래 복선",
+      "한시우 독백: '냄새가 나는데...' - Block 7~10 서브프라임 숏 복선",
+      "한시우가 '미국 부동산'이라는 단어에 눈을 가늘게 뜸 - 리먼 쇼크 암시"
+    ],
+    "callback": [
+      "Block 2에서 '금도 간다'고 중얼거린 것의 회수"
+    ],
+    "emotional_beat": {
+      "type": "steady_growth",
+      "intensity": 6
+    },
+    "tension_level": 5,
+    "pov_character": "한시우",
+    "location": {
+      "place": "서울 강남, SW인베스트먼트 오피스",
+      "type": "실내"
+    },
+    "time_span": {
+      "duration": "4개월",
+      "in_story_time": "2006년 5월 ~ 8월"
+    },
+    "genre_ext": {
+      "capital_before": "30억",
+      "capital_after": "45억",
+      "capital_delta": "+15억 (5억 확정 + 10억 미실현)",
+      "profit_loss": "+5억 (확정)",
+      "method": "레버리지 롱, 부분 익절",
+      "investment_type": "원자재 선물 (골드)",
+      "deal_type": "시장 진입 → 부분 청산",
+      "leverage_used": [
+        "회귀 지식 (연준 금리 정책)",
+        "시장의 무관심 역이용",
+        "인내심"
+      ],
+      "opponent": {
+        "name": "시장 컨센서스 ('금은 죽은 자산')",
+        "type": "시장 심리",
+        "weakness_exploited": "단기 성과에 집착하는 근시안"
+      },
+      "historical_event": {
+        "name": "연준 금리 인상 중단 시사",
+        "year": 2006,
+        "month": "8월",
+        "how_exploited": "달러 약세 → 금 강세 예측"
+      },
+      "time_pressure": "두 달 횡보 기간 동안의 심리적 압박. 틀렸다는 의심.",
+      "knowledge_used": "2006년 하반기 금 620→700달러 상승",
+      "risk_level": "중위험",
+      "business_sector": "원자재/귀금속"
+    },
+    "regression_ext": {
+      "is_regressor": true,
+      "regression_type": "회귀",
+      "timeline_knowledge": {
+        "info_used": "2006년 연준 금리 정책, 금 가격 추이",
+        "accuracy": "정확",
+        "source": "전생 기억"
+      },
+      "butterfly_effect": {
+        "original_event": "금 시장은 정상적으로 움직임",
+        "changed_event": "한시우의 포지션은 시장에 영향 없음",
+        "ripple_effect": "없음"
+      },
+      "death_flag": {
+        "avoided": null,
+        "method": null
+      },
+      "regression_hint": {
+        "slip_up": "'서브프라임'이라는 단어를 흘린 것. 아직 대중에게 익숙하지 않은 용어.",
+        "suspicion_from": "없음"
+      },
+      "future_prep": {
+        "action": "금 나머지 포지션 홀딩, 미국 부동산 시장 분석 시작",
+        "target_event": "2007년 서브프라임 위기 대비"
+      }
+    }
+  },
+  "output": {
+    "block_no": 4,
+    "block_id": "Block 4",
+    "title": "금의 귀환",
+    "content": {
+      "context": "2006년 5~6월. 유가 계속 상승. 78달러 터치. 한시우는 나머지 원유 포지션을 전량 정리한다. 수익 10억 추가. 총 35억. 다음 타깃은 금이다. 현재 온스당 620달러. 달러 약세와 인플레 우려로 700달러까지 간다는 걸 안다.",
+      "event_villain": "금 시장은 원유보다 느리다. 620달러에서 진입했지만, 두 달간 횡보. 오히려 소폭 하락해 600달러대로 내려간다. 업계에서 '금은 죽은 자산'이라는 말이 들린다. 박성호가 조심스럽게 말한다. '고객님, 금은 좀... 옛날 자산 아닙니까? 요즘은 주식이나 부동산이...'",
+      "solution": "한시우는 무시한다. '기다려.' 두 달을 버틴다. 8월, 연준이 금리 인상 중단을 시사한다. 달러 약세 시작. 금 620달러 → 680달러. 한시우는 680달러에서 절반 익절. 15억 투입분에서 5억 수익.",
+      "reward": "금 포지션으로 첫 수확. 5억 확정. 나머지는 700달러까지 홀딩. 총 자산 40억. 4개월 만에 2배. 한시우는 담담하다. 이건 워밍업이다."
+    },
+    "stakes": "15억을 금에 묶어두는 기회비용. 금이 안 오르면 다른 곳에 투자했을 수익을 날린다. 또한 두 달 횡보 동안 '틀렸나?' 하는 심리적 압박.",
+    "power_shift": {
+      "protagonist": "원유에 이어 금까지 성공. 원자재 트레이더로 입지 확보. 증권가에 '재벌가 막내가 귀신같이 찍는다'는 소문.",
+      "antagonist": "가족은 여전히 무관심. 형들은 후계 경쟁에 바쁘다."
+    },
+    "relationship_delta": [
+      {
+        "target": "박성호 (담당 PB)",
+        "before": "경외하지만 반신반의 (금은 의문)",
+        "after": "완전한 신뢰. '이 사람 말은 무조건 따른다'"
+      }
+    ],
+    "foreshadow": [
+      "뉴스: '미국 서브프라임 모기지 연체율 상승' - 먼 미래 복선",
+      "한시우 독백: '냄새가 나는데...' - Block 7~10 서브프라임 숏 복선",
+      "한시우가 '미국 부동산'이라는 단어에 눈을 가늘게 뜸 - 리먼 쇼크 암시"
+    ],
+    "callback": [
+      "Block 2에서 '금도 간다'고 중얼거린 것의 회수"
+    ],
+    "emotional_beat": {
+      "type": "steady_growth",
+      "intensity": 6
+    },
+    "tension_level": 5,
+    "pov_character": "한시우",
+    "location": {
+      "place": "서울 강남, SW인베스트먼트 오피스",
+      "type": "실내"
+    },
+    "time_span": {
+      "duration": "4개월",
+      "in_story_time": "2006년 5월 ~ 8월"
+    },
+    "genre_ext": {
+      "capital_before": "30억",
+      "capital_after": "45억",
+      "capital_delta": "+15억 (5억 확정 + 10억 미실현)",
+      "profit_loss": "+5억 (확정)",
+      "method": "레버리지 롱, 부분 익절",
+      "investment_type": "원자재 선물 (골드)",
+      "deal_type": "시장 진입 → 부분 청산",
+      "leverage_used": [
+        "회귀 지식 (연준 금리 정책)",
+        "시장의 무관심 역이용",
+        "인내심"
+      ],
+      "opponent": {
+        "name": "시장 컨센서스 ('금은 죽은 자산')",
+        "type": "시장 심리",
+        "weakness_exploited": "단기 성과에 집착하는 근시안"
+      },
+      "historical_event": {
+        "name": "연준 금리 인상 중단 시사",
+        "year": 2006,
+        "month": "8월",
+        "how_exploited": "달러 약세 → 금 강세 예측"
+      },
+      "time_pressure": "두 달 횡보 기간 동안의 심리적 압박. 틀렸다는 의심.",
+      "knowledge_used": "2006년 하반기 금 620→700달러 상승",
+      "risk_level": "중위험",
+      "business_sector": "원자재/귀금속"
+    },
+    "regression_ext": {
+      "is_regressor": true,
+      "regression_type": "회귀",
+      "timeline_knowledge": {
+        "info_used": "2006년 연준 금리 정책, 금 가격 추이",
+        "accuracy": "정확",
+        "source": "전생 기억"
+      },
+      "butterfly_effect": {
+        "original_event": "금 시장은 정상적으로 움직임",
+        "changed_event": "한시우의 포지션은 시장에 영향 없음",
+        "ripple_effect": "없음"
+      },
+      "death_flag": {
+        "avoided": null,
+        "method": null
+      },
+      "regression_hint": {
+        "slip_up": "'서브프라임'이라는 단어를 흘린 것. 아직 대중에게 익숙하지 않은 용어.",
+        "suspicion_from": "없음"
+      },
+      "future_prep": {
+        "action": "금 나머지 포지션 홀딩, 미국 부동산 시장 분석 시작",
+        "target_event": "2007년 서브프라임 위기 대비"
+      }
+    },
+    "joint_docs": {
+      "final_location": "서울 강남구 역삼동, SW인베스트먼트의 1인 오피스. 허먼 밀러 에어론 체어에 앉아 듀얼 모니터를 응시하고 있다.",
+      "physical_inventory": "책상 위, 방금 전까지 통화했던 검은색 버투(Vertu) 스마트폰. 그 옆에는 월스트리트저널 1면 기사가 놓여 있으며, 'Subprime Mortgage Worries Contained(서브프라임 모기지 우려는 통제됨)'라는 헤드라인에 붉은 펜으로 밑줄이 그어져 있다.",
+      "world_joint": "시장은 연준의 금리 인상 중단을 '연착륙(Soft Landing)'의 신호로 받아들이며 안도 랠리를 시작할 준비를 한다. 낙관론이 팽배한 가운데, 한시우의 모니터 하단 뉴스 티커에 '뉴센추리 파이낸셜, 주택담보대출 연체율 예상 상회'라는 단신이 스쳐 지나간다."
+    },
+    "status_shadow": {
+      "key_stat_change": "총 자산: 30억 -> 45억 (+15억). 실현 손익: +5억 (금 선물). 미실현 손익: +10억 (잔여 금 포지션). 투자 포트폴리오: 원자재 선물 100% -> 원자재 선물 50%, 현금 50%로 리밸런싱.",
+      "expected_injuries": "정신적 피로도 누적: 2개월간의 평가손실 상태를 버텨낸 심리적 압박. '내 기억이 틀렸을 수 있다'는 회귀자로서의 근원적 공포와 싸워야 했다. 기회비용에 대한 지속적인 자기 검증 과정에서 오는 스트레스.",
+      "item_consumption": [
+        "기회비용: 15억 원의 자본을 2개월간 금 시장에 고정시킨 대가로 포기한 타 시장에서의 잠재 수익.",
+        "신뢰 자산: 박성호 PB의 의구심을 억누르기 위해 소모된 '원유 투자 성공'으로 얻은 신뢰도. 실패했다면 회복 불가능한 손실이 되었을 무형 자산."
+      ]
+    }
+  }
+}

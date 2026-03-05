@@ -28,7 +28,7 @@ class SlackNotifier:
         if self.webhook_url is None:  # [V70] lazy 로딩
             self.webhook_url = os.getenv("SLACK_WEBHOOK_URL", "")
         if not self.webhook_url:
-            logging.info("⚠️ [System] 슬랙 웹훅 URL이 설정되지 않아 알림을 건너뜁니다.")
+            logging.info(" [System] 슬랙 웹훅 URL이 설정되지 않아 알림을 건너뜁니다.")
             return
 
         payload = {
@@ -57,11 +57,11 @@ class SlackNotifier:
                 timeout=10,  # [V70] 무한 대기 방지
             )
             if response.status_code != 200:
-                logging.warning(f"⚠️ [Slack Error] 전송 실패 ({response.status_code}): {response.text}")
+                logging.warning(f" [Slack Error] 전송 실패 ({response.status_code}): {response.text}")
             else:
-                logging.info("📨 [Slack] 알림이 전송되었습니다.")
+                logging.info(" [Slack] 알림이 전송되었습니다.")
         except Exception as e:
-            logging.warning(f"⚠️ [Slack Error] 연결 실패: {e}")
+            logging.warning(f" [Slack Error] 연결 실패: {e}")
 
 
 # 전역 인스턴스 (필요시 사용)

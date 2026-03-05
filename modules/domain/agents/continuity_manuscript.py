@@ -260,7 +260,7 @@ class ContinuityManuscriptValidator:
 
         python_advisory = python_check.get("critical_violations", [])
         if python_advisory:
-            logging.info(f"📋 [V60.56] Python advisory 발견 {len(python_advisory)}건 - LLM에게 전달")
+            logging.info(f" [V60.56] Python advisory 발견 {len(python_advisory)}건 - LLM에게 전달")
 
         # ═══════════════════════════════════════════════════════════════
         # Phase 2: LLM 기반 정밀 검증
@@ -291,7 +291,7 @@ class ContinuityManuscriptValidator:
             result = self._ci._extract_json_robust(response)
 
             if not isinstance(result, dict):
-                logging.warning("⚠️ [V60.74] JSON 파싱 실패 - 수동 검수 권장")
+                logging.warning(" [V60.74] JSON 파싱 실패 - 수동 검수 권장")
                 result = {
                     "decision": "PASS",
                     "severity": "NONE",
@@ -325,7 +325,7 @@ class ContinuityManuscriptValidator:
             return result
 
         except Exception as e:
-            logging.warning(f"🚨 [ContinuityInspector] 원고 LLM 검증 실패: {e}")
+            logging.warning(f" [ContinuityInspector] 원고 LLM 검증 실패: {e}")
             if python_check.get("warnings"):
                 _warnings = list(python_check["warnings"])
                 _warnings.append("LLM 검증 실패 - 수동 확인 권장")
@@ -371,7 +371,7 @@ class ContinuityManuscriptValidator:
                         {"ep_num": ep, "content": ms.get("content", ""), "title": ms.get("title", "")}
                     )
             except Exception as e:
-                logging.warning(f"⚠️ [ContinuityInspector] 제{ep}화 원고 조회 실패: {e}")
+                logging.warning(f" [ContinuityInspector] 제{ep}화 원고 조회 실패: {e}")
 
         return prev_manuscripts
 

@@ -205,7 +205,7 @@ class AdaptiveRetryStrategy:
         max_retries = self.MAX_RETRIES_BY_TYPE.get(error_type, 2)
 
         if ctx.attempt >= max_retries:
-            logging.info(f"🚫 [AdaptiveRetry] 최대 재시도 횟수 도달 ({ctx.attempt}/{max_retries})")
+            logging.info(f" [AdaptiveRetry] 최대 재시도 횟수 도달 ({ctx.attempt}/{max_retries})")
             return False, error_type
 
         ctx.attempt += 1
@@ -408,7 +408,7 @@ class AdaptiveRetryStrategy:
         # 대기 시간
         wait_time = strategy.get("wait_time", 0)
         if wait_time > 0:
-            logging.info(f"⏳ [AdaptiveRetry] {wait_time}초 대기 중...")
+            logging.info(f" [AdaptiveRetry] {wait_time}초 대기 중...")
             time.sleep(wait_time)
 
         # 온도 델타 저장 (호출자가 사용)

@@ -74,11 +74,11 @@ class Weaver(BaseAgent):
                 drive_data["status"] = "LOCKED"
                 # [V47] 필수 필드 검증
                 if not drive_data.get("short_term_objective"):
-                    logging.info("⚠️ [Weaver] short_term_objective 누락 - 보완 필요")
+                    logging.info(" [Weaver] short_term_objective 누락 - 보완 필요")
                     drive_data["short_term_objective"] = "서사적 긴장감 고조"
                 return drive_data
             else:
-                logging.info("⚠️ [Weaver] 유효한 욕망 데이터를 생성하지 못했습니다. 기본값 사용.")
+                logging.info(" [Weaver] 유효한 욕망 데이터를 생성하지 못했습니다. 기본값 사용.")
                 # [V47 Fix] 더 구체적인 기본값 + 명확한 상태 표시
                 return {
                     "short_term_objective": "서사적 긴장감 고조 및 갈등 심화",
@@ -88,7 +88,7 @@ class Weaver(BaseAgent):
                 }
 
         except Exception as e:
-            logging.warning(f"🚨 [Weaver Critical] 욕망 생성 실패: {e}. Fallback 시도.")
+            logging.warning(f" [Weaver Critical] 욕망 생성 실패: {e}. Fallback 시도.")
             return self._fallback_full_request(dynamic_prompt)
 
     def _fallback_full_request(self, dynamic_prompt: str) -> dict:

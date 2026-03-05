@@ -608,7 +608,7 @@ class TestStage2PassWithFix:
         assert ctx.agents["director"].audit_strategic_plan.call_count == 2
 
     def test_finalizer_pass_with_fix_patch_failure_rejects(self):
-        """PASS_WITH_FIX + inplace patch 실패(None) → REJECT 전환 (action=next)."""
+        """PASS_WITH_FIX + inplace patch 실패(None) → REJECT 전환 (action=retry)."""
         from modules.core.stage2_finalizer import Stage2Finalizer
 
         audit = {
@@ -630,13 +630,13 @@ class TestStage2PassWithFix:
         ):
             result = asyncio.run(finalizer.run_finalize(**kwargs))
 
-        # REJECT 전환 → Director REJECT 경로 (action=next)
-        assert result["action"] == "next"
+        # REJECT 전환 → Director REJECT 경로 (action=retry)
+        assert result["action"] == "retry"
         four_phase = ctx.agents["four_phase"]
         assert four_phase._inplace_patch_arc.call_count == 1
 
     def test_finalizer_pass_with_fix_reaudit_reject(self):
-        """PASS_WITH_FIX + patch + 재심사 REJECT → action=next (REJECT 경로)."""
+        """PASS_WITH_FIX + patch + 재심사 REJECT → action=retry (REJECT 경로)."""
         from modules.core.stage2_finalizer import Stage2Finalizer
 
         initial_audit = {
@@ -665,8 +665,8 @@ class TestStage2PassWithFix:
         ):
             result = asyncio.run(finalizer.run_finalize(**kwargs))
 
-        # REJECT 전환 → Director REJECT 경로 (action=next)
-        assert result["action"] == "next"
+        # REJECT 전환 → Director REJECT 경로 (action=retry)
+        assert result["action"] == "retry"
 
     def test_finalizer_pass_with_fix_iterates_until_pass(self):
         """PASS_WITH_FIX → 1차 재심사 PASS_WITH_FIX → 2차 재심사 PASS."""
@@ -724,7 +724,7 @@ class TestStage2PassWithFix:
             "re_slice_instruction": "품질 개선",
             "fix_scope": "inplace",
         }
-        # patch_arc_return=None → patch loop 실패 → REJECT → "next"
+        # patch_arc_return=None → patch loop 실패 → REJECT → "retry"
         ctx = self._make_s2_ctx(audit)
         host = MagicMock()
         host.ctx = ctx
@@ -735,7 +735,134 @@ class TestStage2PassWithFix:
             result = asyncio.run(finalizer.run_finalize(**kwargs))
 
         # [TF-46] QualityGate가 아닌 patch loop 경로로 진행됨
-        assert result["action"] == "next"  # patch 실패 → 정상 REJECT 경로
+        assert result["action"] == "retry"  # patch 실패 → 정상 REJECT 경로
+
+    def test_pwf_s2_patch_history_injected_to_story_context(self):
+        """PASS_WITH_FIX 재심사 시 story_context에 누적 패치 이력이 주입된다."""
+        from modules.core.stage2_finalizer import Stage2Finalizer
+
+        initial_audit = {
+            "decision": "PASS_WITH_FIX",
+            "score": 94,
+            "reason": "수정 필요",
+            "re_slice_instruction": "약 40억을 약 18억으로 수정",
+            "fix_scope": "inplace",
+        }
+        reaudit = {
+            "decision": "PASS",
+            "score": 96,
+            "reason": "수정 완료",
+        }
+        patched_arc = self._valid_arc()
+        patched_arc["tactical_doc"] = "PATCHED " + patched_arc["tactical_doc"]
+        ctx = self._make_s2_ctx([initial_audit, reaudit], patch_arc_return=patched_arc)
+        host = MagicMock()
+        host.ctx = ctx
+        finalizer = Stage2Finalizer(host)
+        kwargs = self._make_kwargs(self._valid_arc())
+
+        with (
+            patch("modules.core.stage2_finalizer.validate_arc", side_effect=lambda x: x),
+            patch("modules.core.spinners.V50_MODULES_AVAILABLE", False),
+        ):
+            result = asyncio.run(finalizer.run_finalize(**kwargs))
+
+        assert result["action"] == "break"
+        calls = ctx.agents["director"].audit_strategic_plan.call_args_list
+        assert len(calls) == 2
+        re_story_context = calls[1].kwargs.get("story_context", "")
+        assert "[PASS_WITH_FIX 재심사 — 이미 적용된 패치]" in re_story_context
+        assert "- 약 40억을 약 18억으로 수정" in re_story_context
+
+    def test_pwf_s2_fix_ok_on_pass(self):
+        """재심사 PASS면 patch 결과를 채택하고 PASS로 종료한다."""
+        from modules.core.stage2_finalizer import Stage2Finalizer
+
+        initial_audit = {
+            "decision": "PASS_WITH_FIX",
+            "score": 92,
+            "reason": "문구 정리 필요",
+            "re_slice_instruction": "숫자 불일치 정정",
+            "fix_scope": "inplace",
+        }
+        reaudit = {
+            "decision": "PASS",
+            "score": 95,
+            "reason": "정상",
+        }
+        patched_arc = self._valid_arc()
+        patched_arc["tactical_doc"] = "PATCHED OK " + patched_arc["tactical_doc"]
+        ctx = self._make_s2_ctx([initial_audit, reaudit], patch_arc_return=patched_arc)
+        host = MagicMock()
+        host.ctx = ctx
+        finalizer = Stage2Finalizer(host)
+        kwargs = self._make_kwargs(self._valid_arc())
+
+        with (
+            patch("modules.core.stage2_finalizer.validate_arc", side_effect=lambda x: x),
+            patch("modules.core.spinners.V50_MODULES_AVAILABLE", False),
+        ):
+            result = asyncio.run(finalizer.run_finalize(**kwargs))
+
+        assert result["action"] == "break"
+        assert kwargs["all_refined_arcs"][0]["tactical_doc"] == patched_arc["tactical_doc"]
+
+    def test_pwf_s2_reject_after_max_fix(self):
+        """재심사 3회 모두 PASS_WITH_FIX면 REJECT로 전환하고 마지막 패치본을 채택한다."""
+        from modules.core.stage2_finalizer import Stage2Finalizer
+
+        initial_audit = {
+            "decision": "PASS_WITH_FIX",
+            "score": 93,
+            "reason": "수정 필요",
+            "re_slice_instruction": "1차 수정",
+            "fix_scope": "inplace",
+        }
+        reaudit_1 = {
+            "decision": "PASS_WITH_FIX",
+            "score": 94,
+            "reason": "추가 수정 필요",
+            "re_slice_instruction": "2차 수정",
+            "fix_scope": "inplace",
+        }
+        reaudit_2 = {
+            "decision": "PASS_WITH_FIX",
+            "score": 95,
+            "reason": "추가 수정 필요",
+            "re_slice_instruction": "3차 수정",
+            "fix_scope": "inplace",
+        }
+        reaudit_3 = {
+            "decision": "PASS_WITH_FIX",
+            "score": 90,
+            "reason": "여전히 수정 필요",
+            "re_slice_instruction": "4차 수정",
+            "fix_scope": "inplace",
+        }
+        ctx = self._make_s2_ctx([initial_audit, reaudit_1, reaudit_2, reaudit_3], patch_arc_return=self._valid_arc())
+        patched_1 = self._valid_arc()
+        patched_1["tactical_doc"] = "PATCHED-1 " + patched_1["tactical_doc"]
+        patched_2 = self._valid_arc()
+        patched_2["tactical_doc"] = "PATCHED-2 " + patched_2["tactical_doc"]
+        patched_3 = self._valid_arc()
+        patched_3["tactical_doc"] = "PATCHED-3 " + patched_3["tactical_doc"]
+        ctx.agents["four_phase"]._inplace_patch_arc.side_effect = [patched_1, patched_2, patched_3]
+
+        host = MagicMock()
+        host.ctx = ctx
+        finalizer = Stage2Finalizer(host)
+        kwargs = self._make_kwargs(self._valid_arc())
+
+        with (
+            patch("modules.core.stage2_finalizer.validate_arc", side_effect=lambda x: x),
+            patch("modules.core.spinners.V50_MODULES_AVAILABLE", False),
+        ):
+            result = asyncio.run(finalizer.run_finalize(**kwargs))
+
+        assert result["action"] == "retry"
+        assert kwargs["refined_arc"]["tactical_doc"] == patched_3["tactical_doc"]
+        calls = ctx.agents["director"].audit_strategic_plan.call_args_list
+        assert len(calls[1:]) == 3
 
 
 # ── Stage 3 PASS_WITH_FIX Tests ──────────────────────────────────
@@ -1063,8 +1190,8 @@ class TestFixScopeRouting:
         ):
             result = asyncio.run(finalizer.run_finalize(**kwargs))
 
-        # fix_scope=partial → inplace 미호출 → REJECT → action=next
-        assert result["action"] == "next"
+        # fix_scope=partial → inplace 미호출 → REJECT → action=retry
+        assert result["action"] == "retry"
         assert ctx.agents["four_phase"]._inplace_patch_arc.call_count == 0
         assert result.get("fix_scope") == "partial"
 
@@ -1093,7 +1220,7 @@ class TestFixScopeRouting:
         ):
             result = asyncio.run(finalizer.run_finalize(**kwargs))
 
-        assert result["action"] == "next"
+        assert result["action"] == "retry"
         assert ctx.agents["four_phase"]._inplace_patch_arc.call_count == 0
         assert result.get("fix_scope") == "full"
 
@@ -1436,8 +1563,8 @@ class TestTF35DirectorConsistency:
         ):
             result = asyncio.run(finalizer.run_finalize(**kwargs))
 
-        # QualityGate: 75 < 90 → PASS 거부 → patch 종료 → REJECT → action=next
-        assert result["action"] == "next"
+        # QualityGate: 75 < 90 → PASS 거부 → patch 종료 → REJECT → action=retry
+        assert result["action"] == "retry"
         # audit_strategic_plan: 1회 초기 + 1회 재심사 = 2회
         assert ctx.agents["director"].audit_strategic_plan.call_count == 2
 

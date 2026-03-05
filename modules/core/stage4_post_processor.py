@@ -237,8 +237,7 @@ class Stage4PostProcessor:
         if diff <= 5:  # 5억 이하 차이는 허용
             return
 
-        logging.warning(
-            "[V73] 자본금 불일치 감지 (ep%d): HUD %s=%s(→%.0f억), 원고=%.0f억 → 원고 기준 보정",
+        logging.warning("[V73] 자본금 불일치 감지 (ep%d): HUD %s=%s(→%.0f억), 원고=%.0f억 → 원고 기준 보정",
             ep_num,
             capital_key,
             current_raw,
@@ -410,7 +409,7 @@ class Stage4PostProcessor:
                     if hasattr(self.ctx, "current_project") and hasattr(self.ctx.current_project, "db"):
                         _et.save_to_db(self.ctx.current_project.db)
                 except Exception as _et_err:
-                    logging.warning(f"⚠️ [TF7-P2-06] emotion_tracker 저장 실패: {_et_err}")
+                    logging.warning(f" [TF7-P2-06] emotion_tracker 저장 실패: {_et_err}")
 
             self.ctx.ui.log("   💾 [V60.87] 로그 파일 저장 완료")
         except Exception as log_err:
@@ -615,8 +614,7 @@ class Stage4PostProcessor:
                         logging.warning("[TruthGate] %s", _tg_w)
                     # [Phase4] structured_warnings severity 로깅
                     for _sw in _tg_result.get("structured_warnings", []):
-                        logging.warning(
-                            "[TruthGate:POST] [%s] %s",
+                        logging.warning("[TruthGate:POST] [%s] %s",
                             _sw.get("severity", "?"),
                             _sw.get("text", ""),
                         )
@@ -709,8 +707,7 @@ class Stage4PostProcessor:
                     self.ctx.ui.log("      ✅ Manager 정산 완료")
                 else:
                     self.ctx.ui.log("      ⚠️ Manager 파싱 실패, 기본 추출 사용")
-                    logging.error(
-                        "[XC-002] Manager LLM 파싱 실패 — bible_delta 미생성으로 FactLedger 갱신 불완전할 수 있음"
+                    logging.error("[XC-002] Manager LLM 파싱 실패 — bible_delta 미생성으로 FactLedger 갱신 불완전할 수 있음"
                     )
                     if callable(getattr(self.ctx, "audit_event", None)):
                         self.ctx.audit_event("manager_parse_failure", "Manager LLM 파싱 실패", {"ep": next_ep})
@@ -860,8 +857,7 @@ class Stage4PostProcessor:
                 "knowledge_map": knowledge_map,
             }
 
-            logging.debug(
-                "[P2] bible_delta ep=%d: items=%d, npcs=%d, deaths=%d",
+            logging.debug("[P2] bible_delta ep=%d: items=%d, npcs=%d, deaths=%d",
                 next_ep,
                 len(all_new_items),
                 len(new_npc_names),
@@ -1105,8 +1101,7 @@ class Stage4PostProcessor:
                 )
                 _regression = self.ctx.quality_dashboard.detect_score_regression(stage=4)
                 if _regression.get("is_regression"):
-                    logging.warning(
-                        "[Phase 3-QR] 품질 회귀 감지 — 제%d화: delta=%s, severity=%s",
+                    logging.warning("[Phase 3-QR] 품질 회귀 감지 — 제%d화: delta=%s, severity=%s",
                         next_ep,
                         _regression.get("delta"),
                         _regression.get("severity"),
@@ -1152,8 +1147,7 @@ class Stage4PostProcessor:
                         min_name_length=_min_len,
                     )
                 if _overexposure:
-                    logging.warning(
-                        "[Phase 3-5C] NPC 과잉 등장 — 제%d화: %s",
+                    logging.warning("[Phase 3-5C] NPC 과잉 등장 — 제%d화: %s",
                         next_ep,
                         _overexposure["warning"],
                     )
@@ -1189,8 +1183,7 @@ class Stage4PostProcessor:
                             regression_threshold=_cr_regr,
                         )
                     if _cr_result:
-                        logging.warning(
-                            "[Phase 3-B] 크로스 에피소드 반복 — 제%d화: %s",
+                        logging.warning("[Phase 3-B] 크로스 에피소드 반복 — 제%d화: %s",
                             next_ep,
                             _cr_result["warning"],
                         )

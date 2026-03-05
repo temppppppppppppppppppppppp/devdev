@@ -136,7 +136,7 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
             feedback = f"[과거 유사 블루프린트 참조 (시맨틱 검색)]\n{semantic_context}\n"
         if external_feedback:
             feedback += f"[Director 외부 피드백 - 반드시 반영]\n{external_feedback}\n"
-            logging.info(f"📢 [V60.80] 외부 피드백 주입됨 ({len(external_feedback)}자)")
+            logging.info(f" [V60.80] 외부 피드백 주입됨 ({len(external_feedback)}자)")
 
         # 제약 블록 캐싱
         cached_constraint_block = None
@@ -185,11 +185,11 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
             # PHASE 1: CONSTRAINT - 제약 수집
             # ═══════════════════════════════════════════════════════════════
             if cached_constraint_block and retry > 0:
-                logging.info("📋 [Phase 1] 제약 캐시 사용")
+                logging.info(" [Phase 1] 제약 캐시 사용")
                 print("   📋 [Phase 1] 제약 캐시 사용")
                 constraint_block = cached_constraint_block
             else:
-                logging.info("📋 [Phase 1] 제약 수집 중...")
+                logging.info(" [Phase 1] 제약 수집 중...")
                 print("   📋 [Phase 1] 제약 수집 중...")
 
                 constraint_block = self.constraint_compiler.compile(
@@ -213,7 +213,7 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
             # ═══════════════════════════════════════════════════════════════
             # PHASE 2: GENERATE - Ensemble 생성
             # ═══════════════════════════════════════════════════════════════
-            logging.info("🎲 [Phase 2] Ensemble 생성 중 (3개 후보)...")
+            logging.info(" [Phase 2] Ensemble 생성 중 (3개 후보)...")
             print("   🎲 [Phase 2] Ensemble 3개 후보 병렬 생성 중...")
 
             # [Patch Mode] 점수 기반 분기: in-place 수정 vs 전면 재생성
@@ -232,8 +232,7 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
             _use_partial = (not _use_inplace) and _previous_best is not None and (_prev_fix_scope == "partial")
 
             if _use_inplace:
-                logging.info(
-                    f"[InPlace] Blueprint in-place 수정 진입 (fix_scope={_prev_fix_scope!r}, score={_prev_reject_score})"
+                logging.info(f"[InPlace] Blueprint in-place 수정 진입 (fix_scope={_prev_fix_scope!r}, score={_prev_reject_score})"
                 )
                 patched = self._inplace_patch_blueprint(
                     original_blueprint=_previous_best,
@@ -353,7 +352,7 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
             # ═══════════════════════════════════════════════════════════════
             # PHASE 3: VALIDATE - Director 비교 선택 + 최종 판정
             # ═══════════════════════════════════════════════════════════════
-            logging.info("🔍 [Phase 3] Director 비교 선택 + 판정 중...")
+            logging.info(" [Phase 3] Director 비교 선택 + 판정 중...")
             print("   🔍 [Phase 3] Director 비교 선택 + 판정 중...")
 
             # [V61.5] 캐시 기반 연속성 검사 (ep_num 바뀔 때만 캐시 갱신)
@@ -375,7 +374,7 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                         _previous_best = best_blueprint  # [TF-S3-01] patch mode용 보존
                     # [S3-P1-4] += 누적 대신 _initial_feedback 기반 재구성
                     feedback = _initial_feedback + f"\n[연속성 오류]\n{continuity_feedback}"
-                    logging.warning("⚠️ [V61.5] 연속성 검사 REJECT")
+                    logging.warning(" [V61.5] 연속성 검사 REJECT")
                     continue  # 다음 재시도로
 
             # [V60.85] 전체 후보를 Director에게 전달하여 비교 선택
@@ -397,7 +396,7 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
             if validation_result.get("selected_blueprint"):
                 best_blueprint = validation_result["selected_blueprint"]
                 selected_idx = validation_result.get("selected_index", 0)
-                logging.info(f"🎯 [V60.85] Director 선택: 후보 {selected_idx + 1}")
+                logging.info(f" [V60.85] Director 선택: 후보 {selected_idx + 1}")
                 print(f"   🎯 [Phase 3] Director 선택: 후보 {selected_idx + 1}")
 
             _selected_meta = best_blueprint.get("_ensemble_meta", {}) if isinstance(best_blueprint, dict) else {}
@@ -425,9 +424,9 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
 
             _contradictions = validation_result.get("contradictions", [])
             if isinstance(_contradictions, list) and _contradictions:
-                logging.warning(f"🚨 [Consistency] 모순 {len(_contradictions)}건:")
+                logging.warning(f" [Consistency] 모순 {len(_contradictions)}건:")
                 for _c in _contradictions[:5]:
-                    logging.warning(f"   ▸ {str(_c)[:150]}")
+                    logging.warning(f" {str(_c)[:150]}")
                 pipeline_result["phases"]["validate"]["contradictions"] = _contradictions
 
             if (
@@ -441,6 +440,7 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
             if verdict in ("PASS", "PASS_WITH_FIX"):  # [TF-32-S3]
                 self.stats["phase3_pass"] += 1
                 pipeline_result["final_verdict"] = verdict  # [TF-32-S3] PASS or PASS_WITH_FIX 보존
+                pipeline_result["last_score"] = _score  # [S3-SCORE] stage_attempts 기록용
                 logging.info(f"✅ [Phase 3] {verdict} - 제{ep_num}화 Blueprint 생성 완료")
                 print(f"   ✅ [Phase 3] {verdict} (score={_score})")
 
@@ -459,11 +459,11 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                             _fix_scope = "inplace" if _score >= _inplace_thresh else "full"
                             logging.warning("[PF-1] fix_scope 누락 → score=%d fallback: %s", _score, _fix_scope)
                         if _fix_scope in ("partial", "full"):
-                            logging.info(f"🔀 [TF-33] fix_scope={_fix_scope!r} → inplace 불가, generate 루프 위임")
+                            logging.info(f" [TF-33] fix_scope={_fix_scope!r} → inplace 불가, generate 루프 위임")
                             break  # → REJECT → generate 재시도 루프
 
                         _fix_fb = _current_vr.get("re_slice_instruction", "") or _current_vr.get("feedback", "")
-                        logging.info(f"🔧 [TF-32-V] Blueprint patch #{_fix_i + 1}/{_MAX_FIX}")
+                        logging.info(f" [TF-32-V] Blueprint patch #{_fix_i + 1}/{_MAX_FIX}")
                         print(f"   🔧 [TF-32-V] Blueprint patch #{_fix_i + 1}/{_MAX_FIX}")
                         try:
                             _patched_bp = self._inplace_patch_blueprint(
@@ -489,8 +489,7 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                             _change_ratio = calc_patch_change_ratio(_orig_j, _patch_j)
                             _max_ratio = float(_th("patch_mode.inplace_max_change_ratio", 0.30))
                             if _change_ratio > _max_ratio:
-                                logging.warning(
-                                    "[F-2] InPlace Blueprint 변경 비율 %.1f%% > %.0f%% (S3)",
+                                logging.warning("[F-2] InPlace Blueprint 변경 비율 %.1f%% > %.0f%% (S3)",
                                     _change_ratio * 100,
                                     _max_ratio * 100,
                                 )
@@ -516,7 +515,7 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                             logging.exception("[TF-32-V] 재심사 예외")
                             break
 
-                        logging.info(f"🎬 [TF-32-V] 재심사 #{_fix_i + 1}: {_re_v} (score={_re_vr.get('score', 0)})")
+                        logging.info(f" [TF-32-V] 재심사 #{_fix_i + 1}: {_re_v} (score={_re_vr.get('score', 0)})")
                         print(f"   🎬 [TF-32-V] 재심사 #{_fix_i + 1}: {_re_v} (score={_re_vr.get('score', 0)})")
                         if _re_v == "PASS":
                             _re_score = _re_vr.get("score", 0)
@@ -525,8 +524,7 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                             except (ValueError, TypeError):
                                 _re_score = 0
                             if _re_score < _quality_gate_score:
-                                logging.warning(
-                                    f"⚠️ [TF-35] 재심사 PASS이나 score={_re_score} < {_quality_gate_score} → patch 종료"
+                                logging.warning(f" [TF-35] 재심사 PASS이나 score={_re_score} < {_quality_gate_score} → patch 종료"
                                 )
                                 break
                             _current_bp = _patched_bp
@@ -556,7 +554,7 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                             except (ValueError, TypeError):
                                 _pf3_score = _score
                             validation_result["score"] = _pf3_score
-                            logging.info("📈 [PF-3] PASS_WITH_FIX 소진 → 패치본 채택 (score=%d)", _pf3_score)
+                            logging.info(" [PF-3] PASS_WITH_FIX 소진 → 패치본 채택 (score=%d)", _pf3_score)
                         verdict = "REJECT"
                         feedback = _initial_feedback + (
                             f"\n[TF-32-V] PASS_WITH_FIX 수정 {_MAX_FIX}회 내 미해결 → REJECT"
@@ -633,7 +631,7 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
 
             issues = validation_result.get("issues", [])
             if issues:
-                logging.warning("🚨 [Phase 3] REJECT - 주요 이슈:")
+                logging.warning(" [Phase 3] REJECT - 주요 이슈:")
                 for issue in issues[:3]:
                     sev = issue.get("severity", "?")
                     cat = issue.get("category", "?")
@@ -648,8 +646,7 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
         _last_score = _prev_reject_score
         # [TF-R3-S3-02] Director 주권주의: 점수 임계값 이상만 긴급 폴백 허용
         if best_blueprint and director and _last_score >= PatchModeThresholds.REWRITE:
-            logging.warning(
-                f"⚠️ [ThreePhase] 제{ep_num}화 긴급 폴백 (score={_last_score} >= {PatchModeThresholds.REWRITE})"
+            logging.warning(f" [ThreePhase] 제{ep_num}화 긴급 폴백 (score={_last_score} >= {PatchModeThresholds.REWRITE})"
             )
             pipeline_result["final_verdict"] = "PASS_WITH_WARNING"
             pipeline_result["quality_gate_failed"] = True
@@ -685,8 +682,7 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
 
         _full_json = json.dumps(original_blueprint, ensure_ascii=False, indent=2)
         if len(_full_json) > 30000:
-            logging.warning(
-                "[TRUNCATION] _inplace_patch_blueprint: Blueprint JSON %d자 → 30000자 (%.1f%% 손실)",
+            logging.warning("[TRUNCATION] _inplace_patch_blueprint: Blueprint JSON %d자 → 30000자 (%.1f%% 손실)",
                 len(_full_json),
                 (1 - 30000 / len(_full_json)) * 100,
             )

@@ -74,7 +74,7 @@ class BlueprintConstraintCompiler:
         # 5. [V63] Arc에서 전달된 constraint_summary (Stage 2 → Stage 3)
         arc_constraint_summary = arc_data.get("constraint_summary", "")
         if not arc_constraint_summary:
-            logging.info(f"⚠️ [V63.4 P1] Arc {arc_no}에 constraint_summary 필드 없음 → Stage 2 제약 전달 누락 가능")
+            logging.info(f" [V63.4 P1] Arc {arc_no}에 constraint_summary 필드 없음 → Stage 2 제약 전달 누락 가능")
 
         # 6. [V63.2] Arc state_changes 요약 (Stage 2 → Stage 3 직접 전달)
         state_changes_summary = self._summarize_state_changes(arc_data.get("state_changes", {}))

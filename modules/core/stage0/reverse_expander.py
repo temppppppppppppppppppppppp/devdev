@@ -86,8 +86,7 @@ class ReverseExpander:
 
                     if is_retryable and attempt < self._MAX_RETRIES - 1:
                         delay = self._BASE_DELAY * (2**attempt)
-                        logging.warning(
-                            f"[S0-N-P1-2] {model} 일시적 오류 (attempt {attempt + 1}/{self._MAX_RETRIES}), "
+                        logging.warning(f"[S0-N-P1-2] {model} 일시적 오류 (attempt {attempt + 1}/{self._MAX_RETRIES}), "
                             f"{delay:.1f}초 후 재시도: {e}"
                         )
                         time.sleep(delay)
@@ -171,7 +170,7 @@ class ReverseExpander:
                 # 하위 폴더에 txt 파일이 있으면 그 폴더 사용
                 if list(sub_path.glob("*.txt")):
                     folder = sub_path
-                    logging.info(f"📂 자동 감지: {subdir}/ 폴더 사용")
+                    logging.info(f" 자동 감지: {subdir}/ 폴더 사용")
                     break
 
         # 모든 txt 파일 수집

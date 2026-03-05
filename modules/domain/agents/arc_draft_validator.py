@@ -100,7 +100,7 @@ class ArcDraftValidator:
 
         # [V60.74] Arc 1 처리 명시적 로그
         if not prev_arcs:
-            logging.info("⏭️ [ArcDraftValidator] Arc 1 - 연속성 검증 스킵, 구조만 검증")
+            logging.info(" [ArcDraftValidator] Arc 1 - 연속성 검증 스킵, 구조만 검증")
 
         # [V60.94] 0. 죽은 NPC 등장 검증 - 유일한 REJECT 사유
         if state_tracker and prev_arcs:
@@ -755,11 +755,19 @@ class ArcDraftValidator:
             return False
 
         item1, item2 = item1.strip(), item2.strip()
-        len1, len2 = len(item1), len(item2)
 
         # 완전 일치는 길이와 무관하게 True
         if item1 == item2:
             return True
+
+        # [이슈-5] 괄호 내 수치 변형 제거 후 비교
+        # "한미증권 계좌 (약 220억)" vs "한미증권 계좌 (약 300억)" → 동일 아이템으로 판정
+        _item1_base = re.sub(r"\s*\([^)]*\)", "", item1).strip()
+        _item2_base = re.sub(r"\s*\([^)]*\)", "", item2).strip()
+        if _item1_base == _item2_base and len(_item1_base) >= 4:
+            return True
+
+        len1, len2 = len(item1), len(item2)
 
         # [V60.20] 최소 길이 체크 - 1글자는 부분 매칭 불가 (완전 일치 제외)
         if len1 < 2 or len2 < 2:
@@ -853,7 +861,7 @@ class ArcDraftValidator:
             critical.append(f"🚨 [V60.94] {reason}")
             penalty += 100  # 즉시 REJECT 수준
 
-            logging.warning(f"💀 [V60.94] REJECT: Arc {death_arc}에서 사망한 '{npc_name}'이 Arc {arc_no}에서 등장!")
+            logging.warning(f" [V60.94] REJECT: Arc {death_arc}에서 사망한 '{npc_name}'이 Arc {arc_no}에서 등장!")
 
         return {"penalty": penalty, "critical": critical}
 

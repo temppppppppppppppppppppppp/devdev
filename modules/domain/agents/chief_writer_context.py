@@ -1154,7 +1154,7 @@ Blueprint가 다음 아이템의 사용을 설계했으나, 주인공이 현재 
                                         }
                                     )
         except (AttributeError, KeyError, TypeError) as e:  # [V64.P4] IMPORTANT: plot event extraction
-            logging.warning(f"⚠️ [V64.P4] 플롯 이벤트 추출 실패: {str(e)[:60]}")
+            logging.warning(f" [V64.P4] 플롯 이벤트 추출 실패: {str(e)[:60]}")
 
         return events[-5:] if events else []
 
@@ -1182,7 +1182,7 @@ Blueprint가 다음 아이템의 사용을 설계했으나, 주인공이 현재 
                 if isinstance(last_appearance, int) and 0 < last_appearance < current_ep:
                     npc_states[name] = {"relationship": relationship, "last_ep": last_appearance}
         except (AttributeError, KeyError, TypeError) as e:  # [V64.P4] IMPORTANT: NPC state extraction
-            logging.warning(f"⚠️ [V64.P4] NPC 상태 추출 실패: {str(e)[:60]}")
+            logging.warning(f" [V64.P4] NPC 상태 추출 실패: {str(e)[:60]}")
 
         return npc_states
 

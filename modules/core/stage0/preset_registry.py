@@ -606,9 +606,19 @@ class PresetRegistry:
             "military": ["전쟁", "군대", "병사", "장군", "전투", "진영", "병력"],
         }
 
+        # [이슈-6] 활성 장르와 의미적으로 호환 불가한 장르는 키워드 오탐으로 간주
+        _INCOMPATIBLE: dict[str, set[str]] = {
+            "investment": {"fantasy", "wuxia", "hunter"},
+            "wuxia": {"investment"},
+            "hunter": {"investment"},
+        }
+        _active_incompatible: set[str] = set()
+        for _ag in self.active_presets:
+            _active_incompatible.update(_INCOMPATIBLE.get(_ag, set()))
+
         content_lower = content.lower()
         for genre, keywords in genre_keywords.items():
-            if genre not in self.active_presets:
+            if genre not in self.active_presets and genre not in _active_incompatible:
                 matches = sum(1 for kw in keywords if kw in content_lower)
                 if matches >= 3:  # 3개 이상 키워드 매칭 시
                     return genre

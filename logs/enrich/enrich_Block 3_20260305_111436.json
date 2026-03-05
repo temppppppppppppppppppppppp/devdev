@@ -1,0 +1,229 @@
+{
+  "block_id": "Block 3",
+  "model": "gemini-2.5-pro",
+  "elapsed_s": 38.0,
+  "input": {
+    "block_no": 3,
+    "block_id": "Block 3",
+    "title": "중동의 불씨",
+    "content": {
+      "context": "2006년 3~4월. 이란 핵 위기 격화. UN 안보리 제재 논의. 유가 65달러에서 70달러 돌파. 한시우의 포지션은 이미 수익권이지만, 그는 움직이지 않는다. 진짜 촉매는 아직 안 터졌다.",
+      "event_villain": "유가가 72달러에서 횡보한다. 언론은 '고점 아니냐', '조정 온다'는 분석을 쏟아낸다. 박성호 PB가 전화한다. '고객님, 익절하시죠? 이미 40% 수익입니다. 충분히 버셨잖아요.' 회사 리스크 관리팀도 압박한다. '이 정도면 성공입니다. 욕심부리지 마세요.'",
+      "solution": "한시우는 거절한다. '아직이야. 나이지리아가 터진다.' PB가 멍해진다. '나이지리아요?' 4월 19일, 나이지리아 무장단체 MEND가 쉐브론 송유관을 폭파한다. 유가 급등. 75달러 돌파. 한시우는 이 타이밍에 포지션 절반을 익절한다. 7.5억 투입분에서 5억 수익 확정. 나머지 7.5억은 홀딩.",
+      "reward": "첫 수익 확정. 15억 → 20억 (5억 순익). 박성호 PB가 완전히 태도를 바꾼다. '고객님, 어떻게 아셨습니까...' 한시우는 대답하지 않는다. 담담하게 차트를 본다. 감흥 없다. 이건 시작일 뿐이다."
+    },
+    "stakes": "익절 타이밍 판단. 너무 빨리 팔면 수익 축소. 너무 늦게 팔면 되돌림에 물린다. 지금 팔면 5억 확정이지만, 틀리면 0이 될 수도 있다.",
+    "power_shift": {
+      "protagonist": "첫 수익 확정. '찍었다'는 소문이 퍼지기 시작. 박성호를 통해 증권가에 '재벌가 막내가 원유로 돈 벌었다'는 말이 돈다.",
+      "antagonist": "박성호 PB: 수익 확인 후 완전 태도 전환. 의심에서 실무 VIP 관리로. 이제 '처리해드리겠습니다'만 남았다"
+    },
+    "relationship_delta": [
+      {
+        "target": "박성호 (담당 PB)",
+        "before": "당혹, 반신반의",
+        "after": "경외. '이 사람은 뭔가 다르다'고 확신"
+      },
+      {
+        "target": "증권사 리스크관리팀",
+        "before": "경고, 압박",
+        "after": "입 다묾. 결과로 증명됐으니"
+      }
+    ],
+    "foreshadow": [
+      "한시우가 '80까지 간다'고 말함 - Block 4 추가 상승 복선",
+      "뉴스: '금 가격 상승세' - Block 4 금 진입 타이밍 복선",
+      "한시우 독백: '이란은 끝나지 않았어' - 추가 상승 복선"
+    ],
+    "callback": [
+      "Block 2에서 '나이지리아'를 중얼거린 것의 회수"
+    ],
+    "emotional_beat": {
+      "type": "triumph",
+      "intensity": 7
+    },
+    "tension_level": 7,
+    "pov_character": "한시우",
+    "location": {
+      "place": "서울 강남, SW인베스트먼트 오피스 (소규모 원룸 오피스)",
+      "type": "실내"
+    },
+    "time_span": {
+      "duration": "6주",
+      "in_story_time": "2006년 3월 ~ 4월"
+    },
+    "genre_ext": {
+      "capital_before": "23억 (미실현 포함)",
+      "capital_after": "30억",
+      "capital_delta": "+7억 (5억 실현 + 2억 미실현)",
+      "profit_loss": "+5억 (확정)",
+      "method": "부분 익절",
+      "investment_type": "원자재 선물 (WTI 원유)",
+      "deal_type": "시장 청산 (절반)",
+      "leverage_used": [
+        "회귀 지식 (MEND 공격 예측)",
+        "홀딩 배짱",
+        "시장의 공포 역이용"
+      ],
+      "opponent": {
+        "name": "시장 여론 / 박성호 PB",
+        "type": "심리전",
+        "weakness_exploited": "단기 이익에 급급한 조급함"
+      },
+      "historical_event": {
+        "name": "나이지리아 MEND 송유관 공격",
+        "year": 2006,
+        "month": "4월",
+        "how_exploited": "공격 직후 급등 타이밍에 절반 익절"
+      },
+      "time_pressure": "MEND 공격 뉴스 직후가 단기 고점. 타이밍 놓치면 되돌림",
+      "knowledge_used": "MEND 공격 시기, 유가 75달러 돌파 후 횡보 패턴",
+      "risk_level": "중위험",
+      "business_sector": "원자재/에너지"
+    },
+    "regression_ext": {
+      "is_regressor": true,
+      "regression_type": "회귀",
+      "timeline_knowledge": {
+        "info_used": "2006년 4월 MEND 공격, 유가 75달러 돌파",
+        "accuracy": "정확",
+        "source": "전생 기억"
+      },
+      "butterfly_effect": {
+        "original_event": "MEND 공격은 역사 그대로 발생",
+        "changed_event": "한시우가 정확히 그 타이밍에 익절",
+        "ripple_effect": "미미함"
+      },
+      "death_flag": {
+        "avoided": null,
+        "method": null
+      },
+      "regression_hint": {
+        "slip_up": "'나이지리아가 터진다'고 예언처럼 말한 것. 박성호가 '어떻게 아셨냐'고 물음.",
+        "suspicion_from": "없음"
+      },
+      "future_prep": {
+        "action": "나머지 원유 포지션 홀딩, 금 시장 분석 본격화",
+        "target_event": "5~6월 유가 78달러 도달 시 전량 익절, 금 진입"
+      }
+    }
+  },
+  "output": {
+    "block_no": 3,
+    "block_id": "Block 3",
+    "title": "중동의 불씨",
+    "content": {
+      "context": "2006년 3~4월. 이란 핵 위기 격화. UN 안보리 제재 논의. 유가 65달러에서 70달러 돌파. 한시우의 포지션은 이미 수익권이지만, 그는 움직이지 않는다. 진짜 촉매는 아직 안 터졌다.",
+      "event_villain": "유가가 72달러에서 횡보한다. 언론은 '고점 아니냐', '조정 온다'는 분석을 쏟아낸다. 박성호 PB가 전화한다. '고객님, 익절하시죠? 이미 40% 수익입니다. 충분히 버셨잖아요.' 회사 리스크 관리팀도 압박한다. '이 정도면 성공입니다. 욕심부리지 마세요.'",
+      "solution": "한시우는 거절한다. '아직이야. 나이지리아가 터진다.' PB가 멍해진다. '나이지리아요?' 4월 19일, 나이지리아 무장단체 MEND가 쉐브론 송유관을 폭파한다. 유가 급등. 75달러 돌파. 한시우는 이 타이밍에 포지션 절반을 익절한다. 7.5억 투입분에서 5억 수익 확정. 나머지 7.5억은 홀딩.",
+      "reward": "첫 수익 확정. 15억 → 20억 (5억 순익). 박성호 PB가 완전히 태도를 바꾼다. '고객님, 어떻게 아셨습니까...' 한시우는 대답하지 않는다. 담담하게 차트를 본다. 감흥 없다. 이건 시작일 뿐이다."
+    },
+    "stakes": "익절 타이밍 판단. 너무 빨리 팔면 수익 축소. 너무 늦게 팔면 되돌림에 물린다. 지금 팔면 5억 확정이지만, 틀리면 0이 될 수도 있다.",
+    "power_shift": {
+      "protagonist": "첫 수익 확정. '찍었다'는 소문이 퍼지기 시작. 박성호를 통해 증권가에 '재벌가 막내가 원유로 돈 벌었다'는 말이 돈다.",
+      "antagonist": "박성호 PB: 수익 확인 후 완전 태도 전환. 의심에서 실무 VIP 관리로. 이제 '처리해드리겠습니다'만 남았다"
+    },
+    "relationship_delta": [
+      {
+        "target": "박성호 (담당 PB)",
+        "before": "당혹, 반신반의",
+        "after": "경외. '이 사람은 뭔가 다르다'고 확신"
+      },
+      {
+        "target": "증권사 리스크관리팀",
+        "before": "경고, 압박",
+        "after": "입 다묾. 결과로 증명됐으니"
+      }
+    ],
+    "foreshadow": [
+      "한시우가 '80까지 간다'고 말함 - Block 4 추가 상승 복선",
+      "뉴스: '금 가격 상승세' - Block 4 금 진입 타이밍 복선",
+      "한시우 독백: '이란은 끝나지 않았어' - 추가 상승 복선"
+    ],
+    "callback": [
+      "Block 2에서 '나이지리아'를 중얼거린 것의 회수"
+    ],
+    "emotional_beat": {
+      "type": "triumph",
+      "intensity": 7
+    },
+    "tension_level": 7,
+    "pov_character": "한시우",
+    "location": {
+      "place": "서울 강남, SW인베스트먼트 오피스 (소규모 원룸 오피스)",
+      "type": "실내"
+    },
+    "time_span": {
+      "duration": "6주",
+      "in_story_time": "2006년 3월 ~ 4월"
+    },
+    "genre_ext": {
+      "capital_before": "23억 (미실현 포함)",
+      "capital_after": "30억",
+      "capital_delta": "+7억 (5억 실현 + 2억 미실현)",
+      "profit_loss": "+5억 (확정)",
+      "method": "부분 익절",
+      "investment_type": "원자재 선물 (WTI 원유)",
+      "deal_type": "시장 청산 (절반)",
+      "leverage_used": [
+        "회귀 지식 (MEND 공격 예측)",
+        "홀딩 배짱",
+        "시장의 공포 역이용"
+      ],
+      "opponent": {
+        "name": "시장 여론 / 박성호 PB",
+        "type": "심리전",
+        "weakness_exploited": "단기 이익에 급급한 조급함"
+      },
+      "historical_event": {
+        "name": "나이지리아 MEND 송유관 공격",
+        "year": 2006,
+        "month": "4월",
+        "how_exploited": "공격 직후 급등 타이밍에 절반 익절"
+      },
+      "time_pressure": "MEND 공격 뉴스 직후가 단기 고점. 타이밍 놓치면 되돌림",
+      "knowledge_used": "MEND 공격 시기, 유가 75달러 돌파 후 횡보 패턴",
+      "risk_level": "중위험",
+      "business_sector": "원자재/에너지"
+    },
+    "regression_ext": {
+      "is_regressor": true,
+      "regression_type": "회귀",
+      "timeline_knowledge": {
+        "info_used": "2006년 4월 MEND 공격, 유가 75달러 돌파",
+        "accuracy": "정확",
+        "source": "전생 기억"
+      },
+      "butterfly_effect": {
+        "original_event": "MEND 공격은 역사 그대로 발생",
+        "changed_event": "한시우가 정확히 그 타이밍에 익절",
+        "ripple_effect": "미미함"
+      },
+      "death_flag": {
+        "avoided": null,
+        "method": null
+      },
+      "regression_hint": {
+        "slip_up": "'나이지리아가 터진다'고 예언처럼 말한 것. 박성호가 '어떻게 아셨냐'고 물음.",
+        "suspicion_from": "없음"
+      },
+      "future_prep": {
+        "action": "나머지 원유 포지션 홀딩, 금 시장 분석 본격화",
+        "target_event": "5~6월 유가 78달러 도달 시 전량 익절, 금 진입"
+      }
+    },
+    "joint_docs": {
+      "final_location": "서울 강남구 역삼동, GFC 빌딩 인근의 1인용 공유 오피스. 책상 위에는 블룸버그 터미널과 트레이딩용 PC 모니터 2대가 아직 열기를 뿜고 있다.",
+      "physical_inventory": "방금 전 매도 주문을 실행한 로지텍 G1 마우스. 모니터 옆에 놓인, 방금 프린트한 '선물 포지션 부분 청산 확인서'. 식어버린 아메리카노가 담긴 종이컵.",
+      "world_joint": "WTI 원유 시장은 나이지리아발 공급 충격으로 극심한 변동성에 휩싸여 있다. 가격은 75달러 선에서 불안하게 움직이며, 시장 참여자들은 추가적인 지정학적 리스크를 찾기 위해 혈안이 되어 있다. 모든 금융 뉴스의 헤드라인은 'MEND'가 장식하고 있다."
+    },
+    "status_shadow": {
+      "key_stat_change": "원금 7.5억 회수, 실현 수익 5억 확보. 잔여 포지션: 원금 7.5억, 미실현 수익 5억. 총자산 30억으로 증가 (초기 20억 대비 +10억).",
+      "expected_injuries": "수 주간의 시장 압박과 기관의 경고를 버텨낸 극도의 정신적 피로. 아드레날린 과다 분비로 인한 일시적 탈진 및 수면 부족으로 인한 가벼운 편두통.",
+      "item_consumption": [
+        "정보 분석 및 의사결정에 소요된 시간 (약 6주)",
+        "PB 및 리스크 관리팀의 압박을 방어하기 위한 감정적 에너지",
+        "시장의 단기 노이즈를 필터링하기 위해 소모된 의지력"
+      ]
+    }
+  }
+}

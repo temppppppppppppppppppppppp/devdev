@@ -641,8 +641,7 @@ class Stage2Orchestrator:
                             if _se and hasattr(_se, "invalidate_cache"):
                                 _se.invalidate_cache(global_arc_no)
                         except Exception as cache_err:
-                            logging.warning(
-                                "[Sweep5-D] state_extractor cache invalidation failed (arc=%s): %s",
+                            logging.warning("[Sweep5-D] state_extractor cache invalidation failed (arc=%s): %s",
                                 global_arc_no,
                                 cache_err,
                             )
@@ -650,7 +649,8 @@ class Stage2Orchestrator:
                         attempt += 1
                         continue
                     elif _fin["action"] == "next":
-                        break
+                        attempt += 1
+                        continue
 
                     attempt += 1
 
@@ -732,17 +732,17 @@ class Stage2Orchestrator:
                     await asyncio.to_thread(_write_failure_report, failure_report_path, report_content)
 
                     logging.info(f"\n{'=' * 60}")
-                    logging.warning(f"📋 [V60.46] Arc {global_arc_no} 실패 분석 리포트")
+                    logging.warning(f" [V60.46] Arc {global_arc_no} 실패 분석 리포트")
                     logging.info(f"{'=' * 60}")
-                    logging.warning(f"\n🔴 REJECT 사유 ({len(arc_rejects)}회):")
+                    logging.warning(f"\n REJECT 사유 ({len(arc_rejects)}회):")
                     for rej in arc_rejects[-3:]:
                         logging.info(f"- {rej.get('reason', 'N/A')[:100]}")
-                    logging.info(f"\n🚫 중복 획득 금지 아이템 ({len(prev_items)}개):")
+                    logging.info(f"\n 중복 획득 금지 아이템 ({len(prev_items)}개):")
                     for item in prev_items[:5]:
                         logging.info(f"- {item}")
                     if len(prev_items) > 5:
                         logging.info(f"... 외 {len(prev_items) - 5}개")
-                    logging.info(f"\n📁 전체 리포트: {failure_report_path}")
+                    logging.info(f"\n 전체 리포트: {failure_report_path}")
                     logging.info(f"{'=' * 60}\n")
 
                     if all_refined_arcs:
@@ -753,7 +753,7 @@ class Stage2Orchestrator:
                         logging.info("[1] 건너뛰고 계속")
                         logging.info("[2] 중단")
                         logging.info("[3] 다시 하기 (자동)")
-                        logging.info("   [4] 수동 개입 (리포트 확인 후 재시도)")
+                        logging.info(" [4] 수동 개입 (리포트 확인 후 재시도)")
                         try:
                             user_choice = (await asyncio.to_thread(input, "   선택 (기본: 2): ")).strip()
                         except (EOFError, KeyboardInterrupt, ValueError):
@@ -780,8 +780,8 @@ class Stage2Orchestrator:
                             constraint_block = constraint_db.generate_constraint_block(global_arc_no)
                             break
                         elif user_choice == "4":
-                            logging.info(f"\n   📝 리포트 파일을 확인하세요: {failure_report_path}")
-                            logging.info("   💡 문제가 된 아이템이나 표현을 확인 후, 아래 옵션을 선택하세요.")
+                            logging.info(f"\n 리포트 파일을 확인하세요: {failure_report_path}")
+                            logging.info(" 문제가 된 아이템이나 표현을 확인 후, 아래 옵션을 선택하세요.")
                             try:
                                 manual_input = (
                                     (

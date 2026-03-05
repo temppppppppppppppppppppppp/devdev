@@ -158,7 +158,7 @@ class NarrativeStructureAnalyzer:
             except (ValueError, AttributeError):
                 _text = None
             if not _text:
-                logging.info("⚠️ [NarrativeAnalyzer] 빈 응답")
+                logging.info(" [NarrativeAnalyzer] 빈 응답")
                 return None
 
             result = _text.strip()
@@ -188,7 +188,7 @@ class NarrativeStructureAnalyzer:
                 return None
 
         except Exception as e:
-            logging.warning(f"⚠️ [NarrativeAnalyzer] 추출 오류: {e}")
+            logging.warning(f" [NarrativeAnalyzer] 추출 오류: {e}")
             return None
 
     def _detect_stagnation(self, episodes: list[dict]) -> dict:

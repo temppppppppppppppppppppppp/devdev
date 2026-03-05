@@ -83,8 +83,7 @@ class StoryExpander:
 
                     if is_retryable and attempt < self._MAX_RETRIES - 1:
                         delay = self._BASE_DELAY * (2**attempt)
-                        logging.warning(
-                            f"[S0-I3] {model} 일시적 오류 (attempt {attempt + 1}/{self._MAX_RETRIES}), "
+                        logging.warning(f"[S0-I3] {model} 일시적 오류 (attempt {attempt + 1}/{self._MAX_RETRIES}), "
                             f"{delay:.1f}초 후 재시도: {e}"
                         )
                         time.sleep(delay)
@@ -348,8 +347,7 @@ JSON:
             current_block += batch_count
             remaining -= batch_count
 
-            logging.info(
-                f"[v] Block {current_block - batch_count}~{current_block - 1} 생성 완료 ({len(extended)}/{extend_count})"
+            logging.info(f"[v] Block {current_block - batch_count}~{current_block - 1} 생성 완료 ({len(extended)}/{extend_count})"
             )
 
         return self.treatment

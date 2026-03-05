@@ -231,8 +231,7 @@ class ConsistencyValidator:
 
         # [I-04] 스킵된 검사 로깅
         if skipped_checks:
-            logging.warning(
-                f"[I-04] ConsistencyValidator: {len(skipped_checks)} checks skipped (no context): {skipped_checks}"
+            logging.warning(f"[I-04] ConsistencyValidator: {len(skipped_checks)} checks skipped (no context): {skipped_checks}"
             )
 
         # ═══════════════════════════════════════════════════════════════

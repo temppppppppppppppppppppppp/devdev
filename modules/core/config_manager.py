@@ -33,7 +33,7 @@ class ConfigManager:
         self.logs_dir = self.root / "logs"
         self.logs_dir.mkdir(parents=True, exist_ok=True)
 
-        logging.info(f"📁 [System] 필수 경로 점검 완료: {self.logs_dir}")
+        logging.info(f" [System] 필수 경로 점검 완료: {self.logs_dir}")
 
         # [SSOT] models.yaml agents 섹션에서 동적 로드
         models_from_yaml = self._load_agents_from_yaml()
@@ -176,8 +176,7 @@ class ConfigManager:
             # int/float 호환은 허용
             if isinstance(default, int | float) and isinstance(value, int | float):
                 return type(default)(value)
-            logging.warning(
-                f"[Phase 5-B-1] 타입 불일치: {key} = {type(value).__name__}, "
+            logging.warning(f"[Phase 5-B-1] 타입 불일치: {key} = {type(value).__name__}, "
                 f"기대 {type(default).__name__} — 기본값 사용"
             )
             return default

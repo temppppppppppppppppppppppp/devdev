@@ -475,7 +475,7 @@ class HUDKeys:
         # [V61.10] 교차검증: HUD name이 역할명이면 CoreIdentity 우선
         if hud_name and hud_name in cls._ROLE_NAME_BLACKLIST:
             if core_name and core_name not in cls._ROLE_NAME_BLACKLIST:
-                logging.warning(f"⚠️ [V61.10] HUD name '{hud_name}'은 역할명 → CoreIdentity '{core_name}' 사용")
+                logging.warning(f" [V61.10] HUD name '{hud_name}'은 역할명 → CoreIdentity '{core_name}' 사용")
                 return core_name
         # HUD name이 정상이면 그대로 사용
         if hud_name and hud_name not in cls._ROLE_NAME_BLACKLIST:

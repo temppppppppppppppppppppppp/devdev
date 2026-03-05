@@ -969,8 +969,7 @@ JSON으로 출력:
                 _s3_meta = round_ctx.blueprint.get("_stage3_meta", {}) if isinstance(round_ctx.blueprint, dict) else {}
                 _quality_risk = bool(_s3_meta.get("quality_risk", False))
                 _v75d_threshold = 1 if _quality_risk else 2
-                logging.info(
-                    "[V75-D] quality_risk=%s → threshold=%d, streak=%d",
+                logging.info("[V75-D] quality_risk=%s → threshold=%d, streak=%d",
                     _quality_risk,
                     _v75d_threshold,
                     _logic_error_streak,
@@ -1006,8 +1005,7 @@ JSON으로 출력:
                             else:
                                 self.ctx.ui.log("   ⚠️ [V75-D] inplace 패치 실패 — 기존 블루프린트 유지")
                     except Exception as _patch_err:
-                        logging.warning(
-                            "[FailClosed:V75-D] inplace 패치 실패: %s",
+                        logging.warning("[FailClosed:V75-D] inplace 패치 실패: %s",
                             _patch_err,
                         )
                     # [V76] 에스컬레이션 이벤트 로그
@@ -1044,8 +1042,7 @@ JSON으로 출력:
                             self.ctx.ui.log("   ⚠️ [V75-B] 블루프린트 재생성 실패 — 기존 블루프린트 유지")
                     except Exception as _regen_err:
                         _blueprint_regenerated = True
-                        logging.warning(
-                            "[SilentPass:V75-B] 블루프린트 재생성 실패: %s",
+                        logging.warning("[SilentPass:V75-B] 블루프린트 재생성 실패: %s",
                             _regen_err,
                         )
                     # [V76] 에스컬레이션 이벤트 로그
@@ -1289,8 +1286,7 @@ JSON으로 출력:
                     _bible_pov = _bible_root.get("protagonist_config", {}).get("pov", "")
                     if _bible_pov:
                         if loaded_sg.pov and _bible_pov != loaded_sg.pov:  # [TF-31-2]
-                            logging.warning(
-                                "[TF-31-2] StyleGuide POV(%s) ≠ Bible POV(%s) — Bible 우선 적용",
+                            logging.warning("[TF-31-2] StyleGuide POV(%s) ≠ Bible POV(%s) — Bible 우선 적용",
                                 loaded_sg.pov,
                                 _bible_pov,
                             )

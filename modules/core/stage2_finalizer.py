@@ -2,10 +2,185 @@
 
 import json
 import logging
+import re
 import time
 
 from modules.core.metrics_collector import get_metrics_collector
 from modules.models.arc import validate_arc
+
+
+def _to_num_with_korean_units(raw: object) -> float | None:
+    """'23억', '1.2조', '+3만' 형식 텍스트 → float 변환."""
+    if isinstance(raw, (int, float)):
+        return float(raw)
+    if not isinstance(raw, str):
+        return None
+
+    text = re.sub(r"\([^)]*\)", "", raw).strip()
+    text = text.replace(",", "")
+    if not text:
+        return None
+
+    sign = 1.0
+    if text[0] in "+-":
+        if text[0] == "-":
+            sign = -1.0
+        text = text[1:].strip()
+
+    unit_map = (
+        ("조", 1e12),
+        ("억", 1e8),
+        ("만", 1e4),
+    )
+    total = 0.0
+    matched_unit = False
+
+    for unit, mult in unit_map:
+        value_pattern = rf"([0-9]+(?:\.[0-9]+)?)\s*{re.escape(unit)}"
+        for value in re.findall(value_pattern, text):
+            try:
+                total += float(value) * mult
+                matched_unit = True
+            except ValueError:
+                return None
+        text = re.sub(value_pattern, "", text)
+
+    if matched_unit:
+        tail = re.search(r"([0-9]+(?:\.[0-9]+)?)", text)
+        if tail:
+            try:
+                total += float(tail.group(1))
+            except ValueError:
+                return None
+        return sign * total
+
+    plain = re.search(r"([0-9]+(?:\.[0-9]+)?)", text)
+    if not plain:
+        return None
+    try:
+        return sign * float(plain.group(1))
+    except ValueError:
+        return None
+
+
+def _relative_error(stated: float, actual: float) -> float:
+    if actual == 0:
+        return 0.0 if stated == 0 else float("inf")
+    return abs(stated - actual) / abs(actual)
+
+
+def _format_eok(value: float) -> str:
+    return f"{value / 1e8:.1f}" + "억"
+
+
+def _check_tactical_arithmetic(tactical_doc: str) -> list[str]:
+    """
+    [NS-1-P] Verify arithmetic claims in tactical_doc with pure Python checks.
+    Returns warning strings when mismatch is over 5%.
+    """
+    if not tactical_doc:
+        return []
+
+    tolerance = 0.05
+    issues: list[str] = []
+
+    num_with_unit = r"[\d,]+(?:\.[\d]+)?(?:조|억|만)?"
+    mul_op = r"(?:[xX×*]|곱)"
+    eq_op = r"(?:=|는|은|:)"
+    bae = "배"
+
+    mult_pattern = re.compile(
+        rf"(?P<a>{num_with_unit})\s*{mul_op}\s*"
+        rf"(?P<n>[\d,]+(?:\.[\d]+)?)\s*{bae}?\s*{eq_op}\s*"
+        rf"(?P<c>{num_with_unit})"
+    )
+    pct_pattern = re.compile(
+        rf"(?P<a>{num_with_unit})\s*{mul_op}\s*"
+        rf"(?P<p>[\d,]+(?:\.[\d]+)?)%\s*{eq_op}\s*"
+        rf"(?P<c>{num_with_unit})"
+    )
+
+    for match in mult_pattern.finditer(tactical_doc):
+        a = _to_num_with_korean_units(match.group("a"))
+        n = _to_num_with_korean_units(match.group("n"))
+        stated = _to_num_with_korean_units(match.group("c"))
+        if None in (a, n, stated):
+            continue
+        actual = a * n
+        if _relative_error(stated, actual) > tolerance:
+            issues.append(
+                f"Arithmetic mismatch: {match.group(0).strip()} "
+                f"(stated={match.group('c')}, actual={_format_eok(actual)})"
+            )
+
+    for match in pct_pattern.finditer(tactical_doc):
+        a = _to_num_with_korean_units(match.group("a"))
+        pct = _to_num_with_korean_units(match.group("p"))
+        stated = _to_num_with_korean_units(match.group("c"))
+        if None in (a, pct, stated):
+            continue
+        actual = a * (pct / 100.0)
+        if _relative_error(stated, actual) > tolerance:
+            issues.append(
+                f"Arithmetic mismatch: {match.group(0).strip()} "
+                f"(stated={match.group('c')}, actual={_format_eok(actual)})"
+            )
+
+    return issues
+
+
+def _check_block_worldstate_alignment(
+    enriched_block: dict,
+    refined_arc: dict,
+    arc_no: int,
+    threshold_pct: float = 0.30,
+) -> list[str]:
+    """
+    [NS-2] Compare treatment block goal numbers with arc_end_state values.
+    Advisory-only warning (no forced reject).
+    """
+    warnings: list[str] = []
+
+    if not isinstance(enriched_block, dict) or not isinstance(refined_arc, dict):
+        return warnings
+
+    genre_ext = enriched_block.get("genre_ext")
+    if not isinstance(genre_ext, dict):
+        return warnings
+
+    state_constraints = refined_arc.get("state_constraints")
+    if not isinstance(state_constraints, dict):
+        return warnings
+
+    arc_end_state = state_constraints.get("arc_end_state")
+    if not isinstance(arc_end_state, dict):
+        return warnings
+
+    target_capital = _to_num_with_korean_units(genre_ext.get("capital_after"))
+    if target_capital in (None, 0):
+        return warnings
+
+    actual_capital = None
+    actual_key = None
+    for key in ("total_assets", "assets", "capital", "total_capital"):
+        value = _to_num_with_korean_units(arc_end_state.get(key))
+        if value is not None:
+            actual_capital = value
+            actual_key = key
+            break
+
+    if actual_capital is None:
+        return warnings
+
+    divergence = abs(target_capital - actual_capital) / abs(target_capital)
+    if divergence > threshold_pct:
+        warnings.append(
+            f"[NS-2] Arc {arc_no} capital divergence: "
+            f"target={genre_ext.get('capital_after')} vs arc_end_state.{actual_key}={_format_eok(actual_capital)} "
+            f"(delta={divergence * 100:.0f}%)"
+        )
+
+    return warnings
 
 
 class Stage2Finalizer:
@@ -260,6 +435,7 @@ class Stage2Finalizer:
             _current_arc = dict(refined_arc)
             _current_audit = audit
             _fix_ok = False
+            _applied_patches: list[str] = []
 
             for _fix_i in range(_MAX_FIX):
                 # [TF-33][PF-1] Director fix_scope 기반 수정 전략 라우팅 — 누락 시 점수 기반 폴백
@@ -294,6 +470,20 @@ class Stage2Finalizer:
                     logging.warning("[TF-32-V] patch 실패 → REJECT")
                     break
 
+                # [NS-1-P] Detect arithmetic mismatch in inplace tactical_doc patch.
+                _arith_patch_ctx = ""
+                _tactical_patched = _patched.get("tactical_doc", "") if isinstance(_patched, dict) else ""
+                if _tactical_patched:
+                    _arith_issues = _check_tactical_arithmetic(str(_tactical_patched))
+                    if _arith_issues:
+                        _arith_warn = "\n".join(f"  - {item}" for item in _arith_issues)
+                        logging.warning("[NS-1-P] arithmetic warning detected in inplace patch:\n%s", _arith_warn)
+                        _arith_patch_ctx = (
+                            "\n\n[NS-1-P arithmetic warning in inplace patch]\n"
+                            f"{_arith_warn}\n"
+                            "Please verify the patched tactical_doc arithmetic before approving."
+                        )
+
                 # [F-2] InPlace Arc 변경 비율 로깅
                 try:
                     from modules.core.constants import calc_patch_change_ratio
@@ -311,8 +501,23 @@ class Stage2Finalizer:
                 except Exception:
                     pass
 
+                # [PWF-S2] 패치 이력 적적 — Director 재심사 컨텍스트에 주입
+                if _fix_instr:
+                    _applied_patches.append(str(_fix_instr)[:200])
+
                 # Director 재심사 (동일 메서드)
                 self.ctx.ui.log(f"      🔄 [TF-38] Director 재심사 #{_fix_i + 1} 호출 중...")
+                # [PWF-S2] 재심사에 이미 적용된 패치를 story_context에 주입
+                # → curr_block 문서로 인한 동일 오류 재감지 가능성 최소화
+                _patch_ctx = _arith_patch_ctx
+                if _applied_patches:
+                    _patch_lines = "\n".join(f"- {p}" for p in _applied_patches)
+                    _patch_ctx += (
+                        "\n\n[PASS_WITH_FIX 재심사 — 이미 적용된 패치]\n"
+                        f"{_patch_lines}\n"
+                        "위 항목은 tactical_doc에 이미 반영되었습니다. "
+                        "curr_block 문서에서 동일 오류가 보여도 tactical_doc에서 수정되었으면 승인하세요."
+                    )
                 try:
                     _re_audit = self.ctx.agents["director"].audit_strategic_plan(
                         _patched,
@@ -321,7 +526,7 @@ class Stage2Finalizer:
                         protagonist_name=protagonist_name,
                         suspected_duplicates=suspected_duplicates,
                         entity_registry=entity_registry_for_director,
-                        story_context=_story_context,
+                        story_context=(_story_context or "") + _patch_ctx,
                     )
                 except (RuntimeError, ValueError, OSError):
                     logging.exception("[TF-32-V] 재심사 예외")
@@ -586,6 +791,13 @@ class Stage2Finalizer:
             if isinstance(refined_arc, dict) and "arc_no" not in refined_arc:
                 refined_arc["arc_no"] = global_arc_no
             refined_arc = validate_arc(refined_arc)  # [Step2] Pydantic ingress+egress
+
+            # [NS-2] Advisory-only check: treatment block target vs arc_end_state alignment.
+            _ns2_warnings = _check_block_worldstate_alignment(enriched_block, refined_arc, global_arc_no)
+            if _ns2_warnings:
+                for _warn in _ns2_warnings:
+                    logging.warning(_warn)
+
             all_refined_arcs.append(refined_arc)
 
             ### [0124 핵심 4] DB 원자적 커밋
@@ -839,7 +1051,7 @@ class Stage2Finalizer:
             )
 
         return {
-            "action": "next",
+            "action": "retry",
             "last_refined_context": last_refined_context,
             "current_ep_start": current_ep_start,
             "current_feedback": current_feedback,

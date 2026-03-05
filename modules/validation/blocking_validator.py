@@ -91,8 +91,7 @@ class BlockingValidator:
         degraded_checks = []
         if relationship_check.get("degraded"):
             degraded_checks.append(relationship_check.get("check", "relationship_consistency"))
-            logging.warning(
-                f"[BlockingValidator] {relationship_check.get('check', 'relationship_consistency')} 검증 degraded: {relationship_check.get('error', '')}"
+            logging.warning(f"[BlockingValidator] {relationship_check.get('check', 'relationship_consistency')} 검증 degraded: {relationship_check.get('error', '')}"
             )
             warnings.append(f"degraded: {relationship_check.get('check', 'relationship_consistency')}")
         if not relationship_check["passed"]:
@@ -101,8 +100,7 @@ class BlockingValidator:
         information_check = self._check_information_consistency(manuscript, validation_context)
         if information_check.get("degraded"):
             degraded_checks.append(information_check.get("check", "information_consistency"))
-            logging.warning(
-                f"[BlockingValidator] {information_check.get('check', 'information_consistency')} 검증 degraded: {information_check.get('error', '')}"
+            logging.warning(f"[BlockingValidator] {information_check.get('check', 'information_consistency')} 검증 degraded: {information_check.get('error', '')}"
             )
             warnings.append(f"degraded: {information_check.get('check', 'information_consistency')}")
         if not information_check["passed"]:
@@ -111,8 +109,7 @@ class BlockingValidator:
         # [I-C03] 모든 일관성 검증이 degraded면 경고
         if len(degraded_checks) >= 2:
             self._degraded_count += 1
-            logging.warning(
-                f"[C-03] ALL consistency checks degraded ({self._degraded_count}회 누적): {degraded_checks}"
+            logging.warning(f"[C-03] ALL consistency checks degraded ({self._degraded_count}회 누적): {degraded_checks}"
             )
 
         if self.enable_justification_checks:

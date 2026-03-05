@@ -179,7 +179,7 @@ class Stage2ValidationPipeline:
         python_advisory = []
         if not four_phase_passed and refined_arc and self.ctx.arc_draft_validator:
             try:
-                logging.info("🔬 [무기 #3] DraftValidator 사전 검증...")
+                logging.info(" [무기 #3] DraftValidator 사전 검증...")
                 draft_result = self.ctx.arc_draft_validator.validate(
                     arc=refined_arc,
                     prev_arcs=all_refined_arcs,
@@ -187,7 +187,7 @@ class Stage2ValidationPipeline:
                 )
                 advisory_issues = draft_result.get("advisory_issues", [])
                 if advisory_issues:
-                    logging.info(f"📋 [V60.56] DraftValidator advisory {len(advisory_issues)}개 발견 - LLM에게 전달")
+                    logging.info(f" [V60.56] DraftValidator advisory {len(advisory_issues)}개 발견 - LLM에게 전달")
                     for issue in advisory_issues[:3]:
                         if isinstance(issue, dict):
                             logging.info(f"- {issue.get('message', str(issue))[:60]}")
@@ -198,7 +198,7 @@ class Stage2ValidationPipeline:
                 # [S2-P1-4] draft_validator_passed는 2차 호출(L256)에서만 설정
                 # 1차 호출은 Consensus용 advisory 수집 전용
             except (RuntimeError, ValueError, OSError) as dv_err:
-                logging.warning(f"⚠️ [DraftValidator] 스킵: {str(dv_err)[:50]}")
+                logging.warning(f" [DraftValidator] 스킵: {str(dv_err)[:50]}")
 
         # ─────────────────────────────────────────────────────────────
         # [V60.36] SelfReflector
@@ -212,7 +212,7 @@ class Stage2ValidationPipeline:
         ):
             self.ctx.ui.log("      🪞 [TF-38] SelfReflector 자기 비판 중...")
             try:
-                logging.info("🪞 [SelfReflector] Analyst 자기 비판 시작...")
+                logging.info(" [SelfReflector] Analyst 자기 비판 시작...")
                 arc_str = json.dumps(refined_arc, ensure_ascii=False, indent=2)
                 context_str = f"Arc {global_arc_no} 설계. 피드백: {current_feedback or '없음'}"
 
@@ -230,17 +230,16 @@ class Stage2ValidationPipeline:
                             )
                         if isinstance(improved_arc, dict):
                             refined_arc = improved_arc
-                            logging.info(
-                                f"✅ [SelfReflector] 자기 개선 완료 (점수: {getattr(reflection_result, 'improvement_score', '?')})"
+                            logging.info(f"✅ [SelfReflector] 자기 개선 완료 (점수: {getattr(reflection_result, 'improvement_score', '?')})"
                             )
                         else:
-                            logging.warning("⚠️ [SelfReflector] 개선 결과가 dict가 아님, 원본 유지")
+                            logging.warning(" [SelfReflector] 개선 결과가 dict가 아님, 원본 유지")
                     except json.JSONDecodeError:
-                        logging.warning("⚠️ [SelfReflector] 개선 결과 파싱 실패, 원본 유지")
+                        logging.warning(" [SelfReflector] 개선 결과 파싱 실패, 원본 유지")
                 else:
-                    logging.info("ℹ️ [SelfReflector] 개선 불필요")
+                    logging.info("ℹ [SelfReflector] 개선 불필요")
             except (RuntimeError, ValueError, OSError, json.JSONDecodeError) as sr_err:
-                logging.warning(f"⚠️ [SelfReflector] 스킵: {str(sr_err)[:50]}")
+                logging.warning(f" [SelfReflector] 스킵: {str(sr_err)[:50]}")
 
         # ─────────────────────────────────────────────────────────────
         # [V60.36] Consensus 검증
@@ -248,7 +247,7 @@ class Stage2ValidationPipeline:
         if not four_phase_passed and refined_arc and "consensus" in self.ctx.agents:
             self.ctx.ui.log("      🗳️ [TF-38] Consensus 3-LLM 합의 검증 중...")
             try:
-                logging.info("🗳️ [Consensus] 3-LLM 합의 검증 시작...")
+                logging.info(" [Consensus] 3-LLM 합의 검증 시작...")
                 with rich_console.status("[bold magenta]🗳️ Consensus 3-LLM 검증 중...[/]", spinner="dots"):
                     consensus_verdict, consensus_result = self.ctx.agents["consensus"].validate_with_consensus(
                         arc=refined_arc,
@@ -258,8 +257,7 @@ class Stage2ValidationPipeline:
                     )
 
                 vote_summary = consensus_result.get("vote_summary", {})
-                logging.info(
-                    f"- 투표 결과: PASS {vote_summary.get('pass', 0)} / REJECT {vote_summary.get('reject', 0)}"
+                logging.info(f"- 투표 결과: PASS {vote_summary.get('pass', 0)} / REJECT {vote_summary.get('reject', 0)}"
                 )
 
                 if consensus_verdict == "REJECT":
@@ -269,7 +267,7 @@ class Stage2ValidationPipeline:
                     logging.warning(f"- CRITICAL: {len(critical_issues)}개")
                     logging.info(f"- 전체 이슈: {len(all_issues)}개")
                     for ci in critical_issues[:3]:
-                        logging.warning(f"🚨 [{ci.get('category', '?')}] {(ci.get('issue', '?') or '?')[:80]}")
+                        logging.warning(f" [{ci.get('category', '?')}] {(ci.get('issue', '?') or '?')[:80]}")
 
                     feedback_parts = [f"[{ci.get('category')}] {ci.get('issue')}" for ci in critical_issues[:3]]
                     _advisory_msg = "Consensus 검증 실패: " + "; ".join(feedback_parts)
@@ -280,7 +278,7 @@ class Stage2ValidationPipeline:
                             "message": _advisory_msg,
                         }
                     )
-                    logging.info(f"📋 [TF-25-08] Consensus REJECT → Director advisory: {_advisory_msg[:100]}...")
+                    logging.info(f" [TF-25-08] Consensus REJECT → Director advisory: {_advisory_msg[:100]}...")
                 else:
                     logging.info("✅ [Consensus] PASS!")
                     consensus_passed = True
@@ -288,7 +286,7 @@ class Stage2ValidationPipeline:
                     if passed_checks:
                         logging.info(f"- 통과 항목: {passed_checks[:3]}")
             except (RuntimeError, ValueError, OSError) as cv_err:
-                logging.warning(f"⚠️ [Consensus] 검증 스킵: {str(cv_err)[:50]}")
+                logging.warning(f" [Consensus] 검증 스킵: {str(cv_err)[:50]}")
 
         # [데이터 검증]
         if not refined_arc or not isinstance(refined_arc, dict):
@@ -1043,7 +1041,7 @@ class Stage2ValidationPipeline:
                 pattern = result.get("pattern", "")
                 recommendation = result.get("recommendation", "")
 
-                logging.warning(f"🔍 [V60.15] 진짜 서사 정체 감지: {stagnation_type}")
+                logging.warning(f" [V60.15] 진짜 서사 정체 감지: {stagnation_type}")
                 logging.info(f"패턴: {pattern}")
 
                 return {
@@ -1055,19 +1053,19 @@ class Stage2ValidationPipeline:
             if result.get("status") == "WARNING":
                 warning_type = result.get("warning_type", "")
                 pattern = result.get("pattern", "")
-                logging.warning(f"⚠️ [V60.15] 서사 경고: {warning_type} - {pattern}")
+                logging.warning(f" [V60.15] 서사 경고: {warning_type} - {pattern}")
 
             diversity = result.get("diversity_score", 1.0)
             if diversity < _min_diversity:
-                logging.warning(f"📊 [V60.15] 서사 다양성: {diversity:.0%} (개선 권장)")
+                logging.warning(f" [V60.15] 서사 다양성: {diversity:.0%} (개선 권장)")
 
             return {"status": "PASS", "diversity_score": diversity}
 
         except ImportError:
-            logging.warning("⚠️ [V60.15] NarrativeStructureAnalyzer 로드 실패, 폴백")
+            logging.warning(" [V60.15] NarrativeStructureAnalyzer 로드 실패, 폴백")
             return self._stage2_flow_guard_legacy(normalized)
         except Exception as e:
-            logging.warning(f"⚠️ [V60.15] 서사 분석 오류 (비차단): {e}")
+            logging.warning(f" [V60.15] 서사 분석 오류 (비차단): {e}")
             return {"status": "PASS", "fallback": True}
 
     def _stage2_flow_guard_legacy(self, normalized: list) -> dict:

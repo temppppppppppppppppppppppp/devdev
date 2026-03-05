@@ -147,14 +147,13 @@ class UnifiedArcValidator(BaseAgent):
 
         # [V63.4] Python CRITICAL도 LLM에 전달 (Python은 정보 제공만, 최종 판단은 LLM)
         if python_result["has_critical"]:
-            logging.warning(
-                f"⚠️ [V63.4] Python CRITICAL {len(python_result.get('critical_summary', ''))}자 → LLM 검증으로 전달"
+            logging.warning(f" [V63.4] Python CRITICAL {len(python_result.get('critical_summary', ''))}자 → LLM 검증으로 전달"
             )
 
         # ═══════════════════════════════════════════════════════════════
         # Phase B: LLM 문맥 검증 (유료)
         # ═══════════════════════════════════════════════════════════════
-        logging.warning("🔍 [UnifiedValidator] LLM 검증 중...")
+        logging.warning(" [UnifiedValidator] LLM 검증 중...")
         print("      🔍 [ArcValidator] LLM 검증 중...")
 
         llm_result = self._llm_validate(arc, prev_arcs, constraints, python_result, genre=genre)
@@ -173,7 +172,7 @@ class UnifiedArcValidator(BaseAgent):
             # MAJOR가 있어도 PASS → Director가 최종 판정
             verdict = "PASS"
             if major_count > 0:
-                logging.warning(f"⚠️ [UnifiedValidator] MAJOR {major_count}건 경고 → Director에게 위임")
+                logging.warning(f" [UnifiedValidator] MAJOR {major_count}건 경고 → Director에게 위임")
 
         result = {
             "verdict": verdict,
@@ -216,7 +215,7 @@ class UnifiedArcValidator(BaseAgent):
                     "fix_hint": f"'{v.get('npc_name', '?')}'을(를) 등장시키지 마세요 (사망 NPC)",
                 }
             )
-            logging.warning(f"💀 [V60.94] REJECT: 죽은 NPC '{v.get('npc_name')}' 등장!")
+            logging.warning(f" [V60.94] REJECT: 죽은 NPC '{v.get('npc_name')}' 등장!")
 
         npc_changes = state_tracker.check_npc_changes(tactical, arc_no)
         for change in npc_changes:
@@ -230,7 +229,7 @@ class UnifiedArcValidator(BaseAgent):
                     "fix_hint": f"'{change.get('npc_name', '?')}'의 {change_type} 변경에 대한 정당화 사유 필요 (습득, 성장 등)",
                 }
             )
-            logging.warning(f"⚠️ [V60.95] WARNING: NPC '{change.get('npc_name')}' {change_type} 변경 감지")
+            logging.warning(f" [V60.95] WARNING: NPC '{change.get('npc_name')}' {change_type} 변경 감지")
 
         return issues
 
@@ -603,7 +602,7 @@ class UnifiedArcValidator(BaseAgent):
             result = self._extract_json_robust(response)
 
             if not isinstance(result, dict):
-                logging.warning("⚠️ [UnifiedValidator] JSON 파싱 실패 → REJECT")
+                logging.warning(" [UnifiedValidator] JSON 파싱 실패 → REJECT")
                 # [V61.5] fail-open → fail-closed: 파싱 실패 시 REJECT
                 return {
                     "verdict": "REJECT",
@@ -622,10 +621,10 @@ class UnifiedArcValidator(BaseAgent):
 
             _contradictions = result.get("contradictions", [])
             if isinstance(_contradictions, list) and _contradictions:
-                logging.warning(f"🚨 [ArcValidator] 모순 {len(_contradictions)}건 발견:")
+                logging.warning(f" [ArcValidator] 모순 {len(_contradictions)}건 발견:")
                 print(f"      🚨 [ArcValidator] 모순 {len(_contradictions)}건 발견")
                 for _c in _contradictions[:5]:
-                    logging.warning(f"   ▸ {str(_c)[:150]}")
+                    logging.warning(f" {str(_c)[:150]}")
             else:
                 logging.info("✅ [ArcValidator] 모순·일관성 이상 없음")
                 print("      ✅ [ArcValidator] 모순 없음")
@@ -633,7 +632,7 @@ class UnifiedArcValidator(BaseAgent):
             return result
 
         except Exception as e:
-            logging.warning(f"⚠️ [UnifiedValidator] LLM 오류: {str(e)[:50]} → REJECT")
+            logging.warning(f" [UnifiedValidator] LLM 오류: {str(e)[:50]} → REJECT")
             # [V61.5] fail-open → fail-closed: LLM 오류 시 REJECT
             return {
                 "verdict": "REJECT",

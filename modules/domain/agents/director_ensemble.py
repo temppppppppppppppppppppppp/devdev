@@ -71,7 +71,7 @@ class DirectorEnsembleSelector:
             single_result["comparison_notes"] = "단일 후보"
             return single_result
 
-        logging.info(f"🎭 [Director] {len(candidates)}개 후보 비교 중...")
+        logging.info(f" [Director] {len(candidates)}개 후보 비교 중...")
 
         # [TTE] 에피소드별 지능 추출 + 안전캡 6000 (기존 2000×3)
         arc_tactical_ep = extract_episode_tactical(
@@ -182,7 +182,7 @@ Architect가 inplace 단계에서 즉시 교정하고 재제출한다. 소소한
             result = self._d._extract_json_robust(response)
 
             if not isinstance(result, dict):
-                logging.warning("⚠️ [Director] 비교 응답 파싱 실패")
+                logging.warning(" [Director] 비교 응답 파싱 실패")
                 return self._fallback_first_candidate(
                     candidates, arc_data, ep_num, prev_blueprint, entity_registry, state_tracker
                 )
@@ -199,20 +199,19 @@ Architect가 inplace 단계에서 즉시 교정하고 재제출한다. 소소한
             if not isinstance(contradictions, list):
                 contradictions = []
 
-            logging.info(f"🎯 [Director] 후보 {selected_idx + 1} 선택 ({decision}, 점수: {score})")
+            logging.info(f" [Director] 후보 {selected_idx + 1} 선택 ({decision}, 점수: {score})")
             if contradictions:
-                logging.warning(f"🚨 [Director] 모순 {len(contradictions)}건 발견:")
+                logging.warning(f" [Director] 모순 {len(contradictions)}건 발견:")
                 for c in contradictions[:5]:
-                    logging.warning(f"   ▸ {str(c)[:120]}")
+                    logging.warning(f" {str(c)[:120]}")
             else:
                 logging.info("✅ [Director] 모순·일관성 이상 없음")
             if comparison_notes:
-                logging.info(f"📝 비교: {comparison_notes[:150]}{'...' if len(comparison_notes) > 150 else ''}")
+                logging.info(f" 비교: {comparison_notes[:150]}{'...' if len(comparison_notes) > 150 else ''}")
             if reason:
-                logging.info(f"💡 이유: {reason[:100]}{'...' if len(reason) > 100 else ''}")
+                logging.info(f" 이유: {reason[:100]}{'...' if len(reason) > 100 else ''}")
 
-            logging.info(
-                f"[Stage3 Director] Blueprint {decision} (점수: {score}) 후보{selected_idx + 1} | {reason[:120] if reason else ''}"
+            logging.info(f"[Stage3 Director] Blueprint {decision} (점수: {score}) 후보{selected_idx + 1} | {reason[:120] if reason else ''}"
             )
             print(f"\n   {'=' * 56}")
             print(f"      [Stage3 Director] Blueprint {decision} (점수: {score})")
@@ -247,7 +246,7 @@ Architect가 inplace 단계에서 즉시 교정하고 재제출한다. 소소한
             }
 
         except Exception as e:
-            logging.warning(f"⚠️ [Director] 비교 오류: {str(e)[:50]}")
+            logging.warning(f" [Director] 비교 오류: {str(e)[:50]}")
             return self._fallback_first_candidate(
                 candidates, arc_data, ep_num, prev_blueprint, entity_registry, state_tracker
             )
@@ -296,7 +295,7 @@ Architect가 inplace 단계에서 즉시 교정하고 재제출한다. 소소한
             }
 
         # [TF-36] 대원칙 3 경고: Director LLM 없이 Python-only PASS
-        logging.warning("⚠️ [대원칙3] _evaluate_single_blueprint: Python-only PASS (Director LLM 미호출)")
+        logging.warning(" [대원칙3] _evaluate_single_blueprint: Python-only PASS (Director LLM 미호출)")
         return {
             "decision": "PASS",
             "score": 75,
@@ -308,7 +307,7 @@ Architect가 inplace 단계에서 즉시 교정하고 재제출한다. 소소한
         self, candidates: list, arc_data: dict, ep_num: int, prev_blueprint: dict, entity_registry: dict, state_tracker
     ) -> dict:
         """폴백: 첫 번째 후보 선택 (비교 실패 시)"""
-        logging.warning("⚠️ [Director] 폴백 - 첫 번째 후보 평가")
+        logging.warning(" [Director] 폴백 - 첫 번째 후보 평가")
         result = self._evaluate_single_blueprint(
             candidates[0], arc_data, ep_num, prev_blueprint, entity_registry, state_tracker
         )
@@ -359,8 +358,7 @@ Architect가 inplace 단계에서 즉시 교정하고 재제출한다. 소소한
         if not candidates:
             return _empty_result
 
-        logging.info(
-            f"🎭 [TF-47] Director Arc {'단독 평가' if len(candidates) == 1 else '비교'}: {len(candidates)}개 후보"
+        logging.info(f" [TF-47] Director Arc {'단독 평가' if len(candidates) == 1 else '비교'}: {len(candidates)}개 후보"
         )
 
         # 후보별 요약 생성
@@ -466,7 +464,7 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
             result = self._d._extract_json_robust(response)
 
             if not isinstance(result, dict):
-                logging.warning("⚠️ [TF-47] Arc 비교 응답 파싱 실패 → Python 폴백")
+                logging.warning(" [TF-47] Arc 비교 응답 파싱 실패 → Python 폴백")
                 return self._fallback_arc_selection(candidates)
 
             selected_idx = _safe_int(result.get("selected_index", 0), 0)
@@ -483,16 +481,15 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
             comparison_notes = str(result.get("comparison_notes", ""))
             reason = str(result.get("reason", ""))
 
-            logging.info(f"🎯 [TF-47] 후보 {selected_idx + 1} 선택 ({decision}, 점수: {score})")
+            logging.info(f" [TF-47] 후보 {selected_idx + 1} 선택 ({decision}, 점수: {score})")
             if contradictions:
-                logging.warning(f"🚨 [TF-47] 모순 {len(contradictions)}건 발견:")
+                logging.warning(f" [TF-47] 모순 {len(contradictions)}건 발견:")
                 for c in contradictions[:5]:
-                    logging.warning(f"   ▸ {str(c)[:120]}")
+                    logging.warning(f" {str(c)[:120]}")
             else:
                 logging.info("✅ [TF-47] 모순·일관성 이상 없음")
 
-            logging.info(
-                f"[Stage2 Director] Arc {decision} (점수: {score}) 후보{selected_idx + 1} | {reason[:120] if reason else ''}"
+            logging.info(f"[Stage2 Director] Arc {decision} (점수: {score}) 후보{selected_idx + 1} | {reason[:120] if reason else ''}"
             )
             print(f"\n   {'=' * 56}")
             print(f"      [Stage2 Director] Arc 비교 판정: {decision} (점수: {score})")
@@ -525,13 +522,13 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
             }
 
         except Exception as e:
-            logging.warning(f"⚠️ [TF-47] Arc 비교 오류: {str(e)[:80]} → Python 폴백")
+            logging.warning(f" [TF-47] Arc 비교 오류: {str(e)[:80]} → Python 폴백")
             return self._fallback_arc_selection(candidates)
 
     @staticmethod
     def _fallback_arc_selection(candidates: list[dict]) -> dict:
         """[TF-47] LLM 실패 시 Python 폴백 — 첫 번째 후보 PASS 반환."""
-        logging.warning("⚠️ [TF-47] 폴백 — 첫 번째 후보 선택 (Python)")
+        logging.warning(" [TF-47] 폴백 — 첫 번째 후보 선택 (Python)")
         best = candidates[0] if candidates else None
         return {
             "decision": "PASS",
@@ -588,7 +585,7 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
 
         if not qualified_indices:
             if not candidates:
-                logging.warning("🚨 [V60.97] 빈 후보 리스트 — REJECT 반환")
+                logging.warning(" [V60.97] 빈 후보 리스트 — REJECT 반환")
                 return {
                     "selected": "A",
                     "selected_candidate": {"manuscript": "", "error": True},
@@ -601,7 +598,7 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
                 }
             lengths = [len(c.get("manuscript", "")) for c in candidates]
             best_idx = lengths.index(max(lengths))
-            logging.warning(f"🚨 [V60.97] 모든 후보 분량 미달 (최대: {max(lengths)}자 < {MIN_MANUSCRIPT_LENGTH}자)")
+            logging.warning(f" [V60.97] 모든 후보 분량 미달 (최대: {max(lengths)}자 < {MIN_MANUSCRIPT_LENGTH}자)")
             return {
                 "selected": ["A", "B", "C"][best_idx],
                 "selected_candidate": candidates[best_idx],
@@ -616,8 +613,7 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
                 "length_violation": True,
             }
 
-        logging.info(
-            f"✅ [V60.97] 분량 통과 후보: {len(qualified_indices)}개 "
+        logging.info(f"✅ [V60.97] 분량 통과 후보: {len(qualified_indices)}개 "
             f"({[chr(65 + i) if i < len(candidates) else f'#{i}' for i in qualified_indices]})"
         )
 
@@ -771,8 +767,7 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
                 )
                 cache_name = cache_info.get("cache_name")
                 _was_cached = cache_info.get("cached", False)
-                logging.info(
-                    f"📦 [Director-CACHE] {'HIT' if _was_cached else 'MISS(신규)'}: "
+                logging.info(f" [Director-CACHE] {'HIT' if _was_cached else 'MISS(신규)'}: "
                     f"stable={len(stable_context):,}자, variable={len(variable_prompt):,}자"
                 )
             except Exception as _cache_err:
@@ -789,7 +784,7 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
                         full_prompt_fallback=full_fallback,
                     )
                 else:
-                    logging.info(f"⚠️ [Director] fallback 경로: full_fallback 전송 ({len(full_fallback):,}자)")
+                    logging.info(f" [Director] fallback 경로: full_fallback 전송 ({len(full_fallback):,}자)")
                     response = self._d.ask(full_fallback, temperature=0.1, thinking_level="high")
             except Exception as _ask_err:
                 logging.warning("[Director] select_and_judge_ensemble ask() 실패: %s", _ask_err)
@@ -797,7 +792,7 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
         result = self._d._extract_json_robust(response)
 
         if not result or result.get("parsing_error"):
-            logging.warning("⚠️ [Director] 앙상블 선택 파싱 실패 - 첫 번째 후보 기본 선택")
+            logging.warning(" [Director] 앙상블 선택 파싱 실패 - 첫 번째 후보 기본 선택")
             return {
                 "selected": "A",
                 "selected_candidate": candidates[0] if candidates else {},
@@ -820,7 +815,7 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
             selected_idx = max(qualified_indices, key=lambda i: len(candidates[i].get("manuscript", "")))
             selected_letter = ["A", "B", "C"][min(selected_idx, 2)]  # [TF-25-01] IndexError 방어
             v60_97_swapped = True
-            logging.warning(f"⚠️ [V60.97] LLM 선택 {old_selection} → {selected_letter}로 교체 (분량 기준)")
+            logging.warning(f" [V60.97] LLM 선택 {old_selection} → {selected_letter}로 교체 (분량 기준)")
             # swap 후 selection_reason도 교체 사실 반영
             original_reason = result.get("selection_reason", "")
             result["selection_reason"] = (
@@ -838,8 +833,7 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
         if isinstance(_sb_raw, dict) and _sb_raw:
             _sb_sum = sum(v for v in _sb_raw.values() if isinstance(v, int | float))
             if _sb_sum != score and _sb_sum > 0:
-                logging.warning(
-                    "[NC-3B] score_breakdown 합산 불일치: breakdown=%d, score=%d → breakdown 우선",
+                logging.warning("[NC-3B] score_breakdown 합산 불일치: breakdown=%d, score=%d → breakdown 우선",
                     _sb_sum,
                     score,
                 )
@@ -870,18 +864,17 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
                 _firewall_triggered = False
                 if _critical_count >= 1:
                     _firewall_triggered = True
-                    logging.warning(f"🚨 [V75-C] Contradiction Firewall: CRITICAL {_critical_count}건 → REJECT 강제")
+                    logging.warning(f" [V75-C] Contradiction Firewall: CRITICAL {_critical_count}건 → REJECT 강제")
                 elif _major_count >= 2:
                     _firewall_triggered = True
-                    logging.warning(f"🚨 [V75-C] Contradiction Firewall: MAJOR {_major_count}건 → REJECT 강제")
+                    logging.warning(f" [V75-C] Contradiction Firewall: MAJOR {_major_count}건 → REJECT 강제")
                 if _firewall_triggered:
                     original_verdict = "REJECT"
                     _pre_firewall_score = score  # [TF-22b] 패치 모드용 원본 점수 보존
                     score = min(score, 44)  # adaptive floor=45 미만 → 승격 불가
                     for _c in _found[:5]:
                         if isinstance(_c, dict):
-                            logging.warning(
-                                f"   ▸ [{_c.get('severity', '?')}] {str(_c.get('type', ''))}: "
+                            logging.warning(f" [{_c.get('severity', '?')}] {str(_c.get('type', ''))}: "
                                 f"{str(_c.get('current_violation', ''))[:100]}"
                             )
 
@@ -897,27 +890,23 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
                 _ncr_reason = str(_ncr.get("reason", ""))[:100]
                 if _ncr_verdict == "AGREE":
                     _nc_agree_count += 1
-                    logging.warning(
-                        "[NC-1] Director AGREE: %s — %s",
+                    logging.warning("[NC-1] Director AGREE: %s — %s",
                         _ncr_id,
                         _ncr_reason,
                     )
                 elif _ncr_verdict == "DISMISS":
-                    logging.info(
-                        "[NC-1] Director DISMISS: %s — %s",
+                    logging.info("[NC-1] Director DISMISS: %s — %s",
                         _ncr_id,
                         _ncr_reason,
                     )
                 else:
-                    logging.warning(
-                        "[NC-1] Director 미판정: %s (verdict=%s)",
+                    logging.warning("[NC-1] Director 미판정: %s (verdict=%s)",
                         _ncr_id,
                         _ncr_verdict,
                     )
             if _nc_agree_count > 0:
                 # AGREE된 항목이 있으면 → MAJOR 모순으로 취급
-                logging.warning(
-                    "[NC-1] Director가 %d건 수치 모순 인정 → continuity_contradiction 감점 강제",
+                logging.warning("[NC-1] Director가 %d건 수치 모순 인정 → continuity_contradiction 감점 강제",
                     _nc_agree_count,
                 )
                 # score_breakdown에서 continuity_contradiction 상한 제한
@@ -928,8 +917,7 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
                         # AGREE 1건당 최대 8점 감점 (40점 만점 기준)
                         _cc_cap = max(0, 40 - _nc_agree_count * 8)
                         if _cc_score > _cc_cap:
-                            logging.info(
-                                "[NC-1] continuity_contradiction %d → %d (AGREE %d건)",
+                            logging.info("[NC-1] continuity_contradiction %d → %d (AGREE %d건)",
                                 _cc_score,
                                 _cc_cap,
                                 _nc_agree_count,
@@ -943,8 +931,7 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
             # NC advisory가 있었는데 Director가 review를 안 한 경우 감지
             _mc = mandatory_context or ""
             if "[NumericConsistency" in _mc and "[NC-" in _mc:
-                logging.warning(
-                    "[NC-1] Director가 numeric_consistency_review를 생략함 — python_warnings 감점",
+                logging.warning("[NC-1] Director가 numeric_consistency_review를 생략함 — python_warnings 감점",
                 )
                 _sb = result.get("score_breakdown", {})
                 if isinstance(_sb, dict):
@@ -968,12 +955,12 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
             "npc_identity",
             "time_progression",
             "opening_diversity",
+            "timeline_arc_consistency",  # [NS-4]
         ]
         if isinstance(_checklist, dict) and _checklist:
             _issue_count = sum(1 for k in _nc3_keys if str(_checklist.get(k, "")).upper() == "ISSUE")
             if _issue_count > 0:
-                logging.warning(
-                    "[NC-3] consistency_checklist ISSUE %d건 감지: %s",
+                logging.warning("[NC-3] consistency_checklist ISSUE %d건 감지: %s",
                     _issue_count,
                     [k for k in _nc3_keys if str(_checklist.get(k, "")).upper() == "ISSUE"],
                 )
@@ -983,8 +970,7 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
                 if isinstance(_sb, dict):
                     _pw = _sb.get("python_warnings", 10)
                     if isinstance(_pw, int | float) and _pw > 3:
-                        logging.info(
-                            "[NC-3] python_warnings %d → 3 (ISSUE %d건)",
+                        logging.info("[NC-3] python_warnings %d → 3 (ISSUE %d건)",
                             _pw,
                             _issue_count,
                         )
@@ -1033,8 +1019,7 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
                 feedback["issues"] = _existing_issues
 
         # --- Director 판정 상세 출력 ---
-        logging.info(
-            f"[Stage4 Director] 판정: {final_verdict} (점수: {score}) 후보{selected_letter} | 원래: {original_verdict}"
+        logging.info(f"[Stage4 Director] 판정: {final_verdict} (점수: {score}) 후보{selected_letter} | 원래: {original_verdict}"
         )
         print(f"\n   {'=' * 56}")
         print(f"      [Stage4 Director] 원고 앙상블 판정: {final_verdict} (점수: {score})")

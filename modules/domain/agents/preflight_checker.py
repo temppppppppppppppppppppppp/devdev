@@ -170,7 +170,7 @@ class PreflightChecker(BaseAgent):
             return result
 
         except Exception as e:
-            logging.warning(f"⚠️ [Preflight] 분석 오류: {str(e)[:50]}")
+            logging.warning(f" [Preflight] 분석 오류: {str(e)[:50]}")
             return self._extract_constraints_fallback(prev_arcs)
 
     # [V63] 윈도잉 상수: 상세 분석할 최근 Arc 수 (3→5 확장)
@@ -263,7 +263,7 @@ class PreflightChecker(BaseAgent):
         result = "\n".join(lines)
         if len(result) > ContextLimits.MAX_CONTEXT_CHARS:
             result = result[: ContextLimits.MAX_CONTEXT_CHARS] + "\n... (200K자 절삭)"
-        logging.info(f"📊 [V67] Preflight 전문: {len(old_arcs)}개 전문 + {len(recent_arcs)}개 상세 ({total_chars:,}자)")
+        logging.info(f" [V67] Preflight 전문: {len(old_arcs)}개 전문 + {len(recent_arcs)}개 상세 ({total_chars:,}자)")
         return result
 
     def _ensure_required_fields(self, result: dict) -> dict:

@@ -253,8 +253,7 @@ class VecMemory:
         try:
             # 실제 테이블 차원 검증 (메타데이터와 무관하게 항상 확인)
             if self._table_needs_migration():
-                logging.warning(
-                    "[VecMemory] vec_episodes 차원 불일치 감지 (기대=%d) — 자동 마이그레이션 시작. "
+                logging.warning("[VecMemory] vec_episodes 차원 불일치 감지 (기대=%d) — 자동 마이그레이션 시작. "
                     "기존 벡터는 삭제되며 새 에피소드부터 재색인됩니다.",
                     EMBED_DIM,
                 )
@@ -323,15 +322,13 @@ class VecMemory:
                 ("embed_dim", str(EMBED_DIM)),
             )
             self._conn.commit()
-            logging.warning(
-                "[VecMemory] vec_episodes 재생성 완료 (dim=%d, model=%s). "
+            logging.warning("[VecMemory] vec_episodes 재생성 완료 (dim=%d, model=%s). "
                 "기존 벡터 전량 삭제됨 — sync_status 리셋, 새 에피소드부터 자동 색인.",
                 EMBED_DIM,
                 EMBED_MODEL,
             )
         except Exception as e:
-            logging.warning(
-                "[VecMemory] 마이그레이션 실패 (비차단, dim=%d): %s — 벡터 검색 정확도 저하 가능",
+            logging.warning("[VecMemory] 마이그레이션 실패 (비차단, dim=%d): %s — 벡터 검색 정확도 저하 가능",
                 EMBED_DIM,
                 str(e)[:80],
             )
@@ -491,8 +488,7 @@ class VecMemory:
             # [OpusTF-P0-2] 임베딩 실패 시 LIKE 키워드 폴백
             result = self._keyword_fallback_search(query_text, current_ep, n_results)
             # [D2] fallback 경로 계측
-            logging.debug(
-                "[VecMem] path=fallback ep<%d q=%r hits=0 fallback=true selected=[] chars=%d",
+            logging.debug("[VecMem] path=fallback ep<%d q=%r hits=0 fallback=true selected=[] chars=%d",
                 current_ep,
                 query_text[:30],
                 len(result),
@@ -501,8 +497,7 @@ class VecMemory:
 
         result = self._knn_search(emb, current_ep, n_results)
         # [D2] dense 경로 계측
-        logging.debug(
-            "[VecMem] path=dense ep<%d q=%r fallback=false chars=%d",
+        logging.debug("[VecMem] path=dense ep<%d q=%r fallback=false chars=%d",
             current_ep,
             query_text[:30],
             len(result),
@@ -565,8 +560,7 @@ class VecMemory:
                 fb = self._keyword_fallback_search(qt, current_ep, max_results)
                 if fb:
                     # [D2] multi_dense fallback 계측
-                    logging.debug(
-                        "[VecMem] path=fallback ep<%d q=%r hits=0 fallback=true selected=[] chars=%d",
+                    logging.debug("[VecMem] path=fallback ep<%d q=%r hits=0 fallback=true selected=[] chars=%d",
                         current_ep,
                         qt[:30],
                         len(fb),
@@ -616,8 +610,7 @@ class VecMemory:
         # [D2] multi_dense 정상 경로 계측
         _d2_result = "\n\n".join(blocks)
         _d2_selected = sorted(seen.keys())[:max_results]
-        logging.debug(
-            "[VecMem] path=multi_dense ep<%d q_count=%d hits=%d fallback=false selected=%s chars=%d",
+        logging.debug("[VecMem] path=multi_dense ep<%d q_count=%d hits=%d fallback=false selected=%s chars=%d",
             current_ep,
             len(queries),
             len(seen),
@@ -683,8 +676,7 @@ class VecMemory:
         top = scored[:max_results]
         # [D2] hybrid 경로 계측 (포맷 통일)
         _d2_selected = [ep for _, ep, _ in top]
-        logging.debug(
-            "[VecMem] path=hybrid ep<%d q=%r hits=%d fallback=false selected=%s chars=pending top_score=%.4f",
+        logging.debug("[VecMem] path=hybrid ep<%d q=%r hits=%d fallback=false selected=%s chars=pending top_score=%.4f",
             current_ep,
             query_text[:30],
             len(dense_results) + len(sparse_results),
@@ -696,8 +688,7 @@ class VecMemory:
             logging.debug("[VecMemory] hybrid search: no results for ep<%d", current_ep)
             fallback = self._keyword_fallback_search(query_text, current_ep, max_results)
             if fallback:
-                logging.debug(
-                    "[VecMem] path=hybrid ep<%d q=%r hits=0 fallback=true selected=[] chars=%d",
+                logging.debug("[VecMem] path=hybrid ep<%d q=%r hits=0 fallback=true selected=[] chars=%d",
                     current_ep,
                     query_text[:30],
                     len(fallback),
@@ -725,8 +716,7 @@ class VecMemory:
 
         # [D2] hybrid 결과 길이 계측
         _d2_result = "\n\n".join(blocks)
-        logging.debug(
-            "[VecMem] path=hybrid ep<%d chars=%d",
+        logging.debug("[VecMem] path=hybrid ep<%d chars=%d",
             current_ep,
             len(_d2_result),
         )
@@ -839,8 +829,7 @@ class VecMemory:
         if not candidates:
             _fallback_query = " ".join(cleaned_names)
             _fallback_result = self._keyword_fallback_search(_fallback_query, current_ep, safe_max)
-            logging.debug(
-                "[VecMem] path=npc ep<%d q=%r hits=0 fallback=true selected=[] chars=%d",
+            logging.debug("[VecMem] path=npc ep<%d q=%r hits=0 fallback=true selected=[] chars=%d",
                 current_ep,
                 _fallback_query[:30],
                 len(_fallback_result),
@@ -889,8 +878,7 @@ class VecMemory:
 
         _d2_selected = [ep_num for ep_num, _ in selected]
         _d2_result = "\n\n".join(blocks)
-        logging.debug(
-            "[VecMem] path=npc ep<%d q=%r hits=%d fallback=false selected=%s chars=%d",
+        logging.debug("[VecMem] path=npc ep<%d q=%r hits=%d fallback=false selected=%s chars=%d",
             current_ep,
             " ".join(cleaned_names)[:30],
             len(candidates),
@@ -994,8 +982,7 @@ class VecMemory:
     def _keyword_fallback_search(self, query_text: str, current_ep: int, n_results: int) -> str:
         """[OpusTF-P0-2] 임베딩 실패 시 episode_meta LIKE 키워드 폴백 검색."""
         # [D2] keyword fallback 진입 계측
-        logging.debug(
-            "[VecMem] path=fallback_entry ep<%d q=%r n=%d",
+        logging.debug("[VecMem] path=fallback_entry ep<%d q=%r n=%d",
             current_ep,
             query_text[:30],
             n_results,

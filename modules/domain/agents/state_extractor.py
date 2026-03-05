@@ -292,8 +292,7 @@ class StateExtractor(BaseAgent):
             if key in self._state_cache:
                 cached_count += 1
         if cached_count > 0:
-            logging.info(
-                f"⚡ [V62.5] StateExtractor 캐시: {cached_count}/{total_count} Arc 캐시 히트 (LLM {total_count - cached_count}회만 호출)"
+            logging.info(f" [V62.5] StateExtractor 캐시: {cached_count}/{total_count} Arc 캐시 히트 (LLM {total_count - cached_count}회만 호출)"
             )
 
         # 마지막 Arc 기준으로 추출
@@ -584,7 +583,7 @@ class StateExtractor(BaseAgent):
                 current_energy = 100 - loss_percent
             except (ValueError, AttributeError, TypeError):  # [V64.P4] energy parse failure
                 # [V60.73] 보수적 기본값 50 (파싱 실패 시 만땅 가정 위험)
-                logging.warning(f"⚠️ [V60.73] internal_energy_loss 파싱 실패: '{energy_loss}' → 50% 가정")
+                logging.warning(f" [V60.73] internal_energy_loss 파싱 실패: '{energy_loss}' → 50% 가정")
                 loss_percent = 50
                 current_energy = 50
 

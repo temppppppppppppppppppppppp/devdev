@@ -173,7 +173,7 @@ class ArcEnsembleGenerator(BaseAgent):
                 if bible:
                     genre = bible.get("_genre", GenreTypes.WUXIA)
         except Exception as e:
-            logging.warning(f"⚠️ [V61.3] genre 사전 로드 실패: {str(e)[:50]}")
+            logging.warning(f" [V61.3] genre 사전 로드 실패: {str(e)[:50]}")
 
         # [Phase 3-Obs] 에이전트 레벨 ThreadPoolExecutor 계측
         # [Tier4-11] shared context cache for ensemble fan-out
@@ -242,21 +242,19 @@ class ArcEnsembleGenerator(BaseAgent):
                                 candidates.append(result)
                                 print(f"      ✓ [Arc] '{strategy_name}' 생성 완료 ({time.monotonic() - _tp_t0:.0f}초)")
                         except FutureTimeoutError:
-                            logging.warning(
-                                f"⏰ [V61.3] {strategy_name} 전략 타임아웃 ({self.SINGLE_CANDIDATE_TIMEOUT}초)"
+                            logging.warning(f" [V61.3] {strategy_name} 전략 타임아웃 ({self.SINGLE_CANDIDATE_TIMEOUT}초)"
                             )
                             print(f"      ✗ [Arc] '{strategy_name}' 타임아웃")
                         except Exception as e:
-                            logging.warning(f"⚠️ [Ensemble] {strategy_name} 전략 실패: {str(e)[:50]}")
+                            logging.warning(f" [Ensemble] {strategy_name} 전략 실패: {str(e)[:50]}")
                             print(f"      ✗ [Arc] '{strategy_name}' 실패")
                 except FutureTimeoutError:
                     # 전체 앙상블 타임아웃 - 완료된 후보만 사용
-                    logging.warning(
-                        f"⏰ [V61.3] 앙상블 전체 타임아웃 ({self.ENSEMBLE_TIMEOUT}초) - 완료된 {len(candidates)}개 후보 사용"
+                    logging.warning(f" [V61.3] 앙상블 전체 타임아웃 ({self.ENSEMBLE_TIMEOUT}초) - 완료된 {len(candidates)}개 후보 사용"
                     )
                 except Exception as e:
                     # [V61.3] as_completed 자체 예외 처리
-                    logging.warning(f"⚠️ [V61.3] 앙상블 루프 예외: {str(e)[:80]}")
+                    logging.warning(f" [V61.3] 앙상블 루프 예외: {str(e)[:80]}")
                 finally:
                     # [Sweep34] 미완료 future 정리로 shutdown 대기 최소화
                     for f in futures:
@@ -266,7 +264,7 @@ class ArcEnsembleGenerator(BaseAgent):
             # stderr로 출력 (Rich 스피너가 stdout 가림)
             import traceback
 
-            logging.error(f"🚨 [V61.3] Arc 병렬 처리 크래시 방지: {str(e)[:100]}")
+            logging.error(f" [V61.3] Arc 병렬 처리 크래시 방지: {str(e)[:100]}")
             logging.error(traceback.format_exc())
 
         # [Phase 3-Obs] 병렬 구간 소요 시간 기록
@@ -290,8 +288,7 @@ class ArcEnsembleGenerator(BaseAgent):
             if tactical_len >= min_tactical_length:
                 valid_candidates.append(candidate)
             else:
-                logging.info(
-                    f"⚠️ [Ensemble] {candidate.get('_strategy', '?')} 제외: tactical_doc {tactical_len}자 < {min_tactical_length}자 (ep_count={ep_count})"
+                logging.info(f" [Ensemble] {candidate.get('_strategy', '?')} 제외: tactical_doc {tactical_len}자 < {min_tactical_length}자 (ep_count={ep_count})"
                 )
                 print(
                     f"      ✗ [Arc] '{candidate.get('_strategy', '?')}' 분량 미달 ({tactical_len}자 < {min_tactical_length}자)"
@@ -311,12 +308,11 @@ class ArcEnsembleGenerator(BaseAgent):
 
             # 권장값의 60% 미만이면 경고 레벨 높임
             if longest_len < min_required * 0.6:
-                logging.warning(
-                    f"🚨 [Ensemble] 모든 후보 심각한 분량 부족: {longest_len}자 < {int(min_required * 0.6)}자 (권장의 60%)"
+                logging.warning(f" [Ensemble] 모든 후보 심각한 분량 부족: {longest_len}자 < {int(min_required * 0.6)}자 (권장의 60%)"
                 )
                 logging.warning("→ Critic/Consensus에서 REJECT 가능성 높음")
             else:
-                logging.warning(f"⚠️ [Ensemble] 모든 후보 분량 미달, 최대 분량 후보 선택: {longest_len}자")
+                logging.warning(f" [Ensemble] 모든 후보 분량 미달, 최대 분량 후보 선택: {longest_len}자")
 
             valid_candidates = candidates[:1]
 
@@ -339,7 +335,7 @@ class ArcEnsembleGenerator(BaseAgent):
         )
 
         # [V61.3] 후보별 점수 비교 출력
-        logging.warning("🏆 [Ensemble] 후보 비교:")
+        logging.warning(" [Ensemble] 후보 비교:")
         _filtered_count = len(candidates) - len(scored_candidates)
         _filter_note = f" (분량미달 {_filtered_count}개 제외)" if _filtered_count > 0 else ""
         print(f"      📋 [Arc] {len(scored_candidates)}/{len(candidates)}개 후보 비교{_filter_note}")
@@ -587,7 +583,7 @@ class ArcEnsembleGenerator(BaseAgent):
             # [V61.3] stderr로 출력 (Rich 스피너가 stdout 가림)
             import traceback
 
-            logging.error(f"🚨 [V61.3] ArcEnsemble _generate_single 크래시: {str(e)[:80]}")
+            logging.error(f" [V61.3] ArcEnsemble _generate_single 크래시: {str(e)[:80]}")
             logging.error(traceback.format_exc())
             return None
 
@@ -799,8 +795,6 @@ class ArcEnsembleGenerator(BaseAgent):
         # 1. 시작 상태 추출 (prev_arc_context에서)
         if prev_arc_context:
             # 내공 추출
-            import re
-
             energy_match = re.search(r"내공[:\s]*(\d+)%", prev_arc_context)
             if energy_match:
                 lines.append(f"✅ 시작 내공: {energy_match.group(1)}% (이 수치로 시작해야 함!)")
@@ -821,11 +815,15 @@ class ArcEnsembleGenerator(BaseAgent):
             forbidden = re.findall(r"❌\s*([^\n❌]+)", constraint_block)
             if forbidden:
                 lines.append("")
-                lines.append("🚫 절대 다시 획득/수여 금지:")
-                for item in forbidden[:10]:  # 최대 10개
-                    clean_item = item.strip()[:50]
+                lines.append("🚫 절대 다시 획득/수여 금지 (잔고·수량이 달라도 동일 아이템으로 간주):")
+                for item in forbidden[:10]:
+                    # 박스 문자, 패딩, Arc 출처 주석 제거 → 핵심 아이템명만 추출
+                    clean_item = re.sub(r"\s*\(Arc\s*\d+.*?\)", "", item)
+                    clean_item = re.sub(r"[│┤├─+|]", "", clean_item).strip()
+                    clean_item = clean_item[:60]
                     if clean_item:
                         lines.append(f"   ❌ {clean_item}")
+                lines.append("   ⚠️ items_acquired에 위 아이템명이 포함되면 즉시 REJECT됩니다.")
 
         # 3. 기본 경고
         if not lines:

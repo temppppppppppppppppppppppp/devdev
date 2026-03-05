@@ -268,7 +268,7 @@ class ChiefWriter(BaseAgent):
             )
             cache_name = cache_info.get("cache_name")
             if cache_name:
-                logging.info(f"📦 [V61.7] 컨텍스트 캐시 활성 (ep{ep_num}, {len(common_context)}자)")
+                logging.info(f" [V61.7] 컨텍스트 캐시 활성 (ep{ep_num}, {len(common_context)}자)")
         except Exception as e:  # [V64.P4] OPTIONAL: context caching
             logging.debug(f"[SILENT] context caching: {e}")
             pass  # 캐싱 실패해도 기존 방식으로 진행
@@ -324,14 +324,13 @@ class ChiefWriter(BaseAgent):
                             result = future.result(timeout=self.SINGLE_CANDIDATE_TIMEOUT)
                             if result:
                                 candidates.append(result)
-                                logging.info(
-                                    f"✅ [ChiefWriter] 후보 {strategy} 생성 완료 ({len(result.get('manuscript', ''))}자)"
+                                logging.info(f"✅ [ChiefWriter] 후보 {strategy} 생성 완료 ({len(result.get('manuscript', ''))}자)"
                                 )
                                 print(
                                     f"      ✓ [Writer] '{strategy}' 완료 ({len(result.get('manuscript', ''))}자, {time.monotonic() - _tp_t0:.0f}초)"
                                 )
                         except FutureTimeoutError:
-                            logging.warning(f"⏰ [V61.3] 후보 {strategy} 타임아웃 ({self.SINGLE_CANDIDATE_TIMEOUT}초)")
+                            logging.warning(f" [V61.3] 후보 {strategy} 타임아웃 ({self.SINGLE_CANDIDATE_TIMEOUT}초)")
                             print(f"      ✗ [Writer] '{strategy}' 타임아웃")
                             candidates.append(
                                 {
@@ -344,7 +343,7 @@ class ChiefWriter(BaseAgent):
                                 }
                             )
                         except Exception as e:
-                            logging.warning(f"⚠️ [ChiefWriter] 후보 {strategy} 생성 실패: {str(e)[:50]}")
+                            logging.warning(f" [ChiefWriter] 후보 {strategy} 생성 실패: {str(e)[:50]}")
                             print(f"      ✗ [Writer] '{strategy}' 실패")
                             # 실패한 전략은 빈 결과로 대체
                             candidates.append(
@@ -359,12 +358,11 @@ class ChiefWriter(BaseAgent):
                             )
                 except FutureTimeoutError:
                     # 전체 앙상블 타임아웃 - 완료된 후보만 사용
-                    logging.warning(
-                        f"⏰ [V61.3] 원고 앙상블 타임아웃 ({self.ENSEMBLE_TIMEOUT}초) - 완료된 {len(candidates)}개 후보 사용"
+                    logging.warning(f" [V61.3] 원고 앙상블 타임아웃 ({self.ENSEMBLE_TIMEOUT}초) - 완료된 {len(candidates)}개 후보 사용"
                     )
                 except Exception as e:
                     # [V61.3] as_completed 자체 예외 처리
-                    logging.warning(f"⚠️ [V61.3] 원고 앙상블 루프 예외: {str(e)[:80]}")
+                    logging.warning(f" [V61.3] 원고 앙상블 루프 예외: {str(e)[:80]}")
                 finally:
                     # [Sweep3-G2] 미완료 future 정리 — 백그라운드 실행 방지
                     for f in futures:
@@ -374,7 +372,7 @@ class ChiefWriter(BaseAgent):
             # stderr로 출력 (Rich 스피너가 stdout 가림)
             import traceback
 
-            logging.error(f"🚨 [V61.3] 원고 병렬 처리 크래시 방지: {str(e)[:100]}")
+            logging.error(f" [V61.3] 원고 병렬 처리 크래시 방지: {str(e)[:100]}")
             logging.error(traceback.format_exc())
 
         # [Phase 3-Obs] 병렬 구간 소요 시간 기록
@@ -386,7 +384,7 @@ class ChiefWriter(BaseAgent):
         # 최소 1개 후보 보장
         valid_candidates = [c for c in candidates if not c.get("error")]
         if not valid_candidates:
-            logging.warning("🚨 [ChiefWriter] 모든 후보 생성 실패 - 단일 재시도")
+            logging.warning(" [ChiefWriter] 모든 후보 생성 실패 - 단일 재시도")
             print("      ⚠️ [Writer] 전원 실패 → 단일 폴백 시도")
             _fallback_strategy = strategies[0] if strategies else "balanced"
             fallback = self._generate_single_candidate(
@@ -594,7 +592,7 @@ class ChiefWriter(BaseAgent):
             # [V61.3] stderr로 출력 (Rich 스피너가 stdout 가림)
             import traceback
 
-            logging.error(f"🚨 [V61.3] ChiefWriter _generate_single_candidate 크래시: {str(e)[:80]}")
+            logging.error(f" [V61.3] ChiefWriter _generate_single_candidate 크래시: {str(e)[:80]}")
             logging.error(traceback.format_exc())
             return None
 
@@ -800,8 +798,7 @@ class ChiefWriter(BaseAgent):
         # [F-4] 트렁케이션 경고
         _orig_len = len(original_manuscript or "")
         if _orig_len > 150000:
-            logging.warning(
-                "[TRUNCATION] chief_writer.inplace_patch: 원고 %d자 → 150000자 (%.1f%% 손실)",
+            logging.warning("[TRUNCATION] chief_writer.inplace_patch: 원고 %d자 → 150000자 (%.1f%% 손실)",
                 _orig_len,
                 (1 - 150000 / _orig_len) * 100,
             )
@@ -973,8 +970,7 @@ class ChiefWriter(BaseAgent):
         # [F-4] 트렁케이션 경고
         _orig_len = len(original_manuscript or "")
         if _orig_len > 150000:
-            logging.warning(
-                "[TRUNCATION] chief_writer._patch_for_fix_loop: 원고 %d자 → 150000자 (%.1f%% 손실)",
+            logging.warning("[TRUNCATION] chief_writer._patch_for_fix_loop: 원고 %d자 → 150000자 (%.1f%% 손실)",
                 _orig_len,
                 (1 - 150000 / _orig_len) * 100,
             )
@@ -1122,7 +1118,7 @@ class ChiefWriter(BaseAgent):
                 except (KeyError, TypeError, AttributeError):  # [V64.P4] individual ms load failure
                     continue
         except Exception as e:  # [V64.P4] IMPORTANT: manuscript cache build failure affects continuity checks
-            logging.warning(f"⚠️ [V64.P4] 원고 캐시 구축 실패: {str(e)[:60]}")
+            logging.warning(f" [V64.P4] 원고 캐시 구축 실패: {str(e)[:60]}")
 
     def invalidate_manuscript_cache(self):
         """원고 캐시 무효화 (에피소드 롤백 시 호출)."""

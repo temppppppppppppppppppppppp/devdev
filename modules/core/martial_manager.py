@@ -63,7 +63,7 @@ class MartialManager:
         if hasattr(self.context, "ui") and self.context.ui:
             self.context.ui.log(f"⚠️ [MartialManager] {msg}")
         else:
-            logging.warning(f"⚠️ [MartialManager] {msg}")
+            logging.warning(f" [MartialManager] {msg}")
 
     def _safe_get_bible(self) -> dict:
         """[V44] 안전한 bible 접근"""

@@ -268,7 +268,7 @@ class Spinner:
             console.print(f" [dim]({elapsed:.1f}s)[/]")
         elif final_message:
             sys.stdout.write("\r" + " " * 80 + "\r")
-            logging.info(f"\033[32m✓\033[0m {final_message} \033[90m({elapsed:.1f}s)\033[0m")
+            logging.info(f"\033[32m\033[0m {final_message} \033[90m({elapsed:.1f}s)\033[0m")
 
         sys.stdout.flush()
 
@@ -356,7 +356,7 @@ class ProgressBar:
             console.print(f" [dim]({elapsed:.1f}s)[/]")
         else:
             sys.stdout.write("\r" + " " * 100 + "\r")
-            logging.info(f"\033[32m✓\033[0m {message} \033[90m({elapsed:.1f}s)\033[0m")
+            logging.info(f"\033[32m\033[0m {message} \033[90m({elapsed:.1f}s)\033[0m")
 
     def __enter__(self):
         self.start()
@@ -404,11 +404,11 @@ class PhaseIndicator:
             print()
             for i, phase in enumerate(self.phases):
                 if i < self.current_phase:
-                    logging.info(f"\033[32m✓\033[0m {phase}")
+                    logging.info(f"\033[32m\033[0m {phase}")
                 elif i == self.current_phase:
-                    logging.info(f"\033[36m➤\033[0m \033[1m{phase}\033[0m")
+                    logging.info(f"\033[36m\033[0m \033[1m{phase}\033[0m")
                 else:
-                    logging.info(f"\033[90m○ {phase}\033[0m")
+                    logging.info(f"\033[90m {phase}\033[0m")
             print()
 
         self.wave_offset += 1
@@ -477,7 +477,7 @@ def print_success(message: str):
         console.print("[bold green]✓[/] ", end="")
         console.print(text)
     else:
-        logging.info(f"\033[32m✓\033[0m {message}")
+        logging.info(f"\033[32m\033[0m {message}")
 
 
 def print_error(message: str):
@@ -485,7 +485,7 @@ def print_error(message: str):
     if RICH_AVAILABLE:
         console.print(f"[bold red]✗[/] [red]{message}[/]")
     else:
-        logging.info(f"\033[31m✗\033[0m {message}")
+        logging.info(f"\033[31m\033[0m {message}")
 
 
 def print_warning(message: str):
@@ -515,7 +515,7 @@ def print_tip(message: str):
         console.print("[bold magenta]💡[/] ", end="")
         console.print(text)
     else:
-        logging.info(f"\033[35m💡\033[0m {message}")
+        logging.info(f"\033[35m\033[0m {message}")
 
 
 def print_stage(stage_num: int, stage_name: str, status: str = "running"):

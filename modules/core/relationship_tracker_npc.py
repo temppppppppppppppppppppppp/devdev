@@ -230,7 +230,7 @@ class RelationshipTrackerNPC:
                         if npc_name in npc_states:
                             history.append({"ep_num": ep, "state": npc_states[npc_name]})
         except (KeyError, AttributeError, TypeError) as e:
-            logging.warning(f"⚠️ [V64.P4-fix] NPC '{npc_name}' 이력 조회 실패 (ep ~{current_ep}): {e}")
+            logging.warning(f" [V64.P4-fix] NPC '{npc_name}' 이력 조회 실패 (ep ~{current_ep}): {e}")
 
         return history
 

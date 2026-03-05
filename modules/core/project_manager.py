@@ -66,7 +66,7 @@ class ProjectContext:
 
         # 1. DB 엔진 기동
         self.db = DBManager(self.paths.db_file)
-        logging.info(f"🗄️ [Sovereign DB] SQLite S-Grade 엔진 가동: {self.db_path.name}")
+        logging.info(f" [Sovereign DB] SQLite S-Grade 엔진 가동: {self.db_path.name}")
 
         self.master_bible = {}
         self.volumes = []
@@ -120,13 +120,13 @@ class ProjectContext:
         try:
             anchors = self.db.load_all_anchors()
         except (DBError, Exception) as e:
-            logging.warning(f"🚨 [ProjectContext] DB 앵커 로드 실패: {e}")
+            logging.warning(f" [ProjectContext] DB 앵커 로드 실패: {e}")
             logging.warning("→ 빈 상태로 초기화합니다")
             anchors = {}
 
         # [V44] anchors 타입 검증
         if not isinstance(anchors, dict):
-            logging.warning(f"⚠️ [ProjectContext] anchors가 dict가 아님: {type(anchors)}")
+            logging.warning(f" [ProjectContext] anchors가 dict가 아님: {type(anchors)}")
             anchors = {}
 
         # [V44] 각 앵커 데이터 안전 추출
@@ -147,7 +147,7 @@ class ProjectContext:
             if not isinstance(self.karma_status, dict):
                 self.karma_status = {}
         except Exception as e:
-            logging.warning(f"⚠️ [ProjectContext] karma 로드 실패: {e}")
+            logging.warning(f" [ProjectContext] karma 로드 실패: {e}")
             self.karma_status = {}
 
         # [V44] safe_nested_get으로 중첩 접근
@@ -232,11 +232,11 @@ class ProjectContext:
                 latest_ep = self.db.get_latest_episode_number() - 1
                 if latest_ep > 0:
                     self.record_martial_stats(latest_ep, actual_data)
-                    logging.info(f"🛡️ [Sync] 성경 저장과 동시에 HUD 테이블 동기화 완료 (ep {latest_ep}).")
+                    logging.info(f" [Sync] 성경 저장과 동시에 HUD 테이블 동기화 완료 (ep {latest_ep}).")
                 else:
                     # 에피소드가 없으면 ep_num=0으로 초기 상태 저장
                     self.record_martial_stats(0, actual_data)
-                    logging.info("🛡️ [Sync] 초기 HUD 상태 저장 (ep 0).")
+                    logging.info(" [Sync] 초기 HUD 상태 저장 (ep 0).")
 
         elif stage == "volumes":
             self.volumes = data
@@ -347,9 +347,9 @@ class ProjectContext:
 
                 filepath.write_text("\n".join(lines), encoding="utf-8")
 
-            logging.info(f"📁 [Plans] Arc txt 파일 {len(arcs_data)}개 저장 완료")
+            logging.info(f" [Plans] Arc txt 파일 {len(arcs_data)}개 저장 완료")
         except Exception as e:
-            logging.warning(f"⚠️ [Plans] Arc txt 저장 실패: {e}")
+            logging.warning(f" [Plans] Arc txt 저장 실패: {e}")
 
     def _save_blueprint_to_txt(self, ep_num, data) -> None:
         # [DB-Eff-P4] export 전용: DB(blueprints 테이블)가 primary source.
@@ -409,9 +409,9 @@ class ProjectContext:
                 lines.append(f"{data['expected_ending']}")
 
             filepath.write_text("\n".join(lines), encoding="utf-8")
-            logging.info(f"📁 [Plans] Blueprint {ep_num}화 txt 저장 완료")
+            logging.info(f" [Plans] Blueprint {ep_num}화 txt 저장 완료")
         except Exception as e:
-            logging.warning(f"⚠️ [Plans] Blueprint txt 저장 실패: {e}")
+            logging.warning(f" [Plans] Blueprint txt 저장 실패: {e}")
 
     def _normalize_seed_id(self, raw_id):
         """[V26 Integrity Filter] AI 오타 교정 및 성경 ID 매칭"""
@@ -430,7 +430,7 @@ class ProjectContext:
                 continue
             clean_vid = re.sub(r"[^a-zA-Z0-9]", "", vid).upper()
             if clean_raw == clean_vid:
-                logging.info(f"🔧 [Normalized] Seed ID 교정: {raw_id} -> {vid}")
+                logging.info(f" [Normalized] Seed ID 교정: {raw_id} -> {vid}")
                 return vid
 
         return raw_id  # 매칭 실패 시 원본 유지(데이터 보존)
@@ -456,7 +456,7 @@ class ProjectContext:
         except Exception:
             self.db.rollback()
             raise
-        logging.info(f"🧹 [Cleanup] 복선 데이터 정화 완료 (유효 ID: {len(valid_ids)}건)")
+        logging.info(f" [Cleanup] 복선 데이터 정화 완료 (유효 ID: {len(valid_ids)}건)")
 
     def commit_full_episode_data(
         self,
@@ -532,7 +532,7 @@ class ProjectContext:
                                         changes.append(f"equipment 상실: {list(removed)}")
 
                                 if changes:
-                                    logging.info(f"🕸️ [NPC Trace] {npc_name} 변화 감지: {', '.join(changes)}")
+                                    logging.info(f" [NPC Trace] {npc_name} 변화 감지: {', '.join(changes)}")
 
                                 # 데이터 병합 (성경 메모리 동기화)
                                 target.setdefault("NPC_Martial_HUD", {}).update(new_hud)
@@ -548,7 +548,7 @@ class ProjectContext:
                 self.save_v20_anchor("bible", self.master_bible)
                 self.sync_and_cleanup_seeds()
             except Exception as bible_err:
-                logging.warning(f"🚨 [Critical] Bible 선행 저장 실패: {bible_err}")
+                logging.warning(f" [Critical] Bible 선행 저장 실패: {bible_err}")
                 raise RuntimeError(f"Bible 저장 실패로 에피소드 커밋 중단: {bible_err}") from bible_err
 
             # 3-2. SQLite 핵심 트랜잭션 (원고, HUD, 로그, 카르마, 로어)
@@ -593,27 +593,26 @@ class ProjectContext:
                     # 모든 공정 성공 시에만 최종 동기화 완료 마킹
                     self.db.update_sync_status(ep_num, 1)
                 else:
-                    logging.warning(f"⚠️ [Sync Warning] 제 {ep_num}화 벡터 주입 지연 (플래그 0 유지)")
+                    logging.warning(f" [Sync Warning] 제 {ep_num}화 벡터 주입 지연 (플래그 0 유지)")
 
                 return True
 
             except Exception as sub_e:
                 # [V44 Fix] 부분 실패 시 경고 강화 및 sync 상태 업데이트
-                logging.warning(f"🚨 [Partial Failure] 벡터 동기화 중 오류: {sub_e}")
-                logging.warning(f"⚠️ [WARNING] 에피소드 {ep_num}: DB/Bible 저장됨, Vector 동기화 불완전")
+                logging.warning(f" [Partial Failure] 벡터 동기화 중 오류: {sub_e}")
+                logging.warning(f" [WARNING] 에피소드 {ep_num}: DB/Bible 저장됨, Vector 동기화 불완전")
                 # sync_status를 2로 설정하여 "부분 성공" 상태 표시
                 try:
                     self.db.update_sync_status(ep_num, 2)  # 2 = partial sync
                 except Exception as _e:
-                    logging.warning(
-                        "[Sweep5-D] sync_status partial update failed (ep=%s): %s",
+                    logging.warning("[Sweep5-D] sync_status partial update failed (ep=%s): %s",
                         ep_num,
                         _e,
                     )
                 return True  # DB는 성공했으므로 진행 (단, 경고 로깅됨)
 
         except Exception as e:
-            logging.warning(f"🛑 [Critical Error] 제 {ep_num}화 원자적 저장 실패: {e}")
+            logging.warning(f" [Critical Error] 제 {ep_num}화 원자적 저장 실패: {e}")
             # [E5c-P1-2] Restore bible from snapshot on failure
             self.master_bible = _bible_snapshot
             self.db.update_sync_status(ep_num, 0)
@@ -688,7 +687,7 @@ class ProjectContext:
         # 규격에 맞는 데이터만 필터링 (누락 시 None 처리하여 DB 에러 방지)
         sanitized_data = {k: stats_data.get(k) for k in valid_keys}
         self.db.update_martial_tracker(ep_num, sanitized_data)
-        logging.info(f"📊 [DB] 제 {ep_num}화 15대 지표 트래커 박제 완료.")
+        logging.info(f" [DB] 제 {ep_num}화 15대 지표 트래커 박제 완료.")
 
     # modules/core/project_manager.py 파일 내부 ProjectContext 클래스에 추가
 
@@ -696,7 +695,7 @@ class ProjectContext:
         """[Phase 0 전용] 물리 원고 데이터를 DB로 직접 미러링하여 박제"""
         # DBManager의 save_manuscript 기능을 호출함
         self.db.save_manuscript(ep_num, title, content)
-        logging.info(f"📝 [Mirroring] 제 {ep_num}화 원고 DB 동기화 완료.")
+        logging.info(f" [Mirroring] 제 {ep_num}화 원고 DB 동기화 완료.")
 
     # --- [Utility: 리셋 및 동기화] ---
     def reset_project(self, target_ep) -> None:
@@ -709,13 +708,13 @@ class ProjectContext:
                 _m = re.match(r"ep_(\d+)\.txt", f.name)
                 if _m and int(_m.group(1)) >= target_ep:
                     f.unlink()
-        logging.info(f"🔥 [Reset] 제 {target_ep}화 이후의 모든 타임라인이 소거되었습니다.")
+        logging.info(f" [Reset] 제 {target_ep}화 이후의 모든 타임라인이 소거되었습니다.")
 
     def force_sync_v25_dna(self, bible_file_name, treatment_file_name) -> bool:
         """
         [Phase 0] AI의 출력 제한을 우회하여 50개 전술 블록을 Bible에 강제 주입 및 DB 박제
         """
-        logging.info(f"🧬 [DNA Injection] '{treatment_file_name}' 데이터를 Bible에 강제 이식합니다...")
+        logging.info(f" [DNA Injection] '{treatment_file_name}' 데이터를 Bible에 강제 이식합니다...")
 
         # 1. Bible(성경) 데이터 로드
         bible_path = self.paths.root.parent.parent / "bible" / bible_file_name
@@ -735,33 +734,32 @@ class ProjectContext:
                 is_valid, report = validate_phase0_files(bible_data, treatment_data)
 
                 # 검증 결과 출력
-                logging.info("📋 [V49.3] Phase 0 파일 검증 결과:")
+                logging.info(" [V49.3] Phase 0 파일 검증 결과:")
                 logging.info(f"Bible: {'✅ 유효' if report['bible']['valid'] else '❌ 오류'}")
                 if report["bible"]["errors"]:
                     for err in report["bible"]["errors"]:
                         logging.warning(f"❌ {err}")
                 if report["bible"]["warnings"]:
                     for warn in report["bible"]["warnings"]:
-                        logging.warning(f"⚠️ {warn}")
+                        logging.warning(f" {warn}")
 
-                logging.info(
-                    f"Treatment: {'✅ 유효' if report['treatment']['valid'] else '❌ 오류'} ({report['treatment']['block_count']}개 블록)"
+                logging.info(f"Treatment: {'✅ 유효' if report['treatment']['valid'] else '❌ 오류'} ({report['treatment']['block_count']}개 블록)"
                 )
                 if report["treatment"]["errors"]:
                     for err in report["treatment"]["errors"]:
                         logging.warning(f"❌ {err}")
                 if report["treatment"]["warnings"]:
                     for warn in report["treatment"]["warnings"][:5]:  # 최대 5개만 표시
-                        logging.warning(f"⚠️ {warn}")
+                        logging.warning(f" {warn}")
                     if len(report["treatment"]["warnings"]) > 5:
-                        logging.warning(f"⚠️ ... 외 {len(report['treatment']['warnings']) - 5}개 경고")
+                        logging.warning(f" ... 외 {len(report['treatment']['warnings']) - 5}개 경고")
 
                 if not is_valid:
-                    logging.warning("🚨 [V49.3] 파일 검증 실패. Phase 0을 중단합니다.")
+                    logging.warning(" [V49.3] 파일 검증 실패. Phase 0을 중단합니다.")
                     logging.warning("→ Bible 또는 Treatment 파일 구조를 확인하세요.")
                     return False
             except ImportError:
-                logging.warning("⚠️ [V49.3] 스키마 검증 모듈 로드 실패. 검증 없이 진행합니다.")
+                logging.warning(" [V49.3] 스키마 검증 모듈 로드 실패. 검증 없이 진행합니다.")
 
             # 2. MasterBible 루트 확보 (포장지가 있든 없든 대응)
             master_bible = bible_data.get("MasterBible", bible_data)
@@ -783,18 +781,17 @@ class ProjectContext:
             success = self.save_v20_anchor("bible", self.master_bible)
 
             if success:
-                logging.info(
-                    f"✅ [S-Grade Success] {len(refined_roadmap)}개 블록이 포함된 '완전한 성경'이 DB에 안착되었습니다."
+                logging.info(f"✅ [S-Grade Success] {len(refined_roadmap)}개 블록이 포함된 '완전한 성경'이 DB에 안착되었습니다."
                 )
-                logging.info(f"📊 로드맵 크기: {len(self.master_bible['MasterBible']['plot_roadmap'])} blocks")
+                logging.info(f" 로드맵 크기: {len(self.master_bible['MasterBible']['plot_roadmap'])} blocks")
                 return True
             else:
                 # [Sweep47] save_v20_anchor False 반환 시 명시적 실패 처리
-                logging.warning("🚨 [DNA Sync Error] save_v20_anchor returned False — DB 저장 실패")
+                logging.warning(" [DNA Sync Error] save_v20_anchor returned False — DB 저장 실패")
                 return False
 
         except Exception as e:
-            logging.warning(f"🚨 [DNA Sync Error] 강제 주입 실패: {e}")
+            logging.warning(f" [DNA Sync Error] 강제 주입 실패: {e}")
             return False
         # 📂 modules/core/project_manager.py 내부에 추가
 
@@ -822,7 +819,7 @@ class ProjectContext:
             content = f_path.read_text(encoding="utf-8")
             # [V44] 빈 content 안전 처리
             if not content or not content.strip():
-                logging.warning(f"⚠️ 제 {ep_num}화 파일이 비어있음. 건너뜀.")
+                logging.warning(f" 제 {ep_num}화 파일이 비어있음. 건너뜀.")
                 continue
             _first_line = content.split("\n")[0].strip() if content else ""
             title = _first_line[:50] if _first_line else f"제{ep_num}화"
@@ -857,7 +854,7 @@ class ProjectContext:
 
             # 3. 동기화 상태 갱신
             self.db.update_sync_status(ep_num, 1)
-            logging.info(f"⚓ 제 {ep_num}화 역사 박제 완료.")
+            logging.info(f" 제 {ep_num}화 역사 박제 완료.")
 
         # [V60.60 Fix] 반환값 추가 - 동기화 성공 표시
         return True
@@ -891,26 +888,26 @@ class ProjectContext:
             # [D-2] 롤백 영향 범위 미리보기
             impact = self.db.get_rollback_impact(target_ep)
             total = sum(impact.values())
-            logging.info(f"🚑 [V35 Backtrack] 제 {target_ep}화로 되감기 (삭제 대상: {total}건)")
+            logging.info(f" [V35 Backtrack] 제 {target_ep}화로 되감기 (삭제 대상: {total}건)")
             for tbl, cnt in impact.items():
                 if cnt > 0:
-                    logging.info(f"  - {tbl}: {cnt}건")
+                    logging.info(f" - {tbl}: {cnt}건")
 
             self.reset_project(target_ep)
 
             if memory and hasattr(memory, "delete_episodes_from"):
                 deleted = memory.delete_episodes_from(target_ep)
-                logging.info(f"🌌 [Memory] 제 {target_ep}화 이후 벡터 기억 {deleted}건 소거")
+                logging.info(f" [Memory] 제 {target_ep}화 이후 벡터 기억 {deleted}건 소거")
 
             if world_state and hasattr(world_state, "rollback_to"):
                 world_state.rollback_to(target_ep)
-                logging.info("🌍 [WorldState] 세계 상태 초기화 완료")
+                logging.info(" [WorldState] 세계 상태 초기화 완료")
 
             if fact_ledger and hasattr(fact_ledger, "rollback_to"):
                 fact_ledger.rollback_to(target_ep)
-                logging.info("📒 [FactLedger] 팩트 원장 초기화 완료")
+                logging.info(" [FactLedger] 팩트 원장 초기화 완료")
 
             return target_ep
         except Exception as e:
-            logging.warning(f"🚨 [Backtrack Error] 자동 되감기 실패: {e}")
+            logging.warning(f" [Backtrack Error] 자동 되감기 실패: {e}")
             return None

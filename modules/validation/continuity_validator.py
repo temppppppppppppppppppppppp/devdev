@@ -122,8 +122,7 @@ class ContinuityValidator:
 
         # [P3-01] prev_hud 완전 누락 시 DEGRADED 조기 반환 — fail-closed (TF-15 P0-06)
         if not prev_hud:
-            logging.warning(
-                "[CONTINUITY] prev_hud 누락 — HUD 의존 연속성 검증 DEGRADED. "
+            logging.warning("[CONTINUITY] prev_hud 누락 — HUD 의존 연속성 검증 DEGRADED. "
                 "validation_context에 prev_hud를 주입하세요."
             )
             return {
@@ -256,7 +255,7 @@ class ContinuityValidator:
                 if manuscript_data:
                     return manuscript_data.get("content", "")
             except Exception as e:
-                logging.warning(f"⚠️ [CONTINUITY] 직전 원고 조회 실패: {e}")
+                logging.warning(f" [CONTINUITY] 직전 원고 조회 실패: {e}")
 
         return None
 

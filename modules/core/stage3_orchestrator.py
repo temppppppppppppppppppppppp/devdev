@@ -419,7 +419,7 @@ class Stage3Orchestrator:
         try:
             prev_blueprint = self.ctx.current_project.get_blueprint(working_ep - 1) if working_ep > 1 else None
         except Exception as prev_bp_err:
-            _logging.error(f"🚨 [V61.3] prev_blueprint 로드 크래시: {str(prev_bp_err)[:100]}")
+            _logging.error(f" [V61.3] prev_blueprint 로드 크래시: {str(prev_bp_err)[:100]}")
             _logging.error(_traceback.format_exc())
             self.ctx.ui.log("      ⚠️ 직전 Blueprint 로드 실패, None으로 진행")
         # [C3-P1-5] prev_blueprint 미존재 시 경고 강화
@@ -435,12 +435,27 @@ class Stage3Orchestrator:
             try:
                 protagonist_name = self.ctx.get_protagonist_name()
             except Exception as protag_err:
-                _logging.error(f"🚨 [V61.3] protagonist_name 추출 크래시: {str(protag_err)[:100]}")
+                _logging.error(f" [V61.3] protagonist_name 추출 크래시: {str(protag_err)[:100]}")
                 _logging.error(_traceback.format_exc())
                 self.ctx.ui.log("      ⚠️ 주인공 이름 추출 실패, 기본값 사용")
         else:
             _logging.debug("[C4-P1-3] ctx.get_protagonist_name이 callable이 아님 — 기본값 사용")
         return protagonist_name
+
+    def _extract_arc_time_markers(self, arc_data: dict) -> list:
+        """[NS-4] Arc tactical_doc에서 시간 마커 추출 (regex, LLM 0회)"""
+        import re as _re
+        _text = (arc_data.get("tactical_doc") or "") + "\n" + (arc_data.get("beat_sequence") or "")
+        _patterns = [
+            r"\d{4}년\s*\d{1,2}월(?:\s*\d{1,2}일)?",    # 2006년 7월 12일
+            r"\d{1,2}월\s*\d{1,2}일",                     # 7월 12일
+            r"\d{1,2}월(?:\s*(?:말|초|중순|하순|상순))?",  # 5월 말
+            r"\d+(?:일|주|달|개월|년)\s*(?:후|전)",         # 2달 후
+        ]
+        _found = []
+        for _p in _patterns:
+            _found.extend(_re.findall(_p, _text))
+        return list(dict.fromkeys(_found))[:5]
 
     # ─────────────────────────────────────────────────────────────
     # Blueprint 생성 (LLM 호출)
@@ -576,8 +591,7 @@ class Stage3Orchestrator:
                             )
                             _tb_text = _tb_header + "\n" + "\n".join(_block_fields)
                             _bp_semantic_ctx = _tb_text + ("\n\n" + _bp_semantic_ctx if _bp_semantic_ctx else "")
-                            _logging.info(
-                                "[TF9] Treatment Block 주입 완료 (arc_idx=%d, ep=%d~%d, %d자)",
+                            _logging.info("[TF9] Treatment Block 주입 완료 (arc_idx=%d, ep=%d~%d, %d자)",
                                 arc_idx,
                                 _ep_start,
                                 _ep_end,
@@ -585,6 +599,34 @@ class Stage3Orchestrator:
                             )
             except Exception as _tb_err:
                 _logging.warning("[SilentPass:TreatmentBlock] 추출 실패 (비차단): %s", _tb_err)
+
+            # [NS-4] 이전 Arc 시간 마커 → Blueprint 컨텍스트 주입 (LLM 0회)
+            try:
+                if arc_idx > 0:
+                    _all_arcs = getattr(ctx.current_project, "arcs", []) or []
+                    if len(_all_arcs) >= arc_idx:
+                        _prev_arc_data = _all_arcs[arc_idx - 1]
+                        _prev_markers = self._extract_arc_time_markers(_prev_arc_data)
+                        _cur_markers = self._extract_arc_time_markers(arc_data)
+                        if _prev_markers or _cur_markers:
+                            _ta_lines = ["[Arc 시간 연속성 참고]"]
+                            if _prev_markers:
+                                _ta_lines.append(f"이전 Arc 종료 시점 마커: {', '.join(_prev_markers)}")
+                            if _cur_markers:
+                                _ta_lines.append(f"현재 Arc 시간 마커: {', '.join(_cur_markers)}")
+                            _ta_lines.append(
+                                "※ 현재 화에서 과거 사건 언급 시 '며칠 전'/'얼마 전' 같은 표현이 "
+                                "위 시간 간격과 일치하는지 확인하세요."
+                            )
+                            _ta_text = "\n".join(_ta_lines)
+                            _bp_semantic_ctx = _ta_text + ("\n\n" + _bp_semantic_ctx if _bp_semantic_ctx else "")
+                            _logging.info(
+                                "[NS-4] Arc 시간 마커 주입: prev=%s, cur=%s",
+                                _prev_markers,
+                                _cur_markers,
+                            )
+            except Exception as _ns4_err:
+                _logging.debug("[NS-4] 시간 마커 주입 실패 (비차단): %s", _ns4_err)
 
             with StageSpinner(3, f"제{working_ep}화") as _s3_spinner:
                 # [V67][S3-I5] 이전 원고 로드 — 단일 쿼리로 최적화 (N+1 → 1)
@@ -602,8 +644,7 @@ class Stage3Orchestrator:
                         + f"\n... ({ContextLimits.MAX_CONTEXT_CHARS // 1000}K자 절삭)"
                     )
                 if _prev_ms_for_bp:
-                    _logging.info(
-                        f"📚 [V67] Blueprint용 이전 원고 {len(_prev_ms_for_bp)}개 로드 ({len(_prev_ms_text_for_bp):,}자)"
+                    _logging.info(f" [V67] Blueprint용 이전 원고 {len(_prev_ms_for_bp)}개 로드 ({len(_prev_ms_text_for_bp):,}자)"
                     )
 
                 # [TF-4] prev_hud 추출 — BlockingValidator consistency checks용
@@ -644,7 +685,7 @@ class Stage3Orchestrator:
                 print(f"      📊 제{working_ep}화 Blueprint 결과: {_verdict} (score={_bp_score})")
 
         except Exception as gen_err:
-            _logging.error(f"🚨 [V61.3] 제{working_ep}화 Blueprint 생성 크래시: {str(gen_err)[:100]}")
+            _logging.error(f" [V61.3] 제{working_ep}화 Blueprint 생성 크래시: {str(gen_err)[:100]}")
             _logging.error(_traceback.format_exc())
 
             ctx.ui.log(f"❌ [V60.80] 제{working_ep}화 생성 실패: {str(gen_err)[:100]}")
@@ -689,7 +730,9 @@ class Stage3Orchestrator:
                 _director = getattr(getattr(ctx, "agents", {}), "get", lambda *_: None)("director")
                 _model = getattr(_director, "primary_model", None) if _director else None
                 _attempt_num = self._extract_stage3_attempt_num(pipeline_result)
-                _score = pipeline_result.get("last_score", 0)
+                _score = pipeline_result.get("last_score") or pipeline_result.get("phases", {}).get(
+                    "generate", {}
+                ).get("selected_score", 0)
                 if not isinstance(_score, int):
                     try:
                         _score = int(_score)
@@ -968,7 +1011,9 @@ class Stage3Orchestrator:
                 _attempt_num = self._extract_stage3_attempt_num(pipeline_result)
                 _arc_num = self._resolve_stage3_arc_num(arc_no=arc_no, pipeline_result=pipeline_result)
                 _reject_reason = self._build_stage3_reject_reason(pipeline_result)
-                _score = pipeline_result.get("last_score", 0)
+                _score = pipeline_result.get("last_score") or pipeline_result.get("phases", {}).get(
+                    "generate", {}
+                ).get("selected_score", 0)
                 if not isinstance(_score, int):
                     try:
                         _score = int(_score)

@@ -286,8 +286,7 @@ class ContextAdvisor:
 
         if self._should_use_llm(stage, context_data):
             plan = self._llm_enrich_plan(plan, context_data)
-        logging.info(
-            f"[SC] {stage} plan: {len(plan.slots)} slots, budget={plan.total_budget_chars}, llm={plan.used_llm}"
+        logging.info(f"[SC] {stage} plan: {len(plan.slots)} slots, budget={plan.total_budget_chars}, llm={plan.used_llm}"
         )
         return plan
 

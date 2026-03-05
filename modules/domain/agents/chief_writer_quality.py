@@ -1,4 +1,4 @@
-"""
+﻿"""
 [B-1-5] ChiefWriter Quality Gate ? Self-Critique + quality pipeline.
 """
 
@@ -10,7 +10,7 @@ from .chief_writer_prompts import get_fix_issues_prompt
 
 
 class ChiefWriterQualityGate:
-    """ChiefWriter? Self-Critique + ?? ?? ?? ????."""
+    """ChiefWriter 품질 게이트 — 자기비판 + 클리셰/정당화/NPC/동기/산술 체크."""
 
     CLICHE_WINDOW = 10  # [Sweep3-E3] 클리셰 감지 윈도우 크기
 
@@ -129,8 +129,7 @@ class ChiefWriterQualityGate:
             ]
             if not _medium_plus:
                 return current_manuscript
-            logging.info(
-                "[ChiefWriter] Rubric %.1f ≥ 3.5이나 구조적 이슈 %d건 — Self-Critique 진행",
+            logging.info("[ChiefWriter] Rubric %.1f ≥ 3.5이나 구조적 이슈 %d건 — Self-Critique 진행",
                 rubric_score,
                 len(_medium_plus),
             )
@@ -164,8 +163,7 @@ class ChiefWriterQualityGate:
                 if mid_score >= 3.5:
                     break
 
-            logging.info(
-                f"[ChiefWriter] Self-Critique R{round_num}/{MAX_CRITIQUE_ROUNDS}: {len(critique_result['issues'])}건..."
+            logging.info(f"[ChiefWriter] Self-Critique R{round_num}/{MAX_CRITIQUE_ROUNDS}: {len(critique_result['issues'])}건..."
             )
             print(f"      🔧 [Writer] Self-Critique R{round_num}: {len(critique_result['issues'])}건 수정 중...")
             current_manuscript = self._fix_manuscript_issues(current_manuscript, critique_result, hud_report)
@@ -235,6 +233,9 @@ class ChiefWriterQualityGate:
         # 8. [합격률] ending_hook 포함 여부 체크
         issues.extend(self._check_ending_hook_presence(content, blueprint))
 
+        # 9. [NS-1] Detect arithmetic inconsistencies in manuscript claims.
+        issues.extend(self._check_arithmetic_consistency(content))
+
         # [Sweep46] 심각도 판단 — 1~2건은 "low" (self-critique 스킵 의도 복원)
         severity = "low"
         if len(issues) >= 5:
@@ -246,6 +247,130 @@ class ChiefWriterQualityGate:
         has_issues = len(issues) > 0
 
         return {"has_issues": has_issues, "issues": issues, "severity": severity}
+
+    def _check_arithmetic_consistency(self, content: str) -> list:
+        """[NS-1] Check obvious arithmetic expressions for consistency."""
+        issues = []
+        if not content:
+            return issues
+
+        tolerance = 0.05  # 5%
+
+        def to_num(token: str) -> float | None:
+            if not isinstance(token, str):
+                return None
+            cleaned = re.sub(r"\([^)]*\)", "", token).strip()
+            cleaned = cleaned.replace(",", "").replace(" ", "")
+            cleaned = re.sub(r"(원|달러|명|개)$", "", cleaned)
+            if not cleaned:
+                return None
+
+            sign = 1.0
+            if cleaned[0] in "+-":
+                if cleaned[0] == "-":
+                    sign = -1.0
+                cleaned = cleaned[1:]
+
+            multipliers = {"조": 1e12, "억": 1e8, "만": 1e4}
+            for unit, mult in multipliers.items():
+                if unit in cleaned:
+                    num_part = cleaned.split(unit, 1)[0]
+                    try:
+                        return sign * float(num_part) * mult
+                    except ValueError:
+                        return None
+
+            try:
+                return sign * float(cleaned)
+            except ValueError:
+                return None
+
+        def within_tolerance(stated: float, actual: float) -> bool:
+            if actual == 0:
+                return stated == 0
+            return abs(stated - actual) / abs(actual) <= tolerance
+
+        def compact(value: float) -> str:
+            if abs(value) >= 1e8:
+                return f"{value / 1e8:.1f}" + "억"
+            return f"{value:.4g}"
+
+        num_with_unit = r"[\d,]+(?:\.[\d]+)?(?:조|억|만)?"
+        mul_op = r"(?:[xX×*]|곱)"
+        eq_op = r"(?:=|는|은|:)"
+        bae = "배"
+
+        mult_pattern = re.compile(
+            rf"(?P<a>{num_with_unit})\s*{mul_op}\s*"
+            rf"(?P<b>[\d,]+(?:\.[\d]+)?)\s*{bae}?\s*{eq_op}\s*"
+            rf"(?P<c>{num_with_unit})"
+        )
+        pct_pattern = re.compile(
+            rf"(?P<a>{num_with_unit})\s*{mul_op}\s*"
+            rf"(?P<pct>[\d,]+(?:\.[\d]+)?)%\s*{eq_op}\s*"
+            rf"(?P<c>{num_with_unit})"
+        )
+        add_sub_pattern = re.compile(
+            rf"(?P<a>{num_with_unit})\s*(?P<op>[+-])\s*"
+            rf"(?P<b>{num_with_unit})\s*=\s*"
+            rf"(?P<c>{num_with_unit})"
+        )
+
+        for match in mult_pattern.finditer(content):
+            a = to_num(match.group("a"))
+            b = to_num(match.group("b"))
+            stated = to_num(match.group("c"))
+            if None in (a, b, stated):
+                continue
+            actual = a * b
+            if not within_tolerance(stated, actual):
+                expr = match.group(0).strip()
+                issues.append(
+                    {
+                        "type": "arithmetic_error",
+                        "description": f"Arithmetic mismatch: {expr} stated={match.group('c')} actual={compact(actual)}",
+                        "location": "numeric expression",
+                        "severity": "high",
+                    }
+                )
+
+        for match in pct_pattern.finditer(content):
+            a = to_num(match.group("a"))
+            pct = to_num(match.group("pct"))
+            stated = to_num(match.group("c"))
+            if None in (a, pct, stated):
+                continue
+            actual = a * (pct / 100.0)
+            if not within_tolerance(stated, actual):
+                expr = match.group(0).strip()
+                issues.append(
+                    {
+                        "type": "arithmetic_error",
+                        "description": f"Arithmetic mismatch: {expr} stated={match.group('c')} actual={compact(actual)}",
+                        "location": "numeric expression",
+                        "severity": "high",
+                    }
+                )
+
+        for match in add_sub_pattern.finditer(content):
+            a = to_num(match.group("a"))
+            b = to_num(match.group("b"))
+            stated = to_num(match.group("c"))
+            if None in (a, b, stated):
+                continue
+            actual = a + b if match.group("op") == "+" else a - b
+            if not within_tolerance(stated, actual):
+                expr = match.group(0).strip()
+                issues.append(
+                    {
+                        "type": "arithmetic_error",
+                        "description": f"Arithmetic mismatch: {expr} stated={match.group('c')} actual={compact(actual)}",
+                        "location": "numeric expression",
+                        "severity": "high",
+                    }
+                )
+
+        return issues
 
     def _check_hud_consistency(self, content: str, hud_report: str) -> list:
         """HUD 모순 체크"""
@@ -524,7 +649,7 @@ class ChiefWriterQualityGate:
                 logging.info("[ChiefWriter] Fix manuscript JSON parse failed, preserving original")
                 return manuscript  # 파싱 실패시 원본 유지
         except Exception as e:
-            logging.warning(f"⚠️ [ChiefWriter] 수정 실패: {e}")
+            logging.warning(f" [ChiefWriter] 수정 실패: {e}")
             return manuscript
 
     def _evaluate_with_rubric(self, manuscript: str, genre_name: str) -> float:

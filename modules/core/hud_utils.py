@@ -75,7 +75,7 @@ def build_hud_context(
             else:
                 _build_writer_npcs(lines, state_tracker.npc_registry)
     except Exception as e:
-        logging.warning(f"⚠️ [V64.P4-fix] NPC 레지스트리 로드 실패: {e}")
+        logging.warning(f" [V64.P4-fix] NPC 레지스트리 로드 실패: {e}")
 
     # ── 결과 반환 ──
     if lines:

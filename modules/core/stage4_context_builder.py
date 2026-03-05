@@ -215,8 +215,7 @@ class Stage4ContextBuilder:
                         )
                     else:
                         if _retrieval_mode not in ("dense", "hybrid", "sparse"):
-                            logging.warning(
-                                "[Retrieval] 알 수 없는 retrieval_mode '%s', dense로 폴백",
+                            logging.warning("[Retrieval] 알 수 없는 retrieval_mode '%s', dense로 폴백",
                                 _retrieval_mode,
                             )
                         result = memory.retrieve_multi_query_context(
@@ -293,8 +292,7 @@ class Stage4ContextBuilder:
 
         tracker = _build_tracker(sections)
         report = tracker.get_usage_report()
-        logging.info(
-            f"[SC] Context budget: {report['used_chars']}/{report['total_budget_chars']} ({report['usage_pct']}%)"
+        logging.info(f"[SC] Context budget: {report['used_chars']}/{report['total_budget_chars']} ({report['usage_pct']}%)"
         )
 
         if report["used_chars"] <= report["total_budget_chars"]:
@@ -328,8 +326,7 @@ class Stage4ContextBuilder:
         # 최종 보고용 tracker 1회 재생성
         tracker = _build_tracker(sections)
         report = tracker.get_usage_report()
-        logging.info(
-            f"[SC] Context budget: {report['used_chars']}/{report['total_budget_chars']} ({report['usage_pct']}%)"
+        logging.info(f"[SC] Context budget: {report['used_chars']}/{report['total_budget_chars']} ({report['usage_pct']}%)"
         )
         return sections
 
@@ -615,8 +612,7 @@ class Stage4ContextBuilder:
 
         _prev_manuscripts_text = "\n\n---\n\n".join(_prev_manuscripts_parts) if _prev_manuscripts_parts else ""
         if _prev_manuscripts_parts:
-            logging.info(
-                "[Tier4-12] hybrid lookback ready: parts=%d chars=%d",
+            logging.info("[Tier4-12] hybrid lookback ready: parts=%d chars=%d",
                 len(_prev_manuscripts_parts),
                 len(_prev_manuscripts_text),
             )
@@ -917,9 +913,9 @@ class Stage4ContextBuilder:
                 _ws_summary = self.ctx.world_state.get_summary(max_chars=50000)
                 if _ws_summary:
                     _mc_parts.insert(0, _ws_summary)
-                    logging.info(f"🌍 [V68] 세계 상태 문서 주입 ({len(_ws_summary)}자)")
+                    logging.info(f" [V68] 세계 상태 문서 주입 ({len(_ws_summary)}자)")
             except Exception as _ws_err:
-                logging.warning(f"⚠️ [V68] 세계 상태 문서 주입 실패 (비치명): {str(_ws_err)[:50]}")
+                logging.warning(f" [V68] 세계 상태 문서 주입 실패 (비치명): {str(_ws_err)[:50]}")
 
         # [Phase3-L3] 타임라인 고정 주입 — world_state 요약 앞에 배치
         try:
@@ -961,9 +957,9 @@ class Stage4ContextBuilder:
                 _fl_summary = self.ctx.fact_ledger.to_summary(max_chars=25000)
                 if _fl_summary:
                     _mc_parts.insert(0, _fl_summary)
-                    logging.info(f"📋 [V68] 팩트 원장 주입 ({len(_fl_summary)}자)")
+                    logging.info(f" [V68] 팩트 원장 주입 ({len(_fl_summary)}자)")
             except Exception as _fl_mc_err:
-                logging.warning(f"⚠️ [V68] 팩트 원장 주입 실패 (비치명): {str(_fl_mc_err)[:50]}")
+                logging.warning(f" [V68] 팩트 원장 주입 실패 (비치명): {str(_fl_mc_err)[:50]}")
 
         # [Phase1-L0] Canonical Constraints 최상단 고정 주입
         # 중복 방지: role_at_intro+known_attrs (NPC, get_summary에 없음) + 수치 참조 목록만 담당

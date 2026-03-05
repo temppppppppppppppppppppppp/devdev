@@ -261,7 +261,7 @@ class Manager(BaseAgent):
             # 가장 강력한 파싱 엔진의 결과물만 그대로 main_a.py의 방탄 로직으로 넘깁니다.
             return self._extract_json_robust(response)
         except Exception as e:
-            logging.warning(f"🚨 [Manager Parsing Error] {e}")
+            logging.warning(f" [Manager Parsing Error] {e}")
             return {"parsing_error": True, "raw_response": response}
 
     def audit_for_consistency(self, manuscript: str, master_bible: dict) -> dict:

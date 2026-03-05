@@ -320,7 +320,7 @@ class WorldStateManager:
                     continue
                 # [TF-36] 대원칙 4: 사망 NPC가 introductions에 포함된 경우 무시
                 if name in self._state.get("dead_npcs", {}):
-                    logging.warning(f"⚠️ [대원칙4] 사망 NPC '{name}'가 npc_introductions에 포함됨 — 무시")
+                    logging.warning(f" [대원칙4] 사망 NPC '{name}'가 npc_introductions에 포함됨 — 무시")
                     continue
                 if name not in self._state["alive_npcs"]:
                     self._state["alive_npcs"][name] = {

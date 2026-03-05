@@ -209,7 +209,7 @@ class StateLockedArcGenerator(BaseAgent):
         # ═══════════════════════════════════════════════════════════════
         start_state = self._lock_start_state(prev_arc)
         log["phases"].append({"phase": "A", "name": "State Lock", "result": start_state})
-        logging.info(f"🔒 [Phase A] 시작 상태 잠금: 내공 {start_state['energy']}%, 부상: {start_state['injuries']}")
+        logging.info(f" [Phase A] 시작 상태 잠금: 내공 {start_state['energy']}%, 부상: {start_state['injuries']}")
 
         # ═══════════════════════════════════════════════════════════════
         # Phase B: 점진적 에피소드 생성 (1화씩)
@@ -219,7 +219,7 @@ class StateLockedArcGenerator(BaseAgent):
 
         for i, beat in enumerate(episode_beats[:5]):  # 최대 5화
             ep_num = ep_start + i
-            logging.info(f"📝 [Phase B] 제 {ep_num}화 생성 중...")
+            logging.info(f" [Phase B] 제 {ep_num}화 생성 중...")
 
             # 에피소드 생성
             episode = self._generate_episode(
@@ -271,7 +271,7 @@ class StateLockedArcGenerator(BaseAgent):
         # ═══════════════════════════════════════════════════════════════
         # Phase C: Arc 통합 + 최종 상태 확정
         # ═══════════════════════════════════════════════════════════════
-        logging.info("🔧 [Phase C] Arc 통합 중...")
+        logging.info(" [Phase C] Arc 통합 중...")
 
         final_arc = self._synthesize_arc(
             arc_no=arc_no,
@@ -297,7 +297,7 @@ class StateLockedArcGenerator(BaseAgent):
                 log["phases"].append(
                     {"phase": "D", "name": "Reverse Validation", "mismatch": mismatch, "action": "Would fix prev_arc"}
                 )
-                logging.info(f"⚠️ [Phase D] 역방향 불일치 감지: {mismatch}")
+                logging.info(f" [Phase D] 역방향 불일치 감지: {mismatch}")
 
         log["success"] = True
         logging.info(f"✅ [V60.14] Arc {arc_no} 생성 완료!")
@@ -328,7 +328,7 @@ class StateLockedArcGenerator(BaseAgent):
                 energy = max(0, 100 - loss)
             except (ValueError, AttributeError, TypeError):  # [V64.P4] energy parse failure
                 # [V60.73] 보수적 기본값 50 (파싱 실패 시 만땅 가정 위험)
-                logging.warning(f"⚠️ [V60.73] internal_energy_loss 파싱 실패: '{loss_str}' → 50% 가정")
+                logging.warning(f" [V60.73] internal_energy_loss 파싱 실패: '{loss_str}' → 50% 가정")
                 energy = 50
 
         # 부상
@@ -474,7 +474,7 @@ class StateLockedArcGenerator(BaseAgent):
             }
 
         except Exception as e:
-            logging.warning(f"⚠️ [Extract] 추출 실패, 시작 상태 유지: {e}")
+            logging.warning(f" [Extract] 추출 실패, 시작 상태 유지: {e}")
             return {
                 "location": start_state["location"],
                 "energy": start_state["energy"],

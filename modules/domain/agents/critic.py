@@ -55,7 +55,7 @@ class Critic(BaseAgent):
                 "recommendations": [str]
             }
         """
-        logging.info("👹 [Critic] 적대적 비평 시작...")
+        logging.info(" [Critic] 적대적 비평 시작...")
 
         # JSON 파싱
         try:
@@ -110,7 +110,7 @@ class Critic(BaseAgent):
 
         result = {"issues": issues, "severity": severity, "score": score, "recommendations": recommendations}
 
-        logging.info(f"👹 [Critic] 비평 완료: {len(issues)}건, 심각도={severity}, 점수={score}/100")
+        logging.info(f" [Critic] 비평 완료: {len(issues)}건, 심각도={severity}, 점수={score}/100")
 
         return result
 
@@ -529,7 +529,7 @@ JSON 형식으로 응답:
                 "specific_feedback": str
             }
         """
-        logging.info("🔍 [V52.2 Critic] 7가지 관점 심층 리뷰 중...")
+        logging.info(" [V52.2 Critic] 7가지 관점 심층 리뷰 중...")
 
         import json as json_module
 
@@ -559,7 +559,7 @@ JSON 형식으로 응답:
             else:
                 result["recommendation"] = "MAJOR_REVISE"
 
-            logging.info(f"🔍 [V52.2 Critic] 완료: {overall}/10, 권장={result['recommendation']}")
+            logging.info(f" [V52.2 Critic] 완료: {overall}/10, 권장={result['recommendation']}")
             return result
 
         except Exception as e:

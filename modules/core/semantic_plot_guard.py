@@ -67,7 +67,7 @@ class SemanticPlotGuard:
 
         self._try_init_client()
         if not self._client:
-            logging.info("ℹ️ [V63] SemanticPlotGuard: API 미사용 — 키워드 폴백 모드")
+            logging.info("ℹ [V63] SemanticPlotGuard: API 미사용 — 키워드 폴백 모드")
 
     def _try_init_client(self) -> None:
         """[V64.P4-fix] Client 초기화 시도 (실패해도 다음 사용 시 재시도)"""
@@ -80,7 +80,7 @@ class SemanticPlotGuard:
             self._init_done = True
             self._retry_count = 0
         except Exception as e:
-            logging.warning(f"⚠️ [V63] SemanticPlotGuard 초기화 실패: {str(e)[:80]}")
+            logging.warning(f" [V63] SemanticPlotGuard 초기화 실패: {str(e)[:80]}")
             self._client = None
             self._retry_count += 1
 
@@ -102,7 +102,7 @@ class SemanticPlotGuard:
             elif hasattr(res, "embedding"):
                 return res.embedding.values
         except Exception as e:
-            logging.warning(f"⚠️ [V63] SemanticPlotGuard 임베딩 실패: {str(e)[:80]}")
+            logging.warning(f" [V63] SemanticPlotGuard 임베딩 실패: {str(e)[:80]}")
         return None
 
     def index_resolved_plots(self, resolved_plots: list[dict]) -> int:
@@ -137,8 +137,7 @@ class SemanticPlotGuard:
                 indexed += 1
 
         if indexed > 0:
-            logging.info(
-                f"📊 [V63] SemanticPlotGuard: {indexed}개 플롯 인덱싱 완료 (총 {len(self._resolved_embeddings)}개)"
+            logging.info(f" [V63] SemanticPlotGuard: {indexed}개 플롯 인덱싱 완료 (총 {len(self._resolved_embeddings)}개)"
             )
         return indexed
 
@@ -229,8 +228,7 @@ class SemanticPlotGuard:
             indexed += 1
 
         if indexed > 0:
-            logging.info(
-                f"📊 [V63] SemanticPlotGuard(키워드): {indexed}개 플롯 인덱싱 완료 (총 {len(self._resolved_keywords)}개)"
+            logging.info(f" [V63] SemanticPlotGuard(키워드): {indexed}개 플롯 인덱싱 완료 (총 {len(self._resolved_keywords)}개)"
             )
         return indexed
 

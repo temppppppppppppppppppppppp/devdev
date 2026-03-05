@@ -675,7 +675,7 @@ class StateTrackerNPC:
                     _verified = self._verify_npc_names_llm(_names_only, _tactical, arc_no)
                     for npc_name, death_data in _sc_candidates:
                         if npc_name not in _verified:
-                            logging.info(f"🔍 [V70.1] NPC 사망 후보 '{npc_name}' LLM 검증 탈락 (state_changes 경로)")
+                            logging.info(f" [V70.1] NPC 사망 후보 '{npc_name}' LLM 검증 탈락 (state_changes 경로)")
                             continue
                         if isinstance(death_data, dict):
                             episode = death_data.get("episode", arc_no)
@@ -1369,7 +1369,7 @@ class StateTrackerNPC:
                 _alive[name] = {"role": npc.get("job", ""), "relation": "", "location": ""}
                 logging.info(f"[TF-36] WorldState.alive_npcs에 '{name}' 복원")
         else:
-            logging.warning(f"⚠️ [TF-36] WorldState 접근 불가 — '{name}' revive 시 수동 동기화 필요")
+            logging.warning(f" [TF-36] WorldState 접근 불가 — '{name}' revive 시 수동 동기화 필요")
 
         return True
 
@@ -2133,7 +2133,7 @@ class StateTrackerNPC:
             except (ValueError, AttributeError):
                 _resp_text = None
             if not _resp_text:
-                logging.info("⚠️ [V69] NPC 정리 LLM 응답 비어있음, 건너뜀")
+                logging.info(" [V69] NPC 정리 LLM 응답 비어있음, 건너뜀")
                 return []
             result = json.loads(_resp_text)
             remove_list = []
@@ -2152,8 +2152,7 @@ class StateTrackerNPC:
                         removed.append(name)
 
             if removed:
-                logging.info(
-                    f"      \U0001f9f9 [V69] NPC 레지스트리 LLM 정리 (Arc {arc_no}): "
+                logging.info(f" \U0001f9f9 [V69] NPC 레지스트리 LLM 정리 (Arc {arc_no}): "
                     f"{len(removed)}개 오탐 제거 - {removed}"
                 )
 

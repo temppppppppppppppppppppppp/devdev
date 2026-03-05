@@ -65,6 +65,6 @@ def test_chief_writer_final_content_falls_back_when_content_is_none():
 
 def test_director_ensemble_info_levels_for_normal_progress_events():
     source = Path("modules/domain/agents/director_ensemble.py").read_text(encoding="utf-8")
-    assert 'logging.info(f"🎭 [Director] {len(candidates)}개 후보 비교 중...")' in source
-    assert 'logging.info(f"🎯 [Director] 후보 {selected_idx + 1} 선택 ({decision}, 점수: {score})")' in source
+    assert 'logging.info(f" [Director] {len(candidates)}개 후보 비교 중...")' in source
+    assert 'logging.info(f" [Director] 후보 {selected_idx + 1} 선택 ({decision}, 점수: {score})")' in source
     assert re.search(r"logging\.info\(\s*f\"✅ \[V60\.97\] 분량 통과 후보:", source)

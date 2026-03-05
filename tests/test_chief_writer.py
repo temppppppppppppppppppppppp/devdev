@@ -971,8 +971,8 @@ class TestPrefetchManuscripts:
 class TestGenerateEnsembleLoggingLevels:
     def test_cache_activation_uses_info_level(self):
         source = Path("modules/domain/agents/chief_writer.py").read_text(encoding="utf-8")
-        assert 'logging.info(f"📦 [V61.7] 컨텍스트 캐시 활성 (ep{ep_num}, {len(common_context)}자)")' in source
+        assert 'logging.info(f" [V61.7] 컨텍스트 캐시 활성 (ep{ep_num}, {len(common_context)}자)")' in source
 
     def test_candidate_timeout_uses_warning_level(self):
         source = Path("modules/domain/agents/chief_writer.py").read_text(encoding="utf-8")
-        assert 'logging.warning(f"⏰ [V61.3] 후보 {strategy} 타임아웃 ({self.SINGLE_CANDIDATE_TIMEOUT}초)")' in source
+        assert 'logging.warning(f" [V61.3] 후보 {strategy} 타임아웃 ({self.SINGLE_CANDIDATE_TIMEOUT}초)")' in source

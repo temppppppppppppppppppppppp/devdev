@@ -91,7 +91,7 @@ class PassRateMonitor:
                         AttemptRecord(**{k: v for k, v in r.items() if k in fields}) for r in data.get("records", [])
                     ]
             except Exception as e:
-                logging.warning(f"⚠️ [PassRateMonitor] 기록 로드 실패: {e}")
+                logging.warning(f" [PassRateMonitor] 기록 로드 실패: {e}")
                 self.records = []
 
     def _save_records(self) -> None:
@@ -115,7 +115,7 @@ class PassRateMonitor:
                     indent=2,
                 )
         except Exception as e:
-            logging.warning(f"⚠️ [PassRateMonitor] 기록 저장 실패: {e}")
+            logging.warning(f" [PassRateMonitor] 기록 저장 실패: {e}")
 
     def record_attempt(
         self,

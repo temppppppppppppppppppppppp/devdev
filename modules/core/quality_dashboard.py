@@ -395,16 +395,15 @@ class QualityDashboard:
         logging.info(" [V60] Quality Dashboard Summary")
         logging.info("=" * 60)
 
-        logging.info(f"\n📊 총 검증 횟수: {summary['total_validations']}")
+        logging.info(f"\n 총 검증 횟수: {summary['total_validations']}")
 
-        logging.info("\n📈 Stage별 통계:")
+        logging.info("\n Stage별 통계:")
         for stage, stats in sorted(summary["stage_stats"].items()):
-            logging.info(
-                f"Stage {stage}: PASS {stats['pass_rate']}% | 평균 점수 {stats['avg_score']} | 총 {stats['total']}회"
+            logging.info(f"Stage {stage}: PASS {stats['pass_rate']}% | 평균 점수 {stats['avg_score']} | 총 {stats['total']}회"
             )
 
-        logging.info(f"\n⚠️ HUD 급변 비율: {summary['hud_anomaly_rate']}%")
-        logging.info(f"📋 평균 Blueprint 커버리지: {summary['avg_blueprint_coverage']}%")
+        logging.info(f"\n HUD 급변 비율: {summary['hud_anomaly_rate']}%")
+        logging.info(f" 평균 Blueprint 커버리지: {summary['avg_blueprint_coverage']}%")
 
         if summary["common_violations"]:
             logging.warning("\n❌ 빈번한 위반 유형:")

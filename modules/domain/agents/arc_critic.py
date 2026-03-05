@@ -174,7 +174,7 @@ class ArcCritic(BaseAgent):
             return result, fixed_arc
 
         except Exception as e:
-            logging.warning(f"⚠️ [Critic] 비평 오류: {str(e)[:50]}")
+            logging.warning(f" [Critic] 비평 오류: {str(e)[:50]}")
             # 폴백: Python 기반 간단 검증
             return self._python_critique_fallback(generated_arc, prev_arcs), generated_arc
 
@@ -242,8 +242,7 @@ class ArcCritic(BaseAgent):
             for key, value in auto_fixes["state_constraints"].items():
                 old_value = fixed["state_constraints"].get(key)
                 if old_value != value:
-                    logging.info(
-                        f"⚠️ [V60.73] state_constraints 자동 수정: {key}: {old_value} → {value} (tactical_doc 불일치 주의)"
+                    logging.info(f" [V60.73] state_constraints 자동 수정: {key}: {old_value} → {value} (tactical_doc 불일치 주의)"
                     )
                 fixed["state_constraints"][key] = value
 

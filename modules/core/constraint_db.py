@@ -92,7 +92,7 @@ class ConstraintDB:
                         self._parse_arc_state(arc)
 
         except Exception as e:
-            logging.warning(f"⚠️ [ConstraintDB] DB 로드 실패: {e}")
+            logging.warning(f" [ConstraintDB] DB 로드 실패: {e}")
 
     def _parse_arc_state(self, arc_data: dict):
         """Arc 데이터에서 상태 추출"""
