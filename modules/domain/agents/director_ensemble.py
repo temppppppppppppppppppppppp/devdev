@@ -621,6 +621,9 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
             f"({[chr(65 + i) if i < len(candidates) else f'#{i}' for i in qualified_indices]})"
         )
 
+        # [NC-1 SCM] 단일 후보 독점 경고 플래그
+        _scm_single_candidate = len(qualified_indices) == 1
+
         blueprint_str = (
             json.dumps(blueprint, ensure_ascii=False, indent=2) if isinstance(blueprint, dict) else str(blueprint)
         )
@@ -686,7 +689,15 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
                     _mc_for_director[: _dir_mc_max - 50]
                     + f"\n...(mandatory_context {_dir_mc_max:,}자 초과로 일부 생략)"
                 )
-            _mc_block = f"""
+            # [NC-1 SCM] 단일 후보 경고 주입
+            _scm_prefix = ""
+            if _scm_single_candidate:
+                _scm_prefix = (
+                    "\n\n⚠️ [단일 후보 경고] 분량 기준 통과 후보가 1개뿐입니다. "
+                    "절대 기준으로 독립 평가하세요. 경쟁 부재로 인한 과대 평가를 경계하세요.\n"
+                )
+                logging.info("[SCM] 단일 후보 독점 경고 주입")
+            _mc_block = f"""{_scm_prefix}
 
 ### 📌 [V67] 참고 컨텍스트 (Python 수집 + StateTracker 상태)
 아래는 Python이 수집한 세계 상태와 advisory 분석 결과입니다.
@@ -822,9 +833,27 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
         score = _safe_int(result.get("score", 50), 50)
         _pre_firewall_score = score  # [TF-24] 기본값 초기화 (firewall 미작동 시에도 안전)
 
+        # ── [NC-3B] score_breakdown 합산 검증 ──────────────────
+        _sb_raw = result.get("score_breakdown", {})
+        if isinstance(_sb_raw, dict) and _sb_raw:
+            _sb_sum = sum(v for v in _sb_raw.values() if isinstance(v, int | float))
+            if _sb_sum != score and _sb_sum > 0:
+                logging.warning(
+                    "[NC-3B] score_breakdown 합산 불일치: breakdown=%d, score=%d → breakdown 우선",
+                    _sb_sum,
+                    score,
+                )
+                score = max(0, min(100, _sb_sum))
+
         if v60_97_swapped:
             score = 50
             original_verdict = "CONDITIONAL_PASS"
+
+        # ── [NC-1 SCM] 단일 후보 점수 보정 ──────────────────────────
+        if _scm_single_candidate and score >= 95:
+            _scm_old = score
+            score = min(score, 90)
+            logging.info(f"[SCM] 단일 후보 점수 보정: {_scm_old} → {score}")
 
         # ── [V75-C] Contradiction Firewall ──────────────────────────
         # NOTE: v60_97_swapped 뒤에 배치 — 방화벽이 swap 승격보다 우선
@@ -855,6 +884,117 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
                                 f"   ▸ [{_c.get('severity', '?')}] {str(_c.get('type', ''))}: "
                                 f"{str(_c.get('current_violation', ''))[:100]}"
                             )
+
+        # ── [NC-1] numeric_consistency_review 검증 ──────────────────
+        _nc_review = result.get("numeric_consistency_review") or []
+        if isinstance(_nc_review, list) and _nc_review:
+            _nc_agree_count = 0
+            for _ncr in _nc_review:
+                if not isinstance(_ncr, dict):
+                    continue
+                _ncr_verdict = str(_ncr.get("verdict", "")).upper()
+                _ncr_id = _ncr.get("id", "?")
+                _ncr_reason = str(_ncr.get("reason", ""))[:100]
+                if _ncr_verdict == "AGREE":
+                    _nc_agree_count += 1
+                    logging.warning(
+                        "[NC-1] Director AGREE: %s — %s",
+                        _ncr_id,
+                        _ncr_reason,
+                    )
+                elif _ncr_verdict == "DISMISS":
+                    logging.info(
+                        "[NC-1] Director DISMISS: %s — %s",
+                        _ncr_id,
+                        _ncr_reason,
+                    )
+                else:
+                    logging.warning(
+                        "[NC-1] Director 미판정: %s (verdict=%s)",
+                        _ncr_id,
+                        _ncr_verdict,
+                    )
+            if _nc_agree_count > 0:
+                # AGREE된 항목이 있으면 → MAJOR 모순으로 취급
+                logging.warning(
+                    "[NC-1] Director가 %d건 수치 모순 인정 → continuity_contradiction 감점 강제",
+                    _nc_agree_count,
+                )
+                # score_breakdown에서 continuity_contradiction 상한 제한
+                _sb = result.get("score_breakdown", {})
+                if isinstance(_sb, dict):
+                    _cc_score = _sb.get("continuity_contradiction", 40)
+                    if isinstance(_cc_score, int | float):
+                        # AGREE 1건당 최대 8점 감점 (40점 만점 기준)
+                        _cc_cap = max(0, 40 - _nc_agree_count * 8)
+                        if _cc_score > _cc_cap:
+                            logging.info(
+                                "[NC-1] continuity_contradiction %d → %d (AGREE %d건)",
+                                _cc_score,
+                                _cc_cap,
+                                _nc_agree_count,
+                            )
+                            _sb["continuity_contradiction"] = _cc_cap
+                            # 총점도 재계산
+                            _new_total = sum(v for v in _sb.values() if isinstance(v, int | float))
+                            if _new_total < score:
+                                score = _new_total
+        else:
+            # NC advisory가 있었는데 Director가 review를 안 한 경우 감지
+            _mc = mandatory_context or ""
+            if "[NumericConsistency" in _mc and "[NC-" in _mc:
+                logging.warning(
+                    "[NC-1] Director가 numeric_consistency_review를 생략함 — python_warnings 감점",
+                )
+                _sb = result.get("score_breakdown", {})
+                if isinstance(_sb, dict):
+                    _pw = _sb.get("python_warnings", 10)
+                    if isinstance(_pw, int | float) and _pw > 5:
+                        _sb["python_warnings"] = 5
+                        _new_total = sum(v for v in _sb.values() if isinstance(v, int | float))
+                        if _new_total < score:
+                            score = _new_total
+
+        # ── [NC-3] consistency_checklist 검증 ──────────────────
+        _checklist = result.get("consistency_checklist") or {}
+        _nc3_keys = [
+            "numeric_accuracy",
+            "arithmetic",
+            "title_consistency",
+            "scene_overlap",
+            "percent_calculation",
+            "event_ordering",
+            "space_continuity",
+            "npc_identity",
+            "time_progression",
+            "opening_diversity",
+        ]
+        if isinstance(_checklist, dict) and _checklist:
+            _issue_count = sum(1 for k in _nc3_keys if str(_checklist.get(k, "")).upper() == "ISSUE")
+            if _issue_count > 0:
+                logging.warning(
+                    "[NC-3] consistency_checklist ISSUE %d건 감지: %s",
+                    _issue_count,
+                    [k for k in _nc3_keys if str(_checklist.get(k, "")).upper() == "ISSUE"],
+                )
+            if _issue_count >= 3:
+                # ISSUE 3건+ → python_warnings 상한 3점
+                _sb = result.get("score_breakdown", {})
+                if isinstance(_sb, dict):
+                    _pw = _sb.get("python_warnings", 10)
+                    if isinstance(_pw, int | float) and _pw > 3:
+                        logging.info(
+                            "[NC-3] python_warnings %d → 3 (ISSUE %d건)",
+                            _pw,
+                            _issue_count,
+                        )
+                        _sb["python_warnings"] = 3
+                        _new_total = sum(v for v in _sb.values() if isinstance(v, int | float))
+                        if _new_total < score:
+                            score = _new_total
+        else:
+            # 체크리스트 누락 → 로깅만 (초기 안정화, 감점 없음)
+            logging.info("[NC-3] Director가 consistency_checklist를 생략함 — 감점 없음 (안정화 기간)")
 
         adaptive_result = self._d.apply_adaptive_decision(
             score=score,
@@ -942,6 +1082,8 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
             "error_category": result.get("error_category", ""),  # [V75-B] LOGIC_ERROR 전파
             "fix_scope": result.get("fix_scope", ""),  # [TF-23] Director 판단 수정 범위
             "fix_scope_reasoning": result.get("fix_scope_reasoning", ""),  # [TF-35] 수정 범위 근거 전파
+            "numeric_consistency_review": _nc_review,  # [NC-1] Director 수치 판정 전파
+            "consistency_checklist": _checklist,  # [NC-3] 일관성 체크리스트 전파
             "contradiction_types": [  # [A-4] 모순 유형 전파
                 c.get("type", "")
                 for c in (

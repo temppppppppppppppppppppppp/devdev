@@ -25,6 +25,34 @@ class Stage4InterviewRound:
             logging.debug("[TruthGate] llm_ask 실패 (비치명): %s", e)
         return ""
 
+    def _get_inplace_success_rate(self) -> float | None:
+        """[PF-4] director_selections에서 inplace fix_scope의 PASS 비율 조회.
+
+        Returns:
+            float (0~100) 또는 None (샘플 부족).
+        """
+        from modules.validation.threshold_helper import _threshold
+
+        try:
+            db = self.ctx.current_project.db
+            stats = db.get_fix_scope_stats(lookback=200)
+        except Exception:
+            return None
+
+        _min_samples = int(_threshold("patch_mode.inplace_min_samples", 5))
+        total = 0
+        pass_cnt = 0
+        for row in stats:
+            if row.get("fix_scope") == "inplace":
+                cnt = row.get("cnt", 0)
+                total += cnt
+                if row.get("verdict") == "PASS":
+                    pass_cnt += cnt
+
+        if total < _min_samples:
+            return None
+        return round(pass_cnt / total * 100, 1)
+
     def _setup_writing_directive(
         self,
         chief_writer,
@@ -386,6 +414,16 @@ class Stage4InterviewRound:
         # validation_results에서 경고를 추출하여 mandatory_context에 병합
         _mandatory_text = mandatory_context if isinstance(mandatory_context, str) else str(mandatory_context or "")
         _director_mc_parts = [_mandatory_text] if _mandatory_text else []
+        # [S3-META] quality_risk Blueprint → Director 사전 경고
+        _s3_meta = round_ctx.blueprint.get("_stage3_meta", {}) if isinstance(round_ctx.blueprint, dict) else {}
+        if _s3_meta.get("quality_risk"):
+            _s3_warn = (
+                f"[S3-META 경고] 이 Blueprint는 Stage 3에서 quality_risk로 판정됨 "
+                f"(verdict={_s3_meta.get('final_verdict', '?')}, score={_s3_meta.get('last_score', '?')}). "
+                "로직 모순·연속성 결함 가능성 높음. 원고의 논리적 일관성을 중점 검토하세요."
+            )
+            _director_mc_parts.append(_s3_warn)
+            logging.info("[S3-META] quality_risk=True → Director advisory 주입 (score=%s)", _s3_meta.get("last_score"))
         if not _writing_directive.is_empty():
             _wd_lines = ["[WritingDirective]"]
             if _writing_directive.ending_style:
@@ -399,7 +437,7 @@ class Stage4InterviewRound:
         # [B-1-3b] Advisory chain (TruthGate, NpcDrift, NumericDrift, Flashback, InfoParadox, RelDrift)
         _advisory_parts = self._run_advisory_chain(candidates, validation_results, next_ep, genre_name)
         _advisory_summary = {}
-        for _part in (_advisory_parts or []):
+        for _part in _advisory_parts or []:
             _part_s = str(_part)
             if "[TruthGate]" in _part_s:
                 _advisory_summary["truth_gate"] = 1
@@ -416,7 +454,75 @@ class Stage4InterviewRound:
             if "[LM-P1]" in _part_s or "LongTerm" in _part_s:
                 _advisory_summary["long_term_rep"] = 1
         self._last_advisory_summary = dict(_advisory_summary)
+        _formatted_advisory_parts: list[str] = []
+        for _part in _advisory_parts or []:
+            _part_s = str(_part or "").strip()
+            if not _part_s:
+                continue
+            if "이상 없음" in _part_s or "경고 0건" in _part_s:
+                _short_name = _part_s.split("]")[0].replace("[", "").strip() if "]" in _part_s else "Advisory"
+                _formatted_advisory_parts.append(f"[{_short_name}] 이상 없음")
+                continue
+            if "[TruthGate" in _part_s:
+                _body = (
+                    _part_s.replace("[TruthGate Advisory — CRITICAL 경고 시 반드시 REJECT]", "")
+                    .replace("[TruthGate Advisory]", "")
+                    .replace("[TruthGate]", "")
+                    .strip()
+                )
+                _formatted_advisory_parts.append(
+                    f"[CRITICAL · TruthGate] {_body}" if _body else "[CRITICAL · TruthGate]"
+                )
+                continue
+            if any(_tag in _part_s for _tag in ("[LM-B]", "NpcDrift")):
+                _formatted_advisory_parts.append(f"[MAJOR · NpcDrift] {_part_s}")
+                continue
+            if any(_tag in _part_s for _tag in ("[LM-D]", "RelDrift", "RelationshipDrift")):
+                _formatted_advisory_parts.append(f"[MAJOR · RelDrift] {_part_s}")
+                continue
+            if any(_tag in _part_s for _tag in ("[LM-E]", "Flashback")):
+                _formatted_advisory_parts.append(f"[MAJOR · Flashback] {_part_s}")
+                continue
+            if any(_tag in _part_s for _tag in ("[LM-F]", "InfoParadox")):
+                _formatted_advisory_parts.append(f"[MAJOR · InfoParadox] {_part_s}")
+                continue
+            _formatted_advisory_parts.append(f"[INFO] {_part_s}")
+        _advisory_parts = _formatted_advisory_parts
         _director_mc_parts = _advisory_parts + _director_mc_parts
+
+        # [NC-2 GAP-5] cumulative_elapsed → Director MC 주입
+        try:
+            _ws = getattr(self.ctx, "world_state", None)
+            if _ws:
+                _cum_elapsed = getattr(_ws, "_state", {}).get("cumulative_elapsed") if hasattr(_ws, "_state") else None
+                if _cum_elapsed:
+                    from modules.core.narrative_context_formatter import NarrativeContextFormatter
+
+                    _time_str = NarrativeContextFormatter.format_cumulative_time(_cum_elapsed)
+                    if _time_str:
+                        _director_mc_parts.append(f"[Timeline] 현재까지 경과 시간: {_time_str}")
+        except Exception as _te:
+            logging.debug("[NC-2] cumulative_elapsed 주입 실패 (비치명): %s", _te)
+
+        # [NC-2 GAP-1] 씬 유사도 advisory → Director MC 주입
+        try:
+            _recent_scene_kws = getattr(round_ctx, "recent_scene_keywords", [])
+            if _recent_scene_kws and candidates:
+                from modules.core.stage4_context_builder import Stage4ContextBuilder
+
+                # 선택 최고 점수 후보의 원고로 비교
+                for _cand in candidates:
+                    _cand_ms = _cand.get("manuscript", "") if isinstance(_cand, dict) else ""
+                    if _cand_ms:
+                        _sim_adv = Stage4ContextBuilder.compute_scene_similarity_advisory(
+                            _cand_ms,
+                            _recent_scene_kws,
+                        )
+                        if _sim_adv:
+                            _director_mc_parts.append(_sim_adv)
+                        break  # 첫 번째 유효 후보로 충분
+        except Exception as _sim_err:
+            logging.debug("[NC-2] 씬 유사도 advisory 실패 (비치명): %s", _sim_err)
 
         # [TF-49b] Preflight advisory → Director에도 전달
         if _preflight_advisory:
@@ -1038,7 +1144,9 @@ class Stage4InterviewRound:
 
         # (c) Downgrade PASS to REJECT if post-select validation found conflicts
         if _post_select_conflicts:
-            self.ctx.ui.log(f"   [A-3] {len(_post_select_conflicts)} post-select conflicts detected -> downgrade to REJECT")
+            self.ctx.ui.log(
+                f"   [A-3] {len(_post_select_conflicts)} post-select conflicts detected -> downgrade to REJECT"
+            )
             verdict = "REJECT"
             # [TF-49] A-3 다운그레이드 시 error_category를 LOGIC_ERROR로 설정
             # → V75-D/V75-B 에스컬레이션 체인 트리거 (Blueprint 자동 수정)
@@ -1055,7 +1163,9 @@ class Stage4InterviewRound:
                 "selected_strategy": director_result.get("selected_strategy", "")
                 if isinstance(director_result, dict)
                 else "",
-                "open_review": director_result.get("open_review", "") if isinstance(director_result, dict) else "",  # [TF-29]
+                "open_review": director_result.get("open_review", "")
+                if isinstance(director_result, dict)
+                else "",  # [TF-29]
             }
 
         return verdict, director_feedback, previous_attempt, error_category
@@ -1080,6 +1190,8 @@ class Stage4InterviewRound:
             tuple: (verdict, final_manuscript, final_state_updates, director_result, director_feedback)
                    verdict 가 PASS 또는 REJECT로 확정됨.
         """
+        from modules.validation.threshold_helper import _threshold
+
         _MAX_FIX = 3
         _current_ms = final_manuscript
         _current_fb = self._extract_fix_feedback(director_result)
@@ -1090,19 +1202,26 @@ class Stage4InterviewRound:
         _director_mandatory_context = director_mandatory_context
 
         _current_audit_result = director_result  # [TF-33] 최신 audit 추적
+        _last_patched_ms = None  # [PF-3] 마지막 패치 원고 추적
 
         for _fix_i in range(_MAX_FIX):
             if not _current_fb:
                 break
-            # [TF-33] Director fix_scope 기반 수정 전략 라우팅
-            _fix_scope = (
-                _current_audit_result.get("fix_scope", "inplace")
-                if isinstance(_current_audit_result, dict)
-                else "inplace"
-            )
+            # [TF-33][PF-1] Director fix_scope 기반 수정 전략 라우팅 — 누락 시 점수 기반 폴백
+            _fix_scope = _current_audit_result.get("fix_scope", "") if isinstance(_current_audit_result, dict) else ""
+            if not _fix_scope:
+                _inplace_thresh = int(_threshold("patch_mode.inplace_below", 60))
+                _fix_scope = "inplace" if score >= _inplace_thresh else "full"
+                logging.warning("[PF-1] fix_scope 누락 → score=%d fallback: %s", score, _fix_scope)
             if _fix_scope in ("partial", "full"):
                 self.ctx.ui.log(f"   🔀 [TF-33] fix_scope={_fix_scope!r} → inplace 불가, retry 경로 위임")
                 break  # → REJECT → retry 경로에서 patch/rewrite 처리
+
+            # [PF-4] inplace 성공률 로깅 (진단용, 스킵하지 않음 — 디렉터 주권주의)
+            if _fix_i == 0:
+                _ip_rate = self._get_inplace_success_rate()
+                if _ip_rate is not None:
+                    logging.info("[PF-4] inplace 성공률 %.1f%%", _ip_rate)
 
             self.ctx.ui.log(f"   🔧 [TF-32-V] PASS_WITH_FIX patch #{_fix_i + 1}/{_MAX_FIX}")
             try:
@@ -1116,9 +1235,26 @@ class Stage4InterviewRound:
             except Exception as _e:
                 logging.warning(f"[TF-32-V] inplace 실패: {_e!s:.100}")
                 break
-            if not _patched_ms or len(_patched_ms) < 2000:
-                logging.warning("[TF-32-V] patch 결과 부족")
+            _min_patch_len = int(_threshold("patch_mode.min_patched_length", 2000))
+            if not _patched_ms or len(_patched_ms) < _min_patch_len:
+                logging.warning("[TF-32-V] patch 결과 부족 (len=%d < %d)", len(_patched_ms or ""), _min_patch_len)
                 break
+            _last_patched_ms = _patched_ms  # [PF-3] 패치본 추적
+
+            # [F-2] InPlace 변경 비율 advisory
+            from modules.core.constants import calc_patch_change_ratio
+
+            _change_ratio = calc_patch_change_ratio(_current_ms, _patched_ms)
+            _max_ratio = float(_threshold("patch_mode.inplace_max_change_ratio", 0.30))
+            _f2_advisory = ""
+            if _change_ratio > _max_ratio:
+                _f2_advisory = (
+                    f"[F-2 경고] InPlace 패치 변경 비율 {_change_ratio:.1%} > 임계값 {_max_ratio:.0%}. "
+                    "국소 수정이 아닌 대폭 재작성일 수 있음. 품질 저하 여부를 중점 확인하세요."
+                )
+                logging.warning(
+                    "[F-2] InPlace 변경 비율 %.1f%% > %.0f%% (S4 원고)", _change_ratio * 100, _max_ratio * 100
+                )
 
             # [TF-35] Director 동일 경로 재심사 — ScoringValidator 대신 Director LLM 직접 채점
             try:
@@ -1140,6 +1276,8 @@ class Stage4InterviewRound:
                     ],
                     "focus_points": [f"[TF-35 재심사] 이전 피드백: {_current_fb[:300]}"],
                 }
+                if _f2_advisory:
+                    _re_val_ctx["warnings"].append(_f2_advisory)
                 _re_audit = _director.select_and_judge_ensemble(
                     ep_num=round_ctx.next_ep,
                     candidates=[_re_candidate],
@@ -1191,6 +1329,7 @@ class Stage4InterviewRound:
                     else str(_fb_obj)
                 )
             else:  # REJECT
+                _current_audit_result = _re_audit  # 재심사 verdict 반영 (PF-3 조건 판정용)
                 break
 
         if _fix_ok:
@@ -1199,6 +1338,18 @@ class Stage4InterviewRound:
             self.ctx.ui.log("   ✅ [TF-32-V] 원고 수정 완료 → PASS 확정")
         else:
             verdict = "REJECT"
+            # [PF-3] PASS_WITH_FIX 소진 시에만 패치본 채택 (Director가 "합격이나 수정 필요"라고 판정한 것)
+            # REJECT 판정 패치본은 채택하지 않음 — 디렉터 주권주의
+            _last_verdict = _current_audit_result.get("verdict", "") if isinstance(_current_audit_result, dict) else ""
+            if _last_verdict == "PASS_WITH_FIX" and _last_patched_ms and _last_patched_ms != final_manuscript:
+                final_manuscript = _last_patched_ms
+                _last_re_score = _current_audit_result.get("score", score)
+                try:
+                    _last_re_score = int(_last_re_score)
+                except (ValueError, TypeError):
+                    _last_re_score = score
+                director_result["score"] = _last_re_score
+                self.ctx.ui.log(f"   📈 [PF-3] PASS_WITH_FIX 소진 → 패치본 채택 (score={_last_re_score})")
             # [TF-33] fix_scope 보존 → retry 경로에서 patch/rewrite 라우팅
             _last_fs = _current_audit_result.get("fix_scope", "") if isinstance(_current_audit_result, dict) else ""
             if _last_fs:
@@ -1631,6 +1782,12 @@ class Stage4InterviewRound:
 
             candidates = None  # [TF-23] 분기 전 초기화
 
+            # [PF-4] inplace 성공률 로깅 (진단용, 스킵하지 않음 — 디렉터 주권주의)
+            if _use_inplace:
+                _ip_rate = self._get_inplace_success_rate()
+                if _ip_rate is not None:
+                    logging.info("[PF-4] inplace 성공률 %.1f%%", _ip_rate)
+
             # --- InPlace 시도 (LLM 1회) ---
             if _use_inplace:
                 logging.info(f"[TF-23] InPlace 진입 (fix_scope={_fix_scope!r}, score={_prev_score})")
@@ -1939,11 +2096,13 @@ class Stage4InterviewRound:
         """[B-1-3b][TF-50] Advisory chain 병렬 실행, Director mandatory_context 파트 반환."""
         from concurrent.futures import ThreadPoolExecutor, as_completed
 
-        logging.debug("Advisory 검증 시작 — 7개 병렬 실행 (TruthGate, NPC, 수치, 회상, 정보역설, 관계, 장기반복)")
-        print("      \u23f3 Advisory 체인 7개 병렬 실행 중...")
+        logging.debug(
+            "Advisory 검증 시작 — 8개 병렬 실행 (TruthGate, NPC, 수치, 회상, 정보역설, 관계, 장기반복, 수치정합)"
+        )
+        print("      \u23f3 Advisory 체인 8개 병렬 실행 중...")
 
         futures = {}
-        with ThreadPoolExecutor(max_workers=7, thread_name_prefix="advisory") as executor:
+        with ThreadPoolExecutor(max_workers=8, thread_name_prefix="advisory") as executor:
             futures[executor.submit(self._advisory_truth_gate, candidates, validation_results, next_ep)] = "TruthGate"
             futures[executor.submit(self._advisory_npc_drift, candidates, validation_results, next_ep)] = "NpcDrift"
             futures[executor.submit(self._advisory_numeric_drift, next_ep)] = "NumericDrift"
@@ -1951,6 +2110,7 @@ class Stage4InterviewRound:
             futures[executor.submit(self._advisory_info_paradox, candidates, next_ep, genre_name)] = "InfoParadox"
             futures[executor.submit(self._advisory_rel_drift, candidates, next_ep)] = "RelDrift"
             futures[executor.submit(self._advisory_long_term_rep, candidates, next_ep)] = "LongTermRep"
+            futures[executor.submit(self._advisory_numeric_consistency, candidates, next_ep)] = "NumericConsistency"
 
             _advisory_parts: list[str] = []
             for future in as_completed(futures, timeout=300):
@@ -2300,6 +2460,61 @@ class Stage4InterviewRound:
             )
         return []
 
+    def _advisory_numeric_consistency(self, candidates: list[dict], next_ep: int) -> list[str]:
+        """[NC-1] NumericConsistencyChecker — Python-only 수치 정합성 advisory."""
+        try:
+            from modules.core.numeric_consistency_checker import NumericConsistencyChecker
+
+            _fl = getattr(self.ctx, "fact_ledger", None)
+            _db = getattr(getattr(self.ctx, "current_project", None), "db", None)
+            _ws = getattr(self.ctx, "world_state", None)
+
+            checker = NumericConsistencyChecker(fact_ledger=_fl, db=_db, world_state=_ws)
+
+            # 직전 화 원고
+            _prev_ms = None
+            if _db and next_ep > 1:
+                _prev_row = _db.get_manuscript(next_ep - 1)
+                if _prev_row:
+                    _prev_ms = _prev_row.get("manuscript", "") or _prev_row.get("text", "")
+
+            _nc_all: list[dict] = []
+            for _ci, _cand in enumerate(candidates):
+                _ms = _cand.get("manuscript", "") if isinstance(_cand, dict) else ""
+                if not _ms:
+                    continue
+                _su = _cand.get("state_updates") or {} if isinstance(_cand, dict) else {}
+                _warns = checker.check(
+                    _ms,
+                    next_ep,
+                    state_updates=_su,
+                    prev_manuscript=_prev_ms,
+                )
+                for _w in _warns:
+                    _w["_cand_idx"] = _ci
+                _nc_all.extend(_warns)
+
+            if _nc_all:
+                _nc_lines = [
+                    "[NumericConsistency — Python 수치 검증 결과. 각 항목에 대해 numeric_consistency_review에서 AGREE/DISMISS 판정 필수]"
+                ]
+                for _wi, _w in enumerate(_nc_all[:10], 1):
+                    _cl = (
+                        ["A", "B", "C"][_w.get("_cand_idx", 0)]
+                        if _w.get("_cand_idx", 0) < 3
+                        else str(_w.get("_cand_idx", 0) + 1)
+                    )
+                    _sev = _w.get("severity", "MAJOR")
+                    _nc_lines.append(f"- [NC-{_wi}][후보 {_cl}][{_sev}] {_w.get('text', '')[:120]}")
+                logging.info(
+                    "[NumericConsistency→Director] %d건 수치 정합성 경고",
+                    len(_nc_all),
+                )
+                return ["\n".join(_nc_lines)]
+        except (AttributeError, TypeError, ValueError, RuntimeError, OSError) as _nc_err:
+            logging.warning("[NC-1] NumericConsistencyChecker 실패 (비치명): %s", str(_nc_err)[:80])
+        return []
+
     # ── [TF-32] PASS_WITH_FIX helpers ──────────────────────────────
 
     def _extract_fix_feedback(self, director_result: dict) -> str:
@@ -2484,4 +2699,3 @@ class Stage4InterviewRound:
                 )
         except Exception as _sa_err:
             logging.debug("[stage_attempts] Stage4 record failed (non-blocking): %s", _sa_err)
-

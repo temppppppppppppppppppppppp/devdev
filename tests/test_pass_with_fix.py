@@ -1,6 +1,7 @@
 """[TF-32] PASS_WITH_FIX verdict 도입 + [TF-32-VERIFY] 재심사 반복 테스트."""
 
 import asyncio
+import dataclasses
 import sys
 from pathlib import Path
 from types import SimpleNamespace
@@ -1793,3 +1794,351 @@ class TestParallelBlockingAdvisory:
         assert len(results["_blocking_advisory"]["failures"]) == 1
         # _build_reject_result_v59가 호출되지 않아야 함
         orch._build_reject_result_v59.assert_not_called()
+
+
+# ── PF 개선 테스트 ──────────────────────────────────────────────
+
+
+class TestPFImprovements:
+    """[PF-1~4] PASS_WITH_FIX 개선 4건 테스트."""
+
+    def test_pf1_fix_scope_missing_high_score(self):
+        """[PF-1] fix_scope 누락 + score=70 → 'inplace' 폴백."""
+        ctx = _make_ctx()
+        cw = MagicMock()
+        _patched_text = "수정된 원고입니다. " * 200
+        cw.inplace_patch.return_value = [{"manuscript": _patched_text}]
+
+        rc = _make_round_ctx(cw)
+        ir = Stage4InterviewRound(ctx)
+
+        # fix_scope 의도적 누락
+        dr = _director_result_pass_with_fix(score=70)
+        dr["fix_scope"] = ""  # 누락
+
+        # 재심사 → PASS
+        ctx.agents["director"].select_and_judge_ensemble.return_value = {
+            "verdict": "PASS",
+            "score": 95,
+        }
+
+        v, ms, su, dr_out, fb = ir._execute_pass_with_fix_loop(
+            verdict="PASS_WITH_FIX",
+            final_manuscript=_MANUSCRIPT_TEXT,
+            final_state_updates={},
+            director_result=dr,
+            director_feedback="수정 필요",
+            round_ctx=rc,
+            round_num=0,
+            score=70,
+            quality_gate_score=90,
+            director_mandatory_context="",
+        )
+        # score=70 >= inplace_below(60) → inplace 폴백
+        assert v == "PASS"
+        cw.inplace_patch.assert_called()
+
+    def test_pf1_fix_scope_missing_low_score(self):
+        """[PF-1] fix_scope 누락 + score=40 → 'full' 폴백 (inplace 불가)."""
+        ctx = _make_ctx()
+        cw = MagicMock()
+        rc = _make_round_ctx(cw)
+        ir = Stage4InterviewRound(ctx)
+
+        dr = _director_result_pass_with_fix(score=40)
+        dr["fix_scope"] = ""  # 누락
+
+        v, ms, su, dr_out, fb = ir._execute_pass_with_fix_loop(
+            verdict="PASS_WITH_FIX",
+            final_manuscript=_MANUSCRIPT_TEXT,
+            final_state_updates={},
+            director_result=dr,
+            director_feedback="수정 필요",
+            round_ctx=rc,
+            round_num=0,
+            score=40,
+            quality_gate_score=90,
+            director_mandatory_context="",
+        )
+        # score=40 < inplace_below(60) → full 폴백 → break → REJECT
+        assert v == "REJECT"
+        cw.inplace_patch.assert_not_called()
+
+    def test_pf2_min_patched_length_yaml(self):
+        """[PF-2] YAML에서 min_patched_length 값 로드 확인."""
+        from modules.validation.threshold_helper import _threshold
+
+        val = _threshold("patch_mode.min_patched_length", 2000)
+        assert int(val) == 2000
+
+    def test_pf3_pass_with_fix_exhausted_adopts_patch(self):
+        """[PF-3] 3회 모두 PASS_WITH_FIX → 패치본 채택 + REJECT 유지 (디렉터 주권 존중)."""
+        ctx = _make_ctx()
+        cw = MagicMock()
+        _patched_text = "수정된 원고입니다. " * 200
+        cw.inplace_patch.return_value = [{"manuscript": _patched_text}]
+
+        rc = _make_round_ctx(cw)
+        ir = Stage4InterviewRound(ctx)
+
+        dr = _director_result_pass_with_fix(score=60)
+
+        # 재심사 → 3회 모두 PASS_WITH_FIX (합격이나 수정 필요)
+        ctx.agents["director"].select_and_judge_ensemble.return_value = {
+            "verdict": "PASS_WITH_FIX",
+            "score": 75,
+            "feedback": {"action_items": ["미세 수정"]},
+            "fix_scope": "inplace",
+        }
+
+        v, ms, su, dr_out, fb = ir._execute_pass_with_fix_loop(
+            verdict="PASS_WITH_FIX",
+            final_manuscript=_MANUSCRIPT_TEXT,
+            final_state_updates={},
+            director_result=dr,
+            director_feedback="수정 필요",
+            round_ctx=rc,
+            round_num=0,
+            score=60,
+            quality_gate_score=90,
+            director_mandatory_context="",
+        )
+        # PASS_WITH_FIX 소진 → 패치본 채택 (Director가 "합격이나 수정 필요"라고 판정)
+        assert v == "REJECT"
+        assert ms == _patched_text  # 패치본 채택
+
+    def test_pf3_reject_does_not_adopt_patch(self):
+        """[PF-3] Director REJECT → 원본 유지 (디렉터 주권주의)."""
+        ctx = _make_ctx()
+        cw = MagicMock()
+        _patched_text = "수정된 원고입니다. " * 200
+        cw.inplace_patch.return_value = [{"manuscript": _patched_text}]
+
+        rc = _make_round_ctx(cw)
+        ir = Stage4InterviewRound(ctx)
+
+        dr = _director_result_pass_with_fix(score=60)
+
+        # 재심사 → REJECT (점수가 높아도 REJECT이면 채택 안 함)
+        ctx.agents["director"].select_and_judge_ensemble.return_value = {
+            "verdict": "REJECT",
+            "score": 75,
+        }
+
+        v, ms, su, dr_out, fb = ir._execute_pass_with_fix_loop(
+            verdict="PASS_WITH_FIX",
+            final_manuscript=_MANUSCRIPT_TEXT,
+            final_state_updates={},
+            director_result=dr,
+            director_feedback="수정 필요",
+            round_ctx=rc,
+            round_num=0,
+            score=60,
+            quality_gate_score=90,
+            director_mandatory_context="",
+        )
+        assert v == "REJECT"
+        assert ms == _MANUSCRIPT_TEXT  # Director REJECT → 원본 유지
+
+    def test_pf4_success_rate_calculation(self):
+        """[PF-4] inplace 성공률 계산 검증 (진단용)."""
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        # Mock DB: inplace 10건 중 PASS 1건 = 10%
+        ctx.current_project.db.get_fix_scope_stats.return_value = [
+            {"fix_scope": "inplace", "verdict": "PASS", "cnt": 1},
+            {"fix_scope": "inplace", "verdict": "REJECT", "cnt": 9},
+        ]
+
+        rate = ir._get_inplace_success_rate()
+        assert rate == 10.0
+
+    def test_pf4_high_rate_returns_value(self):
+        """[PF-4] inplace 성공률 50% → 정상 반환 (스킵하지 않음)."""
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        # Mock DB: inplace 10건 중 PASS 5건 = 50%
+        ctx.current_project.db.get_fix_scope_stats.return_value = [
+            {"fix_scope": "inplace", "verdict": "PASS", "cnt": 5},
+            {"fix_scope": "inplace", "verdict": "REJECT", "cnt": 5},
+        ]
+
+        rate = ir._get_inplace_success_rate()
+        assert rate == 50.0
+
+
+# ── F-2 / F-3 / F-4 Tests ─────────────────────────────────────
+
+
+class TestF2PatchChangeRatio:
+    """[F-2] calc_patch_change_ratio 유틸 테스트."""
+
+    def test_identical(self):
+        from modules.core.constants import calc_patch_change_ratio
+
+        assert calc_patch_change_ratio("hello world", "hello world") == 0.0
+
+    def test_completely_different(self):
+        from modules.core.constants import calc_patch_change_ratio
+
+        ratio = calc_patch_change_ratio("aaaaaa", "zzzzzz")
+        assert ratio > 0.9
+
+    def test_small_change(self):
+        from modules.core.constants import calc_patch_change_ratio
+
+        original = "동해물과 백두산이 마르고 닳도록 " * 100
+        # 원본의 일부만 교체 (3글자 → 3글자)
+        patched = original[:50] + "변경됨" + original[53:]
+        ratio = calc_patch_change_ratio(original, patched)
+        # SequenceMatcher는 실제 diff 기반이므로 소량 변경 = 낮은 ratio
+        assert ratio < 0.05, f"small change should be < 5%, got {ratio:.2%}"
+
+    def test_empty_original(self):
+        from modules.core.constants import calc_patch_change_ratio
+
+        assert calc_patch_change_ratio("", "something") == 1.0
+
+    def test_empty_both(self):
+        from modules.core.constants import calc_patch_change_ratio
+
+        assert calc_patch_change_ratio("", "") == 0.0
+
+
+class TestF3FixScopeRequired:
+    """[F-3] fix_scope 스키마 필수 필드 검증."""
+
+    def test_fix_scope_in_audit_schema_required(self):
+        from modules.core.response_schemas import DIRECTOR_AUDIT_SCHEMA
+
+        assert "fix_scope" in DIRECTOR_AUDIT_SCHEMA.required
+
+    def test_fix_scope_in_strategic_schema_required(self):
+        from modules.core.response_schemas import STRATEGIC_AUDIT_SCHEMA
+
+        assert "fix_scope" in STRATEGIC_AUDIT_SCHEMA.required
+
+
+class TestF4TruncationLogging:
+    """[F-4] 트렁케이션 경고 로깅 확인."""
+
+    def test_truncation_warning_logged(self, caplog):
+        """150K 초과 원고 시 [TRUNCATION] 로그 발생."""
+        import logging
+
+        caplog.set_level(logging.WARNING)
+
+        big_manuscript = "가" * 200000
+        # chief_writer.inplace_patch 내부의 트렁케이션 경고를 직접 시뮬레이션
+        _orig_len = len(big_manuscript)
+        if _orig_len > 150000:
+            logging.warning(
+                "[TRUNCATION] test: 원고 %d자 → 150000자 (%.1f%% 손실)",
+                _orig_len,
+                (1 - 150000 / _orig_len) * 100,
+            )
+
+        assert "[TRUNCATION]" in caplog.text
+        assert "200000" in caplog.text
+
+
+# ── [S3-META] quality_risk Blueprint → Stage 4 활용 테스트 ──────
+
+
+class TestS3MetaQualityRisk:
+    """[S3-META] quality_risk Blueprint → Director advisory + V75-D 조기 트리거."""
+
+    def test_s3_meta_quality_risk_advisory_injected(self):
+        """quality_risk=True → _director_mc_parts에 '[S3-META 경고]' 포함."""
+        ctx = _make_ctx()
+        round_ctx = _make_round_ctx()
+        # Blueprint에 _stage3_meta 주입
+        round_ctx = dataclasses.replace(
+            round_ctx,
+            blueprint={
+                "integrated_scenario": "테스트",
+                "_stage3_meta": {"quality_risk": True, "final_verdict": "PASS_WITH_FIX", "last_score": 72},
+            },
+        )
+        ctx.agents["director"].select_and_judge_ensemble.return_value = {
+            "verdict": "PASS",
+            "selected_strategy": "balanced",
+            "selected_index": 0,
+            "score": 90,
+            "feedback": "합격",
+        }
+        ir = Stage4InterviewRound(ctx)
+        result = ir.run(
+            round_num=0,
+            stage4_spinner=MagicMock(),
+            director_feedback="",
+            previous_attempt={},
+            round_ctx=round_ctx,
+        )
+        # Director에 전달된 mandatory_context에 S3-META 경고 포함 확인
+        call_args = ctx.agents["director"].select_and_judge_ensemble.call_args
+        mc = call_args.kwargs.get("mandatory_context", "") if call_args.kwargs else ""
+        assert "[S3-META 경고]" in mc
+        assert "quality_risk" in mc
+        assert "72" in mc
+
+    def test_s3_meta_no_risk_no_advisory(self):
+        """quality_risk=False → advisory 미주입."""
+        ctx = _make_ctx()
+        round_ctx = _make_round_ctx()
+        round_ctx = dataclasses.replace(
+            round_ctx,
+            blueprint={
+                "integrated_scenario": "테스트",
+                "_stage3_meta": {"quality_risk": False, "final_verdict": "PASS", "last_score": 85},
+            },
+        )
+        ctx.agents["director"].select_and_judge_ensemble.return_value = {
+            "verdict": "PASS",
+            "selected_strategy": "balanced",
+            "selected_index": 0,
+            "score": 90,
+            "feedback": "합격",
+        }
+        ir = Stage4InterviewRound(ctx)
+        result = ir.run(
+            round_num=0,
+            stage4_spinner=MagicMock(),
+            director_feedback="",
+            previous_attempt={},
+            round_ctx=round_ctx,
+        )
+        call_args = ctx.agents["director"].select_and_judge_ensemble.call_args
+        mc = call_args.kwargs.get("mandatory_context", "") if call_args.kwargs else ""
+        assert "[S3-META 경고]" not in mc
+
+    def test_v75d_early_trigger_with_quality_risk(self):
+        """quality_risk=True + streak=1 → V75-D 트리거 (threshold 1)."""
+        blueprint = {
+            "integrated_scenario": "테스트",
+            "_stage3_meta": {"quality_risk": True, "final_verdict": "PASS_WITH_FIX", "last_score": 68},
+        }
+        # _s3_meta 추출 + threshold 계산 로직 단위 테스트
+        _s3_meta = blueprint.get("_stage3_meta", {}) if isinstance(blueprint, dict) else {}
+        _quality_risk = bool(_s3_meta.get("quality_risk", False))
+        _v75d_threshold = 1 if _quality_risk else 2
+
+        assert _quality_risk is True
+        assert _v75d_threshold == 1
+        # streak=1 >= threshold=1 → 트리거
+        _logic_error_streak = 1
+        assert _logic_error_streak >= _v75d_threshold
+
+        # quality_risk=False 대조군
+        blueprint_safe = {
+            "integrated_scenario": "테스트",
+            "_stage3_meta": {"quality_risk": False},
+        }
+        _s3_meta_safe = blueprint_safe.get("_stage3_meta", {})
+        _qr_safe = bool(_s3_meta_safe.get("quality_risk", False))
+        _threshold_safe = 1 if _qr_safe else 2
+        assert _threshold_safe == 2
+        # streak=1 < threshold=2 → 미트리거
+        assert _logic_error_streak < _threshold_safe

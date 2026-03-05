@@ -56,6 +56,7 @@ class _RoundContext:
     justification_prompt: str
     reflexion_prompt: str
     preflight_advisory: str  # [TF-49b] Preflight 발견 사항 advisory (CW/Director용)
+    recent_scene_keywords: list = dataclasses.field(default_factory=list)  # [NC-2 GAP-1]
 
 
 @dataclasses.dataclass(slots=True)

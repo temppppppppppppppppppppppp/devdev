@@ -621,7 +621,14 @@ class FourPhaseArcGenerator(BaseAgent):
         from modules.core.prompt_loader import PromptLoader
         from modules.core.response_schemas import ARC_DESIGN_SCHEMA
 
-        original_json = json.dumps(original_arc, ensure_ascii=False, indent=2)[:30000]
+        _full_json = json.dumps(original_arc, ensure_ascii=False, indent=2)
+        if len(_full_json) > 30000:
+            logging.warning(
+                "[TRUNCATION] _inplace_patch_arc: Arc JSON %d자 → 30000자 (%.1f%% 손실)",
+                len(_full_json),
+                (1 - 30000 / len(_full_json)) * 100,
+            )
+        original_json = _full_json[:30000]
 
         try:
             _patch_template = PromptLoader().load("arc_generator", "ARC_PATCH_MODE_PROMPT")
@@ -719,7 +726,14 @@ class FourPhaseArcGenerator(BaseAgent):
             _patch_template = None
 
         # 2) 원본 Arc 직렬화
-        _original_text = json.dumps(original_arc, ensure_ascii=False, indent=2)[:30000]
+        _full_json = json.dumps(original_arc, ensure_ascii=False, indent=2)
+        if len(_full_json) > 30000:
+            logging.warning(
+                "[TRUNCATION] patch_arc_with_feedback: Arc JSON %d자 → 30000자 (%.1f%% 손실)",
+                len(_full_json),
+                (1 - 30000 / len(_full_json)) * 100,
+            )
+        _original_text = _full_json[:30000]
 
         # 3) 패치 프롬프트 포맷
         if _patch_template:

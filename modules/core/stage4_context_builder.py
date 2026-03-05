@@ -704,6 +704,17 @@ class Stage4ContextBuilder:
             except Exception as e:
                 logging.warning(f"[SilentPass:ContextBuilder] WorldState 요약 로드 실패: {e!s:.100}")
 
+        # [NC-2 GAP-1] 직전 3화 씬 키워드 수집 (씬 유사도 advisory용)
+        _recent_scene_keywords: list[dict] = []
+        try:
+            _recent_scene_keywords = self._collect_recent_scene_keywords(
+                _db,
+                next_ep,
+                lookback=3,
+            )
+        except Exception as _sk_err:
+            logging.debug("[NC-2] 씬 키워드 수집 실패 (비치명): %s", _sk_err)
+
         return {
             "arc_pos": arc_pos,
             "total_ep_in_arc": total_ep_in_arc,
@@ -720,7 +731,119 @@ class Stage4ContextBuilder:
             "item_acquisition_timeline": item_acquisition_timeline,
             "chain_link_section": _chain_link_section,
             "world_state_summary": _world_state_summary,
+            "recent_scene_keywords": _recent_scene_keywords,  # [NC-2 GAP-1]
         }
+
+    # ── [NC-2 GAP-1] 씬 유사도 분석 유틸 ──────────────────────────
+
+    _SCENE_SPLIT_RE = re.compile(r"\n(?:#{1,3}\s+씬\s*\d+|---+|\*\*\*+|\n{3,})")
+
+    @classmethod
+    def _split_scenes(cls, text: str) -> list[str]:
+        """원고를 씬 단위로 분리. 구분자: # 씬 N, ---, ***, 빈 줄 3개+."""
+        if not text:
+            return []
+        parts = cls._SCENE_SPLIT_RE.split(text)
+        return [p.strip() for p in parts if p and len(p.strip()) > 20]
+
+    @staticmethod
+    def _scene_keywords(scene_text: str, max_keywords: int = 30) -> set[str]:
+        """씬에서 장소/인물/핵심 동사 키워드 추출 (300자 사용)."""
+        snippet = scene_text[:300]
+        # 한글 2~6자 단어 추출 (조사 제거)
+        words = re.findall(r"[\uac00-\ud7a3]{2,6}", snippet)
+        # 흔한 조사/어미 제거
+        stopwords = {
+            "그리고",
+            "하지만",
+            "그래서",
+            "그런데",
+            "때문에",
+            "하면서",
+            "라고",
+            "이라고",
+            "했다",
+            "있다",
+            "없다",
+            "되었다",
+            "이었다",
+            "것이다",
+            "같다",
+            "있었다",
+            "않았다",
+        }
+        return {w for w in words[:max_keywords] if w not in stopwords}
+
+    @classmethod
+    def _collect_recent_scene_keywords(
+        cls,
+        db,
+        next_ep: int,
+        lookback: int = 3,
+    ) -> list[dict]:
+        """직전 N화 원고에서 씬별 키워드 목록 수집.
+
+        Returns:
+            [{"ep": int, "scenes": [set[str], ...]}, ...]
+        """
+        result: list[dict] = []
+        for prev_ep in range(max(1, next_ep - lookback), next_ep):
+            try:
+                ms_row = db.get_manuscript(prev_ep)
+                if not ms_row:
+                    continue
+                content = ms_row.get("content", "") or ms_row.get("manuscript", "") or ""
+                if not content or len(content) < 100:
+                    continue
+                scenes = cls._split_scenes(content)
+                scene_kws = [cls._scene_keywords(s) for s in scenes]
+                if scene_kws:
+                    result.append({"ep": prev_ep, "scenes": scene_kws})
+            except Exception:
+                continue
+        return result
+
+    @classmethod
+    def compute_scene_similarity_advisory(
+        cls,
+        candidate_text: str,
+        recent_scene_keywords: list[dict],
+        threshold: float = 0.50,
+    ) -> str:
+        """후보 원고와 직전 화 씬의 키워드 자카드 유사도 → advisory 문자열.
+
+        유사도 > threshold 씬 쌍이 2개 이상이면 advisory 반환, 아니면 빈 문자열.
+        """
+        if not candidate_text or not recent_scene_keywords:
+            return ""
+
+        cand_scenes = cls._split_scenes(candidate_text)
+        cand_kws = [cls._scene_keywords(s) for s in cand_scenes]
+        if not cand_kws:
+            return ""
+
+        similar_pairs: list[str] = []
+        for entry in recent_scene_keywords:
+            ep = entry.get("ep", "?")
+            for prev_idx, prev_kw in enumerate(entry.get("scenes", [])):
+                if not prev_kw:
+                    continue
+                for cand_idx, cand_kw in enumerate(cand_kws):
+                    if not cand_kw:
+                        continue
+                    inter = prev_kw & cand_kw
+                    union = prev_kw | cand_kw
+                    sim = len(inter) / len(union) if union else 0.0
+                    if sim > threshold:
+                        similar_pairs.append(f"EP{ep} 씬{prev_idx + 1} ↔ 후보 씬{cand_idx + 1} (유사도 {sim:.0%})")
+
+        if len(similar_pairs) >= 2:
+            lines = ["[SceneSimilarity] 에피소드 간 씬 구조 중복 감지:"]
+            lines.extend(f"  - {p}" for p in similar_pairs[:5])
+            lines.append("  → 같은 장소·상황·인물 조합 반복 주의. Director 판정 필요.")
+            return "\n".join(lines)
+
+        return ""
 
     def build_mandatory_context(
         self,
@@ -1175,4 +1298,5 @@ class Stage4ContextBuilder:
             justification_prompt=ctx_prompts["justification_prompt"],
             reflexion_prompt=ctx_prompts["reflexion_prompt"],
             preflight_advisory=preflight_advisory,
+            recent_scene_keywords=ep_ctx.get("recent_scene_keywords", []),  # [NC-2 GAP-1]
         )

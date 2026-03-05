@@ -964,8 +964,18 @@ JSON으로 출력:
                     director_feedback = _a4_advisory + "\n" + director_feedback
                     self.ctx.ui.log(f"   ⚠️ [A-4] '{_ct_label}' 모순 {_contradiction_type_streak}연속 — Arc 구조 진단")
 
-                # [V75-D] Step 1: 2연속 → inplace 패치 (저비용 LLM 1회)
-                if _logic_error_streak >= 2 and not _inplace_attempted:
+                # [V75-D] Step 1: N연속 → inplace 패치 (저비용 LLM 1회)
+                # [S3-META] quality_risk Blueprint → 1연속에서 조기 트리거
+                _s3_meta = round_ctx.blueprint.get("_stage3_meta", {}) if isinstance(round_ctx.blueprint, dict) else {}
+                _quality_risk = bool(_s3_meta.get("quality_risk", False))
+                _v75d_threshold = 1 if _quality_risk else 2
+                logging.info(
+                    "[V75-D] quality_risk=%s → threshold=%d, streak=%d",
+                    _quality_risk,
+                    _v75d_threshold,
+                    _logic_error_streak,
+                )
+                if _logic_error_streak >= _v75d_threshold and not _inplace_attempted:
                     _inplace_attempted = True
                     _v75d_success = False
                     try:

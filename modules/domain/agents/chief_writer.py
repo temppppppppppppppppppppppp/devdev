@@ -797,6 +797,15 @@ class ChiefWriter(BaseAgent):
 
         _style_text = _esc(style_guide) if style_guide else "기본 웹소설 문체"  # [TF-37]
 
+        # [F-4] 트렁케이션 경고
+        _orig_len = len(original_manuscript or "")
+        if _orig_len > 150000:
+            logging.warning(
+                "[TRUNCATION] chief_writer.inplace_patch: 원고 %d자 → 150000자 (%.1f%% 손실)",
+                _orig_len,
+                (1 - 150000 / _orig_len) * 100,
+            )
+
         if _patch_template:
             prompt = _patch_template.format(
                 feedback_text=_esc(director_feedback),
@@ -891,7 +900,13 @@ class ChiefWriter(BaseAgent):
                     # ["text1", "text2"] → join
                     return "\n\n".join(str(item) for item in parsed)
                 elif isinstance(parsed, dict):
-                    return parsed.get("patched_text") or parsed.get("content") or parsed.get("text") or parsed.get("manuscript") or text
+                    return (
+                        parsed.get("patched_text")
+                        or parsed.get("content")
+                        or parsed.get("text")
+                        or parsed.get("manuscript")
+                        or text
+                    )
             except (json.JSONDecodeError, ValueError):
                 pass
         return text
@@ -955,6 +970,15 @@ class ChiefWriter(BaseAgent):
             _patch_template = None
 
         # 패치 프롬프트 포맷
+        # [F-4] 트렁케이션 경고
+        _orig_len = len(original_manuscript or "")
+        if _orig_len > 150000:
+            logging.warning(
+                "[TRUNCATION] chief_writer._patch_for_fix_loop: 원고 %d자 → 150000자 (%.1f%% 손실)",
+                _orig_len,
+                (1 - 150000 / _orig_len) * 100,
+            )
+
         if _patch_template:
             # [Sweep55] .format()에 {}가 있으면 KeyError/ValueError 크래시 방지
             def _esc(s):
