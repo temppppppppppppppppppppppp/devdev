@@ -78,8 +78,8 @@ class TestSCMWarningInjection:
 class TestNCReviewEnforcement:
     """[NC-1] numeric_consistency_review 응답 의무 로직 테스트."""
 
-    def test_agree_triggers_score_reduction(self):
-        """AGREE 1건 → continuity_contradiction 상한 32점."""
+    def test_agree_no_auto_penalty(self):
+        """[TF-C] AGREE 1건 → 자동감점 없음 (Director 주권 존중)."""
         _nc_review = [{"id": "NC-1", "verdict": "AGREE", "reason": "실제 모순"}]
         score = 95
         _sb = {
@@ -92,18 +92,13 @@ class TestNCReviewEnforcement:
         _nc_agree_count = sum(
             1 for r in _nc_review if isinstance(r, dict) and str(r.get("verdict", "")).upper() == "AGREE"
         )
-        if _nc_agree_count > 0:
-            _cc_cap = max(0, 40 - _nc_agree_count * 8)
-            if _sb["continuity_contradiction"] > _cc_cap:
-                _sb["continuity_contradiction"] = _cc_cap
-                _new_total = sum(v for v in _sb.values() if isinstance(v, int | float))
-                if _new_total < score:
-                    score = _new_total
-        assert _sb["continuity_contradiction"] == 32
-        assert score == 92  # 32+20+20+10+10
+        # [TF-C] 자동감점 제거 — Director가 직접 continuity_contradiction에 반영
+        assert _nc_agree_count == 1
+        assert _sb["continuity_contradiction"] == 40  # 변동 없음
+        assert score == 95  # 변동 없음
 
-    def test_two_agrees_stronger_penalty(self):
-        """AGREE 2건 → continuity_contradiction 상한 24점."""
+    def test_two_agrees_no_auto_penalty(self):
+        """[TF-C] AGREE 2건 → 자동감점 없음 (Director 주권 존중)."""
         _nc_review = [
             {"id": "NC-1", "verdict": "AGREE", "reason": "모순1"},
             {"id": "NC-2", "verdict": "AGREE", "reason": "모순2"},
@@ -116,9 +111,9 @@ class TestNCReviewEnforcement:
             "python_warnings": 10,
         }
         _nc_agree_count = sum(1 for r in _nc_review if str(r.get("verdict", "")).upper() == "AGREE")
-        _cc_cap = max(0, 40 - _nc_agree_count * 8)
-        _sb["continuity_contradiction"] = min(_sb["continuity_contradiction"], _cc_cap)
-        assert _sb["continuity_contradiction"] == 24
+        # [TF-C] 자동감점 제거
+        assert _nc_agree_count == 2
+        assert _sb["continuity_contradiction"] == 40  # 변동 없음
 
     def test_dismiss_no_penalty(self):
         """전부 DISMISS → 감점 없음."""
@@ -126,8 +121,8 @@ class TestNCReviewEnforcement:
         _nc_agree_count = sum(1 for r in _nc_review if str(r.get("verdict", "")).upper() == "AGREE")
         assert _nc_agree_count == 0
 
-    def test_missing_review_penalty(self):
-        """NC advisory 있었는데 review 생략 → python_warnings 감점."""
+    def test_missing_review_no_penalty(self):
+        """[TF-C] NC advisory 있었는데 review 생략 → 감점 없음 (선택사항)."""
         mandatory_context = "[NumericConsistency] [NC-1] 뭐시기"
         _nc_review = []  # 생략됨
         _sb = {
@@ -137,9 +132,8 @@ class TestNCReviewEnforcement:
             "length": 10,
             "python_warnings": 10,
         }
-        if not _nc_review and "[NumericConsistency" in mandatory_context and "[NC-" in mandatory_context:
-            _sb["python_warnings"] = 5
-        assert _sb["python_warnings"] == 5
+        # [TF-C] 미응답 감점 제거 — 선택사항으로 변경
+        assert _sb["python_warnings"] == 10  # 변동 없음
 
 
 class TestSCMIntegration:

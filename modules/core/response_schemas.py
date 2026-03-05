@@ -135,8 +135,8 @@ DIRECTOR_AUDIT_SCHEMA = types.Schema(
         ),  # [TF-23]
         "fix_scope_reasoning": types.Schema(
             type=types.Type.STRING,
-            description="fix_scope 판단 근거: 어떤 문제의 조합이 이 수정 범위를 요구하는지 한 문장",
-        ),  # [V73]
+            description="fix_scope 판단 근거: 어떤 문제의 조합이 이 수정 범위를 요구하는지 한 문장 (미작성 시 빈 문자열 허용)",
+        ),  # [V73][TF-C]
         "error_category": types.Schema(type=types.Type.STRING, enum=["QUALITY_ISSUE", "LOGIC_ERROR"]),
         "diagnostic_report": types.Schema(type=types.Type.STRING),
         "current_beat_achieved": types.Schema(type=types.Type.BOOLEAN),
@@ -174,8 +174,8 @@ STRATEGIC_AUDIT_SCHEMA = types.Schema(
         ),  # [TF-23]
         "fix_scope_reasoning": types.Schema(
             type=types.Type.STRING,
-            description="fix_scope 판단 근거: 어떤 문제의 조합이 이 수정 범위를 요구하는지 한 문장",
-        ),  # [V73]
+            description="fix_scope 판단 근거: 어떤 문제의 조합이 이 수정 범위를 요구하는지 한 문장 (미작성 시 빈 문자열 허용)",
+        ),  # [V73][TF-C]
         "loop_detected": types.Schema(type=types.Type.BOOLEAN),
         "reason": types.Schema(type=types.Type.STRING),
         "re_slice_instruction": types.Schema(type=types.Type.STRING),

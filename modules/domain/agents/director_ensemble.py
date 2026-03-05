@@ -211,7 +211,8 @@ Architect가 inplace 단계에서 즉시 교정하고 재제출한다. 소소한
             if reason:
                 logging.info(f" 이유: {reason[:100]}{'...' if len(reason) > 100 else ''}")
 
-            logging.info(f"[Stage3 Director] Blueprint {decision} (점수: {score}) 후보{selected_idx + 1} | {reason[:120] if reason else ''}"
+            logging.info(
+                f"[Stage3 Director] Blueprint {decision} (점수: {score}) 후보{selected_idx + 1} | {reason[:120] if reason else ''}"
             )
             print(f"\n   {'=' * 56}")
             print(f"      [Stage3 Director] Blueprint {decision} (점수: {score})")
@@ -358,7 +359,8 @@ Architect가 inplace 단계에서 즉시 교정하고 재제출한다. 소소한
         if not candidates:
             return _empty_result
 
-        logging.info(f" [TF-47] Director Arc {'단독 평가' if len(candidates) == 1 else '비교'}: {len(candidates)}개 후보"
+        logging.info(
+            f" [TF-47] Director Arc {'단독 평가' if len(candidates) == 1 else '비교'}: {len(candidates)}개 후보"
         )
 
         # 후보별 요약 생성
@@ -489,7 +491,8 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
             else:
                 logging.info("✅ [TF-47] 모순·일관성 이상 없음")
 
-            logging.info(f"[Stage2 Director] Arc {decision} (점수: {score}) 후보{selected_idx + 1} | {reason[:120] if reason else ''}"
+            logging.info(
+                f"[Stage2 Director] Arc {decision} (점수: {score}) 후보{selected_idx + 1} | {reason[:120] if reason else ''}"
             )
             print(f"\n   {'=' * 56}")
             print(f"      [Stage2 Director] Arc 비교 판정: {decision} (점수: {score})")
@@ -613,7 +616,8 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
                 "length_violation": True,
             }
 
-        logging.info(f"✅ [V60.97] 분량 통과 후보: {len(qualified_indices)}개 "
+        logging.info(
+            f"✅ [V60.97] 분량 통과 후보: {len(qualified_indices)}개 "
             f"({[chr(65 + i) if i < len(candidates) else f'#{i}' for i in qualified_indices]})"
         )
 
@@ -767,7 +771,8 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
                 )
                 cache_name = cache_info.get("cache_name")
                 _was_cached = cache_info.get("cached", False)
-                logging.info(f" [Director-CACHE] {'HIT' if _was_cached else 'MISS(신규)'}: "
+                logging.info(
+                    f" [Director-CACHE] {'HIT' if _was_cached else 'MISS(신규)'}: "
                     f"stable={len(stable_context):,}자, variable={len(variable_prompt):,}자"
                 )
             except Exception as _cache_err:
@@ -833,7 +838,8 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
         if isinstance(_sb_raw, dict) and _sb_raw:
             _sb_sum = sum(v for v in _sb_raw.values() if isinstance(v, int | float))
             if _sb_sum != score and _sb_sum > 0:
-                logging.warning("[NC-3B] score_breakdown 합산 불일치: breakdown=%d, score=%d → breakdown 우선",
+                logging.warning(
+                    "[NC-3B] score_breakdown 합산 불일치: breakdown=%d, score=%d → breakdown 우선",
                     _sb_sum,
                     score,
                 )
@@ -874,7 +880,8 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
                     score = min(score, 44)  # adaptive floor=45 미만 → 승격 불가
                     for _c in _found[:5]:
                         if isinstance(_c, dict):
-                            logging.warning(f" [{_c.get('severity', '?')}] {str(_c.get('type', ''))}: "
+                            logging.warning(
+                                f" [{_c.get('severity', '?')}] {str(_c.get('type', ''))}: "
                                 f"{str(_c.get('current_violation', ''))[:100]}"
                             )
 
@@ -890,57 +897,34 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
                 _ncr_reason = str(_ncr.get("reason", ""))[:100]
                 if _ncr_verdict == "AGREE":
                     _nc_agree_count += 1
-                    logging.warning("[NC-1] Director AGREE: %s — %s",
+                    logging.warning(
+                        "[NC-1] Director AGREE: %s — %s",
                         _ncr_id,
                         _ncr_reason,
                     )
                 elif _ncr_verdict == "DISMISS":
-                    logging.info("[NC-1] Director DISMISS: %s — %s",
+                    logging.info(
+                        "[NC-1] Director DISMISS: %s — %s",
                         _ncr_id,
                         _ncr_reason,
                     )
                 else:
-                    logging.warning("[NC-1] Director 미판정: %s (verdict=%s)",
+                    logging.warning(
+                        "[NC-1] Director 미판정: %s (verdict=%s)",
                         _ncr_id,
                         _ncr_verdict,
                     )
             if _nc_agree_count > 0:
-                # AGREE된 항목이 있으면 → MAJOR 모순으로 취급
-                logging.warning("[NC-1] Director가 %d건 수치 모순 인정 → continuity_contradiction 감점 강제",
+                # [TF-C] 자동감점 제거 — Director 주권 존중 (대원칙 3)
+                logging.warning(
+                    "[NC-1] Director가 %d건 수치 모순 인정. continuity_contradiction에 직접 반영 여부는 Director 자율.",
                     _nc_agree_count,
                 )
-                # score_breakdown에서 continuity_contradiction 상한 제한
-                _sb = result.get("score_breakdown", {})
-                if isinstance(_sb, dict):
-                    _cc_score = _sb.get("continuity_contradiction", 40)
-                    if isinstance(_cc_score, int | float):
-                        # AGREE 1건당 최대 8점 감점 (40점 만점 기준)
-                        _cc_cap = max(0, 40 - _nc_agree_count * 8)
-                        if _cc_score > _cc_cap:
-                            logging.info("[NC-1] continuity_contradiction %d → %d (AGREE %d건)",
-                                _cc_score,
-                                _cc_cap,
-                                _nc_agree_count,
-                            )
-                            _sb["continuity_contradiction"] = _cc_cap
-                            # 총점도 재계산
-                            _new_total = sum(v for v in _sb.values() if isinstance(v, int | float))
-                            if _new_total < score:
-                                score = _new_total
         else:
-            # NC advisory가 있었는데 Director가 review를 안 한 경우 감지
             _mc = mandatory_context or ""
             if "[NumericConsistency" in _mc and "[NC-" in _mc:
-                logging.warning("[NC-1] Director가 numeric_consistency_review를 생략함 — python_warnings 감점",
-                )
-                _sb = result.get("score_breakdown", {})
-                if isinstance(_sb, dict):
-                    _pw = _sb.get("python_warnings", 10)
-                    if isinstance(_pw, int | float) and _pw > 5:
-                        _sb["python_warnings"] = 5
-                        _new_total = sum(v for v in _sb.values() if isinstance(v, int | float))
-                        if _new_total < score:
-                            score = _new_total
+                # [TF-C] 미응답 감점 제거 — Director 주권 존중 (선택사항으로 변경)
+                logging.debug("[NC-1] Director가 numeric_consistency_review를 생략함 (선택사항, 감점 없음)")
 
         # ── [NC-3] consistency_checklist 검증 ──────────────────
         _checklist = result.get("consistency_checklist") or {}
@@ -960,7 +944,8 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
         if isinstance(_checklist, dict) and _checklist:
             _issue_count = sum(1 for k in _nc3_keys if str(_checklist.get(k, "")).upper() == "ISSUE")
             if _issue_count > 0:
-                logging.warning("[NC-3] consistency_checklist ISSUE %d건 감지: %s",
+                logging.warning(
+                    "[NC-3] consistency_checklist ISSUE %d건 감지: %s",
                     _issue_count,
                     [k for k in _nc3_keys if str(_checklist.get(k, "")).upper() == "ISSUE"],
                 )
@@ -970,7 +955,8 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
                 if isinstance(_sb, dict):
                     _pw = _sb.get("python_warnings", 10)
                     if isinstance(_pw, int | float) and _pw > 3:
-                        logging.info("[NC-3] python_warnings %d → 3 (ISSUE %d건)",
+                        logging.info(
+                            "[NC-3] python_warnings %d → 3 (ISSUE %d건)",
                             _pw,
                             _issue_count,
                         )
@@ -1019,7 +1005,8 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
                 feedback["issues"] = _existing_issues
 
         # --- Director 판정 상세 출력 ---
-        logging.info(f"[Stage4 Director] 판정: {final_verdict} (점수: {score}) 후보{selected_letter} | 원래: {original_verdict}"
+        logging.info(
+            f"[Stage4 Director] 판정: {final_verdict} (점수: {score}) 후보{selected_letter} | 원래: {original_verdict}"
         )
         print(f"\n   {'=' * 56}")
         print(f"      [Stage4 Director] 원고 앙상블 판정: {final_verdict} (점수: {score})")
