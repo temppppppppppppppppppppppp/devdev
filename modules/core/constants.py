@@ -174,6 +174,19 @@ def smart_truncate(text: str, max_chars: int = ContextLimits.MAX_CONTEXT_CHARS, 
     return text[:head_chars] + "\n\n...(중간 생략)...\n\n" + text[-tail_budget:]
 
 
+def calc_patch_change_ratio(original: str, patched: str) -> float:
+    """[F-2] 패치 변경 비율 계산. 0.0=동일, 1.0=완전 상이.
+
+    autojunk=False: 한국어 텍스트에서 autojunk가 반복 문자를 junk 처리하여
+    ratio가 비정상적으로 낮아지는 문제 방지.
+    """
+    from difflib import SequenceMatcher
+
+    if not original:
+        return 1.0 if patched else 0.0
+    return round(1.0 - SequenceMatcher(None, original, patched, autojunk=False).ratio(), 4)
+
+
 class WritingLimits:
     """집필 관련 제한"""
 

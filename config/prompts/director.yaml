@@ -68,7 +68,8 @@ ENSEMBLE_VARIABLE_PROMPT: |
   3. **사망/파괴 존중**: 이전 원고에서 죽은 NPC, 파괴된 장소/조직이 다시 등장하지 않는가?
   4. **아이템/능력 일관성**: 이전에 잃어버린 아이템 재사용, 미습득 무공 사용이 없는가?
   5. **상태 연속성**: 부상, 감정 상태, 관계가 이전 원고와 일관되는가?
-  6. **타임라인 정합성**: 시간 흐름이 자연스러운가? 순간이동이 없는가?
+  6. **타임라인 정합성**: 시간 흐름이 자연스러운가? 순간이동이 없는가? 에피소드 시작 시 시간 경과가 명확한가(다음날/N일 후/당일 등)? mandatory_context에 [Timeline] 정보가 있으면 원고의 시간 묘사와 부합하는지 확인.
+     **공간 연속성**: 캐릭터가 장소를 이동할 때 이동 묘사 또는 씬 전환 표지가 있는가? 이전 씬에서 사무실에 있던 인물이 다음 씬에서 설명 없이 다른 장소에 있으면 → MINOR 감점.
   7. **수학적 정확성** (투자물 CRITICAL 항목):
      - **레버리지 수익률 공식**: 계좌 수익률(%) = 기초자산 변동폭(%) × 레버리지 배수
        예) 진입가 60.15달러 → 매도가 64.20달러 = 기초자산 6.73% 상승.
@@ -166,6 +167,50 @@ ENSEMBLE_VARIABLE_PROMPT: |
   - CRITICAL(TruthGate: 사망 NPC 부활, 세계법칙 위반)만 자동 REJECT 사유입니다.
   - 나머지는 모두 당신의 전문적 판단에 따릅니다.
 
+  ### 🔢 [NC-1] Python 수치 검증 응답 의무
+  mandatory_context에 `[NumericConsistency]` 항목이 있으면, **각 항목에 대해 반드시 판정하세요.**
+  묵살은 금지입니다. 각 NC 항목에 대해 아래 둘 중 하나를 선택하고 이유를 적으세요:
+  - **AGREE**: Python이 맞다 → 이건 실제 모순이다. contradiction_check에도 반영하고 감점하세요.
+  - **DISMISS**: Python이 틀렸다 → 왜 틀렸는지 이유를 적으세요. (예: "전화 후 추가 매수로 60억 정당", "승진 이벤트가 이번 화에 있음")
+  Python은 숫자 비교만 했을 뿐 서사 맥락을 모릅니다. 당신이 맥락을 보고 판단하세요.
+  단, AGREE한 항목이 1건이라도 있으면 continuity_contradiction 점수를 반드시 감점하세요.
+
+  ### ✅ [NC-3] 일관성 체크리스트 (매 심사 필수)
+  아래 10개 항목을 원고를 읽으며 반드시 체크하세요. Python advisory 유무와 관계없이 **매번 전체 항목을 검사**합니다.
+  각 항목에 OK(문제 없음) 또는 ISSUE(문제 발견)를 기입하세요.
+  ISSUE가 1건이라도 있으면 해당 항목이 score_breakdown의 관련 점수에 반영되어야 합니다.
+
+  1. **numeric_accuracy** — 원고의 금액/수량이 이전 화 및 mandatory_context의 수치와 일치하는가?
+  2. **arithmetic** — A+B=C, 레버리지 계산 등 산술이 정확한가?
+  3. **title_consistency** — NPC 직함(팀장/부장/과장 등)이 이전 화와 일관되는가?
+  4. **scene_overlap** — 이전 화와 유사한 씬 구조(같은 장소+인물+상황)가 반복되지 않는가?
+  5. **percent_calculation** — 수익률/유지율/비율 등 퍼센트 수치가 실제 계산과 맞는가?
+  6. **event_ordering** — "처음", "최초" 등 표현이 이전 화의 사건과 모순되지 않는가?
+  7. **space_continuity** — 캐릭터의 장소 이동이 자연스럽고 전환 묘사가 있는가?
+  8. **npc_identity** — 동명이인 혼동이나 NPC 역할 뒤바뀜이 없는가?
+  9. **time_progression** — 에피소드 시작 시 시간 경과가 명확한가?
+  10. **opening_diversity** — 직전 화와 도입부 묘사가 과도하게 유사하지 않는가?
+
+  ### 📚 [NC-3B] consistency_checklist 응답 예시
+  아래는 올바른 체크리스트 응답입니다. ISSUE에는 반드시 구체적 근거를 score_breakdown에 반영하세요.
+
+  "consistency_checklist": {{
+      "numeric_accuracy": "OK",
+      "arithmetic": "ISSUE",
+      "title_consistency": "OK",
+      "scene_overlap": "OK",
+      "percent_calculation": "OK",
+      "event_ordering": "OK",
+      "space_continuity": "OK",
+      "npc_identity": "OK",
+      "time_progression": "OK",
+      "opening_diversity": "OK"
+  }}
+  → arithmetic ISSUE 예시: 레버리지 수익률 6.73%×3배=20.2%인데 원고는 40.6%로 표기 → continuity_contradiction에 MAJOR -10 감점
+
+  ⚠️ score_breakdown 5개 항목의 합산이 반드시 score와 일치해야 합니다.
+  예: continuity_contradiction=30 + blueprint_coverage=20 + quality_engagement=18 + length=10 + python_warnings=8 = score: 86
+
   **[TF-32] verdict 3단계**:
   - **PASS**: 문제 없음 → 그대로 저장
   - **PASS_WITH_FIX**: 총점 90점 이상이면서 모순·어색함이 남아 있는 경우 → fix_scope로 수정 범위를 판단하세요. action_items에 구체적 수정 지시 기입. inplace=국소수정, partial=부분재생성, full=전면재작성.
@@ -188,6 +233,25 @@ ENSEMBLE_VARIABLE_PROMPT: |
           "quality_engagement": 0-20,
           "length": 0-10,
           "python_warnings": 0-10
+      }},
+      "numeric_consistency_review": [
+          {{
+              "id": "NC-1",
+              "verdict": "AGREE|DISMISS",
+              "reason": "판정 사유 (DISMISS면 왜 Python이 틀렸는지, AGREE면 어떤 모순인지)"
+          }}
+      ],
+      "consistency_checklist": {{
+          "numeric_accuracy": "OK|ISSUE",
+          "arithmetic": "OK|ISSUE",
+          "title_consistency": "OK|ISSUE",
+          "scene_overlap": "OK|ISSUE",
+          "percent_calculation": "OK|ISSUE",
+          "event_ordering": "OK|ISSUE",
+          "space_continuity": "OK|ISSUE",
+          "npc_identity": "OK|ISSUE",
+          "time_progression": "OK|ISSUE",
+          "opening_diversity": "OK|ISSUE"
       }},
       "contradiction_check": {{
           "found_contradictions": [
@@ -288,7 +352,8 @@ ENSEMBLE_SELECTION_PROMPT: |
   3. **사망/파괴 존중**: 이전 원고에서 죽은 NPC, 파괴된 장소/조직이 다시 등장하지 않는가?
   4. **아이템/능력 일관성**: 이전에 잃어버린 아이템 재사용, 미습득 무공 사용이 없는가?
   5. **상태 연속성**: 부상, 감정 상태, 관계가 이전 원고와 일관되는가?
-  6. **타임라인 정합성**: 시간 흐름이 자연스러운가? 순간이동이 없는가?
+  6. **타임라인 정합성**: 시간 흐름이 자연스러운가? 순간이동이 없는가? 에피소드 시작 시 시간 경과가 명확한가(다음날/N일 후/당일 등)? mandatory_context에 [Timeline] 정보가 있으면 원고의 시간 묘사와 부합하는지 확인.
+     **공간 연속성**: 캐릭터가 장소를 이동할 때 이동 묘사 또는 씬 전환 표지가 있는가? 이전 씬에서 사무실에 있던 인물이 다음 씬에서 설명 없이 다른 장소에 있으면 → MINOR 감점.
   7. **수학적 정확성** (투자물 CRITICAL 항목):
      - **레버리지 수익률 공식**: 계좌 수익률(%) = 기초자산 변동폭(%) × 레버리지 배수
        예) 진입가 60.15달러 → 매도가 64.20달러 = 기초자산 6.73% 상승.
@@ -386,6 +451,50 @@ ENSEMBLE_SELECTION_PROMPT: |
   - CRITICAL(TruthGate: 사망 NPC 부활, 세계법칙 위반)만 자동 REJECT 사유입니다.
   - 나머지는 모두 당신의 전문적 판단에 따릅니다.
 
+  ### 🔢 [NC-1] Python 수치 검증 응답 의무
+  mandatory_context에 `[NumericConsistency]` 항목이 있으면, **각 항목에 대해 반드시 판정하세요.**
+  묵살은 금지입니다. 각 NC 항목에 대해 아래 둘 중 하나를 선택하고 이유를 적으세요:
+  - **AGREE**: Python이 맞다 → 이건 실제 모순이다. contradiction_check에도 반영하고 감점하세요.
+  - **DISMISS**: Python이 틀렸다 → 왜 틀렸는지 이유를 적으세요. (예: "전화 후 추가 매수로 60억 정당", "승진 이벤트가 이번 화에 있음")
+  Python은 숫자 비교만 했을 뿐 서사 맥락을 모릅니다. 당신이 맥락을 보고 판단하세요.
+  단, AGREE한 항목이 1건이라도 있으면 continuity_contradiction 점수를 반드시 감점하세요.
+
+  ### ✅ [NC-3] 일관성 체크리스트 (매 심사 필수)
+  아래 10개 항목을 원고를 읽으며 반드시 체크하세요. Python advisory 유무와 관계없이 **매번 전체 항목을 검사**합니다.
+  각 항목에 OK(문제 없음) 또는 ISSUE(문제 발견)를 기입하세요.
+  ISSUE가 1건이라도 있으면 해당 항목이 score_breakdown의 관련 점수에 반영되어야 합니다.
+
+  1. **numeric_accuracy** — 원고의 금액/수량이 이전 화 및 mandatory_context의 수치와 일치하는가?
+  2. **arithmetic** — A+B=C, 레버리지 계산 등 산술이 정확한가?
+  3. **title_consistency** — NPC 직함(팀장/부장/과장 등)이 이전 화와 일관되는가?
+  4. **scene_overlap** — 이전 화와 유사한 씬 구조(같은 장소+인물+상황)가 반복되지 않는가?
+  5. **percent_calculation** — 수익률/유지율/비율 등 퍼센트 수치가 실제 계산과 맞는가?
+  6. **event_ordering** — "처음", "최초" 등 표현이 이전 화의 사건과 모순되지 않는가?
+  7. **space_continuity** — 캐릭터의 장소 이동이 자연스럽고 전환 묘사가 있는가?
+  8. **npc_identity** — 동명이인 혼동이나 NPC 역할 뒤바뀜이 없는가?
+  9. **time_progression** — 에피소드 시작 시 시간 경과가 명확한가?
+  10. **opening_diversity** — 직전 화와 도입부 묘사가 과도하게 유사하지 않는가?
+
+  ### 📚 [NC-3B] consistency_checklist 응답 예시
+  아래는 올바른 체크리스트 응답입니다. ISSUE에는 반드시 구체적 근거를 score_breakdown에 반영하세요.
+
+  "consistency_checklist": {{
+      "numeric_accuracy": "OK",
+      "arithmetic": "ISSUE",
+      "title_consistency": "OK",
+      "scene_overlap": "OK",
+      "percent_calculation": "OK",
+      "event_ordering": "OK",
+      "space_continuity": "OK",
+      "npc_identity": "OK",
+      "time_progression": "OK",
+      "opening_diversity": "OK"
+  }}
+  → arithmetic ISSUE 예시: 레버리지 수익률 6.73%×3배=20.2%인데 원고는 40.6%로 표기 → continuity_contradiction에 MAJOR -10 감점
+
+  ⚠️ score_breakdown 5개 항목의 합산이 반드시 score와 일치해야 합니다.
+  예: continuity_contradiction=30 + blueprint_coverage=20 + quality_engagement=18 + length=10 + python_warnings=8 = score: 86
+
   **[TF-32] verdict 3단계**:
   - **PASS**: 문제 없음 → 그대로 저장
   - **PASS_WITH_FIX**: 총점 90점 이상이면서 모순·어색함이 남아 있는 경우 → fix_scope로 수정 범위를 판단하세요. action_items에 구체적 수정 지시 기입. inplace=국소수정, partial=부분재생성, full=전면재작성.
@@ -408,6 +517,25 @@ ENSEMBLE_SELECTION_PROMPT: |
           "quality_engagement": 0-20,
           "length": 0-10,
           "python_warnings": 0-10
+      }},
+      "numeric_consistency_review": [
+          {{
+              "id": "NC-1",
+              "verdict": "AGREE|DISMISS",
+              "reason": "판정 사유 (DISMISS면 왜 Python이 틀렸는지, AGREE면 어떤 모순인지)"
+          }}
+      ],
+      "consistency_checklist": {{
+          "numeric_accuracy": "OK|ISSUE",
+          "arithmetic": "OK|ISSUE",
+          "title_consistency": "OK|ISSUE",
+          "scene_overlap": "OK|ISSUE",
+          "percent_calculation": "OK|ISSUE",
+          "event_ordering": "OK|ISSUE",
+          "space_continuity": "OK|ISSUE",
+          "npc_identity": "OK|ISSUE",
+          "time_progression": "OK|ISSUE",
+          "opening_diversity": "OK|ISSUE"
       }},
       "contradiction_check": {{
           "found_contradictions": [
@@ -590,6 +718,50 @@ STRATEGIC_AUDIT_PROMPT_V30: |
   - CRITICAL(TruthGate: 사망 NPC 부활, 세계법칙 위반)만 자동 REJECT 사유입니다.
   - 나머지는 모두 당신의 전문적 판단에 따릅니다.
 
+  ### 🔢 [NC-1] Python 수치 검증 응답 의무
+  mandatory_context에 `[NumericConsistency]` 항목이 있으면, **각 항목에 대해 반드시 판정하세요.**
+  묵살은 금지입니다. 각 NC 항목에 대해 아래 둘 중 하나를 선택하고 이유를 적으세요:
+  - **AGREE**: Python이 맞다 → 이건 실제 모순이다. contradiction_check에도 반영하고 감점하세요.
+  - **DISMISS**: Python이 틀렸다 → 왜 틀렸는지 이유를 적으세요. (예: "전화 후 추가 매수로 60억 정당", "승진 이벤트가 이번 화에 있음")
+  Python은 숫자 비교만 했을 뿐 서사 맥락을 모릅니다. 당신이 맥락을 보고 판단하세요.
+  단, AGREE한 항목이 1건이라도 있으면 continuity_contradiction 점수를 반드시 감점하세요.
+
+  ### ✅ [NC-3] 일관성 체크리스트 (매 심사 필수)
+  아래 10개 항목을 원고를 읽으며 반드시 체크하세요. Python advisory 유무와 관계없이 **매번 전체 항목을 검사**합니다.
+  각 항목에 OK(문제 없음) 또는 ISSUE(문제 발견)를 기입하세요.
+  ISSUE가 1건이라도 있으면 해당 항목이 score_breakdown의 관련 점수에 반영되어야 합니다.
+
+  1. **numeric_accuracy** — 원고의 금액/수량이 이전 화 및 mandatory_context의 수치와 일치하는가?
+  2. **arithmetic** — A+B=C, 레버리지 계산 등 산술이 정확한가?
+  3. **title_consistency** — NPC 직함(팀장/부장/과장 등)이 이전 화와 일관되는가?
+  4. **scene_overlap** — 이전 화와 유사한 씬 구조(같은 장소+인물+상황)가 반복되지 않는가?
+  5. **percent_calculation** — 수익률/유지율/비율 등 퍼센트 수치가 실제 계산과 맞는가?
+  6. **event_ordering** — "처음", "최초" 등 표현이 이전 화의 사건과 모순되지 않는가?
+  7. **space_continuity** — 캐릭터의 장소 이동이 자연스럽고 전환 묘사가 있는가?
+  8. **npc_identity** — 동명이인 혼동이나 NPC 역할 뒤바뀜이 없는가?
+  9. **time_progression** — 에피소드 시작 시 시간 경과가 명확한가?
+  10. **opening_diversity** — 직전 화와 도입부 묘사가 과도하게 유사하지 않는가?
+
+  ### 📚 [NC-3B] consistency_checklist 응답 예시
+  아래는 올바른 체크리스트 응답입니다. ISSUE에는 반드시 구체적 근거를 score_breakdown에 반영하세요.
+
+  "consistency_checklist": {{
+      "numeric_accuracy": "OK",
+      "arithmetic": "ISSUE",
+      "title_consistency": "OK",
+      "scene_overlap": "OK",
+      "percent_calculation": "OK",
+      "event_ordering": "OK",
+      "space_continuity": "OK",
+      "npc_identity": "OK",
+      "time_progression": "OK",
+      "opening_diversity": "OK"
+  }}
+  → arithmetic ISSUE 예시: 레버리지 수익률 6.73%×3배=20.2%인데 원고는 40.6%로 표기 → continuity_contradiction에 MAJOR -10 감점
+
+  ⚠️ score_breakdown 5개 항목의 합산이 반드시 score와 일치해야 합니다.
+  예: continuity_contradiction=30 + blueprint_coverage=20 + quality_engagement=18 + length=10 + python_warnings=8 = score: 86
+
   **[TF-32] verdict 3단계**:
   - **PASS**: 문제 없음 → 그대로 저장
   - **PASS_WITH_FIX**: 총점 90점 이상이면서 모순이 남아 있는 경우 → fix_scope로 수정 범위를 판단하세요. re_slice_instruction에 구체적 수정 지시 기입. inplace=국소수정, partial=부분재설계, full=전면재설계.
@@ -698,6 +870,8 @@ DIRECTOR_AUDIT_PROMPT_V30: |
   - 사망한 인물, 파괴된 장소가 정상적으로 등장하는가?
   - 핵심 인물 이름이 설계도와 일치하는가?
   - 직전 원고에서 획득한 장비를 사용하는 것은 허용 (HUD 미반영이라도 OK)
+  - [NC-2] 공간 이동이 자연스러운가? 장소 전환 시 이동 묘사 또는 전환 표지가 있는가?
+  - [NC-2] 에피소드 시작 시 시간 경과(다음날/N일 후 등)가 명시되었는가?
   → 위반 시 REJECT, 아니면 다음 단계로
 
   Step 2: 장면 구성 평가
@@ -733,9 +907,10 @@ DIRECTOR_AUDIT_PROMPT_V30: |
   시스템이 inplace 단계에서 즉시 교정한 뒤 저장한다. 소소한 문제라도 전부 잡아내고 교정 지시를 내려라.
 
   1. **설정 일관성 (20점)**:
-     - 20점: 설정 완벽 준수 (무공, 인물, 물리적 인과 모두 정상)
-     - 12점: 경미한 설정 미비 (보조 NPC 이름 오타 등) — MINOR이므로 REJECT+inplace로 교정 지시
+     - 20점: 설정 완벽 준수 (무공, 인물, 물리적 인과, 공간 이동 모두 정상)
+     - 12점: 경미한 설정 미비 (보조 NPC 이름 오타, 장소 전환 묘사 부족 등) — MINOR이므로 REJECT+inplace로 교정 지시
      - 0점: Hard Constraint 위반 (미습득 무공, 죽은 자 부활 등)
+     공간 연속성 체크: 캐릭터의 공간 이동이 자연스러운가? 이전 씬의 장소와 현재 씬의 장소가 달라졌다면 이동 묘사 또는 전환 표지(씬 구분선, 시간 경과 표현)가 있는가?
 
   2. **장면 구성 (20점)**:
      - 20점: 6개 씬 모두 균등한 밀도로 반영
@@ -777,6 +952,50 @@ DIRECTOR_AUDIT_PROMPT_V30: |
   - 특히 1인칭 시점에서 '관찰 기반 추론'(~인 듯했다, ~하려는 것 같았다, ~하고 있었다)은 시점 위반이 아닙니다.
   - CRITICAL(TruthGate: 사망 NPC 부활, 세계법칙 위반)만 자동 REJECT 사유입니다.
   - 나머지는 모두 당신의 전문적 판단에 따릅니다.
+
+  ### 🔢 [NC-1] Python 수치 검증 응답 의무
+  mandatory_context에 `[NumericConsistency]` 항목이 있으면, **각 항목에 대해 반드시 판정하세요.**
+  묵살은 금지입니다. 각 NC 항목에 대해 아래 둘 중 하나를 선택하고 이유를 적으세요:
+  - **AGREE**: Python이 맞다 → 이건 실제 모순이다. contradiction_check에도 반영하고 감점하세요.
+  - **DISMISS**: Python이 틀렸다 → 왜 틀렸는지 이유를 적으세요. (예: "전화 후 추가 매수로 60억 정당", "승진 이벤트가 이번 화에 있음")
+  Python은 숫자 비교만 했을 뿐 서사 맥락을 모릅니다. 당신이 맥락을 보고 판단하세요.
+  단, AGREE한 항목이 1건이라도 있으면 continuity_contradiction 점수를 반드시 감점하세요.
+
+  ### ✅ [NC-3] 일관성 체크리스트 (매 심사 필수)
+  아래 10개 항목을 원고를 읽으며 반드시 체크하세요. Python advisory 유무와 관계없이 **매번 전체 항목을 검사**합니다.
+  각 항목에 OK(문제 없음) 또는 ISSUE(문제 발견)를 기입하세요.
+  ISSUE가 1건이라도 있으면 해당 항목이 score_breakdown의 관련 점수에 반영되어야 합니다.
+
+  1. **numeric_accuracy** — 원고의 금액/수량이 이전 화 및 mandatory_context의 수치와 일치하는가?
+  2. **arithmetic** — A+B=C, 레버리지 계산 등 산술이 정확한가?
+  3. **title_consistency** — NPC 직함(팀장/부장/과장 등)이 이전 화와 일관되는가?
+  4. **scene_overlap** — 이전 화와 유사한 씬 구조(같은 장소+인물+상황)가 반복되지 않는가?
+  5. **percent_calculation** — 수익률/유지율/비율 등 퍼센트 수치가 실제 계산과 맞는가?
+  6. **event_ordering** — "처음", "최초" 등 표현이 이전 화의 사건과 모순되지 않는가?
+  7. **space_continuity** — 캐릭터의 장소 이동이 자연스럽고 전환 묘사가 있는가?
+  8. **npc_identity** — 동명이인 혼동이나 NPC 역할 뒤바뀜이 없는가?
+  9. **time_progression** — 에피소드 시작 시 시간 경과가 명확한가?
+  10. **opening_diversity** — 직전 화와 도입부 묘사가 과도하게 유사하지 않는가?
+
+  ### 📚 [NC-3B] consistency_checklist 응답 예시
+  아래는 올바른 체크리스트 응답입니다. ISSUE에는 반드시 구체적 근거를 score_breakdown에 반영하세요.
+
+  "consistency_checklist": {{
+      "numeric_accuracy": "OK",
+      "arithmetic": "ISSUE",
+      "title_consistency": "OK",
+      "scene_overlap": "OK",
+      "percent_calculation": "OK",
+      "event_ordering": "OK",
+      "space_continuity": "OK",
+      "npc_identity": "OK",
+      "time_progression": "OK",
+      "opening_diversity": "OK"
+  }}
+  → arithmetic ISSUE 예시: 레버리지 수익률 6.73%×3배=20.2%인데 원고는 40.6%로 표기 → continuity_contradiction에 MAJOR -10 감점
+
+  ⚠️ score_breakdown 5개 항목의 합산이 반드시 score와 일치해야 합니다.
+  예: continuity_contradiction=30 + blueprint_coverage=20 + quality_engagement=18 + length=10 + python_warnings=8 = score: 86
 
   **[TF-32] verdict 3단계**:
   - **PASS**: 문제 없음 → 그대로 저장

@@ -142,8 +142,23 @@ DIRECTOR_AUDIT_SCHEMA = types.Schema(
         "current_beat_achieved": types.Schema(type=types.Type.BOOLEAN),
         "reason": types.Schema(type=types.Type.STRING),
         "feedback": types.Schema(type=types.Type.STRING),
+        "consistency_checklist": types.Schema(  # [NC-3] 일관성 체크리스트
+            type=types.Type.OBJECT,
+            properties={
+                "numeric_accuracy": types.Schema(type=types.Type.STRING, enum=["OK", "ISSUE"]),
+                "arithmetic": types.Schema(type=types.Type.STRING, enum=["OK", "ISSUE"]),
+                "title_consistency": types.Schema(type=types.Type.STRING, enum=["OK", "ISSUE"]),
+                "scene_overlap": types.Schema(type=types.Type.STRING, enum=["OK", "ISSUE"]),
+                "percent_calculation": types.Schema(type=types.Type.STRING, enum=["OK", "ISSUE"]),
+                "event_ordering": types.Schema(type=types.Type.STRING, enum=["OK", "ISSUE"]),
+                "space_continuity": types.Schema(type=types.Type.STRING, enum=["OK", "ISSUE"]),
+                "npc_identity": types.Schema(type=types.Type.STRING, enum=["OK", "ISSUE"]),
+                "time_progression": types.Schema(type=types.Type.STRING, enum=["OK", "ISSUE"]),
+                "opening_diversity": types.Schema(type=types.Type.STRING, enum=["OK", "ISSUE"]),
+            },
+        ),
     },
-    required=["decision", "score", "reason"],
+    required=["decision", "score", "reason", "fix_scope"],  # [F-3] fix_scope 필수화
 )
 
 
@@ -165,7 +180,7 @@ STRATEGIC_AUDIT_SCHEMA = types.Schema(
         "reason": types.Schema(type=types.Type.STRING),
         "re_slice_instruction": types.Schema(type=types.Type.STRING),
     },
-    required=["decision", "score", "loop_detected", "reason"],
+    required=["decision", "score", "loop_detected", "reason", "fix_scope"],  # [F-3] fix_scope 필수화
 )
 
 

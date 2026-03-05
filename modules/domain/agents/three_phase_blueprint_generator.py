@@ -452,8 +452,12 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                     _fix_ok = False
 
                     for _fix_i in range(_MAX_FIX):
-                        # [TF-33] Director fix_scope 기반 수정 전략 라우팅
-                        _fix_scope = _current_vr.get("fix_scope", "inplace")
+                        # [TF-33][PF-1] Director fix_scope 기반 수정 전략 라우팅 — 누락 시 점수 기반 폴백
+                        _fix_scope = _current_vr.get("fix_scope", "")
+                        if not _fix_scope:
+                            _inplace_thresh = int(_threshold("patch_mode.inplace_below", 60))
+                            _fix_scope = "inplace" if _score >= _inplace_thresh else "full"
+                            logging.warning("[PF-1] fix_scope 누락 → score=%d fallback: %s", _score, _fix_scope)
                         if _fix_scope in ("partial", "full"):
                             logging.info(f"🔀 [TF-33] fix_scope={_fix_scope!r} → inplace 불가, generate 루프 위임")
                             break  # → REJECT → generate 재시도 루프
@@ -474,6 +478,24 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                         if not _patched_bp:
                             logging.warning("[TF-32-V] patch 실패")
                             break
+
+                        # [F-2] InPlace Blueprint 변경 비율 로깅
+                        try:
+                            from modules.core.constants import calc_patch_change_ratio
+                            from modules.validation.threshold_helper import _threshold as _th
+
+                            _orig_j = json.dumps(_current_bp, ensure_ascii=False)
+                            _patch_j = json.dumps(_patched_bp, ensure_ascii=False)
+                            _change_ratio = calc_patch_change_ratio(_orig_j, _patch_j)
+                            _max_ratio = float(_th("patch_mode.inplace_max_change_ratio", 0.30))
+                            if _change_ratio > _max_ratio:
+                                logging.warning(
+                                    "[F-2] InPlace Blueprint 변경 비율 %.1f%% > %.0f%% (S3)",
+                                    _change_ratio * 100,
+                                    _max_ratio * 100,
+                                )
+                        except Exception:
+                            pass
 
                         # Director 재심사 (단일 후보 경로)
                         try:
@@ -524,6 +546,17 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                         pipeline_result["final_verdict"] = "PASS"
                         logging.info("✅ [TF-32-V] Blueprint 수정 완료 → PASS 확정")
                     else:
+                        # [PF-3] PASS_WITH_FIX 소진 시에만 패치본 채택 — 디렉터 주권주의
+                        _last_rv = _current_vr.get("verdict", "") or _current_vr.get("decision", "")
+                        if _last_rv in ("PASS_WITH_FIX", "PASS_WITH_WARNING") and _current_bp != best_blueprint:
+                            best_blueprint = _current_bp
+                            _pf3_score = _current_vr.get("score", _score)
+                            try:
+                                _pf3_score = int(_pf3_score)
+                            except (ValueError, TypeError):
+                                _pf3_score = _score
+                            validation_result["score"] = _pf3_score
+                            logging.info("📈 [PF-3] PASS_WITH_FIX 소진 → 패치본 채택 (score=%d)", _pf3_score)
                         verdict = "REJECT"
                         feedback = _initial_feedback + (
                             f"\n[TF-32-V] PASS_WITH_FIX 수정 {_MAX_FIX}회 내 미해결 → REJECT"
@@ -650,7 +683,14 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
         from modules.core.prompt_loader import PromptLoader
         from modules.core.response_schemas import BLUEPRINT_SCHEMA
 
-        original_json = json.dumps(original_blueprint, ensure_ascii=False, indent=2)[:30000]
+        _full_json = json.dumps(original_blueprint, ensure_ascii=False, indent=2)
+        if len(_full_json) > 30000:
+            logging.warning(
+                "[TRUNCATION] _inplace_patch_blueprint: Blueprint JSON %d자 → 30000자 (%.1f%% 손실)",
+                len(_full_json),
+                (1 - 30000 / len(_full_json)) * 100,
+            )
+        original_json = _full_json[:30000]
 
         # [TF-49b] Arc tactical excerpt 추출 → 프롬프트에 prepend
         _arc_tactical_prefix = ""

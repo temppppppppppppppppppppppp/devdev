@@ -262,8 +262,12 @@ class Stage2Finalizer:
             _fix_ok = False
 
             for _fix_i in range(_MAX_FIX):
-                # [TF-33] Director fix_scope 기반 수정 전략 라우팅
-                _fix_scope = _current_audit.get("fix_scope", "inplace")
+                # [TF-33][PF-1] Director fix_scope 기반 수정 전략 라우팅 — 누락 시 점수 기반 폴백
+                _fix_scope = _current_audit.get("fix_scope", "")
+                if not _fix_scope:
+                    _inplace_thresh = int(_threshold("patch_mode.inplace_below", 60))
+                    _fix_scope = "inplace" if _score >= _inplace_thresh else "full"
+                    logging.warning("[PF-1] fix_scope 누락 → score=%d fallback: %s", _score, _fix_scope)
                 if _fix_scope in ("partial", "full"):
                     self.ctx.ui.log(f"      🔀 [TF-33] fix_scope={_fix_scope!r} → inplace 불가, retry 경로 위임")
                     break  # → REJECT → retry 경로에서 patch/rewrite 처리
@@ -289,6 +293,23 @@ class Stage2Finalizer:
                 if not _patched:
                     logging.warning("[TF-32-V] patch 실패 → REJECT")
                     break
+
+                # [F-2] InPlace Arc 변경 비율 로깅
+                try:
+                    from modules.core.constants import calc_patch_change_ratio
+
+                    _orig_j = json.dumps(_current_arc, ensure_ascii=False)
+                    _patch_j = json.dumps(_patched, ensure_ascii=False)
+                    _change_ratio = calc_patch_change_ratio(_orig_j, _patch_j)
+                    _max_ratio = float(_threshold("patch_mode.inplace_max_change_ratio", 0.30))
+                    if _change_ratio > _max_ratio:
+                        logging.warning(
+                            "[F-2] InPlace Arc 변경 비율 %.1f%% > %.0f%% (S2)",
+                            _change_ratio * 100,
+                            _max_ratio * 100,
+                        )
+                except Exception:
+                    pass
 
                 # Director 재심사 (동일 메서드)
                 self.ctx.ui.log(f"      🔄 [TF-38] Director 재심사 #{_fix_i + 1} 호출 중...")
@@ -338,6 +359,18 @@ class Stage2Finalizer:
             else:
                 _d_decision = "REJECT"
                 audit["decision"] = "REJECT"
+                # [PF-3] PASS_WITH_FIX 소진 시에만 패치본 채택 — 디렉터 주권주의
+                _last_decision = _current_audit.get("decision", "")
+                if _last_decision == "PASS_WITH_FIX" and _current_arc != dict(refined_arc):
+                    refined_arc.clear()
+                    refined_arc.update(_current_arc)
+                    _pf3_score = _current_audit.get("score", _score)
+                    try:
+                        _pf3_score = int(_pf3_score)
+                    except (ValueError, TypeError):
+                        _pf3_score = _score
+                    audit["score"] = _pf3_score
+                    self.ctx.ui.log(f"      📈 [PF-3] PASS_WITH_FIX 소진 → 패치본 채택 (score={_pf3_score})")
                 # [TF-33] Director fix_scope + reasoning 보존 → retry 경로에서 patch/rewrite 라우팅
                 _last_fix_scope = _current_audit.get("fix_scope", "")
                 if _last_fix_scope:
