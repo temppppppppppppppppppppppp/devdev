@@ -167,18 +167,18 @@ ENSEMBLE_VARIABLE_PROMPT: |
   - CRITICAL(TruthGate: 사망 NPC 부활, 세계법칙 위반)만 자동 REJECT 사유입니다.
   - 나머지는 모두 당신의 전문적 판단에 따릅니다.
 
-  ### 🔢 [NC-1] Python 수치 검증 응답 의무
-  mandatory_context에 `[NumericConsistency]` 항목이 있으면, **각 항목에 대해 반드시 판정하세요.**
-  묵살은 금지입니다. 각 NC 항목에 대해 아래 둘 중 하나를 선택하고 이유를 적으세요:
-  - **AGREE**: Python이 맞다 → 이건 실제 모순이다. contradiction_check에도 반영하고 감점하세요.
+  ### 🔢 [NC-1] Python 수치 검증 참고
+  mandatory_context에 `[NumericConsistency]` 항목이 있으면, `numeric_consistency_review` 응답은 **선택사항**입니다.
+  Python advisory를 참고하여 `continuity_contradiction` 점수에 직접 반영하세요.
+  각 NC 항목에 대해 아래 둘 중 하나를 선택하고 이유를 적을 수 있습니다:
+  - **AGREE**: Python이 맞다 → 이건 실제 모순이다. continuity_contradiction에 반영하세요.
   - **DISMISS**: Python이 틀렸다 → 왜 틀렸는지 이유를 적으세요. (예: "전화 후 추가 매수로 60억 정당", "승진 이벤트가 이번 화에 있음")
   Python은 숫자 비교만 했을 뿐 서사 맥락을 모릅니다. 당신이 맥락을 보고 판단하세요.
-  단, AGREE한 항목이 1건이라도 있으면 continuity_contradiction 점수를 반드시 감점하세요.
 
-  ### ✅ [NC-3] 일관성 체크리스트 (매 심사 필수)
-  아래 11개 항목을 원고를 읽으며 반드시 체크하세요. Python advisory 유무와 관계없이 **매번 전체 항목을 검사**합니다.
+  ### ✅ [NC-3] 일관성 체크리스트 (권장)
+  아래 11개 항목을 원고를 읽으며 가능하면 체크하세요. 미작성 시 별도 감점은 없습니다.
   각 항목에 OK(문제 없음) 또는 ISSUE(문제 발견)를 기입하세요.
-  ISSUE가 1건이라도 있으면 해당 항목이 score_breakdown의 관련 점수에 반영되어야 합니다.
+  ISSUE가 있으면 해당 항목을 score_breakdown의 관련 점수에 반영하세요.
 
   1. **numeric_accuracy** — 원고의 금액/수량이 이전 화 및 mandatory_context의 수치와 일치하는가?
   2. **arithmetic** — A+B=C, 레버리지 계산 등 산술이 정확한가?
@@ -454,18 +454,18 @@ ENSEMBLE_SELECTION_PROMPT: |
   - CRITICAL(TruthGate: 사망 NPC 부활, 세계법칙 위반)만 자동 REJECT 사유입니다.
   - 나머지는 모두 당신의 전문적 판단에 따릅니다.
 
-  ### 🔢 [NC-1] Python 수치 검증 응답 의무
-  mandatory_context에 `[NumericConsistency]` 항목이 있으면, **각 항목에 대해 반드시 판정하세요.**
-  묵살은 금지입니다. 각 NC 항목에 대해 아래 둘 중 하나를 선택하고 이유를 적으세요:
-  - **AGREE**: Python이 맞다 → 이건 실제 모순이다. contradiction_check에도 반영하고 감점하세요.
+  ### 🔢 [NC-1] Python 수치 검증 참고
+  mandatory_context에 `[NumericConsistency]` 항목이 있으면, `numeric_consistency_review` 응답은 **선택사항**입니다.
+  Python advisory를 참고하여 `continuity_contradiction` 점수에 직접 반영하세요.
+  각 NC 항목에 대해 아래 둘 중 하나를 선택하고 이유를 적을 수 있습니다:
+  - **AGREE**: Python이 맞다 → 이건 실제 모순이다. continuity_contradiction에 반영하세요.
   - **DISMISS**: Python이 틀렸다 → 왜 틀렸는지 이유를 적으세요. (예: "전화 후 추가 매수로 60억 정당", "승진 이벤트가 이번 화에 있음")
   Python은 숫자 비교만 했을 뿐 서사 맥락을 모릅니다. 당신이 맥락을 보고 판단하세요.
-  단, AGREE한 항목이 1건이라도 있으면 continuity_contradiction 점수를 반드시 감점하세요.
 
-  ### ✅ [NC-3] 일관성 체크리스트 (매 심사 필수)
-  아래 11개 항목을 원고를 읽으며 반드시 체크하세요. Python advisory 유무와 관계없이 **매번 전체 항목을 검사**합니다.
+  ### ✅ [NC-3] 일관성 체크리스트 (권장)
+  아래 11개 항목을 원고를 읽으며 가능하면 체크하세요. 미작성 시 별도 감점은 없습니다.
   각 항목에 OK(문제 없음) 또는 ISSUE(문제 발견)를 기입하세요.
-  ISSUE가 1건이라도 있으면 해당 항목이 score_breakdown의 관련 점수에 반영되어야 합니다.
+  ISSUE가 있으면 해당 항목을 score_breakdown의 관련 점수에 반영하세요.
 
   1. **numeric_accuracy** — 원고의 금액/수량이 이전 화 및 mandatory_context의 수치와 일치하는가?
   2. **arithmetic** — A+B=C, 레버리지 계산 등 산술이 정확한가?
@@ -724,18 +724,18 @@ STRATEGIC_AUDIT_PROMPT_V30: |
   - CRITICAL(TruthGate: 사망 NPC 부활, 세계법칙 위반)만 자동 REJECT 사유입니다.
   - 나머지는 모두 당신의 전문적 판단에 따릅니다.
 
-  ### 🔢 [NC-1] Python 수치 검증 응답 의무
-  mandatory_context에 `[NumericConsistency]` 항목이 있으면, **각 항목에 대해 반드시 판정하세요.**
-  묵살은 금지입니다. 각 NC 항목에 대해 아래 둘 중 하나를 선택하고 이유를 적으세요:
-  - **AGREE**: Python이 맞다 → 이건 실제 모순이다. contradiction_check에도 반영하고 감점하세요.
+  ### 🔢 [NC-1] Python 수치 검증 참고
+  mandatory_context에 `[NumericConsistency]` 항목이 있으면, `numeric_consistency_review` 응답은 **선택사항**입니다.
+  Python advisory를 참고하여 `continuity_contradiction` 점수에 직접 반영하세요.
+  각 NC 항목에 대해 아래 둘 중 하나를 선택하고 이유를 적을 수 있습니다:
+  - **AGREE**: Python이 맞다 → 이건 실제 모순이다. continuity_contradiction에 반영하세요.
   - **DISMISS**: Python이 틀렸다 → 왜 틀렸는지 이유를 적으세요. (예: "전화 후 추가 매수로 60억 정당", "승진 이벤트가 이번 화에 있음")
   Python은 숫자 비교만 했을 뿐 서사 맥락을 모릅니다. 당신이 맥락을 보고 판단하세요.
-  단, AGREE한 항목이 1건이라도 있으면 continuity_contradiction 점수를 반드시 감점하세요.
 
-  ### ✅ [NC-3] 일관성 체크리스트 (매 심사 필수)
-  아래 11개 항목을 원고를 읽으며 반드시 체크하세요. Python advisory 유무와 관계없이 **매번 전체 항목을 검사**합니다.
+  ### ✅ [NC-3] 일관성 체크리스트 (권장)
+  아래 11개 항목을 원고를 읽으며 가능하면 체크하세요. 미작성 시 별도 감점은 없습니다.
   각 항목에 OK(문제 없음) 또는 ISSUE(문제 발견)를 기입하세요.
-  ISSUE가 1건이라도 있으면 해당 항목이 score_breakdown의 관련 점수에 반영되어야 합니다.
+  ISSUE가 있으면 해당 항목을 score_breakdown의 관련 점수에 반영하세요.
 
   1. **numeric_accuracy** — 원고의 금액/수량이 이전 화 및 mandatory_context의 수치와 일치하는가?
   2. **arithmetic** — A+B=C, 레버리지 계산 등 산술이 정확한가?
@@ -961,18 +961,18 @@ DIRECTOR_AUDIT_PROMPT_V30: |
   - CRITICAL(TruthGate: 사망 NPC 부활, 세계법칙 위반)만 자동 REJECT 사유입니다.
   - 나머지는 모두 당신의 전문적 판단에 따릅니다.
 
-  ### 🔢 [NC-1] Python 수치 검증 응답 의무
-  mandatory_context에 `[NumericConsistency]` 항목이 있으면, **각 항목에 대해 반드시 판정하세요.**
-  묵살은 금지입니다. 각 NC 항목에 대해 아래 둘 중 하나를 선택하고 이유를 적으세요:
-  - **AGREE**: Python이 맞다 → 이건 실제 모순이다. contradiction_check에도 반영하고 감점하세요.
+  ### 🔢 [NC-1] Python 수치 검증 참고
+  mandatory_context에 `[NumericConsistency]` 항목이 있으면, `numeric_consistency_review` 응답은 **선택사항**입니다.
+  Python advisory를 참고하여 `continuity_contradiction` 점수에 직접 반영하세요.
+  각 NC 항목에 대해 아래 둘 중 하나를 선택하고 이유를 적을 수 있습니다:
+  - **AGREE**: Python이 맞다 → 이건 실제 모순이다. continuity_contradiction에 반영하세요.
   - **DISMISS**: Python이 틀렸다 → 왜 틀렸는지 이유를 적으세요. (예: "전화 후 추가 매수로 60억 정당", "승진 이벤트가 이번 화에 있음")
   Python은 숫자 비교만 했을 뿐 서사 맥락을 모릅니다. 당신이 맥락을 보고 판단하세요.
-  단, AGREE한 항목이 1건이라도 있으면 continuity_contradiction 점수를 반드시 감점하세요.
 
-  ### ✅ [NC-3] 일관성 체크리스트 (매 심사 필수)
-  아래 11개 항목을 원고를 읽으며 반드시 체크하세요. Python advisory 유무와 관계없이 **매번 전체 항목을 검사**합니다.
+  ### ✅ [NC-3] 일관성 체크리스트 (권장)
+  아래 11개 항목을 원고를 읽으며 가능하면 체크하세요. 미작성 시 별도 감점은 없습니다.
   각 항목에 OK(문제 없음) 또는 ISSUE(문제 발견)를 기입하세요.
-  ISSUE가 1건이라도 있으면 해당 항목이 score_breakdown의 관련 점수에 반영되어야 합니다.
+  ISSUE가 있으면 해당 항목을 score_breakdown의 관련 점수에 반영하세요.
 
   1. **numeric_accuracy** — 원고의 금액/수량이 이전 화 및 mandatory_context의 수치와 일치하는가?
   2. **arithmetic** — A+B=C, 레버리지 계산 등 산술이 정확한가?

@@ -1,4 +1,4 @@
-﻿"""
+"""
 [B-1-5] ChiefWriter Quality Gate ? Self-Critique + quality pipeline.
 """
 
@@ -129,10 +129,36 @@ class ChiefWriterQualityGate:
             ]
             if not _medium_plus:
                 return current_manuscript
-            logging.info("[ChiefWriter] Rubric %.1f ≥ 3.5이나 구조적 이슈 %d건 — Self-Critique 진행",
+            logging.info(
+                "[ChiefWriter] Rubric %.1f ≥ 3.5이나 구조적 이슈 %d건 — Self-Critique 진행",
                 rubric_score,
                 len(_medium_plus),
             )
+
+        # ── [TF-G] 게이트 검사: ending_hook + 분량 (severity="low" 탈출 방지) ──
+        _gate_issues: list[str] = []
+        if blueprint:
+            _eh_issues = self._check_ending_hook_presence(current_manuscript, blueprint)
+            if _eh_issues:
+                _gate_issues.extend(_eh_issues)
+        if len(current_manuscript) < 5000:
+            _gate_issues.append(f"분량 부족 ({len(current_manuscript)}자 < 5,000자)")
+
+        if _gate_issues:
+            logging.info("[TF-G] 게이트 검사 실패 %d건: %s", len(_gate_issues), _gate_issues)
+            try:
+                current_manuscript = self._fix_manuscript_issues(
+                    current_manuscript,
+                    {
+                        "has_issues": True,
+                        "issues": [{"severity": "high", "issue": g} for g in _gate_issues],
+                        "severity": "high",
+                    },
+                    hud_report,
+                )
+                total_issues_fixed += len(_gate_issues)
+            except Exception as _ge:
+                logging.warning("[TF-G] 게이트 수정 실패 (비치명): %s", _ge)
 
         for round_num in range(1, MAX_CRITIQUE_ROUNDS + 1):
             critique_result = self._self_critique(
@@ -163,7 +189,8 @@ class ChiefWriterQualityGate:
                 if mid_score >= 3.5:
                     break
 
-            logging.info(f"[ChiefWriter] Self-Critique R{round_num}/{MAX_CRITIQUE_ROUNDS}: {len(critique_result['issues'])}건..."
+            logging.info(
+                f"[ChiefWriter] Self-Critique R{round_num}/{MAX_CRITIQUE_ROUNDS}: {len(critique_result['issues'])}건..."
             )
             print(f"      🔧 [Writer] Self-Critique R{round_num}: {len(critique_result['issues'])}건 수정 중...")
             current_manuscript = self._fix_manuscript_issues(current_manuscript, critique_result, hud_report)
