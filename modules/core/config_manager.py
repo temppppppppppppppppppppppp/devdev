@@ -94,8 +94,8 @@ class ConfigManager:
                 agents = (data or {}).get("agents")
                 if isinstance(agents, dict) and agents:
                     return dict(agents)
-        except Exception:
-            pass
+        except Exception as e:
+            logging.warning("[SilentPass:ConfigManager] models.yaml load failed: %s", e)
         return None
 
     def get_model_for_agent(self, agent_role: str) -> str:
@@ -176,7 +176,8 @@ class ConfigManager:
             # int/float 호환은 허용
             if isinstance(default, int | float) and isinstance(value, int | float):
                 return type(default)(value)
-            logging.warning(f"[Phase 5-B-1] 타입 불일치: {key} = {type(value).__name__}, "
+            logging.warning(
+                f"[Phase 5-B-1] 타입 불일치: {key} = {type(value).__name__}, "
                 f"기대 {type(default).__name__} — 기본값 사용"
             )
             return default

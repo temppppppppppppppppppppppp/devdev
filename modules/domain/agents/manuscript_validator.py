@@ -12,7 +12,7 @@ import logging
 import re
 import time
 
-from modules.core.constants import ManuscriptLimits  # [V64.P4]
+from modules.core.constants import AIModels, ManuscriptLimits  # [V64.P4] [TF-9B]
 
 
 class ManuscriptValidator:
@@ -605,7 +605,7 @@ class ManuscriptValidator:
             # [V63.3] 중복 딜레이 제거 (직접 API 호출이므로 최소 지연만)
             time.sleep(0.1)
             response = self._llm_client.models.generate_content(
-                model="gemini-2.5-flash",
+                model=AIModels.FLASH_ANALYSIS_MODEL,  # [TF-9B] SSOT
                 contents=prompt,
                 config=_types.GenerateContentConfig(
                     temperature=0.0,

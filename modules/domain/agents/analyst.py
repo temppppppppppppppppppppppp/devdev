@@ -667,7 +667,8 @@ class Analyst(BaseAgent):
             _warn_parts, content_len = self._extract_content_parts(curr_block)
 
             if content_len < target_ep_count * min_content_per_ep:
-                logging.warning(f" [V60.31] Block 빈약 경고: {content_len}자 / {target_ep_count}화 = 화당 {content_len // target_ep_count}자 (권장 200자+)"
+                logging.warning(
+                    f" [V60.31] Block 빈약 경고: {content_len}자 / {target_ep_count}화 = 화당 {content_len // target_ep_count}자 (권장 200자+)"
                 )
 
         # 3. [V43] 장르별 라이브러리 로드 - 장르에 맞는 서사 패턴 사용
@@ -727,8 +728,8 @@ class Analyst(BaseAgent):
         try:
             if hasattr(self.context, "sys") and hasattr(self.context.sys, "hud") and self.context.sys.hud:
                 _ck_analyst = self.context.sys.hud.get_critical_keys()
-        except Exception:
-            pass
+        except Exception as e:
+            logging.debug("[SilentPass:Analyst] get_critical_keys failed: %s", e)
         _genre_placeholders = self._build_genre_placeholders(current_genre, _ck_analyst)
         safe_data = {
             "genre_prompt": self.context.guard.get_v20_purism_prompt(),
@@ -859,7 +860,8 @@ class Analyst(BaseAgent):
 
             if llm_ep_count < pacing_min or llm_ep_count > pacing_max:
                 corrected_ep_count = max(pacing_min, min(pacing_max, llm_ep_count))
-                logging.warning(f" [V60.70] 자기모순 교정: chosen_pacing={chosen_pacing} 인데 ep_count={llm_ep_count} → {corrected_ep_count}화로 강제 조정"
+                logging.warning(
+                    f" [V60.70] 자기모순 교정: chosen_pacing={chosen_pacing} 인데 ep_count={llm_ep_count} → {corrected_ep_count}화로 강제 조정"
                 )
                 llm_ep_count = corrected_ep_count
 
@@ -886,7 +888,8 @@ class Analyst(BaseAgent):
                     while len(beats) < actual_ep_count:
                         idx = len(beats) % len(fallback_beats)
                         beats.append(fallback_beats[idx])
-                    logging.warning("[Analyst] beat_sequence 부족 (%d/%d) — 폴백 비트 %d개 추가",
+                    logging.warning(
+                        "[Analyst] beat_sequence 부족 (%d/%d) — 폴백 비트 %d개 추가",
                         original_count,
                         actual_ep_count,
                         actual_ep_count - original_count,
@@ -1219,8 +1222,8 @@ class Analyst(BaseAgent):
         try:
             if hasattr(self.context, "sys") and hasattr(self.context.sys, "hud") and self.context.sys.hud:
                 _enrich_ck = self.context.sys.hud.get_critical_keys()
-        except Exception:
-            pass
+        except Exception as e:
+            logging.debug("[SilentPass:Analyst] enrich get_critical_keys failed: %s", e)
         prompt = get_enrich_block_prompt_v30(
             genre_prompt=self.context.guard.get_v20_purism_prompt(),
             curr_block=safe_curr,
@@ -1242,14 +1245,16 @@ class Analyst(BaseAgent):
 
             _t0 = _time.time()
             print(f"      ⏳ [Enrich] Block {_block_id} LLM 호출 (model={self.primary_model}, prompt={len(prompt)}자)")
-            logging.info("[Enrich] Block %s 농축 시작 (model=%s, prompt=%d자)", _block_id, self.primary_model, len(prompt)
+            logging.info(
+                "[Enrich] Block %s 농축 시작 (model=%s, prompt=%d자)", _block_id, self.primary_model, len(prompt)
             )
             raw_res = await loop.run_in_executor(None, lambda: self.ask(prompt, temperature=0.3))
             _elapsed = _time.time() - _t0
             print(
                 f"      ✅ [Enrich] Block {_block_id} 완료 ({_elapsed:.1f}s, model={self.primary_model}, 응답={len(raw_res or '')}자)"
             )
-            logging.info("[Enrich] Block %s 농축 완료 (model=%s, %.1fs, 응답=%d자)",
+            logging.info(
+                "[Enrich] Block %s 농축 완료 (model=%s, %.1fs, 응답=%d자)",
                 _block_id,
                 self.primary_model,
                 _elapsed,
