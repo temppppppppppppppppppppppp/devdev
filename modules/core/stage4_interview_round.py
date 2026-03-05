@@ -8,6 +8,22 @@ import time
 from modules.core.context_advisor import RetrievalSources
 
 
+def _ns4_extract_time_markers(arc_data: dict) -> list:
+    """[NS-4-S4] Arc tactical_doc/beat_sequence에서 날짜·상대시간 마커 추출 (regex, LLM 0회)."""
+    import re as _re
+    _text = (arc_data.get("tactical_doc") or "") + "\n" + (arc_data.get("beat_sequence") or "")
+    _patterns = [
+        r"\d{4}년\s*\d{1,2}월(?:\s*\d{1,2}일)?",
+        r"\d{1,2}월\s*\d{1,2}일",
+        r"\d{1,2}월(?:\s*(?:말|초|중순|하순|상순))?",
+        r"\d+(?:일|주|달|개월|년)\s*(?:후|전)",
+    ]
+    _found = []
+    for _p in _patterns:
+        _found.extend(_re.findall(_p, _text))
+    return list(dict.fromkeys(_found))[:5]
+
+
 class Stage4InterviewRound:
     """[B-1-3] Stage4 단일 면담 라운드 실행 모듈."""
 
@@ -91,8 +107,7 @@ class Stage4InterviewRound:
                         lookback=_lookback,
                     )
                     if not _writing_directive.is_empty():
-                        logging.info(
-                            "[TF-54] WritingDirective 생성 완료: ending=%s, ban=%d개",
+                        logging.info("[TF-54] WritingDirective 생성 완료: ending=%s, ban=%d개",
                             _writing_directive.ending_style[:30],
                             len(_writing_directive.expression_ban),
                         )
@@ -504,6 +519,35 @@ class Stage4InterviewRound:
         except Exception as _te:
             logging.debug("[NC-2] cumulative_elapsed 주입 실패 (비치명): %s", _te)
 
+        # [NS-4-S4] Arc 시간 연속성 마커 → Director mc_parts 주입 (LLM 0회)
+        try:
+            _ns4_arc_no = int(round_ctx.arc_data.get("arc_no", 0) or 0)
+            _ns4_arc_idx = _ns4_arc_no - 1  # 1-based → 0-based
+            if _ns4_arc_idx > 0:
+                _ns4_all_arcs = getattr(self.ctx.current_project, "arcs", []) or []
+                if len(_ns4_all_arcs) > _ns4_arc_idx:
+                    _ns4_prev_arc = _ns4_all_arcs[_ns4_arc_idx - 1]
+                    _ns4_cur_arc = _ns4_all_arcs[_ns4_arc_idx]
+                    _ns4_prev_m = _ns4_extract_time_markers(_ns4_prev_arc)
+                    _ns4_cur_m = _ns4_extract_time_markers(_ns4_cur_arc)
+                    if _ns4_prev_m or _ns4_cur_m:
+                        _ns4_mc_lines = ["[Arc 시간 연속성 참고]"]
+                        if _ns4_prev_m:
+                            _ns4_mc_lines.append(f"이전 Arc 종료 시점 마커: {', '.join(_ns4_prev_m)}")
+                        if _ns4_cur_m:
+                            _ns4_mc_lines.append(f"현재 Arc 시간 마커: {', '.join(_ns4_cur_m)}")
+                        _ns4_mc_lines.append(
+                            "※ 원고에서 과거 사건 언급 시 '며칠 전'/'얼마 전' 같은 표현이 "
+                            "위 시간 간격과 일치하는지 확인하세요."
+                        )
+                        _director_mc_parts.append("\n".join(_ns4_mc_lines))
+                        logging.info(
+                            "[NS-4-S4] Arc 시간 마커 Director 주입: arc_no=%d, prev=%s, cur=%s",
+                            _ns4_arc_no, _ns4_prev_m, _ns4_cur_m,
+                        )
+        except Exception as _ns4_s4_err:
+            logging.debug("[NS-4-S4] Director 시간 마커 주입 실패 (비차단): %s", _ns4_s4_err)
+
         # [NC-2 GAP-1] 씬 유사도 advisory → Director MC 주입
         try:
             _recent_scene_kws = getattr(round_ctx, "recent_scene_keywords", [])
@@ -866,7 +910,7 @@ class Stage4InterviewRound:
                                 validation_results[ci]["warnings"].append(f"[V66.2] 파괴된 엔티티 등장: {_dw_msg}")
                             validation_results[ci]["warning_count"] = len(validation_results[ci]["warnings"])
         except (KeyError, ValueError, TypeError) as _de_err:
-            logging.warning(f"⚠️ [V66.2] 파괴 엔티티 검사 오류: {_de_err}")
+            logging.warning(f" [V66.2] 파괴 엔티티 검사 오류: {_de_err}")
 
         # [SC-5] Director 벡터 메모리 컨텍스트 조립 (후보 공통 1회)
         print("      ⏳ [SC-5] Director 벡터 메모리 수집 중...")
@@ -1252,8 +1296,7 @@ class Stage4InterviewRound:
                     f"[F-2 경고] InPlace 패치 변경 비율 {_change_ratio:.1%} > 임계값 {_max_ratio:.0%}. "
                     "국소 수정이 아닌 대폭 재작성일 수 있음. 품질 저하 여부를 중점 확인하세요."
                 )
-                logging.warning(
-                    "[F-2] InPlace 변경 비율 %.1f%% > %.0f%% (S4 원고)", _change_ratio * 100, _max_ratio * 100
+                logging.warning("[F-2] InPlace 변경 비율 %.1f%% > %.0f%% (S4 원고)", _change_ratio * 100, _max_ratio * 100
                 )
 
             # [TF-35] Director 동일 경로 재심사 — ScoringValidator 대신 Director LLM 직접 채점
@@ -2096,8 +2139,7 @@ class Stage4InterviewRound:
         """[B-1-3b][TF-50] Advisory chain 병렬 실행, Director mandatory_context 파트 반환."""
         from concurrent.futures import ThreadPoolExecutor, as_completed
 
-        logging.debug(
-            "Advisory 검증 시작 — 8개 병렬 실행 (TruthGate, NPC, 수치, 회상, 정보역설, 관계, 장기반복, 수치정합)"
+        logging.debug("Advisory 검증 시작 — 8개 병렬 실행 (TruthGate, NPC, 수치, 회상, 정보역설, 관계, 장기반복, 수치정합)"
         )
         print("      \u23f3 Advisory 체인 8개 병렬 실행 중...")
 
@@ -2205,8 +2247,7 @@ class Stage4InterviewRound:
                                 f"- [\ud6c4\ubcf4 {_cl}][MAJOR] NPC '{_d.get('npc', '')}' {_d.get('field', '')}: "
                                 f"\uae30\ub300='{_d.get('expected', '')}' \u2192 \uc6d0\uace0='{_d.get('found_in_ms', '')[:40]}'"
                             )
-                        logging.info(
-                            "[NpcDriftAdvisor\u2192Director] %d\uac74 \ud45c\ub958 \uac10\uc9c0 \uc804\ub2ec",
+                        logging.info("[NpcDriftAdvisor\u2192Director] %d\uac74 \ud45c\ub958 \uac10\uc9c0 \uc804\ub2ec",
                             len(_drift_all),
                         )
                         return ["\n".join(_drift_lines)]
@@ -2233,8 +2274,7 @@ class Stage4InterviewRound:
                         ]
                         for _nd in _num_drifts[:6]:
                             _nd_lines.append(f"- [MAJOR] '{_nd.get('key', '')}': {_nd.get('issue', '')[:60]}")
-                        logging.info(
-                            "[NumericDriftAdvisor\u2192Director] %d\uac74 \uc218\uce58 \ud45c\ub958 \uac10\uc9c0",
+                        logging.info("[NumericDriftAdvisor\u2192Director] %d\uac74 \uc218\uce58 \ud45c\ub958 \uac10\uc9c0",
                             len(_num_drifts),
                         )
                         return ["\n".join(_nd_lines)]
@@ -2301,8 +2341,7 @@ class Stage4InterviewRound:
                     _fb_lines.append(
                         f"- [\ud6c4\ubcf4 {_cl}][MAJOR] '{_fw.get('marker', '')}': {_fw.get('issue', '')[:60]}"
                     )
-                logging.info(
-                    "[FlashbackVerifier\u2192Director] %d\uac74 \ud68c\uc0c1 \uc624\uc5fc \uac10\uc9c0", len(_fb_all)
+                logging.info("[FlashbackVerifier\u2192Director] %d\uac74 \ud68c\uc0c1 \uc624\uc5fc \uac10\uc9c0", len(_fb_all)
                 )
                 return ["\n".join(_fb_lines)]
         except (AttributeError, TypeError, ValueError, RuntimeError, OSError) as _fb_err:
@@ -2359,8 +2398,7 @@ class Stage4InterviewRound:
                                 _ip_lines.append(
                                     f"- [\ud6c4\ubcf4 {_cl}][MAJOR] '{_ip.get('info_used', '')[:40]}': {_ip.get('why_paradox', '')[:60]}"
                                 )
-                            logging.info(
-                                "[InfoParadoxChecker\u2192Director] %d\uac74 \uc815\ubcf4 \uc5ed\uc124 \uac10\uc9c0",
+                            logging.info("[InfoParadoxChecker\u2192Director] %d\uac74 \uc815\ubcf4 \uc5ed\uc124 \uac10\uc9c0",
                                 len(_ip_all),
                             )
                             return ["\n".join(_ip_lines)]
@@ -2407,8 +2445,7 @@ class Stage4InterviewRound:
                             _rd_lines.append(
                                 f"- [\ud6c4\ubcf4 {_cl}][MAJOR] '{_rd.get('npc_pair', '')[:30]}': {_rd.get('why_drift', '')[:60]}"
                             )
-                        logging.info(
-                            "[RelationshipDriftAdvisor\u2192Director] %d\uac74 \uad00\uacc4 \ud45c\ub958 \uac10\uc9c0",
+                        logging.info("[RelationshipDriftAdvisor\u2192Director] %d\uac74 \uad00\uacc4 \ud45c\ub958 \uac10\uc9c0",
                             len(_rd_all),
                         )
                         return ["\n".join(_rd_lines)]
@@ -2449,14 +2486,12 @@ class Stage4InterviewRound:
                             _ltr_lines.append(
                                 f"- [\ud6c4\ubcf4 {_cl}][MAJOR] '{_lr.get('pattern', '')[:30]}': {_lr.get('issue', '')[:60]}"
                             )
-                        logging.info(
-                            "[LongTermRepetitionAdvisor\u2192Director] %d\uac74 \uc7a5\uae30 \ubc18\ubcf5 \uac10\uc9c0",
+                        logging.info("[LongTermRepetitionAdvisor\u2192Director] %d\uac74 \uc7a5\uae30 \ubc18\ubcf5 \uac10\uc9c0",
                             len(_ltr_all),
                         )
                         return ["\n".join(_ltr_lines)]
         except (AttributeError, TypeError, ValueError, RuntimeError, OSError) as _ltr_err:
-            logging.warning(
-                "[P1-5] LongTermRepetitionAdvisor \uc2e4\ud328 (\ube44\uce58\uba85): %s", str(_ltr_err)[:80]
+            logging.warning("[P1-5] LongTermRepetitionAdvisor \uc2e4\ud328 (\ube44\uce58\uba85): %s", str(_ltr_err)[:80]
             )
         return []
 
@@ -2506,8 +2541,7 @@ class Stage4InterviewRound:
                     )
                     _sev = _w.get("severity", "MAJOR")
                     _nc_lines.append(f"- [NC-{_wi}][후보 {_cl}][{_sev}] {_w.get('text', '')[:120]}")
-                logging.info(
-                    "[NumericConsistency→Director] %d건 수치 정합성 경고",
+                logging.info("[NumericConsistency→Director] %d건 수치 정합성 경고",
                     len(_nc_all),
                 )
                 return ["\n".join(_nc_lines)]

@@ -291,8 +291,7 @@ Step 6: Article 7 (독자 대리만족) 분석
                     try:
                         _val["score"] = max(0, min(int(_val["score"]), int(_val["max"])))
                     except (ValueError, TypeError):
-                        logging.warning(
-                            f"[ScoringValidator] 점수 변환 실패: score={_val.get('score')}, max={_val.get('max')} — 0 대입"
+                        logging.warning(f"[ScoringValidator] 점수 변환 실패: score={_val.get('score')}, max={_val.get('max')} — 0 대입"
                         )
                         _val["score"] = 0
 

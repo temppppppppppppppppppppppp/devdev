@@ -222,7 +222,7 @@ class TestRunFinalize:
         assert cost_kw["total_calls"] == 2
 
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
-    def test_director_reject_returns_next(self, finalizer, valid_refined_arc):
+    def test_director_reject_returns_retry(self, finalizer, valid_refined_arc):
         finalizer.ctx.agents["director"].audit_strategic_plan.return_value = {
             "decision": "REJECT",
             "score": 30,
@@ -236,7 +236,7 @@ class TestRunFinalize:
         )
         result = asyncio.run(finalizer.run_finalize(**kwargs))
 
-        assert result["action"] == "next"
+        assert result["action"] == "retry"
         assert "reject reason" in result["director_feedback_for_fourphase"]
 
     @patch("modules.core.stage2_finalizer.validate_arc", side_effect=lambda x: x)
@@ -253,7 +253,7 @@ class TestRunFinalize:
         result = asyncio.run(finalizer.run_finalize(**kwargs))
 
         # [TF-25-07] Director REJECT 유지 — Python이 판정을 변경하지 않음
-        assert result["action"] == "next"  # REJECT → next (오케스트레이터 재시도)
+        assert result["action"] == "retry"  # REJECT → retry (오케스트레이터 재시도)
         audit = finalizer.ctx.agents["director"].audit_strategic_plan.return_value
         assert audit.get("v60_43_api_warning") is True
 
@@ -288,7 +288,7 @@ class TestRunFinalize:
         )
         result = asyncio.run(finalizer.run_finalize(**kwargs))
 
-        assert result["action"] == "next"
+        assert result["action"] == "retry"
         assert finalizer.ctx.state_tracker.foo == 9
         assert finalizer.ctx.state_tracker.bar == 3
         assert result["st_snapshot"] is None

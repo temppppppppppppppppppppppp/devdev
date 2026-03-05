@@ -419,8 +419,7 @@ class ForeshadowTracker:
     def save_to_db(self, db) -> None:
         """[DB-Eff-P1] foreshadow 테이블에 저장."""
         if not db or not hasattr(db, "conn") or db.conn is None:
-            logging.warning(
-                "[ForeshadowTracker] save_to_db 스킵: db=%r (conn=%r) — 복선 %d건 미저장",
+            logging.warning("[ForeshadowTracker] save_to_db 스킵: db=%r (conn=%r) — 복선 %d건 미저장",
                 db, getattr(db, "conn", None), len(self.hooks),
             )
             return

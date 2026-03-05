@@ -184,7 +184,7 @@ class BaseAgent:
                     keys.append(k)
             cls._api_keys = keys
             if len(keys) > 1:
-                logging.info(f"🔑 [V61.5] API 키 {len(keys)}개 로드 완료 (자동 순환 활성화)")
+                logging.info(f" [V61.5] API 키 {len(keys)}개 로드 완료 (자동 순환 활성화)")
 
     @classmethod
     def _try_rotate_key(cls):
@@ -233,12 +233,10 @@ class BaseAgent:
                 cls._key_rotation_pending = False
             logging.warning("[TF-15/P0] API key rotation client creation failed: %s", create_err)
             return None
-        logging.info(
-            f"🔑 [V61.5] API 키 순환: Key {old_idx + 1} → Key {cls._current_key_idx + 1} (총 {len(cls._api_keys)}개)"
+        logging.info(f" [V61.5] API 키 순환: Key {old_idx + 1} → Key {cls._current_key_idx + 1} (총 {len(cls._api_keys)}개)"
         )
         # [INF-I5] 키 순환 구조화 로그
-        logging.debug(
-            "[SilentPass:Agent] key_rotate old_idx=%d new_idx=%d total_keys=%d",
+        logging.debug("[SilentPass:Agent] key_rotate old_idx=%d new_idx=%d total_keys=%d",
             old_idx,
             cls._current_key_idx,
             len(cls._api_keys),
@@ -285,8 +283,7 @@ class BaseAgent:
         )
         keep = max(0, max_chars - len(notice))
         clipped = prompt[:keep] + notice
-        logging.warning(
-            "[TF3-H7] Prompt length gate applied: %d -> %d chars (agent=%s)",
+        logging.warning("[TF3-H7] Prompt length gate applied: %d -> %d chars (agent=%s)",
             len(prompt),
             len(clipped),
             self._agent_name,
@@ -563,8 +560,7 @@ class BaseAgent:
                     pass
 
             # [INF-I5] API 호출 성공 구조화 로그
-            logging.debug(
-                "[SilentPass:Agent] call_success agent=%s model=%s response_len=%d",
+            logging.debug("[SilentPass:Agent] call_success agent=%s model=%s response_len=%d",
                 self._agent_name,
                 current_model,
                 len(full_response),
@@ -601,8 +597,7 @@ class BaseAgent:
 
             # [TF-28] thinking 캡처 debug 로그
             if _thinking_text:
-                logging.debug(
-                    "[TF-28:Thinking] agent=%s thinking_len=%d",
+                logging.debug("[TF-28:Thinking] agent=%s thinking_len=%d",
                     self._agent_name,
                     len(_thinking_text),
                 )
@@ -616,8 +611,7 @@ class BaseAgent:
             error_type = self._classify_error(e)
             self.last_error_type = error_type
             # [INF-I5] API 호출 실패 구조화 로그
-            logging.debug(
-                "[SilentPass:Agent] call_failure agent=%s model=%s error_type=%s backup=%s",
+            logging.debug("[SilentPass:Agent] call_failure agent=%s model=%s error_type=%s backup=%s",
                 self._agent_name,
                 current_model,
                 error_type,
@@ -625,9 +619,9 @@ class BaseAgent:
             )
             # [V60.66] 429 폴백이 인라인에서 이미 시도되었음을 표시
             if error_type == AgentErrorType.QUOTA_EXCEEDED:
-                logging.warning(f"🚨 [V60.66] 모든 폴백 모델 할당량 초과 ({model_stack}): {str(e)[:50]}")
+                logging.warning(f" [V60.66] 모든 폴백 모델 할당량 초과 ({model_stack}): {str(e)[:50]}")
             else:
-                logging.warning(f"⚠️ [Warning] 모델 실패 ({error_type}), 백업 가동: {str(e)[:50]}")
+                logging.warning(f" [Warning] 모델 실패 ({error_type}), 백업 가동: {str(e)[:50]}")
 
             # [V49.3] 비용 추적 종료 (실패, 백업 시도 전)
             if METRICS_ENABLED and metric_id:
@@ -680,7 +674,7 @@ class BaseAgent:
             # 부분 응답이 있으면 저장
             if full_response:
                 self.last_partial_response = full_response
-                logging.info(f"📝 [Recovery] 부분 응답 {len(full_response)}자 보존")
+                logging.info(f" [Recovery] 부분 응답 {len(full_response)}자 보존")
 
             # [B-1-9:C4] 백업 모델 호출 + 부분 응답 복구
             return self._attempt_backup_recovery(
@@ -730,7 +724,7 @@ class BaseAgent:
                 remaining = int(exhausted_until - current_time)
                 # 첫 번째 모델(primary)이 스킵되는 경우에만 로그 출력
                 if model == self.primary_model:
-                    logging.info(f"⏭️ [V60.68] {model} 쿼터 캐시 히트 - {remaining}초 남음, 스킵")
+                    logging.info(f" [V60.68] {model} 쿼터 캐시 히트 - {remaining}초 남음, 스킵")
 
         # [V60.68] 사용 가능한 모델이 있으면 그것으로 시작, 없으면 원래 스택 사용
         if available_models:
@@ -764,8 +758,7 @@ class BaseAgent:
         config = types.GenerateContentConfig(**config_params)
 
         # [INF-I5] API 호출 시작 구조화 로그
-        logging.debug(
-            "[SilentPass:Agent] call_start agent=%s model=%s prompt_len=%d",
+        logging.debug("[SilentPass:Agent] call_start agent=%s model=%s prompt_len=%d",
             self._agent_name,
             current_model,
             len(base_prompt),
@@ -841,8 +834,7 @@ class BaseAgent:
             from datetime import datetime
 
             timestamp = datetime.now().strftime("%H:%M:%S")
-            logging.warning(
-                f"\n      🌐 [{timestamp}] 연결 오류 → {wait_time}초 대기 ({network_retry_count}/{self.MAX_NETWORK_RETRIES}, 누적 {total_waited}초)"
+            logging.warning(f"\n [{timestamp}] 연결 오류 → {wait_time}초 대기 ({network_retry_count}/{self.MAX_NETWORK_RETRIES}, 누적 {total_waited}초)"
             )
 
             # 대기 중 — 콘솔 표시
@@ -856,7 +848,7 @@ class BaseAgent:
                 logging.info(f"✅ [{datetime.now().strftime('%H:%M:%S')}] 연결 복구! 재시도...")
             else:
                 # 연결 안 됨 - 다음 재시도로 (루프 계속)
-                logging.info(f"⏳ [{datetime.now().strftime('%H:%M:%S')}] 연결 대기 중...")
+                logging.info(f" [{datetime.now().strftime('%H:%M:%S')}] 연결 대기 중...")
             result["action"] = "continue"
             return result
 
@@ -890,8 +882,7 @@ class BaseAgent:
             print(
                 f"      ⏳ [RATE-LIMIT] {self._agent_name} {current_model} → {wait_time}초 대기 ({rate_limit_retry_count}/{max_rate_limit_retries})"
             )
-            logging.info(
-                f"⏳ [V60.97 Rate Limit] {current_model} 분당 제한 감지 → {wait_time}초 대기 후 재시도 ({rate_limit_retry_count}/{max_rate_limit_retries})"
+            logging.info(f" [V60.97 Rate Limit] {current_model} 분당 제한 감지 → {wait_time}초 대기 후 재시도 ({rate_limit_retry_count}/{max_rate_limit_retries})"
             )
             time.sleep(wait_time)
             # 루프 처음으로 돌아가서 try/except 안에서 재시도
@@ -907,7 +898,7 @@ class BaseAgent:
             or (is_rate_limit and rate_limit_retry_count >= max_rate_limit_retries)
         ):
             if is_gemini3_rate_limit:
-                logging.info(f"⚡ [V60.98] {current_model} Rate Limit → 즉시 폴백 (할당량 부족 모델)")
+                logging.info(f" [V60.98] {current_model} Rate Limit → 즉시 폴백 (할당량 부족 모델)")
             if quota_retry_count < max_quota_retries - 1:
                 quota_retry_count += 1
                 rate_limit_retry_count = 0  # 폴백 시 Rate Limit 카운터 리셋
@@ -930,10 +921,9 @@ class BaseAgent:
 
                 error_type = "Quota 소진" if is_quota_exhausted else "Rate Limit 초과"
                 print(f"      🔄 [QUOTA-FB] {self._agent_name} {old_model} {error_type} → {current_model}로 전환")
-                logging.info(f"🔄 [V60.97 Fallback] {old_model} {error_type} → {current_model}로 전환")
+                logging.info(f" [V60.97 Fallback] {old_model} {error_type} → {current_model}로 전환")
                 # [INF-I5] 폴백 전환 구조화 로그
-                logging.debug(
-                    "[SilentPass:Agent] fallback agent=%s from=%s to=%s reason=%s",
+                logging.debug("[SilentPass:Agent] fallback agent=%s from=%s to=%s reason=%s",
                     self._agent_name,
                     old_model,
                     current_model,
@@ -1054,21 +1044,20 @@ class BaseAgent:
         if hasattr(candidate, "finish_reason") and candidate.finish_reason in ["MAX_TOKENS", "LENGTH"]:
             # 🔒 Circuit Breaker 경고
             if attempt >= warn_threshold:
-                logging.warning(f"⚠️ [Circuit Breaker] 과도한 continuation 감지 ({attempt + 1}/{max_continuations}회)")
-                logging.warning(f"⚠️ [Cost Warning] API 비용 증가 중 - 누적 응답 길이: {len(full_response)} chars")
+                logging.warning(f" [Circuit Breaker] 과도한 continuation 감지 ({attempt + 1}/{max_continuations}회)")
+                logging.warning(f" [Cost Warning] API 비용 증가 중 - 누적 응답 길이: {len(full_response)} chars")
 
             # 🔒 Circuit Breaker 트립 (최대 시도 횟수 도달)
             if attempt >= max_continuations - 1:
-                logging.warning(f"🚨 [Circuit Breaker TRIP] 최대 continuation 횟수 도달 ({max_continuations}회)")
-                logging.warning("🚨 [WARNING] 응답 불완전 가능 - 수동 검토 필요")
+                logging.warning(f" [Circuit Breaker TRIP] 최대 continuation 횟수 도달 ({max_continuations}회)")
+                logging.warning(" [WARNING] 응답 불완전 가능 - 수동 검토 필요")
                 return result
 
             # 마지막 50자를 앵커로 사용하여 다음 응답의 시작점을 강제 고정
             overlap_anchor = full_response[-50:].strip()
             # [FIX] 중괄호 이스케이프 적용 (f-string 오류 방지)
             safe_anchor = self._escape_braces(overlap_anchor)
-            logging.warning(
-                f"🔄 [System] 데이터 절단 감지. '{overlap_anchor[:20]}...' 지점부터 인과율 용접 시도 ({attempt + 1}/{max_continuations})"
+            logging.warning(f" [System] 데이터 절단 감지. '{overlap_anchor[:20]}...' 지점부터 인과율 용접 시도 ({attempt + 1}/{max_continuations})"
             )
 
             current_prompt = (
@@ -1169,7 +1158,7 @@ class BaseAgent:
                     self.requires_human_intervention = False
                     return backup_text
                 else:
-                    logging.warning(f"⚠️ [Validation] 백업 응답 검증 실패: {validation['reason']}")
+                    logging.warning(f" [Validation] 백업 응답 검증 실패: {validation['reason']}")
                     # 부분 응답 병합 시도
                     if self.last_partial_response:
                         merged = self._try_merge_responses(self.last_partial_response, backup_text)
@@ -1179,7 +1168,7 @@ class BaseAgent:
 
             # 빈 응답 처리
             if self.last_partial_response:
-                logging.info(f"📝 [Fallback] 부분 응답 반환 ({len(self.last_partial_response)}자)")
+                logging.info(f" [Fallback] 부분 응답 반환 ({len(self.last_partial_response)}자)")
                 # [V44] 부분 응답은 검증되지 않음 - 플래그 설정
                 self.requires_human_intervention = True
                 return self.last_partial_response
@@ -1188,7 +1177,7 @@ class BaseAgent:
 
         except Exception as e_inner:
             inner_error_type = self._classify_error(e_inner)
-            logging.warning(f"🚨 [Critical] 백업 실패 ({inner_error_type}): {str(e_inner)[:50]}")
+            logging.warning(f" [Critical] 백업 실패 ({inner_error_type}): {str(e_inner)[:50]}")
 
             try:
                 self._log_llm_call_to_db(
@@ -1205,7 +1194,7 @@ class BaseAgent:
 
             # [V44] 최후의 복구 시도
             if self.last_partial_response:
-                logging.info(f"📝 [Last Resort] 부분 응답 반환 ({len(self.last_partial_response)}자)")
+                logging.info(f" [Last Resort] 부분 응답 반환 ({len(self.last_partial_response)}자)")
                 self.requires_human_intervention = True
                 return self.last_partial_response
 
@@ -1383,7 +1372,7 @@ class BaseAgent:
             TypeError,
             KeyError,
         ) as e:  # [V64.P4] IMPORTANT: partial merge failure
-            logging.warning(f"⚠️ [V64.P4] 부분 응답 병합 실패: {str(e)[:60]}")
+            logging.warning(f" [V64.P4] 부분 응답 병합 실패: {str(e)[:60]}")
             return None
 
     def _create_error_response(self, error_type: str, message: str) -> str:
@@ -1553,8 +1542,7 @@ class BaseAgent:
                 return ast.literal_eval(processed)
             except (ValueError, SyntaxError):
                 # [V44] JSON 파싱 실패 시 정규식 추출 경고
-                logging.warning(
-                    f"⚠️ [JSON Parser] ast.literal_eval 실패, 정규식 fallback 사용 (길이: {len(json_str)}자)"
+                logging.warning(f" [JSON Parser] ast.literal_eval 실패, 정규식 fallback 사용 (길이: {len(json_str)}자)"
                 )
                 # [TF-C11] 2-pass regex: 문자열 값 + 숫자/불리언 값
                 kv_pattern = r'"(\w+)"\s*:\s*"(.*?)"(?="|\s*\}|\s*,)'
@@ -1580,7 +1568,7 @@ class BaseAgent:
                 logging.warning("→ 정규식 추출 실패, RAW 반환")
                 return {"content": json_str, "status": "REPAIRED_RAW"}
         except Exception as e:
-            logging.warning(f"🚨 [JSON Parser] CRITICAL_FAILURE: {str(e)[:100]}")
+            logging.warning(f" [JSON Parser] CRITICAL_FAILURE: {str(e)[:100]}")
             return {"content": json_str, "error": "CRITICAL_FAILURE"}
 
     # ═══════════════════════════════════════════════════════════════════════════
@@ -1629,7 +1617,7 @@ class BaseAgent:
             cached_info = self._context_caches.get(cache_key)
             if cached_info:
                 if current_time - cached_info["created_at"] < ttl_seconds:
-                    logging.info(f"📦 [CTX-CACHE] HIT: {cache_type} (TTL 내 재사용)")
+                    logging.info(f" [CTX-CACHE] HIT: {cache_type} (TTL 내 재사용)")
                     return {"cache_name": cached_info.get("name"), "cached": True, "content_hash": content_hash}
                 else:
                     # 만료된 캐시 삭제 [I-20] KeyError 방지
@@ -1671,7 +1659,7 @@ class BaseAgent:
                     for old_key, _ in snapshot[: len(snapshot) - self._CONTEXT_CACHE_MAX]:
                         self._context_caches.pop(old_key, None)
 
-            logging.info(f"📦 [V61.5] 컨텍스트 캐시 생성: {cache_type} ({len(content)}자)")
+            logging.info(f" [V61.5] 컨텍스트 캐시 생성: {cache_type} ({len(content)}자)")
 
             return {"cache_name": cache.name, "cached": False, "content_hash": content_hash}
 
@@ -1680,11 +1668,11 @@ class BaseAgent:
             error_str = str(e).lower()
             # [V61.9] 캐싱 중 429/quota → 현재 작업은 캐시 없이 진행, 다음 작업에서 키 전환
             if "429" in error_str or "resource_exhausted" in error_str or "quota" in error_str:
-                logging.warning("⚠️ [V61.9] 캐싱 중 API 제한 감지 → 키 전환 예약 (현재 작업은 캐시 없이 진행)")
+                logging.warning(" [V61.9] 캐싱 중 API 제한 감지 → 키 전환 예약 (현재 작업은 캐시 없이 진행)")
                 with BaseAgent._rotation_lock:
                     BaseAgent._key_rotation_pending = True
             else:
-                logging.warning(f"⚠️ [V61.5] 컨텍스트 캐싱 실패 (계속 진행): {str(e)[:50]}")
+                logging.warning(f" [V61.5] 컨텍스트 캐싱 실패 (계속 진행): {str(e)[:50]}")
             return {"cache_name": None, "cached": False, "content_hash": content_hash, "error": str(e)[:100]}
 
     def _ask_with_cached_context(
@@ -1765,8 +1753,7 @@ class BaseAgent:
                             if getattr(_p, "thought", False) and isinstance(_p.text, str):
                                 _tparts.append(_p.text)
                         if _tparts:
-                            logging.debug(
-                                "[TF-28:Thinking] agent=%s cached_path thinking_len=%d",
+                            logging.debug("[TF-28:Thinking] agent=%s cached_path thinking_len=%d",
                                 self._agent_name,
                                 sum(len(t) for t in _tparts),
                             )

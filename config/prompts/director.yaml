@@ -176,7 +176,7 @@ ENSEMBLE_VARIABLE_PROMPT: |
   단, AGREE한 항목이 1건이라도 있으면 continuity_contradiction 점수를 반드시 감점하세요.
 
   ### ✅ [NC-3] 일관성 체크리스트 (매 심사 필수)
-  아래 10개 항목을 원고를 읽으며 반드시 체크하세요. Python advisory 유무와 관계없이 **매번 전체 항목을 검사**합니다.
+  아래 11개 항목을 원고를 읽으며 반드시 체크하세요. Python advisory 유무와 관계없이 **매번 전체 항목을 검사**합니다.
   각 항목에 OK(문제 없음) 또는 ISSUE(문제 발견)를 기입하세요.
   ISSUE가 1건이라도 있으면 해당 항목이 score_breakdown의 관련 점수에 반영되어야 합니다.
 
@@ -190,6 +190,7 @@ ENSEMBLE_VARIABLE_PROMPT: |
   8. **npc_identity** — 동명이인 혼동이나 NPC 역할 뒤바뀜이 없는가?
   9. **time_progression** — 에피소드 시작 시 시간 경과가 명확한가?
   10. **opening_diversity** — 직전 화와 도입부 묘사가 과도하게 유사하지 않는가?
+  11. **timeline_arc_consistency** — 이전 Arc/에피소드와의 시간 간격 표현("며칠 전", "두 달 후" 등)이 [Arc 시간 연속성 참고] 정보와 일치하는가? 해당 정보가 없으면 OK.
 
   ### 📚 [NC-3B] consistency_checklist 응답 예시
   아래는 올바른 체크리스트 응답입니다. ISSUE에는 반드시 구체적 근거를 score_breakdown에 반영하세요.
@@ -204,7 +205,8 @@ ENSEMBLE_VARIABLE_PROMPT: |
       "space_continuity": "OK",
       "npc_identity": "OK",
       "time_progression": "OK",
-      "opening_diversity": "OK"
+      "opening_diversity": "OK",
+      "timeline_arc_consistency": "OK"
   }}
   → arithmetic ISSUE 예시: 레버리지 수익률 6.73%×3배=20.2%인데 원고는 40.6%로 표기 → continuity_contradiction에 MAJOR -10 감점
 
@@ -251,7 +253,8 @@ ENSEMBLE_VARIABLE_PROMPT: |
           "space_continuity": "OK|ISSUE",
           "npc_identity": "OK|ISSUE",
           "time_progression": "OK|ISSUE",
-          "opening_diversity": "OK|ISSUE"
+          "opening_diversity": "OK|ISSUE",
+          "timeline_arc_consistency": "OK|ISSUE"
       }},
       "contradiction_check": {{
           "found_contradictions": [
@@ -460,7 +463,7 @@ ENSEMBLE_SELECTION_PROMPT: |
   단, AGREE한 항목이 1건이라도 있으면 continuity_contradiction 점수를 반드시 감점하세요.
 
   ### ✅ [NC-3] 일관성 체크리스트 (매 심사 필수)
-  아래 10개 항목을 원고를 읽으며 반드시 체크하세요. Python advisory 유무와 관계없이 **매번 전체 항목을 검사**합니다.
+  아래 11개 항목을 원고를 읽으며 반드시 체크하세요. Python advisory 유무와 관계없이 **매번 전체 항목을 검사**합니다.
   각 항목에 OK(문제 없음) 또는 ISSUE(문제 발견)를 기입하세요.
   ISSUE가 1건이라도 있으면 해당 항목이 score_breakdown의 관련 점수에 반영되어야 합니다.
 
@@ -474,6 +477,7 @@ ENSEMBLE_SELECTION_PROMPT: |
   8. **npc_identity** — 동명이인 혼동이나 NPC 역할 뒤바뀜이 없는가?
   9. **time_progression** — 에피소드 시작 시 시간 경과가 명확한가?
   10. **opening_diversity** — 직전 화와 도입부 묘사가 과도하게 유사하지 않는가?
+  11. **timeline_arc_consistency** — 이전 Arc/에피소드와의 시간 간격 표현("며칠 전", "두 달 후" 등)이 [Arc 시간 연속성 참고] 정보와 일치하는가? 해당 정보가 없으면 OK.
 
   ### 📚 [NC-3B] consistency_checklist 응답 예시
   아래는 올바른 체크리스트 응답입니다. ISSUE에는 반드시 구체적 근거를 score_breakdown에 반영하세요.
@@ -488,7 +492,8 @@ ENSEMBLE_SELECTION_PROMPT: |
       "space_continuity": "OK",
       "npc_identity": "OK",
       "time_progression": "OK",
-      "opening_diversity": "OK"
+      "opening_diversity": "OK",
+      "timeline_arc_consistency": "OK"
   }}
   → arithmetic ISSUE 예시: 레버리지 수익률 6.73%×3배=20.2%인데 원고는 40.6%로 표기 → continuity_contradiction에 MAJOR -10 감점
 
@@ -535,7 +540,8 @@ ENSEMBLE_SELECTION_PROMPT: |
           "space_continuity": "OK|ISSUE",
           "npc_identity": "OK|ISSUE",
           "time_progression": "OK|ISSUE",
-          "opening_diversity": "OK|ISSUE"
+          "opening_diversity": "OK|ISSUE",
+          "timeline_arc_consistency": "OK|ISSUE"
       }},
       "contradiction_check": {{
           "found_contradictions": [
@@ -727,7 +733,7 @@ STRATEGIC_AUDIT_PROMPT_V30: |
   단, AGREE한 항목이 1건이라도 있으면 continuity_contradiction 점수를 반드시 감점하세요.
 
   ### ✅ [NC-3] 일관성 체크리스트 (매 심사 필수)
-  아래 10개 항목을 원고를 읽으며 반드시 체크하세요. Python advisory 유무와 관계없이 **매번 전체 항목을 검사**합니다.
+  아래 11개 항목을 원고를 읽으며 반드시 체크하세요. Python advisory 유무와 관계없이 **매번 전체 항목을 검사**합니다.
   각 항목에 OK(문제 없음) 또는 ISSUE(문제 발견)를 기입하세요.
   ISSUE가 1건이라도 있으면 해당 항목이 score_breakdown의 관련 점수에 반영되어야 합니다.
 
@@ -741,6 +747,7 @@ STRATEGIC_AUDIT_PROMPT_V30: |
   8. **npc_identity** — 동명이인 혼동이나 NPC 역할 뒤바뀜이 없는가?
   9. **time_progression** — 에피소드 시작 시 시간 경과가 명확한가?
   10. **opening_diversity** — 직전 화와 도입부 묘사가 과도하게 유사하지 않는가?
+  11. **timeline_arc_consistency** — 이전 Arc/에피소드와의 시간 간격 표현("며칠 전", "두 달 후" 등)이 [Arc 시간 연속성 참고] 정보와 일치하는가? 해당 정보가 없으면 OK.
 
   ### 📚 [NC-3B] consistency_checklist 응답 예시
   아래는 올바른 체크리스트 응답입니다. ISSUE에는 반드시 구체적 근거를 score_breakdown에 반영하세요.
@@ -755,7 +762,8 @@ STRATEGIC_AUDIT_PROMPT_V30: |
       "space_continuity": "OK",
       "npc_identity": "OK",
       "time_progression": "OK",
-      "opening_diversity": "OK"
+      "opening_diversity": "OK",
+      "timeline_arc_consistency": "OK"
   }}
   → arithmetic ISSUE 예시: 레버리지 수익률 6.73%×3배=20.2%인데 원고는 40.6%로 표기 → continuity_contradiction에 MAJOR -10 감점
 
@@ -962,7 +970,7 @@ DIRECTOR_AUDIT_PROMPT_V30: |
   단, AGREE한 항목이 1건이라도 있으면 continuity_contradiction 점수를 반드시 감점하세요.
 
   ### ✅ [NC-3] 일관성 체크리스트 (매 심사 필수)
-  아래 10개 항목을 원고를 읽으며 반드시 체크하세요. Python advisory 유무와 관계없이 **매번 전체 항목을 검사**합니다.
+  아래 11개 항목을 원고를 읽으며 반드시 체크하세요. Python advisory 유무와 관계없이 **매번 전체 항목을 검사**합니다.
   각 항목에 OK(문제 없음) 또는 ISSUE(문제 발견)를 기입하세요.
   ISSUE가 1건이라도 있으면 해당 항목이 score_breakdown의 관련 점수에 반영되어야 합니다.
 
@@ -976,6 +984,7 @@ DIRECTOR_AUDIT_PROMPT_V30: |
   8. **npc_identity** — 동명이인 혼동이나 NPC 역할 뒤바뀜이 없는가?
   9. **time_progression** — 에피소드 시작 시 시간 경과가 명확한가?
   10. **opening_diversity** — 직전 화와 도입부 묘사가 과도하게 유사하지 않는가?
+  11. **timeline_arc_consistency** — 이전 Arc/에피소드와의 시간 간격 표현("며칠 전", "두 달 후" 등)이 [Arc 시간 연속성 참고] 정보와 일치하는가? 해당 정보가 없으면 OK.
 
   ### 📚 [NC-3B] consistency_checklist 응답 예시
   아래는 올바른 체크리스트 응답입니다. ISSUE에는 반드시 구체적 근거를 score_breakdown에 반영하세요.
@@ -990,7 +999,8 @@ DIRECTOR_AUDIT_PROMPT_V30: |
       "space_continuity": "OK",
       "npc_identity": "OK",
       "time_progression": "OK",
-      "opening_diversity": "OK"
+      "opening_diversity": "OK",
+      "timeline_arc_consistency": "OK"
   }}
   → arithmetic ISSUE 예시: 레버리지 수익률 6.73%×3배=20.2%인데 원고는 40.6%로 표기 → continuity_contradiction에 MAJOR -10 감점
 

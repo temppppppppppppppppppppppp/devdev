@@ -105,7 +105,7 @@ class ReferenceAnchor:
 
             # API client 존재 여부 검증
             if not hasattr(self.context, "sys") or not hasattr(self.context.sys, "api_client"):
-                logging.warning(f"⚠️ [ReferenceAnchor] API client unavailable (ep {ep_num})")
+                logging.warning(f" [ReferenceAnchor] API client unavailable (ep {ep_num})")
                 return []
 
             # 임시 에이전트 생성
@@ -123,7 +123,7 @@ class ReferenceAnchor:
             return anchors
 
         except Exception as e:
-            logging.warning(f"⚠️ [ReferenceAnchor] 앵커 추출 실패 (제 {ep_num}화): {e}")
+            logging.warning(f" [ReferenceAnchor] 앵커 추출 실패 (제 {ep_num}화): {e}")
             # 실패 시 빈 리스트 반환 (치명적 오류 아님)
             return []
 

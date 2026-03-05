@@ -291,14 +291,12 @@ class ProjectService:
             if _et is not None and hasattr(_et, "history") and _et.history:
                 max_ep = max(entry[0] for entry in _et.history)
                 if max_ep >= target_ep:
-                    logging.warning(
-                        "[RollbackInvariant] EmotionArcTracker max ep=%d >= target_ep=%d after rollback",
+                    logging.warning("[RollbackInvariant] EmotionArcTracker max ep=%d >= target_ep=%d after rollback",
                         max_ep,
                         target_ep,
                     )
                 else:
-                    logging.debug(
-                        "[RollbackInvariant] EmotionArcTracker OK (max ep=%d < target_ep=%d)",
+                    logging.debug("[RollbackInvariant] EmotionArcTracker OK (max ep=%d < target_ep=%d)",
                         max_ep,
                         target_ep,
                     )
@@ -308,14 +306,12 @@ class ProjectService:
             if _sdt is not None and hasattr(_sdt, "energy_history") and _sdt.energy_history:
                 max_ep = max(e.episode for e in _sdt.energy_history)
                 if max_ep >= target_ep:
-                    logging.warning(
-                        "[RollbackInvariant] StateDeltaTracker max ep=%d >= target_ep=%d after rollback",
+                    logging.warning("[RollbackInvariant] StateDeltaTracker max ep=%d >= target_ep=%d after rollback",
                         max_ep,
                         target_ep,
                     )
                 else:
-                    logging.debug(
-                        "[RollbackInvariant] StateDeltaTracker OK (max ep=%d < target_ep=%d)",
+                    logging.debug("[RollbackInvariant] StateDeltaTracker OK (max ep=%d < target_ep=%d)",
                         max_ep,
                         target_ep,
                     )

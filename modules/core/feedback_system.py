@@ -195,7 +195,7 @@ class FeedbackSystem:
         if v_type == "duplicate_acquisition":
             core_fix = f"'{item_name}' 획득 장면 삭제. 이미 소유 중이므로 '꺼내서 사용'으로 변경."
         elif v_type == "state_discontinuity":
-            core_fix = "직전 Arc 종료 상태(내공/부상)를 그대로 이어서 시작."
+            core_fix = "직전 Arc 종료 상태(핵심 수치/부상)를 그대로 이어서 시작."
         elif v_type == "premature_possession":
             core_fix = f"'{item_name}' 언급 삭제. 아직 획득 안 한 아이템."
         elif "protagonist" in v_type.lower():

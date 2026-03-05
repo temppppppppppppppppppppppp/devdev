@@ -125,18 +125,53 @@ class DirectorContinuityValidator:
 
             # 결과 로깅
             mismatches = result.get("mismatches", [])
+
+            # [ARC-NOISE-3] 약칭/부분 포함 관계인 경우 MINOR로 다운그레이드 또는 필터
+            def _is_abbreviation(registered: str, variant: str) -> bool:
+                """variant가 registered의 약칭(부분 포함)인지 확인."""
+                r, v = registered.strip(), variant.strip()
+                if not r or not v:
+                    return False
+                # 한쪽이 다른 쪽을 포함하고 길이 차이가 15% 이상이면 약칭으로 간주
+                if (v in r or r in v) and abs(len(r) - len(v)) / max(len(r), len(v)) >= 0.15:
+                    return True
+                # 공백 토큰 기준 부분 포함(중간 수식어 생략)도 약칭으로 간주
+                r_tokens = [tok for tok in r.split() if tok]
+                v_tokens = [tok for tok in v.split() if tok]
+                if r_tokens and v_tokens:
+                    overlap = set(r_tokens) & set(v_tokens)
+                    shorter = min(len(r_tokens), len(v_tokens))
+                    if shorter > 0 and len(overlap) / shorter >= 0.7:
+                        return True
+                return False
+
+            filtered_mismatches = []
+            for m in mismatches:
+                reg = m.get("registered_name", "")
+                var = m.get("found_variant", "")
+                if _is_abbreviation(reg, var):
+                    # 약칭은 WARNING/REJECT 트리거에서 제외
+                    logging.debug(" [V61-ABBREV] 약칭 오탐 필터: %s → %s", reg, var)
+                    continue
+                filtered_mismatches.append(m)
+
+            mismatches = filtered_mismatches
+            result["mismatches"] = mismatches
+            if not mismatches and result.get("decision") in ("WARNING", "REJECT"):
+                result["decision"] = "PASS"
+                result["fix_instructions"] = ""
+
             if mismatches:
                 decision = result.get("decision", "WARNING")
-                logging.warning(f"⚠️ [V61] Entity 일관성 검증: {decision} ({len(mismatches)}개 불일치)")
+                logging.warning(f" [V61] Entity 일관성 검증: {decision} ({len(mismatches)}개 불일치)")
                 for m in mismatches[:3]:
-                    logging.info(
-                        f"- [{m.get('category', '?')}] {m.get('registered_name', '?')} → {m.get('found_variant', '?')}"
+                    logging.info(f"- [{m.get('category', '?')}] {m.get('registered_name', '?')} → {m.get('found_variant', '?')}"
                     )
 
             return result
 
         except Exception as e:
-            logging.warning(f"⚠️ [C-3] Entity 일관성 검증 실패 (UNKNOWN 반환): {e}")
+            logging.warning(f" [C-3] Entity 일관성 검증 실패 (UNKNOWN 반환): {e}")
             return {"decision": "UNKNOWN", "mismatches": [], "fix_instructions": "", "error": str(e)}
 
     def _format_entity_registry_for_director(self, entity_registry: dict) -> str:
@@ -574,7 +609,7 @@ class DirectorContinuityValidator:
 
         except Exception as e:
             # [V63.4 P0] 캐시 실패 시 폴백 트리거 보장
-            logging.warning(f"⚠️ [V60.88] 캐시 검사 오류 → 폴백 경로 전환: {e}")
+            logging.warning(f" [V60.88] 캐시 검사 오류 → 폴백 경로 전환: {e}")
             return {
                 "decision": "SKIP",
                 "conflicts": [],
@@ -620,11 +655,11 @@ class DirectorContinuityValidator:
                 )
                 self._cached_blueprint_ep = ep_num
                 self._cached_recent_blueprints = recent_blueprints
-                logging.info(f"📦 [V61.5] Blueprint 캐시 갱신 (ep={ep_num})")
+                logging.info(f" [V61.5] Blueprint 캐시 갱신 (ep={ep_num})")
             else:
                 recent_blueprints = getattr(self, "_cached_recent_blueprints", [])
                 cache_result = {"cached": True}
-                logging.info(f"♻️ [V61.5] Blueprint 캐시 재사용 (ep={ep_num})")
+                logging.info(f" [V61.5] Blueprint 캐시 재사용 (ep={ep_num})")
 
             # 직전 Blueprint 정보 추출
             prev_bp = recent_blueprints[-1] if recent_blueprints else {}
@@ -681,7 +716,7 @@ class DirectorContinuityValidator:
             }
 
         except Exception as e:
-            logging.warning(f"⚠️ [C-3] Blueprint 연속성 검증 오류 (fail-closed REJECT): {str(e)[:50]}")
+            logging.warning(f" [C-3] Blueprint 연속성 검증 오류 (fail-closed REJECT): {str(e)[:50]}")
             return {
                 "decision": "REJECT",
                 "issues": [],
@@ -735,11 +770,11 @@ class DirectorContinuityValidator:
                 self._cached_manuscript_ep = ep_num
                 self._cached_context_text_manuscript = context_text
                 self._manuscript_cache_name = cache_result.get("cache_name")
-                logging.info(f"📦 [V61.5] Manuscript 캐시 갱신 (ep={ep_num})")
+                logging.info(f" [V61.5] Manuscript 캐시 갱신 (ep={ep_num})")
             else:
                 context_text = getattr(self, "_cached_context_text_manuscript", "")
                 cache_result = {"cached": True, "cache_name": getattr(self, "_manuscript_cache_name", None)}
-                logging.info(f"♻️ [V61.5] Manuscript 캐시 재사용 (ep={ep_num})")
+                logging.info(f" [V61.5] Manuscript 캐시 재사용 (ep={ep_num})")
 
             # 캐시가 있으면 캐시 기반 질의, 없으면 일반 질의
             # [V67.1] story_context 추가
@@ -801,7 +836,7 @@ class DirectorContinuityValidator:
                 }
 
         except Exception as e:
-            logging.warning(f"⚠️ [C-3] Manuscript 연속성 검증 오류 (fail-closed CONFLICT): {str(e)[:50]}")
+            logging.warning(f" [C-3] Manuscript 연속성 검증 오류 (fail-closed CONFLICT): {str(e)[:50]}")
             return {
                 "decision": "CONFLICT",
                 "conflicts": [],

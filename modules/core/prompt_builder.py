@@ -729,7 +729,7 @@ class PromptBuilder:
                 if pacing_prompt:
                     prompts.append(pacing_prompt)
             except Exception as e:
-                logging.warning(f"⚠️ [V64.P4-fix] pacing_analyzer 프롬프트 생성 실패: {e}")
+                logging.warning(f" [V64.P4-fix] pacing_analyzer 프롬프트 생성 실패: {e}")
 
         # V51.5: 캐릭터 음성 가이드
         character_voice = getattr(app, "character_voice", None)
@@ -739,7 +739,7 @@ class PromptBuilder:
                 if voice_prompt:
                     prompts.append(voice_prompt)
             except Exception as e:
-                logging.warning(f"⚠️ [V64.P4-fix] character_voice 프롬프트 생성 실패: {e}")
+                logging.warning(f" [V64.P4-fix] character_voice 프롬프트 생성 실패: {e}")
 
         # V51.6: 복선 관리 가이드
         foreshadow_tracker = getattr(app, "foreshadow_tracker", None)
@@ -749,7 +749,7 @@ class PromptBuilder:
                 if foreshadow_prompt:
                     prompts.append(foreshadow_prompt)
             except Exception as e:
-                logging.warning(f"⚠️ [V64.P4-fix] foreshadow_tracker 프롬프트 생성 실패: {e}")
+                logging.warning(f" [V64.P4-fix] foreshadow_tracker 프롬프트 생성 실패: {e}")
 
         # V52.3: 씬별 전문가 가이드
         expert_mixture = getattr(app, "expert_mixture", None)
@@ -759,7 +759,7 @@ class PromptBuilder:
                 if expert_prompt:
                     prompts.append(expert_prompt)
             except Exception as e:
-                logging.warning(f"⚠️ [V64.P4-fix] expert_mixture 프롬프트 생성 실패: {e}")
+                logging.warning(f" [V64.P4-fix] expert_mixture 프롬프트 생성 실패: {e}")
 
         # [V60.5] 자가 진단 체크리스트
         try:
@@ -767,7 +767,7 @@ class PromptBuilder:
             if self_diagnosis:
                 prompts.append(self_diagnosis)
         except Exception as e:
-            logging.warning(f"⚠️ [V64.P4-fix] self_diagnosis 프롬프트 생성 실패: {e}")
+            logging.warning(f" [V64.P4-fix] self_diagnosis 프롬프트 생성 실패: {e}")
 
         if prompts:
             return "\n\n".join(prompts)

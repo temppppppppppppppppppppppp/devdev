@@ -162,7 +162,7 @@ class ArcCorrector(BaseAgent):
 
         for issue in correctable[: self.max_corrections]:
             try:
-                logging.info(f"🔧 [Corrector] 수정 시도: {(issue.get('message', '') or '')[:50]}...")
+                logging.info(f" [Corrector] 수정 시도: {(issue.get('message', '') or '')[:50]}...")
 
                 corrected_arc, correction_result = self._correct_single_issue(
                     corrected_arc, issue, prev_arcs, original_arc
@@ -190,13 +190,13 @@ class ArcCorrector(BaseAgent):
 
         # 4. 변경 범위 검증 (20% 초과 시 거부)
         if not self._validate_change_ratio(original_arc, corrected_arc):
-            logging.info(f"⚠️ [Corrector] 변경 범위 초과 (>{self.max_change_ratio * 100}%) - 원본 복원")
+            logging.info(f" [Corrector] 변경 범위 초과 (>{self.max_change_ratio * 100}%) - 원본 복원")
             log["reason"] = "변경 범위 초과"
             return None, log
 
         # 5. 구조 검증 (Stage 3 연결성)
         if not self._validate_structure_preserved(original_arc, corrected_arc):
-            logging.info("⚠️ [Corrector] 구조 손상 감지 - 원본 복원")
+            logging.info(" [Corrector] 구조 손상 감지 - 원본 복원")
             log["reason"] = "구조 손상"
             return None, log
 

@@ -420,8 +420,7 @@ class CharacterVoiceTracker:
     def save_to_db(self, db) -> None:
         """[DB-Eff-P1] character_voice 테이블에 저장."""
         if not db or not hasattr(db, "conn") or db.conn is None:
-            logging.warning(
-                "[CharacterVoice] save_to_db 스킵: db=%r (conn=%r) — 프로필 %d건 미저장",
+            logging.warning("[CharacterVoice] save_to_db 스킵: db=%r (conn=%r) — 프로필 %d건 미저장",
                 db, getattr(db, "conn", None), len(self.profiles),
             )
             return

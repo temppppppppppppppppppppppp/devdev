@@ -53,11 +53,11 @@ class ReflexionManager:
                 )
 
             self.loaded = True
-            logging.info(f"📚 [Reflexion] 과거 실패 패턴 {len(self.memory)}개 로드됨")
+            logging.info(f" [Reflexion] 과거 실패 패턴 {len(self.memory)}개 로드됨")
 
         except Exception as e:
             # 테이블이 없거나 오류 시 빈 메모리
-            logging.warning(f"⚠️ [Reflexion] 메모리 로드 실패 (첫 실행일 수 있음): {e}")
+            logging.warning(f" [Reflexion] 메모리 로드 실패 (첫 실행일 수 있음): {e}")
             self.memory = []
             self.loaded = True
 
@@ -101,7 +101,7 @@ class ReflexionManager:
             existing["frequency"] = new_frequency
             existing["last_seen"] = timestamp
 
-            logging.info(f"📝 [Reflexion] 패턴 '{pattern_key}' 빈도 증가: {new_frequency}회")
+            logging.info(f" [Reflexion] 패턴 '{pattern_key}' 빈도 증가: {new_frequency}회")
 
         else:
             # 새 패턴 추가
@@ -124,7 +124,7 @@ class ReflexionManager:
             }
             self.memory.append(new_pattern)
 
-            logging.info(f"✨ [Reflexion] 새 패턴 기록: '{pattern_key}'")
+            logging.info(f" [Reflexion] 새 패턴 기록: '{pattern_key}'")
 
     def _identify_pattern(self, description: str) -> str:
         """

@@ -148,7 +148,7 @@ class Stage01Helpers:
                 app.current_project.save_v20_anchor("bible", app.current_project.master_bible)
                 app.ui.log(f"   💾 [V60.87] 주인공 설정이 Bible에 저장됨: {protagonist_config}")
             except Exception as pc_err:
-                logging.warning(f"⚠️ [V60.87] 주인공 설정 저장 실패 (비차단): {pc_err}")
+                logging.warning(f" [V60.87] 주인공 설정 저장 실패 (비차단): {pc_err}")
 
             draft_path = app.current_project.paths.drafts
             existing_drafts = list(draft_path.glob("*.txt"))
@@ -162,7 +162,7 @@ class Stage01Helpers:
                     else:
                         app.ui.log("⚠️ [Warning] 일부 원고 동기화 실패. 로그를 확인하세요.")
                 except Exception as sync_err:
-                    logging.warning(f"🚨 [Error] 원고 동기화 중 오류 발생: {sync_err}")
+                    logging.warning(f" [Error] 원고 동기화 중 오류 발생: {sync_err}")
                     app._audit_event(
                         "sync_error",
                         "sync_existing_manuscripts failed",
@@ -209,7 +209,7 @@ class Stage01Helpers:
                             app.ui.log(f"   📂 기존 Treatment 로드: {tf.name} ({len(existing_treatment)} 블록)")
                             break
                 except Exception as e:
-                    logging.warning(f"⚠️ 파일 로드 실패: {tf.name} - {e}")
+                    logging.warning(f" 파일 로드 실패: {tf.name} - {e}")
 
         if not existing_treatment:
             app.ui.log("   ❌ 기존 Treatment를 찾을 수 없습니다.")
@@ -342,7 +342,7 @@ class Stage01Helpers:
                     app.current_project.save_v20_anchor("style_guide", sg_data)
                     app.ui.log("   ✅ StyleGuide DB 저장 완료")
             except Exception as _sg_err:
-                logging.warning(f"⚠️ StyleGuide DB 저장 실패: {_sg_err}")
+                logging.warning(f" StyleGuide DB 저장 실패: {_sg_err}")
 
         # 원고 벡터화
         try:
@@ -354,7 +354,7 @@ class Stage01Helpers:
                 if vectorize_result > 0:
                     app.ui.log(f"✅ [Phase 4D] 벡터화 완료: {vectorize_result}개 에피소드")
         except Exception as ve:
-            logging.warning(f"⚠️ [Phase 4D] 벡터화 스킵: {str(ve)[:50]}")
+            logging.warning(f" [Phase 4D] 벡터화 스킵: {str(ve)[:50]}")
 
         # SQLite DB 저장
         try:
@@ -380,7 +380,7 @@ class Stage01Helpers:
                     app.ui.log(f"   - Stage 3 (Blueprint): ep {summary.get('next_blueprint', 'N/A')}부터")
                     app.ui.log(f"   - Stage 4 (Manuscript): ep {summary.get('next_episode', 'N/A')}부터")
         except Exception as db_err:
-            logging.warning(f"⚠️ [V61] DB 저장 스킵: {str(db_err)[:50]}")
+            logging.warning(f" [V61] DB 저장 스킵: {str(db_err)[:50]}")
 
         return bible, None
 
@@ -441,7 +441,7 @@ class Stage01Helpers:
                 app.current_project.save_v20_anchor("style_guide", sg_data)
                 app.ui.log("✅ [V70] StyleGuide DB 저장 완료 (anchor: style_guide)")
             except Exception as sg_err:
-                logging.warning(f"⚠️ StyleGuide DB 저장 실패: {sg_err}")
+                logging.warning(f" StyleGuide DB 저장 실패: {sg_err}")
         try:
             input("\n[Enter] 메뉴로 돌아가기")
         except (EOFError, KeyboardInterrupt, ValueError):

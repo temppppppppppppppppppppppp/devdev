@@ -67,7 +67,7 @@ class InformationDiffusion:
                             }
                         )
         except Exception as e:
-            logging.warning(f"⚠️ [InfoDiffusion] 주요 사건 로드 실패: {e}")
+            logging.warning(f" [InfoDiffusion] 주요 사건 로드 실패: {e}")
 
         self.events = events
         return events

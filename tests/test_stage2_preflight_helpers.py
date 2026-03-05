@@ -410,7 +410,7 @@ class TestPreflightFinalize:
         director_mock.audit_strategic_plan.assert_called_once()
 
     def test_next_on_director_reject(self, s2_orch, valid_refined_arc):
-        """Director REJECT → action=next"""
+        """Director REJECT → action=retry"""
         director_mock = MagicMock()
         director_mock.audit_strategic_plan.return_value = {
             "decision": "REJECT",
@@ -430,7 +430,7 @@ class TestPreflightFinalize:
         with patch("modules.core.spinners.V50_MODULES_AVAILABLE", False):
             result = asyncio.run(s2_orch._preflight_finalize(**kwargs))
 
-        assert result["action"] == "next"
+        assert result["action"] == "retry"
         assert "current_feedback" in result
         assert "director_feedback_for_fourphase" in result
         # director_feedback_for_fourphase should contain reject reason

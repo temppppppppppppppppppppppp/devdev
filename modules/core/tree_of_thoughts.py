@@ -509,7 +509,7 @@ JSON 형식으로:
         if not self.client:
             return None
 
-        logging.info(f"🌳 [ToT Arc] {num_branches}개 분기 탐색 시작 (Arc {arc_no}, 주인공: {protagonist_name})")
+        logging.info(f" [ToT Arc] {num_branches}개 분기 탐색 시작 (Arc {arc_no}, 주인공: {protagonist_name})")
 
         # Arc 전용 접근 방식 (V55.2: 4분기)
         arc_approaches = [
@@ -565,23 +565,22 @@ JSON 형식으로:
                             "weaknesses": evaluation["weaknesses"],
                         }
                     )
-                    logging.info(
-                        f"✅ [ToT Arc] 분기 {i + 1}/{num_branches} '{approach['name']}' 완료 (점수: {evaluation['total']})"
+                    logging.info(f"✅ [ToT Arc] 분기 {i + 1}/{num_branches} '{approach['name']}' 완료 (점수: {evaluation['total']})"
                     )
 
             except Exception as e:
-                logging.warning(f"⚠️ [ToT Arc] 분기 {i + 1} 실패: {e}")
+                logging.warning(f" [ToT Arc] 분기 {i + 1} 실패: {e}")
                 continue
 
         if not candidates:
-            logging.warning("🚨 [ToT Arc] 모든 분기 실패")
+            logging.warning(" [ToT Arc] 모든 분기 실패")
             return None
 
         # 최고 점수 선택
         candidates.sort(key=lambda x: x["score"], reverse=True)
         best = candidates[0]
 
-        logging.info(f"🏆 [ToT Arc] 최선 선택: '{best['approach']}' (점수: {best['score']})")
+        logging.info(f" [ToT Arc] 최선 선택: '{best['approach']}' (점수: {best['score']})")
         logging.info(f"강점: {', '.join(best['strengths'][:2])}")
         if best["weaknesses"]:
             logging.info(f"약점: {', '.join(best['weaknesses'][:2])}")
@@ -667,7 +666,7 @@ Volume 전략: {self._escape(vol_strategy[:2000] if vol_strategy else "(없음)"
             return json.loads(text)
 
         except Exception as e:
-            logging.warning(f"⚠️ [ToT Arc] '{approach['name']}' 생성 오류: {e}")
+            logging.warning(f" [ToT Arc] '{approach['name']}' 생성 오류: {e}")
             return None
 
     def _evaluate_arc(self, arc: dict[str, Any], focus: str) -> dict[str, Any]:

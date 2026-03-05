@@ -176,7 +176,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
                 if bible:
                     genre = bible.get("_genre", GenreTypes.WUXIA)
         except Exception as e:
-            logging.warning(f"⚠️ [V61.3] genre 사전 로드 실패: {str(e)[:50]}")
+            logging.warning(f" [V61.3] genre 사전 로드 실패: {str(e)[:50]}")
 
         # [TF-41] P1-2: genre를 _format_constraints에 전달 (내공 필터링용)
         constraints_str = self._format_constraints(constraint_block, genre=genre)
@@ -188,7 +188,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
         hud_context = self._build_hud_context(state_tracker, ep_num)
 
         # 병렬 생성
-        logging.warning(f"🎲 [BPEnsemble] 3개 후보 병렬 생성 중... (주인공: {protagonist_name})")
+        logging.warning(f" [BPEnsemble] 3개 후보 병렬 생성 중... (주인공: {protagonist_name})")
         _active_strategies = self.strategies
         if single_strategy:
             _filtered = [s for s in self.strategies if s.get("name") == single_strategy]
@@ -248,24 +248,23 @@ class BlueprintEnsembleGenerator(BaseAgent):
                             if result and isinstance(result, dict):
                                 result["_strategy"] = strategy_name
                                 candidates.append(result)
-                                logging.info(f"✓ {strategy_name} 생성 완료")
+                                logging.info(f" {strategy_name} 생성 완료")
                                 print(
                                     f"      ✓ [Blueprint] '{strategy_name}' 생성 완료 ({time.monotonic() - _tp_t0:.0f}초)"
                                 )
                         except FutureTimeoutError:
-                            logging.warning(f"⏰ [V61.3] {strategy_name} 타임아웃 ({self.SINGLE_CANDIDATE_TIMEOUT}초)")
+                            logging.warning(f" [V61.3] {strategy_name} 타임아웃 ({self.SINGLE_CANDIDATE_TIMEOUT}초)")
                             print(f"      ✗ [Blueprint] '{strategy_name}' 타임아웃")
                         except Exception as e:
-                            logging.warning(f"✗ {strategy_name} 실패: {str(e)[:50]}")
+                            logging.warning(f" {strategy_name} 실패: {str(e)[:50]}")
                             print(f"      ✗ [Blueprint] '{strategy_name}' 실패")
                 except FutureTimeoutError:
                     # 전체 앙상블 타임아웃 - 완료된 후보만 사용
-                    logging.warning(
-                        f"⏰ [V61.3] 블루프린트 앙상블 타임아웃 ({self.ENSEMBLE_TIMEOUT}초) - 완료된 {len(candidates)}개 후보 사용"
+                    logging.warning(f" [V61.3] 블루프린트 앙상블 타임아웃 ({self.ENSEMBLE_TIMEOUT}초) - 완료된 {len(candidates)}개 후보 사용"
                     )
                 except Exception as e:
                     # [V61.3] as_completed 자체 예외 처리
-                    logging.warning(f"⚠️ [V61.3] 앙상블 루프 예외: {str(e)[:80]}")
+                    logging.warning(f" [V61.3] 앙상블 루프 예외: {str(e)[:80]}")
                 finally:
                     # [Sweep34] 미완료 future 정리로 shutdown 대기 최소화
                     for f in futures:
@@ -275,7 +274,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
             # stderr로 출력 (Rich 스피너가 stdout 가림)
             import traceback
 
-            logging.error(f"🚨 [V61.3] 병렬 처리 크래시 방지: {str(e)[:100]}")
+            logging.error(f" [V61.3] 병렬 처리 크래시 방지: {str(e)[:100]}")
             logging.error(traceback.format_exc())
 
         # [Phase 3-Obs] 병렬 구간 소요 시간 기록
@@ -306,10 +305,10 @@ class BlueprintEnsembleGenerator(BaseAgent):
                 candidate["_scene_count"] = scene_count
                 candidate["_length"] = integrated_len
                 qualified_candidates.append(candidate)
-                logging.info(f"✓ {strategy_name}: 통과 (씬 {scene_count}개, {integrated_len}자)")
+                logging.info(f" {strategy_name}: 통과 (씬 {scene_count}개, {integrated_len}자)")
             else:
                 disqualified.append((strategy_name, scene_count, integrated_len))
-                logging.info(f"✗ {strategy_name}: 탈락 (씬 {scene_count}개, {integrated_len}자)")
+                logging.info(f" {strategy_name}: 탈락 (씬 {scene_count}개, {integrated_len}자)")
 
         if not qualified_candidates:
             logging.warning("❌ [BPEnsemble] 모든 후보 최소 기준 미달")
@@ -317,7 +316,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
 
         # [V60.85] Director가 선택할 수 있도록 후보 목록 반환
         # Python은 선택하지 않음 - Director에게 전체 전달
-        logging.info(f"📋 [BPEnsemble] {len(qualified_candidates)}개 후보 → Director 선택 대기")
+        logging.info(f" [BPEnsemble] {len(qualified_candidates)}개 후보 → Director 선택 대기")
         print(f"      📋 [Blueprint] {len(qualified_candidates)}개 후보 통과 → Director 선택 대기")
 
         # 메타데이터 저장 (Director 비교용)
@@ -472,7 +471,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
             # [V61.3] stderr로 출력 (Rich 스피너가 stdout 가림)
             import traceback
 
-            logging.error(f"🚨 [V61.3] BPEnsemble _generate_single 크래시: {str(e)[:80]}")
+            logging.error(f" [V61.3] BPEnsemble _generate_single 크래시: {str(e)[:80]}")
             logging.error(traceback.format_exc())
             return None
 

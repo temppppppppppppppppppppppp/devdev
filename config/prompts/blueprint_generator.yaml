@@ -17,7 +17,7 @@ BLUEPRINT_PATCH_MODE_PROMPT: |
   ## 원본 Blueprint (이 Blueprint를 기반으로 수정하세요)
   {original_blueprint}
 
-  전면 재설계하지 마세요. 지적된 부분만 고치세요.
+  # 전면 재설계하지 마세요. 지적된 부분만 고치세요.
 
 BLUEPRINT_PREFLIGHT_VALIDATE_PROMPT: |
   [TF-49b Blueprint 사전검증: 수치/팩트 정합성 체크]
@@ -40,6 +40,14 @@ BLUEPRINT_PREFLIGHT_VALIDATE_PROMPT: |
   4. **장소 정합성**: 이전 화 위치와 현재 Blueprint 시작 장소가 연결되는지
   5. **아이템/장비 정합성**: 보유하지 않은 아이템을 사용하거나, 소진된 아이템이 다시 등장하지 않는지
 
+  6. **[NS-1] Blueprint numeric self-verification**:
+     - Extract all numeric expressions from scene descriptions and summary text.
+     - Recalculate each expression and compare stated vs actual value.
+     - If no numeric expressions exist, treat this check as SKIP (no issue).
+     - If relative error is greater than 5%, append issue with `severity="high"` and set `passed=false`.
+     - Supported patterns: `A x B = C`, `A x B% = C`, `A / B = C`, `A + B = C`, `A - B = C`.
+     - Use this issue format: `Arithmetic mismatch: [expr] stated=[X] actual=[Y]`.
+
   ## 현재 상태 (WorldState)
   {world_state_summary}
 
@@ -59,4 +67,4 @@ BLUEPRINT_PREFLIGHT_VALIDATE_PROMPT: |
 # NOTE: BLUEPRINT_PATCH_WITH_ARC_PROMPT 삭제됨 (TF-49b v2: advisory 전달 방식으로 전환)
 # Blueprint 자체를 수정하지 않고, CW/Director에게 advisory로 전달.
 
-  전면 재설계하지 마세요. 지적된 부분만 고치세요.
+  # 전면 재설계하지 마세요. 지적된 부분만 고치세요.

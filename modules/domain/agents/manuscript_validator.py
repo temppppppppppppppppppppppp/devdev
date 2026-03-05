@@ -631,12 +631,12 @@ class ManuscriptValidator:
 
                 filtered_count = len(warnings) - len(verified)
                 if filtered_count > 0:
-                    logging.info(f"🔍 [V63.1.1] 경고 오탐 필터링: {filtered_count}/{len(warnings)}건 제거 (LLM 검증)")
+                    logging.info(f" [V63.1.1] 경고 오탐 필터링: {filtered_count}/{len(warnings)}건 제거 (LLM 검증)")
 
                 return verified
 
         except Exception as e:
-            logging.warning(f"⚠️ [V63.1.1] LLM 경고 검증 실패, Python 결과 그대로 사용: {str(e)[:60]}")
+            logging.warning(f" [V63.1.1] LLM 경고 검증 실패, Python 결과 그대로 사용: {str(e)[:60]}")
 
         return warnings  # 실패 시 원본 그대로 반환
 

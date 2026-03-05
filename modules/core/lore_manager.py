@@ -55,8 +55,7 @@ class LoreManager:
         if cache_age > self.CACHE_SOFT_TTL_SECONDS:
             # 첫 경고 후 60초마다 로깅 (스팸 방지)
             if not hasattr(self, "_last_cache_warning") or time.time() - self._last_cache_warning > 60:
-                logging.info(
-                    f"⏰ [LoreManager] 캐시 노화 중 ({int(cache_age)}초 경과, {int(self.CACHE_HARD_TTL_SECONDS - cache_age)}초 후 갱신)"
+                logging.info(f" [LoreManager] 캐시 노화 중 ({int(cache_age)}초 경과, {int(self.CACHE_HARD_TTL_SECONDS - cache_age)}초 후 갱신)"
                 )
                 self._last_cache_warning = time.time()
 
@@ -326,7 +325,7 @@ class LoreManager:
             self.db.update_lore_item("item", item_name.strip(), description)
             result["added"].append(item_name)
 
-            logging.info(f"📦 [Item Sync] 새 아이템 등록: '{item_name}' (Ep.{ep_num})")
+            logging.info(f" [Item Sync] 새 아이템 등록: '{item_name}' (Ep.{ep_num})")
 
         # 캐시 무효화
         if result["added"]:

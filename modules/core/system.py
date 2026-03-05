@@ -31,7 +31,7 @@ class StudioSystem:
             genre: 장르 타입 문자열 (예: "wuxia", "hunter", "investment")
                    wuxia 전용 서비스(MartialManager 등)는 wuxia 장르에서만 초기화됨
         """
-        logging.info(f"🚀 [Phase 0] 프로젝트 '{project_name}' V20 지능 기동 중... (장르: {genre})")
+        logging.info(f" [Phase 0] 프로젝트 '{project_name}' V20 지능 기동 중... (장르: {genre})")
 
         # 1. 데이터 앵커링 엔진 기동 (ProjectContext) — 모든 장르 공통
         self.project = ProjectContext(project_name)
@@ -50,13 +50,13 @@ class StudioSystem:
             self.world = JianghuLogic(self.project)
             self.techniques = TechniqueWeaver()
             self.karma = KarmaService(self.project)
-            logging.info("   ⚔️  [System] wuxia 전용 서비스 초기화 완료")
+            logging.info(" [System] wuxia 전용 서비스 초기화 완료")
         else:
             self.martial = None
             self.world = None
             self.techniques = None
             self.karma = None
-            logging.info(f"   ℹ️  [System] 비무협 장르({genre}): wuxia 전용 서비스 스킵")
+            logging.info(f" ℹ [System] 비무협 장르({genre}): wuxia 전용 서비스 스킵")
 
         # 4. guard는 장르 선택 후 main_a.py에서 동적으로 초기화됨
         self.guard = None

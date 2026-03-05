@@ -17,6 +17,7 @@
 
 import json
 import logging
+import re
 
 from modules.core.constants import ContextLimits, Stage2Limits
 
@@ -50,6 +51,116 @@ _NEI_GENRE_DETECT_MAP: dict[str, str] = {
     "composer": "composer",
     "작곡": "composer",
 }
+
+
+def _check_arc_vs_block_targets(
+    arc: dict,
+    curr_block: dict | None,
+    arc_no: int,
+    threshold: float = 0.30,
+) -> str:
+    """
+    [NS-3-B] arc_end_state 수치 vs curr_block.genre_ext 목표 비교.
+    Python-only advisory. 괴리율이 임계치를 넘으면 경고 문자열을 반환.
+    """
+    if not isinstance(curr_block, dict) or not isinstance(arc, dict):
+        return ""
+
+    genre_ext = curr_block.get("genre_ext")
+    if not isinstance(genre_ext, dict):
+        return ""
+
+    state_constraints = arc.get("state_constraints", {})
+    if not isinstance(state_constraints, dict):
+        return ""
+    arc_end = state_constraints.get("arc_end_state", {})
+    if not isinstance(arc_end, dict):
+        return ""
+
+    def parse_num(raw) -> float | None:
+        if isinstance(raw, (int, float)):
+            return float(raw)
+        if not isinstance(raw, str):
+            return None
+        s = re.sub(r"\([^)]*\)", "", raw).strip()
+        if not s:
+            return None
+        sign = 1.0
+        if s[0] in "+-":
+            if s[0] == "-":
+                sign = -1.0
+            s = s[1:].strip()
+        s = s.replace(",", "")
+
+        total = 0.0
+        matched = False
+        for unit, mult in (("조", 1e12), ("억", 1e8), ("만", 1e4)):
+            m = re.search(rf"([\d]+(?:\.[\d]+)?)\s*{unit}", s)
+            if m:
+                matched = True
+                try:
+                    total += float(m.group(1)) * mult
+                except ValueError:
+                    return None
+                s = re.sub(rf"[\d]+(?:\.[\d]+)?\s*{unit}", "", s)
+        if matched:
+            tail = re.search(r"([\d]+(?:\.[\d]+)?)", s)
+            if tail:
+                try:
+                    total += float(tail.group(1))
+                except ValueError:
+                    return None
+            return sign * total
+
+        plain = re.search(r"([\d]+(?:\.[\d]+)?)", s)
+        if not plain:
+            return None
+        try:
+            return sign * float(plain.group(1))
+        except ValueError:
+            return None
+
+    target = parse_num(genre_ext.get("capital_after", ""))
+    if not target:
+        return ""
+
+    actual = None
+    actual_key = None
+    for key in ("total_assets", "assets", "capital", "total_capital"):
+        value = parse_num(arc_end.get(key, ""))
+        if value is not None:
+            actual = value
+            actual_key = key
+            break
+
+    if actual is None:
+        return ""
+
+    divergence = abs(target - actual) / abs(target) if target else 0.0
+    if divergence > threshold:
+        return (
+            f"[NS-3-B] Arc {arc_no} arc_end_state.{actual_key}={actual / 1e8:.1f}억 vs "
+            f"treatment target capital_after={genre_ext.get('capital_after')} "
+            f"(divergence {divergence * 100:.0f}%). "
+            "Please realign tactical_doc numbers with block target."
+        )
+    return ""
+
+
+def _ns4_extract_time_markers(arc_data: dict) -> list:
+    """[NS-4-S2] Arc tactical_doc/beat_sequence에서 날짜·상대시간 마커 추출 (regex, LLM 0회)."""
+    import re as _re
+    _text = (arc_data.get("tactical_doc") or "") + "\n" + (arc_data.get("beat_sequence") or "")
+    _patterns = [
+        r"\d{4}년\s*\d{1,2}월(?:\s*\d{1,2}일)?",
+        r"\d{1,2}월\s*\d{1,2}일",
+        r"\d{1,2}월(?:\s*(?:말|초|중순|하순|상순))?",
+        r"\d+(?:일|주|달|개월|년)\s*(?:후|전)",
+    ]
+    _found = []
+    for _p in _patterns:
+        _found.extend(_re.findall(_p, _text))
+    return list(dict.fromkeys(_found))[:5]
 
 
 class FourPhaseArcGenerator(BaseAgent):
@@ -210,7 +321,7 @@ class FourPhaseArcGenerator(BaseAgent):
 
         # [V61.1] LLM 기반 가변 페이싱 - ep_count 동적 결정
         ep_count, pacing_reason = self._determine_ep_count(curr_block, arc_no, prev_arcs)
-        logging.info(f"📊 [V61.1] 가변 페이싱: {ep_count}화 결정 - {pacing_reason}")
+        logging.info(f" [V61.1] 가변 페이싱: {ep_count}화 결정 - {pacing_reason}")
 
         pipeline_result = {
             "arc_no": arc_no,
@@ -245,7 +356,7 @@ class FourPhaseArcGenerator(BaseAgent):
         if director_feedback:
             _base_director_feedback = f"[🎬 Director 피드백 - 반드시 반영할 것]\n{director_feedback}\n"
             feedback = _base_director_feedback
-            logging.info(f"📢 [V60.77] Director 피드백 주입됨 ({len(director_feedback)}자)")
+            logging.info(f" [V60.77] Director 피드백 주입됨 ({len(director_feedback)}자)")
 
         # [Patch Mode] 내부 retry용 이전 REJECT 추적
         _prev_rejected_arc = None
@@ -260,11 +371,11 @@ class FourPhaseArcGenerator(BaseAgent):
             # PHASE 1: CONSTRAINT - 제약 수집
             # ═══════════════════════════════════════════════════════════════
             if cached_constraint_block and retry > 0:
-                logging.info("📋 [Phase 1] 제약 캐시 사용")
+                logging.info(" [Phase 1] 제약 캐시 사용")
                 full_constraint_block = cached_constraint_block
                 preflight_result = cached_preflight
             else:
-                logging.info(f"📋 [Phase 1] 제약 수집 중... (이전 Arc {len(prev_arcs)}개)")
+                logging.info(f" [Phase 1] 제약 수집 중... (이전 Arc {len(prev_arcs)}개)")
 
                 preflight_result = self.preflight.analyze(prev_arcs)
                 preflight_injection = self.preflight.generate_analyst_injection(preflight_result, genre=self._genre)
@@ -296,7 +407,7 @@ class FourPhaseArcGenerator(BaseAgent):
             # ═══════════════════════════════════════════════════════════════
             # PHASE 2: GENERATE - Ensemble 생성
             # ═══════════════════════════════════════════════════════════════
-            logging.info("🎲 [Phase 2] Ensemble 생성 중 (3개 후보)...")
+            logging.info(" [Phase 2] Ensemble 생성 중 (3개 후보)...")
 
             prev_arc_context = self._generate_prev_context(prev_arcs, preflight_result)
             # [V63.3] 벡터 메모리 컨텍스트 주입
@@ -352,7 +463,7 @@ class FourPhaseArcGenerator(BaseAgent):
                 if _spare_candidates:
                     best_arc = _spare_candidates.pop(0)
                     all_candidates = [best_arc]
-                    logging.info(f"♻️ [SpareCandidate] 차순위 재활용 (남은 후보: {len(_spare_candidates)}개)")
+                    logging.info(f" [SpareCandidate] 차순위 재활용 (남은 후보: {len(_spare_candidates)}개)")
                 else:
                     best_arc, all_candidates = self.ensemble.generate_ensemble(
                         arc_no=arc_no,
@@ -377,7 +488,7 @@ class FourPhaseArcGenerator(BaseAgent):
                             if _c is not best_arc and _c not in _spare_candidates:
                                 _spare_candidates.append(_c)
                         if _spare_candidates:
-                            logging.info(f"♻️ [SpareCandidate] 차순위 {len(_spare_candidates)}개 보존")
+                            logging.info(f" [SpareCandidate] 차순위 {len(_spare_candidates)}개 보존")
 
             if best_arc:
                 logging.info(f"✅ [Phase 2] Ensemble 완료 — 선택 전략: {best_arc.get('strategy', '?')}")
@@ -436,13 +547,20 @@ class FourPhaseArcGenerator(BaseAgent):
             # ═══════════════════════════════════════════════════════════════
             best_arc = self._check_arc_end_state(best_arc)
 
+            # [NS-3-B] Phase 2.55: Treatment block numeric target alignment (advisory, Python-only)
+            _ns3b_warning = _check_arc_vs_block_targets(best_arc, curr_block, arc_no)
+            if _ns3b_warning:
+                logging.warning("[NS-3-B] %s", _ns3b_warning)
+                _ns3b_header = f"[NS-3-B 수치 목표 괴리 경고]\n{_ns3b_warning}"
+                feedback = f"{_ns3b_header}\n\n{feedback}" if feedback else _ns3b_header
+
             # ═══════════════════════════════════════════════════════════════
             # PHASE 2.6: DIRECTOR SELECTION — 후보 비교 선택 [TF-47]
             # ═══════════════════════════════════════════════════════════════
             if director and len(all_candidates) >= 2:
                 _valid_for_director = [c for c in all_candidates if c.get("tactical_doc")]
                 if len(_valid_for_director) >= 2:
-                    logging.info(f"🎭 [TF-47] Director Arc 비교 선택 ({len(_valid_for_director)}개 후보)")
+                    logging.info(f" [TF-47] Director Arc 비교 선택 ({len(_valid_for_director)}개 후보)")
                     try:
                         _dir_result = director.compare_and_select_arc(
                             candidates=_valid_for_director,
@@ -506,7 +624,7 @@ class FourPhaseArcGenerator(BaseAgent):
             # ═══════════════════════════════════════════════════════════════
             # PHASE 3: VALIDATE - 통합 검증 (Director 미사용 또는 단일 후보 시)
             # ═══════════════════════════════════════════════════════════════
-            logging.info("🔍 [Phase 3] 통합 검증 중...")
+            logging.info(" [Phase 3] 통합 검증 중...")
 
             verdict, validation_result = self.validator.validate(
                 arc=best_arc,
@@ -534,15 +652,14 @@ class FourPhaseArcGenerator(BaseAgent):
                 _n_issues = len(_all_issues)
                 _summary = validation_result.get("summary", "")
                 _major_issues = [i for i in _all_issues if i.get("severity") == "MAJOR"]
-                logging.debug(
-                    "[Stage2 Validator] Arc %d PASS (confidence=%.2f, issues=%d) summary=%s",
+                logging.debug("[Stage2 Validator] Arc %d PASS (confidence=%.2f, issues=%d) summary=%s",
                     arc_no,
                     _conf,
                     _n_issues,
                     str(_summary)[:300],
                 )
                 for _mi in _major_issues[:3]:
-                    logging.debug("  MAJOR 경고: %s", _mi.get("issue", "?")[:120])
+                    logging.debug(" MAJOR 경고: %s", _mi.get("issue", "?")[:120])
                 return best_arc, pipeline_result
             else:
                 self.stats["phase3_reject"] += 1
@@ -568,21 +685,19 @@ class FourPhaseArcGenerator(BaseAgent):
 
                 # REJECT 기록
                 issues = validation_result.get("issues", [])
-                logging.debug(
-                    "[Stage2 Validator] Arc %d REJECT (%d/%d) confidence=%.2f",
+                logging.debug("[Stage2 Validator] Arc %d REJECT (%d/%d) confidence=%.2f",
                     arc_no,
                     retry + 1,
                     max_internal_retries + 1,
                     validation_result.get("confidence", 0),
                 )
                 for issue in issues[:5]:
-                    logging.debug(
-                        "  [%s][%s] %s",
+                    logging.debug(" [%s][%s] %s",
                         issue.get("severity", "?"),
                         issue.get("category", "?"),
                         issue.get("issue", "?")[:120],
                     )
-                logging.debug("  피드백: %s", str(_validator_feedback)[:200])
+                logging.debug(" 피드백: %s", str(_validator_feedback)[:200])
                 if issues:
                     first_issue = issues[0]
                     self.negative_injector.record_rejection(
@@ -590,7 +705,7 @@ class FourPhaseArcGenerator(BaseAgent):
                     )
 
                     # 이슈 출력
-                    logging.warning("🚨 [Phase 3] REJECT - 주요 이슈:")
+                    logging.warning(" [Phase 3] REJECT - 주요 이슈:")
                     for issue in issues[:3]:
                         sev = issue.get("severity", "?")
                         cat = issue.get("category", "?")
@@ -623,8 +738,7 @@ class FourPhaseArcGenerator(BaseAgent):
 
         _full_json = json.dumps(original_arc, ensure_ascii=False, indent=2)
         if len(_full_json) > 30000:
-            logging.warning(
-                "[TRUNCATION] _inplace_patch_arc: Arc JSON %d자 → 30000자 (%.1f%% 손실)",
+            logging.warning("[TRUNCATION] _inplace_patch_arc: Arc JSON %d자 → 30000자 (%.1f%% 손실)",
                 len(_full_json),
                 (1 - 30000 / len(_full_json)) * 100,
             )
@@ -728,8 +842,7 @@ class FourPhaseArcGenerator(BaseAgent):
         # 2) 원본 Arc 직렬화
         _full_json = json.dumps(original_arc, ensure_ascii=False, indent=2)
         if len(_full_json) > 30000:
-            logging.warning(
-                "[TRUNCATION] patch_arc_with_feedback: Arc JSON %d자 → 30000자 (%.1f%% 손실)",
+            logging.warning("[TRUNCATION] patch_arc_with_feedback: Arc JSON %d자 → 30000자 (%.1f%% 손실)",
                 len(_full_json),
                 (1 - 30000 / len(_full_json)) * 100,
             )
@@ -895,7 +1008,7 @@ class FourPhaseArcGenerator(BaseAgent):
             logging.info(f"✅ [Patch Mode] Arc {arc_no} 패치 성공")
             return best_arc, pipeline_result
 
-        logging.warning(f"⚠️ [Patch Mode] Arc {arc_no} 패치 검증 실패 → 폴백 필요")
+        logging.warning(f" [Patch Mode] Arc {arc_no} 패치 검증 실패 → 폴백 필요")
         pipeline_result["final_verdict"] = "FAILED"
         return None, pipeline_result
 
@@ -986,7 +1099,7 @@ class FourPhaseArcGenerator(BaseAgent):
         if self._genre == "wuxia":
             final_energy = max(90, int(raw_energy) if isinstance(raw_energy, (int, float)) else 100)
             if isinstance(raw_energy, (int, float)) and raw_energy < final_energy:
-                logging.info(f"🩹 [V62.2] 내공 자연 회복: {int(raw_energy)}% → {final_energy}% (아크 간 휴식)")
+                logging.info(f" [V62.2] 내공 자연 회복: {int(raw_energy)}% → {final_energy}% (아크 간 휴식)")
         else:
             final_energy = None
 
@@ -1130,9 +1243,20 @@ class FourPhaseArcGenerator(BaseAgent):
             lines.append("")
             lines.append(f"[V67] ═══ 이전 Arc 전술서 전문 ({len(_arc_history_lines)}개) ═══")
             lines.append(_full_history)
-            logging.info(
-                f"📚 [V67] FourPhase prev_context 확장: {len(_arc_history_lines)}개 Arc 전술서 ({len(_full_history):,}자)"
+            logging.info(f" [V67] FourPhase prev_context 확장: {len(_arc_history_lines)}개 Arc 전술서 ({len(_full_history):,}자)"
             )
+
+        # [NS-4-S2] 이전 Arc 시간 마커 — 크로스 Arc 시간 연속성 (LLM 0회)
+        try:
+            _ns4_markers = _ns4_extract_time_markers(last_arc)
+            if _ns4_markers:
+                lines.append("")
+                lines.append(
+                    f"⏱️ [NS-4] 이전 Arc {last_arc_no} 시간 마커: {', '.join(_ns4_markers)}\n"
+                    "※ 이번 Arc tactical_doc에 '이전 Arc 종료로부터 X달/주 후 시작'을 명시하세요."
+                )
+        except Exception as _ns4_s2_err:
+            logging.debug("[NS-4-S2] 시간 마커 주입 실패 (비차단): %s", _ns4_s2_err)
 
         return "\n".join(lines)
 
@@ -1166,7 +1290,7 @@ class FourPhaseArcGenerator(BaseAgent):
         """
         if not raw or raw.strip() in ("없음", "정상", ""):
             return "없음"
-        logging.info(f"🩹 [V62.2] 자연 치유: '{raw[:50]}' → '없음' (아크 간 회복)")
+        logging.info(f" [V62.2] 자연 치유: '{raw[:50]}' → '없음' (아크 간 회복)")
         return "없음"
 
     def _check_arc_end_state(self, arc: dict) -> dict:
@@ -1183,8 +1307,10 @@ class FourPhaseArcGenerator(BaseAgent):
             inj = str(end_state.get("injuries", "없음"))
             if inj not in ("없음", "정상", ""):
                 warnings.append(f"부상 미회복: '{inj}' (아크 간 자연 치유 고려)")
+            # [ARC-NOISE-1] 내공(internal_energy)은 무협/헌터/판타지 장르만 해당
+            _energy_genres = {"wuxia", "hunter", "fantasy"}
             energy = end_state.get("internal_energy")
-            if isinstance(energy, (int, float)) and energy < 100:
+            if isinstance(energy, (int, float)) and energy < 100 and self._genre in _energy_genres:
                 warnings.append(f"내공 미복원: {energy}% (아크 간 회복 고려)")
 
         ss = arc.get("status_shadow", {})

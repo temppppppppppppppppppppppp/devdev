@@ -158,8 +158,7 @@ class Stage2PreflightAnalysis:
                         )
                     else:
                         if _retrieval_mode not in ("dense", "hybrid", "sparse"):
-                            logging.warning(
-                                "[Retrieval] 알 수 없는 retrieval_mode '%s', dense로 폴백",
+                            logging.warning("[Retrieval] 알 수 없는 retrieval_mode '%s', dense로 폴백",
                                 _retrieval_mode,
                             )
                         result = memory.retrieve_multi_query_context(
@@ -281,7 +280,7 @@ class Stage2PreflightAnalysis:
                                 _pf_result, genre=genre
                             )
                     except Exception as pf_err:
-                        logging.warning(f"⚠️ [Preflight] 스킵: {str(pf_err)[:50]}")
+                        logging.warning(f" [Preflight] 스킵: {str(pf_err)[:50]}")
                 return _pf_injection, _pf_result
             finally:
                 try:
@@ -340,7 +339,7 @@ class Stage2PreflightAnalysis:
                     _parallel_exec.shutdown(wait=False, cancel_futures=True)
                 except Exception as _e:
                     logging.debug("[Stage2Preflight] executor shutdown(err path) 실패 (무시): %s", _e)
-            logging.warning(f"⚠️ [Preflight] 병렬 실행 타임아웃/오류 (비치명): {str(_pf_err)[:80]}")
+            logging.warning(f" [Preflight] 병렬 실행 타임아웃/오류 (비치명): {str(_pf_err)[:80]}")
         finally:
             if _parallel_exec is not None:
                 try:
@@ -387,8 +386,7 @@ class Stage2PreflightAnalysis:
                             if self.ctx.sync_cache_key_to_app:
                                 self.ctx.sync_cache_key_to_app(arc_count, cache=state_result)
                     except Exception as e:  # [V64.P4] CRITICAL: state extraction failure → NPC validation disabled
-                        logging.warning(
-                            f"[V64.P4] CRITICAL: extract_cumulative_state 실패 (NPC 검증 약화): {e}",
+                        logging.warning(f"[V64.P4] CRITICAL: extract_cumulative_state 실패 (NPC 검증 약화): {e}",
                             exc_info=True,
                         )
                         self.ctx.ui.log(
@@ -654,8 +652,7 @@ class Stage2PreflightAnalysis:
         logging.info(f"[S2-I8] enhanced_context 크기: {_ec_size:,}자 (constraint_block: {len(constraint_block):,}자)")
         _CONTEXT_WARNING_THRESHOLD = 100_000
         if _ec_size > _CONTEXT_WARNING_THRESHOLD:
-            logging.warning(
-                f"[S2-I8] enhanced_context {_ec_size:,}자 > {_CONTEXT_WARNING_THRESHOLD:,}자 경고: "
+            logging.warning(f"[S2-I8] enhanced_context {_ec_size:,}자 > {_CONTEXT_WARNING_THRESHOLD:,}자 경고: "
                 "Gemini context window 초과 가능성 — 컨텍스트 축소 권장"
             )
 
@@ -666,7 +663,7 @@ class Stage2PreflightAnalysis:
         generation_method = "analyst"
         analyst_weapons = {}
 
-        logging.warning(f"\n      {'=' * 60}")
+        logging.warning(f"\n {'=' * 60}")
         logging.info(f"[V60.36] Arc {global_arc_no} 생성 시작 (attempt {attempt + 1})")
         logging.info(f"{'=' * 60}")
 
@@ -684,7 +681,7 @@ class Stage2PreflightAnalysis:
         entity_registry_for_director = {}
         if self.ctx.constraint_compiler and all_refined_arcs:
             try:
-                logging.info("📋 [무기 #2] ConstraintCompiler 컴파일 중...")
+                logging.info(" [무기 #2] ConstraintCompiler 컴파일 중...")
                 state_result = None
                 if "state_extractor" in self.ctx.agents:
                     arc_count = len(all_refined_arcs)
@@ -705,7 +702,7 @@ class Stage2PreflightAnalysis:
                         entity_registry_for_director = self.ctx.fix_entity_registry_protagonist(
                             entity_registry_for_director, protagonist_name
                         )
-                        logging.info("🏷️ [V61] Entity Registry 추출됨 (Director용)")
+                        logging.info(" [V61] Entity Registry 추출됨 (Director용)")
                 _resolved = getattr(self.ctx.state_tracker, "resolved_plots", []) if self.ctx.state_tracker else []
                 _compiler_block = self.ctx.constraint_compiler.compile(
                     all_refined_arcs, state_result, resolved_plots=_resolved
@@ -713,8 +710,7 @@ class Stage2PreflightAnalysis:
                 analyst_weapons["constraints"] = _compiler_block
                 logging.info(f"✅ [Constraints] 제약 블록 생성 완료 ({len(_compiler_block)}자)")
             except Exception as cc_err:
-                logging.warning(
-                    f"⚠️ [C-2] ConstraintCompiler/Entity 추출 실패 (entity_registry 빈 dict 폴백): {str(cc_err)[:80]}"
+                logging.warning(f" [C-2] ConstraintCompiler/Entity 추출 실패 (entity_registry 빈 dict 폴백): {str(cc_err)[:80]}"
                 )
 
         # [Sweep48] constraint_block은 입력값 그대로 보존 (setup에서 이미 DB+Compiler 병합됨)
@@ -1059,13 +1055,12 @@ class Stage2PreflightAnalysis:
                     _suspended = self.ctx.state_tracker.check_suspended_plots(global_arc_no)
                     if _suspended:
                         for sw in _suspended:
-                            logging.warning(f"⚠️ [V66] {sw['message']}")
+                            logging.warning(f" [V66] {sw['message']}")
                     # [V66] 장르별 레지스트리 업데이트
                     try:
                         self.ctx.state_tracker._populate_genre_registries_from_arc(refined_arc)
                     except Exception as _e:
-                        logging.warning(
-                            "[Sweep5-D] genre registry update failed: %s",
+                        logging.warning("[Sweep5-D] genre registry update failed: %s",
                             _e,
                         )
                     if genre_for_tracker == "investment":
@@ -1075,8 +1070,7 @@ class Stage2PreflightAnalysis:
                                 "financial_registry", self.ctx.state_tracker.export_financial_registry()
                             )
                         except Exception as _fin_err:
-                            logging.warning(
-                                "[SilentPass:Preflight] financial registry save failed: %s",
+                            logging.warning("[SilentPass:Preflight] financial registry save failed: %s",
                                 _fin_err,
                             )
 
@@ -1087,10 +1081,9 @@ class Stage2PreflightAnalysis:
                                 self.ctx.state_tracker.resolved_plots
                             )
                             if indexed > 0:
-                                logging.warning(f"📊 [V66] SemanticPlotGuard: {indexed}개 플롯 인덱싱")
+                                logging.warning(f" [V66] SemanticPlotGuard: {indexed}개 플롯 인덱싱")
                         except Exception as _e:
-                            logging.warning(
-                                "[Sweep5-D] semantic plot indexing failed: %s",
+                            logging.warning("[Sweep5-D] semantic plot indexing failed: %s",
                                 _e,
                             )
 
@@ -1157,8 +1150,7 @@ class Stage2PreflightAnalysis:
                         try:
                             removed = self.ctx.state_tracker.cleanup_npc_registry_with_llm(global_arc_no)
                             if removed:
-                                logging.info(
-                                    f"\U0001f9f9 [V69] NPC 레지스트리 정리: {len(removed)}개 오탐 제거 ({', '.join(removed[:5])})"
+                                logging.info(f"\U0001f9f9 [V69] NPC 레지스트리 정리: {len(removed)}개 오탐 제거 ({', '.join(removed[:5])})"
                                 )
                         except Exception as e:
                             logging.warning(f"\u26a0\ufe0f [V69] NPC 레지스트리 정리 실패 (비차단): {e}")
@@ -1168,21 +1160,21 @@ class Stage2PreflightAnalysis:
                     if tactical_doc and hasattr(self.ctx.state_tracker, "check_and_expand_genre"):
                         new_genre = self.ctx.state_tracker.check_and_expand_genre(tactical_doc)
                         if new_genre:
-                            logging.info(f"- 🎭 새 장르 감지: {new_genre}")
+                            logging.info(f"- 새 장르 감지: {new_genre}")
 
                     if dead_npcs:
-                        logging.info(f"- 💀 사망 NPC 기록: {', '.join(dead_npcs)}")
+                        logging.info(f"- 사망 NPC 기록: {', '.join(dead_npcs)}")
                     if learned_skills:
-                        logging.info(f"- 🥋 무공 습득 기록: {', '.join(learned_skills)}")
+                        logging.info(f"- 무공 습득 기록: {', '.join(learned_skills)}")
                     if npc_info:
-                        logging.info(f"- 👤 NPC 정보 기록: {len(npc_info)}건")
+                        logging.info(f"- NPC 정보 기록: {len(npc_info)}건")
 
                     phases = pipeline_result.get("phases", {})
                     if phases.get("generate"):
                         logging.info(f"- 후보 수: {phases['generate'].get('candidates_count', '?')}개")
                         logging.info(f"- 선택 전략: {phases['generate'].get('selected_strategy', '?')}")
                 else:
-                    logging.warning("⚠️ [V60.77] FourPhase 내부 검증 실패")
+                    logging.warning(" [V60.77] FourPhase 내부 검증 실패")
                     if pipeline_result.get("phases", {}).get("validate"):
                         issues = pipeline_result["phases"]["validate"].get("issues_count", 0)
                         logging.info(f"- 검증 이슈: {issues}개")

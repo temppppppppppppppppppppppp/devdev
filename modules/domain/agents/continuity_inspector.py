@@ -257,10 +257,10 @@ class ContinuityInspector(BaseAgent):
         item2_normalized = "".join(item2_clean.lower().split())
 
         if item1_normalized == item2_normalized:
-            logging.info(f"🔍 [_is_same_item] 정확 매칭: '{item1_clean}' == '{item2_clean}'")
+            logging.info(f" [_is_same_item] 정확 매칭: '{item1_clean}' == '{item2_clean}'")
             return True
 
-        logging.info(f"⏭️ [_is_same_item] 다른 아이템: '{item1_clean}' != '{item2_clean}'")
+        logging.info(f" [_is_same_item] 다른 아이템: '{item1_clean}' != '{item2_clean}'")
         return False
 
     def _is_distributed_item(self, item: str, context: str) -> bool:

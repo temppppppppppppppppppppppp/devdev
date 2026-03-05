@@ -12,7 +12,7 @@ POST_STITCH_REPAIR_PROMPT: |
 
   [🚨 용접 가이드라인]
   1. 위치 동기화: A의 종료 위치와 B의 시작 위치가 다르면 A를 기준으로 B의 도입부를 수정하라.
-  2. 상태 보존: A에서 소모한 내공이나 입은 부상이 B의 도입부에 즉시 반영되었는지 확인하라.
+  2. 상태 보존: A에서 소모한 핵심 수치나 입은 부상이 B의 도입부에 즉시 반영되었는지 확인하라.
   3. 엔티티 고정: A에서 등장한 고유 명사(아이템, 지명, 인물 특징)가 B에서도 동일한 규격으로 유지되도록 문장을 보정하라.
 
   [⚠️ Output Format - Strict JSON Only]
@@ -41,7 +41,7 @@ ENRICH_BLOCK_PROMPT_V30: |
 
   [🚨 V35.5 S-GRADE 농축 & 용접 강령]
   1. 물리적 해상도: 무공의 충돌을 압력, 진동, 관성 등 물리 법칙으로 묘사하라.
-  2. 상태 그림자(Status Shadow): 이번 사건으로 인해 주인공이 입을 '예상 손실(내공 소모, 부상 부위, 소모한 영약)'을 수치와 텍스트로 산출하라.
+  2. 상태 그림자(Status Shadow): 이번 사건으로 인해 주인공이 입을 '예상 손실(핵심 수치 소모, 부상 부위, 소모한 영약)'을 수치와 텍스트로 산출하라.
   3. 용접점 문서(Joint Docs): 이 아크가 끝나는 시점의 주인공 위치, 손에 든 물건, 주변 인물의 생사 여부를 '확정 팩트'로 정리하라.
   4. 전략적 의도: 주인공이 이 사건을 통해 얻으려는 '이면의 목적'을 명시하여 지능형 캐릭터를 완성하라.
 
@@ -152,7 +152,7 @@ PLAN_VOLUME_PROMPT_V25: |
   **Step 1: 현재 상태 확인**
   - 주인공이 현재 보유한 능력 목록은 무엇인가?
   - 주인공이 현재 소지한 아이템 목록은 무엇인가?
-  - 주인공의 현재 부상/내공 상태는 어떠한가?
+  - 주인공의 현재 부상/{energy_stat_name} 상태는 어떠한가?
 
   **Step 2: 목표 분석**
   - 이 권에서 주인공이 달성해야 할 목표는 무엇인가?
@@ -237,7 +237,7 @@ PLAN_ARC_PROMPT_V25: |
      - 이미 획득한 아이템을 다시 획득하러 가는 설정은 CRITICAL 위반이다.
      - 아이템 소지 상태를 명시적으로 언급하라.
 
-  2. **부상 연속성**: 직전 Arc에서 입은 부상/내공 소모는 현재 Arc 도입부에 반드시 반영되어야 한다.
+  2. **부상 연속성**: 직전 Arc에서 입은 부상/{energy_stat_name} 소모는 현재 Arc 도입부에 반드시 반영되어야 한다.
      - 부상 상태에서 무리한 행동은 회복/치료 장면이 선행되어야 한다.
      - "갑자기 멀쩡해지는" 설정은 CRITICAL 위반이다.
 
@@ -256,7 +256,7 @@ PLAN_ARC_PROMPT_V25: |
   **Step 1: 직전 Arc 상태 확인**
   - 직전 Arc 종료 시 주인공의 위치는 어디인가?
   - 직전 Arc 종료 시 주인공이 소지한 아이템은 무엇인가?
-  - 직전 Arc 종료 시 주인공의 부상/내공 상태는 어떠한가?
+  - 직전 Arc 종료 시 주인공의 부상/{energy_stat_name} 상태는 어떠한가?
 
   **Step 2: 현재 Arc 도입부 설계**
   - Step 1의 상태를 그대로 계승하여 첫 화를 시작하라.
@@ -560,12 +560,14 @@ ANALYST_SELF_CRITIC_PROMPT: |
      - `power_changes`의 end_power - start_power가 20을 초과하면 FAIL (근거 없이 급성장)
      - `foreshadowings`가 있으면 expected_payoff가 5 Arc 이내인가? (너무 먼 복선 WARNING)
 
-  7. **[V60.10 신규] 수치 일관성 검사**:
-     - 금액/재화가 화마다 맞는가? (획득-소모=잔여 계산 확인)
-     - 핵심 수치 계산이 정확한가? (30-9=21, NOT 210)
-     - 부상 부위가 화마다 일관되는가? (어깨 부상이 전완부로 바뀌면 FAIL)
-     - 아이템 수량 변화가 산술적으로 맞는가? (5개-3개=2개)
-     - 수치 계산 오류 발견 시 즉시 FAIL 처리
+  7. **[NS-1] Numeric self-verification (all genres)**:
+     - Scan the full `tactical_doc` and extract all numeric expressions.
+     - If there is no numeric expression, mark this item as PASS and return `numeric_selfcheck: []`.
+     - Recalculate each extracted expression and compare stated vs actual values.
+     - Supported patterns include: `A x B = C`, `A x B% = C`, `A / B = C`, `A + B = C`, `A - B = C`.
+     - PASS when absolute relative error is <= 5%.
+     - FAIL immediately when error is > 5% or sign direction is wrong.
+     - On FAIL, write: `Arithmetic mismatch: [expr] stated=[X] actual=[Y]`
 
   [Output Format - JSON Only]
   {{
@@ -573,6 +575,10 @@ ANALYST_SELF_CRITIC_PROMPT: |
       "feedback": "수정 지시사항",
       "continuity_issues": ["발견된 연속성 문제 목록"],
       "state_constraint_issues": ["발견된 상태 제약 문제 목록"],
+      "numeric_selfcheck": [
+          {{"expr": "600억 x 17.2%", "stated": "451억", "actual": "103.2억", "ok": false}},
+          {{"expr": "20억 x 3배", "stated": "60억", "actual": "60억", "ok": true}}
+      ],
       "final_arc": {{ ... }}
   }}
 

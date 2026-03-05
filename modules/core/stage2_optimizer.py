@@ -122,7 +122,7 @@ class StateSnapshotInjector:
 ║  ───────────────────────────────────────────────────────────────────────────
 ║  📍 시작 위치: {snapshot["location"]}
 ║  📦 소지품: {", ".join(snapshot["inventory"]) if snapshot["inventory"] else "없음"}
-║  ⚡ 내공: {snapshot["internal_energy"]}%
+║  ⚡ 핵심 수치: {snapshot["internal_energy"]}%
 ║  💔 부상: {snapshot["injuries"]}
 ║  🏅 수여물: {", ".join(all_grants) if all_grants else "없음"}
 ╠══════════════════════════════════════════════════════════════════════════════╣
@@ -144,7 +144,7 @@ class StateSnapshotInjector:
 ║  주인공: {protagonist_name}
 ║  📍 시작 위치: 서사 시작점 (Bible에서 지정된 위치)
 ║  📦 소지품: Bible에서 지정된 초기 아이템만
-║  ⚡ 내공: 100%
+║  ⚡ 핵심 수치: 100%
 ║  💔 부상: 없음
 ╚══════════════════════════════════════════════════════════════════════════════╝
 """

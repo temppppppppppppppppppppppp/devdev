@@ -61,6 +61,52 @@ class _SafeDict(dict):
         return "{" + key + "}"
 
 
+def _format_block_numeric_targets(curr_block: dict | None) -> str:
+    """
+    [NS-3-A] curr_block.genre_ext의 수치 목표를 self-critic 컨텍스트 문자열로 변환.
+    genre_ext가 없거나 수치 관련 필드가 없으면 빈 문자열 반환.
+    """
+    if not isinstance(curr_block, dict):
+        return ""
+
+    genre_ext = curr_block.get("genre_ext")
+    if not isinstance(genre_ext, dict) or not genre_ext:
+        return ""
+
+    numeric_keys = {
+        "capital_before",
+        "capital_after",
+        "capital_delta",
+        "profit_loss",
+        "leverage",
+        "position_size",
+        "level_before",
+        "level_after",
+        "rank_before",
+        "rank_after",
+        "stat_change",
+        "energy_before",
+        "energy_after",
+    }
+    keyword_hints = ("capital", "profit", "loss", "delta", "level", "rank", "energy", "stat", "asset", "revenue")
+
+    lines = []
+    for key, value in genre_ext.items():
+        key_text = str(key)
+        if key in numeric_keys or any(hint in key_text for hint in keyword_hints):
+            lines.append(f"  {key}: {value}")
+
+    if not lines:
+        return ""
+
+    return (
+        "[NS-3 Treatment 수치 목표 - Arc 종료 상태가 아래 목표와 가까워야 합니다]\n"
+        + "\n".join(lines)
+        + "\n※ 수치가 tactical_doc/arc_end_state에서 크게 괴리되면 FAIL 처리하세요. "
+        "30% 이내 차이는 서사 변동으로 허용합니다."
+    )
+
+
 class Analyst(BaseAgent):
     """
     [V37 Sovereign Strategist - 0124 Manifesto]
@@ -119,7 +165,7 @@ class Analyst(BaseAgent):
                 treatment_data = json.loads(treatment_raw_part)
             except (json.JSONDecodeError, ValueError) as e:
                 # [V44] JSON 파싱 실패 경고 추가
-                logging.warning(f"⚠️ [Analyst] treatment 데이터 JSON 파싱 실패: {str(e)[:50]}")
+                logging.warning(f" [Analyst] treatment 데이터 JSON 파싱 실패: {str(e)[:50]}")
                 treatment_data = []  # 변환 실패 시 빈 리스트
         else:
             treatment_data = treatment_raw_part
@@ -164,7 +210,7 @@ class Analyst(BaseAgent):
         # [⬇️ 추가할 코드: 필수 키 누락 방지 가드]
         # AI가 cider_score를 누락했을 경우 기본값 0 또는 50을 할당하여 KeyError 방지
         if "cider_score" not in result:
-            logging.warning(f"⚠️ [Auto-Repair] Vol {vol_no}: 누락된 'cider_score'를 기본값(0)으로 보정했습니다.")
+            logging.warning(f" [Auto-Repair] Vol {vol_no}: 누락된 'cider_score'를 기본값(0)으로 보정했습니다.")
             result["cider_score"] = 0
 
         # vol_no가 누락되었을 경우를 대비한 보정
@@ -250,10 +296,10 @@ class Analyst(BaseAgent):
                     lib = json.loads(path.read_text(encoding="utf-8"))
                     result = {k: json.dumps(lib.get(v, {}), ensure_ascii=False) for k, v in self._LIB_KEYS.items()}
                     result["archetype"] = result["dev"]
-                    logging.warning(f"📚 [Analyst] {genre} 장르 라이브러리 로드 완료 ({path.name})")
+                    logging.warning(f" [Analyst] {genre} 장르 라이브러리 로드 완료 ({path.name})")
                     return result
                 except Exception as e:
-                    logging.warning(f"🚨 [Analyst] 라이브러리 파싱 실패 ({path.name}): {e}")
+                    logging.warning(f" [Analyst] 라이브러리 파싱 실패 ({path.name}): {e}")
         empty = json.dumps({}, ensure_ascii=False)
         return {k: empty for k in [*self._LIB_KEYS, "archetype"]}
 
@@ -520,13 +566,13 @@ class Analyst(BaseAgent):
         if final_location:
             existing_location = joint_docs.get("final_location", "")
             if not existing_location or existing_location != final_location:
-                logging.warning(f"🔧 [V60] joint_docs 위치 보정: '{existing_location}' → '{final_location}'")
+                logging.warning(f" [V60] joint_docs 위치 보정: '{existing_location}' → '{final_location}'")
                 joint_docs["final_location"] = final_location
 
         if final_inventory:
             existing_inventory = joint_docs.get("physical_inventory", [])
             if not existing_inventory:
-                logging.info(f"🔧 [V60] joint_docs 소지품 보정: {final_inventory}")
+                logging.info(f" [V60] joint_docs 소지품 보정: {final_inventory}")
                 joint_docs["physical_inventory"] = final_inventory
 
         # [Sweep11] 상위 레벨에도 동기화 (finalizer/arc_corrector는 top-level에서 읽음)
@@ -621,8 +667,7 @@ class Analyst(BaseAgent):
             _warn_parts, content_len = self._extract_content_parts(curr_block)
 
             if content_len < target_ep_count * min_content_per_ep:
-                logging.warning(
-                    f"⚠️ [V60.31] Block 빈약 경고: {content_len}자 / {target_ep_count}화 = 화당 {content_len // target_ep_count}자 (권장 200자+)"
+                logging.warning(f" [V60.31] Block 빈약 경고: {content_len}자 / {target_ep_count}화 = 화당 {content_len // target_ep_count}자 (권장 200자+)"
                 )
 
         # 3. [V43] 장르별 라이브러리 로드 - 장르에 맞는 서사 패턴 사용
@@ -647,7 +692,7 @@ class Analyst(BaseAgent):
                     if name and name != "주인공":
                         final_protagonist_name = name
             except Exception as e:
-                logging.warning(f"⚠️ [Analyst] 주인공 이름 추출 실패, 기본값 사용: {e}")
+                logging.warning(f" [Analyst] 주인공 이름 추출 실패, 기본값 사용: {e}")
         if not final_protagonist_name:
             final_protagonist_name = "주인공"
         protagonist_name = final_protagonist_name  # 이후 코드 호환
@@ -764,7 +809,7 @@ class Analyst(BaseAgent):
             except Exception as e:
                 # Case B: 캐시가 없거나 호출 실패 시 즉시 Full-Text로 복구 (품질 보존)
                 if self.cache_name:
-                    logging.warning(f"⚠️ [Analyst] 캐시 호출 실패. 일반 모드 전환: {str(e)[:50]}")
+                    logging.warning(f" [Analyst] 캐시 호출 실패. 일반 모드 전환: {str(e)[:50]}")
 
                 full_safe_data = safe_data.copy()
                 full_safe_data.update(
@@ -814,14 +859,13 @@ class Analyst(BaseAgent):
 
             if llm_ep_count < pacing_min or llm_ep_count > pacing_max:
                 corrected_ep_count = max(pacing_min, min(pacing_max, llm_ep_count))
-                logging.warning(
-                    f"🔧 [V60.70] 자기모순 교정: chosen_pacing={chosen_pacing} 인데 ep_count={llm_ep_count} → {corrected_ep_count}화로 강제 조정"
+                logging.warning(f" [V60.70] 자기모순 교정: chosen_pacing={chosen_pacing} 인데 ep_count={llm_ep_count} → {corrected_ep_count}화로 강제 조정"
                 )
                 llm_ep_count = corrected_ep_count
 
             actual_ep_count = max(3, min(7, llm_ep_count))
             if actual_ep_count != target_ep_count:
-                logging.info(f"📊 [V60.31] 가변 페이싱: 권장 {target_ep_count}화 → LLM 결정 {actual_ep_count}화")
+                logging.info(f" [V60.31] 가변 페이싱: 권장 {target_ep_count}화 → LLM 결정 {actual_ep_count}화")
 
             beats = draft_result.get("beat_sequence", [])
             if not isinstance(beats, list):
@@ -842,8 +886,7 @@ class Analyst(BaseAgent):
                     while len(beats) < actual_ep_count:
                         idx = len(beats) % len(fallback_beats)
                         beats.append(fallback_beats[idx])
-                    logging.warning(
-                        "[Analyst] beat_sequence 부족 (%d/%d) — 폴백 비트 %d개 추가",
+                    logging.warning("[Analyst] beat_sequence 부족 (%d/%d) — 폴백 비트 %d개 추가",
                         original_count,
                         actual_ep_count,
                         actual_ep_count - original_count,
@@ -855,8 +898,11 @@ class Analyst(BaseAgent):
             _arc_loop_state["actual_ep_count"] = actual_ep_count
 
             # 자기 비판 감사 (Self-Critic) 호출
+            _critic_block_ctx = _format_block_numeric_targets(curr_block)
             critic_input = (
-                f"{get_analyst_self_critic_prompt()}\n[Draft to Review]: {json.dumps(draft_result, ensure_ascii=False)}"
+                f"{get_analyst_self_critic_prompt()}"
+                + (f"\n\n{_critic_block_ctx}" if _critic_block_ctx else "")
+                + f"\n[Draft to Review]: {json.dumps(draft_result, ensure_ascii=False)}"
             )
             audit_result = self._extract_json_robust(self.ask(critic_input, temperature=0.2, thinking_level="low"))
             return audit_result
@@ -934,7 +980,7 @@ class Analyst(BaseAgent):
         # StateTracker 검증
         state_issues = self._validate_arc_with_state_tracker(final_arc_data)  # [V70] 의도적 비활성화 스텁
         if state_issues:
-            logging.warning(f"⚠️ [Analyst] StateTracker 검증 이슈 발견: {len(state_issues)}건")
+            logging.warning(f" [Analyst] StateTracker 검증 이슈 발견: {len(state_issues)}건")
             final_arc_data["state_tracker_issues"] = state_issues
             critical_issues = [i for i in state_issues if i.get("severity") in ["critical", "major"]]
             if critical_issues:
@@ -956,12 +1002,12 @@ class Analyst(BaseAgent):
                         None,
                     )
             except Exception as e:
-                logging.warning(f"⚠️ [V60] 이전 Arc 로드 실패: {e}")
+                logging.warning(f" [V60] 이전 Arc 로드 실패: {e}")
 
         if prev_arc_data:
             continuity_result = self._validate_arc_state_continuity_v60(final_arc_data, prev_arc_data)
             if continuity_result["issues"]:
-                logging.warning(f"🔍 [V60] Arc 상태 계승 검증: {continuity_result['severity']}")
+                logging.warning(f" [V60] Arc 상태 계승 검증: {continuity_result['severity']}")
                 for issue in continuity_result["issues"][:3]:
                     logging.info(f"- {issue}")
 
@@ -975,7 +1021,7 @@ class Analyst(BaseAgent):
 
                     if "location" in continuity_result["auto_corrections"]:
                         start_state["location"] = continuity_result["auto_corrections"]["location"]
-                        logging.info(f"🔧 [V60] 시작 위치 자동 보정: {start_state['location']}")
+                        logging.info(f" [V60] 시작 위치 자동 보정: {start_state['location']}")
 
                     if "missing_items" in continuity_result["auto_corrections"]:
                         existing = start_state.get("equipment", [])
@@ -983,7 +1029,7 @@ class Analyst(BaseAgent):
                             existing = [existing] if existing else []
                         existing.extend(continuity_result["auto_corrections"]["missing_items"])
                         start_state["equipment"] = list(set(existing))
-                        logging.info(f"🔧 [V60] 시작 소지품 자동 보정: {start_state['equipment']}")
+                        logging.info(f" [V60] 시작 소지품 자동 보정: {start_state['equipment']}")
 
                 final_arc_data["v60_continuity_check"] = continuity_result
 
@@ -994,7 +1040,7 @@ class Analyst(BaseAgent):
         if tactical_doc:
             doc_continuity = self._validate_tactical_doc_continuity_v60(tactical_doc, final_ep_count)
             if doc_continuity["issues"]:
-                logging.info(f"🔍 [V60] 화 간 연속성 검증: {len(doc_continuity['issues'])}건 이슈")
+                logging.info(f" [V60] 화 간 연속성 검증: {len(doc_continuity['issues'])}건 이슈")
                 for issue in doc_continuity["issues"][:3]:
                     logging.info(f"- {issue}")
 
@@ -1196,16 +1242,14 @@ class Analyst(BaseAgent):
 
             _t0 = _time.time()
             print(f"      ⏳ [Enrich] Block {_block_id} LLM 호출 (model={self.primary_model}, prompt={len(prompt)}자)")
-            logging.info(
-                "[Enrich] Block %s 농축 시작 (model=%s, prompt=%d자)", _block_id, self.primary_model, len(prompt)
+            logging.info("[Enrich] Block %s 농축 시작 (model=%s, prompt=%d자)", _block_id, self.primary_model, len(prompt)
             )
             raw_res = await loop.run_in_executor(None, lambda: self.ask(prompt, temperature=0.3))
             _elapsed = _time.time() - _t0
             print(
                 f"      ✅ [Enrich] Block {_block_id} 완료 ({_elapsed:.1f}s, model={self.primary_model}, 응답={len(raw_res or '')}자)"
             )
-            logging.info(
-                "[Enrich] Block %s 농축 완료 (model=%s, %.1fs, 응답=%d자)",
+            logging.info("[Enrich] Block %s 농축 완료 (model=%s, %.1fs, 응답=%d자)",
                 _block_id,
                 self.primary_model,
                 _elapsed,
@@ -1225,7 +1269,7 @@ class Analyst(BaseAgent):
             return merged
 
         except Exception as e:
-            logging.warning(f"🚨 [Enrich Critical Error] {e}")
+            logging.warning(f" [Enrich Critical Error] {e}")
             return raw_block  # 실패 시 원본 DNA 반환
 
     @staticmethod
@@ -1486,7 +1530,7 @@ class Analyst(BaseAgent):
                     if key in genre_name:
                         return genre_type
         except Exception as e:
-            logging.warning(f"⚠️ [Analyst] 장르 감지 실패: {e}")
+            logging.warning(f" [Analyst] 장르 감지 실패: {e}")
         return GenreTypes.WUXIA
 
     @staticmethod
@@ -1605,5 +1649,5 @@ class Analyst(BaseAgent):
             return master_tracker.generate_constraint_prompt()
 
         except Exception as e:
-            logging.warning(f"⚠️ [Analyst] 상태 제약 프롬프트 생성 실패: {e}")
+            logging.warning(f" [Analyst] 상태 제약 프롬프트 생성 실패: {e}")
             return ""
