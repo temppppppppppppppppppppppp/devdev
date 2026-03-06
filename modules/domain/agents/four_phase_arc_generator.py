@@ -178,6 +178,67 @@ def _trim_location(loc: str, max_len: int = 80) -> str:
     return loc[:max_len].rstrip() + "…"
 
 
+def _normalize_item_name(value) -> str:
+    """아이템 값을 문자열 이름으로 정규화."""
+    if isinstance(value, dict):
+        for key in ("item", "name", "value"):
+            item = value.get(key)
+            if item:
+                return str(item).strip()
+        return ""
+    return str(value).strip() if value else ""
+
+
+def _extract_forbidden_item_names(preflight_result: dict) -> list[str]:
+    """preflight.absolute_prohibitions.items_cannot_acquire -> 아이템명 리스트."""
+    if not isinstance(preflight_result, dict):
+        return []
+    prohibitions = preflight_result.get("absolute_prohibitions", {})
+    if not isinstance(prohibitions, dict):
+        return []
+    raw_items = prohibitions.get("items_cannot_acquire", [])
+    if not isinstance(raw_items, list):
+        return []
+    names = []
+    seen = set()
+    for raw in raw_items:
+        name = _normalize_item_name(raw)
+        if name and name not in seen:
+            seen.add(name)
+            names.append(name)
+    return names
+
+
+def _extract_prev_arc_end_equipment(prev_arcs: list[dict]) -> list[str]:
+    """직전 Arc arc_end_state.equipment를 문자열 리스트로 정규화."""
+    if not prev_arcs:
+        return []
+    last_arc = prev_arcs[-1] if isinstance(prev_arcs[-1], dict) else {}
+    state_constraints = last_arc.get("state_constraints", {})
+    if not isinstance(state_constraints, dict):
+        return []
+    arc_end = state_constraints.get("arc_end_state", {})
+    if not isinstance(arc_end, dict):
+        return []
+    equipment = arc_end.get("equipment", [])
+
+    names = []
+    seen = set()
+    if isinstance(equipment, str):
+        parts = [x.strip() for x in equipment.split(",")]
+    elif isinstance(equipment, list):
+        parts = equipment
+    else:
+        parts = []
+
+    for raw in parts:
+        name = _normalize_item_name(raw)
+        if name and name not in seen:
+            seen.add(name)
+            names.append(name)
+    return names
+
+
 class FourPhaseArcGenerator(BaseAgent):
     """
     [V60.75] Three Phase Arc Generator
@@ -196,7 +257,7 @@ class FourPhaseArcGenerator(BaseAgent):
         self.preflight = PreflightChecker(context, client, sub_models.get("preflight", "gemini-2.5-flash"))
         self.ensemble = ArcEnsembleGenerator(context, client, sub_models.get("ensemble", "gemini-2.5-pro"))
         self.validator = UnifiedArcValidator(context, client, sub_models.get("validator", "gemini-2.5-flash"))
-        self.compiler = ConstraintCompiler()
+        self.compiler = None
         # [S2#1] 장르 Guard에서 장르 감지 → NegativeExampleInjector에 전달
         _detected_genre = "wuxia"
         try:
@@ -209,6 +270,7 @@ class FourPhaseArcGenerator(BaseAgent):
         except Exception as _e:
             logging.warning("[FourPhase] 장르 감지 실패, wuxia 기본값 사용: %s", _e)
         self._genre = _detected_genre
+        self.compiler = ConstraintCompiler(genre=self._genre)
         self.negative_injector = NegativeExampleInjector(_detected_genre)
 
         # 통계
@@ -432,6 +494,8 @@ class FourPhaseArcGenerator(BaseAgent):
             logging.info(" [Phase 2] Ensemble 생성 중 (3개 후보)...")
 
             prev_arc_context = self._generate_prev_context(prev_arcs, preflight_result)
+            prev_equipment = _extract_prev_arc_end_equipment(prev_arcs)
+            forbidden_items = _extract_forbidden_item_names(preflight_result)
             # [V63.3] 벡터 메모리 컨텍스트 주입
             if vector_context:
                 prev_arc_context = f"{prev_arc_context}\n\n[과거 유사 맥락 (벡터 검색)]\n{vector_context}"
@@ -494,6 +558,8 @@ class FourPhaseArcGenerator(BaseAgent):
                         curr_block=curr_block,
                         prev_arc_context=prev_arc_context,
                         constraint_block=full_constraint_block,
+                        prev_equipment=prev_equipment,
+                        forbidden_items=forbidden_items,
                         assets=assets,
                         feedback=feedback,
                         strategy_specific_feedback=_prev_reject_feedback if retry > 0 else "",  # [EnsembleFB]
@@ -772,11 +838,9 @@ class FourPhaseArcGenerator(BaseAgent):
 
         _full_json = json.dumps(original_arc, ensure_ascii=False, indent=2)
         if len(_full_json) > 30000:
-            logging.warning("[TRUNCATION] _inplace_patch_arc: Arc JSON %d자 → 30000자 (%.1f%% 손실)",
-                len(_full_json),
-                (1 - 30000 / len(_full_json)) * 100,
-            )
-        original_json = _full_json[:30000]
+            logging.warning("[TRUNCATION] _inplace_patch_arc: Arc JSON %d자 > 30KB 상한 → InPlace 불가", len(_full_json))
+            return None  # 절단 시 깨진 JSON → full rewrite 폴백
+        original_json = _full_json
 
         try:
             _patch_template = PromptLoader().load("arc_generator", "ARC_PATCH_MODE_PROMPT")
@@ -807,15 +871,21 @@ class FourPhaseArcGenerator(BaseAgent):
             result = self.ensemble._extract_json_robust(response)
             if not isinstance(result, dict):
                 return None
-            # 원본 필드 병합 (부분 응답 보상)
+            # 원본 필드 병합 (부분 응답 보상) — 1-depth deep merge
             for key, val in original_arc.items():
                 if key not in result:
                     result[key] = val
+                elif isinstance(val, dict) and isinstance(result[key], dict):
+                    for sub_key, sub_val in val.items():
+                        if sub_key not in result[key]:
+                            result[key][sub_key] = sub_val
             # arc_end_state 검증
             _sc = result.get("state_constraints", {})
             if not isinstance(_sc, dict) or not _sc.get("arc_end_state"):
                 logging.warning("[TF-23] InPlace: arc_end_state 누락 → 실패")
                 return None
+            from modules.models.arc import validate_arc
+            result = validate_arc(result)
             logging.info(f"✅ [TF-23] Arc {arc_no} in-place 수정 완료")
             return result
         except Exception as e:
@@ -947,6 +1017,8 @@ class FourPhaseArcGenerator(BaseAgent):
             logging.debug("[TF-26] master_bible access failed (patch): %s", str(e)[:100])
 
         prev_arc_context = self._generate_prev_context(prev_arcs, preflight_result)
+        prev_equipment = _extract_prev_arc_end_equipment(prev_arcs)
+        forbidden_items = _extract_forbidden_item_names(preflight_result)
         if vector_context:
             prev_arc_context = f"{prev_arc_context}\n\n[과거 유사 맥락 (벡터 검색)]\n{vector_context}"
 
@@ -958,6 +1030,8 @@ class FourPhaseArcGenerator(BaseAgent):
                 curr_block=curr_block,
                 prev_arc_context=prev_arc_context,
                 constraint_block=full_constraint_block,
+                prev_equipment=prev_equipment,
+                forbidden_items=forbidden_items,
                 assets=assets,
                 feedback=enhanced_feedback,
                 protagonist_name=protagonist_name,

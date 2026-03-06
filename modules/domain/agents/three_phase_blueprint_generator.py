@@ -481,13 +481,16 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                             logging.warning("[TF-32-V] patch 실패")
                             break
 
-                        # [F-2] InPlace Blueprint 변경 비율 로깅
+                        # [InPlace-Diff] Blueprint 패치 전후 diff 로깅 + [F-2] 변경 비율
                         try:
-                            from modules.core.constants import calc_patch_change_ratio
+                            from modules.core.constants import calc_patch_change_ratio, log_patch_diff
                             from modules.validation.threshold_helper import _threshold as _th
 
                             _orig_j = json.dumps(_current_bp, ensure_ascii=False)
                             _patch_j = json.dumps(_patched_bp, ensure_ascii=False)
+                            log_patch_diff("S3-Blueprint",
+                                           json.dumps(_current_bp, ensure_ascii=False, indent=2),
+                                           json.dumps(_patched_bp, ensure_ascii=False, indent=2))
                             _change_ratio = calc_patch_change_ratio(_orig_j, _patch_j)
                             _max_ratio = float(_th("patch_mode.inplace_max_change_ratio", 0.30))
                             if _change_ratio > _max_ratio:
@@ -684,11 +687,9 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
 
         _full_json = json.dumps(original_blueprint, ensure_ascii=False, indent=2)
         if len(_full_json) > 30000:
-            logging.warning("[TRUNCATION] _inplace_patch_blueprint: Blueprint JSON %d자 → 30000자 (%.1f%% 손실)",
-                len(_full_json),
-                (1 - 30000 / len(_full_json)) * 100,
-            )
-        original_json = _full_json[:30000]
+            logging.warning("[TRUNCATION] _inplace_patch_blueprint: Blueprint JSON %d자 > 30KB 상한 → InPlace 불가", len(_full_json))
+            return None  # 절단 시 깨진 JSON → full rewrite 폴백
+        original_json = _full_json
 
         # [TF-49b] Arc tactical excerpt 추출 → 프롬프트에 prepend
         _arc_tactical_prefix = ""
@@ -740,12 +741,16 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
             if not isinstance(result, dict):
                 return None
             result.setdefault("episode_number", ep_num)
-            # [TF-49b] 원본 필드 보존 + scene_breakdown 씬 키 복원
+            # [TF-49b] 원본 필드 보존 + scene_breakdown 씬 키 복원 — 1-depth deep merge
             _orig_sb = original_blueprint.get("scene_breakdown", {})
             _result_sb = result.get("scene_breakdown")
             for key, val in original_blueprint.items():
                 if key not in result:
                     result[key] = val
+                elif isinstance(val, dict) and isinstance(result[key], dict):
+                    for sub_key, sub_val in val.items():
+                        if sub_key not in result[key]:
+                            result[key][sub_key] = sub_val
             if isinstance(_orig_sb, dict) and isinstance(_result_sb, dict):
                 _lost = set(_orig_sb) - set(_result_sb)
                 if _lost:

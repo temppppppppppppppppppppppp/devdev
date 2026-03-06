@@ -586,12 +586,15 @@ class Stage2Finalizer:
                             "Please verify the patched tactical_doc arithmetic before approving."
                         )
 
-                # [F-2] InPlace Arc 변경 비율 로깅
+                # [InPlace-Diff] Arc 패치 전후 diff 로깅
                 try:
-                    from modules.core.constants import calc_patch_change_ratio
+                    from modules.core.constants import calc_patch_change_ratio, log_patch_diff
 
                     _orig_j = json.dumps(_current_arc, ensure_ascii=False)
                     _patch_j = json.dumps(_patched, ensure_ascii=False)
+                    log_patch_diff("S2-Arc",
+                                   json.dumps(_current_arc, ensure_ascii=False, indent=2),
+                                   json.dumps(_patched, ensure_ascii=False, indent=2))
                     _change_ratio = calc_patch_change_ratio(_orig_j, _patch_j)
                     _max_ratio = float(_threshold("patch_mode.inplace_max_change_ratio", 0.30))
                     if _change_ratio > _max_ratio:

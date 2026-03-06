@@ -187,6 +187,43 @@ def calc_patch_change_ratio(original: str, patched: str) -> float:
     return round(1.0 - SequenceMatcher(None, original, patched, autojunk=False).ratio(), 4)
 
 
+def log_patch_diff(stage: str, original: str, patched: str, *, max_diff_lines: int = 80) -> None:
+    """InPlace 패치 전후 unified diff를 로그에 기록.
+
+    Args:
+        stage: "S2-Arc" / "S3-Blueprint" / "S4-Manuscript" 등 식별자.
+        original: 패치 전 텍스트.
+        patched: 패치 후 텍스트.
+        max_diff_lines: diff 출력 최대 줄 수 (너무 길면 잘라서 로깅).
+    """
+    import difflib
+    import logging
+
+    if not original or not patched:
+        return
+
+    orig_lines = original.splitlines(keepends=True)
+    patch_lines = patched.splitlines(keepends=True)
+
+    diff = list(difflib.unified_diff(
+        orig_lines, patch_lines,
+        fromfile=f"{stage}/before", tofile=f"{stage}/after",
+        lineterm="",
+        n=2,  # context lines
+    ))
+    if not diff:
+        logging.info("[InPlace-Diff] %s: 변경 없음", stage)
+        return
+
+    total = len(diff)
+    if total > max_diff_lines:
+        diff = diff[:max_diff_lines]
+        diff.append(f"\n... ({total - max_diff_lines}줄 추가 diff 생략)")
+
+    diff_text = "\n".join(line.rstrip() for line in diff)
+    logging.info("[InPlace-Diff] %s (%d줄 diff):\n%s", stage, total, diff_text)
+
+
 class WritingLimits:
     """집필 관련 제한"""
 
