@@ -166,3 +166,51 @@ def test_failure_analyzer_snippets_empty_db(tmp_db):
     fa = FailureAnalyzer(tmp_db)
     assert fa.failed_call_snippets() == []
     assert fa.failure_prompt_patterns() == []
+
+
+# ── [TF-60] 터미널 5 로깅 보완 테스트 ─────────────────────────────────────────
+
+def test_llm_calls_has_thinking_snippet_column(tmp_db):
+    """이슈 8: llm_calls 테이블에 thinking_snippet 컬럼 존재."""
+    cols = [r[1] for r in tmp_db.conn.execute("PRAGMA table_info(llm_calls)").fetchall()]
+    assert "thinking_snippet" in cols
+
+
+def test_save_llm_call_thinking_snippet(tmp_db):
+    """이슈 8: save_llm_call()에 thinking_snippet 전달 시 저장됨."""
+    tmp_db.save_llm_call(
+        agent_name="director",
+        model="gemini-2.5-pro",
+        prompt_chars=1000,
+        response_chars=200,
+        duration_ms=500,
+        success=True,
+        thinking_snippet="director thinking content here",
+    )
+    row = tmp_db.conn.execute("SELECT thinking_snippet FROM llm_calls WHERE agent_name='director'").fetchone()
+    assert row is not None
+    assert row["thinking_snippet"] == "director thinking content here"
+
+
+def test_stage_attempts_has_generation_method_column(tmp_db):
+    """이슈 10: stage_attempts 테이블에 generation_method 컬럼 존재."""
+    cols = [r[1] for r in tmp_db.conn.execute("PRAGMA table_info(stage_attempts)").fetchall()]
+    assert "generation_method" in cols
+
+
+def test_save_stage_attempt_generation_method(tmp_db):
+    """이슈 10: save_stage_attempt()에 generation_method 전달 시 저장됨."""
+    tmp_db.save_stage_attempt(
+        stage=2,
+        verdict="PASS",
+        attempt_num=1,
+        ep_num=3,
+        arc_num=3,
+        score=85,
+        generation_method="four_phase",
+    )
+    row = tmp_db.conn.execute(
+        "SELECT generation_method FROM stage_attempts WHERE stage=2 AND ep_num=3"
+    ).fetchone()
+    assert row is not None
+    assert row["generation_method"] == "four_phase"

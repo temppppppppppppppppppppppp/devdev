@@ -17,9 +17,8 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from concurrent.futures import TimeoutError as FutureTimeoutError
 
 from modules.core.arc_summary_utils import generate_prev_arc_summary  # [V64.P4]
-from modules.core.prompt_loader import SafeDict
-
 from modules.core.constants import AIModels
+from modules.core.prompt_loader import SafeDict
 from modules.validation.threshold_helper import _threshold
 
 from .base_agent import _SYSTEM_CFG, BaseAgent

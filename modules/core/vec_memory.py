@@ -915,20 +915,24 @@ class VecMemory:
         ser = _serialize_f32(emb)
         try:
             with self._db_lock():
+                # [TF-60] sqlite-vec vec0 KNN: rowid 필터 + LIMIT 조합 시
+                # "k = ? constraint required" 에러 발생. k = ? 사용 + rowid 필터는 Python에서 처리.
+                _fetch_k = n_results * 10 + 50
                 rows = self._conn.execute(
                     """SELECT vec_episodes.rowid, distance,
                               m.summary, m.event_types, m.entity_names, m.arc_no
                        FROM vec_episodes
                        LEFT JOIN episode_meta m ON m.ep_num = vec_episodes.rowid
                        WHERE embedding MATCH ?
-                         AND vec_episodes.rowid < ?
-                       ORDER BY distance
-                       LIMIT ?""",
-                    (ser, current_ep, n_results),
+                         AND k = ?
+                       ORDER BY distance""",
+                    (ser, _fetch_k),
                 ).fetchall()
         except Exception as _e:
             logging.debug("[VecMemory] KNN raw search failed: %s", _e)
             return []
+        # Python-level: ep_num < current_ep 필터 + n_results 제한
+        rows = [r for r in rows if r[0] < current_ep][:n_results]
 
         results = []
         for ep_num, distance, summary, event_types, entity_names, arc_no in rows:

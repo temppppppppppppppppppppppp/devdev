@@ -301,7 +301,14 @@ class BaseAgent:
 
     def _resolve_logging_db(self):
         """Return project DB if available."""
-        return getattr(getattr(self.context, "current_project", None), "db", None)
+        # Pattern 1: DI context (Stage*Context.current_project.db)
+        cp = getattr(self.context, "current_project", None)
+        if cp is not None:
+            db = getattr(cp, "db", None)
+            if db is not None:
+                return db
+        # Pattern 2: Direct ProjectContext (main_a.py agent init)
+        return getattr(self.context, "db", None)
 
     def _resolve_stage_number(self):
         """Best-effort stage extraction for telemetry."""
@@ -359,6 +366,7 @@ class BaseAgent:
         context_tag: str | None = None,
         stage: int | None = None,
         ep_num: int | None = None,
+        thinking_text: str | None = None,
     ) -> None:
         """Non-blocking DB write for LLM call telemetry."""
         try:
@@ -379,6 +387,9 @@ class BaseAgent:
             _prompt_snippet = str(prompt_text)[:3000] if (not success and prompt_text) else None
             _response_snippet = str(response_text) if (not success and response_text) else None
 
+            # [TF-58] thinking_text는 성공 호출에서도 저장 (Director 추론 분석용)
+            _thinking_snippet = str(thinking_text)[:5000] if thinking_text else None
+
             _db.save_llm_call(
                 agent_name=_to_snake_case(self.__class__.__name__),
                 model=model or "",
@@ -394,9 +405,10 @@ class BaseAgent:
                 context_tag=context_tag,
                 prompt_snippet=_prompt_snippet,
                 response_snippet=_response_snippet,
+                thinking_snippet=_thinking_snippet,
             )
-        except Exception:
-            pass
+        except Exception as _e:
+            logging.debug("[llm_call_log] save failed: %s", _e)
 
     def ask(self, prompt, temperature=0.5, response_schema=None, thinking_level=None):
         """
@@ -592,6 +604,7 @@ class BaseAgent:
                     response_text=full_response,
                     duration_ms=_elapsed_ms,
                     success=True,
+                    thinking_text=_thinking_text,  # [TF-58]
                 )
             except Exception:
                 pass
@@ -668,6 +681,7 @@ class BaseAgent:
                     duration_ms=_elapsed_ms,
                     success=False,
                     error=_ask_error,
+                    thinking_text=_thinking_text,  # [TF-58]
                 )
             except Exception:
                 pass

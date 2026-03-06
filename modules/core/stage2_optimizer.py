@@ -300,7 +300,6 @@ class ArcAutoCorrector:
             # [TF-57-B] tactical_doc 내 "[시작 상태:...]" 텍스트도 동기화 (phantom fix 방지)
             tactical_doc = arc.get("tactical_doc", "")
             if tactical_doc and current_location in tactical_doc:
-                import re as _re57
                 # "[시작 상태: <위치>" 패턴에서 위치 문자열만 교체 (조사/공백 무시)
                 new_tactical = tactical_doc.replace(current_location, prev_location)
                 if new_tactical != tactical_doc:

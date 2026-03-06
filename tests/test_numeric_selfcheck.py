@@ -222,3 +222,69 @@ def test_ns1p_warning_injected_into_story_context():
     re_story_context = calls[1].kwargs.get("story_context", "")
     assert "[NS-1-P arithmetic warning in inplace patch]" in re_story_context
 
+
+# ── [TF-60] NC-1-S2: check_tactical_doc 테스트 ────────────────────────────
+
+
+def test_nc1_s2_arithmetic_mismatch_detected():
+    """15억 × 2배 = 60억 → 산술 불일치 경고 (기대값 30억)."""
+    from modules.core.numeric_consistency_checker import NumericConsistencyChecker
+
+    checker = NumericConsistencyChecker()
+    warns = checker.check_tactical_doc("15억 x 2배 = 60억", 1)
+    assert any("산술" in w["text"] or "레버리지" in w["text"] for w in warns), (
+        f"산술 불일치 경고 미발생: {warns}"
+    )
+
+
+def test_nc1_s2_arithmetic_correct_no_warning():
+    """원금5억 + 수익5억 = 10억 → 경고 없음."""
+    from modules.core.numeric_consistency_checker import NumericConsistencyChecker
+
+    checker = NumericConsistencyChecker()
+    warns = checker.check_tactical_doc("수익 5억 + 원금 5억 = 10억", 1)
+    arith_warns = [w for w in warns if w["check"] == "산술 일관성"]
+    assert arith_warns == [], f"예상치 못한 산술 경고: {arith_warns}"
+
+
+def test_nc1_s2_leverage_return_pct_mismatch():
+    """620달러→680달러, 2배 레버리지, 수익률 100% → 경고 (실제 ~19.4%)."""
+    from modules.core.numeric_consistency_checker import NumericConsistencyChecker
+
+    checker = NumericConsistencyChecker()
+    warns = checker.check_tactical_doc(
+        "620달러에서 680달러로 상승, 2배 레버리지, 수익률 100%",
+        1,
+    )
+    assert any("레버리지 수익률" in w["text"] for w in warns), (
+        f"레버리지 수익률 경고 미발생: {warns}"
+    )
+
+
+def test_nc1_s2_advisory_injected_into_story_context():
+    """[TF-60] 첫 생성 경로에서 NC-1-S2 경고가 Director story_context에 주입되는지 확인."""
+    audit = {"decision": "PASS", "score": 91, "reason": "ok"}
+    ctx = _make_stage2_ctx([audit])
+    host = MagicMock()
+    host.ctx = ctx
+    finalizer = Stage2Finalizer(host)
+
+    arc = _valid_arc()
+    # 산술 불일치 유도: 15억 × 2배 = 60억 (기대 30억)
+    arc["tactical_doc"] = f"투자금 15{EOK} x 2배 = 60{EOK}"
+    kwargs = _make_kwargs(arc)
+
+    with (
+        patch("modules.core.stage2_finalizer.validate_arc", side_effect=lambda x: x),
+        patch("modules.core.spinners.V50_MODULES_AVAILABLE", False),
+    ):
+        asyncio.run(finalizer.run_finalize(**kwargs))
+
+    calls = ctx.agents["director"].audit_strategic_plan.call_args_list
+    assert calls, "Director audit_strategic_plan 미호출"
+    first_story_ctx = calls[0].kwargs.get("story_context", "")
+    # NC-1-S2 또는 NS-1-P arithmetic warning 중 하나가 주입됐으면 PASS
+    assert "NC-1-S2" in first_story_ctx or "NS-1-P arithmetic warning" in first_story_ctx, (
+        f"NC-1-S2/NS-1-P advisory가 story_context에 없음: {first_story_ctx[:300]}"
+    )
+

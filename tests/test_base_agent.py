@@ -14,6 +14,7 @@ MODEL_FALLBACK_CHAIN, THINKING_BUDGET_MAP.
 import json
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
@@ -36,6 +37,24 @@ def agent():
     context.author_directives = ""
     client = MagicMock()
     return BaseAgent(context=context, client=client, model_tier="gemini-2.5-flash")
+
+
+class TestResolveLoggingDb:
+    def test_resolve_logging_db_supports_di_direct_and_none_context(self):
+        client = MagicMock()
+
+        di_db = object()
+        di_context = SimpleNamespace(current_project=SimpleNamespace(db=di_db))
+        di_agent = BaseAgent(context=di_context, client=client, model_tier="gemini-2.5-flash")
+        assert di_agent._resolve_logging_db() is di_db
+
+        direct_db = object()
+        direct_context = SimpleNamespace(db=direct_db)
+        direct_agent = BaseAgent(context=direct_context, client=client, model_tier="gemini-2.5-flash")
+        assert direct_agent._resolve_logging_db() is direct_db
+
+        none_context_agent = BaseAgent(context=None, client=client, model_tier="gemini-2.5-flash")
+        assert none_context_agent._resolve_logging_db() is None
 
 
 # ══════════════════════════════════════════════════════════════

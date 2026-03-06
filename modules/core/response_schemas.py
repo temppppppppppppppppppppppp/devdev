@@ -221,8 +221,13 @@ ARC_STATE_SCHEMA = types.Schema(
         "equipment": types.Schema(type=types.Type.ARRAY, items=types.Schema(type=types.Type.STRING)),
         "injuries": types.Schema(type=types.Type.STRING, enum=["없음", "정상", "경상", "중상", "위독"]),
         "internal_energy": types.Schema(type=types.Type.INTEGER, minimum=0, maximum=100),
+        # [TF-59] 재무 상태 연속성 (투자물 등 비무협 장르용, optional)
+        "capital": types.Schema(type=types.Type.STRING, description="보유 자본금 (예: '5억원', '$1M')"),
+        "total_assets": types.Schema(type=types.Type.STRING, description="총 자산 (자본금+투자자산)"),
+        "portfolio_position": types.Schema(type=types.Type.STRING, description="현재 포지션 요약 (예: '삼성전자 1000주 보유')"),
     },
     required=["location", "equipment", "injuries", "internal_energy"],
+    # capital/total_assets/portfolio_position은 optional — 무협 등은 생략
 )
 
 ARC_STATE_CONSTRAINTS_SCHEMA = types.Schema(

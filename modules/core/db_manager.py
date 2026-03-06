@@ -489,7 +489,8 @@ class DBManager:
                 verdict TEXT,
                 context_tag TEXT,
                 prompt_snippet TEXT,
-                response_snippet TEXT
+                response_snippet TEXT,
+                thinking_snippet TEXT
             )
             """
         )
@@ -497,7 +498,7 @@ class DBManager:
         self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_llm_calls_ep ON llm_calls(ep_num)")
         self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_llm_calls_ts ON llm_calls(ts)")
         # [Log-Phase2] Existing DB compatibility migration
-        for _col in ("prompt_snippet", "response_snippet"):
+        for _col in ("prompt_snippet", "response_snippet", "thinking_snippet"):
             try:
                 self.cursor.execute(f"ALTER TABLE llm_calls ADD COLUMN {_col} TEXT")
                 self.conn.commit()
@@ -522,7 +523,8 @@ class DBManager:
                 fix_scope TEXT,
                 model TEXT,
                 duration_ms INTEGER,
-                advisory_flags TEXT
+                advisory_flags TEXT,
+                generation_method TEXT
             )
             """
         )
@@ -531,6 +533,12 @@ class DBManager:
         self.cursor.execute(
             "CREATE INDEX IF NOT EXISTS idx_stage_attempts_category ON stage_attempts(failure_category)"
         )
+        # [TF-60] generation_method 컬럼 마이그레이션 (기존 DB 호환)
+        try:
+            self.cursor.execute("ALTER TABLE stage_attempts ADD COLUMN generation_method TEXT")
+            self.conn.commit()
+        except Exception as _e:
+            logging.debug("[DBManager] stage_attempts generation_method 마이그레이션 스킵: %s", _e)
 
         # 16. [Phase 6] 비용 추적 로그
         self.cursor.execute("""
@@ -2474,6 +2482,7 @@ class DBManager:
         session_id: str | None = None,
         prompt_snippet: str | None = None,
         response_snippet: str | None = None,
+        thinking_snippet: str | None = None,
     ) -> None:
         """[Log-1] Save one LLM call record in non-blocking mode."""
         try:
@@ -2481,14 +2490,16 @@ class DBManager:
             # [Log-Phase2] Keep DB size bounded: snippets only for failed calls.
             _prompt_snip = str(prompt_snippet)[:3000] if (not success and prompt_snippet) else None
             _response_snip = str(response_snippet) if (not success and response_snippet) else None
+            # [TF-58] thinking은 성공 호출에서도 저장 (Director 구조 결함 분석용), 5000자 제한
+            _thinking_snip = str(thinking_snippet)[:5000] if thinking_snippet else None
             with self._lock:
                 self.cursor.execute(
                     """INSERT INTO llm_calls
                        (session_id, ts, stage, ep_num, agent_name, model,
                         prompt_chars, response_chars, duration_ms,
                         success, error_type, error_msg, verdict, context_tag,
-                        prompt_snippet, response_snippet)
-                       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                        prompt_snippet, response_snippet, thinking_snippet)
+                       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                     (
                         session_id,
                         ts,
@@ -2506,6 +2517,7 @@ class DBManager:
                         context_tag,
                         _prompt_snip,
                         _response_snip,
+                        _thinking_snip,
                     ),
                 )
                 self.conn.commit()
@@ -2527,6 +2539,7 @@ class DBManager:
         duration_ms: int | None = None,
         advisory_flags: dict | None = None,
         session_id: str | None = None,
+        generation_method: str | None = None,
     ) -> None:
         """[Log-2] Save one stage attempt record in non-blocking mode."""
         try:
@@ -2537,8 +2550,8 @@ class DBManager:
                     """INSERT INTO stage_attempts
                        (session_id, ts, stage, ep_num, arc_num, attempt_num,
                         verdict, score, failure_category, reject_reason,
-                        fix_scope, model, duration_ms, advisory_flags)
-                       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                        fix_scope, model, duration_ms, advisory_flags, generation_method)
+                       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                     (
                         session_id,
                         ts,
@@ -2554,6 +2567,7 @@ class DBManager:
                         model,
                         duration_ms,
                         _advisory_json,
+                        generation_method,
                     ),
                 )
                 self.conn.commit()
