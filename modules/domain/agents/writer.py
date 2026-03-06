@@ -18,6 +18,7 @@ import json
 import logging
 import re
 
+from modules.core.constants import AIModels
 from modules.core.hud_utils import get_hud_trend_safe as _get_hud_trend_safe_shared  # [V64.P4]
 from modules.core.writer_prompt_builders import (
     build_anti_trope_instructions as _build_anti_trope_instructions_shared,
@@ -28,8 +29,6 @@ from modules.core.writer_prompt_builders import (
 from modules.core.writer_prompt_builders import (
     build_mandatory_context as _build_mandatory_context_shared,
 )
-
-from modules.core.constants import AIModels
 
 from .base_agent import BaseAgent
 

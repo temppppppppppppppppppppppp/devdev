@@ -1,0 +1,22 @@
+{
+  "name": "geuldobi-desktop",
+  "version": "1.0.0",
+  "description": "Spike 4: Electron splash skeleton for Geuldobi desktop",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "cmd /C \"set ELECTRON_RUN_AS_NODE=&& electron .\"",
+    "start:spike": "cmd /C \"set ELECTRON_RUN_AS_NODE=&& set SPIKE_AUTOCLOSE_MS=5000&& electron .\"",
+    "test": "echo \"No tests configured\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "cross-env": "^10.1.0",
+    "electron": "^40.8.0"
+  },
+  "dependencies": {
+    "lucide": "^0.577.0"
+  }
+}

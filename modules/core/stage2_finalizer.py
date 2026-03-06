@@ -6,6 +6,7 @@ import re
 import time
 
 from modules.core.metrics_collector import get_metrics_collector
+from modules.core.numeric_consistency_checker import NumericConsistencyChecker
 from modules.models.arc import validate_arc
 
 
@@ -387,6 +388,40 @@ class Stage2Finalizer:
         if _cross_arc_issues:
             _story_context += "\n\n" + "\n".join(_cross_arc_issues)
             logging.info("[TF-57-C] 크로스-Arc 자산 연속성 advisory 주입: %d건", len(_cross_arc_issues))
+
+        # [TF-60] NC-1-S2: tactical_doc 산술 검증 (advisory-only, Director 주권 준수)
+        if _tactical_doc:
+            try:
+                _nc1_s2_checker = NumericConsistencyChecker()
+                _nc1_s2_warns = _nc1_s2_checker.check_tactical_doc(
+                    _tactical_doc,
+                    global_arc_no,
+                )
+                if _nc1_s2_warns:
+                    _nc1_s2_text = "\n".join(
+                        f"  - [{w['severity']}] {w['text']}" for w in _nc1_s2_warns
+                    )
+                    _story_context += (
+                        f"\n\n[NC-1-S2 산술 검증 경고]\n{_nc1_s2_text}\n"
+                        "위 경고를 참고하여 수치 정합성을 검증하세요."
+                    )
+                    logging.info("[TF-60] NC-1-S2 advisory 주입: %d건", len(_nc1_s2_warns))
+            except Exception as _nc1_err:
+                logging.debug("[TF-60] NC-1-S2 검사 실패 (비치명): %s", _nc1_err)
+
+        # [TF-60 / NS-1-P 확장] _check_tactical_arithmetic — 첫 생성 경로에서도 실행
+        if _tactical_doc:
+            try:
+                _arith_first_issues = _check_tactical_arithmetic(str(_tactical_doc))
+                if _arith_first_issues:
+                    _arith_first_warn = "\n".join(f"  - {item}" for item in _arith_first_issues)
+                    logging.warning("[NS-1-P/S2] 첫 생성 arithmetic warning:\n%s", _arith_first_warn)
+                    _story_context += (
+                        f"\n\n[NS-1-P arithmetic warning]\n{_arith_first_warn}\n"
+                        "Please verify tactical_doc arithmetic before approving."
+                    )
+            except Exception as _arith_err:
+                logging.debug("[TF-60] _check_tactical_arithmetic 실패 (비치명): %s", _arith_err)
 
         self.ctx.ui.log("      🤔 [TF-38] Director 전략적 무결성 검수 중...")
         print("      🤔 [Director] 전략적 무결성 검수 중 (LLM 호출, 1~3분 소요)...")
@@ -1157,6 +1192,7 @@ class Stage2Finalizer:
                     attempt_num=attempt + 1,
                     success=True,
                     generation_method=generation_method,
+                    duration_ms=duration_ms or 0,
                     is_patch=is_patch,
                     prev_score=prev_score,
                     patch_fallback=patch_fallback,
@@ -1189,7 +1225,23 @@ class Stage2Finalizer:
                     model=str(_model) if _model else None,
                     duration_ms=duration_ms,
                     advisory_flags=_advisory_flags,
+                    generation_method=generation_method,
                 )
+                # [TF-60] Stage 2 director_selections 기록
+                if hasattr(_db, "save_director_selection"):
+                    try:
+                        _db.save_director_selection(
+                            ep_num=global_arc_no,
+                            round_num=attempt + 1,
+                            selected_label="",
+                            selected_strategy=generation_method or "",
+                            verdict=str(audit.get("decision", "PASS")),
+                            score=_score,
+                            selection_reason=str(audit.get("reason", ""))[:200],
+                            fix_scope=str(audit.get("fix_scope", "") or ""),
+                        )
+                    except Exception as _ds_err:
+                        logging.debug("[director_selections] Stage2 PASS 기록 실패: %s", _ds_err)
         except Exception as _sa_err:
             logging.debug("[stage_attempts] Stage2 PASS 기록 실패 (비차단): %s", _sa_err)
 
@@ -1246,6 +1298,7 @@ class Stage2Finalizer:
                     success=False,
                     reject_reason=str(audit.get("reason", ""))[:100],
                     generation_method=generation_method,
+                    duration_ms=duration_ms or 0,
                     is_patch=is_patch,
                     prev_score=prev_score,
                     patch_fallback=patch_fallback,
@@ -1279,7 +1332,23 @@ class Stage2Finalizer:
                     model=str(_model) if _model else None,
                     duration_ms=duration_ms,
                     advisory_flags=_advisory_flags,
+                    generation_method=generation_method,
                 )
+                # [TF-60] Stage 2 director_selections 기록
+                if hasattr(_db, "save_director_selection"):
+                    try:
+                        _db.save_director_selection(
+                            ep_num=global_arc_no,
+                            round_num=attempt + 1,
+                            selected_label="",
+                            selected_strategy=generation_method or "",
+                            verdict=str(audit.get("decision", "REJECT")),
+                            score=_score,
+                            selection_reason=str(audit.get("reason", ""))[:200],
+                            fix_scope=str(audit.get("fix_scope", "") or ""),
+                        )
+                    except Exception as _ds_err:
+                        logging.debug("[director_selections] Stage2 REJECT 기록 실패: %s", _ds_err)
         except Exception as _sa_err:
             logging.debug("[stage_attempts] Stage2 REJECT 기록 실패 (비차단): %s", _sa_err)
 

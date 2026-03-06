@@ -20,7 +20,6 @@ import logging
 import re
 
 from modules.core.constants import ContextLimits, Stage2Limits
-
 from modules.validation.threshold_helper import _threshold
 
 from .arc_ensemble import ArcEnsembleGenerator
@@ -165,6 +164,18 @@ def _ns4_extract_time_markers(arc_data: dict) -> list:
     for _p in _patterns:
         _found.extend(_re.findall(_p, _text))
     return list(dict.fromkeys(_found))[:5]
+
+
+def _trim_location(loc: str, max_len: int = 80) -> str:
+    """[TF-60] 위치 문자열이 과도하게 긴 경우 핵심어만 추출."""
+    if not loc or len(loc) <= max_len:
+        return loc
+    # 첫 문장(마침표 기준) 추출 시도
+    dot_pos = loc.find(".")
+    if 10 < dot_pos <= max_len:
+        return loc[:dot_pos].strip()
+    # 마침표 없으면 첫 max_len자
+    return loc[:max_len].rstrip() + "…"
 
 
 class FourPhaseArcGenerator(BaseAgent):
@@ -388,9 +399,16 @@ class FourPhaseArcGenerator(BaseAgent):
                 self_check = self.negative_injector.generate_self_check_prompt()
 
                 # [TF-39] P1-4: 제약 블록 섹션 구조화
+                # [TF-60] 비무협 장르: 정신력/내공/마나 수치 금지
+                _genre_energy_warning = (
+                    f"⚠️ 이 작품은 {self._genre} 장르입니다. tactical_doc의 [시작 상태]/[종료 상태]에\n"
+                    '"내공", "정신력", "마나" 등의 수치화된 능력치를 사용하지 마세요.\n'
+                    "심리 상태는 서술형으로 표현하세요. (예: \"극도의 긴장 상태\", \"자신감 회복\")"
+                ) if self._genre not in ("wuxia",) else ""
                 full_constraint_block = "\n\n".join(
                     part
                     for part in [
+                        _genre_energy_warning,
                         f"### [PREFLIGHT 분석]\n{preflight_injection}" if preflight_injection else "",
                         f"### [HARD CONSTRAINTS — 절대 금지]\n{compiled_constraints}" if compiled_constraints else "",
                         f"### [NEGATIVE EXAMPLES]\n{negative_examples}" if negative_examples else "",
@@ -899,9 +917,16 @@ class FourPhaseArcGenerator(BaseAgent):
         negative_examples = self.negative_injector.generate_injection()
         self_check = self.negative_injector.generate_self_check_prompt()
         # [TF-39] P1-4: 제약 블록 섹션 구조화
+        # [TF-60] 비무협 장르: 정신력/내공/마나 수치 금지
+        _genre_energy_warning_p = (
+            f"⚠️ 이 작품은 {self._genre} 장르입니다. tactical_doc의 [시작 상태]/[종료 상태]에\n"
+            '"내공", "정신력", "마나" 등의 수치화된 능력치를 사용하지 마세요.\n'
+            "심리 상태는 서술형으로 표현하세요. (예: \"극도의 긴장 상태\", \"자신감 회복\")"
+        ) if self._genre not in ("wuxia",) else ""
         full_constraint_block = "\n\n".join(
             part
             for part in [
+                _genre_energy_warning_p,
                 f"### [PREFLIGHT 분석]\n{preflight_injection}" if preflight_injection else "",
                 f"### [HARD CONSTRAINTS — 절대 금지]\n{compiled_constraints}" if compiled_constraints else "",
                 f"### [NEGATIVE EXAMPLES]\n{negative_examples}" if negative_examples else "",
@@ -1134,6 +1159,7 @@ class FourPhaseArcGenerator(BaseAgent):
         raw_injuries = arc_end.get("injuries") or "없음"
         final_injuries = self._sanitize_injuries(raw_injuries)
         final_location = arc_end.get("location") or joint.get("final_location", "알 수 없음")
+        final_location = _trim_location(final_location)  # [TF-60] 과잉 복사 방지
         final_equipment = arc_end.get("equipment")
         if final_equipment is None:
             final_equipment = joint.get("physical_inventory", [])
@@ -1149,6 +1175,14 @@ class FourPhaseArcGenerator(BaseAgent):
         lines.append(f"✅ 부상: {final_injuries}")
         lines.append(f"✅ 위치: {final_location}")
         lines.append(f"✅ 소지품: {final_equipment}")
+        # [TF-59] 재무 상태 계승
+        _capital = arc_end.get("capital")
+        _total_assets = arc_end.get("total_assets")
+        _portfolio = arc_end.get("portfolio_position")
+        if _capital or _total_assets or _portfolio:
+            lines.append(f"✅ 자본금: {_capital or '미기재'}")
+            lines.append(f"✅ 총자산: {_total_assets or '미기재'}")
+            lines.append(f"✅ 포지션: {_portfolio or '미기재'}")
         lines.append("=" * 50)
         lines.append("")
 
@@ -1202,12 +1236,12 @@ class FourPhaseArcGenerator(BaseAgent):
         world = preflight_result.get("world_state", {})
         conflicts = world.get("ongoing_conflicts", [])
         if conflicts:
-            lines.append(f"진행 중인 갈등: {', '.join(conflicts[:3])}")
+            lines.append(f"진행 중인 갈등: {', '.join(str(c) for c in conflicts[:3])}")
 
         # [V62.7] 완결된 갈등 (재생성 금지)
         resolved = world.get("resolved_conflicts", [])
         if resolved:
-            lines.append(f"완결된 갈등 (재생성 금지): {', '.join(resolved[:5])}")
+            lines.append(f"완결된 갈등 (재생성 금지): {', '.join(str(r) for r in resolved[:5])}")
 
         relationships = preflight_result.get("relationship_map", {})
         if relationships:

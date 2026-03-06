@@ -9,17 +9,16 @@
 """
 
 import json
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
 
 from modules.api.risk_approval import ApprovalRecord, RiskApprovalGate
 
-
 # ─── 헬퍼 ───────────────────────────────────────────────────────────────────
 
-_NOW = datetime(2026, 3, 6, 12, 0, 0, tzinfo=timezone.utc)
+_NOW = datetime(2026, 3, 6, 12, 0, 0, tzinfo=UTC)
 _FUTURE = _NOW + timedelta(hours=2)
 _PAST = _NOW - timedelta(hours=1)
 

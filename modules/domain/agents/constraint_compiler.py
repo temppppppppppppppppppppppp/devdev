@@ -125,6 +125,17 @@ class ConstraintCompiler:
                             if re.search(rf"{re.escape(item)}[를을]?\s*(?:획득|얻|받|손에)", tactical):
                                 items[item] = arc_no
 
+        # [TF-59] 소비된 아이템은 금지 목록에서 제외 (재획득 허용)
+        consumed = set()
+        for arc in prev_arcs:
+            sc = arc.get("state_constraints") or {}
+            for item in sc.get("items_consumed") or []:
+                item_str = str(item) if isinstance(item, dict) else item
+                if item_str:
+                    consumed.add(item_str)
+        for c in consumed:
+            items.pop(c, None)
+
         return items
 
     def _collect_all_grants(self, prev_arcs: list[dict]) -> dict[str, tuple[int, str]]:
@@ -191,6 +202,9 @@ class ConstraintCompiler:
                 ),
                 "equipment": inventory.get("current_items", []),
                 "world_state": state_extractor_result.get("next_arc_constraints", {}).get("must_start_with", ""),
+                "capital": protagonist.get("capital"),
+                "total_assets": protagonist.get("total_assets"),
+                "portfolio_position": protagonist.get("portfolio_position"),
             }
 
         # [V60.13 FIX] 폴백: arc_end_state 우선 사용
@@ -205,12 +219,16 @@ class ConstraintCompiler:
         internal_energy = 100
         injuries = ""
 
+        arc_end_state = state_constraints.get("arc_end_state", {})
         return {
             "location": joint.get("final_location", "알 수 없음"),
             "injuries": [injuries] if injuries and injuries != "없음" else [],
             "internal_energy": internal_energy,
             "equipment": equipment,
             "world_state": joint.get("world_joint", ""),
+            "capital": arc_end_state.get("capital"),
+            "total_assets": arc_end_state.get("total_assets"),
+            "portfolio_position": arc_end_state.get("portfolio_position"),
         }
 
     def _generate_constraint_checklist(

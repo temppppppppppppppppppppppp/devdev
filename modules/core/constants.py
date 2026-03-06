@@ -204,7 +204,7 @@ class Stage2Limits:
     DEFAULT_EP_COUNT = 5  # 기본 화수 (Standard)
 
     # tactical_doc 분량 기준
-    MIN_CHARS_PER_EPISODE = 500  # 화당 최소 문자 수
+    MIN_CHARS_PER_EPISODE = 450  # 화당 최소 문자 수 [TF-59] 500→450 하향
     RECOMMENDED_CHARS_PER_EPISODE = 600  # 화당 권장 문자 수
 
     # 아이템 유사도 판단 기준

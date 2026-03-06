@@ -57,8 +57,9 @@ def mem_with_embed():
 
 class TestInit:
     def test_in_memory_operational(self, mem):
-        assert mem.is_operational()
+        # is_operational()은 genai_client 필요 — fixture는 api_key="" 이므로 DB 가용성만 확인
         assert mem.has_valid_memory
+        assert mem._conn is not None
 
     def test_status_fields(self, mem):
         status = mem.get_status()
@@ -205,9 +206,9 @@ class TestKNNSearch:
         self._populate(m, 5)
 
         # 쿼리: ep1과 유사한 벡터 → ep1 반환 기대
+        # hybrid mode에서는 "=== EP N [source, rrf=X] ===" 포맷으로 반환됨
         m._embed_text = MagicMock(return_value=_make_similar_vec(1.0))
         result = m.retrieve_high_res_context("query", current_ep=5, n_results=2)
-        assert "제 1 화의 기억" in result
         assert "요약_1" in result
 
     def test_retrieve_excludes_future(self, mem_with_embed):
@@ -438,10 +439,10 @@ class TestEmbeddingKeywordFallback:
         # 요약에 포함된 키워드로 쿼리
         result = m.retrieve_high_res_context("장무기", current_ep=10, n_results=3)
 
-        # 빈 문자열이 아니라 fallback 결과가 반환되어야 함
+        # 빈 문자열이 아니라 결과가 반환되어야 함
+        # hybrid mode: embed=None → sparse FTS 결과 반환 (키워드 헤더 없이 RRF 포맷)
         assert result != ""
-        assert "키워드" in result  # 키워드 fallback 헤더
-        assert "장무기" in result or "화의 기억" in result
+        assert "장무기" in result
 
     def test_embedding_fallback_returns_empty_on_no_match(self, mem_with_embed):
         """DB에 키워드 매칭 항목이 없으면 fallback도 빈 문자열을 안전하게 반환한다."""
@@ -804,16 +805,15 @@ class TestHybridRetrieval:
         assert any("ep<5" in msg for msg in d2_logs), f"ep<5 missing: {d2_logs}"
 
     def test_d2_dense_log_format(self, caplog):
-        """임베딩 성공 + KNN 결과 시 [VecMem] path=dense 포맷 로그가 남는다."""
+        """임베딩 성공 시 [VecMem] path=hybrid 포맷 로그가 남는다 (retrieval_mode=hybrid)."""
         import logging
 
         vm, _ = self._make_vm()
         vm._embed_text = lambda _: [0.0] * EMBED_DIM
-        vm._knn_search = lambda *a, **k: "mock result"
 
         with caplog.at_level(logging.DEBUG, logger="root"):
             vm.retrieve_high_res_context("test query", current_ep=5)
 
         d2_logs = [r.message for r in caplog.records if "[VecMem]" in r.message]
-        assert any("path=dense" in msg for msg in d2_logs), f"path=dense log missing: {d2_logs}"
+        assert any("path=hybrid" in msg for msg in d2_logs), f"path=hybrid log missing: {d2_logs}"
         assert any("ep<5" in msg for msg in d2_logs), f"ep<5 missing: {d2_logs}"

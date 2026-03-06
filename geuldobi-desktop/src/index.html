@@ -1,0 +1,780 @@
+﻿<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>글도비 Desktop</title>
+    <style>
+      :root {
+        --bg: #f8fafc;
+        --surface: #ffffff;
+        --line: #e2e8f0;
+        --text: #0f172a;
+        --muted: #64748b;
+        --label: #475569;
+        --button: #475569;
+        --button-hover: #334155;
+        --pass: #22c55e;
+        --reject: #ef4444;
+        --pwf: #eab308;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Malgun Gothic", "Apple SD Gothic Neo", "Segoe UI", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+      }
+
+      .page {
+        min-height: 100dvh;
+        padding: 20px;
+        display: grid;
+        gap: 14px;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+      }
+
+      .project-select {
+        width: 240px;
+        padding: 8px 10px;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+        background: #fff;
+        color: var(--text);
+        font: inherit;
+      }
+
+      .top-action {
+        padding: 8px 12px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: #fff;
+        color: var(--muted);
+        font: inherit;
+        cursor: pointer;
+      }
+
+      .shell {
+        display: grid;
+        grid-template-columns: 320px 1fr 1fr;
+        gap: 14px;
+      }
+
+      .panel {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 14px;
+      }
+
+      .panel-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+
+      .panel-title {
+        margin: 0;
+        font-size: 16px;
+      }
+
+      .panel-sub {
+        margin: 0 0 12px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .run-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      .menu-btn {
+        width: 100%;
+        text-align: left;
+        border: 0;
+        border-radius: 10px;
+        padding: 11px 12px;
+        background: var(--button);
+        color: #fff;
+        font: inherit;
+        cursor: pointer;
+      }
+
+      .menu-btn:hover {
+        background: var(--button-hover);
+      }
+
+      .menu-btn .label {
+        font-weight: 700;
+      }
+
+      .menu-btn .meta {
+        margin-left: 8px;
+        font-size: 12px;
+        opacity: 0.88;
+      }
+
+      .toggle-row {
+        display: flex;
+        gap: 8px;
+      }
+
+      .mini-toggle {
+        border: 1px solid var(--line);
+        background: #fff;
+        border-radius: 999px;
+        padding: 6px 10px;
+        font: inherit;
+        font-size: 12px;
+        color: var(--muted);
+        cursor: pointer;
+      }
+
+      .mini-toggle.active {
+        background: #e2e8f0;
+        color: #1e293b;
+      }
+
+      .canvas-wrap {
+        position: relative;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        overflow: hidden;
+        background: #e2e8f0;
+      }
+
+      #officeCanvas {
+        display: block;
+        width: 100%;
+        height: 320px;
+        image-rendering: pixelated;
+      }
+
+      .effect-banner {
+        position: absolute;
+        left: 50%;
+        top: 14px;
+        transform: translateX(-50%) translateY(-8px);
+        border-radius: 999px;
+        border: 1px solid transparent;
+        padding: 6px 14px;
+        font-size: 13px;
+        font-weight: 700;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 120ms ease-out, transform 120ms ease-out;
+      }
+
+      .effect-banner.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+
+      .effect-banner.pass {
+        color: #166534;
+        border-color: #86efac;
+        background: rgba(134, 239, 172, 0.25);
+      }
+
+      .effect-banner.pwf {
+        color: #854d0e;
+        border-color: #fde047;
+        background: rgba(250, 204, 21, 0.25);
+      }
+
+      .effect-banner.reject {
+        color: #991b1b;
+        border-color: #fca5a5;
+        background: rgba(248, 113, 113, 0.25);
+      }
+
+      .status-foot {
+        margin-top: 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .badge {
+        display: inline-block;
+        background: #e2e8f0;
+        color: #334155;
+        border-radius: 999px;
+        padding: 5px 11px;
+        font-size: 12px;
+      }
+
+      #stateBadge.state-running {
+        background: #dbeafe;
+        color: #1d4ed8;
+      }
+
+      #stateBadge.state-idle {
+        background: #e2e8f0;
+        color: #334155;
+      }
+
+      #stateBadge.state-pass {
+        background: #dcfce7;
+        color: #166534;
+      }
+
+      #stateBadge.state-pwf {
+        background: #fef9c3;
+        color: #854d0e;
+      }
+
+      #stateBadge.state-reject {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+
+      .last-action {
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      .log-controls {
+        display: grid;
+        grid-template-columns: 1fr 120px;
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+
+      .log-controls input,
+      .log-controls select {
+        width: 100%;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+        padding: 8px 10px;
+        font: inherit;
+        background: #fff;
+        color: var(--text);
+      }
+
+      .log-box {
+        min-height: 320px;
+        max-height: 320px;
+        border-radius: 10px;
+        border: 1px dashed var(--line);
+        padding: 10px;
+        overflow: auto;
+        background: #fff;
+      }
+
+      .log-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 4px;
+        border-bottom: 1px solid #f1f5f9;
+        font-size: 13px;
+      }
+
+      .log-time {
+        color: #94a3b8;
+        min-width: 68px;
+        font-size: 12px;
+      }
+
+      .log-msg {
+        color: #334155;
+        flex: 1;
+      }
+
+      .verdict-badge {
+        border-radius: 999px;
+        padding: 3px 8px;
+        font-size: 11px;
+        font-weight: 700;
+        color: #fff;
+      }
+
+      .verdict-pass {
+        background: var(--pass);
+      }
+
+      .verdict-reject {
+        background: var(--reject);
+      }
+
+      .verdict-pwf {
+        background: var(--pwf);
+        color: #3f2f00;
+      }
+
+      @media (max-width: 1180px) {
+        .shell {
+          grid-template-columns: 1fr;
+        }
+
+        .project-select {
+          width: 100%;
+        }
+
+        .topbar {
+          flex-wrap: wrap;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <header class="topbar">
+        <select class="project-select" aria-label="프로젝트 선택">
+          <option>프로젝트 선택</option>
+          <option>demo_project</option>
+        </select>
+        <button type="button" class="top-action">새 프로젝트</button>
+        <button type="button" class="top-action">설정</button>
+        <button type="button" class="top-action">종료</button>
+      </header>
+
+      <section class="shell">
+        <article class="panel">
+          <h1 class="panel-title">실행 패널</h1>
+          <p class="panel-sub">콘솔 메뉴 1:1 매핑 스텁</p>
+          <div class="run-grid">
+            <button type="button" class="menu-btn" data-action="stage_0" data-key="0">
+              <span class="label">Stage 0</span><span class="meta">key 0</span>
+            </button>
+            <button type="button" class="menu-btn" data-action="stage_1" data-key="1">
+              <span class="label">Stage 1</span><span class="meta">key 1</span>
+            </button>
+            <button type="button" class="menu-btn" data-action="stage_2" data-key="2">
+              <span class="label">Stage 2</span><span class="meta">key 2</span>
+            </button>
+            <button type="button" class="menu-btn" data-action="stage_3" data-key="3">
+              <span class="label">Stage 3</span><span class="meta">key 3</span>
+            </button>
+            <button type="button" class="menu-btn" data-action="stage_4" data-key="4">
+              <span class="label">Stage 4</span><span class="meta">key 4</span>
+            </button>
+            <button type="button" class="menu-btn" data-action="one_stop" data-key="6">
+              <span class="label">One-Stop</span><span class="meta">key 6</span>
+            </button>
+            <button type="button" class="menu-btn" data-action="rollback" data-key="44">
+              <span class="label">Rollback</span><span class="meta">key 44</span>
+            </button>
+            <button type="button" class="menu-btn" data-action="wipe" data-key="77">
+              <span class="label">Wipe</span><span class="meta">key 77</span>
+            </button>
+            <button type="button" class="menu-btn" data-action="reset" data-key="88">
+              <span class="label">Reset</span><span class="meta">key 88</span>
+            </button>
+            <button type="button" class="menu-btn" data-action="rewind" data-key="99">
+              <span class="label">Rewind</span><span class="meta">key 99</span>
+            </button>
+            <button type="button" class="menu-btn" data-action="stop" data-key="stop">
+              <span class="label">Stop</span><span class="meta">runtime</span>
+            </button>
+          </div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head">
+            <h2 class="panel-title">상태 시각화 패널</h2>
+            <div class="toggle-row">
+              <button type="button" id="toggleSkip" class="mini-toggle">Skip animation: OFF</button>
+              <button type="button" id="toggleMute" class="mini-toggle">Mute: OFF</button>
+            </div>
+          </div>
+          <div class="canvas-wrap">
+            <canvas id="officeCanvas" width="640" height="320" aria-label="Office view"></canvas>
+            <div id="effectBanner" class="effect-banner">채택</div>
+          </div>
+          <div class="status-foot">
+            <div class="badge" id="readyBadge">앱 초기화 대기</div>
+            <div class="badge state-running" id="stateBadge">상태: RUNNING</div>
+            <div class="last-action" id="lastAction">최근 클릭: 없음</div>
+          </div>
+        </article>
+
+        <article class="panel">
+          <h2 class="panel-title">로그 패널</h2>
+          <div class="log-controls">
+            <input type="text" placeholder="검색 (stub)" aria-label="로그 검색" />
+            <select aria-label="로그 필터">
+              <option>필터 (stub)</option>
+              <option>PASS</option>
+              <option>REJECT</option>
+              <option>PWF</option>
+            </select>
+          </div>
+          <div class="log-box" id="logStream"></div>
+        </article>
+      </section>
+    </main>
+
+    <script>
+      const canvas = document.getElementById("officeCanvas");
+      const ctx = canvas.getContext("2d");
+      const effectBanner = document.getElementById("effectBanner");
+      const readyBadge = document.getElementById("readyBadge");
+      const stateBadge = document.getElementById("stateBadge");
+      const lastAction = document.getElementById("lastAction");
+      const logStream = document.getElementById("logStream");
+      const toggleSkip = document.getElementById("toggleSkip");
+      const toggleMute = document.getElementById("toggleMute");
+      const menuButtons = document.querySelectorAll(".menu-btn");
+
+      ctx.imageSmoothingEnabled = false;
+
+      const officeState = {
+        isRunning: true,
+        mode: "RUNNING",
+        skipAnimation: false,
+        mute: false,
+        effectIndex: 0,
+        frame: 0,
+        timers: {
+          verdict: null,
+          clearVerdict: null,
+          log: null
+        }
+      };
+
+      const agents = [
+        { name: "Chief Writer", task: "책상에서 타이핑", x: 95, y: 95, tone: "#94a3b8" },
+        { name: "Director", task: "문서 검토", x: 300, y: 95, tone: "#9ca3af" },
+        { name: "Analyst", task: "자료 조사", x: 505, y: 95, tone: "#8ea8c3" },
+        { name: "Critic", task: "메모 작성", x: 200, y: 235, tone: "#b0a8b9" },
+        { name: "Manager", task: "파일 정리", x: 420, y: 235, tone: "#a3b18a" }
+      ];
+
+      const verdictCycle = [
+        { mode: "PASS", text: "채택", durationMs: 1500, badge: "PASS", className: "pass" },
+        {
+          mode: "PASS_WITH_FIX",
+          text: "한 번 더",
+          durationMs: 1500,
+          badge: "PWF",
+          className: "pwf"
+        },
+        { mode: "REJECT", text: "재시도", durationMs: 1000, badge: "REJECT", className: "reject" }
+      ];
+
+      const logTemplates = [
+        { text: "[Stage 2] Arc 1 생성 중..." },
+        { text: "[Chief Writer] 원고 작성 중... (3/5 후보)" },
+        { text: "[Director] 심사 결과: PASS (87점)", verdict: "PASS" },
+        { text: "[Stage 4] Episode 12 완료" }
+      ];
+
+      function randomInt(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+      }
+
+      function nowLabel() {
+        return new Date().toLocaleTimeString("ko-KR", {
+          hour12: false,
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit"
+        });
+      }
+
+      function appendLog(message, verdict) {
+        const row = document.createElement("div");
+        row.className = "log-row";
+
+        const time = document.createElement("span");
+        time.className = "log-time";
+        time.textContent = nowLabel();
+
+        const msg = document.createElement("span");
+        msg.className = "log-msg";
+        msg.textContent = message;
+
+        row.append(time, msg);
+
+        if (verdict) {
+          const badge = document.createElement("span");
+          badge.className = "verdict-badge";
+          if (verdict === "PASS") {
+            badge.classList.add("verdict-pass");
+            badge.textContent = "PASS";
+          } else if (verdict === "REJECT") {
+            badge.classList.add("verdict-reject");
+            badge.textContent = "REJECT";
+          } else {
+            badge.classList.add("verdict-pwf");
+            badge.textContent = "PWF";
+          }
+          row.appendChild(badge);
+        }
+
+        logStream.appendChild(row);
+        logStream.scrollTop = logStream.scrollHeight;
+      }
+
+      function setStateBadge(mode) {
+        stateBadge.classList.remove("state-running", "state-idle", "state-pass", "state-pwf", "state-reject");
+
+        if (mode === "RUNNING") {
+          stateBadge.classList.add("state-running");
+          stateBadge.textContent = "상태: RUNNING";
+        } else if (mode === "IDLE") {
+          stateBadge.classList.add("state-idle");
+          stateBadge.textContent = "상태: IDLE";
+        } else if (mode === "PASS") {
+          stateBadge.classList.add("state-pass");
+          stateBadge.textContent = "상태: PASS";
+        } else if (mode === "PASS_WITH_FIX") {
+          stateBadge.classList.add("state-pwf");
+          stateBadge.textContent = "상태: PASS_WITH_FIX";
+        } else if (mode === "REJECT") {
+          stateBadge.classList.add("state-reject");
+          stateBadge.textContent = "상태: REJECT";
+        }
+      }
+
+      function setEffectBanner(text, className) {
+        effectBanner.textContent = text;
+        effectBanner.classList.remove("pass", "pwf", "reject", "show");
+        if (!text) return;
+        effectBanner.classList.add(className, "show");
+      }
+
+      function clearVerdictTimers() {
+        if (officeState.timers.verdict) {
+          clearTimeout(officeState.timers.verdict);
+          officeState.timers.verdict = null;
+        }
+        if (officeState.timers.clearVerdict) {
+          clearTimeout(officeState.timers.clearVerdict);
+          officeState.timers.clearVerdict = null;
+        }
+      }
+
+      function scheduleVerdictLoop() {
+        clearVerdictTimers();
+        if (!officeState.isRunning) return;
+
+        officeState.timers.verdict = setTimeout(() => {
+          if (!officeState.isRunning) return;
+
+          const current = verdictCycle[officeState.effectIndex % verdictCycle.length];
+          officeState.effectIndex += 1;
+
+          officeState.mode = current.mode;
+          setStateBadge(current.mode);
+          setEffectBanner(current.text, current.className);
+
+          const score = randomInt(81, 93);
+          const verdictText = current.badge === "PWF" ? "PASS_WITH_FIX" : current.badge;
+          appendLog(`[Director] 심사 결과: ${verdictText} (${score}점)`, current.badge);
+
+          const effectDuration = officeState.skipAnimation ? 150 : current.durationMs;
+          officeState.timers.clearVerdict = setTimeout(() => {
+            if (!officeState.isRunning) return;
+            officeState.mode = "RUNNING";
+            setStateBadge("RUNNING");
+            setEffectBanner("", "");
+            scheduleVerdictLoop();
+          }, effectDuration);
+        }, 5000);
+      }
+
+      function startRunningLoop() {
+        officeState.isRunning = true;
+        officeState.mode = "RUNNING";
+        setStateBadge("RUNNING");
+        setEffectBanner("", "");
+        scheduleVerdictLoop();
+      }
+
+      function stopLoop() {
+        clearVerdictTimers();
+        officeState.isRunning = false;
+        officeState.mode = "IDLE";
+        setStateBadge("IDLE");
+        setEffectBanner("", "");
+      }
+
+      function scheduleAutoLogs() {
+        const delay = randomInt(1000, 3000);
+        officeState.timers.log = setTimeout(() => {
+          const item = logTemplates[randomInt(0, logTemplates.length - 1)];
+          appendLog(item.text, item.verdict);
+          scheduleAutoLogs();
+        }, delay);
+      }
+
+      function drawRect(x, y, w, h, color) {
+        ctx.fillStyle = color;
+        ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h));
+      }
+
+      function drawOfficeBackground(time) {
+        drawRect(0, 0, canvas.width, 124, "#e2e8f0");
+        drawRect(0, 124, canvas.width, canvas.height - 124, "#cbd5e1");
+
+        const stripeOffset = officeState.skipAnimation ? 0 : Math.sin(time * 0.8) * 2;
+        for (let i = 0; i < 8; i += 1) {
+          const y = 124 + i * 26 + stripeOffset;
+          drawRect(0, y, canvas.width, 1, "#bfccd9");
+        }
+
+        drawRect(12, 16, 140, 86, "#d6dee8");
+        drawRect(18, 22, 128, 74, "#f8fafc");
+        drawRect(488, 16, 140, 86, "#d6dee8");
+        drawRect(494, 22, 128, 74, "#f8fafc");
+      }
+
+      function drawDesk(agent) {
+        drawRect(agent.x - 50, agent.y + 10, 100, 14, "#b6c2cf");
+        drawRect(agent.x - 44, agent.y + 24, 8, 18, "#94a3b8");
+        drawRect(agent.x + 36, agent.y + 24, 8, 18, "#94a3b8");
+      }
+
+      function drawAgent(agent, index, time) {
+        const animate = officeState.mode === "RUNNING" && officeState.isRunning && !officeState.skipAnimation;
+        const bob = animate ? Math.sin(time * 5 + index) * 2 : 0;
+        const hand = animate ? Math.cos(time * 7 + index) * 2 : 0;
+
+        const bodyColor = officeState.mode === "IDLE" ? "#94a3b8" : "#64748b";
+
+        drawDesk(agent);
+
+        drawRect(agent.x - 6, agent.y - 22 + bob, 12, 15, bodyColor);
+        drawRect(agent.x - 5, agent.y - 34 + bob, 10, 10, agent.tone);
+
+        if (agent.name === "Chief Writer") {
+          drawRect(agent.x - 14 + hand, agent.y - 8, 7, 3, "#475569");
+          drawRect(agent.x + 7 - hand, agent.y - 8, 7, 3, "#475569");
+          drawRect(agent.x - 20, agent.y + 2, 40, 6, "#e2e8f0");
+        } else if (agent.name === "Director") {
+          const flicker = animate ? Math.sin(time * 6) : 0;
+          drawRect(agent.x - 16, agent.y - 2, 32, 7, "#f8fafc");
+          drawRect(agent.x - 15, agent.y - 1, 30, 5, flicker > 0 ? "#cbd5e1" : "#e2e8f0");
+        } else if (agent.name === "Analyst") {
+          const scanX = animate ? Math.sin(time * 4) * 8 : 0;
+          drawRect(agent.x - 13 + scanX, agent.y - 5, 10, 10, "#cbd5e1");
+          drawRect(agent.x + 2 + scanX, agent.y - 1, 8, 2, "#94a3b8");
+        } else if (agent.name === "Critic") {
+          const note = animate ? Math.cos(time * 8 + 1.2) * 2 : 0;
+          drawRect(agent.x - 10, agent.y - 3, 20, 7, "#f8fafc");
+          drawRect(agent.x - 4 + note, agent.y - 7, 2, 8, "#475569");
+        } else if (agent.name === "Manager") {
+          const folderShift = animate ? Math.sin(time * 6 + 2.4) * 4 : 0;
+          drawRect(agent.x - 12 + folderShift, agent.y - 3, 10, 7, "#e2e8f0");
+          drawRect(agent.x + 2 - folderShift, agent.y - 3, 10, 7, "#cbd5e1");
+        }
+
+        ctx.fillStyle = "#475569";
+        ctx.font = '12px "Malgun Gothic", sans-serif';
+        ctx.fillText(agent.name, agent.x - 46, agent.y + 58);
+        ctx.fillStyle = "#64748b";
+        ctx.font = '11px "Malgun Gothic", sans-serif';
+        ctx.fillText(agent.task, agent.x - 46, agent.y + 72);
+      }
+
+      function drawModeEffect(time) {
+        if (officeState.mode === "PASS") {
+          const glow = officeState.skipAnimation ? 0.28 : 0.22 + Math.abs(Math.sin(time * 8)) * 0.25;
+          ctx.fillStyle = `rgba(34, 197, 94, ${glow})`;
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          drawRect(8, 8, canvas.width - 16, 4, "#22c55e");
+          drawRect(8, canvas.height - 12, canvas.width - 16, 4, "#22c55e");
+        } else if (officeState.mode === "PASS_WITH_FIX") {
+          const glow = officeState.skipAnimation ? 0.22 : 0.16 + Math.abs(Math.sin(time * 7)) * 0.2;
+          ctx.fillStyle = `rgba(234, 179, 8, ${glow})`;
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          for (let i = 0; i < 6; i += 1) {
+            const x = 40 + i * 95;
+            drawRect(x, 12, 16, 3, "#eab308");
+          }
+        } else if (officeState.mode === "REJECT") {
+          const shake = officeState.skipAnimation ? 0 : Math.sin(time * 28) * 3;
+          ctx.fillStyle = "rgba(239, 68, 68, 0.18)";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          drawRect(canvas.width * 0.5 - 50 + shake, 48, 100, 6, "#ef4444");
+          drawRect(canvas.width * 0.5 - 3 + shake, 10, 6, 90, "#ef4444");
+        }
+      }
+
+      function draw(timeMs) {
+        officeState.frame += 1;
+        const time = timeMs / 1000;
+
+        drawOfficeBackground(time);
+        agents.forEach((agent, index) => drawAgent(agent, index, time));
+        drawModeEffect(time);
+
+        requestAnimationFrame(draw);
+      }
+
+      function handleRunButtonClick(button) {
+        const action = button.dataset.action;
+        const key = button.dataset.key;
+        const label = button.querySelector(".label").textContent;
+
+        console.log(`[UI-STUB] action=${action} key=${key}`);
+        lastAction.textContent = `최근 클릭: ${label} (key: ${key})`;
+
+        if (action === "stop") {
+          stopLoop();
+          appendLog("[System] 중지됨");
+          return;
+        }
+
+        startRunningLoop();
+        appendLog(`[System] ${label} 시작`);
+      }
+
+      function updateToggleLabels() {
+        toggleSkip.textContent = `Skip animation: ${officeState.skipAnimation ? "ON" : "OFF"}`;
+        toggleMute.textContent = `Mute: ${officeState.mute ? "ON" : "OFF"}`;
+        toggleSkip.classList.toggle("active", officeState.skipAnimation);
+        toggleMute.classList.toggle("active", officeState.mute);
+      }
+
+      menuButtons.forEach((button) => {
+        button.addEventListener("click", () => handleRunButtonClick(button));
+      });
+
+      toggleSkip.addEventListener("click", () => {
+        officeState.skipAnimation = !officeState.skipAnimation;
+        updateToggleLabels();
+        appendLog(`[System] Skip animation ${officeState.skipAnimation ? "활성" : "비활성"}`);
+      });
+
+      toggleMute.addEventListener("click", () => {
+        officeState.mute = !officeState.mute;
+        updateToggleLabels();
+        appendLog(`[System] Mute ${officeState.mute ? "활성" : "비활성"}`);
+      });
+
+      if (window.geuldobiDesktop && typeof window.geuldobiDesktop.onAppReady === "function") {
+        window.geuldobiDesktop.onAppReady(({ reason }) => {
+          readyBadge.textContent = `진입 완료: ${reason}`;
+        });
+      }
+
+      appendLog("[System] UI 스텁 초기화 완료");
+      updateToggleLabels();
+      startRunningLoop();
+      scheduleAutoLogs();
+      requestAnimationFrame(draw);
+    </script>
+  </body>
+</html>

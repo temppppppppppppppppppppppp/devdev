@@ -9,7 +9,6 @@ import pytest
 
 from modules.api.run_validator import validate_run_request
 
-
 # ─── INVALID_KEY ─────────────────────────────────────────────────────────────
 
 @pytest.mark.parametrize("bad_key", ["7", "10", "33", "100", "", "x", "0x0"])

@@ -95,3 +95,45 @@ def test_data_collector_source_catches_type_error_on_dump():
 def test_pacing_analyzer_source_uses_positive_break_condition():
     src = _read("modules/core/pacing_analyzer.py")
     assert "if total_breaks > 0 else len(manuscript)" in src
+
+
+# [TF-59] consumed 아이템 제외 테스트
+def test_collect_all_items_excludes_consumed_items():
+    """소비된 아이템은 금지 목록에서 제외되어야 함 (재획득 허용)"""
+    compiler = ConstraintCompiler()
+    prev_arcs = [
+        {
+            "arc_no": 1,
+            "state_constraints": {
+                "items_acquired": ["주식A", "보고서"],
+                "items_consumed": ["주식A"],
+            },
+        },
+        {
+            "arc_no": 2,
+            "state_constraints": {
+                "items_acquired": [],
+                "items_consumed": [],
+            },
+        },
+    ]
+    result = compiler._collect_all_items(prev_arcs)
+    assert "주식A" not in result, "소비된 아이템은 금지 목록에서 제외되어야 함"
+    assert "보고서" in result, "소비되지 않은 아이템은 금지 목록에 유지되어야 함"
+
+
+def test_collect_all_items_wuxia_items_not_consumed_stay_banned():
+    """무협 비급 등 소비되지 않은 아이템은 금지 유지"""
+    compiler = ConstraintCompiler()
+    prev_arcs = [
+        {
+            "arc_no": 1,
+            "state_constraints": {
+                "items_acquired": ["천잠비급", "현철검"],
+                "items_consumed": [],
+            },
+        },
+    ]
+    result = compiler._collect_all_items(prev_arcs)
+    assert "천잠비급" in result, "소비되지 않은 무협 비급은 금지 목록에 유지"
+    assert "현철검" in result, "소비되지 않은 검은 금지 목록에 유지"

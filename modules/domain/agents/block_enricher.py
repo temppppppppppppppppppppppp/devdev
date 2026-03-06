@@ -17,9 +17,9 @@ from modules.core.constants import AIModels
 from modules.core.prompt_loader import SafeDict
 from modules.validation.threshold_helper import _threshold
 
-_BLOCK_AUDIT_PASS_SCORE = _threshold("quality.block_audit_pass_score", 70)  # [TF-11-11]
-
 from .base_agent import BaseAgent
+
+_BLOCK_AUDIT_PASS_SCORE = _threshold("quality.block_audit_pass_score", 70)  # [TF-11-11]
 
 # ═══════════════════════════════════════════════════════════════════════════
 # ENRICHMENT PROMPT

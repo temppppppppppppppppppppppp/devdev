@@ -859,6 +859,47 @@ class NumericConsistencyChecker:
 
         return warnings
 
+    # ── [TF-60] Stage 2 tactical_doc 산술 검증 ──────────────────────
+
+    def check_tactical_doc(
+        self,
+        tactical_doc: str,
+        arc_num: int,
+        *,
+        fact_ledger_snapshot: dict | None = None,
+    ) -> list[dict]:
+        """[TF-60] Stage 2 tactical_doc 산술 검증. check()의 서브셋.
+
+        Advisory-only: REJECT 권한 없음 (대원칙 3 준수).
+        검사: ①FactLedger 교차 ②산술 일관성(A+B=C, 레버리지) ③퍼센트 구성
+        """
+        if not tactical_doc or not tactical_doc.strip():
+            return []
+
+        warnings: list[dict] = []
+        extracted = self._extract_all_numbers(tactical_doc)
+
+        # 1. FactLedger 교차 (사용 가능한 경우)
+        if self._fact_ledger:
+            try:
+                warnings.extend(self._check_against_ledger(extracted, arc_num))
+            except Exception as e:
+                logging.debug("[NC-1-S2] FactLedger 교차 실패: %s", e)
+
+        # 2. 산술 일관성 (A+B=C, 레버리지, 레버리지 수익률%)
+        try:
+            warnings.extend(self._check_arithmetic(extracted, tactical_doc))
+        except Exception as e:
+            logging.debug("[NC-1-S2] 산술 검사 실패: %s", e)
+
+        # 3. 퍼센트 구성 검증
+        try:
+            warnings.extend(self._check_percent_composition(extracted, tactical_doc))
+        except Exception as e:
+            logging.debug("[NC-1-S2] 퍼센트 구성 실패: %s", e)
+
+        return warnings
+
     # ── 8. [NC-2 GAP-6] 연속 에피소드 도입부 유사도 ─────────────────
 
     @staticmethod
