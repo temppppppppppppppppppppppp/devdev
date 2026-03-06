@@ -23,6 +23,7 @@ import re
 from typing import Any
 
 from modules.core.constants import Stage2Limits
+from modules.core.genre_schema_builder import get_item_suffixes
 
 
 class ArcDraftValidator:
@@ -33,27 +34,35 @@ class ArcDraftValidator:
     비용: 0원 (LLM 미사용)
     """
 
-    def __init__(self) -> None:
-        # 아이템 획득 패턴
+    def __init__(self, genre: str = "") -> None:
+        # [BUG-3] 장르별 아이템 접미사 SSOT
+        self._item_suffixes = get_item_suffixes(genre)
+        _suffix_group = "|".join(
+            sorted((re.escape(s) for s in self._item_suffixes), key=len, reverse=True)
+        )
+        _suffix_group = _suffix_group or r"아이템"
+
+        # 아이템 획득 패턴 (장르 동적 접미사)
         self.acquire_patterns = [
-            r"([가-힣]{2,15}(?:도|검|창|봉|환|단|경|비급|서|책))[를을]?\s*(?:획득|얻|받|손에\s*넣|입수)",
-            r"(?:획득|얻|받|손에\s*넣)[가-힣\s]*([가-힣]{2,15}(?:도|검|창|봉|환|단|비급))",
-            r"([가-힣]{2,15}(?:패|인장|부|권))[를을]?\s*(?:하사|수여|받|얻)",
+            rf"([가-힣A-Za-z0-9]{{0,20}}(?:{_suffix_group}))[를을]?\s*(?:획득|얻|받|손에\s*넣|입수)",
+            rf"(?:획득|얻|받|손에\s*넣)[가-힣A-Za-z0-9\s]*([가-힣A-Za-z0-9]{{0,20}}(?:{_suffix_group}))",
+            rf"([가-힣A-Za-z0-9]{{0,20}}(?:{_suffix_group}))[를을]?\s*(?:하사|수여|받|얻)",
         ]
 
-        # 수여물 패턴
+        # 수여물 키워드 (장르 공통 확장)
+        self.grant_keywords = ["패", "권", "인장", "직위", "자격", "서", "부", "직", "명함", "계약서"]
+        _grant_suffixes = sorted(set(self.grant_keywords + self._item_suffixes), key=len, reverse=True)
+        _grant_group = "|".join(re.escape(s) for s in _grant_suffixes) or r"패|권|인장"
+
+        # 수여물 패턴 (장르 동적)
         self.grant_patterns = [
-            r"([가-힣]{2,20}패)[를을]?\s*(?:하사|수여|받)",
-            r"([가-힣]{2,20}권)[를을]?\s*(?:위임|부여|받|하사)",
-            r"([가-힣]{2,20}인장)[를을]?\s*(?:받|하사|수여)",
-            r"([가-힣]{2,20}직)[에으로]?\s*(?:임명|취임)",
+            rf"([가-힣A-Za-z0-9\s]{{2,30}}(?:{_grant_group}))[를을]?\s*(?:하사|수여|받|얻|위임|부여)",
+            rf"(?:하사|수여|받|얻|위임|부여)[가-힣A-Za-z0-9\s]*([가-힣A-Za-z0-9\s]{{2,30}}(?:{_grant_group}))",
+            r"([가-힣]{2,20}직|[가-힣]{2,20}장)[에으로]?\s*(?:임명|취임|올|받)",
         ]
 
-        # 무기 키워드
-        self.weapon_keywords = ["도", "검", "창", "봉", "궁", "부", "도끼", "낫", "곤", "편"]
-
-        # 수여물 키워드
-        self.grant_keywords = ["패", "권", "인장", "직위", "자격", "서", "부"]
+        # 무기/핵심 아이템 키워드 (장르 동적)
+        self.weapon_keywords = list(self._item_suffixes)
 
     def _safe_tactical(self, arc: dict) -> str:
         """[V60.37] tactical_doc을 안전하게 문자열로 변환"""
@@ -73,6 +82,7 @@ class ArcDraftValidator:
         prev_arcs: list[dict],
         constraint_block: str = "",
         state_tracker=None,  # [V60.94] StateTracker 인스턴스 (NPC 생사 검증용)
+        forbidden_items: list[str] | None = None,  # [BUG-3] 구조적 금지 아이템 (선택)
     ) -> dict[str, Any]:
         """
         Arc 초안 검증
@@ -151,14 +161,24 @@ class ArcDraftValidator:
         suggestions.extend(tactical_result["suggestions"])
 
         # 7. 제약 블록 검증
-        if constraint_block:
-            constraint_result = self._validate_against_constraints(arc, constraint_block)
+        if constraint_block or forbidden_items or arc.get("_forbidden_items"):
+            constraint_result = self._validate_against_constraints(
+                arc,
+                constraint_block,
+                forbidden_items=forbidden_items,
+            )
             score -= constraint_result["penalty"]
             critical_issues.extend(constraint_result["critical"])
 
         # [V60.94] 죽은 NPC 등장만 REJECT, 나머지는 advisory
         # critical_issues를 advisory_issues로 변환 (LLM에게 전달할 정보)
         advisory_issues = [c for c in critical_issues if "사망한" not in c and "죽은" not in c]
+
+        # [BUG-5] advisory_issues 세부 내용 로깅 (디버깅 지원)
+        if advisory_issues:
+            logging.warning(f" [ArcDraftValidator] advisory 이슈 {len(advisory_issues)}건:")
+            for _ai in advisory_issues[:10]:
+                logging.warning(f"   - {str(_ai)[:200]}")
 
         # [V60.94] 죽은 NPC 등장만 REJECT 가능
         is_valid = reject_reason is None
@@ -514,13 +534,9 @@ class ArcDraftValidator:
             if i > 0:
                 has_start_state = any(kw in content for kw in ["시작 상태", "이전", "직전", "에서 이어"])
                 if not has_start_state and len(content) > 300:
-                    # 이전 화 종료 위치/상태 언급 체크
-                    episode_sections.get(sorted_eps[i - 1], "")
-                    # 간단한 연속성 체크: 이전 화 마지막 위치가 현재 화에 언급되는지
-                    pass  # 복잡한 검증은 LLM에 위임
+                    pass  # [BUG-4] 복잡한 연속성 검증은 LLM에 위임
 
             # 종료 상태 체크 (마지막 화 포함 모든 화)
-            any(kw in content for kw in ["종료 상태", "종료:", "끝:", "마무리"])
             has_state_info = sum(1 for kw in state_keywords if kw in content)
 
             # 상태 정보가 2개 미만이면 체크포인트 부족
@@ -700,13 +716,24 @@ class ArcDraftValidator:
 
         return sections
 
-    def _validate_against_constraints(self, arc: dict, constraint_block: str) -> dict:
+    def _validate_against_constraints(
+        self,
+        arc: dict,
+        constraint_block: str,
+        forbidden_items: list[str] | None = None,
+    ) -> dict:
         """제약 블록 검증"""
         critical = []
         penalty = 0
 
-        # 금지 아이템 추출 (❌ 표시)
-        forbidden_items = re.findall(r"❌\s*([가-힣\w]+)", constraint_block)
+        # Tier 1: 구조적 금지 아이템 우선
+        if forbidden_items is None:
+            forbidden_items = arc.get("_forbidden_items", [])
+        if forbidden_items:
+            forbidden_items = [str(item).strip() for item in forbidden_items if str(item).strip()]
+        else:
+            # Tier 3: 문자열 regex 폴백
+            forbidden_items = re.findall(r"❌\s*([가-힣\w]+)", constraint_block)
 
         # 획득 금지 목록에서 추출
         forbidden_matches = re.findall(r"획득\s*(?:금지|불가)[^:]*[:：]\s*([^\n]+)", constraint_block)
@@ -790,7 +817,7 @@ class ArcDraftValidator:
                     return True
 
         # 핵심 부분 비교 (접미사 제거)
-        suffixes = ["검", "도", "창", "패", "권", "인장", "서"]
+        suffixes = sorted(set(self._item_suffixes + self.grant_keywords), key=len, reverse=True)
         core1 = item1
         core2 = item2
         for suffix in suffixes:
@@ -866,6 +893,6 @@ class ArcDraftValidator:
         return {"penalty": penalty, "critical": critical}
 
 
-def create_draft_validator() -> ArcDraftValidator:
+def create_draft_validator(genre: str = "") -> ArcDraftValidator:
     """ArcDraftValidator 생성 헬퍼"""
-    return ArcDraftValidator()
+    return ArcDraftValidator(genre=genre)

@@ -153,7 +153,13 @@ def _check_arc_vs_block_targets(
 def _ns4_extract_time_markers(arc_data: dict) -> list:
     """[NS-4-S2] Arc tactical_doc/beat_sequence에서 날짜·상대시간 마커 추출 (regex, LLM 0회)."""
     import re as _re
-    _text = (arc_data.get("tactical_doc") or "") + "\n" + (arc_data.get("beat_sequence") or "")
+
+    tactical_doc = arc_data.get("tactical_doc") or ""
+    beat_seq = arc_data.get("beat_sequence") or ""
+    if isinstance(beat_seq, list):
+        beat_seq = " ".join(str(b) for b in beat_seq)
+
+    _text = str(tactical_doc) + "\n" + str(beat_seq)
     _patterns = [
         r"\d{4}년\s*\d{1,2}월(?:\s*\d{1,2}일)?",
         r"\d{1,2}월\s*\d{1,2}일",

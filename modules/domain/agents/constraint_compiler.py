@@ -17,6 +17,8 @@
 import json
 import re
 
+from modules.core.genre_schema_builder import get_item_suffixes
+
 
 class ConstraintCompiler:
     """
@@ -25,17 +27,25 @@ class ConstraintCompiler:
     이전 Arc들에서 제약 조건을 추출하고 구조화
     """
 
-    def __init__(self) -> None:
-        # 아이템 획득 패턴
+    def __init__(self, genre: str = "") -> None:
+        self._item_suffixes = get_item_suffixes(genre)
+        _suffix_group = "|".join(
+            sorted((re.escape(s) for s in self._item_suffixes), key=len, reverse=True)
+        )
+        _suffix_group = _suffix_group or r"아이템"
+
+        # 아이템 획득 패턴 (장르 동적 접미사)
         self.acquire_patterns = [
-            r"([가-힣]{2,20}(?:도|검|창|봉|환|단|경|비급|서|책|패|인장|권))",
+            rf"([가-힣A-Za-z0-9]{{0,30}}(?:{_suffix_group}))",
         ]
 
         # 수여물 패턴
         self.grant_patterns = [
-            r"([가-힣]{2,20}패)",
-            r"([가-힣]{2,20}권)",
-            r"([가-힣]{2,20}인장)",
+            r"([가-힣A-Za-z0-9]{2,30}패)",
+            r"([가-힣A-Za-z0-9]{2,30}권)",
+            r"([가-힣A-Za-z0-9]{2,30}인장)",
+            r"([가-힣A-Za-z0-9]{2,30}자격)",
+            r"([가-힣A-Za-z0-9]{2,30}직위)",
         ]
 
     def compile(
@@ -408,6 +418,6 @@ class ConstraintCompiler:
 """
 
 
-def create_constraint_compiler() -> ConstraintCompiler:
+def create_constraint_compiler(genre: str = "") -> ConstraintCompiler:
     """ConstraintCompiler 생성 헬퍼"""
-    return ConstraintCompiler()
+    return ConstraintCompiler(genre=genre)

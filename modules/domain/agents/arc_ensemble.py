@@ -19,7 +19,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from concurrent.futures import TimeoutError as FutureTimeoutError
 
 from modules.core.constants import GenreTypes, Stage2Limits
-from modules.core.genre_schema_builder import build_state_constraints_schema, build_status_shadow_schema
+from modules.core.genre_schema_builder import build_state_constraints_schema, build_status_shadow_schema, get_item_suffixes
 from modules.core.prompt_loader import PromptLoader
 from modules.core.response_schemas import ARC_DESIGN_SCHEMA  # [TF11] response_schema 확대
 
@@ -32,6 +32,42 @@ try:
     PRIMITIVE_GUARD_AVAILABLE = True
 except ImportError:
     PRIMITIVE_GUARD_AVAILABLE = False
+
+
+_ITEM_SUFFIXES_ALL = get_item_suffixes("")
+_ITEM_SUFFIX_GROUP = "|".join(sorted((re.escape(s) for s in _ITEM_SUFFIXES_ALL), key=len, reverse=True)) or r"아이템"
+_FORBIDDEN_ITEM_RE = re.compile(rf"([가-힣A-Za-z0-9][가-힣A-Za-z0-9\s]{{0,30}}(?:{_ITEM_SUFFIX_GROUP}))")
+
+
+def _extract_forbidden_items(constraint_block: str) -> list[str]:
+    """constraint_block의 ❌ 라인에서 금지 아이템명을 추출한다."""
+    if not isinstance(constraint_block, str) or not constraint_block:
+        return []
+
+    items: list[str] = []
+    seen: set[str] = set()
+
+    for raw in re.findall(r"❌\s*([^\n❌]+)", constraint_block):
+        clean = re.sub(r"\s*\(Arc\s*\d+.*?\)", "", str(raw))
+        clean = re.sub(r"[│┤├─+|]", "", clean).strip()
+        if not clean:
+            continue
+        if "다음 아이템" in clean or "다음 수여물" in clean or clean.startswith("다음 "):
+            continue
+
+        # 메타 정보(" - Arc n에서 ...")는 제거 후 핵심명만 추출
+        head = re.split(r"\s*-\s*", clean, maxsplit=1)[0].strip()
+        matched = _FORBIDDEN_ITEM_RE.search(head)
+        if matched:
+            item = matched.group(1).strip()
+        else:
+            item = head
+
+        if item and item not in seen:
+            seen.add(item)
+            items.append(item)
+
+    return items
 
 
 # ── [장르별 에너지 시스템 블록] ──────────────────────────────────────
@@ -643,7 +679,7 @@ class ArcEnsembleGenerator(BaseAgent):
                 forbidden_items = [str(item).strip() for item in _forbidden_structured if str(item).strip()]
             else:
                 # Tier 3: 문자열 regex 폴백
-                forbidden_items = re.findall(r"❌\s*([가-힣\w]+)", constraint_block)
+                forbidden_items = _extract_forbidden_items(constraint_block)
             # [V70] items_acquired를 str 리스트로 변환 (substring 오탐 방지)
             _acq_strs = [str(i).strip() for i in items_acquired] if isinstance(items_acquired, list) else []
 
@@ -859,15 +895,13 @@ class ArcEnsembleGenerator(BaseAgent):
         # 2. 금지 아이템 추출 (constraint_block에서)
         if constraint_block:
             # ❌ 패턴 추출
-            forbidden = re.findall(r"❌\s*([^\n❌]+)", constraint_block)
+            forbidden = _extract_forbidden_items(constraint_block)
             if forbidden:
                 lines.append("")
                 lines.append("🚫 절대 다시 획득/수여 금지 (잔고·수량이 달라도 동일 아이템으로 간주):")
                 for item in forbidden[:10]:
                     # 박스 문자, 패딩, Arc 출처 주석 제거 → 핵심 아이템명만 추출
-                    clean_item = re.sub(r"\s*\(Arc\s*\d+.*?\)", "", item)
-                    clean_item = re.sub(r"[│┤├─+|]", "", clean_item).strip()
-                    clean_item = clean_item[:60]
+                    clean_item = str(item).strip()[:60]
                     if clean_item:
                         lines.append(f"   ❌ {clean_item}")
                 lines.append("   ⚠️ items_acquired에 위 아이템명이 포함되면 즉시 REJECT됩니다.")

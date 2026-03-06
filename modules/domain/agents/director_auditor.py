@@ -872,6 +872,38 @@ class DirectorQualityAuditor:
         else:
             logging.info("✅ [Director/Arc] 모순·일관성 이상 없음")
 
+        # ── [STRUCT-3] Contradiction Firewall — Stage 2/3 audit 경로 ──
+        _contradiction_check = result.get("contradiction_check", {})
+        if isinstance(_contradiction_check, dict):
+            _found = _contradiction_check.get("found_contradictions", [])
+            if isinstance(_found, list) and _found:
+                _critical_count = sum(
+                    1 for c in _found if isinstance(c, dict) and str(c.get("severity", "")).upper() == "CRITICAL"
+                )
+                _major_count = sum(
+                    1 for c in _found if isinstance(c, dict) and str(c.get("severity", "")).upper() == "MAJOR"
+                )
+                _firewall_triggered = False
+                if _critical_count >= 1:
+                    _firewall_triggered = True
+                    logging.warning(f" [STRUCT-3] Contradiction Firewall (audit): CRITICAL {_critical_count}건 → REJECT 강제")
+                elif _major_count >= 2:
+                    _firewall_triggered = True
+                    logging.warning(f" [STRUCT-3] Contradiction Firewall (audit): MAJOR {_major_count}건 → REJECT 강제")
+                if _firewall_triggered:
+                    result["decision"] = "REJECT"
+                    _old_score = result.get("score", 50)
+                    if isinstance(_old_score, int):
+                        result["score"] = min(_old_score, 44)
+                    else:
+                        result["score"] = 44
+                    for _c in _found[:5]:
+                        if isinstance(_c, dict):
+                            logging.warning(
+                                f"   [{_c.get('severity', '?')}] {str(_c.get('type', ''))}: "
+                                f"{str(_c.get('current_violation', ''))[:100]}"
+                            )
+
         return result
 
     # ═══════════════════════════════════════════════════════════════════════
@@ -946,7 +978,7 @@ class DirectorQualityAuditor:
 
         def _vote_task(vote_idx, temp) -> tuple:
             """단일 투표 작업"""
-            response = self._d.ask(prompt, temperature=temp, thinking_level="low")  # [V61.6] SC 추가투표
+            response = self._d.ask(prompt, temperature=temp, thinking_level="medium")  # [STRUCT-1] SC 추가투표 medium 균등화
             return vote_idx, self._d._extract_json_robust(response)
 
         vote_tasks = [(i, 0.1 + (i * 0.05)) for i in range(1, self._d.consistency_votes)]
@@ -1013,7 +1045,12 @@ class DirectorQualityAuditor:
 
         # PASS/REJECT 다수결
         pass_votes = sum(1 for e in evaluations if e.get("decision") in ("PASS", "PASS_WITH_FIX"))  # [TF-32-S2]
-        final_decision = "PASS" if pass_votes > (len(evaluations) // 2) else "REJECT"
+        # [STRUCT-2] PASS_WITH_FIX 다수 시 InPlace patch loop 진입 보장
+        pwf_votes = sum(1 for e in evaluations if e.get("decision") == "PASS_WITH_FIX")
+        if pass_votes > (len(evaluations) // 2):
+            final_decision = "PASS_WITH_FIX" if pwf_votes > 0 else "PASS"
+        else:
+            final_decision = "REJECT"
 
         # 대표 결과 선택 (중앙값에 가장 가까운 것)
         representative = min(evaluations, key=lambda e: abs(_safe_int_score(e.get("score", 50), 50) - median_score))

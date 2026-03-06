@@ -83,8 +83,7 @@ PREFLIGHT_ANALYSIS_PROMPT = """
         "resolved_plots_from_tracker": ["이전에 완결된 플롯 라인 (절대 반복 금지)"],
         "protagonist_status": {{
             "injuries": "왼팔 경상 (Arc 2에서 부상)",
-            "internal_energy": 85,
-            "martial_level": "일류 초입"
+            "key_stat": "핵심 능력치 (장르에 따라 내공/자본금/레벨 등)"
         }}
     }},
     "absolute_prohibitions": {{
@@ -439,20 +438,20 @@ class PreflightChecker(BaseAgent):
 
         # 아이템 금지 (상세)
         if items_forbidden:
-            lines.append("❌ 다음 아이템 획득 금지 (이미 보유 중):")
+            lines.append("[아이템 획득 금지 (이미 보유 중)]:")
             for item in items_forbidden:
                 item_name = item.get("item", item) if isinstance(item, dict) else item
                 reason = item.get("reason", "") if isinstance(item, dict) else ""
-                lines.append(f"   • {item_name} - {reason}")
+                lines.append(f"   ❌ {item_name} - {reason}")
 
         # 수여물 금지
         grants_forbidden = prohibitions.get("grants_cannot_receive", [])
         if grants_forbidden:
-            lines.append("❌ 다음 수여물 재수여 금지:")
+            lines.append("[수여물 재수여 금지]:")
             for grant in grants_forbidden:
                 grant_name = grant.get("grant", grant) if isinstance(grant, dict) else grant
                 reason = grant.get("reason", "") if isinstance(grant, dict) else ""
-                lines.append(f"   • {grant_name} - {reason}")
+                lines.append(f"   ❌ {grant_name} - {reason}")
 
         lines.append("")
 
