@@ -128,6 +128,8 @@ class ArcEnsembleGenerator(BaseAgent):
         curr_block: dict,
         prev_arc_context: str,
         constraint_block: str,
+        prev_equipment: list[str] | None = None,
+        forbidden_items: list[str] | None = None,
         assets: dict = None,
         feedback: str = "",
         strategy_specific_feedback: str = "",  # [EnsembleFB] 특정 전략 전용 추가 피드백
@@ -149,6 +151,8 @@ class ArcEnsembleGenerator(BaseAgent):
             curr_block: 현재 블록 DNA
             prev_arc_context: 이전 Arc 맥락
             constraint_block: 제약 조건 블록
+            prev_equipment: 직전 Arc 종료 소지품(구조적 주입, 선택)
+            forbidden_items: 금지 아이템 목록(구조적 주입, 선택)
             assets: AssetLibrary
             feedback: 이전 피드백
             protagonist_name: [V60.18] 주인공 이름 (환각 방지)
@@ -319,7 +323,13 @@ class ArcEnsembleGenerator(BaseAgent):
         # 후보 평가 및 선택
         scored_candidates = []
         for candidate in valid_candidates:
-            score, issues = self._evaluate_candidate(candidate, prev_arc_context, constraint_block)
+            score, issues = self._evaluate_candidate(
+                candidate,
+                prev_arc_context,
+                constraint_block,
+                prev_equipment=prev_equipment,
+                forbidden_items=forbidden_items,
+            )
             candidate["_score"] = score
             candidate["_issues"] = issues
             scored_candidates.append(candidate)
@@ -588,7 +598,12 @@ class ArcEnsembleGenerator(BaseAgent):
             return None
 
     def _evaluate_candidate(
-        self, candidate: dict, prev_arc_context: str, constraint_block: str
+        self,
+        candidate: dict,
+        prev_arc_context: str,
+        constraint_block: str,
+        prev_equipment: list[str] | None = None,
+        forbidden_items: list[str] | None = None,
     ) -> tuple[int, list[str]]:
         """
         후보 평가 (100점 만점)
@@ -611,7 +626,7 @@ class ArcEnsembleGenerator(BaseAgent):
                 issues.append(f"필수 필드 누락: {field}")
 
         # 2. 제약 조건 준수 (30점)
-        if constraint_block:
+        if constraint_block or forbidden_items or candidate.get("_forbidden_items"):
             # 획득 금지 아이템 검사
             items_acquired = candidate.get("state_constraints", {}).get("items_acquired", [])
             tactical = candidate.get("tactical_doc", "")
@@ -619,20 +634,42 @@ class ArcEnsembleGenerator(BaseAgent):
             if not isinstance(tactical, str):
                 tactical = str(tactical) if tactical else ""
 
-            # 금지 아이템 패턴 추출
-            forbidden_items = re.findall(r"❌\s*([가-힣\w]+)", constraint_block)
+            # Tier 1: 구조적 금지 아이템 (호출자 주입) 우선
+            _forbidden_structured = forbidden_items
+            if _forbidden_structured is None:
+                _forbidden_structured = candidate.get("_forbidden_items", [])
+
+            if _forbidden_structured:
+                forbidden_items = [str(item).strip() for item in _forbidden_structured if str(item).strip()]
+            else:
+                # Tier 3: 문자열 regex 폴백
+                forbidden_items = re.findall(r"❌\s*([가-힣\w]+)", constraint_block)
             # [V70] items_acquired를 str 리스트로 변환 (substring 오탐 방지)
             _acq_strs = [str(i).strip() for i in items_acquired] if isinstance(items_acquired, list) else []
+
+            # [BUG-A] 기존 소지품 화이트리스트 — 이미 보유 중인 아이템은 금지 체크 스킵
+            _existing_equip: set[str] = set()
+            _start_eq = candidate.get("state_constraints", {}).get("arc_start_state", {}).get("equipment", [])
+            if isinstance(_start_eq, list):
+                _existing_equip.update(str(e).strip() for e in _start_eq if str(e).strip())
+            _prev_eq = prev_equipment
+            if _prev_eq is None:
+                _prev_eq = candidate.get("_prev_equipment", [])
+            if isinstance(_prev_eq, list):
+                _existing_equip.update(str(e).strip() for e in _prev_eq if str(e).strip())
+
             for item in forbidden_items:
+                if item in _existing_equip:
+                    continue  # 이미 보유 중인 아이템은 스킵
                 if item in _acq_strs or ("획득" in tactical and item in tactical):
                     score -= 15
                     issues.append(f"금지 아이템 획득 시도: {item}")
 
         # 3. 연속성 (25점)
-        if prev_arc_context and prev_arc_context != "서사 시작점":
+        if (prev_arc_context and prev_arc_context != "서사 시작점") or prev_equipment or candidate.get("_prev_equipment"):
             # 시작 위치 검사
             start_state = candidate.get("state_constraints", {}).get("arc_start_state", {})
-            if "위치" in prev_arc_context:
+            if isinstance(prev_arc_context, str) and "위치" in prev_arc_context:
                 prev_loc_match = re.search(r"위치[:\]]\s*([가-힣\w\s]+)", prev_arc_context)
                 if prev_loc_match:
                     prev_loc = prev_loc_match.group(1).strip()[:20]
@@ -642,17 +679,27 @@ class ArcEnsembleGenerator(BaseAgent):
                         issues.append(f"시작 위치 불일치: 이전={prev_loc}, 현재={curr_loc}")
 
             # 소지품 계승 검사
-            if "소지품" in prev_arc_context:
+            curr_equip = start_state.get("equipment", [])
+            prev_equipment_items: list[str] = []
+
+            # Tier 1: 구조적 이전 Arc 소지품 (호출자 주입) 우선
+            _prev_structured = prev_equipment
+            if _prev_structured is None:
+                _prev_structured = candidate.get("_prev_equipment", [])
+            if _prev_structured:
+                prev_equipment_items = [str(item).strip() for item in _prev_structured if str(item).strip()]
+
+            # Tier 3: 문자열 컨텍스트 폴백
+            if not prev_equipment_items and isinstance(prev_arc_context, str) and "소지품" in prev_arc_context:
                 prev_inv_match = re.search(r"소지품[:\]]\s*([^\n]+)", prev_arc_context)
                 if prev_inv_match:
-                    prev_inv = prev_inv_match.group(1).strip()
-                    curr_equip = start_state.get("equipment", [])
-                    # 주요 아이템이 계승되었는지 간단히 체크
-                    key_items = re.findall(r"([가-힣]+(?:도|검|창|궁|패|인장))", prev_inv)
-                    for item in key_items[:3]:  # 최대 3개만 검사
-                        if item not in str(curr_equip):
-                            score -= 5
-                            issues.append(f"소지품 미계승: {item}")
+                    prev_equipment_items = [x.strip() for x in prev_inv_match.group(1).split(",") if x.strip()]
+
+            if prev_equipment_items and curr_equip:
+                for item in prev_equipment_items[:5]:
+                    if not any(item in str(ce) or str(ce) in item for ce in curr_equip):
+                        score -= 5
+                        issues.append(f"소지품 미계승: {item}")
 
         # 4. tactical_doc 품질 (25점) - [V60.73] 가변 페이싱 기준 (화당 500자)
         tactical = candidate.get("tactical_doc", "")

@@ -1308,9 +1308,12 @@ class Stage4InterviewRound:
                 break
             _last_patched_ms = _patched_ms  # [PF-3] 패치본 추적
 
-            # [F-2] InPlace 변경 비율 advisory
-            from modules.core.constants import calc_patch_change_ratio
+            # [InPlace-Diff] 패치 전후 diff 로깅
+            from modules.core.constants import calc_patch_change_ratio, log_patch_diff
 
+            log_patch_diff("S4-Manuscript", _current_ms, _patched_ms)
+
+            # [F-2] InPlace 변경 비율 advisory
             _change_ratio = calc_patch_change_ratio(_current_ms, _patched_ms)
             _max_ratio = float(_threshold("patch_mode.inplace_max_change_ratio", 0.30))
             _f2_advisory = ""
