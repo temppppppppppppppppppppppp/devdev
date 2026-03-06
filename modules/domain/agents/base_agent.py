@@ -43,6 +43,7 @@ class AgentErrorType:
 
 
 DEFAULT_MODEL_TIER = "gemini-2.5-flash"
+# [SSOT] models.yaml fallback_chain 로드 실패 시 하드코딩 fallback — 변경 불필요(yaml 우선)
 DEFAULT_MODEL_FALLBACK_CHAIN = {
     "gemini-3.1-pro-preview": "gemini-3-pro-preview",
     "gemini-3-pro-preview": "gemini-2.5-pro",

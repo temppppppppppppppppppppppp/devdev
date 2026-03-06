@@ -9,10 +9,15 @@ Purpose:
 """
 
 import json
+import logging
 import re
 import time
 
+from modules.core.constants import AIModels
 from modules.core.prompt_loader import SafeDict
+from modules.validation.threshold_helper import _threshold
+
+_BLOCK_AUDIT_PASS_SCORE = _threshold("quality.block_audit_pass_score", 70)  # [TF-11-11]
 
 from .base_agent import BaseAgent
 
@@ -449,6 +454,7 @@ class BlockEnricher(BaseAgent):
             }
 
         except Exception as e:
+            logging.warning("[BlockEnricher] enrich_block 실패: %s", e)
             return {"enriched": False, "reason": f"농축 실패: {str(e)}", "block": current_block}
 
     def _validate_enrichment(
@@ -473,7 +479,7 @@ class BlockEnricher(BaseAgent):
             # [V60.24] Flash (빠른 검증용)
             original_model = self.primary_model
             try:  # [V70] 예외 시 primary_model 복원 보장 (레이스 컨디션 방지)
-                self.primary_model = "gemini-2.5-flash"
+                self.primary_model = AIModels.FLASH_ANALYSIS_MODEL  # [TF-11-01] SSOT
                 result = self.ask(prompt, temperature=0.3)
             finally:
                 self.primary_model = original_model
@@ -484,6 +490,7 @@ class BlockEnricher(BaseAgent):
             return result
 
         except Exception as e:
+            logging.warning("[BlockEnricher] _validate_enrichment 실패: %s", e)  # [TF-11-03]
             return {
                 "validation_result": "FAIL",  # [D5-P0-2] fail-closed: 검증 실패 시 FAIL 처리
                 "issues": [f"검증 오류: {str(e)}"],
@@ -497,7 +504,7 @@ class BlockEnricher(BaseAgent):
         [V60.10] Director 품질 심사
 
         농축된 Block이 Arc 설계에 사용하기 적합한지 Director가 심사합니다.
-        70점 이상이면 PASS, 미만이면 REJECT.
+        [TF-11-05] decision은 LLM이 직접 반환 — Python 임계값 오버라이드 제거 (대원칙 3).
         """
 
         prompt = DIRECTOR_BLOCK_AUDIT_PROMPT.format_map(
@@ -517,7 +524,7 @@ class BlockEnricher(BaseAgent):
             # [V60.24] Flash (빠른 심사용)
             original_model = self.primary_model
             try:  # [V70] 예외 시 primary_model 복원 보장
-                self.primary_model = "gemini-2.5-flash"
+                self.primary_model = AIModels.FLASH_ANALYSIS_MODEL  # [TF-11-01] SSOT
                 result = self.ask(prompt, temperature=0.3)
             finally:
                 self.primary_model = original_model
@@ -525,19 +532,20 @@ class BlockEnricher(BaseAgent):
             if isinstance(result, str):
                 result = self._extract_json_robust(result)  # [V70] json.loads → robust parser
 
-            # 점수 기반 PASS/REJECT 결정
-            try:
-                total_score = int(result.get("total_score", 0))
-            except (ValueError, TypeError):
-                total_score = 0
-            if total_score >= 70:
-                result["decision"] = "PASS"
-            else:
-                result["decision"] = "REJECT"
+            # [TF-11-05] LLM이 decision 직접 반환 — Python 임계값 오버라이드 제거 (대원칙 3)
+            # decision 미반환 시 score 기반 폴백 (LLM 파싱 실패 방어)
+            if not result.get("decision"):
+                try:
+                    total_score = int(result.get("total_score", 0))
+                except (ValueError, TypeError):
+                    total_score = 0
+                result["decision"] = "PASS" if total_score >= _BLOCK_AUDIT_PASS_SCORE else "REJECT"
+                logging.debug("[BlockEnricher] decision 미반환 — score 폴백 사용: %d", total_score)
 
             return result
 
         except Exception as e:
+            logging.warning("[BlockEnricher] _director_audit_block 실패: %s", e)  # [TF-11-04]
             return {
                 "decision": "PASS",  # 심사 실패 시 일단 통과 (Block 자체 문제 아님)
                 "total_score": 70,
@@ -827,7 +835,7 @@ class BlockEnricher(BaseAgent):
             # [V60.24] Flash (빠른 검증용)
             original_model = self.primary_model
             try:  # [V70] 예외 시 primary_model 복원 보장
-                self.primary_model = "gemini-2.5-flash"
+                self.primary_model = AIModels.FLASH_ANALYSIS_MODEL  # [TF-11-01] SSOT
                 result = self.ask(prompt, temperature=0.2)
             finally:
                 self.primary_model = original_model
@@ -838,9 +846,7 @@ class BlockEnricher(BaseAgent):
             return result.get("issues", [])
 
         except Exception as e:
-            import logging
-
-            logging.warning(f"[BlockEnricher] validate_causal_chain 실패 (non-blocking): {e}")
+            logging.warning("[BlockEnricher] validate_causal_chain 실패 (non-blocking): %s", e)
             return []  # 검증 실패 시 빈 리스트 (에러 없음 처리)
 
     def _re_enrich_with_causal_fix(

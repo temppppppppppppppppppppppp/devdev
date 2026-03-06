@@ -19,6 +19,9 @@ from concurrent.futures import TimeoutError as FutureTimeoutError
 from modules.core.arc_summary_utils import generate_prev_arc_summary  # [V64.P4]
 from modules.core.prompt_loader import SafeDict
 
+from modules.core.constants import AIModels
+from modules.validation.threshold_helper import _threshold
+
 from .base_agent import _SYSTEM_CFG, BaseAgent
 
 # 3가지 검증 관점
@@ -150,9 +153,9 @@ class ConsensusValidator(BaseAgent):
     3개 LLM이 서로 다른 관점으로 검증, 합의 도출
     """
 
-    # [V61.3→TF-26] 앙상블 타임아웃 — system.yaml ensemble_timeouts.consensus_vote 참조
+    # [V61.3→TF-26→TF-6-06] 앙상블 타임아웃 — validation.yaml ensemble_timeouts_validation 참조
     _TIMEOUTS = _SYSTEM_CFG.get("ensemble_timeouts", {}).get("consensus_vote", {})
-    ENSEMBLE_TIMEOUT = 120  # 전체 합의 타임아웃 (초) — consensus는 ensemble key 미사용
+    ENSEMBLE_TIMEOUT = _threshold("ensemble_timeouts_validation.consensus_total", 120)  # [TF-6-06] 외부화
     SINGLE_VOTE_TIMEOUT = _TIMEOUTS.get("single", 90)
 
     def __init__(self, context, client, model_tier: str = None):
@@ -452,6 +455,6 @@ class ConsensusValidator(BaseAgent):
         return "\n".join(lines)
 
 
-def create_consensus_validator(context, client, model_tier: str = "gemini-2.5-flash"):
+def create_consensus_validator(context, client, model_tier: str = AIModels.FLASH_ANALYSIS_MODEL):
     """[V60.53] ConsensusValidator 생성 헬퍼 - Flash로 변경"""
     return ConsensusValidator(context, client, model_tier)

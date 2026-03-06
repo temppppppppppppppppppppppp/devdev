@@ -1007,7 +1007,10 @@ class WorldStateManager:
             if k in text:
                 return v
         # 복합 표현
-        compounds = {"일주일": 7, "보름": 15, "한 달": 30, "한달": 30, "반년": 180}
+        compounds = {
+            "일주일": 7, "보름": 15, "한 달": 30, "한달": 30, "반년": 180,
+            "반나절": 1, "수일": 3, "며칠": 3, "몇 주": 14, "몇주": 14,
+        }
         for k, v in compounds.items():
             if k in text:
                 return v

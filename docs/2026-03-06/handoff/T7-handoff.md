@@ -1,0 +1,20 @@
+# T7 Handoff
+- 시각: 2026-03-06T14:00:00+09:00
+- 모드: CODE_OPEN (사용자 직접 지시 기반 보강 수행)
+- last_seen_broadcast_seq: 1 (참고: `T0-broadcast.md`에 명시적 `seq` 필드는 없음)
+- 변경 파일:
+  - `scripts/e2e_menu_smoke.ps1`
+  - `docs/2026-03-06/handoff/T7-handoff.md`
+- 완료:
+  - `scripts/e2e_menu_smoke.ps1` 점검 및 보강 완료
+  - 종료코드 규칙(`0/1/2/3`) 구현 확인
+  - 산출물 경로(`smoke-summary.json`, `smoke-results.jsonl`, `smoke-failures.log`) 구현 확인
+  - key 커버리지 보강 완료: `0,1,2,3,4,5,6,44,77,88,99`
+  - 누락 key 8개 추가 완료: `1,3,4,5,6,77,88,99`
+- 미완료:
+  - 없음 (T7 발령문 범위 내)
+- 리스크:
+  - `key=5`는 런타임 구현에 따라(backend 처리 vs UI 전용 처리) 환경별 기대 응답 차이가 날 수 있음
+  - `T0-broadcast.md`의 `seq` 증가 규칙 문서화 대비 파일 포맷(명시 필드 없음) 불일치
+- 다음 액션:
+  - 운영 환경에서 key별 기대 응답(특히 `key=5`)을 최종 확정 후 필요 시 expectCode 조정

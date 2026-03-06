@@ -1,0 +1,136 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Geuldobi WS Event v1",
+  "type": "object",
+  "required": ["event_version", "seq", "run_id", "type", "ts", "payload"],
+  "properties": {
+    "event_version": {
+      "type": "string",
+      "const": "v1"
+    },
+    "seq": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "run_started",
+        "progress",
+        "prompt_request",
+        "prompt_resolved",
+        "prompt_timeout",
+        "run_completed",
+        "run_failed"
+      ]
+    },
+    "ts": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "payload": {
+      "type": "object"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "prompt_request"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object",
+            "required": [
+              "prompt_id",
+              "step_id",
+              "input_type",
+              "default",
+              "timeout_sec"
+            ],
+            "properties": {
+              "prompt_id": {
+                "type": "string"
+              },
+              "step_id": {
+                "type": "string"
+              },
+              "input_type": {
+                "type": "string",
+                "enum": ["enum", "int", "string", "bool"]
+              },
+              "options": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "default": {},
+              "timeout_sec": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "prompt_resolved"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object",
+            "required": ["prompt_id", "value", "source"],
+            "properties": {
+              "prompt_id": {
+                "type": "string"
+              },
+              "value": {},
+              "source": {
+                "type": "string",
+                "enum": ["user", "default"]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "prompt_timeout"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object",
+            "required": ["prompt_id", "applied_default"],
+            "properties": {
+              "prompt_id": {
+                "type": "string"
+              },
+              "applied_default": {}
+            }
+          }
+        }
+      }
+    }
+  ]
+}

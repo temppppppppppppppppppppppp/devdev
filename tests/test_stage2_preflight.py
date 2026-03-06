@@ -237,6 +237,7 @@ class TestPreflightArcAnalysis:
             "generation_method",
             "constraint_block",
             "entity_registry_for_director",
+            "narrative_enriched",  # [TF-3T-A]
         }
         assert required == set(out.keys())
 

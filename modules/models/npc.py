@@ -27,6 +27,7 @@ class NPCEntry(BaseModel):
 
     name: str
     status: str = "alive"
+    deceased: bool = False  # [대원칙4] status=="dead" 체크와 병행 (truth_gate 기준)
     weapon: str = ""
     level: str = ""
     death_arc: int | None = None

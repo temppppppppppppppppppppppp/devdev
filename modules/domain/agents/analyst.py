@@ -139,7 +139,8 @@ class Analyst(BaseAgent):
             try:
                 genre = getattr(self.context, "genre", "") or ""
                 protagonist_name = HUDKeys.get_protagonist_name(bible_root, genre)
-            except Exception:
+            except Exception as _e:
+                logging.debug("[Analyst] protagonist_name 폴백: %s", _e)
                 protagonist_name = "주인공"
 
         # [V60.88] 주인공 설정 추출 (인지 목적, 제약 최소화)
@@ -1262,6 +1263,14 @@ class Analyst(BaseAgent):
             )
             enriched_result = self._extract_json_robust(raw_res)
 
+            # [TF-S2PE-03] 파싱 전실패 감지 — orchestrator가 성공으로 오인 방지
+            if enriched_result.get("parsing_error"):
+                logging.warning(
+                    "[Analyst Enrich] JSON 파싱 전실패: block_id=%s", _block_id
+                )
+                raw_block["_enrich_skipped"] = True
+                return raw_block
+
             # [Obs-Fix] 원본 보존 — LLM 출력에서 신규 필드(joint_docs, status_shadow 등)만 추가
             merged = dict(raw_block)
             for k, v in enriched_result.items():
@@ -1536,6 +1545,10 @@ class Analyst(BaseAgent):
                         return genre_type
         except Exception as e:
             logging.warning(f" [Analyst] 장르 감지 실패: {e}")
+        # guard 미매칭/예외 시 context.genre SSOT 우선, 없으면 WUXIA 폴백
+        _ctx_genre = getattr(self.context, "genre", None)
+        if _ctx_genre:
+            return _ctx_genre
         return GenreTypes.WUXIA
 
     @staticmethod

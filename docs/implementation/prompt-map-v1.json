@@ -1,0 +1,170 @@
+{
+  "version": "v1",
+  "updated_at": "2026-03-06",
+  "keys": {
+    "0": {
+      "requires_sub_key": true,
+      "allowed_sub_keys": ["0", "1", "2", "3", "4", "5", "6"],
+      "steps": []
+    },
+    "1": {
+      "requires_sub_key": false,
+      "steps": [
+        {
+          "step_id": "stage1_mode",
+          "type": "enum",
+          "required": true,
+          "options": ["proceed", "skip"],
+          "default": "proceed"
+        }
+      ]
+    },
+    "2": {
+      "requires_sub_key": false,
+      "steps": [
+        {
+          "step_id": "stage2_target_arc_limit",
+          "type": "int",
+          "required": true,
+          "default": 5,
+          "min": 1,
+          "max": 99
+        },
+        {
+          "step_id": "stage2_fail_action",
+          "type": "enum",
+          "required": true,
+          "options": ["skip", "stop", "retry", "manual"],
+          "default": "stop"
+        },
+        {
+          "step_id": "stage2_manual_input",
+          "type": "string",
+          "required_if": {
+            "stage2_fail_action": "manual"
+          },
+          "default": ""
+        }
+      ]
+    },
+    "3": {
+      "requires_sub_key": false,
+      "steps": [
+        {
+          "step_id": "stage3_target_episode",
+          "type": "int",
+          "required": true,
+          "default": 1,
+          "min": 1,
+          "max": 999
+        },
+        {
+          "step_id": "stage3_skip_allowed",
+          "type": "bool",
+          "required": true,
+          "default": false
+        }
+      ]
+    },
+    "4": {
+      "requires_sub_key": false,
+      "steps": [
+        {
+          "step_id": "stage4_target_episode",
+          "type": "int",
+          "required": true,
+          "default": 1,
+          "min": 1,
+          "max": 999
+        },
+        {
+          "step_id": "stage4_style",
+          "type": "enum",
+          "required": true,
+          "options": ["style_a", "style_b"],
+          "default": "style_a"
+        },
+        {
+          "step_id": "stage4_fallback",
+          "type": "enum",
+          "required": true,
+          "options": ["adopt_best", "skip"],
+          "default": "adopt_best"
+        }
+      ]
+    },
+    "5": {
+      "requires_sub_key": false,
+      "ui_only_action": "exit_app",
+      "steps": []
+    },
+    "6": {
+      "requires_sub_key": false,
+      "steps": [
+        {
+          "step_id": "onestop_batch_count",
+          "type": "int",
+          "required": true,
+          "default": 1,
+          "min": 1,
+          "max": 20
+        },
+        {
+          "step_id": "onestop_fail_action",
+          "type": "enum",
+          "required": true,
+          "options": ["skip", "stop"],
+          "default": "stop"
+        },
+        {
+          "step_id": "onestop_continue",
+          "type": "bool",
+          "required": true,
+          "default": true
+        }
+      ]
+    },
+    "44": {
+      "requires_sub_key": false,
+      "requires_double_confirm": true,
+      "approval_policy": "dual_control",
+      "steps": [
+        {
+          "step_id": "rollback_target_episode",
+          "type": "int",
+          "required": true,
+          "default": 1,
+          "min": 1,
+          "max": 999
+        }
+      ]
+    },
+    "77": {
+      "requires_sub_key": false,
+      "requires_double_confirm": true,
+      "approval_policy": "dual_control",
+      "steps": []
+    },
+    "88": {
+      "requires_sub_key": false,
+      "requires_double_confirm": true,
+      "approval_policy": "dual_control",
+      "steps": []
+    },
+    "99": {
+      "requires_sub_key": false,
+      "requires_double_confirm": true,
+      "approval_policy": "dual_control",
+      "steps": [
+        {
+          "step_id": "rewind_target_arc",
+          "type": "int",
+          "required": true,
+          "default": 1,
+          "min": 1,
+          "max": 99
+        }
+      ]
+    }
+  }
+}

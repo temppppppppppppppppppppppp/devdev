@@ -283,6 +283,21 @@ class Stage4InterviewRound:
         if type(director_feedback) is not str:
             director_feedback = str(director_feedback or "")
 
+        # [Arc 경계] arc_pos==1: 위치 변경 묘사 의무화 지시 CW에 주입
+        if arc_pos == 1:
+            _arc_loc_note = (
+                "[Arc 첫 화 특별 지시] 이번 화는 새 Arc의 첫 화입니다. "
+                "mandatory_context의 위치 정보를 확인하여, 이전 Arc 종료 위치와 "
+                "현재 화 시작 위치가 다르다면 반드시 이동 과정(교통수단·경로·시간 소요) "
+                "또는 시간 경과 표지('다음날', 'N일 후' 등)를 도입부에 포함하세요. "
+                "설명 없는 장소 단절은 독자 이탈의 원인입니다."
+            )
+            mandatory_context = (
+                f"{_arc_loc_note}\n\n{mandatory_context}"
+                if mandatory_context
+                else _arc_loc_note
+            )
+
         mandatory_context, _common_writer_kwargs = self._build_common_writer_kwargs(
             round_ctx=round_ctx,
             next_ep=next_ep,
@@ -1361,10 +1376,10 @@ class Stage4InterviewRound:
                     self.ctx.ui.log(f"   ⚠️ [TF-35] 재심사 PASS이나 score={_re_s} < {quality_gate_score} → patch 종료")
                     break
                 _current_ms = _patched_ms
-                # [TF-36] S4-010: 재심사 결과의 state_updates 반영
+                # [TF-36] S4-010: 재심사 결과의 state_updates 반영 (merge, [TF-4T-C] 완전 교체 방지)
                 _re_su = _re_audit.get("state_updates")
                 if isinstance(_re_su, dict) and _re_su:
-                    final_state_updates = _re_su
+                    final_state_updates = {**final_state_updates, **_re_su}
                 _fix_ok = True
                 break
             elif _re_d == "PASS_WITH_FIX":

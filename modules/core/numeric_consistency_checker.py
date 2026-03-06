@@ -515,6 +515,43 @@ class NumericConsistencyChecker:
             except (ValueError, TypeError):
                 continue
 
+        # 레버리지 수익률(%) 검증: "X달러 → Y달러 × N배 → Z%" 패턴
+        warnings.extend(self._check_leverage_return_pct(narration))
+
+        return warnings
+
+    _LEVERAGE_PCT_RE = re.compile(
+        r"(\d[\d.]*)\s*달러[^.。\n]{0,60}?(\d[\d.]*)\s*달러[^.。\n]{0,80}?"
+        r"(\d[\d.]*)\s*배[^.。\n]{0,60}?"
+        r"(?:수익률|수익)[^.。\n]{0,30}?(\d[\d.]*)\s*%",
+    )
+
+    def _check_leverage_return_pct(self, narration: str) -> list[dict]:
+        """[NC-1] 달러 가격 변동 × 레버리지 → 수익률(%) 정합성 검증."""
+        warnings: list[dict] = []
+        for m in self._LEVERAGE_PCT_RE.finditer(narration):
+            try:
+                price_a = float(m.group(1).replace(",", ""))
+                price_b = float(m.group(2).replace(",", ""))
+                leverage = float(m.group(3).replace(",", ""))
+                claimed_pct = float(m.group(4).replace(",", ""))
+                if price_a <= 0 or leverage <= 0:
+                    continue
+                expected_pct = abs(price_b - price_a) / price_a * leverage * 100
+                # 10%p 이상 괴리 시 경고
+                if abs(expected_pct - claimed_pct) > 10.0:
+                    warnings.append(
+                        {
+                            "check": "레버리지 수익률",
+                            "severity": "MAJOR",
+                            "text": (
+                                f"[레버리지 수익률 불일치] {price_a}달러→{price_b}달러 × {leverage:.0f}배 "
+                                f"= 약 {expected_pct:.1f}%이어야 하나 원고에서 {claimed_pct:.1f}%로 표기"
+                            ),
+                        }
+                    )
+            except (ValueError, TypeError):
+                continue
         return warnings
 
     # ── 4. 직함 변경 감지 ────────────────────────────────────────
@@ -547,7 +584,8 @@ class NumericConsistencyChecker:
                 for m in _TITLE_RE.finditer(prev_narration):
                     pname, ptitle = m.group(1), m.group(2)
                     prev_titles.setdefault(pname, set()).add(ptitle)
-            except Exception:
+            except Exception as _e:
+                logging.debug("[NC-1] _check_title_consistency prev_titles 수집 실패 ep=%d: %s", prev_ep, _e)
                 continue
 
         warnings: list[dict] = []
@@ -608,7 +646,8 @@ class NumericConsistencyChecker:
                         val = bible.get(key)
                         if val:
                             prev_events_text += " " + str(val)
-            except Exception:
+            except Exception as _e:
+                logging.debug("[NC-1] _check_event_ordering bible 조회 실패 ep=%d: %s", prev_ep, _e)
                 continue
 
         # 직전 3화 원고에서도 텍스트 수집
@@ -619,7 +658,8 @@ class NumericConsistencyChecker:
                     prev_ms = ms_row.get("manuscript", "") or ms_row.get("text", "")
                     if prev_ms:
                         prev_events_text += " " + prev_ms[:5000]
-            except Exception:
+            except Exception as _e:
+                logging.debug("[NC-1] _check_event_ordering 원고 조회 실패 ep=%d: %s", prev_ep, _e)
                 continue
 
         if not prev_events_text:

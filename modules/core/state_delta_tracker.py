@@ -73,7 +73,7 @@ class StateDeltaTracker:
     갑작스러운 변화를 감지하고 방지합니다.
     """
 
-    # 내공 회복 최대치 (조건별)
+    # 내공 회복 최대치 (조건별) — [TF-8-06] 무협 전용 하드코딩. 장르 확장 시 YAML 이전 고려.
     RECOVERY_LIMITS = {
         "휴식_반나절": 15,
         "휴식_하루": 25,
@@ -356,8 +356,9 @@ class StateDeltaTracker:
 
     def calculate_expected_energy(self) -> int:
         """
-        델타 기반으로 예상 내공 계산
-        (검증용 - 기록된 모든 델타를 합산)
+        델타 기반으로 예상 내공 계산 (검증용 - 기록된 모든 델타를 합산)
+
+        [TF-8-07] 외부 호출 경로 미확인 — 디버깅/테스트 보조용으로 보존.
         """
         calculated = self.initial_energy
         for delta in self.energy_history:

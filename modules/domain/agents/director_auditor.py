@@ -14,7 +14,7 @@ import re
 import statistics
 import time
 
-from modules.core.constants import ManuscriptLimits
+from modules.core.constants import AIModels, ManuscriptLimits
 from modules.core.prompt_loader import PromptLoader
 from modules.validation.threshold_helper import _threshold
 from modules.validation.validation_orchestrator import ValidationOrchestrator
@@ -235,7 +235,7 @@ class DirectorQualityAuditor:
         if self.v0128_orchestrator is None:
             default_config = {
                 "scoring_model": self._d.primary_model,
-                "advisory_model": "gemini-2.5-flash",
+                "advisory_model": AIModels.FLASH_ANALYSIS_MODEL,  # [TF-16-03] models.yaml SSOT
                 "scoring_threshold": 70,  # [TF-I06] 65→70 YAML/코드 일치
                 "use_self_consistency": True,
                 "consistency_votes": 3,
@@ -257,9 +257,8 @@ class DirectorQualityAuditor:
                     with open(_sj_path, encoding="utf-8") as _sj_f:
                         _sj = _json.load(_sj_f)
                     _sj_val = _sj.get("validation", {})
+                    # [TF-16-03] scoring_model/advisory_model 제거 — models.yaml SSOT 우회 방지
                     _SETTINGS_KEYS = {
-                        "scoring_model",
-                        "advisory_model",
                         "scoring_threshold",
                         "use_self_consistency",
                         "consistency_votes",
@@ -274,8 +273,8 @@ class DirectorQualityAuditor:
                     for _k in _SETTINGS_KEYS:
                         if _k in _sj_val:
                             default_config[_k] = _sj_val[_k]
-            except Exception:
-                pass  # settings.json 읽기 실패 시 기본값 유지
+            except Exception as _sj_e:
+                logging.warning("[DirectorAuditor] settings.json 로드 실패 — 기본값 유지: %s", _sj_e)  # [TF-16-04]
 
             if config:
                 default_config.update(config)
@@ -651,9 +650,8 @@ class DirectorQualityAuditor:
                     ms = self._d.context.db.get_manuscript(i)
                     if ms and "content" in ms:
                         prev_manuscripts.append(ms["content"])
-                except Exception:
-                    # DB 조회 실패는 무시 (원고 없을 수 있음)
-                    pass
+                except Exception as _e:
+                    logging.debug("[RepetitionGuard] DB 원고 조회 실패 ep=%d: %s", i, _e)
 
             # 금지 구문 목록 구축
             if prev_manuscripts:

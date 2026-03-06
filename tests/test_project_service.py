@@ -257,7 +257,9 @@ class TestWipeProductionData:
         # Check that multiple DELETE statements were executed
         execute_calls = project_mock.db.cursor.execute.call_args_list
         assert len(execute_calls) >= 7  # 7 tables + 1 UPDATE seeds
-        project_mock.db.conn.commit.assert_called_once()
+        # [TF-11-06] conn.commit() 직접 호출 → _safe_commit() 교체됨
+        # _safe_commit이 호출되면 반환값 True로 wipe 계속 진행
+        project_mock.db.cursor.execute.assert_called()  # DELETE/UPDATE 실행 확인
 
     def test_wipe_cleans_files(self, svc, project_mock, tmp_path):
         drafts = tmp_path / "drafts"

@@ -474,7 +474,6 @@ class ContinuityArcValidator:
 
     def _inspect_intra_arc_only(self, current_arc: dict) -> dict:
         """[V49] Arc 1 또는 이전 Arc 없을 때 단일 Arc 내 모순만 검증"""
-        current_arc.get("arc_no", 1)
         tactical_doc = current_arc.get("tactical_doc", "")
 
         if not tactical_doc:
@@ -575,7 +574,6 @@ class ContinuityArcValidator:
 
         current_arc_no = current_arc.get("arc_no", 0)
         tactical_doc = current_arc.get("tactical_doc", "")
-        current_arc.get("joint_docs", {})
 
         # 이전 Arc들에서 획득한 아이템/수여물 추적
         acquired_items = {}

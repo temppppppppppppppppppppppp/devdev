@@ -7,8 +7,11 @@ import re
 from difflib import SequenceMatcher
 
 from modules.core.constants import AIModels
+from modules.validation.threshold_helper import _threshold
 
-_JACCARD_SIMILARITY_THRESHOLD = 0.50  # [TF-S2-04] Jaccard 전용 (SemanticPlotGuard.SIMILARITY_THRESHOLD와 분리)
+_JACCARD_SIMILARITY_THRESHOLD = _threshold(
+    "arc.jaccard_similarity_threshold", 0.50
+)  # [TF-1-04] validation.yaml 외부화 (SemanticPlotGuard.SIMILARITY_THRESHOLD와 분리)
 
 
 class Stage2ValidationPipeline:

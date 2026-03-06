@@ -297,6 +297,18 @@ class ArcAutoCorrector:
             state["arc_start_state"] = start_state
             arc["state_constraints"] = state
 
+            # [TF-57-B] tactical_doc 내 "[시작 상태:...]" 텍스트도 동기화 (phantom fix 방지)
+            tactical_doc = arc.get("tactical_doc", "")
+            if tactical_doc and current_location in tactical_doc:
+                import re as _re57
+                # "[시작 상태: <위치>" 패턴에서 위치 문자열만 교체 (조사/공백 무시)
+                new_tactical = tactical_doc.replace(current_location, prev_location)
+                if new_tactical != tactical_doc:
+                    arc["tactical_doc"] = new_tactical
+                    self.corrections_made.append(
+                        f"tactical_doc 위치 텍스트 동기화: '{current_location}' → '{prev_location}'"
+                    )
+
         return arc
 
     def _fix_start_state(self, arc: dict, prev_arcs: list[dict]) -> dict:

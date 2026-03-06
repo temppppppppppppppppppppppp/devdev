@@ -17,7 +17,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from concurrent.futures import TimeoutError as FutureTimeoutError
 
-from modules.core.constants import GenreTypes, smart_truncate
+from modules.core.constants import AIModels, GenreTypes, smart_truncate
 from modules.core.hud_utils import build_hud_context as _build_hud_context_shared
 from modules.core.prompt_loader import PromptLoader
 from modules.core.tactical_utils import extract_episode_tactical
@@ -529,7 +529,8 @@ class BlueprintEnsembleGenerator(BaseAgent):
             # ── I-23: 만족도 추이 ──
             try:
                 sat_tags = db.get_recent_satisfaction_tags(before_ep=ep_num, lookback=5)
-            except Exception:
+            except Exception as _e:
+                logging.debug("[BlueprintEnsemble] sat_tags 조회 실패: %s", _e)
                 sat_tags = []
             if sat_tags:
                 parts.append("[독자 만족도 추이 (최근 5화)]")
@@ -552,7 +553,8 @@ class BlueprintEnsembleGenerator(BaseAgent):
             # ── I-24: 호흡 분석 추이 ──
             try:
                 pacing_records = db.get_recent_pacing_records(before_ep=ep_num, lookback=5)
-            except Exception:
+            except Exception as _e:
+                logging.debug("[BlueprintEnsemble] pacing_records 조회 실패: %s", _e)
                 pacing_records = []
             if pacing_records:
                 parts.append("[호흡 분석 추이 (최근 5화)]")
@@ -825,6 +827,6 @@ class BlueprintEnsembleGenerator(BaseAgent):
         return smart_truncate(result)
 
 
-def create_blueprint_ensemble(context, client, model_tier: str = "gemini-2.5-pro"):
+def create_blueprint_ensemble(context, client, model_tier: str = AIModels.DEFAULT_ARCHITECT):
     """BlueprintEnsembleGenerator 생성 헬퍼"""
     return BlueprintEnsembleGenerator(context, client, model_tier)

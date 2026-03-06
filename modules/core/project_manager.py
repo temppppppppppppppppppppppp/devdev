@@ -896,16 +896,25 @@ class ProjectContext:
             self.reset_project(target_ep)
 
             if memory and hasattr(memory, "delete_episodes_from"):
-                deleted = memory.delete_episodes_from(target_ep)
-                logging.info(f" [Memory] 제 {target_ep}화 이후 벡터 기억 {deleted}건 소거")
+                try:
+                    deleted = memory.delete_episodes_from(target_ep)
+                    logging.info(f" [Memory] 제 {target_ep}화 이후 벡터 기억 {deleted}건 소거")
+                except Exception as _e:
+                    logging.warning(f" [Backtrack] Memory rollback 실패 (DB는 완료): {_e}")
 
             if world_state and hasattr(world_state, "rollback_to"):
-                world_state.rollback_to(target_ep)
-                logging.info(" [WorldState] 세계 상태 초기화 완료")
+                try:
+                    world_state.rollback_to(target_ep)
+                    logging.info(" [WorldState] 세계 상태 초기화 완료")
+                except Exception as _e:
+                    logging.warning(f" [Backtrack] WorldState rollback 실패 (DB는 완료): {_e}")
 
             if fact_ledger and hasattr(fact_ledger, "rollback_to"):
-                fact_ledger.rollback_to(target_ep)
-                logging.info(" [FactLedger] 팩트 원장 초기화 완료")
+                try:
+                    fact_ledger.rollback_to(target_ep)
+                    logging.info(" [FactLedger] 팩트 원장 초기화 완료")
+                except Exception as _e:
+                    logging.warning(f" [Backtrack] FactLedger rollback 실패 (DB는 완료): {_e}")
 
             return target_ep
         except Exception as e:

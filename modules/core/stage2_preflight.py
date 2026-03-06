@@ -468,14 +468,15 @@ class Stage2PreflightAnalysis:
                 _trend = self.ctx.quality_dashboard.get_score_trend_summary(stage=2)
                 if _trend.get("trend") != "insufficient_data" and _trend.get("summary"):
                     _quality_trend_block = f"\n[품질 추세 참고]\n{_trend['summary']}\n"
-            except Exception:
-                pass  # [Phase 3-QR] advisory, 실패 시 비차단
+            except Exception as _qr_e:
+                logging.debug("[S2-QR] 품질 추세 수집 실패 (비차단): %s", _qr_e)  # [TF-S2PE-07]
 
         # [V49.4] 제약 블록을 prev_arc_context에 주입
         enhanced_context = last_refined_context
         if _quality_trend_block:
             enhanced_context = _quality_trend_block + enhanced_context
         # [LM-G] 서사 구조 컨텍스트 주입 (advisory)
+        _narrative_enriched = False  # [TF-3T-A] orchestrator 추적용
         try:
             from modules.core.narrative_context_formatter import NarrativeContextFormatter
 
@@ -508,6 +509,7 @@ class Stage2PreflightAnalysis:
             )
             if _narrative_ctx:
                 enhanced_context = _narrative_ctx + "\n\n" + enhanced_context
+                _narrative_enriched = True  # [TF-3T-A]
                 if attempt == 0:
                     self.ctx.ui.log("      📖 [LM-G] 서사 구조 컨텍스트 주입 완료")
         except Exception as _lmg_err:
@@ -721,6 +723,7 @@ class Stage2PreflightAnalysis:
             "generation_method": generation_method,
             "constraint_block": constraint_block,
             "entity_registry_for_director": entity_registry_for_director,
+            "narrative_enriched": _narrative_enriched,  # [TF-3T-A] orchestrator 추적용
         }
 
     def _preflight_enrichment(
@@ -802,6 +805,7 @@ class Stage2PreflightAnalysis:
                                             logging.debug("[Stage2Preflight] SC perf_timer stop 실패 (무시): %s", _e)
                                     _use_advisor_path = True
                                 except Exception as exc:  # advisor path failure -> fallback to legacy
+                                    logging.warning("[S2-SC] advisor 실패, legacy fallback: %s", exc)  # [TF-S2PE-08]
                                     _audit_cb = getattr(self.ctx, "audit_event", None)
                                     if callable(_audit_cb):
                                         _audit_cb("s2_vector_search_failed", str(exc)[:100])
@@ -985,7 +989,7 @@ class Stage2PreflightAnalysis:
                                 "npc": r.get("target", ""),
                                 "from": r.get("before", ""),
                                 "to": r.get("after", ""),
-                                "episode": 0,
+                                "episode": None,  # [TF-S2PE-09] 미정 명시 (0 하드코딩 제거)
                             }
                             for r in _rd
                             if isinstance(r, dict)
@@ -993,18 +997,25 @@ class Stage2PreflightAnalysis:
                     # time_span → timeline
                     _ts = enriched_block.get("time_span", {})
                     if isinstance(_ts, dict) and _ts and not _sc.get("timeline", {}).get("start"):
-                        _sc["timeline"] = {"start": _ts.get("in_story_time", ""), "end": _ts.get("in_story_time", "")}
+                        _ts_val = _ts.get("in_story_time", "")  # [TF-S2PE-06] 빈 문자열 건너뜀
+                        if _ts_val:
+                            _sc["timeline"] = {"start": _ts_val, "end": _ts_val}
                     refined_arc["state_changes"] = _sc
 
-                    # --- Fix 7: items_acquired 자기모순 해결 ---
+                    # --- Fix 7: items_acquired advisory (장비 diff는 이벤트와 다름) ---
+                    # [TF-S2PE-02] equipment diff ≠ 획득 이벤트 — Python이 직접 쓰지 않음
+                    # LLM(FourPhase state_constraints)이 대사·이벤트 기반으로 직접 명시해야 함
                     _stc = refined_arc.get("state_constraints", {})
                     if not _stc.get("items_acquired"):
                         _end_eq = _stc.get("arc_end_state", {}).get("equipment", [])
                         _start_eq = _stc.get("arc_start_state", {}).get("equipment", [])
                         if isinstance(_end_eq, list) and isinstance(_start_eq, list):
-                            _new = [i for i in _end_eq if i not in _start_eq]
-                            if _new:
-                                _stc["items_acquired"] = _new
+                            _diff_items = [i for i in _end_eq if i not in _start_eq]
+                            if _diff_items:
+                                logging.debug(
+                                    "[S2-Preflight] items_acquired LLM 미제공 — equipment diff advisory: %s",
+                                    _diff_items,
+                                )  # advisory 로깅만, items_acquired 자동 채움 제거
 
                     logging.info(f"✅ [V60.77] FourPhase 성공! (내부 재시도: {pipeline_result.get('retries', 0)}회)")
 
@@ -1012,7 +1023,10 @@ class Stage2PreflightAnalysis:
                     import copy as _copy
 
                     _st = self.ctx.state_tracker
-                    _st_snapshot = {
+                    if _st is None:
+                        _st_snapshot = {}
+                    else:
+                        _st_snapshot = {
                         "npc_registry": _copy.deepcopy(_st.npc_registry),
                         "resolved_plots": _copy.deepcopy(_st.resolved_plots),
                         "entity_destructions": _copy.deepcopy(_st.entity_destructions),
@@ -1038,20 +1052,27 @@ class Stage2PreflightAnalysis:
                     }
 
                     # [V60.94] NPC 사망/무공 습득 추출 및 StateTracker 업데이트
-                    dead_npcs = self.ctx.state_tracker.extract_npc_deaths_from_arc(refined_arc)
-                    learned_skills = self.ctx.state_tracker.extract_skill_acquisitions_from_arc(refined_arc)
-                    npc_info = self.ctx.state_tracker.extract_npc_info_from_arc(
-                        refined_arc, genre=genre_for_tracker
-                    )  # [V66.2] F-1 장르 가드
-                    self.ctx.state_tracker.extract_resolved_plots_from_arc(refined_arc)
-                    # [V66] 조직/장소 파괴, NPC 성격, NPC-NPC 관계 추출
-                    self.ctx.state_tracker.extract_entity_destructions_from_arc(refined_arc)
-                    self.ctx.state_tracker.extract_npc_personality_from_arc(refined_arc)
-                    self.ctx.state_tracker.extract_npc_npc_relationships_from_arc(refined_arc)
-                    # [V66] 아이템 상태 추출
-                    self.ctx.state_tracker.extract_item_states_from_arc(refined_arc)
-                    # [V66] 플롯 서스펜션 추적
-                    self.ctx.state_tracker.update_plot_mentions_from_arc(refined_arc)
+                    # [TF-S2PE-05] 첫 9개 extract_* try/except 래핑 — 부분 업데이트 실패 명시 기록
+                    dead_npcs = []
+                    learned_skills = []
+                    npc_info = []
+                    try:
+                        dead_npcs = self.ctx.state_tracker.extract_npc_deaths_from_arc(refined_arc)
+                        learned_skills = self.ctx.state_tracker.extract_skill_acquisitions_from_arc(refined_arc)
+                        npc_info = self.ctx.state_tracker.extract_npc_info_from_arc(
+                            refined_arc, genre=genre_for_tracker
+                        )  # [V66.2] F-1 장르 가드
+                        self.ctx.state_tracker.extract_resolved_plots_from_arc(refined_arc)
+                        # [V66] 조직/장소 파괴, NPC 성격, NPC-NPC 관계 추출
+                        self.ctx.state_tracker.extract_entity_destructions_from_arc(refined_arc)
+                        self.ctx.state_tracker.extract_npc_personality_from_arc(refined_arc)
+                        self.ctx.state_tracker.extract_npc_npc_relationships_from_arc(refined_arc)
+                        # [V66] 아이템 상태 추출
+                        self.ctx.state_tracker.extract_item_states_from_arc(refined_arc)
+                        # [V66] 플롯 서스펜션 추적
+                        self.ctx.state_tracker.update_plot_mentions_from_arc(refined_arc)
+                    except Exception as _st_err:
+                        logging.error("[Preflight] StateTracker 부분 업데이트 실패: %s", _st_err)  # [TF-S2PE-05]
                     _suspended = self.ctx.state_tracker.check_suspended_plots(global_arc_no)
                     if _suspended:
                         for sw in _suspended:

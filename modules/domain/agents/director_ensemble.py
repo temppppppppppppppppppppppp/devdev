@@ -831,7 +831,9 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
 
         original_verdict = result.get("verdict", "REJECT")
         score = _safe_int(result.get("score", 50), 50)
-        _pre_firewall_score = score  # [TF-24] 기본값 초기화 (firewall 미작동 시에도 안전)
+
+        # [TF-DIR-1] raw LLM 점수 보존 — NC-3B 교정 전 기준점 (Firewall 감사 추적용)
+        _pre_firewall_score = score
 
         # ── [NC-3B] score_breakdown 합산 검증 ──────────────────
         _sb_raw = result.get("score_breakdown", {})
@@ -940,6 +942,7 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
             "time_progression",
             "opening_diversity",
             "timeline_arc_consistency",  # [NS-4]
+            "fiction_term_leak",          # [TF-57-A]
         ]
         if isinstance(_checklist, dict) and _checklist:
             _issue_count = sum(1 for k in _nc3_keys if str(_checklist.get(k, "")).upper() == "ISSUE")

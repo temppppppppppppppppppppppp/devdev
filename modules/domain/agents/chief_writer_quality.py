@@ -6,13 +6,15 @@ import json
 import logging
 import re
 
+from modules.validation.threshold_helper import _threshold
+
 from .chief_writer_prompts import get_fix_issues_prompt
 
 
 class ChiefWriterQualityGate:
     """ChiefWriter 품질 게이트 — 자기비판 + 클리셰/정당화/NPC/동기/산술 체크."""
 
-    CLICHE_WINDOW = 10  # [Sweep3-E3] 클리셰 감지 윈도우 크기
+    CLICHE_WINDOW = _threshold("quality.cliche_window", 10)  # [TF-5-04] validation.yaml 외부화
 
     def __init__(self, host):
         self.host = host
@@ -144,6 +146,11 @@ class ChiefWriterQualityGate:
         if len(current_manuscript) < 5000:
             _gate_issues.append(f"분량 부족 ({len(current_manuscript)}자 < 5,000자)")
 
+        # [TF-20-01] meta_wall 단독 1건도 severity="low" 탈출 방지
+        _meta_issues = self._check_system_term_exposure(current_manuscript, genre_name)
+        if _meta_issues:
+            _gate_issues.extend(_meta_issues)
+
         if _gate_issues:
             logging.info("[TF-G] 게이트 검사 실패 %d건: %s", len(_gate_issues), _gate_issues)
             try:
@@ -263,6 +270,9 @@ class ChiefWriterQualityGate:
         # 9. [NS-1] Detect arithmetic inconsistencies in manuscript claims.
         issues.extend(self._check_arithmetic_consistency(content))
 
+        # 10. [메타 월] 집필 시스템 내부 용어 노출 체크
+        issues.extend(self._check_system_term_exposure(content, genre_name))
+
         # [Sweep46] 심각도 판단 — 1~2건은 "low" (self-critique 스킵 의도 복원)
         severity = "low"
         if len(issues) >= 5:
@@ -274,6 +284,47 @@ class ChiefWriterQualityGate:
         has_issues = len(issues) > 0
 
         return {"has_issues": has_issues, "issues": issues, "severity": severity}
+
+    def _check_system_term_exposure(self, content: str, genre: str = "") -> list:
+        """[메타 월] 집필 시스템 내부 용어 원고 노출 감지.
+
+        [TF-4T-B] 의료/미용 장르에서 'Stage N 암', 'treatment' 는 정상 표현이므로 제외.
+        """
+        import re as _re
+
+        if not content:
+            return []
+
+        _MEDICAL_GENRES = {"의료", "병원", "의학", "medical", "hospital"}
+        _genre_lower = genre.lower()
+        is_medical = any(g in _genre_lower for g in _MEDICAL_GENRES)
+
+        if is_medical:
+            # Stage\s+\d+(암 스테이징)과 treatment(시술명) 제외
+            _SYSTEM_TERM_RE = _re.compile(
+                r"\b(Block\s+\d+|Arc\s+\d+|Blueprint)\b",
+                _re.IGNORECASE,
+            )
+        else:
+            _SYSTEM_TERM_RE = _re.compile(
+                r"\b(Block\s+\d+|Arc\s+\d+|Stage\s+\d+|Blueprint|treatment)\b",
+                _re.IGNORECASE,
+            )
+
+        m = _SYSTEM_TERM_RE.search(content)
+        if m:
+            return [
+                {
+                    "type": "meta_wall",
+                    "description": (
+                        f"시스템 용어 '{m.group()}' 원고 노출 — "
+                        "세계관 내 표현으로 대체하세요 "
+                        "(예: '처음 원유 투자할 때', '지난번 거래 초반에')"
+                    ),
+                    "severity": "high",
+                }
+            ]
+        return []
 
     def _check_arithmetic_consistency(self, content: str) -> list:
         """[NS-1] Check obvious arithmetic expressions for consistency."""
@@ -638,7 +689,13 @@ class ChiefWriterQualityGate:
         # 부분 일치 (ending_hook의 앞 20자가 포함되면 OK)
         key_fragment = ending_hook[:20]
         if key_fragment not in tail:
-            return [f"ending_hook '{key_fragment}...' 이 원고 말미(마지막 500자)에서 발견되지 않음"]
+            return [
+                {
+                    "type": "missing_ending_hook",
+                    "description": f"ending_hook '{key_fragment}...' 이 원고 말미(마지막 500자)에서 발견되지 않음",
+                    "severity": "high",
+                }
+            ]
         return []
 
     def _fix_manuscript_issues(self, manuscript: str, critique_result: dict, hud_report: str) -> str:

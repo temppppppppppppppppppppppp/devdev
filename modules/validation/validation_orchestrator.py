@@ -200,9 +200,14 @@ class ValidationOrchestrator:
         # [V56] TIER 0.25: PRE-LLM (Python 기반 사전검증)
         # [V70] pov 전달: context에서 추출
         _pov = ""
+        _protagonist_name = ""
         if context and isinstance(context, dict):
             _pov = context.get("pov", "")
-        self.pre_llm = PreLLMValidator(genre=genre, pov=_pov) if PRE_LLM_AVAILABLE else None
+            _protagonist_name = context.get("protagonist_name", "")  # [TF-PLV-1]
+        self.pre_llm = (
+            PreLLMValidator(genre=genre, pov=_pov, protagonist_name=_protagonist_name)
+            if PRE_LLM_AVAILABLE else None
+        )
         self.use_pre_llm = config.get("use_pre_llm", _threshold("orchestrator.use_pre_llm", True))
 
         # [V47] TIER 0.5: CONTINUITY (에피소드 간 연속성)
