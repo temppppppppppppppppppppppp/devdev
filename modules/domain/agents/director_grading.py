@@ -9,6 +9,12 @@ Director God Object 분해의 두 번째 단계.
 """
 
 from modules.core.constants import ManuscriptLimits
+from modules.validation.threshold_helper import _threshold
+
+_ADAPTIVE_BASE_MIN = _threshold("adaptive_grading.base_score_min", 45)    # [TF-6-07]
+_ADAPTIVE_BASE_MAX = _threshold("adaptive_grading.base_score_max", 85)    # [TF-6-07]
+_ADAPTIVE_LEN_MIN = _threshold("adaptive_grading.length_base_min", 3500)  # [TF-6-07]
+_ADAPTIVE_LEN_MAX = _threshold("adaptive_grading.length_base_max", 6000)  # [TF-6-07]
 
 
 class DirectorGradingSystem:
@@ -528,9 +534,9 @@ class DirectorGradingSystem:
             base -= 5
             reason_parts.append("2회재시도(-5점)")
 
-        # 5. 범위 제한
-        base = max(45, min(85, base))
-        length_base = max(3500, min(6000, length_base))
+        # 5. 범위 제한 [TF-6-07] validation.yaml adaptive_grading 참조
+        base = max(_ADAPTIVE_BASE_MIN, min(_ADAPTIVE_BASE_MAX, base))
+        length_base = max(_ADAPTIVE_LEN_MIN, min(_ADAPTIVE_LEN_MAX, length_base))
 
         if base >= 75:
             strictness = "strict"

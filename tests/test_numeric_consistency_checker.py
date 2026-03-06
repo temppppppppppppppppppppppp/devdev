@@ -352,3 +352,23 @@ class TestOpeningSimilarity:
         warns = checker.check(text, ep_num=5)
         opening_warns = [w for w in warns if w["check"] == "도입부 유사도"]
         assert len(opening_warns) == 0
+
+
+# ── [TF-21-06] _check_leverage_return_pct 직접 테스트 ────────────────────
+
+
+class TestLeverageReturnPct:
+    def test_correct_leverage_no_warning(self, checker):
+        """100달러에서 110달러 × 10배 → 수익률 100% (정확) — 경고 없음.
+        마침표 없이 단일 문장으로 구성 (regex [^.。\\n] 제약 회피).
+        """
+        text = "100달러에서 110달러로 올라 10배 레버리지로 수익률이 100%가 되었다"
+        warns = checker._check_leverage_return_pct(text)
+        assert len(warns) == 0
+
+    def test_wrong_leverage_triggers_warning(self, checker):
+        """100달러에서 110달러 × 10배 → 수익률 500% 주장 (실제 100%) — 경고."""
+        text = "100달러에서 110달러로 올라 10배 레버리지로 수익률이 500%가 되었다"
+        warns = checker._check_leverage_return_pct(text)
+        assert len(warns) >= 1
+        assert warns[0]["severity"] == "MAJOR"

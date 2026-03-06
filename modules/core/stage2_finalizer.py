@@ -129,6 +129,66 @@ def _check_tactical_arithmetic(tactical_doc: str) -> list[str]:
     return issues
 
 
+def _check_cross_arc_asset_continuity(tactical_doc: str, prev_arcs: list) -> list[str]:
+    """[TF-57-C] 직전 Arc 자산 수치 → 현재 Arc 첫 에피소드 자산 연속성 advisory.
+
+    직전 Arc arc_end_state 또는 tactical_doc 종료 상태에서 총자산 수치를 추출하고
+    현재 tactical_doc에서 언급된 첫 자산 수치와 ±20% 이상 차이 시 advisory 반환.
+    advisory-only — REJECT 강제 없음.
+    """
+    if not tactical_doc or not prev_arcs:
+        return []
+
+    import re as _re57c
+
+    _asset_re = _re57c.compile(r"총자산\s*약?\s*(\d[\d.,]*)\s*억")
+
+    # 직전 Arc 자산 추출 (arc_end_state 우선, tactical_doc 폴백)
+    prev_arc = prev_arcs[-1]
+    prev_asset: float | None = None
+
+    _prev_end = prev_arc.get("state_constraints", {}).get("arc_end_state", {})
+    for _key in ("total_assets", "asset", "assets"):
+        _val = _prev_end.get(_key)
+        if isinstance(_val, int | float) and _val > 0:
+            prev_asset = float(_val)
+            break
+
+    if prev_asset is None:
+        _prev_td = prev_arc.get("tactical_doc", "")
+        _prev_matches = _asset_re.findall(_prev_td)  # 마지막 언급 = [-1]
+        if _prev_matches:
+            try:
+                prev_asset = float(_prev_matches[-1].replace(",", "")) * 1e8
+            except ValueError:
+                pass
+
+    if prev_asset is None or prev_asset <= 0:
+        return []
+
+    # 현재 Arc 첫 자산 언급 추출
+    _curr_m = _asset_re.search(tactical_doc[:2000])  # 첫 2000자
+    if not _curr_m:
+        return []
+
+    try:
+        curr_asset = float(_curr_m.group(1).replace(",", "")) * 1e8
+    except ValueError:
+        return []
+
+    if curr_asset <= 0:
+        return []
+
+    delta_pct = abs(curr_asset - prev_asset) / prev_asset
+    if delta_pct > 0.20:
+        return [
+            f"[TF-57-C 자산 연속성 advisory] 직전 Arc 종료 자산 {prev_asset/1e8:.1f}억 대비 "
+            f"현재 Arc 첫 언급 자산 {curr_asset/1e8:.1f}억 — {delta_pct*100:.0f}% 차이 (허용 20% 초과). "
+            "직전 Arc 계산과 정합하는지 확인하세요."
+        ]
+    return []
+
+
 def _check_block_worldstate_alignment(
     enriched_block: dict,
     refined_arc: dict,
@@ -321,6 +381,13 @@ class Stage2Finalizer:
             _adv_text = constraint_block[_adv_start:]
             _story_context += f"\n\n⚠️ {_adv_text}"
 
+        # [TF-57-C] 크로스-Arc 자산 연속성 advisory
+        _tactical_doc = refined_arc.get("tactical_doc", "") if isinstance(refined_arc, dict) else ""
+        _cross_arc_issues = _check_cross_arc_asset_continuity(_tactical_doc, all_refined_arcs)
+        if _cross_arc_issues:
+            _story_context += "\n\n" + "\n".join(_cross_arc_issues)
+            logging.info("[TF-57-C] 크로스-Arc 자산 연속성 advisory 주입: %d건", len(_cross_arc_issues))
+
         self.ctx.ui.log("      🤔 [TF-38] Director 전략적 무결성 검수 중...")
         print("      🤔 [Director] 전략적 무결성 검수 중 (LLM 호출, 1~3분 소요)...")
         # [G7] Director 심사 호출 크래시 방어
@@ -498,8 +565,8 @@ class Stage2Finalizer:
                             _change_ratio * 100,
                             _max_ratio * 100,
                         )
-                except Exception:
-                    pass
+                except Exception as _e:
+                    logging.debug("[S2-Finalizer] change_ratio 계산 실패: %s", _e)
 
                 # [PWF-S2] 패치 이력 적적 — Director 재심사 컨텍스트에 주입
                 if _fix_instr:

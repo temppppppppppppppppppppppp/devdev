@@ -22,7 +22,9 @@ def test_analyst_hud_error_is_logged_and_truncated():
 
 def test_block_enricher_validate_causal_chain_logs_warning():
     src = _read("modules/domain/agents/block_enricher.py")
-    assert 'logging.warning(f"[BlockEnricher] validate_causal_chain 실패 (non-blocking): {e}")' in src
+    # [TF-11-01] f-string → %s 포맷으로 변경됨
+    assert '[BlockEnricher] validate_causal_chain 실패 (non-blocking)' in src
+    assert 'logging.warning(' in src
 
 
 def test_stage2_preflight_critical_state_failure_logs_stacktrace():

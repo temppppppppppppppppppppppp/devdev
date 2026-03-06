@@ -501,8 +501,8 @@ class DBManager:
             try:
                 self.cursor.execute(f"ALTER TABLE llm_calls ADD COLUMN {_col} TEXT")
                 self.conn.commit()
-            except Exception:
-                pass  # already exists / migration race
+            except Exception as _e:
+                logging.debug("[DBManager] llm_calls 컬럼 마이그레이션 스킵(%s): %s", _col, _e)
 
         # [Log-2] Stage-level attempt telemetry
         self.cursor.execute(

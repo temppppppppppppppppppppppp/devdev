@@ -8,7 +8,10 @@ from collections import defaultdict
 
 
 class FailureAnalyzer:
-    """Utility for analyzing failure patterns from DB telemetry."""
+    """Utility for analyzing failure patterns from DB telemetry.
+
+    단일 스레드 설계 — 분석 전용 유틸리티. threading.Lock 불필요.
+    """
 
     def __init__(self, db) -> None:
         self.db = db

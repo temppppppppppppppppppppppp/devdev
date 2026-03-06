@@ -29,13 +29,15 @@ from modules.core.writer_prompt_builders import (
     build_mandatory_context as _build_mandatory_context_shared,
 )
 
+from modules.core.constants import AIModels
+
 from .base_agent import BaseAgent
 
 
 class Writer(BaseAgent):
     """[V64] Thin Fallback Writer — ChiefWriter 실패 시 최후 폴백 전용"""
 
-    def __init__(self, context, client, model_tier="gemini-2.5-flash") -> None:
+    def __init__(self, context, client, model_tier=AIModels.FLASH_ANALYSIS_MODEL) -> None:
         super().__init__(context, client, model_tier)
         self.cache_name = None  # main_a.py에서 주입됨
         self.last_hud_anomalies = None
@@ -297,7 +299,8 @@ class Writer(BaseAgent):
                 if hasattr(self.guard, "get_finance_rules_prompt"):
                     return self.guard.get_finance_rules_prompt()
             return ""
-        except Exception:
+        except Exception as _e:
+            logging.warning("[Writer] get_genre_rules_prompt 실패: %s", _e)
             return ""
 
     def _get_npc_frequency_warning(self, ep_num: int) -> str:

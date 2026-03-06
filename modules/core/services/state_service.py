@@ -7,6 +7,7 @@ Protocol 참조: modules/protocols/app_services.py StateServiceProtocol
 from __future__ import annotations
 
 import json
+import logging
 import re
 from collections.abc import Callable
 from pathlib import Path
@@ -150,7 +151,7 @@ class StateService:
             if archetype_path.exists():
                 archetypes = json.loads(archetype_path.read_text(encoding="utf-8"))
         except Exception as e:
-            print(f"      ⚠️ [Archetype] 아키타입 로드 실패: {e}")
+            logging.warning("[StateService] load_character_archetypes 실패: %s", e)  # [TF-11-12]
         return archetypes
 
     # ── get_archetype_reference_for_npcs ─────────────────────────

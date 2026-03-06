@@ -21,12 +21,16 @@ import re
 
 from modules.core.constants import ContextLimits, Stage2Limits
 
+from modules.validation.threshold_helper import _threshold
+
 from .arc_ensemble import ArcEnsembleGenerator
 from .base_agent import BaseAgent, _get_sub_component_models
 from .constraint_compiler import ConstraintCompiler
 from .negative_example_injector import NegativeExampleInjector
 from .preflight_checker import PreflightChecker
 from .unified_arc_validator import UnifiedArcValidator
+
+_NS3B_DIVERGENCE_THRESHOLD: float = _threshold("arc.ns3b_divergence_threshold", 0.30)
 
 # 장르 Guard 이름 → NegativeExampleInjector 장르 키 매핑
 _NEI_GENRE_DETECT_MAP: dict[str, str] = {
@@ -57,7 +61,7 @@ def _check_arc_vs_block_targets(
     arc: dict,
     curr_block: dict | None,
     arc_no: int,
-    threshold: float = 0.30,
+    threshold: float = _NS3B_DIVERGENCE_THRESHOLD,
 ) -> str:
     """
     [NS-3-B] arc_end_state 수치 vs curr_block.genre_ext 목표 비교.
@@ -191,8 +195,8 @@ class FourPhaseArcGenerator(BaseAgent):
                     if _key in _guard_name:
                         _detected_genre = _genre
                         break
-        except Exception:
-            pass
+        except Exception as _e:
+            logging.warning("[FourPhase] 장르 감지 실패, wuxia 기본값 사용: %s", _e)
         self._genre = _detected_genre
         self.negative_injector = NegativeExampleInjector(_detected_genre)
 
@@ -546,6 +550,18 @@ class FourPhaseArcGenerator(BaseAgent):
             # PHASE 2.5: AUTO-SANITIZE - 부상 에스컬레이션 자동 세정
             # ═══════════════════════════════════════════════════════════════
             best_arc = self._check_arc_end_state(best_arc)
+
+            # [TF-22-01] arc_start_state.location 강제 주입 — Arc 경계 공간 연속성
+            if prev_arcs:
+                _last_end = prev_arcs[-1].get("state_constraints", {}).get("arc_end_state", {})
+                _plan_loc = _last_end.get("location") if isinstance(_last_end, dict) else None
+                _exec_state = self._load_execution_state(prev_arcs[-1])
+                _forced_loc = (_exec_state.get("protagonist_location") if _exec_state else None) or _plan_loc
+                if _forced_loc:
+                    _sc = best_arc.setdefault("state_constraints", {})
+                    _as = _sc.setdefault("arc_start_state", {})
+                    if not _as.get("location"):
+                        _as["location"] = _forced_loc
 
             # [NS-3-B] Phase 2.55: Treatment block numeric target alignment (advisory, Python-only)
             _ns3b_warning = _check_arc_vs_block_targets(best_arc, curr_block, arc_no)
@@ -938,6 +954,18 @@ class FourPhaseArcGenerator(BaseAgent):
 
         # 6) Phase 2.5: Auto-sanitize
         best_arc = self._check_arc_end_state(best_arc)
+
+        # [TF-22-01] arc_start_state.location 강제 주입 (Patch Mode 경로)
+        if prev_arcs:
+            _last_end_p = prev_arcs[-1].get("state_constraints", {}).get("arc_end_state", {})
+            _plan_loc_p = _last_end_p.get("location") if isinstance(_last_end_p, dict) else None
+            _exec_state_p = self._load_execution_state(prev_arcs[-1])
+            _forced_loc_p = (_exec_state_p.get("protagonist_location") if _exec_state_p else None) or _plan_loc_p
+            if _forced_loc_p:
+                _sc_p = best_arc.setdefault("state_constraints", {})
+                _as_p = _sc_p.setdefault("arc_start_state", {})
+                if not _as_p.get("location"):
+                    _as_p["location"] = _forced_loc_p
 
         # 7) Phase 3: Validate
         _pre_items = set()

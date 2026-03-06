@@ -28,6 +28,11 @@ sqlite-vec>=0.1.6                # ✅ Phase 4D: ChromaDB 대체 벡터 엔진 (
 # === Data Validation ===
 pydantic>=2.0                    # 데이터 모델 검증 (Step 2)
 
+# === API 브리지 (Mode B / FastAPI) ===
+fastapi>=0.111.0                 # FastAPI 브리지 서버
+uvicorn[standard]>=0.29.0        # ASGI 서버 (websockets 포함)
+websockets>=12.0                 # WS /events 지원
+
 # === Dev ===
 pytest>=8.0                      # 테스트 프레임워크
 hypothesis>=6.0                  # Property-Based Testing

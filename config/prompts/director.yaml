@@ -70,6 +70,7 @@ ENSEMBLE_VARIABLE_PROMPT: |
   5. **상태 연속성**: 부상, 감정 상태, 관계가 이전 원고와 일관되는가?
   6. **타임라인 정합성**: 시간 흐름이 자연스러운가? 순간이동이 없는가? 에피소드 시작 시 시간 경과가 명확한가(다음날/N일 후/당일 등)? mandatory_context에 [Timeline] 정보가 있으면 원고의 시간 묘사와 부합하는지 확인.
      **공간 연속성**: 캐릭터가 장소를 이동할 때 이동 묘사 또는 씬 전환 표지가 있는가? 이전 씬에서 사무실에 있던 인물이 다음 씬에서 설명 없이 다른 장소에 있으면 → MINOR 감점.
+     **Arc 경계 공간 연속성** (Arc 첫 화): mandatory_context에 이전 Arc 종료 위치가 명시된 경우, 현재 화 시작 위치가 다르면 이동 과정·시간 경과 표지가 반드시 있어야 한다. 없으면 → MAJOR 감점 (연속성 점수 -10점).
   7. **수학적 정확성** (투자물 CRITICAL 항목):
      - **레버리지 수익률 공식**: 계좌 수익률(%) = 기초자산 변동폭(%) × 레버리지 배수
        예) 진입가 60.15달러 → 매도가 64.20달러 = 기초자산 6.73% 상승.
@@ -186,11 +187,12 @@ ENSEMBLE_VARIABLE_PROMPT: |
   4. **scene_overlap** — 이전 화와 유사한 씬 구조(같은 장소+인물+상황)가 반복되지 않는가?
   5. **percent_calculation** — 수익률/유지율/비율 등 퍼센트 수치가 실제 계산과 맞는가?
   6. **event_ordering** — "처음", "최초" 등 표현이 이전 화의 사건과 모순되지 않는가?
-  7. **space_continuity** — 캐릭터의 장소 이동이 자연스럽고 전환 묘사가 있는가?
+  7. **space_continuity** — 캐릭터의 장소 이동이 자연스럽고 전환 묘사가 있는가? (e-2) [TF-57-B] 각 에피소드의 [시작 상태:] 헤더에 명시된 위치와 본문 첫 문단 위치 묘사가 일치하는가? 불일치 시 ISSUE.
   8. **npc_identity** — 동명이인 혼동이나 NPC 역할 뒤바뀜이 없는가?
   9. **time_progression** — 에피소드 시작 시 시간 경과가 명확한가?
   10. **opening_diversity** — 직전 화와 도입부 묘사가 과도하게 유사하지 않는가?
   11. **timeline_arc_consistency** — 이전 Arc/에피소드와의 시간 간격 표현("며칠 전", "두 달 후" 등)이 [Arc 시간 연속성 참고] 정보와 일치하는가? 해당 정보가 없으면 OK.
+  12. **fiction_term_leak** — [TF-57-A] 등장인물 대화·지문에 집필 시스템 내부 용어("Block N", "Arc N", "Blueprint", "전술서")가 노출됐는가? OK = 없음. ISSUE = 1건 이상.
 
   ### 📚 [NC-3B] consistency_checklist 응답 예시
   아래는 올바른 체크리스트 응답입니다. ISSUE에는 반드시 구체적 근거를 score_breakdown에 반영하세요.
@@ -206,7 +208,8 @@ ENSEMBLE_VARIABLE_PROMPT: |
       "npc_identity": "OK",
       "time_progression": "OK",
       "opening_diversity": "OK",
-      "timeline_arc_consistency": "OK"
+      "timeline_arc_consistency": "OK",
+      "fiction_term_leak": "OK"
   }}
   → arithmetic ISSUE 예시: 레버리지 수익률 6.73%×3배=20.2%인데 원고는 40.6%로 표기 → continuity_contradiction에 MAJOR -10 감점
 
@@ -254,7 +257,8 @@ ENSEMBLE_VARIABLE_PROMPT: |
           "npc_identity": "OK|ISSUE",
           "time_progression": "OK|ISSUE",
           "opening_diversity": "OK|ISSUE",
-          "timeline_arc_consistency": "OK|ISSUE"
+          "timeline_arc_consistency": "OK|ISSUE",
+          "fiction_term_leak": "OK|ISSUE"
       }},
       "contradiction_check": {{
           "found_contradictions": [
@@ -357,6 +361,7 @@ ENSEMBLE_SELECTION_PROMPT: |
   5. **상태 연속성**: 부상, 감정 상태, 관계가 이전 원고와 일관되는가?
   6. **타임라인 정합성**: 시간 흐름이 자연스러운가? 순간이동이 없는가? 에피소드 시작 시 시간 경과가 명확한가(다음날/N일 후/당일 등)? mandatory_context에 [Timeline] 정보가 있으면 원고의 시간 묘사와 부합하는지 확인.
      **공간 연속성**: 캐릭터가 장소를 이동할 때 이동 묘사 또는 씬 전환 표지가 있는가? 이전 씬에서 사무실에 있던 인물이 다음 씬에서 설명 없이 다른 장소에 있으면 → MINOR 감점.
+     **Arc 경계 공간 연속성** (Arc 첫 화): mandatory_context에 이전 Arc 종료 위치가 명시된 경우, 현재 화 시작 위치가 다르면 이동 과정·시간 경과 표지가 반드시 있어야 한다. 없으면 → MAJOR 감점 (연속성 점수 -10점).
   7. **수학적 정확성** (투자물 CRITICAL 항목):
      - **레버리지 수익률 공식**: 계좌 수익률(%) = 기초자산 변동폭(%) × 레버리지 배수
        예) 진입가 60.15달러 → 매도가 64.20달러 = 기초자산 6.73% 상승.
@@ -473,11 +478,12 @@ ENSEMBLE_SELECTION_PROMPT: |
   4. **scene_overlap** — 이전 화와 유사한 씬 구조(같은 장소+인물+상황)가 반복되지 않는가?
   5. **percent_calculation** — 수익률/유지율/비율 등 퍼센트 수치가 실제 계산과 맞는가?
   6. **event_ordering** — "처음", "최초" 등 표현이 이전 화의 사건과 모순되지 않는가?
-  7. **space_continuity** — 캐릭터의 장소 이동이 자연스럽고 전환 묘사가 있는가?
+  7. **space_continuity** — 캐릭터의 장소 이동이 자연스럽고 전환 묘사가 있는가? (e-2) [TF-57-B] 각 에피소드의 [시작 상태:] 헤더에 명시된 위치와 본문 첫 문단 위치 묘사가 일치하는가? 불일치 시 ISSUE.
   8. **npc_identity** — 동명이인 혼동이나 NPC 역할 뒤바뀜이 없는가?
   9. **time_progression** — 에피소드 시작 시 시간 경과가 명확한가?
   10. **opening_diversity** — 직전 화와 도입부 묘사가 과도하게 유사하지 않는가?
   11. **timeline_arc_consistency** — 이전 Arc/에피소드와의 시간 간격 표현("며칠 전", "두 달 후" 등)이 [Arc 시간 연속성 참고] 정보와 일치하는가? 해당 정보가 없으면 OK.
+  12. **fiction_term_leak** — [TF-57-A] 등장인물 대화·지문에 집필 시스템 내부 용어("Block N", "Arc N", "Blueprint", "전술서")가 노출됐는가? OK = 없음. ISSUE = 1건 이상.
 
   ### 📚 [NC-3B] consistency_checklist 응답 예시
   아래는 올바른 체크리스트 응답입니다. ISSUE에는 반드시 구체적 근거를 score_breakdown에 반영하세요.
@@ -493,7 +499,8 @@ ENSEMBLE_SELECTION_PROMPT: |
       "npc_identity": "OK",
       "time_progression": "OK",
       "opening_diversity": "OK",
-      "timeline_arc_consistency": "OK"
+      "timeline_arc_consistency": "OK",
+      "fiction_term_leak": "OK"
   }}
   → arithmetic ISSUE 예시: 레버리지 수익률 6.73%×3배=20.2%인데 원고는 40.6%로 표기 → continuity_contradiction에 MAJOR -10 감점
 
@@ -541,7 +548,8 @@ ENSEMBLE_SELECTION_PROMPT: |
           "npc_identity": "OK|ISSUE",
           "time_progression": "OK|ISSUE",
           "opening_diversity": "OK|ISSUE",
-          "timeline_arc_consistency": "OK|ISSUE"
+          "timeline_arc_consistency": "OK|ISSUE",
+          "fiction_term_leak": "OK|ISSUE"
       }},
       "contradiction_check": {{
           "found_contradictions": [
@@ -743,11 +751,12 @@ STRATEGIC_AUDIT_PROMPT_V30: |
   4. **scene_overlap** — 이전 화와 유사한 씬 구조(같은 장소+인물+상황)가 반복되지 않는가?
   5. **percent_calculation** — 수익률/유지율/비율 등 퍼센트 수치가 실제 계산과 맞는가?
   6. **event_ordering** — "처음", "최초" 등 표현이 이전 화의 사건과 모순되지 않는가?
-  7. **space_continuity** — 캐릭터의 장소 이동이 자연스럽고 전환 묘사가 있는가?
+  7. **space_continuity** — 캐릭터의 장소 이동이 자연스럽고 전환 묘사가 있는가? (e-2) [TF-57-B] 각 에피소드의 [시작 상태:] 헤더에 명시된 위치와 본문 첫 문단 위치 묘사가 일치하는가? 불일치 시 ISSUE.
   8. **npc_identity** — 동명이인 혼동이나 NPC 역할 뒤바뀜이 없는가?
   9. **time_progression** — 에피소드 시작 시 시간 경과가 명확한가?
   10. **opening_diversity** — 직전 화와 도입부 묘사가 과도하게 유사하지 않는가?
   11. **timeline_arc_consistency** — 이전 Arc/에피소드와의 시간 간격 표현("며칠 전", "두 달 후" 등)이 [Arc 시간 연속성 참고] 정보와 일치하는가? 해당 정보가 없으면 OK.
+  12. **fiction_term_leak** — [TF-57-A] 등장인물 대화·지문에 집필 시스템 내부 용어("Block N", "Arc N", "Blueprint", "전술서")가 노출됐는가? OK = 없음. ISSUE = 1건 이상.
 
   ### 📚 [NC-3B] consistency_checklist 응답 예시
   아래는 올바른 체크리스트 응답입니다. ISSUE에는 반드시 구체적 근거를 score_breakdown에 반영하세요.
@@ -763,7 +772,8 @@ STRATEGIC_AUDIT_PROMPT_V30: |
       "npc_identity": "OK",
       "time_progression": "OK",
       "opening_diversity": "OK",
-      "timeline_arc_consistency": "OK"
+      "timeline_arc_consistency": "OK",
+      "fiction_term_leak": "OK"
   }}
   → arithmetic ISSUE 예시: 레버리지 수익률 6.73%×3배=20.2%인데 원고는 40.6%로 표기 → continuity_contradiction에 MAJOR -10 감점
 
@@ -880,6 +890,7 @@ DIRECTOR_AUDIT_PROMPT_V30: |
   - 직전 원고에서 획득한 장비를 사용하는 것은 허용 (HUD 미반영이라도 OK)
   - [NC-2] 공간 이동이 자연스러운가? 장소 전환 시 이동 묘사 또는 전환 표지가 있는가?
   - [NC-2] 에피소드 시작 시 시간 경과(다음날/N일 후 등)가 명시되었는가?
+  - [Arc 경계 공간 연속성] arc_pos==1인 경우: mandatory_context에 이전 Arc 종료 위치가 명시된 경우, 현재 화 시작 위치가 다르면 이동 과정·시간 경과 표지가 반드시 있어야 한다. 없으면 → MAJOR 감점 (-10점).
   → 위반 시 REJECT, 아니면 다음 단계로
 
   Step 2: 장면 구성 평가
@@ -980,11 +991,12 @@ DIRECTOR_AUDIT_PROMPT_V30: |
   4. **scene_overlap** — 이전 화와 유사한 씬 구조(같은 장소+인물+상황)가 반복되지 않는가?
   5. **percent_calculation** — 수익률/유지율/비율 등 퍼센트 수치가 실제 계산과 맞는가?
   6. **event_ordering** — "처음", "최초" 등 표현이 이전 화의 사건과 모순되지 않는가?
-  7. **space_continuity** — 캐릭터의 장소 이동이 자연스럽고 전환 묘사가 있는가?
+  7. **space_continuity** — 캐릭터의 장소 이동이 자연스럽고 전환 묘사가 있는가? (e-2) [TF-57-B] 각 에피소드의 [시작 상태:] 헤더에 명시된 위치와 본문 첫 문단 위치 묘사가 일치하는가? 불일치 시 ISSUE.
   8. **npc_identity** — 동명이인 혼동이나 NPC 역할 뒤바뀜이 없는가?
   9. **time_progression** — 에피소드 시작 시 시간 경과가 명확한가?
   10. **opening_diversity** — 직전 화와 도입부 묘사가 과도하게 유사하지 않는가?
   11. **timeline_arc_consistency** — 이전 Arc/에피소드와의 시간 간격 표현("며칠 전", "두 달 후" 등)이 [Arc 시간 연속성 참고] 정보와 일치하는가? 해당 정보가 없으면 OK.
+  12. **fiction_term_leak** — [TF-57-A] 등장인물 대화·지문에 집필 시스템 내부 용어("Block N", "Arc N", "Blueprint", "전술서")가 노출됐는가? OK = 없음. ISSUE = 1건 이상.
 
   ### 📚 [NC-3B] consistency_checklist 응답 예시
   아래는 올바른 체크리스트 응답입니다. ISSUE에는 반드시 구체적 근거를 score_breakdown에 반영하세요.
@@ -1000,7 +1012,8 @@ DIRECTOR_AUDIT_PROMPT_V30: |
       "npc_identity": "OK",
       "time_progression": "OK",
       "opening_diversity": "OK",
-      "timeline_arc_consistency": "OK"
+      "timeline_arc_consistency": "OK",
+      "fiction_term_leak": "OK"
   }}
   → arithmetic ISSUE 예시: 레버리지 수익률 6.73%×3배=20.2%인데 원고는 40.6%로 표기 → continuity_contradiction에 MAJOR -10 감점
 

@@ -114,7 +114,8 @@ class ReverseExpander:
             if isinstance(parsed, dict | list):
                 return parsed
             return None
-        except Exception:
+        except (json.JSONDecodeError, ValueError, IndexError) as e:
+            logging.debug("[ReverseExpander] _parse_json 실패: %s", e)
             return None
 
     # ============================================

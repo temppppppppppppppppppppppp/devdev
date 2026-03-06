@@ -53,15 +53,24 @@ def generate_prev_arc_summary(
             final_injuries = arc_end.get("injuries")
 
             if final_energy is None:
-                loss_str = shadow.get("internal_energy_loss", "0%")
-                try:
-                    match = re.search(r"(\d+)", str(loss_str))
-                    if match:
-                        loss = int(match.group(1))
-                        final_energy = max(0, 100 - loss)
-                    else:
+                # [TF-21-04] 비무협 key_stat_change와 무협 internal_energy_loss 분리
+                _energy_loss = shadow.get("internal_energy_loss")
+                _key_stat = shadow.get("key_stat_change")
+                if _energy_loss is not None:
+                    loss_str = _energy_loss
+                    try:
+                        match = re.search(r"(\d+)", str(loss_str))
+                        if match:
+                            loss = int(match.group(1))
+                            final_energy = max(0, 100 - loss)
+                        else:
+                            final_energy = Stage2Limits.INTERNAL_ENERGY_FALLBACK
+                    except Exception:
                         final_energy = Stage2Limits.INTERNAL_ENERGY_FALLBACK
-                except Exception:
+                elif _key_stat is not None:
+                    # 비무협 장르: key_stat_change는 에너지가 아님 → 해당없음으로 표시
+                    final_energy = 0
+                else:
                     final_energy = Stage2Limits.INTERNAL_ENERGY_FALLBACK
 
             if final_injuries is None:

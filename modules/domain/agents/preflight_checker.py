@@ -14,7 +14,7 @@ import json
 import logging
 import re
 
-from modules.core.constants import ContextLimits
+from modules.core.constants import AIModels, ContextLimits
 from modules.core.prompt_loader import SafeDict
 
 from .base_agent import BaseAgent
@@ -497,6 +497,6 @@ class PreflightChecker(BaseAgent):
         return "\n".join(lines)
 
 
-def create_preflight_checker(context, client, model_tier: str = "gemini-2.5-pro"):
+def create_preflight_checker(context, client, model_tier: str = AIModels.DEFAULT_ARCHITECT):
     """[V62.4] PreflightChecker 생성 헬퍼 - gemini-2.5-pro 사용"""
     return PreflightChecker(context, client, model_tier)

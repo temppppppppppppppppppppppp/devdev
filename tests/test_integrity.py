@@ -538,6 +538,62 @@ class TestIntegrationScenarios:
 
 
 # ============================================================
+# [TF-16-05] 대원칙 2·4 위반 탐지 테스트
+# ============================================================
+class TestPrincipleViolationDetection:
+    """대원칙 2(팩트 수정 권한 LLM만)·4(사망 NPC 행동 금지) 회귀 안전망"""
+
+    def test_principle2_npc_history_not_bypassed(self):
+        """[대원칙 2] Python이 NPC 속성 직접 수정 시 npc_history에 미반영됨을 확인
+        — validate_npc_entry()는 검증만 수행하고 원본 dict를 수정하지 않아야 함."""
+        from modules.models.npc import validate_npc_entry
+
+        original = {"name": "강철", "status": "alive", "weapon": "검"}
+        # validate_npc_entry는 검증 후 dict 반환 — 원본 객체 동일성 확인
+        result = validate_npc_entry(original)
+        # 반환값은 새 dict이거나 원본이어야 하며, Python이 임의 필드를 추가·변경하지 않아야 함
+        assert result["name"] == "강철"
+        assert result["status"] == "alive"
+        # Python 자동 추가 금지 확인: realm, internal_energy 같은 LLM 전용 필드 불삽입
+        assert "realm" not in result or result.get("realm") == original.get("realm")
+
+    def test_principle2_npc_fields_not_auto_modified(self):
+        """[대원칙 2] validate_npc_entry가 status/deceased 자동 수정 금지 확인."""
+        from modules.models.npc import validate_npc_entry
+
+        # LLM이 설정한 status=dead 를 Python이 임의로 변경하면 안 됨
+        entry = {"name": "사망자", "status": "dead", "deceased": True}
+        result = validate_npc_entry(entry)
+        assert result["status"] == "dead"
+        assert result["deceased"] is True
+
+    def test_principle4_deceased_npc_flag(self):
+        """[대원칙 4] NPCEntry.deceased=True 필드가 올바르게 모델 검증됨을 확인."""
+        from modules.models.npc import NPCEntry
+
+        npc = NPCEntry(name="죽은자", status="dead", deceased=True)
+        assert npc.deceased is True
+        assert npc.status == "dead"
+
+    def test_principle4_deceased_default_false(self):
+        """[대원칙 4] 기본값 deceased=False — 생존 NPC는 플래그 없음."""
+        from modules.models.npc import NPCEntry
+
+        npc = NPCEntry(name="생존자")
+        assert npc.deceased is False
+        assert npc.status == "alive"
+
+    def test_principle4_deceased_serialization(self):
+        """[대원칙 4] NPCEntry.model_dump()에 deceased 필드 포함 확인 (Truth Gate 기준 노출)."""
+        from modules.models.npc import NPCEntry
+
+        npc = NPCEntry(name="귀신", status="dead", deceased=True)
+        dumped = npc.model_dump()
+        assert "deceased" in dumped
+        assert dumped["deceased"] is True
+
+
+# ============================================================
 # 메인 실행
 # ============================================================
 if __name__ == "__main__":

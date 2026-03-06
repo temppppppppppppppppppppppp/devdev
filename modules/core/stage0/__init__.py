@@ -432,9 +432,13 @@ class StageZeroManager:
             if self.project_path:
                 output_dir = Path(self.project_path) / "stage0_output"
                 output_dir.mkdir(parents=True, exist_ok=True)
-                with open(output_dir / "style_guide.json", "w", encoding="utf-8") as f:
-                    f.write(self.style_guide.to_json())
-                print(f"  - 저장: {output_dir / 'style_guide.json'}")
+                try:  # [TF-11-08] OSError 방어 — 디스크 오류 시 비정상 종료 방지
+                    with open(output_dir / "style_guide.json", "w", encoding="utf-8") as f:
+                        f.write(self.style_guide.to_json())
+                    print(f"  - 저장: {output_dir / 'style_guide.json'}")
+                except OSError as _oe:
+                    import logging as _log
+                    _log.warning("[Stage0] style_guide.json 저장 실패 (계속 진행): %s", _oe)
 
         return self.style_guide
 

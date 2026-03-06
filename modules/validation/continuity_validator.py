@@ -175,7 +175,9 @@ class ContinuityValidator:
         # ═══════════════════════════════════════════════════════════════
         # 검증 4: 위치 연속성 [V66.1] 불가능한 순간이동 BLOCKING 추가
         # ═══════════════════════════════════════════════════════════════
-        location_check = self._check_location_continuity(current_ep, manuscript, prev_hud, prev_manuscript)
+        location_check = self._check_location_continuity(
+            current_ep, manuscript, prev_hud, prev_manuscript, validation_context
+        )
         if not location_check["passed"]:
             violations.extend(location_check["violations"])
         warnings.extend(location_check.get("warnings", []))
@@ -561,12 +563,18 @@ class ContinuityValidator:
     ]
 
     def _check_location_continuity(
-        self, current_ep: int, manuscript: str, prev_hud: dict, prev_manuscript: str | None
+        self,
+        current_ep: int,
+        manuscript: str,
+        prev_hud: dict,
+        prev_manuscript: str | None,
+        validation_context: dict | None = None,
     ) -> dict:
         """
         [V66.1] 위치 연속성 검증 (강화)
         - 불가능한 순간이동 (DISTANT_LOCATION_PAIRS) → BLOCKING
         - 일반적인 위치 변화 → WARNING (기존)
+        - [TF-CV-1] Arc 첫 화(arc_pos==1) 시 BLOCKING → WARNING 다운그레이드
         """
         if prev_manuscript is None:
             prev_manuscript = ""
@@ -656,6 +664,17 @@ class ContinuityValidator:
                                 "fix_suggestion": "이전 위치에서 현재 위치로 이동하는 과정을 간략히 묘사",
                             }
                         )
+
+        # [TF-CV-1] Arc 첫 화(arc_pos==1) 시 DISTANT BLOCKING → WARNING 다운그레이드
+        # Arc 경계 이동은 서사상 정상이므로 advisory-only 처리
+        arc_pos = (validation_context or {}).get("arc_pos", 0) if validation_context else 0
+        if arc_pos == 1 and violations:
+            for v in violations:
+                if v.get("type") == "impossible_teleportation":
+                    v["severity"] = "WARNING"
+                    v["reason"] = "[Arc 첫 화] " + v.get("reason", "")
+            warnings.extend(violations)
+            violations = []
 
         return {
             "passed": len(violations) == 0,  # [V66.1] 불가능한 순간이동 시 REJECT

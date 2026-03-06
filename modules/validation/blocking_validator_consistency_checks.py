@@ -254,7 +254,6 @@ class BlockingValidatorConsistencyChecks:
             tracker = RelationshipTracker()
             encyclopedia = context.get("encyclopedia", {})
             npcs = encyclopedia.get("npcs", [])
-            context.get("ep_num", 0)
             # [V67.1] incarnation_type 추출
             incarnation_type = context.get("incarnation_type", "")
 

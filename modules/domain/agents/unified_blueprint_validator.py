@@ -23,6 +23,8 @@ import json
 import logging
 import re
 
+from modules.core.constants import AIModels
+
 from .base_agent import _get_agent_default_model
 
 # Blueprint 검증용 최소 분량
@@ -49,7 +51,7 @@ class UnifiedBlueprintValidator:
     def __init__(self, context, client, model_tier: str = None):
         self.context = context
         self.client = client
-        self.model_tier = model_tier or _get_agent_default_model("unified_blueprint_validator") or "gemini-2.5-flash"
+        self.model_tier = model_tier or _get_agent_default_model("unified_blueprint_validator") or AIModels.FLASH_ANALYSIS_MODEL
         self.min_chars = BLUEPRINT_MIN_CHARS
 
     def _safe_causal_history(self) -> str:

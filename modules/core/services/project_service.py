@@ -212,13 +212,16 @@ class ProjectService:
             if _pending_bible is not None:
                 project.master_bible = _pending_bible
 
-            # 5. 물리 파일 삭제
+            # 5. 물리 파일 삭제 [TF-11-07] 실패 시 logging.error (DB·파일 불일치 추적)
+            import logging as _logging
             for f in project.paths.drafts.glob("*.txt"):
                 try:
                     _m = _re_rollback.match(r"(?:ep_)?(\d{1,5})\.txt", f.name)
                     if _m and int(_m.group(1)) >= target_ep:
                         f.unlink()
-                except (OSError, ValueError, IndexError):
+                except OSError as _fe:
+                    _logging.error("[ProjectService] 롤백 파일 삭제 실패 %s: %s", f.name, _fe)
+                except (ValueError, IndexError):
                     pass
             self._ui.log("   📂 원고 파일 삭제 완료")
 
@@ -351,7 +354,9 @@ class ProjectService:
                 project.db.cursor.execute(f"DELETE FROM {t}")
 
             project.db.cursor.execute("UPDATE seeds SET status = 'active', recovered_ep = NULL")
-            project.db.conn.commit()
+            if not self._safe_commit():  # [TF-11-06] rollback 보장
+                self._ui.log("❌ [Wipe] DB 커밋 실패 — 리셋 중단")
+                return
 
             for f in project.paths.drafts.glob("*.txt"):
                 f.unlink()

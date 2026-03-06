@@ -1,0 +1,206 @@
+openapi: 3.1.0
+info:
+  title: Geuldobi Runner API
+  version: v1
+servers:
+  - url: http://127.0.0.1:8000
+paths:
+  /run:
+    post:
+      summary: Run a menu key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RunRequest'
+      responses:
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunAccepted'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Risk approval required or invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '409':
+          description: Another run is already active
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /run/{run_id}/input:
+    post:
+      summary: Resolve an interactive prompt (Mode B)
+      parameters:
+        - name: run_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [prompt_id, value]
+              properties:
+                prompt_id:
+                  type: string
+                value: {}
+      responses:
+        '200':
+          description: Prompt accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OkEnvelope'
+        '400':
+          description: Invalid prompt payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '409':
+          description: Prompt already resolved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /stop:
+    post:
+      summary: Stop current run (idempotent)
+      responses:
+        '200':
+          description: stopped or already stopped
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OkEnvelope'
+
+  /status:
+    get:
+      summary: Get current runner state
+      responses:
+        '200':
+          description: Status response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusEnvelope'
+
+components:
+  schemas:
+    RunRequest:
+      type: object
+      required: [key]
+      properties:
+        key:
+          type: string
+          enum: ['0', '1', '2', '3', '4', '5', '6', '44', '77', '88', '99']
+        sub_key:
+          type: string
+          nullable: true
+        inputs:
+          type: object
+          additionalProperties: true
+        approval_id:
+          type: string
+          nullable: true
+
+    RunAccepted:
+      type: object
+      required: [ok, run_id, code, message]
+      properties:
+        ok:
+          type: boolean
+          const: true
+        run_id:
+          type: string
+        code:
+          type: string
+          const: OK
+        message:
+          type: string
+        data:
+          type: object
+          additionalProperties: true
+
+    OkEnvelope:
+      type: object
+      required: [ok, code, message]
+      properties:
+        ok:
+          type: boolean
+          const: true
+        code:
+          type: string
+        message:
+          type: string
+        data:
+          type: object
+          additionalProperties: true
+
+    StatusEnvelope:
+      type: object
+      required: [ok, code, data]
+      properties:
+        ok:
+          type: boolean
+          const: true
+        code:
+          type: string
+          const: OK
+        data:
+          type: object
+          required: [state]
+          properties:
+            state:
+              type: string
+              enum: [idle, running, waiting_input, stopping, error]
+            run_id:
+              type: string
+              nullable: true
+
+    ErrorEnvelope:
+      type: object
+      required: [ok, code, message]
+      properties:
+        ok:
+          type: boolean
+          const: false
+        run_id:
+          type: string
+          nullable: true
+        code:
+          type: string
+          enum:
+            - INVALID_KEY
+            - SUB_KEY_REQUIRED
+            - SUB_KEY_NOT_ALLOWED
+            - INVALID_SUB_KEY
+            - RUN_ALREADY_ACTIVE
+            - RISK_APPROVAL_REQUIRED
+            - RISK_APPROVAL_EXPIRED
+            - RISK_APPROVAL_DUAL_CONTROL_REQUIRED
+            - INVALID_PROMPT_ID
+            - PROMPT_ALREADY_RESOLVED
+        message:
+          type: string
+        data:
+          type: object
+          nullable: true
+          additionalProperties: true

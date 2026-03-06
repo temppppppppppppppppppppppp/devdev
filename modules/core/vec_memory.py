@@ -483,6 +483,18 @@ class VecMemory:
             return ""
 
         query_text = json.dumps(query, ensure_ascii=False) if isinstance(query, dict | list) else str(query)
+
+        # [TF-HRC] retrieval_mode=hybrid 설정 시 hybrid 경로 사용 (폴백/flashback 경로 누락 보완)
+        try:
+            from modules.validation.threshold_helper import _threshold as _th
+            _mode = _th("smart_retrieval.retrieval_mode", "dense")
+        except Exception:
+            _mode = "dense"
+        if _mode == "hybrid" and hasattr(self, "retrieve_hybrid_context"):
+            return self.retrieve_hybrid_context(
+                query=query_text, current_ep=current_ep, max_results=n_results
+            )
+
         emb = self._embed_text(query_text)
         if emb is None:
             # [OpusTF-P0-2] 임베딩 실패 시 LIKE 키워드 폴백

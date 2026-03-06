@@ -569,6 +569,14 @@ ANALYST_SELF_CRITIC_PROMPT: |
      - FAIL immediately when error is > 5% or sign direction is wrong.
      - On FAIL, write: `Arithmetic mismatch: [expr] stated=[X] actual=[Y]`
 
+  8. **[TF-57-A] 픽션 내부 용어 차단 검사**:
+     - `tactical_doc` 전체에서 집필 시스템 내부 용어가 등장인물의 대화·지문에 노출됐는지 확인하라.
+     - **금지 용어**: "Block N", "Arc N", "Blueprint", "전술서", "Tactical Doc"
+     - 등장인물이 "Block 2에서", "Arc 3 계획" 등으로 말하는 패턴이 있으면 즉시 FAIL.
+     - 서술자(narrator) 레벨의 구조 설명도 허용 불가. 모두 세계관 내 표현으로 대체하라.
+       - 잘못: `"Block 2에서 내가 금도 간다고 중얼거린 것, 기억합니까?"`
+       - 올바름: `"처음 원유에 투자할 때 금도 보라고 했던 것, 기억합니까?"`
+
   [Output Format - JSON Only]
   {{
       "status": "PASS" 또는 "FAIL",

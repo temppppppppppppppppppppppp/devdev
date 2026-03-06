@@ -777,8 +777,7 @@ class PatternTracker:
     }
 
     def analyze_genre_patterns_v59(self, manuscripts: list[str]) -> dict:
-        """
-        [V59] 장르별 확장 패턴 분석
+        """[V59] 장르별 확장 패턴 분석 — [TF-5-05] 외부 호출 없음, dead code 후보.
 
         Args:
             manuscripts: 원고 리스트
@@ -898,8 +897,9 @@ class PatternTracker:
     # ========================================================================
 
     def analyze_trend_v59(self, manuscripts: list[str], window_splits: int = 3) -> dict:
-        """
-        [V59] 패턴 트렌드 분석 - 시간에 따른 패턴 변화 추적
+        """[V59] 패턴 트렌드 분석 — [TF-5-05] 외부 호출 없음, dead code 후보.
+
+        시간에 따른 패턴 변화 추적.
 
         Args:
             manuscripts: 전체 원고 리스트
@@ -1075,8 +1075,7 @@ class PatternTracker:
             return "needs_improvement"
 
     def generate_trend_report_v59(self, trend_result: dict) -> str:
-        """
-        [V59] 트렌드 분석 결과를 읽기 좋은 형태로 포맷
+        """[V59] 트렌드 분석 결과를 읽기 좋은 형태로 포맷 — [TF-5-05] 외부 호출 없음, dead code 후보.
 
         Args:
             trend_result: analyze_trend_v59() 결과

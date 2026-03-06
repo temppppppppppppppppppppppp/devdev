@@ -156,6 +156,7 @@ DIRECTOR_AUDIT_SCHEMA = types.Schema(
                 "time_progression": types.Schema(type=types.Type.STRING, enum=["OK", "ISSUE"]),
                 "opening_diversity": types.Schema(type=types.Type.STRING, enum=["OK", "ISSUE"]),
                 "timeline_arc_consistency": types.Schema(type=types.Type.STRING, enum=["OK", "ISSUE"]),  # [NS-4]
+                "fiction_term_leak": types.Schema(type=types.Type.STRING, enum=["OK", "ISSUE"]),  # [TF-57-A]
             },
         ),
     },

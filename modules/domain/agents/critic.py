@@ -567,13 +567,13 @@ JSON 형식으로 응답:
             return self._default_review_result()
 
     def _default_review_result(self) -> dict:
-        """기본 리뷰 결과"""
+        """기본 리뷰 결과 — 실패 시 REVISE 반환 (fail-open PASS 제거)"""
         return {
             "scores": {},
-            "overall_score": 7,
-            "recommendation": "PASS",
+            "overall_score": 6,
+            "recommendation": "REVISE",
             "strengths": [],
-            "weaknesses": [],
+            "weaknesses": ["심층 리뷰 실패 — 재검토 필요"],
             "revision_priority": [],
             "specific_feedback": "",
         }

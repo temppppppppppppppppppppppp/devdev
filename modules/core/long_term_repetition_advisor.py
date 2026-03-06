@@ -92,8 +92,8 @@ class LongTermRepetitionAdvisor:
                 scenes = LongTermRepetitionAdvisor._extract_scene_types(content)
                 if scenes:
                     scene_sequences.append(scenes)
-            except Exception:
-                logger.debug("[P1-5] build_pattern_summary ep=%d 블루프린트 조회 실패", ep)
+            except Exception as _e:
+                logger.warning("[P1-5] build_pattern_summary ep=%d 블루프린트 조회 실패: %s", ep, _e)
                 continue
 
         if len(scene_sequences) < 5:

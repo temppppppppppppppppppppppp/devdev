@@ -197,6 +197,7 @@ class UnifiedArcValidator(BaseAgent):
         """[#0] 죽은 NPC 등장 + NPC 변경 체크"""
         issues = []
         if not state_tracker or not prev_arcs:
+            logging.warning("[UnifiedValidator] state_tracker 없음 — 사망 NPC 체크 skip")
             return issues
 
         arc_no = arc.get("arc_no", 0)

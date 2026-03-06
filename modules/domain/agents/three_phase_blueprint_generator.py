@@ -20,6 +20,7 @@ Stage 3 통합 파이프라인 - 단순화 + 효율화
 import json
 import logging
 
+from modules.core.constants import AIModels
 from modules.models.blueprint import validate_blueprint
 from modules.validation.threshold_helper import _threshold
 
@@ -42,8 +43,8 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
         # 서브 모듈
         self.constraint_compiler = BlueprintConstraintCompiler()
         sub_models = _get_sub_component_models("three_phase_blueprint_generator")
-        self.ensemble = BlueprintEnsembleGenerator(context, client, sub_models.get("ensemble", "gemini-2.5-pro"))
-        self.validator = UnifiedBlueprintValidator(context, client, sub_models.get("validator", "gemini-2.5-flash"))
+        self.ensemble = BlueprintEnsembleGenerator(context, client, sub_models.get("ensemble", AIModels.DEFAULT_ARCHITECT))
+        self.validator = UnifiedBlueprintValidator(context, client, sub_models.get("validator", AIModels.FLASH_ANALYSIS_MODEL))
 
         # 통계
         self.stats = {
@@ -109,8 +110,8 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                 _bible = self.context.db.load_anchor("bible")
                 if _bible:
                     _genre = _bible.get("_genre", "wuxia")
-        except Exception:
-            pass
+        except Exception as _e:
+            logging.warning("[ThreePhase] genre 로드 실패, wuxia 기본값 사용: %s", _e)
 
         # [V60.90] protagonist_config 추출 (context에서 직접 로드, 파라미터 우선)
         if not protagonist_config:
@@ -119,7 +120,8 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                 if master_bible:
                     bible_root = master_bible.get("MasterBible", master_bible)
                     protagonist_config = bible_root.get("protagonist_config", {})
-            except Exception:
+            except Exception as _e:
+                logging.warning("[ThreePhase] protagonist_config 로드 실패: %s", _e)
                 protagonist_config = {}
 
         pipeline_result = {

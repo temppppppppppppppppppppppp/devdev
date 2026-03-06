@@ -203,3 +203,24 @@ pattern_tracker:
   lookback_episodes: 5          # 직전 몇 화 원고를 분석할지
   min_expression_freq: 2        # expression_ban 포함 최소 빈도
   enable: true                  # false 시 PatternTracker 전체 스킵
+
+# ── Arc 생성 임계값 ───────────────────────────────────────────
+arc:
+  ns3b_divergence_threshold: 0.30  # [NS-3-B] arc_end_state vs genre_ext 목표 괴리 허용률
+  jaccard_similarity_threshold: 0.50  # [TF-1-04] Stage2 Arc Jaccard 중복 감지 임계값
+
+# ── 품질 게이트 파라미터 ─────────────────────────────────────────
+quality:
+  cliche_window: 10  # [TF-5-04] 클리셰 감지 윈도우 크기 (최근 N화)
+  block_audit_pass_score: 70  # [TF-11-11] Director Block Audit LLM 폴백 임계값
+
+# ── 앙상블 타임아웃 ─────────────────────────────────────────────
+ensemble_timeouts_validation:
+  consensus_total: 120  # [TF-6-06] ConsensusValidator 전체 합의 타임아웃 (초)
+
+# ── 적응형 점수 클램프 ────────────────────────────────────────────
+adaptive_grading:
+  base_score_min: 45      # [TF-6-07] 적응형 기본 점수 하한
+  base_score_max: 85      # [TF-6-07] 적응형 기본 점수 상한
+  length_base_min: 3500   # [TF-6-07] 적응형 분량 기준 하한
+  length_base_max: 6000   # [TF-6-07] 적응형 분량 기준 상한

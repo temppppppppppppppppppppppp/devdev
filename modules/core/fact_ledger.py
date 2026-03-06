@@ -15,7 +15,10 @@ _logger = logging.getLogger(__name__)
 
 
 class FactLedger:
-    """[V68] 누적 팩트 원장 — 장기연재 모순 방지의 핵심"""
+    """[V68] 누적 팩트 원장 — 장기연재 모순 방지의 핵심
+
+    단일 스레드 설계 — DB 쓰기는 pipeline 순차 실행 중 발생. threading.Lock 불필요.
+    """
 
     MAX_HISTORY_PER_ENTITY = 100  # [TF-C05] 10→100 확장 (장기연재 팩트 보존)
     MAX_SUMMARY_CHARS = 50000  # [1M-CTX-P1] 20000 → 50000 (100화 이상 NPC 전량 수용)
@@ -286,9 +289,11 @@ class FactLedger:
         # ── status_shadow (무협: 내공/체력 변동) ──
         shadow = state_changes.get("status_shadow") or {}
         if isinstance(shadow, dict):
-            energy = shadow.get("internal_energy_loss")
-            if energy is not None and isinstance(energy, int | float):
-                self.update_number("내공_소모량", energy, "단위", ep_num, note="status_shadow 자동 추출")
+            # [TF-21-05] internal_energy_loss(무협)와 key_stat_change(비무협) 분리 처리
+            _energy_loss = shadow.get("internal_energy_loss")
+            if _energy_loss is not None and isinstance(_energy_loss, int | float):
+                self.update_number("내공_소모량", _energy_loss, "단위", ep_num, note="status_shadow 자동 추출")
+            energy = _energy_loss
             remaining = shadow.get("internal_energy_remaining")
             if remaining is not None and isinstance(remaining, int | float):
                 self.update_number("내공_잔여", remaining, "단위", ep_num, note="status_shadow 자동 추출")

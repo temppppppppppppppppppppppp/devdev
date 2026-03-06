@@ -7,6 +7,7 @@ Preset Registry - 프리셋 기반 동적 스키마 체계
 import copy
 import dataclasses
 import json
+import logging
 import re
 from dataclasses import asdict, dataclass, field
 from typing import Any
@@ -459,6 +460,8 @@ class PresetRegistry:
         self.active_presets: list[str] = ["common"]
         if base_genre and base_genre in self.GENRE_PRESETS:
             self.active_presets.append(base_genre)
+        elif base_genre:
+            logging.warning("[PresetRegistry] 미지원 장르 '%s' — common 프리셋만 활성화", base_genre)  # [TF-11-10]
         self.discovered_fields: dict[str, FieldDefinition] = {}
 
     def activate_preset(self, preset_name: str) -> bool:

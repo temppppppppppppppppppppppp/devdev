@@ -7,6 +7,7 @@ ForeshadowingTracker 등 V49.7 품질 향상 트래커 초기화 및 검증을 �
 inspector reference를 통해 BaseAgent 메서드 및 공유 상태 접근.
 """
 
+import logging
 from typing import Any
 
 # [V49.7] 품질 향상 모듈 임포트
@@ -60,7 +61,8 @@ class ContinuityTrackerIntegration:
 
             try:
                 self._ci.info_diffusion = InformationDiffusion(self._ci.context)
-            except Exception:
+            except Exception as _e:
+                logging.warning("[ContinuityTracker] InformationDiffusion 초기화 실패: %s", _e)
                 self._ci.info_diffusion = None
 
             self._ci.v49_7_enabled = True

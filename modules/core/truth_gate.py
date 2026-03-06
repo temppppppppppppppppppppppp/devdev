@@ -433,5 +433,5 @@ class TruthGate:
                     "CRITICAL",
                     "world_law_violation",
                 )
-        except (json.JSONDecodeError, ValueError, RuntimeError) as e:
+        except Exception as e:
             logger.warning("[TruthGate] world_law_violation 검사 실패 (비치명): %s", e)

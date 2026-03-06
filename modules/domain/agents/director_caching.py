@@ -169,7 +169,8 @@ class DirectorCachingManager:
                 self._protagonist_config = bible_root.get("protagonist_config", {})
             else:
                 self._protagonist_config = {}
-        except Exception:
+        except Exception as _e:
+            logging.warning("[DirectorCaching] protagonist_config 로드 실패: %s", _e)
             self._protagonist_config = {}
 
         return self._protagonist_config

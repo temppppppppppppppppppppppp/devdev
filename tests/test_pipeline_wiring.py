@@ -48,7 +48,11 @@ def test_tf54_self_critique_calls_ending_hook_check():
     )
 
     issues = result.get("issues", [])
-    hook_issues = [i for i in issues if isinstance(i, str) and "ending_hook" in i]
+    hook_issues = [
+        i for i in issues
+        if (isinstance(i, dict) and i.get("type") == "missing_ending_hook")
+        or (isinstance(i, str) and "ending_hook" in i)
+    ]
     assert len(hook_issues) >= 1, f"ending_hook 체크 미실행: {issues}"
 
 
@@ -170,3 +174,53 @@ def test_writing_directive_is_empty_logic():
     # 현재 구현은 ending_style/metaphor_avoid/expression_ban만 검사한다.
     wd_emotion_only = WritingDirective(emotion_required="슬픔")
     assert wd_emotion_only.is_empty() is True
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# [TF-20-05] _check_system_term_exposure 단위 테스트
+# ──────────────────────────────────────────────────────────────────────────────
+
+
+def _make_quality_gate() -> ChiefWriterQualityGate:
+    mock_host = MagicMock()
+    return ChiefWriterQualityGate(mock_host)
+
+
+def test_meta_wall_block_detected():
+    """'Block 2' 같은 시스템 용어가 원고에 노출되면 이슈 반환.
+    regex word boundary는 한국어 문자 직접 뒤에서는 인식 못하므로 공백으로 분리.
+    """
+    gate = _make_quality_gate()
+    issues = gate._check_system_term_exposure("그는 Block 2 에서 깨달았다.", genre="투자물")
+    assert len(issues) == 1
+    assert issues[0]["type"] == "meta_wall"
+    assert issues[0]["severity"] == "high"
+
+
+def test_meta_wall_arc_detected():
+    """'Arc 3' 용어가 원고에 노출되면 이슈 반환."""
+    gate = _make_quality_gate()
+    issues = gate._check_system_term_exposure("Arc 3 에서 그의 여정이 시작되었다.", genre="무협")
+    assert len(issues) == 1
+    assert issues[0]["type"] == "meta_wall"
+
+
+def test_meta_wall_clean_no_issue():
+    """시스템 용어 없는 원고는 이슈 없음."""
+    gate = _make_quality_gate()
+    issues = gate._check_system_term_exposure("그는 조용히 방을 나섰다. 서울 밤하늘에 별이 빛났다.", genre="투자물")
+    assert issues == []
+
+
+def test_meta_wall_medical_treatment_excluded():
+    """의료 장르에서 'treatment'는 시스템 용어가 아님 → 이슈 없음."""
+    gate = _make_quality_gate()
+    issues = gate._check_system_term_exposure("치료(treatment) 옵션으로 방사선을 고려했다.", genre="의료")
+    assert issues == []
+
+
+def test_meta_wall_empty_content():
+    """빈 원고는 이슈 없음."""
+    gate = _make_quality_gate()
+    issues = gate._check_system_term_exposure("", genre="투자물")
+    assert issues == []

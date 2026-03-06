@@ -185,3 +185,45 @@ class TestFantasyGuardDeepValidation:
         result = guard.run_deep_validation(ms, state)
         tier_violations = [v for v in result["violations"] if v["type"] == "spell_tier_violation"]
         assert len(tier_violations) >= 1
+
+
+# ============================================================
+# [TF-16-06] _threshold() 키 ↔ validation.yaml 매핑 검증
+# ============================================================
+class TestThresholdKeyMapping:
+    """_threshold()로 접근하는 validation.yaml 키가 None이 아닌 값을 반환하는지 확인."""
+
+    def setup_method(self):
+        """테스트 격리 — _threshold 캐시 리셋 (이전 테스트가 cfg=None으로 오염 방지)."""
+        from modules.validation.threshold_helper import _threshold
+        if hasattr(_threshold, "_cfg"):
+            del _threshold._cfg
+
+    @pytest.mark.parametrize("key,expected_type", [
+        ("manuscript.min_length", int),
+        ("manuscript.target_length", int),
+        ("scoring.quality_gate_score", int),
+        ("scoring.default_pass_threshold", int),
+        ("scope.chars_per_scene", int),
+        ("arc.ns3b_divergence_threshold", float),
+        ("arc.jaccard_similarity_threshold", float),
+        ("quality.cliche_window", int),
+        ("ensemble_timeouts_validation.consensus_total", int),
+        ("adaptive_grading.base_score_min", int),
+        ("adaptive_grading.base_score_max", int),
+        ("adaptive_grading.length_base_min", int),
+        ("adaptive_grading.length_base_max", int),
+        ("retry.director_max_attempts", int),
+        ("patch_mode.rewrite_below", int),
+        ("smart_retrieval.dense_k", int),
+    ])
+    def test_threshold_key_resolves(self, key, expected_type):
+        """validation.yaml에 정의된 키가 _threshold()로 접근 시 기본값 이상의 값을 반환."""
+        from modules.validation.threshold_helper import _threshold
+
+        sentinel = object()
+        result = _threshold(key, sentinel)
+        assert result is not sentinel, f"키 '{key}'가 validation.yaml에 없음 (None fallback)"
+        assert isinstance(result, expected_type), (
+            f"키 '{key}': 기대 타입={expected_type.__name__}, 실제={type(result).__name__}"
+        )

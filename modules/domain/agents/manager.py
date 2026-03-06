@@ -270,13 +270,13 @@ class Manager(BaseAgent):
         safe_ms = self._escape_braces(manuscript)
         safe_bible = self._escape_braces(json.dumps(master_bible, ensure_ascii=False, indent=2))
 
-        # 2. 프롬프트 구성
-        prompt = f"""
-        당신은 서사 무결성 감사관입니다. 원고와 성경 설정의 충돌을 검사하십시오.
-        [MasterBible]: {safe_bible}
-        [원고]: {safe_ms}
-        충돌 시 "CRITICAL_ERROR", 통과 시 "CLEAR" 반환.
-        """
+        # 2. 프롬프트 구성 [TF-6-10 P2] 현재 인라인 f-string — 향후 prompt YAML 이전 고려
+        prompt = "\n".join([
+            "당신은 서사 무결성 감사관입니다. 원고와 성경 설정의 충돌을 검사하십시오.",
+            f"[MasterBible]: {safe_bible}",
+            f"[원고]: {safe_ms}",
+            '충돌 시 "CRITICAL_ERROR", 통과 시 "CLEAR" 반환.',
+        ])
 
         # 3. 낮은 온도로 엄격한 판정 요청
         return self.ask(prompt, temperature=0.1)
