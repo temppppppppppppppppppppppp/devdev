@@ -11,14 +11,35 @@ import logging
 import re
 
 from modules.core.constants import ManuscriptLimits
+from modules.core.genre_schema_builder import get_item_suffixes
 from modules.core.tactical_utils import extract_episode_tactical
 
 # [V60.10] 수여물 패턴 (main_a.py에서 이관)
+_GRANT_SUFFIXES_ALL = sorted(set(["패", "권", "직", "장", "인장", "자격", "계약서", "명함"] + get_item_suffixes("")), key=len, reverse=True)
+_GRANT_SUFFIX_GROUP = "|".join(re.escape(s) for s in _GRANT_SUFFIXES_ALL) or r"패|권|인장"
+
 GRANT_PATTERNS_COMPILED = [
     (re.compile(r"([가-힣]+패)[를을]?\s*(?:하사|수여|받|얻)"), "패"),
     (re.compile(r"([가-힣]+권)[를을]?\s*(?:위임|부여|받|얻|하사)"), "권"),
     (re.compile(r"([가-힣]+직|[가-힣]+장)[에으로]?\s*(?:임명|취임|올|받)"), "직위"),
     (re.compile(r"((?:[가-힣]+\s*)?인장)[를을]?\s*(?:받|하사|수여)"), "인장"),
+    (re.compile(r"([가-힣A-Za-z0-9\s]+자격)[를을]?\s*(?:부여|수여|받|획득)"), "자격"),
+    (re.compile(r"([가-힣A-Za-z0-9\s]+계약서)[를을]?\s*(?:수여|교부|받|전달)"), "계약서"),
+    (re.compile(r"([가-힣A-Za-z0-9\s]+명함)[를을]?\s*(?:수여|받|전달)"), "명함"),
+    (
+        re.compile(
+            rf"([가-힣A-Za-z0-9][가-힣A-Za-z0-9\s]{{0,30}}(?:{_GRANT_SUFFIX_GROUP}))[를을]?\s*"
+            r"(?:하사|수여|받|얻|획득|교부|전달|위임|부여|임명|취임)"
+        ),
+        "SSOT",
+    ),
+    (
+        re.compile(
+            rf"(?:하사|수여|받|얻|획득|교부|전달|위임|부여|임명|취임)[가-힣A-Za-z0-9\s]{{0,20}}"
+            rf"([가-힣A-Za-z0-9][가-힣A-Za-z0-9\s]{{0,30}}(?:{_GRANT_SUFFIX_GROUP}))"
+        ),
+        "SSOT",
+    ),
 ]
 
 

@@ -21,3 +21,8 @@ def test_validate_grant_timeline_detects_duplicate_from_state_constraints():
 
     assert result["penalty"] >= 25
     assert any("철혈사자패" in msg and "state_constraints" in msg for msg in result["critical"])
+
+
+def test_genre_suffixes_loaded_for_non_wuxia():
+    validator = ArcDraftValidator(genre="sports")
+    assert "트로피" in validator.weapon_keywords

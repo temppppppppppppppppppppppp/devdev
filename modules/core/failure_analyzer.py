@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from collections import defaultdict
 
 
@@ -357,6 +358,240 @@ class FailureAnalyzer:
         except Exception as _e:
             logging.debug("[FailureAnalyzer] empty_response_calls: %s", _e)
             return []
+
+    @staticmethod
+    def _collect_suffix_candidates(unmatched: list[str], min_count: int = 2) -> list[dict]:
+        """미매칭 아이템 목록에서 접미사 후보(count/examples) 추출."""
+        counts: dict[str, int] = {}
+        examples: dict[str, list[str]] = {}
+
+        for raw_name in unmatched:
+            name = str(raw_name).strip()
+            if len(name) < 2:
+                continue
+            for length in (1, 2, 3):
+                if len(name) <= length:
+                    continue
+                suffix = name[-length:]
+                counts[suffix] = counts.get(suffix, 0) + 1
+                bucket = examples.setdefault(suffix, [])
+                if len(bucket) < 3 and name not in bucket:
+                    bucket.append(name)
+
+        rows = []
+        for suffix, cnt in counts.items():
+            if cnt >= min_count:
+                rows.append({"suffix": suffix, "count": cnt, "examples": examples.get(suffix, [])})
+
+        rows.sort(key=lambda row: (-int(row["count"]), len(str(row["suffix"])), str(row["suffix"])))
+        return rows
+
+    def item_suffix_gap_report(self, registry, genre: str = "") -> dict:
+        """아이템 접미사 안전망 갭 리포트 생성."""
+        try:
+            total_items = len(getattr(registry, "items", {}) or {})
+            if not registry or not hasattr(registry, "get_unmatched_items"):
+                return {"total_items": total_items, "unmatched_count": 0, "unmatched": [], "suggested_suffixes": []}
+
+            unmatched = registry.get_unmatched_items(genre)
+            if not isinstance(unmatched, list):
+                unmatched = []
+
+            candidates = self._collect_suffix_candidates(unmatched, min_count=2)
+            suggested = [str(row.get("suffix", "")).strip() for row in candidates if str(row.get("suffix", "")).strip()]
+
+            return {
+                "total_items": total_items,
+                "unmatched_count": len(unmatched),
+                "unmatched": unmatched[:30],
+                "suggested_suffixes": suggested[:10],
+            }
+        except Exception as _e:
+            logging.debug("[FailureAnalyzer] item_suffix_gap_report: %s", _e)
+            return {"total_items": 0, "unmatched_count": 0, "unmatched": [], "suggested_suffixes": []}
+
+    @staticmethod
+    def _parse_json_array_response(raw_text: str) -> list[dict]:
+        """LLM 텍스트에서 JSON 배열 파싱."""
+        if not raw_text:
+            return []
+        raw_text = str(raw_text).strip()
+        if not raw_text:
+            return []
+
+        try:
+            parsed = json.loads(raw_text)
+            return parsed if isinstance(parsed, list) else []
+        except Exception:
+            pass
+
+        m = re.search(r"\[[\s\S]*\]", raw_text)
+        if not m:
+            return []
+
+        try:
+            parsed = json.loads(m.group(0))
+            return parsed if isinstance(parsed, list) else []
+        except Exception:
+            return []
+
+    def review_suffix_candidates(self, candidates: list[dict], llm_ask=None) -> list[dict]:
+        """미매칭 아이템 접미사 후보를 LLM으로 배치 심사.
+
+        Args:
+            candidates: [{"suffix": str, "examples": list[str], "count": int}, ...]
+            llm_ask: prompt(str) -> response(str) callable
+
+        Returns:
+            [{"suffix": str, "verdict": "APPROVE"|"REJECT", "reason": str}, ...]
+        """
+        if not candidates:
+            return []
+
+        normalized: list[dict] = []
+        for row in candidates[:10]:
+            if not isinstance(row, dict):
+                continue
+            suffix = str(row.get("suffix", "")).strip()
+            if not suffix:
+                continue
+
+            raw_examples = row.get("examples", [])
+            if not isinstance(raw_examples, list):
+                raw_examples = [raw_examples]
+            examples = [str(x).strip() for x in raw_examples if str(x).strip()][:5]
+
+            try:
+                count = int(row.get("count", len(examples)))
+            except (TypeError, ValueError):
+                count = len(examples)
+
+            normalized.append({"suffix": suffix, "examples": examples, "count": max(1, count)})
+
+        if not normalized:
+            return []
+
+        if llm_ask is None:
+            return [
+                {"suffix": row["suffix"], "verdict": "REJECT", "reason": "llm_ask 콜백 없음 (수동 검토 필요)"}
+                for row in normalized
+            ]
+
+        prompt = (
+            "다음은 웹소설 아이템 regex 안전망에 추가할 접미사 후보 목록입니다.\n"
+            '각 후보에 대해 "일반적인 아이템/도구/장비의 접미사로 적합한가?"를 판정해 주세요.\n\n'
+            "판정 기준:\n"
+            '- APPROVE: 해당 접미사가 아이템 카테고리를 나타냄 (예: "칼", "서", "증")\n'
+            '- REJECT: 고유명사/브랜드/우연의 일치 (예: "프로", "플러스", "맥스")\n\n'
+            "후보 목록:\n"
+            f"{json.dumps(normalized, ensure_ascii=False, indent=2)}\n\n"
+            'JSON 배열로 응답: [{"suffix":"...","verdict":"APPROVE"|"REJECT","reason":"..."}]'
+        )
+
+        try:
+            raw = llm_ask(prompt) or ""
+        except Exception as _e:
+            logging.debug("[FailureAnalyzer] review_suffix_candidates llm_ask failed: %s", _e)
+            raw = ""
+
+        parsed = self._parse_json_array_response(raw)
+        parsed_map: dict[str, dict] = {}
+        for row in parsed:
+            if not isinstance(row, dict):
+                continue
+            suffix = str(row.get("suffix", "")).strip()
+            if not suffix:
+                continue
+            verdict = str(row.get("verdict", "REJECT")).strip().upper()
+            if verdict not in ("APPROVE", "REJECT"):
+                verdict = "REJECT"
+            reason = str(row.get("reason", "")).strip() or "사유 미기재"
+            parsed_map[suffix] = {"suffix": suffix, "verdict": verdict, "reason": reason}
+
+        results: list[dict] = []
+        for row in normalized:
+            suffix = row["suffix"]
+            judged = parsed_map.get(suffix)
+            if judged:
+                results.append(judged)
+            else:
+                results.append({"suffix": suffix, "verdict": "REJECT", "reason": "LLM 응답 누락/파싱 실패"})
+        return results
+
+    def review_and_apply_suffixes(self, registry, genre: str = "", llm_ask=None) -> dict:
+        """미매칭 아이템 → LLM 심사 → APPROVE 시 YAML 자동 append.
+
+        Returns:
+            {"reviewed": int, "approved": list[str], "rejected": list[str]}
+        """
+        report = self.item_suffix_gap_report(registry, genre)
+        if report["unmatched_count"] < 10:
+            logging.debug("[ItemGap] unmatched %d건 < 10 — 스킵", report["unmatched_count"])
+            return {"reviewed": 0, "approved": [], "rejected": []}
+
+        # 후보 구성 (접미사 + 등장 예시)
+        candidates = []
+        for suffix in report["suggested_suffixes"]:
+            examples = [n for n in report["unmatched"] if n.endswith(suffix)][:3]
+            candidates.append({"suffix": suffix, "examples": examples, "count": len(examples)})
+
+        if not candidates:
+            return {"reviewed": 0, "approved": [], "rejected": []}
+
+        results = self.review_suffix_candidates(candidates, llm_ask=llm_ask)
+        approved = [r["suffix"] for r in results if r.get("verdict") == "APPROVE"]
+        rejected = [r["suffix"] for r in results if r.get("verdict") == "REJECT"]
+
+        if approved:
+            self._append_to_suffix_yaml(genre, approved)
+            logging.info("[ItemGap] YAML 자동 추가: genre=%s, suffixes=%s", genre, approved)
+
+        return {"reviewed": len(results), "approved": approved, "rejected": rejected}
+
+    @staticmethod
+    def _append_to_suffix_yaml(genre: str, suffixes: list[str]) -> None:
+        """APPROVE된 접미사를 item_suffixes.yaml에 자동 append."""
+        from pathlib import Path
+
+        import yaml
+
+        from modules.core.genre_schema_builder import _normalize_item_genre_key
+
+        yaml_path = Path(__file__).resolve().parents[2] / "config" / "settings" / "item_suffixes.yaml"
+        if not yaml_path.exists():
+            logging.warning("[ItemGap] item_suffixes.yaml 없음 — append 스킵")
+            return
+
+        try:
+            data = yaml.safe_load(yaml_path.read_text(encoding="utf-8")) or {}
+        except Exception as e:
+            logging.warning("[ItemGap] YAML 로드 실패: %s", e)
+            return
+
+        genre_key = _normalize_item_genre_key(genre) or "_common"
+        existing = data.get(genre_key, [])
+        if not isinstance(existing, list):
+            existing = []
+
+        added = []
+        for s in suffixes:
+            s = str(s).strip()
+            if s and s not in existing:
+                existing.append(s)
+                added.append(s)
+
+        if not added:
+            return
+
+        data[genre_key] = existing
+        try:
+            yaml_path.write_text(
+                yaml.dump(data, allow_unicode=True, default_flow_style=False, sort_keys=False),
+                encoding="utf-8",
+            )
+            logging.info("[ItemGap] item_suffixes.yaml 업데이트: %s += %s", genre_key, added)
+        except Exception as e:
+            logging.warning("[ItemGap] YAML 쓰기 실패: %s", e)
 
     def print_report(self) -> None:
         """Print summary report to console."""

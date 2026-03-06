@@ -10,6 +10,8 @@ StateTracker에서 resolved_plots 및 entity_name_registry 관련 메서드만 �
 import logging
 import re
 
+from modules.core.genre_schema_builder import get_item_suffixes
+
 # ═══════════════════════════════════════════════════════════════
 # [V66.1] C-2: Module-level compiled regex patterns
 #  메서드 내부 re.compile 호출을 모듈 상수로 이동 (~25ms/Arc 절감)
@@ -31,17 +33,22 @@ _RE_IMPOSSIBLE_TRAVEL = re.compile(
 )
 
 # --- _regex_extract_major_items ---
+_ITEM_SUFFIXES_ALL = get_item_suffixes("")
+_ITEM_SUFFIX_GROUP = "|".join(sorted((re.escape(s) for s in _ITEM_SUFFIXES_ALL), key=len, reverse=True))
+if not _ITEM_SUFFIX_GROUP:
+    _ITEM_SUFFIX_GROUP = "아이템"
+
 _RE_ITEM_ACQUIRE = [
     re.compile(
-        r"([가-힣]{2,10}(?:검|도|창|궁|부|낫|갑|패|환|단|서|전|경|보|인))[을를]?\s*(?:획득|입수|얻|손에\s*넣|전수받|발견)"
+        rf"([가-힣A-Za-z0-9]{{0,30}}(?:{_ITEM_SUFFIX_GROUP}))[을를]?\s*(?:획득|입수|얻|손에\s*넣|전수받|발견)"
     ),
-    re.compile(r"(?:획득|입수|발견)[한하]?\s*([가-힣]{2,10}(?:검|도|창|궁|부|낫|갑|패|환|단|서|전|경|보|인))"),
+    re.compile(rf"(?:획득|입수|발견)[한하]?\s*([가-힣A-Za-z0-9]{{0,30}}(?:{_ITEM_SUFFIX_GROUP}))"),
 ]
 _RE_ITEM_LOSE = [
     re.compile(
-        r"([가-힣]{2,10}(?:검|도|창|궁|부|낫|갑|패|환|단|서|전|경|보|인))[을를]?\s*(?:잃|분실|파괴|소모|사용|부서|깨뜨)"
+        rf"([가-힣A-Za-z0-9]{{0,30}}(?:{_ITEM_SUFFIX_GROUP}))[을를]?\s*(?:잃|분실|파괴|소모|사용|부서|깨뜨)"
     ),
-    re.compile(r"(?:잃어버린|파괴된|소모된)\s*([가-힣]{2,10}(?:검|도|창|궁|부|낫|갑|패|환|단|서|전|경|보|인))"),
+    re.compile(rf"(?:잃어버린|파괴된|소모된)\s*([가-힣A-Za-z0-9]{{0,30}}(?:{_ITEM_SUFFIX_GROUP}))"),
 ]
 
 # --- _regex_extract_commitments ---

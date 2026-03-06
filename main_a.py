@@ -1507,8 +1507,9 @@ class SovereignApp:
         }
 
         # [V60.11] Python 기반 헬퍼 초기화 (LLM 미사용)
-        self.arc_draft_validator = ArcDraftValidator()
-        self.constraint_compiler = ConstraintCompiler()
+        _genre_for_stage2 = self.selected_genre.get("type", "") if isinstance(self.selected_genre, dict) else ""
+        self.arc_draft_validator = ArcDraftValidator(genre=_genre_for_stage2)
+        self.constraint_compiler = ConstraintCompiler(genre=_genre_for_stage2)
         # [V60.42] Arc Corrector - MAJOR 이슈 부분 수정 (ON/OFF 토글 가능)
         self.arc_corrector = ArcCorrector(
             context=self.current_project,
@@ -2391,6 +2392,39 @@ class SovereignApp:
         # [V40] 장르 정보 저장
         if self.selected_genre and hasattr(self.current_project, "db"):
             self.current_project.db.save_anchor("genre_info", self.selected_genre)
+
+        # [3-E] 아이템 접미사 안전망 자동 확장 (LLM 심사 → YAML append)
+        if getattr(self, "semantic_item_registry", None) and self.selected_genre:
+            try:
+                from modules.core.failure_analyzer import FailureAnalyzer
+
+                _genre_type = self.selected_genre.get("type", "") if isinstance(self.selected_genre, dict) else ""
+                _analyzer = FailureAnalyzer(
+                    db=self.current_project.db if hasattr(self.current_project, "db") else None
+                )
+                _llm_ask = None
+                if hasattr(self, "sys") and hasattr(self.sys, "api_client"):
+                    _client = self.sys.api_client
+                    def _llm_ask(prompt, _c=_client):
+                        from modules.core.constants import AIModels
+                        resp = _c.models.generate_content(
+                            model=AIModels.FLASH_ANALYSIS_MODEL,
+                            contents=prompt,
+                        )
+                        return resp.text or ""
+                _result = _analyzer.review_and_apply_suffixes(
+                    self.semantic_item_registry, genre=_genre_type, llm_ask=_llm_ask
+                )
+                if _result["approved"]:
+                    print(
+                        f"🔧 [ItemGap] 접미사 자동 추가: {_result['approved']} "
+                        f"(심사 {_result['reviewed']}건, 거절 {len(_result['rejected'])}건)",
+                        flush=True,
+                    )
+                elif _result["reviewed"] > 0:
+                    print(f"🔧 [ItemGap] 심사 {_result['reviewed']}건 — 추가 없음", flush=True)
+            except Exception as _gap_err:
+                logging.debug("[ItemGap] 접미사 자동 확장 실패: %s", _gap_err)
 
         # 1-b. VecMemory 연결 종료
         if hasattr(self, "memory") and self.memory:

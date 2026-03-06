@@ -622,6 +622,27 @@ class SemanticItemRegistry:
                 forbidden.append({"name": canonical, "aliases": list(entry.aliases), "acquired_in": entry.acquired_arc})
         return forbidden
 
+    def get_unmatched_items(self, genre: str = "") -> list[str]:
+        """현재 suffix 목록에 매칭되지 않는 등록 아이템명 반환.
+
+        운영용: 주기적으로 호출하여 regex 안전망 갭을 가시화한다.
+        """
+        from modules.core.genre_schema_builder import get_item_suffixes
+
+        suffixes = get_item_suffixes(genre)
+        if not suffixes:
+            return []
+
+        unmatched: list[str] = []
+        for canonical in self.items:
+            name = str(canonical).strip()
+            if not name or len(name) < 2:
+                continue
+            if not any(name.endswith(s) for s in suffixes):
+                unmatched.append(name)
+
+        return sorted(set(unmatched))
+
     def validate_arc_items(self, arc_no: int, items_to_acquire: list[str]) -> dict[str, Any]:
         """
         Arc 설계의 획득 아이템 목록 검증

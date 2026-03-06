@@ -19,7 +19,7 @@ import re
 from dataclasses import dataclass, field
 from typing import Any
 
-from modules.core.genre_schema_builder import is_wuxia
+from modules.core.genre_schema_builder import get_item_suffixes, is_wuxia
 
 # [V49.4] Semantic Item Registry 통합
 try:
@@ -62,6 +62,7 @@ class ConstraintDB:
         self.context = project_context
         self._genre = genre
         self.arc_states: dict[int, ArcState] = {}
+        self._grant_patterns = self._build_grant_patterns()
 
         # [V49.4] Semantic Item Registry 초기화
         self.item_registry = None
@@ -194,21 +195,38 @@ class ConstraintDB:
             return []
 
         grants = []
-        grant_patterns = [
-            r"([가-힣]+패)[를을]?\s*(?:하사|수여|받|얻)",
-            r"([가-힣]+권)[를을]?\s*(?:위임|부여|받|얻|하사)",
-            r"([가-힣]+직|[가-힣]+장)[에으로]?\s*(?:임명|취임|올|받)",
-            r"((?:[가-힣]+\s*)?인장)[를을]?\s*(?:받|하사|수여)",
-        ]
-
-        for pattern in grant_patterns:
-            matches = re.findall(pattern, tactical_doc)
+        for pattern in self._grant_patterns:
+            matches = pattern.findall(tactical_doc)
             for match in matches:
                 grant = match if isinstance(match, str) else match[0] if match else None
                 if grant and grant not in grants:
                     grants.append(grant)
 
         return grants
+
+    def _build_grant_patterns(self) -> list[re.Pattern]:
+        """장르 SSOT(get_item_suffixes) 기반 수여물 추출 패턴 구성."""
+        base_keywords = ["패", "권", "직", "장", "인장", "자격", "계약서", "명함"]
+        suffixes = sorted(set(base_keywords + get_item_suffixes(self._genre)), key=len, reverse=True)
+        suffix_group = "|".join(re.escape(s) for s in suffixes) or r"패|권|인장"
+
+        return [
+            re.compile(r"([가-힣]+패)[를을]?\s*(?:하사|수여|받|얻)"),
+            re.compile(r"([가-힣]+권)[를을]?\s*(?:위임|부여|받|얻|하사)"),
+            re.compile(r"([가-힣]+직|[가-힣]+장)[에으로]?\s*(?:임명|취임|올|받)"),
+            re.compile(r"((?:[가-힣]+\s*)?인장)[를을]?\s*(?:받|하사|수여)"),
+            re.compile(r"([가-힣A-Za-z0-9\s]+자격)[를을]?\s*(?:부여|수여|받|획득)"),
+            re.compile(r"([가-힣A-Za-z0-9\s]+계약서)[를을]?\s*(?:수여|교부|받|전달)"),
+            re.compile(r"([가-힣A-Za-z0-9\s]+명함)[를을]?\s*(?:수여|받|전달)"),
+            re.compile(
+                rf"([가-힣A-Za-z0-9][가-힣A-Za-z0-9\s]{{0,30}}(?:{suffix_group}))[를을]?\s*"
+                r"(?:하사|수여|받|얻|획득|교부|전달|위임|부여|임명|취임)"
+            ),
+            re.compile(
+                rf"(?:하사|수여|받|얻|획득|교부|전달|위임|부여|임명|취임)[가-힣A-Za-z0-9\s]{{0,20}}"
+                rf"([가-힣A-Za-z0-9][가-힣A-Za-z0-9\s]{{0,30}}(?:{suffix_group}))"
+            ),
+        ]
 
     def _parse_internal_energy(self, value) -> int:
         """내공 수치 파싱"""

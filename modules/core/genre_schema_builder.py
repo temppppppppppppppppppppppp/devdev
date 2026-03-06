@@ -37,6 +37,110 @@ def get_genre_label(genre: str) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Item suffixes (SSOT)
+# ---------------------------------------------------------------------------
+_ITEM_SUFFIX_MAP: dict[str, list[str]] = {
+    "_common": ["패", "권", "인장", "서", "부"],
+    "wuxia": ["도", "검", "창", "봉", "궁", "갑", "환", "단", "경", "비급", "책", "도끼", "낫", "곤", "편"],
+    "investment": [
+        "통장",
+        "계약서",
+        "인감",
+        "증명서",
+        "면허",
+        "허가증",
+        "보고서",
+        "카드",
+        "워크스테이션",
+        "노트북",
+        "폰",
+        "수표",
+        "어음",
+        "주권",
+        "채권",
+        "명함",
+    ],
+    "hunter": ["검", "도", "창", "활", "방패", "갑옷", "포션", "스크롤", "문장", "배지", "카드"],
+    "fantasy": ["검", "도", "창", "지팡이", "로브", "반지", "목걸이", "오브", "스크롤", "포션", "열쇠"],
+    "cooking": ["칼", "팬", "냄비", "도마", "레시피", "재료", "향신료", "식재료"],
+    "medical": ["메스", "청진기", "차트", "처방전", "의료기", "약"],
+    "sports": ["유니폼", "트로피", "메달", "배트", "글러브", "라켓", "공", "헬멧"],
+    "actor": ["대본", "의상", "소품", "카메라", "마이크", "조명"],
+    "alt_history": ["문서", "지도", "무기", "서신", "칙령", "조약"],
+    "composer": ["악보", "악기", "바이올린", "피아노", "기타", "드럼", "마이크"],
+}
+
+_ITEM_GENRE_ALIASES: dict[str, str] = {
+    "무협": "wuxia",
+    "투자": "investment",
+    "헌터": "hunter",
+    "판타지": "fantasy",
+    "요리": "cooking",
+    "의학": "medical",
+    "스포츠": "sports",
+    "배우": "actor",
+    "대체역사": "alt_history",
+    "작곡가": "composer",
+}
+
+
+def _normalize_item_genre_key(genre: str) -> str:
+    """아이템 접미사 조회용 장르 키 정규화."""
+    if not genre:
+        return ""
+    key = str(genre).strip().lower().replace("-", "_").replace(" ", "_")
+    if key in _ITEM_SUFFIX_MAP:
+        return key
+    return _ITEM_GENRE_ALIASES.get(str(genre).strip(), key)
+
+
+def _load_suffix_data() -> dict[str, list[str]]:
+    """YAML에서 접미사 데이터 로드. 실패 시 하드코딩 폴백."""
+    from pathlib import Path
+
+    import yaml
+
+    yaml_path = Path(__file__).resolve().parents[2] / "config" / "settings" / "item_suffixes.yaml"
+    if yaml_path.exists():
+        try:
+            data = yaml.safe_load(yaml_path.read_text(encoding="utf-8"))
+            if isinstance(data, dict) and "_common" in data:
+                return data
+        except Exception:
+            pass
+    return _ITEM_SUFFIX_MAP
+
+
+def get_item_suffixes(genre: str = "") -> list[str]:
+    """장르별 아이템 접미사 리스트 반환.
+
+    YAML(config/settings/item_suffixes.yaml) 우선 로드, 실패 시 하드코딩 폴백.
+    미지 장르(또는 빈 문자열)는 전체 장르 union을 반환한다.
+    """
+    data = _load_suffix_data()
+    common = list(data.get("_common", []))
+    genre_key = _normalize_item_genre_key(genre)
+    specific = list(data.get(genre_key, [])) if genre_key else []
+
+    if not specific:
+        specific = []
+        for key, values in data.items():
+            if key == "_common":
+                continue
+            specific.extend(values)
+
+    merged = common + specific
+    unique: list[str] = []
+    seen = set()
+    for token in merged:
+        item = str(token).strip()
+        if item and item not in seen:
+            seen.add(item)
+            unique.append(item)
+    return unique
+
+
+# ---------------------------------------------------------------------------
 # Field descriptions per (genre, key) — 비무협 전용
 # ---------------------------------------------------------------------------
 _GENRE_KEY_DESCRIPTIONS: dict[str, dict[str, str]] = {
