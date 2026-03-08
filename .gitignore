@@ -46,3 +46,49 @@ projects/MagicMock/
 
 # === Gemini 관련 ===
 .gemini/
+
+# === UI 에셋팩 (유료/무료 타일셋, 대용량) ===
+UI/
+
+# === Node.js ===
+node_modules/
+
+# === Desktop 빌드/디버그 ===
+geuldobi-desktop/node_modules/
+geuldobi-desktop/src/sprites/dbg_*
+geuldobi-desktop/src/sprites/desk_tile.png
+geuldobi-desktop/src/sprites/desk_overlay.png
+geuldobi-desktop/src/sprites/desk_right_only.png
+geuldobi-desktop/src/sprites/desk_sm_right.png
+geuldobi-desktop/src/sprites/desk_teacher_front.png
+
+# === 임시 스크린샷/백업 ===
+*.png
+!geuldobi-desktop/src/sprites/*.png
+!docs/**/*.png
+백업/
+콘솔로그.txt
+
+# === 실행 로그 (enrich) ===
+logs/enrich/
+
+# === 실행 프로젝트 데이터 (로컬 전용) ===
+projects/001_*/
+projects/00_*/
+projects/20*/
+projects/00000/
+projects/chaebol_material/
+projects/ui*/
+projects/기록용/
+*.db-shm
+*.db-wal
+
+# === 임베디드 Python (배포용, 대용량) ===
+python-embed/
+
+# === 테스트 소재/임시 파일 ===
+test_material/
+tmp_*.py
+tmp_*.txt
+generate_*.py
+*.webp
