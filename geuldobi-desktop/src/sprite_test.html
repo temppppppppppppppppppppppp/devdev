@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<title>오피스 렌더링 테스트</title>
+<style>
+  body { margin:0; background:#1a1a2e; color:#fff; font-family:"Malgun Gothic",sans-serif; padding:20px; }
+  h1 { font-size:16px; margin-bottom:12px; }
+  canvas { image-rendering: pixelated; border:1px solid #334; border-radius:8px; display:block; margin-bottom:8px; }
+  .info { color:#94a3b8; font-size:12px; }
+</style>
+</head>
+<body>
+<h1>글도비 오피스 — LimeZu 스프라이트 통합 테스트</h1>
+<canvas id="c" width="640" height="360"></canvas>
+<div class="info">
+  Writer · Director(+왕관) · Analyst · Critic · Manager — RPG Maker MV 유료 스프라이트 (48×96)
+</div>
+
+<script>
+const canvas = document.getElementById("c");
+const ctx = canvas.getContext("2d");
+ctx.imageSmoothingEnabled = false;
+
+const SCALE = 1, FW = 48, FH = 96;
+
+const AGENTS = [
+  { name:"Writer",   key:"writer",   x:90,  y:145, color:"#60a5fa" },
+  { name:"Director", key:"director", x:320, y:145, color:"#fbbf24", crown:true },
+  { name:"Analyst",  key:"analyst",  x:550, y:145, color:"#34d399" },
+  { name:"Critic",   key:"critic",   x:190, y:275, color:"#a78bfa" },
+  { name:"Manager",  key:"manager",  x:450, y:275, color:"#fb923c" },
+];
+
+// Load sprites
+const images = {};
+let loadCount = 0;
+const toLoad = [];
+for (const a of AGENTS) {
+  for (const pose of ["walk","sit","phone"]) {
+    toLoad.push(`${a.key}_${pose}`);
+  }
+}
+for (const key of toLoad) {
+  const img = new Image();
+  img.onload = () => { images[key] = img; loadCount++; if(loadCount >= toLoad.length) startLoop(); };
+  img.onerror = () => { console.warn("Missing:", key); loadCount++; if(loadCount >= toLoad.length) startLoop(); };
+  img.src = `sprites/${key}.png`;
+}
+
+// Load background
+const bgImg = new Image();
+bgImg.src = "sprites/office_bg.png";
+
+let time = 0;
+let running = false;
+
+function startLoop() {
+  if (running) return;
+  running = true;
+  requestAnimationFrame(loop);
+}
+
+function loop() {
+  time += 1/60;
+  render(time);
+  requestAnimationFrame(loop);
+}
+
+function render(t) {
+  ctx.clearRect(0, 0, 640, 360);
+  ctx.imageSmoothingEnabled = false;
+
+  // Background
+  if (bgImg.complete) {
+    ctx.drawImage(bgImg, 0, 0, 640, 360);
+  }
+
+  // Draw agents
+  for (let i = 0; i < AGENTS.length; i++) {
+    const a = AGENTS[i];
+    const bob = Math.sin(t * 4 + i * 1.3) * 1.5;
+
+    // Character sprite (서있기 — walk 스프라이트)
+    const imgKey = `${a.key}_walk`;
+    const img = images[imgKey];
+    const spriteY = a.y - 30 + bob;
+    if (img) {
+      const frame = Math.floor(t * 3 + i) % 3;
+      const dw = FW * SCALE, dh = FH * SCALE;
+      const dx = a.x - dw/2, dy = spriteY - dh/2;
+
+      ctx.drawImage(img, frame * FW, 0, FW, FH, Math.round(dx), Math.round(dy), dw, dh);
+    }
+
+    // Crown (캐릭터 위)
+    if (a.crown) {
+      drawCrown(a.x, spriteY - (FH*SCALE)/2 - 10, 2);
+    }
+
+    // 책상 오버레이 (캐릭터 위에)
+    const dw2 = 70, dh2 = 24;
+    const ddx = a.x - dw2/2, ddy = a.y + 2;
+    ctx.fillStyle = "#654E37";
+    ctx.fillRect(ddx, ddy, dw2, dh2);
+    ctx.fillStyle = "#785F44";
+    ctx.fillRect(ddx+1, ddy+1, dw2-2, 6);
+    ctx.fillStyle = "#503C2A";
+    ctx.fillRect(ddx, ddy+dh2-2, dw2, 3);
+    ctx.globalAlpha = 0.25;
+    ctx.fillStyle = a.color;
+    ctx.fillRect(a.x-8, ddy-6, 16, 8);
+    ctx.globalAlpha = 1.0;
+
+    // Name tag
+    ctx.font = 'bold 11px "Malgun Gothic", sans-serif';
+    const tw = ctx.measureText(a.name).width + 10;
+    const nameY = a.y + 46;
+    ctx.fillStyle = "rgba(255,255,255,0.85)";
+    ctx.fillRect(a.x - tw/2, nameY, tw, 14);
+    ctx.fillStyle = a.color;
+    ctx.fillRect(a.x - tw/2, nameY, tw, 1);
+    ctx.fillStyle = "#334155";
+    ctx.textAlign = "center";
+    ctx.fillText(a.name, a.x, nameY + 11);
+    ctx.textAlign = "left";
+  }
+}
+
+function drawCrown(cx, cy, s) {
+  s = s || 3;
+  const c = [
+    "0C000C000C0","0CC0CCC0CC0","0CCCCCCCCC0","0C7C7C7C7C0","0CCCCCCCCC0"
+  ];
+  const pal = { C:"#eab308", 7:"#ef4444" };
+  const sx = cx - (11*s)/2, sy = cy;
+  for (let r=0;r<c.length;r++) {
+    for (let k=0;k<c[r].length;k++) {
+      const ch = c[r][k];
+      if(ch==="0") continue;
+      ctx.fillStyle = pal[ch]||"#eab308";
+      ctx.fillRect(Math.round(sx+k*s), Math.round(sy+r*s), s, s);
+    }
+  }
+  ctx.fillStyle = "#3b82f6";
+  ctx.fillRect(Math.round(sx+5*s), Math.round(sy+3*s), s, s);
+}
+
+// Fallback start if bg loads first
+bgImg.onload = () => { if(loadCount >= toLoad.length) startLoop(); };
+</script>
+</body>
+</html>

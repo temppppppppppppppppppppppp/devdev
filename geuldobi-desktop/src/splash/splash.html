@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src http://127.0.0.1:8300;" />
     <title>글도비 시작</title>
     <link rel="stylesheet" href="./splash.css" />
   </head>
@@ -20,7 +21,7 @@
       </section>
     </main>
 
-    <script src="../../node_modules/lucide/dist/umd/lucide.js"></script>
+    <script src="./lucide.js"></script>
     <script src="./splash.js"></script>
   </body>
 </html>

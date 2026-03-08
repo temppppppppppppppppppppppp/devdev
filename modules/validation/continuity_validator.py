@@ -166,11 +166,15 @@ class ContinuityValidator:
 
         # ═══════════════════════════════════════════════════════════════
         # 검증 3: 부상 상태 연속성
+        # [WARN-2] 비전투 장르(투자물/요리/배우/작곡/의료/대체역사/스포츠)는 부상 검사 스킵
         # ═══════════════════════════════════════════════════════════════
-        injury_check = self._check_injury_continuity(current_ep, manuscript, prev_hud, prev_manuscript)
-        if not injury_check["passed"]:
-            violations.extend(injury_check["violations"])
-        warnings.extend(injury_check.get("warnings", []))
+        _combat_genres = {"wuxia", "hunter", "fantasy"}
+        _genre = validation_context.get("genre", "wuxia") if isinstance(validation_context, dict) else "wuxia"
+        if _genre in _combat_genres:
+            injury_check = self._check_injury_continuity(current_ep, manuscript, prev_hud, prev_manuscript)
+            if not injury_check["passed"]:
+                violations.extend(injury_check["violations"])
+            warnings.extend(injury_check.get("warnings", []))
 
         # ═══════════════════════════════════════════════════════════════
         # 검증 4: 위치 연속성 [V66.1] 불가능한 순간이동 BLOCKING 추가

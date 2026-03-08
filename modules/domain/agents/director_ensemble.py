@@ -328,6 +328,7 @@ Architect가 inplace 단계에서 즉시 교정하고 재제출한다. 소소한
         curr_block: dict,
         prev_arc_context: str,
         constraint_block: str = "",
+        advisory: str = "",
     ) -> dict:
         """[TF-47] Arc 후보 비교 선택 + PASS/REJECT/PASS_WITH_FIX 판정.
 
@@ -388,7 +389,7 @@ Architect가 inplace 단계에서 즉시 교정하고 재제출한다. 소소한
                 f"- tactical_doc 분량: {len(tactical)}자\n"
                 f"- state_constraints: {sc_str[:1000]}\n"
                 f"- joint_docs: {joint_str[:1000]}\n\n"
-                f"[tactical_doc 전문]\n{tactical[:8000]}\n"
+                f"[tactical_doc 전문]\n{tactical}\n"
             )
             candidate_summaries.append(summary)
 
@@ -410,6 +411,11 @@ Arc {arc_no}번 후보 {len(candidates)}개를 **각각 절대 기준으로 독�
 
 ### 제약 조건
 {constraint_block[:4000] if constraint_block else "(없음)"}
+
+### Python 사실 검증 Advisory (NS-3-B)
+{str(advisory)[:4000] if advisory else "(없음)"}
+- 이 advisory는 수치 비교 기반 사실 검증입니다.
+- 큰 수치 괴리 경고가 있으면 PASS를 피하고 PASS_WITH_FIX 또는 REJECT로 판정하세요.
 
 ### 후보 목록
 {"".join(candidate_summaries)}
@@ -943,6 +949,7 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
             "opening_diversity",
             "timeline_arc_consistency",  # [NS-4]
             "fiction_term_leak",          # [TF-57-A]
+            "scene_variety",             # [TF-J]
         ]
         if isinstance(_checklist, dict) and _checklist:
             _issue_count = sum(1 for k in _nc3_keys if str(_checklist.get(k, "")).upper() == "ISSUE")

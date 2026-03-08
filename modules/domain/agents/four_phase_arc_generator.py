@@ -18,6 +18,7 @@
 import json
 import logging
 import re
+from typing import Callable
 
 from modules.core.constants import ContextLimits, Stage2Limits
 from modules.validation.threshold_helper import _threshold
@@ -129,7 +130,7 @@ def _check_arc_vs_block_targets(
 
     actual = None
     actual_key = None
-    for key in ("total_assets", "assets", "capital", "total_capital"):
+    for key in ("capital", "total_assets", "assets", "total_capital"):
         value = parse_num(arc_end.get(key, ""))
         if value is not None:
             actual = value
@@ -148,6 +149,38 @@ def _check_arc_vs_block_targets(
             "Please realign tactical_doc numbers with block target."
         )
     return ""
+
+
+def _format_investment_advisory(results: list[dict]) -> str:
+    """F-1/F-2 결과를 Director advisory 문자열로 포맷."""
+    if not results:
+        return ""
+
+    lines = ["[MAJOR · InvestmentMathVerifier] 투자 수치 검산 결과:"]
+    minor_lines: list[str] = []
+    minor_count = 0
+
+    for r in results:
+        severity = str(r.get("severity", "MINOR")).upper()
+        text = str(r.get("text") or r.get("issue") or "").strip()
+        if not text:
+            continue
+
+        idx = r.get("candidate_idx")
+        prefix = f"(후보 {int(idx) + 1}) " if isinstance(idx, int | float) else ""
+        line = f"  [{severity}] {prefix}{text}"
+
+        if severity == "MINOR":
+            minor_count += 1
+            minor_lines.append(line)
+            continue
+        lines.append(line)
+
+    # 노이즈 억제를 위해 MINOR는 3건 이상일 때만 표시
+    if minor_count >= 3:
+        lines.extend(minor_lines)
+
+    return "\n".join(lines)
 
 
 def _ns4_extract_time_markers(arc_data: dict) -> list:
@@ -253,7 +286,13 @@ class FourPhaseArcGenerator(BaseAgent):
     (클래스명은 호환성을 위해 유지)
     """
 
-    def __init__(self, context, client, model_tier: str = None):
+    def __init__(
+        self,
+        context,
+        client,
+        model_tier: str = None,
+        flash_ask: Callable[[str], str] | None = None,
+    ):
         super().__init__(context, client, model_tier)
         # DI 후보: context.master_bible (getattr fallback 2회: L177, L545 — protagonist_config 추출)
         # DI 후보: context.guard (hasattr 패턴 — 장르 감지용, L63)
@@ -278,6 +317,7 @@ class FourPhaseArcGenerator(BaseAgent):
         self._genre = _detected_genre
         self.compiler = ConstraintCompiler(genre=self._genre)
         self.negative_injector = NegativeExampleInjector(_detected_genre)
+        self._flash_ask = flash_ask
 
         # 통계
         self.stats = {
@@ -301,7 +341,7 @@ class FourPhaseArcGenerator(BaseAgent):
             prev_arcs: 이전 Arc 리스트
 
         Returns:
-            (ep_count, reasoning) - 3~7 범위의 화수와 결정 이유
+            (ep_count, reasoning) - 3~6 범위의 화수와 결정 이유
         """
         # 블록 내용 추출
         block_content = ""
@@ -320,7 +360,7 @@ class FourPhaseArcGenerator(BaseAgent):
             ep_count = Stage2Limits.MIN_EP_COUNT  # 3화
             reasoning = f"블록 정보량 부족 ({content_len}자 < 500자) → 최소 화수"
         elif content_len > 1500:
-            ep_count = Stage2Limits.MAX_EP_COUNT  # 7화
+            ep_count = Stage2Limits.MAX_EP_COUNT  # 6화
             reasoning = f"블록 정보량 풍부 ({content_len}자 > 1500자) → 최대 화수"
         else:
             # 500~1500자 구간: 문장 수 비례로 4~6화 결정
@@ -419,12 +459,14 @@ class FourPhaseArcGenerator(BaseAgent):
         _pre_items = set()
         _pre_grants = set()
         for _prev in prev_arcs:
-            _acq = _prev.get("state_constraints", {}).get("items_acquired", [])
+            # [BUG-F] protagonist_items 우선 폴백
+            _psc_fp = _prev.get("state_constraints", {})
+            _acq = _psc_fp.get("protagonist_items") or _psc_fp.get("items_acquired", [])
             if isinstance(_acq, list):
                 _pre_items.update(
                     (i.get("name", i.get("item", "")) if isinstance(i, dict) else str(i)).strip() for i in _acq if i
                 )
-            _grt = _prev.get("state_constraints", {}).get("grants_received", [])
+            _grt = _psc_fp.get("grants_received", [])
             if isinstance(_grt, list):
                 _pre_grants.update(
                     (g.get("name", g.get("item", "")) if isinstance(g, dict) else str(g)).strip() for g in _grt if g
@@ -576,18 +618,18 @@ class FourPhaseArcGenerator(BaseAgent):
                         ep_count=ep_count,  # [V61.1] 가변 페이싱
                         retry=retry,  # [V61.5] 재시도 시 thinking 다운그레이드
                     )
-                    # [SpareCandidate] 차순위 후보 보존 (best_arc 제외한 나머지)
-                    if all_candidates and len(all_candidates) > 1:
+                    # [SpareCandidate] 차순위 후보 보존 (best_arc가 있는 legacy 경로만)
+                    if best_arc is not None and all_candidates and len(all_candidates) > 1:
                         for _c in all_candidates:
                             if _c is not best_arc and _c not in _spare_candidates:
                                 _spare_candidates.append(_c)
                         if _spare_candidates:
                             logging.info(f" [SpareCandidate] 차순위 {len(_spare_candidates)}개 보존")
 
-            if best_arc:
-                logging.info(f"✅ [Phase 2] Ensemble 완료 — 선택 전략: {best_arc.get('strategy', '?')}")
+            if all_candidates:
+                logging.info(f"✅ [Phase 2] Ensemble 완료 — {len(all_candidates)}개 후보 → Director 선택 대기")
 
-            if not best_arc:
+            if not all_candidates:
                 logging.warning("❌ [Phase 2] Ensemble 생성 실패")
                 pipeline_result["phases"]["generate"] = {"status": "failed"}
                 # [Sweep55] Director 원래 피드백 보존 (Sweep53 패턴과 동일)
@@ -595,14 +637,15 @@ class FourPhaseArcGenerator(BaseAgent):
                 feedback = f"{_base_director_feedback}\n{_gen_fail_msg}" if _base_director_feedback else _gen_fail_msg
                 continue
 
-            if retry >= 2 and adversarial_self_play and best_arc:
+            if retry >= 2 and adversarial_self_play and all_candidates:
                 try:
                     _asp_ctx = {
                         "arc_no": arc_no,
                         "ep_start": ep_start,
                         "director_feedback": feedback,
                     }
-                    _asp_input = json.dumps(best_arc, ensure_ascii=False)
+                    _asp_target = all_candidates[0]
+                    _asp_input = json.dumps(_asp_target, ensure_ascii=False)
                     _asp_result = adversarial_self_play.generate_with_adversary(
                         initial_content=_asp_input,
                         content_type="arc",
@@ -618,73 +661,138 @@ class FourPhaseArcGenerator(BaseAgent):
                                 _asp_arc = {}
                         if isinstance(_asp_arc, dict) and _asp_arc.get("tactical_doc"):
                             # [TF10-P2] episode_details 복원 — ASP 교체 시 소실 방지
-                            _orig_details = best_arc.get("episode_details")
-                            best_arc = _asp_arc
-                            if _orig_details and not best_arc.get("episode_details"):
-                                best_arc["episode_details"] = _orig_details
+                            _orig_details = _asp_target.get("episode_details")
+                            if _orig_details and not _asp_arc.get("episode_details"):
+                                _asp_arc["episode_details"] = _orig_details
+                            all_candidates[0] = _asp_arc
+                            if best_arc is None or best_arc is _asp_target:
+                                best_arc = _asp_arc
                             pipeline_result["asp_used"] = True
                             logging.info(f"✅ [ASP] Stage2 Arc 교정 적용 (retry={retry})")
                 except Exception as e:
                     logging.warning(f"[SilentPass:Stage2:ASP] {e!s:.120}")
 
-            # [EnsembleFB] 당선 전략 이름 기록 (REJECT 시 다음 retry에 전달)
-            _current_strategy = best_arc.get("_ensemble_meta", {}).get("best_strategy", "unknown")
-            pipeline_result["phases"]["generate"] = {
-                "status": "complete",
-                "candidates_count": len(all_candidates),
-                "selected_strategy": _current_strategy,
-            }
-            self.stats["phase2_complete"] += 1
-
             # ═══════════════════════════════════════════════════════════════
-            # PHASE 2.5: AUTO-SANITIZE - 부상 에스컬레이션 자동 세정
+            # PHASE 2.5: 후보 전처리 (Director 비교 전)
             # ═══════════════════════════════════════════════════════════════
-            best_arc = self._check_arc_end_state(best_arc)
-
             # [TF-22-01] arc_start_state.location 강제 주입 — Arc 경계 공간 연속성
-            if prev_arcs:
+            if prev_arcs and all_candidates:
                 _last_end = prev_arcs[-1].get("state_constraints", {}).get("arc_end_state", {})
                 _plan_loc = _last_end.get("location") if isinstance(_last_end, dict) else None
                 _exec_state = self._load_execution_state(prev_arcs[-1])
                 _forced_loc = (_exec_state.get("protagonist_location") if _exec_state else None) or _plan_loc
                 if _forced_loc:
-                    _sc = best_arc.setdefault("state_constraints", {})
-                    _as = _sc.setdefault("arc_start_state", {})
-                    if not _as.get("location"):
-                        _as["location"] = _forced_loc
+                    for _cand in all_candidates:
+                        _sc = _cand.setdefault("state_constraints", {})
+                        _as = _sc.setdefault("arc_start_state", {})
+                        if not _as.get("location"):
+                            _as["location"] = _forced_loc
 
-            # [NS-3-B] Phase 2.55: Treatment block numeric target alignment (advisory, Python-only)
-            _ns3b_warning = _check_arc_vs_block_targets(best_arc, curr_block, arc_no)
-            if _ns3b_warning:
-                logging.warning("[NS-3-B] %s", _ns3b_warning)
-                _ns3b_header = f"[NS-3-B 수치 목표 괴리 경고]\n{_ns3b_warning}"
-                feedback = f"{_ns3b_header}\n\n{feedback}" if feedback else _ns3b_header
+            # ═══════════════════════════════════════════════════════════════
+            # PHASE 2.55: AUTO-SANITIZE + NS-3-B advisory (Director 선택 전)
+            # ═══════════════════════════════════════════════════════════════
+            _ns3b_director_advisory = ""
+            _investment_director_advisory = ""
+            _investment_advisory: list[dict] = []
+            if all_candidates:
+                _ns3b_notes: list[str] = []
+                for _idx, _cand in enumerate(all_candidates, start=1):
+                    if not isinstance(_cand, dict):
+                        continue
+                    _cand = self._check_arc_end_state(_cand)
+                    all_candidates[_idx - 1] = _cand
+                    _warn = _check_arc_vs_block_targets(_cand, curr_block, arc_no)
+                    if _warn:
+                        _strategy = _cand.get("_strategy", f"candidate-{_idx}")
+                        _ns3b_notes.append(f"- 후보 {_idx} ({_strategy}): {_warn}")
+                if _ns3b_notes:
+                    _ns3b_director_advisory = "[NS-3-B 수치 목표 괴리 경고]\n" + "\n".join(_ns3b_notes)
+                    logging.warning("[NS-3-B] Director advisory generated (%d건)", len(_ns3b_notes))
+
+            # ═══════════════════════════════════════════════════════════════
+            # PHASE 2.56: 투자물 수치 검산 advisory (Director 선택 전)
+            # ═══════════════════════════════════════════════════════════════
+            if self._genre == "investment" and all_candidates:
+                try:
+                    from modules.core.investment_arithmetic_checker import InvestmentArithmeticChecker
+
+                    _f1 = InvestmentArithmeticChecker.from_yaml()
+                    _prev_end = {}
+                    if prev_arcs:
+                        _prev_end = prev_arcs[-1].get("state_constraints", {}).get("arc_end_state", {})
+
+                    _flash_enabled = bool(_threshold("investment_math.flash_enabled", True))
+                    _flash_ask = self._flash_ask if _flash_enabled else None
+                    _f2 = None
+                    if _flash_ask is not None:
+                        from modules.core.investment_math_verifier import InvestmentMathVerifier
+
+                        _f2 = InvestmentMathVerifier(llm_ask=_flash_ask)
+
+                    for _idx, _cand in enumerate(all_candidates):
+                        if not isinstance(_cand, dict):
+                            continue
+                        _td = str(_cand.get("tactical_doc", ""))
+                        _f1_results = _f1.check(_cand, arc_no, prev_arc_end_state=_prev_end)
+                        if _f2 is not None and _f1_results:
+                            _f2_results = _f2.verify(_td, _f1_results, arc_no, genre=self._genre)
+                            _f1_results.extend(_f2_results)
+                        for _r in _f1_results:
+                            if isinstance(_r, dict):
+                                _r["candidate_idx"] = _idx
+                                _investment_advisory.append(_r)
+
+                    if _investment_advisory:
+                        _investment_director_advisory = _format_investment_advisory(_investment_advisory)
+                        logging.warning("[F] Investment advisory generated (%d건)", len(_investment_advisory))
+                except Exception as e:
+                    logging.warning("[F] Investment advisory generation failed: %s", str(e)[:120])
 
             # ═══════════════════════════════════════════════════════════════
             # PHASE 2.6: DIRECTOR SELECTION — 후보 비교 선택 [TF-47]
             # ═══════════════════════════════════════════════════════════════
-            if director and len(all_candidates) >= 2:
+            if director and all_candidates:
                 _valid_for_director = [c for c in all_candidates if c.get("tactical_doc")]
-                if len(_valid_for_director) >= 2:
+                if _valid_for_director:
                     logging.info(f" [TF-47] Director Arc 비교 선택 ({len(_valid_for_director)}개 후보)")
                     try:
+                        _director_advisory = _ns3b_director_advisory
+                        if _investment_director_advisory:
+                            _director_advisory = (
+                                f"{_director_advisory}\n\n{_investment_director_advisory}"
+                                if _director_advisory
+                                else _investment_director_advisory
+                            )
                         _dir_result = director.compare_and_select_arc(
                             candidates=_valid_for_director,
                             arc_no=arc_no,
                             curr_block=curr_block,
                             prev_arc_context=prev_arc_context,
                             constraint_block=full_constraint_block,
+                            advisory=_director_advisory,
                         )
                         _dir_decision = _dir_result.get("decision", "REJECT")
                         _dir_arc = _dir_result.get("selected_arc")
 
                         if _dir_decision == "PASS" and _dir_arc:
                             best_arc = _dir_arc
+                            _current_strategy = (
+                                best_arc.get("_ensemble_meta", {}).get("best_strategy")
+                                or best_arc.get("_strategy", "unknown")
+                            )
+                            pipeline_result["phases"]["generate"] = {
+                                "status": "complete",
+                                "candidates_count": len(all_candidates),
+                                "selected_strategy": _current_strategy,
+                            }
                             pipeline_result["phases"]["director_selection"] = {
                                 "status": "pass",
                                 "score": _dir_result.get("score", 0),
                                 "selected_strategy": _dir_arc.get("_strategy", "?"),
+                                "ns3b_advisory": bool(_ns3b_director_advisory),
+                                "investment_advisory": bool(_investment_advisory),
                             }
+                            self.stats["phase2_complete"] += 1
                             pipeline_result["final_verdict"] = "PASS"
                             self.stats["phase3_pass"] += 1
                             logging.info(f"✅ [TF-47] Director PASS — Arc {arc_no}")
@@ -692,12 +800,24 @@ class FourPhaseArcGenerator(BaseAgent):
 
                         elif _dir_decision == "PASS_WITH_FIX" and _dir_arc:
                             best_arc = _dir_arc
+                            _current_strategy = (
+                                best_arc.get("_ensemble_meta", {}).get("best_strategy")
+                                or best_arc.get("_strategy", "unknown")
+                            )
+                            pipeline_result["phases"]["generate"] = {
+                                "status": "complete",
+                                "candidates_count": len(all_candidates),
+                                "selected_strategy": _current_strategy,
+                            }
                             pipeline_result["phases"]["director_selection"] = {
                                 "status": "pass_with_fix",
                                 "score": _dir_result.get("score", 0),
                                 "feedback": _dir_result.get("feedback", ""),
                                 "fix_scope": _dir_result.get("fix_scope", "inplace"),
+                                "ns3b_advisory": bool(_ns3b_director_advisory),
+                                "investment_advisory": bool(_investment_advisory),
                             }
+                            self.stats["phase2_complete"] += 1
                             pipeline_result["final_verdict"] = "PASS"
                             self.stats["phase3_pass"] += 1
                             logging.info(f"✅ [TF-47] Director PASS_WITH_FIX — Arc {arc_no}")
@@ -705,7 +825,7 @@ class FourPhaseArcGenerator(BaseAgent):
 
                         else:
                             # Director REJECT → 피드백으로 retry
-                            best_arc = _dir_arc or best_arc
+                            best_arc = _dir_arc or _valid_for_director[0]
                             _dir_feedback = _dir_result.get("feedback", "Director REJECT")
                             feedback = (
                                 f"{_base_director_feedback}\n[Director 비교 피드백]\n{_dir_feedback}"
@@ -720,12 +840,45 @@ class FourPhaseArcGenerator(BaseAgent):
 
                             _prev_rejected_arc = best_arc
                             _prev_reject_feedback = feedback
-                            _prev_selected_strategy = _dir_arc.get("_strategy", "unknown") if _dir_arc else "unknown"
-                            _spare_candidates.clear()
+                            _prev_selected_strategy = best_arc.get("_strategy", "unknown")
+                            _spare_candidates = [c for c in _valid_for_director if c is not _prev_rejected_arc]
                             continue  # retry loop
 
                     except Exception as e:
                         logging.warning(f"[TF-47] Director 비교 실패, Validator 폴백: {str(e)[:100]}")
+                        best_arc = all_candidates[0]
+
+            # Director 미사용/실패 시 1순위 후보 폴백
+            if best_arc is None and all_candidates:
+                best_arc = all_candidates[0]
+
+            # ═══════════════════════════════════════════════════════════════
+            # PHASE 2.55: AUTO-SANITIZE + Python advisory checks
+            # ═══════════════════════════════════════════════════════════════
+            best_arc = self._check_arc_end_state(best_arc)
+
+            # [NS-3-B] Treatment block numeric target alignment (advisory, Python-only)
+            _ns3b_warning = _check_arc_vs_block_targets(best_arc, curr_block, arc_no)
+            if _ns3b_warning:
+                logging.warning("[NS-3-B] %s", _ns3b_warning)
+                _ns3b_header = f"[NS-3-B 수치 목표 괴리 경고]\n{_ns3b_warning}"
+                feedback = f"{_ns3b_header}\n\n{feedback}" if feedback else _ns3b_header
+
+            if _investment_advisory:
+                _inv_header = _format_investment_advisory(_investment_advisory)
+                feedback = f"{_inv_header}\n\n{feedback}" if feedback else _inv_header
+
+            # [EnsembleFB] 당선 전략 이름 기록 (REJECT 시 다음 retry에 전달)
+            _current_strategy = (
+                best_arc.get("_ensemble_meta", {}).get("best_strategy")
+                or best_arc.get("_strategy", "unknown")
+            )
+            pipeline_result["phases"]["generate"] = {
+                "status": "complete",
+                "candidates_count": len(all_candidates),
+                "selected_strategy": _current_strategy,
+            }
+            self.stats["phase2_complete"] += 1
 
             # ═══════════════════════════════════════════════════════════════
             # PHASE 3: VALIDATE - 통합 검증 (Director 미사용 또는 단일 후보 시)
@@ -1052,10 +1205,11 @@ class FourPhaseArcGenerator(BaseAgent):
             pipeline_result["final_verdict"] = "FAILED"
             return None, pipeline_result
 
-        if not best_arc:
+        if not all_candidates:
             logging.warning("[Patch Mode] Arc ensemble 후보 없음 → 폴백 필요")
             pipeline_result["final_verdict"] = "FAILED"
             return None, pipeline_result
+        best_arc = all_candidates[0]
 
         # 6) Phase 2.5: Auto-sanitize
         best_arc = self._check_arc_end_state(best_arc)
@@ -1076,12 +1230,14 @@ class FourPhaseArcGenerator(BaseAgent):
         _pre_items = set()
         _pre_grants = set()
         for _prev in prev_arcs:
-            _acq = _prev.get("state_constraints", {}).get("items_acquired", [])
+            # [BUG-F] protagonist_items 우선 폴백
+            _psc_fp = _prev.get("state_constraints", {})
+            _acq = _psc_fp.get("protagonist_items") or _psc_fp.get("items_acquired", [])
             if isinstance(_acq, list):
                 _pre_items.update(
                     (i.get("name", i.get("item", "")) if isinstance(i, dict) else str(i)).strip() for i in _acq if i
                 )
-            _grt = _prev.get("state_constraints", {}).get("grants_received", [])
+            _grt = _psc_fp.get("grants_received", [])
             if isinstance(_grt, list):
                 _pre_grants.update(
                     (g.get("name", g.get("item", "")) if isinstance(g, dict) else str(g)).strip() for g in _grt if g
@@ -1459,7 +1615,13 @@ class FourPhaseArcGenerator(BaseAgent):
         if isinstance(ss, dict):
             ei = str(ss.get("expected_injuries", "없음"))
             if ei not in ("없음", "정상", ""):
-                warnings.append(f"status_shadow 부상 잔류: '{ei}'")
+                # [NR-1] 정신적 피로는 자연 회복 가능 — advisory 레벨 낮춤
+                _mental_keywords = ("정신", "마모", "스트레스", "피로", "mental", "fatigue", "burnout")
+                _is_mental = any(k in ei.lower() for k in _mental_keywords)
+                if _is_mental:
+                    warnings.append(f"status_shadow 정신적 피로 잔류: '{ei}' (일상 휴식으로 자연 회복 가능)")
+                else:
+                    warnings.append(f"status_shadow 부상 잔류: '{ei}'")
 
         if warnings:
             logging.warning(f"[I-12] 아크 종료 상태 점검: {warnings}")
@@ -1486,6 +1648,11 @@ class FourPhaseArcGenerator(BaseAgent):
         logging.info(f"최종 통과율: {stats.get('pass_rate', 'N/A')}")
 
 
-def create_four_phase_generator(context, client, model_tier: str = "gemini-2.5-pro"):
+def create_four_phase_generator(
+    context,
+    client,
+    model_tier: str = "gemini-2.5-pro",
+    flash_ask: Callable[[str], str] | None = None,
+):
     """FourPhaseArcGenerator 생성 헬퍼 (호환성 유지)"""
-    return FourPhaseArcGenerator(context, client, model_tier)
+    return FourPhaseArcGenerator(context, client, model_tier, flash_ask=flash_ask)

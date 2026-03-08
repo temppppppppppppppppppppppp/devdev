@@ -250,6 +250,24 @@ class TestIntegration:
         assert isinstance(warns, list)
 
 
+# ── 6-1. [NC-2] NPC 이름 정규화(괄호 접미사) ─────────────────────
+
+
+class TestNpcNameCollisionNormalization:
+    def test_parenthesized_name_is_normalized_for_collision(self):
+        world_state = MagicMock()
+        world_state.npcs = {
+            "npc_1": {"name": "박성호", "role": "PB"},
+            "npc_2": {"name": "박성호 (담당 PB)", "role": "PB"},
+        }
+        checker = NumericConsistencyChecker(world_state=world_state)
+
+        warns = checker.check("박성호가 보고서를 넘겼다.", ep_num=4)
+        name_warns = [w for w in warns if w["check"] == "NPC 동명이인"]
+        assert len(name_warns) >= 1
+        assert "박성호" in name_warns[0]["text"]
+
+
 # ── 7. [NC-2] 퍼센트 구성 검증 ───────────────────────────────────
 
 

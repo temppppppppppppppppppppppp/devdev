@@ -229,6 +229,37 @@ class Stage4Orchestrator:
             self._interview_round = Stage4InterviewRound(self.ctx)
         return self._interview_round
 
+    def _set_agent_telemetry_context(self, *, ep_num: int | None = None, extra_agents: list | None = None) -> None:
+        """[LOG-Phase2] BaseAgent llm_calls stage/ep 메타데이터 주입."""
+        targets = []
+        agents = getattr(self.ctx, "agents", None)
+        if isinstance(agents, dict):
+            targets.extend(agents.values())
+        if extra_agents:
+            targets.extend(extra_agents)
+        if not targets:
+            return
+
+        _ep_value = None
+        if ep_num is not None:
+            try:
+                _ep_value = max(0, int(ep_num))
+            except (TypeError, ValueError):
+                _ep_value = None
+
+        for agent in targets:
+            if agent is None:
+                continue
+            try:
+                setattr(agent, "_current_stage", 4)
+            except Exception:
+                pass
+            if _ep_value is not None:
+                try:
+                    setattr(agent, "_current_ep_num", _ep_value)
+                except Exception:
+                    pass
+
     # ═══════════════════════════════════════════════════════════════════════
     # [LM-A-1] Bible → world_laws 자동 등록 (최초 1회)
     # ═══════════════════════════════════════════════════════════════════════
@@ -466,6 +497,7 @@ class Stage4Orchestrator:
             return {}
 
         try:
+            self._set_agent_telemetry_context(ep_num=ep_num)
             _escaped_tail = self.ctx.agents["director"]._escape_braces(manuscript[-3000:])
             prompt = f"""아래 원고의 마지막 상황을 분석하여 다음 화에서 반드시 이어받아야 할 요소를 추출하세요.
 
@@ -545,6 +577,7 @@ JSON으로 출력:
 
             next_ep = self.ctx.current_project.get_latest_episode_number()
             self.interview_round.time_warnings = []  # [V70] 에피소드마다 리셋 (누적 방지)
+            self._set_agent_telemetry_context(ep_num=next_ep, extra_agents=[chief_writer])
             if target_ep and next_ep > target_ep:
                 self.ctx.ui.log(f"🏁 목표 회차({target_ep}화) 도달. 종료합니다.")
                 break
@@ -1148,6 +1181,7 @@ JSON으로 출력:
                 except Exception as e:
                     logging.warning("[TF-26] state_extractor cumulative_state failed: %s", str(e)[:100])
 
+            self._set_agent_telemetry_context(ep_num=ep_num)
             new_bp, _ = bp_agent.generate(
                 ep_num=ep_num,
                 arc_data=arc_data,

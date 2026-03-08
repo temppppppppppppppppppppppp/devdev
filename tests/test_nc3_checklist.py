@@ -6,7 +6,7 @@ import logging
 
 from modules.core.response_schemas import DIRECTOR_AUDIT_SCHEMA
 
-# ── 체크리스트 12개 키 정의 ──────────────────────────────────
+# ── 체크리스트 13개 키 정의 ──────────────────────────────────
 NC3_KEYS = [
     "numeric_accuracy",
     "arithmetic",
@@ -20,6 +20,7 @@ NC3_KEYS = [
     "opening_diversity",
     "timeline_arc_consistency",  # [NS-4] Arc 간 시간 연속성
     "fiction_term_leak",          # [TF-57-A] 집필 시스템 내부 용어 누출
+    "scene_variety",             # [TF-J] 씬 장소/인물 다양성
 ]
 
 
@@ -33,7 +34,7 @@ def test_director_yaml_has_checklist_format():
     assert "consistency_checklist" in variable, "ENSEMBLE_VARIABLE_PROMPT에 consistency_checklist 누락"
 
 
-# ── 2. director.yaml에 12개 항목 지시 텍스트 존재 ──
+# ── 2. director.yaml에 NC-3 지시 텍스트 존재 ──
 def test_director_yaml_has_checklist_instructions():
     """director.yaml ENSEMBLE_VARIABLE_PROMPT에 NC-3 체크 지시 텍스트가 포함되어 있는지 확인"""
     from modules.core.prompt_loader import PromptLoader
@@ -44,9 +45,9 @@ def test_director_yaml_has_checklist_instructions():
     assert "일관성 체크리스트" in variable
 
 
-# ── 3. director.yaml에 12개 key 전량 포함 ──
-def test_director_yaml_has_all_12_keys():
-    """director.yaml의 출력 형식에 12개 key가 모두 포함되어 있는지 확인"""
+# ── 3. director.yaml에 13개 key 전량 포함 ──
+def test_director_yaml_has_all_13_keys():
+    """director.yaml의 출력 형식에 13개 key가 모두 포함되어 있는지 확인"""
     from modules.core.prompt_loader import PromptLoader
 
     loader = PromptLoader()
@@ -62,9 +63,9 @@ def test_schema_has_consistency_checklist():
     assert "consistency_checklist" in props, "DIRECTOR_AUDIT_SCHEMA에 consistency_checklist 누락"
 
 
-# ── 5. 스키마에 12개 key 전량 포함 ──
-def test_schema_has_all_12_keys():
-    """consistency_checklist 스키마에 12개 key가 모두 포함되어 있는지 확인"""
+# ── 5. 스키마에 13개 key 전량 포함 ──
+def test_schema_has_all_13_keys():
+    """consistency_checklist 스키마에 13개 key가 모두 포함되어 있는지 확인"""
     checklist_schema = DIRECTOR_AUDIT_SCHEMA.properties["consistency_checklist"]
     for key in NC3_KEYS:
         assert key in checklist_schema.properties, f"스키마에 key '{key}' 누락"
@@ -111,6 +112,14 @@ def test_checklist_propagated_in_return():
     _apply_nc3_logic(result, score=95)
     assert "consistency_checklist" in result
     assert result["consistency_checklist"] == checklist
+
+
+def test_nc3_keys_includes_scene_variety():
+    """director_ensemble._nc3_keys에 scene_variety가 포함되어 있는지 확인."""
+    import pathlib
+
+    src = pathlib.Path("modules/domain/agents/director_ensemble.py").read_text(encoding="utf-8")
+    assert '"scene_variety"' in src
 
 
 # ── 10. ISSUE 2건 → 경고 로깅만, 감점 없음 ──

@@ -574,7 +574,8 @@ class ConstraintDB:
         state_constraints = arc_data.get("state_constraints") or {}  # [V70] null → {} 방어
         if not isinstance(state_constraints, dict):
             state_constraints = {}  # LLM이 문자열 반환 시 방어
-        new_acquired = state_constraints.get("items_acquired") or []  # [V70]
+        # [BUG-F] protagonist_items 우선 폴백
+        new_acquired = state_constraints.get("protagonist_items") or state_constraints.get("items_acquired") or []  # [V70]
 
         # [V49.4] Semantic Registry를 사용한 고급 중복 감지
         if self.item_registry and new_acquired:

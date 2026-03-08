@@ -51,7 +51,7 @@ class TestArcPatchMode:
         """패치 모드 정상 동작 — ensemble이 유효한 arc를 반환하면 PASS."""
         patched_arc = {**sample_arc, "tactical_doc": "수정된 전술서"}
 
-        arc_generator.ensemble.generate_ensemble.return_value = (patched_arc, [patched_arc])
+        arc_generator.ensemble.generate_ensemble.return_value = (None, [patched_arc])
         arc_generator.validator.validate.return_value = ("PASS", {"issues": [], "confidence": 90})
         arc_generator.preflight.analyze.return_value = {}
         arc_generator.preflight.generate_analyst_injection.return_value = ""
@@ -104,7 +104,7 @@ class TestArcPatchMode:
         """패치 후 검증 REJECT 시 (None, pipeline_result) 반환."""
         patched_arc = {**sample_arc, "tactical_doc": "수정된 전술서"}
 
-        arc_generator.ensemble.generate_ensemble.return_value = (patched_arc, [patched_arc])
+        arc_generator.ensemble.generate_ensemble.return_value = (None, [patched_arc])
         arc_generator.validator.validate.return_value = (
             "REJECT",
             {"issues": [{"issue": "문제"}], "feedback": "재설계"},
@@ -133,7 +133,7 @@ class TestArcPatchMode:
         """YAML 로드 실패 시 인라인 폴백으로 패치 프롬프트 생성."""
         patched_arc = {**sample_arc, "tactical_doc": "인라인 패치"}
 
-        arc_generator.ensemble.generate_ensemble.return_value = (patched_arc, [patched_arc])
+        arc_generator.ensemble.generate_ensemble.return_value = (None, [patched_arc])
         arc_generator.validator.validate.return_value = ("PASS", {"issues": []})
         arc_generator.preflight.analyze.return_value = {}
         arc_generator.preflight.generate_analyst_injection.return_value = ""

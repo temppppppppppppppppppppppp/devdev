@@ -1,4 +1,4 @@
-"""FastAPI 브리지 스켈레톤 — bridge_server.py (스파이크 3)
+"""FastAPI 브리지 — bridge_server.py (실체화)
 
 역할:
 - POST /run      → T4(RunValidator) + T6(RiskApprovalGate) + ProcessRunner.start()
@@ -17,47 +17,25 @@
 
 from __future__ import annotations
 
-import importlib.util
 import itertools
-import json
 import logging
 import uuid
 from contextlib import asynccontextmanager
-from datetime import datetime, timezone
-from pathlib import Path
-from typing import List, Optional
+from datetime import UTC, datetime
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import JSONResponse
 
-from modules.api.run_validator import validate_run_request, RISK_KEYS
+from modules.api.process_runner import MODE_B_KEYS, PROJECT_ROOT, ProcessRunner
+from modules.api.prompt_classifier import classify as classify_prompt
 from modules.api.risk_approval import RiskApprovalGate
-from modules.api.process_runner import ProcessRunner
+from modules.api.run_validator import RISK_KEYS, validate_run_request
 
 logger = logging.getLogger(__name__)
 
-# ─── T5 PromptBroker — importlib 경로 로드 ───────────────────────────────────
-# docs/implementation/prompt_broker.py 는 패키지가 아닌 독립 파일이므로
-# importlib.util.spec_from_file_location 으로 직접 임포트.
+# ─── T5 PromptBroker ──────────────────────────────────────────────────────────
 
-_BROKER_PATH = Path(__file__).parent.parent.parent / "docs" / "implementation" / "prompt_broker.py"
-
-def _load_prompt_broker_cls():
-    if not _BROKER_PATH.exists():
-        logger.warning("PromptBroker 파일 없음: %s — Mode B 비활성", _BROKER_PATH)
-        return None
-    try:
-        spec = importlib.util.spec_from_file_location("_prompt_broker", _BROKER_PATH)
-        mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mod)
-        return mod.PromptBroker, mod.PromptState
-    except Exception:
-        logger.exception("PromptBroker 로드 실패 — Mode B 비활성")
-        return None
-
-_broker_classes = _load_prompt_broker_cls()
-PromptBroker = _broker_classes[0] if _broker_classes else None
-PromptState = _broker_classes[1] if _broker_classes else None
+from modules.api.prompt_broker import PromptBroker, PromptState
 
 # ─── seq 카운터 (전역, 단조 증가) ────────────────────────────────────────────
 _seq_iter = itertools.count(1)
@@ -66,7 +44,7 @@ def _next_seq() -> int:
     return next(_seq_iter)
 
 def _ts() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S+00:00")
+    return datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%S+00:00")
 
 # ─── WS 연결 관리자 ──────────────────────────────────────────────────────────
 
@@ -74,7 +52,7 @@ class WSManager:
     """연결된 WebSocket 클라이언트 목록 유지 + 브로드캐스트."""
 
     def __init__(self) -> None:
-        self._connections: List[WebSocket] = []
+        self._connections: list[WebSocket] = []
 
     async def connect(self, ws: WebSocket) -> None:
         await ws.accept()
@@ -90,7 +68,7 @@ class WSManager:
 
     async def broadcast(self, event: dict) -> None:
         """event-schema-v1.json 형식 dict를 모든 클라이언트에 전송."""
-        dead: List[WebSocket] = []
+        dead: list[WebSocket] = []
         for ws in list(self._connections):
             try:
                 await ws.send_json(event)
@@ -136,7 +114,7 @@ def _accepted(run_id: str, message: str = "accepted") -> dict:
 def _ok(message: str = "ok") -> dict:
     return {"ok": True, "code": "OK", "message": message, "data": None}
 
-def _err(code: str, message: str, run_id: Optional[str] = None) -> dict:
+def _err(code: str, message: str, run_id: str | None = None) -> dict:
     return {"ok": False, "run_id": run_id, "code": code, "message": message, "data": None}
 
 # ─── 앱 수명주기 ──────────────────────────────────────────────────────────────
@@ -147,15 +125,11 @@ async def lifespan(app: FastAPI):
     runner = ProcessRunner()
     risk_gate = RiskApprovalGate()
 
-    if PromptBroker is not None:
-        broker = PromptBroker(
-            emit_fn=ws_manager.emit_sync,
-            seq_counter_fn=_next_seq,
-        )
-        logger.info("PromptBroker 활성화 — Mode B 사용 가능")
-    else:
-        broker = None
-        logger.warning("PromptBroker 없음 — Mode B 비활성")
+    broker = PromptBroker(
+        emit_fn=ws_manager.emit_sync,
+        seq_counter_fn=_next_seq,
+    )
+    logger.info("PromptBroker 활성화 — Mode B 사용 가능")
 
     app.state.ws_manager = ws_manager
     app.state.runner = runner
@@ -165,7 +139,7 @@ async def lifespan(app: FastAPI):
     yield
 
     # 종료 정리
-    runner.stop()
+    await runner.stop()
     logger.info("bridge_server 종료")
 
 # ─── FastAPI 앱 ───────────────────────────────────────────────────────────────
@@ -195,8 +169,8 @@ async def run_endpoint(request: Request) -> JSONResponse:
         return JSONResponse(status_code=400, content=_err("INVALID_KEY", "request body must be valid JSON"))
 
     key: str = str(body.get("key", ""))
-    sub_key: Optional[str] = body.get("sub_key") or None
-    approval_id: Optional[str] = body.get("approval_id") or None
+    sub_key: str | None = body.get("sub_key") or None
+    approval_id: str | None = body.get("approval_id") or None
     inputs: dict = body.get("inputs") or {}
 
     # T4: key / sub_key / 실행 상태 검증
@@ -211,7 +185,67 @@ async def run_endpoint(request: Request) -> JSONResponse:
             return JSONResponse(status_code=approval.http_status, content=_err(approval.code, approval.message))
 
     run_id = str(uuid.uuid4())
-    runner.start(key=key, run_id=run_id, sub_key=sub_key, inputs=inputs)
+    broker: PromptBroker = request.app.state.prompt_broker
+    use_mode_b = key in MODE_B_KEYS
+
+    # stdout/exit 콜백 → WS 이벤트 브로드캐스트
+    async def _on_line(text: str) -> None:
+        await ws_manager.broadcast(_build_event(run_id, "stdout", {"text": text}))
+
+    async def _on_exit(returncode: int) -> None:
+        etype = "run_completed" if returncode == 0 else "run_failed"
+        await ws_manager.broadcast(
+            _build_event(run_id, etype, {"returncode": returncode})
+        )
+        broker.cleanup_run(run_id)
+
+    # Mode B: 프롬프트 감지 → PromptBroker → WS → UI → stdin
+    async def _on_prompt(prompt_text: str, context_lines: list[str]) -> None:
+        meta = classify_prompt(prompt_text, context_lines)
+        prompt_id = str(uuid.uuid4())
+        prompt_state = PromptState(
+            prompt_id=prompt_id,
+            step_id=meta["step_id"],
+            input_type=meta["input_type"],
+            default=meta["default"],
+            timeout_sec=300,
+            options=meta.get("options"),
+        )
+        # prompt_text도 payload에 포함 (UI 렌더링용)
+        prompt_state.prompt_text = meta["prompt_text"]
+
+        # broker가 prompt_request WS 이벤트 발행 + 사용자 응답 대기
+        value = await broker.request_input(run_id, prompt_state)
+        # 응답을 subprocess stdin에 전달
+        await runner.write_stdin(str(value) if value is not None else "")
+
+    try:
+        await runner.start(
+            key=key,
+            run_id=run_id,
+            sub_key=sub_key,
+            inputs=inputs,
+            on_line=_on_line,
+            on_exit=_on_exit,
+            on_prompt=_on_prompt if use_mode_b else None,
+        )
+    except FileNotFoundError as exc:
+        return JSONResponse(
+            status_code=500,
+            content=_err("INTERNAL_ERROR", str(exc), run_id),
+        )
+    except RuntimeError as exc:
+        return JSONResponse(
+            status_code=409,
+            content=_err("RUN_ALREADY_ACTIVE", str(exc), run_id),
+        )
+    except Exception as exc:
+        logger.exception("ProcessRunner start failed run_id=%r", run_id)
+        return JSONResponse(
+            status_code=500,
+            content=_err("INTERNAL_ERROR", "subprocess start failed", run_id),
+        )
+
     logger.info("RUN_STARTED run_id=%r key=%r", run_id, key)
 
     # run_started 이벤트 브로드캐스트
@@ -229,9 +263,7 @@ async def resolve_prompt(run_id: str, request: Request) -> JSONResponse:
     400 — INVALID_PROMPT_ID
     409 — PROMPT_ALREADY_RESOLVED
     """
-    broker = request.app.state.prompt_broker
-    if broker is None:
-        return JSONResponse(status_code=400, content=_err("INVALID_PROMPT_ID", "Mode B is not available"))
+    broker: PromptBroker = request.app.state.prompt_broker
 
     try:
         body = await request.json()
@@ -263,7 +295,8 @@ async def stop_endpoint(request: Request) -> JSONResponse:
     ws_manager: WSManager = request.app.state.ws_manager
     run_id = runner.run_id or "unknown"
 
-    runner.stop()
+    await runner.stop()
+    await ws_manager.broadcast(_build_event(run_id, "run_stopped", {}))
     logger.info("STOP run_id=%r", run_id)
 
     return JSONResponse(status_code=200, content=_ok("stopped"))

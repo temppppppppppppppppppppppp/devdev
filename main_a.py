@@ -1453,6 +1453,21 @@ class SovereignApp:
         Weaver = _agents["Weaver"]
         Writer = _agents["Writer"]
 
+        _flash_ask_cb = None
+        if bool(_val_threshold("investment_math.flash_enabled", True)):
+            try:
+                _flash_client = self.sys.api_client
+
+                def _flash_ask_cb(prompt: str, _c=_flash_client) -> str:
+                    resp = _c.models.generate_content(
+                        model=AIModels.FLASH_ANALYSIS_MODEL,
+                        contents=prompt,
+                    )
+                    return resp.text or ""
+            except Exception as _flash_init_err:
+                logging.warning("[Codex F] flash_ask 콜백 준비 실패: %s", str(_flash_init_err)[:120])
+                _flash_ask_cb = None
+
         self.agents = {
             "analyst": Analyst(self.current_project, self.sys.api_client, model_tier=models.get("analyst", default_model)),
             # [V65] Architect 삭제 (ThreePhaseBlueprintGenerator로 완전 대체)
@@ -1484,7 +1499,10 @@ class SovereignApp:
             ),
             # [V60.12] FourPhaseArcGenerator - 4단계 Arc 생성 파이프라인 (초기 통과율 극대화)
             "four_phase": FourPhaseArcGenerator(
-                self.current_project, self.sys.api_client, model_tier=AIModels.STAGE2_MAIN_MODEL
+                self.current_project,
+                self.sys.api_client,
+                model_tier=AIModels.STAGE2_MAIN_MODEL,
+                flash_ask=_flash_ask_cb,
             ),
             # [V60.14] StateLockedArcGenerator - 상태 잠금 Arc 생성기 (구조적 모순 불가)
             "state_locked": StateLockedArcGenerator(

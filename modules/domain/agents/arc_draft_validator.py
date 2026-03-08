@@ -202,7 +202,8 @@ class ArcDraftValidator:
         # [V60.41] 필수 필드는 WARNING으로 변경 (재생성으로 해결 가능)
         required_fields = ["arc_no", "tactical_doc", "joint_docs", "state_constraints", "ep_start", "ep_end"]
         # [V60.42 Fix] 중요 필드 정의 추가
-        required_important = ["ep_count", "items_acquired", "grants_received"]
+        # [BUG-F] protagonist_items도 허용 (API 스키마 정합)
+        required_important = ["ep_count", "items_acquired", "protagonist_items", "grants_received"]
 
         for field in required_fields:
             if field not in arc or not arc[field]:
@@ -231,7 +232,9 @@ class ArcDraftValidator:
         all_acquired = set()
         for prev_arc in prev_arcs:
             # state_constraints.items_acquired
-            items = prev_arc.get("state_constraints", {}).get("items_acquired", [])
+            # [BUG-F] protagonist_items 우선 폴백
+            _psc_adv = prev_arc.get("state_constraints", {})
+            items = _psc_adv.get("protagonist_items") or _psc_adv.get("items_acquired", [])
             if isinstance(items, list):
                 all_acquired.update(_ikey(i) for i in items)
 
@@ -252,7 +255,9 @@ class ArcDraftValidator:
                         all_acquired.add(item)
 
         # 현재 Arc의 획득 아이템
-        current_items = arc.get("state_constraints", {}).get("items_acquired", [])
+        # [BUG-F] protagonist_items 우선 폴백
+        _csc_dup = arc.get("state_constraints", {})
+        current_items = _csc_dup.get("protagonist_items") or _csc_dup.get("items_acquired", [])
         if not isinstance(current_items, list):
             current_items = [current_items] if isinstance(current_items, str) else []
         tactical = self._safe_tactical(arc)
@@ -742,7 +747,9 @@ class ArcDraftValidator:
             forbidden_items.extend(items)
 
         # 현재 Arc의 획득 아이템과 비교
-        items_acquired = arc.get("state_constraints", {}).get("items_acquired", [])
+        # [BUG-F] protagonist_items 우선 폴백
+        _sc_forb = arc.get("state_constraints", {})
+        items_acquired = _sc_forb.get("protagonist_items") or _sc_forb.get("items_acquired", [])
         if not isinstance(items_acquired, list):
             items_acquired = []
         tactical = self._safe_tactical(arc)

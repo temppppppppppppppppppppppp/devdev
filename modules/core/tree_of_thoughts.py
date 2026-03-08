@@ -709,7 +709,8 @@ Volume 전략: {self._escape(vol_strategy[:2000] if vol_strategy else "(없음)"
 
         # state_constraints 검증
         state = arc.get("state_constraints", {})
-        if state.get("items_acquired"):
+        # [BUG-F] protagonist_items 우선 폴백
+        if state.get("protagonist_items") or state.get("items_acquired"):
             score += 5
         if state.get("grants_received"):
             score += 5

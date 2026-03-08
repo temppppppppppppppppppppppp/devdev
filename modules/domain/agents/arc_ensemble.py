@@ -19,7 +19,11 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from concurrent.futures import TimeoutError as FutureTimeoutError
 
 from modules.core.constants import GenreTypes, Stage2Limits
-from modules.core.genre_schema_builder import build_state_constraints_schema, build_status_shadow_schema, get_item_suffixes
+from modules.core.genre_schema_builder import (
+    build_state_constraints_schema,
+    build_status_shadow_schema,
+    get_item_suffixes,
+)
 from modules.core.prompt_loader import PromptLoader
 from modules.core.response_schemas import ARC_DESIGN_SCHEMA  # [TF11] response_schema 확대
 
@@ -70,6 +74,39 @@ def _extract_forbidden_items(constraint_block: str) -> list[str]:
     return items
 
 
+def _build_block_event_guard(curr_block: dict | None, max_field_len: int = 260) -> str:
+    """현재 블록의 핵심 사건 요약을 추출해 블록 경계 가이드를 강화한다."""
+    if not isinstance(curr_block, dict):
+        return ""
+
+    content = curr_block.get("content")
+    if not isinstance(content, dict):
+        content = {}
+
+    lines: list[str] = []
+    for key in ("context", "event_villain", "solution", "reward"):
+        raw = content.get(key)
+        if raw is None:
+            raw = curr_block.get(key)
+        if raw is None:
+            continue
+        text = re.sub(r"\s+", " ", str(raw)).strip()
+        if not text:
+            continue
+        if len(text) > max_field_len:
+            text = f"{text[:max_field_len].rstrip()}..."
+        lines.append(f"- {key}: {text}")
+
+    if not lines:
+        return ""
+
+    return (
+        "### [이번 Arc에서 다룰 블록 핵심 사건 목록]\n"
+        "아래 항목은 현재 블록에서만 허용되는 사건 출처입니다:\n"
+        + "\n".join(lines)
+    )
+
+
 # ── [장르별 에너지 시스템 블록] ──────────────────────────────────────
 _WUXIA_ENERGY_BLOCK = """\
   ### [V62.2] 🩹 주인공 자연 회복 원칙 (무협 전용)
@@ -103,6 +140,13 @@ def _build_non_wuxia_energy_block(genre: str, critical_keys: list[str] | None = 
   - 주인공은 소설 주인공이다. 절대 약해지지 않는다.
   - 아크 시작: 부상="없음". 예외 없음.
   - ⚠️ 이 장르는 내공/기력 시스템이 없음. "내공" 표현 절대 금지.
+
+  ### [NR-1] 정신적 피로 자연 회복 원칙 (비무협 장르)
+  - 정신적 마모/스트레스/피로는 물리적 부상이 아니다. 일상적 활동으로 자연 회복된다.
+  - 회복 경로: 수면, 식사, 산책, 대화, 취미, 음주, 휴식 등 — 1문장 언급이면 충분.
+  - Arc 내에서 정신적 피로가 화를 거듭하며 악화만 하는 것은 금지. 반드시 회복 구간을 설계하라.
+  - 회복 없이 정신적 마모가 3화 연속 누적되면 REJECT 사유.
+  - 병원/정신과 방문은 선택사항이지 필수가 아니다. 일상적 회복이 기본이다.
 
   ### [V60.40] 화간 상태 체크포인트 필수
   각 화는 반드시 시작 상태와 종료 상태를 명시하라:
@@ -373,12 +417,11 @@ class ArcEnsembleGenerator(BaseAgent):
         # 점수순 정렬
         scored_candidates.sort(key=lambda x: x.get("_score", 0), reverse=True)
 
-        best = scored_candidates[0]
-        # [V60.37] 타입 안전성
-        best_tactical = best.get("tactical_doc", "")
-        tactical_len = (
-            len(best_tactical) if isinstance(best_tactical, str) else len(str(best_tactical)) if best_tactical else 0
-        )
+        # [TF-S2] 구조 결함만 필터링하고 최종 선택은 Director에게 위임
+        STRUCTURAL_MIN_SCORE = 50
+        valid_candidates = [c for c in scored_candidates if c.get("_score", 0) >= STRUCTURAL_MIN_SCORE]
+        if not valid_candidates:
+            valid_candidates = scored_candidates[:1]  # 최소 1개 폴백
 
         # [V61.3] 후보별 점수 비교 출력
         logging.warning(" [Ensemble] 후보 비교:")
@@ -390,21 +433,26 @@ class ArcEnsembleGenerator(BaseAgent):
             score = c.get("_score", 0)
             issues = c.get("_issues", [])
             issue_summary = f" - {issues[0][:40]}..." if issues else ""
-            marker = "→" if c is best else " "
+            marker = "✓" if c in valid_candidates else "×"
             logging.info(f"{marker} {strategy}: {score}점{issue_summary}")
-            _pick = "→" if c is best else " "
-            print(f"        {_pick} {strategy}: {score}점{issue_summary}")
-        logging.info(f"→ {best.get('_strategy')} 선택 (tactical: {tactical_len}자)")
-        print(f"      🏆 [Arc] '{best.get('_strategy')}' 선택 ({tactical_len}자)")
+            print(f"        {marker} {strategy}: {score}점{issue_summary}")
+        logging.info(
+            " [TF-S2] Python은 선택하지 않음 — 유효 후보 %d개를 Director 비교 단계로 전달",
+            len(valid_candidates),
+        )
 
-        # [V60.74] 메타데이터 보존 (디버깅용) - _ensemble_meta에 저장
-        ensemble_meta = {
-            "best_strategy": best.get("_strategy", "unknown"),
-            "best_score": best.get("_score", 0),
-            "all_scores": [(c.get("_strategy", "?"), c.get("_score", 0)) for c in scored_candidates],
-            "total_candidates": len(scored_candidates),
-        }
-        best["_ensemble_meta"] = ensemble_meta
+        # [V60.74] 메타데이터 보존 (디버깅용) - 반환 후보 각각에 저장
+        all_scores = [(c.get("_strategy", "?"), c.get("_score", 0)) for c in scored_candidates]
+        for idx, candidate in enumerate(valid_candidates):
+            candidate["_ensemble_meta"] = {
+                "best_strategy": candidate.get("_strategy", "unknown"),  # 하위 호환 유지
+                "best_score": candidate.get("_score", 0),  # 하위 호환 유지
+                "all_scores": all_scores,
+                "total_candidates": len(valid_candidates),
+                "candidate_index": idx,
+                "strategy": candidate.get("_strategy", "unknown"),
+                "score": candidate.get("_score", 0),
+            }
 
         # 메타데이터 제거 후 반환 (단, _ensemble_meta·_strategy는 유지)
         for c in scored_candidates:
@@ -412,7 +460,8 @@ class ArcEnsembleGenerator(BaseAgent):
             c.pop("_score", None)
             c.pop("_issues", None)
 
-        return best, scored_candidates
+        # [TF-S2] Python은 최종 후보를 고르지 않는다.
+        return None, valid_candidates
 
     def _generate_single(
         self,
@@ -484,8 +533,14 @@ class ArcEnsembleGenerator(BaseAgent):
                 if ge and isinstance(ge, dict):
                     lines = [
                         "### [장르 특화 정보 - genre_ext]",
-                        "이 블록의 장르 고유 데이터입니다. Arc 설계 시 반드시 반영하세요:",
+                        "아래 값은 Arc tactical_doc/state_constraints에 반드시 반영해야 합니다:",
                     ]
+                    if ge.get("capital_after"):
+                        lines.append(
+                            f"- [필수] arc_end_state의 capital/total_assets는 target `{ge.get('capital_after')}`"
+                            "와 크게 괴리되지 않게 유지하세요 (권장 ±30%)."
+                        )
+                        lines.append("- [금지] 블록 DNA에 없는 대규모 자금 유입/차입으로 수치를 임의 상향하지 마세요.")
                     for k, v in ge.items():
                         lines.append(f"- **{k}**: {v}")
                     genre_ext_guide = "\n".join(lines)
@@ -517,6 +572,7 @@ class ArcEnsembleGenerator(BaseAgent):
                         "callback은 이전 복선이 회수되는 씬을 명시하고, "
                         "emotional_beat/tension_level은 화별 감정 밀도 설계에 반영하세요:\n" + "\n".join(_ext_parts)
                     )
+            block_event_guard = _build_block_event_guard(curr_block)
 
             _use_cached_context = bool(cache_name)
             _cached_context_stub = "[context cached: refer to cached_content]"
@@ -552,6 +608,7 @@ class ArcEnsembleGenerator(BaseAgent):
                     _cached_context_stub if _use_cached_context else (prev_arc_context or "시작점")
                 ),
                 curr_block=self._escape_braces(json.dumps(curr_block, ensure_ascii=False) if curr_block else "{}"),
+                block_event_guard=self._escape_braces(block_event_guard),
                 genre_ext_guide=self._escape_braces(genre_ext_guide),
                 extended_block_guide=self._escape_braces(extended_block_guide),  # [TF-9]
                 vol_strategy=self._escape_braces(vol_strategy[:6000] if vol_strategy else "(없음)"),
@@ -579,6 +636,7 @@ class ArcEnsembleGenerator(BaseAgent):
                     constraint_block=self._escape_braces(constraint_block or "(없음)"),
                     prev_arc_context=self._escape_braces(prev_arc_context or "시작점"),
                     curr_block=self._escape_braces(json.dumps(curr_block, ensure_ascii=False) if curr_block else "{}"),
+                    block_event_guard=self._escape_braces(block_event_guard),
                     genre_ext_guide=self._escape_braces(genre_ext_guide),
                     extended_block_guide=self._escape_braces(extended_block_guide),  # [TF-9]
                     vol_strategy=self._escape_braces(
@@ -664,7 +722,9 @@ class ArcEnsembleGenerator(BaseAgent):
         # 2. 제약 조건 준수 (30점)
         if constraint_block or forbidden_items or candidate.get("_forbidden_items"):
             # 획득 금지 아이템 검사
-            items_acquired = candidate.get("state_constraints", {}).get("items_acquired", [])
+            # [BUG-F] protagonist_items 우선 폴백
+            _sc = candidate.get("state_constraints", {})
+            items_acquired = _sc.get("protagonist_items") or _sc.get("items_acquired", [])
             tactical = candidate.get("tactical_doc", "")
             # [V60.37] 타입 안전성
             if not isinstance(tactical, str):

@@ -332,7 +332,16 @@ class WorldStateManager:
                         "known_attrs": {},
                     }
                 attrs = {k: v for k, v in intro.items() if k not in ("name", "episode")}
-                self._state["alive_npcs"][name].setdefault("known_attrs", {}).update(attrs)
+                _ka = self._state["alive_npcs"][name].setdefault("known_attrs", {})
+                _ka.update(attrs)
+                # [CON-2-FIX] job/position 필드를 known_attrs.position에 구조화 저장
+                _pos = intro.get("position", "") or intro.get("job", "")
+                if _pos:
+                    _ka["position"] = {
+                        "value": _pos,
+                        "prev": "",
+                        "changed_ep": intro.get("episode", ep_num),
+                    }
 
         except Exception as e:
             _logger.error("[WorldState] §10 NPC 초기 속성 처리 실패: %s", e)

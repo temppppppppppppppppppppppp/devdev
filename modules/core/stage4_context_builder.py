@@ -138,6 +138,59 @@ class Stage4ContextBuilder:
 
         return names[:50]
 
+    @staticmethod
+    def _suggest_ambient_npcs(blueprint: dict) -> str:
+        """[TF-J] Blueprint 씬 장소 기반 배경 인물 힌트 생성."""
+        if not isinstance(blueprint, dict):
+            return ""
+
+        _location_hints = {
+            "사무실": "직원, 비서, 인턴, 배달 기사",
+            "오피스": "직원, 비서, 인턴, 배달 기사",
+            "카페": "바리스타, 다른 손님, 종업원",
+            "레스토랑": "웨이터, 소믈리에, 다른 손님",
+            "호텔": "프론트 직원, 벨보이, 컨시어지",
+            "병원": "간호사, 접수 직원, 다른 환자",
+            "거래소": "트레이더, 브로커, 경비원",
+            "증권": "영업 직원, 애널리스트, 다른 투자자",
+            "은행": "은행원, 지점장, 대기 고객",
+            "법원": "서기, 변호사, 방청객",
+            "공항": "승무원, 세관 직원, 다른 승객",
+            "택시": "택시 기사",
+            "거리": "행인, 노점상, 경찰",
+            "학교": "교사, 학생, 교직원",
+            "본가": "집사, 가사 도우미, 경호원",
+            "저택": "집사, 가사 도우미, 경호원",
+        }
+
+        hints: list[str] = []
+        scene_breakdown = blueprint.get("scene_breakdown", {})
+        if not isinstance(scene_breakdown, dict):
+            return ""
+
+        for scene_key in sorted(scene_breakdown.keys()):
+            scene = scene_breakdown.get(scene_key)
+            if not isinstance(scene, dict):
+                continue
+            location = str(scene.get("location", "") or "")
+            matched_roles: list[str] = []
+            for keyword, npc_roles in _location_hints.items():
+                if keyword in location:
+                    matched_roles.extend(role.strip() for role in str(npc_roles).split(",") if role.strip())
+            if matched_roles:
+                dedup_roles = ", ".join(dict.fromkeys(matched_roles))
+                hints.append(f"  {scene_key} ({location[:30]}): {dedup_roles}")
+
+        if not hints:
+            return ""
+
+        return (
+            "[TF-J 배경 인물 힌트]\n"
+            "아래는 각 씬 장소에 자연스러운 배경 인물 후보입니다. "
+            "이름 없이 역할만으로 활용하세요. 반드시 사용할 필요는 없습니다.\n"
+            + "\n".join(hints)
+        )
+
     def _execute_retrieval_plan(self, plan: "RetrievalPlan", arc_no: int | None = None) -> list[str]:
         """Execute retrieval plan slots and return context sections."""
         memory = getattr(self.ctx, "memory", None)
@@ -903,6 +956,10 @@ class Stage4ContextBuilder:
             )
 
         _mc_parts = [mandatory_context] if mandatory_context else []
+
+        _ambient_npc_hint = self._suggest_ambient_npcs(blueprint or {})
+        if _ambient_npc_hint:
+            _mc_parts.append(_ambient_npc_hint)
 
         _arc_cs = arc_data.get("constraint_summary", "") if arc_data else ""
         if _arc_cs:

@@ -367,6 +367,17 @@ class Stage2Finalizer:
             logging.warning(f"[SilentPass:Stage2Finalizer] 스토리 컨텍스트 생성 실패: {e!s:.100}")
             _story_context = ""
 
+        # [BUG-B] NS-2 advisory를 Director 선택 시점 story_context에 선주입
+        if isinstance(enriched_block, dict):
+            _genre_ext = enriched_block.get("genre_ext", {})
+            if isinstance(_genre_ext, dict):
+                _target_capital = _genre_ext.get("capital_after")
+                if _target_capital:
+                    _story_context += (
+                        f"\n\n[NS-2 참고] Treatment 블록 목표 자본: {_target_capital}. "
+                        "Arc 설계 자본이 목표에서 과도하게 벗어나지 않도록 주의하십시오."
+                    )
+
         # [TF-25-09] ArcAutoCorrector 수정 내역을 Director advisory로 주입
         if constraint_block and "[Python 자동 수정" in constraint_block:
             _corr_start = constraint_block.find("[Python 자동 수정")
@@ -803,7 +814,8 @@ class Stage2Finalizer:
                         else:
                             consumed_names = []
                         state_constraints = refined_arc.get("state_constraints", {})
-                        acquired = state_constraints.get("items_acquired", [])
+                        # [BUG-F] protagonist_items 우선 폴백
+                        acquired = state_constraints.get("protagonist_items") or state_constraints.get("items_acquired", [])
                         if isinstance(acquired, str):
                             acquired = [acquired] if acquired else []
                         elif not isinstance(acquired, list):

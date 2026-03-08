@@ -205,6 +205,14 @@ def test_meta_wall_arc_detected():
     assert issues[0]["type"] == "meta_wall"
 
 
+def test_meta_wall_arc_without_number_detected():
+    """'이전 Arc 종료' 같은 Arc+비숫자 메타 용어도 감지."""
+    gate = _make_quality_gate()
+    issues = gate._check_system_term_exposure("이전 Arc 종료 후 약 2주가 흘렀다.", genre="투자물")
+    assert len(issues) == 1
+    assert issues[0]["type"] == "meta_wall"
+
+
 def test_meta_wall_clean_no_issue():
     """시스템 용어 없는 원고는 이슈 없음."""
     gate = _make_quality_gate()

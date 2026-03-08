@@ -51,6 +51,40 @@ class Stage3Orchestrator:
     def ctx(self, value):
         self._ctx = value
 
+    def _set_agent_telemetry_context(self, *, ep_num: int | None = None) -> None:
+        """[LOG-Phase2] BaseAgent llm_calls stage/ep 메타데이터 주입."""
+        agents = getattr(self.ctx, "agents", None)
+        if not isinstance(agents, dict):
+            return
+
+        _ep_value = None
+        if ep_num is not None:
+            try:
+                _ep_value = max(0, int(ep_num))
+            except (TypeError, ValueError):
+                _ep_value = None
+
+        # 서브 에이전트 포함 전체 순회
+        _all_agents = list(agents.values())
+        _three_phase_bp = agents.get("three_phase_bp")
+        if _three_phase_bp is not None:
+            _sub = getattr(_three_phase_bp, "ensemble", None)
+            if _sub is not None:
+                _all_agents.append(_sub)
+
+        for agent in _all_agents:
+            if agent is None:
+                continue
+            try:
+                setattr(agent, "_current_stage", 3)
+            except Exception:
+                pass
+            if _ep_value is not None:
+                try:
+                    setattr(agent, "_current_ep_num", _ep_value)
+                except Exception:
+                    pass
+
     # ─────────────────────────────────────────────────────────────
     # Stage 3 메인 진입점
     # ─────────────────────────────────────────────────────────────
@@ -339,6 +373,7 @@ class Stage3Orchestrator:
         ctx.ui.log(
             f"\n   📐 제{working_ep}화 Blueprint 생성 중... (Arc {arc_no}, 주인공: {protagonist_name_for_stage3})"
         )
+        self._set_agent_telemetry_context(ep_num=working_ep)
 
         # [V67.1] protagonist_config 추출
         _bp_protagonist_config = {}
@@ -446,7 +481,11 @@ class Stage3Orchestrator:
         """[NS-4] Arc tactical_doc에서 시간 마커 추출 (regex, LLM 0회)"""
         import re as _re
 
-        _text = (arc_data.get("tactical_doc") or "") + "\n" + (arc_data.get("beat_sequence") or "")
+        _tactical = arc_data.get("tactical_doc") or ""
+        _beats = arc_data.get("beat_sequence") or ""
+        if isinstance(_beats, list):
+            _beats = " ".join(str(b) for b in _beats)
+        _text = str(_tactical) + "\n" + str(_beats)
         _patterns = [
             r"\d{4}년\s*\d{1,2}월(?:\s*\d{1,2}일)?",  # 2006년 7월 12일
             r"\d{1,2}월\s*\d{1,2}일",  # 7월 12일
@@ -457,6 +496,48 @@ class Stage3Orchestrator:
         for _p in _patterns:
             _found.extend(_re.findall(_p, _text))
         return list(dict.fromkeys(_found))[:5]
+
+    def _extract_timeline_start_end(self, arc_data: dict) -> tuple[tuple[int, int] | None, tuple[int, int] | None]:
+        """[NS-4] state_changes.timeline의 시작/종료 시점(연,월) 추출."""
+        import re as _re
+
+        def _parse_point(raw, *, pick: str) -> tuple[int, int] | None:
+            if isinstance(raw, dict):
+                year = raw.get("year")
+                month = raw.get("month")
+                if year is not None and month is not None:
+                    try:
+                        return (int(year), int(month))
+                    except (TypeError, ValueError):
+                        return None
+                return None
+
+            text = str(raw or "").strip()
+            if not text:
+                return None
+            _year_m = _re.search(r"(\d{4})년", text)
+            _year = int(_year_m.group(1)) if _year_m else 0
+            _months = [int(m) for m in _re.findall(r"(\d{1,2})월", text)]
+            if not _months:
+                return None
+            _month = _months[0] if pick == "start" else _months[-1]
+            return (_year, _month)
+
+        timeline = arc_data.get("state_changes", {}).get("timeline", {})
+        if not isinstance(timeline, dict):
+            return None, None
+        return _parse_point(timeline.get("start"), pick="start"), _parse_point(timeline.get("end"), pick="end")
+
+    def _timeline_start_end_raw_equal(self, arc_data: dict) -> bool:
+        """[NS-4] timeline.start/end가 사실상 동일 표현인지 확인."""
+        timeline = arc_data.get("state_changes", {}).get("timeline", {})
+        if not isinstance(timeline, dict):
+            return False
+        start_raw = timeline.get("start")
+        end_raw = timeline.get("end")
+        if not start_raw or not end_raw:
+            return False
+        return str(start_raw).strip() == str(end_raw).strip()
 
     # ─────────────────────────────────────────────────────────────
     # Blueprint 생성 (LLM 호출)
@@ -616,6 +697,23 @@ class Stage3Orchestrator:
                                 _ta_lines.append(f"이전 Arc 종료 시점 마커: {', '.join(_prev_markers)}")
                             if _cur_markers:
                                 _ta_lines.append(f"현재 Arc 시간 마커: {', '.join(_cur_markers)}")
+
+                            # [NS-4] timeline start/end 동일값 경고
+                            if self._timeline_start_end_raw_equal(arc_data):
+                                _ta_lines.append(
+                                    "⚠️ [NS-4] 현재 Arc timeline.start와 end가 동일하게 기입됨 — "
+                                    "시작/종료 시점을 분리해 서술하세요."
+                                )
+
+                            # [NS-4] Arc 시작 시점 역전 경고 (현재 시작 < 이전 시작)
+                            _prev_start, _ = self._extract_timeline_start_end(_prev_arc_data)
+                            _cur_start, _ = self._extract_timeline_start_end(arc_data)
+                            if _prev_start and _cur_start and _prev_start[0] > 0 and _cur_start[0] > 0:
+                                if _cur_start < _prev_start:
+                                    _ta_lines.append(
+                                        "⚠️ [NS-4] Arc timeline 역전 감지 — 현재 Arc 시작 시점이 "
+                                        "이전 Arc 시작 시점보다 과거입니다. 시간 순서를 재점검하세요."
+                                    )
                             _ta_lines.append(
                                 "※ 현재 화에서 과거 사건 언급 시 '며칠 전'/'얼마 전' 같은 표현이 "
                                 "위 시간 간격과 일치하는지 확인하세요."
@@ -940,7 +1038,8 @@ class Stage3Orchestrator:
         # 2. Arc 계획된 신규 아이템 (미보유 중 이번 Arc에서 획득 예정)
         _sc = arc_data.get("state_constraints", {}) if isinstance(arc_data, dict) else {}
         planned = set()
-        for item in _sc.get("items_acquired") or []:
+        # [BUG-F] protagonist_items 우선 폴백
+        for item in (_sc.get("protagonist_items") or _sc.get("items_acquired") or []):
             if item:
                 planned.add(str(item))
         _end_eq = set(_sc.get("arc_end_state", {}).get("equipment", []))

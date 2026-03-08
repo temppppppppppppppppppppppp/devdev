@@ -393,7 +393,7 @@ def build_status_shadow_schema(genre: str, critical_keys: list[str]) -> str:
     label = get_genre_label(genre)
     lines = ['      "status_shadow": {{']
     lines.append(f'          "key_stat_change": "{label} 핵심 수치 변동 요약",')
-    lines.append('          "expected_injuries": "부상/상태 변화 예상",')
+    lines.append('          "expected_injuries": "부상/상태 변화 예상 (정신적 피로는 일상 휴식으로 자연 회복 가능)",')
     lines.append('          "item_consumption": ["사용/소모된 아이템 목록"]')
     lines.append("      }}")
     return "\n".join(lines)

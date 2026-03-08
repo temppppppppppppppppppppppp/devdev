@@ -203,6 +203,19 @@ class TestRunValidation:
         assert isinstance(result["refined_arc"], dict)
 
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    def test_stage2_optimizer_receives_genre(self, pipeline, valid_refined_arc):
+        pipeline._stage2_flow_guard = MagicMock(return_value={"status": "PASS"})
+        pipeline.ctx.stage2_optimizer = MagicMock()
+        pipeline.ctx.stage2_optimizer.post_process_arc.return_value = (valid_refined_arc, [])
+        pipeline.ctx.selected_genre = {"type": "investment"}
+
+        kwargs = self._base_kwargs(valid_refined_arc)
+        result = pipeline.run_validation(**kwargs)
+
+        assert result["action"] == "proceed"
+        assert pipeline.ctx.stage2_optimizer.post_process_arc.call_args.kwargs["genre"] == "investment"
+
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
     def test_consensus_reject_becomes_advisory(self, pipeline, valid_refined_arc):
         """[TF-25-08] Consensus REJECT → advisory로 전환."""
         consensus = MagicMock()

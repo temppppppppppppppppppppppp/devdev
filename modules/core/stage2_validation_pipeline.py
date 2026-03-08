@@ -320,8 +320,12 @@ class Stage2ValidationPipeline:
         # ⚡ [V60.25] Auto-Corrector
         if self.ctx.stage2_optimizer:
             try:
+                _selected_genre = getattr(self.ctx, "selected_genre", None)
+                _genre = _selected_genre.get("type", "") if isinstance(_selected_genre, dict) else ""
                 refined_arc, corrections = self.ctx.stage2_optimizer.post_process_arc(
-                    arc=refined_arc, prev_arcs=all_refined_arcs
+                    arc=refined_arc,
+                    prev_arcs=all_refined_arcs,
+                    genre=_genre,
                 )
                 if corrections:
                     _auto_corrections.extend(corrections)  # [TF-25-09]

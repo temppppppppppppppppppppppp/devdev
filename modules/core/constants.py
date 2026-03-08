@@ -237,7 +237,7 @@ class Stage2Limits:
 
     # 가변 페이싱 범위
     MIN_EP_COUNT = 3  # 최소 화수 (Blitz)
-    MAX_EP_COUNT = 7  # 최대 화수 (Epic)
+    MAX_EP_COUNT = 6  # 최대 화수 (Epic)
     DEFAULT_EP_COUNT = 5  # 기본 화수 (Standard)
 
     # tactical_doc 분량 기준
@@ -327,7 +327,7 @@ class VolumeSettings:
     ARCS_PER_VOLUME = 5  # 권당 아크 개수
     EPISODES_PER_ARC = 5  # 아크당 기본 에피소드 개수 (Standard 기준)
     MIN_EPISODES_PER_ARC = 3  # 아크당 최소 에피소드 (Blitz 최소)
-    MAX_EPISODES_PER_ARC = 7  # 아크당 최대 에피소드 (Epic 최대)
+    MAX_EPISODES_PER_ARC = 6  # 아크당 최대 에피소드 (Epic 최대)
 
 
 class SceneSettings:

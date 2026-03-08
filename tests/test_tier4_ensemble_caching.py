@@ -44,7 +44,7 @@ def test_arc_ensemble_uses_shared_context_cache_name():
     }
     agent._generate_single = MagicMock(return_value=candidate)
 
-    best, _ = agent.generate_ensemble(
+    best, candidates = agent.generate_ensemble(
         arc_no=1,
         ep_start=1,
         vol_strategy="",
@@ -55,7 +55,8 @@ def test_arc_ensemble_uses_shared_context_cache_name():
         feedback="",
     )
 
-    assert best is not None
+    assert best is None
+    assert len(candidates) > 0
     agent._get_or_create_context_cache.assert_called_once()
     assert agent._generate_single.call_count == len(agent.strategies)
     assert all(call.kwargs["cache_name"] == "cache/arc" for call in agent._generate_single.call_args_list)

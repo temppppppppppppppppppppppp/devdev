@@ -1477,6 +1477,9 @@ class Stage4InterviewRound:
             final_manuscript = selected_candidate.get("manuscript", "")
             final_title = selected_candidate.get("title", f"\uc81c{next_ep}\ud654")
             final_state_updates = director_result.get("state_updates", {})
+            # [WARN-4] Director 점수를 final_state_updates에 전파 → quality_metrics.jsonl score 정상화
+            if isinstance(final_state_updates, dict) and score > 0:
+                final_state_updates["director_score"] = score
 
             verdict, director_feedback, previous_attempt, error_category = self._run_post_select_checks(
                 verdict=verdict,
@@ -2144,11 +2147,24 @@ class Stage4InterviewRound:
                             _s_info = self.ctx.state_tracker.npc_registry.get(_sname, {})
                             if _s_info.get("status") == "dead":
                                 continue
+                        # [CON-2-FIX] WorldState known_attrs.position 우선 참조 (master_bible보다 최신)
+                        _ws_position = ""
+                        try:
+                            _ws = getattr(self.ctx, "world_state", None)
+                            if _ws:
+                                _ws_npc = _ws._state.get("alive_npcs", {}).get(_sname, {})
+                                _ws_ka = _ws_npc.get("known_attrs", {})
+                                if isinstance(_ws_ka.get("position"), dict):
+                                    _ws_position = _ws_ka["position"].get("value", "")
+                                elif isinstance(_ws_ka.get("position"), str):
+                                    _ws_position = _ws_ka["position"]
+                        except Exception:
+                            pass
                         _auth_ctx = {
                             "protagonist_position": _mb_root.get("protagonist_config", {}).get("position", ""),
                             "superior_alive": True,
                             "superior_name": _sname,
-                            "superior_position": _npc.get("position", _role),
+                            "superior_position": _ws_position or _npc.get("position", _role),
                         }
                         break
         except Exception as _ac_err:

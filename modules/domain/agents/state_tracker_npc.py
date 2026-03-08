@@ -178,6 +178,10 @@ class StateTrackerNPC:
         try:
             db = getattr(self.tracker, "_db", None)
             if db and hasattr(db, "insert_npc_change"):
+                _reason = str(reason or "").strip()
+                if not _reason:
+                    _source = str(source or "").strip() or "npc_change"
+                    _reason = f"{_source}:{field_name}"
                 db.insert_npc_change(
                     npc_name,
                     episode_no,
@@ -186,7 +190,7 @@ class StateTrackerNPC:
                     str(old_value or ""),
                     str(new_value or ""),
                     source,
-                    reason=reason,
+                    reason=_reason,
                 )
         except Exception as e:
             logging.warning(f"[Phase 3-5A] NPC 이력 기록 실패 (비차단): {e}")
@@ -226,11 +230,13 @@ class StateTrackerNPC:
         level: str = None,
         personality_traits: str = None,
         primary_motivation: str = None,
+        position: str = None,
         episode_no: int = 0,
     ):
         """
         [V60.94] NPC 정보 등록/업데이트
         [V66] personality_traits, primary_motivation 추가
+        [CON-2-FIX] position 추가 — 직함/직위 변경 이력 추적
 
         Args:
             npc_name: NPC 이름
@@ -239,6 +245,7 @@ class StateTrackerNPC:
             level: 수준/경지 (선택)
             personality_traits: [V66] 성격 특성 (선택)
             primary_motivation: [V66] 주요 동기 (선택)
+            position: [CON-2-FIX] 직함/직위 (선택)
         """
         if npc_name not in self.tracker.npc_registry:
             self.tracker.npc_registry[npc_name] = {"status": "alive"}
@@ -271,6 +278,15 @@ class StateTrackerNPC:
                     npc_name, arc_no, "primary_motivation", old, primary_motivation, episode_no=episode_no
                 )
             npc["primary_motivation"] = primary_motivation
+        # [CON-2-FIX] 직함/직위 변경 이력 추적
+        if position:
+            old = npc.get("position", "")
+            if old != position:
+                self._record_change(
+                    npc_name, arc_no, "position", old, position,
+                    episode_no=episode_no, reason="NPC 직함 변경 감지",
+                )
+            npc["position"] = position
 
     def check_npc_changes(self, content: str, arc_no: int) -> list[dict]:
         """
@@ -746,34 +762,54 @@ class StateTrackerNPC:
                 f"일반 명사(데이터, 후원자, 시장, 사태, 세력, 조직, 몬스터 등)는 반드시 제외.\n"
                 f"해당하는 인물이 없으면 빈 배열 []을 반환하세요."
             )
-            # [V63.3] 중복 딜레이 제거 (직접 API 호출이므로 최소 지연만)
-            time.sleep(0.1)
-            response = self.tracker._llm_client.models.generate_content(
-                model=AIModels.FLASH_ANALYSIS_MODEL,  # [TF-9B] SSOT
-                contents=prompt,
-                config=_types.GenerateContentConfig(
-                    temperature=0.0,
-                    max_output_tokens=256,
-                    response_mime_type="application/json",
-                ),
-            )
-            try:  # [V70] response.text ValueError 방어
-                _resp_text = response.text
-            except (ValueError, AttributeError):
-                _resp_text = None
-            if not _resp_text:
-                logging.warning("[XC-002] NPC LLM 검증 응답 없음 → fail-closed: []")
-                return []
-            result = json.loads(_resp_text)
-            if isinstance(result, list):
-                verified = [name for name in result if isinstance(name, str) and name in candidates]
-                filtered = set(candidates) - set(verified)
-                if filtered:
-                    logging.info(f"\U0001f50d [V62.5] NPC 오탐 필터링: {filtered} (LLM 검증으로 제외)")
-                return verified
+            for attempt in range(2):
+                try:
+                    # [V63.3] 중복 딜레이 제거 (직접 API 호출이므로 최소 지연만)
+                    time.sleep(0.1)
+                    response = self.tracker._llm_client.models.generate_content(
+                        model=AIModels.FLASH_ANALYSIS_MODEL,  # [TF-9B] SSOT
+                        contents=prompt,
+                        config=_types.GenerateContentConfig(
+                            temperature=0.0,
+                            max_output_tokens=256,
+                            response_mime_type="application/json",
+                        ),
+                    )
+                    try:  # [V70] response.text ValueError 방어
+                        _resp_text = response.text
+                    except (ValueError, AttributeError):
+                        _resp_text = None
+
+                    if not _resp_text:
+                        if attempt == 0:
+                            logging.debug("[XC-002] NPC LLM 검증 응답 없음, 1회 재시도")
+                            continue
+                        logging.warning("[XC-002] NPC LLM 검증 응답 없음 → fail-closed: []")
+                        return []
+
+                    result = json.loads(_resp_text)
+                    if isinstance(result, list):
+                        verified = [name for name in result if isinstance(name, str) and name in candidates]
+                        filtered = set(candidates) - set(verified)
+                        if filtered:
+                            logging.info(f"\U0001f50d [V62.5] NPC 오탐 필터링: {filtered} (LLM 검증으로 제외)")
+                        return verified
+
+                    if attempt == 0:
+                        logging.debug("[XC-002] NPC LLM 검증 응답 형식 오류, 1회 재시도")
+                        continue
+                    logging.warning("[XC-002] NPC LLM 검증 응답 형식 오류 → fail-closed: []")
+                    return []
+                except Exception as e:
+                    if attempt == 0:
+                        logging.debug("[XC-002] NPC LLM 검증 예외, 1회 재시도: %s", str(e)[:60])
+                        continue
+                    logging.warning("[XC-002] NPC LLM 검증 예외 → fail-closed: %s", str(e)[:60])
+                    return []
         except Exception as e:
             logging.warning("[XC-002] NPC LLM 검증 예외 → fail-closed: %s", str(e)[:60])
             return []
+        return []
 
     def extract_skill_acquisitions_from_arc(self, arc: dict) -> list[str]:
         """

@@ -222,7 +222,8 @@ class ConstitutionalChecker:
                 arc_no = arc.get("arc_no", "?")
                 state = arc.get("state_constraints", {})
 
-                items = state.get("items_acquired", [])
+                # [BUG-F] protagonist_items 우선 폴백
+                items = state.get("protagonist_items") or state.get("items_acquired", [])
                 for item in items:
                     if item:
                         acquired_items.append(f"Arc{arc_no}: {item}")

@@ -198,7 +198,9 @@ class PreflightChecker(BaseAgent):
                 ep_s = arc.get("ep_start", "?")
                 ep_e = arc.get("ep_end", "?")
                 end_loc = arc.get("joint_docs", {}).get("final_location", "?")
-                items = (arc.get("state_constraints") or {}).get("items_acquired", [])  # [V70] None 방어
+                # [BUG-F] protagonist_items 우선 폴백
+                _psc_pf = (arc.get("state_constraints") or {})
+                items = _psc_pf.get("protagonist_items") or _psc_pf.get("items_acquired", [])  # [V70] None 방어
                 item_str = (
                     ", ".join(str(x) if isinstance(x, dict) else x for x in items[:10])
                     if isinstance(items, list) and items
@@ -335,7 +337,9 @@ class PreflightChecker(BaseAgent):
 
         for arc in prev_arcs:
             # items_acquired
-            acquired = (arc.get("state_constraints") or {}).get("items_acquired", [])  # [V70] None 방어
+            # [BUG-F] protagonist_items 우선 폴백
+            _psc_pf2 = (arc.get("state_constraints") or {})
+            acquired = _psc_pf2.get("protagonist_items") or _psc_pf2.get("items_acquired", [])  # [V70] None 방어
             if isinstance(acquired, list):
                 items.update(str(x) if isinstance(x, dict) else x for x in acquired)
 

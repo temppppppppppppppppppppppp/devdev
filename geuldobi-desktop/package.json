@@ -1,11 +1,13 @@
 {
   "name": "geuldobi-desktop",
   "version": "1.0.0",
-  "description": "Spike 4: Electron splash skeleton for Geuldobi desktop",
+  "description": "글도비 — AI 웹소설 자동 생성 데스크톱",
   "main": "src/main.js",
   "scripts": {
     "start": "cmd /C \"set ELECTRON_RUN_AS_NODE=&& electron .\"",
     "start:spike": "cmd /C \"set ELECTRON_RUN_AS_NODE=&& set SPIKE_AUTOCLOSE_MS=5000&& electron .\"",
+    "build": "electron-builder --win",
+    "build:dir": "electron-builder --win --dir",
     "test": "echo \"No tests configured\""
   },
   "keywords": [],
@@ -13,10 +15,62 @@
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
-    "cross-env": "^10.1.0",
-    "electron": "^40.8.0"
+    "electron": "^40.8.0",
+    "electron-builder": "^25.1.8"
   },
   "dependencies": {
     "lucide": "^0.577.0"
+  },
+  "build": {
+    "appId": "com.geuldobi.desktop",
+    "productName": "Geuldobi",
+    "win": {
+      "target": "nsis",
+      "signAndEditExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerLanguages": [
+        "Korean",
+        "English"
+      ]
+    },
+    "extraResources": [
+      {
+        "from": "../dist/backend",
+        "to": "backend",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "../python-embed",
+        "to": "python-embed",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "..",
+        "to": "engine",
+        "filter": [
+          "main_a.py",
+          "modules/**/*",
+          "config/**/*",
+          "libraries/**/*",
+          "treatments/**/*",
+          "bible/**/*",
+          "lite_mode/**/*",
+          "requirements.txt",
+          "!**/__pycache__/**",
+          "!**/*.pyc"
+        ]
+      }
+    ],
+    "files": [
+      "src/**/*",
+      "!node_modules/.cache"
+    ]
   }
 }

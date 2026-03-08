@@ -779,6 +779,51 @@ class Stage4PostProcessor:
             key_npcs = new_lore.get("Key_NPCs", []) if isinstance(new_lore.get("Key_NPCs"), list) else []
             new_npc_names = [npc.get("name", str(npc)) if isinstance(npc, dict) else str(npc) for npc in key_npcs]
 
+            # [CON-2-FIX] new_lore.Key_NPCs → master_bible.AssetLibrary.KeyNPCs 병합
+            # master_bible은 Stage 0 이후 갱신되지 않아 CW가 stale NPC 속성을 읽음.
+            # 매 에피소드 후 Manager가 추출한 최신 NPC 정보를 master_bible에 merge-back.
+            try:
+                _mb = getattr(self.ctx.current_project, "master_bible", None)
+                if _mb and isinstance(_mb, dict) and key_npcs:
+                    _mb_root = _mb.get("MasterBible", _mb)
+                    _assets = _mb_root.setdefault("AssetLibrary", {})
+                    _existing_npcs = _assets.get("KeyNPCs", []) or _assets.get("Key_NPCs", [])
+                    if not _existing_npcs:
+                        _existing_npcs = []
+                    # 이름 기반 인덱스 구축
+                    _npc_by_name = {}
+                    for _i, _enpc in enumerate(_existing_npcs):
+                        if isinstance(_enpc, dict):
+                            _ename = _enpc.get("name", "") or _enpc.get("Name", "")
+                            if _ename:
+                                _npc_by_name[_ename] = _i
+                    _merged_count = 0
+                    for _new_npc in key_npcs:
+                        if not isinstance(_new_npc, dict):
+                            continue
+                        _nname = _new_npc.get("name", "") or _new_npc.get("Name", "")
+                        if not _nname:
+                            continue
+                        if _nname in _npc_by_name:
+                            # 기존 NPC 업데이트 — 신규 필드만 덮어쓰기 (기존 값 보존)
+                            _idx = _npc_by_name[_nname]
+                            for _k, _v in _new_npc.items():
+                                if _k in ("name", "Name"):
+                                    continue
+                                if _v and (not _existing_npcs[_idx].get(_k) or str(_v) != str(_existing_npcs[_idx].get(_k))):
+                                    _existing_npcs[_idx][_k] = _v
+                            _merged_count += 1
+                        else:
+                            # 신규 NPC 추가
+                            _existing_npcs.append(_new_npc)
+                            _npc_by_name[_nname] = len(_existing_npcs) - 1
+                            _merged_count += 1
+                    if _merged_count > 0:
+                        _assets["KeyNPCs"] = _existing_npcs
+                        logging.debug("[CON-2-FIX] master_bible.KeyNPCs 병합: %d건 (ep=%d)", _merged_count, next_ep)
+            except Exception as _mb_merge_err:
+                logging.warning("[CON-2-FIX] master_bible NPC 병합 실패 (비치명): %s", str(_mb_merge_err)[:80])
+
             npc_deaths = []
             for npc in key_npcs:
                 if isinstance(npc, dict):
@@ -875,6 +920,42 @@ class Stage4PostProcessor:
                 if callable(getattr(self.ctx, "audit_event", None)):
                     self.ctx.audit_event("episode_bible_save_failed", "save_episode_bible 실패", {"ep": next_ep})
                 _meta_save_failed = True
+
+            # [CON-2-FIX] new_lore NPC position → WorldState known_attrs 전파
+            try:
+                _ws = getattr(self.ctx, "world_state", None)
+                if _ws and key_npcs:
+                    for _npc in key_npcs:
+                        if not isinstance(_npc, dict):
+                            continue
+                        _nname = _npc.get("name", "") or _npc.get("Name", "")
+                        _pos = _npc.get("position", "") or _npc.get("role", "")
+                        if _nname and _pos:
+                            _alive = _ws._state.get("alive_npcs", {})
+                            if _nname not in _alive:
+                                _alive[_nname] = {
+                                    "first_seen_ep": next_ep,
+                                    "role_at_intro": _pos,
+                                    "known_attrs": {},
+                                }
+                            _npc_entry = _alive[_nname]
+                            _ka = _npc_entry.setdefault("known_attrs", {})
+                            _old_pos = ""
+                            if isinstance(_ka.get("position"), dict):
+                                _old_pos = _ka["position"].get("value", "")
+                            if _old_pos != _pos:
+                                _ka["position"] = {
+                                    "value": _pos,
+                                    "prev": _old_pos,
+                                    "changed_ep": next_ep,
+                                }
+                                if _old_pos:
+                                    logging.info(
+                                        "[CON-2-FIX] NPC '%s' 직함 변경 감지: '%s' → '%s' (ep=%d)",
+                                        _nname, _old_pos, _pos, next_ep,
+                                    )
+            except Exception as _ws_pos_err:
+                logging.warning("[CON-2-FIX] WorldState NPC position 전파 실패 (비치명): %s", str(_ws_pos_err)[:80])
 
             # [Graph-Layer] causal_links → causal_graph dual-write (경로 확보)
             if causal_links:
