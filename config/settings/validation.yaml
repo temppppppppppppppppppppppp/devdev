@@ -209,6 +209,15 @@ arc:
   ns3b_divergence_threshold: 0.30  # [NS-3-B] arc_end_state vs genre_ext 목표 괴리 허용률
   jaccard_similarity_threshold: 0.50  # [TF-1-04] Stage2 Arc Jaccard 중복 감지 임계값
 
+# ── 투자물 수치 검산 (Codex F) ───────────────────────────────
+investment_math:
+  python_tolerance: 0.15        # F-1 괴리 허용률 (15%)
+  cash_tolerance: 0.05          # 현금 합산 허용률 (5%)
+  total_assets_tolerance: 0.05  # 총자산 합산 허용률 (5%)
+  arc_boundary_tolerance: 0.01  # Arc 경계 자본 허용률 (1%)
+  max_leverage: 10              # 레버리지 상한
+  flash_enabled: true           # F-2 Flash 호출 활성화
+
 # ── 품질 게이트 파라미터 ─────────────────────────────────────────
 quality:
   cliche_window: 10  # [TF-5-04] 클리셰 감지 윈도우 크기 (최근 N화)

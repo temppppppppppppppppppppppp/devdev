@@ -1159,7 +1159,8 @@ Blueprint가 다음 아이템의 사용을 설계했으나, 주인공이 현재 
         return events[-5:] if events else []
 
     def _extract_npc_last_states(self, current_ep: int) -> dict:
-        """등장 NPC의 마지막 상태 추출"""
+        """등장 NPC의 마지막 상태 추출
+        [CON-2-FIX] WorldState known_attrs에서 최신 position/속성 병합"""
         npc_states = {}
 
         try:
@@ -1180,7 +1181,37 @@ Blueprint가 다음 아이템의 사용을 설계했으나, 주인공이 현재 
                 last_appearance = npc.get("last_appearance_ep", 0)
 
                 if isinstance(last_appearance, int) and 0 < last_appearance < current_ep:
-                    npc_states[name] = {"relationship": relationship, "last_ep": last_appearance}
+                    npc_states[name] = {
+                        "relationship": relationship,
+                        "last_ep": last_appearance,
+                        "position": npc.get("position", ""),
+                    }
+
+            # [CON-2-FIX] WorldState known_attrs에서 최신 position/속성 병합
+            try:
+                _ws = getattr(self.context, "world_state", None)
+                if _ws and hasattr(_ws, "_state"):
+                    _alive = _ws._state.get("alive_npcs", {})
+                    for _name, _info in _alive.items():
+                        if not isinstance(_info, dict):
+                            continue
+                        _ka = _info.get("known_attrs", {})
+                        _pos_data = _ka.get("position", {})
+                        _pos = _pos_data.get("value", "") if isinstance(_pos_data, dict) else str(_pos_data) if _pos_data else ""
+                        if _name in npc_states:
+                            # 기존 항목 보강 — WorldState position이 있으면 덮어쓰기
+                            if _pos:
+                                npc_states[_name]["position"] = _pos
+                        elif _pos:
+                            # master_bible에 없는 NPC도 WorldState에 있으면 추가
+                            npc_states[_name] = {
+                                "relationship": _info.get("relation", ""),
+                                "last_ep": _info.get("first_seen_ep", 0),
+                                "position": _pos,
+                            }
+            except Exception as _ws_err:
+                logging.debug("[CON-2-FIX] WorldState NPC 속성 병합 실패: %s", str(_ws_err)[:60])
+
         except (AttributeError, KeyError, TypeError) as e:  # [V64.P4] IMPORTANT: NPC state extraction
             logging.warning(f" [V64.P4] NPC 상태 추출 실패: {str(e)[:60]}")
 

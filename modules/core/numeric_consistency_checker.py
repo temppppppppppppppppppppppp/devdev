@@ -792,6 +792,10 @@ class NumericConsistencyChecker:
         if not self._world_state:
             return []
 
+        def _normalize_npc_name(name: str) -> str:
+            # [M-4] 괄호 접미사 제거: "박성호 (담당 PB)" -> "박성호"
+            return re.sub(r"\s*\(.*?\)\s*$", "", str(name or "")).strip()
+
         # NPC 이름 목록 취득
         npcs = getattr(self._world_state, "npcs", None)
         if not npcs:
@@ -799,34 +803,47 @@ class NumericConsistencyChecker:
 
         # NPC 이름 → 역할/설명 매핑
         name_to_roles: dict[str, list[str]] = {}
+        name_aliases: dict[str, set[str]] = {}
         if isinstance(npcs, dict):
             for npc_id, npc_data in npcs.items():
-                name = npc_data.get("name", "") if isinstance(npc_data, dict) else str(npc_data)
+                raw_name = npc_data.get("name", "") if isinstance(npc_data, dict) else str(npc_data)
+                name = _normalize_npc_name(raw_name)
                 if not name or len(name) < 2:
                     continue
                 role = ""
                 if isinstance(npc_data, dict):
                     role = npc_data.get("role", "") or npc_data.get("title", "") or npc_id
                 name_to_roles.setdefault(name, []).append(role)
+                if raw_name:
+                    name_aliases.setdefault(name, set()).add(str(raw_name).strip())
         elif isinstance(npcs, list):
             for npc_data in npcs:
                 if isinstance(npc_data, dict):
-                    name = npc_data.get("name", "")
+                    raw_name = npc_data.get("name", "")
+                    name = _normalize_npc_name(raw_name)
                     if name and len(name) >= 2:
                         role = npc_data.get("role", "") or npc_data.get("title", "") or ""
                         name_to_roles.setdefault(name, []).append(role)
+                        if raw_name:
+                            name_aliases.setdefault(name, set()).add(str(raw_name).strip())
 
         warnings: list[dict] = []
 
         # Case 1: 등록된 NPC 중 동명이인
         for name, roles in name_to_roles.items():
-            if len(roles) >= 2:
-                roles_str = "/".join(r for r in roles if r)[:60]
+            unique_roles = sorted({r for r in roles if r})
+            aliases = sorted(name_aliases.get(name, {name}))
+            if len(unique_roles) >= 2 or len(aliases) >= 2:
+                roles_str = "/".join(unique_roles)[:60] if unique_roles else "역할 미상"
+                alias_note = f", 표기: {'/'.join(aliases)[:40]}" if len(aliases) >= 2 else ""
                 warnings.append(
                     {
                         "check": "NPC 동명이인",
                         "severity": "MINOR",
-                        "text": (f"[동명이인] '{name}' — NPC {len(roles)}명 등록 ({roles_str}). 별명/성씨로 구분 필요"),
+                        "text": (
+                            f"[동명이인] '{name}' — NPC {len(roles)}명 등록 ({roles_str}){alias_note}. "
+                            "별명/성씨로 구분 필요"
+                        ),
                     }
                 )
 

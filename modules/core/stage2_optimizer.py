@@ -21,6 +21,72 @@ from collections import defaultdict
 from dataclasses import dataclass
 from typing import Any
 
+from modules.core.genre_schema_builder import is_wuxia
+
+# [BUG-I] location 필드에 혼입된 시간/날짜 설명 제거
+_LOCATION_TIME_RE = re.compile(
+    r"[.,]\s*시계는.+$"
+    r"|[.,]\s*\d{4}년\s*\d+월.+$"
+    r"|[.,]\s*\d+월\s*\d+일.+$"
+    r"|[.,]\s*(?:오전|오후)\s*\d+시.+$",
+    re.DOTALL,
+)
+
+# [BUG-E] items_consumed 추상 개념 필터 패턴
+_ABSTRACT_ITEMS_CONSUMED_RE = re.compile(
+    r"(이라는|으로 인한|의 기회비용|의 대가|라는 방패|심리적|정신적|감정적|추상적)"
+)
+
+_KOREAN_NUMBER_RE = re.compile(r"-?\d+(?:\.\d+)?")
+
+
+def _parse_korean_number(value: Any) -> float | None:
+    """한국어 금액 문자열을 숫자로 변환한다. 예: 111.7억 -> 11170000000."""
+    if value is None:
+        return None
+    if isinstance(value, (int, float)):
+        return float(value)
+    if not isinstance(value, str):
+        return None
+
+    text = value.strip().replace(",", "")
+    if not text:
+        return None
+
+    match = _KOREAN_NUMBER_RE.search(text)
+    if not match:
+        return None
+
+    try:
+        number = float(match.group())
+    except (ValueError, TypeError):
+        return None
+
+    if "억" in text:
+        return number * 100_000_000
+    if "만" in text:
+        return number * 10_000
+    return number
+
+
+def _normalize_items(items: Any) -> list[str]:
+    """아이템 리스트(str/dict 혼합)를 문자열 리스트로 정규화한다."""
+    if isinstance(items, str):
+        items = [chunk.strip() for chunk in re.split(r"[,/]", items) if chunk.strip()]
+    if not isinstance(items, list):
+        return []
+
+    normalized = []
+    for item in items:
+        if isinstance(item, dict):
+            name = item.get("name") or item.get("item") or ""
+        else:
+            name = str(item)
+        name = name.strip()
+        if name:
+            normalized.append(name)
+    return normalized
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # 1. STATE SNAPSHOT INJECTOR
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -67,7 +133,8 @@ class StateSnapshotInjector:
         """Arc에서 획득한 모든 아이템 수집"""
         items = []
         state = arc.get("state_constraints", {})
-        items.extend(state.get("items_acquired", []))
+        # [BUG-F] protagonist_items 우선 폴백
+        items.extend(state.get("protagonist_items") or state.get("items_acquired", []))
 
         # joint_docs의 inventory도 포함
         joint = arc.get("joint_docs", {})
@@ -111,7 +178,9 @@ class StateSnapshotInjector:
         all_grants = set()
         for arc in prev_arcs:
             state = arc.get("state_constraints", {})
-            all_items.update(_ikey(i) for i in state.get("items_acquired", []) if i)
+            # [BUG-F] protagonist_items 우선 폴백
+            _acq = state.get("protagonist_items") or state.get("items_acquired", [])
+            all_items.update(_ikey(i) for i in _acq if i)
             all_grants.update(_ikey(i) for i in state.get("grants_received", []) if i)
 
         prompt = f"""
@@ -165,7 +234,7 @@ class ArcAutoCorrector:
     def __init__(self) -> None:
         self.corrections_made = []
 
-    def auto_correct(self, arc: dict, prev_arcs: list[dict]) -> tuple[dict, list[str]]:
+    def auto_correct(self, arc: dict, prev_arcs: list[dict], *, genre: str = "") -> tuple[dict, list[str]]:
         """
         Arc 자동 수정
 
@@ -177,26 +246,45 @@ class ArcAutoCorrector:
         if not arc or not isinstance(arc, dict):
             return arc, []
 
+        # 0. 메타 용어(Arc/Block/Stage) 서사 텍스트 치환
+        arc = self._sanitize_tactical_meta_terms(arc)
+
         # 1. 중복 아이템 제거
         arc = self._remove_duplicate_items(arc, prev_arcs)
 
-        # 2. 시작 위치 자동 수정
+        # 2. 소지품 연속성 점검 (advisory-only)
+        arc = self._check_equipment_continuity(arc, prev_arcs)
+
+        # 3. 시작 위치 자동 수정
         arc = self._fix_start_location(arc, prev_arcs)
 
-        # 3. 시작 상태 계승
+        # 4. 시작 상태 계승
         arc = self._fix_start_state(arc, prev_arcs)
 
-        # 4. joint_docs 자동 추출/수정
+        # 5. joint_docs 자동 추출/수정
         arc = self._fix_joint_docs(arc)
 
-        # 4-1. arc_end_state.location을 joint_docs.final_location으로 동기화
+        # 5-1. arc_end_state.location을 joint_docs.final_location으로 동기화
         arc = self._sync_final_location(arc)
 
-        # 5. 필수 필드 보장
+        # 5-2. tactical_doc 종료부 ↔ arc_end_state.location 정합성 점검 (advisory-only)
+        arc = self._check_tactical_location_consistency(arc)
+
+        # 6. 비무협 장르 무협 필드 제거
+        if genre and not is_wuxia(genre):
+            arc = self._strip_wuxia_fields(arc)
+
+        # 7. 필수 필드 보장
         arc = self._ensure_required_fields(arc)
 
-        # 6. 내공 범위 정규화
+        # 8. items_consumed 추상 개념 제거
+        arc = self._filter_abstract_items_consumed(arc)
+
+        # 9. 내공 범위 정규화
         arc = self._normalize_internal_energy(arc)
+
+        # 10. Arc 내 자산 성장률 점검 (advisory-only)
+        arc = self._check_asset_growth_rate(arc, prev_arcs)
 
         return arc, self.corrections_made
 
@@ -210,7 +298,8 @@ class ArcAutoCorrector:
         for prev_arc in prev_arcs:
             state = prev_arc.get("state_constraints", {})
             # [Sweep46] dict 아이템 → 이름 추출 (set 추가 시 unhashable 방지)
-            for _it in state.get("items_acquired", []):
+            # [BUG-F] protagonist_items 우선 폴백
+            for _it in (state.get("protagonist_items") or state.get("items_acquired", [])):
                 if isinstance(_it, dict):
                     _n = _it.get("name", _it.get("item", ""))
                     if _n:
@@ -230,7 +319,8 @@ class ArcAutoCorrector:
 
         # 현재 Arc의 items_acquired에서 중복 제거
         state = arc.get("state_constraints", {})
-        current_items = state.get("items_acquired", [])
+        # [BUG-F] protagonist_items 우선 폴백
+        current_items = state.get("protagonist_items") or state.get("items_acquired", [])
         # [Sweep45] LLM이 dict 리스트 반환 시 문자열 정규화 (AttributeError 방지)
         if current_items and not all(isinstance(x, str) for x in current_items):
             current_items = [
@@ -276,11 +366,12 @@ class ArcAutoCorrector:
         prev_arc = prev_arcs[-1]
         prev_location = None
 
-        joint = prev_arc.get("joint_docs", {})
-        prev_location = joint.get("final_location")
+        # [BUG-A] arc_end_state.location 우선 (auto_correct 후 최신값)
+        end_state = prev_arc.get("state_constraints", {}).get("arc_end_state", {})
+        prev_location = end_state.get("location")
         if not prev_location:
-            end_state = prev_arc.get("state_constraints", {}).get("arc_end_state", {})
-            prev_location = end_state.get("location")
+            joint = prev_arc.get("joint_docs", {})
+            prev_location = joint.get("final_location")
 
         if not prev_location:
             return arc
@@ -346,6 +437,17 @@ class ArcAutoCorrector:
         if prev_equipment:
             start_state["equipment"] = prev_equipment
 
+        # [PATCH-D] Arc 간 시작 자산 vs 이전 종료 자산 차이 advisory
+        prev_total = _parse_korean_number(prev_end.get("total_assets") or prev_end.get("capital"))
+        curr_total = _parse_korean_number(start_state.get("total_assets") or start_state.get("capital"))
+        if prev_total and curr_total and prev_total > 0:
+            diff_pct = abs(curr_total - prev_total) / prev_total * 100
+            if diff_pct > 5:
+                self.corrections_made.append(
+                    f"[PATCH-D] Arc 간 총자산 차이 {diff_pct:.1f}%: "
+                    f"이전 종료 {prev_total:.0f}→현재 시작 {curr_total:.0f} (사유 확인 필요)"
+                )
+
         state["arc_start_state"] = start_state
         arc["state_constraints"] = state
 
@@ -377,31 +479,49 @@ class ArcAutoCorrector:
         return arc
 
     def _sync_final_location(self, arc: dict) -> dict:
-        """joint_docs.final_location → arc_end_state.location 동기화
-
-        joint_docs.final_location이 SSOT (LLM이 tactical_doc에서 생성).
-        arc_end_state.location은 Python이 이전 Arc에서 복사하므로 stale 가능.
-
-        Note: ArcData._enforce_arc_ssot_contracts()가 Pydantic 레벨에서
-        fill-if-missing 동기화를 수행 (이중 안전장치).
-        이 메서드는 더 공격적으로 기존값도 joint_docs로 덮어씀.
-        """
+        """joint_docs.final_location → arc_end_state.location 동기화."""
         joint_loc = arc.get("joint_docs", {}).get("final_location", "")
         if not joint_loc:
             return arc
+
+        # [BUG-I] 시간/날짜 텍스트 제거 후 순수 위치만 반영
+        cleaned_loc = _LOCATION_TIME_RE.sub("", joint_loc).rstrip("., ").strip()
+        if not cleaned_loc:
+            cleaned_loc = joint_loc  # 폴백
 
         state = arc.get("state_constraints", {})
         arc_end = state.get("arc_end_state", {})
         current_loc = arc_end.get("location", "")
 
-        if current_loc != joint_loc:
+        if current_loc != cleaned_loc:
             self.corrections_made.append(
-                f"arc_end_state 위치 동기화: '{current_loc}' → '{joint_loc}'"
+                f"arc_end_state 위치 동기화: '{current_loc}' → '{cleaned_loc}'"
             )
-            arc_end["location"] = joint_loc
+            arc_end["location"] = cleaned_loc
             state["arc_end_state"] = arc_end
             arc["state_constraints"] = state
 
+        return arc
+
+    def _strip_wuxia_fields(self, arc: dict) -> dict:
+        """비무협 장르에서 무협 전용 필드를 제거한다."""
+        wuxia_only_keys = {"internal_energy", "realm", "qi_nature", "martial_arts"}
+        state = arc.get("state_constraints", {})
+
+        for section_key in ("arc_start_state", "arc_end_state"):
+            section = state.get(section_key, {})
+            if not isinstance(section, dict):
+                continue
+
+            removed = [key for key in wuxia_only_keys if key in section]
+            for key in removed:
+                section.pop(key, None)
+            if removed:
+                self.corrections_made.append(
+                    f"{section_key}에서 무협 전용 필드 제거: {removed}"
+                )
+
+        arc["state_constraints"] = state
         return arc
 
     def _ensure_required_fields(self, arc: dict) -> dict:
@@ -416,8 +536,9 @@ class ArcAutoCorrector:
             state["arc_start_state"] = {}
         if "arc_end_state" not in state:
             state["arc_end_state"] = {}
+        # [BUG-F] protagonist_items가 있으면 items_acquired로 복사 (후속 소비자 일관성)
         if "items_acquired" not in state:
-            state["items_acquired"] = []
+            state["items_acquired"] = state.get("protagonist_items", [])
         if "items_consumed" not in state:
             state["items_consumed"] = []
 
@@ -460,6 +581,150 @@ class ArcAutoCorrector:
             state[state_key] = sub_state
 
         arc["state_constraints"] = state
+        return arc
+
+    def _filter_abstract_items_consumed(self, arc: dict) -> dict:
+        """items_consumed에서 추상 개념 항목을 제거한다."""
+        state = arc.get("state_constraints", {})
+        items = state.get("items_consumed", [])
+        if not isinstance(items, list):
+            return arc
+
+        filtered = []
+        removed = []
+        for item in items:
+            if not isinstance(item, str):
+                filtered.append(item)
+                continue
+            if len(item) > 15 or _ABSTRACT_ITEMS_CONSUMED_RE.search(item):
+                removed.append(item)
+            else:
+                filtered.append(item)
+
+        if removed:
+            state["items_consumed"] = filtered
+            arc["state_constraints"] = state
+            self.corrections_made.append(
+                f"items_consumed 추상 개념 {len(removed)}건 제거: {removed[:3]}"
+            )
+
+        return arc
+
+    def _check_asset_growth_rate(self, arc: dict, prev_arcs: list[dict]) -> dict:
+        """[PATCH-A] Arc 내 자산 성장률 상한 advisory."""
+        if not prev_arcs:
+            return arc
+
+        state = arc.get("state_constraints", {})
+        start = state.get("arc_start_state", {})
+        end = state.get("arc_end_state", {})
+        if not isinstance(start, dict) or not isinstance(end, dict):
+            return arc
+
+        start_val = _parse_korean_number(start.get("total_assets") or start.get("capital"))
+        end_val = _parse_korean_number(end.get("total_assets") or end.get("capital"))
+        if not (start_val and end_val and start_val > 0):
+            return arc
+
+        growth_pct = (end_val - start_val) / start_val * 100
+        if growth_pct > 200:
+            self.corrections_made.append(
+                f"[PATCH-A] 자산 성장률 {growth_pct:.0f}% — "
+                f"시작 {start_val:.0f}→종료 {end_val:.0f} (200% 상한 초과, 산술 검증 권고)"
+            )
+        return arc
+
+    def _check_equipment_continuity(self, arc: dict, prev_arcs: list[dict]) -> dict:
+        """[PATCH-B] 소지품 출현/소멸 감지 advisory."""
+        if not prev_arcs:
+            return arc
+
+        prev_arc = prev_arcs[-1]
+        prev_state = prev_arc.get("state_constraints", {})
+        prev_end = prev_state.get("arc_end_state", {})
+        prev_joint = prev_arc.get("joint_docs", {})
+        prev_equip = set(_normalize_items(prev_joint.get("physical_inventory") or prev_end.get("equipment", [])))
+
+        state = arc.get("state_constraints", {})
+        start_state = state.get("arc_start_state", {})
+        end_state = state.get("arc_end_state", {})
+        start_equip = set(_normalize_items(start_state.get("equipment", [])))
+        # [BUG-F] protagonist_items 우선, items_acquired 폴백 (response_schemas 스키마 정합)
+        acquired = set(_normalize_items(
+            state.get("protagonist_items") or state.get("items_acquired", [])
+        ))
+        end_equip = set(_normalize_items(end_state.get("equipment", [])))
+
+        # 1) 출처 불명 등장
+        unexplained = sorted(end_equip - start_equip - acquired - prev_equip)
+        if unexplained:
+            self.corrections_made.append(
+                f"[PATCH-B] 출처 불명 소지품: {unexplained[:5]} (items_acquired에 미등록)"
+            )
+
+        # 2) 이전 Arc 대비 시작 시점 소멸
+        disappeared = sorted(prev_equip - start_equip)
+        if disappeared:
+            self.corrections_made.append(
+                f"[PATCH-B] 이전 Arc 소지품 소멸: {disappeared[:5]} (처분/폐기 사유 미기재)"
+            )
+
+        return arc
+
+    def _check_tactical_location_consistency(self, arc: dict) -> dict:
+        """[PATCH-C] tactical_doc 종료 위치와 arc_end_state.location 정합성 점검."""
+        tactical = arc.get("tactical_doc", "")
+        if not isinstance(tactical, str) or len(tactical) < 100:
+            return arc
+
+        end_loc = arc.get("state_constraints", {}).get("arc_end_state", {}).get("location", "")
+        if not isinstance(end_loc, str) or not end_loc.strip():
+            return arc
+
+        tail = tactical[-500:]
+        loc_keywords = re.findall(r"[가-힣]{2,}", end_loc)
+        if not loc_keywords:
+            return arc
+
+        # 지역 접미사 제거 버전도 함께 검사 (강남구 -> 강남)
+        reduced_keywords = []
+        for kw in loc_keywords[:3]:
+            reduced_keywords.append(kw)
+            if len(kw) > 2 and kw[-1] in ("시", "도", "구", "군", "동", "로", "길"):
+                reduced_keywords.append(kw[:-1])
+
+        matched = [kw for kw in reduced_keywords if kw and kw in tail]
+        if not matched:
+            self.corrections_made.append(
+                f"[PATCH-C] tactical_doc 종료 위치와 arc_end_state.location 불일치 — "
+                f"arc_end_state: '{end_loc[:50]}', tactical_doc 말미에 해당 지명 미발견"
+            )
+
+        return arc
+
+    def _sanitize_tactical_meta_terms(self, arc: dict) -> dict:
+        """[C-1] tactical_doc의 시스템 메타 용어를 서사 용어로 치환."""
+        tactical = arc.get("tactical_doc", "")
+        if not isinstance(tactical, str) or "Arc" not in tactical:
+            return arc
+
+        replaced = tactical
+        replacements = [
+            (r"이전\s*Arc\s*종료", "이전 시기 종료"),
+            (r"이전\s*Arc\s*시작", "이전 시기 시작"),
+            (r"다음\s*Arc\s*종료", "다음 시기 종료"),
+            (r"다음\s*Arc\s*시작", "다음 시기 시작"),
+            (r"이전\s*Arc", "이전 시기"),
+            (r"다음\s*Arc", "다음 시기"),
+            (r"\bArc\s+\d+(?=\D|$)", "해당 시기"),
+            (r"\bArc\b", "시기"),
+        ]
+        for pattern, repl in replacements:
+            replaced = re.sub(pattern, repl, replaced)
+
+        if replaced != tactical:
+            arc["tactical_doc"] = replaced
+            self.corrections_made.append("[C-1] tactical_doc 메타 용어 'Arc'를 서사 용어로 치환")
         return arc
 
 
@@ -525,7 +790,8 @@ class NegativeConstraintAmplifier:
         for arc in prev_arcs:
             arc_no = arc.get("arc_no", "?")
             state = arc.get("state_constraints", {})
-            items = state.get("items_acquired", [])
+            # [BUG-F] protagonist_items 우선 폴백
+            items = state.get("protagonist_items") or state.get("items_acquired", [])
             tactical = arc.get("tactical_doc", "")
 
             for item in items:
@@ -779,7 +1045,11 @@ class FewShotExampleManager:
         simplified = {
             "arc_no": arc.get("arc_no"),
             "tactical_doc_length": len(arc.get("tactical_doc", "")),
-            "items_acquired": arc.get("state_constraints", {}).get("items_acquired", []),
+            # [BUG-F] protagonist_items 우선 폴백
+            "items_acquired": (
+                arc.get("state_constraints", {}).get("protagonist_items")
+                or arc.get("state_constraints", {}).get("items_acquired", [])
+            ),
             "state_constraints_sample": {
                 "arc_start_state": arc.get("state_constraints", {}).get("arc_start_state", {}),
                 "arc_end_state": arc.get("state_constraints", {}).get("arc_end_state", {}),
@@ -871,11 +1141,11 @@ class Stage2Optimizer:
 
         return "\n".join(parts)
 
-    def post_process_arc(self, arc: dict, prev_arcs: list[dict]) -> tuple[dict, list[str]]:
+    def post_process_arc(self, arc: dict, prev_arcs: list[dict], *, genre: str = "") -> tuple[dict, list[str]]:
         """Arc 후처리 (자동 수정)"""
         self.stats["total_arcs"] += 1
 
-        corrected_arc, corrections = self.auto_corrector.auto_correct(arc, prev_arcs)
+        corrected_arc, corrections = self.auto_corrector.auto_correct(arc, prev_arcs, genre=genre)
 
         if corrections:
             self.stats["auto_corrected"] += 1

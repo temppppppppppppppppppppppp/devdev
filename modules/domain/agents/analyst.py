@@ -19,7 +19,7 @@ import logging
 import os
 import re
 
-from modules.core.constants import GenreTypes, HUDKeys, RetryLimits
+from modules.core.constants import GenreTypes, HUDKeys, RetryLimits, VolumeSettings
 from modules.core.genre_schema_builder import (
     build_state_constraints_schema,
     build_status_shadow_schema,
@@ -641,6 +641,9 @@ class Analyst(BaseAgent):
 
         # [V60.31] 페이싱 계산 - Block 구조에 맞게 수정
         # [V60.62] 3가지 구조 모두 대응: flatten, nested content, plot_roadmap
+        min_ep_count = VolumeSettings.MIN_EPISODES_PER_ARC
+        max_ep_count = VolumeSettings.MAX_EPISODES_PER_ARC
+        ep_count_range_text = f"{min_ep_count}~{max_ep_count}"
         original_guess = 5
         if isinstance(curr_block, dict):
             _content_parts, content_len = self._extract_content_parts(curr_block)
@@ -657,10 +660,10 @@ class Analyst(BaseAgent):
             elif content_len < 1500:
                 original_guess = 6  # → 5화
             else:
-                original_guess = 7  # → 6화 (max)
+                original_guess = max_ep_count + 1  # → 최대 화수
 
-        # 실제 타겟 화수는 추정치보다 1화 적게 잡아 긴장감 유도 (3~7화 제한)
-        target_ep_count = max(3, min(7, original_guess - 1))
+        # 실제 타겟 화수는 추정치보다 1화 적게 잡아 긴장감 유도 (설정 범위 제한)
+        target_ep_count = max(min_ep_count, min(max_ep_count, original_guess - 1))
 
         # [V60.31] Block 빈약 경고 - 화당 200자 이상 권장
         min_content_per_ep = 200
@@ -757,7 +760,7 @@ class Analyst(BaseAgent):
         max_retries = RetryLimits.ANALYST_MAX_ATTEMPTS
         # [V60.31] 가변 페이싱: 권장값만 제시, LLM이 사건 밀도로 최종 결정
         pacing_guide = (
-            f"시스템 권장: {target_ep_count}화 (Blitz:2-3 / Standard:3-4 / Epic:5-6 중 사건 밀도에 맞게 조정 가능)"
+            f"시스템 권장: {target_ep_count}화 (Blitz:2-3 / Standard:3-4 / Epic:5-6, 실제 허용 범위: {ep_count_range_text})"
         )
         initial_feedback = feedback if feedback else pacing_guide
         final_arc_data = None
@@ -783,7 +786,10 @@ class Analyst(BaseAgent):
                             "ending_library": placeholder,
                             "trans_library": placeholder,
                             "archetype_library": placeholder,
-                            "special_instructions": f"\n[🚨 PACING GUIDE]: 권장 {target_ep_count}화 (사건 밀도에 따라 3~7화 범위 내 조정 가능)",
+                            "special_instructions": (
+                                f"\n[🚨 PACING GUIDE]: 권장 {target_ep_count}화 "
+                                f"(사건 밀도에 따라 {ep_count_range_text}화 범위 내 조정 가능)"
+                            ),
                         }
                     )
                     prompt = adjusted_prompt_tpl.format_map(_SafeDict(**cache_safe_data))
@@ -821,7 +827,10 @@ class Analyst(BaseAgent):
                         "ending_library": self._escape_braces(ending_lib_full),
                         "trans_library": self._escape_braces(trans_lib_full),
                         "archetype_library": self._escape_braces(archetype_lib_full),
-                        "special_instructions": f"\n[🚨 PACING GUIDE]: 권장 {target_ep_count}화 (사건 밀도에 따라 3~7화 범위 내 조정 가능)",
+                        "special_instructions": (
+                            f"\n[🚨 PACING GUIDE]: 권장 {target_ep_count}화 "
+                            f"(사건 밀도에 따라 {ep_count_range_text}화 범위 내 조정 가능)"
+                        ),
                     }
                 )
                 prompt = adjusted_prompt_tpl.format_map(_SafeDict(**full_safe_data))
@@ -837,7 +846,7 @@ class Analyst(BaseAgent):
                     self.ask(prompt, temperature=temp, response_schema=schema, thinking_level="medium")
                 )
 
-            # 7. [V60.31] 가변 페이싱: LLM이 결정한 ep_count 존중 (3~7 범위 내)
+            # 7. [V60.31] 가변 페이싱: LLM이 결정한 ep_count 존중 (설정 범위 내)
             llm_ep_count = draft_result.get("ep_count")
             if isinstance(llm_ep_count, str):
                 match = re.search(r"(\d+)", str(llm_ep_count))
@@ -851,13 +860,13 @@ class Analyst(BaseAgent):
             chosen_pacing_lower = chosen_pacing.lower() if isinstance(chosen_pacing, str) else ""
 
             if "epic" in chosen_pacing_lower:
-                pacing_min, pacing_max = 6, 7
+                pacing_min, pacing_max = 5, max_ep_count
             elif "standard" in chosen_pacing_lower:
-                pacing_min, pacing_max = 5, 5
+                pacing_min, pacing_max = 4, 5
             elif "blitz" in chosen_pacing_lower:
                 pacing_min, pacing_max = 3, 4
             else:
-                pacing_min, pacing_max = 3, 7
+                pacing_min, pacing_max = min_ep_count, max_ep_count
 
             if llm_ep_count < pacing_min or llm_ep_count > pacing_max:
                 corrected_ep_count = max(pacing_min, min(pacing_max, llm_ep_count))
@@ -866,7 +875,7 @@ class Analyst(BaseAgent):
                 )
                 llm_ep_count = corrected_ep_count
 
-            actual_ep_count = max(3, min(7, llm_ep_count))
+            actual_ep_count = max(min_ep_count, min(max_ep_count, llm_ep_count))
             if actual_ep_count != target_ep_count:
                 logging.info(f" [V60.31] 가변 페이싱: 권장 {target_ep_count}화 → LLM 결정 {actual_ep_count}화")
 

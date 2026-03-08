@@ -611,7 +611,8 @@ class PromptBuilder:
             arc_label = prev_arc.get("arc_no", "?")
 
             state_constraints = prev_arc.get("state_constraints", {})
-            items_acquired = state_constraints.get("items_acquired", [])
+            # [BUG-F] protagonist_items 우선 폴백
+            items_acquired = state_constraints.get("protagonist_items") or state_constraints.get("items_acquired", [])
             if items_acquired:
                 for item in items_acquired:
                     item = str(item) if isinstance(item, dict) else item

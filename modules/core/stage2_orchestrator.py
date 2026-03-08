@@ -79,6 +79,41 @@ class Stage2Orchestrator:
             self._finalizer = Stage2Finalizer(self)
         return self._finalizer
 
+    def _set_agent_telemetry_context(self, *, ep_num: int | None = None) -> None:
+        """[LOG-Phase2] BaseAgent llm_calls stage/ep 메타데이터 주입."""
+        agents = getattr(self.ctx, "agents", None)
+        if not isinstance(agents, dict):
+            return
+
+        _ep_value = None
+        if ep_num is not None:
+            try:
+                _ep_value = max(0, int(ep_num))
+            except (TypeError, ValueError):
+                _ep_value = None
+
+        # 서브 에이전트 포함 전체 순회 (four_phase 내부 인스턴스는 agents dict와 별개)
+        _all_agents = list(agents.values())
+        _four_phase = agents.get("four_phase")
+        if _four_phase is not None:
+            for _sub_name in ("preflight", "ensemble", "validator"):
+                _sub = getattr(_four_phase, _sub_name, None)
+                if _sub is not None:
+                    _all_agents.append(_sub)
+
+        for agent in _all_agents:
+            if agent is None:
+                continue
+            try:
+                setattr(agent, "_current_stage", 2)
+            except Exception:
+                pass
+            if _ep_value is not None:
+                try:
+                    setattr(agent, "_current_ep_num", _ep_value)
+                except Exception:
+                    pass
+
     # ═══════════════════════════════════════════════════════════════════════
     # 메인 파이프라인
     # ═══════════════════════════════════════════════════════════════════════
@@ -247,6 +282,8 @@ class Stage2Orchestrator:
                 # A. [병렬 농축 단계]
                 _enrich_done = 0
                 _enrich_total = batch_end - batch_start
+                _batch_ep_estimate = 1 if not all_refined_arcs else max(1, all_refined_arcs[-1].get("ep_end", 0) + 1)
+                self._set_agent_telemetry_context(ep_num=_batch_ep_estimate)
 
                 async def throttled_enrich(idx):
                     nonlocal _enrich_done
@@ -399,6 +436,7 @@ class Stage2Orchestrator:
                 source_arc_idx, enriched_block = enriched_batch[idx]
                 global_arc_no = source_arc_idx + 1
                 vol_no = ((global_arc_no - 1) // VolumeSettings.ARCS_PER_VOLUME) + 1
+                self._set_agent_telemetry_context(ep_num=current_ep_start)
                 default_vol_strategy = {"vol_no": vol_no, "strategy_doc": ""}
                 current_vol_strategy = next(
                     (v for v in volumes_strategy if v.get("vol_no") == vol_no),
@@ -685,7 +723,9 @@ class Stage2Orchestrator:
 
                     prev_items = []
                     for prev_arc in all_refined_arcs:
-                        items = prev_arc.get("state_constraints", {}).get("items_acquired", [])
+                        # [BUG-F] protagonist_items 우선 폴백
+                        _psc_orch = prev_arc.get("state_constraints", {})
+                        items = _psc_orch.get("protagonist_items") or _psc_orch.get("items_acquired", [])
                         if items:
                             prev_items.extend(items if isinstance(items, list) else [items])
 
@@ -720,7 +760,8 @@ class Stage2Orchestrator:
                     if refined_arc:
                         report_lines.append(f"  tactical_doc 길이: {len(refined_arc.get('tactical_doc', ''))}자")
                         report_lines.append(
-                            f"  items_acquired: {refined_arc.get('state_constraints', {}).get('items_acquired', [])}"
+                            # [BUG-F] protagonist_items 우선 폴백
+                            f"  items_acquired: {refined_arc.get('state_constraints', {}).get('protagonist_items') or refined_arc.get('state_constraints', {}).get('items_acquired', [])}"
                         )
 
                     report_content = "\n".join(report_lines)

@@ -409,12 +409,23 @@ class BaseGuard(ABC):
             if rank == character_rank:
                 continue  # 자신의 호칭은 스킵
 
+            # [WARN-3] 타인 지칭 제외 접미사 — 복수형/지시형은 자칭이 아님
+            _exclusion_suffixes = ["들", "들을", "들의", "들과", "들은", "들이", "투자자"]
             for title in rank_titles:
                 # 주인공이 자신을 부르는 패턴 검색
-                self_address_patterns = [f"나는.*{title}", f"본좌.*{title}", f"소생.*{title}"]
+                # [WARN-3] 정밀화: "나는 {title}다/이다/입니다/야" 형태만 자칭 확정
+                self_address_patterns = [
+                    rf"나는\s{{0,5}}{re.escape(title)}(?:다|이다|입니다|야|인가)",
+                    rf"본좌\s{{0,5}}{re.escape(title)}(?:다|이다|입니다|야|인가)",
+                    rf"소생\s{{0,5}}{re.escape(title)}(?:다|이다|입니다|야|인가)",
+                ]
 
                 for pattern in self_address_patterns:
-                    if re.search(pattern, manuscript):
+                    for match in re.finditer(pattern, manuscript):
+                        # [WARN-3] 타인 지칭 필터링 — 매칭 후 문맥 윈도우 검사
+                        _context_window = manuscript[match.start():min(match.end() + 10, len(manuscript))]
+                        if any(suf in _context_window for suf in _exclusion_suffixes):
+                            continue  # 복수형/타인 지칭 → 오탐 필터링
                         if title not in allowed_titles:
                             violations.append(
                                 {
@@ -423,6 +434,7 @@ class BaseGuard(ABC):
                                     "reason": f"직위 '{character_rank}'에서 '{title}' 자칭 불가",
                                 }
                             )
+                            break  # 동일 title에 대해 1건만 기록
 
         return {"passed": len(violations) == 0, "violations": violations}
 
@@ -512,17 +524,27 @@ class BaseGuard(ABC):
                     continue  # 상위 직위가 아니면 스킵
 
             for title in titles:
-                # 자칭 패턴 검색
+                # [WARN-3] 자칭 패턴 검색 — 정밀 regex + re.escape 적용
+                _esc_title = re.escape(title)
                 self_claim_patterns = [
-                    f"나는.*{title}",
-                    f"본.*{title}",
-                    f"{title}인 내가",
-                    f"{title}로서",
-                    f"{title} 대행",
+                    rf"나는\s{{0,5}}{_esc_title}(?:다|이다|입니다|야|인가)",
+                    rf"본좌\s{{0,5}}{_esc_title}(?:다|이다|입니다|야|인가)",
+                    rf"{_esc_title}인 내가",
+                    rf"{_esc_title}로서",
+                    rf"{_esc_title} 대행",
                 ]
+                # [WARN-3] 타인 지칭 제외 접미사
+                _exclusion_suffixes = ["들", "들을", "들의", "들과", "들은", "들이", "투자자"]
 
                 for pattern in self_claim_patterns:
-                    if re.search(pattern, manuscript):
+                    _matched = False
+                    for _m in re.finditer(pattern, manuscript):
+                        _ctx = manuscript[_m.start():min(_m.end() + 10, len(manuscript))]
+                        if any(suf in _ctx for suf in _exclusion_suffixes):
+                            continue
+                        _matched = True
+                        break
+                    if _matched:
                         # 명분/위임 표현 확인
                         has_delegation = any(re.search(dp, manuscript) for dp in delegation_patterns)
 

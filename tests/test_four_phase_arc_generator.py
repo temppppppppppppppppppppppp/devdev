@@ -28,7 +28,10 @@ def _make_generator() -> FourPhaseArcGenerator:
     gen.negative_injector.record_rejection = MagicMock()
     gen._genre = "wuxia"
     gen.ensemble = MagicMock()
-    gen.ensemble.generate_ensemble.return_value = ({"_ensemble_meta": {"best_strategy": "balanced"}}, [{}])
+    gen.ensemble.generate_ensemble.return_value = (
+        None,
+        [{"_ensemble_meta": {"best_strategy": "balanced"}, "tactical_doc": "mock tactical"}],
+    )
     gen.validator = MagicMock()
     gen.validator.validate.return_value = ("PASS", {"issues": [], "confidence": 90})
     gen._determine_ep_count = MagicMock(return_value=(5, "reason"))

@@ -157,6 +157,7 @@ DIRECTOR_AUDIT_SCHEMA = types.Schema(
                 "opening_diversity": types.Schema(type=types.Type.STRING, enum=["OK", "ISSUE"]),
                 "timeline_arc_consistency": types.Schema(type=types.Type.STRING, enum=["OK", "ISSUE"]),  # [NS-4]
                 "fiction_term_leak": types.Schema(type=types.Type.STRING, enum=["OK", "ISSUE"]),  # [TF-57-A]
+                "scene_variety": types.Schema(type=types.Type.STRING, enum=["OK", "ISSUE"]),  # [TF-J]
             },
         ),
     },
@@ -250,6 +251,36 @@ ARC_STATE_CONSTRAINTS_SCHEMA = types.Schema(
             type=types.Type.ARRAY,
             items=types.Schema(type=types.Type.STRING),
             description="이 Arc에서 소모/사용되어 사라진 아이템 (금전, 소모품 등)",
+        ),
+        # [F-A] 투자물 수치 검산용 구조화 필드 (optional)
+        "investment_calc": types.Schema(
+            type=types.Type.OBJECT,
+            description="투자물 장르: 에피소드별 투자 거래 명세. Python 검산에 사용.",
+            properties={
+                "transactions": types.Schema(
+                    type=types.Type.ARRAY,
+                    description="해당 Arc 내 투자 거래 목록",
+                    items=types.Schema(
+                        type=types.Type.OBJECT,
+                        properties={
+                            "ep_no": types.Schema(type=types.Type.INTEGER, description="에피소드 번호"),
+                            "asset": types.Schema(type=types.Type.STRING, description="자산명 (예: 'WTI 원유')"),
+                            "action": types.Schema(type=types.Type.STRING, description="매수/매도/청산"),
+                            "entry_price": types.Schema(type=types.Type.NUMBER, description="진입가"),
+                            "exit_price": types.Schema(type=types.Type.NUMBER, description="청산가 (미청산 시 0)"),
+                            "leverage": types.Schema(type=types.Type.NUMBER, description="레버리지 배수 (없으면 1)"),
+                            "principal": types.Schema(type=types.Type.NUMBER, description="투자 원금 (원 단위)"),
+                            "stated_profit": types.Schema(
+                                type=types.Type.NUMBER,
+                                description="서술된 수익/손실 (원 단위, 손실은 음수)",
+                            ),
+                        },
+                        required=["ep_no", "asset", "action", "entry_price", "leverage", "principal"],
+                    ),
+                ),
+                "final_cash": types.Schema(type=types.Type.NUMBER, description="Arc 종료 시 현금 (원 단위)"),
+                "final_total_assets": types.Schema(type=types.Type.NUMBER, description="Arc 종료 시 총자산 (원 단위)"),
+            },
         ),
         # [V49.7] 품질 추적 필드
         "relationship_changes": types.Schema(

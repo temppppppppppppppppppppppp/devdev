@@ -199,6 +199,38 @@ def get_fix_issues_prompt(
 """
 
 
+def get_expand_length_prompt(
+    *,
+    current_length: int,
+    target_length: int,
+    manuscript_escaped: str,
+    hud_report_escaped: str,
+) -> str:
+    """[TF-H] 분량 확장 전용 프롬프트."""
+    _deficit = target_length - current_length
+    return f"""
+[Role] 웹소설 원고 확장 전문가
+[Task] 아래 원고를 {target_length}자 이상으로 확장하라. 현재 {current_length}자 (부족분: {_deficit}자).
+
+### 확장 규칙
+1. 기존 내용을 절대 삭제하지 마라.
+2. 각 씬에 대화를 최소 2개 추가하라 (인물 성격이 드러나는 대화).
+3. 주인공의 내면 심리 묘사를 각 씬당 200자 이상 추가하라.
+4. 배경/공간 묘사를 구체화하라 (오감: 시각, 청각, 촉각, 후각).
+5. 액션이나 긴장 장면이 있다면 슬로우모션 기법으로 늘려라.
+6. 반드시 {target_length}자 이상 출력하라. 부족하면 장면 전환 추가.
+
+### 현재 HUD 상태 (참고)
+{hud_report_escaped}
+
+### 확장 대상 원고
+{manuscript_escaped}
+
+### 출력 형식
+확장된 JSON 원고만 출력하라. 설명 없이 JSON만.
+"""
+
+
 def get_anti_trope_instructions(*, genre_name: str) -> str:
     """[V65] 반클리셰 명령 프롬프트 템플릿."""
     return f"""

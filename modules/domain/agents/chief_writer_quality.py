@@ -6,9 +6,10 @@ import json
 import logging
 import re
 
+from modules.core.constants import ManuscriptLimits
 from modules.validation.threshold_helper import _threshold
 
-from .chief_writer_prompts import get_fix_issues_prompt
+from .chief_writer_prompts import get_expand_length_prompt, get_fix_issues_prompt
 
 
 class ChiefWriterQualityGate:
@@ -273,11 +274,29 @@ class ChiefWriterQualityGate:
         # 10. [메타 월] 집필 시스템 내부 용어 노출 체크
         issues.extend(self._check_system_term_exposure(content, genre_name))
 
-        # [Sweep46] 심각도 판단 — 1~2건은 "low" (self-critique 스킵 의도 복원)
+        # 11. [TF-H] 분량 재검사 — self-critique 루프에서 분량 부족 재감지
+        _min_len = int(ManuscriptLimits.MIN_LENGTH)
+        _target_len = int(ManuscriptLimits.TARGET_LENGTH)
+        if len(content) < _target_len:
+            _sev = "high" if len(content) < _min_len else "medium"
+            issues.append(
+                {
+                    "type": "manuscript_length",
+                    "description": (
+                        f"원고 길이 {len(content)}자 < 목표 {_target_len}자. "
+                        "장면 묘사, 인물 심리, 대화를 확장하세요."
+                    ),
+                    "severity": _sev,
+                }
+            )
+
+        # [Sweep46] 심각도 판단
+        # [TF-H] high 이슈 1건이라도 있으면 전체 severity를 최소 medium으로 보정
         severity = "low"
+        _has_high_issue = any(isinstance(i, dict) and i.get("severity") == "high" for i in issues)
         if len(issues) >= 5:
             severity = "high"
-        elif len(issues) >= 3:
+        elif len(issues) >= 3 or _has_high_issue:
             severity = "medium"
         # 1~2건: severity="low", has_issues=True → apply_self_critique에서 break
 
@@ -302,16 +321,18 @@ class ChiefWriterQualityGate:
         if is_medical:
             # Stage\s+\d+(암 스테이징)과 treatment(시술명) 제외
             _SYSTEM_TERM_RE = _re.compile(
-                r"\b(Block\s+\d+|Arc\s+\d+|Blueprint)\b",
+                r"\b(Block\s+\d+|Blueprint)\b",
                 _re.IGNORECASE,
             )
         else:
             _SYSTEM_TERM_RE = _re.compile(
-                r"\b(Block\s+\d+|Arc\s+\d+|Stage\s+\d+|Blueprint|treatment)\b",
+                r"\b(Block\s+\d+|Stage\s+\d+|Blueprint|treatment)\b",
                 _re.IGNORECASE,
             )
+        # [C-1] 'Arc 종료/시작' 같은 메타 표현 감지 (대문자 Arc만)
+        _ARC_META_RE = _re.compile(r"\bArc(?:\s+\d+)?\b")
 
-        m = _SYSTEM_TERM_RE.search(content)
+        m = _SYSTEM_TERM_RE.search(content) or _ARC_META_RE.search(content)
         if m:
             return [
                 {
@@ -715,19 +736,53 @@ class ChiefWriterQualityGate:
             issue_desc = issue.get("description", "") if isinstance(issue, dict) else ""
             fix_instructions.append(f"- {issue_type}: {issue_desc}")
 
-        # [V65] 교정 프롬프트 함수 래핑 호출
-        prompt = get_fix_issues_prompt(
-            fix_instructions_text=chr(10).join(fix_instructions),
-            hud_report_escaped=self.host._escape_braces(hud_report[:500]),
-            manuscript_escaped=self.host._escape_braces(manuscript),  # [TF-I09] 전문 전달 (8000자 절삭 제거)
+        # [TF-H] 분량 부족 이슈면 확장 전용 프롬프트 사용
+        _has_length_issue = any(
+            isinstance(i, dict) and i.get("type") == "manuscript_length"
+            for i in issues[:3]
         )
+
+        if _has_length_issue:
+            _content = ""
+            try:
+                _parsed = json.loads(manuscript)
+                _content = _parsed.get("content", "") if isinstance(_parsed, dict) else manuscript
+            except (json.JSONDecodeError, ValueError, TypeError):
+                _content = manuscript
+            if not isinstance(_content, str):
+                _content = str(_content) if _content is not None else ""
+            prompt = get_expand_length_prompt(
+                current_length=len(_content),
+                target_length=int(ManuscriptLimits.TARGET_LENGTH),
+                manuscript_escaped=self.host._escape_braces(manuscript),
+                hud_report_escaped=self.host._escape_braces(hud_report[:500]),
+            )
+            _thinking = "medium"
+        else:
+            # [V65] 기존 범용 교정 프롬프트
+            prompt = get_fix_issues_prompt(
+                fix_instructions_text=chr(10).join(fix_instructions),
+                hud_report_escaped=self.host._escape_braces(hud_report[:500]),
+                manuscript_escaped=self.host._escape_braces(manuscript),  # [TF-I09] 전문 전달 (8000자 절삭 제거)
+            )
+            _thinking = "low"
         try:
-            fixed = self.host.ask(prompt, temperature=0.5, thinking_level="low")
+            fixed = self.host.ask(prompt, temperature=0.5, thinking_level=_thinking)
             fixed = self.sanitize_leakage(fixed)
 
             # JSON 유효성 검증
             try:
-                json.loads(fixed)
+                _fixed_parsed = json.loads(fixed)
+                _fixed_content = _fixed_parsed.get("content", "") if isinstance(_fixed_parsed, dict) else ""
+                if isinstance(_fixed_content, str):
+                    _fc_len = len(_fixed_content)
+                    _min = int(ManuscriptLimits.MIN_LENGTH)
+                    if _fc_len < _min:
+                        logging.warning(
+                            "[TF-H] 수정 후 분량 여전히 부족: %d자 < %d자",
+                            _fc_len,
+                            _min,
+                        )
                 return fixed
             except (json.JSONDecodeError, ValueError, TypeError):
                 logging.info("[ChiefWriter] Fix manuscript JSON parse failed, preserving original")

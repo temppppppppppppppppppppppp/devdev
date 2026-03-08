@@ -517,7 +517,8 @@ class StateTracker:
                     self._parse_episode_state(ep_num, ep_data, checkpoints)
 
             # 아이템 획득/소모 추적
-            items_acquired = state_constraints.get("items_acquired", [])
+            # [BUG-F] protagonist_items 우선 폴백
+            items_acquired = state_constraints.get("protagonist_items") or state_constraints.get("items_acquired", [])
             items_consumed = state_constraints.get("items_consumed", [])
 
             for item in items_acquired:
@@ -965,6 +966,7 @@ class StateTracker:
         level: str = None,
         personality_traits: str = None,
         primary_motivation: str = None,
+        position: str = None,
     ):
         return self._npc.register_npc_info(
             npc_name,
@@ -973,6 +975,7 @@ class StateTracker:
             level,
             personality_traits=personality_traits,
             primary_motivation=primary_motivation,
+            position=position,
         )
 
     def check_npc_changes(self, content: str, arc_no: int) -> list[dict]:

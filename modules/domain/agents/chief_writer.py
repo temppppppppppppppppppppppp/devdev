@@ -840,7 +840,8 @@ class ChiefWriter(BaseAgent):
                             _state_updates = {}
                         # 원고 텍스트 추출 (여러 키 이름 시도)
                         _manuscript = (
-                            _parsed.get("patched_text")
+                            _parsed.get("corrected_manuscript")
+                            or _parsed.get("patched_text")
                             or _parsed.get("content")
                             or _parsed.get("text")
                             or _parsed.get("manuscript")
@@ -898,10 +899,12 @@ class ChiefWriter(BaseAgent):
                     return "\n\n".join(str(item) for item in parsed)
                 elif isinstance(parsed, dict):
                     return (
-                        parsed.get("patched_text")
+                        parsed.get("corrected_manuscript")
+                        or parsed.get("patched_text")
                         or parsed.get("content")
                         or parsed.get("text")
                         or parsed.get("manuscript")
+                        or parsed.get("patched_manuscript")
                         or text
                     )
             except (json.JSONDecodeError, ValueError):

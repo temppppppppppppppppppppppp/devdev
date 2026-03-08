@@ -174,12 +174,12 @@ ENSEMBLE_VARIABLE_PROMPT: |
   각 NC 항목에 대해 아래 둘 중 하나를 선택하고 이유를 적을 수 있습니다:
   - **AGREE**: Python이 맞다 → 이건 실제 모순이다. continuity_contradiction에 반영하세요.
   - **DISMISS**: Python이 틀렸다 → 왜 틀렸는지 이유를 적으세요. (예: "전화 후 추가 매수로 60억 정당", "승진 이벤트가 이번 화에 있음")
-  Python은 숫자 비교만 했을 뿐 서사 맥락을 모릅니다. 당신이 맥락을 보고 판단하세요.
+  Python 수치 검증은 참고치입니다. 맥락 판단은 당신이 하세요.
 
   ### ✅ [NC-3] 일관성 체크리스트 (권장)
-  아래 11개 항목을 원고를 읽으며 가능하면 체크하세요. 미작성 시 별도 감점은 없습니다.
+  아래 13개 항목을 체크하세요(미작성 감점 없음).
   각 항목에 OK(문제 없음) 또는 ISSUE(문제 발견)를 기입하세요.
-  ISSUE가 있으면 해당 항목을 score_breakdown의 관련 점수에 반영하세요.
+  ISSUE는 관련 score_breakdown 점수에 반영하세요.
 
   1. **numeric_accuracy** — 원고의 금액/수량이 이전 화 및 mandatory_context의 수치와 일치하는가?
   2. **arithmetic** — A+B=C, 레버리지 계산 등 산술이 정확한가?
@@ -193,6 +193,7 @@ ENSEMBLE_VARIABLE_PROMPT: |
   10. **opening_diversity** — 직전 화와 도입부 묘사가 과도하게 유사하지 않는가?
   11. **timeline_arc_consistency** — 이전 Arc/에피소드와의 시간 간격 표현("며칠 전", "두 달 후" 등)이 [Arc 시간 연속성 참고] 정보와 일치하는가? 해당 정보가 없으면 OK.
   12. **fiction_term_leak** — [TF-57-A] 등장인물 대화·지문에 집필 시스템 내부 용어("Block N", "Arc N", "Blueprint", "전술서")가 노출됐는가? OK = 없음. ISSUE = 1건 이상.
+  13. **scene_variety** — 장소·인물 단조 여부.
 
   ### 📚 [NC-3B] consistency_checklist 응답 예시
   아래는 올바른 체크리스트 응답입니다. ISSUE에는 반드시 구체적 근거를 score_breakdown에 반영하세요.
@@ -209,7 +210,8 @@ ENSEMBLE_VARIABLE_PROMPT: |
       "time_progression": "OK",
       "opening_diversity": "OK",
       "timeline_arc_consistency": "OK",
-      "fiction_term_leak": "OK"
+      "fiction_term_leak": "OK",
+      "scene_variety": "OK"
   }}
   → arithmetic ISSUE 예시: 레버리지 수익률 6.73%×3배=20.2%인데 원고는 40.6%로 표기 → continuity_contradiction에 MAJOR -10 감점
 
@@ -258,7 +260,8 @@ ENSEMBLE_VARIABLE_PROMPT: |
           "time_progression": "OK|ISSUE",
           "opening_diversity": "OK|ISSUE",
           "timeline_arc_consistency": "OK|ISSUE",
-          "fiction_term_leak": "OK|ISSUE"
+          "fiction_term_leak": "OK|ISSUE",
+          "scene_variety": "OK|ISSUE"
       }},
       "contradiction_check": {{
           "found_contradictions": [
@@ -465,12 +468,12 @@ ENSEMBLE_SELECTION_PROMPT: |
   각 NC 항목에 대해 아래 둘 중 하나를 선택하고 이유를 적을 수 있습니다:
   - **AGREE**: Python이 맞다 → 이건 실제 모순이다. continuity_contradiction에 반영하세요.
   - **DISMISS**: Python이 틀렸다 → 왜 틀렸는지 이유를 적으세요. (예: "전화 후 추가 매수로 60억 정당", "승진 이벤트가 이번 화에 있음")
-  Python은 숫자 비교만 했을 뿐 서사 맥락을 모릅니다. 당신이 맥락을 보고 판단하세요.
+  Python 수치 검증은 참고치입니다. 맥락 판단은 당신이 하세요.
 
   ### ✅ [NC-3] 일관성 체크리스트 (권장)
-  아래 11개 항목을 원고를 읽으며 가능하면 체크하세요. 미작성 시 별도 감점은 없습니다.
+  아래 13개 항목을 체크하세요(미작성 감점 없음).
   각 항목에 OK(문제 없음) 또는 ISSUE(문제 발견)를 기입하세요.
-  ISSUE가 있으면 해당 항목을 score_breakdown의 관련 점수에 반영하세요.
+  ISSUE는 관련 score_breakdown 점수에 반영하세요.
 
   1. **numeric_accuracy** — 원고의 금액/수량이 이전 화 및 mandatory_context의 수치와 일치하는가?
   2. **arithmetic** — A+B=C, 레버리지 계산 등 산술이 정확한가?
@@ -484,6 +487,7 @@ ENSEMBLE_SELECTION_PROMPT: |
   10. **opening_diversity** — 직전 화와 도입부 묘사가 과도하게 유사하지 않는가?
   11. **timeline_arc_consistency** — 이전 Arc/에피소드와의 시간 간격 표현("며칠 전", "두 달 후" 등)이 [Arc 시간 연속성 참고] 정보와 일치하는가? 해당 정보가 없으면 OK.
   12. **fiction_term_leak** — [TF-57-A] 등장인물 대화·지문에 집필 시스템 내부 용어("Block N", "Arc N", "Blueprint", "전술서")가 노출됐는가? OK = 없음. ISSUE = 1건 이상.
+  13. **scene_variety** — 장소·인물 단조 여부.
 
   ### 📚 [NC-3B] consistency_checklist 응답 예시
   아래는 올바른 체크리스트 응답입니다. ISSUE에는 반드시 구체적 근거를 score_breakdown에 반영하세요.
@@ -500,7 +504,8 @@ ENSEMBLE_SELECTION_PROMPT: |
       "time_progression": "OK",
       "opening_diversity": "OK",
       "timeline_arc_consistency": "OK",
-      "fiction_term_leak": "OK"
+      "fiction_term_leak": "OK",
+      "scene_variety": "OK"
   }}
   → arithmetic ISSUE 예시: 레버리지 수익률 6.73%×3배=20.2%인데 원고는 40.6%로 표기 → continuity_contradiction에 MAJOR -10 감점
 
@@ -549,7 +554,8 @@ ENSEMBLE_SELECTION_PROMPT: |
           "time_progression": "OK|ISSUE",
           "opening_diversity": "OK|ISSUE",
           "timeline_arc_consistency": "OK|ISSUE",
-          "fiction_term_leak": "OK|ISSUE"
+          "fiction_term_leak": "OK|ISSUE",
+          "scene_variety": "OK|ISSUE"
       }},
       "contradiction_check": {{
           "found_contradictions": [
@@ -672,6 +678,9 @@ STRATEGIC_AUDIT_PROMPT_V30: |
        (d) **관계/동맹**: 직전 아크에서 결렬된 관계가 설명 없이 회복되면 WARNING
        (e) **위치/지리**: 직전 아크 종료 시 위치와 현재 아크 시작 위치가 합리적으로 연결되는가?
        (f) **능력/경지**: 직전 아크에서의 능력 수준과 현재 아크의 전제가 일치하는가?
+  6. **[TF-J] 공간/인물 다양성 (Block 예외 포함)**:
+     - 동일 장소/동일 인물 조합의 과도 반복이 있는가?
+     - 단, `curr_block`/treatment가 단일 공간 서사를 명시하면 반복 자체만으로 REJECT하지 말고, 사건 전진 여부를 우선 판단하라.
 
   ### [🚨 유연한 판정 지침 (Pragmatism)]
   1. **관대한 승인**: 전술 설계도의 핵심 맥락이 80% 이상 반영되었고 치명적인 설정 오류(예: 죽은 자의 부활, 성별 바뀜 등)가 없다면, 세부 묘사의 미비함은 '수정 지시'만 남기고 [PASS] 판정하라.
@@ -705,6 +714,17 @@ STRATEGIC_AUDIT_PROMPT_V30: |
   - 사망한 NPC가 등장하거나, 분실 아이템을 보유하면 REJECT
   → 위반 시 REJECT, 아니면 다음 단계
 
+  Step 1.5: Arc 내부 상태-서사 정합성 검사 [PATCH-E]
+  - arc_start_state와 arc_end_state를 비교하여 변동 항목을 추출하라:
+    (a) 자산 변동액 (시작→종료 차이)
+    (b) 소지품 변동 (+신규획득, -폐기)
+    (c) 부상 상태 변화 (치유/악화)
+    (d) 위치 변경 (시작→종료)
+  - 각 변동 항목이 tactical_doc의 사건 서술에 대응되는가?
+    예) "자산 50억 증가"면 투자/판매/보상 등 근거 사건이 있어야 한다.
+    예) "강남→여의도 이동"이면 이동 사유/과정 서술이 있어야 한다.
+  - 불일치 항목은 contradictions에 기록하고 PASS_WITH_FIX 또는 REJECT 근거로 반영하라.
+
   Step 2: 미래 오염 검사
   - 현재 블록의 보상/해결에 존재하지 않는 무구/비기가 전술서에 등장하는가?
   - 아직 획득하지 않은 아이템이나 미습득 무공이 등장하면 REJECT
@@ -725,6 +745,11 @@ STRATEGIC_AUDIT_PROMPT_V30: |
   - 단순 묘사로만 채워지지 않았는가?
   → 밀도 미달 시 REJECT, 충족 시 PASS
 
+  Step 6: [TF-J] 공간/인물 다양성 검사 (Block 예외 규칙)
+  - 동일 장소/동일 인물 배치가 3화 이상 반복되는지 확인하라.
+  - 단, 현재 블록 원문(`curr_block`)이 단일 공간 서사를 요구하면 반복 자체만으로 REJECT하지 마라.
+  - 예외 상황에서도 각 화의 목표/갈등/결과가 분리되지 않으면 PASS_WITH_FIX 또는 REJECT로 판정하라.
+
   ### ⚖️ [TF-52] Director 주권 원칙
   - Advisory(NpcDrift, NumericDrift, Flashback, InfoParadox, RelationshipDrift, LongTermRepetition)는 **참고자료**입니다.
   - Advisory가 MAJOR를 보고해도, 당신이 직접 원고를 읽고 문제가 아니라고 판단하면 무시하세요.
@@ -738,12 +763,12 @@ STRATEGIC_AUDIT_PROMPT_V30: |
   각 NC 항목에 대해 아래 둘 중 하나를 선택하고 이유를 적을 수 있습니다:
   - **AGREE**: Python이 맞다 → 이건 실제 모순이다. continuity_contradiction에 반영하세요.
   - **DISMISS**: Python이 틀렸다 → 왜 틀렸는지 이유를 적으세요. (예: "전화 후 추가 매수로 60억 정당", "승진 이벤트가 이번 화에 있음")
-  Python은 숫자 비교만 했을 뿐 서사 맥락을 모릅니다. 당신이 맥락을 보고 판단하세요.
+  Python 수치 검증은 참고치입니다. 맥락 판단은 당신이 하세요.
 
   ### ✅ [NC-3] 일관성 체크리스트 (권장)
-  아래 11개 항목을 원고를 읽으며 가능하면 체크하세요. 미작성 시 별도 감점은 없습니다.
+  아래 13개 항목을 체크하세요(미작성 감점 없음).
   각 항목에 OK(문제 없음) 또는 ISSUE(문제 발견)를 기입하세요.
-  ISSUE가 있으면 해당 항목을 score_breakdown의 관련 점수에 반영하세요.
+  ISSUE는 관련 score_breakdown 점수에 반영하세요.
 
   1. **numeric_accuracy** — 원고의 금액/수량이 이전 화 및 mandatory_context의 수치와 일치하는가?
   2. **arithmetic** — A+B=C, 레버리지 계산 등 산술이 정확한가?
@@ -757,6 +782,7 @@ STRATEGIC_AUDIT_PROMPT_V30: |
   10. **opening_diversity** — 직전 화와 도입부 묘사가 과도하게 유사하지 않는가?
   11. **timeline_arc_consistency** — 이전 Arc/에피소드와의 시간 간격 표현("며칠 전", "두 달 후" 등)이 [Arc 시간 연속성 참고] 정보와 일치하는가? 해당 정보가 없으면 OK.
   12. **fiction_term_leak** — [TF-57-A] 등장인물 대화·지문에 집필 시스템 내부 용어("Block N", "Arc N", "Blueprint", "전술서")가 노출됐는가? OK = 없음. ISSUE = 1건 이상.
+  13. **scene_variety** — 장소·인물 단조 여부.
 
   ### 📚 [NC-3B] consistency_checklist 응답 예시
   아래는 올바른 체크리스트 응답입니다. ISSUE에는 반드시 구체적 근거를 score_breakdown에 반영하세요.
@@ -773,7 +799,8 @@ STRATEGIC_AUDIT_PROMPT_V30: |
       "time_progression": "OK",
       "opening_diversity": "OK",
       "timeline_arc_consistency": "OK",
-      "fiction_term_leak": "OK"
+      "fiction_term_leak": "OK",
+      "scene_variety": "OK"
   }}
   → arithmetic ISSUE 예시: 레버리지 수익률 6.73%×3배=20.2%인데 원고는 40.6%로 표기 → continuity_contradiction에 MAJOR -10 감점
 
@@ -978,12 +1005,12 @@ DIRECTOR_AUDIT_PROMPT_V30: |
   각 NC 항목에 대해 아래 둘 중 하나를 선택하고 이유를 적을 수 있습니다:
   - **AGREE**: Python이 맞다 → 이건 실제 모순이다. continuity_contradiction에 반영하세요.
   - **DISMISS**: Python이 틀렸다 → 왜 틀렸는지 이유를 적으세요. (예: "전화 후 추가 매수로 60억 정당", "승진 이벤트가 이번 화에 있음")
-  Python은 숫자 비교만 했을 뿐 서사 맥락을 모릅니다. 당신이 맥락을 보고 판단하세요.
+  Python 수치 검증은 참고치입니다. 맥락 판단은 당신이 하세요.
 
   ### ✅ [NC-3] 일관성 체크리스트 (권장)
-  아래 11개 항목을 원고를 읽으며 가능하면 체크하세요. 미작성 시 별도 감점은 없습니다.
+  아래 13개 항목을 체크하세요(미작성 감점 없음).
   각 항목에 OK(문제 없음) 또는 ISSUE(문제 발견)를 기입하세요.
-  ISSUE가 있으면 해당 항목을 score_breakdown의 관련 점수에 반영하세요.
+  ISSUE는 관련 score_breakdown 점수에 반영하세요.
 
   1. **numeric_accuracy** — 원고의 금액/수량이 이전 화 및 mandatory_context의 수치와 일치하는가?
   2. **arithmetic** — A+B=C, 레버리지 계산 등 산술이 정확한가?
@@ -997,6 +1024,7 @@ DIRECTOR_AUDIT_PROMPT_V30: |
   10. **opening_diversity** — 직전 화와 도입부 묘사가 과도하게 유사하지 않는가?
   11. **timeline_arc_consistency** — 이전 Arc/에피소드와의 시간 간격 표현("며칠 전", "두 달 후" 등)이 [Arc 시간 연속성 참고] 정보와 일치하는가? 해당 정보가 없으면 OK.
   12. **fiction_term_leak** — [TF-57-A] 등장인물 대화·지문에 집필 시스템 내부 용어("Block N", "Arc N", "Blueprint", "전술서")가 노출됐는가? OK = 없음. ISSUE = 1건 이상.
+  13. **scene_variety** — 장소·인물 단조 여부.
 
   ### 📚 [NC-3B] consistency_checklist 응답 예시
   아래는 올바른 체크리스트 응답입니다. ISSUE에는 반드시 구체적 근거를 score_breakdown에 반영하세요.
@@ -1013,7 +1041,8 @@ DIRECTOR_AUDIT_PROMPT_V30: |
       "time_progression": "OK",
       "opening_diversity": "OK",
       "timeline_arc_consistency": "OK",
-      "fiction_term_leak": "OK"
+      "fiction_term_leak": "OK",
+      "scene_variety": "OK"
   }}
   → arithmetic ISSUE 예시: 레버리지 수익률 6.73%×3배=20.2%인데 원고는 40.6%로 표기 → continuity_contradiction에 MAJOR -10 감점
 

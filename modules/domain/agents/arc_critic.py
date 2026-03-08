@@ -248,7 +248,9 @@ class ArcCritic(BaseAgent):
 
         # items_acquired 수정 (중복 제거)
         if "remove_items" in auto_fixes:
-            items = fixed.get("state_constraints", {}).get("items_acquired", [])
+            # [BUG-F] protagonist_items 우선 폴백
+            _fsc = fixed.get("state_constraints", {})
+            items = _fsc.get("protagonist_items") or _fsc.get("items_acquired", [])
             for item_to_remove in auto_fixes["remove_items"]:
                 if item_to_remove in items:
                     items.remove(item_to_remove)
@@ -297,11 +299,15 @@ class ArcCritic(BaseAgent):
 
             all_prev_items = set()
             for p in prev_arcs:
-                items = p.get("state_constraints", {}).get("items_acquired", [])
+                # [BUG-F] protagonist_items 우선 폴백
+                _psc2 = p.get("state_constraints", {})
+                items = _psc2.get("protagonist_items") or _psc2.get("items_acquired", [])
                 if isinstance(items, list):
                     all_prev_items.update(_ikey(i) for i in items)
 
-            current_items = arc.get("state_constraints", {}).get("items_acquired", [])
+            # [BUG-F] protagonist_items 우선 폴백
+            _csc2 = arc.get("state_constraints", {})
+            current_items = _csc2.get("protagonist_items") or _csc2.get("items_acquired", [])
             if isinstance(current_items, list):
                 duplicates = {_ikey(i) for i in current_items} & all_prev_items
                 if duplicates:

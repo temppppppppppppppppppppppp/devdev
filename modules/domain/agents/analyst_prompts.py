@@ -353,10 +353,10 @@ PLAN_ARC_PROMPT_V25 = """
         "mixing_logic": "패턴 조합 및 복선 연출 통합 전략"
     }},
     "pacing_decision": {{
-        "chosen_pacing": "Blitz(3-4화) / Standard(5화) / Epic(6-7화) 중 선택",
+        "chosen_pacing": "Blitz(3-4화) / Standard(4-5화) / Epic(5-6화) 중 선택",
         "reasoning": "사건 밀도와 긴장감 분석 근거"
     }},
-    "ep_count": "{ep_count_suggestion} (시스템 추천) 또는 3~7 중 사건 밀도에 맞게 직접 결정",
+    "ep_count": "{ep_count_suggestion} (시스템 추천) 또는 3~6 중 사건 밀도에 맞게 직접 결정",
     "ep_start": {ep_start},
     "ep_end": "ep_start + ep_count - 1 로 계산",
     "title": "에피소드 묶음 제목",

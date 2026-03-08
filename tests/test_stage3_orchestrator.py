@@ -231,6 +231,32 @@ class TestGetProtagonistNameSafe:
         assert orch._get_protagonist_name_safe() == "주인공"
 
 
+class TestNs4TimelineHelpers:
+    def test_extract_timeline_start_end_from_range_string(self, orch):
+        arc_data = {
+            "state_changes": {
+                "timeline": {
+                    "start": "2006년 5월~8월",
+                    "end": "2006년 5월~8월",
+                }
+            }
+        }
+        start, end = orch._extract_timeline_start_end(arc_data)
+        assert start == (2006, 5)
+        assert end == (2006, 8)
+
+    def test_timeline_start_end_raw_equal(self, orch):
+        arc_data = {
+            "state_changes": {
+                "timeline": {
+                    "start": "2006년 5월~8월",
+                    "end": "2006년 5월~8월",
+                }
+            }
+        }
+        assert orch._timeline_start_end_raw_equal(arc_data) is True
+
+
 # ── Single Episode Processing ────────────────────────────────
 
 

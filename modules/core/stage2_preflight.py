@@ -1006,7 +1006,8 @@ class Stage2PreflightAnalysis:
                     # [TF-S2PE-02] equipment diff ≠ 획득 이벤트 — Python이 직접 쓰지 않음
                     # LLM(FourPhase state_constraints)이 대사·이벤트 기반으로 직접 명시해야 함
                     _stc = refined_arc.get("state_constraints", {})
-                    if not _stc.get("items_acquired"):
+                    # [BUG-F] protagonist_items 우선 폴백
+                    if not (_stc.get("protagonist_items") or _stc.get("items_acquired")):
                         _end_eq = _stc.get("arc_end_state", {}).get("equipment", [])
                         _start_eq = _stc.get("arc_start_state", {}).get("equipment", [])
                         if isinstance(_end_eq, list) and isinstance(_start_eq, list):

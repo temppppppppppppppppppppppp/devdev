@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src http://127.0.0.1:8300 ws://127.0.0.1:8300 https://generativelanguage.googleapis.com;" />
     <title>글도비 Desktop</title>
     <style>
       :root {
@@ -23,28 +24,31 @@
         box-sizing: border-box;
       }
 
-      body {
+      html, body {
         margin: 0;
+        height: 100dvh;
+        overflow: hidden;
         font-family: "Malgun Gothic", "Apple SD Gothic Neo", "Segoe UI", sans-serif;
         background: var(--bg);
         color: var(--text);
       }
 
       .page {
-        min-height: 100dvh;
-        padding: 20px;
+        height: 100dvh;
+        padding: 12px;
         display: grid;
-        gap: 14px;
+        grid-template-rows: auto 1fr;
+        gap: 10px;
       }
 
       .topbar {
         display: flex;
         align-items: center;
         gap: 10px;
-        padding: 12px;
+        padding: 8px 12px;
         background: var(--surface);
         border: 1px solid var(--line);
-        border-radius: 12px;
+        border-radius: 10px;
       }
 
       .project-select {
@@ -69,51 +73,66 @@
 
       .shell {
         display: grid;
-        grid-template-columns: 320px 1fr 1fr;
-        gap: 14px;
+        grid-template-columns: 280px 1fr;
+        gap: 10px;
+        min-height: 0;
+        overflow: hidden;
+      }
+
+      .shell > .panel:first-child {
+        overflow-y: auto;
+      }
+
+      .right-col {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        min-height: 0;
+        overflow: hidden;
       }
 
       .panel {
         background: var(--surface);
         border: 1px solid var(--line);
-        border-radius: 12px;
-        padding: 14px;
+        border-radius: 10px;
+        padding: 10px;
       }
 
       .panel-head {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 10px;
-        margin-bottom: 10px;
+        gap: 8px;
+        margin-bottom: 6px;
       }
 
       .panel-title {
         margin: 0;
-        font-size: 16px;
+        font-size: 14px;
       }
 
       .panel-sub {
-        margin: 0 0 12px;
+        margin: 0 0 6px;
         color: var(--muted);
-        font-size: 12px;
+        font-size: 11px;
       }
 
       .run-grid {
         display: grid;
         grid-template-columns: 1fr;
-        gap: 8px;
+        gap: 4px;
       }
 
       .menu-btn {
         width: 100%;
         text-align: left;
         border: 0;
-        border-radius: 10px;
-        padding: 11px 12px;
+        border-radius: 8px;
+        padding: 7px 10px;
         background: var(--button);
         color: #fff;
         font: inherit;
+        font-size: 13px;
         cursor: pointer;
       }
 
@@ -158,12 +177,14 @@
         border-radius: 10px;
         overflow: hidden;
         background: #e2e8f0;
+        flex: 1;
+        min-height: 200px;
       }
 
       #officeCanvas {
         display: block;
         width: 100%;
-        height: 320px;
+        height: 100%;
         image-rendering: pixelated;
       }
 
@@ -206,10 +227,10 @@
       }
 
       .status-foot {
-        margin-top: 10px;
+        margin-top: 6px;
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 6px;
         flex-wrap: wrap;
       }
 
@@ -218,8 +239,8 @@
         background: #e2e8f0;
         color: #334155;
         border-radius: 999px;
-        padding: 5px 11px;
-        font-size: 12px;
+        padding: 3px 9px;
+        font-size: 11px;
       }
 
       #stateBadge.state-running {
@@ -248,36 +269,63 @@
       }
 
       .last-action {
-        font-size: 13px;
+        font-size: 11px;
         color: var(--muted);
       }
 
       .log-controls {
         display: grid;
-        grid-template-columns: 1fr 120px;
-        gap: 8px;
-        margin-bottom: 10px;
+        grid-template-columns: 1fr 100px;
+        gap: 6px;
+        margin-bottom: 6px;
       }
 
       .log-controls input,
       .log-controls select {
         width: 100%;
-        border-radius: 8px;
+        border-radius: 6px;
         border: 1px solid var(--line);
-        padding: 8px 10px;
+        padding: 5px 8px;
         font: inherit;
+        font-size: 12px;
         background: #fff;
         color: var(--text);
       }
 
       .log-box {
-        min-height: 320px;
-        max-height: 320px;
+        min-height: 80px;
+        max-height: 160px;
         border-radius: 10px;
         border: 1px dashed var(--line);
         padding: 10px;
         overflow: auto;
         background: #fff;
+      }
+
+      /* 로그 패널 접기/펼치기 */
+      .log-panel-collapsible .log-controls,
+      .log-panel-collapsible .log-box {
+        display: none;
+      }
+
+      .log-panel-collapsible {
+        padding: 10px 14px;
+      }
+
+      .log-toggle-btn {
+        border: 1px solid var(--line);
+        background: #fff;
+        border-radius: 999px;
+        padding: 4px 10px;
+        font: inherit;
+        font-size: 12px;
+        color: var(--muted);
+        cursor: pointer;
+        margin-left: auto;
+      }
+
+      .log-toggle-btn:hover {
+        background: #f1f5f9;
       }
 
       .log-row {
@@ -321,9 +369,726 @@
         color: #3f2f00;
       }
 
-      @media (max-width: 1180px) {
+      .hidden-stage {
+        display: none;
+      }
+
+      /* ── 장르설정 모달 ── */
+      .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 150ms ease;
+      }
+
+      .modal-overlay.open {
+        opacity: 1;
+        pointer-events: all;
+      }
+
+      .modal-panel {
+        background: #fff;
+        border-radius: 16px;
+        border: 1px solid var(--line);
+        padding: 24px;
+        min-width: 340px;
+        max-width: 420px;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .modal-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .modal-title {
+        font-size: 16px;
+        font-weight: 700;
+        margin: 0;
+      }
+
+      .modal-close {
+        border: 0;
+        background: transparent;
+        font-size: 18px;
+        cursor: pointer;
+        color: var(--muted);
+        padding: 4px 8px;
+        border-radius: 6px;
+        line-height: 1;
+      }
+
+      .modal-close:hover {
+        background: #f1f5f9;
+      }
+
+      .modal-desc {
+        font-size: 13px;
+        color: var(--muted);
+        margin: 0;
+      }
+
+      .genre-list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .genre-item {
+        width: 100%;
+        text-align: left;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 10px 14px;
+        background: #fff;
+        font: inherit;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .genre-item:hover {
+        background: #f8fafc;
+      }
+
+      .genre-item.selected {
+        border-color: #22c55e;
+        background: #f0fdf4;
+      }
+
+      .genre-tag-unavail {
+        color: #94a3b8;
+        font-size: 0.8em;
+      }
+
+      .modal-current {
+        font-size: 12px;
+        color: var(--muted);
+        margin: 0;
+        border-top: 1px solid var(--line);
+        padding-top: 10px;
+      }
+
+      /* ── 확인 모달 ── */
+      .confirm-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 200;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 150ms ease;
+      }
+
+      .confirm-overlay.open {
+        opacity: 1;
+        pointer-events: all;
+      }
+
+      .confirm-panel {
+        background: #fff;
+        border-radius: 14px;
+        border: 1px solid var(--line);
+        padding: 24px;
+        max-width: 340px;
+        width: 90%;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .confirm-msg {
+        font-size: 14px;
+        color: var(--text);
+        margin: 0;
+        line-height: 1.55;
+      }
+
+      .confirm-actions {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+      }
+
+      .btn-cancel {
+        border: 1px solid var(--line);
+        background: #fff;
+        border-radius: 8px;
+        padding: 8px 16px;
+        font: inherit;
+        cursor: pointer;
+        color: var(--muted);
+      }
+
+      .btn-confirm {
+        border: 0;
+        background: var(--button);
+        color: #fff;
+        border-radius: 8px;
+        padding: 8px 16px;
+        font: inherit;
+        cursor: pointer;
+      }
+
+      .btn-confirm:hover {
+        background: var(--button-hover);
+      }
+
+      .accordion-item {
+        margin-top: 12px;
+      }
+
+      .accordion-item:first-child {
+        margin-top: 0;
+      }
+
+      .category-header {
+        width: 100%;
+        text-align: left;
+        border: 0;
+        border-radius: 6px;
+        padding: 8px 12px;
+        background: #e2e8f0;
+        color: #1e293b;
+        font: inherit;
+        font-weight: 600;
+        font-size: 0.95em;
+        cursor: pointer;
+        margin-bottom: 4px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .category-header:hover {
+        background: #d1dae6;
+      }
+
+      .cat-arrow {
+        font-size: 0.85em;
+        display: inline-block;
+        transition: transform 120ms;
+      }
+
+      .category-header.collapsed .cat-arrow {
+        transform: rotate(-90deg);
+      }
+
+      .category-body {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .category-body.collapsed {
+        display: none;
+      }
+
+      .category-body .menu-btn {
+        padding-left: 20px;
+      }
+
+      .menu-btn.genre-btn:disabled {
+        background: #94a3b8;
+        cursor: not-allowed;
+        opacity: 0.7;
+      }
+
+      .menu-btn:disabled {
+        background: #94a3b8;
+        cursor: not-allowed;
+        opacity: 0.5;
+      }
+      .menu-btn:disabled:hover {
+        background: #94a3b8;
+      }
+
+      /* ── 재료 파일 목록 ── */
+      .material-file-list {
+        padding: 4px 8px 8px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .material-file-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 4px 8px;
+        background: #f1f5f9;
+        border-radius: 4px;
+        font-size: 12px;
+        color: var(--text);
+      }
+      .material-file-item .file-name {
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .material-file-item .file-size {
+        color: var(--muted);
+        margin: 0 8px;
+        font-size: 11px;
+        white-space: nowrap;
+      }
+      .material-file-item .file-del {
+        background: none;
+        border: none;
+        color: var(--reject);
+        cursor: pointer;
+        font-size: 13px;
+        padding: 0 2px;
+      }
+      .material-file-item .file-del:hover {
+        color: #b91c1c;
+      }
+      .material-import-btn {
+        width: 100%;
+        padding: 6px 12px;
+        margin-top: 4px;
+        background: #e2e8f0;
+        border: 1px dashed #94a3b8;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 12px;
+        color: var(--label);
+        text-align: center;
+      }
+      .material-import-btn:hover {
+        background: #cbd5e1;
+      }
+      .material-empty {
+        font-size: 12px;
+        color: var(--muted);
+        padding: 4px 0;
+        text-align: center;
+      }
+      .material-section-title {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--label);
+        padding: 6px 0 2px 0;
+      }
+
+      /* ── Stage 0 서브메뉴 ── */
+      .stage0-sub-menu {
+        display: none;
+        flex-direction: column;
+        gap: 2px;
+        padding-left: 16px;
+      }
+      .stage0-sub-menu.open {
+        display: flex;
+      }
+      .stage0-sub-btn {
+        width: 100%;
+        text-align: left;
+        padding: 6px 12px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        color: #fff;
+        font-size: 13px;
+        background: #64748b;
+      }
+      .stage0-sub-btn:hover {
+        background: #475569;
+      }
+      .stage0-sub-btn:disabled {
+        background: #94a3b8;
+        cursor: not-allowed;
+        opacity: 0.5;
+      }
+
+      /* ── 장르 필요 안내 배지 ── */
+      .genre-required-hint {
+        font-size: 11px;
+        color: var(--reject);
+        padding: 2px 20px;
+        display: none;
+      }
+      .genre-required-hint.show {
+        display: block;
+      }
+
+      /* ── Mode B 프롬프트 다이얼로그 ── */
+      .prompt-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 200;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s;
+      }
+      .prompt-overlay.open {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .prompt-dialog {
+        background: var(--surface);
+        border-radius: 12px;
+        padding: 24px;
+        width: 440px;
+        max-width: 90vw;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+      }
+      .prompt-dialog h3 {
+        margin: 0 0 8px 0;
+        font-size: 15px;
+        color: var(--text);
+      }
+      .prompt-dialog .prompt-text {
+        font-size: 13px;
+        color: var(--muted);
+        margin-bottom: 12px;
+        white-space: pre-wrap;
+        line-height: 1.5;
+      }
+      .prompt-dialog .prompt-options {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        margin-bottom: 12px;
+      }
+      .prompt-dialog .prompt-option-btn {
+        text-align: left;
+        padding: 8px 12px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: var(--surface);
+        cursor: pointer;
+        font-size: 13px;
+        color: var(--text);
+      }
+      .prompt-dialog .prompt-option-btn:hover {
+        background: #f1f5f9;
+        border-color: #94a3b8;
+      }
+      .prompt-dialog .prompt-input-row {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+      .prompt-dialog .prompt-input-row input,
+      .prompt-dialog .prompt-input-row textarea {
+        flex: 1;
+        padding: 8px 12px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        font-size: 13px;
+      }
+      .prompt-dialog .prompt-input-row textarea {
+        min-height: 80px;
+        resize: vertical;
+      }
+      .prompt-dialog .prompt-submit {
+        padding: 8px 20px;
+        background: var(--button);
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+      }
+      .prompt-dialog .prompt-submit:hover {
+        background: var(--button-hover);
+      }
+      .prompt-dialog .prompt-default-hint {
+        font-size: 11px;
+        color: var(--muted);
+        margin-bottom: 8px;
+      }
+
+      /* ── 설정 사이드 패널 ── */
+      .settings-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.4);
+        display: flex;
+        align-items: flex-start;
+        justify-content: flex-end;
+        z-index: 150;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 150ms ease;
+      }
+
+      .settings-overlay.open {
+        opacity: 1;
+        pointer-events: all;
+      }
+
+      .settings-panel {
+        height: 100%;
+        width: 460px;
+        background: #fff;
+        border-left: 1px solid var(--line);
+        display: flex;
+        flex-direction: column;
+        transform: translateX(100%);
+        transition: transform 200ms ease;
+      }
+
+      .settings-overlay.open .settings-panel {
+        transform: translateX(0);
+      }
+
+      .settings-head {
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-shrink: 0;
+      }
+
+      .settings-title {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 700;
+      }
+
+      .tab-bar {
+        display: flex;
+        border-bottom: 1px solid var(--line);
+        background: #f8fafc;
+        flex-shrink: 0;
+      }
+
+      .tab-btn {
+        border: 0;
+        background: transparent;
+        padding: 10px 14px;
+        font: inherit;
+        font-size: 13px;
+        color: var(--muted);
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -1px;
+      }
+
+      .tab-btn.active {
+        color: var(--text);
+        border-bottom-color: #475569;
+        font-weight: 600;
+      }
+
+      .tab-content {
+        display: none;
+        padding: 20px;
+        flex: 1;
+        overflow-y: auto;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .tab-content.active {
+        display: flex;
+      }
+
+      .field-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .field-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--label);
+      }
+
+      .field-hint {
+        font-size: 11px;
+        color: var(--muted);
+      }
+
+      .input-row {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+      }
+
+      .input-row input,
+      .settings-textarea {
+        flex: 1;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 8px 10px;
+        font: inherit;
+        background: #fff;
+        color: var(--text);
+        font-size: 13px;
+      }
+
+      .input-row input:focus,
+      .settings-textarea:focus {
+        outline: none;
+        border-color: #94a3b8;
+      }
+
+      .settings-textarea {
+        resize: vertical;
+        min-height: 80px;
+      }
+
+      .btn-sm {
+        border: 1px solid var(--line);
+        background: #fff;
+        border-radius: 8px;
+        padding: 7px 11px;
+        font: inherit;
+        font-size: 12px;
+        cursor: pointer;
+        color: var(--muted);
+        white-space: nowrap;
+      }
+
+      .btn-sm:hover {
+        background: #f1f5f9;
+      }
+
+      .settings-footer {
+        padding: 14px 20px;
+        border-top: 1px solid var(--line);
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+        flex-shrink: 0;
+      }
+
+      .api-warning {
+        background: #fef9c3;
+        border: 1px solid #fde047;
+        border-radius: 8px;
+        padding: 10px 14px;
+        font-size: 13px;
+        color: #854d0e;
+        display: none;
+      }
+
+      .api-warning.show {
+        display: block;
+      }
+
+      .key-status-line {
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .extra-toggle-btn {
+        border: 0;
+        background: transparent;
+        font: inherit;
+        font-size: 13px;
+        color: #475569;
+        cursor: pointer;
+        text-align: left;
+        padding: 0;
+        text-decoration: underline;
+      }
+
+      .extra-keys-body {
+        display: none;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .extra-keys-body.open {
+        display: flex;
+      }
+
+      .section-sep {
+        border: 0;
+        border-top: 1px solid var(--line);
+        margin: 2px 0;
+      }
+
+      .read-only-val {
+        background: #f8fafc;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 8px 10px;
+        font-size: 13px;
+        color: var(--muted);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .slider-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .slider-row input[type="range"] {
+        flex: 1;
+        accent-color: #475569;
+      }
+
+      .slider-val {
+        font-size: 13px;
+        color: var(--text);
+        min-width: 44px;
+        text-align: right;
+      }
+
+      .number-input {
+        width: 90px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 7px 10px;
+        font: inherit;
+        font-size: 13px;
+        background: #fff;
+        color: var(--text);
+      }
+
+      .number-input:focus {
+        outline: none;
+        border-color: #94a3b8;
+      }
+
+      .stub-notice {
+        font-size: 11px;
+        color: var(--muted);
+        background: #f8fafc;
+        border: 1px dashed var(--line);
+        border-radius: 6px;
+        padding: 8px 10px;
+      }
+
+      @media (max-width: 900px) {
         .shell {
           grid-template-columns: 1fr;
+          grid-template-rows: auto 1fr;
+        }
+
+        .shell > .panel:first-child {
+          grid-row: auto;
         }
 
         .project-select {
@@ -339,90 +1104,399 @@
   <body>
     <main class="page">
       <header class="topbar">
-        <select class="project-select" aria-label="프로젝트 선택">
-          <option>프로젝트 선택</option>
-          <option>demo_project</option>
+        <select class="project-select" id="projectSelect" aria-label="프로젝트 선택">
+          <option value="">프로젝트 선택</option>
         </select>
-        <button type="button" class="top-action">새 프로젝트</button>
-        <button type="button" class="top-action">설정</button>
-        <button type="button" class="top-action">종료</button>
+        <button type="button" class="top-action" id="newProjectBtn">새 프로젝트</button>
+        <button type="button" class="top-action" id="settingsBtn">설정</button>
       </header>
 
       <section class="shell">
         <article class="panel">
           <h1 class="panel-title">실행 패널</h1>
-          <p class="panel-sub">콘솔 메뉴 1:1 매핑 스텁</p>
+          <p class="panel-sub">장르·프로젝트 선택 후 Stage 버튼으로 실행</p>
           <div class="run-grid">
-            <button type="button" class="menu-btn" data-action="stage_0" data-key="0">
-              <span class="label">Stage 0</span><span class="meta">key 0</span>
-            </button>
-            <button type="button" class="menu-btn" data-action="stage_1" data-key="1">
+            <!-- ▶ 재료 넣기 -->
+            <div class="accordion-item">
+              <button type="button" class="category-header" data-target="cat-material">
+                <span class="cat-arrow">▼</span> 재료 넣기
+              </button>
+              <div class="category-body" id="cat-material">
+                <div class="material-section-title">Bible (세계관/캐릭터)</div>
+                <div id="bibleFileList" class="material-file-list">
+                  <div class="material-empty">로딩 중...</div>
+                </div>
+                <button type="button" class="material-import-btn" id="importBibleBtn">+ Bible 파일 추가</button>
+
+                <div class="material-section-title" style="margin-top:8px">Treatment (플롯/블록)</div>
+                <div id="treatmentFileList" class="material-file-list">
+                  <div class="material-empty">로딩 중...</div>
+                </div>
+                <button type="button" class="material-import-btn" id="importTreatmentBtn">+ Treatment 파일 추가</button>
+              </div>
+            </div>
+
+            <!-- ▶ 상품 생산 -->
+            <div class="accordion-item">
+              <button type="button" class="category-header" data-target="cat-produce">
+                <span class="cat-arrow">▼</span> 상품 생산
+              </button>
+              <div class="category-body" id="cat-produce">
+                <button type="button" class="menu-btn genre-btn" data-action="genre_setting">
+                  <span class="label">장르설정</span><span class="meta" id="genreBtnMeta">미설정</span>
+                </button>
+                <span class="genre-required-hint" id="genreRequiredHint">장르를 먼저 설정하세요</span>
+
+                <!-- Stage 0: 초기 설정 -->
+                <button type="button" class="menu-btn genre-gated" data-action="stage_0_toggle" disabled>
+                  <span class="label">Stage 0 — 초기 설정</span><span class="meta">key 0</span>
+                </button>
+                <div class="stage0-sub-menu" id="stage0SubMenu">
+                  <button type="button" class="stage0-sub-btn menu-btn" data-action="stage_0" data-key="0" data-sub-key="1">
+                    <span class="label">기존 방식 (Bible/Treatment 선택)</span>
+                  </button>
+                  <button type="button" class="stage0-sub-btn menu-btn" data-action="stage_0" data-key="0" data-sub-key="2">
+                    <span class="label">컨셉 → Bible 생성 (AI 확장)</span>
+                  </button>
+                  <button type="button" class="stage0-sub-btn menu-btn" data-action="stage_0" data-key="0" data-sub-key="3">
+                    <span class="label">역설계 — 기존 원고에서 추출</span>
+                  </button>
+                  <button type="button" class="stage0-sub-btn menu-btn" data-action="stage_0" data-key="0" data-sub-key="4">
+                    <span class="label">Bible JSON 임포트</span>
+                  </button>
+                  <button type="button" class="stage0-sub-btn menu-btn" data-action="stage_0" data-key="0" data-sub-key="5">
+                    <span class="label">Block 확장 — Treatment에 블록 추가</span>
+                  </button>
+                  <button type="button" class="stage0-sub-btn menu-btn" data-action="stage_0" data-key="0" data-sub-key="6">
+                    <span class="label">스타일 레퍼런스 분석</span>
+                  </button>
+                </div>
+
+                <!-- Stage 2~4 + One-Stop -->
+                <button type="button" class="menu-btn genre-gated" data-action="stage_2" data-key="2" disabled>
+                  <span class="label">Arc 설계</span><span class="meta">key 2</span>
+                </button>
+                <button type="button" class="menu-btn genre-gated" data-action="stage_3" data-key="3" disabled>
+                  <span class="label">Blueprint</span><span class="meta">key 3</span>
+                </button>
+                <button type="button" class="menu-btn genre-gated" data-action="stage_4" data-key="4" disabled>
+                  <span class="label">원고 생산</span><span class="meta">key 4</span>
+                </button>
+                <button type="button" class="menu-btn genre-gated" data-action="one_stop" data-key="6" disabled>
+                  <span class="label">One-Stop</span><span class="meta">key 6</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- ▶ 운영 -->
+            <div class="accordion-item">
+              <button type="button" class="category-header" data-target="cat-ops">
+                <span class="cat-arrow">▼</span> 운영
+              </button>
+              <div class="category-body" id="cat-ops">
+                <button type="button" class="menu-btn genre-gated" data-action="rollback" data-key="44" disabled>
+                  <span class="label">Rollback</span><span class="meta">key 44</span>
+                </button>
+                <button type="button" class="menu-btn genre-gated" data-action="wipe" data-key="77" disabled>
+                  <span class="label">Wipe</span><span class="meta">key 77</span>
+                </button>
+                <button type="button" class="menu-btn genre-gated" data-action="reset" data-key="88" disabled>
+                  <span class="label">Reset</span><span class="meta">key 88</span>
+                </button>
+                <button type="button" class="menu-btn genre-gated" data-action="rewind" data-key="99" disabled>
+                  <span class="label">Rewind</span><span class="meta">key 99</span>
+                </button>
+                <button type="button" class="menu-btn" data-action="stop" data-key="stop">
+                  <span class="label">Stop</span><span class="meta">runtime</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Stage 1: 숨김 처리 (핸들러/DOM 보존) -->
+            <button type="button" class="menu-btn hidden-stage" data-action="stage_1" data-key="1" style="display:none">
               <span class="label">Stage 1</span><span class="meta">key 1</span>
             </button>
-            <button type="button" class="menu-btn" data-action="stage_2" data-key="2">
-              <span class="label">Stage 2</span><span class="meta">key 2</span>
-            </button>
-            <button type="button" class="menu-btn" data-action="stage_3" data-key="3">
-              <span class="label">Stage 3</span><span class="meta">key 3</span>
-            </button>
-            <button type="button" class="menu-btn" data-action="stage_4" data-key="4">
-              <span class="label">Stage 4</span><span class="meta">key 4</span>
-            </button>
-            <button type="button" class="menu-btn" data-action="one_stop" data-key="6">
-              <span class="label">One-Stop</span><span class="meta">key 6</span>
-            </button>
-            <button type="button" class="menu-btn" data-action="rollback" data-key="44">
-              <span class="label">Rollback</span><span class="meta">key 44</span>
-            </button>
-            <button type="button" class="menu-btn" data-action="wipe" data-key="77">
-              <span class="label">Wipe</span><span class="meta">key 77</span>
-            </button>
-            <button type="button" class="menu-btn" data-action="reset" data-key="88">
-              <span class="label">Reset</span><span class="meta">key 88</span>
-            </button>
-            <button type="button" class="menu-btn" data-action="rewind" data-key="99">
-              <span class="label">Rewind</span><span class="meta">key 99</span>
-            </button>
-            <button type="button" class="menu-btn" data-action="stop" data-key="stop">
-              <span class="label">Stop</span><span class="meta">runtime</span>
-            </button>
           </div>
         </article>
 
-        <article class="panel">
-          <div class="panel-head">
-            <h2 class="panel-title">상태 시각화 패널</h2>
-            <div class="toggle-row">
-              <button type="button" id="toggleSkip" class="mini-toggle">Skip animation: OFF</button>
-              <button type="button" id="toggleMute" class="mini-toggle">Mute: OFF</button>
+        <div class="right-col">
+          <article class="panel" id="officePanel" style="display:flex;flex-direction:column;flex:1;min-height:0;">
+            <div class="panel-head">
+              <h2 class="panel-title">사무실</h2>
+              <div class="toggle-row">
+                <button type="button" id="toggleSkip" class="mini-toggle">Skip: OFF</button>
+                <button type="button" id="toggleMute" class="mini-toggle">Mute: OFF</button>
+              </div>
             </div>
-          </div>
-          <div class="canvas-wrap">
-            <canvas id="officeCanvas" width="640" height="320" aria-label="Office view"></canvas>
-            <div id="effectBanner" class="effect-banner">채택</div>
-          </div>
-          <div class="status-foot">
-            <div class="badge" id="readyBadge">앱 초기화 대기</div>
-            <div class="badge state-running" id="stateBadge">상태: RUNNING</div>
-            <div class="last-action" id="lastAction">최근 클릭: 없음</div>
-          </div>
-        </article>
+            <div class="canvas-wrap">
+              <canvas id="officeCanvas" width="640" height="360" aria-label="Office view"></canvas>
+              <div id="effectBanner" class="effect-banner">채택</div>
+            </div>
+            <div class="status-foot">
+              <div class="badge" id="readyBadge">앱 초기화 대기</div>
+              <div class="badge state-running" id="stateBadge">상태: RUNNING</div>
+              <div class="last-action" id="lastAction">최근 클릭: 없음</div>
+            </div>
+          </article>
 
-        <article class="panel">
-          <h2 class="panel-title">로그 패널</h2>
-          <div class="log-controls">
-            <input type="text" placeholder="검색 (stub)" aria-label="로그 검색" />
-            <select aria-label="로그 필터">
-              <option>필터 (stub)</option>
-              <option>PASS</option>
-              <option>REJECT</option>
-              <option>PWF</option>
-            </select>
-          </div>
-          <div class="log-box" id="logStream"></div>
-        </article>
+          <article class="panel" id="logPanel">
+            <div class="panel-head">
+              <h2 class="panel-title">로그</h2>
+              <button type="button" class="log-toggle-btn" id="logToggleBtn">접기</button>
+            </div>
+            <div class="log-controls">
+              <input type="text" placeholder="로그 검색..." aria-label="로그 검색" id="logSearchInput" />
+              <select aria-label="로그 필터" id="logFilterSelect">
+                <option value="">전체</option>
+                <option value="PASS">PASS</option>
+                <option value="REJECT">REJECT</option>
+                <option value="PWF">PWF</option>
+              </select>
+            </div>
+            <div class="log-box" id="logStream"></div>
+          </article>
+        </div>
       </section>
     </main>
+
+    <!-- ── 설정 사이드 패널 ── -->
+    <div class="settings-overlay" id="settingsOverlay">
+      <div class="settings-panel">
+        <div class="settings-head">
+          <h2 class="settings-title">설정</h2>
+          <button type="button" class="modal-close" id="settingsClose" aria-label="닫기">✕</button>
+        </div>
+
+        <div class="tab-bar">
+          <button type="button" class="tab-btn active" data-tab="tab-api">API 키</button>
+          <button type="button" class="tab-btn" data-tab="tab-model">모델</button>
+          <button type="button" class="tab-btn" data-tab="tab-project">프로젝트</button>
+          <button type="button" class="tab-btn" data-tab="tab-system">시스템</button>
+        </div>
+
+        <!-- 탭 1: API 키 관리 -->
+        <div class="tab-content active" id="tab-api">
+          <div class="api-warning" id="apiKeyWarning">⚠ API 키를 설정해주세요</div>
+          <p class="key-status-line" id="apiKeyStatus">현재 사용 중: — / 총 0개 등록</p>
+
+          <div class="field-group">
+            <span class="field-label">Gemini API Key <span style="color:#ef4444">*</span></span>
+            <span class="field-hint">필수 — 미입력 시 앱 실행 불가 · 저장 위치: .env GOOGLE_API_KEY</span>
+            <div class="input-row">
+              <input type="password" id="apiKey1" placeholder="AIza..." autocomplete="off" />
+              <button type="button" class="btn-sm" id="toggleKey1">보기</button>
+              <button type="button" class="btn-sm" id="testKey1">테스트</button>
+            </div>
+          </div>
+
+          <button type="button" class="extra-toggle-btn" id="extraKeysToggle">▶ 추가 API Key (2~9)</button>
+          <div class="extra-keys-body" id="extraKeysBody"></div>
+
+          <hr class="section-sep" />
+
+          <div class="field-group">
+            <span class="field-label">Slack Webhook URL</span>
+            <span class="field-hint">선택 — 알림 연동 · 저장 위치: .env SLACK_WEBHOOK_URL</span>
+            <div class="input-row">
+              <input type="text" id="slackWebhook" placeholder="https://hooks.slack.com/..." />
+            </div>
+          </div>
+        </div>
+
+        <!-- 탭 2: 모델 설정 -->
+        <div class="tab-content" id="tab-model">
+          <p class="stub-notice">모델 설정 — 저장 위치: config/models.yaml</p>
+          <div class="field-group">
+            <span class="field-label">기본 모드</span>
+            <button type="button" class="btn-sm" id="applyRecommendedModel" style="width:fit-content">추천 설정 적용 (models.yaml 기본값)</button>
+          </div>
+          <hr class="section-sep" />
+          <div class="field-group">
+            <span class="field-label">에이전트별 모델 (고급)</span>
+            <span class="field-hint">변경 후 앱 재시작이 필요합니다.</span>
+            <div class="field-group" style="gap:8px">
+              <div class="input-row">
+                <span style="font-size:13px;min-width:110px">chief_writer</span>
+                <select class="btn-sm" id="modelCW" style="flex:1">
+                  <option value="pro">gemini-2.5-pro</option>
+                  <option value="flash" selected>gemini-2.5-flash</option>
+                </select>
+              </div>
+              <div class="input-row">
+                <span style="font-size:13px;min-width:110px">director</span>
+                <select class="btn-sm" id="modelDir" style="flex:1">
+                  <option value="pro" selected>gemini-2.5-pro</option>
+                  <option value="flash">gemini-2.5-flash</option>
+                </select>
+              </div>
+              <div class="input-row">
+                <span style="font-size:13px;min-width:110px">analyst</span>
+                <select class="btn-sm" id="modelAnl" style="flex:1">
+                  <option value="pro">gemini-2.5-pro</option>
+                  <option value="flash" selected>gemini-2.5-flash</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 탭 3: 프로젝트 설정 -->
+        <div class="tab-content" id="tab-project">
+          <div class="field-group">
+            <span class="field-label">현재 장르</span>
+            <div class="read-only-val">
+              <span id="settingsGenreDisplay">미설정</span>
+              <button type="button" class="btn-sm" id="settingsChangeGenre">변경</button>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <span class="field-label">작가 지시사항</span>
+            <span class="field-hint">저장 위치: {project}/config/author_directives.txt</span>
+            <textarea class="settings-textarea" id="authorDirectives" placeholder="예) 주인공 이름은 항상 한자 표기를 병기할 것"></textarea>
+          </div>
+
+          <div class="field-group">
+            <span class="field-label">작품 가드 YAML</span>
+            <span class="field-hint">저장 위치: {project}/work_guard.yaml · 작품별 금기어 등</span>
+            <textarea class="settings-textarea" id="workGuardYaml" placeholder="extra_forbidden_terms:&#10;  - 예시_금기어"></textarea>
+          </div>
+        </div>
+
+        <!-- 탭 4: 시스템 설정 -->
+        <div class="tab-content" id="tab-system">
+          <p class="stub-notice">시스템 설정 — 저장 위치: config/system.yaml / config/settings/validation.yaml</p>
+
+          <div class="field-group">
+            <span class="field-label">API 타임아웃</span>
+            <div class="slider-row">
+              <input type="range" id="sliderTimeout" min="60" max="600" step="30" value="300" />
+              <span class="slider-val" id="sliderTimeoutVal">300초</span>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <span class="field-label">키 순환 간격</span>
+            <div class="slider-row">
+              <input type="range" id="sliderKeyRotate" min="5" max="60" step="5" value="10" />
+              <span class="slider-val" id="sliderKeyRotateVal">10초</span>
+            </div>
+          </div>
+
+          <hr class="section-sep" />
+
+          <div class="field-group">
+            <span class="field-label">품질 게이트 점수</span>
+            <span class="field-hint">50~100 · 기본 90 · 전문가 전용</span>
+            <input type="number" class="number-input" id="qualityGate" min="50" max="100" value="90" />
+          </div>
+
+          <div class="field-group">
+            <span class="field-label">원고 목표 길이</span>
+            <span class="field-hint">기본 5000자</span>
+            <input type="number" class="number-input" id="targetLength" min="2000" max="15000" step="500" value="5000" />
+          </div>
+
+          <hr class="section-sep" />
+
+          <div class="field-group">
+            <span class="field-label">연출 설정</span>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button type="button" class="btn-sm" id="sysToggleSkip">Skip animation: OFF</button>
+              <button type="button" class="btn-sm" id="sysToggleMute">Mute: OFF</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-footer">
+          <button type="button" class="btn-cancel" id="settingsCancel">취소</button>
+          <button type="button" class="btn-confirm" id="settingsSave">저장</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 장르설정 모달 ── -->
+    <div class="modal-overlay" id="genreModal" role="dialog" aria-modal="true" aria-labelledby="genreModalTitle">
+      <div class="modal-panel">
+        <div class="modal-head">
+          <h2 class="modal-title" id="genreModalTitle">장르 설정</h2>
+          <button type="button" class="modal-close" id="genreModalClose" aria-label="닫기">✕</button>
+        </div>
+        <p class="modal-desc">프로젝트 장르를 선택하세요.</p>
+        <div class="genre-list">
+          <button type="button" class="genre-item" data-genre="investment">
+            <span>투자물</span>
+          </button>
+          <button type="button" class="genre-item" data-genre="wuxia">
+            <span>무협</span><span class="genre-tag-unavail">(테스트 없음)</span>
+          </button>
+          <button type="button" class="genre-item" data-genre="hunter">
+            <span>헌터물</span><span class="genre-tag-unavail">(테스트 없음)</span>
+          </button>
+          <button type="button" class="genre-item" data-genre="fantasy">
+            <span>판타지</span><span class="genre-tag-unavail">(테스트 없음)</span>
+          </button>
+          <button type="button" class="genre-item" data-genre="medical">
+            <span>의료물</span><span class="genre-tag-unavail">(테스트 없음)</span>
+          </button>
+          <button type="button" class="genre-item" data-genre="alt_history">
+            <span>대체역사</span><span class="genre-tag-unavail">(테스트 없음)</span>
+          </button>
+          <button type="button" class="genre-item" data-genre="composer">
+            <span>작곡물</span><span class="genre-tag-unavail">(테스트 없음)</span>
+          </button>
+          <button type="button" class="genre-item" data-genre="sports">
+            <span>스포츠물</span><span class="genre-tag-unavail">(테스트 없음)</span>
+          </button>
+          <button type="button" class="genre-item" data-genre="actor">
+            <span>배우/연예물</span><span class="genre-tag-unavail">(테스트 없음)</span>
+          </button>
+          <button type="button" class="genre-item" data-genre="cooking">
+            <span>요리물</span><span class="genre-tag-unavail">(테스트 없음)</span>
+          </button>
+        </div>
+        <p class="modal-current" id="genreCurrentLabel">현재 선택: 없음</p>
+      </div>
+    </div>
+
+    <!-- ── 투자물 외 장르 확인 모달 ── -->
+    <div class="confirm-overlay" id="genreConfirmModal">
+      <div class="confirm-panel">
+        <p class="confirm-msg" id="genreConfirmMsg">이 장르는 실파이프라인 테스트가 완료되지 않았습니다. 진행하시겠습니까?</p>
+        <div class="confirm-actions">
+          <button type="button" class="btn-cancel" id="genreConfirmCancel">취소</button>
+          <button type="button" class="btn-confirm" id="genreConfirmOk">진행</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 새 프로젝트 모달 ── -->
+    <div class="confirm-overlay" id="newProjectModal">
+      <div class="confirm-panel" style="max-width:380px">
+        <p class="confirm-msg" style="font-weight:700;font-size:15px;margin-bottom:4px">새 프로젝트</p>
+        <p style="font-size:13px;color:var(--muted);margin:0 0 10px">projects/ 폴더 아래에 프로젝트 디렉토리를 생성합니다.</p>
+        <input type="text" id="newProjectNameInput" placeholder="프로젝트 이름 입력" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font:inherit;font-size:14px" />
+        <p id="newProjectError" style="font-size:12px;color:var(--reject);margin:6px 0 0;display:none"></p>
+        <div class="confirm-actions" style="margin-top:12px">
+          <button type="button" class="btn-cancel" id="newProjectCancel">취소</button>
+          <button type="button" class="btn-confirm" id="newProjectCreate">생성</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Mode B 프롬프트 다이얼로그 ── -->
+    <div class="prompt-overlay" id="promptOverlay">
+      <div class="prompt-dialog" id="promptDialog">
+        <h3 id="promptTitle">입력 대기</h3>
+        <div class="prompt-text" id="promptText"></div>
+        <div class="prompt-default-hint" id="promptDefaultHint"></div>
+        <div class="prompt-options" id="promptOptions"></div>
+        <div class="prompt-input-row" id="promptInputRow">
+          <input type="text" id="promptInput" placeholder="입력..." />
+          <button type="button" class="prompt-submit" id="promptSubmit">확인</button>
+        </div>
+      </div>
+    </div>
 
     <script>
       const canvas = document.getElementById("officeCanvas");
@@ -434,17 +1508,33 @@
       const logStream = document.getElementById("logStream");
       const toggleSkip = document.getElementById("toggleSkip");
       const toggleMute = document.getElementById("toggleMute");
-      const menuButtons = document.querySelectorAll(".menu-btn");
+      const menuButtons = document.querySelectorAll(".menu-btn:not(.stage0-sub-btn)");
 
       ctx.imageSmoothingEnabled = false;
 
+      // 캔버스를 컨테이너에 맞춰 리사이즈 (좌표계는 640x320 기준 스케일)
+      const DESIGN_W = 640, DESIGN_H = 360;
+      function resizeCanvas() {
+        const wrap = canvas.parentElement;
+        if (!wrap) return;
+        const w = wrap.clientWidth;
+        const h = wrap.clientHeight;
+        if (w > 0 && h > 0) {
+          canvas.width = w;
+          canvas.height = h;
+        }
+      }
+      resizeCanvas();
+      new ResizeObserver(resizeCanvas).observe(canvas.parentElement);
+
       const officeState = {
-        isRunning: true,
-        mode: "RUNNING",
+        isRunning: false,
+        mode: "IDLE",
         skipAnimation: false,
         mute: false,
         effectIndex: 0,
         frame: 0,
+        currentStage: null,   // "stage_0" | "stage_2" | "stage_3" | "stage_4" | "one_stop" | null
         timers: {
           verdict: null,
           clearVerdict: null,
@@ -452,13 +1542,31 @@
         }
       };
 
+      // 스테이지별 활성 에이전트 (실제 파이프라인 코드 기반 전수조사)
+      const STAGE_AGENTS = {
+        stage_0:  ["manager"],                                          // 직접 LLM 호출, Manager=StageZeroManager 오케스트레이션만
+        stage_2:  ["director", "analyst", "critic", "manager"],         // Analyst+Director+Validators+StateTracker (ChiefWriter 미사용)
+        stage_3:  ["writer", "director", "critic", "manager"],          // ThreePhaseBP=writer, Director=심사, Consensus=critic
+        stage_4:  ["writer", "director", "critic", "manager"],          // ChiefWriter+Director+4Validators+StateTracker
+        one_stop: ["writer", "director", "analyst", "critic", "manager"],
+      };
+
       const agents = [
-        { name: "Chief Writer", task: "책상에서 타이핑", x: 95, y: 95, tone: "#94a3b8" },
-        { name: "Director", task: "문서 검토", x: 300, y: 95, tone: "#9ca3af" },
-        { name: "Analyst", task: "자료 조사", x: 505, y: 95, tone: "#8ea8c3" },
-        { name: "Critic", task: "메모 작성", x: 200, y: 235, tone: "#b0a8b9" },
-        { name: "Manager", task: "파일 정리", x: 420, y: 235, tone: "#a3b18a" }
+        // 왼쪽 그룹 (2x2)
+        { name: "Writer",   x: 110, y: 140, spriteKey: "writer",   screenColor: "#60a5fa", gender: "F",
+          quotes: ["열심히 쓰는 중...", "이 장면 좋다!", "영감이 떠올랐어!", "커피 한 잔 더..."] },
+        { name: "Analyst",  x: 240, y: 140, spriteKey: "analyst",  screenColor: "#34d399", gender: "F",
+          quotes: ["데이터 분석 중~", "수치가 맞아!", "구조 확인 완료", "패턴 발견!"] },
+        { name: "Critic",   x: 110, y: 260, spriteKey: "critic",   screenColor: "#a78bfa", gender: "M",
+          quotes: ["여기 모순 있어", "논리적으로...", "검토 완료!", "이건 좀..."] },
+        { name: "Manager",  x: 240, y: 260, spriteKey: "manager",  screenColor: "#fb923c", gender: "F",
+          quotes: ["일정 관리 중!", "순조로워요~", "진행률 80%!", "화이팅!"] },
+        // 오른쪽 독립 — 디렉터 (왕관)
+        { name: "Director", x: 480, y: 195, spriteKey: "director", screenColor: "#fbbf24", gender: "M", crown: true,
+          quotes: ["품질이 최우선이다", "다시 써와", "합격!", "흠... 아쉽군"] },
       ];
+      // 클릭 말풍선 상태
+      let _clickBubble = { agentIdx: -1, text: "", timer: 0 };
 
       const verdictCycle = [
         { mode: "PASS", text: "채택", durationMs: 1500, badge: "PASS", className: "pass" },
@@ -523,6 +1631,10 @@
         }
 
         logStream.appendChild(row);
+        // 최대 500줄 유지 (메모리 폭발 방지)
+        while (logStream.children.length > 500) {
+          logStream.removeChild(logStream.firstChild);
+        }
         logStream.scrollTop = logStream.scrollHeight;
       }
 
@@ -606,6 +1718,7 @@
         clearVerdictTimers();
         officeState.isRunning = false;
         officeState.mode = "IDLE";
+        officeState.currentStage = null;
         setStateBadge("IDLE");
         setEffectBanner("", "");
       }
@@ -619,96 +1732,297 @@
         }, delay);
       }
 
+      // ─── PNG Sprite System (LimeZu RPG Maker MV Paid) ───
+      // 48x96 프레임 (3프레임 스트립 144x96), 스케일 1 (이미 3x 해상도)
+      const SPRITE_SCALE = 1;
+      const FRAME_W = 48, FRAME_H = 96;
+
       function drawRect(x, y, w, h, color) {
         ctx.fillStyle = color;
         ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h));
       }
 
-      function drawOfficeBackground(time) {
-        drawRect(0, 0, canvas.width, 124, "#e2e8f0");
-        drawRect(0, 124, canvas.width, canvas.height - 124, "#cbd5e1");
+      // ── 에이전트별 고유 캐릭터 (유료 RPG Maker MV) ──
+      const AGENTS_LIST = ["writer", "director", "analyst", "critic", "manager"];
 
-        const stripeOffset = officeState.skipAnimation ? 0 : Math.sin(time * 0.8) * 2;
-        for (let i = 0; i < 8; i += 1) {
-          const y = 124 + i * 26 + stripeOffset;
-          drawRect(0, y, canvas.width, 1, "#bfccd9");
+      // ── 스프라이트시트 로드 ──
+      const spriteImages = {};
+      let spritesLoaded = false;
+
+      function loadAllSprites() {
+        const poses = ["walk", "sit", "phone"];
+        const promises = [];
+        for (const agent of AGENTS_LIST) {
+          for (const pose of poses) {
+            promises.push(new Promise((resolve) => {
+              const img = new Image();
+              const key = `${agent}_${pose}`;
+              img.onload = () => { spriteImages[key] = img; resolve(); };
+              img.onerror = () => { console.warn(`Failed to load sprite: ${key}`); resolve(); };
+              img.src = `sprites/${key}.png`;
+            }));
+          }
         }
+        return Promise.all(promises).then(() => { spritesLoaded = true; });
+      }
+      loadAllSprites();
 
-        drawRect(12, 16, 140, 86, "#d6dee8");
-        drawRect(18, 22, 128, 74, "#f8fafc");
-        drawRect(488, 16, 140, 86, "#d6dee8");
-        drawRect(494, 22, 128, 74, "#f8fafc");
+      // pose 매핑: idle→walk(정면 서있기), work→phone, sit→sit
+      const POSE_MAP = { idle: "walk", work: "phone", sit: "sit" };
+
+      function drawSpriteImg(spriteKey, pose, cx, cy, animFrame) {
+        const mappedPose = POSE_MAP[pose] || "walk";
+        const imgKey = `${spriteKey}_${mappedPose}`;
+        const img = spriteImages[imgKey];
+        if (!img) return;
+
+        const frame = (animFrame || 0) % 3; // 3프레임 스트립
+        const sx = frame * FRAME_W, sy = 0;
+        const dw = FRAME_W * SPRITE_SCALE, dh = FRAME_H * SPRITE_SCALE;
+        const dx = Math.round(cx - dw / 2);
+        const dy = Math.round(cy - dh / 2);
+
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(img, sx, sy, FRAME_W, FRAME_H, dx, dy, dw, dh);
       }
 
-      function drawDesk(agent) {
-        drawRect(agent.x - 50, agent.y + 10, 100, 14, "#b6c2cf");
-        drawRect(agent.x - 44, agent.y + 24, 8, 18, "#94a3b8");
-        drawRect(agent.x + 36, agent.y + 24, 8, 18, "#94a3b8");
+      // ─── 왕관 (보석 3개 포함) ───
+      function drawCrown(cx, cy, scale) {
+        const s = scale || 3;
+        const crown = [
+          "0C000C000C0",
+          "0CC0CCC0CC0",
+          "0CCCCCCCCC0",
+          "0C7C7C7C7C0",
+          "0CCCCCCCCC0",
+        ];
+        const pal = { C: "#eab308", 7: "#ef4444" };
+        const startX = cx - (crown[0].length * s) / 2;
+        const startY = cy;
+        for (let r = 0; r < crown.length; r++) {
+          for (let c = 0; c < crown[r].length; c++) {
+            const ch = crown[r][c];
+            if (ch === "0") continue;
+            ctx.fillStyle = pal[ch] || "#eab308";
+            ctx.fillRect(Math.round(startX + c * s), Math.round(startY + r * s), s, s);
+          }
+        }
+        ctx.fillStyle = "#3b82f6";
+        ctx.fillRect(Math.round(startX + 5 * s), Math.round(startY + 3 * s), s, s);
       }
 
+      // ─── 오피스 배경 (LimeZu 타일셋 기반 PNG) ───
+      const officeBgImg = new Image();
+      officeBgImg.src = "sprites/office_bg.png";
+
+      // ─── 책상 타일 (LimeZu Theme_Sorter teacher desk) ───
+      const deskTileImg = new Image();
+      deskTileImg.src = "sprites/desk_full_small.png";
+
+      function drawOfficeBackground(time) {
+        if (officeBgImg.complete && officeBgImg.naturalWidth > 0) {
+          ctx.imageSmoothingEnabled = false;
+          ctx.drawImage(officeBgImg, 0, 0, DESIGN_W, DESIGN_H);
+        } else {
+          // 로딩 전 폴백
+          drawRect(0, 0, DESIGN_W, 152, "#f2ede4");
+          drawRect(0, 152, DESIGN_W, DESIGN_H - 152, "#c8af8c");
+        }
+      }
+
+      // ─── 모니터 스크린 컬러 오버레이 (배경 책상 위에 화면 색만 표시) ───
+      function drawDeskOverlay(agent) {
+        // 책상 타일을 캐릭터 위에 그려서 캐릭터가 책상 뒤에 있는 효과
+        const dw = 64, dh = 64;
+        const dx = agent.x - dw / 2;
+        const dy = agent.y - 8;  // 책상 상판이 캐릭터 허리쯤 오도록
+        if (deskTileImg.complete && deskTileImg.naturalWidth > 0) {
+          ctx.imageSmoothingEnabled = false;
+          ctx.drawImage(deskTileImg, dx, dy, dw, dh);
+        } else {
+          // 폴백: 프로그래밍 책상
+          drawRect(dx, dy + 10, dw, 24, "#654E37");
+          drawRect(dx + 1, dy + 11, dw - 2, 6, "#785F44");
+        }
+      }
+
+
+      // ─── 에이전트 ───
       function drawAgent(agent, index, time) {
         const animate = officeState.mode === "RUNNING" && officeState.isRunning && !officeState.skipAnimation;
-        const bob = animate ? Math.sin(time * 5 + index) * 2 : 0;
-        const hand = animate ? Math.cos(time * 7 + index) * 2 : 0;
+        const bob = animate ? Math.sin(time * 4 + index * 1.3) * 1.5 : 0;
 
-        const bodyColor = officeState.mode === "IDLE" ? "#94a3b8" : "#64748b";
-
-        drawDesk(agent);
-
-        drawRect(agent.x - 6, agent.y - 22 + bob, 12, 15, bodyColor);
-        drawRect(agent.x - 5, agent.y - 34 + bob, 10, 10, agent.tone);
-
-        if (agent.name === "Chief Writer") {
-          drawRect(agent.x - 14 + hand, agent.y - 8, 7, 3, "#475569");
-          drawRect(agent.x + 7 - hand, agent.y - 8, 7, 3, "#475569");
-          drawRect(agent.x - 20, agent.y + 2, 40, 6, "#e2e8f0");
-        } else if (agent.name === "Director") {
-          const flicker = animate ? Math.sin(time * 6) : 0;
-          drawRect(agent.x - 16, agent.y - 2, 32, 7, "#f8fafc");
-          drawRect(agent.x - 15, agent.y - 1, 30, 5, flicker > 0 ? "#cbd5e1" : "#e2e8f0");
-        } else if (agent.name === "Analyst") {
-          const scanX = animate ? Math.sin(time * 4) * 8 : 0;
-          drawRect(agent.x - 13 + scanX, agent.y - 5, 10, 10, "#cbd5e1");
-          drawRect(agent.x + 2 + scanX, agent.y - 1, 8, 2, "#94a3b8");
-        } else if (agent.name === "Critic") {
-          const note = animate ? Math.cos(time * 8 + 1.2) * 2 : 0;
-          drawRect(agent.x - 10, agent.y - 3, 20, 7, "#f8fafc");
-          drawRect(agent.x - 4 + note, agent.y - 7, 2, 8, "#475569");
-        } else if (agent.name === "Manager") {
-          const folderShift = animate ? Math.sin(time * 6 + 2.4) * 4 : 0;
-          drawRect(agent.x - 12 + folderShift, agent.y - 3, 10, 7, "#e2e8f0");
-          drawRect(agent.x + 2 - folderShift, agent.y - 3, 10, 7, "#cbd5e1");
+        let pose;
+        let animFrame = 0;
+        // 에이전트별 작업 포즈 (Director/Critic: 전화, 나머지: 서서 작업)
+        const WORK_POSES = { director: "work", critic: "work" };
+        if (animate) {
+          pose = WORK_POSES[agent.spriteKey] || "idle";
+          animFrame = Math.floor(time * 3 + index) % 3;
+        } else {
+          // 대기: 서있기 (중앙 프레임)
+          pose = "idle";
+          animFrame = 1;
         }
 
-        ctx.fillStyle = "#475569";
-        ctx.font = '12px "Malgun Gothic", sans-serif';
-        ctx.fillText(agent.name, agent.x - 46, agent.y + 58);
-        ctx.fillStyle = "#64748b";
-        ctx.font = '11px "Malgun Gothic", sans-serif';
-        ctx.fillText(agent.task, agent.x - 46, agent.y + 72);
+        // 스테이지별 활성 여부 — 비활성 에이전트는 반투명
+        const stageKey = officeState.currentStage;
+        const activeList = stageKey && STAGE_AGENTS[stageKey];
+        const isActive = !activeList || activeList.includes(agent.spriteKey);
+        if (!isActive) ctx.globalAlpha = 0.3;
+
+        // 캐릭터를 책상 뒤에 배치 (먼저 그림) — 상체가 책상 위로 보이도록 위로 올림
+        const spriteY = agent.y - 30 + bob;
+        drawSpriteImg(agent.spriteKey, pose, agent.x, spriteY, animFrame);
+
+        // 왕관 (캐릭터 위에)
+        if (agent.crown) {
+          const crownY = spriteY - (FRAME_H * SPRITE_SCALE) / 2 - 10;
+          drawCrown(agent.x, crownY, 2);
+        }
+
+        // 책상을 캐릭터 위에 그림 (캐릭터가 책상 뒤에 있는 효과)
+        drawDeskOverlay(agent);
+
+        // 이름표
+        ctx.font = 'bold 11px "Malgun Gothic", sans-serif';
+        const nameW = ctx.measureText(agent.name).width + 12;
+        const nameY = agent.y + 46;
+        drawRect(agent.x - nameW / 2, nameY, nameW, 15, "rgba(255,255,255,0.85)");
+        drawRect(agent.x - nameW / 2, nameY, nameW, 1, agent.screenColor || "#94a3b8");
+        ctx.fillStyle = "#334155";
+        ctx.textAlign = "center";
+        ctx.fillText(agent.name, agent.x, nameY + 11);
+        ctx.textAlign = "left";
+
+        // 작업 중 자동 말풍선 (활성 에이전트만)
+        if (isActive && animate && Math.sin(time * 2 + index * 2.1) > 0.75) {
+          const quickBubbles = ["...", "!", "~", "OK"];
+          const bt = quickBubbles[(index + Math.floor(time)) % quickBubbles.length];
+          drawBubble(agent.x + 30, agent.y - 50 + bob, bt, "#475569", false);
+        }
+
+        // 클릭 말풍선
+        if (_clickBubble.agentIdx === index && _clickBubble.timer > 0) {
+          drawBubble(agent.x, agent.y - 64 + bob, _clickBubble.text, "#334155", true);
+        }
+
+        // 비활성 에이전트 투명도 복원
+        if (!isActive) ctx.globalAlpha = 1.0;
       }
 
+      // ─── 말풍선 그리기 ───
+      function drawBubble(bx, by, text, color, big) {
+        ctx.font = big ? '10px "Malgun Gothic", sans-serif' : '9px monospace';
+        const tw = ctx.measureText(text).width;
+        const pw = tw + (big ? 16 : 10);
+        const ph = big ? 18 : 13;
+        const rx = bx - pw / 2, ry = by - ph / 2;
+        // 배경
+        drawRect(rx - 1, ry - 1, pw + 2, ph + 2, "rgba(0,0,0,0.08)"); // 그림자
+        drawRect(rx, ry, pw, ph, "#ffffff");
+        drawRect(rx + 1, ry + 1, pw - 2, ph - 2, "#fafafa");
+        // 꼬리 (아래 삼각)
+        if (big) {
+          drawRect(bx - 3, ry + ph, 6, 3, "#ffffff");
+          drawRect(bx - 1, ry + ph + 3, 2, 2, "#ffffff");
+        }
+        // 텍스트
+        ctx.fillStyle = color;
+        ctx.textAlign = "center";
+        ctx.fillText(text, bx, by + (big ? 4 : 3));
+        ctx.textAlign = "left";
+      }
+
+      // ─── 캔버스 클릭 처리 ───
+      canvas.addEventListener("click", (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const mx = (e.clientX - rect.left) * (DESIGN_W / canvas.width);
+        const my = (e.clientY - rect.top) * (DESIGN_H / canvas.height);
+        let hitIdx = -1;
+        for (let i = 0; i < agents.length; i++) {
+          const a = agents[i];
+          if (Math.abs(mx - a.x) < 45 && Math.abs(my - a.y) < 50) {
+            hitIdx = i;
+            break;
+          }
+        }
+        if (hitIdx >= 0) {
+          const a = agents[hitIdx];
+          const q = a.quotes || ["..."];
+          _clickBubble = {
+            agentIdx: hitIdx,
+            text: q[Math.floor(Math.random() * q.length)],
+            timer: 180, // ~3초 (60fps)
+          };
+        }
+      });
+
+      // ─── 이펙트 ───
       function drawModeEffect(time) {
+        // 클릭 말풍선 타이머 감소
+        if (_clickBubble.timer > 0) _clickBubble.timer--;
+
         if (officeState.mode === "PASS") {
-          const glow = officeState.skipAnimation ? 0.28 : 0.22 + Math.abs(Math.sin(time * 8)) * 0.25;
+          const glow = officeState.skipAnimation ? 0.15 : 0.06 + Math.abs(Math.sin(time * 6)) * 0.12;
           ctx.fillStyle = `rgba(34, 197, 94, ${glow})`;
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-          drawRect(8, 8, canvas.width - 16, 4, "#22c55e");
-          drawRect(8, canvas.height - 12, canvas.width - 16, 4, "#22c55e");
+          ctx.fillRect(0, 0, DESIGN_W, DESIGN_H);
+          if (!officeState.skipAnimation) {
+            ctx.fillStyle = "#22c55e";
+            for (let i = 0; i < 12; i++) {
+              const px = (i * 57 + time * 50) % DESIGN_W;
+              const py = (Math.sin(time * 2.5 + i * 1.3) * 30) + 30 + i * 25;
+              const sz = 2 + Math.sin(time * 5 + i) * 1.5;
+              ctx.globalAlpha = 0.4 + Math.sin(time * 4 + i * 0.7) * 0.3;
+              ctx.fillRect(px, py, sz, sz);
+              ctx.fillRect(px - 1, py + sz / 2 - 0.5, sz + 2, 1);
+              ctx.fillRect(px + sz / 2 - 0.5, py - 1, 1, sz + 2);
+            }
+            ctx.globalAlpha = 1;
+            drawRect(0, 0, DESIGN_W, 22, "rgba(34, 197, 94, 0.75)");
+            ctx.fillStyle = "#fff";
+            ctx.font = 'bold 13px "Malgun Gothic", sans-serif';
+            ctx.textAlign = "center";
+            ctx.fillText("PASS", DESIGN_W / 2, 16);
+            ctx.textAlign = "left";
+          }
         } else if (officeState.mode === "PASS_WITH_FIX") {
-          const glow = officeState.skipAnimation ? 0.22 : 0.16 + Math.abs(Math.sin(time * 7)) * 0.2;
+          const glow = officeState.skipAnimation ? 0.12 : 0.05 + Math.abs(Math.sin(time * 5)) * 0.1;
           ctx.fillStyle = `rgba(234, 179, 8, ${glow})`;
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-          for (let i = 0; i < 6; i += 1) {
-            const x = 40 + i * 95;
-            drawRect(x, 12, 16, 3, "#eab308");
+          ctx.fillRect(0, 0, DESIGN_W, DESIGN_H);
+          if (!officeState.skipAnimation) {
+            if (Math.sin(time * 8) > 0) {
+              ctx.fillStyle = "rgba(234, 179, 8, 0.5)";
+              ctx.fillRect(0, 0, DESIGN_W, 4);
+              ctx.fillRect(0, DESIGN_H - 4, DESIGN_W, 4);
+            }
+            drawRect(0, 0, DESIGN_W, 22, "rgba(234, 179, 8, 0.75)");
+            ctx.fillStyle = "#fff";
+            ctx.font = 'bold 13px "Malgun Gothic", sans-serif';
+            ctx.textAlign = "center";
+            ctx.fillText("PASS WITH FIX", DESIGN_W / 2, 16);
+            ctx.textAlign = "left";
           }
         } else if (officeState.mode === "REJECT") {
-          const shake = officeState.skipAnimation ? 0 : Math.sin(time * 28) * 3;
-          ctx.fillStyle = "rgba(239, 68, 68, 0.18)";
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-          drawRect(canvas.width * 0.5 - 50 + shake, 48, 100, 6, "#ef4444");
-          drawRect(canvas.width * 0.5 - 3 + shake, 10, 6, 90, "#ef4444");
+          const shake = officeState.skipAnimation ? 0 : Math.sin(time * 24) * 2;
+          ctx.fillStyle = "rgba(239, 68, 68, 0.08)";
+          ctx.fillRect(0, 0, DESIGN_W, DESIGN_H);
+          if (!officeState.skipAnimation) {
+            ctx.strokeStyle = "rgba(239, 68, 68, 0.4)";
+            ctx.lineWidth = 5;
+            ctx.beginPath();
+            ctx.moveTo(DESIGN_W / 2 - 18 + shake, 20);
+            ctx.lineTo(DESIGN_W / 2 + 18 + shake, 56);
+            ctx.moveTo(DESIGN_W / 2 + 18 + shake, 20);
+            ctx.lineTo(DESIGN_W / 2 - 18 + shake, 56);
+            ctx.stroke();
+            drawRect(0, 0, DESIGN_W, 22, "rgba(239, 68, 68, 0.75)");
+            ctx.fillStyle = "#fff";
+            ctx.font = 'bold 13px "Malgun Gothic", sans-serif';
+            ctx.textAlign = "center";
+            ctx.fillText("REJECT", DESIGN_W / 2, 16);
+            ctx.textAlign = "left";
+          }
         }
       }
 
@@ -716,29 +2030,454 @@
         officeState.frame += 1;
         const time = timeMs / 1000;
 
+        ctx.save();
+        ctx.scale(canvas.width / DESIGN_W, canvas.height / DESIGN_H);
         drawOfficeBackground(time);
         agents.forEach((agent, index) => drawAgent(agent, index, time));
         drawModeEffect(time);
+        ctx.restore();
 
         requestAnimationFrame(draw);
       }
 
-      function handleRunButtonClick(button) {
-        const action = button.dataset.action;
-        const key = button.dataset.key;
-        const label = button.querySelector(".label").textContent;
+      // ─── Backend 연결 상태 ──
+      let _backendConnected = false;
+      let _ws = null;
+      let _wsReconnectTimer = null;
 
-        console.log(`[UI-STUB] action=${action} key=${key}`);
-        lastAction.textContent = `최근 클릭: ${label} (key: ${key})`;
+      // 장르 key → main_a.py 번호 매핑
+      const GENRE_INDEX_MAP = {
+        wuxia: 1, hunter: 2, investment: 3, fantasy: 4,
+        composer: 5, cooking: 6, alt_history: 7, actor: 8,
+        sports: 9, medical: 10
+      };
 
-        if (action === "stop") {
-          stopLoop();
-          appendLog("[System] 중지됨");
+      function _collectInputs() {
+        const inputs = {};
+        // 장르 인덱스 (main_a.py _select_genre 번호)
+        if (projectConfig.genre) {
+          inputs.genre_index = GENRE_INDEX_MAP[projectConfig.genre] || 1;
+        }
+        // 프로젝트 인덱스 (main_a.py _select_project 번호, 1-based)
+        if (projectConfig.projectIndex) {
+          inputs.project_index = projectConfig.projectIndex;
+        }
+        // DOM 입력 필드 우선, settingsStore 폴백 (설정 모달 열기 전에도 동작)
+        const k1 = document.getElementById("apiKey1");
+        const k1Val = (k1 && k1.value.trim()) || settingsStore.apiKey1;
+        if (k1Val) inputs.api_key = k1Val;
+        for (let i = 2; i <= 9; i++) {
+          const el = document.getElementById(`apiKey${i}`);
+          const v = (el && el.value.trim()) || (settingsStore.extraKeys[i] || "");
+          if (v) inputs[`api_key_${i}`] = v;
+        }
+        const slack = document.getElementById("slackWebhook");
+        const slackVal = (slack && slack.value.trim()) || settingsStore.slackWebhook;
+        if (slackVal) inputs.slack_webhook = slackVal;
+        return inputs;
+      }
+
+      // ── 프로젝트 관리 ──
+      const projectSelect = document.getElementById("projectSelect");
+      const newProjectBtn = document.getElementById("newProjectBtn");
+
+      async function refreshProjectList() {
+        if (!window.geuldobiDesktop) return;
+        try {
+          const res = await window.geuldobiDesktop.listProjects();
+          if (!res.ok) return;
+          // 현재 선택 보존
+          const current = projectSelect.value;
+          projectSelect.innerHTML = '<option value="">프로젝트 선택</option>';
+          for (const name of res.projects) {
+            const opt = document.createElement("option");
+            opt.value = name;
+            opt.textContent = name;
+            projectSelect.appendChild(opt);
+          }
+          // 이전 선택 복원
+          if (current && res.projects.includes(current)) {
+            projectSelect.value = current;
+          }
+          // 설정에 저장된 프로젝트 복원
+          if (!projectSelect.value && settingsStore.project) {
+            projectSelect.value = settingsStore.project;
+          }
+          // 선택된 프로젝트가 있으면 project_index 계산 가능하도록 저장
+          if (projectSelect.value) {
+            projectConfig.project = projectSelect.value;
+            projectConfig.projectIndex = res.projects.indexOf(projectSelect.value) + 1;
+          }
+        } catch (err) {
+          console.error("Project list error:", err);
+        }
+      }
+
+      projectSelect.addEventListener("change", () => {
+        const name = projectSelect.value;
+        if (name) {
+          projectConfig.project = name;
+          // projects 목록에서 인덱스 계산 (1-based, main_a.py _select_project)
+          const options = Array.from(projectSelect.options).filter(o => o.value);
+          projectConfig.projectIndex = options.findIndex(o => o.value === name) + 1;
+          appendLog(`[System] 프로젝트 선택: ${name}`);
+          // 영속화
+          settingsStore.project = name;
+          if (window.geuldobiDesktop) {
+            window.geuldobiDesktop.saveSettings(settingsStore).catch(() => {});
+          }
+        }
+      });
+
+      // ── 새 프로젝트 모달 ──
+      const newProjectModal = document.getElementById("newProjectModal");
+      const newProjectNameInput = document.getElementById("newProjectNameInput");
+      const newProjectError = document.getElementById("newProjectError");
+      const newProjectCreateBtn = document.getElementById("newProjectCreate");
+      const newProjectCancelBtn = document.getElementById("newProjectCancel");
+
+      newProjectBtn.addEventListener("click", () => {
+        newProjectNameInput.value = "";
+        newProjectError.style.display = "none";
+        newProjectModal.classList.add("open");
+        setTimeout(() => newProjectNameInput.focus(), 100);
+      });
+
+      newProjectCancelBtn.addEventListener("click", () => {
+        newProjectModal.classList.remove("open");
+      });
+
+      newProjectModal.addEventListener("click", (e) => {
+        if (e.target === newProjectModal) newProjectModal.classList.remove("open");
+      });
+
+      newProjectNameInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          newProjectCreateBtn.click();
+        }
+      });
+
+      newProjectCreateBtn.addEventListener("click", async () => {
+        const name = newProjectNameInput.value.trim();
+        if (!name) {
+          newProjectError.textContent = "프로젝트 이름을 입력하세요";
+          newProjectError.style.display = "block";
+          return;
+        }
+        if (!window.geuldobiDesktop) {
+          newProjectError.textContent = "Electron 환경에서만 사용 가능합니다";
+          newProjectError.style.display = "block";
+          return;
+        }
+        try {
+          const res = await window.geuldobiDesktop.createProject(name);
+          if (res.ok) {
+            newProjectModal.classList.remove("open");
+            appendLog(`[System] 프로젝트 생성됨: ${res.name}`);
+            await refreshProjectList();
+            projectSelect.value = res.name;
+            projectSelect.dispatchEvent(new Event("change"));
+          } else {
+            newProjectError.textContent = res.message || "생성 실패";
+            newProjectError.style.display = "block";
+          }
+        } catch (err) {
+          newProjectError.textContent = err.message;
+          newProjectError.style.display = "block";
+        }
+      });
+
+      function _connectWebSocket() {
+        if (_ws && _ws.readyState <= WebSocket.OPEN) return;
+        if (!window.geuldobiDesktop) return;
+
+        window.geuldobiDesktop.getBackendUrl().then(({ wsUrl }) => {
+          _ws = new WebSocket(wsUrl);
+          _ws.onopen = () => {
+            _backendConnected = true;
+            if (_wsReconnectTimer) { clearTimeout(_wsReconnectTimer); _wsReconnectTimer = null; }
+            appendLog("[System] 백엔드 연결됨");
+          };
+          _ws.onmessage = (event) => {
+            try {
+              _handleWsEvent(JSON.parse(event.data));
+            } catch (e) {
+              console.error("WS parse error:", e);
+            }
+          };
+          _ws.onclose = () => {
+            _backendConnected = false;
+            if (_wsReconnectTimer) clearTimeout(_wsReconnectTimer);
+            _wsReconnectTimer = setTimeout(_connectWebSocket, 3000);
+          };
+          _ws.onerror = () => {};
+        }).catch(() => {});
+      }
+
+      function _handleWsEvent(ev) {
+        switch (ev.type) {
+          case "run_started":
+            startRunningLoop();
+            appendLog(`[System] 실행 시작 (key: ${ev.payload.key})`);
+            break;
+          case "stdout":
+            _handleStdoutLine(ev.payload.text);
+            break;
+          case "run_completed":
+            stopLoop();
+            appendLog("[System] 실행 완료");
+            break;
+          case "run_failed":
+            stopLoop();
+            appendLog(`[System] 실행 실패 (code: ${ev.payload.returncode})`);
+            break;
+          case "run_stopped":
+            stopLoop();
+            appendLog("[System] 중지됨");
+            break;
+          case "prompt_request":
+            _showPromptDialog(ev);
+            break;
+          case "prompt_resolved":
+            // 프롬프트 해결됨 — 다이얼로그 이미 닫힘
+            break;
+          case "prompt_timeout":
+            document.getElementById("promptOverlay").classList.remove("open");
+            _currentPrompt = null;
+            appendLog(`[System] 프롬프트 타임아웃 — 기본값 적용: ${ev.payload.applied_default}`);
+            break;
+        }
+      }
+
+      // ── Mode B 프롬프트 핸들링 ──
+      let _currentPrompt = null;  // { runId, promptId, inputType, default, options }
+
+      function _showPromptDialog(data) {
+        // 이미 프롬프트 다이얼로그가 열려 있으면 무시 (동시 요청 방지)
+        const overlay = document.getElementById("promptOverlay");
+        if (overlay.classList.contains("open") && _currentPrompt) {
+          console.warn("[prompt] ignoring concurrent prompt_request while dialog open");
+          return;
+        }
+        const title = document.getElementById("promptTitle");
+        const text = document.getElementById("promptText");
+        const hint = document.getElementById("promptDefaultHint");
+        const optionsDiv = document.getElementById("promptOptions");
+        const inputRow = document.getElementById("promptInputRow");
+        const input = document.getElementById("promptInput");
+
+        const payload = data.payload;
+        _currentPrompt = {
+          runId: data.run_id,
+          promptId: payload.prompt_id,
+          inputType: payload.input_type,
+        };
+
+        // 제목 설정
+        const stepLabels = {
+          confirm: "확인",
+          continue: "계속",
+          choice: "선택",
+          range_input: "숫자 입력",
+          path_input: "경로 입력",
+          concept_input: "컨셉 입력",
+          generic_input: "입력",
+        };
+        title.textContent = stepLabels[payload.step_id] || "입력 대기";
+        text.textContent = payload.prompt_text || "";
+        hint.textContent = payload.default != null ? `기본값: ${payload.default}` : "";
+
+        optionsDiv.innerHTML = "";
+        inputRow.style.display = "none";
+        input.style.display = "";
+        const _ta = document.getElementById("promptTextarea");
+        if (_ta) _ta.style.display = "none";
+
+        if (payload.input_type === "enter") {
+          // [Enter] 계속 — 자동 전송
+          _resolveCurrentPrompt("");
           return;
         }
 
-        startRunningLoop();
-        appendLog(`[System] ${label} 시작`);
+        if (payload.input_type === "bool") {
+          // Yes/No 버튼
+          const yesBtn = document.createElement("button");
+          yesBtn.className = "prompt-option-btn";
+          yesBtn.textContent = "예 (Y)";
+          yesBtn.addEventListener("click", () => _resolveCurrentPrompt("y"));
+
+          const noBtn = document.createElement("button");
+          noBtn.className = "prompt-option-btn";
+          noBtn.textContent = "아니오 (N)";
+          noBtn.addEventListener("click", () => _resolveCurrentPrompt("n"));
+
+          optionsDiv.appendChild(yesBtn);
+          optionsDiv.appendChild(noBtn);
+        } else if (payload.options && payload.options.length > 0) {
+          // 옵션 목록
+          for (const opt of payload.options) {
+            const btn = document.createElement("button");
+            btn.className = "prompt-option-btn";
+            btn.textContent = `[${opt.key}] ${opt.label}`;
+            btn.addEventListener("click", () => _resolveCurrentPrompt(opt.key));
+            optionsDiv.appendChild(btn);
+          }
+        } else if (payload.input_type === "multiline") {
+          // 다중 줄 입력 — input 숨기고 textarea 추가 (원본 보존)
+          inputRow.style.display = "flex";
+          input.style.display = "none";
+          let ta = document.getElementById("promptTextarea");
+          if (!ta) {
+            ta = document.createElement("textarea");
+            ta.id = "promptTextarea";
+            ta.style.cssText = "flex:1;min-height:80px;padding:8px;border-radius:6px;border:1px solid #cbd5e1;font-size:14px;resize:vertical;";
+            inputRow.insertBefore(ta, inputRow.querySelector("button"));
+          }
+          ta.style.display = "";
+          ta.placeholder = "여러 줄 입력 후 확인 클릭";
+          ta.value = "";
+          ta.focus();
+        } else {
+          // 일반 입력 (텍스트/숫자)
+          inputRow.style.display = "flex";
+          input.value = payload.default != null ? String(payload.default) : "";
+          input.placeholder = payload.input_type === "int" ? "숫자 입력" : "입력...";
+          input.focus();
+        }
+
+        overlay.classList.add("open");
+      }
+
+      function _resolveCurrentPrompt(value) {
+        if (!_currentPrompt) return;
+        const { runId, promptId } = _currentPrompt;
+        _currentPrompt = null;
+        document.getElementById("promptOverlay").classList.remove("open");
+
+        if (window.geuldobiDesktop) {
+          window.geuldobiDesktop.resolvePrompt(runId, promptId, value).catch((err) => {
+            appendLog(`[System] 프롬프트 응답 실패: ${err.message}`);
+          });
+        }
+        appendLog(`[입력] ${value || "(확인)"}`);
+      }
+
+      // 프롬프트 확인 버튼
+      document.getElementById("promptSubmit").addEventListener("click", () => {
+        const ta = document.getElementById("promptTextarea");
+        const inp = document.getElementById("promptInput");
+        const val = (ta && ta.style.display !== "none") ? (ta.value || "") : (inp ? (inp.value || "") : "");
+        _resolveCurrentPrompt(val);
+      });
+
+      // Enter 키로 전송 (이벤트 위임 — 요소 교체에도 안전)
+      document.getElementById("promptInputRow").addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && _currentPrompt && _currentPrompt.inputType !== "multiline" && e.target.id === "promptInput") {
+          e.preventDefault();
+          _resolveCurrentPrompt(e.target.value || "");
+        }
+      });
+
+      function _handleStdoutLine(text) {
+        const vm = text.match(/심사\s*결과[:\s]*(PASS_WITH_FIX|PASS|REJECT)\s*\((\d+)점\)/);
+        if (vm) {
+          const verdict = vm[1];
+          const badge = verdict === "PASS_WITH_FIX" ? "PWF" : verdict;
+          appendLog(text, badge);
+          if (verdict === "PASS") {
+            officeState.mode = "PASS"; setStateBadge("PASS"); setEffectBanner("채택", "pass");
+          } else if (verdict === "PASS_WITH_FIX") {
+            officeState.mode = "PASS_WITH_FIX"; setStateBadge("PASS_WITH_FIX"); setEffectBanner("한 번 더", "pwf");
+          } else {
+            officeState.mode = "REJECT"; setStateBadge("REJECT"); setEffectBanner("재시도", "reject");
+          }
+          setTimeout(() => {
+            if (officeState.isRunning) {
+              officeState.mode = "RUNNING"; setStateBadge("RUNNING"); setEffectBanner("", "");
+            }
+          }, 1500);
+        } else {
+          appendLog(text);
+        }
+      }
+
+      async function handleRunButtonClick(button) {
+        const action = button.dataset.action;
+        const key = button.dataset.key;
+        const subKey = button.dataset.subKey || null;
+        const label = button.querySelector(".label").textContent;
+
+        console.log(`[UI] action=${action} key=${key} subKey=${subKey}`);
+        lastAction.textContent = `최근 클릭: ${label} (key: ${key || action})`;
+
+        if (action === "genre_setting") {
+          openGenreModal();
+          return;
+        }
+
+        if (action === "stage_0_toggle") {
+          const subMenu = document.getElementById("stage0SubMenu");
+          subMenu.classList.toggle("open");
+          return;
+        }
+
+        if (action === "stop") {
+          if (window.geuldobiDesktop && _backendConnected) {
+            try { await window.geuldobiDesktop.stopRun(); } catch (e) {
+              appendLog("[System] 중지 실패: " + e.message);
+            }
+          } else {
+            stopLoop();
+            appendLog("[System] 중지됨 (오프라인)");
+          }
+          return;
+        }
+
+        // ── 실행 전 검증 (모든 백엔드 실행 키는 장르·프로젝트·API 키 필수) ──
+        if (!projectConfig.genre) {
+          appendLog("[System] 장르를 먼저 설정하세요");
+          openGenreModal();
+          return;
+        }
+        if (!projectConfig.project) {
+          appendLog("[System] 프로젝트를 먼저 선택하세요");
+          return;
+        }
+
+        const inputs = _collectInputs();
+        if (!inputs.api_key) {
+          appendLog("[System] API 키를 먼저 설정하세요 (설정 → API 키)");
+          openSettings();
+          return;
+        }
+
+        // ── 파괴적 작업 확인 (검증 통과 후) ──
+        const destructiveActions = { wipe: "프로젝트 전체 초기화", reset: "프로젝트 리셋", rewind: "에피소드 되감기" };
+        if (destructiveActions[action]) {
+          if (!confirm(`[${destructiveActions[action]}] 정말 실행하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`)) {
+            appendLog(`[System] ${label} 취소됨`);
+            return;
+          }
+        }
+
+        // ── 스테이지별 에이전트 활성화 ──
+        officeState.currentStage = action;
+
+        // ── 실행 요청 ──
+        if (window.geuldobiDesktop && _backendConnected) {
+          appendLog(`[System] ${label} 시작 요청...`);
+          try {
+            const result = await window.geuldobiDesktop.runKey(key, subKey, inputs);
+            if (!result.ok) {
+              appendLog(`[System] 실행 실패: ${result.message}`);
+            }
+          } catch (e) {
+            appendLog(`[System] 연결 실패: ${e.message}`);
+          }
+        } else {
+          appendLog(`[System] 백엔드 미연결 — 실행 불가`);
+        }
       }
 
       function updateToggleLabels() {
@@ -749,6 +2488,11 @@
       }
 
       menuButtons.forEach((button) => {
+        button.addEventListener("click", () => handleRunButtonClick(button));
+      });
+
+      // Stage 0 서브메뉴 버튼 바인딩
+      document.querySelectorAll(".stage0-sub-btn").forEach((button) => {
         button.addEventListener("click", () => handleRunButtonClick(button));
       });
 
@@ -764,16 +2508,512 @@
         appendLog(`[System] Mute ${officeState.mute ? "활성" : "비활성"}`);
       });
 
+      // ── 로그 패널 접기/펼치기 ──
+      const logPanel = document.getElementById("logPanel");
+      const logToggleBtn = document.getElementById("logToggleBtn");
+      logToggleBtn.addEventListener("click", () => {
+        const collapsed = logPanel.classList.toggle("log-panel-collapsible");
+        logToggleBtn.textContent = collapsed ? "펼치기" : "접기";
+      });
+
       if (window.geuldobiDesktop && typeof window.geuldobiDesktop.onAppReady === "function") {
         window.geuldobiDesktop.onAppReady(({ reason }) => {
           readyBadge.textContent = `진입 완료: ${reason}`;
         });
       }
 
-      appendLog("[System] UI 스텁 초기화 완료");
+      // ── 설정 사이드 패널 ──
+      const settingsOverlay = document.getElementById("settingsOverlay");
+      const settingsClose = document.getElementById("settingsClose");
+      const settingsCancel = document.getElementById("settingsCancel");
+      const settingsSave = document.getElementById("settingsSave");
+      const settingsBtn = document.getElementById("settingsBtn");
+      const apiKeyWarning = document.getElementById("apiKeyWarning");
+      const apiKeyStatus = document.getElementById("apiKeyStatus");
+      const apiKey1Input = document.getElementById("apiKey1");
+      const toggleKey1Btn = document.getElementById("toggleKey1");
+      const testKey1Btn = document.getElementById("testKey1");
+      const extraKeysToggle = document.getElementById("extraKeysToggle");
+      const extraKeysBody = document.getElementById("extraKeysBody");
+      const settingsGenreDisplay = document.getElementById("settingsGenreDisplay");
+      const settingsChangeGenre = document.getElementById("settingsChangeGenre");
+      const sysToggleSkipBtn = document.getElementById("sysToggleSkip");
+      const sysToggleMuteBtn = document.getElementById("sysToggleMute");
+
+      // 로컬 설정 저장소 (스텁)
+      const settingsStore = {
+        apiKey1: "",
+        extraKeys: {},
+        slackWebhook: "",
+        timeout: 300,
+        keyRotate: 10,
+        qualityGate: 90,
+        targetLength: 5000,
+        project: ""
+      };
+
+      function openSettings() {
+        syncSettingsUI();
+        settingsOverlay.classList.add("open");
+      }
+
+      function closeSettings() {
+        settingsOverlay.classList.remove("open");
+      }
+
+      function syncSettingsUI() {
+        // API 키 DOM 반영
+        if (apiKey1Input) apiKey1Input.value = settingsStore.apiKey1 || "";
+        for (let i = 2; i <= 9; i++) {
+          const el = document.getElementById(`apiKey${i}`);
+          if (el) el.value = (settingsStore.extraKeys && settingsStore.extraKeys[i]) || "";
+        }
+        const slackEl = document.getElementById("slackWebhook");
+        if (slackEl) slackEl.value = settingsStore.slackWebhook || "";
+
+        // API 키 경고 배너
+        if (!settingsStore.apiKey1) {
+          apiKeyWarning.classList.add("show");
+        } else {
+          apiKeyWarning.classList.remove("show");
+        }
+        // 키 상태 카운트
+        const totalKeys = (settingsStore.apiKey1 ? 1 : 0) +
+          Object.values(settingsStore.extraKeys).filter(Boolean).length;
+        apiKeyStatus.textContent = `현재 사용 중: Key 1 / 총 ${totalKeys}개 등록`;
+
+        // 시스템 탭 연출 버튼 동기화
+        sysToggleSkipBtn.textContent = `Skip animation: ${officeState.skipAnimation ? "ON" : "OFF"}`;
+        sysToggleMuteBtn.textContent = `Mute: ${officeState.mute ? "ON" : "OFF"}`;
+
+        // 슬라이더 값 동기화
+        document.getElementById("sliderTimeout").value = settingsStore.timeout;
+        document.getElementById("sliderTimeoutVal").textContent = `${settingsStore.timeout}초`;
+        document.getElementById("sliderKeyRotate").value = settingsStore.keyRotate;
+        document.getElementById("sliderKeyRotateVal").textContent = `${settingsStore.keyRotate}초`;
+        document.getElementById("qualityGate").value = settingsStore.qualityGate;
+        document.getElementById("targetLength").value = settingsStore.targetLength;
+
+        // 장르 표시
+        settingsGenreDisplay.textContent = projectConfig.genre
+          ? (typeof GENRE_LABELS !== "undefined" ? GENRE_LABELS[projectConfig.genre] : projectConfig.genre)
+          : "미설정";
+      }
+
+      // 탭 전환
+      document.querySelectorAll(".tab-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
+          document.querySelectorAll(".tab-content").forEach((c) => c.classList.remove("active"));
+          btn.classList.add("active");
+          document.getElementById(btn.dataset.tab).classList.add("active");
+        });
+      });
+
+      // API Key 보기/숨기기 토글
+      toggleKey1Btn.addEventListener("click", () => {
+        const isText = apiKey1Input.type === "text";
+        apiKey1Input.type = isText ? "password" : "text";
+        toggleKey1Btn.textContent = isText ? "보기" : "숨기기";
+      });
+
+      // API 키 테스트
+      testKey1Btn.addEventListener("click", async () => {
+        const key = apiKey1Input.value.trim();
+        if (!key) {
+          appendLog("[설정] API 키가 비어 있습니다.");
+          return;
+        }
+        appendLog("[설정] API 키 테스트 중...");
+        try {
+          const res = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(key)}`
+          );
+          if (res.ok) {
+            appendLog("[설정] API 키 테스트 성공");
+          } else {
+            appendLog(`[설정] API 키 테스트 실패 (HTTP ${res.status})`);
+          }
+        } catch (err) {
+          appendLog(`[설정] API 키 테스트 오류: ${err.message}`);
+        }
+      });
+
+      // 추가 API Key 2~9 동적 생성
+      (function buildExtraKeys() {
+        for (let i = 2; i <= 9; i += 1) {
+          const wrap = document.createElement("div");
+          wrap.className = "field-group";
+          wrap.style.gap = "4px";
+
+          const labelEl = document.createElement("span");
+          labelEl.className = "field-label";
+          labelEl.style.fontWeight = "normal";
+          labelEl.textContent = `API Key ${i}`;
+
+          const row = document.createElement("div");
+          row.className = "input-row";
+
+          const inp = document.createElement("input");
+          inp.type = "password";
+          inp.id = `apiKey${i}`;
+          inp.placeholder = "AIza...";
+          inp.autocomplete = "off";
+
+          const toggleBtn = document.createElement("button");
+          toggleBtn.type = "button";
+          toggleBtn.className = "btn-sm";
+          toggleBtn.textContent = "보기";
+          toggleBtn.addEventListener("click", () => {
+            const isText = inp.type === "text";
+            inp.type = isText ? "password" : "text";
+            toggleBtn.textContent = isText ? "보기" : "숨기기";
+          });
+
+          row.append(inp, toggleBtn);
+          wrap.append(labelEl, row);
+          extraKeysBody.appendChild(wrap);
+        }
+      })();
+
+      // 추가 키 접기/펼치기
+      extraKeysToggle.addEventListener("click", () => {
+        const isOpen = extraKeysBody.classList.toggle("open");
+        extraKeysToggle.textContent = `${isOpen ? "▼" : "▶"} 추가 API Key (2~9)`;
+      });
+
+      // 프로젝트 탭 — 장르 변경 버튼
+      settingsChangeGenre.addEventListener("click", () => {
+        closeSettings();
+        // openGenreModal은 이후 JS에서 정의됨 — 이름으로 참조
+        if (typeof openGenreModal === "function") openGenreModal();
+      });
+
+      // 시스템 탭 — 연출 토글 버튼
+      sysToggleSkipBtn.addEventListener("click", () => {
+        officeState.skipAnimation = !officeState.skipAnimation;
+        updateToggleLabels();
+        sysToggleSkipBtn.textContent = `Skip animation: ${officeState.skipAnimation ? "ON" : "OFF"}`;
+        appendLog(`[System] Skip animation ${officeState.skipAnimation ? "활성" : "비활성"}`);
+      });
+
+      sysToggleMuteBtn.addEventListener("click", () => {
+        officeState.mute = !officeState.mute;
+        updateToggleLabels();
+        sysToggleMuteBtn.textContent = `Mute: ${officeState.mute ? "ON" : "OFF"}`;
+        appendLog(`[System] Mute ${officeState.mute ? "활성" : "비활성"}`);
+      });
+
+      // 슬라이더 실시간 표시
+      document.getElementById("sliderTimeout").addEventListener("input", (e) => {
+        document.getElementById("sliderTimeoutVal").textContent = `${e.target.value}초`;
+      });
+      document.getElementById("sliderKeyRotate").addEventListener("input", (e) => {
+        document.getElementById("sliderKeyRotateVal").textContent = `${e.target.value}초`;
+      });
+
+      // 추천 설정 적용
+      document.getElementById("applyRecommendedModel").addEventListener("click", () => {
+        document.getElementById("modelCW").value = "flash";
+        document.getElementById("modelDir").value = "pro";
+        document.getElementById("modelAnl").value = "flash";
+        appendLog("[설정] 추천 모델 설정 적용됨 (CW=flash, Director=pro, Analyst=flash)");
+      });
+
+      // 저장
+      settingsSave.addEventListener("click", async () => {
+        settingsStore.apiKey1 = apiKey1Input.value.trim();
+        settingsStore.slackWebhook = document.getElementById("slackWebhook").value.trim();
+        settingsStore.timeout = parseInt(document.getElementById("sliderTimeout").value, 10);
+        settingsStore.keyRotate = parseInt(document.getElementById("sliderKeyRotate").value, 10);
+        settingsStore.qualityGate = parseInt(document.getElementById("qualityGate").value, 10);
+        settingsStore.targetLength = parseInt(document.getElementById("targetLength").value, 10);
+        settingsStore.genre = projectConfig.genre || null;
+        settingsStore.project = projectConfig.project || "";
+        for (let i = 2; i <= 9; i += 1) {
+          const el = document.getElementById(`apiKey${i}`);
+          if (el) settingsStore.extraKeys[i] = el.value.trim();
+        }
+        syncSettingsUI();
+        closeSettings();
+
+        // AppData JSON 영속화
+        if (window.geuldobiDesktop) {
+          try {
+            const res = await window.geuldobiDesktop.saveSettings(settingsStore);
+            appendLog(res && res.ok ? "[설정] 저장 완료" : "[설정] 저장 실패");
+          } catch (err) {
+            appendLog("[설정] 저장 오류: " + err.message);
+          }
+        } else {
+          appendLog("[설정] 저장 완료 (메모리 전용)");
+        }
+      });
+
+      // 취소 / 닫기
+      settingsCancel.addEventListener("click", closeSettings);
+      settingsClose.addEventListener("click", closeSettings);
+      settingsOverlay.addEventListener("click", (e) => {
+        if (e.target === settingsOverlay) closeSettings();
+      });
+
+      // 설정 버튼
+      settingsBtn.addEventListener("click", openSettings);
+
+      // ── 장르설정 모달 ──
+      const GENRE_LABELS = {
+        investment: "투자물",
+        wuxia: "무협",
+        hunter: "헌터물",
+        fantasy: "판타지",
+        medical: "의료물",
+        alt_history: "대체역사",
+        composer: "작곡물",
+        sports: "스포츠물",
+        actor: "배우/연예물",
+        cooking: "요리물"
+      };
+
+      const projectConfig = { genre: null, project: null, projectIndex: 1 };
+
+      const genreModal = document.getElementById("genreModal");
+      const genreModalClose = document.getElementById("genreModalClose");
+      const genreCurrentLabel = document.getElementById("genreCurrentLabel");
+      const genreBtnMeta = document.getElementById("genreBtnMeta");
+      const genreConfirmModal = document.getElementById("genreConfirmModal");
+      const genreConfirmCancel = document.getElementById("genreConfirmCancel");
+      const genreConfirmOk = document.getElementById("genreConfirmOk");
+
+      let _pendingGenre = null;
+
+      function openGenreModal() {
+        updateGenreModalState();
+        genreModal.classList.add("open");
+      }
+
+      function closeGenreModal() {
+        genreModal.classList.remove("open");
+      }
+
+      function updateGenreModalState() {
+        const label = projectConfig.genre ? GENRE_LABELS[projectConfig.genre] : "없음";
+        genreCurrentLabel.textContent = `현재 선택: ${label}`;
+        document.querySelectorAll(".genre-item").forEach((item) => {
+          item.classList.toggle("selected", item.dataset.genre === projectConfig.genre);
+        });
+      }
+
+      function applyGenre(genreKey) {
+        projectConfig.genre = genreKey;
+        const label = GENRE_LABELS[genreKey];
+        genreBtnMeta.textContent = label;
+        updateGenreModalState();
+        closeGenreModal();
+        updateGenreGating();
+        appendLog(`[System] 장르 설정: ${label}`);
+        // 즉시 영속화
+        if (window.geuldobiDesktop) {
+          settingsStore.genre = genreKey;
+          window.geuldobiDesktop.saveSettings(settingsStore).catch(() => {});
+        }
+      }
+
+      genreModalClose.addEventListener("click", closeGenreModal);
+      genreModal.addEventListener("click", (e) => {
+        if (e.target === genreModal) closeGenreModal();
+      });
+
+      document.querySelectorAll(".genre-item").forEach((item) => {
+        item.addEventListener("click", () => {
+          const genreKey = item.dataset.genre;
+          if (genreKey === "investment") {
+            applyGenre(genreKey);
+          } else {
+            _pendingGenre = genreKey;
+            genreConfirmModal.classList.add("open");
+          }
+        });
+      });
+
+      genreConfirmCancel.addEventListener("click", () => {
+        _pendingGenre = null;
+        genreConfirmModal.classList.remove("open");
+      });
+
+      genreConfirmOk.addEventListener("click", () => {
+        genreConfirmModal.classList.remove("open");
+        if (_pendingGenre) {
+          applyGenre(_pendingGenre);
+          _pendingGenre = null;
+        }
+      });
+
+      // Accordion toggle (독립 토글, 자동 접기 없음)
+      document.querySelectorAll(".category-header").forEach((header) => {
+        header.addEventListener("click", () => {
+          const targetId = header.dataset.target;
+          const body = document.getElementById(targetId);
+          const isCollapsed = body.classList.toggle("collapsed");
+          header.classList.toggle("collapsed", isCollapsed);
+        });
+      });
+
+      // ── 장르 게이팅 (장르 미설정 시 비활성) ──
+      function updateGenreGating() {
+        const hasGenre = !!projectConfig.genre;
+        document.querySelectorAll(".genre-gated").forEach((btn) => {
+          btn.disabled = !hasGenre;
+        });
+        const hint = document.getElementById("genreRequiredHint");
+        if (hint) hint.classList.toggle("show", !hasGenre);
+        // Stage 0 서브메뉴도 장르 없으면 닫기
+        if (!hasGenre) {
+          const subMenu = document.getElementById("stage0SubMenu");
+          if (subMenu) subMenu.classList.remove("open");
+        }
+      }
+
+      // ── 재료 파일 관리 ──
+      function _formatSize(bytes) {
+        if (bytes < 1024) return bytes + " B";
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+        return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+      }
+
+      async function refreshMaterialList(folder, containerId) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        if (!window.geuldobiDesktop) {
+          container.innerHTML = '<div class="material-empty">오프라인 모드</div>';
+          return;
+        }
+        try {
+          const res = await window.geuldobiDesktop.listMaterialFiles(folder);
+          if (!res.ok || res.files.length === 0) {
+            container.innerHTML = '<div class="material-empty">파일 없음</div>';
+            return;
+          }
+          container.innerHTML = "";
+          for (const f of res.files) {
+            if (f.isDir) continue;
+            const item = document.createElement("div");
+            item.className = "material-file-item";
+            item.innerHTML = `<span class="file-name" title="${f.name}">${f.name}</span>`
+              + `<span class="file-size">${_formatSize(f.size)}</span>`
+              + `<button type="button" class="file-del" title="삭제">✕</button>`;
+            item.querySelector(".file-del").addEventListener("click", async () => {
+              if (!confirm(f.name + " 파일을 삭제하시겠습니까?")) return;
+              const del = await window.geuldobiDesktop.deleteMaterialFile(folder, f.name);
+              if (del.ok) {
+                appendLog(`[재료] ${f.name} 삭제됨`);
+                refreshMaterialList(folder, containerId);
+              } else {
+                appendLog(`[재료] ${f.name} 삭제 실패: ${del.message || "알 수 없는 오류"}`);
+              }
+            });
+            container.appendChild(item);
+          }
+        } catch (err) {
+          container.innerHTML = '<div class="material-empty">로드 실패</div>';
+        }
+      }
+
+      function initMaterialPanel() {
+        const importBibleBtn = document.getElementById("importBibleBtn");
+        const importTreatmentBtn = document.getElementById("importTreatmentBtn");
+
+        if (importBibleBtn) {
+          importBibleBtn.addEventListener("click", async () => {
+            if (!window.geuldobiDesktop) return;
+            const res = await window.geuldobiDesktop.importMaterialFile("bible");
+            if (res.ok && res.imported) {
+              appendLog(`[재료] Bible 추가: ${res.imported.join(", ")}`);
+              refreshMaterialList("bible", "bibleFileList");
+            }
+          });
+        }
+        if (importTreatmentBtn) {
+          importTreatmentBtn.addEventListener("click", async () => {
+            if (!window.geuldobiDesktop) return;
+            const res = await window.geuldobiDesktop.importMaterialFile("treatments");
+            if (res.ok && res.imported) {
+              appendLog(`[재료] Treatment 추가: ${res.imported.join(", ")}`);
+              refreshMaterialList("treatments", "treatmentFileList");
+            }
+          });
+        }
+
+        // 초기 로드
+        refreshMaterialList("bible", "bibleFileList");
+        refreshMaterialList("treatments", "treatmentFileList");
+      }
+
+      // ── 로그 검색/필터 ──
+      const logSearchInput = document.getElementById("logSearchInput");
+      const logFilterSelect = document.getElementById("logFilterSelect");
+
+      function applyLogFilter() {
+        const search = (logSearchInput.value || "").toLowerCase();
+        const filter = logFilterSelect.value;
+        const rows = logStream.querySelectorAll(".log-row");
+        for (const row of rows) {
+          const msg = (row.querySelector(".log-msg")?.textContent || "").toLowerCase();
+          const badge = row.querySelector(".verdict-badge");
+          const badgeText = badge ? badge.textContent.trim() : "";
+          let show = true;
+          if (search && !msg.includes(search)) show = false;
+          if (filter && filter !== badgeText) show = false;
+          row.style.display = show ? "" : "none";
+        }
+      }
+
+      logSearchInput.addEventListener("input", applyLogFilter);
+      logFilterSelect.addEventListener("change", applyLogFilter);
+
+      initMaterialPanel();
+      updateGenreGating();
+
+      appendLog("[System] UI 초기화 완료");
       updateToggleLabels();
-      startRunningLoop();
-      scheduleAutoLogs();
+
+      // 영속 설정 로드 (AppData JSON)
+      if (window.geuldobiDesktop) {
+        (async () => {
+          try {
+            const saved = await window.geuldobiDesktop.loadSettings();
+            if (saved && typeof saved === "object") {
+              settingsStore.apiKey1 = saved.apiKey1 || "";
+              settingsStore.slackWebhook = saved.slackWebhook || "";
+              settingsStore.timeout = saved.timeout || 300;
+              settingsStore.keyRotate = saved.keyRotate || 10;
+              settingsStore.qualityGate = saved.qualityGate || 90;
+              settingsStore.targetLength = saved.targetLength || 5000;
+              settingsStore.extraKeys = saved.extraKeys || {};
+              settingsStore.project = saved.project || "";
+              // 장르는 매 실행마다 새로 설정 (잘못된 장르로 작업 방지)
+              // saved.genre는 로드하지 않음 — projectConfig.genre = null 유지
+              syncSettingsUI();
+              // 프로젝트 목록 로드 + 저장된 프로젝트 복원
+              await refreshProjectList();
+              appendLog("[설정] 저장된 설정 로드 완료");
+            }
+          } catch (err) {
+            console.error("Settings load error:", err);
+          }
+        })();
+      }
+
+      // Backend WS 연결 시도
+      if (window.geuldobiDesktop) {
+        _connectWebSocket();
+        setTimeout(() => {
+          if (!_backendConnected) {
+            appendLog("[System] 백엔드 미감지 — 설정 확인 후 앱 재시작 필요");
+          }
+        }, 5000);
+      } else {
+        appendLog("[System] Electron 환경 외부 — 기능 제한됨");
+      }
       requestAnimationFrame(draw);
     </script>
   </body>

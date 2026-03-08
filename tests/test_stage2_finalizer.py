@@ -221,6 +221,26 @@ class TestRunFinalize:
         assert cost_kw["scope_id"] == 1
         assert cost_kw["total_calls"] == 2
 
+    @patch("modules.core.stage2_finalizer.validate_arc", side_effect=lambda x: x)
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    def test_ns2_advisory_injected_to_director_story_context(self, _validate, finalizer, valid_refined_arc):
+        kwargs = _make_finalize_kwargs(
+            valid_refined_arc,
+            enriched_block={
+                "joint_docs": {"final_location": "city", "physical_inventory": [], "world_joint": "stable"},
+                "status_shadow": {"internal_energy_loss": "5%", "expected_injuries": "none", "item_consumption": []},
+                "joint_docs_brief": "brief",
+                "genre_ext": {"capital_after": "77억"},
+            },
+        )
+
+        result = asyncio.run(finalizer.run_finalize(**kwargs))
+
+        assert result["action"] == "break"
+        story_context = finalizer.ctx.agents["director"].audit_strategic_plan.call_args.kwargs["story_context"]
+        assert "[NS-2 참고]" in story_context
+        assert "77억" in story_context
+
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
     def test_director_reject_returns_retry(self, finalizer, valid_refined_arc):
         finalizer.ctx.agents["director"].audit_strategic_plan.return_value = {

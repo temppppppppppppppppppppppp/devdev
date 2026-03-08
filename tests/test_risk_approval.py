@@ -18,7 +18,7 @@ from modules.api.risk_approval import ApprovalRecord, RiskApprovalGate
 
 # ─── 헬퍼 ───────────────────────────────────────────────────────────────────
 
-_NOW = datetime(2026, 3, 6, 12, 0, 0, tzinfo=UTC)
+_NOW = datetime.now(UTC)
 _FUTURE = _NOW + timedelta(hours=2)
 _PAST = _NOW - timedelta(hours=1)
 

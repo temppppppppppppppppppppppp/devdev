@@ -1,10 +1,12 @@
 """[B-1-5] ChiefWriterQualityGate unit tests."""
 
 import json
+import logging
 from unittest.mock import MagicMock, patch
 
 import pytest
 
+from modules.core.constants import ManuscriptLimits
 from modules.domain.agents.chief_writer_quality import ChiefWriterQualityGate
 
 
@@ -113,7 +115,7 @@ class TestApplyAndCritique:
 
     def test_self_critique_no_issues(self):
         gate = ChiefWriterQualityGate(_make_host())
-        manuscript = json.dumps({"content": "clean content"}, ensure_ascii=False)
+        manuscript = json.dumps({"content": "가" * (int(ManuscriptLimits.TARGET_LENGTH) + 200)}, ensure_ascii=False)
         with (
             patch.object(gate, "_check_hud_consistency", return_value=[]),
             patch.object(gate, "_check_cliche_overuse", return_value=[]),
@@ -124,6 +126,83 @@ class TestApplyAndCritique:
         assert out["has_issues"] is False
         assert out["severity"] == "low"
         assert out["issues"] == []
+
+    def test_self_critique_detects_short_manuscript(self):
+        gate = ChiefWriterQualityGate(_make_host())
+        manuscript = json.dumps({"content": "가" * (int(ManuscriptLimits.MIN_LENGTH) - 300)}, ensure_ascii=False)
+        with (
+            patch.object(gate, "_check_hud_consistency", return_value=[]),
+            patch.object(gate, "_check_cliche_overuse", return_value=[]),
+            patch.object(gate, "_check_justification_gaps", return_value=[]),
+            patch.object(gate, "_check_npc_relationship", return_value=[]),
+            patch.object(gate, "_check_writing_directive", return_value=[]),
+            patch.object(gate, "_check_expression_freshness", return_value=[]),
+            patch.object(gate, "_check_ending_hook_presence", return_value=[]),
+            patch.object(gate, "_check_arithmetic_consistency", return_value=[]),
+            patch.object(gate, "_check_system_term_exposure", return_value=[]),
+        ):
+            out = gate._self_critique(manuscript, "", {"npcs": []}, "genre", ep_num=1)
+        length_issue = next((i for i in out["issues"] if i.get("type") == "manuscript_length"), None)
+        assert length_issue is not None
+        assert length_issue["severity"] == "high"
+        assert out["severity"] == "medium"
+
+    def test_self_critique_detects_medium_manuscript(self):
+        gate = ChiefWriterQualityGate(_make_host())
+        manuscript = json.dumps({"content": "가" * (int(ManuscriptLimits.MIN_LENGTH) + 500)}, ensure_ascii=False)
+        with (
+            patch.object(gate, "_check_hud_consistency", return_value=[]),
+            patch.object(gate, "_check_cliche_overuse", return_value=[]),
+            patch.object(gate, "_check_justification_gaps", return_value=[]),
+            patch.object(gate, "_check_npc_relationship", return_value=[]),
+            patch.object(gate, "_check_writing_directive", return_value=[]),
+            patch.object(gate, "_check_expression_freshness", return_value=[]),
+            patch.object(gate, "_check_ending_hook_presence", return_value=[]),
+            patch.object(gate, "_check_arithmetic_consistency", return_value=[]),
+            patch.object(gate, "_check_system_term_exposure", return_value=[]),
+        ):
+            out = gate._self_critique(manuscript, "", {"npcs": []}, "genre", ep_num=1)
+        length_issue = next((i for i in out["issues"] if i.get("type") == "manuscript_length"), None)
+        assert length_issue is not None
+        assert length_issue["severity"] == "medium"
+
+    def test_self_critique_passes_long_manuscript(self):
+        gate = ChiefWriterQualityGate(_make_host())
+        manuscript = json.dumps({"content": "가" * (int(ManuscriptLimits.TARGET_LENGTH) + 500)}, ensure_ascii=False)
+        with (
+            patch.object(gate, "_check_hud_consistency", return_value=[]),
+            patch.object(gate, "_check_cliche_overuse", return_value=[]),
+            patch.object(gate, "_check_justification_gaps", return_value=[]),
+            patch.object(gate, "_check_npc_relationship", return_value=[]),
+            patch.object(gate, "_check_writing_directive", return_value=[]),
+            patch.object(gate, "_check_expression_freshness", return_value=[]),
+            patch.object(gate, "_check_ending_hook_presence", return_value=[]),
+            patch.object(gate, "_check_arithmetic_consistency", return_value=[]),
+            patch.object(gate, "_check_system_term_exposure", return_value=[]),
+        ):
+            out = gate._self_critique(manuscript, "", {"npcs": []}, "genre", ep_num=1)
+        assert not any(i.get("type") == "manuscript_length" for i in out["issues"])
+
+    def test_severity_high_issue_promotes_to_medium(self):
+        gate = ChiefWriterQualityGate(_make_host())
+        manuscript = json.dumps({"content": "가" * (int(ManuscriptLimits.TARGET_LENGTH) + 500)}, ensure_ascii=False)
+        with (
+            patch.object(gate, "_check_hud_consistency", return_value=[]),
+            patch.object(gate, "_check_cliche_overuse", return_value=[]),
+            patch.object(gate, "_check_justification_gaps", return_value=[]),
+            patch.object(gate, "_check_npc_relationship", return_value=[]),
+            patch.object(gate, "_check_writing_directive", return_value=[]),
+            patch.object(gate, "_check_expression_freshness", return_value=[]),
+            patch.object(gate, "_check_ending_hook_presence", return_value=[]),
+            patch.object(gate, "_check_arithmetic_consistency", return_value=[]),
+            patch.object(
+                gate,
+                "_check_system_term_exposure",
+                return_value=[{"type": "meta_wall", "description": "노출", "severity": "high"}],
+            ),
+        ):
+            out = gate._self_critique(manuscript, "", {"npcs": []}, "genre", ep_num=1)
+        assert out["severity"] == "medium"
 
 
 class TestCheckerMethods:
@@ -222,6 +301,53 @@ class TestFixAndRubric:
             "hud",
         )
         assert result == manuscript
+
+    def test_fix_manuscript_logs_short_result(self, caplog):
+        host = _make_host()
+        host.ask.return_value = json.dumps({"content": "짧음"}, ensure_ascii=False)
+        gate = ChiefWriterQualityGate(host)
+        with caplog.at_level(logging.WARNING):
+            result = gate._fix_manuscript_issues(
+                '{"content":"orig"}',
+                {"issues": [{"type": "x", "description": "desc"}]},
+                "hud",
+            )
+        assert json.loads(result)["content"] == "짧음"
+        assert any("[TF-H] 수정 후 분량 여전히 부족" in rec.message for rec in caplog.records)
+
+    def test_fix_uses_expand_prompt_for_length_issue(self):
+        host = _make_host()
+        host.ask.return_value = '{"content":"expanded"}'
+        gate = ChiefWriterQualityGate(host)
+        with (
+            patch("modules.domain.agents.chief_writer_quality.get_expand_length_prompt", return_value="expand prompt") as m_expand,
+            patch("modules.domain.agents.chief_writer_quality.get_fix_issues_prompt", return_value="generic prompt") as m_generic,
+        ):
+            gate._fix_manuscript_issues(
+                '{"content":"orig"}',
+                {"issues": [{"type": "manuscript_length", "description": "짧음"}]},
+                "hud",
+            )
+        m_expand.assert_called_once()
+        m_generic.assert_not_called()
+        host.ask.assert_called_with("expand prompt", temperature=0.5, thinking_level="medium")
+
+    def test_fix_uses_generic_prompt_for_other_issues(self):
+        host = _make_host()
+        host.ask.return_value = '{"content":"fixed"}'
+        gate = ChiefWriterQualityGate(host)
+        with (
+            patch("modules.domain.agents.chief_writer_quality.get_expand_length_prompt", return_value="expand prompt") as m_expand,
+            patch("modules.domain.agents.chief_writer_quality.get_fix_issues_prompt", return_value="generic prompt") as m_generic,
+        ):
+            gate._fix_manuscript_issues(
+                '{"content":"orig"}',
+                {"issues": [{"type": "hud_contradiction", "description": "desc"}]},
+                "hud",
+            )
+        m_generic.assert_called_once()
+        m_expand.assert_not_called()
+        host.ask.assert_called_with("generic prompt", temperature=0.5, thinking_level="low")
 
     def test_evaluate_with_rubric_short(self):
         gate = ChiefWriterQualityGate(_make_host())

@@ -104,6 +104,43 @@ class TestContextBuilderInit:
         assert "charlie" in names
 
 
+class TestSuggestAmbientNpcs:
+    def test_suggest_ambient_npcs_office(self):
+        blueprint = {
+            "scene_breakdown": {
+                "scene_1": {"location": "SW 사무실"},
+            }
+        }
+        out = Stage4ContextBuilder._suggest_ambient_npcs(blueprint)
+        assert "[TF-J 배경 인물 힌트]" in out
+        assert "scene_1 (SW 사무실)" in out
+        assert "직원" in out
+        assert "비서" in out
+
+    def test_suggest_ambient_npcs_cafe(self):
+        blueprint = {
+            "scene_breakdown": {
+                "scene_2": {"location": "강남 카페"},
+            }
+        }
+        out = Stage4ContextBuilder._suggest_ambient_npcs(blueprint)
+        assert "scene_2 (강남 카페)" in out
+        assert "바리스타" in out
+
+    def test_suggest_ambient_npcs_no_match(self):
+        blueprint = {
+            "scene_breakdown": {
+                "scene_1": {"location": "달 궤도 정거장"},
+            }
+        }
+        out = Stage4ContextBuilder._suggest_ambient_npcs(blueprint)
+        assert out == ""
+
+    def test_suggest_ambient_npcs_empty_blueprint(self):
+        out = Stage4ContextBuilder._suggest_ambient_npcs({})
+        assert out == ""
+
+
 class TestLoadChainLinkSection:
     def test_ep1_returns_empty(self):
         cb = Stage4ContextBuilder(_make_ctx())

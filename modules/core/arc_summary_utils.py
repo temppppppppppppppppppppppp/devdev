@@ -88,7 +88,8 @@ def generate_prev_arc_summary(
             lines.append(f"  종료 위치: {joint.get('final_location', '?')}")
 
         lines.append(f"  소지품: {joint.get('physical_inventory', [])}")
-        lines.append(f"  획득 아이템: {state.get('items_acquired', [])}")
+        # [BUG-F] protagonist_items 우선 폴백
+        lines.append(f"  획득 아이템: {state.get('protagonist_items') or state.get('items_acquired', [])}")
         lines.append(f"  수여물: {state.get('grants_received', [])}")
 
     return "\n".join(lines)
