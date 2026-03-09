@@ -7,6 +7,7 @@ import logging
 import re
 from typing import TYPE_CHECKING
 
+from modules.core.constants import Stage2Limits
 from modules.core.context_advisor import RetrievalSources
 from modules.core.context_compression import ContextCompressor
 from modules.core.tactical_utils import extract_episode_tactical
@@ -190,6 +191,251 @@ class Stage4ContextBuilder:
             "이름 없이 역할만으로 활용하세요. 반드시 사용할 필요는 없습니다.\n"
             + "\n".join(hints)
         )
+
+    def _extract_blueprint_entities(self, blueprint: dict) -> dict[str, list[str] | str]:
+        """Blueprint 텍스트에서 이번 화 관련 엔티티를 추출한다."""
+        if not blueprint or not isinstance(blueprint, dict):
+            return {"npcs": [], "items": [], "plots": [], "locations": [], "_full_text": ""}
+
+        text_parts: list[str] = []
+        for key in (
+            "integrated_scenario",
+            "scene_breakdown",
+            "core_tension",
+            "expected_ending",
+            "pacing_notes",
+            "target_beat",
+            "relationship_changes",
+            "time_flow",
+            "protagonist_state",
+            "synopsis",
+            "scenes",
+            "ending_hook",
+            "key_events",
+            "npc_appearances",
+            "emotional_arc",
+            "required_items",
+        ):
+            value = blueprint.get(key)
+            if isinstance(value, str):
+                text_parts.append(value)
+            elif isinstance(value, list):
+                for item in value:
+                    text_parts.append(item if isinstance(item, str) else str(item))
+            elif isinstance(value, dict):
+                text_parts.append(json.dumps(value, ensure_ascii=False, default=str))
+
+        full_text = "\n".join(text_parts)
+        world_state = getattr(self.ctx, "world_state", None)
+        ws_state = getattr(world_state, "_state", {}) if world_state else {}
+
+        npcs: list[str] = []
+        seen_npcs: set[str] = set()
+        for pool in ("alive_npcs", "dead_npcs"):
+            for name in (ws_state.get(pool) or {}):
+                npc_name = str(name).strip()
+                if npc_name and npc_name not in seen_npcs and npc_name in full_text:
+                    npcs.append(npc_name)
+                    seen_npcs.add(npc_name)
+
+        items: list[str] = []
+        for name in (ws_state.get("active_items") or {}):
+            item_name = str(name).strip()
+            if item_name and item_name in full_text:
+                items.append(item_name)
+
+        plots: list[str] = []
+        for plot in ws_state.get("active_plots") or []:
+            plot_name = plot.get("plot", "") if isinstance(plot, dict) else str(plot)
+            plot_name = str(plot_name).strip()
+            if plot_name and plot_name in full_text:
+                plots.append(plot_name)
+
+        locations: list[str] = []
+        protagonist = ws_state.get("protagonist", {}) if isinstance(ws_state, dict) else {}
+        location = protagonist.get("location", "") if isinstance(protagonist, dict) else ""
+        if location:
+            locations.append(str(location))
+
+        return {"npcs": npcs, "items": items, "plots": plots, "locations": locations, "_full_text": full_text}
+
+    def _build_continuity_packet(self, entities: dict[str, list[str] | str]) -> str:
+        """이번 화 관련 엔티티의 상세 이력을 지목 조회하여 패킷으로 조립한다."""
+        if not entities:
+            return ""
+
+        parts = ["=== [Continuity Packet] 이번 화 필수 기억 ==="]
+        budget = 6500
+        used = 0
+
+        project = getattr(self.ctx, "current_project", None)
+        db = getattr(project, "db", None)
+        world_state = getattr(self.ctx, "world_state", None)
+        ws_state = getattr(world_state, "_state", {}) if world_state else {}
+        fact_ledger = getattr(self.ctx, "fact_ledger", None)
+        ledger = getattr(fact_ledger, "_ledger", {}) if fact_ledger else {}
+
+        for npc_name in (entities.get("npcs") or [])[:10]:
+            npc_block: list[str] = []
+
+            for pool in ("alive_npcs", "dead_npcs"):
+                info = (ws_state.get(pool) or {}).get(npc_name)
+                if info and isinstance(info, dict):
+                    desc = ", ".join(
+                        f"{key}={value}"
+                        for key, value in info.items()
+                        if value and key != "name"
+                    )
+                    if desc:
+                        npc_block.append(f"  상태: {desc[:200]}")
+                    if pool == "dead_npcs":
+                        npc_block.append("  ⚠️ 사망 — 행동/대사 등장 금지 (회상/언급만 허용)")
+
+            char_facts = (ledger.get("characters", {}) or {}).get(npc_name, {})
+            if isinstance(char_facts, dict):
+                history = char_facts.get("history", [])
+                for entry in history[-5:]:
+                    if isinstance(entry, str):
+                        npc_block.append(f"  [이력] {entry[:100]}")
+
+            if db and hasattr(db, "get_npc_history"):
+                try:
+                    history_rows = db.get_npc_history(npc_name, limit=3)
+                    for row in history_rows or []:
+                        if isinstance(row, dict):
+                            npc_block.append(
+                                f"  [변경 {row.get('episode_no', '?')}화] "
+                                f"{row.get('field_name', '')}: {str(row.get('old_value', ''))[:30]} → "
+                                f"{str(row.get('new_value', ''))[:30]}"
+                            )
+                except Exception as history_err:
+                    logging.debug("[CP] npc_history 조회 실패: %s", history_err)
+
+            if npc_block:
+                section = f"• {npc_name}\n" + "\n".join(npc_block)
+                if used + len(section) > budget:
+                    break
+                parts.append(section)
+                used += len(section)
+
+        for plot_name in (entities.get("plots") or [])[:5]:
+            plot_line = f"• 진행 중 플롯: {plot_name}"
+            if used + len(plot_line) > budget:
+                break
+            parts.append(plot_line)
+            used += len(plot_line)
+
+        item_names = entities.get("items") or []
+        if item_names:
+            item_line = "• 관련 아이템: " + ", ".join(item_names[:10])
+            if used + len(item_line) <= budget:
+                parts.append(item_line)
+                used += len(item_line)
+
+        location_names = entities.get("locations") or []
+        if location_names:
+            location_line = "• 현재 위치: " + ", ".join(location_names[:3])
+            if used + len(location_line) <= budget:
+                parts.append(location_line)
+                used += len(location_line)
+
+        if db and hasattr(db, "get_relationship_history") and hasattr(db, "get_npc_relationship_edges"):
+            rel_lines: list[str] = []
+            seen_pairs: set[tuple[str, str]] = set()
+            blueprint_npcs = [str(name) for name in (entities.get("npcs") or [])[:10]]
+            for npc_name in blueprint_npcs:
+                try:
+                    edges = db.get_npc_relationship_edges(npc_name)
+                    if not isinstance(edges, list):
+                        continue
+                    for edge in edges[:5]:
+                        if not isinstance(edge, dict):
+                            continue
+                        n1 = str(edge.get("npc1", "") or "").strip()
+                        n2 = str(edge.get("npc2", "") or "").strip()
+                        pair_key = tuple(sorted([n1, n2]))
+                        if not n1 or not n2 or pair_key in seen_pairs:
+                            continue
+                        seen_pairs.add(pair_key)
+
+                        other = n2 if n1 == npc_name else n1
+                        if other not in blueprint_npcs:
+                            continue
+
+                        rel_hist = db.get_relationship_history(n1, n2, limit=5)
+                        if not isinstance(rel_hist, list) or not rel_hist:
+                            cur_rel = edge.get("relation", "?")
+                            rel_lines.append(
+                                f"  {n1} ↔ {n2}: {cur_rel} (ep{edge.get('since_ep', '?')}~)"
+                            )
+                            continue
+
+                        stages: list[str] = []
+                        eps: list[str] = []
+                        for hist in rel_hist:
+                            if not isinstance(hist, dict):
+                                continue
+                            new_rel = str(hist.get("new_relation", "") or "").strip()
+                            change_ep = hist.get("change_ep", "?")
+                            if new_rel:
+                                stages.append(new_rel)
+                                eps.append(str(change_ep))
+                        if stages:
+                            trajectory = "→".join(stages)
+                            ep_flow = "→".join(f"ep{ep}" for ep in eps)
+                            rel_lines.append(f"  {n1} ↔ {n2}: {trajectory} ({ep_flow})")
+                except Exception as rel_err:
+                    logging.debug("[CP] 관계 궤적 조회 실패: %s", rel_err)
+
+            if rel_lines:
+                rel_section = "• 관계 변천사\n" + "\n".join(rel_lines[:8])
+                if used + len(rel_section) <= budget:
+                    parts.append(rel_section)
+                    used += len(rel_section)
+
+        full_text = str(entities.get("_full_text", "") or "")
+        if full_text and fact_ledger:
+            nums = ledger.get("numbers", {})
+            if isinstance(nums, dict) and nums:
+                num_lines: list[str] = []
+                for num_key, num_info in nums.items():
+                    if not isinstance(num_info, dict):
+                        continue
+                    key_text = str(num_key)
+                    if key_text not in full_text:
+                        continue
+
+                    cur_val = num_info.get("value", "?")
+                    unit = num_info.get("unit", "")
+                    est_val = num_info.get("established_value", "")
+                    est_ep = num_info.get("established_ep", "?")
+                    last_ep = num_info.get("last_ep", "?")
+                    unit_str = f" {unit}" if unit else ""
+
+                    if est_val != "" and str(est_val) != str(cur_val):
+                        num_lines.append(
+                            f"  {key_text}: {est_val}{unit_str}(ep{est_ep}) → {cur_val}{unit_str}(ep{last_ep})"
+                        )
+                    else:
+                        num_lines.append(f"  {key_text}: {cur_val}{unit_str} (ep{last_ep} 기준)")
+
+                    history = num_info.get("history", [])
+                    if isinstance(history, list):
+                        for history_entry in history[-3:]:
+                            if isinstance(history_entry, str):
+                                num_lines.append(f"    └ {history_entry[:80]}")
+
+                if num_lines:
+                    num_section = "• 수치 변화 이력\n" + "\n".join(num_lines[:15])
+                    if used + len(num_section) <= budget:
+                        parts.append(num_section)
+                        used += len(num_section)
+
+        if len(parts) == 1:
+            return ""
+
+        result = "\n".join(parts)
+        return result[:budget]
 
     def _execute_retrieval_plan(self, plan: "RetrievalPlan", arc_no: int | None = None) -> list[str]:
         """Execute retrieval plan slots and return context sections."""
@@ -537,7 +783,7 @@ class Stage4ContextBuilder:
     def prepare_episode_context(self, next_ep: int, arc_data: dict, chief_writer) -> dict:
         """에피소드별 컨텍스트 데이터 수집 (Arc 메타 + 이전 원고 + HUD + 연결고리)."""
         arc_pos = next_ep - arc_data.get("ep_start", next_ep) + 1
-        total_ep_in_arc = arc_data.get("ep_count", 5)
+        total_ep_in_arc = arc_data.get("ep_count", Stage2Limits.DEFAULT_EP_COUNT)
         arc_tactical = arc_data.get("tactical_doc", "")
         if isinstance(arc_tactical, dict):  # [V70] dict 타입 방어
             arc_tactical = json.dumps(arc_tactical, ensure_ascii=False)
@@ -606,7 +852,7 @@ class Stage4ContextBuilder:
                         _ep_no = int(_row["ep_num"] or 0)
                         _summary = str(_row["summary"] or "")
                     if _summary:
-                        _tier2_parts.append(f"[EP {_ep_no} summary] {_summary[:2000]}")  # [Phase3-A: 800→2000]
+                        _tier2_parts.append(f"[EP {_ep_no} summary] {_summary[:5000]}")  # [Phase3-A: 800→5000]
             except Exception as e:
                 logging.warning(f"[SilentPass:Tier4-12] tier2 summary load failed: {e!s:.100}")
 
@@ -653,7 +899,7 @@ class Stage4ContextBuilder:
                     else:
                         _sum_text = str(_arc_sum)
                     if _sum_text:
-                        _tier3_parts.append(f"[Arc {_arc_no} summary] {_sum_text[:4000]}")  # [Phase3-A: 1.5K→4K]
+                        _tier3_parts.append(f"[Arc {_arc_no} summary] {_sum_text[:8000]}")  # [Phase3-A: 1.5K→8K]
                 except Exception:
                     continue
 
@@ -1062,6 +1308,22 @@ class Stage4ContextBuilder:
         except Exception as _ge_err:
             logging.warning("[SilentPass:V74] Treatment genre_ext 주입 실패: %s", _ge_err)
 
+        if blueprint:
+            try:
+                cp_entities = self._extract_blueprint_entities(blueprint)
+                cp_text = self._build_continuity_packet(cp_entities)
+                if cp_text:
+                    _mc_parts.insert(0, cp_text)
+                    logging.info(
+                        "[CP] Continuity Packet 주입 (%d자, NPC %d, 플롯 %d, 아이템 %d)",
+                        len(cp_text),
+                        len(cp_entities["npcs"]),
+                        len(cp_entities["plots"]),
+                        len(cp_entities["items"]),
+                    )
+            except Exception as cp_err:
+                logging.warning("[CP] Continuity Packet 생성 실패 (비치명): %s", str(cp_err)[:80])
+
         # [S4-I2] state_tracker 16종 요약을 get_all_summaries()로 일괄 수집
         _st = self.ctx.state_tracker
         if _st:
@@ -1312,6 +1574,7 @@ class Stage4ContextBuilder:
         style_guide: str,
         mandatory_context: str,
         preflight_advisory: str = "",
+        reference_excerpt: str = "",
     ):
         """[4-R1-e-2] Build round context dict from episode context and prompts."""
         from modules.core.stage4_types import _RoundContext
@@ -1346,6 +1609,7 @@ class Stage4ContextBuilder:
             intro_dna=intro_dna,
             story_context=story_context,
             style_guide=style_guide,
+            reference_excerpt=reference_excerpt,
             reference_anchor_prompt=ctx_prompts["reference_anchor_prompt"],
             mandatory_context=mandatory_context,
             justification_prompt=ctx_prompts["justification_prompt"],

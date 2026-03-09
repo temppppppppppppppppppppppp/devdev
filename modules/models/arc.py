@@ -15,6 +15,8 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from modules.core.constants import Stage2Limits
+
 logger = logging.getLogger(__name__)
 
 
@@ -195,7 +197,7 @@ class ArcData(BaseModel):
     ep_end: int
 
     # ── 기본값 있는 필드 ──
-    ep_count: int = 5
+    ep_count: int = Stage2Limits.DEFAULT_EP_COUNT
     volume_no: int = 0
     global_arc_no: int = 0  # project_manager 별칭
     title: str = ""

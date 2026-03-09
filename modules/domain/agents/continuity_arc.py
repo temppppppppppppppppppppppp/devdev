@@ -11,6 +11,7 @@ import json
 import logging
 import re
 
+from modules.core.constants import Stage2Limits
 from modules.core.prompt_loader import SafeDict
 from modules.core.tactical_utils import extract_episode_tactical
 
@@ -252,9 +253,9 @@ class ContinuityArcValidator:
         ep_start = current_arc.get("ep_start", 1)
         # [V60.73] ep_count 우선 참조
         try:
-            ep_count = int(current_arc.get("ep_count", 5))
+            ep_count = int(current_arc.get("ep_count", Stage2Limits.DEFAULT_EP_COUNT))
         except (TypeError, ValueError):
-            ep_count = 5
+            ep_count = Stage2Limits.DEFAULT_EP_COUNT
         try:
             ep_end = int(current_arc.get("ep_end", ep_start + ep_count - 1))
         except (TypeError, ValueError):

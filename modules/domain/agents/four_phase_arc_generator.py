@@ -363,19 +363,19 @@ class FourPhaseArcGenerator(BaseAgent):
             ep_count = Stage2Limits.MAX_EP_COUNT  # 6화
             reasoning = f"블록 정보량 풍부 ({content_len}자 > 1500자) → 최대 화수"
         else:
-            # 500~1500자 구간: 문장 수 비례로 4~6화 결정
+            # [PC-1-B] 500~1500자 구간: 문장 수 비례로 3~5화 결정
             import re
 
             sentence_count = len(re.split(r"[.。!?!\?\n]+", block_content))
             if sentence_count <= 8:
-                ep_count = 4
-                reasoning = f"보통 정보량 ({content_len}자, {sentence_count}문장) → 4화"
+                ep_count = 3  # [PC-1-B] 4→3
+                reasoning = f"보통 정보량 ({content_len}자, {sentence_count}문장) → 3화"
             elif sentence_count >= 15:
-                ep_count = 6
-                reasoning = f"높은 정보량 ({content_len}자, {sentence_count}문장) → 6화"
+                ep_count = 5  # [PC-1-B] 6→5
+                reasoning = f"높은 정보량 ({content_len}자, {sentence_count}문장) → 5화"
             else:
-                ep_count = Stage2Limits.DEFAULT_EP_COUNT  # 5화
-                reasoning = f"표준 정보량 ({content_len}자, {sentence_count}문장) → 기본 5화"
+                ep_count = Stage2Limits.DEFAULT_EP_COUNT  # 4화
+                reasoning = f"표준 정보량 ({content_len}자, {sentence_count}문장) → 기본 {Stage2Limits.DEFAULT_EP_COUNT}화"
 
         # [TF-9] tension_level 보정 — treatment 설계 의도 반영
         tension_level = curr_block.get("tension_level") if isinstance(curr_block, dict) else None

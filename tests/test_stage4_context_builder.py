@@ -331,6 +331,30 @@ class TestPrepareEpisodeContext:
         assert "-- Tier2 summaries (21-60 episodes back) --" in result["prev_manuscripts_text"]
         assert "[EP 12 summary] summary tier2" in result["prev_manuscripts_text"]
 
+    def test_hybrid_context_tier2_summary_respects_5k_cap(self):
+        ctx = _make_ctx()
+        db = ctx.current_project.db
+        long_summary = "A" * 6000
+        _configure_hybrid_db(
+            db,
+            manuscripts=[],
+            summaries=[{"ep_num": 12, "summary": long_summary}],
+            arcs=[],
+        )
+        db.get_manuscript.side_effect = lambda ep: {"content": f"ep{ep} " * 120}
+        chief_writer = MagicMock()
+        chief_writer._generate_episode_digest.return_value = ""
+
+        cb = Stage4ContextBuilder(ctx)
+        result = cb.prepare_episode_context(
+            40,
+            {"ep_start": 1, "ep_count": 50, "tactical_doc": ""},
+            chief_writer,
+        )
+
+        assert f"[EP 12 summary] {'A' * 5000}" in result["prev_manuscripts_text"]
+        assert "A" * 5001 not in result["prev_manuscripts_text"]
+
     def test_hybrid_context_tier3_arc_summary(self):
         ctx = _make_ctx()
         db = ctx.current_project.db
@@ -366,6 +390,31 @@ class TestPrepareEpisodeContext:
         assert "-- Tier3 arc summaries (older than 60 episodes) --" in result["prev_manuscripts_text"]
         assert "[Arc 1 summary] arc one summary" in result["prev_manuscripts_text"]
         assert "[Arc 2 summary]" not in result["prev_manuscripts_text"]
+
+    def test_hybrid_context_tier3_arc_summary_respects_8k_cap(self):
+        ctx = _make_ctx()
+        db = ctx.current_project.db
+        long_summary = "B" * 9000
+        _configure_hybrid_db(
+            db,
+            manuscripts=[],
+            summaries=[],
+            arcs=[{"arc_no": 1, "episodes": [1, 2, 3]}],
+        )
+        db.get_manuscript.side_effect = lambda ep: {"content": f"ep{ep} " * 120}
+        ctx.current_project.load_v20_anchor.side_effect = lambda name: {"summary": long_summary} if name == "arc_summary_1" else None
+        chief_writer = MagicMock()
+        chief_writer._generate_episode_digest.return_value = ""
+
+        cb = Stage4ContextBuilder(ctx)
+        result = cb.prepare_episode_context(
+            80,
+            {"ep_start": 1, "ep_count": 100, "tactical_doc": ""},
+            chief_writer,
+        )
+
+        assert f"[Arc 1 summary] {'B' * 8000}" in result["prev_manuscripts_text"]
+        assert "B" * 8001 not in result["prev_manuscripts_text"]
 
     def test_hybrid_context_early_episodes(self):
         ctx = _make_ctx()

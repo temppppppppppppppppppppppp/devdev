@@ -412,9 +412,9 @@ class ArcDraftValidator:
         # [V60.29] 화별 분할 검증 강화
         ep_start = arc.get("ep_start", 1)
         try:
-            ep_count = int(arc.get("ep_count", 5))
+            ep_count = int(arc.get("ep_count", Stage2Limits.DEFAULT_EP_COUNT))
         except (TypeError, ValueError):
-            ep_count = 5
+            ep_count = Stage2Limits.DEFAULT_EP_COUNT
 
         # [V60.41] 분량 검증 - 모두 WARNING (재생성으로 해결 가능)
         min_length = ep_count * Stage2Limits.MIN_CHARS_PER_EPISODE  # 최소 기준
@@ -506,7 +506,7 @@ class ArcDraftValidator:
 
         # [V60.30] 8. ep_count와 실제 화 수 동기화 검증
         actual_ep_count = len(episode_sections)
-        declared_ep_count = arc.get("ep_count", 5)
+        declared_ep_count = arc.get("ep_count", Stage2Limits.DEFAULT_EP_COUNT)
         if actual_ep_count > 0 and abs(actual_ep_count - declared_ep_count) >= 2:
             warnings.append(f"ep_count 불일치: 선언={declared_ep_count}, 실제={actual_ep_count}")
             penalty += 5

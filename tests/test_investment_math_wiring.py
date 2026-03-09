@@ -41,7 +41,7 @@ def _make_generator(*, genre: str = "investment", flash_ask=None) -> tuple[FourP
     gen.ensemble.generate_ensemble.return_value = (candidate, [candidate])
     gen.validator = MagicMock()
     gen.validator.validate.return_value = ("PASS", {"issues": [], "confidence": 90})
-    gen._determine_ep_count = MagicMock(return_value=(5, "reason"))
+    gen._determine_ep_count = MagicMock(return_value=(4, "reason"))
     gen._generate_prev_context = MagicMock(return_value="prev")
     gen._check_arc_end_state = MagicMock(side_effect=lambda arc: arc)
     gen._load_execution_state = MagicMock(return_value={})

@@ -23,7 +23,7 @@ from modules.core.constants import AIModels
 NARRATIVE_EXTRACTION_PROMPT = """
 [서사 구조 분석기]
 
-아래 5개 에피소드 비트에서 핵심 서사 요소를 추출하세요.
+아래 에피소드 비트에서 핵심 서사 요소를 추출하세요.
 
 ### 비트 목록
 {beats_text}

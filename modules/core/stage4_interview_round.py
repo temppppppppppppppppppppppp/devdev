@@ -159,6 +159,7 @@ class Stage4InterviewRound:
         _effective_anti_trope = round_ctx.effective_anti_trope
         intro_dna = round_ctx.intro_dna
         style_guide = round_ctx.style_guide
+        reference_excerpt = round_ctx.reference_excerpt
         reference_anchor_prompt = round_ctx.reference_anchor_prompt
         justification_prompt = round_ctx.justification_prompt
         reflexion_prompt = round_ctx.reflexion_prompt
@@ -204,6 +205,7 @@ class Stage4InterviewRound:
             "arc_doc": round_ctx.arc_tactical,
             "master_bible": self.ctx.current_project.master_bible,
             "style_guide": style_guide,
+            "reference_excerpt": reference_excerpt,
             "current_inventory": current_inventory,
             "current_martial_arts": current_martial_arts,
             "dead_npcs": dead_npcs,

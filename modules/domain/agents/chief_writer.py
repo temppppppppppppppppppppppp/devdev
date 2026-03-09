@@ -148,6 +148,7 @@ class ChiefWriter(BaseAgent):
         arc_doc: str,
         master_bible: dict,
         style_guide: str = "",
+        reference_excerpt: str = "",
         director_feedback: str = "",
         strategy_specific_feedback: str = "",
         rejected_strategy: str = "",
@@ -167,7 +168,7 @@ class ChiefWriter(BaseAgent):
         genre_name: str = "무협",
         # [V60.81] 추가 파라미터
         npc_equipment_summary: str = "",
-        intro_dna: str = "CYNICAL",
+        intro_dna: str = "",  # [QI-1-C3] CYNICAL 하드코딩 제거
         # [V60.85] 장르 Guard Purism Prompt
         purism_prompt: str = "",
         # [V60.95] 고밀도 HUD 전달
@@ -225,6 +226,7 @@ class ChiefWriter(BaseAgent):
             arc_doc=arc_doc,
             master_bible=master_bible,
             style_guide=style_guide,
+            reference_excerpt=reference_excerpt,
             director_feedback=director_feedback,
             failure_constraints=failure_constraints,
             # 미래 침범 방지
@@ -628,6 +630,7 @@ class ChiefWriter(BaseAgent):
         director_feedback: str,
         previous_attempt: dict,
         attempt_number: int,
+        reference_excerpt: str = "",
         # [V60.80 FIX] 미래 침범 방지용 추가 파라미터
         current_inventory: list[str] = None,
         current_martial_arts: list[str] = None,
@@ -642,7 +645,7 @@ class ChiefWriter(BaseAgent):
         genre_name: str = "무협",
         # [V60.81] 추가 파라미터
         npc_equipment_summary: str = "",
-        intro_dna: str = "CYNICAL",
+        intro_dna: str = "",  # [QI-1-C3] CYNICAL 하드코딩 제거
         # [V60.85] 장르 Guard Purism Prompt
         purism_prompt: str = "",
         # [V60.95] 고밀도 HUD 전달
@@ -733,6 +736,7 @@ class ChiefWriter(BaseAgent):
             arc_doc=arc_doc,
             master_bible=master_bible,
             style_guide=style_guide,
+            reference_excerpt=reference_excerpt,
             director_feedback=enhanced_feedback,
             strategy_specific_feedback=_strategy_feedback,
             rejected_strategy=_rejected_strategy,
@@ -928,6 +932,7 @@ class ChiefWriter(BaseAgent):
         director_feedback: str,
         previous_attempt: dict,
         attempt_number: int,
+        reference_excerpt: str = "",
         # 이하 generate_ensemble과 동일
         current_inventory: list[str] = None,
         current_martial_arts: list[str] = None,
@@ -940,7 +945,7 @@ class ChiefWriter(BaseAgent):
         reflexion_prompt: str = "",
         genre_name: str = "무협",
         npc_equipment_summary: str = "",
-        intro_dna: str = "CYNICAL",
+        intro_dna: str = "",  # [QI-1-C3] CYNICAL 하드코딩 제거
         purism_prompt: str = "",
         state_tracker=None,
         prev_manuscripts_text: str = "",
@@ -1029,6 +1034,7 @@ class ChiefWriter(BaseAgent):
                 arc_doc=arc_doc,
                 master_bible=master_bible,
                 style_guide=style_guide,
+                reference_excerpt=reference_excerpt,
                 director_feedback=enhanced_feedback,
                 strategy_specific_feedback=_strategy_feedback,
                 rejected_strategy=_rejected_strategy,

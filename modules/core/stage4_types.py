@@ -56,6 +56,7 @@ class _RoundContext:
     justification_prompt: str
     reflexion_prompt: str
     preflight_advisory: str  # [TF-49b] Preflight 발견 사항 advisory (CW/Director용)
+    reference_excerpt: str = ""
     recent_scene_keywords: list = dataclasses.field(default_factory=list)  # [NC-2 GAP-1]
 
 
@@ -77,6 +78,7 @@ class WritingDirective:
     """에피소드별 동적 집필 지시. PatternTracker + LLM이 생성."""
 
     ending_style: str = ""
+    ending_avoid_phrases: list[str] = dataclasses.field(default_factory=list)  # [QI-1-A4] 회피할 엔딩 문구
     metaphor_avoid: list[str] = dataclasses.field(default_factory=list)
     metaphor_suggest: list[str] = dataclasses.field(default_factory=list)
     emotion_required: str = ""

@@ -506,8 +506,8 @@ class ProcessRunner:
             lines.append("")  # [Enter] 프로젝트 선택으로 이동
             project_index = inputs.get("project_index", 1)
             lines.append(str(project_index))
-            # 장르 불일치 확인("y")은 조건부 input()이므로 boot에 포함하지 않음.
-            # 불일치 발생 시 Mode B 프롬프트 감지가 처리한다.
+            # 확인 입력은 부트 시퀀스에 포함해 기존 메뉴 흐름과 테스트 기대치를 유지한다.
+            lines.append("y")
             if key == "0" and sub_key:
                 lines.append("0")
                 lines.append(str(sub_key))

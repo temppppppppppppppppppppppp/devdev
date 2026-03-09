@@ -238,14 +238,14 @@ class ArcEnsembleGenerator(BaseAgent):
             protagonist_name: [V60.18] 주인공 이름 (환각 방지)
             protagonist_config: [V60.88] 주인공 설정 (world_origin, incarnation_type)
             entity_registry: [V60.92] Entity Registry (NPC 명칭 일관성)
-            ep_count: [V61.1] 가변 페이싱 - 상위에서 결정된 화수 (None이면 기본값 5)
+            ep_count: [V61.1] 가변 페이싱 - 상위에서 결정된 화수 (None이면 기본값 4)
 
         Returns:
             (best_arc, all_candidates) - 최적 Arc와 모든 후보 리스트
         """
-        # [V61.1] 가변 페이싱: 상위에서 결정된 ep_count 우선, 없으면 기본값 5
+        # [V61.1] 가변 페이싱: 상위에서 결정된 ep_count 우선, 없으면 기본값 4
         if ep_count is None:
-            ep_count = curr_block.get("ep_count", 5) if isinstance(curr_block, dict) else 5
+            ep_count = curr_block.get("ep_count", Stage2Limits.DEFAULT_EP_COUNT) if isinstance(curr_block, dict) else Stage2Limits.DEFAULT_EP_COUNT
         ep_end = ep_start + ep_count - 1
         candidates = []
 
@@ -361,7 +361,7 @@ class ArcEnsembleGenerator(BaseAgent):
             return None, []
 
         # [V60.73] tactical_doc 최소 길이 필터 (가변 페이싱: 화당 500자)
-        min_tactical_length = ep_count * Stage2Limits.MIN_CHARS_PER_EPISODE  # 3화=1500자, 5화=2500자, 7화=3500자
+        min_tactical_length = ep_count * Stage2Limits.MIN_CHARS_PER_EPISODE  # 3화=1500자, 4화=2000자, 6화=3000자
         valid_candidates = []
         for candidate in candidates:
             # [V60.74] tactical_doc 타입 안전 변환 (dict/list 처리)
@@ -640,10 +640,10 @@ class ArcEnsembleGenerator(BaseAgent):
                     genre_ext_guide=self._escape_braces(genre_ext_guide),
                     extended_block_guide=self._escape_braces(extended_block_guide),  # [TF-9]
                     vol_strategy=self._escape_braces(
-                        vol_strategy[:4000] if vol_strategy else "(없음)"
+                        vol_strategy[:6000] if vol_strategy else "(없음)"
                     ),  # [TF-46] 2K→4K
                     assets=self._escape_braces(
-                        json.dumps(assets, ensure_ascii=False)[:4000] if assets else "{}"
+                        json.dumps(assets, ensure_ascii=False)[:6000] if assets else "{}"
                     ),  # [TF-46] 2K→4K
                     feedback=self._escape_braces(_merged_feedback[:9000] if _merged_feedback else "(없음)"),
                     entity_registry_section=self._escape_braces(entity_registry_section),  # [V60.92]
@@ -802,14 +802,14 @@ class ArcEnsembleGenerator(BaseAgent):
         # [V60.37] 타입 안전성
         if not isinstance(tactical, str):
             tactical = str(tactical) if tactical else ""
-        ep_count = candidate.get("ep_count", 5)
+        ep_count = candidate.get("ep_count", Stage2Limits.DEFAULT_EP_COUNT)
         # [Sweep44] LLM이 문자열 반환 시 int 변환 (TypeError 방지)
         if not isinstance(ep_count, int):
             try:
                 ep_count = int(ep_count)
             except (ValueError, TypeError):
-                ep_count = 5
-        min_length = ep_count * Stage2Limits.MIN_CHARS_PER_EPISODE  # 3화=1500자, 5화=2500자, 7화=3500자
+                ep_count = Stage2Limits.DEFAULT_EP_COUNT
+        min_length = ep_count * Stage2Limits.MIN_CHARS_PER_EPISODE  # 3화=1500자, 4화=2000자, 6화=3000자
         recommended_length = ep_count * 600  # 권장: 화당 600자
         if len(tactical) < min_length:
             score -= 40  # 최소 기준 미달은 사실상 실격

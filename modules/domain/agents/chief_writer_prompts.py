@@ -72,6 +72,7 @@ def build_chief_writer_main_prompt(
     style_guide: str,
     common_rules: str,
     writing_guidelines: str,
+    reference_excerpt_section: str = "",
     prev_manuscripts_section: str = "",  # [V67] 이전 원고 전문
     incarnation_context_section: str = "",  # [V67.1] 환생 유형별 집필 맥락
     chain_link_section: str = "",  # [V68] 직전 화 연결고리
@@ -162,6 +163,8 @@ def build_chief_writer_main_prompt(
 
 ### [STEP 6: 문체 DNA 가이드 - 위반 시 AI티 판정]
 {style_guide}
+
+{reference_excerpt_section}
 
 {satisfaction_guide_section}
 

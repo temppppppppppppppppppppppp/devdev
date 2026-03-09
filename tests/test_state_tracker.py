@@ -424,6 +424,8 @@ class TestCreateTrackerFromArcs:
 
         arc1 = {
             "arc_no": 1,
+            "ep_start": 1,
+            "ep_count": 4,
             "state_constraints": {
                 "arc_start_state": {"location": "산동성", "equipment": ["철검"]},
                 "arc_end_state": {"location": "화산파"},
@@ -433,6 +435,8 @@ class TestCreateTrackerFromArcs:
         }
         arc2 = {
             "arc_no": 2,
+            "ep_start": 5,
+            "ep_count": 4,
             "state_constraints": {
                 "arc_start_state": {"location": "화산파", "equipment": ["화산검"]},
                 "arc_end_state": {"location": "소림사"},
@@ -443,12 +447,12 @@ class TestCreateTrackerFromArcs:
 
         tracker = create_tracker_from_arcs([arc1, arc2])
 
-        # states에 arc1 시작(ep1)과 arc2 시작(ep6)이 모두 존재해야 함
+        # states에 arc1 시작(ep1)과 arc2 시작(ep5)이 모두 존재해야 함
         assert 1 in tracker.states, "Arc1 시작 EP1이 states에 없음"
-        assert 6 in tracker.states, "Arc2 시작 EP6이 states에 없음"
+        assert 5 in tracker.states, "Arc2 시작 EP5이 states에 없음"
 
-        # cross-arc boundary transition (ep5→ep6 또는 ep1→ep6) 존재 확인
-        boundary_transitions = [t for t in tracker.transitions if t.from_ep < 6 and t.to_ep >= 6]
+        # cross-arc boundary transition (ep4→ep5 또는 ep1→ep5) 존재 확인
+        boundary_transitions = [t for t in tracker.transitions if t.from_ep < 5 and t.to_ep >= 5]
         assert len(boundary_transitions) > 0, (
             f"Cross-arc boundary transition이 없음. transitions: {[(t.from_ep, t.to_ep) for t in tracker.transitions]}"
         )
