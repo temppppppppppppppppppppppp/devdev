@@ -32,8 +32,8 @@
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "installerLanguages": [
-        "Korean",
-        "English"
+        "ko",
+        "en"
       ]
     },
     "extraResources": [
@@ -45,26 +45,10 @@
         ]
       },
       {
-        "from": "../python-embed",
-        "to": "python-embed",
-        "filter": [
-          "**/*"
-        ]
-      },
-      {
-        "from": "..",
+        "from": "../dist/engine",
         "to": "engine",
         "filter": [
-          "main_a.py",
-          "modules/**/*",
-          "config/**/*",
-          "libraries/**/*",
-          "treatments/**/*",
-          "bible/**/*",
-          "lite_mode/**/*",
-          "requirements.txt",
-          "!**/__pycache__/**",
-          "!**/*.pyc"
+          "**/*"
         ]
       }
     ],

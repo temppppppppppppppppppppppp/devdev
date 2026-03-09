@@ -13,6 +13,7 @@ Usage:
 
 import logging
 import os
+import sys
 import threading
 from pathlib import Path
 from typing import Any, Optional
@@ -62,7 +63,14 @@ class PromptLoader:
         if env_path:
             return Path(env_path)
 
-        # 2) 프로젝트 루트 기준 탐색 (이 파일 위치 기준)
+        # 2) PyInstaller frozen 모드: _MEIPASS 기준
+        if getattr(sys, "frozen", False):
+            base = Path(sys._MEIPASS)  # type: ignore[attr-defined]
+            prompts_dir = base / "config" / "prompts"
+            if prompts_dir.is_dir():
+                return prompts_dir
+
+        # 3) 프로젝트 루트 기준 탐색 (이 파일 위치 기준)
         # modules/core/prompt_loader.py → 프로젝트루트/config/prompts/
         current = Path(__file__).resolve()
         project_root = current.parent.parent.parent  # modules/core/ → modules/ → root

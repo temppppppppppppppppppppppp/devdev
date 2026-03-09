@@ -616,6 +616,11 @@
       .menu-btn:disabled:hover {
         background: #94a3b8;
       }
+      .top-action:disabled, .project-select:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        pointer-events: none;
+      }
 
       /* ── 재료 파일 목록 ── */
       .material-file-list {
@@ -656,6 +661,21 @@
       }
       .material-file-item .file-del:hover {
         color: #b91c1c;
+      }
+      .material-refresh-btn {
+        background: none;
+        border: 1px solid #cbd5e1;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        padding: 1px 6px;
+        margin-left: 6px;
+        color: #475569;
+        vertical-align: middle;
+      }
+      .material-refresh-btn:hover {
+        background: #e2e8f0;
+        color: #1e293b;
       }
       .material-import-btn {
         width: 100%;
@@ -714,6 +734,13 @@
         cursor: not-allowed;
         opacity: 0.5;
       }
+      .stage0-sub-btn.stage0-wip {
+        background: #78716c;
+        border-left: 3px solid #f59e0b;
+      }
+      .stage0-sub-btn.stage0-wip:hover {
+        background: #57534e;
+      }
 
       /* ── 장르 필요 안내 배지 ── */
       .genre-required-hint {
@@ -765,11 +792,22 @@
         white-space: pre-wrap;
         line-height: 1.5;
       }
+      .prompt-dialog .prompt-filter {
+        width: 100%;
+        padding: 6px 10px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        font-size: 13px;
+        margin-bottom: 8px;
+        box-sizing: border-box;
+      }
       .prompt-dialog .prompt-options {
         display: flex;
         flex-direction: column;
         gap: 4px;
         margin-bottom: 12px;
+        max-height: 400px;
+        overflow-y: auto;
       }
       .prompt-dialog .prompt-option-btn {
         text-align: left;
@@ -1108,6 +1146,8 @@
           <option value="">프로젝트 선택</option>
         </select>
         <button type="button" class="top-action" id="newProjectBtn">새 프로젝트</button>
+        <button type="button" class="top-action" id="openWorkspaceBtn" title="작업 폴더를 탐색기에서 엽니다">작업 폴더</button>
+        <div style="flex:1"></div>
         <button type="button" class="top-action" id="settingsBtn">설정</button>
       </header>
 
@@ -1122,13 +1162,17 @@
                 <span class="cat-arrow">▼</span> 재료 넣기
               </button>
               <div class="category-body" id="cat-material">
-                <div class="material-section-title">Bible (세계관/캐릭터)</div>
+                <div class="material-section-title">Bible (세계관/캐릭터)
+                  <button type="button" class="material-refresh-btn" id="refreshBibleBtn" title="새로고침">↻</button>
+                </div>
                 <div id="bibleFileList" class="material-file-list">
                   <div class="material-empty">로딩 중...</div>
                 </div>
                 <button type="button" class="material-import-btn" id="importBibleBtn">+ Bible 파일 추가</button>
 
-                <div class="material-section-title" style="margin-top:8px">Treatment (플롯/블록)</div>
+                <div class="material-section-title" style="margin-top:8px">Treatment (플롯/블록)
+                  <button type="button" class="material-refresh-btn" id="refreshTreatmentBtn" title="새로고침">↻</button>
+                </div>
                 <div id="treatmentFileList" class="material-file-list">
                   <div class="material-empty">로딩 중...</div>
                 </div>
@@ -1155,17 +1199,17 @@
                   <button type="button" class="stage0-sub-btn menu-btn" data-action="stage_0" data-key="0" data-sub-key="1">
                     <span class="label">기존 방식 (Bible/Treatment 선택)</span>
                   </button>
-                  <button type="button" class="stage0-sub-btn menu-btn" data-action="stage_0" data-key="0" data-sub-key="2">
-                    <span class="label">컨셉 → Bible 생성 (AI 확장)</span>
+                  <button type="button" class="stage0-sub-btn menu-btn stage0-wip" data-action="stage_0" data-key="0" data-sub-key="2">
+                    <span class="label">(개선 중) 컨셉 → Bible 생성 (AI 확장)</span>
                   </button>
-                  <button type="button" class="stage0-sub-btn menu-btn" data-action="stage_0" data-key="0" data-sub-key="3">
-                    <span class="label">역설계 — 기존 원고에서 추출</span>
+                  <button type="button" class="stage0-sub-btn menu-btn stage0-wip" data-action="stage_0" data-key="0" data-sub-key="3">
+                    <span class="label">(개선 중) 역설계 — 기존 원고에서 추출</span>
                   </button>
-                  <button type="button" class="stage0-sub-btn menu-btn" data-action="stage_0" data-key="0" data-sub-key="4">
-                    <span class="label">Bible JSON 임포트</span>
+                  <button type="button" class="stage0-sub-btn menu-btn stage0-wip" data-action="stage_0" data-key="0" data-sub-key="4">
+                    <span class="label">(개선 중) Bible JSON 임포트</span>
                   </button>
-                  <button type="button" class="stage0-sub-btn menu-btn" data-action="stage_0" data-key="0" data-sub-key="5">
-                    <span class="label">Block 확장 — Treatment에 블록 추가</span>
+                  <button type="button" class="stage0-sub-btn menu-btn stage0-wip" data-action="stage_0" data-key="0" data-sub-key="5">
+                    <span class="label">(개선 중) Block 확장 — Treatment에 블록 추가</span>
                   </button>
                   <button type="button" class="stage0-sub-btn menu-btn" data-action="stage_0" data-key="0" data-sub-key="6">
                     <span class="label">스타일 레퍼런스 분석</span>
@@ -1318,8 +1362,8 @@
               <div class="input-row">
                 <span style="font-size:13px;min-width:110px">chief_writer</span>
                 <select class="btn-sm" id="modelCW" style="flex:1">
-                  <option value="pro">gemini-2.5-pro</option>
-                  <option value="flash" selected>gemini-2.5-flash</option>
+                  <option value="pro" selected>gemini-2.5-pro</option>
+                  <option value="flash">gemini-2.5-flash</option>
                 </select>
               </div>
               <div class="input-row">
@@ -1332,8 +1376,8 @@
               <div class="input-row">
                 <span style="font-size:13px;min-width:110px">analyst</span>
                 <select class="btn-sm" id="modelAnl" style="flex:1">
-                  <option value="pro">gemini-2.5-pro</option>
-                  <option value="flash" selected>gemini-2.5-flash</option>
+                  <option value="pro" selected>gemini-2.5-pro</option>
+                  <option value="flash">gemini-2.5-flash</option>
                 </select>
               </div>
             </div>
@@ -1490,6 +1534,7 @@
         <h3 id="promptTitle">입력 대기</h3>
         <div class="prompt-text" id="promptText"></div>
         <div class="prompt-default-hint" id="promptDefaultHint"></div>
+        <input type="text" class="prompt-filter" id="promptFilter" placeholder="검색..." style="display:none" />
         <div class="prompt-options" id="promptOptions"></div>
         <div class="prompt-input-row" id="promptInputRow">
           <input type="text" id="promptInput" placeholder="입력..." />
@@ -1532,14 +1577,8 @@
         mode: "IDLE",
         skipAnimation: false,
         mute: false,
-        effectIndex: 0,
         frame: 0,
-        currentStage: null,   // "stage_0" | "stage_2" | "stage_3" | "stage_4" | "one_stop" | null
-        timers: {
-          verdict: null,
-          clearVerdict: null,
-          log: null
-        }
+        currentStage: null   // "stage_0" | "stage_2" | "stage_3" | "stage_4" | "one_stop" | null
       };
 
       // 스테이지별 활성 에이전트 (실제 파이프라인 코드 기반 전수조사)
@@ -1567,29 +1606,14 @@
       ];
       // 클릭 말풍선 상태
       let _clickBubble = { agentIdx: -1, text: "", timer: 0 };
-
-      const verdictCycle = [
-        { mode: "PASS", text: "채택", durationMs: 1500, badge: "PASS", className: "pass" },
-        {
-          mode: "PASS_WITH_FIX",
-          text: "한 번 더",
-          durationMs: 1500,
-          badge: "PWF",
-          className: "pwf"
-        },
-        { mode: "REJECT", text: "재시도", durationMs: 1000, badge: "REJECT", className: "reject" }
-      ];
-
-      const logTemplates = [
-        { text: "[Stage 2] Arc 1 생성 중..." },
-        { text: "[Chief Writer] 원고 작성 중... (3/5 후보)" },
-        { text: "[Director] 심사 결과: PASS (87점)", verdict: "PASS" },
-        { text: "[Stage 4] Episode 12 완료" }
-      ];
-
-      function randomInt(min, max) {
-        return Math.floor(Math.random() * (max - min + 1)) + min;
-      }
+      // Director 심사 말풍선 (verdict 시 자동 표시)
+      let _directorBubble = { text: "", timer: 0 };
+      // Director 스크롤 텍스트 (긴 분석 로그를 흘려보냄)
+      let _directorScroll = { lines: [], timer: 0, lineIdx: 0 };
+      // Manager 로그 말풍선 (TF-38 등 파이프라인 상태)
+      let _managerBubble = { text: "", timer: 0 };
+      // verdict 표시 리셋 타이머 (경합 방지용 단일 인스턴스)
+      let _verdictResetTimer = null;
 
       function nowLabel() {
         return new Date().toLocaleTimeString("ko-KR", {
@@ -1666,70 +1690,42 @@
         effectBanner.classList.add(className, "show");
       }
 
-      function clearVerdictTimers() {
-        if (officeState.timers.verdict) {
-          clearTimeout(officeState.timers.verdict);
-          officeState.timers.verdict = null;
-        }
-        if (officeState.timers.clearVerdict) {
-          clearTimeout(officeState.timers.clearVerdict);
-          officeState.timers.clearVerdict = null;
-        }
-      }
-
-      function scheduleVerdictLoop() {
-        clearVerdictTimers();
-        if (!officeState.isRunning) return;
-
-        officeState.timers.verdict = setTimeout(() => {
-          if (!officeState.isRunning) return;
-
-          const current = verdictCycle[officeState.effectIndex % verdictCycle.length];
-          officeState.effectIndex += 1;
-
-          officeState.mode = current.mode;
-          setStateBadge(current.mode);
-          setEffectBanner(current.text, current.className);
-
-          const score = randomInt(81, 93);
-          const verdictText = current.badge === "PWF" ? "PASS_WITH_FIX" : current.badge;
-          appendLog(`[Director] 심사 결과: ${verdictText} (${score}점)`, current.badge);
-
-          const effectDuration = officeState.skipAnimation ? 150 : current.durationMs;
-          officeState.timers.clearVerdict = setTimeout(() => {
-            if (!officeState.isRunning) return;
-            officeState.mode = "RUNNING";
-            setStateBadge("RUNNING");
-            setEffectBanner("", "");
-            scheduleVerdictLoop();
-          }, effectDuration);
-        }, 5000);
-      }
+      // 애니메이션이 실행되는 스테이지 (생산 공정만)
+      const ANIMATED_STAGES = new Set(["stage_2", "stage_3", "stage_4", "one_stop"]);
 
       function startRunningLoop() {
         officeState.isRunning = true;
         officeState.mode = "RUNNING";
         setStateBadge("RUNNING");
         setEffectBanner("", "");
-        scheduleVerdictLoop();
+        _lockUI(true);
       }
 
       function stopLoop() {
-        clearVerdictTimers();
         officeState.isRunning = false;
         officeState.mode = "IDLE";
         officeState.currentStage = null;
         setStateBadge("IDLE");
         setEffectBanner("", "");
+        _lockUI(false);
       }
 
-      function scheduleAutoLogs() {
-        const delay = randomInt(1000, 3000);
-        officeState.timers.log = setTimeout(() => {
-          const item = logTemplates[randomInt(0, logTemplates.length - 1)];
-          appendLog(item.text, item.verdict);
-          scheduleAutoLogs();
-        }, delay);
+      // ── UI 잠금 (실행 중 조작 방지) ──
+      function _lockUI(locked) {
+        // 메뉴 버튼 전체 비활성화 (Stop 버튼은 제외)
+        document.querySelectorAll(".menu-btn, .stage0-sub-btn").forEach(btn => {
+          if (btn.dataset.action === "stop") return;
+          btn.disabled = locked;
+        });
+        // 상단바 버튼 비활성화
+        document.querySelectorAll(".top-action").forEach(btn => {
+          btn.disabled = locked;
+        });
+        // 프로젝트 셀렉트 비활성화
+        const ps = document.getElementById("projectSelect");
+        if (ps) ps.disabled = locked;
+        // 잠금 해제 시 장르 게이팅 복원
+        if (!locked) updateGenreGating();
       }
 
       // ─── PNG Sprite System (LimeZu RPG Maker MV Paid) ───
@@ -1849,15 +1845,14 @@
 
       // ─── 에이전트 ───
       function drawAgent(agent, index, time) {
-        const animate = officeState.mode === "RUNNING" && officeState.isRunning && !officeState.skipAnimation;
+        const animate = officeState.mode === "RUNNING" && officeState.isRunning && !officeState.skipAnimation && ANIMATED_STAGES.has(officeState.currentStage);
         const bob = animate ? Math.sin(time * 4 + index * 1.3) * 1.5 : 0;
 
         let pose;
         let animFrame = 0;
-        // 에이전트별 작업 포즈 (Director/Critic: 전화, 나머지: 서서 작업)
-        const WORK_POSES = { director: "work", critic: "work" };
+        // 모든 에이전트 walk 포즈 통일 (phone 스프라이트가 다른 캐릭터라 사용 안 함)
         if (animate) {
-          pose = WORK_POSES[agent.spriteKey] || "idle";
+          pose = "idle";
           animFrame = Math.floor(time * 3 + index) % 3;
         } else {
           // 대기: 서있기 (중앙 프레임)
@@ -1900,6 +1895,25 @@
           const quickBubbles = ["...", "!", "~", "OK"];
           const bt = quickBubbles[(index + Math.floor(time)) % quickBubbles.length];
           drawBubble(agent.x + 30, agent.y - 50 + bob, bt, "#475569", false);
+        }
+
+        // Director 심사 말풍선 (verdict — 최우선)
+        if (agent.spriteKey === "director" && _directorBubble.timer > 0) {
+          const bColor = _directorBubble.text.startsWith("PWF") ? "#854d0e"
+            : _directorBubble.text.startsWith("PASS") ? "#166534"
+            : _directorBubble.text.startsWith("REJECT") ? "#991b1b" : "#334155";
+          drawBubble(agent.x, agent.y - 70 + bob, _directorBubble.text, bColor, true);
+        }
+        // Director 스크롤 텍스트 (분석 중 긴 텍스트 흘려보냄 — verdict 없을 때만)
+        else if (agent.spriteKey === "director" && _directorScroll.timer > 0) {
+          const line = _directorScroll.lines[_directorScroll.lineIdx] || "";
+          const truncated = line.length > 28 ? line.slice(0, 26) + "…" : line;
+          drawBubble(agent.x, agent.y - 70 + bob, truncated, "#334155", true);
+        }
+
+        // Manager 로그 말풍선 (파이프라인 상태)
+        if (agent.spriteKey === "manager" && _managerBubble.timer > 0) {
+          drawBubble(agent.x, agent.y - 64 + bob, _managerBubble.text, "#92400e", true);
         }
 
         // 클릭 말풍선
@@ -1960,8 +1974,17 @@
 
       // ─── 이펙트 ───
       function drawModeEffect(time) {
-        // 클릭 말풍선 타이머 감소
+        // 말풍선 타이머 감소
         if (_clickBubble.timer > 0) _clickBubble.timer--;
+        if (_directorBubble.timer > 0) _directorBubble.timer--;
+        if (_managerBubble.timer > 0) _managerBubble.timer--;
+        // Director 스크롤 텍스트: 매 12프레임(~0.2초)마다 다음 줄
+        if (_directorScroll.timer > 0) {
+          _directorScroll.timer--;
+          if (officeState.frame % 12 === 0 && _directorScroll.lines.length > 0) {
+            _directorScroll.lineIdx = (_directorScroll.lineIdx + 1) % _directorScroll.lines.length;
+          }
+        }
 
         if (officeState.mode === "PASS") {
           const glow = officeState.skipAnimation ? 0.15 : 0.06 + Math.abs(Math.sin(time * 6)) * 0.12;
@@ -2026,6 +2049,67 @@
         }
       }
 
+      // ─── 공지 스크롤 (게임 공지 스타일 — 오른쪽→왼쪽 흘러감) ───
+      const _noticeMessages = [
+        "안 멈췄어요. 계속 하고 있어요.",
+        "원래 느려요. 정상입니다.",
+        "AI가 열심히 쓰는 중...",
+        "잠시만 기다려 주세요~",
+        "LLM이 생각하고 있어요.",
+        "커피 한 잔 하고 오셔도 돼요.",
+        "이따가 오세요. 다 되면 알려드릴게요.",
+        "아직 작업 중이에요!",
+        "멈춘 게 아니에요, 진행 중!",
+        "열심히 굴려보는 중...",
+        "화장실 다녀오셔도 됩니다.",
+        "글도비가 일하는 중입니다.",
+      ];
+      let _noticeX = DESIGN_W + 100;     // 현재 X 위치 (오른쪽 밖에서 시작)
+      let _noticeText = "";
+      let _noticeActive = false;
+      let _noticeNextAt = 0;             // 다음 공지 시각 (timeMs)
+      const _NOTICE_INTERVAL = 60000;    // 1분
+      const _NOTICE_SPEED = 0.6;         // px/frame (~36px/sec)
+      const _NOTICE_Y = 50;              // 상단 영역 (캐릭터 위쪽 벽 근처)
+
+      function drawNoticeScroll(timeMs) {
+        if (!officeState.isRunning) {
+          _noticeActive = false;
+          _noticeNextAt = 0;
+          return;
+        }
+        // 1분마다 새 공지 발동
+        if (!_noticeActive && timeMs >= _noticeNextAt) {
+          _noticeText = _noticeMessages[Math.floor(Math.random() * _noticeMessages.length)];
+          _noticeX = DESIGN_W + 10;
+          _noticeActive = true;
+          _noticeNextAt = timeMs + _NOTICE_INTERVAL;
+        }
+        if (!_noticeActive) return;
+
+        // 왼쪽으로 이동
+        _noticeX -= _NOTICE_SPEED;
+
+        // 텍스트 폭 측정 → 완전히 왼쪽 밖으로 나가면 종료
+        ctx.font = '9px "Malgun Gothic", sans-serif';
+        const tw = ctx.measureText(_noticeText).width;
+        if (_noticeX < -tw - 10) {
+          _noticeActive = false;
+          return;
+        }
+
+        // 양쪽 끝 페이드
+        const fadeIn = Math.min(1, (DESIGN_W - _noticeX) / 60);
+        const fadeOut = Math.min(1, (_noticeX + tw) / 60);
+        const alpha = Math.min(fadeIn, fadeOut) * 0.45;
+
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = "#cbd5e1";
+        ctx.fillText(_noticeText, _noticeX, _NOTICE_Y);
+        ctx.restore();
+      }
+
       function draw(timeMs) {
         officeState.frame += 1;
         const time = timeMs / 1000;
@@ -2035,6 +2119,7 @@
         drawOfficeBackground(time);
         agents.forEach((agent, index) => drawAgent(agent, index, time));
         drawModeEffect(time);
+        drawNoticeScroll(timeMs);
         ctx.restore();
 
         requestAnimationFrame(draw);
@@ -2225,14 +2310,20 @@
             _handleStdoutLine(ev.payload.text);
             break;
           case "run_completed":
+            _bootPhase = false;
+            _autoExitAfterStage0 = false;
             stopLoop();
             appendLog("[System] 실행 완료");
             break;
           case "run_failed":
+            _bootPhase = false;
+            _autoExitAfterStage0 = false;
             stopLoop();
             appendLog(`[System] 실행 실패 (code: ${ev.payload.returncode})`);
             break;
           case "run_stopped":
+            _bootPhase = false;
+            _autoExitAfterStage0 = false;
             stopLoop();
             appendLog("[System] 중지됨");
             break;
@@ -2252,8 +2343,31 @@
 
       // ── Mode B 프롬프트 핸들링 ──
       let _currentPrompt = null;  // { runId, promptId, inputType, default, options }
+      let _bootPhase = false;     // Stage 0 부트 단계 — stdout 출력 억제
+      let _autoExitAfterStage0 = false;  // Stage 0 완료 후 메인 메뉴에서 자동 Exit
 
       function _showPromptDialog(data) {
+        // 부트 단계 종료 — 첫 프롬프트 도착 시 정상 출력 모드로 전환
+        if (_bootPhase) {
+          _bootPhase = false;
+          appendLog("[System] 초기화 완료 — 항목을 선택해주세요");
+        }
+        // Stage 0 완료 후 메인 메뉴 → 자동 종료 ("5" Exit 전송)
+        const payload = data.payload;
+        if (_autoExitAfterStage0 && !_bootPhase) {
+          const hasExit = payload.options && payload.options.some(o => /exit/i.test(o.label));
+          if (hasExit) {
+            _autoExitAfterStage0 = false;
+            // 자동으로 "5" (Exit) 전송하여 프로세스 종료
+            const { run_id } = data;
+            const pid = payload.prompt_id;
+            if (window.geuldobiDesktop) {
+              window.geuldobiDesktop.resolvePrompt(run_id, pid, "5").catch(() => {});
+            }
+            appendLog("[System] Stage 0 완료 — 프로세스 종료 중...");
+            return;
+          }
+        }
         // 이미 프롬프트 다이얼로그가 열려 있으면 무시 (동시 요청 방지)
         const overlay = document.getElementById("promptOverlay");
         if (overlay.classList.contains("open") && _currentPrompt) {
@@ -2267,7 +2381,6 @@
         const inputRow = document.getElementById("promptInputRow");
         const input = document.getElementById("promptInput");
 
-        const payload = data.payload;
         _currentPrompt = {
           runId: data.run_id,
           promptId: payload.prompt_id,
@@ -2293,6 +2406,9 @@
         input.style.display = "";
         const _ta = document.getElementById("promptTextarea");
         if (_ta) _ta.style.display = "none";
+        const filterInput = document.getElementById("promptFilter");
+        filterInput.style.display = "none";
+        filterInput.value = "";
 
         if (payload.input_type === "enter") {
           // [Enter] 계속 — 자동 전송
@@ -2316,12 +2432,25 @@
           optionsDiv.appendChild(noBtn);
         } else if (payload.options && payload.options.length > 0) {
           // 옵션 목록
-          for (const opt of payload.options) {
+          const opts = payload.options;
+          for (const opt of opts) {
             const btn = document.createElement("button");
             btn.className = "prompt-option-btn";
             btn.textContent = `[${opt.key}] ${opt.label}`;
             btn.addEventListener("click", () => _resolveCurrentPrompt(opt.key));
             optionsDiv.appendChild(btn);
+          }
+          // 15개 이상이면 검색 필터 표시 + 직접 입력 허용
+          if (opts.length >= 15) {
+            filterInput.style.display = "";
+            filterInput.focus();
+            filterInput.oninput = () => {
+              const q = filterInput.value.toLowerCase();
+              for (const child of optionsDiv.children) {
+                child.style.display = child.textContent.toLowerCase().includes(q) ? "" : "none";
+              }
+            };
+            inputRow.style.display = "flex";
           }
         } else if (payload.input_type === "multiline") {
           // 다중 줄 입력 — input 숨기고 textarea 추가 (원본 보존)
@@ -2380,11 +2509,91 @@
       });
 
       function _handleStdoutLine(text) {
-        const vm = text.match(/심사\s*결과[:\s]*(PASS_WITH_FIX|PASS|REJECT)\s*\((\d+)점\)/);
-        if (vm) {
-          const verdict = vm[1];
+        // 부트 단계에서는 stdout 출력 억제 (초기화 로그 숨김)
+        if (_bootPhase) {
+          console.log("[boot] " + text);
+          return;
+        }
+
+        // ── Manager 로그 → 말풍선 연결 ──
+        // 파이프라인 상태 마커를 Manager 말풍선에 표시
+        const mgrPatterns = [
+          { re: /Arc 생성 완료/,                   msg: "Arc 생성 완료!" },
+          { re: /Pre-Director 검증/,               msg: "검증 체인 시작..." },
+          { re: /Director 심사 대기/,               msg: "Director 심사 대기" },
+          { re: /Director.*무결성 검수/,            msg: "무결성 검수 중..." },
+          { re: /Blueprint.*생성/,                  msg: "Blueprint 생성 중" },
+          { re: /Blueprint.*완료/,                  msg: "Blueprint 완료!" },
+          { re: /원고.*생성|Manuscript.*생성/,       msg: "원고 생성 중..." },
+          { re: /원고.*완료|Manuscript.*완료/,       msg: "원고 완료!" },
+          { re: /앙상블.*생성|Ensemble/,            msg: "앙상블 생성 중..." },
+          { re: /advisory|Advisory/,               msg: "advisory 분석 중" },
+          { re: /재시도|retry/i,                    msg: "재시도 준비..." },
+          { re: /InPlace.*patch|inplace/i,          msg: "InPlace 패치 중" },
+          { re: /Stage\s*(\d)/,                    msg: null }, // 동적 처리
+        ];
+        for (const p of mgrPatterns) {
+          if (p.re.test(text)) {
+            const bubble = p.msg || `Stage ${text.match(/Stage\s*(\d)/)?.[1] || "?"} 진행 중`;
+            _managerBubble = { text: bubble, timer: 240 }; // ~4초
+            break;
+          }
+        }
+
+        // ── Director 상태 말풍선 (진행 중 상황 설명) ──
+        const dirStatusPatterns = [
+          { re: /Arc\s*(\d+).*생성|Arc\s*(\d+).*설계/, msg: (m) => `Arc ${m[1]||m[2]} 설계 중...` },
+          { re: /제(\d+)화.*Blueprint/,               msg: (m) => `${m[1]}화 BP 심사 중` },
+          { re: /제(\d+)화.*원고|(\d+)화.*생산/,       msg: (m) => `${m[1]||m[2]}화 원고 심사 중` },
+          { re: /(\d+)화.*심사|Episode\s*(\d+)/,      msg: (m) => `${m[1]||m[2]}화 검토 중...` },
+          { re: /Candidate|후보/,                     msg: () => "후보 비교 중..." },
+          { re: /검수|Audit/i,                        msg: () => "품질 감사 중..." },
+        ];
+        // verdict가 아닌 경우에만 상태 표시 (verdict 말풍선이 우선)
+        if (_directorBubble.timer <= 0) {
+          for (const p of dirStatusPatterns) {
+            const m = text.match(p.re);
+            if (m) {
+              _directorBubble = { text: p.msg(m), timer: 300 }; // ~5초
+              break;
+            }
+          }
+        }
+
+        // ── Director 분석 스크롤 (긴 텍스트 → 빠르게 흘려보냄) ──
+        // 80자 넘는 분석·설명성 텍스트를 스크롤 큐에 추가
+        if (text.length > 80 && !text.startsWith("[System]")) {
+          // 문장 단위로 분할 (마침표/느낌표/물음표 기준)
+          const sentences = text.split(/(?<=[.!?。])\s*/).filter(s => s.length > 5);
+          if (sentences.length >= 2) {
+            _directorScroll = {
+              lines: sentences.slice(0, 20), // 최대 20문장
+              timer: sentences.length * 12 + 60, // 문장 수 × 0.2초 + 1초 여유
+              lineIdx: 0,
+            };
+          }
+        }
+
+        // ── verdict 패턴 (전 Stage 전수조사 기반) ──
+        const verdictPatterns = [
+          /\[Director\]\s*(PASS_WITH_FIX|PASS|REJECT)\s*\(score=(\d+)\)/,              // S2
+          /Blueprint\s*결과:\s*(PASS_WITH_FIX|PASS|REJECT)\s*\(score=(\d+)\)/,          // S3
+          /재심사\s*#\d+:\s*(PASS_WITH_FIX|PASS|REJECT)\s*\(score=(\d+)\)/,             // S3 TF-32-V
+          /판정:\s*(PASS_WITH_FIX|PASS|REJECT)\s*\|\s*점수:\s*(\d+)/,                   // S4
+          /\[Stage4 Audit\]\s*\S+\s*(PASS_WITH_FIX|PASS|REJECT)\s*\(점수:\s*(\d+)\)/,   // S4 Audit
+        ];
+        let verdict = null, score = null;
+        for (const re of verdictPatterns) {
+          const m = text.match(re);
+          if (m) { verdict = m[1]; score = m[2]; break; }
+        }
+        if (verdict) {
           const badge = verdict === "PASS_WITH_FIX" ? "PWF" : verdict;
           appendLog(text, badge);
+          // Director 말풍선 표시 (verdict가 상태 말풍선을 덮어씀)
+          const bubbleText = verdict === "PASS_WITH_FIX" ? `PWF ${score}점` : `${verdict} ${score}점`;
+          _directorBubble = { text: bubbleText, timer: 180 }; // ~3초 (60fps)
+          _directorScroll = { lines: [], timer: 0, lineIdx: 0 }; // 스크롤 중단
           if (verdict === "PASS") {
             officeState.mode = "PASS"; setStateBadge("PASS"); setEffectBanner("채택", "pass");
           } else if (verdict === "PASS_WITH_FIX") {
@@ -2392,11 +2601,13 @@
           } else {
             officeState.mode = "REJECT"; setStateBadge("REJECT"); setEffectBanner("재시도", "reject");
           }
-          setTimeout(() => {
+          if (_verdictResetTimer) clearTimeout(_verdictResetTimer);
+          _verdictResetTimer = setTimeout(() => {
+            _verdictResetTimer = null;
             if (officeState.isRunning) {
               officeState.mode = "RUNNING"; setStateBadge("RUNNING"); setEffectBanner("", "");
             }
-          }, 1500);
+          }, 2500);
         } else {
           appendLog(text);
         }
@@ -2420,6 +2631,16 @@
           const subMenu = document.getElementById("stage0SubMenu");
           subMenu.classList.toggle("open");
           return;
+        }
+
+        // (개선 중) Stage 0 옵션 경고
+        if (action === "stage_0" && ["2", "3", "4", "5"].includes(subKey)) {
+          const proceed = confirm(
+            "⚠️ 이 기능은 현재 개선 중입니다.\n\n" +
+            "웬만하면 사용을 금지합니다.\n" +
+            "정말 실행하시겠습니까?"
+          );
+          if (!proceed) return;
         }
 
         if (action === "stop") {
@@ -2453,7 +2674,7 @@
         }
 
         // ── 파괴적 작업 확인 (검증 통과 후) ──
-        const destructiveActions = { wipe: "프로젝트 전체 초기화", reset: "프로젝트 리셋", rewind: "에피소드 되감기" };
+        const destructiveActions = { wipe: "프로젝트 전체 초기화", reset: "프로젝트 리셋", rewind: "에피소드 되감기", rollback: "에피소드 롤백" };
         if (destructiveActions[action]) {
           if (!confirm(`[${destructiveActions[action]}] 정말 실행하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`)) {
             appendLog(`[System] ${label} 취소됨`);
@@ -2464,9 +2685,17 @@
         // ── 스테이지별 에이전트 활성화 ──
         officeState.currentStage = action;
 
+        // ── Stage 0 부트 단계: stdout 출력 억제 + 로딩 표시 ──
+        if (action === "stage_0") {
+          _bootPhase = true;
+          _autoExitAfterStage0 = true;
+        }
+
         // ── 실행 요청 ──
         if (window.geuldobiDesktop && _backendConnected) {
-          appendLog(`[System] ${label} 시작 요청...`);
+          appendLog(action === "stage_0"
+            ? `[System] ${label} — 초기화 중... 잠시 기다려주세요`
+            : `[System] ${label} 시작 요청...`);
           try {
             const result = await window.geuldobiDesktop.runKey(key, subKey, inputs);
             if (!result.ok) {
@@ -2714,10 +2943,10 @@
 
       // 추천 설정 적용
       document.getElementById("applyRecommendedModel").addEventListener("click", () => {
-        document.getElementById("modelCW").value = "flash";
+        document.getElementById("modelCW").value = "pro";
         document.getElementById("modelDir").value = "pro";
-        document.getElementById("modelAnl").value = "flash";
-        appendLog("[설정] 추천 모델 설정 적용됨 (CW=flash, Director=pro, Analyst=flash)");
+        document.getElementById("modelAnl").value = "pro";
+        appendLog("[설정] 추천 모델 설정 적용됨 (CW=pro, Director=pro, Analyst=pro)");
       });
 
       // 저장
@@ -2759,6 +2988,18 @@
 
       // 설정 버튼
       settingsBtn.addEventListener("click", openSettings);
+
+      // 작업 폴더 열기 버튼
+      document.getElementById("openWorkspaceBtn").addEventListener("click", async () => {
+        try {
+          const res = await window.geuldobiDesktop.openWorkspaceFolder();
+          if (res && res.path) {
+            appendLog(`[System] 작업 폴더: ${res.path}`);
+          }
+        } catch (err) {
+          appendLog(`[System] 폴더 열기 실패: ${err.message}`);
+        }
+      });
 
       // ── 장르설정 모달 ──
       const GENRE_LABELS = {
@@ -2940,6 +3181,22 @@
               appendLog(`[재료] Treatment 추가: ${res.imported.join(", ")}`);
               refreshMaterialList("treatments", "treatmentFileList");
             }
+          });
+        }
+
+        // 새로고침 버튼
+        const refreshBibleBtn = document.getElementById("refreshBibleBtn");
+        const refreshTreatmentBtn = document.getElementById("refreshTreatmentBtn");
+        if (refreshBibleBtn) {
+          refreshBibleBtn.addEventListener("click", () => {
+            refreshMaterialList("bible", "bibleFileList");
+            appendLog("[재료] Bible 목록 새로고침");
+          });
+        }
+        if (refreshTreatmentBtn) {
+          refreshTreatmentBtn.addEventListener("click", () => {
+            refreshMaterialList("treatments", "treatmentFileList");
+            appendLog("[재료] Treatment 목록 새로고침");
           });
         }
 

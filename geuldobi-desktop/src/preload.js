@@ -31,4 +31,8 @@ contextBridge.exposeInMainWorld("geuldobiDesktop", {
   // 프로젝트 관리
   listProjects: () => ipcRenderer.invoke("project:list"),
   createProject: (name) => ipcRenderer.invoke("project:create", name),
+
+  // 작업 폴더
+  openWorkspaceFolder: () => ipcRenderer.invoke("workspace:open-folder"),
+  getWorkspacePath: () => ipcRenderer.invoke("workspace:get-path"),
 });

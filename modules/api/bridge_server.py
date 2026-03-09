@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import itertools
 import logging
+import os
 import uuid
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
@@ -179,10 +180,15 @@ async def run_endpoint(request: Request) -> JSONResponse:
         return JSONResponse(status_code=v.http_status, content=_err(v.code, v.message))
 
     # T6: 위험키 승인 게이트
+    # 데스크톱 모드: UI confirm() 대체 — approval_id 없으면 자동 승인
+    _desktop_mode = os.environ.get("GEULDOBI_DESKTOP_MODE", "0") == "1"
     if key in RISK_KEYS:
-        approval = risk_gate.validate(key, approval_id)
-        if not approval.ok:
-            return JSONResponse(status_code=approval.http_status, content=_err(approval.code, approval.message))
+        if _desktop_mode and not approval_id:
+            logger.info("Desktop mode: auto-approving risk key=%r", key)
+        else:
+            approval = risk_gate.validate(key, approval_id)
+            if not approval.ok:
+                return JSONResponse(status_code=approval.http_status, content=_err(approval.code, approval.message))
 
     run_id = str(uuid.uuid4())
     broker: PromptBroker = request.app.state.prompt_broker

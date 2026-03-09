@@ -1,7 +1,7 @@
 # 글도비 데스크톱 — 개발·빌드·배포 가이드
 
 > 비개발자도 설치할 수 있는 Windows 데스크톱 앱.
-> Python 설치 불필요 — 내장 Python이 앱 안에 포함됨.
+> Python 설치 불필요 — 전체 바이너리로 배포. 소스 코드 비공개.
 
 ---
 
@@ -12,22 +12,17 @@
 ├── Geuldobi.exe                ← Electron (UI 담당)
 └── resources/
     ├── backend/
-    │   └── backend.exe         ← FastAPI 서버 (PyInstaller로 빌드)
-    ├── python-embed/
-    │   └── python.exe          ← 내장 Python 3.12 (main_a.py 실행용)
+    │   └── backend.exe         ← FastAPI 서버 (PyInstaller)
     └── engine/
-        ├── main_a.py           ← 글도비 파이프라인 진입점
-        ├── modules/            ← 핵심 코드 전체
-        └── config/             ← YAML 프롬프트 등
+        └── engine.exe          ← 글도비 파이프라인 (PyInstaller, 소스 비공개)
 ```
 
 **역할 분담:**
 | 구성요소 | 뭘 하나 | 기술 |
 |----------|---------|------|
 | `Geuldobi.exe` | 창 띄우고, 버튼 누르면 백엔드에 명령 보냄 | Electron |
-| `backend.exe` | HTTP/WebSocket 서버. UI 명령 받아서 main_a.py 실행 | FastAPI + PyInstaller |
-| `python.exe` (내장) | main_a.py를 실제로 돌리는 Python 인터프리터 | Embeddable Python |
-| `engine/` | 글도비 본체 코드 (원격 패치 대상) | Python 소스 |
+| `backend.exe` | HTTP/WebSocket 서버. UI 명령 받아서 engine.exe 실행 | FastAPI + PyInstaller |
+| `engine.exe` | 글도비 파이프라인 바이너리 (main_a.py + modules + config 번들) | PyInstaller |
 
 **앱 실행 흐름:**
 ```
@@ -140,12 +135,18 @@ geuldobi-desktop/dist/
 ### 사용자 데이터 위치
 
 ```
-%LOCALAPPDATA%\Geuldobi\
-├── settings.json        ← API 키, 설정 등
-└── .first_run           ← 최초 실행 마커
+내 문서\글도비\                ← 작업 폴더 (앱에서 "작업 폴더" 버튼으로 바로 열기 가능)
+├── bible\                    ← Bible 파일
+├── treatments\               ← Treatment 파일
+└── projects\                 ← 프로젝트별 데이터 (DB, 원고 등)
+
+%LOCALAPPDATA%\Geuldobi\      ← 앱 설정 (숨김 경로, 사용자가 직접 건드릴 필요 없음)
+├── settings.json             ← API 키, 설정 등
+└── .first_run                ← 최초 실행 마커
 ```
 
-앱 삭제해도 이 폴더는 남음 (API 키 보존).
+작업물은 **내 문서\글도비** 폴더에 저장됨 — 탐색기에서 바로 찾을 수 있음.
+앱 상단 "작업 폴더" 버튼을 누르면 탐색기가 해당 폴더를 바로 열어줌.
 
 ---
 

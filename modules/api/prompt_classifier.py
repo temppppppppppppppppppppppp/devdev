@@ -108,16 +108,20 @@ def classify(text: str, context_lines: list[str] | None = None) -> dict:
     if input_type == "enter":
         default = ""
 
-    # 컨텍스트 라인에서 옵션 추출
+    # 컨텍스트 라인에서 옵션 추출 (프롬프트 직전 연속 블록만 — 이전 메뉴 유입 차단)
     options = []
-    for line in context_lines:
-        om = _OPTION_LINE_RE.match(line.strip())
+    for line in reversed(context_lines):
+        stripped_line = line.strip()
+        if not stripped_line:
+            continue  # 빈 줄 건너뜀
+        om = _OPTION_LINE_RE.match(stripped_line)
         if om:
-            # 두 가지 패턴 중 매치된 것 사용
             key = om.group(1) or om.group(3)
             label = om.group(2) or om.group(4)
             if key and label:
-                options.append({"key": key, "label": label.strip()})
+                options.insert(0, {"key": key, "label": label.strip()})
+        else:
+            break  # 비옵션 라인에서 중단
 
     # 컨텍스트에서 옵션 못 찾았으면 프롬프트 텍스트 자체에서 인라인 추출
     # 예: "Choice (1.무협 / 2.헌터 / 3.투자): "
