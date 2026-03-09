@@ -5,6 +5,11 @@
 > **원칙**: 많이 모아서 나중에 고른다. 지금은 수집만. 터미널은 무한.
 > **총 터미널**: Wave 1 = **58개**, Wave 2 = **10개**, Wave 3 = **5개** → 총 **73개**
 
+> 운영 분리:
+> - 원본 적재는 이 문서 기준으로 `raw table`까지 수행
+> - 집필 투입은 후처리 후 생성되는 `material_bank_*` 뷰만 사용
+> - 후처리/조회 절차는 `docs/2026-03-09/material-bank-ops.md` 참조
+
 ---
 
 ## 터미널 배치 요약
@@ -35,6 +40,25 @@
 - `crises` (12컬럼) — 위기 시나리오
 - `sector_chains` (8컬럼) — 섹터 간 시너지
 - `market_data` (7컬럼) — 시장 지표 시계열
+
+### 0.1 운영 계층
+
+- `events / npcs / crises / sector_chains / market_data`
+  - 수집 원본. coverage 우선.
+- `material_bank_events / material_bank_npcs / material_bank_crises / material_bank_sector_chains / material_bank_market_data`
+  - 집필용 usable view. placeholder/추상 슬롯/파손 행 제외.
+- `material_bank_exclusions`
+  - unusable 행 기록.
+- `material_bank_meta`
+  - 마지막 정제 시각, usable 건수, 백업 경로 기록.
+
+2026-03-09 정제 기준 usable 건수:
+
+- `events`: 3,490 → 3,158
+- `npcs`: 860 → 815
+- `crises`: 268 → 268
+- `sector_chains`: 185 → 107
+- `market_data`: 18,989 → 18,989
 
 ---
 
@@ -1929,6 +1953,8 @@ M1~M4를 기반으로 Block 50개의:
 - Updated: 2026-03-08 19:32
 - Legend: `v` = in DB, `x` = not in DB
 - DB: `test_material/material_bank.db`
+- Material bank cleanup (2026-03-09): `material_bank_*` usable view 생성 완료
+- View counts: `events 3,158 / npcs 815 / crises 268 / sector_chains 107 / market_data 18,989`
 - Extension (`I-*`) ingest: `events 1,570 / npcs 312 / crises 30 / sector_chains 90 / market_data 11,544` (Pass2 정제 완료: 이벤트·인물·위기 detail 중복 0%, 날짜 역전 0, `?`/`\uFFFD`/broken token 0)
 - Bridge (`I0`) ingest: `events 24 / npcs 12 / crises 6 / sector_chains 10 / market_data 120`
 - Full sweep (`json_outputs` 147개): UTF-8 보정 40개 파일 적용 + DB 재적재(`events 3,315 / npcs 662 / crises 212 / sector_chains 168 / market_data 18,322`)

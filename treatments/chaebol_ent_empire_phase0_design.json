@@ -1,0 +1,1452 @@
+{
+  "project": {
+    "work_id": "chaebol_ent_empire",
+    "title_ko": "망나니 재벌 3세의 엔터 제국",
+    "title_working": "스타를 보는 망나니",
+    "format": "현대 한국 엔터 타이쿤 성장물",
+    "start_year": 2009,
+    "end_year": 2022,
+    "core_premise": "유통·식품·호텔 중심 재벌가의 망나니 3세가, 누가 스타가 될지와 어떻게 띄워야 할지 직감하는 감각을 무기로 망해가는 소형 엔터 자회사를 배우·아이돌·유튜버·스트리머·셰프·팬덤 플랫폼을 포괄하는 스타 IP 대기업으로 키운다.",
+    "logline": "인정받지 못한 재벌 3세 권태하는 부친이 던져 준 적자 엔터 자회사에서 아무도 못 알아본 재능들을 집어 올리고, 사람과 포맷과 공간을 묶는 감각으로 한국 엔터 산업의 규칙 자체를 바꾼다."
+  },
+  "setting": {
+    "group_background": "세령그룹은 유통·식품·호텔·면세점·공연장 인프라를 가진 중상위 재벌이며, 문화 사업은 한직 취급을 받는다.",
+    "starter_company": {
+      "name": "세령컬처웍스",
+      "state": "폐업 직전 소형 엔터 자회사",
+      "assets": [
+        "무명 배우 3명",
+        "데뷔 못 한 연습생 6명",
+        "지역 행사 및 대학 축제 라인",
+        "그룹 호텔·외식·유통 계열 연계 가능성"
+      ],
+      "liabilities": [
+        "누적 적자",
+        "허약한 캐스팅 라인",
+        "내부 감시 대상",
+        "히트 IP 부재"
+      ]
+    },
+    "execution_doctrine": "사람 하나를 따로 파는 게 아니라, 사람·콘텐츠·공간·팬덤·유통을 한 몸처럼 묶어 스타 IP를 만든다."
+  },
+  "protagonist": {
+    "name": "권태하",
+    "age_at_start": 28,
+    "status": "세령그룹 오너 3세",
+    "public_image": "술, 여자, 새벽, 카드값으로 대표되는 망나니 도련님",
+    "true_strength": "누가 뜰지뿐 아니라 어떤 포지션, 어떤 순서, 어떤 포맷으로 띄워야 하는지까지 읽는 스타 감각",
+    "true_weakness": [
+      "운영과 재무 체계에 약하다",
+      "내부 정치와 충성 관리에 취약하다",
+      "직접 보고 듣지 못한 대상은 감이 약해진다",
+      "배신과 여론전의 속도는 완벽하게 읽지 못한다"
+    ],
+    "initial_goal": "아버지에게 인정받기보다 자신의 사람 보는 눈이 맞다는 것을 증명한다.",
+    "mid_goal": "연예기획사를 스타 IP 복합기업으로 바꾼다.",
+    "final_goal": "자신의 방식을 업계 표준으로 만든다."
+  },
+  "phase0_design": {
+    "capital_curve": {
+      "metric": "동원 가능 자본",
+      "definition": "현금, 확정 투자, 신용 라인, 계약금을 합친 실제 운용 가능 자본",
+      "targets": [
+        {
+          "block_range": "1-10",
+          "start": "120억",
+          "end": "190억",
+          "notes": "배우 복귀와 행사 라인 정리로 첫 생존을 증명"
+        },
+        {
+          "block_range": "11-20",
+          "start": "190억",
+          "end": "380억",
+          "notes": "윤서아 복귀와 데뷔조 가능성으로 급성장"
+        },
+        {
+          "block_range": "21-30",
+          "start": "380억",
+          "end": "470억",
+          "notes": "대형 기획사 견제 속 시스템 정비로 성장 둔화"
+        },
+        {
+          "block_range": "31-40",
+          "start": "470억",
+          "end": "760억",
+          "notes": "웹콘텐츠와 스트리머 축으로 체질 전환"
+        },
+        {
+          "block_range": "41-50",
+          "start": "760억",
+          "end": "1280억",
+          "notes": "셰프/F&B/브랜드 결합으로 수익 구조 다층화"
+        },
+        {
+          "block_range": "51-60",
+          "start": "1280억",
+          "end": "3600억",
+          "notes": "ORBIT 글로벌 폭발과 해외 투어, 라이선싱 확대"
+        },
+        {
+          "block_range": "61-70",
+          "start": "3600억",
+          "end": "6800억",
+          "notes": "지분전 이후 플랫폼·IP 지주화로 최종 확장"
+        }
+      ]
+    },
+    "quiet_blocks": [
+      6,
+      12,
+      28,
+      42,
+      59,
+      67
+    ],
+    "defeat_blocks": [
+      {
+        "block": 4,
+        "success_pattern": "실패",
+        "summary": "윤서아 복귀 파일럿이 찌라시와 스폰서 이탈로 무너진다."
+      },
+      {
+        "block": 9,
+        "success_pattern": "부분 성공",
+        "summary": "강이현 쇼케이스는 화제를 얻지만 수익화에 실패한다."
+      },
+      {
+        "block": 16,
+        "success_pattern": "실패",
+        "summary": "한도윤과 감사실이 예산을 묶어 데뷔 일정이 깨진다."
+      },
+      {
+        "block": 23,
+        "success_pattern": "피로스 승리",
+        "summary": "프리데뷔 화제는 터지지만 방송과 광고 라인이 막혀 적자를 본다."
+      },
+      {
+        "block": 34,
+        "success_pattern": "실패",
+        "summary": "플랫폼 제재와 광고주 이탈로 웹콘텐츠 확장이 흔들린다."
+      },
+      {
+        "block": 47,
+        "success_pattern": "부분 성공",
+        "summary": "문선우 브랜드는 지키지만 위생 논란 수습 비용으로 타격을 받는다."
+      },
+      {
+        "block": 55,
+        "success_pattern": "피로스 승리",
+        "summary": "ORBIT의 글로벌 성공 뒤에 독점 계약과 멤버 소모가 드러난다."
+      },
+      {
+        "block": 63,
+        "success_pattern": "실패",
+        "summary": "아버지와 외부 자본이 결합해 태하의 지배권을 빼앗는다."
+      }
+    ],
+    "opponent_transition_plan": [
+      {
+        "faction": "세령그룹 공신 라인",
+        "phase": "초기 적대자",
+        "block_range": "1-20",
+        "entry_block": 1,
+        "main_actors": [
+          "권도현",
+          "한도윤"
+        ],
+        "goal": "세령컬처웍스 청산 또는 태하의 실패 입증",
+        "methods": [
+          "예산 동결",
+          "감사실 투입",
+          "인사 및 일정 방해",
+          "언론 흘리기"
+        ],
+        "weakness": "스타성과 팬덤의 가치를 숫자로 환산하지 못한다.",
+        "transition_block": 21
+      },
+      {
+        "faction": "대형 기획사와 방송국 라인",
+        "phase": "중기 적대자",
+        "block_range": "21-40",
+        "entry_block": 22,
+        "main_actors": [
+          "백승문"
+        ],
+        "goal": "배우 캐스팅 차단, 연습생 빼가기, 세령컬처웍스의 업계 진입 봉쇄",
+        "methods": [
+          "섭외 배제",
+          "표절 프레임",
+          "스캔들 확대",
+          "광고 라인 봉쇄"
+        ],
+        "weakness": "웹콘텐츠, 스트리머, 셰프/F&B 결합을 하위 포맷으로 얕본다.",
+        "transition_block": 41
+      },
+      {
+        "faction": "글로벌 플랫폼과 외부 자본",
+        "phase": "최종 적대자",
+        "block_range": "41-70",
+        "entry_block": 52,
+        "main_actors": [
+          "마커스 리",
+          "세령그룹 공신 라인"
+        ],
+        "goal": "세령컬처웍스 인수 또는 태하의 통제권 박탈",
+        "methods": [
+          "독소 계약",
+          "수익 배분 압박",
+          "지분전",
+          "구조조정 명분 만들기"
+        ],
+        "weakness": "사람을 길러 스타로 만드는 시간과 신뢰를 비용으로만 본다.",
+        "transition_block": 63
+      }
+    ],
+    "npc_timeline": [
+      {
+        "name": "권도현",
+        "role": "세령그룹 회장, 아버지",
+        "first_block": 1,
+        "turning_points": [
+          {
+            "block": 1,
+            "event": "태하에게 세령컬처웍스를 던지며 시험대에 올린다."
+          },
+          {
+            "block": 18,
+            "event": "조건부 위임 계약의 진짜 성격이 드러난다."
+          },
+          {
+            "block": 63,
+            "event": "숨은 조항을 꺼내 경영권 박탈에 나선다."
+          },
+          {
+            "block": 70,
+            "event": "태하의 방식을 막지 못하고 결과를 인정한다."
+          }
+        ],
+        "final_status": "완전히 이해하지는 못하지만 태하 체제를 용인한다."
+      },
+      {
+        "name": "한도윤",
+        "role": "경영관리실장, 내부 감시자",
+        "first_block": 2,
+        "turning_points": [
+          {
+            "block": 16,
+            "event": "감사실과 손잡고 예산을 묶는다."
+          },
+          {
+            "block": 62,
+            "event": "외부 자본과 결합해 경영권 쿠데타를 시도한다."
+          },
+          {
+            "block": 68,
+            "event": "공신 라인의 부패 구조와 함께 명분이 붕괴한다."
+          }
+        ],
+        "final_status": "축출 또는 사실상 퇴장"
+      },
+      {
+        "name": "서민재",
+        "role": "A&R 총괄",
+        "first_block": 2,
+        "turning_points": [
+          {
+            "block": 15,
+            "event": "태하와 첫 전략적 합의를 만든다."
+          },
+          {
+            "block": 21,
+            "event": "아이돌 시스템 구축의 핵심 참모가 된다."
+          },
+          {
+            "block": 55,
+            "event": "성공의 대가를 두고 태하와 크게 충돌한다."
+          },
+          {
+            "block": 64,
+            "event": "태하 편에 남아 체제 재건을 돕는다."
+          }
+        ],
+        "final_status": "태하 체제의 제작 총괄"
+      },
+      {
+        "name": "오지혁",
+        "role": "현장 매니저",
+        "first_block": 3,
+        "turning_points": [
+          {
+            "block": 3,
+            "event": "태하의 실전 능력을 처음 확인한다."
+          },
+          {
+            "block": 17,
+            "event": "태하 편으로 완전히 선다."
+          },
+          {
+            "block": 35,
+            "event": "플랫폼 다변화 현장의 주축이 된다."
+          },
+          {
+            "block": 64,
+            "event": "위기 이후에도 남는 실전 오른팔로 기능한다."
+          }
+        ],
+        "final_status": "가장 오래 남는 현장 핵심"
+      },
+      {
+        "name": "윤서아",
+        "role": "몰락 직전 배우",
+        "first_block": 2,
+        "turning_points": [
+          {
+            "block": 4,
+            "event": "복귀 파일럿 실패로 다시 무너진다."
+          },
+          {
+            "block": 11,
+            "event": "악역 조연 오디션으로 복귀를 시작한다."
+          },
+          {
+            "block": 37,
+            "event": "과거 패턴의 여론전에 정면 대응한다."
+          },
+          {
+            "block": 44,
+            "event": "추락의 배후가 밝혀지며 서사적 복권을 이룬다."
+          }
+        ],
+        "final_status": "세령컬처웍스 배우 라인의 상징"
+      },
+      {
+        "name": "강이현",
+        "role": "천재 연습생, ORBIT 핵심",
+        "first_block": 1,
+        "turning_points": [
+          {
+            "block": 7,
+            "event": "태하가 대형 그룹의 씨앗으로 확정한다."
+          },
+          {
+            "block": 26,
+            "event": "팀을 찢는 위험성이 본격적으로 드러난다."
+          },
+          {
+            "block": 53,
+            "event": "글로벌 반응과 함께 팀 내부 균열도 커진다."
+          },
+          {
+            "block": 58,
+            "event": "팀을 구하면서도 동시에 무너뜨릴 수 있는 양날의 검임이 회수된다."
+          }
+        ],
+        "final_status": "글로벌 그룹의 중심이자 최대 리스크"
+      },
+      {
+        "name": "문선우",
+        "role": "호텔 계열 서브 셰프",
+        "first_block": 14,
+        "turning_points": [
+          {
+            "block": 33,
+            "event": "짧은 먹방형 콘텐츠로 첫 반응을 만든다."
+          },
+          {
+            "block": 45,
+            "event": "브랜드의 얼굴이 된다."
+          },
+          {
+            "block": 47,
+            "event": "위생 논란으로 핵심 위기를 맞는다."
+          },
+          {
+            "block": 66,
+            "event": "내부 비리 폭로의 연결고리가 된다."
+          }
+        ],
+        "final_status": "F&B 제국의 출발점"
+      },
+      {
+        "name": "최라희",
+        "role": "콘텐츠 기획자",
+        "first_block": 19,
+        "turning_points": [
+          {
+            "block": 31,
+            "event": "회사 체질을 바꾸는 콘텐츠 실험을 시작한다."
+          },
+          {
+            "block": 35,
+            "event": "플랫폼 다변화의 중추가 된다."
+          },
+          {
+            "block": 38,
+            "event": "회사 전체를 하나의 채널처럼 묶는다."
+          },
+          {
+            "block": 69,
+            "event": "자체 플랫폼 설계자로 안착한다."
+          }
+        ],
+        "final_status": "브랜딩과 플랫폼 전략의 핵심"
+      },
+      {
+        "name": "박재인",
+        "role": "스트리머 지망생",
+        "first_block": 31,
+        "turning_points": [
+          {
+            "block": 34,
+            "event": "플랫폼 제재로 첫 붕괴를 경험한다."
+          },
+          {
+            "block": 36,
+            "event": "습관형 팬덤을 만들며 체류 시간을 자산화한다."
+          },
+          {
+            "block": 57,
+            "event": "해외 팬덤 데이터 축의 기반이 된다."
+          },
+          {
+            "block": 69,
+            "event": "자체 팬덤 플랫폼의 씨앗으로 회수된다."
+          }
+        ],
+        "final_status": "데이터와 커뮤니티의 원형"
+      },
+      {
+        "name": "백승문",
+        "role": "제국엔터 전략본부장",
+        "first_block": 22,
+        "turning_points": [
+          {
+            "block": 23,
+            "event": "방송과 광고 라인을 막으며 존재감을 드러낸다."
+          },
+          {
+            "block": 37,
+            "event": "윤서아 관련 여론전을 다시 가동한다."
+          },
+          {
+            "block": 54,
+            "event": "태하가 놓쳤던 인재를 글로벌 카드로 내세운다."
+          },
+          {
+            "block": 68,
+            "event": "최종 폭로 국면에서 업계 명분을 잃는다."
+          }
+        ],
+        "final_status": "메인 업계 빌런에서 퇴조"
+      },
+      {
+        "name": "하은솔",
+        "role": "유통 계열 MD, 커머스 실무자",
+        "first_block": 45,
+        "turning_points": [
+          {
+            "block": 49,
+            "event": "브랜드 재정비와 자체 통제 구조를 함께 설계한다."
+          },
+          {
+            "block": 50,
+            "event": "생활형 소비 전환의 실무 축이 된다."
+          },
+          {
+            "block": 69,
+            "event": "플랫폼 커머스 구조를 완성한다."
+          }
+        ],
+        "final_status": "팬덤 소비 전환의 총괄"
+      },
+      {
+        "name": "마커스 리",
+        "role": "글로벌 플랫폼 아시아 총괄",
+        "first_block": 52,
+        "turning_points": [
+          {
+            "block": 55,
+            "event": "독점 계약을 통해 우호 파트너에서 적대적 플레이어로 전환한다."
+          },
+          {
+            "block": 60,
+            "event": "태하가 일부 조항을 되돌리며 주도권을 되찾기 시작한다."
+          },
+          {
+            "block": 69,
+            "event": "자체 플랫폼 출범으로 영향력을 잃는다."
+          }
+        ],
+        "final_status": "플랫폼 전쟁의 최종 적대자 축"
+      },
+      {
+        "name": "이세린",
+        "role": "M&A/IR 변호사",
+        "first_block": 61,
+        "turning_points": [
+          {
+            "block": 63,
+            "event": "구조조정 국면에서 중립적으로 등장한다."
+          },
+          {
+            "block": 66,
+            "event": "내부 비리 흐름을 법무·IR 언어로 정리해 태하 편에 선다."
+          },
+          {
+            "block": 68,
+            "event": "최종 반격의 실무 핵심이 된다."
+          }
+        ],
+        "final_status": "지배구조 반격의 키맨"
+      }
+    ],
+    "foreshadow_map": [
+      {
+        "id": "A",
+        "name": "조건부 위임 계약서",
+        "seed_block": 2,
+        "hint_blocks": [
+          18,
+          39
+        ],
+        "payoff_block": 63,
+        "payoff_meaning": "아버지가 준 것은 기회가 아니라 조건부 시험대였다는 사실이 드러난다."
+      },
+      {
+        "id": "B",
+        "name": "윤서아 추락의 배후",
+        "seed_block": 5,
+        "hint_blocks": [
+          22,
+          37
+        ],
+        "payoff_block": 44,
+        "payoff_meaning": "개인 스캔들이 아니라 업계 권력전의 희생양이었다는 진실이 회수된다."
+      },
+      {
+        "id": "C",
+        "name": "강이현의 천재성과 파괴성",
+        "seed_block": 7,
+        "hint_blocks": [
+          26,
+          53
+        ],
+        "payoff_block": 58,
+        "payoff_meaning": "ORBIT의 엔진이자 폭탄인 인물의 양면성이 현실화된다."
+      },
+      {
+        "id": "D",
+        "name": "태하가 놓친 첫 인재",
+        "seed_block": 8,
+        "hint_blocks": [
+          29,
+          41
+        ],
+        "payoff_block": 54,
+        "payoff_meaning": "태하의 감각도 완벽하지 않으며, 발굴 뒤 확보와 보호가 더 중요하다는 교훈이 된다."
+      },
+      {
+        "id": "E",
+        "name": "호텔 공급망 장부",
+        "seed_block": 14,
+        "hint_blocks": [
+          48,
+          62
+        ],
+        "payoff_block": 66,
+        "payoff_meaning": "셰프/F&B 위기가 그룹 내부 부패와 연결된다는 사실이 드러난다."
+      },
+      {
+        "id": "F",
+        "name": "박재인 팬덤 데이터",
+        "seed_block": 31,
+        "hint_blocks": [
+          36,
+          57
+        ],
+        "payoff_block": 69,
+        "payoff_meaning": "스트리머 사업에서 잡힌 체류 데이터가 자체 플랫폼의 기초 자산으로 회수된다."
+      }
+    ],
+    "partner_location_sector_distribution": {
+      "front_sector_by_arc": [
+        {
+          "arc": 1,
+          "front": [
+            "배우"
+          ],
+          "support": [
+            "연습생 발굴",
+            "행사 운영"
+          ]
+        },
+        {
+          "arc": 2,
+          "front": [
+            "배우 복귀"
+          ],
+          "support": [
+            "아이돌 프리데뷔",
+            "호텔 이벤트 인프라"
+          ]
+        },
+        {
+          "arc": 3,
+          "front": [
+            "아이돌 제작 시스템"
+          ],
+          "support": [
+            "드라마/예능"
+          ]
+        },
+        {
+          "arc": 4,
+          "front": [
+            "웹콘텐츠",
+            "유튜버/스트리머"
+          ],
+          "support": [
+            "짧은 포맷",
+            "라이브"
+          ]
+        },
+        {
+          "arc": 5,
+          "front": [
+            "셰프/F&B",
+            "브랜드"
+          ],
+          "support": [
+            "커머스"
+          ]
+        },
+        {
+          "arc": 6,
+          "front": [
+            "글로벌 그룹",
+            "해외 투어"
+          ],
+          "support": [
+            "라이선싱",
+            "팬덤 데이터"
+          ]
+        },
+        {
+          "arc": 7,
+          "front": [
+            "팬덤 플랫폼",
+            "IP 지주화"
+          ],
+          "support": [
+            "지배구조",
+            "전 사업군 통합"
+          ]
+        }
+      ],
+      "partners": [
+        {
+          "name": "다온미디어",
+          "type": "국내 드라마·디지털 제작사",
+          "key_blocks": [
+            11,
+            13,
+            27
+          ]
+        },
+        {
+          "name": "브릿지라이브",
+          "type": "라이브 이벤트·공연 운영사",
+          "key_blocks": [
+            24,
+            30,
+            35
+          ]
+        },
+        {
+          "name": "미각유통",
+          "type": "F&B 유통 파트너",
+          "key_blocks": [
+            45,
+            47,
+            49
+          ]
+        },
+        {
+          "name": "Nebula Asia",
+          "type": "아시아 디지털 유통 파트너",
+          "key_blocks": [
+            52,
+            55,
+            60
+          ]
+        },
+        {
+          "name": "Horizon Live",
+          "type": "글로벌 투어 프로모터",
+          "key_blocks": [
+            54,
+            55,
+            60
+          ]
+        },
+        {
+          "name": "Atlas Commerce",
+          "type": "글로벌 굿즈·커머스 운영사",
+          "key_blocks": [
+            57,
+            60,
+            69
+          ]
+        },
+        {
+          "name": "Veloce Studio",
+          "type": "현지화 콘텐츠 제작 파트너",
+          "key_blocks": [
+            52,
+            57,
+            69
+          ]
+        }
+      ],
+      "location_pool": [
+        "세령컬처웍스 낡은 사무실",
+        "지하 연습실",
+        "그룹 호텔 회의실",
+        "지방 행사장",
+        "케이블 드라마 오디션장",
+        "대학 축제 백스테이지",
+        "소형 공연장",
+        "웹콘텐츠 촬영 스튜디오",
+        "라이브 방송 룸",
+        "호텔 주방/백야드",
+        "팝업 행사장",
+        "공항 VIP 라운지",
+        "해외 쇼케이스 홀",
+        "투어 리허설 스테이지",
+        "해외 프로모션 회의실",
+        "팬 플랫폼 전산센터",
+        "세령그룹 이사회실"
+      ],
+      "deal_type_rotation": [
+        "미수금 회수",
+        "공동제작 계약",
+        "행사 대행 계약",
+        "캐스팅 계약",
+        "프리데뷔 투자",
+        "콘텐츠 선계약",
+        "공연 패키지 계약",
+        "전략 제휴",
+        "광고 협업",
+        "플랫폼 수익배분",
+        "브랜드 라이선싱",
+        "팝업 운영 계약",
+        "글로벌 유통 계약",
+        "투어 계약",
+        "지분 계약",
+        "플랫폼 출범 제휴"
+      ]
+    },
+    "arcs": [
+      {
+        "arc_id": "Arc 1",
+        "title": "폐급 엔터 접수",
+        "block_range": "1-10",
+        "time_window": "2009년 하반기",
+        "capital_target": {
+          "start": "120억",
+          "end": "190억"
+        },
+        "main_opponents": [
+          "권도현",
+          "한도윤"
+        ],
+        "new_npcs": [
+          "윤서아",
+          "강이현"
+        ],
+        "front_sectors": [
+          "배우"
+        ],
+        "support_sectors": [
+          "연습생 발굴",
+          "행사 운영"
+        ],
+        "emotion_curve": [
+          "굴욕",
+          "발견",
+          "첫 동맹",
+          "첫 실패",
+          "집착"
+        ],
+        "defeat_blocks": [
+          4,
+          9
+        ],
+        "quiet_blocks": [
+          6
+        ],
+        "block_slots": [
+          {
+            "block": 1,
+            "title": "쓰레기통 상속",
+            "function": "망나니로 낙인찍힌 태하와 세령컬처웍스의 출발 상태를 제시한다.",
+            "capital_after": "120억"
+          },
+          {
+            "block": 2,
+            "title": "유령 회사",
+            "function": "윤서아의 숨은 가능성과 조건부 위임 계약서를 심는다.",
+            "capital_after": "118억"
+          },
+          {
+            "block": 3,
+            "title": "감으로만 버는 건 아니다",
+            "function": "태하가 현장과 돈을 실제로 굴릴 수 있음을 증명한다.",
+            "capital_after": "126억"
+          },
+          {
+            "block": 4,
+            "title": "첫 패배",
+            "function": "윤서아 복귀 파일럿 실패로 감각만 믿고 달리면 죽는다는 교훈을 준다.",
+            "capital_after": "111억"
+          },
+          {
+            "block": 5,
+            "title": "누가 줄을 당기나",
+            "function": "윤서아 추락의 배후 복선을 심고 업계 라인전의 냄새를 잡는다.",
+            "capital_after": "122억"
+          },
+          {
+            "block": 6,
+            "title": "조용한 밤",
+            "function": "윤서아와 강이현, 태하 사이의 인간적 유대를 다진다.",
+            "capital_after": "125억"
+          },
+          {
+            "block": 7,
+            "title": "첫 판짜기",
+            "function": "태하의 핵심 능력이 발굴이 아니라 배치라는 점을 보여 준다.",
+            "capital_after": "139억"
+          },
+          {
+            "block": 8,
+            "title": "맞는 자리",
+            "function": "윤서아를 맞는 포지션에 놓아 첫 업계 반응을 만든다.",
+            "capital_after": "160억"
+          },
+          {
+            "block": 9,
+            "title": "가능성은 떴는데 돈은 샌다",
+            "function": "강이현 쇼케이스가 화제를 얻지만 수익은 남기지 못한다.",
+            "capital_after": "154억"
+          },
+          {
+            "block": 10,
+            "title": "계속할 이유",
+            "function": "회사를 죽이지 않을 최소한의 생존 증명을 확보한다.",
+            "capital_after": "190억"
+          }
+        ]
+      },
+      {
+        "arc_id": "Arc 2",
+        "title": "첫 증명",
+        "block_range": "11-20",
+        "time_window": "2010년",
+        "capital_target": {
+          "start": "190억",
+          "end": "380억"
+        },
+        "main_opponents": [
+          "한도윤",
+          "세령그룹 감사실"
+        ],
+        "new_npcs": [
+          "문선우",
+          "최라희"
+        ],
+        "front_sectors": [
+          "배우 복귀"
+        ],
+        "support_sectors": [
+          "아이돌 프리데뷔",
+          "호텔 이벤트 인프라"
+        ],
+        "emotion_curve": [
+          "희망",
+          "회복",
+          "불안",
+          "배신감",
+          "첫 환희"
+        ],
+        "defeat_blocks": [
+          16
+        ],
+        "quiet_blocks": [
+          12
+        ],
+        "block_slots": [
+          {
+            "block": 11,
+            "title": "다시 카메라 앞",
+            "function": "윤서아의 본격 복귀를 시작하고 서민재가 공개적으로 태하를 거든다.",
+            "capital_after": "203억"
+          },
+          {
+            "block": 12,
+            "title": "조용한 훈련",
+            "function": "윤서아와 강이현의 근본적인 불안 요소를 차분히 보여 준다.",
+            "capital_after": "208억"
+          },
+          {
+            "block": 13,
+            "title": "첫 반응",
+            "function": "윤서아 테스트 장면이 관계자 시사에서 반응을 얻는다.",
+            "capital_after": "232억"
+          },
+          {
+            "block": 14,
+            "title": "호텔 주방의 남자",
+            "function": "문선우와 호텔 공급망 장부 복선을 심는다.",
+            "capital_after": "241억"
+          },
+          {
+            "block": 15,
+            "title": "데뷔조를 고르다",
+            "function": "평범한 안전 대신 터질 조합을 택하며 회사 색을 정한다.",
+            "capital_after": "276억"
+          },
+          {
+            "block": 16,
+            "title": "감사실 칼날",
+            "function": "한도윤이 첫 본격 배신을 실행해 예산과 일정이 무너진다.",
+            "capital_after": "218억"
+          },
+          {
+            "block": 17,
+            "title": "우회로",
+            "function": "그룹 예산 대신 외부 공동제작과 현장 라인으로 판을 살린다.",
+            "capital_after": "245억"
+          },
+          {
+            "block": 18,
+            "title": "아버지의 진짜 조건",
+            "function": "조건부 위임 계약의 의미를 노골적으로 드러낸다.",
+            "capital_after": "260억"
+          },
+          {
+            "block": 19,
+            "title": "이름이 돌기 시작한다",
+            "function": "윤서아와 프리데뷔 라인 화제성이 묶이며 업계에 이름이 퍼진다.",
+            "capital_after": "308억"
+          },
+          {
+            "block": 20,
+            "title": "청산 보류",
+            "function": "회사가 정리 대상에서 성장 후보로 격상된다.",
+            "capital_after": "380억"
+          }
+        ]
+      },
+      {
+        "arc_id": "Arc 3",
+        "title": "시스템과 전쟁",
+        "block_range": "21-30",
+        "time_window": "2011년-2012년",
+        "capital_target": {
+          "start": "380억",
+          "end": "470억"
+        },
+        "main_opponents": [
+          "백승문",
+          "제국엔터"
+        ],
+        "new_npcs": [
+          "백승문"
+        ],
+        "front_sectors": [
+          "아이돌 제작 시스템"
+        ],
+        "support_sectors": [
+          "드라마/예능"
+        ],
+        "emotion_curve": [
+          "압박",
+          "윤리 갈등",
+          "정면충돌",
+          "깨달음",
+          "피로스 승리"
+        ],
+        "defeat_blocks": [
+          23
+        ],
+        "quiet_blocks": [
+          28
+        ],
+        "block_slots": [
+          {
+            "block": 21,
+            "title": "연습실에 규칙을 깔다",
+            "function": "감각만으로는 못 버틴다는 걸 인정하고 시스템을 깐다.",
+            "capital_after": "395억"
+          },
+          {
+            "block": 22,
+            "title": "윤서아의 그림자",
+            "function": "윤서아 추락 배후와 백승문의 존재를 연결한다.",
+            "capital_after": "418억"
+          },
+          {
+            "block": 23,
+            "title": "화제는 터졌는데 방송은 막혔다",
+            "function": "업계전쟁의 실제 벽을 피로스 승리 형태로 체감시킨다.",
+            "capital_after": "362억"
+          },
+          {
+            "block": 24,
+            "title": "방송 없이 팬을 모으다",
+            "function": "독립적인 팬 유입 구조를 첫 실험한다.",
+            "capital_after": "371억"
+          },
+          {
+            "block": 25,
+            "title": "팀을 만드는 일",
+            "function": "잘하는 개인이 아니라 같이 뜰 조합을 설계한다.",
+            "capital_after": "389억"
+          },
+          {
+            "block": 26,
+            "title": "천재는 팀을 찢는다",
+            "function": "강이현의 천재성과 파괴성 복선을 크게 전진시킨다.",
+            "capital_after": "408억"
+          },
+          {
+            "block": 27,
+            "title": "배우가 회사 간판이 되다",
+            "function": "윤서아의 배우 라인이 회사 신뢰도를 끌어올린다.",
+            "capital_after": "432억"
+          },
+          {
+            "block": 28,
+            "title": "새벽의 숨고르기",
+            "function": "태하가 스타를 버틸 시스템을 만드는 쪽으로 자각한다.",
+            "capital_after": "435억"
+          },
+          {
+            "block": 29,
+            "title": "놓친 이름",
+            "function": "태하가 놓친 인재가 경쟁사 카드로 성장했음을 확인한다.",
+            "capital_after": "451억"
+          },
+          {
+            "block": 30,
+            "title": "첫 업계전쟁의 승자",
+            "function": "세령컬처웍스를 불편한 신흥 세력으로 확정한다.",
+            "capital_after": "470억"
+          }
+        ]
+      },
+      {
+        "arc_id": "Arc 4",
+        "title": "방송 밖의 판",
+        "block_range": "31-40",
+        "time_window": "2013년-2015년",
+        "capital_target": {
+          "start": "470억",
+          "end": "760억"
+        },
+        "main_opponents": [
+          "백승문",
+          "플랫폼 광고 라인"
+        ],
+        "new_npcs": [
+          "박재인"
+        ],
+        "front_sectors": [
+          "웹콘텐츠",
+          "유튜버/스트리머"
+        ],
+        "support_sectors": [
+          "라이브",
+          "짧은 포맷"
+        ],
+        "emotion_curve": [
+          "해방감",
+          "속임수",
+          "역전",
+          "조용한 자신감",
+          "위기 고조"
+        ],
+        "defeat_blocks": [
+          34
+        ],
+        "quiet_blocks": [],
+        "block_slots": [
+          {
+            "block": 31,
+            "title": "카메라 한 대로도 스타는 뜬다",
+            "function": "최라희와 박재인을 중심으로 새 포맷 실험을 시작한다.",
+            "capital_after": "492억"
+          },
+          {
+            "block": 32,
+            "title": "포맷을 먼저 만든다",
+            "function": "콘텐츠를 납품물이 아니라 우리 IP 설명서로 재정의한다.",
+            "capital_after": "531억"
+          },
+          {
+            "block": 33,
+            "title": "주방도 무대가 된다",
+            "function": "문선우를 셰프 스타 IP의 전조로 보여 준다.",
+            "capital_after": "568억"
+          },
+          {
+            "block": 34,
+            "title": "플랫폼이 문을 닫다",
+            "function": "플랫폼 의존 구조의 취약함을 큰 실패로 체감시킨다.",
+            "capital_after": "507억"
+          },
+          {
+            "block": 35,
+            "title": "한 군데에 기대지 않는다",
+            "function": "플랫폼을 분산하고 현장과 커뮤니티를 동시에 굴린다.",
+            "capital_after": "549억"
+          },
+          {
+            "block": 36,
+            "title": "박재인, 이름이 아니라 습관이 되다",
+            "function": "체류 시간과 습관형 팬덤의 개념을 자산으로 만든다.",
+            "capital_after": "608억"
+          },
+          {
+            "block": 37,
+            "title": "누가 윤서아를 망가뜨렸나",
+            "function": "과거 여론전의 패턴을 현재와 연결한다.",
+            "capital_after": "655억"
+          },
+          {
+            "block": 38,
+            "title": "회사 전체가 하나의 채널이 된다",
+            "function": "세령컬처웍스 자체가 브랜드가 되는 전환점이다.",
+            "capital_after": "671억"
+          },
+          {
+            "block": 39,
+            "title": "숫자가 커질수록 냄새도 짙어진다",
+            "function": "계약 구조와 지분 문제의 불길함을 다시 끌어온다.",
+            "capital_after": "688억"
+          },
+          {
+            "block": 40,
+            "title": "방송이 아니라 시장을 흔들다",
+            "function": "광고와 유통 협업까지 묶으며 체질 전환을 완성한다.",
+            "capital_after": "760억"
+          }
+        ]
+      },
+      {
+        "arc_id": "Arc 5",
+        "title": "셰프와 스타 IP",
+        "block_range": "41-50",
+        "time_window": "2016년-2017년",
+        "capital_target": {
+          "start": "760억",
+          "end": "1280억"
+        },
+        "main_opponents": [
+          "백승문",
+          "브랜드 여론전 세력",
+          "그룹 내부 이권 라인"
+        ],
+        "new_npcs": [
+          "하은솔"
+        ],
+        "front_sectors": [
+          "셰프/F&B",
+          "브랜드"
+        ],
+        "support_sectors": [
+          "커머스"
+        ],
+        "emotion_curve": [
+          "확장감",
+          "자만",
+          "폭로",
+          "후유증",
+          "재결속"
+        ],
+        "defeat_blocks": [
+          47
+        ],
+        "quiet_blocks": [
+          42
+        ],
+        "block_slots": [
+          {
+            "block": 41,
+            "title": "주방에서 사람을 읽다",
+            "function": "문선우를 전면 카드로 올리고 놓친 인재 복선을 다시 흔든다.",
+            "capital_after": "788억"
+          },
+          {
+            "block": 42,
+            "title": "조용한 메뉴 테스트",
+            "function": "문선우의 캐릭터를 억지 예능화하지 않고 관찰한다.",
+            "capital_after": "796억"
+          },
+          {
+            "block": 43,
+            "title": "셰프도 팀이다",
+            "function": "주방과 콘텐츠, 공간을 하나의 패키지로 설계한다.",
+            "capital_after": "844억"
+          },
+          {
+            "block": 44,
+            "title": "윤서아의 과거를 되돌려주다",
+            "function": "윤서아 추락 배후 복선을 회수하며 배우 라인을 완성한다.",
+            "capital_after": "901억"
+          },
+          {
+            "block": 45,
+            "title": "문선우, 얼굴이 되다",
+            "function": "문선우를 셰프가 아닌 브랜드 얼굴로 띄운다.",
+            "capital_after": "973억"
+          },
+          {
+            "block": 46,
+            "title": "팬덤 데이터의 맛",
+            "function": "팬덤이 생활 소비로 전환될 수 있다는 구조를 잡는다.",
+            "capital_after": "1042억"
+          },
+          {
+            "block": 47,
+            "title": "위생 논란",
+            "function": "브랜드 확장 뒤에 오는 리스크를 크게 체감시킨다.",
+            "capital_after": "906억"
+          },
+          {
+            "block": 48,
+            "title": "장부 속 이상한 흐름",
+            "function": "호텔 공급망 장부 복선을 재점화한다.",
+            "capital_after": "941억"
+          },
+          {
+            "block": 49,
+            "title": "우리 것만 남긴다",
+            "function": "외부 브랜드 의존을 줄이고 자체 통제 구조를 만든다.",
+            "capital_after": "1104억"
+          },
+          {
+            "block": 50,
+            "title": "엔터가 아니라 생활권력",
+            "function": "회사를 스타 IP 복합기업으로 재정의한다.",
+            "capital_after": "1280억"
+          }
+        ]
+      },
+      {
+        "arc_id": "Arc 6",
+        "title": "글로벌 그룹 탄생",
+        "block_range": "51-60",
+        "time_window": "2018년-2020년",
+        "capital_target": {
+          "start": "1280억",
+          "end": "3600억"
+        },
+        "main_opponents": [
+          "마커스 리",
+          "글로벌 플랫폼",
+          "경쟁사 글로벌 카드"
+        ],
+        "new_npcs": [
+          "마커스 리"
+        ],
+        "front_sectors": [
+          "글로벌 그룹",
+          "해외 투어"
+        ],
+        "support_sectors": [
+          "라이선싱",
+          "팬덤 데이터"
+        ],
+        "emotion_curve": [
+          "환희",
+          "카운트다운",
+          "희생",
+          "고립",
+          "피로스 승리"
+        ],
+        "defeat_blocks": [
+          55
+        ],
+        "quiet_blocks": [
+          59
+        ],
+        "block_slots": [
+          {
+            "block": 51,
+            "title": "데뷔가 아니라 점화",
+            "function": "ORBIT을 국내보다 글로벌 체감 중심으로 포지셔닝한다.",
+            "capital_after": "1356억"
+          },
+          {
+            "block": 52,
+            "title": "언어보다 무드",
+            "function": "해외 커뮤니티에서 먼저 퍼지는 그룹 감각을 만든다.",
+            "capital_after": "1522억"
+          },
+          {
+            "block": 53,
+            "title": "세계는 열렸고, 사람은 닫힌다",
+            "function": "글로벌 반응과 함께 팀 내부 균열을 키운다.",
+            "capital_after": "1701억"
+          },
+          {
+            "block": 54,
+            "title": "돌아온 놓친 카드",
+            "function": "태하가 놓친 인재 복선을 경쟁사 글로벌 카드로 회수한다.",
+            "capital_after": "1812억"
+          },
+          {
+            "block": 55,
+            "title": "세계를 잡았지만 팀이 갈린다",
+            "function": "ORBIT의 폭발과 독소 계약, 멤버 소모를 동시에 터뜨린다.",
+            "capital_after": "1548억"
+          },
+          {
+            "block": 56,
+            "title": "웃는 얼굴 뒤의 계산서",
+            "function": "성공 뒤의 통제권 상실과 죄책감을 부각한다.",
+            "capital_after": "1667억"
+          },
+          {
+            "block": 57,
+            "title": "팬덤은 국경보다 오래 남는다",
+            "function": "박재인식 데이터 구조를 글로벌 팬덤에 접목한다.",
+            "capital_after": "2044억"
+          },
+          {
+            "block": 58,
+            "title": "강이현의 폭발성",
+            "function": "강이현 복선을 결정적으로 회수한다.",
+            "capital_after": "2281억"
+          },
+          {
+            "block": 59,
+            "title": "잠깐 멈춘 방",
+            "function": "태하가 더 크게보다 더 오래로 방향을 틀게 만든다.",
+            "capital_after": "2296억"
+          },
+          {
+            "block": 60,
+            "title": "세계 무대의 증명",
+            "function": "세령컬처웍스를 수천억대 글로벌 플레이어로 격상한다.",
+            "capital_after": "3600억"
+          }
+        ]
+      },
+      {
+        "arc_id": "Arc 7",
+        "title": "엔터 제국과 승계",
+        "block_range": "61-70",
+        "time_window": "2020년-2022년",
+        "capital_target": {
+          "start": "3600억",
+          "end": "6800억"
+        },
+        "main_opponents": [
+          "권도현",
+          "한도윤",
+          "공신 라인",
+          "외부 자본"
+        ],
+        "new_npcs": [
+          "이세린"
+        ],
+        "front_sectors": [
+          "팬덤 플랫폼",
+          "IP 지주화"
+        ],
+        "support_sectors": [
+          "지배구조",
+          "전 사업군 통합"
+        ],
+        "emotion_curve": [
+          "붕괴 위기",
+          "동맹 재편",
+          "폭로",
+          "재탄생",
+          "최종 승리"
+        ],
+        "defeat_blocks": [
+          63
+        ],
+        "quiet_blocks": [
+          67
+        ],
+        "block_slots": [
+          {
+            "block": 61,
+            "title": "축하가 끝난 자리",
+            "function": "성공 직후 회사가 회수 대상 자산이 되는 분위기를 만든다.",
+            "capital_after": "3744억"
+          },
+          {
+            "block": 62,
+            "title": "공신들이 움직인다",
+            "function": "한도윤과 외부 자본이 결합한 구조조정 라인을 노출한다.",
+            "capital_after": "3812억"
+          },
+          {
+            "block": 63,
+            "title": "빼앗기는 날",
+            "function": "조건부 위임 계약 복선을 회수하며 지배권 패배를 준다.",
+            "capital_after": "3146억"
+          },
+          {
+            "block": 64,
+            "title": "남는 사람들",
+            "function": "핵심 NPC들이 태하 편에 남으며 진짜 자산이 신뢰임을 증명한다.",
+            "capital_after": "3288억"
+          },
+          {
+            "block": 65,
+            "title": "반격의 방식",
+            "function": "지분전 대신 IP와 팬 접점을 무기로 우회 반격을 시작한다.",
+            "capital_after": "3562억"
+          },
+          {
+            "block": 66,
+            "title": "장부가 입을 열다",
+            "function": "호텔 공급망 장부 복선을 최종 폭로 카드로 회수한다.",
+            "capital_after": "4021억"
+          },
+          {
+            "block": 67,
+            "title": "조용한 선택",
+            "function": "태하가 인정이 아니라 산업 표준화를 최종 목표로 확정한다.",
+            "capital_after": "4050억"
+          },
+          {
+            "block": 68,
+            "title": "시장을 움직이는 폭로",
+            "function": "부패 구조 폭로와 사업 논리를 묶어 공신 라인의 명분을 무너뜨린다.",
+            "capital_after": "5112억"
+          },
+          {
+            "block": 69,
+            "title": "우리 플랫폼",
+            "function": "박재인 팬덤 데이터 복선을 자체 플랫폼과 커머스로 회수한다.",
+            "capital_after": "6214억"
+          },
+          {
+            "block": 70,
+            "title": "인정이 아니라 표준",
+            "function": "세령컬처웍스를 스타 IP 대기업이자 산업 표준으로 완성한다.",
+            "capital_after": "6800억"
+          }
+        ]
+      }
+    ]
+  }
+}

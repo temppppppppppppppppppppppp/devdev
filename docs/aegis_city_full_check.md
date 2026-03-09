@@ -1,0 +1,622 @@
+# TR Batch Check 1-70
+
+## Summary
+- unresolved P0: 0
+- unresolved P1: 268
+- unresolved P2: 67
+- autofixed: 274
+
+## P0
+- Block 2 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 2 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 3 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='160억', current='160억'
+- Block 3 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=160억, after=198억, delta=+30억
+- Block 3 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 3 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 4 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='198억', current='198억'
+- Block 4 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=198억, after=244억, delta=+30억
+- Block 4 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 4 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 5 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='244억', current='244억'
+- Block 5 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=244억, after=305억, delta=+37억
+- Block 5 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 5 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 6 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='305억', current='305억'
+- Block 6 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=305억, after=376억, delta=+46억
+- Block 6 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 6 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 7 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='376억', current='376억'
+- Block 7 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=376억, after=456억, delta=+56억
+- Block 7 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 7 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 8 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='456억', current='456억'
+- Block 8 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=456억, after=544억, delta=+66억
+- Block 8 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 8 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 9 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='544억', current='544억'
+- Block 9 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=544억, after=642억, delta=+78억
+- Block 9 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 9 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 10 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='642억', current='642억'
+- Block 10 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=642억, after=750억, delta=+92억
+- Block 10 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 10 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 11 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='750억', current='750억'
+- Block 11 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=750억, after=866억, delta=+106억
+- Block 11 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 11 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 12 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='866억', current='866억'
+- Block 12 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=866억, after=991억, delta=+121억
+- Block 12 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 12 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 13 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='991억', current='991억'
+- Block 13 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=991억, after=1106억, delta=+109억
+- Block 13 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 13 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 14 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='1106억', current='1106억'
+- Block 14 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=1106억, after=1269억, delta=+155억
+- Block 14 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 14 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 15 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='1269억', current='1269억'
+- Block 15 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=1269억, after=1416억, delta=+140억
+- Block 15 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 15 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 16 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='1416억', current='1416억'
+- Block 16 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=1416억, after=1580억, delta=+156억
+- Block 16 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 16 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 17 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='1580억', current='1580억'
+- Block 17 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=1580억, after=1762억, delta=+174억
+- Block 17 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 17 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 18 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='1762억', current='1762억'
+- Block 18 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=1762억, after=1965억, delta=+194억
+- Block 18 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 18 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 19 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='1965억', current='1965억'
+- Block 19 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=1965억, after=2191억, delta=+217억
+- Block 19 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 19 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 20 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='2191억', current='2191억'
+- Block 20 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=2191억, after=2443억, delta=+242억
+- Block 20 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 20 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 21 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='2443억', current='2443억'
+- Block 21 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=2443억, after=2722억, delta=+269억
+- Block 21 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 21 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 22 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='2722억', current='2722억'
+- Block 22 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=2722억, after=3033억, delta=+300억
+- Block 22 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 22 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 23 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='3033억', current='3033억'
+- Block 23 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=3033억, after=3378억, delta=+334억
+- Block 23 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 23 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 24 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='3378억', current='3378억'
+- Block 24 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=3378억, after=3762억, delta=+372억
+- Block 24 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 24 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 25 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='3762억', current='3762억'
+- Block 25 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=3762억, after=4189억, delta=+415억
+- Block 25 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 25 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 26 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='4189억', current='4189억'
+- Block 26 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=4189억, after=4664억, delta=+462억
+- Block 26 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 26 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 27 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='4664억', current='4664억'
+- Block 27 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=4664억, after=5191억, delta=+514억
+- Block 27 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 27 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 28 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='5191억', current='5191억'
+- Block 28 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=5191억, after=5777억, delta=+572억
+- Block 28 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 28 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 29 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='5777억', current='5777억'
+- Block 29 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=5777억, after=6428억, delta=+637억
+- Block 29 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 29 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 30 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='6428억', current='6428억'
+- Block 30 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=6428억, after=7151억, delta=+708억
+- Block 30 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 30 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 31 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='7151억', current='7151억'
+- Block 31 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=7151억, after=7954억, delta=+788억
+- Block 31 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 31 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 32 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='7954억', current='7954억'
+- Block 32 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=7954억, after=8846억, delta=+876억
+- Block 32 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 32 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 33 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='8846억', current='8846억'
+- Block 33 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=8846억, after=9836억, delta=+974억
+- Block 33 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 33 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 34 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='9836억', current='9836억'
+- Block 34 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=9836억, after=1조 936억, delta=+1083억
+- Block 34 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 34 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 35 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='1조 936억', current='1조 936억'
+- Block 35 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=1조 936억, after=1조 2157억, delta=+1204억
+- Block 35 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 35 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 36 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='1조 2157억', current='1조 2157억'
+- Block 36 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=1조 2157억, after=1조 3514억, delta=+1339억
+- Block 36 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 36 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 37 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='1조 3514억', current='1조 3514억'
+- Block 37 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=1조 3514억, after=1조 5020억, delta=+1488억
+- Block 37 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 37 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 38 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='1조 5020억', current='1조 5020억'
+- Block 38 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=1조 5020억, after=1조 6693억, delta=+1654억
+- Block 38 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 38 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 39 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='1조 6693억', current='1조 6693억'
+- Block 39 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=1조 6693억, after=1조 8550억, delta=+1838억
+- Block 39 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 39 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 40 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='1조 8550억', current='1조 8550억'
+- Block 40 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=1조 8550억, after=2조 612억, delta=+2042억
+- Block 40 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 40 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 41 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='2조 612억', current='2조 612억'
+- Block 41 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=2조 612억, after=2조 2901억, delta=+2269억
+- Block 41 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 41 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 42 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='2조 2901억', current='2조 2901억'
+- Block 42 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=2조 2901억, after=2조 5443억, delta=+2521억
+- Block 42 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 42 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 43 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='2조 5443억', current='2조 5443억'
+- Block 43 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=2조 5443억, after=2조 8265억, delta=+2801억
+- Block 43 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 43 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 44 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='2조 8265억', current='2조 8265억'
+- Block 44 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=2조 8265억, after=3조 1398억, delta=+3111억
+- Block 44 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 44 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 45 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='3조 1398억', current='3조 1398억'
+- Block 45 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=3조 1398억, after=3조 4876억, delta=+3456억
+- Block 45 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 45 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 46 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='3조 4876억', current='3조 4876억'
+- Block 46 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=3조 4876억, after=3조 8737억, delta=+3838억
+- Block 46 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 46 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 47 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='3조 8737억', current='3조 8737억'
+- Block 47 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=3조 8737억, after=4조 3023억, delta=+4263억
+- Block 47 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 47 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 48 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='4조 3023억', current='4조 3023억'
+- Block 48 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=4조 3023억, after=4조 7782억, delta=+4735억
+- Block 48 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 48 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 49 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='4조 7782억', current='4조 7782억'
+- Block 49 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=4조 7782억, after=5조 3064억, delta=+5258억
+- Block 49 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 49 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 50 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='5조 3064억', current='5조 3064억'
+- Block 50 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=5조 3064억, after=5조 8928억, delta=+5839억
+- Block 50 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 50 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 51 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='5조 8928억', current='5조 8928억'
+- Block 51 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=5조 8928억, after=6조 5437억, delta=+6484억
+- Block 51 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 51 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 52 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='6조 5437억', current='6조 5437억'
+- Block 52 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=6조 5437억, after=7조 2663억, delta=+7200억
+- Block 52 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 52 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 53 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='7조 2663억', current='7조 2663억'
+- Block 53 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=7조 2663억, after=8조 684억, delta=+7995억
+- Block 53 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 53 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 54 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='8조 684억', current='8조 684억'
+- Block 54 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=8조 684억, after=8조 9589억, delta=+8878억
+- Block 54 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 54 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 55 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='8조 9589억', current='8조 9589억'
+- Block 55 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=8조 9589억, after=9조 9473억, delta=+9857억
+- Block 55 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 55 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 56 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='9조 9473억', current='9조 9473억'
+- Block 56 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=9조 9473억, after=11조 446억, delta=+1조 945억
+- Block 56 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 56 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 57 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='11조 446억', current='11조 446억'
+- Block 57 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=11조 446억, after=12조 2626억, delta=+1조 2152억
+- Block 57 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 57 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 58 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='12조 2626억', current='12조 2626억'
+- Block 58 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=12조 2626억, after=13조 6147억, delta=+1조 3492억
+- Block 58 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 58 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 59 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='13조 6147억', current='13조 6147억'
+- Block 59 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=13조 6147억, after=15조 1155억, delta=+1조 4979억
+- Block 59 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 59 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 60 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='15조 1155억', current='15조 1155억'
+- Block 60 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=15조 1155억, after=16조 7815억, delta=+1조 6630억
+- Block 60 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 60 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 61 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='16조 7815억', current='16조 7815억'
+- Block 61 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=16조 7815억, after=18조 6307억, delta=+1조 8462억
+- Block 61 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 61 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 62 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='18조 6307억', current='18조 6307억'
+- Block 62 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=18조 6307억, after=20조 6835억, delta=+2조 497억
+- Block 62 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 62 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 63 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='20조 6835억', current='20조 6835억'
+- Block 63 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=20조 6835억, after=22조 9621억, delta=+2조 2755억
+- Block 63 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 63 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 64 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='22조 9621억', current='22조 9621억'
+- Block 64 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=22조 9621억, after=25조 4914억, delta=+2조 5261억
+- Block 64 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 64 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 65 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='25조 4914억', current='25조 4914억'
+- Block 65 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=25조 4914억, after=28조 2990억, delta=+2조 8044억
+- Block 65 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 65 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 66 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='28조 2990억', current='28조 2990억'
+- Block 66 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=28조 2990억, after=31조 4155억, delta=+3조 1132억
+- Block 66 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 66 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 67 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='31조 4155억', current='31조 4155억'
+- Block 67 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=31조 4155억, after=34조 8748억, delta=+3조 4560억
+- Block 67 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 67 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 68 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='34조 8748억', current='34조 8748억'
+- Block 68 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=34조 8748억, after=38조 7148억, delta=+3조 8366억
+- Block 68 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 68 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 69 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='38조 7148억', current='38조 7148억'
+- Block 69 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=38조 7148억, after=42조 9772억, delta=+4조 2590억
+- Block 69 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 69 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+- Block 70 `CAP-001` [fixed]: capital_before가 직전 capital_after와 이어지지 않는다. prev='42조 9772억', current='42조 9772억'
+- Block 70 `CAP-004` [fixed]: capital_delta가 계산식과 다르다. before=42조 9772억, after=47조 7085억, delta=+4조 7278억
+- Block 70 `REL-001` [fixed]: 이은호 인프라본부장 before가 직전 after와 다르다.
+- Block 70 `REL-001` [fixed]: 한지민 정책협력실장 before가 직전 after와 다르다.
+
+## P1
+- Block 2 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 2 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 2 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 3 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 3 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 3 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 3 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 4 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 4 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 4 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 4 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 5 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 5 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 5 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 5 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 6 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 6 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 6 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 6 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 7 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 7 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 7 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 7 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 8 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 8 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 8 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 8 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 9 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 9 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 9 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 9 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 10 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 10 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 10 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 10 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 11 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 11 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 11 `LANG-001`: foreshadow[1]의 한국어 비율이 낮다.
+- Block 12 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 12 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 12 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 13 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 13 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 13 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 13 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 14 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 14 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 14 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 14 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 15 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 15 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 15 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 15 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 16 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 16 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 16 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 16 `LANG-001`: foreshadow[1]의 한국어 비율이 낮다.
+- Block 16 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 17 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 17 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 17 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 17 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 18 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 18 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 18 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 18 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 19 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 19 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 19 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 19 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 20 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 20 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 20 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 20 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 21 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 21 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 21 `LANG-001`: foreshadow[1]의 한국어 비율이 낮다.
+- Block 22 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 22 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 22 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 23 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 23 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 23 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 23 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 24 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 24 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 24 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 24 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 25 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 25 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 25 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 25 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 26 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 26 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 26 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 26 `LANG-001`: foreshadow[1]의 한국어 비율이 낮다.
+- Block 26 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 27 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 27 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 27 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 27 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 28 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 28 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 28 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 28 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 29 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 29 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 29 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 29 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 30 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 30 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 30 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 30 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 31 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 31 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 31 `LANG-001`: foreshadow[1]의 한국어 비율이 낮다.
+- Block 32 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 32 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 32 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 33 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 33 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 33 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 33 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 34 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 34 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 34 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 34 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 35 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 35 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 35 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 35 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 36 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 36 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 36 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 36 `LANG-001`: foreshadow[1]의 한국어 비율이 낮다.
+- Block 36 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 37 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 37 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 37 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 37 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 38 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 38 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 38 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 38 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 39 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 39 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 39 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 39 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 40 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 40 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 40 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 40 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 41 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 41 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 42 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 42 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 42 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 43 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 43 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 43 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 43 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 44 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 44 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 44 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 44 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 45 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 45 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 45 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 45 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 46 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 46 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 46 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 46 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 47 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 47 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 47 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 47 `LANG-001`: foreshadow[1]의 한국어 비율이 낮다.
+- Block 47 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 48 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 48 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 48 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 48 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 49 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 49 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 49 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 49 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 50 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 50 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 50 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 50 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 51 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 51 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 52 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 52 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 52 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 52 `LANG-001`: foreshadow[1]의 한국어 비율이 낮다.
+- Block 53 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 53 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 53 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 53 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 54 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 54 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 54 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 54 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 55 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 55 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 55 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 55 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 56 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 56 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 56 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 56 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 57 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 57 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 57 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 57 `LANG-001`: foreshadow[1]의 한국어 비율이 낮다.
+- Block 57 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 58 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 58 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 58 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 58 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 59 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 59 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 59 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 59 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 60 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 60 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 60 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 60 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 61 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 61 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 62 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 62 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 62 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 62 `LANG-001`: foreshadow[1]의 한국어 비율이 낮다.
+- Block 63 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 63 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 63 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 63 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 64 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 64 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 64 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 64 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 65 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 65 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 65 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 65 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 66 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 66 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 66 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 66 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 67 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 67 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 67 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 67 `LANG-001`: foreshadow[1]의 한국어 비율이 낮다.
+- Block 67 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 68 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 68 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 68 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 68 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 69 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 69 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 69 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 69 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+- Block 70 `REL-002`: 이은호 인프라본부장 관계가 이번 블록에서 변하지 않았다.
+- Block 70 `REL-002`: 한지민 정책협력실장 관계가 이번 블록에서 변하지 않았다.
+- Block 70 `CALL-001`: callback이 기계식 carry-over 패턴이다.
+- Block 70 `LEV-001`: leverage_used 동일 세트가 3회 이상 반복되었다.
+
+## P2
+- Block 6 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 세종 정책협의실
+- Block 7 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 서울 인프라본부
+- Block 8 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 부산 현장통합관제실
+- Block 9 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 인천 신도시 PMO
+- Block 10 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 두바이 파트너 오피스
+- Block 11 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 세종 정책협의실
+- Block 12 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 서울 인프라본부
+- Block 13 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 부산 현장통합관제실
+- Block 14 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 인천 신도시 PMO
+- Block 15 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 두바이 파트너 오피스
+- Block 16 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 세종 정책협의실
+- Block 17 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 서울 인프라본부
+- Block 18 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 부산 현장통합관제실
+- Block 19 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 인천 신도시 PMO
+- Block 20 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 두바이 파트너 오피스
+- Block 21 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 세종 정책협의실
+- Block 22 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 서울 인프라본부
+- Block 23 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 부산 현장통합관제실
+- Block 24 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 인천 신도시 PMO
+- Block 25 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 두바이 파트너 오피스
+- Block 26 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 세종 정책협의실
+- Block 27 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 서울 인프라본부
+- Block 28 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 부산 현장통합관제실
+- Block 29 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 인천 신도시 PMO
+- Block 30 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 두바이 파트너 오피스
+- Block 31 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 세종 정책협의실
+- Block 32 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 서울 인프라본부
+- Block 33 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 부산 현장통합관제실
+- Block 34 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 인천 신도시 PMO
+- Block 35 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 두바이 파트너 오피스
+- Block 36 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 세종 정책협의실
+- Block 37 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 서울 인프라본부
+- Block 38 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 부산 현장통합관제실
+- Block 39 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 인천 신도시 PMO
+- Block 40 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 두바이 파트너 오피스
+- Block 41 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 세종 정책협의실
+- Block 42 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 서울 인프라본부
+- Block 43 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 부산 현장통합관제실
+- Block 44 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 인천 신도시 PMO
+- Block 45 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 두바이 파트너 오피스
+- Block 46 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 세종 정책협의실
+- Block 47 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 서울 인프라본부
+- Block 48 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 부산 현장통합관제실
+- Block 49 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 인천 신도시 PMO
+- Block 50 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 두바이 파트너 오피스
+- Block 51 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 세종 정책협의실
+- Block 52 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 서울 인프라본부
+- Block 53 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 부산 현장통합관제실
+- Block 54 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 인천 신도시 PMO
+- Block 55 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 두바이 파트너 오피스
+- Block 56 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 세종 정책협의실
+- Block 57 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 서울 인프라본부
+- Block 58 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 부산 현장통합관제실
+- Block 59 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 인천 신도시 PMO
+- Block 60 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 두바이 파트너 오피스
+- Block 61 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 세종 정책협의실
+- Block 62 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 서울 인프라본부
+- Block 63 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 부산 현장통합관제실
+- Block 64 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 인천 신도시 PMO
+- Block 65 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 두바이 파트너 오피스
+- Block 66 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 세종 정책협의실
+- Block 67 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 서울 인프라본부
+- Block 68 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 부산 현장통합관제실
+- Block 69 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 인천 신도시 PMO
+- Block 70 `LOC-001`: location이 최근 15블록 이내에 재등장했다: 두바이 파트너 오피스
+- 1-70 `CAP-005`: 이번 배치에 패배/하락 블록이 없다.
+- 1-70 `FS-003`: OPEN 복선이 140개라서 저지능 모델 관리 한도를 넘는다.

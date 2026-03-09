@@ -27,7 +27,7 @@ let fallbackTimer = null;
 let firstRun = false;
 let backendProcess = null;
 
-// ─── AppData 경로 ────────────────────────────────────────────────────────────
+// ─── 앱 경로 ─────────────────────────────────────────────────────────────────
 
 function getLocalAppDataRoot() {
   if (process.platform === "win32" && process.env.LOCALAPPDATA) {
@@ -38,6 +38,16 @@ function getLocalAppDataRoot() {
 
 function getAppDir() {
   return path.join(getLocalAppDataRoot(), "Geuldobi");
+}
+
+/** 작업 폴더 — 내 문서/글도비 (사용자가 쉽게 찾을 수 있는 경로) */
+function getWorkspaceDir() {
+  if (app.isPackaged) {
+    const documentsDir = app.getPath("documents");
+    return path.join(documentsDir, "글도비");
+  }
+  // 개발 모드: 프로젝트 루트 그대로
+  return path.resolve(__dirname, "..", "..");
 }
 
 const SETTINGS_PATH = path.join(getAppDir(), "settings.json");
@@ -77,8 +87,8 @@ function startBackend() {
     const resourcesPath = process.resourcesPath;
     cmd = path.join(resourcesPath, "backend", "backend.exe");
     args = [];
-    // engine/은 read-only (Program Files) → 작업 디렉토리는 AppData 사용
-    const workspace = path.join(getAppDir(), "workspace");
+    // 작업 디렉토리는 내 문서/글도비 (사용자 접근 용이)
+    const workspace = getWorkspaceDir();
     fs.mkdirSync(workspace, { recursive: true });
     cwd = workspace;
     console.log(`[backend] PROD mode — ${cmd}, workspace=${cwd}`);
@@ -91,7 +101,11 @@ function startBackend() {
         ...process.env,
         PYTHONIOENCODING: "utf-8",
         PYTHONUNBUFFERED: "1",
-        ...(app.isPackaged ? { GEULDOBI_WORKSPACE: path.join(getAppDir(), "workspace") } : {}),
+        GEULDOBI_DESKTOP_MODE: "1",
+        ...(app.isPackaged ? {
+          GEULDOBI_WORKSPACE: getWorkspaceDir(),
+          GEULDOBI_ENGINE_EXE: path.join(process.resourcesPath, "engine", "engine.exe"),
+        } : {}),
       },
       stdio: ["ignore", "pipe", "pipe"],
       windowsHide: true,
@@ -349,9 +363,9 @@ function getEngineRoot() {
 }
 
 function getMaterialRoot() {
-  // 패키징 모드: AppData (쓰기 가능), 개발 모드: 엔진 루트
+  // 패키징 모드: 내 문서/글도비 (사용자 접근 용이), 개발 모드: 엔진 루트
   if (app.isPackaged) {
-    return path.join(getAppDir(), "workspace");
+    return getWorkspaceDir();
   }
   return getEngineRoot();
 }
@@ -440,7 +454,7 @@ ipcMain.handle("material:delete-file", async (_, folder, fileName) => {
 
 function getProjectsDir() {
   if (app.isPackaged) {
-    return path.join(getAppDir(), "workspace", "projects");
+    return path.join(getWorkspaceDir(), "projects");
   }
   return path.join(getEngineRoot(), "projects");
 }
@@ -484,6 +498,21 @@ ipcMain.handle("project:create", async (_, name) => {
   } catch (err) {
     return { ok: false, message: err.message };
   }
+});
+
+// ─── 작업 폴더 열기 IPC ──────────────────────────────────────────────────────
+
+ipcMain.handle("workspace:open-folder", async () => {
+  const dir = app.isPackaged ? getWorkspaceDir() : path.resolve(__dirname, "..", "..");
+  fs.mkdirSync(dir, { recursive: true });
+  const { shell } = electron;
+  shell.openPath(dir);
+  return { ok: true, path: dir };
+});
+
+ipcMain.handle("workspace:get-path", async () => {
+  const dir = app.isPackaged ? getWorkspaceDir() : path.resolve(__dirname, "..", "..");
+  return { ok: true, path: dir };
 });
 
 // ─── 앱 수명주기 ─────────────────────────────────────────────────────────────

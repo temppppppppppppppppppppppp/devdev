@@ -60,7 +60,7 @@ OnPromptCallback = Callable[[str, list[str]], Awaitable[None]]
 _DEFAULT_CONFIRM_PADDING = 5
 
 # ─── Mode B 프롬프트 감지 타임아웃 (초) ──────────────────────────────────────
-_PROMPT_DETECT_TIMEOUT = 2.0
+_PROMPT_DETECT_TIMEOUT = 0.5
 
 # Mode B 대상 키 — 전체 (main_a.py boot 흐름이 인터랙티브)
 MODE_B_KEYS = frozenset({"0", "1", "2", "3", "4", "5", "6", "44", "77", "88", "99"})
@@ -139,11 +139,19 @@ class ProcessRunner:
         self._on_prompt = on_prompt
         self._mode = mode if mode else ("B" if key in MODE_B_KEYS else "A")
 
-        main_script = PROJECT_ROOT / "main_a.py"
-        if not main_script.exists():
-            self._state = "error"
-            logger.error("main_a.py not found at %s", main_script)
-            raise FileNotFoundError(f"main_a.py not found: {main_script}")
+        # frozen 모드: engine.exe 직접 실행 / 개발 모드: python main_a.py
+        engine_exe = os.environ.get("GEULDOBI_ENGINE_EXE")
+        if engine_exe:
+            if not Path(engine_exe).exists():
+                self._state = "error"
+                logger.error("engine.exe not found at %s", engine_exe)
+                raise FileNotFoundError(f"engine.exe not found: {engine_exe}")
+        else:
+            main_script = PROJECT_ROOT / "main_a.py"
+            if not main_script.exists():
+                self._state = "error"
+                logger.error("main_a.py not found at %s", main_script)
+                raise FileNotFoundError(f"main_a.py not found: {main_script}")
 
         stdin_data = self._build_stdin_sequence(key, sub_key, inputs)
         env = self._build_env(inputs)
@@ -153,15 +161,19 @@ class ProcessRunner:
             kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
 
         try:
-            # frozen 모드: 내장 Python 경로 사용
-            python_exe = os.environ.get("GEULDOBI_PYTHON_PATH", sys.executable)
-            # frozen 모드: 작업 디렉토리를 GEULDOBI_WORKSPACE로 분리
-            # (engine/은 read-only, projects/ 등 쓰기는 workspace에서)
+            # 작업 디렉토리: GEULDOBI_WORKSPACE (배포) 또는 PROJECT_ROOT (개발)
             work_dir = os.environ.get("GEULDOBI_WORKSPACE", str(PROJECT_ROOT))
+
+            if engine_exe:
+                # 배포 모드: engine.exe 직접 실행 (소스 비공개 바이너리)
+                cmd_args = [engine_exe]
+            else:
+                # 개발 모드: python -u main_a.py
+                python_exe = os.environ.get("GEULDOBI_PYTHON_PATH", sys.executable)
+                cmd_args = [python_exe, "-u", str(main_script)]
+
             self._process = await asyncio.create_subprocess_exec(
-                python_exe,
-                "-u",  # unbuffered stdout (TextIOWrapper 교체 시에도 유효)
-                str(main_script),
+                *cmd_args,
                 stdin=asyncio.subprocess.PIPE,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
@@ -355,7 +367,7 @@ class ProcessRunner:
 
         buffer = ""
         context_lines: list[str] = []  # 최근 N줄 (옵션 추출용)
-        max_context = 30
+        max_context = 120
 
         try:
             while True:
@@ -376,6 +388,7 @@ class ProcessRunner:
                             except Exception:
                                 logger.exception("on_prompt callback error")
                         buffer = ""
+                        context_lines.clear()  # 이전 메뉴 항목이 다음 프롬프트에 유입되지 않도록 초기화
                     continue
 
                 if not chunk:
@@ -493,7 +506,8 @@ class ProcessRunner:
             lines.append("")  # [Enter] 프로젝트 선택으로 이동
             project_index = inputs.get("project_index", 1)
             lines.append(str(project_index))
-            lines.append("y")  # 장르 불일치 확인
+            # 장르 불일치 확인("y")은 조건부 input()이므로 boot에 포함하지 않음.
+            # 불일치 발생 시 Mode B 프롬프트 감지가 처리한다.
             if key == "0" and sub_key:
                 lines.append("0")
                 lines.append(str(sub_key))
@@ -544,12 +558,6 @@ class ProcessRunner:
         env = os.environ.copy()
         env["PYTHONIOENCODING"] = "utf-8"
         env["PYTHONUNBUFFERED"] = "1"
-
-        # frozen 모드: engine 루트를 PYTHONPATH에 추가 (main_a.py import 해소)
-        engine_root = os.environ.get("GEULDOBI_ENGINE_ROOT")
-        if engine_root:
-            existing = env.get("PYTHONPATH", "")
-            env["PYTHONPATH"] = engine_root + (os.pathsep + existing if existing else "")
 
         inputs = inputs or {}
 
