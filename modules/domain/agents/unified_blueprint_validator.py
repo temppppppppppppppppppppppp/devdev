@@ -23,7 +23,7 @@ import json
 import logging
 import re
 
-from modules.core.constants import AIModels
+from modules.core.constants import AIModels, Stage2Limits
 
 from .base_agent import _get_agent_default_model
 
@@ -215,7 +215,7 @@ class UnifiedBlueprintValidator:
             # Arc 내 위치 계산
             ep_start = arc_data.get("ep_start", working_ep)
             arc_pos = working_ep - ep_start + 1
-            total_eps = arc_data.get("ep_count", 5)
+            total_eps = arc_data.get("ep_count", Stage2Limits.DEFAULT_EP_COUNT)
 
             # [V60.80] Python 경고를 Director 주의 포인트로 전달
             ensemble_meta = blueprint.get("_ensemble_meta", {})

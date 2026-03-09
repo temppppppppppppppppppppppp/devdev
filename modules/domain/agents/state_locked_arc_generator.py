@@ -92,7 +92,7 @@ STATE_EXTRACTION_PROMPT = """
 ARC_SYNTHESIS_PROMPT = """
 [V60.14 ARC SYNTHESIZER]
 
-5개 에피소드를 하나의 Arc로 통합하세요.
+에피소드들을 하나의 Arc로 통합하세요.
 
 ### 에피소드들
 {episodes}
@@ -110,11 +110,11 @@ ARC_SYNTHESIS_PROMPT = """
 ### 출력 (JSON)
 {{
     "arc_no": {arc_no},
-    "ep_count": 5,
+    "ep_count": "(ep_count)",
     "ep_start": {ep_start},
     "ep_end": {ep_end},
     "title": "Arc 제목",
-    "tactical_doc": "5개 에피소드 본문 통합 (제 N화: 형식 유지)",
+    "tactical_doc": "에피소드 본문 통합 (제 N화: 형식 유지)",
     "beat_sequence": ["제 N화: 핵심 비트", ...],
     "state_constraints": {{
         "arc_start_state": {arc_start_state},

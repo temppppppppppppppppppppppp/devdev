@@ -238,9 +238,9 @@ class UnifiedArcValidator(BaseAgent):
         """[#1] 분량 체크"""
         issues = []
         try:
-            ep_count = int(arc.get("ep_count", 5))
+            ep_count = int(arc.get("ep_count", Stage2Limits.DEFAULT_EP_COUNT))
         except (TypeError, ValueError):
-            ep_count = 5
+            ep_count = Stage2Limits.DEFAULT_EP_COUNT
         tactical = arc.get("tactical_doc", "")
         if not isinstance(tactical, str):
             tactical = str(tactical) if tactical else ""

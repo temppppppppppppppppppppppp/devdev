@@ -274,6 +274,9 @@ class ChiefWriterQualityGate:
         # 10. [메타 월] 집필 시스템 내부 용어 노출 체크
         issues.extend(self._check_system_term_exposure(content, genre_name))
 
+        # 12. [QI-1-A5] 엔딩 참신성 체크 — 직전 화 엔딩과 유사한 엔딩 반복 방지
+        issues.extend(self._check_ending_novelty(content, directive))
+
         # 11. [TF-H] 분량 재검사 — self-critique 루프에서 분량 부족 재감지
         _min_len = int(ManuscriptLimits.MIN_LENGTH)
         _target_len = int(ManuscriptLimits.TARGET_LENGTH)
@@ -699,7 +702,7 @@ class ChiefWriterQualityGate:
         return issues
 
     def _check_ending_hook_presence(self, manuscript: str, blueprint) -> list:
-        """[합격률] ending_hook 텍스트가 원고 말미에 있는지 확인."""
+        """[합격률+QI-1-A2] ending_hook 의미가 원고 말미에 반영되었는지 키워드 매칭으로 확인."""
         if not blueprint or not isinstance(blueprint, dict):
             return []
         ending_hook = str(blueprint.get("ending_hook", "") or "").strip()
@@ -707,16 +710,62 @@ class ChiefWriterQualityGate:
             return []
         # 원고 마지막 500자에서 확인 (ending_hook은 말미에 있어야 함)
         tail = manuscript[-500:] if len(manuscript) > 500 else manuscript
-        # 부분 일치 (ending_hook의 앞 20자가 포함되면 OK)
-        key_fragment = ending_hook[:20]
-        if key_fragment not in tail:
+        # [QI-1-A2] 리터럴 매칭 → 키워드 매칭 전환
+        keywords = [w for w in re.findall(r"[가-힣]{2,}|[a-zA-Z]{3,}", ending_hook) if len(w) >= 2]
+        top_keywords = keywords[:5]
+        if len(top_keywords) < 2:
+            return []  # 키워드 부족 → 검사 스킵
+        matched = sum(1 for kw in top_keywords if kw in tail)
+        if matched < 2:
             return [
                 {
                     "type": "missing_ending_hook",
-                    "description": f"ending_hook '{key_fragment}...' 이 원고 말미(마지막 500자)에서 발견되지 않음",
-                    "severity": "high",
+                    "description": (
+                        f"ending_hook 키워드({', '.join(top_keywords[:3])}...) 중 "
+                        f"{matched}개만 원고 말미에서 발견됨 (최소 2개 필요)"
+                    ),
+                    "severity": "medium",
                 }
             ]
+        return []
+
+    def _check_ending_novelty(self, manuscript: str, directive) -> list:
+        """[QI-1-A5] 엔딩 참신성 체크 — 직전 화 엔딩 문구와 3-gram 자카드 유사도 비교."""
+        if not directive or not manuscript:
+            return []
+        avoid_phrases = list(getattr(directive, "ending_avoid_phrases", []) or [])
+        if not avoid_phrases:
+            return []
+
+        tail = manuscript[-50:].strip() if len(manuscript) > 50 else manuscript.strip()
+        if len(tail) < 10:
+            return []
+
+        # 3-gram 생성
+        def _ngrams(text: str, n: int = 3) -> set[str]:
+            return {text[i : i + n] for i in range(max(0, len(text) - n + 1))}
+
+        tail_grams = _ngrams(tail)
+        if not tail_grams:
+            return []
+
+        for phrase in avoid_phrases[-3:]:
+            phrase_grams = _ngrams(str(phrase))
+            if not phrase_grams:
+                continue
+            intersection = len(tail_grams & phrase_grams)
+            union = len(tail_grams | phrase_grams)
+            if union > 0 and intersection / union > 0.6:
+                return [
+                    {
+                        "type": "ending_repetition",
+                        "description": (
+                            f"엔딩 문구가 직전 화와 유사합니다 (유사도 {intersection / union:.0%}). "
+                            "다른 유형의 엔딩(수사의문문·감각묘사·대사 중단·상황 반전)을 시도하세요."
+                        ),
+                        "severity": "medium",
+                    }
+                ]
         return []
 
     def _fix_manuscript_issues(self, manuscript: str, critique_result: dict, hud_report: str) -> str:

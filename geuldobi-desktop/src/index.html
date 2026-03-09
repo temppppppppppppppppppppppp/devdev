@@ -176,9 +176,21 @@
         border: 1px solid var(--line);
         border-radius: 10px;
         overflow: hidden;
-        background: #e2e8f0;
+        background: linear-gradient(180deg, #f8fafc 0%, #dbeafe 14%, #e2e8f0 34%, #cbd5e1 100%);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65), inset 0 -20px 36px rgba(15, 23, 42, 0.08);
         flex: 1;
         min-height: 200px;
+      }
+
+      .canvas-wrap::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background:
+          linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0) 22%),
+          linear-gradient(180deg, rgba(15,23,42,0) 66%, rgba(15,23,42,0.12));
+        z-index: 1;
       }
 
       #officeCanvas {
@@ -186,6 +198,8 @@
         width: 100%;
         height: 100%;
         image-rendering: pixelated;
+        position: relative;
+        z-index: 0;
       }
 
       .effect-banner {
@@ -232,6 +246,234 @@
         align-items: center;
         gap: 6px;
         flex-wrap: wrap;
+      }
+
+      .office-dashboard {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-top: 8px;
+      }
+
+      .mission-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .mission-card {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: linear-gradient(180deg, #ffffff, #f8fafc);
+        padding: 10px 12px;
+        min-height: 78px;
+        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
+      }
+
+      .mission-label {
+        display: block;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        color: var(--muted);
+        text-transform: uppercase;
+        margin-bottom: 6px;
+      }
+
+      .mission-title {
+        display: block;
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--text);
+        margin-bottom: 4px;
+      }
+
+      .mission-meta {
+        display: block;
+        font-size: 12px;
+        line-height: 1.45;
+        color: var(--muted);
+      }
+
+      .mission-card.prompt-live {
+        border-color: #f59e0b;
+        background: linear-gradient(180deg, #fffaf0, #fffbeb);
+      }
+
+      .mission-card.verdict-pass {
+        border-color: rgba(34, 197, 94, 0.35);
+      }
+
+      .mission-card.verdict-pwf {
+        border-color: rgba(234, 179, 8, 0.4);
+      }
+
+      .mission-card.verdict-reject {
+        border-color: rgba(239, 68, 68, 0.35);
+      }
+
+      .pipeline-strip {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .pipeline-chip {
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 7px 10px;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--muted);
+        background: #fff;
+        text-align: center;
+        transition: background 120ms ease, color 120ms ease, border-color 120ms ease, transform 120ms ease;
+      }
+
+      .pipeline-chip.is-past {
+        background: #eef2ff;
+        border-color: #c7d2fe;
+        color: #4338ca;
+      }
+
+      .pipeline-chip.is-active {
+        background: #0f172a;
+        border-color: #0f172a;
+        color: #fff;
+        transform: translateY(-1px);
+      }
+
+      .pipeline-chip.is-running {
+        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.14);
+      }
+
+      .agent-board {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .agent-card {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #fff;
+        padding: 9px 10px;
+        min-height: 90px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.03);
+      }
+
+      .agent-card.active {
+        border-color: #cbd5e1;
+        background: linear-gradient(180deg, #ffffff, #f8fafc);
+      }
+
+      .agent-card.speaking {
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+      }
+
+      .agent-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px;
+      }
+
+      .agent-name-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        min-width: 0;
+      }
+
+      .agent-dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 999px;
+        flex-shrink: 0;
+      }
+
+      .agent-name {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text);
+      }
+
+      .agent-state {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--muted);
+        white-space: nowrap;
+      }
+
+      .agent-role {
+        font-size: 11px;
+        color: var(--muted);
+      }
+
+      .agent-detail {
+        font-size: 12px;
+        line-height: 1.4;
+        color: var(--text);
+        min-height: 32px;
+      }
+
+      .agent-bubble-echo {
+        border-radius: 8px;
+        background: #f8fafc;
+        padding: 6px 8px;
+        font-size: 11px;
+        line-height: 1.35;
+        color: var(--muted);
+      }
+
+      .live-feed {
+        border: 1px dashed var(--line);
+        border-radius: 10px;
+        background: linear-gradient(180deg, #ffffff, #f8fafc);
+        padding: 8px 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-height: 72px;
+        max-height: 118px;
+        overflow: auto;
+      }
+
+      .live-feed-empty {
+        font-size: 12px;
+        color: var(--muted);
+        padding: 4px 0;
+      }
+
+      .live-event {
+        display: grid;
+        grid-template-columns: 56px minmax(0, 1fr);
+        gap: 8px;
+        align-items: start;
+      }
+
+      .live-event-time {
+        font-size: 11px;
+        color: #94a3b8;
+      }
+
+      .live-event-body {
+        min-width: 0;
+      }
+
+      .live-event-title {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text);
+      }
+
+      .live-event-meta {
+        font-size: 11px;
+        line-height: 1.4;
+        color: var(--muted);
       }
 
       .badge {
@@ -329,8 +571,9 @@
       }
 
       .log-row {
-        display: flex;
-        align-items: center;
+        display: grid;
+        grid-template-columns: 68px minmax(0, 1fr) auto;
+        align-items: start;
         gap: 8px;
         padding: 6px 4px;
         border-bottom: 1px solid #f1f5f9;
@@ -346,6 +589,43 @@
       .log-msg {
         color: #334155;
         flex: 1;
+        line-height: 1.45;
+        word-break: break-word;
+      }
+
+      .log-main {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .log-meta-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+      }
+
+      .log-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 2px 7px;
+        border-radius: 999px;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+      }
+
+      .log-chip-agent {
+        color: #0f172a;
+        background: #e2e8f0;
+      }
+
+      .log-chip-stage {
+        color: #334155;
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
       }
 
       .verdict-badge {
@@ -1136,6 +1416,12 @@
         .topbar {
           flex-wrap: wrap;
         }
+
+        .mission-grid,
+        .agent-board,
+        .pipeline-strip {
+          grid-template-columns: 1fr;
+        }
       }
     </style>
   </head>
@@ -1276,9 +1562,37 @@
               <canvas id="officeCanvas" width="640" height="360" aria-label="Office view"></canvas>
               <div id="effectBanner" class="effect-banner">채택</div>
             </div>
+            <div class="office-dashboard">
+              <div class="mission-grid">
+                <div class="mission-card" id="stageMissionCard">
+                  <span class="mission-label">Pipeline</span>
+                  <strong class="mission-title" id="currentStageLabel">대기</strong>
+                  <span class="mission-meta" id="currentStageDetail">실행 버튼을 기다리는 중</span>
+                </div>
+                <div class="mission-card" id="focusMissionCard">
+                  <span class="mission-label">Current Task</span>
+                  <strong class="mission-title" id="currentFocusLabel">앱 준비 중</strong>
+                  <span class="mission-meta" id="currentFocusMeta">백엔드 연결 전</span>
+                </div>
+                <div class="mission-card" id="promptMissionCard">
+                  <span class="mission-label">Prompt</span>
+                  <strong class="mission-title" id="promptStatusLabel">없음</strong>
+                  <span class="mission-meta" id="promptStatusMeta">대기 중인 입력 없음</span>
+                </div>
+                <div class="mission-card" id="verdictMissionCard">
+                  <span class="mission-label">Last Verdict</span>
+                  <strong class="mission-title" id="verdictSummary">없음</strong>
+                  <span class="mission-meta" id="verdictMeta">아직 심사 결과 없음</span>
+                </div>
+              </div>
+              <div class="pipeline-strip" id="pipelineStrip" aria-label="파이프라인 상태"></div>
+              <div class="agent-board" id="agentBoard" aria-label="에이전트 상태"></div>
+              <div class="live-feed" id="eventFeed" aria-label="실시간 주요 이벤트"></div>
+            </div>
             <div class="status-foot">
               <div class="badge" id="readyBadge">앱 초기화 대기</div>
               <div class="badge state-running" id="stateBadge">상태: RUNNING</div>
+              <div class="badge" id="runtimeBadge">경과: --:--</div>
               <div class="last-action" id="lastAction">최근 클릭: 없음</div>
             </div>
           </article>
@@ -1549,10 +1863,24 @@
       const effectBanner = document.getElementById("effectBanner");
       const readyBadge = document.getElementById("readyBadge");
       const stateBadge = document.getElementById("stateBadge");
+      const runtimeBadge = document.getElementById("runtimeBadge");
       const lastAction = document.getElementById("lastAction");
       const logStream = document.getElementById("logStream");
       const toggleSkip = document.getElementById("toggleSkip");
       const toggleMute = document.getElementById("toggleMute");
+      const currentStageLabel = document.getElementById("currentStageLabel");
+      const currentStageDetail = document.getElementById("currentStageDetail");
+      const currentFocusLabel = document.getElementById("currentFocusLabel");
+      const currentFocusMeta = document.getElementById("currentFocusMeta");
+      const promptStatusLabel = document.getElementById("promptStatusLabel");
+      const promptStatusMeta = document.getElementById("promptStatusMeta");
+      const verdictSummary = document.getElementById("verdictSummary");
+      const verdictMeta = document.getElementById("verdictMeta");
+      const pipelineStrip = document.getElementById("pipelineStrip");
+      const agentBoard = document.getElementById("agentBoard");
+      const eventFeed = document.getElementById("eventFeed");
+      const promptMissionCard = document.getElementById("promptMissionCard");
+      const verdictMissionCard = document.getElementById("verdictMissionCard");
       const menuButtons = document.querySelectorAll(".menu-btn:not(.stage0-sub-btn)");
 
       ctx.imageSmoothingEnabled = false;
@@ -1578,42 +1906,100 @@
         skipAnimation: false,
         mute: false,
         frame: 0,
-        currentStage: null   // "stage_0" | "stage_2" | "stage_3" | "stage_4" | "one_stop" | null
+        currentStage: null,   // "stage_0" | "stage_2" | "stage_3" | "stage_4" | "one_stop" | null
+        currentSubKey: null,
+        currentStageTitle: "대기",
+        currentStageSummary: "실행 버튼을 기다리는 중",
+        focusTitle: "앱 준비 중",
+        focusDetail: "백엔드 연결 전",
+        promptPending: false,
+        promptDetail: "대기 중인 입력 없음",
+        recentEvents: [],
+        lastVerdict: null,
+        lastVerdictScore: null,
+        backendConnected: false,
+        runStartedAt: null,
       };
+
+      const ACTION_META = {
+        stage_0: { title: "Stage 0", summary: "스타일/초기 셋업과 참조 자료를 준비하는 단계", short: "STYLE" },
+        stage_2: { title: "Stage 2 · Arc 설계", summary: "Analyst가 구조를 짜고 Director가 설계 품질을 본다", short: "ARC" },
+        stage_3: { title: "Stage 3 · Blueprint", summary: "에피소드 골격을 만들고 검증 체인을 통과시키는 단계", short: "BLUEPRINT" },
+        stage_4: { title: "Stage 4 · 원고 생산", summary: "Chief Writer 원고 작성과 Director 감사가 이어진다", short: "MANUSCRIPT" },
+        one_stop: { title: "One-Stop", summary: "Arc부터 원고까지 전체 파이프라인을 한 번에 실행", short: "FULL RUN" },
+        rollback: { title: "Rollback", summary: "이전 에피소드 기준으로 롤백을 수행", short: "ROLLBACK" },
+        wipe: { title: "Wipe", summary: "프로젝트 산출물을 초기화하는 위험 작업", short: "WIPE" },
+        reset: { title: "Reset", summary: "프로젝트 상태를 리셋하는 운영 작업", short: "RESET" },
+        rewind: { title: "Rewind", summary: "에피소드 진행을 되감는 운영 작업", short: "REWIND" },
+        stop: { title: "Stop", summary: "현재 실행 중인 작업을 중지", short: "STOP" },
+      };
+
+      const STAGE0_SUB_META = {
+        "1": { title: "Stage 0 · 기존 방식", summary: "Bible/Treatment를 골라 초기 설정을 진행", short: "SETUP" },
+        "2": { title: "Stage 0 · 컨셉 확장", summary: "컨셉에서 Bible을 생성하는 확장 경로", short: "CONCEPT" },
+        "3": { title: "Stage 0 · 역설계", summary: "기존 원고에서 설정을 추출하는 역설계 경로", short: "REVERSE" },
+        "4": { title: "Stage 0 · Bible 임포트", summary: "기존 Bible JSON을 가져와 초기 상태를 구성", short: "IMPORT" },
+        "5": { title: "Stage 0 · Block 확장", summary: "Treatment에 블록을 추가해 설계를 확장", short: "BLOCKS" },
+        "6": { title: "Stage 0 · 스타일 레퍼런스", summary: "참조 작품을 분석해 스타일 가이드를 만드는 경로", short: "STYLE REF" },
+      };
+
+      const PIPELINE_ORDER = ["stage_0", "stage_2", "stage_3", "stage_4", "one_stop"];
+
+      function resolveActionMeta(action, subKey) {
+        if (action === "stage_0" && subKey && STAGE0_SUB_META[subKey]) {
+          return STAGE0_SUB_META[subKey];
+        }
+        return ACTION_META[action] || { title: "대기", summary: "실행 버튼을 기다리는 중", short: "IDLE" };
+      }
 
       // 스테이지별 활성 에이전트 (실제 파이프라인 코드 기반 전수조사)
       const STAGE_AGENTS = {
-        stage_0:  ["manager"],                                          // 직접 LLM 호출, Manager=StageZeroManager 오케스트레이션만
+        stage_0:  ["manager", "analyst"],                               // 초기 셋업 + 스타일 분석
         stage_2:  ["director", "analyst", "critic", "manager"],         // Analyst+Director+Validators+StateTracker (ChiefWriter 미사용)
         stage_3:  ["writer", "director", "critic", "manager"],          // ThreePhaseBP=writer, Director=심사, Consensus=critic
         stage_4:  ["writer", "director", "critic", "manager"],          // ChiefWriter+Director+4Validators+StateTracker
         one_stop: ["writer", "director", "analyst", "critic", "manager"],
+        rollback: ["manager", "director"],
+        wipe: ["manager", "director"],
+        reset: ["manager", "director"],
+        rewind: ["manager", "director"],
       };
 
       const agents = [
         // 왼쪽 그룹 (2x2)
-        { name: "Writer",   x: 110, y: 140, spriteKey: "writer",   screenColor: "#60a5fa", gender: "F",
+        { name: "Writer",   role: "Chief Writer", x: 110, y: 140, spriteKey: "writer",   screenColor: "#60a5fa", gender: "F", idlePose: "sit", workPose: "sit",
           quotes: ["열심히 쓰는 중...", "이 장면 좋다!", "영감이 떠올랐어!", "커피 한 잔 더..."] },
-        { name: "Analyst",  x: 240, y: 140, spriteKey: "analyst",  screenColor: "#34d399", gender: "F",
+        { name: "Analyst",  role: "Arc / Style", x: 240, y: 140, spriteKey: "analyst",  screenColor: "#34d399", gender: "F", idlePose: "sit", workPose: "sit",
           quotes: ["데이터 분석 중~", "수치가 맞아!", "구조 확인 완료", "패턴 발견!"] },
-        { name: "Critic",   x: 110, y: 260, spriteKey: "critic",   screenColor: "#a78bfa", gender: "M",
+        { name: "Critic",   role: "Validator", x: 110, y: 260, spriteKey: "critic",   screenColor: "#a78bfa", gender: "M", idlePose: "sit", workPose: "sit",
           quotes: ["여기 모순 있어", "논리적으로...", "검토 완료!", "이건 좀..."] },
-        { name: "Manager",  x: 240, y: 260, spriteKey: "manager",  screenColor: "#fb923c", gender: "F",
+        { name: "Manager",  role: "Orchestrator", x: 240, y: 260, spriteKey: "manager",  screenColor: "#fb923c", gender: "F", idlePose: "sit", workPose: "idle",
           quotes: ["일정 관리 중!", "순조로워요~", "진행률 80%!", "화이팅!"] },
         // 오른쪽 독립 — 디렉터 (왕관)
-        { name: "Director", x: 480, y: 195, spriteKey: "director", screenColor: "#fbbf24", gender: "M", crown: true,
+        { name: "Director", role: "Quality Gate", x: 480, y: 195, spriteKey: "director", screenColor: "#fbbf24", gender: "M", crown: true, idlePose: "idle", workPose: "idle",
           quotes: ["품질이 최우선이다", "다시 써와", "합격!", "흠... 아쉽군"] },
       ];
       // 클릭 말풍선 상태
       let _clickBubble = { agentIdx: -1, text: "", timer: 0 };
-      // Director 심사 말풍선 (verdict 시 자동 표시)
-      let _directorBubble = { text: "", timer: 0 };
       // Director 스크롤 텍스트 (긴 분석 로그를 흘려보냄)
       let _directorScroll = { lines: [], timer: 0, lineIdx: 0 };
-      // Manager 로그 말풍선 (TF-38 등 파이프라인 상태)
-      let _managerBubble = { text: "", timer: 0 };
       // verdict 표시 리셋 타이머 (경합 방지용 단일 인스턴스)
       let _verdictResetTimer = null;
+
+      const agentRuntime = Object.fromEntries(
+        agents.map((agent) => [
+          agent.spriteKey,
+          {
+            status: "대기",
+            detail: "작업 요청 없음",
+            bubbleText: "",
+            bubbleColor: agent.screenColor,
+            bubbleTimer: 0,
+            intensity: 0.18,
+            updatedAt: 0,
+          }
+        ])
+      );
 
       function nowLabel() {
         return new Date().toLocaleTimeString("ko-KR", {
@@ -1624,19 +2010,309 @@
         });
       }
 
-      function appendLog(message, verdict) {
+      function shortenText(text, limit) {
+        if (!text) return "";
+        return text.length > limit ? text.slice(0, limit - 1) + "…" : text;
+      }
+
+      function formatDuration(ms) {
+        const total = Math.max(0, Math.floor(ms / 1000));
+        const minutes = String(Math.floor(total / 60)).padStart(2, "0");
+        const seconds = String(total % 60).padStart(2, "0");
+        return `${minutes}:${seconds}`;
+      }
+
+      function getCurrentStageAgents() {
+        return STAGE_AGENTS[officeState.currentStage] || [];
+      }
+
+      function getAgentDisplayName(agentKey) {
+        return agents.find((agent) => agent.spriteKey === agentKey)?.name || agentKey || "";
+      }
+
+      function setCurrentFocus(title, detail) {
+        officeState.focusTitle = title || "대기 중";
+        officeState.focusDetail = detail || "새 작업을 기다리는 중";
+        renderMissionBoard();
+      }
+
+      function setPromptState(pending, detail) {
+        officeState.promptPending = !!pending;
+        officeState.promptDetail = detail || (pending ? "사용자 입력을 기다리는 중" : "대기 중인 입력 없음");
+        renderMissionBoard();
+      }
+
+      function setVerdictState(verdict, score) {
+        officeState.lastVerdict = verdict || null;
+        officeState.lastVerdictScore = score || null;
+        renderMissionBoard();
+      }
+
+      function setActionState(action, label, subKey) {
+        const meta = resolveActionMeta(action, subKey);
+        officeState.currentStage = action;
+        officeState.currentSubKey = subKey || null;
+        officeState.currentStageTitle = label || meta.title;
+        officeState.currentStageSummary = meta.summary;
+        renderMissionBoard();
+        renderPipelineStrip();
+        renderAgentBoard();
+      }
+
+      function pushEventFeed(entry) {
+        if (!entry || !entry.title) return;
+        officeState.recentEvents.unshift({
+          time: entry.time || nowLabel(),
+          title: entry.title,
+          detail: entry.detail || "",
+          agent: entry.agent || null,
+        });
+        officeState.recentEvents = officeState.recentEvents.slice(0, 8);
+        renderEventFeed();
+      }
+
+      function renderPipelineStrip() {
+        pipelineStrip.innerHTML = "";
+        const currentIndex = PIPELINE_ORDER.indexOf(officeState.currentStage);
+        for (const key of PIPELINE_ORDER) {
+          const chip = document.createElement("div");
+          chip.className = "pipeline-chip";
+          chip.textContent = resolveActionMeta(key).title.replace("Stage ", "S");
+          const idx = PIPELINE_ORDER.indexOf(key);
+          if (currentIndex >= 0 && idx < currentIndex) chip.classList.add("is-past");
+          if (officeState.currentStage === key) {
+            chip.classList.add("is-active");
+            if (officeState.isRunning) chip.classList.add("is-running");
+          }
+          pipelineStrip.appendChild(chip);
+        }
+      }
+
+      function renderAgentBoard() {
+        agentBoard.innerHTML = "";
+        const activeSet = new Set(getCurrentStageAgents());
+        for (const agent of agents) {
+          const runtime = agentRuntime[agent.spriteKey];
+          const card = document.createElement("div");
+          card.className = "agent-card";
+          if (activeSet.has(agent.spriteKey)) card.classList.add("active");
+          if (runtime.bubbleTimer > 0) card.classList.add("speaking");
+
+          const head = document.createElement("div");
+          head.className = "agent-head";
+
+          const nameRow = document.createElement("div");
+          nameRow.className = "agent-name-row";
+
+          const dot = document.createElement("span");
+          dot.className = "agent-dot";
+          dot.style.background = agent.screenColor;
+
+          const name = document.createElement("span");
+          name.className = "agent-name";
+          name.textContent = agent.name;
+
+          nameRow.append(dot, name);
+
+          const state = document.createElement("span");
+          state.className = "agent-state";
+          state.textContent = runtime.status;
+
+          head.append(nameRow, state);
+
+          const role = document.createElement("div");
+          role.className = "agent-role";
+          role.textContent = agent.role;
+
+          const detail = document.createElement("div");
+          detail.className = "agent-detail";
+          detail.textContent = runtime.detail;
+
+          const bubble = document.createElement("div");
+          bubble.className = "agent-bubble-echo";
+          bubble.textContent = runtime.bubbleTimer > 0 ? `“${shortenText(runtime.bubbleText, 34)}”` : "최근 발화 없음";
+
+          card.append(head, role, detail, bubble);
+          agentBoard.appendChild(card);
+        }
+      }
+
+      function renderEventFeed() {
+        eventFeed.innerHTML = "";
+        if (officeState.recentEvents.length === 0) {
+          const empty = document.createElement("div");
+          empty.className = "live-feed-empty";
+          empty.textContent = "중요 이벤트가 들어오면 여기서 요약됩니다.";
+          eventFeed.appendChild(empty);
+          return;
+        }
+
+        for (const entry of officeState.recentEvents.slice(0, 5)) {
+          const row = document.createElement("div");
+          row.className = "live-event";
+
+          const time = document.createElement("div");
+          time.className = "live-event-time";
+          time.textContent = entry.time;
+
+          const body = document.createElement("div");
+          body.className = "live-event-body";
+
+          const title = document.createElement("div");
+          title.className = "live-event-title";
+          title.textContent = entry.agent ? `[${getAgentDisplayName(entry.agent)}] ${entry.title}` : entry.title;
+
+          const meta = document.createElement("div");
+          meta.className = "live-event-meta";
+          meta.textContent = entry.detail || " ";
+
+          body.append(title, meta);
+          row.append(time, body);
+          eventFeed.appendChild(row);
+        }
+      }
+
+      function renderMissionBoard() {
+        currentStageLabel.textContent = officeState.currentStageTitle;
+        currentStageDetail.textContent = officeState.currentStageSummary;
+
+        currentFocusLabel.textContent = officeState.focusTitle;
+        currentFocusMeta.textContent = officeState.focusDetail;
+
+        promptStatusLabel.textContent = officeState.promptPending ? "입력 대기" : "없음";
+        promptStatusMeta.textContent = officeState.promptDetail;
+        promptMissionCard.classList.toggle("prompt-live", officeState.promptPending);
+
+        verdictMissionCard.classList.remove("verdict-pass", "verdict-pwf", "verdict-reject");
+        if (!officeState.lastVerdict) {
+          verdictSummary.textContent = "없음";
+          verdictMeta.textContent = "아직 심사 결과 없음";
+        } else {
+          const verdictLabel = officeState.lastVerdict === "PASS_WITH_FIX" ? "PASS_WITH_FIX" : officeState.lastVerdict;
+          verdictSummary.textContent = officeState.lastVerdictScore ? `${verdictLabel} · ${officeState.lastVerdictScore}점` : verdictLabel;
+          verdictMeta.textContent = officeState.mode === "RUNNING" ? "다음 판정을 기다리는 중" : "최근 심사 결과를 유지 중";
+          if (officeState.lastVerdict === "PASS") verdictMissionCard.classList.add("verdict-pass");
+          else if (officeState.lastVerdict === "PASS_WITH_FIX") verdictMissionCard.classList.add("verdict-pwf");
+          else if (officeState.lastVerdict === "REJECT") verdictMissionCard.classList.add("verdict-reject");
+        }
+
+        if (officeState.isRunning && officeState.runStartedAt) {
+          runtimeBadge.textContent = `경과: ${formatDuration(Date.now() - officeState.runStartedAt)}`;
+        } else {
+          runtimeBadge.textContent = "경과: --:--";
+        }
+      }
+
+      function setAgentStatus(agentKey, status, detail, intensity) {
+        const runtime = agentRuntime[agentKey];
+        if (!runtime) return;
+        runtime.status = status || runtime.status;
+        runtime.detail = detail || runtime.detail;
+        runtime.intensity = intensity != null ? intensity : runtime.intensity;
+        runtime.updatedAt = Date.now();
+        renderAgentBoard();
+      }
+
+      function speakAgent(agentKey, text, options = {}) {
+        const runtime = agentRuntime[agentKey];
+        if (!runtime || !text) return;
+        runtime.bubbleText = text;
+        runtime.bubbleColor = options.color || runtime.bubbleColor || "#334155";
+        runtime.bubbleTimer = options.timer || 210;
+        runtime.intensity = options.intensity != null ? options.intensity : Math.max(runtime.intensity, 0.92);
+        runtime.updatedAt = Date.now();
+        if (options.status) runtime.status = options.status;
+        if (options.detail) runtime.detail = options.detail;
+        renderAgentBoard();
+      }
+
+      function syncAgentBaseline() {
+        const activeSet = new Set(getCurrentStageAgents());
+        for (const agent of agents) {
+          const runtime = agentRuntime[agent.spriteKey];
+          if (activeSet.has(agent.spriteKey)) {
+            if (!officeState.isRunning) {
+              runtime.status = "대기";
+              runtime.detail = "다음 실행 요청을 기다리는 중";
+              runtime.intensity = Math.max(runtime.intensity, 0.3);
+            } else if (runtime.status === "대기") {
+              runtime.status = "준비";
+              runtime.detail = "작업 큐에 올라가 실행 신호를 기다리는 중";
+              runtime.intensity = Math.max(runtime.intensity, 0.5);
+            }
+          } else {
+            runtime.status = officeState.isRunning ? "비활성" : "대기";
+            runtime.detail = officeState.currentStage ? "이번 단계 주체가 아님" : "작업 요청 없음";
+            runtime.intensity = Math.min(runtime.intensity, 0.24);
+          }
+        }
+        renderAgentBoard();
+      }
+
+      function inferLogMeta(message, verdict, meta = {}) {
+        const raw = String(message || "").trim();
+        const summaryText = raw.replace(/^\[[^\]]+\]\s*/, "");
+        const stage = meta.stage || officeState.currentStage || null;
+        let agent = meta.agent || null;
+        if (!agent) {
+          if (verdict) agent = "director";
+          else if (/원고|Manuscript|ChiefWriter|CW|scene|장면/i.test(raw)) agent = "writer";
+          else if (/Arc|분석|advisory|style|레퍼런스/i.test(raw)) agent = "analyst";
+          else if (/검증|validator|consensus|무결성|patch|retry|재심사|audit/i.test(raw)) agent = "critic";
+          else if (/Director|심사|판정/i.test(raw)) agent = "director";
+          else if (/System|프로젝트|초기화|입력|백엔드|실행|중지|완료|장르|설정/i.test(raw)) agent = "manager";
+        }
+        return {
+          agent,
+          stage,
+          summary: meta.summary || shortenText(summaryText, 68),
+          detail: meta.detail || raw,
+          significant: meta.significant != null ? meta.significant : (
+            !!verdict ||
+            raw.startsWith("[System]") ||
+            /완료|생성|심사|검수|재시도|입력|실패|중지|연결|판정|로드/i.test(raw)
+          ),
+          bubble: meta.bubble || null,
+        };
+      }
+
+      function appendLog(message, verdict, meta = {}) {
+        const rowMeta = inferLogMeta(message, verdict, meta);
         const row = document.createElement("div");
         row.className = "log-row";
+        row.dataset.agent = rowMeta.agent || "";
+        row.dataset.stage = rowMeta.stage || "";
 
         const time = document.createElement("span");
         time.className = "log-time";
         time.textContent = nowLabel();
 
+        const main = document.createElement("div");
+        main.className = "log-main";
+
+        const metaRow = document.createElement("div");
+        metaRow.className = "log-meta-row";
+        if (rowMeta.agent) {
+          const agentChip = document.createElement("span");
+          agentChip.className = "log-chip log-chip-agent";
+          agentChip.textContent = getAgentDisplayName(rowMeta.agent);
+          metaRow.appendChild(agentChip);
+        }
+        if (rowMeta.stage) {
+          const stageChip = document.createElement("span");
+          stageChip.className = "log-chip log-chip-stage";
+          stageChip.textContent = resolveActionMeta(rowMeta.stage, officeState.currentSubKey).title;
+          metaRow.appendChild(stageChip);
+        }
+
         const msg = document.createElement("span");
         msg.className = "log-msg";
         msg.textContent = message;
 
-        row.append(time, msg);
+        if (metaRow.childNodes.length > 0) main.appendChild(metaRow);
+        main.appendChild(msg);
+
+        row.append(time, main);
 
         if (verdict) {
           const badge = document.createElement("span");
@@ -1660,6 +2336,35 @@
           logStream.removeChild(logStream.firstChild);
         }
         logStream.scrollTop = logStream.scrollHeight;
+
+        if (rowMeta.agent && rowMeta.bubble) {
+          speakAgent(rowMeta.agent, rowMeta.bubble, {
+            status: meta.status,
+            detail: meta.agentDetail || rowMeta.summary,
+            color: meta.bubbleColor,
+            timer: meta.bubbleTimer,
+            intensity: meta.intensity,
+          });
+        } else if (rowMeta.agent && meta.status) {
+          setAgentStatus(rowMeta.agent, meta.status, meta.agentDetail || rowMeta.summary, meta.intensity);
+        }
+
+        if (rowMeta.significant) {
+          pushEventFeed({
+            time: time.textContent,
+            title: rowMeta.summary,
+            detail: shortenText(rowMeta.detail, 96),
+            agent: rowMeta.agent,
+          });
+        }
+
+        if (rowMeta.significant) {
+          setCurrentFocus(rowMeta.summary, shortenText(rowMeta.detail, 120));
+        }
+
+        if (typeof applyLogFilter === "function") {
+          applyLogFilter();
+        }
       }
 
       function setStateBadge(mode) {
@@ -1696,17 +2401,27 @@
       function startRunningLoop() {
         officeState.isRunning = true;
         officeState.mode = "RUNNING";
+        officeState.runStartedAt = Date.now();
+        setVerdictState(null, null);
+        setPromptState(false, "대기 중인 입력 없음");
         setStateBadge("RUNNING");
         setEffectBanner("", "");
+        syncAgentBaseline();
+        renderMissionBoard();
+        renderPipelineStrip();
         _lockUI(true);
       }
 
       function stopLoop() {
         officeState.isRunning = false;
         officeState.mode = "IDLE";
-        officeState.currentStage = null;
+        officeState.runStartedAt = null;
+        setPromptState(false, "대기 중인 입력 없음");
         setStateBadge("IDLE");
         setEffectBanner("", "");
+        syncAgentBaseline();
+        renderMissionBoard();
+        renderPipelineStrip();
         _lockUI(false);
       }
 
@@ -1824,6 +2539,72 @@
           drawRect(0, 0, DESIGN_W, 152, "#f2ede4");
           drawRect(0, 152, DESIGN_W, DESIGN_H - 152, "#c8af8c");
         }
+        ctx.fillStyle = `rgba(191, 219, 254, ${0.05 + Math.abs(Math.sin(time * 0.7)) * 0.03})`;
+        ctx.fillRect(0, 0, DESIGN_W, 120);
+      }
+
+      function drawWallDisplay(time) {
+        const boardX = 272;
+        const boardY = 19;
+        const boardW = 96;
+        const boardH = 58;
+        const meta = resolveActionMeta(officeState.currentStage, officeState.currentSubKey);
+        const stageText = meta.short || "IDLE";
+        const focus = shortenText(officeState.focusTitle || "대기", 18);
+        const detail = shortenText(
+          officeState.promptPending ? "USER INPUT" : officeState.isRunning ? "PIPELINE LIVE" : "STANDBY",
+          18
+        );
+        const activeAgents = getCurrentStageAgents().length || 0;
+
+        drawRect(boardX, boardY, boardW, boardH, "rgba(255,255,255,0.38)");
+        drawRect(boardX, boardY, boardW, 2, officeState.promptPending ? "#f59e0b" : "#475569");
+        drawRect(boardX + 5, boardY + 8, boardW - 10, 12, "rgba(15,23,42,0.82)");
+        ctx.fillStyle = "#e2e8f0";
+        ctx.font = 'bold 8px monospace';
+        ctx.fillText(stageText, boardX + 9, boardY + 17);
+
+        ctx.fillStyle = "#334155";
+        ctx.font = '7px "Malgun Gothic", sans-serif';
+        ctx.fillText(focus, boardX + 7, boardY + 31);
+        ctx.fillText(detail, boardX + 7, boardY + 41);
+        ctx.fillText(`ACTIVE ${String(activeAgents).padStart(2, "0")}`, boardX + 7, boardY + 51);
+
+        drawRect(boardX + 6, boardY + 55, boardW - 12, 3, "rgba(148,163,184,0.35)");
+        if (officeState.isRunning) {
+          const span = officeState.skipAnimation ? 18 : 18 + ((time * 48) % 44);
+          drawRect(boardX + 6, boardY + 55, Math.min(boardW - 12, span), 3, "rgba(59,130,246,0.85)");
+        } else {
+          drawRect(boardX + 6, boardY + 55, 18, 3, "rgba(71,85,105,0.55)");
+        }
+      }
+
+      function drawPacketStream(fromX, fromY, toX, toY, color, time, phase) {
+        const dx = toX - fromX;
+        const dy = toY - fromY;
+        ctx.globalAlpha = 0.22;
+        for (let i = 0; i < 5; i++) {
+          const t = (time * 0.35 + phase + i * 0.22) % 1;
+          const px = fromX + dx * t;
+          const py = fromY + dy * t;
+          drawRect(px - 1, py - 1, 3, 3, color);
+        }
+        ctx.globalAlpha = 1;
+      }
+
+      function drawLLMFlow(time) {
+        if (!officeState.isRunning || officeState.skipAnimation) return;
+        const boardTarget = { x: 320, y: 63 };
+        const director = agents.find((agent) => agent.spriteKey === "director");
+        const activeKeys = getCurrentStageAgents();
+        activeKeys.forEach((key, index) => {
+          const agent = agents.find((item) => item.spriteKey === key);
+          if (!agent || key === "director") return;
+          drawPacketStream(agent.x, agent.y - 18, boardTarget.x, boardTarget.y, agent.screenColor, time, index * 0.13);
+        });
+        if (director && activeKeys.includes("director")) {
+          drawPacketStream(boardTarget.x, boardTarget.y + 2, director.x - 10, director.y - 54, director.screenColor, time, 0.47);
+        }
       }
 
       // ─── 모니터 스크린 컬러 오버레이 (배경 책상 위에 화면 색만 표시) ───
@@ -1832,6 +2613,7 @@
         const dw = 64, dh = 64;
         const dx = agent.x - dw / 2;
         const dy = agent.y - 8;  // 책상 상판이 캐릭터 허리쯤 오도록
+        const runtime = agentRuntime[agent.spriteKey];
         if (deskTileImg.complete && deskTileImg.naturalWidth > 0) {
           ctx.imageSmoothingEnabled = false;
           ctx.drawImage(deskTileImg, dx, dy, dw, dh);
@@ -1840,6 +2622,13 @@
           drawRect(dx, dy + 10, dw, 24, "#654E37");
           drawRect(dx + 1, dy + 11, dw - 2, 6, "#785F44");
         }
+        const glow = runtime ? Math.min(0.44, 0.1 + runtime.intensity * 0.28) : 0.12;
+        ctx.globalAlpha = glow;
+        drawRect(agent.x - 8, dy + 12, 16, 7, agent.screenColor);
+        if (runtime && runtime.intensity > 0.55) {
+          drawRect(agent.x - 10, dy + 10, 20, 2, agent.screenColor);
+        }
+        ctx.globalAlpha = 1;
       }
 
 
@@ -1847,24 +2636,28 @@
       function drawAgent(agent, index, time) {
         const animate = officeState.mode === "RUNNING" && officeState.isRunning && !officeState.skipAnimation && ANIMATED_STAGES.has(officeState.currentStage);
         const bob = animate ? Math.sin(time * 4 + index * 1.3) * 1.5 : 0;
+        const runtime = agentRuntime[agent.spriteKey];
 
         let pose;
         let animFrame = 0;
-        // 모든 에이전트 walk 포즈 통일 (phone 스프라이트가 다른 캐릭터라 사용 안 함)
-        if (animate) {
-          pose = "idle";
-          animFrame = Math.floor(time * 3 + index) % 3;
-        } else {
-          // 대기: 서있기 (중앙 프레임)
-          pose = "idle";
-          animFrame = 1;
-        }
-
         // 스테이지별 활성 여부 — 비활성 에이전트는 반투명
         const stageKey = officeState.currentStage;
         const activeList = stageKey && STAGE_AGENTS[stageKey];
         const isActive = !activeList || activeList.includes(agent.spriteKey);
+        if (animate && isActive) {
+          pose = agent.workPose || "idle";
+          animFrame = Math.floor(time * (pose === "sit" ? 2 : 3) + index) % 3;
+        } else {
+          pose = agent.idlePose || "idle";
+          animFrame = pose === "sit" ? 1 : 1;
+        }
         if (!isActive) ctx.globalAlpha = 0.3;
+
+        if (runtime && runtime.intensity > 0.5) {
+          ctx.globalAlpha = Math.min(0.28, runtime.intensity * 0.24);
+          drawRect(agent.x - 18, agent.y - 22, 36, 46, agent.screenColor);
+          ctx.globalAlpha = !isActive ? 0.3 : 1;
+        }
 
         // 캐릭터를 책상 뒤에 배치 (먼저 그림) — 상체가 책상 위로 보이도록 위로 올림
         const spriteY = agent.y - 30 + bob;
@@ -1897,23 +2690,20 @@
           drawBubble(agent.x + 30, agent.y - 50 + bob, bt, "#475569", false);
         }
 
-        // Director 심사 말풍선 (verdict — 최우선)
-        if (agent.spriteKey === "director" && _directorBubble.timer > 0) {
-          const bColor = _directorBubble.text.startsWith("PWF") ? "#854d0e"
-            : _directorBubble.text.startsWith("PASS") ? "#166534"
-            : _directorBubble.text.startsWith("REJECT") ? "#991b1b" : "#334155";
-          drawBubble(agent.x, agent.y - 70 + bob, _directorBubble.text, bColor, true);
+        if (runtime && runtime.bubbleTimer > 0) {
+          drawBubble(
+            agent.x,
+            agent.y - (agent.spriteKey === "manager" ? 64 : 70) + bob,
+            shortenText(runtime.bubbleText, 28),
+            runtime.bubbleColor || "#334155",
+            true
+          );
         }
-        // Director 스크롤 텍스트 (분석 중 긴 텍스트 흘려보냄 — verdict 없을 때만)
+        // Director 스크롤 텍스트 (분석 중 긴 텍스트 흘려보냄 — 직접 말풍선이 없을 때만)
         else if (agent.spriteKey === "director" && _directorScroll.timer > 0) {
           const line = _directorScroll.lines[_directorScroll.lineIdx] || "";
           const truncated = line.length > 28 ? line.slice(0, 26) + "…" : line;
           drawBubble(agent.x, agent.y - 70 + bob, truncated, "#334155", true);
-        }
-
-        // Manager 로그 말풍선 (파이프라인 상태)
-        if (agent.spriteKey === "manager" && _managerBubble.timer > 0) {
-          drawBubble(agent.x, agent.y - 64 + bob, _managerBubble.text, "#92400e", true);
         }
 
         // 클릭 말풍선
@@ -1976,8 +2766,10 @@
       function drawModeEffect(time) {
         // 말풍선 타이머 감소
         if (_clickBubble.timer > 0) _clickBubble.timer--;
-        if (_directorBubble.timer > 0) _directorBubble.timer--;
-        if (_managerBubble.timer > 0) _managerBubble.timer--;
+        for (const runtime of Object.values(agentRuntime)) {
+          if (runtime.bubbleTimer > 0) runtime.bubbleTimer--;
+          runtime.intensity = Math.max(0.16, runtime.intensity - 0.002);
+        }
         // Director 스크롤 텍스트: 매 12프레임(~0.2초)마다 다음 줄
         if (_directorScroll.timer > 0) {
           _directorScroll.timer--;
@@ -2117,6 +2909,8 @@
         ctx.save();
         ctx.scale(canvas.width / DESIGN_W, canvas.height / DESIGN_H);
         drawOfficeBackground(time);
+        drawWallDisplay(time);
+        drawLLMFlow(time);
         agents.forEach((agent, index) => drawAgent(agent, index, time));
         drawModeEffect(time);
         drawNoticeScroll(timeMs);
@@ -2281,8 +3075,18 @@
           _ws = new WebSocket(wsUrl);
           _ws.onopen = () => {
             _backendConnected = true;
+            officeState.backendConnected = true;
             if (_wsReconnectTimer) { clearTimeout(_wsReconnectTimer); _wsReconnectTimer = null; }
-            appendLog("[System] 백엔드 연결됨");
+            readyBadge.textContent = "백엔드 연결됨";
+            appendLog("[System] 백엔드 연결됨", null, {
+              agent: "manager",
+              summary: "백엔드 연결 완료",
+              detail: "브리지 WebSocket이 열려 런타임 이벤트 수신 가능",
+              bubble: "브리지 연결됨",
+              status: "연결됨",
+              agentDetail: "런타임 이벤트 스트림 수신 가능",
+              significant: true,
+            });
           };
           _ws.onmessage = (event) => {
             try {
@@ -2293,7 +3097,26 @@
           };
           _ws.onclose = () => {
             _backendConnected = false;
+            officeState.backendConnected = false;
             if (_wsReconnectTimer) clearTimeout(_wsReconnectTimer);
+            readyBadge.textContent = "백엔드 재연결 대기";
+            setCurrentFocus("백엔드 재연결 대기", "3초 뒤 브리지 WebSocket 재연결을 시도함");
+            speakAgent("manager", "재연결 중...", {
+              color: "#92400e",
+              status: "재연결",
+              detail: "브리지 연결이 끊겨 재연결을 시도하는 중",
+              timer: 180,
+              intensity: 0.78,
+            });
+            appendLog("[System] 백엔드 연결 종료 — 재연결 시도", null, {
+              agent: "manager",
+              summary: "백엔드 연결 종료",
+              detail: "WebSocket 연결이 끊겨 3초 뒤 재연결 예정",
+              bubble: "재연결 중...",
+              status: "재연결",
+              agentDetail: "브리지 연결 복구 시도",
+              significant: true,
+            });
             _wsReconnectTimer = setTimeout(_connectWebSocket, 3000);
           };
           _ws.onerror = () => {};
@@ -2304,7 +3127,17 @@
         switch (ev.type) {
           case "run_started":
             startRunningLoop();
-            appendLog(`[System] 실행 시작 (key: ${ev.payload.key})`);
+            syncAgentBaseline();
+            appendLog(`[System] 실행 시작 (key: ${ev.payload.key})`, null, {
+              agent: "manager",
+              stage: officeState.currentStage,
+              summary: `${officeState.currentStageTitle} 실행 시작`,
+              detail: resolveActionMeta(officeState.currentStage, officeState.currentSubKey).summary,
+              bubble: "작업 시작",
+              status: "오케스트레이션",
+              agentDetail: "런타임 subprocess를 기동하고 로그를 수집 중",
+              significant: true,
+            });
             break;
           case "stdout":
             _handleStdoutLine(ev.payload.text);
@@ -2313,19 +3146,48 @@
             _bootPhase = false;
             _autoExitAfterStage0 = false;
             stopLoop();
-            appendLog("[System] 실행 완료");
+            appendLog("[System] 실행 완료", null, {
+              agent: "manager",
+              stage: officeState.currentStage,
+              summary: `${officeState.currentStageTitle} 완료`,
+              detail: "런타임이 정상 종료되어 결과가 저장됨",
+              bubble: "완료됐어요",
+              status: "완료",
+              agentDetail: "결과 저장 후 대기 상태로 복귀",
+              significant: true,
+            });
             break;
           case "run_failed":
             _bootPhase = false;
             _autoExitAfterStage0 = false;
             stopLoop();
-            appendLog(`[System] 실행 실패 (code: ${ev.payload.returncode})`);
+            appendLog(`[System] 실행 실패 (code: ${ev.payload.returncode})`, null, {
+              agent: "manager",
+              stage: officeState.currentStage,
+              summary: `${officeState.currentStageTitle} 실패`,
+              detail: `프로세스 종료 코드 ${ev.payload.returncode} 로 비정상 종료`,
+              bubble: "실패 로그 확인",
+              bubbleColor: "#991b1b",
+              status: "오류",
+              agentDetail: "실패 원인 분석 필요",
+              significant: true,
+              intensity: 0.84,
+            });
             break;
           case "run_stopped":
             _bootPhase = false;
             _autoExitAfterStage0 = false;
             stopLoop();
-            appendLog("[System] 중지됨");
+            appendLog("[System] 중지됨", null, {
+              agent: "manager",
+              stage: officeState.currentStage,
+              summary: `${officeState.currentStageTitle} 중지`,
+              detail: "사용자 또는 브리지 요청으로 실행을 중단",
+              bubble: "중지 처리 완료",
+              status: "중지",
+              agentDetail: "런타임을 안전하게 중단",
+              significant: true,
+            });
             break;
           case "prompt_request":
             _showPromptDialog(ev);
@@ -2336,7 +3198,17 @@
           case "prompt_timeout":
             document.getElementById("promptOverlay").classList.remove("open");
             _currentPrompt = null;
-            appendLog(`[System] 프롬프트 타임아웃 — 기본값 적용: ${ev.payload.applied_default}`);
+            setPromptState(false, `기본값 적용: ${ev.payload.applied_default}`);
+            appendLog(`[System] 프롬프트 타임아웃 — 기본값 적용: ${ev.payload.applied_default}`, null, {
+              agent: "manager",
+              stage: officeState.currentStage,
+              summary: "프롬프트 타임아웃",
+              detail: `기본값 ${ev.payload.applied_default} 이 적용됨`,
+              bubble: "기본값 적용",
+              status: "입력 만료",
+              agentDetail: "사용자 응답이 없어 기본값으로 계속 진행",
+              significant: true,
+            });
             break;
         }
       }
@@ -2350,7 +3222,16 @@
         // 부트 단계 종료 — 첫 프롬프트 도착 시 정상 출력 모드로 전환
         if (_bootPhase) {
           _bootPhase = false;
-          appendLog("[System] 초기화 완료 — 항목을 선택해주세요");
+          appendLog("[System] 초기화 완료 — 항목을 선택해주세요", null, {
+            agent: "manager",
+            stage: officeState.currentStage,
+            summary: "초기화 완료",
+            detail: "이제 사용자 선택을 받아 다음 단계로 진행 가능",
+            bubble: "입력 받을 준비 완료",
+            status: "준비 완료",
+            agentDetail: "부트 단계 종료 후 입력 대기",
+            significant: true,
+          });
         }
         // Stage 0 완료 후 메인 메뉴 → 자동 종료 ("5" Exit 전송)
         const payload = data.payload;
@@ -2364,7 +3245,16 @@
             if (window.geuldobiDesktop) {
               window.geuldobiDesktop.resolvePrompt(run_id, pid, "5").catch(() => {});
             }
-            appendLog("[System] Stage 0 완료 — 프로세스 종료 중...");
+            appendLog("[System] Stage 0 완료 — 프로세스 종료 중...", null, {
+              agent: "manager",
+              stage: officeState.currentStage,
+              summary: "Stage 0 마무리",
+              detail: "메인 메뉴 복귀 후 자동 종료 입력을 전달",
+              bubble: "마무리 중",
+              status: "정리",
+              agentDetail: "자동 Exit 입력을 전송하는 중",
+              significant: true,
+            });
             return;
           }
         }
@@ -2400,6 +3290,17 @@
         title.textContent = stepLabels[payload.step_id] || "입력 대기";
         text.textContent = payload.prompt_text || "";
         hint.textContent = payload.default != null ? `기본값: ${payload.default}` : "";
+        setPromptState(true, shortenText(payload.prompt_text || "입력 요청 도착", 90));
+        appendLog(`[System] 입력 대기: ${payload.prompt_text || "사용자 응답 필요"}`, null, {
+          agent: "manager",
+          stage: officeState.currentStage,
+          summary: title.textContent,
+          detail: payload.prompt_text || "사용자 응답 필요",
+          bubble: "입력 부탁드려요",
+          status: "입력 대기",
+          agentDetail: "Mode B 프롬프트 응답을 기다리는 중",
+          significant: true,
+        });
 
         optionsDiv.innerHTML = "";
         inputRow.style.display = "none";
@@ -2483,13 +3384,23 @@
         const { runId, promptId } = _currentPrompt;
         _currentPrompt = null;
         document.getElementById("promptOverlay").classList.remove("open");
+        setPromptState(false, "대기 중인 입력 없음");
 
         if (window.geuldobiDesktop) {
           window.geuldobiDesktop.resolvePrompt(runId, promptId, value).catch((err) => {
             appendLog(`[System] 프롬프트 응답 실패: ${err.message}`);
           });
         }
-        appendLog(`[입력] ${value || "(확인)"}`);
+        appendLog(`[입력] ${value || "(확인)"}`, null, {
+          agent: "manager",
+          stage: officeState.currentStage,
+          summary: "프롬프트 응답 전달",
+          detail: value || "(확인)",
+          bubble: "입력 전달 완료",
+          status: "응답 전달",
+          agentDetail: "사용자 입력을 런타임 stdin으로 전달",
+          significant: true,
+        });
       }
 
       // 프롬프트 확인 버튼
@@ -2515,6 +3426,13 @@
           return;
         }
 
+        const stageHint =
+          /Stage\s*0|style|레퍼런스/i.test(text) ? "stage_0" :
+          /Stage\s*2|Arc|arc/i.test(text) ? "stage_2" :
+          /Stage\s*3|Blueprint/i.test(text) ? "stage_3" :
+          /Stage\s*4|원고|Manuscript|ChiefWriter|CW/i.test(text) ? "stage_4" :
+          officeState.currentStage;
+
         // ── Manager 로그 → 말풍선 연결 ──
         // 파이프라인 상태 마커를 Manager 말풍선에 표시
         const mgrPatterns = [
@@ -2535,7 +3453,13 @@
         for (const p of mgrPatterns) {
           if (p.re.test(text)) {
             const bubble = p.msg || `Stage ${text.match(/Stage\s*(\d)/)?.[1] || "?"} 진행 중`;
-            _managerBubble = { text: bubble, timer: 240 }; // ~4초
+            speakAgent("manager", bubble, {
+              color: "#92400e",
+              status: "오케스트레이션",
+              detail: shortenText(text, 68),
+              timer: 240,
+              intensity: 0.9,
+            });
             break;
           }
         }
@@ -2549,14 +3473,72 @@
           { re: /Candidate|후보/,                     msg: () => "후보 비교 중..." },
           { re: /검수|Audit/i,                        msg: () => "품질 감사 중..." },
         ];
-        // verdict가 아닌 경우에만 상태 표시 (verdict 말풍선이 우선)
-        if (_directorBubble.timer <= 0) {
-          for (const p of dirStatusPatterns) {
-            const m = text.match(p.re);
-            if (m) {
-              _directorBubble = { text: p.msg(m), timer: 300 }; // ~5초
-              break;
-            }
+        for (const p of dirStatusPatterns) {
+          const m = text.match(p.re);
+          if (m) {
+            speakAgent("director", p.msg(m), {
+              color: "#a16207",
+              status: "심사 중",
+              detail: shortenText(text, 72),
+              timer: 300,
+              intensity: 0.96,
+            });
+            break;
+          }
+        }
+
+        const writerPatterns = [
+          { re: /Blueprint.*생성/, msg: "에피소드 골격 조립 중", status: "Blueprint 작성" },
+          { re: /Blueprint.*완료/, msg: "Blueprint 정리 완료", status: "Blueprint 완료" },
+          { re: /원고.*생성|Manuscript.*생성/, msg: "원고 집필 중", status: "원고 작성" },
+          { re: /원고.*완료|Manuscript.*완료/, msg: "원고 초안 완료", status: "초안 완료" },
+        ];
+        for (const p of writerPatterns) {
+          if (p.re.test(text)) {
+            speakAgent("writer", p.msg, {
+              color: "#2563eb",
+              status: p.status,
+              detail: shortenText(text, 72),
+              timer: 240,
+              intensity: 0.92,
+            });
+            break;
+          }
+        }
+
+        const analystPatterns = [
+          { re: /Arc.*생성|Arc.*설계/, msg: "Arc 구조 설계 중", status: "구조 분석" },
+          { re: /advisory|Advisory/, msg: "보조 분석 중", status: "추가 분석" },
+          { re: /스타일.*분석|레퍼런스.*분석|style/i, msg: "스타일 분석 중", status: "스타일 분석" },
+        ];
+        for (const p of analystPatterns) {
+          if (p.re.test(text)) {
+            speakAgent("analyst", p.msg, {
+              color: "#047857",
+              status: p.status,
+              detail: shortenText(text, 72),
+              timer: 240,
+              intensity: 0.88,
+            });
+            break;
+          }
+        }
+
+        const criticPatterns = [
+          { re: /검수|Audit/i, msg: "감사 체크 중", status: "감사" },
+          { re: /validator|consensus|무결성/i, msg: "검증 체인 점검 중", status: "검증" },
+          { re: /patch|retry|재심사|fix_scope/i, msg: "수정 경로 확인 중", status: "수정 라우팅" },
+        ];
+        for (const p of criticPatterns) {
+          if (p.re.test(text)) {
+            speakAgent("critic", p.msg, {
+              color: "#7c3aed",
+              status: p.status,
+              detail: shortenText(text, 72),
+              timer: 220,
+              intensity: 0.84,
+            });
+            break;
           }
         }
 
@@ -2589,11 +3571,22 @@
         }
         if (verdict) {
           const badge = verdict === "PASS_WITH_FIX" ? "PWF" : verdict;
-          appendLog(text, badge);
+          appendLog(text, badge, {
+            agent: "director",
+            stage: stageHint,
+            summary: `Director verdict ${verdict === "PASS_WITH_FIX" ? "PASS_WITH_FIX" : verdict}`,
+            detail: `${shortenText(text, 110)}${score ? ` / ${score}점` : ""}`,
+            bubble: verdict === "PASS_WITH_FIX" ? `PWF ${score}점` : `${verdict} ${score}점`,
+            status: verdict === "PASS_WITH_FIX" ? "재수정 요구" : verdict,
+            agentDetail: score ? `점수 ${score}점` : shortenText(text, 68),
+            bubbleColor: verdict === "PASS" ? "#166534" : verdict === "PASS_WITH_FIX" ? "#854d0e" : "#991b1b",
+            bubbleTimer: 180,
+            significant: true,
+            intensity: 1,
+          });
           // Director 말풍선 표시 (verdict가 상태 말풍선을 덮어씀)
-          const bubbleText = verdict === "PASS_WITH_FIX" ? `PWF ${score}점` : `${verdict} ${score}점`;
-          _directorBubble = { text: bubbleText, timer: 180 }; // ~3초 (60fps)
           _directorScroll = { lines: [], timer: 0, lineIdx: 0 }; // 스크롤 중단
+          setVerdictState(verdict, score);
           if (verdict === "PASS") {
             officeState.mode = "PASS"; setStateBadge("PASS"); setEffectBanner("채택", "pass");
           } else if (verdict === "PASS_WITH_FIX") {
@@ -2609,7 +3602,7 @@
             }
           }, 2500);
         } else {
-          appendLog(text);
+          appendLog(text, null, { stage: stageHint });
         }
       }
 
@@ -2630,6 +3623,7 @@
         if (action === "stage_0_toggle") {
           const subMenu = document.getElementById("stage0SubMenu");
           subMenu.classList.toggle("open");
+          setCurrentFocus("Stage 0 메뉴 토글", subMenu.classList.contains("open") ? "Stage 0 세부 실행 키가 열림" : "Stage 0 세부 실행 키가 접힘");
           return;
         }
 
@@ -2644,13 +3638,37 @@
         }
 
         if (action === "stop") {
+          setCurrentFocus(
+            "중지 요청",
+            officeState.currentStageTitle !== "대기"
+              ? `${officeState.currentStageTitle} 실행을 멈추는 중`
+              : "현재 실행 중인 작업을 멈추는 중"
+          );
+          setPromptState(false, "대기 중인 입력 없음");
           if (window.geuldobiDesktop && _backendConnected) {
             try { await window.geuldobiDesktop.stopRun(); } catch (e) {
-              appendLog("[System] 중지 실패: " + e.message);
+              appendLog("[System] 중지 실패: " + e.message, null, {
+                agent: "manager",
+                summary: "중지 실패",
+                detail: e.message,
+                bubble: "중지 실패",
+                bubbleColor: "#991b1b",
+                status: "오류",
+                agentDetail: "정지 요청이 실패함",
+                significant: true,
+              });
             }
           } else {
             stopLoop();
-            appendLog("[System] 중지됨 (오프라인)");
+            appendLog("[System] 중지됨 (오프라인)", null, {
+              agent: "manager",
+              summary: "오프라인 중지",
+              detail: "백엔드 미연결 상태에서 로컬 UI만 정지 처리",
+              bubble: "오프라인 정지",
+              status: "중지",
+              agentDetail: "로컬 상태만 정리 완료",
+              significant: true,
+            });
           }
           return;
         }
@@ -2677,13 +3695,23 @@
         const destructiveActions = { wipe: "프로젝트 전체 초기화", reset: "프로젝트 리셋", rewind: "에피소드 되감기", rollback: "에피소드 롤백" };
         if (destructiveActions[action]) {
           if (!confirm(`[${destructiveActions[action]}] 정말 실행하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`)) {
-            appendLog(`[System] ${label} 취소됨`);
+            appendLog(`[System] ${label} 취소됨`, null, {
+              agent: "manager",
+              stage: action,
+              summary: `${label} 취소`,
+              detail: "사용자가 파괴적 작업 확인창에서 취소를 선택",
+              bubble: "취소됐어요",
+              status: "취소",
+              agentDetail: "위험 작업 미실행",
+              significant: true,
+            });
             return;
           }
         }
 
         // ── 스테이지별 에이전트 활성화 ──
-        officeState.currentStage = action;
+        setActionState(action, label, subKey);
+        syncAgentBaseline();
 
         // ── Stage 0 부트 단계: stdout 출력 억제 + 로딩 표시 ──
         if (action === "stage_0") {
@@ -2695,17 +3723,56 @@
         if (window.geuldobiDesktop && _backendConnected) {
           appendLog(action === "stage_0"
             ? `[System] ${label} — 초기화 중... 잠시 기다려주세요`
-            : `[System] ${label} 시작 요청...`);
+            : `[System] ${label} 시작 요청...`, null, {
+            agent: "manager",
+            stage: action,
+            summary: `${label} 실행 요청`,
+            detail: resolveActionMeta(action, subKey).summary,
+            bubble: action === "stage_0" ? "초기화 중..." : "실행 요청 접수",
+            status: "요청 접수",
+            agentDetail: "브리지 /run 호출 대기",
+            significant: true,
+          });
           try {
             const result = await window.geuldobiDesktop.runKey(key, subKey, inputs);
             if (!result.ok) {
-              appendLog(`[System] 실행 실패: ${result.message}`);
+              appendLog(`[System] 실행 실패: ${result.message}`, null, {
+                agent: "manager",
+                stage: action,
+                summary: `${label} 요청 실패`,
+                detail: result.message,
+                bubble: "요청 실패",
+                bubbleColor: "#991b1b",
+                status: "오류",
+                agentDetail: "브리지 호출 실패",
+                significant: true,
+              });
             }
           } catch (e) {
-            appendLog(`[System] 연결 실패: ${e.message}`);
+            appendLog(`[System] 연결 실패: ${e.message}`, null, {
+              agent: "manager",
+              stage: action,
+              summary: `${label} 연결 실패`,
+              detail: e.message,
+              bubble: "연결 실패",
+              bubbleColor: "#991b1b",
+              status: "연결 오류",
+              agentDetail: "IPC 또는 브리지 연결 점검 필요",
+              significant: true,
+            });
           }
         } else {
-          appendLog(`[System] 백엔드 미연결 — 실행 불가`);
+          appendLog(`[System] 백엔드 미연결 — 실행 불가`, null, {
+            agent: "manager",
+            stage: action,
+            summary: `${label} 실행 불가`,
+            detail: "백엔드 연결이 없어 /run 요청을 보낼 수 없음",
+            bubble: "백엔드 미연결",
+            bubbleColor: "#92400e",
+            status: "대기",
+            agentDetail: "브리지 연결 확인 필요",
+            significant: true,
+          });
         }
       }
 
@@ -2748,6 +3815,7 @@
       if (window.geuldobiDesktop && typeof window.geuldobiDesktop.onAppReady === "function") {
         window.geuldobiDesktop.onAppReady(({ reason }) => {
           readyBadge.textContent = `진입 완료: ${reason}`;
+          setCurrentFocus("앱 진입 완료", `Electron 메인 화면 진입 사유: ${reason}`);
         });
       }
 
@@ -3214,7 +4282,7 @@
         const filter = logFilterSelect.value;
         const rows = logStream.querySelectorAll(".log-row");
         for (const row of rows) {
-          const msg = (row.querySelector(".log-msg")?.textContent || "").toLowerCase();
+          const msg = (row.textContent || "").toLowerCase();
           const badge = row.querySelector(".verdict-badge");
           const badgeText = badge ? badge.textContent.trim() : "";
           let show = true;
@@ -3227,10 +4295,28 @@
       logSearchInput.addEventListener("input", applyLogFilter);
       logFilterSelect.addEventListener("change", applyLogFilter);
 
+      renderMissionBoard();
+      renderPipelineStrip();
+      renderAgentBoard();
+      renderEventFeed();
+      setStateBadge("IDLE");
+      setInterval(() => {
+        renderMissionBoard();
+        renderAgentBoard();
+      }, 500);
+
       initMaterialPanel();
       updateGenreGating();
 
-      appendLog("[System] UI 초기화 완료");
+      appendLog("[System] UI 초기화 완료", null, {
+        agent: "manager",
+        summary: "UI 초기화 완료",
+        detail: "사무실 HUD, 로그 스트림, 설정 패널이 준비됨",
+        bubble: "대시보드 준비 완료",
+        status: "대기",
+        agentDetail: "사용자 입력을 받을 수 있음",
+        significant: true,
+      });
       updateToggleLabels();
 
       // 영속 설정 로드 (AppData JSON)
@@ -3265,11 +4351,28 @@
         _connectWebSocket();
         setTimeout(() => {
           if (!_backendConnected) {
-            appendLog("[System] 백엔드 미감지 — 설정 확인 후 앱 재시작 필요");
+            appendLog("[System] 백엔드 미감지 — 설정 확인 후 앱 재시작 필요", null, {
+              agent: "manager",
+              summary: "백엔드 미감지",
+              detail: "5초 내 WebSocket 연결 실패, 설정 또는 브리지 상태 확인 필요",
+              bubble: "백엔드 확인 필요",
+              bubbleColor: "#92400e",
+              status: "점검 필요",
+              agentDetail: "브리지 프로세스 상태 점검 필요",
+              significant: true,
+            });
           }
         }, 5000);
       } else {
-        appendLog("[System] Electron 환경 외부 — 기능 제한됨");
+        appendLog("[System] Electron 환경 외부 — 기능 제한됨", null, {
+          agent: "manager",
+          summary: "외부 브라우저 모드",
+          detail: "IPC/파일 시스템/런타임 제어 기능이 제한됨",
+          bubble: "브라우저 모드",
+          status: "제한 모드",
+          agentDetail: "데스크톱 전용 기능 비활성",
+          significant: true,
+        });
       }
       requestAnimationFrame(draw);
     </script>

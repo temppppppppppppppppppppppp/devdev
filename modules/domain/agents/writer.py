@@ -63,7 +63,7 @@ class Writer(BaseAgent):
         hud_report,
         purism_prompt,
         style_mode="",
-        intro_dna="CYNICAL",
+        intro_dna="",  # [QI-1-C3] CYNICAL 하드코딩 제거
         feedback="",
         prev_full_manuscript="",
         arc_doc="",

@@ -12,7 +12,7 @@
 ## Why
 - 왜 3개 후보 병렬 생성? 전략 다양성(액션/감정/대화)을 확보하고 Director가 상대 비교로 최적안을 고르기 위해서다.
 - 왜 in-place patch? score >= 60 구간은 전면 재생성보다 단일 수정이 빠르고 비용이 낮기 때문이다.
-- 왜 `blueprint_quality_gate_score=80`? Director 비교 프롬프트의 80점 미만 REJECT 기준과 일치시켜 주권주의 역전을 막기 위해서다.
+- 왜 `quality_gate_score=90`? Director 비교 프롬프트의 90점 미만 REJECT 기준과 일치시켜 주권주의 역전을 막기 위해서다.
 - 왜 PASS_WITH_FIX? (TF-27~34) Director가 "소수 수정 후 합격" 판정 시 fix_scope 기반 inplace/partial/full 라우팅. QualityGate는 PASS_WITH_FIX를 bypass하여 Director 주권 존중.
 
 ## Entry Points
@@ -82,7 +82,7 @@
   - DB commit 실패/JSON 파싱 실패.
 - Recovery flow:
   - Stage3Orchestrator는 실패 화에서 즉시 루프 중단(`break=True`), 후속 화 skip 금지.
-  - ThreePhase retry 루프: `for retry in range(max_retries+1)`; Stage3 호출값 `max_retries=4` -> 최대 5회 시도.
+  - ThreePhase retry 루프: `for retry in range(max_retries+1)`; Stage3 호출값 `max_retries=9` -> 최대 10회 시도.
   - 각 시도에서 후보 3개 생성 -> Director 비교/판정.
   - REJECT 피드백(점수/이슈/사유) 누적 후 다음 시도에 반영.
   - **PASS_WITH_FIX** (TF-27~34): fix_scope="inplace"면 LLM 1회 수정 + `validator.validate(all_candidates=None)` 재심사(최대 3회). partial/full이면 REJECT → retry 경로 위임.
@@ -132,8 +132,8 @@
   - Director가 없으면 PASS로 진행되는 비차단 경로가 있어 운영 설정 오류 시 품질 게이트가 약화될 수 있음.
 
 ## Last Verified
-- Date: 2026-03-02
-- Commit: `8476bc2`
+- Date: 2026-03-10
+- Commit: `3a00c12`
 - Code Sync (Yes/No): Yes
-- Verified By: Opus
+- Verified By: Codex
 

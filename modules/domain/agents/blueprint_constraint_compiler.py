@@ -18,6 +18,7 @@ import json
 import logging
 import re
 
+from modules.core.constants import Stage2Limits
 from modules.core.tactical_utils import _EPISODE_HEADER_PATTERNS, extract_episode_tactical
 
 
@@ -53,7 +54,7 @@ class BlueprintConstraintCompiler:
         """
         # Arc 기본 정보
         ep_start = arc_data.get("ep_start", 1)
-        ep_count = arc_data.get("ep_count", 5)
+        ep_count = arc_data.get("ep_count", Stage2Limits.DEFAULT_EP_COUNT)
         arc_no = arc_data.get("arc_no", 1)
 
         # 현재 화의 Arc 내 위치

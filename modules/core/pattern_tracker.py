@@ -64,6 +64,7 @@ class PatternReport:
 
     expression_freq: dict[str, int] = field(default_factory=dict)
     ending_patterns: list[str] = field(default_factory=list)
+    recent_ending_texts: list[str] = field(default_factory=list)  # [QI-1-A3] 직전 N화 엔딩 실제 문구
     npc_reaction_patterns: dict[str, list[str]] = field(default_factory=dict)
     metaphor_categories: dict[str, int] = field(default_factory=dict)
     emotion_diversity: float = 0.0
@@ -83,6 +84,10 @@ class PatternReport:
             for pattern in self.ending_patterns:
                 ending_counter[pattern] = ending_counter.get(pattern, 0) + 1
             lines.append("【엔딩 패턴】 " + ", ".join(f"{k}:{v}회" for k, v in ending_counter.items()))
+
+        # [QI-1-A3] 직전 엔딩 실제 문구 요약
+        if self.recent_ending_texts:
+            lines.append("【직전 엔딩】 " + " / ".join(f"'{t[-30:]}'" for t in self.recent_ending_texts[-3:]))
 
         heavy = [(cat, cnt) for cat, cnt in self.metaphor_categories.items() if cnt >= 3]
         unused = [cat for cat, cnt in self.metaphor_categories.items() if cnt == 0]
@@ -232,6 +237,10 @@ class PatternTracker:
         report = PatternReport()
         report.expression_freq = self._count_expressions(manuscripts)
         report.ending_patterns = self._classify_endings(manuscripts)
+        # [QI-1-A3] 직전 N화 엔딩 실제 문구 수집 (마지막 50자)
+        report.recent_ending_texts = [
+            m[-50:].strip() for m in manuscripts if len(m) >= 20
+        ]
         report.metaphor_categories = self._count_metaphors(manuscripts)
 
         combined = "\n".join(manuscripts)

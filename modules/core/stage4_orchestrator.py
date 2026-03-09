@@ -157,6 +157,7 @@ class _SessionConfig:
     output_dir: object  # Path
     v50_modules_available: bool
     total_planned_ep: int
+    reference_excerpt: str = ""
 
 
 @dataclasses.dataclass(slots=True)
@@ -544,6 +545,7 @@ JSON으로 출력:
         s4_genre_type = session.s4_genre_type
         story_context = session.story_context
         style_guide = session.style_guide
+        reference_excerpt = session.reference_excerpt
         target_ep = session.target_ep
         output_dir = session.output_dir
         v50_modules_available = session.v50_modules_available
@@ -683,7 +685,14 @@ JSON으로 출력:
                 except Exception as _e:  # [V64.P4] OPTIONAL: diversity injection
                     logging.debug("[Stage4] diversity_engine 주입 실패 (무시): %s", _e)
 
-            intro_dna = "CYNICAL"
+            # [QI-1-C3] Bible protagonist_config에서 personality 동적 로드
+            intro_dna = ""
+            try:
+                _bible = self.ctx.current_project.master_bible
+                _br = _bible.get("MasterBible", _bible) if isinstance(_bible, dict) else {}
+                intro_dna = _br.get("protagonist_config", {}).get("personality", "")
+            except Exception:
+                logging.debug("[Stage4] intro_dna Bible 로드 실패 (빈 문자열 폴백)")
 
             self.ctx.ui.log(f"\n{'=' * 60}")
             self.ctx.ui.log(
@@ -747,6 +756,7 @@ JSON으로 출력:
                 intro_dna=intro_dna,
                 story_context=story_context,
                 style_guide=style_guide,
+                reference_excerpt=reference_excerpt,
                 mandatory_context=mandatory_context,
                 preflight_advisory=_preflight_advisory,
             )
@@ -1307,6 +1317,7 @@ JSON으로 출력:
 
         # [V60.95] 스타일 가이드 로드
         style_guide = ""
+        reference_excerpt = ""
         saved_style = self.ctx.current_project.load_v20_anchor("style_guide")
         if saved_style and STAGE0_AVAILABLE:
             try:
@@ -1328,6 +1339,7 @@ JSON으로 출력:
                 except Exception as e:
                     _perf_logger.warning(f"[SilentPass:Stage4] Bible POV 오버라이드 실패: {e!s:.100}")
                 style_guide = loaded_sg.to_prompt()
+                reference_excerpt = getattr(loaded_sg, "reference_excerpt", "")
                 self.ctx.ui.log(
                     f"🎨 [V60.95] 저장된 스타일 가이드 로드됨 (톤: {loaded_sg.tone}, 시점: {loaded_sg.pov})"
                 )
@@ -1381,6 +1393,7 @@ JSON으로 출력:
             s4_genre_type=_s4_genre_type,
             story_context=_story_context,
             style_guide=style_guide,
+            reference_excerpt=reference_excerpt,
             target_ep=target_ep,
             output_dir=output_dir,
             v50_modules_available=V50_MODULES_AVAILABLE,

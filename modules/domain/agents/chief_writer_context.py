@@ -51,6 +51,7 @@ class ChiefWriterContextBuilder:
         style_guide: str,
         director_feedback: str,
         failure_constraints: str,
+        reference_excerpt: str = "",
         # 미래 침범 방지
         current_inventory: list[str] = None,
         current_martial_arts: list[str] = None,
@@ -65,7 +66,7 @@ class ChiefWriterContextBuilder:
         genre_name: str = "무협",
         # [V60.81] 추가 파라미터
         npc_equipment_summary: str = "",
-        intro_dna: str = "CYNICAL",
+        intro_dna: str = "",  # [QI-1-C3] CYNICAL 하드코딩 제거
         # [V60.85] 장르 Guard Purism Prompt
         purism_prompt: str = "",
         # [V60.95] 고밀도 HUD 전달
@@ -270,6 +271,12 @@ Blueprint가 다음 아이템의 사용을 설계했으나, 주인공이 현재 
                 _wd_lines.append(
                     f"- 마무리 방식: {self.host._escape_braces(str(getattr(writing_directive, 'ending_style', '')))}"
                 )
+            # [QI-1-A4] 엔딩 회피 문구 주입
+            _ending_avoid = list(getattr(writing_directive, "ending_avoid_phrases", []) or [])
+            if _ending_avoid:
+                _wd_lines.append(
+                    f"- 피할 엔딩 문구: {self.host._escape_braces(', '.join(str(x) for x in _ending_avoid[:5]))}"
+                )
             _exp_ban = list(getattr(writing_directive, "expression_ban", []) or [])
             if _exp_ban:
                 _wd_lines.append(f"- 금지 표현: {self.host._escape_braces(', '.join(str(x) for x in _exp_ban))}")
@@ -409,6 +416,11 @@ Blueprint가 다음 아이템의 사용을 설계했으나, 주인공이 현재 
 
         # [투자물 전용] 수치 규칙은 investment 장르에서만 추가 주입
         _investment_guidelines = get_writing_guidelines_investment_only() if genre_code == "investment" else ""
+        reference_excerpt_section = (
+            f"\n## 참조 원고 발췌 (이 문체를 따라 쓸 것)\n{self.host._escape_braces(reference_excerpt)}"
+            if reference_excerpt
+            else ""
+        )
 
         # [V65] 메인 프롬프트 함수 래핑 호출
         return build_chief_writer_main_prompt(
@@ -433,6 +445,7 @@ Blueprint가 다음 아이템의 사용을 설계했으나, 주인공이 현재 
             arc_doc=self.host._escape_braces(arc_doc) if arc_doc else "특이사항 없음",
             core_identity_desire=self.host._escape_braces(str(core_identity.get("desire", ""))),
             style_guide=self.host._escape_braces(style_guide) if style_guide else "기본 웹소설 문체",
+            reference_excerpt_section=reference_excerpt_section,
             common_rules=get_common_rules_section(),
             writing_guidelines=get_writing_guidelines_section() + _investment_guidelines,
             prev_manuscripts_section=prev_manuscripts_section,  # [V67]
@@ -1057,15 +1070,25 @@ Blueprint가 다음 아이템의 사용을 설계했으나, 주인공이 현재 
         except (AttributeError, KeyError, TypeError):  # [V64.P4] OPTIONAL: NPC frequency warning
             return "빈도 추적 실패"
 
-    def _get_dna_instruction(self, ep_num: int, intro_dna: str = "CYNICAL") -> str:
+    def _get_dna_instruction(self, ep_num: int, intro_dna: str = "") -> str:
         """
         [V60.81] DNA 모드 지시문 생성
 
-        1화는 특수 DNA 적용, 2화부터는 연속성 모드
+        1화는 특수 DNA 적용 (intro_dna 존재 시), 2화부터는 연속성 모드.
+        [QI-1-C3] intro_dna가 빈 문자열이면 DNA 블록을 생략하고
+        Blueprint/Treatment 기반으로 LLM이 자유 서술합니다.
         """
         if int(ep_num) == 1:
-            return f"""
+            if intro_dna:
+                return f"""
 [제1화 특수 DNA 적용]: {intro_dna}
+- 주인공의 핵심 동기와 세계관 기초 확립
+- 강렬한 첫인상과 핵심 갈등 제시
+- 독자 몰입을 위한 훅(Hook) 장면 필수
+"""
+            else:
+                return """
+[제1화 집필 모드]: Blueprint와 Treatment에 따라 자유롭게 서술하세요.
 - 주인공의 핵심 동기와 세계관 기초 확립
 - 강렬한 첫인상과 핵심 갈등 제시
 - 독자 몰입을 위한 훅(Hook) 장면 필수

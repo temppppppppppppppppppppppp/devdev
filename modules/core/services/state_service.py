@@ -13,7 +13,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-from modules.core.constants import Emojis, GenreTypes, VolumeSettings
+from modules.core.constants import Emojis, GenreTypes, Stage2Limits, VolumeSettings
 
 
 class StateService:
@@ -71,9 +71,9 @@ class StateService:
         ep_count = refined_arc.get("ep_count")
         if not isinstance(ep_count, int):
             try:
-                ep_count = int(ep_count) if ep_count and not isinstance(ep_count, dict | list) else 5
+                ep_count = int(ep_count) if ep_count and not isinstance(ep_count, dict | list) else Stage2Limits.DEFAULT_EP_COUNT
             except (ValueError, TypeError):
-                ep_count = 5
+                ep_count = Stage2Limits.DEFAULT_EP_COUNT
         if refined_arc.get("ep_start") != expected_ep_start:
             self._ui.log(f"⚠️ [Mapping] ep_start 불일치: {refined_arc.get('ep_start')} -> {expected_ep_start} (보정)")
             self._audit_event(

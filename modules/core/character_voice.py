@@ -85,13 +85,15 @@ class CharacterVoiceTracker:
         VoiceStyle.MARTIAL: [r"이다[.!?]?$", r"도다[.!?]?$", r"하라[.!?]?$", r"하겠다[.!?]?$", r"것이다[.!?]?$"],
     }
 
-    # 감탄사 패턴
+    # [QI-1-C2] 감탄사 패턴 — 검출용 예시 풀
+    # 상황에 따라 강도를 조절합니다. 진지한 장면에서는 약한 표현,
+    # 극한 상황에서만 강한 표현을 사용합니다.
     EXCLAMATION_PATTERNS = {
-        VoiceStyle.ARCHAIC: ["허허", "허어", "음", "흠", "허"],
-        VoiceStyle.CRUDE: ["쳇", "젠장", "씨발", "빌어먹을"],
-        VoiceStyle.NOBLE: ["허허", "호호", "음", "그래"],
-        VoiceStyle.MARTIAL: ["흠", "음", "크하", "허"],
-        VoiceStyle.SCHOLARLY: ["흠", "음", "그러하군"],
+        VoiceStyle.ARCHAIC: ["허허", "허어", "음", "흠", "허", "어허"],
+        VoiceStyle.CRUDE: ["쳇", "젠장", "씨발", "빌어먹을", "제기랄", "망할", "이런"],
+        VoiceStyle.NOBLE: ["허허", "호호", "음", "그래", "오호"],
+        VoiceStyle.MARTIAL: ["흠", "음", "크하", "허", "크흠"],
+        VoiceStyle.SCHOLARLY: ["흠", "음", "그러하군", "허어"],
     }
 
     # 존칭 관련 패턴

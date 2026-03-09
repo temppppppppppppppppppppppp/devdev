@@ -494,7 +494,8 @@ class StateTracker:
 
             # Arc 번호 추출
             arc_no = tactical_doc.get("arc_no", 1)
-            base_ep = (arc_no - 1) * 5 + 1  # Arc 1 = EP 1-5, Arc 2 = EP 6-10 ...
+            _ep_count = int(tactical_doc.get("ep_count", 4) or 4)
+            base_ep = tactical_doc.get("ep_start", (arc_no - 1) * _ep_count + 1)
 
             # 초기 상태 설정 (Arc 시작)
             initial_state = EpisodeState(
@@ -508,7 +509,7 @@ class StateTracker:
             self.states[base_ep] = initial_state
 
             # 각 에피소드별 상태 파싱
-            for i in range(5):  # Arc당 5개 에피소드
+            for i in range(_ep_count):  # Arc당 에피소드 수
                 ep_num = base_ep + i
                 ep_key = f"ep_{i + 1}"
 
