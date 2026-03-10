@@ -1,0 +1,74 @@
+{
+  "_schema_version": "tf-continuity.v1",
+  "_last_updated": "2026-03-10",
+  "source_master": "docs/2026-03-09/imf_kukje_heir_tf_master_001_070.json",
+  "cleanup_scope": [
+    "canonical_name_unification",
+    "capital_chain_verification",
+    "time_chain_verification",
+    "section_handoff_verification",
+    "future_extension_guardrails"
+  ],
+  "canonical_name_map": [
+    {
+      "canonical": "???",
+      "replaced_aliases": [
+        "???"
+      ],
+      "role": "??? ??/?? ?? ?"
+    },
+    {
+      "canonical": "???",
+      "replaced_aliases": [
+        "???"
+      ],
+      "role": "???? ? ?? ??"
+    }
+  ],
+  "verified_chains": {
+    "capital_chain_ok": true,
+    "time_chain_ok": true,
+    "section_handoffs": [
+      {
+        "from_block": "Block 10",
+        "to_block": "Block 11",
+        "capital_after": "150?"
+      },
+      {
+        "from_block": "Block 20",
+        "to_block": "Block 21",
+        "capital_after": "330?"
+      },
+      {
+        "from_block": "Block 30",
+        "to_block": "Block 31",
+        "capital_after": "520?"
+      },
+      {
+        "from_block": "Block 40",
+        "to_block": "Block 41",
+        "capital_after": "810?"
+      },
+      {
+        "from_block": "Block 50",
+        "to_block": "Block 51",
+        "capital_after": "1250?"
+      },
+      {
+        "from_block": "Block 60",
+        "to_block": "Block 61",
+        "capital_after": "1680?"
+      }
+    ]
+  },
+  "npc_end_state": {
+    "???": "??? ??? ??, ???? ?? ?? ?? ???? ??? ?? ???.",
+    "?? ?": "?? ??? ?? ?? ??? ?? ???? ?? ????."
+  },
+  "future_extension_guardrails": [
+    "Block 71 ???? ???, ??? ??? ????.",
+    "? ??? capital_before? ?? block capital_after? ??? ????.",
+    "? ??? ? block relationship_delta.before? ? bible? npc_end_state ?? ?? after? ???? ???.",
+    "????? ?? ??? ??? ?? ???? ??? ?? ???? ?? ????? ????."
+  ]
+}
