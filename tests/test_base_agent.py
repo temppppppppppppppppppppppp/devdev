@@ -331,6 +331,10 @@ class TestModelFallbackChain:
         assert "gemini-3-flash-preview" not in BaseAgent.MODEL_FALLBACK_CHAIN
         assert "gemini-3.1-pro-preview" not in BaseAgent.MODEL_FALLBACK_CHAIN
 
+    def test_vertex_prefixed_pro_preserves_provider_on_fallback(self):
+        agent = BaseAgent(context=MagicMock(), client=MagicMock(), model_tier="vertexai:gemini-2.5-pro")
+        assert agent.backup_model == "vertexai:gemini-2.5-flash"
+
 
 # ══════════════════════════════════════════════════════════════
 # Test 9: THINKING_BUDGET_MAP

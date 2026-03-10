@@ -65,14 +65,21 @@ class SessionStats:
     model_stats: dict[str, dict] = field(default_factory=dict)
 
 
-# 모델별 토큰 비용 (USD per 1M tokens, 2024년 기준 추정)
+# 모델별 토큰 비용 (USD per 1M tokens, 2026년 기준)
 MODEL_COSTS = {
-    "gemini-2.5-flash-preview-04-17": {"input": 0.15, "output": 0.60},
     "gemini-2.5-flash": {"input": 0.15, "output": 0.60},
     "gemini-2.5-pro": {"input": 1.25, "output": 5.00},
-    "gemini-3.1-pro-preview": {"input": 2.50, "output": 10.00},
     "default": {"input": 0.50, "output": 2.00},
 }
+
+
+def _normalize_billable_model(model: str) -> str:
+    normalized = (model or "").strip()
+    lowered = normalized.lower()
+    for prefix in ("vertexai:", "vertex:", "vertex/"):
+        if lowered.startswith(prefix):
+            return normalized[len(prefix) :]
+    return normalized
 
 
 class MetricsCollector:
@@ -83,7 +90,7 @@ class MetricsCollector:
         collector = MetricsCollector()
 
         # 호출 시작
-        metric_id = collector.start_call("Writer", "gemini-3.1-pro-preview")
+        metric_id = collector.start_call("Writer", "gemini-2.5-pro")
 
         # 작업 수행...
 
@@ -277,7 +284,7 @@ class MetricsCollector:
         Returns:
             float: 비용 (USD)
         """
-        costs = MODEL_COSTS.get(model, MODEL_COSTS["default"])
+        costs = MODEL_COSTS.get(_normalize_billable_model(model), MODEL_COSTS["default"])
         input_cost = (input_tokens / 1_000_000) * costs["input"]
         output_cost = (output_tokens / 1_000_000) * costs["output"]
         return input_cost + output_cost

@@ -167,6 +167,8 @@ def smart_truncate(text: str, max_chars: int = ContextLimits.MAX_CONTEXT_CHARS, 
     if head_chars < 0:
         head_chars = 0
 
+    # Separator is 17 chars; keep a 50-char reserve so tail slices do not overrun
+    # and head-only fallback remains stable near the max_chars boundary.
     tail_budget = max_chars - head_chars - 50
     if tail_budget <= 0:
         return text[:max_chars]

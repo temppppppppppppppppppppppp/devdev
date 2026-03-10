@@ -147,6 +147,62 @@ class TestProcessPassResult:
 
         pp.ctx.agents["director"].on_approve_workflow.assert_called_once()
 
+    def test_quality_labels_saved_via_sidecar_table(self, tmp_path):
+        pp = self._make_pp()
+        pp.ctx.current_project.db.save_manuscript.return_value = True
+
+        result = pp.process_pass_result(
+            next_ep=1,
+            final_manuscript="테스트 원고 " * 500,
+            final_title="테스트",
+            final_state_updates={
+                "_director_quality_labels": {
+                    "score": 94,
+                    "verdict": "PASS",
+                    "selection_reason": "연속성 우수",
+                    "score_breakdown": {"continuity_contradiction": 39},
+                    "consistency_checklist": {"pacing_quality": "OK"},
+                }
+            },
+            blueprint={"scene_breakdown": []},
+            arc_data={"arc_no": 1},
+            output_dir=tmp_path,
+            v50_modules_available=False,
+            extract_chain_link_fn=lambda *_args, **_kwargs: {},
+        )
+
+        assert result is True
+        pp.ctx.current_project.db.save_episode_quality_label.assert_called_once()
+
+    def test_quality_signals_saved_via_sidecar_table(self, tmp_path):
+        pp = self._make_pp()
+        pp.ctx.current_project.db.save_manuscript.return_value = True
+
+        result = pp.process_pass_result(
+            next_ep=2,
+            final_manuscript="그야말로 숨을 삼켰다. 어느새 입을 열었다. " * 120,
+            final_title="테스트",
+            final_state_updates={
+                "_director_quality_labels": {
+                    "score": 91,
+                    "verdict": "PASS",
+                    "consistency_checklist": {"scene_variety": "ISSUE"},
+                },
+                "warnings": ["길이 편차"],
+            },
+            blueprint={"scene_breakdown": []},
+            arc_data={"arc_no": 1},
+            output_dir=tmp_path,
+            v50_modules_available=False,
+            extract_chain_link_fn=lambda *_args, **_kwargs: {},
+        )
+
+        assert result is True
+        pp.ctx.current_project.db.save_episode_quality_signal.assert_called_once()
+        saved_signals = pp.ctx.current_project.db.save_episode_quality_signal.call_args.args[1]
+        assert saved_signals["ced_score"] > 0
+        assert saved_signals["ai_slop_score"] > 0
+
     def test_chain_link_fn_called(self, tmp_path):
         pp = self._make_pp()
         pp.ctx.current_project.db.save_manuscript.return_value = True
@@ -379,6 +435,35 @@ class TestProcessPassResult:
         assert record_kwargs["ep_num"] == 7
         assert record_kwargs["stage"] == 4
         assert record_kwargs["result"]["decision"] == "PASS"
+
+    def test_records_quality_signals_on_dashboard_validation(self, tmp_path):
+        pp = self._make_pp()
+        pp.ctx.current_project.db.save_manuscript.return_value = True
+        pp.ctx.quality_dashboard = MagicMock()
+        pp.ctx.quality_dashboard.detect_score_regression.return_value = {"is_regression": False, "severity": "none"}
+
+        result = pp.process_pass_result(
+            next_ep=8,
+            final_manuscript="그야말로 숨을 삼켰다. 말 그대로 시선을 돌렸다. " * 120,
+            final_title="테스트",
+            final_state_updates={
+                "_director_quality_labels": {
+                    "score": 95,
+                    "verdict": "PASS",
+                    "consistency_checklist": {"pacing_quality": "ISSUE"},
+                }
+            },
+            blueprint={"scene_breakdown": []},
+            arc_data={"arc_no": 1},
+            output_dir=tmp_path,
+            v50_modules_available=False,
+            extract_chain_link_fn=lambda *_args, **_kwargs: {},
+        )
+
+        assert result is True
+        record_kwargs = pp.ctx.quality_dashboard.record_validation.call_args.kwargs
+        assert record_kwargs["result"]["score"] == 95
+        assert record_kwargs["result"]["quality_signals"]["ced_score"] > 0
 
 
 class TestRunPostEpisodeTasks:

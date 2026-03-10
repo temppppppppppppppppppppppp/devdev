@@ -196,7 +196,7 @@ class StateExtractor(BaseAgent):
             model_tier: 사용할 모델 (V60.24: Flash로 변경 - 추출 작업)
         """
         super().__init__(context, client, model_tier)
-        # [V60.37] 스마트 폴백 (BaseAgent에서 자동 설정: gemini-3-flash → gemini-2.5-flash)
+        # [V60.37] 스마트 폴백 (BaseAgent 자동 설정, 현재 gemini-2.5-flash 직접 사용)
         # [V62.5] 상태 캐시: arc_no → extract_state 결과 (PASS된 Arc는 불변)
         self._state_cache: dict[int, dict] = {}
 

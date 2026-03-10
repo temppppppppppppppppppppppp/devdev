@@ -285,6 +285,57 @@ class TestPreflightArcAnalysis:
         out = preflight._preflight_arc_analysis(**_arc_analysis_kwargs(all_refined_arcs=arcs))
         assert "recent_patterns" not in out
 
+    def test_build_fact_ledger_context_reads_numbers_schema(self, preflight):
+        preflight.ctx.current_project.db.load_anchor.side_effect = lambda key: (
+            {
+                "numbers": {
+                    "자본금": {
+                        "value": "10억",
+                        "unit": "원",
+                        "established_value": "1억",
+                        "established_ep": 1,
+                        "last_ep": 8,
+                    }
+                }
+            }
+            if key == "fact_ledger"
+            else {}
+        )
+
+        text = preflight._build_fact_ledger_context(max_items=5)
+
+        assert "[팩트 원장 핵심 수치]" in text
+        assert "자본금" in text
+
+    def test_style_guide_and_protagonist_helpers_read_anchor_data(self, preflight):
+        preflight.ctx.current_project.load_v20_anchor.return_value = {
+            "tone": "냉소적",
+            "pov": "3인칭",
+            "dialogue_ratio": 0.4,
+            "sentence_length": "short",
+            "anti_ai_patterns": ["그의 눈동자가 흔들렸다", "마침내 모든 것이 끝났다"],
+            "forbidden_expressions": ["결국"],
+        }
+        preflight.ctx.current_project.master_bible = {
+            "MasterBible": {
+                "protagonist_config": {
+                    "world_origin": "현대인",
+                    "incarnation_type": "회귀자",
+                    "pov": "1인칭",
+                }
+            }
+        }
+
+        style_text = preflight._build_style_guide_summary()
+        protagonist_text = preflight._build_protagonist_config_summary()
+
+        assert "[문체 가이드 요약]" in style_text
+        assert "시점=1인칭" in style_text
+        assert "anti-AI 금지" in style_text
+        assert "[주인공 설정 요약]" in protagonist_text
+        assert "환생 유형=회귀자" in protagonist_text
+        assert "1인칭 유지" in protagonist_text
+
 
 class TestPreflightEnrichment:
     @patch("modules.core.spinners.StageSpinner", MagicMock())
@@ -359,6 +410,21 @@ class TestPreflightEnrichment:
         assert not preflight.ctx.memory.retrieve_npc_context.called
         call_kwargs = preflight.ctx.agents["four_phase"].generate.call_args.kwargs
         assert call_kwargs["vector_context"] == "legacy vector block"
+
+    @patch("modules.core.spinners.StageSpinner", MagicMock())
+    def test_fact_ledger_context_prepended_to_fourphase_vector_context(self, preflight):
+        preflight.ctx.context_advisor = None
+        preflight.ctx.memory = MagicMock()
+        preflight.ctx.memory.retrieve_high_res_context.return_value = "legacy vector block"
+        preflight.ctx.current_project.db.load_anchor.side_effect = lambda key: (
+            {"numbers": {"자본금": {"value": "10억", "unit": "원", "last_ep": 8}}} if key == "fact_ledger" else {}
+        )
+
+        preflight._preflight_enrichment(**_enrichment_kwargs(current_ep_start=3))
+
+        call_kwargs = preflight.ctx.agents["four_phase"].generate.call_args.kwargs
+        assert "[팩트 원장 핵심 수치]" in call_kwargs["vector_context"]
+        assert "legacy vector block" in call_kwargs["vector_context"]
 
     @patch("modules.core.spinners.StageSpinner", MagicMock())
     def test_advisor_plan_dispatches_vec_and_npc_sources(self, preflight):

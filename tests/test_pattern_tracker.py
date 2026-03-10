@@ -69,3 +69,33 @@ def test_build_report_db_returns_none():
     report = tracker.build_report(db=FakeDB(), ep_num=5, lookback=3)
     assert isinstance(report, PatternReport)
     assert report.expression_freq == {}
+
+
+def test_build_report_collects_npc_reaction_patterns():
+    class FakeDB:
+        def __init__(self):
+            self._rows = {
+                1: {"content": "민수는 경악했다."},
+                2: {"content": "민수는 침묵했다."},
+                3: {"content": "민수는 분노했다."},
+            }
+
+        def get_manuscript(self, ep):
+            return self._rows.get(ep)
+
+    tracker = PatternTracker()
+    report = tracker.build_report(db=FakeDB(), ep_num=4, lookback=4)
+
+    assert report.npc_reaction_patterns["민수"][-3:] == ["경악", "침묵", "분노"]
+
+
+def test_to_summary_text_warns_on_recent_emotion_streak_even_with_ok_diversity():
+    report = PatternReport(
+        emotion_diversity=0.5,
+        protagonist_emotions=["안도", "분노", "안도", "분노"],
+        episode_emotion_sequence=["안도", "안도", "안도"],
+    )
+
+    text = report.to_summary_text()
+
+    assert "감정 고착" in text

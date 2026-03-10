@@ -10,6 +10,7 @@ import re
 import statistics
 from collections import Counter
 
+from modules.core.llm_generate import generate_content_via_router
 from modules.validation.threshold_helper import _threshold  # [Phase 5-B-2c]
 
 _SANITIZE_MAX_CHARS = int(_threshold("scoring.sanitize_max_chars", 3000))
@@ -261,7 +262,7 @@ Step 6: Article 7 (독자 대리만족) 분석
                 ),  # [TF-1] ms 단위, Gemini 최소 10초
             )
 
-            response = self.client.models.generate_content(model=self.model, contents=prompt, config=config)
+            response = generate_content_via_router(client=self.client, model=self.model, contents=prompt, config=config)
 
             import json
 

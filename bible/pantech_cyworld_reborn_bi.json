@@ -1,30 +1,30 @@
 {
   "_schema_version": "2.0",
-  "_schema_description": "팬택과 싸이월드를 살린 재벌 3세 전용 Bible - pantech_cyworld_reborn_tr_block_070_draft.json 기반 동기화본",
-  "_last_updated": "2026-03-09",
+  "_schema_description": "벽돌 더미 속 미래 지도 전용 Bible - pantech_cyworld_reborn_tr_block_070_draft.json 기반 자동 생성",
+  "_last_updated": "2026-03-10",
   "_genre": "investment",
   "MasterBible": {
     "ProjectData": {
       "MetaInfo": {
-        "title": "팬택과 싸이월드를 살린 재벌 3세",
-        "grand_objective": "팬택과 싸이월드의 실패를 되감아 하드웨어·관계망·공공 돌봄을 하나로 묶은 생활계정 그룹을 세우고, 한국 IT의 아픈 이름을 새 시대의 질서로 바꾼다.",
-        "genre_archetype": "회귀 재벌 · 사업전략 · 산업재건",
-        "logline": "몰락한 한국 IT의 골든타임으로 회귀한 재벌 3세 윤도현이 팬택의 제조력과 싸이월드의 관계망을 결합해 생활계정 그룹을 세우고, 승계전과 공공·해외 표준 전쟁까지 돌파한다.",
+        "title": "벽돌 더미 속 미래 지도",
+        "grand_objective": "이번 새 그룹 선언식이 실체 없는 상징으로 보이면 윤도현은 승계와 재편, 정책과 해외 확장의 성과를 하나의 질서로 묶지 못하고, 팬택과 싸이월드의 부활을 일시적 반등으로 남겨 두게 된다.",
+        "genre_archetype": "investment + chaebol + business strategy",
+        "logline": "미래 붕괴를 경험한 재벌 3세가 회귀 후 산업 전 섹터를 순차 공략하며 제국을 재건한다.",
         "total_episodes": 350,
         "episodes_per_arc": 5,
         "arcs_per_volume": 5
       },
       "CoreIdentity": {
         "protagonist": "윤도현",
-        "protagonist_faction": "세림그룹 전략라인",
-        "edge": "미래 시장 전환 지식 + 자본·정책·지배구조 설계",
-        "desire": "팬택과 싸이월드를 묶어 생활계정 그룹을 세우고 한국 IT의 실패를 미래 질서로 뒤집는다.",
-        "crisis": "아이폰 쇼크 이전의 짧은 골든타임 안에 세림그룹 승계전, 공공 데이터 감사, 해외 현지보관 압박까지 동시에 돌파해야 한다."
+        "protagonist_faction": "제국그룹 본사",
+        "edge": "미래 지식 + 협상 설계",
+        "desire": "실패한 미래를 완전히 교정하고 승리 루트만 남긴다.",
+        "crisis": "2024년 겨울, 세림그룹 오너 3세 윤도현은 서울 한복판의 임대 오피스텔에서 혼자 죽었다. 전생의 그는 2000년대 후반 한국 IT 기업들이 하나씩 무너지는 광경을 보며도 아무것도 하지 못한 채 유통 계열사만 전전하다가 쫓겨난 인물이었다. 팬택은 스마트폰 전환에 실패해 벽돌 더미가 되었고, 싸이월드는 세계에서 가장 촘촘했던 인간관계망을 들고도 모바일 시대 문턱에서 미끄러졌다. 눈을 뜬 곳은"
       },
       "CommercialCode": {
-        "cider_point": "실패한 IT 브랜드를 제도와 수익 구조까지 갖춘 새 질서로 뒤집는 쾌감",
-        "success_device": "골든타임 선점 + 정책 표준화 + 지배구조 역전",
-        "attitude": "질서를 먼저 설계하고 시장·정치·자본을 같은 방향으로 밀어붙임"
+        "cider_point": "패배로 보이는 장면을 미리 설계된 승리로 반전",
+        "success_device": "타이밍 투자 + 글로벌 거물 협업",
+        "attitude": "항상 이기는 구조를 먼저 만들고 실행"
       }
     },
     "protagonist_config": {
@@ -40,9 +40,9 @@
       "Protagonist": {
         "actual_truth": {
           "name": "윤도현",
-          "alias": "생활계정 설계자",
-          "age": 31,
-          "rank": "세림그룹 오너 3세/전략 총괄",
+          "alias": "시장 설계자",
+          "age": 30,
+          "rank": "재벌 3세/핵심 경영자",
           "financial_status": {
             "total_assets": "초기 설정 필요",
             "liquid_cash": "초기 설정 필요",
@@ -54,12 +54,12 @@
           },
           "network_level": "중상",
           "wealth": "성장 국면",
-          "current_objective": "팬택과 싸이월드를 축으로 생활계정 그룹을 완성하고 국내 정책 표준과 아시아 공동운영 질서까지 장악한다.",
-          "causal_injuries": "승계전, 공공 데이터 감사, 해외 현지보관 압박이 연쇄적으로 몰려오는 복합 위기.",
+          "current_objective": "몰락한 제국그룹을 재건해 한국 1위에서 세계 1위 그룹까지 확장한다.",
+          "causal_injuries": "승계 압박, 정책 충돌, 글로벌 경쟁이 동시에 몰려오는 복합 위기.",
           "inventory": []
         },
         "public_reputation": {
-          "identity": "무시받던 재벌 3세에서 판을 바꾸는 실무형 후계자",
+          "identity": "젊은 실무형 후계자",
           "wealth_level": "신흥",
           "perceived_influence": "빠르게 상승"
         }

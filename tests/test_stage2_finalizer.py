@@ -326,10 +326,13 @@ class TestRunFinalize:
         finalizer.ctx.current_project.load_v20_anchor.side_effect = _load_anchor
         finalizer.ctx.agents["director"].ask.return_value = "summary result long enough"
 
-        kwargs = _make_finalize_kwargs(valid_refined_arc, global_arc_no=10)
+        kwargs = _make_finalize_kwargs(valid_refined_arc, global_arc_no=5)
         result = asyncio.run(finalizer.run_finalize(**kwargs))
 
         assert result["action"] == "break"
         save_calls = [call.args[0] for call in finalizer.ctx.current_project.save_v20_anchor.call_args_list]
         assert "volume_summary_1" in save_calls
         assert "series_summary" in save_calls
+        prompts = [call.args[0] for call in finalizer.ctx.agents["director"].ask.call_args_list]
+        assert any("[인물 아크]" in prompt and "2000자 이내" in prompt for prompt in prompts)
+        assert any("[미해결 복선]" in prompt and "5000자 이내" in prompt for prompt in prompts)

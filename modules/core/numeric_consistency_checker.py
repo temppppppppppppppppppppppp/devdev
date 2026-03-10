@@ -66,6 +66,9 @@ _LEVERAGE_CALC_RE = re.compile(r"(\d[\d,.]*)\s*(억|만).*?[xX×]\s*(\d[\d,.]*)\
 
 # 직함 패턴
 _TITLE_LIST = [
+    "인턴",
+    "레지던트",
+    "전문의",
     "회장",
     "부회장",
     "사장",
@@ -106,38 +109,70 @@ _TITLE_LIST = [
     "의사",
     "간호사",
     "약사",
+    "병장",
+    "상병",
+    "일병",
+    "이등병",
+    "하사",
+    "중사",
+    "상사",
     "감독",
     "코치",
     "선수",
     "주장",
+    "1군",
+    "2군",
+    "국대",
+    "국가대표",
+    "석사",
+    "박사",
 ]
 _TITLE_RE = re.compile(
     r"([\uac00-\ud7a3]{2,6})\s*(" + "|".join(re.escape(t) for t in _TITLE_LIST) + r")(?:\b|[이가은는의를에])",
 )
 
 # 직함 승진 순서 (동일 계열만 비교)
+_TITLE_PROGRESSIONS = {
+    "corporate": [
+        "사원",
+        "대리",
+        "과장",
+        "차장",
+        "부장",
+        "팀장",
+        "파트장",
+        "실장",
+        "본부장",
+        "이사",
+        "상무",
+        "전무",
+        "부사장",
+        "사장",
+        "부회장",
+        "회장",
+        "대표",
+        "CEO",
+        "CFO",
+        "CTO",
+        "COO",
+        "VP",
+        "MD",
+        "파트너",
+        "디렉터",
+        "매니저",
+        "PB",
+    ],
+    "academic": ["강사", "연구원", "석사", "박사", "조교수", "부교수", "교수"],
+    "medical": ["간호사", "인턴", "레지던트", "의사", "전문의", "약사", "원장", "교수"],
+    "military": ["이등병", "일병", "상병", "병장", "하사", "중사", "상사"],
+    "sports": ["2군", "선수", "1군", "국대", "국가대표", "주장", "코치", "감독"],
+    "research": ["연구원", "선임연구원", "책임연구원", "소장", "센터장", "관장"],
+}
+
 _TITLE_RANK = {
-    t: i
-    for i, t in enumerate(
-        [
-            "사원",
-            "대리",
-            "과장",
-            "차장",
-            "부장",
-            "팀장",
-            "파트장",
-            "실장",
-            "본부장",
-            "이사",
-            "상무",
-            "전무",
-            "부사장",
-            "사장",
-            "부회장",
-            "회장",
-        ]
-    )
+    title: (domain, idx)
+    for domain, titles in _TITLE_PROGRESSIONS.items()
+    for idx, title in enumerate(titles)
 }
 
 # "처음" 마커
@@ -600,7 +635,12 @@ class NumericConsistencyChecker:
             is_promotion = False
             for pt in prev_set:
                 prev_rank = _TITLE_RANK.get(pt)
-                if cur_rank is not None and prev_rank is not None and cur_rank > prev_rank:
+                if (
+                    cur_rank is not None
+                    and prev_rank is not None
+                    and cur_rank[0] == prev_rank[0]
+                    and cur_rank[1] > prev_rank[1]
+                ):
                     is_promotion = True
                     break
             if not is_promotion:

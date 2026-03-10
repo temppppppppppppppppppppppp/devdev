@@ -16,6 +16,8 @@ from dataclasses import asdict, dataclass, fields
 from pathlib import Path
 from typing import Any
 
+from modules.core.llm_generate import generate_content_via_router
+
 
 @dataclass
 class StyleGuide:
@@ -689,8 +691,28 @@ JSON만 출력하세요.
         if not self.client:
             return {}
 
-        # 모범 문단 + 초반 원고 샘플
-        sample = "\n\n".join(passages[:5]) if passages else drafts[0][:5000]
+        # 모범 문단 + 앞/중간/뒤 샘플을 섞어 편향 완화
+        sample_chunks: list[str] = []
+        if passages:
+            indices = sorted({0, len(passages) // 3, (len(passages) * 2) // 3, len(passages) - 1})
+            for idx in indices:
+                if 0 <= idx < len(passages):
+                    chunk = str(passages[idx] or "").strip()
+                    if chunk and chunk not in sample_chunks:
+                        sample_chunks.append(chunk)
+            for chunk in passages[:2]:
+                chunk_text = str(chunk or "").strip()
+                if chunk_text and chunk_text not in sample_chunks:
+                    sample_chunks.append(chunk_text)
+        elif drafts:
+            draft_indices = sorted({0, len(drafts) // 2, len(drafts) - 1})
+            for idx in draft_indices:
+                if 0 <= idx < len(drafts):
+                    chunk = str(drafts[idx] or "").strip()[:5000]
+                    if chunk and chunk not in sample_chunks:
+                        sample_chunks.append(chunk)
+
+        sample = "\n\n".join(sample_chunks[:6])
 
         # [QI-1-B3] 장르별 Anti-AI 힌트
         _genre_hint = ""
@@ -913,7 +935,8 @@ JSON만 출력하세요.
         last_err = None
         for model_name in models:
             try:
-                response = self.client.models.generate_content(
+                response = generate_content_via_router(
+                    client=self.client,
                     model=model_name,
                     contents=prompt,
                     config=types.GenerateContentConfig(

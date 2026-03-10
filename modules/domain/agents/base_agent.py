@@ -12,6 +12,8 @@ from google import genai
 from google.genai import types
 
 from modules.core.constants import ContextLimits  # [TF-25-04] validation.yaml SSOT
+from modules.core.llm_provider import LLMRequest
+from modules.core.llm_router import get_shared_llm_router
 from modules.validation.threshold_helper import _threshold
 
 # [V44] 에스케이프 유틸리티 임포트
@@ -45,11 +47,34 @@ class AgentErrorType:
 DEFAULT_MODEL_TIER = "gemini-2.5-flash"
 # [SSOT] models.yaml fallback_chain 로드 실패 시 하드코딩 fallback — 변경 불필요(yaml 우선)
 DEFAULT_MODEL_FALLBACK_CHAIN = {
-    "gemini-3.1-pro-preview": "gemini-3-pro-preview",
-    "gemini-3-pro-preview": "gemini-2.5-pro",
-    "gemini-3-flash-preview": "gemini-2.5-flash",
+    "gemini-2.5-pro": "gemini-2.5-flash",
     "gemini-2.5-flash": "gemini-2.5-flash",
 }
+
+_PROVIDER_PREFIXES = ("vertexai:", "vertex:", "vertex/")
+
+
+def _split_provider_prefixed_model(model: str) -> tuple[str, str]:
+    normalized = (model or "").strip()
+    lowered = normalized.lower()
+    for prefix in _PROVIDER_PREFIXES:
+        if lowered.startswith(prefix):
+            return normalized[: len(prefix)], normalized[len(prefix) :]
+    return "", normalized
+
+
+def _resolve_backup_model(primary_model: str, fallback_chain: dict[str, str]) -> str:
+    direct = fallback_chain.get(primary_model)
+    if isinstance(direct, str) and direct.strip():
+        return direct
+
+    prefix, base_model = _split_provider_prefixed_model(primary_model)
+    if prefix:
+        base_backup = fallback_chain.get(base_model, DEFAULT_MODEL_TIER)
+        _, normalized_backup = _split_provider_prefixed_model(base_backup)
+        return prefix + normalized_backup
+
+    return fallback_chain.get(primary_model, DEFAULT_MODEL_TIER)
 
 
 def _resolve_models_config_path() -> Path:
@@ -253,6 +278,7 @@ class BaseAgent:
     def __init__(self, context, client, model_tier=None) -> None:
         self.context = context
         self.client = client
+        self._llm_router = get_shared_llm_router()
         resolved_model = model_tier
         if resolved_model is None:
             agent_key = _to_snake_case(self.__class__.__name__)
@@ -260,7 +286,7 @@ class BaseAgent:
         self.primary_model = resolved_model or DEFAULT_MODEL_TIER
         # [V60.37] 스마트 폴백: 모델 티어에 따라 자동 백업 모델 설정
         # [V60.78] 기본 폴백을 2.5-flash로 변경 (2.0 이하 미사용 정책)
-        self.backup_model = self.MODEL_FALLBACK_CHAIN.get(self.primary_model, DEFAULT_MODEL_TIER)
+        self.backup_model = _resolve_backup_model(self.primary_model, self.MODEL_FALLBACK_CHAIN)
         self.cache_name = None
         # [V44] 실패 복구 상태 추적
         self.last_partial_response = ""
@@ -296,6 +322,18 @@ class BaseAgent:
     def agent_name(self) -> str:
         """[V49.3] 에이전트 이름 반환 (비용 추적용)"""
         return self._agent_name
+
+    def _generate_content(self, *, model: str, contents, config):
+        """Phase 1 provider shim.
+
+        Downstream parsing in BaseAgent still expects the native Gemini response
+        object, so the provider keeps `raw` intact and this helper returns it.
+        """
+
+        request = LLMRequest(model=model, contents=contents, config=config)
+        provider = self._llm_router.get_provider_for_model(model)
+        response = provider.generate(client=self.client, request=request)
+        return response.raw
 
     # 📂 modules/domain/agents/base_agent.py
 
@@ -476,9 +514,7 @@ class BaseAgent:
                     # [V60.99] API Rate Limit 예방 딜레이
                     time.sleep(self.API_DELAY)
                     _api_t0 = time.time()
-                    response = self.client.models.generate_content(
-                        model=current_model, contents=current_prompt, config=config
-                    )
+                    response = self._generate_content(model=current_model, contents=current_prompt, config=config)
                     _api_elapsed = time.time() - _api_t0
                     if _api_elapsed > 30:
                         print(
@@ -761,7 +797,7 @@ class BaseAgent:
         if response_schema:
             config_params["response_schema"] = response_schema
 
-        # [V61.6] Thinking Budget 지원 (모든 모델 공통 - gemini-3, 2.5-pro, 2.5-flash)
+        # [V61.6] Thinking Budget 지원 (모든 모델 공통 - gemini-2.5-pro, gemini-2.5-flash)
         if thinking_level:
             # 문자열이면 정수로 변환, 이미 정수면 그대로 사용
             if isinstance(thinking_level, str):
@@ -878,13 +914,9 @@ class BaseAgent:
         is_ambiguous_429 = "429" in error_str and not is_rate_limit and not is_quota_exhausted
 
         # ═══════════════════════════════════════════════════════════════
-        # [V60.98] gemini-3-pro는 할당량이 적으므로 Rate Limit 시 즉시 폴백
+        # [V60.97] Case A: Rate Limit → Backoff 후 재시도
         # ═══════════════════════════════════════════════════════════════
-        is_gemini3_rate_limit = (is_rate_limit or is_ambiguous_429) and "gemini-3-pro" in current_model
-
-        # ═══════════════════════════════════════════════════════════════
-        # [V60.97] Case A: Rate Limit (gemini-3-pro 제외) → Backoff 후 재시도
-        # ═══════════════════════════════════════════════════════════════
+        is_gemini3_rate_limit = False  # [TF-MULTI] gemini-3 시리즈 폐기 — 현재 2.5-pro/flash만 사용
         if (
             (is_rate_limit or is_ambiguous_429)
             and not is_gemini3_rate_limit
@@ -905,7 +937,7 @@ class BaseAgent:
             return result
 
         # ═══════════════════════════════════════════════════════════════
-        # [V60.97] Case B: Quota/Rate Limit 초과 또는 gemini-3-pro Rate Limit → 즉시 폴백
+        # [V60.97] Case B: Quota/Rate Limit 초과 → 즉시 폴백
         # ═══════════════════════════════════════════════════════════════
         if (
             is_quota_exhausted
@@ -966,9 +998,7 @@ class BaseAgent:
 
                 # [V60.99] API Rate Limit 예방 딜레이
                 time.sleep(self.API_DELAY)
-                response = self.client.models.generate_content(
-                    model=current_model, contents=current_prompt, config=new_config
-                )
+                response = self._generate_content(model=current_model, contents=current_prompt, config=new_config)
 
                 result["action"] = "fallback_response"
                 result["current_model"] = current_model
@@ -1129,9 +1159,7 @@ class BaseAgent:
 
             # [V60.99] API Rate Limit 예방 딜레이
             time.sleep(self.API_DELAY)
-            res = self.client.models.generate_content(
-                model=self.backup_model, contents=base_prompt, config=backup_config
-            )
+            res = self._generate_content(model=self.backup_model, contents=base_prompt, config=backup_config)
             try:
                 backup_text = res.text if res.text else ""
             except (ValueError, AttributeError):
@@ -1752,7 +1780,7 @@ class BaseAgent:
 
             _cached_t0 = time.monotonic()
             time.sleep(self.API_DELAY)
-            response = self.client.models.generate_content(
+            response = self._generate_content(
                 model=self.primary_model,
                 contents=[{"role": "user", "parts": [{"text": wrapped_prompt}]}],
                 config=config,

@@ -18,6 +18,7 @@ import re
 from google.genai import types
 
 from modules.core.constants import AIModels
+from modules.core.llm_generate import generate_content_via_router
 
 # 서사 요소 추출 프롬프트
 NARRATIVE_EXTRACTION_PROMPT = """
@@ -150,7 +151,7 @@ class NarrativeStructureAnalyzer:
                 response_mime_type="application/json",
             )
 
-            response = self.client.models.generate_content(model=self.model, contents=prompt, config=config)
+            response = generate_content_via_router(client=self.client, model=self.model, contents=prompt, config=config)
 
             # [V60.15 FIX] None 체크 + [V70] ValueError 방어
             try:

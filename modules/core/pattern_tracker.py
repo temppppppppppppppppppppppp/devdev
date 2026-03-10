@@ -58,6 +58,25 @@ ENDING_CLASSIFIERS: dict[str, list[str]] = {
 }
 
 
+def _find_recent_emotion_streak(sequence: list[str], min_streak: int = 3) -> tuple[str, int]:
+    """최근 에피소드 기준 동일 지배 감정 연속 길이를 계산한다."""
+    if not sequence:
+        return "", 0
+
+    last = str(sequence[-1] or "").strip()
+    if not last:
+        return "", 0
+
+    streak = 0
+    for emotion in reversed(sequence):
+        if str(emotion or "").strip() != last:
+            break
+        streak += 1
+    if streak >= min_streak:
+        return last, streak
+    return "", 0
+
+
 @dataclass
 class PatternReport:
     """[TF-54a] PatternTracker가 집계한 직전 N화 패턴 요약."""
@@ -69,6 +88,7 @@ class PatternReport:
     metaphor_categories: dict[str, int] = field(default_factory=dict)
     emotion_diversity: float = 0.0
     protagonist_emotions: list[str] = field(default_factory=list)
+    episode_emotion_sequence: list[str] = field(default_factory=list)
 
     def to_summary_text(self, min_freq: int = 2) -> str:
         """LLM 주입용 요약 텍스트 생성."""
@@ -99,6 +119,12 @@ class PatternReport:
         if self.emotion_diversity < 0.4 and self.protagonist_emotions:
             dominant = max(set(self.protagonist_emotions), key=self.protagonist_emotions.count)
             lines.append(f"【감정 빈곤】 주인공 감정이 '{dominant}'에 편중 (다양성={self.emotion_diversity:.2f})")
+        else:
+            dominant = ""
+
+        streak_emotion, streak_len = _find_recent_emotion_streak(self.episode_emotion_sequence, min_streak=3)
+        if streak_emotion and (self.emotion_diversity >= 0.4 or streak_emotion != dominant):
+            lines.append(f"【감정 고착】 최근 {streak_len}화 연속 '{streak_emotion}' 우세")
 
         for npc, reactions in list(self.npc_reaction_patterns.items())[:2]:
             if isinstance(reactions, list) and len(reactions) >= 3:
@@ -242,12 +268,14 @@ class PatternTracker:
             m[-50:].strip() for m in manuscripts if len(m) >= 20
         ]
         report.metaphor_categories = self._count_metaphors(manuscripts)
+        report.npc_reaction_patterns = self._extract_npc_reaction_patterns(manuscripts)
 
         combined = "\n".join(manuscripts)
         report.protagonist_emotions = self._extract_emotions(combined)
         unique = len(set(report.protagonist_emotions))
         total = len(report.protagonist_emotions)
         report.emotion_diversity = (unique / total) if total else 0.0
+        report.episode_emotion_sequence = self._extract_episode_emotion_sequence(manuscripts)
 
         return report
 
@@ -299,6 +327,43 @@ class PatternTracker:
         combined = "\n".join(manuscripts)
         return {cat: sum(combined.count(keyword) for keyword in keywords) for cat, keywords in METAPHOR_CATEGORIES.items()}
 
+    def _extract_npc_reaction_patterns(self, manuscripts: list[str]) -> dict[str, list[str]]:
+        """직전 원고에서 NPC별 반복 반응 키워드를 추출한다."""
+        reaction_keywords: dict[str, tuple[str, ...]] = {
+            "경악": ("경악", "경악했다", "경악하며"),
+            "침묵": ("침묵", "말을 잇지 못", "입을 다물"),
+            "분노": ("분노", "이를 갈", "노려보"),
+            "당황": ("당황", "얼어붙", "굳어졌"),
+            "안도": ("안도", "한숨을 내쉬", "긴장을 풀"),
+            "두려움": ("두려움", "질린", "겁에 질"),
+            "웃음": ("웃음", "웃었", "미소"),
+        }
+        stopwords = {"그는", "그녀는", "나는", "주인공은", "그리고", "하지만", "그러나", "순간", "그때"}
+        patterns: dict[str, list[str]] = {}
+        particles = ("은", "는", "이", "가", "도", "을", "를")
+
+        for manuscript in manuscripts:
+            for sentence in re.split(r"[.!?\n]+", manuscript):
+                sentence = sentence.strip()
+                if len(sentence) < 4:
+                    continue
+                match = re.search(r"([가-힣A-Za-z][가-힣A-Za-z0-9]{1,11})\s*(?:은|는|이|가|도|을|를)?", sentence)
+                if not match:
+                    continue
+                npc_name = match.group(1).strip()
+                for particle in particles:
+                    if npc_name.endswith(particle) and len(npc_name) > len(particle) + 1:
+                        npc_name = npc_name[: -len(particle)]
+                        break
+                if npc_name in stopwords:
+                    continue
+                for label, keywords in reaction_keywords.items():
+                    if any(keyword in sentence for keyword in keywords):
+                        patterns.setdefault(npc_name, []).append(label)
+                        break
+
+        return {npc: reactions[-5:] for npc, reactions in patterns.items() if len(reactions) >= 2}
+
     def _extract_emotions(self, text: str) -> list[str]:
         """간단한 감정 키워드 추출 (regex/문자열 기반)."""
         emotion_patterns = [
@@ -318,6 +383,17 @@ class PatternTracker:
             count = text.count(emotion)
             found.extend([emotion] * count)
         return found
+
+    def _extract_episode_emotion_sequence(self, manuscripts: list[str]) -> list[str]:
+        """원고별 지배 감정을 시간순으로 추출한다."""
+        sequence: list[str] = []
+        for manuscript in manuscripts:
+            emotions = self._extract_emotions(manuscript)
+            if not emotions:
+                continue
+            dominant = max(set(emotions), key=emotions.count)
+            sequence.append(dominant)
+        return sequence
 
     def analyze_manuscripts(self, manuscripts: list[str], blueprints: list[dict] = None) -> dict:
         """

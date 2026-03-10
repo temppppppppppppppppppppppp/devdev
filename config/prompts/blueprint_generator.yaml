@@ -1,3 +1,5 @@
+_version: "2026-03-10-opt3"
+
 BLUEPRINT_PATCH_MODE_PROMPT: |
   [패치 모드: Blueprint 원본 보존 + 지적사항만 수정]
 

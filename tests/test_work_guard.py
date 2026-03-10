@@ -257,6 +257,45 @@ class TestCharacterConstraints:
         assert "주인공: 왼손잡이" in prompt
         assert "천무진: 장님" in prompt
 
+    def test_age_constraint_reports_warning(self, tmp_path):
+        from modules.core.genre_guards.work_guard import WorkGuard
+
+        p = _write_yaml(
+            tmp_path,
+            """\
+            character_constraints:
+              "주인공":
+                - "나이 18~35세"
+        """,
+        )
+        guard = WorkGuard(MockBaseGuard(), p)
+
+        result = guard.run_deep_validation("주인공은 50세의 외모를 지녔다.", {"protagonist_config": {}})
+
+        assert result["has_warning"] is True
+        assert any("50세" in item["message"] for item in result["warning_violations"])
+
+    def test_age_constraint_suppressed_for_possession_regression_settings(self, tmp_path):
+        from modules.core.genre_guards.work_guard import WorkGuard
+
+        p = _write_yaml(
+            tmp_path,
+            """\
+            character_constraints:
+              "주인공":
+                - "나이 18~35세"
+        """,
+        )
+        guard = WorkGuard(MockBaseGuard(), p)
+
+        result = guard.run_deep_validation(
+            "주인공은 50세의 기억을 가진 채 젊은 몸에 눈을 떴다.",
+            {"protagonist_config": {"incarnation_type": "빙의자"}},
+        )
+
+        assert result["has_warning"] is False
+        assert result["warning_violations"] == []
+
 
 # ── StyleGuard 체이닝 호환 ───────────────────────────────────
 

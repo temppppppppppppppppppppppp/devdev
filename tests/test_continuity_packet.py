@@ -170,7 +170,7 @@ class TestBuildContinuityPacket:
             {"npcs": list(alive_npcs.keys()), "items": [], "plots": [], "locations": [], "_full_text": ""}
         )
 
-        assert len(packet) <= 6500
+        assert len(packet) <= 7000
 
     def test_build_continuity_packet_empty_entities(self):
         builder = Stage4ContextBuilder(_make_ctx())
@@ -438,7 +438,68 @@ class TestBuildContinuityPacket:
             }
         )
 
-        assert len(packet) <= 6500
+        assert len(packet) <= 7000
+
+
+class TestCondensedSummaries:
+    def test_condensed_world_state_summary_uses_packet_refs_for_blueprint_npcs(self):
+        ctx = _make_ctx()
+        ctx.world_state = _make_world_state(
+            {
+                "last_updated_ep": 12,
+                "protagonist": {"name": "장천", "location": "한양"},
+                "alive_npcs": {
+                    "장천": {"role": "주인공", "relation": "본인", "location": "한양"},
+                    "소연": {"role": "정보상", "relation": "협력", "location": "개경"},
+                    "진무": {"role": "추적자", "relation": "적대", "location": "하북"},
+                },
+                "active_items": {"흑검": {"status": "보유"}, "패도검": {"status": "보유"}},
+                "active_plots": [{"plot": "혈교 추적", "since_ep": 9}, {"plot": "황실 거래", "since_ep": 11}],
+            }
+        )
+        builder = Stage4ContextBuilder(ctx)
+
+        summary = builder._build_condensed_world_state_summary(
+            {"npcs": ["소연"], "items": ["흑검"], "plots": ["혈교 추적"], "locations": ["한양"], "_full_text": "소연 흑검 혈교 추적"}
+        )
+
+        assert "진무" in summary
+        assert "소연: 정보상" not in summary
+        assert "Continuity Packet 참조" in summary
+        assert "황실 거래" in summary
+        assert "혈교 추적" not in summary
+
+    def test_condensed_fact_ledger_summary_omits_cp_entities(self):
+        ctx = _make_ctx()
+        ctx.fact_ledger = _make_fact_ledger(
+            {
+                "last_updated_ep": 12,
+                "characters": {
+                    "소연": {"status": "alive", "role": "정보상", "relationship": "협력", "established_ep": 2},
+                    "진무": {"status": "alive", "role": "추적자", "relationship": "적대", "established_ep": 5},
+                },
+                "items": {
+                    "흑검": {"status": "보유", "owner": "장천"},
+                    "패도검": {"status": "보유", "owner": "진무"},
+                },
+                "numbers": {
+                    "자본금": {"value": "10억", "unit": "원", "last_ep": 12},
+                    "명성": {"value": "A급", "unit": "", "last_ep": 12},
+                },
+            }
+        )
+        builder = Stage4ContextBuilder(ctx)
+
+        summary = builder._build_condensed_fact_ledger_summary(
+            {"npcs": ["소연"], "items": ["흑검"], "plots": [], "locations": [], "_full_text": "소연 흑검 자본금"}
+        )
+
+        assert "진무" in summary
+        assert "소연" not in summary
+        assert "패도검" in summary
+        assert "흑검" not in summary
+        assert "명성" in summary
+        assert "자본금" not in summary
 
 
 class TestMandatoryContextContinuityPacket:

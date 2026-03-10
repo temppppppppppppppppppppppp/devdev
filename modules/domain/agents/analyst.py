@@ -27,6 +27,7 @@ from modules.core.genre_schema_builder import (
     get_genre_role_title,
     is_wuxia,
 )
+from modules.core.llm_generate import generate_content_via_router
 
 # [V65] 프롬프트 외부화
 from .analyst_prompt_api import (
@@ -120,6 +121,74 @@ class Analyst(BaseAgent):
     - Stage 1 Volume (plan_single_volume_v20): 여전히 활성
     """
 
+    _CONTEXT_CACHE_TTL_SECONDS = 600
+
+    def _cache_project_name(self, cache_type: str) -> str:
+        current_project = getattr(self.context, "current_project", None)
+        raw_name = (
+            getattr(current_project, "name", None)
+            or getattr(self.context, "project_name", None)
+            or getattr(self.context, "genre", None)
+            or "default"
+        )
+        safe_name = re.sub(r"[^0-9A-Za-z_.-]+", "_", str(raw_name or "")).strip("_.") or "default"
+        return f"{safe_name}_{cache_type}"[:80]
+
+    @staticmethod
+    def _build_cached_task_stub(task_label: str, extra: str = "") -> str:
+        lines = [f"[Cached Analyst Task] {task_label}"]
+        extra_text = str(extra or "").strip()
+        if extra_text:
+            lines.append(extra_text)
+        lines.append("위 cached context를 기준으로 동일 작업을 수행하고 유효한 JSON만 반환하세요.")
+        return "\n\n".join(lines)
+
+    def _ask_with_analyst_cache(
+        self,
+        *,
+        cache_type: str,
+        stable_context: str,
+        variable_prompt: str = "",
+        full_prompt_fallback: str = "",
+        temperature: float = 0.3,
+        thinking_level=None,
+        response_schema=None,
+        task_label: str,
+    ) -> str:
+        stable_text = str(stable_context or "").strip()
+        fallback_prompt = str(full_prompt_fallback or "").strip()
+        if not fallback_prompt:
+            fallback_prompt = "\n\n".join(part for part in (stable_text, str(variable_prompt or "").strip()) if part)
+
+        if not stable_text:
+            return self.ask(
+                fallback_prompt,
+                temperature=temperature,
+                thinking_level=thinking_level,
+                response_schema=response_schema,
+            )
+
+        cache_name = None
+        try:
+            cache_info = self._get_or_create_context_cache(
+                cache_type=f"analyst_{cache_type}",
+                content=stable_text,
+                ttl_seconds=self._CONTEXT_CACHE_TTL_SECONDS,
+                project_name=self._cache_project_name(cache_type),
+            )
+            cache_name = cache_info.get("cache_name")
+        except Exception as e:
+            logging.debug("[Analyst] context cache 준비 실패 (%s): %s", cache_type, e)
+
+        return self._ask_with_cached_context(
+            cache_name=cache_name,
+            prompt=self._build_cached_task_stub(task_label, variable_prompt),
+            temperature=temperature,
+            thinking_level=thinking_level,
+            full_prompt_fallback=fallback_prompt,
+            response_schema=response_schema,
+        )
+
     # region //volume planning
     def plan_single_volume_v20(
         self,
@@ -196,7 +265,14 @@ class Analyst(BaseAgent):
             if world_origin not in prompt and incarnation_type not in prompt:
                 prompt = f"{prompt}\n\n[PROTAGONIST_CONFIG]\n{protagonist_config_text}"
 
-        response = self.ask(prompt, temperature=0.7, thinking_level="low")
+        response = self._ask_with_analyst_cache(
+            cache_type="plan_volume",
+            stable_context=prompt,
+            full_prompt_fallback=prompt,
+            temperature=0.7,
+            thinking_level="low",
+            task_label="권역 전략 수립",
+        )
         # [V60.2] DEBUG → 조건부 로깅 (프로덕션에서는 비활성화)
         if os.getenv("DEBUG_MODE", "").lower() == "true":
             logging.warning(f"\n--- [Vol {vol_no} AI Raw Response] ---\n{response[:500]}...\n")
@@ -807,8 +883,11 @@ class Analyst(BaseAgent):
                     if SCHEMA_ENABLED and ARC_DESIGN_SCHEMA:
                         config_params["response_schema"] = ARC_DESIGN_SCHEMA
 
-                    response = self.client.models.generate_content(
-                        model=self.primary_model, contents=prompt, config=types.GenerateContentConfig(**config_params)
+                    response = generate_content_via_router(
+                        client=self.client,
+                        model=self.primary_model,
+                        contents=prompt,
+                        config=types.GenerateContentConfig(**config_params),
                     )
                     draft_result = self._extract_json_robust(response.text)
                 else:
@@ -833,7 +912,8 @@ class Analyst(BaseAgent):
                         ),
                     }
                 )
-                prompt = adjusted_prompt_tpl.format_map(_SafeDict(**full_safe_data))
+                stable_prompt = adjusted_prompt_tpl.format_map(_SafeDict(**full_safe_data))
+                prompt = stable_prompt
                 # [Sweep47] 캐시 경로와 동일하게 — attempt 0에서도 caller feedback 포함
                 if attempt > 0 or feedback:
                     prompt += f"\n\n🚨 [FEEDBACK]: {current_feedback}"
@@ -843,7 +923,20 @@ class Analyst(BaseAgent):
                 schema = ARC_DESIGN_SCHEMA if SCHEMA_ENABLED else None
                 temp = 0.5 if attempt == 0 else (0.6 if attempt == 1 else 0.7)
                 draft_result = self._extract_json_robust(
-                    self.ask(prompt, temperature=temp, response_schema=schema, thinking_level="medium")
+                    self._ask_with_analyst_cache(
+                        cache_type="plan_arc",
+                        stable_context=stable_prompt,
+                        variable_prompt=(
+                            f"🚨 [FEEDBACK]: {current_feedback}"
+                            if (attempt > 0 or feedback) and current_feedback
+                            else ""
+                        ),
+                        full_prompt_fallback=prompt,
+                        temperature=temp,
+                        thinking_level="medium",
+                        response_schema=schema,
+                        task_label="단일 Arc 설계",
+                    )
                 )
 
             # 7. [V60.31] 가변 페이싱: LLM이 결정한 ep_count 존중 (설정 범위 내)
@@ -912,12 +1005,22 @@ class Analyst(BaseAgent):
 
             # 자기 비판 감사 (Self-Critic) 호출
             _critic_block_ctx = _format_block_numeric_targets(curr_block)
-            critic_input = (
-                f"{get_analyst_self_critic_prompt()}"
-                + (f"\n\n{_critic_block_ctx}" if _critic_block_ctx else "")
-                + f"\n[Draft to Review]: {json.dumps(draft_result, ensure_ascii=False)}"
+            critic_stable = f"{get_analyst_self_critic_prompt()}" + (
+                f"\n\n{_critic_block_ctx}" if _critic_block_ctx else ""
             )
-            audit_result = self._extract_json_robust(self.ask(critic_input, temperature=0.2, thinking_level="low"))
+            critic_variable = f"[Draft to Review]: {json.dumps(draft_result, ensure_ascii=False)}"
+            critic_input = critic_stable + f"\n{critic_variable}"
+            audit_result = self._extract_json_robust(
+                self._ask_with_analyst_cache(
+                    cache_type="arc_self_critic",
+                    stable_context=critic_stable,
+                    variable_prompt=critic_variable,
+                    full_prompt_fallback=critic_input,
+                    temperature=0.2,
+                    thinking_level="low",
+                    task_label="Arc self-critique",
+                )
+            )
             return audit_result
 
         def _arc_on_success(audit_result) -> bool:
@@ -1167,7 +1270,14 @@ class Analyst(BaseAgent):
             draft_data=self._escape_braces(compact_draft), treatment_data=self._escape_braces(treatment_content[:50000])
         )
 
-        response = self.ask(prompt, temperature=0.3, thinking_level="low")
+        response = self._ask_with_analyst_cache(
+            cache_type="total_recovery",
+            stable_context=prompt,
+            full_prompt_fallback=prompt,
+            temperature=0.3,
+            thinking_level="low",
+            task_label="원고 기반 역사 복구",
+        )
         return self._extract_json_robust(response)
 
     # endregion
@@ -1184,7 +1294,14 @@ class Analyst(BaseAgent):
             roadmap_info=self._escape_braces(json.dumps(roadmap_data, ensure_ascii=False)),
         )
 
-        response = self.ask(prompt, temperature=0.5, thinking_level="low")
+        response = self._ask_with_analyst_cache(
+            cache_type="volume_strategy",
+            stable_context=prompt,
+            full_prompt_fallback=prompt,
+            temperature=0.5,
+            thinking_level="low",
+            task_label="장기 권수 전략 수립",
+        )
         return self._extract_json_robust(response)
 
     def plan_batch_arcs_v25(self, batch_no, vol_strategy, blueprint_str, prev_context, assets):
@@ -1258,7 +1375,16 @@ class Analyst(BaseAgent):
             logging.info(
                 "[Enrich] Block %s 농축 시작 (model=%s, prompt=%d자)", _block_id, self.primary_model, len(prompt)
             )
-            raw_res = await loop.run_in_executor(None, lambda: self.ask(prompt, temperature=0.3))
+            raw_res = await loop.run_in_executor(
+                None,
+                lambda: self._ask_with_analyst_cache(
+                    cache_type="enrich_block",
+                    stable_context=prompt,
+                    full_prompt_fallback=prompt,
+                    temperature=0.3,
+                    task_label=f"Block {_block_id} 농축",
+                ),
+            )
             _elapsed = _time.time() - _t0
             print(
                 f"      ✅ [Enrich] Block {_block_id} 완료 ({_elapsed:.1f}s, model={self.primary_model}, 응답={len(raw_res or '')}자)"
@@ -1365,7 +1491,14 @@ class Analyst(BaseAgent):
                 feedback=feedback,
             )
             # 3-pro급 모델 호출 (안정적인 수술을 위해 온도를 낮춤)
-            raw_response = self.ask(surgery_prompt, temperature=0.3, thinking_level="medium")
+            raw_response = self._ask_with_analyst_cache(
+                cache_type="arc_surgery",
+                stable_context=surgery_prompt,
+                full_prompt_fallback=surgery_prompt,
+                temperature=0.3,
+                thinking_level="medium",
+                task_label="Arc 재구성 수술",
+            )
 
             # BaseAgent의 강건한 파싱 엔진 활용
             reconstructed_arc = self._extract_json_robust(raw_response)
@@ -1446,7 +1579,14 @@ class Analyst(BaseAgent):
             current_hud_json=json.dumps(current_hud, ensure_ascii=False),
             arc_tactical=arc_tactical,
         )
-        res = self.ask(calibration_prompt, temperature=0.3, thinking_level="low")
+        res = self._ask_with_analyst_cache(
+            cache_type="calibration",
+            stable_context=calibration_prompt,
+            full_prompt_fallback=calibration_prompt,
+            temperature=0.3,
+            thinking_level="low",
+            task_label="HUD-Arc 수치 보정",
+        )
         return self._extract_json_robust(res)
 
     def stitch_joints(self, joint_a, joint_b, context_b):
@@ -1457,7 +1597,14 @@ class Analyst(BaseAgent):
         )
 
         # 용접은 정밀도가 중요하므로 온도를 0.1로 고정
-        raw_res = self.ask(prompt, temperature=0.1, thinking_level="low")
+        raw_res = self._ask_with_analyst_cache(
+            cache_type="stitch_joints",
+            stable_context=prompt,
+            full_prompt_fallback=prompt,
+            temperature=0.1,
+            thinking_level="low",
+            task_label="Joint 용접",
+        )
         return self._extract_json_robust(raw_res)
 
     def get_lack_report(self, martial_hud) -> dict:

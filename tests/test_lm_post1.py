@@ -109,3 +109,43 @@ def test_get_recent_causal_links_malformed_json():
         if db is not None:
             db.close()
         os.unlink(tmpdb)
+
+
+def test_get_recent_causal_links_default_lookback_covers_30_episodes():
+    with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
+        tmpdb = f.name
+    db = None
+    try:
+        db = DBManager(tmpdb)
+        db.save_causal_links([{"cause": "오래된 사건", "effect": "결과", "ep": 200}], current_ep=200)
+        db.save_causal_links([{"cause": "유효 사건", "effect": "결과", "ep": 220}], current_ep=220)
+        result = db.get_recent_causal_links(current_ep=250)
+        causes = [r.get("cause") for r in result]
+        assert "유효 사건" in causes
+        assert "오래된 사건" not in causes
+    finally:
+        if db is not None:
+            db.close()
+        os.unlink(tmpdb)
+
+
+def test_get_causal_links_by_entities_filters_target_names():
+    with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
+        tmpdb = f.name
+    db = None
+    try:
+        db = DBManager(tmpdb)
+        db.save_causal_links(
+            [
+                {"cause": "노사부의 경고", "effect": "진우 각성", "ep": 15},
+                {"cause": "상인의 배신", "effect": "시장 붕괴", "ep": 18},
+            ],
+            current_ep=20,
+        )
+        result = db.get_causal_links_by_entities(["노사부", "진우"], before_ep=20, lookback=10, limit=5)
+        assert len(result) == 1
+        assert result[0]["cause"] == "노사부의 경고"
+    finally:
+        if db is not None:
+            db.close()
+        os.unlink(tmpdb)

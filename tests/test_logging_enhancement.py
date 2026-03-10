@@ -94,10 +94,12 @@ def test_save_stage_attempt(tmp_db):
         failure_category="CONTINUITY",
         reject_reason="continuity broken",
         advisory_flags={"truth_gate": 1, "npc_drift": 0},
+        prompt_version="chief_writer@v1|director@v1",
     )
     rows = tmp_db.conn.execute("SELECT * FROM stage_attempts").fetchall()
     assert len(rows) == 1
     assert rows[0]["verdict"] == "REJECT"
+    assert rows[0]["prompt_version"] == "chief_writer@v1|director@v1"
     flags = json.loads(rows[0]["advisory_flags"])
     assert flags["truth_gate"] == 1
 

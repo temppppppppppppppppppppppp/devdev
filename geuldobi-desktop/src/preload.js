@@ -11,6 +11,8 @@ contextBridge.exposeInMainWorld("geuldobiDesktop", {
     ipcRenderer.invoke("bridge:run", { key, subKey, inputs }),
   stopRun: () => ipcRenderer.invoke("bridge:stop"),
   getStatus: () => ipcRenderer.invoke("bridge:status"),
+  getQualitySummary: (project, lookback = 5) =>
+    ipcRenderer.invoke("bridge:get-quality-summary", { project, lookback }),
 
   // Backend URL (renderer에서 직접 WebSocket 연결용)
   getBackendUrl: () => ipcRenderer.invoke("bridge:get-url"),

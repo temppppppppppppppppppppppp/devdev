@@ -76,6 +76,15 @@ BLUEPRINT_STRATEGIES = [
     },
 ]
 
+AI_TELL_BLUEPRINT_GUARDRAIL = """
+[AI 티 회피 지침]
+- 장면 말미를 설명문으로 기계적으로 요약하지 마세요.
+- 감정 반응을 상투적인 반응구 반복으로 처리하지 말고 행동·대사·구체 감각으로 드러내세요.
+- 정보 전달만 수행하는 대사가 길게 이어지지 않게 하세요.
+- 매 씬의 도입과 종결 리듬을 같게 반복하지 마세요.
+- 독자가 "익숙한 AI 문장"이라고 느낄 만한 접속구·감탄구 남용을 피하세요.
+"""
+
 
 # [V60.98] 씬 프리셋 정의 - 장면/화자 전환 연출
 SCENE_PRESETS = {
@@ -413,7 +422,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
                 arc_focus=self._escape_braces(_cached_context_stub if _use_cached_context else arc_focus),
                 constraints=self._escape_braces(_cached_context_stub if _use_cached_context else constraints_str),
                 strategy_directive=self._escape_braces(
-                    strategy["directive"] + extra_directive
+                    strategy["directive"] + AI_TELL_BLUEPRINT_GUARDRAIL + extra_directive
                 ),  # [V70] Director feedback 내 {} 방어
                 prev_info=self._escape_braces(_cached_context_stub if _use_cached_context else prev_info),
                 hud_context=(
@@ -436,7 +445,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
                     arc_focus=self._escape_braces(arc_focus),
                     constraints=self._escape_braces(constraints_str),
                     strategy_directive=self._escape_braces(
-                        strategy["directive"] + extra_directive
+                        strategy["directive"] + AI_TELL_BLUEPRINT_GUARDRAIL + extra_directive
                     ),  # [V70] Director feedback 내 {} 방어
                     prev_info=self._escape_braces(prev_info),
                     hud_context=self._escape_braces(hud_context) if hud_context else "(상태 정보 없음)",  # [V60.95]

@@ -79,6 +79,15 @@ class DirectorQualityAuditor:
             if hasattr(self._d, "context") and self._d.context:
                 try:
                     current_state = getattr(self._d.context, "actual_truth", {}) or {}
+                    if not isinstance(current_state, dict):
+                        current_state = {}
+                    master_bible = getattr(self._d.context, "master_bible", {})
+                    if isinstance(master_bible, dict):
+                        bible_root = master_bible.get("MasterBible", master_bible)
+                        protagonist_config = bible_root.get("protagonist_config", {}) if isinstance(bible_root, dict) else {}
+                        if isinstance(protagonist_config, dict) and protagonist_config:
+                            current_state = dict(current_state)
+                            current_state.setdefault("protagonist_config", protagonist_config)
                 except Exception as e:
                     logging.warning("[TF-26] actual_truth lookup failed: %s", str(e)[:100])
 
@@ -401,6 +410,7 @@ class DirectorQualityAuditor:
         # [V63.4] Python 사전 검증 → 경고 수집 (최종 판단은 LLM)
         # ═══════════════════════════════════════════════════════════════
         _pre_llm_warnings = []
+        _pre_llm_advisories = []
 
         # [V60.97] arc_no 추출 (타임라인 비교용)
         arc_no = 0
@@ -434,6 +444,16 @@ class DirectorQualityAuditor:
                 _pre_llm_warnings.append(
                     f"[CRITICAL 경고] 장르 규칙 위반: {genre_violations.get('summary', '')}\n"
                     f"  {genre_violations.get('feedback', '')}"
+                )
+            _genre_warning_violations = genre_violations.get("warning_violations", [])
+            if _genre_warning_violations:
+                _warning_lines = [
+                    f"  - {item.get('message', str(item))}"
+                    for item in _genre_warning_violations[:5]
+                    if isinstance(item, dict)
+                ]
+                _pre_llm_advisories.append(
+                    "[Python 참고 경고] 작품별 캐릭터 제약 확인 필요\n" + "\n".join(_warning_lines)
                 )
 
         # ═══════════════════════════════════════════════════════════════
@@ -588,6 +608,12 @@ class DirectorQualityAuditor:
                 "\n\n[🚨 Python 사전 검증 경고 — CRITICAL 경고가 포함된 경우 반드시 REJECT]\n"
                 + "\n---\n".join(_pre_llm_warnings)
             )
+        if _pre_llm_advisories:
+            if validation_context is None:
+                validation_context = {}
+            validation_context["pre_llm_advisories"] = (
+                "\n\n[Python 사전 참고 경고 — 판단은 Director]\n" + "\n---\n".join(_pre_llm_advisories)
+            )
 
         # [V66.1] prev_full_text 확대를 1회 수행 후 V0128/legacy 경로에서 공용 사용
         expanded_prev = self._expand_prev_full_text(ep_num, prev_full_text)
@@ -715,6 +741,11 @@ class DirectorQualityAuditor:
                 + "\n---\n".join(_pre_llm_warnings)
             )
             prompt += self._d._escape_braces(_warning_block)
+        if _pre_llm_advisories:
+            _advisory_block = (
+                "\n\n[Python 사전 참고 경고 — 판단은 Director]\n" + "\n---\n".join(_pre_llm_advisories)
+            )
+            prompt += self._d._escape_braces(_advisory_block)
 
         response = self._d.ask(prompt, temperature=0.1, thinking_level="high")  # [V61.6] 원고 PASS/REJECT
         result = self._d._extract_json_robust(response)

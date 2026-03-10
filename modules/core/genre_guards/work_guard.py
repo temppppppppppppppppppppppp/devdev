@@ -152,10 +152,118 @@ class WorkGuard(BaseGuard):
 
         return base_prompt + "\n\n" + "\n\n".join(sections)
 
+    @staticmethod
+    def _extract_age_bounds(constraint: str) -> tuple[int | None, int | None]:
+        range_match = re.search(r"(\d{1,2})\s*[~\-]\s*(\d{1,2})\s*세", constraint)
+        if range_match:
+            return int(range_match.group(1)), int(range_match.group(2))
+
+        lower_match = re.search(r"(\d{1,2})\s*세\s*이상", constraint)
+        upper_match = re.search(r"(\d{1,2})\s*세\s*이하", constraint)
+        lower = int(lower_match.group(1)) if lower_match else None
+        upper = int(upper_match.group(1)) if upper_match else None
+        return lower, upper
+
+    @staticmethod
+    def _find_character_ages(manuscript: str, char_name: str) -> list[int]:
+        patterns = [
+            rf"{re.escape(char_name)}[^\n]{{0,24}}?(\d{{1,2}})세",
+            rf"(\d{{1,2}})세[^\n]{{0,24}}?{re.escape(char_name)}",
+        ]
+        ages: list[int] = []
+        for pattern in patterns:
+            for match in re.finditer(pattern, manuscript):
+                try:
+                    ages.append(int(match.group(1)))
+                except (TypeError, ValueError):
+                    continue
+        return ages
+
+    def _check_character_constraints(self, manuscript: str, current_state: dict[str, Any] | None) -> list[dict[str, Any]]:
+        warnings: list[dict[str, Any]] = []
+        if not isinstance(self._char_constraints, dict) or not self._char_constraints:
+            return warnings
+
+        current_state = current_state or {}
+        protagonist_config = current_state.get("protagonist_config", {})
+        protagonist_name = str(current_state.get("protagonist_name", "") or "").strip()
+        incarnation_type = str(protagonist_config.get("incarnation_type", "") or "").strip()
+
+        for char_name, constraints in self._char_constraints.items():
+            name = str(char_name or "").strip()
+            if not name or name not in manuscript or not isinstance(constraints, list):
+                continue
+
+            for raw_constraint in constraints:
+                constraint = str(raw_constraint or "").strip()
+                if not constraint:
+                    continue
+
+                lower_age, upper_age = self._extract_age_bounds(constraint)
+                if lower_age is not None or upper_age is not None:
+                    is_protagonist_constraint = name in {"주인공", protagonist_name} if protagonist_name else name == "주인공"
+                    if is_protagonist_constraint and incarnation_type in {"빙의자", "환생자", "회귀자"}:
+                        continue
+
+                    for age in self._find_character_ages(manuscript, name):
+                        if (lower_age is not None and age < lower_age) or (upper_age is not None and age > upper_age):
+                            warnings.append(
+                                {
+                                    "type": "work_character_constraint",
+                                    "severity": "WARNING",
+                                    "character": name,
+                                    "constraint": constraint,
+                                    "message": f"[Work] 캐릭터 제약 확인 필요: {name} 나이 {age}세 ↔ {constraint}",
+                                }
+                            )
+                            break
+                    continue
+
+                if "장님" in constraint:
+                    if re.search(rf"{re.escape(name)}[^\n]{{0,24}}(봤|바라봤|응시|시선을|눈으로)", manuscript):
+                        warnings.append(
+                            {
+                                "type": "work_character_constraint",
+                                "severity": "WARNING",
+                                "character": name,
+                                "constraint": constraint,
+                                "message": f"[Work] 캐릭터 제약 확인 필요: {name}에게 시각 기반 묘사 가능성 ({constraint})",
+                            }
+                        )
+                    continue
+
+                if "왼손잡이" in constraint:
+                    if re.search(rf"{re.escape(name)}[^\n]{{0,24}}오른손", manuscript):
+                        warnings.append(
+                            {
+                                "type": "work_character_constraint",
+                                "severity": "WARNING",
+                                "character": name,
+                                "constraint": constraint,
+                                "message": f"[Work] 캐릭터 제약 확인 필요: {name} 오른손 사용 묘사 감지 ({constraint})",
+                            }
+                        )
+                    continue
+
+                if "검만 사용" in constraint:
+                    if re.search(rf"{re.escape(name)}[^\n]{{0,24}}(창|도|활|총|망치|도끼|단검)", manuscript):
+                        warnings.append(
+                            {
+                                "type": "work_character_constraint",
+                                "severity": "WARNING",
+                                "character": name,
+                                "constraint": constraint,
+                                "message": f"[Work] 캐릭터 제약 확인 필요: {name} 검 외 무기 사용 묘사 감지 ({constraint})",
+                            }
+                        )
+                    continue
+        return warnings
+
     def run_deep_validation(self, manuscript: str, current_state: dict[str, Any] = None) -> dict[str, Any]:
         """기존 장르 검증 + 추가 금기어 + extra_forbidden_patterns regex 검사."""
         result = self._base.run_deep_validation(manuscript, current_state)
         violations = result.get("violations", [])
+        warning_violations = list(result.get("warning_violations", []) or [])
 
         # 추가 금기어 검사 (base에서 이미 체크한 것 외)
         for term in self._added_forbidden:
@@ -188,16 +296,23 @@ class WorkGuard(BaseGuard):
             except re.error:
                 _logger.warning("[WorkGuard] 잘못된 정규식: %s", pattern)
 
+        warning_violations.extend(self._check_character_constraints(manuscript, current_state))
+
         has_critical = any(v.get("severity") in ("HIGH", "CRITICAL") for v in violations)
         summary_parts = [v.get("message", "") for v in violations[:5]]
         summary = "; ".join(summary_parts) if summary_parts else "검증 통과"
+        warning_parts = [v.get("message", "") for v in warning_violations[:5]]
+        warning_summary = "; ".join(warning_parts) if warning_parts else ""
         feedback = ""
         if violations:
             feedback = f"[{self.get_genre_name()} Guard] {len(violations)}건 위반 발견: {summary}"
 
         return {
             "has_critical": has_critical,
+            "has_warning": bool(warning_violations),
             "violations": violations,
+            "warning_violations": warning_violations,
             "summary": summary,
+            "warning_summary": warning_summary,
             "feedback": feedback,
         }

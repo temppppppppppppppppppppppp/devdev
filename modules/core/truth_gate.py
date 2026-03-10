@@ -8,6 +8,8 @@ import json
 import logging
 import re
 
+from modules.core.constants import smart_truncate
+
 logger = logging.getLogger(__name__)
 
 
@@ -403,7 +405,7 @@ class TruthGate:
 
         try:
             laws_text = "\n".join(f"- {law}" for law in laws)
-            ms_snippet = manuscript[:3000] if manuscript else ""
+            ms_snippet = smart_truncate(manuscript or "", max_chars=3000, head_chars=1800)
             prompt = (
                 "다음은 이 세계의 절대 법칙입니다:\n"
                 f"{laws_text}\n\n"

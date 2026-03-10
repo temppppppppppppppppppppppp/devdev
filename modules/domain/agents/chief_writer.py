@@ -91,7 +91,7 @@ class ChiefWriter(BaseAgent):
         },
         "tension": {
             "name": "긴장감 + 반전 강조",
-            "temperature": 0.8,
+            "temperature": 0.9,
             "emphasis": "반전 + 클리프행어 + 예측 불가능 전개",
             "instruction": """
 [전략 C: 몰입감 극대화]
@@ -116,6 +116,126 @@ class ChiefWriter(BaseAgent):
         self._context_builder = None  # [B-1-4] lazy init
         self._quality_gate = None  # [B-1-5] lazy init
         # [V65] _emotion_skeleton_cache / _emotion_skeleton_blueprint_hash 삭제 (Emotion Skeleton Dead Code 제거)
+
+    def _load_strategy_bias(self, strategy_names: list[str], *, lookback: int = 20) -> dict[str, float]:
+        """최근 PASS 선택 비중을 전략별로 로드한다."""
+        db_candidates = []
+        for db in (
+            self._resolve_logging_db(),
+            getattr(self.context, "db", None),
+        ):
+            if db is None or not hasattr(db, "get_strategy_win_rates"):
+                continue
+            if any(existing is db for existing in db_candidates):
+                continue
+            db_candidates.append(db)
+
+        for db in db_candidates:
+            try:
+                stats = db.get_strategy_win_rates(
+                    lookback=lookback,
+                    allowed_strategies=tuple(strategy_names),
+                )
+            except Exception as bias_err:
+                logging.debug("[QR-3] ChiefWriter 전략 비중 조회 실패 (비치명): %s", bias_err)
+                continue
+
+            if not isinstance(stats, dict) or int(stats.get("total", 0) or 0) <= 0:
+                continue
+            return {name: float(stats.get(name, 0.0) or 0.0) for name in strategy_names}
+        return {}
+
+    def _build_strategy_execution_plan(self, strategy_names: list[str]) -> tuple[list[str], dict[str, float], dict[str, float]]:
+        """전략 실행 순서와 temperature 보정값을 계산한다."""
+        shares = self._load_strategy_bias(strategy_names)
+        if not shares or all(shares.get(name, 0.0) <= 0 for name in strategy_names):
+            return strategy_names, {}, shares
+
+        ordered = sorted(strategy_names, key=lambda name: shares.get(name, 0.0), reverse=True)
+        adjusted_temperatures: dict[str, float] = {}
+        for name in strategy_names:
+            base = float(self.ENSEMBLE_STRATEGIES[name]["temperature"])
+            share = shares.get(name, 0.0)
+            adjusted = base
+            if share >= 0.5:
+                adjusted = max(0.1, round(base - 0.05, 2))
+            elif share <= 0.15:
+                adjusted = min(1.0, round(base + 0.1, 2))
+            elif share <= 0.3:
+                adjusted = min(1.0, round(base + 0.05, 2))
+            adjusted_temperatures[name] = adjusted
+
+        logging.info(
+            "[QR-3] ChiefWriter 전략 비중 적용: %s",
+            ", ".join(f"{name}={int(shares.get(name, 0.0) * 100)}%" for name in ordered),
+        )
+        return ordered, adjusted_temperatures, shares
+
+    @staticmethod
+    def _build_char_ngrams(text: str, n: int = 3) -> set[str]:
+        normalized = re.sub(r"\s+", " ", str(text or "")).strip()
+        if not normalized:
+            return set()
+        if len(normalized) < n:
+            return {normalized}
+        return {normalized[i : i + n] for i in range(len(normalized) - n + 1)}
+
+    def _annotate_candidate_diversity(self, candidates: list[dict], *, threshold: float = 0.7) -> dict:
+        """후보 간 3-gram Jaccard 유사도를 계산해 metadata에 기록한다."""
+        indexed_texts: list[tuple[int, str]] = []
+        for idx, candidate in enumerate(candidates):
+            if not isinstance(candidate, dict):
+                continue
+            manuscript = str(candidate.get("manuscript", "") or "").strip()
+            if manuscript:
+                indexed_texts.append((idx, manuscript))
+
+        if len(indexed_texts) < 2:
+            return {}
+
+        labels = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        pairwise = []
+        high_similarity_pairs = []
+        max_similarity = 0.0
+        for left_pos in range(len(indexed_texts)):
+            left_idx, left_text = indexed_texts[left_pos]
+            left_grams = self._build_char_ngrams(left_text)
+            if not left_grams:
+                continue
+            for right_pos in range(left_pos + 1, len(indexed_texts)):
+                right_idx, right_text = indexed_texts[right_pos]
+                right_grams = self._build_char_ngrams(right_text)
+                if not right_grams:
+                    continue
+                union = left_grams | right_grams
+                similarity = (len(left_grams & right_grams) / len(union)) if union else 0.0
+                similarity = round(similarity, 2)
+                pair_label = f"{labels[left_idx]}-{labels[right_idx]}"
+                pairwise.append({"pair": pair_label, "similarity": similarity})
+                max_similarity = max(max_similarity, similarity)
+                if similarity >= threshold:
+                    high_similarity_pairs.append((pair_label, similarity))
+
+        warning = ""
+        if high_similarity_pairs:
+            pairs_text = ", ".join(f"{pair} {int(score * 100)}%" for pair, score in high_similarity_pairs[:3])
+            warning = f"[후보 다양성 경고] 후보 유사도 높음: {pairs_text}"
+
+        summary = {
+            "pairwise": pairwise,
+            "max_similarity": round(max_similarity, 2),
+            "high_similarity_pairs": [
+                {"pair": pair, "similarity": similarity} for pair, similarity in high_similarity_pairs
+            ],
+            "warning": warning,
+        }
+        for candidate in candidates:
+            if not isinstance(candidate, dict):
+                continue
+            metadata = candidate.setdefault("metadata", {})
+            if isinstance(metadata, dict):
+                metadata["diversity"] = summary
+        return summary
 
     def _get_critical_keys_for_genre(self) -> list[str]:
         """[TF-45] 현재 프로젝트 HUD에서 critical_keys 추출."""
@@ -282,6 +402,7 @@ class ChiefWriter(BaseAgent):
             _target = [s for s in strategies if s == single_strategy]
             if _target:
                 strategies = _target
+        strategies, _strategy_temperatures, _ = self._build_strategy_execution_plan(strategies)
 
         # [Phase 3-Obs] 에이전트 레벨 ThreadPoolExecutor 계측
         _tp_t0 = time.monotonic()
@@ -300,6 +421,7 @@ class ChiefWriter(BaseAgent):
                         self._generate_single_candidate,
                         ep_num=ep_num,
                         strategy=strategy,
+                        blueprint=blueprint,
                         common_context=common_context,
                         hud_report=hud_report,
                         master_bible=master_bible,
@@ -308,6 +430,7 @@ class ChiefWriter(BaseAgent):
                         strategy_feedback=_feedback,
                         motivations=motivations,
                         promises=promises,
+                        strategy_temperature=_strategy_temperatures.get(strategy),
                     )
                     futures[future] = strategy
 
@@ -392,6 +515,7 @@ class ChiefWriter(BaseAgent):
             fallback = self._generate_single_candidate(
                 ep_num=ep_num,
                 strategy=_fallback_strategy,
+                blueprint=blueprint,
                 common_context=common_context,
                 hud_report=hud_report,
                 master_bible=master_bible,
@@ -399,6 +523,7 @@ class ChiefWriter(BaseAgent):
                 cache_name=cache_name,
                 motivations=motivations,
                 promises=promises,
+                strategy_temperature=_strategy_temperatures.get(_fallback_strategy),
                 strategy_feedback=(
                     strategy_specific_feedback
                     if (_fallback_strategy == rejected_strategy and strategy_specific_feedback)
@@ -429,12 +554,14 @@ class ChiefWriter(BaseAgent):
 
         # [Step2] Pydantic ingress+egress — 각 후보 검증
         candidates = [validate_manuscript_candidate(c) for c in candidates]
+        self._annotate_candidate_diversity(candidates)
         return candidates
 
     def _generate_single_candidate(
         self,
         ep_num: int,
         strategy: str,
+        blueprint: dict,
         common_context: str,
         hud_report: str = "",
         master_bible: dict = None,
@@ -443,6 +570,7 @@ class ChiefWriter(BaseAgent):
         strategy_feedback: str = "",
         motivations: list = None,
         promises: list = None,
+        strategy_temperature: float | None = None,
     ) -> dict | None:
         """
         [V60.81] 단일 후보 생성 + Self-Critique + Leakage 방지
@@ -460,6 +588,11 @@ class ChiefWriter(BaseAgent):
         # [V61.3] 전체 메서드를 try-except로 감싸서 worker thread 크래시 방지
         try:
             strategy_config = self.ENSEMBLE_STRATEGIES.get(strategy, self.ENSEMBLE_STRATEGIES["balanced"])
+            _temperature = (
+                float(strategy_temperature)
+                if isinstance(strategy_temperature, (int, float))
+                else float(strategy_config["temperature"])
+            )
             _strategy_feedback_block = (
                 f"\n[Strategy-Specific Feedback]\n{strategy_feedback}\n" if strategy_feedback else ""
             )
@@ -490,7 +623,7 @@ class ChiefWriter(BaseAgent):
                 response = self._ask_with_cached_context(
                     cache_name=cache_name,
                     prompt=strategy_prompt,
-                    temperature=strategy_config["temperature"],
+                    temperature=_temperature,
                     thinking_level="medium",
                     full_prompt_fallback=full_prompt,
                 )
@@ -504,7 +637,7 @@ class ChiefWriter(BaseAgent):
 
                 response = self.ask(
                     prompt=full_prompt,
-                    temperature=strategy_config["temperature"],
+                    temperature=_temperature,
                     thinking_level="medium",  # [V61.6] 원고 생성 추론 강화
                 )
 
@@ -547,6 +680,7 @@ class ChiefWriter(BaseAgent):
                 ep_num=ep_num,
                 motivations=motivations,
                 promises=promises,  # [B-4]
+                blueprint=blueprint,
             )
 
             # Self-Critique 결과에서 content 재추출
@@ -583,7 +717,7 @@ class ChiefWriter(BaseAgent):
                 "state_updates": final_state,
                 "key_scenes_covered": data.get("key_scenes_covered", []),
                 "metadata": {
-                    "temperature": strategy_config["temperature"],
+                    "temperature": _temperature,
                     "emphasis": strategy_config["emphasis"],
                     "length": len(final_content),
                     "self_critique_applied": True,
@@ -684,6 +818,8 @@ class ChiefWriter(BaseAgent):
         Returns:
             List[Dict]: 새로운 3개 후보
         """
+        _history_feedback = self._build_retry_history_feedback(previous_attempt)
+
         # 피드백 강화
         enhanced_feedback = f"""
 [🚨 {attempt_number}차 재시도 - Director 피드백 필수 반영]
@@ -715,6 +851,8 @@ class ChiefWriter(BaseAgent):
         _open_review = previous_attempt.get("open_review", "")
         if _open_review and _open_review not in ("특이사항 없음", "없음", ""):
             enhanced_feedback += f"\n\n[Director 서사 관찰 — 반드시 개선할 것]\n{_open_review}"
+        if _history_feedback:
+            enhanced_feedback += f"\n\n{_history_feedback}"
 
         # 실패 학습 제약 구성
         failure_constraints = ""
@@ -1010,6 +1148,9 @@ class ChiefWriter(BaseAgent):
 ⚠️ 원본 원고의 전체 구조, 문체, 장점을 보존하면서 피드백 지적사항만 수정하세요.
 ⚠️ 수정하지 않는 부분은 원문을 그대로 유지하세요.
 """
+        _history_feedback = self._build_retry_history_feedback(previous_attempt)
+        if _history_feedback:
+            enhanced_feedback += f"\n{_history_feedback}"
 
         failure_constraints = ""
         if previous_attempt.get("action_items"):
@@ -1065,6 +1206,63 @@ class ChiefWriter(BaseAgent):
         except Exception as e:
             logging.warning(f"[Phase 3-5B] patch_with_feedback 실패, 빈 리스트 반환: {e}")
             return []
+
+    @staticmethod
+    def _build_retry_history_feedback(previous_attempt: dict | None) -> str:
+        """누적된 REJECT 히스토리를 CW 재시도 프롬프트용 요약으로 변환."""
+        if not isinstance(previous_attempt, dict):
+            return ""
+
+        history = previous_attempt.get("prior_attempts") or previous_attempt.get("history") or []
+        if not isinstance(history, list) or not history:
+            return ""
+
+        recent = [item for item in history[-3:] if isinstance(item, dict)]
+        if not recent:
+            return ""
+
+        lines = ["[누적 실패 히스토리 — 반복 금지]"]
+        bucket_counts: dict[str, int] = {}
+        category_counts: dict[str, int] = {}
+        contradiction_hits: dict[str, int] = {}
+        for idx, item in enumerate(recent, start=1):
+            bucket = str(item.get("reject_bucket", "") or "").strip()
+            category = str(item.get("error_category", "") or "").strip()
+            reason = str(item.get("rejection_reason", "") or "").strip()
+            score = item.get("score", "")
+            action_items = [str(action).strip() for action in (item.get("action_items") or []) if str(action).strip()]
+            contradictions = [
+                str(name).strip() for name in (item.get("contradiction_types") or []) if str(name).strip()
+            ]
+
+            if bucket:
+                bucket_counts[bucket] = bucket_counts.get(bucket, 0) + 1
+            if category:
+                category_counts[category] = category_counts.get(category, 0) + 1
+            for contradiction in contradictions:
+                contradiction_hits[contradiction] = contradiction_hits.get(contradiction, 0) + 1
+
+            summary_parts = []
+            if bucket:
+                summary_parts.append(bucket)
+            if category:
+                summary_parts.append(category)
+            if action_items:
+                summary_parts.append(f"action={' / '.join(action_items[:2])}")
+            elif reason:
+                summary_parts.append(reason[:120])
+            if score not in ("", None):
+                summary_parts.append(f"score={score}")
+            lines.append(f"- 시도 {idx}: " + " | ".join(summary_parts[:4]))
+
+        repeated = []
+        repeated.extend([name for name, count in bucket_counts.items() if count >= 2])
+        repeated.extend([name for name, count in category_counts.items() if count >= 2])
+        repeated.extend([name for name, count in contradiction_hits.items() if count >= 2])
+        if repeated:
+            lines.append("공통 실패 패턴: " + ", ".join(dict.fromkeys(repeated)))
+        lines.append("위 패턴을 다시 반복하지 말고, 이번 시도에서는 근본 원인부터 제거하세요.")
+        return "\n".join(lines)
 
     # =========================================================================
     # [V60.81] Writer 핵심 기능 통합 - Self-Critique & Quality Assurance

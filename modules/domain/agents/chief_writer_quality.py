@@ -16,6 +16,15 @@ class ChiefWriterQualityGate:
     """ChiefWriter 품질 게이트 — 자기비판 + 클리셰/정당화/NPC/동기/산술 체크."""
 
     CLICHE_WINDOW = _threshold("quality.cliche_window", 10)  # [TF-5-04] validation.yaml 외부화
+    AI_TELL_PHRASES = (
+        "어느새",
+        "말 그대로",
+        "그야말로",
+        "숨을 삼켰다",
+        "시선을 돌렸다",
+        "잠시 말을 잃었다",
+        "입꼬리를 올렸다",
+    )
 
     def __init__(self, host):
         self.host = host
@@ -265,17 +274,35 @@ class ChiefWriterQualityGate:
         # 7. [TF-54e] 표현 신선도 체크
         issues.extend(self._check_expression_freshness(content, expression_freq or {}))
 
-        # 8. [합격률] ending_hook 포함 여부 체크
+        # 8. [AI-TELL] 상투적 반응구/문장 스타터 반복 체크
+        issues.extend(self._check_ai_tell_patterns(content))
+
+        # 9. [합격률] ending_hook 포함 여부 체크
         issues.extend(self._check_ending_hook_presence(content, blueprint))
 
-        # 9. [NS-1] Detect arithmetic inconsistencies in manuscript claims.
+        # 10. [NS-1] Detect arithmetic inconsistencies in manuscript claims.
         issues.extend(self._check_arithmetic_consistency(content))
 
-        # 10. [메타 월] 집필 시스템 내부 용어 노출 체크
+        # 11. [메타 월] 집필 시스템 내부 용어 노출 체크
         issues.extend(self._check_system_term_exposure(content, genre_name))
 
         # 12. [QI-1-A5] 엔딩 참신성 체크 — 직전 화 엔딩과 유사한 엔딩 반복 방지
         issues.extend(self._check_ending_novelty(content, directive))
+
+        # 13. [QI-QM-1] self-critique 내부 시간 논리 보강
+        issues.extend(self._check_temporal_logic(content))
+
+        # 14. [QI-QM-1] self-critique 내부 문단 구조 보강
+        issues.extend(self._check_paragraph_structure(content))
+
+        # 15. [QI-QM-1] Blueprint 대비 톤 일관성 보강
+        issues.extend(self._check_tonal_consistency(content, blueprint, directive))
+
+        # 16. [QI-POV] POV 일관성 자가 점검
+        issues.extend(self._check_pov_consistency_critique(content))
+
+        # 17. [QI-QM-5] 씬 전환 마커 점검
+        issues.extend(self._check_scene_transition_markers(content))
 
         # 11. [TF-H] 분량 재검사 — self-critique 루프에서 분량 부족 재감지
         _min_len = int(ManuscriptLimits.MIN_LENGTH)
@@ -306,6 +333,49 @@ class ChiefWriterQualityGate:
         has_issues = len(issues) > 0
 
         return {"has_issues": has_issues, "issues": issues, "severity": severity}
+
+    def _resolve_expected_pov(self) -> tuple[str, str]:
+        """MasterBible 기준 예상 POV/주인공명을 조회한다."""
+        try:
+            _ctx = getattr(self.host, "context", None)
+            _project = getattr(_ctx, "current_project", None) if _ctx else None
+            _mb = getattr(_project, "master_bible", None) or getattr(_ctx, "master_bible", None) or {}
+            _mb_root = _mb.get("MasterBible", _mb) if isinstance(_mb, dict) else {}
+            _protag = _mb_root.get("protagonist_config", {}) if isinstance(_mb_root, dict) else {}
+            _pov = str(_protag.get("pov", "") or "").strip()
+            _name = str(_protag.get("name", "") or "").strip()
+            return _pov, _name
+        except Exception:
+            return "", ""
+
+    def _check_pov_consistency_critique(self, content: str) -> list[dict]:
+        """PreLLM POV 규칙을 Self-Critique에도 재사용한다."""
+        if not content:
+            return []
+
+        _pov, _protagonist_name = self._resolve_expected_pov()
+        if not _pov:
+            return []
+
+        try:
+            from modules.validation.pre_llm_validator import PreLLMValidator
+
+            _validator = PreLLMValidator(pov=_pov, protagonist_name=_protagonist_name)
+            _result = _validator._check_pov_consistency(content)
+        except Exception as _pov_err:
+            logging.debug("[ChiefWriter] POV self-critique 실패 (비치명): %s", _pov_err)
+            return []
+
+        if not isinstance(_result, dict) or not _result.get("has_issue"):
+            return []
+
+        return [
+            {
+                "type": "pov_consistency",
+                "description": str(_result.get("description", "시점 일관성 의심") or "시점 일관성 의심"),
+                "severity": "medium",
+            }
+        ]
 
     def _check_system_term_exposure(self, content: str, genre: str = "") -> list:
         """[메타 월] 집필 시스템 내부 용어 원고 노출 감지.
@@ -668,7 +738,8 @@ class ChiefWriterQualityGate:
         """[TF-54e] WritingDirective 위반 여부 점검."""
         if directive is None:
             return []
-        if hasattr(directive, "is_empty") and directive.is_empty():
+        emotion_required = str(getattr(directive, "emotion_required", "") or "").strip()
+        if hasattr(directive, "is_empty") and directive.is_empty() and not emotion_required:
             return []
 
         issues = []
@@ -683,6 +754,20 @@ class ChiefWriterQualityGate:
             kw in tail for kw in ["시작이었다", "서막이 올랐다", "전쟁이 시작", "사냥이 시작"]
         ):
             issues.append("ending_style '조용한여운' 지시인데 선언문으로 종결")
+
+        if emotion_required:
+            emotion_keywords = [
+                kw for kw in re.findall(r"[가-힣]{2,}|[A-Za-z]{3,}", emotion_required) if len(kw) >= 2
+            ] or [emotion_required]
+            emotion_window = manuscript[-1200:] if len(manuscript) > 1200 else manuscript
+            if not any(keyword in emotion_window for keyword in emotion_keywords[:3]):
+                issues.append(
+                    {
+                        "type": "emotion_required_missing",
+                        "description": f"emotion_required '{emotion_required}'가 원고 후반 감정선에 반영되지 않음",
+                        "severity": "medium",
+                    }
+                )
 
         return issues
 
@@ -699,6 +784,58 @@ class ChiefWriterQualityGate:
                 _freq = 0
             if _freq >= 3 and expr and str(expr) in manuscript:
                 issues.append(f"반복 표현 '{str(expr)[:20]}' 이번 화에도 사용 (직전 {_freq}회)")
+        return issues
+
+    def _check_ai_tell_patterns(self, content: str) -> list[dict]:
+        """상투적 AI 반응구와 문장 스타터 반복을 advisory-only로 탐지한다."""
+        if not content:
+            return []
+
+        issues: list[dict] = []
+
+        phrase_hits = {
+            phrase: content.count(phrase)
+            for phrase in self.AI_TELL_PHRASES
+            if content.count(phrase) >= 2
+        }
+        if phrase_hits:
+            top_hits = sorted(phrase_hits.items(), key=lambda item: (-item[1], item[0]))[:3]
+            labels = ", ".join(f"{phrase} x{count}" for phrase, count in top_hits)
+            issues.append(
+                {
+                    "type": "ai_tell_pattern_overuse",
+                    "description": f"상투적 반응구/접속구 반복 감지: {labels}",
+                    "severity": "low",
+                }
+            )
+
+        starters: dict[str, int] = {}
+        first_tokens: dict[str, int] = {}
+        sentences = [chunk.strip(" \"'“”‘’") for chunk in re.split(r"(?<=[.!?…])\s+|\n+", content) if chunk.strip()]
+        for sentence in sentences:
+            tokens = re.findall(r"[가-힣A-Za-z]{2,}", sentence)
+            if not tokens:
+                continue
+            first_token = tokens[0]
+            first_tokens[first_token] = first_tokens.get(first_token, 0) + 1
+            if len(tokens) >= 2:
+                starter = " ".join(tokens[:2])
+                starters[starter] = starters.get(starter, 0) + 1
+
+        repeated_starters = [(starter, count) for starter, count in starters.items() if count >= 3]
+        if not repeated_starters:
+            repeated_starters = [(token, count) for token, count in first_tokens.items() if count >= 4]
+        if repeated_starters:
+            top_starters = sorted(repeated_starters, key=lambda item: (-item[1], item[0]))[:3]
+            labels = ", ".join(f"{starter} x{count}" for starter, count in top_starters)
+            issues.append(
+                {
+                    "type": "ai_tell_sentence_starter_repetition",
+                    "description": f"문장 스타터가 지나치게 단조롭게 반복됨: {labels}",
+                    "severity": "low",
+                }
+            )
+
         return issues
 
     def _check_ending_hook_presence(self, manuscript: str, blueprint) -> list:
@@ -766,6 +903,148 @@ class ChiefWriterQualityGate:
                         "severity": "medium",
                     }
                 ]
+        return []
+
+    def _check_temporal_logic(self, content: str) -> list:
+        """같은 단락 내 상충되는 시간 점프가 겹치는지 점검."""
+        if not content:
+            return []
+
+        immediate_markers = ("곧바로", "즉시", "잠시 후", "곧", "이내")
+        long_jump_markers = ("다음 날", "며칠 후", "한참 후", "몇 시간 후", "몇 주 후", "한 달 후", "이틀 뒤")
+        for paragraph in [p.strip() for p in re.split(r"\n{2,}", content) if p.strip()]:
+            has_immediate = any(marker in paragraph for marker in immediate_markers)
+            has_long_jump = any(marker in paragraph for marker in long_jump_markers)
+            if has_immediate and has_long_jump:
+                return [
+                    {
+                        "type": "temporal_logic_jump",
+                        "description": "같은 단락 안에서 즉시 진행과 장시간 점프가 함께 나타남",
+                        "severity": "medium",
+                    }
+                ]
+        return []
+
+    def _check_paragraph_structure(self, content: str) -> list:
+        """과도하게 긴 벽돌 문단을 탐지한다."""
+        if not content:
+            return []
+
+        paragraphs = [p.strip() for p in re.split(r"\n{2,}", content) if p.strip()]
+        if not paragraphs:
+            return []
+
+        for paragraph in paragraphs:
+            sentence_count = len([s for s in re.split(r"[.!?\n]|[다요]\s", paragraph) if s.strip()])
+            if len(paragraph) >= 1000 and sentence_count >= 12:
+                return [
+                    {
+                        "type": "paragraph_structure_dense",
+                        "description": "문단이 지나치게 길어 호흡이 막힘 (줄바꿈/장면 분리 필요)",
+                        "severity": "medium",
+                    }
+                ]
+            if len(paragraph) >= 700 and sentence_count >= 8:
+                return [
+                    {
+                        "type": "paragraph_structure_dense",
+                        "description": "벽돌 문단 가능성 — 줄바꿈 또는 대사 분리 검토 필요",
+                        "severity": "low",
+                    }
+                ]
+            if sentence_count >= 12:
+                return [
+                    {
+                        "type": "paragraph_structure_dense",
+                        "description": "단일 문단에 문장이 과도하게 몰려 있어 호흡이 막힘",
+                        "severity": "low",
+                    }
+                ]
+        return []
+
+    def _check_tonal_consistency(self, content: str, blueprint, directive) -> list:
+        """Blueprint 핵심 긴장/감정선과 정반대 톤이 과도한지 점검."""
+        if not content:
+            return []
+
+        target_texts = []
+        if isinstance(blueprint, dict):
+            for key in ("core_tension", "emotional_arc", "target_beat", "expected_ending"):
+                value = blueprint.get(key)
+                if isinstance(value, str) and value.strip():
+                    target_texts.append(value)
+        intensity_note = str(getattr(directive, "intensity_note", "") or "").strip()
+        if intensity_note:
+            target_texts.append(intensity_note)
+        if not target_texts:
+            return []
+
+        target = " ".join(target_texts)
+        tension_markers = ("긴장", "위기", "절박", "압박", "불안", "분노", "살벌", "비장")
+        soft_markers = ("안도", "잔잔", "따뜻", "다정", "평온", "평화", "포근")
+        comic_markers = ("낄낄", "키득", "농담", "장난", "우스꽝", "능청")
+        violent_markers = ("피", "살기", "참혹", "절규", "비명", "광기")
+
+        if any(marker in target for marker in tension_markers):
+            comic_hits = sum(content.count(marker) for marker in comic_markers)
+            if comic_hits >= 2:
+                return [
+                    {
+                        "type": "tonal_inconsistency",
+                        "description": "Blueprint 긴장 톤 대비 코미디 톤이 과도하게 섞임",
+                        "severity": "medium",
+                    }
+                ]
+
+        if any(marker in target for marker in soft_markers):
+            violent_hits = sum(content.count(marker) for marker in violent_markers)
+            if violent_hits >= 3:
+                return [
+                    {
+                        "type": "tonal_inconsistency",
+                        "description": "Blueprint 잔잔/안도 톤 대비 과격한 정서가 과다함",
+                        "severity": "medium",
+                    }
+                ]
+
+        return []
+
+    def _check_scene_transition_markers(self, content: str) -> list:
+        """장면 전환 시 시간/장소 마커가 부족한지 점검."""
+        if not content:
+            return []
+
+        scene_blocks = [block.strip() for block in re.split(r"\n{2,}|\n\*\*\*\n", content) if block.strip()]
+        if len(scene_blocks) < 3:
+            return []
+
+        place_markers = ("에서", "으로", "안으로", "밖으로", "도착", "향했다", "들어섰다", "돌아왔다")
+        time_markers = ("다음 날", "그날 밤", "잠시 후", "며칠 후", "아침", "저녁", "새벽", "오후")
+        missing_count = 0
+
+        for block in scene_blocks[1:]:
+            head = " ".join(re.split(r"[.!?\n]", block)[:2]).strip()
+            has_place = any(marker in head for marker in place_markers)
+            has_time = any(marker in head for marker in time_markers)
+            if not has_place and not has_time:
+                missing_count += 1
+
+        if missing_count >= 2:
+            return [
+                {
+                    "type": "scene_transition_marker_missing",
+                    "description": "복수 장면 전환에서 시간/장소 마커가 부족함",
+                    "severity": "medium",
+                }
+            ]
+        if missing_count == 1:
+            return [
+                {
+                    "type": "scene_transition_marker_missing",
+                    "description": "장면 전환부의 시간/장소 마커가 약함",
+                    "severity": "low",
+                }
+            ]
         return []
 
     def _fix_manuscript_issues(self, manuscript: str, critique_result: dict, hud_report: str) -> str:

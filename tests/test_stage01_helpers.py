@@ -151,6 +151,18 @@ class TestPhase0Recovery:
         app_mock._ui_select_treatment.assert_called_once()
         app_mock.current_project.force_sync_v25_dna.assert_called_once_with("bible.json", "treatment.json")
 
+    def test_legacy_flow_can_store_mixed_pov(self, helpers, app_mock):
+        """기존 흐름에서도 POV 4번 선택 시 혼합 시점이 저장된다."""
+        with (
+            redirect_stdout(StringIO()),
+            patch("builtins.input", side_effect=["1", "N", "1", "1", "4", ""]),
+            patch("modules.core.spinners.STAGE0_AVAILABLE", True),
+        ):
+            helpers.phase_0_recovery()
+
+        saved = app_mock.current_project.master_bible["MasterBible"]["protagonist_config"]
+        assert saved["pov"] == "혼합"
+
     def test_no_bible_file_aborts(self, helpers, app_mock):
         """Bible 파일 없으면 중단"""
         app_mock._ui_select_bible.return_value = None

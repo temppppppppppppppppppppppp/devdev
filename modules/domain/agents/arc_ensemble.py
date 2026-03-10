@@ -195,10 +195,139 @@ class ArcEnsembleGenerator(BaseAgent):
     ):  # [SSOT-P2] 호출부(main_a.py:L1513)가 model_tier 인자를 명시 전달
         # [V62.4] gemini-2.5-pro로 변경 - 3-pro 쿼터 소진 문제 방지
         super().__init__(context, client, model_tier)
-        # [V60.37] 스마트 폴백 (BaseAgent에서 자동 설정: gemini-3 → gemini-2.5-pro)
+        # [V60.37] 스마트 폴백 (BaseAgent 자동 설정, 현재 gemini-2.5-pro 직접 사용)
         self._prompt_loader = PromptLoader()
         self.strategies = GENERATION_STRATEGIES
         self.max_workers = 3
+
+    def _load_strategy_bias(self, strategy_names: list[str], *, lookback: int = 30) -> dict[str, float]:
+        """Stage 2 PASS 선택 비중을 전략별로 로드한다."""
+        db_candidates = []
+        for db in (
+            self._resolve_logging_db(),
+            getattr(self.context, "db", None),
+        ):
+            if db is None or not hasattr(db, "get_strategy_win_rates"):
+                continue
+            if any(existing is db for existing in db_candidates):
+                continue
+            db_candidates.append(db)
+
+        for db in db_candidates:
+            try:
+                stats = db.get_strategy_win_rates(
+                    lookback=lookback,
+                    selected_label="",
+                    allowed_strategies=tuple(strategy_names),
+                )
+            except Exception as bias_err:
+                logging.debug("[QR-3] Arc 전략 비중 조회 실패 (비치명): %s", bias_err)
+                continue
+
+            if not isinstance(stats, dict) or int(stats.get("total", 0) or 0) <= 0:
+                continue
+            return {name: float(stats.get(name, 0.0) or 0.0) for name in strategy_names}
+        return {}
+
+    def _build_strategy_execution_plan(self, strategies: list[dict]) -> list[dict]:
+        """최근 PASS 비중을 반영해 전략 temperature를 미세 조정한다."""
+        strategy_names = [str(strategy.get("name", "") or "").strip() for strategy in strategies if strategy.get("name")]
+        shares = self._load_strategy_bias(strategy_names)
+        if not shares or all(shares.get(name, 0.0) <= 0 for name in strategy_names):
+            return [dict(strategy) for strategy in strategies]
+
+        ordered = sorted(strategies, key=lambda strategy: shares.get(strategy.get("name", ""), 0.0), reverse=True)
+        adjusted: list[dict] = []
+        for strategy in ordered:
+            strategy_copy = dict(strategy)
+            name = str(strategy_copy.get("name", "") or "")
+            base_temp = float(strategy_copy.get("temperature", 0.5) or 0.5)
+            share = shares.get(name, 0.0)
+            adjusted_temp = base_temp
+            if share >= 0.5:
+                adjusted_temp = max(0.1, round(base_temp - 0.05, 2))
+            elif share <= 0.15:
+                adjusted_temp = min(1.0, round(base_temp + 0.1, 2))
+            elif share <= 0.3:
+                adjusted_temp = min(1.0, round(base_temp + 0.05, 2))
+            strategy_copy["temperature"] = adjusted_temp
+            strategy_copy["_recent_share"] = share
+            adjusted.append(strategy_copy)
+
+        logging.info(
+            "[QR-3] Arc 전략 비중 적용: %s",
+            ", ".join(f"{strategy['name']}={int(shares.get(strategy['name'], 0.0) * 100)}%" for strategy in adjusted),
+        )
+        return adjusted
+
+    @staticmethod
+    def _build_char_ngrams(text: str, n: int = 3) -> set[str]:
+        normalized = re.sub(r"\s+", " ", str(text or "")).strip()
+        if not normalized:
+            return set()
+        if len(normalized) < n:
+            return {normalized}
+        return {normalized[i : i + n] for i in range(len(normalized) - n + 1)}
+
+    @staticmethod
+    def _compose_diversity_text(candidate: dict) -> str:
+        tactical = candidate.get("tactical_doc", "")
+        tactical = tactical if isinstance(tactical, str) else str(tactical or "")
+        joint_docs = candidate.get("joint_docs", {})
+        if isinstance(joint_docs, dict):
+            joint_text = json.dumps(joint_docs, ensure_ascii=False)
+        else:
+            joint_text = str(joint_docs or "")
+        return (tactical + "\n" + joint_text).strip()
+
+    def _summarize_candidate_diversity(self, candidates: list[dict], *, threshold: float = 0.7) -> dict:
+        indexed_texts: list[tuple[int, str]] = []
+        for idx, candidate in enumerate(candidates):
+            if not isinstance(candidate, dict):
+                continue
+            combined = self._compose_diversity_text(candidate)
+            if combined:
+                indexed_texts.append((idx, combined))
+
+        if len(indexed_texts) < 2:
+            return {}
+
+        labels = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        pairwise = []
+        high_similarity_pairs = []
+        max_similarity = 0.0
+        for left_pos in range(len(indexed_texts)):
+            left_idx, left_text = indexed_texts[left_pos]
+            left_grams = self._build_char_ngrams(left_text)
+            if not left_grams:
+                continue
+            for right_pos in range(left_pos + 1, len(indexed_texts)):
+                right_idx, right_text = indexed_texts[right_pos]
+                right_grams = self._build_char_ngrams(right_text)
+                if not right_grams:
+                    continue
+                union = left_grams | right_grams
+                similarity = (len(left_grams & right_grams) / len(union)) if union else 0.0
+                similarity = round(similarity, 2)
+                pair_label = f"{labels[left_idx]}-{labels[right_idx]}"
+                pairwise.append({"pair": pair_label, "similarity": similarity})
+                max_similarity = max(max_similarity, similarity)
+                if similarity >= threshold:
+                    high_similarity_pairs.append({"pair": pair_label, "similarity": similarity})
+
+        warning = ""
+        if high_similarity_pairs:
+            pairs_text = ", ".join(
+                f"{pair['pair']} {int(pair['similarity'] * 100)}%" for pair in high_similarity_pairs[:3]
+            )
+            warning = f"[후보 다양성 경고] Arc 후보 유사도 높음: {pairs_text}"
+
+        return {
+            "pairwise": pairwise,
+            "max_similarity": round(max_similarity, 2),
+            "high_similarity_pairs": high_similarity_pairs,
+            "warning": warning,
+        }
 
     def generate_ensemble(
         self,
@@ -278,6 +407,7 @@ class ArcEnsembleGenerator(BaseAgent):
             _filtered = [s for s in self.strategies if s.get("name") == single_strategy]
             if _filtered:
                 _active_strategies = _filtered
+        _active_strategies = self._build_strategy_execution_plan(_active_strategies)
 
         # [V61.3] 전체 병렬 처리 블록을 try-except로 감싸서 급사 방지
         try:
@@ -422,6 +552,7 @@ class ArcEnsembleGenerator(BaseAgent):
         valid_candidates = [c for c in scored_candidates if c.get("_score", 0) >= STRUCTURAL_MIN_SCORE]
         if not valid_candidates:
             valid_candidates = scored_candidates[:1]  # 최소 1개 폴백
+        _diversity_summary = self._summarize_candidate_diversity(valid_candidates)
 
         # [V61.3] 후보별 점수 비교 출력
         logging.warning(" [Ensemble] 후보 비교:")
@@ -452,6 +583,7 @@ class ArcEnsembleGenerator(BaseAgent):
                 "candidate_index": idx,
                 "strategy": candidate.get("_strategy", "unknown"),
                 "score": candidate.get("_score", 0),
+                "diversity": _diversity_summary,
             }
 
         # 메타데이터 제거 후 반환 (단, _ensemble_meta·_strategy는 유지)

@@ -7,7 +7,7 @@ import logging
 import re
 from typing import TYPE_CHECKING
 
-from modules.core.constants import Stage2Limits
+from modules.core.constants import Stage2Limits, VolumeSettings
 from modules.core.context_advisor import RetrievalSources
 from modules.core.context_compression import ContextCompressor
 from modules.core.tactical_utils import extract_episode_tactical
@@ -24,6 +24,47 @@ from modules.validation.threshold_helper import _threshold
 
 if TYPE_CHECKING:
     from modules.core.context_advisor import RetrievalPlan
+
+
+def _build_canonical_facts_section(db, full_text: str) -> str:
+    """Blueprint 본문과 겹치는 canonical_facts를 CP 섹션 문자열로 조립한다."""
+    getter = getattr(db, "get_canonical_facts", None)
+    if not callable(getter):
+        return ""
+
+    try:
+        canonical_facts = getter(fact_type="numerical")
+        if not isinstance(canonical_facts, list) or not canonical_facts:
+            return ""
+
+        cf_lines: list[str] = []
+        for fact in canonical_facts[:10]:
+            if not isinstance(fact, dict):
+                continue
+            fact_key = str(fact.get("fact_key", "") or "").strip()
+            if not fact_key:
+                continue
+            if full_text and fact_key not in full_text:
+                continue
+
+            fact_value = fact.get("value", {})
+            fact_conf = str(fact.get("confidence", "confirmed") or "confirmed")
+            first_ep = fact.get("first_ep", "?")
+            last_ep = fact.get("last_ep", "?")
+            if isinstance(fact_value, dict):
+                value = fact_value.get("value", "?")
+                unit = str(fact_value.get("unit", "") or "").strip()
+                unit_str = f" {unit}" if unit else ""
+                cf_lines.append(f"  {fact_key}: {value}{unit_str} (ep{first_ep}~{last_ep}, {fact_conf})")
+            else:
+                cf_lines.append(f"  {fact_key}: {fact_value} (ep{first_ep}~{last_ep}, {fact_conf})")
+
+        if not cf_lines:
+            return ""
+        return "• 정규 팩트 참조\n" + "\n".join(cf_lines[:8])
+    except Exception as cf_err:
+        logging.debug("[CP-7] canonical_facts 조회 실패 (비치명): %s", cf_err)
+        return ""
 
 
 class Stage4ContextBuilder:
@@ -86,7 +127,16 @@ class Stage4ContextBuilder:
         names: list[str] = []
         state_changes = (arc_data or {}).get("state_changes", {}) if isinstance(arc_data, dict) else {}
 
-        for field in ("npc_deaths", "relationship_changes", "npc_injuries"):
+        for field in (
+            "npc_deaths",
+            "relationship_changes",
+            "npc_injuries",
+            "npc_movements",
+            "npc_attribute_changes",
+            "npc_personality_changes",
+            "companion_changes",
+            "npc_introductions",
+        ):
             for entry in state_changes.get(field) or []:
                 if isinstance(entry, dict):
                     candidates = [
@@ -138,6 +188,86 @@ class Stage4ContextBuilder:
                         names.append(text)
 
         return names[:50]
+
+    @staticmethod
+    def _collect_arc_state_entities(arc_data: dict) -> dict[str, list[str]]:
+        """Collect explicit entities from arc.state_changes for CP fallback coverage."""
+        state_changes = (arc_data or {}).get("state_changes", {}) if isinstance(arc_data, dict) else {}
+        npcs = Stage4ContextBuilder._collect_npc_roster(arc_data=arc_data)
+        items: list[str] = []
+        plots: list[str] = []
+        locations: list[str] = []
+
+        for entry in state_changes.get("major_items") or []:
+            if isinstance(entry, dict):
+                for key in ("name", "item", "target"):
+                    text = str(entry.get(key) or "").strip()
+                    if text and text not in items:
+                        items.append(text)
+            elif isinstance(entry, str):
+                text = entry.strip()
+                if text and text not in items:
+                    items.append(text)
+        for entry in state_changes.get("items_acquired") or []:
+            if isinstance(entry, dict):
+                for key in ("name", "item", "target"):
+                    text = str(entry.get(key) or "").strip()
+                    if text and text not in items:
+                        items.append(text)
+            elif isinstance(entry, str):
+                text = entry.strip()
+                if text and text not in items:
+                    items.append(text)
+
+        for entry in state_changes.get("resolved_plots") or []:
+            if isinstance(entry, dict):
+                text = str(entry.get("plot", "") or entry.get("description", "") or "").strip()
+            else:
+                text = str(entry or "").strip()
+            if text and text not in plots:
+                plots.append(text)
+        for entry in state_changes.get("active_plots") or []:
+            if isinstance(entry, dict):
+                text = str(entry.get("plot", "") or entry.get("description", "") or "").strip()
+            else:
+                text = str(entry or "").strip()
+            if text and text not in plots:
+                plots.append(text)
+
+        for entry in state_changes.get("npc_movements") or []:
+            if not isinstance(entry, dict):
+                continue
+            for key in ("from", "to"):
+                text = str(entry.get(key) or "").strip()
+                if text and text not in locations:
+                    locations.append(text)
+
+        return {"npcs": npcs[:50], "items": items[:20], "plots": plots[:10], "locations": locations[:10]}
+
+    @staticmethod
+    def _format_npc_meta_value(value) -> str:
+        if isinstance(value, dict):
+            if "value" in value:
+                value = value.get("value")
+            elif "public_role" in value or "secret_role" in value:
+                public_role = str(value.get("public_role", "") or "").strip()
+                secret_role = str(value.get("secret_role", "") or "").strip()
+                known_by = Stage4ContextBuilder._format_npc_meta_value(
+                    value.get("known_by") or value.get("known_by_characters") or []
+                )
+                parts = []
+                if public_role:
+                    parts.append(f"공개={public_role}")
+                if secret_role:
+                    parts.append(f"비밀={secret_role}")
+                if known_by:
+                    parts.append(f"인지={known_by}")
+                return " / ".join(parts)
+            else:
+                return json.dumps(value, ensure_ascii=False, sort_keys=True)
+        if isinstance(value, list):
+            return ", ".join(str(item).strip() for item in value if str(item).strip())
+        return str(value or "").strip()
 
     @staticmethod
     def _suggest_ambient_npcs(blueprint: dict) -> str:
@@ -192,7 +322,7 @@ class Stage4ContextBuilder:
             + "\n".join(hints)
         )
 
-    def _extract_blueprint_entities(self, blueprint: dict) -> dict[str, list[str] | str]:
+    def _extract_blueprint_entities(self, blueprint: dict, arc_data: dict | None = None) -> dict[str, list[str] | str]:
         """Blueprint 텍스트에서 이번 화 관련 엔티티를 추출한다."""
         if not blueprint or not isinstance(blueprint, dict):
             return {"npcs": [], "items": [], "plots": [], "locations": [], "_full_text": ""}
@@ -228,6 +358,7 @@ class Stage4ContextBuilder:
         full_text = "\n".join(text_parts)
         world_state = getattr(self.ctx, "world_state", None)
         ws_state = getattr(world_state, "_state", {}) if world_state else {}
+        arc_entities = self._collect_arc_state_entities(arc_data or {})
 
         npcs: list[str] = []
         seen_npcs: set[str] = set()
@@ -237,12 +368,21 @@ class Stage4ContextBuilder:
                 if npc_name and npc_name not in seen_npcs and npc_name in full_text:
                     npcs.append(npc_name)
                     seen_npcs.add(npc_name)
+        for npc_name in arc_entities.get("npcs", []):
+            text = str(npc_name or "").strip()
+            if text and text not in seen_npcs:
+                npcs.append(text)
+                seen_npcs.add(text)
 
         items: list[str] = []
         for name in (ws_state.get("active_items") or {}):
             item_name = str(name).strip()
             if item_name and item_name in full_text:
                 items.append(item_name)
+        for item_name in arc_entities.get("items", []):
+            text = str(item_name or "").strip()
+            if text and text not in items:
+                items.append(text)
 
         plots: list[str] = []
         for plot in ws_state.get("active_plots") or []:
@@ -250,14 +390,118 @@ class Stage4ContextBuilder:
             plot_name = str(plot_name).strip()
             if plot_name and plot_name in full_text:
                 plots.append(plot_name)
+        for plot_name in arc_entities.get("plots", []):
+            text = str(plot_name or "").strip()
+            if text and text not in plots:
+                plots.append(text)
 
         locations: list[str] = []
         protagonist = ws_state.get("protagonist", {}) if isinstance(ws_state, dict) else {}
         location = protagonist.get("location", "") if isinstance(protagonist, dict) else ""
         if location:
             locations.append(str(location))
+        for location_name in arc_entities.get("locations", []):
+            text = str(location_name or "").strip()
+            if text and text not in locations:
+                locations.append(text)
 
         return {"npcs": npcs, "items": items, "plots": plots, "locations": locations, "_full_text": full_text}
+
+    def _build_npc_boundary_block(self, npc_names: list[str]) -> str:
+        """Build explicit NPC knowledge/identity guidance for CW/Director."""
+        if not npc_names:
+            return ""
+
+        project = getattr(self.ctx, "current_project", None)
+        bible = getattr(project, "master_bible", None) or {}
+        bible_root = bible.get("MasterBible", bible) if isinstance(bible, dict) else {}
+        assets = bible_root.get("AssetLibrary", {}) if isinstance(bible_root, dict) else {}
+        key_npcs = assets.get("KeyNPCs", []) or assets.get("Key_NPCs", [])
+        key_npc_map = {
+            str(npc.get("name", "") or "").strip(): npc
+            for npc in key_npcs
+            if isinstance(npc, dict) and str(npc.get("name", "") or "").strip()
+        }
+        ws_state = getattr(getattr(self.ctx, "world_state", None), "_state", {}) or {}
+        alive = ws_state.get("alive_npcs", {}) if isinstance(ws_state, dict) else {}
+        dead = ws_state.get("dead_npcs", {}) if isinstance(ws_state, dict) else {}
+
+        lines = ["[NPC 지식 범위/비밀 인지 참고]"]
+        count = 0
+        for npc_name in npc_names[:10]:
+            text = str(npc_name or "").strip()
+            if not text:
+                continue
+            info = {}
+            if text in alive and isinstance(alive.get(text), dict):
+                info = alive.get(text) or {}
+            elif text in dead and isinstance(dead.get(text), dict):
+                info = dead.get(text) or {}
+            key_info = key_npc_map.get(text, {})
+            known_attrs = info.get("known_attrs", {}) if isinstance(info, dict) else {}
+            if not isinstance(known_attrs, dict):
+                known_attrs = {}
+
+            def _pick(*values):
+                for value in values:
+                    rendered = self._format_npc_meta_value(value)
+                    if rendered:
+                        return rendered
+                return ""
+
+            knowledge_era = _pick(
+                info.get("knowledge_era"),
+                key_info.get("knowledge_era"),
+                known_attrs.get("knowledge_era"),
+            )
+            knowledge_tags = _pick(
+                info.get("knowledge_tags"),
+                key_info.get("knowledge_tags"),
+                known_attrs.get("knowledge_tags"),
+            )
+            expertise_domain = _pick(
+                info.get("expertise_domain"),
+                key_info.get("expertise_domain"),
+                known_attrs.get("expertise_domain"),
+            )
+            secrets_known = _pick(
+                info.get("secrets_known"),
+                key_info.get("secrets_known"),
+                known_attrs.get("secrets_known"),
+            )
+            dual_identity = _pick(
+                info.get("dual_identity"),
+                key_info.get("dual_identity"),
+                known_attrs.get("dual_identity"),
+                {
+                    "public_role": key_info.get("public_facade") or info.get("public_facade"),
+                    "secret_role": key_info.get("secret_role") or info.get("secret_role"),
+                    "known_by": key_info.get("known_by") or key_info.get("known_by_characters") or [],
+                },
+            )
+
+            parts = []
+            if knowledge_era:
+                parts.append(f"지식시대={knowledge_era}")
+            if knowledge_tags:
+                parts.append(f"지식태그={knowledge_tags}")
+            if expertise_domain:
+                parts.append(f"전문영역={expertise_domain}")
+            if secrets_known:
+                parts.append(f"비밀인지={secrets_known}")
+            if dual_identity:
+                parts.append(f"이중정체={dual_identity}")
+            if not parts:
+                continue
+            lines.append(f"- {text}: {' / '.join(parts)}")
+            count += 1
+            if count >= 6:
+                break
+
+        if count == 0:
+            return ""
+        lines.append("위 제약은 참고용 advisory다. 해당 NPC가 모를 정보·말투·정체 노출 여부를 점검하라.")
+        return "\n".join(lines)
 
     def _build_continuity_packet(self, entities: dict[str, list[str] | str]) -> str:
         """이번 화 관련 엔티티의 상세 이력을 지목 조회하여 패킷으로 조립한다."""
@@ -265,7 +509,7 @@ class Stage4ContextBuilder:
             return ""
 
         parts = ["=== [Continuity Packet] 이번 화 필수 기억 ==="]
-        budget = 6500
+        budget = 7000
         used = 0
 
         project = getattr(self.ctx, "current_project", None)
@@ -303,10 +547,12 @@ class Stage4ContextBuilder:
                     history_rows = db.get_npc_history(npc_name, limit=3)
                     for row in history_rows or []:
                         if isinstance(row, dict):
+                            reason = str(row.get("reason", "") or "")
+                            reason_str = f" ({reason[:30]})" if reason else ""
                             npc_block.append(
                                 f"  [변경 {row.get('episode_no', '?')}화] "
                                 f"{row.get('field_name', '')}: {str(row.get('old_value', ''))[:30]} → "
-                                f"{str(row.get('new_value', ''))[:30]}"
+                                f"{str(row.get('new_value', ''))[:30]}{reason_str}"
                             )
                 except Exception as history_err:
                     logging.debug("[CP] npc_history 조회 실패: %s", history_err)
@@ -431,11 +677,267 @@ class Stage4ContextBuilder:
                         parts.append(num_section)
                         used += len(num_section)
 
+        canonical_facts_section = _build_canonical_facts_section(db, full_text)
+        if canonical_facts_section and used + len(canonical_facts_section) <= budget:
+            parts.append(canonical_facts_section)
+            used += len(canonical_facts_section)
+
         if len(parts) == 1:
             return ""
 
         result = "\n".join(parts)
         return result[:budget]
+
+    @staticmethod
+    def _trim_summary_value(value, max_chars: int = 60) -> str:
+        text = str(value or "").strip()
+        if len(text) <= max_chars:
+            return text
+        return text[: max_chars - 1] + "…"
+
+    def _build_condensed_world_state_summary(
+        self,
+        entities: dict[str, list[str] | str],
+        *,
+        max_chars: int = 50000,
+    ) -> str:
+        """CP가 이미 상세 주입한 엔티티는 간략 표기만 남긴 world_state 요약."""
+        world_state = getattr(self.ctx, "world_state", None)
+        if not world_state:
+            return ""
+
+        state = getattr(world_state, "_state", {}) if hasattr(world_state, "_state") else {}
+        if not isinstance(state, dict) or not state:
+            try:
+                return world_state.get_summary(max_chars=max_chars)
+            except Exception:
+                return ""
+
+        cp_npcs = {str(name).strip() for name in (entities.get("npcs") or []) if str(name).strip()}
+        cp_items = {str(name).strip() for name in (entities.get("items") or []) if str(name).strip()}
+        cp_plots = {str(name).strip() for name in (entities.get("plots") or []) if str(name).strip()}
+        cp_locations = {str(name).strip() for name in (entities.get("locations") or []) if str(name).strip()}
+
+        if not any([cp_npcs, cp_items, cp_plots, cp_locations]):
+            try:
+                return world_state.get_summary(max_chars=max_chars)
+            except Exception:
+                return ""
+
+        parts: list[str] = []
+        last_ep = state.get("last_updated_ep", 0)
+        if last_ep:
+            parts.append(f"=== 세계 상태 (제{last_ep}화 기준) ===")
+
+        protagonist = state.get("protagonist", {})
+        if isinstance(protagonist, dict):
+            prot_lines = []
+            if protagonist.get("name"):
+                prot_lines.append(f"이름: {protagonist['name']}")
+            if protagonist.get("location"):
+                prot_lines.append(f"위치: {self._trim_summary_value(protagonist['location'])}")
+            if protagonist.get("assets"):
+                prot_lines.append(f"자산: {self._trim_summary_value(protagonist['assets'], 120)}")
+            if protagonist.get("injuries") and protagonist.get("injuries") != "정상":
+                prot_lines.append(f"부상: {self._trim_summary_value(protagonist['injuries'])}")
+            if prot_lines:
+                parts.append("[주인공]\n" + "\n".join(prot_lines))
+
+        motivations = [
+            mot
+            for mot in (state.get("motivations") or [])
+            if isinstance(mot, dict) and mot.get("status") == "active" and mot.get("text")
+        ]
+        if motivations:
+            parts.append(
+                "[주인공 핵심 동기]\n"
+                + "\n".join(
+                    f"- {self._trim_summary_value(mot.get('text'), 80)}"
+                    + (f" (제{mot.get('since_ep')}화~)" if mot.get("since_ep") else "")
+                    for mot in motivations[:6]
+                )
+            )
+
+        promises = [
+            promise
+            for promise in (state.get("promises") or [])
+            if isinstance(promise, dict)
+            and promise.get("text")
+            and promise.get("status") in ("pending", None, "")
+        ]
+        if promises:
+            promise_lines = []
+            for promise in promises[:6]:
+                promiser = str(promise.get("promiser", "") or "").strip()
+                promisee = str(promise.get("promisee", "") or "").strip()
+                parties = "→".join(x for x in [promiser, promisee] if x)
+                text = self._trim_summary_value(promise.get("text"), 80)
+                label = f"{parties}: {text}" if parties else text
+                if promise.get("since_ep"):
+                    label += f" (제{promise.get('since_ep')}화~)"
+                promise_lines.append(f"- {label}")
+            if promise_lines:
+                parts.append("[서약/약속]\n" + "\n".join(promise_lines))
+
+        cumulative_elapsed = state.get("cumulative_elapsed", {})
+        if isinstance(cumulative_elapsed, dict) and cumulative_elapsed.get("total_days"):
+            parts.append(f"[누적 경과] 총 {cumulative_elapsed.get('total_days')}일")
+
+        alive = state.get("alive_npcs", {})
+        if isinstance(alive, dict) and alive:
+            remaining_alive = [(name, info) for name, info in alive.items() if str(name).strip() not in cp_npcs]
+            if remaining_alive:
+                lines = []
+                for name, info in remaining_alive[:12]:
+                    desc_parts = []
+                    if isinstance(info, dict):
+                        if info.get("role"):
+                            desc_parts.append(str(info["role"]))
+                        if info.get("relation"):
+                            desc_parts.append(f"관계={info['relation']}")
+                        if info.get("location"):
+                            desc_parts.append(f"위치={self._trim_summary_value(info['location'], 24)}")
+                    desc = " / ".join(desc_parts)
+                    lines.append(f"- {name}" + (f": {desc}" if desc else ""))
+                parts.append(f"[생존 NPC - CP 비포함 {len(lines)}명]\n" + "\n".join(lines))
+            if cp_npcs:
+                parts.append("[CP 상세 참조]\n- 핵심 NPC 상세는 Continuity Packet 참조")
+
+        dead = state.get("dead_npcs", {})
+        if isinstance(dead, dict) and dead:
+            remaining_dead = [(name, info) for name, info in dead.items() if str(name).strip() not in cp_npcs]
+            if remaining_dead:
+                lines = []
+                for name, info in remaining_dead[:8]:
+                    if isinstance(info, dict):
+                        lines.append(f"- {name} (제{info.get('ep', '?')}화, {self._trim_summary_value(info.get('cause'), 24)})")
+                    else:
+                        lines.append(f"- {name}")
+                parts.append(f"[사망 NPC - CP 비포함 {len(lines)}명]\n" + "\n".join(lines))
+
+        relationships = state.get("relationships", {})
+        if isinstance(relationships, dict) and relationships:
+            rel_lines = []
+            for npc, relation in list(relationships.items())[:12]:
+                if str(npc).strip() in cp_npcs:
+                    continue
+                rel_lines.append(f"- {npc}: {self._trim_summary_value(relation, 40)}")
+            if rel_lines:
+                parts.append("[주요 관계 - CP 비포함]\n" + "\n".join(rel_lines))
+
+        active_items = state.get("active_items", {})
+        if isinstance(active_items, dict) and active_items:
+            item_lines = [f"- {name}" for name, info in list(active_items.items())[:20] if str(name).strip() not in cp_items]
+            if item_lines:
+                parts.append("[보유 아이템 - CP 비포함]\n" + "\n".join(item_lines[:12]))
+            if cp_items:
+                parts.append("[CP 상세 참조]\n- 관련 아이템 상세는 Continuity Packet 참조")
+
+        active_plots = state.get("active_plots", [])
+        if isinstance(active_plots, list) and active_plots:
+            plot_lines = []
+            for plot in active_plots[-10:]:
+                plot_name = plot.get("plot", "") if isinstance(plot, dict) else str(plot)
+                if str(plot_name).strip() in cp_plots:
+                    continue
+                since_ep = plot.get("since_ep", "?") if isinstance(plot, dict) else "?"
+                plot_lines.append(f"- {self._trim_summary_value(plot_name, 60)} (제{since_ep}화~)")
+            if plot_lines:
+                parts.append("[진행 중 플롯 - CP 비포함]\n" + "\n".join(plot_lines[:8]))
+            if cp_plots:
+                parts.append("[CP 상세 참조]\n- 이번 화 핵심 플롯 상세는 Continuity Packet 참조")
+
+        if cp_locations:
+            parts.append("[CP 상세 참조]\n- 이번 화 위치 맥락 상세는 Continuity Packet 참조")
+
+        result = "\n\n".join(part for part in parts if part)
+        if len(result) > max_chars:
+            result = result[: max_chars - 20] + "\n... (세계 상태 절삭)"
+        return result
+
+    def _build_condensed_fact_ledger_summary(
+        self,
+        entities: dict[str, list[str] | str],
+        *,
+        max_chars: int = 25000,
+    ) -> str:
+        """CP가 이미 상세 주입한 인물/아이템/수치는 압축한 FactLedger 요약."""
+        fact_ledger = getattr(self.ctx, "fact_ledger", None)
+        if not fact_ledger:
+            return ""
+
+        ledger = getattr(fact_ledger, "_ledger", {}) if hasattr(fact_ledger, "_ledger") else {}
+        if not isinstance(ledger, dict) or not ledger:
+            try:
+                return fact_ledger.to_summary(max_chars=max_chars)
+            except Exception:
+                return ""
+
+        cp_npcs = {str(name).strip() for name in (entities.get("npcs") or []) if str(name).strip()}
+        cp_items = {str(name).strip() for name in (entities.get("items") or []) if str(name).strip()}
+        full_text = str(entities.get("_full_text", "") or "")
+        if not any([cp_npcs, cp_items, full_text]):
+            try:
+                return fact_ledger.to_summary(max_chars=max_chars)
+            except Exception:
+                return ""
+
+        parts = []
+        last_ep = ledger.get("last_updated_ep", 0)
+        if last_ep:
+            parts.append(f"=== 팩트 원장 (제{last_ep}화 기준) ===")
+
+        characters = ledger.get("characters", {})
+        if isinstance(characters, dict) and characters:
+            alive_lines = []
+            for name, info in list(characters.items())[:40]:
+                if str(name).strip() in cp_npcs or not isinstance(info, dict) or info.get("status") != "alive":
+                    continue
+                role = self._trim_summary_value(info.get("role", "?"), 24)
+                relation = self._trim_summary_value(info.get("relationship", ""), 24)
+                rel_str = f", 관계: {relation}" if relation else ""
+                alive_lines.append(f"  - {name} ({role}{rel_str}, ep{info.get('established_ep', '?')}~)")
+            if alive_lines:
+                parts.append("[생존 인물 - CP 비포함]\n" + "\n".join(alive_lines[:12]))
+            if cp_npcs:
+                parts.append("[CP 상세 참조]\n- 핵심 인물 팩트 이력은 Continuity Packet 참조")
+
+        items = ledger.get("items", {})
+        if isinstance(items, dict) and items:
+            item_lines = []
+            for name, info in list(items.items())[:30]:
+                if str(name).strip() in cp_items or not isinstance(info, dict):
+                    continue
+                if info.get("status") in ("분실", "파괴", "소모"):
+                    continue
+                owner = self._trim_summary_value(info.get("owner", ""), 20)
+                owner_str = f", 소유: {owner}" if owner else ""
+                item_lines.append(f"  - {name} ({info.get('status', '보유')}{owner_str})")
+            if item_lines:
+                parts.append("[보유 아이템/무공 - CP 비포함]\n" + "\n".join(item_lines[:10]))
+            if cp_items:
+                parts.append("[CP 상세 참조]\n- 관련 아이템 상세는 Continuity Packet 참조")
+
+        numbers = ledger.get("numbers", {})
+        if isinstance(numbers, dict) and numbers:
+            num_lines = []
+            for key, info in list(numbers.items())[:30]:
+                if not isinstance(info, dict):
+                    continue
+                if full_text and str(key) in full_text:
+                    continue
+                unit = str(info.get("unit", "") or "").strip()
+                unit_str = f" {unit}" if unit else ""
+                num_lines.append(f"  - {key}: {info.get('value', '?')}{unit_str} (ep{info.get('last_ep', '?')} 기준)")
+            if num_lines:
+                parts.append("[주요 수치 - CP 비포함]\n" + "\n".join(num_lines[:10]))
+            if full_text:
+                parts.append("[CP 상세 참조]\n- 이번 화 관련 수치 변화 이력은 Continuity Packet 참조")
+
+        result = "\n\n".join(part for part in parts if part)
+        if len(result) > max_chars:
+            result = result[: max_chars - 18] + "\n... (팩트 원장 절삭)"
+        return result
 
     def _execute_retrieval_plan(self, plan: "RetrievalPlan", arc_no: int | None = None) -> list[str]:
         """Execute retrieval plan slots and return context sections."""
@@ -628,6 +1130,71 @@ class Stage4ContextBuilder:
         logging.info(f"[SC] Context budget: {report['used_chars']}/{report['total_budget_chars']} ({report['usage_pct']}%)"
         )
         return sections
+
+    def _compose_mandatory_context_with_headroom(self, sc_parts: list[str], mc_parts: list[str]) -> str:
+        """Compose SC + mandatory context while preserving headroom against final tail-trim."""
+        sc_header = "\n\n".join(sc_parts) if sc_parts else ""
+        mc_body = "\n\n".join(mc_parts)
+        limit = int(_threshold("context.mandatory_context_max", 80000))
+        headroom = 0
+        if sc_header and limit > 0:
+            headroom = min(20000, max(500, limit // 20))
+            headroom = min(headroom, max(0, limit // 5))
+            available_for_mc = max(0, limit - len(sc_header) - headroom - 2)
+            if available_for_mc > 0 and len(mc_body) > available_for_mc and mc_parts:
+                trimmed_parts = self._apply_context_budget(list(mc_parts), available_for_mc)
+                mc_body = "\n\n".join(trimmed_parts)
+                logging.info(
+                    "[S4:CTX] rebalanced mc_body against SC headroom (sc=%d, mc=%d, limit=%d, headroom=%d)",
+                    len(sc_header),
+                    len(mc_body),
+                    limit,
+                    headroom,
+                )
+
+        total_len = len(sc_header) + len(mc_body) + (2 if sc_header and mc_body else 0)
+        if limit > 0 and total_len > limit and mc_body:
+            compressor = ContextCompressor()
+            mc_budget = max(300, limit - len(sc_header) - (2 if sc_header else 0))
+            if len(mc_body) > mc_budget:
+                original_len = len(mc_body)
+                mc_body = compressor._smart_trim(mc_body, mc_budget)
+                logging.info("[S4:CTX] final mc_body trim %d→%d (limit=%d)", original_len, len(mc_body), limit)
+
+        total_len = len(sc_header) + len(mc_body) + (2 if sc_header and mc_body else 0)
+        if limit > 0 and total_len > limit and sc_header:
+            compressor = ContextCompressor()
+            sc_budget = max(300, limit - len(mc_body) - (2 if mc_body else 0))
+            if len(sc_header) > sc_budget:
+                original_len = len(sc_header)
+                sc_header = compressor._smart_trim(sc_header, sc_budget)
+                logging.info("[S4:CTX] final sc_header trim %d→%d (limit=%d)", original_len, len(sc_header), limit)
+                total_len = len(sc_header) + len(mc_body) + (2 if sc_header and mc_body else 0)
+
+        logging.info(
+            "[S4:CTX] compose pre-final sc=%d mc=%d total=%d limit=%d headroom=%d",
+            len(sc_header),
+            len(mc_body),
+            total_len,
+            limit,
+            headroom,
+        )
+
+        self.ctx._stage4_context_budget_meta = {
+            "sc_chars": len(sc_header),
+            "mc_chars": len(mc_body),
+            "total_chars": total_len,
+            "limit_chars": limit,
+            "headroom_chars": headroom,
+        }
+        mandatory_context = (sc_header + "\n\n" + mc_body).strip() if sc_header else mc_body
+        if limit > 0 and len(mandatory_context) > limit:
+            compressor = ContextCompressor()
+            original_len = len(mandatory_context)
+            mandatory_context = compressor._smart_trim(mandatory_context, limit)
+            self.ctx._stage4_context_budget_meta["total_chars"] = len(mandatory_context)
+            logging.info("[S4:CTX] final combined trim %d→%d (limit=%d)", original_len, len(mandatory_context), limit)
+        return mandatory_context
 
     def load_chain_link_section(self, next_ep: int) -> str:
         """
@@ -1201,6 +1768,13 @@ class Stage4ContextBuilder:
                 "[경고] 필수 컨텍스트 로딩 실패 - 이전 에피소드 상태를 우선 참조하여 연속성을 유지하세요."
             )
 
+        cp_entities = {"npcs": [], "items": [], "plots": [], "locations": [], "_full_text": ""}
+        if blueprint:
+            try:
+                cp_entities = self._extract_blueprint_entities(blueprint, arc_data=arc_data)
+            except Exception as cp_entity_err:
+                logging.debug("[CP] blueprint entity 추출 실패 (비치명): %s", cp_entity_err)
+
         _mc_parts = [mandatory_context] if mandatory_context else []
 
         _ambient_npc_hint = self._suggest_ambient_npcs(blueprint or {})
@@ -1213,7 +1787,12 @@ class Stage4ContextBuilder:
 
         if self.ctx.world_state:
             try:
-                _ws_summary = self.ctx.world_state.get_summary(max_chars=50000)
+                if cp_entities.get("npcs") or cp_entities.get("items") or cp_entities.get("plots"):
+                    _ws_summary = self._build_condensed_world_state_summary(cp_entities, max_chars=50000)
+                    if not _ws_summary:
+                        _ws_summary = self.ctx.world_state.get_summary(max_chars=50000)
+                else:
+                    _ws_summary = self.ctx.world_state.get_summary(max_chars=50000)
                 if _ws_summary:
                     _mc_parts.insert(0, _ws_summary)
                     logging.info(f" [V68] 세계 상태 문서 주입 ({len(_ws_summary)}자)")
@@ -1241,7 +1820,7 @@ class Stage4ContextBuilder:
                     _mc_parts.append(f"[V68 시리즈 전체 요약]\n{_series_summary}")
 
             _current_arc_no = arc_data.get("arc_no", 1) if arc_data else 1
-            _current_vol = max(1, (_current_arc_no - 1) // 5 + 1)  # ARCS_PER_VOLUME = 5
+            _current_vol = max(1, (_current_arc_no - 1) // int(VolumeSettings.ARCS_PER_VOLUME) + 1)
             _volume_summaries = []
             for _vi in range(max(1, _current_vol - 2), _current_vol + 1):
                 _vs = self.ctx.current_project.load_v20_anchor(f"volume_summary_{_vi}")
@@ -1257,7 +1836,12 @@ class Stage4ContextBuilder:
 
         if self.ctx.fact_ledger:
             try:
-                _fl_summary = self.ctx.fact_ledger.to_summary(max_chars=25000)
+                if cp_entities.get("npcs") or cp_entities.get("items") or cp_entities.get("_full_text"):
+                    _fl_summary = self._build_condensed_fact_ledger_summary(cp_entities, max_chars=25000)
+                    if not _fl_summary:
+                        _fl_summary = self.ctx.fact_ledger.to_summary(max_chars=25000)
+                else:
+                    _fl_summary = self.ctx.fact_ledger.to_summary(max_chars=25000)
                 if _fl_summary:
                     _mc_parts.insert(0, _fl_summary)
                     logging.info(f" [V68] 팩트 원장 주입 ({len(_fl_summary)}자)")
@@ -1310,7 +1894,6 @@ class Stage4ContextBuilder:
 
         if blueprint:
             try:
-                cp_entities = self._extract_blueprint_entities(blueprint)
                 cp_text = self._build_continuity_packet(cp_entities)
                 if cp_text:
                     _mc_parts.insert(0, cp_text)
@@ -1323,6 +1906,16 @@ class Stage4ContextBuilder:
                     )
             except Exception as cp_err:
                 logging.warning("[CP] Continuity Packet 생성 실패 (비치명): %s", str(cp_err)[:80])
+
+        try:
+            _boundary_npcs = list(cp_entities.get("npcs") or [])
+            if not _boundary_npcs:
+                _boundary_npcs = self._collect_npc_roster(arc_data=arc_data or {}, blueprint=blueprint or {})
+            _npc_boundary_block = self._build_npc_boundary_block(_boundary_npcs)
+            if _npc_boundary_block:
+                _mc_parts.insert(0, _npc_boundary_block)
+        except Exception as _npc_boundary_err:
+            logging.debug("[QI-NPC] NPC boundary block 생성 실패 (비치명): %s", _npc_boundary_err)
 
         # [S4-I2] state_tracker 16종 요약을 get_all_summaries()로 일괄 수집
         _st = self.ctx.state_tracker
@@ -1339,7 +1932,7 @@ class Stage4ContextBuilder:
             except Exception as _st_err:
                 logging.warning("[S4-I2] get_all_summaries 실패, 개별 폴백: %s", _st_err)
                 # 폴백: 개별 호출 (하위 호환성 보장)
-                for _summary in (
+                _fallback_summaries = [
                     _st.get_entity_destruction_summary(),
                     _st.get_resolved_plots_summary(),
                     _st.get_npc_personality_summary(),
@@ -1356,7 +1949,25 @@ class Stage4ContextBuilder:
                     _st.get_npc_injury_summary(),
                     _st.get_npc_movement_summary(),
                     _st.get_protagonist_skills_summary(),
-                ):
+                    _st.get_dead_npc_summary(),
+                ]
+                if s4_genre_type == "hunter":
+                    _fallback_summaries.extend(
+                        [
+                            _st.get_dungeon_clear_summary(),
+                            _st.get_skill_cooldown_summary(),
+                        ]
+                    )
+                elif s4_genre_type == "fantasy":
+                    _fallback_summaries.extend(
+                        [
+                            _st.get_spell_repertoire_summary(),
+                            _st.get_blessing_curse_summary(),
+                        ]
+                    )
+                elif s4_genre_type == "actor":
+                    _fallback_summaries.append(_st.get_filmography_summary())
+                for _summary in _fallback_summaries:
                     if _summary:
                         _mc_parts.append(_summary)
 
@@ -1520,10 +2131,8 @@ class Stage4ContextBuilder:
         if _threshold("smart_retrieval.enabled", False) and _threshold("smart_retrieval.stage4_enabled", False):
             _mc_parts = self._apply_context_budget(_mc_parts, _sc_budget)
 
-        # [Wave-B] SC Retrieval 결과를 mandatory_context 맨 앞에 배치 (40K 절삭 보호)
-        _sc_header = "\n\n".join(_sc_parts) if _sc_parts else ""
-        _mc_body = "\n\n".join(_mc_parts)
-        mandatory_context = (_sc_header + "\n\n" + _mc_body).strip() if _sc_header else _mc_body
+        # [LS-5] SC Retrieval 결과와 non-SC 본문을 합산 budget 기준으로 재조립
+        mandatory_context = self._compose_mandatory_context_with_headroom(_sc_parts, _mc_parts)
 
         try:
             anti_trope_prompt = _build_anti_trope(genre_name)

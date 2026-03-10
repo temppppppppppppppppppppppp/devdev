@@ -1,4 +1,5 @@
 # [V70] Ensemble 프롬프트 템플릿
+_version: "2026-03-10-opt3"
 
 ENSEMBLE_ARC_PROMPT: |
   [V60.11 ENSEMBLE ARC GENERATOR - {strategy_name} 전략]

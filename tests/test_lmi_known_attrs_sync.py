@@ -374,3 +374,50 @@ class TestAutoRegisterNpc:
         assert "신규NPC" in w._state["alive_npcs"]
         ka = w._state["alive_npcs"]["신규NPC"].get("known_attrs", {})
         assert ka["location"]["value"] == "개봉"
+
+
+class TestExtendedKnownAttrsSync:
+    def test_personality_change_syncs_known_attrs(self, ws):
+        ws.update_from_state_changes(
+            9,
+            {
+                "npc_personality_changes": [
+                    {"name": "노사부", "from": "엄격함", "to": "유연함"},
+                ]
+            },
+        )
+
+        ka = ws._state["alive_npcs"]["노사부"]["known_attrs"]
+        assert ka["personality"]["value"] == "유연함"
+        assert ka["personality"]["prev"] == "엄격함"
+        assert ka["personality"]["changed_ep"] == 9
+
+    def test_npc_introduction_syncs_knowledge_boundary_fields(self):
+        w = WorldState(db=MagicMock())
+        w.update_from_state_changes(
+            4,
+            {
+                "npc_introductions": [
+                    {
+                        "name": "은월",
+                        "role": "원시 부족 전사",
+                        "knowledge_era": "선사시대",
+                        "knowledge_tags": ["부족사회", "석기"],
+                        "expertise_domain": "사냥",
+                        "secrets_known": ["회귀 비밀"],
+                        "dual_identity": {
+                            "public_role": "부족 전사",
+                            "secret_role": "숨은 제사장",
+                            "known_by": ["주인공"],
+                        },
+                    }
+                ]
+            },
+        )
+
+        ka = w._state["alive_npcs"]["은월"]["known_attrs"]
+        assert ka["knowledge_era"]["value"] == "선사시대"
+        assert ka["knowledge_tags"]["value"] == ["부족사회", "석기"]
+        assert ka["expertise_domain"]["value"] == "사냥"
+        assert ka["secrets_known"]["value"] == ["회귀 비밀"]
+        assert ka["dual_identity"]["value"]["secret_role"] == "숨은 제사장"

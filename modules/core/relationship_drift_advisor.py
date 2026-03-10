@@ -9,6 +9,8 @@ import json
 import logging
 import re
 
+from modules.core.constants import smart_truncate
+
 logger = logging.getLogger(__name__)
 
 MAX_PAIRS = 20
@@ -95,7 +97,7 @@ class RelationshipDriftAdvisor:
 
     def _llm_check(self, manuscript, relationship_timeline, ep_num):
         """LLM에게 관계 표류 판정을 요청."""
-        ms_snippet = manuscript[:4000]
+        ms_snippet = smart_truncate(manuscript or "", max_chars=4000, head_chars=2500)
 
         prompt = (
             "다음은 웹소설 NPC 쌍의 관계 변경 이력(타임라인)과 현재 원고입니다.\n"

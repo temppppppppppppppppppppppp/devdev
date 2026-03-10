@@ -14,6 +14,7 @@
 - **비치명** — 실패 시 `logging.debug` + skip, 기존 동작 불변
 - **Director 주권** — advisory만 제공, REJECT 강제 금지 (대원칙 3)
 - **예산 의식** — Director MC 총량 40K cap 내에서 추가
+- **오탐 고지** — Python 임계값/패턴 매칭 기반이므로 오탐 가능. 각 advisory 헤더에 `(Python 자동 감지 — 오탐 가능, 참고용)` 문구 포함. LLM이 맹신하지 않고 자체 판단하도록 유도
 
 ---
 
@@ -54,7 +55,7 @@ Stage 3 Blueprint 생성(`blueprint_ensemble.py:558`)에서는 `get_recent_pacin
                 if len(_dial_vals) >= 3 and all(_dial_vals[i] > _dial_vals[i + 1] for i in range(len(_dial_vals) - 1)):
                     _pacing_lines.append(f"대화 비율 {len(_dial_vals)}화 연속 하락 ({_dial_vals[0]:.0%}→{_dial_vals[-1]:.0%})")
                 if _pacing_lines:
-                    _director_mc_parts.append("[DB-1 호흡 추이]\n" + "\n".join(_pacing_lines))
+                    _director_mc_parts.append("[DB-1 호흡 추이] (Python 자동 감지 — 오탐 가능, 참고용)\n" + "\n".join(_pacing_lines))
     except Exception as _pace_err:
         logging.debug("[DB-1] pacing advisory 실패 (비치명): %s", _pace_err)
 ```
@@ -114,7 +115,7 @@ Stage 3(`blueprint_ensemble.py:534`) + `continuity_validator.py:1019`에서 조�
                 if _avg_score < 4:
                     _sat_lines.append(f"만족도 평균 {_avg_score:.1f}/10 — 긴장·보상·캐릭터 성장 보강 필요")
                 if _sat_lines:
-                    _director_mc_parts.append("[DB-2 만족도 추이]\n" + "\n".join(_sat_lines))
+                    _director_mc_parts.append("[DB-2 만족도 추이] (Python 자동 감지 — 오탐 가능, 참고용)\n" + "\n".join(_sat_lines))
     except Exception as _sat_err:
         logging.debug("[DB-2] satisfaction advisory 실패 (비치명): %s", _sat_err)
 ```
@@ -168,7 +169,7 @@ Arc N+1 생성 시 "Arc 3이 Arc 1의 복선에 의존"을 Analyst/Director가 �
                     else:
                         _dep_lines.append(f"  현재 → Arc {_to}: {_dtype} ({_ddesc})")
                 if _dep_lines:
-                    _story_context += "\n\n[DB-3 Arc 의존성]\n" + "\n".join(_dep_lines)
+                    _story_context += "\n\n[DB-3 Arc 의존성] (Python 자동 감지 — 오탐 가능, 참고용)\n" + "\n".join(_dep_lines)
     except Exception as _dep_err:
         logging.debug("[DB-3] arc_dependencies advisory 실패 (비치명): %s", _dep_err)
 ```
@@ -200,7 +201,7 @@ Arc N+1 생성 시 "Arc 3이 Arc 1의 복선에 의존"을 Analyst/Director가 �
 
 ### 구현
 
-**위치**: `stage3_orchestrator.py`, Blueprint 생성 직전 advisory 조립부
+**위치**: `stage3_orchestrator.py`, Blueprint 생성 직전 advisory 조립부 (`_bp_semantic_ctx` 변수에 prepend)
 
 ```python
     # [DB-4] 미회수 복선 → Blueprint advisory
@@ -218,9 +219,9 @@ Arc N+1 생성 시 "Arc 3이 Arc 1의 복선에 의존"을 Analyst/Director가 �
                             f"  - {_seed.get('content', '?')[:60]} (ep{_planted}~ 미회수, {next_ep - _planted}화 경과)"
                         )
                 if _stale_seeds:
-                    _advisory_text = "[DB-4 장기 미회수 복선]\n" + "\n".join(_stale_seeds[:5])
+                    _advisory_text = "[DB-4 장기 미회수 복선] (Python 자동 감지 — 오탐 가능, 참고용)\n" + "\n".join(_stale_seeds[:5])
                     # Blueprint LLM 컨텍스트에 advisory 주입
-                    _enriched_context = _advisory_text + "\n\n" + _enriched_context
+                    _bp_semantic_ctx = _advisory_text + "\n\n" + _bp_semantic_ctx
     except Exception as _seed_err:
         logging.debug("[DB-4] foreshadow advisory 실패 (비치명): %s", _seed_err)
 ```
@@ -261,32 +262,33 @@ NC-1 수치 검증이 FactLedger만 참조하고, canonical_facts의 `confidence
 
 ```python
     # 7. 정규 팩트 교차 검증 (canonical_facts)
+    # 주의: 변수명은 CP 컨벤션에 맞춤 (언더스코어 없음 — db, used, budget, parts 등과 동일)
     if db and hasattr(db, "get_canonical_facts"):
         try:
-            _c_facts = db.get_canonical_facts(fact_type="numerical")
-            if _c_facts:
-                _cf_lines = []
-                for _cf in _c_facts[:10]:
-                    _cf_key = _cf.get("fact_key", "")
-                    if not _cf_key:
+            c_facts = db.get_canonical_facts(fact_type="numerical")
+            if c_facts:
+                cf_lines = []
+                for cf in c_facts[:10]:
+                    cf_key = cf.get("fact_key", "")
+                    if not cf_key:
                         continue
                     # Blueprint 텍스트에 팩트 키가 등장하는 경우만
-                    _ft = entities.get("_full_text", "")
-                    if _ft and _cf_key not in _ft:
+                    ft = str(entities.get("_full_text", "") or "")
+                    if ft and cf_key not in ft:
                         continue
-                    _cf_val = _cf.get("value", {})
-                    _cf_conf = _cf.get("confidence", "confirmed")
-                    if isinstance(_cf_val, dict):
-                        _v = _cf_val.get("value", "?")
-                        _u = _cf_val.get("unit", "")
-                        _cf_lines.append(f"  {_cf_key}: {_v} {_u} (ep{_cf.get('first_ep','?')}~{_cf.get('last_ep','?')}, {_cf_conf})")
-                if _cf_lines:
-                    cf_section = "• 정규 팩트 참조\n" + "\n".join(_cf_lines[:8])
+                    cf_val = cf.get("value", {})
+                    cf_conf = cf.get("confidence", "confirmed")
+                    if isinstance(cf_val, dict):
+                        v = cf_val.get("value", "?")
+                        u = cf_val.get("unit", "")
+                        cf_lines.append(f"  {cf_key}: {v} {u} (ep{cf.get('first_ep','?')}~{cf.get('last_ep','?')}, {cf_conf})")
+                if cf_lines:
+                    cf_section = "• 정규 팩트 참조\n" + "\n".join(cf_lines[:8])
                     if used + len(cf_section) <= budget:
                         parts.append(cf_section)
                         used += len(cf_section)
-        except Exception as _cf_err:
-            logging.debug("[CP-7] canonical_facts 조회 실패 (비치명): %s", _cf_err)
+        except Exception as cf_err:
+            logging.debug("[CP-7] canonical_facts 조회 실패 (비치명): %s", cf_err)
 ```
 
 ### budget 변경
@@ -343,7 +345,7 @@ NC-1 수치 검증이 FactLedger만 참조하고, canonical_facts의 `confidence
                             _reveal_all.append(f"  ep{_prev_ep}: {_rev[:80]}")
             if _reveal_all:
                 _director_mc_parts.append(
-                    f"[DB-6 최근 10화 내 밝혀진 사실 ({len(_reveal_all)}건)]\n"
+                    f"[DB-6 최근 10화 내 밝혀진 사실 ({len(_reveal_all)}건)] (Python 자동 감지 — 오탐 가능, 참고용)\n"
                     + "\n".join(_reveal_all[-8:])
                 )
     except Exception as _rev_err:
@@ -397,7 +399,7 @@ Stage 4에서만 조건부 사용 (`V50_MODULES_AVAILABLE=True` 필요).
                     if _name and (_tone or _speech):
                         _voice_lines.append(f"  {_name}: {_tone}, {_speech}"[:80])
                 if _voice_lines:
-                    _story_context += "\n\n[DB-7 NPC 말투 참고]\n" + "\n".join(_voice_lines)
+                    _story_context += "\n\n[DB-7 NPC 말투 참고] (Python 자동 감지 — 오탐 가능, 참고용)\n" + "\n".join(_voice_lines)
     except Exception as _voice_err:
         logging.debug("[DB-7] character_voice advisory 실패 (비치명): %s", _voice_err)
 ```
@@ -457,7 +459,7 @@ Stage 4에서만 조건부 사용 (`V50_MODULES_AVAILABLE=True` 필요).
                     _desc = _p.get("description", "")[:60]
                     _refl_lines.append(f"  - {_ptype} ({_freq}회): {_desc}")
                 _director_mc_parts.append(
-                    "[DB-8 반복 실패 패턴 (빈도≥3)]\n" + "\n".join(_refl_lines)
+                    "[DB-8 반복 실패 패턴 (빈도≥3)] (Python 자동 감지 — 오탐 가능, 참고용)\n" + "\n".join(_refl_lines)
                 )
     except Exception as _refl_err:
         logging.debug("[DB-8] reflexion advisory 실패 (비치명): %s", _refl_err)
@@ -505,12 +507,16 @@ Stage 2 Arc 생성 시 30화 이상의 시간 흐름을 볼 수 없어 시간 �
 
 ### 구현
 
-**위치**: `four_phase_arc_generator.py`, `_generate_prev_context()` 반환 직전
+**위치**: `four_phase_arc_generator.py`, `_generate_prev_context()` 반환(`return "\n".join(lines)`) 직전
+
+> **주의**: 이 메서드는 `lines: list[str]`에 append → `"\n".join(lines)` 반환 패턴.
+> `self.context.current_project` 경유 (BaseAgent 상속, `self.ctx` 아님).
 
 ```python
     # [DB-9] 확장 타임라인 → Arc 생성 컨텍스트
     try:
-        _db = getattr(self.ctx.current_project, "db", None)
+        _db = getattr(getattr(self, "context", None), "current_project", None)
+        _db = getattr(_db, "db", None) if _db else None
         if _db and hasattr(_db, "get_timeline_range"):
             _timeline = _db.get_timeline_range(start_ep=1, end_ep=9999, limit=30)
             if _timeline and len(_timeline) >= 5:
@@ -520,16 +526,18 @@ Stage 2 Arc 생성 시 30화 이상의 시간 흐름을 볼 수 없어 시간 �
                     _date = _te.get("story_date", "")
                     _elapsed = _te.get("elapsed_days", "")
                     _note = _te.get("time_note", "")[:40]
-                    _parts = [f"ep{_ep}"]
+                    _te_parts = [f"ep{_ep}"]
                     if _date:
-                        _parts.append(_date)
+                        _te_parts.append(_date)
                     if _elapsed:
-                        _parts.append(f"+{_elapsed}일")
+                        _te_parts.append(f"+{_elapsed}일")
                     if _note:
-                        _parts.append(_note)
-                    _tl_lines.append("  " + " | ".join(_parts))
+                        _te_parts.append(_note)
+                    _tl_lines.append("  " + " | ".join(_te_parts))
                 if _tl_lines:
-                    _prev_context += "\n\n[DB-9 확장 타임라인 (최근 15화)]\n" + "\n".join(_tl_lines)
+                    lines.append("")  # 빈 줄 구분
+                    lines.append("[DB-9 확장 타임라인 (최근 15화)] (Python 자동 감지 — 오탐 가능, 참고용)")
+                    lines.extend(_tl_lines)
     except Exception as _tl_err:
         logging.debug("[DB-9] timeline advisory 실패 (비치명): %s", _tl_err)
 ```
@@ -537,7 +545,7 @@ Stage 2 Arc 생성 시 30화 이상의 시간 흐름을 볼 수 없어 시간 �
 ### 테스트
 ```
 21. test_timeline_extended_injection
-    - timeline_entries 10건 → _prev_context에 "[DB-9 확장 타임라인]" 포함
+    - timeline_entries 10건 → lines에 "[DB-9 확장 타임라인]" 포함
 22. test_timeline_short_skip
     - timeline_entries 3건 → 5건 미만이므로 skip
 ```
@@ -574,12 +582,12 @@ CP 1차 구현은 `episode_no`, `field_name`, `old_value`, `new_value`만 읽고
 
 **변경 후**:
 ```python
-                        _reason = row.get("reason", "")
-                        _reason_str = f" ({_reason[:30]})" if _reason else ""
+                        reason = row.get("reason", "")
+                        reason_str = f" ({reason[:30]})" if reason else ""
                         npc_block.append(
                             f"  [변경 {row.get('episode_no', '?')}화] "
                             f"{row.get('field_name', '')}: {str(row.get('old_value', ''))[:30]} → "
-                            f"{str(row.get('new_value', ''))[:30]}{_reason_str}"
+                            f"{str(row.get('new_value', ''))[:30]}{reason_str}"
                         )
 ```
 

@@ -7,6 +7,18 @@ import time
 
 from modules.core.context_advisor import RetrievalSources
 
+_DB_ADVISORY_NOTICE = "(Python 자동 감지 — 오탐 가능, 참고용)"
+
+
+def _build_stage4_prompt_version() -> str | None:
+    try:
+        from modules.core.prompt_loader import PromptLoader
+
+        return PromptLoader().compose_version_tag("chief_writer", "director")
+    except Exception as _e:
+        logging.debug("[Stage4] prompt_version 계산 실패 (비차단): %s", _e)
+        return None
+
 
 def _ns4_extract_time_markers(arc_data: dict) -> list:
     """[NS-4-S4] Arc tactical_doc/beat_sequence에서 날짜·상대시간 마커 추출 (regex, LLM 0회)."""
@@ -36,6 +48,39 @@ class Stage4InterviewRound:
     def __init__(self, ctx) -> None:
         self.ctx = ctx
         self.time_warnings = []
+        self._last_advisory_summary = {}
+        self._last_advisory_details: list[str] = []
+
+    def _build_retry_advisory_digest(self, *, max_items: int = 5) -> str:
+        """Condense current-round advisory findings for CW retry feedback."""
+        details = []
+        for item in self._last_advisory_details:
+            text = str(item or "").strip()
+            if not text or "이상 없음" in text:
+                continue
+            details.append(text.replace("\n", " / "))
+
+        if not details:
+            return ""
+
+        lines = ["[Advisory 핵심 요약 - 재시도 시 반영]"]
+        for text in details[:max_items]:
+            lines.append(f"- {text[:240]}")
+        return "\n".join(lines)
+
+    def _merge_retry_advisory_feedback(self, director_feedback: str) -> str:
+        """Append advisory digest once so retries see raw failure signals."""
+        advisory_digest = self._build_retry_advisory_digest()
+        if not advisory_digest:
+            return director_feedback
+
+        marker = "[Advisory 핵심 요약 - 재시도 시 반영]"
+        base = str(director_feedback or "").strip()
+        if marker in base:
+            return base
+        if not base:
+            return advisory_digest
+        return base + "\n\n" + advisory_digest
 
     def _truth_gate_llm_ask(self, prompt: str) -> str:
         """[LM-A-2] TruthGate 세계관 법칙 검사용 LLM 콜백."""
@@ -74,6 +119,441 @@ class Stage4InterviewRound:
         if total < _min_samples:
             return None
         return round(pass_cnt / total * 100, 1)
+
+    def _build_db_pacing_advisory(self, db, next_ep: int) -> str:
+        """최근 호흡 분석 추이를 Director advisory로 변환한다."""
+        getter = getattr(db, "get_recent_pacing_records", None)
+        if not callable(getter):
+            return ""
+
+        try:
+            pacing_recs = getter(before_ep=next_ep, lookback=5)
+            if not isinstance(pacing_recs, list) or len(pacing_recs) < 2:
+                return ""
+
+            def _num(value, default: float = 0.0) -> float:
+                try:
+                    return float(value)
+                except (TypeError, ValueError):
+                    return default
+
+            avg_dial = sum(_num(rec.get("dialogue_ratio")) for rec in pacing_recs) / len(pacing_recs)
+            avg_score = sum(_num(rec.get("pacing_score"), 50.0) for rec in pacing_recs) / len(pacing_recs)
+            pacing_lines: list[str] = []
+            if avg_dial < 0.15:
+                pacing_lines.append(f"대화 비율 평균 {avg_dial:.0%} — 최근 {len(pacing_recs)}화 대화 부족 추세")
+            if avg_score < 40:
+                pacing_lines.append(f"호흡 점수 평균 {avg_score:.0f}/100 — 문장 다양화·장면 전환 필요")
+
+            dial_vals = [_num(rec.get("dialogue_ratio")) for rec in pacing_recs]
+            if len(dial_vals) >= 3 and all(dial_vals[i] > dial_vals[i + 1] for i in range(len(dial_vals) - 1)):
+                pacing_lines.append(f"대화 비율 {len(dial_vals)}화 연속 하락 ({dial_vals[0]:.0%}→{dial_vals[-1]:.0%})")
+
+            if not pacing_lines:
+                return ""
+            return f"[DB-1 호흡 추이] {_DB_ADVISORY_NOTICE}\n" + "\n".join(pacing_lines)
+        except Exception as pace_err:
+            logging.debug("[DB-1] pacing advisory 실패 (비치명): %s", pace_err)
+            return ""
+
+    def _build_db_satisfaction_advisory(self, db, next_ep: int) -> str:
+        """최근 만족도 태그 추이를 Director advisory로 변환한다."""
+        getter = getattr(db, "get_recent_satisfaction_tags", None)
+        if not callable(getter):
+            return ""
+
+        try:
+            sat_tags = getter(before_ep=next_ep, lookback=5)
+            if not isinstance(sat_tags, list) or len(sat_tags) < 2:
+                return ""
+
+            sat_lines: list[str] = []
+            consecutive_frust = 0
+            low_agency_count = 0
+            for sat_tag in sat_tags:
+                if bool(sat_tag.get("frustration_flag")):
+                    consecutive_frust += 1
+                else:
+                    consecutive_frust = 0
+                if str(sat_tag.get("protagonist_agency", "") or "") in {"타력", "수동"}:
+                    low_agency_count += 1
+
+            if consecutive_frust >= 2:
+                sat_lines.append(f"좌절감 {consecutive_frust}화 연속 — 주인공 능동적 활약 필수")
+            if low_agency_count >= 3:
+                sat_lines.append(f"주인공 에이전시 저조 {low_agency_count}/{len(sat_tags)}화 — 주체적 선택 장면 필요")
+
+            def _score(value) -> float:
+                try:
+                    return float(value)
+                except (TypeError, ValueError):
+                    return 5.0
+
+            avg_score = sum(_score(tag.get("satisfaction_score")) for tag in sat_tags) / len(sat_tags)
+            if avg_score < 4:
+                sat_lines.append(f"만족도 평균 {avg_score:.1f}/10 — 긴장·보상·캐릭터 성장 보강 필요")
+
+            if not sat_lines:
+                return ""
+            return f"[DB-2 만족도 추이] {_DB_ADVISORY_NOTICE}\n" + "\n".join(sat_lines)
+        except Exception as sat_err:
+            logging.debug("[DB-2] satisfaction advisory 실패 (비치명): %s", sat_err)
+            return ""
+
+    def _build_db_reveals_advisory(self, db, next_ep: int) -> str:
+        """최근 episode_bible의 reveals를 Director advisory로 조립한다."""
+        getter = getattr(db, "get_episode_bible", None)
+        if not callable(getter):
+            return ""
+
+        try:
+            reveal_all: list[str] = []
+            for prev_ep in range(max(1, next_ep - 10), next_ep):
+                bible = getter(prev_ep)
+                if not isinstance(bible, dict):
+                    continue
+                for reveal in bible.get("reveals") or []:
+                    if isinstance(reveal, str) and reveal.strip():
+                        reveal_all.append(f"  ep{prev_ep}: {reveal[:80]}")
+
+            if not reveal_all:
+                return ""
+            return (
+                f"[DB-6 최근 10화 내 밝혀진 사실 ({len(reveal_all)}건)] {_DB_ADVISORY_NOTICE}\n"
+                + "\n".join(reveal_all[-8:])
+            )
+        except Exception as rev_err:
+            logging.debug("[DB-6] reveals advisory 실패 (비치명): %s", rev_err)
+            return ""
+
+    def _build_db_reflexion_advisory(self, next_ep: int) -> str:
+        """Reflexion memory의 상위 실패 패턴을 Director advisory로 조립한다."""
+        if next_ep < 20:
+            return ""
+
+        try:
+            from modules.core.reflexion_manager import ReflexionManager
+
+            project = getattr(self.ctx, "current_project", None)
+            if project is None:
+                return ""
+            top_patterns = ReflexionManager(project).get_top_patterns(min_frequency=3, limit=3)
+            if not isinstance(top_patterns, list) or not top_patterns:
+                return ""
+
+            refl_lines: list[str] = []
+            for pattern in top_patterns:
+                if not isinstance(pattern, dict):
+                    continue
+                ptype = pattern.get("pattern_type", "?")
+                freq = pattern.get("frequency", 0)
+                desc = str(pattern.get("description", "") or "")[:60]
+                refl_lines.append(f"  - {ptype} ({freq}회): {desc}")
+
+            if not refl_lines:
+                return ""
+            return f"[DB-8 반복 실패 패턴 (빈도≥3)] {_DB_ADVISORY_NOTICE}\n" + "\n".join(refl_lines)
+        except Exception as refl_err:
+            logging.debug("[DB-8] reflexion advisory 실패 (비치명): %s", refl_err)
+            return ""
+
+    @staticmethod
+    def _compact_attempt_snapshot(previous_attempt: dict | None) -> dict:
+        """이전 시도 피드백을 재생성용 최소 스냅샷으로 축약."""
+        if not isinstance(previous_attempt, dict) or not previous_attempt:
+            return {}
+
+        snapshot = {
+            "strategy": previous_attempt.get("strategy", ""),
+            "score": previous_attempt.get("score", 0),
+            "fix_scope": previous_attempt.get("fix_scope", ""),
+            "reject_bucket": previous_attempt.get("reject_bucket", ""),
+            "error_category": previous_attempt.get("error_category", ""),
+            "rejection_reason": str(previous_attempt.get("rejection_reason", "") or "")[:240],
+            "action_items": list(previous_attempt.get("action_items", []) or [])[:3],
+            "contradiction_types": list(previous_attempt.get("contradiction_types", []) or [])[:5],
+        }
+        return {k: v for k, v in snapshot.items() if v not in ("", [], {}, None)}
+
+    def _inherit_attempt_history(self, previous_attempt: dict | None) -> list[dict]:
+        """직전 previous_attempt로부터 누적 재시도 히스토리를 계승한다."""
+        if not isinstance(previous_attempt, dict) or not previous_attempt:
+            return []
+
+        history: list[dict] = []
+        for key in ("prior_attempts", "history"):
+            raw = previous_attempt.get(key)
+            if isinstance(raw, list):
+                for item in raw:
+                    compact = self._compact_attempt_snapshot(item if isinstance(item, dict) else {})
+                    if compact:
+                        history.append(compact)
+
+        current = self._compact_attempt_snapshot(previous_attempt)
+        if current:
+            history.append(current)
+
+        deduped: list[dict] = []
+        seen: set[tuple] = set()
+        for item in history:
+            marker = (
+                item.get("strategy", ""),
+                item.get("score", ""),
+                item.get("fix_scope", ""),
+                item.get("reject_bucket", ""),
+                item.get("error_category", ""),
+                item.get("rejection_reason", ""),
+            )
+            if marker in seen:
+                continue
+            seen.add(marker)
+            deduped.append(item)
+        return deduped[-3:]
+
+    @staticmethod
+    def _build_char_ngrams(text: str, n: int = 3) -> set[str]:
+        import re as _re
+
+        normalized = _re.sub(r"\s+", " ", str(text or "")).strip()
+        if not normalized:
+            return set()
+        if len(normalized) < n:
+            return {normalized}
+        return {normalized[i : i + n] for i in range(len(normalized) - n + 1)}
+
+    def _summarize_candidate_diversity(self, candidates: list[dict], *, threshold: float = 0.7) -> dict:
+        for candidate in candidates:
+            if not isinstance(candidate, dict):
+                continue
+            metadata = candidate.get("metadata", {})
+            if isinstance(metadata, dict) and isinstance(metadata.get("diversity"), dict):
+                return metadata["diversity"]
+
+        indexed_texts: list[tuple[int, str]] = []
+        for idx, candidate in enumerate(candidates):
+            if not isinstance(candidate, dict):
+                continue
+            manuscript = str(candidate.get("manuscript", "") or "").strip()
+            if manuscript:
+                indexed_texts.append((idx, manuscript))
+
+        if len(indexed_texts) < 2:
+            return {}
+
+        labels = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        pairwise = []
+        high_similarity_pairs = []
+        max_similarity = 0.0
+        for left_pos in range(len(indexed_texts)):
+            left_idx, left_text = indexed_texts[left_pos]
+            left_grams = self._build_char_ngrams(left_text)
+            if not left_grams:
+                continue
+            for right_pos in range(left_pos + 1, len(indexed_texts)):
+                right_idx, right_text = indexed_texts[right_pos]
+                right_grams = self._build_char_ngrams(right_text)
+                if not right_grams:
+                    continue
+                union = left_grams | right_grams
+                similarity = (len(left_grams & right_grams) / len(union)) if union else 0.0
+                similarity = round(similarity, 2)
+                pair_label = f"{labels[left_idx]}-{labels[right_idx]}"
+                pairwise.append({"pair": pair_label, "similarity": similarity})
+                max_similarity = max(max_similarity, similarity)
+                if similarity > threshold:
+                    high_similarity_pairs.append({"pair": pair_label, "similarity": similarity})
+
+        warning = ""
+        if len(high_similarity_pairs) >= 2:
+            pairs_text = ", ".join(
+                f"{pair['pair']} {int(pair['similarity'] * 100)}%" for pair in high_similarity_pairs[:3]
+            )
+            warning = f"[후보 다양성 경고] 후보 유사도 높음: {pairs_text}"
+
+        return {
+            "pairwise": pairwise,
+            "max_similarity": round(max_similarity, 2),
+            "high_similarity_pairs": high_similarity_pairs,
+            "warning": warning,
+        }
+
+    def _build_candidate_diversity_advisory(self, candidates: list[dict]) -> str:
+        summary = self._summarize_candidate_diversity(candidates)
+        if not isinstance(summary, dict):
+            return ""
+
+        warning = str(summary.get("warning", "") or "").strip()
+        if not warning:
+            return ""
+
+        lines = [warning]
+        for pair in summary.get("high_similarity_pairs", [])[:3]:
+            if not isinstance(pair, dict):
+                continue
+            lines.append(f"- {pair.get('pair', '?')}: {int(float(pair.get('similarity', 0.0)) * 100)}%")
+        lines.append("- 3후보가 지나치게 비슷하면 가장 다른 접근을 우대해 비교하세요.")
+        return "\n".join(lines)
+
+    @staticmethod
+    def _normalize_failure_signature(text: str) -> str:
+        import re as _re
+
+        cleaned = str(text or "").strip()
+        if not cleaned:
+            return ""
+        cleaned = _re.sub(r"^\[[^\]]+\]\s*", "", cleaned)
+        cleaned = _re.sub(r"\d+", "#", cleaned)
+        cleaned = _re.sub(r"\s+", " ", cleaned).strip()
+        return cleaned[:80]
+
+    def _extract_failure_signatures(self, validation_result: dict) -> set[str]:
+        signatures: set[str] = set()
+        if not isinstance(validation_result, dict):
+            return signatures
+
+        for violation in validation_result.get("structured_violations", []) or []:
+            if not isinstance(violation, dict):
+                continue
+            raw = violation.get("type") or violation.get("reason") or violation.get("message") or ""
+            normalized = self._normalize_failure_signature(raw)
+            if normalized:
+                signatures.add(normalized)
+
+        tracked_prefixes = ("[Python검증-", "[V63.2] 일관성:", "[V66.1] 연속성:")
+        for warning in validation_result.get("warnings", []) or []:
+            warning_text = str(warning or "")
+            if not warning_text.startswith(tracked_prefixes):
+                continue
+            normalized = self._normalize_failure_signature(warning_text)
+            if normalized:
+                signatures.add(normalized)
+        return signatures
+
+    def _detect_shared_failure_warnings(self, validation_results: list[dict]) -> list[str]:
+        signature_sets = [self._extract_failure_signatures(result) for result in validation_results if isinstance(result, dict)]
+        signature_sets = [items for items in signature_sets if items]
+        if len(signature_sets) < 2:
+            return []
+
+        shared = sorted(set.intersection(*signature_sets))
+        return [f"[⚠️ 전원 동일 위반: {item}]" for item in shared[:3]]
+
+    @staticmethod
+    def _classify_advisory_tier(advisory_text: str) -> tuple[int, str]:
+        text = str(advisory_text or "")
+        if "[TruthGate" in text:
+            return 3, "TruthGate"
+        if any(tag in text for tag in ("[LM-B]", "NpcDrift")):
+            return 2, "NpcDrift"
+        if any(tag in text for tag in ("[LM-D]", "RelDrift", "RelationshipDrift")):
+            return 2, "RelDrift"
+        if any(tag in text for tag in ("[LM-E]", "Flashback")):
+            return 2, "Flashback"
+        if any(tag in text for tag in ("[LM-F]", "InfoParadox")):
+            return 2, "InfoParadox"
+        if any(tag in text for tag in ("[LM-C]", "NumericDrift")):
+            return 1, "NumericDrift"
+        if any(tag in text for tag in ("[LM-P1]", "LongTerm")):
+            return 1, "LongTermRepetition"
+        return 1, "Advisory"
+
+    @staticmethod
+    def _extract_advisory_subjects(advisory_text: str) -> tuple[set[str], set[str]]:
+        import re as _re
+
+        text = str(advisory_text or "")
+        explicit = {
+            match.group(1).strip()
+            for match in _re.finditer(r"'([^']{2,40})'", text)
+            if match.group(1).strip()
+        }
+        broad = set(explicit)
+        stopwords = {
+            "truthgate",
+            "advisory",
+            "director",
+            "major",
+            "minor",
+            "critical",
+            "issue",
+            "issues",
+            "advisor",
+            "candidate",
+            "warning",
+            "warnings",
+            "python",
+            "refer",
+            "reference",
+            "후보",
+            "경고",
+            "감지",
+            "참고용",
+            "판단",
+            "최종",
+            "전달",
+            "이상",
+            "없음",
+        }
+        for token in _re.findall(r"[가-힣A-Za-z][가-힣A-Za-z0-9_]{1,}", text):
+            if token.lower() in stopwords:
+                continue
+            broad.add(token)
+        return explicit, broad
+
+    def _suppress_conflicting_advisories(self, advisory_parts: list[str]) -> list[str]:
+        """상위 티어와 같은 대상을 가리키는 하위 advisory는 Director MC에서 제거."""
+        if not advisory_parts:
+            return []
+
+        meta = []
+        for idx, part in enumerate(advisory_parts):
+            tier, kind = self._classify_advisory_tier(part)
+            explicit, broad = self._extract_advisory_subjects(part)
+            meta.append(
+                {
+                    "idx": idx,
+                    "text": part,
+                    "tier": tier,
+                    "kind": kind,
+                    "explicit": explicit,
+                    "broad": broad,
+                }
+            )
+
+        suppressed: set[int] = set()
+        for high in sorted(meta, key=lambda item: (-item["tier"], item["idx"])):
+            if high["idx"] in suppressed:
+                continue
+            for low in meta:
+                if low["idx"] == high["idx"] or low["idx"] in suppressed or low["tier"] >= high["tier"]:
+                    continue
+                overlap = set()
+                if high["explicit"] and low["explicit"]:
+                    overlap = high["explicit"] & low["explicit"]
+                if not overlap and high["explicit"]:
+                    overlap = high["explicit"] & low["broad"]
+                if not overlap and low["explicit"]:
+                    overlap = low["explicit"] & high["broad"]
+                if overlap:
+                    suppressed.add(low["idx"])
+                    logging.info(
+                        "[QI-SNR-3] advisory suppress: %s <- %s (shared=%s)",
+                        low["kind"],
+                        high["kind"],
+                        ",".join(sorted(overlap)[:3]),
+                    )
+
+        return [part for idx, part in enumerate(advisory_parts) if idx not in suppressed]
+
+    @staticmethod
+    def _build_reference_only_block(reference_parts: list[str]) -> str:
+        if not reference_parts:
+            return ""
+        header = [
+            "[참고 — 판정 무관]",
+            "아래 통계·추세는 참고 메모입니다. score/verdict의 직접 근거로 사용하지 마세요.",
+        ]
+        return "\n".join(header) + "\n\n" + "\n\n".join(str(part).strip() for part in reference_parts if str(part).strip())
 
     def _setup_writing_directive(
         self,
@@ -244,6 +724,8 @@ class Stage4InterviewRound:
         from modules.core.stage4_types import _InterviewRoundResult
 
         self._round_start_ts = time.monotonic()
+        self._last_advisory_summary = {}
+        self._last_advisory_details = []
 
         # [4-R2-b] Unpack round context
         chief_writer = round_ctx.chief_writer
@@ -378,6 +860,7 @@ class Stage4InterviewRound:
                 "score": 0,
                 "_tot_used": _tot_used,
                 "_mad_used": _mad_used,
+                "prior_attempts": self._inherit_attempt_history(previous_attempt),
             }
             self._record_s4_attempt(
                 episode=next_ep,
@@ -457,6 +940,13 @@ class Stage4InterviewRound:
         # validation_results에서 경고를 추출하여 mandatory_context에 병합
         _mandatory_text = mandatory_context if isinstance(mandatory_context, str) else str(mandatory_context or "")
         _director_mc_parts = [_mandatory_text] if _mandatory_text else []
+        _shared_failure_warnings = []
+        for _vr in validation_results:
+            _shared_failure_warnings = _vr.get("shared_failure_warnings", [])
+            if _shared_failure_warnings:
+                break
+        if _shared_failure_warnings:
+            _director_mc_parts.insert(0, "\n".join(_shared_failure_warnings))
         # [S3-META] quality_risk Blueprint → Director 사전 경고
         _s3_meta = round_ctx.blueprint.get("_stage3_meta", {}) if isinstance(round_ctx.blueprint, dict) else {}
         if _s3_meta.get("quality_risk"):
@@ -476,13 +966,22 @@ class Stage4InterviewRound:
             if _writing_directive.emotion_required:
                 _wd_lines.append(f"- emotion_required: {_writing_directive.emotion_required}")
             _director_mc_parts.insert(0, "\n".join(_wd_lines))
+        try:
+            _mb = getattr(self.ctx.current_project, "master_bible", None) or {}
+            _mb_root = _mb.get("MasterBible", _mb) if isinstance(_mb, dict) else {}
+            _pov = str((_mb_root.get("protagonist_config", {}) or {}).get("pov", "") or "").strip()
+            if _pov:
+                _director_mc_parts.insert(0, f"[작품 시점]\n- 기본 POV: {_pov}")
+        except Exception as _pov_err:
+            logging.debug("[QI-POV] Director POV 주입 실패 (비치명): %s", _pov_err)
 
         # [B-1-3b] Advisory chain (TruthGate, NpcDrift, NumericDrift, Flashback, InfoParadox, RelDrift)
         _advisory_parts = self._run_advisory_chain(candidates, validation_results, next_ep, genre_name)
+        _advisory_parts = self._suppress_conflicting_advisories(_advisory_parts or [])
         _advisory_summary = {}
         for _part in _advisory_parts or []:
             _part_s = str(_part)
-            if "[TruthGate]" in _part_s:
+            if "[TruthGate" in _part_s:
                 _advisory_summary["truth_gate"] = 1
             if "[LM-B]" in _part_s or "NpcDrift" in _part_s:
                 _advisory_summary["npc_drift"] = 1
@@ -531,6 +1030,7 @@ class Stage4InterviewRound:
                 continue
             _formatted_advisory_parts.append(f"[INFO] {_part_s}")
         _advisory_parts = _formatted_advisory_parts
+        self._last_advisory_details = list(_advisory_parts)
         _director_mc_parts = _advisory_parts + _director_mc_parts
 
         # [NC-2 GAP-5] cumulative_elapsed → Director MC 주입
@@ -598,6 +1098,10 @@ class Stage4InterviewRound:
         except Exception as _sim_err:
             logging.debug("[NC-2] 씬 유사도 advisory 실패 (비치명): %s", _sim_err)
 
+        _diversity_advisory = self._build_candidate_diversity_advisory(candidates)
+        if _diversity_advisory:
+            _director_mc_parts.append(_diversity_advisory)
+
         # [TF-49b] Preflight advisory → Director에도 전달
         if _preflight_advisory:
             _director_mc_parts.append(f"🔍 {_preflight_advisory}")
@@ -615,17 +1119,26 @@ class Stage4InterviewRound:
         # [V69.1] V67 원고 역사 충돌 + 연속성 충돌 경고를 Director에 전달
         if director_feedback and director_feedback.strip():
             _director_mc_parts.append("🚨 [V69.1] Python 감지된 원고 충돌 경고 (참고용)\n" + director_feedback.strip())
+        _db = getattr(getattr(self.ctx, "current_project", None), "db", None)
+        _reference_only_parts: list[str] = []
+        for _db_advisory in (
+            self._build_db_pacing_advisory(_db, next_ep),
+            self._build_db_satisfaction_advisory(_db, next_ep),
+            self._build_db_reveals_advisory(_db, next_ep),
+            self._build_db_reflexion_advisory(next_ep),
+        ):
+            if _db_advisory:
+                _reference_only_parts.append(_db_advisory)
         # [TF7-P1-04] 전략별 최근 통과율을 Director 선택 프롬프트에 주입
         try:
-            _db = getattr(getattr(self.ctx, "current_project", None), "db", None)
             if _db is not None and hasattr(_db, "get_strategy_win_rates"):
                 _win_rates = _db.get_strategy_win_rates()
                 if _win_rates and _win_rates.get("total", 0) > 0:
-                    _wr_lines = [f"[TF7-P1-04] 전략별 최근 통과율 (최근 {_win_rates['total']}건 기준)"]
+                    _wr_lines = [f"[TF7-P1-04] 전략별 최근 PASS 선택 비중 (최근 {_win_rates['total']}건 기준)"]
                     for _k, _v in _win_rates.items():
                         if _k != "total":
                             _wr_lines.append(f"  - {_k}: {int(_v * 100)}%")
-                    _director_mc_parts.append("\n".join(_wr_lines))
+                    _reference_only_parts.append("\n".join(_wr_lines))
         except Exception as _wr_err:
             logging.debug(f"[TF7-P1-04] win_rates fetch 실패 (비치명): {_wr_err}")
         # [LM-Tier TF-C] fix_scope 전략별 합격률을 Director에 주입
@@ -640,9 +1153,12 @@ class Stage4InterviewRound:
                         _cnt = _row.get("cnt", 0)
                         if _cnt > 0:
                             _fs_lines.append(f"  - {_scope} + {_verdict}: {_cnt}건")
-                    _director_mc_parts.append("\n".join(_fs_lines))
+                    _reference_only_parts.append("\n".join(_fs_lines))
         except Exception as _fs_err:
             logging.debug(f"[A-3] fix_scope stats fetch 실패 (비치명): {_fs_err}")
+        _reference_only_block = self._build_reference_only_block(_reference_only_parts)
+        if _reference_only_block:
+            _director_mc_parts.append(_reference_only_block)
         _director_mandatory_context = "\n\n".join(str(x) for x in _director_mc_parts if x is not None)
 
         director_result = self.ctx.agents["director"].select_and_judge_ensemble(
@@ -749,6 +1265,8 @@ class Stage4InterviewRound:
             model=getattr(chief_writer, "model_tier", None),
             validation_warnings=[w for vr in validation_results for w in vr.get("warnings", [])][:20],  # [TF-46] 10→20
         )
+
+        director_feedback = self._merge_retry_advisory_feedback(director_feedback)
 
         # [B-1-3b] PASS/PASS_WITH_FIX 처리 → 위임
         _pass_result, director_feedback, previous_attempt = self._process_verdict(
@@ -1117,6 +1635,13 @@ class Stage4InterviewRound:
             except Exception as e:
                 logging.warning(f"[SilentPass:CrossAgentVerifier] {e!s:.100}")
 
+        _shared_failure_warnings = self._detect_shared_failure_warnings(validation_results)
+        if _shared_failure_warnings:
+            for result in validation_results:
+                if isinstance(result, dict):
+                    result["shared_failure_warnings"] = list(_shared_failure_warnings)
+            logging.info("[QR-6] 전원 동일 위반 감지: %s", ", ".join(_shared_failure_warnings))
+
         self._god1_director_memory_context = _director_memory_context
         return validation_results
 
@@ -1240,6 +1765,7 @@ class Stage4InterviewRound:
                 "open_review": director_result.get("open_review", "")
                 if isinstance(director_result, dict)
                 else "",  # [TF-29]
+                "prior_attempts": self._inherit_attempt_history(previous_attempt),
             }
 
         return verdict, director_feedback, previous_attempt, error_category
@@ -1479,9 +2005,10 @@ class Stage4InterviewRound:
             final_manuscript = selected_candidate.get("manuscript", "")
             final_title = selected_candidate.get("title", f"\uc81c{next_ep}\ud654")
             final_state_updates = director_result.get("state_updates", {})
-            # [WARN-4] Director 점수를 final_state_updates에 전파 → quality_metrics.jsonl score 정상화
-            if isinstance(final_state_updates, dict) and score > 0:
-                final_state_updates["director_score"] = score
+            if not isinstance(final_state_updates, dict):
+                final_state_updates = {}
+            else:
+                final_state_updates = dict(final_state_updates)
 
             verdict, director_feedback, previous_attempt, error_category = self._run_post_select_checks(
                 verdict=verdict,
@@ -1516,6 +2043,16 @@ class Stage4InterviewRound:
                 )
 
             if verdict in ("PASS", "PASS_WITH_FIX"):
+                if score > 0:
+                    final_state_updates["director_score"] = score
+                final_state_updates["_director_quality_labels"] = {
+                    "score": score,
+                    "verdict": verdict,
+                    "selection_reason": director_result.get("selection_reason", ""),
+                    "open_review": director_result.get("open_review", ""),
+                    "score_breakdown": director_result.get("score_breakdown", {}) or {},
+                    "consistency_checklist": director_result.get("consistency_checklist", {}) or {},
+                }
                 if self.ctx.state_tracker:
                     try:
                         _time_warnings = self.ctx.state_tracker.check_time_consistency(
@@ -1653,6 +2190,7 @@ class Stage4InterviewRound:
             if _prev_general_lines and round_num > 0:
                 _prev_text = " / ".join(_prev_general_lines)[:500]
                 director_feedback += f"\n[R{round_num - 1} 이전 지시] {_prev_text}"
+            director_feedback = self._merge_retry_advisory_feedback(director_feedback)
             _reject_text = f"{director_feedback}\n" + "\n".join(str(a) for a in action_items)
             _reject_lower = _reject_text.lower()
             _reject_bucket = "quality_issue"
@@ -1717,6 +2255,7 @@ class Stage4InterviewRound:
                 "open_review": director_result.get("open_review", ""),  # [TF-29] 자유 리뷰 보존
                 "error_category": director_result.get("error_category", ""),  # [A-4] 에러 카테고리 보존
                 "contradiction_types": director_result.get("contradiction_types", []),  # [A-4] 모순 유형 보존
+                "prior_attempts": self._inherit_attempt_history(previous_attempt),
             }
             try:
                 self.ctx.current_project.db.save_cost_record(
@@ -2274,7 +2813,12 @@ class Stage4InterviewRound:
                         _ms = _cand.get("manuscript", "")
                         if not _ms:
                             continue
-                        _drifts = _drift_advisor.check(manuscript=_ms, npc_snapshots=_npc_snaps, ep_num=next_ep)
+                        _drifts = _drift_advisor.check(
+                            manuscript=_ms,
+                            npc_snapshots=_npc_snaps,
+                            ep_num=next_ep,
+                            max_npcs=8,
+                        )
                         if _drifts:
                             for _d in _drifts:
                                 _d["_cand_idx"] = _ci
@@ -2774,6 +3318,7 @@ class Stage4InterviewRound:
                 if not _model:
                     _director = getattr(getattr(self.ctx, "agents", {}), "get", lambda *_: None)("director")
                     _model = getattr(_director, "primary_model", None) if _director else None
+                _prompt_version = _build_stage4_prompt_version()
                 _db.save_stage_attempt(
                     stage=4,
                     verdict=_verdict,
@@ -2786,6 +3331,7 @@ class Stage4InterviewRound:
                     model=str(_model) if _model else None,
                     duration_ms=duration_ms,
                     advisory_flags=_adv,
+                    prompt_version=_prompt_version,
                 )
         except Exception as _sa_err:
             logging.debug("[stage_attempts] Stage4 record failed (non-blocking): %s", _sa_err)
