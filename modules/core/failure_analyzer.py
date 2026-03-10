@@ -6,6 +6,7 @@ import json
 import logging
 import re
 from collections import defaultdict
+from pathlib import Path
 
 
 class FailureAnalyzer:
@@ -14,8 +15,13 @@ class FailureAnalyzer:
     단일 스레드 설계 — 분석 전용 유틸리티. threading.Lock 불필요.
     """
 
-    def __init__(self, db) -> None:
+    def __init__(self, db, project_path: str | Path | None = None) -> None:
         self.db = db
+        if project_path is not None:
+            self.project_path = Path(project_path)
+        else:
+            db_path = getattr(db, "db_path", None)
+            self.project_path = Path(db_path).parent if db_path else None
 
     def summary(self) -> dict:
         """Top-level summary for quick diagnostics."""
@@ -27,9 +33,330 @@ class FailureAnalyzer:
             result["advisory_correlations"] = self.advisory_reject_correlation()
             result["avg_attempts_by_stage"] = self.avg_attempts_by_stage()
             result["failure_prompt_patterns"] = self.failure_prompt_patterns(top_n=5)
+            result["top_success_patterns"] = self.top_success_patterns(top_n=3)
+            result["quality_distribution"] = self.quality_distribution()
         except Exception as _e:
             logging.debug("[FailureAnalyzer] summary failed: %s", _e)
         return result
+
+    def _load_episode_production_entries(self, min_score: int = 0) -> list[dict]:
+        """episode_production.jsonl fallback loader."""
+        if self.project_path is None:
+            return []
+
+        log_path = self.project_path / "logs" / "episode_production.jsonl"
+        if not log_path.exists():
+            return []
+
+        entries: list[dict] = []
+        try:
+            with log_path.open("r", encoding="utf-8") as handle:
+                for raw_line in handle:
+                    line = raw_line.strip()
+                    if not line:
+                        continue
+                    try:
+                        row = json.loads(line)
+                    except (TypeError, ValueError, json.JSONDecodeError):
+                        continue
+                    try:
+                        score = int(row.get("score", 0) or 0)
+                    except (TypeError, ValueError):
+                        score = 0
+                    if score < min_score:
+                        continue
+                    entries.append(row)
+        except Exception as _e:
+            logging.debug("[FailureAnalyzer] episode_production load failed: %s", _e)
+            return []
+        return entries
+
+    def top_success_patterns(self, top_n: int = 5, min_score: int = 90) -> list[dict]:
+        """고득점 에피소드의 공통 품질 패턴 요약."""
+        rows: list[dict] = []
+        try:
+            db_rows = self.db.conn.execute(
+                """SELECT ep_num, score, verdict, selection_reason, open_review,
+                          score_breakdown, consistency_checklist
+                   FROM episode_quality_labels
+                   WHERE score >= ?
+                   ORDER BY score DESC, ep_num DESC
+                   LIMIT ?""",
+                (min_score, max(top_n * 3, 6)),
+            ).fetchall()
+            for row in db_rows:
+                item = dict(row)
+                for field in ("score_breakdown", "consistency_checklist"):
+                    try:
+                        item[field] = json.loads(item.get(field) or "{}")
+                    except (TypeError, ValueError, json.JSONDecodeError):
+                        item[field] = {}
+                rows.append(item)
+        except Exception as _e:
+            logging.debug("[FailureAnalyzer] top_success_patterns DB fallback: %s", _e)
+
+        if not rows:
+            for entry in self._load_episode_production_entries(min_score=min_score):
+                verdict = str(entry.get("verdict", "") or "")
+                if verdict not in ("PASS", "PASS_WITH_FIX"):
+                    continue
+                rows.append(
+                    {
+                        "ep_num": entry.get("ep"),
+                        "score": entry.get("score", 0),
+                        "verdict": verdict,
+                        "selection_reason": entry.get("reason", ""),
+                        "open_review": entry.get("open_review", ""),
+                        "score_breakdown": entry.get("score_breakdown", {}) or {},
+                        "consistency_checklist": entry.get("consistency_checklist", {}) or {},
+                    }
+                )
+
+        if not rows:
+            return []
+
+        score_totals: dict[str, float] = defaultdict(float)
+        score_counts: dict[str, int] = defaultdict(int)
+        checklist_ok: dict[str, int] = defaultdict(int)
+        checklist_total: dict[str, int] = defaultdict(int)
+        keyword_counts: dict[str, int] = defaultdict(int)
+        stopwords = {"그리고", "그러나", "이번", "장면", "서사", "원고", "후보", "score", "review"}
+
+        for row in rows:
+            for key, value in (row.get("score_breakdown") or {}).items():
+                if isinstance(value, int | float):
+                    score_totals[key] += float(value)
+                    score_counts[key] += 1
+            for key, verdict in (row.get("consistency_checklist") or {}).items():
+                verdict_text = str(verdict or "").upper()
+                if verdict_text in {"OK", "ISSUE"}:
+                    checklist_total[key] += 1
+                    if verdict_text == "OK":
+                        checklist_ok[key] += 1
+            reason_text = " ".join(
+                str(row.get(field, "") or "") for field in ("selection_reason", "open_review")
+            )
+            tokens = {
+                token
+                for token in re.findall(r"[가-힣A-Za-z]{2,}", reason_text)
+                if token.lower() not in stopwords
+            }
+            for token in tokens:
+                keyword_counts[token] += 1
+
+        patterns: list[dict] = []
+        axis_avgs = sorted(
+            (
+                (key, round(score_totals[key] / score_counts[key], 1))
+                for key in score_totals
+                if score_counts[key] > 0
+            ),
+            key=lambda item: item[1],
+            reverse=True,
+        )
+        for key, avg in axis_avgs[:2]:
+            patterns.append(
+                {
+                    "pattern": key,
+                    "count": len(rows),
+                    "description": f"{key} 평균 {avg}점",
+                }
+            )
+
+        stable_keys = [
+            key
+            for key, total in checklist_total.items()
+            if total > 0 and checklist_ok[key] / total >= 0.8
+        ]
+        if stable_keys:
+            patterns.append(
+                {
+                    "pattern": "stable_checklist",
+                    "count": len(rows),
+                    "description": "OK 비율 높음: " + ", ".join(sorted(stable_keys)[:4]),
+                }
+            )
+
+        common_keywords = [key for key, count in sorted(keyword_counts.items(), key=lambda item: item[1], reverse=True) if count >= 2]
+        if common_keywords:
+            patterns.append(
+                {
+                    "pattern": "selection_reason_keywords",
+                    "count": len(rows),
+                    "description": "반복 키워드: " + ", ".join(common_keywords[:4]),
+                }
+            )
+
+        return patterns[:top_n]
+
+    def quality_distribution(self, lookback: int = 100) -> dict:
+        """정규화된 품질 라벨 분포 요약."""
+        rows: list[dict] = []
+        try:
+            db_rows = self.db.conn.execute(
+                """SELECT score, verdict, score_breakdown
+                   FROM episode_quality_labels
+                   ORDER BY ep_num DESC
+                   LIMIT ?""",
+                (lookback,),
+            ).fetchall()
+            for row in db_rows:
+                item = dict(row)
+                try:
+                    item["score_breakdown"] = json.loads(item.get("score_breakdown") or "{}")
+                except (TypeError, ValueError, json.JSONDecodeError):
+                    item["score_breakdown"] = {}
+                rows.append(item)
+        except Exception as _e:
+            logging.debug("[FailureAnalyzer] quality_distribution DB fallback: %s", _e)
+
+        if not rows:
+            for entry in self._load_episode_production_entries(min_score=0)[-lookback:]:
+                rows.append(
+                    {
+                        "score": entry.get("score", 0),
+                        "verdict": entry.get("verdict", ""),
+                        "score_breakdown": entry.get("score_breakdown", {}) or {},
+                    }
+                )
+
+        if not rows:
+            return {}
+
+        scores = []
+        breakdown_sum: dict[str, float] = defaultdict(float)
+        breakdown_count: dict[str, int] = defaultdict(int)
+        pass_with_fix_count = 0
+        high_score_count = 0
+        for row in rows:
+            try:
+                score = int(row.get("score", 0) or 0)
+            except (TypeError, ValueError):
+                score = 0
+            scores.append(score)
+            if score >= 90:
+                high_score_count += 1
+            if str(row.get("verdict", "") or "") == "PASS_WITH_FIX":
+                pass_with_fix_count += 1
+            for key, value in (row.get("score_breakdown") or {}).items():
+                if isinstance(value, int | float):
+                    breakdown_sum[key] += float(value)
+                    breakdown_count[key] += 1
+
+        return {
+            "count": len(rows),
+            "avg_score": round(sum(scores) / len(scores), 1) if scores else 0.0,
+            "high_score_count": high_score_count,
+            "pass_with_fix_count": pass_with_fix_count,
+            "avg_breakdown": {
+                key: round(breakdown_sum[key] / breakdown_count[key], 1)
+                for key in breakdown_sum
+                if breakdown_count[key] > 0
+            },
+        }
+
+    def compare_versions(
+        self,
+        version_a: str,
+        version_b: str,
+        *,
+        stage: int | None = None,
+        lookback: int = 200,
+    ) -> dict:
+        """Compare pass-rate and score deltas between two prompt-version tags."""
+        version_a = str(version_a or "").strip()
+        version_b = str(version_b or "").strip()
+        if not version_a or not version_b:
+            return {}
+
+        clauses = ["prompt_version IN (?, ?)"]
+        params: list = [version_a, version_b]
+        if stage is not None:
+            clauses.append("stage = ?")
+            params.append(stage)
+        where_sql = " AND ".join(clauses)
+        params.append(max(int(lookback or 0), 1))
+
+        try:
+            rows = self.db.conn.execute(
+                f"""SELECT prompt_version, verdict, score
+                    FROM (
+                        SELECT prompt_version, verdict, score, id
+                        FROM stage_attempts
+                        WHERE {where_sql}
+                        ORDER BY id DESC
+                        LIMIT ?
+                    ) recent""",
+                tuple(params),
+            ).fetchall()
+        except Exception as _e:
+            logging.debug("[FailureAnalyzer] compare_versions: %s", _e)
+            return {}
+
+        if not rows:
+            return {}
+
+        stats = {
+            version_a: {"attempts": 0, "pass": 0, "reject": 0, "scores": []},
+            version_b: {"attempts": 0, "pass": 0, "reject": 0, "scores": []},
+        }
+        for row in rows:
+            version = str(row["prompt_version"] or "")
+            if version not in stats:
+                continue
+            stats[version]["attempts"] += 1
+            verdict = str(row["verdict"] or "")
+            if verdict in {"PASS", "PASS_WITH_FIX", "PASS_WITH_WARNING"}:
+                stats[version]["pass"] += 1
+            elif verdict == "REJECT":
+                stats[version]["reject"] += 1
+            try:
+                score = int(row["score"])
+            except (TypeError, ValueError):
+                score = None
+            if score is not None:
+                stats[version]["scores"].append(score)
+
+        versions: dict[str, dict] = {}
+        for version, data in stats.items():
+            attempts = int(data["attempts"])
+            scores = data["scores"]
+            versions[version] = {
+                "attempts": attempts,
+                "pass": int(data["pass"]),
+                "reject": int(data["reject"]),
+                "pass_rate_pct": round((data["pass"] / attempts) * 100, 1) if attempts else 0.0,
+                "avg_score": round(sum(scores) / len(scores), 1) if scores else 0.0,
+            }
+
+        delta_pass_rate = round(
+            versions[version_b]["pass_rate_pct"] - versions[version_a]["pass_rate_pct"],
+            1,
+        )
+        delta_avg_score = round(
+            versions[version_b]["avg_score"] - versions[version_a]["avg_score"],
+            1,
+        )
+
+        winner = None
+        if versions[version_a]["attempts"] and versions[version_b]["attempts"]:
+            if (versions[version_b]["pass_rate_pct"], versions[version_b]["avg_score"]) > (
+                versions[version_a]["pass_rate_pct"],
+                versions[version_a]["avg_score"],
+            ):
+                winner = version_b
+            elif (versions[version_a]["pass_rate_pct"], versions[version_a]["avg_score"]) > (
+                versions[version_b]["pass_rate_pct"],
+                versions[version_b]["avg_score"],
+            ):
+                winner = version_a
+
+        return {
+            "versions": versions,
+            "pass_rate_delta_pct": delta_pass_rate,
+            "avg_score_delta": delta_avg_score,
+            "winner": winner,
+        }
 
     def stage_pass_rates(self) -> dict:
         """Per-stage attempt/pass/reject rates."""

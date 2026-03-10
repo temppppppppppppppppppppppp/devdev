@@ -449,6 +449,25 @@ class PreLLMValidator:
                 violations.append(
                     f"3인칭 모드인데 서술자 1인칭 {first_person}회 감지 (3인칭 {third_person}회 대비 과다)"
                 )
+        elif self.pov == "전지적":
+            if first_person > 5 and first_person > max(3, third_person * 0.2):
+                violations.append(f"전지적 시점인데 서술자 1인칭 {first_person}회 감지")
+        elif self.pov == "혼합":
+            _has_scene_separator = bool(re.search(r"\n\s*\*{3,}\s*\n", no_dialogue))
+            scene_blocks = [block.strip() for block in re.split(r"\n\s*\*{3,}\s*\n", no_dialogue) if block.strip()]
+            if not _has_scene_separator and first_person > 5 and third_person > 5:
+                violations.append("혼합 시점인데 씬 구분자(***) 없이 1인칭/3인칭 서술이 함께 나타남")
+            mixed_blocks = []
+            for idx, block in enumerate(scene_blocks, 1):
+                block_first = len(re.findall(r"(?:나는|내가|나를|나에게|내 )", block))
+                block_third = len(re.findall(_third_base, block))
+                if block_first > 2 and block_third > 2:
+                    mixed_blocks.append(idx)
+            if not violations and mixed_blocks:
+                violations.append(
+                    "혼합 시점인데 동일 씬 블록에서 1인칭/3인칭 서술이 함께 감지됨 "
+                    f"(scene {', '.join(str(i) for i in mixed_blocks[:4])})"
+                )
 
         if violations:
             return {

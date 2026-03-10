@@ -1,6 +1,6 @@
 """Unit tests for FactLedger edge cases."""
 
-from modules.core.fact_ledger import FactLedger
+from modules.core.fact_ledger import FactLedger, summarize_fact_ledger_numbers_block
 
 
 class _StubDB:
@@ -128,3 +128,49 @@ def test_established_value_survives_fifo_trim():
     entry = ledger._ledger["numbers"]["내공"]
     assert len(entry["history"]) == 100  # FIFO trim
     assert entry["established_value"] == 10  # ep1의 초기값 보존
+
+
+def test_summarize_fact_ledger_numbers_block_reads_numbers_schema():
+    ledger = {
+        "numbers": {
+            "자본금": {
+                "value": "10억",
+                "unit": "원",
+                "established_value": "1억",
+                "established_ep": 1,
+                "last_ep": 12,
+            }
+        }
+    }
+
+    text = summarize_fact_ledger_numbers_block(ledger, max_items=5)
+
+    assert "[팩트 원장 핵심 수치]" in text
+    assert "자본금" in text
+    assert "1억 원 (ep1) -> 10억 원 (ep12)" in text
+
+
+def test_to_summary_includes_section_truncation_counters():
+    ledger = FactLedger(_EmptyStubDB())
+    ledger._ledger = {
+        "characters": {
+            **{f"생존{i}": {"status": "alive", "role": "역할", "established_ep": i} for i in range(35)},
+            "사망A": {"status": "dead", "last_ep": 9, "history": ["사망: 결투 패배"]},
+        },
+        "items": {
+            **{f"보유{i}": {"status": "보유", "owner": "주인공", "established_ep": i} for i in range(25)},
+            **{f"분실{i}": {"status": "분실", "last_ep": i} for i in range(12)},
+        },
+        "locations": {f"장소{i}": {"status": "정상"} for i in range(12)},
+        "organizations": {f"조직{i}": {"status": "활동중"} for i in range(11)},
+        "numbers": {f"수치{i}": {"value": i, "last_ep": i} for i in range(18)},
+        "last_updated_ep": 20,
+    }
+
+    summary = ledger.to_summary()
+
+    assert "(총 35명 중 30명 표시)" in summary
+    assert "(총 25개 중 20개 표시)" in summary
+    assert "(총 12개 중 10개 표시)" in summary
+    assert "(총 11개 중 10개 표시)" in summary
+    assert "(총 18개 중 15개 표시)" in summary

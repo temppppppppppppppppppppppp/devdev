@@ -44,6 +44,7 @@ class QualityDashboard:
         self.stage_stats: dict[int, dict] = defaultdict(lambda: {"pass": 0, "reject": 0, "scores": []})
         self.hud_anomalies: list[dict] = []
         self.blueprint_coverage: list[dict] = []
+        self.quality_signal_history: list[dict] = []
 
         # 파일에서 기존 메트릭 로드
         if self.metrics_file and self.metrics_file.exists():
@@ -80,6 +81,14 @@ class QualityDashboard:
 
             if score > 0:
                 self.stage_stats[stage]["scores"].append(score)
+            if isinstance(record.get("quality_signals"), dict) and record["quality_signals"]:
+                self.quality_signal_history.append(
+                    {
+                        "ep_num": record.get("ep_num"),
+                        "stage": stage,
+                        "quality_signals": record["quality_signals"],
+                    }
+                )
             self._trim_histories(stage=stage)
 
         elif record_type == "hud_anomaly":
@@ -97,6 +106,8 @@ class QualityDashboard:
             self.hud_anomalies = self.hud_anomalies[-self._max_history :]
         if len(self.blueprint_coverage) > self._max_history:
             self.blueprint_coverage = self.blueprint_coverage[-self._max_history :]
+        if len(self.quality_signal_history) > self._max_history:
+            self.quality_signal_history = self.quality_signal_history[-self._max_history :]
 
         if stage is not None:
             scores = self.stage_stats[stage]["scores"]
@@ -123,6 +134,7 @@ class QualityDashboard:
                 v.get("type") if isinstance(v, dict) else str(v) for v in result.get("violations", [])
             ],  # [V70] str 타입 방어
             "warnings": len(result.get("warnings", [])),
+            "quality_signals": result.get("quality_signals", {}) or {},
         }
 
         self._process_record(record)
@@ -210,6 +222,7 @@ class QualityDashboard:
             "hud_anomaly_rate": 0,
             "avg_blueprint_coverage": 0,
             "common_violations": [],
+            "latest_quality_signals": {},
         }
 
         # Stage별 통계
@@ -241,8 +254,22 @@ class QualityDashboard:
                 violation_counts[v] += 1
 
         summary["common_violations"] = sorted(violation_counts.items(), key=lambda x: x[1], reverse=True)[:5]
+        if self.quality_signal_history:
+            summary["latest_quality_signals"] = self.quality_signal_history[-1].get("quality_signals", {})
 
         return summary
+
+    def get_quality_signal_snapshot(self, recent_n: int = 5) -> dict[str, Any]:
+        """최근 품질 신호 스냅샷을 반환한다."""
+        if recent_n <= 0 or not self.quality_signal_history:
+            return {"samples": 0, "latest": {}, "recent": []}
+
+        recent = self.quality_signal_history[-recent_n:]
+        return {
+            "samples": len(recent),
+            "latest": recent[-1].get("quality_signals", {}),
+            "recent": recent,
+        }
 
     def get_episode_trend(self, n_episodes: int = 20) -> list[dict]:
         """

@@ -52,9 +52,11 @@ def reset_singleton():
     """각 테스트 전 싱글톤 리셋"""
     PromptLoader._instance = None
     PromptLoader._cache = {}
+    PromptLoader._metadata_cache = {}
     yield
     PromptLoader._instance = None
     PromptLoader._cache = {}
+    PromptLoader._metadata_cache = {}
 
 
 @pytest.fixture
@@ -69,6 +71,7 @@ def temp_prompts_dir(tmp_path):
 def sample_yaml(temp_prompts_dir):
     """샘플 YAML 프롬프트 파일"""
     content = """# 테스트용 프롬프트 파일
+_version: "v1.2"
 GREETING_PROMPT: |
   안녕하세요, {name}님!
   오늘의 장르는 {genre}입니다.
@@ -208,6 +211,27 @@ class TestListKeys:
         with patch.object(loader, "_prompts_dir", sample_yaml):
             keys = loader.list_keys("nonexistent")
             assert keys == []
+
+
+class TestMetadata:
+    def test_get_metadata_reads_version(self, sample_yaml):
+        loader = PromptLoader()
+        with patch.object(loader, "_prompts_dir", sample_yaml):
+            metadata = loader.get_metadata("test_domain")
+            assert metadata["_version"] == "v1.2"
+
+    def test_get_prompt_version_prefers_yaml_metadata(self, sample_yaml):
+        loader = PromptLoader()
+        with patch.object(loader, "_prompts_dir", sample_yaml):
+            assert loader.get_prompt_version("test_domain") == "v1.2"
+
+    def test_compose_version_tag_preserves_order_and_dedups(self, sample_yaml):
+        other_yaml = sample_yaml / "other.yaml"
+        other_yaml.write_text('_version: "v9"\nOTHER_PROMPT: |\n  hello\n', encoding="utf-8")
+        loader = PromptLoader()
+        with patch.object(loader, "_prompts_dir", sample_yaml):
+            tag = loader.compose_version_tag("test_domain", "other", "test_domain")
+            assert tag == "test_domain@v1.2|other@v9"
 
 
 # ============================================================

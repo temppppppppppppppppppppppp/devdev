@@ -1,154 +1,366 @@
 # Stage 4 Map
 
 ## Scope
-- Blueprint를 입력으로 실제 원고를 생성하고, Director 심사/재시도 루프를 통해 회차 확정본을 저장한다.
-- PASS 시 후처리로 Episode Bible, state_logs, world_state/fact_ledger, 벡터 메모리, 품질/비용 메트릭을 갱신한다.
-- Out of scope: Arc 생성(Stage2), Blueprint 생성(Stage3), Stage 초기화/롤백 메뉴 처리(runbook/main_a).
+- Define what Stage 4 is responsible for.
+  - DB `blueprints`를 읽어 실제 회차 원고를 생산하고, Chief Writer 앙상블과 Director 심사 루프로 확정본을 만든다.
+  - Python 사전 검증, post-select 충돌 검사, `PASS_WITH_FIX` patch loop, CoVe 사후검증을 거친 뒤에만 저장한다.
+  - PASS 후 `manuscripts`, Episode Bible, `state_logs`, `world_state`/`fact_ledger`, VecMemory, 품질/비용 메트릭을 갱신한다.
+  - Stage 4는 Stage 3의 `_stage3_meta.quality_risk`와 Stage 0의 `style_guide/reference_excerpt`를 실제 집필 프롬프트에 반영한다.
+- Out of scope:
+  - Arc 생성(Stage 2 책임).
+  - Blueprint 생성(Stage 3 책임).
+  - StyleGuide 자체 분석(Stage 0 책임).
+  - Arc/Blueprint의 근본 결함 완전 자동 수리. 현재 구현은 `V75-D`/`V75-B` 수준의 1회 자동 보정까지만 담당한다.
 
 ## Why
-- 왜 Blueprint를 DB에서만 읽나? `blueprints` 테이블을 SSOT로 고정해야 재시작/롤백/후처리 경로가 일관되기 때문이다.
-- 왜 Chief Writer와 Director를 분리하나? 생성 책임(Writer)과 판정 책임(Director)을 분리해 품질 게이트의 독립성을 유지하기 위해서다.
-- 왜 PASS 후에도 연속성/히스토리 후검증을 한 번 더 하나? 후보 선택 직후 충돌을 늦게라도 잡아 REJECT로 강등할 안전장치가 필요하기 때문이다.
-- 왜 advisory 체인을 Director 앞에 배치하나? (LM-A~F) TruthGate → NpcDrift → NumericDrift → Flashback → InfoParadox → RelationshipDrift 순으로 advisory를 수집하여 Director에게 근거를 제공하되, 최종 판정은 Director가 내리기 때문이다.
-- 왜 PASS_WITH_FIX에서 QualityGate를 bypass하나? (TF-46) Director가 "수정 후 합격" 의도를 표현했는데 QualityGate가 이를 REJECT로 뒤집으면 Director 주권이 침해되기 때문이다.
-- 왜 state_updates에서 Director 보정값을 CW보다 우선하나? Director 프롬프트가 CW state_updates를 "기반으로 보정"하여 superset(투자 장르 capital 등)을 반환하기 때문이다.
+- 왜 Stage 4를 별도 파이프라인으로 두는가? 장면 구조(Blueprint)와 실제 출판물(원고) 사이에는 다른 검증 규칙과 실패 양상이 존재하기 때문이다.
+- 왜 Chief Writer와 Director를 분리하나? 생성 책임과 최종 판정 책임을 분리해야 품질 게이트가 독립적으로 유지된다.
+- 왜 mandatory context를 크게 키우나? 장편 연재에서는 최근 원고, 과거 요약, 세계 상태, 수치 팩트, 복선, 관계 이력의 동시 참조가 필요하기 때문이다.
+- 왜 `Continuity Packet`을 별도 주입하나? 기억 저장을 늘리는 것보다 이번 화에 직접 관련된 과거 정보만 작업 책상 위에 올리는 편이 더 ROI가 높기 때문이다.
+- 왜 PASS 후에도 post-select/CoVe를 다시 돌리나? Director가 고른 후보라도 직전 원고/히스토리와의 충돌은 선택 후에야 드러나는 경우가 있기 때문이다.
 
 ## Entry Points
-- Primary: `Stage4Orchestrator.stage_4_v2_chief_writer(limit_mode=False)` (`modules/core/stage4_orchestrator.py`)
+- Primary:
+  - `Stage4Orchestrator.stage_4_v2_chief_writer(limit_mode=False, target_ep=None)`
 - Secondary:
   - `Stage4Orchestrator._prepare_stage4_session()`
   - `Stage4Orchestrator._run_interview_loop()`
-  - `Stage4InterviewRound.run()` (`modules/core/stage4_interview_round.py`)
-  - `Stage4PostProcessor.process_pass_result()` (`modules/core/stage4_post_processor.py`)
+  - `Stage4Orchestrator._handle_round_outcome()`
+  - `Stage4InterviewRound.run()`
+  - `Stage4PostProcessor.process_pass_result()`
+- Notes:
+  - 세션 시작 전에 `master_bible` 또는 `arcs`가 없으면 즉시 중단한다.
+  - 실제 라운드 수는 `retry.director_max_attempts`를 따른다.
+    - 현재 `validation.yaml` 기준 `10`
+  - 0라운드는 신규 앙상블 생성, 1라운드 이후는 `fix_scope + 점수` 기준 `InPlace -> Patch -> Rewrite` 분기로 진행한다.
 
 ## Inputs
 - Required:
-  - `current_project.master_bible`, `current_project.arcs` (없으면 Stage4 세션 시작 중단)
-  - `current_project.get_blueprint(next_ep)`로 로드한 회차 Blueprint (DB `blueprints` 테이블 기반)
-  - Arc 매핑 정보(`ep_start/ep_end`)와 이전 원고(`db.get_manuscript(next_ep-1)`)
+  - `current_project.master_bible`
+  - `current_project.arcs`
+  - `current_project.get_blueprint(next_ep)`로 읽은 다음 화 Blueprint
+  - `agents["director"]`
+  - `agents["manager"]`
+  - `ChiefWriter`
 - Optional:
-  - Stage0 style guide anchor(`style_guide`) 또는 사용자 스타일 선택 입력
-  - 벡터 메모리/WorldState/FactLedger/ReferenceAnchor/품질 대시보드 모듈
-  - `limit_mode=True`일 때 target episode 입력
+  - 저장된 Stage 0 `style_guide` anchor
+  - Stage 0 `reference_excerpt`
+  - `world_state`
+  - `fact_ledger`
+  - `state_tracker`
+  - `memory` / `context_advisor`
+  - `foreshadow_tracker`
+  - `semantic_plot_guard`
+  - `pacing_analyzer`
+  - `chain_of_verification`
+  - `quality_dashboard`
+  - `pass_rate_monitor`
+  - `failure_learner`
+  - `adaptive_manager`
+  - `limit_mode` 또는 `target_ep`
+- Style fallback:
+  - 저장된 StyleGuide가 없으면 Bible POV 기반 최소 스타일 가이드를 만들고,
+  - 그것도 없으면 사용자 입력으로 `카카오 / 네이버` 스타일을 고른다.
+
+## Upstream Contract
+- Stage 3 Blueprint는 `_stage3_meta`를 포함할 수 있다.
+  - `quality_risk=True`
+    - Director mandatory context에 경고문으로 주입된다.
+    - `V75-D` 논리 오류 에스컬레이션 임계값이 `2 -> 1`로 낮아진다.
+  - `final_verdict`, `last_score`
+    - 경고 설명에만 사용된다.
+- Stage 0 StyleGuide는 `reference_excerpt`를 포함할 수 있다.
+  - Chief Writer 메인 프롬프트에서 `style_guide` 바로 뒤에 붙는다.
+- Stage 4는 Director 점수를 `final_state_updates["director_score"]`에 기록한다.
+  - 후속 품질 대시보드와 회귀 분석에서 이 값을 사용한다.
 
 ## Outputs
 - Files:
-  - `projects/{project_name}/drafts/ep_XXXX.txt` (확정 원고 텍스트)
+  - `projects/{project_name}/drafts/ep_XXXX.txt`
+  - `projects/{project_name}/logs/episode_production.jsonl`
 - DB updates:
-  - `manuscripts`: `save_manuscript()`
-  - `martial_tracker`: `update_martial_tracker()` (state_updates 있을 때)
-  - `director_selections`: 매 면담 라운드 선택/점수 기록
-  - `episode_bibles`: `save_episode_bible()`
-  - `state_logs`: `save_state_log_with_summary()`
-  - `anchors`: `chain_link_{ep}`, `world_state`, `fact_ledger`
-  - `episode_sentence_hashes`: 크로스 에피소드 반복 감지 해시 저장
-  - `episode_satisfaction_tags`: 만족도 태그 저장
-  - `episode_pacing`: 호흡 분석 저장
-  - `cost_log`: REJECT/PASS 비용 스냅샷 저장
-  - VecMemory 경유: `episode_meta`, `vec_episodes`, `sync_status`, `episode_fts`
+  - `manuscripts`
+  - `martial_tracker`
+  - `director_selections`
+  - `episode_bibles`
+  - `state_logs`
+  - `episode_sentence_hashes`
+  - `episode_satisfaction_tags`
+  - `episode_pacing`
+  - `cost_record`
+  - causal links
+- Anchors:
+  - `chain_link_{ep}`
+  - `world_state`
+  - `fact_ledger`
+- Memory / summaries:
+  - `memorize_v20_episode()`
+  - 5화 단위 narrative summary 생성
+  - 세션 종료 시 `sync_v20_drafts()`
 - In-memory state:
-  - 라운드별 `previous_attempt`, `director_feedback`, `time_warnings`
-  - HUD 승인 업데이트(`director.on_approve_workflow` 결과 반영)
-  - `world_state`/`fact_ledger` 내부 상태 dict 갱신 후 저장
+  - `previous_attempt`
+  - `director_feedback`
+  - `time_warnings`
+  - lazy Stage 4 submodules
+  - Chief Writer context/manuscript cache
 
 ## Dependencies
 - Internal modules:
-  - `Stage4ContextBuilder`, `Stage4InterviewRound`, `Stage4PostProcessor`
-  - `ChiefWriter`, `ManuscriptValidator`, `ConsistencyValidator`, `BlockingValidator`, `ContinuityValidator`
-  - Director 에이전트의 `select_and_judge_ensemble()`, `check_manuscript_continuity_with_cache()`, `check_manuscript_history_conflicts()`
-  - `DirectorContinuityValidator` (`modules/domain/agents/director_continuity.py`)의 캐시 기반 연속성 검사 구현
-  - **Advisory 체인** (LM-A~F, Director 앞단 `_director_mc_parts`에 주입):
-    - `TruthGate` (LM-A): 사망NPC/아이템/장소/스킬/카르마/NPC역할/세계법칙 7개 검사
-    - `NpcDriftAdvisor` (LM-B): 원고 vs 스냅샷 NPC 속성 표류 LLM advisory
-    - `NumericDriftAdvisor` (LM-C): FactLedger 수치 누적 표류 (5화 단위)
-    - `FlashbackVerifier` (LM-E): 회상/플래시백 오염 감지 (14개 마커 + VecMemory)
-    - `InfoParadoxChecker` (LM-F): 1인칭 시점 정보 역설 (1인칭 전용)
-    - `RelationshipDriftAdvisor` (LM-D): NPC 관계도 장기 표류
-  - `CentralSchemaBuilder` (TF-45): 장르별 프롬프트 스키마 동적 생성 (비무협 오염 방지)
+  - `modules/core/stage4_orchestrator.py`
+  - `modules/core/stage4_interview_round.py`
+  - `modules/core/stage4_context_builder.py`
+  - `modules/core/stage4_post_processor.py`
+  - `modules/core/stage4_types.py`
+  - `modules/domain/agents/chief_writer.py`
+  - `modules/domain/agents/chief_writer_context.py`
+  - `modules/domain/agents/chief_writer_prompts.py`
+  - `modules/domain/agents/manuscript_validator.py`
+  - `modules/validation/consistency_validator.py`
+  - `modules/validation/blocking_validator.py`
+  - `modules/validation/continuity_validator.py`
+  - `modules/domain/agents/director_continuity.py`
 - External services/models:
-  - LLM 호출 (`self.ctx.sys.api_client`, Director/Writer `ask()` 계열)
-  - VecMemory 임베딩/검색 경로(환경에 따라 `google genai` + `sqlite-vec`)
-  - Hybrid Retrieval (FTS5+RRF): 벡터 검색 + 전문 검색 결합
+  - Chief Writer LLM 호출
+  - Director의 `select_and_judge_ensemble()`
+  - Director의 `check_manuscript_continuity_with_cache()`
+  - Director의 `check_manuscript_history_conflicts()`
+  - Manager의 `update_state_and_lore_v20()`
+  - optional VecMemory / Hybrid Retrieval / CoVe
+- Advisory and supporting modules:
+  - WritingDirective / PatternTracker
+  - TruthGate
+  - NpcDrift / NumericDrift / RelationshipDrift / Flashback / InfoParadox
+  - PreDirectorChecklist / ConfidenceCalibrator / CrossVerifier
+  - DB trend advisories
+    - pacing
+    - satisfaction
+    - reveals
+    - reflexion
+
+## Context Build
+- Episode lookback:
+  - `prev_text`는 직전 화 원고다.
+  - `prev_ending`은 직전 화 마지막 `2500자`다.
+  - Tier 1:
+    - 최근 `30화` 원고 전문
+  - Tier 2:
+    - 현재 화 기준 `21~60화 전`의 `episode_meta.summary`
+    - 화당 최대 `5000자`
+  - Tier 3:
+    - 60화 이전의 구 Arc 요약
+    - Arc당 최대 `8000자`
+  - `next_ep >= 60`이면 `world_state.get_long_term_anchor()`를 앞단에 추가한다.
+  - `episode_digest`에는 직전 화 다이제스트와 투자물용 HUD 금융 스냅샷이 섞일 수 있다.
+- mandatory_context layers:
+  - `_build_writer_mandatory_context()` 기본 블록
+  - Canonical Constraints
+    - `world_state.get_canonical_constraints()`
+    - `fact_ledger.get_canonical_summary()`
+  - timeline summary
+  - `world_state.get_summary(max_chars=50000)`
+  - `fact_ledger.to_summary(max_chars=25000)`
+  - `series_summary`
+  - 최근 3권 `volume_summary_n`
+  - Treatment `genre_ext`
+  - `Continuity Packet`
+  - `StateTracker.get_all_summaries()`
+  - 최근 3개 Arc summary
+  - Smart Retrieval 결과
+  - extended lookback digest
+  - foreshadow prompt
+  - semantic plot guard warnings
+  - pacing prompt
+  - narrative summaries
+  - future arc / remaining blueprint context
+- `Continuity Packet`:
+  - Budget: `7000자`
+  - Blueprint 본문에 직접 등장하는 엔티티만 대상으로 한다.
+  - 포함 가능 정보:
+    - NPC 상태/사망 여부
+    - NPC history
+    - DB NPC history
+    - 관련 플롯
+    - 관련 아이템
+    - 현재 위치
+    - 관계 변천사
+    - 수치 변화 이력
+    - canonical facts
+  - 유효 섹션이 하나도 없으면 헤더-only 패킷은 주입하지 않는다.
+- Smart Retrieval:
+  - `context_advisor.plan_stage4_retrieval()` 경로가 켜져 있으면 슬롯 기반 검색을 사용한다.
+  - retrieval source는 dense / sparse / hybrid / DB relationship / manuscript excerpt를 섞을 수 있다.
+  - Smart Retrieval 결과는 `mandatory_context` 맨 앞에 배치된다.
+  - 비-SC 블록만 `ContextBudgetTracker`의 압축 대상이 된다.
+- Budgets:
+  - `smart_retrieval.stage4_total_budget = 300000`
+  - `context.mandatory_context_max = 400000`
+  - 오케스트레이터는 최종 `mandatory_context`가 상한을 넘으면 섹션 단위로 뒤에서부터 제거한다.
+- Chief Writer common prompt:
+  - 공통 컨텍스트는 TTL `600초` 캐시를 시도한다.
+  - 전략은 기본 `balanced / narrative / tension` 3개다.
+  - `style_guide` 다음에 `reference_excerpt`가 들어간다.
+  - `prev_manuscripts_text`, `chain_link`, `world_state_summary`, `mandatory_context`가 모두 공통 프롬프트에 합쳐진다.
 
 ## State and Cache
 - Persistent state:
-  - 원고/심사/후처리 산출물은 `project_data.db` 테이블 및 anchors에 누적 저장
+  - 원고 SSOT는 `manuscripts` 테이블이다.
+  - `drafts/ep_XXXX.txt`는 export 전용이다.
 - Runtime cache:
-  - `Stage4Orchestrator`의 lazy submodule 캐시(`post_processor/context_builder/interview_round`)
-  - `ReferenceAnchor` 인스턴스 루프 외부 1회 생성
-  - `ChiefWriter` 원고 프리페치 캐시(`_manuscript_cache`), 컨텍스트 캐시(TTL 600초)
-  - `DirectorContinuityValidator`의 blueprint/manuscript 캐시(`_cached_*_ep`)
+  - `Stage4Orchestrator` lazy submodules
+    - `post_processor`
+    - `context_builder`
+    - `interview_round`
+  - loop-scoped `ReferenceAnchor`
+  - Chief Writer `_manuscript_cache`
+  - Chief Writer context cache
+  - Director continuity/history 측 캐시
 - Invalidation rules:
-  - 에피소드 시작마다 `time_warnings` 리셋
-  - Director continuity 캐시는 `ep_num` 변경 시 재생성
-  - Writer 캐시는 `invalidate_manuscript_cache()`로 명시 무효화 가능(롤백 시 사용)
+  - 에피소드 시작마다 `time_warnings`를 리셋한다.
+  - `ctx`를 교체하면 Stage 4 lazy submodule 캐시를 전부 비운다.
+  - Writer manuscript cache는 `invalidate_manuscript_cache()`로 명시 무효화할 수 있다.
+  - 세션 종료 시 `flush_audit_buffer()`와 vector sync가 수행될 수 있다.
 
 ## Failure and Recovery
 - Common failure patterns:
-  - Blueprint/Arc 누락 시 집필 루프 중단
-  - 후보 원고 전부 실패 시 `EMPTY` 반환 후 다음 라운드 재시도
-  - Director PASS라도 `score < scoring.quality_gate_score(90)`이면 REJECT 강등 (**단, PASS_WITH_FIX는 QualityGate bypass** — TF-46)
-  - DB 저장 실패 시 트랜잭션 롤백 후 해당 회차 집필 중단
-- Recovery flow:
-  - 라운드 수는 `retry.director_max_attempts`(기본 5)까지 반복
-  - REJECT 시 `previous_attempt` 기반 재생성/패치 경로로 다음 라운드 진행
-  - Manager 비동기 정산 실패 시 동기 재시도 폴백
-  - **PASS_WITH_FIX 3-tier 라우팅** (TF-33):
-    - **inplace**: `_previous_best`가 있고 (fix_scope=="inplace" 또는 score >= INPLACE 임계값) → `chief_writer.inplace_patch()` → Director `audit_manuscript()` 재심사 (최대 3회)
-    - **partial**: `_previous_best`가 있고 fix_scope=="partial" → `single_strategy=rejected_strategy`로 해당 전략만 1후보 재생성
-    - **full**: `_previous_best` 없거나 fix_scope=="full" → Ensemble 3후보 전면 재생성
-  - **InPlace patch state_updates** (TF-46): LLM이 `patch_state_updates` JSON 블록 반환 → 기존 state_updates에 merge (`{**final_state_updates, **_patch_state}`)
-  - **patch_state_updates JSON 파싱** (TF-47): `rfind` + `json.loads` 조합으로 중첩 dict 안전 파싱, regex 폴백 유지
-- Fallback behavior:
-  - 모든 라운드 실패 + 최선 원고 존재 시 사용자 선택으로 진행/건너뛰기
-  - 최선 원고도 없으면 인간 검토 필요 메시지 후 세션 반환
-  - PASS 후처리의 보조 기능(로그/태깅/분석)은 대부분 비차단 처리
+  - `master_bible` 또는 `arcs` 부재
+  - 다음 화 Blueprint 부재
+  - Arc 매핑 실패
+  - 후보 원고 전부 빈 문자열
+  - Director REJECT
+  - `PASS`지만 `score < 90`
+  - post-select continuity/history conflict
+  - CoVe 실패
+  - DB 저장 실패
+  - Episode Bible 저장 실패
+- Candidate generation:
+  - Round 0:
+    - `chief_writer.generate_ensemble()`
+  - Round 1+:
+    - `fix_scope` 또는 이전 점수 기준 `InPlace -> Patch -> Rewrite`
+    - 현재 기준:
+      - `patch_mode.inplace_below = 60`
+      - `patch_mode.rewrite_below = 50`
+    - 실제 라우팅은 `fix_scope`, `inplace_below`, `rewrite_below`를 사용한다.
+    - `patch_below`는 현재 Stage 4 분기 결정의 주 키가 아니다.
+- Python pre-director validation:
+  - `manuscript_validator.validate_all_candidates()`
+  - consistency / blocking / continuity
+  - pre-director checklist
+  - confidence calibration
+  - cross verifier
+  - 결과는 Director용 advisory로 넘기되, 최종 REJECT 권한은 Director가 가진다.
+- Director and post-select:
+  - Director는 `select_and_judge_ensemble()`로 후보를 선택한다.
+  - `PASS`인데 `score < quality_gate_score(90)`면 즉시 REJECT로 강등된다.
+  - `PASS_WITH_FIX`는 즉시 강등하지 않고 patch loop로 들어간다.
+  - Round 0에서만 선택 후보에 대해 post-select 검사를 병렬 실행한다.
+    - continuity conflict
+    - history conflict
+  - post-select conflict가 나오면 `REJECT + LOGIC_ERROR`로 바뀌어 blueprint escalation 체인으로 연결된다.
+- `PASS_WITH_FIX` loop:
+  - 최대 `3회`
+  - `chief_writer.inplace_patch()` 후 Director 동일 경로 재심사
+  - 재심사 `PASS`라도 `score < 90`이면 종료
+  - 재심사 `PASS_WITH_FIX`가 계속되면 마지막 patch본을 채택한 채 REJECT로 종료될 수 있다.
+  - patch 결과의 `state_updates`는 기존 `final_state_updates`와 merge한다.
+- Blueprint escalation:
+  - `LOGIC_ERROR` 연속 시 `V75-D`
+    - 기본 2연속
+    - `_stage3_meta.quality_risk=True`면 1연속
+    - Stage 3 blueprint inplace patch 1회 시도
+  - inplace 후에도 계속 실패하면 `V75-B`
+    - 해당 화 Blueprint 전면 재생성 1회 시도
+  - 재생성 후에도 실패하면 Arc 자체 문제 가능성을 사용자 로그에 남긴다.
+- CoVe:
+  - PASS 또는 `PASS_WITH_FIX` 이후 `quick_verify -> verify` 경로를 탄다.
+  - 치명적 모순이면 현재 라운드를 소모한 채 REJECT로 되돌린다.
+  - runtime exception도 fail-closed REJECT다.
+- Round exhaustion:
+  - 최선 원고가 있으면 사용자 선택:
+    - `1 = 최선 결과물로 진행`
+    - `2 = 건너뛰기`
+  - 최선 원고도 없으면 인간 검토 필요 상태로 세션을 반환한다.
+- Post-processing:
+  - `save_manuscript`와 `update_martial_tracker`는 하나의 DB 트랜잭션 안에서 처리된다.
+  - DB 커밋 실패 시 HUD 업데이트는 실행하지 않는다.
+  - `save_episode_bible()` 실패는 후속 state/world/fact 처리와 분리되어 계속 진행된다.
+  - 다만 `_meta_save_failed=True`가 남으면 `process_pass_result()`는 마지막에 `False`를 반환하고, 오케스트레이터는 해당 회차에서 Stage 4를 중단한다.
 
 ## Manual Intervention Points
 - User prompts:
-  - `limit_mode` 집필 범위 입력
-  - style guide 미존재 시 플랫폼 스타일 선택 입력
-  - 라운드 소진 시 `1=최선 결과물 진행 / 2=건너뛰기` 선택
-  - 세션 종료 시 TTY 환경에서 Enter 입력 대기
+  - `limit_mode`에서 목표 화 입력
+  - Stage 0 StyleGuide가 없을 때 `카카오 / 네이버` 스타일 선택
+  - 라운드 소진 시 `1=최선 결과물 진행 / 2=건너뛰기`
+  - 세션 종료 시 TTY 환경에서 Enter 대기
 - Approvals:
-  - Director PASS가 최종 승인 게이트(이후 CoVe/후검증에서 REJECT 재전환 가능)
+  - 별도 수동 승인 UI는 없다.
+  - Director 판정, post-select 검사, CoVe가 자동 게이트를 이룬다.
 - Operator checks:
-  - 회차별 Director 점수/사유, QualityGate 강등 로그, 반복/NPC 과잉 경고 확인
+  - Director 점수 / 사유 / `fix_scope`
+  - `episode_production.jsonl`
+  - QualityGate 강등 로그
+  - CoVe 강등 로그
+  - 반복/NPC 과잉/호흡/만족도 후처리 로그
 
 ## Metrics
 - Throughput:
-  - Stage4 시도 단위 기록: `pass_rate_monitor.record_attempt(stage=4, episode, attempt_num, success, is_patch, ...)`
-- Error rate:
-  - `quality_dashboard.record_validation(stage=4)`에 REJECT/EMPTY/PASS 결과 누적
-- Latency:
-  - `perf_timer`(`generate`, `director` 구간) 및 episode 비용 스냅샷(`cost_log`) 기록
+  - `pass_rate_monitor.record_attempt(stage=4, ...)`
+  - 회차별 JSONL 생산 로그
+- Error rate / quality:
+  - `quality_dashboard.record_validation(stage=4, ...)`
+    - EMPTY
+    - REJECT
+    - PASS
+  - `session_logger.log_decision()`
+  - `failure_learner.record_failure()`
+  - `adaptive_manager.record_failure()`
+- Cost / latency:
+  - `perf_timer`
+    - generate
+    - director
+  - REJECT 비용 스냅샷
+  - PASS 후 episode 비용 스냅샷
+  - pacing / satisfaction DB 기록은 다음 화 advisory로 재사용된다.
 
 ## Tests
 - Unit:
-  - `tests/test_stage4_context_builder.py`
-  - `tests/test_stage4_interview_round.py`
-  - `tests/test_stage4_post_processor.py`
   - `tests/test_stage4_orchestrator.py`
+  - `tests/test_stage4_interview_round.py`
+  - `tests/test_stage4_context_builder.py`
+  - `tests/test_stage4_post_processor.py`
   - `tests/test_stage4_cv_context.py`
+  - `tests/test_chief_writer.py`
+  - `tests/test_chief_writer_context.py`
+  - `tests/test_chief_writer_quality.py`
   - `tests/test_manuscript_validator.py`
+  - `tests/test_continuity_packet.py`
 - Integration:
   - `tests/test_stage4_context.py`
   - `tests/e2e/test_l3_stage4_smoke.py`
 - Regression:
+  - `tests/test_pass_with_fix.py`
+  - `tests/test_v75b_escalation.py`
+  - `tests/test_v75c_contradiction_firewall.py`
+  - `tests/test_v75d_graduated_escalation.py`
   - `tests/test_director_continuity_sc5.py`
-  - `tests/test_director_modules.py`
-  - `tests/test_director_bias.py`
   - `tests/test_pre_director_submodules.py`
   - `tests/test_pre_director_checklist_submodules.py`
 
 ## Open Risks
-- Risk 1: Stage4 패치 진입 조건이 `PatchModeThresholds.REWRITE`(현재 50)로 연결되어 `patch_below`(80) 설정과 동작 불일치 가능성이 있다.
-- Risk 2: 후보 생성/Director 응답 파싱 실패가 누적되면 사용자 개입(진행/스킵) 없이는 자동 복구가 제한된다.
-- Risk 3: Advisory 체인(LM-A~F) 6개가 순차 실행되므로, LLM 호출 지연이 누적될 수 있다. (현재 advisory는 비차단이므로 실패해도 진행)
+- Risk 1:
+  - 실제 라운드 상한은 `retry.director_max_attempts=10`, `mandatory_context` 상한은 `400000`인데, 코드 일부 배너/주석은 아직 `5회`나 `50K`처럼 읽힐 수 있다. 문서와 런타임 숫자를 다시 헷갈리게 만드는 드리프트 포인트다.
+- Risk 2:
+  - 라운드 소진 시 `진행/건너뛰기` 선택과 세션 종료 Enter 대기가 남아 있어, 비대화형 운영에서는 TTY 여부에 따라 수동 중단점이 생길 수 있다.
+- Risk 3:
+  - advisory chain, DB trend advisory, Smart Retrieval, post-select, CoVe가 한 화에 누적되므로 지연 시간이 커질 수 있다.
+- Risk 4:
+  - `world_state` / `fact_ledger` / `state_tracker`가 약하거나 비어 있어도 Stage 4는 진행된다. 이 경우 Continuity Packet과 canonical constraint 밀도가 떨어진다.
+- Risk 5:
+  - `save_episode_bible()` 실패가 완전히 fail-fast는 아니다. 일부 후처리와 파일 저장이 먼저 진행된 뒤 최종적으로 회차 중단으로 귀결될 수 있어 운영자가 부분 성공처럼 오해할 여지가 있다.
 
 ## Last Verified
-- Date: 2026-03-02
-- Commit: `8476bc2`
+- Date: 2026-03-10
+- Commit: `d2d935b`
 - Code Sync (Yes/No): Yes
-- Verified By: Opus
+- Verified By: Codex
 

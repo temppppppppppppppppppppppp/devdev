@@ -69,7 +69,6 @@ class TestDBSchemaComplete:
             "npc_history",
             "karma_status",
             "causal_graph",
-            "surgery_logs",
             "sync_status",
         }
         missing = expected_tables - tables

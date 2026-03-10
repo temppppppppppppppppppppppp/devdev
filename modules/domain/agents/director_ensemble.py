@@ -23,6 +23,24 @@ def _safe_int(value, default=0):
         return default
 
 
+def _prompt_cap(name: str, default: int) -> int:
+    """Context cap lookup with sane lower bound."""
+    try:
+        return max(0, int(_threshold(name, default)))
+    except (TypeError, ValueError):
+        return default
+
+
+def _prompt_snippet(text: str, *, cap_name: str, default: int, head_ratio: float = 0.6) -> str:
+    """Stage 2/4 prompt snippets preserve both head and tail when trimmed."""
+    raw = text if isinstance(text, str) else str(text or "")
+    cap = _prompt_cap(cap_name, default)
+    if cap <= 0:
+        return ""
+    head_chars = min(cap, max(0, int(cap * head_ratio)))
+    return smart_truncate(raw, max_chars=cap, head_chars=head_chars)
+
+
 class DirectorEnsembleSelector:
     """
     [V64 P2-1] Director에서 분리된 앙상블 선택 모듈
@@ -381,22 +399,69 @@ Architect가 inplace 단계에서 즉시 교정하고 재제출한다. 소소한
                 sc_str = json.dumps(sc, ensure_ascii=False)
             else:
                 sc_str = str(sc) if sc else ""
+            sc_prompt = _prompt_snippet(
+                sc_str,
+                cap_name="context.director_arc_state_constraints_max",
+                default=4000,
+                head_ratio=0.55,
+            )
+            joint_prompt = _prompt_snippet(
+                joint_str,
+                cap_name="context.director_arc_joint_docs_max",
+                default=4000,
+                head_ratio=0.55,
+            )
 
             ep_count = arc.get("ep_count", "?")
+            meta = arc.get("_ensemble_meta", {}) if isinstance(arc.get("_ensemble_meta", {}), dict) else {}
+            diversity = meta.get("diversity", {}) if isinstance(meta.get("diversity", {}), dict) else {}
+            diversity_warning = str(diversity.get("warning", "") or "").strip()
             summary = (
                 f"[후보 {idx + 1}: {strategy}]\n"
                 f"- 화수: {ep_count}\n"
                 f"- tactical_doc 분량: {len(tactical)}자\n"
-                f"- state_constraints: {sc_str[:1000]}\n"
-                f"- joint_docs: {joint_str[:1000]}\n\n"
-                f"[tactical_doc 전문]\n{tactical}\n"
+                f"- state_constraints: {sc_prompt}\n"
+                f"- joint_docs: {joint_prompt}\n"
             )
+            if diversity_warning:
+                summary += f"- 다양성 경고: {diversity_warning}\n"
+            summary += f"\n[tactical_doc 전문]\n{tactical}\n"
             candidate_summaries.append(summary)
 
         # curr_block 요약
         block_summary = ""
         if isinstance(curr_block, dict):
-            block_summary = json.dumps(curr_block, ensure_ascii=False)[:4000]
+            block_summary = _prompt_snippet(
+                json.dumps(curr_block, ensure_ascii=False),
+                cap_name="context.director_arc_block_summary_max",
+                default=12000,
+                head_ratio=0.65,
+            )
+        prev_arc_prompt = _prompt_snippet(
+            prev_arc_context,
+            cap_name="context.director_arc_prev_context_max",
+            default=24000,
+            head_ratio=0.55,
+        )
+        constraint_prompt = _prompt_snippet(
+            constraint_block,
+            cap_name="context.director_arc_constraint_max",
+            default=12000,
+            head_ratio=0.6,
+        )
+        advisory_prompt = _prompt_snippet(
+            advisory,
+            cap_name="context.director_arc_advisory_max",
+            default=12000,
+            head_ratio=0.55,
+        )
+        logging.info(
+            "[CTX-P0-1] arc prompt slices block=%d prev=%d constraint=%d advisory=%d",
+            len(block_summary),
+            len(prev_arc_prompt),
+            len(constraint_prompt),
+            len(advisory_prompt),
+        )
 
         comparison_prompt = f"""[Arc 후보 비교 선택 + 일관성·모순 판정]
 
@@ -407,13 +472,13 @@ Arc {arc_no}번 후보 {len(candidates)}개를 **각각 절대 기준으로 독�
 {block_summary}
 
 ### 이전 Arc 맥락
-{prev_arc_context[:6000] if prev_arc_context else "(첫 Arc)"}
+{prev_arc_prompt if prev_arc_prompt else "(첫 Arc)"}
 
 ### 제약 조건
-{constraint_block[:4000] if constraint_block else "(없음)"}
+{constraint_prompt if constraint_prompt else "(없음)"}
 
 ### Python 사실 검증 Advisory (NS-3-B)
-{str(advisory)[:4000] if advisory else "(없음)"}
+{advisory_prompt if advisory_prompt else "(없음)"}
 - 이 advisory는 수치 비교 기반 사실 검증입니다.
 - 큰 수치 괴리 경고가 있으면 PASS를 피하고 PASS_WITH_FIX 또는 REJECT로 판정하세요.
 
@@ -688,7 +753,7 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
         # mandatory_context 블록 생성 (stable/legacy 양쪽 공통)
         _mc_block = ""
         if mandatory_context:
-            _dir_mc_max = _threshold("context.director_mandatory_max", 40000)
+            _dir_mc_max = _threshold("context.director_mandatory_max", 400000)
             _mc_for_director = mandatory_context[:_dir_mc_max]
             if len(mandatory_context) > _dir_mc_max:
                 _mc_for_director = (
@@ -950,6 +1015,13 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
             "timeline_arc_consistency",  # [NS-4]
             "fiction_term_leak",          # [TF-57-A]
             "scene_variety",             # [TF-J]
+            "pacing_quality",
+            "dialogue_naturalness",
+            "pov_discipline",
+            "emotional_authenticity",
+            "npc_knowledge_boundary",
+            "secret_consistency",
+            "identity_consistency",
         ]
         if isinstance(_checklist, dict) and _checklist:
             _issue_count = sum(1 for k in _nc3_keys if str(_checklist.get(k, "")).upper() == "ISSUE")

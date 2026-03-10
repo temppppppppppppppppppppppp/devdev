@@ -29,6 +29,8 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
+from modules.core.llm_generate import generate_content_via_router
+
 
 class AgentRole(Enum):
     """에이전트 역할"""
@@ -193,8 +195,11 @@ JSON 형식:
     def _call_llm(self, prompt: str, temperature: float = 0.4) -> str:
         """LLM 호출"""
         try:
-            response = self.client.models.generate_content(
-                model=self.model, contents=prompt, config={"temperature": temperature, "max_output_tokens": 8192}
+            response = generate_content_via_router(
+                client=self.client,
+                model=self.model,
+                contents=prompt,
+                config={"temperature": temperature, "max_output_tokens": 8192},
             )
             return response.text or ""  # [V70] None 방어
         except Exception as e:

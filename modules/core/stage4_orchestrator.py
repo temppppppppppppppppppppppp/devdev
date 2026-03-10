@@ -11,6 +11,7 @@ import dataclasses
 import logging
 import re
 
+from modules.core.llm_generate import generate_content_via_router
 from modules.core.stage4_context_builder import Stage4ContextBuilder
 from modules.core.stage4_interview_round import Stage4InterviewRound
 from modules.core.stage4_post_processor import Stage4PostProcessor
@@ -364,7 +365,8 @@ class Stage4Orchestrator:
             # 3. Flash 모델 직접 호출
             from google.genai import types
 
-            _response = self.ctx.sys.api_client.models.generate_content(
+            _response = generate_content_via_router(
+                client=self.ctx.sys.api_client,
                 model=AIModels.FLASH_ANALYSIS_MODEL,
                 contents=_prompt,
                 config=types.GenerateContentConfig(
@@ -704,6 +706,16 @@ JSON으로 출력:
             _mc_max = _threshold("context.mandatory_context_max", 80000)
             if len(mandatory_context) > _mc_max:
                 _original_len = len(mandatory_context)
+                _ctx_budget_meta = getattr(self.ctx, "_stage4_context_budget_meta", {}) or {}
+                if isinstance(_ctx_budget_meta, dict) and _ctx_budget_meta:
+                    _perf_logger.info(
+                        "[V66.1] mandatory_context pretrim meta sc=%s mc=%s total=%s limit=%s headroom=%s",
+                        _ctx_budget_meta.get("sc_chars"),
+                        _ctx_budget_meta.get("mc_chars"),
+                        _ctx_budget_meta.get("total_chars"),
+                        _ctx_budget_meta.get("limit_chars"),
+                        _ctx_budget_meta.get("headroom_chars"),
+                    )
                 # 섹션 분리: "\n[" 또는 "\n\n[" 마커 기준으로 분할
                 _section_pattern = re.compile(r"\n(?=\[)")
                 _sections = _section_pattern.split(mandatory_context)
@@ -825,6 +837,8 @@ JSON으로 출력:
         _bucket_streak = 0
         _prev_dominant_contradiction = ""  # [A-4] contradiction type 수렴 추적
         _contradiction_type_streak = 0
+        _score_history: list[int] = []
+        _plateau_advisory_emitted = False
 
         with StageSpinner(4, f"제{next_ep}화 · 앙상블 준비") as stage4_spinner:
             try:
@@ -941,6 +955,44 @@ JSON으로 출력:
                 director_feedback = _round_result.director_feedback
                 previous_attempt = _round_result.previous_attempt
                 print(f"   ❌ [Round {interview_round + 1}/{_max_rounds}] REJECT → 다음 라운드")
+
+                _current_score = (previous_attempt or {}).get("score", 0)
+                try:
+                    _current_score = int(_current_score)
+                except (TypeError, ValueError):
+                    _current_score = 0
+                if _current_score > 0:
+                    _score_history.append(_current_score)
+                    if not _plateau_advisory_emitted:
+                        _plateau_advisory = ""
+                        if len(_score_history) >= 3 and (
+                            _score_history[-3] > _score_history[-2] > _score_history[-1]
+                        ):
+                            _plateau_advisory = (
+                                f"[⚠️ 점수 하락 추세] 최근 점수가 "
+                                f"{_score_history[-3]}→{_score_history[-2]}→{_score_history[-1]}로 3연속 하락했습니다. "
+                                "현재 수정 루프의 효율이 낮습니다. fix_scope를 rewrite 이상으로 넓히거나 "
+                                "Blueprint/Arc 구조를 재검토하세요."
+                            )
+                        elif len(_score_history) >= 2 and _score_history[-2] == _score_history[-1]:
+                            _plateau_advisory = (
+                                f"[⚠️ 점수 plateau] 최근 두 라운드 점수가 {_score_history[-1]}점으로 동일합니다. "
+                                "동일 수정 루프를 반복 중일 수 있습니다. fix_scope 확대 또는 Blueprint 재검토를 우선 검토하세요."
+                            )
+
+                        if _plateau_advisory:
+                            _plateau_advisory_emitted = True
+                            director_feedback = _plateau_advisory + "\n" + director_feedback
+                            if isinstance(previous_attempt, dict):
+                                previous_attempt["score_history"] = list(_score_history[-3:])
+                                previous_attempt["plateau_detected"] = True
+                                _existing_reasoning = str(previous_attempt.get("fix_scope_reasoning", "") or "").strip()
+                                previous_attempt["fix_scope_reasoning"] = (
+                                    f"{_existing_reasoning}\n{_plateau_advisory}".strip()
+                                    if _existing_reasoning
+                                    else _plateau_advisory
+                                )
+                            self.ctx.ui.log(f"   ⚠️ [QR-7] {str(_plateau_advisory)[:80]}")
 
                 # [V75-B] LOGIC_ERROR 연속 카운터
                 if _round_result.error_category == "LOGIC_ERROR":

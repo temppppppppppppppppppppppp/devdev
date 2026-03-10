@@ -173,6 +173,36 @@ class TestAnalystPlanVolumeReturn:
         result = analyst.plan_single_volume_v20(vol_no=1, master_bible=bible, treatment_raw_part="[]")
         assert result.get("strategy_doc") == "전술 문서 내용"
 
+    def test_plan_single_volume_uses_cached_context_when_available(self, analyst):
+        mock_response = json.dumps({"vol_no": 1, "strategy_doc": "전략 문서", "cider_score": 60})
+        analyst._get_or_create_context_cache = MagicMock(return_value={"cache_name": "cache/analyst"})
+
+        captured = {}
+
+        def _cached_side_effect(*, cache_name, prompt, temperature, thinking_level, full_prompt_fallback, response_schema=None):
+            captured["cache_name"] = cache_name
+            captured["prompt"] = prompt
+            captured["fallback"] = full_prompt_fallback
+            return mock_response
+
+        analyst._ask_with_cached_context = MagicMock(side_effect=_cached_side_effect)
+
+        bible = {"MasterBible": {"AssetLibrary": {}, "protagonist_config": {"world_origin": "현대인"}}}
+        result = analyst.plan_single_volume_v20(
+            vol_no=1,
+            master_bible=bible,
+            treatment_raw_part='[{"goal":"시장 장악"}]',
+            protagonist_name="장무기",
+        )
+
+        assert result["strategy_doc"] == "전략 문서"
+        assert captured["cache_name"] == "cache/analyst"
+        assert "[Cached Analyst Task]" in captured["prompt"]
+        assert any(
+            marker in captured["fallback"]
+            for marker in ("장무기", "주인공 이름", "[PROTAGONIST_CONFIG]", "현대인")
+        )
+
 
 # ══════════════════════════════════════════════════════════════
 # [Analyst] Test 4: get_lack_report 유효 HUD 처리

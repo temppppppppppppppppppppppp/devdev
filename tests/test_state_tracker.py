@@ -234,6 +234,39 @@ class TestRegisterEntityName:
         assert "맹" not in tracker.entity_name_registry
 
 
+class TestGenreRegistrySummaries:
+    def test_summary_methods_render_genre_specific_registries(self, tracker):
+        tracker.skill_cooldown_registry = {"연속베기": {"cooldown": "2턴", "last_used_ep": 12}}
+        tracker.dungeon_clear_registry = {"붉은 던전": {"cleared_ep": 10, "rank": "A"}}
+        tracker.spell_repertoire = {"파이어볼": {"tier": "중급", "learned_ep": 8}}
+        tracker.blessing_curse_registry = {"성검의 축복": {"type": "축복", "source": "성검", "ep": 9}}
+        tracker.filmography_registry = {"청룡전": {"role": "주연", "year": 2025, "ep": 14}}
+
+        assert "연속베기" in tracker.get_skill_cooldown_summary()
+        assert "붉은 던전" in tracker.get_dungeon_clear_summary()
+        assert "파이어볼" in tracker.get_spell_repertoire_summary()
+        assert "성검의 축복" in tracker.get_blessing_curse_summary()
+        assert "청룡전" in tracker.get_filmography_summary()
+
+    def test_get_all_summaries_includes_only_matching_genre_sections(self, tracker):
+        tracker.skill_cooldown_registry = {"연속베기": {"cooldown": "2턴"}}
+        tracker.dungeon_clear_registry = {"붉은 던전": {"cleared_ep": 10}}
+        tracker.spell_repertoire = {"파이어볼": {"tier": "중급"}}
+        tracker.blessing_curse_registry = {"성검의 축복": {"type": "축복"}}
+        tracker.filmography_registry = {"청룡전": {"role": "주연"}}
+
+        hunter = tracker.get_all_summaries(genre="hunter")
+        fantasy = tracker.get_all_summaries(genre="fantasy")
+        actor = tracker.get_all_summaries(genre="actor")
+
+        assert "skill_cooldown" in hunter
+        assert "dungeon_clear" in hunter
+        assert "spell_repertoire" not in hunter
+        assert "spell_repertoire" in fantasy
+        assert "blessing_curse" in fantasy
+        assert "filmography" in actor
+
+
 # ══════════════════════════════════════════════════════════════
 # Test 6: check_entity_name_consistency
 # ══════════════════════════════════════════════════════════════

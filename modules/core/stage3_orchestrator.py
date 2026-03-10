@@ -12,11 +12,146 @@ import logging as _logging
 import traceback as _traceback
 
 from modules.core.constants import ContextLimits, Emojis, ErrorMessages
+from modules.core.fact_ledger import summarize_fact_ledger_numbers_block
 
 try:
     from modules.utils.notifier import notifier
 except Exception:  # notifier 미설치 시 비차단
     notifier = None
+
+_DB_ADVISORY_NOTICE = "(Python 자동 감지 — 오탐 가능, 참고용)"
+
+
+def _build_stage3_prompt_version() -> str | None:
+    try:
+        from modules.core.prompt_loader import PromptLoader
+
+        return PromptLoader().compose_version_tag("ensemble", "blueprint_generator", "director")
+    except Exception as _e:
+        _logging.debug("[Stage3] prompt_version 계산 실패 (비차단): %s", _e)
+        return None
+
+
+def _build_stale_seed_advisory(db, next_ep: int) -> str:
+    """장기 미회수 복선 경고를 Blueprint semantic_context용 문자열로 반환한다."""
+    getter = getattr(db, "get_active_seeds", None)
+    if not callable(getter):
+        return ""
+
+    try:
+        seeds = getter()
+        if not isinstance(seeds, list) or not seeds:
+            return ""
+
+        stale_seeds: list[str] = []
+        for seed in seeds:
+            if not isinstance(seed, dict):
+                continue
+            planted_ep = seed.get("planted_ep") or 0
+            try:
+                planted_ep = int(planted_ep)
+            except (TypeError, ValueError):
+                planted_ep = 0
+            if planted_ep and (next_ep - planted_ep) >= 20:
+                content = str(seed.get("content", "?") or "?")[:60]
+                stale_seeds.append(f"  - {content} (ep{planted_ep}~ 미회수, {next_ep - planted_ep}화 경과)")
+
+        if not stale_seeds:
+            return ""
+        return f"[DB-4 장기 미회수 복선] {_DB_ADVISORY_NOTICE}\n" + "\n".join(stale_seeds[:5])
+    except Exception as seed_err:
+        _logging.debug("[DB-4] foreshadow advisory 실패 (비치명): %s", seed_err)
+        return ""
+
+
+def _build_fact_ledger_advisory(db, *, max_items: int = 10) -> str:
+    """Blueprint semantic_context용 핵심 수치 팩트 요약."""
+    if db is None:
+        return ""
+
+    try:
+        ledger = db.load_anchor("fact_ledger")
+        return summarize_fact_ledger_numbers_block(
+            ledger,
+            header="[팩트 원장 핵심 수치]",
+            max_items=max_items,
+        )
+    except Exception as fact_err:
+        _logging.debug("[TF-DB-B1] Stage3 FactLedger advisory 실패 (비치명): %s", fact_err)
+        return ""
+
+
+def _build_world_state_advisory(world_state, *, max_chars: int = 1800) -> str:
+    """Blueprint semantic_context용 compact WorldState 요약."""
+    if world_state is None or not hasattr(world_state, "get_summary"):
+        return ""
+
+    try:
+        summary = world_state.get_summary(max_chars=max_chars)
+    except Exception as ws_err:
+        _logging.debug("[CTX-P1-2] Stage3 WorldState advisory 실패 (비치명): %s", ws_err)
+        return ""
+
+    summary = str(summary or "").strip()
+    if not summary:
+        return ""
+    return "[WorldState 핵심 요약]\n" + summary
+
+
+def _build_style_guide_advisory(project, *, max_chars: int = 600) -> str:
+    """Blueprint semantic_context용 compact StyleGuide 요약."""
+    if project is None:
+        return ""
+
+    style_data = {}
+    try:
+        loader = getattr(project, "load_v20_anchor", None)
+        raw_style = loader("style_guide") if callable(loader) else None
+        if isinstance(raw_style, dict):
+            style_data = raw_style
+    except Exception as style_err:
+        _logging.debug("[QR-1] Stage3 StyleGuide 로드 실패 (비치명): %s", style_err)
+
+    bible_root = {}
+    try:
+        master_bible = getattr(project, "master_bible", None)
+        if isinstance(master_bible, dict):
+            bible_root = master_bible.get("MasterBible", master_bible)
+    except Exception:
+        bible_root = {}
+    protagonist_config = bible_root.get("protagonist_config", {}) if isinstance(bible_root, dict) else {}
+    bible_pov = str(protagonist_config.get("pov", "") or "").strip()
+
+    tone = str(style_data.get("tone", "") or "").strip()
+    pov = bible_pov or str(style_data.get("pov", "") or "").strip()
+    sentence_length = str(style_data.get("sentence_length", "") or "").strip()
+    paragraph_style = str(style_data.get("paragraph_style", "") or "").strip()
+    anti_ai_patterns = [str(item).strip() for item in (style_data.get("anti_ai_patterns") or []) if str(item).strip()]
+    forbidden_expr = [
+        str(item).strip() for item in (style_data.get("forbidden_expressions") or []) if str(item).strip()
+    ]
+
+    if not any([tone, pov, sentence_length, paragraph_style, anti_ai_patterns, forbidden_expr]):
+        return ""
+
+    lines = ["[StyleGuide 문체/anti-AI 참고]"]
+    core_bits: list[str] = []
+    if tone:
+        core_bits.append(f"톤={tone}")
+    if pov:
+        core_bits.append(f"시점={pov}")
+    if sentence_length:
+        core_bits.append(f"문장 길이={sentence_length}")
+    if paragraph_style:
+        core_bits.append(f"문단 스타일={paragraph_style}")
+    if core_bits:
+        lines.append("- " + ", ".join(core_bits))
+    if anti_ai_patterns:
+        lines.append("- anti-AI 금지: " + ", ".join(anti_ai_patterns[:6]))
+    if forbidden_expr:
+        lines.append("- 금지 표현: " + ", ".join(forbidden_expr[:5]))
+
+    return "\n".join(lines)[:max_chars]
 
 
 class Stage3Orchestrator:
@@ -728,6 +863,22 @@ class Stage3Orchestrator:
             except Exception as _ns4_err:
                 _logging.debug("[NS-4] 시간 마커 주입 실패 (비차단): %s", _ns4_err)
 
+            _world_state_advisory = _build_world_state_advisory(getattr(ctx, "world_state", None))
+            if _world_state_advisory:
+                _bp_semantic_ctx = _world_state_advisory + ("\n\n" + _bp_semantic_ctx if _bp_semantic_ctx else "")
+
+            _style_guide_advisory = _build_style_guide_advisory(getattr(ctx, "current_project", None))
+            if _style_guide_advisory:
+                _bp_semantic_ctx = _style_guide_advisory + ("\n\n" + _bp_semantic_ctx if _bp_semantic_ctx else "")
+
+            _fact_ledger_advisory = _build_fact_ledger_advisory(getattr(self.ctx.current_project, "db", None))
+            if _fact_ledger_advisory:
+                _bp_semantic_ctx = _fact_ledger_advisory + ("\n\n" + _bp_semantic_ctx if _bp_semantic_ctx else "")
+
+            _seed_advisory = _build_stale_seed_advisory(getattr(self.ctx.current_project, "db", None), working_ep)
+            if _seed_advisory:
+                _bp_semantic_ctx = _seed_advisory + ("\n\n" + _bp_semantic_ctx if _bp_semantic_ctx else "")
+
             with StageSpinner(3, f"제{working_ep}화") as _s3_spinner:
                 # [V67][S3-I5] 이전 원고 로드 — 단일 쿼리로 최적화 (N+1 → 1)
                 _prev_ms_for_bp = []
@@ -839,6 +990,7 @@ class Stage3Orchestrator:
                         _score = int(_score)
                     except (ValueError, TypeError):
                         _score = 0
+                _prompt_version = _build_stage3_prompt_version()
                 _db.save_stage_attempt(
                     stage=3,
                     verdict=str(_final_verdict),
@@ -847,6 +999,7 @@ class Stage3Orchestrator:
                     arc_num=arc_no,
                     score=_score,
                     model=str(_model) if _model else None,
+                    prompt_version=_prompt_version,
                 )
         except Exception as _sa_err:
             _logging.debug("[stage_attempts] Stage3 PASS 기록 실패 (비차단): %s", _sa_err)
@@ -1121,6 +1274,7 @@ class Stage3Orchestrator:
                         _score = int(_score)
                     except (ValueError, TypeError):
                         _score = 0
+                _prompt_version = _build_stage3_prompt_version()
                 _db.save_stage_attempt(
                     stage=3,
                     verdict=str(pipeline_result.get("final_verdict", "REJECT")),
@@ -1130,6 +1284,7 @@ class Stage3Orchestrator:
                     score=_score,
                     reject_reason=_reject_reason,
                     model=str(_model) if _model else None,
+                    prompt_version=_prompt_version,
                 )
         except Exception as _sa_err:
             _logging.debug("[stage_attempts] Stage3 REJECT 기록 실패 (비차단): %s", _sa_err)

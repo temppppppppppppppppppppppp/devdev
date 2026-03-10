@@ -71,3 +71,13 @@ def test_snapshot_and_reset_scope(tmp_path):
         assert after_reset["total_cost_usd"] == 0.0
     finally:
         MetricsCollector.reset(tmp_path / "metrics")
+
+
+def test_vertex_prefixed_model_uses_gemini_costs(tmp_path):
+    collector = MetricsCollector.reset(tmp_path / "metrics")
+    try:
+        base_cost = collector.calculate_cost("gemini-2.5-pro", input_tokens=1200, output_tokens=800)
+        vertex_cost = collector.calculate_cost("vertexai:gemini-2.5-pro", input_tokens=1200, output_tokens=800)
+        assert vertex_cost == base_cost
+    finally:
+        MetricsCollector.reset(tmp_path / "metrics")

@@ -9,6 +9,8 @@ import json
 import logging
 import re
 
+from modules.core.constants import smart_truncate
+
 logger = logging.getLogger(__name__)
 
 # 일반 명사 / 호칭 — NPC 이름 매칭에서 제외
@@ -25,7 +27,7 @@ class NpcDriftAdvisor:
         """
         self._llm_ask = llm_ask
 
-    def check(self, manuscript, npc_snapshots, *, ep_num=0, max_npcs=5):
+    def check(self, manuscript, npc_snapshots, *, ep_num=0, max_npcs=8):
         """NPC 속성 표류 검사.
 
         Args:
@@ -77,7 +79,20 @@ class NpcDriftAdvisor:
             if cnt > 0:
                 counts[name] = cnt
 
-        return sorted(counts, key=counts.get, reverse=True)
+        def _sort_key(name):
+            snap = npc_snapshots.get(name, {}) if isinstance(npc_snapshots, dict) else {}
+            recent_changed_ep = 0
+            known_attrs = snap.get("known_attrs", {}) if isinstance(snap, dict) else {}
+            if isinstance(known_attrs, dict):
+                for value in known_attrs.values():
+                    if isinstance(value, dict):
+                        try:
+                            recent_changed_ep = max(recent_changed_ep, int(value.get("changed_ep", 0) or 0))
+                        except (TypeError, ValueError):
+                            continue
+            return (counts.get(name, 0), recent_changed_ep, int(snap.get("first_seen_ep", 0) or 0))
+
+        return sorted(counts, key=_sort_key, reverse=True)
 
     def _format_snapshot_for_prompt(self, npc_snapshots, targets):
         """프롬프트용 NPC 스냅샷 텍스트 포맷."""
@@ -104,12 +119,14 @@ class NpcDriftAdvisor:
     def _llm_check_batch(self, manuscript, npc_snapshots, targets, ep_num):
         """배치 LLM 호출로 NPC 속성 표류 감지."""
         snapshot_text = self._format_snapshot_for_prompt(npc_snapshots, targets)
-        ms_snippet = manuscript[:4000]
+        ms_snippet = smart_truncate(manuscript or "", max_chars=4000, head_chars=2500)
 
         prompt = (
             "다음 NPC들의 초기 속성과 원고를 비교하여, 설명 없이 속성이 변한 경우만 지적하세요.\n"
             "검사 대상: 역할, 관계(relation_to_protag), 무장, 실력, 성격, "
-            "부상 상태(injury), 현재 위치(location), 영구 부상(permanent_injuries) 등.\n"
+            "부상 상태(injury), 현재 위치(location), 영구 부상(permanent_injuries), "
+            "지식시대(knowledge_era), 전문영역(expertise_domain), 비밀 인지(secrets_known), "
+            "이중 정체(dual_identity) 등.\n"
             "서사적 변화(성장·부상·전직 등 작중 이유가 있는 변화)는 표류가 아닙니다.\n"
             "설명 없이 속성이 바뀐 것만 지적하세요.\n\n"
             f"[NPC 초기 속성]\n{snapshot_text}\n\n"

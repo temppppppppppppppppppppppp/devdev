@@ -29,6 +29,7 @@ from enum import Enum
 from typing import Any
 
 from modules.core.constants import AIModels
+from modules.core.llm_generate import generate_content_via_router
 
 
 class ReflectionTarget(Enum):
@@ -168,8 +169,11 @@ JSON 형식으로 응답:
     def _call_llm(self, prompt: str, temperature: float = 0.3) -> str:
         """LLM 호출"""
         try:
-            response = self.client.models.generate_content(
-                model=self.model, contents=prompt, config={"temperature": temperature, "max_output_tokens": 8192}
+            response = generate_content_via_router(
+                client=self.client,
+                model=self.model,
+                contents=prompt,
+                config={"temperature": temperature, "max_output_tokens": 8192},
             )
             return response.text if response.text else ""  # [V70] None 방어
         except Exception as e:

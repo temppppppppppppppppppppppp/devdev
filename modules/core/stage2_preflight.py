@@ -6,7 +6,9 @@ import logging
 import re
 import threading
 
+from modules.core.constants import smart_truncate
 from modules.core.context_advisor import RetrievalSources
+from modules.core.fact_ledger import summarize_fact_ledger_numbers_block
 from modules.validation.threshold_helper import _threshold
 
 
@@ -190,6 +192,122 @@ class Stage2PreflightAnalysis:
             joined = joined[:budget]
             logging.info(f"[SC] stage2 budget truncation → {budget}자")
         return joined
+
+    def _build_fact_ledger_context(self, *, max_items: int = 10) -> str:
+        """Stage 2 Arc 생성기에 전달할 핵심 수치 요약."""
+        try:
+            db = getattr(getattr(self.ctx, "current_project", None), "db", None)
+            if not db:
+                return ""
+            ledger = db.load_anchor("fact_ledger")
+            return summarize_fact_ledger_numbers_block(
+                ledger,
+                header="[팩트 원장 핵심 수치]",
+                max_items=max_items,
+            )
+        except Exception as fact_err:
+            logging.debug("[TF-DB-B1] Stage2 FactLedger 요약 실패 (비치명): %s", fact_err)
+            return ""
+
+    def _build_style_guide_summary(self, *, max_chars: int = 1200) -> str:
+        """Stage 2 Analyst용 compact StyleGuide 요약."""
+        project = getattr(self.ctx, "current_project", None)
+        if project is None:
+            return ""
+
+        style_data = {}
+        try:
+            loader = getattr(project, "load_v20_anchor", None)
+            raw_style = loader("style_guide") if callable(loader) else None
+            if isinstance(raw_style, dict):
+                style_data = raw_style
+        except Exception as style_err:
+            logging.debug("[QR-1] Stage2 StyleGuide 로드 실패 (비치명): %s", style_err)
+
+        bible_root = {}
+        try:
+            master_bible = getattr(project, "master_bible", None)
+            if isinstance(master_bible, dict):
+                bible_root = master_bible.get("MasterBible", master_bible)
+        except Exception:
+            bible_root = {}
+        protagonist_config = bible_root.get("protagonist_config", {}) if isinstance(bible_root, dict) else {}
+        bible_pov = str(protagonist_config.get("pov", "") or "").strip()
+
+        tone = str(style_data.get("tone", "") or "").strip()
+        pov = bible_pov or str(style_data.get("pov", "") or "").strip()
+        sentence_length = str(style_data.get("sentence_length", "") or "").strip()
+        description_style = str(style_data.get("description_style", "") or "").strip()
+        dialogue_ratio = style_data.get("dialogue_ratio")
+        anti_ai_patterns = [str(item).strip() for item in (style_data.get("anti_ai_patterns") or []) if str(item).strip()]
+        forbidden_expr = [
+            str(item).strip() for item in (style_data.get("forbidden_expressions") or []) if str(item).strip()
+        ]
+
+        if not any([tone, pov, sentence_length, description_style, anti_ai_patterns, forbidden_expr]):
+            return ""
+
+        core_bits: list[str] = []
+        if tone:
+            core_bits.append(f"톤={tone}")
+        if pov:
+            core_bits.append(f"시점={pov}")
+        if isinstance(dialogue_ratio, (int, float)):
+            core_bits.append(f"대화 비율={dialogue_ratio:.0%}")
+        if sentence_length:
+            core_bits.append(f"문장 길이={sentence_length}")
+        if description_style:
+            core_bits.append(f"묘사={description_style}")
+
+        lines = ["[문체 가이드 요약]"]
+        if core_bits:
+            lines.append("- " + ", ".join(core_bits))
+        if anti_ai_patterns:
+            lines.append("- anti-AI 금지: " + ", ".join(anti_ai_patterns[:5]))
+        if forbidden_expr:
+            lines.append("- 금지 표현: " + ", ".join(forbidden_expr[:5]))
+
+        text = "\n".join(lines).strip()
+        return smart_truncate(text, max_chars=max_chars, head_chars=max_chars // 2)
+
+    def _build_protagonist_config_summary(self) -> str:
+        """Stage 2 enhanced_context 상단용 compact protagonist_config 요약."""
+        project = getattr(self.ctx, "current_project", None)
+        if project is None:
+            return ""
+
+        master_bible = getattr(project, "master_bible", None)
+        if not isinstance(master_bible, dict):
+            return ""
+
+        bible_root = master_bible.get("MasterBible", master_bible)
+        protagonist_config = bible_root.get("protagonist_config", {}) if isinstance(bible_root, dict) else {}
+        if not isinstance(protagonist_config, dict) or not protagonist_config:
+            return ""
+
+        world_origin = str(protagonist_config.get("world_origin", "") or "").strip()
+        incarnation_type = str(protagonist_config.get("incarnation_type", "") or "").strip()
+        pov = str(protagonist_config.get("pov", "") or "").strip()
+
+        if not any([world_origin, incarnation_type, pov]):
+            return ""
+
+        lines = ["[주인공 설정 요약]"]
+        parts = []
+        if world_origin:
+            parts.append(f"세계 출신={world_origin}")
+        if incarnation_type:
+            parts.append(f"환생 유형={incarnation_type}")
+        if pov:
+            parts.append(f"시점={pov}")
+        if parts:
+            lines.append("- " + ", ".join(parts))
+        if pov == "1인칭":
+            lines.append("- 1인칭 유지: 주인공 부재 장면/타인 내면 직서술 금지")
+        elif pov == "3인칭":
+            lines.append("- 3인칭 유지: 주인공 중심 시점, 전지적 개입 최소화")
+
+        return "\n".join(lines)
 
     def _preflight_state_setup(
         self,
@@ -475,6 +593,15 @@ class Stage2PreflightAnalysis:
         enhanced_context = last_refined_context
         if _quality_trend_block:
             enhanced_context = _quality_trend_block + enhanced_context
+        _context_headers: list[str] = []
+        _style_guide_block = self._build_style_guide_summary()
+        if _style_guide_block:
+            _context_headers.append(_style_guide_block)
+        _protagonist_block = self._build_protagonist_config_summary()
+        if _protagonist_block:
+            _context_headers.append(_protagonist_block)
+        if _context_headers:
+            enhanced_context = "\n\n".join(_context_headers) + "\n\n" + enhanced_context
         # [LM-G] 서사 구조 컨텍스트 주입 (advisory)
         _narrative_enriched = False  # [TF-3T-A] orchestrator 추적용
         try:
@@ -514,6 +641,10 @@ class Stage2PreflightAnalysis:
                     self.ctx.ui.log("      📖 [LM-G] 서사 구조 컨텍스트 주입 완료")
         except Exception as _lmg_err:
             logging.warning("[LM-G] NarrativeContextFormatter 실패 (비치명): %s", str(_lmg_err)[:80])
+
+        _fact_ledger_block = self._build_fact_ledger_context(max_items=10)
+        if _fact_ledger_block:
+            enhanced_context = _fact_ledger_block + "\n\n" + enhanced_context
 
         if constraint_block:
             enhanced_context = constraint_block + "\n" + enhanced_context
@@ -820,6 +951,9 @@ class Stage2PreflightAnalysis:
                         _audit_cb = getattr(self.ctx, "audit_event", None)
                         if callable(_audit_cb):
                             _audit_cb("s2_vector_search_failed", str(e)[:100])
+                    _fact_ledger_context = self._build_fact_ledger_context(max_items=10)
+                    if _fact_ledger_context:
+                        _s2_vector_ctx = _fact_ledger_context + ("\n\n" + _s2_vector_ctx if _s2_vector_ctx else "")
                     if _s2_vector_ctx:
                         self.ctx.ui.log(f"      🔎 [TF-38] 벡터 검색 완료 ({len(_s2_vector_ctx):,}자)")
                     # [V65] PerfTimer: Arc 생성 측정

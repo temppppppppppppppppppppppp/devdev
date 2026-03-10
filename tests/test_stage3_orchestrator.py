@@ -257,6 +257,87 @@ class TestNs4TimelineHelpers:
         assert orch._timeline_start_end_raw_equal(arc_data) is True
 
 
+class TestGenerateBlueprint:
+    @patch("modules.core.spinners.StageSpinner")
+    def test_world_state_advisory_included_in_semantic_context(self, MockSpinner, orch, app_mock):
+        spinner = MagicMock()
+        spinner.update_detail = MagicMock()
+        MockSpinner.return_value.__enter__.return_value = spinner
+        app_mock.current_project.db.get_recent_manuscripts.return_value = []
+        app_mock.world_state.get_summary.return_value = "주인공 상태=긴장, 진행 플롯=적대적 인수합병"
+
+        orch._generate_blueprint(
+            working_ep=1,
+            arc_data=app_mock.current_project.arcs[0],
+            arc_idx=0,
+            prev_blueprint=None,
+            prev_blueprints=[],
+            entity_registry={},
+            protagonist_name="장무기",
+            protagonist_config={},
+        )
+
+        semantic_context = app_mock.agents["three_phase_bp"].generate.call_args.kwargs["semantic_context"]
+        assert "[WorldState 핵심 요약]" in semantic_context
+        assert "진행 플롯=적대적 인수합병" in semantic_context
+
+    @patch("modules.core.spinners.StageSpinner")
+    def test_fact_ledger_advisory_included_in_semantic_context(self, MockSpinner, orch, app_mock):
+        spinner = MagicMock()
+        spinner.update_detail = MagicMock()
+        MockSpinner.return_value.__enter__.return_value = spinner
+        app_mock.current_project.db.get_recent_manuscripts.return_value = []
+        app_mock.current_project.db.load_anchor.side_effect = lambda key: (
+            {"numbers": {"자본금": {"value": "10억", "unit": "원", "last_ep": 12}}}
+            if key == "fact_ledger"
+            else []
+        )
+
+        orch._generate_blueprint(
+            working_ep=1,
+            arc_data=app_mock.current_project.arcs[0],
+            arc_idx=0,
+            prev_blueprint=None,
+            prev_blueprints=[],
+            entity_registry={},
+            protagonist_name="장무기",
+            protagonist_config={},
+        )
+
+        semantic_context = app_mock.agents["three_phase_bp"].generate.call_args.kwargs["semantic_context"]
+        assert "[팩트 원장 핵심 수치]" in semantic_context
+        assert "자본금" in semantic_context
+
+    @patch("modules.core.spinners.StageSpinner")
+    def test_style_guide_advisory_included_in_semantic_context(self, MockSpinner, orch, app_mock):
+        spinner = MagicMock()
+        spinner.update_detail = MagicMock()
+        MockSpinner.return_value.__enter__.return_value = spinner
+        app_mock.current_project.db.get_recent_manuscripts.return_value = []
+        app_mock.current_project.load_v20_anchor.return_value = {
+            "tone": "건조함",
+            "pov": "3인칭",
+            "sentence_length": "short",
+            "paragraph_style": "mixed",
+            "anti_ai_patterns": ["그의 눈동자가 흔들렸다"],
+        }
+
+        orch._generate_blueprint(
+            working_ep=1,
+            arc_data=app_mock.current_project.arcs[0],
+            arc_idx=0,
+            prev_blueprint=None,
+            prev_blueprints=[],
+            entity_registry={},
+            protagonist_name="장무기",
+            protagonist_config={},
+        )
+
+        semantic_context = app_mock.agents["three_phase_bp"].generate.call_args.kwargs["semantic_context"]
+        assert "[StyleGuide 문체/anti-AI 참고]" in semantic_context
+        assert "그의 눈동자가 흔들렸다" in semantic_context
+
+
 # ── Single Episode Processing ────────────────────────────────
 
 

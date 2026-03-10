@@ -313,6 +313,14 @@ ipcMain.handle("bridge:get-url", () => {
   return { wsUrl: "ws://127.0.0.1:8300/events", httpUrl: STATUS_BASE_URL };
 });
 
+ipcMain.handle("bridge:get-quality-summary", async (_, { project, lookback = 5 }) => {
+  const safeProject = String(project || "").trim();
+  const safeLookback = Number.isFinite(Number(lookback)) ? Number(lookback) : 5;
+  return bridgeFetch(
+    `/quality/summary?project=${encodeURIComponent(safeProject)}&lookback=${encodeURIComponent(String(safeLookback))}`
+  );
+});
+
 ipcMain.handle("bridge:resolve-prompt", async (_, { runId, promptId, value }) => {
   return bridgeFetch(`/run/${encodeURIComponent(runId)}/input`, {
     method: "POST",

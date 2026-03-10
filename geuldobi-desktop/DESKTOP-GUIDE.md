@@ -109,7 +109,7 @@ geuldobi-desktop/dist/
 | 단계 | 소요 시간 | 비고 |
 |------|-----------|------|
 | 내장 Python 다운로드 | 1~2분 | 캐시됨 (2회차부터 스킵) |
-| pip 패키지 설치 | 2~5분 | numpy, google-generativeai 등 |
+| pip 패키지 설치 | 2~5분 | numpy, google-genai 등 |
 | PyInstaller | 1~3분 | |
 | Electron Builder | 2~5분 | |
 | **합계** | **~15분** | 2회차부터 ~5분 |

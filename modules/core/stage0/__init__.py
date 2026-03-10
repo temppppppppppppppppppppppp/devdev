@@ -61,7 +61,7 @@ class StageZeroManager:
     # 주인공 설정 옵션
     WORLD_ORIGIN_OPTIONS = ["현대인", "원시인"]
     INCARNATION_TYPES = ["회귀자", "빙의자", "환생자", "일반"]
-    POV_OPTIONS = ["1인칭", "3인칭", "전지적"]
+    POV_OPTIONS = ["1인칭", "3인칭", "전지적", "혼합"]
 
     def __init__(self, project_path: str = None, llm_client=None):
         self.project_path = project_path

@@ -31,6 +31,7 @@ from enum import Enum
 from typing import Any
 
 from modules.core.constants import AIModels
+from modules.core.llm_generate import generate_content_via_router
 from modules.core.tactical_utils import extract_episode_tactical
 
 
@@ -163,8 +164,11 @@ JSON 형식으로:
     def _call_llm(self, prompt: str, temperature: float = 0.7) -> str:
         """LLM 호출"""
         try:
-            response = self.client.models.generate_content(
-                model=self.model, contents=prompt, config={"temperature": temperature, "max_output_tokens": 4096}
+            response = generate_content_via_router(
+                client=self.client,
+                model=self.model,
+                contents=prompt,
+                config={"temperature": temperature, "max_output_tokens": 4096},
             )
             return response.text or ""  # [V70] None 방어
         except Exception as e:
@@ -646,7 +650,8 @@ Volume 전략: {self._escape(vol_strategy[:2000] if vol_strategy else "(없음)"
 반드시 JSON만 출력하세요."""
 
         try:
-            response = self.client.models.generate_content(
+            response = generate_content_via_router(
+                client=self.client,
                 model=self.model,
                 contents=prompt,
                 config={"temperature": 0.6, "max_output_tokens": 8192, "response_mime_type": "application/json"},

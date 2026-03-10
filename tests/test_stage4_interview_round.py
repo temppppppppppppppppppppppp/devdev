@@ -117,6 +117,90 @@ class TestInterviewRoundInit:
         assert orch.interview_round is orch.interview_round
 
 
+class TestInterviewRoundHelpers:
+    def test_inherit_attempt_history_appends_previous_attempt(self):
+        ir = Stage4InterviewRound(_make_ctx())
+
+        history = ir._inherit_attempt_history(
+            {
+                "strategy": "A",
+                "score": 61,
+                "rejection_reason": "연속성 실패",
+                "reject_bucket": "constraint_violation",
+                "prior_attempts": [{"strategy": "B", "score": 48, "rejection_reason": "분량 부족"}],
+            }
+        )
+
+        assert len(history) == 2
+        assert history[-1]["strategy"] == "A"
+        assert history[-1]["reject_bucket"] == "constraint_violation"
+
+    def test_suppress_conflicting_advisories_prefers_higher_tier(self):
+        ir = Stage4InterviewRound(_make_ctx())
+        parts = [
+            "[NumericDriftAdvisor]\n- [MAJOR] '자본금': 누적 표류 의심",
+            "[TruthGate Advisory — CRITICAL 경고 시 반드시 REJECT]\n- [CRITICAL] 자본금 10억이 갑자기 100억으로 변함",
+        ]
+
+        filtered = ir._suppress_conflicting_advisories(parts)
+
+        assert len(filtered) == 1
+        assert "TruthGate" in filtered[0]
+
+    def test_build_candidate_diversity_advisory_warns_for_similar_candidates(self):
+        ir = Stage4InterviewRound(_make_ctx())
+        candidates = [
+            {"manuscript": "같은 내용이 길게 이어진다. 같은 내용이 길게 이어진다."},
+            {"manuscript": "같은 내용이 길게 이어진다! 같은 내용이 길게 이어진다."},
+            {"manuscript": "같은 내용이 길게 이어진다? 같은 내용이 길게 이어진다."},
+        ]
+
+        advisory = ir._build_candidate_diversity_advisory(candidates)
+
+        assert "후보 다양성 경고" in advisory
+        assert "가장 다른 접근" in advisory
+
+    def test_summarize_candidate_diversity_reports_pairwise_similarity(self):
+        ir = Stage4InterviewRound(_make_ctx())
+        candidates = [
+            {"manuscript": "같은 내용이 길게 이어진다. 같은 내용이 길게 이어진다."},
+            {"manuscript": "같은 내용이 길게 이어진다! 같은 내용이 길게 이어진다."},
+            {"manuscript": "전혀 다른 접근으로 새로운 장면이 열린다."},
+        ]
+
+        summary = ir._summarize_candidate_diversity(candidates, threshold=0.6)
+
+        assert summary["max_similarity"] >= 0.6
+        assert any(pair["pair"] == "A-B" for pair in summary["pairwise"])
+        assert any(pair["similarity"] < 0.5 for pair in summary["pairwise"])
+
+    def test_detect_shared_failure_warnings_when_all_candidates_share_signature(self):
+        ir = Stage4InterviewRound(_make_ctx())
+        validation_results = [
+            {"warnings": ["[Python검증-HIGH] NPC 텔레포트"], "structured_violations": []},
+            {"warnings": ["[Python검증-HIGH] NPC 텔레포트"], "structured_violations": []},
+            {"warnings": ["[Python검증-HIGH] NPC 텔레포트"], "structured_violations": []},
+        ]
+
+        warnings = ir._detect_shared_failure_warnings(validation_results)
+
+        assert warnings == ["[⚠️ 전원 동일 위반: NPC 텔레포트]"]
+
+    def test_merge_retry_advisory_feedback_appends_digest_once(self):
+        ir = Stage4InterviewRound(_make_ctx())
+        ir._last_advisory_details = [
+            "[CRITICAL · TruthGate] 마지막 장면의 수치 모순",
+            "[MAJOR · NpcDrift] 주연 NPC 말투 이탈",
+        ]
+
+        merged = ir._merge_retry_advisory_feedback("기본 피드백")
+
+        assert "[Advisory 핵심 요약 - 재시도 시 반영]" in merged
+        assert "TruthGate" in merged
+        assert "NpcDrift" in merged
+        assert ir._merge_retry_advisory_feedback(merged) == merged
+
+
 class TestInterviewRoundRun:
     def test_empty_candidates_returns_empty(self):
         ctx = _make_ctx()
@@ -166,6 +250,7 @@ class TestInterviewRoundRun:
         round_ctx = _make_round_ctx()
         round_ctx.chief_writer.generate_ensemble.return_value = [_candidate()]
         round_ctx.manuscript_validator.validate_all_candidates.return_value = [_validation_result()]
+        ir._run_advisory_chain = MagicMock(return_value=["[TruthGate Advisory] 마지막 장면 모순"])
         ctx.agents["director"].select_and_judge_ensemble.return_value = {
             "selected": "A",
             "verdict": "REJECT",
@@ -186,6 +271,7 @@ class TestInterviewRoundRun:
 
         assert result.verdict == "REJECT"
         assert result.final_manuscript is None
+        assert "[Advisory 핵심 요약 - 재시도 시 반영]" in result.previous_attempt["rejection_reason"]
 
     def test_patch_and_fallback_use_ctx_state_tracker(self):
         ctx = _make_ctx()
@@ -298,6 +384,34 @@ class TestInterviewRoundRun:
         used_context = round_ctx.consistency_validator.validate.call_args.args[1]
         assert used_context["blueprint"] == round_ctx.blueprint
         assert "integrated_scenario" in used_context["blueprint_text"]
+
+    def test_director_mandatory_context_includes_pov_block(self):
+        ctx = _make_ctx()
+        ctx.current_project.master_bible = {"MasterBible": {"protagonist_config": {"pov": "혼합"}}}
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.chief_writer.generate_ensemble.return_value = [_candidate()]
+        round_ctx.manuscript_validator.validate_all_candidates.return_value = [_validation_result()]
+        ctx.agents["director"].select_and_judge_ensemble.return_value = {
+            "selected": "A",
+            "verdict": "PASS",
+            "score": 95,
+            "selection_reason": "ok",
+            "selected_candidate": {"manuscript": "통과 원고", "title": "통과"},
+            "state_updates": {},
+        }
+
+        ir.run(
+            round_num=0,
+            stage4_spinner=MagicMock(),
+            director_feedback="",
+            previous_attempt={},
+            round_ctx=round_ctx,
+        )
+
+        director_kwargs = ctx.agents["director"].select_and_judge_ensemble.call_args.kwargs
+        assert "[작품 시점]" in director_kwargs["mandatory_context"]
+        assert "기본 POV: 혼합" in director_kwargs["mandatory_context"]
 
     def test_build_history_parser_accepts_inline_header_without_newline(self):
         ctx = _make_ctx()

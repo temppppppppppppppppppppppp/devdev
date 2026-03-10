@@ -29,7 +29,10 @@
         height: 100dvh;
         overflow: hidden;
         font-family: "Malgun Gothic", "Apple SD Gothic Neo", "Segoe UI", sans-serif;
-        background: var(--bg);
+        background:
+          radial-gradient(circle at top left, rgba(191, 219, 254, 0.45), rgba(255,255,255,0) 24%),
+          radial-gradient(circle at bottom right, rgba(251, 191, 36, 0.16), rgba(255,255,255,0) 20%),
+          var(--bg);
         color: var(--text);
       }
 
@@ -39,6 +42,9 @@
         display: grid;
         grid-template-rows: auto 1fr;
         gap: 10px;
+        background:
+          linear-gradient(180deg, rgba(255,255,255,0.28), rgba(255,255,255,0)),
+          linear-gradient(180deg, rgba(15,23,42,0.015), rgba(15,23,42,0));
       }
 
       .topbar {
@@ -46,9 +52,11 @@
         align-items: center;
         gap: 10px;
         padding: 8px 12px;
-        background: var(--surface);
+        background:
+          linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.92));
         border: 1px solid var(--line);
-        border-radius: 10px;
+        border-radius: 14px;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
       }
 
       .project-select {
@@ -92,10 +100,12 @@
       }
 
       .panel {
-        background: var(--surface);
+        background:
+          linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.94));
         border: 1px solid var(--line);
-        border-radius: 10px;
+        border-radius: 14px;
         padding: 10px;
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.045);
       }
 
       .panel-head {
@@ -109,6 +119,7 @@
       .panel-title {
         margin: 0;
         font-size: 14px;
+        letter-spacing: 0.01em;
       }
 
       .panel-sub {
@@ -174,10 +185,15 @@
       .canvas-wrap {
         position: relative;
         border: 1px solid var(--line);
-        border-radius: 10px;
+        border-radius: 14px;
         overflow: hidden;
-        background: linear-gradient(180deg, #f8fafc 0%, #dbeafe 14%, #e2e8f0 34%, #cbd5e1 100%);
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65), inset 0 -20px 36px rgba(15, 23, 42, 0.08);
+        background:
+          radial-gradient(circle at top, rgba(250, 250, 249, 0.7), rgba(255, 255, 255, 0) 28%),
+          linear-gradient(180deg, #f8fafc 0%, #dbeafe 14%, #e2e8f0 34%, #cbd5e1 100%);
+        box-shadow:
+          0 14px 30px rgba(15, 23, 42, 0.08),
+          inset 0 1px 0 rgba(255, 255, 255, 0.65),
+          inset 0 -28px 42px rgba(15, 23, 42, 0.12);
         flex: 1;
         min-height: 200px;
       }
@@ -190,6 +206,22 @@
         background:
           linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0) 22%),
           linear-gradient(180deg, rgba(15,23,42,0) 66%, rgba(15,23,42,0.12));
+        z-index: 1;
+      }
+
+      .canvas-wrap::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background:
+          repeating-linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.02) 0 1px,
+            rgba(15, 23, 42, 0.01) 1px 3px
+          ),
+          radial-gradient(circle at center, rgba(255,255,255,0) 56%, rgba(15,23,42,0.18) 100%);
+        mix-blend-mode: soft-light;
         z-index: 1;
       }
 
@@ -215,6 +247,7 @@
         opacity: 0;
         pointer-events: none;
         transition: opacity 120ms ease-out, transform 120ms ease-out;
+        z-index: 2;
       }
 
       .effect-banner.show {
@@ -262,12 +295,40 @@
       }
 
       .mission-card {
+        position: relative;
         border: 1px solid var(--line);
-        border-radius: 10px;
+        border-radius: 12px;
         background: linear-gradient(180deg, #ffffff, #f8fafc);
         padding: 10px 12px;
         min-height: 78px;
-        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
+        box-shadow: 0 10px 22px rgba(15, 23, 42, 0.04);
+        overflow: hidden;
+      }
+
+      .mission-card::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 3px;
+        background: rgba(148, 163, 184, 0.4);
+      }
+
+      #stageMissionCard::before {
+        background: rgba(59, 130, 246, 0.55);
+      }
+
+      #focusMissionCard::before {
+        background: rgba(16, 185, 129, 0.55);
+      }
+
+      #promptMissionCard::before {
+        background: rgba(245, 158, 11, 0.58);
+      }
+
+      #verdictMissionCard::before {
+        background: rgba(168, 85, 247, 0.5);
       }
 
       .mission-label {
@@ -318,6 +379,88 @@
         gap: 8px;
       }
 
+      .quality-radar-panel {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: linear-gradient(180deg, #ffffff, #f8fafc);
+        padding: 10px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+      }
+
+      .quality-radar-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .quality-radar {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .quality-signal-card {
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        border-radius: 12px;
+        background: linear-gradient(180deg, #ffffff, #f8fafc);
+        padding: 9px 10px;
+        min-height: 96px;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+
+      .quality-signal-card.is-good {
+        border-color: rgba(34, 197, 94, 0.28);
+        background: linear-gradient(180deg, rgba(240, 253, 244, 0.92), #ffffff);
+      }
+
+      .quality-signal-card.is-watch {
+        border-color: rgba(245, 158, 11, 0.3);
+        background: linear-gradient(180deg, rgba(255, 251, 235, 0.94), #ffffff);
+      }
+
+      .quality-signal-card.is-alert {
+        border-color: rgba(239, 68, 68, 0.28);
+        background: linear-gradient(180deg, rgba(254, 242, 242, 0.95), #ffffff);
+      }
+
+      .quality-signal-card.is-empty {
+        grid-column: 1 / -1;
+        min-height: 72px;
+        justify-content: center;
+      }
+
+      .quality-signal-label {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        color: var(--muted);
+        text-transform: uppercase;
+      }
+
+      .quality-signal-value {
+        font-size: 20px;
+        font-weight: 800;
+        color: var(--text);
+      }
+
+      .quality-signal-meta {
+        font-size: 11px;
+        line-height: 1.45;
+        color: var(--muted);
+      }
+
+      .quality-radar-foot {
+        font-size: 12px;
+        color: var(--muted);
+        line-height: 1.45;
+      }
+
       .pipeline-chip {
         border: 1px solid var(--line);
         border-radius: 999px;
@@ -325,7 +468,7 @@
         font-size: 11px;
         font-weight: 700;
         color: var(--muted);
-        background: #fff;
+        background: linear-gradient(180deg, #ffffff, #f8fafc);
         text-align: center;
         transition: background 120ms ease, color 120ms ease, border-color 120ms ease, transform 120ms ease;
       }
@@ -355,23 +498,25 @@
 
       .agent-card {
         border: 1px solid var(--line);
-        border-radius: 10px;
-        background: #fff;
+        border-radius: 12px;
+        background: linear-gradient(180deg, #ffffff, #f8fafc);
         padding: 9px 10px;
         min-height: 90px;
         display: flex;
         flex-direction: column;
         gap: 6px;
-        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.03);
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+        transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease, background 120ms ease;
       }
 
       .agent-card.active {
         border-color: #cbd5e1;
-        background: linear-gradient(180deg, #ffffff, #f8fafc);
+        background: linear-gradient(180deg, #ffffff, #f8fafc 54%, #eef2ff);
       }
 
       .agent-card.speaking {
-        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+        transform: translateY(-1px);
+        box-shadow: 0 14px 28px rgba(15, 23, 42, 0.1);
       }
 
       .agent-head {
@@ -404,8 +549,11 @@
       .agent-state {
         font-size: 11px;
         font-weight: 700;
-        color: var(--muted);
+        color: #334155;
         white-space: nowrap;
+        background: #eef2ff;
+        border-radius: 999px;
+        padding: 3px 7px;
       }
 
       .agent-role {
@@ -421,17 +569,23 @@
       }
 
       .agent-bubble-echo {
-        border-radius: 8px;
-        background: #f8fafc;
-        padding: 6px 8px;
+        border-radius: 10px;
+        background: linear-gradient(180deg, #f8fafc, #f1f5f9);
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        padding: 7px 9px;
         font-size: 11px;
         line-height: 1.35;
         color: var(--muted);
+        min-height: 40px;
+      }
+
+      .agent-bubble-echo.live {
+        color: #334155;
       }
 
       .live-feed {
         border: 1px dashed var(--line);
-        border-radius: 10px;
+        border-radius: 12px;
         background: linear-gradient(180deg, #ffffff, #f8fafc);
         padding: 8px 10px;
         display: flex;
@@ -453,6 +607,10 @@
         grid-template-columns: 56px minmax(0, 1fr);
         gap: 8px;
         align-items: start;
+        border-radius: 10px;
+        padding: 7px 8px;
+        background: rgba(248, 250, 252, 0.8);
+        border: 1px solid rgba(226, 232, 240, 0.8);
       }
 
       .live-event-time {
@@ -537,11 +695,11 @@
       .log-box {
         min-height: 80px;
         max-height: 160px;
-        border-radius: 10px;
+        border-radius: 12px;
         border: 1px dashed var(--line);
         padding: 10px;
         overflow: auto;
-        background: #fff;
+        background: linear-gradient(180deg, #ffffff, #f8fafc);
       }
 
       /* 로그 패널 접기/펼치기 */
@@ -1419,8 +1577,23 @@
 
         .mission-grid,
         .agent-board,
-        .pipeline-strip {
+        .pipeline-strip,
+        .quality-radar {
           grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 1280px) {
+        .agent-board {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .pipeline-strip {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .quality-radar {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
         }
       }
     </style>
@@ -1586,6 +1759,17 @@
                 </div>
               </div>
               <div class="pipeline-strip" id="pipelineStrip" aria-label="파이프라인 상태"></div>
+              <div class="quality-radar-panel" aria-label="품질 레이더">
+                <div class="quality-radar-head">
+                  <div>
+                    <span class="mission-label">Quality Radar</span>
+                    <strong class="mission-title" id="qualityRadarTitle">최근 품질 신호</strong>
+                    <span class="mission-meta" id="qualityRadarMeta">프로젝트를 선택하면 최근 5화 기준 신호를 표시합니다</span>
+                  </div>
+                </div>
+                <div class="quality-radar" id="qualityRadar"></div>
+                <div class="quality-radar-foot" id="qualityRadarFoot">신호 데이터가 아직 없습니다.</div>
+              </div>
               <div class="agent-board" id="agentBoard" aria-label="에이전트 상태"></div>
               <div class="live-feed" id="eventFeed" aria-label="실시간 주요 이벤트"></div>
             </div>
@@ -1877,6 +2061,10 @@
       const verdictSummary = document.getElementById("verdictSummary");
       const verdictMeta = document.getElementById("verdictMeta");
       const pipelineStrip = document.getElementById("pipelineStrip");
+      const qualityRadar = document.getElementById("qualityRadar");
+      const qualityRadarTitle = document.getElementById("qualityRadarTitle");
+      const qualityRadarMeta = document.getElementById("qualityRadarMeta");
+      const qualityRadarFoot = document.getElementById("qualityRadarFoot");
       const agentBoard = document.getElementById("agentBoard");
       const eventFeed = document.getElementById("eventFeed");
       const promptMissionCard = document.getElementById("promptMissionCard");
@@ -1919,6 +2107,15 @@
         lastVerdictScore: null,
         backendConnected: false,
         runStartedAt: null,
+        qualitySummary: {
+          available: false,
+          lookback: 5,
+          latest_ep: null,
+          project: null,
+          signals: {},
+          recent: [],
+          latest_ai_slop_hits: [],
+        },
       };
 
       const ACTION_META = {
@@ -2015,6 +2212,40 @@
         return text.length > limit ? text.slice(0, limit - 1) + "…" : text;
       }
 
+      function hexToRgba(hex, alpha = 1) {
+        const raw = String(hex || "#94a3b8").replace("#", "").trim();
+        const normalized = raw.length === 3
+          ? raw.split("").map((ch) => ch + ch).join("")
+          : raw.padEnd(6, "0").slice(0, 6);
+        const r = parseInt(normalized.slice(0, 2), 16);
+        const g = parseInt(normalized.slice(2, 4), 16);
+        const b = parseInt(normalized.slice(4, 6), 16);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+      }
+
+      function wrapBubbleText(text, maxChars = 14, maxLines = 2) {
+        const source = String(text || "").trim();
+        if (!source) return [];
+        const lines = [];
+        let rest = source;
+        while (rest && lines.length < maxLines) {
+          if (rest.length <= maxChars) {
+            lines.push(rest);
+            rest = "";
+            break;
+          }
+          let slice = rest.slice(0, maxChars);
+          let pivot = Math.max(slice.lastIndexOf(" "), slice.lastIndexOf("/"), slice.lastIndexOf("-"));
+          if (pivot < Math.floor(maxChars * 0.45)) pivot = maxChars;
+          lines.push(rest.slice(0, pivot).trim());
+          rest = rest.slice(pivot).trim();
+        }
+        if (rest && lines.length > 0) {
+          lines[lines.length - 1] = shortenText(`${lines[lines.length - 1]} ${rest}`.trim(), maxChars);
+        }
+        return lines.filter(Boolean);
+      }
+
       function formatDuration(ms) {
         const total = Math.max(0, Math.floor(ms / 1000));
         const minutes = String(Math.floor(total / 60)).padStart(2, "0");
@@ -2028,6 +2259,10 @@
 
       function getAgentDisplayName(agentKey) {
         return agents.find((agent) => agent.spriteKey === agentKey)?.name || agentKey || "";
+      }
+
+      function getAgentMeta(agentKey) {
+        return agents.find((agent) => agent.spriteKey === agentKey) || null;
       }
 
       function setCurrentFocus(title, detail) {
@@ -2078,6 +2313,14 @@
           const chip = document.createElement("div");
           chip.className = "pipeline-chip";
           chip.textContent = resolveActionMeta(key).title.replace("Stage ", "S");
+          const stageAccent = {
+            stage_0: "rgba(14, 165, 233, 0.14)",
+            stage_2: "rgba(16, 185, 129, 0.14)",
+            stage_3: "rgba(59, 130, 246, 0.14)",
+            stage_4: "rgba(251, 191, 36, 0.16)",
+            one_stop: "rgba(168, 85, 247, 0.14)",
+          };
+          chip.style.background = stageAccent[key] || "linear-gradient(180deg, #ffffff, #f8fafc)";
           const idx = PIPELINE_ORDER.indexOf(key);
           if (currentIndex >= 0 && idx < currentIndex) chip.classList.add("is-past");
           if (officeState.currentStage === key) {
@@ -2086,6 +2329,129 @@
           }
           pipelineStrip.appendChild(chip);
         }
+      }
+
+      const QUALITY_SIGNAL_META = {
+        ced: { label: "CED", hint: "오류 밀도", format: (value) => Number(value || 0).toFixed(2) },
+        ai_slop: { label: "AI Slop", hint: "상투어 밀도", format: (value) => Number(value || 0).toFixed(2) },
+        compression: { label: "gzip", hint: "압축 비율", format: (value) => `${(Number(value || 0) * 100).toFixed(1)}%` },
+        burstiness: { label: "Rhythm", hint: "문장 리듬", format: (value) => Number(value || 0).toFixed(1) },
+        complexity: { label: "Density", hint: "문장 밀도", format: (value) => Number(value || 0).toFixed(1) },
+      };
+
+      function renderQualityRadar() {
+        qualityRadar.innerHTML = "";
+        const summary = officeState.qualitySummary || {};
+
+        if (!projectConfig.project) {
+          qualityRadarTitle.textContent = "최근 품질 신호";
+          qualityRadarMeta.textContent = "프로젝트를 선택하면 최근 5화 기준 신호를 표시합니다";
+          qualityRadarFoot.textContent = "프로젝트가 아직 선택되지 않았습니다.";
+          const empty = document.createElement("div");
+          empty.className = "quality-signal-card is-empty";
+          empty.innerHTML = '<div class="quality-signal-label">No Project</div><div class="quality-signal-meta">PASS 원고가 쌓이면 CED, AI Slop, gzip, Rhythm, Density가 표시됩니다.</div>';
+          qualityRadar.appendChild(empty);
+          return;
+        }
+
+        const projectLabel = summary.project || projectConfig.project;
+        qualityRadarTitle.textContent = `${projectLabel} · Quality Radar`;
+
+        if (!summary.available) {
+          qualityRadarMeta.textContent = "최근 PASS 원고가 아직 없거나 신호를 불러오지 못했습니다";
+          qualityRadarFoot.textContent = "Stage 4 PASS 원고가 저장되면 이 패널이 최근 5화 기준 상대 추세를 보여줍니다.";
+          const empty = document.createElement("div");
+          empty.className = "quality-signal-card is-empty";
+          empty.innerHTML = '<div class="quality-signal-label">Signals Pending</div><div class="quality-signal-meta">신규 프로젝트이거나 아직 품질 신호가 기록되지 않았습니다.</div>';
+          qualityRadar.appendChild(empty);
+          return;
+        }
+
+        qualityRadarMeta.textContent = `ep ${summary.latest_ep || "-"} · 최근 ${summary.lookback || 5}화 median 대비 상대 위치`;
+        for (const [key, meta] of Object.entries(QUALITY_SIGNAL_META)) {
+          const stat = summary.signals?.[key] || {};
+          const card = document.createElement("div");
+          card.className = `quality-signal-card is-${stat.status || "watch"}`;
+
+          const deltaValue = Number(stat.delta || 0);
+          const trendMap = { up: "상승", down: "하강", flat: "유지" };
+          const deltaSign = deltaValue > 0 ? "+" : "";
+          const valueText = meta.format(stat.value || 0);
+          const medianText = meta.format(stat.median || 0);
+
+          card.innerHTML = `
+            <div class="quality-signal-label">${meta.label}</div>
+            <div class="quality-signal-value">${valueText}</div>
+            <div class="quality-signal-meta">${meta.hint}</div>
+            <div class="quality-signal-meta">median ${medianText}</div>
+            <div class="quality-signal-meta">${trendMap[stat.trend] || "유지"} · Δ ${deltaSign}${meta.format(deltaValue)}</div>
+          `;
+          qualityRadar.appendChild(card);
+        }
+
+        const topHits = (summary.latest_ai_slop_hits || [])
+          .slice(0, 3)
+          .map((item) => `${item.pattern}×${item.count}`)
+          .join(", ");
+        const sentenceCount = summary.latest_signal_summary?.sentence_count || 0;
+        qualityRadarFoot.textContent = topHits
+          ? `최근 상투어 hit: ${topHits} · 문장 수 ${sentenceCount}`
+          : `최근 상투어 hit 없음 · 문장 수 ${sentenceCount}`;
+      }
+
+      async function refreshQualitySummary() {
+        if (!window.geuldobiDesktop || !projectConfig.project) {
+          officeState.qualitySummary = {
+            available: false,
+            lookback: 5,
+            latest_ep: null,
+            project: projectConfig.project || null,
+            signals: {},
+            recent: [],
+            latest_ai_slop_hits: [],
+          };
+          renderQualityRadar();
+          return;
+        }
+
+        try {
+          const result = await window.geuldobiDesktop.getQualitySummary(projectConfig.project, 5);
+          if (result && result.ok) {
+            officeState.qualitySummary = {
+              available: !!result.data?.available,
+              lookback: result.data?.lookback || 5,
+              latest_ep: result.data?.latest_ep || null,
+              project: result.data?.project || projectConfig.project,
+              signals: result.data?.signals || {},
+              recent: result.data?.recent || [],
+              latest_ai_slop_hits: result.data?.latest_ai_slop_hits || [],
+              latest_signal_summary: result.data?.latest_signal_summary || {},
+            };
+          } else {
+            officeState.qualitySummary = {
+              available: false,
+              lookback: 5,
+              latest_ep: null,
+              project: projectConfig.project,
+              signals: {},
+              recent: [],
+              latest_ai_slop_hits: [],
+              latest_signal_summary: {},
+            };
+          }
+        } catch (err) {
+          officeState.qualitySummary = {
+            available: false,
+            lookback: 5,
+            latest_ep: null,
+            project: projectConfig.project,
+            signals: {},
+            recent: [],
+            latest_ai_slop_hits: [],
+            latest_signal_summary: {},
+          };
+        }
+        renderQualityRadar();
       }
 
       function renderAgentBoard() {
@@ -2097,6 +2463,14 @@
           card.className = "agent-card";
           if (activeSet.has(agent.spriteKey)) card.classList.add("active");
           if (runtime.bubbleTimer > 0) card.classList.add("speaking");
+          card.style.borderColor = activeSet.has(agent.spriteKey)
+            ? hexToRgba(agent.screenColor, runtime.bubbleTimer > 0 ? 0.6 : 0.34)
+            : hexToRgba("#94a3b8", 0.2);
+          if (runtime.bubbleTimer > 0) {
+            card.style.boxShadow = `0 14px 28px rgba(15, 23, 42, 0.1), 0 0 0 1px ${hexToRgba(agent.screenColor, 0.18)}`;
+          } else if (activeSet.has(agent.spriteKey)) {
+            card.style.boxShadow = `0 10px 24px rgba(15, 23, 42, 0.05), 0 0 0 1px ${hexToRgba(agent.screenColor, 0.12)}`;
+          }
 
           const head = document.createElement("div");
           head.className = "agent-head";
@@ -2117,6 +2491,10 @@
           const state = document.createElement("span");
           state.className = "agent-state";
           state.textContent = runtime.status;
+          state.style.background = activeSet.has(agent.spriteKey)
+            ? `linear-gradient(180deg, ${hexToRgba(agent.screenColor, 0.18)}, ${hexToRgba(agent.screenColor, 0.08)})`
+            : "#eef2ff";
+          state.style.color = activeSet.has(agent.spriteKey) ? "#1e293b" : "#475569";
 
           head.append(nameRow, state);
 
@@ -2130,7 +2508,17 @@
 
           const bubble = document.createElement("div");
           bubble.className = "agent-bubble-echo";
-          bubble.textContent = runtime.bubbleTimer > 0 ? `“${shortenText(runtime.bubbleText, 34)}”` : "최근 발화 없음";
+          const liveBubbleText = runtime.bubbleTimer > 0
+            ? runtime.bubbleText
+            : officeState.isRunning && activeSet.has(agent.spriteKey)
+              ? runtime.detail || runtime.status
+              : "";
+          bubble.textContent = liveBubbleText ? `“${shortenText(liveBubbleText, 38)}”` : "최근 발화 없음";
+          bubble.classList.toggle("live", !!liveBubbleText);
+          bubble.style.borderColor = hexToRgba(agent.screenColor, liveBubbleText ? 0.24 : 0.12);
+          bubble.style.background = liveBubbleText
+            ? `linear-gradient(180deg, ${hexToRgba(agent.screenColor, 0.12)}, rgba(248, 250, 252, 0.98))`
+            : "linear-gradient(180deg, #f8fafc, #f1f5f9)";
 
           card.append(head, role, detail, bubble);
           agentBoard.appendChild(card);
@@ -2150,6 +2538,12 @@
         for (const entry of officeState.recentEvents.slice(0, 5)) {
           const row = document.createElement("div");
           row.className = "live-event";
+          const agentMeta = entry.agent ? getAgentMeta(entry.agent) : null;
+          if (agentMeta) {
+            row.style.borderColor = hexToRgba(agentMeta.screenColor, 0.25);
+            row.style.background = `linear-gradient(180deg, ${hexToRgba(agentMeta.screenColor, 0.08)}, rgba(248, 250, 252, 0.94))`;
+            row.style.boxShadow = `inset 3px 0 0 ${hexToRgba(agentMeta.screenColor, 0.6)}`;
+          }
 
           const time = document.createElement("div");
           time.className = "live-event-time";
@@ -2529,18 +2923,100 @@
       // ─── 책상 타일 (LimeZu Theme_Sorter teacher desk) ───
       const deskTileImg = new Image();
       deskTileImg.src = "sprites/desk_full_small.png";
+      const genericDecorImg = new Image();
+      genericDecorImg.src = "sprites/dbg_sheet_Generic_01.png";
+      const libraryDecorImg = new Image();
+      libraryDecorImg.src = "sprites/dbg_sheet_Classroom_and_Library_01.png";
+      const hallDecorImg = new Image();
+      hallDecorImg.src = "sprites/dbg_sheet_Conference_Hall_01.png";
+
+      function drawAtlasSprite(img, sx, sy, sw, sh, dx, dy, dw = sw, dh = sh, alpha = 1) {
+        if (!img.complete || img.naturalWidth <= 0) return;
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh);
+        ctx.restore();
+      }
+
+      function drawOfficeDecor(time) {
+        const shimmer = 0.05 + Math.abs(Math.sin(time * 0.55)) * 0.04;
+
+        drawAtlasSprite(genericDecorImg, 438, 540, 180, 120, 34, 192, 182, 108, 0.95);
+        drawAtlasSprite(genericDecorImg, 438, 396, 180, 120, 380, 206, 154, 92, 0.92);
+        drawAtlasSprite(genericDecorImg, 393, 681, 123, 84, 262, 166, 104, 71, 0.75);
+
+        drawAtlasSprite(libraryDecorImg, 384, 354, 384, 102, 338, 94, 248, 66, 0.95);
+        drawAtlasSprite(libraryDecorImg, 144, 462, 141, 162, 20, 68, 102, 118, 0.88);
+        drawAtlasSprite(libraryDecorImg, 561, 480, 174, 114, 522, 102, 98, 64, 0.9);
+        drawAtlasSprite(genericDecorImg, 0, 0, 191, 71, 36, 30, 124, 46, 0.82);
+        drawAtlasSprite(genericDecorImg, 0, 0, 191, 71, 488, 30, 124, 46, 0.82);
+        drawAtlasSprite(hallDecorImg, 336, 414, 48, 81, 590, 136, 30, 51, 0.86);
+
+        ctx.save();
+        ctx.globalAlpha = shimmer;
+        ctx.fillStyle = "#fff7d6";
+        ctx.beginPath();
+        ctx.moveTo(24, 36);
+        ctx.lineTo(112, 36);
+        ctx.lineTo(200, 236);
+        ctx.lineTo(82, 236);
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(502, 28);
+        ctx.lineTo(620, 28);
+        ctx.lineTo(560, 218);
+        ctx.lineTo(460, 218);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+
+        ctx.fillStyle = "rgba(15, 23, 42, 0.08)";
+        ctx.fillRect(0, 162, DESIGN_W, 4);
+        ctx.fillRect(0, 300, DESIGN_W, 18);
+      }
 
       function drawOfficeBackground(time) {
+        const wallGradient = ctx.createLinearGradient(0, 0, 0, 192);
+        wallGradient.addColorStop(0, "#f7f7f4");
+        wallGradient.addColorStop(0.52, "#e6edf4");
+        wallGradient.addColorStop(1, "#d8e1ea");
+        ctx.fillStyle = wallGradient;
+        ctx.fillRect(0, 0, DESIGN_W, 176);
+
+        const floorGradient = ctx.createLinearGradient(0, 156, 0, DESIGN_H);
+        floorGradient.addColorStop(0, "#b8936a");
+        floorGradient.addColorStop(0.45, "#8f6d50");
+        floorGradient.addColorStop(1, "#6b543e");
+        ctx.fillStyle = floorGradient;
+        ctx.fillRect(0, 156, DESIGN_W, DESIGN_H - 156);
+
+        ctx.fillStyle = "rgba(255, 255, 255, 0.52)";
+        ctx.fillRect(0, 0, DESIGN_W, 18);
+        ctx.fillStyle = "rgba(15, 23, 42, 0.08)";
+        ctx.fillRect(0, 144, DESIGN_W, 10);
+        ctx.fillStyle = "rgba(15, 23, 42, 0.045)";
+        for (let x = 0; x < DESIGN_W; x += 16) {
+          ctx.fillRect(x, 156, 1, DESIGN_H - 156);
+        }
+        for (let y = 166; y < DESIGN_H; y += 18) {
+          ctx.fillRect(0, y, DESIGN_W, 1);
+        }
+
         if (officeBgImg.complete && officeBgImg.naturalWidth > 0) {
+          ctx.save();
+          ctx.globalAlpha = 0.4;
           ctx.imageSmoothingEnabled = false;
           ctx.drawImage(officeBgImg, 0, 0, DESIGN_W, DESIGN_H);
-        } else {
-          // 로딩 전 폴백
-          drawRect(0, 0, DESIGN_W, 152, "#f2ede4");
-          drawRect(0, 152, DESIGN_W, DESIGN_H - 152, "#c8af8c");
+          ctx.restore();
         }
+
+        drawOfficeDecor(time);
         ctx.fillStyle = `rgba(191, 219, 254, ${0.05 + Math.abs(Math.sin(time * 0.7)) * 0.03})`;
         ctx.fillRect(0, 0, DESIGN_W, 120);
+        ctx.fillStyle = "rgba(255, 255, 255, 0.04)";
+        ctx.fillRect(0, 0, DESIGN_W, DESIGN_H);
       }
 
       function drawWallDisplay(time) {
@@ -2631,6 +3107,27 @@
         ctx.globalAlpha = 1;
       }
 
+      function resolveAgentBubble(agentKey, runtime, isActive) {
+        if (!runtime || !isActive) return null;
+        if (runtime.bubbleTimer > 0 && runtime.bubbleText) {
+          return {
+            text: runtime.bubbleText,
+            color: runtime.bubbleColor || "#334155",
+            emphatic: true,
+          };
+        }
+        if (!officeState.isRunning) return null;
+        const fallbackText = runtime.status && !/^(대기|비활성)$/.test(runtime.status)
+          ? runtime.status
+          : runtime.detail;
+        if (!fallbackText || /이번 단계 주체가 아님|작업 요청 없음/.test(fallbackText)) return null;
+        return {
+          text: fallbackText,
+          color: runtime.bubbleColor || "#475569",
+          emphatic: false,
+        };
+      }
+
 
       // ─── 에이전트 ───
       function drawAgent(agent, index, time) {
@@ -2683,27 +3180,30 @@
         ctx.fillText(agent.name, agent.x, nameY + 11);
         ctx.textAlign = "left";
 
-        // 작업 중 자동 말풍선 (활성 에이전트만)
-        if (isActive && animate && Math.sin(time * 2 + index * 2.1) > 0.75) {
+        const liveBubble = resolveAgentBubble(agent.spriteKey, runtime, isActive);
+
+        // 작업 중 자동 말풍선 (활성 에이전트만, 지속 상태 말풍선이 없을 때)
+        if (!liveBubble && isActive && animate && Math.sin(time * 2 + index * 2.1) > 0.75) {
           const quickBubbles = ["...", "!", "~", "OK"];
           const bt = quickBubbles[(index + Math.floor(time)) % quickBubbles.length];
-          drawBubble(agent.x + 30, agent.y - 50 + bob, bt, "#475569", false);
+          drawBubble(agent.x + 30, agent.y - 50 + bob, bt, "#475569", false, { subtle: true });
         }
 
-        if (runtime && runtime.bubbleTimer > 0) {
+        if (liveBubble) {
           drawBubble(
             agent.x,
             agent.y - (agent.spriteKey === "manager" ? 64 : 70) + bob,
-            shortenText(runtime.bubbleText, 28),
-            runtime.bubbleColor || "#334155",
-            true
+            shortenText(liveBubble.text, 34),
+            liveBubble.color,
+            true,
+            { subtle: !liveBubble.emphatic }
           );
         }
         // Director 스크롤 텍스트 (분석 중 긴 텍스트 흘려보냄 — 직접 말풍선이 없을 때만)
         else if (agent.spriteKey === "director" && _directorScroll.timer > 0) {
           const line = _directorScroll.lines[_directorScroll.lineIdx] || "";
           const truncated = line.length > 28 ? line.slice(0, 26) + "…" : line;
-          drawBubble(agent.x, agent.y - 70 + bob, truncated, "#334155", true);
+          drawBubble(agent.x, agent.y - 70 + bob, truncated, "#334155", true, { subtle: true });
         }
 
         // 클릭 말풍선
@@ -2716,25 +3216,33 @@
       }
 
       // ─── 말풍선 그리기 ───
-      function drawBubble(bx, by, text, color, big) {
+      function drawBubble(bx, by, text, color, big, options = {}) {
+        const lines = wrapBubbleText(text, big ? 15 : 9, big ? 2 : 1);
+        if (lines.length === 0) return;
         ctx.font = big ? '10px "Malgun Gothic", sans-serif' : '9px monospace';
-        const tw = ctx.measureText(text).width;
-        const pw = tw + (big ? 16 : 10);
-        const ph = big ? 18 : 13;
+        const tw = Math.max(...lines.map((line) => ctx.measureText(line).width));
+        const pw = tw + (big ? 20 : 12);
+        const lineHeight = big ? 12 : 10;
+        const ph = big ? 10 + lines.length * lineHeight : 14;
         const rx = bx - pw / 2, ry = by - ph / 2;
-        // 배경
-        drawRect(rx - 1, ry - 1, pw + 2, ph + 2, "rgba(0,0,0,0.08)"); // 그림자
-        drawRect(rx, ry, pw, ph, "#ffffff");
-        drawRect(rx + 1, ry + 1, pw - 2, ph - 2, "#fafafa");
+        const accent = color || "#475569";
+        const fill = options.subtle ? "rgba(255, 255, 255, 0.88)" : "#fffdf8";
+        drawRect(rx - 2, ry + 2, pw + 4, ph + 3, "rgba(15, 23, 42, 0.12)");
+        drawRect(rx, ry, pw, ph, hexToRgba(accent, 0.18));
+        drawRect(rx + 1, ry + 1, pw - 2, ph - 2, fill);
+        drawRect(rx + 1, ry + 1, pw - 2, 2, hexToRgba(accent, options.subtle ? 0.26 : 0.38));
         // 꼬리 (아래 삼각)
         if (big) {
-          drawRect(bx - 3, ry + ph, 6, 3, "#ffffff");
-          drawRect(bx - 1, ry + ph + 3, 2, 2, "#ffffff");
+          drawRect(bx - 4, ry + ph, 8, 3, fill);
+          drawRect(bx - 2, ry + ph + 3, 4, 2, fill);
         }
         // 텍스트
         ctx.fillStyle = color;
         ctx.textAlign = "center";
-        ctx.fillText(text, bx, by + (big ? 4 : 3));
+        lines.forEach((line, index) => {
+          const textY = ry + (big ? 12 : 10) + index * lineHeight;
+          ctx.fillText(line, bx, textY);
+        });
         ctx.textAlign = "left";
       }
 
@@ -2841,10 +3349,10 @@
         }
       }
 
-      // ─── 공지 스크롤 (게임 공지 스타일 — 오른쪽→왼쪽 흘러감) ───
+      // ─── 공지 스크롤 (게임 공지 스타일 — 왼쪽→오른쪽 흘러감) ───
       const _noticeMessages = [
+        "원래 느립니다. 정상입니다.",
         "안 멈췄어요. 계속 하고 있어요.",
-        "원래 느려요. 정상입니다.",
         "AI가 열심히 쓰는 중...",
         "잠시만 기다려 주세요~",
         "LLM이 생각하고 있어요.",
@@ -2856,13 +3364,14 @@
         "화장실 다녀오셔도 됩니다.",
         "글도비가 일하는 중입니다.",
       ];
-      let _noticeX = DESIGN_W + 100;     // 현재 X 위치 (오른쪽 밖에서 시작)
+      let _noticeCursor = 0;
+      let _noticeX = DESIGN_W + 100;
       let _noticeText = "";
       let _noticeActive = false;
       let _noticeNextAt = 0;             // 다음 공지 시각 (timeMs)
-      const _NOTICE_INTERVAL = 60000;    // 1분
-      const _NOTICE_SPEED = 0.6;         // px/frame (~36px/sec)
-      const _NOTICE_Y = 50;              // 상단 영역 (캐릭터 위쪽 벽 근처)
+      const _NOTICE_INTERVAL = 24000;
+      const _NOTICE_SPEED = 0.8;
+      const _NOTICE_Y = 40;
 
       function drawNoticeScroll(timeMs) {
         if (!officeState.isRunning) {
@@ -2870,34 +3379,40 @@
           _noticeNextAt = 0;
           return;
         }
-        // 1분마다 새 공지 발동
+        ctx.font = 'bold 10px "Malgun Gothic", sans-serif';
         if (!_noticeActive && timeMs >= _noticeNextAt) {
-          _noticeText = _noticeMessages[Math.floor(Math.random() * _noticeMessages.length)];
-          _noticeX = DESIGN_W + 10;
+          _noticeText = _noticeMessages[_noticeCursor % _noticeMessages.length];
+          _noticeCursor += 1;
+          const introWidth = ctx.measureText(_noticeText).width;
+          _noticeX = -introWidth - 24;
           _noticeActive = true;
           _noticeNextAt = timeMs + _NOTICE_INTERVAL;
         }
         if (!_noticeActive) return;
 
-        // 왼쪽으로 이동
-        _noticeX -= _NOTICE_SPEED;
+        _noticeX += _NOTICE_SPEED;
 
-        // 텍스트 폭 측정 → 완전히 왼쪽 밖으로 나가면 종료
-        ctx.font = '9px "Malgun Gothic", sans-serif';
         const tw = ctx.measureText(_noticeText).width;
-        if (_noticeX < -tw - 10) {
+        if (_noticeX > DESIGN_W + 20) {
           _noticeActive = false;
           return;
         }
 
-        // 양쪽 끝 페이드
-        const fadeIn = Math.min(1, (DESIGN_W - _noticeX) / 60);
-        const fadeOut = Math.min(1, (_noticeX + tw) / 60);
-        const alpha = Math.min(fadeIn, fadeOut) * 0.45;
+        const fadeIn = Math.min(1, (_noticeX + tw) / 70);
+        const fadeOut = Math.min(1, (DESIGN_W - _noticeX) / 70);
+        const alpha = Math.min(fadeIn, fadeOut) * 0.78;
+        const railX = 20;
+        const railY = 24;
+        const railW = DESIGN_W - 40;
+        const railH = 18;
 
         ctx.save();
+        ctx.globalAlpha = 0.68;
+        drawRect(railX, railY, railW, railH, "rgba(15, 23, 42, 0.22)");
+        drawRect(railX, railY, railW, 1, "rgba(255, 255, 255, 0.18)");
+        drawRect(railX, railY + railH - 1, railW, 1, "rgba(15, 23, 42, 0.2)");
         ctx.globalAlpha = alpha;
-        ctx.fillStyle = "#cbd5e1";
+        ctx.fillStyle = "#f8fafc";
         ctx.fillText(_noticeText, _noticeX, _NOTICE_Y);
         ctx.restore();
       }
@@ -2986,13 +3501,16 @@
           if (projectSelect.value) {
             projectConfig.project = projectSelect.value;
             projectConfig.projectIndex = res.projects.indexOf(projectSelect.value) + 1;
+          } else {
+            projectConfig.project = null;
           }
+          await refreshQualitySummary();
         } catch (err) {
           console.error("Project list error:", err);
         }
       }
 
-      projectSelect.addEventListener("change", () => {
+      projectSelect.addEventListener("change", async () => {
         const name = projectSelect.value;
         if (name) {
           projectConfig.project = name;
@@ -3005,7 +3523,10 @@
           if (window.geuldobiDesktop) {
             window.geuldobiDesktop.saveSettings(settingsStore).catch(() => {});
           }
+        } else {
+          projectConfig.project = null;
         }
+        await refreshQualitySummary();
       });
 
       // ── 새 프로젝트 모달 ──
@@ -3087,6 +3608,7 @@
               agentDetail: "런타임 이벤트 스트림 수신 가능",
               significant: true,
             });
+            refreshQualitySummary();
           };
           _ws.onmessage = (event) => {
             try {
@@ -3146,6 +3668,7 @@
             _bootPhase = false;
             _autoExitAfterStage0 = false;
             stopLoop();
+            refreshQualitySummary();
             appendLog("[System] 실행 완료", null, {
               agent: "manager",
               stage: officeState.currentStage,
@@ -4224,6 +4747,7 @@
           }
         } catch (err) {
           container.innerHTML = '<div class="material-empty">로드 실패</div>';
+          appendLog(`[재료] ${folder} 목록 로드 실패: ${err.message}`);
         }
       }
 
@@ -4231,24 +4755,33 @@
         const importBibleBtn = document.getElementById("importBibleBtn");
         const importTreatmentBtn = document.getElementById("importTreatmentBtn");
 
+        async function handleMaterialImport(folder, label, containerId) {
+          if (!window.geuldobiDesktop) return;
+          try {
+            const res = await window.geuldobiDesktop.importMaterialFile(folder);
+            if (res.ok && res.imported && res.imported.length > 0) {
+              appendLog(`[재료] ${label} 추가: ${res.imported.join(", ")}`);
+              await refreshMaterialList(folder, containerId);
+              return;
+            }
+            if (res && res.message && res.message !== "cancelled") {
+              appendLog(`[재료] ${label} 추가 실패: ${res.message}`);
+            } else {
+              appendLog(`[재료] ${label} 추가 취소`);
+            }
+          } catch (err) {
+            appendLog(`[재료] ${label} 추가 오류: ${err.message}`);
+          }
+        }
+
         if (importBibleBtn) {
           importBibleBtn.addEventListener("click", async () => {
-            if (!window.geuldobiDesktop) return;
-            const res = await window.geuldobiDesktop.importMaterialFile("bible");
-            if (res.ok && res.imported) {
-              appendLog(`[재료] Bible 추가: ${res.imported.join(", ")}`);
-              refreshMaterialList("bible", "bibleFileList");
-            }
+            await handleMaterialImport("bible", "Bible", "bibleFileList");
           });
         }
         if (importTreatmentBtn) {
           importTreatmentBtn.addEventListener("click", async () => {
-            if (!window.geuldobiDesktop) return;
-            const res = await window.geuldobiDesktop.importMaterialFile("treatments");
-            if (res.ok && res.imported) {
-              appendLog(`[재료] Treatment 추가: ${res.imported.join(", ")}`);
-              refreshMaterialList("treatments", "treatmentFileList");
-            }
+            await handleMaterialImport("treatments", "Treatment", "treatmentFileList");
           });
         }
 
@@ -4297,6 +4830,7 @@
 
       renderMissionBoard();
       renderPipelineStrip();
+      renderQualityRadar();
       renderAgentBoard();
       renderEventFeed();
       setStateBadge("IDLE");

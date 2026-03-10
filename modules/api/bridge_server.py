@@ -23,20 +23,19 @@ import os
 import uuid
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
+from pathlib import Path
 
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import JSONResponse
 
 from modules.api.process_runner import MODE_B_KEYS, PROJECT_ROOT, ProcessRunner
+from modules.api.prompt_broker import PromptBroker, PromptState
 from modules.api.prompt_classifier import classify as classify_prompt
 from modules.api.risk_approval import RiskApprovalGate
 from modules.api.run_validator import RISK_KEYS, validate_run_request
+from modules.core.db_manager import DBManager
 
 logger = logging.getLogger(__name__)
-
-# ─── T5 PromptBroker ──────────────────────────────────────────────────────────
-
-from modules.api.prompt_broker import PromptBroker, PromptState
 
 # ─── seq 카운터 (전역, 단조 증가) ────────────────────────────────────────────
 _seq_iter = itertools.count(1)
@@ -117,6 +116,18 @@ def _ok(message: str = "ok") -> dict:
 
 def _err(code: str, message: str, run_id: str | None = None) -> dict:
     return {"ok": False, "run_id": run_id, "code": code, "message": message, "data": None}
+
+
+def _get_project_db_path(project_name: str) -> Path:
+    projects_root = (PROJECT_ROOT / "projects").resolve()
+    normalized = str(project_name or "").strip()
+    if not normalized:
+        raise ValueError("project is required")
+
+    candidate = (projects_root / normalized / "project_data.db").resolve()
+    if projects_root not in candidate.parents:
+        raise ValueError("invalid project path")
+    return candidate
 
 # ─── 앱 수명주기 ──────────────────────────────────────────────────────────────
 
@@ -325,6 +336,49 @@ async def status_endpoint(request: Request) -> JSONResponse:
         data["pid"] = runner.pid
 
     return JSONResponse(status_code=200, content={"ok": True, "code": "OK", "data": data})
+
+
+@app.get("/quality/summary")
+async def quality_summary_endpoint(project: str = "", lookback: int = 5) -> JSONResponse:
+    """프로젝트 최근 품질 신호 요약 조회."""
+    try:
+        db_path = _get_project_db_path(project)
+    except ValueError as exc:
+        return JSONResponse(status_code=400, content=_err("INVALID_PROJECT", str(exc)))
+
+    safe_lookback = max(1, min(int(lookback or 5), 20))
+    if not db_path.exists():
+        return JSONResponse(
+            status_code=200,
+            content={
+                "ok": True,
+                "code": "OK",
+                "data": {
+                    "project": project,
+                    "available": False,
+                    "lookback": safe_lookback,
+                    "latest_ep": None,
+                    "signals": {},
+                    "recent": [],
+                    "latest_ai_slop_hits": [],
+                },
+            },
+        )
+
+    db = DBManager(db_path)
+    try:
+        summary = db.get_quality_signal_summary(lookback=safe_lookback)
+    except Exception as exc:
+        logger.exception("quality summary failed for project=%r", project)
+        return JSONResponse(status_code=500, content=_err("INTERNAL_ERROR", str(exc)))
+    finally:
+        try:
+            db.close()
+        except Exception:
+            pass
+
+    summary["project"] = project
+    return JSONResponse(status_code=200, content={"ok": True, "code": "OK", "data": summary})
 
 # ─── WS /events ───────────────────────────────────────────────────────────────
 

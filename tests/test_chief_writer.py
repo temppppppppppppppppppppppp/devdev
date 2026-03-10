@@ -184,6 +184,22 @@ class TestChiefWriterInit:
         assert chief_writer.SINGLE_CANDIDATE_TIMEOUT > 0
         assert chief_writer.SINGLE_CANDIDATE_TIMEOUT <= chief_writer.ENSEMBLE_TIMEOUT
 
+    def test_strategy_execution_plan_uses_recent_pass_mix(self, chief_writer):
+        chief_writer.context.db.get_strategy_win_rates.return_value = {
+            "total": 10,
+            "tension": 0.6,
+            "balanced": 0.3,
+            "narrative": 0.1,
+        }
+
+        ordered, adjusted_temps, _shares = chief_writer._build_strategy_execution_plan(
+            ["balanced", "narrative", "tension"]
+        )
+
+        assert ordered[0] == "tension"
+        assert adjusted_temps["tension"] < chief_writer.ENSEMBLE_STRATEGIES["tension"]["temperature"]
+        assert adjusted_temps["narrative"] > chief_writer.ENSEMBLE_STRATEGIES["narrative"]["temperature"]
+
 
 # ══════════════════════════════════════════════════════════════
 # Test 2: _build_common_context TIER1/2/3
@@ -553,6 +569,64 @@ class TestRegenerateWithFeedback:
         )
         assert isinstance(candidates, list)
         assert len(candidates) >= 1
+
+    def test_retry_history_feedback_is_included(self, chief_writer, sample_blueprint, sample_master_bible):
+        chief_writer.generate_ensemble = MagicMock(return_value=[{"content": "ok"}])
+
+        previous_attempt = {
+            "strategy": "balanced",
+            "rejection_reason": "분량 부족",
+            "action_items": ["분량 보강"],
+            "score": 45,
+            "prior_attempts": [
+                {
+                    "reject_bucket": "constraint_violation",
+                    "error_category": "LOGIC_ERROR",
+                    "rejection_reason": "연속성 실패",
+                    "action_items": ["위치 연결 보강"],
+                    "score": 52,
+                },
+                {
+                    "reject_bucket": "constraint_violation",
+                    "error_category": "LOGIC_ERROR",
+                    "rejection_reason": "타임라인 실패",
+                    "action_items": ["시간 경과 명시"],
+                    "score": 49,
+                    "contradiction_types": ["타임라인"],
+                },
+            ],
+        }
+
+        chief_writer.regenerate_with_feedback(
+            ep_num=10,
+            blueprint=sample_blueprint,
+            prev_manuscript="",
+            hud_report="",
+            arc_doc="",
+            master_bible=sample_master_bible,
+            style_guide="",
+            director_feedback="연속성 보강",
+            previous_attempt=previous_attempt,
+            attempt_number=3,
+            genre_name="무협",
+        )
+
+        feedback = chief_writer.generate_ensemble.call_args.kwargs["director_feedback"]
+        assert "[누적 실패 히스토리" in feedback
+        assert "constraint_violation" in feedback
+        assert "공통 실패 패턴" in feedback
+
+    def test_candidate_diversity_warning_attached(self, chief_writer):
+        candidates = [
+            {"manuscript": "같은 원고 흐름이다. 같은 원고 흐름이다.", "metadata": {}},
+            {"manuscript": "같은 원고 흐름이다. 같은 원고 흐름이다!", "metadata": {}},
+            {"manuscript": "같은 원고 흐름이다? 같은 원고 흐름이다.", "metadata": {}},
+        ]
+
+        summary = chief_writer._annotate_candidate_diversity(candidates)
+
+        assert "후보 다양성 경고" in summary["warning"]
+        assert candidates[0]["metadata"]["diversity"]["max_similarity"] >= 0.7
 
 
 # ══════════════════════════════════════════════════════════════
@@ -940,6 +1014,7 @@ class TestBuildAntiTropeInstructions:
         """클리셰 경고가 포함"""
         result = chief_writer._build_anti_trope_instructions("무협")
         assert "클리셰" in result or "금지" in result
+        assert "AI 티 문장" in result
 
 
 # ══════════════════════════════════════════════════════════════

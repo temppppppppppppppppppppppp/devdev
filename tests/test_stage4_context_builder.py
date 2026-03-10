@@ -445,6 +445,69 @@ class TestPrepareEpisodeContext:
         assert "-- Tier3 arc summaries (older than 30 episodes) --" not in result["prev_manuscripts_text"]
 
 
+class TestStructuredEntityAndNpcBoundary:
+    def test_extract_blueprint_entities_merges_arc_state_changes(self):
+        ctx = _make_ctx()
+        ctx.world_state = MagicMock()
+        ctx.world_state._state = {
+            "alive_npcs": {},
+            "dead_npcs": {},
+            "active_items": {},
+            "active_plots": [],
+            "protagonist": {"location": "개봉"},
+        }
+        cb = Stage4ContextBuilder(ctx)
+
+        entities = cb._extract_blueprint_entities(
+            {"integrated_scenario": "주인공은 결심했다."},
+            arc_data={
+                "state_changes": {
+                    "npc_introductions": [{"name": "노사부"}],
+                    "items_acquired": [{"name": "청룡검"}],
+                    "active_plots": [{"plot": "사문 추적"}],
+                    "npc_movements": [{"name": "노사부", "to": "무당산"}],
+                }
+            },
+        )
+
+        assert "노사부" in entities["npcs"]
+        assert "청룡검" in entities["items"]
+        assert "사문 추적" in entities["plots"]
+        assert "무당산" in entities["locations"]
+
+    def test_build_npc_boundary_block_includes_knowledge_and_identity_fields(self):
+        ctx = _make_ctx()
+        ctx.current_project.master_bible = {
+            "MasterBible": {
+                "AssetLibrary": {
+                    "KeyNPCs": [
+                        {
+                            "name": "노사부",
+                            "knowledge_era": "선사시대",
+                            "knowledge_tags": ["부족사회", "석기"],
+                            "expertise_domain": "생존술",
+                            "secrets_known": ["회귀 비밀"],
+                            "public_facade": "떠돌이 노인",
+                            "secret_role": "숨은 수호자",
+                            "known_by": ["진우"],
+                        }
+                    ]
+                }
+            }
+        }
+        ctx.world_state = MagicMock()
+        ctx.world_state._state = {"alive_npcs": {}, "dead_npcs": {}}
+        cb = Stage4ContextBuilder(ctx)
+
+        block = cb._build_npc_boundary_block(["노사부"])
+
+        assert "[NPC 지식 범위/비밀 인지 참고]" in block
+        assert "지식시대=선사시대" in block
+        assert "전문영역=생존술" in block
+        assert "비밀인지=회귀 비밀" in block
+        assert "이중정체=공개=떠돌이 노인 / 비밀=숨은 수호자 / 인지=진우" in block
+
+
 class TestBuildMandatoryContext:
     def test_no_writer_agent_returns_empty(self):
         cb = Stage4ContextBuilder(_make_ctx())
@@ -579,6 +642,36 @@ class TestBuildMandatoryContext:
         ctx.memory.retrieve_multi_query_context.assert_called()
 
     @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")
+    def test_includes_genre_specific_state_tracker_summaries(self, *_mocks):
+        ctx = _make_ctx()
+        ctx.state_tracker = MagicMock()
+        ctx.state_tracker.get_all_summaries.return_value = {
+            "dungeon_clear": "[던전 클리어 기록]\n- 붉은 던전 (클리어 ep12)",
+            "skill_cooldown": "[스킬 쿨다운/사용 이력]\n- 연속베기 (쿨다운 2턴)",
+        }
+        cb = Stage4ContextBuilder(ctx)
+        anchor_sys = MagicMock()
+        anchor_sys.get_relevant_anchors.return_value = []
+        anchor_sys.get_critical_anchors.return_value = []
+
+        result = cb.build_mandatory_context(
+            next_ep=5,
+            arc_data={"arc_no": 1},
+            arc_tactical="전술",
+            prev_text="이전 원고 " * 30,
+            prev_ending="엔딩",
+            hud_report="HUD",
+            writer_agent=MagicMock(),
+            anchor_sys=anchor_sys,
+            s4_genre_type="hunter",
+            v50_modules_available=False,
+        )
+
+        ctx.state_tracker.get_all_summaries.assert_called_once_with(arc_no=1, genre="hunter")
+        assert "[던전 클리어 기록]" in result["mandatory_context"]
+        assert "[스킬 쿨다운/사용 이력]" in result["mandatory_context"]
+
+    @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")
     def test_uses_advisor_retrieval_plan_when_available(self, *_mocks):
         ctx = _make_ctx()
         ctx.memory = MagicMock()
@@ -655,6 +748,55 @@ class TestBuildMandatoryContext:
 
         assert sum(len(s) for s in trimmed_sections) < 2400
         assert any("[SC] Context budget:" in rec.message for rec in caplog.records)
+
+    @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="")
+    def test_build_mandatory_context_rebalances_sc_and_mc_with_headroom(self, _mock_build, caplog):
+        ctx = _make_ctx()
+        ctx.memory = MagicMock()
+        ctx.memory.retrieve_multi_query_context.return_value = "S" * 320
+        ctx.context_advisor = MagicMock()
+        ctx.context_advisor.plan_stage4_retrieval.return_value = RetrievalPlan(
+            stage="stage4",
+            episode_num=7,
+            slots=[RetrievalSlot(category="scene_context", query="scene query", source="vec_memory", priority=1)],
+            total_budget_chars=320,
+        )
+        cb = Stage4ContextBuilder(ctx)
+        anchor_sys = MagicMock()
+        anchor_sys.get_relevant_anchors.return_value = []
+        anchor_sys.get_critical_anchors.return_value = []
+
+        def threshold_side_effect(key, default=None):
+            if key == "smart_retrieval.enabled":
+                return True
+            if key == "smart_retrieval.stage4_enabled":
+                return True
+            if key == "context.vector_max_results_s4":
+                return 16
+            if key == "context.mandatory_context_max":
+                return 500
+            return default
+
+        with (
+            patch("modules.core.stage4_context_builder._threshold", side_effect=threshold_side_effect),
+            patch.object(cb, "_build_future_arc_context", return_value="M" * 420),
+            caplog.at_level("INFO"),
+        ):
+            result = cb.build_mandatory_context(
+                next_ep=7,
+                arc_data={"arc_no": 1, "ep_start": 1, "ep_count": 10},
+                arc_tactical="arc tactical",
+                prev_text="x" * 200,
+                prev_ending="ending context",
+                hud_report="HUD",
+                writer_agent=MagicMock(),
+                anchor_sys=anchor_sys,
+                s4_genre_type="wuxia",
+                v50_modules_available=False,
+            )
+
+        assert len(result["mandatory_context"]) <= 500
+        assert any("[S4:CTX] compose pre-final" in rec.message for rec in caplog.records)
 
 
 class TestBuildRoundContext:

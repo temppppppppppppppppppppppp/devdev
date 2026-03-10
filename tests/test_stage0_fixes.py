@@ -84,10 +84,11 @@ class TestPhaseB:
         assert "20000" not in src, "_generate_skeleton이 여전히 단일 20000 토큰 호출"
 
     def test_episode_bible_truncation_increased(self):
-        """에피소드 상태 추출 시 content 절삭이 6000자"""
+        """에피소드 상태 추출 시 head+tail 절삭 helper 사용."""
         src = inspect.getsource(ReverseExpander._extract_single_episode_bible)
-        assert "[:6000]" in src, "content 절삭이 6000자로 완화되지 않음"
-        assert "[:3000]" not in src, "content 절삭이 여전히 3000자"
+        assert "_EPISODE_BIBLE_MAX_CHARS" in src
+        assert "self._excerpt(" in src
+        assert "[:6000]" not in src
 
     def test_input_eof_handling(self):
         """주요 input 경로에 EOFError 처리 존재"""

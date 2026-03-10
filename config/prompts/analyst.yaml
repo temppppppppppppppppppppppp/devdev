@@ -1,6 +1,7 @@
 # [V70] Analyst 프롬프트 템플릿
 # analyst_prompts.py에서 외부화
 # 변수 플레이스홀더: {변수명} 형식 → PromptLoader.load()에서 .format_map()으로 치환
+_version: "2026-03-10-opt1"
 
 POST_STITCH_REPAIR_PROMPT: |
   [Role] 서사 무결성 용접공 (Causal Joint Welder)

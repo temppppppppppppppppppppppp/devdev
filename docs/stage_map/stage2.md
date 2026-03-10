@@ -1,138 +1,227 @@
 # Stage 2 Map
 
 ## Scope
-- Arc 설계 파이프라인을 실행한다: Preflight 상태준비 → FourPhase 생성/보강 → Pre-Director 검증 체인 → Director 전략 심사.
-- PASS된 Arc를 저장하고(anchors + txt export), Stage3/Stage4가 사용할 연속성 상태(StateTracker/ConstraintDB/요약 anchor)를 갱신한다.
-- Out of scope: Blueprint 생성(Stage3), 원고 집필(Stage4), Bible/Volume 생성(Stage0/1).
+- Define what Stage 2 is responsible for.
+  - `MasterBible.plot_roadmap`를 Arc 단위로 읽어 배치별 농축, 인과율 용접, Arc 설계, Director 심사까지 수행한다.
+  - PASS한 Arc만 `arcs` 앵커와 txt export에 저장하고, StateTracker/ConstraintDB/요약 앵커를 갱신한다.
+  - Stage 2는 권 전략(`volumes`)을 참조하지만, 비어 있어도 기본 `strategy_doc=""`로 계속 진행한다.
+  - Python 검증기들은 대부분 advisory를 조립해 Director에게 넘기고, 최종 PASS/REJECT는 Director와 QualityGate가 확정한다.
+- Out of scope:
+  - Bible/Treatment/권 전략 생성(Stage 0/1 책임).
+  - Blueprint 생성(Stage 3 책임).
+  - 원고 생성(Stage 4 책임).
+  - Arc 실패 후 자동 완전 복구. 현재 구현은 재시도와 수동 개입 분기까지가 한계다.
 
 ## Why
-- 왜 FourPhase인가? 초안-자기검증-패치 분기를 한 파이프라인으로 묶어 Stage2 초기 통과율을 높이기 위해서다.
-- 왜 앙상블/다중 검증인가? 단일 생성기 편향을 줄이고 DraftValidator·Consensus·ContinuityInspector로 실패 유형을 분해하기 위해서다.
-- 왜 Director audit을 분리했나? Python 사전검증은 빠른 필터 역할만 하고, 최종 전략/서사 판정은 Director가 맡는 주권주의를 지키기 위해서다.
-- 왜 PASS_WITH_FIX가 있나? (TF-27~34) Director가 "거의 합격이나 소수 수정 필요"를 표현할 수 있도록. fix_scope 기반 3-tier 라우팅(inplace/partial/full)으로 수정 전략을 분기한다.
-- 왜 constraint_block을 매 시도마다 초기화하나? (TF-47) retry loop 내에서 advisory 텍스트가 `+=`로 누적되면 3회 시도 시 3배 중복이 되기 때문이다.
+- 왜 Stage 2를 별도 파이프라인으로 두는가? Arc는 장기 연재에서 가장 많은 인과/연속성 결정을 담는 중간 산출물이기 때문이다.
+- 왜 배치 농축과 순차 설계를 같이 쓰는가? 전처리는 병렬로 처리하되, 실제 Arc 설계는 이전 Arc 상태를 물고 가야 하기 때문이다.
+- 왜 검증을 advisory 중심으로 돌리는가? Python이 결함 신호를 빨리 모으되, 최종 서사 판정은 Director가 하도록 주권을 남겨두기 위해서다.
+- 왜 PASS_WITH_FIX가 있는가? 거의 통과 가능한 Arc를 전면 재생성 대신 국소 수정으로 살리기 위해서다.
 
 ## Entry Points
-- Primary: `Stage2Orchestrator.stage_2_arcs_async_logic()` (`modules/core/stage2_orchestrator.py`)
+- Primary:
+  - `Stage2Orchestrator.stage_2_arcs_async_logic(target_arc_count=None)`
 - Secondary:
-  - `Stage2PreflightAnalysis._preflight_state_setup() / _preflight_arc_analysis() / _preflight_enrichment()`
+  - `Stage2PreflightAnalysis._preflight_state_setup()`
+  - `Stage2PreflightAnalysis._preflight_arc_analysis()`
+  - `Stage2PreflightAnalysis._preflight_enrichment()`
   - `Stage2ValidationPipeline.run_validation()`
   - `Stage2Finalizer.run_finalize()`
-  - Director 심사 진입: `DirectorQualityAuditor.audit_strategic_plan()`
+- Notes:
+  - Stage 2는 배치 크기 5, 농축 병렬도 5(`asyncio.Semaphore(5)`)를 사용한다.
+  - 프로그래밍 호출 시 `target_arc_count`로 상한을 줄일 수 있고, 대화형 실행은 기본 5개 Arc 범위로 안내된다.
 
 ## Inputs
 - Required:
-  - `current_project.master_bible` (없으면 `load_anchor("bible")`로 복원)
-  - `bible_root.plot_roadmap` (Arc source block)
-  - 기존 Arc 누적본 `load_anchor("arcs")` (없으면 빈 리스트)
-  - 현재 프로젝트/장르 컨텍스트(`selected_genre`, `volumes_strategy`)
+  - `current_project.master_bible`
+    - 없으면 `load_anchor("bible")`로 복원 시도
+  - `MasterBible.plot_roadmap`
+  - `current_project.db.load_anchor("arcs")`
+  - `agents["analyst"]`
+  - `agents["director"]`
 - Optional:
-  - 사용자 입력 target arc limit (`get_int_input`)
-  - StateTracker/ConstraintCompiler/ContextAdvisor/VecMemory/Optimizer/QualityDashboard
-  - `previous_attempt`(REJECT 후 패치 모드 판단용)
+  - `current_project.volumes`
+    - 없으면 `load_anchor("volumes")`, 그래도 없으면 권 전략 없이 진행
+  - `selected_genre`
+  - `StateTracker`
+  - `ConstraintCompiler`
+  - `ConstraintDB`
+  - `VecMemory` / `ContextAdvisor`
+  - `quality_dashboard`
+  - `pass_rate_monitor`
+  - `stage2_optimizer`
+  - `previous_attempt`
+    - 이전 REJECT Arc를 패치/재생성 라우팅할 때 사용
+  - 기존 원고 수
+    - `get_max_episode_from_manuscripts()`가 있으면 smart skip 경고에 사용
 
 ## Outputs
 - Files:
-  - Arc 실패 시 `logs/arc_{arc_no}_failure_report.txt` 생성
-  - Arc 저장 시 `projects/{project}/plans/arcs/arc_XXX.txt` human-readable export
+  - `plans/arcs/arc_XXX.txt`
+    - `save_v20_anchor("arcs", ...)` 경유 human-readable export
+  - `logs/arc_{arc_no}_failure_report.txt`
+    - 최종 실패 시 생성
 - DB updates:
-  - 최종 Arc 집합: `save_v20_anchor("arcs", all_refined_arcs)` → DB `anchors` 키 `arcs`
-  - Stage2 메트릭: `cost_log` (PASS/REJECT), `pass_rate_monitor`, `quality_dashboard` 기록 경유
-  - 부가 anchor: `arc_summary_{n}`, `volume_summary_{n}`, `series_summary`, `financial_registry` 등
+  - `save_v20_anchor("arcs", all_refined_arcs)`
+  - 선택적 `financial_registry`
+  - 선택적 `volume_summary_{n}`
+  - 선택적 `series_summary`
+  - `stage_attempts`
+  - `director_selections`
+  - `cost_record`
+  - Arc dependency graph (`upsert_arc_dependency`)
 - In-memory state:
-  - `all_refined_arcs`, `current_ep_start`, `current_feedback`, `director_feedback_for_fourphase`
-  - `StateTracker` 레지스트리(npc/item/plot/time/skill/financial 등) 증분 갱신
-  - `ConstraintDB.arc_states`, `cumulative_state_cache`
+  - `all_refined_arcs`
+  - `current_ep_start`
+  - `last_refined_context`
+  - `current_feedback`
+  - `director_feedback_for_fourphase`
+  - `StateTracker`
+  - `ConstraintDB.arc_states`
+  - `cumulative_state_cache`
 
 ## Dependencies
 - Internal modules:
-  - `Stage2PreflightAnalysis`, `Stage2ValidationPipeline`, `Stage2Finalizer`
-  - `FourPhaseArcGenerator`, `ArcEnsembleGenerator`, `UnifiedArcValidator`
-  - `DirectorQualityAuditor.audit_strategic_plan()`
-  - `ConstraintDB`, `StateTracker`, `ConstraintCompiler`, `SemanticPlotGuard`
-  - `NarrativeContextFormatter` (LM-G): 동기/약속/Arc스케일을 `enhanced_context`에 prepend (순수 Python, LLM/DB 없음)
-  - `CentralSchemaBuilder` (TF-45): 장르별 프롬프트 스키마 생성 (비무협 장르 오염 방지)
+  - `modules/core/stage2_orchestrator.py`
+  - `modules/core/stage2_preflight.py`
+  - `modules/core/stage2_validation_pipeline.py`
+  - `modules/core/stage2_finalizer.py`
+  - `modules/core/stage2_context.py`
+  - `modules/core/constraint_db.py`
+  - `modules/domain/agents/state_tracker.py`
+  - `modules/domain/agents/four_phase_arc_generator.py`
+  - `modules/core/context_advisor.py`
+  - `modules/core/project_manager.py`
 - External services/models:
-  - Analyst/Weaver/FourPhase/Director LLM 호출 경로
-  - VecMemory 검색 경로(`retrieve_high_res_context` 또는 advisor plan 기반 multi-query)
-  - Smart Context Retrieval (SC-0~6): `ContextAdvisor`가 RetrievalPlan 기반 multi-query 실행
+  - Analyst
+    - block 농축
+    - lack report
+    - joint stitch
+  - Weaver
+    - `generate_arc_drive()`
+  - Preflight agent
+    - 누적 Arc 분석
+  - FourPhase
+    - `generate()`
+    - `_inplace_patch_arc()`
+    - `patch_arc_with_feedback()`
+  - Director
+    - `audit_strategic_plan()`
+    - 요약 생성용 `ask()`
+  - optional Consensus / SelfReflector / ContinuityInspector / VecMemory
 
 ## State and Cache
 - Persistent state:
-  - Arc SSOT: `anchors["arcs"]` (list of Arc dict)
-  - Arc txt는 export 전용(참조용), 복구 기준은 DB anchor
+  - Arc SSOT는 `anchors["arcs"]`다.
+  - `plans/arcs/*.txt`는 export 전용이다.
 - Runtime cache:
-  - `self.ctx.cumulative_state_cache` / `cumulative_state_cache_key`
-  - Preflight 병렬 계산 캐시(`cached_preflight_result`, `cached_preflight_injection`)
-  - Patch 모드 입력 캐시(`_previous_attempt`)
-  - FourPhase 내부 캐시/patch fallback state (`pipeline_result`, spare candidates)
+  - `cumulative_state_cache`
+  - `cumulative_state_cache_key`
+  - `_cached_preflight_result`
+  - `_cached_preflight_injection`
+  - `_previous_attempt`
+  - `last_refined_context`
 - Invalidation rules:
-  - Arc PASS 후 `cumulative_state_cache`/key 초기화
-  - `state_extractor.invalidate_cache(global_arc_no)`로 동일 Arc 재생성 시 스탈 캐시 제거
-  - Arc DB 저장 실패/Director REJECT 시 `st_snapshot` 기반 StateTracker 롤백
+  - Arc PASS 후 `cumulative_state_cache`와 key를 비운다.
+  - 동일 Arc 재시도/다음 시도 시 `state_extractor.invalidate_cache(global_arc_no)`를 호출한다.
+  - DB 커밋 실패나 Director REJECT 시 `st_snapshot`으로 StateTracker를 롤백한다.
+  - retry 루프에서는 `_base_constraint_block`을 저장해 매 시도마다 constraint/advisory 누적을 막는다.
 
 ## Failure and Recovery
 - Common failure patterns:
-  - enrich 병렬 실패/데이터 타입 오류/농축 결과 공백
-  - FourPhase 생성 실패 또는 Pre-Director 검증(Flow Guard, Duplicate Guard, Draft/Consensus, continuity) REJECT
-  - Director REJECT 또는 PASS 후 QualityGate 미달(`score < 90`)
-  - Arc 저장 커밋 실패(`safe_commit_async` False/예외)
+  - 농축 결과 예외 또는 타입 오류
+  - FourPhase 생성 실패
+  - malformed `refined_arc` / `enriched_block`
+  - Director REJECT
+  - PASS이지만 `quality_gate_score` 미달
+  - DB 커밋 실패
 - Recovery flow:
-  - 외부 재시도 루프: `retry.analyst_max_attempts` (기본 5)
-  - FourPhase 내부 재시도: `generate(..., max_internal_retries=4)`
-  - REJECT 점수 `>= PatchModeThresholds.REWRITE(50)`이면 다음 시도에서 패치 모드 후보 활성화
-  - 커밋 실패 시 DB rollback + `all_refined_arcs.pop()` + StateTracker 롤백 후 retry
-  - **PASS_WITH_FIX** (TF-27~34): Director가 fix_scope 지정 → inplace면 LLM 1회 국소 수정 + 재심사(최대 3회), partial/full이면 REJECT → retry 경로 위임
+  - 배치 농축은 `asyncio.gather()` 후 실패 항목만 순차 재시도한다.
+  - Arc 시도 횟수는 `retry.analyst_max_attempts`를 따른다.
+    - 현재 `validation.yaml` 기준 `10`
+  - FourPhase 전면 생성은 `max_internal_retries=9`로 호출된다.
+  - retry 시 `Focus Mode`가 활성화되어 컨텍스트를 축소하되 `constraint_block`과 preflight injection은 보존한다.
+  - Flow Guard / Duplicate Guard / Consensus / DraftValidator / ContinuityInspector의 의미적 실패는 주로 Python advisory로 변환되어 Director에 전달된다.
+  - malformed 데이터나 필수 구조 붕괴는 Director 전 `retry`로 되돌린다.
+  - Director PASS 후 저장 실패 시 DB rollback + `all_refined_arcs.pop()` + StateTracker 롤백을 수행한다.
+- PASS_WITH_FIX behavior:
+  - Director가 `PASS_WITH_FIX`를 반환하면 최대 3회까지 in-place patch + 재심사를 수행한다.
+  - `fix_scope`가 `partial`/`full`이면 inplace를 포기하고 retry 경로로 위임한다.
+  - `PASS_WITH_FIX`는 Director 주권 존중을 위해 최초 진입 시 QualityGate를 바로 적용하지 않는다.
+- QualityGate behavior:
+  - `PASS`이고 `tactical_doc >= 1500자`인데 `score < scoring.quality_gate_score`면 REJECT로 전환한다.
+  - 현재 `validation.yaml` 기준 `quality_gate_score = 90`
 - Fallback behavior:
-  - 패치 실패 시 전면 재생성 폴백
-  - 배치 Arc 최종 실패 시 사용자 선택(건너뛰기/중단/자동 재시도/수동 개입) 지원
-  - API quota 패턴 감지 시(Draft+Consensus PASS) Director REJECT를 PASS override
-- **constraint_block 초기화** (TF-47): while loop 진입 전 `_base_constraint_block` 저장, 매 시도마다 원본으로 초기화하여 advisory 누적 방지
+  - Stage 1 스킵 시 `default_vol_strategy = {"vol_no": vol_no, "strategy_doc": ""}`
+  - Smart retrieval advisor 실패 시 legacy vector retrieval로 폴백
+  - Patch 실패 시 full rewrite로 폴백
 
 ## Manual Intervention Points
 - User prompts:
   - 시작 시 target arc limit 입력
-  - Arc 최종 실패 시 `1=skip, 2=stop, 3=retry, 4=manual`
-  - 세션 종료 시 Enter 입력
+  - 최종 실패 시
+    - `1`: 건너뛰고 계속
+    - `2`: 중단
+    - `3`: 다시 하기
+    - `4`: 수동 개입
+  - 수동 개입 후
+    - `[Enter]`: 재시도
+    - `skip`: 건너뛰기
+    - `quit`: 중단
 - Approvals:
-  - Director `audit_strategic_plan` PASS가 최종 승인(단, QualityGate/저장 실패 시 재시도)
+  - 최종 PASS는 Director 심사와 후행 QualityGate를 통과해야 확정된다.
 - Operator checks:
-  - 실패 리포트 파일(`arc_{n}_failure_report.txt`) 기반 수동 수정 후 재시도 가능
+  - `logs/arc_{n}_failure_report.txt`
+  - 배치별 농축/용접/설계 로그
+  - `plans/arcs/arc_XXX.txt` export
 
 ## Metrics
 - Throughput:
-  - Arc 단위 PASS/REJECT 기록 (`pass_rate_monitor.record_attempt(stage=2, arc=...)`)
+  - `pass_rate_monitor.record_attempt(stage=2, ...)`
+  - 배치별 완료 Arc 수
 - Error rate:
-  - `quality_dashboard.record_validation(stage=2)` + `stage_rejection_history`
-- Latency:
-  - `perf_timer`(preflight/generate/director), Arc 단위 `cost_log` 스냅샷
+  - `quality_dashboard.record_validation(stage=2, ...)`
+  - `stage_rejection_history`
+  - `stage_attempts`
+- Latency / cost:
+  - `perf_timer`
+  - `save_cost_record(scope_type="arc")`
+  - Director/Preflight/Generation 구간 타이머
 
 ## Tests
 - Unit:
-  - `tests/test_stage2_validation_pipeline.py`
   - `tests/test_stage2_preflight.py`
   - `tests/test_stage2_preflight_helpers.py`
+  - `tests/test_stage2_validation_pipeline.py`
   - `tests/test_stage2_finalizer.py`
+  - `tests/test_stage2_context.py`
   - `tests/test_four_phase_arc_generator.py`
-  - `tests/test_arc_draft_validator.py`
   - `tests/test_arc_patch_mode.py`
+  - `tests/test_arc_draft_validator.py`
 - Integration:
   - `tests/test_stage2_pipeline.py`
-  - `tests/test_stage2_context.py`
   - `tests/test_stage2_patch_integration.py`
-  - `tests/e2e/test_l3_stage2_realproject.py`
+  - `tests/test_director_continuity_sc5.py`
+  - `tests/test_sc6_observability.py`
 - Regression:
   - `tests/test_stage2_optimizer.py`
-  - `tests/test_arc_difficulty.py`
   - `tests/test_stage234_fixes.py`
+  - `tests/e2e/test_l3_stage2_realproject.py`
 
 ## Open Risks
-- Risk 1: Stage2 패치 진입 조건이 `PatchModeThresholds.REWRITE`(50) 기준으로 연결되어 `patch_below`(80) 설정 의미와 괴리가 있다.
-- Risk 2: 실패 처리 구간의 `input()` 기반 분기(수동 선택)는 비대화형/자동화 실행에서 운영 중단 지점이 될 수 있다.
+- Risk 1:
+  - retry 실제 상한은 `validation.yaml`의 `retry.analyst_max_attempts`를 따르지만, 일부 UI 로그는 `RetryLimits.ANALYST_MAX_ATTEMPTS`를 사용한다. 지금은 둘 다 10이지만 추후 드리프트 위험이 있다.
+- Risk 2:
+  - 최종 실패 후 `input()` 기반 수동 분기가 있어 비대화형 실행이나 자동 운영에서 중단 지점이 된다.
+- Risk 3:
+  - 의미적 검증기 상당수가 advisory-only다. Director 품질이 흔들리면 Python이 잡은 문제를 통과시킬 수 있다.
+- Risk 4:
+  - `volume_summary_{n}` / `series_summary`는 `arc_summary_{i}` 앵커와 Director 요약 호출에 의존한다. 요약 앵커가 비어 있으면 계층 요약이 약해진다.
+- Risk 5:
+  - `PASS_WITH_FIX` 소진 후에도 마지막 상태가 `PASS_WITH_FIX`이면 patched arc를 채택하는 경로가 있다. Director 주권 보존 의도는 명확하지만 운영 해석이 까다롭다.
 
 ## Last Verified
-- Date: 2026-03-02
-- Commit: `8476bc2`
+- Date: 2026-03-10
+- Commit: `d2d935b`
 - Code Sync (Yes/No): Yes
-- Verified By: Opus
-
+- Verified By: Codex
