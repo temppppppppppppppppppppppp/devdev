@@ -1,7 +1,8 @@
-"""
+﻿"""
 [B-1-3] Stage4 Interview Round — 단일 면담 라운드 실행.
 """
 
+import json
 import logging
 import time
 
@@ -119,6 +120,72 @@ class Stage4InterviewRound:
         if total < _min_samples:
             return None
         return round(pass_cnt / total * 100, 1)
+
+    @staticmethod
+    def _normalize_scope_summary(summary: dict | None) -> dict:
+        payload = summary if isinstance(summary, dict) else {}
+        breakdown = payload.get("model_breakdown", {})
+        if isinstance(breakdown, str):
+            try:
+                breakdown = json.loads(breakdown)
+            except (TypeError, ValueError, json.JSONDecodeError):
+                breakdown = {}
+        if not isinstance(breakdown, dict):
+            breakdown = {}
+        return {
+            "total_calls": int(payload.get("total_calls", 0) or 0),
+            "total_tokens": int(payload.get("total_tokens", 0) or 0),
+            "total_cost_usd": float(payload.get("total_cost_usd", 0.0) or 0.0),
+            "model_breakdown": dict(breakdown),
+        }
+
+    def _peek_round_scope_summary(self) -> dict:
+        try:
+            from modules.core.metrics_collector import get_metrics_collector
+
+            collector = get_metrics_collector()
+            if collector is None or not hasattr(collector, "peek_scope"):
+                return self._normalize_scope_summary({})
+            return self._normalize_scope_summary(collector.peek_scope())
+        except Exception as exc:
+            logging.debug("[Stage4] round scope peek 실패 (비차단): %s", exc)
+            return self._normalize_scope_summary({})
+
+    def _capture_round_metrics_baseline(self) -> None:
+        self._round_metrics_start = self._peek_round_scope_summary()
+
+    def _get_round_metrics_delta(self) -> dict:
+        start = self._normalize_scope_summary(getattr(self, "_round_metrics_start", {}))
+        current = self._peek_round_scope_summary()
+        delta_breakdown: dict[str, dict[str, float]] = {}
+        model_names = set(start["model_breakdown"].keys()) | set(current["model_breakdown"].keys())
+        for model_name in model_names:
+            current_row = current["model_breakdown"].get(model_name, {}) or {}
+            start_row = start["model_breakdown"].get(model_name, {}) or {}
+            tokens = int(current_row.get("tokens", 0) or 0) - int(start_row.get("tokens", 0) or 0)
+            cost = float(current_row.get("cost", 0.0) or 0.0) - float(start_row.get("cost", 0.0) or 0.0)
+            if tokens or cost:
+                delta_breakdown[model_name] = {"tokens": max(0, tokens), "cost": max(0.0, cost)}
+        return {
+            "total_calls": max(0, current["total_calls"] - start["total_calls"]),
+            "total_tokens": max(0, current["total_tokens"] - start["total_tokens"]),
+            "total_cost_usd": max(0.0, current["total_cost_usd"] - start["total_cost_usd"]),
+            "model_breakdown": delta_breakdown,
+        }
+
+    @staticmethod
+    def _classify_reject_bucket(*, director_feedback: str, feedback, action_items: list | None) -> str:
+        issues = feedback.get("issues", []) if isinstance(feedback, dict) else []
+        reject_text = f"{director_feedback}\n" + "\n".join(str(item) for item in (action_items or issues or []))
+        reject_lower = reject_text.lower()
+        if any(
+            key in reject_lower
+            for key in ("constraint", "consistency", "conflict", "contradiction", "logic", "validation", "continuity")
+        ):
+            return "constraint_violation"
+        if any(key in reject_lower for key in ("structure", "structural", "flow", "outline", "pacing", "rewrite")):
+            return "structure_error"
+        return "quality_issue"
 
     def _resolve_director_protagonist_name(self, genre_name: str = "") -> str:
         try:
@@ -970,6 +1037,9 @@ class Stage4InterviewRound:
         self._round_start_ts = time.monotonic()
         self._last_advisory_summary = {}
         self._last_advisory_details = []
+        self._last_strategy_budget = "full"
+        self._last_strategy_count = 0
+        self._capture_round_metrics_baseline()
 
         # [4-R2-b] Unpack round context
         chief_writer = round_ctx.chief_writer
@@ -1439,7 +1509,9 @@ class Stage4InterviewRound:
             score = int(score)
         except (ValueError, TypeError):
             score = 0
-        reason = director_result.get("selection_reason") or ""
+        selection_reason = director_result.get("selection_reason") or ""
+        verdict_reason = director_result.get("verdict_reason") or selection_reason or ""
+        reason = verdict_reason
         error_category = director_result.get("error_category", "")  # [V75-B]
 
         self.ctx.ui.log(f"   📊 Director 판정: {verdict} (점수: {score}, 선택: 후보 {selected})")
@@ -1479,11 +1551,13 @@ class Stage4InterviewRound:
 
         # [D-4] Director 선택 기록 (비차단)
         try:
-            _selection_reason = reason
+            _selection_reason = selection_reason
             if _is_patch:
                 _tag = "patch-fallback" if _is_patch_fallback else "patch"
                 _selection_reason = (
-                    f"[{_tag}|score={_prev_score}] {reason}" if reason else f"[{_tag}|score={_prev_score}]"
+                    f"[{_tag}|score={_prev_score}] {selection_reason}"
+                    if selection_reason
+                    else f"[{_tag}|score={_prev_score}]"
                 )
             _sel_candidate = director_result.get("selected_candidate", {})
             if not isinstance(_sel_candidate, dict):
@@ -1501,11 +1575,24 @@ class Stage4InterviewRound:
                 candidate_count=len(candidates) if candidates else 0,
                 fix_scope=director_result.get("fix_scope", ""),  # [A-3]
                 advisory_warnings=_advisory_summary or None,
+                verdict_reason=verdict_reason,
+                pre_firewall_score=director_result.get("pre_firewall_score", score),
+                firewall_triggered=bool(director_result.get("firewall_triggered")),
+                firewall_reason=director_result.get("firewall_reason", ""),
             )
         except Exception as e:
             logging.warning(f"[D-4] Director 선택 기록 실패 (비차단): {e!s:.100}")
 
         # [V76] 라운드별 생산 로그 (JSONL)
+        _feedback_payload = director_result.get("feedback") or {}
+        _action_items_payload = director_result.get("action_items") or []
+        _log_reject_bucket = str((previous_attempt or {}).get("reject_bucket", "") or "")
+        if verdict not in ("PASS", "PASS_WITH_FIX") and not _log_reject_bucket:
+            _log_reject_bucket = self._classify_reject_bucket(
+                director_feedback=director_feedback,
+                feedback=_feedback_payload,
+                action_items=_action_items_payload,
+            )
         self._append_episode_log(
             ep_num=next_ep,
             round_num=round_num,
@@ -1516,6 +1603,7 @@ class Stage4InterviewRound:
             mad_used=_mad_used,
             asp_used=bool(_asp_manuscript),
             model=getattr(chief_writer, "model_tier", None),
+            reject_bucket=_log_reject_bucket,
             validation_warnings=[w for vr in validation_results for w in vr.get("warnings", [])][:20],  # [TF-46] 10→20
         )
 
@@ -2058,16 +2146,26 @@ class Stage4InterviewRound:
             error_category = "LOGIC_ERROR"
             director_feedback += "\n" + "\n".join(_post_select_conflicts)
             # [P0-D3] 다운그레이드 시 previous_attempt 갱신 — 다음 라운드 패치 모드용
+            _fix_scope = director_result.get("fix_scope", "") if isinstance(director_result, dict) else ""
+            _sel_candidate = director_result.get("selected_candidate") or {}
+            if not isinstance(_sel_candidate, dict):
+                _sel_candidate = {}
+            _sel_strategy_key = _sel_candidate.get("strategy", "") or _sel_candidate.get("strategy_name", "")
+            _selection_reason = director_result.get("selection_reason", "") if isinstance(director_result, dict) else ""
+            _verdict_reason = director_result.get("verdict_reason", "") if isinstance(director_result, dict) else ""
+            _post_select_fix_scope = _fix_scope if _fix_scope == "full" else "partial"
             previous_attempt = {
                 "best_manuscript": final_manuscript,
                 "state_updates": final_state_updates,
                 "score": score,
                 # [TF-36] S4-005: fix_scope/rejection_reason/selected_strategy 보존
-                "fix_scope": director_result.get("fix_scope", "") if isinstance(director_result, dict) else "",
+                "fix_scope": _post_select_fix_scope,
                 "rejection_reason": director_feedback,
-                "selected_strategy": director_result.get("selected_strategy", "")
-                if isinstance(director_result, dict)
-                else "",
+                "selected_strategy": director_result.get("selected_strategy", "") if isinstance(director_result, dict) else "",
+                "selected_strategy_key": _sel_strategy_key,
+                "selection_reason": _selection_reason,
+                "verdict_reason": _verdict_reason,
+                "reject_bucket": "post_select_conflict",
                 "open_review": director_result.get("open_review", "")
                 if isinstance(director_result, dict)
                 else "",  # [TF-29]
@@ -2145,6 +2243,17 @@ class Stage4InterviewRound:
             if not _patched_ms or len(_patched_ms) < _min_patch_len:
                 logging.warning("[TF-32-V] patch 결과 부족 (len=%d < %d)", len(_patched_ms or ""), _min_patch_len)
                 break
+
+            # [TF-IPG GAP-3] 원본 대비 축소 guard — 70% 미만이면 patch 폐기, 원본 유지
+            _min_preserve = float(_threshold("patch_mode.inplace_min_preserve_ratio", 0.70))
+            if len(_current_ms) > 0 and len(_patched_ms) < len(_current_ms) * _min_preserve:
+                logging.warning(
+                    "[TF-IPG] patch 축소 감지: %d자 → %d자 (%.0f%%, 하한 %.0f%%) → patch 폐기",
+                    len(_current_ms), len(_patched_ms),
+                    len(_patched_ms) / len(_current_ms) * 100, _min_preserve * 100,
+                )
+                break
+
             _last_patched_ms = _patched_ms  # [PF-3] 패치본 추적
 
             # [InPlace-Diff] 패치 전후 diff 로깅
@@ -2497,13 +2606,11 @@ class Stage4InterviewRound:
                 _prev_text = " / ".join(_prev_general_lines)[:500]
                 director_feedback += f"\n[R{round_num - 1} 이전 지시] {_prev_text}"
             director_feedback = self._merge_retry_advisory_feedback(director_feedback)
-            _reject_text = f"{director_feedback}\n" + "\n".join(str(a) for a in action_items)
-            _reject_lower = _reject_text.lower()
-            _reject_bucket = "quality_issue"
-            if any(k in _reject_lower for k in ("constraint", "제약", "충돌", "금지", "모순", "consistency", "검증")):
-                _reject_bucket = "constraint_violation"
-            elif any(k in _reject_lower for k in ("구조", "structure", "흐름", "flow", "씬", "전개", "페이싱")):
-                _reject_bucket = "structure_error"
+            _reject_bucket = self._classify_reject_bucket(
+                director_feedback=director_feedback,
+                feedback=feedback,
+                action_items=action_items,
+            )
 
             _seed_manuscript = (director_result.get("selected_candidate") or {}).get(
                 "manuscript", ""
@@ -2667,8 +2774,8 @@ class Stage4InterviewRound:
         style_guide,
         blueprint,
         common_writer_kwargs: dict,
-    ) -> tuple[list[dict], bool, bool, int]:
-        """[B-1-3b] 3-branch 후보 생성. Returns (candidates, is_patch, is_patch_fallback, prev_score)."""
+    ) -> tuple[list[dict], bool, bool, int, str | None]:
+        """[B-1-3b] 3-branch 후보 생성. Returns (candidates, is_patch, is_patch_fallback, prev_score, asp_manuscript)."""
         from modules.core.constants import PatchModeThresholds
         from modules.core.stage4_types import _PATCH_REWRITE_THRESHOLD
         from modules.validation.threshold_helper import _threshold
@@ -2678,8 +2785,25 @@ class Stage4InterviewRound:
         _prev_score = 0
         _common_writer_kwargs = common_writer_kwargs
         _prev_manuscript = prev_manuscript
+        self._last_strategy_budget = "full"
+        self._last_strategy_count = 0
+
+        def _build_regenerate_kwargs(
+            *,
+            reject_bucket: str,
+            fix_scope: str,
+            selected_strategy_key: str,
+        ) -> tuple[dict, str, int]:
+            regen_kwargs = dict(_common_writer_kwargs)
+            if reject_bucket in {"quality_issue", "constraint_violation"} and fix_scope != "full":
+                regen_kwargs["strategy_budget"] = "reduced"
+                regen_kwargs["preferred_strategy"] = selected_strategy_key
+                return regen_kwargs, "reduced", 2
+            return regen_kwargs, "full", 3
 
         if round_num == 0:
+            self._last_strategy_budget = "full"
+            self._last_strategy_count = 3
             candidates = chief_writer.generate_ensemble(**_common_writer_kwargs)
         else:
             # [TF-23] 3단계 분기: InPlace → Patch → Rewrite (Director 판단 우선)
@@ -2688,20 +2812,37 @@ class Stage4InterviewRound:
             except (ValueError, TypeError):
                 _prev_score = 0
             _fix_scope = previous_attempt.get("fix_scope", "") if previous_attempt else ""
+            _reject_bucket = str(previous_attempt.get("reject_bucket", "") or "") if previous_attempt else ""
+            _selected_strategy_key = (
+                str(previous_attempt.get("selected_strategy_key", "") or previous_attempt.get("selected_strategy", ""))
+                if previous_attempt
+                else ""
+            )
             _patch_enabled = bool(_threshold("feature_flags.enable_patch_mode", True))
+            _force_patch = (
+                _patch_enabled
+                and _prev_manuscript
+                and _reject_bucket == "post_select_conflict"
+                and _fix_scope != "full"
+                and round_num <= 1
+            )
 
             # [TF-23] Director 판단 우선, 점수 fallback
             _use_inplace = (
                 _patch_enabled
                 and _prev_manuscript
+                and not _force_patch
                 and (_fix_scope == "inplace" or (not _fix_scope and _prev_score >= PatchModeThresholds.INPLACE))
             )
             _use_patch = (
-                _patch_enabled
-                and _prev_manuscript
-                and (
-                    _fix_scope in ("inplace", "partial")  # inplace 실패 시 patch 폴백
-                    or (not _fix_scope and _prev_score >= _PATCH_REWRITE_THRESHOLD)
+                _force_patch
+                or (
+                    _patch_enabled
+                    and _prev_manuscript
+                    and (
+                        _fix_scope in ("inplace", "partial")  # inplace 실패 시 patch 폴백
+                        or (not _fix_scope and _prev_score >= _PATCH_REWRITE_THRESHOLD)
+                    )
                 )
             )
 
@@ -2717,6 +2858,8 @@ class Stage4InterviewRound:
             if _use_inplace:
                 logging.info(f"[TF-23] InPlace 진입 (fix_scope={_fix_scope!r}, score={_prev_score})")
                 self.ctx.ui.log(f"   🔧 [TF-23] InPlace: fix_scope={_fix_scope!r}, score={_prev_score}")
+                self._last_strategy_budget = "inplace"
+                self._last_strategy_count = 1
                 candidates = chief_writer.inplace_patch(
                     original_manuscript=_prev_manuscript,
                     director_feedback=director_feedback,
@@ -2729,12 +2872,31 @@ class Stage4InterviewRound:
                     self.ctx.ui.log("   ⚠️ [TF-23] InPlace 실패 → Patch 폴백")
                     candidates = None  # 폴백 트리거
                     _use_inplace = False  # 폴백
+                # [TF-IPG GAP-2] REJECT retry 경로에서도 min_patched_length + 축소 guard
+                elif candidates and _prev_manuscript:
+                    _ip_ms = candidates[0].get("manuscript", "")
+                    _ip_min = int(_threshold("patch_mode.min_patched_length", 2000))
+                    _ip_preserve = float(_threshold("patch_mode.inplace_min_preserve_ratio", 0.70))
+                    if len(_ip_ms) < _ip_min:
+                        logging.warning("[TF-IPG] REJECT경로 patch 분량 부족 (%d < %d) → Patch 폴백", len(_ip_ms), _ip_min)
+                        candidates = None
+                        _use_inplace = False
+                    elif len(_prev_manuscript) > 0 and len(_ip_ms) < len(_prev_manuscript) * _ip_preserve:
+                        logging.warning(
+                            "[TF-IPG] REJECT경로 patch 축소 (%d→%d, %.0f%%) → Patch 폴백",
+                            len(_prev_manuscript), len(_ip_ms),
+                            len(_ip_ms) / len(_prev_manuscript) * 100,
+                        )
+                        candidates = None
+                        _use_inplace = False
 
             # --- Patch 시도 (Ensemble) ---
             if not candidates and _use_patch:
                 _is_patch = True
                 logging.info(f"[Phase 3-5B] 패치 모드 진입 (score={_prev_score}, round={round_num})")
                 self.ctx.ui.log(f"   🔧 [Phase 3-5B] 패치 모드: score={_prev_score}, 원본 보존 수정")
+                self._last_strategy_budget = "patch"
+                self._last_strategy_count = 1
                 candidates = chief_writer.patch_with_feedback(
                     **_common_writer_kwargs,
                     original_manuscript=_prev_manuscript,
@@ -2745,16 +2907,30 @@ class Stage4InterviewRound:
                     _is_patch_fallback = True
                     logging.warning("[Phase 3-5B] 패치 실패, full rewrite 폴백")
                     self.ctx.ui.log("   ⚠️ [Phase 3-5B] 패치 실패 → 전면 재작성 폴백")
+                    _regen_kwargs, _strategy_budget, _strategy_count = _build_regenerate_kwargs(
+                        reject_bucket=_reject_bucket,
+                        fix_scope=_fix_scope,
+                        selected_strategy_key=_selected_strategy_key,
+                    )
+                    self._last_strategy_budget = _strategy_budget
+                    self._last_strategy_count = _strategy_count
                     candidates = chief_writer.regenerate_with_feedback(
-                        **_common_writer_kwargs,
+                        **_regen_kwargs,
                         previous_attempt=previous_attempt,
                         attempt_number=round_num + 1,
                     )
 
             # --- Rewrite (전면 재작성) ---
             if not candidates:
+                _regen_kwargs, _strategy_budget, _strategy_count = _build_regenerate_kwargs(
+                    reject_bucket=_reject_bucket,
+                    fix_scope=_fix_scope,
+                    selected_strategy_key=_selected_strategy_key,
+                )
+                self._last_strategy_budget = _strategy_budget
+                self._last_strategy_count = _strategy_count
                 candidates = chief_writer.regenerate_with_feedback(
-                    **_common_writer_kwargs,
+                    **_regen_kwargs,
                     previous_attempt=previous_attempt,
                     attempt_number=round_num + 1,
                 )
@@ -3512,7 +3688,8 @@ class Stage4InterviewRound:
         mad_used,
         asp_used,
         model,
-        validation_warnings,
+        reject_bucket="",
+        validation_warnings=None,
     ):
         """[V76] 라운드별 생산 로그를 JSONL로 기록."""
         try:
@@ -3538,6 +3715,10 @@ class Stage4InterviewRound:
                     _duration_ms = int((time.monotonic() - self._round_start_ts) * 1000)
                 except Exception:
                     _duration_ms = None
+            _warnings = list(validation_warnings or [])
+            _round_metrics = self._get_round_metrics_delta()
+            _selection_reason = (director_result.get("selection_reason") or "")[:500]
+            _verdict_reason = (director_result.get("verdict_reason") or _selection_reason)[:500]
 
             entry = {
                 "ts": datetime.datetime.now().isoformat(timespec="seconds"),
@@ -3550,8 +3731,14 @@ class Stage4InterviewRound:
                 "strategy": _sel_candidate.get("strategy", "") or _sel_candidate.get("strategy_name", ""),
                 "model": model,
                 "duration_ms": _duration_ms,
+                "round_total_calls": _round_metrics["total_calls"],
+                "round_total_tokens": _round_metrics["total_tokens"],
+                "round_total_cost_usd": _round_metrics["total_cost_usd"],
+                "round_model_breakdown": _round_metrics["model_breakdown"],
                 "error_category": director_result.get("error_category", ""),
-                "reason": (director_result.get("selection_reason") or "")[:500],
+                "reason": _selection_reason,
+                "selection_reason": _selection_reason,
+                "verdict_reason": _verdict_reason,
                 "action_items": (director_result.get("action_items") or [])[:5],
                 "score_breakdown": director_result.get("score_breakdown", {}),
                 "open_review": (director_result.get("open_review") or "")[:300],
@@ -3561,8 +3748,11 @@ class Stage4InterviewRound:
                     "tot": tot_used,
                     "mad": mad_used,
                     "asp": asp_used,
+                    "strategy_budget": getattr(self, "_last_strategy_budget", "full"),
+                    "strategy_count": getattr(self, "_last_strategy_count", 0),
+                    "reject_bucket": reject_bucket,
                 },
-                "warnings": validation_warnings[:20],  # [TF-46] 10→20
+                "warnings": _warnings[:20],  # [TF-46] 10→20
             }
 
             log_path = os.path.join(logs_dir, "episode_production.jsonl")
@@ -3588,6 +3778,7 @@ class Stage4InterviewRound:
         advisory_flags: dict | None = None,
         model: str | None = None,
         duration_ms: int | None = None,
+        token_cost: float | None = None,
     ) -> None:
         """Stage 4 ?? ??? ???? DB? ??? ??."""
         if duration_ms is None and hasattr(self, "_round_start_ts"):
@@ -3595,6 +3786,11 @@ class Stage4InterviewRound:
                 duration_ms = int((time.monotonic() - self._round_start_ts) * 1000)
             except Exception:
                 duration_ms = None
+        if token_cost is None:
+            try:
+                token_cost = float(self._get_round_metrics_delta().get("total_cost_usd", 0.0))
+            except Exception:
+                token_cost = 0.0
 
         if getattr(self.ctx, "pass_rate_monitor", None):
             try:
@@ -3604,8 +3800,10 @@ class Stage4InterviewRound:
                     arc=arc,
                     attempt_num=round_num + 1,
                     success=success,
-                    reject_reason="" if success else f"score={score}",
+                    reject_reason="" if success else (reject_reason or f"score={score}"),
                     generation_method="patch" if is_patch and not patch_fallback else "ensemble",
+                    duration_ms=duration_ms or 0,
+                    token_cost=token_cost or 0.0,
                     is_patch=is_patch,
                     prev_score=prev_score,
                     patch_fallback=patch_fallback,

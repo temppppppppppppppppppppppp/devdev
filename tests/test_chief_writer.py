@@ -12,7 +12,7 @@ Stage4Orchestrator (modules/core/stage4_orchestrator.py):
 import json
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -145,6 +145,85 @@ def mock_app():
     app.failure_learner = None
     app.foreshadow_tracker = None
     return app
+
+
+class TestChiefWriterInplacePatchGuards:
+    def test_inplace_patch_strips_end_marker_and_preserves_state_updates(self, chief_writer):
+        original = "original manuscript " * 160
+        patched = ("patched manuscript " * 140) + "[원고_끝]"
+        chief_writer.ask = MagicMock(
+            return_value=json.dumps(
+                {
+                    "content": patched,
+                    "patch_state_updates": {"mood": "tense"},
+                },
+                ensure_ascii=False,
+            )
+        )
+
+        with patch("modules.core.prompt_loader.PromptLoader.load", return_value=None):
+            result = chief_writer.inplace_patch(
+                original_manuscript=original,
+                director_feedback="fix only continuity",
+                attempt_number=1,
+            )
+
+        assert result == [
+            {
+                "manuscript": patched[: -len("[원고_끝]")].rstrip(),
+                "strategy": "inplace_patch",
+                "state_updates": {"mood": "tense"},
+            }
+        ]
+
+    def test_inplace_patch_without_end_marker_warns_but_returns_manuscript(self, chief_writer):
+        original = "original manuscript " * 160
+        patched = "patched manuscript " * 140
+        chief_writer.ask = MagicMock(
+            return_value=json.dumps(
+                {
+                    "content": patched,
+                    "patch_state_updates": {"tone": "dry"},
+                },
+                ensure_ascii=False,
+            )
+        )
+
+        with (
+            patch("modules.core.prompt_loader.PromptLoader.load", return_value=None),
+            patch("modules.domain.agents.chief_writer.logging.warning") as mock_warning,
+        ):
+            result = chief_writer.inplace_patch(
+                original_manuscript=original,
+                director_feedback="fix only continuity",
+                attempt_number=1,
+            )
+
+        assert result[0]["manuscript"] == patched
+        assert result[0]["state_updates"] == {"tone": "dry"}
+        assert any("[원고_끝]" in str(call.args[0]) for call in mock_warning.call_args_list)
+
+    def test_inplace_patch_rejects_short_extracted_manuscript(self, chief_writer):
+        original = "original manuscript " * 160
+        chief_writer.ask = MagicMock(
+            return_value=json.dumps(
+                {
+                    "content": "x" * 1999,
+                    "patch_state_updates": {"tone": "dry"},
+                    "notes": "y" * 500,
+                },
+                ensure_ascii=False,
+            )
+        )
+
+        with patch("modules.core.prompt_loader.PromptLoader.load", return_value=None):
+            result = chief_writer.inplace_patch(
+                original_manuscript=original,
+                director_feedback="fix only continuity",
+                attempt_number=1,
+            )
+
+        assert result == []
 
 
 # ══════════════════════════════════════════════════════════════
@@ -530,6 +609,75 @@ class TestGenerateEnsemble:
             assert "title" in cand
             assert "state_updates" in cand
             assert "metadata" in cand
+
+    def test_reduced_strategy_budget_prefers_selected_strategy(self, chief_writer, sample_blueprint, sample_master_bible):
+        called = []
+
+        chief_writer.context_builder.build_common_context = MagicMock(return_value="ctx")
+        chief_writer._get_or_create_context_cache = MagicMock(return_value={})
+
+        def _fake_generate_single_candidate(**kwargs):
+            strategy = kwargs["strategy"]
+            called.append(strategy)
+            return {
+                "strategy": strategy,
+                "manuscript": strategy * 1000,
+                "title": strategy,
+                "state_updates": {},
+                "metadata": {},
+            }
+
+        chief_writer._generate_single_candidate = MagicMock(side_effect=_fake_generate_single_candidate)
+
+        candidates = chief_writer.generate_ensemble(
+            ep_num=10,
+            blueprint=sample_blueprint,
+            prev_manuscript="",
+            hud_report="",
+            arc_doc="",
+            master_bible=sample_master_bible,
+            genre_name="臾댄삊",
+            strategy_budget="reduced",
+            preferred_strategy="tension",
+        )
+
+        assert len(candidates) == 2
+        assert set(called) == {"tension", "balanced"}
+
+    def test_reduced_strategy_budget_without_preferred_uses_balanced_and_tension(
+        self, chief_writer, sample_blueprint, sample_master_bible
+    ):
+        called = []
+
+        chief_writer.context_builder.build_common_context = MagicMock(return_value="ctx")
+        chief_writer._get_or_create_context_cache = MagicMock(return_value={})
+
+        def _fake_generate_single_candidate(**kwargs):
+            strategy = kwargs["strategy"]
+            called.append(strategy)
+            return {
+                "strategy": strategy,
+                "manuscript": strategy * 1000,
+                "title": strategy,
+                "state_updates": {},
+                "metadata": {},
+            }
+
+        chief_writer._generate_single_candidate = MagicMock(side_effect=_fake_generate_single_candidate)
+
+        candidates = chief_writer.generate_ensemble(
+            ep_num=10,
+            blueprint=sample_blueprint,
+            prev_manuscript="",
+            hud_report="",
+            arc_doc="",
+            master_bible=sample_master_bible,
+            genre_name="臾댄삊",
+            strategy_budget="reduced",
+        )
+
+        assert len(candidates) == 2
+        assert set(called) == {"balanced", "tension"}
 
 
 # ══════════════════════════════════════════════════════════════

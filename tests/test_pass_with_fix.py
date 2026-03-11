@@ -1998,6 +1998,43 @@ class TestPFImprovements:
         val = _threshold("patch_mode.min_patched_length", 2000)
         assert int(val) == 2000
 
+    def test_pf2_inplace_preserve_ratio_yaml(self):
+        """[TF-IPG] YAML?먯꽌 inplace_min_preserve_ratio 媛?濡쒕뱶 ?뺤씤."""
+        from modules.validation.threshold_helper import _threshold
+
+        val = _threshold("patch_mode.inplace_min_preserve_ratio", 0.70)
+        assert float(val) == 0.70
+
+    def test_pf3_pass_with_fix_shrunk_patch_becomes_reject(self):
+        """[TF-IPG] PASS_WITH_FIX ??70% 誘몃쭔 異뺤냼 patch??議곗슜??REJECT ?꾪솚."""
+        ctx = _make_ctx()
+        cw = MagicMock()
+        _original_text = "original " * 500
+        _shrunk_patch = "patched " * 300
+        cw.inplace_patch.return_value = [{"manuscript": _shrunk_patch}]
+
+        rc = _make_round_ctx(cw)
+        ir = Stage4InterviewRound(ctx)
+        dr = _director_result_pass_with_fix(score=60)
+
+        v, ms, su, dr_out, fb = ir._execute_pass_with_fix_loop(
+            verdict="PASS_WITH_FIX",
+            final_manuscript=_original_text,
+            final_state_updates={},
+            director_result=dr,
+            director_feedback="?섏젙 ?꾩슂",
+            round_ctx=rc,
+            round_num=0,
+            score=60,
+            quality_gate_score=90,
+            director_mandatory_context="",
+        )
+
+        assert v == "REJECT"
+        assert ms == _original_text
+        cw.inplace_patch.assert_called_once()
+        ctx.agents["director"].select_and_judge_ensemble.assert_not_called()
+
     def test_pf3_pass_with_fix_exhausted_adopts_patch(self):
         """[PF-3] 3회 모두 PASS_WITH_FIX → 패치본 채택 + REJECT 유지 (디렉터 주권 존중)."""
         ctx = _make_ctx()

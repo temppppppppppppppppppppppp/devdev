@@ -464,6 +464,22 @@ class DBManager:
             self.cursor.execute("ALTER TABLE director_selections ADD COLUMN stage INTEGER")
         except sqlite3.OperationalError:
             pass  # already exists
+        try:
+            self.cursor.execute("ALTER TABLE director_selections ADD COLUMN verdict_reason TEXT DEFAULT ''")
+        except sqlite3.OperationalError:
+            pass  # already exists
+        try:
+            self.cursor.execute("ALTER TABLE director_selections ADD COLUMN pre_firewall_score INTEGER DEFAULT 0")
+        except sqlite3.OperationalError:
+            pass  # already exists
+        try:
+            self.cursor.execute("ALTER TABLE director_selections ADD COLUMN firewall_triggered INTEGER DEFAULT 0")
+        except sqlite3.OperationalError:
+            pass  # already exists
+        try:
+            self.cursor.execute("ALTER TABLE director_selections ADD COLUMN firewall_reason TEXT DEFAULT ''")
+        except sqlite3.OperationalError:
+            pass  # already exists
         self.cursor.execute(
             "CREATE INDEX IF NOT EXISTS idx_director_selections_stage_ep ON director_selections(stage, ep_num)"
         )
@@ -2565,6 +2581,10 @@ class DBManager:
         fix_scope: str = "",
         advisory_warnings: dict | None = None,
         stage: int | None = None,
+        verdict_reason: str = "",
+        pre_firewall_score: int = 0,
+        firewall_triggered: bool = False,
+        firewall_reason: str = "",
     ) -> None:
         """Persist director selection result."""
         with self._lock:
@@ -2573,8 +2593,9 @@ class DBManager:
             self.cursor.execute(
                 "INSERT INTO director_selections "
                 "(stage, ep_num, round_num, selected_label, selected_strategy, verdict, score, "
-                "selection_reason, candidate_count, fix_scope, advisory_warnings) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                "selection_reason, candidate_count, fix_scope, advisory_warnings, verdict_reason, "
+                "pre_firewall_score, firewall_triggered, firewall_reason) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (
                     stage,
                     ep_num,
@@ -2587,6 +2608,10 @@ class DBManager:
                     candidate_count,
                     fix_scope or "",
                     _adv_json,
+                    verdict_reason[:500] if verdict_reason else "",
+                    int(pre_firewall_score or 0),
+                    1 if firewall_triggered else 0,
+                    firewall_reason[:500] if firewall_reason else "",
                 ),
             )
             if not nested:

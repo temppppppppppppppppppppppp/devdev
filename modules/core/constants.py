@@ -204,6 +204,15 @@ def log_patch_diff(stage: str, original: str, patched: str, *, max_diff_lines: i
     if not original or not patched:
         return
 
+    # [TF-IPG GAP-6] 글자수 delta 로깅
+    _orig_len = len(original)
+    _patch_len = len(patched)
+    _delta_pct = ((_patch_len - _orig_len) / _orig_len * 100) if _orig_len > 0 else 0.0
+    logging.info(
+        "[InPlace-Diff] %s: %d자 → %d자 (%+.1f%%)",
+        stage, _orig_len, _patch_len, _delta_pct,
+    )
+
     orig_lines = original.splitlines(keepends=True)
     patch_lines = patched.splitlines(keepends=True)
 

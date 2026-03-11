@@ -11,6 +11,7 @@ import statistics
 from collections import Counter
 
 from modules.core.llm_generate import generate_content_via_router
+from modules.validation.dialogue_utils import count_dialogue_segments
 from modules.validation.threshold_helper import _threshold  # [Phase 5-B-2c]
 
 _SANITIZE_MAX_CHARS = int(_threshold("scoring.sanitize_max_chars", 3000))
@@ -323,7 +324,7 @@ Step 6: Article 7 (독자 대리만족) 분석
 
         # 대화 품질 (따옴표 빈도로 추정)
         # [V44] 서로 다른 유형의 따옴표 카운트 (직선형 + 곡선형)
-        dialogue_count = manuscript.count('"') + manuscript.count("\u201c") + manuscript.count("\u201d")
+        dialogue_count = count_dialogue_segments(manuscript) * 2
         dialogue_score = min(score_breakdown["dialogue_quality"], 5 + int(dialogue_count / 10))
 
         # 상업성 (길이와 구조로 추정)

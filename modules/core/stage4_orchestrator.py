@@ -312,6 +312,7 @@ class Stage4Orchestrator:
 
         try:
             from modules.core.constants import AIModels
+            from modules.core.continuity_pin_guard import apply_continuity_pins
             from modules.core.prompt_loader import PromptLoader
             from modules.core.response_schemas import BLUEPRINT_PREFLIGHT_SCHEMA
             from modules.core.tactical_utils import extract_episode_tactical
@@ -342,7 +343,36 @@ class Stage4Orchestrator:
                 except Exception:
                     pass
 
-            _bp_json = json.dumps(blueprint, ensure_ascii=False, indent=2)[:15000]
+            _prev_published_text = ""
+            try:
+                _db = getattr(getattr(self.ctx, "current_project", None), "db", None)
+                _prev_row = _db.get_manuscript(ep_num - 1) if _db and ep_num > 1 else None
+                if isinstance(_prev_row, dict):
+                    _prev_published_text = str(
+                        _prev_row.get("content")
+                        or _prev_row.get("corrected_manuscript")
+                        or _prev_row.get("manuscript")
+                        or ""
+                    )
+                elif _prev_row:
+                    _prev_published_text = str(_prev_row)
+            except Exception:
+                _prev_published_text = ""
+
+            _pin_result = apply_continuity_pins(
+                blueprint,
+                previous_published_text=_prev_published_text,
+                arc_tactical_text=_arc_tactical,
+            )
+            _patched_blueprint = None
+            _blueprint_for_validation = blueprint
+            if _pin_result.get("changes"):
+                _patched_blueprint = _pin_result.get("blueprint", blueprint)
+                if isinstance(_patched_blueprint, dict):
+                    _patched_blueprint["_continuity_pins"] = _pin_result["changes"]
+                    _blueprint_for_validation = _patched_blueprint
+
+            _bp_json = json.dumps(_blueprint_for_validation, ensure_ascii=False, indent=2)[:15000]
 
             # 2. 프롬프트 로드 + 포맷
             try:
@@ -434,7 +464,7 @@ class Stage4Orchestrator:
                     "passed": True,
                     "issues": _issues,
                     "summary": _summary,
-                    "patched_blueprint": None,
+                    "patched_blueprint": _patched_blueprint,
                 }
 
             # 4. 실패 → advisory 텍스트 생성 (Blueprint 패치 대신 CW/Director에 전달)
@@ -466,7 +496,7 @@ class Stage4Orchestrator:
                 "passed": True,  # advisory 전달이므로 항상 pass (블루프린트 미수정)
                 "issues": _issues,
                 "summary": _summary,
-                "patched_blueprint": None,
+                "patched_blueprint": _patched_blueprint,
                 "advisory": _advisory_text,
             }
 
@@ -611,6 +641,7 @@ JSON으로 출력:
                 arc_data=arc_data,
                 ep_num=next_ep,
             )
+            blueprint = _preflight.get("patched_blueprint") or blueprint
             _preflight_advisory = _preflight.get("advisory", "")
 
             # [4-R1-a] 에피소드 컨텍스트 수집 (Extract Method)
@@ -1089,6 +1120,22 @@ JSON으로 출력:
                                 arc_data=round_ctx.arc_data,
                             )
                             if _patched_bp:
+                                # [TF-IPG GAP-4] V75-D blueprint 패치 diff 로깅 + 변경비율 체크
+                                try:
+                                    import json as _json_mod
+
+                                    from modules.core.constants import calc_patch_change_ratio, log_patch_diff
+                                    _bp_orig_j = _json_mod.dumps(round_ctx.blueprint, ensure_ascii=False, indent=2)
+                                    _bp_patch_j = _json_mod.dumps(_patched_bp, ensure_ascii=False, indent=2)
+                                    log_patch_diff("S4-V75D-Blueprint", _bp_orig_j, _bp_patch_j)
+                                    _bp_cr = calc_patch_change_ratio(
+                                        _json_mod.dumps(round_ctx.blueprint, ensure_ascii=False),
+                                        _json_mod.dumps(_patched_bp, ensure_ascii=False),
+                                    )
+                                    if _bp_cr > 0.30:
+                                        logging.warning("[TF-IPG] V75-D Blueprint 변경 비율 %.1f%% > 30%%", _bp_cr * 100)
+                                except Exception as _diff_e:
+                                    logging.debug("[TF-IPG] V75-D diff 계산 실패: %s", _diff_e)
                                 _v75d_success = True
                                 round_ctx = dataclasses.replace(round_ctx, blueprint=_patched_bp)
                                 _logic_error_streak = 0
@@ -1474,8 +1521,12 @@ JSON으로 출력:
             if session is None:
                 return
             # 5. Episode production loop
-            if self._run_interview_loop(session):
+            _should_return = self._run_interview_loop(session)
+            if _should_return:
                 return
+            _write_summary = getattr(self.app, "_write_audit_summary", None)
+            if callable(_write_summary):
+                _write_summary("stage4_complete")
 
         except KeyboardInterrupt:
             self.ctx.ui.log("\n⚠️ 사용자 중단 요청. 저장 후 종료합니다.")

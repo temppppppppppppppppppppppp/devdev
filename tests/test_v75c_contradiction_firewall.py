@@ -1,5 +1,6 @@
 """[V75-C] Director Contradiction Firewall 테스트."""
 
+import json
 from pathlib import Path
 from unittest.mock import MagicMock
 
@@ -300,3 +301,68 @@ def test_firewall_code_exists_in_director_ensemble():
     assert "[V75-C] Contradiction Firewall" in src
     assert "found_contradictions" in src
     assert "min(score, 44)" in src
+
+
+def test_firewall_defaults_fix_scope_to_inplace_for_selected_manuscript():
+    """Firewall REJECT는 선택 원고가 있으면 explicit inplace metadata를 남긴다."""
+    from modules.domain.agents.director_ensemble import DirectorEnsembleSelector
+
+    class _FakeDirector:
+        _last_thinking = ""
+        MAX_CONTEXT_CHARS = 700_000
+
+        def __init__(self):
+            self._response = json.dumps(
+                {
+                    "selected": "A",
+                    "verdict": "PASS",
+                    "score": 98,
+                    "selection_reason": "best candidate",
+                    "feedback": {"issues": ["critical contradiction"]},
+                    "contradiction_check": {
+                        "found_contradictions": [
+                            {
+                                "severity": "CRITICAL",
+                                "type": "timeline",
+                                "current_violation": "future event mismatch",
+                            }
+                        ]
+                    },
+                },
+                ensure_ascii=False,
+            )
+
+        def ask(self, prompt, temperature=0.1, thinking_level=None):
+            return self._response
+
+        def _extract_json_robust(self, response):
+            return json.loads(response)
+
+        def _escape_braces(self, text):
+            return str(text or "")
+
+        def apply_adaptive_decision(self, score, original_decision, arc_pos, total_eps, retry_count):
+            return {"decision": original_decision, "threshold_used": 45, "reason": ""}
+
+    selector = DirectorEnsembleSelector(_FakeDirector())
+    result = selector.select_and_judge_ensemble(
+        ep_num=3,
+        candidates=[
+            {
+                "strategy": "tension",
+                "strategy_name": "tension",
+                "manuscript": "가" * 5000,
+                "title": "title",
+                "state_updates": {},
+            }
+        ],
+        validation_results=[{"warnings": [], "focus_points": []}],
+        blueprint={"integrated_scenario": "scenario"},
+        previous_ending="ending",
+    )
+
+    assert result["verdict"] == "REJECT"
+    assert result["score"] == 44
+    assert result["firewall_triggered"] is True
+    assert result["fix_scope"] == "inplace"
+    assert result["fix_scope_reasoning"] == "Contradiction Firewall: CRITICAL 1건"

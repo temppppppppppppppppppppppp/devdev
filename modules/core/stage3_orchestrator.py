@@ -12,9 +12,11 @@ import logging as _logging
 import traceback as _traceback
 
 from modules.core.constants import ContextLimits, Emojis, ErrorMessages
+from modules.core.continuity_pin_guard import apply_continuity_pins
 from modules.core.context_advisor import RetrievalSources
 from modules.core.fact_ledger import summarize_fact_ledger_numbers_block
 from modules.core.semantic_query_broker import SemanticQueryBroker
+from modules.core.tactical_utils import extract_episode_tactical
 
 try:
     from modules.utils.notifier import notifier
@@ -1311,6 +1313,57 @@ class Stage3Orchestrator:
 
         # 무결성 검증 후 저장
         # [S3-N-P1-3] DI 콜백 None 방어
+        if isinstance(blueprint, dict):
+            _prev_published_text = ""
+            try:
+                _db = getattr(getattr(ctx, "current_project", None), "db", None)
+                _prev_row = _db.get_manuscript(working_ep - 1) if _db and working_ep > 1 else None
+                if isinstance(_prev_row, dict):
+                    _prev_published_text = str(
+                        _prev_row.get("content")
+                        or _prev_row.get("corrected_manuscript")
+                        or _prev_row.get("manuscript")
+                        or ""
+                    )
+                elif _prev_row:
+                    _prev_published_text = str(_prev_row)
+            except Exception as _pin_prev_err:
+                _logging.debug("[Stage3] previous manuscript lookup failed (non-blocking): %s", _pin_prev_err)
+
+            _arc_tactical_text = ""
+            try:
+                _arc_tactical_text = extract_episode_tactical(
+                    arc_data.get("tactical_doc", ""),
+                    working_ep,
+                    episode_details=arc_data.get("episode_details"),
+                )
+            except Exception as _pin_tactical_err:
+                _logging.debug("[Stage3] arc tactical extract failed (non-blocking): %s", _pin_tactical_err)
+
+            _pin_result = apply_continuity_pins(
+                blueprint,
+                previous_published_text=_prev_published_text,
+                arc_tactical_text=_arc_tactical_text,
+            )
+            blueprint = _pin_result.get("blueprint", blueprint)
+            if _pin_result.get("changes"):
+                blueprint["_continuity_pins"] = _pin_result["changes"]
+                ctx.ui.log(f"   [PinGuard] ep {working_ep} continuity pins applied: {len(_pin_result['changes'])}")
+            if _pin_result.get("unresolved"):
+                ctx.ui.log(f"   ?슚 [PinGuard] ep {working_ep} unresolved continuity pins")
+                if callable(ctx.audit_event):
+                    ctx.audit_event(
+                        "continuity_pin_unresolved",
+                        "stage3 continuity pin unresolved",
+                        {"ep_num": working_ep, "items": _pin_result["unresolved"][:3]},
+                    )
+                return {
+                    "next_ep": working_ep + 1,
+                    "success_count": success_count,
+                    "fail_count": fail_count + 1,
+                    "break": True,
+                }
+
         if callable(ctx.validate_blueprint_integrity) and not ctx.validate_blueprint_integrity(blueprint):
             ctx.ui.log(f"   🚨 [Integrity] 제{working_ep}화 Blueprint 무결성 실패")
             if callable(ctx.audit_event):

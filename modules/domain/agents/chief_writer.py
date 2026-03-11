@@ -171,6 +171,33 @@ class ChiefWriter(BaseAgent):
         )
         return ordered, adjusted_temperatures, shares
 
+    def _select_ensemble_strategies(
+        self,
+        *,
+        strategy_budget: str = "full",
+        preferred_strategy: str = "",
+        single_strategy: str = "",
+    ) -> tuple[list[str], dict[str, float]]:
+        """Resolve strategy set for the current ensemble budget."""
+        strategies = ["balanced", "narrative", "tension"]
+
+        if single_strategy:
+            target = [name for name in strategies if name == single_strategy]
+            return (target or ["balanced"]), {}
+
+        if strategy_budget == "reduced":
+            ordered: list[str] = []
+            preferred = preferred_strategy if preferred_strategy in strategies else ""
+            for name in (preferred, "balanced", "tension", "narrative"):
+                if name and name not in ordered:
+                    ordered.append(name)
+                if len(ordered) >= 2:
+                    break
+            return ordered[:2], {}
+
+        ordered, adjusted_temperatures, _ = self._build_strategy_execution_plan(strategies)
+        return ordered, adjusted_temperatures
+
     @staticmethod
     def _build_char_ngrams(text: str, n: int = 3) -> set[str]:
         normalized = re.sub(r"\s+", " ", str(text or "")).strip()
@@ -306,6 +333,8 @@ class ChiefWriter(BaseAgent):
         promises: list = None,
         # [TF-49b] Arc 계획 아이템 사전 정당화
         upcoming_arc_items: list[str] = None,
+        strategy_budget: str = "full",
+        preferred_strategy: str = "",
     ) -> list[dict]:
         """
         3개 후보 원고 병렬 생성
@@ -397,19 +426,18 @@ class ChiefWriter(BaseAgent):
 
         # 병렬 생성
         candidates = []
-        strategies = ["balanced", "narrative", "tension"]
-        if single_strategy:
-            _target = [s for s in strategies if s == single_strategy]
-            if _target:
-                strategies = _target
-        strategies, _strategy_temperatures, _ = self._build_strategy_execution_plan(strategies)
+        strategies, _strategy_temperatures = self._select_ensemble_strategies(
+            strategy_budget=strategy_budget,
+            preferred_strategy=preferred_strategy,
+            single_strategy=single_strategy,
+        )
 
         # [Phase 3-Obs] 에이전트 레벨 ThreadPoolExecutor 계측
         _tp_t0 = time.monotonic()
 
         # [V61.3] 전체 병렬 처리 블록을 try-except로 감싸서 급사 방지
         try:
-            with ThreadPoolExecutor(max_workers=3) as executor:
+            with ThreadPoolExecutor(max_workers=max(1, min(3, len(strategies)))) as executor:
                 futures = {}
                 for strategy in strategies:
                     _feedback = (
@@ -797,6 +825,8 @@ class ChiefWriter(BaseAgent):
         promises: list = None,
         # [TF-49b] Arc 계획 아이템 사전 정당화
         upcoming_arc_items: list[str] = None,
+        strategy_budget: str = "full",
+        preferred_strategy: str = "",
     ) -> list[dict]:
         """
         Director 피드백 반영 재생성
@@ -908,6 +938,8 @@ class ChiefWriter(BaseAgent):
             motivations=motivations,  # [B-4]
             promises=promises,  # [B-4]
             upcoming_arc_items=upcoming_arc_items,  # [TF-49b]
+            strategy_budget=strategy_budget,
+            preferred_strategy=preferred_strategy,
         )
 
     # =========================================================================
@@ -945,11 +977,16 @@ class ChiefWriter(BaseAgent):
                 (1 - 150000 / _orig_len) * 100,
             )
 
+        # [TF-IPG] 원본 글자수 명시 — LLM에게 구체적 목표치 제공
+        _min_char_target = int(_orig_len * 0.9)  # ±10% 하한
+
         if _patch_template:
             prompt = _patch_template.format(
                 feedback_text=_esc(director_feedback),
                 original_manuscript=_esc(smart_truncate(original_manuscript, max_chars=150000, head_chars=20000)),
                 style_guide=_style_text,  # [TF-37]
+                original_char_count=_orig_len,
+                min_char_target=_min_char_target,
             )
         else:
             prompt = (
@@ -1019,6 +1056,21 @@ class ChiefWriter(BaseAgent):
                 # [TF-36] LLM이 JSON으로 감싼 경우 텍스트 추출
                 _manuscript = self._unwrap_manuscript_text(response)
 
+            # [TF-IPG] [원고_끝] 마커 검증 — 마커가 있으면 제거, 없으면 잘림 경고
+            _end_marker = "[원고_끝]"
+            _marker_idx = _manuscript.rfind(_end_marker)
+            if _marker_idx >= 0:
+                _manuscript = _manuscript[:_marker_idx].rstrip()
+            else:
+                logging.warning("[TF-IPG] [원고_끝] 마커 없음 — 출력이 잘렸을 수 있음 (%d자)", len(_manuscript))
+
+            # [TF-IPG GAP-1] 추출된 manuscript 자체의 길이 체크 (raw 응답이 아닌 추출본 기준)
+            if not _manuscript or len(_manuscript) < 2000:
+                logging.warning(
+                    "[TF-IPG] 추출된 manuscript 길이 부족: %d자 < 2000자 (raw 응답 %d자)",
+                    len(_manuscript or ""), len(response or ""),
+                )
+                return []
             logging.info(f"✅ [TF-23] 원고 in-place 수정 완료 ({len(_manuscript)}자)")
             return [{"manuscript": _manuscript, "strategy": "inplace_patch", "state_updates": _state_updates}]
         except Exception as e:

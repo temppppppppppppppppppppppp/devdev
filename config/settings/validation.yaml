@@ -105,6 +105,7 @@ patch_mode:
   inplace_min_success_rate: 30   # [PF-4] inplace 성공률(%) 진단 로그용 (디렉터 주권주의: 스킵 안 함)
   inplace_min_samples: 5         # [PF-4] 통계 최소 샘플 수
   inplace_max_change_ratio: 0.30   # [F-2] 30% 이상 변경 시 Director advisory 주입
+  inplace_min_preserve_ratio: 0.70  # [TF-IPG] 원본 대비 70% 미만 축소 시 patch 폐기
 
 # ── Premium 품질 시스템 ──────────────────────────────────────
 premium:

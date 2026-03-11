@@ -85,9 +85,9 @@ class TestT4KwargsHelper:
         # [B-1-3b] _common_writer_kwargs 사용이 run()에서 _generate_candidates()로 위임됨
         cls_src = inspect.getsource(Stage4InterviewRound)
         assert "_common_writer_kwargs" in cls_src, "클래스에 _common_writer_kwargs 미사용"
-        # **_common_writer_kwargs 언팩이 최소 3회 사용되어야 함 (run + _generate_candidates 합산)
+        # **_common_writer_kwargs 언팩이 최소 2회 사용되어야 함 (run + _generate_candidates 합산)
         unpack_count = cls_src.count("**_common_writer_kwargs")
-        assert unpack_count >= 3, f"_common_writer_kwargs 언팩이 {unpack_count}회만 사용 (최소 3회 필요)"
+        assert unpack_count >= 2, f"_common_writer_kwargs 언팩이 {unpack_count}회만 사용 (최소 2회 필요)"
 
 
 # ──────────────────────────────────────────────

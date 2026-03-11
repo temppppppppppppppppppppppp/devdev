@@ -1253,6 +1253,22 @@ class Stage2PreflightAnalysis:
                             logging.warning("[TF-23] Arc InPlace 실패 → Patch 폴백")
                             self.ctx.ui.log("   ⚠️ [TF-23] Arc InPlace 실패 → Patch 폴백")
                         else:
+                            # [TF-IPG GAP-5] preflight retry 경로 diff 로깅
+                            try:
+                                import json as _json_mod
+
+                                from modules.core.constants import calc_patch_change_ratio, log_patch_diff
+                                _pf_orig_j = _json_mod.dumps(previous_attempt.get("best_arc", {}), ensure_ascii=False, indent=2)
+                                _pf_patch_j = _json_mod.dumps(four_phase_arc, ensure_ascii=False, indent=2)
+                                log_patch_diff("S2-Preflight-Arc", _pf_orig_j, _pf_patch_j)
+                                _pf_cr = calc_patch_change_ratio(
+                                    _json_mod.dumps(previous_attempt.get("best_arc", {}), ensure_ascii=False),
+                                    _json_mod.dumps(four_phase_arc, ensure_ascii=False),
+                                )
+                                if _pf_cr > 0.30:
+                                    logging.warning("[TF-IPG] Preflight Arc 변경 비율 %.1f%% > 30%%", _pf_cr * 100)
+                            except Exception as _diff_e:
+                                logging.debug("[TF-IPG] preflight diff 계산 실패: %s", _diff_e)
                             # [TF-36] S2-006: InPlace 성공 시 final_verdict 설정
                             pipeline_result["final_verdict"] = "PASS"
 
