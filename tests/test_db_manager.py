@@ -166,10 +166,25 @@ def test_save_and_summarize_episode_quality_signals(db):
     assert summary["latest_signal_summary"]["sentence_count"] == 50
 
 
+def test_save_and_read_episode_quality_observations(db):
+    db.save_episode_quality_observation(8, {"operator_label": "AI 티", "note": "후반부 상투구 반복"})
+    db.save_episode_quality_observation(9, {"operator_label": "좋음", "note": "리듬 안정"})
+
+    row = db.get_episode_quality_observation(8)
+    recent = db.get_recent_episode_quality_observations(lookback=5)
+
+    assert row is not None
+    assert row["operator_label"] == "AI 티"
+    assert row["note"] == "후반부 상투구 반복"
+    assert [item["ep_num"] for item in recent] == [8, 9]
+    assert recent[-1]["operator_label"] == "좋음"
+
+
 def test_recent_episode_scores_and_stage_attempts_queries(db):
-    db.save_director_selection(3, 1, "A", "balanced", "PASS", score=91, selection_reason="좋음")
-    db.save_director_selection(4, 1, "A", "balanced", "PASS_WITH_FIX", score=88, selection_reason="수정 필요")
-    db.save_director_selection(4, 2, "B", "balanced", "PASS", score=93, selection_reason="개선됨")
+    db.save_director_selection(2, 1, "", "creative", "PASS", score=77, selection_reason="arc ok", stage=2)
+    db.save_director_selection(3, 1, "A", "balanced", "PASS", score=91, selection_reason="좋음", stage=4)
+    db.save_director_selection(4, 1, "A", "balanced", "PASS_WITH_FIX", score=88, selection_reason="수정 필요", stage=4)
+    db.save_director_selection(4, 2, "B", "balanced", "PASS", score=93, selection_reason="개선됨", stage=4)
     db.save_stage_attempt(
         stage=4,
         verdict="REJECT",

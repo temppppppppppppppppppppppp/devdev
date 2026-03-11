@@ -9,6 +9,7 @@ import threading
 from modules.core.constants import smart_truncate
 from modules.core.context_advisor import RetrievalSources
 from modules.core.fact_ledger import summarize_fact_ledger_numbers_block
+from modules.core.semantic_query_broker import SemanticQueryBroker
 from modules.validation.threshold_helper import _threshold
 
 
@@ -104,6 +105,7 @@ class Stage2PreflightAnalysis:
         current_ep: int,
         npc_roster: list[str] | None = None,
         current_arc_no: int | None = None,
+        protagonist_name: str = "",
     ) -> str:
         """Execute Stage2 retrieval plan and return merged context text."""
         memory = getattr(self.ctx, "memory", None)
@@ -131,6 +133,12 @@ class Stage2PreflightAnalysis:
                         npc_names=npc_names,
                         current_ep=current_ep,
                         max_results=max_results,
+                    )
+                elif source == RetrievalSources.DB_NPC_RELATIONSHIP:
+                    npc_names = fallback_names or self._extract_npc_tokens(query_text)
+                    result = self._build_relationship_context(
+                        npc_names=npc_names,
+                        protagonist_name=protagonist_name,
                     )
                 else:
                     # [Hybrid-P4] retrieval_mode 플래그 기반 경로 분기
@@ -192,6 +200,76 @@ class Stage2PreflightAnalysis:
             joined = joined[:budget]
             logging.info(f"[SC] stage2 budget truncation → {budget}자")
         return joined
+
+    def _build_relationship_context(
+        self,
+        *,
+        npc_names: list[str],
+        protagonist_name: str = "",
+        limit: int = 6,
+    ) -> str:
+        db = getattr(getattr(self.ctx, "current_project", None), "db", None)
+        if not db or not hasattr(db, "get_relationship_history"):
+            return ""
+
+        clean_names = [str(name).strip() for name in (npc_names or []) if str(name).strip()]
+        if protagonist_name:
+            protagonist_name = str(protagonist_name).strip()
+
+        seen: set[tuple[str, str]] = set()
+        lines: list[str] = []
+
+        def _add_pair(n1: str, n2: str) -> None:
+            if not n1 or not n2 or n1 == n2:
+                return
+            pair = tuple(sorted((n1, n2)))
+            if pair in seen:
+                return
+            seen.add(pair)
+            try:
+                rows = db.get_relationship_history(pair[0], pair[1], limit=3)
+            except Exception as rel_err:
+                logging.debug("[Stage2Preflight] relationship history 조회 실패 (비치명): %s", rel_err)
+                rows = []
+            if not rows:
+                return
+            for row in rows[:2]:
+                if not isinstance(row, dict):
+                    continue
+                old_relation = str(row.get("old_relation", "") or "").strip()
+                new_relation = str(row.get("new_relation", "") or "").strip()
+                change_ep = row.get("change_ep", "?")
+                transition = " -> ".join(part for part in (old_relation, new_relation) if part)
+                if transition:
+                    lines.append(f"EP{change_ep} {pair[0]}-{pair[1]}: {transition}")
+
+        if protagonist_name:
+            for name in clean_names[:5]:
+                _add_pair(protagonist_name, name)
+        for idx, name in enumerate(clean_names[:4]):
+            for other in clean_names[idx + 1 : idx + 4]:
+                _add_pair(name, other)
+
+        return "\n".join(lines[:limit])
+
+    @staticmethod
+    def _summarize_retrieval_sources(plan) -> dict[str, int]:
+        counts: dict[str, int] = {}
+        if not plan or not getattr(plan, "slots", None):
+            return counts
+        for slot in getattr(plan, "slots", []) or []:
+            source = str(getattr(slot, "source", RetrievalSources.VEC_MEMORY) or RetrievalSources.VEC_MEMORY)
+            counts[source] = counts.get(source, 0) + 1
+        return counts
+
+    def _record_retrieval_observation(self, *, ep_num: int, stage: str, observation: dict) -> None:
+        dashboard = getattr(self.ctx, "quality_dashboard", None)
+        if dashboard is None or not hasattr(dashboard, "record_retrieval_observation"):
+            return
+        try:
+            dashboard.record_retrieval_observation(ep_num=ep_num, stage=stage, observation=observation)
+        except Exception as exc:
+            logging.debug("[Stage2Preflight] retrieval observation record failed: %s", exc)
 
     def _build_fact_ledger_context(self, *, max_items: int = 10) -> str:
         """Stage 2 Arc 생성기에 전달할 핵심 수치 요약."""
@@ -308,6 +386,138 @@ class Stage2PreflightAnalysis:
             lines.append("- 3인칭 유지: 주인공 중심 시점, 전지적 개입 최소화")
 
         return "\n".join(lines)
+
+    def _compose_work_focus_text(self, enriched_block: dict | None, *, current_vol_strategy: dict | None = None) -> str:
+        if not isinstance(enriched_block, dict):
+            return ""
+
+        parts: list[str] = []
+        for key in ("block_theme", "tactical_doc", "arc_tactical", "constraint_summary"):
+            value = str(enriched_block.get(key, "") or "").strip()
+            if value:
+                parts.append(value)
+
+        plot_suspension = enriched_block.get("plot_suspension", []) or []
+        if isinstance(plot_suspension, list) and plot_suspension:
+            parts.append(" ".join(str(item).strip() for item in plot_suspension[:4] if str(item).strip()))
+
+        npc_roster = self._collect_npc_roster(enriched_block)
+        if npc_roster:
+            parts.append(" ".join(npc_roster[:8]))
+
+        for container_key in ("joint_docs", "status_shadow"):
+            container = enriched_block.get(container_key)
+            if not isinstance(container, dict):
+                continue
+            for key in ("constraint_summary", "core_conflict", "status_summary", "active_threads"):
+                value = container.get(key)
+                if isinstance(value, list):
+                    text = " ".join(str(item).strip() for item in value[:4] if str(item).strip())
+                else:
+                    text = str(value or "").strip()
+                if text:
+                    parts.append(text)
+
+        if isinstance(current_vol_strategy, dict):
+            strategy_doc = str(current_vol_strategy.get("strategy_doc", "") or "").strip()
+            if strategy_doc:
+                parts.append(strategy_doc[:400])
+
+        combined = "\n".join(part for part in parts if part)
+        return combined[:1800]
+
+    def _resolve_work_retrieval_focus(
+        self,
+        enriched_block: dict | None,
+        *,
+        current_vol_strategy: dict | None = None,
+    ) -> dict[str, object]:
+        guard = getattr(getattr(self.ctx, "sys", None), "guard", None)
+        if not guard or not hasattr(guard, "select_retrieval_focus"):
+            return {}
+
+        focus_text = self._compose_work_focus_text(enriched_block, current_vol_strategy=current_vol_strategy)
+        if not focus_text:
+            return {}
+
+        try:
+            focus = guard.select_retrieval_focus(stage="block", focus_text=focus_text)
+        except Exception as focus_err:
+            logging.debug("[Stage2Preflight] work_focus 선택 실패 (비치명): %s", focus_err)
+            return {}
+
+        return focus if isinstance(focus, dict) else {}
+
+    def _build_work_identity_slot_summary(
+        self,
+        focus: dict[str, object],
+        enriched_block: dict | None,
+        *,
+        protagonist_name: str = "",
+        max_chars: int = 1200,
+    ) -> str:
+        if not isinstance(focus, dict) or not focus:
+            return ""
+
+        tracking_slots = [str(item).strip() for item in (focus.get("tracking_slots") or []) if str(item).strip()]
+        scene_engines = [
+            str(item).strip() for item in (focus.get("mandatory_scene_engines") or []) if str(item).strip()
+        ]
+        registry_profiles = [
+            item for item in (focus.get("registry_profiles") or []) if isinstance(item, dict)
+        ]
+
+        if not any([tracking_slots, scene_engines, registry_profiles]):
+            return ""
+
+        lines = ["[작품 추적 슬롯 요약]"]
+        if tracking_slots:
+            lines.append(f"- 이번 블록 우선 tracking_slots: {', '.join(tracking_slots[:3])}")
+        if scene_engines:
+            lines.append(f"- 이번 블록 scene engines: {', '.join(scene_engines[:2])}")
+        if registry_profiles:
+            rendered_profiles = []
+            for profile in registry_profiles[:2]:
+                name = str(profile.get('name', '') or '').strip()
+                fields = [str(item).strip() for item in (profile.get("required_fields") or []) if str(item).strip()]
+                if not name:
+                    continue
+                rendered_profiles.append(name + (f"(fields={', '.join(fields[:4])})" if fields else ""))
+            if rendered_profiles:
+                lines.append(f"- registry focus: {', '.join(rendered_profiles)}")
+
+        if isinstance(enriched_block, dict):
+            block_theme = str(enriched_block.get("block_theme", "") or "").strip()
+            if block_theme:
+                lines.append(f"- 현재 블록 중심축: {block_theme[:140]}")
+            constraint_summary = str(enriched_block.get("constraint_summary", "") or "").strip()
+            if constraint_summary:
+                lines.append(f"- 갈등 요약: {constraint_summary[:160]}")
+
+        try:
+            focus_text = " ".join(
+                [
+                    ", ".join(tracking_slots),
+                    ", ".join(scene_engines),
+                    " ".join(str(profile.get("purpose", "") or "") for profile in registry_profiles),
+                    str((enriched_block or {}).get("constraint_summary", "") or ""),
+                    str((enriched_block or {}).get("block_theme", "") or ""),
+                ]
+            ).strip()
+            broker = SemanticQueryBroker(
+                db=getattr(getattr(self.ctx, "current_project", None), "db", None),
+                world_state=getattr(self.ctx, "world_state", None),
+                fact_ledger=getattr(self.ctx, "fact_ledger", None),
+                state_tracker=getattr(self.ctx, "state_tracker", None),
+                protagonist_name=protagonist_name,
+            )
+            relation_slice = broker.build_relation_slice(focus_text=focus_text, max_chars=420)
+            if relation_slice:
+                lines.append(relation_slice)
+        except Exception as broker_err:
+            logging.debug("[Stage2Preflight] semantic relation slice 생성 실패 (비치명): %s", broker_err)
+
+        return smart_truncate("\n".join(lines), max_chars=max_chars, head_chars=max_chars // 2)
 
     def _preflight_state_setup(
         self,
@@ -902,9 +1112,20 @@ class Stage2PreflightAnalysis:
                     # [V63.3] Stage 2 벡터 검색
                     _s2_spinner.update_detail(f"Arc {global_arc_no} · 벡터 검색")
                     _s2_vector_ctx = ""
+                    _retrieval_plan = None
+                    _use_advisor_path = False
+                    _npc_roster: list[str] = []
+                    _work_focus = self._resolve_work_retrieval_focus(
+                        enriched_block,
+                        current_vol_strategy=current_vol_strategy,
+                    )
+                    _work_slot_summary = self._build_work_identity_slot_summary(
+                        _work_focus,
+                        enriched_block,
+                        protagonist_name=protagonist_name,
+                    )
                     try:
                         if self.ctx.memory and current_ep_start > 1:
-                            _use_advisor_path = False
                             _advisor = getattr(self.ctx, "context_advisor", None)
                             _smart_enabled = bool(_threshold("smart_retrieval.enabled", False)) and bool(
                                 _threshold("smart_retrieval.stage2_enabled", False)
@@ -916,6 +1137,7 @@ class Stage2PreflightAnalysis:
                                         arc_data=enriched_block or {},
                                         current_ep=current_ep_start,
                                         npc_roster=_npc_roster,
+                                        work_focus=_work_focus,
                                     )
                                     _perf_key = f"sc_stage2_arc{global_arc_no}_retrieval"
                                     try:
@@ -924,11 +1146,12 @@ class Stage2PreflightAnalysis:
                                         logging.debug("[Stage2Preflight] SC perf_timer start 실패 (무시): %s", _e)
                                     try:
                                         _s2_vector_ctx = self._execute_stage2_retrieval_plan(
-                                            _retrieval_plan,
-                                            current_ep=current_ep_start,
-                                            npc_roster=_npc_roster,
-                                            current_arc_no=global_arc_no,
-                                        )
+                                        _retrieval_plan,
+                                        current_ep=current_ep_start,
+                                        npc_roster=_npc_roster,
+                                        current_arc_no=global_arc_no,
+                                        protagonist_name=protagonist_name,
+                                    )
                                     finally:
                                         try:
                                             self.ctx.perf_timer.stop(_perf_key)
@@ -954,6 +1177,41 @@ class Stage2PreflightAnalysis:
                     _fact_ledger_context = self._build_fact_ledger_context(max_items=10)
                     if _fact_ledger_context:
                         _s2_vector_ctx = _fact_ledger_context + ("\n\n" + _s2_vector_ctx if _s2_vector_ctx else "")
+                    if _work_slot_summary:
+                        _s2_vector_ctx = _work_slot_summary + ("\n\n" + _s2_vector_ctx if _s2_vector_ctx else "")
+                    _source_counts = self._summarize_retrieval_sources(_retrieval_plan)
+                    if not _source_counts and _s2_vector_ctx and not _use_advisor_path:
+                        _source_counts = {"legacy_high_res": 1}
+                    _coverage_warnings: list[str] = []
+                    if _work_focus and not _work_slot_summary:
+                        _coverage_warnings.append("missing_work_slot_summary")
+                    if _work_focus and _retrieval_plan and not any(
+                        str(getattr(_slot, "category", "")).startswith("work_")
+                        for _slot in (getattr(_retrieval_plan, "slots", []) or [])
+                    ):
+                        _coverage_warnings.append("work_focus_without_slots")
+                    if (
+                        _source_counts.get(RetrievalSources.DB_NPC_RELATIONSHIP, 0) > 0
+                        and "[관계 의미 질의]" not in _s2_vector_ctx
+                    ):
+                        _coverage_warnings.append("missing_relation_slice")
+                    self._record_retrieval_observation(
+                        ep_num=current_ep_start,
+                        stage="stage2",
+                        observation={
+                            "work_focus_present": bool(_work_focus),
+                            "tracking_slots_count": len(_work_focus.get("tracking_slots") or []) if isinstance(_work_focus, dict) else 0,
+                            "scene_engines_count": len(_work_focus.get("mandatory_scene_engines") or []) if isinstance(_work_focus, dict) else 0,
+                            "registry_profiles_count": len(_work_focus.get("registry_profiles") or []) if isinstance(_work_focus, dict) else 0,
+                            "planned_slots_count": len(getattr(_retrieval_plan, "slots", []) or []) if _retrieval_plan else 0,
+                            "advisor_path_used": bool(_use_advisor_path),
+                            "work_slot_summary_included": bool(_work_slot_summary and "[작품 추적 슬롯 요약]" in _s2_vector_ctx),
+                            "relation_slice_included": "[관계 의미 질의]" in _s2_vector_ctx,
+                            "source_counts": _source_counts,
+                            "coverage_warnings": _coverage_warnings,
+                            "vector_context_chars": len(_s2_vector_ctx),
+                        },
+                    )
                     if _s2_vector_ctx:
                         self.ctx.ui.log(f"      🔎 [TF-38] 벡터 검색 완료 ({len(_s2_vector_ctx):,}자)")
                     # [V65] PerfTimer: Arc 생성 측정

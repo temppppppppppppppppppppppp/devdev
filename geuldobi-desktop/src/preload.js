@@ -13,6 +13,12 @@ contextBridge.exposeInMainWorld("geuldobiDesktop", {
   getStatus: () => ipcRenderer.invoke("bridge:status"),
   getQualitySummary: (project, lookback = 5) =>
     ipcRenderer.invoke("bridge:get-quality-summary", { project, lookback }),
+  getQualityDashboard: (project, lookback = 5) =>
+    ipcRenderer.invoke("bridge:get-quality-dashboard", { project, lookback }),
+  getSafeOpsPreview: (project) =>
+    ipcRenderer.invoke("bridge:get-safe-ops-preview", { project }),
+  saveQualityReview: (project, epNum, operatorLabel, note = "") =>
+    ipcRenderer.invoke("bridge:save-quality-review", { project, epNum, operatorLabel, note }),
 
   // Backend URL (renderer에서 직접 WebSocket 연결용)
   getBackendUrl: () => ipcRenderer.invoke("bridge:get-url"),
@@ -33,6 +39,9 @@ contextBridge.exposeInMainWorld("geuldobiDesktop", {
   // 프로젝트 관리
   listProjects: () => ipcRenderer.invoke("project:list"),
   createProject: (name) => ipcRenderer.invoke("project:create", name),
+  loadProjectConfigSurfaces: (project) => ipcRenderer.invoke("project:load-config-surfaces", project),
+  saveProjectConfigSurfaces: (project, authorDirectives = "", workGuardYaml = "") =>
+    ipcRenderer.invoke("project:save-config-surfaces", { project, authorDirectives, workGuardYaml }),
 
   // 작업 폴더
   openWorkspaceFolder: () => ipcRenderer.invoke("workspace:open-folder"),

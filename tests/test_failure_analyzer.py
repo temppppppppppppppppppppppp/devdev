@@ -77,3 +77,19 @@ def test_failure_analyzer_compare_versions(tmp_path):
         assert result["winner"] == "chief@v2"
     finally:
         db.close()
+
+
+def test_failure_analyzer_summary_reports_soft_failures(tmp_path):
+    db = DBManager(tmp_path / "test_summary_soft_failure.db")
+    try:
+        analyzer = FailureAnalyzer(db)
+        analyzer.stage_pass_rates = lambda: (_ for _ in ()).throw(RuntimeError("summary boom"))
+
+        summary = analyzer.summary()
+
+        assert "stage_pass_rates" not in summary
+        soft_failures = tmp_path / "logs" / "soft_failures.jsonl"
+        assert soft_failures.exists()
+        assert "stage_pass_rates" in soft_failures.read_text(encoding="utf-8")
+    finally:
+        db.close()

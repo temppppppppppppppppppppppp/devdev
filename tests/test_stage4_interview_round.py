@@ -526,6 +526,97 @@ class TestInterviewRoundRun:
         assert continuity_ctx == history_ctx
         assert "[SC:" in continuity_ctx
 
+    def test_director_sc5_injects_work_focus_and_relation_slice(self):
+        ctx = _make_ctx()
+        ctx.context_advisor = MagicMock()
+        ctx.quality_dashboard = MagicMock()
+        ctx.memory = MagicMock()
+        ctx.memory.retrieve_multi_query_context.return_value = "vec memory block"
+        ctx.memory.retrieve_npc_context.return_value = "npc memory block"
+        ctx.current_project.db.get_relationship_history.return_value = [
+            {"change_ep": 7, "old_relation": "소꿉친구", "new_relation": "멀어진 동료"}
+        ]
+        ctx.sys = MagicMock()
+        ctx.sys.guard = MagicMock()
+        ctx.sys.guard.select_retrieval_focus.return_value = {
+            "tracking_slots": ["소꿉친구 관계선"],
+            "mandatory_scene_engines": ["관계 반전"],
+            "registry_profiles": [{"name": "relationship_registry", "purpose": "주인공의 오래된 인연 추적"}],
+        }
+        ctx.context_advisor.plan_director_retrieval.return_value = RetrievalPlan(
+            stage="director",
+            episode_num=3,
+            slots=[
+                RetrievalSlot(
+                    category="relationship_consistency",
+                    query="한태하 연홍 관계선",
+                    source=RetrievalSources.DB_NPC_RELATIONSHIP,
+                    priority=1,
+                ),
+            ],
+            total_budget_chars=20000,
+        )
+
+        ir = Stage4InterviewRound(ctx)
+        ir._resolve_director_protagonist_name = MagicMock(return_value="한태하")
+        round_ctx = _make_round_ctx()
+        round_ctx.next_ep = 3
+        round_ctx.prev_manuscripts_text = "history-present"
+        round_ctx.prev_ending = "연홍과의 관계가 흔들린 채 끝난다."
+        round_ctx.blueprint = {
+            "characters": [{"name": "한태하"}, {"name": "연홍"}],
+            "core_event": "오래된 인연이 시험받는다",
+            "story_goal": "연홍의 진심을 확인한다",
+            "integrated_scenario": "x",
+        }
+        round_ctx.chief_writer.generate_ensemble.return_value = [_candidate()]
+        round_ctx.manuscript_validator.validate_all_candidates.return_value = [_validation_result()]
+
+        ctx.agents["director"].check_manuscript_continuity_with_cache.return_value = {"decision": "PASS", "summary": ""}
+        ctx.agents["director"].check_manuscript_history_conflicts.return_value = {"decision": "PASS", "summary": ""}
+        ctx.agents["director"].select_and_judge_ensemble.return_value = {
+            "selected": "A",
+            "verdict": "PASS",
+            "score": 95,
+            "selection_reason": "ok",
+            "selected_candidate": {"manuscript": "pass manuscript", "title": "pass"},
+            "state_updates": {},
+        }
+
+        def _threshold_side_effect(key, default=None):
+            if key == "smart_retrieval.enabled":
+                return True
+            if key == "smart_retrieval.director_enabled":
+                return True
+            if key == "context.vector_max_results_s4":
+                return 16
+            if key == "smart_retrieval.director_total_budget":
+                return 20000
+            return default
+
+        with patch("modules.validation.threshold_helper._threshold", side_effect=_threshold_side_effect):
+            ir.run(
+                round_num=0,
+                stage4_spinner=MagicMock(),
+                director_feedback="",
+                previous_attempt={},
+                round_ctx=round_ctx,
+            )
+
+        call_kwargs = ctx.context_advisor.plan_director_retrieval.call_args.kwargs
+        assert call_kwargs["work_focus"]["tracking_slots"] == ["소꿉친구 관계선"]
+        continuity_ctx = ctx.agents["director"].check_manuscript_continuity_with_cache.call_args.kwargs[
+            "memory_context"
+        ]
+        ctx.quality_dashboard.record_retrieval_observation.assert_called_once()
+        kwargs = ctx.quality_dashboard.record_retrieval_observation.call_args.kwargs
+        assert kwargs["stage"] == "director"
+        assert kwargs["observation"]["relation_slice_included"] is True
+        assert "[작품 추적 슬롯 요약]" in continuity_ctx
+        assert "[관계 의미 질의]" in continuity_ctx
+        assert "[SC:relationship_consistency]" in continuity_ctx
+        ctx.current_project.db.get_relationship_history.assert_called()
+
     def test_post_select_continuity_conflict_downgrades_pass(self):
         ctx = _make_ctx()
         ir = Stage4InterviewRound(ctx)

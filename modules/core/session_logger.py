@@ -16,6 +16,8 @@ import threading
 import time
 from pathlib import Path
 
+from modules.core.soft_failure import report_soft_failure
+
 
 class SessionLogger:
     """프로젝트별 JSONL 세션 로거.
@@ -51,6 +53,8 @@ class SessionLogger:
         self._max_prompt_chars = max(1000, int(max_prompt_chars))
         self._max_rotations = max(1, int(max_rotations))
         self._write_lock = threading.Lock()  # [TF-30-7] 멀티스레드 JSONL interleave 방지
+        self._soft_failure_count = 0
+        self._last_soft_failure = None
 
     # ── public API ───────────────────────────────────────────
 
@@ -61,6 +65,14 @@ class SessionLogger:
     def set_log_dir(self, new_dir) -> None:
         """프로젝트 선택 후 경로 갱신."""
         self._log_dir = Path(new_dir)
+
+    def get_health_snapshot(self) -> dict:
+        """Return recent logger health state for diagnostics."""
+        return {
+            "enabled": self._enabled,
+            "soft_failures": self._soft_failure_count,
+            "last_soft_failure": dict(self._last_soft_failure) if isinstance(self._last_soft_failure, dict) else None,
+        }
 
     def log_llm_call(
         self,
@@ -191,6 +203,12 @@ class SessionLogger:
                 with open(filepath, "a", encoding="utf-8") as f:
                     f.write(line + "\n")
         except Exception as e:
+            self._record_soft_failure(
+                operation="write",
+                message=f"{category} JSONL write failed",
+                exc=e,
+                extra={"category": category},
+            )
             logging.debug("[SessionLogger] write failed (%s): %s", category, e)
 
     def _maybe_rotate(self, filepath: Path) -> None:
@@ -211,8 +229,13 @@ class SessionLogger:
                         if dst.exists():
                             os.remove(dst)
                         os.rename(src, dst)
-                    except OSError:
-                        pass
+                    except OSError as rotate_err:
+                        self._record_soft_failure(
+                            operation="rotate",
+                            message="rotated session log rename failed",
+                            exc=rotate_err,
+                            extra={"src": str(src), "dst": str(dst)},
+                        )
 
             # 현재 파일 → .1
             dst_1 = filepath.with_suffix(".jsonl.1")
@@ -220,7 +243,50 @@ class SessionLogger:
                 if dst_1.exists():
                     os.remove(dst_1)
                 os.rename(filepath, dst_1)
-            except OSError:
-                pass
+            except OSError as rotate_err:
+                self._record_soft_failure(
+                    operation="rotate",
+                    message="session log primary rotate failed",
+                    exc=rotate_err,
+                    extra={"src": str(filepath), "dst": str(dst_1)},
+                )
         except Exception as e:
+            self._record_soft_failure(
+                operation="rotate",
+                message="session log rotation failed",
+                exc=e,
+                extra={"filepath": str(filepath)},
+            )
             logging.debug("[SessionLogger] rotation failed: %s", e)
+
+    def _record_soft_failure(
+        self,
+        *,
+        operation: str,
+        message: str,
+        exc: Exception | None = None,
+        extra: dict | None = None,
+    ) -> None:
+        self._soft_failure_count += 1
+        self._last_soft_failure = {
+            "ts": time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime()),
+            "operation": operation,
+            "message": message,
+        }
+        report_soft_failure(
+            component="session_logger",
+            operation=operation,
+            message=message,
+            exc=exc,
+            degraded=True,
+            user_visible=False,
+            learnable=True,
+            extra=extra,
+            log_dir=self._resolve_soft_failure_log_dir(),
+            warning_window_sec=120.0,
+        )
+
+    def _resolve_soft_failure_log_dir(self) -> Path:
+        if self._log_dir.name == "session":
+            return self._log_dir.parent
+        return self._log_dir

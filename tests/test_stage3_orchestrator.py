@@ -337,6 +337,134 @@ class TestGenerateBlueprint:
         assert "[StyleGuide 문체/anti-AI 참고]" in semantic_context
         assert "그의 눈동자가 흔들렸다" in semantic_context
 
+    @patch("modules.core.spinners.StageSpinner")
+    def test_work_focus_summary_included_in_semantic_context(self, MockSpinner, orch, app_mock):
+        spinner = MagicMock()
+        spinner.update_detail = MagicMock()
+        MockSpinner.return_value.__enter__.return_value = spinner
+        app_mock.current_project.db.get_recent_manuscripts.return_value = []
+        app_mock.sys.guard = MagicMock()
+        app_mock.sys.guard.select_retrieval_focus.return_value = {
+            "tracking_slots": ["핵심 배우 라인"],
+            "mandatory_scene_engines": ["인재 발굴"],
+            "registry_profiles": [
+                {
+                    "name": "talent_registry",
+                    "required_fields": ["name", "status", "fan_reaction"],
+                }
+            ],
+        }
+
+        orch._generate_blueprint(
+            working_ep=1,
+            arc_data=app_mock.current_project.arcs[0],
+            arc_idx=0,
+            prev_blueprint=None,
+            prev_blueprints=[],
+            entity_registry={"characters": ["윤서아", "강이현"]},
+            protagonist_name="장무기",
+            protagonist_config={},
+        )
+
+        semantic_context = app_mock.agents["three_phase_bp"].generate.call_args.kwargs["semantic_context"]
+        assert "[작품 추적 슬롯 요약]" in semantic_context
+        assert "핵심 배우 라인" in semantic_context
+        assert "talent_registry" in semantic_context
+
+    @patch("modules.core.spinners.StageSpinner")
+    def test_stage3_advisor_receives_work_focus(self, MockSpinner, orch, app_mock):
+        spinner = MagicMock()
+        spinner.update_detail = MagicMock()
+        MockSpinner.return_value.__enter__.return_value = spinner
+        app_mock.current_project.db.get_recent_manuscripts.return_value = []
+        app_mock.context_advisor = MagicMock()
+        app_mock.memory = MagicMock()
+        app_mock.memory.retrieve_multi_query_context.return_value = "vec context"
+        app_mock.memory.retrieve_npc_context.return_value = "npc context"
+        app_mock.sys.guard = MagicMock()
+        app_mock.sys.guard.select_retrieval_focus.return_value = {
+            "tracking_slots": ["핵심 배우 라인"],
+            "mandatory_scene_engines": ["팬덤 반응"],
+            "registry_profiles": [{"name": "talent_registry", "required_fields": ["name", "heat"]}],
+        }
+        app_mock.context_advisor.plan_stage3_retrieval.return_value = MagicMock(
+            slots=[
+                MagicMock(category="work_tracking_slot_1", query="slot query", source="db_npc_history", max_chars=400),
+                MagicMock(category="genre_context_1", query="genre query", source="vec_memory", max_chars=400),
+            ]
+        )
+
+        def threshold_side_effect(key, default=None):
+            if key == "smart_retrieval.enabled":
+                return True
+            if key == "smart_retrieval.stage3_enabled":
+                return True
+            if key == "context.vector_max_results_s4":
+                return 8
+            return default
+
+        with patch("modules.validation.threshold_helper._threshold", side_effect=threshold_side_effect):
+            orch._generate_blueprint(
+                working_ep=1,
+                arc_data=app_mock.current_project.arcs[0],
+                arc_idx=0,
+                prev_blueprint=None,
+                prev_blueprints=[],
+                entity_registry={"characters": [{"name": "윤서아"}, {"name": "강이현"}]},
+                protagonist_name="장무기",
+                protagonist_config={},
+            )
+
+        app_mock.context_advisor.plan_stage3_retrieval.assert_called_once()
+        call_kwargs = app_mock.context_advisor.plan_stage3_retrieval.call_args.kwargs
+        assert call_kwargs["work_focus"]["tracking_slots"] == ["핵심 배우 라인"]
+
+    @patch("modules.core.spinners.StageSpinner")
+    def test_stage3_work_focus_relation_slice_included_in_semantic_context(self, MockSpinner, orch, app_mock):
+        spinner = MagicMock()
+        spinner.update_detail = MagicMock()
+        MockSpinner.return_value.__enter__.return_value = spinner
+        app_mock.current_project.db.get_recent_manuscripts.return_value = []
+        app_mock.quality_dashboard = MagicMock()
+        app_mock.sys.guard = MagicMock()
+        app_mock.sys.guard.select_retrieval_focus.return_value = {
+            "tracking_slots": ["소꿉친구 관계선"],
+            "mandatory_scene_engines": [],
+            "registry_profiles": [],
+        }
+        app_mock.world_state.get_state_dict.return_value = {"relationships": {"연홍": "죽마고우"}}
+        app_mock.fact_ledger._ledger = {
+            "characters": {"연홍": {"relationship": "소꿉친구", "established_ep": 3, "history": []}}
+        }
+        app_mock.current_project.db.get_npc_relationship_edges.return_value = [
+            {"npc1": "장무기", "npc2": "연홍", "relation": "죽마고우", "updated_ep": 3}
+        ]
+        app_mock.current_project.db.get_relationship_history.return_value = [
+            {"old_relation": "친구", "new_relation": "죽마고우", "change_ep": 3}
+        ]
+
+        orch._generate_blueprint(
+            working_ep=1,
+            arc_data={
+                **app_mock.current_project.arcs[0],
+                "constraint_summary": "연홍과의 소꿉친구 관계를 회복한다",
+            },
+            arc_idx=0,
+            prev_blueprint=None,
+            prev_blueprints=[],
+            entity_registry={"characters": ["연홍"]},
+            protagonist_name="장무기",
+            protagonist_config={},
+        )
+
+        semantic_context = app_mock.agents["three_phase_bp"].generate.call_args.kwargs["semantic_context"]
+        app_mock.quality_dashboard.record_retrieval_observation.assert_called_once()
+        kwargs = app_mock.quality_dashboard.record_retrieval_observation.call_args.kwargs
+        assert kwargs["stage"] == "stage3"
+        assert kwargs["observation"]["relation_slice_included"] is True
+        assert "[관계 의미 질의]" in semantic_context
+        assert "연홍" in semantic_context
+
 
 # ── Single Episode Processing ────────────────────────────────
 

@@ -138,7 +138,14 @@ def test_project_service_rollback_handles_null_json_rows():
     project = SimpleNamespace(
         get_latest_episode_number=MagicMock(return_value=6),
         paths=SimpleNamespace(drafts=SimpleNamespace(glob=MagicMock(return_value=[]))),
-        db=SimpleNamespace(cursor=cursor, delete_episode_bibles_after=MagicMock(return_value=0)),
+        db=SimpleNamespace(
+            cursor=cursor,
+            reset_after=MagicMock(),
+            commit=MagicMock(),
+            load_anchor=MagicMock(return_value={"MasterBible": {"MartialHUD": {"Protagonist": {}}}}),
+            save_anchor=MagicMock(return_value=True),
+            delete_episode_bibles_after=MagicMock(return_value=0),
+        ),
         _load_from_db=MagicMock(),
         master_bible={},
     )

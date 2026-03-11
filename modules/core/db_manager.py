@@ -435,6 +435,7 @@ class DBManager:
         self.cursor.execute("""
             CREATE TABLE IF NOT EXISTS director_selections (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+                stage INTEGER,
                 ep_num INTEGER NOT NULL,
                 round_num INTEGER NOT NULL,
                 selected_label TEXT NOT NULL,
@@ -459,6 +460,13 @@ class DBManager:
             self.cursor.execute("ALTER TABLE director_selections ADD COLUMN advisory_warnings TEXT")
         except sqlite3.OperationalError:
             pass  # already exists
+        try:
+            self.cursor.execute("ALTER TABLE director_selections ADD COLUMN stage INTEGER")
+        except sqlite3.OperationalError:
+            pass  # already exists
+        self.cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_director_selections_stage_ep ON director_selections(stage, ep_num)"
+        )
 
         # [Log-1] Per-call LLM telemetry
         self.cursor.execute(
@@ -622,6 +630,21 @@ class DBManager:
         """)
         self.cursor.execute(
             "CREATE INDEX IF NOT EXISTS idx_episode_quality_signals_created_at ON episode_quality_signals(created_at)"
+        )
+        self.cursor.execute("""
+            CREATE TABLE IF NOT EXISTS episode_quality_observations (
+                ep_num INTEGER PRIMARY KEY,
+                operator_label TEXT DEFAULT '',
+                note TEXT DEFAULT '',
+                created_at TEXT DEFAULT (datetime('now')),
+                updated_at TEXT DEFAULT (datetime('now'))
+            )
+        """)
+        self.cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_episode_quality_observations_label ON episode_quality_observations(operator_label)"
+        )
+        self.cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_episode_quality_observations_updated_at ON episode_quality_observations(updated_at)"
         )
         # [DB-Eff-P1] character_voice 프로필 테이블
         self.cursor.execute("""
@@ -841,7 +864,8 @@ class DBManager:
             logging.warning(f"[DB-MERGE] 마이그레이션 실패 (비치명): {e}")
             # [FIX-2] rollback -> DETACH 순서
             try:
-                self.conn.rollback()
+                if self.conn.in_transaction:
+                    self.conn.rollback()
             except Exception:
                 pass
             try:
@@ -2125,7 +2149,8 @@ class DBManager:
                 self.conn.commit()
         except sqlite3.IntegrityError as e:
             if not nested:
-                self.conn.rollback()
+                if self.conn.in_transaction:
+                    self.conn.rollback()
             logging.warning(f" [{DBErrorSeverity.HIGH}] 트랜잭션 무결성 오류 - 롤백 수행: {e}")
             raise DBIntegrityError(str(e), original_error=e) from e
         except sqlite3.OperationalError as e:
@@ -2170,11 +2195,13 @@ class DBManager:
             )
             return [dict(row) for row in cur.fetchall()]
 
-    def reset_after(self, target_ep) -> None:
+    def reset_after(self, target_ep, *, commit: bool = True) -> None:
         """전체 테이블 리셋 및 롤백"""
         with self._lock:
             try:
-                self.cursor.execute("BEGIN")
+                started_tx = not self.conn.in_transaction
+                if started_tx:
+                    self.cursor.execute("BEGIN")
                 tables = ["blueprints", "state_logs", "causal_graph", "manuscripts", "martial_tracker"]
                 for tbl in tables:
                     self.cursor.execute(f"DELETE FROM {tbl} WHERE ep_num >= ?", (target_ep,))
@@ -2188,8 +2215,16 @@ class DBManager:
                 self.cursor.execute("DELETE FROM npc_history WHERE episode_no >= ?", (target_ep,))
                 self.cursor.execute("DELETE FROM episode_sentence_hashes WHERE episode_number >= ?", (target_ep,))
                 self.cursor.execute("DELETE FROM episode_satisfaction_tags WHERE ep_num >= ?", (target_ep,))
-                self.cursor.execute("DELETE FROM director_selections WHERE ep_num >= ?", (target_ep,))
+                _stage4_selections = self._director_stage_predicate(4)
+                self.cursor.execute(
+                    "DELETE FROM director_selections WHERE ep_num >= ? AND " + _stage4_selections,
+                    (target_ep,),
+                )
                 self.cursor.execute("DELETE FROM episode_pacing WHERE ep_num >= ?", (target_ep,))
+                self.cursor.execute("DELETE FROM episode_quality_labels WHERE ep_num >= ?", (target_ep,))
+                self.cursor.execute("DELETE FROM episode_quality_signals WHERE ep_num >= ?", (target_ep,))
+                self.cursor.execute("DELETE FROM episode_quality_observations WHERE ep_num >= ?", (target_ep,))
+                self.cursor.execute("DELETE FROM stage_attempts WHERE stage IN (3, 4) AND ep_num >= ?", (target_ep,))
                 # [R7-P1-1] episode_fts/episode_meta 롤백 (FTS 먼저 삭제 후 meta 삭제)
                 try:
                     self.cursor.execute("DELETE FROM episode_fts WHERE rowid >= ?", (target_ep,))
@@ -2247,14 +2282,51 @@ class DBManager:
             )
             impact["satisfaction_tags"] = cur.fetchone()["cnt"]
 
-            cur = self.cursor.execute("SELECT COUNT(*) as cnt FROM director_selections WHERE ep_num >= ?", (target_ep,))
+            _stage4_selections = self._director_stage_predicate(4)
+            cur = self.cursor.execute(
+                "SELECT COUNT(*) as cnt FROM director_selections WHERE ep_num >= ? AND " + _stage4_selections,
+                (target_ep,),
+            )
             impact["director_selections"] = cur.fetchone()["cnt"]
+
+            cur = self.cursor.execute("SELECT COUNT(*) as cnt FROM episode_pacing WHERE ep_num >= ?", (target_ep,))
+            impact["episode_pacing"] = cur.fetchone()["cnt"]
+
+            cur = self.cursor.execute("SELECT COUNT(*) as cnt FROM episode_quality_labels WHERE ep_num >= ?", (target_ep,))
+            impact["episode_quality_labels"] = cur.fetchone()["cnt"]
+
+            cur = self.cursor.execute(
+                "SELECT COUNT(*) as cnt FROM episode_quality_signals WHERE ep_num >= ?",
+                (target_ep,),
+            )
+            impact["episode_quality_signals"] = cur.fetchone()["cnt"]
+
+            cur = self.cursor.execute(
+                "SELECT COUNT(*) as cnt FROM episode_quality_observations WHERE ep_num >= ?",
+                (target_ep,),
+            )
+            impact["episode_quality_observations"] = cur.fetchone()["cnt"]
+
+            cur = self.cursor.execute("SELECT COUNT(*) as cnt FROM foreshadow WHERE planted_ep >= ?", (target_ep,))
+            impact["foreshadow"] = cur.fetchone()["cnt"]
+
+            cur = self.cursor.execute(
+                "SELECT COUNT(*) as cnt FROM npc_relationship_edges WHERE updated_ep >= ?",
+                (target_ep,),
+            )
+            impact["npc_relationship_edges"] = cur.fetchone()["cnt"]
 
             # [LM-D] 관계 변경 이력 영향도
             cur = self.cursor.execute(
                 "SELECT COUNT(*) as cnt FROM npc_relationship_history WHERE change_ep >= ?", (target_ep,)
             )
             impact["npc_relationship_history"] = cur.fetchone()["cnt"]
+
+            cur = self.cursor.execute(
+                "SELECT COUNT(*) as cnt FROM stage_attempts WHERE stage IN (3, 4) AND ep_num >= ?",
+                (target_ep,),
+            )
+            impact["stage_attempts_stage34"] = cur.fetchone()["cnt"]
 
             return impact
 
@@ -2492,6 +2564,7 @@ class DBManager:
         candidate_count: int = 3,
         fix_scope: str = "",
         advisory_warnings: dict | None = None,
+        stage: int | None = None,
     ) -> None:
         """Persist director selection result."""
         with self._lock:
@@ -2499,10 +2572,11 @@ class DBManager:
             _adv_json = json.dumps(advisory_warnings, ensure_ascii=False) if advisory_warnings else None
             self.cursor.execute(
                 "INSERT INTO director_selections "
-                "(ep_num, round_num, selected_label, selected_strategy, verdict, score, "
+                "(stage, ep_num, round_num, selected_label, selected_strategy, verdict, score, "
                 "selection_reason, candidate_count, fix_scope, advisory_warnings) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (
+                    stage,
                     ep_num,
                     round_num,
                     selected_label,
@@ -2592,6 +2666,75 @@ class DBManager:
         if not row:
             return None
         return self._parse_episode_quality_signal_row(dict(row))
+
+    @staticmethod
+    def _parse_episode_quality_observation_row(row: dict) -> dict:
+        result = dict(row)
+        result["operator_label"] = str(result.get("operator_label") or "").strip()
+        result["note"] = str(result.get("note") or "").strip()
+        return result
+
+    def save_episode_quality_observation(self, ep_num: int, observation: dict) -> None:
+        """운영자 수기 품질 관측 기록 저장."""
+        if not isinstance(observation, dict):
+            return
+
+        label = str(observation.get("operator_label") or observation.get("label") or "").strip()
+        note = str(observation.get("note") or "").strip()
+        if not label:
+            return
+
+        with self._lock:
+            nested = self.conn.in_transaction
+            self.cursor.execute(
+                """
+                INSERT INTO episode_quality_observations (ep_num, operator_label, note, created_at, updated_at)
+                VALUES (?, ?, ?, datetime('now'), datetime('now'))
+                ON CONFLICT(ep_num) DO UPDATE SET
+                    operator_label = excluded.operator_label,
+                    note = excluded.note,
+                    updated_at = datetime('now')
+                """,
+                (ep_num, label[:40], note[:500]),
+            )
+            if not nested:
+                self.commit()
+
+    def get_episode_quality_observation(self, ep_num: int) -> dict | None:
+        """특정 회차의 운영자 수기 품질 관측 조회."""
+        with self._lock:
+            cur = self.cursor.execute(
+                "SELECT ep_num, operator_label, note, created_at, updated_at "
+                "FROM episode_quality_observations WHERE ep_num = ?",
+                (ep_num,),
+            )
+            row = cur.fetchone()
+        if not row:
+            return None
+        return self._parse_episode_quality_observation_row(dict(row))
+
+    def get_recent_episode_quality_observations(
+        self,
+        before_ep: int | None = None,
+        lookback: int = 20,
+    ) -> list[dict]:
+        """최근 N개 회차의 운영자 수기 품질 관측을 오래된 순으로 반환."""
+        safe_lookback = max(1, int(lookback))
+        with self._lock:
+            if before_ep is None:
+                cur = self.cursor.execute(
+                    "SELECT ep_num, operator_label, note, created_at, updated_at "
+                    "FROM episode_quality_observations ORDER BY ep_num DESC LIMIT ?",
+                    (safe_lookback,),
+                )
+            else:
+                cur = self.cursor.execute(
+                    "SELECT ep_num, operator_label, note, created_at, updated_at "
+                    "FROM episode_quality_observations WHERE ep_num < ? ORDER BY ep_num DESC LIMIT ?",
+                    (before_ep, safe_lookback),
+                )
+            rows = [dict(row) for row in cur.fetchall()]
+        return [self._parse_episode_quality_observation_row(row) for row in reversed(rows)]
 
     def get_recent_episode_quality_signals(
         self,
@@ -2703,8 +2846,22 @@ class DBManager:
             parsed_rows.append(row)
         return parsed_rows
 
+    @staticmethod
+    def _director_stage_predicate(stage: int, *, alias: str = "") -> str:
+        prefix = f"{alias}." if alias else ""
+        if stage == 2:
+            return (
+                f"({prefix}stage = 2 OR ({prefix}stage IS NULL AND COALESCE({prefix}selected_label, '') = ''))"
+            )
+        if stage == 4:
+            return (
+                f"({prefix}stage = 4 OR ({prefix}stage IS NULL AND COALESCE({prefix}selected_label, '') != ''))"
+            )
+        return f"{prefix}stage = {int(stage)}"
+
     def get_recent_episode_scores(self, before_ep: int, lookback: int = 5) -> list[dict]:
         """최근 PASS 계열 에피소드 점수를 오래된 순으로 반환."""
+        _stage4 = self._director_stage_predicate(4)
         with self._lock:
             cur = self.cursor.execute(
                 """
@@ -2713,7 +2870,9 @@ class DBManager:
                 JOIN (
                     SELECT ep_num, MAX(id) AS last_id
                     FROM director_selections
-                    WHERE ep_num < ? AND verdict IN ('PASS', 'PASS_WITH_FIX')
+                    WHERE ep_num < ? AND verdict IN ('PASS', 'PASS_WITH_FIX') AND """
+                + _stage4
+                + """
                     GROUP BY ep_num
                     ORDER BY ep_num DESC
                     LIMIT ?
