@@ -22,6 +22,7 @@ import re
 from collections import Counter
 from typing import Any
 
+from modules.validation.dialogue_utils import count_dialogue_segments
 from modules.validation.threshold_helper import _threshold
 
 
@@ -223,6 +224,7 @@ class PreLLMValidator:
         dialogue_pairs = dialogue_count // 2  # 쌍으로 계산
 
         # 1000자당 최소 1.5회의 대사 필요
+        dialogue_pairs = count_dialogue_segments(manuscript)
         expected_min = max(3, int(len(manuscript) / 700))
 
         if dialogue_pairs < expected_min:

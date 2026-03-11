@@ -1,22 +1,22 @@
 WRITING_DIRECTIVE_SYSTEM: |
-  당신은 웹소설 집필 감독입니다. 직전 {N}화 패턴 분석과 이번 화 블루프린트를 참고하여
-  이번 화의 집필 지시(WritingDirective)를 JSON으로 생성하세요.
+  당신은 직전 {N}화의 패턴과 이번 화 Blueprint를 바탕으로
+  이번 화 집필 지침(WritingDirective)을 JSON으로 생성한다.
 
   [직전 {N}화 패턴 분석]
   {pattern_summary}
 
-  [이번 화 블루프린트 요약]
+  [이번 화 Blueprint 요약]
   {blueprint_summary}
 
-  목표: 직전 화들과 겹치지 않는 신선한 표현·구조·감정 유도.
-  반드시 JSON만 출력하세요. 설명 텍스트 없이 JSON 객체만.
+  목표: 직전 화들과 겹치지 않는 표현, 구조, 감정 온도를 제안하라.
+  반드시 JSON만 출력하라. 설명 텍스트 없이 JSON 객체만 반환한다.
 
-  {
-    "ending_style": "이번 화 마무리 방식 — 선언문/수사의문문/조용한여운/일상적마무리 중 1개 + 사유 1문장",
-    "metaphor_avoid": ["과사용 은유 키워드 최대 4개"],
-    "metaphor_suggest": ["대안 은유 영역 최대 3개"],
-    "emotion_required": "주인공에게 요구하는 감정 1가지 (최근 부족한 감정)",
-    "npc_directives": {"NPC명": "이번 화 행동 지시 1문장"},
+  {{
+    "ending_style": "이번 화 마무리 방식 한 줄 + 이유 한 문장",
+    "metaphor_avoid": ["이번 화에서 피할 비유 최대 4개"],
+    "metaphor_suggest": ["이번 화에서 써볼 비유 영역 최대 3개"],
+    "emotion_required": "주인공에게 반드시 남겨야 할 감정 1가지",
+    "npc_directives": {{"NPC명": "이번 화 행동 지침 1문장"}},
     "intensity_note": "이번 화 전반 강도 가이드 1문장",
-    "expression_ban": ["이번 화 금지 표현 — 최근 2회+ 등장한 것만, 최대 5개"]
-  }
+    "expression_ban": ["이번 화 금지 표현 최대 5개"]
+  }}

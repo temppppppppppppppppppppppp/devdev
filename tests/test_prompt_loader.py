@@ -296,6 +296,21 @@ class TestRealYamlFiles:
         keys = loader.list_keys("emotion_tracker")
         assert len(keys) > 0
 
+    def test_writing_directive_prompt_loads_with_literal_json_braces(self):
+        loader = PromptLoader()
+        prompt = loader.load(
+            "writing_directive",
+            "WRITING_DIRECTIVE_SYSTEM",
+            N=3,
+            pattern_summary="요약",
+            blueprint_summary="블루프린트",
+        )
+
+        assert prompt is not None
+        assert '"ending_style"' in prompt
+        assert '"npc_directives"' in prompt
+        assert "{N}" not in prompt
+
 
 class TestTier5PromptHygiene:
     def test_deleted_yaml_keys_not_referenced(self):

@@ -40,6 +40,7 @@ from modules.api.risk_approval import RiskApprovalGate
 from modules.api.run_validator import RISK_KEYS, validate_run_request
 from modules.core.db_manager import DBManager
 from modules.core.quality_dashboard import QualityDashboard
+from modules.core.quality_sidecar_bootstrap import inspect_quality_sidecar_health
 
 logger = logging.getLogger(__name__)
 
@@ -274,6 +275,20 @@ def _quality_dashboard_defaults(project: str, lookback: int) -> dict:
             "advisory_candidates": [],
             "next_step": "실제 회차를 보며 '좋음/경계/AI 티/지나친 단조/과잉 설명'을 기록하면 승격 후보가 누적됩니다.",
             "allowed_labels": list(_QUALITY_REVIEW_LABELS),
+            "data_health": {
+                "metrics_rows": 0,
+                "stage4_validation_eps": 0,
+                "retrieval_observation_rows": 0,
+                "quality_label_rows": 0,
+                "quality_signal_rows": 0,
+                "manual_review_rows": 0,
+                "missing_label_eps": 0,
+                "missing_signal_eps": 0,
+                "work_guard_exists": False,
+                "tracking_slots": 0,
+                "registry_profiles": 0,
+                "role_fit_constraints": 0,
+            },
         },
     }
 
@@ -958,6 +973,7 @@ def _build_calibration_payload(
     labels: list[dict],
     signals: list[dict],
     observations: list[dict],
+    data_health: dict | None = None,
 ) -> dict:
     payload = {
         "available": False,
@@ -969,8 +985,14 @@ def _build_calibration_payload(
         "advisory_candidates": [],
         "next_step": "실제 회차를 보며 '좋음/경계/AI 티/지나친 단조/과잉 설명'을 기록하면 승격 후보가 누적됩니다.",
         "allowed_labels": list(_QUALITY_REVIEW_LABELS),
+        "data_health": data_health or {},
     }
     if not observations:
+        health = data_health or {}
+        if health.get("stage4_validation_eps", 0) > 0 and health.get("manual_review_rows", 0) <= 0:
+            payload["next_step"] = "수동 review 라벨이 아직 없습니다. 최근 Stage 4 원고부터 운영자 라벨을 5건 이상 쌓으세요."
+        elif health.get("retrieval_observation_rows", 0) <= 0 and health.get("stage4_validation_eps", 0) > 0:
+            payload["next_step"] = "retrieval 관측 로그가 부족합니다. 최신 코드로 Stage 2/3/4를 다시 실행해 표본을 쌓으세요."
         return payload
 
     signal_map = {int(row.get("ep_num")): row for row in signals if row.get("ep_num") is not None}
@@ -1134,7 +1156,9 @@ def _build_quality_dashboard_payload(project: str, lookback: int) -> dict:
         return payload
 
     db = DBManager(db_path)
+    calibration_health = payload["calibration"]["data_health"]
     try:
+        calibration_health = inspect_quality_sidecar_health(project_dir, db)
         quality_summary = db.get_quality_signal_summary(lookback=safe_lookback)
         quality_summary["project"] = project
         payload["quality_summary"] = quality_summary
@@ -1171,6 +1195,7 @@ def _build_quality_dashboard_payload(project: str, lookback: int) -> dict:
         labels=compare_labels,
         signals=compare_signals,
         observations=observations,
+        data_health=calibration_health,
     )
     if not payload["available"]:
         payload["available"] = bool(payload["stage_stats"] or payload["episode_trend"])

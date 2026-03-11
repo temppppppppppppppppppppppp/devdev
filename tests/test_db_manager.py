@@ -227,3 +227,34 @@ def test_get_strategy_win_rates_supports_stage2_filters(db):
 
     assert result["total"] == 1
     assert result["creative"] == 1.0
+
+
+def test_save_director_selection_persists_firewall_metadata(db):
+    db.save_director_selection(
+        4,
+        2,
+        "A",
+        "balanced",
+        "REJECT",
+        score=44,
+        selection_reason="최우수 후보 선택",
+        verdict_reason="Contradiction Firewall: CRITICAL 1건",
+        pre_firewall_score=100,
+        firewall_triggered=True,
+        firewall_reason="Contradiction Firewall: CRITICAL 1건",
+        stage=4,
+    )
+
+    row = db.cursor.execute(
+        """
+        SELECT selection_reason, verdict_reason, pre_firewall_score, firewall_triggered, firewall_reason
+        FROM director_selections
+        WHERE ep_num = 4 AND round_num = 2
+        """
+    ).fetchone()
+
+    assert row["selection_reason"] == "최우수 후보 선택"
+    assert row["verdict_reason"] == "Contradiction Firewall: CRITICAL 1건"
+    assert row["pre_firewall_score"] == 100
+    assert row["firewall_triggered"] == 1
+    assert row["firewall_reason"] == "Contradiction Firewall: CRITICAL 1건"

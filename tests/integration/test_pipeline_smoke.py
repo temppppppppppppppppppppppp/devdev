@@ -566,7 +566,7 @@ class TestStage4ContextDISlots:
     def test_stage4_context_slot_count(self):
         """Stage4Context __slots__ 총 수 == 28."""
         slots = Stage4Context.__slots__
-        assert len(slots) == 29, f"슬롯 수 불일치: {len(slots)}"  # [LOG-1] +session_logger
+        assert len(slots) == 30, f"슬롯 수 불일치: {len(slots)}"  # [LOG-1] +session_logger + budget meta
 
     def test_stage4_character_voice_slot_wiring(self, tmp_path):
         """character_voice 슬롯에 CharacterVoiceTracker 주입 후 접근 가능."""

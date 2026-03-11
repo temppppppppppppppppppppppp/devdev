@@ -163,11 +163,28 @@ def test_quality_dashboard_endpoint_combines_result_and_patterns(tmp_path, monke
         encoding="utf-8",
     )
 
+    db = DBManager(project_dir / "project_data.db")
+    before_counts = {
+        "labels": db.cursor.execute("SELECT COUNT(*) FROM episode_quality_labels").fetchone()[0],
+        "signals": db.cursor.execute("SELECT COUNT(*) FROM episode_quality_signals").fetchone()[0],
+        "observations": db.cursor.execute("SELECT COUNT(*) FROM episode_quality_observations").fetchone()[0],
+    }
+    db.close()
+
     response = asyncio.run(bridge_server.quality_dashboard_endpoint(project="demo", lookback=5))
     payload = json.loads(response.body.decode("utf-8"))
 
+    db = DBManager(project_dir / "project_data.db")
+    after_counts = {
+        "labels": db.cursor.execute("SELECT COUNT(*) FROM episode_quality_labels").fetchone()[0],
+        "signals": db.cursor.execute("SELECT COUNT(*) FROM episode_quality_signals").fetchone()[0],
+        "observations": db.cursor.execute("SELECT COUNT(*) FROM episode_quality_observations").fetchone()[0],
+    }
+    db.close()
+
     assert response.status_code == 200
     assert payload["ok"] is True
+    assert after_counts == before_counts
     data = payload["data"]
     assert data["available"] is True
     assert data["quality_summary"]["latest_ep"] == 3

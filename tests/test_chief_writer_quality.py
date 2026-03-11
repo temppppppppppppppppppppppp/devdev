@@ -65,9 +65,9 @@ class TestQualityGateBasics:
 
 class TestApplyAndCritique:
     def test_apply_self_critique_high_rubric_skip(self):
-        """[TF-I08] rubric ≥ 3.5 + 구조적 이슈 없음 → 스킵"""
+        """[TF-I08] rubric ≥ 3.5 + 구조적 이슈 없음 + 분량 충족 → 스킵"""
         gate = ChiefWriterQualityGate(_make_host())
-        manuscript = '{"content":"본문"}'
+        manuscript = '{"content":"' + "본문입니다. " * 700 + '"}'  # 4,000자 이상
         with (
             patch.object(gate, "_evaluate_with_rubric", return_value=3.6),
             patch.object(
@@ -421,7 +421,7 @@ class TestFixAndRubric:
             )
         m_expand.assert_called_once()
         m_generic.assert_not_called()
-        host.ask.assert_called_with("expand prompt", temperature=0.5, thinking_level="medium")
+        host.ask.assert_called_with("expand prompt", temperature=0.5, thinking_level="low")
 
     def test_fix_uses_generic_prompt_for_other_issues(self):
         host = _make_host()

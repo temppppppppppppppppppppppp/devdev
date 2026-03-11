@@ -66,3 +66,15 @@ def test_check_pov_consistency_allows_mixed_pov_with_scene_separator():
     result = validator._check_pov_consistency(manuscript)
 
     assert result["has_issue"] is False
+
+
+def test_check_dialogue_presence_counts_smart_and_corner_quotes():
+    validator = PreLLMValidator()
+    manuscript = (
+        "서술" * 1200
+        + " “지금부터 시작이야.” 「여기서 끝내자.」 『하지만 아직 아니다.』 " * 4
+    )
+
+    result = validator._check_dialogue_presence(manuscript)
+
+    assert result["missing"] is False

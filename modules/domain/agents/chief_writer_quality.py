@@ -76,6 +76,21 @@ class ChiefWriterQualityGate:
 
         return text
 
+    def _extract_content_text(self, manuscript: str) -> str:
+        try:
+            data = json.loads(manuscript)
+            content = data.get("content", "") if isinstance(data, dict) else manuscript
+        except (json.JSONDecodeError, ValueError, TypeError):
+            content = manuscript
+
+        if isinstance(content, list):
+            return "\n".join(str(item) for item in content)
+        if isinstance(content, dict):
+            return content.get("text", "") or json.dumps(content, ensure_ascii=False)
+        if isinstance(content, str):
+            return content
+        return str(content or "")
+
     def apply_self_critique(
         self,
         manuscript: str,
@@ -117,10 +132,11 @@ class ChiefWriterQualityGate:
 
         current_manuscript = manuscript
         total_issues_fixed = 0
+        current_content_length = len(self._extract_content_text(current_manuscript))
 
         # [V60.82] 조기 스킵 조건 - Rubric 점수로 사전 평가
         rubric_score = self._evaluate_with_rubric(current_manuscript, genre_name)
-        if rubric_score >= 3.5:
+        if rubric_score >= 3.5 and current_content_length >= int(ManuscriptLimits.MIN_LENGTH):
             # [TF-I08] 구조적 적신호 확인 — rubric 높아도 구조 문제 있으면 스킵 금지
             _structural = self._self_critique(
                 current_manuscript,
@@ -203,7 +219,8 @@ class ChiefWriterQualityGate:
             # [V60.82] 라운드 중간 Rubric 체크 - 3.5 이상이면 조기 종료
             if round_num > 1:
                 mid_score = self._evaluate_with_rubric(current_manuscript, genre_name)
-                if mid_score >= 3.5:
+                current_content_length = len(self._extract_content_text(current_manuscript))
+                if mid_score >= 3.5 and current_content_length >= int(ManuscriptLimits.MIN_LENGTH):
                     break
 
             logging.info(
@@ -1085,7 +1102,7 @@ class ChiefWriterQualityGate:
                 manuscript_escaped=self.host._escape_braces(manuscript),
                 hud_report_escaped=self.host._escape_braces(hud_report[:500]),
             )
-            _thinking = "medium"
+            _thinking = "low"
         else:
             # [V65] 기존 범용 교정 프롬프트
             prompt = get_fix_issues_prompt(

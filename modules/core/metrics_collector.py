@@ -442,22 +442,31 @@ class MetricsCollector:
 
         return filepath
 
+    def _build_scope_summary_locked(self) -> dict[str, Any]:
+        model_breakdown = {
+            model: {
+                "tokens": int(stats.get("tokens", 0)),
+                "cost": round(float(stats.get("cost", 0.0)), 6),
+            }
+            for model, stats in self._scope_model_breakdown.items()
+        }
+        return {
+            "total_calls": int(self._scope_calls),
+            "total_tokens": int(self._scope_tokens),
+            "total_cost_usd": round(float(self._scope_cost), 6),
+            "model_breakdown": model_breakdown,
+        }
+
+    def peek_scope(self) -> dict[str, Any]:
+        """Return current scope totals without resetting them."""
+        with self._lock:
+            return self._build_scope_summary_locked()
+
     def snapshot_and_reset_scope(self) -> dict[str, Any]:
         """현재 스코프 집계를 반환하고 스코프 카운터를 리셋."""
         with self._lock:
-            model_breakdown = {
-                model: {
-                    "tokens": int(stats.get("tokens", 0)),
-                    "cost": round(float(stats.get("cost", 0.0)), 6),
-                }
-                for model, stats in self._scope_model_breakdown.items()
-            }
-            summary = {
-                "total_calls": int(self._scope_calls),
-                "total_tokens": int(self._scope_tokens),
-                "total_cost_usd": round(float(self._scope_cost), 6),
-                "model_breakdown": json.dumps(model_breakdown, ensure_ascii=False),
-            }
+            summary = self._build_scope_summary_locked()
+            summary["model_breakdown"] = json.dumps(summary["model_breakdown"], ensure_ascii=False)
 
             self._scope_calls = 0
             self._scope_tokens = 0

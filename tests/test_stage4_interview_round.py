@@ -1,8 +1,10 @@
 """[B-1-3] Stage4InterviewRound unit tests."""
 
 import inspect
+import json
+import time
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, mock_open, patch
 
 from modules.core.context_advisor import RetrievalPlan, RetrievalSlot, RetrievalSources
 from modules.core.stage4_interview_round import Stage4InterviewRound
@@ -839,7 +841,7 @@ class TestRecordS4Attempt:
         ctx.pass_rate_monitor.record_attempt.assert_called_once()
         kw = ctx.pass_rate_monitor.record_attempt.call_args.kwargs
         assert kw["success"] is False
-        assert "score=40" in kw["reject_reason"]
+        assert kw["reject_reason"] == "수정1"
         assert kw["arc"] == 1
 
     def test_patch_records_method_patch(self):
@@ -925,8 +927,157 @@ class TestRecordS4Attempt:
         ctx.pass_rate_monitor.record_attempt.assert_called_once()
         kw = ctx.pass_rate_monitor.record_attempt.call_args.kwargs
         assert kw["success"] is False
-        assert kw["reject_reason"] == "score=0"
+        assert kw["reject_reason"] == "empty_candidates"
         assert kw["arc"] == 1
+
+    def test_save_director_selection_persists_verdict_metadata(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.chief_writer.generate_ensemble.return_value = [_candidate()]
+        round_ctx.manuscript_validator.validate_all_candidates.return_value = [_validation_result()]
+        ctx.agents["director"].select_and_judge_ensemble.return_value = {
+            "selected": "A",
+            "verdict": "REJECT",
+            "score": 44,
+            "pre_firewall_score": 100,
+            "selection_reason": "최우수 후보 선택",
+            "verdict_reason": "Contradiction Firewall: CRITICAL 1건",
+            "firewall_triggered": True,
+            "firewall_reason": "Contradiction Firewall: CRITICAL 1건",
+            "feedback": {"issues": ["중대 모순"]},
+            "action_items": ["마지막 장면 수정"],
+            "selected_candidate": {"manuscript": "candidate manuscript", "strategy_name": "balanced"},
+        }
+
+        ir.run(
+            round_num=0,
+            stage4_spinner=MagicMock(),
+            director_feedback="",
+            previous_attempt={},
+            round_ctx=round_ctx,
+        )
+
+        ctx.current_project.db.save_director_selection.assert_called_once()
+        kw = ctx.current_project.db.save_director_selection.call_args.kwargs
+        assert kw["selection_reason"] == "최우수 후보 선택"
+        assert kw["verdict_reason"] == "Contradiction Firewall: CRITICAL 1건"
+        assert kw["pre_firewall_score"] == 100
+        assert kw["firewall_triggered"] is True
+        assert kw["firewall_reason"] == "Contradiction Firewall: CRITICAL 1건"
+
+    def test_post_select_conflict_preserves_patch_seed_metadata(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.next_ep = 2
+        ctx.agents["director"].check_manuscript_continuity_with_cache.return_value = {
+            "decision": "CONFLICT",
+            "summary": "continuity mismatch",
+        }
+
+        verdict, director_feedback, previous_attempt, error_category = ir._run_post_select_checks(
+            verdict="PASS",
+            final_manuscript="patched manuscript",
+            final_state_updates={},
+            next_ep=2,
+            round_num=0,
+            round_ctx=round_ctx,
+            director_result={
+                "selected_candidate": {
+                    "manuscript": "patched manuscript",
+                    "strategy": "tension",
+                    "strategy_name": "tension",
+                },
+                "selection_reason": "best candidate",
+                "verdict_reason": "director pass before post-select",
+                "fix_scope": "",
+                "open_review": "",
+            },
+            director_feedback="initial feedback",
+            score=95,
+            error_category="",
+            previous_attempt={},
+            stage4_spinner=MagicMock(),
+            director_memory_context="",
+        )
+
+        assert verdict == "REJECT"
+        assert error_category == "LOGIC_ERROR"
+        assert "[Continuity Conflict]" in director_feedback
+        assert previous_attempt["fix_scope"] == "partial"
+        assert previous_attempt["selected_strategy_key"] == "tension"
+        assert previous_attempt["selection_reason"] == "best candidate"
+        assert previous_attempt["verdict_reason"] == "director pass before post-select"
+        assert previous_attempt["reject_bucket"] == "post_select_conflict"
+
+    def test_post_select_conflict_prefers_patch_before_inplace(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.chief_writer.inplace_patch.return_value = [_candidate()]
+        round_ctx.chief_writer.patch_with_feedback.return_value = [_candidate()]
+        round_ctx.chief_writer.regenerate_with_feedback.return_value = [_candidate()]
+
+        candidates, is_patch, patch_fallback, prev_score, asp_manuscript = ir._generate_candidates(
+            round_num=1,
+            chief_writer=round_ctx.chief_writer,
+            director_feedback="fix continuity only",
+            previous_attempt={
+                "score": 98,
+                "best_manuscript": "original manuscript",
+                "fix_scope": "",
+                "reject_bucket": "post_select_conflict",
+                "selected_strategy_key": "tension",
+            },
+            prev_manuscript="original manuscript",
+            style_guide="",
+            blueprint={},
+            common_writer_kwargs={},
+        )
+
+        assert candidates == round_ctx.chief_writer.patch_with_feedback.return_value
+        assert is_patch is True
+        assert patch_fallback is False
+        assert prev_score == 98
+        assert asp_manuscript is None
+        round_ctx.chief_writer.inplace_patch.assert_not_called()
+        round_ctx.chief_writer.patch_with_feedback.assert_called_once()
+        round_ctx.chief_writer.regenerate_with_feedback.assert_not_called()
+
+    def test_reject_retry_shrunk_inplace_patch_falls_back_to_patch(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        prev_manuscript = "original " * 500
+        round_ctx.chief_writer.inplace_patch.return_value = [{"manuscript": "patched " * 300}]
+        round_ctx.chief_writer.patch_with_feedback.return_value = [_candidate()]
+
+        candidates, is_patch, patch_fallback, prev_score, asp_manuscript = ir._generate_candidates(
+            round_num=1,
+            chief_writer=round_ctx.chief_writer,
+            director_feedback="fix continuity only",
+            previous_attempt={
+                "score": 70,
+                "best_manuscript": prev_manuscript,
+                "fix_scope": "inplace",
+                "reject_bucket": "quality_issue",
+                "selected_strategy_key": "balanced",
+            },
+            prev_manuscript=prev_manuscript,
+            style_guide="",
+            blueprint={},
+            common_writer_kwargs={},
+        )
+
+        assert candidates == round_ctx.chief_writer.patch_with_feedback.return_value
+        assert is_patch is True
+        assert patch_fallback is False
+        assert prev_score == 70
+        assert asp_manuscript is None
+        round_ctx.chief_writer.inplace_patch.assert_called_once()
+        round_ctx.chief_writer.patch_with_feedback.assert_called_once()
+        round_ctx.chief_writer.regenerate_with_feedback.assert_not_called()
 
     def test_no_monitor_does_not_crash(self):
         ctx = _make_ctx()
@@ -962,6 +1113,366 @@ class TestRecordS4Attempt:
         )
 
         assert result.verdict == "EMPTY"
+
+    def test_post_select_conflict_force_patch_only_once(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.chief_writer.inplace_patch.return_value = [_candidate()]
+
+        candidates, is_patch, patch_fallback, prev_score, asp_manuscript = ir._generate_candidates(
+            round_num=2,
+            chief_writer=round_ctx.chief_writer,
+            director_feedback="fix continuity only",
+            previous_attempt={
+                "score": 98,
+                "best_manuscript": "original manuscript",
+                "fix_scope": "",
+                "reject_bucket": "post_select_conflict",
+                "selected_strategy_key": "tension",
+            },
+            prev_manuscript="original manuscript",
+            style_guide="",
+            blueprint={},
+            common_writer_kwargs={},
+        )
+
+        assert candidates == round_ctx.chief_writer.inplace_patch.return_value
+        assert is_patch is False
+        assert patch_fallback is False
+        assert prev_score == 98
+        assert asp_manuscript is None
+        round_ctx.chief_writer.patch_with_feedback.assert_not_called()
+        round_ctx.chief_writer.regenerate_with_feedback.assert_not_called()
+        round_ctx.chief_writer.inplace_patch.assert_called_once()
+
+    def test_retry_regenerate_uses_reduced_strategy_budget_for_constraint_violation(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.chief_writer.regenerate_with_feedback.return_value = [_candidate()]
+
+        candidates, is_patch, patch_fallback, prev_score, asp_manuscript = ir._generate_candidates(
+            round_num=2,
+            chief_writer=round_ctx.chief_writer,
+            director_feedback="fix constraint only",
+            previous_attempt={
+                "score": 10,
+                "best_manuscript": "",
+                "fix_scope": "",
+                "reject_bucket": "constraint_violation",
+                "selected_strategy_key": "tension",
+            },
+            prev_manuscript="original manuscript",
+            style_guide="",
+            blueprint={},
+            common_writer_kwargs={},
+        )
+
+        assert candidates == round_ctx.chief_writer.regenerate_with_feedback.return_value
+        assert is_patch is False
+        assert patch_fallback is False
+        assert prev_score == 10
+        assert asp_manuscript is None
+        call_kwargs = round_ctx.chief_writer.regenerate_with_feedback.call_args.kwargs
+        assert call_kwargs["strategy_budget"] == "reduced"
+        assert call_kwargs["preferred_strategy"] == "tension"
+        assert ir._last_strategy_budget == "reduced"
+        assert ir._last_strategy_count == 2
+
+    def test_retry_regenerate_keeps_full_strategy_budget_for_structure_error(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.chief_writer.regenerate_with_feedback.return_value = [_candidate()]
+
+        candidates, is_patch, patch_fallback, prev_score, asp_manuscript = ir._generate_candidates(
+            round_num=2,
+            chief_writer=round_ctx.chief_writer,
+            director_feedback="fix structure only",
+            previous_attempt={
+                "score": 10,
+                "best_manuscript": "",
+                "fix_scope": "",
+                "reject_bucket": "structure_error",
+                "selected_strategy_key": "tension",
+            },
+            prev_manuscript="original manuscript",
+            style_guide="",
+            blueprint={},
+            common_writer_kwargs={},
+        )
+
+        assert candidates == round_ctx.chief_writer.regenerate_with_feedback.return_value
+        assert is_patch is False
+        assert patch_fallback is False
+        assert prev_score == 10
+        assert asp_manuscript is None
+        call_kwargs = round_ctx.chief_writer.regenerate_with_feedback.call_args.kwargs
+        assert call_kwargs.get("strategy_budget", "full") == "full"
+        assert call_kwargs.get("preferred_strategy", "") == ""
+        assert ir._last_strategy_budget == "full"
+        assert ir._last_strategy_count == 3
+
+    def test_record_s4_attempt_passes_round_duration_and_token_cost(self):
+        ctx = _make_ctx()
+        ctx.pass_rate_monitor = MagicMock()
+        ir = Stage4InterviewRound(ctx)
+        ir._round_start_ts = time.monotonic() - 1
+        ir._round_metrics_start = {
+            "total_calls": 0,
+            "total_tokens": 0,
+            "total_cost_usd": 0.0,
+            "model_breakdown": {},
+        }
+        ir._get_round_metrics_delta = MagicMock(
+            return_value={
+                "total_calls": 2,
+                "total_tokens": 3000,
+                "total_cost_usd": 0.321,
+                "model_breakdown": {"gemini-2.5-pro": {"tokens": 3000, "cost": 0.321}},
+            }
+        )
+
+        ir._record_s4_attempt(
+            episode=1,
+            round_num=0,
+            success=True,
+            score=90,
+            model="gemini-2.5-pro",
+        )
+
+        kwargs = ctx.pass_rate_monitor.record_attempt.call_args.kwargs
+        assert kwargs["duration_ms"] > 0
+        assert kwargs["token_cost"] == 0.321
+
+    def test_append_episode_log_includes_round_cost_and_strategy_flags(self):
+        ctx = _make_ctx()
+        ctx.current_project.name = "proj"
+        ir = Stage4InterviewRound(ctx)
+        ir._round_start_ts = time.monotonic() - 1
+        ir._last_strategy_budget = "reduced"
+        ir._last_strategy_count = 2
+        ir._get_round_metrics_delta = MagicMock(
+            return_value={
+                "total_calls": 4,
+                "total_tokens": 4321,
+                "total_cost_usd": 0.456,
+                "model_breakdown": {"gemini-2.5-pro": {"tokens": 4321, "cost": 0.456}},
+            }
+        )
+
+        with patch("builtins.open", mock_open()) as mocked_open, patch("os.makedirs"):
+            ir._append_episode_log(
+                ep_num=3,
+                round_num=1,
+                director_result={
+                    "verdict": "REJECT",
+                    "score": 44,
+                    "selected": "A",
+                    "selection_reason": "best candidate",
+                    "selected_candidate": {"strategy_name": "tension"},
+                    "score_breakdown": {},
+                    "action_items": [],
+                    "open_review": "",
+                },
+                is_patch=False,
+                patch_fallback=False,
+                tot_used=False,
+                mad_used=False,
+                asp_used=False,
+                model="gemini-2.5-pro",
+                reject_bucket="constraint_violation",
+                validation_warnings=["warn-1"],
+            )
+
+        written = "".join(call.args[0] for call in mocked_open().write.call_args_list)
+        payload = json.loads(written.strip())
+        assert payload["round_total_calls"] == 4
+        assert payload["round_total_tokens"] == 4321
+        assert payload["round_total_cost_usd"] == 0.456
+        assert payload["round_model_breakdown"]["gemini-2.5-pro"]["tokens"] == 4321
+        assert payload["flags"]["strategy_budget"] == "reduced"
+        assert payload["flags"]["strategy_count"] == 2
+        assert payload["flags"]["reject_bucket"] == "constraint_violation"
+
+    def test_append_episode_log_persists_selection_and_verdict_reason(self):
+        ctx = _make_ctx()
+        ctx.current_project.name = "proj"
+        ir = Stage4InterviewRound(ctx)
+        ir._round_start_ts = time.monotonic() - 1
+        ir._get_round_metrics_delta = MagicMock(
+            return_value={
+                "total_calls": 1,
+                "total_tokens": 1234,
+                "total_cost_usd": 0.123,
+                "model_breakdown": {"gemini-2.5-pro": {"tokens": 1234, "cost": 0.123}},
+            }
+        )
+
+        with patch("builtins.open", mock_open()) as mocked_open, patch("os.makedirs"):
+            ir._append_episode_log(
+                ep_num=4,
+                round_num=0,
+                director_result={
+                    "verdict": "REJECT",
+                    "score": 44,
+                    "selected": "A",
+                    "selection_reason": "최우수 후보 선택",
+                    "verdict_reason": "Contradiction Firewall: CRITICAL 1건",
+                    "selected_candidate": {"strategy_name": "balanced"},
+                    "score_breakdown": {},
+                    "action_items": ["마지막 장면 수정"],
+                    "open_review": "",
+                },
+                is_patch=False,
+                patch_fallback=False,
+                tot_used=False,
+                mad_used=False,
+                asp_used=False,
+                model="gemini-2.5-pro",
+                reject_bucket="constraint_violation",
+                validation_warnings=[],
+            )
+
+        written = "".join(call.args[0] for call in mocked_open().write.call_args_list)
+        payload = json.loads(written.strip())
+        assert payload["reason"] == "최우수 후보 선택"
+        assert payload["selection_reason"] == "최우수 후보 선택"
+        assert payload["verdict_reason"] == "Contradiction Firewall: CRITICAL 1건"
+
+    def test_append_episode_log_defaults_verdict_reason_to_selection_reason(self):
+        ctx = _make_ctx()
+        ctx.current_project.name = "proj"
+        ir = Stage4InterviewRound(ctx)
+        ir._round_start_ts = time.monotonic() - 1
+        ir._get_round_metrics_delta = MagicMock(
+            return_value={
+                "total_calls": 1,
+                "total_tokens": 1000,
+                "total_cost_usd": 0.1,
+                "model_breakdown": {"gemini-2.5-pro": {"tokens": 1000, "cost": 0.1}},
+            }
+        )
+
+        with patch("builtins.open", mock_open()) as mocked_open, patch("os.makedirs"):
+            ir._append_episode_log(
+                ep_num=5,
+                round_num=0,
+                director_result={
+                    "verdict": "PASS",
+                    "score": 95,
+                    "selected": "A",
+                    "selection_reason": "리듬과 연속성이 안정적",
+                    "selected_candidate": {"strategy_name": "balanced"},
+                    "score_breakdown": {},
+                    "action_items": [],
+                    "open_review": "",
+                },
+                is_patch=False,
+                patch_fallback=False,
+                tot_used=False,
+                mad_used=False,
+                asp_used=False,
+                model="gemini-2.5-pro",
+                reject_bucket="",
+                validation_warnings=[],
+            )
+
+        written = "".join(call.args[0] for call in mocked_open().write.call_args_list)
+        payload = json.loads(written.strip())
+        assert payload["selection_reason"] == "리듬과 연속성이 안정적"
+        assert payload["verdict_reason"] == "리듬과 연속성이 안정적"
+
+    def test_reject_run_keeps_db_and_episode_log_reasoning_consistent(self):
+        ctx = _make_ctx()
+        ctx.pass_rate_monitor = MagicMock()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.chief_writer.model_tier = "gemini-2.5-pro"
+        round_ctx.chief_writer.generate_ensemble.return_value = [_candidate()]
+        round_ctx.manuscript_validator.validate_all_candidates.return_value = [_validation_result()]
+        ctx.agents["director"].select_and_judge_ensemble.return_value = {
+            "selected": "A",
+            "verdict": "REJECT",
+            "score": 44,
+            "selection_reason": "최우수 후보 선택",
+            "verdict_reason": "Contradiction Firewall: CRITICAL 1건",
+            "pre_firewall_score": 100,
+            "firewall_triggered": True,
+            "firewall_reason": "Contradiction Firewall: CRITICAL 1건",
+            "feedback": {"issues": ["중대 모순"]},
+            "action_items": ["마지막 장면 수정"],
+            "selected_candidate": {"manuscript": "candidate manuscript", "strategy_name": "balanced"},
+            "score_breakdown": {},
+            "open_review": "",
+        }
+
+        with patch("builtins.open", mock_open()) as mocked_open, patch("os.makedirs"):
+            result = ir.run(
+                round_num=0,
+                stage4_spinner=MagicMock(),
+                director_feedback="",
+                previous_attempt={},
+                round_ctx=round_ctx,
+            )
+
+        assert result.verdict == "REJECT"
+        db_kwargs = ctx.current_project.db.save_director_selection.call_args.kwargs
+        assert db_kwargs["selection_reason"] == "최우수 후보 선택"
+        assert db_kwargs["verdict_reason"] == "Contradiction Firewall: CRITICAL 1건"
+        prm_kwargs = ctx.pass_rate_monitor.record_attempt.call_args.kwargs
+        assert prm_kwargs["success"] is False
+        assert prm_kwargs["reject_reason"] == "마지막 장면 수정"
+
+        written = "".join(call.args[0] for call in mocked_open().write.call_args_list)
+        payload = json.loads(written.strip())
+        assert payload["selection_reason"] == "최우수 후보 선택"
+        assert payload["verdict_reason"] == "Contradiction Firewall: CRITICAL 1건"
+        assert payload["flags"]["reject_bucket"] == "quality_issue"
+
+    def test_episode_log_write_failure_is_non_blocking_and_other_records_persist(self):
+        ctx = _make_ctx()
+        ctx.pass_rate_monitor = MagicMock()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.chief_writer.model_tier = "gemini-2.5-pro"
+        round_ctx.chief_writer.generate_ensemble.return_value = [_candidate()]
+        round_ctx.manuscript_validator.validate_all_candidates.return_value = [_validation_result()]
+        ctx.agents["director"].select_and_judge_ensemble.return_value = {
+            "selected": "A",
+            "verdict": "REJECT",
+            "score": 44,
+            "selection_reason": "최우수 후보 선택",
+            "verdict_reason": "Contradiction Firewall: CRITICAL 1건",
+            "pre_firewall_score": 100,
+            "firewall_triggered": True,
+            "firewall_reason": "Contradiction Firewall: CRITICAL 1건",
+            "feedback": {"issues": ["중대 모순"]},
+            "action_items": ["마지막 장면 수정"],
+            "selected_candidate": {"manuscript": "candidate manuscript", "strategy_name": "balanced"},
+            "score_breakdown": {},
+            "open_review": "",
+        }
+
+        with patch("modules.core.stage4_interview_round.open", side_effect=OSError("disk full")), patch(
+            "os.makedirs"
+        ):
+            result = ir.run(
+                round_num=0,
+                stage4_spinner=MagicMock(),
+                director_feedback="",
+                previous_attempt={},
+                round_ctx=round_ctx,
+            )
+
+        assert result.verdict == "REJECT"
+        db_kwargs = ctx.current_project.db.save_director_selection.call_args.kwargs
+        assert db_kwargs["selection_reason"] == "최우수 후보 선택"
+        assert db_kwargs["verdict_reason"] == "Contradiction Firewall: CRITICAL 1건"
+        prm_kwargs = ctx.pass_rate_monitor.record_attempt.call_args.kwargs
+        assert prm_kwargs["success"] is False
+        assert prm_kwargs["reject_reason"] == "마지막 장면 수정"
 
 
 class TestModuleStructure:
