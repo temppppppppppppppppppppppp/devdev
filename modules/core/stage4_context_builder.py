@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 from modules.core.constants import Stage2Limits, VolumeSettings
 from modules.core.context_advisor import RetrievalSources
 from modules.core.context_compression import ContextCompressor
+from modules.core.semantic_query_broker import SemanticQueryBroker
 from modules.core.tactical_utils import extract_episode_tactical
 from modules.core.writer_prompt_builders import (
     build_anti_trope_instructions as _build_anti_trope,
@@ -72,6 +73,36 @@ class Stage4ContextBuilder:
 
     def __init__(self, ctx) -> None:
         self.ctx = ctx
+
+    def _resolve_protagonist_name(self) -> str:
+        try:
+            if getattr(self.ctx, "get_protagonist_name", None):
+                name = self.ctx.get_protagonist_name()
+                if name:
+                    return str(name).strip()
+        except Exception as exc:
+            logging.debug("[Stage4ContextBuilder] protagonist callback 실패 (비치명): %s", exc)
+
+        try:
+            ws = getattr(self.ctx, "world_state", None)
+            if ws and hasattr(ws, "get_state_dict"):
+                state = ws.get_state_dict()
+                if isinstance(state, dict):
+                    protagonist = state.get("protagonist", {})
+                    name = str((protagonist or {}).get("name", "") or "").strip()
+                    if name:
+                        return name
+        except Exception as exc:
+            logging.debug("[Stage4ContextBuilder] world_state protagonist 조회 실패 (비치명): %s", exc)
+
+        try:
+            master_bible = getattr(self.ctx.current_project, "master_bible", None) or {}
+            bible_root = master_bible.get("MasterBible", master_bible) if isinstance(master_bible, dict) else {}
+            protagonist = bible_root.get("protagonist_config", {}) if isinstance(bible_root, dict) else {}
+            return str((protagonist or {}).get("name", "") or "").strip()
+        except Exception as exc:
+            logging.debug("[Stage4ContextBuilder] bible protagonist 조회 실패 (비치명): %s", exc)
+            return ""
 
     @staticmethod
     def _extract_npc_tokens(query: str) -> list[str]:
@@ -695,6 +726,237 @@ class Stage4ContextBuilder:
             return text
         return text[: max_chars - 1] + "…"
 
+    @staticmethod
+    def _tokenize_focus_terms(value: str) -> set[str]:
+        text = str(value or "").strip().lower()
+        if not text:
+            return set()
+        tokens: set[str] = set()
+        for token in re.split(r"[\s,|/:;()\[\]{}<>\"'`~!@#$%^&*+=?!.…-]+", text):
+            token = token.strip()
+            if len(token) < 2:
+                continue
+            tokens.add(token)
+        return tokens
+
+    def _compose_work_focus_text(
+        self,
+        *,
+        arc_data: dict | None,
+        arc_tactical: str,
+        prev_ending: str,
+        blueprint: dict | None,
+        cp_entities: dict[str, list[str] | str] | None,
+        max_chars: int = 4000,
+    ) -> str:
+        parts: list[str] = []
+        if arc_tactical:
+            parts.append(str(arc_tactical))
+        if prev_ending:
+            parts.append(str(prev_ending))
+        if isinstance(arc_data, dict):
+            for key in ("constraint_summary", "goal", "core_conflict", "hook"):
+                value = str(arc_data.get(key, "") or "").strip()
+                if value:
+                    parts.append(value)
+        if isinstance(blueprint, dict):
+            for key in ("title", "summary", "hook", "core_conflict", "goal", "twist"):
+                value = str(blueprint.get(key, "") or "").strip()
+                if value:
+                    parts.append(value)
+            scene_blocks = blueprint.get("scene_breakdown") or blueprint.get("scenes") or []
+            if isinstance(scene_blocks, dict):
+                scene_blocks = list(scene_blocks.values())
+            if isinstance(scene_blocks, list):
+                for scene in scene_blocks[:4]:
+                    if not isinstance(scene, dict):
+                        continue
+                    for key in ("summary", "purpose", "conflict", "location"):
+                        value = str(scene.get(key, "") or "").strip()
+                        if value:
+                            parts.append(value)
+        if isinstance(cp_entities, dict):
+            for key in ("npcs", "items", "plots", "locations"):
+                values = cp_entities.get(key) or []
+                if isinstance(values, list) and values:
+                    parts.append(" ".join(str(v).strip() for v in values[:8] if str(v).strip()))
+        combined = "\n".join(part for part in parts if part)
+        if len(combined) > max_chars:
+            return combined[:max_chars]
+        return combined
+
+    def _resolve_work_retrieval_focus(
+        self,
+        *,
+        stage: str,
+        arc_data: dict | None,
+        arc_tactical: str,
+        prev_ending: str,
+        blueprint: dict | None,
+        cp_entities: dict[str, list[str] | str] | None,
+    ) -> dict[str, object]:
+        guard = getattr(getattr(self.ctx, "sys", None), "guard", None)
+        if not guard or not hasattr(guard, "select_retrieval_focus"):
+            return {}
+
+        focus_text = self._compose_work_focus_text(
+            arc_data=arc_data,
+            arc_tactical=arc_tactical,
+            prev_ending=prev_ending,
+            blueprint=blueprint,
+            cp_entities=cp_entities,
+        )
+        try:
+            focus = guard.select_retrieval_focus(stage=stage, focus_text=focus_text)
+        except Exception as focus_err:
+            logging.debug("[WorkGuard] retrieval focus 선택 실패 (비치명): %s", focus_err)
+            return {}
+
+        return focus if isinstance(focus, dict) else {}
+
+    def _build_work_identity_slot_summary(
+        self,
+        *,
+        focus: dict[str, object],
+        arc_data: dict | None,
+        cp_entities: dict[str, list[str] | str] | None,
+        max_chars: int = 1800,
+    ) -> str:
+        if not isinstance(focus, dict) or not focus:
+            return ""
+
+        tracking_slots = [str(x).strip() for x in (focus.get("tracking_slots") or []) if str(x).strip()]
+        scene_engines = [str(x).strip() for x in (focus.get("mandatory_scene_engines") or []) if str(x).strip()]
+        registry_profiles = [x for x in (focus.get("registry_profiles") or []) if isinstance(x, dict)]
+
+        if not any([tracking_slots, scene_engines, registry_profiles]):
+            return ""
+
+        lines = ["[작품 추적 슬롯 요약]"]
+        if tracking_slots:
+            lines.append(f"- 이번 화 우선 tracking_slots: {', '.join(tracking_slots[:3])}")
+        if scene_engines:
+            lines.append(f"- 이번 화 scene engines: {', '.join(scene_engines[:2])}")
+        if registry_profiles:
+            rendered_profiles = []
+            for profile in registry_profiles[:2]:
+                name = str(profile.get("name", "") or "").strip()
+                fields = [str(x).strip() for x in (profile.get("required_fields") or []) if str(x).strip()]
+                if not name:
+                    continue
+                rendered_profiles.append(
+                    f"{name}" + (f"(fields={', '.join(fields[:4])})" if fields else "")
+                )
+            if rendered_profiles:
+                lines.append(f"- registry focus: {', '.join(rendered_profiles)}")
+
+        if isinstance(cp_entities, dict):
+            linked_parts = []
+            for label, key, limit in (
+                ("NPC", "npcs", 4),
+                ("플롯", "plots", 3),
+                ("아이템", "items", 3),
+                ("위치", "locations", 2),
+            ):
+                values = [str(v).strip() for v in (cp_entities.get(key) or []) if str(v).strip()]
+                if values:
+                    linked_parts.append(f"{label}={', '.join(values[:limit])}")
+            if linked_parts:
+                lines.append(f"- 이번 화 연동 엔티티: {' | '.join(linked_parts)}")
+
+        if isinstance(arc_data, dict):
+            constraint_summary = self._trim_summary_value(arc_data.get("constraint_summary", ""), 160)
+            if constraint_summary:
+                lines.append(f"- 현재 갈등축: {constraint_summary}")
+
+        try:
+            protagonist_name = self._resolve_protagonist_name()
+            focus_text = " ".join(
+                [
+                    ", ".join(tracking_slots),
+                    ", ".join(scene_engines),
+                    " ".join(str(profile.get("purpose", "") or "") for profile in registry_profiles),
+                    str((arc_data or {}).get("constraint_summary", "") or ""),
+                ]
+            ).strip()
+            broker = SemanticQueryBroker(
+                db=getattr(self.ctx.current_project, "db", None),
+                world_state=getattr(self.ctx, "world_state", None),
+                fact_ledger=getattr(self.ctx, "fact_ledger", None),
+                state_tracker=getattr(self.ctx, "state_tracker", None),
+                protagonist_name=protagonist_name,
+            )
+            relation_slice = broker.build_stage4_relation_slice(focus_text=focus_text, max_chars=560)
+            if relation_slice:
+                lines.append(relation_slice)
+        except Exception as broker_err:
+            logging.debug("[Stage4ContextBuilder] semantic relation slice 생성 실패 (비치명): %s", broker_err)
+
+        result = "\n".join(lines)
+        if len(result) > max_chars:
+            result = result[: max_chars - 20] + "\n... (슬롯 요약 절삭)"
+        return result
+
+    @staticmethod
+    def _summarize_retrieval_sources(plan: "RetrievalPlan | None") -> dict[str, int]:
+        counts: dict[str, int] = {}
+        if not plan or not getattr(plan, "slots", None):
+            return counts
+        for slot in getattr(plan, "slots", []) or []:
+            source = str(getattr(slot, "source", RetrievalSources.VEC_MEMORY) or RetrievalSources.VEC_MEMORY)
+            counts[source] = counts.get(source, 0) + 1
+        return counts
+
+    def _record_retrieval_observation(self, *, ep_num: int, stage: str, observation: dict) -> None:
+        dashboard = getattr(self.ctx, "quality_dashboard", None)
+        if dashboard is None or not hasattr(dashboard, "record_retrieval_observation"):
+            return
+        try:
+            dashboard.record_retrieval_observation(ep_num=ep_num, stage=stage, observation=observation)
+        except Exception as exc:
+            logging.debug("[Stage4ContextBuilder] retrieval observation record failed: %s", exc)
+
+    def _prioritize_summaries_by_work_focus(
+        self,
+        summaries: list[str],
+        focus: dict[str, object],
+    ) -> list[str]:
+        if not summaries or not isinstance(focus, dict) or not focus:
+            return summaries
+
+        phrases: list[str] = []
+        phrases.extend(str(x).strip() for x in (focus.get("tracking_slots") or []) if str(x).strip())
+        phrases.extend(str(x).strip() for x in (focus.get("mandatory_scene_engines") or []) if str(x).strip())
+        for profile in focus.get("registry_profiles") or []:
+            if not isinstance(profile, dict):
+                continue
+            for key in ("name", "purpose"):
+                value = str(profile.get(key, "") or "").strip()
+                if value:
+                    phrases.append(value)
+
+        if not phrases:
+            return summaries
+
+        phrase_tokens = set()
+        for phrase in phrases:
+            phrase_tokens |= self._tokenize_focus_terms(phrase)
+
+        scored: list[tuple[int, int, str]] = []
+        for idx, summary in enumerate(summaries):
+            text = str(summary or "")
+            lowered = text.lower()
+            score = 0
+            for phrase in phrases:
+                if phrase.lower() in lowered:
+                    score += 4
+            score += len(self._tokenize_focus_terms(lowered) & phrase_tokens)
+            scored.append((score, idx, text))
+
+        if not any(score > 0 for score, _, _ in scored):
+            return summaries
+        return [text for _, _, text in sorted(scored, key=lambda row: (-row[0], row[1]))]
+
     def _build_condensed_world_state_summary(
         self,
         entities: dict[str, list[str] | str],
@@ -1102,27 +1364,74 @@ class Stage4ContextBuilder:
         # [S4-P1-6] 압축 대상 목록을 루프 전 1회 캐시하여 O(n^2) → O(n) 개선
         compression_targets = tracker.get_compression_targets()
         compressor = ContextCompressor()
+        protected_prefix = "[작품 추적 슬롯 요약]"
+
+        def _used_chars() -> int:
+            return sum(len(s) for s in sections)
+
+        target_indices: list[int] = []
+        seen: set[int] = set()
         for target in compression_targets:
             try:
                 idx = int(target.split("_")[-1]) - 1
             except (TypeError, ValueError):
                 continue
-            if idx < 0 or idx >= len(sections):
+            if idx < 0 or idx >= len(sections) or idx in seen:
                 continue
+            seen.add(idx)
+            target_indices.append(idx)
+        for idx in range(len(sections)):
+            if idx not in seen:
+                target_indices.append(idx)
 
-            section = sections[idx]
-            if len(section) <= 300:
-                continue
+        protected_indices = [idx for idx in target_indices if sections[idx].startswith(protected_prefix)]
+        regular_indices = [idx for idx in target_indices if idx not in protected_indices]
 
-            trim_target = max(300, int(len(section) * 0.7))
-            orig_len = len(section)
-            sections[idx] = compressor._smart_trim(section, trim_target)
-            logging.info(f"[SC:TRIM] section_{idx + 1}: {orig_len:,}→{len(sections[idx]):,}자")
+        def _trim_indices(
+            indices: list[int],
+            *,
+            label: str,
+            min_chars: int,
+            ratio: float,
+            max_rounds: int = 1,
+        ) -> None:
+            for _ in range(max_rounds):
+                if _used_chars() <= total_budget_chars:
+                    return
+                changed = False
+                for idx in indices:
+                    section = sections[idx]
+                    if len(section) <= min_chars:
+                        continue
+                    trim_target = max(min_chars, int(len(section) * ratio))
+                    if trim_target >= len(section):
+                        continue
+                    trimmed = compressor._smart_trim(section, trim_target)
+                    if len(trimmed) >= len(section):
+                        continue
+                    orig_len = len(section)
+                    sections[idx] = trimmed
+                    changed = True
+                    logging.info(f"{label} section_{idx + 1}: {orig_len:,}→{len(trimmed):,}자")
+                    if _used_chars() <= total_budget_chars:
+                        return
+                if not changed:
+                    return
 
-            # 총 사용량만 빠르게 체크 (tracker 재생성 대신 합산)
-            _used = sum(len(s) for s in sections)
-            if _used <= total_budget_chars:
-                break
+        # 1) 일반 섹션을 먼저 줄여 작품 슬롯 요약이 가능한 한 오래 살아남게 한다.
+        _trim_indices(regular_indices, label="[SC:TRIM]", min_chars=300, ratio=0.7, max_rounds=2)
+        # 2) 그래도 넘치면 작품 추적 슬롯만 완만하게 줄인다.
+        _trim_indices(protected_indices, label="[SC:TRIM:PROTECTED]", min_chars=500, ratio=0.88, max_rounds=2)
+        # 3) 여전히 넘치는 예외 상황에서만 비상 trim을 한 번 더 돈다.
+        if _used_chars() > total_budget_chars:
+            _trim_indices(regular_indices, label="[SC:TRIM:EMERGENCY]", min_chars=240, ratio=0.5, max_rounds=2)
+            _trim_indices(
+                protected_indices,
+                label="[SC:TRIM:EMERGENCY:PROTECTED]",
+                min_chars=420,
+                ratio=0.68,
+                max_rounds=2,
+            )
 
         # 최종 보고용 tracker 1회 재생성
         tracker = _build_tracker(sections)
@@ -1775,7 +2084,25 @@ class Stage4ContextBuilder:
             except Exception as cp_entity_err:
                 logging.debug("[CP] blueprint entity 추출 실패 (비치명): %s", cp_entity_err)
 
+        _work_focus = self._resolve_work_retrieval_focus(
+            stage="manuscript",
+            arc_data=arc_data,
+            arc_tactical=arc_tactical,
+            prev_ending=prev_ending,
+            blueprint=blueprint,
+            cp_entities=cp_entities,
+        )
+
         _mc_parts = [mandatory_context] if mandatory_context else []
+
+        _slot_summary = self._build_work_identity_slot_summary(
+            focus=_work_focus,
+            arc_data=arc_data,
+            cp_entities=cp_entities,
+        )
+        if _slot_summary:
+            _mc_parts.insert(0, _slot_summary)
+            logging.info("[WorkGuard] tracking slot summary 주입 (%d자)", len(_slot_summary))
 
         _ambient_npc_hint = self._suggest_ambient_npcs(blueprint or {})
         if _ambient_npc_hint:
@@ -1926,7 +2253,8 @@ class Stage4ContextBuilder:
                     arc_no=_arc_no_for_st,
                     genre=s4_genre_type,
                 )
-                for _summary in _all_summaries.values():
+                _ordered_summaries = self._prioritize_summaries_by_work_focus(list(_all_summaries.values()), _work_focus)
+                for _summary in _ordered_summaries:
                     if _summary:
                         _mc_parts.append(_summary)
             except Exception as _st_err:
@@ -1967,6 +2295,7 @@ class Stage4ContextBuilder:
                     )
                 elif s4_genre_type == "actor":
                     _fallback_summaries.append(_st.get_filmography_summary())
+                _fallback_summaries = self._prioritize_summaries_by_work_focus(_fallback_summaries, _work_focus)
                 for _summary in _fallback_summaries:
                     if _summary:
                         _mc_parts.append(_summary)
@@ -2133,6 +2462,41 @@ class Stage4ContextBuilder:
 
         # [LS-5] SC Retrieval 결과와 non-SC 본문을 합산 budget 기준으로 재조립
         mandatory_context = self._compose_mandatory_context_with_headroom(_sc_parts, _mc_parts)
+        _source_counts = self._summarize_retrieval_sources(_retrieval_plan)
+        if not _source_counts and any("[과거 유사 맥락" in str(_part) for _part in _mc_parts):
+            _source_counts = {"legacy_multi_query": 1}
+        _coverage_warnings: list[str] = []
+        if _work_focus and not _slot_summary:
+            _coverage_warnings.append("missing_work_slot_summary")
+        if _work_focus and _retrieval_plan and not any(
+            str(getattr(_slot, "category", "")).startswith("work_")
+            for _slot in (getattr(_retrieval_plan, "slots", []) or [])
+        ):
+            _coverage_warnings.append("work_focus_without_slots")
+        _slot_summary_survived = "[작품 추적 슬롯 요약]" in mandatory_context
+        if _slot_summary and not _slot_summary_survived:
+            _coverage_warnings.append("trimmed_work_slot_summary")
+        if _source_counts.get(RetrievalSources.DB_NPC_RELATIONSHIP, 0) > 0 and "[관계 의미 질의]" not in mandatory_context:
+            _coverage_warnings.append("missing_relation_slice")
+        self._record_retrieval_observation(
+            ep_num=next_ep,
+            stage="stage4",
+            observation={
+                "work_focus_present": bool(_work_focus),
+                "tracking_slots_count": len(_work_focus.get("tracking_slots") or []) if isinstance(_work_focus, dict) else 0,
+                "scene_engines_count": len(_work_focus.get("mandatory_scene_engines") or []) if isinstance(_work_focus, dict) else 0,
+                "registry_profiles_count": len(_work_focus.get("registry_profiles") or []) if isinstance(_work_focus, dict) else 0,
+                "planned_slots_count": len(getattr(_retrieval_plan, "slots", []) or []) if _retrieval_plan else 0,
+                "advisor_path_used": bool(_retrieval_plan),
+                "work_slot_summary_included": _slot_summary_survived,
+                "relation_slice_included": "[관계 의미 질의]" in mandatory_context,
+                "source_counts": _source_counts,
+                "coverage_warnings": _coverage_warnings,
+                "mandatory_context_chars": len(mandatory_context),
+                "protected_summary_survived": _slot_summary_survived,
+                "trimmed_work_slot_summary": bool(_slot_summary and not _slot_summary_survived),
+            },
+        )
 
         try:
             anti_trope_prompt = _build_anti_trope(genre_name)

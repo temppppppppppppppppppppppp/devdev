@@ -749,6 +749,18 @@ class TestBuildMandatoryContext:
         assert sum(len(s) for s in trimmed_sections) < 2400
         assert any("[SC] Context budget:" in rec.message for rec in caplog.records)
 
+    def test_apply_context_budget_prefers_preserving_work_slot_summary(self, caplog):
+        cb = Stage4ContextBuilder(_make_ctx())
+        slot_summary = "[작품 추적 슬롯 요약]\n" + ("slot " * 180)
+        generic_block = "[기타 요약]\n" + ("generic " * 220)
+
+        with caplog.at_level("INFO"):
+            trimmed_sections = cb._apply_context_budget([slot_summary, generic_block], total_budget_chars=1000)
+
+        assert trimmed_sections[0].startswith("[작품 추적 슬롯 요약]")
+        assert len(trimmed_sections[0]) > len(trimmed_sections[1])
+        assert any("[SC:TRIM:PROTECTED]" in rec.message for rec in caplog.records)
+
     @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="")
     def test_build_mandatory_context_rebalances_sc_and_mc_with_headroom(self, _mock_build, caplog):
         ctx = _make_ctx()
@@ -797,6 +809,109 @@ class TestBuildMandatoryContext:
 
         assert len(result["mandatory_context"]) <= 500
         assert any("[S4:CTX] compose pre-final" in rec.message for rec in caplog.records)
+
+    @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")
+    def test_build_mandatory_context_injects_work_tracking_slot_summary(self, _mock_build):
+        ctx = _make_ctx()
+        ctx.sys.guard = MagicMock()
+        ctx.sys.guard.select_retrieval_focus.return_value = {
+            "tracking_slots": ["핵심 배우 라인"],
+            "mandatory_scene_engines": ["인재 발굴"],
+            "registry_profiles": [
+                {"name": "talent_registry", "required_fields": ["name", "tier", "risk"]},
+            ],
+        }
+        cb = Stage4ContextBuilder(ctx)
+        anchor_sys = MagicMock()
+        anchor_sys.get_relevant_anchors.return_value = []
+        anchor_sys.get_critical_anchors.return_value = []
+
+        result = cb.build_mandatory_context(
+            next_ep=7,
+            arc_data={"arc_no": 1, "constraint_summary": "배우 라인 재정비와 팬덤 반응 회수"},
+            arc_tactical="캐스팅 재정비",
+            prev_text="이전 화 원고",
+            prev_ending="팬덤 반응과 캐스팅 갈등이 남았다",
+            hud_report="HUD",
+            writer_agent=MagicMock(),
+            anchor_sys=anchor_sys,
+            s4_genre_type="investment",
+            v50_modules_available=False,
+            blueprint={"summary": "핵심 배우 라인 중심으로 재정비한다."},
+        )
+
+        assert "[작품 추적 슬롯 요약]" in result["mandatory_context"]
+        assert "핵심 배우 라인" in result["mandatory_context"]
+        assert "talent_registry" in result["mandatory_context"]
+
+    @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")
+    def test_build_mandatory_context_injects_semantic_relation_slice_when_focus_requires_it(self, _mock_build):
+        ctx = _make_ctx()
+        ctx.quality_dashboard = MagicMock()
+        ctx.current_project.master_bible = {"MasterBible": {"protagonist_config": {"name": "주인공"}}}
+        ctx.sys.guard = MagicMock()
+        ctx.sys.guard.select_retrieval_focus.return_value = {
+            "tracking_slots": ["소꿉친구 라인"],
+            "mandatory_scene_engines": [],
+            "registry_profiles": [],
+        }
+        ctx.world_state = MagicMock()
+        ctx.world_state.get_state_dict.return_value = {
+            "protagonist": {"name": "주인공"},
+            "relationships": {"연홍": "죽마고우"},
+            "alive_npcs": {
+                "연홍": {
+                    "relation": "신뢰",
+                    "known_attrs": {"relation_to_protag": {"value": "어릴 때부터 함께 자란 친구"}},
+                }
+            },
+        }
+        ctx.world_state.get_summary.return_value = ""
+        ctx.world_state.get_canonical_constraints.return_value = ""
+        ctx.world_state.get_timeline_summary.return_value = ""
+        ctx.fact_ledger = MagicMock()
+        ctx.fact_ledger._ledger = {
+            "characters": {
+                "연홍": {
+                    "relationship": "소꿉친구",
+                    "established_ep": 3,
+                    "history": ["ep3: 어릴 때부터 함께 자람"],
+                }
+            }
+        }
+        ctx.fact_ledger.to_summary.return_value = ""
+        ctx.fact_ledger.get_canonical_summary.return_value = ""
+        ctx.current_project.db.get_npc_relationship_edges.return_value = [
+            {"npc1": "주인공", "npc2": "연홍", "relation": "신뢰", "updated_ep": 12}
+        ]
+        ctx.current_project.db.get_relationship_history.return_value = [
+            {"old_relation": "중립", "new_relation": "죽마고우", "change_ep": 5}
+        ]
+        cb = Stage4ContextBuilder(ctx)
+        anchor_sys = MagicMock()
+        anchor_sys.get_relevant_anchors.return_value = []
+        anchor_sys.get_critical_anchors.return_value = []
+
+        result = cb.build_mandatory_context(
+            next_ep=7,
+            arc_data={"arc_no": 1, "constraint_summary": "연홍과의 소꿉친구 라인 회수"},
+            arc_tactical="소꿉친구 라인 재등장",
+            prev_text="이전 화 원고",
+            prev_ending="연홍과의 과거 인연을 다시 꺼낼 필요가 남았다",
+            hud_report="HUD",
+            writer_agent=MagicMock(),
+            anchor_sys=anchor_sys,
+            s4_genre_type="investment",
+            v50_modules_available=False,
+            blueprint={"summary": "연홍이 주인공의 소꿉친구로 다시 부각된다."},
+        )
+
+        ctx.quality_dashboard.record_retrieval_observation.assert_called_once()
+        kwargs = ctx.quality_dashboard.record_retrieval_observation.call_args.kwargs
+        assert kwargs["stage"] == "stage4"
+        assert kwargs["observation"]["relation_slice_included"] is True
+        assert "[관계 의미 질의]" in result["mandatory_context"]
+        assert "연홍" in result["mandatory_context"]
 
 
 class TestBuildRoundContext:

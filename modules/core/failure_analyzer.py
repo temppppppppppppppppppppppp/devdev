@@ -8,6 +8,8 @@ import re
 from collections import defaultdict
 from pathlib import Path
 
+from modules.core.soft_failure import report_soft_failure
+
 
 class FailureAnalyzer:
     """Utility for analyzing failure patterns from DB telemetry.
@@ -23,20 +25,52 @@ class FailureAnalyzer:
             db_path = getattr(db, "db_path", None)
             self.project_path = Path(db_path).parent if db_path else None
 
+    def _report_soft_failure(
+        self,
+        operation: str,
+        exc: Exception,
+        *,
+        message: str,
+        extra: dict | None = None,
+    ) -> None:
+        log_dir = self.project_path / "logs" if self.project_path is not None else None
+        report_soft_failure(
+            component="failure_analyzer",
+            operation=operation,
+            message=message,
+            exc=exc,
+            degraded=True,
+            user_visible=False,
+            learnable=True,
+            extra=extra,
+            log_dir=log_dir,
+            warning_window_sec=180.0,
+        )
+
     def summary(self) -> dict:
         """Top-level summary for quick diagnostics."""
         result = {}
-        try:
-            result["stage_pass_rates"] = self.stage_pass_rates()
-            result["top_failed_agents"] = self.most_failed_agents(top_n=5)
-            result["top_failure_categories"] = self.top_failure_categories(top_n=5)
-            result["advisory_correlations"] = self.advisory_reject_correlation()
-            result["avg_attempts_by_stage"] = self.avg_attempts_by_stage()
-            result["failure_prompt_patterns"] = self.failure_prompt_patterns(top_n=5)
-            result["top_success_patterns"] = self.top_success_patterns(top_n=3)
-            result["quality_distribution"] = self.quality_distribution()
-        except Exception as _e:
-            logging.debug("[FailureAnalyzer] summary failed: %s", _e)
+        metric_loaders = {
+            "stage_pass_rates": lambda: self.stage_pass_rates(),
+            "top_failed_agents": lambda: self.most_failed_agents(top_n=5),
+            "top_failure_categories": lambda: self.top_failure_categories(top_n=5),
+            "advisory_correlations": lambda: self.advisory_reject_correlation(),
+            "avg_attempts_by_stage": lambda: self.avg_attempts_by_stage(),
+            "failure_prompt_patterns": lambda: self.failure_prompt_patterns(top_n=5),
+            "top_success_patterns": lambda: self.top_success_patterns(top_n=3),
+            "quality_distribution": lambda: self.quality_distribution(),
+        }
+        for key, loader in metric_loaders.items():
+            try:
+                result[key] = loader()
+            except Exception as _e:
+                self._report_soft_failure(
+                    key,
+                    _e,
+                    message=f"{key} summary collection failed",
+                    extra={"summary_key": key},
+                )
+                logging.debug("[FailureAnalyzer] %s failed: %s", key, _e)
         return result
 
     def _load_episode_production_entries(self, min_score: int = 0) -> list[dict]:
@@ -67,6 +101,11 @@ class FailureAnalyzer:
                         continue
                     entries.append(row)
         except Exception as _e:
+            self._report_soft_failure(
+                "load_episode_production_entries",
+                _e,
+                message="episode_production.jsonl fallback load failed",
+            )
             logging.debug("[FailureAnalyzer] episode_production load failed: %s", _e)
             return []
         return entries
@@ -93,6 +132,11 @@ class FailureAnalyzer:
                         item[field] = {}
                 rows.append(item)
         except Exception as _e:
+            self._report_soft_failure(
+                "top_success_patterns",
+                _e,
+                message="quality label query for top_success_patterns failed",
+            )
             logging.debug("[FailureAnalyzer] top_success_patterns DB fallback: %s", _e)
 
         if not rows:
@@ -208,6 +252,11 @@ class FailureAnalyzer:
                     item["score_breakdown"] = {}
                 rows.append(item)
         except Exception as _e:
+            self._report_soft_failure(
+                "quality_distribution",
+                _e,
+                message="quality_distribution DB query failed",
+            )
             logging.debug("[FailureAnalyzer] quality_distribution DB fallback: %s", _e)
 
         if not rows:

@@ -1,7 +1,12 @@
 # Runbook
 
 Purpose:
-- Define operational procedures for rollback/reset/rewind actions used by the main menu.
+- Define the current operational semantics for destructive safe-op menu actions.
+
+Desktop UI:
+- Safe Ops now surfaces a read-only preview before execution.
+- The preview distinguishes `deleted` vs `preserved` scope.
+- The confirm modal reflects Stage 2 vs Stage 4 `director_selections` split.
 
 ## Scope and Entry Points
 - Menu `44` -> `main_a.py:_rollback_episode()` -> `ProjectService.rollback_episode()`
@@ -11,114 +16,180 @@ Purpose:
 
 ## Menu 44: Stage 4 Episode Rollback
 Operator inputs:
-1. Confirm target episode `target_ep` in range `1..latest_ep`.
-2. Confirm destructive rollback for all records `ep >= target_ep`.
+1. Select `target_ep` in `1..latest_ep`.
+2. Confirm destructive rollback for every artifact `ep >= target_ep`.
 
 Data operations:
-1. Optional HUD rollback in `anchors[key='bible']` using `state_logs[target_ep-1]` snapshot.
-2. Delete `ep_num >= target_ep` from:
-- `manuscripts`
+1. If possible, restore HUD protagonist `actual_truth` from `state_logs[target_ep - 1]`.
+2. Call `db.reset_after(target_ep)`:
 - `blueprints`
 - `state_logs`
-- `martial_tracker`
-- `sync_status`
 - `causal_graph`
-3. Additional cleanup:
-- `DELETE FROM encyclopedia` (full wipe)
-- `DELETE FROM karma_status WHERE last_updated_ep >= target_ep`
-- `DELETE FROM npc_history WHERE episode_no >= target_ep`
+- `manuscripts`
+- `martial_tracker`
+- `episode_bibles`
+- `sync_status`
+- `karma_status`
+- `npc_history`
+- `episode_sentence_hashes`
+- `episode_satisfaction_tags`
+- `director_selections` for Stage 4 / legacy episode selections only
+- `episode_pacing`
+- `episode_quality_labels`
+- `episode_quality_signals`
+- `episode_quality_observations`
+- `episode_meta`
+- `episode_fts`
+- `vec_episodes`
+- `foreshadow`
+- `npc_relationship_edges`
+- `npc_relationship_history`
+- `stage_attempts` for stages `3` and `4`
+3. Restore seeds recovered after `target_ep`:
 - `UPDATE seeds SET status='active', recovered_ep=NULL WHERE recovered_ep >= target_ep`
-- `DELETE FROM director_selections WHERE ep_num >= target_ep`
-- `delete_episode_bibles_after(target_ep - 1)` (removes episode bibles for rolled-back range)
-4. Reset selected SQLite sequences for episode tables.
-5. Commit DB transaction via safe commit.
+4. Save restored bible anchor if HUD rollback data was found.
 
 Non-DB operations:
-1. Delete draft files matching episode number `>= target_ep` in `projects/{name}/drafts/*.txt`.
-2. Vector memory cleanup via `memory.delete_episodes_from(target_ep)`.
-3. Reload project from DB (`project._load_from_db()`).
-4. Runtime tracker rollback:
-- `world_state.rollback_to(target_ep)` if available.
-- `fact_ledger.rollback_to(target_ep)` if available.
-- `emotion_tracker.rollback_to(target_ep)` if available.
-- `state_delta_tracker.rollback_to(target_ep)` if available.
-5. Restore preset registry callback if configured.
+1. Delete draft files `ep >= target_ep`.
+2. Delete vector memory via `memory.delete_episodes_from(target_ep)` if available.
+3. Reload project from DB.
+4. Roll runtime state back to `target_ep`:
+- `world_state.rollback_to(target_ep)` if available
+- `fact_ledger.rollback_to(target_ep)` if available
+- `emotion_tracker.rollback_to(target_ep)` if available
+- `state_delta_tracker.rollback_to(target_ep)` if available
+5. Restore preset registry if configured.
 
-Post-success cache invalidation in `main_a.py` wrapper:
+Post-success cache invalidation in `main_a.py`:
 - `state_tracker = None`
 - prompt timeline cache invalidate
 - cumulative state cache clear
 - narrative summaries cache clear
-- writer manuscript cache invalidate (if supported)
-- director cache invalidate (if supported)
-- foreshadow tracker clear + DB sync (if supported)
+- writer manuscript cache invalidate
+- director cache invalidate
+- foreshadow tracker clear + DB sync
 
-## Menu 77: Wipe Production Data (Stage 4 Reset)
+Notes:
+- `encyclopedia` is no longer force-wiped during episode rollback.
+- Stage 2 `director_selections` are preserved during episode rollback because the table now carries a `stage` split.
+
+## Menu 77: Wipe Production Data
 Operator action:
 1. Confirm wipe prompt.
 
+Intent:
+- Keep setup/design assets.
+- Remove episode-derived production artifacts so generation can restart cleanly.
+
 Data operations:
-1. Full table delete (all rows):
-- `manuscripts`
-- `blueprints`
-- `state_logs`
-- `martial_tracker`
-- `causal_graph`
-- `sync_status`
-- `karma_status`
-2. `UPDATE seeds SET status='active', recovered_ep=NULL`
-3. Commit DB transaction.
+1. Call `db.reset_after(1)` to clear all episode-derived tables listed in Menu `44`.
+2. Restore all recovered seeds:
+- `UPDATE seeds SET status='active', recovered_ep=NULL`
 
 Non-DB operations:
-1. Delete all draft txt files in `projects/{name}/drafts/`.
-2. Vector memory full cleanup via `memory.delete_all_episodes()` if available.
+1. Delete all draft txt files.
+2. Delete all vector memory via `memory.delete_all_episodes()` if available.
+3. Reload project from DB and roll runtime state back to the initial state.
+
+Post-success cache invalidation in `main_a.py`:
+- `state_tracker = None`
+- prompt timeline cache invalidate
+- cumulative state cache clear
+- narrative summaries cache clear
+- writer manuscript cache invalidate
+- director cache invalidate
+- `state_extractor` cache invalidate
+- foreshadow tracker clear + DB sync
 
 Notes:
-- This action does not delete `npc_history` in `ProjectService.wipe_production_data()`.
+- This action now clears `npc_history`, quality tables, pacing tables, relationship history, Stage 3/4 `stage_attempts`, and Stage 4 `director_selections`.
+- Stage 2 arc design and Stage 2 selection history are preserved.
 
-## Menu 88: Stage 2 Reset (Arcs Full Clear)
+## Menu 88: Stage 2 Reset (Full Arc Reset)
 Operator action:
 1. Confirm reset prompt.
 
-Data operations:
-1. `DELETE FROM anchors WHERE key='arcs'`
-2. Safe commit.
-3. In-memory `project.arcs = []`
+Intent:
+- Drop every Stage 2 arc artifact and every downstream episode artifact.
 
-Result:
-- Stage 2 is treated as not completed; arc design must be regenerated.
+Data operations:
+1. Call `db.reset_after(1)` to clear downstream episode-derived tables.
+2. Delete Stage 2-specific metadata:
+- `DELETE FROM arc_dependencies`
+- `DELETE FROM stage_attempts WHERE stage = 2`
+- `DELETE FROM director_selections WHERE stage = 2` (+ legacy Stage 2 rows with empty `selected_label`)
+3. Delete Stage 2 anchors:
+- `DELETE FROM anchors WHERE key = 'arcs'`
+- `DELETE FROM anchors WHERE key = 'volumes'`
+- `DELETE FROM anchors WHERE key = 'series_summary'`
+- `DELETE FROM anchors WHERE key LIKE 'arc_summary_%'`
+- `DELETE FROM anchors WHERE key LIKE 'volume_summary_%'`
+4. Commit anchor / Stage 2 metadata cleanup.
+5. Set in-memory `project.arcs = []`.
+
+Non-DB operations:
+1. Delete all draft txt files.
+2. Delete all vector memory via `memory.delete_all_episodes()` if available.
+3. Reload project from DB and roll runtime state back to the initial state.
+
+Post-success cache invalidation in `main_a.py`:
+- `state_tracker = None`
+- prompt timeline cache invalidate
+- cumulative state cache clear
+- narrative summaries cache clear
+- writer manuscript cache invalidate
+- director cache invalidate
+- `state_extractor` cache invalidate
+- foreshadow tracker clear + DB sync
 
 ## Menu 99: Stage 2 Selective Rewind
 Operator inputs:
 1. Enter `target_no` in `1..len(project.arcs)`.
-2. Confirm delete from `target_no` to last arc.
+2. Confirm destructive rewind.
+
+Intent:
+- Keep earlier arcs.
+- Delete later arcs and every downstream episode artifact generated from the removed arc range.
 
 Data operations:
 1. Build `updated_arcs = [arc for arc in arcs if arc.arc_no < target_no]`.
-2. Persist with `save_v20_anchor('arcs', updated_arcs)`.
-3. Replace in-memory `project.arcs = updated_arcs`.
+2. Infer `target_ep` from the removed arcs' `ep_start` if available; otherwise fall back to `target_no`.
+3. Call `db.reset_after(target_ep)` to clear downstream episode-derived tables.
+4. Delete Stage 2-specific metadata for removed arcs:
+- `DELETE FROM arc_dependencies WHERE from_arc_no >= target_no OR to_arc_no >= target_no`
+- `DELETE FROM stage_attempts WHERE stage = 2 AND arc_num >= target_no`
+- `DELETE FROM director_selections WHERE stage = 2 AND ep_num >= target_no` (+ legacy Stage 2 rows with empty `selected_label`)
+5. Delete stale Stage 2 summary anchors:
+- `DELETE FROM anchors WHERE key = 'volumes'`
+- `DELETE FROM anchors WHERE key = 'series_summary'`
+- `DELETE FROM anchors WHERE key LIKE 'volume_summary_%'`
+- `DELETE FROM anchors WHERE key GLOB 'arc_summary_[0-9]*' AND CAST(SUBSTR(key, 13) AS INTEGER) >= target_no`
+6. Save the reduced `arcs` anchor.
+7. Replace in-memory `project.arcs = updated_arcs`.
 
-Post-wrapper cache handling:
-- Clear cumulative state cache and key.
-- Invalidate timeline cache.
-- Clear narrative summaries cache.
-- Invalidate `state_extractor` cache if supported.
+Non-DB operations:
+1. Delete draft txt files `ep >= target_ep`.
+2. Delete vector memory via `memory.delete_episodes_from(target_ep)` if available.
+3. Reload project from DB and roll runtime state back to `target_ep`.
 
-## NPC History Rollback Policy
-- `npc_history` behaves as append-only during forward generation.
-- Rollback path (menu `44`) explicitly deletes `npc_history` records with `episode_no >= target_ep`.
-- Wipe path (menu `77`) does not touch `npc_history`.
-- Stage 2 reset/rewind (menu `88`/`99`) does not touch `npc_history`.
+Post-success cache invalidation in `main_a.py`:
+- `state_tracker = None`
+- prompt timeline cache invalidate
+- cumulative state cache clear
+- narrative summaries cache clear
+- writer manuscript cache invalidate
+- director cache invalidate
+- `state_extractor` cache invalidate
+- foreshadow tracker clear + DB sync
 
-## Legacy/Support Path (ProjectContext)
-- `ProjectContext.reset_project(target_ep)` calls `db.reset_after(target_ep)` and removes draft files `ep_*.txt >= target_ep`.
-- `ProjectContext.auto_backtrack_v35(...)` can call `reset_project`, vector memory rewind, and optional `world_state/fact_ledger` rollback.
-- `db.reset_after(target_ep)` includes broader cleanup (for example `npc_history`, `episode_sentence_hashes`, `episode_satisfaction_tags`, `director_selections`, `episode_pacing`, `episode_meta`).
+## Legacy / Support Path
+- `ProjectContext.reset_project(target_ep)` still delegates to `db.reset_after(target_ep)` and draft cleanup.
+- `db.get_rollback_impact(target_ep)` now includes quality tables, pacing, foreshadow, relationship edges, and Stage 3/4 `stage_attempts`.
 
 ## Incident Template
 - Timestamp:
-- Menu action (`44`/`77`/`88`/`99`):
-- Target episode/arc:
+- Menu action (`44` / `77` / `88` / `99`):
+- Target episode / arc:
 - Trigger:
 - Impact:
 - Immediate mitigation:
@@ -126,8 +197,6 @@ Post-wrapper cache handling:
 - Preventive action:
 
 ## Last Verified
-- Date: 2026-02-25
-- Commit: `f99119d`
-- Code Sync (Yes/No): Yes
+- Date: 2026-03-11
+- Code Sync: Yes
 - Verified By: Codex
-

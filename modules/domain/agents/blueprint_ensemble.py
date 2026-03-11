@@ -198,6 +198,13 @@ class BlueprintEnsembleGenerator(BaseAgent):
 
         # [V60.95] 고밀도 HUD 컨텍스트 구축
         hud_context = self._build_hud_context(state_tracker, ep_num)
+        _work_retrieval_contract = ""
+        try:
+            _guard = getattr(self.context, "guard", None)
+            if _guard and hasattr(_guard, "get_retrieval_contract_prompt"):
+                _work_retrieval_contract = str(_guard.get_retrieval_contract_prompt("blueprint") or "").strip()
+        except Exception as _e:
+            logging.debug("[BPEnsemble] work retrieval contract 로드 실패: %s", _e)
 
         # 병렬 생성
         logging.warning(f" [BPEnsemble] 3개 후보 병렬 생성 중... (주인공: {protagonist_name})")
@@ -410,6 +417,13 @@ class BlueprintEnsembleGenerator(BaseAgent):
 
             # [TF-I23/I24] 독자 피드백 컨텍스트 (advisory-only)
             _reader_fb = self._build_reader_feedback_context(ep_num)
+            _work_retrieval_contract = ""
+            try:
+                _guard = getattr(self.context, "guard", None)
+                if _guard and hasattr(_guard, "get_retrieval_contract_prompt"):
+                    _work_retrieval_contract = str(_guard.get_retrieval_contract_prompt("blueprint") or "").strip()
+            except Exception as _e:
+                logging.debug("[BPEnsemble] work retrieval contract 로드 실패: %s", _e)
             _use_cached_context = bool(cache_name)
             _cached_context_stub = "[context cached: refer to cached_content]"
             prompt = self._prompt_loader.load(
@@ -422,7 +436,10 @@ class BlueprintEnsembleGenerator(BaseAgent):
                 arc_focus=self._escape_braces(_cached_context_stub if _use_cached_context else arc_focus),
                 constraints=self._escape_braces(_cached_context_stub if _use_cached_context else constraints_str),
                 strategy_directive=self._escape_braces(
-                    strategy["directive"] + AI_TELL_BLUEPRINT_GUARDRAIL + extra_directive
+                    strategy["directive"]
+                    + AI_TELL_BLUEPRINT_GUARDRAIL
+                    + extra_directive
+                    + (f"\n\n{_work_retrieval_contract}" if _work_retrieval_contract else "")
                 ),  # [V70] Director feedback 내 {} 방어
                 prev_info=self._escape_braces(_cached_context_stub if _use_cached_context else prev_info),
                 hud_context=(
@@ -445,7 +462,10 @@ class BlueprintEnsembleGenerator(BaseAgent):
                     arc_focus=self._escape_braces(arc_focus),
                     constraints=self._escape_braces(constraints_str),
                     strategy_directive=self._escape_braces(
-                        strategy["directive"] + AI_TELL_BLUEPRINT_GUARDRAIL + extra_directive
+                        strategy["directive"]
+                        + AI_TELL_BLUEPRINT_GUARDRAIL
+                        + extra_directive
+                        + (f"\n\n{_work_retrieval_contract}" if _work_retrieval_contract else "")
                     ),  # [V70] Director feedback 내 {} 방어
                     prev_info=self._escape_braces(prev_info),
                     hud_context=self._escape_braces(hud_context) if hud_context else "(상태 정보 없음)",  # [V60.95]

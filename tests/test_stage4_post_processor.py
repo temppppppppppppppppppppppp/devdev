@@ -1,5 +1,6 @@
 """[B-1-1] Stage4PostProcessor unit tests."""
 
+import json
 from unittest.mock import MagicMock, patch
 
 from modules.core.stage4_orchestrator import Stage4Orchestrator
@@ -791,3 +792,65 @@ class TestModuleStructure:
     def test_orchestrator_no_legacy_post_methods(self):
         assert not hasattr(Stage4Orchestrator, "_process_pass_result")
         assert not hasattr(Stage4Orchestrator, "_run_post_episode_tasks")
+
+
+class TestSoftFailureLogging:
+    def test_quality_signal_save_failure_is_logged_as_soft_failure(self, tmp_path):
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.sys = MagicMock()
+        ctx.sys.hud = MagicMock()
+        ctx.sys.hud.snapshot.return_value = {}
+        ctx.agents = {"director": MagicMock()}
+        ctx.agents["director"].on_approve_workflow.return_value = {}
+        ctx.memory = None
+        ctx.state_tracker = None
+        ctx.world_state = None
+        ctx.fact_ledger = None
+        ctx.character_voice = None
+        ctx.foreshadow_tracker = None
+        ctx.failure_learner = None
+        ctx.quality_dashboard = None
+        ctx.perf_timer = MagicMock()
+        ctx.flush_audit_buffer = MagicMock()
+        ctx.get_protagonist_name = lambda: "주인공"
+        ctx.generate_narrative_summary = MagicMock()
+        ctx.audit_event = MagicMock()
+
+        db = MagicMock()
+        db.conn = MagicMock()
+        db.save_episode_quality_signal.side_effect = RuntimeError("signal table busy")
+        db.get_episode_bible.return_value = {}
+        db.load_anchor.return_value = []
+
+        project = MagicMock()
+        project.db = db
+        project.name = "demo"
+        project.latest_state = {}
+        project.seed_tracker = None
+        project.karma_matrix = {}
+        project.master_bible = {
+            "MasterBible": {"AssetLibrary": {"KeyNPCs": []}, "protagonist_config": {"name": "주인공"}},
+            "npc_registry": {},
+        }
+        project.paths = type("Paths", (), {"root": tmp_path})()
+        ctx.current_project = project
+
+        pp = Stage4PostProcessor(ctx)
+        result = pp.process_pass_result(
+            next_ep=2,
+            final_manuscript="그야말로 숨을 삼켰다. " * 120,
+            final_title="테스트",
+            final_state_updates={"_director_quality_labels": {"score": 92, "verdict": "PASS"}},
+            blueprint={"scene_breakdown": []},
+            arc_data={"arc_no": 1},
+            output_dir=tmp_path,
+            v50_modules_available=False,
+            extract_chain_link_fn=lambda *_args, **_kwargs: {},
+        )
+
+        assert result is True
+        soft_failures = tmp_path / "logs" / "soft_failures.jsonl"
+        assert soft_failures.exists()
+        rows = [json.loads(line) for line in soft_failures.read_text(encoding="utf-8").splitlines() if line.strip()]
+        assert any(row["operation"] == "save_episode_quality_signal" for row in rows)

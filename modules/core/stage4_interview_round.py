@@ -120,6 +120,250 @@ class Stage4InterviewRound:
             return None
         return round(pass_cnt / total * 100, 1)
 
+    def _resolve_director_protagonist_name(self, genre_name: str = "") -> str:
+        try:
+            from modules.core.constants import HUDKeys
+
+            master_bible = getattr(getattr(self.ctx, "current_project", None), "master_bible", {}) or {}
+            bible_root = master_bible.get("MasterBible", {}) if isinstance(master_bible, dict) else {}
+            return str(HUDKeys.get_protagonist_name(bible_root, genre_name) or "").strip()
+        except Exception as exc:
+            logging.debug("[Stage4] Director protagonist_name 조회 실패 (비치명): %s", exc)
+            return ""
+
+    def _compose_director_work_focus_text(
+        self,
+        *,
+        blueprint: dict | None,
+        prev_ending: str,
+        npc_roster: list[str],
+        max_chars: int = 2400,
+    ) -> str:
+        parts: list[str] = []
+        if prev_ending:
+            parts.append(str(prev_ending))
+        if isinstance(blueprint, dict):
+            for key in (
+                "title",
+                "summary",
+                "hook",
+                "core_conflict",
+                "goal",
+                "twist",
+                "core_event",
+                "story_goal",
+                "integrated_scenario",
+                "end_location",
+                "start_location",
+            ):
+                value = str(blueprint.get(key, "") or "").strip()
+                if value:
+                    parts.append(value)
+            scene_blocks = blueprint.get("scene_breakdown") or blueprint.get("scenes") or []
+            if isinstance(scene_blocks, dict):
+                scene_blocks = list(scene_blocks.values())
+            if isinstance(scene_blocks, list):
+                for scene in scene_blocks[:4]:
+                    if not isinstance(scene, dict):
+                        continue
+                    for key in ("summary", "purpose", "conflict", "location"):
+                        value = str(scene.get(key, "") or "").strip()
+                        if value:
+                            parts.append(value)
+        if npc_roster:
+            parts.append(" ".join(str(name).strip() for name in npc_roster[:8] if str(name).strip()))
+        combined = "\n".join(part for part in parts if part)
+        return combined[:max_chars]
+
+    def _resolve_director_work_focus(
+        self,
+        *,
+        blueprint: dict | None,
+        prev_ending: str,
+        npc_roster: list[str],
+    ) -> dict[str, object]:
+        guard = getattr(getattr(self.ctx, "sys", None), "guard", None)
+        if not guard or not hasattr(guard, "select_retrieval_focus"):
+            return {}
+
+        focus_text = self._compose_director_work_focus_text(
+            blueprint=blueprint,
+            prev_ending=prev_ending,
+            npc_roster=npc_roster,
+        )
+        if not focus_text:
+            return {}
+
+        try:
+            focus = guard.select_retrieval_focus(stage="director", focus_text=focus_text)
+        except Exception as exc:
+            logging.debug("[Stage4] Director work_focus 선택 실패 (비치명): %s", exc)
+            return {}
+        return focus if isinstance(focus, dict) else {}
+
+    def _build_director_work_focus_summary(
+        self,
+        *,
+        work_focus: dict[str, object],
+        blueprint: dict | None,
+        protagonist_name: str = "",
+        max_chars: int = 1200,
+    ) -> str:
+        if not isinstance(work_focus, dict) or not work_focus:
+            return ""
+
+        tracking_slots = [str(item).strip() for item in (work_focus.get("tracking_slots") or []) if str(item).strip()]
+        scene_engines = [
+            str(item).strip() for item in (work_focus.get("mandatory_scene_engines") or []) if str(item).strip()
+        ]
+        registry_profiles = [item for item in (work_focus.get("registry_profiles") or []) if isinstance(item, dict)]
+        if not any([tracking_slots, scene_engines, registry_profiles]):
+            return ""
+
+        lines = ["[작품 추적 슬롯 요약]"]
+        if tracking_slots:
+            lines.append(f"- Director 우선 tracking_slots: {', '.join(tracking_slots[:3])}")
+        if scene_engines:
+            lines.append(f"- Director scene engines: {', '.join(scene_engines[:2])}")
+        if registry_profiles:
+            rendered_profiles = []
+            for profile in registry_profiles[:2]:
+                name = str(profile.get("name", "") or "").strip()
+                fields = [str(item).strip() for item in (profile.get("required_fields") or []) if str(item).strip()]
+                if not name:
+                    continue
+                rendered_profiles.append(name + (f"(fields={', '.join(fields[:4])})" if fields else ""))
+            if rendered_profiles:
+                lines.append(f"- registry focus: {', '.join(rendered_profiles)}")
+
+        char_names: list[str] = []
+        if isinstance(blueprint, dict):
+            linked_parts: list[str] = []
+            raw_chars = blueprint.get("characters") or blueprint.get("npcs") or []
+            if isinstance(raw_chars, list):
+                for item in raw_chars[:4]:
+                    if isinstance(item, dict):
+                        name = str(item.get("name", "") or item.get("npc", "")).strip()
+                    else:
+                        name = str(item).strip()
+                    if name:
+                        char_names.append(name)
+            elif isinstance(raw_chars, str):
+                char_names = [token.strip() for token in raw_chars.replace("|", ",").split(",") if token.strip()][:4]
+            if char_names:
+                linked_parts.append(f"NPC={', '.join(char_names)}")
+            for label, key in (("장소", "end_location"), ("사건", "core_event"), ("목표", "story_goal")):
+                value = str(blueprint.get(key, "") or "").strip()
+                if value:
+                    linked_parts.append(f"{label}={value[:80]}")
+            if linked_parts:
+                lines.append(f"- 이번 화 연결 엔티티: {' | '.join(linked_parts)}")
+
+        try:
+            from modules.core.semantic_query_broker import SemanticQueryBroker
+
+            focus_text = " ".join(
+                [
+                    ", ".join(tracking_slots),
+                    ", ".join(scene_engines),
+                    " ".join(str(profile.get("purpose", "") or "") for profile in registry_profiles),
+                    str((blueprint or {}).get("core_event", "") or ""),
+                    str((blueprint or {}).get("story_goal", "") or ""),
+                ]
+            ).strip()
+            broker = SemanticQueryBroker(
+                db=getattr(getattr(self.ctx, "current_project", None), "db", None),
+                world_state=getattr(self.ctx, "world_state", None),
+                fact_ledger=getattr(self.ctx, "fact_ledger", None),
+                state_tracker=getattr(self.ctx, "state_tracker", None),
+                protagonist_name=protagonist_name,
+            )
+            relation_slice = broker.build_relation_slice(focus_text=focus_text, max_chars=420)
+            if relation_slice:
+                lines.append(relation_slice)
+            elif protagonist_name and char_names:
+                fallback = self._build_director_relationship_context(
+                    db=getattr(getattr(self.ctx, "current_project", None), "db", None),
+                    npc_names=char_names,
+                    protagonist_name=protagonist_name,
+                    limit=4,
+                )
+                if fallback:
+                    lines.append("[관계 의미 질의]\n" + fallback)
+        except Exception as exc:
+            logging.debug("[Stage4] Director semantic relation slice 생성 실패 (비치명): %s", exc)
+
+        text = "\n".join(lines)
+        return text if len(text) <= max_chars else text[: max_chars - 18] + "\n... (focus 요약 절삭)"
+
+    def _build_director_relationship_context(
+        self,
+        *,
+        db,
+        npc_names: list[str],
+        protagonist_name: str = "",
+        limit: int = 6,
+    ) -> str:
+        if not db or not hasattr(db, "get_relationship_history"):
+            return ""
+
+        clean_names = [str(name).strip() for name in (npc_names or []) if str(name).strip()]
+        protagonist_name = str(protagonist_name or "").strip()
+        seen: set[tuple[str, str]] = set()
+        lines: list[str] = []
+
+        def _add_pair(n1: str, n2: str) -> None:
+            if not n1 or not n2 or n1 == n2:
+                return
+            pair = tuple(sorted((n1, n2)))
+            if pair in seen:
+                return
+            seen.add(pair)
+            try:
+                rows = db.get_relationship_history(pair[0], pair[1], limit=3)
+            except Exception as exc:
+                logging.debug("[Stage4] Director relationship history 조회 실패 (비치명): %s", exc)
+                rows = []
+            if not rows:
+                return
+            for row in rows[:2]:
+                if not isinstance(row, dict):
+                    continue
+                old_relation = str(row.get("old_relation", "") or "").strip()
+                new_relation = str(row.get("new_relation", "") or "").strip()
+                change_ep = row.get("change_ep", "?")
+                transition = " -> ".join(part for part in (old_relation, new_relation) if part)
+                if transition:
+                    lines.append(f"EP{change_ep} {pair[0]}-{pair[1]}: {transition}")
+
+        if protagonist_name:
+            for name in clean_names[:5]:
+                _add_pair(protagonist_name, name)
+        for idx, name in enumerate(clean_names[:4]):
+            for other in clean_names[idx + 1 : idx + 4]:
+                _add_pair(name, other)
+
+        return "\n".join(lines[:limit])
+
+    @staticmethod
+    def _summarize_retrieval_sources(plan) -> dict[str, int]:
+        counts: dict[str, int] = {}
+        if not plan or not getattr(plan, "slots", None):
+            return counts
+        for slot in getattr(plan, "slots", []) or []:
+            source = str(getattr(slot, "source", RetrievalSources.VEC_MEMORY) or RetrievalSources.VEC_MEMORY)
+            counts[source] = counts.get(source, 0) + 1
+        return counts
+
+    def _record_retrieval_observation(self, *, ep_num: int, stage: str, observation: dict) -> None:
+        dashboard = getattr(self.ctx, "quality_dashboard", None)
+        if dashboard is None or not hasattr(dashboard, "record_retrieval_observation"):
+            return
+        try:
+            dashboard.record_retrieval_observation(ep_num=ep_num, stage=stage, observation=observation)
+        except Exception as exc:
+            logging.debug("[Stage4] Director retrieval observation record failed: %s", exc)
+
     def _build_db_pacing_advisory(self, db, next_ep: int) -> str:
         """최근 호흡 분석 추이를 Director advisory로 변환한다."""
         getter = getattr(db, "get_recent_pacing_records", None)
@@ -1159,6 +1403,14 @@ class Stage4InterviewRound:
         _reference_only_block = self._build_reference_only_block(_reference_only_parts)
         if _reference_only_block:
             _director_mc_parts.append(_reference_only_block)
+        try:
+            _guard = getattr(getattr(self.ctx, "sys", None), "guard", None)
+            if _guard and hasattr(_guard, "get_director_review_advisory"):
+                _work_review_advisory = str(_guard.get_director_review_advisory() or "").strip()
+                if _work_review_advisory:
+                    _director_mc_parts.append(_work_review_advisory)
+        except Exception as _e:
+            logging.debug("[Stage4] work review advisory 주입 실패: %s", _e)
         _director_mandatory_context = "\n\n".join(str(x) for x in _director_mc_parts if x is not None)
 
         director_result = self.ctx.agents["director"].select_and_judge_ensemble(
@@ -1243,6 +1495,7 @@ class Stage4InterviewRound:
                 selected_label=selected,
                 selected_strategy=_sel_strategy,
                 verdict=verdict,
+                stage=4,
                 score=score,
                 selection_reason=_selection_reason,
                 candidate_count=len(candidates) if candidates else 0,
@@ -1463,6 +1716,9 @@ class Stage4InterviewRound:
         # [SC-5] Director 벡터 메모리 컨텍스트 조립 (후보 공통 1회)
         print("      ⏳ [SC-5] Director 벡터 메모리 수집 중...")
         _director_memory_context = ""
+        _plan = None
+        _work_focus: dict[str, object] = {}
+        _work_focus_summary = ""
         _sc5_perf_key = f"sc_director_ep{next_ep}_retrieval"
         try:
             self.ctx.perf_timer.start(_sc5_perf_key)
@@ -1496,6 +1752,17 @@ class Stage4InterviewRound:
 
                 _is_arc_boundary = (arc_pos == 1) or (total_ep_in_arc > 0 and arc_pos == total_ep_in_arc)
                 _is_reject_retry = round_num > 0
+                _protagonist_name = self._resolve_director_protagonist_name(genre_name)
+                _work_focus = self._resolve_director_work_focus(
+                    blueprint=blueprint or {},
+                    prev_ending=prev_text,
+                    npc_roster=_npc_roster,
+                )
+                _work_focus_summary = self._build_director_work_focus_summary(
+                    work_focus=_work_focus,
+                    blueprint=blueprint or {},
+                    protagonist_name=_protagonist_name,
+                )
                 _plan = _advisor.plan_director_retrieval(
                     manuscript="",
                     blueprint=blueprint or {},
@@ -1503,12 +1770,15 @@ class Stage4InterviewRound:
                     npc_roster=_npc_roster,
                     is_arc_boundary=_is_arc_boundary,
                     is_reject_retry=_is_reject_retry,
+                    work_focus=_work_focus,
                 )
 
                 _max_results = int(_threshold("context.vector_max_results_s4", 20))
                 _default_slot_max = int(_threshold("smart_retrieval.slot_max_chars_default", 1500))
                 _max_npcs_per_slot = int(_threshold("smart_retrieval.max_npcs_per_slot", 5))
                 _mem_parts = []
+                if _work_focus_summary:
+                    _mem_parts.append(_work_focus_summary)
                 for _slot in getattr(_plan, "slots", []) or []:
                     _slot_source = str(
                         getattr(_slot, "source", RetrievalSources.VEC_MEMORY) or RetrievalSources.VEC_MEMORY
@@ -1543,6 +1813,14 @@ class Stage4InterviewRound:
                             )
                             if _npc_text:
                                 _mem_parts.append(f"[SC:npc]\n{str(_npc_text)[:_slot_max]}")
+                        elif _slot_source == RetrievalSources.DB_NPC_RELATIONSHIP:
+                            _rel_text = self._build_director_relationship_context(
+                                db=getattr(self.ctx.current_project, "db", None),
+                                npc_names=_npc_roster,
+                                protagonist_name=_protagonist_name,
+                            )
+                            if _rel_text:
+                                _mem_parts.append(f"[SC:{_slot_category}]\n{str(_rel_text)[:_slot_max]}")
                         else:
                             _vec_text = _vec_mem.retrieve_multi_query_context(
                                 queries=[_slot_query],
@@ -1573,6 +1851,34 @@ class Stage4InterviewRound:
                 self.ctx.perf_timer.stop(_sc5_perf_key)
             except Exception:
                 pass
+        _source_counts = self._summarize_retrieval_sources(_plan)
+        _coverage_warnings: list[str] = []
+        if _work_focus and not _work_focus_summary:
+            _coverage_warnings.append("missing_work_slot_summary")
+        if _work_focus and _plan and not any(
+            str(getattr(_slot, "category", "")).startswith("work_")
+            for _slot in (getattr(_plan, "slots", []) or [])
+        ):
+            _coverage_warnings.append("work_focus_without_slots")
+        if _source_counts.get(RetrievalSources.DB_NPC_RELATIONSHIP, 0) > 0 and "[관계 의미 질의]" not in _director_memory_context:
+            _coverage_warnings.append("missing_relation_slice")
+        self._record_retrieval_observation(
+            ep_num=next_ep,
+            stage="director",
+            observation={
+                "work_focus_present": bool(_work_focus),
+                "tracking_slots_count": len(_work_focus.get("tracking_slots") or []) if isinstance(_work_focus, dict) else 0,
+                "scene_engines_count": len(_work_focus.get("mandatory_scene_engines") or []) if isinstance(_work_focus, dict) else 0,
+                "registry_profiles_count": len(_work_focus.get("registry_profiles") or []) if isinstance(_work_focus, dict) else 0,
+                "planned_slots_count": len(getattr(_plan, "slots", []) or []) if _plan else 0,
+                "advisor_path_used": bool(_plan),
+                "work_slot_summary_included": "[작품 추적 슬롯 요약]" in _director_memory_context,
+                "relation_slice_included": "[관계 의미 질의]" in _director_memory_context,
+                "source_counts": _source_counts,
+                "coverage_warnings": _coverage_warnings,
+                "vector_context_chars": len(_director_memory_context),
+            },
+        )
 
         _pdcl = self.ctx.get_module("pre_director_checklist")
         if _pdcl:

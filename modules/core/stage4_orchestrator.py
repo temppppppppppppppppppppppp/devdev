@@ -632,6 +632,10 @@ JSON으로 출력:
             if hasattr(self.ctx.sys, "guard") and self.ctx.sys.guard:
                 try:
                     purism_prompt = self.ctx.sys.guard.get_v20_purism_prompt()
+                    if hasattr(self.ctx.sys.guard, "get_retrieval_contract_prompt"):
+                        _work_contract = str(self.ctx.sys.guard.get_retrieval_contract_prompt("manuscript") or "").strip()
+                        if _work_contract:
+                            purism_prompt = "\n\n".join(part for part in (purism_prompt, _work_contract) if part)
                 except Exception as e:
                     self.ctx.ui.log(f"   ⚠️ Guard Purism Prompt 추출 실패 (비치명): {e}")
 

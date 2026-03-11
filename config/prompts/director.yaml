@@ -112,6 +112,7 @@ ENSEMBLE_VARIABLE_PROMPT: |
   - 구체적인 사실 모순이 아니더라도, 톤/분위기/인물 태도의 급변, 동기 없는 행동 전환, 설명 없는 상황 변화 등 **어색한 부분**이 있으면 지적하세요.
   - **전문가 반응 비례성**: 전문 직업 캐릭터(PB, 의사, 셰프, 선수, 무인 등)가 자기 분야의 일상적 상황에 과잉 반응하고 있지 않은가? (예: VIP PB가 20억에 놀람→잘못, 3배 레버리지에 놀람→맞음) 위반 시 open_review에 기재.
   - 상투구 반복·스타터 단조·기계 요약 종결·정보전달형 대사 과다는 open_review에 기재.
+  - [작품 정체성 감리] mandatory_context에 해당 블록이 있으면 `mandatory_scene_engines` 누락, `tracking_slots` 소실, `forbidden_flattenings` 위반을 `work identity drift`로 open_review에 기재.
   - 발견한 사항을 아래 JSON의 `open_review` 필드에 자유롭게 서술하세요.
 
   ---
@@ -299,7 +300,7 @@ ENSEMBLE_VARIABLE_PROMPT: |
           ],
           "check_summary": "모순 검사 결과 요약"
       }},
-      "open_review": "체크리스트 외에 어색함/비약/톤 급변/동기 부재/상투구 반복/스타터 단조/기계적 요약 종결을 서술. 없으면 '특이사항 없음'",
+      "open_review": "체크리스트 외 어색함/비약/톤 급변/AI 티/work identity drift를 서술. 없으면 '특이사항 없음'",
       "feedback": {{
           "strengths": ["강점 1", "강점 2"],
           "issues": ["문제점 1 (있을 경우)"],
@@ -429,6 +430,7 @@ ENSEMBLE_SELECTION_PROMPT: |
   - 구체적인 사실 모순이 아니더라도, 톤/분위기/인물 태도의 급변, 동기 없는 행동 전환, 설명 없는 상황 변화 등 **어색한 부분**이 있으면 지적하세요.
   - **전문가 반응 비례성**: 전문 직업 캐릭터(PB, 의사, 셰프, 선수, 무인 등)가 자기 분야의 일상적 상황에 과잉 반응하고 있지 않은가? (예: VIP PB가 20억에 놀람→잘못, 3배 레버리지에 놀람→맞음) 위반 시 open_review에 기재.
   - 상투구 반복, 스타터 단조, 기계적 요약 종결, 정보전달형 대사 과다 같은 "AI 티"도 open_review에 기재.
+  - [작품 정체성 감리] mandatory_context에 해당 블록이 있으면 `mandatory_scene_engines` 누락, `tracking_slots` 소실, `forbidden_flattenings` 위반을 `work identity drift`로 open_review에 기재.
   - 발견한 사항을 아래 JSON의 `open_review` 필드에 자유롭게 서술하세요.
 
   ---
@@ -616,7 +618,7 @@ ENSEMBLE_SELECTION_PROMPT: |
           ],
           "check_summary": "모순 검사 결과 요약"
       }},
-      "open_review": "체크리스트 외에 어색함/비약/톤 급변/동기 부재/상투구 반복/스타터 단조/기계적 요약 종결을 서술. 없으면 '특이사항 없음'",
+      "open_review": "체크리스트 외 어색함/비약/톤 급변/AI 티/work identity drift를 서술. 없으면 '특이사항 없음'",
       "feedback": {{
           "strengths": ["강점 1", "강점 2"],
           "issues": ["문제점 1 (있을 경우)"],
@@ -1000,11 +1002,11 @@ DIRECTOR_AUDIT_PROMPT_V30: |
   - [D-Step2] 독자 대리만족: 보상 장면이 있는가? 좌절만 반복되지 않는가? 주인공 성장이 체감되는가?
 
   Step 4.5: [V67.2] 자유 형식 모순 리뷰
-  - 위 체크리스트와 별개로, 이전 원고를 읽은 독자의 눈으로 현재 원고를 통독하라.
-  - "이전 화와 자연스럽게 이어지는가?" "독자가 '어?' 할 부분이 없는가?"
-  - 사실 모순이 아니더라도 톤/분위기/인물 태도의 급변, 동기 없는 행동 전환이 있으면 지적하라.
-  - **전문가 반응 비례성**: 전문가는 자기 분야 루틴엔 둔감하고 진짜 이상 신호에만 반응해야 한다. 위반 시 open_review에 기재.
-  - 상투구·스타터 단조·기계 요약 종결·정보전달형 대사 과다 같은 "AI 티"도 open_review에 기재.
+  - 위 체크리스트와 별개로, 독자 시점에서 현재 원고를 통독하라.
+  - 사실 모순이 아니어도 톤 급변, 태도 급변, 동기 없는 행동 전환은 지적하라.
+  - 전문가는 루틴보다 진짜 이상 신호에만 반응해야 한다. 위반 시 open_review에 기재.
+  - AI 티(상투구/스타터 단조/기계 요약/정보전달형 대사)는 open_review에 기재.
+  - [작품 정체성 감리] 해당 블록이 있으면 scene engine/slot/flattening 이탈을 `work identity drift`로 open_review에 기재.
   - 발견 사항은 `open_review`에 서술하라.
 
   ### [V63 점수 산정 공식 (Score Formula)]
@@ -1158,7 +1160,7 @@ DIRECTOR_AUDIT_PROMPT_V30: |
       "current_beat_achieved": true/false,
       "reason": "판정 근거 (반드시 {audit_mode} 관점에서 서술)",
       "feedback": "증폭/수정을 위한 구체적 지시",
-      "open_review": "체크리스트 외 어색함/비약/톤 급변/상투구 반복/스타터 단조/기계 요약 종결을 서술. 없으면 '특이사항 없음'",
+      "open_review": "추가 이상(어색함/AI 티/work identity drift). 없으면 '특이사항 없음'",
       "lowest_score_area": "가장 낮은 점수를 받은 영역 (setting_consistency/scene_composition/narrative_flow/reader_engagement/prose_quality)"
   }}
 

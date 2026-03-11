@@ -433,6 +433,15 @@ class TestPreflightEnrichment:
         preflight.ctx.memory.retrieve_multi_query_context = MagicMock(side_effect=["vec one", "vec two"])
         preflight.ctx.memory.retrieve_npc_context = MagicMock(return_value="npc one")
         preflight.ctx.context_advisor = MagicMock()
+        preflight.ctx.sys = MagicMock()
+        preflight.ctx.sys.guard = MagicMock()
+        preflight.ctx.sys.guard.select_retrieval_focus.return_value = {
+            "tracking_slots": ["핵심 배우 라인"],
+            "mandatory_scene_engines": ["인재 발굴"],
+            "registry_profiles": [
+                {"name": "talent_registry", "required_fields": ["name", "heat", "fan_reaction"]}
+            ],
+        }
         preflight.ctx.context_advisor.plan_stage2_retrieval.return_value = RetrievalPlan(
             stage="stage2",
             episode_num=3,
@@ -468,6 +477,8 @@ class TestPreflightEnrichment:
             )
 
         preflight.ctx.context_advisor.plan_stage2_retrieval.assert_called_once()
+        call_kwargs = preflight.ctx.context_advisor.plan_stage2_retrieval.call_args.kwargs
+        assert call_kwargs["work_focus"]["tracking_slots"] == ["핵심 배우 라인"]
         assert preflight.ctx.memory.retrieve_multi_query_context.call_count == 2
         preflight.ctx.memory.retrieve_npc_context.assert_called_once()
         preflight.ctx.memory.retrieve_high_res_context.assert_not_called()
@@ -476,9 +487,73 @@ class TestPreflightEnrichment:
         assert npc_call["npc_names"][:2] == ["alice", "bob"]
 
         vector_context = preflight.ctx.agents["four_phase"].generate.call_args.kwargs["vector_context"]
+        assert "[작품 추적 슬롯 요약]" in vector_context
+        assert "핵심 배우 라인" in vector_context
         assert "[SC:block_theme]" in vector_context
         assert "[SC:npc_recent]" in vector_context
         assert "[SC:arc_tactical]" in vector_context
+
+    def test_work_focus_relation_slice_included_in_vector_context(self, preflight):
+        preflight.ctx.memory = MagicMock()
+        preflight.ctx.memory.retrieve_multi_query_context = MagicMock(return_value="vec one")
+        preflight.ctx.context_advisor = MagicMock()
+        preflight.ctx.quality_dashboard = MagicMock()
+        preflight.ctx.sys = MagicMock()
+        preflight.ctx.sys.guard = MagicMock()
+        preflight.ctx.sys.guard.select_retrieval_focus.return_value = {
+            "tracking_slots": ["소꿉친구 관계선"],
+            "mandatory_scene_engines": [],
+            "registry_profiles": [],
+        }
+        preflight.ctx.world_state = MagicMock()
+        preflight.ctx.world_state.get_state_dict.return_value = {"relationships": {"연홍": "죽마고우"}}
+        preflight.ctx.fact_ledger = MagicMock()
+        preflight.ctx.fact_ledger._ledger = {
+            "characters": {"연홍": {"relationship": "소꿉친구", "established_ep": 3, "history": []}}
+        }
+        preflight.ctx.current_project.db.get_npc_relationship_edges.return_value = [
+            {"npc1": "주인공", "npc2": "연홍", "relation": "죽마고우", "updated_ep": 3}
+        ]
+        preflight.ctx.current_project.db.get_relationship_history.return_value = [
+            {"old_relation": "친구", "new_relation": "죽마고우", "change_ep": 3}
+        ]
+        preflight.ctx.context_advisor.plan_stage2_retrieval.return_value = RetrievalPlan(
+            stage="stage2",
+            episode_num=3,
+            slots=[RetrievalSlot(category="block_theme", query="theme query", source="vec_memory", priority=1)],
+            total_budget_chars=2000,
+        )
+
+        def threshold_side_effect(key, default=None):
+            if key == "smart_retrieval.enabled":
+                return True
+            if key == "smart_retrieval.stage2_enabled":
+                return True
+            if key == "context.vector_max_results_s2":
+                return 8
+            return default
+
+        with patch("modules.core.stage2_preflight._threshold", side_effect=threshold_side_effect):
+            preflight._preflight_enrichment(
+                **_enrichment_kwargs(
+                    current_ep_start=3,
+                    protagonist_name="주인공",
+                    enriched_block={
+                        "block_theme": "relation repair",
+                        "constraint_summary": "소꿉친구와 관계 회복",
+                        "joint_docs": {},
+                        "status_shadow": {},
+                    },
+                )
+            )
+
+        vector_context = preflight.ctx.agents["four_phase"].generate.call_args.kwargs["vector_context"]
+        preflight.ctx.quality_dashboard.record_retrieval_observation.assert_called_once()
+        kwargs = preflight.ctx.quality_dashboard.record_retrieval_observation.call_args.kwargs
+        assert kwargs["stage"] == "stage2"
+        assert kwargs["observation"]["relation_slice_included"] is True
+        assert "[관계 의미 질의]" in vector_context
+        assert "연홍" in vector_context
 
 
 class TestGlobalBudgetTruncation:

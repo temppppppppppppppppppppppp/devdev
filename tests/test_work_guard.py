@@ -233,6 +233,365 @@ class TestCustomRules:
         assert prompt == "base purism prompt"
 
 
+# ── work_identity SSOT → purism prompt / warning ───────────────────
+
+
+class TestWorkIdentity:
+    def test_work_identity_sections_in_prompt(self, tmp_path):
+        from modules.core.genre_guards.work_guard import WorkGuard
+
+        p = _write_yaml(
+            tmp_path,
+            """\
+            work_identity:
+              work_type: "엔터 타이쿤 성장물"
+              one_line_truth: "사람을 발굴하고 포지셔닝해 스타 IP 기업으로 키우는 이야기"
+              protagonist_weapon:
+                - "스타 감각"
+                - "포지셔닝 판단"
+              business_axes:
+                - "배우"
+                - "연습생"
+              control_axes:
+                - "캐스팅 권한"
+              mandatory_scene_engines:
+                - "인재 발굴"
+              forbidden_flattenings:
+                - "사람 대신 숫자만으로 승부 보기"
+              mandatory_lexicon:
+                - "캐스팅"
+                - "팬덤"
+              tracking_slots:
+                - "핵심 배우 라인"
+              registry_profiles:
+                - name: "talent_registry"
+                  purpose: "배우/연습생 성장 상태 추적"
+                  required_fields: ["name", "tier", "risk"]
+        """,
+        )
+        guard = WorkGuard(MockBaseGuard(), p)
+        prompt = guard.get_v20_purism_prompt()
+        assert "[작품 정체성 SSOT]" in prompt
+        assert "작품 유형: 엔터 타이쿤 성장물" in prompt
+        assert "주인공 무기: 스타 감각, 포지셔닝 판단" in prompt
+        assert "[우선 추적 슬롯]" in prompt
+        assert "핵심 배우 라인" in prompt
+        assert "[레지스트리 프로파일]" in prompt
+        assert "talent_registry: 배우/연습생 성장 상태 추적 | required_fields=name, tier, risk" in prompt
+
+    def test_retrieval_contract_prompt_contains_slots_and_stage_guidance(self, tmp_path):
+        from modules.core.genre_guards.work_guard import WorkGuard
+
+        p = _write_yaml(
+            tmp_path,
+            """\
+            work_identity:
+              mandatory_scene_engines:
+                - "인재 발굴"
+              tracking_slots:
+                - "핵심 배우 라인"
+                - "주력 포맷/IP"
+              registry_profiles:
+                - name: "talent_registry"
+                  purpose: "배우 상태 추적"
+                  required_fields: ["name", "tier"]
+        """,
+        )
+        guard = WorkGuard(MockBaseGuard(), p)
+
+        contract = guard.get_retrieval_contract_prompt("blueprint")
+
+        assert "[작품 메모리 소비 계약 - Stage 3 Blueprint 설계]" in contract
+        assert "핵심 배우 라인" in contract
+        assert "인재 발굴" in contract
+        assert "talent_registry" in contract
+        assert "씬은 mandatory_scene_engines 중 최소 하나와 연결" in contract
+
+    def test_director_review_advisory_mentions_identity_drift(self, tmp_path):
+        from modules.core.genre_guards.work_guard import WorkGuard
+
+        p = _write_yaml(
+            tmp_path,
+            """\
+            work_identity:
+              mandatory_scene_engines:
+                - "인재 발굴"
+              forbidden_flattenings:
+                - "단순 M&A/주식 매매물처럼 흐르기"
+              tracking_slots:
+                - "핵심 배우 라인"
+        """,
+        )
+        guard = WorkGuard(MockBaseGuard(), p)
+
+        advisory = guard.get_director_review_advisory()
+
+        assert "[작품 정체성 감리 기준]" in advisory
+        assert "work identity drift" in advisory
+        assert "flattened_to_generic_investment" in advisory
+        assert "핵심 배우 라인" in advisory
+
+    def test_select_retrieval_focus_prefers_matching_slots(self, tmp_path):
+        from modules.core.genre_guards.work_guard import WorkGuard
+
+        p = _write_yaml(
+            tmp_path,
+            """\
+            work_identity:
+              mandatory_scene_engines:
+                - "인재 발굴"
+                - "팬덤 반응"
+              tracking_slots:
+                - "핵심 배우 라인"
+                - "주력 포맷/IP"
+                - "외부 투자 라인"
+              registry_profiles:
+                - name: "talent_registry"
+                  purpose: "배우/연습생 성장 상태 추적"
+                  required_fields: ["name", "tier", "risk"]
+                - name: "finance_registry"
+                  purpose: "자금/투자 상태 추적"
+                  required_fields: ["cash", "exposure"]
+        """,
+        )
+        guard = WorkGuard(MockBaseGuard(), p)
+
+        focus = guard.select_retrieval_focus(
+            stage="manuscript",
+            focus_text="이번 화는 배우 캐스팅과 팬덤 반응, 연습생 리스크를 다룬다.",
+        )
+
+        assert focus["tracking_slots"][0] == "핵심 배우 라인"
+        assert "인재 발굴" in focus["mandatory_scene_engines"] or "팬덤 반응" in focus["mandatory_scene_engines"]
+        assert focus["registry_profiles"][0]["name"] == "talent_registry"
+
+    def test_mandatory_lexicon_missing_reports_warning(self, tmp_path):
+        from modules.core.genre_guards.work_guard import WorkGuard
+
+        p = _write_yaml(
+            tmp_path,
+            """\
+            work_identity:
+              mandatory_lexicon:
+                - "캐스팅"
+                - "팬덤"
+        """,
+        )
+        guard = WorkGuard(MockBaseGuard(), p)
+
+        result = guard.run_deep_validation("지표와 자금만 오가는 차가운 협상 장면", {})
+
+        assert result["has_warning"] is True
+        assert any(item["type"] == "work_identity_lexicon_missing" for item in result["warning_violations"])
+
+    def test_mandatory_lexicon_present_stays_clean(self, tmp_path):
+        from modules.core.genre_guards.work_guard import WorkGuard
+
+        p = _write_yaml(
+            tmp_path,
+            """\
+            work_identity:
+              mandatory_lexicon:
+                - "캐스팅"
+                - "팬덤"
+        """,
+        )
+        guard = WorkGuard(MockBaseGuard(), p)
+
+        result = guard.run_deep_validation("캐스팅 회의 뒤 팬덤 반응까지 확인했다.", {})
+
+        assert not any(item["type"] == "work_identity_lexicon_missing" for item in result["warning_violations"])
+
+    def test_mandatory_scene_engines_missing_reports_warning(self, tmp_path):
+        from modules.core.genre_guards.work_guard import WorkGuard
+
+        p = _write_yaml(
+            tmp_path,
+            """\
+            work_identity:
+              mandatory_scene_engines:
+                - "인재 발굴"
+                - "팬덤 반응"
+        """,
+        )
+        guard = WorkGuard(MockBaseGuard(), p)
+
+        result = guard.run_deep_validation("지표와 자금만 검토하는 건조한 투자 회의가 이어졌다.", {})
+
+        warning = next(item for item in result["warning_violations"] if item["type"] == "work_identity_scene_engine_missing")
+
+        assert warning["expected_scene_engines"] == ["인재 발굴", "팬덤 반응"]
+        assert warning["matched_scene_engines"] == []
+        assert "인재 발굴" in warning["scene_engine_keywords"]
+
+    def test_mandatory_scene_engines_present_stays_clean(self, tmp_path):
+        from modules.core.genre_guards.work_guard import WorkGuard
+
+        p = _write_yaml(
+            tmp_path,
+            """\
+            work_identity:
+              mandatory_scene_engines:
+                - "인재 발굴"
+                - "팬덤 반응"
+        """,
+        )
+        guard = WorkGuard(MockBaseGuard(), p)
+
+        result = guard.run_deep_validation("신인 인재를 발굴한 뒤 팬덤 반응까지 바로 확인했다.", {})
+
+        assert not any(item["type"] == "work_identity_scene_engine_missing" for item in result["warning_violations"])
+
+    def test_forbidden_flattenings_warn_on_generic_investment_drift(self, tmp_path):
+        from modules.core.genre_guards.work_guard import WorkGuard
+
+        p = _write_yaml(
+            tmp_path,
+            """\
+            work_identity:
+              forbidden_flattenings:
+                - "엔터 현장성 없이 투자 용어만 반복"
+              mandatory_lexicon:
+                - "캐스팅"
+                - "팬덤"
+        """,
+        )
+        guard = WorkGuard(MockBaseGuard(), p)
+
+        result = guard.run_deep_validation(
+            "지분과 밸류, 수익률, 회수 배수만 계산하며 투자 지표만 반복했다.",
+            {},
+        )
+
+        warning = next(item for item in result["warning_violations"] if item["type"] == "work_identity_flattening_warning")
+
+        assert warning["finance_term_hits"] >= 3
+        assert warning["keyword_hits"] >= 0
+        assert warning["lexicon_present"] is False
+
+    def test_forbidden_flattenings_do_not_warn_when_work_lexicon_present(self, tmp_path):
+        from modules.core.genre_guards.work_guard import WorkGuard
+
+        p = _write_yaml(
+            tmp_path,
+            """\
+            work_identity:
+              forbidden_flattenings:
+                - "엔터 현장성 없이 투자 용어만 반복"
+              mandatory_lexicon:
+                - "캐스팅"
+                - "팬덤"
+        """,
+        )
+        guard = WorkGuard(MockBaseGuard(), p)
+
+        result = guard.run_deep_validation(
+            "캐스팅 회의에서 배우 동선을 조정하고 팬덤 반응까지 확인했다.",
+            {},
+        )
+
+        assert not any(item["type"] == "work_identity_flattening_warning" for item in result["warning_violations"])
+
+    def test_role_fit_constraints_in_prompt(self, tmp_path):
+        from modules.core.genre_guards.work_guard import WorkGuard
+
+        p = _write_yaml(
+            tmp_path,
+            """\
+            work_identity:
+              role_fit_constraints:
+                - name: "한지수"
+                  role: "PB"
+                  disallowed_actions:
+                    - "탭댄스"
+                    - "아이돌 안무"
+                  exceptions:
+                    - "연습생 출신"
+        """,
+        )
+        guard = WorkGuard(MockBaseGuard(), p)
+        prompt = guard.get_v20_purism_prompt()
+
+        assert "[직업 적합성 가드]" in prompt
+        assert "한지수 (PB)" in prompt
+        assert "탭댄스" in prompt
+        assert "연습생 출신" in prompt
+
+    def test_role_fit_constraints_warn_on_unjustified_role_break(self, tmp_path):
+        from modules.core.genre_guards.work_guard import WorkGuard
+
+        p = _write_yaml(
+            tmp_path,
+            """\
+            work_identity:
+              role_fit_constraints:
+                - name: "한지수"
+                  role: "PB"
+                  disallowed_actions:
+                    - "탭댄스"
+                    - "아이돌 안무"
+                  exceptions:
+                    - "연습생 출신"
+                    - "무대 훈련"
+        """,
+        )
+        guard = WorkGuard(MockBaseGuard(), p)
+
+        result = guard.run_deep_validation("한지수는 회의실에서 갑자기 탭댄스를 추며 분위기를 장악했다.", {})
+
+        warning = next(item for item in result["warning_violations"] if item["type"] == "work_role_fit_warning")
+
+        assert warning["character"] == "한지수"
+        assert warning["exceptions_considered"] == ["연습생 출신", "무대 훈련"]
+        assert warning["exception_hit"] is False
+
+    def test_role_fit_constraints_skip_when_exception_is_present(self, tmp_path):
+        from modules.core.genre_guards.work_guard import WorkGuard
+
+        p = _write_yaml(
+            tmp_path,
+            """\
+            work_identity:
+              role_fit_constraints:
+                - name: "한지수"
+                  role: "PB"
+                  disallowed_actions:
+                    - "탭댄스"
+                  exceptions:
+                    - "연습생 출신"
+        """,
+        )
+        guard = WorkGuard(MockBaseGuard(), p)
+
+        result = guard.run_deep_validation(
+            "연습생 출신인 한지수는 과거 특기를 살려 탭댄스를 짧게 보여줬다.",
+            {},
+        )
+
+        assert not any(item["type"] == "work_role_fit_warning" for item in result["warning_violations"])
+
+    def test_director_review_advisory_mentions_role_fit(self, tmp_path):
+        from modules.core.genre_guards.work_guard import WorkGuard
+
+        p = _write_yaml(
+            tmp_path,
+            """\
+            work_identity:
+              role_fit_constraints:
+                - name: "한지수"
+                  role: "PB"
+                  disallowed_actions:
+                    - "탭댄스"
+        """,
+        )
+        guard = WorkGuard(MockBaseGuard(), p)
+
+        advisory = guard.get_director_review_advisory()
+
+        assert "직업 적합성" in advisory
+        assert "한지수(PB)" in advisory
+
+
 # ── character_constraints → purism prompt ────────────────────
 
 

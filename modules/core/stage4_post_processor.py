@@ -7,10 +7,12 @@ import logging
 import os
 import re
 from contextlib import nullcontext as _nullcontext
+from pathlib import Path
 
 from modules.core.genre_schema_builder import is_wuxia
 from modules.core.metrics_collector import get_metrics_collector
 from modules.core.quality_signal_metrics import compute_quality_signal_bundle, extract_warning_count
+from modules.core.soft_failure import report_soft_failure
 
 _PROJECTS_DIR = "projects"
 
@@ -20,6 +22,51 @@ class Stage4PostProcessor:
 
     def __init__(self, ctx) -> None:
         self.ctx = ctx
+
+    def _report_soft_failure(
+        self,
+        *,
+        operation: str,
+        message: str,
+        exc: Exception | None = None,
+        ep_num: int | None = None,
+        extra: dict | None = None,
+        user_visible: bool = True,
+        learnable: bool = True,
+    ) -> None:
+        audit_event = getattr(self.ctx, "audit_event", None)
+        report_soft_failure(
+            component="stage4_post_processor",
+            operation=operation,
+            message=message,
+            exc=exc,
+            stage=4,
+            ep_num=ep_num,
+            degraded=True,
+            user_visible=user_visible,
+            learnable=learnable,
+            extra=extra,
+            log_dir=self._resolve_project_log_dir(),
+            audit_event=audit_event if callable(audit_event) else None,
+            warning_window_sec=120.0,
+        )
+
+    def _resolve_project_log_dir(self):
+        current_project = getattr(self.ctx, "current_project", None)
+        try:
+            root = getattr(getattr(current_project, "paths", None), "root", None)
+            if root:
+                return Path(root) / "logs"
+        except Exception:
+            pass
+
+        try:
+            db_path = getattr(getattr(current_project, "db", None), "db_path", None)
+            if db_path:
+                return Path(db_path).parent / "logs"
+        except Exception:
+            pass
+        return None
 
     def _truth_gate_llm_ask(self, prompt: str) -> str:
         """[TF-30-1] TruthGate 세계법칙 검사용 LLM 콜백."""
@@ -312,6 +359,13 @@ class Stage4PostProcessor:
                 _db.save_episode_quality_label(next_ep, _quality_labels)
                 self.ctx.ui.log("   ✅ 품질 라벨 저장 완료")
             except Exception as quality_err:
+                self._report_soft_failure(
+                    operation="save_episode_quality_label",
+                    message="episode quality label sidecar save failed",
+                    exc=quality_err,
+                    ep_num=next_ep,
+                    extra={"table": "episode_quality_labels"},
+                )
                 logging.warning("[QI-QM-4] quality label 저장 실패 (비차단): %s", quality_err)
 
         if hasattr(_db, "save_episode_quality_signal"):
@@ -328,6 +382,13 @@ class Stage4PostProcessor:
                 _db.save_episode_quality_signal(next_ep, _quality_signals)
                 self.ctx.ui.log("   ✅ 품질 신호 저장 완료")
             except Exception as signal_err:
+                self._report_soft_failure(
+                    operation="save_episode_quality_signal",
+                    message="episode quality signal sidecar save failed",
+                    exc=signal_err,
+                    ep_num=next_ep,
+                    extra={"table": "episode_quality_signals"},
+                )
                 logging.warning("[P0-QS] quality signal 저장 실패 (비차단): %s", signal_err)
 
         # HUD 업데이트 (DB 커밋 성공 후에만 실행)
@@ -1026,6 +1087,13 @@ class Stage4PostProcessor:
                     summary = f"제{next_ep}화 정산: {', '.join(all_new_items[:3]) if all_new_items else '변화없음'}"
                     self.ctx.current_project.db.save_state_log_with_summary(next_ep, state_log_data, summary)
                 except Exception as state_err:
+                    self._report_soft_failure(
+                        operation="save_state_log_with_summary",
+                        message="state_logs summary save failed after episode bible update",
+                        exc=state_err,
+                        ep_num=next_ep,
+                        extra={"table": "state_logs"},
+                    )
                     self.ctx.ui.log(f"      ⚠️ state_logs 저장 실패: {str(state_err)[:30]}")
 
             changes_count = (
@@ -1146,6 +1214,13 @@ class Stage4PostProcessor:
                 self.ctx.world_state._state = _ws_snap
             if _fl_snap is not None and self.ctx.fact_ledger:
                 self.ctx.fact_ledger._ledger = _fl_snap
+            self._report_soft_failure(
+                operation="save_world_state_atomic",
+                message="world state/fact ledger atomic save failed and was rolled back",
+                exc=_meta_err,
+                ep_num=next_ep,
+                extra={"rolled_back": True},
+            )
             self.ctx.ui.log(f"   ⚠️ [TF-C10] 메타데이터 원자적 저장 실패 (비차단): {str(_meta_err)[:60]}")
 
     def _run_post_pass_advisories(

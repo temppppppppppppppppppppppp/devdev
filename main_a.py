@@ -3029,22 +3029,64 @@ class SovereignApp:
 
     def _reset_stage_2(self):
         """[V20] Stage 2(Arcs)만 SQL DB에서 삭제하여 1번 완료 상태로 회귀"""
-        self._project_service.reset_stage_2()  # [Phase 4B-3] thin delegate
+        success = self._project_service.reset_stage_2()  # [Phase 4B-3] thin delegate
+        if success:
+            self.state_tracker = None
+            self._prompt_builder.invalidate_timeline_cache()
+            self._cumulative_state_cache = None
+            self._cumulative_state_cache_key = None
+            self._narrative_summaries_cache = None
+            try:
+                _se = self.agents.get("state_extractor") if isinstance(self.agents, dict) else None
+                if _se and hasattr(_se, "invalidate_cache"):
+                    _se.invalidate_cache()
+                _writer = self.agents.get("writer") if isinstance(self.agents, dict) else None
+                if _writer and hasattr(_writer, "invalidate_manuscript_cache"):
+                    _writer.invalidate_manuscript_cache()
+                _director = self.agents.get("director") if isinstance(self.agents, dict) else None
+                if _director and hasattr(_director, "invalidate_caches"):
+                    _director.invalidate_caches()
+            except Exception as _svc_err:
+                logging.warning("[SafeOps] reset_stage_2 cache invalidation failed (non-blocking): %s", _svc_err)
+            try:
+                _ft = getattr(self, "foreshadow_tracker", None)
+                if _ft is not None and hasattr(_ft, "clear"):
+                    _ft.clear()
+                    if self.current_project and hasattr(self.current_project, "db"):
+                        _ft.save_to_db(self.current_project.db)
+            except Exception as _ft_err:
+                logging.warning("[SafeOps] reset_stage_2 foreshadow sync failed (non-blocking): %s", _ft_err)
 
     def _rewind_stage_2(self):
         """[V20] 특정 아크 번호부터 그 이후를 전부 삭제 (정밀 되감기)"""
-        self._project_service.rewind_stage_2()  # [Phase 4B-3] thin delegate
+        success = self._project_service.rewind_stage_2()  # [Phase 4B-3] thin delegate
         # [Sweep35] clear state-related caches after rewind [I-16] 공개 메서드 사용
-        self._cumulative_state_cache = None
-        self._cumulative_state_cache_key = None
-        self._prompt_builder.invalidate_timeline_cache()
-        self._narrative_summaries_cache = None
-        try:
-            _se = self.agents.get("state_extractor") if isinstance(self.agents, dict) else None
-            if _se and hasattr(_se, "invalidate_cache"):
-                _se.invalidate_cache()
-        except Exception as _se_err:
-            logging.warning(f"[Sweep35] StateExtractor cache clear failed (non-blocking): {_se_err}")
+        if success:
+            self.state_tracker = None
+            self._cumulative_state_cache = None
+            self._cumulative_state_cache_key = None
+            self._prompt_builder.invalidate_timeline_cache()
+            self._narrative_summaries_cache = None
+            try:
+                _se = self.agents.get("state_extractor") if isinstance(self.agents, dict) else None
+                if _se and hasattr(_se, "invalidate_cache"):
+                    _se.invalidate_cache()
+                _writer = self.agents.get("writer") if isinstance(self.agents, dict) else None
+                if _writer and hasattr(_writer, "invalidate_manuscript_cache"):
+                    _writer.invalidate_manuscript_cache()
+                _director = self.agents.get("director") if isinstance(self.agents, dict) else None
+                if _director and hasattr(_director, "invalidate_caches"):
+                    _director.invalidate_caches()
+            except Exception as _se_err:
+                logging.warning(f"[Sweep35] StateExtractor cache clear failed (non-blocking): {_se_err}")
+            try:
+                _ft = getattr(self, "foreshadow_tracker", None)
+                if _ft is not None and hasattr(_ft, "clear"):
+                    _ft.clear()
+                    if self.current_project and hasattr(self.current_project, "db"):
+                        _ft.save_to_db(self.current_project.db)
+            except Exception as _ft_err:
+                logging.warning(f"[SafeOps] rewind_stage_2 foreshadow sync failed (non-blocking): {_ft_err}")
 
     def _rollback_episode(self):
         """[V40.1 Rollback] 특정 회차로 되감기 (HUD, DB, Vector DB, 파일 모두 롤백)"""
@@ -3087,7 +3129,33 @@ class SovereignApp:
 
     def _wipe_production_data(self):
         """[V27.1 Wipe] 설계도는 유지하고 실제 집필 기록(Manuscripts/Blueprints)만 소거"""
-        self._project_service.wipe_production_data()  # [Phase 4B-3] thin delegate
+        success = self._project_service.wipe_production_data()  # [Phase 4B-3] thin delegate
+        if success:
+            self.state_tracker = None
+            self._prompt_builder.invalidate_timeline_cache()
+            self._cumulative_state_cache = None
+            self._cumulative_state_cache_key = None
+            self._narrative_summaries_cache = None
+            try:
+                _writer = self.agents.get("writer") if isinstance(self.agents, dict) else None
+                if _writer and hasattr(_writer, "invalidate_manuscript_cache"):
+                    _writer.invalidate_manuscript_cache()
+                _director = self.agents.get("director") if isinstance(self.agents, dict) else None
+                if _director and hasattr(_director, "invalidate_caches"):
+                    _director.invalidate_caches()
+                _se = self.agents.get("state_extractor") if isinstance(self.agents, dict) else None
+                if _se and hasattr(_se, "invalidate_cache"):
+                    _se.invalidate_cache()
+            except Exception as _svc_err:
+                logging.warning("[SafeOps] wipe cache invalidation failed (non-blocking): %s", _svc_err)
+            try:
+                _ft = getattr(self, "foreshadow_tracker", None)
+                if _ft is not None and hasattr(_ft, "clear"):
+                    _ft.clear()
+                    if self.current_project and hasattr(self.current_project, "db"):
+                        _ft.save_to_db(self.current_project.db)
+            except Exception as _ft_err:
+                logging.warning(f"[SafeOps] wipe foreshadow sync failed (non-blocking): {_ft_err}")
 
     # =================================================================
     # [V60.80] Stage 4 V2 - Chief Writer 주권주의 아키텍처

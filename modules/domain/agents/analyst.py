@@ -123,6 +123,18 @@ class Analyst(BaseAgent):
 
     _CONTEXT_CACHE_TTL_SECONDS = 600
 
+    def _compose_guard_prompt(self, stage: str = "generic") -> str:
+        _guard = getattr(self.context, "guard", None)
+        if not _guard or not hasattr(_guard, "get_v20_purism_prompt"):
+            return ""
+
+        parts = [str(_guard.get_v20_purism_prompt() or "").strip()]
+        if hasattr(_guard, "get_retrieval_contract_prompt"):
+            _contract = str(_guard.get_retrieval_contract_prompt(stage) or "").strip()
+            if _contract:
+                parts.append(_contract)
+        return "\n\n".join(part for part in parts if part)
+
     def _cache_project_name(self, cache_type: str) -> str:
         current_project = getattr(self.context, "current_project", None)
         raw_name = (
@@ -244,8 +256,7 @@ class Analyst(BaseAgent):
         target_blocks_str = json.dumps(target_blocks, ensure_ascii=False, indent=2)
 
         # 2. 프롬프트 데이터 안전화 및 주입
-        _guard = getattr(self.context, "guard", None)
-        _genre_prompt = _guard.get_v20_purism_prompt() if _guard and hasattr(_guard, "get_v20_purism_prompt") else ""
+        _genre_prompt = self._compose_guard_prompt("volume")
         # [TF-45] 장르별 role_title 주입
         _genre_code = self._get_current_genre()
         prompt = get_plan_volume_prompt_v25(
@@ -812,7 +823,7 @@ class Analyst(BaseAgent):
             logging.debug("[SilentPass:Analyst] get_critical_keys failed: %s", e)
         _genre_placeholders = self._build_genre_placeholders(current_genre, _ck_analyst)
         safe_data = {
-            "genre_prompt": self.context.guard.get_v20_purism_prompt(),
+            "genre_prompt": self._compose_guard_prompt("arc"),
             "protagonist_name": protagonist_name,  # V42 LOCK
             "strategic_compass": self._escape_braces(vol_strategy),
             "prev_arc_context": self._escape_braces(prev_arc_context) or "시작점",
@@ -1352,7 +1363,7 @@ class Analyst(BaseAgent):
         except Exception as e:
             logging.debug("[SilentPass:Analyst] enrich get_critical_keys failed: %s", e)
         prompt = get_enrich_block_prompt_v30(
-            genre_prompt=self.context.guard.get_v20_purism_prompt(),
+            genre_prompt=self._compose_guard_prompt("block"),
             curr_block=safe_curr,
             prev_context=effective_prev,  # 👈 safe_prev의 진화형
             next_context=safe_next,

@@ -12,7 +12,9 @@ import logging as _logging
 import traceback as _traceback
 
 from modules.core.constants import ContextLimits, Emojis, ErrorMessages
+from modules.core.context_advisor import RetrievalSources
 from modules.core.fact_ledger import summarize_fact_ledger_numbers_block
+from modules.core.semantic_query_broker import SemanticQueryBroker
 
 try:
     from modules.utils.notifier import notifier
@@ -152,6 +154,228 @@ def _build_style_guide_advisory(project, *, max_chars: int = 600) -> str:
         lines.append("- 금지 표현: " + ", ".join(forbidden_expr[:5]))
 
     return "\n".join(lines)[:max_chars]
+
+
+def _compose_stage3_work_focus_text(
+    *,
+    arc_data: dict | None,
+    prev_blueprints: list[dict] | None,
+    entity_registry: dict | None,
+) -> str:
+    parts: list[str] = []
+    if isinstance(arc_data, dict):
+        for key in ("title", "summary", "block_theme", "tactical_doc", "arc_tactical", "constraint_summary"):
+            value = str(arc_data.get(key, "") or "").strip()
+            if value:
+                parts.append(value)
+        plot_suspension = arc_data.get("plot_suspension", []) or []
+        if isinstance(plot_suspension, list) and plot_suspension:
+            parts.append(" ".join(str(item).strip() for item in plot_suspension[:4] if str(item).strip()))
+
+    if isinstance(prev_blueprints, list) and prev_blueprints:
+        last_bp = prev_blueprints[-1] if isinstance(prev_blueprints[-1], dict) else {}
+        if isinstance(last_bp, dict):
+            for key in ("title", "ending_hook", "cliffhanger", "core_event"):
+                value = str(last_bp.get(key, "") or "").strip()
+                if value:
+                    parts.append(value)
+
+    if isinstance(entity_registry, dict):
+        for values in entity_registry.values():
+            if not isinstance(values, list):
+                continue
+            names: list[str] = []
+            for item in values[:8]:
+                if isinstance(item, dict):
+                    name = str(item.get("name", "") or item.get("npc", "") or item.get("title", "")).strip()
+                else:
+                    name = str(item).strip()
+                if name:
+                    names.append(name)
+            if names:
+                parts.append(" ".join(names[:6]))
+
+    combined = "\n".join(part for part in parts if part)
+    return combined[:1800]
+
+
+def _resolve_stage3_work_focus(
+    ctx,
+    *,
+    arc_data: dict | None,
+    prev_blueprints: list[dict] | None,
+    entity_registry: dict | None,
+) -> dict[str, object]:
+    guard = getattr(getattr(ctx, "sys", None), "guard", None)
+    if not guard or not hasattr(guard, "select_retrieval_focus"):
+        return {}
+
+    focus_text = _compose_stage3_work_focus_text(
+        arc_data=arc_data,
+        prev_blueprints=prev_blueprints,
+        entity_registry=entity_registry,
+    )
+    if not focus_text:
+        return {}
+
+    try:
+        focus = guard.select_retrieval_focus(stage="blueprint", focus_text=focus_text)
+    except Exception as focus_err:
+        _logging.debug("[Stage3] work_focus 선택 실패 (비치명): %s", focus_err)
+        return {}
+
+    return focus if isinstance(focus, dict) else {}
+
+
+def _build_stage3_work_focus_advisory(
+    work_focus: dict[str, object],
+    *,
+    arc_data: dict | None,
+    entity_registry: dict | None,
+    ctx,
+    protagonist_name: str = "",
+    max_chars: int = 1200,
+) -> str:
+    if not isinstance(work_focus, dict) or not work_focus:
+        return ""
+
+    tracking_slots = [str(item).strip() for item in (work_focus.get("tracking_slots") or []) if str(item).strip()]
+    scene_engines = [
+        str(item).strip() for item in (work_focus.get("mandatory_scene_engines") or []) if str(item).strip()
+    ]
+    registry_profiles = [
+        item for item in (work_focus.get("registry_profiles") or []) if isinstance(item, dict)
+    ]
+    if not any([tracking_slots, scene_engines, registry_profiles]):
+        return ""
+
+    lines = ["[작품 추적 슬롯 요약]"]
+    if tracking_slots:
+        lines.append(f"- 이번 화 우선 tracking_slots: {', '.join(tracking_slots[:3])}")
+    if scene_engines:
+        lines.append(f"- 이번 화 scene engines: {', '.join(scene_engines[:2])}")
+    if registry_profiles:
+        rendered_profiles = []
+        for profile in registry_profiles[:2]:
+            name = str(profile.get("name", "") or "").strip()
+            fields = [str(item).strip() for item in (profile.get("required_fields") or []) if str(item).strip()]
+            if not name:
+                continue
+            rendered_profiles.append(name + (f"(fields={', '.join(fields[:4])})" if fields else ""))
+        if rendered_profiles:
+            lines.append(f"- registry focus: {', '.join(rendered_profiles)}")
+
+    if isinstance(entity_registry, dict):
+        linked_parts: list[str] = []
+        for label, key in (("인물", "characters"), ("아이템", "items"), ("플롯", "plots"), ("위치", "locations")):
+            values = entity_registry.get(key) or []
+            rendered: list[str] = []
+            if isinstance(values, list):
+                for item in values[:4]:
+                    if isinstance(item, dict):
+                        name = str(item.get("name", "") or item.get("npc", "") or item.get("title", "")).strip()
+                    else:
+                        name = str(item).strip()
+                    if name:
+                        rendered.append(name)
+            if rendered:
+                linked_parts.append(f"{label}={', '.join(rendered[:4])}")
+        if linked_parts:
+            lines.append(f"- 연동 엔티티: {' | '.join(linked_parts)}")
+
+    if isinstance(arc_data, dict):
+        conflict = str(arc_data.get("constraint_summary", "") or arc_data.get("block_theme", "") or "").strip()
+        if conflict:
+            lines.append(f"- 현재 갈등축: {conflict[:160]}")
+
+    try:
+        focus_text = " ".join(
+            [
+                ", ".join(tracking_slots),
+                ", ".join(scene_engines),
+                " ".join(str(profile.get("purpose", "") or "") for profile in registry_profiles),
+                str((arc_data or {}).get("constraint_summary", "") or ""),
+                str((arc_data or {}).get("block_theme", "") or ""),
+            ]
+        ).strip()
+        broker = SemanticQueryBroker(
+            db=getattr(getattr(ctx, "current_project", None), "db", None),
+            world_state=getattr(ctx, "world_state", None),
+            fact_ledger=getattr(ctx, "fact_ledger", None),
+            state_tracker=getattr(ctx, "state_tracker", None),
+            protagonist_name=protagonist_name,
+        )
+        relation_slice = broker.build_relation_slice(focus_text=focus_text, max_chars=420)
+        if relation_slice:
+            lines.append(relation_slice)
+    except Exception as broker_err:
+        _logging.debug("[Stage3] semantic relation slice 생성 실패 (비치명): %s", broker_err)
+
+    text = "\n".join(lines)
+    return text if len(text) <= max_chars else text[: max_chars - 18] + "\n... (슬롯 요약 절삭)"
+
+
+def _build_stage3_relationship_context(db, *, npc_names: list[str], protagonist_name: str = "", limit: int = 6) -> str:
+    if not db or not hasattr(db, "get_relationship_history"):
+        return ""
+
+    clean_names = [str(name).strip() for name in (npc_names or []) if str(name).strip()]
+    protagonist_name = str(protagonist_name or "").strip()
+    seen: set[tuple[str, str]] = set()
+    lines: list[str] = []
+
+    def _add_pair(n1: str, n2: str) -> None:
+        if not n1 or not n2 or n1 == n2:
+            return
+        pair = tuple(sorted((n1, n2)))
+        if pair in seen:
+            return
+        seen.add(pair)
+        try:
+            rows = db.get_relationship_history(pair[0], pair[1], limit=3)
+        except Exception as rel_err:
+            _logging.debug("[Stage3] relationship history 조회 실패 (비치명): %s", rel_err)
+            rows = []
+        if not rows:
+            return
+        for row in rows[:2]:
+            if not isinstance(row, dict):
+                continue
+            old_relation = str(row.get("old_relation", "") or "").strip()
+            new_relation = str(row.get("new_relation", "") or "").strip()
+            change_ep = row.get("change_ep", "?")
+            transition = " -> ".join(part for part in (old_relation, new_relation) if part)
+            if transition:
+                lines.append(f"EP{change_ep} {pair[0]}-{pair[1]}: {transition}")
+
+    if protagonist_name:
+        for name in clean_names[:5]:
+            _add_pair(protagonist_name, name)
+    for idx, name in enumerate(clean_names[:4]):
+        for other in clean_names[idx + 1 : idx + 4]:
+            _add_pair(name, other)
+
+    return "\n".join(lines[:limit])
+
+
+def _summarize_retrieval_sources(plan) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    if not plan or not getattr(plan, "slots", None):
+        return counts
+    for slot in getattr(plan, "slots", []) or []:
+        source = str(getattr(slot, "source", RetrievalSources.VEC_MEMORY) or RetrievalSources.VEC_MEMORY)
+        counts[source] = counts.get(source, 0) + 1
+    return counts
+
+
+def _record_retrieval_observation(app, *, ep_num: int, stage: str, observation: dict) -> None:
+    dashboard = getattr(app, "quality_dashboard", None)
+    if dashboard is None or not hasattr(dashboard, "record_retrieval_observation"):
+        return
+    try:
+        dashboard.record_retrieval_observation(ep_num=ep_num, stage=stage, observation=observation)
+    except Exception as exc:
+        _logging.debug("[Stage3] retrieval observation record failed: %s", exc)
 
 
 class Stage3Orchestrator:
@@ -694,6 +918,8 @@ class Stage3Orchestrator:
 
         try:
             _bp_semantic_ctx = ""
+            _s3_work_focus: dict[str, object] = {}
+            _s3_plan = None
 
             # [S3-I1] Smart Context Retrieval — 과거 유사 Blueprint 참조
             try:
@@ -718,12 +944,19 @@ class Stage3Orchestrator:
                                     if _name and _name not in _s3_npc_roster:
                                         _s3_npc_roster.append(_name)
 
+                    _s3_work_focus = _resolve_stage3_work_focus(
+                        ctx,
+                        arc_data=arc_data,
+                        prev_blueprints=prev_blueprints[-5:] if prev_blueprints else [],
+                        entity_registry=entity_registry,
+                    )
                     _s3_plan = _s3_advisor.plan_stage3_retrieval(
                         arc_data=arc_data,
                         prev_blueprints=prev_blueprints[-5:] if prev_blueprints else [],
                         current_ep=working_ep,
                         npc_roster=_s3_npc_roster[:10],
                         genre=_s3_genre,
+                        work_focus=_s3_work_focus,
                     )
                     _s3_parts = []
                     # NOTE: S3 전용 키 없음 — S4의 vector_max_results_s4를 의도적으로 공유
@@ -741,6 +974,12 @@ class Stage3Orchestrator:
                                     npc_names=_s3_npc_roster[:5],
                                     current_ep=working_ep,
                                     max_results=_s3_max_results,
+                                )
+                            elif _slot_source == "db_npc_relationship":
+                                _s3_text = _build_stage3_relationship_context(
+                                    getattr(ctx.current_project, "db", None),
+                                    npc_names=_s3_npc_roster[:6],
+                                    protagonist_name=protagonist_name,
                                 )
                             else:
                                 _s3_text = _s3_memory.retrieve_multi_query_context(
@@ -878,6 +1117,56 @@ class Stage3Orchestrator:
             _seed_advisory = _build_stale_seed_advisory(getattr(self.ctx.current_project, "db", None), working_ep)
             if _seed_advisory:
                 _bp_semantic_ctx = _seed_advisory + ("\n\n" + _bp_semantic_ctx if _bp_semantic_ctx else "")
+
+            _work_focus_advisory = _build_stage3_work_focus_advisory(
+                _s3_work_focus
+                or _resolve_stage3_work_focus(
+                    ctx,
+                    arc_data=arc_data,
+                    prev_blueprints=prev_blueprints[-5:] if prev_blueprints else [],
+                    entity_registry=entity_registry,
+                ),
+                arc_data=arc_data,
+                entity_registry=entity_registry,
+                ctx=ctx,
+                protagonist_name=protagonist_name,
+            )
+            if _work_focus_advisory:
+                _bp_semantic_ctx = _work_focus_advisory + ("\n\n" + _bp_semantic_ctx if _bp_semantic_ctx else "")
+            _source_counts = _summarize_retrieval_sources(_s3_plan)
+            if not _source_counts and _bp_semantic_ctx:
+                _source_counts = {"legacy_semantic_context": 1}
+            _coverage_warnings: list[str] = []
+            if _s3_work_focus and not _work_focus_advisory:
+                _coverage_warnings.append("missing_work_slot_summary")
+            if _s3_work_focus and _s3_plan and not any(
+                str(getattr(_slot, "category", "")).startswith("work_")
+                for _slot in (getattr(_s3_plan, "slots", []) or [])
+            ):
+                _coverage_warnings.append("work_focus_without_slots")
+            if (
+                _source_counts.get(RetrievalSources.DB_NPC_RELATIONSHIP, 0) > 0
+                and "[관계 의미 질의]" not in _bp_semantic_ctx
+            ):
+                _coverage_warnings.append("missing_relation_slice")
+            _record_retrieval_observation(
+                self.app,
+                ep_num=working_ep,
+                stage="stage3",
+                observation={
+                    "work_focus_present": bool(_s3_work_focus),
+                    "tracking_slots_count": len(_s3_work_focus.get("tracking_slots") or []) if isinstance(_s3_work_focus, dict) else 0,
+                    "scene_engines_count": len(_s3_work_focus.get("mandatory_scene_engines") or []) if isinstance(_s3_work_focus, dict) else 0,
+                    "registry_profiles_count": len(_s3_work_focus.get("registry_profiles") or []) if isinstance(_s3_work_focus, dict) else 0,
+                    "planned_slots_count": len(getattr(_s3_plan, "slots", []) or []) if _s3_plan else 0,
+                    "advisor_path_used": bool(_s3_plan),
+                    "work_slot_summary_included": "[작품 추적 슬롯 요약]" in _bp_semantic_ctx,
+                    "relation_slice_included": "[관계 의미 질의]" in _bp_semantic_ctx,
+                    "source_counts": _source_counts,
+                    "coverage_warnings": _coverage_warnings,
+                    "vector_context_chars": len(_bp_semantic_ctx),
+                },
+            )
 
             with StageSpinner(3, f"제{working_ep}화") as _s3_spinner:
                 # [V67][S3-I5] 이전 원고 로드 — 단일 쿼리로 최적화 (N+1 → 1)

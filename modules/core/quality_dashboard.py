@@ -45,6 +45,7 @@ class QualityDashboard:
         self.hud_anomalies: list[dict] = []
         self.blueprint_coverage: list[dict] = []
         self.quality_signal_history: list[dict] = []
+        self.retrieval_observation_history: list[dict] = []
 
         # 파일에서 기존 메트릭 로드
         if self.metrics_file and self.metrics_file.exists():
@@ -99,6 +100,10 @@ class QualityDashboard:
             self.blueprint_coverage.append(record)
             self._trim_histories()
 
+        elif record_type == "retrieval_observation":
+            self.retrieval_observation_history.append(record)
+            self._trim_histories()
+
     def _trim_histories(self, stage: int | None = None) -> None:
         if len(self.validation_history) > self._max_history:
             self.validation_history = self.validation_history[-self._max_history :]
@@ -108,6 +113,8 @@ class QualityDashboard:
             self.blueprint_coverage = self.blueprint_coverage[-self._max_history :]
         if len(self.quality_signal_history) > self._max_history:
             self.quality_signal_history = self.quality_signal_history[-self._max_history :]
+        if len(self.retrieval_observation_history) > self._max_history:
+            self.retrieval_observation_history = self.retrieval_observation_history[-self._max_history :]
 
         if stage is not None:
             scores = self.stage_stats[stage]["scores"]
@@ -187,6 +194,39 @@ class QualityDashboard:
 
         return record
 
+    def record_retrieval_observation(self, *, ep_num: int, stage: str, observation: dict | None = None) -> dict:
+        """Record stage-level retrieval effectiveness / coverage observation."""
+        observation = observation if isinstance(observation, dict) else {}
+        coverage_warnings = [str(item).strip() for item in (observation.get("coverage_warnings") or []) if str(item).strip()]
+        source_counts = observation.get("source_counts") or {}
+        if not isinstance(source_counts, dict):
+            source_counts = {}
+
+        record = {
+            "type": "retrieval_observation",
+            "timestamp": datetime.now().isoformat(),
+            "ep_num": int(ep_num),
+            "stage": str(stage or "unknown"),
+            "work_focus_present": bool(observation.get("work_focus_present", False)),
+            "tracking_slots_count": int(observation.get("tracking_slots_count", 0) or 0),
+            "scene_engines_count": int(observation.get("scene_engines_count", 0) or 0),
+            "registry_profiles_count": int(observation.get("registry_profiles_count", 0) or 0),
+            "planned_slots_count": int(observation.get("planned_slots_count", 0) or 0),
+            "advisor_path_used": bool(observation.get("advisor_path_used", False)),
+            "work_slot_summary_included": bool(observation.get("work_slot_summary_included", False)),
+            "relation_slice_included": bool(observation.get("relation_slice_included", False)),
+            "source_counts": {str(key): int(value or 0) for key, value in source_counts.items() if str(key).strip()},
+            "coverage_warnings": coverage_warnings,
+            "vector_context_chars": int(observation.get("vector_context_chars", 0) or 0),
+            "mandatory_context_chars": int(observation.get("mandatory_context_chars", 0) or 0),
+            "protected_summary_survived": bool(observation.get("protected_summary_survived", False)),
+            "trimmed_work_slot_summary": bool(observation.get("trimmed_work_slot_summary", False)),
+        }
+
+        self._process_record(record)
+        self._save_record(record)
+        return record
+
     def _save_record(self, record: dict):
         """레코드를 파일에 저장"""
         if not self.metrics_file:
@@ -223,6 +263,12 @@ class QualityDashboard:
             "avg_blueprint_coverage": 0,
             "common_violations": [],
             "latest_quality_signals": {},
+            "retrieval_observations": {
+                "count": len(self.retrieval_observation_history),
+                "latest_stage": self.retrieval_observation_history[-1].get("stage")
+                if self.retrieval_observation_history
+                else None,
+            },
         }
 
         # Stage별 통계
@@ -258,6 +304,73 @@ class QualityDashboard:
             summary["latest_quality_signals"] = self.quality_signal_history[-1].get("quality_signals", {})
 
         return summary
+
+    def get_retrieval_summary(self, recent_n: int = 12) -> dict[str, Any]:
+        """Return compact retrieval effectiveness summary for dashboard / calibration."""
+        payload: dict[str, Any] = {
+            "available": False,
+            "total_observations": 0,
+            "stage_rows": [],
+            "top_warnings": [],
+            "recent": [],
+        }
+        if recent_n <= 0 or not self.retrieval_observation_history:
+            return payload
+
+        history = self.retrieval_observation_history
+        stage_groups: dict[str, list[dict]] = defaultdict(list)
+        warning_counts: dict[str, int] = defaultdict(int)
+        for row in history:
+            stage_groups[str(row.get("stage") or "unknown")].append(row)
+            for warning in row.get("coverage_warnings", []) or []:
+                warning_counts[str(warning)] += 1
+
+        stage_rows: list[dict] = []
+        for stage, rows in sorted(stage_groups.items(), key=lambda item: item[0]):
+            total = len(rows)
+            if total <= 0:
+                continue
+            stage_rows.append(
+                {
+                    "stage": stage,
+                    "total": total,
+                    "work_focus_rate": round(sum(1 for row in rows if row.get("work_focus_present")) / total, 2),
+                    "summary_included_rate": round(
+                        sum(1 for row in rows if row.get("work_slot_summary_included")) / total,
+                        2,
+                    ),
+                    "relation_slice_rate": round(
+                        sum(1 for row in rows if row.get("relation_slice_included")) / total,
+                        2,
+                    ),
+                    "coverage_warning_rate": round(
+                        sum(1 for row in rows if row.get("coverage_warnings")) / total,
+                        2,
+                    ),
+                }
+            )
+
+        payload["available"] = True
+        payload["total_observations"] = len(history)
+        payload["stage_rows"] = stage_rows
+        payload["top_warnings"] = [
+            {"warning": warning, "count": count}
+            for warning, count in sorted(warning_counts.items(), key=lambda item: item[1], reverse=True)[:6]
+        ]
+        payload["recent"] = [
+            {
+                "ep_num": row.get("ep_num"),
+                "stage": row.get("stage"),
+                "work_focus_present": bool(row.get("work_focus_present")),
+                "work_slot_summary_included": bool(row.get("work_slot_summary_included")),
+                "relation_slice_included": bool(row.get("relation_slice_included")),
+                "coverage_warnings": list(row.get("coverage_warnings") or []),
+                "source_counts": dict(row.get("source_counts") or {}),
+                "timestamp": row.get("timestamp"),
+            }
+            for row in reversed(history[-recent_n:])
+        ]
+        return payload
 
     def get_quality_signal_snapshot(self, recent_n: int = 5) -> dict[str, Any]:
         """최근 품질 신호 스냅샷을 반환한다."""

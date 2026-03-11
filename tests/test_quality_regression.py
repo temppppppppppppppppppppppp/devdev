@@ -153,3 +153,40 @@ class TestGetScoreTrendSummary:
         result = db.get_score_trend_summary()
         assert result["min"] == 60
         assert result["max"] == 90
+
+
+class TestRetrievalObservationSummary:
+    def test_retrieval_summary_aggregates_stage_rows_and_warnings(self):
+        db = QualityDashboard(project_path=None)
+        db.record_retrieval_observation(
+            ep_num=3,
+            stage="stage2",
+            observation={
+                "work_focus_present": True,
+                "tracking_slots_count": 2,
+                "work_slot_summary_included": True,
+                "relation_slice_included": False,
+                "source_counts": {"vec_memory": 2, "db_npc_relationship": 1},
+                "coverage_warnings": ["missing_relation_slice"],
+            },
+        )
+        db.record_retrieval_observation(
+            ep_num=4,
+            stage="stage4",
+            observation={
+                "work_focus_present": True,
+                "tracking_slots_count": 1,
+                "work_slot_summary_included": True,
+                "relation_slice_included": True,
+                "source_counts": {"vec_memory": 1},
+                "coverage_warnings": [],
+            },
+        )
+
+        summary = db.get_retrieval_summary(recent_n=5)
+
+        assert summary["available"] is True
+        assert summary["total_observations"] == 2
+        assert any(row["stage"] == "stage2" for row in summary["stage_rows"])
+        assert summary["top_warnings"][0]["warning"] == "missing_relation_slice"
+        assert summary["recent"][0]["stage"] == "stage4"
