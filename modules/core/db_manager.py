@@ -9,6 +9,7 @@ from datetime import datetime
 from pathlib import Path
 
 from .constants import MARTIAL_METRICS  # 👈 상수 임포트
+from .quality_signal_metrics import build_signal_stat
 
 
 # [V44] DB 에러 심각도 분류
@@ -182,16 +183,6 @@ class DBManager:
             )
         """)
 
-        self.cursor.execute("""
-            CREATE TABLE IF NOT EXISTS surgery_logs (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                ep_num INTEGER,
-                error_category TEXT,
-                failed_logic TEXT,
-                surgery_result TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        """)
         self.conn.commit()
 
         # [DB-Eff-P3] anchors 테이블 SSOT 정책:
@@ -444,6 +435,7 @@ class DBManager:
         self.cursor.execute("""
             CREATE TABLE IF NOT EXISTS director_selections (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+                stage INTEGER,
                 ep_num INTEGER NOT NULL,
                 round_num INTEGER NOT NULL,
                 selected_label TEXT NOT NULL,
@@ -453,6 +445,10 @@ class DBManager:
                 selection_reason TEXT,
                 candidate_count INTEGER DEFAULT 3,
                 fix_scope TEXT DEFAULT '',
+                attempt_key TEXT DEFAULT '',
+                candidate_key TEXT DEFAULT '',
+                content_hash TEXT DEFAULT '',
+                artifact_path TEXT DEFAULT '',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
@@ -468,6 +464,41 @@ class DBManager:
             self.cursor.execute("ALTER TABLE director_selections ADD COLUMN advisory_warnings TEXT")
         except sqlite3.OperationalError:
             pass  # already exists
+        try:
+            self.cursor.execute("ALTER TABLE director_selections ADD COLUMN stage INTEGER")
+        except sqlite3.OperationalError:
+            pass  # already exists
+        try:
+            self.cursor.execute("ALTER TABLE director_selections ADD COLUMN verdict_reason TEXT DEFAULT ''")
+        except sqlite3.OperationalError:
+            pass  # already exists
+        try:
+            self.cursor.execute("ALTER TABLE director_selections ADD COLUMN pre_firewall_score INTEGER DEFAULT 0")
+        except sqlite3.OperationalError:
+            pass  # already exists
+        try:
+            self.cursor.execute("ALTER TABLE director_selections ADD COLUMN firewall_triggered INTEGER DEFAULT 0")
+        except sqlite3.OperationalError:
+            pass  # already exists
+        try:
+            self.cursor.execute("ALTER TABLE director_selections ADD COLUMN firewall_reason TEXT DEFAULT ''")
+        except sqlite3.OperationalError:
+            pass  # already exists
+        try:
+            self.cursor.execute("ALTER TABLE director_selections ADD COLUMN attempt_key TEXT DEFAULT ''")
+        except sqlite3.OperationalError:
+            pass  # already exists
+        for _col in ("candidate_key", "content_hash", "artifact_path"):
+            try:
+                self.cursor.execute(f"ALTER TABLE director_selections ADD COLUMN {_col} TEXT DEFAULT ''")
+            except sqlite3.OperationalError:
+                pass  # already exists
+        self.cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_director_selections_stage_ep ON director_selections(stage, ep_num)"
+        )
+        self.cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_director_selections_attempt_key ON director_selections(attempt_key)"
+        )
 
         # [Log-1] Per-call LLM telemetry
         self.cursor.execute(
@@ -488,6 +519,11 @@ class DBManager:
                 error_msg TEXT,
                 verdict TEXT,
                 context_tag TEXT,
+                input_tokens INTEGER,
+                output_tokens INTEGER,
+                cached_tokens INTEGER,
+                thinking_tokens INTEGER,
+                total_cost_usd REAL,
                 prompt_snippet TEXT,
                 response_snippet TEXT,
                 thinking_snippet TEXT
@@ -498,9 +534,19 @@ class DBManager:
         self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_llm_calls_ep ON llm_calls(ep_num)")
         self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_llm_calls_ts ON llm_calls(ts)")
         # [Log-Phase2] Existing DB compatibility migration
-        for _col in ("prompt_snippet", "response_snippet", "thinking_snippet"):
+        for _col in (
+            "input_tokens",
+            "output_tokens",
+            "cached_tokens",
+            "thinking_tokens",
+            "total_cost_usd",
+            "prompt_snippet",
+            "response_snippet",
+            "thinking_snippet",
+        ):
             try:
-                self.cursor.execute(f"ALTER TABLE llm_calls ADD COLUMN {_col} TEXT")
+                _col_type = "REAL" if _col == "total_cost_usd" else ("INTEGER" if _col.endswith("_tokens") else "TEXT")
+                self.cursor.execute(f"ALTER TABLE llm_calls ADD COLUMN {_col} {_col_type}")
                 self.conn.commit()
             except Exception as _e:
                 logging.debug("[DBManager] llm_calls 컬럼 마이그레이션 스킵(%s): %s", _col, _e)
@@ -524,7 +570,12 @@ class DBManager:
                 model TEXT,
                 duration_ms INTEGER,
                 advisory_flags TEXT,
-                generation_method TEXT
+                attempt_key TEXT,
+                generation_method TEXT,
+                prompt_version TEXT,
+                candidate_key TEXT,
+                content_hash TEXT,
+                artifact_path TEXT
             )
             """
         )
@@ -533,12 +584,21 @@ class DBManager:
         self.cursor.execute(
             "CREATE INDEX IF NOT EXISTS idx_stage_attempts_category ON stage_attempts(failure_category)"
         )
-        # [TF-60] generation_method 컬럼 마이그레이션 (기존 DB 호환)
-        try:
-            self.cursor.execute("ALTER TABLE stage_attempts ADD COLUMN generation_method TEXT")
-            self.conn.commit()
-        except Exception as _e:
-            logging.debug("[DBManager] stage_attempts generation_method 마이그레이션 스킵: %s", _e)
+        # [TF-60][OPT-3] stage_attempts 컬럼 마이그레이션 (기존 DB 호환)
+        for _col in (
+            "generation_method",
+            "prompt_version",
+            "attempt_key",
+            "candidate_key",
+            "content_hash",
+            "artifact_path",
+        ):
+            try:
+                self.cursor.execute(f"ALTER TABLE stage_attempts ADD COLUMN {_col} TEXT")
+                self.conn.commit()
+            except Exception as _e:
+                logging.debug("[DBManager] stage_attempts %s 마이그레이션 스킵: %s", _col, _e)
+        self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_stage_attempts_attempt_key ON stage_attempts(attempt_key)")
 
         # 16. [Phase 6] 비용 추적 로그
         self.cursor.execute("""
@@ -601,6 +661,50 @@ class DBManager:
                 created_at TEXT DEFAULT (datetime('now'))
             )
         """)
+        self.cursor.execute("""
+            CREATE TABLE IF NOT EXISTS episode_quality_labels (
+                ep_num INTEGER PRIMARY KEY,
+                score INTEGER DEFAULT 0,
+                verdict TEXT DEFAULT '',
+                selection_reason TEXT DEFAULT '',
+                open_review TEXT DEFAULT '',
+                score_breakdown TEXT DEFAULT '{}',
+                consistency_checklist TEXT DEFAULT '{}',
+                created_at TEXT DEFAULT (datetime('now'))
+            )
+        """)
+        self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_episode_quality_score ON episode_quality_labels(score)")
+        self.cursor.execute("""
+            CREATE TABLE IF NOT EXISTS episode_quality_signals (
+                ep_num INTEGER PRIMARY KEY,
+                ced_score REAL DEFAULT 0.0,
+                ai_slop_score REAL DEFAULT 0.0,
+                ai_slop_hits TEXT DEFAULT '[]',
+                compression_ratio REAL DEFAULT 0.0,
+                burstiness REAL DEFAULT 0.0,
+                complexity REAL DEFAULT 0.0,
+                signal_summary TEXT DEFAULT '{}',
+                created_at TEXT DEFAULT (datetime('now'))
+            )
+        """)
+        self.cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_episode_quality_signals_created_at ON episode_quality_signals(created_at)"
+        )
+        self.cursor.execute("""
+            CREATE TABLE IF NOT EXISTS episode_quality_observations (
+                ep_num INTEGER PRIMARY KEY,
+                operator_label TEXT DEFAULT '',
+                note TEXT DEFAULT '',
+                created_at TEXT DEFAULT (datetime('now')),
+                updated_at TEXT DEFAULT (datetime('now'))
+            )
+        """)
+        self.cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_episode_quality_observations_label ON episode_quality_observations(operator_label)"
+        )
+        self.cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_episode_quality_observations_updated_at ON episode_quality_observations(updated_at)"
+        )
         # [DB-Eff-P1] character_voice 프로필 테이블
         self.cursor.execute("""
             CREATE TABLE IF NOT EXISTS character_voice (
@@ -819,7 +923,8 @@ class DBManager:
             logging.warning(f"[DB-MERGE] 마이그레이션 실패 (비치명): {e}")
             # [FIX-2] rollback -> DETACH 순서
             try:
-                self.conn.rollback()
+                if self.conn.in_transaction:
+                    self.conn.rollback()
             except Exception:
                 pass
             try:
@@ -1251,6 +1356,35 @@ class DBManager:
 
             return bibles
 
+    def get_episode_bibles_before(self, up_to_ep: int) -> list:
+        """
+        Episode Bible lightweight range query for retrospective/knowledge checks.
+
+        Returns only fields actually needed by InfoParadoxChecker.
+        """
+        with self._lock:
+            cur = self.conn.cursor()
+            try:
+                cur.execute(
+                    "SELECT ep_num, reveals, knowledge_map FROM episode_bibles WHERE ep_num < ? ORDER BY ep_num",
+                    (int(up_to_ep),),
+                )
+                rows = cur.fetchall()
+            finally:
+                cur.close()
+
+            bibles = []
+            for row in rows:
+                bibles.append(
+                    {
+                        "ep_num": row["ep_num"],
+                        "reveals": self._safe_json_loads(row["reveals"], "[]"),
+                        "knowledge_map": self._safe_json_loads(row["knowledge_map"], "{}"),
+                    }
+                )
+
+            return bibles
+
     def delete_episode_bibles_after(self, ep_num: int):
         """특정 화 이후의 Bible delta 삭제 (롤백용)"""
         with self._lock:
@@ -1267,24 +1401,6 @@ class DBManager:
                 return cur.rowcount
             finally:
                 cur.close()
-
-        # --- [Section 2: 복선 및 로어] ---
-        # modules/core/db_manager.py
-        # [V35.5] 수술 기록 박제 메서드 추가
-
-    def save_surgery_log(self, ep_num, category, failed_logic, result) -> None:
-        with self._lock:
-            nested = self.conn.in_transaction
-            self.cursor.execute(
-                """
-                INSERT INTO surgery_logs (ep_num, error_category, failed_logic, surgery_result)
-                VALUES (?, ?, ?, ?)
-            """,
-                (ep_num, category, failed_logic, result),
-            )
-            # [V44 Fix] 중첩 트랜잭션 안전성 보장
-            if not nested:
-                self.commit()
 
     def delete_orphaned_seeds(self, valid_ids: list) -> None:
         """[TF-30-8] 유효 ID 목록에 없는 유령 복선 삭제 (lock 보호)."""
@@ -1401,15 +1517,6 @@ class DBManager:
                 logging.info(f"→ 상세: {traceback.format_exc()[:300]}")
                 if nested:
                     raise DBError(f"로어 저장 기타 오류: {e}", original_error=e) from e
-
-        # --- [Section 2 보완: 로어 인출] ---
-
-    def get_lore_item(self, item_name):
-        """특정 인물/아이템의 설정을 테이블에서 즉시 조회"""
-        with self._lock:
-            cur = self.cursor.execute("SELECT * FROM encyclopedia WHERE item = ?", (item_name,))
-            row = cur.fetchone()
-            return dict(row) if row else None
 
     def get_lore_list_by_category(self, category):
         """특정 카테고리(NPC, ITEM 등) 전체 리스트 인출. category가 None이면 전체 반환"""
@@ -1797,7 +1904,7 @@ class DBManager:
             )
             return "\n".join([f"- [제 {r['ep_num']} 화]: {r['summary']}" for r in reversed(cur.fetchall())])
 
-    def get_recent_causal_links(self, current_ep: int, lookback: int = 10) -> list[dict]:
+    def get_recent_causal_links(self, current_ep: int, lookback: int = 30) -> list[dict]:
         """[LM-post-1] 최근 N화의 인과 링크 목록 반환."""
         start_ep = max(1, int(current_ep) - int(lookback))
         try:
@@ -1819,6 +1926,39 @@ class DBManager:
                 return results
         except Exception as _e:
             logging.debug("[causal_graph] get_recent_causal_links 실패 (비치명): %s", _e)
+            return []
+
+    def get_causal_links_by_entities(self, entity_names: list[str], *, before_ep: int, lookback: int = 120, limit: int = 30) -> list[dict]:
+        """Entity-filtered causal link lookup for long-range continuity hints."""
+        names = [str(name or "").strip() for name in entity_names if str(name or "").strip()]
+        if not names:
+            return []
+
+        start_ep = max(1, int(before_ep) - int(lookback))
+        try:
+            with self._lock:
+                cur = self.cursor.execute(
+                    "SELECT ep_num, data FROM causal_graph WHERE ep_num >= ? AND ep_num < ? ORDER BY ep_num DESC LIMIT ?",
+                    (start_ep, int(before_ep), int(limit) * 4),
+                )
+                results: list[dict] = []
+                for row in cur.fetchall():
+                    raw = row["data"]
+                    try:
+                        link = json.loads(raw) if isinstance(raw, str) else {}
+                    except (json.JSONDecodeError, ValueError, TypeError):
+                        continue
+                    if not isinstance(link, dict) or not link:
+                        continue
+                    link_text = json.dumps(link, ensure_ascii=False)
+                    if any(name in link_text for name in names):
+                        link.setdefault("ep", row["ep_num"])
+                        results.append(link)
+                    if len(results) >= int(limit):
+                        break
+                return list(reversed(results))
+        except Exception as _e:
+            logging.debug("[causal_graph] get_causal_links_by_entities 실패 (비치명): %s", _e)
             return []
 
         # --- [Section 5: 관계 및 인과] ---
@@ -1852,9 +1992,23 @@ class DBManager:
                 return
             data_to_insert = []
             for link in new_links:
-                ep = link.get("ep") or current_ep
-                serialized = json.dumps(link, ensure_ascii=False)
+                if isinstance(link, dict):
+                    normalized_link = dict(link)
+                else:
+                    text = str(link or "").strip()
+                    if not text:
+                        continue
+                    normalized_link = {
+                        "cause": text,
+                        "effect": "",
+                        "raw_text": text,
+                    }
+                ep = normalized_link.get("ep") or normalized_link.get("ep_no") or current_ep
+                normalized_link.setdefault("ep", ep)
+                serialized = json.dumps(normalized_link, ensure_ascii=False)
                 data_to_insert.append((ep, serialized))
+            if not data_to_insert:
+                return
             self.cursor.executemany("INSERT INTO causal_graph (ep_num, data) VALUES (?, ?)", data_to_insert)
             if not nested:
                 self.commit()
@@ -2068,7 +2222,8 @@ class DBManager:
                 self.conn.commit()
         except sqlite3.IntegrityError as e:
             if not nested:
-                self.conn.rollback()
+                if self.conn.in_transaction:
+                    self.conn.rollback()
             logging.warning(f" [{DBErrorSeverity.HIGH}] 트랜잭션 무결성 오류 - 롤백 수행: {e}")
             raise DBIntegrityError(str(e), original_error=e) from e
         except sqlite3.OperationalError as e:
@@ -2113,11 +2268,13 @@ class DBManager:
             )
             return [dict(row) for row in cur.fetchall()]
 
-    def reset_after(self, target_ep) -> None:
+    def reset_after(self, target_ep, *, commit: bool = True) -> None:
         """전체 테이블 리셋 및 롤백"""
         with self._lock:
             try:
-                self.cursor.execute("BEGIN")
+                started_tx = not self.conn.in_transaction
+                if started_tx:
+                    self.cursor.execute("BEGIN")
                 tables = ["blueprints", "state_logs", "causal_graph", "manuscripts", "martial_tracker"]
                 for tbl in tables:
                     self.cursor.execute(f"DELETE FROM {tbl} WHERE ep_num >= ?", (target_ep,))
@@ -2131,8 +2288,16 @@ class DBManager:
                 self.cursor.execute("DELETE FROM npc_history WHERE episode_no >= ?", (target_ep,))
                 self.cursor.execute("DELETE FROM episode_sentence_hashes WHERE episode_number >= ?", (target_ep,))
                 self.cursor.execute("DELETE FROM episode_satisfaction_tags WHERE ep_num >= ?", (target_ep,))
-                self.cursor.execute("DELETE FROM director_selections WHERE ep_num >= ?", (target_ep,))
+                _stage4_selections = self._director_stage_predicate(4)
+                self.cursor.execute(
+                    "DELETE FROM director_selections WHERE ep_num >= ? AND " + _stage4_selections,
+                    (target_ep,),
+                )
                 self.cursor.execute("DELETE FROM episode_pacing WHERE ep_num >= ?", (target_ep,))
+                self.cursor.execute("DELETE FROM episode_quality_labels WHERE ep_num >= ?", (target_ep,))
+                self.cursor.execute("DELETE FROM episode_quality_signals WHERE ep_num >= ?", (target_ep,))
+                self.cursor.execute("DELETE FROM episode_quality_observations WHERE ep_num >= ?", (target_ep,))
+                self.cursor.execute("DELETE FROM stage_attempts WHERE stage IN (3, 4) AND ep_num >= ?", (target_ep,))
                 # [R7-P1-1] episode_fts/episode_meta 롤백 (FTS 먼저 삭제 후 meta 삭제)
                 try:
                     self.cursor.execute("DELETE FROM episode_fts WHERE rowid >= ?", (target_ep,))
@@ -2190,14 +2355,51 @@ class DBManager:
             )
             impact["satisfaction_tags"] = cur.fetchone()["cnt"]
 
-            cur = self.cursor.execute("SELECT COUNT(*) as cnt FROM director_selections WHERE ep_num >= ?", (target_ep,))
+            _stage4_selections = self._director_stage_predicate(4)
+            cur = self.cursor.execute(
+                "SELECT COUNT(*) as cnt FROM director_selections WHERE ep_num >= ? AND " + _stage4_selections,
+                (target_ep,),
+            )
             impact["director_selections"] = cur.fetchone()["cnt"]
+
+            cur = self.cursor.execute("SELECT COUNT(*) as cnt FROM episode_pacing WHERE ep_num >= ?", (target_ep,))
+            impact["episode_pacing"] = cur.fetchone()["cnt"]
+
+            cur = self.cursor.execute("SELECT COUNT(*) as cnt FROM episode_quality_labels WHERE ep_num >= ?", (target_ep,))
+            impact["episode_quality_labels"] = cur.fetchone()["cnt"]
+
+            cur = self.cursor.execute(
+                "SELECT COUNT(*) as cnt FROM episode_quality_signals WHERE ep_num >= ?",
+                (target_ep,),
+            )
+            impact["episode_quality_signals"] = cur.fetchone()["cnt"]
+
+            cur = self.cursor.execute(
+                "SELECT COUNT(*) as cnt FROM episode_quality_observations WHERE ep_num >= ?",
+                (target_ep,),
+            )
+            impact["episode_quality_observations"] = cur.fetchone()["cnt"]
+
+            cur = self.cursor.execute("SELECT COUNT(*) as cnt FROM foreshadow WHERE planted_ep >= ?", (target_ep,))
+            impact["foreshadow"] = cur.fetchone()["cnt"]
+
+            cur = self.cursor.execute(
+                "SELECT COUNT(*) as cnt FROM npc_relationship_edges WHERE updated_ep >= ?",
+                (target_ep,),
+            )
+            impact["npc_relationship_edges"] = cur.fetchone()["cnt"]
 
             # [LM-D] 관계 변경 이력 영향도
             cur = self.cursor.execute(
                 "SELECT COUNT(*) as cnt FROM npc_relationship_history WHERE change_ep >= ?", (target_ep,)
             )
             impact["npc_relationship_history"] = cur.fetchone()["cnt"]
+
+            cur = self.cursor.execute(
+                "SELECT COUNT(*) as cnt FROM stage_attempts WHERE stage IN (3, 4) AND ep_num >= ?",
+                (target_ep,),
+            )
+            impact["stage_attempts_stage34"] = cur.fetchone()["cnt"]
 
             return impact
 
@@ -2230,6 +2432,21 @@ class DBManager:
         with self._lock:
             cur = self.cursor.execute("SELECT * FROM seeds WHERE status = 'active'")
             return [dict(row) for row in cur.fetchall()]
+
+    def get_all_character_voices(self) -> list[dict]:
+        """character_voice 프로필 전체 조회."""
+        with self._lock:
+            cur = self.conn.cursor()
+            try:
+                rows = cur.execute(
+                    "SELECT npc_name, profile_data FROM character_voice ORDER BY npc_name"
+                ).fetchall()
+                return [dict(row) for row in rows]
+            except Exception as e:
+                logging.debug("[character_voice] 전체 조회 실패 (비치명): %s", e)
+                return []
+            finally:
+                cur.close()
 
         # --- [V61.5] Blueprint/Manuscript 연속성 캐싱용 메서드 ---
 
@@ -2360,25 +2577,6 @@ class DBManager:
             # 오름차순으로 정렬 (시간순)
             return list(reversed(results))
 
-    def get_all_manuscripts(self) -> list:
-        """전체 원고 목록 조회 (ep_num 오름차순)"""
-        with self._lock:
-            cur = self.cursor.execute("SELECT ep_num, title, content FROM manuscripts ORDER BY ep_num ASC")
-            return [dict(row) for row in cur.fetchall()]
-
-    def get_all_blueprints(self) -> list:
-        """전체 블루프린트 목록 조회 (ep_num 오름차순)"""
-        with self._lock:
-            cur = self.cursor.execute("SELECT ep_num, data FROM blueprints ORDER BY ep_num ASC")
-            results = []
-            for row in cur.fetchall():
-                try:
-                    data = json.loads(row["data"]) if row["data"] else {}
-                except json.JSONDecodeError:
-                    data = {}
-                results.append({"ep_num": row["ep_num"], "data": data})
-            return results
-
         # --- [Phase 3-5A] NPC 변경 이력 ---
 
     def insert_npc_change(
@@ -2439,6 +2637,15 @@ class DBManager:
         candidate_count: int = 3,
         fix_scope: str = "",
         advisory_warnings: dict | None = None,
+        stage: int | None = None,
+        verdict_reason: str = "",
+        pre_firewall_score: int = 0,
+        firewall_triggered: bool = False,
+        firewall_reason: str = "",
+        attempt_key: str = "",
+        candidate_key: str = "",
+        content_hash: str = "",
+        artifact_path: str = "",
     ) -> None:
         """Persist director selection result."""
         with self._lock:
@@ -2446,10 +2653,13 @@ class DBManager:
             _adv_json = json.dumps(advisory_warnings, ensure_ascii=False) if advisory_warnings else None
             self.cursor.execute(
                 "INSERT INTO director_selections "
-                "(ep_num, round_num, selected_label, selected_strategy, verdict, score, "
-                "selection_reason, candidate_count, fix_scope, advisory_warnings) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                "(stage, ep_num, round_num, selected_label, selected_strategy, verdict, score, "
+                "selection_reason, candidate_count, fix_scope, advisory_warnings, verdict_reason, "
+                "pre_firewall_score, firewall_triggered, firewall_reason, attempt_key, "
+                "candidate_key, content_hash, artifact_path) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (
+                    stage,
                     ep_num,
                     round_num,
                     selected_label,
@@ -2460,10 +2670,343 @@ class DBManager:
                     candidate_count,
                     fix_scope or "",
                     _adv_json,
+                    verdict_reason[:500] if verdict_reason else "",
+                    int(pre_firewall_score or 0),
+                    1 if firewall_triggered else 0,
+                    firewall_reason[:500] if firewall_reason else "",
+                    str(attempt_key or ""),
+                    str(candidate_key or ""),
+                    str(content_hash or ""),
+                    str(artifact_path or ""),
                 ),
             )
             if not nested:
                 self.commit()
+
+    def save_episode_quality_label(self, ep_num: int, labels: dict) -> None:
+        """PASS 에피소드의 정규화된 품질 라벨 저장."""
+        if not isinstance(labels, dict):
+            return
+
+        with self._lock:
+            nested = self.conn.in_transaction
+            self.cursor.execute(
+                "INSERT OR REPLACE INTO episode_quality_labels "
+                "(ep_num, score, verdict, selection_reason, open_review, score_breakdown, consistency_checklist) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (
+                    ep_num,
+                    int(labels.get("score", 0) or 0),
+                    str(labels.get("verdict", "") or ""),
+                    str(labels.get("selection_reason", "") or "")[:300],
+                    str(labels.get("open_review", "") or "")[:500],
+                    json.dumps(labels.get("score_breakdown", {}) or {}, ensure_ascii=False),
+                    json.dumps(labels.get("consistency_checklist", {}) or {}, ensure_ascii=False),
+                ),
+            )
+            if not nested:
+                self.commit()
+
+    @staticmethod
+    def _parse_episode_quality_signal_row(row: dict) -> dict:
+        result = dict(row)
+        try:
+            result["ai_slop_hits"] = json.loads(result.get("ai_slop_hits") or "[]")
+        except (TypeError, ValueError, json.JSONDecodeError):
+            result["ai_slop_hits"] = []
+        try:
+            result["signal_summary"] = json.loads(result.get("signal_summary") or "{}")
+        except (TypeError, ValueError, json.JSONDecodeError):
+            result["signal_summary"] = {}
+        return result
+
+    def save_episode_quality_signal(self, ep_num: int, signals: dict) -> None:
+        """최종 원고 기준 Python-only 품질 신호 저장."""
+        if not isinstance(signals, dict):
+            return
+
+        with self._lock:
+            nested = self.conn.in_transaction
+            self.cursor.execute(
+                "INSERT OR REPLACE INTO episode_quality_signals "
+                "(ep_num, ced_score, ai_slop_score, ai_slop_hits, compression_ratio, burstiness, complexity, signal_summary) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    ep_num,
+                    float(signals.get("ced_score", 0.0) or 0.0),
+                    float(signals.get("ai_slop_score", 0.0) or 0.0),
+                    json.dumps(signals.get("ai_slop_hits", []) or [], ensure_ascii=False),
+                    float(signals.get("compression_ratio", 0.0) or 0.0),
+                    float(signals.get("burstiness", 0.0) or 0.0),
+                    float(signals.get("complexity", 0.0) or 0.0),
+                    json.dumps(signals.get("signal_summary", {}) or {}, ensure_ascii=False),
+                ),
+            )
+            if not nested:
+                self.commit()
+
+    def get_episode_quality_signal(self, ep_num: int) -> dict | None:
+        """특정 회차의 Python-only 품질 신호 조회."""
+        with self._lock:
+            cur = self.cursor.execute(
+                "SELECT ep_num, ced_score, ai_slop_score, ai_slop_hits, compression_ratio, burstiness, complexity, signal_summary "
+                "FROM episode_quality_signals WHERE ep_num = ?",
+                (ep_num,),
+            )
+            row = cur.fetchone()
+        if not row:
+            return None
+        return self._parse_episode_quality_signal_row(dict(row))
+
+    @staticmethod
+    def _parse_episode_quality_observation_row(row: dict) -> dict:
+        result = dict(row)
+        result["operator_label"] = str(result.get("operator_label") or "").strip()
+        result["note"] = str(result.get("note") or "").strip()
+        return result
+
+    def save_episode_quality_observation(self, ep_num: int, observation: dict) -> None:
+        """운영자 수기 품질 관측 기록 저장."""
+        if not isinstance(observation, dict):
+            return
+
+        label = str(observation.get("operator_label") or observation.get("label") or "").strip()
+        note = str(observation.get("note") or "").strip()
+        if not label:
+            return
+
+        with self._lock:
+            nested = self.conn.in_transaction
+            self.cursor.execute(
+                """
+                INSERT INTO episode_quality_observations (ep_num, operator_label, note, created_at, updated_at)
+                VALUES (?, ?, ?, datetime('now'), datetime('now'))
+                ON CONFLICT(ep_num) DO UPDATE SET
+                    operator_label = excluded.operator_label,
+                    note = excluded.note,
+                    updated_at = datetime('now')
+                """,
+                (ep_num, label[:40], note[:500]),
+            )
+            if not nested:
+                self.commit()
+
+    def get_episode_quality_observation(self, ep_num: int) -> dict | None:
+        """특정 회차의 운영자 수기 품질 관측 조회."""
+        with self._lock:
+            cur = self.cursor.execute(
+                "SELECT ep_num, operator_label, note, created_at, updated_at "
+                "FROM episode_quality_observations WHERE ep_num = ?",
+                (ep_num,),
+            )
+            row = cur.fetchone()
+        if not row:
+            return None
+        return self._parse_episode_quality_observation_row(dict(row))
+
+    def get_recent_episode_quality_observations(
+        self,
+        before_ep: int | None = None,
+        lookback: int = 20,
+    ) -> list[dict]:
+        """최근 N개 회차의 운영자 수기 품질 관측을 오래된 순으로 반환."""
+        safe_lookback = max(1, int(lookback))
+        with self._lock:
+            if before_ep is None:
+                cur = self.cursor.execute(
+                    "SELECT ep_num, operator_label, note, created_at, updated_at "
+                    "FROM episode_quality_observations ORDER BY ep_num DESC LIMIT ?",
+                    (safe_lookback,),
+                )
+            else:
+                cur = self.cursor.execute(
+                    "SELECT ep_num, operator_label, note, created_at, updated_at "
+                    "FROM episode_quality_observations WHERE ep_num < ? ORDER BY ep_num DESC LIMIT ?",
+                    (before_ep, safe_lookback),
+                )
+            rows = [dict(row) for row in cur.fetchall()]
+        return [self._parse_episode_quality_observation_row(row) for row in reversed(rows)]
+
+    def get_recent_episode_quality_signals(
+        self,
+        before_ep: int | None = None,
+        lookback: int = 20,
+    ) -> list[dict]:
+        """최근 N개 에피소드의 품질 신호를 오래된 순으로 반환."""
+        safe_lookback = max(1, int(lookback))
+        with self._lock:
+            if before_ep is None:
+                cur = self.cursor.execute(
+                    "SELECT ep_num, ced_score, ai_slop_score, ai_slop_hits, compression_ratio, burstiness, complexity, signal_summary "
+                    "FROM episode_quality_signals ORDER BY ep_num DESC LIMIT ?",
+                    (safe_lookback,),
+                )
+            else:
+                cur = self.cursor.execute(
+                    "SELECT ep_num, ced_score, ai_slop_score, ai_slop_hits, compression_ratio, burstiness, complexity, signal_summary "
+                    "FROM episode_quality_signals WHERE ep_num < ? ORDER BY ep_num DESC LIMIT ?",
+                    (before_ep, safe_lookback),
+                )
+            rows = [dict(row) for row in cur.fetchall()]
+
+        return [self._parse_episode_quality_signal_row(row) for row in reversed(rows)]
+
+    def get_quality_signal_summary(self, before_ep: int | None = None, lookback: int = 5) -> dict:
+        """최근 품질 신호 요약을 UI/브리지 용도로 반환."""
+        recent_rows = self.get_recent_episode_quality_signals(before_ep=before_ep, lookback=lookback)
+        if not recent_rows:
+            return {
+                "available": False,
+                "lookback": lookback,
+                "latest_ep": None,
+                "signals": {},
+                "recent": [],
+                "latest_ai_slop_hits": [],
+            }
+
+        latest = recent_rows[-1]
+        signals = {
+            "ced": build_signal_stat(field="ced_score", recent_rows=recent_rows, mode="lower_better"),
+            "ai_slop": build_signal_stat(field="ai_slop_score", recent_rows=recent_rows, mode="lower_better"),
+            "compression": build_signal_stat(
+                field="compression_ratio", recent_rows=recent_rows, mode="deviation"
+            ),
+            "burstiness": build_signal_stat(field="burstiness", recent_rows=recent_rows, mode="deviation"),
+            "complexity": build_signal_stat(field="complexity", recent_rows=recent_rows, mode="deviation"),
+        }
+
+        return {
+            "available": True,
+            "lookback": lookback,
+            "latest_ep": latest.get("ep_num"),
+            "signals": signals,
+            "recent": [
+                {
+                    "ep_num": row.get("ep_num"),
+                    "ced_score": row.get("ced_score", 0.0),
+                    "ai_slop_score": row.get("ai_slop_score", 0.0),
+                    "compression_ratio": row.get("compression_ratio", 0.0),
+                    "burstiness": row.get("burstiness", 0.0),
+                    "complexity": row.get("complexity", 0.0),
+                }
+                for row in recent_rows
+            ],
+            "latest_ai_slop_hits": latest.get("ai_slop_hits", [])[:5],
+            "latest_signal_summary": latest.get("signal_summary", {}),
+        }
+
+    def get_episode_quality_label(self, ep_num: int) -> dict | None:
+        """특정 회차의 품질 라벨 조회."""
+        with self._lock:
+            cur = self.cursor.execute(
+                "SELECT ep_num, score, verdict, selection_reason, open_review, score_breakdown, consistency_checklist "
+                "FROM episode_quality_labels WHERE ep_num = ?",
+                (ep_num,),
+            )
+            row = cur.fetchone()
+        if not row:
+            return None
+
+        result = dict(row)
+        for field in ("score_breakdown", "consistency_checklist"):
+            raw = result.get(field)
+            try:
+                result[field] = json.loads(raw) if raw else {}
+            except (TypeError, ValueError, json.JSONDecodeError):
+                result[field] = {}
+        return result
+
+    def get_recent_episode_quality_labels(self, before_ep: int, lookback: int = 20) -> list[dict]:
+        """최근 N개 에피소드의 품질 라벨을 오래된 순으로 반환."""
+        with self._lock:
+            cur = self.cursor.execute(
+                "SELECT ep_num, score, verdict, selection_reason, open_review, score_breakdown, consistency_checklist "
+                "FROM episode_quality_labels WHERE ep_num < ? ORDER BY ep_num DESC LIMIT ?",
+                (before_ep, lookback),
+            )
+            rows = [dict(row) for row in cur.fetchall()]
+
+        parsed_rows: list[dict] = []
+        for row in reversed(rows):
+            for field in ("score_breakdown", "consistency_checklist"):
+                raw = row.get(field)
+                try:
+                    row[field] = json.loads(raw) if raw else {}
+                except (TypeError, ValueError, json.JSONDecodeError):
+                    row[field] = {}
+            parsed_rows.append(row)
+        return parsed_rows
+
+    @staticmethod
+    def _director_stage_predicate(stage: int, *, alias: str = "") -> str:
+        prefix = f"{alias}." if alias else ""
+        if stage == 2:
+            return (
+                f"({prefix}stage = 2 OR ({prefix}stage IS NULL AND COALESCE({prefix}selected_label, '') = ''))"
+            )
+        if stage == 4:
+            return (
+                f"({prefix}stage = 4 OR ({prefix}stage IS NULL AND COALESCE({prefix}selected_label, '') != ''))"
+            )
+        return f"{prefix}stage = {int(stage)}"
+
+    def get_recent_episode_scores(self, before_ep: int, lookback: int = 5) -> list[dict]:
+        """최근 PASS 계열 에피소드 점수를 오래된 순으로 반환."""
+        with self._lock:
+            cur = self.cursor.execute(
+                """
+                SELECT sa.ep_num, sa.score, sa.verdict, sa.attempt_key
+                FROM stage_attempts sa
+                JOIN (
+                    SELECT ep_num, MAX(id) AS last_id
+                    FROM stage_attempts
+                    WHERE ep_num < ? AND stage = 4 AND verdict IN ('PASS', 'PASS_WITH_WARNING')
+                    GROUP BY ep_num
+                    ORDER BY ep_num DESC
+                    LIMIT ?
+                ) latest ON latest.last_id = sa.id
+                ORDER BY sa.ep_num ASC
+                """,
+                (before_ep, lookback),
+            )
+            return [dict(row) for row in cur.fetchall()]
+
+    def get_stage_attempts_for_arc(
+        self,
+        arc_num: int,
+        stages: tuple[int, ...] = (3, 4),
+        verdict: str | None = None,
+        limit: int = 20,
+    ) -> list[dict]:
+        """특정 Arc의 stage_attempts 조회."""
+        if not stages:
+            return []
+
+        placeholders = ", ".join("?" for _ in stages)
+        sql = (
+            "SELECT stage, ep_num, arc_num, attempt_num, verdict, score, failure_category, reject_reason, advisory_flags, prompt_version "
+            f"FROM stage_attempts WHERE arc_num = ? AND stage IN ({placeholders})"
+        )
+        params: list = [arc_num, *stages]
+        if verdict:
+            sql += " AND verdict = ?"
+            params.append(verdict)
+        sql += " ORDER BY id DESC LIMIT ?"
+        params.append(limit)
+
+        with self._lock:
+            cur = self.cursor.execute(sql, tuple(params))
+            rows = [dict(row) for row in cur.fetchall()]
+
+        parsed_rows: list[dict] = []
+        for row in rows:
+            raw_flags = row.get("advisory_flags")
+            try:
+                row["advisory_flags"] = json.loads(raw_flags) if raw_flags else {}
+            except (TypeError, ValueError, json.JSONDecodeError):
+                row["advisory_flags"] = {}
+            parsed_rows.append(row)
+        return parsed_rows
 
     def save_llm_call(
         self,
@@ -2480,6 +3023,11 @@ class DBManager:
         verdict: str | None = None,
         context_tag: str | None = None,
         session_id: str | None = None,
+        input_tokens: int | None = None,
+        output_tokens: int | None = None,
+        cached_tokens: int | None = None,
+        thinking_tokens: int | None = None,
+        total_cost_usd: float | None = None,
         prompt_snippet: str | None = None,
         response_snippet: str | None = None,
         thinking_snippet: str | None = None,
@@ -2498,8 +3046,9 @@ class DBManager:
                        (session_id, ts, stage, ep_num, agent_name, model,
                         prompt_chars, response_chars, duration_ms,
                         success, error_type, error_msg, verdict, context_tag,
+                        input_tokens, output_tokens, cached_tokens, thinking_tokens, total_cost_usd,
                         prompt_snippet, response_snippet, thinking_snippet)
-                       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                     (
                         session_id,
                         ts,
@@ -2515,6 +3064,11 @@ class DBManager:
                         (error_msg or "")[:80],
                         verdict,
                         context_tag,
+                        int(input_tokens or 0) if input_tokens is not None else None,
+                        int(output_tokens or 0) if output_tokens is not None else None,
+                        int(cached_tokens or 0) if cached_tokens is not None else None,
+                        int(thinking_tokens or 0) if thinking_tokens is not None else None,
+                        float(total_cost_usd or 0.0) if total_cost_usd is not None else None,
                         _prompt_snip,
                         _response_snip,
                         _thinking_snip,
@@ -2539,7 +3093,12 @@ class DBManager:
         duration_ms: int | None = None,
         advisory_flags: dict | None = None,
         session_id: str | None = None,
+        attempt_key: str | None = None,
         generation_method: str | None = None,
+        prompt_version: str | None = None,
+        candidate_key: str | None = None,
+        content_hash: str | None = None,
+        artifact_path: str | None = None,
     ) -> None:
         """[Log-2] Save one stage attempt record in non-blocking mode."""
         try:
@@ -2550,8 +3109,9 @@ class DBManager:
                     """INSERT INTO stage_attempts
                        (session_id, ts, stage, ep_num, arc_num, attempt_num,
                         verdict, score, failure_category, reject_reason,
-                        fix_scope, model, duration_ms, advisory_flags, generation_method)
-                       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                        fix_scope, model, duration_ms, advisory_flags, attempt_key, generation_method, prompt_version,
+                        candidate_key, content_hash, artifact_path)
+                       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                     (
                         session_id,
                         ts,
@@ -2567,7 +3127,12 @@ class DBManager:
                         model,
                         duration_ms,
                         _advisory_json,
+                        str(attempt_key or ""),
                         generation_method,
+                        prompt_version,
+                        str(candidate_key or ""),
+                        str(content_hash or ""),
+                        str(artifact_path or ""),
                     ),
                 )
                 self.conn.commit()
@@ -2586,17 +3151,36 @@ class DBManager:
             )
             return [dict(row) for row in cur.fetchall()]
 
-    def get_strategy_win_rates(self, lookback: int = 20) -> dict:
-        """[D-4] 최근 N건의 PASS 선택에서 전략별 승률 조회."""
+    def get_strategy_win_rates(
+        self,
+        lookback: int = 20,
+        *,
+        selected_label: str | None = None,
+        allowed_strategies: tuple[str, ...] | list[str] | set[str] | None = None,
+    ) -> dict:
+        """[D-4] 최근 N건의 PASS 선택에서 전략별 선택 비중 조회."""
+        query = (
+            "SELECT selected_strategy "
+            "FROM director_selections "
+            "WHERE verdict = 'PASS' AND selected_strategy IS NOT NULL AND selected_strategy != '' "
+        )
+        params: list[object] = []
+        if selected_label is not None:
+            query += "AND selected_label = ? "
+            params.append(selected_label)
+        query += "ORDER BY id DESC LIMIT ?"
+        params.append(lookback)
+
         with self._lock:
             cur = self.cursor.execute(
-                "SELECT selected_strategy "
-                "FROM director_selections "
-                "WHERE verdict = 'PASS' AND selected_strategy IS NOT NULL AND selected_strategy != '' "
-                "ORDER BY id DESC LIMIT ?",
-                (lookback,),
+                query,
+                tuple(params),
             )
             rows = [r["selected_strategy"] for r in cur.fetchall()]
+
+        if allowed_strategies:
+            allowed = {str(strategy).strip() for strategy in allowed_strategies if str(strategy).strip()}
+            rows = [strategy for strategy in rows if strategy in allowed]
 
         total = len(rows)
         if total == 0:

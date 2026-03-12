@@ -1,9 +1,11 @@
 """ProcessRunner 단위 테스트 — Step 4a/4b 검증."""
 
 import asyncio
+import time
 
 import pytest
 
+from modules.api import process_runner
 from modules.api.process_runner import ProcessRunner, _strip_ansi
 
 
@@ -177,6 +179,54 @@ class TestBuildEnv:
         assert env.get("SLACK_WEBHOOK_URL") is None
 
 
+class TestPathResolution:
+    def test_resolve_projects_root_prefers_explicit_env(self, monkeypatch, tmp_path):
+        explicit_root = tmp_path / "workspace-projects"
+        monkeypatch.setenv("GEULDOBI_PROJECTS_ROOT", str(explicit_root))
+        monkeypatch.setenv("GEULDOBI_WORKSPACE", str(tmp_path / "workspace"))
+
+        assert process_runner._resolve_projects_root() == explicit_root.resolve()
+
+    def test_resolve_launch_command_falls_back_to_main_script_when_engine_exe_missing(self, monkeypatch, tmp_path):
+        engine_root = tmp_path / "engine"
+        engine_root.mkdir()
+        main_script = engine_root / "main_a.py"
+        main_script.write_text("print('ok')\n", encoding="utf-8")
+
+        monkeypatch.setattr(process_runner, "PROJECT_ROOT", engine_root)
+        monkeypatch.setenv("GEULDOBI_ENGINE_EXE", str(engine_root / "engine.exe"))
+        monkeypatch.setenv("GEULDOBI_PYTHON_PATH", "embedded-python.exe")
+
+        assert process_runner._resolve_launch_command() == [
+            "embedded-python.exe",
+            "-u",
+            str(main_script),
+        ]
+
+
+class TestRuntimeDiagnostics:
+    def test_runtime_diagnostics_include_recent_tails(self):
+        runner = ProcessRunner()
+        runner._key = "4"
+        runner._sub_key = "1"
+        runner._mode = "B"
+        runner._started_at_iso = "2026-03-10T00:00:00+00:00"
+        runner._started_monotonic = time.monotonic() - 1.2
+        runner.remember_prompt_step("style_choice")
+        runner._remember_stdout_line("stdout one")
+        runner._remember_stderr_line("stderr boom")
+
+        diagnostics = runner.get_runtime_diagnostics()
+
+        assert diagnostics["key"] == "4"
+        assert diagnostics["sub_key"] == "1"
+        assert diagnostics["last_prompt_step"] == "style_choice"
+        assert diagnostics["failure_phase"] == "prompt:style_choice"
+        assert diagnostics["stdout_tail"][-1] == "stdout one"
+        assert diagnostics["stderr_tail"][-1] == "stderr boom"
+        assert diagnostics["duration_ms"] >= 1000
+
+
 class TestBridgeServerWiring:
     """bridge_server.py 배선 검증 (fastapi 필수)."""
 
@@ -198,3 +248,23 @@ class TestBridgeServerWiring:
         assert ev["payload"]["text"] == "hello"
         assert "seq" in ev
         assert "ts" in ev
+
+    def test_build_run_exit_payload_includes_runtime_diagnostics(self):
+        from modules.api.bridge_server import _build_run_exit_payload
+
+        runner = ProcessRunner()
+        runner._key = "4"
+        runner._mode = "B"
+        runner._started_at_iso = "2026-03-10T00:00:00+00:00"
+        runner._started_monotonic = time.monotonic() - 0.5
+        runner._remember_stdout_line("last stdout")
+        runner._remember_stderr_line("last stderr")
+        runner.remember_prompt_step("confirm_api")
+
+        payload = _build_run_exit_payload(runner, 2)
+
+        assert payload["returncode"] == 2
+        assert payload["key"] == "4"
+        assert payload["failure_phase"] == "prompt:confirm_api"
+        assert payload["stdout_tail"][-1] == "last stdout"
+        assert payload["stderr_tail"][-1] == "last stderr"

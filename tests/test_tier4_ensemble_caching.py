@@ -68,7 +68,10 @@ def test_arc_ensemble_cached_path_uses_stub_prompt_and_full_fallback():
     agent = ArcEnsembleGenerator(ctx, client)
 
     def _load_side_effect(_file, _key, **kwargs):
-        return f"prev={kwargs['prev_arc_context']}|constraint={kwargs['constraint_block']}"
+        return (
+            f"prev={kwargs['prev_arc_context']}|constraint={kwargs['constraint_block']}|"
+            f"vol={kwargs['vol_strategy']}|assets={kwargs['assets']}"
+        )
 
     agent._prompt_loader = MagicMock()
     agent._prompt_loader.load.side_effect = _load_side_effect
@@ -106,11 +109,11 @@ def test_arc_ensemble_cached_path_uses_stub_prompt_and_full_fallback():
         arc_no=1,
         ep_start=1,
         ep_end=3,
-        vol_strategy="",
+        vol_strategy="V" * 6500,
         curr_block={"ep_count": 3},
         prev_arc_context="PREV_CONTEXT_PAYLOAD",
         constraint_block="CONSTRAINT_PAYLOAD",
-        assets={},
+        assets={"payload": "A" * 7000},
         feedback="",
         strategy={"name": "balanced", "temperature": 0.5, "focus": "f", "style": "s"},
         cache_name="cache/arc",
@@ -122,6 +125,13 @@ def test_arc_ensemble_cached_path_uses_stub_prompt_and_full_fallback():
     assert "CONSTRAINT_PAYLOAD" not in captured["prompt"]
     assert "PREV_CONTEXT_PAYLOAD" in captured["fallback"]
     assert "CONSTRAINT_PAYLOAD" in captured["fallback"]
+    assert "V" * 6000 in captured["prompt"]
+    assert "V" * 6001 not in captured["prompt"]
+    assert "V" * 6000 in captured["fallback"]
+    assert "V" * 6001 not in captured["fallback"]
+    expected_assets = json.dumps({"payload": "A" * 7000}, ensure_ascii=False)[:6000]
+    assert expected_assets in captured["prompt"]
+    assert expected_assets in captured["fallback"]
 
 
 def test_blueprint_ensemble_uses_shared_context_cache_name():

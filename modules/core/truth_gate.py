@@ -8,6 +8,8 @@ import json
 import logging
 import re
 
+from modules.core.constants import smart_truncate
+
 logger = logging.getLogger(__name__)
 
 
@@ -119,10 +121,6 @@ class TruthGate:
             for line in manuscript.split("\n"):
                 if name not in line:
                     continue
-                # 회상/과거 문맥인지 확인
-                is_recall = any(kw in line for kw in recall_patterns)
-                if is_recall:
-                    continue
 
                 # [E3-P1-1] 직접 대사/행동 패턴 — (?<![가-힣]) lookbehind로 부분문자열 false positive 방지
                 _esc = re.escape(name)
@@ -135,6 +133,7 @@ class TruthGate:
                     rf"{_lb}{_esc}.*달려",
                     rf"{_lb}{_esc}.*공격",
                 ]
+                is_recall = any(kw in line for kw in recall_patterns)
                 _found_action = False
                 for pat in action_patterns:
                     if re.search(pat, line):
@@ -147,6 +146,8 @@ class TruthGate:
                         )
                         _found_action = True
                         break
+                if is_recall and not _found_action:
+                    continue
                 if _found_action:
                     break  # NPC당 1건만 경고
 
@@ -403,7 +404,7 @@ class TruthGate:
 
         try:
             laws_text = "\n".join(f"- {law}" for law in laws)
-            ms_snippet = manuscript[:3000] if manuscript else ""
+            ms_snippet = smart_truncate(manuscript or "", max_chars=3000, head_chars=1800)
             prompt = (
                 "다음은 이 세계의 절대 법칙입니다:\n"
                 f"{laws_text}\n\n"

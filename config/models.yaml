@@ -1,3 +1,27 @@
+providers:
+  gemini:
+    enabled: true
+    sdk: "google-genai"
+    api_key_env: "GOOGLE_API_KEY"
+  anthropic:
+    enabled: false
+    sdk: "anthropic"
+    api_key_env: "ANTHROPIC_API_KEY"
+  openai:
+    enabled: false
+    sdk: "openai"
+    api_key_env: "OPENAI_API_KEY"
+  vertex_ai:
+    enabled: false
+    sdk: "google-genai"
+    project_id_env: "VERTEX_PROJECT_ID"
+    location_env: "VERTEX_LOCATION"
+    credentials_env: "GOOGLE_APPLICATION_CREDENTIALS"
+    # Use explicit model prefixes to keep Gemini Developer API and Vertex AI side by side.
+    # Example opt-in models:
+    # - "vertexai:gemini-3.1-flash-lite-preview"
+    # - "vertexai:gemini-2.5-flash"
+
 agents:
   analyst: "gemini-2.5-pro"
   manager: "gemini-2.5-flash"
@@ -35,6 +59,6 @@ sub_components:
 
 # ── [SSOT] 추상 역할 상수 — constants.py AIModels에서 참조 ──────────────────
 role_constants:
-  pro_main: "gemini-2.5-pro"      # 고사양: writer/architect/analyst/director 전용
+  pro_main: "gemini-2.5-pro"
   flash_main: "gemini-2.5-flash"  # 경량: module/analysis/summary 전용
-  emergency: "gemini-2.5-pro"     # 긴급/429 폴백
+  emergency: "gemini-2.5-pro" # 긴급/429 폴백

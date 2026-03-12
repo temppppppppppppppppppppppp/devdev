@@ -47,7 +47,7 @@ class TestStage4ContextCreation:
         assert ctx.flush_audit_buffer is None
         assert ctx.safe_commit is None
         # Phase 3/4 + SC-3(context_advisor) + conditional_modules + emotion_tracker [TF7-P2-06]
-        assert len(Stage4Context.__slots__) == 29  # [LOG-1] +session_logger
+        assert len(Stage4Context.__slots__) == 30  # [LOG-1] +session_logger + budget meta
 
 
 # ══════════════════════════════════════════════════════════════
@@ -69,7 +69,6 @@ class TestDBSchemaComplete:
             "npc_history",
             "karma_status",
             "causal_graph",
-            "surgery_logs",
             "sync_status",
         }
         missing = expected_tables - tables

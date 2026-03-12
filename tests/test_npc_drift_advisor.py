@@ -162,6 +162,25 @@ class TestFormatting:
         text = advisor._format_snapshot_for_prompt(sample_snapshots, ["이무영"])
         assert "weapon=창" in text
 
+    def test_check_caps_target_count_at_eight(self):
+        captured = {}
+
+        def _capture(manuscript, npc_snapshots, targets, ep_num):
+            captured["targets"] = list(targets)
+            return []
+
+        advisor = NpcDriftAdvisor(llm_ask=lambda _: "[]")
+        advisor._llm_check_batch = _capture
+        snaps = {
+            f"인물{i}": {"role_at_intro": "조연", "first_seen_ep": i, "known_attrs": {"job": {"value": "역할"}}}
+            for i in range(1, 11)
+        }
+        manuscript = " ".join(f"인물{i}이 등장했다." for i in range(1, 11))
+
+        advisor.check(manuscript, snaps, ep_num=10)
+
+        assert len(captured["targets"]) == 8
+
 
 # ═══════════════════════════════════════════════════════════════
 # EdgeCases 테스트

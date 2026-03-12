@@ -72,6 +72,7 @@ def build_chief_writer_main_prompt(
     style_guide: str,
     common_rules: str,
     writing_guidelines: str,
+    reference_excerpt_section: str = "",
     prev_manuscripts_section: str = "",  # [V67] 이전 원고 전문
     incarnation_context_section: str = "",  # [V67.1] 환생 유형별 집필 맥락
     chain_link_section: str = "",  # [V68] 직전 화 연결고리
@@ -162,6 +163,8 @@ def build_chief_writer_main_prompt(
 
 ### [STEP 6: 문체 DNA 가이드 - 위반 시 AI티 판정]
 {style_guide}
+
+{reference_excerpt_section}
 
 {satisfaction_guide_section}
 
@@ -259,6 +262,11 @@ def get_anti_trope_instructions(*, genre_name: str) -> str:
 5. "NPC의 기억상실" 클리셰 금지
    - X 이전 화에서 경외했던 NPC가 이번 화에서 다시 무시
    - O 관계는 단방향 발전 (무시->경외는 가능, 경외->무시는 정당화 필요)
+
+6. "AI 티 문장" 금지
+   - X "어느새", "말 그대로", "그야말로", "숨을 삼켰다", "시선을 돌렸다" 같은 상투구를 짧은 간격으로 반복
+   - X 장면 말미를 설명문으로 기계적으로 요약하거나 같은 리듬으로 닫기
+   - O 감정은 행동/대사/구체 감각으로 드러내고, 문장 스타터와 장면 시작·종결 리듬을 계속 바꿔라
 
 [당신이 쓰려는 문장이 위 클리셰에 해당하는가? YES -> 다시 쓰십시오]
 """

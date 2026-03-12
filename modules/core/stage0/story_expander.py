@@ -12,7 +12,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from modules.core.constants import AIModels, GenreTypes
+from modules.core.constants import AIModels, GenreTypes, smart_truncate
+from modules.core.llm_generate import generate_content_via_router
 
 from .preset_registry import PresetRegistry
 
@@ -27,6 +28,9 @@ except ImportError:
 
 class StoryExpander:
     """스토리 확장기 - 컨셉 → Bible + Treatment"""
+
+    _CONCEPT_PROMPT_MAX = 4000
+    _CONCEPT_PROMPT_HEAD = 2500
 
     def __init__(self, genre: str = None, llm_client=None):
         self.genre = genre
@@ -68,7 +72,8 @@ class StoryExpander:
         for model in self._FALLBACK_MODELS:
             for attempt in range(self._MAX_RETRIES):
                 try:
-                    response = self.client.models.generate_content(
+                    response = generate_content_via_router(
+                        client=self.client,
                         model=model,
                         contents=prompt,
                         config=types.GenerateContentConfig(
@@ -106,6 +111,37 @@ class StoryExpander:
             return json.loads(json_str.strip())
         except (json.JSONDecodeError, ValueError, IndexError):  # [V64.P4] JSON parse failure
             return None
+
+    def _get_concept_prompt_text(self, *, max_chars: int | None = None, head_chars: int | None = None) -> str:
+        """Keep more concept detail while staying inside a bounded prompt budget."""
+        max_chars = max_chars or self._CONCEPT_PROMPT_MAX
+        head_chars = head_chars or self._CONCEPT_PROMPT_HEAD
+        return smart_truncate(self.concept or "", max_chars=max_chars, head_chars=head_chars)
+
+    def _build_story_brief(self) -> str:
+        """Compact brief reused by Stage 0 generation prompts."""
+        extracted = self.extracted if isinstance(self.extracted, dict) else {}
+        parts: list[str] = []
+
+        concept_text = self._get_concept_prompt_text()
+        if concept_text:
+            parts.append(f"컨셉: {concept_text}")
+        if self.genre:
+            parts.append(f"장르: {self.genre}")
+
+        themes = [str(item).strip() for item in (extracted.get("themes") or []) if str(item).strip()]
+        if themes:
+            parts.append(f"테마: {', '.join(themes[:4])}")
+
+        tone = str(extracted.get("tone", "") or "").strip()
+        if tone:
+            parts.append(f"톤: {tone}")
+
+        world_laws = [str(item).strip() for item in (extracted.get("world_laws") or []) if str(item).strip()]
+        if world_laws:
+            parts.append("세계 법칙: " + "; ".join(world_laws[:3]))
+
+        return "\n".join(parts).strip()
 
     # ============================================
     # Phase 1: 컨셉 분석
@@ -247,7 +283,7 @@ JSON:
         """NPC 생성"""
         prompt = f"""다음 컨셉에 맞는 NPC 8명을 생성하세요.
 
-컨셉: {self.concept[:500]}
+{self._build_story_brief()}
 
 JSON:
 ```json
@@ -418,8 +454,7 @@ JSON:
 
             prompt = f"""웹소설 Block {start}~{end} ({batch_count}개)의 뼈대를 생성하세요.
 
-컨셉: {self.concept[:500]}
-장르: {self.genre}
+{self._build_story_brief()}
 {continuity}
 
 JSON:
@@ -449,8 +484,11 @@ JSON:
             skeleton_text = "\n".join(
                 [f"- {b.get('block_id', f'block_{i + j}')}: {b.get('title', '제목 없음')}" for j, b in enumerate(batch)]
             )  # [V70] 인덱스 수정 (i는 이미 배치 시작)
+            story_brief = self._build_story_brief()
 
             prompt = f"""블록 상세:
+
+{story_brief}
 
 {skeleton_text}
 

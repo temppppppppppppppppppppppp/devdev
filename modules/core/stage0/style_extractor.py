@@ -16,6 +16,8 @@ from dataclasses import asdict, dataclass, fields
 from pathlib import Path
 from typing import Any
 
+from modules.core.llm_generate import generate_content_via_router
+
 
 @dataclass
 class StyleGuide:
@@ -45,8 +47,10 @@ class StyleGuide:
     action_scene_density: str = ""  # 액션씬 묘사 밀도
     calm_scene_density: str = ""  # 일상씬 묘사 밀도
     exemplary_passages: list[str] = None  # 모범 문단 5-8개 (200-500자)
+    reference_excerpt: str = ""  # 참조 원고 발췌 (CW 직접 주입용)
 
     # === 메타데이터 ===
+    genre: str = ""  # [QI-1-B4] 장르 (to_prompt 장르별 섹션용)
     source_episode_count: int = 0
     source_char_count: int = 0
     analysis_version: str = "v2"
@@ -71,7 +75,7 @@ class StyleGuide:
     def _get_pov_rules(self) -> str:
         """[V70] 시점(POV)별 상세 집필 규칙"""
         if self.pov == "1인칭":
-            return """## 🎯 시점 규칙: 1인칭 (절대 준수 — 위반 시 REJECT)
+            _base = """## 🎯 시점 규칙: 1인칭 (절대 준수 — 위반 시 REJECT)
 - 모든 서술을 '나'의 시점으로 기술한다. ("나는", "내가", "내 ~")
 - 주인공이 직접 보고/듣고/느낀 것만 서술 가능
 - 다른 캐릭터의 내면·생각을 직접 서술 금지 → 행동·표정·말투로 추론만 허용
@@ -80,6 +84,13 @@ class StyleGuide:
 - 주인공 부재 장면 금지: '나'가 없는 곳의 사건은 서술 불가 (나중에 전해 듣는 형식으로만)
 - 3인칭 서술 전환 금지: "그는 ~했다", "시우는 ~했다" 식의 외부 시선 서술 금지
 - 독백: "~인가." "~해야 했다." 등 내면 독백은 자유롭게 사용"""
+            # [QI-1-B5] 투자물 1인칭 추가 규칙
+            if self.genre in ("investment", "투자물"):
+                _base += """
+- [투자물] 주인공의 분석·계산·직감만 서술 가능. 시장 전체 조망은 뉴스·매체·타인 대사로만 간접 전달
+- [투자물] 다른 투자자의 의도/전략은 직접 서술 금지 → 표정·행동·거래 내역으로만 추론
+- [투자물] 주인공 부재 시 벌어진 거래/회의는 사후 보고·문서·통화로만 전달"""
+            return _base
         elif self.pov == "3인칭":
             return """## 🎯 시점 규칙: 3인칭 제한적 (절대 준수)
 - 주인공을 이름 또는 '그/그녀'로 지칭한다
@@ -136,14 +147,14 @@ class StyleGuide:
 
         # 4. AI 패턴 금지 목록 (가장 중요)
         if self.anti_ai_patterns:
-            lines = "\n".join(f"- 금지: {p}" for p in self.anti_ai_patterns[:10])
+            lines = "\n".join(f"- 금지: {p}" for p in self.anti_ai_patterns[:15])
             sections.append(f"""## AI 패턴 금지 목록 (위반 시 즉시 REJECT)
 {lines}""")
 
         # 5. 모범 문단 (show, don't tell)
         if self.exemplary_passages:
             passage_lines = []
-            for i, p in enumerate(self.exemplary_passages[:5], 1):
+            for i, p in enumerate(self.exemplary_passages[:8], 1):
                 passage_lines.append(f'[예시 {i}]\n"{p[:400]}"')
             sections.append(f"""## 참고 문체 (이 느낌으로 작성)
 {chr(10).join(passage_lines)}""")
@@ -153,12 +164,12 @@ class StyleGuide:
             sections.append(f"""## 대화-서술 연결 패턴
 {self.dialogue_narration_pattern}""")
         if self.sample_dialogues:
-            dialog_ex = "\n".join(f'  "{d[:150]}"' for d in self.sample_dialogues[:5])
+            dialog_ex = "\n".join(f'  "{d[:150]}"' for d in self.sample_dialogues[:8])
             sections.append(f"### 대화 스타일 참고:\n{dialog_ex}")
 
         # 7. 장면 전환
         if self.scene_transitions:
-            trans_ex = "\n".join(f'  "{t[:100]}"' for t in self.scene_transitions[:5])
+            trans_ex = "\n".join(f'  "{t[:100]}"' for t in self.scene_transitions[:8])
             sections.append(f"## 장면 전환 스타일\n{trans_ex}")
 
         # 8. 묘사 밀도
@@ -169,9 +180,18 @@ class StyleGuide:
 
         # 9. 활용/금지 표현
         if self.signature_expressions:
-            sections.append(f"## 활용할 표현: {', '.join(self.signature_expressions[:8])}")
+            sections.append(f"## 활용할 표현: {', '.join(self.signature_expressions[:12])}")
         if self.forbidden_expressions:
-            sections.append(f"## 사용 금지 표현: {', '.join(self.forbidden_expressions[:8])}")
+            sections.append(f"## 사용 금지 표현: {', '.join(self.forbidden_expressions[:10])}")
+
+        # [QI-1-B4] 투자물 장르 전용 섹션
+        if self.genre in ("investment", "투자물"):
+            sections.append("""## 투자물 문체 규칙
+- 금융 거래 장면: 구체적 수치(진입가, 매도가, 수익률)를 대사/서술에 자연스럽게 녹일 것
+- 전문 용어: 첫 등장 시 맥락으로 설명, 이후 약어 허용 (PER, ROE 등)
+- 캐릭터별 금융 지식 깊이: PB/트레이더는 전문 용어 자유 사용, 초보 투자자는 쉬운 말
+- 시장 심리: 욕심·공포·확신의 심리 묘사를 구체적 행동/대사로 표현
+- 수치 일관성: 자본금 증감, 수익률 계산은 반드시 교차 검증""")
 
         return "\n\n".join(sections)
 
@@ -201,13 +221,30 @@ _TRANSITION_MARKERS = set(
 )
 
 
+# [QI-1-B2] 투자물 장르 전용 키워드 사전
+_INVESTMENT_FINANCE_WORDS = set(
+    "매수|매도|레버리지|수익률|청산|포지션|공매도|손절|익절|배당|시가총액|PER|ROE|ROA|"
+    "주가|종가|거래량|호가|증거금|담보비율|마진콜|선물|옵션|스왑|헤지|포트폴리오|"
+    "유동성|펀드|IPO|M&A|인수|합병|지분|투자금|원금|이자|부채|자산|자본금".split("|")
+)
+
+_INVESTMENT_NUMERIC_RE = re.compile(r"\d+[억만천]|\d+[.]\d+%|\d+%|\d+배|\d+[.]?\d*조")
+
+_INVESTMENT_NEGOTIATION_VERBS = set(
+    "제안했|거절했|계산했|판단했|협상했|분석했|결정했|투자했|매각했|인수했|"
+    "검토했|평가했|예측했|추산했|산출했|조율했".split("|")
+)
+
+
 class StyleExtractor:
     """[V2] 문체 DNA 추출기 - 정밀 클로닝"""
 
     API_DELAY = 0.5  # LLM 호출 간격
 
-    def __init__(self, llm_client=None) -> None:
+    def __init__(self, llm_client=None, genre: str = "") -> None:
         self.client = llm_client
+        self.genre = genre  # [QI-1-B2] 장르별 가중치 분기용
+        self._latest_curated_passages: list[str] = []
 
     # ═══════════════════════════════════════════════════════════════
     # 메인 추출 메서드
@@ -231,8 +268,8 @@ class StyleExtractor:
         total_chars = len(all_text)
         total_episodes = len(drafts)
 
-        # 대용량 텍스트 샘플링 (50만자 상한)
-        MAX_ANALYSIS_CHARS = 500_000
+        # 대용량 텍스트 샘플링 (100만자 상한)
+        MAX_ANALYSIS_CHARS = 1_000_000
         if total_chars > MAX_ANALYSIS_CHARS:
             sampled_text = self._sample_text(all_text, MAX_ANALYSIS_CHARS)
         else:
@@ -272,9 +309,11 @@ class StyleExtractor:
 
         # 병합
         merged = {**stats, **curated, **rhythm, **qualitative}
+        merged["reference_excerpt"] = self._build_reference_excerpt(sampled_text)
         merged["source_episode_count"] = total_episodes
         merged["source_char_count"] = total_chars
         merged["analysis_version"] = "v2"
+        merged["genre"] = self.genre  # [QI-1-B4] StyleGuide에 장르 전달
         if reference_name:
             merged["reference_works"] = [reference_name]
 
@@ -357,46 +396,132 @@ class StyleExtractor:
 
         scored_sentences.sort(key=lambda x: -x[0])
 
-        # 상위 20-30개 대표 문장
-        result["sample_sentences"] = [s for _, s in scored_sentences[:25]]
+        # 상위 대표 문장 50개
+        result["sample_sentences"] = [s for _, s in scored_sentences[:50]]
 
         # 대화 큐레이션 (길이+다양성)
         good_dialogues = [d for d in dialogues if 10 < len(d) < 120]
-        result["sample_dialogues"] = good_dialogues[:15]
+        result["sample_dialogues"] = good_dialogues[:30]
 
         # 모범 문단 추출 (200-500자 블록)
         paragraphs = [p.strip() for p in all_text.split("\n\n") if p.strip()]
         scored_passages = []
         for p in paragraphs:
             if 150 < len(p) < 600:
-                score = sum(1 for w in _SENSORY_WORDS if w in p) * 3
-                score += sum(1 for v in _ACTION_VERBS if v in p)
-                score -= sum(1 for c in _CLICHE_MARKERS if c in p) * 2
-                # 대화+서술 혼합 보너스
-                if '"' in p or '"' in p:
-                    score += 2
+                score = self._score_passage(p)
                 scored_passages.append((score, p))
 
         scored_passages.sort(key=lambda x: -x[0])
-        result["exemplary_passages"] = [p for _, p in scored_passages[:8]]
+        result["exemplary_passages"] = [p for _, p in scored_passages[:15]]
+        self._latest_curated_passages = list(result["exemplary_passages"])
 
         # 장면 전환 문장 추출
         transitions = []
         for s in sentences:
             if any(m in s for m in _TRANSITION_MARKERS) and 10 < len(s) < 80:
                 transitions.append(s)
-        result["scene_transitions"] = transitions[:8]
+        result["scene_transitions"] = transitions[:12]
 
         return result
+
+    def _score_passage(self, passage: str) -> float:
+        """문단 품질 점수 (장르별 가중치 적용)."""
+        score = 0.0
+
+        if self.genre in ("investment", "투자물"):
+            score += sum(3 for w in _INVESTMENT_FINANCE_WORDS if w in passage)
+            score += sum(2 for w in _INVESTMENT_NEGOTIATION_VERBS if w in passage)
+            if _INVESTMENT_NUMERIC_RE.search(passage):
+                score += 2
+        else:
+            score += sum(3 for w in _SENSORY_WORDS if w in passage)
+            score += sum(1 for v in _ACTION_VERBS if v in passage)
+
+        score -= sum(2 for c in _CLICHE_MARKERS if c in passage)
+        if self._has_dialogue(passage):
+            score += 2
+        return score
+
+    @staticmethod
+    def _has_dialogue(text: str) -> bool:
+        return any(mark in text for mark in ('"', "“", "”"))
+
+    def _build_reference_excerpt(self, sampled_text: str) -> str:
+        """CW 직접 주입용 참조 원고 발췌 생성 (50,000자 상한)."""
+        if not sampled_text:
+            return ""
+
+        header = "[참조 원고 발췌 — 이 문체를 따라 쓸 것]"
+        max_chars = 50_000
+        passages = [p.strip() for p in sampled_text.split("\n\n") if p.strip()]
+        scored_passages = []
+
+        for passage in passages:
+            if not 200 <= len(passage) <= 800:
+                continue
+            if not self._has_dialogue(passage):
+                continue
+
+            narrative_only = re.sub(r'["“”][^"“”]*["“”]', "", passage).strip()
+            if len(narrative_only) < 40:
+                continue
+
+            sentence_scores = [self._score_sentence(s) for s in self._split_sentences(passage)]
+            if not sentence_scores:
+                continue
+
+            score = self._score_passage(passage)
+            score += sum(sentence_scores) / len(sentence_scores)
+            if len(sentence_scores) >= 3:
+                score += 1
+            scored_passages.append((score, passage))
+
+        scored_passages.sort(key=lambda x: -x[0])
+
+        excerpt_parts = [header]
+        total_chars = len(header)
+        seen = set()
+        candidates = list(self._latest_curated_passages) + [p for _, p in scored_passages]
+
+        for passage in candidates:
+            normalized = passage.strip()
+            if not normalized or normalized in seen:
+                continue
+
+            entry = f"\n\n[발췌 {len(seen) + 1}]\n{normalized}"
+            if total_chars + len(entry) > max_chars:
+                break
+
+            excerpt_parts.append(entry)
+            total_chars += len(entry)
+            seen.add(normalized)
+
+        return "".join(excerpt_parts) if seen else ""
 
     def _score_sentence(self, sentence: str) -> float:
         """문장 품질 점수 (높을수록 좋은 문장)"""
         score = 0.0
+        _is_investment = self.genre in ("investment", "투자물")
 
-        # 감각어 포함 → +3
-        for w in _SENSORY_WORDS:
-            if w in sentence:
-                score += 3
+        # [QI-1-B2] 투자물: 금융 서술어 +3, 수치 표현 +2, 협상 동사 +2
+        if _is_investment:
+            for w in _INVESTMENT_FINANCE_WORDS:
+                if w in sentence:
+                    score += 3
+            if _INVESTMENT_NUMERIC_RE.search(sentence):
+                score += 2
+            for w in _INVESTMENT_NEGOTIATION_VERBS:
+                if w in sentence:
+                    score += 2
+            # 감각어는 장르 공통 +1 (투자물에선 비중 축소)
+            for w in _SENSORY_WORDS:
+                if w in sentence:
+                    score += 1
+        else:
+            # 기존 무협/범용: 감각어 +3
+            for w in _SENSORY_WORDS:
+                if w in sentence:
+                    score += 3
 
         # 의성어/의태어 패턴 → +2
         if re.search(r"[가-힣]{2,3}[!]", sentence):
@@ -424,7 +549,7 @@ class StyleExtractor:
     def _analyze_rhythm(self, drafts: list[str]) -> dict[str, Any]:
         """문장 리듬 패턴 분석"""
         result = {}
-        all_text = "\n\n".join(drafts[:20])  # 20화까지 분석
+        all_text = "\n\n".join(drafts[:50])  # 50화까지 분석
         paragraphs = [p.strip() for p in all_text.split("\n\n") if p.strip()]
 
         # 단락별 문장 길이 시퀀스
@@ -490,20 +615,26 @@ class StyleExtractor:
     # ═══════════════════════════════════════════════════════════════
 
     def _deep_llm_analysis(self, drafts: list[str]) -> dict[str, Any]:
-        """[V2] 3배치 LLM 심층 분석"""
+        """[V2] 6배치/2회차 LLM 심층 분석."""
         self._ensure_client()
         if not self.client:
             return {}
 
-        # 초반/중반/후반에서 8000자씩 샘플링
-        samples = self._sample_batches(drafts, batch_size=8000, num_batches=3)
-        combined_sample = "\n\n---\n\n".join(samples)[:20000]
+        samples = self._sample_batches(drafts, batch_size=10000, num_batches=6)
+        if not samples:
+            return {}
 
-        prompt = f"""당신은 한국 웹소설 문체 분석 전문가입니다.
-아래 원고 샘플 3개(초반/중반/후반)를 분석하세요.
+        front_samples = samples[:3]
+        back_samples = samples[3:] or samples[-3:]
+
+        front_sample_text = "\n\n---\n\n".join(front_samples)[:50000]
+        back_sample_text = "\n\n---\n\n".join(back_samples)[:50000]
+
+        prompt_front = f"""당신은 한국 웹소설 문체 분석 전문가입니다.
+아래 원고 샘플 3개(전반부 중심)를 분석하세요.
 
 ## 원고 샘플
-{combined_sample}
+{front_sample_text}
 
 ## 분석 항목 (JSON으로 출력)
 ```json
@@ -512,20 +643,43 @@ class StyleExtractor:
   "description_style": "간결/균형/묘사적 중 하나",
   "vocabulary_level": "easy/medium/hard 중 하나",
   "action_style": "static/dynamic/cinematic 중 하나",
-  "emotion_rendering": "이 작가의 감정 표현 방식을 2-3문장으로 설명 (예: 직접 감정어 대신 신체 반응과 행동으로 간접 표현, 내면 독백 최소화)",
-  "dialogue_narration_pattern": "대화와 서술이 어떻게 연결되는지 2-3문장 (예: 대화 전 1줄 행동묘사, 대화 후 짧은 반응, 지문 최소화)",
-  "signature_expressions": ["이 작가가 자주 쓰는 특징적 표현 10개"],
-  "forbidden_expressions": ["이 작가가 절대 안 쓰는 표현 5개"]
+  "emotion_rendering": "이 작가의 감정 표현 방식을 2-3문장으로 설명 (예: 직접 감정어 대신 신체 반응과 행동으로 간접 표현, 내면 독백 최소화)"
 }}
 ```
 JSON만 출력하세요.
 """
+
+        prompt_back = f"""당신은 한국 웹소설 문체 분석 전문가입니다.
+아래 원고 샘플 3개(후반부 중심)를 분석하세요.
+
+## 원고 샘플
+{back_sample_text}
+
+## 분석 항목 (JSON으로 출력)
+```json
+{{
+  "dialogue_narration_pattern": "대화와 서술이 어떻게 연결되는지 2-3문장 (예: 대화 전 1줄 행동묘사, 대화 후 짧은 반응, 지문 최소화)",
+  "signature_expressions": ["이 작가가 자주 쓰는 특징적 표현 12개"],
+  "forbidden_expressions": ["이 작가가 절대 안 쓰는 표현 10개"]
+}}
+```
+JSON만 출력하세요.
+"""
+
+        front_result = {}
+        back_result = {}
+
         try:
-            result = self._llm_call(prompt)
-            return result
+            front_result = self._llm_call(prompt_front)
         except Exception as e:
-            logging.warning(f"[!] LLM 심층 분석 실패: {e}")
-            return {}
+            logging.warning(f"[!] LLM 심층 분석(전반부) 실패: {e}")
+
+        try:
+            back_result = self._llm_call(prompt_back)
+        except Exception as e:
+            logging.warning(f"[!] LLM 심층 분석(후반부) 실패: {e}")
+
+        return {**front_result, **back_result}
 
     # ═══════════════════════════════════════════════════════════════
     # Phase 5: Anti-AI 패턴 생성
@@ -537,12 +691,44 @@ JSON만 출력하세요.
         if not self.client:
             return {}
 
-        # 모범 문단 + 초반 원고 샘플
-        sample = "\n\n".join(passages[:5]) if passages else drafts[0][:5000]
+        # 모범 문단 + 앞/중간/뒤 샘플을 섞어 편향 완화
+        sample_chunks: list[str] = []
+        if passages:
+            indices = sorted({0, len(passages) // 3, (len(passages) * 2) // 3, len(passages) - 1})
+            for idx in indices:
+                if 0 <= idx < len(passages):
+                    chunk = str(passages[idx] or "").strip()
+                    if chunk and chunk not in sample_chunks:
+                        sample_chunks.append(chunk)
+            for chunk in passages[:2]:
+                chunk_text = str(chunk or "").strip()
+                if chunk_text and chunk_text not in sample_chunks:
+                    sample_chunks.append(chunk_text)
+        elif drafts:
+            draft_indices = sorted({0, len(drafts) // 2, len(drafts) - 1})
+            for idx in draft_indices:
+                if 0 <= idx < len(drafts):
+                    chunk = str(drafts[idx] or "").strip()[:5000]
+                    if chunk and chunk not in sample_chunks:
+                        sample_chunks.append(chunk)
+
+        sample = "\n\n".join(sample_chunks[:6])
+
+        # [QI-1-B3] 장르별 Anti-AI 힌트
+        _genre_hint = ""
+        if self.genre in ("investment", "투자물"):
+            _genre_hint = """
+## 장르: 투자/재벌물
+이 작품은 투자/재벌 장르입니다. 해당 장르에서 AI가 특히 빠지기 쉬운 패턴도 포함하세요:
+- 수치 과도 반올림 (정확한 금액 대신 "막대한 금액" 같은 추상 표현)
+- 모든 투자가 성공하는 비현실적 전개
+- 금융 용어 영어 병기 남용 (레버리지(leverage) 같은 불필요한 괄호 병기)
+- 숫자 없는 추상적 투자 서술 ("큰 수익을 올렸다" → 구체적 수치 필요)
+"""
 
         prompt = f"""당신은 한국 웹소설 AI 탐지 전문가입니다.
 아래 인간 작가의 원고 샘플을 분석하고, AI가 글을 쓸 때 반드시 피해야 할 패턴을 추출하세요.
-
+{_genre_hint}
 ## 인간 작가 원고 샘플
 {sample[:8000]}
 
@@ -618,6 +804,7 @@ JSON만 출력하세요.
         Returns:
             StyleGuide 또는 None
         """
+        self.genre = genre  # [QI-1-B2] extract_from_references 호출 시 장르 동기화
         ref_dir = Path("config/style_references") / genre
         cache_path = ref_dir / "style_guide.json"
 
@@ -690,24 +877,32 @@ JSON만 출력하세요.
 
     @staticmethod
     def _sample_text(text: str, max_chars: int) -> str:
-        """대용량 텍스트에서 초반/중반/후반 균등 샘플링"""
+        """대용량 텍스트에서 5분할 균등 샘플링."""
         if len(text) <= max_chars:
             return text
-        chunk = max_chars // 3
-        mid = len(text) // 2
-        return text[:chunk] + "\n\n" + text[mid - chunk // 2 : mid + chunk // 2] + "\n\n" + text[-chunk:]
+        chunk = max(1, max_chars // 5)
+        half = chunk // 2
+        q1 = len(text) // 4
+        q2 = len(text) // 2
+        q3 = len(text) * 3 // 4
 
-    def _sample_batches(self, drafts: list[str], batch_size: int = 8000, num_batches: int = 3) -> list[str]:
-        """초반/중반/후반에서 균등 샘플링"""
+        def _window(center: int) -> str:
+            start = max(0, center - half)
+            end = min(len(text), start + chunk)
+            start = max(0, end - chunk)
+            return text[start:end]
+
+        return "\n\n".join([text[:chunk], _window(q1), _window(q2), _window(q3), text[-chunk:]])
+
+    def _sample_batches(self, drafts: list[str], batch_size: int = 8000, num_batches: int = 6) -> list[str]:
+        """원고 전체 범위에서 균등 샘플링."""
+        if not drafts:
+            return []
         if len(drafts) <= num_batches:
             return [d[:batch_size] for d in drafts]
 
-        step = max(1, len(drafts) // num_batches)
-        samples = []
-        for i in range(num_batches):
-            idx = min(i * step, len(drafts) - 1)
-            samples.append(drafts[idx][:batch_size])
-        return samples
+        positions = [round(i * (len(drafts) - 1) / (num_batches - 1)) for i in range(num_batches)]
+        return [drafts[idx][:batch_size] for idx in positions]
 
     def _ensure_client(self) -> None:
         """LLM 클라이언트 자동 초기화"""
@@ -740,7 +935,8 @@ JSON만 출력하세요.
         last_err = None
         for model_name in models:
             try:
-                response = self.client.models.generate_content(
+                response = generate_content_via_router(
+                    client=self.client,
                     model=model_name,
                     contents=prompt,
                     config=types.GenerateContentConfig(

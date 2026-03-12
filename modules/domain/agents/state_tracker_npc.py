@@ -13,6 +13,7 @@ import re
 import time
 
 from modules.core.constants import AIModels  # [TF-9B] 모델 SSOT
+from modules.core.llm_generate import generate_content_via_router
 
 # ═══════════════════════════════════════════════════════════════
 # [V66.1] C-2: Module-level compiled regex patterns
@@ -766,7 +767,8 @@ class StateTrackerNPC:
                 try:
                     # [V63.3] 중복 딜레이 제거 (직접 API 호출이므로 최소 지연만)
                     time.sleep(0.1)
-                    response = self.tracker._llm_client.models.generate_content(
+                    response = generate_content_via_router(
+                        client=self.tracker._llm_client,
                         model=AIModels.FLASH_ANALYSIS_MODEL,  # [TF-9B] SSOT
                         contents=prompt,
                         config=_types.GenerateContentConfig(
@@ -2156,7 +2158,8 @@ class StateTrackerNPC:
             )
 
             time.sleep(0.1)
-            response = self.tracker._llm_client.models.generate_content(
+            response = generate_content_via_router(
+                client=self.tracker._llm_client,
                 model=AIModels.FLASH_ANALYSIS_MODEL,  # [TF-9B] SSOT
                 contents=prompt,
                 config=_types.GenerateContentConfig(

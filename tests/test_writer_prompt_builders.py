@@ -93,6 +93,7 @@ class TestBuildAntiTrope:
 
         result = build_anti_trope_instructions("판타지")
         assert "클리셰 금지" in result
+        assert "AI 티 문장" in result
 
 
 class TestBuildJustification:

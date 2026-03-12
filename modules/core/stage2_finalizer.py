@@ -5,9 +5,29 @@ import logging
 import re
 import time
 
+from modules.core.artifact_logging import build_candidate_key, snapshot_logged_artifact
+from modules.core.constants import VolumeSettings
+from modules.core.logging_keys import build_attempt_key, resolve_logging_session_id
 from modules.core.metrics_collector import get_metrics_collector
 from modules.core.numeric_consistency_checker import NumericConsistencyChecker
 from modules.models.arc import validate_arc
+
+_DB_ADVISORY_NOTICE = "(Python 자동 감지 — 오탐 가능, 참고용)"
+
+
+def _build_stage2_prompt_version(*, generation_method: str, is_patch: bool = False) -> str | None:
+    try:
+        from modules.core.prompt_loader import PromptLoader
+
+        method = str(generation_method or "").strip().lower()
+        domains = ["analyst"] if "analyst" in method else ["ensemble"]
+        if is_patch:
+            domains.append("arc_generator")
+        domains.append("director")
+        return PromptLoader().compose_version_tag(*domains)
+    except Exception as _e:
+        logging.debug("[Stage2] prompt_version 계산 실패 (비차단): %s", _e)
+        return None
 
 
 def _to_num_with_korean_units(raw: object) -> float | None:
@@ -72,6 +92,16 @@ def _relative_error(stated: float, actual: float) -> float:
 
 def _format_eok(value: float) -> str:
     return f"{value / 1e8:.1f}" + "억"
+
+
+def _trim_hierarchical_summary(text: object, max_chars: int) -> str:
+    """Hierarchical summary hard cap for long-serial anchors."""
+    summary = str(text or "").strip()
+    if not summary:
+        return ""
+    if len(summary) <= max_chars:
+        return summary
+    return summary[: max_chars - 12].rstrip() + "\n...(요약 절삭)"
 
 
 def _check_tactical_arithmetic(tactical_doc: str) -> list[str]:
@@ -242,6 +272,84 @@ def _check_block_worldstate_alignment(
         )
 
     return warnings
+
+
+def _build_arc_dependency_advisory(db, arc_no: int) -> str:
+    """Arc 의존성 요약을 Director story_context에 넣을 문자열로 반환한다."""
+    getter = getattr(db, "get_arc_dependencies", None)
+    if not callable(getter):
+        return ""
+
+    try:
+        current_arc_no = int(arc_no)
+    except (TypeError, ValueError):
+        return ""
+
+    try:
+        deps = getter(current_arc_no)
+        if not isinstance(deps, list) or not deps:
+            return ""
+
+        dep_lines: list[str] = []
+        for dep in deps[:5]:
+            if not isinstance(dep, dict):
+                continue
+            from_arc = dep.get("from_arc_no", "?")
+            to_arc = dep.get("to_arc_no", "?")
+            dep_type = dep.get("dep_type", "causes")
+            desc = str(dep.get("description", "") or "")[:80]
+            try:
+                if int(to_arc) == current_arc_no:
+                    dep_lines.append(f"  Arc {from_arc} → 현재: {dep_type} ({desc})")
+                else:
+                    dep_lines.append(f"  현재 → Arc {to_arc}: {dep_type} ({desc})")
+            except (TypeError, ValueError):
+                dep_lines.append(f"  Arc {from_arc} ↔ Arc {to_arc}: {dep_type} ({desc})")
+
+        if not dep_lines:
+            return ""
+        return f"[DB-3 Arc 의존성] {_DB_ADVISORY_NOTICE}\n" + "\n".join(dep_lines)
+    except Exception as dep_err:
+        logging.debug("[DB-3] arc_dependencies advisory 실패 (비치명): %s", dep_err)
+        return ""
+
+
+def _build_character_voice_advisory(db) -> str:
+    """NPC 말투 프로필 요약을 Director story_context용 문자열로 반환한다."""
+    getter = getattr(db, "get_all_character_voices", None)
+    if not callable(getter):
+        return ""
+
+    try:
+        voices = getter()
+        if not isinstance(voices, list) or not voices:
+            return ""
+
+        voice_lines: list[str] = []
+        for voice in voices[:8]:
+            if not isinstance(voice, dict):
+                continue
+            name = str(voice.get("npc_name", "") or "").strip()
+            profile = voice.get("profile_data", {})
+            if isinstance(profile, str):
+                try:
+                    profile = json.loads(profile) if profile else {}
+                except json.JSONDecodeError:
+                    profile = {}
+            if not isinstance(profile, dict):
+                continue
+            tone = str(profile.get("tone", "") or "").strip()
+            speech = str(profile.get("speech_pattern", "") or "").strip()
+            profile_summary = ", ".join(part for part in (tone, speech) if part)
+            if name and profile_summary:
+                voice_lines.append(f"  {name}: {profile_summary}"[:80])
+
+        if not voice_lines:
+            return ""
+        return f"[DB-7 NPC 말투 참고] {_DB_ADVISORY_NOTICE}\n" + "\n".join(voice_lines)
+    except Exception as voice_err:
+        logging.debug("[DB-7] character_voice advisory 실패 (비치명): %s", voice_err)
+        return ""
 
 
 class Stage2Finalizer:
@@ -433,6 +541,15 @@ class Stage2Finalizer:
                     )
             except Exception as _arith_err:
                 logging.debug("[TF-60] _check_tactical_arithmetic 실패 (비치명): %s", _arith_err)
+
+        _db = getattr(getattr(self.ctx, "current_project", None), "db", None)
+        _arc_dep_advisory = _build_arc_dependency_advisory(_db, refined_arc.get("arc_no") or global_arc_no)
+        if _arc_dep_advisory:
+            _story_context = f"{_story_context}\n\n{_arc_dep_advisory}" if _story_context else _arc_dep_advisory
+
+        _voice_advisory = _build_character_voice_advisory(_db)
+        if _voice_advisory:
+            _story_context = f"{_story_context}\n\n{_voice_advisory}" if _story_context else _voice_advisory
 
         self.ctx.ui.log("      🤔 [TF-38] Director 전략적 무결성 검수 중...")
         print("      🤔 [Director] 전략적 무결성 검수 중 (LLM 호출, 1~3분 소요)...")
@@ -733,10 +850,18 @@ class Stage2Finalizer:
                     global_arc_no=global_arc_no,
                     attempt=attempt,
                     generation_method=generation_method,
+                    selected_strategy=(
+                        refined_arc.get("_ensemble_meta", {}).get("best_strategy")
+                        or refined_arc.get("_strategy", "")
+                        or generation_method
+                    )
+                    if isinstance(refined_arc, dict)
+                    else generation_method,
                     audit=audit,
                     is_patch=is_patch,
                     prev_score=prev_score,
                     patch_fallback=patch_fallback,
+                    artifact_payload=refined_arc if isinstance(refined_arc, dict) else None,
                 )
                 return {
                     "action": "retry",
@@ -994,11 +1119,19 @@ class Stage2Finalizer:
                 global_arc_no=global_arc_no,
                 attempt=attempt,
                 generation_method=generation_method,
+                selected_strategy=(
+                    refined_arc.get("_ensemble_meta", {}).get("best_strategy")
+                    or refined_arc.get("_strategy", "")
+                    or generation_method
+                )
+                if isinstance(refined_arc, dict)
+                else generation_method,
                 audit=audit,
                 duration_ms=_director_duration_ms,
                 is_patch=is_patch,
                 prev_score=prev_score,
                 patch_fallback=patch_fallback,
+                artifact_payload=refined_arc if isinstance(refined_arc, dict) else None,
             )
 
             # [Phase 6] Arc 단위 비용 스냅샷 저장 (비차단)
@@ -1023,12 +1156,13 @@ class Stage2Finalizer:
             except (OSError, RuntimeError, TypeError) as cost_err:
                 logging.warning("[Phase 6] Arc 비용 기록 실패 (비차단): %s", cost_err)
 
-            # [V68] 계층적 요약 피라미드 — 볼륨 요약 (10 Arc마다)
-            if global_arc_no > 0 and global_arc_no % 10 == 0:
+            # [LS-1] 계층적 요약 피라미드 — VolumeSettings.ARCS_PER_VOLUME 기준
+            _arcs_per_volume = max(1, int(VolumeSettings.ARCS_PER_VOLUME))
+            if global_arc_no > 0 and global_arc_no % _arcs_per_volume == 0:
                 try:
-                    _vol_no = global_arc_no // 10
+                    _vol_no = global_arc_no // _arcs_per_volume
                     _arc_summaries_for_vol = []
-                    for _ai in range(global_arc_no - 9, global_arc_no + 1):
+                    for _ai in range(global_arc_no - (_arcs_per_volume - 1), global_arc_no + 1):
                         _as = self.ctx.current_project.load_v20_anchor(f"arc_summary_{_ai}")
                         if _as:
                             # arc_summary는 dict 또는 str일 수 있음
@@ -1066,14 +1200,17 @@ class Stage2Finalizer:
 
                     if _arc_summaries_for_vol:
                         _vol_prompt = (
-                            "아래 10개 아크 요약을 하나의 볼륨 요약으로 합쳐주세요.\n"
+                            f"아래 {_arcs_per_volume}개 아크 요약을 하나의 볼륨 요약으로 합쳐주세요.\n"
                             "핵심 사건, 주요 인물 변화, 세계 상태 변화에 집중하세요.\n"
-                            "1000자 이내로 작성하세요.\n\n"
+                            "반드시 아래 3개 섹션으로만 정리하세요:\n"
+                            "[인물 아크]\n[핵심 갈등]\n[미해결 복선]\n"
+                            "전체 2000자 이내로 작성하세요.\n\n"
                             + "\n".join(_arc_summaries_for_vol)
                             + f"\n\n볼륨 {_vol_no} 요약:"
                         )
                         _vol_result = self.ctx.agents["director"].ask(_vol_prompt, temperature=0.2)
                         if _vol_result and isinstance(_vol_result, str) and len(_vol_result) > 20:
+                            _vol_result = _trim_hierarchical_summary(_vol_result, 2000)
                             self.ctx.current_project.save_v20_anchor(f"volume_summary_{_vol_no}", _vol_result)
                             logging.info(f"📖 [V68] 볼륨 {_vol_no} 요약 저장 완료 ({len(_vol_result)}자)")
 
@@ -1084,14 +1221,17 @@ class Stage2Finalizer:
                                     _existing_series = _existing_series.get("summary", "") or str(_existing_series)
                                 _series_prompt = (
                                     "아래는 기존 시리즈 요약과 새 볼륨 요약입니다.\n"
-                                    "이를 통합하여 전체 시리즈 요약을 1000자 이내로 갱신하세요.\n"
-                                    "핵심 사건, 주요 인물 변화, 세계 상태 변화에 집중하세요.\n\n"
+                                    "이를 통합하여 전체 시리즈 요약을 갱신하세요.\n"
+                                    "반드시 아래 3개 섹션으로만 정리하세요:\n"
+                                    "[인물 아크]\n[핵심 갈등]\n[미해결 복선]\n"
+                                    "핵심 사건, 주요 인물 변화, 세계 상태 변화에 집중하고 전체 5000자 이내로 작성하세요.\n\n"
                                     f"기존 시리즈 요약:\n{_existing_series or '(아직 없음)'}\n\n"
                                     f"새 볼륨 {_vol_no} 요약:\n{_vol_result}\n\n"
                                     "갱신된 시리즈 요약:"
                                 )
                                 _series_result = self.ctx.agents["director"].ask(_series_prompt, temperature=0.2)
                                 if _series_result and isinstance(_series_result, str) and len(_series_result) > 20:
+                                    _series_result = _trim_hierarchical_summary(_series_result, 5000)
                                     self.ctx.current_project.save_v20_anchor("series_summary", _series_result)
                                     logging.info(f"📚 [V68] 시리즈 요약 갱신 완료 ({len(_series_result)}자)")
                             except Exception as _se:
@@ -1152,6 +1292,7 @@ class Stage2Finalizer:
 [재시도 가이드]
 {intensity_guide}
 """
+            _rejected_arc = refined_arc if isinstance(refined_arc, dict) else None
             refined_arc = None
             self.ctx.ui.log(f"      🔄 [V60.77] Director 피드백 → FourPhase 대면 {min(attempt + 2, 5)}/5")
 
@@ -1160,11 +1301,19 @@ class Stage2Finalizer:
                 global_arc_no=global_arc_no,
                 attempt=attempt,
                 generation_method=generation_method,
+                selected_strategy=(
+                    refined_arc.get("_ensemble_meta", {}).get("best_strategy")
+                    or refined_arc.get("_strategy", "")
+                    or generation_method
+                )
+                if isinstance(refined_arc, dict)
+                else generation_method,
                 audit=audit,
                 duration_ms=_director_duration_ms,
                 is_patch=is_patch,
                 prev_score=prev_score,
                 patch_fallback=patch_fallback,
+                artifact_payload=_rejected_arc,
             )
 
         return {
@@ -1189,14 +1338,34 @@ class Stage2Finalizer:
         global_arc_no: int,
         attempt: int,
         generation_method: str,
+        selected_strategy: str = "",
         audit: dict,
         duration_ms: int | None = None,
         is_patch: bool = False,
         prev_score: float = 0.0,
         patch_fallback: bool = False,
+        artifact_payload: dict | None = None,
     ) -> None:
         """[4-R3-f] Record Stage 2 PASS metrics (PassRateMonitor, Dashboard, Optimizer, PerfTimer)."""
         from modules.core.spinners import V50_MODULES_AVAILABLE
+        _session_id = resolve_logging_session_id(getattr(self.ctx, "current_project", None))
+        attempt_key = build_attempt_key(
+            stage=2,
+            ep_num=global_arc_no,
+            arc_num=global_arc_no,
+            attempt_num=attempt + 1,
+            session_id=_session_id,
+        )
+        _candidate_key = build_candidate_key(strategy=selected_strategy, fallback=generation_method)
+        _artifact_meta = snapshot_logged_artifact(
+            getattr(self.ctx, "current_project", None),
+            stage=2,
+            arc_num=global_arc_no,
+            attempt_num=attempt + 1,
+            candidate_key=_candidate_key,
+            artifact_kind="final_arc",
+            payload=artifact_payload,
+        )
 
         if V50_MODULES_AVAILABLE and self.ctx.pass_rate_monitor:
             try:
@@ -1211,6 +1380,11 @@ class Stage2Finalizer:
                     is_patch=is_patch,
                     prev_score=prev_score,
                     patch_fallback=patch_fallback,
+                    attempt_key=attempt_key,
+                    final_verdict=str(audit.get("decision", "PASS")),
+                    candidate_key=_candidate_key,
+                    content_hash=_artifact_meta["content_hash"],
+                    artifact_path=_artifact_meta["artifact_path"],
                 )
             except Exception as e:  # [V64.P4] OPTIONAL: metrics
                 logging.debug(f"[SILENT] metrics (success): {e}")
@@ -1228,6 +1402,10 @@ class Stage2Finalizer:
                 _model = getattr(_director, "primary_model", None) if _director else None
                 _failure_category = self._extract_failure_category(audit)
                 _advisory_flags = self._extract_advisory_flags(audit)
+                _prompt_version = _build_stage2_prompt_version(
+                    generation_method=generation_method,
+                    is_patch=is_patch,
+                )
                 _db.save_stage_attempt(
                     stage=2,
                     verdict=str(audit.get("decision", "PASS")),
@@ -1240,7 +1418,13 @@ class Stage2Finalizer:
                     model=str(_model) if _model else None,
                     duration_ms=duration_ms,
                     advisory_flags=_advisory_flags,
+                    session_id=_session_id,
+                    attempt_key=attempt_key,
                     generation_method=generation_method,
+                    prompt_version=_prompt_version,
+                    candidate_key=_candidate_key,
+                    content_hash=_artifact_meta["content_hash"],
+                    artifact_path=_artifact_meta["artifact_path"],
                 )
                 # [TF-60] Stage 2 director_selections 기록
                 if hasattr(_db, "save_director_selection"):
@@ -1249,11 +1433,16 @@ class Stage2Finalizer:
                             ep_num=global_arc_no,
                             round_num=attempt + 1,
                             selected_label="",
-                            selected_strategy=generation_method or "",
+                            selected_strategy=selected_strategy or generation_method or "",
                             verdict=str(audit.get("decision", "PASS")),
+                            stage=2,
                             score=_score,
                             selection_reason=str(audit.get("reason", ""))[:200],
                             fix_scope=str(audit.get("fix_scope", "") or ""),
+                            attempt_key=attempt_key,
+                            candidate_key=_candidate_key,
+                            content_hash=_artifact_meta["content_hash"],
+                            artifact_path=_artifact_meta["artifact_path"],
                         )
                     except Exception as _ds_err:
                         logging.debug("[director_selections] Stage2 PASS 기록 실패: %s", _ds_err)
@@ -1294,14 +1483,34 @@ class Stage2Finalizer:
         global_arc_no: int,
         attempt: int,
         generation_method: str,
+        selected_strategy: str = "",
         audit: dict,
         duration_ms: int | None = None,
         is_patch: bool = False,
         prev_score: float = 0.0,
         patch_fallback: bool = False,
+        artifact_payload: dict | None = None,
     ) -> None:
         """[4-R3-f] Record Stage 2 REJECT metrics (PassRateMonitor, Dashboard, History, Optimizer)."""
         from modules.core.spinners import V50_MODULES_AVAILABLE
+        _session_id = resolve_logging_session_id(getattr(self.ctx, "current_project", None))
+        attempt_key = build_attempt_key(
+            stage=2,
+            ep_num=global_arc_no,
+            arc_num=global_arc_no,
+            attempt_num=attempt + 1,
+            session_id=_session_id,
+        )
+        _candidate_key = build_candidate_key(strategy=selected_strategy, fallback=generation_method)
+        _artifact_meta = snapshot_logged_artifact(
+            getattr(self.ctx, "current_project", None),
+            stage=2,
+            arc_num=global_arc_no,
+            attempt_num=attempt + 1,
+            candidate_key=_candidate_key,
+            artifact_kind="rejected_arc",
+            payload=artifact_payload,
+        )
 
         if V50_MODULES_AVAILABLE and self.ctx.pass_rate_monitor:
             try:
@@ -1317,6 +1526,11 @@ class Stage2Finalizer:
                     is_patch=is_patch,
                     prev_score=prev_score,
                     patch_fallback=patch_fallback,
+                    attempt_key=attempt_key,
+                    final_verdict=str(audit.get("decision", "REJECT")),
+                    candidate_key=_candidate_key,
+                    content_hash=_artifact_meta["content_hash"],
+                    artifact_path=_artifact_meta["artifact_path"],
                 )
             except Exception as e:  # [V64.P4] OPTIONAL: metrics
                 logging.debug(f"[SILENT] metrics (reject): {e}")
@@ -1334,6 +1548,10 @@ class Stage2Finalizer:
                 _model = getattr(_director, "primary_model", None) if _director else None
                 _failure_category = self._extract_failure_category(audit)
                 _advisory_flags = self._extract_advisory_flags(audit)
+                _prompt_version = _build_stage2_prompt_version(
+                    generation_method=generation_method,
+                    is_patch=is_patch,
+                )
                 _db.save_stage_attempt(
                     stage=2,
                     verdict=str(audit.get("decision", "REJECT")),
@@ -1347,7 +1565,13 @@ class Stage2Finalizer:
                     model=str(_model) if _model else None,
                     duration_ms=duration_ms,
                     advisory_flags=_advisory_flags,
+                    session_id=_session_id,
+                    attempt_key=attempt_key,
                     generation_method=generation_method,
+                    prompt_version=_prompt_version,
+                    candidate_key=_candidate_key,
+                    content_hash=_artifact_meta["content_hash"],
+                    artifact_path=_artifact_meta["artifact_path"],
                 )
                 # [TF-60] Stage 2 director_selections 기록
                 if hasattr(_db, "save_director_selection"):
@@ -1356,11 +1580,16 @@ class Stage2Finalizer:
                             ep_num=global_arc_no,
                             round_num=attempt + 1,
                             selected_label="",
-                            selected_strategy=generation_method or "",
+                            selected_strategy=selected_strategy or generation_method or "",
                             verdict=str(audit.get("decision", "REJECT")),
+                            stage=2,
                             score=_score,
                             selection_reason=str(audit.get("reason", ""))[:200],
                             fix_scope=str(audit.get("fix_scope", "") or ""),
+                            attempt_key=attempt_key,
+                            candidate_key=_candidate_key,
+                            content_hash=_artifact_meta["content_hash"],
+                            artifact_path=_artifact_meta["artifact_path"],
                         )
                     except Exception as _ds_err:
                         logging.debug("[director_selections] Stage2 REJECT 기록 실패: %s", _ds_err)
@@ -1375,7 +1604,10 @@ class Stage2Finalizer:
                 except (ValueError, TypeError):
                     _score = 0
             self.ctx.current_project.db.save_cost_record(
-                session_id=f"arc_{global_arc_no}",
+                session_id=resolve_logging_session_id(
+                    getattr(self.ctx, "current_project", None),
+                    fallback=f"arc_{global_arc_no}",
+                ),
                 scope_type="arc",
                 scope_id=int(global_arc_no),
                 total_calls=0,

@@ -27,7 +27,7 @@ from modules.core.genre_schema_builder import build_state_updates_schema
 from modules.models.manuscript import validate_manuscript_candidate
 
 from .base_agent import _SYSTEM_CFG, BaseAgent
-from .chief_writer_context import ChiefWriterContextBuilder
+from .chief_writer_context import ChiefWriterContextBuilder, normalize_chief_writer_genre_code
 from .chief_writer_prompts import (
     get_prompt_template_output,
 )
@@ -91,7 +91,7 @@ class ChiefWriter(BaseAgent):
         },
         "tension": {
             "name": "긴장감 + 반전 강조",
-            "temperature": 0.8,
+            "temperature": 0.9,
             "emphasis": "반전 + 클리프행어 + 예측 불가능 전개",
             "instruction": """
 [전략 C: 몰입감 극대화]
@@ -116,6 +116,153 @@ class ChiefWriter(BaseAgent):
         self._context_builder = None  # [B-1-4] lazy init
         self._quality_gate = None  # [B-1-5] lazy init
         # [V65] _emotion_skeleton_cache / _emotion_skeleton_blueprint_hash 삭제 (Emotion Skeleton Dead Code 제거)
+
+    def _load_strategy_bias(self, strategy_names: list[str], *, lookback: int = 20) -> dict[str, float]:
+        """최근 PASS 선택 비중을 전략별로 로드한다."""
+        db_candidates = []
+        for db in (
+            self._resolve_logging_db(),
+            getattr(self.context, "db", None),
+        ):
+            if db is None or not hasattr(db, "get_strategy_win_rates"):
+                continue
+            if any(existing is db for existing in db_candidates):
+                continue
+            db_candidates.append(db)
+
+        for db in db_candidates:
+            try:
+                stats = db.get_strategy_win_rates(
+                    lookback=lookback,
+                    allowed_strategies=tuple(strategy_names),
+                )
+            except Exception as bias_err:
+                logging.debug("[QR-3] ChiefWriter 전략 비중 조회 실패 (비치명): %s", bias_err)
+                continue
+
+            if not isinstance(stats, dict) or int(stats.get("total", 0) or 0) <= 0:
+                continue
+            return {name: float(stats.get(name, 0.0) or 0.0) for name in strategy_names}
+        return {}
+
+    def _build_strategy_execution_plan(self, strategy_names: list[str]) -> tuple[list[str], dict[str, float], dict[str, float]]:
+        """전략 실행 순서와 temperature 보정값을 계산한다."""
+        shares = self._load_strategy_bias(strategy_names)
+        if not shares or all(shares.get(name, 0.0) <= 0 for name in strategy_names):
+            return strategy_names, {}, shares
+
+        ordered = sorted(strategy_names, key=lambda name: shares.get(name, 0.0), reverse=True)
+        adjusted_temperatures: dict[str, float] = {}
+        for name in strategy_names:
+            base = float(self.ENSEMBLE_STRATEGIES[name]["temperature"])
+            share = shares.get(name, 0.0)
+            adjusted = base
+            if share >= 0.5:
+                adjusted = max(0.1, round(base - 0.05, 2))
+            elif share <= 0.15:
+                adjusted = min(1.0, round(base + 0.1, 2))
+            elif share <= 0.3:
+                adjusted = min(1.0, round(base + 0.05, 2))
+            adjusted_temperatures[name] = adjusted
+
+        logging.info(
+            "[QR-3] ChiefWriter 전략 비중 적용: %s",
+            ", ".join(f"{name}={int(shares.get(name, 0.0) * 100)}%" for name in ordered),
+        )
+        return ordered, adjusted_temperatures, shares
+
+    def _select_ensemble_strategies(
+        self,
+        *,
+        strategy_budget: str = "full",
+        preferred_strategy: str = "",
+        single_strategy: str = "",
+    ) -> tuple[list[str], dict[str, float]]:
+        """Resolve strategy set for the current ensemble budget."""
+        strategies = ["balanced", "narrative", "tension"]
+
+        if single_strategy:
+            target = [name for name in strategies if name == single_strategy]
+            return (target or ["balanced"]), {}
+
+        if strategy_budget == "reduced":
+            ordered: list[str] = []
+            preferred = preferred_strategy if preferred_strategy in strategies else ""
+            for name in (preferred, "balanced", "tension", "narrative"):
+                if name and name not in ordered:
+                    ordered.append(name)
+                if len(ordered) >= 2:
+                    break
+            return ordered[:2], {}
+
+        ordered, adjusted_temperatures, _ = self._build_strategy_execution_plan(strategies)
+        return ordered, adjusted_temperatures
+
+    @staticmethod
+    def _build_char_ngrams(text: str, n: int = 3) -> set[str]:
+        normalized = re.sub(r"\s+", " ", str(text or "")).strip()
+        if not normalized:
+            return set()
+        if len(normalized) < n:
+            return {normalized}
+        return {normalized[i : i + n] for i in range(len(normalized) - n + 1)}
+
+    def _annotate_candidate_diversity(self, candidates: list[dict], *, threshold: float = 0.7) -> dict:
+        """후보 간 3-gram Jaccard 유사도를 계산해 metadata에 기록한다."""
+        indexed_texts: list[tuple[int, str]] = []
+        for idx, candidate in enumerate(candidates):
+            if not isinstance(candidate, dict):
+                continue
+            manuscript = str(candidate.get("manuscript", "") or "").strip()
+            if manuscript:
+                indexed_texts.append((idx, manuscript))
+
+        if len(indexed_texts) < 2:
+            return {}
+
+        labels = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        pairwise = []
+        high_similarity_pairs = []
+        max_similarity = 0.0
+        for left_pos in range(len(indexed_texts)):
+            left_idx, left_text = indexed_texts[left_pos]
+            left_grams = self._build_char_ngrams(left_text)
+            if not left_grams:
+                continue
+            for right_pos in range(left_pos + 1, len(indexed_texts)):
+                right_idx, right_text = indexed_texts[right_pos]
+                right_grams = self._build_char_ngrams(right_text)
+                if not right_grams:
+                    continue
+                union = left_grams | right_grams
+                similarity = (len(left_grams & right_grams) / len(union)) if union else 0.0
+                similarity = round(similarity, 2)
+                pair_label = f"{labels[left_idx]}-{labels[right_idx]}"
+                pairwise.append({"pair": pair_label, "similarity": similarity})
+                max_similarity = max(max_similarity, similarity)
+                if similarity >= threshold:
+                    high_similarity_pairs.append((pair_label, similarity))
+
+        warning = ""
+        if high_similarity_pairs:
+            pairs_text = ", ".join(f"{pair} {int(score * 100)}%" for pair, score in high_similarity_pairs[:3])
+            warning = f"[후보 다양성 경고] 후보 유사도 높음: {pairs_text}"
+
+        summary = {
+            "pairwise": pairwise,
+            "max_similarity": round(max_similarity, 2),
+            "high_similarity_pairs": [
+                {"pair": pair, "similarity": similarity} for pair, similarity in high_similarity_pairs
+            ],
+            "warning": warning,
+        }
+        for candidate in candidates:
+            if not isinstance(candidate, dict):
+                continue
+            metadata = candidate.setdefault("metadata", {})
+            if isinstance(metadata, dict):
+                metadata["diversity"] = summary
+        return summary
 
     def _get_critical_keys_for_genre(self) -> list[str]:
         """[TF-45] 현재 프로젝트 HUD에서 critical_keys 추출."""
@@ -148,6 +295,7 @@ class ChiefWriter(BaseAgent):
         arc_doc: str,
         master_bible: dict,
         style_guide: str = "",
+        reference_excerpt: str = "",
         director_feedback: str = "",
         strategy_specific_feedback: str = "",
         rejected_strategy: str = "",
@@ -167,7 +315,7 @@ class ChiefWriter(BaseAgent):
         genre_name: str = "무협",
         # [V60.81] 추가 파라미터
         npc_equipment_summary: str = "",
-        intro_dna: str = "CYNICAL",
+        intro_dna: str = "",  # [QI-1-C3] CYNICAL 하드코딩 제거
         # [V60.85] 장르 Guard Purism Prompt
         purism_prompt: str = "",
         # [V60.95] 고밀도 HUD 전달
@@ -185,6 +333,8 @@ class ChiefWriter(BaseAgent):
         promises: list = None,
         # [TF-49b] Arc 계획 아이템 사전 정당화
         upcoming_arc_items: list[str] = None,
+        strategy_budget: str = "full",
+        preferred_strategy: str = "",
     ) -> list[dict]:
         """
         3개 후보 원고 병렬 생성
@@ -225,6 +375,7 @@ class ChiefWriter(BaseAgent):
             arc_doc=arc_doc,
             master_bible=master_bible,
             style_guide=style_guide,
+            reference_excerpt=reference_excerpt,
             director_feedback=director_feedback,
             failure_constraints=failure_constraints,
             # 미래 침범 방지
@@ -275,18 +426,18 @@ class ChiefWriter(BaseAgent):
 
         # 병렬 생성
         candidates = []
-        strategies = ["balanced", "narrative", "tension"]
-        if single_strategy:
-            _target = [s for s in strategies if s == single_strategy]
-            if _target:
-                strategies = _target
+        strategies, _strategy_temperatures = self._select_ensemble_strategies(
+            strategy_budget=strategy_budget,
+            preferred_strategy=preferred_strategy,
+            single_strategy=single_strategy,
+        )
 
         # [Phase 3-Obs] 에이전트 레벨 ThreadPoolExecutor 계측
         _tp_t0 = time.monotonic()
 
         # [V61.3] 전체 병렬 처리 블록을 try-except로 감싸서 급사 방지
         try:
-            with ThreadPoolExecutor(max_workers=3) as executor:
+            with ThreadPoolExecutor(max_workers=max(1, min(3, len(strategies)))) as executor:
                 futures = {}
                 for strategy in strategies:
                     _feedback = (
@@ -298,6 +449,7 @@ class ChiefWriter(BaseAgent):
                         self._generate_single_candidate,
                         ep_num=ep_num,
                         strategy=strategy,
+                        blueprint=blueprint,
                         common_context=common_context,
                         hud_report=hud_report,
                         master_bible=master_bible,
@@ -306,6 +458,7 @@ class ChiefWriter(BaseAgent):
                         strategy_feedback=_feedback,
                         motivations=motivations,
                         promises=promises,
+                        strategy_temperature=_strategy_temperatures.get(strategy),
                     )
                     futures[future] = strategy
 
@@ -390,6 +543,7 @@ class ChiefWriter(BaseAgent):
             fallback = self._generate_single_candidate(
                 ep_num=ep_num,
                 strategy=_fallback_strategy,
+                blueprint=blueprint,
                 common_context=common_context,
                 hud_report=hud_report,
                 master_bible=master_bible,
@@ -397,6 +551,7 @@ class ChiefWriter(BaseAgent):
                 cache_name=cache_name,
                 motivations=motivations,
                 promises=promises,
+                strategy_temperature=_strategy_temperatures.get(_fallback_strategy),
                 strategy_feedback=(
                     strategy_specific_feedback
                     if (_fallback_strategy == rejected_strategy and strategy_specific_feedback)
@@ -427,12 +582,14 @@ class ChiefWriter(BaseAgent):
 
         # [Step2] Pydantic ingress+egress — 각 후보 검증
         candidates = [validate_manuscript_candidate(c) for c in candidates]
+        self._annotate_candidate_diversity(candidates)
         return candidates
 
     def _generate_single_candidate(
         self,
         ep_num: int,
         strategy: str,
+        blueprint: dict,
         common_context: str,
         hud_report: str = "",
         master_bible: dict = None,
@@ -441,6 +598,7 @@ class ChiefWriter(BaseAgent):
         strategy_feedback: str = "",
         motivations: list = None,
         promises: list = None,
+        strategy_temperature: float | None = None,
     ) -> dict | None:
         """
         [V60.81] 단일 후보 생성 + Self-Critique + Leakage 방지
@@ -458,12 +616,17 @@ class ChiefWriter(BaseAgent):
         # [V61.3] 전체 메서드를 try-except로 감싸서 worker thread 크래시 방지
         try:
             strategy_config = self.ENSEMBLE_STRATEGIES.get(strategy, self.ENSEMBLE_STRATEGIES["balanced"])
+            _temperature = (
+                float(strategy_temperature)
+                if isinstance(strategy_temperature, (int, float))
+                else float(strategy_config["temperature"])
+            )
             _strategy_feedback_block = (
                 f"\n[Strategy-Specific Feedback]\n{strategy_feedback}\n" if strategy_feedback else ""
             )
 
             # [TF-45] 장르별 state_updates 스키마 주입
-            _genre_code = _CW_GENRE_CODE_MAP.get(genre_name, "wuxia")
+            _genre_code = normalize_chief_writer_genre_code(genre_name)
             _critical_keys = self._get_critical_keys_for_genre()
             _su_schema = build_state_updates_schema(_genre_code, _critical_keys)
             _output_block = self.PROMPT_TEMPLATE_OUTPUT.format(
@@ -488,7 +651,7 @@ class ChiefWriter(BaseAgent):
                 response = self._ask_with_cached_context(
                     cache_name=cache_name,
                     prompt=strategy_prompt,
-                    temperature=strategy_config["temperature"],
+                    temperature=_temperature,
                     thinking_level="medium",
                     full_prompt_fallback=full_prompt,
                 )
@@ -502,7 +665,7 @@ class ChiefWriter(BaseAgent):
 
                 response = self.ask(
                     prompt=full_prompt,
-                    temperature=strategy_config["temperature"],
+                    temperature=_temperature,
                     thinking_level="medium",  # [V61.6] 원고 생성 추론 강화
                 )
 
@@ -545,6 +708,7 @@ class ChiefWriter(BaseAgent):
                 ep_num=ep_num,
                 motivations=motivations,
                 promises=promises,  # [B-4]
+                blueprint=blueprint,
             )
 
             # Self-Critique 결과에서 content 재추출
@@ -581,7 +745,7 @@ class ChiefWriter(BaseAgent):
                 "state_updates": final_state,
                 "key_scenes_covered": data.get("key_scenes_covered", []),
                 "metadata": {
-                    "temperature": strategy_config["temperature"],
+                    "temperature": _temperature,
                     "emphasis": strategy_config["emphasis"],
                     "length": len(final_content),
                     "self_critique_applied": True,
@@ -628,6 +792,7 @@ class ChiefWriter(BaseAgent):
         director_feedback: str,
         previous_attempt: dict,
         attempt_number: int,
+        reference_excerpt: str = "",
         # [V60.80 FIX] 미래 침범 방지용 추가 파라미터
         current_inventory: list[str] = None,
         current_martial_arts: list[str] = None,
@@ -642,7 +807,7 @@ class ChiefWriter(BaseAgent):
         genre_name: str = "무협",
         # [V60.81] 추가 파라미터
         npc_equipment_summary: str = "",
-        intro_dna: str = "CYNICAL",
+        intro_dna: str = "",  # [QI-1-C3] CYNICAL 하드코딩 제거
         # [V60.85] 장르 Guard Purism Prompt
         purism_prompt: str = "",
         # [V60.95] 고밀도 HUD 전달
@@ -660,6 +825,8 @@ class ChiefWriter(BaseAgent):
         promises: list = None,
         # [TF-49b] Arc 계획 아이템 사전 정당화
         upcoming_arc_items: list[str] = None,
+        strategy_budget: str = "full",
+        preferred_strategy: str = "",
     ) -> list[dict]:
         """
         Director 피드백 반영 재생성
@@ -681,6 +848,8 @@ class ChiefWriter(BaseAgent):
         Returns:
             List[Dict]: 새로운 3개 후보
         """
+        _history_feedback = self._build_retry_history_feedback(previous_attempt)
+
         # 피드백 강화
         enhanced_feedback = f"""
 [🚨 {attempt_number}차 재시도 - Director 피드백 필수 반영]
@@ -712,6 +881,8 @@ class ChiefWriter(BaseAgent):
         _open_review = previous_attempt.get("open_review", "")
         if _open_review and _open_review not in ("특이사항 없음", "없음", ""):
             enhanced_feedback += f"\n\n[Director 서사 관찰 — 반드시 개선할 것]\n{_open_review}"
+        if _history_feedback:
+            enhanced_feedback += f"\n\n{_history_feedback}"
 
         # 실패 학습 제약 구성
         failure_constraints = ""
@@ -733,6 +904,7 @@ class ChiefWriter(BaseAgent):
             arc_doc=arc_doc,
             master_bible=master_bible,
             style_guide=style_guide,
+            reference_excerpt=reference_excerpt,
             director_feedback=enhanced_feedback,
             strategy_specific_feedback=_strategy_feedback,
             rejected_strategy=_rejected_strategy,
@@ -766,11 +938,378 @@ class ChiefWriter(BaseAgent):
             motivations=motivations,  # [B-4]
             promises=promises,  # [B-4]
             upcoming_arc_items=upcoming_arc_items,  # [TF-49b]
+            strategy_budget=strategy_budget,
+            preferred_strategy=preferred_strategy,
         )
 
     # =========================================================================
     # [TF-23] InPlace — LLM 1회 호출로 원고 국소 수정
     # =========================================================================
+
+    _STRUCTURAL_PATCH_LOCAL_HINTS = {
+        "opening": ("도입", "초반", "오프닝", "첫 장면", "시작"),
+        "ending": ("엔딩", "결말", "마지막", "마무리", "후반", "후반부", "클라이맥스", "ending", "final"),
+        "dialogue": ("대화", "대사", "말투", "dialogue"),
+        "confrontation": ("전투", "대결", "결전", "충돌", "액션", "confrontation"),
+        "revelation": ("반전", "정체", "드러", "밝혀", "revelation"),
+    }
+    _STRUCTURAL_PATCH_GLOBAL_HINTS = (
+        "전반",
+        "전체",
+        "전체적",
+        "전면",
+        "전체적으로",
+        "구조",
+        "플롯",
+        "문체",
+        "톤",
+        "호흡",
+        "페이싱",
+        "리듬",
+        "pacing",
+        "tone",
+        "style",
+    )
+
+    def _set_last_inplace_patch_trace(
+        self,
+        *,
+        patch_strategy: str = "",
+        patch_targets: list[str] | None = None,
+        fallback_reason: str = "",
+        focus: str = "",
+        structural_attempted: bool = False,
+    ) -> dict:
+        trace = {
+            "patch_strategy": str(patch_strategy or ""),
+            "patch_targets": list(patch_targets or []),
+            "fallback_reason": str(fallback_reason or ""),
+            "focus": str(focus or ""),
+            "structural_attempted": bool(structural_attempted),
+        }
+        self._last_inplace_patch_trace = trace
+        return trace
+
+    def _classify_structural_patch_focus(self, director_feedback: str) -> str:
+        feedback = str(director_feedback or "")
+        if not feedback:
+            return ""
+        for focus, keywords in self._STRUCTURAL_PATCH_LOCAL_HINTS.items():
+            if any(keyword in feedback for keyword in keywords):
+                return focus
+        if any(keyword in feedback for keyword in self._STRUCTURAL_PATCH_GLOBAL_HINTS):
+            return "global"
+        return ""
+
+    def _split_manuscript_into_structural_blocks(
+        self,
+        original_manuscript: str,
+        *,
+        expected_blocks: int,
+    ) -> tuple[list[str], str]:
+        from modules.core.stage4_context_builder import Stage4ContextBuilder
+
+        manuscript = str(original_manuscript or "").strip()
+        if not manuscript:
+            return [], "\n\n"
+
+        explicit_blocks = Stage4ContextBuilder._split_scenes(manuscript)
+        has_explicit_boundary = bool(re.search(r"\n(?:#{1,3}\s+\S+|---+|\*\*\*+|\n{3,})", manuscript))
+        if has_explicit_boundary and len(explicit_blocks) >= 2:
+            if not expected_blocks or abs(len(explicit_blocks) - expected_blocks) <= 1:
+                separator = "\n\n---\n\n" if ("---" in manuscript or "***" in manuscript) else "\n\n\n"
+                return explicit_blocks, separator
+
+        paragraphs = [paragraph.strip() for paragraph in re.split(r"\n{2,}", manuscript) if paragraph.strip()]
+        if len(paragraphs) < 2:
+            return [], "\n\n"
+
+        target_blocks = expected_blocks if expected_blocks >= 2 else min(max(len(paragraphs) // 3, 2), 6)
+        target_blocks = max(2, min(target_blocks, len(paragraphs)))
+        base_size, extra = divmod(len(paragraphs), target_blocks)
+        blocks: list[str] = []
+        cursor = 0
+        for block_idx in range(target_blocks):
+            chunk_size = base_size + (1 if block_idx < extra else 0)
+            chunk = paragraphs[cursor : cursor + chunk_size]
+            cursor += chunk_size
+            if chunk:
+                blocks.append("\n\n".join(chunk))
+        return blocks, "\n\n"
+
+    def _select_structural_patch_targets(self, *, focus: str, slots: list, block_count: int) -> list[int]:
+        if not slots or block_count <= 1:
+            return []
+
+        usable_count = min(len(slots), block_count)
+        last_idx = usable_count - 1
+        middle_idx = min(max(1, usable_count // 2), last_idx)
+
+        if focus == "opening":
+            return [0]
+        if focus == "ending":
+            return sorted({max(0, last_idx - 1), last_idx}) if usable_count >= 4 else [last_idx]
+        if focus == "dialogue":
+            return [middle_idx]
+        if focus == "confrontation":
+            for idx, slot in enumerate(slots[:usable_count]):
+                if getattr(getattr(slot, "scene_type", None), "value", "") == "confrontation":
+                    return [idx]
+            return [middle_idx]
+        if focus == "revelation":
+            for idx, slot in enumerate(slots[:usable_count]):
+                if getattr(getattr(slot, "scene_type", None), "value", "") in {"revelation", "resolution"}:
+                    return [idx]
+            return [max(0, last_idx - 1)]
+        return []
+
+    def _build_structural_patch_plan(
+        self,
+        *,
+        original_manuscript: str,
+        director_feedback: str,
+        blueprint: dict | None,
+        genre_name: str = "",
+    ) -> dict:
+        from modules.core.writer_template import create_writer_template
+
+        if not isinstance(blueprint, dict):
+            return {}
+
+        scene_breakdown = blueprint.get("scene_breakdown", {})
+        if not isinstance(scene_breakdown, dict) or len(scene_breakdown) < 2:
+            return {}
+
+        focus = self._classify_structural_patch_focus(director_feedback)
+        if not focus or focus == "global":
+            return {}
+
+        blocks, separator = self._split_manuscript_into_structural_blocks(
+            original_manuscript,
+            expected_blocks=len(scene_breakdown),
+        )
+        if len(blocks) < 2:
+            return {}
+
+        genre_code = normalize_chief_writer_genre_code(genre_name)
+        template = create_writer_template(genre=genre_code).generate_template(blueprint=blueprint)
+        if not getattr(template, "slots", None):
+            return {}
+
+        slots = list(template.slots)[: len(blocks)]
+        target_indexes = self._select_structural_patch_targets(
+            focus=focus,
+            slots=slots,
+            block_count=len(blocks),
+        )
+        if not target_indexes:
+            return {}
+
+        target_scene_ids: list[str] = []
+        target_payload_lines: list[str] = []
+        boundary_lines: list[str] = []
+        scene_plan_lines: list[str] = []
+        target_index_map: dict[str, int] = {}
+
+        for idx, slot in enumerate(slots):
+            scene_plan_lines.append(
+                f"- {slot.scene_id} | {slot.scene_type.value} | {str(slot.description or '')[:120]}"
+            )
+
+            if idx not in target_indexes:
+                continue
+
+            scene_id = slot.scene_id
+            target_scene_ids.append(scene_id)
+            target_index_map[scene_id] = idx
+            target_payload_lines.append(
+                "\n".join(
+                    [
+                        f"[{scene_id}]",
+                        f"type={slot.scene_type.value}",
+                        f"description={str(slot.description or '')[:160]}",
+                        "required=" + ", ".join(str(item) for item in list(slot.required_elements or [])[:4]),
+                        blocks[idx],
+                    ]
+                )
+            )
+            prev_excerpt = blocks[idx - 1][-220:] if idx > 0 else ""
+            next_excerpt = blocks[idx + 1][:220] if idx + 1 < len(blocks) else ""
+            boundary_lines.append(
+                "\n".join(
+                    [
+                        f"[{scene_id} boundary]",
+                        f"prev={prev_excerpt}" if prev_excerpt else "prev=",
+                        f"next={next_excerpt}" if next_excerpt else "next=",
+                    ]
+                )
+            )
+
+        if not target_scene_ids:
+            return {}
+
+        return {
+            "focus": focus,
+            "blocks": blocks,
+            "separator": separator,
+            "target_scene_ids": target_scene_ids,
+            "target_index_map": target_index_map,
+            "scene_plan": "\n".join(scene_plan_lines),
+            "boundary_context": "\n\n".join(boundary_lines),
+            "target_scene_payload": "\n\n".join(target_payload_lines),
+        }
+
+    def _load_structural_patch_payload(self, response: str) -> dict:
+        stripped = str(response or "").strip()
+        if not stripped:
+            return {}
+        if stripped.startswith("```"):
+            stripped = re.sub(r"^```(?:json)?\s*|\s*```$", "", stripped, flags=re.IGNORECASE | re.DOTALL).strip()
+        try:
+            parsed = json.loads(stripped)
+        except (json.JSONDecodeError, TypeError, ValueError):
+            return {}
+        return parsed if isinstance(parsed, dict) else {}
+
+    def _attempt_structural_inplace_patch(
+        self,
+        *,
+        original_manuscript: str,
+        director_feedback: str,
+        attempt_number: int,
+        style_guide: str = "",
+        blueprint: dict | None = None,
+        genre_name: str = "",
+    ) -> list[dict] | None:
+        from modules.core.prompt_loader import PromptLoader
+
+        plan = self._build_structural_patch_plan(
+            original_manuscript=original_manuscript,
+            director_feedback=director_feedback,
+            blueprint=blueprint,
+            genre_name=genre_name,
+        )
+        if not plan:
+            return None
+
+        self._set_last_inplace_patch_trace(
+            patch_strategy="inplace_patch_structural",
+            patch_targets=list(plan["target_scene_ids"]),
+            focus=str(plan["focus"] or ""),
+            structural_attempted=True,
+        )
+
+        def _esc(text: str) -> str:
+            return str(text or "").replace("{", "{{").replace("}", "}}")
+
+        try:
+            template = PromptLoader().load("chief_writer", "PATCH_MODE_STRUCTURAL_PROMPT")
+        except Exception as exc:
+            logging.warning("[PWF-STRUCT] PATCH_MODE_STRUCTURAL_PROMPT 로드 실패: %s", exc)
+            template = None
+
+        if template:
+            prompt = template.format(
+                focus_label=_esc(plan["focus"]),
+                style_guide=_esc(style_guide or ""),
+                feedback_text=_esc(director_feedback),
+                scene_plan=_esc(plan["scene_plan"]),
+                target_scene_ids=", ".join(plan["target_scene_ids"]),
+                boundary_context=_esc(plan["boundary_context"]),
+                target_scene_payload=_esc(plan["target_scene_payload"]),
+            )
+        else:
+            prompt = (
+                "[Structural InPlace Patch]\n\n"
+                f"focus={plan['focus']}\n"
+                f"target_scene_ids={', '.join(plan['target_scene_ids'])}\n\n"
+                f"[StyleGuide]\n{style_guide}\n\n"
+                f"[DirectorFeedback]\n{director_feedback}\n\n"
+                f"[ScenePlan]\n{plan['scene_plan']}\n\n"
+                f"[BoundaryContext]\n{plan['boundary_context']}\n\n"
+                f"[TargetScenes]\n{plan['target_scene_payload']}\n\n"
+                'Return JSON only: {"patched_blocks":{"scene_id":"patched text"}, "patch_state_updates": {...}}'
+            )
+
+        logging.info(
+            "[PWF-STRUCT] scene-aware inplace patch attempt=%d focus=%s targets=%s",
+            attempt_number,
+            plan["focus"],
+            plan["target_scene_ids"],
+        )
+        try:
+            response = self.ask(prompt, temperature=0.2, thinking_level="medium")
+        except Exception as exc:
+            logging.warning("[PWF-STRUCT] scene-aware inplace 호출 실패: %s", exc)
+            return None
+
+        payload = self._load_structural_patch_payload(response)
+        patched_blocks = payload.get("patched_blocks", {}) if isinstance(payload, dict) else {}
+        if not isinstance(patched_blocks, dict):
+            logging.info("[PWF-STRUCT] patched_blocks 누락 → whole-text fallback")
+            self._set_last_inplace_patch_trace(
+                patch_strategy="inplace_patch_structural",
+                patch_targets=list(plan["target_scene_ids"]),
+                fallback_reason="missing_patched_blocks",
+                focus=str(plan["focus"] or ""),
+                structural_attempted=True,
+            )
+            return None
+
+        merged_blocks = list(plan["blocks"])
+        patched_any = False
+        for scene_id in plan["target_scene_ids"]:
+            patch_text = str(patched_blocks.get(scene_id, "") or "").strip()
+            if len(patch_text) < 80:
+                continue
+            block_idx = plan["target_index_map"].get(scene_id)
+            if block_idx is None or block_idx >= len(merged_blocks):
+                continue
+            merged_blocks[block_idx] = patch_text
+            patched_any = True
+
+        if not patched_any:
+            logging.info("[PWF-STRUCT] usable patched block 없음 → whole-text fallback")
+            self._set_last_inplace_patch_trace(
+                patch_strategy="inplace_patch_structural",
+                patch_targets=list(plan["target_scene_ids"]),
+                fallback_reason="no_usable_patched_blocks",
+                focus=str(plan["focus"] or ""),
+                structural_attempted=True,
+            )
+            return None
+
+        merged_manuscript = str(plan["separator"] or "\n\n").join(merged_blocks).strip()
+        if len(merged_manuscript) < 2000:
+            logging.warning("[PWF-STRUCT] merged structural patch too short: %d", len(merged_manuscript))
+            self._set_last_inplace_patch_trace(
+                patch_strategy="inplace_patch_structural",
+                patch_targets=list(plan["target_scene_ids"]),
+                fallback_reason="patched_output_too_short",
+                focus=str(plan["focus"] or ""),
+                structural_attempted=True,
+            )
+            return None
+
+        state_updates = payload.get("patch_state_updates", {})
+        if not isinstance(state_updates, dict):
+            state_updates = {}
+
+        self._set_last_inplace_patch_trace(
+            patch_strategy="inplace_patch_structural",
+            patch_targets=list(plan["target_scene_ids"]),
+            focus=str(plan["focus"] or ""),
+            structural_attempted=True,
+        )
+
+        return [
+            {
+                "manuscript": merged_manuscript,
+                "strategy": "inplace_patch_structural",
+                "state_updates": state_updates,
+                "patch_targets": list(plan["target_scene_ids"]),
+            }
+        ]
 
     def inplace_patch(
         self,
@@ -783,6 +1322,54 @@ class ChiefWriter(BaseAgent):
         """[TF-23] LLM 1회 호출로 원고 in-place 수정. 실패 시 빈 리스트 → patch/rewrite 폴백."""
         from modules.core.constants import smart_truncate
         from modules.core.prompt_loader import PromptLoader
+
+        blueprint = getattr(self, "_inplace_patch_blueprint", None)
+        genre_name = str(getattr(self, "_inplace_patch_genre_name", "") or "")
+        focus = self._classify_structural_patch_focus(director_feedback)
+        scene_breakdown = blueprint.get("scene_breakdown", {}) if isinstance(blueprint, dict) else {}
+        structural_attempted = False
+        fallback_reason = ""
+
+        if not isinstance(blueprint, dict):
+            fallback_reason = "missing_blueprint"
+        elif not isinstance(scene_breakdown, dict) or len(scene_breakdown) < 2:
+            fallback_reason = "missing_scene_breakdown"
+        elif not focus:
+            fallback_reason = "unclassified_feedback"
+        elif focus == "global":
+            fallback_reason = "global_issue"
+        else:
+            structural_attempted = True
+            _structural_result = self._attempt_structural_inplace_patch(
+                original_manuscript=original_manuscript,
+                director_feedback=director_feedback,
+                attempt_number=attempt_number,
+                style_guide=style_guide,
+                blueprint=blueprint,
+                genre_name=genre_name,
+            )
+            if _structural_result:
+                return _structural_result
+
+            _existing_trace = dict(getattr(self, "_last_inplace_patch_trace", {}) or {})
+            fallback_reason = str(_existing_trace.get("fallback_reason") or "structural_patch_unusable")
+            focus = str(_existing_trace.get("focus") or focus)
+            self._set_last_inplace_patch_trace(
+                patch_strategy="inplace_patch",
+                patch_targets=list(_existing_trace.get("patch_targets") or []),
+                fallback_reason=fallback_reason,
+                focus=focus,
+                structural_attempted=True,
+            )
+
+        if not structural_attempted:
+            self._set_last_inplace_patch_trace(
+                patch_strategy="inplace_patch",
+                patch_targets=[],
+                fallback_reason=fallback_reason,
+                focus=focus,
+                structural_attempted=False,
+            )
 
         try:
             _patch_template = PromptLoader().load("chief_writer", "PATCH_MODE_PROMPT")
@@ -803,11 +1390,16 @@ class ChiefWriter(BaseAgent):
                 (1 - 150000 / _orig_len) * 100,
             )
 
+        # [TF-IPG] 원본 글자수 명시 — LLM에게 구체적 목표치 제공
+        _min_char_target = int(_orig_len * 0.9)  # ±10% 하한
+
         if _patch_template:
             prompt = _patch_template.format(
                 feedback_text=_esc(director_feedback),
                 original_manuscript=_esc(smart_truncate(original_manuscript, max_chars=150000, head_chars=20000)),
                 style_guide=_style_text,  # [TF-37]
+                original_char_count=_orig_len,
+                min_char_target=_min_char_target,
             )
         else:
             prompt = (
@@ -842,6 +1434,7 @@ class ChiefWriter(BaseAgent):
                         _manuscript = (
                             _parsed.get("corrected_manuscript")
                             or _parsed.get("patched_text")
+                            or _parsed.get("revised_manuscript")
                             or _parsed.get("content")
                             or _parsed.get("text")
                             or _parsed.get("manuscript")
@@ -877,6 +1470,29 @@ class ChiefWriter(BaseAgent):
                 # [TF-36] LLM이 JSON으로 감싼 경우 텍스트 추출
                 _manuscript = self._unwrap_manuscript_text(response)
 
+            # [TF-IPG] [원고_끝] 마커 검증 — 마커가 있으면 제거, 없으면 잘림 경고
+            _end_marker = "[원고_끝]"
+            _marker_idx = _manuscript.rfind(_end_marker)
+            if _marker_idx >= 0:
+                _manuscript = _manuscript[:_marker_idx].rstrip()
+            else:
+                logging.warning("[TF-IPG] [원고_끝] 마커 없음 — 출력이 잘렸을 수 있음 (%d자)", len(_manuscript))
+
+            # [TF-IPG GAP-1] 추출된 manuscript 자체의 길이 체크 (raw 응답이 아닌 추출본 기준)
+            if not _manuscript or len(_manuscript) < 2000:
+                logging.warning(
+                    "[TF-IPG] 추출된 manuscript 길이 부족: %d자 < 2000자 (raw 응답 %d자)",
+                    len(_manuscript or ""), len(response or ""),
+                )
+                return []
+            _existing_trace = dict(getattr(self, "_last_inplace_patch_trace", {}) or {})
+            self._set_last_inplace_patch_trace(
+                patch_strategy="inplace_patch",
+                patch_targets=list(_existing_trace.get("patch_targets") or []),
+                fallback_reason=str(_existing_trace.get("fallback_reason") or fallback_reason),
+                focus=str(_existing_trace.get("focus") or focus),
+                structural_attempted=bool(_existing_trace.get("structural_attempted") or structural_attempted),
+            )
             logging.info(f"✅ [TF-23] 원고 in-place 수정 완료 ({len(_manuscript)}자)")
             return [{"manuscript": _manuscript, "strategy": "inplace_patch", "state_updates": _state_updates}]
         except Exception as e:
@@ -901,6 +1517,7 @@ class ChiefWriter(BaseAgent):
                     return (
                         parsed.get("corrected_manuscript")
                         or parsed.get("patched_text")
+                        or parsed.get("revised_manuscript")
                         or parsed.get("content")
                         or parsed.get("text")
                         or parsed.get("manuscript")
@@ -928,6 +1545,7 @@ class ChiefWriter(BaseAgent):
         director_feedback: str,
         previous_attempt: dict,
         attempt_number: int,
+        reference_excerpt: str = "",
         # 이하 generate_ensemble과 동일
         current_inventory: list[str] = None,
         current_martial_arts: list[str] = None,
@@ -940,7 +1558,7 @@ class ChiefWriter(BaseAgent):
         reflexion_prompt: str = "",
         genre_name: str = "무협",
         npc_equipment_summary: str = "",
-        intro_dna: str = "CYNICAL",
+        intro_dna: str = "",  # [QI-1-C3] CYNICAL 하드코딩 제거
         purism_prompt: str = "",
         state_tracker=None,
         prev_manuscripts_text: str = "",
@@ -983,10 +1601,13 @@ class ChiefWriter(BaseAgent):
             def _esc(s):
                 return s.replace("{", "{{").replace("}", "}}")
 
+            _min_char_target = int(_orig_len * 0.9)
             _patch_section = _patch_template.format(
                 feedback_text=_esc(director_feedback),
                 original_manuscript=_esc(smart_truncate(original_manuscript, max_chars=150000, head_chars=20000)),
                 style_guide=_esc(style_guide or ""),
+                original_char_count=_orig_len,
+                min_char_target=_min_char_target,
             )
         else:
             # YAML 로드 실패 시 인라인 폴백
@@ -1005,6 +1626,9 @@ class ChiefWriter(BaseAgent):
 ⚠️ 원본 원고의 전체 구조, 문체, 장점을 보존하면서 피드백 지적사항만 수정하세요.
 ⚠️ 수정하지 않는 부분은 원문을 그대로 유지하세요.
 """
+        _history_feedback = self._build_retry_history_feedback(previous_attempt)
+        if _history_feedback:
+            enhanced_feedback += f"\n{_history_feedback}"
 
         failure_constraints = ""
         if previous_attempt.get("action_items"):
@@ -1029,6 +1653,7 @@ class ChiefWriter(BaseAgent):
                 arc_doc=arc_doc,
                 master_bible=master_bible,
                 style_guide=style_guide,
+                reference_excerpt=reference_excerpt,
                 director_feedback=enhanced_feedback,
                 strategy_specific_feedback=_strategy_feedback,
                 rejected_strategy=_rejected_strategy,
@@ -1059,6 +1684,63 @@ class ChiefWriter(BaseAgent):
         except Exception as e:
             logging.warning(f"[Phase 3-5B] patch_with_feedback 실패, 빈 리스트 반환: {e}")
             return []
+
+    @staticmethod
+    def _build_retry_history_feedback(previous_attempt: dict | None) -> str:
+        """누적된 REJECT 히스토리를 CW 재시도 프롬프트용 요약으로 변환."""
+        if not isinstance(previous_attempt, dict):
+            return ""
+
+        history = previous_attempt.get("prior_attempts") or previous_attempt.get("history") or []
+        if not isinstance(history, list) or not history:
+            return ""
+
+        recent = [item for item in history[-3:] if isinstance(item, dict)]
+        if not recent:
+            return ""
+
+        lines = ["[누적 실패 히스토리 — 반복 금지]"]
+        bucket_counts: dict[str, int] = {}
+        category_counts: dict[str, int] = {}
+        contradiction_hits: dict[str, int] = {}
+        for idx, item in enumerate(recent, start=1):
+            bucket = str(item.get("reject_bucket", "") or "").strip()
+            category = str(item.get("error_category", "") or "").strip()
+            reason = str(item.get("rejection_reason", "") or "").strip()
+            score = item.get("score", "")
+            action_items = [str(action).strip() for action in (item.get("action_items") or []) if str(action).strip()]
+            contradictions = [
+                str(name).strip() for name in (item.get("contradiction_types") or []) if str(name).strip()
+            ]
+
+            if bucket:
+                bucket_counts[bucket] = bucket_counts.get(bucket, 0) + 1
+            if category:
+                category_counts[category] = category_counts.get(category, 0) + 1
+            for contradiction in contradictions:
+                contradiction_hits[contradiction] = contradiction_hits.get(contradiction, 0) + 1
+
+            summary_parts = []
+            if bucket:
+                summary_parts.append(bucket)
+            if category:
+                summary_parts.append(category)
+            if action_items:
+                summary_parts.append(f"action={' / '.join(action_items[:2])}")
+            elif reason:
+                summary_parts.append(reason[:120])
+            if score not in ("", None):
+                summary_parts.append(f"score={score}")
+            lines.append(f"- 시도 {idx}: " + " | ".join(summary_parts[:4]))
+
+        repeated = []
+        repeated.extend([name for name, count in bucket_counts.items() if count >= 2])
+        repeated.extend([name for name, count in category_counts.items() if count >= 2])
+        repeated.extend([name for name, count in contradiction_hits.items() if count >= 2])
+        if repeated:
+            lines.append("공통 실패 패턴: " + ", ".join(dict.fromkeys(repeated)))
+        lines.append("위 패턴을 다시 반복하지 말고, 이번 시도에서는 근본 원인부터 제거하세요.")
+        return "\n".join(lines)
 
     # =========================================================================
     # [V60.81] Writer 핵심 기능 통합 - Self-Critique & Quality Assurance
@@ -1127,6 +1809,7 @@ class ChiefWriter(BaseAgent):
         """원고 캐시 무효화 (에피소드 롤백 시 호출)."""
         self._manuscript_cache = {}
         self._cache_ep_num = -1
+        self._last_inplace_patch_trace = {}
 
     def _get_cached_manuscript(self, ep_num: int) -> dict:
         """[V60.82] 캐시에서 원고 조회"""

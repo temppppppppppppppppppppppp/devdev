@@ -26,6 +26,7 @@ from enum import Enum
 from typing import Any
 
 from modules.core.constants import ManuscriptLimits  # [V64.P4]
+from modules.core.llm_generate import generate_content_via_router
 
 
 class ComplianceLevel(Enum):
@@ -130,8 +131,11 @@ JSON 형식으로 응답:
     def _call_llm(self, prompt: str, temperature: float = 0.1) -> str:
         """LLM 호출"""
         try:
-            response = self.client.models.generate_content(
-                model=self.model, contents=prompt, config={"temperature": temperature, "max_output_tokens": 2048}
+            response = generate_content_via_router(
+                client=self.client,
+                model=self.model,
+                contents=prompt,
+                config={"temperature": temperature, "max_output_tokens": 2048},
             )
             return response.text or ""  # [V70] None 방어
         except Exception as e:

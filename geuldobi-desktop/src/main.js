@@ -19,6 +19,23 @@ const SPLASH_HEIGHT = 260;
 const SPLASH_FALLBACK_MS = 8000; // uvicorn 기동 대기 포함
 const STATUS_BASE_URL = "http://127.0.0.1:8300";
 const SPIKE_AUTOCLOSE_MS = Number(process.env.SPIKE_AUTOCLOSE_MS || "0");
+const CLI_CONTRACT = Object.freeze({
+  defaultGenreIndex: 3,
+  projectIndexBase: 1,
+  projectSort: "lexical",
+  genreIndexMap: Object.freeze({
+    wuxia: 1,
+    hunter: 2,
+    investment: 3,
+    fantasy: 4,
+    composer: 5,
+    cooking: 6,
+    alt_history: 7,
+    actor: 8,
+    sports: 9,
+    medical: 10,
+  }),
+});
 
 let mainWindow = null;
 let splashWindow = null;
@@ -104,6 +121,7 @@ function startBackend() {
         GEULDOBI_DESKTOP_MODE: "1",
         ...(app.isPackaged ? {
           GEULDOBI_WORKSPACE: getWorkspaceDir(),
+          GEULDOBI_PROJECTS_ROOT: path.join(getWorkspaceDir(), "projects"),
           GEULDOBI_ENGINE_EXE: path.join(process.resourcesPath, "engine", "engine.exe"),
         } : {}),
       },
@@ -313,6 +331,43 @@ ipcMain.handle("bridge:get-url", () => {
   return { wsUrl: "ws://127.0.0.1:8300/events", httpUrl: STATUS_BASE_URL };
 });
 
+ipcMain.handle("bridge:get-cli-contract", () => {
+  return CLI_CONTRACT;
+});
+
+ipcMain.handle("bridge:get-quality-summary", async (_, { project, lookback = 5 }) => {
+  const safeProject = String(project || "").trim();
+  const safeLookback = Number.isFinite(Number(lookback)) ? Number(lookback) : 5;
+  return bridgeFetch(
+    `/quality/summary?project=${encodeURIComponent(safeProject)}&lookback=${encodeURIComponent(String(safeLookback))}`
+  );
+});
+
+ipcMain.handle("bridge:get-quality-dashboard", async (_, { project, lookback = 5 }) => {
+  const safeProject = String(project || "").trim();
+  const safeLookback = Number.isFinite(Number(lookback)) ? Number(lookback) : 5;
+  return bridgeFetch(
+    `/quality/dashboard?project=${encodeURIComponent(safeProject)}&lookback=${encodeURIComponent(String(safeLookback))}`
+  );
+});
+
+ipcMain.handle("bridge:get-safe-ops-preview", async (_, { project }) => {
+  const safeProject = String(project || "").trim();
+  return bridgeFetch(`/safe-ops/preview?project=${encodeURIComponent(safeProject)}`);
+});
+
+ipcMain.handle("bridge:save-quality-review", async (_, { project, epNum, operatorLabel, note = "" }) => {
+  return bridgeFetch("/quality/review", {
+    method: "POST",
+    body: JSON.stringify({
+      project,
+      ep_num: epNum,
+      operator_label: operatorLabel,
+      note,
+    }),
+  });
+});
+
 ipcMain.handle("bridge:resolve-prompt", async (_, { runId, promptId, value }) => {
   return bridgeFetch(`/run/${encodeURIComponent(runId)}/input`, {
     method: "POST",
@@ -459,6 +514,38 @@ function getProjectsDir() {
   return path.join(getEngineRoot(), "projects");
 }
 
+function sanitizeProjectName(name) {
+  if (typeof name !== "string") {
+    return "";
+  }
+  return name.trim().replace(/[<>:"/\\|?*]/g, "_");
+}
+
+function getProjectRoot(projectName) {
+  const safeName = sanitizeProjectName(projectName);
+  if (!safeName) {
+    throw new Error("유효한 프로젝트 이름이 필요합니다");
+  }
+  return path.join(getProjectsDir(), safeName);
+}
+
+function getProjectConfigDir(projectName) {
+  return path.join(getProjectRoot(projectName), "config");
+}
+
+function getProjectConfigSurfaces(projectName) {
+  const configDir = getProjectConfigDir(projectName);
+  return {
+    configDir,
+    authorDirectivesPath: path.join(configDir, "author_directives.txt"),
+    workGuardPath: path.join(configDir, "work_guard.yaml"),
+  };
+}
+
+function getDefaultAuthorDirectives() {
+  return "# 절대 지시 사항을 입력하세요.\n";
+}
+
 ipcMain.handle("project:list", async () => {
   try {
     const dir = getProjectsDir();
@@ -471,8 +558,9 @@ ipcMain.handle("project:list", async () => {
         try {
           return fs.statSync(path.join(dir, f)).isDirectory();
         } catch { return false; }
-      });
-    // main_a.py iterdir() 순서와 동일하게 유지 (정렬 없음)
+      })
+      .sort();
+    // main_a.py _select_project와 동일한 lexical sort를 사용해 1-based index drift를 막는다.
     return { ok: true, projects: entries };
   } catch (err) {
     return { ok: false, projects: [], message: err.message };
@@ -484,7 +572,7 @@ ipcMain.handle("project:create", async (_, name) => {
     return { ok: false, message: "프로젝트 이름을 입력하세요" };
   }
   // 안전한 이름만 허용
-  const safeName = name.trim().replace(/[<>:"/\\|?*]/g, "_");
+  const safeName = sanitizeProjectName(name);
   if (!safeName) {
     return { ok: false, message: "유효하지 않은 이름입니다" };
   }
@@ -495,6 +583,40 @@ ipcMain.handle("project:create", async (_, name) => {
     }
     fs.mkdirSync(dir, { recursive: true });
     return { ok: true, name: safeName };
+  } catch (err) {
+    return { ok: false, message: err.message };
+  }
+});
+
+ipcMain.handle("project:load-config-surfaces", async (_, projectName) => {
+  try {
+    const { authorDirectivesPath, workGuardPath } = getProjectConfigSurfaces(projectName);
+    const authorDirectives = fs.existsSync(authorDirectivesPath)
+      ? fs.readFileSync(authorDirectivesPath, "utf8")
+      : getDefaultAuthorDirectives();
+    const workGuardYaml = fs.existsSync(workGuardPath)
+      ? fs.readFileSync(workGuardPath, "utf8")
+      : "";
+    return { ok: true, authorDirectives, workGuardYaml };
+  } catch (err) {
+    return { ok: false, message: err.message, authorDirectives: "", workGuardYaml: "" };
+  }
+});
+
+ipcMain.handle("project:save-config-surfaces", async (_, payload = {}) => {
+  try {
+    const project = typeof payload.project === "string" ? payload.project : "";
+    const { configDir, authorDirectivesPath, workGuardPath } = getProjectConfigSurfaces(project);
+    fs.mkdirSync(configDir, { recursive: true });
+
+    const authorDirectives = typeof payload.authorDirectives === "string"
+      ? payload.authorDirectives
+      : getDefaultAuthorDirectives();
+    const workGuardYaml = typeof payload.workGuardYaml === "string" ? payload.workGuardYaml : "";
+
+    fs.writeFileSync(authorDirectivesPath, authorDirectives, "utf8");
+    fs.writeFileSync(workGuardPath, workGuardYaml, "utf8");
+    return { ok: true };
   } catch (err) {
     return { ok: false, message: err.message };
   }

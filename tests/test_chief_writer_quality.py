@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from modules.core.constants import ManuscriptLimits
+from modules.core.stage4_types import WritingDirective
 from modules.domain.agents.chief_writer_quality import ChiefWriterQualityGate
 
 
@@ -64,9 +65,9 @@ class TestQualityGateBasics:
 
 class TestApplyAndCritique:
     def test_apply_self_critique_high_rubric_skip(self):
-        """[TF-I08] rubric ≥ 3.5 + 구조적 이슈 없음 → 스킵"""
+        """[TF-I08] rubric ≥ 3.5 + 구조적 이슈 없음 + 분량 충족 → 스킵"""
         gate = ChiefWriterQualityGate(_make_host())
-        manuscript = '{"content":"본문"}'
+        manuscript = '{"content":"' + "본문입니다. " * 700 + '"}'  # 4,000자 이상
         with (
             patch.object(gate, "_evaluate_with_rubric", return_value=3.6),
             patch.object(
@@ -236,6 +237,96 @@ class TestCheckerMethods:
             issues = gate._check_cliche_overuse("content", "genre", ep_num=10)
         assert any(i.get("type") == "cliche_overuse_recent" for i in issues)
 
+    def test_check_writing_directive_detects_missing_emotion_required(self):
+        gate = ChiefWriterQualityGate(_make_host())
+
+        issues = gate._check_writing_directive("건조한 보고만 이어졌다.", WritingDirective(emotion_required="안도"))
+
+        assert any(isinstance(i, dict) and i.get("type") == "emotion_required_missing" for i in issues)
+
+    def test_check_writing_directive_accepts_present_emotion_required(self):
+        gate = ChiefWriterQualityGate(_make_host())
+
+        issues = gate._check_writing_directive("마침내 안도가 밀려왔다.", WritingDirective(emotion_required="안도"))
+
+        assert not any(isinstance(i, dict) and i.get("type") == "emotion_required_missing" for i in issues)
+
+    def test_check_temporal_logic_detects_conflicting_jump(self):
+        gate = ChiefWriterQualityGate(_make_host())
+
+        issues = gate._check_temporal_logic("곧바로 검을 뽑았다. 다음 날 그는 다시 같은 자리에서 웃었다.")
+
+        assert any(i.get("type") == "temporal_logic_jump" for i in issues)
+
+    def test_check_paragraph_structure_detects_dense_block(self):
+        gate = ChiefWriterQualityGate(_make_host())
+        dense = ("문장이다. " * 14).strip()
+
+        issues = gate._check_paragraph_structure(dense)
+
+        assert any(i.get("type") == "paragraph_structure_dense" for i in issues)
+
+    def test_check_tonal_consistency_detects_blueprint_mismatch(self):
+        gate = ChiefWriterQualityGate(_make_host())
+
+        issues = gate._check_tonal_consistency(
+            "그는 낄낄 웃으며 농담을 던지고 또 장난을 쳤다.",
+            {"core_tension": "살벌한 긴장과 위기의 압박"},
+            WritingDirective(),
+        )
+
+        assert any(i.get("type") == "tonal_inconsistency" for i in issues)
+
+    def test_check_scene_transition_markers_detects_missing_markers(self):
+        gate = ChiefWriterQualityGate(_make_host())
+        content = (
+            "한양의 밤은 차가웠다.\n\n"
+            "그는 칼을 만지작거리며 숨을 골랐다.\n\n"
+            "그리고 곧장 결전을 준비했다."
+        )
+
+        issues = gate._check_scene_transition_markers(content)
+
+        assert any(i.get("type") == "scene_transition_marker_missing" for i in issues)
+
+    def test_check_ai_tell_patterns_detects_stock_phrase_repetition(self):
+        gate = ChiefWriterQualityGate(_make_host())
+        content = (
+            "어느새 복도 끝이 조용해졌다. 그는 숨을 삼켰다. "
+            "어느새 방 안 공기가 식었다. 그녀도 숨을 삼켰다."
+        )
+
+        issues = gate._check_ai_tell_patterns(content)
+
+        assert any(i.get("type") == "ai_tell_pattern_overuse" for i in issues)
+
+    def test_check_ai_tell_patterns_detects_repeated_sentence_starters(self):
+        gate = ChiefWriterQualityGate(_make_host())
+        content = (
+            "그는 천천히 문을 열었다. 그는 조용히 안을 살폈다. "
+            "그는 다시 손끝을 움켜쥐었다. 그는 낮게 숨을 골랐다."
+        )
+
+        issues = gate._check_ai_tell_patterns(content)
+
+        assert any(i.get("type") == "ai_tell_sentence_starter_repetition" for i in issues)
+
+    def test_check_pov_consistency_critique_detects_mixed_without_scene_separator(self):
+        host = _make_host()
+        host.context = MagicMock()
+        host.context.current_project = MagicMock()
+        host.context.current_project.master_bible = {
+            "MasterBible": {"protagonist_config": {"pov": "혼합", "name": "진우"}}
+        }
+        gate = ChiefWriterQualityGate(host)
+
+        issues = gate._check_pov_consistency_critique(
+            "나는 검을 들었다. 내가 앞으로 나섰다. 나는 숨을 골랐다. "
+            "진우는 문을 밀었다. 진우가 복도를 바라봤다. 그는 다시 걸었다."
+        )
+
+        assert any(i.get("type") == "pov_consistency" for i in issues)
+
     def test_check_justification_gaps(self):
         gate = ChiefWriterQualityGate(_make_host())
         strings = [c for c in gate._check_justification_gaps.__code__.co_consts if isinstance(c, str)]
@@ -330,7 +421,7 @@ class TestFixAndRubric:
             )
         m_expand.assert_called_once()
         m_generic.assert_not_called()
-        host.ask.assert_called_with("expand prompt", temperature=0.5, thinking_level="medium")
+        host.ask.assert_called_with("expand prompt", temperature=0.5, thinking_level="low")
 
     def test_fix_uses_generic_prompt_for_other_issues(self):
         host = _make_host()

@@ -37,6 +37,7 @@ class PromptLoader:
 
     _instance: Optional["PromptLoader"] = None
     _cache: dict[tuple[str, str], dict[str, str]] = {}
+    _metadata_cache: dict[tuple[str, str], dict[str, Any]] = {}
     _instance_lock = threading.Lock()
     _cache_lock = threading.Lock()
 
@@ -47,6 +48,7 @@ class PromptLoader:
                 if cls._instance is None:
                     cls._instance = super().__new__(cls)
                     cls._cache = {}
+                    cls._metadata_cache = {}
         return cls._instance
 
     def __init__(self) -> None:
@@ -162,6 +164,48 @@ class PromptLoader:
                 self._cache[cache_key] = {}
             return {}
 
+    def _load_yaml_metadata(self, domain: str) -> dict[str, Any]:
+        """Load lightweight top-level metadata such as `_version`."""
+        cache_key = (str(self._prompts_dir), domain)
+        with self._cache_lock:
+            if cache_key in self._metadata_cache:
+                return self._metadata_cache[cache_key]
+
+        yaml_path = self._prompts_dir / f"{domain}.yaml"
+        if not yaml_path.exists():
+            with self._cache_lock:
+                self._metadata_cache[cache_key] = {}
+            return {}
+
+        metadata: dict[str, Any] = {}
+        try:
+            import re
+
+            meta_pattern = re.compile(r"^(_[A-Za-z0-9_]+):\s*(.+?)\s*$")
+            with open(yaml_path, encoding="utf-8") as f:
+                for line in f:
+                    raw = line.rstrip("\n\r")
+                    if not raw or raw.lstrip().startswith("#"):
+                        continue
+                    if raw.startswith(" ") or raw.startswith("\t"):
+                        continue
+                    match = meta_pattern.match(raw)
+                    if not match:
+                        continue
+                    value = match.group(2).strip()
+                    if value == "|":
+                        continue
+                    if len(value) >= 2 and value[0] == value[-1] and value[0] in {'"', "'"}:
+                        value = value[1:-1]
+                    metadata[match.group(1)] = value
+        except Exception as e:
+            logging.warning(f"[PromptLoader] Failed to load metadata for {yaml_path}: {e}")
+            metadata = {}
+
+        with self._cache_lock:
+            self._metadata_cache[cache_key] = metadata
+        return metadata
+
     def load(self, domain: str, key: str, **kwargs: Any) -> str | None:
         """프롬프트 템플릿을 로드하고 변수를 치환.
 
@@ -199,6 +243,35 @@ class PromptLoader:
         prompts = self._load_yaml_file(domain)
         return list(prompts.keys())
 
+    def get_metadata(self, domain: str) -> dict[str, Any]:
+        """Return parsed top-level YAML metadata for a prompt domain."""
+        return dict(self._load_yaml_metadata(domain))
+
+    def get_prompt_version(self, domain: str, default: str = "unversioned") -> str:
+        """Return `_version` or a deterministic content hash fallback."""
+        version = self._load_yaml_metadata(domain).get("_version")
+        if version:
+            return str(version)
+
+        prompts = self._load_yaml_file(domain)
+        if not prompts:
+            return default
+
+        import hashlib
+
+        source = "\n".join(f"{key}:{prompts[key]}" for key in sorted(prompts))
+        digest = hashlib.md5(source.encode("utf-8"), usedforsecurity=False).hexdigest()[:10]
+        return f"hash:{digest}"
+
+    def compose_version_tag(self, *domains: str) -> str:
+        """Compose a stable stage-level version tag from one or more prompt domains."""
+        ordered_domains: list[str] = []
+        for domain in domains:
+            name = str(domain or "").strip()
+            if name and name not in ordered_domains:
+                ordered_domains.append(name)
+        return "|".join(f"{domain}@{self.get_prompt_version(domain)}" for domain in ordered_domains)
+
     def invalidate_cache(self, domain: str | None = None) -> None:
         """캐시 무효화. domain 지정 시 해당 도메인만, 없으면 전체 초기화."""
         with self._cache_lock:
@@ -206,5 +279,9 @@ class PromptLoader:
                 keys_to_remove = [k for k in self._cache if k[1] == domain]
                 for k in keys_to_remove:
                     del self._cache[k]
+                meta_keys_to_remove = [k for k in self._metadata_cache if k[1] == domain]
+                for k in meta_keys_to_remove:
+                    del self._metadata_cache[k]
             else:
                 self._cache.clear()
+                self._metadata_cache.clear()

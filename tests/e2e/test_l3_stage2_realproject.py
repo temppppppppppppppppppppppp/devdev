@@ -48,8 +48,8 @@ def _build_mock_arc(arc_no: int, ep_start: int, source_block: dict) -> dict:
         "arc_no": arc_no,
         "global_arc_no": arc_no,
         "ep_start": ep_start,
-        "ep_end": ep_start + 4,
-        "ep_count": 5,
+        "ep_end": ep_start + 3,
+        "ep_count": 4,
         "title": f"Arc {arc_no}",
         "tactical_doc": tactical_doc,
         "beat_sequence": [

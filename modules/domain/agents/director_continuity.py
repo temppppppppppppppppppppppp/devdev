@@ -9,6 +9,7 @@ import json
 import logging
 
 from modules.core.constants import ContextLimits, smart_truncate
+from modules.core.llm_generate import generate_content_via_router
 from modules.core.prompt_loader import PromptLoader
 
 
@@ -550,7 +551,8 @@ class DirectorContinuityValidator:
 }}
 """
 
-            response = self._d.client.models.generate_content(
+            response = generate_content_via_router(
+                client=self._d.client,
                 model=self._d.primary_model,
                 contents=prompt,
                 config=types.GenerateContentConfig(

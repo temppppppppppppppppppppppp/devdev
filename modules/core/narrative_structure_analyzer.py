@@ -18,12 +18,13 @@ import re
 from google.genai import types
 
 from modules.core.constants import AIModels
+from modules.core.llm_generate import generate_content_via_router
 
 # 서사 요소 추출 프롬프트
 NARRATIVE_EXTRACTION_PROMPT = """
 [서사 구조 분석기]
 
-아래 5개 에피소드 비트에서 핵심 서사 요소를 추출하세요.
+아래 에피소드 비트에서 핵심 서사 요소를 추출하세요.
 
 ### 비트 목록
 {beats_text}
@@ -150,7 +151,7 @@ class NarrativeStructureAnalyzer:
                 response_mime_type="application/json",
             )
 
-            response = self.client.models.generate_content(model=self.model, contents=prompt, config=config)
+            response = generate_content_via_router(client=self.client, model=self.model, contents=prompt, config=config)
 
             # [V60.15 FIX] None 체크 + [V70] ValueError 방어
             try:

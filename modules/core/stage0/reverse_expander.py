@@ -14,7 +14,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from modules.core.constants import AIModels, GenreTypes, VolumeSettings
+from modules.core.constants import AIModels, GenreTypes, VolumeSettings, smart_truncate
+from modules.core.llm_generate import generate_content_via_router
 
 from .preset_registry import PresetRegistry
 from .style_extractor import StyleExtractor, StyleGuide
@@ -30,6 +31,16 @@ except ImportError:
 
 class ReverseExpander:
     """역설계 - 기존 원고에서 설정 추출"""
+
+    _GENRE_SAMPLE_DRAFTS = 5
+    _GENRE_SAMPLE_CHARS_PER_DRAFT = 2000
+    _GENRE_PROMPT_MAX = 6000
+    _MASTER_BIBLE_SAMPLE_DRAFTS = 5
+    _MASTER_BIBLE_CHARS_PER_DRAFT = 8000
+    _PROTAGONIST_SAMPLE_MAX = 8000
+    _NPC_SAMPLE_MAX = 10000
+    _WORLD_SAMPLE_MAX = 6000
+    _EPISODE_BIBLE_MAX_CHARS = 10000
 
     def __init__(self, project_context=None, llm_client=None) -> None:
         self.project = project_context
@@ -71,7 +82,8 @@ class ReverseExpander:
         for model in self._FALLBACK_MODELS:
             for attempt in range(self._MAX_RETRIES):
                 try:
-                    response = self.client.models.generate_content(
+                    response = generate_content_via_router(
+                        client=self.client,
                         model=model,
                         contents=prompt,
                         config=types.GenerateContentConfig(
@@ -117,6 +129,11 @@ class ReverseExpander:
         except (json.JSONDecodeError, ValueError, IndexError) as e:
             logging.debug("[ReverseExpander] _parse_json 실패: %s", e)
             return None
+
+    @staticmethod
+    def _excerpt(text: str, *, max_chars: int, head_chars: int | None = None) -> str:
+        head_chars = head_chars if head_chars is not None else int(max_chars * 0.65)
+        return smart_truncate(str(text or ""), max_chars=max_chars, head_chars=head_chars)
 
     # ============================================
     # Phase 1: 원고 로드 및 파싱
@@ -218,13 +235,19 @@ class ReverseExpander:
         if not self.raw_drafts:
             logging.warning("[detect_genre] raw_drafts가 비어있음 — 기본 장르 반환")
             return GenreTypes.INVESTMENT
-        sample = "\n".join([d["content"][:1000] for d in self.raw_drafts[:3]])
+        sample = "\n".join(
+            self._excerpt(
+                d.get("content", ""),
+                max_chars=self._GENRE_SAMPLE_CHARS_PER_DRAFT,
+            )
+            for d in self.raw_drafts[: self._GENRE_SAMPLE_DRAFTS]
+        )
 
         genre_lines = "\n".join(f"- {g}: {GenreTypes.get_name(g)}" for g in GenreTypes.all())
         prompt = f"""다음 원고의 장르를 판별하세요.
 
 ## 원고 샘플
-{sample[:3000]}
+{self._excerpt(sample, max_chars=self._GENRE_PROMPT_MAX, head_chars=3500)}
 
 ## 가능한 장르
 {genre_lines}
@@ -249,8 +272,9 @@ class ReverseExpander:
         """마스터 Bible 추출"""
         sample_text = "\n\n---\n\n".join(
             [
-                f"[{d.get('ep_num', 0)}화: {d.get('title', '')}]\n{d.get('content', '')[:4000]}"
-                for d in self.raw_drafts[:3]
+                f"[{d.get('ep_num', 0)}화: {d.get('title', '')}]\n"
+                f"{self._excerpt(d.get('content', ''), max_chars=self._MASTER_BIBLE_CHARS_PER_DRAFT)}"
+                for d in self.raw_drafts[: self._MASTER_BIBLE_SAMPLE_DRAFTS]
             ]
         )
 
@@ -303,7 +327,7 @@ class ReverseExpander:
         """주인공 정보 추출"""
         prompt = f"""다음 원고에서 주인공 정보를 추출하세요.
 
-{sample[:4000]}
+{self._excerpt(sample, max_chars=self._PROTAGONIST_SAMPLE_MAX)}
 
 JSON:
 ```json
@@ -325,7 +349,7 @@ JSON:
         """NPC 추출"""
         prompt = f"""다음 원고에서 등장인물을 추출하세요.
 
-{sample[:5000]}
+{self._excerpt(sample, max_chars=self._NPC_SAMPLE_MAX)}
 
 JSON:
 ```json
@@ -343,7 +367,7 @@ JSON:
         """세계관 추출"""
         prompt = f"""다음 원고에서 세계관/배경을 추출하세요.
 
-{sample[:3000]}
+{self._excerpt(sample, max_chars=self._WORLD_SAMPLE_MAX)}
 
 JSON:
 ```json
@@ -365,7 +389,7 @@ JSON:
         prompt = f"""이 에피소드 끝 시점의 주인공 상태를 추출하세요.
 
 ## 에피소드 {draft["ep_num"]}화
-{draft.get("content", "")[:6000]}
+{self._excerpt(draft.get("content", ""), max_chars=self._EPISODE_BIBLE_MAX_CHARS)}
 
 ## 이전 상태
 {json.dumps(prev_state.get("hud_snapshot", {}), ensure_ascii=False)[:1000]}

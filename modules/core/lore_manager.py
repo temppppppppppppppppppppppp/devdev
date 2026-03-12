@@ -125,14 +125,16 @@ class LoreManager:
         # 1. 페르소나 지침 복구
         if self.persona_desc or self.speech_style:
             if isinstance(self.speech_style, dict):  # [V70] string 타입 방어
-                tone = self.speech_style.get("tone", "격조 있는 무인")
+                tone = self.speech_style.get("tone", "")  # [QI-1-C4] 무협 하드코딩 제거
                 keywords = self.speech_style.get("Keywords", self.speech_style.get("words", []))
+                # [QI-1-C4] 빈 톤이면 톤 라인 생략 → LLM이 캐릭터 속성에서 자체 판단
+                tone_line = f"\n- 말투 톤: {tone}" if tone else ""
                 if isinstance(keywords, list):
                     info.append(
-                        f"[페르소나 가이드]\n- 성격: {self.persona_desc}\n- 말투 톤: {tone}\n- 핵심 키워드: {', '.join(keywords)}"
+                        f"[페르소나 가이드]\n- 성격: {self.persona_desc}{tone_line}\n- 핵심 키워드: {', '.join(keywords)}"
                     )
                 else:
-                    info.append(f"[페르소나 가이드]\n- 성격: {self.persona_desc}\n- 말투 톤: {tone}")
+                    info.append(f"[페르소나 가이드]\n- 성격: {self.persona_desc}{tone_line}")
             elif self.persona_desc:
                 info.append(f"[페르소나 가이드]\n- 성격: {self.persona_desc}")
 

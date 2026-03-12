@@ -22,6 +22,10 @@ import concurrent.futures
 import logging
 import threading
 from functools import partial
+from pathlib import Path
+
+from modules.core.soft_failure import report_soft_failure
+from modules.core.soft_failure import resolve_db_log_dir, resolve_logs_dir, resolve_project_log_dir
 
 from .action_scene_evaluator import ActionSceneEvaluator
 from .advisory_validator import AdvisoryValidator
@@ -269,6 +273,54 @@ class ValidationOrchestrator:
         # 장르별 프로파일 로드
         self.threshold_profile = GENRE_THRESHOLD_PROFILES.get(genre, GENRE_THRESHOLD_PROFILES["wuxia"])
 
+    def _report_soft_failure(
+        self,
+        validation_context: dict | None,
+        operation: str,
+        exc: Exception,
+        *,
+        ep_num: int | None = None,
+        stage: int | str = 4,
+        message: str,
+        extra: dict | None = None,
+    ) -> None:
+        audit_event = None
+        if isinstance(validation_context, dict):
+            candidate = validation_context.get("_audit_event") or validation_context.get("audit_event")
+            if callable(candidate):
+                audit_event = candidate
+        log_dir = self._resolve_soft_failure_log_dir(validation_context)
+        report_soft_failure(
+            component="validation_orchestrator",
+            operation=operation,
+            message=message,
+            exc=exc,
+            stage=stage,
+            ep_num=ep_num,
+            degraded=True,
+            user_visible=False,
+            learnable=True,
+            extra=extra,
+            log_dir=log_dir,
+            audit_event=audit_event,
+            warning_window_sec=180.0,
+        )
+
+    def _resolve_soft_failure_log_dir(self, validation_context: dict | None):
+        if isinstance(validation_context, dict):
+            for key in ("log_dir", "project_dir"):
+                resolved = resolve_logs_dir(validation_context.get(key))
+                if resolved is not None:
+                    return resolved
+            from_ctx = resolve_project_log_dir(validation_context.get("current_project"))
+            if from_ctx is not None:
+                return from_ctx
+            resolved_db = resolve_db_log_dir(validation_context.get("db_path"))
+            if resolved_db is not None:
+                return resolved_db
+
+        return resolve_project_log_dir(getattr(self.context, "current_project", None))
+
     def validate(self, ep_num: int, manuscript: str, validation_context: dict) -> dict:
         """
         전체 검증 실행
@@ -385,6 +437,14 @@ class ValidationOrchestrator:
                             else str(_f)[:200],
                         )
                     except Exception as _e:
+                        self._report_soft_failure(
+                            validation_context,
+                            "failure_learner_record_failure",
+                            _e,
+                            ep_num=ep_num,
+                            message="FailureLearner.record_failure failed during blocking advisory collection",
+                            extra={"validator": "BlockingValidator"},
+                        )
                         logging.debug("[ValidationOrchestrator] FailureLearner 기록 실패 (무시): %s", _e)
 
             # 즉시 REJECT 대신 결과를 누적하여 후속 SCORING + Director 판정에 위임
@@ -1161,6 +1221,14 @@ class ValidationOrchestrator:
                             else str(_f)[:200],
                         )
                     except Exception as _e:
+                        self._report_soft_failure(
+                            validation_context,
+                            "failure_learner_record_failure_parallel",
+                            _e,
+                            ep_num=ep_num,
+                            message="FailureLearner.record_failure failed during blocking advisory collection (parallel)",
+                            extra={"validator": "BlockingValidator", "mode": "parallel"},
+                        )
                         logging.debug("[ValidationOrchestrator] FailureLearner(parallel) 기록 실패 (무시): %s", _e)
 
             results["_blocking_advisory"] = {

@@ -50,6 +50,13 @@
         "filter": [
           "**/*"
         ]
+      },
+      {
+        "from": "../python-embed",
+        "to": "python-embed",
+        "filter": [
+          "**/*"
+        ]
       }
     ],
     "files": [

@@ -5,6 +5,7 @@
 
 import logging
 
+from modules.core.llm_generate import generate_content_via_router
 from modules.validation.threshold_helper import _threshold  # [Phase 5-B-2c]
 
 
@@ -137,7 +138,7 @@ JSON 형식으로 답하십시오:
 
             config = types.GenerateContentConfig(temperature=0.5, response_mime_type="application/json")
 
-            response = self.client.models.generate_content(model=self.model, contents=prompt, config=config)
+            response = generate_content_via_router(client=self.client, model=self.model, contents=prompt, config=config)
 
             import json
 

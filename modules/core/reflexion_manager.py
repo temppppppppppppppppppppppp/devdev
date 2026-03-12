@@ -203,6 +203,17 @@ class ReflexionManager:
 
         return "\n".join(prompt_parts)
 
+    def get_top_patterns(self, min_frequency: int = 2, limit: int = 5) -> list[dict]:
+        """빈도 기준 상위 실패 패턴을 반환한다."""
+        self.load_memory()
+        top_patterns = [
+            dict(pattern)
+            for pattern in self.memory
+            if int(pattern.get("frequency", 0) or 0) >= min_frequency
+        ]
+        top_patterns.sort(key=lambda x: int(x.get("frequency", 0) or 0), reverse=True)
+        return top_patterns[:limit]
+
     def get_pattern_summary(self) -> str:
         """
         패턴 요약 (디버깅/모니터링용)

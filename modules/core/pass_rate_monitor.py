@@ -26,6 +26,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from modules.core.logging_keys import build_attempt_key
+
 
 @dataclass
 class AttemptRecord:
@@ -45,6 +47,13 @@ class AttemptRecord:
     is_patch: bool = False
     prev_score: float = 0.0
     patch_fallback: bool = False
+    attempt_key: str = ""
+    final_verdict: str = ""
+    patch_strategy: str = ""
+    structural_attempted: bool = False
+    candidate_key: str = ""
+    content_hash: str = ""
+    artifact_path: str = ""
 
 
 @dataclass
@@ -132,6 +141,13 @@ class PassRateMonitor:
         is_patch: bool = False,
         prev_score: float = 0.0,
         patch_fallback: bool = False,
+        attempt_key: str = "",
+        final_verdict: str = "",
+        patch_strategy: str = "",
+        structural_attempted: bool = False,
+        candidate_key: str = "",
+        content_hash: str = "",
+        artifact_path: str = "",
     ):
         """
         시도 기록
@@ -163,6 +179,16 @@ class PassRateMonitor:
             is_patch=is_patch,
             prev_score=prev_score,
             patch_fallback=patch_fallback,
+            attempt_key=str(
+                attempt_key
+                or build_attempt_key(stage=stage, ep_num=episode, arc_num=arc, attempt_num=attempt_num)
+            ),
+            final_verdict=str(final_verdict or ""),
+            patch_strategy=str(patch_strategy or ""),
+            structural_attempted=bool(structural_attempted),
+            candidate_key=str(candidate_key or ""),
+            content_hash=str(content_hash or ""),
+            artifact_path=str(artifact_path or ""),
         )
 
         with self._lock:

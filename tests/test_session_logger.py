@@ -1,6 +1,7 @@
 """[LOG-1] SessionLogger 단위 테스트."""
 
 import json
+from unittest.mock import patch
 
 import pytest
 
@@ -312,3 +313,18 @@ class TestThinkingField:
         assert "thinking" in record
         assert len(record["thinking"]) < 2000
         assert "TRUNCATED" in record["thinking"]
+
+
+class TestLoggerHealth:
+    def test_health_snapshot_tracks_soft_failures(self, tmp_path):
+        log_dir = tmp_path / "session"
+        logger = SessionLogger(log_dir=log_dir, enabled=True)
+
+        with patch("builtins.open", side_effect=OSError("disk full")):
+            logger.log_decision(stage="stage4", ep_num=7, result="PASS")
+
+        snapshot = logger.get_health_snapshot()
+        assert snapshot["enabled"] is True
+        assert snapshot["soft_failures"] == 1
+        assert snapshot["last_soft_failure"]["operation"] == "write"
+        assert (tmp_path / "soft_failures.jsonl").exists()

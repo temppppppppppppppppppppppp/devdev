@@ -196,6 +196,7 @@ def test_stage_attempts_has_generation_method_column(tmp_db):
     """이슈 10: stage_attempts 테이블에 generation_method 컬럼 존재."""
     cols = [r[1] for r in tmp_db.conn.execute("PRAGMA table_info(stage_attempts)").fetchall()]
     assert "generation_method" in cols
+    assert "prompt_version" in cols
 
 
 def test_save_stage_attempt_generation_method(tmp_db):
@@ -208,9 +209,11 @@ def test_save_stage_attempt_generation_method(tmp_db):
         arc_num=3,
         score=85,
         generation_method="four_phase",
+        prompt_version="ensemble@v1|director@v1",
     )
     row = tmp_db.conn.execute(
-        "SELECT generation_method FROM stage_attempts WHERE stage=2 AND ep_num=3"
+        "SELECT generation_method, prompt_version FROM stage_attempts WHERE stage=2 AND ep_num=3"
     ).fetchone()
     assert row is not None
     assert row["generation_method"] == "four_phase"
+    assert row["prompt_version"] == "ensemble@v1|director@v1"

@@ -331,6 +331,30 @@ class TestPrepareEpisodeContext:
         assert "-- Tier2 summaries (21-60 episodes back) --" in result["prev_manuscripts_text"]
         assert "[EP 12 summary] summary tier2" in result["prev_manuscripts_text"]
 
+    def test_hybrid_context_tier2_summary_respects_5k_cap(self):
+        ctx = _make_ctx()
+        db = ctx.current_project.db
+        long_summary = "A" * 6000
+        _configure_hybrid_db(
+            db,
+            manuscripts=[],
+            summaries=[{"ep_num": 12, "summary": long_summary}],
+            arcs=[],
+        )
+        db.get_manuscript.side_effect = lambda ep: {"content": f"ep{ep} " * 120}
+        chief_writer = MagicMock()
+        chief_writer._generate_episode_digest.return_value = ""
+
+        cb = Stage4ContextBuilder(ctx)
+        result = cb.prepare_episode_context(
+            40,
+            {"ep_start": 1, "ep_count": 50, "tactical_doc": ""},
+            chief_writer,
+        )
+
+        assert f"[EP 12 summary] {'A' * 5000}" in result["prev_manuscripts_text"]
+        assert "A" * 5001 not in result["prev_manuscripts_text"]
+
     def test_hybrid_context_tier3_arc_summary(self):
         ctx = _make_ctx()
         db = ctx.current_project.db
@@ -367,6 +391,31 @@ class TestPrepareEpisodeContext:
         assert "[Arc 1 summary] arc one summary" in result["prev_manuscripts_text"]
         assert "[Arc 2 summary]" not in result["prev_manuscripts_text"]
 
+    def test_hybrid_context_tier3_arc_summary_respects_8k_cap(self):
+        ctx = _make_ctx()
+        db = ctx.current_project.db
+        long_summary = "B" * 9000
+        _configure_hybrid_db(
+            db,
+            manuscripts=[],
+            summaries=[],
+            arcs=[{"arc_no": 1, "episodes": [1, 2, 3]}],
+        )
+        db.get_manuscript.side_effect = lambda ep: {"content": f"ep{ep} " * 120}
+        ctx.current_project.load_v20_anchor.side_effect = lambda name: {"summary": long_summary} if name == "arc_summary_1" else None
+        chief_writer = MagicMock()
+        chief_writer._generate_episode_digest.return_value = ""
+
+        cb = Stage4ContextBuilder(ctx)
+        result = cb.prepare_episode_context(
+            80,
+            {"ep_start": 1, "ep_count": 100, "tactical_doc": ""},
+            chief_writer,
+        )
+
+        assert f"[Arc 1 summary] {'B' * 8000}" in result["prev_manuscripts_text"]
+        assert "B" * 8001 not in result["prev_manuscripts_text"]
+
     def test_hybrid_context_early_episodes(self):
         ctx = _make_ctx()
         db = ctx.current_project.db
@@ -394,6 +443,69 @@ class TestPrepareEpisodeContext:
         assert "[EP 5]" in result["prev_manuscripts_text"]
         assert "-- Tier2 summaries (11-30 episodes back) --" not in result["prev_manuscripts_text"]
         assert "-- Tier3 arc summaries (older than 30 episodes) --" not in result["prev_manuscripts_text"]
+
+
+class TestStructuredEntityAndNpcBoundary:
+    def test_extract_blueprint_entities_merges_arc_state_changes(self):
+        ctx = _make_ctx()
+        ctx.world_state = MagicMock()
+        ctx.world_state._state = {
+            "alive_npcs": {},
+            "dead_npcs": {},
+            "active_items": {},
+            "active_plots": [],
+            "protagonist": {"location": "개봉"},
+        }
+        cb = Stage4ContextBuilder(ctx)
+
+        entities = cb._extract_blueprint_entities(
+            {"integrated_scenario": "주인공은 결심했다."},
+            arc_data={
+                "state_changes": {
+                    "npc_introductions": [{"name": "노사부"}],
+                    "items_acquired": [{"name": "청룡검"}],
+                    "active_plots": [{"plot": "사문 추적"}],
+                    "npc_movements": [{"name": "노사부", "to": "무당산"}],
+                }
+            },
+        )
+
+        assert "노사부" in entities["npcs"]
+        assert "청룡검" in entities["items"]
+        assert "사문 추적" in entities["plots"]
+        assert "무당산" in entities["locations"]
+
+    def test_build_npc_boundary_block_includes_knowledge_and_identity_fields(self):
+        ctx = _make_ctx()
+        ctx.current_project.master_bible = {
+            "MasterBible": {
+                "AssetLibrary": {
+                    "KeyNPCs": [
+                        {
+                            "name": "노사부",
+                            "knowledge_era": "선사시대",
+                            "knowledge_tags": ["부족사회", "석기"],
+                            "expertise_domain": "생존술",
+                            "secrets_known": ["회귀 비밀"],
+                            "public_facade": "떠돌이 노인",
+                            "secret_role": "숨은 수호자",
+                            "known_by": ["진우"],
+                        }
+                    ]
+                }
+            }
+        }
+        ctx.world_state = MagicMock()
+        ctx.world_state._state = {"alive_npcs": {}, "dead_npcs": {}}
+        cb = Stage4ContextBuilder(ctx)
+
+        block = cb._build_npc_boundary_block(["노사부"])
+
+        assert "[NPC 지식 범위/비밀 인지 참고]" in block
+        assert "지식시대=선사시대" in block
+        assert "전문영역=생존술" in block
+        assert "비밀인지=회귀 비밀" in block
+        assert "이중정체=공개=떠돌이 노인 / 비밀=숨은 수호자 / 인지=진우" in block
 
 
 class TestBuildMandatoryContext:
@@ -530,6 +642,36 @@ class TestBuildMandatoryContext:
         ctx.memory.retrieve_multi_query_context.assert_called()
 
     @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")
+    def test_includes_genre_specific_state_tracker_summaries(self, *_mocks):
+        ctx = _make_ctx()
+        ctx.state_tracker = MagicMock()
+        ctx.state_tracker.get_all_summaries.return_value = {
+            "dungeon_clear": "[던전 클리어 기록]\n- 붉은 던전 (클리어 ep12)",
+            "skill_cooldown": "[스킬 쿨다운/사용 이력]\n- 연속베기 (쿨다운 2턴)",
+        }
+        cb = Stage4ContextBuilder(ctx)
+        anchor_sys = MagicMock()
+        anchor_sys.get_relevant_anchors.return_value = []
+        anchor_sys.get_critical_anchors.return_value = []
+
+        result = cb.build_mandatory_context(
+            next_ep=5,
+            arc_data={"arc_no": 1},
+            arc_tactical="전술",
+            prev_text="이전 원고 " * 30,
+            prev_ending="엔딩",
+            hud_report="HUD",
+            writer_agent=MagicMock(),
+            anchor_sys=anchor_sys,
+            s4_genre_type="hunter",
+            v50_modules_available=False,
+        )
+
+        ctx.state_tracker.get_all_summaries.assert_called_once_with(arc_no=1, genre="hunter")
+        assert "[던전 클리어 기록]" in result["mandatory_context"]
+        assert "[스킬 쿨다운/사용 이력]" in result["mandatory_context"]
+
+    @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")
     def test_uses_advisor_retrieval_plan_when_available(self, *_mocks):
         ctx = _make_ctx()
         ctx.memory = MagicMock()
@@ -606,6 +748,170 @@ class TestBuildMandatoryContext:
 
         assert sum(len(s) for s in trimmed_sections) < 2400
         assert any("[SC] Context budget:" in rec.message for rec in caplog.records)
+
+    def test_apply_context_budget_prefers_preserving_work_slot_summary(self, caplog):
+        cb = Stage4ContextBuilder(_make_ctx())
+        slot_summary = "[작품 추적 슬롯 요약]\n" + ("slot " * 180)
+        generic_block = "[기타 요약]\n" + ("generic " * 220)
+
+        with caplog.at_level("INFO"):
+            trimmed_sections = cb._apply_context_budget([slot_summary, generic_block], total_budget_chars=1000)
+
+        assert trimmed_sections[0].startswith("[작품 추적 슬롯 요약]")
+        assert len(trimmed_sections[0]) > len(trimmed_sections[1])
+        assert any("[SC:TRIM:PROTECTED]" in rec.message for rec in caplog.records)
+
+    @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="")
+    def test_build_mandatory_context_rebalances_sc_and_mc_with_headroom(self, _mock_build, caplog):
+        ctx = _make_ctx()
+        ctx.memory = MagicMock()
+        ctx.memory.retrieve_multi_query_context.return_value = "S" * 320
+        ctx.context_advisor = MagicMock()
+        ctx.context_advisor.plan_stage4_retrieval.return_value = RetrievalPlan(
+            stage="stage4",
+            episode_num=7,
+            slots=[RetrievalSlot(category="scene_context", query="scene query", source="vec_memory", priority=1)],
+            total_budget_chars=320,
+        )
+        cb = Stage4ContextBuilder(ctx)
+        anchor_sys = MagicMock()
+        anchor_sys.get_relevant_anchors.return_value = []
+        anchor_sys.get_critical_anchors.return_value = []
+
+        def threshold_side_effect(key, default=None):
+            if key == "smart_retrieval.enabled":
+                return True
+            if key == "smart_retrieval.stage4_enabled":
+                return True
+            if key == "context.vector_max_results_s4":
+                return 16
+            if key == "context.mandatory_context_max":
+                return 500
+            return default
+
+        with (
+            patch("modules.core.stage4_context_builder._threshold", side_effect=threshold_side_effect),
+            patch.object(cb, "_build_future_arc_context", return_value="M" * 420),
+            caplog.at_level("INFO"),
+        ):
+            result = cb.build_mandatory_context(
+                next_ep=7,
+                arc_data={"arc_no": 1, "ep_start": 1, "ep_count": 10},
+                arc_tactical="arc tactical",
+                prev_text="x" * 200,
+                prev_ending="ending context",
+                hud_report="HUD",
+                writer_agent=MagicMock(),
+                anchor_sys=anchor_sys,
+                s4_genre_type="wuxia",
+                v50_modules_available=False,
+            )
+
+        assert len(result["mandatory_context"]) <= 500
+        assert any("[S4:CTX] compose pre-final" in rec.message for rec in caplog.records)
+
+    @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")
+    def test_build_mandatory_context_injects_work_tracking_slot_summary(self, _mock_build):
+        ctx = _make_ctx()
+        ctx.sys.guard = MagicMock()
+        ctx.sys.guard.select_retrieval_focus.return_value = {
+            "tracking_slots": ["핵심 배우 라인"],
+            "mandatory_scene_engines": ["인재 발굴"],
+            "registry_profiles": [
+                {"name": "talent_registry", "required_fields": ["name", "tier", "risk"]},
+            ],
+        }
+        cb = Stage4ContextBuilder(ctx)
+        anchor_sys = MagicMock()
+        anchor_sys.get_relevant_anchors.return_value = []
+        anchor_sys.get_critical_anchors.return_value = []
+
+        result = cb.build_mandatory_context(
+            next_ep=7,
+            arc_data={"arc_no": 1, "constraint_summary": "배우 라인 재정비와 팬덤 반응 회수"},
+            arc_tactical="캐스팅 재정비",
+            prev_text="이전 화 원고",
+            prev_ending="팬덤 반응과 캐스팅 갈등이 남았다",
+            hud_report="HUD",
+            writer_agent=MagicMock(),
+            anchor_sys=anchor_sys,
+            s4_genre_type="investment",
+            v50_modules_available=False,
+            blueprint={"summary": "핵심 배우 라인 중심으로 재정비한다."},
+        )
+
+        assert "[작품 추적 슬롯 요약]" in result["mandatory_context"]
+        assert "핵심 배우 라인" in result["mandatory_context"]
+        assert "talent_registry" in result["mandatory_context"]
+
+    @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")
+    def test_build_mandatory_context_injects_semantic_relation_slice_when_focus_requires_it(self, _mock_build):
+        ctx = _make_ctx()
+        ctx.quality_dashboard = MagicMock()
+        ctx.current_project.master_bible = {"MasterBible": {"protagonist_config": {"name": "주인공"}}}
+        ctx.sys.guard = MagicMock()
+        ctx.sys.guard.select_retrieval_focus.return_value = {
+            "tracking_slots": ["소꿉친구 라인"],
+            "mandatory_scene_engines": [],
+            "registry_profiles": [],
+        }
+        ctx.world_state = MagicMock()
+        ctx.world_state.get_state_dict.return_value = {
+            "protagonist": {"name": "주인공"},
+            "relationships": {"연홍": "죽마고우"},
+            "alive_npcs": {
+                "연홍": {
+                    "relation": "신뢰",
+                    "known_attrs": {"relation_to_protag": {"value": "어릴 때부터 함께 자란 친구"}},
+                }
+            },
+        }
+        ctx.world_state.get_summary.return_value = ""
+        ctx.world_state.get_canonical_constraints.return_value = ""
+        ctx.world_state.get_timeline_summary.return_value = ""
+        ctx.fact_ledger = MagicMock()
+        ctx.fact_ledger._ledger = {
+            "characters": {
+                "연홍": {
+                    "relationship": "소꿉친구",
+                    "established_ep": 3,
+                    "history": ["ep3: 어릴 때부터 함께 자람"],
+                }
+            }
+        }
+        ctx.fact_ledger.to_summary.return_value = ""
+        ctx.fact_ledger.get_canonical_summary.return_value = ""
+        ctx.current_project.db.get_npc_relationship_edges.return_value = [
+            {"npc1": "주인공", "npc2": "연홍", "relation": "신뢰", "updated_ep": 12}
+        ]
+        ctx.current_project.db.get_relationship_history.return_value = [
+            {"old_relation": "중립", "new_relation": "죽마고우", "change_ep": 5}
+        ]
+        cb = Stage4ContextBuilder(ctx)
+        anchor_sys = MagicMock()
+        anchor_sys.get_relevant_anchors.return_value = []
+        anchor_sys.get_critical_anchors.return_value = []
+
+        result = cb.build_mandatory_context(
+            next_ep=7,
+            arc_data={"arc_no": 1, "constraint_summary": "연홍과의 소꿉친구 라인 회수"},
+            arc_tactical="소꿉친구 라인 재등장",
+            prev_text="이전 화 원고",
+            prev_ending="연홍과의 과거 인연을 다시 꺼낼 필요가 남았다",
+            hud_report="HUD",
+            writer_agent=MagicMock(),
+            anchor_sys=anchor_sys,
+            s4_genre_type="investment",
+            v50_modules_available=False,
+            blueprint={"summary": "연홍이 주인공의 소꿉친구로 다시 부각된다."},
+        )
+
+        ctx.quality_dashboard.record_retrieval_observation.assert_called_once()
+        kwargs = ctx.quality_dashboard.record_retrieval_observation.call_args.kwargs
+        assert kwargs["stage"] == "stage4"
+        assert kwargs["observation"]["relation_slice_included"] is True
+        assert "[관계 의미 질의]" in result["mandatory_context"]
+        assert "연홍" in result["mandatory_context"]
 
 
 class TestBuildRoundContext:

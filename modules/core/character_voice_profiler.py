@@ -72,30 +72,33 @@ class CharacterVoiceProfiler:
         },
     }
 
-    # 성격별 표현 패턴
+    # [QI-1-C1] 성격별 표현 패턴 — 검출용 참고 예시
+    # 캐릭터의 상황·관계·감정에 따라 LLM이 자유롭게 변형합니다.
+    # 아래 키워드는 원고에서 성격 경향을 추론하기 위한 신호일 뿐,
+    # 프롬프트에 직접 주입되지 않습니다.
     PERSONALITY_PATTERNS = {
         "aggressive": {
-            "keywords": ["죽여", "박살", "꺼져", "닥쳐", "빌어먹을"],
+            "keywords": ["죽여", "박살", "꺼져", "닥쳐", "빌어먹을", "망할", "찢어", "때려", "부숴"],
             "punctuation": ["!", "!!"],
             "sentence_length": "short",
         },
         "calm": {
-            "keywords": ["그렇군", "알겠네", "생각해보면", "아마도"],
+            "keywords": ["그렇군", "알겠네", "생각해보면", "아마도", "천천히", "살펴보지"],
             "punctuation": [".", "..."],
             "sentence_length": "medium",
         },
         "humorous": {
-            "keywords": ["하하", "농담", "재밌", "웃기"],
+            "keywords": ["하하", "농담", "재밌", "웃기", "장난", "별걸"],
             "punctuation": ["~", "ㅋ", "ㅎ"],
             "sentence_length": "varied",
         },
         "cold": {
-            "keywords": ["상관없", "필요없", "그만", "됐"],
+            "keywords": ["상관없", "필요없", "그만", "됐", "알아서", "끝났"],
             "punctuation": ["."],
             "sentence_length": "short",
         },
         "warm": {
-            "keywords": ["걱정", "괜찮", "고마워", "미안"],
+            "keywords": ["걱정", "괜찮", "고마워", "미안", "힘내", "함께"],
             "punctuation": [".", "..."],
             "sentence_length": "medium",
         },

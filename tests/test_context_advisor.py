@@ -34,6 +34,35 @@ def test_stage2_plan_builds_expected_slots():
     assert all(slot.max_chars > 0 for slot in plan.slots)
 
 
+def test_stage2_plan_includes_work_focus_slots_and_source_mapping():
+    advisor = _make_enabled_advisor()
+    plan = advisor.plan_stage2_retrieval(
+        arc_data={"block_theme": "entertainment scale up"},
+        current_ep=7,
+        npc_roster=["Han"],
+        work_focus={
+            "tracking_slots": ["핵심 배우 라인"],
+            "mandatory_scene_engines": ["인재 발굴"],
+            "registry_profiles": [
+                {
+                    "name": "talent_registry",
+                    "purpose": "주요 배우/연습생 상태 추적",
+                    "required_fields": ["name", "status", "fan_reaction"],
+                }
+            ],
+        },
+    )
+
+    categories = {slot.category for slot in plan.slots}
+    assert "work_tracking_slot_1" in categories
+    assert "work_scene_engine_1" in categories
+    assert "work_registry_1" in categories
+
+    source_map = {slot.category: slot.source for slot in plan.slots}
+    assert source_map["work_tracking_slot_1"] == RetrievalSources.DB_NPC_HISTORY
+    assert source_map["work_registry_1"] == RetrievalSources.DB_NPC_HISTORY
+
+
 def test_stage4_plan_includes_scene_plot_and_relationship_slots():
     advisor = _make_enabled_advisor()
     plan = advisor.plan_stage4_retrieval(
@@ -104,6 +133,26 @@ def test_director_plan_uses_npc_mentions_from_manuscript():
     assert "npc_consistency" in categories
     assert "event_claim" in categories
     assert "location_item_consistency" in categories
+
+
+def test_director_plan_includes_work_focus_slots_and_relationship_source():
+    advisor = _make_enabled_advisor()
+    plan = advisor.plan_director_retrieval(
+        manuscript="",
+        blueprint={"core_event": "director checks ally loyalty", "state_changes": {"relationship_changes": ["한태하-연홍"]}},
+        current_ep=21,
+        npc_roster=["한태하", "연홍"],
+        work_focus={
+            "tracking_slots": ["소꿉친구 관계선"],
+            "mandatory_scene_engines": ["관계 반전"],
+            "registry_profiles": [{"name": "relationship_registry", "purpose": "주인공의 오래된 인연 추적"}],
+        },
+    )
+
+    source_map = {slot.category: slot.source for slot in plan.slots}
+    assert source_map["work_tracking_slot_1"] == RetrievalSources.DB_NPC_RELATIONSHIP
+    assert source_map["work_registry_1"] == RetrievalSources.DB_NPC_RELATIONSHIP
+    assert source_map["relationship_consistency"] == RetrievalSources.DB_NPC_RELATIONSHIP
 
 
 def test_should_use_llm_when_trigger_conditions_match():
@@ -197,6 +246,51 @@ def test_supported_genres_have_context_hints():
     for genre in GenreTypes.all():
         assert genre in advisor._GENRE_HINTS
         assert len(advisor._GENRE_HINTS[genre]) >= 3
+
+
+def test_stage3_plan_includes_work_focus_slots():
+    advisor = _make_enabled_advisor()
+    plan = advisor.plan_stage3_retrieval(
+        arc_data={"arc_tactical": "팬덤 확장과 캐스팅 장악"},
+        prev_blueprints=[],
+        current_ep=19,
+        npc_roster=["윤서아", "강이현"],
+        genre="investment",
+        work_focus={
+            "tracking_slots": ["핵심 배우 라인"],
+            "mandatory_scene_engines": ["팬덤 반응"],
+            "registry_profiles": [
+                {
+                    "name": "fandom_registry",
+                    "purpose": "팬덤 반응과 배우별 체급 변화",
+                    "required_fields": ["name", "fan_reaction", "heat"],
+                }
+            ],
+        },
+    )
+
+    categories = {slot.category for slot in plan.slots}
+    assert "work_tracking_slot_1" in categories
+    assert "work_scene_engine_1" in categories
+    assert "work_registry_1" in categories
+
+
+def test_relation_heavy_work_focus_maps_to_relationship_db():
+    advisor = _make_enabled_advisor()
+    plan = advisor.plan_stage2_retrieval(
+        arc_data={"block_theme": "relationship repair"},
+        current_ep=5,
+        npc_roster=["연홍"],
+        work_focus={
+            "tracking_slots": ["소꿉친구 관계선"],
+            "mandatory_scene_engines": ["신뢰 회복"],
+            "registry_profiles": [{"name": "relationship_registry", "required_fields": ["relation", "trust"]}],
+        },
+    )
+
+    source_map = {slot.category: slot.source for slot in plan.slots}
+    assert source_map["work_tracking_slot_1"] == RetrievalSources.DB_NPC_RELATIONSHIP
+    assert source_map["work_registry_1"] == RetrievalSources.DB_NPC_RELATIONSHIP
 
 
 def test_master_flag_off_returns_empty_plan(monkeypatch):

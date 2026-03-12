@@ -62,6 +62,7 @@ class Stage4Context:
         "safe_commit",
         # [LOG-1] 세션 로거
         "session_logger",
+        "_stage4_context_budget_meta",
     )
 
     def __init__(
@@ -129,6 +130,7 @@ class Stage4Context:
         self.flush_audit_buffer = flush_audit_buffer
         self.safe_commit = safe_commit
         self.session_logger = session_logger
+        self._stage4_context_budget_meta = {}
 
     def get_module(self, name: str):
         """[S-13] 조건부 모듈 조회 헬퍼."""

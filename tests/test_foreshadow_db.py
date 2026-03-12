@@ -100,3 +100,8 @@ def test_foreshadow_load_from_db_none_logs_debug(caplog):
     # DEBUG 이어야 하며 WARNING 이상이면 안 됨
     warning_logs = [r for r in caplog.records if "load_from_db 스킵" in r.message and r.levelno >= logging.WARNING]
     assert not warning_logs, "load_from_db 스킵 로그가 WARNING 이상으로 출력됨 — DEBUG 여야 함"
+
+
+def test_foreshadow_tracker_default_max_hooks_200():
+    tracker = ForeshadowTracker()
+    assert tracker.max_hooks == 200

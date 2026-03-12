@@ -48,6 +48,7 @@ from google import genai
 
 import modules.core.spinners as _spinners_mod  # [V65] 플래그 동기화용
 from modules.core.feedback_system import FeedbackSystem  # [V64 P2-3]
+from modules.core.llm_generate import generate_content_via_router
 from modules.core.metrics_collector import get_metrics_collector  # [V49.3] 비용 추적 시스템
 from modules.core.narrative_diversity import NarrativeDiversityEngine  # [V48] 서사 다양성 엔진
 from modules.core.perf_timer import PerfTimer  # [V65] 파이프라인 성능 프로파일링
@@ -985,7 +986,11 @@ class SovereignApp:
             # [V73] MetricsCollector 프로젝트별 경로 갱신
             from modules.core.metrics_collector import get_metrics_collector
 
-            get_metrics_collector(self.current_project.paths.root / "logs" / "metrics")
+            _metrics_collector = get_metrics_collector(self.current_project.paths.root / "logs" / "metrics")
+            _metrics_session_id = getattr(_metrics_collector, "session_id", None)
+            if isinstance(_metrics_session_id, str) and _metrics_session_id.strip():
+                self.metrics_session_id = _metrics_session_id.strip()
+                self.current_project.metrics_session_id = self.metrics_session_id
 
         # [Sweep3-D1] 프로젝트 전환 시 PromptLoader 캐시 무효화
         from modules.core.prompt_loader import PromptLoader
@@ -1459,7 +1464,8 @@ class SovereignApp:
                 _flash_client = self.sys.api_client
 
                 def _flash_ask_cb(prompt: str, _c=_flash_client) -> str:
-                    resp = _c.models.generate_content(
+                    resp = generate_content_via_router(
+                        client=_c,
                         model=AIModels.FLASH_ANALYSIS_MODEL,
                         contents=prompt,
                     )
@@ -2423,9 +2429,12 @@ class SovereignApp:
                 _llm_ask = None
                 if hasattr(self, "sys") and hasattr(self.sys, "api_client"):
                     _client = self.sys.api_client
+
                     def _llm_ask(prompt, _c=_client):
                         from modules.core.constants import AIModels
-                        resp = _c.models.generate_content(
+
+                        resp = generate_content_via_router(
+                            client=_c,
                             model=AIModels.FLASH_ANALYSIS_MODEL,
                             contents=prompt,
                         )
@@ -3018,7 +3027,8 @@ class SovereignApp:
         """
         root = Path(self._PROJECTS_DIR)
         root.mkdir(parents=True, exist_ok=True)
-        projects = [d.name for d in root.iterdir() if d.is_dir()]
+        # Desktop bridge also derives 1-based project_index from a lexical sort.
+        projects = sorted(d.name for d in root.iterdir() if d.is_dir())
         if not projects:  # [V70] 빈 프로젝트 폴더 방어
             self.ui.log("❌ projects/ 폴더에 프로젝트가 없습니다. 먼저 프로젝트를 생성하세요.")
             return ""
@@ -3029,22 +3039,64 @@ class SovereignApp:
 
     def _reset_stage_2(self):
         """[V20] Stage 2(Arcs)만 SQL DB에서 삭제하여 1번 완료 상태로 회귀"""
-        self._project_service.reset_stage_2()  # [Phase 4B-3] thin delegate
+        success = self._project_service.reset_stage_2()  # [Phase 4B-3] thin delegate
+        if success:
+            self.state_tracker = None
+            self._prompt_builder.invalidate_timeline_cache()
+            self._cumulative_state_cache = None
+            self._cumulative_state_cache_key = None
+            self._narrative_summaries_cache = None
+            try:
+                _se = self.agents.get("state_extractor") if isinstance(self.agents, dict) else None
+                if _se and hasattr(_se, "invalidate_cache"):
+                    _se.invalidate_cache()
+                _writer = self.agents.get("writer") if isinstance(self.agents, dict) else None
+                if _writer and hasattr(_writer, "invalidate_manuscript_cache"):
+                    _writer.invalidate_manuscript_cache()
+                _director = self.agents.get("director") if isinstance(self.agents, dict) else None
+                if _director and hasattr(_director, "invalidate_caches"):
+                    _director.invalidate_caches()
+            except Exception as _svc_err:
+                logging.warning("[SafeOps] reset_stage_2 cache invalidation failed (non-blocking): %s", _svc_err)
+            try:
+                _ft = getattr(self, "foreshadow_tracker", None)
+                if _ft is not None and hasattr(_ft, "clear"):
+                    _ft.clear()
+                    if self.current_project and hasattr(self.current_project, "db"):
+                        _ft.save_to_db(self.current_project.db)
+            except Exception as _ft_err:
+                logging.warning("[SafeOps] reset_stage_2 foreshadow sync failed (non-blocking): %s", _ft_err)
 
     def _rewind_stage_2(self):
         """[V20] 특정 아크 번호부터 그 이후를 전부 삭제 (정밀 되감기)"""
-        self._project_service.rewind_stage_2()  # [Phase 4B-3] thin delegate
+        success = self._project_service.rewind_stage_2()  # [Phase 4B-3] thin delegate
         # [Sweep35] clear state-related caches after rewind [I-16] 공개 메서드 사용
-        self._cumulative_state_cache = None
-        self._cumulative_state_cache_key = None
-        self._prompt_builder.invalidate_timeline_cache()
-        self._narrative_summaries_cache = None
-        try:
-            _se = self.agents.get("state_extractor") if isinstance(self.agents, dict) else None
-            if _se and hasattr(_se, "invalidate_cache"):
-                _se.invalidate_cache()
-        except Exception as _se_err:
-            logging.warning(f"[Sweep35] StateExtractor cache clear failed (non-blocking): {_se_err}")
+        if success:
+            self.state_tracker = None
+            self._cumulative_state_cache = None
+            self._cumulative_state_cache_key = None
+            self._prompt_builder.invalidate_timeline_cache()
+            self._narrative_summaries_cache = None
+            try:
+                _se = self.agents.get("state_extractor") if isinstance(self.agents, dict) else None
+                if _se and hasattr(_se, "invalidate_cache"):
+                    _se.invalidate_cache()
+                _writer = self.agents.get("writer") if isinstance(self.agents, dict) else None
+                if _writer and hasattr(_writer, "invalidate_manuscript_cache"):
+                    _writer.invalidate_manuscript_cache()
+                _director = self.agents.get("director") if isinstance(self.agents, dict) else None
+                if _director and hasattr(_director, "invalidate_caches"):
+                    _director.invalidate_caches()
+            except Exception as _se_err:
+                logging.warning(f"[Sweep35] StateExtractor cache clear failed (non-blocking): {_se_err}")
+            try:
+                _ft = getattr(self, "foreshadow_tracker", None)
+                if _ft is not None and hasattr(_ft, "clear"):
+                    _ft.clear()
+                    if self.current_project and hasattr(self.current_project, "db"):
+                        _ft.save_to_db(self.current_project.db)
+            except Exception as _ft_err:
+                logging.warning(f"[SafeOps] rewind_stage_2 foreshadow sync failed (non-blocking): {_ft_err}")
 
     def _rollback_episode(self):
         """[V40.1 Rollback] 특정 회차로 되감기 (HUD, DB, Vector DB, 파일 모두 롤백)"""
@@ -3087,7 +3139,33 @@ class SovereignApp:
 
     def _wipe_production_data(self):
         """[V27.1 Wipe] 설계도는 유지하고 실제 집필 기록(Manuscripts/Blueprints)만 소거"""
-        self._project_service.wipe_production_data()  # [Phase 4B-3] thin delegate
+        success = self._project_service.wipe_production_data()  # [Phase 4B-3] thin delegate
+        if success:
+            self.state_tracker = None
+            self._prompt_builder.invalidate_timeline_cache()
+            self._cumulative_state_cache = None
+            self._cumulative_state_cache_key = None
+            self._narrative_summaries_cache = None
+            try:
+                _writer = self.agents.get("writer") if isinstance(self.agents, dict) else None
+                if _writer and hasattr(_writer, "invalidate_manuscript_cache"):
+                    _writer.invalidate_manuscript_cache()
+                _director = self.agents.get("director") if isinstance(self.agents, dict) else None
+                if _director and hasattr(_director, "invalidate_caches"):
+                    _director.invalidate_caches()
+                _se = self.agents.get("state_extractor") if isinstance(self.agents, dict) else None
+                if _se and hasattr(_se, "invalidate_cache"):
+                    _se.invalidate_cache()
+            except Exception as _svc_err:
+                logging.warning("[SafeOps] wipe cache invalidation failed (non-blocking): %s", _svc_err)
+            try:
+                _ft = getattr(self, "foreshadow_tracker", None)
+                if _ft is not None and hasattr(_ft, "clear"):
+                    _ft.clear()
+                    if self.current_project and hasattr(self.current_project, "db"):
+                        _ft.save_to_db(self.current_project.db)
+            except Exception as _ft_err:
+                logging.warning(f"[SafeOps] wipe foreshadow sync failed (non-blocking): {_ft_err}")
 
     # =================================================================
     # [V60.80] Stage 4 V2 - Chief Writer 주권주의 아키텍처
@@ -3190,7 +3268,8 @@ class SovereignApp:
             )
 
             _time.sleep(0.3)
-            response = self.sys.api_client.models.generate_content(
+            response = generate_content_via_router(
+                client=self.sys.api_client,
                 model=_SUMMARY_MODEL,  # [V65] 중앙 상수
                 contents=prompt,
                 config=_types.GenerateContentConfig(
