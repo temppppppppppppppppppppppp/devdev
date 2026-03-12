@@ -6,6 +6,9 @@ import json
 import logging
 import re
 from collections import defaultdict
+from pathlib import Path
+
+from modules.core.soft_failure import report_soft_failure
 
 
 class FailureAnalyzer:
@@ -14,22 +17,901 @@ class FailureAnalyzer:
     단일 스레드 설계 — 분석 전용 유틸리티. threading.Lock 불필요.
     """
 
-    def __init__(self, db) -> None:
+    def __init__(self, db, project_path: str | Path | None = None) -> None:
         self.db = db
+        if project_path is not None:
+            self.project_path = Path(project_path)
+        else:
+            db_path = getattr(db, "db_path", None)
+            self.project_path = Path(db_path).parent if db_path else None
+
+    def _report_soft_failure(
+        self,
+        operation: str,
+        exc: Exception,
+        *,
+        message: str,
+        extra: dict | None = None,
+    ) -> None:
+        log_dir = self.project_path / "logs" if self.project_path is not None else None
+        report_soft_failure(
+            component="failure_analyzer",
+            operation=operation,
+            message=message,
+            exc=exc,
+            degraded=True,
+            user_visible=False,
+            learnable=True,
+            extra=extra,
+            log_dir=log_dir,
+            warning_window_sec=180.0,
+        )
 
     def summary(self) -> dict:
         """Top-level summary for quick diagnostics."""
         result = {}
-        try:
-            result["stage_pass_rates"] = self.stage_pass_rates()
-            result["top_failed_agents"] = self.most_failed_agents(top_n=5)
-            result["top_failure_categories"] = self.top_failure_categories(top_n=5)
-            result["advisory_correlations"] = self.advisory_reject_correlation()
-            result["avg_attempts_by_stage"] = self.avg_attempts_by_stage()
-            result["failure_prompt_patterns"] = self.failure_prompt_patterns(top_n=5)
-        except Exception as _e:
-            logging.debug("[FailureAnalyzer] summary failed: %s", _e)
+        metric_loaders = {
+            "stage_pass_rates": lambda: self.stage_pass_rates(),
+            "top_failed_agents": lambda: self.most_failed_agents(top_n=5),
+            "top_failure_categories": lambda: self.top_failure_categories(top_n=5),
+            "advisory_correlations": lambda: self.advisory_reject_correlation(),
+            "avg_attempts_by_stage": lambda: self.avg_attempts_by_stage(),
+            "failure_prompt_patterns": lambda: self.failure_prompt_patterns(top_n=5),
+            "top_success_patterns": lambda: self.top_success_patterns(top_n=3),
+            "quality_distribution": lambda: self.quality_distribution(),
+            "patch_trace_summary": lambda: self.patch_trace_summary(),
+            "sink_alignment_summary": lambda: self.sink_alignment_summary(),
+        }
+        for key, loader in metric_loaders.items():
+            try:
+                result[key] = loader()
+            except Exception as _e:
+                self._report_soft_failure(
+                    key,
+                    _e,
+                    message=f"{key} summary collection failed",
+                    extra={"summary_key": key},
+                )
+                logging.debug("[FailureAnalyzer] %s failed: %s", key, _e)
         return result
+
+    def _load_episode_production_entries(self, min_score: int = 0) -> list[dict]:
+        """episode_production.jsonl fallback loader."""
+        if self.project_path is None:
+            return []
+
+        log_path = self.project_path / "logs" / "episode_production.jsonl"
+        if not log_path.exists():
+            return []
+
+        entries: list[dict] = []
+        try:
+            with log_path.open("r", encoding="utf-8") as handle:
+                for raw_line in handle:
+                    line = raw_line.strip()
+                    if not line:
+                        continue
+                    try:
+                        row = json.loads(line)
+                    except (TypeError, ValueError, json.JSONDecodeError):
+                        continue
+                    try:
+                        score = int(row.get("final_score", row.get("score", 0)) or 0)
+                    except (TypeError, ValueError):
+                        score = 0
+                    if score < min_score:
+                        continue
+                    entries.append(row)
+        except Exception as _e:
+            self._report_soft_failure(
+                "load_episode_production_entries",
+                _e,
+                message="episode_production.jsonl fallback load failed",
+            )
+            logging.debug("[FailureAnalyzer] episode_production load failed: %s", _e)
+            return []
+        return entries
+
+    def _load_pass_rate_monitor_entries(self, stage: int | None = None) -> list[dict]:
+        """pass_rate_monitor.json loader for cross-sink alignment checks."""
+        if self.project_path is None:
+            return []
+
+        log_path = self.project_path / "logs" / "pass_rate_monitor.json"
+        if not log_path.exists():
+            return []
+
+        try:
+            payload = json.loads(log_path.read_text(encoding="utf-8"))
+        except Exception as _e:
+            self._report_soft_failure(
+                "load_pass_rate_monitor_entries",
+                _e,
+                message="pass_rate_monitor.json load failed",
+            )
+            logging.debug("[FailureAnalyzer] pass_rate_monitor load failed: %s", _e)
+            return []
+
+        records = payload.get("records", [])
+        if not isinstance(records, list):
+            return []
+
+        rows: list[dict] = []
+        for row in records:
+            if not isinstance(row, dict):
+                continue
+            if stage is not None:
+                try:
+                    if int(row.get("stage", 0) or 0) != int(stage):
+                        continue
+                except (TypeError, ValueError):
+                    continue
+            rows.append(row)
+        return rows
+
+    @staticmethod
+    def _coerce_int(value) -> int | None:
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return None
+
+    @staticmethod
+    def _attempt_key_has_session_scope(attempt_key: str) -> bool:
+        parts = [part for part in str(attempt_key or "").split(":") if part]
+        return len(parts) > 4
+
+    @staticmethod
+    def _compact_examples(values: list[str], limit: int = 5) -> dict:
+        if not values:
+            return {}
+        normalized = sorted(str(value) for value in values if str(value).strip())
+        return {"count": len(normalized), "examples": normalized[:limit]}
+
+    @staticmethod
+    def _nonempty_value_map(values: dict[str, object]) -> dict[str, str]:
+        result: dict[str, str] = {}
+        for key, value in values.items():
+            normalized = str(value or "").strip()
+            if normalized:
+                result[key] = normalized
+        return result
+
+    @staticmethod
+    def _missing_value_sinks(values: dict[str, object]) -> list[str]:
+        missing: list[str] = []
+        for key, value in values.items():
+            if not str(value or "").strip():
+                missing.append(str(key))
+        return missing
+
+    def _artifact_file_exists(self, artifact_path: str) -> bool | None:
+        normalized = str(artifact_path or "").strip()
+        if not normalized or self.project_path is None:
+            return None
+        try:
+            return (self.project_path / normalized).exists()
+        except Exception:
+            return None
+
+    @staticmethod
+    def _final_verdict_from_monitor(row: dict) -> str:
+        verdict = str(row.get("final_verdict", "") or "").strip()
+        if verdict:
+            return verdict
+        success = row.get("success")
+        if success is True:
+            return "PASS"
+        if success is False:
+            return "REJECT"
+        return ""
+
+    def sink_alignment_summary(self, stage: int = 4, lookback: int = 100) -> dict:
+        """Cross-check attempt-key alignment across DB and JSON sinks."""
+        stage = max(1, int(stage or 4))
+        lookback = max(1, int(lookback or 100))
+
+        try:
+            stage_attempt_rows = self.db.conn.execute(
+                """
+                SELECT id, attempt_key, verdict, score, session_id,
+                       candidate_key, content_hash, artifact_path
+                FROM stage_attempts
+                WHERE stage = ? AND COALESCE(attempt_key, '') != ''
+                ORDER BY id DESC
+                LIMIT ?
+                """,
+                (stage, lookback),
+            ).fetchall()
+        except Exception as _e:
+            self._report_soft_failure(
+                "sink_alignment_stage_attempts",
+                _e,
+                message="stage_attempts load for sink_alignment_summary failed",
+                extra={"stage": stage},
+            )
+            logging.debug("[FailureAnalyzer] sink_alignment stage_attempts failed: %s", _e)
+            return {}
+
+        stage_attempts: dict[str, dict] = {}
+        for row in stage_attempt_rows:
+            attempt_key = str(row["attempt_key"] or "").strip()
+            if attempt_key and attempt_key not in stage_attempts:
+                stage_attempts[attempt_key] = {
+                    "final_verdict": str(row["verdict"] or ""),
+                    "final_score": self._coerce_int(row["score"]),
+                    "session_id": str(row["session_id"] or "").strip(),
+                    "candidate_key": str(row["candidate_key"] or "").strip(),
+                    "content_hash": str(row["content_hash"] or "").strip(),
+                    "artifact_path": str(row["artifact_path"] or "").strip(),
+                }
+
+        pass_rate_monitor: dict[str, dict] = {}
+        for row in self._load_pass_rate_monitor_entries(stage=stage)[-lookback:]:
+            attempt_key = str(row.get("attempt_key", "") or "").strip()
+            if not attempt_key:
+                continue
+            pass_rate_monitor[attempt_key] = {
+                "final_verdict": self._final_verdict_from_monitor(row),
+                "patch_strategy": str(row.get("patch_strategy", "") or ""),
+                "structural_attempted": bool(row.get("structural_attempted", False)),
+                "candidate_key": str(row.get("candidate_key", "") or "").strip(),
+                "content_hash": str(row.get("content_hash", "") or "").strip(),
+                "artifact_path": str(row.get("artifact_path", "") or "").strip(),
+            }
+
+        director_selections: dict[str, dict] = {}
+        if stage in (2, 4):
+            try:
+                director_rows = self.db.conn.execute(
+                    """
+                    SELECT id, attempt_key, verdict, score, candidate_key, content_hash, artifact_path
+                    FROM director_selections
+                    WHERE COALESCE(stage, 4) = ? AND COALESCE(attempt_key, '') != ''
+                    ORDER BY id DESC
+                    LIMIT ?
+                    """,
+                    (stage, lookback),
+                ).fetchall()
+            except Exception as _e:
+                self._report_soft_failure(
+                    "sink_alignment_director_selections",
+                    _e,
+                    message="director_selections load for sink_alignment_summary failed",
+                    extra={"stage": stage},
+                )
+                logging.debug("[FailureAnalyzer] sink_alignment director_selections failed: %s", _e)
+                director_rows = []
+            for row in director_rows:
+                attempt_key = str(row["attempt_key"] or "").strip()
+                if attempt_key and attempt_key not in director_selections:
+                    director_selections[attempt_key] = {
+                        "initial_verdict": str(row["verdict"] or ""),
+                        "initial_score": self._coerce_int(row["score"]),
+                        "candidate_key": str(row["candidate_key"] or "").strip(),
+                        "content_hash": str(row["content_hash"] or "").strip(),
+                        "artifact_path": str(row["artifact_path"] or "").strip(),
+                    }
+
+        episode_production: dict[str, dict] = {}
+        if stage == 4:
+            for row in self._load_episode_production_entries(min_score=0)[-lookback:]:
+                attempt_key = str(row.get("attempt_key", "") or "").strip()
+                if not attempt_key:
+                    continue
+                patch_trace = row.get("patch_trace", {}) or {}
+                if not isinstance(patch_trace, dict):
+                    patch_trace = {}
+                episode_production[attempt_key] = {
+                    "initial_verdict": str(row.get("initial_verdict", row.get("verdict", "")) or ""),
+                    "final_verdict": str(row.get("final_verdict", row.get("verdict", "")) or ""),
+                    "final_score": self._coerce_int(row.get("final_score", row.get("score", 0))),
+                    "patch_strategy": str(patch_trace.get("patch_strategy", "") or ""),
+                    "candidate_key": str(row.get("candidate_key", "") or "").strip(),
+                    "content_hash": str(row.get("content_hash", "") or "").strip(),
+                    "artifact_path": str(row.get("artifact_path", "") or "").strip(),
+                    "selection_candidate_key": str(
+                        row.get("selection_candidate_key", row.get("candidate_key", "")) or ""
+                    ).strip(),
+                }
+
+        final_union = set(stage_attempts) | set(pass_rate_monitor)
+        lifecycle_union = set()
+        if stage == 4:
+            lifecycle_union = set(director_selections) | set(episode_production)
+        attempts_considered = final_union | lifecycle_union
+        if not attempts_considered:
+            return {}
+
+        final_missing = {
+            "stage_attempts": self._compact_examples(list(final_union - set(stage_attempts))),
+            "pass_rate_monitor": self._compact_examples(list(final_union - set(pass_rate_monitor))),
+        }
+        final_missing = {key: value for key, value in final_missing.items() if value}
+
+        lifecycle_missing: dict[str, dict] = {}
+        lifecycle_missing_in_final: dict[str, dict] = {}
+        if lifecycle_union:
+            lifecycle_missing = {
+                "director_selections": self._compact_examples(list(lifecycle_union - set(director_selections))),
+                "episode_production": self._compact_examples(list(lifecycle_union - set(episode_production))),
+            }
+            lifecycle_missing = {key: value for key, value in lifecycle_missing.items() if value}
+            lifecycle_missing_in_final = {
+                "stage_attempts": self._compact_examples(list(lifecycle_union - set(stage_attempts))),
+                "pass_rate_monitor": self._compact_examples(list(lifecycle_union - set(pass_rate_monitor))),
+            }
+            lifecycle_missing_in_final = {
+                key: value for key, value in lifecycle_missing_in_final.items() if value
+            }
+
+        final_verdict_mismatches: list[dict] = []
+        final_score_mismatches: list[dict] = []
+        initial_verdict_mismatches: list[dict] = []
+        patch_strategy_mismatches: list[dict] = []
+        candidate_key_mismatches: list[dict] = []
+        selection_candidate_key_mismatches: list[dict] = []
+        content_hash_mismatches: list[dict] = []
+        artifact_path_mismatches: list[dict] = []
+        artifact_metadata_missing: list[dict] = []
+        artifact_missing_files: list[dict] = []
+
+        for attempt_key in sorted(attempts_considered):
+            final_verdicts = {}
+            if attempt_key in stage_attempts:
+                final_verdicts["stage_attempts"] = stage_attempts[attempt_key]["final_verdict"]
+            if attempt_key in pass_rate_monitor:
+                final_verdicts["pass_rate_monitor"] = pass_rate_monitor[attempt_key]["final_verdict"]
+            if attempt_key in episode_production:
+                final_verdicts["episode_production"] = episode_production[attempt_key]["final_verdict"]
+            final_verdicts = {key: value for key, value in final_verdicts.items() if value}
+            if len(set(final_verdicts.values())) > 1:
+                final_verdict_mismatches.append({"attempt_key": attempt_key, **final_verdicts})
+
+            final_scores = {}
+            if attempt_key in stage_attempts and stage_attempts[attempt_key]["final_score"] is not None:
+                final_scores["stage_attempts"] = stage_attempts[attempt_key]["final_score"]
+            if attempt_key in episode_production and episode_production[attempt_key]["final_score"] is not None:
+                final_scores["episode_production"] = episode_production[attempt_key]["final_score"]
+            if len(set(final_scores.values())) > 1:
+                final_score_mismatches.append({"attempt_key": attempt_key, **final_scores})
+
+            if attempt_key in director_selections and attempt_key in episode_production:
+                ds_verdict = director_selections[attempt_key]["initial_verdict"]
+                ep_verdict = episode_production[attempt_key]["initial_verdict"]
+                if ds_verdict and ep_verdict and ds_verdict != ep_verdict:
+                    initial_verdict_mismatches.append(
+                        {
+                            "attempt_key": attempt_key,
+                            "director_selections": ds_verdict,
+                            "episode_production": ep_verdict,
+                        }
+                    )
+
+            if attempt_key in pass_rate_monitor and attempt_key in episode_production:
+                prm_strategy = pass_rate_monitor[attempt_key]["patch_strategy"]
+                ep_strategy = episode_production[attempt_key]["patch_strategy"]
+                if prm_strategy != ep_strategy:
+                    patch_strategy_mismatches.append(
+                        {
+                            "attempt_key": attempt_key,
+                            "pass_rate_monitor": prm_strategy,
+                            "episode_production": ep_strategy,
+                        }
+                    )
+
+            final_artifact_fields: dict[str, dict[str, str]] = {}
+            if attempt_key in stage_attempts:
+                final_artifact_fields["stage_attempts"] = {
+                    "candidate_key": stage_attempts[attempt_key]["candidate_key"],
+                    "content_hash": stage_attempts[attempt_key]["content_hash"],
+                    "artifact_path": stage_attempts[attempt_key]["artifact_path"],
+                }
+            if attempt_key in pass_rate_monitor:
+                final_artifact_fields["pass_rate_monitor"] = {
+                    "candidate_key": pass_rate_monitor[attempt_key]["candidate_key"],
+                    "content_hash": pass_rate_monitor[attempt_key]["content_hash"],
+                    "artifact_path": pass_rate_monitor[attempt_key]["artifact_path"],
+                }
+            if attempt_key in episode_production:
+                final_artifact_fields["episode_production"] = {
+                    "candidate_key": episode_production[attempt_key]["candidate_key"],
+                    "content_hash": episode_production[attempt_key]["content_hash"],
+                    "artifact_path": episode_production[attempt_key]["artifact_path"],
+                }
+
+            if final_artifact_fields:
+                for field_name, collector in (
+                    ("candidate_key", candidate_key_mismatches),
+                    ("content_hash", content_hash_mismatches),
+                    ("artifact_path", artifact_path_mismatches),
+                ):
+                    values_by_sink = {sink: payload.get(field_name, "") for sink, payload in final_artifact_fields.items()}
+                    nonempty_values = self._nonempty_value_map(values_by_sink)
+                    if len(set(nonempty_values.values())) > 1:
+                        collector.append({"attempt_key": attempt_key, **nonempty_values})
+                    missing_sinks = self._missing_value_sinks(values_by_sink)
+                    if missing_sinks:
+                        artifact_metadata_missing.append(
+                            {
+                                "attempt_key": attempt_key,
+                                "field": field_name,
+                                "sinks": missing_sinks,
+                            }
+                        )
+
+                for sink_name, payload in final_artifact_fields.items():
+                    artifact_path = str(payload.get("artifact_path", "") or "").strip()
+                    if not artifact_path:
+                        continue
+                    file_exists = self._artifact_file_exists(artifact_path)
+                    if file_exists is False:
+                        artifact_missing_files.append(
+                            {
+                                "attempt_key": attempt_key,
+                                "sink": sink_name,
+                                "artifact_path": artifact_path,
+                            }
+                        )
+
+            if attempt_key in director_selections and attempt_key in episode_production:
+                ds_candidate_key = str(director_selections[attempt_key]["candidate_key"] or "").strip()
+                ep_candidate_key = str(episode_production[attempt_key]["selection_candidate_key"] or "").strip()
+                if ds_candidate_key and ep_candidate_key and ds_candidate_key != ep_candidate_key:
+                    selection_candidate_key_mismatches.append(
+                        {
+                            "attempt_key": attempt_key,
+                            "director_selections": ds_candidate_key,
+                            "episode_production": ep_candidate_key,
+                        }
+                    )
+
+        session_scoped_attempts = sum(
+            1 for attempt_key in attempts_considered if self._attempt_key_has_session_scope(attempt_key)
+        )
+        complete_final_attempts = sum(
+            1 for attempt_key in final_union if attempt_key in stage_attempts and attempt_key in pass_rate_monitor
+        )
+        complete_lifecycle_attempts = sum(
+            1
+            for attempt_key in lifecycle_union
+            if attempt_key in director_selections and attempt_key in episode_production
+        )
+
+        has_issues = any(
+            (
+                final_missing,
+                lifecycle_missing,
+                lifecycle_missing_in_final,
+                final_verdict_mismatches,
+                final_score_mismatches,
+                initial_verdict_mismatches,
+                patch_strategy_mismatches,
+                candidate_key_mismatches,
+                selection_candidate_key_mismatches,
+                content_hash_mismatches,
+                artifact_path_mismatches,
+                artifact_metadata_missing,
+                artifact_missing_files,
+            )
+        )
+
+        return {
+            "stage": stage,
+            "attempts_considered": len(attempts_considered),
+            "coverage": {
+                "stage_attempts": len(stage_attempts),
+                "pass_rate_monitor": len(pass_rate_monitor),
+                "director_selections": len(director_selections),
+                "episode_production": len(episode_production),
+            },
+            "complete_final_attempts": complete_final_attempts,
+            "director_lifecycle_attempts": len(lifecycle_union),
+            "complete_lifecycle_attempts": complete_lifecycle_attempts,
+            "final_sink_missing": final_missing,
+            "lifecycle_sink_missing": lifecycle_missing,
+            "lifecycle_missing_in_final_sinks": lifecycle_missing_in_final,
+            "final_verdict_mismatches": final_verdict_mismatches[:10],
+            "final_score_mismatches": final_score_mismatches[:10],
+            "initial_verdict_mismatches": initial_verdict_mismatches[:10],
+            "patch_strategy_mismatches": patch_strategy_mismatches[:10],
+            "candidate_key_mismatches": candidate_key_mismatches[:10],
+            "selection_candidate_key_mismatches": selection_candidate_key_mismatches[:10],
+            "content_hash_mismatches": content_hash_mismatches[:10],
+            "artifact_path_mismatches": artifact_path_mismatches[:10],
+            "artifact_metadata_missing": artifact_metadata_missing[:10],
+            "artifact_missing_files": artifact_missing_files[:10],
+            "session_scoped_attempts": session_scoped_attempts,
+            "legacy_key_attempts": len(attempts_considered) - session_scoped_attempts,
+            "status": "warn" if has_issues else "ok",
+        }
+
+    def top_success_patterns(self, top_n: int = 5, min_score: int = 90) -> list[dict]:
+        """고득점 에피소드의 공통 품질 패턴 요약."""
+        rows: list[dict] = []
+        try:
+            db_rows = self.db.conn.execute(
+                """SELECT ep_num, score, verdict, selection_reason, open_review,
+                          score_breakdown, consistency_checklist
+                   FROM episode_quality_labels
+                   WHERE score >= ?
+                   ORDER BY score DESC, ep_num DESC
+                   LIMIT ?""",
+                (min_score, max(top_n * 3, 6)),
+            ).fetchall()
+            for row in db_rows:
+                item = dict(row)
+                for field in ("score_breakdown", "consistency_checklist"):
+                    try:
+                        item[field] = json.loads(item.get(field) or "{}")
+                    except (TypeError, ValueError, json.JSONDecodeError):
+                        item[field] = {}
+                rows.append(item)
+        except Exception as _e:
+            self._report_soft_failure(
+                "top_success_patterns",
+                _e,
+                message="quality label query for top_success_patterns failed",
+            )
+            logging.debug("[FailureAnalyzer] top_success_patterns DB fallback: %s", _e)
+
+        if not rows:
+            for entry in self._load_episode_production_entries(min_score=min_score):
+                verdict = str(entry.get("final_verdict", entry.get("verdict", "")) or "")
+                if verdict not in ("PASS", "PASS_WITH_WARNING"):
+                    continue
+                rows.append(
+                    {
+                        "ep_num": entry.get("ep"),
+                        "score": entry.get("final_score", entry.get("score", 0)),
+                        "verdict": verdict,
+                        "selection_reason": entry.get("reason", ""),
+                        "open_review": entry.get("open_review", ""),
+                        "score_breakdown": entry.get("score_breakdown", {}) or {},
+                        "consistency_checklist": entry.get("consistency_checklist", {}) or {},
+                    }
+                )
+
+        if not rows:
+            return []
+
+        score_totals: dict[str, float] = defaultdict(float)
+        score_counts: dict[str, int] = defaultdict(int)
+        checklist_ok: dict[str, int] = defaultdict(int)
+        checklist_total: dict[str, int] = defaultdict(int)
+        keyword_counts: dict[str, int] = defaultdict(int)
+        stopwords = {"그리고", "그러나", "이번", "장면", "서사", "원고", "후보", "score", "review"}
+
+        for row in rows:
+            for key, value in (row.get("score_breakdown") or {}).items():
+                if isinstance(value, int | float):
+                    score_totals[key] += float(value)
+                    score_counts[key] += 1
+            for key, verdict in (row.get("consistency_checklist") or {}).items():
+                verdict_text = str(verdict or "").upper()
+                if verdict_text in {"OK", "ISSUE"}:
+                    checklist_total[key] += 1
+                    if verdict_text == "OK":
+                        checklist_ok[key] += 1
+            reason_text = " ".join(
+                str(row.get(field, "") or "") for field in ("selection_reason", "open_review")
+            )
+            tokens = {
+                token
+                for token in re.findall(r"[가-힣A-Za-z]{2,}", reason_text)
+                if token.lower() not in stopwords
+            }
+            for token in tokens:
+                keyword_counts[token] += 1
+
+        patterns: list[dict] = []
+        axis_avgs = sorted(
+            (
+                (key, round(score_totals[key] / score_counts[key], 1))
+                for key in score_totals
+                if score_counts[key] > 0
+            ),
+            key=lambda item: item[1],
+            reverse=True,
+        )
+        for key, avg in axis_avgs[:2]:
+            patterns.append(
+                {
+                    "pattern": key,
+                    "count": len(rows),
+                    "description": f"{key} 평균 {avg}점",
+                }
+            )
+
+        stable_keys = [
+            key
+            for key, total in checklist_total.items()
+            if total > 0 and checklist_ok[key] / total >= 0.8
+        ]
+        if stable_keys:
+            patterns.append(
+                {
+                    "pattern": "stable_checklist",
+                    "count": len(rows),
+                    "description": "OK 비율 높음: " + ", ".join(sorted(stable_keys)[:4]),
+                }
+            )
+
+        common_keywords = [key for key, count in sorted(keyword_counts.items(), key=lambda item: item[1], reverse=True) if count >= 2]
+        if common_keywords:
+            patterns.append(
+                {
+                    "pattern": "selection_reason_keywords",
+                    "count": len(rows),
+                    "description": "반복 키워드: " + ", ".join(common_keywords[:4]),
+                }
+            )
+
+        return patterns[:top_n]
+
+    def quality_distribution(self, lookback: int = 100) -> dict:
+        """정규화된 품질 라벨 분포 요약."""
+        rows: list[dict] = []
+        try:
+            db_rows = self.db.conn.execute(
+                """SELECT score, verdict, score_breakdown
+                   FROM episode_quality_labels
+                   ORDER BY ep_num DESC
+                   LIMIT ?""",
+                (lookback,),
+            ).fetchall()
+            for row in db_rows:
+                item = dict(row)
+                try:
+                    item["score_breakdown"] = json.loads(item.get("score_breakdown") or "{}")
+                except (TypeError, ValueError, json.JSONDecodeError):
+                    item["score_breakdown"] = {}
+                rows.append(item)
+        except Exception as _e:
+            self._report_soft_failure(
+                "quality_distribution",
+                _e,
+                message="quality_distribution DB query failed",
+            )
+            logging.debug("[FailureAnalyzer] quality_distribution DB fallback: %s", _e)
+
+        if not rows:
+            for entry in self._load_episode_production_entries(min_score=0)[-lookback:]:
+                rows.append(
+                    {
+                        "score": entry.get("final_score", entry.get("score", 0)),
+                        "verdict": entry.get("final_verdict", entry.get("verdict", "")),
+                        "initial_verdict": entry.get("initial_verdict", entry.get("verdict", "")),
+                        "score_breakdown": entry.get("score_breakdown", {}) or {},
+                    }
+                )
+
+        if not rows:
+            return {}
+
+        scores = []
+        breakdown_sum: dict[str, float] = defaultdict(float)
+        breakdown_count: dict[str, int] = defaultdict(int)
+        pass_with_fix_count = 0
+        high_score_count = 0
+        for row in rows:
+            try:
+                score = int(row.get("score", 0) or 0)
+            except (TypeError, ValueError):
+                score = 0
+            scores.append(score)
+            if score >= 90:
+                high_score_count += 1
+            if str(row.get("initial_verdict", row.get("verdict", "")) or "") == "PASS_WITH_FIX":
+                pass_with_fix_count += 1
+            for key, value in (row.get("score_breakdown") or {}).items():
+                if isinstance(value, int | float):
+                    breakdown_sum[key] += float(value)
+                    breakdown_count[key] += 1
+
+        return {
+            "count": len(rows),
+            "avg_score": round(sum(scores) / len(scores), 1) if scores else 0.0,
+            "high_score_count": high_score_count,
+            "pass_with_fix_count": pass_with_fix_count,
+            "avg_breakdown": {
+                key: round(breakdown_sum[key] / breakdown_count[key], 1)
+                for key in breakdown_sum
+                if breakdown_count[key] > 0
+            },
+        }
+
+    def patch_trace_summary(self, lookback: int = 100) -> dict:
+        """Summarize patch behavior from episode_production patch_trace payloads."""
+        entries = self._load_episode_production_entries(min_score=0)
+        if not entries:
+            return {}
+
+        rows = entries[-lookback:] if lookback else entries
+        patch_rows: list[dict] = []
+        for entry in rows:
+            patch_trace = entry.get("patch_trace", {}) or {}
+            flags = entry.get("flags", {}) or {}
+            if not isinstance(patch_trace, dict):
+                patch_trace = {}
+            if not isinstance(flags, dict):
+                flags = {}
+
+            patch_strategy = str(patch_trace.get("patch_strategy", "") or "")
+            structural_attempted = bool(patch_trace.get("structural_attempted", False))
+            if not patch_strategy and not structural_attempted and not bool(flags.get("patch_mode", False)):
+                continue
+
+            patch_rows.append(
+                {
+                    "patch_strategy": patch_strategy,
+                    "patch_targets": list(patch_trace.get("patch_targets") or []),
+                    "fallback_reason": str(patch_trace.get("fallback_reason", "") or ""),
+                    "focus": str(patch_trace.get("focus", "") or ""),
+                    "structural_attempted": structural_attempted,
+                    "unchanged_ratio": patch_trace.get("unchanged_ratio"),
+                    "final_verdict": str(entry.get("final_verdict", entry.get("verdict", "")) or ""),
+                }
+            )
+
+        if not patch_rows:
+            return {}
+
+        strategy_counts: dict[str, int] = defaultdict(int)
+        fallback_counts: dict[str, int] = defaultdict(int)
+        focus_counts: dict[str, int] = defaultdict(int)
+        target_counts: dict[str, int] = defaultdict(int)
+        unchanged_ratios: list[float] = []
+        final_pass = 0
+        final_reject = 0
+        structural_attempted_count = 0
+
+        for row in patch_rows:
+            strategy = row["patch_strategy"]
+            if strategy:
+                strategy_counts[strategy] += 1
+            fallback_reason = row["fallback_reason"]
+            if fallback_reason:
+                fallback_counts[fallback_reason] += 1
+            focus = row["focus"]
+            if focus:
+                focus_counts[focus] += 1
+            for target in row["patch_targets"]:
+                target_text = str(target or "").strip()
+                if target_text:
+                    target_counts[target_text] += 1
+            try:
+                unchanged_ratio = float(row["unchanged_ratio"])
+            except (TypeError, ValueError):
+                unchanged_ratio = None
+            if unchanged_ratio is not None:
+                unchanged_ratios.append(unchanged_ratio)
+            if row["structural_attempted"]:
+                structural_attempted_count += 1
+            if row["final_verdict"] in {"PASS", "PASS_WITH_WARNING"}:
+                final_pass += 1
+            elif row["final_verdict"] == "REJECT":
+                final_reject += 1
+
+        return {
+            "count": len(patch_rows),
+            "structural_attempted_count": structural_attempted_count,
+            "final_pass": final_pass,
+            "final_reject": final_reject,
+            "avg_unchanged_ratio": round(sum(unchanged_ratios) / len(unchanged_ratios), 4)
+            if unchanged_ratios
+            else None,
+            "strategy_counts": dict(sorted(strategy_counts.items())),
+            "fallback_reasons": dict(sorted(fallback_counts.items())),
+            "focus_counts": dict(sorted(focus_counts.items())),
+            "top_patch_targets": [
+                {"target": target, "count": count}
+                for target, count in sorted(target_counts.items(), key=lambda item: (-item[1], item[0]))[:5]
+            ],
+        }
+
+    def compare_versions(
+        self,
+        version_a: str,
+        version_b: str,
+        *,
+        stage: int | None = None,
+        lookback: int = 200,
+    ) -> dict:
+        """Compare pass-rate and score deltas between two prompt-version tags."""
+        version_a = str(version_a or "").strip()
+        version_b = str(version_b or "").strip()
+        if not version_a or not version_b:
+            return {}
+
+        clauses = ["prompt_version IN (?, ?)"]
+        params: list = [version_a, version_b]
+        if stage is not None:
+            clauses.append("stage = ?")
+            params.append(stage)
+        where_sql = " AND ".join(clauses)
+        params.append(max(int(lookback or 0), 1))
+
+        try:
+            rows = self.db.conn.execute(
+                f"""SELECT prompt_version, verdict, score
+                    FROM (
+                        SELECT prompt_version, verdict, score, id
+                        FROM stage_attempts
+                        WHERE {where_sql}
+                        ORDER BY id DESC
+                        LIMIT ?
+                    ) recent""",
+                tuple(params),
+            ).fetchall()
+        except Exception as _e:
+            logging.debug("[FailureAnalyzer] compare_versions: %s", _e)
+            return {}
+
+        if not rows:
+            return {}
+
+        stats = {
+            version_a: {"attempts": 0, "pass": 0, "reject": 0, "scores": []},
+            version_b: {"attempts": 0, "pass": 0, "reject": 0, "scores": []},
+        }
+        for row in rows:
+            version = str(row["prompt_version"] or "")
+            if version not in stats:
+                continue
+            stats[version]["attempts"] += 1
+            verdict = str(row["verdict"] or "")
+            if verdict in {"PASS", "PASS_WITH_WARNING"}:
+                stats[version]["pass"] += 1
+            elif verdict == "REJECT":
+                stats[version]["reject"] += 1
+            try:
+                score = int(row["score"])
+            except (TypeError, ValueError):
+                score = None
+            if score is not None:
+                stats[version]["scores"].append(score)
+
+        versions: dict[str, dict] = {}
+        for version, data in stats.items():
+            attempts = int(data["attempts"])
+            scores = data["scores"]
+            versions[version] = {
+                "attempts": attempts,
+                "pass": int(data["pass"]),
+                "reject": int(data["reject"]),
+                "pass_rate_pct": round((data["pass"] / attempts) * 100, 1) if attempts else 0.0,
+                "avg_score": round(sum(scores) / len(scores), 1) if scores else 0.0,
+            }
+
+        delta_pass_rate = round(
+            versions[version_b]["pass_rate_pct"] - versions[version_a]["pass_rate_pct"],
+            1,
+        )
+        delta_avg_score = round(
+            versions[version_b]["avg_score"] - versions[version_a]["avg_score"],
+            1,
+        )
+
+        winner = None
+        if versions[version_a]["attempts"] and versions[version_b]["attempts"]:
+            if (versions[version_b]["pass_rate_pct"], versions[version_b]["avg_score"]) > (
+                versions[version_a]["pass_rate_pct"],
+                versions[version_a]["avg_score"],
+            ):
+                winner = version_b
+            elif (versions[version_a]["pass_rate_pct"], versions[version_a]["avg_score"]) > (
+                versions[version_b]["pass_rate_pct"],
+                versions[version_b]["avg_score"],
+            ):
+                winner = version_a
+
+        return {
+            "versions": versions,
+            "pass_rate_delta_pct": delta_pass_rate,
+            "avg_score_delta": delta_avg_score,
+            "winner": winner,
+        }
 
     def stage_pass_rates(self) -> dict:
         """Per-stage attempt/pass/reject rates."""
@@ -46,11 +928,12 @@ class FailureAnalyzer:
             result = {}
             for stage, counts in sorted(by_stage.items()):
                 total = sum(counts.values())
-                passes = counts.get("PASS", 0) + counts.get("PASS_WITH_FIX", 0)
+                passes = counts.get("PASS", 0) + counts.get("PASS_WITH_WARNING", 0)
                 result[f"stage_{stage}"] = {
                     "total_attempts": total,
                     "pass": passes,
                     "reject": counts.get("REJECT", 0),
+                    "pass_with_fix_transient": counts.get("PASS_WITH_FIX", 0),
                     "pass_rate_pct": round(passes / total * 100, 1) if total else 0,
                 }
             return result

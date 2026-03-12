@@ -46,7 +46,7 @@ class TestArcData:
         assert arc.arc_no == 1
         assert arc.ep_start == 1
         assert arc.ep_end == 5
-        assert arc.ep_count == 5  # default
+        assert arc.ep_count == 4  # default [PC-1-A] 5→4
 
     def test_full_fields(self):
         raw = {

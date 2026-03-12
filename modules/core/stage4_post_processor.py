@@ -7,9 +7,12 @@ import logging
 import os
 import re
 from contextlib import nullcontext as _nullcontext
+from pathlib import Path
 
 from modules.core.genre_schema_builder import is_wuxia
 from modules.core.metrics_collector import get_metrics_collector
+from modules.core.quality_signal_metrics import compute_quality_signal_bundle, extract_warning_count
+from modules.core.soft_failure import report_soft_failure, resolve_project_log_dir
 
 _PROJECTS_DIR = "projects"
 
@@ -19,6 +22,38 @@ class Stage4PostProcessor:
 
     def __init__(self, ctx) -> None:
         self.ctx = ctx
+
+    def _report_soft_failure(
+        self,
+        *,
+        operation: str,
+        message: str,
+        exc: Exception | None = None,
+        ep_num: int | None = None,
+        extra: dict | None = None,
+        user_visible: bool = True,
+        learnable: bool = True,
+    ) -> None:
+        audit_event = getattr(self.ctx, "audit_event", None)
+        report_soft_failure(
+            component="stage4_post_processor",
+            operation=operation,
+            message=message,
+            exc=exc,
+            stage=4,
+            ep_num=ep_num,
+            degraded=True,
+            user_visible=user_visible,
+            learnable=learnable,
+            extra=extra,
+            log_dir=self._resolve_project_log_dir(),
+            audit_event=audit_event if callable(audit_event) else None,
+            warning_window_sec=120.0,
+        )
+
+    def _resolve_project_log_dir(self):
+        current_project = getattr(self.ctx, "current_project", None)
+        return resolve_project_log_dir(current_project)
 
     def _truth_gate_llm_ask(self, prompt: str) -> str:
         """[TF-30-1] TruthGate 세계법칙 검사용 LLM 콜백."""
@@ -267,6 +302,12 @@ class Stage4PostProcessor:
     ) -> bool:
         """[4-R1-c] Pass result post-processing. Returns False on DB save failure."""
         self.ctx.ui.log(f"\n📦 제{next_ep}화 데이터 정산 중...")
+        _quality_labels = None
+        _quality_signals = None
+        if isinstance(final_state_updates, dict):
+            _quality_labels = final_state_updates.get("_director_quality_labels")
+            if isinstance(_quality_labels, dict):
+                final_state_updates = {k: v for k, v in final_state_updates.items() if k != "_director_quality_labels"}
 
         # DB 저장 (HUD보다 먼저 — DB 실패 시 HUD 오염 방지) [Sweep56]
         # [P0-D1/D4] lock 보호 + 원자적 트랜잭션으로 부분 저장 방지
@@ -299,6 +340,43 @@ class Stage4PostProcessor:
         except Exception as db_err:
             self.ctx.ui.log(f"   🚨 DB 저장 실패 (롤백 완료): {db_err}")
             return False
+
+        if isinstance(_quality_labels, dict) and hasattr(_db, "save_episode_quality_label"):
+            try:
+                _db.save_episode_quality_label(next_ep, _quality_labels)
+                self.ctx.ui.log("   ✅ 품질 라벨 저장 완료")
+            except Exception as quality_err:
+                self._report_soft_failure(
+                    operation="save_episode_quality_label",
+                    message="episode quality label sidecar save failed",
+                    exc=quality_err,
+                    ep_num=next_ep,
+                    extra={"table": "episode_quality_labels"},
+                )
+                logging.warning("[QI-QM-4] quality label 저장 실패 (비차단): %s", quality_err)
+
+        if hasattr(_db, "save_episode_quality_signal"):
+            try:
+                _quality_signals = compute_quality_signal_bundle(
+                    final_manuscript,
+                    consistency_checklist=(
+                        (_quality_labels or {}).get("consistency_checklist", {})
+                        if isinstance(_quality_labels, dict)
+                        else {}
+                    ),
+                    warning_count=extract_warning_count(final_state_updates),
+                )
+                _db.save_episode_quality_signal(next_ep, _quality_signals)
+                self.ctx.ui.log("   ✅ 품질 신호 저장 완료")
+            except Exception as signal_err:
+                self._report_soft_failure(
+                    operation="save_episode_quality_signal",
+                    message="episode quality signal sidecar save failed",
+                    exc=signal_err,
+                    ep_num=next_ep,
+                    extra={"table": "episode_quality_signals"},
+                )
+                logging.warning("[P0-QS] quality signal 저장 실패 (비차단): %s", signal_err)
 
         # HUD 업데이트 (DB 커밋 성공 후에만 실행)
         if final_state_updates and hasattr(self.ctx.sys, "hud"):
@@ -460,6 +538,8 @@ class Stage4PostProcessor:
             next_ep=next_ep,
             final_manuscript=final_manuscript,
             final_state_updates=final_state_updates,
+            quality_labels=_quality_labels,
+            quality_signals=_quality_signals,
             detect_npc_overexposure_fn=detect_npc_overexposure_fn,
             detect_cross_episode_repetition_fn=detect_cross_episode_repetition_fn,
             v50_modules_available=v50_modules_available,
@@ -966,7 +1046,7 @@ class Stage4PostProcessor:
 
             # [LM-post-1] causal_graph Read → Director MC 보조 컨텍스트 주입
             try:
-                _causal_links = self.ctx.current_project.db.get_recent_causal_links(next_ep, lookback=10)
+                _causal_links = self.ctx.current_project.db.get_recent_causal_links(next_ep, lookback=30)
                 if _causal_links:
                     _causal_lines = ["[인과 관계 요약]"]
                     for _lk in _causal_links[:8]:
@@ -994,6 +1074,13 @@ class Stage4PostProcessor:
                     summary = f"제{next_ep}화 정산: {', '.join(all_new_items[:3]) if all_new_items else '변화없음'}"
                     self.ctx.current_project.db.save_state_log_with_summary(next_ep, state_log_data, summary)
                 except Exception as state_err:
+                    self._report_soft_failure(
+                        operation="save_state_log_with_summary",
+                        message="state_logs summary save failed after episode bible update",
+                        exc=state_err,
+                        ep_num=next_ep,
+                        extra={"table": "state_logs"},
+                    )
                     self.ctx.ui.log(f"      ⚠️ state_logs 저장 실패: {str(state_err)[:30]}")
 
             changes_count = (
@@ -1114,6 +1201,13 @@ class Stage4PostProcessor:
                 self.ctx.world_state._state = _ws_snap
             if _fl_snap is not None and self.ctx.fact_ledger:
                 self.ctx.fact_ledger._ledger = _fl_snap
+            self._report_soft_failure(
+                operation="save_world_state_atomic",
+                message="world state/fact ledger atomic save failed and was rolled back",
+                exc=_meta_err,
+                ep_num=next_ep,
+                extra={"rolled_back": True},
+            )
             self.ctx.ui.log(f"   ⚠️ [TF-C10] 메타데이터 원자적 저장 실패 (비차단): {str(_meta_err)[:60]}")
 
     def _run_post_pass_advisories(
@@ -1122,6 +1216,8 @@ class Stage4PostProcessor:
         next_ep,
         final_manuscript,
         final_state_updates,
+        quality_labels=None,
+        quality_signals=None,
         detect_npc_overexposure_fn,
         detect_cross_episode_repetition_fn,
         v50_modules_available,
@@ -1171,13 +1267,21 @@ class Stage4PostProcessor:
         if self.ctx.quality_dashboard:
             try:
                 _stage4_score = 0
-                if isinstance(final_state_updates, dict):
+                if isinstance(quality_labels, dict):
+                    _cand_score = quality_labels.get("score", 0)
+                    if isinstance(_cand_score, int | float):
+                        _stage4_score = int(_cand_score)
+                elif isinstance(final_state_updates, dict):
                     _cand_score = final_state_updates.get("director_score", 0)
                     if isinstance(_cand_score, int | float):
                         _stage4_score = int(_cand_score)
                 self.ctx.quality_dashboard.record_validation(
                     ep_num=next_ep,
-                    result={"decision": "PASS", "score": _stage4_score},
+                    result={
+                        "decision": "PASS",
+                        "score": _stage4_score,
+                        "quality_signals": quality_signals or {},
+                    },
                     stage=4,
                 )
                 _regression = self.ctx.quality_dashboard.detect_score_regression(stage=4)

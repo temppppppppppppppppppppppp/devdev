@@ -23,6 +23,43 @@ def _safe_int(value, default=0):
         return default
 
 
+def _prompt_cap(name: str, default: int) -> int:
+    """Context cap lookup with sane lower bound."""
+    try:
+        return max(0, int(_threshold(name, default)))
+    except (TypeError, ValueError):
+        return default
+
+
+def _prompt_snippet(text: str, *, cap_name: str, default: int, head_ratio: float = 0.6) -> str:
+    """Stage 2/4 prompt snippets preserve both head and tail when trimmed."""
+    raw = text if isinstance(text, str) else str(text or "")
+    cap = _prompt_cap(cap_name, default)
+    if cap <= 0:
+        return ""
+    head_chars = min(cap, max(0, int(cap * head_ratio)))
+    return smart_truncate(raw, max_chars=cap, head_chars=head_chars)
+
+
+_CANONICAL_SCORE_KEYS = (
+    "continuity_contradiction",
+    "blueprint_coverage",
+    "quality_engagement",
+    "length",
+    "python_warnings",
+)
+
+
+def _canonical_score_breakdown(raw: dict | None = None, *, length_score: int = 0) -> dict[str, int]:
+    base = {key: 0 for key in _CANONICAL_SCORE_KEYS}
+    if isinstance(raw, dict):
+        for key in _CANONICAL_SCORE_KEYS:
+            base[key] = _safe_int(raw.get(key, base[key]), base[key])
+    if length_score:
+        base["length"] = _safe_int(length_score, base["length"])
+    return base
+
+
 class DirectorEnsembleSelector:
     """
     [V64 P2-1] Director에서 분리된 앙상블 선택 모듈
@@ -283,6 +320,9 @@ Architect가 inplace 단계에서 즉시 교정하고 재제출한다. 소소한
             return {
                 "decision": "REJECT",
                 "score": 30,
+                "pre_firewall_score": 30,
+                "firewall_triggered": False,
+                "firewall_reason": "",
                 "reason": f"씬 개수 부족: {scene_count}개",
                 "feedback": "최소 4개 이상의 씬이 필요합니다.",
             }
@@ -381,22 +421,69 @@ Architect가 inplace 단계에서 즉시 교정하고 재제출한다. 소소한
                 sc_str = json.dumps(sc, ensure_ascii=False)
             else:
                 sc_str = str(sc) if sc else ""
+            sc_prompt = _prompt_snippet(
+                sc_str,
+                cap_name="context.director_arc_state_constraints_max",
+                default=4000,
+                head_ratio=0.55,
+            )
+            joint_prompt = _prompt_snippet(
+                joint_str,
+                cap_name="context.director_arc_joint_docs_max",
+                default=4000,
+                head_ratio=0.55,
+            )
 
             ep_count = arc.get("ep_count", "?")
+            meta = arc.get("_ensemble_meta", {}) if isinstance(arc.get("_ensemble_meta", {}), dict) else {}
+            diversity = meta.get("diversity", {}) if isinstance(meta.get("diversity", {}), dict) else {}
+            diversity_warning = str(diversity.get("warning", "") or "").strip()
             summary = (
                 f"[후보 {idx + 1}: {strategy}]\n"
                 f"- 화수: {ep_count}\n"
                 f"- tactical_doc 분량: {len(tactical)}자\n"
-                f"- state_constraints: {sc_str[:1000]}\n"
-                f"- joint_docs: {joint_str[:1000]}\n\n"
-                f"[tactical_doc 전문]\n{tactical}\n"
+                f"- state_constraints: {sc_prompt}\n"
+                f"- joint_docs: {joint_prompt}\n"
             )
+            if diversity_warning:
+                summary += f"- 다양성 경고: {diversity_warning}\n"
+            summary += f"\n[tactical_doc 전문]\n{tactical}\n"
             candidate_summaries.append(summary)
 
         # curr_block 요약
         block_summary = ""
         if isinstance(curr_block, dict):
-            block_summary = json.dumps(curr_block, ensure_ascii=False)[:4000]
+            block_summary = _prompt_snippet(
+                json.dumps(curr_block, ensure_ascii=False),
+                cap_name="context.director_arc_block_summary_max",
+                default=12000,
+                head_ratio=0.65,
+            )
+        prev_arc_prompt = _prompt_snippet(
+            prev_arc_context,
+            cap_name="context.director_arc_prev_context_max",
+            default=24000,
+            head_ratio=0.55,
+        )
+        constraint_prompt = _prompt_snippet(
+            constraint_block,
+            cap_name="context.director_arc_constraint_max",
+            default=12000,
+            head_ratio=0.6,
+        )
+        advisory_prompt = _prompt_snippet(
+            advisory,
+            cap_name="context.director_arc_advisory_max",
+            default=12000,
+            head_ratio=0.55,
+        )
+        logging.info(
+            "[CTX-P0-1] arc prompt slices block=%d prev=%d constraint=%d advisory=%d",
+            len(block_summary),
+            len(prev_arc_prompt),
+            len(constraint_prompt),
+            len(advisory_prompt),
+        )
 
         comparison_prompt = f"""[Arc 후보 비교 선택 + 일관성·모순 판정]
 
@@ -407,13 +494,13 @@ Arc {arc_no}번 후보 {len(candidates)}개를 **각각 절대 기준으로 독�
 {block_summary}
 
 ### 이전 Arc 맥락
-{prev_arc_context[:6000] if prev_arc_context else "(첫 Arc)"}
+{prev_arc_prompt if prev_arc_prompt else "(첫 Arc)"}
 
 ### 제약 조건
-{constraint_block[:4000] if constraint_block else "(없음)"}
+{constraint_prompt if constraint_prompt else "(없음)"}
 
 ### Python 사실 검증 Advisory (NS-3-B)
-{str(advisory)[:4000] if advisory else "(없음)"}
+{advisory_prompt if advisory_prompt else "(없음)"}
 - 이 advisory는 수치 비교 기반 사실 검증입니다.
 - 큰 수치 괴리 경고가 있으면 PASS를 피하고 PASS_WITH_FIX 또는 REJECT로 판정하세요.
 
@@ -620,6 +707,10 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
                 "state_updates": candidates[best_idx].get("state_updates", {}),
                 "action_items": ["분량 확장 필요 - 최소 5,000자"],
                 "length_violation": True,
+                "selection_reason": f"[length_guard] 최장 후보를 패치 대상으로 유지 ({max(lengths)}자)",
+                "verdict_reason": f"모든 후보 분량 미달: {lengths}자 (최소 {MIN_MANUSCRIPT_LENGTH}자 필요)",
+                "reject_reason": f"모든 후보 분량 미달: {lengths}자 (최소 {MIN_MANUSCRIPT_LENGTH}자 필요)",
+                "score_breakdown": _canonical_score_breakdown(length_score=30),
             }
 
         logging.info(
@@ -688,7 +779,7 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
         # mandatory_context 블록 생성 (stable/legacy 양쪽 공통)
         _mc_block = ""
         if mandatory_context:
-            _dir_mc_max = _threshold("context.director_mandatory_max", 40000)
+            _dir_mc_max = _threshold("context.director_mandatory_max", 400000)
             _mc_for_director = mandatory_context[:_dir_mc_max]
             if len(mandatory_context) > _dir_mc_max:
                 _mc_for_director = (
@@ -840,6 +931,8 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
 
         # [TF-DIR-1] raw LLM 점수 보존 — NC-3B 교정 전 기준점 (Firewall 감사 추적용)
         _pre_firewall_score = score
+        firewall_triggered = False
+        firewall_reason = ""
 
         # ── [NC-3B] score_breakdown 합산 검증 ──────────────────
         _sb_raw = result.get("score_breakdown", {})
@@ -875,14 +968,16 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
                 _major_count = sum(
                     1 for c in _found if isinstance(c, dict) and str(c.get("severity", "")).upper() == "MAJOR"
                 )
-                _firewall_triggered = False
+                firewall_triggered = False
                 if _critical_count >= 1:
-                    _firewall_triggered = True
+                    firewall_triggered = True
+                    firewall_reason = f"Contradiction Firewall: CRITICAL {_critical_count}건"
                     logging.warning(f" [V75-C] Contradiction Firewall: CRITICAL {_critical_count}건 → REJECT 강제")
                 elif _major_count >= 2:
-                    _firewall_triggered = True
+                    firewall_triggered = True
+                    firewall_reason = f"Contradiction Firewall: MAJOR {_major_count}건"
                     logging.warning(f" [V75-C] Contradiction Firewall: MAJOR {_major_count}건 → REJECT 강제")
-                if _firewall_triggered:
+                if firewall_triggered:
                     original_verdict = "REJECT"
                     _pre_firewall_score = score  # [TF-22b] 패치 모드용 원본 점수 보존
                     score = min(score, 44)  # adaptive floor=45 미만 → 승격 불가
@@ -950,6 +1045,13 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
             "timeline_arc_consistency",  # [NS-4]
             "fiction_term_leak",          # [TF-57-A]
             "scene_variety",             # [TF-J]
+            "pacing_quality",
+            "dialogue_naturalness",
+            "pov_discipline",
+            "emotional_authenticity",
+            "npc_knowledge_boundary",
+            "secret_consistency",
+            "identity_consistency",
         ]
         if isinstance(_checklist, dict) and _checklist:
             _issue_count = sum(1 for k in _nc3_keys if str(_checklist.get(k, "")).upper() == "ISSUE")
@@ -1002,6 +1104,26 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
         feedback = result.get("feedback", {})
         if isinstance(feedback, str):
             feedback = {"issues": [feedback]}
+        _selection_reason = str(result.get("selection_reason", "") or "")
+        _verdict_reason = str(result.get("verdict_reason") or result.get("reject_reason") or "").strip()
+        if not _verdict_reason and firewall_triggered and firewall_reason:
+            _verdict_reason = firewall_reason
+        if not _verdict_reason and isinstance(feedback, dict):
+            _feedback_issues = feedback.get("issues", []) or []
+            if _feedback_issues:
+                _verdict_reason = str(_feedback_issues[0])
+        if not _verdict_reason:
+            _verdict_reason = _selection_reason
+        _fix_scope = str(result.get("fix_scope", "") or "").strip()
+        _fix_scope_reasoning = str(result.get("fix_scope_reasoning", "") or "").strip()
+        _selected_manuscript = (
+            str(selected_candidate.get("manuscript", "") or "") if isinstance(selected_candidate, dict) else ""
+        )
+        if firewall_triggered and _selected_manuscript:
+            if _fix_scope not in ("partial", "full"):
+                _fix_scope = "inplace"
+            if not _fix_scope_reasoning and firewall_reason:
+                _fix_scope_reasoning = firewall_reason
 
         # [V67.2] 자유 형식 리뷰 → feedback에 병합
         _open_review = result.get("open_review", "")
@@ -1021,10 +1143,12 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
         print(f"\n   {'=' * 56}")
         print(f"      [Stage4 Director] 원고 앙상블 판정: {final_verdict} (점수: {score})")
         print(f"      선택: 후보 {selected_letter} | 원래 판정: {original_verdict}")
-        _sel_reason = result.get("selection_reason", "")
+        _sel_reason = _selection_reason
         if _sel_reason:
             print(f"      선택 사유: {str(_sel_reason)[:200]}")
-        _sb = result.get("score_breakdown", {})
+        if _verdict_reason and _verdict_reason != _selection_reason:
+            print(f"      verdict_reason: {_verdict_reason[:200]}")
+        _sb = _canonical_score_breakdown(result.get("score_breakdown", {}))
         if _sb:
             _sb_str = ", ".join(f"{k}={v}" for k, v in _sb.items() if isinstance(v, int | float))
             if _sb_str:
@@ -1050,8 +1174,12 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
             "original_verdict": original_verdict,
             "score": score,
             "pre_firewall_score": _pre_firewall_score,  # [TF-22b] 패치 모드용
-            "score_breakdown": result.get("score_breakdown", {}),
-            "selection_reason": result.get("selection_reason", ""),
+            "score_breakdown": _canonical_score_breakdown(result.get("score_breakdown", {})),
+            "selection_reason": _selection_reason,
+            "verdict_reason": _verdict_reason,
+            "reject_reason": _verdict_reason,
+            "firewall_triggered": firewall_triggered,
+            "firewall_reason": firewall_reason,
             "feedback": feedback,
             "state_updates": result.get("state_updates")
             or selected_candidate.get("state_updates")
@@ -1062,8 +1190,8 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
             "adaptive_threshold": adaptive_result.get("threshold_used", 65),
             "adaptive_reason": adaptive_result.get("reason", ""),
             "error_category": result.get("error_category", ""),  # [V75-B] LOGIC_ERROR 전파
-            "fix_scope": result.get("fix_scope", ""),  # [TF-23] Director 판단 수정 범위
-            "fix_scope_reasoning": result.get("fix_scope_reasoning", ""),  # [TF-35] 수정 범위 근거 전파
+            "fix_scope": _fix_scope,  # [TF-23] Director 판단 수정 범위
+            "fix_scope_reasoning": _fix_scope_reasoning,  # [TF-35] 수정 범위 근거 전파
             "numeric_consistency_review": _nc_review,  # [NC-1] Director 수치 판정 전파
             "consistency_checklist": _checklist,  # [NC-3] 일관성 체크리스트 전파
             "contradiction_types": [  # [A-4] 모순 유형 전파

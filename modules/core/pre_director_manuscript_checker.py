@@ -14,6 +14,7 @@ import re
 from typing import TYPE_CHECKING, Any
 
 from modules.core.pre_director_checklist import CheckCategory, CheckItem, CheckSeverity
+from modules.validation.dialogue_utils import count_dialogue_characters, count_dialogue_segments
 
 if TYPE_CHECKING:
     from modules.core.pre_director_checklist import PreDirectorChecklist
@@ -45,11 +46,7 @@ class PreDirectorManuscriptChecker:
             r"'[^']{5,}'",
         ]
 
-        dialogue_chars = 0
-        for pattern in dialogue_patterns:
-            matches = re.findall(pattern, manuscript)
-            for match in matches:
-                dialogue_chars += len(match)
+        dialogue_chars = count_dialogue_characters(manuscript)
 
         total_chars = len(manuscript)
         if total_chars < 1000:
@@ -59,6 +56,7 @@ class PreDirectorManuscriptChecker:
         narrative_ratio = 1 - dialogue_ratio
 
         dialogue_count = manuscript.count('"') // 2 + manuscript.count("「")
+        dialogue_count = count_dialogue_segments(manuscript)
         min_dialogue = self.host.MANUSCRIPT_REQUIRED["dialogue"][0]
 
         ideal_dialogue_ratio = 0.30

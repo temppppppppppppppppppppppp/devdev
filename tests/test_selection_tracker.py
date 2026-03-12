@@ -104,6 +104,15 @@ class TestRollbackIncludesSelections:
         assert len(rows) == 1
         assert rows[0]["ep_num"] == 3
 
+    def test_reset_after_preserves_stage2_selection_rows(self, db):
+        db.save_director_selection(2, 0, "", "creative", "PASS", 88, "arc ok", stage=2)
+        db.save_director_selection(5, 0, "B", "narrative", "PASS", 75, stage=4)
+
+        db.reset_after(4)
+
+        rows = [dict(row) for row in db.execute_query("SELECT stage, ep_num FROM director_selections ORDER BY id")]
+        assert rows == [{"stage": 2, "ep_num": 2}]
+
     def test_rollback_impact_includes_selections(self, db):
         db.save_director_selection(5, 0, "A", "balanced", "PASS", 80)
         impact = db.get_rollback_impact(4)

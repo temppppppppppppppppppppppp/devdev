@@ -116,6 +116,134 @@ class TestPatchModeThresholds:
         assert PatchModeThresholds.REWRITE < PatchModeThresholds.INPLACE
 
 
+class TestStage4AuditSummary:
+    def test_stage4_completion_writes_runtime_audit_summary(self, mock_app):
+        from modules.core.stage4_orchestrator import Stage4Orchestrator
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.ui.log = MagicMock()
+        ctx.current_project = mock_app.current_project
+        ctx.agents = mock_app.agents
+        ctx.state_tracker = None
+        ctx.memory = None
+        ctx.context_advisor = None
+        ctx.perf_timer = MagicMock()
+        ctx.sys = mock_app.sys
+        mock_app._audit_event = MagicMock()
+        mock_app._write_audit_summary = MagicMock()
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+        orch._prepare_stage4_session = MagicMock(return_value=object())
+        orch._run_interview_loop = MagicMock(return_value=False)
+
+        orch.stage_4_v2_chief_writer()
+
+        mock_app._audit_event.assert_called_once()
+        mock_app._write_audit_summary.assert_called_once_with("stage4_complete")
+
+    def test_stage4_early_return_does_not_write_runtime_audit_summary(self, mock_app):
+        from modules.core.stage4_orchestrator import Stage4Orchestrator
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.ui.log = MagicMock()
+        ctx.current_project = mock_app.current_project
+        ctx.agents = mock_app.agents
+        ctx.state_tracker = None
+        ctx.memory = None
+        ctx.context_advisor = None
+        ctx.perf_timer = MagicMock()
+        ctx.sys = mock_app.sys
+        mock_app._write_audit_summary = MagicMock()
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+        orch._prepare_stage4_session = MagicMock(return_value=object())
+        orch._run_interview_loop = MagicMock(return_value=True)
+
+        orch.stage_4_v2_chief_writer()
+
+        mock_app._write_audit_summary.assert_not_called()
+
+    def test_stage4_failed_exhaustion_does_not_write_runtime_audit_summary(self, mock_app):
+        from modules.core.stage4_orchestrator import Stage4Orchestrator
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.ui.log = MagicMock()
+        ctx.current_project = mock_app.current_project
+        ctx.agents = mock_app.agents
+        ctx.state_tracker = None
+        ctx.memory = None
+        ctx.context_advisor = None
+        ctx.perf_timer = MagicMock()
+        ctx.sys = mock_app.sys
+        mock_app._write_audit_summary = MagicMock()
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+        orch._prepare_stage4_session = MagicMock(return_value=object())
+        # 5라운드 소진 후 인간 검토 필요 → _run_interview_loop() returns True
+        orch._run_interview_loop = MagicMock(return_value=True)
+
+        orch.stage_4_v2_chief_writer()
+
+        mock_app._write_audit_summary.assert_not_called()
+
+    def test_stage4_interrupt_does_not_write_runtime_audit_summary(self, mock_app):
+        from modules.core.stage4_orchestrator import Stage4Orchestrator
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.ui.log = MagicMock()
+        ctx.current_project = mock_app.current_project
+        ctx.agents = mock_app.agents
+        ctx.state_tracker = None
+        ctx.memory = None
+        ctx.context_advisor = None
+        ctx.perf_timer = MagicMock()
+        ctx.sys = mock_app.sys
+        ctx.flush_audit_buffer = MagicMock()
+        ctx.safe_commit = MagicMock()
+        mock_app._write_audit_summary = MagicMock()
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+        orch._prepare_stage4_session = MagicMock(return_value=object())
+        orch._run_interview_loop = MagicMock(side_effect=KeyboardInterrupt)
+
+        orch.stage_4_v2_chief_writer()
+
+        mock_app._write_audit_summary.assert_not_called()
+        ctx.flush_audit_buffer.assert_called_once()
+        ctx.safe_commit.assert_called_once()
+
+    def test_stage4_exception_does_not_write_runtime_audit_summary_and_flushes(self, mock_app):
+        from modules.core.stage4_orchestrator import Stage4Orchestrator
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.ui.log = MagicMock()
+        ctx.current_project = mock_app.current_project
+        ctx.agents = mock_app.agents
+        ctx.state_tracker = None
+        ctx.memory = None
+        ctx.context_advisor = None
+        ctx.perf_timer = MagicMock()
+        ctx.sys = mock_app.sys
+        ctx.flush_audit_buffer = MagicMock()
+        ctx.safe_commit = MagicMock()
+        mock_app._write_audit_summary = MagicMock()
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+        orch._prepare_stage4_session = MagicMock(return_value=object())
+        orch._run_interview_loop = MagicMock(side_effect=RuntimeError("boom"))
+
+        orch.stage_4_v2_chief_writer()
+
+        mock_app._write_audit_summary.assert_not_called()
+        ctx.flush_audit_buffer.assert_called_once()
+        ctx.safe_commit.assert_called_once()
+
+
 class TestRoundContextAnnotations:
     def test_inventory_and_martial_arts_are_list_annotations(self):
         from modules.core.stage4_orchestrator import _RoundContext

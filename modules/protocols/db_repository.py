@@ -1,10 +1,10 @@
 """
 [Phase 4A] DB Repository Protocol — DBManager 추상화 계층
 
-DBManager(db_manager.py)의 50개 public 메서드/프로퍼티를 구조적 서브타이핑으로 정의.
+DBManager(db_manager.py)의 public 메서드/프로퍼티를 구조적 서브타이핑으로 정의.
 Phase 4C에서 직접 conn/cursor 접근을 차단할 때 타입 안전성 보장.
 
-시그니처 근거: modules/core/db_manager.py (1,147줄, 50개 public)
+시그니처 근거: modules/core/db_manager.py
 """
 
 from __future__ import annotations
@@ -15,8 +15,6 @@ from typing import Any, Protocol, runtime_checkable
 @runtime_checkable
 class DBRepositoryProtocol(Protocol):
     """S등급 무결성 DB 엔진 계약
-
-    DBManager 48개 기존 public + close() + in_transaction = 50개
     """
 
     # --- 트랜잭션 제어 (db_manager.py:295-297, 299, 310) ---
@@ -50,17 +48,8 @@ class DBRepositoryProtocol(Protocol):
     def get_episode_bible(self, ep_num: int) -> dict: ...
     def get_cumulative_bible(self, up_to_ep: int) -> dict: ...
     def get_all_episode_bibles(self) -> list: ...
+    def get_episode_bibles_before(self, up_to_ep: int) -> list: ...
     def delete_episode_bibles_after(self, ep_num: int) -> None: ...
-
-    # --- 수술 로그 (db_manager.py:577) ---
-
-    def save_surgery_log(
-        self,
-        ep_num: int,
-        category: str,
-        failed_logic: str,
-        result: str,
-    ) -> None: ...
 
     # --- 복선/시드 (db_manager.py:588-606) ---
 
@@ -71,7 +60,6 @@ class DBRepositoryProtocol(Protocol):
 
     def update_lore_item(self, category: str, item: str, description: str) -> None: ...
     def update_lore_items_batch(self, lore_items_list: list) -> None: ...
-    def get_lore_item(self, item_name: str) -> dict | None: ...
     def get_lore_list_by_category(self, category: str) -> list: ...
 
     # --- 앵커 (db_manager.py:684-714) ---
@@ -97,6 +85,15 @@ class DBRepositoryProtocol(Protocol):
     def get_latest_state(self) -> dict: ...
     def load_state_log(self, ep_num: int) -> dict: ...
     def get_causal_summary_chain(self, limit: int = 5) -> list: ...
+    def get_recent_causal_links(self, current_ep: int, lookback: int = 30) -> list[dict]: ...
+    def get_causal_links_by_entities(
+        self,
+        entity_names: list[str],
+        *,
+        before_ep: int,
+        lookback: int = 120,
+        limit: int = 30,
+    ) -> list[dict]: ...
 
     # --- 카르마/관계 (db_manager.py:789-804) ---
 
@@ -148,5 +145,54 @@ class DBRepositoryProtocol(Protocol):
         limit: int = 10,
         max_chars: int = 200,
     ) -> list: ...
-    def get_all_manuscripts(self) -> list: ...
-    def get_all_blueprints(self) -> list: ...
+
+    # --- 품질/회고 (db_manager.py) ---
+
+    def save_episode_quality_label(self, ep_num: int, labels: dict) -> None: ...
+    def get_episode_quality_label(self, ep_num: int) -> dict | None: ...
+    def get_recent_episode_quality_labels(self, before_ep: int, lookback: int = 20) -> list[dict]: ...
+    def save_episode_quality_signal(self, ep_num: int, signals: dict) -> None: ...
+    def get_episode_quality_signal(self, ep_num: int) -> dict | None: ...
+    def get_recent_episode_quality_signals(
+        self,
+        before_ep: int | None = None,
+        lookback: int = 20,
+    ) -> list[dict]: ...
+    def get_quality_signal_summary(self, before_ep: int | None = None, lookback: int = 5) -> dict: ...
+    def get_recent_episode_scores(self, before_ep: int, lookback: int = 5) -> list[dict]: ...
+    def get_strategy_win_rates(
+        self,
+        lookback: int = 20,
+        *,
+        selected_label: str | None = None,
+        allowed_strategies: tuple[str, ...] | list[str] | set[str] | None = None,
+    ) -> dict: ...
+    def get_stage_attempts_for_arc(
+        self,
+        arc_num: int,
+        stages: tuple[int, ...] = (3, 4),
+        verdict: str | None = None,
+        limit: int = 20,
+    ) -> list[dict]: ...
+    def save_stage_attempt(
+        self,
+        stage: int,
+        verdict: str,
+        attempt_num: int = 1,
+        ep_num: int | None = None,
+        arc_num: int | None = None,
+        score: int | None = None,
+        failure_category: str | None = None,
+        reject_reason: str | None = None,
+        fix_scope: str | None = None,
+        model: str | None = None,
+        duration_ms: int | None = None,
+        advisory_flags: dict | None = None,
+        session_id: str | None = None,
+        attempt_key: str | None = None,
+        generation_method: str | None = None,
+        prompt_version: str | None = None,
+        candidate_key: str | None = None,
+        content_hash: str | None = None,
+        artifact_path: str | None = None,
+    ) -> None: ...

@@ -34,7 +34,7 @@ def _make_generator() -> FourPhaseArcGenerator:
     )
     gen.validator = MagicMock()
     gen.validator.validate.return_value = ("PASS", {"issues": [], "confidence": 90})
-    gen._determine_ep_count = MagicMock(return_value=(5, "reason"))
+    gen._determine_ep_count = MagicMock(return_value=(4, "reason"))
     gen._generate_prev_context = MagicMock(return_value="prev")
     gen._check_arc_end_state = MagicMock(side_effect=lambda arc: arc)
     return gen
@@ -292,3 +292,181 @@ def test_generate_prev_context_dict_in_conflicts_no_typeerror():
 
     assert "진행 중인 갈등" in result
     assert "완결된 갈등" in result
+
+
+def test_load_execution_state_reads_fact_ledger_numbers_schema():
+    gen = FourPhaseArcGenerator.__new__(FourPhaseArcGenerator)
+    gen.context = MagicMock()
+    gen.context.current_project = MagicMock()
+    db = MagicMock()
+    db.load_anchor.side_effect = lambda key: {
+        "world_state": {
+            "protagonist": {"assets": {"현금": "10억"}, "location": "서울", "status": {"건강": "양호"}},
+            "active_items": {"청룡검": {"status": "보유"}},
+            "motivations": [{"text": "복수", "status": "active", "since_ep": 3}],
+            "promises": [{"text": "사부를 지킨다", "status": "pending", "promiser": "주인공", "since_ep": 4}],
+            "cumulative_elapsed": {"total_days": 42},
+        },
+        "fact_ledger": {
+            "numbers": {
+                "자본금": {
+                    "value": "10억",
+                    "unit": "원",
+                    "established_value": "1억",
+                    "established_ep": 1,
+                    "last_ep": 12,
+                }
+            }
+        },
+    }.get(key, {})
+    db.get_episode_bible.return_value = {
+        "ep_num": 12,
+        "capital": "10억",
+        "total_assets": "30억",
+        "new_items": [],
+        "location": "서울",
+    }
+    gen.context.current_project.db = db
+
+    state = gen._load_execution_state({"ep_end": 12})
+
+    assert state["fact_ledger"]["자본금"]["value"] == "10억"
+    assert state["fact_ledger"]["자본금"]["established_value"] == "1억"
+    assert "자본금" in state["fact_ledger_summary"]
+    assert state["motivations"][0]["text"] == "복수"
+    assert state["promises"][0]["text"] == "사부를 지킨다"
+    assert state["cumulative_elapsed"]["total_days"] == 42
+
+
+def test_generate_prev_context_includes_execution_state_motivations_and_fact_ledger():
+    gen = FourPhaseArcGenerator.__new__(FourPhaseArcGenerator)
+    gen._genre = "investment"
+
+    prev_arcs = [
+        {
+            "arc_no": 1,
+            "state_constraints": {
+                "arc_end_state": {
+                    "location": "서울",
+                    "equipment": [],
+                    "injuries": "없음",
+                    "internal_energy": 100,
+                }
+            },
+            "joint_docs": {},
+            "status_shadow": {},
+        }
+    ]
+
+    execution_state = {
+        "motivations": [{"text": "복수", "since_ep": 3}],
+        "promises": [{"text": "사부를 지킨다", "promiser": "주인공", "since_ep": 4}],
+        "cumulative_elapsed": {"total_days": 42},
+        "fact_ledger_summary": "[팩트 원장 핵심 수치]\n- 자본금: 1억 원 (ep1) -> 10억 원 (ep12)",
+    }
+
+    with patch.object(gen, "_load_execution_state", return_value=execution_state):
+        result = gen._generate_prev_context(prev_arcs, preflight_result={})
+
+    assert "핵심 동기" in result
+    assert "복수" in result
+    assert "미이행 약속" in result
+    assert "사부를 지킨다" in result
+    assert "누적 경과: 총 42일" in result
+    assert "[팩트 원장 핵심 수치]" in result
+
+
+def test_generate_prev_context_includes_stage_attempt_and_quality_feedback():
+    gen = FourPhaseArcGenerator.__new__(FourPhaseArcGenerator)
+    gen._genre = "investment"
+    gen.context = MagicMock()
+    gen.context.current_project = MagicMock()
+    db = MagicMock()
+    db.get_stage_attempts_for_arc.return_value = [
+        {"failure_category": "continuity", "reject_reason": "위치 텔레포트", "stage": 4},
+        {"failure_category": "continuity", "reject_reason": "위치 텔레포트", "stage": 4},
+        {"failure_category": "pacing", "reject_reason": "호흡 급변", "stage": 3},
+    ]
+    db.get_recent_episode_scores.return_value = [
+        {"ep_num": 8, "score": 91, "verdict": "PASS"},
+        {"ep_num": 9, "score": 84, "verdict": "PASS"},
+        {"ep_num": 10, "score": 77, "verdict": "PASS"},
+    ]
+    gen.context.current_project.db = db
+
+    prev_arcs = [
+        {
+            "arc_no": 2,
+            "ep_start": 7,
+            "ep_end": 10,
+            "state_constraints": {"arc_end_state": {"location": "서울", "equipment": [], "injuries": "없음", "internal_energy": 100}},
+            "joint_docs": {},
+            "status_shadow": {},
+        }
+    ]
+
+    with (
+        patch.object(gen, "_load_execution_state", return_value=None),
+        patch("modules.domain.agents.four_phase_arc_generator.FailureAnalyzer") as analyzer_cls,
+    ):
+        analyzer = analyzer_cls.return_value
+        analyzer.summary.return_value = {
+            "stage_pass_rates": {"stage_4": {"pass_rate_pct": 68.0, "total_attempts": 22}},
+            "top_failed_agents": [{"agent": "chief_writer", "fail_rate_pct": 55.0}],
+            "top_failure_categories": [{"category": "continuity", "count": 5}],
+            "quality_distribution": {"avg_score": 82.3, "high_score_count": 2},
+            "top_success_patterns": [{"description": "blueprint_coverage 평균 18.5점"}],
+        }
+        result = gen._generate_prev_context(prev_arcs, preflight_result={})
+
+    assert "[직전 Arc Stage3/4 주요 실패]" in result
+    assert "continuity" in result
+    assert "[이전 Arc 실패 분석]" in result
+    assert "chief_writer" in result
+    assert "[직전 Arc 고득점 패턴]" in result
+    assert "blueprint_coverage 평균 18.5점" in result
+    assert "[품질 추세 경고]" in result
+
+
+def test_generate_prev_context_includes_forgotten_npc_and_dormant_promise_advisories():
+    gen = FourPhaseArcGenerator.__new__(FourPhaseArcGenerator)
+    gen._genre = "wuxia"
+    gen.context = MagicMock()
+    gen.context.master_bible = {
+        "MasterBible": {
+            "protagonist_config": {"name": "진우"},
+            "AssetLibrary": {"KeyNPCs": [{"name": "노사부", "role": "사부"}]},
+        }
+    }
+    gen.context.current_project = MagicMock()
+    db = MagicMock()
+    db.load_anchor.return_value = {
+        "alive_npcs": {
+            "노사부": {"role": "사부", "first_seen_ep": 2},
+            "진우": {"role": "주인공", "first_seen_ep": 1},
+        },
+        "promises": [
+            {"text": "제자를 지킨다", "promiser": "노사부", "promisee": "진우", "since_ep": 4, "status": "pending"}
+        ],
+    }
+    db.get_npc_recent_episodes.side_effect = lambda name, before_ep, limit=1: [2] if name == "노사부" else [11]
+    gen.context.current_project.db = db
+
+    prev_arcs = [
+        {
+            "arc_no": 2,
+            "ep_start": 8,
+            "ep_end": 12,
+            "state_constraints": {"arc_end_state": {"location": "개봉", "equipment": [], "injuries": "없음", "internal_energy": 100}},
+            "joint_docs": {},
+            "status_shadow": {},
+        }
+    ]
+
+    with patch.object(gen, "_load_execution_state", return_value=None):
+        result = gen._generate_prev_context(prev_arcs, preflight_result={})
+
+    assert "[방치 NPC 주의]" in result
+    assert "노사부" in result
+    assert "[방치 맹세 경고]" in result
+    assert "제자를 지킨다" in result

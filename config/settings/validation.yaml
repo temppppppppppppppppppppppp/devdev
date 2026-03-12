@@ -75,6 +75,12 @@ context:
   max_context_chars: 1000000         # [TF-25-04] smart_truncate 상한 (SSOT — constants.py _LazyThreshold)
   mandatory_context_max: 400000      # [1M-CTX-P0] 200000 → 400000 (모델 용량 80%)
   director_mandatory_max: 400000     # [1M-CTX-P0] 200000 → 400000 (Writer와 동일; 모델 용량 80%)
+  director_arc_state_constraints_max: 4000
+  director_arc_joint_docs_max: 4000
+  director_arc_block_summary_max: 12000
+  director_arc_prev_context_max: 24000
+  director_arc_constraint_max: 12000
+  director_arc_advisory_max: 12000
   lookback_excerpt_chars: 5000       # [1M-CTX-P0] 2000 → 5000 (화별 요약 2.5배)
   lookback_total_chars: 40000        # [1M-CTX-P0] 15000 → 40000 (전체 lookback 2.7배)
   vector_max_results_s4: 50   # [1M-CTX-P0] 20 → 50 — recall 2.5배 향상
@@ -99,6 +105,7 @@ patch_mode:
   inplace_min_success_rate: 30   # [PF-4] inplace 성공률(%) 진단 로그용 (디렉터 주권주의: 스킵 안 함)
   inplace_min_samples: 5         # [PF-4] 통계 최소 샘플 수
   inplace_max_change_ratio: 0.30   # [F-2] 30% 이상 변경 시 Director advisory 주입
+  inplace_min_preserve_ratio: 0.70  # [TF-IPG] 원본 대비 70% 미만 축소 시 patch 폐기
 
 # ── Premium 품질 시스템 ──────────────────────────────────────
 premium:

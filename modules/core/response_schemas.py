@@ -6,8 +6,11 @@ JSON 파싱 실패율 90% 감소
 """
 
 import logging
+from copy import deepcopy
 
 from google.genai import types
+
+from modules.core.llm_schema import schema_to_dict, to_gemini_schema
 
 # =================================================================
 # V0128 Validation Schemas
@@ -158,6 +161,13 @@ DIRECTOR_AUDIT_SCHEMA = types.Schema(
                 "timeline_arc_consistency": types.Schema(type=types.Type.STRING, enum=["OK", "ISSUE"]),  # [NS-4]
                 "fiction_term_leak": types.Schema(type=types.Type.STRING, enum=["OK", "ISSUE"]),  # [TF-57-A]
                 "scene_variety": types.Schema(type=types.Type.STRING, enum=["OK", "ISSUE"]),  # [TF-J]
+                "pacing_quality": types.Schema(type=types.Type.STRING, enum=["OK", "ISSUE"]),
+                "dialogue_naturalness": types.Schema(type=types.Type.STRING, enum=["OK", "ISSUE"]),
+                "pov_discipline": types.Schema(type=types.Type.STRING, enum=["OK", "ISSUE"]),
+                "emotional_authenticity": types.Schema(type=types.Type.STRING, enum=["OK", "ISSUE"]),
+                "npc_knowledge_boundary": types.Schema(type=types.Type.STRING, enum=["OK", "ISSUE"]),
+                "secret_consistency": types.Schema(type=types.Type.STRING, enum=["OK", "ISSUE"]),
+                "identity_consistency": types.Schema(type=types.Type.STRING, enum=["OK", "ISSUE"]),
             },
         ),
     },
@@ -507,6 +517,21 @@ MANUSCRIPT_SCHEMA = types.Schema(
 )
 
 
+_TASK_SCHEMA_CONSTANTS = {
+    "BLOCKING": BLOCKING_RESULT_SCHEMA,
+    "SCORING": SCORING_RESULT_SCHEMA,
+    "ADVISORY": ADVISORY_RESULT_SCHEMA,
+    "DIRECTOR_AUDIT": DIRECTOR_AUDIT_SCHEMA,
+    "STRATEGIC_AUDIT": STRATEGIC_AUDIT_SCHEMA,
+    "CHARACTER_LOGIC": CHARACTER_LOGIC_SCHEMA,
+    "BLUEPRINT": BLUEPRINT_SCHEMA,
+    "MANUSCRIPT": MANUSCRIPT_SCHEMA,
+    "ARC_DESIGN": ARC_DESIGN_SCHEMA,
+    "BLUEPRINT_PREFLIGHT": BLUEPRINT_PREFLIGHT_SCHEMA,
+}
+_TASK_SCHEMA_SPECS = {name: schema_to_dict(schema) for name, schema in _TASK_SCHEMA_CONSTANTS.items()}
+
+
 # =================================================================
 # Utility Functions
 # =================================================================
@@ -523,23 +548,18 @@ def get_schema_for_task(task_type: str) -> types.Schema:
     Returns:
         types.Schema instance or None
     """
-    schemas = {
-        "BLOCKING": BLOCKING_RESULT_SCHEMA,
-        "SCORING": SCORING_RESULT_SCHEMA,
-        "ADVISORY": ADVISORY_RESULT_SCHEMA,
-        "DIRECTOR_AUDIT": DIRECTOR_AUDIT_SCHEMA,
-        "STRATEGIC_AUDIT": STRATEGIC_AUDIT_SCHEMA,
-        "CHARACTER_LOGIC": CHARACTER_LOGIC_SCHEMA,
-        "BLUEPRINT": BLUEPRINT_SCHEMA,
-        "MANUSCRIPT": MANUSCRIPT_SCHEMA,
-        "ARC_DESIGN": ARC_DESIGN_SCHEMA,  # [V49.4] Arc 설계 스키마
-        "BLUEPRINT_PREFLIGHT": BLUEPRINT_PREFLIGHT_SCHEMA,  # [TF-49b] Blueprint 사전검증
-    }
-
-    return schemas.get(task_type)
+    spec = get_schema_spec_for_task(task_type)
+    return to_gemini_schema(spec) if spec else None
 
 
-def validate_response_against_schema(response: dict, schema: types.Schema) -> bool:
+def get_schema_spec_for_task(task_type: str) -> dict | None:
+    """작업 유형에 맞는 provider-neutral dict schema 반환."""
+
+    spec = _TASK_SCHEMA_SPECS.get(task_type)
+    return deepcopy(spec) if spec else None
+
+
+def validate_response_against_schema(response: dict, schema: types.Schema | dict) -> bool:
     """
     응답이 스키마를 만족하는지 기본 검증
 
@@ -562,7 +582,10 @@ def validate_response_against_schema(response: dict, schema: types.Schema) -> bo
         return False
 
     # [V70] required 필드만 체크 (optional 필드는 누락 허용)
-    required_props = getattr(schema, "required", None)
+    if isinstance(schema, dict):
+        required_props = schema.get("required")
+    else:
+        required_props = getattr(schema, "required", None)
     if required_props:
         missing = [p for p in required_props if p not in response]
         if missing:

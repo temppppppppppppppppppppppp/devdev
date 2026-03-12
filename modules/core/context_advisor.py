@@ -191,6 +191,84 @@ class ContextAdvisor:
 
     # [INF-I7] 장르 힌트 YAML 외부화 — 모듈 로드 시 1회 로딩
     _GENRE_HINTS = _load_genre_hints()
+    _WORK_FOCUS_RELATION_TOKENS = {
+        "ally",
+        "bond",
+        "family",
+        "friend",
+        "mentor",
+        "rival",
+        "relationship",
+        "relation",
+        "trust",
+        "소꿉친구",
+        "관계",
+        "관계선",
+        "동맹",
+        "동료",
+        "라이벌",
+        "멘토",
+        "믿음",
+        "사부",
+        "사제",
+        "숙적",
+        "우군",
+        "은인",
+        "인맥",
+        "죽마고우",
+        "조력자",
+        "친구",
+        "파트너",
+        "후배 라인",
+    }
+    _WORK_FOCUS_NPC_TOKENS = {
+        "actor",
+        "ally",
+        "apprentice",
+        "artist",
+        "associate",
+        "cast",
+        "casting",
+        "character",
+        "crew",
+        "disciple",
+        "family",
+        "fandom",
+        "friend",
+        "junior",
+        "line",
+        "manager",
+        "member",
+        "mentor",
+        "npc",
+        "partner",
+        "people",
+        "person",
+        "rival",
+        "student",
+        "talent",
+        "team",
+        "trainee",
+        "후배",
+        "동료",
+        "라이벌",
+        "매니저",
+        "멘토",
+        "문파",
+        "배우",
+        "사람",
+        "소꿉친구",
+        "승무원",
+        "연습생",
+        "인맥",
+        "인물",
+        "인재",
+        "제자",
+        "조력자",
+        "팀",
+        "팬덤",
+        "핵심 배우",
+    }
 
     def __init__(
         self,
@@ -202,12 +280,17 @@ class ContextAdvisor:
         self.max_queries_per_plan = int(_threshold("smart_retrieval.max_queries_per_plan", 8))
 
     def plan_stage2_retrieval(
-        self, arc_data: dict, current_ep: int, npc_roster: list[Any] | None = None
+        self,
+        arc_data: dict,
+        current_ep: int,
+        npc_roster: list[Any] | None = None,
+        work_focus: dict[str, Any] | None = None,
     ) -> RetrievalPlan:
         context_data = {
             "arc_data": arc_data or {},
             "npc_roster": npc_roster or [],
             "current_ep": current_ep,
+            "work_focus": work_focus or {},
         }
         return self._build_plan("stage2", current_ep, context_data)
 
@@ -218,6 +301,7 @@ class ContextAdvisor:
         current_ep: int = 1,
         npc_roster: list[Any] | None = None,
         genre: str = "",
+        work_focus: dict[str, Any] | None = None,
     ) -> RetrievalPlan:
         """[S3-I1] Stage 3 Blueprint 생성 시 과거 유사 Blueprint를 SC로 검색."""
         context_data = {
@@ -226,6 +310,7 @@ class ContextAdvisor:
             "npc_roster": npc_roster or [],
             "genre": genre or "",
             "current_ep": current_ep,
+            "work_focus": work_focus or {},
         }
         return self._build_plan("stage3", current_ep, context_data)
 
@@ -263,6 +348,7 @@ class ContextAdvisor:
         is_arc_boundary: bool = False,
         is_reject_retry: bool = False,
         low_confidence: bool = False,
+        work_focus: dict[str, Any] | None = None,
     ) -> RetrievalPlan:
         context_data = {
             "manuscript": manuscript or "",
@@ -272,6 +358,7 @@ class ContextAdvisor:
             "is_arc_boundary": bool(is_arc_boundary),
             "is_reject_retry": bool(is_reject_retry),
             "low_confidence": bool(low_confidence),
+            "work_focus": work_focus or {},
         }
         return self._build_plan("director", current_ep, context_data)
 
@@ -370,7 +457,10 @@ class ContextAdvisor:
     def _build_stage2_slots(self, context_data: dict[str, Any]) -> list[RetrievalSlot]:
         arc_data = context_data.get("arc_data", {})
         npc_names = self._normalize_npc_names(context_data.get("npc_roster", []))
-        slots: list[RetrievalSlot] = []
+        slots: list[RetrievalSlot] = self._build_work_focus_slots(
+            context_data.get("work_focus", {}),
+            stage="stage2",
+        )
 
         block_theme = str(arc_data.get("block_theme", "")).strip()
         tactical = str(arc_data.get("tactical_doc", "") or arc_data.get("arc_tactical", "")).strip()
@@ -409,7 +499,10 @@ class ContextAdvisor:
         prev_blueprints = context_data.get("prev_blueprints", [])
         genre = str(context_data.get("genre", "")).strip().lower()
 
-        slots: list[RetrievalSlot] = []
+        slots: list[RetrievalSlot] = self._build_work_focus_slots(
+            context_data.get("work_focus", {}),
+            stage="stage3",
+        )
 
         # 1. Arc 전술 키워드 → 과거 유사 블루프린트 검색
         tactical = str(arc_data.get("tactical_doc", "") or arc_data.get("arc_tactical", "")).strip()
@@ -459,6 +552,77 @@ class ContextAdvisor:
 
         return slots
 
+    @classmethod
+    def _infer_work_focus_source(cls, *values: Any) -> str:
+        haystack = " ".join(str(value or "").lower() for value in values if value)
+        if not haystack:
+            return RetrievalSources.VEC_MEMORY
+        if any(token in haystack for token in cls._WORK_FOCUS_RELATION_TOKENS):
+            return RetrievalSources.DB_NPC_RELATIONSHIP
+        if any(token in haystack for token in cls._WORK_FOCUS_NPC_TOKENS):
+            return RetrievalSources.DB_NPC_HISTORY
+        return RetrievalSources.VEC_MEMORY
+
+    def _build_work_focus_slots(self, work_focus: dict[str, Any], *, stage: str) -> list[RetrievalSlot]:
+        if not isinstance(work_focus, dict) or not work_focus:
+            return []
+
+        slots: list[RetrievalSlot] = []
+        tracking_slots = [str(item).strip() for item in (work_focus.get("tracking_slots") or []) if str(item).strip()]
+        scene_engines = [
+            str(item).strip() for item in (work_focus.get("mandatory_scene_engines") or []) if str(item).strip()
+        ]
+        registry_profiles = [
+            item for item in (work_focus.get("registry_profiles") or []) if isinstance(item, dict)
+        ]
+
+        for idx, item in enumerate(tracking_slots[:3], start=1):
+            source = self._infer_work_focus_source(item)
+            slots.append(
+                RetrievalSlot(
+                    category=f"work_tracking_slot_{idx}",
+                    query=f"{stage} 작품 tracking slot 핵심 상태/최근 변화: {item}",
+                    source=source,
+                    priority=1,
+                )
+            )
+
+        for idx, item in enumerate(scene_engines[:2], start=1):
+            source = self._infer_work_focus_source(item)
+            slots.append(
+                RetrievalSlot(
+                    category=f"work_scene_engine_{idx}",
+                    query=f"{stage} mandatory scene engine 관련 근거/최근 장면: {item}",
+                    source=source,
+                    priority=1,
+                )
+            )
+
+        for idx, profile in enumerate(registry_profiles[:2], start=1):
+            name = str(profile.get("name", "") or "").strip()
+            purpose = str(profile.get("purpose", "") or "").strip()
+            required_fields = [
+                str(item).strip() for item in (profile.get("required_fields") or []) if str(item).strip()
+            ]
+            if not name:
+                continue
+            source = self._infer_work_focus_source(name, purpose, " ".join(required_fields))
+            query_parts = [name]
+            if purpose:
+                query_parts.append(purpose)
+            if required_fields:
+                query_parts.append(f"required_fields={', '.join(required_fields[:5])}")
+            slots.append(
+                RetrievalSlot(
+                    category=f"work_registry_{idx}",
+                    query=f"{stage} registry profile 상태/근거: {' | '.join(query_parts)}",
+                    source=source,
+                    priority=2,
+                )
+            )
+
+        return slots
+
     def _build_stage4_slots(self, context_data: dict[str, Any]) -> list[RetrievalSlot]:
         arc_data = context_data.get("arc_data", {})
         blueprint = context_data.get("blueprint", {})
@@ -469,7 +633,10 @@ class ContextAdvisor:
         npc_names = self._normalize_npc_names(context_data.get("npc_roster", []))
         npc_names.extend(self._extract_npc_names_from_state_changes(state_changes))
 
-        slots: list[RetrievalSlot] = []
+        slots: list[RetrievalSlot] = self._build_work_focus_slots(
+            context_data.get("work_focus", {}),
+            stage="director",
+        )
         if prev_ending:
             slots.append(RetrievalSlot("prev_ending", f"직전 결말 연결 포인트: {prev_ending[:260]}", priority=1))
         if npc_names:
@@ -550,7 +717,10 @@ class ContextAdvisor:
         npc_names = self._normalize_npc_names(context_data.get("npc_roster", []))
         mentioned_npcs = [name for name in npc_names if name and name in manuscript]
 
-        slots: list[RetrievalSlot] = []
+        slots: list[RetrievalSlot] = self._build_work_focus_slots(
+            context_data.get("work_focus", {}),
+            stage="director",
+        )
         if mentioned_npcs:
             slots.append(
                 RetrievalSlot(
@@ -567,7 +737,14 @@ class ContextAdvisor:
 
         rel_query = self._build_relationship_query(blueprint.get("state_changes", {}))
         if rel_query:
-            slots.append(RetrievalSlot("relationship_consistency", rel_query, priority=2))
+            slots.append(
+                RetrievalSlot(
+                    "relationship_consistency",
+                    rel_query,
+                    source=RetrievalSources.DB_NPC_RELATIONSHIP,
+                    priority=2,
+                )
+            )
 
         place = str(blueprint.get("end_location", "") or blueprint.get("start_location", "")).strip()
         if place:

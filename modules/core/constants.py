@@ -167,6 +167,8 @@ def smart_truncate(text: str, max_chars: int = ContextLimits.MAX_CONTEXT_CHARS, 
     if head_chars < 0:
         head_chars = 0
 
+    # Separator is 17 chars; keep a 50-char reserve so tail slices do not overrun
+    # and head-only fallback remains stable near the max_chars boundary.
     tail_budget = max_chars - head_chars - 50
     if tail_budget <= 0:
         return text[:max_chars]
@@ -201,6 +203,15 @@ def log_patch_diff(stage: str, original: str, patched: str, *, max_diff_lines: i
 
     if not original or not patched:
         return
+
+    # [TF-IPG GAP-6] 글자수 delta 로깅
+    _orig_len = len(original)
+    _patch_len = len(patched)
+    _delta_pct = ((_patch_len - _orig_len) / _orig_len * 100) if _orig_len > 0 else 0.0
+    logging.info(
+        "[InPlace-Diff] %s: %d자 → %d자 (%+.1f%%)",
+        stage, _orig_len, _patch_len, _delta_pct,
+    )
 
     orig_lines = original.splitlines(keepends=True)
     patch_lines = patched.splitlines(keepends=True)
@@ -238,7 +249,7 @@ class Stage2Limits:
     # 가변 페이싱 범위
     MIN_EP_COUNT = 3  # 최소 화수 (Blitz)
     MAX_EP_COUNT = 6  # 최대 화수 (Epic)
-    DEFAULT_EP_COUNT = 5  # 기본 화수 (Standard)
+    DEFAULT_EP_COUNT = 4  # 기본 화수 (Standard) [PC-1-A] 5→4
 
     # tactical_doc 분량 기준
     MIN_CHARS_PER_EPISODE = 450  # 화당 최소 문자 수 [TF-59] 500→450 하향
@@ -325,7 +336,7 @@ class VolumeSettings:
     """권 및 아크 설정"""
 
     ARCS_PER_VOLUME = 5  # 권당 아크 개수
-    EPISODES_PER_ARC = 5  # 아크당 기본 에피소드 개수 (Standard 기준)
+    EPISODES_PER_ARC = 4  # 아크당 기본 에피소드 개수 (Standard 기준) [PC-1-A] 5→4
     MIN_EPISODES_PER_ARC = 3  # 아크당 최소 에피소드 (Blitz 최소)
     MAX_EPISODES_PER_ARC = 6  # 아크당 최대 에피소드 (Epic 최대)
 

@@ -26,6 +26,7 @@ class Stage3Context:
         "adversarial_self_play",
         "preset_registry",
         "selected_genre",
+        "pass_rate_monitor",
         # [콜백 10종]
         "get_protagonist_name",
         "audit_event",
@@ -54,6 +55,7 @@ class Stage3Context:
         adversarial_self_play=None,
         preset_registry=None,
         selected_genre=None,
+        pass_rate_monitor=None,
         get_protagonist_name=None,
         audit_event=None,
         write_audit_summary=None,
@@ -76,6 +78,7 @@ class Stage3Context:
         self.adversarial_self_play = adversarial_self_play
         self.preset_registry = preset_registry
         self.selected_genre = selected_genre
+        self.pass_rate_monitor = pass_rate_monitor
         self.get_protagonist_name = get_protagonist_name
         self.audit_event = audit_event
         self.write_audit_summary = write_audit_summary
@@ -102,6 +105,7 @@ class Stage3Context:
             adversarial_self_play=getattr(app, "adversarial_self_play", None),
             preset_registry=getattr(app, "preset_registry", None),
             selected_genre=getattr(app, "selected_genre", None),
+            pass_rate_monitor=getattr(app, "pass_rate_monitor", None),
             get_protagonist_name=getattr(app, "_get_protagonist_name", None),
             audit_event=getattr(app, "_audit_event", None),
             write_audit_summary=getattr(app, "_write_audit_summary", None),

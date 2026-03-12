@@ -494,7 +494,8 @@ class StateTracker:
 
             # Arc 번호 추출
             arc_no = tactical_doc.get("arc_no", 1)
-            base_ep = (arc_no - 1) * 5 + 1  # Arc 1 = EP 1-5, Arc 2 = EP 6-10 ...
+            _ep_count = int(tactical_doc.get("ep_count", 4) or 4)
+            base_ep = tactical_doc.get("ep_start", (arc_no - 1) * _ep_count + 1)
 
             # 초기 상태 설정 (Arc 시작)
             initial_state = EpisodeState(
@@ -508,7 +509,7 @@ class StateTracker:
             self.states[base_ep] = initial_state
 
             # 각 에피소드별 상태 파싱
-            for i in range(5):  # Arc당 5개 에피소드
+            for i in range(_ep_count):  # Arc당 에피소드 수
                 ep_num = base_ep + i
                 ep_key = f"ep_{i + 1}"
 
@@ -1236,6 +1237,112 @@ class StateTracker:
     def get_protagonist_skills_summary(self) -> str:
         return self._npc.get_protagonist_skills_summary()
 
+    def get_skill_cooldown_summary(self) -> str:
+        if not self.skill_cooldown_registry:
+            return ""
+        lines = ["[스킬 쿨다운/사용 이력]"]
+        for skill_name, info in list(self.skill_cooldown_registry.items())[:10]:
+            if not isinstance(info, dict):
+                continue
+            parts = []
+            cooldown = info.get("cooldown")
+            if cooldown not in (None, ""):
+                parts.append(f"쿨다운 {cooldown}")
+            last_used_ep = info.get("last_used_ep")
+            if last_used_ep:
+                parts.append(f"마지막 사용 ep{last_used_ep}")
+            learned_ep = info.get("learned_ep")
+            if learned_ep and not last_used_ep:
+                parts.append(f"습득 ep{learned_ep}")
+            arc_no = info.get("arc_no")
+            if arc_no:
+                parts.append(f"arc{arc_no}")
+            lines.append(f"- {skill_name}" + (f" ({', '.join(parts)})" if parts else ""))
+        return "\n".join(lines) if len(lines) > 1 else ""
+
+    def get_dungeon_clear_summary(self) -> str:
+        if not self.dungeon_clear_registry:
+            return ""
+        lines = ["[던전 클리어 기록]"]
+        for dungeon_name, info in list(self.dungeon_clear_registry.items())[:10]:
+            if not isinstance(info, dict):
+                continue
+            parts = []
+            rank = str(info.get("rank", "") or "").strip()
+            if rank:
+                parts.append(f"랭크 {rank}")
+            cleared_ep = info.get("cleared_ep")
+            if cleared_ep:
+                parts.append(f"클리어 ep{cleared_ep}")
+            arc_no = info.get("arc_no")
+            if arc_no:
+                parts.append(f"arc{arc_no}")
+            lines.append(f"- {dungeon_name}" + (f" ({', '.join(parts)})" if parts else ""))
+        return "\n".join(lines) if len(lines) > 1 else ""
+
+    def get_spell_repertoire_summary(self) -> str:
+        if not self.spell_repertoire:
+            return ""
+        lines = ["[주요 주문/마법]"]
+        for spell_name, info in list(self.spell_repertoire.items())[:10]:
+            if not isinstance(info, dict):
+                continue
+            parts = []
+            tier = str(info.get("tier", "") or "").strip()
+            if tier:
+                parts.append(f"티어 {tier}")
+            learned_ep = info.get("learned_ep")
+            if learned_ep:
+                parts.append(f"습득 ep{learned_ep}")
+            arc_no = info.get("arc_no")
+            if arc_no:
+                parts.append(f"arc{arc_no}")
+            lines.append(f"- {spell_name}" + (f" ({', '.join(parts)})" if parts else ""))
+        return "\n".join(lines) if len(lines) > 1 else ""
+
+    def get_blessing_curse_summary(self) -> str:
+        if not self.blessing_curse_registry:
+            return ""
+        lines = ["[활성 축복/저주]"]
+        for effect_name, info in list(self.blessing_curse_registry.items())[:10]:
+            if not isinstance(info, dict):
+                continue
+            parts = []
+            effect_type = str(info.get("type", "") or "").strip()
+            if effect_type:
+                parts.append(effect_type)
+            source = str(info.get("source", "") or "").strip()
+            if source:
+                parts.append(f"출처 {source}")
+            ep = info.get("ep") or info.get("episode")
+            if ep:
+                parts.append(f"ep{ep}")
+            status = str(info.get("status", "") or "").strip()
+            if status:
+                parts.append(status)
+            lines.append(f"- {effect_name}" + (f" ({', '.join(parts)})" if parts else ""))
+        return "\n".join(lines) if len(lines) > 1 else ""
+
+    def get_filmography_summary(self) -> str:
+        if not self.filmography_registry:
+            return ""
+        lines = ["[필모그래피]"]
+        for work_name, info in list(self.filmography_registry.items())[:10]:
+            if not isinstance(info, dict):
+                continue
+            parts = []
+            role = str(info.get("role", "") or "").strip()
+            if role:
+                parts.append(f"배역 {role}")
+            year = info.get("year")
+            if year not in (None, ""):
+                parts.append(f"{year}년")
+            ep = info.get("ep") or info.get("episode")
+            if ep:
+                parts.append(f"ep{ep}")
+            lines.append(f"- {work_name}" + (f" ({', '.join(parts)})" if parts else ""))
+        return "\n".join(lines) if len(lines) > 1 else ""
+
     # ═══════════════════════════════════════════════════════════════
     # [S4-I2] 통합 요약 메서드
     # ═══════════════════════════════════════════════════════════════
@@ -1299,6 +1406,27 @@ class StateTracker:
                     summaries["financial_state"] = val
             except Exception as exc:
                 logging.warning("[S4-I2] get_financial_state_summary() 실패 (무시): %s", exc)
+
+        genre_methods: dict[str, list[tuple[str, str]]] = {
+            "hunter": [
+                ("dungeon_clear", "get_dungeon_clear_summary"),
+                ("skill_cooldown", "get_skill_cooldown_summary"),
+            ],
+            "fantasy": [
+                ("spell_repertoire", "get_spell_repertoire_summary"),
+                ("blessing_curse", "get_blessing_curse_summary"),
+            ],
+            "actor": [
+                ("filmography", "get_filmography_summary"),
+            ],
+        }
+        for key, method_name in genre_methods.get(genre, []):
+            try:
+                val = getattr(self, method_name)()
+                if val is not None:
+                    summaries[key] = val
+            except Exception as exc:
+                logging.warning("[S4-I2] %s() 실패 (무시): %s", method_name, exc)
 
         return summaries
 

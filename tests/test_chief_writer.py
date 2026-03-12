@@ -12,7 +12,7 @@ Stage4Orchestrator (modules/core/stage4_orchestrator.py):
 import json
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -22,6 +22,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 from modules.core.stage4_orchestrator import Stage4Orchestrator
 from modules.domain.agents.chief_writer import ChiefWriter
+from modules.domain.agents.chief_writer_context import normalize_chief_writer_genre_code
 
 # ══════════════════════════════════════════════════════════════
 # Fixtures
@@ -147,6 +148,236 @@ def mock_app():
     return app
 
 
+class TestChiefWriterInplacePatchGuards:
+    def test_inplace_patch_strips_end_marker_and_preserves_state_updates(self, chief_writer):
+        original = "original manuscript " * 160
+        patched = ("patched manuscript " * 140) + "[원고_끝]"
+        chief_writer.ask = MagicMock(
+            return_value=json.dumps(
+                {
+                    "content": patched,
+                    "patch_state_updates": {"mood": "tense"},
+                },
+                ensure_ascii=False,
+            )
+        )
+
+        with patch("modules.core.prompt_loader.PromptLoader.load", return_value=None):
+            result = chief_writer.inplace_patch(
+                original_manuscript=original,
+                director_feedback="fix only continuity",
+                attempt_number=1,
+            )
+
+        assert result == [
+            {
+                "manuscript": patched[: -len("[원고_끝]")].rstrip(),
+                "strategy": "inplace_patch",
+                "state_updates": {"mood": "tense"},
+            }
+        ]
+
+    def test_inplace_patch_without_end_marker_warns_but_returns_manuscript(self, chief_writer):
+        original = "original manuscript " * 160
+        patched = "patched manuscript " * 140
+        chief_writer.ask = MagicMock(
+            return_value=json.dumps(
+                {
+                    "content": patched,
+                    "patch_state_updates": {"tone": "dry"},
+                },
+                ensure_ascii=False,
+            )
+        )
+
+        with (
+            patch("modules.core.prompt_loader.PromptLoader.load", return_value=None),
+            patch("modules.domain.agents.chief_writer.logging.warning") as mock_warning,
+        ):
+            result = chief_writer.inplace_patch(
+                original_manuscript=original,
+                director_feedback="fix only continuity",
+                attempt_number=1,
+            )
+
+        assert result[0]["manuscript"] == patched
+        assert result[0]["state_updates"] == {"tone": "dry"}
+        assert any("[원고_끝]" in str(call.args[0]) for call in mock_warning.call_args_list)
+
+    def test_inplace_patch_unwraps_revised_manuscript_wrapper(self, chief_writer):
+        original = "original manuscript " * 160
+        patched = "patched manuscript " * 140
+        chief_writer.ask = MagicMock(
+            return_value=json.dumps(
+                {
+                    "revised_manuscript": patched,
+                    "patch_state_updates": {"tone": "clean"},
+                },
+                ensure_ascii=False,
+            )
+        )
+
+        with patch("modules.core.prompt_loader.PromptLoader.load", return_value=None):
+            result = chief_writer.inplace_patch(
+                original_manuscript=original,
+                director_feedback="fix only continuity",
+                attempt_number=1,
+            )
+
+        assert result[0]["manuscript"] == patched
+        assert result[0]["state_updates"] == {"tone": "clean"}
+
+    def test_inplace_patch_rejects_short_extracted_manuscript(self, chief_writer):
+        original = "original manuscript " * 160
+        chief_writer.ask = MagicMock(
+            return_value=json.dumps(
+                {
+                    "content": "x" * 1999,
+                    "patch_state_updates": {"tone": "dry"},
+                    "notes": "y" * 500,
+                },
+                ensure_ascii=False,
+            )
+        )
+
+        with patch("modules.core.prompt_loader.PromptLoader.load", return_value=None):
+            result = chief_writer.inplace_patch(
+                original_manuscript=original,
+                director_feedback="fix only continuity",
+                attempt_number=1,
+            )
+
+        assert result == []
+
+    def test_patch_with_feedback_formats_length_placeholders(self, chief_writer):
+        chief_writer.generate_ensemble = MagicMock(return_value=[{"manuscript": "patched"}])
+        original = "original manuscript " * 160
+
+        prompt_template = (
+            "feedback={feedback_text}\n"
+            "chars={original_char_count}\n"
+            "min={min_char_target}\n"
+            "{style_guide}\n"
+            "{original_manuscript}"
+        )
+
+        with patch("modules.core.prompt_loader.PromptLoader.load", return_value=prompt_template):
+            result = chief_writer.patch_with_feedback(
+                ep_num=3,
+                blueprint={"ep_num": 3},
+                prev_manuscript="",
+                hud_report="",
+                arc_doc="",
+                master_bible={},
+                style_guide="keep tone",
+                original_manuscript=original,
+                director_feedback="fix local continuity only",
+                previous_attempt={},
+                attempt_number=2,
+            )
+
+        assert result == [{"manuscript": "patched"}]
+        chief_writer.generate_ensemble.assert_called_once()
+        forwarded_feedback = chief_writer.generate_ensemble.call_args.kwargs["director_feedback"]
+        assert f"chars={len(original)}" in forwarded_feedback
+        assert f"min={int(len(original) * 0.9)}" in forwarded_feedback
+
+
+class TestChiefWriterStructuralInplacePatch:
+    def test_structural_inplace_patch_replaces_only_target_scene_block(self, chief_writer):
+        blueprint = {
+            "ep_num": 10,
+            "scene_breakdown": {
+                "scene_1": {"description": "opening buildup"},
+                "scene_2": {"description": "ending payoff"},
+            },
+        }
+        opening_block = ("OPENING_KEEP_BLOCK alpha beta gamma. " * 90).strip()
+        ending_block = ("ENDING_ORIGINAL_BLOCK omega theta sigma. " * 90).strip()
+        patched_ending = ("ENDING_PATCHED_BLOCK omega theta sigma. " * 92).strip()
+        original = f"{opening_block}\n\n\n{ending_block}"
+
+        chief_writer._inplace_patch_blueprint = blueprint
+        chief_writer._inplace_patch_genre_name = "wuxia"
+        chief_writer.ask = MagicMock(
+            return_value=json.dumps(
+                {
+                    "patched_blocks": {"scene_2": patched_ending},
+                    "patch_state_updates": {"ending": "tightened"},
+                },
+                ensure_ascii=False,
+            )
+        )
+
+        with patch("modules.core.prompt_loader.PromptLoader.load", return_value=None):
+            result = chief_writer.inplace_patch(
+                original_manuscript=original,
+                director_feedback="ending needs a local fix while preserving the rest",
+                attempt_number=1,
+            )
+
+        assert result == [
+            {
+                "manuscript": f"{opening_block}\n\n{patched_ending}",
+                "strategy": "inplace_patch_structural",
+                "state_updates": {"ending": "tightened"},
+                "patch_targets": ["scene_2"],
+            }
+        ]
+        assert chief_writer._last_inplace_patch_trace == {
+            "patch_strategy": "inplace_patch_structural",
+            "patch_targets": ["scene_2"],
+            "fallback_reason": "",
+            "focus": "ending",
+            "structural_attempted": True,
+        }
+
+    def test_structural_inplace_patch_global_feedback_falls_back_to_whole_text_patch(self, chief_writer):
+        blueprint = {
+            "ep_num": 10,
+            "scene_breakdown": {
+                "scene_1": {"description": "opening buildup"},
+                "scene_2": {"description": "ending payoff"},
+            },
+        }
+        original = "original manuscript " * 160
+        patched = "patched manuscript " * 140
+
+        chief_writer._inplace_patch_blueprint = blueprint
+        chief_writer._inplace_patch_genre_name = "wuxia"
+        chief_writer.ask = MagicMock(
+            return_value=json.dumps(
+                {
+                    "content": patched,
+                    "patch_state_updates": {"tone": "reset"},
+                },
+                ensure_ascii=False,
+            )
+        )
+
+        with patch("modules.core.prompt_loader.PromptLoader.load", return_value=None):
+            result = chief_writer.inplace_patch(
+                original_manuscript=original,
+                director_feedback="tone and pacing need a full rewrite across the manuscript",
+                attempt_number=1,
+            )
+
+        assert result == [
+            {
+                "manuscript": patched,
+                "strategy": "inplace_patch",
+                "state_updates": {"tone": "reset"},
+            }
+        ]
+        assert chief_writer._last_inplace_patch_trace == {
+            "patch_strategy": "inplace_patch",
+            "patch_targets": [],
+            "fallback_reason": "global_issue",
+            "focus": "global",
+            "structural_attempted": False,
+        }
+
+
 # ══════════════════════════════════════════════════════════════
 # Test 1: ChiefWriter 초기화
 # ══════════════════════════════════════════════════════════════
@@ -183,6 +414,22 @@ class TestChiefWriterInit:
         assert chief_writer.ENSEMBLE_TIMEOUT > 0
         assert chief_writer.SINGLE_CANDIDATE_TIMEOUT > 0
         assert chief_writer.SINGLE_CANDIDATE_TIMEOUT <= chief_writer.ENSEMBLE_TIMEOUT
+
+    def test_strategy_execution_plan_uses_recent_pass_mix(self, chief_writer):
+        chief_writer.context.db.get_strategy_win_rates.return_value = {
+            "total": 10,
+            "tension": 0.6,
+            "balanced": 0.3,
+            "narrative": 0.1,
+        }
+
+        ordered, adjusted_temps, _shares = chief_writer._build_strategy_execution_plan(
+            ["balanced", "narrative", "tension"]
+        )
+
+        assert ordered[0] == "tension"
+        assert adjusted_temps["tension"] < chief_writer.ENSEMBLE_STRATEGIES["tension"]["temperature"]
+        assert adjusted_temps["narrative"] > chief_writer.ENSEMBLE_STRATEGIES["narrative"]["temperature"]
 
 
 # ══════════════════════════════════════════════════════════════
@@ -515,6 +762,75 @@ class TestGenerateEnsemble:
             assert "state_updates" in cand
             assert "metadata" in cand
 
+    def test_reduced_strategy_budget_prefers_selected_strategy(self, chief_writer, sample_blueprint, sample_master_bible):
+        called = []
+
+        chief_writer.context_builder.build_common_context = MagicMock(return_value="ctx")
+        chief_writer._get_or_create_context_cache = MagicMock(return_value={})
+
+        def _fake_generate_single_candidate(**kwargs):
+            strategy = kwargs["strategy"]
+            called.append(strategy)
+            return {
+                "strategy": strategy,
+                "manuscript": strategy * 1000,
+                "title": strategy,
+                "state_updates": {},
+                "metadata": {},
+            }
+
+        chief_writer._generate_single_candidate = MagicMock(side_effect=_fake_generate_single_candidate)
+
+        candidates = chief_writer.generate_ensemble(
+            ep_num=10,
+            blueprint=sample_blueprint,
+            prev_manuscript="",
+            hud_report="",
+            arc_doc="",
+            master_bible=sample_master_bible,
+            genre_name="臾댄삊",
+            strategy_budget="reduced",
+            preferred_strategy="tension",
+        )
+
+        assert len(candidates) == 2
+        assert set(called) == {"tension", "balanced"}
+
+    def test_reduced_strategy_budget_without_preferred_uses_balanced_and_tension(
+        self, chief_writer, sample_blueprint, sample_master_bible
+    ):
+        called = []
+
+        chief_writer.context_builder.build_common_context = MagicMock(return_value="ctx")
+        chief_writer._get_or_create_context_cache = MagicMock(return_value={})
+
+        def _fake_generate_single_candidate(**kwargs):
+            strategy = kwargs["strategy"]
+            called.append(strategy)
+            return {
+                "strategy": strategy,
+                "manuscript": strategy * 1000,
+                "title": strategy,
+                "state_updates": {},
+                "metadata": {},
+            }
+
+        chief_writer._generate_single_candidate = MagicMock(side_effect=_fake_generate_single_candidate)
+
+        candidates = chief_writer.generate_ensemble(
+            ep_num=10,
+            blueprint=sample_blueprint,
+            prev_manuscript="",
+            hud_report="",
+            arc_doc="",
+            master_bible=sample_master_bible,
+            genre_name="臾댄삊",
+            strategy_budget="reduced",
+        )
+
+        assert len(candidates) == 2
+        assert set(called) == {"balanced", "tension"}
+
 
 # ══════════════════════════════════════════════════════════════
 # Test 9: regenerate_with_feedback
@@ -553,6 +869,64 @@ class TestRegenerateWithFeedback:
         )
         assert isinstance(candidates, list)
         assert len(candidates) >= 1
+
+    def test_retry_history_feedback_is_included(self, chief_writer, sample_blueprint, sample_master_bible):
+        chief_writer.generate_ensemble = MagicMock(return_value=[{"content": "ok"}])
+
+        previous_attempt = {
+            "strategy": "balanced",
+            "rejection_reason": "분량 부족",
+            "action_items": ["분량 보강"],
+            "score": 45,
+            "prior_attempts": [
+                {
+                    "reject_bucket": "constraint_violation",
+                    "error_category": "LOGIC_ERROR",
+                    "rejection_reason": "연속성 실패",
+                    "action_items": ["위치 연결 보강"],
+                    "score": 52,
+                },
+                {
+                    "reject_bucket": "constraint_violation",
+                    "error_category": "LOGIC_ERROR",
+                    "rejection_reason": "타임라인 실패",
+                    "action_items": ["시간 경과 명시"],
+                    "score": 49,
+                    "contradiction_types": ["타임라인"],
+                },
+            ],
+        }
+
+        chief_writer.regenerate_with_feedback(
+            ep_num=10,
+            blueprint=sample_blueprint,
+            prev_manuscript="",
+            hud_report="",
+            arc_doc="",
+            master_bible=sample_master_bible,
+            style_guide="",
+            director_feedback="연속성 보강",
+            previous_attempt=previous_attempt,
+            attempt_number=3,
+            genre_name="무협",
+        )
+
+        feedback = chief_writer.generate_ensemble.call_args.kwargs["director_feedback"]
+        assert "[누적 실패 히스토리" in feedback
+        assert "constraint_violation" in feedback
+        assert "공통 실패 패턴" in feedback
+
+    def test_candidate_diversity_warning_attached(self, chief_writer):
+        candidates = [
+            {"manuscript": "같은 원고 흐름이다. 같은 원고 흐름이다.", "metadata": {}},
+            {"manuscript": "같은 원고 흐름이다. 같은 원고 흐름이다!", "metadata": {}},
+            {"manuscript": "같은 원고 흐름이다? 같은 원고 흐름이다.", "metadata": {}},
+        ]
+
+        summary = chief_writer._annotate_candidate_diversity(candidates)
+
+        assert "후보 다양성 경고" in summary["warning"]
+        assert candidates[0]["metadata"]["diversity"]["max_similarity"] >= 0.7
 
 
 # ══════════════════════════════════════════════════════════════
@@ -940,6 +1314,7 @@ class TestBuildAntiTropeInstructions:
         """클리셰 경고가 포함"""
         result = chief_writer._build_anti_trope_instructions("무협")
         assert "클리셰" in result or "금지" in result
+        assert "AI 티 문장" in result
 
 
 # ══════════════════════════════════════════════════════════════
@@ -976,3 +1351,9 @@ class TestGenerateEnsembleLoggingLevels:
     def test_candidate_timeout_uses_warning_level(self):
         source = Path("modules/domain/agents/chief_writer.py").read_text(encoding="utf-8")
         assert 'logging.warning(f" [V61.3] 후보 {strategy} 타임아웃 ({self.SINGLE_CANDIDATE_TIMEOUT}초)")' in source
+
+
+def test_normalize_chief_writer_genre_code_accepts_investment_aliases():
+    assert normalize_chief_writer_genre_code("투자 (Investment Fiction)") == "investment"
+    assert normalize_chief_writer_genre_code("investment", genre_type="investment") == "investment"
+    assert normalize_chief_writer_genre_code("", genre_type="investment") == "investment"

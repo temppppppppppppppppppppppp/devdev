@@ -11,6 +11,7 @@ import dataclasses
 import logging
 import re
 
+from modules.core.llm_generate import generate_content_via_router
 from modules.core.stage4_context_builder import Stage4ContextBuilder
 from modules.core.stage4_interview_round import Stage4InterviewRound
 from modules.core.stage4_post_processor import Stage4PostProcessor
@@ -157,6 +158,7 @@ class _SessionConfig:
     output_dir: object  # Path
     v50_modules_available: bool
     total_planned_ep: int
+    reference_excerpt: str = ""
 
 
 @dataclasses.dataclass(slots=True)
@@ -310,6 +312,7 @@ class Stage4Orchestrator:
 
         try:
             from modules.core.constants import AIModels
+            from modules.core.continuity_pin_guard import apply_continuity_pins
             from modules.core.prompt_loader import PromptLoader
             from modules.core.response_schemas import BLUEPRINT_PREFLIGHT_SCHEMA
             from modules.core.tactical_utils import extract_episode_tactical
@@ -340,7 +343,36 @@ class Stage4Orchestrator:
                 except Exception:
                     pass
 
-            _bp_json = json.dumps(blueprint, ensure_ascii=False, indent=2)[:15000]
+            _prev_published_text = ""
+            try:
+                _db = getattr(getattr(self.ctx, "current_project", None), "db", None)
+                _prev_row = _db.get_manuscript(ep_num - 1) if _db and ep_num > 1 else None
+                if isinstance(_prev_row, dict):
+                    _prev_published_text = str(
+                        _prev_row.get("content")
+                        or _prev_row.get("corrected_manuscript")
+                        or _prev_row.get("manuscript")
+                        or ""
+                    )
+                elif _prev_row:
+                    _prev_published_text = str(_prev_row)
+            except Exception:
+                _prev_published_text = ""
+
+            _pin_result = apply_continuity_pins(
+                blueprint,
+                previous_published_text=_prev_published_text,
+                arc_tactical_text=_arc_tactical,
+            )
+            _patched_blueprint = None
+            _blueprint_for_validation = blueprint
+            if _pin_result.get("changes"):
+                _patched_blueprint = _pin_result.get("blueprint", blueprint)
+                if isinstance(_patched_blueprint, dict):
+                    _patched_blueprint["_continuity_pins"] = _pin_result["changes"]
+                    _blueprint_for_validation = _patched_blueprint
+
+            _bp_json = json.dumps(_blueprint_for_validation, ensure_ascii=False, indent=2)[:15000]
 
             # 2. 프롬프트 로드 + 포맷
             try:
@@ -363,7 +395,8 @@ class Stage4Orchestrator:
             # 3. Flash 모델 직접 호출
             from google.genai import types
 
-            _response = self.ctx.sys.api_client.models.generate_content(
+            _response = generate_content_via_router(
+                client=self.ctx.sys.api_client,
                 model=AIModels.FLASH_ANALYSIS_MODEL,
                 contents=_prompt,
                 config=types.GenerateContentConfig(
@@ -431,7 +464,7 @@ class Stage4Orchestrator:
                     "passed": True,
                     "issues": _issues,
                     "summary": _summary,
-                    "patched_blueprint": None,
+                    "patched_blueprint": _patched_blueprint,
                 }
 
             # 4. 실패 → advisory 텍스트 생성 (Blueprint 패치 대신 CW/Director에 전달)
@@ -463,7 +496,7 @@ class Stage4Orchestrator:
                 "passed": True,  # advisory 전달이므로 항상 pass (블루프린트 미수정)
                 "issues": _issues,
                 "summary": _summary,
-                "patched_blueprint": None,
+                "patched_blueprint": _patched_blueprint,
                 "advisory": _advisory_text,
             }
 
@@ -544,6 +577,7 @@ JSON으로 출력:
         s4_genre_type = session.s4_genre_type
         story_context = session.story_context
         style_guide = session.style_guide
+        reference_excerpt = session.reference_excerpt
         target_ep = session.target_ep
         output_dir = session.output_dir
         v50_modules_available = session.v50_modules_available
@@ -607,6 +641,7 @@ JSON으로 출력:
                 arc_data=arc_data,
                 ep_num=next_ep,
             )
+            blueprint = _preflight.get("patched_blueprint") or blueprint
             _preflight_advisory = _preflight.get("advisory", "")
 
             # [4-R1-a] 에피소드 컨텍스트 수집 (Extract Method)
@@ -628,6 +663,10 @@ JSON으로 출력:
             if hasattr(self.ctx.sys, "guard") and self.ctx.sys.guard:
                 try:
                     purism_prompt = self.ctx.sys.guard.get_v20_purism_prompt()
+                    if hasattr(self.ctx.sys.guard, "get_retrieval_contract_prompt"):
+                        _work_contract = str(self.ctx.sys.guard.get_retrieval_contract_prompt("manuscript") or "").strip()
+                        if _work_contract:
+                            purism_prompt = "\n\n".join(part for part in (purism_prompt, _work_contract) if part)
                 except Exception as e:
                     self.ctx.ui.log(f"   ⚠️ Guard Purism Prompt 추출 실패 (비치명): {e}")
 
@@ -683,7 +722,14 @@ JSON으로 출력:
                 except Exception as _e:  # [V64.P4] OPTIONAL: diversity injection
                     logging.debug("[Stage4] diversity_engine 주입 실패 (무시): %s", _e)
 
-            intro_dna = "CYNICAL"
+            # [QI-1-C3] Bible protagonist_config에서 personality 동적 로드
+            intro_dna = ""
+            try:
+                _bible = self.ctx.current_project.master_bible
+                _br = _bible.get("MasterBible", _bible) if isinstance(_bible, dict) else {}
+                intro_dna = _br.get("protagonist_config", {}).get("personality", "")
+            except Exception:
+                logging.debug("[Stage4] intro_dna Bible 로드 실패 (빈 문자열 폴백)")
 
             self.ctx.ui.log(f"\n{'=' * 60}")
             self.ctx.ui.log(
@@ -695,6 +741,16 @@ JSON으로 출력:
             _mc_max = _threshold("context.mandatory_context_max", 80000)
             if len(mandatory_context) > _mc_max:
                 _original_len = len(mandatory_context)
+                _ctx_budget_meta = getattr(self.ctx, "_stage4_context_budget_meta", {}) or {}
+                if isinstance(_ctx_budget_meta, dict) and _ctx_budget_meta:
+                    _perf_logger.info(
+                        "[V66.1] mandatory_context pretrim meta sc=%s mc=%s total=%s limit=%s headroom=%s",
+                        _ctx_budget_meta.get("sc_chars"),
+                        _ctx_budget_meta.get("mc_chars"),
+                        _ctx_budget_meta.get("total_chars"),
+                        _ctx_budget_meta.get("limit_chars"),
+                        _ctx_budget_meta.get("headroom_chars"),
+                    )
                 # 섹션 분리: "\n[" 또는 "\n\n[" 마커 기준으로 분할
                 _section_pattern = re.compile(r"\n(?=\[)")
                 _sections = _section_pattern.split(mandatory_context)
@@ -747,6 +803,7 @@ JSON으로 출력:
                 intro_dna=intro_dna,
                 story_context=story_context,
                 style_guide=style_guide,
+                reference_excerpt=reference_excerpt,
                 mandatory_context=mandatory_context,
                 preflight_advisory=_preflight_advisory,
             )
@@ -815,6 +872,8 @@ JSON으로 출력:
         _bucket_streak = 0
         _prev_dominant_contradiction = ""  # [A-4] contradiction type 수렴 추적
         _contradiction_type_streak = 0
+        _score_history: list[int] = []
+        _plateau_advisory_emitted = False
 
         with StageSpinner(4, f"제{next_ep}화 · 앙상블 준비") as stage4_spinner:
             try:
@@ -932,6 +991,44 @@ JSON으로 출력:
                 previous_attempt = _round_result.previous_attempt
                 print(f"   ❌ [Round {interview_round + 1}/{_max_rounds}] REJECT → 다음 라운드")
 
+                _current_score = (previous_attempt or {}).get("score", 0)
+                try:
+                    _current_score = int(_current_score)
+                except (TypeError, ValueError):
+                    _current_score = 0
+                if _current_score > 0:
+                    _score_history.append(_current_score)
+                    if not _plateau_advisory_emitted:
+                        _plateau_advisory = ""
+                        if len(_score_history) >= 3 and (
+                            _score_history[-3] > _score_history[-2] > _score_history[-1]
+                        ):
+                            _plateau_advisory = (
+                                f"[⚠️ 점수 하락 추세] 최근 점수가 "
+                                f"{_score_history[-3]}→{_score_history[-2]}→{_score_history[-1]}로 3연속 하락했습니다. "
+                                "현재 수정 루프의 효율이 낮습니다. fix_scope를 rewrite 이상으로 넓히거나 "
+                                "Blueprint/Arc 구조를 재검토하세요."
+                            )
+                        elif len(_score_history) >= 2 and _score_history[-2] == _score_history[-1]:
+                            _plateau_advisory = (
+                                f"[⚠️ 점수 plateau] 최근 두 라운드 점수가 {_score_history[-1]}점으로 동일합니다. "
+                                "동일 수정 루프를 반복 중일 수 있습니다. fix_scope 확대 또는 Blueprint 재검토를 우선 검토하세요."
+                            )
+
+                        if _plateau_advisory:
+                            _plateau_advisory_emitted = True
+                            director_feedback = _plateau_advisory + "\n" + director_feedback
+                            if isinstance(previous_attempt, dict):
+                                previous_attempt["score_history"] = list(_score_history[-3:])
+                                previous_attempt["plateau_detected"] = True
+                                _existing_reasoning = str(previous_attempt.get("fix_scope_reasoning", "") or "").strip()
+                                previous_attempt["fix_scope_reasoning"] = (
+                                    f"{_existing_reasoning}\n{_plateau_advisory}".strip()
+                                    if _existing_reasoning
+                                    else _plateau_advisory
+                                )
+                            self.ctx.ui.log(f"   ⚠️ [QR-7] {str(_plateau_advisory)[:80]}")
+
                 # [V75-B] LOGIC_ERROR 연속 카운터
                 if _round_result.error_category == "LOGIC_ERROR":
                     _logic_error_streak += 1
@@ -1023,6 +1120,22 @@ JSON으로 출력:
                                 arc_data=round_ctx.arc_data,
                             )
                             if _patched_bp:
+                                # [TF-IPG GAP-4] V75-D blueprint 패치 diff 로깅 + 변경비율 체크
+                                try:
+                                    import json as _json_mod
+
+                                    from modules.core.constants import calc_patch_change_ratio, log_patch_diff
+                                    _bp_orig_j = _json_mod.dumps(round_ctx.blueprint, ensure_ascii=False, indent=2)
+                                    _bp_patch_j = _json_mod.dumps(_patched_bp, ensure_ascii=False, indent=2)
+                                    log_patch_diff("S4-V75D-Blueprint", _bp_orig_j, _bp_patch_j)
+                                    _bp_cr = calc_patch_change_ratio(
+                                        _json_mod.dumps(round_ctx.blueprint, ensure_ascii=False),
+                                        _json_mod.dumps(_patched_bp, ensure_ascii=False),
+                                    )
+                                    if _bp_cr > 0.30:
+                                        logging.warning("[TF-IPG] V75-D Blueprint 변경 비율 %.1f%% > 30%%", _bp_cr * 100)
+                                except Exception as _diff_e:
+                                    logging.debug("[TF-IPG] V75-D diff 계산 실패: %s", _diff_e)
                                 _v75d_success = True
                                 round_ctx = dataclasses.replace(round_ctx, blueprint=_patched_bp)
                                 _logic_error_streak = 0
@@ -1307,6 +1420,7 @@ JSON으로 출력:
 
         # [V60.95] 스타일 가이드 로드
         style_guide = ""
+        reference_excerpt = ""
         saved_style = self.ctx.current_project.load_v20_anchor("style_guide")
         if saved_style and STAGE0_AVAILABLE:
             try:
@@ -1328,6 +1442,7 @@ JSON으로 출력:
                 except Exception as e:
                     _perf_logger.warning(f"[SilentPass:Stage4] Bible POV 오버라이드 실패: {e!s:.100}")
                 style_guide = loaded_sg.to_prompt()
+                reference_excerpt = getattr(loaded_sg, "reference_excerpt", "")
                 self.ctx.ui.log(
                     f"🎨 [V60.95] 저장된 스타일 가이드 로드됨 (톤: {loaded_sg.tone}, 시점: {loaded_sg.pov})"
                 )
@@ -1381,6 +1496,7 @@ JSON으로 출력:
             s4_genre_type=_s4_genre_type,
             story_context=_story_context,
             style_guide=style_guide,
+            reference_excerpt=reference_excerpt,
             target_ep=target_ep,
             output_dir=output_dir,
             v50_modules_available=V50_MODULES_AVAILABLE,
@@ -1405,8 +1521,19 @@ JSON으로 출력:
             if session is None:
                 return
             # 5. Episode production loop
-            if self._run_interview_loop(session):
+            _should_return = self._run_interview_loop(session)
+            if _should_return:
                 return
+            _audit_event = getattr(self.app, "_audit_event", None)
+            if callable(_audit_event):
+                _audit_event(
+                    "stage4_complete",
+                    "stage4 production completed",
+                    {"target_ep": getattr(session, "target_ep", target_ep)},
+                )
+            _write_summary = getattr(self.app, "_write_audit_summary", None)
+            if callable(_write_summary):
+                _write_summary("stage4_complete")
 
         except KeyboardInterrupt:
             self.ctx.ui.log("\n⚠️ 사용자 중단 요청. 저장 후 종료합니다.")

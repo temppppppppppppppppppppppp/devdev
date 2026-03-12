@@ -121,7 +121,7 @@ class PreflightChecker(BaseAgent):
     def __init__(self, context, client, model_tier: str = None):
         # [V60.24] Flash로 변경 (분석용)
         super().__init__(context, client, model_tier)
-        # [V60.37] 스마트 폴백 (BaseAgent에서 자동 설정: gemini-3-flash → gemini-2.5-flash)
+        # [V60.37] 스마트 폴백 (BaseAgent 자동 설정, 현재 gemini-2.5-flash 직접 사용)
 
     def analyze(self, prev_arcs: list[dict], resolved_plots_summary: str = "") -> dict:
         """

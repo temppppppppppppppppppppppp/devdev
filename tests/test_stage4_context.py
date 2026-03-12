@@ -74,6 +74,9 @@ class TestStage4Context:
     def test_context_advisor_default_none(self, ctx):
         assert ctx.context_advisor is None
 
+    def test_budget_meta_default_empty_dict(self, ctx):
+        assert ctx._stage4_context_budget_meta == {}
+
     def test_context_advisor_stored(self, mock_deps):
         advisor = MagicMock()
         with_advisor = Stage4Context(**mock_deps, context_advisor=advisor)

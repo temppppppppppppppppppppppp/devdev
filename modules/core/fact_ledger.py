@@ -14,6 +14,55 @@ import logging
 _logger = logging.getLogger(__name__)
 
 
+def _build_truncation_suffix(total: int, shown: int, *, unit: str = "개") -> str:
+    if total > shown:
+        return f" (총 {total}{unit} 중 {shown}{unit} 표시)"
+    return ""
+
+
+def summarize_fact_ledger_numbers_block(
+    ledger: dict | None,
+    *,
+    header: str = "[팩트 원장 핵심 수치]",
+    max_items: int = 10,
+) -> str:
+    """팩트 원장 수치 블록을 Stage 2/3 컨텍스트용 짧은 문자열로 직렬화한다."""
+    if not isinstance(ledger, dict):
+        return ""
+
+    numbers = ledger.get("numbers", {})
+    if not isinstance(numbers, dict) or not numbers:
+        return ""
+
+    shown_entries: list[tuple[str, dict]] = []
+    for key, info in numbers.items():
+        if not isinstance(info, dict):
+            continue
+        shown_entries.append((str(key), info))
+        if len(shown_entries) >= max(1, int(max_items)):
+            break
+
+    if not shown_entries:
+        return ""
+
+    title = f"{header}{_build_truncation_suffix(len(numbers), len(shown_entries))}"
+    lines = [title]
+    for key, info in shown_entries:
+        value = info.get("value", "?")
+        unit = str(info.get("unit", "") or "").strip()
+        unit_str = f" {unit}" if unit else ""
+        last_ep = info.get("last_ep", "?")
+        established_value = info.get("established_value", "")
+        established_ep = info.get("established_ep", "?")
+        if established_value not in ("", None) and str(established_value) != str(value):
+            lines.append(
+                f"- {key}: {established_value}{unit_str} (ep{established_ep}) -> {value}{unit_str} (ep{last_ep})"
+            )
+        else:
+            lines.append(f"- {key}: {value}{unit_str} (ep{last_ep} 기준)")
+    return "\n".join(lines)
+
+
 class FactLedger:
     """[V68] 누적 팩트 원장 — 장기연재 모순 방지의 핵심
 
@@ -445,8 +494,11 @@ class FactLedger:
             dead = {k: v for k, v in chars.items() if isinstance(v, dict) and v.get("status") == "dead"}  # [V70]
 
             if alive:
-                parts.append(f"\n[생존 인물 ({len(alive)}명)]")
-                for name, info in list(alive.items())[:30]:
+                _alive_shown = list(alive.items())[:30]
+                _alive_shown_count = len(_alive_shown)
+                _alive_suffix = _build_truncation_suffix(len(alive), _alive_shown_count, unit="명")
+                parts.append(f"\n[생존 인물 ({_alive_shown_count}명){_alive_suffix}]")
+                for name, info in _alive_shown:
                     rel = f", 관계: {info['relationship']}" if info.get("relationship") else ""
                     role_str = info.get("role", "?")
                     parts.append(f"  - {name} ({role_str}{rel}, ep{info.get('established_ep', '?')}~)")
@@ -476,8 +528,10 @@ class FactLedger:
             }  # [V70] dict 방어
 
             if active_items:
-                parts.append(f"\n[보유 아이템/무공 ({len(active_items)}개)]")
-                for name, info in list(active_items.items())[:20]:
+                _active_item_shown = list(active_items.items())[:20]
+                _active_item_suffix = _build_truncation_suffix(len(active_items), len(_active_item_shown))
+                parts.append(f"\n[보유 아이템/무공 ({len(_active_item_shown)}개){_active_item_suffix}]")
+                for name, info in _active_item_shown:
                     owner = info.get("owner", "")
                     owner_str = f", 소유: {owner}" if owner else ""
                     parts.append(
@@ -485,8 +539,10 @@ class FactLedger:
                     )
 
             if lost_items:
-                parts.append(f"\n[분실/파괴된 아이템 ({len(lost_items)}개)]")
-                for name, info in list(lost_items.items())[:10]:
+                _lost_item_shown = list(lost_items.items())[:10]
+                _lost_item_suffix = _build_truncation_suffix(len(lost_items), len(_lost_item_shown))
+                parts.append(f"\n[분실/파괴된 아이템 ({len(_lost_item_shown)}개){_lost_item_suffix}]")
+                for name, info in _lost_item_shown:
                     parts.append(f"  - {name} ({info.get('status', '분실')}, ep{info.get('last_ep', '?')})")
 
         # ── 장소 ──
@@ -505,8 +561,10 @@ class FactLedger:
                     parts.append(f"  - {name} (ep{info.get('last_ep', '?')}에서 파괴)")
 
             if active_locs:
-                parts.append(f"\n[주요 장소 ({len(active_locs)}개)]")
-                for name, info in list(active_locs.items())[:10]:
+                _active_loc_shown = list(active_locs.items())[:10]
+                _active_loc_suffix = _build_truncation_suffix(len(active_locs), len(_active_loc_shown))
+                parts.append(f"\n[주요 장소 ({len(_active_loc_shown)}개){_active_loc_suffix}]")
+                for name, info in _active_loc_shown:
                     owner = info.get("current_owner", "")
                     owner_str = f", 소유: {owner}" if owner else ""
                     parts.append(f"  - {name} ({info.get('status', '정상')}{owner_str})")
@@ -527,8 +585,10 @@ class FactLedger:
                     parts.append(f"  - {name} (ep{info.get('last_ep', '?')}에서 파괴)")
 
             if active_orgs:
-                parts.append(f"\n[활동 조직 ({len(active_orgs)}개)]")
-                for name, info in list(active_orgs.items())[:10]:
+                _active_org_shown = list(active_orgs.items())[:10]
+                _active_org_suffix = _build_truncation_suffix(len(active_orgs), len(_active_org_shown))
+                parts.append(f"\n[활동 조직 ({len(_active_org_shown)}개){_active_org_suffix}]")
+                for name, info in _active_org_shown:
                     leader = info.get("leader", "")
                     leader_str = f", 수장: {leader}" if leader else ""
                     parts.append(f"  - {name} ({info.get('status', '활동중')}{leader_str})")
@@ -536,8 +596,10 @@ class FactLedger:
         # ── 숫자/금액 ──
         numbers = self._ledger.get("numbers", {})
         if numbers:
-            parts.append(f"\n[주요 수치 ({len(numbers)}개)]")
-            for key, info in list(numbers.items())[:15]:
+            _number_shown = list(numbers.items())[:15]
+            _number_suffix = _build_truncation_suffix(len(numbers), len(_number_shown))
+            parts.append(f"\n[주요 수치 ({len(_number_shown)}개){_number_suffix}]")
+            for key, info in _number_shown:
                 if not isinstance(info, dict):
                     continue
                 unit = info.get("unit", "")

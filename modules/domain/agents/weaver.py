@@ -3,6 +3,8 @@
 import json
 import logging
 
+from modules.core.llm_generate import generate_content_via_router
+
 from .base_agent import BaseAgent
 
 
@@ -54,7 +56,8 @@ class Weaver(BaseAgent):
         try:
             if self.cache_name:
                 # ✅ Case A: 캐시 활성화 (저비용 모드)
-                response = self.client.models.generate_content(
+                response = generate_content_via_router(
+                    client=self.client,
                     model=self.primary_model,
                     contents=dynamic_prompt,
                     config=types.GenerateContentConfig(

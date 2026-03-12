@@ -12,6 +12,8 @@ from google import genai
 from google.genai import types
 
 from modules.core.constants import ContextLimits  # [TF-25-04] validation.yaml SSOT
+from modules.core.llm_provider import LLMRequest
+from modules.core.llm_router import get_shared_llm_router
 from modules.validation.threshold_helper import _threshold
 
 # [V44] 에스케이프 유틸리티 임포트
@@ -45,11 +47,34 @@ class AgentErrorType:
 DEFAULT_MODEL_TIER = "gemini-2.5-flash"
 # [SSOT] models.yaml fallback_chain 로드 실패 시 하드코딩 fallback — 변경 불필요(yaml 우선)
 DEFAULT_MODEL_FALLBACK_CHAIN = {
-    "gemini-3.1-pro-preview": "gemini-3-pro-preview",
-    "gemini-3-pro-preview": "gemini-2.5-pro",
-    "gemini-3-flash-preview": "gemini-2.5-flash",
+    "gemini-2.5-pro": "gemini-2.5-flash",
     "gemini-2.5-flash": "gemini-2.5-flash",
 }
+
+_PROVIDER_PREFIXES = ("vertexai:", "vertex:", "vertex/")
+
+
+def _split_provider_prefixed_model(model: str) -> tuple[str, str]:
+    normalized = (model or "").strip()
+    lowered = normalized.lower()
+    for prefix in _PROVIDER_PREFIXES:
+        if lowered.startswith(prefix):
+            return normalized[: len(prefix)], normalized[len(prefix) :]
+    return "", normalized
+
+
+def _resolve_backup_model(primary_model: str, fallback_chain: dict[str, str]) -> str:
+    direct = fallback_chain.get(primary_model)
+    if isinstance(direct, str) and direct.strip():
+        return direct
+
+    prefix, base_model = _split_provider_prefixed_model(primary_model)
+    if prefix:
+        base_backup = fallback_chain.get(base_model, DEFAULT_MODEL_TIER)
+        _, normalized_backup = _split_provider_prefixed_model(base_backup)
+        return prefix + normalized_backup
+
+    return fallback_chain.get(primary_model, DEFAULT_MODEL_TIER)
 
 
 def _resolve_models_config_path() -> Path:
@@ -249,10 +274,17 @@ class BaseAgent:
     NETWORK_RETRY_DELAY_BASE = _SYSTEM_CFG.get("network_retry", {}).get("delay_base", 10)
     NETWORK_RETRY_DELAY_MAX = _SYSTEM_CFG.get("network_retry", {}).get("delay_max", 30)
     MAX_NETWORK_RETRIES = _SYSTEM_CFG.get("network_retry", {}).get("max_retries", 22)
+    _USAGE_KEYS = (
+        "prompt_token_count",
+        "candidates_token_count",
+        "thoughts_token_count",
+        "cached_content_token_count",
+    )
 
     def __init__(self, context, client, model_tier=None) -> None:
         self.context = context
         self.client = client
+        self._llm_router = get_shared_llm_router()
         resolved_model = model_tier
         if resolved_model is None:
             agent_key = _to_snake_case(self.__class__.__name__)
@@ -260,7 +292,7 @@ class BaseAgent:
         self.primary_model = resolved_model or DEFAULT_MODEL_TIER
         # [V60.37] 스마트 폴백: 모델 티어에 따라 자동 백업 모델 설정
         # [V60.78] 기본 폴백을 2.5-flash로 변경 (2.0 이하 미사용 정책)
-        self.backup_model = self.MODEL_FALLBACK_CHAIN.get(self.primary_model, DEFAULT_MODEL_TIER)
+        self.backup_model = _resolve_backup_model(self.primary_model, self.MODEL_FALLBACK_CHAIN)
         self.cache_name = None
         # [V44] 실패 복구 상태 추적
         self.last_partial_response = ""
@@ -269,6 +301,8 @@ class BaseAgent:
         # [V49.3] 에이전트 이름 (비용 추적용)
         self._agent_name = self.__class__.__name__
         self._last_thinking = ""  # [TF-28c] 최근 ask() thinking content
+        self._last_llm_usage = {}
+        self._call_usage_totals = {key: 0 for key in self._USAGE_KEYS}
 
     def _apply_prompt_size_gate(self, prompt: str) -> str:
         """[TF3-H7] 과대 프롬프트를 API 호출 전에 절삭."""
@@ -296,6 +330,75 @@ class BaseAgent:
     def agent_name(self) -> str:
         """[V49.3] 에이전트 이름 반환 (비용 추적용)"""
         return self._agent_name
+
+    def _generate_content(self, *, model: str, contents, config):
+        """Phase 1 provider shim.
+
+        Downstream parsing in BaseAgent still expects the native Gemini response
+        object, so the provider keeps `raw` intact and this helper returns it.
+        """
+
+        request = LLMRequest(model=model, contents=contents, config=config)
+        provider = self._llm_router.get_provider_for_model(model)
+        response = provider.generate(client=self.client, request=request)
+        self._last_llm_usage = response.usage  # 실측 토큰 보존
+        return response.raw
+
+    @staticmethod
+    def _coerce_usage_int(value) -> int:
+        try:
+            normalized = int(value or 0)
+        except (TypeError, ValueError):
+            return 0
+        return max(0, normalized)
+
+    def _reset_usage_tracking(self) -> None:
+        self._last_llm_usage = {}
+        self._call_usage_totals = {key: 0 for key in self._USAGE_KEYS}
+
+    def _accumulate_last_llm_usage(self) -> None:
+        usage = getattr(self, "_last_llm_usage", None)
+        if not isinstance(usage, dict):
+            return
+        totals = getattr(self, "_call_usage_totals", None)
+        if not isinstance(totals, dict):
+            totals = {key: 0 for key in self._USAGE_KEYS}
+            self._call_usage_totals = totals
+        for key in self._USAGE_KEYS:
+            totals[key] = self._coerce_usage_int(totals.get(key)) + self._coerce_usage_int(usage.get(key))
+
+    def _build_metric_usage_payload(
+        self,
+        *,
+        collector,
+        prompt_text: str,
+        response_text: str,
+        use_accumulated: bool = False,
+    ) -> dict[str, int]:
+        usage = self._call_usage_totals if use_accumulated else self._last_llm_usage
+        if not isinstance(usage, dict):
+            usage = {}
+
+        input_tokens = self._coerce_usage_int(usage.get("prompt_token_count"))
+        output_tokens = self._coerce_usage_int(usage.get("candidates_token_count"))
+        cached_tokens = self._coerce_usage_int(usage.get("cached_content_token_count"))
+        thinking_tokens = self._coerce_usage_int(usage.get("thoughts_token_count"))
+
+        if input_tokens <= 0:
+            input_tokens = collector.estimate_tokens(prompt_text, is_input=True)
+            cached_tokens = 0
+        else:
+            cached_tokens = min(cached_tokens, input_tokens)
+
+        if output_tokens <= 0:
+            output_tokens = collector.estimate_tokens(response_text, is_input=False) if response_text else 0
+
+        return {
+            "input_tokens": input_tokens,
+            "output_tokens": output_tokens,
+            "cached_tokens": cached_tokens,
+            "thinking_tokens": thinking_tokens,
+        }
 
     # 📂 modules/domain/agents/base_agent.py
 
@@ -386,9 +489,33 @@ class BaseAgent:
             _verdict = self._extract_verdict_from_response(response_text) if success else None
             _prompt_snippet = str(prompt_text)[:3000] if (not success and prompt_text) else None
             _response_snippet = str(response_text) if (not success and response_text) else None
+            _usage_payload = {
+                "input_tokens": 0,
+                "output_tokens": 0,
+                "cached_tokens": 0,
+                "thinking_tokens": 0,
+            }
+            _total_cost_usd = None
 
             # [TF-58] thinking_text는 성공 호출에서도 저장 (Director 추론 분석용)
             _thinking_snippet = str(thinking_text)[:5000] if thinking_text else None
+            if METRICS_ENABLED:
+                try:
+                    collector = get_metrics_collector()
+                    _usage_payload = self._build_metric_usage_payload(
+                        collector=collector,
+                        prompt_text=str(prompt_text or ""),
+                        response_text=str(response_text or ""),
+                        use_accumulated=True,
+                    )
+                    _total_cost_usd = collector.calculate_cost(
+                        model or "",
+                        _usage_payload["input_tokens"],
+                        _usage_payload["output_tokens"],
+                        cached_tokens=_usage_payload["cached_tokens"],
+                    )
+                except Exception as _usage_err:
+                    logging.debug("[llm_call_log] usage payload build failed: %s", _usage_err)
 
             _db.save_llm_call(
                 agent_name=_to_snake_case(self.__class__.__name__),
@@ -403,6 +530,11 @@ class BaseAgent:
                 ep_num=ep_num,
                 verdict=_verdict,
                 context_tag=context_tag,
+                input_tokens=_usage_payload["input_tokens"],
+                output_tokens=_usage_payload["output_tokens"],
+                cached_tokens=_usage_payload["cached_tokens"],
+                thinking_tokens=_usage_payload["thinking_tokens"],
+                total_cost_usd=_total_cost_usd,
                 prompt_snippet=_prompt_snippet,
                 response_snippet=_response_snippet,
                 thinking_snippet=_thinking_snippet,
@@ -423,6 +555,7 @@ class BaseAgent:
         """
         # [B4-P2-4] 이전 ask() 호출의 부분 응답이 남아있으면 새 호출에서 오염됨 — 초기화
         self.last_partial_response = ""
+        self._reset_usage_tracking()
         directives = self._escape_braces(getattr(self.context, "author_directives", ""))
         base_prompt = (
             f"### [AUTHOR'S ABSOLUTE DIRECTIVES]\n{directives}\n\n"
@@ -476,9 +609,7 @@ class BaseAgent:
                     # [V60.99] API Rate Limit 예방 딜레이
                     time.sleep(self.API_DELAY)
                     _api_t0 = time.time()
-                    response = self.client.models.generate_content(
-                        model=current_model, contents=current_prompt, config=config
-                    )
+                    response = self._generate_content(model=current_model, contents=current_prompt, config=config)
                     _api_elapsed = time.time() - _api_t0
                     if _api_elapsed > 30:
                         print(
@@ -530,6 +661,7 @@ class BaseAgent:
                         raise api_error
 
                 # [B-1-9:C3] 응답 추출 + 병합 + 이어쓰기 판정
+                self._accumulate_last_llm_usage()
                 _resp = self._extract_and_merge_response(
                     response=response,
                     full_response=full_response,
@@ -561,13 +693,17 @@ class BaseAgent:
                     f"      📊 [ASK] {self._agent_name} 총 {_total_elapsed:.1f}s (model={current_model}, attempts={attempt + 1}, 응답={len(full_response)}자)"
                 )
 
-            # [V49.3] 비용 추적 종료 (성공)
+            # [V49.3] 비용 추적 종료 (성공) — 실측 토큰 우선, fallback 추정
             if METRICS_ENABLED and metric_id:
                 try:
                     collector = get_metrics_collector()
-                    input_tokens = collector.estimate_tokens(base_prompt, is_input=True)
-                    output_tokens = collector.estimate_tokens(full_response, is_input=False)
-                    collector.end_call(metric_id, success=True, input_tokens=input_tokens, output_tokens=output_tokens)
+                    metric_usage = self._build_metric_usage_payload(
+                        collector=collector,
+                        prompt_text=base_prompt,
+                        response_text=full_response,
+                        use_accumulated=True,
+                    )
+                    collector.end_call(metric_id, success=True, **metric_usage)
                 except Exception as e:  # [V64.P4] OPTIONAL: metrics end (success)
                     logging.debug(f"[SILENT] metrics end (success): {e}")
                     pass
@@ -637,18 +773,21 @@ class BaseAgent:
             else:
                 logging.warning(f" [Warning] 모델 실패 ({error_type}), 백업 가동: {str(e)[:50]}")
 
-            # [V49.3] 비용 추적 종료 (실패, 백업 시도 전)
+            # [V49.3] 비용 추적 종료 (실패, 백업 시도 전) — 실측 토큰 우선
             if METRICS_ENABLED and metric_id:
                 try:
                     collector = get_metrics_collector()
-                    input_tokens = collector.estimate_tokens(base_prompt, is_input=True)
-                    output_tokens = collector.estimate_tokens(full_response, is_input=False) if full_response else 0
+                    metric_usage = self._build_metric_usage_payload(
+                        collector=collector,
+                        prompt_text=base_prompt,
+                        response_text=full_response or "",
+                        use_accumulated=True,
+                    )
                     collector.end_call(
                         metric_id,
                         success=False,
-                        input_tokens=input_tokens,
-                        output_tokens=output_tokens,
                         error_type=error_type,
+                        **metric_usage,
                     )
                 except Exception as e:  # [V64.P4] OPTIONAL: metrics end (failure)
                     logging.debug(f"[SILENT] metrics end (failure): {e}")
@@ -761,7 +900,7 @@ class BaseAgent:
         if response_schema:
             config_params["response_schema"] = response_schema
 
-        # [V61.6] Thinking Budget 지원 (모든 모델 공통 - gemini-3, 2.5-pro, 2.5-flash)
+        # [V61.6] Thinking Budget 지원 (모든 모델 공통 - gemini-2.5-pro, gemini-2.5-flash)
         if thinking_level:
             # 문자열이면 정수로 변환, 이미 정수면 그대로 사용
             if isinstance(thinking_level, str):
@@ -878,13 +1017,9 @@ class BaseAgent:
         is_ambiguous_429 = "429" in error_str and not is_rate_limit and not is_quota_exhausted
 
         # ═══════════════════════════════════════════════════════════════
-        # [V60.98] gemini-3-pro는 할당량이 적으므로 Rate Limit 시 즉시 폴백
+        # [V60.97] Case A: Rate Limit → Backoff 후 재시도
         # ═══════════════════════════════════════════════════════════════
-        is_gemini3_rate_limit = (is_rate_limit or is_ambiguous_429) and "gemini-3-pro" in current_model
-
-        # ═══════════════════════════════════════════════════════════════
-        # [V60.97] Case A: Rate Limit (gemini-3-pro 제외) → Backoff 후 재시도
-        # ═══════════════════════════════════════════════════════════════
+        is_gemini3_rate_limit = False  # [TF-MULTI] gemini-3 시리즈 폐기 — 현재 2.5-pro/flash만 사용
         if (
             (is_rate_limit or is_ambiguous_429)
             and not is_gemini3_rate_limit
@@ -905,7 +1040,7 @@ class BaseAgent:
             return result
 
         # ═══════════════════════════════════════════════════════════════
-        # [V60.97] Case B: Quota/Rate Limit 초과 또는 gemini-3-pro Rate Limit → 즉시 폴백
+        # [V60.97] Case B: Quota/Rate Limit 초과 → 즉시 폴백
         # ═══════════════════════════════════════════════════════════════
         if (
             is_quota_exhausted
@@ -966,9 +1101,7 @@ class BaseAgent:
 
                 # [V60.99] API Rate Limit 예방 딜레이
                 time.sleep(self.API_DELAY)
-                response = self.client.models.generate_content(
-                    model=current_model, contents=current_prompt, config=new_config
-                )
+                response = self._generate_content(model=current_model, contents=current_prompt, config=new_config)
 
                 result["action"] = "fallback_response"
                 result["current_model"] = current_model
@@ -1128,10 +1261,9 @@ class BaseAgent:
                     pass
 
             # [V60.99] API Rate Limit 예방 딜레이
+            self._last_llm_usage = {}
             time.sleep(self.API_DELAY)
-            res = self.client.models.generate_content(
-                model=self.backup_model, contents=base_prompt, config=backup_config
-            )
+            res = self._generate_content(model=self.backup_model, contents=base_prompt, config=backup_config)
             try:
                 backup_text = res.text if res.text else ""
             except (ValueError, AttributeError):
@@ -1154,13 +1286,15 @@ class BaseAgent:
             if METRICS_ENABLED and backup_metric_id:
                 try:
                     collector = get_metrics_collector()
-                    input_tokens = collector.estimate_tokens(base_prompt, is_input=True)
-                    output_tokens = collector.estimate_tokens(backup_text, is_input=False)
+                    metric_usage = self._build_metric_usage_payload(
+                        collector=collector,
+                        prompt_text=base_prompt,
+                        response_text=backup_text,
+                    )
                     collector.end_call(
                         backup_metric_id,
                         success=bool(backup_text),
-                        input_tokens=input_tokens,
-                        output_tokens=output_tokens,
+                        **metric_usage,
                     )
                 except Exception as e:  # [V64.P4] OPTIONAL: backup metrics end
                     logging.debug(f"[SILENT] backup metrics end: {e}")
@@ -1193,6 +1327,23 @@ class BaseAgent:
         except Exception as e_inner:
             inner_error_type = self._classify_error(e_inner)
             logging.warning(f" [Critical] 백업 실패 ({inner_error_type}): {str(e_inner)[:50]}")
+
+            if METRICS_ENABLED and backup_metric_id:
+                try:
+                    collector = get_metrics_collector()
+                    metric_usage = self._build_metric_usage_payload(
+                        collector=collector,
+                        prompt_text=base_prompt,
+                        response_text="",
+                    )
+                    collector.end_call(
+                        backup_metric_id,
+                        success=False,
+                        error_type=inner_error_type,
+                        **metric_usage,
+                    )
+                except Exception as metrics_err:  # [V64.P4] OPTIONAL: backup metrics end (failure)
+                    logging.debug(f"[SILENT] backup metrics end (failure): {metrics_err}")
 
             try:
                 self._log_llm_call_to_db(
@@ -1752,7 +1903,7 @@ class BaseAgent:
 
             _cached_t0 = time.monotonic()
             time.sleep(self.API_DELAY)
-            response = self.client.models.generate_content(
+            response = self._generate_content(
                 model=self.primary_model,
                 contents=[{"role": "user", "parts": [{"text": wrapped_prompt}]}],
                 config=config,

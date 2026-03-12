@@ -44,6 +44,7 @@ BLUEPRINT_STRATEGIES = [
 - 전투, 추격, 대결 씬을 중심으로 구성하세요
 - 빠른 템포와 역동적인 전개를 강조하세요
 - 감정 묘사는 최소화하고 행동으로 보여주세요
+- [QI-1-A6] ending_hook은 물리적 위기/액션 클리프행어로 끝낼 것
 """,
         "tension_range": (7, 9),
     },
@@ -56,6 +57,7 @@ BLUEPRINT_STRATEGIES = [
 - 갈등, 화해, 성장의 순간을 부각하세요
 - 대화 속 감정의 미묘한 변화를 묘사하세요
 - 긴장도는 중간 수준으로 유지하세요 (4-6/10)
+- [QI-1-A6] ending_hook은 감정적 반전/내면 갈등 여운으로 끝낼 것
 """,
         "tension_range": (4, 6),
     },
@@ -68,10 +70,20 @@ BLUEPRINT_STRATEGIES = [
 - 정보 교환, 음모, 협상 씬을 중심으로 구성하세요
 - 대사를 통해 캐릭터 성격과 관계를 드러내세요
 - 서브텍스트(말 속에 숨겨진 의미)를 활용하세요
+- [QI-1-A6] ending_hook은 대사 중단/대화 반전으로 끝낼 것
 """,
         "tension_range": (3, 7),
     },
 ]
+
+AI_TELL_BLUEPRINT_GUARDRAIL = """
+[AI 티 회피 지침]
+- 장면 말미를 설명문으로 기계적으로 요약하지 마세요.
+- 감정 반응을 상투적인 반응구 반복으로 처리하지 말고 행동·대사·구체 감각으로 드러내세요.
+- 정보 전달만 수행하는 대사가 길게 이어지지 않게 하세요.
+- 매 씬의 도입과 종결 리듬을 같게 반복하지 마세요.
+- 독자가 "익숙한 AI 문장"이라고 느낄 만한 접속구·감탄구 남용을 피하세요.
+"""
 
 
 # [V60.98] 씬 프리셋 정의 - 장면/화자 전환 연출
@@ -186,6 +198,13 @@ class BlueprintEnsembleGenerator(BaseAgent):
 
         # [V60.95] 고밀도 HUD 컨텍스트 구축
         hud_context = self._build_hud_context(state_tracker, ep_num)
+        _work_retrieval_contract = ""
+        try:
+            _guard = getattr(self.context, "guard", None)
+            if _guard and hasattr(_guard, "get_retrieval_contract_prompt"):
+                _work_retrieval_contract = str(_guard.get_retrieval_contract_prompt("blueprint") or "").strip()
+        except Exception as _e:
+            logging.debug("[BPEnsemble] work retrieval contract 로드 실패: %s", _e)
 
         # 병렬 생성
         logging.warning(f" [BPEnsemble] 3개 후보 병렬 생성 중... (주인공: {protagonist_name})")
@@ -398,6 +417,13 @@ class BlueprintEnsembleGenerator(BaseAgent):
 
             # [TF-I23/I24] 독자 피드백 컨텍스트 (advisory-only)
             _reader_fb = self._build_reader_feedback_context(ep_num)
+            _work_retrieval_contract = ""
+            try:
+                _guard = getattr(self.context, "guard", None)
+                if _guard and hasattr(_guard, "get_retrieval_contract_prompt"):
+                    _work_retrieval_contract = str(_guard.get_retrieval_contract_prompt("blueprint") or "").strip()
+            except Exception as _e:
+                logging.debug("[BPEnsemble] work retrieval contract 로드 실패: %s", _e)
             _use_cached_context = bool(cache_name)
             _cached_context_stub = "[context cached: refer to cached_content]"
             prompt = self._prompt_loader.load(
@@ -410,7 +436,10 @@ class BlueprintEnsembleGenerator(BaseAgent):
                 arc_focus=self._escape_braces(_cached_context_stub if _use_cached_context else arc_focus),
                 constraints=self._escape_braces(_cached_context_stub if _use_cached_context else constraints_str),
                 strategy_directive=self._escape_braces(
-                    strategy["directive"] + extra_directive
+                    strategy["directive"]
+                    + AI_TELL_BLUEPRINT_GUARDRAIL
+                    + extra_directive
+                    + (f"\n\n{_work_retrieval_contract}" if _work_retrieval_contract else "")
                 ),  # [V70] Director feedback 내 {} 방어
                 prev_info=self._escape_braces(_cached_context_stub if _use_cached_context else prev_info),
                 hud_context=(
@@ -433,7 +462,10 @@ class BlueprintEnsembleGenerator(BaseAgent):
                     arc_focus=self._escape_braces(arc_focus),
                     constraints=self._escape_braces(constraints_str),
                     strategy_directive=self._escape_braces(
-                        strategy["directive"] + extra_directive
+                        strategy["directive"]
+                        + AI_TELL_BLUEPRINT_GUARDRAIL
+                        + extra_directive
+                        + (f"\n\n{_work_retrieval_contract}" if _work_retrieval_contract else "")
                     ),  # [V70] Director feedback 내 {} 방어
                     prev_info=self._escape_braces(prev_info),
                     hud_context=self._escape_braces(hud_context) if hud_context else "(상태 정보 없음)",  # [V60.95]

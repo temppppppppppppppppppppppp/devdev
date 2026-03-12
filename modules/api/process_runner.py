@@ -22,7 +22,10 @@ import os
 import re
 import subprocess
 import sys
+import time
+from collections import deque
 from collections.abc import Awaitable, Callable
+from datetime import UTC, datetime
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -61,9 +64,44 @@ _DEFAULT_CONFIRM_PADDING = 5
 
 # ─── Mode B 프롬프트 감지 타임아웃 (초) ──────────────────────────────────────
 _PROMPT_DETECT_TIMEOUT = 0.5
+_RUNTIME_TAIL_LINES = 8
 
 # Mode B 대상 키 — 전체 (main_a.py boot 흐름이 인터랙티브)
 MODE_B_KEYS = frozenset({"0", "1", "2", "3", "4", "5", "6", "44", "77", "88", "99"})
+
+
+def _resolve_workspace_root() -> Path:
+    workspace = os.environ.get("GEULDOBI_WORKSPACE")
+    if workspace:
+        return Path(workspace).resolve()
+    return PROJECT_ROOT.resolve()
+
+
+def _resolve_projects_root() -> Path:
+    projects_root = os.environ.get("GEULDOBI_PROJECTS_ROOT")
+    if projects_root:
+        return Path(projects_root).resolve()
+    workspace = os.environ.get("GEULDOBI_WORKSPACE")
+    if workspace:
+        return (Path(workspace) / "projects").resolve()
+    return (PROJECT_ROOT / "projects").resolve()
+
+
+def _resolve_launch_command() -> list[str]:
+    engine_exe = os.environ.get("GEULDOBI_ENGINE_EXE")
+    if engine_exe:
+        engine_path = Path(engine_exe)
+        if engine_path.exists():
+            return [str(engine_path)]
+        logger.warning("engine.exe not found at %s; falling back to python main_a.py", engine_exe)
+
+    main_script = PROJECT_ROOT / "main_a.py"
+    if not main_script.exists():
+        logger.error("main_a.py not found at %s", main_script)
+        raise FileNotFoundError(f"main_a.py not found: {main_script}")
+
+    python_exe = os.environ.get("GEULDOBI_PYTHON_PATH", sys.executable)
+    return [python_exe, "-u", str(main_script)]
 
 
 class ProcessRunner:
@@ -84,6 +122,13 @@ class ProcessRunner:
         self._on_exit: OnExitCallback | None = None
         self._on_prompt: OnPromptCallback | None = None
         self._mode: str = "A"  # "A" (stdin 사전 주입) | "B" (실시간 대화)
+        self._key: str | None = None
+        self._sub_key: str | None = None
+        self._started_at_iso: str | None = None
+        self._started_monotonic: float | None = None
+        self._stdout_tail: deque[str] = deque(maxlen=_RUNTIME_TAIL_LINES)
+        self._stderr_tail: deque[str] = deque(maxlen=_RUNTIME_TAIL_LINES)
+        self._last_prompt_step: str | None = None
 
     # ──────────────────────────────────────────────────────────────────────────
     # Properties
@@ -138,20 +183,13 @@ class ProcessRunner:
         self._on_exit = on_exit
         self._on_prompt = on_prompt
         self._mode = mode if mode else ("B" if key in MODE_B_KEYS else "A")
-
-        # frozen 모드: engine.exe 직접 실행 / 개발 모드: python main_a.py
-        engine_exe = os.environ.get("GEULDOBI_ENGINE_EXE")
-        if engine_exe:
-            if not Path(engine_exe).exists():
-                self._state = "error"
-                logger.error("engine.exe not found at %s", engine_exe)
-                raise FileNotFoundError(f"engine.exe not found: {engine_exe}")
-        else:
-            main_script = PROJECT_ROOT / "main_a.py"
-            if not main_script.exists():
-                self._state = "error"
-                logger.error("main_a.py not found at %s", main_script)
-                raise FileNotFoundError(f"main_a.py not found: {main_script}")
+        self._key = key
+        self._sub_key = sub_key
+        self._started_at_iso = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%S+00:00")
+        self._started_monotonic = time.monotonic()
+        self._stdout_tail.clear()
+        self._stderr_tail.clear()
+        self._last_prompt_step = None
 
         stdin_data = self._build_stdin_sequence(key, sub_key, inputs)
         env = self._build_env(inputs)
@@ -161,16 +199,9 @@ class ProcessRunner:
             kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
 
         try:
-            # 작업 디렉토리: GEULDOBI_WORKSPACE (배포) 또는 PROJECT_ROOT (개발)
-            work_dir = os.environ.get("GEULDOBI_WORKSPACE", str(PROJECT_ROOT))
-
-            if engine_exe:
-                # 배포 모드: engine.exe 직접 실행 (소스 비공개 바이너리)
-                cmd_args = [engine_exe]
-            else:
-                # 개발 모드: python -u main_a.py
-                python_exe = os.environ.get("GEULDOBI_PYTHON_PATH", sys.executable)
-                cmd_args = [python_exe, "-u", str(main_script)]
+            # 배포 모드에서는 workspace를 CWD로 고정하고, engine.exe가 없으면 source-tree 엔진으로 fallback한다.
+            work_dir = str(_resolve_workspace_root())
+            cmd_args = _resolve_launch_command()
 
             self._process = await asyncio.create_subprocess_exec(
                 *cmd_args,
@@ -260,6 +291,13 @@ class ProcessRunner:
         self._pid = None
         self._process = None
         self._read_task = None
+        self._key = None
+        self._sub_key = None
+        self._started_at_iso = None
+        self._started_monotonic = None
+        self._last_prompt_step = None
+        self._stdout_tail.clear()
+        self._stderr_tail.clear()
 
     async def write_stdin(self, text: str) -> None:
         """Mode B: 사용자 응답을 subprocess stdin에 쓰기.
@@ -277,6 +315,51 @@ class ProcessRunner:
             logger.debug("write_stdin: %r", data.strip())
         except Exception:
             logger.exception("write_stdin 실패")
+
+    def remember_prompt_step(self, step_id: str | None) -> None:
+        """Remember the latest interactive prompt step for failure diagnostics."""
+        normalized = str(step_id or "").strip()
+        if normalized:
+            self._last_prompt_step = normalized
+
+    def get_runtime_diagnostics(self) -> dict:
+        """Return a compact runtime snapshot for UI/event diagnostics."""
+        duration_ms = None
+        if self._started_monotonic is not None:
+            duration_ms = int(max(0.0, (time.monotonic() - self._started_monotonic) * 1000))
+
+        stdout_tail = list(self._stdout_tail)
+        stderr_tail = list(self._stderr_tail)
+        return {
+            "key": self._key,
+            "sub_key": self._sub_key,
+            "mode": self._mode,
+            "started_at": self._started_at_iso,
+            "duration_ms": duration_ms,
+            "last_prompt_step": self._last_prompt_step,
+            "stdout_tail": stdout_tail,
+            "stderr_tail": stderr_tail,
+            "failure_phase": self._infer_failure_phase(stdout_tail, stderr_tail),
+        }
+
+    def _remember_stdout_line(self, text: str) -> None:
+        normalized = str(text or "").strip()
+        if normalized:
+            self._stdout_tail.append(normalized[:240])
+
+    def _remember_stderr_line(self, text: str) -> None:
+        normalized = str(text or "").strip()
+        if normalized:
+            self._stderr_tail.append(normalized[:240])
+
+    def _infer_failure_phase(self, stdout_tail: list[str], stderr_tail: list[str]) -> str:
+        if self._last_prompt_step:
+            return f"prompt:{self._last_prompt_step}"
+        if stderr_tail:
+            return "stderr"
+        if not stdout_tail:
+            return "startup"
+        return "runtime"
 
     # ──────────────────────────────────────────────────────────────────────────
     # Internal
@@ -296,6 +379,7 @@ class ProcessRunner:
                 text = _strip_ansi(raw.decode("utf-8", errors="replace"))
                 if not text:
                     continue
+                self._remember_stdout_line(text)
                 if self._on_line:
                     try:
                         await self._on_line(text)
@@ -316,6 +400,7 @@ class ProcessRunner:
                         ).splitlines():
                             stripped = _strip_ansi(line)
                             if stripped:
+                                self._remember_stderr_line(stripped)
                                 logger.debug("STDERR: %s", stripped[:500])
                 except Exception:
                     pass
@@ -376,7 +461,7 @@ class ProcessRunner:
                         proc.stdout.read(4096),
                         timeout=_PROMPT_DETECT_TIMEOUT,
                     )
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     # 타임아웃: 버퍼에 남은 텍스트가 프롬프트인지 확인
                     stripped_buf = _strip_ansi(buffer).strip()
                     if stripped_buf and is_prompt(stripped_buf):
@@ -402,6 +487,7 @@ class ProcessRunner:
                     text = _strip_ansi(line)
                     if not text:
                         continue
+                    self._remember_stdout_line(text)
                     # 컨텍스트 유지
                     context_lines.append(text)
                     if len(context_lines) > max_context:
@@ -420,6 +506,8 @@ class ProcessRunner:
             # 잔여 버퍼 처리
             if buffer.strip():
                 text = _strip_ansi(buffer)
+                if text:
+                    self._remember_stdout_line(text)
                 if text and self._on_line:
                     try:
                         await self._on_line(text)
@@ -436,6 +524,7 @@ class ProcessRunner:
                         ).splitlines():
                             stripped = _strip_ansi(line)
                             if stripped:
+                                self._remember_stderr_line(stripped)
                                 logger.debug("STDERR: %s", stripped[:500])
                 except Exception:
                     pass
@@ -506,8 +595,8 @@ class ProcessRunner:
             lines.append("")  # [Enter] 프로젝트 선택으로 이동
             project_index = inputs.get("project_index", 1)
             lines.append(str(project_index))
-            # 장르 불일치 확인("y")은 조건부 input()이므로 boot에 포함하지 않음.
-            # 불일치 발생 시 Mode B 프롬프트 감지가 처리한다.
+            # 확인 입력은 부트 시퀀스에 포함해 기존 메뉴 흐름과 테스트 기대치를 유지한다.
+            lines.append("y")
             if key == "0" and sub_key:
                 lines.append("0")
                 lines.append(str(sub_key))

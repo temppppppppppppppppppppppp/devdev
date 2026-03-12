@@ -234,6 +234,7 @@ class TestPassRateMonitor:
         assert len(monitor.records) == 1
         assert monitor.records[0].stage == 4
         assert monitor.records[0].success == True
+        assert monitor.records[0].attempt_key == "s4:ep10:arc0:a1"
 
     def test_stage_stats(self, tmp_path):
         """Stage 통계 테스트"""

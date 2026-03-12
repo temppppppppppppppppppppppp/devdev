@@ -9,6 +9,8 @@ import json
 import logging
 import re
 
+from modules.core.constants import smart_truncate
+
 logger = logging.getLogger(__name__)
 
 MAX_REVEALS = 500  # [P0-1] 200→500 (화당 ~2 reveals 기준 ~250화 안전 커버)
@@ -37,13 +39,18 @@ class InfoParadoxChecker:
         Returns:
             str: 포맷된 지식 요약. 이전 데이터 없으면 빈 문자열.
         """
-        if not db or not hasattr(db, "get_all_episode_bibles"):
+        if not db:
             return ""
         if up_to_ep <= 1:
             return ""
 
         try:
-            all_bibles = db.get_all_episode_bibles()
+            if hasattr(db, "get_episode_bibles_before"):
+                all_bibles = db.get_episode_bibles_before(up_to_ep)
+            elif hasattr(db, "get_all_episode_bibles"):
+                all_bibles = db.get_all_episode_bibles()
+            else:
+                return ""
         except Exception as e:
             logger.warning("[LM-F] episode_bibles 조회 실패: %s", str(e)[:80])
             return ""
@@ -54,6 +61,7 @@ class InfoParadoxChecker:
         reveals_list = []
         witnesses_list = []
         misled_list = []
+        first_seen_list = []
 
         for bible in all_bibles:
             ep = bible.get("ep_num", 0)
@@ -89,9 +97,24 @@ class InfoParadoxChecker:
                         if desc:
                             misled_list.append(f"{str(desc).strip()} ({ep}화)")
 
+        try:
+            if hasattr(db, "load_anchor"):
+                world_state = db.load_anchor("world_state") or {}
+                alive_npcs = world_state.get("alive_npcs", {}) if isinstance(world_state, dict) else {}
+                for name, info in (alive_npcs or {}).items():
+                    if not isinstance(info, dict):
+                        continue
+                    first_seen_ep = int(info.get("first_seen_ep", 0) or 0)
+                    if 0 < first_seen_ep < up_to_ep:
+                        first_seen_list.append((first_seen_ep, f"{str(name).strip()} (ep{first_seen_ep} 첫 대면)"))
+        except Exception as e:
+            logger.debug("[LM-F] world_state first_seen_ep 조회 실패 (비치명): %s", str(e)[:80])
+
         # 상한 적용
         if len(reveals_list) > MAX_REVEALS:
             reveals_list = reveals_list[-MAX_REVEALS:]
+        if len(first_seen_list) > 30:
+            first_seen_list = first_seen_list[-30:]
 
         # 섹션 구성
         sections = []
@@ -104,6 +127,9 @@ class InfoParadoxChecker:
         if misled_list:
             misled_text = "\n".join(f"  - {m}" for m in misled_list)
             sections.append(f"오해/잘못된 믿음:\n{misled_text}")
+        if first_seen_list:
+            first_seen_text = "\n".join(f"  - {entry}" for _, entry in sorted(first_seen_list)[:20])
+            sections.append(f"주요 NPC 첫 대면:\n{first_seen_text}")
 
         if not sections:
             return ""
@@ -147,7 +173,7 @@ class InfoParadoxChecker:
 
     def _llm_check(self, manuscript, pov_character, knowledge_summary, ep_num, *, incarnation_type="", genre_name=""):
         """LLM에게 정보 역설 판정을 요청."""
-        ms_snippet = manuscript[:4000]
+        ms_snippet = smart_truncate(manuscript or "", max_chars=4000, head_chars=2500)
 
         # [TF-51] 회귀자/장르별 예외 프롬프트
         _extra_exclusions = ""

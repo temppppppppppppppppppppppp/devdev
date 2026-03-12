@@ -124,7 +124,7 @@ class ForeshadowTracker:
         ForeshadowCategory.OTHER: 20,
     }
 
-    def __init__(self, max_hooks: int = 100):
+    def __init__(self, max_hooks: int = 200):
         self.max_hooks = max_hooks
         self.hooks: dict[str, Foreshadow] = {}
         self.episode_plants: dict[int, list[str]] = {}  # 화별 심은 복선

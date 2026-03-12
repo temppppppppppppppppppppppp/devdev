@@ -9,14 +9,442 @@ V68 lazy init: state_tracker, world_state, fact_ledger를 self.app에 할당
 
 import json as _json
 import logging as _logging
+import time as _time
 import traceback as _traceback
 
+from modules.core.artifact_logging import build_candidate_key, snapshot_logged_artifact
 from modules.core.constants import ContextLimits, Emojis, ErrorMessages
+from modules.core.continuity_pin_guard import apply_continuity_pins
+from modules.core.context_advisor import RetrievalSources
+from modules.core.fact_ledger import summarize_fact_ledger_numbers_block
+from modules.core.logging_keys import build_attempt_key, resolve_logging_session_id
+from modules.core.semantic_query_broker import SemanticQueryBroker
+from modules.core.tactical_utils import extract_episode_tactical
 
 try:
     from modules.utils.notifier import notifier
 except Exception:  # notifier 미설치 시 비차단
     notifier = None
+
+_DB_ADVISORY_NOTICE = "(Python 자동 감지 — 오탐 가능, 참고용)"
+
+
+def _normalize_semantic_source_counts(source_counts: dict | None) -> dict[str, int]:
+    if not isinstance(source_counts, dict):
+        return {}
+    normalized: dict[str, int] = {}
+    for key, value in source_counts.items():
+        name = str(key or "").strip()
+        if not name:
+            continue
+        try:
+            count = int(value)
+        except (TypeError, ValueError):
+            continue
+        if count > 0:
+            normalized[name] = count
+    return normalized
+
+
+def _build_stage3_observability_flags(meta: dict | None) -> dict:
+    if not isinstance(meta, dict):
+        return {}
+    source_counts = _normalize_semantic_source_counts(meta.get("source_counts"))
+    coverage_warnings = [
+        str(item).strip()
+        for item in (meta.get("coverage_warnings") or [])
+        if str(item or "").strip()
+    ]
+    flags = {
+        "semantic_ctx_chars": int(meta.get("semantic_ctx_chars") or 0),
+        "semantic_ctx_sources": sorted(source_counts.keys()),
+        "semantic_ctx_source_counts": source_counts,
+        "coverage_warnings": coverage_warnings,
+        "advisor_path_used": bool(meta.get("advisor_path_used", False)),
+        "planned_slots_count": int(meta.get("planned_slots_count") or 0),
+        "work_focus_present": bool(meta.get("work_focus_present", False)),
+    }
+    return {key: value for key, value in flags.items() if value not in ("", [], {}, None, 0, False)}
+
+
+def _classify_stage3_failure_category(pipeline_result: dict) -> str | None:
+    if not isinstance(pipeline_result, dict):
+        return None
+
+    verdict = str(pipeline_result.get("final_verdict", "") or "").upper()
+    error_text = str(pipeline_result.get("error", "") or "").strip()
+    if verdict == "ERROR" or error_text:
+        return "generation_error"
+    if pipeline_result.get("quality_gate_failed"):
+        return "quality_gate"
+
+    phases = pipeline_result.get("phases", {})
+    validate = phases.get("validate", {}) if isinstance(phases, dict) else {}
+    if isinstance(validate, dict):
+        contradictions = validate.get("contradictions")
+        if isinstance(contradictions, list) and contradictions:
+            return "validation_contradiction"
+        if validate.get("issues_count"):
+            return "validation_issue"
+
+    reject_reason = str(pipeline_result.get("reject_reason", "") or "")
+    if "continuity" in reject_reason.lower():
+        return "continuity"
+    return "reject"
+
+
+def _build_stage3_prompt_version() -> str | None:
+    try:
+        from modules.core.prompt_loader import PromptLoader
+
+        return PromptLoader().compose_version_tag("ensemble", "blueprint_generator", "director")
+    except Exception as _e:
+        _logging.debug("[Stage3] prompt_version 계산 실패 (비차단): %s", _e)
+        return None
+
+
+def _build_stale_seed_advisory(db, next_ep: int) -> str:
+    """장기 미회수 복선 경고를 Blueprint semantic_context용 문자열로 반환한다."""
+    getter = getattr(db, "get_active_seeds", None)
+    if not callable(getter):
+        return ""
+
+    try:
+        seeds = getter()
+        if not isinstance(seeds, list) or not seeds:
+            return ""
+
+        stale_seeds: list[str] = []
+        for seed in seeds:
+            if not isinstance(seed, dict):
+                continue
+            planted_ep = seed.get("planted_ep") or 0
+            try:
+                planted_ep = int(planted_ep)
+            except (TypeError, ValueError):
+                planted_ep = 0
+            if planted_ep and (next_ep - planted_ep) >= 20:
+                content = str(seed.get("content", "?") or "?")[:60]
+                stale_seeds.append(f"  - {content} (ep{planted_ep}~ 미회수, {next_ep - planted_ep}화 경과)")
+
+        if not stale_seeds:
+            return ""
+        return f"[DB-4 장기 미회수 복선] {_DB_ADVISORY_NOTICE}\n" + "\n".join(stale_seeds[:5])
+    except Exception as seed_err:
+        _logging.debug("[DB-4] foreshadow advisory 실패 (비치명): %s", seed_err)
+        return ""
+
+
+def _build_fact_ledger_advisory(db, *, max_items: int = 10) -> str:
+    """Blueprint semantic_context용 핵심 수치 팩트 요약."""
+    if db is None:
+        return ""
+
+    try:
+        ledger = db.load_anchor("fact_ledger")
+        return summarize_fact_ledger_numbers_block(
+            ledger,
+            header="[팩트 원장 핵심 수치]",
+            max_items=max_items,
+        )
+    except Exception as fact_err:
+        _logging.debug("[TF-DB-B1] Stage3 FactLedger advisory 실패 (비치명): %s", fact_err)
+        return ""
+
+
+def _build_world_state_advisory(world_state, *, max_chars: int = 1800) -> str:
+    """Blueprint semantic_context용 compact WorldState 요약."""
+    if world_state is None or not hasattr(world_state, "get_summary"):
+        return ""
+
+    try:
+        summary = world_state.get_summary(max_chars=max_chars)
+    except Exception as ws_err:
+        _logging.debug("[CTX-P1-2] Stage3 WorldState advisory 실패 (비치명): %s", ws_err)
+        return ""
+
+    summary = str(summary or "").strip()
+    if not summary:
+        return ""
+    return "[WorldState 핵심 요약]\n" + summary
+
+
+def _build_style_guide_advisory(project, *, max_chars: int = 600) -> str:
+    """Blueprint semantic_context용 compact StyleGuide 요약."""
+    if project is None:
+        return ""
+
+    style_data = {}
+    try:
+        loader = getattr(project, "load_v20_anchor", None)
+        raw_style = loader("style_guide") if callable(loader) else None
+        if isinstance(raw_style, dict):
+            style_data = raw_style
+    except Exception as style_err:
+        _logging.debug("[QR-1] Stage3 StyleGuide 로드 실패 (비치명): %s", style_err)
+
+    bible_root = {}
+    try:
+        master_bible = getattr(project, "master_bible", None)
+        if isinstance(master_bible, dict):
+            bible_root = master_bible.get("MasterBible", master_bible)
+    except Exception:
+        bible_root = {}
+    protagonist_config = bible_root.get("protagonist_config", {}) if isinstance(bible_root, dict) else {}
+    bible_pov = str(protagonist_config.get("pov", "") or "").strip()
+
+    tone = str(style_data.get("tone", "") or "").strip()
+    pov = bible_pov or str(style_data.get("pov", "") or "").strip()
+    sentence_length = str(style_data.get("sentence_length", "") or "").strip()
+    paragraph_style = str(style_data.get("paragraph_style", "") or "").strip()
+    anti_ai_patterns = [str(item).strip() for item in (style_data.get("anti_ai_patterns") or []) if str(item).strip()]
+    forbidden_expr = [
+        str(item).strip() for item in (style_data.get("forbidden_expressions") or []) if str(item).strip()
+    ]
+
+    if not any([tone, pov, sentence_length, paragraph_style, anti_ai_patterns, forbidden_expr]):
+        return ""
+
+    lines = ["[StyleGuide 문체/anti-AI 참고]"]
+    core_bits: list[str] = []
+    if tone:
+        core_bits.append(f"톤={tone}")
+    if pov:
+        core_bits.append(f"시점={pov}")
+    if sentence_length:
+        core_bits.append(f"문장 길이={sentence_length}")
+    if paragraph_style:
+        core_bits.append(f"문단 스타일={paragraph_style}")
+    if core_bits:
+        lines.append("- " + ", ".join(core_bits))
+    if anti_ai_patterns:
+        lines.append("- anti-AI 금지: " + ", ".join(anti_ai_patterns[:6]))
+    if forbidden_expr:
+        lines.append("- 금지 표현: " + ", ".join(forbidden_expr[:5]))
+
+    return "\n".join(lines)[:max_chars]
+
+
+def _compose_stage3_work_focus_text(
+    *,
+    arc_data: dict | None,
+    prev_blueprints: list[dict] | None,
+    entity_registry: dict | None,
+) -> str:
+    parts: list[str] = []
+    if isinstance(arc_data, dict):
+        for key in ("title", "summary", "block_theme", "tactical_doc", "arc_tactical", "constraint_summary"):
+            value = str(arc_data.get(key, "") or "").strip()
+            if value:
+                parts.append(value)
+        plot_suspension = arc_data.get("plot_suspension", []) or []
+        if isinstance(plot_suspension, list) and plot_suspension:
+            parts.append(" ".join(str(item).strip() for item in plot_suspension[:4] if str(item).strip()))
+
+    if isinstance(prev_blueprints, list) and prev_blueprints:
+        last_bp = prev_blueprints[-1] if isinstance(prev_blueprints[-1], dict) else {}
+        if isinstance(last_bp, dict):
+            for key in ("title", "ending_hook", "cliffhanger", "core_event"):
+                value = str(last_bp.get(key, "") or "").strip()
+                if value:
+                    parts.append(value)
+
+    if isinstance(entity_registry, dict):
+        for values in entity_registry.values():
+            if not isinstance(values, list):
+                continue
+            names: list[str] = []
+            for item in values[:8]:
+                if isinstance(item, dict):
+                    name = str(item.get("name", "") or item.get("npc", "") or item.get("title", "")).strip()
+                else:
+                    name = str(item).strip()
+                if name:
+                    names.append(name)
+            if names:
+                parts.append(" ".join(names[:6]))
+
+    combined = "\n".join(part for part in parts if part)
+    return combined[:1800]
+
+
+def _resolve_stage3_work_focus(
+    ctx,
+    *,
+    arc_data: dict | None,
+    prev_blueprints: list[dict] | None,
+    entity_registry: dict | None,
+) -> dict[str, object]:
+    guard = getattr(getattr(ctx, "sys", None), "guard", None)
+    if not guard or not hasattr(guard, "select_retrieval_focus"):
+        return {}
+
+    focus_text = _compose_stage3_work_focus_text(
+        arc_data=arc_data,
+        prev_blueprints=prev_blueprints,
+        entity_registry=entity_registry,
+    )
+    if not focus_text:
+        return {}
+
+    try:
+        focus = guard.select_retrieval_focus(stage="blueprint", focus_text=focus_text)
+    except Exception as focus_err:
+        _logging.debug("[Stage3] work_focus 선택 실패 (비치명): %s", focus_err)
+        return {}
+
+    return focus if isinstance(focus, dict) else {}
+
+
+def _build_stage3_work_focus_advisory(
+    work_focus: dict[str, object],
+    *,
+    arc_data: dict | None,
+    entity_registry: dict | None,
+    ctx,
+    protagonist_name: str = "",
+    max_chars: int = 1200,
+) -> str:
+    if not isinstance(work_focus, dict) or not work_focus:
+        return ""
+
+    tracking_slots = [str(item).strip() for item in (work_focus.get("tracking_slots") or []) if str(item).strip()]
+    scene_engines = [
+        str(item).strip() for item in (work_focus.get("mandatory_scene_engines") or []) if str(item).strip()
+    ]
+    registry_profiles = [
+        item for item in (work_focus.get("registry_profiles") or []) if isinstance(item, dict)
+    ]
+    if not any([tracking_slots, scene_engines, registry_profiles]):
+        return ""
+
+    lines = ["[작품 추적 슬롯 요약]"]
+    if tracking_slots:
+        lines.append(f"- 이번 화 우선 tracking_slots: {', '.join(tracking_slots[:3])}")
+    if scene_engines:
+        lines.append(f"- 이번 화 scene engines: {', '.join(scene_engines[:2])}")
+    if registry_profiles:
+        rendered_profiles = []
+        for profile in registry_profiles[:2]:
+            name = str(profile.get("name", "") or "").strip()
+            fields = [str(item).strip() for item in (profile.get("required_fields") or []) if str(item).strip()]
+            if not name:
+                continue
+            rendered_profiles.append(name + (f"(fields={', '.join(fields[:4])})" if fields else ""))
+        if rendered_profiles:
+            lines.append(f"- registry focus: {', '.join(rendered_profiles)}")
+
+    if isinstance(entity_registry, dict):
+        linked_parts: list[str] = []
+        for label, key in (("인물", "characters"), ("아이템", "items"), ("플롯", "plots"), ("위치", "locations")):
+            values = entity_registry.get(key) or []
+            rendered: list[str] = []
+            if isinstance(values, list):
+                for item in values[:4]:
+                    if isinstance(item, dict):
+                        name = str(item.get("name", "") or item.get("npc", "") or item.get("title", "")).strip()
+                    else:
+                        name = str(item).strip()
+                    if name:
+                        rendered.append(name)
+            if rendered:
+                linked_parts.append(f"{label}={', '.join(rendered[:4])}")
+        if linked_parts:
+            lines.append(f"- 연동 엔티티: {' | '.join(linked_parts)}")
+
+    if isinstance(arc_data, dict):
+        conflict = str(arc_data.get("constraint_summary", "") or arc_data.get("block_theme", "") or "").strip()
+        if conflict:
+            lines.append(f"- 현재 갈등축: {conflict[:160]}")
+
+    try:
+        focus_text = " ".join(
+            [
+                ", ".join(tracking_slots),
+                ", ".join(scene_engines),
+                " ".join(str(profile.get("purpose", "") or "") for profile in registry_profiles),
+                str((arc_data or {}).get("constraint_summary", "") or ""),
+                str((arc_data or {}).get("block_theme", "") or ""),
+            ]
+        ).strip()
+        broker = SemanticQueryBroker(
+            db=getattr(getattr(ctx, "current_project", None), "db", None),
+            world_state=getattr(ctx, "world_state", None),
+            fact_ledger=getattr(ctx, "fact_ledger", None),
+            state_tracker=getattr(ctx, "state_tracker", None),
+            protagonist_name=protagonist_name,
+        )
+        relation_slice = broker.build_relation_slice(focus_text=focus_text, max_chars=420)
+        if relation_slice:
+            lines.append(relation_slice)
+    except Exception as broker_err:
+        _logging.debug("[Stage3] semantic relation slice 생성 실패 (비치명): %s", broker_err)
+
+    text = "\n".join(lines)
+    return text if len(text) <= max_chars else text[: max_chars - 18] + "\n... (슬롯 요약 절삭)"
+
+
+def _build_stage3_relationship_context(db, *, npc_names: list[str], protagonist_name: str = "", limit: int = 6) -> str:
+    if not db or not hasattr(db, "get_relationship_history"):
+        return ""
+
+    clean_names = [str(name).strip() for name in (npc_names or []) if str(name).strip()]
+    protagonist_name = str(protagonist_name or "").strip()
+    seen: set[tuple[str, str]] = set()
+    lines: list[str] = []
+
+    def _add_pair(n1: str, n2: str) -> None:
+        if not n1 or not n2 or n1 == n2:
+            return
+        pair = tuple(sorted((n1, n2)))
+        if pair in seen:
+            return
+        seen.add(pair)
+        try:
+            rows = db.get_relationship_history(pair[0], pair[1], limit=3)
+        except Exception as rel_err:
+            _logging.debug("[Stage3] relationship history 조회 실패 (비치명): %s", rel_err)
+            rows = []
+        if not rows:
+            return
+        for row in rows[:2]:
+            if not isinstance(row, dict):
+                continue
+            old_relation = str(row.get("old_relation", "") or "").strip()
+            new_relation = str(row.get("new_relation", "") or "").strip()
+            change_ep = row.get("change_ep", "?")
+            transition = " -> ".join(part for part in (old_relation, new_relation) if part)
+            if transition:
+                lines.append(f"EP{change_ep} {pair[0]}-{pair[1]}: {transition}")
+
+    if protagonist_name:
+        for name in clean_names[:5]:
+            _add_pair(protagonist_name, name)
+    for idx, name in enumerate(clean_names[:4]):
+        for other in clean_names[idx + 1 : idx + 4]:
+            _add_pair(name, other)
+
+    return "\n".join(lines[:limit])
+
+
+def _summarize_retrieval_sources(plan) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    if not plan or not getattr(plan, "slots", None):
+        return counts
+    for slot in getattr(plan, "slots", []) or []:
+        source = str(getattr(slot, "source", RetrievalSources.VEC_MEMORY) or RetrievalSources.VEC_MEMORY)
+        counts[source] = counts.get(source, 0) + 1
+    return counts
+
+
+def _record_retrieval_observation(app, *, ep_num: int, stage: str, observation: dict) -> None:
+    dashboard = getattr(app, "quality_dashboard", None)
+    if dashboard is None or not hasattr(dashboard, "record_retrieval_observation"):
+        return
+    try:
+        dashboard.record_retrieval_observation(ep_num=ep_num, stage=stage, observation=observation)
+    except Exception as exc:
+        _logging.debug("[Stage3] retrieval observation record failed: %s", exc)
 
 
 class Stage3Orchestrator:
@@ -397,7 +825,6 @@ class Stage3Orchestrator:
         # 결과 처리
         if blueprint and pipeline_result.get("final_verdict") in (
             "PASS",
-            "PASS_WITH_FIX",
             "PASS_WITH_WARNING",
         ):  # [TF-32-S3]
             return self._handle_success(
@@ -557,8 +984,13 @@ class Stage3Orchestrator:
         ctx = self.ctx
         from modules.core.spinners import StageSpinner
 
+        _started_at = _time.perf_counter()
         try:
             _bp_semantic_ctx = ""
+            _s3_work_focus: dict[str, object] = {}
+            _s3_plan = None
+            _source_counts: dict[str, int] = {}
+            _coverage_warnings: list[str] = []
 
             # [S3-I1] Smart Context Retrieval — 과거 유사 Blueprint 참조
             try:
@@ -583,12 +1015,19 @@ class Stage3Orchestrator:
                                     if _name and _name not in _s3_npc_roster:
                                         _s3_npc_roster.append(_name)
 
+                    _s3_work_focus = _resolve_stage3_work_focus(
+                        ctx,
+                        arc_data=arc_data,
+                        prev_blueprints=prev_blueprints[-5:] if prev_blueprints else [],
+                        entity_registry=entity_registry,
+                    )
                     _s3_plan = _s3_advisor.plan_stage3_retrieval(
                         arc_data=arc_data,
                         prev_blueprints=prev_blueprints[-5:] if prev_blueprints else [],
                         current_ep=working_ep,
                         npc_roster=_s3_npc_roster[:10],
                         genre=_s3_genre,
+                        work_focus=_s3_work_focus,
                     )
                     _s3_parts = []
                     # NOTE: S3 전용 키 없음 — S4의 vector_max_results_s4를 의도적으로 공유
@@ -606,6 +1045,12 @@ class Stage3Orchestrator:
                                     npc_names=_s3_npc_roster[:5],
                                     current_ep=working_ep,
                                     max_results=_s3_max_results,
+                                )
+                            elif _slot_source == "db_npc_relationship":
+                                _s3_text = _build_stage3_relationship_context(
+                                    getattr(ctx.current_project, "db", None),
+                                    npc_names=_s3_npc_roster[:6],
+                                    protagonist_name=protagonist_name,
                                 )
                             else:
                                 _s3_text = _s3_memory.retrieve_multi_query_context(
@@ -728,6 +1173,71 @@ class Stage3Orchestrator:
             except Exception as _ns4_err:
                 _logging.debug("[NS-4] 시간 마커 주입 실패 (비차단): %s", _ns4_err)
 
+            _world_state_advisory = _build_world_state_advisory(getattr(ctx, "world_state", None))
+            if _world_state_advisory:
+                _bp_semantic_ctx = _world_state_advisory + ("\n\n" + _bp_semantic_ctx if _bp_semantic_ctx else "")
+
+            _style_guide_advisory = _build_style_guide_advisory(getattr(ctx, "current_project", None))
+            if _style_guide_advisory:
+                _bp_semantic_ctx = _style_guide_advisory + ("\n\n" + _bp_semantic_ctx if _bp_semantic_ctx else "")
+
+            _fact_ledger_advisory = _build_fact_ledger_advisory(getattr(self.ctx.current_project, "db", None))
+            if _fact_ledger_advisory:
+                _bp_semantic_ctx = _fact_ledger_advisory + ("\n\n" + _bp_semantic_ctx if _bp_semantic_ctx else "")
+
+            _seed_advisory = _build_stale_seed_advisory(getattr(self.ctx.current_project, "db", None), working_ep)
+            if _seed_advisory:
+                _bp_semantic_ctx = _seed_advisory + ("\n\n" + _bp_semantic_ctx if _bp_semantic_ctx else "")
+
+            _work_focus_advisory = _build_stage3_work_focus_advisory(
+                _s3_work_focus
+                or _resolve_stage3_work_focus(
+                    ctx,
+                    arc_data=arc_data,
+                    prev_blueprints=prev_blueprints[-5:] if prev_blueprints else [],
+                    entity_registry=entity_registry,
+                ),
+                arc_data=arc_data,
+                entity_registry=entity_registry,
+                ctx=ctx,
+                protagonist_name=protagonist_name,
+            )
+            if _work_focus_advisory:
+                _bp_semantic_ctx = _work_focus_advisory + ("\n\n" + _bp_semantic_ctx if _bp_semantic_ctx else "")
+            _source_counts = _summarize_retrieval_sources(_s3_plan)
+            if not _source_counts and _bp_semantic_ctx:
+                _source_counts = {"legacy_semantic_context": 1}
+            if _s3_work_focus and not _work_focus_advisory:
+                _coverage_warnings.append("missing_work_slot_summary")
+            if _s3_work_focus and _s3_plan and not any(
+                str(getattr(_slot, "category", "")).startswith("work_")
+                for _slot in (getattr(_s3_plan, "slots", []) or [])
+            ):
+                _coverage_warnings.append("work_focus_without_slots")
+            if (
+                _source_counts.get(RetrievalSources.DB_NPC_RELATIONSHIP, 0) > 0
+                and "[관계 의미 질의]" not in _bp_semantic_ctx
+            ):
+                _coverage_warnings.append("missing_relation_slice")
+            _record_retrieval_observation(
+                self.app,
+                ep_num=working_ep,
+                stage="stage3",
+                observation={
+                    "work_focus_present": bool(_s3_work_focus),
+                    "tracking_slots_count": len(_s3_work_focus.get("tracking_slots") or []) if isinstance(_s3_work_focus, dict) else 0,
+                    "scene_engines_count": len(_s3_work_focus.get("mandatory_scene_engines") or []) if isinstance(_s3_work_focus, dict) else 0,
+                    "registry_profiles_count": len(_s3_work_focus.get("registry_profiles") or []) if isinstance(_s3_work_focus, dict) else 0,
+                    "planned_slots_count": len(getattr(_s3_plan, "slots", []) or []) if _s3_plan else 0,
+                    "advisor_path_used": bool(_s3_plan),
+                    "work_slot_summary_included": "[작품 추적 슬롯 요약]" in _bp_semantic_ctx,
+                    "relation_slice_included": "[관계 의미 질의]" in _bp_semantic_ctx,
+                    "source_counts": _source_counts,
+                    "coverage_warnings": _coverage_warnings,
+                    "vector_context_chars": len(_bp_semantic_ctx),
+                },
+            )
+
             with StageSpinner(3, f"제{working_ep}화") as _s3_spinner:
                 # [V67][S3-I5] 이전 원고 로드 — 단일 쿼리로 최적화 (N+1 → 1)
                 _prev_ms_for_bp = []
@@ -795,6 +1305,17 @@ class Stage3Orchestrator:
             blueprint = None
             pipeline_result = {"final_verdict": "ERROR", "error": str(gen_err)[:200]}
 
+        if not isinstance(pipeline_result, dict):
+            pipeline_result = {"final_verdict": "ERROR", "error": "invalid_pipeline_result"}
+        pipeline_result["_stage3_duration_ms"] = max(0, int((_time.perf_counter() - _started_at) * 1000))
+        pipeline_result["_stage3_observability"] = {
+            "semantic_ctx_chars": len(_bp_semantic_ctx),
+            "source_counts": _normalize_semantic_source_counts(_source_counts),
+            "coverage_warnings": list(_coverage_warnings),
+            "advisor_path_used": bool(_s3_plan),
+            "planned_slots_count": len(getattr(_s3_plan, "slots", []) or []) if _s3_plan else 0,
+            "work_focus_present": bool(_s3_work_focus),
+        }
         return blueprint, pipeline_result
 
     # ─────────────────────────────────────────────────────────────
@@ -808,6 +1329,8 @@ class Stage3Orchestrator:
         _final_verdict = pipeline_result.get("final_verdict", "PASS")
         _quality_gate_failed = bool(pipeline_result.get("quality_gate_failed", False))
         _quality_risk = bool(pipeline_result.get("quality_risk", False) or _quality_gate_failed)
+        _observability_flags = _build_stage3_observability_flags(pipeline_result.get("_stage3_observability"))
+        _duration_ms = int(pipeline_result.get("_stage3_duration_ms") or 0) or None
 
         # [LOG-1] 판정 경로 세션 로깅
         _sl = getattr(ctx, "session_logger", None)
@@ -827,18 +1350,58 @@ class Stage3Orchestrator:
 
         try:
             _db = getattr(getattr(ctx, "current_project", None), "db", None)
+            _attempt_num = self._extract_stage3_attempt_num(pipeline_result)
+            _session_id = resolve_logging_session_id(getattr(ctx, "current_project", None))
+            _attempt_key = build_attempt_key(
+                stage=3,
+                ep_num=working_ep,
+                arc_num=arc_no,
+                attempt_num=_attempt_num,
+                session_id=_session_id,
+            )
+            _score = pipeline_result.get("last_score") or pipeline_result.get("phases", {}).get("generate", {}).get(
+                "selected_score", 0
+            )
+            _selected_strategy = str(
+                pipeline_result.get("phases", {}).get("generate", {}).get("selected_strategy", "unknown") or "unknown"
+            )
+            _candidate_key = build_candidate_key(strategy=_selected_strategy, fallback="stage3")
+            _artifact_meta = snapshot_logged_artifact(
+                getattr(ctx, "current_project", None),
+                stage=3,
+                ep_num=working_ep,
+                arc_num=arc_no,
+                attempt_num=_attempt_num,
+                candidate_key=_candidate_key,
+                artifact_kind="final_blueprint",
+                payload=blueprint if isinstance(blueprint, dict) else None,
+            )
+            if not isinstance(_score, int):
+                try:
+                    _score = int(_score)
+                except (ValueError, TypeError):
+                    _score = 0
+            if getattr(ctx, "pass_rate_monitor", None):
+                try:
+                    ctx.pass_rate_monitor.record_attempt(
+                        stage=3,
+                        episode=working_ep,
+                        arc=arc_no,
+                        attempt_num=_attempt_num,
+                        success=_final_verdict in ("PASS", "PASS_WITH_WARNING"),
+                        generation_method="blueprint",
+                        attempt_key=_attempt_key,
+                        final_verdict=str(_final_verdict),
+                        candidate_key=_candidate_key,
+                        content_hash=_artifact_meta["content_hash"],
+                        artifact_path=_artifact_meta["artifact_path"],
+                    )
+                except Exception as _prm_err:
+                    _logging.debug("[stage3_prm] Stage3 PASS 기록 실패 (비차단): %s", _prm_err)
             if _db and hasattr(_db, "save_stage_attempt"):
                 _director = getattr(getattr(ctx, "agents", {}), "get", lambda *_: None)("director")
                 _model = getattr(_director, "primary_model", None) if _director else None
-                _attempt_num = self._extract_stage3_attempt_num(pipeline_result)
-                _score = pipeline_result.get("last_score") or pipeline_result.get("phases", {}).get("generate", {}).get(
-                    "selected_score", 0
-                )
-                if not isinstance(_score, int):
-                    try:
-                        _score = int(_score)
-                    except (ValueError, TypeError):
-                        _score = 0
+                _prompt_version = _build_stage3_prompt_version()
                 _db.save_stage_attempt(
                     stage=3,
                     verdict=str(_final_verdict),
@@ -847,6 +1410,14 @@ class Stage3Orchestrator:
                     arc_num=arc_no,
                     score=_score,
                     model=str(_model) if _model else None,
+                    session_id=_session_id,
+                    attempt_key=_attempt_key,
+                    prompt_version=_prompt_version,
+                    duration_ms=_duration_ms,
+                    advisory_flags=_observability_flags or None,
+                    candidate_key=_candidate_key,
+                    content_hash=_artifact_meta["content_hash"],
+                    artifact_path=_artifact_meta["artifact_path"],
                 )
         except Exception as _sa_err:
             _logging.debug("[stage_attempts] Stage3 PASS 기록 실패 (비차단): %s", _sa_err)
@@ -869,6 +1440,57 @@ class Stage3Orchestrator:
 
         # 무결성 검증 후 저장
         # [S3-N-P1-3] DI 콜백 None 방어
+        if isinstance(blueprint, dict):
+            _prev_published_text = ""
+            try:
+                _db = getattr(getattr(ctx, "current_project", None), "db", None)
+                _prev_row = _db.get_manuscript(working_ep - 1) if _db and working_ep > 1 else None
+                if isinstance(_prev_row, dict):
+                    _prev_published_text = str(
+                        _prev_row.get("content")
+                        or _prev_row.get("corrected_manuscript")
+                        or _prev_row.get("manuscript")
+                        or ""
+                    )
+                elif _prev_row:
+                    _prev_published_text = str(_prev_row)
+            except Exception as _pin_prev_err:
+                _logging.debug("[Stage3] previous manuscript lookup failed (non-blocking): %s", _pin_prev_err)
+
+            _arc_tactical_text = ""
+            try:
+                _arc_tactical_text = extract_episode_tactical(
+                    arc_data.get("tactical_doc", ""),
+                    working_ep,
+                    episode_details=arc_data.get("episode_details"),
+                )
+            except Exception as _pin_tactical_err:
+                _logging.debug("[Stage3] arc tactical extract failed (non-blocking): %s", _pin_tactical_err)
+
+            _pin_result = apply_continuity_pins(
+                blueprint,
+                previous_published_text=_prev_published_text,
+                arc_tactical_text=_arc_tactical_text,
+            )
+            blueprint = _pin_result.get("blueprint", blueprint)
+            if _pin_result.get("changes"):
+                blueprint["_continuity_pins"] = _pin_result["changes"]
+                ctx.ui.log(f"   [PinGuard] ep {working_ep} continuity pins applied: {len(_pin_result['changes'])}")
+            if _pin_result.get("unresolved"):
+                ctx.ui.log(f"   ?슚 [PinGuard] ep {working_ep} unresolved continuity pins")
+                if callable(ctx.audit_event):
+                    ctx.audit_event(
+                        "continuity_pin_unresolved",
+                        "stage3 continuity pin unresolved",
+                        {"ep_num": working_ep, "items": _pin_result["unresolved"][:3]},
+                    )
+                return {
+                    "next_ep": working_ep + 1,
+                    "success_count": success_count,
+                    "fail_count": fail_count + 1,
+                    "break": True,
+                }
+
         if callable(ctx.validate_blueprint_integrity) and not ctx.validate_blueprint_integrity(blueprint):
             ctx.ui.log(f"   🚨 [Integrity] 제{working_ep}화 Blueprint 무결성 실패")
             if callable(ctx.audit_event):
@@ -1107,29 +1729,69 @@ class Stage3Orchestrator:
 
         try:
             _db = getattr(getattr(ctx, "current_project", None), "db", None)
+            _final_verdict = str(pipeline_result.get("final_verdict", "REJECT"))
+            _attempt_num = self._extract_stage3_attempt_num(pipeline_result)
+            _arc_num = self._resolve_stage3_arc_num(arc_no=arc_no, pipeline_result=pipeline_result)
+            _session_id = resolve_logging_session_id(getattr(ctx, "current_project", None))
+            _attempt_key = build_attempt_key(
+                stage=3,
+                ep_num=working_ep,
+                arc_num=_arc_num,
+                attempt_num=_attempt_num,
+                session_id=_session_id,
+            )
+            _reject_reason = self._build_stage3_reject_reason(pipeline_result)
+            _score = pipeline_result.get("last_score") or pipeline_result.get("phases", {}).get("generate", {}).get(
+                "selected_score", 0
+            )
+            _selected_strategy = str(
+                pipeline_result.get("phases", {}).get("generate", {}).get("selected_strategy", "unknown") or "unknown"
+            )
+            _candidate_key = build_candidate_key(strategy=_selected_strategy, fallback="stage3")
+            _observability_flags = _build_stage3_observability_flags(pipeline_result.get("_stage3_observability"))
+            _duration_ms = int(pipeline_result.get("_stage3_duration_ms") or 0) or None
+            _failure_category = _classify_stage3_failure_category(pipeline_result)
+            if not isinstance(_score, int):
+                try:
+                    _score = int(_score)
+                except (ValueError, TypeError):
+                    _score = 0
+            if getattr(ctx, "pass_rate_monitor", None):
+                try:
+                    ctx.pass_rate_monitor.record_attempt(
+                        stage=3,
+                        episode=working_ep,
+                        arc=_arc_num,
+                        attempt_num=_attempt_num,
+                        success=False,
+                        reject_reason=_reject_reason,
+                        generation_method="blueprint",
+                        attempt_key=_attempt_key,
+                        final_verdict=_final_verdict,
+                        candidate_key=_candidate_key,
+                    )
+                except Exception as _prm_err:
+                    _logging.debug("[stage3_prm] Stage3 REJECT 기록 실패 (비차단): %s", _prm_err)
             if _db and hasattr(_db, "save_stage_attempt"):
                 _director = getattr(getattr(ctx, "agents", {}), "get", lambda *_: None)("director")
                 _model = getattr(_director, "primary_model", None) if _director else None
-                _attempt_num = self._extract_stage3_attempt_num(pipeline_result)
-                _arc_num = self._resolve_stage3_arc_num(arc_no=arc_no, pipeline_result=pipeline_result)
-                _reject_reason = self._build_stage3_reject_reason(pipeline_result)
-                _score = pipeline_result.get("last_score") or pipeline_result.get("phases", {}).get("generate", {}).get(
-                    "selected_score", 0
-                )
-                if not isinstance(_score, int):
-                    try:
-                        _score = int(_score)
-                    except (ValueError, TypeError):
-                        _score = 0
+                _prompt_version = _build_stage3_prompt_version()
                 _db.save_stage_attempt(
                     stage=3,
-                    verdict=str(pipeline_result.get("final_verdict", "REJECT")),
+                    verdict=_final_verdict,
                     attempt_num=_attempt_num,
                     ep_num=working_ep,
                     arc_num=_arc_num,
                     score=_score,
+                    failure_category=_failure_category,
                     reject_reason=_reject_reason,
                     model=str(_model) if _model else None,
+                    duration_ms=_duration_ms,
+                    advisory_flags=_observability_flags or None,
+                    session_id=_session_id,
+                    attempt_key=_attempt_key,
+                    prompt_version=_prompt_version,
+                    candidate_key=_candidate_key,
                 )
         except Exception as _sa_err:
             _logging.debug("[stage_attempts] Stage3 REJECT 기록 실패 (비차단): %s", _sa_err)
@@ -1150,7 +1812,10 @@ class Stage3Orchestrator:
                 except (ValueError, TypeError):
                     _score = 0
             ctx.current_project.db.save_cost_record(
-                session_id=f"ep_{working_ep}",
+                session_id=resolve_logging_session_id(
+                    getattr(ctx, "current_project", None),
+                    fallback=f"ep_{working_ep}",
+                ),
                 scope_type="episode",
                 scope_id=int(working_ep),
                 total_calls=0,

@@ -12,11 +12,20 @@ from modules.core.info_paradox_checker import InfoParadoxChecker
 class FakeDB:
     """get_all_episode_bibles()를 제공하는 가짜 DB."""
 
-    def __init__(self, bibles=None):
+    def __init__(self, bibles=None, world_state=None):
         self._bibles = bibles or []
+        self._world_state = world_state or {}
 
     def get_all_episode_bibles(self):
         return self._bibles
+
+    def get_episode_bibles_before(self, up_to_ep):
+        return [b for b in self._bibles if b.get("ep_num", 0) < up_to_ep]
+
+    def load_anchor(self, key):
+        if key == "world_state":
+            return self._world_state
+        return None
 
 
 def _make_bible(ep_num, reveals=None, knowledge_map=None):
@@ -144,6 +153,23 @@ class TestBuildKnowledgeSummary:
         result = InfoParadoxChecker.build_knowledge_summary(db, 5, "수현")
         assert "폭발 현장 목격" in result
         assert "동맹이 배신했다고 오해" in result
+
+    def test_includes_world_state_first_seen_npc_summary(self):
+        db = FakeDB(
+            [_make_bible(1, reveals=["은밀한 낌새"])],
+            world_state={
+                "alive_npcs": {
+                    "노사부": {"first_seen_ep": 2},
+                    "흑풍": {"first_seen_ep": 5},
+                }
+            },
+        )
+
+        result = InfoParadoxChecker.build_knowledge_summary(db, 5, "진우")
+
+        assert "주요 NPC 첫 대면" in result
+        assert "노사부 (ep2 첫 대면)" in result
+        assert "흑풍 (ep5 첫 대면)" not in result
 
 
 # ===========================================================================

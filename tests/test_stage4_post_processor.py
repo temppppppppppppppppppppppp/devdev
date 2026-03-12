@@ -1,5 +1,6 @@
 """[B-1-1] Stage4PostProcessor unit tests."""
 
+import json
 from unittest.mock import MagicMock, patch
 
 from modules.core.stage4_orchestrator import Stage4Orchestrator
@@ -146,6 +147,62 @@ class TestProcessPassResult:
         )
 
         pp.ctx.agents["director"].on_approve_workflow.assert_called_once()
+
+    def test_quality_labels_saved_via_sidecar_table(self, tmp_path):
+        pp = self._make_pp()
+        pp.ctx.current_project.db.save_manuscript.return_value = True
+
+        result = pp.process_pass_result(
+            next_ep=1,
+            final_manuscript="테스트 원고 " * 500,
+            final_title="테스트",
+            final_state_updates={
+                "_director_quality_labels": {
+                    "score": 94,
+                    "verdict": "PASS",
+                    "selection_reason": "연속성 우수",
+                    "score_breakdown": {"continuity_contradiction": 39},
+                    "consistency_checklist": {"pacing_quality": "OK"},
+                }
+            },
+            blueprint={"scene_breakdown": []},
+            arc_data={"arc_no": 1},
+            output_dir=tmp_path,
+            v50_modules_available=False,
+            extract_chain_link_fn=lambda *_args, **_kwargs: {},
+        )
+
+        assert result is True
+        pp.ctx.current_project.db.save_episode_quality_label.assert_called_once()
+
+    def test_quality_signals_saved_via_sidecar_table(self, tmp_path):
+        pp = self._make_pp()
+        pp.ctx.current_project.db.save_manuscript.return_value = True
+
+        result = pp.process_pass_result(
+            next_ep=2,
+            final_manuscript="그야말로 숨을 삼켰다. 어느새 입을 열었다. " * 120,
+            final_title="테스트",
+            final_state_updates={
+                "_director_quality_labels": {
+                    "score": 91,
+                    "verdict": "PASS",
+                    "consistency_checklist": {"scene_variety": "ISSUE"},
+                },
+                "warnings": ["길이 편차"],
+            },
+            blueprint={"scene_breakdown": []},
+            arc_data={"arc_no": 1},
+            output_dir=tmp_path,
+            v50_modules_available=False,
+            extract_chain_link_fn=lambda *_args, **_kwargs: {},
+        )
+
+        assert result is True
+        pp.ctx.current_project.db.save_episode_quality_signal.assert_called_once()
+        saved_signals = pp.ctx.current_project.db.save_episode_quality_signal.call_args.args[1]
+        assert saved_signals["ced_score"] > 0
+        assert saved_signals["ai_slop_score"] > 0
 
     def test_chain_link_fn_called(self, tmp_path):
         pp = self._make_pp()
@@ -379,6 +436,35 @@ class TestProcessPassResult:
         assert record_kwargs["ep_num"] == 7
         assert record_kwargs["stage"] == 4
         assert record_kwargs["result"]["decision"] == "PASS"
+
+    def test_records_quality_signals_on_dashboard_validation(self, tmp_path):
+        pp = self._make_pp()
+        pp.ctx.current_project.db.save_manuscript.return_value = True
+        pp.ctx.quality_dashboard = MagicMock()
+        pp.ctx.quality_dashboard.detect_score_regression.return_value = {"is_regression": False, "severity": "none"}
+
+        result = pp.process_pass_result(
+            next_ep=8,
+            final_manuscript="그야말로 숨을 삼켰다. 말 그대로 시선을 돌렸다. " * 120,
+            final_title="테스트",
+            final_state_updates={
+                "_director_quality_labels": {
+                    "score": 95,
+                    "verdict": "PASS",
+                    "consistency_checklist": {"pacing_quality": "ISSUE"},
+                }
+            },
+            blueprint={"scene_breakdown": []},
+            arc_data={"arc_no": 1},
+            output_dir=tmp_path,
+            v50_modules_available=False,
+            extract_chain_link_fn=lambda *_args, **_kwargs: {},
+        )
+
+        assert result is True
+        record_kwargs = pp.ctx.quality_dashboard.record_validation.call_args.kwargs
+        assert record_kwargs["result"]["score"] == 95
+        assert record_kwargs["result"]["quality_signals"]["ced_score"] > 0
 
 
 class TestRunPostEpisodeTasks:
@@ -706,3 +792,99 @@ class TestModuleStructure:
     def test_orchestrator_no_legacy_post_methods(self):
         assert not hasattr(Stage4Orchestrator, "_process_pass_result")
         assert not hasattr(Stage4Orchestrator, "_run_post_episode_tasks")
+
+
+class TestSoftFailureLogging:
+    def test_quality_signal_save_failure_is_logged_as_soft_failure(self, tmp_path):
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.sys = MagicMock()
+        ctx.sys.hud = MagicMock()
+        ctx.sys.hud.snapshot.return_value = {}
+        ctx.agents = {"director": MagicMock()}
+        ctx.agents["director"].on_approve_workflow.return_value = {}
+        ctx.memory = None
+        ctx.state_tracker = None
+        ctx.world_state = None
+        ctx.fact_ledger = None
+        ctx.character_voice = None
+        ctx.foreshadow_tracker = None
+        ctx.failure_learner = None
+        ctx.quality_dashboard = None
+        ctx.perf_timer = MagicMock()
+        ctx.flush_audit_buffer = MagicMock()
+        ctx.get_protagonist_name = lambda: "주인공"
+        ctx.generate_narrative_summary = MagicMock()
+        ctx.audit_event = MagicMock()
+
+        db = MagicMock()
+        db.conn = MagicMock()
+        db.save_episode_quality_signal.side_effect = RuntimeError("signal table busy")
+        db.get_episode_bible.return_value = {}
+        db.load_anchor.return_value = []
+
+        project = MagicMock()
+        project.db = db
+        project.name = "demo"
+        project.latest_state = {}
+        project.seed_tracker = None
+        project.karma_matrix = {}
+        project.master_bible = {
+            "MasterBible": {"AssetLibrary": {"KeyNPCs": []}, "protagonist_config": {"name": "주인공"}},
+            "npc_registry": {},
+        }
+        project.paths = type("Paths", (), {"root": tmp_path})()
+        ctx.current_project = project
+
+        pp = Stage4PostProcessor(ctx)
+        result = pp.process_pass_result(
+            next_ep=2,
+            final_manuscript="그야말로 숨을 삼켰다. " * 120,
+            final_title="테스트",
+            final_state_updates={"_director_quality_labels": {"score": 92, "verdict": "PASS"}},
+            blueprint={"scene_breakdown": []},
+            arc_data={"arc_no": 1},
+            output_dir=tmp_path,
+            v50_modules_available=False,
+            extract_chain_link_fn=lambda *_args, **_kwargs: {},
+        )
+
+        assert result is True
+        soft_failures = tmp_path / "logs" / "soft_failures.jsonl"
+        assert soft_failures.exists()
+        rows = [json.loads(line) for line in soft_failures.read_text(encoding="utf-8").splitlines() if line.strip()]
+        assert any(row["operation"] == "save_episode_quality_signal" for row in rows)
+
+    def test_report_soft_failure_ignores_magicmock_root_without_db_path(self, tmp_path):
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.sys = MagicMock()
+        ctx.sys.hud = MagicMock()
+        ctx.sys.hud.snapshot.return_value = {}
+        ctx.agents = {"director": MagicMock()}
+        ctx.agents["director"].on_approve_workflow.return_value = {}
+        ctx.memory = None
+        ctx.state_tracker = None
+        ctx.world_state = None
+        ctx.fact_ledger = None
+        ctx.character_voice = None
+        ctx.foreshadow_tracker = None
+        ctx.failure_learner = None
+        ctx.quality_dashboard = None
+        ctx.perf_timer = MagicMock()
+        ctx.flush_audit_buffer = MagicMock()
+        ctx.get_protagonist_name = lambda: "주인공"
+        ctx.generate_narrative_summary = MagicMock()
+        ctx.audit_event = MagicMock()
+
+        project = MagicMock()
+        project.paths.root = MagicMock()
+        project.db = MagicMock()
+        project.db.db_path = None
+        ctx.current_project = project
+
+        pp = Stage4PostProcessor(ctx)
+
+        assert pp._resolve_project_log_dir() is None
+        pp._report_soft_failure(operation="mock_root", message="should not persist", exc=RuntimeError("boom"))
+        assert not (tmp_path / "logs" / "soft_failures.jsonl").exists()

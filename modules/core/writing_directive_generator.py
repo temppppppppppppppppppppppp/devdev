@@ -44,7 +44,14 @@ class WritingDirectiveGenerator:
         try:
             prompt = self._build_prompt(pattern_report, blueprint, genre, ep_num, lookback)
             raw = llm_callback(prompt)
-            return self._parse_response(raw)
+            result = self._parse_response(raw)
+            # [QI-1-A4] PatternReport 엔딩 문구를 ending_avoid_phrases에 병합
+            if pattern_report and getattr(pattern_report, "recent_ending_texts", None):
+                _existing = set(result.ending_avoid_phrases)
+                for text in pattern_report.recent_ending_texts[-3:]:
+                    if text and text not in _existing:
+                        result.ending_avoid_phrases.append(text)
+            return result
         except Exception as e:
             logger.warning("[TF-54b] WritingDirectiveGenerator 실패 (비치명): %s", str(e)[:120])
             return WritingDirective()
@@ -59,6 +66,12 @@ class WritingDirectiveGenerator:
     ) -> str:
         pattern_summary = report.to_summary_text(min_freq=2) if report else ""
         pattern_summary = pattern_summary or "직전 화 패턴 없음 (초기 에피소드)"
+        # [QI-1-A4] 직전 엔딩 문구 회피 목록
+        _ending_texts = getattr(report, "recent_ending_texts", []) if report else []
+        if _ending_texts:
+            _avoid_section = "\n【회피할 엔딩 문구】 아래 문구는 이미 사용했으므로 유사한 엔딩을 피하세요:\n"
+            _avoid_section += "\n".join(f"  - \"{t}\"" for t in _ending_texts[-3:])
+            pattern_summary += "\n" + _avoid_section
         blueprint_summary = self._summarize_blueprint(blueprint)
 
         if self._prompt_loader:
@@ -187,6 +200,7 @@ class WritingDirectiveGenerator:
 
         return WritingDirective(
             ending_style=_as_str("ending_style", "endingStyle", "ending", "ending_type"),
+            ending_avoid_phrases=_as_list("ending_avoid_phrases", "endingAvoidPhrases", "avoid_endings"),
             metaphor_avoid=_as_list("metaphor_avoid", "metaphorAvoid", "avoid_metaphor", "avoid_metaphors"),
             metaphor_suggest=_as_list("metaphor_suggest", "metaphorSuggest", "suggest_metaphor", "suggest_metaphors"),
             emotion_required=_as_str("emotion_required", "emotionRequired", "required_emotion", "emotion"),

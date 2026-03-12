@@ -14,6 +14,8 @@ import logging
 import re
 from collections import Counter
 
+from modules.core.constants import smart_truncate
+
 logger = logging.getLogger(__name__)
 
 # 씬 유형 키워드 매핑 (장르 무관 공통)
@@ -66,7 +68,7 @@ class LongTermRepetitionAdvisor:
         if not self._llm_ask:
             return []
 
-        return self._llm_check(manuscript[:3000], current_label, pattern_summary, ep_num)
+        return self._llm_check(manuscript, current_label, pattern_summary, ep_num)
 
     @staticmethod
     def build_pattern_summary(db, current_ep: int, lookback: int = 20) -> str:
@@ -165,6 +167,7 @@ class LongTermRepetitionAdvisor:
 
     def _llm_check(self, manuscript_snippet: str, current_label: str, pattern_summary: str, ep_num: int) -> list[dict]:
         """LLM에게 장기 반복 판정을 요청."""
+        manuscript_snippet = smart_truncate(manuscript_snippet or "", max_chars=3000, head_chars=1800)
         prompt = (
             "다음은 웹소설의 장기 패턴 분석 결과와 현재 원고 일부입니다.\n"
             "독자 이탈을 유발할 수 있는 **구조적 반복**을 찾아주세요.\n"

@@ -122,11 +122,12 @@ class Stage01Helpers:
         app.ui.log("      [1] 1인칭 - 주인공 '나'의 시점 (몰입감↑, 정보 제한)")
         app.ui.log("      [2] 3인칭 - 주인공을 '그/그녀'로 지칭 (자유도↑)")
         app.ui.log("      [3] 전지적 - 모든 캐릭터 내면 접근 가능")
+        app.ui.log("      [4] 혼합 - 씬 전환마다 시점을 바꿔 사용할 수 있음")
         try:
             pov_choice = input("   선택 (기본: 2): ").strip()
         except (EOFError, KeyboardInterrupt, ValueError):
             pov_choice = "2"
-        pov_types = {"1": "1인칭", "2": "3인칭", "3": "전지적"}
+        pov_types = {"1": "1인칭", "2": "3인칭", "3": "전지적", "4": "혼합"}
         selected_pov = pov_types.get(pov_choice, "3인칭")
 
         protagonist_config = {

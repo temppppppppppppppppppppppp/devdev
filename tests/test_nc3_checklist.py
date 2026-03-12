@@ -6,7 +6,7 @@ import logging
 
 from modules.core.response_schemas import DIRECTOR_AUDIT_SCHEMA
 
-# ── 체크리스트 13개 키 정의 ──────────────────────────────────
+# ── 체크리스트 20개 키 정의 ──────────────────────────────────
 NC3_KEYS = [
     "numeric_accuracy",
     "arithmetic",
@@ -21,6 +21,13 @@ NC3_KEYS = [
     "timeline_arc_consistency",  # [NS-4] Arc 간 시간 연속성
     "fiction_term_leak",          # [TF-57-A] 집필 시스템 내부 용어 누출
     "scene_variety",             # [TF-J] 씬 장소/인물 다양성
+    "pacing_quality",
+    "dialogue_naturalness",
+    "pov_discipline",
+    "emotional_authenticity",
+    "npc_knowledge_boundary",
+    "secret_consistency",
+    "identity_consistency",
 ]
 
 
@@ -45,9 +52,9 @@ def test_director_yaml_has_checklist_instructions():
     assert "일관성 체크리스트" in variable
 
 
-# ── 3. director.yaml에 13개 key 전량 포함 ──
-def test_director_yaml_has_all_13_keys():
-    """director.yaml의 출력 형식에 13개 key가 모두 포함되어 있는지 확인"""
+# ── 3. director.yaml에 20개 key 전량 포함 ──
+def test_director_yaml_has_all_20_keys():
+    """director.yaml의 출력 형식에 20개 key가 모두 포함되어 있는지 확인"""
     from modules.core.prompt_loader import PromptLoader
 
     loader = PromptLoader()
@@ -63,9 +70,9 @@ def test_schema_has_consistency_checklist():
     assert "consistency_checklist" in props, "DIRECTOR_AUDIT_SCHEMA에 consistency_checklist 누락"
 
 
-# ── 5. 스키마에 13개 key 전량 포함 ──
-def test_schema_has_all_13_keys():
-    """consistency_checklist 스키마에 13개 key가 모두 포함되어 있는지 확인"""
+# ── 5. 스키마에 20개 key 전량 포함 ──
+def test_schema_has_all_20_keys():
+    """consistency_checklist 스키마에 20개 key가 모두 포함되어 있는지 확인"""
     checklist_schema = DIRECTOR_AUDIT_SCHEMA.properties["consistency_checklist"]
     for key in NC3_KEYS:
         assert key in checklist_schema.properties, f"스키마에 key '{key}' 누락"
@@ -120,6 +127,13 @@ def test_nc3_keys_includes_scene_variety():
 
     src = pathlib.Path("modules/domain/agents/director_ensemble.py").read_text(encoding="utf-8")
     assert '"scene_variety"' in src
+    assert '"pacing_quality"' in src
+    assert '"dialogue_naturalness"' in src
+    assert '"pov_discipline"' in src
+    assert '"emotional_authenticity"' in src
+    assert '"npc_knowledge_boundary"' in src
+    assert '"secret_consistency"' in src
+    assert '"identity_consistency"' in src
 
 
 # ── 10. ISSUE 2건 → 경고 로깅만, 감점 없음 ──

@@ -29,7 +29,10 @@
         height: 100dvh;
         overflow: hidden;
         font-family: "Malgun Gothic", "Apple SD Gothic Neo", "Segoe UI", sans-serif;
-        background: var(--bg);
+        background:
+          radial-gradient(circle at top left, rgba(191, 219, 254, 0.45), rgba(255,255,255,0) 24%),
+          radial-gradient(circle at bottom right, rgba(251, 191, 36, 0.16), rgba(255,255,255,0) 20%),
+          var(--bg);
         color: var(--text);
       }
 
@@ -39,6 +42,9 @@
         display: grid;
         grid-template-rows: auto 1fr;
         gap: 10px;
+        background:
+          linear-gradient(180deg, rgba(255,255,255,0.28), rgba(255,255,255,0)),
+          linear-gradient(180deg, rgba(15,23,42,0.015), rgba(15,23,42,0));
       }
 
       .topbar {
@@ -46,9 +52,11 @@
         align-items: center;
         gap: 10px;
         padding: 8px 12px;
-        background: var(--surface);
+        background:
+          linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.92));
         border: 1px solid var(--line);
-        border-radius: 10px;
+        border-radius: 14px;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
       }
 
       .project-select {
@@ -92,10 +100,12 @@
       }
 
       .panel {
-        background: var(--surface);
+        background:
+          linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.94));
         border: 1px solid var(--line);
-        border-radius: 10px;
+        border-radius: 14px;
         padding: 10px;
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.045);
       }
 
       .panel-head {
@@ -109,6 +119,7 @@
       .panel-title {
         margin: 0;
         font-size: 14px;
+        letter-spacing: 0.01em;
       }
 
       .panel-sub {
@@ -174,11 +185,44 @@
       .canvas-wrap {
         position: relative;
         border: 1px solid var(--line);
-        border-radius: 10px;
+        border-radius: 14px;
         overflow: hidden;
-        background: #e2e8f0;
+        background:
+          radial-gradient(circle at top, rgba(250, 250, 249, 0.7), rgba(255, 255, 255, 0) 28%),
+          linear-gradient(180deg, #f8fafc 0%, #dbeafe 14%, #e2e8f0 34%, #cbd5e1 100%);
+        box-shadow:
+          0 14px 30px rgba(15, 23, 42, 0.08),
+          inset 0 1px 0 rgba(255, 255, 255, 0.65),
+          inset 0 -28px 42px rgba(15, 23, 42, 0.12);
         flex: 1;
         min-height: 200px;
+      }
+
+      .canvas-wrap::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background:
+          linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0) 22%),
+          linear-gradient(180deg, rgba(15,23,42,0) 66%, rgba(15,23,42,0.12));
+        z-index: 1;
+      }
+
+      .canvas-wrap::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background:
+          repeating-linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.02) 0 1px,
+            rgba(15, 23, 42, 0.01) 1px 3px
+          ),
+          radial-gradient(circle at center, rgba(255,255,255,0) 56%, rgba(15,23,42,0.18) 100%);
+        mix-blend-mode: soft-light;
+        z-index: 1;
       }
 
       #officeCanvas {
@@ -186,6 +230,8 @@
         width: 100%;
         height: 100%;
         image-rendering: pixelated;
+        position: relative;
+        z-index: 0;
       }
 
       .effect-banner {
@@ -201,6 +247,7 @@
         opacity: 0;
         pointer-events: none;
         transition: opacity 120ms ease-out, transform 120ms ease-out;
+        z-index: 2;
       }
 
       .effect-banner.show {
@@ -232,6 +279,984 @@
         align-items: center;
         gap: 6px;
         flex-wrap: wrap;
+      }
+
+      .office-dashboard {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-top: 8px;
+      }
+
+      .mission-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .mission-card {
+        position: relative;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: linear-gradient(180deg, #ffffff, #f8fafc);
+        padding: 10px 12px;
+        min-height: 78px;
+        box-shadow: 0 10px 22px rgba(15, 23, 42, 0.04);
+        overflow: hidden;
+      }
+
+      .mission-card::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 3px;
+        background: rgba(148, 163, 184, 0.4);
+      }
+
+      #stageMissionCard::before {
+        background: rgba(59, 130, 246, 0.55);
+      }
+
+      #focusMissionCard::before {
+        background: rgba(16, 185, 129, 0.55);
+      }
+
+      #promptMissionCard::before {
+        background: rgba(245, 158, 11, 0.58);
+      }
+
+      #verdictMissionCard::before {
+        background: rgba(168, 85, 247, 0.5);
+      }
+
+      .mission-label {
+        display: block;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        color: var(--muted);
+        text-transform: uppercase;
+        margin-bottom: 6px;
+      }
+
+      .mission-title {
+        display: block;
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--text);
+        margin-bottom: 4px;
+      }
+
+      .mission-meta {
+        display: block;
+        font-size: 12px;
+        line-height: 1.45;
+        color: var(--muted);
+      }
+
+      .mission-card.prompt-live {
+        border-color: #f59e0b;
+        background: linear-gradient(180deg, #fffaf0, #fffbeb);
+      }
+
+      .mission-card.verdict-pass {
+        border-color: rgba(34, 197, 94, 0.35);
+      }
+
+      .mission-card.verdict-pwf {
+        border-color: rgba(234, 179, 8, 0.4);
+      }
+
+      .mission-card.verdict-reject {
+        border-color: rgba(239, 68, 68, 0.35);
+      }
+
+      .pipeline-strip {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .quality-radar-panel {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: linear-gradient(180deg, #ffffff, #f8fafc);
+        padding: 10px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+      }
+
+      .quality-radar-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .quality-radar {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .quality-signal-card {
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        border-radius: 12px;
+        background: linear-gradient(180deg, #ffffff, #f8fafc);
+        padding: 9px 10px;
+        min-height: 96px;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+
+      .quality-signal-card.is-good {
+        border-color: rgba(34, 197, 94, 0.28);
+        background: linear-gradient(180deg, rgba(240, 253, 244, 0.92), #ffffff);
+      }
+
+      .quality-signal-card.is-watch {
+        border-color: rgba(245, 158, 11, 0.3);
+        background: linear-gradient(180deg, rgba(255, 251, 235, 0.94), #ffffff);
+      }
+
+      .quality-signal-card.is-alert {
+        border-color: rgba(239, 68, 68, 0.28);
+        background: linear-gradient(180deg, rgba(254, 242, 242, 0.95), #ffffff);
+      }
+
+      .quality-signal-card.is-empty {
+        grid-column: 1 / -1;
+        min-height: 72px;
+        justify-content: center;
+      }
+
+      .quality-signal-label {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        color: var(--muted);
+        text-transform: uppercase;
+      }
+
+      .quality-signal-value {
+        font-size: 20px;
+        font-weight: 800;
+        color: var(--text);
+      }
+
+      .quality-signal-meta {
+        font-size: 11px;
+        line-height: 1.45;
+        color: var(--muted);
+      }
+
+      .quality-radar-foot {
+        font-size: 12px;
+        color: var(--muted);
+        line-height: 1.45;
+      }
+
+      .quality-signal-spark {
+        width: 100%;
+        height: 28px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.65);
+        border: 1px solid rgba(226, 232, 240, 0.9);
+        overflow: hidden;
+      }
+
+      .quality-signal-reason {
+        font-size: 11px;
+        line-height: 1.4;
+        color: #475569;
+      }
+
+      .quality-radar-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 6px;
+      }
+
+      .mini-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        border-radius: 999px;
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        background: rgba(255, 255, 255, 0.92);
+        padding: 3px 8px;
+        font-size: 11px;
+        color: #475569;
+      }
+
+      .quality-insight-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .artifact-support-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .artifact-support-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 999px;
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        background: rgba(255, 255, 255, 0.92);
+        padding: 4px 10px;
+        font-size: 11px;
+        color: #475569;
+      }
+
+      .artifact-support-chip::before {
+        content: "";
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: #cbd5e1;
+      }
+
+      .artifact-support-chip.is-ready::before {
+        background: #16a34a;
+      }
+
+      .artifact-ladder-grid {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .artifact-card {
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        border-radius: 12px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.95));
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        min-height: 128px;
+      }
+
+      .artifact-card.is-ready {
+        border-color: rgba(22, 163, 74, 0.24);
+        background: linear-gradient(180deg, rgba(240, 253, 244, 0.95), rgba(248, 250, 252, 0.95));
+      }
+
+      .artifact-card.is-derived {
+        border-color: rgba(217, 119, 6, 0.24);
+        background: linear-gradient(180deg, rgba(255, 251, 235, 0.96), rgba(248, 250, 252, 0.95));
+      }
+
+      .artifact-card.is-pending {
+        border-style: dashed;
+      }
+
+      .artifact-card-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .artifact-short {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 40px;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.06);
+        padding: 4px 8px;
+        font-size: 11px;
+        font-weight: 800;
+        color: #334155;
+      }
+
+      .artifact-status-chip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        padding: 4px 8px;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+      }
+
+      .artifact-status-chip.is-ready {
+        color: #166534;
+        background: rgba(22, 163, 74, 0.12);
+      }
+
+      .artifact-status-chip.is-derived {
+        color: #92400e;
+        background: rgba(217, 119, 6, 0.12);
+      }
+
+      .artifact-status-chip.is-pending {
+        color: #475569;
+        background: rgba(148, 163, 184, 0.14);
+      }
+
+      .artifact-card-title {
+        font-size: 14px;
+        font-weight: 800;
+        color: var(--text);
+      }
+
+      .artifact-card-meta,
+      .artifact-card-detail,
+      .artifact-card-path {
+        font-size: 11px;
+        line-height: 1.45;
+        color: var(--muted);
+      }
+
+      .artifact-card-path {
+        margin-top: auto;
+        color: #475569;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .retrieval-summary-strip {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .retrieval-stage-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .retrieval-stage-card {
+        border-radius: 12px;
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.95));
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+
+      .retrieval-stage-label {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: #64748b;
+      }
+
+      .retrieval-stage-value {
+        font-size: 18px;
+        font-weight: 800;
+        color: var(--text);
+      }
+
+      .retrieval-stage-meta {
+        font-size: 11px;
+        line-height: 1.45;
+        color: var(--muted);
+      }
+
+      .insight-panel {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: linear-gradient(180deg, #ffffff, #f8fafc);
+        padding: 10px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+        min-height: 0;
+      }
+
+      .insight-panel.is-wide {
+        grid-column: 1 / -1;
+      }
+
+      .insight-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .insight-subtitle {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        color: #64748b;
+        text-transform: uppercase;
+      }
+
+      .result-summary-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .verdict-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        padding: 5px 10px;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.03em;
+        background: #e2e8f0;
+        color: #334155;
+      }
+
+      .verdict-badge.is-pass {
+        background: #dcfce7;
+        color: #166534;
+      }
+
+      .verdict-badge.is-pwf {
+        background: #fef3c7;
+        color: #92400e;
+      }
+
+      .verdict-badge.is-reject {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+
+      .result-summary-copy {
+        flex: 1;
+        min-width: 220px;
+      }
+
+      .action-card-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .action-card {
+        border-radius: 12px;
+        border: 1px solid rgba(226, 232, 240, 0.9);
+        background: linear-gradient(180deg, rgba(248, 250, 252, 0.98), rgba(241, 245, 249, 0.96));
+        padding: 9px 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-height: 88px;
+      }
+
+      .action-card-label {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: #64748b;
+      }
+
+      .action-card-copy {
+        font-size: 12px;
+        line-height: 1.45;
+        color: #334155;
+      }
+
+      .result-summary-headline {
+        font-size: 14px;
+        font-weight: 800;
+        color: var(--text);
+      }
+
+      .result-summary-reason {
+        font-size: 12px;
+        line-height: 1.5;
+        color: #475569;
+      }
+
+      .signal-alert-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .signal-alert-chip {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: 3px 8px;
+        font-size: 11px;
+        font-weight: 700;
+        background: rgba(254, 242, 242, 0.95);
+        color: #991b1b;
+        border: 1px solid rgba(239, 68, 68, 0.18);
+      }
+
+      .issue-list {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .issue-item {
+        border-radius: 10px;
+        border: 1px solid rgba(226, 232, 240, 0.9);
+        background: linear-gradient(180deg, rgba(248, 250, 252, 0.96), rgba(241, 245, 249, 0.96));
+        padding: 8px 9px;
+        font-size: 12px;
+        line-height: 1.45;
+        color: #334155;
+        min-height: 64px;
+      }
+
+      .next-action-box {
+        border-radius: 12px;
+        border: 1px solid rgba(59, 130, 246, 0.14);
+        background: linear-gradient(180deg, rgba(239, 246, 255, 0.96), rgba(248, 250, 252, 1));
+        padding: 9px 10px;
+        font-size: 12px;
+        line-height: 1.5;
+        color: #1e3a8a;
+      }
+
+      .trend-summary-strip {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .trend-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        border-radius: 999px;
+        padding: 4px 8px;
+        font-size: 11px;
+        font-weight: 700;
+        background: #eef2ff;
+        color: #4338ca;
+      }
+
+      .compare-table-wrap {
+        border-radius: 12px;
+        border: 1px dashed rgba(148, 163, 184, 0.28);
+        overflow: hidden;
+      }
+
+      .compare-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+      }
+
+      .compare-table th,
+      .compare-table td {
+        padding: 8px 10px;
+        border-bottom: 1px solid rgba(226, 232, 240, 0.75);
+        text-align: left;
+        color: #334155;
+      }
+
+      .compare-table th {
+        background: #f8fafc;
+        color: #64748b;
+        font-size: 11px;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+      }
+
+      .compare-table tr:last-child td {
+        border-bottom: none;
+      }
+
+      .compare-verdict {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: 2px 8px;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+        background: #e2e8f0;
+        color: #334155;
+      }
+
+      .compare-verdict.is-pass {
+        background: #dcfce7;
+        color: #166534;
+      }
+
+      .compare-verdict.is-pwf {
+        background: #fef3c7;
+        color: #92400e;
+      }
+
+      .compare-verdict.is-reject {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+
+      .stage-stat-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .stage-stat-card {
+        border-radius: 12px;
+        border: 1px solid rgba(226, 232, 240, 0.9);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.98));
+        padding: 9px 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .stage-stat-label {
+        font-size: 11px;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+      }
+
+      .stage-stat-value {
+        font-size: 18px;
+        font-weight: 800;
+        color: var(--text);
+      }
+
+      .stage-stat-meta {
+        font-size: 11px;
+        line-height: 1.4;
+        color: #64748b;
+      }
+
+      .pattern-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .pattern-column {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .pattern-list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .pattern-item {
+        border-radius: 10px;
+        border: 1px solid rgba(226, 232, 240, 0.85);
+        background: rgba(248, 250, 252, 0.9);
+        padding: 8px 9px;
+      }
+
+      .pattern-item-title {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text);
+      }
+
+      .pattern-item-meta {
+        font-size: 11px;
+        line-height: 1.4;
+        color: #64748b;
+      }
+
+      .calibration-grid {
+        display: grid;
+        grid-template-columns: 1.15fr 1fr 1fr;
+        gap: 8px;
+      }
+
+      .calibration-form {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .calibration-form label {
+        display: block;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        color: #64748b;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+      }
+
+      .calibration-form input,
+      .calibration-form select,
+      .calibration-form textarea {
+        width: 100%;
+        border: 1px solid rgba(226, 232, 240, 0.95);
+        border-radius: 10px;
+        padding: 9px 10px;
+        background: rgba(255, 255, 255, 0.96);
+        color: #0f172a;
+        font: inherit;
+        font-size: 13px;
+      }
+
+      .calibration-form textarea {
+        min-height: 92px;
+        resize: vertical;
+      }
+
+      .calibration-form .btn-sm {
+        align-self: flex-start;
+      }
+
+      .observation-label-chip {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: 2px 8px;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+        background: #e2e8f0;
+        color: #334155;
+      }
+
+      .observation-label-chip.is-good {
+        background: #dcfce7;
+        color: #166534;
+      }
+
+      .observation-label-chip.is-watch {
+        background: #fef3c7;
+        color: #92400e;
+      }
+
+      .observation-label-chip.is-alert {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+
+      .candidate-card {
+        border-radius: 10px;
+        border: 1px solid rgba(59, 130, 246, 0.14);
+        background: linear-gradient(180deg, rgba(239, 246, 255, 0.96), rgba(248, 250, 252, 0.98));
+        padding: 8px 9px;
+      }
+
+      .candidate-card strong {
+        display: block;
+        font-size: 12px;
+        color: #1e3a8a;
+        margin-bottom: 4px;
+      }
+
+      .candidate-card span {
+        display: block;
+        font-size: 11px;
+        line-height: 1.45;
+        color: #475569;
+      }
+
+      .insight-empty {
+        border: 1px dashed rgba(148, 163, 184, 0.28);
+        border-radius: 12px;
+        padding: 10px;
+        font-size: 12px;
+        color: var(--muted);
+        background: rgba(248, 250, 252, 0.72);
+      }
+
+      .pipeline-chip {
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 7px 10px;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--muted);
+        background: linear-gradient(180deg, #ffffff, #f8fafc);
+        text-align: center;
+        transition: background 120ms ease, color 120ms ease, border-color 120ms ease, transform 120ms ease;
+      }
+
+      .pipeline-chip.is-past {
+        background: #eef2ff;
+        border-color: #c7d2fe;
+        color: #4338ca;
+      }
+
+      .pipeline-chip.is-active {
+        background: #0f172a;
+        border-color: #0f172a;
+        color: #fff;
+        transform: translateY(-1px);
+      }
+
+      .pipeline-chip.is-running {
+        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.14);
+      }
+
+      .agent-board {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .agent-card {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: linear-gradient(180deg, #ffffff, #f8fafc);
+        padding: 9px 10px;
+        min-height: 90px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+        transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease, background 120ms ease;
+      }
+
+      .agent-card.active {
+        border-color: #cbd5e1;
+        background: linear-gradient(180deg, #ffffff, #f8fafc 54%, #eef2ff);
+      }
+
+      .agent-card.speaking {
+        transform: translateY(-1px);
+        box-shadow: 0 14px 28px rgba(15, 23, 42, 0.1);
+      }
+
+      .agent-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px;
+      }
+
+      .agent-name-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        min-width: 0;
+      }
+
+      .agent-dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 999px;
+        flex-shrink: 0;
+      }
+
+      .agent-name {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text);
+      }
+
+      .agent-state {
+        font-size: 11px;
+        font-weight: 700;
+        color: #334155;
+        white-space: nowrap;
+        background: #eef2ff;
+        border-radius: 999px;
+        padding: 3px 7px;
+      }
+
+      .agent-role {
+        font-size: 11px;
+        color: var(--muted);
+      }
+
+      .agent-detail {
+        font-size: 12px;
+        line-height: 1.4;
+        color: var(--text);
+        min-height: 32px;
+      }
+
+      .agent-bubble-echo {
+        border-radius: 10px;
+        background: linear-gradient(180deg, #f8fafc, #f1f5f9);
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        padding: 7px 9px;
+        font-size: 11px;
+        line-height: 1.35;
+        color: var(--muted);
+        min-height: 40px;
+      }
+
+      .agent-bubble-echo.live {
+        color: #334155;
+      }
+
+      .live-feed {
+        border: 1px dashed var(--line);
+        border-radius: 12px;
+        background: linear-gradient(180deg, #ffffff, #f8fafc);
+        padding: 8px 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-height: 72px;
+        max-height: 118px;
+        overflow: auto;
+      }
+
+      .live-feed-empty {
+        font-size: 12px;
+        color: var(--muted);
+        padding: 4px 0;
+      }
+
+      .live-event {
+        display: grid;
+        grid-template-columns: 56px minmax(0, 1fr);
+        gap: 8px;
+        align-items: start;
+        border-radius: 10px;
+        padding: 7px 8px;
+        background: rgba(248, 250, 252, 0.8);
+        border: 1px solid rgba(226, 232, 240, 0.8);
+      }
+
+      .live-event-time {
+        font-size: 11px;
+        color: #94a3b8;
+      }
+
+      .live-event-body {
+        min-width: 0;
+      }
+
+      .live-event-title {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text);
+      }
+
+      .live-event-meta {
+        font-size: 11px;
+        line-height: 1.4;
+        color: var(--muted);
       }
 
       .badge {
@@ -295,11 +1320,11 @@
       .log-box {
         min-height: 80px;
         max-height: 160px;
-        border-radius: 10px;
+        border-radius: 12px;
         border: 1px dashed var(--line);
         padding: 10px;
         overflow: auto;
-        background: #fff;
+        background: linear-gradient(180deg, #ffffff, #f8fafc);
       }
 
       /* 로그 패널 접기/펼치기 */
@@ -329,8 +1354,9 @@
       }
 
       .log-row {
-        display: flex;
-        align-items: center;
+        display: grid;
+        grid-template-columns: 68px minmax(0, 1fr) auto;
+        align-items: start;
         gap: 8px;
         padding: 6px 4px;
         border-bottom: 1px solid #f1f5f9;
@@ -346,6 +1372,43 @@
       .log-msg {
         color: #334155;
         flex: 1;
+        line-height: 1.45;
+        word-break: break-word;
+      }
+
+      .log-main {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .log-meta-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+      }
+
+      .log-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 2px 7px;
+        border-radius: 999px;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+      }
+
+      .log-chip-agent {
+        color: #0f172a;
+        background: #e2e8f0;
+      }
+
+      .log-chip-stage {
+        color: #334155;
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
       }
 
       .verdict-badge {
@@ -546,6 +1609,152 @@
 
       .btn-confirm:hover {
         background: var(--button-hover);
+      }
+
+      .safe-ops-panel {
+        margin-top: 10px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.96));
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .safe-ops-head {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .safe-ops-title {
+        font-size: 12px;
+        font-weight: 700;
+        color: #1e293b;
+      }
+
+      .safe-ops-meta {
+        font-size: 11px;
+        color: var(--muted);
+      }
+
+      .safe-ops-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .safe-ops-card {
+        border: 1px solid rgba(148, 163, 184, 0.22);
+        border-radius: 10px;
+        background: #fff;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .safe-ops-card-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .safe-ops-card-title {
+        font-size: 12px;
+        font-weight: 700;
+        color: #0f172a;
+      }
+
+      .safe-ops-chip {
+        border-radius: 999px;
+        padding: 3px 8px;
+        font-size: 10px;
+        font-weight: 700;
+        background: rgba(239, 68, 68, 0.1);
+        color: #991b1b;
+      }
+
+      .safe-ops-chip.is-target {
+        background: rgba(245, 158, 11, 0.14);
+        color: #92400e;
+      }
+
+      .safe-ops-card-copy,
+      .safe-ops-card-note,
+      .safe-ops-card-impact {
+        font-size: 11px;
+        line-height: 1.5;
+        color: #475569;
+      }
+
+      .safe-ops-card-impact strong {
+        color: #0f172a;
+      }
+
+      .safe-ops-hint {
+        font-size: 11px;
+        color: #64748b;
+        line-height: 1.5;
+      }
+
+      .confirm-panel.safe-ops {
+        max-width: 520px;
+      }
+
+      .confirm-kicker {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        color: #991b1b;
+        text-transform: uppercase;
+      }
+
+      .confirm-title {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 800;
+        color: #0f172a;
+      }
+
+      .confirm-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .confirm-box {
+        border: 1px solid rgba(148, 163, 184, 0.22);
+        border-radius: 10px;
+        padding: 10px;
+        background: #f8fafc;
+      }
+
+      .confirm-box strong {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 12px;
+        color: #0f172a;
+      }
+
+      .confirm-box ul {
+        margin: 0;
+        padding-left: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        font-size: 12px;
+        color: #475569;
+      }
+
+      .confirm-note-list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        font-size: 12px;
+        color: #475569;
       }
 
       .accordion-item {
@@ -991,6 +2200,88 @@
         min-height: 80px;
       }
 
+      .setup-helper-panel {
+        padding: 14px;
+        border: 1px solid rgba(148, 163, 184, 0.28);
+        border-radius: 12px;
+        background:
+          linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.96)),
+          repeating-linear-gradient(
+            90deg,
+            rgba(71, 85, 105, 0.02) 0 18px,
+            rgba(71, 85, 105, 0) 18px 36px
+          );
+      }
+
+      .setup-helper-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .setup-helper-field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .setup-helper-field-wide {
+        grid-column: 1 / -1;
+      }
+
+      .setup-helper-field span {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text);
+      }
+
+      .setup-helper-field input,
+      .setup-helper-field textarea {
+        width: 100%;
+        box-sizing: border-box;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 8px 10px;
+        font: inherit;
+        font-size: 13px;
+        color: var(--text);
+        background: #fff;
+      }
+
+      .setup-helper-field textarea {
+        min-height: 74px;
+        resize: vertical;
+        line-height: 1.55;
+      }
+
+      .setup-helper-field input:focus,
+      .setup-helper-field textarea:focus {
+        outline: none;
+        border-color: #94a3b8;
+      }
+
+      .setup-helper-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .setup-helper-note {
+        margin: 0;
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: #f8fafc;
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        font-size: 12px;
+        line-height: 1.55;
+        color: var(--muted);
+      }
+
+      .setup-helper-note strong {
+        color: var(--text);
+      }
+
       .btn-sm {
         border: 1px solid var(--line);
         background: #fff;
@@ -1076,6 +2367,12 @@
         gap: 8px;
       }
 
+      @media (max-width: 860px) {
+        .setup-helper-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
       .slider-row {
         display: flex;
         align-items: center;
@@ -1135,6 +2432,47 @@
 
         .topbar {
           flex-wrap: wrap;
+        }
+
+        .mission-grid,
+        .quality-insight-grid,
+        .agent-board,
+        .pipeline-strip,
+        .quality-radar,
+        .action-card-grid,
+        .issue-list,
+        .stage-stat-grid,
+        .retrieval-stage-grid,
+        .pattern-grid,
+        .calibration-grid,
+        .artifact-ladder-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 1280px) {
+        .agent-board {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .pipeline-strip {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .quality-radar {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .issue-list {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .artifact-ladder-grid {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .retrieval-stage-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
         }
       }
     </style>
@@ -1253,6 +2591,14 @@
                 <button type="button" class="menu-btn" data-action="stop" data-key="stop">
                   <span class="label">Stop</span><span class="meta">runtime</span>
                 </button>
+                <div class="safe-ops-panel">
+                  <div class="safe-ops-head">
+                    <span class="safe-ops-title">Safe Ops Preview</span>
+                    <span class="safe-ops-meta" id="safeOpsMeta">프로젝트를 선택하면 삭제/유지 범위를 미리 보여줍니다</span>
+                  </div>
+                  <div class="safe-ops-grid" id="safeOpsGrid"></div>
+                  <div class="safe-ops-hint" id="safeOpsHint">운영 버튼을 누르기 전, 무엇이 지워지고 무엇이 남는지 여기서 먼저 확인합니다.</div>
+                </div>
               </div>
             </div>
 
@@ -1276,9 +2622,203 @@
               <canvas id="officeCanvas" width="640" height="360" aria-label="Office view"></canvas>
               <div id="effectBanner" class="effect-banner">채택</div>
             </div>
+            <div class="office-dashboard">
+              <div class="mission-grid">
+                <div class="mission-card" id="stageMissionCard">
+                  <span class="mission-label">Pipeline</span>
+                  <strong class="mission-title" id="currentStageLabel">대기</strong>
+                  <span class="mission-meta" id="currentStageDetail">실행 버튼을 기다리는 중</span>
+                </div>
+                <div class="mission-card" id="focusMissionCard">
+                  <span class="mission-label">Current Task</span>
+                  <strong class="mission-title" id="currentFocusLabel">앱 준비 중</strong>
+                  <span class="mission-meta" id="currentFocusMeta">백엔드 연결 전</span>
+                </div>
+                <div class="mission-card" id="promptMissionCard">
+                  <span class="mission-label">Prompt</span>
+                  <strong class="mission-title" id="promptStatusLabel">없음</strong>
+                  <span class="mission-meta" id="promptStatusMeta">대기 중인 입력 없음</span>
+                </div>
+                <div class="mission-card" id="verdictMissionCard">
+                  <span class="mission-label">Last Verdict</span>
+                  <strong class="mission-title" id="verdictSummary">없음</strong>
+                  <span class="mission-meta" id="verdictMeta">아직 심사 결과 없음</span>
+                </div>
+              </div>
+              <div class="pipeline-strip" id="pipelineStrip" aria-label="파이프라인 상태"></div>
+              <div class="quality-radar-panel" aria-label="품질 레이더">
+                <div class="quality-radar-head">
+                  <div>
+                    <span class="mission-label">Quality Radar</span>
+                    <strong class="mission-title" id="qualityRadarTitle">최근 품질 신호</strong>
+                    <span class="mission-meta" id="qualityRadarMeta">프로젝트를 선택하면 최근 5화 기준 신호를 표시합니다</span>
+                  </div>
+                </div>
+              <div class="quality-radar" id="qualityRadar"></div>
+              <div class="quality-radar-foot" id="qualityRadarFoot">신호 데이터가 아직 없습니다.</div>
+            </div>
+              <div class="quality-insight-grid" aria-label="품질 인사이트">
+                <div class="insight-panel is-wide" id="artifactLadderPanel">
+                <div class="insight-head">
+                  <div>
+                    <span class="mission-label">Artifact Ladder</span>
+                    <strong class="mission-title">BI -> TR -> Arc -> Blueprint -> Manuscript</strong>
+                    <span class="mission-meta" id="artifactLadderMeta">프로젝트를 선택하면 최신 산출물과 다음 행동이 표시됩니다</span>
+                  </div>
+                </div>
+                <div class="artifact-support-row" id="artifactSupportRow"></div>
+                <div class="artifact-ladder-grid" id="artifactLadderGrid"></div>
+                <div class="next-action-box" id="artifactLadderHint">아직 선택된 프로젝트가 없습니다.</div>
+                </div>
+                <div class="insight-panel is-wide" id="retrievalInspectorPanel">
+                  <div class="insight-head">
+                    <div>
+                      <span class="mission-label">Retrieval Inspector</span>
+                      <strong class="mission-title">이번 화에 뭘 꺼내왔고 어디서 비었는가</strong>
+                      <span class="mission-meta" id="retrievalInspectorMeta">프로젝트를 선택하면 최근 retrieval 관측이 표시됩니다</span>
+                    </div>
+                  </div>
+                  <div class="retrieval-summary-strip" id="retrievalSummaryStrip"></div>
+                  <div class="retrieval-stage-grid" id="retrievalStageGrid"></div>
+                  <div class="pattern-grid">
+                    <div class="pattern-column">
+                      <div class="insight-subtitle">반복 경고</div>
+                      <div class="pattern-list" id="retrievalWarningList"></div>
+                    </div>
+                    <div class="pattern-column">
+                      <div class="insight-subtitle">최근 retrieval</div>
+                      <div class="pattern-list" id="retrievalRecentList"></div>
+                    </div>
+                  </div>
+                  <div class="next-action-box" id="retrievalInspectorHint">retrieval 관측 데이터가 아직 없습니다.</div>
+                </div>
+                <div class="insight-panel is-wide" id="resultSummaryPanel">
+                <div class="insight-head">
+                  <div>
+                      <span class="mission-label">Run Result Summary</span>
+                      <strong class="mission-title" id="resultSummaryTitle">최근 심사 결과</strong>
+                      <span class="mission-meta" id="resultSummaryMeta">프로젝트를 선택하면 최근 심사 결과와 즉시 행동 가이드를 표시합니다</span>
+                    </div>
+                  </div>
+                  <div class="result-summary-top">
+                    <div class="result-summary-copy">
+                      <div class="result-summary-headline" id="resultSummaryHeadline">최근 결과가 아직 없습니다.</div>
+                      <div class="result-summary-reason" id="resultSummaryReason">Stage 4 PASS/PWF/REJECT 결과가 기록되면 여기에 핵심 요약이 표시됩니다.</div>
+                    </div>
+                    <span class="verdict-badge" id="resultVerdictBadge">대기</span>
+                  </div>
+                  <div class="signal-alert-row" id="resultSignalAlerts"></div>
+                  <div class="action-card-grid" id="resultActionGrid">
+                    <div class="action-card">
+                      <div class="action-card-label">Fix Now</div>
+                      <div class="action-card-copy" id="resultFixNow">지금 고칠 포인트가 여기에 표시됩니다.</div>
+                    </div>
+                    <div class="action-card">
+                      <div class="action-card-label">Keep Next</div>
+                      <div class="action-card-copy" id="resultKeepNext">다음 화에 유지할 강점이 여기에 표시됩니다.</div>
+                    </div>
+                    <div class="action-card">
+                      <div class="action-card-label">Avoid Next</div>
+                      <div class="action-card-copy" id="resultAvoidNext">다음 화에서 피할 반복 패턴이 여기에 표시됩니다.</div>
+                    </div>
+                  </div>
+                  <div class="issue-list" id="resultIssueList"></div>
+                  <div class="next-action-box" id="resultNextAction">다음 행동 추천이 여기에 표시됩니다.</div>
+                </div>
+                <div class="insight-panel" id="trendPanel">
+                  <div class="insight-head">
+                    <div>
+                      <span class="mission-label">Episode Trend</span>
+                      <strong class="mission-title">최근 회차 비교</strong>
+                      <span class="mission-meta" id="trendPanelMeta">최근 회차 점수와 품질 신호를 비교합니다</span>
+                    </div>
+                  </div>
+                  <div class="trend-summary-strip" id="qualityTrendSummary"></div>
+                  <div class="compare-table-wrap">
+                    <table class="compare-table" aria-label="최근 회차 비교표">
+                      <thead>
+                        <tr>
+                          <th>EP</th>
+                          <th>Verdict</th>
+                          <th>Score</th>
+                          <th>CED</th>
+                          <th>Slop</th>
+                        </tr>
+                      </thead>
+                      <tbody id="qualityCompareBody"></tbody>
+                    </table>
+                  </div>
+                </div>
+                <div class="insight-panel" id="failureWatchPanel">
+                  <div class="insight-head">
+                    <div>
+                      <span class="mission-label">Failure Watch</span>
+                      <strong class="mission-title">실패 패턴 & Stage 상태</strong>
+                      <span class="mission-meta" id="failureWatchMeta">실패 원인과 Stage별 통과 흐름을 요약합니다</span>
+                    </div>
+                  </div>
+                  <div class="stage-stat-grid" id="stageStatsGrid"></div>
+                  <div class="pattern-grid">
+                    <div class="pattern-column">
+                      <div class="insight-subtitle">주요 실패 패턴</div>
+                      <div class="pattern-list" id="failurePatternList"></div>
+                    </div>
+                    <div class="pattern-column">
+                      <div class="insight-subtitle">회차 구간 경향</div>
+                      <div class="pattern-list" id="failureRangeList"></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="insight-panel is-wide" id="calibrationPanel">
+                  <div class="insight-head">
+                    <div>
+                      <span class="mission-label">Calibration Desk</span>
+                      <strong class="mission-title">운영 관측 & 승격 후보</strong>
+                      <span class="mission-meta" id="calibrationMeta">프로젝트를 선택하면 수기 관측과 승격 후보가 표시됩니다</span>
+                    </div>
+                  </div>
+                  <div class="trend-summary-strip" id="calibrationSummary"></div>
+                  <div class="calibration-grid">
+                    <div class="calibration-form">
+                      <div>
+                        <label for="qualityObservationEp">회차</label>
+                        <input type="number" id="qualityObservationEp" min="1" placeholder="ep 번호" />
+                      </div>
+                      <div>
+                        <label for="qualityObservationLabel">운영자 판정</label>
+                        <select id="qualityObservationLabel">
+                          <option value="">판정 선택</option>
+                          <option value="좋음">좋음</option>
+                          <option value="경계">경계</option>
+                          <option value="AI 티">AI 티</option>
+                          <option value="지나친 단조">지나친 단조</option>
+                          <option value="과잉 설명">과잉 설명</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label for="qualityObservationNote">관측 메모</label>
+                        <textarea id="qualityObservationNote" placeholder="예: 후반부 설명문이 많고 문장 스타터가 반복됨"></textarea>
+                      </div>
+                      <button type="button" class="btn-sm" id="saveQualityObservationBtn">관측 기록</button>
+                    </div>
+                    <div class="pattern-column">
+                      <div class="insight-subtitle">최근 관측 노트</div>
+                      <div class="pattern-list" id="qualityObservationList"></div>
+                    </div>
+                    <div class="pattern-column">
+                      <div class="insight-subtitle">승격 후보</div>
+                      <div class="pattern-list" id="qualityAdvisoryList"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="agent-board" id="agentBoard" aria-label="에이전트 상태"></div>
+              <div class="live-feed" id="eventFeed" aria-label="실시간 주요 이벤트"></div>
+            </div>
             <div class="status-foot">
               <div class="badge" id="readyBadge">앱 초기화 대기</div>
               <div class="badge state-running" id="stateBadge">상태: RUNNING</div>
+              <div class="badge" id="runtimeBadge">경과: --:--</div>
               <div class="last-action" id="lastAction">최근 클릭: 없음</div>
             </div>
           </article>
@@ -1394,6 +2934,60 @@
             </div>
           </div>
 
+          <div class="field-group setup-helper-panel">
+            <span class="field-label">작품 정체성 도우미</span>
+            <span class="field-hint">`work_identity` 핵심 키를 구조화 입력으로 잡아줍니다. 고급 키는 아래 raw YAML에서 계속 편집할 수 있습니다.</span>
+            <div class="setup-helper-grid">
+              <label class="setup-helper-field">
+                <span>작품 타입</span>
+                <input type="text" id="wgWorkType" placeholder="예) 엔터 타이쿤 성장물" />
+              </label>
+              <label class="setup-helper-field">
+                <span>한 줄 진실</span>
+                <input type="text" id="wgOneLineTruth" placeholder="예) 사람을 발굴하고 포지셔닝해 IP로 키우는 이야기" />
+              </label>
+              <label class="setup-helper-field">
+                <span>주인공 무기</span>
+                <textarea id="wgProtagonistWeapon" placeholder="줄바꿈 또는 쉼표로 구분&#10;예) 스타 감각&#10;포지셔닝 판단"></textarea>
+              </label>
+              <label class="setup-helper-field">
+                <span>사업 축</span>
+                <textarea id="wgBusinessAxes" placeholder="예) 배우, 연습생, 포맷 IP"></textarea>
+              </label>
+              <label class="setup-helper-field">
+                <span>통제 축</span>
+                <textarea id="wgControlAxes" placeholder="예) 캐스팅 권한, 편성권, 라이선스"></textarea>
+              </label>
+              <label class="setup-helper-field">
+                <span>필수 장면 엔진</span>
+                <textarea id="wgSceneEngines" placeholder="예) 인재 발굴, 포지셔닝, 팬덤 반응"></textarea>
+              </label>
+              <label class="setup-helper-field">
+                <span>평탄화 금지</span>
+                <textarea id="wgForbiddenFlattenings" placeholder="예) 사람 대신 숫자만으로 승부 보기"></textarea>
+              </label>
+              <label class="setup-helper-field">
+                <span>핵심 어휘</span>
+                <textarea id="wgLexicon" placeholder="예) 캐스팅, 오디션, 데뷔조"></textarea>
+              </label>
+              <label class="setup-helper-field setup-helper-field-wide">
+                <span>우선 추적 슬롯</span>
+                <textarea id="wgTrackingSlots" placeholder="예) 핵심 배우 라인, 데뷔조 성장, 팬덤 반응, 외부 경쟁사"></textarea>
+              </label>
+            </div>
+            <div class="setup-helper-actions">
+              <button type="button" class="btn-sm" id="wgPresetEnterprise">기업/투자 셸</button>
+              <button type="button" class="btn-sm" id="wgPresetTalent">엔터/인재 셸</button>
+              <button type="button" class="btn-sm" id="wgPresetSect">문파/후계 셸</button>
+              <button type="button" class="btn-sm" id="wgReloadFromYaml">YAML에서 다시 읽기</button>
+              <button type="button" class="btn-sm" id="wgClearHelper">도우미 초기화</button>
+            </div>
+            <p class="setup-helper-note">
+              <strong>작동 방식:</strong> 위 입력은 아래 `작품 가드 YAML`의 `work_identity` 관리 키만 자동 갱신합니다.
+              `registry_profiles`, `role_fit_constraints`, `extra_forbidden_terms` 같은 고급 키는 raw YAML에 남겨두면 그대로 보존됩니다.
+            </p>
+          </div>
+
           <div class="field-group">
             <span class="field-label">작가 지시사항</span>
             <span class="field-hint">저장 위치: {project}/config/author_directives.txt</span>
@@ -1402,7 +2996,7 @@
 
           <div class="field-group">
             <span class="field-label">작품 가드 YAML</span>
-            <span class="field-hint">저장 위치: {project}/work_guard.yaml · 작품별 금기어 등</span>
+            <span class="field-hint">저장 위치: {project}/config/work_guard.yaml · 작품별 금기어 등</span>
             <textarea class="settings-textarea" id="workGuardYaml" placeholder="extra_forbidden_terms:&#10;  - 예시_금기어"></textarea>
           </div>
         </div>
@@ -1528,6 +3122,32 @@
       </div>
     </div>
 
+    <div class="confirm-overlay" id="safeOpsConfirmModal">
+      <div class="confirm-panel safe-ops">
+        <span class="confirm-kicker">Safe Ops</span>
+        <h3 class="confirm-title" id="safeOpsConfirmTitle">운영 작업 확인</h3>
+        <p class="confirm-msg" id="safeOpsConfirmSummary">삭제/유지 범위를 확인한 뒤 실행하세요.</p>
+        <div class="confirm-grid">
+          <div class="confirm-box">
+            <strong>삭제됨</strong>
+            <ul id="safeOpsDeleteList"></ul>
+          </div>
+          <div class="confirm-box">
+            <strong>유지됨</strong>
+            <ul id="safeOpsPreserveList"></ul>
+          </div>
+        </div>
+        <div class="confirm-box">
+          <strong>참고 메모</strong>
+          <div class="confirm-note-list" id="safeOpsNoteList"></div>
+        </div>
+        <div class="confirm-actions">
+          <button type="button" class="btn-cancel" id="safeOpsConfirmCancel">취소</button>
+          <button type="button" class="btn-confirm" id="safeOpsConfirmOk">계속 실행</button>
+        </div>
+      </div>
+    </div>
+
     <!-- ── Mode B 프롬프트 다이얼로그 ── -->
     <div class="prompt-overlay" id="promptOverlay">
       <div class="prompt-dialog" id="promptDialog">
@@ -1549,10 +3169,75 @@
       const effectBanner = document.getElementById("effectBanner");
       const readyBadge = document.getElementById("readyBadge");
       const stateBadge = document.getElementById("stateBadge");
+      const runtimeBadge = document.getElementById("runtimeBadge");
       const lastAction = document.getElementById("lastAction");
       const logStream = document.getElementById("logStream");
       const toggleSkip = document.getElementById("toggleSkip");
       const toggleMute = document.getElementById("toggleMute");
+      const currentStageLabel = document.getElementById("currentStageLabel");
+      const currentStageDetail = document.getElementById("currentStageDetail");
+      const currentFocusLabel = document.getElementById("currentFocusLabel");
+      const currentFocusMeta = document.getElementById("currentFocusMeta");
+      const promptStatusLabel = document.getElementById("promptStatusLabel");
+      const promptStatusMeta = document.getElementById("promptStatusMeta");
+      const verdictSummary = document.getElementById("verdictSummary");
+      const verdictMeta = document.getElementById("verdictMeta");
+      const pipelineStrip = document.getElementById("pipelineStrip");
+      const qualityRadar = document.getElementById("qualityRadar");
+      const qualityRadarTitle = document.getElementById("qualityRadarTitle");
+      const qualityRadarMeta = document.getElementById("qualityRadarMeta");
+      const qualityRadarFoot = document.getElementById("qualityRadarFoot");
+      const artifactLadderMeta = document.getElementById("artifactLadderMeta");
+      const artifactSupportRow = document.getElementById("artifactSupportRow");
+      const artifactLadderGrid = document.getElementById("artifactLadderGrid");
+      const artifactLadderHint = document.getElementById("artifactLadderHint");
+      const retrievalInspectorMeta = document.getElementById("retrievalInspectorMeta");
+      const retrievalSummaryStrip = document.getElementById("retrievalSummaryStrip");
+      const retrievalStageGrid = document.getElementById("retrievalStageGrid");
+      const retrievalWarningList = document.getElementById("retrievalWarningList");
+      const retrievalRecentList = document.getElementById("retrievalRecentList");
+      const retrievalInspectorHint = document.getElementById("retrievalInspectorHint");
+      const resultSummaryTitle = document.getElementById("resultSummaryTitle");
+      const resultSummaryMeta = document.getElementById("resultSummaryMeta");
+      const resultSummaryHeadline = document.getElementById("resultSummaryHeadline");
+      const resultSummaryReason = document.getElementById("resultSummaryReason");
+      const resultVerdictBadge = document.getElementById("resultVerdictBadge");
+      const resultSignalAlerts = document.getElementById("resultSignalAlerts");
+      const resultFixNow = document.getElementById("resultFixNow");
+      const resultKeepNext = document.getElementById("resultKeepNext");
+      const resultAvoidNext = document.getElementById("resultAvoidNext");
+      const resultIssueList = document.getElementById("resultIssueList");
+      const resultNextAction = document.getElementById("resultNextAction");
+      const trendPanelMeta = document.getElementById("trendPanelMeta");
+      const qualityTrendSummary = document.getElementById("qualityTrendSummary");
+      const qualityCompareBody = document.getElementById("qualityCompareBody");
+      const failureWatchMeta = document.getElementById("failureWatchMeta");
+      const stageStatsGrid = document.getElementById("stageStatsGrid");
+      const failurePatternList = document.getElementById("failurePatternList");
+      const failureRangeList = document.getElementById("failureRangeList");
+      const calibrationMeta = document.getElementById("calibrationMeta");
+      const calibrationSummary = document.getElementById("calibrationSummary");
+      const qualityObservationEp = document.getElementById("qualityObservationEp");
+      const qualityObservationLabel = document.getElementById("qualityObservationLabel");
+      const qualityObservationNote = document.getElementById("qualityObservationNote");
+      const saveQualityObservationBtn = document.getElementById("saveQualityObservationBtn");
+      const qualityObservationList = document.getElementById("qualityObservationList");
+      const qualityAdvisoryList = document.getElementById("qualityAdvisoryList");
+      const safeOpsMeta = document.getElementById("safeOpsMeta");
+      const safeOpsGrid = document.getElementById("safeOpsGrid");
+      const safeOpsHint = document.getElementById("safeOpsHint");
+      const safeOpsConfirmModal = document.getElementById("safeOpsConfirmModal");
+      const safeOpsConfirmTitle = document.getElementById("safeOpsConfirmTitle");
+      const safeOpsConfirmSummary = document.getElementById("safeOpsConfirmSummary");
+      const safeOpsDeleteList = document.getElementById("safeOpsDeleteList");
+      const safeOpsPreserveList = document.getElementById("safeOpsPreserveList");
+      const safeOpsNoteList = document.getElementById("safeOpsNoteList");
+      const safeOpsConfirmCancel = document.getElementById("safeOpsConfirmCancel");
+      const safeOpsConfirmOk = document.getElementById("safeOpsConfirmOk");
+      const agentBoard = document.getElementById("agentBoard");
+      const eventFeed = document.getElementById("eventFeed");
+      const promptMissionCard = document.getElementById("promptMissionCard");
+      const verdictMissionCard = document.getElementById("verdictMissionCard");
       const menuButtons = document.querySelectorAll(".menu-btn:not(.stage0-sub-btn)");
 
       ctx.imageSmoothingEnabled = false;
@@ -1578,42 +3263,166 @@
         skipAnimation: false,
         mute: false,
         frame: 0,
-        currentStage: null   // "stage_0" | "stage_2" | "stage_3" | "stage_4" | "one_stop" | null
+        currentStage: null,   // "stage_0" | "stage_2" | "stage_3" | "stage_4" | "one_stop" | null
+        currentSubKey: null,
+        currentStageTitle: "대기",
+        currentStageSummary: "실행 버튼을 기다리는 중",
+        focusTitle: "앱 준비 중",
+        focusDetail: "백엔드 연결 전",
+        promptPending: false,
+        promptDetail: "대기 중인 입력 없음",
+        recentEvents: [],
+        lastVerdict: null,
+        lastVerdictScore: null,
+        backendConnected: false,
+        runStartedAt: null,
+        qualitySummary: {
+          available: false,
+          lookback: 5,
+          latest_ep: null,
+          project: null,
+          signals: {},
+          recent: [],
+          latest_ai_slop_hits: [],
+        },
+        qualityInsights: {
+          available: false,
+          lookback: 5,
+          latest_ep: null,
+          quality_summary: {
+            available: false,
+            lookback: 5,
+            latest_ep: null,
+            signals: {},
+            recent: [],
+            latest_ai_slop_hits: [],
+            latest_signal_summary: {},
+          },
+          result_summary: {
+            available: false,
+            headline: "최근 심사 결과가 아직 없습니다.",
+            verdict: null,
+            score: null,
+            ep_num: null,
+            selection_reason: "",
+            open_review: "",
+            issues: [],
+            signal_alerts: [],
+            fix_now: [],
+            keep_next: "최근 심사 결과가 쌓이면 유지 포인트가 표시됩니다.",
+            avoid_next: "반복 방지 포인트가 아직 없습니다.",
+            next_action: "Stage 4 PASS 원고가 누적되면 결과 요약이 표시됩니다.",
+          },
+          episode_trend: [],
+          compare_rows: [],
+          score_trend: {
+            trend: "insufficient_data",
+            summary: "데이터 부족 (0화)",
+            delta: 0,
+            avg: 0,
+            samples: 0,
+          },
+          stage_stats: [],
+          common_violations: [],
+          failure_patterns: {
+            top_types: [],
+            by_stage: [],
+            by_episode_range: [],
+          },
+          calibration: {
+            available: false,
+            lookback: 5,
+            latest_ep: null,
+            total_reviews: 0,
+            label_counts: [],
+            recent_observations: [],
+            advisory_candidates: [],
+            next_step: "관측 기록이 누적되면 승격 후보가 표시됩니다.",
+            allowed_labels: [],
+          },
+        },
       };
+      let _safeOpsConfirmResolve = null;
+
+      const ACTION_META = {
+        stage_0: { title: "Stage 0", summary: "스타일/초기 셋업과 참조 자료를 준비하는 단계", short: "STYLE" },
+        stage_2: { title: "Stage 2 · Arc 설계", summary: "Analyst가 구조를 짜고 Director가 설계 품질을 본다", short: "ARC" },
+        stage_3: { title: "Stage 3 · Blueprint", summary: "에피소드 골격을 만들고 검증 체인을 통과시키는 단계", short: "BLUEPRINT" },
+        stage_4: { title: "Stage 4 · 원고 생산", summary: "Chief Writer 원고 작성과 Director 감사가 이어진다", short: "MANUSCRIPT" },
+        one_stop: { title: "One-Stop", summary: "Arc부터 원고까지 전체 파이프라인을 한 번에 실행", short: "FULL RUN" },
+        rollback: { title: "Rollback", summary: "이전 에피소드 기준으로 롤백을 수행", short: "ROLLBACK" },
+        wipe: { title: "Wipe", summary: "프로젝트 산출물을 초기화하는 위험 작업", short: "WIPE" },
+        reset: { title: "Reset", summary: "프로젝트 상태를 리셋하는 운영 작업", short: "RESET" },
+        rewind: { title: "Rewind", summary: "에피소드 진행을 되감는 운영 작업", short: "REWIND" },
+        stop: { title: "Stop", summary: "현재 실행 중인 작업을 중지", short: "STOP" },
+      };
+
+      const STAGE0_SUB_META = {
+        "1": { title: "Stage 0 · 기존 방식", summary: "Bible/Treatment를 골라 초기 설정을 진행", short: "SETUP" },
+        "2": { title: "Stage 0 · 컨셉 확장", summary: "컨셉에서 Bible을 생성하는 확장 경로", short: "CONCEPT" },
+        "3": { title: "Stage 0 · 역설계", summary: "기존 원고에서 설정을 추출하는 역설계 경로", short: "REVERSE" },
+        "4": { title: "Stage 0 · Bible 임포트", summary: "기존 Bible JSON을 가져와 초기 상태를 구성", short: "IMPORT" },
+        "5": { title: "Stage 0 · Block 확장", summary: "Treatment에 블록을 추가해 설계를 확장", short: "BLOCKS" },
+        "6": { title: "Stage 0 · 스타일 레퍼런스", summary: "참조 작품을 분석해 스타일 가이드를 만드는 경로", short: "STYLE REF" },
+      };
+
+      const PIPELINE_ORDER = ["stage_0", "stage_2", "stage_3", "stage_4", "one_stop"];
+
+      function resolveActionMeta(action, subKey) {
+        if (action === "stage_0" && subKey && STAGE0_SUB_META[subKey]) {
+          return STAGE0_SUB_META[subKey];
+        }
+        return ACTION_META[action] || { title: "대기", summary: "실행 버튼을 기다리는 중", short: "IDLE" };
+      }
 
       // 스테이지별 활성 에이전트 (실제 파이프라인 코드 기반 전수조사)
       const STAGE_AGENTS = {
-        stage_0:  ["manager"],                                          // 직접 LLM 호출, Manager=StageZeroManager 오케스트레이션만
+        stage_0:  ["manager", "analyst"],                               // 초기 셋업 + 스타일 분석
         stage_2:  ["director", "analyst", "critic", "manager"],         // Analyst+Director+Validators+StateTracker (ChiefWriter 미사용)
         stage_3:  ["writer", "director", "critic", "manager"],          // ThreePhaseBP=writer, Director=심사, Consensus=critic
         stage_4:  ["writer", "director", "critic", "manager"],          // ChiefWriter+Director+4Validators+StateTracker
         one_stop: ["writer", "director", "analyst", "critic", "manager"],
+        rollback: ["manager", "director"],
+        wipe: ["manager", "director"],
+        reset: ["manager", "director"],
+        rewind: ["manager", "director"],
       };
 
       const agents = [
         // 왼쪽 그룹 (2x2)
-        { name: "Writer",   x: 110, y: 140, spriteKey: "writer",   screenColor: "#60a5fa", gender: "F",
+        { name: "Writer",   role: "Chief Writer", x: 110, y: 140, spriteKey: "writer",   screenColor: "#60a5fa", gender: "F", idlePose: "sit", workPose: "sit",
           quotes: ["열심히 쓰는 중...", "이 장면 좋다!", "영감이 떠올랐어!", "커피 한 잔 더..."] },
-        { name: "Analyst",  x: 240, y: 140, spriteKey: "analyst",  screenColor: "#34d399", gender: "F",
+        { name: "Analyst",  role: "Arc / Style", x: 240, y: 140, spriteKey: "analyst",  screenColor: "#34d399", gender: "F", idlePose: "sit", workPose: "sit",
           quotes: ["데이터 분석 중~", "수치가 맞아!", "구조 확인 완료", "패턴 발견!"] },
-        { name: "Critic",   x: 110, y: 260, spriteKey: "critic",   screenColor: "#a78bfa", gender: "M",
+        { name: "Critic",   role: "Validator", x: 110, y: 260, spriteKey: "critic",   screenColor: "#a78bfa", gender: "M", idlePose: "sit", workPose: "sit",
           quotes: ["여기 모순 있어", "논리적으로...", "검토 완료!", "이건 좀..."] },
-        { name: "Manager",  x: 240, y: 260, spriteKey: "manager",  screenColor: "#fb923c", gender: "F",
+        { name: "Manager",  role: "Orchestrator", x: 240, y: 260, spriteKey: "manager",  screenColor: "#fb923c", gender: "F", idlePose: "sit", workPose: "idle",
           quotes: ["일정 관리 중!", "순조로워요~", "진행률 80%!", "화이팅!"] },
         // 오른쪽 독립 — 디렉터 (왕관)
-        { name: "Director", x: 480, y: 195, spriteKey: "director", screenColor: "#fbbf24", gender: "M", crown: true,
+        { name: "Director", role: "Quality Gate", x: 480, y: 195, spriteKey: "director", screenColor: "#fbbf24", gender: "M", crown: true, idlePose: "idle", workPose: "idle",
           quotes: ["품질이 최우선이다", "다시 써와", "합격!", "흠... 아쉽군"] },
       ];
       // 클릭 말풍선 상태
       let _clickBubble = { agentIdx: -1, text: "", timer: 0 };
-      // Director 심사 말풍선 (verdict 시 자동 표시)
-      let _directorBubble = { text: "", timer: 0 };
       // Director 스크롤 텍스트 (긴 분석 로그를 흘려보냄)
       let _directorScroll = { lines: [], timer: 0, lineIdx: 0 };
-      // Manager 로그 말풍선 (TF-38 등 파이프라인 상태)
-      let _managerBubble = { text: "", timer: 0 };
       // verdict 표시 리셋 타이머 (경합 방지용 단일 인스턴스)
       let _verdictResetTimer = null;
+
+      const agentRuntime = Object.fromEntries(
+        agents.map((agent) => [
+          agent.spriteKey,
+          {
+            status: "대기",
+            detail: "작업 요청 없음",
+            bubbleText: "",
+            bubbleColor: agent.screenColor,
+            bubbleTimer: 0,
+            intensity: 0.18,
+            updatedAt: 0,
+          }
+        ])
+      );
 
       function nowLabel() {
         return new Date().toLocaleTimeString("ko-KR", {
@@ -1624,19 +3433,1274 @@
         });
       }
 
-      function appendLog(message, verdict) {
+      function shortenText(text, limit) {
+        if (!text) return "";
+        return text.length > limit ? text.slice(0, limit - 1) + "…" : text;
+      }
+
+      function hexToRgba(hex, alpha = 1) {
+        const raw = String(hex || "#94a3b8").replace("#", "").trim();
+        const normalized = raw.length === 3
+          ? raw.split("").map((ch) => ch + ch).join("")
+          : raw.padEnd(6, "0").slice(0, 6);
+        const r = parseInt(normalized.slice(0, 2), 16);
+        const g = parseInt(normalized.slice(2, 4), 16);
+        const b = parseInt(normalized.slice(4, 6), 16);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+      }
+
+      function wrapBubbleText(text, maxChars = 14, maxLines = 2) {
+        const source = String(text || "").trim();
+        if (!source) return [];
+        const lines = [];
+        let rest = source;
+        while (rest && lines.length < maxLines) {
+          if (rest.length <= maxChars) {
+            lines.push(rest);
+            rest = "";
+            break;
+          }
+          let slice = rest.slice(0, maxChars);
+          let pivot = Math.max(slice.lastIndexOf(" "), slice.lastIndexOf("/"), slice.lastIndexOf("-"));
+          if (pivot < Math.floor(maxChars * 0.45)) pivot = maxChars;
+          lines.push(rest.slice(0, pivot).trim());
+          rest = rest.slice(pivot).trim();
+        }
+        if (rest && lines.length > 0) {
+          lines[lines.length - 1] = shortenText(`${lines[lines.length - 1]} ${rest}`.trim(), maxChars);
+        }
+        return lines.filter(Boolean);
+      }
+
+      function formatDuration(ms) {
+        const total = Math.max(0, Math.floor(ms / 1000));
+        const minutes = String(Math.floor(total / 60)).padStart(2, "0");
+        const seconds = String(total % 60).padStart(2, "0");
+        return `${minutes}:${seconds}`;
+      }
+
+      function getCurrentStageAgents() {
+        return STAGE_AGENTS[officeState.currentStage] || [];
+      }
+
+      function getAgentDisplayName(agentKey) {
+        return agents.find((agent) => agent.spriteKey === agentKey)?.name || agentKey || "";
+      }
+
+      function getAgentMeta(agentKey) {
+        return agents.find((agent) => agent.spriteKey === agentKey) || null;
+      }
+
+      function setCurrentFocus(title, detail) {
+        officeState.focusTitle = title || "대기 중";
+        officeState.focusDetail = detail || "새 작업을 기다리는 중";
+        renderMissionBoard();
+      }
+
+      function setPromptState(pending, detail) {
+        officeState.promptPending = !!pending;
+        officeState.promptDetail = detail || (pending ? "사용자 입력을 기다리는 중" : "대기 중인 입력 없음");
+        renderMissionBoard();
+      }
+
+      function setVerdictState(verdict, score) {
+        officeState.lastVerdict = verdict || null;
+        officeState.lastVerdictScore = score || null;
+        renderMissionBoard();
+      }
+
+      function setActionState(action, label, subKey) {
+        const meta = resolveActionMeta(action, subKey);
+        officeState.currentStage = action;
+        officeState.currentSubKey = subKey || null;
+        officeState.currentStageTitle = label || meta.title;
+        officeState.currentStageSummary = meta.summary;
+        renderMissionBoard();
+        renderPipelineStrip();
+        renderAgentBoard();
+      }
+
+      function pushEventFeed(entry) {
+        if (!entry || !entry.title) return;
+        officeState.recentEvents.unshift({
+          time: entry.time || nowLabel(),
+          title: entry.title,
+          detail: entry.detail || "",
+          agent: entry.agent || null,
+        });
+        officeState.recentEvents = officeState.recentEvents.slice(0, 8);
+        renderEventFeed();
+      }
+
+      function renderPipelineStrip() {
+        pipelineStrip.innerHTML = "";
+        const currentIndex = PIPELINE_ORDER.indexOf(officeState.currentStage);
+        for (const key of PIPELINE_ORDER) {
+          const chip = document.createElement("div");
+          chip.className = "pipeline-chip";
+          chip.textContent = resolveActionMeta(key).title.replace("Stage ", "S");
+          const stageAccent = {
+            stage_0: "rgba(14, 165, 233, 0.14)",
+            stage_2: "rgba(16, 185, 129, 0.14)",
+            stage_3: "rgba(59, 130, 246, 0.14)",
+            stage_4: "rgba(251, 191, 36, 0.16)",
+            one_stop: "rgba(168, 85, 247, 0.14)",
+          };
+          chip.style.background = stageAccent[key] || "linear-gradient(180deg, #ffffff, #f8fafc)";
+          const idx = PIPELINE_ORDER.indexOf(key);
+          if (currentIndex >= 0 && idx < currentIndex) chip.classList.add("is-past");
+          if (officeState.currentStage === key) {
+            chip.classList.add("is-active");
+            if (officeState.isRunning) chip.classList.add("is-running");
+          }
+          pipelineStrip.appendChild(chip);
+        }
+      }
+
+      const QUALITY_SIGNAL_META = {
+        ced: { label: "CED", hint: "오류 밀도", field: "ced_score", format: (value) => Number(value || 0).toFixed(2) },
+        ai_slop: { label: "AI Slop", hint: "상투어 밀도", field: "ai_slop_score", format: (value) => Number(value || 0).toFixed(2) },
+        compression: {
+          label: "gzip",
+          hint: "압축 비율",
+          field: "compression_ratio",
+          format: (value) => `${(Number(value || 0) * 100).toFixed(1)}%`,
+        },
+        burstiness: { label: "Rhythm", hint: "문장 리듬", field: "burstiness", format: (value) => Number(value || 0).toFixed(1) },
+        complexity: { label: "Density", hint: "문장 밀도", field: "complexity", format: (value) => Number(value || 0).toFixed(1) },
+      };
+
+      function createEmptyQualityDashboard(projectName) {
+        return {
+          available: false,
+          lookback: 5,
+          latest_ep: null,
+          project: projectName || null,
+          safe_ops: {
+            available: false,
+            project: projectName || null,
+            latest_ep: null,
+            arc_count: 0,
+            stage2_selection_count: 0,
+            stage4_selection_count: 0,
+            hint: "프로젝트를 선택하면 rollback / wipe / reset / rewind 영향 범위를 보여줍니다.",
+            actions: {},
+          },
+          artifact_ladder: {
+            available: false,
+            project: projectName || null,
+            hint: "프로젝트를 선택하면 BI -> TR -> Arc -> Blueprint -> Manuscript 흐름이 표시됩니다.",
+            items: [],
+            support: [],
+          },
+          retrieval_summary: {
+            available: false,
+            total_observations: 0,
+            stage_rows: [],
+            top_warnings: [],
+            recent: [],
+          },
+          quality_summary: {
+            available: false,
+            lookback: 5,
+            latest_ep: null,
+            project: projectName || null,
+            signals: {},
+            recent: [],
+            latest_ai_slop_hits: [],
+            latest_signal_summary: {},
+          },
+          result_summary: {
+            available: false,
+            headline: "최근 심사 결과가 아직 없습니다.",
+            verdict: null,
+            score: null,
+            ep_num: null,
+            selection_reason: "",
+            open_review: "",
+            issues: [],
+            signal_alerts: [],
+            next_action: "Stage 4 PASS 원고가 누적되면 결과 요약이 표시됩니다.",
+          },
+          episode_trend: [],
+          compare_rows: [],
+          score_trend: {
+            trend: "insufficient_data",
+            summary: "데이터 부족 (0화)",
+            delta: 0,
+            avg: 0,
+            samples: 0,
+          },
+          stage_stats: [],
+          common_violations: [],
+          failure_patterns: {
+            top_types: [],
+            by_stage: [],
+            by_episode_range: [],
+          },
+          calibration: {
+            available: false,
+            lookback: 5,
+            latest_ep: null,
+            total_reviews: 0,
+            label_counts: [],
+            recent_observations: [],
+            advisory_candidates: [],
+            next_step: "관측 기록이 누적되면 승격 후보가 표시됩니다.",
+            allowed_labels: ["좋음", "경계", "AI 티", "지나친 단조", "과잉 설명"],
+          },
+        };
+      }
+
+      function buildSparklineSvg(values, status = "watch") {
+        const clean = (values || [])
+          .map((value) => Number(value))
+          .filter((value) => Number.isFinite(value));
+        if (clean.length < 2) {
+          return "";
+        }
+
+        const min = Math.min(...clean);
+        const max = Math.max(...clean);
+        const range = Math.max(max - min, 0.001);
+        const width = 104;
+        const height = 28;
+        const colors = { good: "#16a34a", watch: "#d97706", alert: "#dc2626" };
+        const stroke = colors[status] || "#475569";
+        const points = clean
+          .map((value, index) => {
+            const x = clean.length === 1 ? width / 2 : (index / (clean.length - 1)) * width;
+            const y = height - ((value - min) / range) * (height - 6) - 3;
+            return `${x.toFixed(1)},${y.toFixed(1)}`;
+          })
+          .join(" ");
+
+        return `
+          <svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-hidden="true">
+            <polyline fill="none" stroke="${stroke}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" points="${points}"></polyline>
+          </svg>
+        `;
+      }
+
+      function describeSignal(key, stat) {
+        const status = stat?.status || "watch";
+        const trend = stat?.trend || "flat";
+        if (key === "ced" || key === "ai_slop") {
+          if (status === "good") return trend === "down" ? "직전보다 안정화됨" : "최근 기준선 아래에서 유지";
+          if (status === "alert") return trend === "up" ? "최근 대비 과다 상승" : "최근 품질 편차가 큼";
+          return "기준선 근처에서 관찰 필요";
+        }
+        if (status === "good") return "최근 흐름과 큰 차이 없음";
+        if (status === "alert") return trend === "up" ? "최근 평균보다 과도하게 높음" : "최근 평균보다 과도하게 낮음";
+        return "평소 분포에서 약간 벗어남";
+      }
+
+      function appendInsightEmpty(container, text) {
+        const empty = document.createElement("div");
+        empty.className = "insight-empty";
+        empty.textContent = text;
+        container.appendChild(empty);
+      }
+
+      function getArtifactStatusLabel(status) {
+        if (status === "ready") return "준비";
+        if (status === "derived") return "동기화";
+        return "대기";
+      }
+
+      function buildArtifactFallbackHint(items = []) {
+        const pending = (items || []).find((item) => item.status === "pending");
+        if (!pending) {
+          return "현재 프로젝트는 기본 산출물이 준비되어 있습니다.";
+        }
+        if (pending.key === "bible") return "Bible anchor를 먼저 확인하거나 DNA sync 상태를 점검하세요.";
+        if (pending.key === "treatment") return "Stage 0 treatment를 만들거나 plot_roadmap 동기화를 확인하세요.";
+        if (pending.key === "arc") return "Stage 2를 실행해서 Arc 설계를 생성하세요.";
+        if (pending.key === "blueprint") return "Stage 3를 실행해서 Blueprint를 누적하세요.";
+        return "Stage 4를 실행해서 최근 원고를 생성하세요.";
+      }
+
+      function formatSafeOpsImpactCounts(action) {
+        const counts = action?.impact_counts || [];
+        if (!counts.length) return "세부 건수는 실행 중 target 입력 이후 결정됩니다.";
+        return counts
+          .filter((row) => Number(row.count || 0) > 0)
+          .slice(0, 3)
+          .map((row) => `${row.label} ${row.count}`)
+          .join(" · ") || "현재 삭제 대상 건수는 0입니다.";
+      }
+
+      function renderSafeOpsPreview() {
+        const insight = officeState.qualityInsights || createEmptyQualityDashboard(projectConfig.project);
+        const safeOps = insight.safe_ops || createEmptyQualityDashboard(projectConfig.project).safe_ops;
+
+        safeOpsMeta.textContent = projectConfig.project
+          ? `${projectConfig.project} · latest ep ${safeOps.latest_ep || 0} · Arc ${safeOps.arc_count || 0}개`
+          : "프로젝트를 선택하면 삭제/유지 범위를 미리 보여줍니다";
+        safeOpsGrid.innerHTML = "";
+
+        if (!projectConfig.project) {
+          appendInsightEmpty(safeOpsGrid, "프로젝트를 선택하면 운영 작업별 영향 범위가 표시됩니다.");
+          safeOpsHint.textContent = "운영 버튼을 누르기 전, 무엇이 지워지고 무엇이 남는지 여기서 먼저 확인합니다.";
+          return;
+        }
+
+        const actionOrder = ["rollback", "wipe", "reset", "rewind"];
+        for (const key of actionOrder) {
+          const action = safeOps.actions?.[key];
+          if (!action) continue;
+          const card = document.createElement("div");
+          card.className = "safe-ops-card";
+          card.innerHTML = `
+            <div class="safe-ops-card-head">
+              <span class="safe-ops-card-title">${action.title || key}</span>
+              <span class="safe-ops-chip ${action.requires_target ? "is-target" : ""}">
+                ${action.requires_target ? "target 필요" : "즉시 preview"}
+              </span>
+            </div>
+            <div class="safe-ops-card-copy">${action.summary || ""}</div>
+            <div class="safe-ops-card-impact"><strong>영향</strong> · ${formatSafeOpsImpactCounts(action)}</div>
+            <div class="safe-ops-card-note">${(action.notes || [])[0] || "추가 메모 없음"}</div>
+          `;
+          safeOpsGrid.appendChild(card);
+        }
+
+        safeOpsHint.textContent = safeOps.hint || "Rollback/Wipe/Reset/Rewind의 삭제/유지 범위를 확인하세요.";
+      }
+
+      function renderArtifactLadder() {
+        const insight = officeState.qualityInsights || createEmptyQualityDashboard(projectConfig.project);
+        const artifact = insight.artifact_ladder || createEmptyQualityDashboard(projectConfig.project).artifact_ladder;
+
+        artifactLadderMeta.textContent = projectConfig.project
+          ? `${projectConfig.project} 최신 산출물 상태와 다음 행동`
+          : "프로젝트를 선택하면 최신 산출물과 다음 행동이 표시됩니다";
+
+        artifactSupportRow.innerHTML = "";
+        const supportChips = artifact.support || [];
+        if (!supportChips.length) {
+          const chip = document.createElement("span");
+          chip.className = "artifact-support-chip";
+          chip.textContent = "지원 아티팩트 없음";
+          artifactSupportRow.appendChild(chip);
+        } else {
+          for (const support of supportChips) {
+            const chip = document.createElement("span");
+            chip.className = `artifact-support-chip is-${support.status || "pending"}`;
+            chip.textContent = `${support.label} · ${support.value}`;
+            artifactSupportRow.appendChild(chip);
+          }
+        }
+
+        artifactLadderGrid.innerHTML = "";
+        const items = artifact.items || [];
+        if (!projectConfig.project) {
+          const emptyCard = document.createElement("div");
+          emptyCard.className = "artifact-card is-pending";
+          emptyCard.innerHTML = `
+            <div class="artifact-card-top">
+              <span class="artifact-short">BI</span>
+              <span class="artifact-status-chip is-pending">대기</span>
+            </div>
+            <div class="artifact-card-title">프로젝트 선택 대기</div>
+            <div class="artifact-card-detail">프로젝트를 선택하면 현재 산출물 사다리와 최신 파일을 보여줍니다.</div>
+          `;
+          artifactLadderGrid.appendChild(emptyCard);
+          artifactLadderHint.textContent = "프로젝트를 먼저 선택하세요.";
+          return;
+        }
+
+        if (!items.length) {
+          appendInsightEmpty(artifactLadderGrid, "프로젝트 산출물 사다리를 아직 불러오지 못했습니다.");
+          artifactLadderHint.textContent = artifact.hint || "프로젝트 산출물 상태를 다시 불러오세요.";
+          return;
+        }
+
+        for (const item of items) {
+          const card = document.createElement("div");
+          const status = item.status || "pending";
+          card.className = `artifact-card is-${status}`;
+          card.innerHTML = `
+            <div class="artifact-card-top">
+              <span class="artifact-short">${item.short || item.key || "-"}</span>
+              <span class="artifact-status-chip is-${status}">${getArtifactStatusLabel(status)}</span>
+            </div>
+            <div class="artifact-card-title">${item.title || item.label || item.key || "Artifact"}</div>
+            <div class="artifact-card-meta">${item.meta || item.label || ""}</div>
+            <div class="artifact-card-detail">${item.detail || ""}</div>
+            <div class="artifact-card-path">${item.path || "경로 정보 없음"}</div>
+          `;
+          artifactLadderGrid.appendChild(card);
+        }
+
+        artifactLadderHint.textContent = artifact.hint || buildArtifactFallbackHint(items);
+      }
+
+      function renderRetrievalInspector() {
+        const insight = officeState.qualityInsights || createEmptyQualityDashboard(projectConfig.project);
+        const retrieval = insight.retrieval_summary || createEmptyQualityDashboard(projectConfig.project).retrieval_summary;
+
+        retrievalInspectorMeta.textContent = projectConfig.project
+          ? `${projectConfig.project} 최근 retrieval 관측과 coverage 경고`
+          : "프로젝트를 선택하면 최근 retrieval 관측이 표시됩니다";
+
+        retrievalSummaryStrip.innerHTML = "";
+        const summaryChips = retrieval.available
+          ? [
+              `관측 ${retrieval.total_observations || 0}건`,
+              `Stage ${((retrieval.stage_rows || []).map((row) => row.stage).join(", ") || "-")}`,
+              `반복 경고 ${((retrieval.top_warnings || []).length || 0)}종`,
+            ]
+          : ["관측 0건", "retrieval summary 대기", "coverage 경고 없음"];
+        for (const label of summaryChips) {
+          const chip = document.createElement("span");
+          chip.className = "trend-chip";
+          chip.textContent = label;
+          retrievalSummaryStrip.appendChild(chip);
+        }
+
+        retrievalStageGrid.innerHTML = "";
+        const stageRows = retrieval.stage_rows || [];
+        if (!stageRows.length) {
+          appendInsightEmpty(retrievalStageGrid, "Stage별 retrieval 관측이 아직 없습니다.");
+        } else {
+          for (const row of stageRows.slice(0, 4)) {
+            const card = document.createElement("div");
+            card.className = "retrieval-stage-card";
+            const workRate = Math.round(Number(row.work_focus_rate || 0) * 100);
+            const summaryRate = Math.round(Number(row.summary_included_rate || 0) * 100);
+            const relationRate = Math.round(Number(row.relation_slice_rate || 0) * 100);
+            const warningRate = Math.round(Number(row.coverage_warning_rate || 0) * 100);
+            card.innerHTML = `
+              <div class="retrieval-stage-label">${row.stage || "unknown"}</div>
+              <div class="retrieval-stage-value">${summaryRate}%</div>
+              <div class="retrieval-stage-meta">summary slot 포함률</div>
+              <div class="retrieval-stage-meta">work focus ${workRate}% · relation slice ${relationRate}%</div>
+              <div class="retrieval-stage-meta">coverage warning ${warningRate}% · 표본 ${row.total || 0}건</div>
+            `;
+            retrievalStageGrid.appendChild(card);
+          }
+        }
+
+        retrievalWarningList.innerHTML = "";
+        const warnings = retrieval.top_warnings || [];
+        if (!warnings.length) {
+          appendInsightEmpty(retrievalWarningList, "반복적으로 관찰된 retrieval 경고가 아직 없습니다.");
+        } else {
+          for (const row of warnings.slice(0, 6)) {
+            const item = document.createElement("div");
+            item.className = "pattern-item";
+            item.innerHTML = `
+              <div class="pattern-item-title">${row.warning || "unknown_warning"}</div>
+              <div class="pattern-item-meta">누적 ${row.count || 0}회</div>
+            `;
+            retrievalWarningList.appendChild(item);
+          }
+        }
+
+        retrievalRecentList.innerHTML = "";
+        const recent = retrieval.recent || [];
+        if (!recent.length) {
+          appendInsightEmpty(retrievalRecentList, "최근 retrieval 샘플이 아직 없습니다.");
+        } else {
+          for (const row of recent.slice(0, 6)) {
+            const item = document.createElement("div");
+            item.className = "pattern-item";
+            const sources = Object.entries(row.source_counts || {})
+              .map(([key, value]) => `${key} ${value}`)
+              .join(" · ");
+            const warningsText = (row.coverage_warnings || []).join(" · ");
+            item.innerHTML = `
+              <div class="pattern-item-title">ep ${row.ep_num ?? "-"} · ${String(row.stage || "unknown").toUpperCase()}</div>
+              <div class="pattern-item-meta">summary ${row.work_slot_summary_included ? "yes" : "no"} · relation ${row.relation_slice_included ? "yes" : "no"}</div>
+              <div class="pattern-item-meta">${sources || "source count 없음"}</div>
+              <div class="pattern-item-meta">${warningsText || "coverage warning 없음"}</div>
+            `;
+            retrievalRecentList.appendChild(item);
+          }
+        }
+
+        const topWarning = warnings[0]?.warning;
+        retrievalInspectorHint.textContent = topWarning
+          ? `지금 가장 반복되는 retrieval 문제는 ${topWarning} 입니다. 이 경고가 많은 stage부터 summary slot / relation slice를 점검하세요.`
+          : "retrieval 경고가 거의 없거나 아직 충분한 관측이 없습니다.";
+      }
+
+      function renderQualityRadarFoot(summary) {
+        qualityRadarFoot.innerHTML = "";
+        const sentenceCount = summary.latest_signal_summary?.sentence_count || 0;
+        const line = document.createElement("div");
+        line.textContent = sentenceCount
+          ? `최근 문장 수 ${sentenceCount} · 상투어 hit 상위 패턴`
+          : "최근 문장/상투어 데이터가 아직 충분하지 않습니다.";
+        qualityRadarFoot.appendChild(line);
+
+        const hits = (summary.latest_ai_slop_hits || []).slice(0, 4);
+        if (!hits.length) {
+          const none = document.createElement("div");
+          none.className = "quality-radar-chips";
+          const chip = document.createElement("span");
+          chip.className = "mini-chip";
+          chip.textContent = "최근 상투어 hit 없음";
+          none.appendChild(chip);
+          qualityRadarFoot.appendChild(none);
+          return;
+        }
+
+        const chipRow = document.createElement("div");
+        chipRow.className = "quality-radar-chips";
+        for (const item of hits) {
+          const chip = document.createElement("span");
+          chip.className = "mini-chip";
+          chip.textContent = `${item.pattern} × ${item.count}`;
+          chipRow.appendChild(chip);
+        }
+        qualityRadarFoot.appendChild(chipRow);
+      }
+
+      function renderQualityRadar() {
+        qualityRadar.innerHTML = "";
+        const summary = officeState.qualitySummary || {};
+
+        if (!projectConfig.project) {
+          qualityRadarTitle.textContent = "최근 품질 신호";
+          qualityRadarMeta.textContent = "프로젝트를 선택하면 최근 5화 기준 신호를 표시합니다";
+          qualityRadarFoot.textContent = "프로젝트가 아직 선택되지 않았습니다.";
+          const empty = document.createElement("div");
+          empty.className = "quality-signal-card is-empty";
+          empty.innerHTML = '<div class="quality-signal-label">No Project</div><div class="quality-signal-meta">PASS 원고가 쌓이면 CED, AI Slop, gzip, Rhythm, Density가 표시됩니다.</div>';
+          qualityRadar.appendChild(empty);
+          return;
+        }
+
+        const projectLabel = summary.project || projectConfig.project;
+        qualityRadarTitle.textContent = `${projectLabel} · Quality Radar`;
+
+        if (!summary.available) {
+          qualityRadarMeta.textContent = "최근 PASS 원고가 아직 없거나 신호를 불러오지 못했습니다";
+          qualityRadarFoot.textContent = "Stage 4 PASS 원고가 저장되면 이 패널이 최근 5화 기준 상대 추세를 보여줍니다.";
+          const empty = document.createElement("div");
+          empty.className = "quality-signal-card is-empty";
+          empty.innerHTML = '<div class="quality-signal-label">Signals Pending</div><div class="quality-signal-meta">신규 프로젝트이거나 아직 품질 신호가 기록되지 않았습니다.</div>';
+          qualityRadar.appendChild(empty);
+          return;
+        }
+
+        qualityRadarMeta.textContent = `ep ${summary.latest_ep || "-"} · 최근 ${summary.lookback || 5}화 median 대비 상대 위치`;
+        for (const [key, meta] of Object.entries(QUALITY_SIGNAL_META)) {
+          const stat = summary.signals?.[key] || {};
+          const card = document.createElement("div");
+          card.className = `quality-signal-card is-${stat.status || "watch"}`;
+
+          const deltaValue = Number(stat.delta || 0);
+          const trendMap = { up: "상승", down: "하강", flat: "유지" };
+          const deltaSign = deltaValue > 0 ? "+" : "";
+          const valueText = meta.format(stat.value || 0);
+          const medianText = meta.format(stat.median || 0);
+          const recentValues = (summary.recent || []).map((row) => row?.[meta.field]);
+          const sparkMarkup = buildSparklineSvg(recentValues, stat.status || "watch");
+
+          card.innerHTML = `
+            <div class="quality-signal-label">${meta.label}</div>
+            <div class="quality-signal-value">${valueText}</div>
+            <div class="quality-signal-meta">${meta.hint}</div>
+            <div class="quality-signal-spark">${sparkMarkup || ""}</div>
+            <div class="quality-signal-meta">median ${medianText}</div>
+            <div class="quality-signal-meta">${trendMap[stat.trend] || "유지"} · Δ ${deltaSign}${meta.format(deltaValue)}</div>
+            <div class="quality-signal-reason">${describeSignal(key, stat)}</div>
+          `;
+          qualityRadar.appendChild(card);
+        }
+
+        renderQualityRadarFoot(summary);
+      }
+
+      function renderResultSummary() {
+        const insight = officeState.qualityInsights || createEmptyQualityDashboard(projectConfig.project);
+        const result = insight.result_summary || createEmptyQualityDashboard(projectConfig.project).result_summary;
+        resultSummaryTitle.textContent = projectConfig.project ? `${projectConfig.project} · 최근 심사 결과` : "최근 심사 결과";
+        resultSummaryMeta.textContent = result.available
+          ? `ep ${result.ep_num || "-"} 기준 verdict · 즉시 행동 가이드`
+          : "프로젝트를 선택하면 최근 심사 결과와 즉시 행동 가이드를 표시합니다";
+
+        resultVerdictBadge.className = "verdict-badge";
+        if (!result.available) {
+          resultVerdictBadge.textContent = "대기";
+          resultSummaryHeadline.textContent = "최근 결과가 아직 없습니다.";
+          resultSummaryReason.textContent = "Stage 4 PASS/PWF/REJECT 결과가 기록되면 여기에 핵심 요약이 표시됩니다.";
+          resultSignalAlerts.innerHTML = "";
+          resultFixNow.textContent = "지금 고칠 포인트가 여기에 표시됩니다.";
+          resultKeepNext.textContent = "다음 화에 유지할 강점이 여기에 표시됩니다.";
+          resultAvoidNext.textContent = "다음 화에서 피할 반복 패턴이 여기에 표시됩니다.";
+          resultIssueList.innerHTML = "";
+          appendInsightEmpty(resultIssueList, "이번 화의 핵심 이슈 3개가 여기에 표시됩니다.");
+          resultNextAction.textContent = "다음 행동 추천이 여기에 표시됩니다.";
+          return;
+        }
+
+        const verdict = String(result.verdict || "").toUpperCase();
+        resultVerdictBadge.textContent = verdict || "UNKNOWN";
+        if (verdict === "PASS") resultVerdictBadge.classList.add("is-pass");
+        else if (verdict === "PASS_WITH_FIX") resultVerdictBadge.classList.add("is-pwf");
+        else if (verdict === "REJECT") resultVerdictBadge.classList.add("is-reject");
+
+        resultSummaryHeadline.textContent = result.headline || "최근 심사 결과";
+        resultSummaryReason.textContent = result.selection_reason || result.open_review || "Director selection reason이 아직 없습니다.";
+
+        resultSignalAlerts.innerHTML = "";
+        const alerts = result.signal_alerts || [];
+        if (alerts.length) {
+          for (const alertText of alerts) {
+            const chip = document.createElement("span");
+            chip.className = "signal-alert-chip";
+            chip.textContent = alertText;
+            resultSignalAlerts.appendChild(chip);
+          }
+        }
+
+        const fixNow = (result.fix_now || []).slice(0, 3);
+        resultFixNow.textContent = fixNow.length ? fixNow.join(" · ") : "즉시 고쳐야 할 경고가 아직 없습니다.";
+        resultKeepNext.textContent = result.keep_next || "다음 화에 유지할 강점이 아직 정리되지 않았습니다.";
+        resultAvoidNext.textContent = result.avoid_next || "다음 화에서 피할 반복 패턴이 아직 정리되지 않았습니다.";
+
+        resultIssueList.innerHTML = "";
+        const issues = result.issues || [];
+        if (!issues.length) {
+          appendInsightEmpty(resultIssueList, "이번 화에서 즉시 강조할 이슈가 없거나 아직 집계되지 않았습니다.");
+        } else {
+          for (const issue of issues.slice(0, 3)) {
+            const item = document.createElement("li");
+            item.className = "issue-item";
+            item.textContent = issue;
+            resultIssueList.appendChild(item);
+          }
+        }
+
+        resultNextAction.textContent = result.next_action || "다음 행동 추천이 없습니다.";
+      }
+
+      function renderTrendCompare() {
+        const insight = officeState.qualityInsights || createEmptyQualityDashboard(projectConfig.project);
+        const scoreTrend = insight.score_trend || {};
+        const compareRows = insight.compare_rows || [];
+
+        trendPanelMeta.textContent = scoreTrend.summary || "최근 회차 점수와 품질 신호를 비교합니다";
+        qualityTrendSummary.innerHTML = "";
+
+        const chips = [
+          `Trend · ${scoreTrend.trend || "insufficient_data"}`,
+          `평균 ${Number(scoreTrend.avg || 0).toFixed(1)}점`,
+          `Δ ${Number(scoreTrend.delta || 0) > 0 ? "+" : ""}${Number(scoreTrend.delta || 0)}`,
+          `샘플 ${scoreTrend.samples || 0}화`,
+        ];
+        for (const label of chips) {
+          const chip = document.createElement("span");
+          chip.className = "trend-chip";
+          chip.textContent = label;
+          qualityTrendSummary.appendChild(chip);
+        }
+
+        qualityCompareBody.innerHTML = "";
+        if (!compareRows.length) {
+          const row = document.createElement("tr");
+          row.innerHTML = '<td colspan="5">최근 회차 비교 데이터가 아직 없습니다.</td>';
+          qualityCompareBody.appendChild(row);
+          return;
+        }
+
+        for (const rowData of compareRows.slice(0, 6)) {
+          const row = document.createElement("tr");
+          const verdict = String(rowData.verdict || "").toUpperCase();
+          const verdictClass = verdict === "PASS" ? "is-pass" : verdict === "PASS_WITH_FIX" ? "is-pwf" : verdict === "REJECT" ? "is-reject" : "";
+          row.innerHTML = `
+            <td>${rowData.ep_num ?? "-"}</td>
+            <td><span class="compare-verdict ${verdictClass}">${verdict || "-"}</span></td>
+            <td>${rowData.score ?? "-"}</td>
+            <td>${rowData.ced != null ? Number(rowData.ced).toFixed(2) : "-"}</td>
+            <td>${rowData.ai_slop != null ? Number(rowData.ai_slop).toFixed(2) : "-"}</td>
+          `;
+          qualityCompareBody.appendChild(row);
+        }
+      }
+
+      function renderFailureWatch() {
+        const insight = officeState.qualityInsights || createEmptyQualityDashboard(projectConfig.project);
+        const stageStats = insight.stage_stats || [];
+        const failurePatterns = insight.failure_patterns || {};
+        const commonViolations = insight.common_violations || [];
+
+        failureWatchMeta.textContent = stageStats.length
+          ? `Stage ${stageStats.map((row) => row.stage).join(", ")} 최근 통과율과 실패 패턴`
+          : "실패 원인과 Stage별 통과 흐름을 요약합니다";
+
+        stageStatsGrid.innerHTML = "";
+        if (!stageStats.length) {
+          appendInsightEmpty(stageStatsGrid, "Stage별 pass rate / avg score가 누적되면 여기에 표시됩니다.");
+        } else {
+          for (const stat of stageStats.slice(0, 3)) {
+            const card = document.createElement("div");
+            card.className = "stage-stat-card";
+            card.innerHTML = `
+              <div class="stage-stat-label">Stage ${stat.stage}</div>
+              <div class="stage-stat-value">${Number(stat.pass_rate || 0).toFixed(1)}%</div>
+              <div class="stage-stat-meta">평균 ${Number(stat.avg_score || 0).toFixed(1)}점 · 총 ${stat.total || 0}회</div>
+            `;
+            stageStatsGrid.appendChild(card);
+          }
+        }
+
+        failurePatternList.innerHTML = "";
+        const topTypes = failurePatterns.top_types?.length ? failurePatterns.top_types : commonViolations;
+        if (!topTypes || !topTypes.length) {
+          appendInsightEmpty(failurePatternList, "주요 실패 패턴이 아직 충분히 쌓이지 않았습니다.");
+        } else {
+          for (const item of topTypes.slice(0, 5)) {
+            const node = document.createElement("div");
+            node.className = "pattern-item";
+            node.innerHTML = `
+              <div class="pattern-item-title">${item.type || "unknown"}</div>
+              <div class="pattern-item-meta">누적 ${item.count || 0}회</div>
+            `;
+            failurePatternList.appendChild(node);
+          }
+        }
+
+        failureRangeList.innerHTML = "";
+        const ranges = failurePatterns.by_episode_range || [];
+        if (!ranges.length) {
+          appendInsightEmpty(failureRangeList, "회차 구간별 실패 경향이 아직 없습니다.");
+        } else {
+          for (const item of ranges.slice(0, 5)) {
+            const node = document.createElement("div");
+            node.className = "pattern-item";
+            node.innerHTML = `
+              <div class="pattern-item-title">${item.range}</div>
+              <div class="pattern-item-meta">REJECT ${item.count || 0}회</div>
+            `;
+            failureRangeList.appendChild(node);
+          }
+        }
+      }
+
+      function getObservationLabelClass(label) {
+        if (label === "좋음") return "is-good";
+        if (label === "AI 티" || label === "과잉 설명") return "is-alert";
+        return "is-watch";
+      }
+
+      function renderCalibrationDesk() {
+        const insight = officeState.qualityInsights || createEmptyQualityDashboard(projectConfig.project);
+        const calibration = insight.calibration || createEmptyQualityDashboard(projectConfig.project).calibration;
+
+        calibrationMeta.textContent = calibration.available
+          ? `최근 ${calibration.lookback || 5}화 기준 수기 관측 ${calibration.total_reviews || 0}건`
+          : "프로젝트를 선택하면 수기 관측과 승격 후보가 표시됩니다";
+
+        const projectKey = projectConfig.project || "";
+        if (qualityObservationEp.dataset.project !== projectKey) {
+          qualityObservationEp.dataset.project = projectKey;
+          qualityObservationEp.value = insight.latest_ep || "";
+        } else if (!qualityObservationEp.value && insight.latest_ep) {
+          qualityObservationEp.value = insight.latest_ep;
+        }
+
+        calibrationSummary.innerHTML = "";
+        const summaryChips = calibration.label_counts?.length
+          ? calibration.label_counts.map((item) => `${item.label} ${item.count}건`)
+          : [`허용 라벨 ${((calibration.allowed_labels || []).length || 5)}종`, "아직 관측 데이터 없음"];
+        for (const label of summaryChips.slice(0, 5)) {
+          const chip = document.createElement("span");
+          chip.className = "trend-chip";
+          chip.textContent = label;
+          calibrationSummary.appendChild(chip);
+        }
+
+        qualityObservationList.innerHTML = "";
+        const recentObservations = calibration.recent_observations || [];
+        if (!recentObservations.length) {
+          appendInsightEmpty(qualityObservationList, "좋음/경계/AI 티 같은 수기 관측이 쌓이면 여기서 최근 노트를 비교할 수 있습니다.");
+        } else {
+          for (const row of recentObservations.slice(0, 6)) {
+            const card = document.createElement("div");
+            card.className = "pattern-item";
+            const verdict = row.verdict ? ` · ${row.verdict}${row.score ? ` ${row.score}점` : ""}` : "";
+            const notes = (row.signal_notes || []).join(" · ");
+            card.innerHTML = `
+              <div class="pattern-item-title">ep ${row.ep_num} <span class="observation-label-chip ${getObservationLabelClass(row.operator_label)}">${row.operator_label}</span></div>
+              <div class="pattern-item-meta">${row.note || "메모 없음"}${verdict}</div>
+              <div class="pattern-item-meta">${notes || "신호 메모 없음"}</div>
+            `;
+            qualityObservationList.appendChild(card);
+          }
+        }
+
+        qualityAdvisoryList.innerHTML = "";
+        const candidates = calibration.advisory_candidates || [];
+        if (!candidates.length) {
+          appendInsightEmpty(qualityAdvisoryList, calibration.next_step || "승격 후보가 아직 없습니다.");
+        } else {
+          for (const item of candidates.slice(0, 4)) {
+            const card = document.createElement("div");
+            card.className = "candidate-card";
+            card.innerHTML = `
+              <strong>${item.signal} advisory 후보</strong>
+              <span>${item.reason}</span>
+              <span>동행 관측 ${item.count || 0}건</span>
+            `;
+            qualityAdvisoryList.appendChild(card);
+          }
+        }
+      }
+
+      function renderQualityInsights() {
+        renderSafeOpsPreview();
+        renderArtifactLadder();
+        renderRetrievalInspector();
+        renderResultSummary();
+        renderTrendCompare();
+        renderFailureWatch();
+        renderCalibrationDesk();
+      }
+
+      async function refreshQualitySummary() {
+        if (!window.geuldobiDesktop || !projectConfig.project) {
+          officeState.qualityInsights = createEmptyQualityDashboard(projectConfig.project || null);
+          officeState.qualitySummary = officeState.qualityInsights.quality_summary;
+          renderQualityRadar();
+          renderQualityInsights();
+          return;
+        }
+
+        try {
+          if (window.geuldobiDesktop.getQualityDashboard) {
+            const result = await window.geuldobiDesktop.getQualityDashboard(projectConfig.project, 5);
+            if (result && result.ok) {
+              const fallback = createEmptyQualityDashboard(projectConfig.project);
+              officeState.qualityInsights = {
+                ...fallback,
+                ...(result.data || {}),
+                safe_ops: {
+                  ...fallback.safe_ops,
+                  ...((result.data || {}).safe_ops || {}),
+                },
+                artifact_ladder: {
+                  ...fallback.artifact_ladder,
+                  ...((result.data || {}).artifact_ladder || {}),
+                },
+                retrieval_summary: {
+                  ...fallback.retrieval_summary,
+                  ...((result.data || {}).retrieval_summary || {}),
+                },
+                quality_summary: {
+                  ...fallback.quality_summary,
+                  ...((result.data || {}).quality_summary || {}),
+                },
+                result_summary: {
+                  ...fallback.result_summary,
+                  ...((result.data || {}).result_summary || {}),
+                },
+                failure_patterns: {
+                  ...fallback.failure_patterns,
+                  ...((result.data || {}).failure_patterns || {}),
+                },
+                calibration: {
+                  ...fallback.calibration,
+                  ...((result.data || {}).calibration || {}),
+                },
+              };
+              officeState.qualitySummary = officeState.qualityInsights.quality_summary;
+            } else {
+              officeState.qualityInsights = createEmptyQualityDashboard(projectConfig.project);
+              officeState.qualitySummary = officeState.qualityInsights.quality_summary;
+            }
+          } else {
+            const result = await window.geuldobiDesktop.getQualitySummary(projectConfig.project, 5);
+            const fallback = createEmptyQualityDashboard(projectConfig.project);
+            if (result && result.ok) {
+              officeState.qualitySummary = {
+                ...fallback.quality_summary,
+                ...result.data,
+              };
+              officeState.qualityInsights = {
+                ...fallback,
+                quality_summary: officeState.qualitySummary,
+              };
+            } else {
+              officeState.qualityInsights = fallback;
+              officeState.qualitySummary = fallback.quality_summary;
+            }
+          }
+        } catch (err) {
+          officeState.qualityInsights = createEmptyQualityDashboard(projectConfig.project);
+          officeState.qualitySummary = officeState.qualityInsights.quality_summary;
+        }
+        renderQualityRadar();
+        renderQualityInsights();
+      }
+
+      async function loadSafeOpsPreview() {
+        if (!projectConfig.project || !window.geuldobiDesktop?.getSafeOpsPreview) {
+          return officeState.qualityInsights?.safe_ops || createEmptyQualityDashboard(projectConfig.project).safe_ops;
+        }
+        try {
+          const result = await window.geuldobiDesktop.getSafeOpsPreview(projectConfig.project);
+          if (result && result.ok && result.data) {
+            officeState.qualityInsights = officeState.qualityInsights || createEmptyQualityDashboard(projectConfig.project);
+            officeState.qualityInsights.safe_ops = {
+              ...createEmptyQualityDashboard(projectConfig.project).safe_ops,
+              ...result.data,
+            };
+            renderQualityInsights();
+            return officeState.qualityInsights.safe_ops;
+          }
+        } catch (err) {
+          console.warn("safe ops preview load failed:", err);
+        }
+        return officeState.qualityInsights?.safe_ops || createEmptyQualityDashboard(projectConfig.project).safe_ops;
+      }
+
+      function closeSafeOpsConfirm(result) {
+        safeOpsConfirmModal.classList.remove("open");
+        if (_safeOpsConfirmResolve) {
+          _safeOpsConfirmResolve(result);
+          _safeOpsConfirmResolve = null;
+        }
+      }
+
+      function fillSafeOpsList(container, items, emptyText) {
+        container.innerHTML = "";
+        const rows = (items || []).length ? items : [emptyText];
+        for (const text of rows) {
+          const li = document.createElement("li");
+          li.textContent = text;
+          container.appendChild(li);
+        }
+      }
+
+      async function confirmSafeOpsAction(action, label) {
+        const safeOps = await loadSafeOpsPreview();
+        const spec = safeOps.actions?.[action];
+        if (!spec) return true;
+
+        safeOpsConfirmTitle.textContent = `${spec.title || label} 실행 확인`;
+        safeOpsConfirmSummary.textContent = spec.summary || `${label} 실행 전에 삭제/유지 범위를 확인하세요.`;
+        fillSafeOpsList(safeOpsDeleteList, spec.deletes, "삭제 범위 정보가 없습니다.");
+        fillSafeOpsList(safeOpsPreserveList, spec.preserves, "유지 범위 정보가 없습니다.");
+
+        safeOpsNoteList.innerHTML = "";
+        const notes = [...(spec.notes || [])];
+        const impactLine = formatSafeOpsImpactCounts(spec);
+        if (impactLine) notes.unshift(`영향도: ${impactLine}`);
+        for (const note of notes) {
+          const row = document.createElement("div");
+          row.textContent = note;
+          safeOpsNoteList.appendChild(row);
+        }
+
+        safeOpsConfirmOk.textContent = spec.requires_target ? "확인 후 target 입력" : "계속 실행";
+        safeOpsConfirmModal.classList.add("open");
+        return new Promise((resolve) => {
+          _safeOpsConfirmResolve = resolve;
+        });
+      }
+
+      saveQualityObservationBtn.addEventListener("click", async () => {
+        if (!projectConfig.project) {
+          appendLog("[관측] 프로젝트를 먼저 선택하세요.");
+          return;
+        }
+
+        const epNum = Number.parseInt(qualityObservationEp.value, 10);
+        const operatorLabel = String(qualityObservationLabel.value || "").trim();
+        const note = String(qualityObservationNote.value || "").trim();
+
+        if (!Number.isInteger(epNum) || epNum <= 0) {
+          appendLog("[관측] 유효한 회차 번호가 필요합니다.");
+          return;
+        }
+        if (!operatorLabel) {
+          appendLog("[관측] 운영자 판정을 선택하세요.");
+          return;
+        }
+        if (!window.geuldobiDesktop?.saveQualityReview) {
+          appendLog("[관측] 현재 실행 환경에서 저장을 지원하지 않습니다.");
+          return;
+        }
+
+        try {
+          const result = await window.geuldobiDesktop.saveQualityReview(projectConfig.project, epNum, operatorLabel, note);
+          if (result && result.ok) {
+            appendLog(`[관측] ep ${epNum} · ${operatorLabel} 저장`, null, {
+              agent: "manager",
+              summary: `품질 관측 저장 · ep ${epNum}`,
+              detail: note || `${operatorLabel} 판정 기록`,
+              bubble: `관측 저장 · ${operatorLabel}`,
+              status: "관측 갱신",
+              agentDetail: note || "승격 후보 재계산 대기",
+            });
+            qualityObservationNote.value = "";
+            await refreshQualitySummary();
+          } else {
+            appendLog(`[관측] 저장 실패: ${result?.message || "알 수 없는 오류"}`);
+          }
+        } catch (err) {
+          appendLog(`[관측] 저장 오류: ${err.message}`);
+        }
+      });
+
+      function renderAgentBoard() {
+        agentBoard.innerHTML = "";
+        const activeSet = new Set(getCurrentStageAgents());
+        for (const agent of agents) {
+          const runtime = agentRuntime[agent.spriteKey];
+          const card = document.createElement("div");
+          card.className = "agent-card";
+          if (activeSet.has(agent.spriteKey)) card.classList.add("active");
+          if (runtime.bubbleTimer > 0) card.classList.add("speaking");
+          card.style.borderColor = activeSet.has(agent.spriteKey)
+            ? hexToRgba(agent.screenColor, runtime.bubbleTimer > 0 ? 0.6 : 0.34)
+            : hexToRgba("#94a3b8", 0.2);
+          if (runtime.bubbleTimer > 0) {
+            card.style.boxShadow = `0 14px 28px rgba(15, 23, 42, 0.1), 0 0 0 1px ${hexToRgba(agent.screenColor, 0.18)}`;
+          } else if (activeSet.has(agent.spriteKey)) {
+            card.style.boxShadow = `0 10px 24px rgba(15, 23, 42, 0.05), 0 0 0 1px ${hexToRgba(agent.screenColor, 0.12)}`;
+          }
+
+          const head = document.createElement("div");
+          head.className = "agent-head";
+
+          const nameRow = document.createElement("div");
+          nameRow.className = "agent-name-row";
+
+          const dot = document.createElement("span");
+          dot.className = "agent-dot";
+          dot.style.background = agent.screenColor;
+
+          const name = document.createElement("span");
+          name.className = "agent-name";
+          name.textContent = agent.name;
+
+          nameRow.append(dot, name);
+
+          const state = document.createElement("span");
+          state.className = "agent-state";
+          state.textContent = runtime.status;
+          state.style.background = activeSet.has(agent.spriteKey)
+            ? `linear-gradient(180deg, ${hexToRgba(agent.screenColor, 0.18)}, ${hexToRgba(agent.screenColor, 0.08)})`
+            : "#eef2ff";
+          state.style.color = activeSet.has(agent.spriteKey) ? "#1e293b" : "#475569";
+
+          head.append(nameRow, state);
+
+          const role = document.createElement("div");
+          role.className = "agent-role";
+          role.textContent = agent.role;
+
+          const detail = document.createElement("div");
+          detail.className = "agent-detail";
+          detail.textContent = runtime.detail;
+
+          const bubble = document.createElement("div");
+          bubble.className = "agent-bubble-echo";
+          const liveBubbleText = runtime.bubbleTimer > 0
+            ? runtime.bubbleText
+            : officeState.isRunning && activeSet.has(agent.spriteKey)
+              ? runtime.detail || runtime.status
+              : "";
+          bubble.textContent = liveBubbleText ? `“${shortenText(liveBubbleText, 38)}”` : "최근 발화 없음";
+          bubble.classList.toggle("live", !!liveBubbleText);
+          bubble.style.borderColor = hexToRgba(agent.screenColor, liveBubbleText ? 0.24 : 0.12);
+          bubble.style.background = liveBubbleText
+            ? `linear-gradient(180deg, ${hexToRgba(agent.screenColor, 0.12)}, rgba(248, 250, 252, 0.98))`
+            : "linear-gradient(180deg, #f8fafc, #f1f5f9)";
+
+          card.append(head, role, detail, bubble);
+          agentBoard.appendChild(card);
+        }
+      }
+
+      function renderEventFeed() {
+        eventFeed.innerHTML = "";
+        if (officeState.recentEvents.length === 0) {
+          const empty = document.createElement("div");
+          empty.className = "live-feed-empty";
+          empty.textContent = "중요 이벤트가 들어오면 여기서 요약됩니다.";
+          eventFeed.appendChild(empty);
+          return;
+        }
+
+        for (const entry of officeState.recentEvents.slice(0, 5)) {
+          const row = document.createElement("div");
+          row.className = "live-event";
+          const agentMeta = entry.agent ? getAgentMeta(entry.agent) : null;
+          if (agentMeta) {
+            row.style.borderColor = hexToRgba(agentMeta.screenColor, 0.25);
+            row.style.background = `linear-gradient(180deg, ${hexToRgba(agentMeta.screenColor, 0.08)}, rgba(248, 250, 252, 0.94))`;
+            row.style.boxShadow = `inset 3px 0 0 ${hexToRgba(agentMeta.screenColor, 0.6)}`;
+          }
+
+          const time = document.createElement("div");
+          time.className = "live-event-time";
+          time.textContent = entry.time;
+
+          const body = document.createElement("div");
+          body.className = "live-event-body";
+
+          const title = document.createElement("div");
+          title.className = "live-event-title";
+          title.textContent = entry.agent ? `[${getAgentDisplayName(entry.agent)}] ${entry.title}` : entry.title;
+
+          const meta = document.createElement("div");
+          meta.className = "live-event-meta";
+          meta.textContent = entry.detail || " ";
+
+          body.append(title, meta);
+          row.append(time, body);
+          eventFeed.appendChild(row);
+        }
+      }
+
+      function renderMissionBoard() {
+        currentStageLabel.textContent = officeState.currentStageTitle;
+        currentStageDetail.textContent = officeState.currentStageSummary;
+
+        currentFocusLabel.textContent = officeState.focusTitle;
+        currentFocusMeta.textContent = officeState.focusDetail;
+
+        promptStatusLabel.textContent = officeState.promptPending ? "입력 대기" : "없음";
+        promptStatusMeta.textContent = officeState.promptDetail;
+        promptMissionCard.classList.toggle("prompt-live", officeState.promptPending);
+
+        verdictMissionCard.classList.remove("verdict-pass", "verdict-pwf", "verdict-reject");
+        if (!officeState.lastVerdict) {
+          verdictSummary.textContent = "없음";
+          verdictMeta.textContent = "아직 심사 결과 없음";
+        } else {
+          const verdictLabel = officeState.lastVerdict === "PASS_WITH_FIX" ? "PASS_WITH_FIX" : officeState.lastVerdict;
+          verdictSummary.textContent = officeState.lastVerdictScore ? `${verdictLabel} · ${officeState.lastVerdictScore}점` : verdictLabel;
+          verdictMeta.textContent = officeState.mode === "RUNNING" ? "다음 판정을 기다리는 중" : "최근 심사 결과를 유지 중";
+          if (officeState.lastVerdict === "PASS") verdictMissionCard.classList.add("verdict-pass");
+          else if (officeState.lastVerdict === "PASS_WITH_FIX") verdictMissionCard.classList.add("verdict-pwf");
+          else if (officeState.lastVerdict === "REJECT") verdictMissionCard.classList.add("verdict-reject");
+        }
+
+        if (officeState.isRunning && officeState.runStartedAt) {
+          runtimeBadge.textContent = `경과: ${formatDuration(Date.now() - officeState.runStartedAt)}`;
+        } else {
+          runtimeBadge.textContent = "경과: --:--";
+        }
+      }
+
+      function setAgentStatus(agentKey, status, detail, intensity) {
+        const runtime = agentRuntime[agentKey];
+        if (!runtime) return;
+        runtime.status = status || runtime.status;
+        runtime.detail = detail || runtime.detail;
+        runtime.intensity = intensity != null ? intensity : runtime.intensity;
+        runtime.updatedAt = Date.now();
+        renderAgentBoard();
+      }
+
+      function speakAgent(agentKey, text, options = {}) {
+        const runtime = agentRuntime[agentKey];
+        if (!runtime || !text) return;
+        runtime.bubbleText = text;
+        runtime.bubbleColor = options.color || runtime.bubbleColor || "#334155";
+        runtime.bubbleTimer = options.timer || 210;
+        runtime.intensity = options.intensity != null ? options.intensity : Math.max(runtime.intensity, 0.92);
+        runtime.updatedAt = Date.now();
+        if (options.status) runtime.status = options.status;
+        if (options.detail) runtime.detail = options.detail;
+        renderAgentBoard();
+      }
+
+      function syncAgentBaseline() {
+        const activeSet = new Set(getCurrentStageAgents());
+        for (const agent of agents) {
+          const runtime = agentRuntime[agent.spriteKey];
+          if (activeSet.has(agent.spriteKey)) {
+            if (!officeState.isRunning) {
+              runtime.status = "대기";
+              runtime.detail = "다음 실행 요청을 기다리는 중";
+              runtime.intensity = Math.max(runtime.intensity, 0.3);
+            } else if (runtime.status === "대기") {
+              runtime.status = "준비";
+              runtime.detail = "작업 큐에 올라가 실행 신호를 기다리는 중";
+              runtime.intensity = Math.max(runtime.intensity, 0.5);
+            }
+          } else {
+            runtime.status = officeState.isRunning ? "비활성" : "대기";
+            runtime.detail = officeState.currentStage ? "이번 단계 주체가 아님" : "작업 요청 없음";
+            runtime.intensity = Math.min(runtime.intensity, 0.24);
+          }
+        }
+        renderAgentBoard();
+      }
+
+      function inferLogMeta(message, verdict, meta = {}) {
+        const raw = String(message || "").trim();
+        const summaryText = raw.replace(/^\[[^\]]+\]\s*/, "");
+        const stage = meta.stage || officeState.currentStage || null;
+        let agent = meta.agent || null;
+        if (!agent) {
+          if (verdict) agent = "director";
+          else if (/원고|Manuscript|ChiefWriter|CW|scene|장면/i.test(raw)) agent = "writer";
+          else if (/Arc|분석|advisory|style|레퍼런스/i.test(raw)) agent = "analyst";
+          else if (/검증|validator|consensus|무결성|patch|retry|재심사|audit/i.test(raw)) agent = "critic";
+          else if (/Director|심사|판정/i.test(raw)) agent = "director";
+          else if (/System|프로젝트|초기화|입력|백엔드|실행|중지|완료|장르|설정/i.test(raw)) agent = "manager";
+        }
+        return {
+          agent,
+          stage,
+          summary: meta.summary || shortenText(summaryText, 68),
+          detail: meta.detail || raw,
+          significant: meta.significant != null ? meta.significant : (
+            !!verdict ||
+            raw.startsWith("[System]") ||
+            /완료|생성|심사|검수|재시도|입력|실패|중지|연결|판정|로드/i.test(raw)
+          ),
+          bubble: meta.bubble || null,
+        };
+      }
+
+      function appendLog(message, verdict, meta = {}) {
+        const rowMeta = inferLogMeta(message, verdict, meta);
         const row = document.createElement("div");
         row.className = "log-row";
+        row.dataset.agent = rowMeta.agent || "";
+        row.dataset.stage = rowMeta.stage || "";
 
         const time = document.createElement("span");
         time.className = "log-time";
         time.textContent = nowLabel();
 
+        const main = document.createElement("div");
+        main.className = "log-main";
+
+        const metaRow = document.createElement("div");
+        metaRow.className = "log-meta-row";
+        if (rowMeta.agent) {
+          const agentChip = document.createElement("span");
+          agentChip.className = "log-chip log-chip-agent";
+          agentChip.textContent = getAgentDisplayName(rowMeta.agent);
+          metaRow.appendChild(agentChip);
+        }
+        if (rowMeta.stage) {
+          const stageChip = document.createElement("span");
+          stageChip.className = "log-chip log-chip-stage";
+          stageChip.textContent = resolveActionMeta(rowMeta.stage, officeState.currentSubKey).title;
+          metaRow.appendChild(stageChip);
+        }
+
         const msg = document.createElement("span");
         msg.className = "log-msg";
         msg.textContent = message;
 
-        row.append(time, msg);
+        if (metaRow.childNodes.length > 0) main.appendChild(metaRow);
+        main.appendChild(msg);
+
+        row.append(time, main);
 
         if (verdict) {
           const badge = document.createElement("span");
@@ -1660,6 +4724,35 @@
           logStream.removeChild(logStream.firstChild);
         }
         logStream.scrollTop = logStream.scrollHeight;
+
+        if (rowMeta.agent && rowMeta.bubble) {
+          speakAgent(rowMeta.agent, rowMeta.bubble, {
+            status: meta.status,
+            detail: meta.agentDetail || rowMeta.summary,
+            color: meta.bubbleColor,
+            timer: meta.bubbleTimer,
+            intensity: meta.intensity,
+          });
+        } else if (rowMeta.agent && meta.status) {
+          setAgentStatus(rowMeta.agent, meta.status, meta.agentDetail || rowMeta.summary, meta.intensity);
+        }
+
+        if (rowMeta.significant) {
+          pushEventFeed({
+            time: time.textContent,
+            title: rowMeta.summary,
+            detail: shortenText(rowMeta.detail, 96),
+            agent: rowMeta.agent,
+          });
+        }
+
+        if (rowMeta.significant) {
+          setCurrentFocus(rowMeta.summary, shortenText(rowMeta.detail, 120));
+        }
+
+        if (typeof applyLogFilter === "function") {
+          applyLogFilter();
+        }
       }
 
       function setStateBadge(mode) {
@@ -1696,17 +4789,27 @@
       function startRunningLoop() {
         officeState.isRunning = true;
         officeState.mode = "RUNNING";
+        officeState.runStartedAt = Date.now();
+        setVerdictState(null, null);
+        setPromptState(false, "대기 중인 입력 없음");
         setStateBadge("RUNNING");
         setEffectBanner("", "");
+        syncAgentBaseline();
+        renderMissionBoard();
+        renderPipelineStrip();
         _lockUI(true);
       }
 
       function stopLoop() {
         officeState.isRunning = false;
         officeState.mode = "IDLE";
-        officeState.currentStage = null;
+        officeState.runStartedAt = null;
+        setPromptState(false, "대기 중인 입력 없음");
         setStateBadge("IDLE");
         setEffectBanner("", "");
+        syncAgentBaseline();
+        renderMissionBoard();
+        renderPipelineStrip();
         _lockUI(false);
       }
 
@@ -1814,15 +4917,163 @@
       // ─── 책상 타일 (LimeZu Theme_Sorter teacher desk) ───
       const deskTileImg = new Image();
       deskTileImg.src = "sprites/desk_full_small.png";
+      const genericDecorImg = new Image();
+      genericDecorImg.src = "sprites/dbg_sheet_Generic_01.png";
+      const libraryDecorImg = new Image();
+      libraryDecorImg.src = "sprites/dbg_sheet_Classroom_and_Library_01.png";
+      const hallDecorImg = new Image();
+      hallDecorImg.src = "sprites/dbg_sheet_Conference_Hall_01.png";
+
+      function drawAtlasSprite(img, sx, sy, sw, sh, dx, dy, dw = sw, dh = sh, alpha = 1) {
+        if (!img.complete || img.naturalWidth <= 0) return;
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh);
+        ctx.restore();
+      }
+
+      function drawOfficeDecor(time) {
+        const shimmer = 0.05 + Math.abs(Math.sin(time * 0.55)) * 0.04;
+
+        drawAtlasSprite(genericDecorImg, 438, 540, 180, 120, 34, 192, 182, 108, 0.95);
+        drawAtlasSprite(genericDecorImg, 438, 396, 180, 120, 380, 206, 154, 92, 0.92);
+        drawAtlasSprite(genericDecorImg, 393, 681, 123, 84, 262, 166, 104, 71, 0.75);
+
+        drawAtlasSprite(libraryDecorImg, 384, 354, 384, 102, 338, 94, 248, 66, 0.95);
+        drawAtlasSprite(libraryDecorImg, 144, 462, 141, 162, 20, 68, 102, 118, 0.88);
+        drawAtlasSprite(libraryDecorImg, 561, 480, 174, 114, 522, 102, 98, 64, 0.9);
+        drawAtlasSprite(genericDecorImg, 0, 0, 191, 71, 36, 30, 124, 46, 0.82);
+        drawAtlasSprite(genericDecorImg, 0, 0, 191, 71, 488, 30, 124, 46, 0.82);
+        drawAtlasSprite(hallDecorImg, 336, 414, 48, 81, 590, 136, 30, 51, 0.86);
+
+        ctx.save();
+        ctx.globalAlpha = shimmer;
+        ctx.fillStyle = "#fff7d6";
+        ctx.beginPath();
+        ctx.moveTo(24, 36);
+        ctx.lineTo(112, 36);
+        ctx.lineTo(200, 236);
+        ctx.lineTo(82, 236);
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(502, 28);
+        ctx.lineTo(620, 28);
+        ctx.lineTo(560, 218);
+        ctx.lineTo(460, 218);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+
+        ctx.fillStyle = "rgba(15, 23, 42, 0.08)";
+        ctx.fillRect(0, 162, DESIGN_W, 4);
+        ctx.fillRect(0, 300, DESIGN_W, 18);
+      }
 
       function drawOfficeBackground(time) {
+        const wallGradient = ctx.createLinearGradient(0, 0, 0, 192);
+        wallGradient.addColorStop(0, "#f7f7f4");
+        wallGradient.addColorStop(0.52, "#e6edf4");
+        wallGradient.addColorStop(1, "#d8e1ea");
+        ctx.fillStyle = wallGradient;
+        ctx.fillRect(0, 0, DESIGN_W, 176);
+
+        const floorGradient = ctx.createLinearGradient(0, 156, 0, DESIGN_H);
+        floorGradient.addColorStop(0, "#b8936a");
+        floorGradient.addColorStop(0.45, "#8f6d50");
+        floorGradient.addColorStop(1, "#6b543e");
+        ctx.fillStyle = floorGradient;
+        ctx.fillRect(0, 156, DESIGN_W, DESIGN_H - 156);
+
+        ctx.fillStyle = "rgba(255, 255, 255, 0.52)";
+        ctx.fillRect(0, 0, DESIGN_W, 18);
+        ctx.fillStyle = "rgba(15, 23, 42, 0.08)";
+        ctx.fillRect(0, 144, DESIGN_W, 10);
+        ctx.fillStyle = "rgba(15, 23, 42, 0.045)";
+        for (let x = 0; x < DESIGN_W; x += 16) {
+          ctx.fillRect(x, 156, 1, DESIGN_H - 156);
+        }
+        for (let y = 166; y < DESIGN_H; y += 18) {
+          ctx.fillRect(0, y, DESIGN_W, 1);
+        }
+
         if (officeBgImg.complete && officeBgImg.naturalWidth > 0) {
+          ctx.save();
+          ctx.globalAlpha = 0.4;
           ctx.imageSmoothingEnabled = false;
           ctx.drawImage(officeBgImg, 0, 0, DESIGN_W, DESIGN_H);
+          ctx.restore();
+        }
+
+        drawOfficeDecor(time);
+        ctx.fillStyle = `rgba(191, 219, 254, ${0.05 + Math.abs(Math.sin(time * 0.7)) * 0.03})`;
+        ctx.fillRect(0, 0, DESIGN_W, 120);
+        ctx.fillStyle = "rgba(255, 255, 255, 0.04)";
+        ctx.fillRect(0, 0, DESIGN_W, DESIGN_H);
+      }
+
+      function drawWallDisplay(time) {
+        const boardX = 272;
+        const boardY = 19;
+        const boardW = 96;
+        const boardH = 58;
+        const meta = resolveActionMeta(officeState.currentStage, officeState.currentSubKey);
+        const stageText = meta.short || "IDLE";
+        const focus = shortenText(officeState.focusTitle || "대기", 18);
+        const detail = shortenText(
+          officeState.promptPending ? "USER INPUT" : officeState.isRunning ? "PIPELINE LIVE" : "STANDBY",
+          18
+        );
+        const activeAgents = getCurrentStageAgents().length || 0;
+
+        drawRect(boardX, boardY, boardW, boardH, "rgba(255,255,255,0.38)");
+        drawRect(boardX, boardY, boardW, 2, officeState.promptPending ? "#f59e0b" : "#475569");
+        drawRect(boardX + 5, boardY + 8, boardW - 10, 12, "rgba(15,23,42,0.82)");
+        ctx.fillStyle = "#e2e8f0";
+        ctx.font = 'bold 8px monospace';
+        ctx.fillText(stageText, boardX + 9, boardY + 17);
+
+        ctx.fillStyle = "#334155";
+        ctx.font = '7px "Malgun Gothic", sans-serif';
+        ctx.fillText(focus, boardX + 7, boardY + 31);
+        ctx.fillText(detail, boardX + 7, boardY + 41);
+        ctx.fillText(`ACTIVE ${String(activeAgents).padStart(2, "0")}`, boardX + 7, boardY + 51);
+
+        drawRect(boardX + 6, boardY + 55, boardW - 12, 3, "rgba(148,163,184,0.35)");
+        if (officeState.isRunning) {
+          const span = officeState.skipAnimation ? 18 : 18 + ((time * 48) % 44);
+          drawRect(boardX + 6, boardY + 55, Math.min(boardW - 12, span), 3, "rgba(59,130,246,0.85)");
         } else {
-          // 로딩 전 폴백
-          drawRect(0, 0, DESIGN_W, 152, "#f2ede4");
-          drawRect(0, 152, DESIGN_W, DESIGN_H - 152, "#c8af8c");
+          drawRect(boardX + 6, boardY + 55, 18, 3, "rgba(71,85,105,0.55)");
+        }
+      }
+
+      function drawPacketStream(fromX, fromY, toX, toY, color, time, phase) {
+        const dx = toX - fromX;
+        const dy = toY - fromY;
+        ctx.globalAlpha = 0.22;
+        for (let i = 0; i < 5; i++) {
+          const t = (time * 0.35 + phase + i * 0.22) % 1;
+          const px = fromX + dx * t;
+          const py = fromY + dy * t;
+          drawRect(px - 1, py - 1, 3, 3, color);
+        }
+        ctx.globalAlpha = 1;
+      }
+
+      function drawLLMFlow(time) {
+        if (!officeState.isRunning || officeState.skipAnimation) return;
+        const boardTarget = { x: 320, y: 63 };
+        const director = agents.find((agent) => agent.spriteKey === "director");
+        const activeKeys = getCurrentStageAgents();
+        activeKeys.forEach((key, index) => {
+          const agent = agents.find((item) => item.spriteKey === key);
+          if (!agent || key === "director") return;
+          drawPacketStream(agent.x, agent.y - 18, boardTarget.x, boardTarget.y, agent.screenColor, time, index * 0.13);
+        });
+        if (director && activeKeys.includes("director")) {
+          drawPacketStream(boardTarget.x, boardTarget.y + 2, director.x - 10, director.y - 54, director.screenColor, time, 0.47);
         }
       }
 
@@ -1832,6 +5083,7 @@
         const dw = 64, dh = 64;
         const dx = agent.x - dw / 2;
         const dy = agent.y - 8;  // 책상 상판이 캐릭터 허리쯤 오도록
+        const runtime = agentRuntime[agent.spriteKey];
         if (deskTileImg.complete && deskTileImg.naturalWidth > 0) {
           ctx.imageSmoothingEnabled = false;
           ctx.drawImage(deskTileImg, dx, dy, dw, dh);
@@ -1840,6 +5092,34 @@
           drawRect(dx, dy + 10, dw, 24, "#654E37");
           drawRect(dx + 1, dy + 11, dw - 2, 6, "#785F44");
         }
+        const glow = runtime ? Math.min(0.44, 0.1 + runtime.intensity * 0.28) : 0.12;
+        ctx.globalAlpha = glow;
+        drawRect(agent.x - 8, dy + 12, 16, 7, agent.screenColor);
+        if (runtime && runtime.intensity > 0.55) {
+          drawRect(agent.x - 10, dy + 10, 20, 2, agent.screenColor);
+        }
+        ctx.globalAlpha = 1;
+      }
+
+      function resolveAgentBubble(agentKey, runtime, isActive) {
+        if (!runtime || !isActive) return null;
+        if (runtime.bubbleTimer > 0 && runtime.bubbleText) {
+          return {
+            text: runtime.bubbleText,
+            color: runtime.bubbleColor || "#334155",
+            emphatic: true,
+          };
+        }
+        if (!officeState.isRunning) return null;
+        const fallbackText = runtime.status && !/^(대기|비활성)$/.test(runtime.status)
+          ? runtime.status
+          : runtime.detail;
+        if (!fallbackText || /이번 단계 주체가 아님|작업 요청 없음/.test(fallbackText)) return null;
+        return {
+          text: fallbackText,
+          color: runtime.bubbleColor || "#475569",
+          emphatic: false,
+        };
       }
 
 
@@ -1847,24 +5127,28 @@
       function drawAgent(agent, index, time) {
         const animate = officeState.mode === "RUNNING" && officeState.isRunning && !officeState.skipAnimation && ANIMATED_STAGES.has(officeState.currentStage);
         const bob = animate ? Math.sin(time * 4 + index * 1.3) * 1.5 : 0;
+        const runtime = agentRuntime[agent.spriteKey];
 
         let pose;
         let animFrame = 0;
-        // 모든 에이전트 walk 포즈 통일 (phone 스프라이트가 다른 캐릭터라 사용 안 함)
-        if (animate) {
-          pose = "idle";
-          animFrame = Math.floor(time * 3 + index) % 3;
-        } else {
-          // 대기: 서있기 (중앙 프레임)
-          pose = "idle";
-          animFrame = 1;
-        }
-
         // 스테이지별 활성 여부 — 비활성 에이전트는 반투명
         const stageKey = officeState.currentStage;
         const activeList = stageKey && STAGE_AGENTS[stageKey];
         const isActive = !activeList || activeList.includes(agent.spriteKey);
+        if (animate && isActive) {
+          pose = agent.workPose || "idle";
+          animFrame = Math.floor(time * (pose === "sit" ? 2 : 3) + index) % 3;
+        } else {
+          pose = agent.idlePose || "idle";
+          animFrame = pose === "sit" ? 1 : 1;
+        }
         if (!isActive) ctx.globalAlpha = 0.3;
+
+        if (runtime && runtime.intensity > 0.5) {
+          ctx.globalAlpha = Math.min(0.28, runtime.intensity * 0.24);
+          drawRect(agent.x - 18, agent.y - 22, 36, 46, agent.screenColor);
+          ctx.globalAlpha = !isActive ? 0.3 : 1;
+        }
 
         // 캐릭터를 책상 뒤에 배치 (먼저 그림) — 상체가 책상 위로 보이도록 위로 올림
         const spriteY = agent.y - 30 + bob;
@@ -1890,30 +5174,30 @@
         ctx.fillText(agent.name, agent.x, nameY + 11);
         ctx.textAlign = "left";
 
-        // 작업 중 자동 말풍선 (활성 에이전트만)
-        if (isActive && animate && Math.sin(time * 2 + index * 2.1) > 0.75) {
+        const liveBubble = resolveAgentBubble(agent.spriteKey, runtime, isActive);
+
+        // 작업 중 자동 말풍선 (활성 에이전트만, 지속 상태 말풍선이 없을 때)
+        if (!liveBubble && isActive && animate && Math.sin(time * 2 + index * 2.1) > 0.75) {
           const quickBubbles = ["...", "!", "~", "OK"];
           const bt = quickBubbles[(index + Math.floor(time)) % quickBubbles.length];
-          drawBubble(agent.x + 30, agent.y - 50 + bob, bt, "#475569", false);
+          drawBubble(agent.x + 30, agent.y - 50 + bob, bt, "#475569", false, { subtle: true });
         }
 
-        // Director 심사 말풍선 (verdict — 최우선)
-        if (agent.spriteKey === "director" && _directorBubble.timer > 0) {
-          const bColor = _directorBubble.text.startsWith("PWF") ? "#854d0e"
-            : _directorBubble.text.startsWith("PASS") ? "#166534"
-            : _directorBubble.text.startsWith("REJECT") ? "#991b1b" : "#334155";
-          drawBubble(agent.x, agent.y - 70 + bob, _directorBubble.text, bColor, true);
+        if (liveBubble) {
+          drawBubble(
+            agent.x,
+            agent.y - (agent.spriteKey === "manager" ? 64 : 70) + bob,
+            shortenText(liveBubble.text, 34),
+            liveBubble.color,
+            true,
+            { subtle: !liveBubble.emphatic }
+          );
         }
-        // Director 스크롤 텍스트 (분석 중 긴 텍스트 흘려보냄 — verdict 없을 때만)
+        // Director 스크롤 텍스트 (분석 중 긴 텍스트 흘려보냄 — 직접 말풍선이 없을 때만)
         else if (agent.spriteKey === "director" && _directorScroll.timer > 0) {
           const line = _directorScroll.lines[_directorScroll.lineIdx] || "";
           const truncated = line.length > 28 ? line.slice(0, 26) + "…" : line;
-          drawBubble(agent.x, agent.y - 70 + bob, truncated, "#334155", true);
-        }
-
-        // Manager 로그 말풍선 (파이프라인 상태)
-        if (agent.spriteKey === "manager" && _managerBubble.timer > 0) {
-          drawBubble(agent.x, agent.y - 64 + bob, _managerBubble.text, "#92400e", true);
+          drawBubble(agent.x, agent.y - 70 + bob, truncated, "#334155", true, { subtle: true });
         }
 
         // 클릭 말풍선
@@ -1926,25 +5210,33 @@
       }
 
       // ─── 말풍선 그리기 ───
-      function drawBubble(bx, by, text, color, big) {
+      function drawBubble(bx, by, text, color, big, options = {}) {
+        const lines = wrapBubbleText(text, big ? 15 : 9, big ? 2 : 1);
+        if (lines.length === 0) return;
         ctx.font = big ? '10px "Malgun Gothic", sans-serif' : '9px monospace';
-        const tw = ctx.measureText(text).width;
-        const pw = tw + (big ? 16 : 10);
-        const ph = big ? 18 : 13;
+        const tw = Math.max(...lines.map((line) => ctx.measureText(line).width));
+        const pw = tw + (big ? 20 : 12);
+        const lineHeight = big ? 12 : 10;
+        const ph = big ? 10 + lines.length * lineHeight : 14;
         const rx = bx - pw / 2, ry = by - ph / 2;
-        // 배경
-        drawRect(rx - 1, ry - 1, pw + 2, ph + 2, "rgba(0,0,0,0.08)"); // 그림자
-        drawRect(rx, ry, pw, ph, "#ffffff");
-        drawRect(rx + 1, ry + 1, pw - 2, ph - 2, "#fafafa");
+        const accent = color || "#475569";
+        const fill = options.subtle ? "rgba(255, 255, 255, 0.88)" : "#fffdf8";
+        drawRect(rx - 2, ry + 2, pw + 4, ph + 3, "rgba(15, 23, 42, 0.12)");
+        drawRect(rx, ry, pw, ph, hexToRgba(accent, 0.18));
+        drawRect(rx + 1, ry + 1, pw - 2, ph - 2, fill);
+        drawRect(rx + 1, ry + 1, pw - 2, 2, hexToRgba(accent, options.subtle ? 0.26 : 0.38));
         // 꼬리 (아래 삼각)
         if (big) {
-          drawRect(bx - 3, ry + ph, 6, 3, "#ffffff");
-          drawRect(bx - 1, ry + ph + 3, 2, 2, "#ffffff");
+          drawRect(bx - 4, ry + ph, 8, 3, fill);
+          drawRect(bx - 2, ry + ph + 3, 4, 2, fill);
         }
         // 텍스트
         ctx.fillStyle = color;
         ctx.textAlign = "center";
-        ctx.fillText(text, bx, by + (big ? 4 : 3));
+        lines.forEach((line, index) => {
+          const textY = ry + (big ? 12 : 10) + index * lineHeight;
+          ctx.fillText(line, bx, textY);
+        });
         ctx.textAlign = "left";
       }
 
@@ -1976,8 +5268,10 @@
       function drawModeEffect(time) {
         // 말풍선 타이머 감소
         if (_clickBubble.timer > 0) _clickBubble.timer--;
-        if (_directorBubble.timer > 0) _directorBubble.timer--;
-        if (_managerBubble.timer > 0) _managerBubble.timer--;
+        for (const runtime of Object.values(agentRuntime)) {
+          if (runtime.bubbleTimer > 0) runtime.bubbleTimer--;
+          runtime.intensity = Math.max(0.16, runtime.intensity - 0.002);
+        }
         // Director 스크롤 텍스트: 매 12프레임(~0.2초)마다 다음 줄
         if (_directorScroll.timer > 0) {
           _directorScroll.timer--;
@@ -2049,10 +5343,10 @@
         }
       }
 
-      // ─── 공지 스크롤 (게임 공지 스타일 — 오른쪽→왼쪽 흘러감) ───
+      // ─── 공지 스크롤 (게임 공지 스타일 — 왼쪽→오른쪽 흘러감) ───
       const _noticeMessages = [
+        "원래 느립니다. 정상입니다.",
         "안 멈췄어요. 계속 하고 있어요.",
-        "원래 느려요. 정상입니다.",
         "AI가 열심히 쓰는 중...",
         "잠시만 기다려 주세요~",
         "LLM이 생각하고 있어요.",
@@ -2064,13 +5358,14 @@
         "화장실 다녀오셔도 됩니다.",
         "글도비가 일하는 중입니다.",
       ];
-      let _noticeX = DESIGN_W + 100;     // 현재 X 위치 (오른쪽 밖에서 시작)
+      let _noticeCursor = 0;
+      let _noticeX = DESIGN_W + 100;
       let _noticeText = "";
       let _noticeActive = false;
       let _noticeNextAt = 0;             // 다음 공지 시각 (timeMs)
-      const _NOTICE_INTERVAL = 60000;    // 1분
-      const _NOTICE_SPEED = 0.6;         // px/frame (~36px/sec)
-      const _NOTICE_Y = 50;              // 상단 영역 (캐릭터 위쪽 벽 근처)
+      const _NOTICE_INTERVAL = 24000;
+      const _NOTICE_SPEED = 0.8;
+      const _NOTICE_Y = 40;
 
       function drawNoticeScroll(timeMs) {
         if (!officeState.isRunning) {
@@ -2078,34 +5373,40 @@
           _noticeNextAt = 0;
           return;
         }
-        // 1분마다 새 공지 발동
+        ctx.font = 'bold 10px "Malgun Gothic", sans-serif';
         if (!_noticeActive && timeMs >= _noticeNextAt) {
-          _noticeText = _noticeMessages[Math.floor(Math.random() * _noticeMessages.length)];
-          _noticeX = DESIGN_W + 10;
+          _noticeText = _noticeMessages[_noticeCursor % _noticeMessages.length];
+          _noticeCursor += 1;
+          const introWidth = ctx.measureText(_noticeText).width;
+          _noticeX = -introWidth - 24;
           _noticeActive = true;
           _noticeNextAt = timeMs + _NOTICE_INTERVAL;
         }
         if (!_noticeActive) return;
 
-        // 왼쪽으로 이동
-        _noticeX -= _NOTICE_SPEED;
+        _noticeX += _NOTICE_SPEED;
 
-        // 텍스트 폭 측정 → 완전히 왼쪽 밖으로 나가면 종료
-        ctx.font = '9px "Malgun Gothic", sans-serif';
         const tw = ctx.measureText(_noticeText).width;
-        if (_noticeX < -tw - 10) {
+        if (_noticeX > DESIGN_W + 20) {
           _noticeActive = false;
           return;
         }
 
-        // 양쪽 끝 페이드
-        const fadeIn = Math.min(1, (DESIGN_W - _noticeX) / 60);
-        const fadeOut = Math.min(1, (_noticeX + tw) / 60);
-        const alpha = Math.min(fadeIn, fadeOut) * 0.45;
+        const fadeIn = Math.min(1, (_noticeX + tw) / 70);
+        const fadeOut = Math.min(1, (DESIGN_W - _noticeX) / 70);
+        const alpha = Math.min(fadeIn, fadeOut) * 0.78;
+        const railX = 20;
+        const railY = 24;
+        const railW = DESIGN_W - 40;
+        const railH = 18;
 
         ctx.save();
+        ctx.globalAlpha = 0.68;
+        drawRect(railX, railY, railW, railH, "rgba(15, 23, 42, 0.22)");
+        drawRect(railX, railY, railW, 1, "rgba(255, 255, 255, 0.18)");
+        drawRect(railX, railY + railH - 1, railW, 1, "rgba(15, 23, 42, 0.2)");
         ctx.globalAlpha = alpha;
-        ctx.fillStyle = "#cbd5e1";
+        ctx.fillStyle = "#f8fafc";
         ctx.fillText(_noticeText, _noticeX, _NOTICE_Y);
         ctx.restore();
       }
@@ -2117,6 +5418,8 @@
         ctx.save();
         ctx.scale(canvas.width / DESIGN_W, canvas.height / DESIGN_H);
         drawOfficeBackground(time);
+        drawWallDisplay(time);
+        drawLLMFlow(time);
         agents.forEach((agent, index) => drawAgent(agent, index, time));
         drawModeEffect(time);
         drawNoticeScroll(timeMs);
@@ -2130,18 +5433,22 @@
       let _ws = null;
       let _wsReconnectTimer = null;
 
-      // 장르 key → main_a.py 번호 매핑
-      const GENRE_INDEX_MAP = {
-        wuxia: 1, hunter: 2, investment: 3, fantasy: 4,
-        composer: 5, cooking: 6, alt_history: 7, actor: 8,
-        sports: 9, medical: 10
+      // Desktop-side CLI contract fallback. The main process supplies the same map via IPC.
+      let cliContract = {
+        defaultGenreIndex: 3,
+        projectIndexBase: 1,
+        genreIndexMap: {
+          wuxia: 1, hunter: 2, investment: 3, fantasy: 4,
+          composer: 5, cooking: 6, alt_history: 7, actor: 8,
+          sports: 9, medical: 10
+        }
       };
 
       function _collectInputs() {
         const inputs = {};
         // 장르 인덱스 (main_a.py _select_genre 번호)
         if (projectConfig.genre) {
-          inputs.genre_index = GENRE_INDEX_MAP[projectConfig.genre] || 1;
+          inputs.genre_index = (cliContract.genreIndexMap || {})[projectConfig.genre] || cliContract.defaultGenreIndex || 1;
         }
         // 프로젝트 인덱스 (main_a.py _select_project 번호, 1-based)
         if (projectConfig.projectIndex) {
@@ -2165,6 +5472,32 @@
       // ── 프로젝트 관리 ──
       const projectSelect = document.getElementById("projectSelect");
       const newProjectBtn = document.getElementById("newProjectBtn");
+
+      async function loadProjectSurfaceSettings(projectName) {
+        if (!window.geuldobiDesktop || !projectName) {
+          projectSettingsStore.authorDirectives = "";
+          projectSettingsStore.workGuardYaml = "";
+          syncSettingsUI();
+          return;
+        }
+
+        try {
+          const res = await window.geuldobiDesktop.loadProjectConfigSurfaces(projectName);
+          if (res && res.ok) {
+            projectSettingsStore.authorDirectives = res.authorDirectives || "";
+            projectSettingsStore.workGuardYaml = res.workGuardYaml || "";
+          } else {
+            projectSettingsStore.authorDirectives = "";
+            projectSettingsStore.workGuardYaml = "";
+          }
+        } catch (err) {
+          console.error("Project surface settings load error:", err);
+          projectSettingsStore.authorDirectives = "";
+          projectSettingsStore.workGuardYaml = "";
+        }
+
+        syncSettingsUI();
+      }
 
       async function refreshProjectList() {
         if (!window.geuldobiDesktop) return;
@@ -2192,13 +5525,17 @@
           if (projectSelect.value) {
             projectConfig.project = projectSelect.value;
             projectConfig.projectIndex = res.projects.indexOf(projectSelect.value) + 1;
+          } else {
+            projectConfig.project = null;
           }
+          await loadProjectSurfaceSettings(projectConfig.project);
+          await refreshQualitySummary();
         } catch (err) {
           console.error("Project list error:", err);
         }
       }
 
-      projectSelect.addEventListener("change", () => {
+      projectSelect.addEventListener("change", async () => {
         const name = projectSelect.value;
         if (name) {
           projectConfig.project = name;
@@ -2211,7 +5548,11 @@
           if (window.geuldobiDesktop) {
             window.geuldobiDesktop.saveSettings(settingsStore).catch(() => {});
           }
+        } else {
+          projectConfig.project = null;
         }
+        await loadProjectSurfaceSettings(projectConfig.project);
+        await refreshQualitySummary();
       });
 
       // ── 새 프로젝트 모달 ──
@@ -2230,6 +5571,12 @@
 
       newProjectCancelBtn.addEventListener("click", () => {
         newProjectModal.classList.remove("open");
+      });
+
+      safeOpsConfirmCancel.addEventListener("click", () => closeSafeOpsConfirm(false));
+      safeOpsConfirmOk.addEventListener("click", () => closeSafeOpsConfirm(true));
+      safeOpsConfirmModal.addEventListener("click", (e) => {
+        if (e.target === safeOpsConfirmModal) closeSafeOpsConfirm(false);
       });
 
       newProjectModal.addEventListener("click", (e) => {
@@ -2281,8 +5628,19 @@
           _ws = new WebSocket(wsUrl);
           _ws.onopen = () => {
             _backendConnected = true;
+            officeState.backendConnected = true;
             if (_wsReconnectTimer) { clearTimeout(_wsReconnectTimer); _wsReconnectTimer = null; }
-            appendLog("[System] 백엔드 연결됨");
+            readyBadge.textContent = "백엔드 연결됨";
+            appendLog("[System] 백엔드 연결됨", null, {
+              agent: "manager",
+              summary: "백엔드 연결 완료",
+              detail: "브리지 WebSocket이 열려 런타임 이벤트 수신 가능",
+              bubble: "브리지 연결됨",
+              status: "연결됨",
+              agentDetail: "런타임 이벤트 스트림 수신 가능",
+              significant: true,
+            });
+            refreshQualitySummary();
           };
           _ws.onmessage = (event) => {
             try {
@@ -2293,7 +5651,26 @@
           };
           _ws.onclose = () => {
             _backendConnected = false;
+            officeState.backendConnected = false;
             if (_wsReconnectTimer) clearTimeout(_wsReconnectTimer);
+            readyBadge.textContent = "백엔드 재연결 대기";
+            setCurrentFocus("백엔드 재연결 대기", "3초 뒤 브리지 WebSocket 재연결을 시도함");
+            speakAgent("manager", "재연결 중...", {
+              color: "#92400e",
+              status: "재연결",
+              detail: "브리지 연결이 끊겨 재연결을 시도하는 중",
+              timer: 180,
+              intensity: 0.78,
+            });
+            appendLog("[System] 백엔드 연결 종료 — 재연결 시도", null, {
+              agent: "manager",
+              summary: "백엔드 연결 종료",
+              detail: "WebSocket 연결이 끊겨 3초 뒤 재연결 예정",
+              bubble: "재연결 중...",
+              status: "재연결",
+              agentDetail: "브리지 연결 복구 시도",
+              significant: true,
+            });
             _wsReconnectTimer = setTimeout(_connectWebSocket, 3000);
           };
           _ws.onerror = () => {};
@@ -2304,7 +5681,17 @@
         switch (ev.type) {
           case "run_started":
             startRunningLoop();
-            appendLog(`[System] 실행 시작 (key: ${ev.payload.key})`);
+            syncAgentBaseline();
+            appendLog(`[System] 실행 시작 (key: ${ev.payload.key})`, null, {
+              agent: "manager",
+              stage: officeState.currentStage,
+              summary: `${officeState.currentStageTitle} 실행 시작`,
+              detail: resolveActionMeta(officeState.currentStage, officeState.currentSubKey).summary,
+              bubble: "작업 시작",
+              status: "오케스트레이션",
+              agentDetail: "런타임 subprocess를 기동하고 로그를 수집 중",
+              significant: true,
+            });
             break;
           case "stdout":
             _handleStdoutLine(ev.payload.text);
@@ -2313,19 +5700,75 @@
             _bootPhase = false;
             _autoExitAfterStage0 = false;
             stopLoop();
-            appendLog("[System] 실행 완료");
+            refreshQualitySummary().then(() => {
+              const result = officeState.qualityInsights?.result_summary;
+              if (result?.available) {
+                setCurrentFocus(result.headline || "최근 결과 업데이트", result.next_action || "결과 요약 패널을 확인하세요.");
+              }
+            }).catch(() => {});
+            appendLog("[System] 실행 완료", null, {
+              agent: "manager",
+              stage: officeState.currentStage,
+              summary: `${officeState.currentStageTitle} 완료`,
+              detail: "런타임이 정상 종료되어 결과가 저장됨",
+              bubble: "완료됐어요",
+              status: "완료",
+              agentDetail: "결과 저장 후 대기 상태로 복귀",
+              significant: true,
+            });
             break;
           case "run_failed":
             _bootPhase = false;
             _autoExitAfterStage0 = false;
             stopLoop();
-            appendLog(`[System] 실행 실패 (code: ${ev.payload.returncode})`);
+            {
+              const stdoutTail = Array.isArray(ev.payload.stdout_tail) ? ev.payload.stdout_tail : [];
+              const stderrTail = Array.isArray(ev.payload.stderr_tail) ? ev.payload.stderr_tail : [];
+              const failureBits = [`프로세스 종료 코드 ${ev.payload.returncode} 로 비정상 종료`];
+              if (ev.payload.failure_phase) {
+                failureBits.push(`추정 실패 단계 ${ev.payload.failure_phase}`);
+              }
+              if (ev.payload.last_prompt_step) {
+                failureBits.push(`마지막 프롬프트 ${ev.payload.last_prompt_step}`);
+              }
+              if (typeof ev.payload.duration_ms === "number") {
+                failureBits.push(`실행 시간 ${Math.max(0, Math.round(ev.payload.duration_ms / 100) / 10)}초`);
+              }
+              const tailPreview = stderrTail.length ? stderrTail : stdoutTail;
+              if (tailPreview.length) {
+                failureBits.push(`마지막 로그: ${tailPreview[tailPreview.length - 1]}`);
+              }
+              const bubbleText = ev.payload.failure_phase
+                ? `실패 단계 ${ev.payload.failure_phase}`
+                : "실패 로그 확인";
+            appendLog(`[System] 실행 실패 (code: ${ev.payload.returncode})`, null, {
+              agent: "manager",
+              stage: officeState.currentStage,
+              summary: `${officeState.currentStageTitle} 실패`,
+              detail: failureBits.join(" • "),
+              bubble: bubbleText,
+              bubbleColor: "#991b1b",
+              status: "오류",
+              agentDetail: tailPreview.length ? tailPreview[tailPreview.length - 1] : "실패 원인 분석 필요",
+              significant: true,
+              intensity: 0.84,
+            });
+            }
             break;
           case "run_stopped":
             _bootPhase = false;
             _autoExitAfterStage0 = false;
             stopLoop();
-            appendLog("[System] 중지됨");
+            appendLog("[System] 중지됨", null, {
+              agent: "manager",
+              stage: officeState.currentStage,
+              summary: `${officeState.currentStageTitle} 중지`,
+              detail: "사용자 또는 브리지 요청으로 실행을 중단",
+              bubble: "중지 처리 완료",
+              status: "중지",
+              agentDetail: "런타임을 안전하게 중단",
+              significant: true,
+            });
             break;
           case "prompt_request":
             _showPromptDialog(ev);
@@ -2336,7 +5779,17 @@
           case "prompt_timeout":
             document.getElementById("promptOverlay").classList.remove("open");
             _currentPrompt = null;
-            appendLog(`[System] 프롬프트 타임아웃 — 기본값 적용: ${ev.payload.applied_default}`);
+            setPromptState(false, `기본값 적용: ${ev.payload.applied_default}`);
+            appendLog(`[System] 프롬프트 타임아웃 — 기본값 적용: ${ev.payload.applied_default}`, null, {
+              agent: "manager",
+              stage: officeState.currentStage,
+              summary: "프롬프트 타임아웃",
+              detail: `기본값 ${ev.payload.applied_default} 이 적용됨`,
+              bubble: "기본값 적용",
+              status: "입력 만료",
+              agentDetail: "사용자 응답이 없어 기본값으로 계속 진행",
+              significant: true,
+            });
             break;
         }
       }
@@ -2350,7 +5803,16 @@
         // 부트 단계 종료 — 첫 프롬프트 도착 시 정상 출력 모드로 전환
         if (_bootPhase) {
           _bootPhase = false;
-          appendLog("[System] 초기화 완료 — 항목을 선택해주세요");
+          appendLog("[System] 초기화 완료 — 항목을 선택해주세요", null, {
+            agent: "manager",
+            stage: officeState.currentStage,
+            summary: "초기화 완료",
+            detail: "이제 사용자 선택을 받아 다음 단계로 진행 가능",
+            bubble: "입력 받을 준비 완료",
+            status: "준비 완료",
+            agentDetail: "부트 단계 종료 후 입력 대기",
+            significant: true,
+          });
         }
         // Stage 0 완료 후 메인 메뉴 → 자동 종료 ("5" Exit 전송)
         const payload = data.payload;
@@ -2364,7 +5826,16 @@
             if (window.geuldobiDesktop) {
               window.geuldobiDesktop.resolvePrompt(run_id, pid, "5").catch(() => {});
             }
-            appendLog("[System] Stage 0 완료 — 프로세스 종료 중...");
+            appendLog("[System] Stage 0 완료 — 프로세스 종료 중...", null, {
+              agent: "manager",
+              stage: officeState.currentStage,
+              summary: "Stage 0 마무리",
+              detail: "메인 메뉴 복귀 후 자동 종료 입력을 전달",
+              bubble: "마무리 중",
+              status: "정리",
+              agentDetail: "자동 Exit 입력을 전송하는 중",
+              significant: true,
+            });
             return;
           }
         }
@@ -2400,6 +5871,17 @@
         title.textContent = stepLabels[payload.step_id] || "입력 대기";
         text.textContent = payload.prompt_text || "";
         hint.textContent = payload.default != null ? `기본값: ${payload.default}` : "";
+        setPromptState(true, shortenText(payload.prompt_text || "입력 요청 도착", 90));
+        appendLog(`[System] 입력 대기: ${payload.prompt_text || "사용자 응답 필요"}`, null, {
+          agent: "manager",
+          stage: officeState.currentStage,
+          summary: title.textContent,
+          detail: payload.prompt_text || "사용자 응답 필요",
+          bubble: "입력 부탁드려요",
+          status: "입력 대기",
+          agentDetail: "Mode B 프롬프트 응답을 기다리는 중",
+          significant: true,
+        });
 
         optionsDiv.innerHTML = "";
         inputRow.style.display = "none";
@@ -2483,13 +5965,23 @@
         const { runId, promptId } = _currentPrompt;
         _currentPrompt = null;
         document.getElementById("promptOverlay").classList.remove("open");
+        setPromptState(false, "대기 중인 입력 없음");
 
         if (window.geuldobiDesktop) {
           window.geuldobiDesktop.resolvePrompt(runId, promptId, value).catch((err) => {
             appendLog(`[System] 프롬프트 응답 실패: ${err.message}`);
           });
         }
-        appendLog(`[입력] ${value || "(확인)"}`);
+        appendLog(`[입력] ${value || "(확인)"}`, null, {
+          agent: "manager",
+          stage: officeState.currentStage,
+          summary: "프롬프트 응답 전달",
+          detail: value || "(확인)",
+          bubble: "입력 전달 완료",
+          status: "응답 전달",
+          agentDetail: "사용자 입력을 런타임 stdin으로 전달",
+          significant: true,
+        });
       }
 
       // 프롬프트 확인 버튼
@@ -2515,6 +6007,13 @@
           return;
         }
 
+        const stageHint =
+          /Stage\s*0|style|레퍼런스/i.test(text) ? "stage_0" :
+          /Stage\s*2|Arc|arc/i.test(text) ? "stage_2" :
+          /Stage\s*3|Blueprint/i.test(text) ? "stage_3" :
+          /Stage\s*4|원고|Manuscript|ChiefWriter|CW/i.test(text) ? "stage_4" :
+          officeState.currentStage;
+
         // ── Manager 로그 → 말풍선 연결 ──
         // 파이프라인 상태 마커를 Manager 말풍선에 표시
         const mgrPatterns = [
@@ -2535,7 +6034,13 @@
         for (const p of mgrPatterns) {
           if (p.re.test(text)) {
             const bubble = p.msg || `Stage ${text.match(/Stage\s*(\d)/)?.[1] || "?"} 진행 중`;
-            _managerBubble = { text: bubble, timer: 240 }; // ~4초
+            speakAgent("manager", bubble, {
+              color: "#92400e",
+              status: "오케스트레이션",
+              detail: shortenText(text, 68),
+              timer: 240,
+              intensity: 0.9,
+            });
             break;
           }
         }
@@ -2549,14 +6054,72 @@
           { re: /Candidate|후보/,                     msg: () => "후보 비교 중..." },
           { re: /검수|Audit/i,                        msg: () => "품질 감사 중..." },
         ];
-        // verdict가 아닌 경우에만 상태 표시 (verdict 말풍선이 우선)
-        if (_directorBubble.timer <= 0) {
-          for (const p of dirStatusPatterns) {
-            const m = text.match(p.re);
-            if (m) {
-              _directorBubble = { text: p.msg(m), timer: 300 }; // ~5초
-              break;
-            }
+        for (const p of dirStatusPatterns) {
+          const m = text.match(p.re);
+          if (m) {
+            speakAgent("director", p.msg(m), {
+              color: "#a16207",
+              status: "심사 중",
+              detail: shortenText(text, 72),
+              timer: 300,
+              intensity: 0.96,
+            });
+            break;
+          }
+        }
+
+        const writerPatterns = [
+          { re: /Blueprint.*생성/, msg: "에피소드 골격 조립 중", status: "Blueprint 작성" },
+          { re: /Blueprint.*완료/, msg: "Blueprint 정리 완료", status: "Blueprint 완료" },
+          { re: /원고.*생성|Manuscript.*생성/, msg: "원고 집필 중", status: "원고 작성" },
+          { re: /원고.*완료|Manuscript.*완료/, msg: "원고 초안 완료", status: "초안 완료" },
+        ];
+        for (const p of writerPatterns) {
+          if (p.re.test(text)) {
+            speakAgent("writer", p.msg, {
+              color: "#2563eb",
+              status: p.status,
+              detail: shortenText(text, 72),
+              timer: 240,
+              intensity: 0.92,
+            });
+            break;
+          }
+        }
+
+        const analystPatterns = [
+          { re: /Arc.*생성|Arc.*설계/, msg: "Arc 구조 설계 중", status: "구조 분석" },
+          { re: /advisory|Advisory/, msg: "보조 분석 중", status: "추가 분석" },
+          { re: /스타일.*분석|레퍼런스.*분석|style/i, msg: "스타일 분석 중", status: "스타일 분석" },
+        ];
+        for (const p of analystPatterns) {
+          if (p.re.test(text)) {
+            speakAgent("analyst", p.msg, {
+              color: "#047857",
+              status: p.status,
+              detail: shortenText(text, 72),
+              timer: 240,
+              intensity: 0.88,
+            });
+            break;
+          }
+        }
+
+        const criticPatterns = [
+          { re: /검수|Audit/i, msg: "감사 체크 중", status: "감사" },
+          { re: /validator|consensus|무결성/i, msg: "검증 체인 점검 중", status: "검증" },
+          { re: /patch|retry|재심사|fix_scope/i, msg: "수정 경로 확인 중", status: "수정 라우팅" },
+        ];
+        for (const p of criticPatterns) {
+          if (p.re.test(text)) {
+            speakAgent("critic", p.msg, {
+              color: "#7c3aed",
+              status: p.status,
+              detail: shortenText(text, 72),
+              timer: 220,
+              intensity: 0.84,
+            });
+            break;
           }
         }
 
@@ -2589,11 +6152,22 @@
         }
         if (verdict) {
           const badge = verdict === "PASS_WITH_FIX" ? "PWF" : verdict;
-          appendLog(text, badge);
+          appendLog(text, badge, {
+            agent: "director",
+            stage: stageHint,
+            summary: `Director verdict ${verdict === "PASS_WITH_FIX" ? "PASS_WITH_FIX" : verdict}`,
+            detail: `${shortenText(text, 110)}${score ? ` / ${score}점` : ""}`,
+            bubble: verdict === "PASS_WITH_FIX" ? `PWF ${score}점` : `${verdict} ${score}점`,
+            status: verdict === "PASS_WITH_FIX" ? "재수정 요구" : verdict,
+            agentDetail: score ? `점수 ${score}점` : shortenText(text, 68),
+            bubbleColor: verdict === "PASS" ? "#166534" : verdict === "PASS_WITH_FIX" ? "#854d0e" : "#991b1b",
+            bubbleTimer: 180,
+            significant: true,
+            intensity: 1,
+          });
           // Director 말풍선 표시 (verdict가 상태 말풍선을 덮어씀)
-          const bubbleText = verdict === "PASS_WITH_FIX" ? `PWF ${score}점` : `${verdict} ${score}점`;
-          _directorBubble = { text: bubbleText, timer: 180 }; // ~3초 (60fps)
           _directorScroll = { lines: [], timer: 0, lineIdx: 0 }; // 스크롤 중단
+          setVerdictState(verdict, score);
           if (verdict === "PASS") {
             officeState.mode = "PASS"; setStateBadge("PASS"); setEffectBanner("채택", "pass");
           } else if (verdict === "PASS_WITH_FIX") {
@@ -2609,7 +6183,7 @@
             }
           }, 2500);
         } else {
-          appendLog(text);
+          appendLog(text, null, { stage: stageHint });
         }
       }
 
@@ -2630,6 +6204,7 @@
         if (action === "stage_0_toggle") {
           const subMenu = document.getElementById("stage0SubMenu");
           subMenu.classList.toggle("open");
+          setCurrentFocus("Stage 0 메뉴 토글", subMenu.classList.contains("open") ? "Stage 0 세부 실행 키가 열림" : "Stage 0 세부 실행 키가 접힘");
           return;
         }
 
@@ -2644,13 +6219,37 @@
         }
 
         if (action === "stop") {
+          setCurrentFocus(
+            "중지 요청",
+            officeState.currentStageTitle !== "대기"
+              ? `${officeState.currentStageTitle} 실행을 멈추는 중`
+              : "현재 실행 중인 작업을 멈추는 중"
+          );
+          setPromptState(false, "대기 중인 입력 없음");
           if (window.geuldobiDesktop && _backendConnected) {
             try { await window.geuldobiDesktop.stopRun(); } catch (e) {
-              appendLog("[System] 중지 실패: " + e.message);
+              appendLog("[System] 중지 실패: " + e.message, null, {
+                agent: "manager",
+                summary: "중지 실패",
+                detail: e.message,
+                bubble: "중지 실패",
+                bubbleColor: "#991b1b",
+                status: "오류",
+                agentDetail: "정지 요청이 실패함",
+                significant: true,
+              });
             }
           } else {
             stopLoop();
-            appendLog("[System] 중지됨 (오프라인)");
+            appendLog("[System] 중지됨 (오프라인)", null, {
+              agent: "manager",
+              summary: "오프라인 중지",
+              detail: "백엔드 미연결 상태에서 로컬 UI만 정지 처리",
+              bubble: "오프라인 정지",
+              status: "중지",
+              agentDetail: "로컬 상태만 정리 완료",
+              significant: true,
+            });
           }
           return;
         }
@@ -2676,14 +6275,25 @@
         // ── 파괴적 작업 확인 (검증 통과 후) ──
         const destructiveActions = { wipe: "프로젝트 전체 초기화", reset: "프로젝트 리셋", rewind: "에피소드 되감기", rollback: "에피소드 롤백" };
         if (destructiveActions[action]) {
-          if (!confirm(`[${destructiveActions[action]}] 정말 실행하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`)) {
-            appendLog(`[System] ${label} 취소됨`);
+          const proceed = await confirmSafeOpsAction(action, destructiveActions[action]);
+          if (!proceed) {
+            appendLog(`[System] ${label} 취소됨`, null, {
+              agent: "manager",
+              stage: action,
+              summary: `${label} 취소`,
+              detail: "사용자가 파괴적 작업 확인창에서 취소를 선택",
+              bubble: "취소됐어요",
+              status: "취소",
+              agentDetail: "위험 작업 미실행",
+              significant: true,
+            });
             return;
           }
         }
 
         // ── 스테이지별 에이전트 활성화 ──
-        officeState.currentStage = action;
+        setActionState(action, label, subKey);
+        syncAgentBaseline();
 
         // ── Stage 0 부트 단계: stdout 출력 억제 + 로딩 표시 ──
         if (action === "stage_0") {
@@ -2695,17 +6305,56 @@
         if (window.geuldobiDesktop && _backendConnected) {
           appendLog(action === "stage_0"
             ? `[System] ${label} — 초기화 중... 잠시 기다려주세요`
-            : `[System] ${label} 시작 요청...`);
+            : `[System] ${label} 시작 요청...`, null, {
+            agent: "manager",
+            stage: action,
+            summary: `${label} 실행 요청`,
+            detail: resolveActionMeta(action, subKey).summary,
+            bubble: action === "stage_0" ? "초기화 중..." : "실행 요청 접수",
+            status: "요청 접수",
+            agentDetail: "브리지 /run 호출 대기",
+            significant: true,
+          });
           try {
             const result = await window.geuldobiDesktop.runKey(key, subKey, inputs);
             if (!result.ok) {
-              appendLog(`[System] 실행 실패: ${result.message}`);
+              appendLog(`[System] 실행 실패: ${result.message}`, null, {
+                agent: "manager",
+                stage: action,
+                summary: `${label} 요청 실패`,
+                detail: result.message,
+                bubble: "요청 실패",
+                bubbleColor: "#991b1b",
+                status: "오류",
+                agentDetail: "브리지 호출 실패",
+                significant: true,
+              });
             }
           } catch (e) {
-            appendLog(`[System] 연결 실패: ${e.message}`);
+            appendLog(`[System] 연결 실패: ${e.message}`, null, {
+              agent: "manager",
+              stage: action,
+              summary: `${label} 연결 실패`,
+              detail: e.message,
+              bubble: "연결 실패",
+              bubbleColor: "#991b1b",
+              status: "연결 오류",
+              agentDetail: "IPC 또는 브리지 연결 점검 필요",
+              significant: true,
+            });
           }
         } else {
-          appendLog(`[System] 백엔드 미연결 — 실행 불가`);
+          appendLog(`[System] 백엔드 미연결 — 실행 불가`, null, {
+            agent: "manager",
+            stage: action,
+            summary: `${label} 실행 불가`,
+            detail: "백엔드 연결이 없어 /run 요청을 보낼 수 없음",
+            bubble: "백엔드 미연결",
+            bubbleColor: "#92400e",
+            status: "대기",
+            agentDetail: "브리지 연결 확인 필요",
+            significant: true,
+          });
         }
       }
 
@@ -2748,6 +6397,7 @@
       if (window.geuldobiDesktop && typeof window.geuldobiDesktop.onAppReady === "function") {
         window.geuldobiDesktop.onAppReady(({ reason }) => {
           readyBadge.textContent = `진입 완료: ${reason}`;
+          setCurrentFocus("앱 진입 완료", `Electron 메인 화면 진입 사유: ${reason}`);
         });
       }
 
@@ -2768,6 +6418,22 @@
       const settingsChangeGenre = document.getElementById("settingsChangeGenre");
       const sysToggleSkipBtn = document.getElementById("sysToggleSkip");
       const sysToggleMuteBtn = document.getElementById("sysToggleMute");
+      const workGuardHelperFields = {
+        work_type: document.getElementById("wgWorkType"),
+        one_line_truth: document.getElementById("wgOneLineTruth"),
+        protagonist_weapon: document.getElementById("wgProtagonistWeapon"),
+        business_axes: document.getElementById("wgBusinessAxes"),
+        control_axes: document.getElementById("wgControlAxes"),
+        mandatory_scene_engines: document.getElementById("wgSceneEngines"),
+        forbidden_flattenings: document.getElementById("wgForbiddenFlattenings"),
+        mandatory_lexicon: document.getElementById("wgLexicon"),
+        tracking_slots: document.getElementById("wgTrackingSlots")
+      };
+      const workGuardPresetEnterpriseBtn = document.getElementById("wgPresetEnterprise");
+      const workGuardPresetTalentBtn = document.getElementById("wgPresetTalent");
+      const workGuardPresetSectBtn = document.getElementById("wgPresetSect");
+      const workGuardReloadBtn = document.getElementById("wgReloadFromYaml");
+      const workGuardClearBtn = document.getElementById("wgClearHelper");
 
       // 로컬 설정 저장소 (스텁)
       const settingsStore = {
@@ -2780,6 +6446,243 @@
         targetLength: 5000,
         project: ""
       };
+      const projectSettingsStore = {
+        authorDirectives: "",
+        workGuardYaml: ""
+      };
+      const WORK_GUARD_MANAGED_LIST_KEYS = [
+        "protagonist_weapon",
+        "business_axes",
+        "control_axes",
+        "mandatory_scene_engines",
+        "forbidden_flattenings",
+        "mandatory_lexicon",
+        "tracking_slots"
+      ];
+      let isSyncingWorkGuardHelper = false;
+
+      function splitHelperListValue(value) {
+        return String(value || "")
+          .split(/\r?\n|,/)
+          .map((item) => item.trim())
+          .filter(Boolean);
+      }
+
+      function parseYamlScalarValue(rawValue) {
+        const value = String(rawValue || "").trim();
+        if (!value) return "";
+        if (
+          (value.startsWith("\"") && value.endsWith("\"")) ||
+          (value.startsWith("'") && value.endsWith("'"))
+        ) {
+          return value.slice(1, -1).replace(/\\"/g, "\"").replace(/\\'/g, "'");
+        }
+        return value;
+      }
+
+      function quoteYamlString(value) {
+        return `"${String(value || "").replace(/\\/g, "\\\\").replace(/"/g, "\\\"")}"`;
+      }
+
+      function extractTopLevelSection(yamlText, key) {
+        const lines = String(yamlText || "").split(/\r?\n/);
+        let start = -1;
+        for (let i = 0; i < lines.length; i += 1) {
+          if (new RegExp(`^${key}:\\s*$`).test(lines[i])) {
+            start = i;
+            break;
+          }
+        }
+        if (start === -1) {
+          return { before: String(yamlText || "").trim(), sectionLines: [], after: "" };
+        }
+        let end = lines.length;
+        for (let i = start + 1; i < lines.length; i += 1) {
+          const line = lines[i];
+          if (!line.trim()) continue;
+          if (!/^\s/.test(line)) {
+            end = i;
+            break;
+          }
+        }
+        return {
+          before: lines.slice(0, start).join("\n").trim(),
+          sectionLines: lines.slice(start, end),
+          after: lines.slice(end).join("\n").trim()
+        };
+      }
+
+      function extractUnmanagedWorkIdentityBlocks(sectionLines) {
+        const blocks = [];
+        const lines = Array.isArray(sectionLines) ? sectionLines.slice(1) : [];
+        for (let i = 0; i < lines.length; ) {
+          const line = lines[i];
+          if (!line.trim()) {
+            i += 1;
+            continue;
+          }
+          const match = line.match(/^  ([A-Za-z0-9_]+):(.*)$/);
+          if (!match) {
+            i += 1;
+            continue;
+          }
+          const key = match[1];
+          const block = [line];
+          i += 1;
+          while (i < lines.length) {
+            const next = lines[i];
+            if (!next.trim()) {
+              block.push(next);
+              i += 1;
+              continue;
+            }
+            if (/^  [A-Za-z0-9_]+:/.test(next)) break;
+            if (/^    /.test(next) || /^  - /.test(next)) {
+              block.push(next);
+              i += 1;
+              continue;
+            }
+            break;
+          }
+          if (!(key in workGuardHelperFields)) {
+            blocks.push(block.join("\n").trimEnd());
+          }
+        }
+        return blocks;
+      }
+
+      function parseHelperStateFromYaml(yamlText) {
+        const result = {};
+        Object.keys(workGuardHelperFields).forEach((key) => {
+          result[key] = "";
+        });
+        const { sectionLines } = extractTopLevelSection(yamlText, "work_identity");
+        if (!sectionLines.length) return result;
+        const lines = sectionLines.slice(1);
+        for (let i = 0; i < lines.length; i += 1) {
+          const line = lines[i];
+          const match = line.match(/^  ([A-Za-z0-9_]+):(.*)$/);
+          if (!match) continue;
+          const key = match[1];
+          if (!(key in workGuardHelperFields)) continue;
+          const inlineValue = match[2].trim();
+          if (WORK_GUARD_MANAGED_LIST_KEYS.includes(key)) {
+            const items = [];
+            let j = i + 1;
+            while (j < lines.length) {
+              const listMatch = lines[j].match(/^    -\s+(.*)$/);
+              if (!listMatch) break;
+              items.push(parseYamlScalarValue(listMatch[1]));
+              j += 1;
+            }
+            result[key] = items.join("\n");
+            i = j - 1;
+          } else {
+            result[key] = parseYamlScalarValue(inlineValue);
+          }
+        }
+        return result;
+      }
+
+      function collectWorkGuardHelperState() {
+        const state = {};
+        Object.entries(workGuardHelperFields).forEach(([key, element]) => {
+          state[key] = element ? element.value.trim() : "";
+        });
+        return state;
+      }
+
+      function buildManagedWorkIdentitySection(state, unmanagedBlocks = []) {
+        const helperState = state || collectWorkGuardHelperState();
+        const lines = ["work_identity:"];
+        if (helperState.work_type) {
+          lines.push(`  work_type: ${quoteYamlString(helperState.work_type)}`);
+        }
+        if (helperState.one_line_truth) {
+          lines.push(`  one_line_truth: ${quoteYamlString(helperState.one_line_truth)}`);
+        }
+        WORK_GUARD_MANAGED_LIST_KEYS.forEach((key) => {
+          const items = splitHelperListValue(helperState[key]);
+          if (!items.length) return;
+          lines.push(`  ${key}:`);
+          items.forEach((item) => {
+            lines.push(`    - ${quoteYamlString(item)}`);
+          });
+        });
+        unmanagedBlocks.filter(Boolean).forEach((block) => {
+          lines.push(block);
+        });
+        if (lines.length === 1) {
+          return unmanagedBlocks.length ? ["work_identity:", ...unmanagedBlocks].join("\n") : "";
+        }
+        return lines.join("\n");
+      }
+
+      function mergeHelperStateIntoYaml(yamlText, state = collectWorkGuardHelperState()) {
+        const { before, sectionLines, after } = extractTopLevelSection(yamlText, "work_identity");
+        const unmanagedBlocks = extractUnmanagedWorkIdentityBlocks(sectionLines);
+        const workIdentitySection = buildManagedWorkIdentitySection(state, unmanagedBlocks);
+        return [before, workIdentitySection, after].filter((part) => part && part.trim()).join("\n\n").trim();
+      }
+
+      function fillWorkGuardHelperFields(state) {
+        isSyncingWorkGuardHelper = true;
+        Object.entries(workGuardHelperFields).forEach(([key, element]) => {
+          if (element) element.value = state?.[key] || "";
+        });
+        isSyncingWorkGuardHelper = false;
+      }
+
+      function syncWorkGuardHelperFromYaml(yamlText) {
+        fillWorkGuardHelperFields(parseHelperStateFromYaml(yamlText));
+      }
+
+      function syncWorkGuardTextareaFromHelper() {
+        if (isSyncingWorkGuardHelper) return;
+        const workGuardEl = document.getElementById("workGuardYaml");
+        if (!workGuardEl) return;
+        workGuardEl.value = mergeHelperStateIntoYaml(workGuardEl.value);
+      }
+
+      function applyWorkGuardPreset(presetName) {
+        const presets = {
+          enterprise: {
+            work_type: "기업 타이쿤 성장물",
+            one_line_truth: "사업 축과 통제권을 차근차근 장악해 회사의 체급을 키우는 이야기",
+            protagonist_weapon: "시장 감각\n협상 설계",
+            business_axes: "핵심 섹터\n인재 라인\n거래 구조",
+            control_axes: "지분\n의사결정권\n유통 채널",
+            mandatory_scene_engines: "판 읽기\n인재 포섭\n권한 장악",
+            forbidden_flattenings: "모든 갈등을 숫자 계산으로만 해결하기",
+            mandatory_lexicon: "라인\n협상\n의사결정",
+            tracking_slots: "핵심 인재 라인\n주요 사업 축\n적대 세력 움직임"
+          },
+          talent: {
+            work_type: "엔터/인재 타이쿤 성장물",
+            one_line_truth: "사람을 발굴하고 포지셔닝해 스타와 포맷을 IP로 키우는 이야기",
+            protagonist_weapon: "인재 판별\n포지셔닝 감각",
+            business_axes: "배우\n연습생\n포맷 IP",
+            control_axes: "캐스팅 권한\n편성권\n라이선스",
+            mandatory_scene_engines: "인재 발굴\n포지셔닝\n팬덤 반응",
+            forbidden_flattenings: "사람 대신 숫자만으로 승부 보기",
+            mandatory_lexicon: "캐스팅\n오디션\n데뷔조",
+            tracking_slots: "핵심 배우 라인\n데뷔조 성장\n팬덤 반응"
+          },
+          sect: {
+            work_type: "문파/후계 성장물",
+            one_line_truth: "문파의 사람과 질서를 키워 세력을 다시 세우는 이야기",
+            protagonist_weapon: "사람 보는 눈\n전승 설계",
+            business_axes: "핵심 제자\n장로 라인\n외부 연합",
+            control_axes: "문파 위상\n전승권\n배분권",
+            mandatory_scene_engines: "후배 성장\n서열 재편\n외부 충돌",
+            forbidden_flattenings: "모든 문제를 주인공 1인 무력으로만 해결하기",
+            mandatory_lexicon: "문파\n사형\n전승",
+            tracking_slots: "핵심 후배 라인\n문파 내부 서열\n외부 적대 세력"
+          }
+        };
+        fillWorkGuardHelperFields(presets[presetName] || {});
+        syncWorkGuardTextareaFromHelper();
+      }
 
       function openSettings() {
         syncSettingsUI();
@@ -2827,6 +6730,14 @@
         settingsGenreDisplay.textContent = projectConfig.genre
           ? (typeof GENRE_LABELS !== "undefined" ? GENRE_LABELS[projectConfig.genre] : projectConfig.genre)
           : "미설정";
+
+        const authorDirectivesEl = document.getElementById("authorDirectives");
+        if (authorDirectivesEl) authorDirectivesEl.value = projectSettingsStore.authorDirectives || "";
+        const workGuardEl = document.getElementById("workGuardYaml");
+        if (workGuardEl) {
+          workGuardEl.value = projectSettingsStore.workGuardYaml || "";
+          syncWorkGuardHelperFromYaml(workGuardEl.value);
+        }
       }
 
       // 탭 전환
@@ -2917,6 +6828,27 @@
         // openGenreModal은 이후 JS에서 정의됨 — 이름으로 참조
         if (typeof openGenreModal === "function") openGenreModal();
       });
+      Object.values(workGuardHelperFields).forEach((element) => {
+        if (!element) return;
+        element.addEventListener("input", () => {
+          syncWorkGuardTextareaFromHelper();
+        });
+      });
+      document.getElementById("workGuardYaml").addEventListener("change", (event) => {
+        syncWorkGuardHelperFromYaml(event.target.value);
+      });
+      workGuardPresetEnterpriseBtn.addEventListener("click", () => applyWorkGuardPreset("enterprise"));
+      workGuardPresetTalentBtn.addEventListener("click", () => applyWorkGuardPreset("talent"));
+      workGuardPresetSectBtn.addEventListener("click", () => applyWorkGuardPreset("sect"));
+      workGuardReloadBtn.addEventListener("click", () => {
+        const workGuardEl = document.getElementById("workGuardYaml");
+        syncWorkGuardHelperFromYaml(workGuardEl ? workGuardEl.value : "");
+        appendLog("[설정] 작품 정체성 도우미를 현재 YAML 기준으로 다시 읽었습니다.");
+      });
+      workGuardClearBtn.addEventListener("click", () => {
+        fillWorkGuardHelperFields({});
+        syncWorkGuardTextareaFromHelper();
+      });
 
       // 시스템 탭 — 연출 토글 버튼
       sysToggleSkipBtn.addEventListener("click", () => {
@@ -2951,6 +6883,9 @@
 
       // 저장
       settingsSave.addEventListener("click", async () => {
+        const authorDirectivesEl = document.getElementById("authorDirectives");
+        const workGuardEl = document.getElementById("workGuardYaml");
+        syncWorkGuardTextareaFromHelper();
         settingsStore.apiKey1 = apiKey1Input.value.trim();
         settingsStore.slackWebhook = document.getElementById("slackWebhook").value.trim();
         settingsStore.timeout = parseInt(document.getElementById("sliderTimeout").value, 10);
@@ -2959,6 +6894,8 @@
         settingsStore.targetLength = parseInt(document.getElementById("targetLength").value, 10);
         settingsStore.genre = projectConfig.genre || null;
         settingsStore.project = projectConfig.project || "";
+        projectSettingsStore.authorDirectives = authorDirectivesEl ? authorDirectivesEl.value : "";
+        projectSettingsStore.workGuardYaml = workGuardEl ? workGuardEl.value : "";
         for (let i = 2; i <= 9; i += 1) {
           const el = document.getElementById(`apiKey${i}`);
           if (el) settingsStore.extraKeys[i] = el.value.trim();
@@ -2970,7 +6907,17 @@
         if (window.geuldobiDesktop) {
           try {
             const res = await window.geuldobiDesktop.saveSettings(settingsStore);
-            appendLog(res && res.ok ? "[설정] 저장 완료" : "[설정] 저장 실패");
+            let projectSaveRes = { ok: true };
+            if (projectConfig.project) {
+              projectSaveRes = await window.geuldobiDesktop.saveProjectConfigSurfaces(
+                projectConfig.project,
+                projectSettingsStore.authorDirectives,
+                projectSettingsStore.workGuardYaml
+              );
+            }
+            appendLog(
+              res && res.ok && projectSaveRes && projectSaveRes.ok ? "[설정] 저장 완료" : "[설정] 저장 실패"
+            );
           } catch (err) {
             appendLog("[설정] 저장 오류: " + err.message);
           }
@@ -3156,6 +7103,7 @@
           }
         } catch (err) {
           container.innerHTML = '<div class="material-empty">로드 실패</div>';
+          appendLog(`[재료] ${folder} 목록 로드 실패: ${err.message}`);
         }
       }
 
@@ -3163,24 +7111,33 @@
         const importBibleBtn = document.getElementById("importBibleBtn");
         const importTreatmentBtn = document.getElementById("importTreatmentBtn");
 
+        async function handleMaterialImport(folder, label, containerId) {
+          if (!window.geuldobiDesktop) return;
+          try {
+            const res = await window.geuldobiDesktop.importMaterialFile(folder);
+            if (res.ok && res.imported && res.imported.length > 0) {
+              appendLog(`[재료] ${label} 추가: ${res.imported.join(", ")}`);
+              await refreshMaterialList(folder, containerId);
+              return;
+            }
+            if (res && res.message && res.message !== "cancelled") {
+              appendLog(`[재료] ${label} 추가 실패: ${res.message}`);
+            } else {
+              appendLog(`[재료] ${label} 추가 취소`);
+            }
+          } catch (err) {
+            appendLog(`[재료] ${label} 추가 오류: ${err.message}`);
+          }
+        }
+
         if (importBibleBtn) {
           importBibleBtn.addEventListener("click", async () => {
-            if (!window.geuldobiDesktop) return;
-            const res = await window.geuldobiDesktop.importMaterialFile("bible");
-            if (res.ok && res.imported) {
-              appendLog(`[재료] Bible 추가: ${res.imported.join(", ")}`);
-              refreshMaterialList("bible", "bibleFileList");
-            }
+            await handleMaterialImport("bible", "Bible", "bibleFileList");
           });
         }
         if (importTreatmentBtn) {
           importTreatmentBtn.addEventListener("click", async () => {
-            if (!window.geuldobiDesktop) return;
-            const res = await window.geuldobiDesktop.importMaterialFile("treatments");
-            if (res.ok && res.imported) {
-              appendLog(`[재료] Treatment 추가: ${res.imported.join(", ")}`);
-              refreshMaterialList("treatments", "treatmentFileList");
-            }
+            await handleMaterialImport("treatments", "Treatment", "treatmentFileList");
           });
         }
 
@@ -3214,7 +7171,7 @@
         const filter = logFilterSelect.value;
         const rows = logStream.querySelectorAll(".log-row");
         for (const row of rows) {
-          const msg = (row.querySelector(".log-msg")?.textContent || "").toLowerCase();
+          const msg = (row.textContent || "").toLowerCase();
           const badge = row.querySelector(".verdict-badge");
           const badgeText = badge ? badge.textContent.trim() : "";
           let show = true;
@@ -3227,16 +7184,46 @@
       logSearchInput.addEventListener("input", applyLogFilter);
       logFilterSelect.addEventListener("change", applyLogFilter);
 
+      renderMissionBoard();
+      renderPipelineStrip();
+      renderQualityRadar();
+      renderQualityInsights();
+      renderAgentBoard();
+      renderEventFeed();
+      setStateBadge("IDLE");
+      setInterval(() => {
+        renderMissionBoard();
+        renderAgentBoard();
+      }, 500);
+
       initMaterialPanel();
       updateGenreGating();
 
-      appendLog("[System] UI 초기화 완료");
+      appendLog("[System] UI 초기화 완료", null, {
+        agent: "manager",
+        summary: "UI 초기화 완료",
+        detail: "사무실 HUD, 로그 스트림, 설정 패널이 준비됨",
+        bubble: "대시보드 준비 완료",
+        status: "대기",
+        agentDetail: "사용자 입력을 받을 수 있음",
+        significant: true,
+      });
       updateToggleLabels();
 
       // 영속 설정 로드 (AppData JSON)
       if (window.geuldobiDesktop) {
         (async () => {
           try {
+            if (typeof window.geuldobiDesktop.getCliContract === "function") {
+              const contract = await window.geuldobiDesktop.getCliContract();
+              if (contract && typeof contract === "object") {
+                cliContract = {
+                  ...cliContract,
+                  ...contract,
+                  genreIndexMap: contract.genreIndexMap || cliContract.genreIndexMap,
+                };
+              }
+            }
             const saved = await window.geuldobiDesktop.loadSettings();
             if (saved && typeof saved === "object") {
               settingsStore.apiKey1 = saved.apiKey1 || "";
@@ -3265,11 +7252,28 @@
         _connectWebSocket();
         setTimeout(() => {
           if (!_backendConnected) {
-            appendLog("[System] 백엔드 미감지 — 설정 확인 후 앱 재시작 필요");
+            appendLog("[System] 백엔드 미감지 — 설정 확인 후 앱 재시작 필요", null, {
+              agent: "manager",
+              summary: "백엔드 미감지",
+              detail: "5초 내 WebSocket 연결 실패, 설정 또는 브리지 상태 확인 필요",
+              bubble: "백엔드 확인 필요",
+              bubbleColor: "#92400e",
+              status: "점검 필요",
+              agentDetail: "브리지 프로세스 상태 점검 필요",
+              significant: true,
+            });
           }
         }, 5000);
       } else {
-        appendLog("[System] Electron 환경 외부 — 기능 제한됨");
+        appendLog("[System] Electron 환경 외부 — 기능 제한됨", null, {
+          agent: "manager",
+          summary: "외부 브라우저 모드",
+          detail: "IPC/파일 시스템/런타임 제어 기능이 제한됨",
+          bubble: "브라우저 모드",
+          status: "제한 모드",
+          agentDetail: "데스크톱 전용 기능 비활성",
+          significant: true,
+        });
       }
       requestAnimationFrame(draw);
     </script>

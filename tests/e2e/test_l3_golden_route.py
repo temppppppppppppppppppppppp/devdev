@@ -50,13 +50,13 @@ def _make_mock_arc(arc_no: int, ep_start: int, source_block: dict) -> dict:
     tactical_seed = f"arc {arc_no} {block_title} {context_seed[:80]}".strip()
     tactical_doc = ((tactical_seed + " detailed progression and consequence sentence. ") * 120).strip()
 
-    ep_end = ep_start + 4
+    ep_end = ep_start + 3
     return {
         "arc_no": arc_no,
         "global_arc_no": arc_no,
         "ep_start": ep_start,
         "ep_end": ep_end,
-        "ep_count": 5,
+        "ep_count": 4,
         "title": f"Arc {arc_no}",
         "tactical_doc": tactical_doc,
         "beat_sequence": [

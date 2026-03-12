@@ -172,6 +172,25 @@ class TestTitleConsistency:
         title_warns = [w for w in warns if w["check"] == "직함 변경"]
         assert len(title_warns) == 0
 
+    def test_medical_promotion_allowed_within_same_domain(self):
+        db = MagicMock()
+        db.get_manuscript.return_value = {"manuscript": "김도윤 레지던트가 수술방으로 뛰어갔다."}
+        checker = NumericConsistencyChecker(db=db)
+        text = "김도윤 전문의가 첫 집도를 맡았다."
+        warns = checker.check(text, ep_num=3)
+        title_warns = [w for w in warns if w["check"] == "직함 변경"]
+        assert len(title_warns) == 0
+
+    def test_cross_domain_title_change_is_not_treated_as_promotion(self):
+        db = MagicMock()
+        db.get_manuscript.return_value = {"manuscript": "김도윤 레지던트가 수술방으로 뛰어갔다."}
+        checker = NumericConsistencyChecker(db=db)
+        text = "김도윤 박사가 연구실로 향했다."
+        warns = checker.check(text, ep_num=3)
+        title_warns = [w for w in warns if w["check"] == "직함 변경"]
+        assert len(title_warns) >= 1
+        assert "무단 변경" in title_warns[0]["text"]
+
     def test_no_db(self, checker):
         text = "박민수 부장이 회의에 참석했다."
         warns = checker.check(text, ep_num=3)
