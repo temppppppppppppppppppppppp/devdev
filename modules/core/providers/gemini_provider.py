@@ -36,6 +36,8 @@ class GeminiProvider:
                 "prompt_token_count": getattr(usage_meta, "prompt_token_count", None),
                 "candidates_token_count": getattr(usage_meta, "candidates_token_count", None),
                 "total_token_count": getattr(usage_meta, "total_token_count", None),
+                "thoughts_token_count": getattr(usage_meta, "thoughts_token_count", None),
+                "cached_content_token_count": getattr(usage_meta, "cached_content_token_count", None),
             }
 
         return LLMResponse(

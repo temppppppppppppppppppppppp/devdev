@@ -23,3 +23,14 @@ def test_report_soft_failure_relays_to_audit_event(tmp_path):
     assert call_args[2]["component"] == "validation_orchestrator"
     assert call_args[2]["ep_num"] == 12
     assert (tmp_path / "logs" / "soft_failures.jsonl").exists()
+
+
+def test_resolve_soft_failure_log_dir_ignores_magicmock_project_root():
+    orchestrator = ValidationOrchestrator(config={}, client=None, context={})
+    project = MagicMock()
+    project.paths.root = MagicMock()
+    project.db.db_path = None
+
+    resolved = orchestrator._resolve_soft_failure_log_dir({"current_project": project})
+
+    assert resolved is None

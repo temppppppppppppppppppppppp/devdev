@@ -3,6 +3,14 @@
 작성일: 2026-03-12  
 문서 역할: `PASS_WITH_FIX / inplace / Stage 3·4 semantics / logging·analytics / rerun gate`를 하나의 phase roadmap으로 묶는 최상위 SSOT  
 기준 근거: `docs/2026-03-12/pass-with-fix-partial-fix-3pass-audit.md`
+Phase 1 실행 스펙: `docs/2026-03-12/pass-with-fix-phase1-execution-spec.md`
+
+참고 문서:
+
+- `docs/2026-03-12/TF-S3-context-contract-audit.md`
+  - 사용 목적: `Stage 3 external verdict`, `S3 context contract`, `S3→S4 handoff` 판단을 다시 잠글 때 참조
+- `docs/2026-03-12/stage4-context-contract-full-survey-3pass-audit.md`
+  - 사용 목적: `CW-Director context contract`, `PASS_WITH_FIX local patch feedback 축약`, `Stage 4 patch provenance` retained finding을 roadmap에 연결할 때 참조
 
 ## 0. 문서 위치와 역할
 
@@ -69,6 +77,7 @@
 - 기본값: `PASS_WITH_FIX`는 `transient/internal verdict`
 - 외부 최종 verdict 기본안: `PASS` 또는 `REJECT`만 허용
 - Stage 3는 예외 허용이 아니라 기본안에 맞춰 재정렬하는 방향을 권고
+- 단, `PASS_WITH_WARNING`은 이번 initiative에서 별도 degraded-success verdict로 유지하며 `PASS_WITH_FIX` 정리와 혼합하지 않는다
 
 ### 4.2 Stage 4 final semantics
 
@@ -138,6 +147,25 @@
 
 이 계약을 기준으로 나머지 문서와 운영 체크리스트를 정렬한다.
 
+### 6.1 patch_trace 계약
+
+Phase 4 이후 `episode_production.jsonl`은 `patch_trace`를 round trace의 최소 계측 필드로 포함한다.
+
+- `patch_strategy`
+- `patch_targets`
+- `unchanged_ratio`
+- `fallback_reason`
+- `focus`
+- `structural_attempted`
+
+의도는 다음과 같다.
+
+- `director_selections`는 초기 Director 판단을 저장한다.
+- `stage_attempts`와 `pass_rate_monitor`는 최종 success/failure semantics를 저장한다.
+- `episode_production`은 그 사이 lifecycle을 보존하며, 특히 `PASS_WITH_FIX -> patch -> PASS/REJECT`의 구조적 수정 경로를 `patch_trace`로 노출한다.
+
+`patch_trace`는 full artifact snapshot의 대체재가 아니라, limited rerun과 full rerun에서 structural inplace가 실제로 작동했는지 판단하는 hard gate용 최소 계측이다.
+
 ## 7. phase 로드맵
 
 아래 순서는 고정한다.
@@ -160,6 +188,7 @@
 
 성공 기준:
 - 문서상 계약 충돌이 사라진다.
+- `pass-with-fix-phase1-execution-spec.md`만 보고 구현자가 착수 가능하다.
 
 ROI:
 - 높음
@@ -249,6 +278,7 @@ rollback 관점:
 
 성공 기준:
 - structural inplace의 성공/실패 원인을 추적할 수 있다.
+- `episode_production.patch_trace`와 `FailureAnalyzer.patch_trace_summary()`만으로 canary rerun의 go/no-go 판단이 가능하다.
 
 ROI:
 - 중상
@@ -316,12 +346,17 @@ rollback 관점:
 - 새 project
 - 실패 run 보존
 - sink 계약 검증
+- `patch_trace` hard gate 검증
 
 선행조건:
 - Phase 1~6 green
 
 성공 기준:
 - 결과 해석이 가능하고, initial/final verdict 의미가 혼동되지 않는다.
+- local issue 기반 `PASS_WITH_FIX`가 발생했다면 `patch_strategy=inplace_patch_structural`이 최소 1회는 관측된다.
+- `avg_unchanged_ratio >= 0.70`
+- `fallback_reason` 중 `missing_patched_blocks`, `no_usable_patched_blocks`, `patched_output_too_short`는 0회이거나, 발생 시 문서상 명시적 사유와 승인 메모가 남는다.
+- local issue rerun에서 `top_patch_targets`가 비어 있지 않다.
 
 ROI:
 - 높음
@@ -339,6 +374,8 @@ rollback 관점:
 
 성공 기준:
 - draft count, audit tag, stage attempts, pass_rate_monitor, episode_production 해석이 일치한다.
+- limited rerun에서 확인한 `patch_trace` 기준선이 full rerun에서도 유지되거나, 편차 사유가 운영 메모로 설명된다.
+- `patch_trace_summary()`와 raw `episode_production.jsonl`이 서로 모순되지 않는다.
 
 ROI:
 - 최종 검증

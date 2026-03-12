@@ -9,12 +9,15 @@ V68 lazy init: state_tracker, world_state, fact_ledger를 self.app에 할당
 
 import json as _json
 import logging as _logging
+import time as _time
 import traceback as _traceback
 
+from modules.core.artifact_logging import build_candidate_key, snapshot_logged_artifact
 from modules.core.constants import ContextLimits, Emojis, ErrorMessages
 from modules.core.continuity_pin_guard import apply_continuity_pins
 from modules.core.context_advisor import RetrievalSources
 from modules.core.fact_ledger import summarize_fact_ledger_numbers_block
+from modules.core.logging_keys import build_attempt_key, resolve_logging_session_id
 from modules.core.semantic_query_broker import SemanticQueryBroker
 from modules.core.tactical_utils import extract_episode_tactical
 
@@ -24,6 +27,70 @@ except Exception:  # notifier 미설치 시 비차단
     notifier = None
 
 _DB_ADVISORY_NOTICE = "(Python 자동 감지 — 오탐 가능, 참고용)"
+
+
+def _normalize_semantic_source_counts(source_counts: dict | None) -> dict[str, int]:
+    if not isinstance(source_counts, dict):
+        return {}
+    normalized: dict[str, int] = {}
+    for key, value in source_counts.items():
+        name = str(key or "").strip()
+        if not name:
+            continue
+        try:
+            count = int(value)
+        except (TypeError, ValueError):
+            continue
+        if count > 0:
+            normalized[name] = count
+    return normalized
+
+
+def _build_stage3_observability_flags(meta: dict | None) -> dict:
+    if not isinstance(meta, dict):
+        return {}
+    source_counts = _normalize_semantic_source_counts(meta.get("source_counts"))
+    coverage_warnings = [
+        str(item).strip()
+        for item in (meta.get("coverage_warnings") or [])
+        if str(item or "").strip()
+    ]
+    flags = {
+        "semantic_ctx_chars": int(meta.get("semantic_ctx_chars") or 0),
+        "semantic_ctx_sources": sorted(source_counts.keys()),
+        "semantic_ctx_source_counts": source_counts,
+        "coverage_warnings": coverage_warnings,
+        "advisor_path_used": bool(meta.get("advisor_path_used", False)),
+        "planned_slots_count": int(meta.get("planned_slots_count") or 0),
+        "work_focus_present": bool(meta.get("work_focus_present", False)),
+    }
+    return {key: value for key, value in flags.items() if value not in ("", [], {}, None, 0, False)}
+
+
+def _classify_stage3_failure_category(pipeline_result: dict) -> str | None:
+    if not isinstance(pipeline_result, dict):
+        return None
+
+    verdict = str(pipeline_result.get("final_verdict", "") or "").upper()
+    error_text = str(pipeline_result.get("error", "") or "").strip()
+    if verdict == "ERROR" or error_text:
+        return "generation_error"
+    if pipeline_result.get("quality_gate_failed"):
+        return "quality_gate"
+
+    phases = pipeline_result.get("phases", {})
+    validate = phases.get("validate", {}) if isinstance(phases, dict) else {}
+    if isinstance(validate, dict):
+        contradictions = validate.get("contradictions")
+        if isinstance(contradictions, list) and contradictions:
+            return "validation_contradiction"
+        if validate.get("issues_count"):
+            return "validation_issue"
+
+    reject_reason = str(pipeline_result.get("reject_reason", "") or "")
+    if "continuity" in reject_reason.lower():
+        return "continuity"
+    return "reject"
 
 
 def _build_stage3_prompt_version() -> str | None:
@@ -758,7 +825,6 @@ class Stage3Orchestrator:
         # 결과 처리
         if blueprint and pipeline_result.get("final_verdict") in (
             "PASS",
-            "PASS_WITH_FIX",
             "PASS_WITH_WARNING",
         ):  # [TF-32-S3]
             return self._handle_success(
@@ -918,10 +984,13 @@ class Stage3Orchestrator:
         ctx = self.ctx
         from modules.core.spinners import StageSpinner
 
+        _started_at = _time.perf_counter()
         try:
             _bp_semantic_ctx = ""
             _s3_work_focus: dict[str, object] = {}
             _s3_plan = None
+            _source_counts: dict[str, int] = {}
+            _coverage_warnings: list[str] = []
 
             # [S3-I1] Smart Context Retrieval — 과거 유사 Blueprint 참조
             try:
@@ -1138,7 +1207,6 @@ class Stage3Orchestrator:
             _source_counts = _summarize_retrieval_sources(_s3_plan)
             if not _source_counts and _bp_semantic_ctx:
                 _source_counts = {"legacy_semantic_context": 1}
-            _coverage_warnings: list[str] = []
             if _s3_work_focus and not _work_focus_advisory:
                 _coverage_warnings.append("missing_work_slot_summary")
             if _s3_work_focus and _s3_plan and not any(
@@ -1237,6 +1305,17 @@ class Stage3Orchestrator:
             blueprint = None
             pipeline_result = {"final_verdict": "ERROR", "error": str(gen_err)[:200]}
 
+        if not isinstance(pipeline_result, dict):
+            pipeline_result = {"final_verdict": "ERROR", "error": "invalid_pipeline_result"}
+        pipeline_result["_stage3_duration_ms"] = max(0, int((_time.perf_counter() - _started_at) * 1000))
+        pipeline_result["_stage3_observability"] = {
+            "semantic_ctx_chars": len(_bp_semantic_ctx),
+            "source_counts": _normalize_semantic_source_counts(_source_counts),
+            "coverage_warnings": list(_coverage_warnings),
+            "advisor_path_used": bool(_s3_plan),
+            "planned_slots_count": len(getattr(_s3_plan, "slots", []) or []) if _s3_plan else 0,
+            "work_focus_present": bool(_s3_work_focus),
+        }
         return blueprint, pipeline_result
 
     # ─────────────────────────────────────────────────────────────
@@ -1250,6 +1329,8 @@ class Stage3Orchestrator:
         _final_verdict = pipeline_result.get("final_verdict", "PASS")
         _quality_gate_failed = bool(pipeline_result.get("quality_gate_failed", False))
         _quality_risk = bool(pipeline_result.get("quality_risk", False) or _quality_gate_failed)
+        _observability_flags = _build_stage3_observability_flags(pipeline_result.get("_stage3_observability"))
+        _duration_ms = int(pipeline_result.get("_stage3_duration_ms") or 0) or None
 
         # [LOG-1] 판정 경로 세션 로깅
         _sl = getattr(ctx, "session_logger", None)
@@ -1269,18 +1350,57 @@ class Stage3Orchestrator:
 
         try:
             _db = getattr(getattr(ctx, "current_project", None), "db", None)
+            _attempt_num = self._extract_stage3_attempt_num(pipeline_result)
+            _session_id = resolve_logging_session_id(getattr(ctx, "current_project", None))
+            _attempt_key = build_attempt_key(
+                stage=3,
+                ep_num=working_ep,
+                arc_num=arc_no,
+                attempt_num=_attempt_num,
+                session_id=_session_id,
+            )
+            _score = pipeline_result.get("last_score") or pipeline_result.get("phases", {}).get("generate", {}).get(
+                "selected_score", 0
+            )
+            _selected_strategy = str(
+                pipeline_result.get("phases", {}).get("generate", {}).get("selected_strategy", "unknown") or "unknown"
+            )
+            _candidate_key = build_candidate_key(strategy=_selected_strategy, fallback="stage3")
+            _artifact_meta = snapshot_logged_artifact(
+                getattr(ctx, "current_project", None),
+                stage=3,
+                ep_num=working_ep,
+                arc_num=arc_no,
+                attempt_num=_attempt_num,
+                candidate_key=_candidate_key,
+                artifact_kind="final_blueprint",
+                payload=blueprint if isinstance(blueprint, dict) else None,
+            )
+            if not isinstance(_score, int):
+                try:
+                    _score = int(_score)
+                except (ValueError, TypeError):
+                    _score = 0
+            if getattr(ctx, "pass_rate_monitor", None):
+                try:
+                    ctx.pass_rate_monitor.record_attempt(
+                        stage=3,
+                        episode=working_ep,
+                        arc=arc_no,
+                        attempt_num=_attempt_num,
+                        success=_final_verdict in ("PASS", "PASS_WITH_WARNING"),
+                        generation_method="blueprint",
+                        attempt_key=_attempt_key,
+                        final_verdict=str(_final_verdict),
+                        candidate_key=_candidate_key,
+                        content_hash=_artifact_meta["content_hash"],
+                        artifact_path=_artifact_meta["artifact_path"],
+                    )
+                except Exception as _prm_err:
+                    _logging.debug("[stage3_prm] Stage3 PASS 기록 실패 (비차단): %s", _prm_err)
             if _db and hasattr(_db, "save_stage_attempt"):
                 _director = getattr(getattr(ctx, "agents", {}), "get", lambda *_: None)("director")
                 _model = getattr(_director, "primary_model", None) if _director else None
-                _attempt_num = self._extract_stage3_attempt_num(pipeline_result)
-                _score = pipeline_result.get("last_score") or pipeline_result.get("phases", {}).get("generate", {}).get(
-                    "selected_score", 0
-                )
-                if not isinstance(_score, int):
-                    try:
-                        _score = int(_score)
-                    except (ValueError, TypeError):
-                        _score = 0
                 _prompt_version = _build_stage3_prompt_version()
                 _db.save_stage_attempt(
                     stage=3,
@@ -1290,7 +1410,14 @@ class Stage3Orchestrator:
                     arc_num=arc_no,
                     score=_score,
                     model=str(_model) if _model else None,
+                    session_id=_session_id,
+                    attempt_key=_attempt_key,
                     prompt_version=_prompt_version,
+                    duration_ms=_duration_ms,
+                    advisory_flags=_observability_flags or None,
+                    candidate_key=_candidate_key,
+                    content_hash=_artifact_meta["content_hash"],
+                    artifact_path=_artifact_meta["artifact_path"],
                 )
         except Exception as _sa_err:
             _logging.debug("[stage_attempts] Stage3 PASS 기록 실패 (비차단): %s", _sa_err)
@@ -1602,31 +1729,69 @@ class Stage3Orchestrator:
 
         try:
             _db = getattr(getattr(ctx, "current_project", None), "db", None)
+            _final_verdict = str(pipeline_result.get("final_verdict", "REJECT"))
+            _attempt_num = self._extract_stage3_attempt_num(pipeline_result)
+            _arc_num = self._resolve_stage3_arc_num(arc_no=arc_no, pipeline_result=pipeline_result)
+            _session_id = resolve_logging_session_id(getattr(ctx, "current_project", None))
+            _attempt_key = build_attempt_key(
+                stage=3,
+                ep_num=working_ep,
+                arc_num=_arc_num,
+                attempt_num=_attempt_num,
+                session_id=_session_id,
+            )
+            _reject_reason = self._build_stage3_reject_reason(pipeline_result)
+            _score = pipeline_result.get("last_score") or pipeline_result.get("phases", {}).get("generate", {}).get(
+                "selected_score", 0
+            )
+            _selected_strategy = str(
+                pipeline_result.get("phases", {}).get("generate", {}).get("selected_strategy", "unknown") or "unknown"
+            )
+            _candidate_key = build_candidate_key(strategy=_selected_strategy, fallback="stage3")
+            _observability_flags = _build_stage3_observability_flags(pipeline_result.get("_stage3_observability"))
+            _duration_ms = int(pipeline_result.get("_stage3_duration_ms") or 0) or None
+            _failure_category = _classify_stage3_failure_category(pipeline_result)
+            if not isinstance(_score, int):
+                try:
+                    _score = int(_score)
+                except (ValueError, TypeError):
+                    _score = 0
+            if getattr(ctx, "pass_rate_monitor", None):
+                try:
+                    ctx.pass_rate_monitor.record_attempt(
+                        stage=3,
+                        episode=working_ep,
+                        arc=_arc_num,
+                        attempt_num=_attempt_num,
+                        success=False,
+                        reject_reason=_reject_reason,
+                        generation_method="blueprint",
+                        attempt_key=_attempt_key,
+                        final_verdict=_final_verdict,
+                        candidate_key=_candidate_key,
+                    )
+                except Exception as _prm_err:
+                    _logging.debug("[stage3_prm] Stage3 REJECT 기록 실패 (비차단): %s", _prm_err)
             if _db and hasattr(_db, "save_stage_attempt"):
                 _director = getattr(getattr(ctx, "agents", {}), "get", lambda *_: None)("director")
                 _model = getattr(_director, "primary_model", None) if _director else None
-                _attempt_num = self._extract_stage3_attempt_num(pipeline_result)
-                _arc_num = self._resolve_stage3_arc_num(arc_no=arc_no, pipeline_result=pipeline_result)
-                _reject_reason = self._build_stage3_reject_reason(pipeline_result)
-                _score = pipeline_result.get("last_score") or pipeline_result.get("phases", {}).get("generate", {}).get(
-                    "selected_score", 0
-                )
-                if not isinstance(_score, int):
-                    try:
-                        _score = int(_score)
-                    except (ValueError, TypeError):
-                        _score = 0
                 _prompt_version = _build_stage3_prompt_version()
                 _db.save_stage_attempt(
                     stage=3,
-                    verdict=str(pipeline_result.get("final_verdict", "REJECT")),
+                    verdict=_final_verdict,
                     attempt_num=_attempt_num,
                     ep_num=working_ep,
                     arc_num=_arc_num,
                     score=_score,
+                    failure_category=_failure_category,
                     reject_reason=_reject_reason,
                     model=str(_model) if _model else None,
+                    duration_ms=_duration_ms,
+                    advisory_flags=_observability_flags or None,
+                    session_id=_session_id,
+                    attempt_key=_attempt_key,
                     prompt_version=_prompt_version,
+                    candidate_key=_candidate_key,
                 )
         except Exception as _sa_err:
             _logging.debug("[stage_attempts] Stage3 REJECT 기록 실패 (비차단): %s", _sa_err)
@@ -1647,7 +1812,10 @@ class Stage3Orchestrator:
                 except (ValueError, TypeError):
                     _score = 0
             ctx.current_project.db.save_cost_record(
-                session_id=f"ep_{working_ep}",
+                session_id=resolve_logging_session_id(
+                    getattr(ctx, "current_project", None),
+                    fallback=f"ep_{working_ep}",
+                ),
                 scope_type="episode",
                 scope_id=int(working_ep),
                 total_calls=0,

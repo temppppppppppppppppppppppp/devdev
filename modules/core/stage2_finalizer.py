@@ -5,7 +5,9 @@ import logging
 import re
 import time
 
+from modules.core.artifact_logging import build_candidate_key, snapshot_logged_artifact
 from modules.core.constants import VolumeSettings
+from modules.core.logging_keys import build_attempt_key, resolve_logging_session_id
 from modules.core.metrics_collector import get_metrics_collector
 from modules.core.numeric_consistency_checker import NumericConsistencyChecker
 from modules.models.arc import validate_arc
@@ -859,6 +861,7 @@ class Stage2Finalizer:
                     is_patch=is_patch,
                     prev_score=prev_score,
                     patch_fallback=patch_fallback,
+                    artifact_payload=refined_arc if isinstance(refined_arc, dict) else None,
                 )
                 return {
                     "action": "retry",
@@ -1128,6 +1131,7 @@ class Stage2Finalizer:
                 is_patch=is_patch,
                 prev_score=prev_score,
                 patch_fallback=patch_fallback,
+                artifact_payload=refined_arc if isinstance(refined_arc, dict) else None,
             )
 
             # [Phase 6] Arc 단위 비용 스냅샷 저장 (비차단)
@@ -1288,6 +1292,7 @@ class Stage2Finalizer:
 [재시도 가이드]
 {intensity_guide}
 """
+            _rejected_arc = refined_arc if isinstance(refined_arc, dict) else None
             refined_arc = None
             self.ctx.ui.log(f"      🔄 [V60.77] Director 피드백 → FourPhase 대면 {min(attempt + 2, 5)}/5")
 
@@ -1308,6 +1313,7 @@ class Stage2Finalizer:
                 is_patch=is_patch,
                 prev_score=prev_score,
                 patch_fallback=patch_fallback,
+                artifact_payload=_rejected_arc,
             )
 
         return {
@@ -1338,9 +1344,28 @@ class Stage2Finalizer:
         is_patch: bool = False,
         prev_score: float = 0.0,
         patch_fallback: bool = False,
+        artifact_payload: dict | None = None,
     ) -> None:
         """[4-R3-f] Record Stage 2 PASS metrics (PassRateMonitor, Dashboard, Optimizer, PerfTimer)."""
         from modules.core.spinners import V50_MODULES_AVAILABLE
+        _session_id = resolve_logging_session_id(getattr(self.ctx, "current_project", None))
+        attempt_key = build_attempt_key(
+            stage=2,
+            ep_num=global_arc_no,
+            arc_num=global_arc_no,
+            attempt_num=attempt + 1,
+            session_id=_session_id,
+        )
+        _candidate_key = build_candidate_key(strategy=selected_strategy, fallback=generation_method)
+        _artifact_meta = snapshot_logged_artifact(
+            getattr(self.ctx, "current_project", None),
+            stage=2,
+            arc_num=global_arc_no,
+            attempt_num=attempt + 1,
+            candidate_key=_candidate_key,
+            artifact_kind="final_arc",
+            payload=artifact_payload,
+        )
 
         if V50_MODULES_AVAILABLE and self.ctx.pass_rate_monitor:
             try:
@@ -1355,6 +1380,11 @@ class Stage2Finalizer:
                     is_patch=is_patch,
                     prev_score=prev_score,
                     patch_fallback=patch_fallback,
+                    attempt_key=attempt_key,
+                    final_verdict=str(audit.get("decision", "PASS")),
+                    candidate_key=_candidate_key,
+                    content_hash=_artifact_meta["content_hash"],
+                    artifact_path=_artifact_meta["artifact_path"],
                 )
             except Exception as e:  # [V64.P4] OPTIONAL: metrics
                 logging.debug(f"[SILENT] metrics (success): {e}")
@@ -1388,8 +1418,13 @@ class Stage2Finalizer:
                     model=str(_model) if _model else None,
                     duration_ms=duration_ms,
                     advisory_flags=_advisory_flags,
+                    session_id=_session_id,
+                    attempt_key=attempt_key,
                     generation_method=generation_method,
                     prompt_version=_prompt_version,
+                    candidate_key=_candidate_key,
+                    content_hash=_artifact_meta["content_hash"],
+                    artifact_path=_artifact_meta["artifact_path"],
                 )
                 # [TF-60] Stage 2 director_selections 기록
                 if hasattr(_db, "save_director_selection"):
@@ -1404,6 +1439,10 @@ class Stage2Finalizer:
                             score=_score,
                             selection_reason=str(audit.get("reason", ""))[:200],
                             fix_scope=str(audit.get("fix_scope", "") or ""),
+                            attempt_key=attempt_key,
+                            candidate_key=_candidate_key,
+                            content_hash=_artifact_meta["content_hash"],
+                            artifact_path=_artifact_meta["artifact_path"],
                         )
                     except Exception as _ds_err:
                         logging.debug("[director_selections] Stage2 PASS 기록 실패: %s", _ds_err)
@@ -1450,9 +1489,28 @@ class Stage2Finalizer:
         is_patch: bool = False,
         prev_score: float = 0.0,
         patch_fallback: bool = False,
+        artifact_payload: dict | None = None,
     ) -> None:
         """[4-R3-f] Record Stage 2 REJECT metrics (PassRateMonitor, Dashboard, History, Optimizer)."""
         from modules.core.spinners import V50_MODULES_AVAILABLE
+        _session_id = resolve_logging_session_id(getattr(self.ctx, "current_project", None))
+        attempt_key = build_attempt_key(
+            stage=2,
+            ep_num=global_arc_no,
+            arc_num=global_arc_no,
+            attempt_num=attempt + 1,
+            session_id=_session_id,
+        )
+        _candidate_key = build_candidate_key(strategy=selected_strategy, fallback=generation_method)
+        _artifact_meta = snapshot_logged_artifact(
+            getattr(self.ctx, "current_project", None),
+            stage=2,
+            arc_num=global_arc_no,
+            attempt_num=attempt + 1,
+            candidate_key=_candidate_key,
+            artifact_kind="rejected_arc",
+            payload=artifact_payload,
+        )
 
         if V50_MODULES_AVAILABLE and self.ctx.pass_rate_monitor:
             try:
@@ -1468,6 +1526,11 @@ class Stage2Finalizer:
                     is_patch=is_patch,
                     prev_score=prev_score,
                     patch_fallback=patch_fallback,
+                    attempt_key=attempt_key,
+                    final_verdict=str(audit.get("decision", "REJECT")),
+                    candidate_key=_candidate_key,
+                    content_hash=_artifact_meta["content_hash"],
+                    artifact_path=_artifact_meta["artifact_path"],
                 )
             except Exception as e:  # [V64.P4] OPTIONAL: metrics
                 logging.debug(f"[SILENT] metrics (reject): {e}")
@@ -1502,8 +1565,13 @@ class Stage2Finalizer:
                     model=str(_model) if _model else None,
                     duration_ms=duration_ms,
                     advisory_flags=_advisory_flags,
+                    session_id=_session_id,
+                    attempt_key=attempt_key,
                     generation_method=generation_method,
                     prompt_version=_prompt_version,
+                    candidate_key=_candidate_key,
+                    content_hash=_artifact_meta["content_hash"],
+                    artifact_path=_artifact_meta["artifact_path"],
                 )
                 # [TF-60] Stage 2 director_selections 기록
                 if hasattr(_db, "save_director_selection"):
@@ -1518,6 +1586,10 @@ class Stage2Finalizer:
                             score=_score,
                             selection_reason=str(audit.get("reason", ""))[:200],
                             fix_scope=str(audit.get("fix_scope", "") or ""),
+                            attempt_key=attempt_key,
+                            candidate_key=_candidate_key,
+                            content_hash=_artifact_meta["content_hash"],
+                            artifact_path=_artifact_meta["artifact_path"],
                         )
                     except Exception as _ds_err:
                         logging.debug("[director_selections] Stage2 REJECT 기록 실패: %s", _ds_err)
@@ -1532,7 +1604,10 @@ class Stage2Finalizer:
                 except (ValueError, TypeError):
                     _score = 0
             self.ctx.current_project.db.save_cost_record(
-                session_id=f"arc_{global_arc_no}",
+                session_id=resolve_logging_session_id(
+                    getattr(self.ctx, "current_project", None),
+                    fallback=f"arc_{global_arc_no}",
+                ),
                 scope_type="arc",
                 scope_id=int(global_arc_no),
                 total_calls=0,

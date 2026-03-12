@@ -133,6 +133,8 @@ class TestMetricsRecording:
         kw = finalizer.ctx.pass_rate_monitor.record_attempt.call_args[1]
         assert kw["success"] is True
         assert kw["stage"] == 2
+        assert kw["attempt_key"] == "s2:ep1:arc1:a1"
+        assert kw["final_verdict"] == "PASS"
         qd_kw = finalizer.ctx.quality_dashboard.record_validation.call_args[1]
         assert qd_kw["result"]["decision"] == "PASS"
 
@@ -159,6 +161,8 @@ class TestMetricsRecording:
         )
         kw = finalizer.ctx.pass_rate_monitor.record_attempt.call_args[1]
         assert kw["success"] is False
+        assert kw["attempt_key"] == "s2:ep4:arc4:a2"
+        assert kw["final_verdict"] == "REJECT"
         assert len(finalizer.ctx.stage_rejection_history) == 1
         assert finalizer.ctx.stage_rejection_history[0]["arc_no"] == 4
 
@@ -183,6 +187,43 @@ class TestMetricsRecording:
             audit={"reason": "reject reason"},
         )
         finalizer.ctx.stage2_optimizer.failure_memory.record_failure.assert_called_once()
+
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", True)
+    def test_attempt_key_uses_metrics_session_id_when_available(self, finalizer):
+        finalizer.ctx.current_project.metrics_session_id = "sess_stage2"
+
+        finalizer._record_s2_pass_metrics(global_arc_no=1, attempt=0, generation_method="analyst", audit={"score": 88})
+
+        kw = finalizer.ctx.pass_rate_monitor.record_attempt.call_args.kwargs
+        assert kw["attempt_key"] == "s2:ep1:arc1:a1:sess_stage2"
+        db_kw = finalizer.ctx.current_project.db.save_stage_attempt.call_args.kwargs
+        assert db_kw["attempt_key"] == "s2:ep1:arc1:a1:sess_stage2"
+        assert db_kw["session_id"] == "sess_stage2"
+
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", True)
+    def test_pass_metrics_persist_artifact_linkage(self, finalizer, valid_refined_arc, tmp_path):
+        finalizer.ctx.current_project.paths = MagicMock()
+        finalizer.ctx.current_project.paths.root = tmp_path
+
+        finalizer._record_s2_pass_metrics(
+            global_arc_no=1,
+            attempt=0,
+            generation_method="analyst",
+            selected_strategy="creative",
+            audit={"score": 88},
+            artifact_payload=valid_refined_arc,
+        )
+
+        prm_kw = finalizer.ctx.pass_rate_monitor.record_attempt.call_args.kwargs
+        db_kw = finalizer.ctx.current_project.db.save_stage_attempt.call_args.kwargs
+        ds_kw = finalizer.ctx.current_project.db.save_director_selection.call_args.kwargs
+
+        assert prm_kw["candidate_key"] == "creative"
+        assert prm_kw["content_hash"]
+        assert prm_kw["artifact_path"].endswith("final_arc__creative.json")
+        assert (tmp_path / prm_kw["artifact_path"]).exists()
+        assert db_kw["artifact_path"] == prm_kw["artifact_path"]
+        assert ds_kw["artifact_path"] == prm_kw["artifact_path"]
 
 
 class TestRunFinalize:
@@ -243,6 +284,7 @@ class TestRunFinalize:
 
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
     def test_director_reject_returns_retry(self, finalizer, valid_refined_arc):
+        finalizer.ctx.current_project.metrics_session_id = "sess_stage2_reject"
         finalizer.ctx.agents["director"].audit_strategic_plan.return_value = {
             "decision": "REJECT",
             "score": 30,
@@ -258,6 +300,8 @@ class TestRunFinalize:
 
         assert result["action"] == "retry"
         assert "reject reason" in result["director_feedback_for_fourphase"]
+        cost_kw = finalizer.ctx.current_project.db.save_cost_record.call_args.kwargs
+        assert cost_kw["session_id"] == "sess_stage2_reject"
 
     @patch("modules.core.stage2_finalizer.validate_arc", side_effect=lambda x: x)
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)

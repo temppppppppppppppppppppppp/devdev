@@ -854,3 +854,37 @@ class TestSoftFailureLogging:
         assert soft_failures.exists()
         rows = [json.loads(line) for line in soft_failures.read_text(encoding="utf-8").splitlines() if line.strip()]
         assert any(row["operation"] == "save_episode_quality_signal" for row in rows)
+
+    def test_report_soft_failure_ignores_magicmock_root_without_db_path(self, tmp_path):
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.sys = MagicMock()
+        ctx.sys.hud = MagicMock()
+        ctx.sys.hud.snapshot.return_value = {}
+        ctx.agents = {"director": MagicMock()}
+        ctx.agents["director"].on_approve_workflow.return_value = {}
+        ctx.memory = None
+        ctx.state_tracker = None
+        ctx.world_state = None
+        ctx.fact_ledger = None
+        ctx.character_voice = None
+        ctx.foreshadow_tracker = None
+        ctx.failure_learner = None
+        ctx.quality_dashboard = None
+        ctx.perf_timer = MagicMock()
+        ctx.flush_audit_buffer = MagicMock()
+        ctx.get_protagonist_name = lambda: "주인공"
+        ctx.generate_narrative_summary = MagicMock()
+        ctx.audit_event = MagicMock()
+
+        project = MagicMock()
+        project.paths.root = MagicMock()
+        project.db = MagicMock()
+        project.db.db_path = None
+        ctx.current_project = project
+
+        pp = Stage4PostProcessor(ctx)
+
+        assert pp._resolve_project_log_dir() is None
+        pp._report_soft_failure(operation="mock_root", message="should not persist", exc=RuntimeError("boom"))
+        assert not (tmp_path / "logs" / "soft_failures.jsonl").exists()

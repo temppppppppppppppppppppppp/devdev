@@ -171,8 +171,20 @@ def _err(code: str, message: str, run_id: str | None = None) -> dict:
     return {"ok": False, "run_id": run_id, "code": code, "message": message, "data": None}
 
 
+def _get_projects_root() -> Path:
+    explicit = os.environ.get("GEULDOBI_PROJECTS_ROOT")
+    if explicit:
+        return Path(explicit).resolve()
+
+    workspace = os.environ.get("GEULDOBI_WORKSPACE")
+    if workspace:
+        return (Path(workspace) / "projects").resolve()
+
+    return (PROJECT_ROOT / "projects").resolve()
+
+
 def _get_project_dir(project_name: str) -> Path:
-    projects_root = (PROJECT_ROOT / "projects").resolve()
+    projects_root = _get_projects_root()
     normalized = str(project_name or "").strip()
     if not normalized:
         raise ValueError("project is required")

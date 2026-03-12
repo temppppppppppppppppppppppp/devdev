@@ -54,6 +54,7 @@ def app_mock():
     app.state_tracker.npc_registry = {}
     app.world_state = MagicMock()
     app.fact_ledger = MagicMock()
+    app.pass_rate_monitor = MagicMock()
 
     # Facade methods
     app._audit_event = MagicMock()
@@ -203,6 +204,73 @@ class TestGetEntityRegistry:
 
 
 # ── Blueprint Helpers ────────────────────────────────────────
+
+
+class TestStageAttemptObservability:
+    def test_handle_success_persists_semantic_context_metadata(self, orch, app_mock):
+        pipeline_result = {
+            "final_verdict": "PASS",
+            "last_score": 88,
+            "phases": {"generate": {"selected_strategy": "balanced", "selected_score": 88}},
+            "_stage3_duration_ms": 4321,
+            "_stage3_observability": {
+                "semantic_ctx_chars": 1234,
+                "source_counts": {"vec_memory": 2, "db_npc_relationship": 1},
+                "coverage_warnings": ["missing_relation_slice"],
+                "advisor_path_used": True,
+                "planned_slots_count": 3,
+                "work_focus_present": True,
+            },
+        }
+
+        orch._handle_success(
+            working_ep=1,
+            arc_no=1,
+            arc_data={"arc_no": 1},
+            blueprint={"integrated_scenario": "ok"},
+            pipeline_result=pipeline_result,
+            prev_blueprints=[],
+            success_count=0,
+            fail_count=0,
+        )
+
+        kwargs = app_mock.current_project.db.save_stage_attempt.call_args.kwargs
+        assert kwargs["duration_ms"] == 4321
+        assert kwargs["advisory_flags"]["semantic_ctx_chars"] == 1234
+        assert kwargs["advisory_flags"]["semantic_ctx_sources"] == ["db_npc_relationship", "vec_memory"]
+
+    def test_handle_failure_persists_failure_category_and_observability(self, orch, app_mock):
+        pipeline_result = {
+            "final_verdict": "REJECT",
+            "last_score": 52,
+            "quality_gate_failed": True,
+            "phases": {
+                "generate": {"selected_strategy": "balanced", "selected_score": 52},
+                "validate": {"issues_count": 2},
+            },
+            "_stage3_duration_ms": 987,
+            "_stage3_observability": {
+                "semantic_ctx_chars": 222,
+                "source_counts": {"legacy_semantic_context": 1},
+                "coverage_warnings": [],
+                "advisor_path_used": False,
+                "planned_slots_count": 0,
+                "work_focus_present": False,
+            },
+        }
+
+        orch._handle_failure(
+            working_ep=1,
+            pipeline_result=pipeline_result,
+            success_count=0,
+            fail_count=0,
+            arc_no=1,
+        )
+
+        kwargs = app_mock.current_project.db.save_stage_attempt.call_args.kwargs
+        assert kwargs["failure_category"] == "quality_gate"
+        assert kwargs["duration_ms"] == 987
+        assert kwargs["advisory_flags"]["semantic_ctx_sources"] == ["legacy_semantic_context"]
 
 
 class TestLoadPrevBlueprint:
@@ -494,6 +562,92 @@ class TestProcessSingleEpisode:
         result = orch._process_single_episode(1, 5, [], 0, 0)
         assert result.get("break") is True
 
+    def test_pass_with_fix_uses_failure_path(self, orch, app_mock):
+        app_mock.current_project.get_blueprint.return_value = None
+        orch._get_entity_registry = MagicMock(return_value={"characters": []})
+        orch._load_prev_blueprint = MagicMock(return_value=None)
+        orch._get_protagonist_name_safe = MagicMock(return_value="주인공")
+        orch._generate_blueprint = MagicMock(
+            return_value=(
+                {"integrated_scenario": "test", "scene_breakdown": {"s1": "scene"}},
+                {"final_verdict": "PASS_WITH_FIX"},
+            )
+        )
+        orch._handle_success = MagicMock(return_value={"path": "success"})
+        orch._handle_failure = MagicMock(return_value={"path": "failure"})
+
+        result = orch._process_single_episode(1, 5, [], 0, 0)
+
+        assert result == {"path": "failure"}
+        orch._handle_success.assert_not_called()
+        orch._handle_failure.assert_called_once()
+
+    def test_stage3_success_records_pass_rate_monitor(self, orch, app_mock):
+        blueprint = {"integrated_scenario": "test", "scene_breakdown": {"s1": "scene"}}
+        pipeline_result = {"final_verdict": "PASS", "last_score": 87, "phases": {"generate": {"selected_score": 87}}}
+
+        orch._handle_success(3, 1, {}, blueprint, pipeline_result, [], 0, 0)
+
+        kw = app_mock.pass_rate_monitor.record_attempt.call_args.kwargs
+        assert kw["stage"] == 3
+        assert kw["success"] is True
+        assert kw["final_verdict"] == "PASS"
+        assert kw["attempt_key"] == "s3:ep3:arc1:a1"
+
+    def test_stage3_failure_records_pass_rate_monitor(self, orch, app_mock):
+        pipeline_result = {"final_verdict": "REJECT", "last_score": 41, "phases": {"generate": {"selected_score": 41}}}
+
+        orch._handle_failure(4, pipeline_result, 0, 0, arc_no=2)
+
+        kw = app_mock.pass_rate_monitor.record_attempt.call_args.kwargs
+        assert kw["stage"] == 3
+        assert kw["success"] is False
+        assert kw["final_verdict"] == "REJECT"
+        assert kw["attempt_key"] == "s3:ep4:arc2:a1"
+
+    def test_stage3_reject_cost_record_uses_metrics_session_id_when_available(self, orch, app_mock):
+        app_mock.current_project.metrics_session_id = "sess_stage3_reject"
+        pipeline_result = {"final_verdict": "REJECT", "last_score": 41, "phases": {"generate": {"selected_score": 41}}}
+
+        orch._handle_failure(4, pipeline_result, 0, 0, arc_no=2)
+
+        cost_kw = app_mock.current_project.db.save_cost_record.call_args.kwargs
+        assert cost_kw["session_id"] == "sess_stage3_reject"
+
+    def test_stage3_attempt_key_uses_metrics_session_id_when_available(self, orch, app_mock):
+        app_mock.current_project.metrics_session_id = "sess_stage3"
+        blueprint = {"integrated_scenario": "test", "scene_breakdown": {"s1": "scene"}}
+        pipeline_result = {"final_verdict": "PASS", "last_score": 87, "phases": {"generate": {"selected_score": 87}}}
+
+        orch._handle_success(3, 1, {}, blueprint, pipeline_result, [], 0, 0)
+
+        kw = app_mock.pass_rate_monitor.record_attempt.call_args.kwargs
+        assert kw["attempt_key"] == "s3:ep3:arc1:a1:sess_stage3"
+        db_kw = app_mock.current_project.db.save_stage_attempt.call_args.kwargs
+        assert db_kw["attempt_key"] == "s3:ep3:arc1:a1:sess_stage3"
+        assert db_kw["session_id"] == "sess_stage3"
+
+    def test_stage3_success_persists_artifact_linkage(self, orch, app_mock, tmp_path):
+        app_mock.current_project.paths = MagicMock()
+        app_mock.current_project.paths.root = tmp_path
+        blueprint = {"integrated_scenario": "test", "scene_breakdown": {"s1": "scene"}}
+        pipeline_result = {
+            "final_verdict": "PASS",
+            "last_score": 87,
+            "phases": {"generate": {"selected_strategy": "A", "selected_score": 87}},
+        }
+
+        orch._handle_success(3, 1, {}, blueprint, pipeline_result, [], 0, 0)
+
+        prm_kw = app_mock.pass_rate_monitor.record_attempt.call_args.kwargs
+        db_kw = app_mock.current_project.db.save_stage_attempt.call_args.kwargs
+
+        assert prm_kw["candidate_key"] == "A"
+        assert prm_kw["content_hash"]
+        assert prm_kw["artifact_path"].endswith("final_blueprint__A.json")
+        assert (tmp_path / prm_kw["artifact_path"]).exists()
+        assert db_kw["artifact_path"] == prm_kw["artifact_path"]
+
 
 # ── Result Handlers ──────────────────────────────────────────
 
@@ -612,6 +766,7 @@ class TestStage3ContextDI:
         assert ctx.adversarial_self_play is app_mock.adversarial_self_play
         assert ctx.preset_registry is app_mock.preset_registry
         assert ctx.selected_genre is app_mock.selected_genre
+        assert ctx.pass_rate_monitor is app_mock.pass_rate_monitor
         assert ctx.get_protagonist_name is app_mock._get_protagonist_name
         assert ctx.audit_event is app_mock._audit_event
         assert ctx.write_audit_summary is app_mock._write_audit_summary
@@ -625,7 +780,7 @@ class TestStage3ContextDI:
 
     def test_slots_count_20(self):
         """__slots__ 개수 검증"""
-        assert len(Stage3Context.__slots__) == 21  # [LOG-1] +session_logger
+        assert len(Stage3Context.__slots__) == 22  # pass_rate_monitor + session_logger
 
     def test_ctx_sync_after_lazy_init(self, app_mock):
         """lazy init 후 state_tracker/world_state/fact_ledger가 ctx에 sync되는지 확인"""

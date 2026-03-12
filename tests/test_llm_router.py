@@ -212,6 +212,8 @@ def test_vertex_provider_generate_with_fake_sdk(monkeypatch):
         "prompt_token_count": 12,
         "candidates_token_count": 23,
         "total_token_count": 35,
+        "thoughts_token_count": None,
+        "cached_content_token_count": None,
     }
     assert captured_kwargs["model"] == "gemini-2.5-pro"
     assert captured_kwargs["config"] == {"temperature": 0.1}

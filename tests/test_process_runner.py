@@ -5,6 +5,7 @@ import time
 
 import pytest
 
+from modules.api import process_runner
 from modules.api.process_runner import ProcessRunner, _strip_ansi
 
 
@@ -176,6 +177,31 @@ class TestBuildEnv:
         # 기존 환경의 GOOGLE_API_KEY가 있을 수도 있으므로 추가 확인 불가
         # 빈 값이 주입되지 않았는지만 확인
         assert env.get("SLACK_WEBHOOK_URL") is None
+
+
+class TestPathResolution:
+    def test_resolve_projects_root_prefers_explicit_env(self, monkeypatch, tmp_path):
+        explicit_root = tmp_path / "workspace-projects"
+        monkeypatch.setenv("GEULDOBI_PROJECTS_ROOT", str(explicit_root))
+        monkeypatch.setenv("GEULDOBI_WORKSPACE", str(tmp_path / "workspace"))
+
+        assert process_runner._resolve_projects_root() == explicit_root.resolve()
+
+    def test_resolve_launch_command_falls_back_to_main_script_when_engine_exe_missing(self, monkeypatch, tmp_path):
+        engine_root = tmp_path / "engine"
+        engine_root.mkdir()
+        main_script = engine_root / "main_a.py"
+        main_script.write_text("print('ok')\n", encoding="utf-8")
+
+        monkeypatch.setattr(process_runner, "PROJECT_ROOT", engine_root)
+        monkeypatch.setenv("GEULDOBI_ENGINE_EXE", str(engine_root / "engine.exe"))
+        monkeypatch.setenv("GEULDOBI_PYTHON_PATH", "embedded-python.exe")
+
+        assert process_runner._resolve_launch_command() == [
+            "embedded-python.exe",
+            "-u",
+            str(main_script),
+        ]
 
 
 class TestRuntimeDiagnostics:

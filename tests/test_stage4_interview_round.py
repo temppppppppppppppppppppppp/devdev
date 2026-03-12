@@ -137,6 +137,35 @@ class TestInterviewRoundHelpers:
         assert history[-1]["strategy"] == "A"
         assert history[-1]["reject_bucket"] == "constraint_violation"
 
+    def test_extract_fix_feedback_keeps_reasoning_and_open_review(self):
+        ir = Stage4InterviewRound(_make_ctx())
+
+        feedback = ir._extract_fix_feedback(
+            {
+                "action_items": ["첫 장면 감정선 조정"],
+                "fix_scope_reasoning": "국소 수정으로 해결 가능",
+                "open_review": "주인공 목소리가 중반에 흔들립니다.",
+                "feedback": {"issues": ["[자유 리뷰] 톤이 흔들립니다.", "장면 전환이 급함"]},
+            }
+        )
+
+        assert "[핵심 수정 지시]" in feedback
+        assert "[수정 범위 근거]" in feedback
+        assert "[Director 자유 리뷰]" in feedback
+        assert "장면 전환이 급함" in feedback
+
+    def test_build_reaudit_story_context_injects_patch_history(self):
+        ir = Stage4InterviewRound(_make_ctx())
+
+        story_context = ir._build_reaudit_story_context(
+            "기존 story context",
+            ["scope=inplace | reason=대사 조정", "scope=inplace | reason=엔딩 긴장 복구"],
+        )
+
+        assert story_context.startswith("기존 story context")
+        assert "[PASS_WITH_FIX 재심사 — 이미 적용된 패치]" in story_context
+        assert "- scope=inplace | reason=엔딩 긴장 복구" in story_context
+
     def test_suppress_conflicting_advisories_prefers_higher_tier(self):
         ir = Stage4InterviewRound(_make_ctx())
         parts = [
@@ -812,6 +841,8 @@ class TestRecordS4Attempt:
         assert kw["generation_method"] == "ensemble"
         assert kw["is_patch"] is False
         assert kw["arc"] == 1
+        assert kw["attempt_key"] == "s4:ep1:arc1:a1"
+        assert kw["final_verdict"] == "PASS"
 
     def test_reject_records_failure(self):
         ctx = _make_ctx()
@@ -843,6 +874,22 @@ class TestRecordS4Attempt:
         assert kw["success"] is False
         assert kw["reject_reason"] == "수정1"
         assert kw["arc"] == 1
+        assert kw["attempt_key"] == "s4:ep1:arc1:a1"
+        assert kw["final_verdict"] == "REJECT"
+
+    def test_attempt_key_uses_metrics_session_id_when_available(self):
+        ctx = _make_ctx()
+        ctx.current_project.metrics_session_id = "sess_stage4"
+        ctx.pass_rate_monitor = MagicMock()
+        ir = Stage4InterviewRound(ctx)
+
+        ir._record_s4_attempt(episode=1, round_num=0, success=True, score=95, arc=1, verdict="PASS")
+
+        kw = ctx.pass_rate_monitor.record_attempt.call_args.kwargs
+        assert kw["attempt_key"] == "s4:ep1:arc1:a1:sess_stage4"
+        db_kw = ctx.current_project.db.save_stage_attempt.call_args.kwargs
+        assert db_kw["attempt_key"] == "s4:ep1:arc1:a1:sess_stage4"
+        assert db_kw["session_id"] == "sess_stage4"
 
     def test_patch_records_method_patch(self):
         ctx = _make_ctx()
@@ -875,6 +922,7 @@ class TestRecordS4Attempt:
         assert kw["generation_method"] == "patch"
         assert kw["prev_score"] == 70
         assert kw["arc"] == 1
+        assert kw["attempt_key"] == "s4:ep1:arc1:a2"
 
     def test_patch_fallback_records_method_ensemble(self):
         ctx = _make_ctx()
@@ -907,6 +955,7 @@ class TestRecordS4Attempt:
         assert kw["is_patch"] is True
         assert kw["patch_fallback"] is True
         assert kw["generation_method"] == "ensemble"
+        assert kw["attempt_key"] == "s4:ep1:arc1:a2"
         round_ctx.chief_writer.regenerate_with_feedback.assert_called_once()
 
     def test_empty_candidates_records_failure(self):
@@ -929,6 +978,8 @@ class TestRecordS4Attempt:
         assert kw["success"] is False
         assert kw["reject_reason"] == "empty_candidates"
         assert kw["arc"] == 1
+        assert kw["attempt_key"] == "s4:ep1:arc1:a1"
+        assert kw["final_verdict"] == "ERROR"
 
     def test_save_director_selection_persists_verdict_metadata(self):
         ctx = _make_ctx()
@@ -965,6 +1016,41 @@ class TestRecordS4Attempt:
         assert kw["pre_firewall_score"] == 100
         assert kw["firewall_triggered"] is True
         assert kw["firewall_reason"] == "Contradiction Firewall: CRITICAL 1건"
+
+    def test_save_director_selection_persists_artifact_linkage(self, tmp_path):
+        ctx = _make_ctx()
+        ctx.current_project.name = "proj"
+        ctx.current_project.paths = MagicMock()
+        ctx.current_project.paths.root = tmp_path
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.chief_writer.generate_ensemble.return_value = [_candidate()]
+        round_ctx.manuscript_validator.validate_all_candidates.return_value = [_validation_result()]
+        ctx.agents["director"].select_and_judge_ensemble.return_value = {
+            "selected": "A",
+            "verdict": "REJECT",
+            "score": 44,
+            "selection_reason": "best candidate",
+            "verdict_reason": "conflict",
+            "selected_candidate": {"manuscript": "candidate manuscript", "strategy_name": "balanced"},
+            "feedback": {"issues": ["conflict"]},
+            "action_items": ["fix ending"],
+        }
+
+        with patch("builtins.open", mock_open()), patch("os.makedirs"):
+            ir.run(
+                round_num=0,
+                stage4_spinner=MagicMock(),
+                director_feedback="",
+                previous_attempt={},
+                round_ctx=round_ctx,
+            )
+
+        kw = ctx.current_project.db.save_director_selection.call_args.kwargs
+        assert kw["candidate_key"] == "A|balanced"
+        assert kw["content_hash"]
+        assert kw["artifact_path"].endswith("rejected_best__A_balanced.txt")
+        assert (tmp_path / kw["artifact_path"]).exists()
 
     def test_post_select_conflict_preserves_patch_seed_metadata(self):
         ctx = _make_ctx()
@@ -1138,7 +1224,7 @@ class TestRecordS4Attempt:
         )
 
         assert candidates == round_ctx.chief_writer.inplace_patch.return_value
-        assert is_patch is False
+        assert is_patch is True
         assert patch_fallback is False
         assert prev_score == 98
         assert asp_manuscript is None
@@ -1245,6 +1331,95 @@ class TestRecordS4Attempt:
         kwargs = ctx.pass_rate_monitor.record_attempt.call_args.kwargs
         assert kwargs["duration_ms"] > 0
         assert kwargs["token_cost"] == 0.321
+        assert kwargs["attempt_key"] == "s4:ep1:arc0:a1"
+
+    def test_record_s4_attempt_persists_artifact_linkage(self, tmp_path):
+        ctx = _make_ctx()
+        ctx.current_project.paths = MagicMock()
+        ctx.current_project.paths.root = tmp_path
+        ctx.pass_rate_monitor = MagicMock()
+        ir = Stage4InterviewRound(ctx)
+
+        ir._record_s4_attempt(
+            episode=1,
+            round_num=0,
+            success=True,
+            score=91,
+            candidate_key="A|balanced",
+            artifact_payload="final manuscript text",
+            artifact_kind="final_manuscript",
+        )
+
+        prm_kw = ctx.pass_rate_monitor.record_attempt.call_args.kwargs
+        db_kw = ctx.current_project.db.save_stage_attempt.call_args.kwargs
+        assert prm_kw["candidate_key"] == "A|balanced"
+        assert prm_kw["content_hash"]
+        assert prm_kw["artifact_path"].endswith("final_manuscript__A_balanced.txt")
+        assert (tmp_path / prm_kw["artifact_path"]).exists()
+        assert db_kw["artifact_path"] == prm_kw["artifact_path"]
+
+    def test_process_verdict_uses_reaudit_score_for_final_state_and_attempt(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        ir._record_s4_attempt = MagicMock()
+        ir._run_post_select_checks = MagicMock(return_value=("PASS_WITH_FIX", "", {}, ""))
+        ir._execute_pass_with_fix_loop = MagicMock(
+            return_value=(
+                "PASS",
+                "patched manuscript " * 200,
+                {"patched": True},
+                {
+                    "score": 98,
+                    "selection_reason": "re-audited best candidate",
+                    "open_review": "tightened final beat",
+                    "score_breakdown": {"structure": 98},
+                    "consistency_checklist": {"timeline": "ok"},
+                },
+                "resolved",
+                {"patch_strategy": "inplace_patch_structural"},
+            )
+        )
+        round_ctx = _make_round_ctx()
+        director_result = {
+            "selected_candidate": {
+                "manuscript": "candidate manuscript " * 200,
+                "title": "제1화",
+            },
+            "state_updates": {},
+            "selection_reason": "initial pick",
+            "open_review": "",
+            "score_breakdown": {"structure": 92},
+            "consistency_checklist": {},
+        }
+
+        result, director_feedback, previous_attempt, trace_meta = ir._process_verdict(
+            verdict="PASS_WITH_FIX",
+            score=92,
+            director_result=director_result,
+            director_feedback="initial feedback",
+            round_ctx=round_ctx,
+            round_num=0,
+            previous_attempt={},
+            is_patch=False,
+            is_patch_fallback=False,
+            prev_score=0,
+            stage4_spinner=MagicMock(),
+            director_mandatory_context="",
+            director_memory_context="",
+            error_category="",
+        )
+
+        assert result is not None
+        assert result.verdict == "PASS"
+        assert director_feedback == "resolved"
+        assert previous_attempt == {}
+        assert result.final_state_updates["director_score"] == 98
+        assert result.final_state_updates["_director_quality_labels"]["score"] == 98
+        assert result.final_state_updates["_director_quality_labels"]["verdict"] == "PASS"
+        assert result.final_state_updates["_director_quality_labels"]["selection_reason"] == "re-audited best candidate"
+        assert ir._record_s4_attempt.call_args.kwargs["score"] == 98
+        assert trace_meta["final_verdict"] == "PASS"
+        assert trace_meta["final_score"] == 98
 
     def test_append_episode_log_includes_round_cost_and_strategy_flags(self):
         ctx = _make_ctx()
@@ -1295,6 +1470,9 @@ class TestRecordS4Attempt:
         assert payload["flags"]["strategy_budget"] == "reduced"
         assert payload["flags"]["strategy_count"] == 2
         assert payload["flags"]["reject_bucket"] == "constraint_violation"
+        assert payload["patch_trace"]["patch_strategy"] == ""
+        assert payload["patch_trace"]["patch_targets"] == []
+        assert payload["patch_trace"]["unchanged_ratio"] is None
 
     def test_append_episode_log_persists_selection_and_verdict_reason(self):
         ctx = _make_ctx()
@@ -1384,8 +1562,343 @@ class TestRecordS4Attempt:
         assert payload["selection_reason"] == "리듬과 연속성이 안정적"
         assert payload["verdict_reason"] == "리듬과 연속성이 안정적"
 
+        assert payload["initial_verdict"] == "PASS"
+        assert payload["final_verdict"] == "PASS"
+        assert payload["initial_score"] == 95
+        assert payload["final_score"] == 95
+        assert payload["attempt_key"] == "s4:ep5:arc0:a1"
+
+    def test_pass_with_fix_run_logs_initial_and_final_verdicts(self):
+        ctx = _make_ctx()
+        ctx.pass_rate_monitor = MagicMock()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.chief_writer.model_tier = "gemini-2.5-pro"
+        round_ctx.chief_writer.generate_ensemble.return_value = [_candidate()]
+        def _inplace_side_effect(**kwargs):
+            round_ctx.chief_writer._last_inplace_patch_trace = {
+                "patch_strategy": "inplace_patch_structural",
+                "patch_targets": ["scene_2"],
+                "fallback_reason": "",
+                "focus": "ending",
+                "structural_attempted": True,
+            }
+            return [{"manuscript": "patched manuscript " * 200, "patch_targets": ["scene_2"]}]
+
+        round_ctx.chief_writer.inplace_patch.side_effect = _inplace_side_effect
+        round_ctx.manuscript_validator.validate_all_candidates.return_value = [_validation_result()]
+        ctx.agents["director"].select_and_judge_ensemble.side_effect = [
+            {
+                "selected": "A",
+                "verdict": "PASS_WITH_FIX",
+                "score": 92,
+                "selection_reason": "initial selection",
+                "verdict_reason": "ending needs a local fix",
+                "feedback": {"action_items": ["tighten the ending"]},
+                "action_items": ["tighten the ending"],
+                "fix_scope": "inplace",
+                "selected_candidate": {"manuscript": "candidate manuscript " * 200, "strategy_name": "balanced"},
+                "score_breakdown": {},
+                "open_review": "",
+            },
+            {
+                "verdict": "PASS",
+                "score": 98,
+                "selection_reason": "re-audit accepted",
+                "open_review": "ending tension restored",
+                "score_breakdown": {"structure": 98},
+                "consistency_checklist": {"timeline": "ok"},
+            },
+        ]
+
+        with patch("builtins.open", mock_open()) as mocked_open, patch("os.makedirs"):
+            result = ir.run(
+                round_num=0,
+                stage4_spinner=MagicMock(),
+                director_feedback="",
+                previous_attempt={},
+                round_ctx=round_ctx,
+            )
+
+        assert result.verdict == "PASS"
+        written = "".join(call.args[0] for call in mocked_open().write.call_args_list)
+        payload = json.loads(written.strip())
+        assert payload["verdict"] == "PASS_WITH_FIX"
+        assert payload["score"] == 92
+        assert payload["initial_verdict"] == "PASS_WITH_FIX"
+        assert payload["final_verdict"] == "PASS"
+        assert payload["initial_score"] == 92
+        assert payload["final_score"] == 98
+        assert payload["attempt_key"] == "s4:ep1:arc1:a1"
+        assert payload["flags"]["patch_mode"] is True
+        assert payload["patch_trace"]["patch_strategy"] == "inplace_patch_structural"
+        assert payload["patch_trace"]["patch_targets"] == ["scene_2"]
+        assert payload["patch_trace"]["fallback_reason"] == ""
+        assert payload["patch_trace"]["focus"] == "ending"
+        assert payload["patch_trace"]["structural_attempted"] is True
+        assert 0.0 <= payload["patch_trace"]["unchanged_ratio"] <= 1.0
+        prm_kwargs = ctx.pass_rate_monitor.record_attempt.call_args.kwargs
+        assert prm_kwargs["is_patch"] is True
+
+    def test_pass_with_fix_run_logs_artifact_linkage(self, tmp_path):
+        ctx = _make_ctx()
+        ctx.current_project.name = "proj"
+        ctx.current_project.paths = MagicMock()
+        ctx.current_project.paths.root = tmp_path
+        ctx.pass_rate_monitor = MagicMock()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.chief_writer.model_tier = "gemini-2.5-pro"
+        round_ctx.chief_writer.generate_ensemble.return_value = [_candidate()]
+
+        def _inplace_side_effect(**kwargs):
+            round_ctx.chief_writer._last_inplace_patch_trace = {
+                "patch_strategy": "inplace_patch_structural",
+                "patch_targets": ["scene_2"],
+                "fallback_reason": "",
+                "focus": "ending",
+                "structural_attempted": True,
+            }
+            return [{"manuscript": "patched manuscript " * 200, "patch_targets": ["scene_2"]}]
+
+        round_ctx.chief_writer.inplace_patch.side_effect = _inplace_side_effect
+        round_ctx.manuscript_validator.validate_all_candidates.return_value = [_validation_result()]
+        ctx.agents["director"].select_and_judge_ensemble.side_effect = [
+            {
+                "selected": "A",
+                "verdict": "PASS_WITH_FIX",
+                "score": 92,
+                "selection_reason": "initial selection",
+                "verdict_reason": "ending needs a local fix",
+                "feedback": {"action_items": ["tighten the ending"]},
+                "action_items": ["tighten the ending"],
+                "fix_scope": "inplace",
+                "selected_candidate": {"manuscript": "candidate manuscript " * 200, "strategy_name": "balanced"},
+                "score_breakdown": {},
+                "open_review": "",
+            },
+            {
+                "verdict": "PASS",
+                "score": 98,
+                "selection_reason": "re-audit accepted",
+                "open_review": "ending tension restored",
+                "score_breakdown": {"structure": 98},
+                "consistency_checklist": {"timeline": "ok"},
+            },
+        ]
+
+        with patch("builtins.open", mock_open()) as mocked_open, patch("os.makedirs"):
+            result = ir.run(
+                round_num=0,
+                stage4_spinner=MagicMock(),
+                director_feedback="",
+                previous_attempt={},
+                round_ctx=round_ctx,
+            )
+
+        assert result.verdict == "PASS"
+        written = "".join(call.args[0] for call in mocked_open().write.call_args_list)
+        payload = json.loads(written.strip())
+        assert payload["candidate_key"] == "A|balanced"
+        assert payload["content_hash"]
+        assert payload["artifact_path"].endswith("patched_after_fix__A_balanced.txt")
+        assert payload["selection_candidate_key"] == "A|balanced"
+        assert (tmp_path / payload["artifact_path"]).exists()
+
+    def test_pass_with_fix_episode_log_uses_final_attempt_meta_and_preserves_selection_meta(self, tmp_path):
+        ctx = _make_ctx()
+        ctx.current_project.name = "proj"
+        ctx.current_project.paths = MagicMock()
+        ctx.current_project.paths.root = tmp_path
+        ctx.pass_rate_monitor = MagicMock()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.chief_writer.model_tier = "gemini-2.5-pro"
+        round_ctx.chief_writer.generate_ensemble.return_value = [_candidate()]
+
+        def _inplace_side_effect(**kwargs):
+            round_ctx.chief_writer._last_inplace_patch_trace = {
+                "patch_strategy": "inplace_patch_structural",
+                "patch_targets": ["scene_2"],
+                "fallback_reason": "",
+                "focus": "ending",
+                "structural_attempted": True,
+            }
+            return [{"manuscript": "patched manuscript " * 200, "patch_targets": ["scene_2"]}]
+
+        round_ctx.chief_writer.inplace_patch.side_effect = _inplace_side_effect
+        round_ctx.manuscript_validator.validate_all_candidates.return_value = [_validation_result()]
+        ctx.agents["director"].select_and_judge_ensemble.side_effect = [
+            {
+                "selected": "A",
+                "verdict": "PASS_WITH_FIX",
+                "score": 92,
+                "selection_reason": "initial selection",
+                "verdict_reason": "ending needs a local fix",
+                "feedback": {"action_items": ["tighten the ending"]},
+                "action_items": ["tighten the ending"],
+                "fix_scope": "inplace",
+                "selected_candidate": {
+                    "manuscript": "candidate manuscript " * 200,
+                    "strategy": "balanced",
+                    "strategy_name": "균형 전략",
+                },
+                "score_breakdown": {},
+                "open_review": "",
+            },
+            {
+                "selected": "A",
+                "selected_candidate": {
+                    "manuscript": "patched manuscript " * 200,
+                    "strategy": "inplace_patch",
+                    "strategy_name": "InPlace 수정",
+                },
+                "verdict": "PASS",
+                "score": 98,
+                "selection_reason": "re-audit accepted",
+                "open_review": "ending tension restored",
+                "score_breakdown": {"structure": 98},
+                "consistency_checklist": {"timeline": "ok"},
+            },
+        ]
+
+        with patch("builtins.open", mock_open()) as mocked_open, patch("os.makedirs"):
+            result = ir.run(
+                round_num=0,
+                stage4_spinner=MagicMock(),
+                director_feedback="",
+                previous_attempt={},
+                round_ctx=round_ctx,
+            )
+
+        assert result.verdict == "PASS"
+        prm_kwargs = ctx.pass_rate_monitor.record_attempt.call_args.kwargs
+        db_kwargs = ctx.current_project.db.save_director_selection.call_args.kwargs
+        payload = json.loads("".join(call.args[0] for call in mocked_open().write.call_args_list).strip())
+        assert prm_kwargs["candidate_key"] == "A|InPlace 수정"
+        assert payload["candidate_key"] == prm_kwargs["candidate_key"]
+        assert payload["artifact_path"] == prm_kwargs["artifact_path"]
+        assert payload["selection_candidate_key"] == db_kwargs["candidate_key"]
+        assert payload["selection_candidate_key"] == "A|균형 전략"
+        assert payload["selection_artifact_path"] == db_kwargs["artifact_path"]
+
+    def test_reject_episode_log_uses_final_attempt_meta_and_preserves_selection_meta(self, tmp_path):
+        ctx = _make_ctx()
+        ctx.current_project.name = "proj"
+        ctx.current_project.paths = MagicMock()
+        ctx.current_project.paths.root = tmp_path
+        ctx.pass_rate_monitor = MagicMock()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.chief_writer.model_tier = "gemini-2.5-pro"
+        round_ctx.chief_writer.generate_ensemble.return_value = [_candidate()]
+        round_ctx.manuscript_validator.validate_all_candidates.return_value = [_validation_result()]
+        ctx.agents["director"].select_and_judge_ensemble.return_value = {
+            "selected": "B",
+            "verdict": "REJECT",
+            "score": 44,
+            "selection_reason": "best candidate",
+            "verdict_reason": "conflict",
+            "selected_candidate": {
+                "manuscript": "candidate manuscript",
+                "strategy": "balanced",
+                "strategy_name": "균형 전략",
+            },
+            "feedback": {"issues": ["conflict"]},
+            "action_items": ["fix ending"],
+        }
+
+        with patch("builtins.open", mock_open()) as mocked_open, patch("os.makedirs"):
+            result = ir.run(
+                round_num=0,
+                stage4_spinner=MagicMock(),
+                director_feedback="",
+                previous_attempt={},
+                round_ctx=round_ctx,
+            )
+
+        assert result.verdict == "REJECT"
+        prm_kwargs = ctx.pass_rate_monitor.record_attempt.call_args.kwargs
+        db_kwargs = ctx.current_project.db.save_director_selection.call_args.kwargs
+        payload = json.loads("".join(call.args[0] for call in mocked_open().write.call_args_list).strip())
+        assert prm_kwargs["candidate_key"] == "B|balanced"
+        assert payload["candidate_key"] == prm_kwargs["candidate_key"]
+        assert payload["artifact_path"] == prm_kwargs["artifact_path"]
+        assert payload["selection_candidate_key"] == db_kwargs["candidate_key"]
+        assert payload["selection_candidate_key"] == "B|균형 전략"
+        assert payload["selection_artifact_path"] == db_kwargs["artifact_path"]
+
+    def test_pass_with_fix_loop_sets_and_clears_structural_patch_context(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.blueprint = {
+            "ep_num": 1,
+            "scene_breakdown": {
+                "scene_1": {"description": "opening buildup"},
+                "scene_2": {"description": "ending payoff"},
+            },
+        }
+        round_ctx.genre_name = "무협"
+
+        def _inplace_side_effect(**kwargs):
+            assert round_ctx.chief_writer._inplace_patch_blueprint == round_ctx.blueprint
+            assert round_ctx.chief_writer._inplace_patch_genre_name == "무협"
+            round_ctx.chief_writer._last_inplace_patch_trace = {
+                "patch_strategy": "inplace_patch_structural",
+                "patch_targets": ["scene_2"],
+                "fallback_reason": "",
+                "focus": "ending",
+                "structural_attempted": True,
+            }
+            return [{"manuscript": "patched manuscript " * 200, "state_updates": {"ending": "tightened"}}]
+
+        round_ctx.chief_writer.inplace_patch.side_effect = _inplace_side_effect
+        ctx.agents["director"].select_and_judge_ensemble.return_value = {
+            "verdict": "PASS",
+            "score": 97,
+            "selection_reason": "re-audit accepted",
+            "open_review": "ending tension restored",
+            "score_breakdown": {"structure": 97},
+            "consistency_checklist": {"timeline": "ok"},
+            "state_updates": {"ending": "tightened"},
+        }
+
+        verdict, final_manuscript, final_state_updates, final_director_result, final_feedback, patch_trace = (
+            ir._execute_pass_with_fix_loop(
+                verdict="PASS_WITH_FIX",
+                final_manuscript="original manuscript " * 220,
+                final_state_updates={},
+                director_result={
+                    "fix_scope": "inplace",
+                    "action_items": ["엔딩 장면 보강"],
+                    "feedback": {"action_items": ["엔딩 장면 보강"]},
+                    "selected_candidate": {"manuscript": "candidate manuscript " * 220},
+                    "score": 92,
+                },
+                director_feedback="엔딩 장면 보강",
+                round_ctx=round_ctx,
+                round_num=0,
+                score=92,
+                quality_gate_score=90,
+                director_mandatory_context="",
+            )
+        )
+
+        assert verdict == "PASS"
+        assert final_manuscript == "patched manuscript " * 200
+        assert final_state_updates["ending"] == "tightened"
+        assert final_director_result["score"] == 97
+        assert final_feedback == "엔딩 장면 보강"
+        assert patch_trace["patch_strategy"] == "inplace_patch_structural"
+        assert patch_trace["patch_targets"] == ["scene_2"]
+        assert 0.0 <= patch_trace["unchanged_ratio"] <= 1.0
+        assert round_ctx.chief_writer._inplace_patch_blueprint is None
+        assert round_ctx.chief_writer._inplace_patch_genre_name == ""
+
     def test_reject_run_keeps_db_and_episode_log_reasoning_consistent(self):
         ctx = _make_ctx()
+        ctx.current_project.metrics_session_id = "sess_stage4_reject"
         ctx.pass_rate_monitor = MagicMock()
         ir = Stage4InterviewRound(ctx)
         round_ctx = _make_round_ctx()
@@ -1424,11 +1937,16 @@ class TestRecordS4Attempt:
         prm_kwargs = ctx.pass_rate_monitor.record_attempt.call_args.kwargs
         assert prm_kwargs["success"] is False
         assert prm_kwargs["reject_reason"] == "마지막 장면 수정"
+        assert prm_kwargs["attempt_key"] == "s4:ep1:arc1:a1:sess_stage4_reject"
+        cost_kwargs = ctx.current_project.db.save_cost_record.call_args.kwargs
+        assert cost_kwargs["session_id"] == "sess_stage4_reject"
 
         written = "".join(call.args[0] for call in mocked_open().write.call_args_list)
         payload = json.loads(written.strip())
         assert payload["selection_reason"] == "최우수 후보 선택"
         assert payload["verdict_reason"] == "Contradiction Firewall: CRITICAL 1건"
+        assert payload["initial_verdict"] == "REJECT"
+        assert payload["final_verdict"] == "REJECT"
         assert payload["flags"]["reject_bucket"] == "quality_issue"
 
     def test_episode_log_write_failure_is_non_blocking_and_other_records_persist(self):
@@ -1473,6 +1991,7 @@ class TestRecordS4Attempt:
         prm_kwargs = ctx.pass_rate_monitor.record_attempt.call_args.kwargs
         assert prm_kwargs["success"] is False
         assert prm_kwargs["reject_reason"] == "마지막 장면 수정"
+        assert prm_kwargs["attempt_key"] == "s4:ep1:arc1:a1"
 
 
 class TestModuleStructure:

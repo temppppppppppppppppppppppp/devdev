@@ -4,12 +4,14 @@
 상위 마스터 문서: `docs/2026-03-12/pass-with-fix-master-roadmap.md`  
 기준 감사 문서: `docs/2026-03-12/pass-with-fix-partial-fix-3pass-audit.md`  
 문서 역할: 마스터 로드맵의 phase를 실제 구현·검증 항목으로 풀어 쓴 하위 실행 메모
+Phase 1 실행 스펙: `docs/2026-03-12/pass-with-fix-phase1-execution-spec.md`
 
 ## 문서 상태
 
 - 이 문서는 최상위 SSOT가 아니다.
 - phase 순서, 용어, 비대상 범위는 `pass-with-fix-master-roadmap.md`를 따른다.
 - 특히 `CW 일반 글쓰기 생성 구조는 직접 변경 대상이 아님`이라는 원칙을 전제로 읽는다.
+- `Phase 1` 구현 세부는 이 문서보다 `pass-with-fix-phase1-execution-spec.md`가 우선한다.
 
 ## 0. 실행 결론
 
@@ -196,6 +198,31 @@
 
 이 항목은 correctness보다는 observability이므로 `P1`로 둔다.
 
+### P1-2b. patch_trace 최소 계측 고정
+
+문제:
+
+- structural inplace가 실제로 발동했는지, whole-text fallback이 발생했는지, 얼마나 원문을 보존했는지 운영자가 빠르게 판단하기 어렵다
+
+실행 목표:
+
+- `episode_production.jsonl`에 `patch_trace`를 최소 계측 필드로 고정한다
+- `FailureAnalyzer.patch_trace_summary()`가 rerun 판정용 1차 요약 지표를 제공한다
+
+최소 필드:
+
+- `patch_strategy`
+- `patch_targets`
+- `unchanged_ratio`
+- `fallback_reason`
+- `focus`
+- `structural_attempted`
+
+완료 기준:
+
+- limited rerun 후 운영자는 raw JSONL을 전부 읽지 않아도 `patch_trace_summary()`로 structural inplace 상태를 판단할 수 있다
+- 문서 체크리스트에 같은 필드가 hard gate로 반영된다
+
 ### P1-3. artifact snapshot backlog 정의
 
 문제:
@@ -295,12 +322,16 @@ Gate:
 
 - 기존 체크리스트로 rerun 수행
 - `00_test_03` 유형의 `PASS_WITH_FIX` 사례를 우선 점검
+- `patch_trace_summary()`를 함께 기록
 
 필수 확인:
 
 - initial vs final verdict 혼동이 사라졌는지
 - final score가 재심사 score와 맞는지
 - shrink guard가 실제 rerun에서도 정상 작동하는지
+- local issue에서 `patch_strategy=inplace_patch_structural`이 실제로 관측되는지
+- `avg_unchanged_ratio >= 0.70`인지
+- `fallback_reason`의 금지 항목(`missing_patched_blocks`, `no_usable_patched_blocks`, `patched_output_too_short`)이 0 또는 명시적 예외인지
 
 ### Phase 5. behavior change 실험
 
@@ -321,8 +352,10 @@ Gate:
 - Stage 4 `PASS_WITH_FIX -> patch -> PASS` 시 `_director_quality_labels.score` 갱신
 - Stage 4 `PASS_WITH_FIX -> patch -> PASS` 시 `stage_attempts.score` 갱신
 - Stage 4 `episode_production`과 `stage_attempts`가 의도적으로 다른 의미를 쓸 경우 그 계약을 명시적으로 검증
+- Stage 4 `episode_production.patch_trace`가 structural patch / fallback / unchanged ratio를 보존하는지 검증
 - Stage 3 `PASS_WITH_FIX` 외부 노출 계약 검증
 - failure analyzer / db query가 확정 계약과 같은 의미를 집계하는지 검증
+- `FailureAnalyzer.patch_trace_summary()`가 rerun용 기준선을 계산하는지 검증
 
 권장 추가:
 
@@ -337,6 +370,7 @@ Gate:
 - Stage 4 final score semantics 수정 완료
 - 관련 회귀 테스트 green
 - 운영자가 sink별 의미를 헷갈리지 않도록 체크리스트/문서가 갱신됨
+- `patch_trace` hard gate와 canary acceptance band가 문서상 고정됨
 
 예외:
 

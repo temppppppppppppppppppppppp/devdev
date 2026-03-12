@@ -130,6 +130,7 @@ class TestStage4AuditSummary:
         ctx.context_advisor = None
         ctx.perf_timer = MagicMock()
         ctx.sys = mock_app.sys
+        mock_app._audit_event = MagicMock()
         mock_app._write_audit_summary = MagicMock()
 
         orch = Stage4Orchestrator(mock_app, context=ctx)
@@ -138,6 +139,7 @@ class TestStage4AuditSummary:
 
         orch.stage_4_v2_chief_writer()
 
+        mock_app._audit_event.assert_called_once()
         mock_app._write_audit_summary.assert_called_once_with("stage4_complete")
 
     def test_stage4_early_return_does_not_write_runtime_audit_summary(self, mock_app):

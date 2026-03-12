@@ -5433,18 +5433,22 @@
       let _ws = null;
       let _wsReconnectTimer = null;
 
-      // 장르 key → main_a.py 번호 매핑
-      const GENRE_INDEX_MAP = {
-        wuxia: 1, hunter: 2, investment: 3, fantasy: 4,
-        composer: 5, cooking: 6, alt_history: 7, actor: 8,
-        sports: 9, medical: 10
+      // Desktop-side CLI contract fallback. The main process supplies the same map via IPC.
+      let cliContract = {
+        defaultGenreIndex: 3,
+        projectIndexBase: 1,
+        genreIndexMap: {
+          wuxia: 1, hunter: 2, investment: 3, fantasy: 4,
+          composer: 5, cooking: 6, alt_history: 7, actor: 8,
+          sports: 9, medical: 10
+        }
       };
 
       function _collectInputs() {
         const inputs = {};
         // 장르 인덱스 (main_a.py _select_genre 번호)
         if (projectConfig.genre) {
-          inputs.genre_index = GENRE_INDEX_MAP[projectConfig.genre] || 1;
+          inputs.genre_index = (cliContract.genreIndexMap || {})[projectConfig.genre] || cliContract.defaultGenreIndex || 1;
         }
         // 프로젝트 인덱스 (main_a.py _select_project 번호, 1-based)
         if (projectConfig.projectIndex) {
@@ -7210,6 +7214,16 @@
       if (window.geuldobiDesktop) {
         (async () => {
           try {
+            if (typeof window.geuldobiDesktop.getCliContract === "function") {
+              const contract = await window.geuldobiDesktop.getCliContract();
+              if (contract && typeof contract === "object") {
+                cliContract = {
+                  ...cliContract,
+                  ...contract,
+                  genreIndexMap: contract.genreIndexMap || cliContract.genreIndexMap,
+                };
+              }
+            }
             const saved = await window.geuldobiDesktop.loadSettings();
             if (saved && typeof saved === "object") {
               settingsStore.apiKey1 = saved.apiKey1 || "";

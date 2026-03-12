@@ -445,6 +445,10 @@ class DBManager:
                 selection_reason TEXT,
                 candidate_count INTEGER DEFAULT 3,
                 fix_scope TEXT DEFAULT '',
+                attempt_key TEXT DEFAULT '',
+                candidate_key TEXT DEFAULT '',
+                content_hash TEXT DEFAULT '',
+                artifact_path TEXT DEFAULT '',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
@@ -480,8 +484,20 @@ class DBManager:
             self.cursor.execute("ALTER TABLE director_selections ADD COLUMN firewall_reason TEXT DEFAULT ''")
         except sqlite3.OperationalError:
             pass  # already exists
+        try:
+            self.cursor.execute("ALTER TABLE director_selections ADD COLUMN attempt_key TEXT DEFAULT ''")
+        except sqlite3.OperationalError:
+            pass  # already exists
+        for _col in ("candidate_key", "content_hash", "artifact_path"):
+            try:
+                self.cursor.execute(f"ALTER TABLE director_selections ADD COLUMN {_col} TEXT DEFAULT ''")
+            except sqlite3.OperationalError:
+                pass  # already exists
         self.cursor.execute(
             "CREATE INDEX IF NOT EXISTS idx_director_selections_stage_ep ON director_selections(stage, ep_num)"
+        )
+        self.cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_director_selections_attempt_key ON director_selections(attempt_key)"
         )
 
         # [Log-1] Per-call LLM telemetry
@@ -503,6 +519,11 @@ class DBManager:
                 error_msg TEXT,
                 verdict TEXT,
                 context_tag TEXT,
+                input_tokens INTEGER,
+                output_tokens INTEGER,
+                cached_tokens INTEGER,
+                thinking_tokens INTEGER,
+                total_cost_usd REAL,
                 prompt_snippet TEXT,
                 response_snippet TEXT,
                 thinking_snippet TEXT
@@ -513,9 +534,19 @@ class DBManager:
         self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_llm_calls_ep ON llm_calls(ep_num)")
         self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_llm_calls_ts ON llm_calls(ts)")
         # [Log-Phase2] Existing DB compatibility migration
-        for _col in ("prompt_snippet", "response_snippet", "thinking_snippet"):
+        for _col in (
+            "input_tokens",
+            "output_tokens",
+            "cached_tokens",
+            "thinking_tokens",
+            "total_cost_usd",
+            "prompt_snippet",
+            "response_snippet",
+            "thinking_snippet",
+        ):
             try:
-                self.cursor.execute(f"ALTER TABLE llm_calls ADD COLUMN {_col} TEXT")
+                _col_type = "REAL" if _col == "total_cost_usd" else ("INTEGER" if _col.endswith("_tokens") else "TEXT")
+                self.cursor.execute(f"ALTER TABLE llm_calls ADD COLUMN {_col} {_col_type}")
                 self.conn.commit()
             except Exception as _e:
                 logging.debug("[DBManager] llm_calls 컬럼 마이그레이션 스킵(%s): %s", _col, _e)
@@ -539,8 +570,12 @@ class DBManager:
                 model TEXT,
                 duration_ms INTEGER,
                 advisory_flags TEXT,
+                attempt_key TEXT,
                 generation_method TEXT,
-                prompt_version TEXT
+                prompt_version TEXT,
+                candidate_key TEXT,
+                content_hash TEXT,
+                artifact_path TEXT
             )
             """
         )
@@ -550,12 +585,20 @@ class DBManager:
             "CREATE INDEX IF NOT EXISTS idx_stage_attempts_category ON stage_attempts(failure_category)"
         )
         # [TF-60][OPT-3] stage_attempts 컬럼 마이그레이션 (기존 DB 호환)
-        for _col in ("generation_method", "prompt_version"):
+        for _col in (
+            "generation_method",
+            "prompt_version",
+            "attempt_key",
+            "candidate_key",
+            "content_hash",
+            "artifact_path",
+        ):
             try:
                 self.cursor.execute(f"ALTER TABLE stage_attempts ADD COLUMN {_col} TEXT")
                 self.conn.commit()
             except Exception as _e:
                 logging.debug("[DBManager] stage_attempts %s 마이그레이션 스킵: %s", _col, _e)
+        self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_stage_attempts_attempt_key ON stage_attempts(attempt_key)")
 
         # 16. [Phase 6] 비용 추적 로그
         self.cursor.execute("""
@@ -1949,9 +1992,23 @@ class DBManager:
                 return
             data_to_insert = []
             for link in new_links:
-                ep = link.get("ep") or current_ep
-                serialized = json.dumps(link, ensure_ascii=False)
+                if isinstance(link, dict):
+                    normalized_link = dict(link)
+                else:
+                    text = str(link or "").strip()
+                    if not text:
+                        continue
+                    normalized_link = {
+                        "cause": text,
+                        "effect": "",
+                        "raw_text": text,
+                    }
+                ep = normalized_link.get("ep") or normalized_link.get("ep_no") or current_ep
+                normalized_link.setdefault("ep", ep)
+                serialized = json.dumps(normalized_link, ensure_ascii=False)
                 data_to_insert.append((ep, serialized))
+            if not data_to_insert:
+                return
             self.cursor.executemany("INSERT INTO causal_graph (ep_num, data) VALUES (?, ?)", data_to_insert)
             if not nested:
                 self.commit()
@@ -2585,6 +2642,10 @@ class DBManager:
         pre_firewall_score: int = 0,
         firewall_triggered: bool = False,
         firewall_reason: str = "",
+        attempt_key: str = "",
+        candidate_key: str = "",
+        content_hash: str = "",
+        artifact_path: str = "",
     ) -> None:
         """Persist director selection result."""
         with self._lock:
@@ -2594,8 +2655,9 @@ class DBManager:
                 "INSERT INTO director_selections "
                 "(stage, ep_num, round_num, selected_label, selected_strategy, verdict, score, "
                 "selection_reason, candidate_count, fix_scope, advisory_warnings, verdict_reason, "
-                "pre_firewall_score, firewall_triggered, firewall_reason) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                "pre_firewall_score, firewall_triggered, firewall_reason, attempt_key, "
+                "candidate_key, content_hash, artifact_path) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (
                     stage,
                     ep_num,
@@ -2612,6 +2674,10 @@ class DBManager:
                     int(pre_firewall_score or 0),
                     1 if firewall_triggered else 0,
                     firewall_reason[:500] if firewall_reason else "",
+                    str(attempt_key or ""),
+                    str(candidate_key or ""),
+                    str(content_hash or ""),
+                    str(artifact_path or ""),
                 ),
             )
             if not nested:
@@ -2886,23 +2952,20 @@ class DBManager:
 
     def get_recent_episode_scores(self, before_ep: int, lookback: int = 5) -> list[dict]:
         """최근 PASS 계열 에피소드 점수를 오래된 순으로 반환."""
-        _stage4 = self._director_stage_predicate(4)
         with self._lock:
             cur = self.cursor.execute(
                 """
-                SELECT ds.ep_num, ds.score, ds.verdict
-                FROM director_selections ds
+                SELECT sa.ep_num, sa.score, sa.verdict, sa.attempt_key
+                FROM stage_attempts sa
                 JOIN (
                     SELECT ep_num, MAX(id) AS last_id
-                    FROM director_selections
-                    WHERE ep_num < ? AND verdict IN ('PASS', 'PASS_WITH_FIX') AND """
-                + _stage4
-                + """
+                    FROM stage_attempts
+                    WHERE ep_num < ? AND stage = 4 AND verdict IN ('PASS', 'PASS_WITH_WARNING')
                     GROUP BY ep_num
                     ORDER BY ep_num DESC
                     LIMIT ?
-                ) latest ON latest.last_id = ds.id
-                ORDER BY ds.ep_num ASC
+                ) latest ON latest.last_id = sa.id
+                ORDER BY sa.ep_num ASC
                 """,
                 (before_ep, lookback),
             )
@@ -2960,6 +3023,11 @@ class DBManager:
         verdict: str | None = None,
         context_tag: str | None = None,
         session_id: str | None = None,
+        input_tokens: int | None = None,
+        output_tokens: int | None = None,
+        cached_tokens: int | None = None,
+        thinking_tokens: int | None = None,
+        total_cost_usd: float | None = None,
         prompt_snippet: str | None = None,
         response_snippet: str | None = None,
         thinking_snippet: str | None = None,
@@ -2978,8 +3046,9 @@ class DBManager:
                        (session_id, ts, stage, ep_num, agent_name, model,
                         prompt_chars, response_chars, duration_ms,
                         success, error_type, error_msg, verdict, context_tag,
+                        input_tokens, output_tokens, cached_tokens, thinking_tokens, total_cost_usd,
                         prompt_snippet, response_snippet, thinking_snippet)
-                       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                     (
                         session_id,
                         ts,
@@ -2995,6 +3064,11 @@ class DBManager:
                         (error_msg or "")[:80],
                         verdict,
                         context_tag,
+                        int(input_tokens or 0) if input_tokens is not None else None,
+                        int(output_tokens or 0) if output_tokens is not None else None,
+                        int(cached_tokens or 0) if cached_tokens is not None else None,
+                        int(thinking_tokens or 0) if thinking_tokens is not None else None,
+                        float(total_cost_usd or 0.0) if total_cost_usd is not None else None,
                         _prompt_snip,
                         _response_snip,
                         _thinking_snip,
@@ -3019,8 +3093,12 @@ class DBManager:
         duration_ms: int | None = None,
         advisory_flags: dict | None = None,
         session_id: str | None = None,
+        attempt_key: str | None = None,
         generation_method: str | None = None,
         prompt_version: str | None = None,
+        candidate_key: str | None = None,
+        content_hash: str | None = None,
+        artifact_path: str | None = None,
     ) -> None:
         """[Log-2] Save one stage attempt record in non-blocking mode."""
         try:
@@ -3031,8 +3109,9 @@ class DBManager:
                     """INSERT INTO stage_attempts
                        (session_id, ts, stage, ep_num, arc_num, attempt_num,
                         verdict, score, failure_category, reject_reason,
-                        fix_scope, model, duration_ms, advisory_flags, generation_method, prompt_version)
-                       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                        fix_scope, model, duration_ms, advisory_flags, attempt_key, generation_method, prompt_version,
+                        candidate_key, content_hash, artifact_path)
+                       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                     (
                         session_id,
                         ts,
@@ -3048,8 +3127,12 @@ class DBManager:
                         model,
                         duration_ms,
                         _advisory_json,
+                        str(attempt_key or ""),
                         generation_method,
                         prompt_version,
+                        str(candidate_key or ""),
+                        str(content_hash or ""),
+                        str(artifact_path or ""),
                     ),
                 )
                 self.conn.commit()

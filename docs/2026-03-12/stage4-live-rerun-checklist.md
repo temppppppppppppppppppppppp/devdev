@@ -1,5 +1,17 @@
 # Stage 4 Live Rerun Checklist
 
+## Pre-Canary Automation
+
+- pre-canary parallel roadmap: `docs/2026-03-12/stage4-canary-parallel-roadmap.md`
+- safe copy + Stage4-only prep:
+  - `python scripts/run_stage4_canary.py prepare --source-project 00_test_02 --target-project 00_test_06 --force`
+- canary run:
+  - `python scripts/run_stage4_canary.py run --project 00_test_06 --target-ep 4`
+- canary summary:
+  - `python scripts/run_stage4_canary.py analyze --project 00_test_06 --target-ep 4`
+- one-shot path:
+  - `python scripts/run_stage4_canary.py full --source-project 00_test_02 --target-project 00_test_06 --target-ep 4 --force`
+
 작성일: 2026-03-12
 
 상위 마스터 문서: `docs/2026-03-12/pass-with-fix-master-roadmap.md`  
@@ -135,8 +147,49 @@ pytest -q tests/test_v75c_contradiction_firewall.py tests/test_chief_writer.py t
   - `flags.reject_bucket`
   - `selection_reason`
   - `verdict_reason`
+  - `patch_trace.patch_strategy`
+  - `patch_trace.patch_targets`
+  - `patch_trace.unchanged_ratio`
+  - `patch_trace.fallback_reason`
+  - `patch_trace.focus`
+  - `patch_trace.structural_attempted`
 - [ ] `pass_rate_monitor.json` stage4 row에 `duration_ms`와 `token_cost`가 0 또는 누락이 아닌 값으로 저장된다.
 - [ ] `director_selections`에 `selection_reason`, `verdict_reason`, `pre_firewall_score`, `firewall_triggered`, `firewall_reason`이 필요 시 저장된다.
+
+### 3.4 Patch Trace Hard Gate
+
+- [ ] local issue 기반 `PASS_WITH_FIX`가 있었다면 `patch_trace.patch_strategy=inplace_patch_structural`이 최소 1회는 관측된다.
+- [ ] `FailureAnalyzer.patch_trace_summary().avg_unchanged_ratio >= 0.70`
+- [ ] `fallback_reason` 중 아래 항목은 canary에서 `0`이거나, 발생 시 운영 메모에 명시적 승인 사유가 있다.
+  - `missing_patched_blocks`
+  - `no_usable_patched_blocks`
+  - `patched_output_too_short`
+- [ ] local issue canary에서 `top_patch_targets`가 비어 있지 않다.
+- [ ] `patch_mode=true`인데 `patch_trace`가 비어 있는 row가 없다.
+- [ ] `patch_trace_summary()`와 raw `episode_production.jsonl`이 서로 모순되지 않는다.
+
+### 3.5 Cross-Sink Hard Gate
+
+- [ ] `FailureAnalyzer.sink_alignment_summary().status == "ok"` 또는 `warn`의 모든 항목이 명시적 예외로 문서화되어 있다.
+- [ ] `final_verdict_mismatches == []`
+- [ ] `final_score_mismatches == []`
+- [ ] `initial_verdict_mismatches == []`
+- [ ] `patch_strategy_mismatches == []`
+- [ ] `candidate_key_mismatches == []`
+- [ ] `selection_candidate_key_mismatches == []`
+- [ ] `content_hash_mismatches == []`
+- [ ] `artifact_path_mismatches == []`
+- [ ] `artifact_metadata_missing == []`
+- [ ] `artifact_missing_files == []`
+- [ ] `legacy_key_attempts == 0` for standard runtime canary
+- [ ] `lifecycle_missing_in_final_sinks == {}` 또는 허용 사유가 문서화되어 있다.
+
+### 3.6 Artifact Linkage Hard Gate
+
+- [ ] Stage 4 `PASS` 또는 `PASS_WITH_FIX -> PASS` attempt의 `episode_production.jsonl` row에 `candidate_key`, `content_hash`, `artifact_path`가 모두 있다.
+- [ ] `artifact_path`가 가리키는 파일이 실제로 존재한다.
+- [ ] `artifact_path`가 `logs/artifacts/stage4/...` 하위에 기록된다.
+- [ ] `candidate_key`가 director selection과 final artifact에서 모순되지 않는다.
 
 ## 4. 조건부 시나리오 검증
 
@@ -159,6 +212,9 @@ pytest -q tests/test_v75c_contradiction_firewall.py tests/test_chief_writer.py t
 
 - [ ] `verdict=PASS_WITH_FIX` row가 있어도 최종 completion 판정은 `drafts/`, `runtime_audit_summary`, `stage_attempts` 기준으로 다시 확인한다.
 - [ ] `episode_production.jsonl`의 round verdict만 보고 성공으로 단정하지 않는다.
+- [ ] local issue였던 row는 `patch_trace.focus`와 `patch_trace.patch_targets`가 비어 있지 않은지 확인한다.
+- [ ] `patch_trace.patch_strategy`가 `inplace_patch_structural`이 아니었다면 `fallback_reason`을 함께 기록한다.
+- [ ] `patch_trace.unchanged_ratio`가 `0.70` 미만이면 acceptable drift로 넘기지 않고 원인 분석 대상으로 분리한다.
 
 ### 4.4 Interrupted Session
 
@@ -254,6 +310,108 @@ Get-Content projects/<PROJECT>/logs/episode_production.jsonl -TotalCount 20
 - `flags.strategy_budget`
 - `flags.strategy_count`
 - `flags.reject_bucket`
+- `patch_trace.patch_strategy`
+- `patch_trace.patch_targets`
+- `patch_trace.unchanged_ratio`
+- `patch_trace.fallback_reason`
+
+### 5.5 patch_trace_summary 확인
+
+```powershell
+@'
+from pathlib import Path
+from modules.core.db_manager import DBManager
+from modules.core.failure_analyzer import FailureAnalyzer
+
+name = "<PROJECT>"
+project_path = Path("projects") / name
+db = DBManager(project_path / "project_data.db")
+try:
+    analyzer = FailureAnalyzer(db, project_path=project_path)
+    print(analyzer.patch_trace_summary())
+finally:
+    db.close()
+'@ | python -
+```
+
+확인 포인트:
+
+- `count`
+- `structural_attempted_count`
+- `avg_unchanged_ratio`
+- `strategy_counts`
+- `fallback_reasons`
+- `focus_counts`
+- `top_patch_targets`
+
+### 5.6 sink_alignment_summary 확인
+
+```powershell
+@'
+from pathlib import Path
+from modules.core.db_manager import DBManager
+from modules.core.failure_analyzer import FailureAnalyzer
+
+name = "<PROJECT>"
+project_path = Path("projects") / name
+db = DBManager(project_path / "project_data.db")
+try:
+    analyzer = FailureAnalyzer(db, project_path=project_path)
+    print(analyzer.sink_alignment_summary())
+finally:
+    db.close()
+'@ | python -
+```
+
+확인 포인트
+
+- `status`
+- `coverage`
+- `complete_final_attempts`
+- `complete_lifecycle_attempts`
+- `final_sink_missing`
+- `lifecycle_sink_missing`
+- `lifecycle_missing_in_final_sinks`
+- `final_verdict_mismatches`
+- `final_score_mismatches`
+- `initial_verdict_mismatches`
+- `patch_strategy_mismatches`
+- `candidate_key_mismatches`
+- `selection_candidate_key_mismatches`
+- `content_hash_mismatches`
+- `artifact_path_mismatches`
+- `artifact_metadata_missing`
+- `artifact_missing_files`
+- `legacy_key_attempts`
+
+### 5.7 artifact linkage 확인
+
+```powershell
+@'
+from pathlib import Path
+import json
+
+name = "<PROJECT>"
+project_path = Path("projects") / name
+log_path = project_path / "logs" / "episode_production.jsonl"
+rows = [json.loads(line) for line in log_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+target = next(row for row in reversed(rows) if row.get("artifact_path"))
+artifact_path = project_path / target["artifact_path"]
+print({
+    "attempt_key": target.get("attempt_key"),
+    "candidate_key": target.get("candidate_key"),
+    "content_hash_present": bool(target.get("content_hash")),
+    "artifact_path": target.get("artifact_path"),
+    "artifact_exists": artifact_path.exists(),
+})
+'@ | python -
+```
+
+확인 포인트
+- `candidate_key`
+- `content_hash_present`
+- `artifact_path`
+- `artifact_exists`
 
 ## 6. 최종 판정 템플릿
 
@@ -285,15 +443,31 @@ Observability:
 - episode_production per-round metrics present: yes/no
 - pass_rate_monitor duration_ms/token_cost present: yes/no
 - selection_reason / verdict_reason split preserved: yes/no
+- patch_trace fields present: yes/no
+- patch_trace_summary avg_unchanged_ratio:
+- patch_trace_summary fallback_reasons:
+- patch_trace_summary top_patch_targets:
+- sink_alignment_summary status:
+- sink_alignment_summary final_verdict_mismatches:
+- sink_alignment_summary final_score_mismatches:
+- sink_alignment_summary candidate_key_mismatches:
+- sink_alignment_summary selection_candidate_key_mismatches:
+- sink_alignment_summary content_hash_mismatches:
+- sink_alignment_summary artifact_path_mismatches:
+- sink_alignment_summary artifact_metadata_missing:
+- sink_alignment_summary artifact_missing_files:
+- sink_alignment_summary legacy_key_attempts:
 
 Conditional Paths:
 - firewall REJECT seen: yes/no
 - post_select_conflict seen: yes/no
 - PASS_WITH_FIX seen: yes/no
+- structural inplace seen: yes/no
 - interrupted session: yes/no
 
 Notes:
 - acceptable drift:
+- patch_trace exceptions:
 - correctness issue:
 - follow-up:
 ```
@@ -301,5 +475,5 @@ Notes:
 ## 결론 규칙
 
 - 이 체크리스트의 목적은 "좋아 보이는 콘솔 출력"이 아니라 "completion semantics + observability semantics + retry routing semantics"를 실제 run에서 재검증하는 것이다.
-- rerun 결과가 성공 기준선보다 조금 느리거나 retry가 1회 더 많아도, `draft_count=4`와 `tag=stage4_complete`가 닫히고 observability 필드가 정상이면 우선 `acceptable drift`로 본다.
+- rerun 결과가 성공 기준선보다 조금 느리거나 retry가 1회 더 많아도, `draft_count=4`, `tag=stage4_complete`, `patch_trace` hard gate가 함께 닫히면 우선 `acceptable drift`로 본다.
 - 반대로 콘솔에 성공처럼 보여도 `draft_count`, `runtime_audit_summary.tag`, `stage_attempts`가 안 맞으면 fail로 기록한다.

@@ -34,6 +34,8 @@ class AgentMetric:
     retry_count: int = 0
     input_tokens: int = 0
     output_tokens: int = 0
+    cached_tokens: int = 0
+    thinking_tokens: int = 0
     error_type: str | None = None
 
     @property
@@ -65,11 +67,17 @@ class SessionStats:
     model_stats: dict[str, dict] = field(default_factory=dict)
 
 
-# 모델별 토큰 비용 (USD per 1M tokens, 2026년 기준)
+# 모델별 토큰 비용 (USD per 1M tokens, Google 공식 2026-03 기준, ≤200K context)
 MODEL_COSTS = {
-    "gemini-2.5-flash": {"input": 0.15, "output": 0.60},
-    "gemini-2.5-pro": {"input": 1.25, "output": 5.00},
-    "default": {"input": 0.50, "output": 2.00},
+    "gemini-2.5-flash": {
+        "input": 0.30, "output": 2.50,
+        "cache_read": 0.03,
+    },
+    "gemini-2.5-pro": {
+        "input": 1.25, "output": 10.00,
+        "cache_read": 0.125,
+    },
+    "default": {"input": 1.25, "output": 10.00, "cache_read": 0.125},
 }
 
 
@@ -151,12 +159,16 @@ class MetricsCollector:
         self._agent_calls: dict[str, int] = defaultdict(int)
         self._agent_successes: dict[str, int] = defaultdict(int)
         self._agent_retries: dict[str, int] = defaultdict(int)
-        self._model_tokens: dict[str, dict[str, int]] = defaultdict(lambda: {"input": 0, "output": 0})
+        self._model_tokens: dict[str, dict[str, int]] = defaultdict(
+            lambda: {"input": 0, "output": 0, "cached": 0, "thinking": 0}
+        )
         # [Phase 6] 스코프 단위 누적 (arc/episode 스냅샷 후 리셋)
         self._scope_calls = 0
         self._scope_tokens = 0
         self._scope_cost = 0.0
-        self._scope_model_breakdown: dict[str, dict[str, float]] = defaultdict(lambda: {"tokens": 0, "cost": 0.0})
+        self._scope_model_breakdown: dict[str, dict[str, float]] = defaultdict(
+            lambda: {"tokens": 0, "cost": 0.0, "cached_tokens": 0, "thinking_tokens": 0}
+        )
 
         # 스레드 안전성
         # [V49.6 FIX] Lock → RLock (재진입 가능, 데드락 방지)
@@ -197,6 +209,8 @@ class MetricsCollector:
         retry_count: int = 0,
         input_tokens: int = 0,
         output_tokens: int = 0,
+        cached_tokens: int = 0,
+        thinking_tokens: int = 0,
         error_type: str | None = None,
     ):
         """
@@ -220,6 +234,8 @@ class MetricsCollector:
             metric.retry_count = retry_count
             metric.input_tokens = input_tokens
             metric.output_tokens = output_tokens
+            metric.cached_tokens = max(0, min(int(cached_tokens or 0), int(input_tokens or 0)))
+            metric.thinking_tokens = max(0, int(thinking_tokens or 0))
             metric.error_type = error_type
 
             # 집계 업데이트
@@ -236,15 +252,19 @@ class MetricsCollector:
             model = metric.model
             self._model_tokens[model]["input"] += input_tokens
             self._model_tokens[model]["output"] += output_tokens
+            self._model_tokens[model]["cached"] += metric.cached_tokens
+            self._model_tokens[model]["thinking"] += metric.thinking_tokens
 
             # [Phase 6] 스코프 집계
             call_tokens = input_tokens + output_tokens
-            cost = self.calculate_cost(model, input_tokens, output_tokens)
+            cost = self.calculate_cost(model, input_tokens, output_tokens, cached_tokens=metric.cached_tokens)
             self._scope_calls += 1
             self._scope_tokens += call_tokens
             self._scope_cost += cost
             self._scope_model_breakdown[model]["tokens"] += call_tokens
             self._scope_model_breakdown[model]["cost"] += cost
+            self._scope_model_breakdown[model]["cached_tokens"] += metric.cached_tokens
+            self._scope_model_breakdown[model]["thinking_tokens"] += metric.thinking_tokens
 
             # [INF-P1-4] 완료된 메트릭 엔트리 삭제 (메모리 누수 방지)
             del self._metrics[metric_id]
@@ -272,22 +292,26 @@ class MetricsCollector:
         other_chars = len(text) - korean_chars
         return int(korean_chars / 1.5 + other_chars / 4)
 
-    def calculate_cost(self, model: str, input_tokens: int, output_tokens: int) -> float:
+    def calculate_cost(self, model: str, input_tokens: int, output_tokens: int,
+                       cached_tokens: int = 0) -> float:
         """
-        API 비용 계산
+        API 비용 계산 (cache-aware)
 
         Args:
             model: 모델명
             input_tokens: 입력 토큰 수
-            output_tokens: 출력 토큰 수
+            output_tokens: 출력 토큰 수 (Developer API: thinking 토큰 포함)
+            cached_tokens: 캐시 히트 토큰 수 (input에서 차감, 할인 적용)
 
         Returns:
             float: 비용 (USD)
         """
         costs = MODEL_COSTS.get(_normalize_billable_model(model), MODEL_COSTS["default"])
-        input_cost = (input_tokens / 1_000_000) * costs["input"]
+        non_cached_input = max(0, input_tokens - cached_tokens)
+        input_cost = (non_cached_input / 1_000_000) * costs["input"]
+        cache_cost = (cached_tokens / 1_000_000) * costs.get("cache_read", costs["input"] * 0.1)
         output_cost = (output_tokens / 1_000_000) * costs["output"]
-        return input_cost + output_cost
+        return input_cost + cache_cost + output_cost
 
     def get_agent_stats(self, agent_name: str) -> dict[str, Any]:
         """
@@ -342,7 +366,9 @@ class MetricsCollector:
             for model, tokens in self._model_tokens.items():
                 input_t = tokens["input"]
                 output_t = tokens["output"]
-                cost = self.calculate_cost(model, input_t, output_t)
+                cached_t = tokens.get("cached", 0)
+                thinking_t = tokens.get("thinking", 0)
+                cost = self.calculate_cost(model, input_t, output_t, cached_tokens=cached_t)
 
                 total_tokens += input_t + output_t
                 total_cost += cost
@@ -350,6 +376,8 @@ class MetricsCollector:
                 model_stats[model] = {
                     "input_tokens": input_t,
                     "output_tokens": output_t,
+                    "cached_tokens": cached_t,
+                    "thinking_tokens": thinking_t,
                     "total_tokens": input_t + output_t,
                     "cost_usd": round(cost, 4),
                 }
@@ -447,6 +475,8 @@ class MetricsCollector:
             model: {
                 "tokens": int(stats.get("tokens", 0)),
                 "cost": round(float(stats.get("cost", 0.0)), 6),
+                "cached_tokens": int(stats.get("cached_tokens", 0)),
+                "thinking_tokens": int(stats.get("thinking_tokens", 0)),
             }
             for model, stats in self._scope_model_breakdown.items()
         }
@@ -471,7 +501,9 @@ class MetricsCollector:
             self._scope_calls = 0
             self._scope_tokens = 0
             self._scope_cost = 0.0
-            self._scope_model_breakdown = defaultdict(lambda: {"tokens": 0, "cost": 0.0})
+            self._scope_model_breakdown = defaultdict(
+                lambda: {"tokens": 0, "cost": 0.0, "cached_tokens": 0, "thinking_tokens": 0}
+            )
             return summary
 
     def _percentile(self, data: list[float], percentile: int) -> float:

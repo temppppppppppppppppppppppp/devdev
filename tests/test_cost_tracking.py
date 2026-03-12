@@ -106,3 +106,32 @@ def test_vertex_prefixed_model_uses_gemini_costs(tmp_path):
         assert vertex_cost == base_cost
     finally:
         MetricsCollector.reset(tmp_path / "metrics")
+
+
+def test_end_call_applies_cached_token_discount(tmp_path):
+    collector = MetricsCollector.reset(tmp_path / "metrics")
+    try:
+        metric_id = collector.start_call("Writer", "gemini-2.5-pro")
+        collector.end_call(
+            metric_id,
+            success=True,
+            input_tokens=1200,
+            output_tokens=800,
+            cached_tokens=200,
+            thinking_tokens=150,
+        )
+
+        expected_cost = collector.calculate_cost(
+            "gemini-2.5-pro",
+            input_tokens=1200,
+            output_tokens=800,
+            cached_tokens=200,
+        )
+        peek = collector.peek_scope()
+
+        assert peek["total_calls"] == 1
+        assert peek["total_cost_usd"] == round(expected_cost, 6)
+        assert peek["model_breakdown"]["gemini-2.5-pro"]["cached_tokens"] == 200
+        assert peek["model_breakdown"]["gemini-2.5-pro"]["thinking_tokens"] == 150
+    finally:
+        MetricsCollector.reset(tmp_path / "metrics")

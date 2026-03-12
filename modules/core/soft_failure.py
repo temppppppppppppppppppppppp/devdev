@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import threading
 import time
 from datetime import UTC, datetime
@@ -24,13 +25,55 @@ def _should_emit_warning(key: tuple[str, str, str], window_sec: float) -> bool:
         return True
 
 
-def _normalize_log_dir(log_dir: str | Path | None) -> Path | None:
+def _coerce_path(value: str | os.PathLike[str] | Path | None) -> Path | None:
+    if value is None:
+        return None
+    if isinstance(value, Path):
+        return value
+    if type(value).__module__.startswith("unittest.mock"):
+        return None
+    if isinstance(value, str):
+        normalized = value.strip()
+        return Path(normalized) if normalized else None
+    if isinstance(value, os.PathLike):
+        try:
+            raw = os.fspath(value)
+        except TypeError:
+            return None
+        return _coerce_path(raw)
+    return None
+
+
+def resolve_logs_dir(base_dir: str | os.PathLike[str] | Path | None) -> Path | None:
+    base = _coerce_path(base_dir)
+    if base is None:
+        return None
+    return base if base.name == "logs" else base / "logs"
+
+
+def resolve_project_log_dir(project) -> Path | None:
+    if project is None:
+        return None
+    root = _coerce_path(getattr(getattr(project, "paths", None), "root", None))
+    if root is not None:
+        return root / "logs"
+    db_path = _coerce_path(getattr(getattr(project, "db", None), "db_path", None))
+    if db_path is not None:
+        return db_path.parent / "logs"
+    return None
+
+
+def resolve_db_log_dir(db_path: str | os.PathLike[str] | Path | None) -> Path | None:
+    normalized = _coerce_path(db_path)
+    if normalized is None:
+        return None
+    return normalized.parent / "logs"
+
+
+def _normalize_log_dir(log_dir: str | os.PathLike[str] | Path | None) -> Path | None:
     if log_dir is None:
         return None
-    try:
-        return Path(log_dir)
-    except Exception:
-        return None
+    return _coerce_path(log_dir)
 
 
 def build_soft_failure_event(

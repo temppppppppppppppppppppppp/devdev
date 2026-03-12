@@ -98,6 +98,37 @@ def test_causal_graph_ep_num_index_exists(db):
     assert "idx_causal_graph_ep_num" in names
 
 
+def test_save_llm_call_persists_token_and_cost_fields(db):
+    db.save_llm_call(
+        agent_name="chief_writer",
+        model="gemini-2.5-pro",
+        prompt_chars=100,
+        response_chars=200,
+        duration_ms=321,
+        success=True,
+        session_id="sess-1",
+        input_tokens=120,
+        output_tokens=80,
+        cached_tokens=20,
+        thinking_tokens=10,
+        total_cost_usd=0.0123,
+    )
+
+    row = db.cursor.execute(
+        """
+        SELECT input_tokens, output_tokens, cached_tokens, thinking_tokens, total_cost_usd
+        FROM llm_calls
+        WHERE session_id = 'sess-1'
+        """
+    ).fetchone()
+
+    assert row["input_tokens"] == 120
+    assert row["output_tokens"] == 80
+    assert row["cached_tokens"] == 20
+    assert row["thinking_tokens"] == 10
+    assert row["total_cost_usd"] == pytest.approx(0.0123)
+
+
 def test_get_manuscripts_range_returns_ordered_rows(db):
     db.save_manuscript(1, "t1", "c1")
     db.save_manuscript(2, "t2", "c2")
@@ -187,6 +218,26 @@ def test_recent_episode_scores_and_stage_attempts_queries(db):
     db.save_director_selection(4, 2, "B", "balanced", "PASS", score=93, selection_reason="개선됨", stage=4)
     db.save_stage_attempt(
         stage=4,
+        verdict="PASS",
+        attempt_num=1,
+        ep_num=3,
+        arc_num=1,
+        score=91,
+        attempt_key="s4:ep3:arc1:a1",
+        prompt_version="chief_writer@v1|director@v1",
+    )
+    db.save_stage_attempt(
+        stage=4,
+        verdict="PASS_WITH_WARNING",
+        attempt_num=2,
+        ep_num=4,
+        arc_num=2,
+        score=93,
+        attempt_key="s4:ep4:arc2:a2",
+        prompt_version="chief_writer@v1|director@v1",
+    )
+    db.save_stage_attempt(
+        stage=4,
         verdict="REJECT",
         attempt_num=1,
         ep_num=4,
@@ -209,9 +260,56 @@ def test_recent_episode_scores_and_stage_attempts_queries(db):
 
     assert [row["ep_num"] for row in scores] == [3, 4]
     assert scores[-1]["score"] == 93
+    assert scores[0]["attempt_key"] == "s4:ep3:arc1:a1"
     assert len(attempts) == 2
     assert {row["failure_category"] for row in attempts} == {"continuity", "pacing"}
     assert attempts[0]["prompt_version"]
+
+
+def test_save_stage_attempt_and_director_selection_persist_attempt_key(db):
+    db.save_director_selection(
+        5,
+        2,
+        "A",
+        "balanced",
+        "PASS_WITH_FIX",
+        score=88,
+        selection_reason="needs local fix",
+        stage=4,
+        attempt_key="s4:ep5:arc2:a2",
+        candidate_key="A|balanced",
+        content_hash="hash-director",
+        artifact_path="logs/artifacts/stage4/ep_0005/attempt_02/selected_before_fix__A_balanced.txt",
+    )
+    db.save_stage_attempt(
+        stage=4,
+        verdict="PASS",
+        attempt_num=2,
+        ep_num=5,
+        arc_num=2,
+        score=97,
+        attempt_key="s4:ep5:arc2:a2",
+        prompt_version="chief_writer@v1|director@v1",
+        candidate_key="A|balanced",
+        content_hash="hash-stage-attempt",
+        artifact_path="logs/artifacts/stage4/ep_0005/attempt_02/final_manuscript__A_balanced.txt",
+    )
+
+    ds_row = db.conn.execute(
+        "SELECT attempt_key, candidate_key, content_hash, artifact_path FROM director_selections WHERE ep_num=5"
+    ).fetchone()
+    sa_row = db.conn.execute(
+        "SELECT attempt_key, candidate_key, content_hash, artifact_path FROM stage_attempts WHERE ep_num=5 AND stage=4"
+    ).fetchone()
+
+    assert ds_row["attempt_key"] == "s4:ep5:arc2:a2"
+    assert sa_row["attempt_key"] == "s4:ep5:arc2:a2"
+    assert ds_row["candidate_key"] == "A|balanced"
+    assert ds_row["content_hash"] == "hash-director"
+    assert ds_row["artifact_path"].endswith("selected_before_fix__A_balanced.txt")
+    assert sa_row["candidate_key"] == "A|balanced"
+    assert sa_row["content_hash"] == "hash-stage-attempt"
+    assert sa_row["artifact_path"].endswith("final_manuscript__A_balanced.txt")
 
 
 def test_get_strategy_win_rates_supports_stage2_filters(db):

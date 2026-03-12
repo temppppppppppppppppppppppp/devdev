@@ -19,6 +19,23 @@ const SPLASH_HEIGHT = 260;
 const SPLASH_FALLBACK_MS = 8000; // uvicorn 기동 대기 포함
 const STATUS_BASE_URL = "http://127.0.0.1:8300";
 const SPIKE_AUTOCLOSE_MS = Number(process.env.SPIKE_AUTOCLOSE_MS || "0");
+const CLI_CONTRACT = Object.freeze({
+  defaultGenreIndex: 3,
+  projectIndexBase: 1,
+  projectSort: "lexical",
+  genreIndexMap: Object.freeze({
+    wuxia: 1,
+    hunter: 2,
+    investment: 3,
+    fantasy: 4,
+    composer: 5,
+    cooking: 6,
+    alt_history: 7,
+    actor: 8,
+    sports: 9,
+    medical: 10,
+  }),
+});
 
 let mainWindow = null;
 let splashWindow = null;
@@ -104,6 +121,7 @@ function startBackend() {
         GEULDOBI_DESKTOP_MODE: "1",
         ...(app.isPackaged ? {
           GEULDOBI_WORKSPACE: getWorkspaceDir(),
+          GEULDOBI_PROJECTS_ROOT: path.join(getWorkspaceDir(), "projects"),
           GEULDOBI_ENGINE_EXE: path.join(process.resourcesPath, "engine", "engine.exe"),
         } : {}),
       },
@@ -311,6 +329,10 @@ ipcMain.handle("bridge:status", async () => {
 
 ipcMain.handle("bridge:get-url", () => {
   return { wsUrl: "ws://127.0.0.1:8300/events", httpUrl: STATUS_BASE_URL };
+});
+
+ipcMain.handle("bridge:get-cli-contract", () => {
+  return CLI_CONTRACT;
 });
 
 ipcMain.handle("bridge:get-quality-summary", async (_, { project, lookback = 5 }) => {
@@ -536,8 +558,9 @@ ipcMain.handle("project:list", async () => {
         try {
           return fs.statSync(path.join(dir, f)).isDirectory();
         } catch { return false; }
-      });
-    // main_a.py iterdir() 순서와 동일하게 유지 (정렬 없음)
+      })
+      .sort();
+    // main_a.py _select_project와 동일한 lexical sort를 사용해 1-based index drift를 막는다.
     return { ok: true, projects: entries };
   } catch (err) {
     return { ok: false, projects: [], message: err.message };

@@ -81,9 +81,21 @@ class AuditService:
                 "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
                 "total_events": len(self._runtime_audit),
                 "counts": {},
+                "latest_event_type": "",
+                "recent_events": [],
             }
+            recent_events = self._runtime_audit[-10:]
             for evt in self._runtime_audit[-200:]:
                 summary["counts"][evt["type"]] = summary["counts"].get(evt["type"], 0) + 1
+            if recent_events:
+                summary["latest_event_type"] = str(recent_events[-1].get("type", "") or "")
+                summary["recent_events"] = [
+                    {
+                        "type": str(evt.get("type", "") or ""),
+                        "message": str(evt.get("message", "") or "")[:160],
+                    }
+                    for evt in recent_events
+                ]
             log_dir = paths.root / "logs"
             log_dir.mkdir(parents=True, exist_ok=True)
             summary_path = log_dir / "runtime_audit_summary.json"

@@ -22,6 +22,7 @@ contextBridge.exposeInMainWorld("geuldobiDesktop", {
 
   // Backend URL (renderer에서 직접 WebSocket 연결용)
   getBackendUrl: () => ipcRenderer.invoke("bridge:get-url"),
+  getCliContract: () => ipcRenderer.invoke("bridge:get-cli-contract"),
 
   // 설정 영속화 (AppData JSON)
   saveSettings: (settings) => ipcRenderer.invoke("bridge:save-settings", settings),

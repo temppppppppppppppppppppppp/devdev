@@ -13,7 +13,7 @@ Purpose:
 | Document | Status | Code Sync (Yes/No) | Last Verified Date | Commit | Owner | Notes |
 |---|---|---|---|---|---|---|
 | `stage0.md` | Active | Yes | 2026-02-25 | `f99119d` | Codex | Stage0 확장/역설계/스타일분석 및 DB 동기화 경로 반영 |
-| `stage1.md` | Draft | No | TBD | TBD | TBD | |
+| `stage1.md` | Active | Yes | 2026-03-10 | `d2d935b` | Codex | Stage 1 volume split / Stage01Helpers 경계 / 검증 리스크 원장 동기화 |
 | `stage2.md` | Active | Yes | 2026-03-02 | `8476bc2` | Opus | TF-47 constraint_block 누적 방지, PASS_WITH_FIX 재심사, LM-G NarrativeContextFormatter, SC-0~6 Smart Context, CentralSchemaBuilder 반영 |
 | `stage3.md` | Active | Yes | 2026-03-02 | `8476bc2` | Opus | PASS_WITH_FIX 3-tier 라우팅, CentralSchemaBuilder(TF-45) 반영 |
 | `stage4.md` | Active | Yes | 2026-03-02 | `8476bc2` | Opus | LM-A~F advisory 체인, PASS_WITH_FIX 3-tier+InPlace state_updates, QualityGate bypass(TF-46), JSON 파싱 강화(TF-47), Hybrid Retrieval 반영 |

@@ -749,6 +749,8 @@ class Stage2ValidationPipeline:
                 # [V60.2] PassRateMonitor
                 if V50_MODULES_AVAILABLE and self.ctx.pass_rate_monitor:
                     try:
+                        from modules.core.logging_keys import build_attempt_key, resolve_logging_session_id
+
                         self.ctx.pass_rate_monitor.record_attempt(
                             stage=2,
                             episode=global_arc_no,
@@ -757,6 +759,14 @@ class Stage2ValidationPipeline:
                             success=False,
                             reject_reason=f"ContinuityInspector: {severity} - {violations[0].get('type', '') if violations else 'unknown'}",
                             generation_method=generation_method,
+                            attempt_key=build_attempt_key(
+                                stage=2,
+                                ep_num=global_arc_no,
+                                arc_num=global_arc_no,
+                                attempt_num=attempt + 1,
+                                session_id=resolve_logging_session_id(getattr(self.ctx, "current_project", None)),
+                            ),
+                            final_verdict="REJECT",
                         )
                     except Exception as e:  # [V64.P4] OPTIONAL: metrics recording
                         logging.debug(f"[SILENT] metrics recording: {e}")

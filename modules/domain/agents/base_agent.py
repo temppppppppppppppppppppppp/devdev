@@ -274,6 +274,12 @@ class BaseAgent:
     NETWORK_RETRY_DELAY_BASE = _SYSTEM_CFG.get("network_retry", {}).get("delay_base", 10)
     NETWORK_RETRY_DELAY_MAX = _SYSTEM_CFG.get("network_retry", {}).get("delay_max", 30)
     MAX_NETWORK_RETRIES = _SYSTEM_CFG.get("network_retry", {}).get("max_retries", 22)
+    _USAGE_KEYS = (
+        "prompt_token_count",
+        "candidates_token_count",
+        "thoughts_token_count",
+        "cached_content_token_count",
+    )
 
     def __init__(self, context, client, model_tier=None) -> None:
         self.context = context
@@ -295,6 +301,8 @@ class BaseAgent:
         # [V49.3] 에이전트 이름 (비용 추적용)
         self._agent_name = self.__class__.__name__
         self._last_thinking = ""  # [TF-28c] 최근 ask() thinking content
+        self._last_llm_usage = {}
+        self._call_usage_totals = {key: 0 for key in self._USAGE_KEYS}
 
     def _apply_prompt_size_gate(self, prompt: str) -> str:
         """[TF3-H7] 과대 프롬프트를 API 호출 전에 절삭."""
@@ -333,7 +341,64 @@ class BaseAgent:
         request = LLMRequest(model=model, contents=contents, config=config)
         provider = self._llm_router.get_provider_for_model(model)
         response = provider.generate(client=self.client, request=request)
+        self._last_llm_usage = response.usage  # 실측 토큰 보존
         return response.raw
+
+    @staticmethod
+    def _coerce_usage_int(value) -> int:
+        try:
+            normalized = int(value or 0)
+        except (TypeError, ValueError):
+            return 0
+        return max(0, normalized)
+
+    def _reset_usage_tracking(self) -> None:
+        self._last_llm_usage = {}
+        self._call_usage_totals = {key: 0 for key in self._USAGE_KEYS}
+
+    def _accumulate_last_llm_usage(self) -> None:
+        usage = getattr(self, "_last_llm_usage", None)
+        if not isinstance(usage, dict):
+            return
+        totals = getattr(self, "_call_usage_totals", None)
+        if not isinstance(totals, dict):
+            totals = {key: 0 for key in self._USAGE_KEYS}
+            self._call_usage_totals = totals
+        for key in self._USAGE_KEYS:
+            totals[key] = self._coerce_usage_int(totals.get(key)) + self._coerce_usage_int(usage.get(key))
+
+    def _build_metric_usage_payload(
+        self,
+        *,
+        collector,
+        prompt_text: str,
+        response_text: str,
+        use_accumulated: bool = False,
+    ) -> dict[str, int]:
+        usage = self._call_usage_totals if use_accumulated else self._last_llm_usage
+        if not isinstance(usage, dict):
+            usage = {}
+
+        input_tokens = self._coerce_usage_int(usage.get("prompt_token_count"))
+        output_tokens = self._coerce_usage_int(usage.get("candidates_token_count"))
+        cached_tokens = self._coerce_usage_int(usage.get("cached_content_token_count"))
+        thinking_tokens = self._coerce_usage_int(usage.get("thoughts_token_count"))
+
+        if input_tokens <= 0:
+            input_tokens = collector.estimate_tokens(prompt_text, is_input=True)
+            cached_tokens = 0
+        else:
+            cached_tokens = min(cached_tokens, input_tokens)
+
+        if output_tokens <= 0:
+            output_tokens = collector.estimate_tokens(response_text, is_input=False) if response_text else 0
+
+        return {
+            "input_tokens": input_tokens,
+            "output_tokens": output_tokens,
+            "cached_tokens": cached_tokens,
+            "thinking_tokens": thinking_tokens,
+        }
 
     # 📂 modules/domain/agents/base_agent.py
 
@@ -424,9 +489,33 @@ class BaseAgent:
             _verdict = self._extract_verdict_from_response(response_text) if success else None
             _prompt_snippet = str(prompt_text)[:3000] if (not success and prompt_text) else None
             _response_snippet = str(response_text) if (not success and response_text) else None
+            _usage_payload = {
+                "input_tokens": 0,
+                "output_tokens": 0,
+                "cached_tokens": 0,
+                "thinking_tokens": 0,
+            }
+            _total_cost_usd = None
 
             # [TF-58] thinking_text는 성공 호출에서도 저장 (Director 추론 분석용)
             _thinking_snippet = str(thinking_text)[:5000] if thinking_text else None
+            if METRICS_ENABLED:
+                try:
+                    collector = get_metrics_collector()
+                    _usage_payload = self._build_metric_usage_payload(
+                        collector=collector,
+                        prompt_text=str(prompt_text or ""),
+                        response_text=str(response_text or ""),
+                        use_accumulated=True,
+                    )
+                    _total_cost_usd = collector.calculate_cost(
+                        model or "",
+                        _usage_payload["input_tokens"],
+                        _usage_payload["output_tokens"],
+                        cached_tokens=_usage_payload["cached_tokens"],
+                    )
+                except Exception as _usage_err:
+                    logging.debug("[llm_call_log] usage payload build failed: %s", _usage_err)
 
             _db.save_llm_call(
                 agent_name=_to_snake_case(self.__class__.__name__),
@@ -441,6 +530,11 @@ class BaseAgent:
                 ep_num=ep_num,
                 verdict=_verdict,
                 context_tag=context_tag,
+                input_tokens=_usage_payload["input_tokens"],
+                output_tokens=_usage_payload["output_tokens"],
+                cached_tokens=_usage_payload["cached_tokens"],
+                thinking_tokens=_usage_payload["thinking_tokens"],
+                total_cost_usd=_total_cost_usd,
                 prompt_snippet=_prompt_snippet,
                 response_snippet=_response_snippet,
                 thinking_snippet=_thinking_snippet,
@@ -461,6 +555,7 @@ class BaseAgent:
         """
         # [B4-P2-4] 이전 ask() 호출의 부분 응답이 남아있으면 새 호출에서 오염됨 — 초기화
         self.last_partial_response = ""
+        self._reset_usage_tracking()
         directives = self._escape_braces(getattr(self.context, "author_directives", ""))
         base_prompt = (
             f"### [AUTHOR'S ABSOLUTE DIRECTIVES]\n{directives}\n\n"
@@ -566,6 +661,7 @@ class BaseAgent:
                         raise api_error
 
                 # [B-1-9:C3] 응답 추출 + 병합 + 이어쓰기 판정
+                self._accumulate_last_llm_usage()
                 _resp = self._extract_and_merge_response(
                     response=response,
                     full_response=full_response,
@@ -597,13 +693,17 @@ class BaseAgent:
                     f"      📊 [ASK] {self._agent_name} 총 {_total_elapsed:.1f}s (model={current_model}, attempts={attempt + 1}, 응답={len(full_response)}자)"
                 )
 
-            # [V49.3] 비용 추적 종료 (성공)
+            # [V49.3] 비용 추적 종료 (성공) — 실측 토큰 우선, fallback 추정
             if METRICS_ENABLED and metric_id:
                 try:
                     collector = get_metrics_collector()
-                    input_tokens = collector.estimate_tokens(base_prompt, is_input=True)
-                    output_tokens = collector.estimate_tokens(full_response, is_input=False)
-                    collector.end_call(metric_id, success=True, input_tokens=input_tokens, output_tokens=output_tokens)
+                    metric_usage = self._build_metric_usage_payload(
+                        collector=collector,
+                        prompt_text=base_prompt,
+                        response_text=full_response,
+                        use_accumulated=True,
+                    )
+                    collector.end_call(metric_id, success=True, **metric_usage)
                 except Exception as e:  # [V64.P4] OPTIONAL: metrics end (success)
                     logging.debug(f"[SILENT] metrics end (success): {e}")
                     pass
@@ -673,18 +773,21 @@ class BaseAgent:
             else:
                 logging.warning(f" [Warning] 모델 실패 ({error_type}), 백업 가동: {str(e)[:50]}")
 
-            # [V49.3] 비용 추적 종료 (실패, 백업 시도 전)
+            # [V49.3] 비용 추적 종료 (실패, 백업 시도 전) — 실측 토큰 우선
             if METRICS_ENABLED and metric_id:
                 try:
                     collector = get_metrics_collector()
-                    input_tokens = collector.estimate_tokens(base_prompt, is_input=True)
-                    output_tokens = collector.estimate_tokens(full_response, is_input=False) if full_response else 0
+                    metric_usage = self._build_metric_usage_payload(
+                        collector=collector,
+                        prompt_text=base_prompt,
+                        response_text=full_response or "",
+                        use_accumulated=True,
+                    )
                     collector.end_call(
                         metric_id,
                         success=False,
-                        input_tokens=input_tokens,
-                        output_tokens=output_tokens,
                         error_type=error_type,
+                        **metric_usage,
                     )
                 except Exception as e:  # [V64.P4] OPTIONAL: metrics end (failure)
                     logging.debug(f"[SILENT] metrics end (failure): {e}")
@@ -1158,6 +1261,7 @@ class BaseAgent:
                     pass
 
             # [V60.99] API Rate Limit 예방 딜레이
+            self._last_llm_usage = {}
             time.sleep(self.API_DELAY)
             res = self._generate_content(model=self.backup_model, contents=base_prompt, config=backup_config)
             try:
@@ -1182,13 +1286,15 @@ class BaseAgent:
             if METRICS_ENABLED and backup_metric_id:
                 try:
                     collector = get_metrics_collector()
-                    input_tokens = collector.estimate_tokens(base_prompt, is_input=True)
-                    output_tokens = collector.estimate_tokens(backup_text, is_input=False)
+                    metric_usage = self._build_metric_usage_payload(
+                        collector=collector,
+                        prompt_text=base_prompt,
+                        response_text=backup_text,
+                    )
                     collector.end_call(
                         backup_metric_id,
                         success=bool(backup_text),
-                        input_tokens=input_tokens,
-                        output_tokens=output_tokens,
+                        **metric_usage,
                     )
                 except Exception as e:  # [V64.P4] OPTIONAL: backup metrics end
                     logging.debug(f"[SILENT] backup metrics end: {e}")
@@ -1221,6 +1327,23 @@ class BaseAgent:
         except Exception as e_inner:
             inner_error_type = self._classify_error(e_inner)
             logging.warning(f" [Critical] 백업 실패 ({inner_error_type}): {str(e_inner)[:50]}")
+
+            if METRICS_ENABLED and backup_metric_id:
+                try:
+                    collector = get_metrics_collector()
+                    metric_usage = self._build_metric_usage_payload(
+                        collector=collector,
+                        prompt_text=base_prompt,
+                        response_text="",
+                    )
+                    collector.end_call(
+                        backup_metric_id,
+                        success=False,
+                        error_type=inner_error_type,
+                        **metric_usage,
+                    )
+                except Exception as metrics_err:  # [V64.P4] OPTIONAL: backup metrics end (failure)
+                    logging.debug(f"[SILENT] backup metrics end (failure): {metrics_err}")
 
             try:
                 self._log_llm_call_to_db(
