@@ -1,9 +1,8 @@
-﻿# 글도비 — 후임 에이전트 인수인계
+# 글도비 — 후임 에이전트 인수인계
 
 > AI 웹소설 자동 생성 시스템. Python + Gemini API (멀티 프로바이더 대응 완료 — Anthropic/OpenAI/Vertex AI readiness).
-> 상세 참고: `참고자료.md` (2000줄+ 종합 자료)
 > 검토 문서: `docs/2026-03-04/명세-행동 정합성 감사.md`, `docs/2026-03-04/stage3-blueprint-logic-error-analysis.md`
-> 파이프라인 점검: `docs/2026-03-06/TF-57-arc-quality-gate-hardening.md` (Arc 품질 게이트 — Director 허용 근본 원인 + 패치 계획 3건)
+> 파이프라인 점검: `docs/2026-03-06/TF-57-arc-quality-gate-hardening.md`
 
 ---
 
@@ -27,387 +26,132 @@ NPC 등록                앙상블 + 검증 체인              합격/불합 �
 
 ---
 
-## 현재 상태 (2026-03-07)
+## 현재 상태 (2026-03-12)
 
 - **작동함**: Stage 0→2→4 정상 동작 (투자물 장르 실파이프라인 검증 완료)
-- **완료된 것**: Phase 1~2, 5-A/5-B/5-C, 6-A/6-B/6-C, 4C(DI), 4D(sqlite-vec), 3-5B(패치), 3-5A(NPC이력), **4-R1~R3(몬스터 분할)**, R4-a(NO-GO), **3-QR(품질 회귀 감지)**, **3-5C(NPC 과잉 경고)**, **3-Obs Step 1+2(관측성 계측)**, **3-B(크로스 에피소드 반복 감지)**, **D.대리만족 전체 완료(Step1~5)**, **A-1(writer 유틸 해체)**, **A-3(test xfail)**, **C-1(PlotGuard 폴백)**, **C-2(NPC 체인)**, **C-3(Validator 체인)**, **B-1 전체 완료(stage4 -64%, chief_writer -62%, stage2 -66%)**, **E-2(Ruff 0 violations)**, **A-2(optimizer TODO)**, **R5(2차 분할 전량)**, **WorkGuard(작품별 YAML)**, **Debug Sweep 1차~12차 전량 완료**, **B-3(Protocol 전면 표준화)**, **DB-SSOT(VecMemory merge)**, **Patch Mode(Stage 2/3)**, **Passrate 전략 배선**, **Ensemble Feedback**, **Ops Quality 6대 개선**, **Opus TF 전면 재감사+T1/T2 수정**, **SC-0~6(Smart Context Retrieval) + Post-Audit**, **TF-5 전체 시스템 디버깅 감사 32건 패치**, **TF-6 롤백 원자성·상태 누적·트랜잭션 등 16건 패치**, **TF-7 전체 감사(A~N) + P0/P1/P2 24건 패치**, **TF-7R 1차/3차/6차 17건 + 7차 카오스 테스트 38개**, **PBT(hypothesis) 46개**, **E2E 통합 wiring 16개**, **아키텍처 부채 감사(silent except·DI주석·dead var)**, **Memory ROI P0-1~P0-4(검색품질 4건)**, **D1 Hybrid Retrieval(FTS5+RRF)**, **DB 효율화(chroma_db삭제·file→DB·인덱스보강)**, **D2 Memory Observability(경로별 계측)**, **문서정리(docs 445→70개)**, **E2E Smoke Tests(파이프라인 통합 33개)**, **TF-10~15 전면 감사+P0 패치**, **TF-16(P1 백로그 3건)**, **TF-17(Truth Gate 메모리 오염 방지)**, **TF-18(Hybrid 검색 활성화)**, **TF-19(Memory Benchmark 17개)**, **Opus TF 전수조사(P0 7+P1 17건 패치)**, **2차 전수조사(P0 10건 + P1 34건 전량 패치)**, **3차 전수조사(P0 19+P1 17+P2 2건 패치)**, **4차 전수조사(동시성·복구·계약·설정·크로스컷 51건 — P0 10+P1 18+dead code 1744줄 삭제)**, **메타감리(1~4차 130+패치 검증 — 오작업 0건, 테스트 복원 17개)**, **5차 전수조사(에러전파·입력검증·리소스·LLM파싱·상태일관성 — P0 7+P1 12건 패치)**, **1~3차 재감사(7TF 병렬 — P0 1+P1 11건 패치, 감리 12/12 CORRECT)**, **extended_block_guide(treatment 확장 필드 → Arc LLM generic serialization)**, **Treatment 반응 다양화(골든루트 60블록 — Intensity·캐릭터아크·power_shift 전량)**, **Bible 동기화(골든루트 — 이름 충돌 3건 통일·NPC 2건 추가)**, **TF-20(정확도 우선 5건 — ContinuityInspector 예외→retry·memorize 반환값 체크·NPC LLM fail-closed·Manager audit_event·save_episode_bible→False)**, **LM-A(world_laws 자동등록+TruthGate 7번째 검사+CRITICAL 핀 보호)**, **LM-B(NpcDriftAdvisor — NPC 속성 텍스트 레벨 표류 LLM advisory)**, **LM-C(NumericDriftAdvisor — FactLedger 수치 누적 표류 LLM advisory)**, **LM-D(RelationshipDriftAdvisor — NPC 관계도 장기 표류 LLM advisory)**, **LM-E(FlashbackVerifier — 회상/플래시백 오염 감지 LLM advisory)**, **LM-F(InfoParadoxChecker — 1인칭 시점 정보 역설 LLM advisory)**, **LM-G(NarrativeContextFormatter — 서사 구조 컨텍스트 enrichment)**, **TF-27~32(PASS_WITH_FIX verdict 도입 + S2/S3 소비자 코드 패치)**, **TF-32-VERIFY(PASS_WITH_FIX → patch + Director 재심사 반복 최대3회)**, **TF-33(fix_scope 기반 3-tier 수정 라우팅 — inplace/partial/full)**, **TF-34(Validator PASS_WITH_FIX 피드백 보존 + compare 경로 fix_scope 전파)**, **TF-45(비무협 무협 오염 근절 7건 — 동적 에너지 블록+스키마+플레이스홀더+후처리)**, **TF-46(합격률 개선 — QualityGate 적응형 + 컨텍스트 보강 + InPlace state_updates)**, **TF-47(InPlace 원고 전체 삭제 버그 수정 — JSON 파싱 1단계 + rfind 보호)**, **TF-48(Arc 간 실행 상태 연속성 — DB 실행 결과 우선 주입)**, **B-1-3b(stage4_interview_round.run() 2차 분할 — 1,647→686줄, -58%)**, **LM-I(npc_history known_attrs 4필드 동기화)**, **E-1(PatchModeThresholds.PATCH dead code 제거)**, **LM-H(FlashbackVerifier 원고 원문 대조 강화)**, **A-4(공통 실패 패턴 감지 — contradiction_types 수렴 + Arc 구조 진단 advisory)**, **NumericDrift 한도 보강(MAX_ITEMS 30, MAX_HISTORY_POINTS 20)**, **A-2(open_review Director→CW 전달)**, **A-3(fix_scope DB 추적 — director_selections)**, **B-4(동기/약속 방치 감지 — CW self-critique 5번째 체크)**, **TF-25-01(director_ensemble IndexError 방어)**, **TF-25 전수 확인(01~09 — SSOT 통합 + 7건 기존 완료 확인)**, **TF-26(종합 감사 — Director SSOT + dead code 2파일 삭제 + 로깅 강화 9건 + 타임아웃 YAML 외부화)**, **B-1-9(거대 함수 2차 분할 — process_pass_result -71%, run_validation -83%, ask -57%)**, **LM-Tier(장기 기억+품질 강화 6건 — TF-A~F)**, **TF-54(WritingDirective — PatternTracker+지시생성+CW주입+Director정합+self-critique 6·7·8번째 체크)**, **TF-55b(VecMemory hits=0 슬롯 → STATIC/DB_NPC_RELATIONSHIP 직접 주입)**, **Model SSOT(models.yaml 단일 참조 — constants.py _load_model_from_yaml + config_manager 동적 로드)**, **합격률 개선(ending_hook 의무화 규칙12·13 + self-critique 8번째 체크 + blueprint 주입)**, **실파이프라인 검증(TF-54/55b/합격률 wiring 통합 테스트 8개)**, **6차 전수조사(신규 코드 전수 감사 P1 3건 — config_manager/reference_anchor/confidence_calibration SSOT)**, **V73(자본금 역동기화 2중 방어 — Director state_updates 우선 + 대사 제거 regex)**, **7차 전수조사(P2 SSOT 주석 7파일 + LM-B/C/P1-5 except Exception 보강)**, **LM-post-1(Retrospective lookback 5→10 YAML 외부화 + causal_graph Read 연결 + Director MC 보조 주입)**, **8차 전수조사(LM-E/F/D except Exception 보강 — advisory 비치명 완결)**, **God Object 해체 1~3차(run() 782→404줄 + _attach_agents() 570→137줄 + _process_verdict() 320→114줄, 신규 메서드 +7개)**, **로깅 강화(llm_calls+stage_attempts DB 테이블 + BaseAgent 계측 + FailureAnalyzer — 실패 학습 기반 진단 시스템)**, **Log-Phase2(실패 스니펫 저장 prompt_snippet/response_snippet + Stage2 duration_ms/failure_category/advisory_flags 보강 + Stage3 attempt_num 동적화/arc_num 복원/reject_reason 상세화)**, **S3-META(quality_risk Blueprint → Director advisory 주입 + V75-D 1연속 조기 트리거)**, **감사문서 패치(F-1 YAML주석 교정·F-2 diff ratio S2/S3/S4 3곳·F-3 fix_scope required 스키마)**, **NC-1(수치 정합성 Python 검증 5개 검사 + 단일 후보 독점 방지 SCM)**, **NC-2(실파이프라인 11대 이슈 잔여 갭 6건 해소 — 퍼센트구성+동명이인+도입부유사도+씬유사도+공간연속성+시간경과)**, **NC-3(Director 일관성 체크리스트 10개 카테고리 — consistency_checklist 스키마+프롬프트+파싱+점수보정)**, **NC-3B(Few-Shot Golden Example + score_breakdown 합산 Self-Consistency Check)**, **TF-LLM P0(TF-D Advisory 시각화 + TF-E CW 톤 조절 — TF-A 중복제거 NO-OP 재분류)**, **NS-3(treatment block 수치 목표 self-critic 주입 — NS-3-A fallback critic_input 주입 + NS-3-B FourPhase Phase 2.55 Python 교차검증)**, **TF-G(Self-Critique 게이트 검사 — ending_hook+분량 루프 전 사전 수정)**, **TF-I(피드백 전달 경로 명확화 — common_writer_kwargs에 director_feedback 추가)**, **TF-C(스키마-프롬프트-규칙 3중 정합 — NC-1/NC-3 자동감점 제거, Director 주권 존중)**, **9차 전수조사(감리 3회 — P0 0건(전량 하향) + P1 9건 패치: silent except 5건 logging 보강 + 모델 SSOT 3건 + NC-3 스키마 11번째 키 동기화)**, **실전모순패치(2026-03-06 실파이프라인 6건 기반 — 4th wall 메타용어 3단계 방어[chief_writer.yaml 규칙14+self-critique 10번째 체크+_check_system_term_exposure] + NC-1 레버리지 수익률% 신규 체크[_check_leverage_return_pct+_LEVERAGE_PCT_RE] + Arc 경계 공간연속성 MAJOR 상향[director.yaml 2곳] + arc_pos==1 CW 위치묘사 의무화 주입[stage4_interview_round.py])**, **2차 전수조사 마스터 오더(1~10번 터미널 122개+ 파일 전수조사 + 갭 패치 완료)**, **3차 전수조사 마스터 오더(11~16번 터미널 70개+ 미커버 파일 전수조사 + 갭 패치 완료)**, **S2 preflight enrichment 전면 조사(P1 3건+P2 4건 패치 — items_acquired LLM 필수화+파싱전실패 플래그+StateTracker 원자성+timeline 빈값+episode:0→None)**, **TF-S2(Stage 2 Director Selection 통합 — Python 자동선택 제거+STRUCTURAL_MIN_SCORE=50 소프트필터+tactical_doc 절삭 제거+블록배치 재정렬)**, **실파이프라인 감사 03(코덱스 오더 7 Step — BUG-A 위치 SSOT+BUG-I 시간 제거+BUG-D 비무협 무협필드 strip+BUG-E 추상아이템 필터+BUG-C XC-002 retry+BUG-B NS-2 advisory 주입+NR-1 정신적 피로 자연 회복)**, **실파이프라인 감사 04(000_27 — C-1 Arc 메타용어 regex 확장+M-4 NPC 이름 괄호 정규화+M-2 equipment 프롬프트 강화+M-3 NS-4 timeline 역전/동일값 경고)**, **실파이프라인 감사 05(000_01 인과분석 — 블록 경계 침범+ep_count 7화+수치 날조 근본 원인 99% 확정)**, **TF-A~E 코덱스 패치(NS-3-B Director 선택 전 이동+블록경계 4대 규칙+genre_ext ±30%+ep_count 3~6+items_acquired 강화)**, **실파이프라인 감사 06(00000000 전수조사 — TF-A~E 효과 검증 100% 합격률+블록 침범 0건+수치 날조 0건)**, **BUG-F(protagonist_items vs items_acquired 필드명 불일치 — 14파일 21곳 폴백 패치+테스트 3개)**, **TF-DB 전수조사+DB 코덱스 오더(P1 7건+P2 3건+§1~§10 — WorldState motivations/promises/cumulative_elapsed/known_attrs 노출+7개 truncation 카운터+FactLedger 6개 truncation+numbers 스키마 정합+Stage2/3 수치 주입+5종 registry 요약+NPC 반응 패턴+감정 고착 경고+emotion_required self-critique+DB-1~8 advisory+CP-7 canonical_facts+dead code 5메서드 삭제)**, **QI-Quality Boost(DB 외 3대 방향성 — SNR-1 NPC 5중복 CP 축약+SNR-3 Advisory 티어별 모순 suppress+SNR-4 비게이팅 [참고] 분리+FL-1 prior_attempts 누적 피드백 max3+FL-2 Cross-Arc stage_attempts 소비+FL-3 FailureAnalyzer Arc 생성 주입+FL-5 품질 추세 경고+QM-1 self-critique 12~15 4개 추가+QM-2 consistency_checklist 17개 확장+QM-4 episode_quality_labels sidecar 테이블)**, **TF-DB-quality-boost-audit(B1 FactLedger 스키마 불일치 활성 버그 수정)**, **quality-boost-beyond-db-audit(S/N 비율·피드백 루프·품질 측정 3대 방향)**, **TF-QR-quality-remaining-audit(잔여 퀄리티 갭 8건 해소)**, **TF-250-long-serial-scale-audit(장기 연재 스케일 감사)**, **TF-QI-structural-quality-gaps-audit(구조적 품질 갭 감사)**, **CTX-utilization-audit(Context Window 활용 극대화 — Stage 0/2/3/4 head+tail 절삭+advisory retry feedback 합류+validation.yaml cap 6건)**, **TF-FINAL(코드베이스 전수 건강 감사 — 3-pass 120+파일 스캔, HIGH 6건 전량 오탐, P0/P1 0건, P2 3건+P3 5건 현상유지)**, **TF-MULTI Phase 1(deprecated 모델명 정리 — base_agent fallback chain gemini-3.x→2.5 정리+metrics_collector 가격표 정리+주석 4파일 교정+문서화)**, **TF-MULTI Phase 2~4+Vertex(멀티 프로바이더 전환 — provider 추상화+direct caller 21곳 정리+schema adapter+Anthropic/OpenAI/Vertex AI provider 4종+shared router+models.yaml providers 섹션+readiness-only 고정)**, **TF-BE 백엔드 전수조사(6영역 120+파일 3-pass 감리 — P0 0건+P1 0건+P2 12건, 오탐 23건 제거, 확신도 97%)**
-- **현재 단계**: TF-BE 백엔드 전수조사 완료 (P0 0건, P1 0건, P2 12건 — 코드 위생/로깅/문서 수준). 벤치마크 인사이트 통합본 완료 (`docs/2026-03-10/benchmark-insights-final.md`). TF-MULTI Phase 0-4+Vertex 전량 완료. Gemini-only 운영 유지. 멀티 프로바이더 전환 명세: `docs/2026-03-10/TF-MULTI-LLM-provider-transition-spec.md`.
-- **테스트 기준선**: **3,847 collected** (last verified 2026-03-10, `pytest --collect-only -q tests`). 전체 회귀 3,831 passed, 16 skipped.
-- **Ruff**: 0 violations, Silent Pass YELLOW 0건 (E-1+E-2 완료)
-- **stage4 orchestrator**: 2,481→883줄 (**-64%**, 분할 완료, 서브모듈 3개)
-- **chief_writer**: 2,255→854줄 (**-62%**, 분할 완료, 서브모듈 2개)
-- **stage2 orchestrator**: 2,639→907줄 (**-66%**, B-1-8 완료, 서브모듈 3개)
-- **stage4_interview_round**: run() 782→404줄, _process_verdict() 320→114줄, _attach_agents() 570→137줄 (God-1~3, 신규 메서드 +7개)
+- **테스트 기준선**: **3,847 collected** (last verified 2026-03-10). 3,831 passed, 16 skipped.
+- **Ruff**: 0 violations
 - **DI 전환**: Stage2(44슬롯) + Stage3(19슬롯) + Stage4(24슬롯) 전량 완료
-- **checkpoint**: `02b458a`
-- **향후 계획 문서**: `docs/2026-02-27/LM-enhancement-implementation-spec.md` — L1~L7 **전량 구현 완료** (LM-A~I). 잔여 항목 없음.
-- **폐기/NO-GO 확정 (2026-03-04 재검사)**:
-  - ~~causal_graph Read 연결~~ → **LM-post-1에서 완료됨** (get_recent_causal_links + Director MC 주입, 테스트 8개)
-  - ~~FTS5 한국어 형태소 분리~~ → **후순위 유지, ROI 낮음** (Python re.split이 97% 처리, 조사 분리만 약점이나 OR 5키워드로 recall 충분)
-  - ~~동적 장르 확장~~ → **폐기** (16~20개 하드코딩 위치 + Guard/HUDManager 클래스 신규 필요, 템플릿 복제 방식이 10개 장르로 검증 완료)
-  - ~~캐시 최적화~~ → **NO-GO 재확인** (6사이트 ~11 HIT/에피소드 전량 커버, P1 ROI 부족, P2 프롬프트 7-13KB < 50K 임계값 미달, Gemini API 임계값 하향 전까지 추가 불가)
+- **코드 분할 완료**: stage4 orch -64%, chief_writer -62%, stage2 orch -66%, interview_round run() -48%
+- **완료된 주요 작업군** (150건+ 전량 완료, 개별 이력은 git log 참조):
+  - 인프라: DI 전환, DB-SSOT, Ruff 0, Protocol 표준화, God Object 해체 3차
+  - 품질: NC-1~3(수치 정합성), NS-1~4(수치 자기검증), WritingDirective, Self-Critique 15개 체크
+  - 장기기억: LM-A~I(7개 advisory), TruthGate, Smart Context Retrieval
+  - 수정전략: PASS_WITH_FIX 3-tier(inplace/partial/full), fix_scope 라우팅
+  - 멀티프로바이더: LLMProvider Protocol + Router + 4 Provider (Gemini only 운영)
+  - 감사: 1~10차 전수조사, TF-FINAL, TF-BE 백엔드 전수조사 (P0 0건, P1 0건)
+- **폐기/NO-GO 확정**:
+  - ~~FTS5 한국어 형태소~~ → ROI 낮음 (Python re.split 97% 처리)
+  - ~~동적 장르 확장~~ → 폐기 (템플릿 복제 방식 10개 장르 검증 완료)
+  - ~~캐시 최적화~~ → NO-GO (Gemini API 임계값 하향 전까지 불가)
 
 ---
 
 ## 핵심 파일
 
-| 파일 | 역할 | 비고 |
-|------|------|------|
-| `modules/core/stage2_orchestrator.py` | Arc 오케스트레이터 | B-1-6~8 분리 후 907줄, 서브모듈 3개 위임 |
-| `modules/core/stage2_validation_pipeline.py` | Stage2 검증 파이프라인 | B-1-6 분리, B-1-9b 2차 분할 (run_validation 693→120줄 -83%, 4개 private 메서드) |
-| `modules/core/stage2_finalizer.py` | Stage2 Finalizer | B-1-7 분리 (535줄), V64 위임 패턴 |
-| `modules/core/stage2_preflight.py` | Stage2 Preflight 분석 | B-1-8 분리 (637줄), V64 위임 패턴 |
-| `modules/core/stage3_orchestrator.py` | Blueprint 오케스트레이터 | DI 전환 완료 (19슬롯, lazy init만 self.app) |
-| `modules/core/stage4_orchestrator.py` | 원고 오케스트레이터 | B-1-1~3 분리 후 883줄, 서브모듈 3개 위임 |
-| `modules/core/stage4_post_processor.py` | Stage4 PASS 후처리 | B-1-1 분리, B-1-9a 2차 분할 (process_pass_result 813→238줄 -71%, 5개 private 메서드) |
-| `modules/core/stage4_context_builder.py` | Stage4 컨텍스트 빌더 | B-1-2 분리 (570줄), V64 위임 패턴 |
-| `modules/core/stage4_interview_round.py` | Stage4 인터뷰 라운드 | B-1-3b 2차 분할 (run 686줄, 메서드 12개), 5개 private 메서드 추출 |
-| `modules/domain/agents/chief_writer_context.py` | CW 컨텍스트 빌더 | B-1-4 분리 (1,074줄), V64 위임 패턴 |
-| `modules/domain/agents/chief_writer_quality.py` | CW 품질 게이트 | B-1-5 분리 (465줄), V64 위임 패턴 |
-| `modules/core/failure_analyzer.py` | 실패 패턴 사후 분석 유틸리티 | 로깅 강화, FailureAnalyzer(db).summary() / advisory_reject_correlation() / model_performance() 등 11개 메서드 |
-| `modules/core/numeric_consistency_checker.py` | Python-only 수치 정합성 검사 | NC-1, 5개 검사 (FactLedger 교차/산술/직함/이벤트순서), LLM 0회 advisory |
-| `modules/core/truth_gate.py` | 메모리 오염 방지 advisory 검증기 | TF-17+LM-A, 7개 검사 (사망NPC/아이템/장소/스킬/카르마/NPC역할/세계법칙) |
-| `modules/core/npc_drift_advisor.py` | NPC 속성 텍스트 레벨 표류 LLM advisory | LM-B, 원고 vs 스냅샷 대조 |
-| `modules/core/numeric_drift_advisor.py` | FactLedger 수치 누적 표류 LLM advisory | LM-C, 5화 단위 이력 검사 |
-| `modules/core/relationship_drift_advisor.py` | NPC 관계도 장기 표류 LLM advisory | LM-D, npc_relationship_history 이력 |
-| `modules/core/flashback_verifier.py` | 회상/플래시백 오염 감지 LLM advisory | LM-E, 14개 마커 + VecMemory 참조 |
-| `modules/core/info_paradox_checker.py` | 1인칭 시점 정보 역설 LLM advisory | LM-F, episode_bibles 지식 누적 |
-| `modules/core/narrative_context_formatter.py` | 서사 구조 컨텍스트 포맷터 | LM-G, Stage2 enrichment (LLM/DB 없음) |
-| `modules/core/long_term_repetition_advisor.py` | 장기 반복 패턴 감지 LLM advisory | P1-5, 20화+ 윈도우 씬 패턴 분석 |
-| `modules/core/genre_schema_builder.py` | 장르별 프롬프트 스키마 자동 생성 | TF-45, 비무협 동적 스키마 (순수 Python, LLM/DB 없음) |
-| `modules/core/pattern_tracker.py` | 직전 N화 표현·은유·결말 패턴 추적 | TF-54a, LLM 0회, `build_report()` → PatternReport |
-| `modules/core/writing_directive_generator.py` | PatternReport → WritingDirective 생성 | TF-54b, Flash 1회, JSON 파싱 폴백 완비 |
-| `modules/core/context_advisor.py` | Smart Context Retrieval 플래너 | SC-1~6, RetrievalPlan/Slot/Sources, STATIC·DB_NPC_RELATIONSHIP(TF-55b) |
-| `modules/core/db_manager.py` | SQLite DB 매니저 | 모범 패턴 |
-| `modules/core/prompt_loader.py` | YAML 프롬프트 로더 (싱글톤) | |
-| `config/prompts/*.yaml` | 외부화된 프롬프트 43개 | |
-| `modules/domain/agents/base_agent.py` | AI 에이전트 베이스 클래스 | B-1-9c ask() 분할 (4개 private 메서드), Context Caching |
-| `modules/domain/agents/*.py` | AI 에이전트 20+개 | |
-| `modules/core/genre_guards/*.py` | 장르 가드 10종 + WorkGuard + StyleGuard | Guard 체인: Genre→Work→Style |
-| `modules/core/genre_guards/alt_history_guard.py` | 대체역사 Guard | 실제 역사 오류·미래기술 금지 |
-| `modules/core/genre_guards/composer_guard.py` | 음악/작곡 Guard | 음악 용어·악기 일관성 |
-| `modules/core/genre_guards/medical_guard.py` | 의료 Guard | 의학 용어·시술 정합성 |
-| `modules/core/genre_guards/sports_guard.py` | 스포츠 Guard | 종목별 규칙·경기 진행 |
-| `modules/core/genre_guards/actor_guard.py` | 연예/배우 Guard | 업계 용어·오디션 절차 |
-| `modules/core/genre_guards/cooking_guard.py` | 요리 Guard | 조리법·식재료 일관성 |
-| `modules/validation/*.py` | 검증 파이프라인 | |
-| `config/settings/validation.yaml` | 검증 임계값 설정 | Phase 5-B |
-| `modules/validation/threshold_helper.py` | 공유 `_threshold()` 헬퍼 | Phase 5-B-2c |
-| `modules/core/writer_prompt_builders.py` | Writer 유틸 독립 모듈 | A-1 분리 |
-| `modules/core/semantic_plot_guard.py` | 플롯 중복 감지 (임베딩+키워드 폴백) | C-1 개선 |
-| `modules/core/stage2_context.py` | Stage2 DI 컨텍스트 (43슬롯) | Phase 4C-3 |
-| `modules/core/stage3_context.py` | Stage3 DI 컨텍스트 (21슬롯) | Phase E-1a |
-| `modules/core/stage4_context.py` | Stage4 DI 컨텍스트 (24슬롯) | Phase 4C-2 |
-| `modules/core/llm_provider.py` | LLM Provider Protocol + Request/Response envelope | TF-MULTI Phase 1 |
-| `modules/core/llm_router.py` | LLMProviderRouter (shared singleton, models.yaml 연동) | TF-MULTI Phase 1-3 |
-| `modules/core/llm_generate.py` | `generate_content_via_router()` 공용 헬퍼 | TF-MULTI Phase 2 |
-| `modules/core/llm_schema.py` | Provider-neutral schema adapter (to_gemini_schema/schema_to_dict) | TF-MULTI Phase 2 |
-| `modules/core/providers/gemini_provider.py` | Gemini Provider (google-genai SDK) | TF-MULTI Phase 1 |
-| `modules/core/providers/anthropic_provider.py` | Anthropic Provider (lazy import, disabled) | TF-MULTI Phase 3 |
-| `modules/core/providers/openai_provider.py` | OpenAI Provider (lazy import, disabled) | TF-MULTI Phase 3 |
-| `modules/core/providers/vertex_provider.py` | Vertex AI Provider (genai.Client vertexai=True, disabled) | TF-MULTI Vertex |
+| 파일 | 역할 |
+|------|------|
+| `main_a.py` | 진입점, SovereignApp (4,200+ lines) |
+| **Stage 2** | |
+| `modules/core/stage2_orchestrator.py` | Arc 오케스트레이터 (907줄, 서브모듈 3개 위임) |
+| `modules/core/stage2_validation_pipeline.py` | Stage2 검증 파이프라인 |
+| `modules/core/stage2_finalizer.py` | Stage2 Finalizer |
+| `modules/core/stage2_preflight.py` | Stage2 Preflight 분석 |
+| **Stage 3** | |
+| `modules/core/stage3_orchestrator.py` | Blueprint 오케스트레이터 (DI 완료, 19슬롯) |
+| **Stage 4** | |
+| `modules/core/stage4_orchestrator.py` | 원고 오케스트레이터 (883줄, 서브모듈 3개 위임) |
+| `modules/core/stage4_post_processor.py` | Stage4 PASS 후처리 |
+| `modules/core/stage4_context_builder.py` | Stage4 컨텍스트 빌더 |
+| `modules/core/stage4_interview_round.py` | Stage4 인터뷰 라운드 (run 686줄, 12개 메서드) |
+| **에이전트** | |
+| `modules/domain/agents/base_agent.py` | AI 에이전트 베이스 (Context Caching 포함) |
+| `modules/domain/agents/chief_writer.py` | Chief Writer (854줄 + context/quality 서브모듈) |
+| `modules/domain/agents/chief_writer_context.py` | CW 컨텍스트 빌더 (1,074줄) |
+| `modules/domain/agents/chief_writer_quality.py` | CW 품질 게이트 (465줄, self-critique 15개 체크) |
+| **Advisory 체인** (Stage4, ThreadPoolExecutor 8병렬) | |
+| `modules/core/truth_gate.py` | 메모리 오염 방지 (7개 검사) |
+| `modules/core/npc_drift_advisor.py` | NPC 속성 표류 LLM advisory |
+| `modules/core/numeric_drift_advisor.py` | FactLedger 수치 표류 LLM advisory |
+| `modules/core/relationship_drift_advisor.py` | NPC 관계도 표류 LLM advisory |
+| `modules/core/flashback_verifier.py` | 회상/플래시백 오염 감지 |
+| `modules/core/info_paradox_checker.py` | 1인칭 정보 역설 감지 |
+| `modules/core/long_term_repetition_advisor.py` | 장기 반복 패턴 감지 (20화+) |
+| `modules/core/numeric_consistency_checker.py` | 수치 정합성 Python-only (9개 검사, LLM 0회) |
+| **핵심 모듈** | |
+| `modules/core/db_manager.py` | SQLite DB 매니저 (`project_data.db` SSOT) |
+| `modules/core/failure_analyzer.py` | 실패 패턴 분석 (11개 메서드) |
+| `modules/core/pattern_tracker.py` | 표현·은유·결말 패턴 추적 (LLM 0회) |
+| `modules/core/writing_directive_generator.py` | WritingDirective 생성 (Flash 1회) |
+| `modules/core/context_advisor.py` | Smart Context Retrieval |
+| `modules/core/narrative_context_formatter.py` | 서사 구조 컨텍스트 포맷터 |
+| `modules/core/genre_schema_builder.py` | 장르별 동적 스키마 (비무협 오염 방지) |
+| **LLM 추상화** | |
+| `modules/core/llm_provider.py` | LLMProvider Protocol + Request/Response |
+| `modules/core/llm_router.py` | LLMProviderRouter (shared singleton) |
+| `modules/core/llm_generate.py` | `generate_content_via_router()` 공용 헬퍼 |
+| `modules/core/llm_schema.py` | Provider-neutral schema adapter |
+| `modules/core/providers/*.py` | Gemini/Anthropic/OpenAI/Vertex AI Provider |
+| **설정** | |
+| `config/prompts/*.yaml` | 외부화된 프롬프트 43개 |
+| `config/models.yaml` | 모델 설정 SSOT |
+| `config/settings/validation.yaml` | 검증 임계값 |
+| `modules/core/genre_guards/*.py` | 장르 가드 10종 + WorkGuard + StyleGuard |
+| **DI Context** | |
+| `modules/core/stage2_context.py` | Stage2Context (44 슬롯) |
+| `modules/core/stage3_context.py` | Stage3Context (19 슬롯) |
+| `modules/core/stage4_context.py` | Stage4Context (24 슬롯) |
 
 ---
 
-## ⚠️ 주의
+## ⚠️ 주의사항
 
-- **LLM 모델 설정 SSOT 완료** — `models.yaml` 단일 참조 달성. `constants.py`의 `_load_model_from_yaml()` import-time 로드 + `AIModels` 19개 attr 전량 yaml 참조. `config_manager.py` `_load_agents_from_yaml()` 동적 로드. `state_locked_arc_generator`/`narrative_structure_analyzer`/`self_reflection`/`tree_of_thoughts` default 인자 `AIModels.*` 교체 완료. **P2 유보(호출자 명시 주입)**: `adversarial_self_play`/`chain_of_verification`/`cross_agent_verifier`/`multi_agent_deliberation`/`arc_corrector`/`arc_critic`/`arc_ensemble` 7개 파일 — 운영 경로(`main_a.py`)에서 model 명시 주입하므로 현상 유지. `base_agent.py:47` fallback_chain `gemini-2.5-pro→gemini-2.5-flash` 2단계만 유지 (TF-MULTI Phase 1: gemini-3.x 시리즈 전량 제거). `metrics_collector.py` 가격표도 `gemini-2.5-pro`/`gemini-2.5-flash`/`default` 3항목만 유지. 멀티 프로바이더 전환 명세: `docs/2026-03-10/TF-MULTI-LLM-provider-transition-spec.md`.
-- **멀티 프로바이더 추상화 완료 (TF-MULTI Phase 0-4+Vertex)** — `LLMProvider` Protocol(`llm_provider.py`) + `LLMProviderRouter`(`llm_router.py`, shared singleton) + 4 provider 구현체(`providers/gemini_provider.py`·`anthropic_provider.py`·`openai_provider.py`·`vertex_provider.py`). `generate_content_via_router()`(`llm_generate.py`) 공용 헬퍼로 BaseAgent 밖 direct caller 21곳 전량 경유. `llm_schema.py`에 provider-neutral schema adapter(`to_gemini_schema()`/`schema_to_dict()`). `models.yaml` `providers:` 섹션에서 enabled/disabled 제어. **기본값: gemini=true, anthropic/openai/vertex_ai=false**. Vertex AI는 `vertexai:gemini-2.5-pro` prefix로 Google API 경로와 공존, `_split_provider_prefixed_model()`로 fallback chain prefix 보존, `_normalize_billable_model()`로 비용 계산 정합. Anthropic/OpenAI는 lazy import(미설치 시 `RuntimeError`). 프로덕션 direct `generate_content()` 잔류: `gemini_provider.py`(합법) + `response_schemas.py` L769(독스트링 예제) 2곳만.
-- `writer.py` — 유틸 3개는 `writer_prompt_builders.py`로 분리 완료 (A-1). `write_v20_manuscript` API만 유지 (오케스트레이터에서 호출 제거됨, 외부 진입점용).
-- `memory_engine.py` — **삭제됨** (Phase 4D 완료). VecMemory(`vec_memory.py`)가 DBManager 커넥션을 공유 (DB-MERGE). `project_data.db` 단일 파일이 SSOT.
-- NPC 속성 변경 — `npc_history` 테이블로 append-only 이력 기록 (Phase 3-5A 완료). `bind_db()` 호출 시 활성화.
-- `base_agent.py`의 Context Caching — 구현 완료 (`_get_or_create_context_cache` L920, `_ask_with_cached_context` L1003). `chief_writer`·`arc_ensemble`·`blueprint_ensemble`·`director_ensemble`·`director_continuity` 5개 에이전트에서 사용 중.
-- NPC 관계 변경 이력 — `npc_relationship_history` 테이블 (append-only, sorted key). `upsert_npc_relationship_edge()` 호출 시 변경분 자동 기록. `reset_after()` 롤백 포함 (LM-D).
-- NPC 변경 이력 reason — `npc_history` 테이블에 `reason` 컬럼 추가 (TF-D). `insert_npc_change(reason="...")` 전달.
-- HUD Anomaly 파이프라인 — `manuscripts` 테이블에 `hud_snapshot` 컬럼 활성화 (TF-E). `save_manuscript(hud_snapshot=dict)` → `get_manuscript()["hud_snapshot"]` dict 반환. `_check_hud_anomalies()` 실제 데이터 수신.
-- NumericDrift 지수 성장 — Python 사전 감지 (TF-B): `_detect_exponential_growth()` (100배+ 급등, 5연속 50%+ 성장). LLM 경로 유지, pre_warnings를 history_text에 prepend.
-- fix_scope Director 주입 — `get_fix_scope_stats()` 결과를 Director mc_parts에 주입 (TF-C). 기존 win_rates 블록 직후.
-- 누적 경과 시간 — WorldState `cumulative_elapsed` 필드 (TF-F). `_parse_elapsed_days()` 한국어 시간 파서. `NarrativeContextFormatter.format_cumulative_time()` → Stage2 advisory 주입.
-- Stage4 advisory 체인 — TruthGate(LM-A) → NpcDriftAdvisor(LM-B, 4필드 확장) → NumericDriftAdvisor(LM-C, MAX_ITEMS=30/MAX_HISTORY_POINTS=20) → FlashbackVerifier(LM-E, 원문 대조 LM-H) → InfoParadoxChecker(LM-F, 1인칭 전용) → RelationshipDriftAdvisor(LM-D) → LongTermRepetitionAdvisor(P1-5, 20화+ 전용) → **NumericConsistencyChecker(NC-1/NC-2, Python-only, LLM 0회, 8개 검사)** → **SceneSimilarity(NC-2, Python-only)** → **Timeline(NC-2, cumulative_elapsed)**. 전부 `_director_mc_parts`에 주입, Director 최종 판정. **ThreadPoolExecutor(max_workers=8)로 병렬 실행** (`_build_director_mc_parts` L2330-2367, `as_completed` + per-advisory timeout=60s).
-- NC-1/NC-2 NumericConsistencyChecker — 매화 Python-only advisory, **9개 검사**: ①FactLedger 교차(5% 허용 오차) ②산술 일관성(A+B=C, 레버리지) ③직함 변경 감지(승진 허용, 무단 변경 경고) ④"처음" 이벤트 모순 ⑤숫자 추출(대사 제거) ⑥퍼센트 구성 검증(유지율/담보비율 역산, 2%p 허용) ⑦NPC 동명이인 감지(WorldState 교차, **M-4 괄호 접미사 정규화 `re.sub(r"\s*\(.*?\)\s*$", "", name)`**) ⑧도입부 유사도(3-gram 자카드 40% 임계값) ⑨**레버리지 수익률% 검증(`_check_leverage_return_pct`): X달러→Y달러 × N배 → Z% 패턴 감지, 10%p 이상 괴리 시 MAJOR 경고**. LLM 0회.
-- 4th wall 메타용어 방어 3단계 — ①`chief_writer.yaml` 규칙 14(생성 단계 금지 지시) ②`chief_writer_quality._check_system_term_exposure()`(self-critique 10번째 체크, `Block N/Arc N/Stage N/Blueprint/treatment` + **`\bArc(?:\s+\d+)?\b` 단독 Arc 패턴(C-1)**) ③향후 `truth_gate` 8번째 메서드(P2 후순위). Stage 2 auto_correct에서 tactical_doc "이전 Arc" → 서사용어 치환도 포함.
-- Arc 경계 공간연속성 — `director.yaml` 3곳(VARIABLE_PROMPT L72, SELECTION_PROMPT L359, AUDIT_PROMPT_V30 Step1)에 Arc 첫 화 MAJOR 감점 조항 추가. `stage4_interview_round.py` arc_pos==1 시 CW mandatory_context에 위치 변경 묘사 의무화 지시 prepend. `four_phase_arc_generator.generate_arc()` PHASE 2.5 직후 2경로(일반/Patch Mode)에 `arc_start_state.location` 강제 주입 구현 완료 — 실행 결과(WorldState `protagonist_location`) 우선, 계획 값(`arc_end_state.location`) 폴백. [TF-22-01/25-P1-R ✅]
-- NC-2 씬 유사도 advisory — `stage4_context_builder._collect_recent_scene_keywords()`로 직전 3화 씬 키워드 수집 → `compute_scene_similarity_advisory()`로 50% 자카드 임계값 초과 씬 2쌍+ → `[SceneSimilarity]` advisory Director MC 주입. Python-only, LLM 0회.
-- NC-2 공간 연속성/시간 경과 — `director.yaml` ENSEMBLE_STABLE_CONTEXT + AUDIT 프롬프트에 공간 이동 묘사·전환 표지 체크 + `[Timeline]` 시간 경과 정보 심사 기준 추가. `stage4_interview_round`에서 `cumulative_elapsed` → `NarrativeContextFormatter.format_cumulative_time()` → Director MC 주입.
-- NC-1 응답 **선택사항** (TF-C) — `numeric_consistency_review` 필드는 **선택사항**으로 변경. AGREE/DISMISS 판정 가능하나 자동감점 없음. Director가 직접 continuity_contradiction 점수에 반영 여부 결정. 미응답 시에도 감점 없음. **대원칙 3(Director 주권주의) 준수**.
-- TF-G Self-Critique 게이트 검사 — `apply_self_critique()` 루프 진입 전 ending_hook 누락 + 분량 부족(< 5,000자) 사전 검사. 해당 시 `_fix_manuscript_issues(severity="high")` 호출. severity="low" 탈출 방지.
-- TF-I 피드백 전달 경로 — `_weighted_injection` 적용 후 `_common_writer_kwargs["director_feedback"]` 설정. `_generate_candidates` 내부 `**_common_writer_kwargs` 전개 시 명시적 `director_feedback=` 중복 제거.
-- NC-3 일관성 체크리스트 (TF-C: **권장**으로 변경) — Director JSON 응답에 `consistency_checklist` 필드 추가. 12개 카테고리를 OK/ISSUE로 체크. ISSUE 3건+ → python_warnings 상한 3점. **체크리스트 미작성 시 감점 없음** (TF-C). `DIRECTOR_AUDIT_SCHEMA` optional, 반환 dict에 전파.
-- NC-3B Few-Shot + Self-Consistency — director.yaml 4곳에 `[NC-3B]` few-shot golden example 삽입 (올바른 체크리스트 응답 예시 + "합산=score 필수" 메시지). `director_ensemble.py`에서 score_breakdown 합산 ≠ score 시 breakdown 우선 자동 교정 (0~100 클램프, _sb_sum > 0 조건). 배치 순서: `_safe_int(score)` 직후, SCM/Firewall/NC-1/NC-3 전.
-- SCM 단일 후보 독점 방지 — `director_ensemble.py`에서 `qualified_indices==1`일 때 ①경고 주입("절대 기준으로 독립 평가") ②score≥95→min(score,90) 보정. 90점이면 QualityGate PASS 유지, Director 주권 존중.
-- TF-D Advisory 우선순위 시각화 — `stage4_interview_round.py` L457-490에서 advisory 문자열에 우선순위 헤더 태그 삽입. TruthGate→`[CRITICAL · TruthGate]`, NpcDrift/RelDrift/Flashback/InfoParadox→`[MAJOR · ...]`, 나머지→`[INFO]`, 0건 advisory→`[이름] 이상 없음` 1줄 축약. `_advisory_summary` dict 로직(L440-456) 미변경.
-- TF-E Chief Writer 톤 조절 — `chief_writer.yaml` COMMON_RULES/WRITING_GUIDELINES에서 "절대 금지"→"사용하지 마세요", "무조건 REJECT"→"감점 대상입니다", "벽돌 문단=독자 이탈 1순위"→"5줄 이상 연속 서술은 줄바꿈으로 끊어주세요". 핵심 금지 3곳 유지: L51 사망NPC/미습득무공, L66 원시인모드 현대용어.
-- TF-A 프롬프트 중복 제거 NO-OP — director.yaml VARIABLE_PROMPT(L61-112)와 SELECTION_PROMPT(L345-397)의 V67 중복은 **구조적 필수** (SELECTION_PROMPT는 비캐시 fallback 단독 전송). 진정한 dedup은 V67→STABLE_CONTEXT 이동 필요 (캐시 재설계) → P2 후순위.
-- BUG-1 Preflight 마커 분리 — `preflight_checker.py` 제목 라인 `"❌ 다음 아이템..."` → `"[아이템 획득 금지]:"` + 개별 아이템 앞 `❌` 배치. `arc_ensemble.py:623` regex `r"❌\s*([가-힣\w]+)"` 오탐("다음" 캡처) 근절.
-- STRUCT-1 SC 투표 thinking_level 균등화 — `director_auditor.py` `_vote_task` 추가투표 `thinking_level="low"` → `"medium"`. 모순 감지 능력 균등화.
-- STRUCT-2 PASS_WITH_FIX SC 다수결 분리 — `director_auditor.py` SC 다수결에서 `pwf_votes > 0` 시 `final_decision = "PASS_WITH_FIX"` (기존: 순수 PASS와 동등 집계). InPlace patch loop 진입 보장.
-- STRUCT-3 Stage 2/3 audit Contradiction Firewall — `director_auditor.py` `audit_strategic_plan()` 반환 직전 `contradiction_check.found_contradictions` 검사. CRITICAL 1건+ 또는 MAJOR 2건+ → `REJECT` 강제 + `score = min(score, 44)`. Stage 4 compare 경로(`director_ensemble.py` L860-888)와 동일 로직.
-- BUG-3 소지품 regex 장르 확장 — `arc_ensemble.py:651` + `arc_draft_validator.py` `weapon_keywords`에 투자물/현대물 아이템 접미사 추가(통장, 계약서, 인감, 증명서, 면허, 허가증, 보고서, 카드, 워크스테이션, 노트북, 폰).
-- BUG-5 ArcValidator advisory 로깅 — `arc_draft_validator.py` `validate()` 반환 직전 `advisory_issues` 세부 내용 `logging.warning` 출력 (최대 10건, 200자 트렁케이션).
-- A-4 공통 실패 패턴 감지 — `stage4_orchestrator._handle_round_outcome()`에서 `contradiction_types` 수렴 추적. LOGIC_ERROR 2연속 + 동일 모순 유형 2연속 → Arc 구조 진단 advisory. Director `select_and_judge_ensemble` 반환에 `contradiction_types` 포함, `previous_attempt`에 보존.
-- A-3 fix_scope DB 추적 — `director_selections` 테이블에 `fix_scope` 컬럼 추가. Director 판정 시 fix_scope 값(inplace/partial/full/null) 저장, 전략별 수정 패턴 분석 가능.
-- B-4 동기/약속 방치 감지 — Chief Writer `self_critique` 5번째 체크: "방치된 동기·약속·떡밥이 없는지". `NarrativeContextFormatter`가 enrichment한 동기/약속 목록과 대조.
-- Stage2 advisory — NarrativeContextFormatter(LM-G)가 `stage2_preflight.py`에서 동기/약속/Arc스케일을 `enhanced_context`에 prepend. 순수 Python, LLM/DB 없음.
-- TF-45 비무협 무협 오염 근절 — `genre_schema_builder.py`의 `build_state_constraints_schema()`/`build_status_shadow_schema()`로 장르별 동적 스키마 생성. `analyst.yaml`/`analyst_prompts.py`의 "내공" 하드코딩 → `{energy_tracking_rules}`/`{state_constraints_genre_field}`/`{episode_state_label}` 등 플레이스홀더 교체. `analyst.py _build_genre_placeholders(genre, critical_keys)` → 무협이면 원본, 비무협이면 장르별 대체. `response_schemas.py` `status_shadow`의 `internal_energy_loss` → `key_stat_change` 장르 중립화 + 하위호환 브릿지. `stage2_preflight.py`에서 enriched_block → state_changes 매핑 + items_acquired diff 자동 채움.
-- TF-47 InPlace 원고 보호 — `chief_writer.inplace_patch()`에서 `response_mime_type="application/json"` 강제 시 LLM이 `{"content":"원고..."}` JSON 반환 → JSON 전체 파싱 1단계 추가 (content/text/manuscript 키). rfind 폴백에서 `_outer_start > 0` 조건 추가 (position 0 → 원고 전체 삭제 방지). `_generate_candidates`에서 빈 manuscript 후보도 실패로 간주.
-- TF-48 Arc 실행 상태 연속성 — `four_phase_arc_generator.py`에 `_load_execution_state()`/`_generate_prev_context()` 추가. Arc N+1 생성 시 Arc N의 계획 상태(arc_end_state)뿐 아니라 WorldState/FactLedger/episode_bibles에서 **실제 에피소드 실행 결과**를 로드하여 LLM 컨텍스트에 주입. "실행 결과가 계획과 다를 경우 실행 결과를 따르라" 지시.
-- TF-54 WritingDirective — `pattern_tracker.py`의 `build_report()`가 직전 N화 패턴 분석(LLM 0회). `writing_directive_generator.py`가 Flash 1회로 `WritingDirective` 생성. `stage4_interview_round.py`가 `setattr(cw, "_tf54_writing_directive", wd)` + `setattr(cw, "_current_blueprint", blueprint)` 주입. Director `_director_mc_parts[0]`에 `[WritingDirective]` prepend. `chief_writer_quality.py` self-critique 6번째(directive 준수)·7번째(표현 신선도)·8번째(ending_hook) 체크.
-- TF-55b STATIC/DB_NPC_RELATIONSHIP — `context_advisor.py` `RetrievalSources.STATIC`(query 문자열 직접 반환, VecMemory 미호출)·`DB_NPC_RELATIONSHIP`(npc_relationship_history 직접 조회). `stage4_context_builder._execute_retrieval_plan()`에서 source 분기 처리. VecMemory hits=0 슬롯이 이 경로로 리다이렉트됨.
-- 합격률 개선 — `chief_writer.yaml` 규칙 12(ending_hook 의무화)·13(씬별 대화 의무) 추가. `chief_writer_quality._check_ending_hook_presence()`: 원고 마지막 500자에서 ending_hook 앞 20자 부분 일치 확인. `apply_self_critique()`에서 `getattr(self.host, "_current_blueprint", None)`으로 blueprint 취득.
-- Log-Phase2 실패 스니펫 — `llm_calls` 테이블에 `prompt_snippet`(실패 시 앞 3000자)/`response_snippet`(실패 시 전체) 컬럼 추가. 성공 호출은 NULL(DB 폭발 방지). `FailureAnalyzer.failed_call_snippets(agent_name=)` + `failure_prompt_patterns()` 조회. Stage2 `duration_ms`/`failure_category`/`advisory_flags` 보강, Stage3 `attempt_num` `retries+1` 동적화 + `arc_num` 복원 + `reject_reason` 상세화.
-- S3-META quality_risk 활용 — `stage4_interview_round.py`에서 `_stage3_meta.quality_risk=True` 시 `[S3-META 경고]` Director advisory 주입 (advisory만, REJECT 강제 없음). `stage4_orchestrator.py`에서 V75-D 임계값을 `quality_risk=True`이면 1연속, 아니면 기존 2연속으로 동적 설정. 테스트 3개 (`test_pass_with_fix.py`).
-- 감사 문서 항목 패치 현황 — `docs/2026-03-04/명세-행동 정합성 감사.md` 기준: F-1(YAML주석 교정) ✅, F-2(diff ratio S2/S3/S4) ✅, F-3(fix_scope required) ✅, F-4(트렁케이션 경고) ✅. **F-5(PF-3 소진 상태 전파)**: 미완이나 ROI 낮음 — PF-3 소진 자체가 드물고 다음 라운드 full rewrite로 자연 복구. `stage3-blueprint-logic-error-analysis.md` 기준: §5 _stage3_meta 미활용 → S3-META로 해결 ✅, §6 트리거 지연 → V75-D 조기 트리거로 해결 ✅, §6 Stage3 Python 검증 한계 → 대원칙 부합 NO-GO.
-- PASS_WITH_FIX verdict — 전 Stage에서 **Director fix_scope 기반 수정 전략 라우팅 + 재심사 반복** (최대 3회).
-  - **3-tier 수정 전략 (분기 조건)**:
-    ```
-    _use_inplace = _previous_best is not None and (
-        fix_scope == "inplace"
-        or (not fix_scope and score >= PatchModeThresholds.INPLACE)
-    )
-    _use_partial = (not _use_inplace) and _previous_best is not None and (
-        fix_scope == "partial"
-    )
-    # else → full rewrite
-    ```
-    - **inplace**: LLM 1회 국소 수정, `_inplace_patch_*()` 호출. 실패 시 full 폴백.
-    - **partial** (TF-36): 가장 좋은 후보 **1개만** `single_strategy=rejected_strategy`로 재생성. Director 피드백 기반 집중 수정.
-    - **full**: `_previous_best` 없거나 fix_scope="full" → Ensemble 3후보 전면 재생성.
-  - **PASS_WITH_FIX 루프**: fix_scope="inplace" → Stage별 InPlace 패치 + Director 재심사(동일 audit 메서드). fix_scope="partial"/"full" → fix loop 즉시 REJECT → 기존 retry 경로 위임.
-  - **재심사 메서드**: S2 `audit_strategic_plan()`, S3 `validator.validate(all_candidates=None)`, S4 `audit_manuscript()`
-  - **Validator 2경로**: compare(multi-candidate, director_ensemble) vs audit(single-candidate, audit_manuscript). 양쪽 모두 fix_scope/feedback 전파 완비.
-  - **QualityGate 적용 규칙 (TF-46)**: PASS일 때만 score < 90이면 REJECT 선전환. **PASS_WITH_FIX는 QualityGate bypass** — Director 주권 존중, patch 기회 부여.
-  - **InPlace patch state_updates (TF-46)**: InPlace 패치 시 LLM이 `patch_state_updates` JSON 블록 반환 → 소비측에서 기존 state_updates에 merge (stale 방지).
-- InPlace-Diff 로깅 — `constants.log_patch_diff(stage, original, patched)` 유틸. S2(`stage2_finalizer.py`), S3(`three_phase_blueprint_generator.py`), S4(`stage4_interview_round.py`) 전량 배선. `difflib.unified_diff` 기반, 최대 80줄 diff.
-- InPlace JSON 절단 방지 — S2 `_inplace_patch_arc()` / S3 `_inplace_patch_blueprint()`에서 Arc/Blueprint JSON > 30KB 시 `return None` (full rewrite 폴백). 절단된 JSON으로 LLM 호출하면 구조 손상.
-- InPlace 1-depth deep merge — S2/S3 InPlace 원본 필드 병합 시 top-level만이 아닌 dict 서브키까지 복원. `state_constraints.arc_start_state` 등 중첩 키 영구 손실 방지.
-- S2 InPlace Pydantic 검증 — `_inplace_patch_arc()` 반환 전 `validate_arc(result)` 호출 추가. S3는 기존 `validate_blueprint()` 있었으나 S2는 누락됐었음.
-- BUG-A 금지 아이템 오탐 수정 — `arc_ensemble.py` L650 forbidden item 검사에서 기존 소지품(`arc_start_state.equipment` + `prev_equipment`) 화이트리스트 추가. 이미 보유 중인 아이템은 금지 체크 스킵.
-- TF-S2 Stage 2 Director Selection 통합 — `arc_ensemble.py` `generate_ensemble()` 반환값 `(best_arc, all_candidates)` → `(None, valid_candidates)` 변경. Python 자동선택(`_evaluate_candidate` 점수 기반 max) 제거, Director가 `compare_and_select_arc()`에서 최종 선택. `STRUCTURAL_MIN_SCORE = 50` 소프트필터(구조적 결함 후보 걸러냄, 최소 1개 보장). `_ensemble_meta`를 전 후보에 부착(기존: best만). `director_ensemble.py` L391 `tactical[:8000]` 절삭 제거 — Director에게 전체 전술 문서 제공. `four_phase_arc_generator.py` 블록 배치 재정렬: ASP(all_candidates[0] 대상) → location 주입(루프) → Phase 2.6(Director 선택) → fallback → auto-sanitize → NS-3-B → EnsembleFB(PASS 경로 키 기록 포함). 대원칙 1(Python 수집, LLM 판단) + 대원칙 3(Director 주권) 정합.
-- 감사03 위치 SSOT — `stage2_optimizer.py` `_fix_start_location()` SSOT 우선순위 `arc_end_state.location` 1순위로 변경(기존: `joint_docs.final_location`). `_sync_final_location()`에서 시간/날짜 정보(`시계는...`, `N년 N월...`, `오후 N시...`) regex 제거 후 location 저장. `_strip_wuxia_fields()` 비무협 장르 `internal_energy`/`realm`/`qi_nature`/`martial_arts` 자동 제거. `_filter_abstract_items_consumed()` 15자 초과+추상 패턴 아이템 자동 제거. `auto_correct()`/`post_process_arc()` `genre` 인자 추가, `stage2_validation_pipeline.py`에서 전달.
-- 감사03 NS-2 advisory — `stage2_finalizer.py` Director story_context에 `[NS-2 참고] Treatment 블록 목표 자본` 선제 주입. Director가 Arc 선택 시점에 목표 자본 괴리 인지 가능.
-- 감사03 XC-002 retry — `state_tracker_npc.py` `_verify_npcs_with_llm()` 빈 응답/예외 시 1회 retry 추가 (기존: 즉시 fail-closed). 2차도 실패 시 fail-closed 유지.
-- 감사04 C-1 Arc 메타용어 확장 — `chief_writer_quality._check_system_term_exposure()`에 `_ARC_META_RE = r"\bArc(?:\s+\d+)?\b"` 추가. 기존 `Arc\s+\d+`만 잡던 것을 단독 "Arc", "Arc 종료", "Arc 시작" 등 비숫자 패턴까지 탐지. `stage2_optimizer.py`에서 tactical_doc 내 "이전 Arc" → 서사용어("이전 시기" 등) 자동 치환.
-- 감사04 M-4 NPC 괄호 정규화 — `numeric_consistency_checker._check_npc_name_collision()`에 `_normalize_npc_name()` 추가. `re.sub(r"\s*\(.*?\)\s*$", "", name)` 적용하여 "박성호 (담당 PB)" → "박성호"로 정규화 후 비교. 괄호 접미사 분화로 인한 동명이인 미탐지 방지.
-- 감사04 M-2 equipment 프롬프트 강화 — `analyst.yaml` arc_start_state/arc_end_state equipment 필드에 "물리적으로 휴대 가능한 물건만. 가구/음식/화면 UI/마우스·펜 같은 일상 소품 제외" 지시 추가.
-- 감사04 M-3 NS-4 timeline 강화 — `stage3_orchestrator._timeline_start_end_raw_equal()` 추가: timeline.start==end 동일값 경고. Arc 시작 시점 역전 탐지(`_cur_start < _prev_start`) 경고. Blueprint 생성 시 advisory 주입.
-- NR-1 정신적 피로 자연 회복 — `arc_ensemble.py` `_build_non_wuxia_energy_block()`에 `[NR-1]` 블록 추가: 정신적 마모/스트레스는 수면·식사·대화 1문장으로 자연 회복 가능, 3화 연속 악화만 하면 REJECT. `analyst.yaml` 3곳+`writer_rules.json` 규칙5+`genre_schema_builder.py` status_shadow에 물리적 부상 vs 정신적 피로 구분 추가. `four_phase_arc_generator.py` I-12 advisory에서 정신적 피로 키워드 감지 시 레벨 분리.
-- TF-A NS-3-B 실행 순서 수정 — `four_phase_arc_generator.py` Phase 2.55(L649-666)에서 Director 선택(Phase 2.6) **이전**에 `_check_arc_vs_block_targets()` 실행. advisory를 `director.compare_and_select_arc(advisory=...)` 파라미터로 전달. `director_ensemble.py` `compare_and_select_arc()` advisory 파라미터 추가, 프롬프트 4000자 캡 주입 + "수치 괴리 경고 시 PASS 회피" 지시.
-- TF-B 블록 경계 4대 규칙 — `ensemble.yaml` L51-56에 블록 경계 절대 준수 규칙 4건 추가(선취 금지/독자 창작 금지/세분화 지시). `arc_ensemble.py` `_build_block_event_guard()` 함수: curr_block의 context/event_villain/solution/reward 4키 추출 → `{block_event_guard}` 플레이스홀더 주입. 3곳(L575/L611/L639)에서 배선.
-- TF-C genre_ext 수치 강제 — `arc_ensemble.py` L534-543에서 `capital_after` 존재 시 ±30% 권장 + 대규모 자금 임의 상향 금지 지시 주입.
-- TF-D ep_count 3~6 제한 — `constants.py:240` `MAX_EP_COUNT=6`, `constants.py:330` `MAX_EPISODES_PER_ARC=6`, `ensemble.yaml:79` "3~6", `analyst.yaml:291` "Epic(5~6화)", `analyst.yaml:352` "Epic(5-6화)". Python 클램프 `VolumeSettings` 기반 3~6 범위 강제.
-- TF-E items_acquired 강화 — `ensemble.yaml:103` items_acquired 설명에 "arc_end_state.equipment에 새로 추가된 항목은 반드시 포함" 추가.
-- BUG-F protagonist_items 폴백 전수 패치 — API 스키마(`response_schemas.py:297`)가 `protagonist_items`를 required로 강제하므로 LLM 응답에 `items_acquired` 키가 없음. **14파일 21곳**에서 `state.get("protagonist_items") or state.get("items_acquired", [])` 폴백 패턴 적용. `stage2_optimizer.py` L539에서 `protagonist_items` → `items_acquired` 복사 추가(후속 소비자 일관성). 기존 완료(D) 4파일 7곳(constraint_db/semantic_item_registry/continuity_arc/stage4_interview_round)은 변경 없음. 테스트 3개 추가.
-- 감사 문서 — `docs/2026-03-07/pipeline-run-audit-05_20260307.md`(인과 분석), `docs/2026-03-07/pipeline-run-audit-06_20260307.md`(00000000 전수 조사).
-- TF-DB WorldState `get_summary()` 확장 — `[주인공 핵심 동기]`(active만, 최대 10건) + `[서약/약속]`(pending만, 최대 10건) + `[누적 경과] 총 N일` + NPC 블록 `known_attrs`(injury/location/permanent_injuries) 노출 + 7개 섹션 절삭 카운터 `(총 X명 중 Y명 표시)`. 기존 cap(30/20/20/10/10/5) 불변.
-- TF-DB FactLedger `to_summary()` 확장 — 6개 섹션(생존인물/보유아이템/분실아이템/장소/조직/수치) 절삭 카운터 추가. 기존 cap 불변. `summarize_fact_ledger_numbers_block()` Stage 2/3 공용 헬퍼 추가 (established_value→현재값 변화 포맷).
-- TF-DB-B1 FactLedger Stage 2/3 직접 주입 — `four_phase_arc_generator._load_execution_state()` 스키마 `facts`→`numbers` 정합 복구 + `_generate_prev_context()`에 motivations/promises/cumulative_elapsed/fact_ledger_summary 주입. `stage2_preflight._build_fact_ledger_context()` enhanced_context prepend. `stage3_orchestrator._build_fact_ledger_advisory()` _bp_semantic_ctx prepend.
-- TF-DB-D1 장르별 Registry 5종 요약 — `state_tracker.py`에 `get_skill_cooldown_summary()`/`get_dungeon_clear_summary()`(hunter), `get_spell_repertoire_summary()`/`get_blessing_curse_summary()`(fantasy), `get_filmography_summary()`(actor) 추가. `get_all_summaries(genre=)`에 장르별 분기. `stage4_context_builder.py` primary + fallback 양쪽에서 장르별 호출.
-- TF-DB-E1 NPC 반응 패턴 수집 — `pattern_tracker._extract_npc_reaction_patterns()`: 7개 반응 키워드(경악/침묵/분노/당황/안도/두려움/웃음) × NPC 이름 regex 추출. `build_report()`에서 호출 → `npc_reaction_patterns` 채움 → `to_summary_text()`에서 `【NPC 반응 고정】` 포맷.
-- TF-DB-E2 감정 고착 경고 — `_find_recent_emotion_streak()`: 최근 N화 동일 지배 감정 3화+ 연속 감지. `to_summary_text()`에서 diversity≥0.4여도 streak 경고 `【감정 고착】` 생성. `chief_writer_quality._check_writing_directive()`에 `emotion_required` 키워드 매칭 self-critique 추가.
-- DB advisory §1~§8 — `stage4_interview_round.py`에 4개 Director MC advisory: DB-1(pacing 추이), DB-2(satisfaction 추이), DB-6(reveals), DB-8(reflexion 빈도≥3, ep≥20). `stage2_finalizer.py`에 2개 story_context advisory: DB-3(arc_dependencies), DB-7(character_voice). `stage3_orchestrator.py`에 2개 _bp_semantic_ctx advisory: DB-4(stale seeds 20화+), FactLedger 수치. 전부 `_DB_ADVISORY_NOTICE = "(Python 자동 감지 — 오탐 가능, 참고용)"` 포함.
-- DB-9 확장 타임라인 — `four_phase_arc_generator._build_extended_timeline_advisory()`: `get_timeline_range()` 최근 15화 타임라인 → Arc 생성 `_generate_prev_context()` lines에 append. 5건 미만 skip.
-- CP-7 canonical_facts — `stage4_context_builder._build_canonical_facts_section()`: Blueprint 본문과 겹치는 numerical canonical_facts를 CP에 추가. budget 6500→7000 (50K 대비 14%). `npc_history.reason` 컬럼 CP 표시 추가 (§10).
-- DB dead code 제거 — `surgery_logs` 테이블 정의 + `save_surgery_log()` + `get_lore_item()` + `get_all_manuscripts()` + `get_all_blueprints()` 삭제. `db_repository.py` protocol 동기화. `get_all_character_voices()` 신규 (DB-7 지원). `reflexion_manager.get_top_patterns()` 신규 (DB-8 지원).
-- QI-SNR-1 NPC 5중복 CP 축약 — `stage4_context_builder.py`에 `_build_condensed_world_state_summary()`/`_build_condensed_fact_ledger_summary()` 추가. CP가 지목한 NPC/아이템은 WorldState/FactLedger 요약에서 제외 + "[CP 상세 참조]" 포인터. 빈 결과 시 원본 `get_summary()`/`to_summary()` fallback. `_extract_blueprint_entities()` 호출을 WS/FL 조립 전으로 이동.
-- QI-SNR-3 Advisory 모순 감지 — `stage4_interview_round.py`에 `_classify_advisory_tier()`(CRITICAL=3/MAJOR=2/INFO=1) + `_extract_advisory_subjects()`(명시 인용+브로드 토큰) + `_suppress_conflicting_advisories()`(상위 티어 공유 주제 → 하위 suppress + 로깅). `_run_advisory_chain()` 직후 적용. Director 주권 존중(advisory만, REJECT 강제 없음).
-- QI-SNR-4 비게이팅 분리 — `stage4_interview_round.py`에서 win_rates/fix_scope_stats/DB-1,2,6,8을 `_reference_only_parts` 리스트로 분리. `_build_reference_only_block()`이 `[참고 — 판정 무관]` 헤더로 래핑. Director MC 핵심부에서 제거.
-- QI-FL-1 CW 누적 피드백 — `stage4_interview_round.py`에 `_compact_attempt_snapshot()`(strategy/score/fix_scope/reject_bucket/error_category/rejection_reason 240자+action_items 3건+contradiction_types 5건) + `_inherit_attempt_history()`(`prior_attempts` 및 `history` 키 역호환 읽기, 중복 제거, `[-3:]` max 3). 3곳 주입(빈 후보/REJECT/일반). `chief_writer.py`에 `_build_retry_history_feedback()` static method: 누적 실패 버킷·카테고리·모순 집계 → `[누적 실패 히스토리 — 반복 금지]` 섹션. `generate_with_feedback()`/`patch_with_feedback()` 양쪽에서 소비.
-- QI-FL-2 Cross-Arc 실패 소비 — `four_phase_arc_generator._generate_prev_context()`에서 `db.get_stage_attempts_for_arc(last_arc_no, stages=(3,4), verdict="REJECT", limit=20)` 조회. `failure_category` 상위 3건 + `reject_reason` 샘플 3건 → `[직전 Arc Stage3/4 주요 실패]` 블록 주입. `db_manager.get_stage_attempts_for_arc()` 신규 메서드 + `db_repository.py` protocol 동기화.
-- QI-FL-3 FailureAnalyzer Arc 생성 소비 — `four_phase_arc_generator._generate_prev_context()`에서 `FailureAnalyzer(db).summary()` 호출. stage4 통과율/주요 실패 에이전트/상위 3 실패 카테고리/평균 점수/고득점 패턴 → `[실패 분석 요약]` + `[고득점 에피소드 특성]` 블록 주입. `failure_analyzer.py`에 `top_success_patterns()`(episode_quality_labels 조회 + jsonl fallback) + `quality_distribution()`(점수 분포/평균/고득점 비율) 신규 메서드.
-- QI-FL-5 품질 추세 경고 — `four_phase_arc_generator._generate_prev_context()`에서 `db.get_recent_episode_scores(before_ep, lookback=5)` 조회. 단조 하락 또는 평균 80 미만 → `[품질 추세 경고]` advisory 주입. `db_manager.get_recent_episode_scores()` 신규 메서드 + protocol 동기화.
-- QI-QM-1 Self-Critique 12~15 — `chief_writer_quality.py`에 4개 신규 체크: ①`_check_temporal_logic`(시간 비약/역전 감지, 한국어 시간 마커 regex) ②`_check_paragraph_structure`(5줄+ 벽돌 문단/단문 반복 감지) ③`_check_tonal_consistency`(Blueprint core_tension·emotional_arc 대비 톤 교차검증) ④`_check_scene_transition_markers`(씬 분리 후 첫 3문장 장소/시간 키워드 존재 확인). 기존 11개 체크 불변. 전부 Python-only, medium/low severity advisory.
-- QI-QM-2 Director 체크리스트 17개 — `director.yaml` 4곳(VARIABLE/SELECTION/AUDIT/ENSEMBLE_STABLE)에 `pacing_quality`/`dialogue_naturalness`/`pov_discipline`/`emotional_authenticity` 4개 추가. `director_ensemble.py` `_nc3_keys` 17개. `response_schemas.py` DIRECTOR_AUDIT_SCHEMA `consistency_checklist` 17개 properties. 3중 동기화 완벽. 자동감점 없음(Director 주권 존중).
-- QI-QM-4 episode_quality_labels sidecar — `db_manager.py`에 `episode_quality_labels` 테이블 신설(ep_num PK, score, verdict, selection_reason, open_review, score_breakdown JSON, consistency_checklist JSON, created_at). `save_episode_quality_label()`/`get_episode_quality_label()`/`get_recent_episode_quality_labels()` 3메서드 + protocol 동기화. `stage4_post_processor.py`에서 PASS 시 비차단 저장 (`_director_quality_labels` → final_state_updates에서 strip 후 sidecar 저장). `failure_analyzer.py`에서 `top_success_patterns()`/`quality_distribution()`이 소비.
+### 모델 설정
+- **SSOT**: `config/models.yaml` 단일 참조. `constants.py` `_load_model_from_yaml()` import-time 로드.
+- **fallback chain**: `gemini-2.5-pro → gemini-2.5-flash` 2단계만 유지.
+- **멀티 프로바이더**: 4 provider 구현체. `models.yaml` `providers:` 섹션에서 enabled/disabled 제어. **기본값: gemini=true, 나머지 false**.
+- **direct generate_content() 잔류**: `gemini_provider.py`(합법) + `vertex_provider.py`(합법) + `response_schemas.py` L769(독스트링 예제)만 허용.
 
----
+### PASS_WITH_FIX 수정 전략
+- **3-tier 라우팅**: fix_scope 기반 — inplace(LLM 1회 국소), partial(1후보 재생성), full(3후보 전면)
+- **QualityGate**: PASS일 때만 score < 90 → REJECT. **PASS_WITH_FIX는 bypass** (Director 주권 존중)
+- **InPlace 보호**: 30KB 초과 → return None (full 폴백), rfind position 0 보호, JSON 파싱 1단계, 1-depth deep merge
 
-## SAFE 작업
+### Advisory 체인 (Stage4)
+- TruthGate → NpcDrift → NumericDrift → Flashback → InfoParadox → RelDrift → LongTermRep → NumericConsistency → SceneSimilarity → Timeline
+- **ThreadPoolExecutor(max_workers=8)** 병렬 실행, per-advisory timeout 60s
+- 전부 `_director_mc_parts`에 주입, Director 최종 판정
+- **우선순위 헤더**: TruthGate=CRITICAL, Drift/Flashback/InfoParadox=MAJOR, 나머지=INFO
 
-| Phase | 작업 | 상태 |
-|-------|------|------|
-| 6-C | pre-commit + ruff 설정 | ✅ 완료 |
-| 6-A | pytest 테스트 (GenreGuard, RepetitionGuard, PromptLoader — 63개) | ✅ 완료 |
-| 5-A' | PromptLoader import 전환 (7파일 완료) | ✅ 완료 (2026-02-13) |
-| 5-B | Settings YAML + 임계값 외부화 | ✅ 완료 (2026-02-14) |
+### NC-1/NC-3 규칙
+- **NC-1 numeric_consistency_review**: 선택사항, 자동감점 없음 (대원칙 3 준수)
+- **NC-3 consistency_checklist**: 20개 카테고리 OK/ISSUE 체크, 미작성 시 감점 없음
+- **NC-3B**: score_breakdown 합산 ≠ score → breakdown 우선 자동 교정
 
-## RISKY 작업 (순서 지킬 것)
+### DB / 메모리
+- `memory_engine.py` 삭제됨. VecMemory(`vec_memory.py`)가 DBManager 커넥션 공유. `project_data.db` 단일 SSOT.
+- NPC 속성 변경 → `npc_history` 테이블 (append-only, reason 컬럼 포함)
+- NPC 관계 변경 → `npc_relationship_history` 테이블 (append-only, sorted key)
+- HUD Anomaly → `manuscripts` 테이블 `hud_snapshot` 컬럼
+- Context Caching: 5개 에이전트(chief_writer, arc_ensemble, blueprint_ensemble, director_ensemble, director_continuity)
 
-| 순서 | Phase | 작업 | 전제 |
-|------|-------|------|------|
-| ~~1~~ | ~~4D~~ | ~~sqlite-vec (ChromaDB 교체)~~ | ✅ 완료 |
-| ~~2~~ | ~~3-5B~~ | ~~수정 모드 — Stage 4 패치 모드~~ | ✅ 완료 |
-| ~~3~~ | ~~3-5A~~ | ~~NPC 이력 DB + 검증 강화~~ | ✅ 완료 |
-| ~~4~~ | ~~5-B~~ | ~~Settings/임계값 외부화~~ | ✅ 완료 |
-| ~~5~~ | ~~6-B~~ | ~~E2E 테스트~~ | ✅ 완료 |
-| ~~6~~ | ~~4(잔여)~~ | ~~대형 함수 분할 (R1~R3)~~ | ✅ 완료, R4 async 통일은 NO-GO |
-| ~~7~~ | ~~3-QR~~ | ~~품질 회귀 감지 (Step 1+2)~~ | ✅ 완료 (`4b6ad8e`) |
-| ~~8~~ | ~~3-5C~~ | ~~NPC 과잉 등장 경고 (extra-only)~~ | ✅ 완료 (`409093c`) |
-| ~~9~~ | ~~3-Obs~~ | ~~관측성 — preflight 병렬 구간 계측~~ | ✅ 완료 (`b4eaa58`) |
-| ~~10~~ | ~~3-B~~ | ~~크로스 에피소드 반복 감지 (advisory)~~ | ✅ 완료 (`db07efd`) |
-| ~~11~~ | ~~3-Obs Step 2~~ | ~~관측성 — 에이전트 레벨 ThreadPoolExecutor 계측~~ | ✅ 완료 (`597fcae`) |
-| ~~12~~ | ~~D. 대리만족~~ | ~~대리만족 프레임워크 구현 (5-Step)~~ | ✅ **전체 완료** — Step 1(`0d676c8`), 2(`ffc2bb8`), 3(`470dfee`), 4(`7684a78`), 5(문서) |
-| ~~13~~ | ~~A-1~~ | ~~writer.py 유틸 해체~~ | ✅ 완료 (`4aeb9f3`) |
-| ~~14~~ | ~~A-3~~ | ~~test_validation 13건 xfail~~ | ✅ 완료 (`8b2081e`) |
-| ~~15~~ | ~~C-1~~ | ~~SemanticPlotGuard 키워드 폴백~~ | ✅ 완료 (`eb81782`) |
-| ~~16~~ | ~~C-2~~ | ~~NPC 정보 소실 체인 수정~~ | ✅ 완료 (`d145db1`) |
-| ~~17~~ | ~~C-3~~ | ~~Validator 우회 체인 수정~~ | ✅ 완료 (`d107eee`) |
-| ~~18~~ | ~~B-1-1~~ | ~~stage4 post-processor 추출~~ | ✅ 완료 (`ed48489`) |
-| ~~19~~ | ~~B-1-2~~ | ~~stage4 context builder 추출~~ | ✅ 완료 (`667291e`) |
-| ~~20~~ | ~~B-1-3~~ | ~~stage4 interview round 추출~~ | ✅ 완료 (`7242d4a`) |
-| ~~21~~ | ~~B-1-4~~ | ~~chief_writer context builder 추출~~ | ✅ 완료 (`1e8db62`) |
-| ~~22~~ | ~~B-1-5~~ | ~~chief_writer quality gate 추출~~ | ✅ 완료 (`d8c0663`) |
-| ~~23~~ | ~~B-1-6~~ | ~~stage2 validation pipeline 추출~~ | ✅ 완료 (`c1008e7`) |
-| ~~24~~ | ~~B-1-7~~ | ~~stage2 finalizer 추출~~ | ✅ 완료 (`a6613b1`) |
-| ~~25~~ | ~~B-1-8~~ | ~~stage2 preflight analysis 추출~~ | ✅ 완료 (`8d68e85`) |
-| ~~26~~ | ~~Green Suite~~ | ~~테스트 정리 (B-1 regression + xfail)~~ | ✅ 완료 (`ae97ffa`) |
-| ~~27~~ | ~~E-2~~ | ~~Ruff 전면 정리 (2,234건→0 violations)~~ | ✅ 완료 (`6472c42`, `610d8e4`) |
-| ~~28~~ | ~~A-2~~ | ~~stage2_optimizer TODO 2건~~ | ✅ 완료 (`167b305`) |
-| ~~29~~ | ~~E-1~~ | ~~Silent Pass 로깅 보강 (16건)~~ | ✅ 완료 (`380c911`) |
-| ~~30~~ | ~~D-1~~ | ~~POV 시스템 활성화~~ | ✅ 완료 (`f0390e8`) |
-| ~~31~~ | ~~D-2~~ | ~~에피소드 롤백 NPC 되감기~~ | ✅ 완료 (`9ba06cd`) |
-| ~~32~~ | ~~D-3~~ | ~~문체 분석 → StyleGuard 자동생성~~ | ✅ 완료 (`79afbfd`) |
-| ~~33~~ | ~~D-4~~ | ~~Director 선택 추적~~ | ✅ 완료 (`a2c1fb2`) |
-| ~~34~~ | ~~B-2~~ | ~~Protocol 미적합 어댑터 3종~~ | ✅ 완료 (`d45d53c`) |
-| ~~35~~ | ~~R5~~ | ~~2차 분할 (R5-1a/2a/2b/2c)~~ | ✅ 완료 (`2b0161c`) |
-| ~~36~~ | ~~WorkGuard~~ | ~~작품별 Guard YAML 시스템~~ | ✅ 완료 (`d3bd2db`) |
-| ~~37~~ | ~~Debug Sweep~~ | ~~전면 디버깅 스윕 (Phase 1~5b)~~ | ✅ 완료 (`883f438`) |
-| ~~38~~ | ~~B-3~~ | ~~ABC/Protocol 전면 표준화~~ | ✅ 완료 |
-| ~~39~~ | ~~Sweep 3차~12차~~ | ~~전면 디버깅 스윕 (sweep3~64 + codex)~~ | ✅ 완료 — 128파일+, 200건+ 수정 |
-| ~~40~~ | ~~Patch Mode~~ | ~~Stage 2/3 패치 모드 + Legacy 제거~~ | ✅ 완료 (`396280b`, `dd825a8`) |
-| ~~41~~ | ~~Ops Quality~~ | ~~운영 품질 6대 개선~~ | ✅ 완료 (`af32192`) |
-| ~~42~~ | ~~DB-SSOT~~ | ~~VecMemory → project_data.db 통합~~ | ✅ 완료 (`d7ff7f0`) |
-| ~~43~~ | ~~Passrate~~ | ~~전략별 재시도 + 조건부 지능 배선~~ | ✅ 완료 (`0141553`) |
-| ~~44~~ | ~~Ensemble FB~~ | ~~Stage 2 arc 앙상블 전략 피드백~~ | ✅ 완료 (`b037cf7`) |
-| ~~45~~ | ~~크로스컷+계약~~ | ~~R1-R100 시나리오 스윕 + 계약 위생~~ | ✅ 완료 (`16dc053`, `24b6372`) |
-| ~~46~~ | ~~Multi-Sweep~~ | ~~sweep 4~12 + codex 종합 버그 수정~~ | ✅ 완료 (`a4f984f`, `5d073a7`) |
-| ~~47~~ | ~~Opus TF 재감사~~ | ~~전면 재감사 + T1/T2 9건 수정~~ | ✅ 완료 (`7ba32c0`, `77b0164`) |
-| ~~48~~ | ~~SC-0~6~~ | ~~Smart Context Retrieval 전량 + Post-Audit~~ | ✅ 완료 (`5c762b6`, `6454f5a`) |
-| ~~49~~ | ~~TF-5~~ | ~~전체 시스템 디버깅 감사 12TF + 32건 패치~~ | ✅ 완료 (`5e7f7c0`) |
-| ~~50~~ | ~~TF-6~~ | ~~롤백 원자성·상태 누적·트랜잭션 등 16건 패치~~ | ✅ 완료 (`9f0de73`) |
-| ~~51~~ | ~~TF-7~~ | ~~전체 감사(A~N 14TF) + TF-C-1 + P0/P1/P2 24건 패치~~ | ✅ 완료 (`ddef308`) |
-| ~~52~~ | ~~TF-7R~~ | ~~1차(롤백SSOT) + 3차(fail-close) + 6차(피드백루프) + 7차(카오스테스트38개)~~ | ✅ 완료 (`ddef308`) |
-| ~~53~~ | ~~PBT~~ | ~~hypothesis property-based tests 46개 — rollback/validation/budget/invariant~~ | ✅ 완료 (`cff4ae5`) |
-| ~~54~~ | ~~E2E 통합~~ | ~~DI 배선 wiring 검증 16개 — TF-7R 8개 신호 경로 전량 확인~~ | ✅ 완료 (`67a0262`) |
-| ~~55~~ | ~~Debt Audit~~ | ~~아키텍처 부채 감사 — silent except 22건 debug화, DI 후보 주석, dead var 제거~~ | ✅ 완료 (`77f5d62`) |
-| ~~56~~ | ~~Memory ROI~~ | ~~vec_memory 검색 품질 4건 개선 (P0-1~P0-4)~~ | ✅ 완료 (`d5888f7`) |
-| ~~57~~ | ~~D1 Hybrid~~ | ~~FTS5 + RRF 하이브리드 검색 + 감리 소결함 수정~~ | ✅ 완료 (`2671927`, `3abea28`) |
-| ~~58~~ | ~~DB 효율화~~ | ~~chroma_db 삭제·character_voice/foreshadow DB 전환·인덱스 보강~~ | ✅ 완료 (`6422dc4`, `da7439e`, `1b8fe9a`) |
-| ~~59~~ | ~~D2 Observability~~ | ~~memory retrieval 경로별 계측 (dense/fallback/hybrid/multi_dense)~~ | ✅ 완료 (`266640d`) |
-| ~~60~~ | ~~문서정리~~ | ~~docs/ 완료 히스토리 삭제 (445→70개, -84%)~~ | ✅ 완료 (`48d66d4`) |
-| ~~61~~ | ~~E2E Smoke~~ | ~~파이프라인 통합 smoke 테스트 33개 추가~~ | ✅ 완료 (`11cf0ee`) |
-| ~~62~~ | ~~TF-10~15~~ | ~~전면 감사 6TF + P0 패치 8건~~ | ✅ 완료 (`e3b407d`) |
-| ~~63~~ | ~~TF-16~~ | ~~P1 백로그 3건 — fail-closed + 캐시키 + callable guard 38건~~ | ✅ 완료 (`abe66de`) |
-| ~~64~~ | ~~TF-17~~ | ~~Truth Gate 메모리 오염 방지 advisory 검증기 (5개 검사, 20개 테스트)~~ | ✅ 완료 (`5446a3b`) |
-| ~~65~~ | ~~TF-18~~ | ~~Hybrid 검색 모드 활성화 (smart_retrieval enabled + hybrid 모드)~~ | ✅ 완료 (`5446a3b`) |
-| ~~66~~ | ~~TF-19~~ | ~~Memory Benchmark 골든 에피소드 검색 정확도 테스트 17개~~ | ✅ 완료 (`e4dff1c`) |
-| ~~67~~ | ~~Opus TF 전수조사~~ | ~~Stage 0~4 전면 감사 78건 — P0 7건 + P1 17건 패치~~ | ✅ 완료 (`abe64c3`) |
-| ~~68~~ | ~~2차 전수조사~~ | ~~동시성·트랜잭션·리소스 71건 — P0 10건 + P1 34건 전량 패치~~ | ✅ 완료 (`eb604a5`) |
-| ~~69~~ | ~~3차 전수조사~~ | ~~데이터 무결성·엣지케이스·정합성 73건 — P0 19건 + P1 17건 + P2 2건 패치~~ | ✅ 완료 (`a116ac7`) |
-| ~~70~~ | ~~4차 전수조사~~ | ~~동시성·복구경로·계약·설정·크로스컷 51건 — P0 10건 + P1 18건 + dead code 1744줄 삭제~~ | ✅ 완료 (`eb653cf`) |
-| ~~71~~ | ~~TF-20~~ | ~~정확도 우선 5건 — [S2-001] ContinuityInspector→retry / [CO-002] memorize 반환값 / [XC-002] NPC fail-closed + Manager audit_event / [S4-001] save_episode_bible→False~~ | ✅ 완료 (`8efe39c`) |
-| ~~72~~ | ~~LM-A~~ | ~~세계관 절대 법칙 강제 — Bible→world_laws 자동등록 + TruthGate 7번째 검사(_check_world_law_violation) + CRITICAL 핀 보호~~ | ✅ 완료 |
-| ~~73~~ | ~~LM-B~~ | ~~NPC 속성 텍스트 레벨 표류 감지 — NpcDriftAdvisor(원고 vs 스냅샷 LLM advisory) + Stage4 배선~~ | ✅ 완료 |
-| ~~74~~ | ~~LM-C~~ | ~~수치 누적 표류 감지 — NumericDriftAdvisor(FactLedger 이력 LLM advisory, 5화 단위) + Stage4 배선~~ | ✅ 완료 |
-| ~~75~~ | ~~LM-D~~ | ~~관계도 장기 표류 감지 — RelationshipDriftAdvisor(npc_relationship_history append-only + LLM advisory) + Stage4 배선~~ | ✅ 완료 (`71f1a1f`) |
-| ~~76~~ | ~~LM-E~~ | ~~회상/플래시백 오염 감지 — FlashbackVerifier(14개 마커 + VecMemory 참조 + LLM advisory) + Stage4 배선~~ | ✅ 완료 (`71f1a1f`) |
-| ~~77~~ | ~~LM-F~~ | ~~1인칭 정보 역설 감지 — InfoParadoxChecker(episode_bibles 지식 누적 + LLM advisory, 1인칭 전용) + Stage4 배선~~ | ✅ 완료 (`71f1a1f`) |
-| ~~78~~ | ~~LM-G~~ | ~~서사 구조 컨텍스트 enrichment — NarrativeContextFormatter(동기/약속/Arc스케일 포맷터) + WorldState motivations/promises + Stage2 배선~~ | ✅ 완료 (`71f1a1f`) |
-| ~~79~~ | ~~TF-27~32~~ | ~~PASS_WITH_FIX verdict 도입 — 스키마+프롬프트+Stage4 inplace patch + S2/S3 소비자 코드 패치 + 테스트 17개~~ | ✅ 완료 (`75efa5f`) |
-| ~~80~~ | ~~TF-32-VERIFY~~ | ~~PASS_WITH_FIX → patch + Director 재심사 반복 (최대3회) — S2/S3/S4 전량~~ | ✅ 완료 |
-| ~~81~~ | ~~TF-33~~ | ~~fix_scope 기반 3-tier 수정 라우팅 — inplace만 fix loop, partial/full → REJECT → retry 경로~~ | ✅ 완료 |
-| ~~82~~ | ~~TF-34~~ | ~~Validator PASS_WITH_FIX 피드백 보존(L303) + compare 경로 fix_scope 전파(L133)~~ | ✅ 완료 |
-| ~~83~~ | ~~TF-45~~ | ~~Central Schema Builder — 비무협 장르 프롬프트 오염 근절~~ | ✅ 완료 (`3c19e6d`) |
-| ~~84~~ | ~~TF-46~~ | ~~합격률 개선 — QualityGate PASS_WITH_FIX bypass + 컨텍스트 한도 증가 + InPlace state_updates 반환/merge~~ | ✅ 완료 (`8476bc2`) |
-| ~~85~~ | ~~B-1-3b~~ | ~~stage4_interview_round.run() 2차 분할 — 1,647→686줄(-58%), 5개 private 메서드 추출~~ | ✅ 완료 (`ce9b9c4`) |
-| ~~86~~ | ~~LM-I~~ | ~~npc_history known_attrs 4필드 동기화 — WorldState §15~17 (injury/location/permanent_injuries) + §3 (relation_to_protag) + NpcDriftAdvisor 프롬프트 보강~~ | ✅ 완료 |
-| ~~87~~ | ~~E-1~~ | ~~PatchModeThresholds.PATCH dead code 제거 — fix_scope 기반 라우팅으로 대체됨. 테스트·YAML·docstring 정리~~ | ✅ 완료 |
-| ~~88~~ | ~~LM-H~~ | ~~FlashbackVerifier 원고 원문 대조 강화 — VecMemory.fetch_manuscript_snippet 공개화 + 원문 스니펫 LLM 프롬프트 주입 + 원문 우선 참조 지시~~ | ✅ 완료 |
-| ~~89~~ | ~~A-4~~ | ~~공통 실패 패턴 감지 — contradiction_types 반환·보존 + 동일 모순 유형 2연속 Arc 구조 진단 advisory~~ | ✅ 완료 (`f0a091b`) |
-| ~~90~~ | ~~NumericDrift~~ | ~~장기연재 한도 보강 — MAX_ITEMS 20→30, MAX_HISTORY_POINTS 15→20~~ | ✅ 완료 (`f0a091b`) |
-| ~~91~~ | ~~A-2+A-3+B-4+TF-25-01~~ | ~~open_review CW 전달 + fix_scope DB 추적 + 동기/약속 방치 감지 + IndexError 방어~~ | ✅ 완료 (`9417b6d`) |
-| ~~92~~ | ~~TF-25~~ | ~~전수 확인(01~09) + SSOT 통합 — base_agent/director_ensemble → validation.yaml 단일 참조~~ | ✅ 완료 |
-| ~~93~~ | ~~TF-26~~ | ~~종합 감사 — Director SSOT + dead config 2파일 삭제 + 로깅 강화 9건 + 타임아웃 YAML 외부화~~ | ✅ 완료 |
-| ~~94~~ | ~~B-1-9~~ | ~~거대 함수 2차 분할 — process_pass_result(-71%) + run_validation(-83%) + ask(-57%) = 13개 메서드 추출~~ | ✅ 완료 |
-| ~~95~~ | ~~LM-Tier~~ | ~~장기 기억+품질 강화 6건 — TF-A(bare except) + TF-B(지수 성장) + TF-C(fix_scope 주입) + TF-D(npc reason) + TF-E(HUD Anomaly) + TF-F(누적 시간)~~ | ✅ 완료 |
-| ~~96~~ | ~~P1-5~~ | ~~장기 반복 감지 advisory — LongTermRepetitionAdvisor(20화+ 씬 패턴 2-gram 분석 + LLM 판정) + Stage4 배선~~ | ✅ 완료 |
-| ~~97~~ | ~~TF-45~~ | ~~비무협 무협 오염 근절 7건 — 동적 에너지 블록+ARC_DESIGN_SCHEMA state_changes+status_shadow 중립화+analyst 플레이스홀더+후처리 매핑~~ | ✅ 완료 (`63661c1`) |
-| ~~98~~ | ~~TF-47~~ | ~~InPlace/PASS_WITH_FIX 패치 원고 전체 삭제 버그 — JSON 파싱 1단계+rfind position 0 보호+빈 manuscript 실패 처리~~ | ✅ 완료 (`99bd199`) |
-| ~~99~~ | ~~TF-48~~ | ~~Arc 간 실행 상태 연속성 — DB에서 실제 에피소드 실행 결과 로드+LLM 컨텍스트 주입 (계획-실행 괴리 근절)~~ | ✅ 완료 (`00bcef5`) |
-| ~~100~~ | ~~TF-54~~ | ~~WritingDirective — PatternTracker(LLM 0회)+지시생성(Flash 1회)+CW setattr 주입+Director MC prepend+self-critique 6·7·8번째 체크~~ | ✅ 완료 (`3f18370`) |
-| ~~101~~ | ~~TF-55b~~ | ~~VecMemory hits=0 슬롯 → STATIC(query 직접 반환)/DB_NPC_RELATIONSHIP(관계이력 직접 조회) — context_advisor + stage4_context_builder~~ | ✅ 완료 (`d55081d`) |
-| ~~102~~ | ~~Model SSOT~~ | ~~모델명 models.yaml 단일 참조 — constants.py _load_model_from_yaml + config_manager 동적 로드 + 6개 파일 AIModels.* 교체~~ | ✅ 완료 (`5336be8`) |
-| ~~103~~ | ~~합격률 개선~~ | ~~ending_hook 의무화(chief_writer.yaml 규칙12·13) + _check_ending_hook_presence(앞20자 부분일치) + stage4_interview_round blueprint setattr~~ | ✅ 완료 (`5a27a8d`) |
-| ~~104~~ | ~~실파이프라인 검증~~ | ~~TF-54/55b/합격률 wiring 통합 테스트 8개 — setattr 배선·ending_hook 체인·STATIC/DB_NPC dispatch·Director MC prepend(test_pipeline_wiring.py)~~ | ✅ 완료 (`8dcb785`) |
-| ~~105~~ | ~~6차 전수조사~~ | ~~신규 코드 전수 감사 P0 0건 + P1 3건 — config_manager fallback 정렬·reference_anchor AIModels·confidence_calibration model 인자화~~ | ✅ 완료 (`ce1658f`) |
-| ~~106~~ | ~~V73~~ | ~~자본금 역동기화 2중 방어 — Director state_updates 우선 + 대사 제거 regex~~ | ✅ 완료 |
-| ~~107~~ | ~~7차 전수조사~~ | ~~P2 SSOT 주석 7파일 + LM-B/C/P1-5 except Exception 보강~~ | ✅ 완료 |
-| ~~108~~ | ~~LM-post-1~~ | ~~Retrospective lookback 5→10 YAML 외부화 + causal_graph Read + Director MC 보조 주입~~ | ✅ 완료 |
-| ~~109~~ | ~~8차 전수조사~~ | ~~LM-E/F/D except Exception 보강 — advisory 비치명 완결~~ | ✅ 완료 |
-| ~~110~~ | ~~God Object 1~~ | ~~stage4_interview_round.run() 782→404줄, _setup_writing_directive/_build_common_writer_kwargs/_run_pre_director_validation 추출~~ | ✅ 완료 (`9405b6f`) |
-| ~~111~~ | ~~God Object 2~~ | ~~main_a._attach_agents() 570→137줄, _init_core_agents/_init_v50_modules 추출~~ | ✅ 완료 (`d3b9d79`) |
-| ~~112~~ | ~~God Object 3~~ | ~~stage4_interview_round._process_verdict() 320→114줄, _run_post_select_checks/_execute_pass_with_fix_loop 추출~~ | ✅ 완료 (`d715975`) |
-| ~~113~~ | ~~로깅 강화~~ | ~~llm_calls+stage_attempts DB 테이블 + BaseAgent 계측 + FailureAnalyzer + advisory_warnings 컬럼 + episode_production.jsonl 필드 강화~~ | ✅ 완료 (`b48a1c6`) |
-| ~~114~~ | ~~Log-Phase2~~ | ~~실패 스니펫 저장(prompt_snippet/response_snippet 실패 한정 3000자) + Stage2 duration_ms/failure_category/advisory_flags 보강 + Stage3 attempt_num 동적화/arc_num 복원/reject_reason 상세화~~ | ✅ 완료 (감리 PASS, 3,245 passed) |
-| ~~115~~ | ~~NC-1~~ | ~~수치 정합성 Python 검증(5개 검사: FactLedger교차/산술/직함/이벤트순서, LLM 0회) + 단일 후보 독점 방지 SCM(경고 주입+score 95→90 보정)~~ | ✅ 완료 (3,299 passed) |
-| ~~116~~ | ~~NC-2~~ | ~~실파이프라인 11대 이슈 잔여 갭 6건 해소 — 퍼센트구성검증+NPC동명이인+도입부유사도+씬유사도advisory+공간연속성프롬프트+시간경과Stage4주입~~ | ✅ 완료 (3,331 passed) |
-| ~~117~~ | ~~NC-3~~ | ~~Director 일관성 체크리스트 10개 카테고리 — consistency_checklist 스키마+프롬프트(4곳)+파싱+ISSUE 3건+ python_warnings 상한 3+반환 전파+테스트 11개~~ | ✅ 완료 (3,342 passed) |
-| ~~118~~ | ~~NC-3B~~ | ~~Few-Shot Golden Example(director.yaml 4곳) + score_breakdown 합산 Self-Consistency Check(director_ensemble.py) + 테스트 6개~~ | ✅ 완료 (3,348 passed) |
-| ~~119~~ | ~~TF-LLM P0~~ | ~~TF-D Advisory 시각화(CRITICAL/MAJOR/INFO 헤더+0건 축약) + TF-E CW 톤 조절(강압→완화, 핵심 금지 유지) + TF-A 중복 제거(NO-OP — SELECTION_PROMPT standalone 필수, P2 재분류)~~ | ✅ 완료 (3,348 passed, 감리 PASS) |
-| ~~120~~ | ~~PWF-S2~~ | ~~Stage 2 PASS_WITH_FIX 무력화 수정 — inplace patch 이력을 Director 재심사 story_context에 주입(stage2_finalizer.py) + 테스트 3개~~ | ✅ 완료 (3,351 passed, 감리 PASS) |
-| ~~121~~ | ~~NS-1/NS-1-P/NS-2~~ | ~~전장르 수치 자기검증 — S2 ANALYST_SELF_CRITIC 항목7 강화(LLM재계산) + S3 BLUEPRINT_PREFLIGHT 항목6 추가 + S4 CW self_critique check9(_check_arithmetic_consistency, mult/pct/add_sub 3패턴) + NS-1-P(inplace 패치 후 Python 산술 검증→Director story_context 주입) + NS-2(Arc PASS 후 genre_ext vs arc_end_state 30% 괴리 advisory 로깅) + 테스트 13개~~ | ✅ 완료 (3,364 passed, 감리 PASS) |
-| ~~122~~ | ~~NS-3~~ | ~~Treatment block 수치 목표 self-critic 주입 — NS-3-A(_format_block_numeric_targets: genre_ext 수치 → fallback critic_input prepend) + NS-3-B(_check_arc_vs_block_targets: FourPhase Phase 2.55 Python 교차검증, 30% 괴리 경고 → feedback prepend) + 테스트 6개~~ | ✅ 완료 (3,370 passed, 감리 PASS) |
-| ~~123~~ | ~~NS-4~~ | ~~Arc 간 시간 연속성 체크 — stage3_orchestrator._extract_arc_time_markers(regex, LLM 0회) + NS-4 advisory 주입(TF9 except 직후) + Director NC-3 체크리스트 11번째 항목(timeline_arc_consistency) + director_ensemble._nc3_keys 추가 + 테스트 5개~~ | ✅ 완료 (3,382 passed, 감리 PASS) |
-| ~~124~~ | ~~NS-4-S2/S4~~ | ~~Arc 간 날짜 감각 Stage 2/4 확장 — four_phase_arc_generator._ns4_extract_time_markers(모듈 상단)+_generate_prev_context() return 직전 ⏱️[NS-4] 주입 + stage4_interview_round._ns4_extract_time_markers(모듈 상단)+run() [Timeline] 직후 [Arc 시간 연속성 참고] Director mc_parts 주입 + 테스트 5개~~ | ✅ 완료 (3,387 passed, 감리 PASS) |
-| ~~125~~ | ~~TF-G/TF-I/TF-C~~ | ~~P1 코덱스 3건 — TF-G(Self-Critique 게이트 ending_hook+분량) + TF-I(director_feedback common_writer_kwargs 주입) + TF-C(NC-1/NC-3 자동감점 제거 — 대원칙 3 Director 주권 존중)~~ | ✅ 완료 (3,390 passed, 감리 PASS) |
-| ~~126~~ | ~~9차 전수조사~~ | ~~감리 3회 — P0 3건→0건(전량 하향) + P1 9건 패치: silent except 5건 logging 보강 + 모델 SSOT 3건(state_tracker_npc/manuscript_validator) + NC-3 스키마 timeline_arc_consistency 키 동기화~~ | ✅ 완료 (3,390 passed, 감리 PASS) |
-| ~~127~~ | ~~2차 전수조사 마스터 오더 (1~10번 터미널)~~ | ~~코드베이스 전 영역 122개+ 파일 전수조사 — S2 파이프라인·Arc 생성/검증·Blueprint/Continuity·Stage4·CW/Writer·Director·Advisory·Memory/DB·Validation/Guard·Config SSOT 10개 영역 전량 검수 + 식별된 갭 패치 완료~~ | ✅ 완료 |
-| ~~128~~ | ~~3차 전수조사 마스터 오더 (11~16번 터미널)~~ | ~~1차 오더 미커버 70개+ 파일 전수조사 — Stage0/Services·보조에이전트(P2 유보 7개 포함)·추적/관계/캐릭터·품질/스타일/장르/HUD·운영/모니터링/lite_mode·Config잔여+Tests 6개 영역 전량 검수 + 식별된 갭 패치 완료~~ | ✅ 완료 |
-| ~~129~~ | ~~S2 preflight enrichment 전면 조사 패치~~ | ~~stage2_preflight/_orchestrator/analyst 3파일 전면 조사 — P0 0건 / P1 3건 패치(items_acquired LLM 필수 필드화+파싱전실패 _enrich_skipped 플래그+StateTracker 첫 9개 try/except 래핑) / P2 4건 패치(timeline 빈값 건너뜀+silent pass 2건 logging.debug+episode:0→None) + 오탐 2건 제거~~ | ✅ 완료 |
-| ~~130~~ | ~~10차 전수조사 마스터 오더 (19~26번 터미널)~~ | ~~director_grading/manager/state_delta(19번·P2 1건 유보)+meta_wall 게이트(20번·P1 TF-G 확장)+arc_summary/fact_ledger 비무협 갭(21번·P1 3건)+four_phase_arc arc_start_state.location(22번·P1)+NS-4-S4 검증(23번·P2 2건 유보)+AUDIT 조항 갭(24번·P1)+location 상세화(25번)+NC3_KEYS 12개 동기화(26번) — P1 9건 전량 패치+테스트 7개 신규 + 오탐 1건 제거~~ | ✅ 완료 (3,415 passed, 감리 PASS) |
-| ~~131~~ | ~~실파이프라인 감사 00_20260306 패치~~ | ~~P1 4건: BUG-1(❌ 다음 오탐 — 제목 마커 분리)+STRUCT-1(SC 추가투표 thinking_level medium 균등화)+STRUCT-2(PASS_WITH_FIX SC 다수결 분리 → InPlace 진입 보장)+STRUCT-3(Stage 2/3 audit Contradiction Firewall 추가) / P2 4건: BUG-2(preflight 프롬프트 장르 중립화)+BUG-3(소지품 regex 장르 확장 4곳)+BUG-4(arc_draft_validator dead code 제거)+BUG-5(ArcValidator advisory 세부 로깅) + 테스트 11개~~ | ✅ 완료 (3,512 passed) |
-| ~~132~~ | ~~실파이프라인 감사 01_20260306~~ | ~~InPlace-Diff 로깅(S2/S3/S4 `log_patch_diff` 유틸) + BUG-A P1(금지 아이템 오탐 — 기존 소지품 화이트리스트 `arc_ensemble.py`) + 감사 문서 4건(BUG-A~D) + 테스트 6개~~ | ✅ 완료 (3,523 passed, 감리 3회 PASS) |
-| ~~133~~ | ~~InPlace 신뢰성 조사 + 패치~~ | ~~S2/S3/S4 전면 조사 — P1 2건(30KB 절단→return None, 1-depth deep merge) + P2 1건(S2 validate_arc 추가) + 조사 문서 + 테스트 7개~~ | ✅ 완료 (3,530 passed, 감리 3회 PASS) |
-| ~~134~~ | ~~TF-S2~~ | ~~Stage 2 Director Selection 통합 — Python 자동선택 제거(generate_ensemble→(None,valid_candidates))+STRUCTURAL_MIN_SCORE=50 소프트필터+tactical_doc 8000자 절삭 제거+블록배치 재정렬(ASP→location→Phase2.6→fallback→sanitize→NS-3-B→EnsembleFB)+_ensemble_meta 전 후보 부착+테스트 58개 신규~~ | ✅ 완료 (3,588 passed, 감리 PASS) |
-| ~~135~~ | ~~감사03 코덱스 오더~~ | ~~BUG-A(위치 SSOT arc_end_state 우선)+BUG-I(시간 제거 regex)+BUG-D(비무협 무협필드 strip)+BUG-E(추상아이템 필터)+BUG-C(XC-002 1회 retry)+BUG-B(NS-2 advisory Director 주입)+NR-1(정신적 피로 자연 회복 5파일) — 7 Step 전량+테스트 10개 신규~~ | ✅ 완료 (3,598 passed, 감리 2연속 PASS) |
-| ~~136~~ | ~~감사04 패치(000_27)~~ | ~~C-1(Arc 메타용어 regex `\bArc(?:\s+\d+)?\b` 확장+S2 tactical_doc "이전 Arc" 치환)+M-4(NPC 괄호 접미사 정규화 `_normalize_npc_name`)+M-2(analyst.yaml equipment 물리적 휴대 제한)+M-3(NS-4 timeline start==end 경고+Arc 시작 역전 탐지) — P1 2건+P2 2건+테스트 13개 신규~~ | ✅ 완료 (3,611 passed) |
-| ~~137~~ | ~~감사05 인과분석+TF-A~E 코덱스~~ | ~~000_01 블록침범/ep초과/수치날조 99% 인과 확정 → TF-A(NS-3-B Director 전 이동)+TF-B(블록경계 4대 규칙+block_event_guard)+TF-C(genre_ext ±30%)+TF-D(ep_count 3~6 전량 동기화)+TF-E(items_acquired equipment 동기화) — 5파일 패치~~ | ✅ 완료 (3,611 passed) |
-| ~~138~~ | ~~감사06 전수조사+BUG-F~~ | ~~00000000 TF-A~E 효과 검증(블록침범 0건/수치날조 0건/100% 합격률) + BUG-F(protagonist_items vs items_acquired 필드명 불일치 — 14파일 21곳 폴백+테스트 3개) + analyst.yaml Epic 6~7→5~6 교정~~ | ✅ 완료 (3,614 passed, 감리 3회 PASS) |
-| ~~139~~ | ~~TF-DB 감사+DB 코덱스 오더~~ | ~~DB 활용 극대화 — TF-DB-A1(motivations/promises get_summary)+A2(cumulative_elapsed)+A3(7개 truncation)+B1(FactLedger numbers 스키마 정합+S2/S3 주입)+B3(6개 truncation)+D1(5종 registry 요약)+D2(known_attrs NPC 블록)+E1(NPC 반응 패턴 수집)+E2(감정 고착 경고+emotion_required self-critique)+C1(surgery_logs 삭제)+DB-1(pacing advisory)+DB-2(satisfaction advisory)+DB-3(arc_dependencies)+DB-4(stale seeds)+DB-6(reveals)+DB-7(character_voice)+DB-8(reflexion)+DB-9(확장 타임라인)+CP-7(canonical_facts §5)+§10(npc_history reason) — 14파일+테스트 141개 신규~~ | ✅ 완료 (3,755 passed, 3-pass 감리 PASS) |
-| ~~140~~ | ~~QI-Quality Boost~~ | ~~DB 외 3대 방향성 — QI-SNR-1(NPC 5중복 CP 축약)+SNR-3(Advisory 티어별 모순 suppress)+SNR-4(비게이팅 [참고] 분리)+FL-1(prior_attempts 누적 피드백 max3 CW 소비)+FL-2(Cross-Arc stage_attempts 소비)+FL-3(FailureAnalyzer Arc 생성 주입)+FL-5(품질 추세 경고)+QM-1(self-critique 12~15 4개 추가)+QM-2(consistency_checklist 13→17개)+QM-4(episode_quality_labels sidecar 테이블) — 20+파일+타깃 테스트 409 passed~~ | ✅ 완료 (3-pass 감리 PASS) |
-| ~~141~~ | ~~TF-DB-quality-boost-audit~~ | ~~B1 FactLedger 스키마 불일치 활성 버그 우선 수정~~ | ✅ 완료 |
-| ~~142~~ | ~~quality-boost-beyond-db-audit~~ | ~~S/N 비율·피드백 루프·품질 측정 3대 방향 감사+패치~~ | ✅ 완료 |
-| ~~143~~ | ~~TF-QR-quality-remaining-audit~~ | ~~잔여 퀄리티 갭 8건 해소~~ | ✅ 완료 |
-| ~~144~~ | ~~TF-250-long-serial-scale-audit~~ | ~~장기 연재 스케일 감사~~ | ✅ 완료 |
-| ~~145~~ | ~~TF-QI-structural-quality-gaps-audit~~ | ~~구조적 품질 갭 감사~~ | ✅ 완료 |
-| ~~146~~ | ~~CTX-utilization-audit~~ | ~~Context Window 활용 극대화 — Stage 0/2/3/4 head+tail 절삭+advisory retry feedback 합류+validation.yaml cap 6건 — 3,810 passed, 감리 PASS~~ | ✅ 완료 |
-| ~~147~~ | ~~TF-FINAL 건강 감사~~ | ~~코드베이스 전수 건강 감사 — 4 병렬 에이전트×120+파일 스캔, 1차 50+건→2차 HIGH 6건 전량 오탐→3차 P0/P1 0건, P2 3건+P3 5건 현상유지. 확신도 97%+~~ | ✅ 완료 |
-| ~~148~~ | ~~TF-MULTI Phase 1~~ | ~~deprecated 모델명 정리 — base_agent fallback chain gemini-3.x 4항목→2항목(2.5-pro→2.5-flash)+rate limit 분기 무효화+metrics_collector 가격표 2항목 삭제+주석 4파일 교정+멀티 프로바이더 전환 명세 문서화 — 457 passed, 3-pass 감리 PASS~~ | ✅ 완료 |
-| ~~149~~ | ~~TF-MULTI Phase 2~4+Vertex~~ | ~~멀티 프로바이더 전환 — Phase 2(provider 추상화 llm_provider/llm_router/llm_generate+BaseAgent shim+direct caller 21곳 경유+llm_schema adapter) + Phase 3(Anthropic/OpenAI provider+disabled guard+shared router singleton+models.yaml providers 섹션) + Phase 4(readiness-only 고정+문서화) + Vertex AI(VertexAIProvider+vertexai: prefix 공존+fallback prefix 보존+비용 정합) — 3,847 collected, 3,831 passed, 감리 PASS~~ | ✅ 완료 |
-| ~~150~~ | ~~TF-BE 백엔드 전수조사~~ | ~~6개 병렬 에이전트 1차 스캔(120+파일) → 4개 병렬 에이전트 2차 검증 → 3차 종합 감리. 1차 35건(P0 4+P1 13+P2 18) → 2차 오탐 23건 제거(66% 오탐률) → **최종 P0 0건, P1 0건, P2 12건**(코드 위생/로깅/문서). 확신도 97%. 보고서: `docs/2026-03-10/TF-BE-backend-full-audit.md`~~ | ✅ 완료 |
+### 비무협 장르 오염 방지
+- `genre_schema_builder.py` 장르별 동적 스키마 생성 (TF-45)
+- `analyst.py _build_genre_placeholders()` → 무협이면 원본, 비무협이면 대체
+- 4th wall 메타용어 3단계 방어: chief_writer.yaml 규칙14 → self-critique 10번째 → truth_gate(P2)
 
----
+### Stage2 Director Selection (TF-S2)
+- Python 자동선택 제거, Director가 `compare_and_select_arc()`에서 최종 선택
+- `STRUCTURAL_MIN_SCORE = 50` 소프트필터 (최소 1개 보장)
 
-## 기존에 있지만 제대로 안 쓰이는 것들
+### 주요 필드명 주의
+- `protagonist_items` vs `items_acquired`: API 스키마가 `protagonist_items` 강제. 14파일 21곳 폴백 패턴 적용됨.
+- `cumulative_elapsed`: WorldState 필드, 한국어 시간 파서 `_parse_elapsed_days()`
 
-| 기능 | 파일 | 상태 |
-|------|------|------|
-| 시점 전환 프리셋 | `blueprint_ensemble.py` L76~90, `stage0/__init__.py` | ✅ **D-1 활성화 완료** — POV 선택 메뉴 추가, 전체 체인 작동 |
-| 시점(POV) 일관성 체크 | `pre_llm_validator.py` V70 | ✅ 구현됨 |
-| A/B 테스트 / 선택 추적 | `db_manager.py` director_selections | ✅ D-4 완료 — 전략 승률 DB 저장 |
-| 에피소드 롤백 | `project_manager.py` | ✅ D-2 완료 — NPC이력+WorldState+FactLedger 롤백 |
-| 문체 분석 → Guard | `genre_guards/style_guard.py` | ✅ D-3 완료 — StyleGuard 래퍼 (자동 래핑) |
-| Context Caching | `base_agent.py` | ✅ 구현 완료 (`chief_writer`·`arc_ensemble`·`blueprint_ensemble`·`director_ensemble`·`director_continuity` 5개 에이전트에서 사용 중) |
+### Self-Critique 체크 (15개)
+1~4: 기본(사망NPC/분량/대사비율/씬전환), 5: 동기약속 방치, 6: WritingDirective 준수, 7: 표현 신선도, 8: ending_hook, 9: 산술 일관성, 10: 메타용어 노출, 11: 감정 고착, 12: 시간 논리, 13: 문단 구조, 14: 톤 일관성, 15: 씬 전환 마커
 
----
-
-## 상세 정보
-
-**`참고자료.md`를 반드시 읽을 것.** 포함 내용:
-- 시스템 아키텍처 전체 구조도
-- 버그 패턴 분석 (Tier 1~8)
-- NPC 연속성 실패 시나리오 24개 (3-C)
-- 수정 모드 전략 (3-D)
-- 개선 아이디어 27개 + 대조표 (3-E)
-- 독자 대리만족 프레임워크 (3-F)
-- 리팩토링 Phase 1~6 로드맵
-
+### DB Advisory (Python 자동감지, 참고용)
+- Stage4 Director: DB-1(pacing), DB-2(satisfaction), DB-6(reveals), DB-8(reflexion)
+- Stage2 Finalizer: DB-3(arc_dependencies), DB-7(character_voice)
+- Stage3: DB-4(stale seeds), FactLedger 수치

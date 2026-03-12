@@ -25,6 +25,7 @@ from functools import partial
 from pathlib import Path
 
 from modules.core.soft_failure import report_soft_failure
+from modules.core.soft_failure import resolve_db_log_dir, resolve_logs_dir, resolve_project_log_dir
 
 from .action_scene_evaluator import ActionSceneEvaluator
 from .advisory_validator import AdvisoryValidator
@@ -306,43 +307,19 @@ class ValidationOrchestrator:
         )
 
     def _resolve_soft_failure_log_dir(self, validation_context: dict | None):
-        def _from_project(project) -> Path | None:
-            if project is None:
-                return None
-            try:
-                root = getattr(getattr(project, "paths", None), "root", None)
-                if root:
-                    return Path(root) / "logs"
-            except Exception:
-                pass
-            try:
-                db_path = getattr(getattr(project, "db", None), "db_path", None)
-                if db_path:
-                    return Path(db_path).parent / "logs"
-            except Exception:
-                pass
-            return None
-
         if isinstance(validation_context, dict):
             for key in ("log_dir", "project_dir"):
-                value = validation_context.get(key)
-                if value:
-                    try:
-                        base = Path(value)
-                        return base if base.name == "logs" else base / "logs"
-                    except Exception:
-                        pass
-            from_ctx = _from_project(validation_context.get("current_project"))
+                resolved = resolve_logs_dir(validation_context.get(key))
+                if resolved is not None:
+                    return resolved
+            from_ctx = resolve_project_log_dir(validation_context.get("current_project"))
             if from_ctx is not None:
                 return from_ctx
-            db_path = validation_context.get("db_path")
-            if db_path:
-                try:
-                    return Path(db_path).parent / "logs"
-                except Exception:
-                    pass
+            resolved_db = resolve_db_log_dir(validation_context.get("db_path"))
+            if resolved_db is not None:
+                return resolved_db
 
-        return _from_project(getattr(self.context, "current_project", None))
+        return resolve_project_log_dir(getattr(self.context, "current_project", None))
 
     def validate(self, ep_num: int, manuscript: str, validation_context: dict) -> dict:
         """

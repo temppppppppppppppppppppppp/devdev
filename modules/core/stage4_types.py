@@ -71,6 +71,7 @@ class _InterviewRoundResult:
     final_title: object = None  # str | None, set only on PASS
     final_state_updates: dict = dataclasses.field(default_factory=dict)  # set only on PASS
     error_category: str = ""  # [V75-B] LOGIC_ERROR | QUALITY_ISSUE | ""
+    attempt_artifact_meta: dict = dataclasses.field(default_factory=dict)
 
 
 @dataclasses.dataclass

@@ -1524,6 +1524,13 @@ JSON으로 출력:
             _should_return = self._run_interview_loop(session)
             if _should_return:
                 return
+            _audit_event = getattr(self.app, "_audit_event", None)
+            if callable(_audit_event):
+                _audit_event(
+                    "stage4_complete",
+                    "stage4 production completed",
+                    {"target_ep": getattr(session, "target_ep", target_ep)},
+                )
             _write_summary = getattr(self.app, "_write_audit_summary", None)
             if callable(_write_summary):
                 _write_summary("stage4_complete")

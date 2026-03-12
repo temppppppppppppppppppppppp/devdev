@@ -36,6 +36,26 @@ def test_quality_summary_endpoint_reads_project_sidecar(tmp_path, monkeypatch):
     assert payload["data"]["signals"]["ced"]["value"] == 1.1
 
 
+def test_quality_summary_endpoint_prefers_workspace_projects_root(tmp_path, monkeypatch):
+    workspace_root = tmp_path / "workspace"
+    monkeypatch.setenv("GEULDOBI_WORKSPACE", str(workspace_root))
+    monkeypatch.setattr(bridge_server, "PROJECT_ROOT", tmp_path / "engine")
+    project_dir = workspace_root / "projects" / "demo"
+    project_dir.mkdir(parents=True)
+
+    db = DBManager(project_dir / "project_data.db")
+    db.save_episode_quality_signal(2, {"ced_score": 0.9, "ai_slop_score": 0.4})
+    db.close()
+
+    response = asyncio.run(bridge_server.quality_summary_endpoint(project="demo", lookback=5))
+    payload = json.loads(response.body.decode("utf-8"))
+
+    assert response.status_code == 200
+    assert payload["ok"] is True
+    assert payload["data"]["available"] is True
+    assert payload["data"]["latest_ep"] == 2
+
+
 def test_quality_summary_endpoint_rejects_missing_project():
     response = asyncio.run(bridge_server.quality_summary_endpoint(project="", lookback=5))
     payload = json.loads(response.body.decode("utf-8"))

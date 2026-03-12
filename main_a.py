@@ -48,6 +48,7 @@ from google import genai
 
 import modules.core.spinners as _spinners_mod  # [V65] 플래그 동기화용
 from modules.core.feedback_system import FeedbackSystem  # [V64 P2-3]
+from modules.core.llm_generate import generate_content_via_router
 from modules.core.metrics_collector import get_metrics_collector  # [V49.3] 비용 추적 시스템
 from modules.core.narrative_diversity import NarrativeDiversityEngine  # [V48] 서사 다양성 엔진
 from modules.core.perf_timer import PerfTimer  # [V65] 파이프라인 성능 프로파일링
@@ -985,7 +986,11 @@ class SovereignApp:
             # [V73] MetricsCollector 프로젝트별 경로 갱신
             from modules.core.metrics_collector import get_metrics_collector
 
-            get_metrics_collector(self.current_project.paths.root / "logs" / "metrics")
+            _metrics_collector = get_metrics_collector(self.current_project.paths.root / "logs" / "metrics")
+            _metrics_session_id = getattr(_metrics_collector, "session_id", None)
+            if isinstance(_metrics_session_id, str) and _metrics_session_id.strip():
+                self.metrics_session_id = _metrics_session_id.strip()
+                self.current_project.metrics_session_id = self.metrics_session_id
 
         # [Sweep3-D1] 프로젝트 전환 시 PromptLoader 캐시 무효화
         from modules.core.prompt_loader import PromptLoader
@@ -1459,7 +1464,8 @@ class SovereignApp:
                 _flash_client = self.sys.api_client
 
                 def _flash_ask_cb(prompt: str, _c=_flash_client) -> str:
-                    resp = _c.models.generate_content(
+                    resp = generate_content_via_router(
+                        client=_c,
                         model=AIModels.FLASH_ANALYSIS_MODEL,
                         contents=prompt,
                     )
@@ -2423,9 +2429,12 @@ class SovereignApp:
                 _llm_ask = None
                 if hasattr(self, "sys") and hasattr(self.sys, "api_client"):
                     _client = self.sys.api_client
+
                     def _llm_ask(prompt, _c=_client):
                         from modules.core.constants import AIModels
-                        resp = _c.models.generate_content(
+
+                        resp = generate_content_via_router(
+                            client=_c,
                             model=AIModels.FLASH_ANALYSIS_MODEL,
                             contents=prompt,
                         )
@@ -3018,7 +3027,8 @@ class SovereignApp:
         """
         root = Path(self._PROJECTS_DIR)
         root.mkdir(parents=True, exist_ok=True)
-        projects = [d.name for d in root.iterdir() if d.is_dir()]
+        # Desktop bridge also derives 1-based project_index from a lexical sort.
+        projects = sorted(d.name for d in root.iterdir() if d.is_dir())
         if not projects:  # [V70] 빈 프로젝트 폴더 방어
             self.ui.log("❌ projects/ 폴더에 프로젝트가 없습니다. 먼저 프로젝트를 생성하세요.")
             return ""
@@ -3258,7 +3268,8 @@ class SovereignApp:
             )
 
             _time.sleep(0.3)
-            response = self.sys.api_client.models.generate_content(
+            response = generate_content_via_router(
+                client=self.sys.api_client,
                 model=_SUMMARY_MODEL,  # [V65] 중앙 상수
                 contents=prompt,
                 config=_types.GenerateContentConfig(

@@ -7,6 +7,7 @@
 관련 문서:
 
 - `docs/2026-03-12/pass-with-fix-master-roadmap.md`
+- `docs/2026-03-12/pass-with-fix-phase1-execution-spec.md`
 - `docs/2026-03-12/pass-with-fix-improvement-execution-plan.md`
 - `docs/2026-03-12/stage4-live-rerun-checklist.md`
 

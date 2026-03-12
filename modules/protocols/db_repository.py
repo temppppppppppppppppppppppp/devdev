@@ -189,6 +189,10 @@ class DBRepositoryProtocol(Protocol):
         duration_ms: int | None = None,
         advisory_flags: dict | None = None,
         session_id: str | None = None,
+        attempt_key: str | None = None,
         generation_method: str | None = None,
         prompt_version: str | None = None,
+        candidate_key: str | None = None,
+        content_hash: str | None = None,
+        artifact_path: str | None = None,
     ) -> None: ...

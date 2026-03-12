@@ -942,26 +942,25 @@ class TestStage3PassWithFix:
     def test_orchestrator_accepts_pass_with_fix(self):
         """final_verdict=PASS_WITH_FIX → Stage3 _handle_success 호출 경로 확인."""
         # Stage3Orchestrator L359 조건 재현
-        for final_verdict in ("PASS", "PASS_WITH_FIX", "PASS_WITH_WARNING"):
+        for final_verdict in ("PASS", "PASS_WITH_WARNING"):
             blueprint = {"scenario": "test"}
             pipeline_result = {"final_verdict": final_verdict}
 
-            # L359 조건: PASS, PASS_WITH_FIX, PASS_WITH_WARNING 모두 success
+            # Phase 1 계약: PASS, PASS_WITH_WARNING만 success
             success = blueprint and pipeline_result.get("final_verdict") in (
                 "PASS",
-                "PASS_WITH_FIX",
                 "PASS_WITH_WARNING",
             )
             assert success, f"{final_verdict}이(가) success 경로로 처리되어야 함"
 
-        # REJECT는 failure 경로
-        pipeline_result = {"final_verdict": "REJECT"}
-        success = {"scenario": "test"} and pipeline_result.get("final_verdict") in (
-            "PASS",
-            "PASS_WITH_FIX",
-            "PASS_WITH_WARNING",
-        )
-        assert not success
+        # PASS_WITH_FIX, REJECT는 failure 경로
+        for final_verdict in ("PASS_WITH_FIX", "REJECT"):
+            pipeline_result = {"final_verdict": final_verdict}
+            success = {"scenario": "test"} and pipeline_result.get("final_verdict") in (
+                "PASS",
+                "PASS_WITH_WARNING",
+            )
+            assert not success
 
 
 # ── Self-Consistency PASS_WITH_FIX Tests ──────────────────────────
@@ -1949,7 +1948,7 @@ class TestPFImprovements:
             "score": 95,
         }
 
-        v, ms, su, dr_out, fb = ir._execute_pass_with_fix_loop(
+        v, ms, su, dr_out, fb, patch_trace = ir._execute_pass_with_fix_loop(
             verdict="PASS_WITH_FIX",
             final_manuscript=_MANUSCRIPT_TEXT,
             final_state_updates={},
@@ -1963,6 +1962,8 @@ class TestPFImprovements:
         )
         # score=70 >= inplace_below(60) → inplace 폴백
         assert v == "PASS"
+        assert dr_out["score"] == 95
+        assert patch_trace["patch_strategy"] == "inplace_patch"
         cw.inplace_patch.assert_called()
 
     def test_pf1_fix_scope_missing_low_score(self):
@@ -1975,7 +1976,7 @@ class TestPFImprovements:
         dr = _director_result_pass_with_fix(score=40)
         dr["fix_scope"] = ""  # 누락
 
-        v, ms, su, dr_out, fb = ir._execute_pass_with_fix_loop(
+        v, ms, su, dr_out, fb, patch_trace = ir._execute_pass_with_fix_loop(
             verdict="PASS_WITH_FIX",
             final_manuscript=_MANUSCRIPT_TEXT,
             final_state_updates={},
@@ -1989,6 +1990,7 @@ class TestPFImprovements:
         )
         # score=40 < inplace_below(60) → full 폴백 → break → REJECT
         assert v == "REJECT"
+        assert patch_trace == {}
         cw.inplace_patch.assert_not_called()
 
     def test_pf2_min_patched_length_yaml(self):
@@ -2017,7 +2019,7 @@ class TestPFImprovements:
         ir = Stage4InterviewRound(ctx)
         dr = _director_result_pass_with_fix(score=60)
 
-        v, ms, su, dr_out, fb = ir._execute_pass_with_fix_loop(
+        v, ms, su, dr_out, fb, patch_trace = ir._execute_pass_with_fix_loop(
             verdict="PASS_WITH_FIX",
             final_manuscript=_original_text,
             final_state_updates={},
@@ -2032,6 +2034,7 @@ class TestPFImprovements:
 
         assert v == "REJECT"
         assert ms == _original_text
+        assert patch_trace["patch_strategy"] == "inplace_patch"
         cw.inplace_patch.assert_called_once()
         ctx.agents["director"].select_and_judge_ensemble.assert_not_called()
 
@@ -2055,7 +2058,7 @@ class TestPFImprovements:
             "fix_scope": "inplace",
         }
 
-        v, ms, su, dr_out, fb = ir._execute_pass_with_fix_loop(
+        v, ms, su, dr_out, fb, patch_trace = ir._execute_pass_with_fix_loop(
             verdict="PASS_WITH_FIX",
             final_manuscript=_MANUSCRIPT_TEXT,
             final_state_updates={},
@@ -2070,6 +2073,50 @@ class TestPFImprovements:
         # PASS_WITH_FIX 소진 → 패치본 채택 (Director가 "합격이나 수정 필요"라고 판정)
         assert v == "REJECT"
         assert ms == _patched_text  # 패치본 채택
+        assert patch_trace["patch_strategy"] == "inplace_patch"
+
+    def test_pf3_pass_with_fix_reaudit_merges_state_updates(self):
+        """PASS_WITH_FIX 반복 재심사 state_updates는 누적 merge되어야 한다."""
+        ctx = _make_ctx()
+        cw = MagicMock()
+        cw.inplace_patch.return_value = [{"manuscript": "수정된 원고입니다. " * 200}]
+
+        rc = _make_round_ctx(cw)
+        ir = Stage4InterviewRound(ctx)
+        dr = _director_result_pass_with_fix(score=60)
+
+        ctx.agents["director"].select_and_judge_ensemble.side_effect = [
+            {
+                "verdict": "PASS_WITH_FIX",
+                "score": 75,
+                "feedback": {"action_items": ["미세 수정"]},
+                "fix_scope": "inplace",
+                "state_updates": {"ending": "tightened"},
+            },
+            {
+                "verdict": "PASS",
+                "score": 95,
+                "state_updates": {"tone": "clean"},
+            },
+        ]
+
+        v, _ms, su, _dr_out, _fb, _patch_trace = ir._execute_pass_with_fix_loop(
+            verdict="PASS_WITH_FIX",
+            final_manuscript=_MANUSCRIPT_TEXT,
+            final_state_updates={"seed": "kept"},
+            director_result=dr,
+            director_feedback="수정 필요",
+            round_ctx=rc,
+            round_num=0,
+            score=60,
+            quality_gate_score=90,
+            director_mandatory_context="",
+        )
+
+        assert v == "PASS"
+        assert su["seed"] == "kept"
+        assert su["ending"] == "tightened"
+        assert su["tone"] == "clean"
 
     def test_pf3_reject_does_not_adopt_patch(self):
         """[PF-3] Director REJECT → 원본 유지 (디렉터 주권주의)."""
@@ -2089,7 +2136,7 @@ class TestPFImprovements:
             "score": 75,
         }
 
-        v, ms, su, dr_out, fb = ir._execute_pass_with_fix_loop(
+        v, ms, su, dr_out, fb, patch_trace = ir._execute_pass_with_fix_loop(
             verdict="PASS_WITH_FIX",
             final_manuscript=_MANUSCRIPT_TEXT,
             final_state_updates={},
@@ -2103,6 +2150,7 @@ class TestPFImprovements:
         )
         assert v == "REJECT"
         assert ms == _MANUSCRIPT_TEXT  # Director REJECT → 원본 유지
+        assert patch_trace["patch_strategy"] == "inplace_patch"
 
     def test_pf4_success_rate_calculation(self):
         """[PF-4] inplace 성공률 계산 검증 (진단용)."""

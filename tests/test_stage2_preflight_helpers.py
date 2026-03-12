@@ -151,6 +151,8 @@ class TestRecordS2PassMetrics:
         assert kw["success"] is True
         assert kw["attempt_num"] == 1
         assert kw["stage"] == 2
+        assert kw["attempt_key"] == "s2:ep1:arc1:a1"
+        assert kw["final_verdict"] == "PASS"
 
         # QualityDashboard
         s2_orch.ctx.quality_dashboard.record_validation.assert_called_once()
@@ -206,6 +208,8 @@ class TestRecordS2RejectMetrics:
         # PassRateMonitor
         kw = s2_orch.ctx.pass_rate_monitor.record_attempt.call_args[1]
         assert kw["success"] is False
+        assert kw["attempt_key"] == "s2:ep3:arc3:a2"
+        assert kw["final_verdict"] == "REJECT"
         assert kw["reject_reason"] == "구조 불안정"
 
         # QualityDashboard

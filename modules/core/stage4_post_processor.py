@@ -12,7 +12,7 @@ from pathlib import Path
 from modules.core.genre_schema_builder import is_wuxia
 from modules.core.metrics_collector import get_metrics_collector
 from modules.core.quality_signal_metrics import compute_quality_signal_bundle, extract_warning_count
-from modules.core.soft_failure import report_soft_failure
+from modules.core.soft_failure import report_soft_failure, resolve_project_log_dir
 
 _PROJECTS_DIR = "projects"
 
@@ -53,20 +53,7 @@ class Stage4PostProcessor:
 
     def _resolve_project_log_dir(self):
         current_project = getattr(self.ctx, "current_project", None)
-        try:
-            root = getattr(getattr(current_project, "paths", None), "root", None)
-            if root:
-                return Path(root) / "logs"
-        except Exception:
-            pass
-
-        try:
-            db_path = getattr(getattr(current_project, "db", None), "db_path", None)
-            if db_path:
-                return Path(db_path).parent / "logs"
-        except Exception:
-            pass
-        return None
+        return resolve_project_log_dir(current_project)
 
     def _truth_gate_llm_ask(self, prompt: str) -> str:
         """[TF-30-1] TruthGate 세계법칙 검사용 LLM 콜백."""

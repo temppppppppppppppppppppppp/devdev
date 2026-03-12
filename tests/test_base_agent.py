@@ -23,6 +23,7 @@ import pytest
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+import modules.domain.agents.base_agent as base_agent_module
 from modules.domain.agents.base_agent import AgentErrorType, BaseAgent
 
 # ══════════════════════════════════════════════════════════════
@@ -518,6 +519,156 @@ class TestContextCacheEviction:
             for k in list(agent._context_caches.keys()):
                 if k.startswith("evict_"):
                     agent._context_caches.pop(k, None)
+
+
+class TestMetricsUsageTracking:
+    def test_ask_resets_stale_usage_before_failure_metrics(self, agent, monkeypatch):
+        collector = MagicMock()
+        collector.estimate_tokens.side_effect = [111]
+        collector.start_call.return_value = "metric_1"
+
+        monkeypatch.setattr(base_agent_module, "METRICS_ENABLED", True)
+        monkeypatch.setattr(base_agent_module, "get_metrics_collector", lambda: collector)
+
+        agent._last_llm_usage = {
+            "prompt_token_count": 999,
+            "candidates_token_count": 888,
+            "cached_content_token_count": 777,
+        }
+        agent._build_model_stack = MagicMock(
+            return_value={
+                "model_stack": ["gemini-2.5-flash"],
+                "current_model": "gemini-2.5-flash",
+                "config": object(),
+                "metric_id": "metric_1",
+            }
+        )
+        agent._generate_content = MagicMock(side_effect=RuntimeError("boom"))
+        agent._handle_api_error = MagicMock(
+            return_value={
+                "action": "raise",
+                "current_model": "gemini-2.5-flash",
+                "config": object(),
+                "network_retry_count": 0,
+                "rate_limit_retry_count": 0,
+                "quota_retry_count": 0,
+            }
+        )
+        agent._attempt_backup_recovery = MagicMock(return_value='{"error": true}')
+        BaseAgent._session_logger_global = None
+
+        agent.ask("테스트 프롬프트")
+
+        collector.end_call.assert_called_once()
+        kwargs = collector.end_call.call_args.kwargs
+        assert kwargs["success"] is False
+        assert kwargs["input_tokens"] == 111
+        assert kwargs["output_tokens"] == 0
+        assert kwargs["cached_tokens"] == 0
+
+    def test_ask_accumulates_usage_across_continuations(self, agent, monkeypatch):
+        collector = MagicMock()
+        collector.start_call.return_value = "metric_2"
+
+        monkeypatch.setattr(base_agent_module, "METRICS_ENABLED", True)
+        monkeypatch.setattr(base_agent_module, "get_metrics_collector", lambda: collector)
+        monkeypatch.setattr(base_agent_module.time, "sleep", lambda *_args, **_kwargs: None)
+
+        usages = [
+            {
+                "prompt_token_count": 100,
+                "candidates_token_count": 40,
+                "cached_content_token_count": 10,
+                "thoughts_token_count": 4,
+            },
+            {
+                "prompt_token_count": 50,
+                "candidates_token_count": 20,
+                "cached_content_token_count": 5,
+                "thoughts_token_count": 3,
+            },
+        ]
+
+        def fake_generate(**_kwargs):
+            agent._last_llm_usage = usages.pop(0)
+            return object()
+
+        def fake_extract(*, full_response, attempt, **_kwargs):
+            if attempt == 0:
+                return {
+                    "full_response": full_response + "first",
+                    "_thinking_text": "",
+                    "action": "continue",
+                    "current_prompt": "continue",
+                }
+            return {
+                "full_response": full_response + "second",
+                "_thinking_text": "",
+                "action": "break",
+            }
+
+        agent._build_model_stack = MagicMock(
+            return_value={
+                "model_stack": ["gemini-2.5-flash"],
+                "current_model": "gemini-2.5-flash",
+                "config": object(),
+                "metric_id": "metric_2",
+            }
+        )
+        agent._generate_content = fake_generate
+        agent._extract_and_merge_response = fake_extract
+        BaseAgent._session_logger_global = None
+
+        result = agent.ask("테스트 프롬프트")
+
+        assert result == "firstsecond"
+        collector.end_call.assert_called_once()
+        kwargs = collector.end_call.call_args.kwargs
+        assert kwargs["success"] is True
+        assert kwargs["input_tokens"] == 150
+        assert kwargs["output_tokens"] == 60
+        assert kwargs["cached_tokens"] == 15
+        assert kwargs["thinking_tokens"] == 7
+
+    def test_backup_recovery_uses_measured_usage_and_closes_failed_metric(self, agent, monkeypatch):
+        collector = MagicMock()
+        collector.start_call.return_value = "backup_metric"
+
+        monkeypatch.setattr(base_agent_module, "METRICS_ENABLED", True)
+        monkeypatch.setattr(base_agent_module, "get_metrics_collector", lambda: collector)
+        monkeypatch.setattr(base_agent_module.time, "sleep", lambda *_args, **_kwargs: None)
+
+        agent._log_llm_call_to_db = MagicMock()
+        agent._classify_error = MagicMock(return_value=AgentErrorType.NETWORK_ERROR)
+
+        def fake_generate(**_kwargs):
+            agent._last_llm_usage = {
+                "prompt_token_count": 30,
+                "candidates_token_count": 0,
+                "cached_content_token_count": 4,
+                "thoughts_token_count": 2,
+            }
+            raise RuntimeError("backup down")
+
+        agent._generate_content = fake_generate
+
+        result = agent._attempt_backup_recovery(
+            base_prompt="backup prompt",
+            temperature=0.3,
+            response_schema=None,
+            full_response="",
+            error_type=AgentErrorType.UNKNOWN,
+        )
+
+        assert json.loads(result)["error"] is True
+        collector.end_call.assert_called_once()
+        kwargs = collector.end_call.call_args.kwargs
+        assert kwargs["success"] is False
+        assert kwargs["input_tokens"] == 30
+        assert kwargs["output_tokens"] == 0
+        assert kwargs["cached_tokens"] == 4
+        assert kwargs["thinking_tokens"] == 2
+        assert kwargs["error_type"] == AgentErrorType.NETWORK_ERROR
 
 
 # ══════════════════════════════════════════════════════════════

@@ -1,5 +1,7 @@
 """FailureAnalyzer success-pattern and quality-distribution tests."""
 
+import json
+
 from modules.core.db_manager import DBManager
 from modules.core.failure_analyzer import FailureAnalyzer
 
@@ -72,9 +74,459 @@ def test_failure_analyzer_compare_versions(tmp_path):
 
         assert result["versions"]["chief@v1"]["attempts"] == 2
         assert result["versions"]["chief@v1"]["pass_rate_pct"] == 50.0
-        assert result["versions"]["chief@v2"]["pass_rate_pct"] == 100.0
+        assert result["versions"]["chief@v2"]["pass_rate_pct"] == 50.0
         assert result["avg_score_delta"] == 9.5
         assert result["winner"] == "chief@v2"
+    finally:
+        db.close()
+
+
+def test_failure_analyzer_stage_pass_rates_treats_pass_with_fix_as_transient(tmp_path):
+    db = DBManager(tmp_path / "test_stage_pass_rates.db")
+    try:
+        db.save_stage_attempt(stage=4, verdict="PASS", ep_num=10, arc_num=3, score=91, prompt_version="chief@v1")
+        db.save_stage_attempt(stage=4, verdict="PASS_WITH_WARNING", ep_num=11, arc_num=3, score=88, prompt_version="chief@v1")
+        db.save_stage_attempt(stage=4, verdict="PASS_WITH_FIX", ep_num=12, arc_num=3, score=89, prompt_version="chief@v1")
+        db.save_stage_attempt(stage=4, verdict="REJECT", ep_num=13, arc_num=3, score=61, prompt_version="chief@v1")
+
+        analyzer = FailureAnalyzer(db)
+        result = analyzer.stage_pass_rates()
+
+        assert result["stage_4"]["total_attempts"] == 4
+        assert result["stage_4"]["pass"] == 2
+        assert result["stage_4"]["reject"] == 1
+        assert result["stage_4"]["pass_with_fix_transient"] == 1
+        assert result["stage_4"]["pass_rate_pct"] == 50.0
+    finally:
+        db.close()
+
+
+def test_failure_analyzer_episode_log_fallback_prefers_final_verdict_and_score(tmp_path):
+    db = DBManager(tmp_path / "test_episode_log_fallback.db")
+    try:
+        logs_dir = tmp_path / "logs"
+        logs_dir.mkdir(parents=True, exist_ok=True)
+        log_path = logs_dir / "episode_production.jsonl"
+        entries = [
+            {
+                "ep": 11,
+                "verdict": "PASS_WITH_FIX",
+                "score": 92,
+                "initial_verdict": "PASS_WITH_FIX",
+                "initial_score": 92,
+                "final_verdict": "PASS",
+                "final_score": 98,
+                "reason": "엔딩만 보강하면 됨",
+                "open_review": "엔딩 긴장감 회복",
+                "score_breakdown": {"structure": 98},
+                "consistency_checklist": {"timeline": "OK"},
+            },
+            {
+                "ep": 12,
+                "verdict": "PASS_WITH_FIX",
+                "score": 96,
+                "initial_verdict": "PASS_WITH_FIX",
+                "initial_score": 96,
+                "final_verdict": "REJECT",
+                "final_score": 61,
+                "reason": "수정 범위 확대",
+                "open_review": "",
+                "score_breakdown": {"structure": 61},
+                "consistency_checklist": {"timeline": "WARN"},
+            },
+        ]
+        log_path.write_text("\n".join(json.dumps(item, ensure_ascii=False) for item in entries) + "\n", encoding="utf-8")
+
+        analyzer = FailureAnalyzer(db)
+        patterns = analyzer.top_success_patterns(top_n=3, min_score=95)
+
+        assert len(patterns) >= 1
+        assert all(item["count"] >= 1 for item in patterns)
+    finally:
+        db.close()
+
+
+def test_failure_analyzer_patch_trace_summary_uses_episode_logs(tmp_path):
+    db = DBManager(tmp_path / "test_patch_trace_summary.db")
+    try:
+        logs_dir = tmp_path / "logs"
+        logs_dir.mkdir(parents=True, exist_ok=True)
+        log_path = logs_dir / "episode_production.jsonl"
+        entries = [
+            {
+                "ep": 21,
+                "verdict": "PASS_WITH_FIX",
+                "score": 92,
+                "initial_verdict": "PASS_WITH_FIX",
+                "initial_score": 92,
+                "final_verdict": "PASS",
+                "final_score": 98,
+                "flags": {"patch_mode": True},
+                "patch_trace": {
+                    "patch_strategy": "inplace_patch_structural",
+                    "patch_targets": ["scene_2"],
+                    "unchanged_ratio": 0.83,
+                    "fallback_reason": "",
+                    "focus": "ending",
+                    "structural_attempted": True,
+                },
+            },
+            {
+                "ep": 22,
+                "verdict": "PASS_WITH_FIX",
+                "score": 88,
+                "initial_verdict": "PASS_WITH_FIX",
+                "initial_score": 88,
+                "final_verdict": "REJECT",
+                "final_score": 61,
+                "flags": {"patch_mode": True},
+                "patch_trace": {
+                    "patch_strategy": "inplace_patch",
+                    "patch_targets": [],
+                    "unchanged_ratio": 0.58,
+                    "fallback_reason": "global_issue",
+                    "focus": "global",
+                    "structural_attempted": False,
+                },
+            },
+        ]
+        log_path.write_text("\n".join(json.dumps(item, ensure_ascii=False) for item in entries) + "\n", encoding="utf-8")
+
+        analyzer = FailureAnalyzer(db)
+        result = analyzer.patch_trace_summary()
+        summary = analyzer.summary()
+
+        assert result["count"] == 2
+        assert result["structural_attempted_count"] == 1
+        assert result["final_pass"] == 1
+        assert result["final_reject"] == 1
+        assert result["avg_unchanged_ratio"] == 0.705
+        assert result["strategy_counts"]["inplace_patch"] == 1
+        assert result["strategy_counts"]["inplace_patch_structural"] == 1
+        assert result["fallback_reasons"]["global_issue"] == 1
+        assert result["focus_counts"]["ending"] == 1
+        assert result["top_patch_targets"] == [{"target": "scene_2", "count": 1}]
+        assert summary["patch_trace_summary"]["count"] == 2
+    finally:
+        db.close()
+
+
+def test_failure_analyzer_sink_alignment_summary_detects_missing_and_mismatch(tmp_path):
+    db = DBManager(tmp_path / "test_sink_alignment_summary.db")
+    try:
+        attempt_key_1 = "s4:ep31:arc3:a1:sess_a"
+        attempt_key_2 = "s4:ep32:arc3:a1:sess_a"
+
+        db.save_stage_attempt(
+            stage=4,
+            verdict="PASS",
+            attempt_num=1,
+            ep_num=31,
+            arc_num=3,
+            score=98,
+            session_id="sess_a",
+            attempt_key=attempt_key_1,
+        )
+        db.save_stage_attempt(
+            stage=4,
+            verdict="REJECT",
+            attempt_num=1,
+            ep_num=32,
+            arc_num=3,
+            score=61,
+            session_id="sess_a",
+            attempt_key=attempt_key_2,
+        )
+
+        db.save_director_selection(
+            ep_num=31,
+            round_num=1,
+            selected_label="candidate_a",
+            selected_strategy="default",
+            verdict="PASS_WITH_FIX",
+            score=92,
+            stage=4,
+            attempt_key=attempt_key_1,
+        )
+        db.save_director_selection(
+            ep_num=32,
+            round_num=1,
+            selected_label="candidate_b",
+            selected_strategy="default",
+            verdict="REJECT",
+            score=61,
+            stage=4,
+            attempt_key=attempt_key_2,
+        )
+
+        logs_dir = tmp_path / "logs"
+        logs_dir.mkdir(parents=True, exist_ok=True)
+
+        episode_entries = [
+            {
+                "ep": 31,
+                "attempt_key": attempt_key_1,
+                "verdict": "PASS_WITH_FIX",
+                "score": 92,
+                "initial_verdict": "PASS_WITH_FIX",
+                "initial_score": 92,
+                "final_verdict": "PASS",
+                "final_score": 98,
+                "patch_trace": {
+                    "patch_strategy": "inplace_patch_structural",
+                    "patch_targets": ["scene_3"],
+                    "unchanged_ratio": 0.84,
+                    "fallback_reason": "",
+                    "focus": "ending",
+                    "structural_attempted": True,
+                },
+            }
+        ]
+        (logs_dir / "episode_production.jsonl").write_text(
+            "\n".join(json.dumps(item, ensure_ascii=False) for item in episode_entries) + "\n",
+            encoding="utf-8",
+        )
+
+        pass_rate_payload = {
+            "records": [
+                {
+                    "stage": 4,
+                    "episode": 31,
+                    "arc": 3,
+                    "attempt_num": 1,
+                    "success": True,
+                    "attempt_key": attempt_key_1,
+                    "final_verdict": "PASS",
+                    "patch_strategy": "inplace_patch_structural",
+                    "structural_attempted": True,
+                },
+                {
+                    "stage": 4,
+                    "episode": 32,
+                    "arc": 3,
+                    "attempt_num": 1,
+                    "success": False,
+                    "attempt_key": attempt_key_2,
+                    "final_verdict": "PASS",
+                    "patch_strategy": "",
+                    "structural_attempted": False,
+                },
+            ]
+        }
+        (logs_dir / "pass_rate_monitor.json").write_text(
+            json.dumps(pass_rate_payload, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+
+        analyzer = FailureAnalyzer(db)
+        result = analyzer.sink_alignment_summary()
+        summary = analyzer.summary()
+
+        assert result["attempts_considered"] == 2
+        assert result["coverage"]["stage_attempts"] == 2
+        assert result["coverage"]["pass_rate_monitor"] == 2
+        assert result["coverage"]["director_selections"] == 2
+        assert result["coverage"]["episode_production"] == 1
+        assert result["complete_final_attempts"] == 2
+        assert result["director_lifecycle_attempts"] == 2
+        assert result["complete_lifecycle_attempts"] == 1
+        assert result["session_scoped_attempts"] == 2
+        assert result["legacy_key_attempts"] == 0
+        assert result["status"] == "warn"
+        assert result["lifecycle_sink_missing"]["episode_production"]["count"] == 1
+        assert attempt_key_2 in result["lifecycle_sink_missing"]["episode_production"]["examples"]
+        assert result["lifecycle_missing_in_final_sinks"] == {}
+        assert result["final_verdict_mismatches"] == [
+            {
+                "attempt_key": attempt_key_2,
+                "stage_attempts": "REJECT",
+                "pass_rate_monitor": "PASS",
+            }
+        ]
+        assert summary["sink_alignment_summary"]["attempts_considered"] == 2
+        assert summary["sink_alignment_summary"]["status"] == "warn"
+    finally:
+        db.close()
+
+
+def test_failure_analyzer_sink_alignment_summary_reports_artifact_linkage_issues(tmp_path):
+    db = DBManager(tmp_path / "test_sink_alignment_artifact.db")
+    try:
+        attempt_key_ok = "s4:ep41:arc4:a1:sess_art"
+        attempt_key_bad = "s4:ep42:arc4:a1:sess_art"
+        good_artifact = "logs/artifacts/stage4/ep_0041/attempt_01/final_manuscript__A_balanced.txt"
+        bad_artifact = "logs/artifacts/stage4/ep_0042/attempt_01/final_manuscript__B_balanced.txt"
+        bad_alt_artifact = "logs/artifacts/stage4/ep_0042/attempt_01/final_manuscript__B_alt.txt"
+
+        good_path = tmp_path / good_artifact
+        good_path.parent.mkdir(parents=True, exist_ok=True)
+        good_path.write_text("artifact ok", encoding="utf-8")
+
+        db.save_stage_attempt(
+            stage=4,
+            verdict="PASS",
+            attempt_num=1,
+            ep_num=41,
+            arc_num=4,
+            score=97,
+            session_id="sess_art",
+            attempt_key=attempt_key_ok,
+            candidate_key="A|balanced",
+            content_hash="hash-ok",
+            artifact_path=good_artifact,
+        )
+        db.save_stage_attempt(
+            stage=4,
+            verdict="PASS",
+            attempt_num=1,
+            ep_num=42,
+            arc_num=4,
+            score=94,
+            session_id="sess_art",
+            attempt_key=attempt_key_bad,
+            candidate_key="B|balanced",
+            content_hash="hash-bad-db",
+            artifact_path=bad_artifact,
+        )
+
+        db.save_director_selection(
+            ep_num=41,
+            round_num=1,
+            selected_label="candidate_a",
+            selected_strategy="balanced",
+            verdict="PASS",
+            score=97,
+            stage=4,
+            attempt_key=attempt_key_ok,
+            candidate_key="A|balanced",
+            content_hash="hash-ok",
+            artifact_path=good_artifact,
+        )
+        db.save_director_selection(
+            ep_num=42,
+            round_num=1,
+            selected_label="candidate_b",
+            selected_strategy="balanced",
+            verdict="PASS_WITH_FIX",
+            score=91,
+            stage=4,
+            attempt_key=attempt_key_bad,
+            candidate_key="C|balanced",
+            content_hash="hash-bad-director",
+            artifact_path="logs/artifacts/stage4/ep_0042/attempt_01/selected_before_fix__C_balanced.txt",
+        )
+
+        logs_dir = tmp_path / "logs"
+        logs_dir.mkdir(parents=True, exist_ok=True)
+        episode_entries = [
+            {
+                "ep": 41,
+                "attempt_key": attempt_key_ok,
+                "verdict": "PASS",
+                "score": 97,
+                "initial_verdict": "PASS",
+                "initial_score": 97,
+                "final_verdict": "PASS",
+                "final_score": 97,
+                "candidate_key": "A|balanced",
+                "content_hash": "hash-ok",
+                "artifact_path": good_artifact,
+                "patch_trace": {"patch_strategy": "", "structural_attempted": False},
+            },
+            {
+                "ep": 42,
+                "attempt_key": attempt_key_bad,
+                "verdict": "PASS_WITH_FIX",
+                "score": 91,
+                "initial_verdict": "PASS_WITH_FIX",
+                "initial_score": 91,
+                "final_verdict": "PASS",
+                "final_score": 94,
+                "candidate_key": "B|balanced",
+                "content_hash": "hash-bad-episode",
+                "artifact_path": bad_artifact,
+                "patch_trace": {"patch_strategy": "inplace_patch_structural", "structural_attempted": True},
+            },
+        ]
+        (logs_dir / "episode_production.jsonl").write_text(
+            "\n".join(json.dumps(item, ensure_ascii=False) for item in episode_entries) + "\n",
+            encoding="utf-8",
+        )
+
+        pass_rate_payload = {
+            "records": [
+                {
+                    "stage": 4,
+                    "episode": 41,
+                    "arc": 4,
+                    "attempt_num": 1,
+                    "success": True,
+                    "attempt_key": attempt_key_ok,
+                    "final_verdict": "PASS",
+                    "patch_strategy": "",
+                    "structural_attempted": False,
+                    "candidate_key": "A|balanced",
+                    "content_hash": "hash-ok",
+                    "artifact_path": good_artifact,
+                },
+                {
+                    "stage": 4,
+                    "episode": 42,
+                    "arc": 4,
+                    "attempt_num": 1,
+                    "success": True,
+                    "attempt_key": attempt_key_bad,
+                    "final_verdict": "PASS",
+                    "patch_strategy": "inplace_patch_structural",
+                    "structural_attempted": True,
+                    "candidate_key": "B|balanced",
+                    "content_hash": "hash-bad-monitor",
+                    "artifact_path": bad_alt_artifact,
+                },
+            ]
+        }
+        (logs_dir / "pass_rate_monitor.json").write_text(
+            json.dumps(pass_rate_payload, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+
+        analyzer = FailureAnalyzer(db, project_path=tmp_path)
+        result = analyzer.sink_alignment_summary()
+
+        assert result["status"] == "warn"
+        assert result["candidate_key_mismatches"] == []
+        assert result["selection_candidate_key_mismatches"] == [
+            {
+                "attempt_key": attempt_key_bad,
+                "director_selections": "C|balanced",
+                "episode_production": "B|balanced",
+            }
+        ]
+        assert result["content_hash_mismatches"] == [
+            {
+                "attempt_key": attempt_key_bad,
+                "stage_attempts": "hash-bad-db",
+                "pass_rate_monitor": "hash-bad-monitor",
+                "episode_production": "hash-bad-episode",
+            }
+        ]
+        assert result["artifact_path_mismatches"] == [
+            {
+                "attempt_key": attempt_key_bad,
+                "stage_attempts": bad_artifact,
+                "pass_rate_monitor": bad_alt_artifact,
+                "episode_production": bad_artifact,
+            }
+        ]
+        assert result["artifact_metadata_missing"] == []
+        assert any(
+            row["attempt_key"] == attempt_key_bad and row["artifact_path"] == bad_artifact
+            for row in result["artifact_missing_files"]
+        )
+        assert any(
+            row["attempt_key"] == attempt_key_bad and row["artifact_path"] == bad_alt_artifact
+            for row in result["artifact_missing_files"]
+        )
     finally:
         db.close()
 
@@ -91,5 +543,100 @@ def test_failure_analyzer_summary_reports_soft_failures(tmp_path):
         soft_failures = tmp_path / "logs" / "soft_failures.jsonl"
         assert soft_failures.exists()
         assert "stage_pass_rates" in soft_failures.read_text(encoding="utf-8")
+    finally:
+        db.close()
+
+
+def test_sink_alignment_uses_selection_candidate_key_from_episode_production_when_available(tmp_path):
+    db = DBManager(tmp_path / "test_selection_candidate_key.db")
+    try:
+        attempt_key = "s4:ep7:arc1:a1:sess"
+        good_artifact = "logs/artifacts/stage4/ep_0007/attempt_01/patched_after_fix__A_InPlace.txt"
+
+        (tmp_path / good_artifact).parent.mkdir(parents=True, exist_ok=True)
+        (tmp_path / good_artifact).write_text("patched", encoding="utf-8")
+
+        db.save_stage_attempt(
+            stage=4,
+            verdict="PASS",
+            attempt_num=1,
+            ep_num=7,
+            arc_num=1,
+            score=98,
+            session_id="sess",
+            attempt_key=attempt_key,
+            candidate_key="A|InPlace 수정",
+            content_hash="hash-ok",
+            artifact_path=good_artifact,
+        )
+        db.save_director_selection(
+            ep_num=7,
+            round_num=0,
+            selected_label="A",
+            selected_strategy="균형 전략",
+            verdict="PASS_WITH_FIX",
+            stage=4,
+            score=92,
+            attempt_key=attempt_key,
+            candidate_key="A|균형 전략",
+            content_hash="hash-selected",
+            artifact_path="logs/artifacts/stage4/ep_0007/attempt_01/selected_before_fix__A.txt",
+        )
+
+        logs_dir = tmp_path / "logs"
+        logs_dir.mkdir(parents=True, exist_ok=True)
+        (logs_dir / "pass_rate_monitor.json").write_text(
+            json.dumps(
+                {
+                    "records": [
+                        {
+                            "stage": 4,
+                            "episode": 7,
+                            "arc": 1,
+                            "attempt_num": 1,
+                            "success": True,
+                            "attempt_key": attempt_key,
+                            "final_verdict": "PASS",
+                            "patch_strategy": "inplace_patch_structural",
+                            "structural_attempted": True,
+                            "candidate_key": "A|InPlace 수정",
+                            "content_hash": "hash-ok",
+                            "artifact_path": good_artifact,
+                        }
+                    ]
+                },
+                ensure_ascii=False,
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+        (logs_dir / "episode_production.jsonl").write_text(
+            json.dumps(
+                {
+                    "ep": 7,
+                    "attempt_key": attempt_key,
+                    "verdict": "PASS_WITH_FIX",
+                    "initial_verdict": "PASS_WITH_FIX",
+                    "final_verdict": "PASS",
+                    "final_score": 98,
+                    "candidate_key": "A|InPlace 수정",
+                    "selection_candidate_key": "A|균형 전략",
+                    "content_hash": "hash-ok",
+                    "artifact_path": good_artifact,
+                    "patch_trace": {"patch_strategy": "inplace_patch_structural", "structural_attempted": True},
+                },
+                ensure_ascii=False,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+
+        analyzer = FailureAnalyzer(db, project_path=tmp_path)
+        result = analyzer.sink_alignment_summary()
+
+        assert result["candidate_key_mismatches"] == []
+        assert result["selection_candidate_key_mismatches"] == []
+        assert result["artifact_path_mismatches"] == []
+        assert result["status"] == "ok"
     finally:
         db.close()

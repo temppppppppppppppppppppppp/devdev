@@ -22,6 +22,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 from modules.core.stage4_orchestrator import Stage4Orchestrator
 from modules.domain.agents.chief_writer import ChiefWriter
+from modules.domain.agents.chief_writer_context import normalize_chief_writer_genre_code
 
 # ══════════════════════════════════════════════════════════════
 # Fixtures
@@ -203,6 +204,29 @@ class TestChiefWriterInplacePatchGuards:
         assert result[0]["state_updates"] == {"tone": "dry"}
         assert any("[원고_끝]" in str(call.args[0]) for call in mock_warning.call_args_list)
 
+    def test_inplace_patch_unwraps_revised_manuscript_wrapper(self, chief_writer):
+        original = "original manuscript " * 160
+        patched = "patched manuscript " * 140
+        chief_writer.ask = MagicMock(
+            return_value=json.dumps(
+                {
+                    "revised_manuscript": patched,
+                    "patch_state_updates": {"tone": "clean"},
+                },
+                ensure_ascii=False,
+            )
+        )
+
+        with patch("modules.core.prompt_loader.PromptLoader.load", return_value=None):
+            result = chief_writer.inplace_patch(
+                original_manuscript=original,
+                director_feedback="fix only continuity",
+                attempt_number=1,
+            )
+
+        assert result[0]["manuscript"] == patched
+        assert result[0]["state_updates"] == {"tone": "clean"}
+
     def test_inplace_patch_rejects_short_extracted_manuscript(self, chief_writer):
         original = "original manuscript " * 160
         chief_writer.ask = MagicMock(
@@ -224,6 +248,134 @@ class TestChiefWriterInplacePatchGuards:
             )
 
         assert result == []
+
+    def test_patch_with_feedback_formats_length_placeholders(self, chief_writer):
+        chief_writer.generate_ensemble = MagicMock(return_value=[{"manuscript": "patched"}])
+        original = "original manuscript " * 160
+
+        prompt_template = (
+            "feedback={feedback_text}\n"
+            "chars={original_char_count}\n"
+            "min={min_char_target}\n"
+            "{style_guide}\n"
+            "{original_manuscript}"
+        )
+
+        with patch("modules.core.prompt_loader.PromptLoader.load", return_value=prompt_template):
+            result = chief_writer.patch_with_feedback(
+                ep_num=3,
+                blueprint={"ep_num": 3},
+                prev_manuscript="",
+                hud_report="",
+                arc_doc="",
+                master_bible={},
+                style_guide="keep tone",
+                original_manuscript=original,
+                director_feedback="fix local continuity only",
+                previous_attempt={},
+                attempt_number=2,
+            )
+
+        assert result == [{"manuscript": "patched"}]
+        chief_writer.generate_ensemble.assert_called_once()
+        forwarded_feedback = chief_writer.generate_ensemble.call_args.kwargs["director_feedback"]
+        assert f"chars={len(original)}" in forwarded_feedback
+        assert f"min={int(len(original) * 0.9)}" in forwarded_feedback
+
+
+class TestChiefWriterStructuralInplacePatch:
+    def test_structural_inplace_patch_replaces_only_target_scene_block(self, chief_writer):
+        blueprint = {
+            "ep_num": 10,
+            "scene_breakdown": {
+                "scene_1": {"description": "opening buildup"},
+                "scene_2": {"description": "ending payoff"},
+            },
+        }
+        opening_block = ("OPENING_KEEP_BLOCK alpha beta gamma. " * 90).strip()
+        ending_block = ("ENDING_ORIGINAL_BLOCK omega theta sigma. " * 90).strip()
+        patched_ending = ("ENDING_PATCHED_BLOCK omega theta sigma. " * 92).strip()
+        original = f"{opening_block}\n\n\n{ending_block}"
+
+        chief_writer._inplace_patch_blueprint = blueprint
+        chief_writer._inplace_patch_genre_name = "wuxia"
+        chief_writer.ask = MagicMock(
+            return_value=json.dumps(
+                {
+                    "patched_blocks": {"scene_2": patched_ending},
+                    "patch_state_updates": {"ending": "tightened"},
+                },
+                ensure_ascii=False,
+            )
+        )
+
+        with patch("modules.core.prompt_loader.PromptLoader.load", return_value=None):
+            result = chief_writer.inplace_patch(
+                original_manuscript=original,
+                director_feedback="ending needs a local fix while preserving the rest",
+                attempt_number=1,
+            )
+
+        assert result == [
+            {
+                "manuscript": f"{opening_block}\n\n{patched_ending}",
+                "strategy": "inplace_patch_structural",
+                "state_updates": {"ending": "tightened"},
+                "patch_targets": ["scene_2"],
+            }
+        ]
+        assert chief_writer._last_inplace_patch_trace == {
+            "patch_strategy": "inplace_patch_structural",
+            "patch_targets": ["scene_2"],
+            "fallback_reason": "",
+            "focus": "ending",
+            "structural_attempted": True,
+        }
+
+    def test_structural_inplace_patch_global_feedback_falls_back_to_whole_text_patch(self, chief_writer):
+        blueprint = {
+            "ep_num": 10,
+            "scene_breakdown": {
+                "scene_1": {"description": "opening buildup"},
+                "scene_2": {"description": "ending payoff"},
+            },
+        }
+        original = "original manuscript " * 160
+        patched = "patched manuscript " * 140
+
+        chief_writer._inplace_patch_blueprint = blueprint
+        chief_writer._inplace_patch_genre_name = "wuxia"
+        chief_writer.ask = MagicMock(
+            return_value=json.dumps(
+                {
+                    "content": patched,
+                    "patch_state_updates": {"tone": "reset"},
+                },
+                ensure_ascii=False,
+            )
+        )
+
+        with patch("modules.core.prompt_loader.PromptLoader.load", return_value=None):
+            result = chief_writer.inplace_patch(
+                original_manuscript=original,
+                director_feedback="tone and pacing need a full rewrite across the manuscript",
+                attempt_number=1,
+            )
+
+        assert result == [
+            {
+                "manuscript": patched,
+                "strategy": "inplace_patch",
+                "state_updates": {"tone": "reset"},
+            }
+        ]
+        assert chief_writer._last_inplace_patch_trace == {
+            "patch_strategy": "inplace_patch",
+            "patch_targets": [],
+            "fallback_reason": "global_issue",
+            "focus": "global",
+            "structural_attempted": False,
+        }
 
 
 # ══════════════════════════════════════════════════════════════
@@ -1199,3 +1351,9 @@ class TestGenerateEnsembleLoggingLevels:
     def test_candidate_timeout_uses_warning_level(self):
         source = Path("modules/domain/agents/chief_writer.py").read_text(encoding="utf-8")
         assert 'logging.warning(f" [V61.3] 후보 {strategy} 타임아웃 ({self.SINGLE_CANDIDATE_TIMEOUT}초)")' in source
+
+
+def test_normalize_chief_writer_genre_code_accepts_investment_aliases():
+    assert normalize_chief_writer_genre_code("투자 (Investment Fiction)") == "investment"
+    assert normalize_chief_writer_genre_code("investment", genre_type="investment") == "investment"
+    assert normalize_chief_writer_genre_code("", genre_type="investment") == "investment"

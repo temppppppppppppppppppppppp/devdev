@@ -70,6 +70,40 @@ _RUNTIME_TAIL_LINES = 8
 MODE_B_KEYS = frozenset({"0", "1", "2", "3", "4", "5", "6", "44", "77", "88", "99"})
 
 
+def _resolve_workspace_root() -> Path:
+    workspace = os.environ.get("GEULDOBI_WORKSPACE")
+    if workspace:
+        return Path(workspace).resolve()
+    return PROJECT_ROOT.resolve()
+
+
+def _resolve_projects_root() -> Path:
+    projects_root = os.environ.get("GEULDOBI_PROJECTS_ROOT")
+    if projects_root:
+        return Path(projects_root).resolve()
+    workspace = os.environ.get("GEULDOBI_WORKSPACE")
+    if workspace:
+        return (Path(workspace) / "projects").resolve()
+    return (PROJECT_ROOT / "projects").resolve()
+
+
+def _resolve_launch_command() -> list[str]:
+    engine_exe = os.environ.get("GEULDOBI_ENGINE_EXE")
+    if engine_exe:
+        engine_path = Path(engine_exe)
+        if engine_path.exists():
+            return [str(engine_path)]
+        logger.warning("engine.exe not found at %s; falling back to python main_a.py", engine_exe)
+
+    main_script = PROJECT_ROOT / "main_a.py"
+    if not main_script.exists():
+        logger.error("main_a.py not found at %s", main_script)
+        raise FileNotFoundError(f"main_a.py not found: {main_script}")
+
+    python_exe = os.environ.get("GEULDOBI_PYTHON_PATH", sys.executable)
+    return [python_exe, "-u", str(main_script)]
+
+
 class ProcessRunner:
     """main_a.py subprocess 래퍼.
 
@@ -157,20 +191,6 @@ class ProcessRunner:
         self._stderr_tail.clear()
         self._last_prompt_step = None
 
-        # frozen 모드: engine.exe 직접 실행 / 개발 모드: python main_a.py
-        engine_exe = os.environ.get("GEULDOBI_ENGINE_EXE")
-        if engine_exe:
-            if not Path(engine_exe).exists():
-                self._state = "error"
-                logger.error("engine.exe not found at %s", engine_exe)
-                raise FileNotFoundError(f"engine.exe not found: {engine_exe}")
-        else:
-            main_script = PROJECT_ROOT / "main_a.py"
-            if not main_script.exists():
-                self._state = "error"
-                logger.error("main_a.py not found at %s", main_script)
-                raise FileNotFoundError(f"main_a.py not found: {main_script}")
-
         stdin_data = self._build_stdin_sequence(key, sub_key, inputs)
         env = self._build_env(inputs)
 
@@ -179,16 +199,9 @@ class ProcessRunner:
             kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
 
         try:
-            # 작업 디렉토리: GEULDOBI_WORKSPACE (배포) 또는 PROJECT_ROOT (개발)
-            work_dir = os.environ.get("GEULDOBI_WORKSPACE", str(PROJECT_ROOT))
-
-            if engine_exe:
-                # 배포 모드: engine.exe 직접 실행 (소스 비공개 바이너리)
-                cmd_args = [engine_exe]
-            else:
-                # 개발 모드: python -u main_a.py
-                python_exe = os.environ.get("GEULDOBI_PYTHON_PATH", sys.executable)
-                cmd_args = [python_exe, "-u", str(main_script)]
+            # 배포 모드에서는 workspace를 CWD로 고정하고, engine.exe가 없으면 source-tree 엔진으로 fallback한다.
+            work_dir = str(_resolve_workspace_root())
+            cmd_args = _resolve_launch_command()
 
             self._process = await asyncio.create_subprocess_exec(
                 *cmd_args,

@@ -70,6 +70,23 @@ def test_get_recent_causal_links_returns_data():
         os.unlink(tmpdb)
 
 
+def test_save_causal_links_accepts_string_payloads():
+    with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
+        tmpdb = f.name
+    db = None
+    try:
+        db = DBManager(tmpdb)
+        db.save_causal_links(["정상화되지 않은 causal link"], current_ep=5)
+        result = db.get_recent_causal_links(current_ep=6, lookback=5)
+        assert len(result) == 1
+        assert result[0]["cause"] == "정상화되지 않은 causal link"
+        assert result[0]["raw_text"] == "정상화되지 않은 causal link"
+    finally:
+        if db is not None:
+            db.close()
+        os.unlink(tmpdb)
+
+
 def test_get_recent_causal_links_range_filter():
     """lookback 범위 밖 링크는 반환하지 않는지 확인."""
     with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:

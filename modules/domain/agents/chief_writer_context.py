@@ -30,6 +30,61 @@ from .chief_writer_prompts import (
 )
 
 
+_GENRE_CODE_ALIASES = {
+    "무협": "wuxia",
+    "wuxia": "wuxia",
+    "판타지": "fantasy",
+    "fantasy": "fantasy",
+    "헌터물": "hunter",
+    "hunter": "hunter",
+    "투자물": "investment",
+    "투자": "investment",
+    "investment": "investment",
+    "investment fiction": "investment",
+    "투자 (investment fiction)": "investment",
+    "배우물": "actor",
+    "actor": "actor",
+    "스포츠": "sports",
+    "sports": "sports",
+    "의학": "medical",
+    "medical": "medical",
+    "요리": "cooking",
+    "cooking": "cooking",
+    "작곡가": "composer",
+    "composer": "composer",
+    "대체역사": "alt_history",
+    "alt_history": "alt_history",
+    "alt history": "alt_history",
+}
+
+
+def _normalize_genre_alias_key(value: str) -> str:
+    return re.sub(r"\s+", " ", str(value or "").strip()).lower()
+
+
+def normalize_chief_writer_genre_code(
+    genre_name: str = "",
+    *,
+    genre_type: str = "",
+    bible_root: dict | None = None,
+    default: str = "wuxia",
+) -> str:
+    for candidate in (genre_name, genre_type):
+        key = _normalize_genre_alias_key(candidate)
+        if key and key in _GENRE_CODE_ALIASES:
+            return _GENRE_CODE_ALIASES[key]
+
+    if isinstance(bible_root, dict):
+        raw_genre = str(bible_root.get("_genre", "") or "").strip()
+        key = _normalize_genre_alias_key(raw_genre)
+        if key and key in _GENRE_CODE_ALIASES:
+            return _GENRE_CODE_ALIASES[key]
+        if raw_genre:
+            return raw_genre
+
+    return default
+
+
 class ChiefWriterContextBuilder:
     """ChiefWriter의 컨텍스트 빌딩 + 분석 담당 서브모듈."""
 
@@ -154,19 +209,17 @@ class ChiefWriterContextBuilder:
 """
 
         # [V60.96] 장르 코드 변환 (장르별 금지어 적용)
-        genre_code_map = {
-            "무협": "wuxia",
-            "판타지": "fantasy",
-            "헌터물": "hunter",
-            "투자물": "investment",
-            "배우물": "actor",
-            "스포츠": "sports",
-            "의학": "medical",
-            "요리": "cooking",
-            "작곡가": "composer",
-            "대체역사": "alt_history",
-        }
-        genre_code = genre_code_map.get(genre_name, bible_root.get("_genre", "wuxia"))
+        genre_type = ""
+        try:
+            genre_type = str((self.host.context.selected_genre or {}).get("type", "") or "")
+        except Exception:
+            genre_type = ""
+        genre_code = normalize_chief_writer_genre_code(
+            genre_name,
+            genre_type=genre_type,
+            bible_root=bible_root,
+            default="wuxia",
+        )
 
         # [V60.96] 원시인 모드 제약 섹션 (장르별 JSON 기반 PrimitiveGuard)
         world_origin_constraint_section = ""
