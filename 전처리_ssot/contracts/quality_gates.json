@@ -1,0 +1,94 @@
+{
+  "package_name": "preprocess_contracts",
+  "schema_id": "quality_gates",
+  "version": "1.0.0-draft",
+  "shared_gates": {
+    "quality_first": {
+      "severity": "hard",
+      "rule": "quality gates always outrank speed and automation"
+    },
+    "utf8_only": {
+      "severity": "hard",
+      "rule": "if mojibake or invalid UTF-8 is detected, stop immediately"
+    },
+    "auto_run_meaning": {
+      "severity": "hard",
+      "rule": "continue next unit only; do not batch-generate large ranges"
+    },
+    "script_run_not_required": {
+      "severity": "hard",
+      "rule": "script execution is optional; orchestration continuity does not imply code execution"
+    },
+    "phase0_before_tr": {
+      "severity": "hard",
+      "rule": "TR generation is forbidden before phase0_design exists"
+    },
+    "tr_before_bi": {
+      "severity": "hard",
+      "rule": "BI generation is forbidden before verified TR exists"
+    },
+    "audit_before_complete": {
+      "severity": "hard",
+      "rule": "completion cannot be declared before audit pass"
+    }
+  },
+  "stage_gates": {
+    "stage0_preprocess": {
+      "hard_fail": [
+        "primary_profile_missing",
+        "canonical_sources_missing",
+        "core_materials_too_abstract",
+        "do_not_fake_missing",
+        "manual_audit_note_missing",
+        "phase0_ready_snapshot.manual_audit_pass_not_true"
+      ],
+      "go_condition": "all four stage0 contract files exist and manual_audit_pass == true"
+    },
+    "planning": {
+      "hard_fail": [
+        "enter_planning_without_stage0_contracts",
+        "enter_planning_without_manual_audit_pass",
+        "write_phase0_without_locked_profile"
+      ],
+      "go_condition": "phase0_design exists and minimum contract is satisfied"
+    },
+    "production": {
+      "hard_fail": [
+        "generate_without_phase0",
+        "batch_generate_10_or_70_blocks",
+        "count_seed_baseline_sync_as_progress",
+        "ignore_sequential_run_status",
+        "advance_without_manual_block_audit"
+      ],
+      "soft_warning": [
+        "resume_status_is_markdown_only",
+        "seed_baseline_exists_but_real_progress_is_zero"
+      ],
+      "go_condition": "produce one block, leave manual audit, then advance to the next block only"
+    },
+    "bi": {
+      "hard_fail": [
+        "enter_bi_without_tr",
+        "enter_bi_without_source_tr_handoff_gate",
+        "source_tr_has_skeleton_or_density_fail",
+        "source_tr_has_repetition_fail",
+        "bi_structure_exists_but_sync_fail"
+      ],
+      "soft_warning": [
+        "portfolio_history_missing_or_sparse",
+        "source_tr_has_soft_cadence_warning"
+      ],
+      "go_condition": "BI is allowed only after source TR handoff gate pass and one manual audit note"
+    }
+  },
+  "transitional_gates": {
+    "production_resume": {
+      "transitional_file": "treatments/preprocess/{work_id}/docs/sequential_run_status.md",
+      "future_file": "treatments/preprocess/{work_id}/sequential_run_status.json",
+      "hard_fail": [
+        "status_file_conflicts_with_manual_audit_history",
+        "treat_seed_baseline_sync_as_sequential_production"
+      ]
+    }
+  }
+}

@@ -1,0 +1,117 @@
+{
+  "package_name": "preprocess_contracts",
+  "schema_id": "handoff_rules",
+  "version": "1.0.0-draft",
+  "handoffs": [
+    {
+      "handoff_id": "stage0_to_planning",
+      "from_stage": "stage0_preprocess",
+      "to_stage": "planning",
+      "required_files": [
+        "treatments/preprocess/{work_id}/source_manifest.json",
+        "treatments/preprocess/{work_id}/profile_lock.json",
+        "treatments/preprocess/{work_id}/material_bundle_summary.json",
+        "treatments/preprocess/{work_id}/phase0_ready_snapshot.json"
+      ],
+      "required_json_values": [
+        {
+          "path": "treatments/preprocess/{work_id}/phase0_ready_snapshot.json",
+          "json_pointer": "/manual_audit_pass",
+          "expected": true
+        }
+      ],
+      "forbidden_if": [
+        "stage0_artifact_missing",
+        "manual_audit_pass_not_true"
+      ],
+      "success_state": "planning_unlocked"
+    },
+    {
+      "handoff_id": "planning_to_production",
+      "from_stage": "planning",
+      "to_stage": "production",
+      "required_files": [
+        "treatments/{work_id}_phase0_design.json"
+      ],
+      "required_conditions": [
+        "phase0_design_exists",
+        "phase0_minimum_contract_satisfied"
+      ],
+      "forbidden_if": [
+        "phase0_missing",
+        "phase0_unparseable_utf8"
+      ],
+      "success_state": "production_unlocked"
+    },
+    {
+      "handoff_id": "production_resume",
+      "from_stage": "production",
+      "to_stage": "production",
+      "preferred_evidence": [
+        "treatments/preprocess/{work_id}/sequential_run_status.json"
+      ],
+      "preferred_schema_contract": "전처리_ssot/contracts/sequential_run_status.schema.json",
+      "required_evidence_one_of": [
+        "treatments/preprocess/{work_id}/docs/sequential_run_status.md",
+        "treatments/preprocess/{work_id}/sequential_run_status.json"
+      ],
+      "required_conditions": [
+        "run_class_must_be_interpreted_before_resume",
+        "seed_baseline_sync_is_not_progress",
+        "single_block_unit_only"
+      ],
+      "fallback_if_missing_or_ambiguous": "restart_at_block_001",
+      "success_state": "next_block_resolved"
+    },
+    {
+      "handoff_id": "production_to_bi",
+      "from_stage": "production",
+      "to_stage": "bi",
+      "required_files": [
+        "treatments/{work_id}_tr_block_070_draft.json"
+      ],
+      "required_conditions": [
+        "source_tr_handoff_gate_pass",
+        "source_tr_density_gate_pass",
+        "source_tr_repetition_gate_pass"
+      ],
+      "forbidden_if": [
+        "tr_missing",
+        "tr_failed_audit",
+        "source_tr_soft_warning_present_without_report_note"
+      ],
+      "success_state": "bi_unlocked"
+    },
+    {
+      "handoff_id": "bi_to_release",
+      "from_stage": "bi",
+      "to_stage": "release_ready",
+      "required_files": [
+        "bible/0_bi_{work_id}.json"
+      ],
+      "preferred_status_file": "treatments/preprocess/{work_id}/audit_status.json",
+      "preferred_schema_contract": "전처리_ssot/contracts/audit_status.schema.json",
+      "required_conditions": [
+        "bi_5pass_all_pass",
+        "tr_bi_sync_pass",
+        "manual_bi_audit_note_present"
+      ],
+      "forbidden_if": [
+        "bi_utf8_corruption",
+        "financial_sync_fail",
+        "roadmap_sync_fail"
+      ],
+      "success_state": "release_ready"
+    }
+  ],
+  "transitional_notes": {
+    "current_resume_pointer": "treatments/preprocess/{work_id}/docs/sequential_run_status.md",
+    "future_resume_pointer": "treatments/preprocess/{work_id}/sequential_run_status.json",
+    "future_audit_status_pointer": "treatments/preprocess/{work_id}/audit_status.json",
+    "current_bi_audit_evidence": [
+      "bible/audit_reports/*_bi_5pass*.md",
+      "preprocess 05_bi_work/bi_5pass.md",
+      "manual audit memo"
+    ]
+  }
+}

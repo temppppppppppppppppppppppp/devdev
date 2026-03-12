@@ -1,0 +1,131 @@
+{
+  "package_name": "preprocess_contracts",
+  "schema_id": "audit_status",
+  "version": "1.0.0-draft",
+  "target_instance_path": "treatments/preprocess/{work_id}/audit_status.json",
+  "purpose": "작품별 최신 감리 상태, blocker, confidence, 다음 허용 행동을 구조화해 저장한다.",
+  "required_keys": [
+    "work_id",
+    "current_stage",
+    "last_audit_scope",
+    "last_audit_result",
+    "confidence_percent",
+    "hard_blockers",
+    "soft_warnings",
+    "checked_artifacts",
+    "failed_gate_ids",
+    "next_allowed_action",
+    "manual_review_required",
+    "updated_at",
+    "notes"
+  ],
+  "key_contracts": {
+    "work_id": {
+      "type": "string"
+    },
+    "current_stage": {
+      "type": "string",
+      "enum": [
+        "stage0_preprocess",
+        "planning",
+        "production",
+        "bi",
+        "audit_repair",
+        "release_ready"
+      ]
+    },
+    "last_audit_scope": {
+      "type": "string",
+      "enum": [
+        "stage0",
+        "planning",
+        "production_block",
+        "production_final",
+        "bi",
+        "release"
+      ]
+    },
+    "last_audit_result": {
+      "type": "string",
+      "enum": [
+        "pass",
+        "partial_pass",
+        "fail"
+      ]
+    },
+    "confidence_percent": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "hard_blockers": {
+      "type": "array",
+      "description": "즉시 중단이 필요한 blocker 목록"
+    },
+    "soft_warnings": {
+      "type": "array",
+      "description": "진행은 가능하지만 기록해야 하는 warning 목록"
+    },
+    "checked_artifacts": {
+      "type": "array",
+      "description": "이번 감리에서 실제 본 파일 목록"
+    },
+    "failed_gate_ids": {
+      "type": "array",
+      "description": "quality_gates 또는 handoff_rules에서 실패한 gate id 목록"
+    },
+    "next_allowed_action": {
+      "type": "string",
+      "enum": [
+        "fix_current_stage",
+        "advance_to_next_stage",
+        "restart_block_001",
+        "rerun_audit",
+        "hold_for_manual_review"
+      ]
+    },
+    "manual_review_required": {
+      "type": "boolean"
+    },
+    "updated_at": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "validation_rules": [
+    "last_audit_result == fail 이면 next_allowed_action은 advance_to_next_stage일 수 없다.",
+    "hard_blockers 배열이 비어 있지 않으면 manual_review_required는 true여야 한다.",
+    "confidence_percent는 감리 확신도를 나타내지만 pass/fail 자체를 자동으로 대체하지 않는다."
+  ],
+  "transitional_policy": {
+    "current_human_reports": [
+      "phase0_check.md",
+      "tr_gate_report.md",
+      "bi_5pass.md",
+      "manual audit memo"
+    ],
+    "if_json_missing": "human audit reports remain canonical explanation layer",
+    "until_phase": "phase_c_live_instances"
+  },
+  "example_minimum_instance": {
+    "work_id": "example_work",
+    "current_stage": "stage0_preprocess",
+    "last_audit_scope": "stage0",
+    "last_audit_result": "partial_pass",
+    "confidence_percent": 88,
+    "hard_blockers": [],
+    "soft_warnings": [
+      "material depth is still thin"
+    ],
+    "checked_artifacts": [
+      "treatments/preprocess/example_work/source_manifest.json"
+    ],
+    "failed_gate_ids": [],
+    "next_allowed_action": "fix_current_stage",
+    "manual_review_required": true,
+    "updated_at": "2026-03-12T00:00:00+09:00",
+    "notes": "can continue after manual reinforcement"
+  }
+}

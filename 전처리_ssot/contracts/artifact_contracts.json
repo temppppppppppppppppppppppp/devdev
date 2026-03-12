@@ -1,0 +1,184 @@
+{
+  "package_name": "preprocess_contracts",
+  "schema_id": "artifact_contracts",
+  "version": "1.0.0-draft",
+  "path_tokens": {
+    "{work_id}": "canonical work identifier"
+  },
+  "artifacts": [
+    {
+      "artifact_id": "source_manifest",
+      "stage": "stage0_preprocess",
+      "path": "treatments/preprocess/{work_id}/source_manifest.json",
+      "format": "json",
+      "required_keys": [
+        "work_identity",
+        "canonical_sources",
+        "reference_only_sources",
+        "core_materials",
+        "npc_pool",
+        "crisis_pool",
+        "hard_constraints",
+        "do_not_fake",
+        "manual_audit_note"
+      ],
+      "gate_type": "hard"
+    },
+    {
+      "artifact_id": "profile_lock",
+      "stage": "stage0_preprocess",
+      "path": "treatments/preprocess/{work_id}/profile_lock.json",
+      "format": "json",
+      "required_keys": [
+        "primary_profile",
+        "secondary_profile",
+        "resource_axis",
+        "power_axis",
+        "control_axis",
+        "payoff_axis",
+        "failure_axis",
+        "hud_interpretation"
+      ],
+      "gate_type": "hard"
+    },
+    {
+      "artifact_id": "material_bundle_summary",
+      "stage": "stage0_preprocess",
+      "path": "treatments/preprocess/{work_id}/material_bundle_summary.json",
+      "format": "json",
+      "required_keys": [
+        "events",
+        "npc_candidates",
+        "crisis_candidates",
+        "terms",
+        "scene_details",
+        "notes"
+      ],
+      "gate_type": "hard"
+    },
+    {
+      "artifact_id": "phase0_ready_snapshot",
+      "stage": "stage0_preprocess",
+      "path": "treatments/preprocess/{work_id}/phase0_ready_snapshot.json",
+      "format": "json",
+      "required_keys": [
+        "identity_locked",
+        "profile_locked",
+        "material_sufficient",
+        "manual_audit_pass",
+        "remaining_risks"
+      ],
+      "gate_type": "hard"
+    },
+    {
+      "artifact_id": "phase0_design",
+      "stage": "planning",
+      "path": "treatments/{work_id}_phase0_design.json",
+      "format": "json",
+      "required_key_sets_any_of": [
+        [
+          "project",
+          "setting",
+          "protagonist",
+          "phase0_design"
+        ],
+        [
+          "work_id",
+          "arcs",
+          "npc_timeline",
+          "foreshadow_map",
+          "opponent_transition_plan"
+        ]
+      ],
+      "gate_type": "hard"
+    },
+    {
+      "artifact_id": "tr_block_070_draft",
+      "stage": "production",
+      "path": "treatments/{work_id}_tr_block_070_draft.json",
+      "format": "json",
+      "top_level_type": "array",
+      "required_item_keys": [
+        "block_id",
+        "title",
+        "content",
+        "stakes"
+      ],
+      "gate_type": "hard"
+    },
+    {
+      "artifact_id": "bi_output",
+      "stage": "bi",
+      "path": "bible/0_bi_{work_id}.json",
+      "format": "json",
+      "required_json_paths": [
+        "/_schema_version",
+        "/MasterBible/ProjectData/MetaInfo/title",
+        "/MasterBible/ProjectData/CoreIdentity/protagonist",
+        "/MasterBible/FinanceHUD/Protagonist/actual_truth/financial_status"
+      ],
+      "gate_type": "hard"
+    }
+  ],
+  "status_artifacts": [
+    {
+      "artifact_id": "sequential_run_status",
+      "stage": "production",
+      "path": "treatments/preprocess/{work_id}/sequential_run_status.json",
+      "format": "json",
+      "schema_contract": "전처리_ssot/contracts/sequential_run_status.schema.json",
+      "required_keys": [
+        "work_id",
+        "run_class",
+        "last_sequential_block_pass",
+        "next_unit_type",
+        "next_block_id",
+        "manual_audit_ready",
+        "resume_basis",
+        "updated_at",
+        "notes"
+      ],
+      "enforcement_state": "standard_locked_not_yet_mandatory"
+    },
+    {
+      "artifact_id": "audit_status",
+      "stage": "audit_repair",
+      "path": "treatments/preprocess/{work_id}/audit_status.json",
+      "format": "json",
+      "schema_contract": "전처리_ssot/contracts/audit_status.schema.json",
+      "required_keys": [
+        "work_id",
+        "current_stage",
+        "last_audit_scope",
+        "last_audit_result",
+        "confidence_percent",
+        "hard_blockers",
+        "soft_warnings",
+        "checked_artifacts",
+        "failed_gate_ids",
+        "next_allowed_action",
+        "manual_review_required",
+        "updated_at",
+        "notes"
+      ],
+      "enforcement_state": "standard_locked_not_yet_mandatory"
+    }
+  ],
+  "transitional_artifacts": [
+    {
+      "artifact_id": "sequential_run_status_md",
+      "stage": "production",
+      "path": "treatments/preprocess/{work_id}/docs/sequential_run_status.md",
+      "format": "markdown",
+      "required_fields": [
+        "run_class",
+        "last_sequential_block_pass",
+        "next_block",
+        "manual_audit_ready",
+        "notes"
+      ],
+      "replacement_target": "treatments/preprocess/{work_id}/sequential_run_status.json",
+      "replacement_schema_contract": "전처리_ssot/contracts/sequential_run_status.schema.json"
+    }
+  ]
+}

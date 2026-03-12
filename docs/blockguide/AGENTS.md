@@ -2,7 +2,7 @@
 
 ## Blockguide First
 
-이 워크스페이스에서 아래 작업이 들어오면 먼저 `docs/blockguide/blockguide-integrated-order.md`를 UTF-8로 읽는다.
+이 워크스페이스에서 아래 작업이 들어오면 먼저 `docs/blockguide/SSOT_blockguide-integrated-order.md`를 UTF-8로 읽는다.
 
 - 작품 기획안 작성 또는 수정
 - `work_id` 기준 Treatment/BI 생성
@@ -14,6 +14,10 @@
 1. `docs/blockguide/treatment-planning-harness.md`
 2. `docs/blockguide/treatment-production-harness-v2.md`
 3. `docs/blockguide/bi-production-harness-v1.md`
+
+대상 작품이 `alt_history`이거나 역사 재료 DB 조회가 필요하면 추가로 아래 문서를 읽는다.
+
+4. `docs/blockguide/alt_history_db_harness.md`
 
 ## Stage Detection
 

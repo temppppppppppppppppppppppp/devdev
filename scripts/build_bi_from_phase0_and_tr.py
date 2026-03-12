@@ -29,6 +29,14 @@ def require(condition: bool, message: str) -> None:
         raise ValueError(message)
 
 
+def as_text(value: Any) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, str):
+        return value.strip()
+    return str(value).strip()
+
+
 def unique_preserve_order(items: list[str]) -> list[str]:
     seen: set[str] = set()
     out: list[str] = []
@@ -37,6 +45,69 @@ def unique_preserve_order(items: list[str]) -> list[str]:
             seen.add(item)
             out.append(item)
     return out
+
+
+def parse_block_range(block_range: str) -> tuple[int, int]:
+    start_text, end_text = as_text(block_range).split("-", 1)
+    return int(start_text), int(end_text)
+
+
+def summarize_business_axis(sectors: list[str], limit: int = 4) -> str:
+    cleaned = [sector for sector in sectors if as_text(sector)]
+    if not cleaned:
+        return "핵심 사업축"
+    sample = cleaned[:limit]
+    if len(cleaned) <= limit:
+        return ", ".join(sample)
+    return ", ".join(sample) + " 등"
+
+
+def derive_talent_name(protagonist: dict[str, Any]) -> str:
+    strength = as_text(protagonist.get("true_strength"))
+    if "AI" in strength or "추론" in strength or "모델" in strength:
+        return "추론 독점 감각"
+    if "현금흐름" in strength or "지출" in strength or "운영비" in strength:
+        return "현금흐름 장악 감각"
+    if "계약" in strength or "규격" in strength:
+        return "계약 구조 감각"
+    return "사업 감각"
+
+
+def derive_growth_rule(phase0: dict[str, Any]) -> str:
+    sectors = unique_preserve_order(
+        [
+            *[sector for arc in phase0["partner_location_sector_distribution"]["front_sector_by_arc"] for sector in arc["front"]],
+            *[sector for arc in phase0["partner_location_sector_distribution"]["front_sector_by_arc"] for sector in arc["support"]],
+        ]
+    )
+    return f"{summarize_business_axis(sectors)} 순으로 사업축을 넓히며 지배력을 키운다."
+
+
+def derive_debt_summary(starter_company: dict[str, Any]) -> str:
+    liabilities = starter_company.get("liabilities", [])
+    if isinstance(liabilities, list):
+        return ", ".join(as_text(item) for item in liabilities if as_text(item))
+    return as_text(liabilities)
+
+
+def derive_starter_context(starter_company: dict[str, Any]) -> str:
+    return f"{starter_company['name']}를 {starter_company['state']} 상태에서 되살려야 하는 출발점"
+
+
+def derive_protagonist_faction(starter_company: dict[str, Any]) -> str:
+    return f"{starter_company['name']} -> {starter_company['name']}"
+
+
+def derive_public_influence(protagonist: dict[str, Any]) -> str:
+    public_image = as_text(protagonist.get("public_image"))
+    if not public_image:
+        return "업계에서 과소평가된 인물로 보인다."
+    return f"초반 평판은 '{public_image}' 쪽에 가까워 실권보다 저평가된다."
+
+
+def derive_risk_tolerance(protagonist: dict[str, Any]) -> str:
+    weakness = as_text(protagonist.get("true_weakness"))
+    return f"리스크를 감수하지만 '{weakness}' 때문에 과신과 불신이 동시에 흔들릴 수 있다."
 
 
 def build_portfolio_history(blocks: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -54,6 +125,107 @@ def build_portfolio_history(blocks: list[dict[str, Any]]) -> list[dict[str, Any]
             }
         )
     return history
+
+
+def derive_partner_location_sector_distribution(
+    phase0: dict[str, Any],
+    treatment_blocks: list[dict[str, Any]],
+) -> dict[str, Any]:
+    front_sector_by_arc: list[dict[str, Any]] = []
+    for arc in phase0["arcs"]:
+        front_sector_by_arc.append(
+            {
+                "arc_id": arc["arc_id"],
+                "front": list(arc.get("front_sectors", [])),
+                "support": list(arc.get("support_sectors", [])),
+            }
+        )
+
+    partners: list[dict[str, Any]] = []
+    seen_names: set[str] = set()
+    for entry in phase0.get("opponent_transition_plan", []):
+        name = as_text(entry.get("faction")) or ", ".join(entry.get("main_actors", []))
+        if not name or name in seen_names:
+            continue
+        seen_names.add(name)
+        partners.append(
+            {
+                "name": name,
+                "cadence": as_text(entry.get("phase")) or as_text(entry.get("block_range")) or as_text(entry.get("entry_block")),
+                "objective": as_text(entry.get("goal")) or as_text(entry.get("weakness")) or "source TR aligned business-power objective",
+            }
+        )
+
+    if not partners:
+        for arc in phase0["arcs"]:
+            for name in arc.get("main_opponents", []):
+                if not name or name in seen_names:
+                    continue
+                seen_names.add(name)
+                partners.append({"name": name, "cadence": arc["arc_id"], "objective": arc["title"]})
+
+    location_pool = unique_preserve_order(
+        [as_text(block.get("location", {}).get("place")) for block in treatment_blocks if isinstance(block, dict)]
+    )
+    deal_type_rotation = unique_preserve_order(
+        [as_text(block.get("genre_ext", {}).get("deal_type")) for block in treatment_blocks if isinstance(block, dict)]
+    )
+
+    return {
+        "partners": partners,
+        "location_pool": location_pool,
+        "deal_type_rotation": deal_type_rotation,
+        "front_sector_by_arc": front_sector_by_arc,
+    }
+
+
+def derive_capital_curve(treatment_blocks: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    points: list[dict[str, Any]] = []
+    for block_no in [1, 10, 20, 30, 40, 50, 60, 70]:
+        block = treatment_blocks[block_no - 1]
+        points.append(
+            {
+                "block": block_no,
+                "title": block["title"],
+                "capital_after": block["genre_ext"]["capital_after"],
+            }
+        )
+    return points
+
+
+def derive_defeat_blocks(
+    phase0: dict[str, Any],
+    treatment_blocks: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    derived: list[dict[str, Any]] = []
+    for arc in phase0["arcs"]:
+        for block_no in arc.get("defeat_blocks", []):
+            if not isinstance(block_no, int) or not (1 <= block_no <= len(treatment_blocks)):
+                continue
+            block = treatment_blocks[block_no - 1]
+            derived.append(
+                {
+                    "block": block_no,
+                    "success_pattern": block.get("genre_ext", {}).get("success_pattern", ""),
+                    "summary": as_text(block.get("content", {}).get("reward")) or block["title"],
+                }
+            )
+    derived.sort(key=lambda item: item["block"])
+    return derived
+
+
+def normalize_phase0_design(
+    phase0: dict[str, Any],
+    treatment_blocks: list[dict[str, Any]],
+) -> dict[str, Any]:
+    normalized = json.loads(json.dumps(phase0, ensure_ascii=False))
+    if "partner_location_sector_distribution" not in normalized:
+        normalized["partner_location_sector_distribution"] = derive_partner_location_sector_distribution(normalized, treatment_blocks)
+    if "capital_curve" not in normalized:
+        normalized["capital_curve"] = derive_capital_curve(treatment_blocks)
+    if "defeat_blocks" not in normalized:
+        normalized["defeat_blocks"] = derive_defeat_blocks(normalized, treatment_blocks)
+    return normalized
 
 
 def build_key_npcs(
@@ -76,6 +248,7 @@ def build_key_npcs(
         }
     ]
     for npc in npc_timeline:
+        turning_points = npc.get("turning_points") or npc.get("key_turning_points") or []
         key_npcs.append(
             {
                 "name": npc["name"],
@@ -83,7 +256,7 @@ def build_key_npcs(
                 "desc": f"{npc['role']}. Block {npc['first_block']}부터 본격적으로 영향력을 행사한다.",
                 "first_block": npc["first_block"],
                 "final_status": npc["final_status"],
-                "key_turning_points": npc["turning_points"],
+                "key_turning_points": turning_points,
             }
         )
     return key_npcs
@@ -92,8 +265,13 @@ def build_key_npcs(
 def build_arc_sheets(arcs: list[dict[str, Any]]) -> list[dict[str, Any]]:
     out: list[dict[str, Any]] = []
     for arc in arcs:
-        first_slot = arc["block_slots"][0]
-        last_slot = arc["block_slots"][-1]
+        if arc.get("block_slots"):
+            first_slot = arc["block_slots"][0]
+            last_slot = arc["block_slots"][-1]
+        else:
+            start_block, end_block = parse_block_range(arc["block_range"])
+            first_slot = {"block": start_block, "title": arc["title"], "function": arc.get("entry_function", arc["title"])}
+            last_slot = {"block": end_block, "title": arc["title"], "function": arc.get("exit_function", arc["title"])}
         out.append(
             {
                 "arc_id": arc["arc_id"],
@@ -121,8 +299,13 @@ def build_historical_events(
 ) -> list[dict[str, Any]]:
     events: list[dict[str, Any]] = []
     for arc in arcs:
-        first_slot = arc["block_slots"][0]
-        last_slot = arc["block_slots"][-1]
+        if arc.get("block_slots"):
+            first_slot = arc["block_slots"][0]
+            last_slot = arc["block_slots"][-1]
+        else:
+            start_block, end_block = parse_block_range(arc["block_range"])
+            first_slot = {"block": start_block, "title": arc["title"], "function": arc.get("entry_function", arc["title"])}
+            last_slot = {"block": end_block, "title": arc["title"], "function": arc.get("exit_function", arc["title"])}
         events.append(
             {
                 "type": "arc",
@@ -171,7 +354,7 @@ def build_bible(phase0_payload: dict[str, Any], treatment_blocks: list[dict[str,
     project = phase0_payload["project"]
     setting_data = phase0_payload["setting"]
     protagonist = phase0_payload["protagonist"]
-    phase0 = phase0_payload["phase0_design"]
+    phase0 = normalize_phase0_design(phase0_payload["phase0_design"], treatment_blocks)
     first_block = treatment_blocks[0]
 
     portfolio_history = build_portfolio_history(treatment_blocks)
@@ -186,7 +369,15 @@ def build_bible(phase0_payload: dict[str, Any], treatment_blocks: list[dict[str,
     )
 
     starter_company = setting_data["starter_company"]
-    max_capital = portfolio_history[-1]["total_assets"]
+    final_capital = portfolio_history[-1]["total_assets"]
+    max_capital = final_capital
+    protagonist_faction = derive_protagonist_faction(starter_company)
+    debt_summary = derive_debt_summary(starter_company)
+    starter_context = derive_starter_context(starter_company)
+    growth_rule = derive_growth_rule(phase0)
+    talent_name = derive_talent_name(protagonist)
+    public_influence = derive_public_influence(protagonist)
+    risk_tolerance = derive_risk_tolerance(protagonist)
 
     master_bible = {
         "ProjectData": {
@@ -201,22 +392,22 @@ def build_bible(phase0_payload: dict[str, Any], treatment_blocks: list[dict[str,
             },
             "CoreIdentity": {
                 "protagonist": protagonist["name"],
-                "protagonist_faction": "세령컬처웍스 (초기) -> 스타 IP 복합기업 세령컬처웍스 (후기)",
+                "protagonist_faction": protagonist_faction,
                 "edge": protagonist["true_strength"],
                 "desire": protagonist["initial_goal"],
-                "crisis": f"{protagonist['public_image']}으로 낙인찍혀 문화 사업에서도 실패를 기대받는 상태에서 출발한다.",
+                "crisis": project["logline"],
             },
             "CommercialCode": {
-                "cider_point": "아무도 못 알아본 인재를 정확한 자리와 타이밍에 올려 성공으로 바꾸는 통쾌함",
-                "success_device": "사람 발굴, 포지셔닝, 팬덤 접점 설계, 그룹 인프라 활용",
-                "attitude": "망나니 외피 아래에서 사람과 포맷을 집요하게 배치하는 실전형 설계자",
+                "cider_point": "저평가된 자산과 병목을 먼저 읽고 지배력으로 전환하는 역전감",
+                "success_device": setting_data["execution_doctrine"],
+                "attitude": "큰 승부보다 반복 현금흐름, 통제권, 문서 우위를 차근차근 쌓는 사업 성장 서사",
             },
         },
         "protagonist_config": {
             "world_origin": protagonist["status"],
-            "incarnation_type": "비회귀 / 비빙의",
+            "incarnation_type": "회귀/사업 감각 강화",
             "special_talent": {
-                "name": "스타 감각",
+                "name": talent_name,
                 "description": protagonist["true_strength"],
                 "limits": protagonist["true_weakness"],
             },
@@ -224,43 +415,43 @@ def build_bible(phase0_payload: dict[str, Any], treatment_blocks: list[dict[str,
                 "year": project["start_year"],
                 "month": first_block["time_span"]["in_story_time"],
                 "age": protagonist["age_at_start"],
-                "context": "부친이 던져 준 적자 엔터 자회사 세령컬처웍스를 1년 안에 살려야 하는 상황",
+                "context": starter_context,
             },
         },
         "FinanceHUD": {
-            "_description": "엔터 타이쿤 전용 HUD - 동원 가능 자본, 인재 축, 사업축, 지배력 추적",
+            "_description": "Business-Power HUD - 동원 가능 자본, 사업축, 지배력, 반복 현금흐름 추적",
             "Protagonist": {
                 "actual_truth": {
                     "name": protagonist["name"],
-                    "alias": "망나니 도련님 (초기) -> 스타 IP 제국 설계자 (후기)",
+                    "alias": protagonist["public_image"],
                     "age": protagonist["age_at_start"],
-                    "rank": f"{protagonist['status']} / {starter_company['name']} 대표",
+                    "rank": f"{protagonist['status']} / {starter_company['name']}",
                     "financial_status": {
-                        "mobilizable_capital": portfolio_history[0]["total_assets"],
-                        "total_assets": portfolio_history[0]["total_assets"],
+                        "mobilizable_capital": final_capital,
+                        "total_assets": final_capital,
                         "max_assets": max_capital,
                         "company": starter_company["name"],
                         "company_state": starter_company["state"],
                         "business_lines": all_sectors,
-                        "debt": "누적 적자와 낮은 신뢰도에서 출발",
+                        "debt": debt_summary,
                     },
                     "portfolio_history": portfolio_history,
-                    "investment_style": "스타 감각 기반 발굴 + 포지셔닝 + 시스템 설계",
-                    "risk_tolerance": "중고위험 감수. 확신이 서면 빠르게 밀어붙이지만 배신과 여론전에는 취약하다.",
+                    "investment_style": setting_data["execution_doctrine"],
+                    "risk_tolerance": risk_tolerance,
                     "credentials": [
                         protagonist["status"],
                         starter_company["name"],
                     ],
-                    "current_objective": "세령컬처웍스를 청산 직전 상태에서 생존시킨다.",
+                    "current_objective": protagonist["initial_goal"],
                     "mid_term_goal": protagonist["mid_goal"],
                     "final_goal": protagonist["final_goal"],
-                    "causal_injuries": "망나니 낙인, 아버지의 불신, 내부 공신 라인의 감시",
+                    "causal_injuries": protagonist["true_weakness"],
                 },
                 "public_reputation": {
                     "identity": protagonist["public_image"],
-                    "wealth_level": "오너가 출신이지만 개인 역량은 의심받는 상태",
-                    "perceived_influence": "낙하산 대표 정도로만 보인다.",
-                    "credit_rating": "세령그룹 후광은 있으나 업계 신뢰는 낮다.",
+                    "wealth_level": starter_company["state"],
+                    "perceived_influence": public_influence,
+                    "credit_rating": "법인과 계약 구조는 약하지만 판을 읽는 주도권은 점점 강해진다.",
                 },
             },
         },
@@ -269,9 +460,9 @@ def build_bible(phase0_payload: dict[str, Any], treatment_blocks: list[dict[str,
             "Protagonist": {
                 "actual_truth": {
                     "name": protagonist["name"],
-                    "alias": "망나니 도련님 -> 스타 IP 제국 설계자",
+                    "alias": protagonist["public_image"],
                     "age": protagonist["age_at_start"],
-                    "rank": f"{protagonist['status']} / {starter_company['name']} 대표",
+                    "rank": f"{protagonist['status']} / {starter_company['name']}",
                 }
             },
         },
@@ -294,10 +485,10 @@ def build_bible(phase0_payload: dict[str, Any], treatment_blocks: list[dict[str,
         "HistoricalEvents": build_historical_events(phase0["arcs"], phase0["defeat_blocks"]),
         "GenreRules": {
             "core_mode": project["format"],
-            "growth_rule": "배우 -> 아이돌 -> 웹콘텐츠 -> 셰프/F&B -> 글로벌 -> 플랫폼 순으로 사업축을 확장한다.",
-            "reward_rule": "승리는 화제성, 수익, 지배력의 세 층위로 측정한다.",
-            "risk_rule": "패배는 여론전, 계약, 내부 정치, 지배구조 리스크에서 온다.",
-            "talent_rule": "태하의 재능은 초능력이 아니라 사람과 포맷의 타이밍을 읽는 감각으로만 작동한다.",
+            "growth_rule": growth_rule,
+            "reward_rule": "승리의 단위는 수익, 지배력, 반복 현금흐름, 계약/규격 우위로 측정한다.",
+            "risk_rule": "패배는 여론전, 계약, 내부 정치, 규제, 지배구조 리스크에서 온다.",
+            "talent_rule": "능력은 전지적 예언이 아니라 사업 구조와 위험을 더 빨리 읽는 감각으로만 작동한다.",
         },
         "plot_roadmap": treatment_blocks,
     }
@@ -306,7 +497,7 @@ def build_bible(phase0_payload: dict[str, Any], treatment_blocks: list[dict[str,
         "_schema_version": "2.0",
         "_schema_description": f"{project['title_ko']} Bible - phase0/TR draft 동기화 산출물",
         "_last_updated": date.today().isoformat(),
-        "_genre": "entertainment",
+        "_genre": project["format"],
         "MasterBible": master_bible,
     }
 
@@ -328,14 +519,14 @@ def main() -> int:
     require("project" in phase0 and "setting" in phase0 and "protagonist" in phase0 and "phase0_design" in phase0, "Phase0 payload is missing required sections")
 
     phase0_design = phase0["phase0_design"]
-    for field in ("arcs", "npc_timeline", "foreshadow_map", "partner_location_sector_distribution", "capital_curve", "defeat_blocks", "opponent_transition_plan"):
+    for field in ("arcs", "npc_timeline", "foreshadow_map", "opponent_transition_plan"):
         require(field in phase0_design, f"Phase0 design missing field: {field}")
 
     payload = {
         "project": phase0["project"],
         "setting": phase0["setting"],
         "protagonist": phase0["protagonist"],
-        "phase0_design": phase0_design,
+        "phase0_design": normalize_phase0_design(phase0_design, treatment_blocks),
     }
     payload["setting"]["protagonist"] = phase0["protagonist"]
     bible = build_bible(payload, treatment_blocks)

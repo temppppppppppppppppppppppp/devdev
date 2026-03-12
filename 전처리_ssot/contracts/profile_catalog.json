@@ -1,0 +1,199 @@
+{
+  "package_name": "preprocess_contracts",
+  "schema_id": "profile_catalog",
+  "version": "1.0.0-draft",
+  "profiles": [
+    {
+      "profile_id": "business_growth_profile",
+      "display_name_ko": "기업 성장 / 운영 장악",
+      "resource_axis": [
+        "운영권",
+        "공급망",
+        "정산권",
+        "반복매출"
+      ],
+      "control_axis": [
+        "병목 위치",
+        "운영 관문",
+        "승인 구조"
+      ],
+      "success_actions": [
+        "운영권 인수",
+        "공급망 수직 통합",
+        "정산 표준화"
+      ],
+      "forbidden_drift": [
+        "모든 해결을 주가 차익으로 처리",
+        "운영 장악물을 추상 성장담으로 뭉개기"
+      ]
+    },
+    {
+      "profile_id": "investment_market_profile",
+      "display_name_ko": "투자 / 시장",
+      "resource_axis": [
+        "지분",
+        "가격",
+        "수익률",
+        "레버리지"
+      ],
+      "control_axis": [
+        "진입 타이밍",
+        "시장 병목",
+        "구조화 포인트"
+      ],
+      "success_actions": [
+        "지분 매입",
+        "구조화 거래",
+        "M&A",
+        "헤지"
+      ],
+      "forbidden_drift": [
+        "기업/리스크 근거 없는 차트 서사",
+        "현장 전장 없는 추상 수익률 놀음"
+      ]
+    },
+    {
+      "profile_id": "entertainment_media_profile",
+      "display_name_ko": "엔터 / 미디어",
+      "resource_axis": [
+        "IP",
+        "팬덤",
+        "편성",
+        "유통"
+      ],
+      "control_axis": [
+        "아티스트 라인",
+        "편성 슬롯",
+        "유통 관문",
+        "여론 채널"
+      ],
+      "success_actions": [
+        "캐스팅",
+        "편성 슬롯 선점",
+        "저작권 묶음 확보"
+      ],
+      "forbidden_drift": [
+        "감정선만 있고 IP/유통 축이 없음",
+        "연예계물을 일반 회사물로 평탄화"
+      ]
+    },
+    {
+      "profile_id": "medical_professional_profile",
+      "display_name_ko": "의학 / 전문직",
+      "resource_axis": [
+        "집도권",
+        "케이스",
+        "신뢰도",
+        "병원 권한"
+      ],
+      "control_axis": [
+        "전문성 단계",
+        "병원 위계",
+        "프로토콜"
+      ],
+      "success_actions": [
+        "집도권 확보",
+        "프로토콜 개정",
+        "연구/증례 선점"
+      ],
+      "forbidden_drift": [
+        "수술 장면만 있고 권한 변화가 없음",
+        "병원 정치를 일반 갈등으로 축소"
+      ]
+    },
+    {
+      "profile_id": "office_power_profile",
+      "display_name_ko": "회사원 / 조직 권력",
+      "resource_axis": [
+        "KPI",
+        "예산",
+        "결재선",
+        "인사권"
+      ],
+      "control_axis": [
+        "실적 축",
+        "승인 구조",
+        "조직 권한 이동"
+      ],
+      "success_actions": [
+        "KPI 재설계",
+        "승인권 회수",
+        "조직 재배치"
+      ],
+      "forbidden_drift": [
+        "측정 가능한 권력축 없는 순수 직장 드라마",
+        "결재/예산/인사 대신 감정선만 반복"
+      ]
+    },
+    {
+      "profile_id": "tech_startup_profile",
+      "display_name_ko": "테크 / 창업",
+      "resource_axis": [
+        "제품",
+        "데이터",
+        "특허",
+        "사용자 기반"
+      ],
+      "control_axis": [
+        "제품 우위",
+        "진입장벽",
+        "배포/고객 축"
+      ],
+      "success_actions": [
+        "제품 출시",
+        "라이선스",
+        "특허/데이터 선점"
+      ],
+      "forbidden_drift": [
+        "기술 설명만 길고 고객/배포 축이 없음",
+        "투자 서사에 흡수되어 제품 축이 사라짐"
+      ]
+    },
+    {
+      "profile_id": "urban_power_profile",
+      "display_name_ko": "현대 능력 / 길드",
+      "resource_axis": [
+        "전투력",
+        "길드 자산",
+        "던전 권리",
+        "사회적 위상"
+      ],
+      "control_axis": [
+        "힘의 계급",
+        "권리 배분",
+        "팀 편성"
+      ],
+      "success_actions": [
+        "레이드 배치 재편",
+        "독점권 확보",
+        "길드/팀 재편"
+      ],
+      "forbidden_drift": [
+        "전투 장면만 있고 길드 권리 변화가 없음",
+        "능력물인데 사회 구조 축이 비어 있음"
+      ]
+    }
+  ],
+  "recommended_pairs": [
+    {
+      "work_id": "chaebol_allowance_zero",
+      "primary_profile": "business_growth_profile",
+      "secondary_profile": "office_power_profile"
+    },
+    {
+      "work_id": "chaebol_ent_empire",
+      "primary_profile": "entertainment_media_profile",
+      "secondary_profile": "business_growth_profile"
+    },
+    {
+      "work_id": "defense_defect_engineer",
+      "primary_profile": "business_growth_profile",
+      "secondary_profile": "tech_startup_profile"
+    },
+    {
+      "work_id": "us_ai_exile_monopoly",
+      "primary_profile": "investment_market_profile",
+      "secondary_profile": "tech_startup_profile"
+    }
+  ]
+}

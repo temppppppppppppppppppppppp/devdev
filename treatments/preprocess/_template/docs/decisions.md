@@ -1,0 +1,5 @@
+# Decisions
+
+- Decision:
+  - Why:
+  - Impact:
