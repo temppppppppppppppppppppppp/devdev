@@ -1,7 +1,7 @@
 # Updated Blockguide Re-Audit (2026-03-10)
 
 ## Scope
-- source docs: `docs/blockguide/blockguide-integrated-order.md`
+- source docs: `docs/blockguide/SSOT_blockguide-integrated-order.md`
 - source docs: `docs/blockguide/treatment-production-harness-v2.md`
 - source docs: `docs/blockguide/bi-production-harness-v1.md`
 - target draft: `treatments/us_ai_exile_monopoly_tr_block_070_draft.json`

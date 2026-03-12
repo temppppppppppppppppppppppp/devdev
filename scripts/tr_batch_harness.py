@@ -112,6 +112,146 @@ def write_json(path: Path, data: Any) -> None:
     path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
+def normalize_tail(text: Any, length: int = 20) -> str:
+    raw = re.sub(r"\s+", " ", as_text(text))
+    return raw[-length:] if len(raw) >= length else raw
+
+
+def sentence_like_count(text: Any) -> int:
+    raw = as_text(text)
+    if not raw:
+        return 0
+    parts = [part for part in re.split(r"[.!?]+", raw) if part.strip()]
+    return len(parts) if parts else 1
+
+
+def compute_treatment_metrics(blocks: list[dict[str, Any]]) -> dict[str, Any]:
+    if not blocks:
+        return {
+            "block_count": 0,
+            "production_density_gate": False,
+            "avg_bundle_chars": 0.0,
+            "avg_solution_chars": 0.0,
+            "opponent_unique": 0,
+            "weakness_unique": 0,
+            "deal_unique": 0,
+            "method_unique": 0,
+            "top_opponent_name": "",
+            "top_opponent_repetition": 0,
+            "top_opponent_share": 0.0,
+            "top_weakness_repetition": 0,
+            "deal_top_repetition": 0,
+            "method_top_repetition": 0,
+            "solution_tail20_top_repetition": 0,
+            "one_sentence_like_solution_blocks": 0,
+            "business_sector_missing": 0,
+            "section_rotation_missing": 0,
+            "window_10_opponent_unique_counts": [],
+            "pattern_feedback_snapshot": {
+                "top_opponents": [],
+                "top_weaknesses": [],
+                "solution_pattern_warnings": [],
+                "forbidden_pattern_reuse": [],
+            },
+        }
+
+    opponent_names: list[str] = []
+    weaknesses: list[str] = []
+    deals: list[str] = []
+    methods: list[str] = []
+    solution_tails: list[str] = []
+    bundle_sizes: list[int] = []
+    solution_sizes: list[int] = []
+    one_sentence_like = 0
+    business_sector_missing = 0
+    section_rotation_missing = 0
+
+    for block in blocks:
+        genre = block.get("genre_ext", {}) if isinstance(block, dict) else {}
+        content = block.get("content", {}) if isinstance(block, dict) else {}
+        opponent = genre.get("opponent", {}) if isinstance(genre.get("opponent", {}), dict) else {}
+
+        opponent_names.append(as_text(opponent.get("name")))
+        weaknesses.append(as_text(opponent.get("weakness_exploited")))
+        deals.append(as_text(genre.get("deal_type")))
+        methods.append(as_text(genre.get("method")))
+
+        solution = as_text(content.get("solution"))
+        solution_sizes.append(len(solution))
+        solution_tails.append(normalize_tail(solution, 20))
+        if sentence_like_count(solution) <= 2:
+            one_sentence_like += 1
+
+        bundle_sizes.append(
+            len(as_text(content.get("context")))
+            + len(as_text(content.get("event_villain")))
+            + len(solution)
+            + len(as_text(content.get("reward")))
+            + len(as_text(block.get("stakes")))
+        )
+
+        if not as_text(genre.get("business_sector")):
+            business_sector_missing += 1
+        if not as_text(genre.get("section_rotation")):
+            section_rotation_missing += 1
+
+    opponent_counter = Counter(name for name in opponent_names if name)
+    weakness_counter = Counter(value for value in weaknesses if value)
+    deal_counter = Counter(value for value in deals if value)
+    method_counter = Counter(value for value in methods if value)
+    solution_tail_counter = Counter(value for value in solution_tails if value)
+
+    top_opponent_name, top_opponent_repetition = opponent_counter.most_common(1)[0] if opponent_counter else ("", 0)
+    top_weakness_repetition = weakness_counter.most_common(1)[0][1] if weakness_counter else 0
+    deal_top_repetition = deal_counter.most_common(1)[0][1] if deal_counter else 0
+    method_top_repetition = method_counter.most_common(1)[0][1] if method_counter else 0
+    solution_tail20_top_repetition = solution_tail_counter.most_common(1)[0][1] if solution_tail_counter else 0
+
+    window_10 = []
+    for start in range(0, len(opponent_names), 10):
+        chunk = [name for name in opponent_names[start : start + 10] if name]
+        window_10.append(len(set(chunk)))
+
+    pattern_warnings: list[str] = []
+    forbidden_reuse: list[str] = []
+    if solution_tail20_top_repetition >= 50:
+        pattern_warnings.append(f"solution tail-20 repeats {solution_tail20_top_repetition} times")
+    if top_weakness_repetition >= 3:
+        forbidden_reuse.append(f"same weakness repeats {top_weakness_repetition} times")
+    if top_opponent_repetition / max(len(blocks), 1) > 0.30:
+        pattern_warnings.append(
+            f"top opponent {top_opponent_name} share is {round(top_opponent_repetition / len(blocks) * 100, 1)}%"
+        )
+
+    return {
+        "block_count": len(blocks),
+        "production_density_gate": (sum(bundle_sizes) / len(bundle_sizes)) >= 350,
+        "avg_bundle_chars": round(sum(bundle_sizes) / len(bundle_sizes), 2),
+        "avg_solution_chars": round(sum(solution_sizes) / len(solution_sizes), 2),
+        "opponent_unique": len(set(name for name in opponent_names if name)),
+        "weakness_unique": len(set(value for value in weaknesses if value)),
+        "deal_unique": len(set(value for value in deals if value)),
+        "method_unique": len(set(value for value in methods if value)),
+        "top_opponent_name": top_opponent_name,
+        "top_opponent_repetition": top_opponent_repetition,
+        "top_opponent_share": round(top_opponent_repetition / len(blocks) * 100, 1) if blocks else 0.0,
+        "top_weakness_repetition": top_weakness_repetition,
+        "deal_top_repetition": deal_top_repetition,
+        "method_top_repetition": method_top_repetition,
+        "solution_tail20_top_repetition": solution_tail20_top_repetition,
+        "one_sentence_like_solution_blocks": one_sentence_like,
+        "business_sector_missing": business_sector_missing,
+        "section_rotation_missing": section_rotation_missing,
+        "window_10_opponent_unique_counts": window_10,
+        "pattern_feedback_snapshot": {
+            "top_opponents": opponent_counter.most_common(3),
+            "top_weaknesses": weakness_counter.most_common(3),
+            "solution_pattern_warnings": pattern_warnings,
+            "forbidden_pattern_reuse": forbidden_reuse,
+        },
+    }
+
+
 def extract_blocks(payload: Any) -> list[dict[str, Any]]:
     if payload is None:
         return []

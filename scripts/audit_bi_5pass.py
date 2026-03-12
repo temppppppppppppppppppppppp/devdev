@@ -15,8 +15,12 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
+SCRIPTS_DIR = ROOT / "scripts"
+if str(SCRIPTS_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS_DIR))
 
 from modules.core.response_schemas import validate_bible_structure, validate_treatment_structure
+from tr_batch_harness import compute_treatment_metrics
 
 GARBLED_RE = re.compile(r"\?{2,}|�|\ufffd")
 FOREIGN_TOKENS = [
@@ -101,6 +105,7 @@ def main() -> int:
 
     draft_valid, draft_errors, draft_warnings = validate_treatment_structure(draft)
     bi_valid, bi_errors, bi_warnings = validate_bible_structure(bi)
+    source_metrics = compute_treatment_metrics(draft)
 
     mb = bi["MasterBible"]
     meta = mb["ProjectData"]["MetaInfo"]
@@ -147,6 +152,14 @@ def main() -> int:
     foreign_hits = [token for token in FOREIGN_TOKENS if token in serialized]
     key_npc_names = [entry["name"] for entry in mb["AssetLibrary"]["KeyNPCs"]]
     npc_name_match = key_npc_names == expected_npcs
+    source_density_gate = source_metrics["production_density_gate"]
+    source_opponent_diversity_gate = source_metrics["opponent_unique"] >= 8 and source_metrics["top_opponent_share"] <= 30.0
+    source_weakness_repeat_gate = source_metrics["top_weakness_repetition"] < 3
+    source_solution_gate = (
+        source_metrics["avg_solution_chars"] >= 120
+        and source_metrics["one_sentence_like_solution_blocks"] <= 20
+    )
+    source_cadence_warning = source_metrics["solution_tail20_top_repetition"] > 50
 
     passes = [
         (
@@ -169,8 +182,12 @@ def main() -> int:
         ),
         (
             "PASS 3",
-            "내부 정합성",
+            "source TR handoff gate",
             {
+                "source_tr_density_gate": source_density_gate,
+                "source_tr_opponent_diversity_gate": source_opponent_diversity_gate,
+                "source_tr_weakness_repeat_gate": source_weakness_repeat_gate,
+                "source_tr_solution_gate": source_solution_gate,
                 "protagonist_match": core["protagonist"] == actual["name"] == expected_protagonist,
                 "title_match_phase0": meta["title"] == expected_title,
                 "starter_company_match": actual["financial_status"]["company"] == starter_company,
@@ -206,6 +223,22 @@ def main() -> int:
     report_lines.append(f"- draft: `{args.draft.as_posix()}`")
     report_lines.append(f"- bi: `{args.bi.as_posix()}`")
     report_lines.append("")
+    report_lines.append("## Source TR Metrics")
+    report_lines.append(f"- production_density_gate: {'PASS' if source_metrics['production_density_gate'] else 'FAIL'}")
+    report_lines.append(f"- avg_bundle_chars: {source_metrics['avg_bundle_chars']}")
+    report_lines.append(f"- avg_solution_chars: {source_metrics['avg_solution_chars']}")
+    report_lines.append(f"- opponent_unique: {source_metrics['opponent_unique']}")
+    report_lines.append(f"- top_opponent_repetition: {source_metrics['top_opponent_repetition']}")
+    report_lines.append(f"- top_opponent_share: {source_metrics['top_opponent_share']}%")
+    report_lines.append(f"- top_weakness_repetition: {source_metrics['top_weakness_repetition']}")
+    report_lines.append(f"- deal_top_repetition: {source_metrics['deal_top_repetition']}")
+    report_lines.append(f"- method_top_repetition: {source_metrics['method_top_repetition']}")
+    report_lines.append(f"- solution_tail20_top_repetition: {source_metrics['solution_tail20_top_repetition']}")
+    report_lines.append(f"- one_sentence_like_solution_blocks: {source_metrics['one_sentence_like_solution_blocks']}")
+    report_lines.append(f"- business_sector_missing: {source_metrics['business_sector_missing']}")
+    report_lines.append(f"- section_rotation_missing: {source_metrics['section_rotation_missing']}")
+    report_lines.append(f"- window_10_opponent_unique_counts: {source_metrics['window_10_opponent_unique_counts']}")
+    report_lines.append("")
 
     for pass_name, label, checks in passes:
         pass_ok = all(checks.values())
@@ -235,6 +268,26 @@ def main() -> int:
         report_lines.append(f"- garbled_matches: {garbled_matches[:20]}")
     if foreign_hits:
         report_lines.append(f"- foreign_hits: {foreign_hits}")
+    if source_cadence_warning:
+        report_lines.append(
+            f"- source_tr_cadence_warning: solution tail-20 repeats {source_metrics['solution_tail20_top_repetition']} times"
+        )
+    if source_metrics["pattern_feedback_snapshot"]["top_opponents"]:
+        report_lines.append(
+            f"- pattern_feedback_snapshot.top_opponents: {source_metrics['pattern_feedback_snapshot']['top_opponents']}"
+        )
+    if source_metrics["pattern_feedback_snapshot"]["top_weaknesses"]:
+        report_lines.append(
+            f"- pattern_feedback_snapshot.top_weaknesses: {source_metrics['pattern_feedback_snapshot']['top_weaknesses']}"
+        )
+    if source_metrics["pattern_feedback_snapshot"]["solution_pattern_warnings"]:
+        report_lines.append(
+            f"- pattern_feedback_snapshot.solution_pattern_warnings: {source_metrics['pattern_feedback_snapshot']['solution_pattern_warnings']}"
+        )
+    if source_metrics["pattern_feedback_snapshot"]["forbidden_pattern_reuse"]:
+        report_lines.append(
+            f"- pattern_feedback_snapshot.forbidden_pattern_reuse: {source_metrics['pattern_feedback_snapshot']['forbidden_pattern_reuse']}"
+        )
     if fail_count == 0:
         report_lines.append("- summary: 5개 PASS 모두 통과")
     else:

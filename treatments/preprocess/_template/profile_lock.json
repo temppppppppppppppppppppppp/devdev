@@ -1,0 +1,16 @@
+{
+  "primary_profile": "",
+  "secondary_profile": "",
+  "resource_axis": [],
+  "power_axis": [],
+  "control_axis": [],
+  "payoff_axis": [],
+  "failure_axis": [],
+  "hud_interpretation": {
+    "capital": "",
+    "deal_type": "",
+    "resource_power_hud": "",
+    "business_lines": "",
+    "company_state": ""
+  }
+}

@@ -1,0 +1,98 @@
+{
+  "package_name": "preprocess_contracts",
+  "schema_id": "sequential_run_status",
+  "version": "1.0.0-draft",
+  "target_instance_path": "treatments/preprocess/{work_id}/sequential_run_status.json",
+  "purpose": "작품별 순차 production 진행률과 재개 포인터를 구조화해 저장한다.",
+  "required_keys": [
+    "work_id",
+    "run_class",
+    "last_sequential_block_pass",
+    "next_unit_type",
+    "next_block_id",
+    "manual_audit_ready",
+    "resume_basis",
+    "updated_at",
+    "notes"
+  ],
+  "key_contracts": {
+    "work_id": {
+      "type": "string",
+      "description": "canonical work identifier"
+    },
+    "run_class": {
+      "type": "string",
+      "enum": [
+        "seed_baseline_sync",
+        "sequential_production"
+      ],
+      "description": "seed baseline인지, 실제 순차 production인지 구분"
+    },
+    "last_sequential_block_pass": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 70,
+      "description": "수동 감리 PASS까지 완료된 마지막 블록 번호"
+    },
+    "next_unit_type": {
+      "type": "string",
+      "enum": [
+        "block",
+        "merge",
+        "bi_handoff"
+      ],
+      "description": "다음 실행 단위"
+    },
+    "next_block_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "다음 단위가 block이면 `Block 001` 형식, 아니면 null"
+    },
+    "manual_audit_ready": {
+      "type": "boolean",
+      "description": "직전 단위가 수동 감리상 다음 단계로 넘어갈 준비가 되었는지"
+    },
+    "resume_basis": {
+      "type": "string",
+      "enum": [
+        "manual_audit_pass",
+        "seed_baseline_sync",
+        "status_recovery",
+        "restart_default"
+      ],
+      "description": "왜 이 재개 포인터를 신뢰하는지"
+    },
+    "updated_at": {
+      "type": "string",
+      "description": "상태 파일 갱신 시각"
+    },
+    "notes": {
+      "type": "string",
+      "description": "간단한 보충 설명"
+    }
+  },
+  "validation_rules": [
+    "run_class == seed_baseline_sync 이면 last_sequential_block_pass는 기본적으로 0이어야 한다.",
+    "next_unit_type == block 이면 next_block_id는 null일 수 없다.",
+    "next_unit_type != block 이면 next_block_id는 null이어야 한다.",
+    "run_class == sequential_production 이면 manual_audit_ready 값은 직전 수동 감리 상태와 충돌하면 안 된다."
+  ],
+  "transitional_policy": {
+    "current_fallback_file": "treatments/preprocess/{work_id}/docs/sequential_run_status.md",
+    "if_json_missing": "markdown fallback 또는 Block 001 restart",
+    "until_phase": "phase_c_live_instances"
+  },
+  "example_minimum_instance": {
+    "work_id": "example_work",
+    "run_class": "seed_baseline_sync",
+    "last_sequential_block_pass": 0,
+    "next_unit_type": "block",
+    "next_block_id": "Block 001",
+    "manual_audit_ready": false,
+    "resume_basis": "restart_default",
+    "updated_at": "2026-03-12T00:00:00+09:00",
+    "notes": "seed baseline only; no sequential credit yet"
+  }
+}

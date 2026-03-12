@@ -1,0 +1,122 @@
+{
+  "package_name": "preprocess_contracts",
+  "schema_id": "stage_machine",
+  "version": "1.0.0-draft",
+  "defaults": {
+    "orchestration_mode": "quality_first",
+    "auto_run_meaning": "continue_to_the_next_smallest_unit_only",
+    "script_run_required": false,
+    "production_unit": "single_block",
+    "completion_requires_audit_pass": true
+  },
+  "stage_order": [
+    "stage0_preprocess",
+    "planning",
+    "production",
+    "bi",
+    "audit_repair",
+    "release_ready"
+  ],
+  "stage_detection": [
+    {
+      "stage_id": "stage0_preprocess",
+      "label": "Stage 0 preprocess",
+      "match_when_any_missing": [
+        "treatments/preprocess/{work_id}/source_manifest.json",
+        "treatments/preprocess/{work_id}/profile_lock.json",
+        "treatments/preprocess/{work_id}/material_bundle_summary.json",
+        "treatments/preprocess/{work_id}/phase0_ready_snapshot.json"
+      ],
+      "or_when_json_value_not_equals": [
+        {
+          "path": "treatments/preprocess/{work_id}/phase0_ready_snapshot.json",
+          "json_pointer": "/manual_audit_pass",
+          "expected": true
+        }
+      ],
+      "result_action": "create_or_fix_stage0_artifacts"
+    },
+    {
+      "stage_id": "planning",
+      "label": "Planning",
+      "match_when_all_exist": [
+        "treatments/preprocess/{work_id}/source_manifest.json",
+        "treatments/preprocess/{work_id}/profile_lock.json",
+        "treatments/preprocess/{work_id}/material_bundle_summary.json",
+        "treatments/preprocess/{work_id}/phase0_ready_snapshot.json"
+      ],
+      "and_json_value_equals": [
+        {
+          "path": "treatments/preprocess/{work_id}/phase0_ready_snapshot.json",
+          "json_pointer": "/manual_audit_pass",
+          "expected": true
+        }
+      ],
+      "and_missing": [
+        "treatments/{work_id}_phase0_design.json"
+      ],
+      "result_action": "enter_planning"
+    },
+    {
+      "stage_id": "production",
+      "label": "Production",
+      "match_when_all_exist": [
+        "treatments/{work_id}_phase0_design.json"
+      ],
+      "and_missing": [
+        "treatments/{work_id}_tr_block_070_draft.json"
+      ],
+      "result_action": "enter_production"
+    },
+    {
+      "stage_id": "bi",
+      "label": "BI",
+      "match_when_all_exist": [
+        "treatments/{work_id}_tr_block_070_draft.json"
+      ],
+      "and_missing": [
+        "bible/0_bi_{work_id}.json"
+      ],
+      "result_action": "enter_bi"
+    },
+    {
+      "stage_id": "audit_repair",
+      "label": "Audit / Repair",
+      "match_when_all_exist": [
+        "treatments/{work_id}_tr_block_070_draft.json",
+        "bible/0_bi_{work_id}.json"
+      ],
+      "result_action": "verify_audit_state_before_completion"
+    }
+  ],
+  "production_resume_contract": {
+    "status_contract_schema": "전처리_ssot/contracts/sequential_run_status.schema.json",
+    "transitional_status_file": "treatments/preprocess/{work_id}/docs/sequential_run_status.md",
+    "future_status_file": "treatments/preprocess/{work_id}/sequential_run_status.json",
+    "ignore_for_progress": [
+      "treatments/preprocess/{work_id}/03_tr_blocks directory count",
+      "treatments/preprocess/{work_id}/04_tr_final existence",
+      "preprocess workspace final draft existence"
+    ],
+    "seed_baseline_sync_meaning": "canonical or verified outputs were mirrored into preprocess workspace as reference seed only",
+    "sequential_production_meaning": "each credited block was produced and manually audited in sequence",
+    "if_status_missing_or_ambiguous": "restart_at_block_001"
+  },
+  "audit_state_contract": {
+    "status_contract_schema": "전처리_ssot/contracts/audit_status.schema.json",
+    "future_status_file": "treatments/preprocess/{work_id}/audit_status.json",
+    "transitional_human_reports": [
+      "phase0_check.md",
+      "tr_gate_report.md",
+      "bi_5pass.md",
+      "manual audit memo"
+    ]
+  },
+  "forbidden_shortcuts": [
+    "skip_stage0_and_write_phase0_directly",
+    "generate_tr_without_phase0",
+    "generate_bi_without_tr",
+    "count_seed_baseline_as_production_progress",
+    "declare_complete_before_audit_pass"
+  ]
+}

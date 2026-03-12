@@ -21,6 +21,7 @@ TITLE = "재벌 3세인데 용돈이 0원"
 PROTAGONIST_NAME = "윤재이"
 PHASE0_PATH = ROOT / "treatments" / f"{WORK_ID}_phase0_design.json"
 TR_PATH = ROOT / "treatments" / f"{WORK_ID}_tr_block_070_draft.json"
+TR_TITLE_PATH = ROOT / "treatments" / f"{TITLE}_tr_block_070_draft.json"
 BI_PATH = ROOT / "bible" / f"0_bi_{WORK_ID}.json"
 
 
@@ -945,9 +946,11 @@ def main() -> int:
     verify(phase0, treatment, bible)
     write_json(PHASE0_PATH, phase0)
     write_json(TR_PATH, treatment)
+    write_json(TR_TITLE_PATH, treatment)
     write_json(BI_PATH, bible)
     print(f"[OK] wrote {PHASE0_PATH}")
     print(f"[OK] wrote {TR_PATH}")
+    print(f"[OK] wrote {TR_TITLE_PATH}")
     print(f"[OK] wrote {BI_PATH}")
     return 0
 

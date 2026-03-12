@@ -1,0 +1,36 @@
+{
+  "package_name": "preprocess_contracts",
+  "version": "1.0.0-draft",
+  "status": "seeded",
+  "updated_at": "2026-03-12",
+  "confidence_percent": 96,
+  "canonical_root": "전처리_ssot/contracts",
+  "human_readme": "전처리_ssot/README.md",
+  "human_contract_guide": "전처리_ssot/contracts/README.md",
+  "migration_notes": "전처리_ssot/docs/30_ops/migration_notes/README.md",
+  "included_contracts": [
+    "schema_version.json",
+    "stage_machine.json",
+    "artifact_contracts.json",
+    "quality_gates.json",
+    "profile_catalog.json",
+    "handoff_rules.json",
+    "sequential_run_status.schema.json",
+    "audit_status.schema.json"
+  ],
+  "work_status_schema_files": [
+    "전처리_ssot/contracts/sequential_run_status.schema.json",
+    "전처리_ssot/contracts/audit_status.schema.json"
+  ],
+  "planned_work_status_instance_paths": [
+    "treatments/preprocess/{work_id}/sequential_run_status.json",
+    "treatments/preprocess/{work_id}/audit_status.json"
+  ],
+  "compatibility": {
+    "blockguide_md": "required",
+    "preprocess_ssot_md": "required",
+    "stage0_contract_files": "carry_forward",
+    "legacy_md_status_files": "temporary_parallel_allowed",
+    "work_status_json": "standard_schema_locked_instances_not_forced"
+  }
+}
