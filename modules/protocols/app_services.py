@@ -49,7 +49,7 @@ class AuditServiceProtocol(Protocol):
     근거:
     - stage2_orchestrator.py 36건  self.app._audit_event(...)
     - stage4_orchestrator.py:1748  self.app._flush_audit_buffer()
-    - stage4_orchestrator.py:1748  self.app._write_audit_summary()
+    - stage4_orchestrator.py success-path runtime summary emission
 
     NOTE: 원본은 private(_) 메서드이나 Protocol에서는 public으로 정의.
     Phase 4B에서 AuditService 구현체로 이전 시 public 메서드로 전환.
@@ -64,7 +64,7 @@ class AuditServiceProtocol(Protocol):
 
     def flush_audit_buffer(self) -> None: ...
 
-    def write_audit_summary(self) -> None: ...
+    def write_audit_summary(self, tag: str = "snapshot") -> None: ...
 
 
 # ──────────────────────────────────────────────────────────────

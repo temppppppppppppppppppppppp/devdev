@@ -57,6 +57,7 @@
   - `pass_rate_monitor`
   - `failure_learner`
   - `adaptive_manager`
+  - `extract_npc_profiles` facade seam (`Stage4Context`)
   - `limit_mode` 또는 `target_ep`
 - Style fallback:
   - 저장된 StyleGuide가 없으면 Bible POV 기반 최소 스타일 가이드를 만들고,
@@ -241,8 +242,8 @@
       - `patch_mode.inplace_below = 60`
       - `patch_mode.rewrite_below = 50`
     - 실제 라우팅은 `fix_scope`, `inplace_below`, `rewrite_below`를 사용한다.
-    - `patch_below`는 현재 Stage 4 분기 결정의 주 키가 아니다.
 - Python pre-director validation:
+  - `_build_cv_context()`는 `npc_profiles`를 `ctx.extract_npc_profiles()` seam에서 먼저 구하고, 실패 시 MasterBible `AssetLibrary.KeyNPCs` 필터로 폴백한다.
   - `manuscript_validator.validate_all_candidates()`
   - consistency / blocking / continuity
   - pre-director checklist
@@ -275,6 +276,9 @@
   - PASS 또는 `PASS_WITH_FIX` 이후 `quick_verify -> verify` 경로를 탄다.
   - 치명적 모순이면 현재 라운드를 소모한 채 REJECT로 되돌린다.
   - runtime exception도 fail-closed REJECT다.
+- EMPTY handling:
+  - 후보가 완전히 비면 caller-facing verdict는 `EMPTY`다.
+  - 다만 `stage_attempts` observability row는 `verdict="ERROR"` + `reject_reason="empty_candidates"`로 기록된다.
 - Round exhaustion:
   - 최선 원고가 있으면 사용자 선택:
     - `1 = 최선 결과물로 진행`
@@ -348,7 +352,7 @@
 
 ## Open Risks
 - Risk 1:
-  - 실제 라운드 상한은 `retry.director_max_attempts=10`, `mandatory_context` 상한은 `400000`인데, 코드 일부 배너/주석은 아직 `5회`나 `50K`처럼 읽힐 수 있다. 문서와 런타임 숫자를 다시 헷갈리게 만드는 드리프트 포인트다.
+  - YAML lookup이 실패하면 일부 Python fallback 기본값이 아직 더 작은 예산 / 더 적은 라운드 수를 가리킨다. 정상 환경에서는 무해하지만 fallback semantics는 최신 값과 다르다.
 - Risk 2:
   - 라운드 소진 시 `진행/건너뛰기` 선택과 세션 종료 Enter 대기가 남아 있어, 비대화형 운영에서는 TTY 여부에 따라 수동 중단점이 생길 수 있다.
 - Risk 3:
@@ -357,10 +361,13 @@
   - `world_state` / `fact_ledger` / `state_tracker`가 약하거나 비어 있어도 Stage 4는 진행된다. 이 경우 Continuity Packet과 canonical constraint 밀도가 떨어진다.
 - Risk 5:
   - `save_episode_bible()` 실패가 완전히 fail-fast는 아니다. 일부 후처리와 파일 저장이 먼저 진행된 뒤 최종적으로 회차 중단으로 귀결될 수 있어 운영자가 부분 성공처럼 오해할 여지가 있다.
+- Risk 6:
+  - caller-facing `EMPTY`와 attempt-sink `ERROR/empty_candidates`가 다른 label을 쓰므로, observability tooling과 live logs를 섞어 읽을 때 해석 실수가 나기 쉽다.
 
 ## Last Verified
-- Date: 2026-03-10
-- Commit: `d2d935b`
+- Date: 2026-03-13
+- Commit: `e18f9910`
+- Workspace State: dirty
 - Code Sync (Yes/No): Yes
 - Verified By: Codex
 

@@ -37,9 +37,11 @@ class Stage4Context:
             semantic_plot_guard, selected_genre, quality_dashboard,
             pacing_analyzer, pass_rate_monitor
     [S-13] 조건부 모듈 8종 → conditional_modules dict 통합
-    [4C-2c] 콜백 7종: get_int_input, build_item_acquisition_timeline,
+    [4C-2c] 콜백 11종: get_int_input, build_item_acquisition_timeline,
             load_narrative_summaries, get_protagonist_name,
-            generate_narrative_summary, flush_audit_buffer, safe_commit
+            generate_narrative_summary, generate_writer_guidance_v60_8,
+            enrich_director_result, audit_event, write_audit_summary,
+            flush_audit_buffer, safe_commit
     """
 
     __slots__ = (
@@ -67,12 +69,17 @@ class Stage4Context:
         "emotion_tracker",  # [TF7-P2-06] EmotionArcTracker 배선
         # [S-13] 조건부 모듈 8종 → 1 composite dict
         "conditional_modules",
-        # [4C-2c] 콜백 7종
+        # [4C-2c] 콜백 11종
         "get_int_input",
         "build_item_acquisition_timeline",
         "load_narrative_summaries",
         "get_protagonist_name",
+        "extract_npc_profiles",
         "generate_narrative_summary",
+        "generate_writer_guidance_v60_8",
+        "enrich_director_result",
+        "audit_event",
+        "write_audit_summary",
         "flush_audit_buffer",
         "safe_commit",
         # [LOG-1] 세션 로거
@@ -111,9 +118,12 @@ class Stage4Context:
         build_item_acquisition_timeline=None,
         load_narrative_summaries=None,
         get_protagonist_name=None,
+        extract_npc_profiles=None,
         generate_narrative_summary=None,
         generate_writer_guidance_v60_8=None,
         enrich_director_result=None,
+        audit_event=None,
+        write_audit_summary=None,
         flush_audit_buffer=None,
         safe_commit=None,
         session_logger=None,
@@ -144,9 +154,12 @@ class Stage4Context:
         self.build_item_acquisition_timeline = build_item_acquisition_timeline
         self.load_narrative_summaries = load_narrative_summaries
         self.get_protagonist_name = get_protagonist_name
+        self.extract_npc_profiles = extract_npc_profiles
         self.generate_narrative_summary = generate_narrative_summary
         self.generate_writer_guidance_v60_8 = generate_writer_guidance_v60_8
         self.enrich_director_result = enrich_director_result
+        self.audit_event = audit_event
+        self.write_audit_summary = write_audit_summary
         self.flush_audit_buffer = flush_audit_buffer
         self.safe_commit = safe_commit
         self.session_logger = session_logger
@@ -213,9 +226,12 @@ class Stage4Context:
             build_item_acquisition_timeline=_safe_getattr(app, "_build_item_acquisition_timeline", None),
             load_narrative_summaries=_safe_getattr(app, "_load_narrative_summaries", None),
             get_protagonist_name=_safe_getattr(app, "_get_protagonist_name", None),
+            extract_npc_profiles=_safe_getattr(app, "_extract_npc_profiles", None),
             generate_narrative_summary=_safe_getattr(app, "_generate_narrative_summary", None),
             generate_writer_guidance_v60_8=_safe_getattr(app, "_generate_writer_guidance_v60_8", None),
             enrich_director_result=_safe_getattr(app, "_enrich_director_result", None),
+            audit_event=_safe_getattr(app, "_audit_event", None),
+            write_audit_summary=_safe_getattr(app, "_write_audit_summary", None),
             flush_audit_buffer=_safe_getattr(app, "_flush_audit_buffer", None),
             safe_commit=_safe_getattr(app, "_safe_commit", None),
             session_logger=_safe_getattr(app, "_session_logger", None),

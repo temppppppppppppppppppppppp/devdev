@@ -15,6 +15,7 @@ Stage2Orchestrator (modules/core/stage2_orchestrator.py):
 
 import json
 import sys
+from difflib import SequenceMatcher
 from pathlib import Path
 from unittest.mock import MagicMock
 
@@ -25,6 +26,7 @@ PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from modules.core.stage2_orchestrator import Stage2Orchestrator
+from modules.core.stage2_contracts import TACTICAL_DOC_DUPLICATE_THRESHOLD
 from modules.domain.agents.analyst import Analyst
 from modules.domain.agents.base_agent import BaseAgent
 
@@ -583,6 +585,20 @@ class TestStage2IsTacticalDocDuplicate:
     def test_empty_reference_list(self, orchestrator):
         """빈 참조 리스트는 중복 아님"""
         assert orchestrator._is_tactical_doc_duplicate("텍스트", []) is False
+
+    def test_near_duplicate_band_matches_pipeline_threshold(self, orchestrator):
+        """near-duplicate band는 facade/orchestrator/pipeline이 동일하게 판정"""
+        candidate = "alpha beta gamma delta epsilon zeta eta theta"
+        reference = "alpha beta gamma delta epsilon zeta eta iota"
+        ratio = SequenceMatcher(
+            None,
+            orchestrator._normalize_tactical_text(candidate),
+            orchestrator._normalize_tactical_text(reference),
+        ).ratio()
+
+        assert TACTICAL_DOC_DUPLICATE_THRESHOLD < ratio < 0.98
+        assert orchestrator._is_tactical_doc_duplicate(candidate, [reference]) is True
+        assert orchestrator.validation_pipeline._is_tactical_doc_duplicate(candidate, [reference]) is True
 
 
 # ══════════════════════════════════════════════════════════════

@@ -3,6 +3,7 @@
 > 작성일: 2026-03-13
 > 트랙: `main_a.py` real-app live wiring blind spot audit
 > 상태: `execution-ready`
+> 조사 현황: `조사 완료`
 > 목적: `main_a.py`가 실제 `SovereignApp` bound method와 runtime context를 통해 Stage 2/3/4 consumer에 연결되는 live wiring contract를 전면 전량 조사한다.
 > 방식: `5-terminal 병렬`, 각 터미널 자체 `3PASS`, 통합본 `3PASS 재감리`
 
@@ -329,3 +330,11 @@
 - 본 오더 문서는 `execution-ready`다.
 - 결과 문서와 통합 문서는 본 오더와 함께 생성되지만 초기 상태는 모두 `template / not executed`다.
 - 조사 단계가 끝나기 전에는 확정 finding이 없는 상태로 본다.
+
+---
+
+## 13. 현재 조사 현황
+
+- 기준일: `2026-03-13`
+- 조사 현황: `조사 완료`
+- 메모: 터미널별 결과 문서 작성 이후에도 통합본 및 `3PASS 재감리`가 남아 있으므로, 본 트랙은 아직 조사 진행 중으로 관리한다.

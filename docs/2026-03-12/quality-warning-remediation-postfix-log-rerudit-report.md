@@ -1,5 +1,9 @@
 # Quality Warning Remediation Postfix Log Rerudit Report
 
+archive note:
+- `projects/00_test_07` is a historical locator only.
+- see `docs/2026-03-13/stage4-canary-archive-locator-note.md` for current path drift.
+
 작성일: 2026-03-12  
 기준 범위: `quality-warning-root-cause-remediation-execution-ssot.md` 후속 구현분 + 로그 기반 재조사  
 판정: `closed`  

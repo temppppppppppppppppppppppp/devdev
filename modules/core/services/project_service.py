@@ -113,6 +113,20 @@ class ProjectService:
                 (from_arc_no,),
             )
 
+    def _clear_narrative_summary_anchors(self, project: Any, from_episode: int | None = None) -> None:
+        if from_episode is None:
+            project.db.cursor.execute("DELETE FROM anchors WHERE key LIKE 'narrative_summary_ep_%'")
+            return
+
+        project.db.cursor.execute(
+            """
+            DELETE FROM anchors
+            WHERE key GLOB 'narrative_summary_ep_[0-9]*'
+              AND CAST(SUBSTR(key, 22) AS INTEGER) >= ?
+            """,
+            (from_episode,),
+        )
+
     def _clear_stage2_metadata(self, project: Any, from_arc_no: int | None = None) -> None:
         if from_arc_no is None:
             project.db.cursor.execute("DELETE FROM arc_dependencies")
@@ -171,8 +185,10 @@ class ProjectService:
             project.db.reset_after(1, commit=False)
             self._clear_stage2_metadata(project)
             self._clear_stage2_summary_anchors(project)
+            self._clear_narrative_summary_anchors(project)
             project.db.cursor.execute("DELETE FROM anchors WHERE key = 'arcs'")
             if not self._safe_commit():
+                self._rollback_open_transaction(project)
                 self._ui.log("DB commit failed during Stage 2 reset")
                 return False
 
@@ -232,9 +248,11 @@ class ProjectService:
             project.db.reset_after(target_ep, commit=False)
             self._clear_stage2_metadata(project, from_arc_no=target_no)
             self._clear_stage2_summary_anchors(project, from_arc_no=target_no)
+            self._clear_narrative_summary_anchors(project, from_episode=target_ep)
             if not project.db.save_anchor("arcs", updated_arcs):
                 raise RuntimeError("failed to save arcs anchor during rewind")
             if not self._safe_commit():
+                self._rollback_open_transaction(project)
                 self._ui.log("DB commit failed during Stage 2 rewind")
                 return False
 
@@ -317,6 +335,7 @@ class ProjectService:
                                 pending_bible = bible_data
 
             project.db.reset_after(target_ep, commit=False)
+            self._clear_narrative_summary_anchors(project, from_episode=target_ep)
             project.db.cursor.execute(
                 "UPDATE seeds SET status = 'active', recovered_ep = NULL WHERE recovered_ep >= ?",
                 (target_ep,),
@@ -325,6 +344,7 @@ class ProjectService:
                 if not project.db.save_anchor("bible", pending_bible):
                     raise RuntimeError("failed to save bible anchor during rollback")
             if not self._safe_commit():
+                self._rollback_open_transaction(project)
                 self._ui.log("DB commit failed during rollback")
                 return False
 
@@ -387,8 +407,10 @@ class ProjectService:
         project = self._project_fn()
         try:
             project.db.reset_after(1, commit=False)
+            self._clear_narrative_summary_anchors(project)
             project.db.cursor.execute("UPDATE seeds SET status = 'active', recovered_ep = NULL")
             if not self._safe_commit():
+                self._rollback_open_transaction(project)
                 self._ui.log("DB commit failed during production wipe")
                 return False
 

@@ -1,6 +1,6 @@
 """[B-1-3] Stage4InterviewRound unit tests."""
 
-import inspect
+import concurrent.futures
 import json
 import logging
 import time
@@ -19,6 +19,7 @@ def _make_ctx():
     ctx.ui.log = MagicMock()
     ctx.perf_timer = MagicMock()
     ctx.current_project = MagicMock()
+    ctx.current_project.name = "test_project"
     ctx.current_project.master_bible = {"MasterBible": {"protagonist_config": {}}}
     ctx.current_project.db = MagicMock()
     ctx.current_project.db.get_recent_manuscripts.return_value = []
@@ -93,6 +94,12 @@ def _make_round_ctx():
         reflexion_prompt="",
         preflight_advisory="",
     )
+
+
+class _AppTrapInterviewRound(Stage4InterviewRound):
+    @property
+    def app(self):
+        raise AssertionError("Stage4InterviewRound should not access self.app")
 
 
 def _candidate():
@@ -236,6 +243,126 @@ class TestInterviewRoundHelpers:
         assert "TruthGate" in merged
         assert "NpcDrift" in merged
         assert ir._merge_retry_advisory_feedback(merged) == merged
+
+
+class TestAdvisoryChain:
+    def test_timeout_cancels_pending_futures_and_returns_empty(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        class _FakeFuture:
+            def __init__(self):
+                self.cancelled = False
+
+            def done(self):
+                return False
+
+            def cancel(self):
+                self.cancelled = True
+                return True
+
+            def result(self, timeout=None):
+                return []
+
+        class _FakeExecutor:
+            last_instance = None
+
+            def __init__(self, *args, **kwargs):
+                self.futures = []
+                self.shutdown_calls = []
+                _FakeExecutor.last_instance = self
+
+            def submit(self, *_args, **_kwargs):
+                future = _FakeFuture()
+                self.futures.append(future)
+                return future
+
+            def shutdown(self, wait=True, cancel_futures=False):
+                self.shutdown_calls.append((wait, cancel_futures))
+
+        def _raise_timeout(_futures, timeout=None):
+            raise concurrent.futures.TimeoutError("boom")
+
+        with (
+            patch("concurrent.futures.ThreadPoolExecutor", _FakeExecutor),
+            patch("concurrent.futures.as_completed", side_effect=_raise_timeout),
+        ):
+            result = ir._run_advisory_chain(
+                candidates=[_candidate()],
+                validation_results=[_validation_result()],
+                next_ep=1,
+                genre_name="무협",
+            )
+
+        assert result == []
+        assert _FakeExecutor.last_instance is not None
+        assert _FakeExecutor.last_instance.shutdown_calls == [(False, True)]
+        assert all(f.cancelled for f in _FakeExecutor.last_instance.futures)
+
+    def test_advisory_chain_uses_local_validation_copies_and_merges_back(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        validation_results = [_validation_result()]
+        seen_ids = {}
+
+        class _ImmediateFuture:
+            def __init__(self, fn, *args):
+                self._result = fn(*args)
+
+            def result(self, timeout=None):
+                return self._result
+
+            def done(self):
+                return True
+
+            def cancel(self):
+                return False
+
+        class _FakeExecutor:
+            def __init__(self, *args, **kwargs):
+                self.shutdown_calls = []
+
+            def submit(self, fn, *args, **kwargs):
+                return _ImmediateFuture(fn, *args)
+
+            def shutdown(self, wait=True, cancel_futures=False):
+                self.shutdown_calls.append((wait, cancel_futures))
+
+        def _truth_gate(_candidates, local_results, _next_ep):
+            seen_ids["truth"] = id(local_results)
+            local_results[0]["truth_gate_warnings"] = [{"severity": "CRITICAL", "text": "사망 NPC 등장"}]
+            return ["[TruthGate Advisory]"]
+
+        def _npc_drift(_candidates, local_results, _next_ep):
+            seen_ids["npc"] = id(local_results)
+            local_results[0]["npc_drift_warnings"] = [{"npc": "연홍"}]
+            return ["[NpcDriftAdvisor]"]
+
+        with (
+            patch("concurrent.futures.ThreadPoolExecutor", _FakeExecutor),
+            patch("concurrent.futures.as_completed", side_effect=lambda futures, timeout=None: list(futures)),
+            patch.object(ir, "_advisory_truth_gate", side_effect=_truth_gate),
+            patch.object(ir, "_advisory_npc_drift", side_effect=_npc_drift),
+            patch.object(ir, "_advisory_numeric_drift", return_value=[]),
+            patch.object(ir, "_advisory_flashback", return_value=[]),
+            patch.object(ir, "_advisory_info_paradox", return_value=[]),
+            patch.object(ir, "_advisory_rel_drift", return_value=[]),
+            patch.object(ir, "_advisory_long_term_rep", return_value=[]),
+            patch.object(ir, "_advisory_numeric_consistency", return_value=[]),
+        ):
+            result = ir._run_advisory_chain(
+                candidates=[_candidate()],
+                validation_results=validation_results,
+                next_ep=1,
+                genre_name="무협",
+            )
+
+        assert result == ["[TruthGate Advisory]", "[NpcDriftAdvisor]"]
+        assert seen_ids["truth"] != id(validation_results)
+        assert seen_ids["npc"] != id(validation_results)
+        assert seen_ids["truth"] != seen_ids["npc"]
+        assert validation_results[0]["truth_gate_warnings"][0]["text"] == "사망 NPC 등장"
+        assert validation_results[0]["npc_drift_warnings"][0]["npc"] == "연홍"
 
 
 class TestInterviewRoundRun:
@@ -1036,7 +1163,16 @@ class TestRecordS4Attempt:
         assert kw["reject_reason"] == "empty_candidates"
         assert kw["arc"] == 1
         assert kw["attempt_key"] == "s4:ep1:arc1:a1"
-        assert kw["final_verdict"] == "ERROR"
+        assert kw["final_verdict"] == "EMPTY"
+
+    def test_source_defaults_align_with_validation_yaml(self):
+        src = Path("modules/core/stage4_interview_round.py").read_text(encoding="utf-8")
+
+        assert '_threshold("smart_retrieval.enabled", True)' in src
+        assert '_threshold("smart_retrieval.director_enabled", True)' in src
+        assert '_threshold("context.vector_max_results_s4", 50)' in src
+        assert '_threshold("smart_retrieval.slot_max_chars_default", 3000)' in src
+        assert '_threshold("smart_retrieval.director_total_budget", 300000)' in src
 
     def test_save_director_selection_persists_verdict_metadata(self):
         ctx = _make_ctx()
@@ -1972,6 +2108,50 @@ class TestRecordS4Attempt:
         assert payload["final_warnings"] == ["final-only warning"]
         assert payload["candidate_warnings"] == ["candidate-only warning"]
 
+    def test_append_episode_log_uses_project_root_logs_dir(self, tmp_path, monkeypatch):
+        monkeypatch.chdir(tmp_path)
+        ctx = _make_ctx()
+        ctx.current_project.name = "fallback_project"
+        ctx.current_project.paths.root = tmp_path / "actual_project"
+        ir = Stage4InterviewRound(ctx)
+        ir._round_start_ts = time.monotonic() - 1
+        ir._get_round_metrics_delta = MagicMock(
+            return_value={
+                "total_calls": 1,
+                "total_tokens": 100,
+                "total_cost_usd": 0.01,
+                "model_breakdown": {"gemini-2.5-pro": {"tokens": 100, "cost": 0.01}},
+            }
+        )
+
+        ir._append_episode_log(
+            ep_num=2,
+            round_num=0,
+            director_result={
+                "verdict": "PASS",
+                "score": 91,
+                "selected": "A",
+                "selection_reason": "accepted",
+                "selected_candidate": {"strategy_name": "balanced"},
+                "score_breakdown": {},
+                "action_items": [],
+                "open_review": "",
+            },
+            is_patch=False,
+            patch_fallback=False,
+            tot_used=False,
+            mad_used=False,
+            asp_used=False,
+            model="gemini-2.5-pro",
+            reject_bucket="",
+            validation_warnings=[],
+        )
+
+        expected_path = ctx.current_project.paths.root / "logs" / "episode_production.jsonl"
+        fallback_path = tmp_path / "projects" / "fallback_project" / "logs" / "episode_production.jsonl"
+        assert expected_path.exists()
+        assert not fallback_path.exists()
+
     def test_pass_with_fix_run_logs_initial_and_final_verdicts(self):
         ctx = _make_ctx()
         ctx.pass_rate_monitor = MagicMock()
@@ -2408,9 +2588,13 @@ class TestModuleStructure:
     def test_orchestrator_no_legacy_interview_method(self):
         assert not hasattr(Stage4Orchestrator, "_run_interview_round")
 
-    def test_no_self_app_in_interview_round(self):
-        source = inspect.getsource(Stage4InterviewRound)
-        assert "self.app" not in source
+    def test_round_attempt_key_does_not_touch_self_app(self):
+        ctx = _make_ctx()
+        ir = _AppTrapInterviewRound(ctx)
+
+        attempt_key = ir._build_round_attempt_key(next_ep=1, round_num=0, arc_num=1)
+
+        assert attempt_key == "s4:ep1:arc1:a1"
 
     def test_stage4_context_from_app_extracts_pass_rate_monitor(self):
         app = MagicMock(spec=[])

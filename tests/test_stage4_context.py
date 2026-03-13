@@ -138,14 +138,17 @@ class TestStage4Context:
         assert ctx.pass_rate_monitor is app_mock.pass_rate_monitor
 
     def test_callbacks_default_none(self, ctx):
-        """[4C-2c] 콜백 7종 기본값 None"""
+        """[4C-2c] 콜백 기본값 None"""
         assert ctx.get_int_input is None
         assert ctx.build_item_acquisition_timeline is None
         assert ctx.load_narrative_summaries is None
         assert ctx.get_protagonist_name is None
+        assert ctx.extract_npc_profiles is None
         assert ctx.generate_narrative_summary is None
         assert ctx.generate_writer_guidance_v60_8 is None
         assert ctx.enrich_director_result is None
+        assert ctx.audit_event is None
+        assert ctx.write_audit_summary is None
         assert ctx.flush_audit_buffer is None
         assert ctx.safe_commit is None
 
@@ -153,23 +156,35 @@ class TestStage4Context:
         """[4C-2c] 콜백 전달 시 정확히 저장"""
         cb_flush = MagicMock()
         cb_commit = MagicMock()
+        cb_audit = MagicMock()
+        cb_summary = MagicMock()
+        cb_extract_npc_profiles = MagicMock()
         ctx = Stage4Context(
             **mock_deps,
+            extract_npc_profiles=cb_extract_npc_profiles,
+            audit_event=cb_audit,
+            write_audit_summary=cb_summary,
             flush_audit_buffer=cb_flush,
             safe_commit=cb_commit,
         )
+        assert ctx.extract_npc_profiles is cb_extract_npc_profiles
+        assert ctx.audit_event is cb_audit
+        assert ctx.write_audit_summary is cb_summary
         assert ctx.flush_audit_buffer is cb_flush
         assert ctx.safe_commit is cb_commit
 
     def test_from_app_extracts_callbacks(self, app_mock):
-        """[4C-2c] from_app가 콜백 7종을 바운드 메서드로 채움"""
+        """[4C-2c] from_app가 콜백 surface를 바운드 메서드로 채움"""
         app_mock._get_int_input = MagicMock()
         app_mock._build_item_acquisition_timeline = MagicMock()
         app_mock._load_narrative_summaries = MagicMock()
         app_mock._get_protagonist_name = MagicMock()
+        app_mock._extract_npc_profiles = MagicMock()
         app_mock._generate_narrative_summary = MagicMock()
         app_mock._generate_writer_guidance_v60_8 = MagicMock()
         app_mock._enrich_director_result = MagicMock()
+        app_mock._audit_event = MagicMock()
+        app_mock._write_audit_summary = MagicMock()
         app_mock._flush_audit_buffer = MagicMock()
         app_mock._safe_commit = MagicMock()
 
@@ -178,9 +193,12 @@ class TestStage4Context:
         assert ctx.build_item_acquisition_timeline is app_mock._build_item_acquisition_timeline
         assert ctx.load_narrative_summaries is app_mock._load_narrative_summaries
         assert ctx.get_protagonist_name is app_mock._get_protagonist_name
+        assert ctx.extract_npc_profiles is app_mock._extract_npc_profiles
         assert ctx.generate_narrative_summary is app_mock._generate_narrative_summary
         assert ctx.generate_writer_guidance_v60_8 is app_mock._generate_writer_guidance_v60_8
         assert ctx.enrich_director_result is app_mock._enrich_director_result
+        assert ctx.audit_event is app_mock._audit_event
+        assert ctx.write_audit_summary is app_mock._write_audit_summary
         assert ctx.flush_audit_buffer is app_mock._flush_audit_buffer
         assert ctx.safe_commit is app_mock._safe_commit
 
@@ -195,8 +213,85 @@ class TestStage4Context:
         assert ctx.get_int_input is None
         assert ctx.generate_writer_guidance_v60_8 is None
         assert ctx.enrich_director_result is None
+        assert ctx.extract_npc_profiles is None
+        assert ctx.audit_event is None
+        assert ctx.write_audit_summary is None
         assert ctx.flush_audit_buffer is None
         assert ctx.safe_commit is None
+
+    def test_from_app_binds_real_item_timeline_method(self, mock_deps):
+        class RealApp:
+            def __init__(self, deps):
+                self.ui = deps["ui"]
+                self.current_project = deps["current_project"]
+                self.agents = deps["agents"]
+                self.sys = deps["sys"]
+                self.state_tracker = deps["state_tracker"]
+                self.timeline_calls = []
+
+            def _build_item_acquisition_timeline(self, up_to_ep):
+                self.timeline_calls.append(up_to_ep)
+                return f"timeline:{up_to_ep}"
+
+        app = RealApp(mock_deps)
+
+        ctx = Stage4Context.from_app(app)
+
+        assert ctx.build_item_acquisition_timeline.__self__ is app
+        assert ctx.build_item_acquisition_timeline(4) == "timeline:4"
+        assert app.timeline_calls == [4]
+
+    def test_from_app_binds_real_audit_callbacks(self, mock_deps):
+        class RealApp:
+            def __init__(self, deps):
+                self.ui = deps["ui"]
+                self.current_project = deps["current_project"]
+                self.agents = deps["agents"]
+                self.sys = deps["sys"]
+                self.state_tracker = deps["state_tracker"]
+                self.audit_calls = []
+                self.summary_calls = []
+
+            def _audit_event(self, event_type, message, data=None):
+                self.audit_calls.append((event_type, message, data))
+
+            def _write_audit_summary(self, tag="snapshot"):
+                self.summary_calls.append(tag)
+
+        app = RealApp(mock_deps)
+
+        ctx = Stage4Context.from_app(app)
+
+        assert ctx.audit_event.__self__ is app
+        assert ctx.write_audit_summary.__self__ is app
+        ctx.audit_event("stage4_complete", "done", {"target_ep": 4})
+        ctx.write_audit_summary("stage4_complete")
+        assert app.audit_calls == [("stage4_complete", "done", {"target_ep": 4})]
+        assert app.summary_calls == ["stage4_complete"]
+
+    def test_from_app_binds_real_extract_npc_profiles_callback(self, mock_deps):
+        class RealApp:
+            def __init__(self, deps):
+                self.ui = deps["ui"]
+                self.current_project = deps["current_project"]
+                self.agents = deps["agents"]
+                self.sys = deps["sys"]
+                self.state_tracker = deps["state_tracker"]
+                self.extract_calls = []
+
+            def _extract_npc_profiles(self, arc_data):
+                self.extract_calls.append(arc_data)
+                return {"장현석": {"name": "장현석", "role": "적대 세력 수장"}}
+
+        app = RealApp(mock_deps)
+
+        ctx = Stage4Context.from_app(app)
+
+        assert ctx.extract_npc_profiles.__self__ is app
+        assert ctx.extract_npc_profiles({"summary": "장현석 등장"}) == {
+            "장현석": {"name": "장현석", "role": "적대 세력 수장"}
+        }
+        assert app.extract_calls == [{"summary": "장현석 등장"}]
 
 
 # ── Stage4Orchestrator ctx 테스트 ────────────────────────────

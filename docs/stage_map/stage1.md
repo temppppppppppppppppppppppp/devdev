@@ -123,6 +123,7 @@
   - `총 N개 아크 → M권` 로그 확인.
   - 권별 `검수 완료 (분량: X자)` 로그 확인.
   - 완료 후 `_show_volume_table(final_volumes)` 출력 확인.
+  - 이 테이블은 post-save UI surface다. 저장 truth는 `volumes` anchor와 `current_project.volumes` 쪽이다.
 
 ## Metrics
 - Throughput:
@@ -172,9 +173,12 @@
   - `_validate_volume_boundaries()`가 `main_a.py`에 남아 있어 Stage01Helpers 단독 재사용성과 테스트 분리가 약하다.
 - Risk 5:
   - 전용 Stage 1 E2E가 없어 실제 장편 입력에서 권 경계 검증과 연속성 누적이 어떻게 작동하는지 자동으로 보장하지 못한다.
+- Risk 6:
+  - `_show_volume_table()`는 live runtime consumer가 있지만 `hasattr(app, "_show_volume_table")`로 느슨하게 호출된다. direct facade-level regression 없이 UI contract가 약한 편이다.
 
 ## Last Verified
-- Date: 2026-03-10
-- Commit: `d2d935b`
+- Date: 2026-03-13
+- Commit: `e18f9910`
+- Workspace State: dirty
 - Code Sync (Yes/No): Yes
 - Verified By: Codex

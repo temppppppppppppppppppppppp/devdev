@@ -1,75 +1,76 @@
-# Gotchas — 새 세션 AI 주의사항
+# Gotchas
 
-> 이 문서를 먼저 읽어라. 코드 보기 전에 알아야 할 함정들.
+> Read this before using stage_map for debugging or remediation work.
 
-## G-1. Stage 3 REJECT는 실제 운영에서 잘 안 터진다
-**현상**: Director 비교 선택에서 보통 최소 1개 후보가 높은 점수를 받아 REJECT 루프가 길게 이어지지 않는다. 운영 관측(2026-02-25, `0225_1`)에서도 이 패턴이 반복됐다.  
-**원인**: Stage 3은 Director 비교 선택 후 점수 게이트(80)만 추가 적용하는 구조라, "모순 없음 = 고득점" 경향이 있으면 REJECT 빈도가 낮아진다.  
-**실제 영향**: `_inplace_patch_blueprint()`/전면 재생성 분기가 구현돼 있어도 실사용 빈도는 낮을 수 있다.  
-**확인 위치**: `modules/domain/agents/three_phase_blueprint_generator.py:334`, `modules/domain/agents/three_phase_blueprint_generator.py:368`, `modules/domain/agents/director_ensemble.py:143`, `docs/stage_map/ENHANCE_ORDER.md`
+## G-1. Stage 3 now uses the shared 90-point QualityGate
+**현상**: Stage 3도 더 이상 별도 Blueprint 전용 gate를 쓰지 않는다.  
+**원인**: `three_phase_blueprint_generator.py`가 `scoring.quality_gate_score`를 읽도록 정렬됐다.  
+**실제 영향**: 예전 `80 gate`를 전제로 논의하면 retry, PASS_WITH_FIX, PASS_WITH_WARNING 해석이 틀어진다.  
+**확인 위치**: `modules/domain/agents/three_phase_blueprint_generator.py`, `config/settings/validation.yaml`
 
-## G-2. PASS_WITH_WARNING은 생각보다 쉽게 발동한다
-**현상**: 재시도 종료 후 `last_score >= 50`이면 최종 verdict를 `PASS_WITH_WARNING`으로 올린다.  
-**원인**: 실패 후 긴급 폴백 조건이 `PatchModeThresholds.REWRITE(50)` 기준으로 열려 있기 때문이다.  
-**실제 영향**: "완전 실패(FAILED)"는 `score < 50`이거나 생성 결과 자체가 없는 경우로 수렴한다.  
-**확인 위치**: `modules/domain/agents/three_phase_blueprint_generator.py:448`, `modules/domain/agents/three_phase_blueprint_generator.py:452`, `modules/core/constants.py:563`
+## G-2. PASS_WITH_FIX는 최초 QualityGate를 bypass하지만 영구 면제는 아니다
+**현상**: `PASS_WITH_FIX`는 첫 진입에서 즉시 gate 강등되지 않지만, patch 재심사에서 `PASS`가 나오면 다시 90점 gate를 탄다.  
+**원인**: Director 주권을 보존하면서도 최종 PASS는 gate를 다시 통과시키는 구조다.  
+**실제 영향**: `PASS_WITH_FIX`를 "무조건 통과"로 읽으면 안 된다. patch loop 안에서 다시 실패할 수 있다.  
+**확인 위치**: `modules/domain/agents/three_phase_blueprint_generator.py`, `modules/core/stage4_interview_round.py`
 
-## G-3. Blueprint txt는 사람이 읽는 백업이고, Stage 4 입력은 DB다
-**현상**: `plans/blueprints/*.txt`를 고쳐도 Stage 4 입력에 반영되지 않는다.  
-**원인**: Stage 4는 `current_project.get_blueprint(next_ep)` -> `db.get_blueprint()` 경로만 사용한다. txt는 export artifact다.  
-**실제 영향**: Blueprint 수정은 DB(`blueprints`) 기준으로 해야 한다. txt-only 수정은 무효다.  
-**확인 위치**: `modules/core/stage4_orchestrator.py:335`, `modules/core/project_manager.py:832`, `modules/core/db_manager.py:774`, `modules/core/project_manager.py:380`
+## G-3. PASS_WITH_WARNING은 여전히 저장 가능한 degraded outcome이다
+**현상**: Stage 3 재시도 소진 후 마지막 점수가 `rewrite_below(50)` 이상이면 `PASS_WITH_WARNING`으로 저장될 수 있다.  
+**원인**: 긴급 폴백 경로가 남아 있고 `_stage3_meta.quality_risk`가 함께 붙는다.  
+**실제 영향**: "저장됐다 = 깨끗한 PASS"가 아니다. Stage 4는 `_stage3_meta`를 보고 경고 강도를 높일 수 있다.  
+**확인 위치**: `modules/domain/agents/three_phase_blueprint_generator.py`, `modules/core/stage4_orchestrator.py`
 
-## G-4. WARNING 로그가 많아도 실제 오류가 아닐 수 있다
-**현상**: 정보성 메시지가 `logging.warning`으로 출력되는 구간이 있다.  
-**원인**: 레거시 로깅 레벨 정리가 완전히 끝나지 않았다.  
-**실제 영향**: WARNING 개수만으로 장애 판단하면 오탐이 난다. 메시지 본문/컨텍스트를 같이 봐야 한다.  
-**확인 위치**: `modules/domain/agents/blueprint_ensemble.py:188`, `modules/domain/agents/unified_blueprint_validator.py:103`
+## G-4. Blueprint txt와 draft txt는 사람용 export이고 DB가 SSOT다
+**현상**: `plans/blueprints/*.txt`, `drafts/ep_XXXX.txt`를 고쳐도 stage handoff truth가 바뀌지 않을 수 있다.  
+**원인**: Stage 4는 `current_project.get_blueprint(next_ep)` -> DB `blueprints`를 읽고, 원고 SSOT도 `manuscripts` 테이블이다.  
+**실제 영향**: export 파일만 수정해서는 다음 stage 입력을 고친 것이 아니다.  
+**확인 위치**: `modules/core/project_manager.py`, `modules/core/db_manager.py`, `modules/core/stage4_orchestrator.py`
 
-## G-5. Director 주권주의를 Python 게이트가 덮어쓰면 안 된다
-**현상**: Director 프롬프트 기준보다 Python QualityGate가 높으면, Director PASS를 Python이 REJECT로 뒤집는 역전이 발생한다.  
-**원인**: Stage별 점수 게이트를 분리하지 않으면 기준선이 충돌한다.  
-**실제 영향**: Stage 3은 `blueprint_quality_gate_score=80`으로 Director 기준과 맞춰야 한다. 새 코드도 이 원칙을 유지해야 한다.  
-**확인 위치**: `modules/domain/agents/three_phase_blueprint_generator.py:368`, `config/settings/validation.yaml:34`, `config/settings/validation.yaml:35`
+## G-5. Stage 4 patch routing의 live branch key는 legacy 중간 임계값이 아니다
+**현상**: 현재 Stage 4 분기는 `fix_scope`, `inplace_below`, `rewrite_below` 중심이다.  
+**원인**: 예전 문서에 남은 80점대 중간 patch threshold 설명은 더 이상 live branch key가 아니다.  
+**실제 영향**: 구 문서 기준으로 Stage 4 retry를 설명하면 잘못된 remediation이 나온다.  
+**확인 위치**: `modules/core/stage4_interview_round.py`, `config/settings/validation.yaml`
 
-## G-6. quality gate 임계값은 Stage별로 다르다
-**현상**: 같은 `PASS`여도 Stage별 최소 점수가 다르다.  
-**원인**: Stage 3은 Blueprint 전용 게이트(80), Stage 2/4는 공통 게이트(90)로 분리 설계됐다.  
-**실제 영향**: 임계값을 통합하거나 복붙 수정하면 Stage 간 품질/재시도 동작이 깨진다.  
-**확인 위치**: `config/settings/validation.yaml:34`, `config/settings/validation.yaml:35`, `modules/core/stage4_interview_round.py:873`, `modules/core/stage2_finalizer.py:182`
+## G-6. Stage 4 EMPTY와 attempt sink의 ERROR는 같은 사건을 다른 표면에서 본 것이다
+**현상**: Interview round는 caller에 `verdict="EMPTY"`를 돌려주지만, `stage_attempts`에는 `verdict="ERROR"` + `reject_reason="empty_candidates"`가 찍힌다.  
+**원인**: caller-facing semantics와 observability sink labeling이 완전히 동일하지 않다.  
+**실제 영향**: 운영 로그, DB 집계, canary proof를 섞어 볼 때 label mismatch를 오탐으로 읽지 말아야 한다.  
+**확인 위치**: `modules/core/stage4_interview_round.py`
 
-## G-7. 수치 모순은 "후보 탈락"과 "라운드 실패"를 구분해서 봐야 한다
-**현상**: Director는 후보별로 수치/사실 모순을 잡아 특정 후보만 탈락시킬 수 있다.  
-**원인**: 비교 프롬프트가 후보별 모순 검사를 강제하고, `contradictions` 필드를 별도로 반환한다.  
-**실제 영향**: 모순 검출이 있어도 다른 후보가 PASS면 라운드는 통과한다. 운영 해석 시 "후보 REJECT"와 "라운드 REJECT"를 분리해야 한다.  
-**확인 위치**: `modules/domain/agents/director_ensemble.py:129`, `modules/domain/agents/director_ensemble.py:136`, `modules/domain/agents/director_ensemble.py:190`, `modules/domain/agents/three_phase_blueprint_generator.py:349`, `docs/stage_map/ENHANCE_ORDER.md`
+## G-7. Stage2Context에는 아직 `world_state` 슬롯이 없다
+**현상**: Stage 2 오케스트레이터는 `getattr(ctx, "world_state", None)`로 bind를 시도하지만, Stage2Context는 dedicated `world_state` 속성을 제공하지 않는다.  
+**원인**: Stage 2 DI surface가 확장되는 중인데 context slot과 consumer가 완전히 맞물리지는 않았다.  
+**실제 영향**: Stage 2 WorldState 배선이 있다고 가정하고 문서를 쓰거나 테스트를 설계하면 틀릴 수 있다.  
+**확인 위치**: `modules/core/stage2_context.py`, `modules/core/stage2_orchestrator.py`
 
-## G-8. Arc는 단일 anchor(`key='arcs'`)로 저장된다
-**현상**: Arc는 화별 row가 아니라 하나의 JSON 리스트로 관리된다.
-**원인**: `save_v20_anchor("arcs", data)`가 `anchors.key='arcs'`를 덮어쓰는 구조다.
-**실제 영향**: `DELETE FROM anchors WHERE key='arcs'`는 Stage 2 전체 Arc를 한 번에 지운다(메뉴 88).
-**확인 위치**: `modules/core/project_manager.py:264`, `modules/core/project_manager.py:272`, `modules/core/db_manager.py:202`, `modules/core/services/project_service.py:65`
+## G-8. `validate_arc_data_fields`는 live repair seam이다
+**현상**: `main_a.py` facade -> `Stage2Context` -> `Stage2Finalizer` -> `Stage3Orchestrator`로 이어지는 실제 repair hook가 있다.  
+**원인**: Arc 구조 복구가 여러 stage에서 재사용되도록 callback seam으로 묶여 있다.  
+**실제 영향**: mock-only context tests는 이 seam의 live binding drift를 가릴 수 있다.  
+**확인 위치**: `main_a.py`, `modules/core/stage2_context.py`, `modules/core/stage2_finalizer.py`, `modules/core/stage3_orchestrator.py`
 
-## G-9. PASS_WITH_FIX는 QualityGate를 bypass한다 (TF-46)
-**현상**: Director가 PASS_WITH_FIX를 내려도 QualityGate에 걸리지 않는다.
-**원인**: QualityGate score < 90 → REJECT 전환은 **PASS verdict에만** 적용. PASS_WITH_FIX는 Director 주권 존중을 위해 의도적 bypass.
-**실제 영향**: PASS_WITH_FIX + score 60이면 QualityGate를 통과하여 InPlace patch 기회를 받는다. 이것이 설계 의도다.
-**확인 위치**: `modules/core/stage4_interview_round.py` (QualityGate 분기), `modules/core/stage2_finalizer.py`
+## G-9. Stage 1 `_show_volume_table()`는 live지만 강한 계약 surface는 아니다
+**현상**: Stage 1 완료 후 `_show_volume_table(final_volumes)`가 호출되지만, `Stage01Helpers`는 `hasattr(app, "_show_volume_table")`로 optional seam처럼 다룬다.  
+**원인**: data commit과 operator-facing presentation이 느슨하게 결합돼 있다.  
+**실제 영향**: UI 출력은 저장 확인용 힌트이지, Stage 1 무결성 자체를 보장하는 계약은 아니다.  
+**확인 위치**: `modules/core/stage01_helpers.py`, `main_a.py`, `modules/core/services/ui_service.py`
 
-## G-10. constraint_block은 retry마다 초기화된다 (TF-47)
-**현상**: Stage 2 retry loop에서 advisory 텍스트가 누적되지 않는다.
-**원인**: `_base_constraint_block`으로 매 시도마다 원본 초기화. advisory는 해당 시도에서만 유효.
-**실제 영향**: 이전 시도의 Python 자동수정/Pre-Director advisory가 다음 시도에 중복 누적되지 않는다.
-**확인 위치**: `modules/core/stage2_orchestrator.py:418`, `modules/core/stage2_orchestrator.py:421`
+## G-10. Stage 0 `reference_excerpt`는 50,000자까지 커질 수 있고 Stage 4에 raw 주입된다
+**현상**: Stage 0는 `reference_excerpt`를 최대 50,000자로 만들고, Chief Writer 공통 프롬프트는 이를 별도 추가 절삭 없이 붙인다.  
+**원인**: Stage 0 cap과 Stage 4 prompt budgeting이 별개 레이어다.  
+**실제 영향**: 큰 reference excerpt는 context pressure를 키우지만 Stage 0 alone만 보고는 그 영향을 체감하기 어렵다.  
+**확인 위치**: `modules/core/stage0/style_extractor.py`, `modules/domain/agents/chief_writer_context.py`
 
-## G-11. patch_state_updates JSON 파싱은 rfind 기반이다 (TF-47)
-**현상**: InPlace patch가 반환하는 `patch_state_updates` JSON 블록을 `rfind` + `json.loads`로 추출한다.
-**원인**: 기존 regex `\{.*?\}`는 non-greedy라 중첩 dict에서 첫 `}`에 멈추는 버그가 있었다.
-**실제 영향**: 중첩 dict(3단계+)도 안전하게 파싱. regex 폴백은 flat dict용 보험으로 유지.
-**확인 위치**: `modules/domain/agents/chief_writer.py:774`
+## G-11. Stage 4 NPC profile sourcing은 facade-first, AssetLibrary fallback이다
+**현상**: 현재 `_build_cv_context()`는 `npc_profiles={}` 고정이 아니라 `extract_npc_profiles` seam을 먼저 보고, 실패하면 MasterBible AssetLibrary 필터로 폴백한다.  
+**원인**: earlier bypass 문제를 줄이기 위해 facade-or-fallback 구조가 들어갔다.  
+**실제 영향**: NPC validation 문제를 볼 때는 "무조건 빈 dict"라는 옛 전제를 버려야 한다. 대신 facade failure와 fallback precision을 구분해야 한다.  
+**확인 위치**: `modules/core/stage4_context.py`, `modules/core/stage4_interview_round.py`
 
-## G-12. state_updates 우선순위는 Director > CW이다
-**현상**: `director_ensemble.py`에서 `result.get("state_updates") or selected_candidate.get("state_updates")`로 Director 보정값 우선.
-**원인**: Director 프롬프트가 CW state_updates를 "기반으로 보정"하여 superset(투자 장르 capital 등) 반환.
-**실제 영향**: CW 우선으로 바꾸면 투자 장르 capital 키 등 보정값이 손실된다. **절대 순서를 바꾸면 안 된다.**
-**확인 위치**: `modules/domain/agents/director_ensemble.py:702`, `config/prompts/director.yaml:198`
+## Last Verified
+- Date: 2026-03-13
+- Commit: `e18f9910`
+- Workspace State: dirty
+- Code Sync (Yes/No): Yes
+- Verified By: Codex

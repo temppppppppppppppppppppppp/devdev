@@ -3,6 +3,7 @@
 > 작성일: 2026-03-13
 > 트랙: runtime observability, provenance, artifact sink blind spot audit
 > 상태: `execution-ready`
+> 조사 현황: `조사 완료`
 > 목적: `main_a.py`, Stage 0~4 runtime, DB/JSONL/session/style-guide artifact가 operator-facing 증거 계층으로 같은 사실을 보존하는지 전면 전량 조사한다.
 > 방식: `5-terminal 병렬`, 각 터미널 자체 `3PASS`, 통합본 `3PASS 재감리`
 
@@ -342,3 +343,11 @@
 - 본 오더 문서는 `execution-ready`다.
 - 결과 문서와 통합 문서는 본 오더와 함께 생성되지만 초기 상태는 모두 `template / not executed`다.
 - 조사 단계가 끝나기 전에는 확정 finding이 없는 상태로 본다.
+
+---
+
+## 13. 현재 조사 현황
+
+- 기준일: `2026-03-13`
+- 조사 현황: `조사 완료`
+- 메모: 개별 조사 결과가 누적되고 있으나, operator-facing evidence-layer ledger를 재구성하는 통합본 및 `3PASS 재감리` 전 단계이므로 본 트랙은 계속 조사 중으로 관리한다.

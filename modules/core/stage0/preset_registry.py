@@ -534,11 +534,11 @@ class PresetRegistry:
                 return str(value)
             elif field_def.type == "list":
                 if isinstance(value, list):
-                    return list(value)  # [P0] 얕은 복사 — 공유 참조 방지
+                    return copy.deepcopy(value)
                 return [value] if value else []
             elif field_def.type == "dict":
                 if isinstance(value, dict):
-                    return dict(value)  # [P0] 얕은 복사 — 공유 참조 방지
+                    return copy.deepcopy(value)
                 return {}
             elif field_def.type == "enum":
                 if value in field_def.enum_values:

@@ -16,6 +16,7 @@ import asyncio
 import logging
 
 from modules.core.constants import VolumeSettings
+from modules.core.stage2_contracts import TACTICAL_DOC_DUPLICATE_THRESHOLD
 
 DEFAULT_EP_COUNT = VolumeSettings.EPISODES_PER_ARC
 
@@ -169,6 +170,53 @@ class Stage2Orchestrator:
         lines.extend(["", "=" * 60, ""])
         return "\n".join(lines)
 
+    def _resolve_arc_number_for_episode(self, ep_num: int) -> int:
+        """Resolve manuscript frontier to an arc number even when DI callback is absent."""
+        try:
+            ep_num = int(ep_num)
+        except (TypeError, ValueError):
+            return 0
+        if ep_num <= 0:
+            return 0
+
+        calc_cb = getattr(self.ctx, "calculate_arc_from_episode", None)
+        if callable(calc_cb):
+            try:
+                resolved = int(calc_cb(ep_num))
+                if resolved > 0:
+                    return resolved
+            except Exception as exc:
+                self.ctx.ui.log(f"⚠️ [Stage2] arc mapping callback 실패 - fallback 사용: {exc}")
+        else:
+            self.ctx.ui.log("⚠️ [Stage2] arc mapping callback 부재 - fallback 사용")
+
+        def _safe_int(value) -> int:
+            try:
+                return int(value)
+            except (TypeError, ValueError):
+                return 0
+
+        arcs = getattr(getattr(self.ctx, "current_project", None), "arcs", None)
+        if isinstance(arcs, list):
+            for idx, arc in enumerate(arcs, start=1):
+                if not isinstance(arc, dict):
+                    continue
+                ep_start = _safe_int(
+                    arc.get("ep_start")
+                    or arc.get("start_ep")
+                    or arc.get("episode_start")
+                    or arc.get("start_episode")
+                )
+                ep_end = _safe_int(arc.get("ep_end") or arc.get("end_ep") or arc.get("episode_end"))
+                if ep_start > 0 and ep_end <= 0:
+                    ep_count = _safe_int(arc.get("ep_count"))
+                    if ep_count > 0:
+                        ep_end = ep_start + ep_count - 1
+                if ep_start > 0 and ep_end > 0 and ep_start <= ep_num <= ep_end:
+                    return _safe_int(arc.get("arc_no")) or idx
+
+        return (ep_num - 1) // DEFAULT_EP_COUNT + 1
+
     # ═══════════════════════════════════════════════════════════════════════
     # 메인 파이프라인
     # ═══════════════════════════════════════════════════════════════════════
@@ -276,7 +324,7 @@ class Stage2Orchestrator:
             else 0
         )
         if existing_ms_max_ep > 0:
-            skip_arc_no = self.ctx.calculate_arc_from_episode(existing_ms_max_ep)
+            skip_arc_no = self._resolve_arc_number_for_episode(existing_ms_max_ep)
             if skip_arc_no > done_count:
                 self.ctx.ui.log(f"📂 [Manuscript Detected] 기존 원고 {existing_ms_max_ep}화까지 발견")
                 self.ctx.ui.log(
@@ -991,7 +1039,7 @@ class Stage2Orchestrator:
         self,
         candidate_text: str,
         reference_texts: list,
-        threshold: float = 0.98,
+        threshold: float = TACTICAL_DOC_DUPLICATE_THRESHOLD,
     ) -> bool:
         """[B-1-6] Thin wrapper for backward compatibility."""
         return self.validation_pipeline._is_tactical_doc_duplicate(candidate_text, reference_texts, threshold)

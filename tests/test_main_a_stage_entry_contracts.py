@@ -1,7 +1,9 @@
+import inspect
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import main_a
+from modules.core.stage2_contracts import TACTICAL_DOC_DUPLICATE_THRESHOLD
 
 
 def test_get_max_episode_from_manuscripts_uses_hybrid_project_head(tmp_path):
@@ -113,3 +115,8 @@ def test_stage2_wrapper_calls_resume_status_and_syncs_ctx_state(monkeypatch):
     run_mock.assert_called_once_with("stage2-coro")
     assert app.state_tracker is sentinel_tracker
     assert app._state_tracker_loaded_arcs == 9
+
+
+def test_stage2_duplicate_helper_signature_uses_shared_threshold():
+    default = inspect.signature(main_a.SovereignApp._is_tactical_doc_duplicate).parameters["threshold"].default
+    assert default == TACTICAL_DOC_DUPLICATE_THRESHOLD

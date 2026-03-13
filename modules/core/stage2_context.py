@@ -116,9 +116,9 @@ class Stage2Context:
             pass_rate_monitor, quality_dashboard, quality_amplifier,
             agent_intelligence, constitutional_checker, self_reflector,
             use_arc_corrector
-    [4C-3c] 콜백 21종: audit_event, cumulative_state_cache,
+    [4C-3c] 콜백 22종: audit_event, cumulative_state_cache,
             cumulative_state_cache_key, write_audit_summary,
-            validate_arc_mapping, validate_arc_integrity,
+            validate_arc_data_fields, validate_arc_mapping, validate_arc_integrity,
             state_tracker_loaded_arcs, safe_commit_async,
             get_max_episode_from_manuscripts, get_int_input,
             generate_structured_arc_feedback,
@@ -138,6 +138,7 @@ class Stage2Context:
         "agents",
         "sys",
         "state_tracker",
+        "world_state",
         # [4C-3b] 확장 18종
         "selected_genre",
         "preset_registry",
@@ -164,6 +165,7 @@ class Stage2Context:
         "cumulative_state_cache",
         "cumulative_state_cache_key",
         "write_audit_summary",
+        "validate_arc_data_fields",
         "validate_arc_mapping",
         "validate_arc_integrity",
         "state_tracker_loaded_arcs",
@@ -198,6 +200,7 @@ class Stage2Context:
         agents,
         sys,
         state_tracker,
+        world_state=None,
         # [4C-3b] 확장 — 모두 optional
         selected_genre=None,
         preset_registry=None,
@@ -224,6 +227,7 @@ class Stage2Context:
         cumulative_state_cache=None,
         cumulative_state_cache_key=None,
         write_audit_summary=None,
+        validate_arc_data_fields=None,
         validate_arc_mapping=None,
         validate_arc_integrity=None,
         state_tracker_loaded_arcs=None,
@@ -253,6 +257,7 @@ class Stage2Context:
         self.agents = agents
         self.sys = sys
         self.state_tracker = state_tracker
+        self.world_state = world_state
         self.selected_genre = selected_genre
         self.preset_registry = preset_registry
         self.perf_timer = perf_timer
@@ -277,6 +282,7 @@ class Stage2Context:
         self.cumulative_state_cache = cumulative_state_cache
         self.cumulative_state_cache_key = cumulative_state_cache_key
         self.write_audit_summary = write_audit_summary
+        self.validate_arc_data_fields = validate_arc_data_fields
         self.validate_arc_mapping = validate_arc_mapping
         self.validate_arc_integrity = validate_arc_integrity
         self.state_tracker_loaded_arcs = state_tracker_loaded_arcs
@@ -315,6 +321,7 @@ class Stage2Context:
             agents=app.agents,
             sys=app.sys,
             state_tracker=_safe_getattr(app, "state_tracker", None),
+            world_state=_safe_getattr(app, "world_state", None),
             selected_genre=_safe_getattr(app, "selected_genre", None),
             preset_registry=_safe_getattr(app, "preset_registry", None),
             perf_timer=_safe_getattr(app, "perf_timer", None),
@@ -339,6 +346,7 @@ class Stage2Context:
             cumulative_state_cache=_safe_getattr(app, "_cumulative_state_cache", None),
             cumulative_state_cache_key=_safe_getattr(app, "_cumulative_state_cache_key", None),
             write_audit_summary=_safe_getattr(app, "_write_audit_summary", None),
+            validate_arc_data_fields=_safe_getattr(app, "_validate_arc_data_fields", None),
             validate_arc_mapping=_safe_getattr(app, "_validate_arc_mapping", None),
             validate_arc_integrity=_safe_getattr(app, "_validate_arc_integrity", None),
             state_tracker_loaded_arcs=_safe_getattr(app, "_state_tracker_loaded_arcs", None),

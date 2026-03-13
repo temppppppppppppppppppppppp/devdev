@@ -12,6 +12,7 @@
 
 import json
 import logging
+import re
 
 from modules.core.project_support import (
     EXTERNAL_POV_INSERT_POLICY_OPTIONS,
@@ -33,6 +34,56 @@ class Stage01Helpers:
 
     def __init__(self, app) -> None:
         self.app = app
+
+    @staticmethod
+    def validate_volume_boundaries(vol_data, vol_idx):
+        """권 전략 문서의 미래 권 누수와 비정상 payload를 검증한다."""
+        if not isinstance(vol_data, dict):
+            return {
+                "status": "REJECT",
+                "reason": "권 설계 결과 구조가 유효하지 않습니다.",
+                "feedback": "dict 형태의 권 설계 결과를 다시 생성하십시오.",
+            }
+
+        strategy = vol_data.get("strategy_doc", "")
+        if isinstance(strategy, (dict, list)):
+            strategy = json.dumps(strategy, ensure_ascii=False)
+        elif strategy is None:
+            return {
+                "status": "REJECT",
+                "reason": "strategy_doc가 비어 있습니다.",
+                "feedback": "권 전략 문서를 문자열 또는 JSON 직렬화 가능한 구조로 다시 생성하십시오.",
+            }
+        elif not isinstance(strategy, str):
+            return {
+                "status": "REJECT",
+                "reason": f"strategy_doc 타입이 지원되지 않습니다: {type(strategy).__name__}",
+                "feedback": "strategy_doc를 문자열 또는 JSON 직렬화 가능한 구조로 다시 생성하십시오.",
+            }
+
+        future_mentions = re.findall(r"제\s*(\d+)\s*권", strategy)
+        for mention in future_mentions:
+            try:
+                mention_vol = int(mention)
+            except ValueError:
+                continue
+            if mention_vol > vol_idx:
+                return {
+                    "status": "REJECT",
+                    "reason": f"미래 권({mention}권) 정보 누수 감지",
+                    "feedback": f"제 {vol_idx}권 설계에서 {mention}권 내용을 언급하지 마십시오.",
+                }
+
+        future_keywords = ["이후", "다음 권", "훗날", "나중에", "앞으로"]
+        future_count = sum(strategy.count(kw) for kw in future_keywords)
+        if future_count > 3:
+            return {
+                "status": "WARNING",
+                "reason": f"미래 지향 표현 과다 ({future_count}회)",
+                "feedback": "현재 권의 사건에만 집중하십시오.",
+            }
+
+        return {"status": "PASS"}
 
     # ─────────────────────────────────────────────────────────────
     # [4C-1b-a] _phase_0_recovery
@@ -602,11 +653,13 @@ class Stage01Helpers:
     @staticmethod
     def _s0_save_results(app, stage0_manager, bible, treatment):
         """공통 후처리: Bible/Treatment DB 저장 + 리로드."""
+        bible_saved = False
         if bible:
             try:
                 injected_blocks = Stage01Helpers._ensure_plot_roadmap(app, bible, treatment)
                 app.current_project.master_bible = bible
                 app.current_project.save_v20_anchor("bible", bible)
+                bible_saved = True
                 app.ui.log("✅ Bible이 DB에 저장되었습니다.")
                 if injected_blocks:
                     app.ui.log(f"   ✅ plot_roadmap 준비 완료: {injected_blocks} 블록")
@@ -630,17 +683,24 @@ class Stage01Helpers:
                 logging.warning(f"❌ 저장 중 오류: {e}")
 
         if treatment:
-            try:
-                treatment_path = app.current_project.paths.root / "treatment_generated.json"
-                with open(treatment_path, "w", encoding="utf-8") as f:
-                    json.dump({"treatments": treatment}, f, ensure_ascii=False, indent=2)
-                app.ui.log(f"✅ Treatment 저장: {treatment_path}")
-            except Exception as e:
-                logging.warning(f"❌ Treatment 저장 실패: {e}")
+            if bible and not bible_saved:
+                logging.warning("⚠️ Bible 저장 실패로 Treatment 저장을 건너뜁니다.")
+                app.ui.log("⚠️ Bible 저장 실패로 Treatment 저장을 건너뜁니다.")
+            else:
+                try:
+                    treatment_path = app.current_project.paths.root / "treatment_generated.json"
+                    with open(treatment_path, "w", encoding="utf-8") as f:
+                        json.dump({"treatments": treatment}, f, ensure_ascii=False, indent=2)
+                    app.ui.log(f"✅ Treatment 저장: {treatment_path}")
+                except Exception as e:
+                    logging.warning(f"❌ Treatment 저장 실패: {e}")
 
-        if bible:
-            app.current_project._load_from_db()
-            app.ui.log("✨ [Stage 0 Complete] 프로젝트 설정이 완료되었습니다.")
+        if bible_saved:
+            try:
+                app.current_project._load_from_db()
+                app.ui.log("✨ [Stage 0 Complete] 프로젝트 설정이 완료되었습니다.")
+            except Exception as e:
+                logging.warning(f"❌ Stage 0 결과 리로드 실패: {e}")
 
         try:
             input("\n[Enter] 메뉴로 돌아가기")
@@ -773,7 +833,7 @@ class Stage01Helpers:
                     app.ui.log(f"   ⚠️ [Low Density] 분량 부족({doc_len}/2000). 다시 설계합니다.")
                     return False
 
-                boundary_check = app._validate_volume_boundaries(vol_data, _vi)
+                boundary_check = self.validate_volume_boundaries(vol_data, _vi)
                 if boundary_check.get("status") == "REJECT":
                     app.ui.log(f"   🚨 [Boundary Violation] {boundary_check.get('reason')}")
                     app.ui.log(f"   📝 수정 요청: {boundary_check.get('feedback')}")

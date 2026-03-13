@@ -150,6 +150,7 @@ async def _run_stage2_three_blocks(db: DBManager, monkeypatch) -> dict:
 
     async def _safe_commit_async():
         db.conn.commit()
+        return True
 
     async def _enrich_passthrough(curr_b, _prev_b, _next_b, _seeds, transfused_history=""):
         payload = curr_b if isinstance(curr_b, dict) else {"context": str(curr_b)}

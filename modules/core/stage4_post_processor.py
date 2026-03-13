@@ -7,15 +7,12 @@ import logging
 import os
 import re
 from contextlib import nullcontext as _nullcontext
-from pathlib import Path
 
 from modules.core.genre_schema_builder import is_wuxia
 from modules.core.metrics_collector import get_metrics_collector
 from modules.core.project_support import resolve_project_pov_contract
 from modules.core.quality_signal_metrics import compute_quality_signal_bundle, extract_warning_count
 from modules.core.soft_failure import report_soft_failure, resolve_project_log_dir
-
-_PROJECTS_DIR = "projects"
 
 
 class Stage4PostProcessor:
@@ -453,8 +450,9 @@ class Stage4PostProcessor:
 
         # [V60.87 C] 로그 파일 저장
         try:
-            logs_dir = os.path.join(_PROJECTS_DIR, self.ctx.current_project.name, "logs")
-            os.makedirs(logs_dir, exist_ok=True)
+            logs_dir = self._resolve_project_log_dir()
+            if logs_dir is not None:
+                os.makedirs(logs_dir, exist_ok=True)
 
             # [DB-Eff-P2] failure_learner: 세션 종료 시 main_a.py가 reflexion_memory DB에 저장.
             # 매 화 중간 저장 불필요 — 누적 학습 이력은 세션 내 메모리 유지로 충분.

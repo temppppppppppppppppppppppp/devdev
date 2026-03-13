@@ -7,6 +7,7 @@ import re
 from difflib import SequenceMatcher
 
 from modules.core.constants import AIModels
+from modules.core.stage2_contracts import TACTICAL_DOC_DUPLICATE_THRESHOLD
 from modules.validation.threshold_helper import _threshold
 
 _JACCARD_SIMILARITY_THRESHOLD = _threshold(
@@ -961,7 +962,10 @@ class Stage2ValidationPipeline:
         return normalized
 
     def _is_tactical_doc_duplicate(
-        self, candidate_text: str, reference_texts: list, threshold: float = 0.92
+        self,
+        candidate_text: str,
+        reference_texts: list,
+        threshold: float = TACTICAL_DOC_DUPLICATE_THRESHOLD,
     ) -> bool:  # [TF-39] P2-1
         """[V64.P3] 전술서 중복 감지"""
 
@@ -987,6 +991,22 @@ class Stage2ValidationPipeline:
             if SequenceMatcher(None, candidate, ref).ratio() >= threshold:
                 return True
         return False
+
+    def _build_flow_guard_fallback(
+        self,
+        normalized: list[str],
+        *,
+        fallback_reason: str,
+        error: Exception | None = None,
+    ) -> dict:
+        """Preserve legacy semantics when the analyzer cannot produce a result."""
+        fallback = dict(self._stage2_flow_guard_legacy(normalized))
+        fallback["fallback"] = True
+        fallback["fallback_mode"] = "legacy_flow_guard"
+        fallback["fallback_reason"] = fallback_reason
+        if error is not None:
+            fallback["diagnostic_error"] = str(error)
+        return fallback
 
     def _normalize_flow_text(self, text: str) -> str:
         """[V64.P3] Flow Guard용 텍스트 정규화"""
@@ -1126,12 +1146,20 @@ class Stage2ValidationPipeline:
 
             return {"status": "PASS", "diversity_score": diversity}
 
-        except ImportError:
+        except ImportError as exc:
             logging.warning(" [V60.15] NarrativeStructureAnalyzer 로드 실패, 폴백")
-            return self._stage2_flow_guard_legacy(normalized)
+            return self._build_flow_guard_fallback(
+                normalized,
+                fallback_reason="import_error",
+                error=exc,
+            )
         except Exception as e:
-            logging.warning(f" [V60.15] 서사 분석 오류 (비차단): {e}")
-            return {"status": "PASS", "fallback": True}
+            logging.warning(f" [V60.15] 서사 분석 오류, 레거시 폴백으로 재평가: {e}")
+            return self._build_flow_guard_fallback(
+                normalized,
+                fallback_reason="runtime_error",
+                error=e,
+            )
 
     def _stage2_flow_guard_legacy(self, normalized: list) -> dict:
         """[V60.15] 레거시 Flow Guard (폴백용)"""

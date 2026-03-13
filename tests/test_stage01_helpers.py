@@ -431,6 +431,21 @@ class TestStage0RoadmapInjection:
         assert roadmap[0]["ep_count"] == 5
         assert roadmap[0]["_stub"] is True
 
+    def test_s0_save_results_skips_treatment_when_bible_save_fails(self, app_mock, tmp_path):
+        app_mock.current_project.paths.root = tmp_path
+        app_mock.current_project.save_v20_anchor.side_effect = RuntimeError("bible-fail")
+        bible = {"MasterBible": {"ProjectData": {}}}
+        treatment = [{"title": "블록 1", "ep_start": 1, "ep_end": 5}]
+        stage0_mgr = MagicMock()
+        stage0_mgr.preset_registry = None
+        stage0_mgr.style_guide = None
+
+        with patch("builtins.input", return_value=""):
+            Stage01Helpers._s0_save_results(app_mock, stage0_mgr, bible, treatment)
+
+        assert not (tmp_path / "treatment_generated.json").exists()
+        app_mock.current_project._load_from_db.assert_not_called()
+
     def test_mode_5_calls_reference_analysis(self, helpers, app_mock):
         """mode=5 → run_reference_analysis 호출"""
         mock_mgr = MagicMock()
@@ -542,6 +557,7 @@ class TestStage1Volumes:
             helpers.stage_1_volumes()
 
         app_mock.current_project.save_v20_anchor.assert_called_once_with("volumes", [{"strategy_doc": "x" * 2500}])
+        app_mock._show_volume_table.assert_called_once_with([{"strategy_doc": "x" * 2500}])
 
     def test_quality_fail_stops(self, helpers, app_mock):
         """품질 미달 시 공정 중단"""
@@ -562,3 +578,69 @@ class TestStage1Volumes:
 
         # 실패 시 save_v20_anchor 호출 안 함
         app_mock.current_project.save_v20_anchor.assert_not_called()
+
+
+class TestBoundaryValidation:
+    def test_validate_volume_boundaries_serializes_dict_strategy_doc(self):
+        result = Stage01Helpers.validate_volume_boundaries(
+            {"strategy_doc": {"summary": "제 1권 내부 사건만 다룬다."}},
+            1,
+        )
+
+        assert result["status"] == "PASS"
+
+    def test_validate_volume_boundaries_rejects_none_strategy_doc(self):
+        result = Stage01Helpers.validate_volume_boundaries({"strategy_doc": None}, 1)
+
+        assert result["status"] == "REJECT"
+        assert "strategy_doc" in result["reason"]
+
+    def test_stage1_success_path_executes_real_boundary_callback_chain(self, helpers, app_mock):
+        app_mock.current_project.master_bible = {
+            "MasterBible": {
+                "plot_roadmap": [{"arc": i} for i in range(5)],
+                "ProjectData": {"MetaInfo": {}},
+            }
+        }
+        app_mock._get_protagonist_name.return_value = "주인공"
+        app_mock._validate_volume_boundaries.side_effect = AssertionError("legacy private validator should not be used")
+        app_mock.agents = {"analyst": MagicMock()}
+        app_mock.agents["analyst"].plan_single_volume_v20.return_value = {
+            "strategy_doc": "현재 권 사건만 다룬다. " * 180,
+        }
+
+        with (
+            patch("builtins.input", side_effect=["1", ""]),
+            patch("modules.core.spinners.StageSpinner"),
+        ):
+            helpers.stage_1_volumes()
+
+        app_mock.current_project.save_v20_anchor.assert_called_once()
+
+    def test_stage1_retries_after_boundary_reject(self, helpers, app_mock):
+        app_mock.current_project.master_bible = {
+            "MasterBible": {
+                "plot_roadmap": [{"arc": i} for i in range(5)],
+                "ProjectData": {"MetaInfo": {}},
+            }
+        }
+        app_mock._get_protagonist_name.return_value = "주인공"
+        app_mock._validate_volume_boundaries.side_effect = AssertionError("legacy private validator should not be used")
+        app_mock.agents = {"analyst": MagicMock()}
+        app_mock.agents["analyst"].plan_single_volume_v20.side_effect = [
+            {"strategy_doc": ("제 2권에서 벌어질 일을 미리 적는다. " * 120)},
+            {"strategy_doc": ("현재 권 사건만 다룬다. " * 180)},
+        ]
+
+        with (
+            patch("builtins.input", side_effect=["1", ""]),
+            patch("modules.core.spinners.StageSpinner"),
+        ):
+            helpers.stage_1_volumes()
+
+        assert app_mock.agents["analyst"].plan_single_volume_v20.call_count == 2
+        app_mock._audit_event.assert_any_call(
+            "volume_boundary_violation",
+            "미래 권(2권) 정보 누수 감지",
+            {"vol_no": 1, "feedback": "제 1권 설계에서 2권 내용을 언급하지 마십시오."},
+        )

@@ -1,5 +1,9 @@
 # Stage 4 Canary Execution Runbook
 
+archive-safe note:
+- use `project_locator` as the canonical locator for future canary artifacts.
+- nested project names are allowed in CLI (`archive/demo_canary`).
+
 작성일: 2026-03-12
 
 목적: Stage 4 limited canary를 반복 가능하게 실행하고, 종료 직후 go/no-go를 같은 기준으로 판정한다.
@@ -159,6 +163,7 @@ post-run canary는 아래를 만족해야 한다.
 
 ```text
 project:
+project_locator:
 source baseline:
 target canary:
 started_at:

@@ -88,6 +88,53 @@ def sample_fields(bi: dict[str, Any]) -> list[tuple[str, str]]:
     return samples
 
 
+def build_source_tr_handoff_checks(
+    source_metrics: dict[str, Any],
+    *,
+    protagonist_match: bool,
+    title_match_phase0: bool,
+    starter_company_match: bool,
+    portfolio_monotonic: bool,
+    portfolio_sync: bool,
+) -> dict[str, bool]:
+    checks = {
+        "source_tr_density_gate": bool(source_metrics.get("production_density_gate")),
+        "source_tr_critical_thin_gate": source_metrics.get("hard_gate_checks", {}).get("critical_thin_blocks_zero", True),
+        "source_tr_thin_ratio_gate": source_metrics.get("hard_gate_checks", {}).get("thin_blocks_ratio_ok", True),
+        "source_tr_late_thin_gate": source_metrics.get("hard_gate_checks", {}).get("late_thin_blocks_zero", True),
+        "source_tr_short_stakes_gate": source_metrics.get("hard_gate_checks", {}).get("short_stakes_blocks_total_ok", True),
+        "source_tr_endgame_stakes_gate": source_metrics.get("hard_gate_checks", {}).get("endgame_low_stakes_zero", True),
+        "source_tr_callback_gate": source_metrics.get("hard_gate_checks", {}).get("callback_ratio_ok", True),
+        "source_tr_unresolved_foreshadow_gate": source_metrics.get("hard_gate_checks", {}).get(
+            "unresolved_foreshadow_count_ok", True
+        ),
+        "source_tr_section_rotation_gate": source_metrics.get("hard_gate_checks", {}).get("section_rotation_present", True),
+        "source_tr_late_opponent_gate": source_metrics.get("hard_gate_checks", {}).get("late_blank_opponent_ok", True),
+        "source_tr_solution_stakes_repeat_gate": source_metrics.get("hard_gate_checks", {}).get(
+            "normalized_solution_stakes_repeat_ok", True
+        ),
+        "source_tr_opponent_diversity_gate": source_metrics["opponent_unique"] >= 8 and source_metrics["top_opponent_share"] <= 30.0,
+        "source_tr_weakness_repeat_gate": source_metrics["top_weakness_repetition"] < 3,
+        "source_tr_solution_gate": (
+            source_metrics["avg_solution_chars"] >= 120
+            and source_metrics["one_sentence_like_solution_blocks"] <= 20
+        ),
+        "protagonist_match": protagonist_match,
+        "title_match_phase0": title_match_phase0,
+        "starter_company_match": starter_company_match,
+        "portfolio_monotonic": portfolio_monotonic,
+        "portfolio_sync_with_tr": portfolio_sync,
+    }
+    if source_metrics.get("is_regressor_treatment"):
+        checks["source_tr_regressor_recognition_count_gate"] = source_metrics.get("hard_gate_checks", {}).get(
+            "regressor_recognition_count_ok", True
+        )
+        checks["source_tr_regressor_recognition_gap_gate"] = source_metrics.get("hard_gate_checks", {}).get(
+            "regressor_recognition_gap_ok", True
+        )
+    return checks
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--phase0", type=Path, required=True, help="Phase0 design JSON path")
@@ -152,12 +199,13 @@ def main() -> int:
     foreign_hits = [token for token in FOREIGN_TOKENS if token in serialized]
     key_npc_names = [entry["name"] for entry in mb["AssetLibrary"]["KeyNPCs"]]
     npc_name_match = key_npc_names == expected_npcs
-    source_density_gate = source_metrics["production_density_gate"]
-    source_opponent_diversity_gate = source_metrics["opponent_unique"] >= 8 and source_metrics["top_opponent_share"] <= 30.0
-    source_weakness_repeat_gate = source_metrics["top_weakness_repetition"] < 3
-    source_solution_gate = (
-        source_metrics["avg_solution_chars"] >= 120
-        and source_metrics["one_sentence_like_solution_blocks"] <= 20
+    source_handoff_checks = build_source_tr_handoff_checks(
+        source_metrics,
+        protagonist_match=(core["protagonist"] == actual["name"] == expected_protagonist),
+        title_match_phase0=(meta["title"] == expected_title),
+        starter_company_match=(actual["financial_status"]["company"] == starter_company),
+        portfolio_monotonic=portfolio_monotonic,
+        portfolio_sync=portfolio_sync,
     )
     source_cadence_warning = source_metrics["solution_tail20_top_repetition"] > 50
 
@@ -183,17 +231,7 @@ def main() -> int:
         (
             "PASS 3",
             "source TR handoff gate",
-            {
-                "source_tr_density_gate": source_density_gate,
-                "source_tr_opponent_diversity_gate": source_opponent_diversity_gate,
-                "source_tr_weakness_repeat_gate": source_weakness_repeat_gate,
-                "source_tr_solution_gate": source_solution_gate,
-                "protagonist_match": core["protagonist"] == actual["name"] == expected_protagonist,
-                "title_match_phase0": meta["title"] == expected_title,
-                "starter_company_match": actual["financial_status"]["company"] == starter_company,
-                "portfolio_monotonic": portfolio_monotonic,
-                "portfolio_sync_with_tr": portfolio_sync,
-            },
+            source_handoff_checks,
         ),
         (
             "PASS 4",
@@ -227,6 +265,10 @@ def main() -> int:
     report_lines.append(f"- production_density_gate: {'PASS' if source_metrics['production_density_gate'] else 'FAIL'}")
     report_lines.append(f"- avg_bundle_chars: {source_metrics['avg_bundle_chars']}")
     report_lines.append(f"- avg_solution_chars: {source_metrics['avg_solution_chars']}")
+    report_lines.append(f"- foreshadow_total: {source_metrics['foreshadow_total']}")
+    report_lines.append(f"- callback_total: {source_metrics['callback_total']}")
+    report_lines.append(f"- callback_ratio: {source_metrics['callback_ratio']}")
+    report_lines.append(f"- unresolved_foreshadow_count: {source_metrics['unresolved_foreshadow_count']}")
     report_lines.append(f"- opponent_unique: {source_metrics['opponent_unique']}")
     report_lines.append(f"- top_opponent_repetition: {source_metrics['top_opponent_repetition']}")
     report_lines.append(f"- top_opponent_share: {source_metrics['top_opponent_share']}%")
@@ -237,6 +279,17 @@ def main() -> int:
     report_lines.append(f"- one_sentence_like_solution_blocks: {source_metrics['one_sentence_like_solution_blocks']}")
     report_lines.append(f"- business_sector_missing: {source_metrics['business_sector_missing']}")
     report_lines.append(f"- section_rotation_missing: {source_metrics['section_rotation_missing']}")
+    report_lines.append(f"- critical_thin_blocks: {source_metrics['critical_thin_blocks']}")
+    report_lines.append(f"- thin_blocks: {source_metrics['thin_blocks']}")
+    report_lines.append(f"- short_stakes_blocks: {source_metrics['short_stakes_blocks']}")
+    report_lines.append(f"- recognition_signal_blocks: {source_metrics['recognition_signal_blocks']}")
+    report_lines.append(f"- max_recognition_gap_streak: {source_metrics['max_recognition_gap_streak']}")
+    report_lines.append(f"- late_blank_opponent_blocks: {source_metrics['late_blank_opponent_blocks']}")
+    report_lines.append(f"- endgame_low_stakes_blocks: {source_metrics['endgame_low_stakes_blocks']}")
+    report_lines.append(
+        f"- normalized_solution_stakes_repeat_max: {source_metrics['normalized_solution_stakes_repeat_max']}"
+    )
+    report_lines.append(f"- hard_gate_failures: {source_metrics['hard_gate_failures']}")
     report_lines.append(f"- window_10_opponent_unique_counts: {source_metrics['window_10_opponent_unique_counts']}")
     report_lines.append("")
 
@@ -287,6 +340,10 @@ def main() -> int:
     if source_metrics["pattern_feedback_snapshot"]["forbidden_pattern_reuse"]:
         report_lines.append(
             f"- pattern_feedback_snapshot.forbidden_pattern_reuse: {source_metrics['pattern_feedback_snapshot']['forbidden_pattern_reuse']}"
+        )
+    if source_metrics["pattern_feedback_snapshot"]["structural_gate_failures"]:
+        report_lines.append(
+            f"- pattern_feedback_snapshot.structural_gate_failures: {source_metrics['pattern_feedback_snapshot']['structural_gate_failures']}"
         )
     if fail_count == 0:
         report_lines.append("- summary: 5개 PASS 모두 통과")

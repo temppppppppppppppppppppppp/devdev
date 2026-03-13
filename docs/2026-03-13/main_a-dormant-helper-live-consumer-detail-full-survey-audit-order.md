@@ -3,6 +3,7 @@
 > 작성일: 2026-03-13
 > 트랙: `main_a.py` dormant helper and live consumer inventory audit
 > 상태: `execution-ready`
+> 조사 현황: `조사 완료`
 > 목적: `main_a.py`와 직접 하위 모듈에 남아 있는 helper들이 실제 runtime consumer를 가지는지, 우회되는지, dead surface인지 전면 전량 조사한다.
 > 방식: `5-terminal 병렬`, 각 터미널 자체 `3PASS`, 통합본 `3PASS 재감리`
 
@@ -127,6 +128,14 @@
   - `_build_minimal_arc_context()`
   - `_generate_reverse_feedback_stage4_to_3()`
   - `_enrich_director_result()`
+- 직접 downstream
+  - `modules/core/stage2_context.py`
+  - `modules/core/stage2_preflight.py`
+  - `modules/core/stage2_validation_pipeline.py`
+  - `modules/core/stage4_context.py`
+  - `modules/core/stage4_context_builder.py`
+  - `modules/core/stage4_interview_round.py`
+  - `modules/core/stage4_orchestrator.py`
 
 ### 핵심 검사 포인트
 
@@ -135,13 +144,50 @@
 3. retry / guidance family 안에서 dead helper와 live helper가 섞여 있지 않은가
 4. hidden one-shot consumer가 e2e, canary, manual path에만 남아 있지 않은가
 5. 기존 coverage gap의 `별도 audit` 요청을 이번 inventory로 닫을 수 있는가
+6. `Stage2Context` / `Stage4Context` / `Stage4Orchestrator`의 DI 바인딩이 thin wrapper를 실제 live surface로 승격시키는지 확인했는가
+7. `grep` 상 caller가 없어 보여도 context callback 슬롯 또는 orchestrator helper에서 간접 호출되는 경로를 놓치지 않았는가
+8. callback slot 누락, DI 실패, optional hook crash처럼 `dormant`가 아니라 `binding-broken live surface`로 봐야 하는 항목을 분리했는가
+
+### T1 재감리 기준선
+
+`2026-03-13` 재감리 기준으로 아래는 기본 전제다.
+
+| Helper | 기본 판정 | 확인해야 할 consumer anchor |
+|--------|-----------|-----------------------------|
+| `_build_focused_context()` | live | `Stage2Context.from_app()` → `stage2_validation_pipeline.py` |
+| `_build_minimal_arc_context()` | live | `Stage2Context.from_app()` → `stage2_preflight.py` |
+| `_generate_reverse_feedback_stage4_to_3()` | live-conditional | `Stage4Orchestrator._build_stage4_to_3_reverse_feedback()` |
+| `_generate_writer_guidance_v60_8()` | live surface 여부 우선 확인 | `Stage4Context.from_app()` → `Stage4ContextBuilder.build_mandatory_context()` |
+| `_enrich_director_result()` | live surface 여부 우선 확인 | `Stage4Context.from_app()` → `Stage4InterviewRound._maybe_enrich_director_result()` |
+| `_generate_arc_position_guide()` | dormant 후보 | production caller 입증 전까지 test-only로 본다 |
+| `_simplify_prompt_for_retry()` | dormant 후보 | production caller 입증 전까지 test-only로 본다 |
+
+### T1 오탐 방지 규칙
+
+1. `main_a.py` thin wrapper는 호출부가 적어 보여도 `Stage2Context.from_app()`가 direct callback을 우선 바인딩하면 **live wrapper**로 본다.
+2. `_generate_writer_guidance_v60_8()`와 `_enrich_director_result()`는 `Stage4Context`를 열지 않고는 dormant 판정을 내리면 안 된다.
+3. `Stage4Context.__slots__`에 callback 이름이 없으면 이는 dormant가 아니라 **binding-broken live surface**다.
+4. `_generate_reverse_feedback_stage4_to_3()`는 일반 round에서 안 보이더라도 `LOGIC_ERROR` 누적 후 blueprint patch / regenerate 경로까지 추적해야 한다.
+5. T1 PASS 3 전에는 최소 한 번 `Stage4Context.from_app()` 관련 테스트 또는 동등한 재현으로 callback binding이 실제로 성립하는지 확인한다.
 
 ### 필수 근거
 
 - `tests/test_arc_retry.py`
 - `tests/test_stage2_preflight_helpers.py`
+- `tests/test_stage2_context.py`
+- `tests/test_stage2_preflight.py`
+- `tests/test_stage2_validation_pipeline.py`
+- `tests/test_stage4_context.py`
 - `tests/test_stage4_context_builder.py`
+- `tests/test_stage4_orchestrator.py`
+- `tests/test_stage4_interview_round.py`
+- `modules/core/stage2_context.py`
+- `modules/core/stage2_preflight.py`
+- `modules/core/stage2_validation_pipeline.py`
+- `modules/core/stage4_context.py`
 - `modules/core/stage4_context_builder.py`
+- `modules/core/stage4_interview_round.py`
+- `modules/core/stage4_orchestrator.py`
 
 ### 산출물
 
@@ -337,3 +383,11 @@
 - 본 오더 문서는 `execution-ready`다.
 - 결과 문서와 통합 문서는 본 오더와 함께 생성되지만 초기 상태는 모두 `template / not executed`다.
 - 조사 단계가 끝나기 전에는 확정 finding이 없는 상태로 본다.
+
+---
+
+## 13. 현재 조사 현황
+
+- 기준일: `2026-03-13`
+- 조사 현황: `조사 완료`
+- 메모: 터미널별 inventory/finding 취합 이후에도 통합본과 `dead / dormant / bypassed-live / unknown` ledger 재감리가 남아 있어 본 트랙은 계속 진행 중으로 관리한다.

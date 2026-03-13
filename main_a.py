@@ -48,6 +48,7 @@ import re
 from google import genai
 
 import modules.core.spinners as _spinners_mod  # [V65] 플래그 동기화용
+from modules.core.constants import VolumeSettings
 from modules.core.feedback_system import FeedbackSystem  # [V64 P2-3]
 from modules.core.llm_generate import generate_content_via_router
 from modules.core.metrics_collector import get_metrics_collector  # [V49.3] 비용 추적 시스템
@@ -61,6 +62,7 @@ from modules.core.services.state_service import StateService  # [Phase 4B-3]
 from modules.core.services.ui_service import UIService  # [Phase 4B-2]
 from modules.core.session_logger import SessionLogger  # [LOG-1] JSONL 세션 로깅
 from modules.core.stage01_helpers import Stage01Helpers  # [Phase 4C-1b]
+from modules.core.stage2_contracts import TACTICAL_DOC_DUPLICATE_THRESHOLD
 from modules.core.stage2_orchestrator import Stage2Orchestrator  # [V64.P3]
 from modules.core.stage3_orchestrator import Stage3Orchestrator  # [Phase 4C-1a]
 from modules.core.stage4_orchestrator import Stage4Orchestrator  # [V64.P3]
@@ -74,6 +76,16 @@ from modules.validation.threshold_helper import _threshold as _val_threshold  # 
 # 아래 변수만 미리 선언 (boot 전 참조 방어)
 V50_MODULES_AVAILABLE = False  # _attach_agents()에서 실제 판정
 STAGE0_AVAILABLE = False  # _lazy_load_stage0()에서 실제 판정
+
+# StateService facade 중 일부는 레거시/manual ops용으로만 유지한다.
+# 현재 Stage2/3/4 live context graph에는 바인딩하지 않는다.
+RESERVED_STATE_SERVICE_FACADE_SHIMS = (
+    "_extract_block_index",
+    "_extract_pattern_keywords",
+    "_pattern_presence_check",
+    "_build_validation_context",
+    "_load_genre_references",
+)
 
 
 @dataclass(slots=True)
@@ -378,6 +390,7 @@ class SovereignApp:
 
     def _restore_preset_registry(self) -> None:
         """[TF-7-P0-03] 프로젝트 _preset_state_raw에서 app.preset_registry 복원."""
+        self.preset_registry = None
         _ps_raw = getattr(self.current_project, "_preset_state_raw", None) if self.current_project else None
         if _ps_raw is None:
             return
@@ -1078,15 +1091,9 @@ class SovereignApp:
         PromptLoader().invalidate_cache()
 
         # [TF-7-P0-03] preset_state anchor → app.preset_registry 복원 (프로젝트 로드 시)
-        _ps_raw = getattr(self.current_project, "_preset_state_raw", None)
-        if _ps_raw is not None:
-            try:
-                from modules.core.stage0.preset_registry import PresetRegistry as _PresetRegistry
-
-                self.preset_registry = _PresetRegistry.from_json(json.dumps(_ps_raw, ensure_ascii=False))
-                self.ui.log("   ✅ [TF7-P0-03] preset_registry DB에서 복원 완료")
-            except Exception as _pr_err:
-                self.ui.log(f"   ⚠️ [TF7-P0-03] preset_registry 복원 실패 (무시): {_pr_err}")
+        self._restore_preset_registry()
+        if self.preset_registry is not None:
+            self.ui.log("   ✅ [TF7-P0-03] preset_registry DB에서 복원 완료")
 
         # [V40] 장르 정보를 프로젝트에 주입
         self.current_project.genre = self.selected_genre
@@ -1304,26 +1311,36 @@ class SovereignApp:
                     cache_info["weaver_cache"] = None
 
         # [V40.1 Critical Fix] 캐시 정보를 DB에 영속화 (재시작 시 캐시 재사용 보장)
+        cache_metadata_persisted = False
         try:
-            self.current_project.db.save_anchor("sys_caches", cache_info)
-            self._safe_commit()
-            self.ui.log(f"{Emojis.SAVE} [System] 캐시 정보 DB 저장 완료")
-            self._audit_event(
-                AuditEvents.CACHE_CREATED,
-                SuccessMessages.CACHE_CREATED,
-                {
-                    "writer": bool(cache_info.get("writer_cache")),
-                    # [V65] architect 캐시 항목 삭제
-                    "analyst": bool(cache_info.get("analyst_cache")),
-                    "weaver": bool(cache_info.get("weaver_cache")),
-                },
-            )
+            save_ok = bool(self.current_project.db.save_anchor("sys_caches", cache_info))
+            commit_ok = bool(self._safe_commit())
+            cache_metadata_persisted = save_ok and commit_ok
+            if cache_metadata_persisted:
+                self.ui.log(f"{Emojis.SAVE} [System] 캐시 정보 DB 저장 완료")
+                self._audit_event(
+                    AuditEvents.CACHE_CREATED,
+                    SuccessMessages.CACHE_CREATED,
+                    {
+                        "writer": bool(cache_info.get("writer_cache")),
+                        # [V65] architect 캐시 항목 삭제
+                        "analyst": bool(cache_info.get("analyst_cache")),
+                        "weaver": bool(cache_info.get("weaver_cache")),
+                    },
+                )
+            else:
+                self.ui.log(f"{Emojis.WARNING} [System] 캐시 정보 저장 실패 - 캐시 주입 생략")
+                self._audit_event(
+                    "cache_save_error",
+                    ErrorMessages.DB_COMMIT_FAILED,
+                    {"save_ok": save_ok, "commit_ok": commit_ok},
+                )
         except Exception as save_err:
             self.ui.log(f"{Emojis.ERROR} [System] 캐시 정보 DB 저장 실패: {save_err}")
             self._audit_event("cache_save_error", ErrorMessages.DB_COMMIT_FAILED, {"error": str(save_err)})
 
         # [V40 Fix] 생성된 캐시를 에이전트에 주입
-        if hasattr(self, "agents") and self.agents:
+        if cache_metadata_persisted and hasattr(self, "agents") and self.agents:
             if cache_info.get("writer_cache"):
                 self.agents["writer"].cache_name = cache_info["writer_cache"]
                 self.ui.log("   ✅ Writer 캐시 주입 완료")
@@ -2149,23 +2166,37 @@ class SovereignApp:
         AssetLibrary.KeyNPCs 폴백까지 처리함
         """
         try:
-            bible = self.current_project.db.load_anchor("bible") or {}
-            bible_root = bible.get("MasterBible", bible)
             genre = self.selected_genre.get("type", "") if self.selected_genre else ""
 
-            name = HUDKeys.get_protagonist_name(bible_root, genre)
-            if name and name != "주인공":
+            def _extract_name(bible_payload: Any) -> str | None:
+                if not isinstance(bible_payload, dict):
+                    return None
+                bible_root = bible_payload.get("MasterBible", bible_payload)
+                name = HUDKeys.get_protagonist_name(bible_root, genre)
+                if name and name != "주인공":
+                    return name
+
+                chars = bible_root.get("characters", bible_root.get("등장인물", []))
+                if chars and isinstance(chars, list):
+                    first_char = chars[0]
+                    if isinstance(first_char, dict):
+                        return first_char.get("name") or first_char.get("이름")
+                    if first_char:
+                        return str(first_char)
+                return None
+
+            live_bible = getattr(self.current_project, "master_bible", None) if self.current_project else None
+            name = _extract_name(live_bible)
+            if name:
                 return name
 
-            # 레거시 characters 리스트 폴백
-            chars = bible.get("characters", bible.get("등장인물", []))
-            if chars and isinstance(chars, list) and len(chars) > 0:
-                first_char = chars[0]
-                if isinstance(first_char, dict):
-                    return first_char.get("name", first_char.get("이름", "주인공"))
-                return str(first_char)
+            db = getattr(getattr(self.current_project, "db", None), "load_anchor", None)
+            if callable(db):
+                name = _extract_name(db("bible") or {})
+                if name:
+                    return name
 
-            return name  # '주인공' 기본값
+            return "주인공"
         except Exception as e:
             print(f"      ⚠️ [V61.2] 주인공 이름 추출 실패: {e}")
             return "주인공"
@@ -2181,20 +2212,35 @@ class SovereignApp:
         if not entity_registry or not protagonist_name or protagonist_name == "주인공":
             return entity_registry
 
-        chars = entity_registry.get("characters", [])
-        protag_found = False
+        chars = entity_registry.get("characters")
+        if not isinstance(chars, list):
+            chars = []
+            entity_registry["characters"] = chars
+
+        protagonist_row = None
         for ch in chars:
-            if isinstance(ch, dict) and ch.get("role") in ("주인공", "protagonist", "주역"):
-                if ch.get("name") != protagonist_name:
-                    old_name = ch.get("name", "?")
-                    ch["name"] = protagonist_name
-                    print(f"      🔒 [V62.4] Entity Registry 주인공 보정: {old_name} → {protagonist_name}")
-                protag_found = True
+            if isinstance(ch, dict) and ch.get("name") == protagonist_name:
+                protagonist_row = ch
                 break
 
-        if not protag_found:
+        if protagonist_row is None:
+            for ch in chars:
+                if isinstance(ch, dict) and ch.get("role") in ("주인공", "protagonist", "주역"):
+                    protagonist_row = ch
+                    break
+
+        if protagonist_row is None:
             chars.insert(0, {"name": protagonist_name, "role": "주인공", "context": "락 고정"})
             entity_registry["characters"] = chars
+            return entity_registry
+
+        old_name = protagonist_row.get("name", "?")
+        if old_name != protagonist_name:
+            protagonist_row["name"] = protagonist_name
+            print(f"      🔒 [V62.4] Entity Registry 주인공 보정: {old_name} → {protagonist_name}")
+        if protagonist_row.get("role") not in ("주인공", "protagonist", "주역"):
+            protagonist_row["role"] = "주인공"
+        protagonist_row.setdefault("context", "락 고정")
 
         return entity_registry
 
@@ -2634,11 +2680,41 @@ class SovereignApp:
             return 0
 
     def _calculate_arc_from_episode(self, ep_num):
-        """에피소드 번호로부터 Arc 번호 계산 (각 Arc는 5화)"""
+        """에피소드 번호로부터 Arc 번호 계산."""
+        try:
+            ep_num = int(ep_num)
+        except (TypeError, ValueError):
+            return 0
         if ep_num <= 0:
             return 0
-        # 1-5화 -> Arc 1, 6-10화 -> Arc 2, ...
-        return (ep_num - 1) // 5 + 1
+
+        def _safe_int(value):
+            try:
+                return int(value)
+            except (TypeError, ValueError):
+                return 0
+
+        arcs = getattr(getattr(self, "current_project", None), "arcs", None)
+        if isinstance(arcs, list):
+            for idx, arc in enumerate(arcs, start=1):
+                if not isinstance(arc, dict):
+                    continue
+                ep_start = _safe_int(
+                    arc.get("ep_start")
+                    or arc.get("start_ep")
+                    or arc.get("episode_start")
+                    or arc.get("start_episode")
+                )
+                ep_end = _safe_int(arc.get("ep_end") or arc.get("end_ep") or arc.get("episode_end"))
+                if ep_start > 0 and ep_end <= 0:
+                    ep_count = _safe_int(arc.get("ep_count"))
+                    if ep_count > 0:
+                        ep_end = ep_start + ep_count - 1
+                if ep_start > 0 and ep_end > 0 and ep_start <= ep_num <= ep_end:
+                    return _safe_int(arc.get("arc_no")) or idx
+
+        episodes_per_arc = max(1, int(VolumeSettings.EPISODES_PER_ARC))
+        return (ep_num - 1) // episodes_per_arc + 1
 
     def _show_resume_status(self):
         """프로젝트 진행 현황 출력 (크래시 후 재시작 포함)."""
@@ -2711,7 +2787,12 @@ class SovereignApp:
         """[V64.P3] -> Stage2Orchestrator"""
         return self._stage2_orch._normalize_tactical_text(text)
 
-    def _is_tactical_doc_duplicate(self, candidate_text, reference_texts, threshold=0.98):
+    def _is_tactical_doc_duplicate(
+        self,
+        candidate_text,
+        reference_texts,
+        threshold=TACTICAL_DOC_DUPLICATE_THRESHOLD,
+    ):
         """[V64.P3] -> Stage2Orchestrator"""
         return self._stage2_orch._is_tactical_doc_duplicate(candidate_text, reference_texts, threshold)
 
@@ -2729,36 +2810,26 @@ class SovereignApp:
 
     def _validate_volume_boundaries(self, vol_data, vol_idx):
         """[V39 패치 D] Volume 설계에서 미래 권 정보 누수 차단"""
-        strategy = vol_data.get("strategy_doc", "")
+        return Stage01Helpers.validate_volume_boundaries(vol_data, vol_idx)
 
-        if not isinstance(strategy, str):
-            return {"status": "PASS"}
-
-        # 1. 미래 권 번호 검출
-        future_mentions = re.findall(r"제\s*(\d+)\s*권", strategy)
-        for mention in future_mentions:
+    def _format_episode_coverage_label(self, episodes: list[int]) -> str:
+        normalized = []
+        for ep in episodes or []:
             try:
-                mention_vol = int(mention)
-                if mention_vol > vol_idx:
-                    return {
-                        "status": "REJECT",
-                        "reason": f"미래 권({mention}권) 정보 누수 감지",
-                        "feedback": f"제 {vol_idx}권 설계에서 {mention}권 내용을 언급하지 마십시오.",
-                    }
-            except ValueError:
+                ep_no = int(ep)
+            except (TypeError, ValueError):
                 continue
+            if ep_no > 0:
+                normalized.append(ep_no)
 
-        # 2. 미래 지향 키워드 검출 (과도한 경우만)
-        future_keywords = ["이후", "다음 권", "훗날", "나중에", "앞으로"]
-        future_count = sum(strategy.count(kw) for kw in future_keywords)
-        if future_count > 3:  # 3회 이상 언급 시 경고
-            return {
-                "status": "WARNING",
-                "reason": f"미래 지향 표현 과다 ({future_count}회)",
-                "feedback": "현재 권의 사건에만 집중하십시오.",
-            }
-
-        return {"status": "PASS"}
+        normalized = sorted(set(normalized))
+        if not normalized:
+            return ""
+        if len(normalized) == 1:
+            return str(normalized[0])
+        if len(normalized) == normalized[-1] - normalized[0] + 1:
+            return f"{normalized[0]}-{normalized[-1]}"
+        return ",".join(str(ep) for ep in normalized)
 
     def _build_item_acquisition_timeline(self, up_to_ep: int) -> str:
         """[V64 P2-2] -> PromptBuilder"""
@@ -3306,7 +3377,6 @@ class SovereignApp:
         import time as _time
 
         start_ep = max(1, up_to_ep - 4)  # [V66] 10→5화 범위
-        self.ui.log(f"   📝 [V66.1] 내러티브 요약 생성 중 (제{start_ep}~{up_to_ep}화)...")
 
         # 최근 5화 원고 수집
         manuscripts = self.current_project.db.get_recent_manuscripts(before_ep=up_to_ep + 1, limit=5)
@@ -3314,6 +3384,19 @@ class SovereignApp:
         if manuscript_count < 2:  # [V66] 최소 2화로 완화
             self.ui.log(f"   ⚠️ 원고 부족 ({manuscript_count}화) - 요약 건너뜀")
             return
+
+        episode_numbers = []
+        for ms in manuscripts:
+            if not isinstance(ms, dict):
+                continue
+            try:
+                ep_no = int(ms.get("ep_num"))
+            except (TypeError, ValueError):
+                continue
+            if ep_no > 0:
+                episode_numbers.append(ep_no)
+        coverage_label = self._format_episode_coverage_label(episode_numbers) or f"{start_ep}-{up_to_ep}"
+        self.ui.log(f"   📝 [V66.1] 내러티브 요약 생성 중 (제{coverage_label}화)...")
 
         # [V66.1] 원고 텍스트 결합 (앞 800자 + 중간 핵심 500자 + 뒤 500자 ≈ 1800자/화)
         # 중간 핵심: 사망/습득/부상/배신 등 키워드 주변 250자씩 추출
@@ -3368,7 +3451,7 @@ class SovereignApp:
 
             # [V66.1] 요약 800자로 확대, 우선순위 지시 추가
             prompt = (
-                f"다음은 웹소설의 제{start_ep}~{up_to_ep}화 원고 발췌입니다.\n"
+                f"다음은 웹소설의 제{coverage_label}화 원고 발췌입니다.\n"
                 f"800자 이내로 핵심 내러티브를 요약해주세요.\n\n"
                 f"**우선 포함 항목 (절대 누락 금지)**:\n"
                 f"1. 사망/살해: 누가, 어떻게 죽었는지 (사망자 이름 필수 기재)\n"
@@ -3401,9 +3484,10 @@ class SovereignApp:
                 self.current_project.db.save_anchor(
                     anchor_key,
                     {
-                        "ep_range": f"{start_ep}-{up_to_ep}",
+                        "ep_range": coverage_label,
+                        "episode_list": sorted(set(episode_numbers)),
                         "summary": summary,
-                        "ep_count": len(manuscripts),
+                        "ep_count": len(set(episode_numbers)) or len(manuscripts),
                     },
                 )
                 self.current_project.db.conn.commit()
@@ -3426,46 +3510,45 @@ class SovereignApp:
         if self._narrative_summaries_cache is not None:
             return self._narrative_summaries_cache
 
+        frontier_ep = None
+        latest_ep_fn = getattr(self.current_project, "get_latest_episode_number", None)
+        if callable(latest_ep_fn):
+            try:
+                frontier_ep = max(0, int(latest_ep_fn()) - 1)
+            except (TypeError, ValueError):
+                frontier_ep = None
+
         summaries = []
-        for ep_marker in range(5, 500, 5):  # [V66] 10→5화 간격
-            anchor_key = f"narrative_summary_ep_{ep_marker:03d}"
-            data = self.current_project.db.load_anchor(anchor_key, default=None)
-            if data and isinstance(data, dict) and data.get("summary"):
-                summaries.append(f"[제{data['ep_range']}화 요약] {data['summary']}")
-            else:
-                continue  # [V63.3] 빈 구간 건너뛰기 (break→continue, 이후 요약도 로드)
-
-        # [V68] 계층적 요약 피라미드 — 상위 요약 선두 배치
-        _upper_parts = []
         try:
-            _series = self.current_project.load_v20_anchor("series_summary")
-            if _series:
-                if isinstance(_series, dict):
-                    _series = _series.get("summary", "") or str(_series)
-                if _series and len(str(_series)) > 10:
-                    _upper_parts.append(f"[시리즈 전체 요약] {_series}")
-
-            # 볼륨 요약: 존재하는 모든 볼륨 로드 (최대 20개)
-            for _vi in range(1, 21):
-                _vs = self.current_project.load_v20_anchor(f"volume_summary_{_vi}")
-                if _vs:
-                    if isinstance(_vs, dict):
-                        _vs = _vs.get("summary", "") or str(_vs)
-                    if _vs and len(str(_vs)) > 10:
-                        _upper_parts.append(f"[볼륨 {_vi} 요약] {_vs}")
-                # 빈 볼륨이면 이후도 없을 가능성이 높지만 continue
+            all_anchors = self.current_project.db.load_all_anchors()
         except Exception:
-            logging.warning("[V68] 상위 요약 로드 실패 (기존 요약만 사용)", exc_info=True)
+            logging.warning("[V66.1] narrative summary anchor 전체 로드 실패", exc_info=True)
+            all_anchors = {}
 
-        if summaries or _upper_parts:
-            _all_parts = []
-            if _upper_parts:
-                _all_parts.append("### 📚 계층적 요약 피라미드 (V68)\n" + "\n\n".join(_upper_parts))
-            if summaries:
-                _all_parts.append("### 📚 장기 내러티브 요약 (과거 스토리)\n" + "\n\n".join(summaries))
-            result = "\n\n".join(_all_parts)
-        else:
-            result = ""
+        def _parse_ep_marker(key: str) -> int:
+            try:
+                return int(key.rsplit("_", 1)[-1])
+            except (AttributeError, TypeError, ValueError):
+                return 0
+
+        narrative_items = []
+        if isinstance(all_anchors, dict):
+            for key, value in all_anchors.items():
+                if isinstance(key, str) and key.startswith("narrative_summary_ep_"):
+                    narrative_items.append((key, value))
+
+        for anchor_key, data in sorted(narrative_items, key=lambda item: _parse_ep_marker(item[0])):
+            ep_marker = _parse_ep_marker(anchor_key)
+            if frontier_ep is not None and ep_marker > frontier_ep:
+                continue
+            if not isinstance(data, dict) or not data.get("summary"):
+                continue
+            ep_label = data.get("ep_range") or self._format_episode_coverage_label(data.get("episode_list") or [])
+            if not ep_label:
+                ep_label = str(ep_marker)
+            summaries.append(f"[제{ep_label}화 요약] {data['summary']}")
+
+        result = "### 📚 장기 내러티브 요약 (과거 스토리)\n" + "\n\n".join(summaries) if summaries else ""
 
         # [V66.1] B-1: 캐시 저장
         self._narrative_summaries_cache = result
