@@ -1,68 +1,60 @@
-# stage_map 동기화 체크 — 실행 프롬프트
+# stage_map 동기화 체크
 
-> 사용법: 이 파일을 Claude에게 던지거나 "stage_map 동기화 체크해" 라고 말하면 됨.
+> 사용법: `docs/stage_map/SYNC_CHECK.md 읽고 동기화 체크 실행해줘.`
 
----
+## 먼저 읽을 것
+1. `docs/stage_map/README.md`
+2. `docs/stage_map/UPDATE_ORDER.md`
+3. `docs/stage_map/doc_status.md`
 
-## 실행 프롬프트 (Claude에게 그대로 전달)
+## 체크 원칙
+- 현재 기준 truth는 `current workspace code`다.
+- 비교 우선순위는 `code > 2026-03-13 consolidated audits > existing stage_map docs`다.
+- HEAD commit만 보지 말고 현재 dirty workspace 변경도 같이 본다.
 
-```
-docs/stage_map/SYNC_CHECK.md 읽고 동기화 체크 실행해줘.
-```
+## Step 1. 기준점 파악
+- `doc_status.md`에서 active 문서 목록과 마지막 verified metadata를 확인한다.
+- 각 active 문서 footer의 `Commit` / `Workspace State` / `Code Sync`가 `doc_status.md`와 일치하는지 먼저 본다.
 
----
+## Step 2. 변경 파일 수집
+- `git status --short`
+- `git diff --name-only HEAD`
+- 필요하면 `git log --oneline -20`
 
-## 체크 절차
+해석 규칙:
+- `git diff --name-only HEAD`는 현재 dirty workspace 기준 변경 surface다.
+- last verified commit 이후의 clean delta만이 아니라, 현재 미커밋 변경도 최신화 대상이다.
 
-### Step 1. 마지막 체크 기준점 파악
-- `docs/stage_map/doc_status.md` 읽기
-- 각 파일의 `Last Verified` 커밋 해시 확인
-
-### Step 2. 그 이후 변경된 코드 파일 확인
-아래 bash 명령으로 커밋 이후 변경 파일 목록 추출:
-```bash
-git log --oneline -20
-git diff {마지막_커밋}..HEAD --name-only
-```
-
-### Step 3. 변경 파일 → 대응 stage_map 파일 매핑
+## Step 3. 변경 파일 -> stage_map 문서 매핑
 
 | 변경된 코드 경로 | 확인할 stage_map 파일 |
 |---|---|
-| `modules/core/stage2_*.py` | `stage2.md`, `interfaces.md` |
-| `modules/core/stage3_*.py` | `stage3.md` |
-| `modules/core/stage4_*.py` | `stage4.md` |
-| `modules/domain/agents/three_phase_blueprint_generator.py` | `stage3.md`, `gotchas.md` |
-| `modules/domain/agents/director*.py` | `stage2.md`, `stage3.md`, `stage4.md` |
-| `modules/domain/agents/chief_writer*.py` | `stage4.md` |
-| `modules/core/db_manager.py` | `interfaces.md` |
-| `modules/core/project_manager.py` | `interfaces.md`, `runbook.md` |
+| `modules/core/stage0/*`, `modules/core/stage01_helpers.py` | `stage0.md`, `stage1.md` |
+| `modules/core/stage2_*.py`, `modules/core/stage2_context.py` | `stage2.md`, `interfaces.md`, `agent_graph.md`, `gotchas.md` |
+| `modules/core/stage3_*.py`, `modules/domain/agents/three_phase_blueprint_generator.py` | `stage3.md`, `interfaces.md`, `agent_graph.md`, `gotchas.md` |
+| `modules/core/stage4_*.py`, `modules/domain/agents/chief_writer*.py`, `modules/validation/consistency_validator.py` | `stage4.md`, `interfaces.md`, `agent_graph.md`, `gotchas.md` |
+| `modules/core/db_manager.py`, `modules/core/project_manager.py` | `interfaces.md`, `runbook.md` |
 | `modules/core/services/project_service.py` | `runbook.md` |
-| `modules/core/stage0/` | `stage0.md` |
-| `config/settings/validation.yaml` | `metrics_baseline.md`, `stage3.md` |
-| `modules/core/constants.py` | `metrics_baseline.md` |
-| `main_a.py` | `runbook.md` |
+| `modules/core/services/ui_service.py` | `stage1.md`, `gotchas.md` |
+| `config/settings/validation.yaml`, `modules/core/constants.py` | `metrics_baseline.md`, `stage2.md`, `stage3.md`, `stage4.md`, `gotchas.md` |
+| `main_a.py` | `stage0.md`, `stage1.md`, `stage2.md`, `stage3.md`, `stage4.md`, `runbook.md` |
 
-### Step 4. 대응 파일 읽고 불일치 판단
-
-변경된 코드 핵심 내용과 stage_map 문서 내용 대조.
+## Step 4. 문서 대조
 판단 기준:
-- 임계값 수치 변경 → `metrics_baseline.md` 수치 불일치
-- 함수명/진입점 변경 → 해당 stage 파일 Entry Points 불일치
-- 흐름/분기 변경 → 해당 stage 파일 Key Flow 불일치
-- 새로운 함정 패턴 발견 → `gotchas.md` 누락 여부
-- DB 테이블/계약 변경 → `interfaces.md` 불일치
-- 롤백/초기화 동작 변경 → `runbook.md` 불일치
+- 임계값 / 예산 / 라운드 수 변경 -> `metrics_baseline.md`, 해당 stage 문서
+- 함수명 / 진입점 / callback surface 변경 -> 해당 stage 문서와 `agent_graph.md`
+- 흐름 / 분기 / verdict semantics 변경 -> 해당 stage 문서, `interfaces.md`, `gotchas.md`
+- DB 테이블 / handoff / anchor 의미 변경 -> `interfaces.md`
+- rollback / wipe / rewind 의미 변경 -> `runbook.md`
+- active footer / 원장 불일치 -> `doc_status.md`, 해당 문서 footer
 
-### Step 5. 보고
+## Step 5. 보고 형식
 
-아래 형식으로 출력:
-
-```
+```markdown
 ## stage_map 동기화 체크 결과 (YYYY-MM-DD)
 
 ### ✅ 동기화됨
-- [파일명]: 변경 없음 또는 문서 반영 확인
+- [파일명]: 현재 workspace code와 문서가 일치함
 
 ### ⚠️ 업데이트 필요
 - [stage_map 파일]: [불일치 내용]
@@ -70,28 +62,17 @@ git diff {마지막_커밋}..HEAD --name-only
   - 문서: [현재 기재된 값/동작]
   - 수정 제안: [한 줄]
 
-### 📝 판단 불가 (직접 확인 필요)
+### 📝 판단 불가
 - [항목]: [이유]
 ```
 
-### Step 6. 업데이트 여부 사용자 결정
-- 사용자가 "고쳐" 하면 해당 stage_map 파일 수정
-- 사용자가 "넘어가" 하면 `doc_status.md`에 "Known mismatch" 기록
+## Step 6. 후속 처리
+- 사용자가 `고쳐`라고 하면 해당 stage_map 파일을 수정한다.
+- 사용자가 보류를 선택하면 `doc_status.md`의 note에 known drift를 남긴다.
 
----
-
-## 실행 주기 권장
-
-| 시점 | 체크 범위 |
-|---|---|
-| 코드 대규모 수정 후 | 전체 |
-| 특정 스테이지 버그 수정 후 | 해당 stage.md + gotchas.md |
-| 임계값 변경 후 | metrics_baseline.md 단독 |
-
----
-
-## 제약
-
-- bash `git log` / `git diff` 는 허용 필요 (파일 목록 추출용)
-- Read 툴로 코드 직접 읽기 (rg/grep 자동화 금지)
-- 불일치 판단은 LLM이 함 — 100% 자동 아님, 반자동
+## Last Verified
+- Date: 2026-03-13
+- Commit: `e18f9910`
+- Workspace State: dirty
+- Code Sync (Yes/No): Yes
+- Verified By: Codex

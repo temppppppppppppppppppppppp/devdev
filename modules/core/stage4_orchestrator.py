@@ -11,9 +11,12 @@ import dataclasses
 import inspect
 import logging
 import re
+from pathlib import Path
 
+from modules.core.jsonl_io import append_jsonl_record
 from modules.core.llm_generate import generate_content_via_router
 from modules.core.project_support import load_style_guide_anchor, resolve_project_bible_pov
+from modules.core.soft_failure import resolve_project_log_dir
 from modules.core.stage4_context_builder import Stage4ContextBuilder
 from modules.core.stage4_interview_round import Stage4InterviewRound
 from modules.core.stage4_post_processor import Stage4PostProcessor
@@ -1305,10 +1308,11 @@ JSON으로 출력:
         """[V76] 에스컬레이션 이벤트를 episode_production.jsonl에 기록."""
         try:
             import datetime
-            import json
             import os
 
-            logs_dir = os.path.join("projects", self.ctx.current_project.name, "logs")
+            logs_dir = resolve_project_log_dir(getattr(self.ctx, "current_project", None))
+            if logs_dir is None:
+                logs_dir = Path("projects") / str(self.ctx.current_project.name) / "logs"
             os.makedirs(logs_dir, exist_ok=True)
             entry = {
                 "ts": datetime.datetime.now().isoformat(timespec="seconds"),
@@ -1317,12 +1321,7 @@ JSON으로 출력:
                 "streak": streak,
                 "success": success,
             }
-            with open(
-                os.path.join(logs_dir, "episode_production.jsonl"),
-                "a",
-                encoding="utf-8",
-            ) as f:
-                f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+            append_jsonl_record(Path(logs_dir) / "episode_production.jsonl", entry)
         except Exception as e:
             logging.warning("[V76] escalation log 실패: %s", e)
 
@@ -1584,6 +1583,7 @@ JSON으로 출력:
         - 인간 개입: 5번 실패 시 중단
         """
         try:
+            ctx = self.ctx
             session = self._prepare_stage4_session(limit_mode=limit_mode, target_ep=target_ep)
             if session is None:
                 return
@@ -1591,14 +1591,14 @@ JSON으로 출력:
             _should_return = self._run_interview_loop(session)
             if _should_return:
                 return
-            _audit_event = getattr(self.app, "_audit_event", None)
+            _audit_event = getattr(ctx, "audit_event", None)
             if callable(_audit_event):
                 _audit_event(
                     "stage4_complete",
                     "stage4 production completed",
                     {"target_ep": getattr(session, "target_ep", target_ep)},
                 )
-            _write_summary = getattr(self.app, "_write_audit_summary", None)
+            _write_summary = getattr(ctx, "write_audit_summary", None)
             if callable(_write_summary):
                 _write_summary("stage4_complete")
 
@@ -1607,7 +1607,8 @@ JSON으로 출력:
             if callable(getattr(self.ctx, "flush_audit_buffer", None)):
                 self.ctx.flush_audit_buffer()
             if callable(getattr(self.ctx, "safe_commit", None)):
-                self.ctx.safe_commit()
+                if not self.ctx.safe_commit():
+                    self.ctx.ui.log("⚠️ [Stage4 Cleanup] interrupt cleanup commit failed")
         except Exception as e:
             self.ctx.ui.log(f"\n🚨 Stage 4 V2 오류: {e}")
             import traceback
@@ -1616,4 +1617,5 @@ JSON으로 출력:
             if callable(getattr(self.ctx, "flush_audit_buffer", None)):
                 self.ctx.flush_audit_buffer()
             if callable(getattr(self.ctx, "safe_commit", None)):
-                self.ctx.safe_commit()
+                if not self.ctx.safe_commit():
+                    self.ctx.ui.log("⚠️ [Stage4 Cleanup] exception cleanup commit failed")

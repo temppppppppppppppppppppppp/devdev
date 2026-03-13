@@ -48,17 +48,19 @@ def test_blueprint_ep_num_creates_episode_number_alias():
     assert dumped.get("episode_number") == 7
 
 
-def test_main_a_arc_calc_uses_5_episode_buckets():
+def test_main_a_arc_calc_uses_configured_buckets_and_arc_boundaries():
     src = _read("main_a.py")
     idx = src.index("def _calculate_arc_from_episode")
-    section = src[idx : idx + 260]
-    assert "// 5 + 1" in section
-    assert "// 10 + 1" not in section
+    section = src[idx : idx + 1400]
+    assert "VolumeSettings.EPISODES_PER_ARC" in section
+    assert "current_project" in section
+    assert "// 5 + 1" not in section
 
 
-def test_stage2_orchestrator_smart_skip_has_no_dead_pass_branch():
+def test_stage2_orchestrator_smart_skip_uses_guarded_resolver():
     src = _read("modules/core/stage2_orchestrator.py")
-    idx = src.index("skip_arc_no = self.ctx.calculate_arc_from_episode(existing_ms_max_ep)")
+    idx = src.index("skip_arc_no = self._resolve_arc_number_for_episode(existing_ms_max_ep)")
     section = src[idx : idx + 350]
     assert "if skip_arc_no > done_count:" in section
     assert "if skip_arc_no <= done_count:" not in section
+    assert "self.ctx.calculate_arc_from_episode(existing_ms_max_ep)" not in src

@@ -28,6 +28,13 @@ BANNED_TEMPLATE_RES = [
     re.compile(r"Capital moved from", re.IGNORECASE),
 ]
 GENERIC_CALLBACK_RE = re.compile(r"직전 블록의 .* 성과가 이번 .* 발판이 되었다")
+AMOUNT_RE = re.compile(r"\d[\d,.]*\s*(?:억|조|만|원|%|달러|위안|배)?")
+ORG_RE = re.compile(
+    r"[가-힣A-Za-z0-9]{2,}(?:사|그룹|회사|공장|호텔|병원|은행|연합|센터|재단|증권|캐피탈|인베스트먼트|파트너스|자산운용)"
+)
+RECOGNITION_RE = re.compile(
+    r"(대단|인정|재평가|경탄|감탄|존중|신뢰|의지|믿게|다시\s*봤|경외|감복|수긍|고개를 숙|격이 다르)"
+)
 
 MANDATORY_CONTENT_FIELDS = ("context", "event_villain", "solution", "reward")
 LANGUAGE_PATHS = [
@@ -47,6 +54,33 @@ CODE_PATHS = [
     "regression_ext.regression_hint.slip_up",
 ]
 LOW_INTELLIGENCE_OPEN_FORESHADOW_LIMIT = 10
+BLANKISH_PREFIXES = ("없음", "해당 없음")
+BLANKISH_VALUES = {
+    "",
+    "없다",
+    "무",
+    "none",
+    "n/a",
+    "na",
+    "null",
+}
+ENTITY_TOKEN_STOPWORDS = {
+    "그리고",
+    "하지만",
+    "그러나",
+    "이번",
+    "블록",
+    "자본",
+    "상대",
+    "주인공",
+    "시장",
+    "가문",
+    "회사",
+    "그룹",
+    "운영",
+    "계약",
+    "정산",
+}
 
 
 @dataclass
@@ -125,6 +159,112 @@ def sentence_like_count(text: Any) -> int:
     return len(parts) if parts else 1
 
 
+def is_blankish(value: Any) -> bool:
+    text = re.sub(r"\s+", " ", as_text(value)).strip()
+    if not text:
+        return True
+    lowered = text.lower()
+    if lowered in BLANKISH_VALUES:
+        return True
+    return any(text.startswith(prefix) for prefix in BLANKISH_PREFIXES)
+
+
+def bundle_size(block: dict[str, Any]) -> int:
+    content = block.get("content", {}) if isinstance(block, dict) else {}
+    return (
+        len(as_text(content.get("context")))
+        + len(as_text(content.get("event_villain")))
+        + len(as_text(content.get("solution")))
+        + len(as_text(content.get("reward")))
+        + len(as_text(block.get("stakes")))
+    )
+
+
+def iter_entity_tokens(block: dict[str, Any]) -> list[str]:
+    genre = block.get("genre_ext", {}) if isinstance(block, dict) else {}
+    opponent = genre.get("opponent", {}) if isinstance(genre.get("opponent", {}), dict) else {}
+    names = [
+        block.get("title"),
+        opponent.get("name"),
+        (genre.get("global_partner") or {}).get("name") if isinstance(genre.get("global_partner"), dict) else "",
+    ]
+    for rel in ensure_list(block.get("relationship_delta")):
+        if isinstance(rel, dict):
+            names.append(rel.get("target"))
+
+    tokens: set[str] = set()
+    for text in names:
+        for token in re.findall(r"[가-힣A-Za-z]{2,}", as_text(text)):
+            if token not in ENTITY_TOKEN_STOPWORDS:
+                tokens.add(token)
+    return sorted(tokens, key=len, reverse=True)
+
+
+def normalize_solution_stakes_signature(block: dict[str, Any]) -> str:
+    content = block.get("content", {}) if isinstance(block, dict) else {}
+    raw = f"{as_text(content.get('solution'))} {as_text(block.get('stakes'))}".strip()
+    if not raw:
+        return ""
+
+    text = BLOCK_REF_RE.sub("[BLOCK]", raw)
+    text = AMOUNT_RE.sub("[N]", text)
+    text = ORG_RE.sub("[ORG]", text)
+    for token in iter_entity_tokens(block):
+        text = re.sub(re.escape(token), "[ENT]", text, flags=re.IGNORECASE)
+    text = re.sub(r"[A-Za-z]{2,}", "[ENG]", text)
+    text = re.sub(r"[가-힣]{2,5}", "[K]", text)
+    text = re.sub(r"\s+", " ", text).strip()
+    return text
+
+
+def count_unresolved_foreshadows(blocks: list[dict[str, Any]]) -> int:
+    unresolved = 0
+    for foreshadow_source in blocks:
+        for foreshadow in ensure_list(foreshadow_source.get("foreshadow")):
+            text = as_text(foreshadow)
+            if not text:
+                continue
+            targets = [int(match.group(1)) for match in BLOCK_REF_RE.finditer(text)]
+            if not targets:
+                continue
+            source_tokens = set(TOKEN_RE.findall(text.lower()))
+            for target in targets:
+                if target < 1 or target > len(blocks):
+                    unresolved += 1
+                    continue
+                callbacks = ensure_list(blocks[target - 1].get("callback"))
+                resolved = False
+                for callback in callbacks:
+                    callback_tokens = set(TOKEN_RE.findall(as_text(callback).lower()))
+                    if len(source_tokens & callback_tokens) >= 2:
+                        resolved = True
+                        break
+                if not resolved:
+                    unresolved += 1
+    return unresolved
+
+
+def has_recognition_signal(block: dict[str, Any]) -> bool:
+    regression = block.get("regression_ext", {}) if isinstance(block.get("regression_ext"), dict) else {}
+    regression_hint = regression.get("regression_hint", {}) if isinstance(regression.get("regression_hint"), dict) else {}
+
+    explicit = regression_hint.get("recognition_from")
+    if not is_blankish(explicit):
+        return True
+
+    candidates = [block.get("content", {}).get("reward", "")]
+    candidates.extend(as_text(item) for item in ensure_list(block.get("callback")))
+    for rel in ensure_list(block.get("relationship_delta")):
+        if isinstance(rel, dict):
+            candidates.append(rel.get("after", ""))
+    power_shift = block.get("power_shift", {})
+    if isinstance(power_shift, dict):
+        candidates.append(power_shift.get("antagonist", ""))
+        candidates.append(power_shift.get("protagonist", ""))
+
+    return any(RECOGNITION_RE.search(as_text(text)) for text in candidates)
+
+
 def compute_treatment_metrics(blocks: list[dict[str, Any]]) -> dict[str, Any]:
     if not blocks:
         return {
@@ -132,6 +272,10 @@ def compute_treatment_metrics(blocks: list[dict[str, Any]]) -> dict[str, Any]:
             "production_density_gate": False,
             "avg_bundle_chars": 0.0,
             "avg_solution_chars": 0.0,
+            "foreshadow_total": 0,
+            "callback_total": 0,
+            "callback_ratio": 0.0,
+            "unresolved_foreshadow_count": 0,
             "opponent_unique": 0,
             "weakness_unique": 0,
             "deal_unique": 0,
@@ -146,12 +290,24 @@ def compute_treatment_metrics(blocks: list[dict[str, Any]]) -> dict[str, Any]:
             "one_sentence_like_solution_blocks": 0,
             "business_sector_missing": 0,
             "section_rotation_missing": 0,
+            "critical_thin_blocks": [],
+            "thin_blocks": [],
+            "short_stakes_blocks": [],
+            "recognition_signal_blocks": 0,
+            "max_recognition_gap_streak": 0,
+            "late_blank_opponent_blocks": [],
+            "endgame_low_stakes_blocks": [],
+            "normalized_solution_stakes_repeat_max": 0,
+            "is_regressor_treatment": False,
+            "hard_gate_checks": {},
+            "hard_gate_failures": [],
             "window_10_opponent_unique_counts": [],
             "pattern_feedback_snapshot": {
                 "top_opponents": [],
                 "top_weaknesses": [],
                 "solution_pattern_warnings": [],
                 "forbidden_pattern_reuse": [],
+                "structural_gate_failures": [],
             },
         }
 
@@ -160,16 +316,31 @@ def compute_treatment_metrics(blocks: list[dict[str, Any]]) -> dict[str, Any]:
     deals: list[str] = []
     methods: list[str] = []
     solution_tails: list[str] = []
+    normalized_solution_stakes: list[str] = []
     bundle_sizes: list[int] = []
     solution_sizes: list[int] = []
     one_sentence_like = 0
     business_sector_missing = 0
     section_rotation_missing = 0
+    critical_thin_blocks: list[int] = []
+    thin_blocks: list[int] = []
+    short_stakes_blocks: list[int] = []
+    recognition_signal_blocks = 0
+    recognition_gap_streak = 0
+    max_recognition_gap_streak = 0
+    is_regressor_treatment = False
+    foreshadow_total = 0
+    callback_total = 0
 
-    for block in blocks:
+    for block_no, block in enumerate(blocks, start=1):
         genre = block.get("genre_ext", {}) if isinstance(block, dict) else {}
         content = block.get("content", {}) if isinstance(block, dict) else {}
         opponent = genre.get("opponent", {}) if isinstance(genre.get("opponent", {}), dict) else {}
+        regression = block.get("regression_ext", {}) if isinstance(block.get("regression_ext"), dict) else {}
+        regression_hint = regression.get("regression_hint", {}) if isinstance(regression.get("regression_hint"), dict) else {}
+        is_regressor = bool(regression.get("is_regressor")) or as_text(regression.get("regression_type")) in {"빙의", "회귀"}
+        if is_regressor:
+            is_regressor_treatment = True
 
         opponent_names.append(as_text(opponent.get("name")))
         weaknesses.append(as_text(opponent.get("weakness_exploited")))
@@ -179,26 +350,41 @@ def compute_treatment_metrics(blocks: list[dict[str, Any]]) -> dict[str, Any]:
         solution = as_text(content.get("solution"))
         solution_sizes.append(len(solution))
         solution_tails.append(normalize_tail(solution, 20))
+        normalized_solution_stakes.append(normalize_solution_stakes_signature(block))
         if sentence_like_count(solution) <= 2:
             one_sentence_like += 1
 
-        bundle_sizes.append(
-            len(as_text(content.get("context")))
-            + len(as_text(content.get("event_villain")))
-            + len(solution)
-            + len(as_text(content.get("reward")))
-            + len(as_text(block.get("stakes")))
-        )
+        current_bundle = bundle_size(block)
+        bundle_sizes.append(current_bundle)
+        if current_bundle < 300:
+            critical_thin_blocks.append(block_no)
+        elif current_bundle < 350:
+            thin_blocks.append(block_no)
 
-        if not as_text(genre.get("business_sector")):
+        stakes_len = len(as_text(block.get("stakes")))
+        if stakes_len < 35:
+            short_stakes_blocks.append(block_no)
+
+        if is_blankish(genre.get("business_sector")):
             business_sector_missing += 1
-        if not as_text(genre.get("section_rotation")):
+        if is_blankish(genre.get("section_rotation")):
             section_rotation_missing += 1
 
-    opponent_counter = Counter(name for name in opponent_names if name)
-    weakness_counter = Counter(value for value in weaknesses if value)
-    deal_counter = Counter(value for value in deals if value)
-    method_counter = Counter(value for value in methods if value)
+        foreshadow_total += len([text for text in ensure_list(block.get("foreshadow")) if as_text(text)])
+        callback_total += len([text for text in ensure_list(block.get("callback")) if as_text(text)])
+
+        if is_regressor:
+            if has_recognition_signal(block):
+                recognition_signal_blocks += 1
+                recognition_gap_streak = 0
+            else:
+                recognition_gap_streak += 1
+                max_recognition_gap_streak = max(max_recognition_gap_streak, recognition_gap_streak)
+
+    opponent_counter = Counter(name for name in opponent_names if name and not is_blankish(name))
+    weakness_counter = Counter(value for value in weaknesses if value and not is_blankish(value))
+    deal_counter = Counter(value for value in deals if value and not is_blankish(value))
+    method_counter = Counter(value for value in methods if value and not is_blankish(value))
     solution_tail_counter = Counter(value for value in solution_tails if value)
 
     top_opponent_name, top_opponent_repetition = opponent_counter.most_common(1)[0] if opponent_counter else ("", 0)
@@ -209,8 +395,47 @@ def compute_treatment_metrics(blocks: list[dict[str, Any]]) -> dict[str, Any]:
 
     window_10 = []
     for start in range(0, len(opponent_names), 10):
-        chunk = [name for name in opponent_names[start : start + 10] if name]
+        chunk = [name for name in opponent_names[start : start + 10] if name and not is_blankish(name)]
         window_10.append(len(set(chunk)))
+
+    unresolved_foreshadow_count = count_unresolved_foreshadows(blocks)
+    callback_ratio = round(callback_total / max(foreshadow_total, 1), 2)
+    late_blank_opponent_blocks = [
+        idx
+        for idx in range(max(1, len(blocks) - 9), len(blocks) + 1)
+        if is_blankish(opponent_names[idx - 1])
+    ]
+    endgame_low_stakes_blocks = [
+        idx for idx in range(max(1, len(blocks) - 4), len(blocks) + 1) if idx in short_stakes_blocks
+    ]
+
+    normalized_solution_stakes_repeat_max = 0
+    for start in range(0, len(normalized_solution_stakes), 10):
+        chunk = [value for value in normalized_solution_stakes[start : start + 10] if value]
+        if not chunk:
+            continue
+        normalized_solution_stakes_repeat_max = max(
+            normalized_solution_stakes_repeat_max,
+            Counter(chunk).most_common(1)[0][1],
+        )
+
+    thin_ratio_limit = len(blocks) * 0.10
+    required_recognition_blocks = max(6, (len(blocks) + 9) // 10) if is_regressor_treatment else 0
+    hard_gate_checks = {
+        "critical_thin_blocks_zero": len(critical_thin_blocks) == 0,
+        "thin_blocks_ratio_ok": len(thin_blocks) <= thin_ratio_limit,
+        "late_thin_blocks_zero": not any(block_no > len(blocks) - 10 for block_no in thin_blocks),
+        "short_stakes_blocks_total_ok": len(short_stakes_blocks) <= 2,
+        "endgame_low_stakes_zero": len(endgame_low_stakes_blocks) == 0,
+        "callback_ratio_ok": callback_ratio >= 0.65,
+        "unresolved_foreshadow_count_ok": unresolved_foreshadow_count <= (foreshadow_total * 0.35),
+        "section_rotation_present": section_rotation_missing == 0,
+        "late_blank_opponent_ok": len(late_blank_opponent_blocks) <= 1,
+        "normalized_solution_stakes_repeat_ok": normalized_solution_stakes_repeat_max <= 3,
+    }
+    if is_regressor_treatment:
+        hard_gate_checks["regressor_recognition_count_ok"] = recognition_signal_blocks >= required_recognition_blocks
+        hard_gate_checks["regressor_recognition_gap_ok"] = max_recognition_gap_streak <= 15
 
     pattern_warnings: list[str] = []
     forbidden_reuse: list[str] = []
@@ -222,16 +447,21 @@ def compute_treatment_metrics(blocks: list[dict[str, Any]]) -> dict[str, Any]:
         pattern_warnings.append(
             f"top opponent {top_opponent_name} share is {round(top_opponent_repetition / len(blocks) * 100, 1)}%"
         )
+    structural_gate_failures = [key for key, ok in hard_gate_checks.items() if not ok]
 
     return {
         "block_count": len(blocks),
-        "production_density_gate": (sum(bundle_sizes) / len(bundle_sizes)) >= 350,
+        "production_density_gate": all(hard_gate_checks.values()),
         "avg_bundle_chars": round(sum(bundle_sizes) / len(bundle_sizes), 2),
         "avg_solution_chars": round(sum(solution_sizes) / len(solution_sizes), 2),
-        "opponent_unique": len(set(name for name in opponent_names if name)),
-        "weakness_unique": len(set(value for value in weaknesses if value)),
-        "deal_unique": len(set(value for value in deals if value)),
-        "method_unique": len(set(value for value in methods if value)),
+        "foreshadow_total": foreshadow_total,
+        "callback_total": callback_total,
+        "callback_ratio": callback_ratio,
+        "unresolved_foreshadow_count": unresolved_foreshadow_count,
+        "opponent_unique": len(set(name for name in opponent_names if name and not is_blankish(name))),
+        "weakness_unique": len(set(value for value in weaknesses if value and not is_blankish(value))),
+        "deal_unique": len(set(value for value in deals if value and not is_blankish(value))),
+        "method_unique": len(set(value for value in methods if value and not is_blankish(value))),
         "top_opponent_name": top_opponent_name,
         "top_opponent_repetition": top_opponent_repetition,
         "top_opponent_share": round(top_opponent_repetition / len(blocks) * 100, 1) if blocks else 0.0,
@@ -242,12 +472,24 @@ def compute_treatment_metrics(blocks: list[dict[str, Any]]) -> dict[str, Any]:
         "one_sentence_like_solution_blocks": one_sentence_like,
         "business_sector_missing": business_sector_missing,
         "section_rotation_missing": section_rotation_missing,
+        "critical_thin_blocks": critical_thin_blocks,
+        "thin_blocks": thin_blocks,
+        "short_stakes_blocks": short_stakes_blocks,
+        "recognition_signal_blocks": recognition_signal_blocks,
+        "max_recognition_gap_streak": max_recognition_gap_streak,
+        "late_blank_opponent_blocks": late_blank_opponent_blocks,
+        "endgame_low_stakes_blocks": endgame_low_stakes_blocks,
+        "normalized_solution_stakes_repeat_max": normalized_solution_stakes_repeat_max,
+        "is_regressor_treatment": is_regressor_treatment,
+        "hard_gate_checks": hard_gate_checks,
+        "hard_gate_failures": structural_gate_failures,
         "window_10_opponent_unique_counts": window_10,
         "pattern_feedback_snapshot": {
             "top_opponents": opponent_counter.most_common(3),
             "top_weaknesses": weakness_counter.most_common(3),
             "solution_pattern_warnings": pattern_warnings,
             "forbidden_pattern_reuse": forbidden_reuse,
+            "structural_gate_failures": structural_gate_failures,
         },
     }
 
@@ -617,7 +859,11 @@ def prompt_json_skeleton(start: int, batch_size: int, protagonist: str) -> str:
             "timeline_knowledge": {"info_used": "사용 정보", "accuracy": "상", "source": "출처"},
             "butterfly_effect": {"original_event": "원래 사건", "changed_event": "바뀐 사건", "ripple_effect": "파급"},
             "death_flag": {"avoided": "회피한 위기", "method": "회피 방법"},
-            "regression_hint": {"slip_up": "의심을 부른 실수", "suspicion_from": "의심한 세력"},
+            "regression_hint": {
+                "slip_up": "너무 정확한 타이밍이 드러난 실수",
+                "recognition_from": "주인공의 비범함을 인정한 인물 또는 세력",
+                "suspicion_from": "선택: 이상함을 눈치챈 인물 또는 세력",
+            },
             "future_prep": {"action": "다음 준비", "target_event": "다음 목표"},
             "single_heir_policy": "승계 정책",
             "incarnation_type": "빙의자",

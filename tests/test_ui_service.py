@@ -121,10 +121,21 @@ class TestShowVolumeTable:
         ]
         svc.show_volume_table(volumes)
         ui_mock.console.print.assert_called_once()
+        table = ui_mock.console.print.call_args.args[0]
+        assert table.title == "📊 [V20] 2권 전략 설계 상업성 성적표"
 
     def test_empty_volumes(self, svc, ui_mock):
         svc.show_volume_table([])
         ui_mock.console.print.assert_called_once()
+        table = ui_mock.console.print.call_args.args[0]
+        assert table.title == "📊 [V20] 권별 전략 설계 상업성 성적표"
+
+    def test_single_volume_title_is_not_fixed_to_ten(self, svc, ui_mock):
+        svc.show_volume_table([{"vol_no": 1, "strategy_doc": "Only Title", "cider_score": 88}])
+
+        ui_mock.console.print.assert_called_once()
+        table = ui_mock.console.print.call_args.args[0]
+        assert table.title == "📊 [V20] 1권 전략 설계 상업성 성적표"
 
 
 # ── project_fn None safety ───────────────────────────────────────

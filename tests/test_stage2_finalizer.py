@@ -12,6 +12,7 @@ PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from modules.core.stage2_finalizer import Stage2Finalizer
+from modules.core.stage2_context import Stage2Context
 
 
 @pytest.fixture
@@ -117,6 +118,24 @@ class TestFinalizerStructure:
         f = Stage2Finalizer(None)
         with pytest.raises(AttributeError):
             _ = f.ctx
+
+
+class TestCommitSemantics:
+    @patch("modules.core.stage2_finalizer.validate_arc", side_effect=lambda arc: arc)
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    def test_safe_commit_async_false_returns_retry_and_audit(self, _validate, finalizer, valid_refined_arc):
+        finalizer.ctx.safe_commit_async = AsyncMock(return_value=False)
+        finalizer.ctx.current_project.db.conn.in_transaction = False
+
+        result = asyncio.run(finalizer.run_finalize(**_make_finalize_kwargs(valid_refined_arc)))
+
+        assert result["action"] == "retry"
+        assert any("Arc 1 저장 실패" in call.args[0] for call in finalizer.ctx.ui.log.call_args_list if call.args)
+        finalizer.ctx.audit_event.assert_any_call(
+            "db_commit_error",
+            "arc save failed in async",
+            {"arc_no": 1, "error": "safe_commit_async returned False"},
+        )
 
     def test_ctx_proxy(self, finalizer, finalizer_ctx):
         assert finalizer.ctx is finalizer_ctx
@@ -304,6 +323,70 @@ class TestRunFinalize:
         assert ("data_missing", "hybrid_composition missing") not in calls
         assert ("data_missing", "joint_docs missing") not in calls
         assert ("data_missing", "status_shadow missing") not in calls
+
+    @patch("modules.core.stage2_finalizer.validate_arc", side_effect=lambda x: x)
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    def test_finalize_real_app_context_invokes_bound_validate_arc_data_fields(self, _validate, valid_refined_arc):
+        class RealApp:
+            def __init__(self):
+                self.ui = MagicMock()
+                self.ui.log = MagicMock()
+                self.current_project = MagicMock()
+                self.agents = {"director": MagicMock()}
+                self.agents["director"].audit_strategic_plan.return_value = {"decision": "PASS", "score": 95, "reason": "ok"}
+                self.agents["director"].ask.return_value = "volume summary text long enough"
+                self.sys = MagicMock()
+                self.state_tracker = SimpleNamespace(foo=0, bar=0)
+                self.pass_rate_monitor = MagicMock()
+                self.quality_dashboard = MagicMock()
+                self.stage2_optimizer = MagicMock()
+                self.stage2_optimizer.failure_memory = MagicMock()
+                self.perf_timer = MagicMock()
+                self.stage_rejection_history = []
+                self.semantic_plot_guard = None
+                self._audit_event = MagicMock()
+                self._write_audit_summary = MagicMock()
+                self._safe_commit_async = AsyncMock(return_value=True)
+                self._generate_arc_context_v60 = MagicMock(return_value="context_text")
+                self._get_adaptive_feedback_intensity = MagicMock(return_value={"guidance": "guide"})
+                self._state_tracker_loaded_arcs = 0
+                self.repair_calls = []
+
+            def _validate_arc_data_fields(self, arc_data, arc_idx):
+                self.repair_calls.append((arc_idx, arc_data.get("arc_no")))
+                repaired = dict(arc_data)
+                repaired.setdefault(
+                    "hybrid_composition",
+                    {"primary": "standard_progression", "secondary": [], "mixing_logic": "default"},
+                )
+                repaired.setdefault(
+                    "joint_docs",
+                    {"final_location": "market", "physical_inventory": [], "world_joint": "stable"},
+                )
+                repaired.setdefault(
+                    "status_shadow",
+                    {"internal_energy_loss": "10%", "expected_injuries": "none", "item_consumption": []},
+                )
+                return repaired
+
+            def _validate_arc_integrity(self, arc_data):
+                return True
+
+        app = RealApp()
+        host = SimpleNamespace(ctx=Stage2Context.from_app(app))
+        finalizer = Stage2Finalizer(host)
+
+        repaired_arc = dict(valid_refined_arc)
+        repaired_arc.pop("hybrid_composition", None)
+        repaired_arc.pop("joint_docs", None)
+        repaired_arc.pop("status_shadow", None)
+
+        result = asyncio.run(finalizer.run_finalize(**_make_finalize_kwargs(repaired_arc)))
+
+        assert result["action"] == "break"
+        assert app.repair_calls == [(1, 1)]
+        calls = [call.args[:2] for call in app._audit_event.call_args_list]
+        assert ("data_missing", "hybrid_composition missing") not in calls
 
     @patch("modules.core.stage2_finalizer.validate_arc", side_effect=lambda x: x)
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)

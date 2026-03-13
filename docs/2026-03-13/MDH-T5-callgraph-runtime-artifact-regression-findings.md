@@ -1,276 +1,305 @@
 # [MDH-T5] Call Graph / Runtime Artifact / Regression Findings
 
 > 작성일: 2026-03-13
-> 상태: `executed / PASS3 completed`
+> 상태: `executed / PASS3 re-audited`
 > 조사 모드: `static / read-only / code-and-test verification / source-report cross-check / UTF-8 only`
 > 기준 오더: `main_a-dormant-helper-live-consumer-detail-full-survey-audit-order.md`
-> 작성자: `opus`
-> 최종 판정: `retained P2 3건, PASS2 제거 2건`
+> 작성자: `codex`
+> 재감리 메모: `opus` 1차 초안의 exact-name grep 결과를 dynamic DI, `getattr` wiring, targeted test로 재검증했다.
+> 최종 판정: `retained P2 3건, PASS2 제거 3건, helper ledger corrected`
 
-이 문서는 T1~T4 범위의 25개 helper에 대해 repo 전역 정적 검색, e2e/canary/smoke runtime artifact, 기존 감리 문서 3트랙(MRF/MFS/MPN) 통합본을 교차 대조한 PASS3 결과다.
+이 문서는 T1~T4 범위 25개 helper에 대해 repo 전역 검색, 실제 orchestrator/context wiring, e2e/smoke/canary artifact, 기존 감리 문서를 다시 대조한 T5 재감리본이다.
 코드 직접 수정은 수행하지 않았다.
 
 ---
 
 ## 조사 범위
 
-- repo 전역 검색 결과 (grep 기반 call graph)
+- repo 전역 검색 결과
+- `main_a.py`
+- `modules/core/stage2_context.py`
+- `modules/core/stage2_preflight.py`
+- `modules/core/stage2_validation_pipeline.py`
+- `modules/core/stage3_context.py`
+- `modules/core/stage4_context.py`
+- `modules/core/stage4_context_builder.py`
+- `modules/core/stage4_interview_round.py`
+- `modules/core/stage4_orchestrator.py`
+- `modules/core/services/project_service.py`
+- `modules/core/services/state_service.py`
+- `modules/core/prompt_builder.py`
 - `tests/e2e/test_l3_golden_route.py`
 - `tests/e2e/test_l3_stage3_smoke.py`
 - `tests/e2e/test_l3_stage4_smoke.py`
-- `tests/e2e/test_npc_continuity_e2e.py`
 - `tests/e2e/test_retry_recovery_e2e.py`
-- `tests/e2e/test_lm_advisory_smoke.py`
-- `tests/e2e/test_smoke_pipeline.py`
 - `tests/test_run_stage4_canary.py`
-- `tests/test_stage4_canary_tools.py`
 - `scripts/run_stage2_smoke.py`
 - `scripts/run_stage3_smoke.py`
 - `scripts/run_stage4_smoke.py`
 - `scripts/run_stage4_canary.py`
-- 기존 감리 통합본
-  - `main_a-retry-feedback-detail-consolidated-findings.md` (MRF, 13건)
-  - `main_a-facade-shim-detail-consolidated-findings.md` (MFS, 12건)
-  - `main_a-persistence-narrative-detail-consolidated-findings.md` (MPN, 16건)
-  - 각각의 3pass 재감리본 (전부 `pass` 판정)
-- 추가 참조
-  - `MFS-T3-stage3-stage4-audit-callback-findings.md`
-  - `MFS-T4-ui-stage01-presentation-findings.md`
-  - `MRF-T3-prompt-guidance-context-findings.md`
-  - `MRF-T4-cross-stage-reverse-feedback-findings.md`
-  - `MCP-T2-agent-bootstrap-di-findings.md`
+- 기존 감리 문서
+  - `MDH-T1-retry-guidance-helper-liveness-findings.md`
+  - `MDH-T3-stage01-npc-ui-helper-liveness-findings.md`
+  - `MDH-T4-bootstrap-history-cache-helper-liveness-findings.md`
+  - `main_a-retry-feedback-detail-consolidated-findings.md`
+  - `main_a-facade-shim-detail-consolidated-findings.md`
+  - `main_a-persistence-narrative-detail-consolidated-findings.md`
+
+### 추가 실행 검증
+
+- PASS
+  - `pytest tests/test_stage4_context_builder.py::TestBuildMandatoryContext::test_writer_guidance_is_injected_into_live_prompt_path tests/test_stage4_orchestrator.py::TestHandleRoundOutcomeErrorPaths::test_handle_round_outcome_injects_stage4_to_3_feedback_into_inplace_patch tests/test_run_stage4_canary.py::test_run_canary_saves_and_flushes_before_analyze -q`
+  - 결과: `3 passed`
+- FAIL
+  - `pytest tests/test_stage4_context.py::TestStage4Context::test_from_app_extracts_callbacks -q`
+  - 결과: `AttributeError: 'Stage4Context' object has no attribute 'generate_writer_guidance_v60_8'`
+  - 해석: `Stage4Context.from_app()`는 신규 callback wiring을 시도하지만 `__slots__`가 이를 따라가지 못해 Stage4 callback extraction 자체가 현재 worktree에서 깨져 있다.
 
 ---
 
 ## PASS 기록
 
-### PASS 1 — 표면 수집
+### PASS 1 - 표면 수집
 
-T1~T4 범위의 25개 helper에 대해 repo 전역 grep을 수행하고, e2e/canary/smoke 10개 파일, script 4개 파일을 전부 읽어 call graph를 재구성했다. 후보 5건을 뽑았다.
+후보 6건을 잡았다.
 
-- 후보 A: 6개 helper가 production caller 0건, DI export 0건, test-only caller 0건 — 순수 dead surface 클러스터
-- 후보 B: `_classify_rejection_feedback`가 정의와 underlying 구현 테스트만 있고, production caller와 DI export가 없다
-- 후보 C: e2e/smoke 테스트가 main_a helper를 lambda/MagicMock으로 주입해 DI signature drift를 숨긴다
-- 후보 D: `_generate_reverse_feedback_stage4_to_3`가 Stage3 consumer 없이 dormant
-- 후보 E: `_load_v50_history`가 no-op stub
+- 후보 A: OPUS 초안이 `dead/dormant`로 분류한 helper 중 일부가 dynamic DI 또는 `getattr` 경로로 실제 live consumer를 가질 가능성
+- 후보 B: `_classify_rejection_feedback()` dormant 여부
+- 후보 C: e2e/smoke/canary가 helper live contract를 실제로 검증하는지 여부
+- 후보 D: `_load_v50_history()`는 dead인지, live one-shot no-op인지 여부
+- 후보 E: T3 NPC/archetype facade 4종에 hidden runtime caller가 있는지 여부
+- 후보 F: `_restore_preset_registry()` / bootstrap 계열이 runtime artifact에서 다른 hidden consumer를 갖는지 여부
 
-### PASS 2 — 교차 검증
+### PASS 2 - 교차 검증
 
-후보 2건을 제거했다.
+후보 3건을 제거하거나 재분류했다.
 
-- 후보 D 제거
-  - 판정: `already-covered-do-not-reopen`
-  - 근거: `MRF-T4-001`이 동일 helper의 Stage3 consumer 부재를 `P1`으로 이미 확정. dormant-helper inventory 관점에서도 새 정보가 없다.
+- RC-1 제거
+  - 기존 OPUS 초안의 `dead cluster` 안에 있던 `_generate_writer_guidance_v60_8`, `_enrich_director_result`는 제거했다.
+  - 근거: `main_a.py:3544`에서 `Stage4Context.from_app(self)`가 runtime에 연결되고, `modules/core/stage4_context_builder.py:2514-2533`, `modules/core/stage4_interview_round.py:839-870,1902`가 해당 callback을 실제 소비한다.
+  - 단, 현재 worktree에서는 `modules/core/stage4_context.py:148-149`가 `__slots__` 불일치로 실패하므로 상태는 `dead/dormant`가 아니라 `live-wired / runtime-gated`다.
 
-- 후보 E 제거
-  - 판정: `already-covered-do-not-reopen`
-  - 근거: `MCP-T2` coverage gap log가 이미 "No-op stub at `main_a.py:2026-2038`; no required test demonstrates a real restore contract"로 기록. helper 자체의 no-op 상태는 이미 잠겨 있다.
+- RC-2 제거
+  - 기존 OPUS 초안의 `_generate_reverse_feedback_stage4_to_3` dormant claim은 제거했다.
+  - 근거: `modules/core/stage4_orchestrator.py:267-305,1166-1228`가 `self.app._generate_reverse_feedback_stage4_to_3`를 직접 호출한다.
+  - targeted test `tests/test_stage4_orchestrator.py::TestHandleRoundOutcomeErrorPaths::test_handle_round_outcome_injects_stage4_to_3_feedback_into_inplace_patch`도 통과했다.
 
-후보 A/B/C는 retained finding으로 유지했다.
-- 후보 A: 기존 트랙들이 개별 helper를 건드렸지만 (MRF-T3-01은 writer guidance 3개, MRF-T4-003은 `_enrich_director_result`, MCP-T2는 `_ignite_quad_cache_system`), "dead helper 전체를 한 ledger로 모았는가"는 아니었다. T5의 call graph inventory 책임 경계에서 신규다.
-- 후보 B: MFS-T3가 coverage gap으로 이관했지만 dormant 확정은 하지 않았다. T5 전역 grep으로 production caller 0건을 확인했으므로 신규 dormant 확정이다.
-- 후보 C: 개별 트랙들이 MagicMock blind spot을 부분적으로 언급했지만 (MPN-T5-004, MFS-T2-002), e2e/smoke 전체에서 lambda/MagicMock injection 패턴이 DI contract 전체를 가리는 구조적 문제를 T5 관점으로 모은 것은 신규다.
+- RC-3 제거
+  - `_load_v50_history()`를 T5 신규 dormant finding으로 다시 열지 않았다.
+  - 근거: `main_a.py:1955-1956`에서 live bootstrap caller가 존재하고, 현재 본체는 no-op stub이다.
+  - 분류는 `live / no-op legacy`로 바로잡되, defect 자체는 `MDH-T4-003`으로 이미 잠겨 있으므로 T5 신규 finding으로 재오픈하지 않는다.
+
+후보 B, C는 retained finding으로 유지했다.
+후보 E, F는 hidden runtime caller가 없음을 확인했으므로 finding 대신 corrected ledger에 반영했다.
 
 ---
 
-## PASS 3 — 확정 Findings
+## PASS 3 - 최종 확정 Findings
 
 ### Finding Ledger
 
 | ID | Sev | 상태 | 파일/함수 | 요약 | duplicate status |
 |----|-----|------|-----------|------|------------------|
-| `MDH-T5-001` | `P2` | confirmed | `main_a.py` (6개 helper) | 6개 helper가 production caller 0건, DI export 0건으로 순수 dead surface를 구성한다 | `related-but-new-live-consumer-surface` |
-| `MDH-T5-002` | `P2` | confirmed | `main_a.py::_classify_rejection_feedback`, `state_service.py`, `feedback_system.py` | `_classify_rejection_feedback()`는 정의와 underlying 테스트만 있고 production caller가 없는 dormant surface다 | `related-but-new-live-consumer-surface` |
-| `MDH-T5-003` | `P2` | confirmed | `tests/e2e/*.py`, `scripts/run_stage*_smoke.py` | e2e/smoke 테스트가 main_a helper를 lambda/MagicMock으로 주입해 DI signature drift를 구조적으로 가린다 | `related-but-new-live-consumer-surface` |
+| `MDH-T5-001` | `P2` | confirmed | `main_a.py`, `stage4_context.py`, `stage4_context_builder.py`, `stage4_interview_round.py`, `stage4_orchestrator.py` | exact-name grep만으로는 Stage4/boot helper live consumer를 복원할 수 없고, 실제로 OPUS 초안의 dead/dormant 분류 일부가 false negative였다 | `related-but-new-live-consumer-surface` |
+| `MDH-T5-002` | `P2` | confirmed | `main_a.py::_classify_rejection_feedback`, `state_service.py`, `feedback_system.py` | `_classify_rejection_feedback()`는 구현과 하위 테스트는 있으나 production caller와 DI export가 없는 dormant surface다 | `related-but-new-live-consumer-surface` |
+| `MDH-T5-003` | `P2` | confirmed | `tests/e2e/*.py`, `scripts/run_stage*_smoke.py`, `tests/test_run_stage4_canary.py` | e2e/smoke/canary artifact는 real app-bound helper wiring을 충분히 pin하지 못해 live consumer drift와 dormant misclassification을 잡지 못한다 | `related-but-new-live-consumer-surface` |
 
 ---
 
 ## 상세 Findings
 
-### [MDH-T5-001] P2 | 6개 helper가 production caller 0건으로 dead surface 클러스터를 구성한다
+### [MDH-T5-001] P2 | dynamic DI / getattr 경로를 빼면 Stage4/boot helper live consumer inventory가 틀어진다
 
 1. ID
    - `MDH-T5-001`
 2. Severity
    - `P2`
 3. 현상 요약
-   - repo 전역 grep 결과, 아래 6개 helper는 정의부(main_a.py) 외에 production caller, DI context export, test call site가 모두 없다.
-     - `_generate_writer_guidance_v60_8` (main_a.py:733)
-     - `_generate_arc_position_guide` (main_a.py:685)
-     - `_simplify_prompt_for_retry` (main_a.py:669)
-     - `_enrich_director_result` (main_a.py:432)
-     - `_ignite_quad_cache_system` (main_a.py:1148)
-     - `_is_cache_alive` (main_a.py:1293)
-   - 이 helper들은 SovereignApp의 API 표면에 남아 있지만 어떤 Stage orchestrator, DI context, e2e, smoke, canary에서도 호출되지 않는다.
-   - `_is_cache_alive`의 유일한 caller는 `_ignite_quad_cache_system` 내부(main_a.py:1189,1215,1238)이며, 그 caller 자체가 dead이므로 연쇄 dead다.
+   - OPUS 1차 초안은 exact-name grep 중심으로 helper liveness를 분류했지만, 현재 codebase에는 literal helper 이름이 아니라 `from_app()`, `getattr()`, callback name indirection으로 소비되는 live surface가 있다.
+   - 그 결과 `_generate_writer_guidance_v60_8`, `_generate_reverse_feedback_stage4_to_3`, `_enrich_director_result`, `_build_item_acquisition_timeline`, `_load_v50_history` 중 최소 5개가 dead/dormant 쪽으로 잘못 기울었다.
+   - 이 오분류는 "삭제해도 되는 helper"와 "실제 배선은 있는데 현재 runtime gate가 깨진 helper"를 구분하지 못하게 만든다.
 4. 코드 근거
-   - `_generate_writer_guidance_v60_8`: main_a.py:733 정의. grep 결과 추가 참조 0건. Stage2Context/Stage4Context `from_app()` 미포함.
-   - `_generate_arc_position_guide`: main_a.py:685 정의. grep 결과 추가 참조 0건.
-   - `_simplify_prompt_for_retry`: main_a.py:669 정의. grep 결과 추가 참조 0건.
-   - `_enrich_director_result`: main_a.py:432 정의. grep 결과 추가 참조 0건. MRF-T4-003이 "호출 지점이 확인되지 않았다"고 기록.
-   - `_ignite_quad_cache_system`: main_a.py:1148 정의. grep 결과 외부 caller 0건. MCP-T2 coverage gap이 "dead code"로 기록.
-   - `_is_cache_alive`: main_a.py:1293 정의. 유일한 caller가 `_ignite_quad_cache_system` 내부.
+   - `main_a.py:3544`
+     - Stage4 진입 시 `self._stage4_orch.ctx = Stage4Context.from_app(self)`로 callback wiring을 건다.
+   - `modules/core/stage4_context.py:111-118,148-149,191-197`
+     - `build_item_acquisition_timeline`, `generate_writer_guidance_v60_8`, `enrich_director_result`, `flush_audit_buffer`를 app-bound callback으로 주입하려고 시도한다.
+   - `modules/core/stage4_context_builder.py:1864,2514-2533`
+     - `self.ctx.build_item_acquisition_timeline(...)`
+     - `self.ctx.generate_writer_guidance_v60_8(...)`
+   - `modules/core/stage4_interview_round.py:839-870,1902`
+     - `self.ctx.enrich_director_result(...)`를 통해 Director 결과 enrich 경로를 실제로 소비한다.
+   - `modules/core/stage4_orchestrator.py:267-305,1166-1228`
+     - `self.app._generate_reverse_feedback_stage4_to_3`를 직접 조회·호출한다.
+   - `main_a.py:1955-1956`
+     - `_init_v50_modules()` 말미에서 `_load_v50_history()`를 실제 호출한다.
+   - targeted test PASS
+     - `tests/test_stage4_context_builder.py::TestBuildMandatoryContext::test_writer_guidance_is_injected_into_live_prompt_path`
+     - `tests/test_stage4_orchestrator.py::TestHandleRoundOutcomeErrorPaths::test_handle_round_outcome_injects_stage4_to_3_feedback_into_inplace_patch`
+     - `tests/test_run_stage4_canary.py::test_run_canary_saves_and_flushes_before_analyze`
+   - targeted test FAIL
+     - `tests/test_stage4_context.py::TestStage4Context::test_from_app_extracts_callbacks`
+     - 실패 원인: `Stage4Context.__slots__`가 `generate_writer_guidance_v60_8`, `enrich_director_result`를 포함하지 않아 callback extraction이 깨진다.
 5. downstream 영향 경계
-   - 이 helper들이 존재해도 runtime에 영향을 주지 않는다.
-   - 그러나 SovereignApp의 API 표면을 넓히고, 코드 리뷰와 감리에서 live surface와 혼동을 만든다.
-   - 특히 `_generate_writer_guidance_v60_8`과 `_generate_arc_position_guide`는 MRF-T3-01이 "export만 되고 실제 writer prompt에 닿지 않는다"고 확정한 helper들과 같은 family로, 설계 의도 대비 배선 누락인지 의도된 폐기인지 판단이 필요하다.
+   - 잘못된 inventory를 기준으로 dead-code cleanup을 하면 Stage4 retry guidance, blueprint reverse feedback, Director enrich, item timeline helper를 잘못 제거할 수 있다.
+   - 반대로 현재 문제의 본질은 dead helper가 아니라 `live wiring은 있는데 Stage4Context gate가 깨진 상태`라는 점인데, exact-name grep-only inventory는 이를 놓친다.
+   - bootstrap 측면에서도 `_load_v50_history()`는 caller가 있으므로 dead가 아니라 `live/no-op legacy`로 다뤄야 한다.
 6. 현재 테스트 근거 또는 테스트 부재
-   - 6개 helper 모두 직접 테스트가 없다.
-   - underlying 구현체(`PromptBuilder.generate_writer_guidance_v60_8()` 등)에는 unit test가 있지만, thin delegate 호출 경로는 미검증이다.
-   - `_ignite_quad_cache_system`과 `_is_cache_alive`는 underlying 구현체 테스트도 없다.
+   - positive unit coverage는 일부 존재한다.
+     - writer guidance 주입 경로: `1 passed`
+     - Stage4→3 reverse feedback 주입 경로: `1 passed`
+     - canary flush 경로: `1 passed`
+   - 그러나 Stage4 callback extraction의 핵심 factory test는 현재 실패한다.
+     - `tests/test_stage4_context.py::TestStage4Context::test_from_app_extracts_callbacks`
+     - 즉, live consumer inventory는 `존재함`이 맞지만 runtime health는 별도 FAIL gate를 가진다.
 7. 기존 문서와의 중복 여부
    - `related-but-new-live-consumer-surface`
-   - MRF-T3-01은 writer guidance 3개의 callback contract drift를, MRF-T4-003은 `_enrich_director_result`의 live wiring 부재를, MCP-T2는 `_ignite_quad_cache_system`의 dead code 상태를 각각 건드렸다. 그러나 "6개를 dead cluster로 통합해 live helper와 분리한 inventory"는 이번이 처음이다.
+   - 기존 T1/T4 문서가 개별 helper를 dormant/dead로 적었지만, T5 재감리의 책임은 그 문서들을 runtime artifact와 dynamic wiring으로 다시 교차 검증해 inventory 자체를 바로잡는 데 있다.
 8. 권장 후속 조치
-   - 의도된 활성 기능이라면: 6개 helper를 실제 pipeline에 배선한다 (특히 writer guidance family).
-   - 의도된 폐기라면: main_a.py에서 정의를 제거하고 underlying 구현체의 dead helper도 함께 정리한다.
-   - 최소한 dead/live 경계를 문서화해 감리와 리뷰에서 혼동을 줄인다.
+   - consolidated 문서 작성 시 `dead/dormant`와 `live-wired / runtime-gated`를 분리한다.
+   - `Stage4Context.__slots__`와 callback 필드를 맞춰 runtime gate failure를 remediation 단계에서 별도 처리한다.
+   - 이후 helper 정리 작업은 literal grep이 아니라 `from_app()` / `getattr()` / callback name indirection을 포함한 inventory를 기준으로 수행한다.
 
-### [MDH-T5-002] P2 | `_classify_rejection_feedback()`는 production caller가 없는 dormant surface다
+### [MDH-T5-002] P2 | `_classify_rejection_feedback()`는 하위 구현만 검증되고 main_a 표면은 dormant다
 
 1. ID
    - `MDH-T5-002`
 2. Severity
    - `P2`
 3. 현상 요약
-   - `main_a.py:2780`에 정의된 `_classify_rejection_feedback()`는 `self._state_service.classify_rejection_feedback()`에 위임하는 thin delegate다.
-   - underlying 구현체인 `FeedbackSystem.classify_rejection_feedback()`에는 unit test 7건이 있고(`test_feedback_system.py:523-553`), `StateService.classify_rejection_feedback()`에도 위임 테스트가 있다(`test_state_service.py:230-236`).
-   - 그러나 `self._classify_rejection_feedback()`를 호출하는 production code가 repo 전역에 없다. Stage2Context, Stage3Context, Stage4Context 어느 DI context에도 export되지 않는다.
-   - MFS-T3가 "이번 T3 직접 downstream에서 사용처를 찾지 못해 finding이 아니라 coverage gap으로 이관"했지만, T5 전역 grep으로 production caller가 0건임을 확정한다.
+   - `main_a.py:2825-2829`의 `_classify_rejection_feedback()`는 `StateService -> FeedbackSystem`으로 위임하는 thin delegate다.
+   - 하지만 `main_a.py` wrapper 자체를 호출하는 production code가 repo 전역에 없고, Stage2/3/4 context 어느 곳에도 DI export되지 않는다.
+   - 하위 구현 테스트가 풍부하더라도 app surface 관점에서는 dormant export다.
 4. 코드 근거
-   - `main_a.py:2780-2783` 정의 (thin delegate to StateService)
-   - `modules/core/services/state_service.py:236-239` StateService 위임 (thin delegate to FeedbackSystem)
-   - `modules/core/feedback_system.py:759` 실제 구현
-   - repo 전역 `_classify_rejection_feedback` grep: 정의(main_a.py:2780), 위임 호출(main_a.py:2782)만 존재. 외부 caller 0건.
-   - `modules/core/stage2_context.py`, `stage3_context.py`, `stage4_context.py`: `classify_rejection_feedback` slot 또는 `from_app` 주입 없음.
+   - `main_a.py:2825-2829`
+     - thin delegate 정의
+   - `modules/core/services/state_service.py:236-239`
+     - `classify_rejection_feedback()` thin delegate
+   - `modules/core/feedback_system.py:791`
+     - 실제 구현
+   - repo 전역 검색
+     - `_classify_rejection_feedback` literal ref는 `main_a.py` 정의 1건만 존재
+     - `stage2_context.py`, `stage3_context.py`, `stage4_context.py`에 callback slot 없음
 5. downstream 영향 경계
-   - 현재 runtime에 영향 없음.
-   - rejection feedback 분류가 pipeline에서 빠져 있다면, REJECT reason에 따른 적응적 재시도 전략이 작동하지 않을 수 있다.
-   - MRF-T2-02가 지적한 "자유서술형 REJECT reason이 좁은 정규화 버킷 밖으로 떨어지면 기타/무가이드로 수렴"하는 문제의 한 원인일 수 있다.
+   - 현재 runtime은 rejection reason taxonomy를 app surface에서 직접 소비하지 못한다.
+   - retry strategy가 reason bucket에 따라 달라져야 한다면, 그 기능은 main_a boundary에서 사실상 닫혀 있다.
+   - 즉 "구현은 있지만 consumer가 없다"는 dormant surface이며, future cleanup 또는 배선 결정이 필요하다.
 6. 현재 테스트 근거 또는 테스트 부재
-   - underlying 구현: `test_feedback_system.py:516-553` (7건, 카테고리별 분류 검증)
-   - StateService 위임: `test_state_service.py:230-236`
-   - main_a thin delegate: 직접 테스트 없음
-   - production caller: 없음
+   - 하위 구현 테스트는 있다.
+     - `tests/test_feedback_system.py`의 분류 테스트 다수
+     - `tests/test_state_service.py:235-236`의 위임 테스트
+   - main_a wrapper 직접 테스트는 없다.
+   - production caller 테스트도 없다.
 7. 기존 문서와의 중복 여부
    - `related-but-new-live-consumer-surface`
-   - MFS-T3 coverage gap이 "별도 audit" 요청으로 남겼고, 이번 T5가 그 audit을 전역 grep으로 실행해 dormant 확정한 것이다.
+   - 기존 문서는 coverage gap 또는 하위 구현 관점에 머물렀고, T5가 main_a boundary에서 dormant 확정을 잠근다.
 8. 권장 후속 조치
-   - 의도된 활성 기능이라면: Stage2Context 또는 Stage4Context에 callback으로 export하고, retry loop에서 rejection 분류 결과를 실제 활용하도록 배선한다.
-   - 의도된 폐기라면: main_a.py thin delegate를 제거한다. underlying 구현은 별도 판단.
+   - 기능이 필요하면 Stage2 또는 Stage4 retry loop에서 명시적으로 callback export를 추가한다.
+   - 기능이 불필요하면 main_a wrapper를 정리하고 하위 구현만 유지할지 결정한다.
 
-### [MDH-T5-003] P2 | e2e/smoke 테스트가 main_a helper를 lambda/MagicMock으로 주입해 DI signature drift를 구조적으로 가린다
+### [MDH-T5-003] P2 | e2e/smoke/canary는 real app-bound helper contract를 충분히 pin하지 못한다
 
 1. ID
    - `MDH-T5-003`
 2. Severity
    - `P2`
 3. 현상 요약
-   - e2e/smoke/canary 테스트 전체에서 main_a.py helper를 실제 호출하지 않고, lambda 또는 MagicMock으로 대체해 DI contract를 조립한다.
-   - 이 패턴은 helper의 signature, 반환 타입, side effect가 변경되어도 e2e/smoke 테스트가 자동으로 통과하게 만든다.
-   - 결과적으로 "helper가 live consumer와 올바르게 연결돼 있는가"라는 질문에 대해 e2e/smoke regression net이 답할 수 없다.
+   - 현재 e2e/smoke/canary artifact는 real `SovereignApp` helper surface를 직접 소비하기보다 `lambda`, `MagicMock`, `SimpleNamespace`로 callback을 대체해 조립한다.
+   - 이 패턴은 helper signature, binding source, side effect가 drift해도 green을 유지하게 만든다.
+   - 특히 이번 재감리에서 live로 바로잡은 Stage4 helper들(`_generate_writer_guidance_v60_8`, `_generate_reverse_feedback_stage4_to_3`, `_enrich_director_result`, `_build_item_acquisition_timeline`)은 runtime artifact에서 직접 pin되지 않는다.
 4. 코드 근거
-   - `tests/e2e/test_l3_golden_route.py:237-254`: Stage2Context 조립 시 15개 callback을 전부 lambda/빈문자열로 주입
-     - `build_focused_context=lambda **_kw: ""`
-     - `build_minimal_arc_context=lambda *_a, **_k: ""`
-     - `analyze_rejection_pattern_v60=lambda *_a, **_k: ""`
-     - `generate_arc_context_v60=lambda _arcs, _arc_no: ""`
-   - `tests/e2e/test_l3_stage3_smoke.py:125-146`: app mock에 5개 helper를 MagicMock으로 직접 할당
-     - `app._get_arc_context_for_episode = MagicMock(side_effect=...)`
-     - `app._validate_arc_data_fields = MagicMock(side_effect=lambda arc, _idx: arc)`
-     - `app._validate_blueprint_integrity = MagicMock(return_value={"passed": True, ...})`
-     - `app._audit_event = MagicMock()`
-     - `app._write_audit_summary = MagicMock()`
-   - `scripts/run_stage3_smoke.py:110-129`: 동일 패턴
-   - `scripts/run_stage4_smoke.py`: Stage4Context를 MagicMock callback으로 조립
-   - `tests/test_run_stage4_canary.py:8-15`: SimpleNamespace에 `_flush_audit_buffer=MagicMock()`
-   - `tests/e2e/test_retry_recovery_e2e.py:36-75`: mock_app fixture에서 Stage4Orchestrator에 주입할 때 helper를 전부 MagicMock auto-attribute로 남김
+   - `tests/e2e/test_l3_golden_route.py:237-253`
+     - Stage2Context를 lambda 묶음으로 수동 조립한다.
+   - `scripts/run_stage2_smoke.py:253-269`
+     - 동일한 lambda 기반 Stage2Context 조립
+   - `tests/e2e/test_l3_stage3_smoke.py:133-146`
+     - `_get_arc_context_for_episode`, `_validate_arc_data_fields`, `_validate_blueprint_integrity`, `_audit_event`, `_write_audit_summary`를 `MagicMock`으로 직접 주입
+   - `scripts/run_stage3_smoke.py:118-129`
+     - 동일한 MagicMock 패턴
+   - `tests/e2e/test_l3_stage4_smoke.py:115-123`
+     - Stage4Context를 `SimpleNamespace` + lambda callback으로 조립
+   - `scripts/run_stage4_smoke.py:100-107`
+     - 동일한 Stage4 smoke 조립
+   - `tests/test_run_stage4_canary.py:8-17`
+     - canary는 `_flush_audit_buffer` / pass-rate monitor save 순서만 pin하고, writer guidance / enrich / reverse feedback 경로는 직접 검증하지 않는다.
 5. downstream 영향 경계
-   - 실제 helper signature가 변경되어도 e2e 테스트가 MagicMock auto-attribute 또는 `**kwargs` lambda로 흡수해 green을 유지한다.
-   - 이로 인해 facade shim drift(MFS 트랙), callback contract drift(MRF 트랙), shared helper semantics drift(MPN 트랙)가 모두 e2e/smoke regression에서 감지 불가능하다.
-   - helper가 dead인지 live인지도 e2e 테스트만으로는 구별할 수 없다 — dead helper를 MagicMock으로 주입하면 테스트가 통과하기 때문이다.
+   - helper가 live consumer와 맞게 연결돼 있는지에 대한 회귀망이 약하다.
+   - exact-name grep 오분류, bound-method drift, callback slot 누락, Stage4Context slot regression 같은 문제가 runtime artifact만으로는 빨리 드러나지 않는다.
+   - dead helper를 mock으로 채워 넣어도 smoke가 통과할 수 있으므로, "테스트가 green"이 live consumer proof가 되지 않는다.
 6. 현재 테스트 근거 또는 테스트 부재
-   - e2e/smoke 10개 파일, script 4개 파일을 전수 확인했다.
-   - real SovereignApp 인스턴스를 boot하는 테스트는 `scripts/run_stage4_canary.py`뿐이다. 이 스크립트도 `_stage_4_v2_chief_writer()`, `_flush_audit_buffer()`, `_get_int_input`만 직접 사용하고 나머지 helper는 간접적으로만 live된다.
-   - 나머지 모든 e2e/smoke는 MagicMock/lambda injection으로 helper를 대체한다.
-   - helper signature parity를 검증하는 e2e 테스트는 0건이다.
+   - helper-specific unit proof는 일부 존재한다.
+     - writer guidance live prompt path: `1 passed`
+     - Stage4→3 reverse feedback injection: `1 passed`
+     - canary flush path: `1 passed`
+   - 하지만 `from_app()` callback extraction 자체는 현재 fail이다.
+     - `tests/test_stage4_context.py::TestStage4Context::test_from_app_extracts_callbacks`
+   - 즉, unit 단위 일부 증거는 있으나, app-bound wiring을 통합적으로 고정하는 e2e/smoke proof는 부족하다.
 7. 기존 문서와의 중복 여부
    - `related-but-new-live-consumer-surface`
-   - MPN-T5-004는 Stage3 DI slot coverage의 MagicMock auto-attr 공백을, MFS-T2-002는 facade bound-method drift가 MagicMock 분할 테스트에만 잠기는 문제를 각각 부분적으로 다뤘다.
-   - 이번 finding은 e2e/smoke 전체에서 lambda/MagicMock injection이 DI contract 전체를 구조적으로 가리는 패턴을 통합한 것이다.
+   - 기존 MRF/MFS/MPN 트랙이 각각 부분 blind spot을 지적했지만, T5는 runtime artifact 전체를 묶어 "real app-bound helper contract를 pin하지 못한다"는 구조 문제를 통합한다.
 8. 권장 후속 조치
-   - 최소 1개 e2e 테스트에서 real SovereignApp 또는 real `from_app()` factory를 사용해 DI callback signature가 live helper와 일치하는지 검증한다.
-   - 또는 `Stage2Context.from_app()`, `Stage3Context.from_app()`, `Stage4Context.from_app()`에 대해 signature parity assertion을 추가한다 (예: `inspect.signature` 비교).
-   - MagicMock auto-attribute 흡수를 방지하려면 `spec=SovereignApp` 또는 `spec_set=True`를 사용한다.
+   - 최소 1개 Stage4 smoke/e2e에서 real `Stage4Context.from_app(app)`를 사용해 callback extraction을 직접 검증한다.
+   - Stage2/3 smoke도 lambda/MagicMock 수동 조립본과 real `from_app()` 경로를 분리해 검증한다.
+   - mock 사용 시 `spec_set` 또는 stricter protocol을 써서 drift 흡수를 줄인다.
 
 ---
 
-## Rejected / Removed Candidates
+## Corrected Helper Ledger
 
-### RC-1. `_generate_reverse_feedback_stage4_to_3` dormant
+아래는 오더 범위 25개 helper의 corrected inventory다.
 
-- 판정: `already-covered-do-not-reopen`
-- 근거: `MRF-T4-001`이 동일 helper의 Stage3 consumer 부재를 `P1`으로 이미 확정. dormant-helper inventory 관점에서도 신규 정보가 없다.
-
-### RC-2. `_load_v50_history` no-op stub
-
-- 판정: `already-covered-do-not-reopen`
-- 근거: `MCP-T2` coverage gap log가 "No-op stub at `main_a.py:2026-2038`; no required test demonstrates a real restore contract"로 이미 기록.
-
----
-
-## Comprehensive Ledger: dead / dormant / bypassed-live / live / unknown
-
-아래는 T1~T4 범위 25개 helper의 전수 inventory다.
-
-### dead (6건)
+### dead (4건)
 
 | Helper | 정의 위치 | 근거 |
 |--------|-----------|------|
-| `_generate_writer_guidance_v60_8` | main_a.py:733 | production caller 0, DI export 0, test caller 0 |
-| `_generate_arc_position_guide` | main_a.py:685 | production caller 0, DI export 0, test caller 0 |
-| `_simplify_prompt_for_retry` | main_a.py:669 | production caller 0, DI export 0, test caller 0 |
-| `_enrich_director_result` | main_a.py:432 | production caller 0, DI export 0, test caller 0 |
-| `_ignite_quad_cache_system` | main_a.py:1148 | production caller 0, 내부적으로만 `_is_cache_alive` 호출 |
-| `_is_cache_alive` | main_a.py:1293 | 유일한 caller `_ignite_quad_cache_system`이 dead |
+| `_generate_arc_position_guide` | `main_a.py:685` | 정의 외 caller 0건 |
+| `_simplify_prompt_for_retry` | `main_a.py:669` | 정의 외 caller 0건 |
+| `_ignite_quad_cache_system` | `main_a.py:1193` | 정의 외 caller 0건 |
+| `_is_cache_alive` | `main_a.py:1338` | caller가 dead helper 내부 3건뿐 |
 
 ### dormant (5건)
 
 | Helper | 정의 위치 | 근거 |
 |--------|-----------|------|
-| `_classify_rejection_feedback` | main_a.py:2780 | 정의 + underlying 테스트 있음, production caller 0, DI export 0 |
-| `_generate_reverse_feedback_stage4_to_3` | main_a.py:752 | 정의 + unit test 있음, Stage3 DI export 없음 (MRF-T4-001) |
-| `_load_v50_history` | main_a.py:2083 | `_init_v50_modules`에서 호출되지만 no-op stub (MCP-T2) |
-| `_load_character_archetypes` | main_a.py:2772 | 정의만 있음, production caller 0, DI export 0 |
-| `_get_archetype_reference_for_npcs` | main_a.py:2776 | 정의만 있음, production caller 0, DI export 0 |
+| `_classify_rejection_feedback` | `main_a.py:2825` | 구현과 하위 테스트만 있고 production caller/DI export 0건 |
+| `_extract_npc_profiles` | `main_a.py:2809` | 정의 외 caller 0건 |
+| `_get_character_traits` | `main_a.py:2813` | 정의 외 caller 0건 |
+| `_load_character_archetypes` | `main_a.py:2817` | 정의 외 caller 0건 |
+| `_get_archetype_reference_for_npcs` | `main_a.py:2821` | 정의 외 caller 0건 |
 
-### bypassed-live (2건)
+### bypassed-live (1건)
 
 | Helper | 정의 위치 | 근거 |
 |--------|-----------|------|
-| `_extract_npc_profiles` | main_a.py:2764 | facade 존재, Stage4 live consumer가 bypass (MFS-T4-001) |
-| `_get_character_traits` | main_a.py:2768 | facade 존재, live production caller 없음, test만 존재 |
+| `_restore_preset_registry` | `main_a.py:379` | `ProjectService` callback 경로는 live, boot는 인라인 복제본으로 bypass |
 
 ### live (12건)
 
-| Helper | 정의 위치 | DI export | production caller |
-|--------|-----------|-----------|-------------------|
-| `_build_focused_context` | main_a.py:677 | Stage2Context:253 | stage2_validation_pipeline.py:897 |
-| `_build_minimal_arc_context` | main_a.py:681 | Stage2Context:252 | stage2_preflight.py retry focus |
-| `_audit_event` | main_a.py:2786 | — (직접 내부 + StateService) | main_a.py 12곳+, StateService 10곳+ |
-| `_flush_audit_buffer` | main_a.py:2790 | Stage4Context:172 | atexit, canary, emergency shutdown |
-| `_write_audit_summary` | main_a.py:2794 | Stage3Context (DI) | Stage3/4 orchestrator |
-| `_get_arc_context_for_episode` | main_a.py:2798 | Stage3Context:120 | Stage3 orchestrator |
-| `_validate_arc_data_fields` | main_a.py:2847 | Stage3Context:124 | Stage3 orchestrator, Stage2 finalizer |
-| `_validate_blueprint_integrity` | main_a.py:2859 | Stage3Context:125 | Stage3 orchestrator |
-| `_build_item_acquisition_timeline` | main_a.py:2718 | Stage4Context:172 | Stage4 context builder |
-| `_validate_volume_boundaries` | main_a.py:2685 | — (직접 호출) | stage01_helpers.py:776 |
-| `_show_volume_table` | main_a.py:2863 | — (직접 호출) | stage01_helpers.py:838 |
-| `_restore_preset_registry` | main_a.py:379 | — (callback 주입) | ProjectService (main_a.py:328) |
+| Helper | 정의 위치 | 근거 |
+|--------|-----------|------|
+| `_build_focused_context` | `main_a.py:677` | `Stage2Context` dynamic callback resolution → `stage2_validation_pipeline.py:897-898` |
+| `_build_minimal_arc_context` | `main_a.py:681` | `Stage2Context` dynamic callback resolution → `stage2_preflight.py:928-929` |
+| `_generate_reverse_feedback_stage4_to_3` | `main_a.py:752` | `stage4_orchestrator.py:267-305,1166-1228`에서 직접 조회·호출 |
+| `_audit_event` | `main_a.py:2831` | main + service/orchestrator 다수 caller |
+| `_flush_audit_buffer` | `main_a.py:2835` | `atexit`, shutdown, canary 경로 live |
+| `_write_audit_summary` | `main_a.py:2839` | Stage2/3/4 callback surface로 live |
+| `_get_arc_context_for_episode` | `main_a.py:2843` | `Stage3Context` export 후 Stage3 consumer live |
+| `_validate_arc_data_fields` | `main_a.py:2892` | `Stage3Context` export 후 Stage3 consumer live |
+| `_validate_blueprint_integrity` | `main_a.py:2904` | `Stage3Context` export 후 Stage3 consumer live |
+| `_validate_volume_boundaries` | `main_a.py:2730` | `stage01_helpers.py:776` live caller |
+| `_show_volume_table` | `main_a.py:2908` | `stage01_helpers.py:838-839` live caller |
+| `_load_v50_history` | `main_a.py:2128` | `main_a.py:1955-1956` live bootstrap caller 존재, 현재 본체는 no-op legacy stub |
+
+### live-wired / runtime-gated (3건)
+
+| Helper | 정의 위치 | 근거 |
+|--------|-----------|------|
+| `_generate_writer_guidance_v60_8` | `main_a.py:733` | `Stage4Context.from_app()` wiring + `stage4_context_builder.py:2514-2533` 소비, 단 `Stage4Context.__slots__` mismatch로 factory test FAIL |
+| `_enrich_director_result` | `main_a.py:432` | `Stage4Context.from_app()` wiring + `stage4_interview_round.py:839-870,1902` 소비, 단 동일 slot regression 영향 |
+| `_build_item_acquisition_timeline` | `main_a.py:2763` | `Stage4Context.from_app()` wiring + `stage4_context_builder.py:1864` 소비, 단 동일 slot regression 영향 |
 
 ### unknown (0건)
 
-- 전 항목이 dead / dormant / bypassed-live / live 중 하나로 분류되었다.
+- 전 항목이 `dead / dormant / bypassed-live / live / live-wired-runtime-gated` 중 하나로 분류되었다.
 
 ---
 
@@ -278,28 +307,36 @@ T1~T4 범위의 25개 helper에 대해 repo 전역 grep을 수행하고, e2e/can
 
 ### 1. static grep과 runtime artifact가 같은 caller inventory를 가리키는가
 
-- **일치함**. e2e/smoke/canary runtime artifact에서 발견된 helper 참조는 static grep 결과의 부분집합이다.
-- e2e/smoke가 MagicMock/lambda로 주입하는 helper는 static grep에서도 DI export 경로로 확인된다.
-- runtime artifact가 static grep에 없는 숨겨진 caller를 보여주는 경우는 0건이다.
+- **아니다.**
+- exact-name grep만 쓰면 `from_app()` / callback name indirection / `getattr()` 기반 live consumer를 놓친다.
+- corrected inventory는 literal grep에 dynamic wiring 해석을 추가해야만 복원된다.
 
-### 2. e2e/smoke/canary에서만 살아 있는 helper가 있는가
+### 2. e2e / smoke / canary에서만 살아 있는 helper가 있는가
 
-- **없음**. e2e/smoke에서 참조되는 helper는 모두 DI context export 또는 직접 internal caller가 있다.
-- 단, dead helper 6개는 e2e/smoke에서도 참조되지 않으므로 "e2e-only alive"가 아니라 "completely dead"다.
+- **없다.**
+- 반대로 문제는 "runtime artifact가 live helper를 증명해 주지 못하는 것"이다.
+- hidden e2e-only helper는 없고, 검증이 약한 mock-driven path가 대부분이다.
 
-### 3. 문서상 dead로 보였지만 runtime artifact가 live consumer를 암시하지 않는가
+### 3. 문서상 dead처럼 보였지만 runtime/production code가 live consumer를 갖는 helper가 있는가
 
-- **암시하지 않는다**. MCP-T2 coverage gap의 `_ignite_quad_cache_system`, `_load_v50_history`는 runtime artifact에서도 확인되지 않았다.
-- `_enrich_director_result`도 동일.
+- **있다.**
+- `_generate_writer_guidance_v60_8`
+- `_generate_reverse_feedback_stage4_to_3`
+- `_enrich_director_result`
+- `_build_item_acquisition_timeline`
+- `_load_v50_history`
 
 ### 4. 이미 닫힌 finding을 dormant-helper inventory 명목으로 다시 여는 오탐은 없는가
 
-- **없음**. PASS2에서 `MRF-T4-001` (Stage4→3 reverse feedback)과 `MCP-T2` (load_v50_history)를 `already-covered-do-not-reopen`으로 명시 제거했다.
-- retained finding 3건은 모두 기존 트랙에서 부분적으로만 다루어진 표면을 T5 관점(call graph inventory)으로 통합한 것이다.
+- **거의 제거했다.**
+- `_load_v50_history`는 T4에서 이미 잡힌 no-op legacy stub이므로 T5 신규 finding으로 재오픈하지 않았다.
+- `_restore_preset_registry`는 bypassed-live 상태를 ledger에만 반영하고, 신규 T5 finding으로 다시 열지 않았다.
 
 ### 5. 최종 통합 시 ledger를 재구성할 수 있는가
 
-- **가능**. 위 Comprehensive Ledger에 25개 helper 전수가 `dead(6) / dormant(5) / bypassed-live(2) / live(12) / unknown(0)`으로 분류되어 있다.
+- **가능하다.**
+- corrected ledger가 25개 helper 전량을 재분류했다.
+- 특히 `live-wired / runtime-gated` 범주를 별도로 둬서 "consumer 없음"과 "consumer는 있으나 factory/runtime gate가 깨짐"을 분리했다.
 
 ---
 
@@ -307,30 +344,32 @@ T1~T4 범위의 25개 helper에 대해 repo 전역 grep을 수행하고, e2e/can
 
 | 주제 | 현재 상태 | 필요한 추가 근거 |
 |------|-----------|------------------|
-| dead helper 6개의 의도된 폐기 여부 | 불명확 | writer guidance family는 설계 의도 대비 배선 누락일 수 있고, cache system은 의도된 폐기일 수 있다. 판단은 remediation 단계에서 |
-| `_classify_rejection_feedback` 의도된 활성 여부 | 불명확 | rejection feedback 분류가 retry 전략에 실제로 필요한지 설계 의도 확인 필요 |
-| e2e signature parity | 전무 | real `from_app()` 또는 `inspect.signature` 기반 parity assertion 0건 |
+| Stage4 callback extraction full suite | FAIL | `Stage4Context.__slots__`와 callback field 정렬 후 `tests/test_stage4_context.py` 재실행 |
+| `_classify_rejection_feedback` product intent | 불명확 | retry loop가 실제로 rejection taxonomy를 소비해야 하는지 제품 의도 확인 |
+| real app-bound Stage2/3 smoke parity | 부족 | lambda/MagicMock 조립 대신 `from_app()` 경로를 직접 pin하는 smoke/e2e 추가 |
+| `live-wired / runtime-gated` 3건의 end-to-end health | 부족 | real `SovereignApp -> Stage4Context.from_app -> Stage4 consumer` 통합 실행 근거 |
 
 ---
 
 ## PASS 요약
 
-- PASS1 후보: 5건
-- PASS2 제거: 2건
-  - `_generate_reverse_feedback_stage4_to_3` → `already-covered-do-not-reopen` (MRF-T4-001)
-  - `_load_v50_history` → `already-covered-do-not-reopen` (MCP-T2 coverage gap)
+- PASS1 후보: 6건
+- PASS2 제거 또는 재분류: 3건
+  - OPUS dead cluster 중 Stage4 helper 2건 제거
+  - `_generate_reverse_feedback_stage4_to_3` dormant claim 제거
+  - `_load_v50_history` 신규 T5 finding 재오픈 제거
 - PASS3 확정: 3건
-  - `MDH-T5-001` P2 (dead helper cluster)
+  - `MDH-T5-001` P2 (dynamic DI / getattr false-negative로 인한 inventory drift)
   - `MDH-T5-002` P2 (`_classify_rejection_feedback` dormant)
-  - `MDH-T5-003` P2 (e2e/smoke lambda/MagicMock DI drift blindness)
+  - `MDH-T5-003` P2 (e2e/smoke/canary contract blind spot)
 
 ---
 
 ## 마감 체크
 
 - 코드 근거 포함: 완료
-- downstream 영향 경계 포함: 완료
-- 현재 테스트 근거 또는 테스트 부재 포함: 완료
+- 테스트 근거 또는 테스트 부재 포함: 완료
+- runtime artifact cross-check 포함: 완료
 - 기존 문서와의 중복 여부 포함: 완료
 - PASS1 -> PASS2 -> PASS3 요약 포함: 완료
-- Comprehensive Ledger (dead/dormant/bypassed-live/live/unknown) 포함: 완료
+- corrected helper ledger 포함: 완료

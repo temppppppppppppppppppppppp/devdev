@@ -1210,7 +1210,7 @@ class Stage4ContextBuilder:
 
         sections: list[str] = []
         compressor = ContextCompressor()
-        max_results = int(_threshold("context.vector_max_results_s4", 20))
+        max_results = int(_threshold("context.vector_max_results_s4", 50))
         current_arc_no = arc_no
         ordered_slots = sorted(plan.slots, key=lambda slot: getattr(slot, "priority", 2))
 
@@ -1259,7 +1259,7 @@ class Stage4ContextBuilder:
                         result = ""
                 else:
                     # [Hybrid-P4] retrieval_mode 플래그 기반 경로 분기
-                    _retrieval_mode = _threshold("smart_retrieval.retrieval_mode", "dense")
+                    _retrieval_mode = _threshold("smart_retrieval.retrieval_mode", "hybrid")
                     if _retrieval_mode == "hybrid" and hasattr(memory, "retrieve_hybrid_context"):
                         result = memory.retrieve_hybrid_context(
                             query=query_text,
@@ -1342,7 +1342,7 @@ class Stage4ContextBuilder:
             return sections
 
         if total_budget_chars <= 0:
-            total_budget_chars = int(_threshold("smart_retrieval.stage4_total_budget", 50000))
+            total_budget_chars = int(_threshold("smart_retrieval.stage4_total_budget", 300000))
         if total_budget_chars <= 0:
             return sections
 
@@ -1445,7 +1445,7 @@ class Stage4ContextBuilder:
         """Compose SC + mandatory context while preserving headroom against final tail-trim."""
         sc_header = "\n\n".join(sc_parts) if sc_parts else ""
         mc_body = "\n\n".join(mc_parts)
-        limit = int(_threshold("context.mandatory_context_max", 80000))
+        limit = int(_threshold("context.mandatory_context_max", 400000))
         headroom = 0
         if sc_header and limit > 0:
             headroom = min(20000, max(500, limit // 20))
@@ -1559,7 +1559,7 @@ class Stage4ContextBuilder:
             start_ep = max(1, next_ep - 10)
             end_ep = max(1, next_ep - 3)  # 최근 3화는 기존 lookback이 커버
             # [V66.1] B-4: 발췌 전용 쿼리 (첫 200자만 DB에서 조회)
-            _excerpt_max = _threshold("context.lookback_excerpt_chars", 500)
+            _excerpt_max = _threshold("context.lookback_excerpt_chars", 5000)
             manuscripts = self.ctx.current_project.db.get_recent_manuscript_excerpts(
                 before_ep=next_ep, limit=10, max_chars=_excerpt_max
             )
@@ -1587,7 +1587,7 @@ class Stage4ContextBuilder:
                 return ""
 
             digest = "\n".join(lines)
-            _total_max = _threshold("context.lookback_total_chars", 4000)
+            _total_max = _threshold("context.lookback_total_chars", 40000)
             if len(digest) > _total_max:
                 digest = digest[: _total_max - 3] + "..."
             return f"[확장 Lookback: 직전 4~10화 요약]\n{digest}"
@@ -1656,6 +1656,65 @@ class Stage4ContextBuilder:
         except Exception as _fut_err:
             logging.warning("[SilentPass:FutureArcCtx] 미래 Arc 컨텍스트 생성 실패: %s", str(_fut_err)[:80])
             return ""
+
+    def _build_stage2_failure_context(self, arc_data: dict) -> str:
+        """Stage 2의 최근 실패/보정 이력을 Stage 4 mandatory_context에 요약 주입."""
+        if not isinstance(arc_data, dict):
+            return ""
+
+        _arc_no = arc_data.get("arc_no")
+        try:
+            _arc_no = int(_arc_no)
+        except (TypeError, ValueError):
+            return ""
+
+        _db = getattr(getattr(self.ctx, "current_project", None), "db", None)
+        if not _db or not hasattr(_db, "get_stage_attempts_for_arc"):
+            return ""
+
+        try:
+            _rows = _db.get_stage_attempts_for_arc(_arc_no, stages=(2,), limit=12) or []
+        except Exception as exc:
+            logging.debug("[Stage4ContextBuilder] stage2 failure context 로드 실패 (비치명): %s", exc)
+            return ""
+
+        if not isinstance(_rows, list) or not _rows:
+            return ""
+
+        _noteworthy: list[dict] = []
+        for _row in _rows:
+            if not isinstance(_row, dict):
+                continue
+            _verdict = str(_row.get("verdict", "") or "").strip()
+            if _verdict in {"REJECT", "PASS_WITH_FIX", "PASS_WITH_WARNING"} or _row.get("reject_reason"):
+                _noteworthy.append(_row)
+
+        if not _noteworthy:
+            return ""
+
+        _category_counts: dict[str, int] = {}
+        _reason_samples: list[str] = []
+        for _row in _noteworthy:
+            _category = str(_row.get("failure_category", "") or "").strip()
+            if _category:
+                _category_counts[_category] = _category_counts.get(_category, 0) + 1
+            _reason = str(_row.get("reject_reason", "") or "").strip()
+            if _reason and _reason not in _reason_samples:
+                _reason_samples.append(_reason[:120])
+
+        _top_categories = sorted(_category_counts.items(), key=lambda item: item[1], reverse=True)[:3]
+        _lines = [
+            "[Stage 2 실패/보정 이력]",
+            "아래 Arc 설계 실패/보정 맥락을 우선 반영하고 같은 유형의 문제를 반복하지 말 것.",
+        ]
+        if _top_categories:
+            _lines.append("주요 카테고리: " + ", ".join(f"{name}({count})" for name, count in _top_categories))
+        if _reason_samples:
+            _lines.append("대표 사유:")
+            for _reason in _reason_samples[:3]:
+                _lines.append(f"- {_reason}")
+
+        return "\n".join(_lines)
 
     def prepare_episode_context(self, next_ep: int, arc_data: dict, chief_writer) -> dict:
         """에피소드별 컨텍스트 데이터 수집 (Arc 메타 + 이전 원고 + HUD + 연결고리)."""
@@ -2105,6 +2164,12 @@ class Stage4ContextBuilder:
             _mc_parts.insert(0, _slot_summary)
             logging.info("[WorkGuard] tracking slot summary 주입 (%d자)", len(_slot_summary))
 
+        _stage2_failure_context = self._build_stage2_failure_context(arc_data)
+        if _stage2_failure_context:
+            _insert_idx = 1 if _slot_summary else 0
+            _mc_parts.insert(_insert_idx, _stage2_failure_context)
+            logging.info("[Stage4ContextBuilder] stage2 failure context 주입 (%d자)", len(_stage2_failure_context))
+
         _ambient_npc_hint = self._suggest_ambient_npcs(blueprint or {})
         if _ambient_npc_hint:
             _mc_parts.append(_ambient_npc_hint)
@@ -2321,8 +2386,8 @@ class Stage4ContextBuilder:
             if self.ctx.memory and prev_ending:
                 _use_advisor_path = False
                 _advisor = getattr(self.ctx, "context_advisor", None)
-                _smart_enabled = bool(_threshold("smart_retrieval.enabled", False)) and bool(
-                    _threshold("smart_retrieval.stage4_enabled", False)
+                _smart_enabled = bool(_threshold("smart_retrieval.enabled", True)) and bool(
+                    _threshold("smart_retrieval.stage4_enabled", True)
                 )
                 if _advisor and _smart_enabled:
                     _arc_ep_start = arc_data.get("ep_start", next_ep) if arc_data else next_ep
@@ -2399,7 +2464,7 @@ class Stage4ContextBuilder:
                         queries=_mq_queries,
                         current_ep=next_ep,
                         n_per_query=3,
-                        max_results=_threshold("context.vector_max_results_s4", 20),
+                        max_results=_threshold("context.vector_max_results_s4", 50),
                         current_arc_no=current_arc_no,
                     )
                     if _vector_memory:
@@ -2458,7 +2523,7 @@ class Stage4ContextBuilder:
 
         _sc_budget = int(getattr(_retrieval_plan, "total_budget_chars", 0) or 0)
         # [TF7-P1-03] SC 비활성 시 비-SC 필수 문맥이 절삭되지 않도록 양쪽 플래그 모두 확인
-        if _threshold("smart_retrieval.enabled", False) and _threshold("smart_retrieval.stage4_enabled", False):
+        if _threshold("smart_retrieval.enabled", True) and _threshold("smart_retrieval.stage4_enabled", True):
             _mc_parts = self._apply_context_budget(_mc_parts, _sc_budget)
 
         # [LS-5] SC Retrieval 결과와 non-SC 본문을 합산 budget 기준으로 재조립

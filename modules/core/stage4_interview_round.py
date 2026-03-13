@@ -2,14 +2,22 @@
 [B-1-3] Stage4 Interview Round — 단일 면담 라운드 실행.
 """
 
-import json
+import copy
 import inspect
+import json
 import logging
 import time
+from pathlib import Path
 
-from modules.core.artifact_logging import build_candidate_key, normalize_artifact_meta, snapshot_logged_artifact
+from modules.core.artifact_logging import (
+    build_candidate_key,
+    normalize_artifact_meta,
+    snapshot_logged_artifact,
+)
 from modules.core.context_advisor import RetrievalSources
+from modules.core.jsonl_io import append_jsonl_record
 from modules.core.logging_keys import build_attempt_key, resolve_logging_session_id
+from modules.core.soft_failure import resolve_project_log_dir
 
 _DB_ADVISORY_NOTICE = "(Python 자동 감지 — 오탐 가능, 참고용)"
 
@@ -999,6 +1007,26 @@ class Stage4InterviewRound:
         return [f"[⚠️ 전원 동일 위반: {item}]" for item in shared[:3]]
 
     @staticmethod
+    def _clone_validation_results_for_advisory(validation_results: list[dict]) -> list[dict]:
+        cloned: list[dict] = []
+        for result in validation_results or []:
+            cloned.append(copy.deepcopy(result) if isinstance(result, dict) else result)
+        return cloned
+
+    @staticmethod
+    def _merge_advisory_validation_results(target_results: list[dict], advisory_results: list[dict]) -> None:
+        tracked_keys = ("truth_gate_warnings", "npc_drift_warnings")
+        for idx, advisory_result in enumerate(advisory_results or []):
+            if idx >= len(target_results):
+                break
+            if not isinstance(target_results[idx], dict) or not isinstance(advisory_result, dict):
+                continue
+            for key in tracked_keys:
+                value = advisory_result.get(key)
+                if value:
+                    target_results[idx][key] = copy.deepcopy(value)
+
+    @staticmethod
     def _classify_advisory_tier(advisory_text: str) -> tuple[int, str]:
         text = str(advisory_text or "")
         if "[TruthGate" in text:
@@ -1441,7 +1469,7 @@ class Stage4InterviewRound:
                 prev_score=_prev_score,
                 patch_fallback=_is_patch_fallback,
                 arc=round_ctx.arc_data.get("arc_no", 0),
-                verdict="ERROR",
+                verdict="EMPTY",
                 reject_reason="empty_candidates",
                 model=getattr(chief_writer, "model_tier", None),
             )
@@ -1471,6 +1499,7 @@ class Stage4InterviewRound:
         self._god1_round_num = round_num
         self._god1_arc_pos = arc_pos
         self._god1_total_ep_in_arc = total_ep_in_arc
+        self._god1_arc_data = round_ctx.arc_data if isinstance(round_ctx.arc_data, dict) else {}
         self._god1_prev_manuscript = _prev_manuscript
         self._god1_director_memory_context = ""
         validation_results = self._run_pre_director_validation(
@@ -1545,10 +1574,9 @@ class Stage4InterviewRound:
         try:
             _mb = getattr(self.ctx.current_project, "master_bible", None) or {}
             _mb_root = _mb.get("MasterBible", _mb) if isinstance(_mb, dict) else {}
-            _pov = str((_mb_root.get("protagonist_config", {}) or {}).get("pov", "") or "").strip()
-            _external_policy = str(
-                ((_mb_root.get("protagonist_config", {}) or {}).get("external_pov_insert_policy", "") or "")
-            ).strip()
+            _protagonist_config = _mb_root.get("protagonist_config", {}) or {}
+            _pov = str(_protagonist_config.get("pov", "") or "").strip()
+            _external_policy = str(_protagonist_config.get("external_pov_insert_policy", "") or "").strip()
             if _pov:
                 _director_mc_parts.insert(0, f"[작품 시점]\n- 기본 POV: {_pov}")
             if _external_policy:
@@ -2114,6 +2142,7 @@ class Stage4InterviewRound:
         round_num = getattr(self, "_god1_round_num", 0)
         arc_pos = getattr(self, "_god1_arc_pos", 0)
         total_ep_in_arc = getattr(self, "_god1_total_ep_in_arc", 0)
+        arc_data = getattr(self, "_god1_arc_data", {})
         _prev_manuscript = getattr(self, "_god1_prev_manuscript", "")
 
         if stage4_spinner is not None and hasattr(stage4_spinner, "update_detail"):
@@ -2143,7 +2172,7 @@ class Stage4InterviewRound:
 
         # [V63.2] ConsistencyValidator
         try:
-            _cv_context = self._build_cv_context(next_ep, genre_name, blueprint)
+            _cv_context = self._build_cv_context(next_ep, genre_name, blueprint, arc_data)
             for ci, cand in enumerate(candidates):
                 _cv_ms = cand.get("manuscript", "")
                 if _cv_ms and ci < len(validation_results):
@@ -2261,8 +2290,8 @@ class Stage4InterviewRound:
                 _advisor
                 and _vec_mem
                 and next_ep > 1
-                and _threshold("smart_retrieval.enabled", False)
-                and _threshold("smart_retrieval.director_enabled", False)
+                and _threshold("smart_retrieval.enabled", True)
+                and _threshold("smart_retrieval.director_enabled", True)
             ):
                 _npc_roster = []
                 if isinstance(blueprint, dict):
@@ -2302,8 +2331,8 @@ class Stage4InterviewRound:
                     work_focus=_work_focus,
                 )
 
-                _max_results = int(_threshold("context.vector_max_results_s4", 20))
-                _default_slot_max = int(_threshold("smart_retrieval.slot_max_chars_default", 1500))
+                _max_results = int(_threshold("context.vector_max_results_s4", 50))
+                _default_slot_max = int(_threshold("smart_retrieval.slot_max_chars_default", 3000))
                 _max_npcs_per_slot = int(_threshold("smart_retrieval.max_npcs_per_slot", 5))
                 _mem_parts = []
                 if _work_focus_summary:
@@ -2363,7 +2392,7 @@ class Stage4InterviewRound:
                         logging.warning(f"[SilentPass:SC:Director] 슬롯 {_slot_category} 실패: {_slot_err!s:.100}")
 
                 if _mem_parts:
-                    _budget = int(_threshold("smart_retrieval.director_total_budget", 20000))
+                    _budget = int(_threshold("smart_retrieval.director_total_budget", 300000))
                     _director_memory_context = "\n\n".join(_mem_parts)
                     if _budget > 0 and len(_director_memory_context) > _budget:
                         _director_memory_context = _director_memory_context[:_budget]
@@ -3525,7 +3554,46 @@ class Stage4InterviewRound:
 
         return candidates, _is_patch, _is_patch_fallback, _prev_score, _asp_manuscript
 
-    def _build_cv_context(self, next_ep: int, genre_name: str, blueprint) -> dict:
+    def _resolve_npc_profiles(self, arc_data) -> dict:
+        """Prefer the Stage4 facade seam, then mirror PromptBuilder filtering as fallback."""
+        _arc_data = arc_data if isinstance(arc_data, dict) else {}
+
+        _extract_npc_profiles = getattr(self.ctx, "extract_npc_profiles", None)
+        if callable(_extract_npc_profiles):
+            try:
+                _profiles = _extract_npc_profiles(_arc_data)
+            except Exception as _npc_err:
+                logging.warning(f"[SilentPass:InterviewRound] npc_profiles facade 실패: {_npc_err!s:.100}")
+            else:
+                if isinstance(_profiles, dict):
+                    return _profiles
+
+        try:
+            _mb = self.ctx.current_project.master_bible or {}
+            _mb_root = _mb.get("MasterBible", _mb)
+            _npc_lib = _mb_root.get("AssetLibrary", {}).get("KeyNPCs", [])
+            if not _npc_lib:
+                _npc_lib = _mb_root.get("AssetLibrary", {}).get("Key_NPCs", [])
+            if not isinstance(_npc_lib, list):
+                return {}
+
+            _arc_text = json.dumps(_arc_data, ensure_ascii=False) if _arc_data else ""
+            _npc_profiles = {}
+            for _npc in _npc_lib:
+                if not isinstance(_npc, dict):
+                    continue
+                _npc_name = _npc.get("name", "") or _npc.get("Name", "")
+                if not _npc_name:
+                    continue
+                if _arc_text and _npc_name not in _arc_text:
+                    continue
+                _npc_profiles[_npc_name] = _npc
+            return _npc_profiles
+        except Exception as _npc_err:
+            logging.warning(f"[SilentPass:InterviewRound] npc_profiles fallback 실패: {_npc_err!s:.100}")
+            return {}
+
+    def _build_cv_context(self, next_ep: int, genre_name: str, blueprint, arc_data=None) -> dict:
         """[B-1-3b] ConsistencyValidator 컨텍스트 조립."""
         _cv_context = {
             "mode": "MANUSCRIPT",
@@ -3533,7 +3601,7 @@ class Stage4InterviewRound:
             "martial_hud": {},
             "karma_matrix": {},
             "asset_library": {},
-            "npc_profiles": {},
+            "npc_profiles": self._resolve_npc_profiles(arc_data),
             "prev_episode_events": [],
             "ep_num": next_ep,
             "blueprint": blueprint if isinstance(blueprint, dict) else {},
@@ -3752,7 +3820,7 @@ class Stage4InterviewRound:
         genre_name: str,
     ) -> list[str]:
         """[B-1-3b][TF-50] Advisory chain 병렬 실행, Director mandatory_context 파트 반환."""
-        from concurrent.futures import ThreadPoolExecutor, as_completed
+        from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError, as_completed
 
         logging.debug(
             "Advisory 검증 시작 — 8개 병렬 실행 (TruthGate, NPC, 수치, 회상, 정보역설, 관계, 장기반복, 수치정합)"
@@ -3760,26 +3828,50 @@ class Stage4InterviewRound:
         print("      \u23f3 Advisory 체인 8개 병렬 실행 중...")
 
         futures = {}
-        with ThreadPoolExecutor(max_workers=8, thread_name_prefix="advisory") as executor:
-            futures[executor.submit(self._advisory_truth_gate, candidates, validation_results, next_ep)] = "TruthGate"
-            futures[executor.submit(self._advisory_npc_drift, candidates, validation_results, next_ep)] = "NpcDrift"
-            futures[executor.submit(self._advisory_numeric_drift, next_ep)] = "NumericDrift"
-            futures[executor.submit(self._advisory_flashback, candidates, next_ep)] = "Flashback"
-            futures[executor.submit(self._advisory_info_paradox, candidates, next_ep, genre_name)] = "InfoParadox"
-            futures[executor.submit(self._advisory_rel_drift, candidates, next_ep)] = "RelDrift"
-            futures[executor.submit(self._advisory_long_term_rep, candidates, next_ep)] = "LongTermRep"
-            futures[executor.submit(self._advisory_numeric_consistency, candidates, next_ep)] = "NumericConsistency"
+        _advisory_parts: list[str] = []
+        executor = ThreadPoolExecutor(max_workers=8, thread_name_prefix="advisory")
+        try:
+            _truth_gate_results = self._clone_validation_results_for_advisory(validation_results)
+            futures[executor.submit(self._advisory_truth_gate, candidates, _truth_gate_results, next_ep)] = (
+                "TruthGate",
+                _truth_gate_results,
+            )
+            _npc_drift_results = self._clone_validation_results_for_advisory(validation_results)
+            futures[executor.submit(self._advisory_npc_drift, candidates, _npc_drift_results, next_ep)] = (
+                "NpcDrift",
+                _npc_drift_results,
+            )
+            futures[executor.submit(self._advisory_numeric_drift, next_ep)] = ("NumericDrift", None)
+            futures[executor.submit(self._advisory_flashback, candidates, next_ep)] = ("Flashback", None)
+            futures[executor.submit(self._advisory_info_paradox, candidates, next_ep, genre_name)] = (
+                "InfoParadox",
+                None,
+            )
+            futures[executor.submit(self._advisory_rel_drift, candidates, next_ep)] = ("RelDrift", None)
+            futures[executor.submit(self._advisory_long_term_rep, candidates, next_ep)] = ("LongTermRep", None)
+            futures[executor.submit(self._advisory_numeric_consistency, candidates, next_ep)] = (
+                "NumericConsistency",
+                None,
+            )
 
-            _advisory_parts: list[str] = []
             for future in as_completed(futures, timeout=300):
-                _name = futures[future]
+                _name, _local_results = futures[future]
                 try:
                     result = future.result(timeout=60)
+                    if _local_results is not None:
+                        self._merge_advisory_validation_results(validation_results, _local_results)
                     if result:
                         _advisory_parts.extend(result)
                         logging.debug("[Advisory] %s 완료 (%d건)", _name, len(result))
                 except Exception as e:
                     logging.debug("[Advisory] %s 실패 (비치명): %s", _name, e)
+        except FuturesTimeoutError as timeout_err:
+            logging.warning("[Advisory] 병렬 실행 타임아웃 — 미완료 future 취소 후 계속 진행: %s", timeout_err)
+        finally:
+            for future in futures:
+                if not future.done():
+                    future.cancel()
+            executor.shutdown(wait=False, cancel_futures=True)
 
         if _advisory_parts:
             print(f"      \u2705 Advisory 체인 완료 — {len(_advisory_parts)}건 경고")
@@ -4325,10 +4417,11 @@ class Stage4InterviewRound:
         """[V76] 라운드별 생산 로그를 JSONL로 기록."""
         try:
             import datetime
-            import json
             import os
 
-            logs_dir = os.path.join("projects", self.ctx.current_project.name, "logs")
+            logs_dir = resolve_project_log_dir(getattr(self.ctx, "current_project", None))
+            if logs_dir is None:
+                logs_dir = Path("projects") / str(self.ctx.current_project.name) / "logs"
             os.makedirs(logs_dir, exist_ok=True)
 
             _sel_candidate = director_result.get("selected_candidate") or {}
@@ -4446,10 +4539,8 @@ class Stage4InterviewRound:
                     "retry_directives": self._compact_text(_feedback_provenance.get("retry_directives", ""), 500),
                 },
             }
-
-            log_path = os.path.join(logs_dir, "episode_production.jsonl")
-            with open(log_path, "a", encoding="utf-8") as f:
-                f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+            log_path = Path(logs_dir) / "episode_production.jsonl"
+            append_jsonl_record(log_path, entry)
         except Exception as e:
             logging.warning("[V76] episode_production log 실패 (비차단): %s", e)
 

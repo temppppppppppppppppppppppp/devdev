@@ -87,12 +87,19 @@ class UIService:
             return files[0].name if files else None
 
     # ── show_volume_table ────────────────────────────────────────
+    def _build_volume_table_title(self, volumes: list[dict[str, Any]]) -> str:
+        """Use the live volume count when available, otherwise fall back to a neutral label."""
+        volume_count = len(volumes)
+        if volume_count > 0:
+            return f"📊 [V20] {volume_count}권 전략 설계 상업성 성적표"
+        return "📊 [V20] 권별 전략 설계 상업성 성적표"
+
     def show_volume_table(self, volumes: list[dict[str, Any]]) -> None:
         """권별 전략 설계 테이블 출력. 원본: main_a.py:3219"""
         from rich import box
         from rich.table import Table
 
-        table = Table(title="📊 [V20] 10권 전략 설계 상업성 성적표", box=box.ROUNDED)
+        table = Table(title=self._build_volume_table_title(volumes), box=box.ROUNDED)
         table.add_column("Vol", justify="center", style="cyan")
         table.add_column("Strategy Title", style="white")
         table.add_column("Cider Score", justify="right", style="bold yellow")

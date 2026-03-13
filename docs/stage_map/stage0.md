@@ -85,6 +85,7 @@
 - Downstream contract:
   - `style_guide` 앵커는 `reference_excerpt`, `anti_ai_patterns`, `exemplary_passages`, `genre`를 포함할 수 있고, Stage 4가 이를 불러 Chief Writer 공통 컨텍스트로 사용한다.
   - `reference_excerpt`는 최대 `50,000자`이며 `style_guide.to_prompt()` 출력과 별도로 전달된다.
+  - 스타일 캐시 파일은 `analysis_version`, `sampling_policy`, `prompt_contract_hash`, `reference_manifest_hash` 같은 provenance 메타를 담지만, Stage 4가 직접 소비하는 live contract는 `style_guide` 앵커와 `reference_excerpt` 본문이다.
 
 ## Dependencies
 - Internal modules:
@@ -189,14 +190,17 @@
 - Risk 1:
   - Stage 0는 여전히 `input()` 중심 CLI 플로우라 비대화형 자동화나 API orchestration에 직접 연결하기 어렵다.
 - Risk 2:
-  - 스타일 캐시는 레퍼런스 `.txt`의 `mtime`만 본다. 분석 프롬프트, 샘플링 규칙, 모델 체인 변경은 자동 무효화 조건이 아니다.
+  - `reference_excerpt`는 Stage 0에서 최대 50,000자로 제한되지만, Stage 4 Chief Writer 공통 프롬프트에서는 이 필드만을 위한 별도 추가 절삭이 없다. 큰 레퍼런스는 downstream context pressure를 키울 수 있다.
 - Risk 3:
   - 역설계가 저장하는 Arc/Blueprint는 stub 기반 복구 데이터다. Stage 2/3 재생성 없이 바로 운영 품질을 보장하지 않는다.
 - Risk 4:
-  - 메뉴 체계가 `phase_0_recovery()`와 `StageZeroManager.show_menu()` 사이에 완전히 대칭적이지 않다. 블록 확장은 helper 경로에서만 노출된다.
+  - 작품 설정 / POV / preset 관련 UI가 `StageZeroManager`와 `Stage01Helpers.phase_0_recovery()` 경로에 나뉘어 있다. 한쪽만 바뀌면 operator-facing drift가 다시 생길 수 있다.
+- Risk 5:
+  - style provenance 메타와 operator-facing POV / style artifact가 동시에 갱신되지 않으면, 실제 Stage 4가 읽는 입력과 사람이 보는 Stage 0 결과가 어긋날 수 있다.
 
 ## Last Verified
-- Date: 2026-03-10
-- Commit: `d2d935b`
+- Date: 2026-03-13
+- Commit: `e18f9910`
+- Workspace State: dirty
 - Code Sync (Yes/No): Yes
 - Verified By: Codex

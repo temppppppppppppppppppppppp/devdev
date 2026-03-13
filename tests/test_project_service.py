@@ -83,6 +83,7 @@ class TestResetStage2:
         assert call(
             "DELETE FROM director_selections WHERE stage = 2 OR (stage IS NULL AND COALESCE(selected_label, '') = '')"
         ) in execute_calls
+        assert call("DELETE FROM anchors WHERE key LIKE 'narrative_summary_ep_%'") in execute_calls
         assert call("DELETE FROM anchors WHERE key = 'arcs'") in execute_calls
 
     def test_commit_failure_returns_false(self, ui_mock, project_mock, genre_fn, memory_mock):
@@ -93,11 +94,13 @@ class TestResetStage2:
             genre_fn=genre_fn,
             memory_fn=lambda: memory_mock,
         )
+        svc._rollback_open_transaction = MagicMock()
 
         with patch("builtins.input", side_effect=["y"]):
             result = svc.reset_stage_2()
 
         assert result is False
+        svc._rollback_open_transaction.assert_called_once_with(project_mock)
         ui_mock.log.assert_any_call("DB commit failed during Stage 2 reset")
 
 
@@ -133,6 +136,14 @@ class TestRewindStage2:
         )
         assert project_mock.arcs == [{"arc_no": 1, "title": "Arc 1", "ep_start": 1, "ep_end": 2}]
         memory_mock.delete_episodes_from.assert_called_once_with(3)
+        execute_calls = project_mock.db.cursor.execute.call_args_list
+        assert any(
+            c.args
+            and "DELETE FROM anchors" in c.args[0]
+            and "narrative_summary_ep_" in c.args[0]
+            and c.args[1] == (3,)
+            for c in execute_calls
+        )
 
     def test_rewind_commit_failure_returns_false_without_runtime_mutation(
         self, ui_mock, project_mock, genre_fn, memory_mock
@@ -144,12 +155,14 @@ class TestRewindStage2:
             genre_fn=genre_fn,
             memory_fn=lambda: memory_mock,
         )
+        svc._rollback_open_transaction = MagicMock()
         original_arcs = list(project_mock.arcs)
 
         with patch("builtins.input", side_effect=["2", "y"]):
             result = svc.rewind_stage_2()
 
         assert result is False
+        svc._rollback_open_transaction.assert_called_once_with(project_mock)
         assert project_mock.arcs == original_arcs
         memory_mock.delete_episodes_from.assert_not_called()
         ui_mock.log.assert_any_call("DB commit failed during Stage 2 rewind")
@@ -189,6 +202,13 @@ class TestRollbackEpisode:
         execute_calls = project_mock.db.cursor.execute.call_args_list
         assert any(
             c.args
+            and "DELETE FROM anchors" in c.args[0]
+            and "narrative_summary_ep_" in c.args[0]
+            and c.args[1] == (3,)
+            for c in execute_calls
+        )
+        assert any(
+            c.args
             and c.args[0] == "UPDATE seeds SET status = 'active', recovered_ep = NULL WHERE recovered_ep >= ?"
             and c.args[1] == (3,)
             for c in execute_calls
@@ -218,12 +238,14 @@ class TestRollbackEpisode:
             genre_fn=genre_fn,
             memory_fn=lambda: memory_mock,
         )
+        svc._rollback_open_transaction = MagicMock()
         project_mock.db.cursor.fetchone.return_value = None
 
         with patch("builtins.input", side_effect=["3", "y"]):
             result = svc.rollback_episode()
 
         assert result is False
+        svc._rollback_open_transaction.assert_called_once_with(project_mock)
         project_mock.db.reset_after.assert_called_once_with(3, commit=False)
         project_mock.db.save_anchor.assert_not_called()
         memory_mock.delete_episodes_from.assert_not_called()
@@ -250,3 +272,24 @@ class TestWipeProductionData:
             c.args and c.args[0] == "UPDATE seeds SET status = 'active', recovered_ep = NULL"
             for c in execute_calls
         )
+        assert any(
+            c.args and c.args[0] == "DELETE FROM anchors WHERE key LIKE 'narrative_summary_ep_%'"
+            for c in execute_calls
+        )
+
+    def test_commit_failure_rolls_back_open_transaction(self, ui_mock, project_mock, genre_fn, memory_mock):
+        svc = ProjectService(
+            project_fn=lambda: project_mock,
+            ui=ui_mock,
+            safe_commit_fn=MagicMock(return_value=False),
+            genre_fn=genre_fn,
+            memory_fn=lambda: memory_mock,
+        )
+        svc._rollback_open_transaction = MagicMock()
+
+        with patch("builtins.input", side_effect=["y"]):
+            result = svc.wipe_production_data()
+
+        assert result is False
+        svc._rollback_open_transaction.assert_called_once_with(project_mock)
+        ui_mock.log.assert_any_call("DB commit failed during production wipe")

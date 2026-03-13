@@ -154,6 +154,7 @@
     - `smart_retrieval.stage3_enabled`
     - Stage 3 전용 `vector_max_results` 키는 없고 `context.vector_max_results_s4`를 공유한다.
   - 원본 Treatment Block 직접 주입
+  - `world_state.get_summary()` 기반 advisory 블록 (available할 때만)
   - Arc 시간 마커/타임라인 경고
   - 장기 미회수 복선 advisory (`DB-4`)
   - 최근 원고 30화 전문
@@ -208,9 +209,14 @@
   - 실패 시 현재 화에서 즉시 중단하므로, 한 화의 문제로 긴 생성 배치 전체가 막힐 수 있다.
 - Risk 5:
   - lazy init 실패는 비차단이라 `StateTracker`/`WorldState`/`FactLedger` 없이도 진행될 수 있다. 이 경우 연속성 감시 밀도가 떨어진다.
+- Risk 6:
+  - Treatment Block 직접 주입 경로는 live semantics에 중요하지만, 전용 regression이 얕아 prompt-level drift를 놓칠 수 있다.
+- Risk 7:
+  - `generate()` 예외 / `gen_err` 안전망 경로는 존재하지만 dedicated regression coverage가 충분히 두껍지 않다.
 
 ## Last Verified
-- Date: 2026-03-10
-- Commit: `d2d935b`
+- Date: 2026-03-13
+- Commit: `e18f9910`
+- Workspace State: dirty
 - Code Sync (Yes/No): Yes
 - Verified By: Codex

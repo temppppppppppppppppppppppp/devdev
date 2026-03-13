@@ -586,18 +586,20 @@ class Stage3Orchestrator:
         ctx.ui.log(f"   범위: 제{working_ep}화 ~ 제{target_ep}화 ({target_ep - working_ep + 1}개)")
         ctx.ui.log(f"{'═' * 60}\n")
 
+        completed_normally = True
         while working_ep <= target_ep:
             result = self._process_single_episode(working_ep, target_ep, prev_blueprints, success_count, fail_count)
             working_ep = result["next_ep"]
             success_count = result["success_count"]
             fail_count = result["fail_count"]
             if result.get("break"):
+                completed_normally = False
                 break
 
         # ═══════════════════════════════════════════════════════════════
         # 3. 완료 처리
         # ═══════════════════════════════════════════════════════════════
-        if callable(ctx.write_audit_summary):
+        if completed_normally and callable(ctx.write_audit_summary):
             ctx.write_audit_summary("stage3_complete")
 
         # 통계 출력
@@ -1482,7 +1484,7 @@ class Stage3Orchestrator:
                 ctx.ui.log(f"   [PinGuard] ep {working_ep} continuity pins applied: {len(_pin_result['changes'])}")
             if _pin_result.get("unresolved"):
                 blueprint["_continuity_pin_unresolved"] = _pin_result["unresolved"]
-                ctx.ui.log(f"   ?슚 [PinGuard] ep {working_ep} unresolved continuity pins")
+                ctx.ui.log(f"   [PinGuard][WARN] ep {working_ep} unresolved continuity pins")
                 if callable(ctx.audit_event):
                     ctx.audit_event(
                         "continuity_pin_unresolved",

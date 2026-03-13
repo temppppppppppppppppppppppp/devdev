@@ -1,10 +1,14 @@
 """[B-1-6] Unit tests for Stage2ValidationPipeline."""
 
+import builtins
+import sys
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
 
 from modules.core.stage2_orchestrator import Stage2Orchestrator
+from modules.core.stage2_contracts import TACTICAL_DOC_DUPLICATE_THRESHOLD
 from modules.core.stage2_validation_pipeline import Stage2ValidationPipeline
 
 
@@ -106,6 +110,14 @@ class TestTextUtils:
         assert pipeline._is_tactical_doc_duplicate("", ["참조"]) is False
         assert pipeline._is_tactical_doc_duplicate("텍스트", []) is False
 
+    def test_duplicate_threshold_matches_shared_contract(self, pipeline, orchestrator_with_ctx):
+        candidate = "alpha beta gamma delta epsilon zeta eta theta"
+        reference = "alpha beta gamma delta epsilon zeta eta iota"
+
+        assert TACTICAL_DOC_DUPLICATE_THRESHOLD == 0.92
+        assert pipeline._is_tactical_doc_duplicate(candidate, [reference]) is True
+        assert orchestrator_with_ctx._is_tactical_doc_duplicate(candidate, [reference]) is True
+
 
 class TestFlowGuard:
     def test_reject_insufficient_beats(self, pipeline):
@@ -137,6 +149,43 @@ class TestFlowGuard:
         ]
         result = pipeline._stage2_flow_guard_legacy(normalized)
         assert result["status"] == "PASS"
+
+    def test_runtime_exception_uses_legacy_fallback(self, pipeline, valid_refined_arc, monkeypatch):
+        class BoomAnalyzer:
+            def __init__(self, *args, **kwargs):
+                pass
+
+            def analyze(self, _beats):
+                raise RuntimeError("boom")
+
+        fake_module = SimpleNamespace(NarrativeStructureAnalyzer=BoomAnalyzer)
+        monkeypatch.setitem(sys.modules, "modules.core.narrative_structure_analyzer", fake_module)
+
+        result = pipeline._stage2_flow_guard(valid_refined_arc)
+
+        assert result["fallback"] is True
+        assert result["fallback_mode"] == "legacy_flow_guard"
+        assert result["fallback_reason"] == "runtime_error"
+        assert result["status"] == pipeline._stage2_flow_guard_legacy(
+            [pipeline._normalize_flow_text(beat) for beat in valid_refined_arc["beat_sequence"]]
+        )["status"]
+
+    def test_import_error_uses_legacy_fallback(self, pipeline, valid_refined_arc, monkeypatch):
+        real_import = builtins.__import__
+
+        def _fake_import(name, globals=None, locals=None, fromlist=(), level=0):
+            if name == "modules.core.narrative_structure_analyzer":
+                raise ImportError("missing")
+            return real_import(name, globals, locals, fromlist, level)
+
+        monkeypatch.setattr(builtins, "__import__", _fake_import)
+        monkeypatch.delitem(sys.modules, "modules.core.narrative_structure_analyzer", raising=False)
+
+        result = pipeline._stage2_flow_guard(valid_refined_arc)
+
+        assert result["fallback"] is True
+        assert result["fallback_mode"] == "legacy_flow_guard"
+        assert result["fallback_reason"] == "import_error"
 
 
 class TestRunValidation:

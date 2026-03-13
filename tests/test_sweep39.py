@@ -17,6 +17,23 @@ def test_preset_registry_get_field_value_uses_deepcopy_for_default_return():
     assert section.count("copy.deepcopy(field_def.default)") >= 2
 
 
+def test_preset_registry_enforce_type_deepcopies_nested_runtime_values():
+    from modules.core.stage0.preset_registry import FieldDefinition, PresetRegistry
+
+    registry = PresetRegistry()
+    nested_list = [{"stats": {"power": 10}}]
+    nested_dict = {"npc": {"role": "ally"}}
+
+    out_list = registry._enforce_type(nested_list, FieldDefinition("secrets", "list", []))
+    out_dict = registry._enforce_type(nested_dict, FieldDefinition("relationships", "dict", {}))
+
+    out_list[0]["stats"]["power"] = 99
+    out_dict["npc"]["role"] = "enemy"
+
+    assert nested_list[0]["stats"]["power"] == 10
+    assert nested_dict["npc"]["role"] == "ally"
+
+
 def test_episode_state_to_dict_deepcopies_extra_fields():
     state = EpisodeState(
         ep_num=1,
