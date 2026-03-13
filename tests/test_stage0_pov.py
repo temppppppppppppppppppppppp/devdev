@@ -1,5 +1,6 @@
 """Stage 0 POV and external insert policy selection tests."""
 
+from pathlib import Path
 from unittest.mock import patch
 
 
@@ -73,3 +74,11 @@ class TestPOVSelection:
         config = mgr.show_protagonist_config_menu()
         assert config["pov"] == "3인칭"
         assert config["external_pov_insert_policy"] == "제한적 허용"
+
+    def test_external_pov_menu_strings_are_utf8_clean(self):
+        src = Path("modules/core/stage0/__init__.py").read_text(encoding="utf-8")
+
+        assert "[외부 시점 삽입 정책]" in src
+        assert "선택 (기본:" in src
+        assert "?" not in src
+        assert "?좏깮" not in src

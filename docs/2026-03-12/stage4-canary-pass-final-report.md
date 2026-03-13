@@ -1,5 +1,10 @@
 # Stage 4 Canary Pass Final Report
 
+archive note:
+- historical `projects/00_test_07` references are stale in the current workspace.
+- see `docs/2026-03-13/stage4-canary-archive-locator-note.md`.
+- future rerun proof should use `project_locator`.
+
 작성일: 2026-03-12  
 상태: `closed-pass`
 

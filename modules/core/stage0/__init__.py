@@ -314,7 +314,7 @@ class StageZeroManager:
             default="3인칭",
         )
 
-        print("\n  [????쒖젏 ?쎌엯 ?뺤콉]")
+        print("\n  [외부 시점 삽입 정책]")
         default_policy = default_external_pov_insert_policy(config.get("pov", ""), genre=self.genre)
         default_index = 1
         for i, opt in enumerate(self.EXTERNAL_POV_INSERT_POLICY_OPTIONS, 1):
@@ -322,7 +322,7 @@ class StageZeroManager:
                 default_index = i
             print(f"  [{i}] {opt}")
         try:
-            raw_choice = input(f"    ?좏깮 (湲곕낯: {default_index}): ").strip()
+            raw_choice = input(f"    선택 (기본: {default_index}): ").strip()
         except (ValueError, IndexError, EOFError):
             raw_choice = ""
         config["external_pov_insert_policy"] = resolve_external_pov_insert_policy_choice(

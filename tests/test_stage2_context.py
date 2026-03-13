@@ -36,6 +36,7 @@ def app_mock(mock_deps):
     app.agents = mock_deps["agents"]
     app.sys = mock_deps["sys"]
     app.state_tracker = mock_deps["state_tracker"]
+    app.world_state = MagicMock()
     return app
 
 
@@ -59,6 +60,7 @@ class TestStage2Context:
         assert ctx.agents is app_mock.agents
         assert ctx.sys is app_mock.sys
         assert ctx.state_tracker is app_mock.state_tracker
+        assert ctx.world_state is app_mock.world_state
 
     def test_optional_attrs_none_allowed(self, mock_deps):
         """확장 속성 미전달 시 None/False 기본값"""
@@ -69,6 +71,7 @@ class TestStage2Context:
         assert ctx.semantic_plot_guard is None
         assert ctx.failure_learner is None
         assert ctx.memory is None
+        assert ctx.world_state is None
         assert ctx.context_advisor is None
         assert ctx.stage2_optimizer is None
         assert ctx.arc_draft_validator is None
@@ -93,6 +96,7 @@ class TestStage2Context:
         app_mock._audit_event = MagicMock()
         app_mock._get_int_input = MagicMock()
         app_mock._safe_commit_async = MagicMock()
+        app_mock._validate_arc_data_fields = MagicMock()
         app_mock._build_focused_context = MagicMock()
         app_mock._generate_arc_context_v60 = MagicMock()
         app_mock._generate_reverse_feedback_stage4_to_2 = MagicMock()
@@ -101,6 +105,7 @@ class TestStage2Context:
         assert ctx.audit_event is app_mock._audit_event
         assert ctx.get_int_input is app_mock._get_int_input
         assert ctx.safe_commit_async is app_mock._safe_commit_async
+        assert ctx.validate_arc_data_fields is app_mock._validate_arc_data_fields
         assert ctx.build_focused_context is app_mock._build_focused_context
         assert ctx.generate_arc_context_v60 is app_mock._generate_arc_context_v60
         assert ctx.generate_reverse_feedback_stage4_to_2 is app_mock._generate_reverse_feedback_stage4_to_2
@@ -110,6 +115,7 @@ class TestStage2Context:
         assert ctx.audit_event is None
         assert ctx.get_int_input is None
         assert ctx.safe_commit_async is None
+        assert ctx.validate_arc_data_fields is None
         assert ctx.build_focused_context is None
         assert ctx.generate_arc_context_v60 is None
         assert ctx.generate_reverse_feedback_stage4_to_2 is None
@@ -141,6 +147,7 @@ class TestStage2Context:
         assert ctx.audit_event is None
         assert ctx.get_int_input is None
         assert ctx.state_tracker is None
+        assert ctx.world_state is None
         assert ctx.context_advisor is None
         assert ctx.retry_feedback_missing_callbacks["required"] == ["analyze_rejection_pattern_v60"]
         assert "generate_arc_context_v60" in ctx.retry_feedback_missing_callbacks["optional_with_fallback"]
@@ -175,6 +182,46 @@ class TestStage2Context:
         """위치 인자로 생성 시 TypeError"""
         with pytest.raises(TypeError):
             Stage2Context(1, 2, 3, 4, 5)
+
+    def test_from_app_binds_real_validation_callbacks(self, mock_deps):
+        class RealApp:
+            def __init__(self, deps):
+                self.ui = deps["ui"]
+                self.current_project = deps["current_project"]
+                self.agents = deps["agents"]
+                self.sys = deps["sys"]
+                self.state_tracker = deps["state_tracker"]
+                self.repair_calls = []
+                self.mapping_calls = []
+                self.integrity_calls = []
+
+            def _validate_arc_data_fields(self, arc_data, arc_idx):
+                self.repair_calls.append((arc_idx, arc_data.get("arc_no")))
+                repaired = dict(arc_data)
+                repaired["arc_no"] = arc_idx
+                return repaired
+
+            def _validate_arc_mapping(self, refined_arc, enriched_block, expected_arc_no, expected_ep_start):
+                self.mapping_calls.append((expected_arc_no, expected_ep_start))
+                return refined_arc
+
+            def _validate_arc_integrity(self, arc_data):
+                self.integrity_calls.append(arc_data.get("arc_no"))
+                return True
+
+        app = RealApp(mock_deps)
+
+        ctx = Stage2Context.from_app(app)
+
+        assert ctx.validate_arc_data_fields.__self__ is app
+        assert ctx.validate_arc_mapping.__self__ is app
+        assert ctx.validate_arc_integrity.__self__ is app
+        assert ctx.validate_arc_data_fields({"arc_no": 99}, 3)["arc_no"] == 3
+        assert ctx.validate_arc_mapping({"arc_no": 1}, {}, 1, 1)["arc_no"] == 1
+        assert ctx.validate_arc_integrity({"arc_no": 3}) is True
+        assert app.repair_calls == [(3, 99)]
+        assert app.mapping_calls == [(1, 1)]
+        assert app.integrity_calls == [3]
 
 
 # ── Stage2Orchestrator ctx 테스트 ────────────────────────────

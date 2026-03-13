@@ -1,5 +1,9 @@
 # Stage 4 Director-CW Feedback Loop Full Survey 3PASS Audit
 
+archive note:
+- `projects/00_test_07` absolute links are historical references only.
+- see `docs/2026-03-13/stage4-canary-archive-locator-note.md` for current archive guidance.
+
 작성일: 2026-03-13  
 대상 범위: Stage 4의 `Director -> ChiefWriter` 피드백 루프 전면 조사  
 조사 원칙: 읽기 전용, 코드 수정 금지, 테스트 실행 금지  

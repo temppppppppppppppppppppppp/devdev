@@ -10,6 +10,7 @@
 """
 
 import dataclasses
+import json
 import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -59,6 +60,7 @@ def mock_app():
     app.current_project.arcs = []
     app.current_project.name = "test_project"
     app.current_project.paths = MagicMock()
+    app.current_project.paths.root = Path("/tmp/test_project_root")
     app.current_project.paths.drafts = Path("/tmp/test_drafts")
     app.perf_timer = MagicMock()
     app.sys = MagicMock()
@@ -131,8 +133,10 @@ class TestStage4AuditSummary:
         ctx.context_advisor = None
         ctx.perf_timer = MagicMock()
         ctx.sys = mock_app.sys
-        mock_app._audit_event = MagicMock()
-        mock_app._write_audit_summary = MagicMock()
+        ctx.audit_event = MagicMock()
+        ctx.write_audit_summary = MagicMock()
+        mock_app._audit_event = None
+        mock_app._write_audit_summary = None
 
         orch = Stage4Orchestrator(mock_app, context=ctx)
         orch._prepare_stage4_session = MagicMock(return_value=object())
@@ -140,8 +144,8 @@ class TestStage4AuditSummary:
 
         orch.stage_4_v2_chief_writer()
 
-        mock_app._audit_event.assert_called_once()
-        mock_app._write_audit_summary.assert_called_once_with("stage4_complete")
+        ctx.audit_event.assert_called_once()
+        ctx.write_audit_summary.assert_called_once_with("stage4_complete")
 
     def test_stage4_early_return_does_not_write_runtime_audit_summary(self, mock_app):
         from modules.core.stage4_orchestrator import Stage4Orchestrator
@@ -156,7 +160,7 @@ class TestStage4AuditSummary:
         ctx.context_advisor = None
         ctx.perf_timer = MagicMock()
         ctx.sys = mock_app.sys
-        mock_app._write_audit_summary = MagicMock()
+        ctx.write_audit_summary = MagicMock()
 
         orch = Stage4Orchestrator(mock_app, context=ctx)
         orch._prepare_stage4_session = MagicMock(return_value=object())
@@ -164,7 +168,7 @@ class TestStage4AuditSummary:
 
         orch.stage_4_v2_chief_writer()
 
-        mock_app._write_audit_summary.assert_not_called()
+        ctx.write_audit_summary.assert_not_called()
 
     def test_stage4_failed_exhaustion_does_not_write_runtime_audit_summary(self, mock_app):
         from modules.core.stage4_orchestrator import Stage4Orchestrator
@@ -179,7 +183,7 @@ class TestStage4AuditSummary:
         ctx.context_advisor = None
         ctx.perf_timer = MagicMock()
         ctx.sys = mock_app.sys
-        mock_app._write_audit_summary = MagicMock()
+        ctx.write_audit_summary = MagicMock()
 
         orch = Stage4Orchestrator(mock_app, context=ctx)
         orch._prepare_stage4_session = MagicMock(return_value=object())
@@ -188,7 +192,7 @@ class TestStage4AuditSummary:
 
         orch.stage_4_v2_chief_writer()
 
-        mock_app._write_audit_summary.assert_not_called()
+        ctx.write_audit_summary.assert_not_called()
 
     def test_stage4_interrupt_does_not_write_runtime_audit_summary(self, mock_app):
         from modules.core.stage4_orchestrator import Stage4Orchestrator
@@ -205,7 +209,7 @@ class TestStage4AuditSummary:
         ctx.sys = mock_app.sys
         ctx.flush_audit_buffer = MagicMock()
         ctx.safe_commit = MagicMock()
-        mock_app._write_audit_summary = MagicMock()
+        ctx.write_audit_summary = MagicMock()
 
         orch = Stage4Orchestrator(mock_app, context=ctx)
         orch._prepare_stage4_session = MagicMock(return_value=object())
@@ -213,9 +217,53 @@ class TestStage4AuditSummary:
 
         orch.stage_4_v2_chief_writer()
 
-        mock_app._write_audit_summary.assert_not_called()
+        ctx.write_audit_summary.assert_not_called()
         ctx.flush_audit_buffer.assert_called_once()
         ctx.safe_commit.assert_called_once()
+
+    def test_stage4_interrupt_logs_commit_failure(self, mock_app):
+        from modules.core.stage4_orchestrator import Stage4Orchestrator
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.ui.log = MagicMock()
+        ctx.current_project = mock_app.current_project
+        ctx.agents = mock_app.agents
+        ctx.state_tracker = None
+        ctx.memory = None
+        ctx.context_advisor = None
+        ctx.perf_timer = MagicMock()
+        ctx.sys = mock_app.sys
+        ctx.flush_audit_buffer = MagicMock()
+        ctx.safe_commit = MagicMock(return_value=False)
+        ctx.write_audit_summary = MagicMock()
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+        orch._prepare_stage4_session = MagicMock(return_value=object())
+        orch._run_interview_loop = MagicMock(side_effect=KeyboardInterrupt)
+
+        orch.stage_4_v2_chief_writer()
+
+        assert any("interrupt cleanup commit failed" in call.args[0] for call in ctx.ui.log.call_args_list if call.args)
+
+    def test_log_escalation_event_uses_project_root_logs_dir(self, mock_app, tmp_path, monkeypatch):
+        from modules.core.stage4_orchestrator import Stage4Orchestrator
+
+        monkeypatch.chdir(tmp_path)
+        mock_app.current_project.name = "fallback_project"
+        mock_app.current_project.paths.root = tmp_path / "actual_project"
+        ctx = MagicMock()
+        ctx.current_project = mock_app.current_project
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+        orch._log_escalation_event(3, "TEST_EVENT", 2, success=True)
+
+        expected_path = mock_app.current_project.paths.root / "logs" / "episode_production.jsonl"
+        fallback_path = tmp_path / "projects" / "fallback_project" / "logs" / "episode_production.jsonl"
+        assert expected_path.exists()
+        assert not fallback_path.exists()
+        rows = [json.loads(line) for line in expected_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+        assert rows[-1]["event"] == "TEST_EVENT"
 
 
 class TestPrepareStage4SessionLimits:
@@ -292,7 +340,7 @@ class TestPrepareStage4SessionLimits:
         ctx.sys = mock_app.sys
         ctx.flush_audit_buffer = MagicMock()
         ctx.safe_commit = MagicMock()
-        mock_app._write_audit_summary = MagicMock()
+        ctx.write_audit_summary = MagicMock()
 
         orch = Stage4Orchestrator(mock_app, context=ctx)
         orch._prepare_stage4_session = MagicMock(return_value=object())
@@ -300,9 +348,34 @@ class TestPrepareStage4SessionLimits:
 
         orch.stage_4_v2_chief_writer()
 
-        mock_app._write_audit_summary.assert_not_called()
+        ctx.write_audit_summary.assert_not_called()
         ctx.flush_audit_buffer.assert_called_once()
         ctx.safe_commit.assert_called_once()
+
+    def test_stage4_exception_logs_commit_failure(self, mock_app):
+        from modules.core.stage4_orchestrator import Stage4Orchestrator
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.ui.log = MagicMock()
+        ctx.current_project = mock_app.current_project
+        ctx.agents = mock_app.agents
+        ctx.state_tracker = None
+        ctx.memory = None
+        ctx.context_advisor = None
+        ctx.perf_timer = MagicMock()
+        ctx.sys = mock_app.sys
+        ctx.flush_audit_buffer = MagicMock()
+        ctx.safe_commit = MagicMock(return_value=False)
+        ctx.write_audit_summary = MagicMock()
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+        orch._prepare_stage4_session = MagicMock(return_value=object())
+        orch._run_interview_loop = MagicMock(side_effect=RuntimeError("boom"))
+
+        orch.stage_4_v2_chief_writer()
+
+        assert any("exception cleanup commit failed" in call.args[0] for call in ctx.ui.log.call_args_list if call.args)
 
 
 class TestRoundContextAnnotations:

@@ -99,7 +99,7 @@ class MockAudit:
     def flush_audit_buffer(self):
         pass
 
-    def write_audit_summary(self):
+    def write_audit_summary(self, tag="snapshot"):
         pass
 
 

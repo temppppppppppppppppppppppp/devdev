@@ -571,7 +571,8 @@ Phase 0 완료 시 아래를 기준으로 정리한다.
 27. 핵심 서술 번들 저밀도 금지:
     - `context + event_villain + solution + reward + stakes` 평균(`avg_bundle_chars`)이 350자 미만이면
       해당 draft를 `skeleton draft`로 분류한다.
-    - 200자 미만 블록이 1개라도 있으면 P0 재생성.
+    - 300자 미만 블록이 1개라도 있으면 P0 재생성.
+    - 300~349자 블록은 전체의 10%를 초과하면 FAIL, 마지막 10블록에서는 0개여야 한다.
 28. sector field drift 오판 금지:
     - `sector`, `business_sector`, `section_rotation`를 sector 계열 필드로 함께 본다.
     - `business_sector`와 `section_rotation`가 있으면 `sector missing`으로 판정하지 않는다.
@@ -594,6 +595,26 @@ Phase 0 완료 시 아래를 기준으로 정리한다.
       2) 특정 종결 문장 점유율이 40% 이상
     - 다문장 전개와 충분한 밀도가 유지되면, 같은 결말 cadence 자체만으로는 자동 P0를 주지 않는다.
     - 고유명사/금액 제거 후 solution 골격이 10블록 이상 반복되면 P0, 5~9블록 반복이면 P1 경고다.
+32. stakes 형식화 금지:
+    - `stakes` 35자 미만 블록은 경고가 아니라 구조 저밀도로 본다.
+    - 전체 2개 초과면 FAIL, 마지막 5블록에서는 0개여야 한다.
+33. 회귀 인정 서사 부재 금지:
+    - `is_regressor=true` 또는 `regression_type in {회귀, 빙의}`면 기본 외부 반응은 `의심`보다 `인정/재평가`를 우선한다.
+    - `recognition_from`을 쓰면 가장 좋고, 없으면 `reward / relationship_delta.after / callback` 안에
+      "대단하다, 인정한다, 다시 봤다, 신뢰한다" 계열 반응이 명시되어야 한다.
+    - recognition signal 블록은 최소 `max(6, ceil(block_count*0.1))`.
+    - 연속 15블록 초과 recognition signal 부재면 FAIL.
+34. 복선 회수율 저하 금지:
+    - `callback_ratio = callback_total / foreshadow_total`이 0.65 미만이면 FAIL.
+    - `unresolved_foreshadow_count > foreshadow_total * 0.35`면 FAIL.
+35. 후반 상대 공백 금지:
+    - 마지막 10블록에서 opponent가 비어 있거나 `없음` 계열이면 1블록까지는 허용, 그 이상이면 FAIL.
+36. section_rotation 누락 금지:
+    - `section_rotation_missing = 0`이 기본값이다.
+    - `business_sector`만 채우고 role/rotation을 비우면 block 책임이 빠진 것으로 본다.
+37. 구조 밀도 정의:
+    - 이제 밀도는 평균 글자수 하나로 보지 않는다.
+    - `stakes / recognition / callback / opponent / section_rotation` 5축이 동시에 채워져야 **구조 밀도** PASS다.
 ```
 
 ### 3.3 사전 선언 프로토콜 (블록마다 JSON 앞에 필수)
@@ -1376,8 +1397,21 @@ Python 자동 검증(§5) + LLM 6개 검사 항목 × 70블록:
 - `avg_reward`
 - `avg_stakes`
 - `avg_bundle_chars`
+- `foreshadow_total`
+- `callback_total`
+- `callback_ratio`
+- `unresolved_foreshadow_count`
 - `business_sector_missing`
 - `section_rotation_missing`
+- `critical_thin_blocks`
+- `thin_blocks`
+- `short_stakes_blocks`
+- `recognition_signal_blocks`
+- `max_recognition_gap_streak`
+- `late_blank_opponent_blocks`
+- `endgame_low_stakes_blocks`
+- `normalized_solution_stakes_repeat_max`
+- `hard_gate_failures`
 - `production_density_gate`
 
 최소 출력 예시:
@@ -1395,8 +1429,21 @@ Python 자동 검증(§5) + LLM 6개 검사 항목 × 70블록:
 - avg_reward: 57.71
 - avg_stakes: 53.14
 - avg_bundle_chars: 321.29
+- foreshadow_total: 56
+- callback_total: 24
+- callback_ratio: 0.43
+- unresolved_foreshadow_count: 19
 - business_sector_missing: 0
-- section_rotation_missing: 0
+- section_rotation_missing: 12
+- critical_thin_blocks: [22]
+- thin_blocks: [18, 24, 27]
+- short_stakes_blocks: [55, 56, 57]
+- recognition_signal_blocks: 4
+- max_recognition_gap_streak: 21
+- late_blank_opponent_blocks: [62, 63, 64]
+- endgame_low_stakes_blocks: [66, 67, 68]
+- normalized_solution_stakes_repeat_max: 4
+- hard_gate_failures: ['callback_ratio_ok', 'section_rotation_present']
 - production_density_gate: FAIL
 ```
 
@@ -1408,17 +1455,28 @@ Python 자동 검증(§5) + LLM 6개 검사 항목 × 70블록:
 
 정합성이 맞아도 아래 기준을 못 넘기면 `production_ready = false`로 본다.
 이 경우 결과물은 draft가 아니라 **skeleton draft**로 분류하며, 출고 전 재생성이 원칙이다.
+이제 이 게이트는 평균 글자수만이 아니라 **구조 밀도**를 본다.
 
 - 핵심 서술 평균 길이 (`context + event_villain + solution + reward + stakes`) 350자 이상
+- `critical_thin_blocks = 0`
+- `thin_blocks` 전체 비율 10% 이하, 마지막 10블록 0개
+- `short_stakes_blocks` 전체 2개 이하, 마지막 5블록 0개
 - `foreshadow` 평균 0.8개 이상
 - `callback` 평균 0.8개 이상
+- `callback_ratio >= 0.65`
+- `unresolved_foreshadow_count <= foreshadow_total * 0.35`
 - `relationship_delta` 평균 대상 수 2.0 이상
+- 회귀/빙의형이면 `recognition_signal_blocks >= max(6, ceil(block_count*0.1))`
+- 회귀/빙의형이면 `max_recognition_gap_streak <= 15`
 - `opponent_unique` 8명 이상
 - 단일 opponent 점유율 30% 이하
+- 마지막 10블록 `late_blank_opponent_blocks <= 1`
 - 동일 `weakness_exploited` 3회 이상 0건
 - 동일 `opponent + weakness_exploited` 조합 4회 이상 0건
 - `deal_type` 최대 반복 4회 이하
 - `method` 최대 반복 4회 이하
+- `section_rotation_missing = 0`
+- `normalized_solution_stakes_repeat_max <= 3` in any 10-block window
 - `reward` 재진술 패턴 0건
 - 대단원 간 `deal_type/method` 순서 반복 0건
 - 연속된 2개 이상의 10블록 구간이 동일 2인 opponent 로테이션 0건
@@ -1427,8 +1485,11 @@ Python 자동 검증(§5) + LLM 6개 검사 항목 × 70블록:
 해석:
 
 - 위 기준을 못 넘기면 "JSON은 맞지만 실제 생산용으론 저밀도"로 판정한다.
+- 특히 `stakes / recognition / callback / opponent / section_rotation` 중 2개 이상이 비면
+  평균 글자수가 높아도 block 책임이 비어 있는 것으로 본다.
 - 이 경우 패치보다 **Phase 0 유지 + TR 전면 재생성**이 우선이다.
-- `avg_bundle_chars < 350`이면 `production_density_gate = FAIL`, 즉시 `skeleton draft`로 분류한다.
+- `avg_bundle_chars < 350` 또는 위 구조 밀도 hard gate 중 하나라도 FAIL이면
+  `production_density_gate = FAIL`, 즉시 `skeleton draft`로 분류한다.
 
 ### P0 게이트 (자동화 — 1건이라도 있으면 출고 불가)
 
@@ -1774,7 +1835,7 @@ python -X utf8 scripts/tr_batch_harness.py merge `
 | `method` | 블록별 고유 전략 서술 |
 | `risk_level` | "저"~"극고" 전구간 활용 |
 | `global_partner` | 투자/글로벌형이면 70블록에 최소 3곳. 그 외 서브모드는 국내 파트너/부서/계열사 3축 이상으로 대체 가능 |
-| (빙의) `death_flag` | 대단원별 다른 위기 유형 |
+| (빙의/회귀) `death_flag` | 대단원별 다른 위기 유형. 투자물도 파산, 신용 경색, 가문 축출 같은 `경제적 사망` 허용 |
 | (빙의) `slip_up` | 10종+, 에스컬레이션 |
 
 ---

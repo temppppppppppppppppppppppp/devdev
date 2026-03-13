@@ -33,6 +33,7 @@ def _make_ctx(*, master_bible=None, next_ep=3):
     ctx.context_advisor = None
     ctx.memory = None
     ctx.get_module = MagicMock(return_value=None)
+    ctx.extract_npc_profiles = None
     # sys.hud for prev_hud
     ctx.sys = MagicMock()
     ctx.sys.hud = None
@@ -211,6 +212,61 @@ class TestPrevHud:
 
         assert cv_context is not None
         assert cv_context["prev_hud"] == {}
+
+
+# ═══════════════════════════════════════════════════════════════
+# Test 3: npc_profiles - Stage4 facade / fallback parity
+# ═══════════════════════════════════════════════════════════════
+
+
+class TestNpcProfiles:
+    def test_npc_profiles_populated_via_stage4_facade_callback(self):
+        """Stage4 live path uses ctx.extract_npc_profiles when available."""
+        bible = {
+            "MasterBible": {
+                "AssetLibrary": {
+                    "KeyNPCs": [
+                        {"name": "장현석", "role": "적대 세력 수장"},
+                        {"name": "박비서", "role": "조력자"},
+                    ]
+                }
+            }
+        }
+        ctx = _make_ctx(master_bible=bible)
+        seen_arc_data = []
+
+        def _extract_npc_profiles(arc_data):
+            seen_arc_data.append(arc_data)
+            return {"장현석": {"name": "장현석", "role": "적대 세력 수장"}}
+
+        ctx.extract_npc_profiles = _extract_npc_profiles
+        round_ctx = _make_round_ctx(next_ep=3)
+        round_ctx.arc_data = {"arc_no": 1, "beat_sheet": ["장현석이 주인공을 압박한다."]}
+        cv_context = _run_and_capture_cv_context(ctx, round_ctx)
+
+        assert cv_context is not None
+        assert cv_context["npc_profiles"] == {"장현석": {"name": "장현석", "role": "적대 세력 수장"}}
+        assert seen_arc_data == [round_ctx.arc_data]
+
+    def test_npc_profiles_fallback_filters_key_npcs_by_arc_data(self):
+        """Facade callback이 없을 때도 PromptBuilder와 같은 KeyNPCs 필터 규칙을 따른다."""
+        bible = {
+            "MasterBible": {
+                "AssetLibrary": {
+                    "KeyNPCs": [
+                        {"name": "장현석", "role": "적대 세력 수장"},
+                        {"name": "박비서", "role": "조력자"},
+                    ]
+                }
+            }
+        }
+        ctx = _make_ctx(master_bible=bible)
+        round_ctx = _make_round_ctx(next_ep=3)
+        round_ctx.arc_data = {"arc_no": 1, "summary": "장현석이 회의실에서 압박한다."}
+        cv_context = _run_and_capture_cv_context(ctx, round_ctx)
+
+        assert cv_context is not None
+        assert cv_context["npc_profiles"] == {"장현석": {"name": "장현석", "role": "적대 세력 수장"}}
 
 
 # ═══════════════════════════════════════════════════════════════

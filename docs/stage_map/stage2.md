@@ -143,6 +143,7 @@
   - retry 시 `Focus Mode`가 활성화되어 컨텍스트를 축소하되 `constraint_block`과 preflight injection은 보존한다.
   - Flow Guard / Duplicate Guard / Consensus / DraftValidator / ContinuityInspector의 의미적 실패는 주로 Python advisory로 변환되어 Director에 전달된다.
   - malformed 데이터나 필수 구조 붕괴는 Director 전 `retry`로 되돌린다.
+  - final commit 직전에는 `ctx.validate_arc_data_fields()` repair hook가 있으면 Arc 구조를 한 번 더 복구 시도한다.
   - Director PASS 후 저장 실패 시 DB rollback + `all_refined_arcs.pop()` + StateTracker 롤백을 수행한다.
 - PASS_WITH_FIX behavior:
   - Director가 `PASS_WITH_FIX`를 반환하면 최대 3회까지 in-place patch + 재심사를 수행한다.
@@ -210,18 +211,23 @@
 
 ## Open Risks
 - Risk 1:
-  - retry 실제 상한은 `validation.yaml`의 `retry.analyst_max_attempts`를 따르지만, 일부 UI 로그는 `RetryLimits.ANALYST_MAX_ATTEMPTS`를 사용한다. 지금은 둘 다 10이지만 추후 드리프트 위험이 있다.
+  - `Stage2Context`에는 dedicated `world_state` slot이 없는데, 오케스트레이터는 `getattr(ctx, "world_state", None)`로 bind를 시도한다. 현재는 조용히 `None`으로 흐르지만 DI truth는 완전히 잠기지 않았다.
 - Risk 2:
   - 최종 실패 후 `input()` 기반 수동 분기가 있어 비대화형 실행이나 자동 운영에서 중단 지점이 된다.
 - Risk 3:
-  - 의미적 검증기 상당수가 advisory-only다. Director 품질이 흔들리면 Python이 잡은 문제를 통과시킬 수 있다.
+  - ArcAutoCorrector, equipment / inventory 동기화 같은 Python 구조 정규화는 여전히 Director 주권 경계선에 있다. 범위가 커지면 principle drift로 다시 번질 수 있다.
 - Risk 4:
-  - `volume_summary_{n}` / `series_summary`는 `arc_summary_{i}` 앵커와 Director 요약 호출에 의존한다. 요약 앵커가 비어 있으면 계층 요약이 약해진다.
+  - `npc_deaths`, `skill_acquisitions`, `timeline` 계열 response schema 불일치가 남아 있어 structured extraction 대신 fallback / advisory noise가 발생할 수 있다.
 - Risk 5:
+  - `validate_arc_data_fields` repair hook는 live seam이지만, mock-heavy context tests만으로는 real bound-method drift를 놓칠 수 있다.
+- Risk 6:
+  - `volume_summary_{n}` / `series_summary`는 `arc_summary_{i}` 앵커와 Director 요약 호출에 의존한다. 요약 앵커가 비어 있으면 계층 요약이 약해진다.
+- Risk 7:
   - `PASS_WITH_FIX` 소진 후에도 마지막 상태가 `PASS_WITH_FIX`이면 patched arc를 채택하는 경로가 있다. Director 주권 보존 의도는 명확하지만 운영 해석이 까다롭다.
 
 ## Last Verified
-- Date: 2026-03-10
-- Commit: `d2d935b`
+- Date: 2026-03-13
+- Commit: `e18f9910`
+- Workspace State: dirty
 - Code Sync (Yes/No): Yes
 - Verified By: Codex

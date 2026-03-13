@@ -2,48 +2,80 @@
 
 Purpose:
 - Capture caller-callee contracts across stages.
-- Keep stage boundaries explicit and testable.
+- Keep stage boundaries explicit, testable, and aligned to the current workspace.
 
 ## Contract Matrix
 
-| From | To | Input Contract | Output Contract | Failure Contract | Owner |
+| From | To | Input Contract | Output Contract | Failure / Degraded Contract | Owner |
 |---|---|---|---|---|---|
-| Stage 0 | Stage 1 | `ProjectContext.save_v20_anchor("bible", dict)`로 `anchors.key='bible'` 저장. Stage 1 미사용 시 Stage 2가 직접 소비 | Stage 1 사용 시 `anchors.key='volumes'`(list) 기대 | 앵커 JSON 파싱 실패 시 `{}`/기본값 폴백 (`load_anchor`) | Stage 0 (`ProjectContext`) |
-| Stage 1 | Stage 2 | (현재 파이프라인에서 선택적) `anchors.key='volumes'` + `anchors.key='bible'` | Stage 2 완료 시 `anchors.key='arcs'`에 Arc 리스트 JSON 저장 (`save_v20_anchor("arcs", ...)`) | Stage 1 산출물 부재 시 Stage 2는 Bible 기반 최소 동작 가능 | Stage 1/2 |
-| Stage 2 | Stage 3 | `anchors.key='arcs'` (list[ArcData-compatible dict]), `anchors.key='bible'` | ArcData 계약: `arc_no/global_arc_no`, `ep_start`, `ep_end`, `tactical_doc`, `beat_sequence`, `state_constraints`, `state_changes`, `episode_details` 등 | Arc dict 스키마 불일치 시 `validate_arc()`가 원본 dict 유지 (graceful degradation) | Stage 2 + `modules/models/arc.py` |
-| Stage 3 | Stage 4 | `db_manager.get_blueprint(ep_num)` -> `blueprints.data` JSON(dict), 이전 회차는 `get_previous_blueprint` | Stage 4 입력 Blueprint dict: `episode_number(ep_num alias)`, `scene_breakdown`, `integrated_scenario`, `pacing_notes`, `target_beat`, `relationship_changes`, `time_flow`, `core_tension`, `expected_ending` | Blueprint JSON 파싱 실패 시 `None` 반환 (`get_blueprint`) | Stage 3/4 + `modules/models/blueprint.py` |
+| Stage 0 | Stage 1 | `anchors["bible"]` / `current_project.master_bible`; optional `preset_state`, optional `style_guide` | Stage 1 reads `MasterBible.plot_roadmap` and may write `anchors["volumes"]` | Missing or malformed anchors degrade to reload / defaults; Stage 1 is optional for downstream flow | Stage 0 / Stage 1 |
+| Stage 1 | Stage 2 | Optional `anchors["volumes"]`; Stage 2 still requires Bible + plot roadmap | Stage 2 writes `anchors["arcs"]` as list[Arc-like dict] | If `volumes` is absent, Stage 2 uses `strategy_doc=""` fallback | Stage 1 / Stage 2 |
+| Stage 2 | Stage 3 | `anchors["arcs"]` plus Arc dict fields such as `arc_no`, `ep_start`, `ep_end`, `tactical_doc`, `joint_docs`, `status_shadow`, `episode_details` | Stage 3 reads Arc context and writes `blueprints.data` plus optional `_stage3_meta` | Arc schema can be repaired via `validate_arc_data_fields`; malformed data may retry or fail-closed per episode | Stage 2 / Stage 3 |
+| Stage 3 | Stage 4 | `db.get_blueprint(ep_num)` returns blueprint dict; txt export is not an input contract | Stage 4 consumes blueprint dict and may read optional `_stage3_meta` (`quality_risk`, `last_score`, `final_verdict`) | Missing / JSON-broken blueprint returns `None`; Stage 4 stops at the missing episode | Stage 3 / Stage 4 |
+| Stage 4 | Downstream state | PASS-family manuscript, director result, state updates, episode metadata | `manuscripts`, `state_logs`, `episode_bibles`, `world_state`, `fact_ledger`, memory / quality sinks | `PASS_WITH_WARNING` remains a valid degraded stored outcome; `EMPTY` caller result is logged as attempt `ERROR` with `reject_reason="empty_candidates"` | Stage 4 |
 
 ## Shared Invariants
-- Invariant 1: Stage 간 영속 계약은 `project_data.db` 중심. `anchors`/`blueprints`/`manuscripts`/`episode_bibles`가 핵심 전달 경로.
-- Invariant 2: Stage 4 후속 상태는 DB anchor 기반 누적 저장:
-  - `world_state` (`WorldStateManager`, anchor key)
-  - `fact_ledger` (`FactLedger`, anchor key)
-  - `npc_history` (append-only table)
-  - `npc_relationship_history` (append-only, sorted key — LM-D)
-  - `episode_meta`/`vec_episodes`/`episode_fts` (VecMemory 검색 인덱스)
-- Invariant 3: JSON 계약 실패는 fail-closed보다 비차단 폴백 우선:
-  - `load_anchor()` 실패 시 기본값 반환
-  - `get_blueprint()` JSON 파싱 실패 시 `None`
-  - Arc/Blueprint Pydantic 검증 실패 시 원본 dict 유지
-- Invariant 5: **Director verdict 3종** — `PASS`, `REJECT`, `PASS_WITH_FIX` (TF-27):
-  - PASS_WITH_FIX는 `fix_scope` 필드(`inplace`/`partial`/`full`)와 `feedback.action_items`를 반드시 동반
-  - QualityGate는 PASS일 때만 score < 90이면 REJECT 전환. **PASS_WITH_FIX는 QualityGate bypass** (TF-46)
-- Invariant 6: **state_updates 전파 우선순위** — Director 보정값 > CW 생성값 > {} (TF-R4):
-  - Director 프롬프트가 CW state_updates를 "기반으로 보정" → superset 반환
-  - InPlace patch 시 `{**final_state_updates, **_patch_state}` merge 후 Director 재심사
-- Invariant 4: `db_manager.py` 부트스트랩 기준 테이블 목록:
-  - `sync_status`, `surgery_logs`, `anchors`, `blueprints`, `state_logs`, `causal_graph`, `karma_status`, `manuscripts`, `reflexion_memory`, `martial_tracker`, `seeds`, `encyclopedia`, `episode_bibles`, `npc_history`, `episode_sentence_hashes`, `episode_satisfaction_tags`, `director_selections`, `cost_log`, `episode_meta`, `episode_fts`, `episode_pacing`, `character_voice`, `foreshadow` (+ `vec_episodes` 가상 테이블, sqlite-vec 사용 시)
+- Invariant 1: DB is the durable handoff surface.
+  - `anchors`, `blueprints`, `manuscripts`, `episode_bibles`, `state_logs` carry the real cross-stage contract.
+  - human-readable txt exports are operational artifacts, not upstream input truth.
+- Invariant 2: Stage 2 / 3 / 4 all use `scoring.quality_gate_score = 90` as the live QualityGate.
+  - `PASS_WITH_FIX` bypasses the initial gate entry.
+  - a later re-review that resolves to plain `PASS` still goes through the 90-point gate.
+- Invariant 3: Stage 3 may emit degraded blueprint metadata.
+  - `_stage3_meta.quality_risk`
+  - `_stage3_meta.quality_gate_failed`
+  - `_stage3_meta.last_score`
+  - Stage 4 may tighten escalation behavior when this metadata is present.
+- Invariant 4: JSON contract failures prefer controlled degradation over silent schema invention.
+  - `load_anchor()` returns defaults on parse failure.
+  - `get_blueprint()` returns `None` on JSON parse failure.
+  - Arc repair is routed through `validate_arc_data_fields` when the seam is available.
+- Invariant 5: Director verdict family remains:
+  - `PASS`
+  - `REJECT`
+  - `PASS_WITH_FIX`
+  - `PASS_WITH_WARNING` can appear as a degraded stored result in Stage 3 and Stage 4 flows.
+- Invariant 6: Stage 4 `state_updates` merge priority remains `Director > Chief Writer > {}`.
+  - In-place patch merges patch state into the current final state update set instead of replacing it wholesale.
+
+## Key Persistence Surfaces
+- `anchors`
+  - `bible`
+  - `preset_state`
+  - `style_guide`
+  - `volumes`
+  - `arcs`
+  - `series_summary`
+  - `volume_summary_*`
+  - `arc_summary_*`
+  - `world_state`
+  - `fact_ledger`
+- tables
+  - `blueprints`
+  - `manuscripts`
+  - `episode_bibles`
+  - `state_logs`
+  - `stage_attempts`
+  - `director_selections`
+  - `episode_meta`
+  - `episode_fts`
+  - `episode_pacing`
+  - `npc_history`
+  - `npc_relationship_history`
+  - `cost_log`
+  - `foreshadow`
 
 ## Breaking Change Checklist
-- Was any input field added/removed/renamed?
-- Was any output field added/removed/renamed?
-- Were default values changed?
-- Were failure codes/messages changed?
-- Were fallback paths changed?
+- Was an input field added, removed, or renamed?
+- Was an output field added, removed, or renamed?
+- Did a stage switch from DB truth to export-file truth, or vice versa?
+- Did verdict semantics or degraded outcomes change?
+- Did retry or QualityGate rules change?
+- Did a safe-op delete / preserve boundary move?
 
 ## Last Verified
-- Date: 2026-03-02
-- Commit: `8476bc2`
+- Date: 2026-03-13
+- Commit: `e18f9910`
+- Workspace State: dirty
 - Code Sync (Yes/No): Yes
-- Verified By: Opus
-
+- Verified By: Codex

@@ -3,6 +3,7 @@
 > 작성일: 2026-03-13
 > 트랙: `main_a.py` cross-stage semantic preservation blind spot audit
 > 상태: `execution-ready`
+> 조사 현황: `조사 완료`
 > 목적: `main_a.py`와 직접 consumer가 Stage 4 -> 3 -> 2 및 summary/context handoff 과정에서 같은 실패 의미, 같은 narrative 의미, 같은 경계 의미를 보존하는지 전면 전량 조사한다.
 > 방식: `5-terminal 병렬`, 각 터미널 자체 `3PASS`, 통합본 `3PASS 재감리`
 
@@ -336,3 +337,11 @@
 - 본 오더 문서는 `execution-ready`다.
 - 결과 문서와 통합 문서는 본 오더와 함께 생성되지만 초기 상태는 모두 `template / not executed`다.
 - 조사 단계가 끝나기 전에는 확정 finding이 없는 상태로 본다.
+
+---
+
+## 13. 현재 조사 현황
+
+- 기준일: `2026-03-13`
+- 조사 현황: `조사 완료`
+- 메모: 본 표면의 터미널별 전수조사는 완료로 기록한다. 다만 트랙 마감 여부와 통합본 `3PASS 재감리`는 별도 단계로 관리한다.

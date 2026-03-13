@@ -2,6 +2,7 @@
 
 Purpose:
 - Define the current operational semantics for destructive safe-op menu actions.
+- Use `main_a.py` + `ProjectService` current workspace behavior as the source of truth.
 
 Desktop UI:
 - Safe Ops now surfaces a read-only preview before execution.
@@ -197,6 +198,8 @@ Post-success cache invalidation in `main_a.py`:
 - Preventive action:
 
 ## Last Verified
-- Date: 2026-03-11
-- Code Sync: Yes
+- Date: 2026-03-13
+- Commit: `e18f9910`
+- Workspace State: dirty
+- Code Sync (Yes/No): Yes
 - Verified By: Codex

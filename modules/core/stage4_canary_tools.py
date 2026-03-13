@@ -10,6 +10,7 @@ from pathlib import Path
 from modules.core.db_manager import DBManager
 from modules.core.failure_analyzer import FailureAnalyzer
 
+_APP_ROOT = Path(__file__).resolve().parents[2]
 
 _LOG_FILE_NAMES = (
     "episode_production.jsonl",
@@ -18,6 +19,22 @@ _LOG_FILE_NAMES = (
     "runtime_audit.jsonl",
     "runtime_audit_summary.json",
 )
+
+_STAGE4_RATIONALE_FIELDS = (
+    "selection_reason",
+    "verdict_reason",
+    "open_review",
+    "fix_scope_reasoning",
+    "runtime_advisory",
+    "retry_directives",
+)
+_STAGE4_RETRY_CONTEXT_FIELDS = (
+    "open_review",
+    "fix_scope_reasoning",
+    "runtime_advisory",
+    "retry_directives",
+)
+_STAGE4_RETRY_REQUIRED_VERDICTS = {"REJECT", "PASS_WITH_FIX"}
 
 
 def _normalize_from_ep(from_ep: int) -> int:
@@ -113,6 +130,7 @@ def build_stage4_canary_summary(project_root: str | Path, *, target_ep: int | No
             ORDER BY id ASC
             """
         ).fetchall()
+        rationale_contract_summary = _summarize_stage4_rationale_contract(db)
     finally:
         db.close()
 
@@ -132,10 +150,12 @@ def build_stage4_canary_summary(project_root: str | Path, *, target_ep: int | No
         pass_rate_monitor_exists=pass_rate_monitor_exists,
         patch_trace_summary=patch_trace_summary,
         sink_alignment_summary=sink_alignment_summary,
+        rationale_contract_summary=rationale_contract_summary,
     )
 
     return {
         "project": root.name,
+        "project_locator": _build_project_locator(root),
         "project_root": str(root),
         "target_ep": int(target_ep) if target_ep is not None else None,
         "prepared_from": canary_prep.get("source_project"),
@@ -149,8 +169,66 @@ def build_stage4_canary_summary(project_root: str | Path, *, target_ep: int | No
         "pass_rate_monitor_exists": pass_rate_monitor_exists,
         "patch_trace_summary": patch_trace_summary,
         "sink_alignment_summary": sink_alignment_summary,
+        "rationale_contract_summary": rationale_contract_summary,
         "hard_gates": hard_gates,
     }
+
+
+def _summarize_stage4_rationale_contract(db: DBManager) -> dict:
+    summary = {
+        "status": "ok",
+        "required_fields": list(_STAGE4_RATIONALE_FIELDS),
+        "missing_columns": [],
+        "stage4_row_count": 0,
+        "retry_required_row_count": 0,
+        "field_nonempty_counts": {field: 0 for field in _STAGE4_RATIONALE_FIELDS},
+        "rows_missing_selection_reason": [],
+        "rows_missing_verdict_reason": [],
+        "rows_missing_retry_context": [],
+    }
+
+    columns = {
+        str(row["name"] if isinstance(row, dict) else row[1] or "").strip()
+        for row in db.conn.execute("PRAGMA table_info(stage_attempts)").fetchall()
+    }
+    summary["missing_columns"] = [field for field in _STAGE4_RATIONALE_FIELDS if field not in columns]
+    if summary["missing_columns"]:
+        summary["status"] = "fail"
+        return summary
+
+    rows = db.conn.execute(
+        """
+        SELECT ep_num, attempt_num, verdict, selection_reason, verdict_reason, open_review,
+               fix_scope_reasoning, runtime_advisory, retry_directives
+        FROM stage_attempts
+        WHERE stage = 4
+        ORDER BY id ASC
+        """
+    ).fetchall()
+    summary["stage4_row_count"] = len(rows)
+
+    for row in rows:
+        locator = _format_stage4_attempt_locator(row)
+        verdict = str(row["verdict"] or "").strip()
+        for field in _STAGE4_RATIONALE_FIELDS:
+            if str(row[field] or "").strip():
+                summary["field_nonempty_counts"][field] += 1
+        if not str(row["selection_reason"] or "").strip():
+            summary["rows_missing_selection_reason"].append(locator)
+        if not str(row["verdict_reason"] or "").strip():
+            summary["rows_missing_verdict_reason"].append(locator)
+        if verdict in _STAGE4_RETRY_REQUIRED_VERDICTS:
+            summary["retry_required_row_count"] += 1
+            if not any(str(row[field] or "").strip() for field in _STAGE4_RETRY_CONTEXT_FIELDS):
+                summary["rows_missing_retry_context"].append(locator)
+
+    if (
+        summary["rows_missing_selection_reason"]
+        or summary["rows_missing_verdict_reason"]
+        or summary["rows_missing_retry_context"]
+    ):
+        summary["status"] = "fail"
+    return summary
 
 
 def _collect_stage4_cleanup_impact(db: DBManager, *, from_ep: int) -> dict[str, int]:
@@ -262,6 +340,7 @@ def _evaluate_stage4_canary_gates(
     pass_rate_monitor_exists: bool,
     patch_trace_summary: dict,
     sink_alignment_summary: dict,
+    rationale_contract_summary: dict,
 ) -> dict:
     errors: list[str] = []
     warnings: list[str] = []
@@ -307,6 +386,23 @@ def _evaluate_stage4_canary_gates(
     else:
         errors.append("sink_alignment_summary_empty")
 
+    if rationale_contract_summary:
+        if rationale_contract_summary.get("missing_columns"):
+            errors.append("stage4_rationale_columns_missing")
+        if rationale_contract_summary.get("rows_missing_selection_reason"):
+            errors.append("stage4_selection_reason_missing")
+        if rationale_contract_summary.get("rows_missing_verdict_reason"):
+            errors.append("stage4_verdict_reason_missing")
+        if rationale_contract_summary.get("rows_missing_retry_context"):
+            errors.append("stage4_retry_context_missing")
+        if int(rationale_contract_summary.get("stage4_row_count", 0) or 0) > 0:
+            if int(rationale_contract_summary.get("retry_required_row_count", 0) or 0) == 0:
+                warnings.append("stage4_retry_contract_not_exercised")
+        if rationale_contract_summary.get("status") not in ("", "ok"):
+            errors.append(f"stage4_rationale_status:{rationale_contract_summary.get('status')}")
+    else:
+        errors.append("stage4_rationale_summary_empty")
+
     if patch_trace_summary:
         avg_unchanged = patch_trace_summary.get("avg_unchanged_ratio")
         if avg_unchanged is not None and float(avg_unchanged) < 0.70:
@@ -324,6 +420,20 @@ def _evaluate_stage4_canary_gates(
         "errors": errors,
         "warnings": warnings,
     }
+
+
+def _format_stage4_attempt_locator(row) -> str:
+    ep_num = int(row["ep_num"] or 0)
+    attempt_num = int(row["attempt_num"] or 0)
+    verdict = str(row["verdict"] or "").strip() or "UNKNOWN"
+    return f"ep{ep_num}:a{attempt_num}:{verdict}"
+
+
+def _build_project_locator(project_root: Path) -> str:
+    try:
+        return project_root.resolve().relative_to(_APP_ROOT).as_posix()
+    except Exception:
+        return str(project_root)
 
 
 def _extract_ep_num(filename: str) -> int | None:

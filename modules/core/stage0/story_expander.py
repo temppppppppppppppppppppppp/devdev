@@ -197,6 +197,7 @@ class StoryExpander:
 
     def generate_bible(self, protagonist_config: dict[str, Any] = None) -> dict[str, Any]:
         """Bible 생성"""
+        self.bible = {}
         if not self.extracted:  # [P1-A3-6] extracted None/빈값 방어
             self.extracted = {}
         proto = self.extracted.get("protagonist", {})
@@ -207,7 +208,7 @@ class StoryExpander:
         # [TF-S01-04] protagonist 빈값 검증 게이트
         if not protagonist or not isinstance(protagonist, dict) or "name" not in protagonist:
             logging.error("[StoryExpander] LLM 실패: protagonist 생성 불가")
-            return None
+            return self.bible
 
         # NPC 생성
         npcs = self._generate_npcs()

@@ -4,6 +4,7 @@
 """
 
 import logging
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -472,6 +473,43 @@ class TestGenerateBlueprint:
         assert "자본금" in semantic_context
 
     @patch("modules.core.spinners.StageSpinner")
+    def test_treatment_block_is_injected_into_semantic_context(self, MockSpinner, orch, app_mock):
+        spinner = MagicMock()
+        spinner.update_detail = MagicMock()
+        MockSpinner.return_value.__enter__.return_value = spinner
+        app_mock.current_project.db.get_recent_manuscripts.return_value = []
+        app_mock.current_project.master_bible = {
+            "MasterBible": {
+                "protagonist_config": {},
+                "plot_roadmap": [
+                    {
+                        "title": "시장 선점",
+                        "event_villain": "유동성 위기",
+                        "solution": "리스크 관리",
+                        "content": {"context": "기관 매도 공세"},
+                    }
+                ],
+            }
+        }
+
+        orch._generate_blueprint(
+            working_ep=1,
+            arc_data=app_mock.current_project.arcs[0],
+            arc_idx=0,
+            prev_blueprint=None,
+            prev_blueprints=[],
+            entity_registry={},
+            protagonist_name="장무기",
+            protagonist_config={},
+        )
+
+        semantic_context = app_mock.agents["three_phase_bp"].generate.call_args.kwargs["semantic_context"]
+        assert "[원본 Treatment Block" in semantic_context
+        assert "시장 선점" in semantic_context
+        assert "기관 매도 공세" in semantic_context
+        assert "유동성 위기" in semantic_context
+
+    @patch("modules.core.spinners.StageSpinner")
     def test_style_guide_advisory_included_in_semantic_context(self, MockSpinner, orch, app_mock):
         spinner = MagicMock()
         spinner.update_detail = MagicMock()
@@ -499,6 +537,30 @@ class TestGenerateBlueprint:
         semantic_context = app_mock.agents["three_phase_bp"].generate.call_args.kwargs["semantic_context"]
         assert "[StyleGuide 문체/anti-AI 참고]" in semantic_context
         assert "그의 눈동자가 흔들렸다" in semantic_context
+
+    @patch("modules.core.spinners.StageSpinner")
+    def test_generate_blueprint_crash_returns_error_pipeline_and_audits(self, MockSpinner, orch, app_mock):
+        spinner = MagicMock()
+        spinner.update_detail = MagicMock()
+        MockSpinner.return_value.__enter__.return_value = spinner
+        app_mock.current_project.db.get_recent_manuscripts.return_value = []
+        app_mock.agents["three_phase_bp"].generate.side_effect = RuntimeError("boom")
+
+        blueprint, pipeline_result = orch._generate_blueprint(
+            working_ep=1,
+            arc_data=app_mock.current_project.arcs[0],
+            arc_idx=0,
+            prev_blueprint=None,
+            prev_blueprints=[],
+            entity_registry={},
+            protagonist_name="장무기",
+            protagonist_config={},
+        )
+
+        assert blueprint is None
+        assert pipeline_result["final_verdict"] == "ERROR"
+        assert "boom" in pipeline_result["error"]
+        app_mock._audit_event.assert_any_call("blueprint_gen_error", "boom", {"ep_num": 1})
 
     @patch("modules.core.spinners.StageSpinner")
     def test_work_focus_summary_included_in_semantic_context(self, MockSpinner, orch, app_mock):
@@ -917,6 +979,17 @@ class TestStage3BatchBlueprintingEntryPoint:
         app_mock._write_audit_summary.assert_called_once_with("stage3_complete")
         app_mock.current_project.save_episode_blueprint.assert_called_once()
 
+    def test_break_path_does_not_write_completion_summary(self, app_mock):
+        app_mock._get_int_input.return_value = 1
+        orch = Stage3Orchestrator(app=app_mock)
+        orch._process_single_episode = MagicMock(
+            return_value={"next_ep": 1, "success_count": 0, "fail_count": 1, "break": True}
+        )
+
+        orch.stage_3_batch_blueprinting()
+
+        app_mock._write_audit_summary.assert_not_called()
+
     def test_target_prompt_uses_hybrid_project_head(self, app_mock):
         app_mock.current_project.db.get_latest_blueprint_number.return_value = 0
         app_mock.current_project.get_latest_episode_number = MagicMock(return_value=4)
@@ -980,35 +1053,89 @@ class TestStage3ContextDI:
         cb.assert_called_once()
         assert result == "장무기"
 
-    def test_from_app_all_slots(self, app_mock):
+    def test_from_app_all_slots(self):
         """from_app이 Stage3Context 슬롯 전부 매핑하는지 확인"""
-        app_mock.memory = MagicMock()
-        app_mock.context_advisor = MagicMock()
-        ctx = Stage3Context.from_app(app_mock)
-        assert ctx.ui is app_mock.ui
-        assert ctx.current_project is app_mock.current_project
-        assert ctx.agents is app_mock.agents
-        assert ctx.sys is app_mock.sys
-        assert ctx.state_tracker is app_mock.state_tracker
-        assert ctx.memory is app_mock.memory
-        assert ctx.context_advisor is app_mock.context_advisor
-        assert ctx.world_state is app_mock.world_state
-        assert ctx.fact_ledger is app_mock.fact_ledger
-        assert ctx.adversarial_self_play is app_mock.adversarial_self_play
-        assert ctx.preset_registry is app_mock.preset_registry
-        assert ctx.selected_genre is app_mock.selected_genre
-        assert ctx.pass_rate_monitor is app_mock.pass_rate_monitor
-        assert ctx.get_protagonist_name is app_mock._get_protagonist_name
-        assert ctx.audit_event is app_mock._audit_event
-        assert ctx.write_audit_summary is app_mock._write_audit_summary
-        assert ctx.get_arc_context_for_episode is app_mock._get_arc_context_for_episode
-        assert ctx.get_max_episode_from_manuscripts is app_mock._get_max_episode_from_manuscripts
-        assert ctx.get_int_input is app_mock._get_int_input
-        assert ctx.safe_commit is app_mock._safe_commit
-        assert ctx.validate_arc_data_fields is app_mock._validate_arc_data_fields
-        assert ctx.validate_blueprint_integrity is app_mock._validate_blueprint_integrity
-        assert ctx.fix_entity_registry_protagonist is app_mock._fix_entity_registry_protagonist
-        assert ctx.session_logger is app_mock._session_logger
+        fake_app = SimpleNamespace(
+            ui=MagicMock(),
+            current_project=MagicMock(),
+            agents={"three_phase_bp": MagicMock()},
+            sys=MagicMock(),
+            state_tracker=MagicMock(),
+            memory=MagicMock(),
+            context_advisor=MagicMock(),
+            world_state=MagicMock(),
+            fact_ledger=MagicMock(),
+            adversarial_self_play=MagicMock(),
+            preset_registry=MagicMock(),
+            selected_genre={"type": "wuxia"},
+            pass_rate_monitor=MagicMock(),
+            _get_protagonist_name=MagicMock(),
+            _audit_event=MagicMock(),
+            _write_audit_summary=MagicMock(),
+            _get_arc_context_for_episode=MagicMock(),
+            _get_max_episode_from_manuscripts=MagicMock(),
+            _get_int_input=MagicMock(),
+            _safe_commit=MagicMock(),
+            _validate_arc_data_fields=MagicMock(),
+            _validate_blueprint_integrity=MagicMock(),
+            _fix_entity_registry_protagonist=MagicMock(),
+            _session_logger=MagicMock(),
+        )
+        ctx = Stage3Context.from_app(fake_app)
+        assert ctx.ui is fake_app.ui
+        assert ctx.current_project is fake_app.current_project
+        assert ctx.agents is fake_app.agents
+        assert ctx.sys is fake_app.sys
+        assert ctx.state_tracker is fake_app.state_tracker
+        assert ctx.memory is fake_app.memory
+        assert ctx.context_advisor is fake_app.context_advisor
+        assert ctx.world_state is fake_app.world_state
+        assert ctx.fact_ledger is fake_app.fact_ledger
+        assert ctx.adversarial_self_play is fake_app.adversarial_self_play
+        assert ctx.preset_registry is fake_app.preset_registry
+        assert ctx.selected_genre is fake_app.selected_genre
+        assert ctx.pass_rate_monitor is fake_app.pass_rate_monitor
+        assert ctx.get_protagonist_name is fake_app._get_protagonist_name
+        assert ctx.audit_event is fake_app._audit_event
+        assert ctx.write_audit_summary is fake_app._write_audit_summary
+        assert ctx.get_arc_context_for_episode is fake_app._get_arc_context_for_episode
+        assert ctx.get_max_episode_from_manuscripts is fake_app._get_max_episode_from_manuscripts
+        assert ctx.get_int_input is fake_app._get_int_input
+        assert ctx.safe_commit is fake_app._safe_commit
+        assert ctx.validate_arc_data_fields is fake_app._validate_arc_data_fields
+        assert ctx.validate_blueprint_integrity is fake_app._validate_blueprint_integrity
+        assert ctx.fix_entity_registry_protagonist is fake_app._fix_entity_registry_protagonist
+        assert ctx.session_logger is fake_app._session_logger
+
+    def test_from_app_binds_real_validation_methods(self):
+        class RealApp:
+            def __init__(self):
+                self.ui = MagicMock()
+                self.current_project = MagicMock()
+                self.agents = {"three_phase_bp": MagicMock()}
+                self.sys = MagicMock()
+                self.state_tracker = MagicMock()
+                self.validation_calls = []
+                self.blueprint_calls = []
+
+            def _validate_arc_data_fields(self, arc_data, arc_idx):
+                self.validation_calls.append((arc_idx, arc_data.get("arc_no")))
+                return {**arc_data, "arc_no": arc_idx}
+
+            def _validate_blueprint_integrity(self, blueprint):
+                self.blueprint_calls.append(blueprint.get("integrated_scenario"))
+                return True
+
+        app = RealApp()
+
+        ctx = Stage3Context.from_app(app)
+
+        assert ctx.validate_arc_data_fields.__self__ is app
+        assert ctx.validate_blueprint_integrity.__self__ is app
+        assert ctx.validate_arc_data_fields({"arc_no": 99}, 4)["arc_no"] == 4
+        assert ctx.validate_blueprint_integrity({"integrated_scenario": "ok"}) is True
+        assert app.validation_calls == [(4, 99)]
+        assert app.blueprint_calls == ["ok"]
 
     def test_slots_count_20(self):
         """__slots__ 개수 검증"""

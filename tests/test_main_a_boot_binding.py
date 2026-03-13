@@ -100,3 +100,69 @@ def test_current_project_log_path_uses_bound_project_root(tmp_path):
     log_path = SovereignApp._get_current_project_log_path(app, "voice_profiles.json")
 
     assert log_path == (tmp_path / "external-projects" / "demo" / "logs" / "voice_profiles.json").resolve()
+
+
+def test_boot_does_not_touch_legacy_quad_cache_helper(monkeypatch, tmp_path):
+    project_root = (tmp_path / "projects" / "demo").resolve()
+    (project_root / "logs").mkdir(parents=True)
+    (project_root / "config").mkdir(parents=True)
+    (project_root / "memory").mkdir(parents=True)
+
+    db = SimpleNamespace(
+        load_anchor=MagicMock(return_value={"type": "investment", "name": "투자"}),
+        save_anchor=MagicMock(),
+        conn=MagicMock(),
+        _lock=MagicMock(),
+    )
+    current_project = SimpleNamespace(
+        name="demo",
+        db=db,
+        paths=SimpleNamespace(root=project_root, config=project_root / "config", memory=project_root / "memory"),
+    )
+
+    class FakePromptLoader:
+        def invalidate_cache(self):
+            return None
+
+    class FakeVecMemory:
+        def __init__(self, **_kwargs):
+            self.initialization_error = ""
+
+        def is_operational(self):
+            return True
+
+    sys_obj = SimpleNamespace(project=None, boot_v20_project=None)
+
+    def _boot_v20_project(project_name, genre="wuxia", projects_root=None):
+        assert project_name == "demo"
+        assert genre == "investment"
+        assert projects_root == (tmp_path / "projects").resolve()
+        sys_obj.project = current_project
+
+    sys_obj.boot_v20_project = _boot_v20_project
+
+    app = _make_minimal_app()
+    app.sys = sys_obj
+    app._session_logger = SimpleNamespace(set_log_dir=MagicMock())
+    app._select_genre = MagicMock(return_value={"type": "investment", "name": "투자"})
+    app._select_project = MagicMock(return_value="demo")
+    app._reload_project_environment = MagicMock()
+    app._get_projects_root = MagicMock(return_value=(tmp_path / "projects").resolve())
+    app._restore_preset_registry = MagicMock()
+    app.preset_registry = None
+    app._check_vector_db_lock = MagicMock(return_value=True)
+    app._attach_agents = MagicMock(return_value=False)
+    app._run_main_process = MagicMock()
+    app._ignite_quad_cache_system = MagicMock(side_effect=AssertionError("legacy cache helper must stay dead"))
+
+    monkeypatch.setattr(main_a, "VecMemory", FakeVecMemory)
+    monkeypatch.setattr("modules.core.prompt_loader.PromptLoader", FakePromptLoader)
+    monkeypatch.setattr("modules.core.genre_hud_manager.create_hud_manager", lambda *_args, **_kwargs: SimpleNamespace())
+    monkeypatch.setattr("modules.core.genre_hud_manager.log_hud_compatibility_report", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr("modules.core.genre_guards.create_genre_guard", lambda *_args, **_kwargs: SimpleNamespace())
+
+    SovereignApp.boot(app)
+
+    app._ignite_quad_cache_system.assert_not_called()
+    app._attach_agents.assert_called_once()
+    app._run_main_process.assert_not_called()

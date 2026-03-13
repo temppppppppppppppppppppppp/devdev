@@ -382,8 +382,26 @@ ARC_DESIGN_SCHEMA = types.Schema(
                 "timeline": types.Schema(
                     type=types.Type.OBJECT,
                     properties={
-                        "start": types.Schema(type=types.Type.STRING, description="Arc 시작 시점"),
-                        "end": types.Schema(type=types.Type.STRING, description="Arc 종료 시점"),
+                        "start": types.Schema(
+                            type=types.Type.OBJECT,
+                            description="Arc 시작 시점",
+                            properties={
+                                "year": types.Schema(type=types.Type.INTEGER),
+                                "month": types.Schema(type=types.Type.INTEGER),
+                                "day": types.Schema(type=types.Type.INTEGER),
+                                "description": types.Schema(type=types.Type.STRING),
+                            },
+                        ),
+                        "end": types.Schema(
+                            type=types.Type.OBJECT,
+                            description="Arc 종료 시점",
+                            properties={
+                                "year": types.Schema(type=types.Type.INTEGER),
+                                "month": types.Schema(type=types.Type.INTEGER),
+                                "day": types.Schema(type=types.Type.INTEGER),
+                                "description": types.Schema(type=types.Type.STRING),
+                            },
+                        ),
                     },
                 ),
                 "relationship_changes": types.Schema(
@@ -413,7 +431,27 @@ ARC_DESIGN_SCHEMA = types.Schema(
                 ),
                 "npc_deaths": types.Schema(
                     type=types.Type.ARRAY,
-                    items=types.Schema(type=types.Type.STRING),
+                    items=types.Schema(
+                        type=types.Type.OBJECT,
+                        properties={
+                            "name": types.Schema(type=types.Type.STRING),
+                            "episode": types.Schema(type=types.Type.INTEGER),
+                            "cause": types.Schema(type=types.Type.STRING),
+                        },
+                        required=["name"],
+                    ),
+                ),
+                "skill_acquisitions": types.Schema(
+                    type=types.Type.ARRAY,
+                    items=types.Schema(
+                        type=types.Type.OBJECT,
+                        properties={
+                            "name": types.Schema(type=types.Type.STRING),
+                            "episode": types.Schema(type=types.Type.INTEGER),
+                            "source": types.Schema(type=types.Type.STRING),
+                        },
+                        required=["name"],
+                    ),
                 ),
                 "npc_introductions": types.Schema(
                     type=types.Type.ARRAY,

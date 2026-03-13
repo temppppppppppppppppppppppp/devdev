@@ -1,6 +1,6 @@
 """[B-1-2] Stage4ContextBuilder unit tests."""
 
-import inspect
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from modules.core.context_advisor import RetrievalPlan, RetrievalSlot
@@ -34,6 +34,12 @@ def _make_ctx():
     ctx.generate_writer_guidance_v60_8 = None
     ctx.enrich_director_result = None
     return ctx
+
+
+class _AppTrapContextBuilder(Stage4ContextBuilder):
+    @property
+    def app(self):
+        raise AssertionError("build_mandatory_context should not access self.app")
 
 
 def _configure_hybrid_db(db, *, manuscripts=None, summaries=None, arcs=None):
@@ -104,6 +110,16 @@ class TestContextBuilderInit:
         assert "alice" in names
         assert "bob" in names
         assert "charlie" in names
+
+    def test_source_defaults_align_with_validation_yaml(self):
+        src = Path("modules/core/stage4_context_builder.py").read_text(encoding="utf-8")
+
+        assert '_threshold("context.vector_max_results_s4", 50)' in src
+        assert '_threshold("smart_retrieval.retrieval_mode", "hybrid")' in src
+        assert '_threshold("smart_retrieval.stage4_total_budget", 300000)' in src
+        assert '_threshold("context.mandatory_context_max", 400000)' in src
+        assert '_threshold("context.lookback_excerpt_chars", 5000)' in src
+        assert '_threshold("context.lookback_total_chars", 40000)' in src
 
 
 class TestSuggestAmbientNpcs:
@@ -561,6 +577,78 @@ class TestBuildMandatoryContext:
         }
         assert "writer mandatory" in result["mandatory_context"]
 
+    @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="")
+    def test_build_mandatory_context_injects_series_summary_once(self, _mock_build):
+        ctx = _make_ctx()
+
+        def _load_v20_anchor(key, default=None):
+            if key == "series_summary":
+                return {"summary": "시리즈 요약 본문이 충분히 길다"}
+            return default
+
+        ctx.current_project.load_v20_anchor.side_effect = _load_v20_anchor
+        ctx.load_narrative_summaries = MagicMock(return_value="### 📚 장기 내러티브 요약 (과거 스토리)\n[제1-4화 요약] 별도 요약")
+        cb = Stage4ContextBuilder(ctx)
+        anchor_sys = MagicMock()
+        anchor_sys.get_relevant_anchors.return_value = []
+        anchor_sys.get_critical_anchors.return_value = []
+
+        result = cb.build_mandatory_context(
+            next_ep=5,
+            arc_data={"arc_no": 1},
+            arc_tactical="전술",
+            prev_text="",
+            prev_ending="",
+            hud_report="",
+            writer_agent=MagicMock(),
+            anchor_sys=anchor_sys,
+            s4_genre_type="fantasy",
+            blueprint={},
+            v50_modules_available=False,
+        )
+
+        assert result["mandatory_context"].count("시리즈 요약 본문이 충분히 길다") == 1
+
+    @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")
+    def test_build_mandatory_context_includes_stage2_failure_context(self, *_mocks):
+        ctx = _make_ctx()
+        ctx.current_project.db.get_stage_attempts_for_arc = MagicMock(
+            return_value=[
+                {
+                    "verdict": "REJECT",
+                    "failure_category": "continuity",
+                    "reject_reason": "timeline.start/end 불일치",
+                },
+                {
+                    "verdict": "PASS_WITH_FIX",
+                    "failure_category": "schema",
+                    "reject_reason": "npc_deaths 타입 보정",
+                },
+            ]
+        )
+        cb = Stage4ContextBuilder(ctx)
+        anchor_sys = MagicMock()
+        anchor_sys.get_relevant_anchors.return_value = []
+        anchor_sys.get_critical_anchors.return_value = []
+
+        result = cb.build_mandatory_context(
+            next_ep=5,
+            arc_data={"arc_no": 3, "state_changes": {}},
+            arc_tactical="arc tactical",
+            prev_text="prev text",
+            prev_ending="prev ending",
+            hud_report="HUD",
+            writer_agent=MagicMock(),
+            anchor_sys=anchor_sys,
+            s4_genre_type="wuxia",
+            v50_modules_available=False,
+        )
+
+        assert "[Stage 2 실패/보정 이력]" in result["mandatory_context"]
+        assert "continuity(1)" in result["mandatory_context"]
+        assert "timeline.start/end 불일치" in result["mandatory_context"]
+        ctx.current_project.db.get_stage_attempts_for_arc.assert_called_once_with(3, stages=(2,), limit=12)
+
     @patch("modules.core.stage4_context_builder._build_justification", return_value="just")
     @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")
     def test_writer_guidance_is_injected_into_live_prompt_path(self, *_mocks):
@@ -640,10 +728,30 @@ class TestBuildMandatoryContext:
         ctx.semantic_plot_guard.check_new_arc.assert_called_once()
         assert "spg warning" in result["mandatory_context"]
 
-    def test_no_self_app_reference_in_source(self):
-        source = inspect.getsource(Stage4ContextBuilder.build_mandatory_context)
-        assert "self.app" not in source
-        assert "self.ctx.semantic_plot_guard" in source
+    def test_build_mandatory_context_does_not_touch_self_app(self):
+        ctx = _make_ctx()
+        ctx.semantic_plot_guard = MagicMock()
+        ctx.semantic_plot_guard.check_new_arc.return_value = ["warn"]
+        ctx.semantic_plot_guard.format_warnings.return_value = "spg warning"
+        cb = _AppTrapContextBuilder(ctx)
+        anchor_sys = MagicMock()
+        anchor_sys.get_relevant_anchors.return_value = []
+        anchor_sys.get_critical_anchors.return_value = []
+
+        result = cb.build_mandatory_context(
+            next_ep=5,
+            arc_data={"arc_no": 1, "tactical_doc": "?꾩닠"},
+            arc_tactical="",
+            prev_text="x" * 200,
+            prev_ending="?붾뵫",
+            hud_report="HUD",
+            writer_agent=MagicMock(),
+            anchor_sys=anchor_sys,
+            s4_genre_type="wuxia",
+            v50_modules_available=False,
+        )
+
+        assert "spg warning" in result["mandatory_context"]
 
     @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")
     def test_falls_back_to_legacy_vector_path_without_advisor(self, *_mocks):
@@ -706,6 +814,7 @@ class TestBuildMandatoryContext:
         ctx = _make_ctx()
         ctx.memory = MagicMock()
         ctx.memory.retrieve_multi_query_context.return_value = "vec hit"
+        ctx.memory.retrieve_hybrid_context.return_value = "vec hit"
         ctx.memory.retrieve_npc_context.return_value = "npc hit"
         ctx.context_advisor = MagicMock()
         ctx.context_advisor.plan_stage4_retrieval.return_value = RetrievalPlan(
@@ -746,7 +855,9 @@ class TestBuildMandatoryContext:
             )
 
         ctx.context_advisor.plan_stage4_retrieval.assert_called_once()
-        ctx.memory.retrieve_multi_query_context.assert_called_once()
+        assert (
+            ctx.memory.retrieve_hybrid_context.call_count + ctx.memory.retrieve_multi_query_context.call_count
+        ) == 1
         ctx.memory.retrieve_npc_context.assert_called_once()
         assert "[SC:scene_context]" in result["mandatory_context"]
         assert "[SC:npc_history]" in result["mandatory_context"]

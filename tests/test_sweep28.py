@@ -38,6 +38,19 @@ def test_story_expander_analyze_concept_handles_list_json(monkeypatch):
     assert expander.genre == "fantasy"
 
 
+def test_story_expander_generate_bible_clears_stale_bible_on_failure(monkeypatch):
+    expander = StoryExpander(genre="fantasy", llm_client=None)
+    expander.extracted = {"protagonist": {"main_goal": "survive"}}
+    expander.preset_registry = MagicMock()
+    expander.bible = {"stale": True}
+    monkeypatch.setattr(expander, "_generate_protagonist_detail", lambda: {})
+
+    result = expander.generate_bible()
+
+    assert result == {}
+    assert expander.bible == {}
+
+
 def test_style_extractor_extract_from_drafts_handles_non_dict_llm_results(monkeypatch):
     extractor = StyleExtractor(llm_client=object())
     monkeypatch.setattr(extractor, "_deep_llm_analysis", lambda _drafts: ["bad-shape"])
