@@ -3541,6 +3541,7 @@ class SovereignApp:
         # [S-13] 조건부 모듈 8종 → conditional_modules dict
         from modules.core.stage4_context import Stage4Context
 
+        # Legacy manual DI equivalent: context_advisor=getattr(self, "context_advisor", None),
         self._stage4_orch.ctx = Stage4Context.from_app(self)
 
         return self._stage4_orch.stage_4_v2_chief_writer(limit_mode=limit_mode, target_ep=target_ep)
