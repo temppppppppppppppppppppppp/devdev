@@ -106,3 +106,48 @@ def test_wipe_production_data_success_invalidates_runtime_caches():
     director.invalidate_caches.assert_called_once()
     state_extractor.invalidate_cache.assert_called_once()
     foreshadow_tracker.clear.assert_called_once()
+
+
+def test_rewind_stage_2_success_reloads_foreshadow_from_db():
+    writer = MagicMock()
+    director = MagicMock()
+    state_extractor = MagicMock()
+    foreshadow_tracker = MagicMock()
+    app = SimpleNamespace(
+        _project_service=SimpleNamespace(rewind_stage_2=MagicMock(return_value=True)),
+        state_tracker="tracker",
+        _prompt_builder=SimpleNamespace(invalidate_timeline_cache=MagicMock()),
+        _cumulative_state_cache="cache",
+        _cumulative_state_cache_key="cache_key",
+        _narrative_summaries_cache="summary_cache",
+        current_project=SimpleNamespace(db=MagicMock()),
+        foreshadow_tracker=foreshadow_tracker,
+        agents={"writer": writer, "director": director, "state_extractor": state_extractor},
+    )
+
+    SovereignApp._rewind_stage_2(app)
+
+    foreshadow_tracker.load_from_db.assert_called_once_with(app.current_project.db)
+    foreshadow_tracker.clear.assert_not_called()
+
+
+def test_rollback_episode_success_reloads_foreshadow_from_db():
+    writer = MagicMock()
+    director = MagicMock()
+    foreshadow_tracker = MagicMock()
+    app = SimpleNamespace(
+        _project_service=SimpleNamespace(rollback_episode=MagicMock(return_value=True)),
+        state_tracker="tracker",
+        _prompt_builder=SimpleNamespace(invalidate_timeline_cache=MagicMock()),
+        _cumulative_state_cache="cache",
+        _cumulative_state_cache_key="cache_key",
+        _narrative_summaries_cache="summary_cache",
+        current_project=SimpleNamespace(db=MagicMock()),
+        foreshadow_tracker=foreshadow_tracker,
+        agents={"writer": writer, "director": director},
+    )
+
+    SovereignApp._rollback_episode(app)
+
+    foreshadow_tracker.load_from_db.assert_called_once_with(app.current_project.db)
+    foreshadow_tracker.clear.assert_not_called()

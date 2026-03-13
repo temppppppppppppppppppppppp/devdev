@@ -83,12 +83,43 @@
   },
   "transitional_gates": {
     "production_resume": {
-      "transitional_file": "treatments/preprocess/{work_id}/docs/sequential_run_status.md",
-      "future_file": "treatments/preprocess/{work_id}/sequential_run_status.json",
+      "primary_file": "treatments/preprocess/{work_id}/sequential_run_status.json",
+      "deprecated_fallback": "treatments/preprocess/{work_id}/docs/sequential_run_status.md",
+      "read_priority": "json_first",
       "hard_fail": [
         "status_file_conflicts_with_manual_audit_history",
-        "treat_seed_baseline_sync_as_sequential_production"
-      ]
+        "treat_seed_baseline_sync_as_sequential_production",
+        "json_missing_after_grace_period_expired"
+      ],
+      "soft_to_hard_escalation": {
+        "resume_status_is_markdown_only": {
+          "during_grace_period": "soft_warning",
+          "after_grace_period": "hard_fail"
+        }
+      }
+    },
+    "audit_status": {
+      "primary_file": "treatments/preprocess/{work_id}/audit_status.json",
+      "deprecated_fallback": "human audit reports (bi_5pass.md, manual memo)",
+      "read_priority": "json_first",
+      "hard_fail": [
+        "json_missing_after_grace_period_expired",
+        "audit_result_fail_but_next_action_advance"
+      ],
+      "soft_to_hard_escalation": {
+        "audit_status_is_human_reports_only": {
+          "during_grace_period": "soft_warning",
+          "after_grace_period": "hard_fail"
+        }
+      }
     }
+  },
+  "cutover_gate": {
+    "rule": "work_status_json becomes mandatory at cutover trigger; md-only degrades from soft_warning to hard_fail after 30-day grace period",
+    "triggers": {
+      "sequential_run_status": "run_class changes to sequential_production",
+      "audit_status": "first manual_audit_pass on any block"
+    },
+    "new_works": "json mandatory from stage0_completion (no grace period for md-only)"
   }
 }

@@ -123,13 +123,24 @@ class TestPhase0Recovery:
             helpers.phase_0_recovery()
         mock_s0.assert_called_once_with(mode=5)
 
+    def test_choice_7_delegates_to_stage_0_extended(self, helpers, app_mock):
+        """선택 7 → self.stage_0_extended(mode=6) 호출"""
+        with (
+            redirect_stdout(StringIO()),
+            patch("builtins.input", return_value="7"),
+            patch("modules.core.spinners.STAGE0_AVAILABLE", True),
+            patch.object(helpers, "stage_0_extended") as mock_s0,
+        ):
+            helpers.phase_0_recovery()
+        mock_s0.assert_called_once_with(mode=6)
+
     def test_stage0_unavailable_skips_extended_choices(self, helpers, app_mock):
         """STAGE0_AVAILABLE=False 시 choice=2는 기존 방식으로 진행"""
         # choice=2이지만 STAGE0_AVAILABLE=False → 기존 방식 (bible/treatment 선택)
         # 기존 방식: choice, enrich(N), world(1), type(1), pov(2), Enter
         with (
             redirect_stdout(StringIO()),
-            patch("builtins.input", side_effect=["2", "N", "1", "1", "2", ""]),
+            patch("builtins.input", side_effect=["2", "N", "1", "1", "2", "2", ""]),
             patch("modules.core.spinners.STAGE0_AVAILABLE", False),
         ):
             helpers.phase_0_recovery()
@@ -143,7 +154,7 @@ class TestPhase0Recovery:
         # input sequence: choice=1, enrich=N, world=1, type=1, pov=2, Enter
         with (
             redirect_stdout(StringIO()),
-            patch("builtins.input", side_effect=["1", "N", "1", "1", "2", ""]),
+            patch("builtins.input", side_effect=["1", "N", "1", "1", "2", "2", ""]),
             patch("modules.core.spinners.STAGE0_AVAILABLE", True),
         ):
             helpers.phase_0_recovery()
@@ -155,13 +166,46 @@ class TestPhase0Recovery:
         """기존 흐름에서도 POV 4번 선택 시 혼합 시점이 저장된다."""
         with (
             redirect_stdout(StringIO()),
-            patch("builtins.input", side_effect=["1", "N", "1", "1", "4", ""]),
+            patch("builtins.input", side_effect=["1", "N", "1", "1", "4", "3", ""]),
             patch("modules.core.spinners.STAGE0_AVAILABLE", True),
         ):
             helpers.phase_0_recovery()
 
         saved = app_mock.current_project.master_bible["MasterBible"]["protagonist_config"]
+        assert saved["external_pov_insert_policy"] == "적극 허용"
         assert saved["pov"] == "혼합"
+
+    @pytest.mark.parametrize(
+        ("policy_choice", "expected"),
+        [("1", "금지"), ("2", "제한적 허용"), ("3", "적극 허용")],
+    )
+    def test_legacy_flow_external_pov_policy_choices_match_stage0_menu(
+        self, helpers, app_mock, policy_choice, expected
+    ):
+        with (
+            redirect_stdout(StringIO()),
+            patch("builtins.input", side_effect=["1", "N", "1", "1", "2", policy_choice, ""]),
+            patch("modules.core.spinners.STAGE0_AVAILABLE", True),
+        ):
+            helpers.phase_0_recovery()
+
+        saved = app_mock.current_project.master_bible["MasterBible"]["protagonist_config"]
+        assert saved["pov"] == "3인칭"
+        assert saved["external_pov_insert_policy"] == expected
+
+    def test_legacy_flow_world_origin_and_incarnation_defaults_match_stage0(self, helpers, app_mock):
+        with (
+            redirect_stdout(StringIO()),
+            patch("builtins.input", side_effect=["1", "N", "invalid", "invalid", "", "", ""]),
+            patch("modules.core.spinners.STAGE0_AVAILABLE", True),
+        ):
+            helpers.phase_0_recovery()
+
+        saved = app_mock.current_project.master_bible["MasterBible"]["protagonist_config"]
+        assert saved["world_origin"] == "현대인"
+        assert saved["incarnation_type"] == "일반"
+        assert saved["pov"] == "3인칭"
+        assert saved["external_pov_insert_policy"] == "제한적 허용"
 
     def test_no_bible_file_aborts(self, helpers, app_mock):
         """Bible 파일 없으면 중단"""
@@ -180,7 +224,7 @@ class TestPhase0Recovery:
         app_mock.current_project.force_sync_v25_dna.return_value = False
         with (
             redirect_stdout(StringIO()),
-            patch("builtins.input", side_effect=["1", "N", "1", "1", "2", ""]),
+            patch("builtins.input", side_effect=["1", "N", "1", "1", "2", "2", ""]),
             patch("modules.core.spinners.STAGE0_AVAILABLE", True),
         ):
             helpers.phase_0_recovery()
@@ -193,7 +237,7 @@ class TestPhase0Recovery:
         app_mock.current_project.sync_existing_manuscripts.side_effect = RuntimeError("sync crash")
         with (
             redirect_stdout(StringIO()),
-            patch("builtins.input", side_effect=["1", "N", "1", "1", "2", ""]),
+            patch("builtins.input", side_effect=["1", "N", "1", "1", "2", "2", ""]),
             patch("modules.core.spinners.STAGE0_AVAILABLE", True),
         ):
             helpers.phase_0_recovery()
@@ -347,6 +391,46 @@ class TestStage0Extended:
             helpers.stage_0_extended(mode=4)
         mock_eb.assert_called_once_with(mock_mgr)
 
+
+class TestStage0RoadmapInjection:
+    def test_s0_save_results_injects_plot_roadmap_from_treatment(self, app_mock, tmp_path):
+        app_mock.current_project.paths.root = tmp_path
+        bible = {"MasterBible": {"ProjectData": {}}}
+        treatment = [
+            {"title": "블록 1", "ep_start": 1, "ep_end": 5},
+            {"title": "블록 2", "ep_start": 6, "ep_end": 10},
+        ]
+        stage0_mgr = MagicMock()
+        stage0_mgr.preset_registry = None
+        stage0_mgr.style_guide = None
+
+        with patch("builtins.input", return_value=""):
+            Stage01Helpers._s0_save_results(app_mock, stage0_mgr, bible, treatment)
+
+        roadmap = bible["MasterBible"]["plot_roadmap"]
+        assert [block["block_no"] for block in roadmap] == [1, 2]
+        assert roadmap[0]["title"] == "블록 1"
+        saved_key, saved_payload = app_mock.current_project.save_v20_anchor.call_args.args
+        assert saved_key == "bible"
+        assert saved_payload["MasterBible"]["plot_roadmap"][1]["ep_end"] == 10
+
+    def test_s0_save_results_builds_stub_plot_roadmap_from_saved_arcs(self, app_mock):
+        bible = {"MasterBible": {"ProjectData": {}}}
+        app_mock.current_project.db.load_anchor.return_value = [
+            {"arc_no": 1, "ep_start": 1, "ep_end": 5, "tactical_doc": "stub arc", "_stub": True}
+        ]
+        stage0_mgr = MagicMock()
+        stage0_mgr.preset_registry = None
+        stage0_mgr.style_guide = None
+
+        with patch("builtins.input", return_value=""):
+            Stage01Helpers._s0_save_results(app_mock, stage0_mgr, bible, treatment=None)
+
+        roadmap = bible["MasterBible"]["plot_roadmap"]
+        assert roadmap[0]["arc_no"] == 1
+        assert roadmap[0]["ep_count"] == 5
+        assert roadmap[0]["_stub"] is True
+
     def test_mode_5_calls_reference_analysis(self, helpers, app_mock):
         """mode=5 → run_reference_analysis 호출"""
         mock_mgr = MagicMock()
@@ -360,6 +444,19 @@ class TestStage0Extended:
         ):
             helpers.stage_0_extended(mode=5)
         mock_mgr.run_reference_analysis.assert_called_once()
+
+    def test_mode_6_calls_manage_work_guard(self, helpers, app_mock):
+        """mode=6 → manage_work_guard 호출"""
+        mock_mgr = MagicMock()
+        with (
+            redirect_stdout(StringIO()),
+            patch("modules.core.spinners.STAGE0_AVAILABLE", True),
+            patch("modules.core.stage0.StageZeroManager", return_value=mock_mgr),
+            patch("modules.core.stage0.PresetRegistry"),
+            patch("builtins.input", return_value=""),
+        ):
+            helpers.stage_0_extended(mode=6)
+        mock_mgr.manage_work_guard.assert_called_once()
 
     def test_invalid_choice_cancels(self, helpers, app_mock):
         """유효하지 않은 choice → 취소"""

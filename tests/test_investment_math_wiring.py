@@ -80,9 +80,12 @@ def test_investment_advisory_reaches_director():
 
     assert result["final_verdict"] == "PASS"
     advisory = director.compare_and_select_arc.call_args.kwargs["advisory"]
+    quality_flags = director.compare_and_select_arc.call_args.kwargs["candidate_quality_flags"]
     assert "InvestmentMathVerifier" in advisory
     assert "[F-1] mismatch" in advisory
     assert "[F-2] llm mismatch" in advisory
+    assert quality_flags[0]["force_pass_with_fix"] is True
+    assert quality_flags[0]["score_cap"] == 89
 
 
 def test_non_investment_genre_skips_codex_f():
@@ -170,3 +173,60 @@ def test_flash_disabled_skips_f2():
 
     assert result["final_verdict"] == "PASS"
     assert not mocked_verify.called
+
+
+def test_investment_critical_candidate_filtered_before_director():
+    gen, candidate = _make_generator(genre="investment", flash_ask=lambda _prompt: "[]")
+    critical_candidate = {
+        "_strategy": "aggressive",
+        "tactical_doc": "critical tactical",
+        "state_constraints": {
+            "arc_start_state": {},
+            "arc_end_state": {},
+            "investment_calc": {"transactions": []},
+        },
+    }
+    clean_candidate = {
+        "_strategy": "balanced",
+        "tactical_doc": "clean tactical",
+        "state_constraints": {
+            "arc_start_state": {},
+            "arc_end_state": {},
+            "investment_calc": {"transactions": []},
+        },
+    }
+    gen.ensemble.generate_ensemble.return_value = (critical_candidate, [critical_candidate, clean_candidate])
+
+    director = MagicMock()
+    director.compare_and_select_arc.return_value = {
+        "decision": "PASS",
+        "selected_arc": clean_candidate,
+        "score": 95,
+    }
+
+    fake_checker = MagicMock()
+    fake_checker.check.side_effect = [
+        [{"check": "investment_arithmetic", "severity": "CRITICAL", "text": "[F-1] critical mismatch"}],
+        [],
+    ]
+
+    with patch(
+        "modules.core.investment_arithmetic_checker.InvestmentArithmeticChecker.from_yaml",
+        return_value=fake_checker,
+    ):
+        _, result = gen.generate(
+            arc_no=4,
+            ep_start=1,
+            vol_strategy="std",
+            curr_block={},
+            prev_arcs=[],
+            director=director,
+        )
+
+    assert result["final_verdict"] == "PASS"
+    passed_candidates = director.compare_and_select_arc.call_args.kwargs["candidates"]
+    quality_flags = director.compare_and_select_arc.call_args.kwargs["candidate_quality_flags"]
+    assert passed_candidates == [clean_candidate]
+    assert len(quality_flags) == 1
+    assert quality_flags[0]["force_reject"] is False
+    assert quality_flags[0]["force_pass_with_fix"] is False

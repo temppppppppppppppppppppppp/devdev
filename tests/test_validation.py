@@ -380,6 +380,80 @@ class TestValidationOrchestrator:
             orchestrator = ValidationOrchestrator(config, MagicMock(), genre=genre)
             assert orchestrator.genre == genre
 
+    def test_consistency_unjustifiable_flows_to_advisory_instead_of_early_reject(self):
+        from modules.validation.validation_orchestrator import ValidationOrchestrator
+
+        orchestrator = ValidationOrchestrator(
+            {"scoring_model": "gemini-2.5-pro", "advisory_model": "gemini-2.5-flash", "scoring_threshold": 70},
+            MagicMock(),
+            genre="wuxia",
+        )
+        orchestrator.continuity.validate = MagicMock(return_value={"passed": True, "warning_count": 0, "violations": []})
+        orchestrator.blocking.validate = MagicMock(return_value={"passed": True, "failure_count": 0, "failures": []})
+        orchestrator.consistency.validate = MagicMock(
+            return_value={
+                "unjustifiable_violations": [{"type": "timeline", "severity": "CRITICAL"}],
+                "justifiable_violations": [],
+                "score_penalty": -5,
+                "feedback": "정당화 불가 타임라인 모순",
+            }
+        )
+        orchestrator.pre_llm.validate = MagicMock(return_value={"passed": True, "warnings": [], "score_deduction": 0})
+        orchestrator.scoring.validate_v59 = MagicMock(return_value={"total_score": 90, "message": "ok", "passed": True})
+        orchestrator.advisory.validate = MagicMock(return_value={"suggestions": []})
+        orchestrator.catharsis_timer.check_catharsis_timing = MagicMock(return_value={"status": "ok"})
+        orchestrator.action_evaluator.evaluate = MagicMock(return_value={"action_scene_count": 0})
+
+        result = orchestrator.validate(4, "충분한 원고 분량입니다. " * 500, _minimal_blocking_context())
+
+        assert result["final_decision"] == "PASS"
+        assert result["total_score"] == 85
+        assert result["_consistency_advisory"]["severity"] == "CRITICAL"
+
+    def test_retrospective_critical_becomes_advisory_penalty(self, monkeypatch):
+        from modules.validation import validation_orchestrator as vo_mod
+        from modules.validation.validation_orchestrator import ValidationOrchestrator
+
+        monkeypatch.setattr(vo_mod, "RETROSPECTIVE_AVAILABLE", True)
+        orchestrator = ValidationOrchestrator(
+            {
+                "scoring_model": "gemini-2.5-pro",
+                "advisory_model": "gemini-2.5-flash",
+                "scoring_threshold": 70,
+                "use_retrospective": True,
+            },
+            MagicMock(),
+            genre="wuxia",
+        )
+        orchestrator.continuity.validate = MagicMock(return_value={"passed": True, "warning_count": 0, "violations": []})
+        orchestrator.blocking.validate = MagicMock(return_value={"passed": True, "failure_count": 0, "failures": []})
+        orchestrator.consistency.validate = MagicMock(
+            return_value={"unjustifiable_violations": [], "justifiable_violations": [], "score_penalty": 0, "feedback": ""}
+        )
+        orchestrator.pre_llm.validate = MagicMock(return_value={"passed": True, "warnings": [], "score_deduction": 0})
+        orchestrator.scoring.validate_v59 = MagicMock(return_value={"total_score": 95, "message": "ok", "passed": True})
+        orchestrator.advisory.validate = MagicMock(return_value={"suggestions": []})
+        orchestrator.catharsis_timer.check_catharsis_timing = MagicMock(return_value={"status": "ok"})
+        orchestrator.action_evaluator.evaluate = MagicMock(return_value={"action_scene_count": 0})
+        orchestrator.retrospective = MagicMock()
+        orchestrator.retrospective.validate_long_term_consistency.return_value = {
+            "passed": False,
+            "severity_level": "CRITICAL",
+            "total_violations": 1,
+            "message": "장기 드리프트",
+            "violations": [{"type": "drift", "description": "장기 상태 불일치"}],
+        }
+
+        result = orchestrator.validate(
+            4,
+            "충분한 원고 분량입니다. " * 500,
+            {**_minimal_blocking_context(), "_context": MagicMock()},
+        )
+
+        assert result["final_decision"] == "CONDITIONAL_PASS"
+        assert result["total_score"] == 80
+        assert result["_retrospective_advisory"]["severity"] == "CRITICAL"
+
 
 class TestValidationEdgeCases:
     """Validation edge case tests."""

@@ -144,6 +144,8 @@ class TestStage4Context:
         assert ctx.load_narrative_summaries is None
         assert ctx.get_protagonist_name is None
         assert ctx.generate_narrative_summary is None
+        assert ctx.generate_writer_guidance_v60_8 is None
+        assert ctx.enrich_director_result is None
         assert ctx.flush_audit_buffer is None
         assert ctx.safe_commit is None
 
@@ -166,6 +168,8 @@ class TestStage4Context:
         app_mock._load_narrative_summaries = MagicMock()
         app_mock._get_protagonist_name = MagicMock()
         app_mock._generate_narrative_summary = MagicMock()
+        app_mock._generate_writer_guidance_v60_8 = MagicMock()
+        app_mock._enrich_director_result = MagicMock()
         app_mock._flush_audit_buffer = MagicMock()
         app_mock._safe_commit = MagicMock()
 
@@ -175,6 +179,8 @@ class TestStage4Context:
         assert ctx.load_narrative_summaries is app_mock._load_narrative_summaries
         assert ctx.get_protagonist_name is app_mock._get_protagonist_name
         assert ctx.generate_narrative_summary is app_mock._generate_narrative_summary
+        assert ctx.generate_writer_guidance_v60_8 is app_mock._generate_writer_guidance_v60_8
+        assert ctx.enrich_director_result is app_mock._enrich_director_result
         assert ctx.flush_audit_buffer is app_mock._flush_audit_buffer
         assert ctx.safe_commit is app_mock._safe_commit
 
@@ -187,6 +193,8 @@ class TestStage4Context:
         app.sys = MagicMock()
         ctx = Stage4Context.from_app(app)
         assert ctx.get_int_input is None
+        assert ctx.generate_writer_guidance_v60_8 is None
+        assert ctx.enrich_director_result is None
         assert ctx.flush_audit_buffer is None
         assert ctx.safe_commit is None
 

@@ -73,7 +73,7 @@ class TestResetStage2:
             result = svc.reset_stage_2()
 
         assert result is True
-        project_mock.db.reset_after.assert_called_once_with(1)
+        project_mock.db.reset_after.assert_called_once_with(1, commit=False)
         assert project_mock.arcs == []
         safe_commit_mock.assert_called_once()
         memory_mock.delete_all_episodes.assert_called_once()
@@ -126,13 +126,33 @@ class TestRewindStage2:
             result = svc.rewind_stage_2()
 
         assert result is True
-        project_mock.db.reset_after.assert_called_once_with(3)
+        project_mock.db.reset_after.assert_called_once_with(3, commit=False)
         project_mock.db.save_anchor.assert_called_once_with(
             "arcs",
             [{"arc_no": 1, "title": "Arc 1", "ep_start": 1, "ep_end": 2}],
         )
         assert project_mock.arcs == [{"arc_no": 1, "title": "Arc 1", "ep_start": 1, "ep_end": 2}]
         memory_mock.delete_episodes_from.assert_called_once_with(3)
+
+    def test_rewind_commit_failure_returns_false_without_runtime_mutation(
+        self, ui_mock, project_mock, genre_fn, memory_mock
+    ):
+        svc = ProjectService(
+            project_fn=lambda: project_mock,
+            ui=ui_mock,
+            safe_commit_fn=MagicMock(return_value=False),
+            genre_fn=genre_fn,
+            memory_fn=lambda: memory_mock,
+        )
+        original_arcs = list(project_mock.arcs)
+
+        with patch("builtins.input", side_effect=["2", "y"]):
+            result = svc.rewind_stage_2()
+
+        assert result is False
+        assert project_mock.arcs == original_arcs
+        memory_mock.delete_episodes_from.assert_not_called()
+        ui_mock.log.assert_any_call("DB commit failed during Stage 2 rewind")
 
 
 class TestRollbackEpisode:
@@ -163,8 +183,7 @@ class TestRollbackEpisode:
             result = svc.rollback_episode()
 
         assert result is True
-        project_mock.db.reset_after.assert_called_once_with(3)
-        project_mock.db.commit.assert_called_once()
+        project_mock.db.reset_after.assert_called_once_with(3, commit=False)
         project_mock._load_from_db.assert_called_once()
         memory_mock.delete_episodes_from.assert_called_once_with(3)
         execute_calls = project_mock.db.cursor.execute.call_args_list
@@ -189,6 +208,27 @@ class TestRollbackEpisode:
         assert saved_key == "bible"
         assert saved_payload["MasterBible"]["MartialHUD"]["Protagonist"]["actual_truth"] == {"bank": "safe"}
 
+    def test_rollback_commit_failure_returns_false_without_bible_or_memory_mutation(
+        self, ui_mock, project_mock, genre_fn, memory_mock
+    ):
+        svc = ProjectService(
+            project_fn=lambda: project_mock,
+            ui=ui_mock,
+            safe_commit_fn=MagicMock(return_value=False),
+            genre_fn=genre_fn,
+            memory_fn=lambda: memory_mock,
+        )
+        project_mock.db.cursor.fetchone.return_value = None
+
+        with patch("builtins.input", side_effect=["3", "y"]):
+            result = svc.rollback_episode()
+
+        assert result is False
+        project_mock.db.reset_after.assert_called_once_with(3, commit=False)
+        project_mock.db.save_anchor.assert_not_called()
+        memory_mock.delete_episodes_from.assert_not_called()
+        ui_mock.log.assert_any_call("DB commit failed during rollback")
+
 
 class TestWipeProductionData:
     def test_confirm_n_returns_false(self, svc, project_mock):
@@ -203,8 +243,7 @@ class TestWipeProductionData:
             result = svc.wipe_production_data()
 
         assert result is True
-        project_mock.db.reset_after.assert_called_once_with(1)
-        project_mock.db.commit.assert_called_once()
+        project_mock.db.reset_after.assert_called_once_with(1, commit=False)
         memory_mock.delete_all_episodes.assert_called_once()
         execute_calls = project_mock.db.cursor.execute.call_args_list
         assert any(

@@ -14,6 +14,7 @@ SovereignApp에서 분리된 15개 피드백 생성 메서드.
 - 재시도 (1개): simplify_prompt_for_retry
 """
 
+from modules.core.arc_state_utils import compute_terminal_arc_state
 from modules.core.constants import ManuscriptLimits  # [V64.P4]
 
 
@@ -313,36 +314,13 @@ class FeedbackSystem:
         if not prev_arcs:
             return f"<CONTEXT>\n주인공: {protagonist_name}\n서사 시작점 (첫 Arc)\n</CONTEXT>"
 
-        last_arc = prev_arcs[-1]
-        arc_no = last_arc.get("arc_no", "?")
-
-        state = last_arc.get("state_constraints", {})
-        arc_end = state.get("arc_end_state", {})
-        joint = last_arc.get("joint_docs", {})
-        shadow = last_arc.get("status_shadow", {})
-
-        energy = arc_end.get("internal_energy")
-        if energy is None:
-            loss = shadow.get("internal_energy_loss", "0%")
-            try:
-                loss_val = int(str(loss).replace("%", "").strip())
-                energy = max(0, min(100, 100 - loss_val))
-            except (ValueError, TypeError):
-                energy = "?"
-
-        injury = arc_end.get("injuries") or shadow.get("expected_injuries", "없음")
-        location = arc_end.get("location") or joint.get("final_location", "?")
-
-        inventory = arc_end.get("equipment")
-        if inventory is None:
-            inventory = joint.get("physical_inventory", [])
-        if isinstance(inventory, str):
-            inventory = [i.strip() for i in inventory.split(",") if i.strip()]
-        if isinstance(inventory, list):
-            inventory = inventory[:5]
-            inventory_str = ", ".join(inventory) if inventory else "없음"
-        else:
-            inventory_str = str(inventory)[:100]
+        terminal_state = compute_terminal_arc_state(prev_arcs)
+        arc_no = terminal_state["arc_no"]
+        energy = terminal_state["final_energy"]
+        injury = terminal_state["injuries"]
+        location = terminal_state["location"]
+        inventory = terminal_state["equipment"][:5]
+        inventory_str = ", ".join(inventory) if inventory else "없음"
 
         return f"""<CONTEXT priority="HIGH">
 주인공: {protagonist_name} (절대 변경 금지)
@@ -666,19 +644,73 @@ class FeedbackSystem:
 
     def generate_reverse_feedback_stage4_to_2(self, arc_difficulty: dict | None = None) -> str:
         """[Item4] Stage 4→2 역방향 피드백 (집필 난이도 기반)."""
-        if not arc_difficulty or arc_difficulty.get("difficulty") != "hard":
+        if not arc_difficulty:
             return ""
 
         arc_no = arc_difficulty.get("arc_no", "?")
+        difficulty = str(arc_difficulty.get("difficulty", "unknown") or "unknown")
         avg = arc_difficulty.get("avg_attempts", 0)
         hard_eps = arc_difficulty.get("hard_episodes", [])
+        semantic_failures = arc_difficulty.get("semantic_failures", []) or []
+
+        if difficulty != "hard" and not semantic_failures:
+            return ""
+
+        buckets: list[str] = []
+        categories: list[str] = []
+        weak_score_areas: list[str] = []
+        for failure in semantic_failures:
+            if not isinstance(failure, dict):
+                continue
+            bucket = str(failure.get("reject_bucket", "") or "").strip()
+            if bucket and bucket not in buckets:
+                buckets.append(bucket)
+            category = str(failure.get("error_category", "") or "").strip()
+            if category and category not in categories:
+                categories.append(category)
+            breakdown = failure.get("score_breakdown", {})
+            if isinstance(breakdown, dict):
+                scored = sorted(
+                    (
+                        (str(key), value)
+                        for key, value in breakdown.items()
+                        if isinstance(value, int | float)
+                    ),
+                    key=lambda item: item[1],
+                )
+                for key, _value in scored[:2]:
+                    if key not in weak_score_areas:
+                        weak_score_areas.append(key)
 
         lines = [
-            f"[Stage 4→2 역방향 피드백] 이전 Arc(#{arc_no}) 집필 난이도 높음",
-            f"  평균 {avg}회 시도 필요 (hard_episodes: {hard_eps})",
-            "  → 다음 Arc 설계 시 씬 구조를 단순화하고 집필 난이도를 낮추세요.",
-            "  → 복잡한 다중 NPC 동시 등장, 비선형 시간 전개를 최소화하세요.",
+            f"[Stage 4→2 역방향 피드백] 이전 Arc(#{arc_no}) 집필 회고",
         ]
+        if difficulty == "hard":
+            lines[0] = f"[Stage 4→2 역방향 피드백] 이전 Arc(#{arc_no}) 집필 난이도 높음"
+            lines.append(f"  평균 {avg}회 시도 필요 (hard_episodes: {hard_eps})")
+            lines.append("  → 다음 Arc 설계 시 씬 구조를 단순화하고 집필 난이도를 낮추세요.")
+            lines.append("  → 복잡한 다중 NPC 동시 등장, 비선형 시간 전개를 최소화하세요.")
+        if categories:
+            lines.append(f"  반복 에러 범주: {', '.join(categories)}")
+        if buckets:
+            lines.append(f"  반복 reject bucket: {', '.join(buckets)}")
+        if weak_score_areas:
+            lines.append(f"  취약 score 항목: {', '.join(weak_score_areas[:3])}")
+
+        semantic_guides: list[str] = []
+        if "LOGIC_ERROR" in categories or any(bucket in {"structure_error", "post_select_conflict"} for bucket in buckets):
+            semantic_guides.append("인과/설정 충돌이 재발하지 않도록 장면 의존성과 상태 전이를 더 단순하게 설계하세요.")
+        if any(bucket in {"constraint_violation", "post_select_conflict"} for bucket in buckets):
+            semantic_guides.append("HUD 기준 위치·아이템·수치 상태를 Arc 설계 본문 상단에 고정해 집필 오차를 줄이세요.")
+        if "QUALITY_ISSUE" in categories or any(
+            area in {"length_fulfillment", "narrative_flow", "scene_composition"} for area in weak_score_areas
+        ):
+            semantic_guides.append("후반부 분량과 이벤트 밀도를 Blueprint 단계에서 먼저 할당해 원고 난도를 낮추세요.")
+        if not semantic_guides and semantic_failures:
+            semantic_guides.append("이전 Arc의 REJECT 원문과 action item을 다음 Arc 제약으로 직접 승격하세요.")
+
+        for guide in semantic_guides[:3]:
+            lines.append(f"  → {guide}")
         return "\n".join(lines)
 
     # ═══════════════════════════════════════════════════════════════════════

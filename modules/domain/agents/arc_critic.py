@@ -250,7 +250,7 @@ class ArcCritic(BaseAgent):
         if "remove_items" in auto_fixes:
             # [BUG-F] protagonist_items 우선 폴백
             _fsc = fixed.get("state_constraints", {})
-            items = _fsc.get("protagonist_items") or _fsc.get("items_acquired", [])
+            items = self._get_acquired_items(_fsc)
             for item_to_remove in auto_fixes["remove_items"]:
                 if item_to_remove in items:
                     items.remove(item_to_remove)
@@ -301,13 +301,13 @@ class ArcCritic(BaseAgent):
             for p in prev_arcs:
                 # [BUG-F] protagonist_items 우선 폴백
                 _psc2 = p.get("state_constraints", {})
-                items = _psc2.get("protagonist_items") or _psc2.get("items_acquired", [])
+                items = self._get_acquired_items(_psc2)
                 if isinstance(items, list):
                     all_prev_items.update(_ikey(i) for i in items)
 
             # [BUG-F] protagonist_items 우선 폴백
             _csc2 = arc.get("state_constraints", {})
-            current_items = _csc2.get("protagonist_items") or _csc2.get("items_acquired", [])
+            current_items = self._get_acquired_items(_csc2)
             if isinstance(current_items, list):
                 duplicates = {_ikey(i) for i in current_items} & all_prev_items
                 if duplicates:
@@ -337,6 +337,16 @@ class ArcCritic(BaseAgent):
             "auto_fixes": {},
             "revision_priority": [],
         }
+
+    @staticmethod
+    def _get_acquired_items(state_constraints: dict) -> list:
+        if not isinstance(state_constraints, dict):
+            return []
+        protagonist_items = state_constraints.get("protagonist_items")
+        if protagonist_items is not None:
+            return protagonist_items if isinstance(protagonist_items, list) else []
+        items_acquired = state_constraints.get("items_acquired", [])
+        return items_acquired if isinstance(items_acquired, list) else []
 
     def should_regenerate(self, critique: dict) -> bool:
         """재생성이 필요한지 판단"""

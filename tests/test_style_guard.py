@@ -182,6 +182,28 @@ class TestStyleGuardValidation:
         result = guard.run_deep_validation("그의 눈동자가 흔들렸다. 바람이 불었다.")
         assert result["has_critical"] is False
 
+    def test_warning_fields_from_base_guard_are_preserved(self):
+        from modules.core.genre_guards.style_guard import StyleGuard
+
+        class WarningBaseGuard(MockBaseGuard):
+            def run_deep_validation(self, manuscript, current_state=None):
+                return {
+                    "has_critical": False,
+                    "has_warning": True,
+                    "violations": [],
+                    "warning_violations": [{"type": "work_identity_warning", "message": "경고"}],
+                    "warning_summary": "작품 경고",
+                    "summary": "기본 통과",
+                    "feedback": "",
+                }
+
+        guard = StyleGuard(WarningBaseGuard(), MockStyleGuide())
+        result = guard.run_deep_validation("깨끗한 원고")
+
+        assert result["has_warning"] is True
+        assert result["warning_summary"] == "작품 경고"
+        assert result["warning_violations"][0]["type"] == "work_identity_warning"
+
 
 class TestStyleGuardDelegation:
     def test_delegates_purism_prompt(self):

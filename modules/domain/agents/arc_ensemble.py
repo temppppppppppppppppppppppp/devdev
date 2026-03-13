@@ -395,7 +395,7 @@ class ArcEnsembleGenerator(BaseAgent):
             cache_type="arc_ensemble",
             content=shared_context,
             ttl_seconds=600,
-            project_name=f"arc{arc_no}",
+            project_name=self._context_cache_project_namespace("arc", arc_no),
         )
         cache_name = cache_info.get("cache_name")
 

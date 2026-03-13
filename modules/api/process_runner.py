@@ -11,15 +11,17 @@
     await runner.stop()
 
 stdin 시퀀스 (Mode A):
-    project_index → menu_key → [sub_key] → confirmations → exit(5)
+    genre_index → [Enter] → project_index → [genre_confirm] → menu_key → [sub_key] → confirmations → exit(5)
 """
 
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import os
 import re
+import sqlite3
 import subprocess
 import sys
 import time
@@ -28,11 +30,17 @@ from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
 from pathlib import Path
 
+from modules.core.runtime_paths import (
+    resolve_engine_root,
+    resolve_project_dir,
+    resolve_projects_root,
+    resolve_workspace_root,
+)
+
 logger = logging.getLogger(__name__)
 
 # frozen 모드(PyInstaller): GEULDOBI_ENGINE_ROOT 환경 변수 우선
-_ENGINE_ROOT_ENV = os.environ.get("GEULDOBI_ENGINE_ROOT")
-PROJECT_ROOT = Path(_ENGINE_ROOT_ENV) if _ENGINE_ROOT_ENV else Path(__file__).resolve().parent.parent.parent
+PROJECT_ROOT = resolve_engine_root(Path(__file__).resolve().parent.parent.parent)
 
 # 러너가 취할 수 있는 상태 (StatusEnvelope.data.state enum과 동기화)
 VALID_STATES = frozenset({"idle", "starting", "running", "stopping", "error"})
@@ -61,6 +69,7 @@ OnPromptCallback = Callable[[str, list[str]], Awaitable[None]]
 
 # ─── 기본 확인 응답 패딩 수 ──────────────────────────────────────────────────
 _DEFAULT_CONFIRM_PADDING = 5
+_STAGE0_STYLE_ANALYSIS_SUB_KEY = "6"
 
 # ─── Mode B 프롬프트 감지 타임아웃 (초) ──────────────────────────────────────
 _PROMPT_DETECT_TIMEOUT = 0.5
@@ -68,23 +77,114 @@ _RUNTIME_TAIL_LINES = 8
 
 # Mode B 대상 키 — 전체 (main_a.py boot 흐름이 인터랙티브)
 MODE_B_KEYS = frozenset({"0", "1", "2", "3", "4", "5", "6", "44", "77", "88", "99"})
+_GENRE_INDEX_TO_TYPE = {
+    "1": "wuxia",
+    "2": "hunter",
+    "3": "investment",
+    "4": "fantasy",
+    "5": "composer",
+    "6": "cooking",
+    "7": "alt_history",
+    "8": "actor",
+    "9": "sports",
+    "10": "medical",
+}
 
 
 def _resolve_workspace_root() -> Path:
-    workspace = os.environ.get("GEULDOBI_WORKSPACE")
-    if workspace:
-        return Path(workspace).resolve()
-    return PROJECT_ROOT.resolve()
+    return resolve_workspace_root(PROJECT_ROOT)
 
 
 def _resolve_projects_root() -> Path:
-    projects_root = os.environ.get("GEULDOBI_PROJECTS_ROOT")
-    if projects_root:
-        return Path(projects_root).resolve()
-    workspace = os.environ.get("GEULDOBI_WORKSPACE")
-    if workspace:
-        return (Path(workspace) / "projects").resolve()
-    return (PROJECT_ROOT / "projects").resolve()
+    return resolve_projects_root(PROJECT_ROOT)
+
+
+def _resolve_stage0_style_cache_choice(inputs: dict | None) -> str | None:
+    if not inputs:
+        return None
+    cache_mode = str(inputs.get("stage0_style_cache_mode") or "").strip().lower()
+    return {"use": "1", "refresh": "2", "reset": "3"}.get(cache_mode)
+
+
+def _resolve_requested_genre_type(inputs: dict | None) -> str | None:
+    if not inputs:
+        return None
+
+    explicit = str(inputs.get("genre_type") or "").strip().lower()
+    if explicit:
+        return explicit
+
+    genre_index = str(inputs.get("genre_index") or "").strip()
+    return _GENRE_INDEX_TO_TYPE.get(genre_index)
+
+
+def _resolve_requested_project_name(inputs: dict | None) -> str | None:
+    if not inputs:
+        return None
+
+    explicit = str(inputs.get("project_name") or "").strip()
+    if explicit:
+        return explicit
+
+    try:
+        project_index = int(inputs.get("project_index", 0))
+    except (TypeError, ValueError):
+        return None
+
+    if project_index < 1:
+        return None
+
+    root = _resolve_projects_root()
+    try:
+        projects = sorted(path.name for path in root.iterdir() if path.is_dir())
+    except FileNotFoundError:
+        return None
+
+    if project_index > len(projects):
+        return None
+    return projects[project_index - 1]
+
+
+def _load_stored_project_genre_type(project_name: str | None) -> str | None:
+    normalized_name = str(project_name or "").strip()
+    if not normalized_name:
+        return None
+
+    db_path = resolve_project_dir(normalized_name, PROJECT_ROOT) / "project_data.db"
+    if not db_path.exists():
+        return None
+
+    try:
+        with sqlite3.connect(db_path) as conn:
+            row = conn.execute("SELECT data FROM anchors WHERE key = ?", ("genre_info",)).fetchone()
+    except sqlite3.Error as exc:
+        logger.warning("failed to inspect stored genre for %s: %s", normalized_name, exc)
+        return None
+
+    if not row or not row[0]:
+        return None
+
+    try:
+        payload = json.loads(row[0])
+    except (json.JSONDecodeError, TypeError) as exc:
+        logger.warning("failed to parse stored genre for %s: %s", normalized_name, exc)
+        return None
+
+    if not isinstance(payload, dict):
+        return None
+
+    stored_type = str(payload.get("type") or "").strip().lower()
+    return stored_type or None
+
+
+def _should_inject_boot_genre_confirm(inputs: dict | None) -> bool:
+    selected_genre_type = _resolve_requested_genre_type(inputs)
+    if not selected_genre_type:
+        return False
+
+    project_name = _resolve_requested_project_name(inputs)
+    stored_genre_type = _load_stored_project_genre_type(project_name)
+    return bool(stored_genre_type and stored_genre_type != selected_genre_type)
 
 
 def _resolve_launch_command() -> list[str]:
@@ -570,10 +670,11 @@ class ProcessRunner:
 
         main_a.py 메뉴 흐름:
             1. 프로젝트 선택 (정수)
-            2. 메인 메뉴 키 ("0"~"99")
-            3. key="0"일 때 sub_key 선택
-            4. 확인 프롬프트 ("y") 패딩  ← Mode A만
-            5. 종료 ("5")                ← Mode A만
+            2. 필요 시 장르 불일치 확인 ("y")
+            3. 메인 메뉴 키 ("0"~"99")
+            4. key="0"일 때 sub_key 선택
+            5. 확인 프롬프트 ("y") 패딩  ← Mode A만
+            6. 종료 ("5")                ← Mode A만
 
         inputs dict 키:
             project_index (int): 프로젝트 번호 (기본: 1)
@@ -586,7 +687,9 @@ class ProcessRunner:
         if "stdin_lines" in inputs:
             return "\n".join(str(x) for x in inputs["stdin_lines"]) + "\n"
 
-        # Mode B: boot 시퀀스만 사전 주입 (장르→Enter→프로젝트→확인→메뉴키)
+        inject_genre_confirm = _should_inject_boot_genre_confirm(inputs)
+
+        # Mode B: boot 시퀀스만 사전 주입 (장르→Enter→프로젝트→[필요 시 확인]→메뉴키)
         # stdin은 열어두고, stage-specific 프롬프트만 실시간 감지+UI 처리
         if self._mode == "B":
             lines: list[str] = []
@@ -595,11 +698,16 @@ class ProcessRunner:
             lines.append("")  # [Enter] 프로젝트 선택으로 이동
             project_index = inputs.get("project_index", 1)
             lines.append(str(project_index))
-            # 확인 입력은 부트 시퀀스에 포함해 기존 메뉴 흐름과 테스트 기대치를 유지한다.
-            lines.append("y")
+            if inject_genre_confirm:
+                lines.append("y")
             if key == "0" and sub_key:
                 lines.append("0")
                 lines.append(str(sub_key))
+                if str(sub_key) == _STAGE0_STYLE_ANALYSIS_SUB_KEY:
+                    cache_choice = _resolve_stage0_style_cache_choice(inputs)
+                    if cache_choice:
+                        lines.append("y")
+                        lines.append(cache_choice)
             else:
                 lines.append(str(key))
             return "\n".join(lines) + "\n"
@@ -618,13 +726,19 @@ class ProcessRunner:
         project_index = inputs.get("project_index", 1)
         lines.append(str(project_index))
 
-        # 4. 장르 불일치 확인 (기존 프로젝트와 장르가 다를 때 y/n)
-        lines.append("y")
+        # 4. 장르 불일치 확인은 실제 mismatch일 때만 소비
+        if inject_genre_confirm:
+            lines.append("y")
 
         # 5. 메인 메뉴 키 + sub_key
         if key == "0" and sub_key:
             lines.append("0")
             lines.append(str(sub_key))
+            if str(sub_key) == _STAGE0_STYLE_ANALYSIS_SUB_KEY:
+                cache_choice = _resolve_stage0_style_cache_choice(inputs)
+                if cache_choice:
+                    lines.append("y")
+                    lines.append(cache_choice)
         else:
             lines.append(str(key))
 

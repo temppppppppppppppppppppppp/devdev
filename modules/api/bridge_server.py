@@ -39,8 +39,10 @@ from modules.api.prompt_classifier import classify as classify_prompt
 from modules.api.risk_approval import RiskApprovalGate
 from modules.api.run_validator import RISK_KEYS, validate_run_request
 from modules.core.db_manager import DBManager
+from modules.core.project_support import inspect_project_support_assets
 from modules.core.quality_dashboard import QualityDashboard
 from modules.core.quality_sidecar_bootstrap import inspect_quality_sidecar_health
+from modules.core.runtime_paths import resolve_project_dir, resolve_projects_root
 
 logger = logging.getLogger(__name__)
 
@@ -172,27 +174,11 @@ def _err(code: str, message: str, run_id: str | None = None) -> dict:
 
 
 def _get_projects_root() -> Path:
-    explicit = os.environ.get("GEULDOBI_PROJECTS_ROOT")
-    if explicit:
-        return Path(explicit).resolve()
-
-    workspace = os.environ.get("GEULDOBI_WORKSPACE")
-    if workspace:
-        return (Path(workspace) / "projects").resolve()
-
-    return (PROJECT_ROOT / "projects").resolve()
+    return resolve_projects_root(PROJECT_ROOT)
 
 
 def _get_project_dir(project_name: str) -> Path:
-    projects_root = _get_projects_root()
-    normalized = str(project_name or "").strip()
-    if not normalized:
-        raise ValueError("project is required")
-
-    candidate = (projects_root / normalized).resolve()
-    if projects_root not in candidate.parents:
-        raise ValueError("invalid project path")
-    return candidate
+    return resolve_project_dir(project_name, PROJECT_ROOT)
 
 
 def _get_project_db_path(project_name: str) -> Path:
@@ -364,9 +350,10 @@ def _build_artifact_ladder_payload(project: str, project_dir: Path, db_path: Pat
     drafts_dir = project_dir / "drafts"
     stage0_dir = project_dir / "stage0_output"
 
-    author_directives = config_dir / "author_directives.txt"
-    work_guard = config_dir / "work_guard.yaml"
-    style_guide = stage0_dir / "style_guide.json"
+    support_assets = inspect_project_support_assets(project_dir)
+    author_directives = Path(support_assets["author_directives"]["path"])
+    work_guard = Path(support_assets["work_guard"]["path"])
+    style_guide = Path(support_assets["style_guide"]["path"])
     treatment_candidates = [
         project_dir / "treatment_extended.json",
         project_dir / "treatment_generated.json",
@@ -512,18 +499,45 @@ def _build_artifact_ladder_payload(project: str, project_dir: Path, db_path: Pat
     payload["support"] = [
         {
             "label": "Author",
-            "status": "ready" if author_directives.exists() and author_directives.stat().st_size > 0 else "pending",
+            "status": "ready" if support_assets["author_directives"]["ready"] else "pending",
             "value": "author_directives.txt",
+            "detail": (
+                f"{int(support_assets['author_directives']['size_bytes'] or 0)} bytes"
+                if support_assets["author_directives"]["ready"]
+                else "not configured"
+            ),
         },
         {
             "label": "Guard",
-            "status": "ready" if work_guard.exists() and work_guard.stat().st_size > 0 else "pending",
+            "status": "ready" if support_assets["work_guard"]["ready"] else "pending",
             "value": "work_guard.yaml",
+            "detail": (
+                f"slots={support_assets['work_guard']['tracking_slots']}, "
+                f"registry={support_assets['work_guard']['registry_profiles']}, "
+                f"role_fit={support_assets['work_guard']['role_fit_constraints']}"
+                if support_assets["work_guard"]["ready"]
+                else "not configured"
+            ),
         },
         {
             "label": "Style",
-            "status": "ready" if style_guide.exists() else "pending",
+            "status": "ready" if support_assets["style_guide"]["ready"] else "pending",
             "value": "style_guide.json",
+            "detail": (
+                (
+                    ", ".join(
+                        part
+                        for part in (
+                            f"tone={support_assets['style_guide']['tone']}" if support_assets["style_guide"]["tone"] else "",
+                            f"pov={support_assets['style_guide']['pov']}" if support_assets["style_guide"]["pov"] else "",
+                        )
+                        if part
+                    )
+                    or "ready"
+                )
+                if support_assets["style_guide"]["ready"]
+                else "not configured"
+            ),
         },
     ]
     payload["available"] = any(item["status"] != "pending" for item in payload["items"]) or any(
@@ -1275,15 +1289,10 @@ async def run_endpoint(request: Request) -> JSONResponse:
         return JSONResponse(status_code=v.http_status, content=_err(v.code, v.message))
 
     # T6: 위험키 승인 게이트
-    # 데스크톱 모드: UI confirm() 대체 — approval_id 없으면 자동 승인
-    _desktop_mode = os.environ.get("GEULDOBI_DESKTOP_MODE", "0") == "1"
     if key in RISK_KEYS:
-        if _desktop_mode and not approval_id:
-            logger.info("Desktop mode: auto-approving risk key=%r", key)
-        else:
-            approval = risk_gate.validate(key, approval_id)
-            if not approval.ok:
-                return JSONResponse(status_code=approval.http_status, content=_err(approval.code, approval.message))
+        approval = risk_gate.validate(key, approval_id)
+        if not approval.ok:
+            return JSONResponse(status_code=approval.http_status, content=_err(approval.code, approval.message))
 
     run_id = str(uuid.uuid4())
     broker: PromptBroker = request.app.state.prompt_broker

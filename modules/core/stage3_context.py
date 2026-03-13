@@ -5,8 +5,8 @@ class Stage3Context:
     """Stage3Orchestrator DI 컨텍스트.
 
     [4C-4a] 필수 2종: ui, current_project
-    [E-1a] 속성 7종: agents, sys, state_tracker, world_state, fact_ledger,
-           preset_registry, selected_genre
+    [E-1a] 속성 9종: agents, sys, state_tracker, world_state, fact_ledger,
+           preset_registry, selected_genre, memory, context_advisor
     [E-1a] 콜백 10종: get_protagonist_name, audit_event, write_audit_summary,
            get_arc_context_for_episode, get_max_episode_from_manuscripts,
            get_int_input, safe_commit, validate_arc_data_fields,
@@ -21,6 +21,8 @@ class Stage3Context:
         "agents",
         "sys",
         "state_tracker",
+        "memory",
+        "context_advisor",
         "world_state",
         "fact_ledger",
         "adversarial_self_play",
@@ -50,6 +52,8 @@ class Stage3Context:
         agents=None,
         sys=None,
         state_tracker=None,
+        memory=None,
+        context_advisor=None,
         world_state=None,
         fact_ledger=None,
         adversarial_self_play=None,
@@ -73,6 +77,8 @@ class Stage3Context:
         self.agents = agents
         self.sys = sys
         self.state_tracker = state_tracker
+        self.memory = memory
+        self.context_advisor = context_advisor
         self.world_state = world_state
         self.fact_ledger = fact_ledger
         self.adversarial_self_play = adversarial_self_play
@@ -100,6 +106,8 @@ class Stage3Context:
             agents=app.agents,
             sys=app.sys,
             state_tracker=getattr(app, "state_tracker", None),
+            memory=getattr(app, "memory", None),
+            context_advisor=getattr(app, "context_advisor", None),
             world_state=getattr(app, "world_state", None),
             fact_ledger=getattr(app, "fact_ledger", None),
             adversarial_self_play=getattr(app, "adversarial_self_play", None),

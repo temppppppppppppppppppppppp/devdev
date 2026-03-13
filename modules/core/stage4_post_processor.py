@@ -11,6 +11,7 @@ from pathlib import Path
 
 from modules.core.genre_schema_builder import is_wuxia
 from modules.core.metrics_collector import get_metrics_collector
+from modules.core.project_support import resolve_project_pov_contract
 from modules.core.quality_signal_metrics import compute_quality_signal_bundle, extract_warning_count
 from modules.core.soft_failure import report_soft_failure, resolve_project_log_dir
 
@@ -549,26 +550,48 @@ class Stage4PostProcessor:
         try:
             collector = get_metrics_collector()
             _db = getattr(self.ctx.current_project, "db", None)
+            _scope = {
+                "total_calls": 0,
+                "total_tokens": 0,
+                "total_cost_usd": 0.0,
+                "model_breakdown": "{}",
+            }
             if collector and _db and hasattr(_db, "save_cost_record"):
-                scope = collector.snapshot_and_reset_scope()
+                _scope = collector.snapshot_and_reset_scope()
+                scope = _scope
                 if (
-                    scope.get("total_calls", 0) > 0
-                    or scope.get("total_tokens", 0) > 0
-                    or scope.get("total_cost_usd", 0.0) > 0
+                    _scope.get("total_calls", 0) > 0
+                    or _scope.get("total_tokens", 0) > 0
+                    or _scope.get("total_cost_usd", 0.0) > 0
                 ):
                     _db.save_cost_record(
                         session_id=collector.session_id,
                         scope_type="episode",
                         scope_id=next_ep,
-                        total_calls=scope.get("total_calls", 0),
-                        total_tokens=scope.get("total_tokens", 0),
-                        total_cost_usd=scope.get("total_cost_usd", 0.0),
-                        model_breakdown=scope.get("model_breakdown", "{}"),
+                        total_calls=_scope.get("total_calls", 0),
+                        total_tokens=_scope.get("total_tokens", 0),
+                        total_cost_usd=_scope.get("total_cost_usd", 0.0),
+                        model_breakdown=_scope.get("model_breakdown", "{}"),
                     )
                     self.ctx.ui.log(
                         f"   💰 [Cost] Episode {next_ep} 비용: ${scope.get('total_cost_usd', 0.0):.4f} "
                         f"({scope.get('total_tokens', 0):,} tokens)"
                     )
+            _pov_contract = resolve_project_pov_contract(self.ctx.current_project)
+            logging.info(
+                "[EPISODE_SUMMARY] stage=4 ep=%d arc=%s title=%s manuscript_len=%d total_calls=%d total_tokens=%d total_cost_usd=%.4f primary_pov=%s external_pov_insert_policy=%s style_guide_extracted_pov=%s effective_pov=%s",
+                next_ep,
+                arc_data.get("arc_no", 0) if isinstance(arc_data, dict) else 0,
+                str(final_title or "")[:120],
+                len(final_manuscript or ""),
+                int(_scope.get("total_calls", 0) or 0),
+                int(_scope.get("total_tokens", 0) or 0),
+                float(_scope.get("total_cost_usd", 0.0) or 0.0),
+                _pov_contract.get("primary_pov", "") or "-",
+                _pov_contract.get("external_pov_insert_policy", "") or "-",
+                _pov_contract.get("style_guide_extracted_pov", "") or "-",
+                _pov_contract.get("effective_pov", "") or "-",
+            )
         except Exception as _cost_err:
             logging.warning("[Phase 6] Episode 비용 기록 실패 (비차단): %s", _cost_err)
 

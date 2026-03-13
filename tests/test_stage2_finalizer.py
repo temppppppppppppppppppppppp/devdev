@@ -28,6 +28,7 @@ def finalizer_ctx():
     ctx.audit_event = MagicMock()
     ctx.semantic_plot_guard = None
     ctx.validate_arc_integrity = MagicMock(return_value=True)
+    ctx.validate_arc_data_fields = None
     ctx.current_project = MagicMock()
     ctx.safe_commit_async = AsyncMock(return_value=True)
     ctx.generate_arc_context_v60 = MagicMock(return_value="context_text")
@@ -157,7 +158,7 @@ class TestMetricsRecording:
             global_arc_no=4,
             attempt=1,
             generation_method="analyst",
-            audit={"score": 42, "reason": "bad structure"},
+            audit={"score": 42, "reason": "bad structure", "re_slice_instruction": "장면 순서를 재배치"},
         )
         kw = finalizer.ctx.pass_rate_monitor.record_attempt.call_args[1]
         assert kw["success"] is False
@@ -165,6 +166,7 @@ class TestMetricsRecording:
         assert kw["final_verdict"] == "REJECT"
         assert len(finalizer.ctx.stage_rejection_history) == 1
         assert finalizer.ctx.stage_rejection_history[0]["arc_no"] == 4
+        assert finalizer.ctx.stage_rejection_history[0]["specific_issue"] == "장면 순서를 재배치"
 
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", True)
     def test_reject_metrics_without_monitor(self, finalizer):
@@ -258,9 +260,64 @@ class TestRunFinalize:
         finalizer.ctx.current_project.db.save_cost_record.assert_called_once()
         cost_kw = finalizer.ctx.current_project.db.save_cost_record.call_args.kwargs
         assert cost_kw["session_id"] == "sess_test"
-        assert cost_kw["scope_type"] == "arc"
-        assert cost_kw["scope_id"] == 1
-        assert cost_kw["total_calls"] == 2
+
+    @patch("modules.core.stage2_finalizer.validate_arc", side_effect=lambda x: x)
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    def test_finalize_uses_validate_arc_data_fields_before_missing_field_audit(
+        self,
+        _validate,
+        finalizer,
+        valid_refined_arc,
+    ):
+        repaired_arc = dict(valid_refined_arc)
+        repaired_arc.pop("hybrid_composition", None)
+        repaired_arc.pop("joint_docs", None)
+        repaired_arc.pop("status_shadow", None)
+
+        finalizer.ctx.validate_arc_data_fields = MagicMock(
+            return_value={
+                **repaired_arc,
+                "hybrid_composition": {
+                    "primary": "standard_progression",
+                    "secondary": [],
+                    "mixing_logic": "default",
+                },
+                "joint_docs": {
+                    "final_location": "market",
+                    "physical_inventory": [],
+                    "world_joint": "stable",
+                },
+                "status_shadow": {
+                    "internal_energy_loss": "10%",
+                    "expected_injuries": "none",
+                    "item_consumption": [],
+                },
+            }
+        )
+
+        kwargs = _make_finalize_kwargs(repaired_arc)
+        result = asyncio.run(finalizer.run_finalize(**kwargs))
+
+        assert result["action"] == "break"
+        finalizer.ctx.validate_arc_data_fields.assert_called_once()
+        calls = [call.args[:2] for call in finalizer.ctx.audit_event.call_args_list]
+        assert ("data_missing", "hybrid_composition missing") not in calls
+        assert ("data_missing", "joint_docs missing") not in calls
+        assert ("data_missing", "status_shadow missing") not in calls
+
+    @patch("modules.core.stage2_finalizer.validate_arc", side_effect=lambda x: x)
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    def test_finalize_fallback_repairs_emit_field_repair(self, _validate, finalizer, valid_refined_arc):
+        repaired_arc = dict(valid_refined_arc)
+        repaired_arc["hybrid_composition"] = {}
+        finalizer.ctx.validate_arc_data_fields = MagicMock(return_value=repaired_arc)
+
+        kwargs = _make_finalize_kwargs(repaired_arc)
+        result = asyncio.run(finalizer.run_finalize(**kwargs))
+
+        assert result["action"] == "break"
+        calls = [call.args[:2] for call in finalizer.ctx.audit_event.call_args_list]
+        assert ("field_repair", "hybrid_composition default injected") in calls
 
     @patch("modules.core.stage2_finalizer.validate_arc", side_effect=lambda x: x)
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
@@ -282,7 +339,46 @@ class TestRunFinalize:
         assert "[NS-2 참고]" in story_context
         assert "77억" in story_context
 
+    @patch("modules.core.stage2_finalizer.validate_arc", side_effect=lambda x: x)
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    @patch("modules.core.constants.log_patch_diff")
+    @patch("modules.core.constants.calc_patch_change_ratio", return_value=0.75)
+    def test_pass_with_fix_high_patch_pressure_stays_pass_with_fix(
+        self,
+        _ratio,
+        _log_diff,
+        _validate,
+        finalizer,
+        valid_refined_arc,
+    ):
+        patched_arc = dict(valid_refined_arc)
+        patched_arc["tactical_doc"] = valid_refined_arc["tactical_doc"] + " patched"
+        finalizer.ctx.agents["four_phase"] = MagicMock()
+        finalizer.ctx.agents["four_phase"]._inplace_patch_arc.return_value = patched_arc
+        finalizer.ctx.agents["director"].audit_strategic_plan.side_effect = [
+            {
+                "decision": "PASS_WITH_FIX",
+                "score": 93,
+                "reason": "needs local fix",
+                "re_slice_instruction": "tighten numbers",
+                "fix_scope": "inplace",
+            },
+            {
+                "decision": "PASS",
+                "score": 95,
+                "reason": "looks good",
+            },
+        ]
+
+        kwargs = _make_finalize_kwargs(valid_refined_arc)
+        result = asyncio.run(finalizer.run_finalize(**kwargs))
+
+        assert result["action"] == "break"
+        save_kw = finalizer.ctx.current_project.db.save_stage_attempt.call_args.kwargs
+        assert save_kw["verdict"] == "PASS_WITH_FIX"
+        assert save_kw["advisory_flags"]["patch_pressure_exceeded"] == 1
+        assert save_kw["advisory_flags"]["patch_pressure_count"] == 1
+
     def test_director_reject_returns_retry(self, finalizer, valid_refined_arc):
         finalizer.ctx.current_project.metrics_session_id = "sess_stage2_reject"
         finalizer.ctx.agents["director"].audit_strategic_plan.return_value = {

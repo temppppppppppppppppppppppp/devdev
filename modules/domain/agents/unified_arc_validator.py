@@ -196,8 +196,11 @@ class UnifiedArcValidator(BaseAgent):
     def _check_dead_npc(self, arc: dict, state_tracker, prev_arcs: list[dict]) -> list[dict]:
         """[#0] 죽은 NPC 등장 + NPC 변경 체크"""
         issues = []
-        if not state_tracker or not prev_arcs:
-            logging.warning("[UnifiedValidator] state_tracker 없음 — 사망 NPC 체크 skip")
+        if not prev_arcs:
+            logging.info("[UnifiedValidator] no previous arcs — dead NPC check skipped")
+            return issues
+        if not state_tracker:
+            logging.warning("[UnifiedValidator] state_tracker missing with previous arcs — dead NPC check skipped")
             return issues
 
         arc_no = arc.get("arc_no", 0)
@@ -291,12 +294,15 @@ class UnifiedArcValidator(BaseAgent):
         if state_changes and isinstance(state_changes, dict):
             timeline = state_changes.get("timeline", {})
             if not timeline or not isinstance(timeline, dict):
+                fallback_timeline = (arc.get("state_constraints", {}) or {}).get("timeline", {})
+                timeline = fallback_timeline if isinstance(fallback_timeline, dict) else {}
+            if not timeline or not isinstance(timeline, dict):
                 issues.append(
                     {
                         "severity": "WARNING",
                         "category": "state_changes",
                         "issue": "state_changes.timeline 필드 누락",
-                        "evidence": "timeline 필드가 없거나 형식이 잘못됨",
+                        "evidence": "timeline 필드가 없고 state_constraints.timeline 폴백도 사용할 수 없음",
                         "fix_hint": "timeline: {start: {...}, end: {...}} 형식으로 작성하세요",
                     }
                 )

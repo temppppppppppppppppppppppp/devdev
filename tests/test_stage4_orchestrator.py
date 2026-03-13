@@ -9,6 +9,7 @@
 - REJECT 시 best_manuscript 저장
 """
 
+import dataclasses
 import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -215,6 +216,66 @@ class TestStage4AuditSummary:
         mock_app._write_audit_summary.assert_not_called()
         ctx.flush_audit_buffer.assert_called_once()
         ctx.safe_commit.assert_called_once()
+
+
+class TestPrepareStage4SessionLimits:
+    def test_limit_mode_prompt_uses_current_written_floor(self, mock_app, tmp_path):
+        from modules.core.stage4_context import Stage4Context
+        from modules.core.stage4_orchestrator import Stage4Orchestrator
+
+        mock_app.current_project.paths.drafts = tmp_path / "drafts"
+        mock_app.current_project.db.get_latest_blueprint_number.return_value = 5
+        mock_app.current_project.get_latest_episode_number.return_value = 4
+        mock_app.current_project.arcs = [{"ep_end": 5}]
+
+        ctx = Stage4Context.from_app(mock_app)
+        ctx.get_int_input = MagicMock(side_effect=[4, 1])
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+
+        with (
+            patch("modules.domain.agents.chief_writer.ChiefWriter", return_value=MagicMock()),
+            patch("modules.domain.agents.manuscript_validator.ManuscriptValidator", return_value=MagicMock()),
+            patch("modules.validation.consistency_validator.ConsistencyValidator", return_value=MagicMock()),
+            patch("modules.validation.blocking_validator.BlockingValidator", return_value=MagicMock()),
+            patch("modules.validation.continuity_validator.ContinuityValidator", return_value=MagicMock()),
+            patch("modules.core.stage4_orchestrator.load_style_guide_anchor", return_value=None),
+        ):
+            session = orch._prepare_stage4_session(limit_mode=True)
+
+        assert session is not None
+        first_call = ctx.get_int_input.call_args_list[0]
+        assert "현재 3화" in first_call.args[0]
+        assert first_call.kwargs["min_val"] == 4
+        assert first_call.kwargs["max_val"] == 5
+        assert session.target_ep == 4
+
+    def test_limit_mode_returns_early_when_all_blueprints_already_written(self, mock_app, tmp_path):
+        from modules.core.stage4_context import Stage4Context
+        from modules.core.stage4_orchestrator import Stage4Orchestrator
+
+        mock_app.current_project.paths.drafts = tmp_path / "drafts"
+        mock_app.current_project.db.get_latest_blueprint_number.return_value = 3
+        mock_app.current_project.get_latest_episode_number.return_value = 4
+        mock_app.current_project.arcs = [{"ep_end": 3}]
+
+        ctx = Stage4Context.from_app(mock_app)
+        ctx.get_int_input = MagicMock()
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+
+        with (
+            patch("modules.domain.agents.chief_writer.ChiefWriter", return_value=MagicMock()),
+            patch("modules.domain.agents.manuscript_validator.ManuscriptValidator", return_value=MagicMock()),
+            patch("modules.validation.consistency_validator.ConsistencyValidator", return_value=MagicMock()),
+            patch("modules.validation.blocking_validator.BlockingValidator", return_value=MagicMock()),
+            patch("modules.validation.continuity_validator.ContinuityValidator", return_value=MagicMock()),
+            patch("modules.core.stage4_orchestrator.load_style_guide_anchor", return_value=None),
+        ):
+            session = orch._prepare_stage4_session(limit_mode=True)
+
+        assert session is None
+        ctx.get_int_input.assert_not_called()
 
     def test_stage4_exception_does_not_write_runtime_audit_summary_and_flushes(self, mock_app):
         from modules.core.stage4_orchestrator import Stage4Orchestrator
@@ -467,6 +528,7 @@ class TestHandleRoundOutcomeErrorPaths:
         orch._ctx.current_project.master_bible = {"MasterBible": {}}
         orch._ctx.get_protagonist_name = MagicMock(return_value="이청풍")
         orch._ctx.get_int_input = MagicMock(return_value=1)  # abort (not 4)
+        orch._ctx.get_module = MagicMock(return_value=None)
         return orch
 
     @pytest.fixture
@@ -567,6 +629,80 @@ class TestHandleRoundOutcomeErrorPaths:
             orch._handle_round_outcome(round_ctx=minimal_round_ctx)
 
         assert orch._interview_round.run.call_count == 2
+
+    def test_handle_round_outcome_injects_stage4_to_3_feedback_into_inplace_patch(
+        self,
+        orch_with_ctx,
+        minimal_round_ctx,
+        monkeypatch,
+    ):
+        from modules.core.stage4_types import _InterviewRoundResult
+
+        orch = orch_with_ctx
+        orch.app._generate_reverse_feedback_stage4_to_3 = MagicMock(return_value="[S4->S3] blueprint hint")
+        bp_agent = MagicMock()
+        bp_agent._inplace_patch_blueprint.return_value = {"patched": True}
+        orch._ctx.agents["three_phase_bp"] = bp_agent
+        orch._interview_round = MagicMock()
+        orch._interview_round.run = MagicMock(
+            side_effect=[
+                _InterviewRoundResult(
+                    verdict="REJECT",
+                    director_feedback="후반 밀도 부족",
+                    previous_attempt={
+                        "score": 40,
+                        "open_review": "후반 이벤트가 부족합니다.",
+                        "action_items": ["scene 6 보강"],
+                        "consistency_checklist": {
+                            "items": [{"name": "continuity", "passed": False, "message": "frontier"}]
+                        },
+                    },
+                    error_category="LOGIC_ERROR",
+                ),
+                _InterviewRoundResult(
+                    verdict="PASS",
+                    director_feedback="",
+                    previous_attempt={},
+                    final_manuscript="통과 원고",
+                    final_title="제1화",
+                    final_state_updates={},
+                ),
+            ]
+        )
+        minimal_round_ctx = dataclasses.replace(minimal_round_ctx, blueprint={"_stage3_meta": {"quality_risk": True}})
+
+        import modules.core.spinners
+
+        monkeypatch.setattr(modules.core.spinners, "StageSpinner", MagicMock())
+
+        result = orch._handle_round_outcome(round_ctx=minimal_round_ctx)
+
+        assert result.should_return is False
+        patch_feedback = bp_agent._inplace_patch_blueprint.call_args.kwargs["director_feedback"]
+        assert "[S4->S3] blueprint hint" in patch_feedback
+        assert "[Stage4 원문 피드백]" in patch_feedback
+
+    def test_regenerate_blueprint_passes_external_feedback(self, orch_with_ctx, minimal_round_ctx):
+        orch = orch_with_ctx
+        bp_agent = MagicMock()
+        bp_agent.generate.return_value = ({"scene_breakdown": {}}, {})
+        orch._ctx.agents["three_phase_bp"] = bp_agent
+        orch._ctx.agents["state_extractor"] = MagicMock()
+        orch._ctx.agents["state_extractor"].extract_cumulative_state.return_value = {"entity_registry": {}}
+        orch._ctx.current_project.get_blueprint = MagicMock(return_value=None)
+        orch._ctx.current_project.save_episode_blueprint = MagicMock()
+        orch._ctx.current_project.master_bible = {"MasterBible": {"protagonist_config": {"name": "이청풍"}}}
+        orch._ctx.current_project.db = MagicMock()
+
+        result = orch._regenerate_blueprint(
+            2,
+            {"arc_no": 1},
+            minimal_round_ctx,
+            external_feedback="translated reverse feedback",
+        )
+
+        assert result == {"scene_breakdown": {}}
+        assert bp_agent.generate.call_args.kwargs["external_feedback"] == "translated reverse feedback"
 
 
 # ══════════════════════════════════════════════════════════════

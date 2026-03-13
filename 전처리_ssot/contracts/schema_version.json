@@ -31,6 +31,20 @@
     "preprocess_ssot_md": "required",
     "stage0_contract_files": "carry_forward",
     "legacy_md_status_files": "temporary_parallel_allowed",
-    "work_status_json": "standard_schema_locked_instances_not_forced"
+    "work_status_json": "mandatory_on_cutover"
+  },
+  "cutover_policy": {
+    "sequential_run_status": {
+      "trigger": "run_class changes from seed_baseline_sync to sequential_production",
+      "existing_works": "json required at transition; md parallel allowed 30 days",
+      "new_works": "json required at stage0_completion"
+    },
+    "audit_status": {
+      "trigger": "first manual_audit_pass on any block in sequential_production",
+      "existing_works": "json required at first block audit pass; md parallel allowed 30 days",
+      "new_works": "json required at stage0_completion"
+    },
+    "after_grace_period": "json_only; md files ignored by machine consumers",
+    "grace_period_days": 30
   }
 }

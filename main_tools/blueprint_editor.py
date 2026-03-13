@@ -12,6 +12,12 @@ import tempfile
 from pathlib import Path
 
 
+SAFETY_NOTICE = (
+    "[manual-only] This tool writes project blueprints directly to SQLite. "
+    "Take a DB backup first and verify the target project before saving."
+)
+
+
 def get_project_list():
     """프로젝트 목록 조회"""
     root = Path("projects")
@@ -194,6 +200,7 @@ def main_menu():
     print("     Blueprint Editor v1.0")
     print("     외부 에디터 연동 Blueprint 수정 도구")
     print("=" * 50)
+    print(SAFETY_NOTICE)
 
     # 1. 프로젝트 선택
     projects = get_project_list()

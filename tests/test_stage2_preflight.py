@@ -142,6 +142,24 @@ class TestPreflightStructure:
         assert hasattr(preflight, "_preflight_state_setup")
         assert hasattr(preflight, "_preflight_arc_analysis")
         assert hasattr(preflight, "_preflight_enrichment")
+        assert hasattr(preflight, "_build_stage3_to_2_reverse_feedback_fallback")
+
+
+class TestStage3To2Fallback:
+    def test_stage3_reverse_feedback_fallback_includes_reasons_and_details(self, preflight):
+        result = preflight._build_stage3_to_2_reverse_feedback_fallback(
+            [
+                {"reason": "설정 충돌", "specific_issue": "장면 3에서 위치 불일치"},
+                {"reason": "설정 충돌"},
+                {"reason": "반복 전개"},
+            ],
+            4,
+            status="callback_missing",
+        )
+
+        assert "callback_missing" in result
+        assert "설정 충돌" in result
+        assert "장면 3에서 위치 불일치" in result
 
 
 class TestPreflightStateSetup:

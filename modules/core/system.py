@@ -23,18 +23,19 @@ class StudioSystem:
         self.hud = None
         self.api_client = api_client  # main.py에서 주입받은 클라이언트를 할당
 
-    def boot_v20_project(self, project_name: str, genre: str = "wuxia") -> None:
+    def boot_v20_project(self, project_name: str, genre: str = "wuxia", projects_root: str | Path | None = None) -> None:
         """[Phase 0] V20 지능 기동 및 시스템 복구
 
         Args:
             project_name: 프로젝트 디렉터리명
             genre: 장르 타입 문자열 (예: "wuxia", "hunter", "investment")
                    wuxia 전용 서비스(MartialManager 등)는 wuxia 장르에서만 초기화됨
+            projects_root: 프로젝트 루트 디렉터리. 지정 시 ProjectContext도 같은 root를 사용
         """
         logging.info(f" [Phase 0] 프로젝트 '{project_name}' V20 지능 기동 중... (장르: {genre})")
 
         # 1. 데이터 앵커링 엔진 기동 (ProjectContext) — 모든 장르 공통
-        self.project = ProjectContext(project_name)
+        self.project = ProjectContext(project_name, root_dir=projects_root)
 
         # 2. 범용 서비스 — 모든 장르 공통
         self.lore = LoreManager(self.project)

@@ -58,6 +58,35 @@ class TestResolveLoggingDb:
         assert none_context_agent._resolve_logging_db() is None
 
 
+class TestContextCacheNamespace:
+    def test_prefers_current_project_identity(self):
+        client = MagicMock()
+        context = SimpleNamespace(
+            current_project=SimpleNamespace(work_id="hero_reborn", name="Hero Reborn"),
+            project_name="fallback_project",
+            genre="wuxia",
+        )
+        agent = BaseAgent(context=context, client=client, model_tier="gemini-2.5-flash")
+
+        assert agent._context_cache_project_namespace("ep", 12) == "hero_reborn_ep_12"
+
+    def test_falls_back_to_context_project_name_and_genre(self):
+        client = MagicMock()
+        agent = BaseAgent(
+            context=SimpleNamespace(project_name="My Project", genre="investment"),
+            client=client,
+            model_tier="gemini-2.5-flash",
+        )
+        fallback_agent = BaseAgent(
+            context=SimpleNamespace(genre="investment"),
+            client=client,
+            model_tier="gemini-2.5-flash",
+        )
+
+        assert agent._context_cache_project_namespace("arc", 3) == "My_Project_arc_3"
+        assert fallback_agent._context_cache_project_namespace("arc", 3) == "investment_arc_3"
+
+
 # ══════════════════════════════════════════════════════════════
 # Test 1: _extract_json_robust - 정상 JSON
 # ══════════════════════════════════════════════════════════════

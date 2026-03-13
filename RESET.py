@@ -6,6 +6,34 @@ import sqlite3
 from pathlib import Path
 
 
+def _restore_bible_actual_truth(bible_data: dict, past_actual: dict) -> dict:
+    """장르별 HUD root를 찾아 actual_truth를 롤백한다."""
+    if not isinstance(bible_data, dict) or not isinstance(past_actual, dict):
+        return bible_data
+
+    bible_root = bible_data.get("MasterBible", bible_data)
+    if not isinstance(bible_root, dict):
+        return bible_data
+
+    hud_candidates = (
+        "MartialHUD",
+        "FinanceHUD",
+        "HunterHUD",
+        "ComposerHUD",
+        "CookingHUD",
+        "JoseonHUD",
+        "ActorHUD",
+        "SportsHUD",
+        "MedicalHUD",
+        "FantasyHUD",
+    )
+    selected_hud_key = next((key for key in hud_candidates if isinstance(bible_root.get(key), dict)), "MartialHUD")
+    protagonist = bible_root.setdefault(selected_hud_key, {}).setdefault("Protagonist", {})
+    if isinstance(protagonist, dict):
+        protagonist["actual_truth"] = past_actual
+    return bible_data
+
+
 def get_project_list():
     root = Path("projects")
     if not root.exists():
@@ -82,8 +110,7 @@ def perform_selective_rewind(target_ep, db_path, drafts_path):
                     bible_row = cursor.fetchone()
                     if bible_row:
                         bible_data = json.loads(bible_row["data"])
-                        if "MasterBible" in bible_data:
-                            bible_data["MasterBible"]["MartialHUD"]["Protagonist"]["actual_truth"] = past_actual
+                        bible_data = _restore_bible_actual_truth(bible_data, past_actual)
                         cursor.execute(
                             "UPDATE anchors SET data = ? WHERE key = 'bible'",
                             (json.dumps(bible_data, ensure_ascii=False),),

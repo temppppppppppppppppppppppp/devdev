@@ -1044,6 +1044,36 @@ class TestStage4To2FeedbackInjection:
         assert "enhanced_context" not in result
         assert not any(c.args and c.args[0] == "s4_to_s2_feedback" for c in s2_orch.ctx.audit_event.call_args_list)
 
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    def test_preserves_stage4_semantic_payload(self, s2_orch):
+        semantic_payload = {
+            "arc_no": 1,
+            "difficulty": "hard",
+            "avg_attempts": 3.0,
+            "hard_episodes": [7],
+            "semantic_failures": [
+                {
+                    "episode": 7,
+                    "attempt_num": 2,
+                    "error_category": "LOGIC_ERROR",
+                    "reject_bucket": "post_select_conflict",
+                    "score_breakdown": {"narrative_flow": 9},
+                    "reject_reason": "후반 구조 충돌",
+                }
+            ],
+        }
+        s2_orch.ctx.stage2_optimizer = None
+        s2_orch.ctx.quality_dashboard = None
+        s2_orch.ctx.stage_rejection_history = []
+        s2_orch.ctx.generate_reverse_feedback_stage4_to_2 = MagicMock(return_value="[S4->S2] 의미 보존")
+        s2_orch.ctx.pass_rate_monitor.get_arc_difficulty = MagicMock(return_value=semantic_payload)
+
+        s2_orch._preflight_arc_analysis(**self._base_kwargs())
+
+        s2_orch.ctx.generate_reverse_feedback_stage4_to_2.assert_called_once_with(semantic_payload)
+        audit_payload = s2_orch.ctx.audit_event.call_args_list[-1].args[2]
+        assert audit_payload["prev_difficulty"]["semantic_failures"][0]["error_category"] == "LOGIC_ERROR"
+
 
 # ══════════════════════════════════════════════════════════════
 # [Phase 3-Obs] Preflight parallel PerfTimer instrumentation

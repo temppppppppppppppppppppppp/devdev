@@ -51,6 +51,9 @@ class AttemptRecord:
     final_verdict: str = ""
     patch_strategy: str = ""
     structural_attempted: bool = False
+    error_category: str = ""
+    reject_bucket: str = ""
+    score_breakdown: dict[str, Any] = field(default_factory=dict)
     candidate_key: str = ""
     content_hash: str = ""
     artifact_path: str = ""
@@ -145,6 +148,9 @@ class PassRateMonitor:
         final_verdict: str = "",
         patch_strategy: str = "",
         structural_attempted: bool = False,
+        error_category: str = "",
+        reject_bucket: str = "",
+        score_breakdown: dict[str, Any] | None = None,
         candidate_key: str = "",
         content_hash: str = "",
         artifact_path: str = "",
@@ -186,6 +192,9 @@ class PassRateMonitor:
             final_verdict=str(final_verdict or ""),
             patch_strategy=str(patch_strategy or ""),
             structural_attempted=bool(structural_attempted),
+            error_category=str(error_category or ""),
+            reject_bucket=str(reject_bucket or ""),
+            score_breakdown=dict(score_breakdown or {}),
             candidate_key=str(candidate_key or ""),
             content_hash=str(content_hash or ""),
             artifact_path=str(artifact_path or ""),
@@ -485,6 +494,7 @@ class PassRateMonitor:
                 "difficulty": "easy" | "normal" | "hard" | "unknown",
                 "avg_attempts": float,
                 "hard_episodes": list[int],
+                "semantic_failures": list[dict],
             }
         """
         if arc_no <= 0:
@@ -493,6 +503,7 @@ class PassRateMonitor:
                 "difficulty": "unknown",
                 "avg_attempts": 0.0,
                 "hard_episodes": [],
+                "semantic_failures": [],
             }
 
         with self._lock:
@@ -503,6 +514,7 @@ class PassRateMonitor:
                 "difficulty": "unknown",
                 "avg_attempts": 0.0,
                 "hard_episodes": [],
+                "semantic_failures": [],
             }
 
         episodes: dict[int, list[AttemptRecord]] = {}
@@ -525,11 +537,29 @@ class PassRateMonitor:
         else:
             difficulty = "hard"
 
+        semantic_failures: list[dict[str, Any]] = []
+        failed_records = sorted(
+            (record for record in arc_records if not record.success),
+            key=lambda record: (record.episode, record.attempt_num),
+        )
+        for record in failed_records[-5:]:
+            semantic_failures.append(
+                {
+                    "episode": record.episode,
+                    "attempt_num": record.attempt_num,
+                    "error_category": str(record.error_category or ""),
+                    "reject_bucket": str(record.reject_bucket or ""),
+                    "score_breakdown": dict(record.score_breakdown or {}),
+                    "reject_reason": str(record.reject_reason or "")[:160],
+                }
+            )
+
         return {
             "arc_no": arc_no,
             "difficulty": difficulty,
             "avg_attempts": round(avg_attempts, 1),
             "hard_episodes": hard_eps,
+            "semantic_failures": semantic_failures,
         }
 
     def save(self) -> None:

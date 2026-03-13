@@ -1,0 +1,15 @@
+work_identity:
+  work_type: investment
+  one_line_truth: ""
+  mandatory_lexicon: []
+  forbidden_flattenings: []
+  tracking_slots:
+    - 지분 구조 변화
+    - 현금흐름 압박
+    - 시장 심리 변화
+  mandatory_scene_engines:
+    - 협상
+    - 실사
+    - IR/브리핑
+  registry_profiles: []
+  role_fit_constraints: []

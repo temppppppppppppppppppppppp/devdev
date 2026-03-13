@@ -11,6 +11,8 @@ def _make_agent_context():
     ctx.author_directives = ""
     ctx.db = MagicMock()
     ctx.db.load_anchor.return_value = {}
+    ctx.current_project = SimpleNamespace(name="Cache Project")
+    ctx.project_name = "Cache Project"
     return ctx
 
 
@@ -58,6 +60,7 @@ def test_arc_ensemble_uses_shared_context_cache_name():
     assert best is None
     assert len(candidates) > 0
     agent._get_or_create_context_cache.assert_called_once()
+    assert agent._get_or_create_context_cache.call_args.kwargs["project_name"] == "Cache_Project_arc_1"
     assert agent._generate_single.call_count == len(agent.strategies)
     assert all(call.kwargs["cache_name"] == "cache/arc" for call in agent._generate_single.call_args_list)
 
@@ -156,6 +159,7 @@ def test_blueprint_ensemble_uses_shared_context_cache_name():
 
     assert best is not None
     agent._get_or_create_context_cache.assert_called_once()
+    assert agent._get_or_create_context_cache.call_args.kwargs["project_name"] == "Cache_Project_ep_11"
     assert agent._generate_single.call_count == 1
     assert agent._generate_single.call_args.kwargs["cache_name"] == "cache/bp"
 

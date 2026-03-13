@@ -11,6 +11,7 @@ Purpose:
 import json
 import logging
 import re
+import threading
 import time
 
 from modules.core.constants import AIModels
@@ -218,6 +219,17 @@ class BlockEnricher(BaseAgent):
         """
         super().__init__(context, client, model_tier)
         # [V60.37] 스마트 폴백 (BaseAgent 자동 설정, 현재 gemini-2.5-flash 직접 사용)
+        self._flash_model_lock = threading.Lock()
+
+    def _ask_with_flash_model(self, prompt: str, *, temperature: float):
+        """같은 인스턴스의 임시 모델 스왑을 직렬화해 thread race를 방지한다."""
+        with self._flash_model_lock:
+            original_model = self.primary_model
+            try:
+                self.primary_model = AIModels.FLASH_ANALYSIS_MODEL  # [TF-11-01] SSOT
+                return self.ask(prompt, temperature=temperature)
+            finally:
+                self.primary_model = original_model
 
     def analyze_block_density(self, block: dict) -> dict:
         """
@@ -477,12 +489,7 @@ class BlockEnricher(BaseAgent):
 
         try:
             # [V60.24] Flash (빠른 검증용)
-            original_model = self.primary_model
-            try:  # [V70] 예외 시 primary_model 복원 보장 (레이스 컨디션 방지)
-                self.primary_model = AIModels.FLASH_ANALYSIS_MODEL  # [TF-11-01] SSOT
-                result = self.ask(prompt, temperature=0.3)
-            finally:
-                self.primary_model = original_model
+            result = self._ask_with_flash_model(prompt, temperature=0.3)
 
             if isinstance(result, str):
                 result = self._extract_json_robust(result)  # [V70] json.loads → robust parser
@@ -522,12 +529,7 @@ class BlockEnricher(BaseAgent):
 
         try:
             # [V60.24] Flash (빠른 심사용)
-            original_model = self.primary_model
-            try:  # [V70] 예외 시 primary_model 복원 보장
-                self.primary_model = AIModels.FLASH_ANALYSIS_MODEL  # [TF-11-01] SSOT
-                result = self.ask(prompt, temperature=0.3)
-            finally:
-                self.primary_model = original_model
+            result = self._ask_with_flash_model(prompt, temperature=0.3)
 
             if isinstance(result, str):
                 result = self._extract_json_robust(result)  # [V70] json.loads → robust parser
@@ -833,12 +835,7 @@ class BlockEnricher(BaseAgent):
 
         try:
             # [V60.24] Flash (빠른 검증용)
-            original_model = self.primary_model
-            try:  # [V70] 예외 시 primary_model 복원 보장
-                self.primary_model = AIModels.FLASH_ANALYSIS_MODEL  # [TF-11-01] SSOT
-                result = self.ask(prompt, temperature=0.2)
-            finally:
-                self.primary_model = original_model
+            result = self._ask_with_flash_model(prompt, temperature=0.2)
 
             if isinstance(result, str):
                 result = self._extract_json_robust(result)  # [V70] json.loads → robust parser

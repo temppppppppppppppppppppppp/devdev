@@ -763,14 +763,26 @@ class ChiefWriterQualityGate:
         expression_ban = list(getattr(directive, "expression_ban", []) or [])
         for expr in expression_ban:
             if expr and expr in manuscript:
-                issues.append(f"금지 표현 '{expr}' 사용됨")
+                issues.append(
+                    {
+                        "type": "expression_ban_violation",
+                        "description": f"금지 표현 '{expr}' 사용됨",
+                        "severity": "medium",
+                    }
+                )
 
         tail = manuscript[-200:] if len(manuscript) > 200 else manuscript
         ending_style = str(getattr(directive, "ending_style", "") or "")
         if "조용한여운" in ending_style and any(
             kw in tail for kw in ["시작이었다", "서막이 올랐다", "전쟁이 시작", "사냥이 시작"]
         ):
-            issues.append("ending_style '조용한여운' 지시인데 선언문으로 종결")
+            issues.append(
+                {
+                    "type": "ending_style_violation",
+                    "description": "ending_style '조용한여운' 지시인데 선언문으로 종결",
+                    "severity": "medium",
+                }
+            )
 
         if emotion_required:
             emotion_keywords = [
@@ -800,7 +812,13 @@ class ChiefWriterQualityGate:
             except (ValueError, TypeError):
                 _freq = 0
             if _freq >= 3 and expr and str(expr) in manuscript:
-                issues.append(f"반복 표현 '{str(expr)[:20]}' 이번 화에도 사용 (직전 {_freq}회)")
+                issues.append(
+                    {
+                        "type": "expression_freshness_repetition",
+                        "description": f"반복 표현 '{str(expr)[:20]}' 이번 화에도 사용 (직전 {_freq}회)",
+                        "severity": "low",
+                    }
+                )
         return issues
 
     def _check_ai_tell_patterns(self, content: str) -> list[dict]:

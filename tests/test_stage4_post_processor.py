@@ -1,5 +1,6 @@
 """[B-1-1] Stage4PostProcessor unit tests."""
 
+import logging
 import json
 from unittest.mock import MagicMock, patch
 
@@ -255,6 +256,45 @@ class TestProcessPassResult:
         assert cost_kw["scope_type"] == "episode"
         assert cost_kw["scope_id"] == 2
         assert cost_kw["total_calls"] == 3
+
+    def test_logs_episode_summary_after_cost_snapshot(self, tmp_path, caplog):
+        pp = self._make_pp()
+        pp.ctx.current_project.db.save_manuscript.return_value = True
+        pp.ctx.current_project.master_bible = {
+            "MasterBible": {"protagonist_config": {"pov": "3인칭", "external_pov_insert_policy": "제한적 허용"}}
+        }
+
+        collector = MagicMock()
+        collector.session_id = "sess_ep"
+        collector.snapshot_and_reset_scope.return_value = {
+            "total_calls": 4,
+            "total_tokens": 3600,
+            "total_cost_usd": 0.034,
+            "model_breakdown": "{}",
+        }
+
+        with patch("modules.core.stage4_post_processor.get_metrics_collector", return_value=collector):
+            with caplog.at_level(logging.INFO):
+                result = pp.process_pass_result(
+                    next_ep=4,
+                    final_manuscript="test manuscript " * 400,
+                    final_title="episode title",
+                    final_state_updates={},
+                    blueprint={"scene_breakdown": []},
+                    arc_data={"arc_no": 2},
+                    output_dir=tmp_path,
+                    v50_modules_available=False,
+                    extract_chain_link_fn=lambda *_args, **_kwargs: {},
+                )
+
+        assert result is True
+        assert "[EPISODE_SUMMARY]" in caplog.text
+        assert "stage=4 ep=4 arc=2" in caplog.text
+        assert "total_calls=4" in caplog.text
+        assert "total_tokens=3600" in caplog.text
+        assert "primary_pov=3인칭" in caplog.text
+        assert "external_pov_insert_policy=제한적 허용" in caplog.text
+        assert "style_guide_extracted_pov=-" in caplog.text
 
     def test_bible_delta_time_passed_uses_time_passed_field(self, tmp_path):
         pp = self._make_pp()

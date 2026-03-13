@@ -3,6 +3,7 @@
 import inspect
 import json
 import re
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -105,6 +106,47 @@ class TestPhaseB:
         """공통 메서드 _extract_single_episode_bible 존재"""
         assert hasattr(ReverseExpander, "_extract_single_episode_bible")
         assert callable(getattr(ReverseExpander, "_extract_single_episode_bible"))
+
+    def test_reverse_engineering_flow_handles_draft_encoding_error(self, tmp_path, capsys):
+        manager = StageZeroManager(project_path=str(tmp_path))
+        src = tmp_path / "broken.txt"
+        src.write_text("placeholder", encoding="utf-8")
+
+        with patch.object(StageZeroManager, "show_genre_menu", return_value=""), patch.object(
+            ReverseExpander,
+            "run",
+            side_effect=ReverseExpander.DraftEncodingError("UTF-8/cp949로 복구할 수 없는 입력 파일입니다"),
+        ):
+            bible, episode_bibles, style_guide = manager.run_reverse_engineering_flow(str(src))
+
+        captured = capsys.readouterr()
+        assert bible == {}
+        assert episode_bibles == []
+        assert style_guide is None
+        assert "인코딩 오류로 역설계를 중단합니다" in captured.out
+
+    def test_generate_from_concept_returns_plot_roadmap_before_save(self):
+        manager = StageZeroManager()
+        manager.genre = "wuxia"
+        manager.protagonist_config = {"pov": "3인칭"}
+        expander = MagicMock()
+        expander.genre = "wuxia"
+        expander.preset_registry = MagicMock()
+        expander.generate_bible.return_value = {"MasterBible": {"ProjectData": {}}}
+        expander.generate_treatment.return_value = [
+            {"title": "블록 1", "ep_start": 1, "ep_end": 5},
+            {"title": "블록 2", "ep_start": 6, "ep_end": 10},
+        ]
+
+        with patch("modules.core.stage0.StoryExpander", return_value=expander):
+            bible, treatment, style_guide = manager.generate_from_concept("컨셉")
+
+        assert style_guide is None
+        assert treatment == expander.generate_treatment.return_value
+        roadmap = bible["MasterBible"]["plot_roadmap"]
+        assert [block["block_no"] for block in roadmap] == [1, 2]
+        assert roadmap[0]["title"] == "블록 1"
+
 
 
 # ──────────────────────────────────────────────

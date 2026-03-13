@@ -33,6 +33,7 @@ if sys.platform == "win32" and "pytest" not in sys.modules:
 import json
 import logging
 import time
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -53,6 +54,7 @@ from modules.core.metrics_collector import get_metrics_collector  # [V49.3] 비�
 from modules.core.narrative_diversity import NarrativeDiversityEngine  # [V48] 서사 다양성 엔진
 from modules.core.perf_timer import PerfTimer  # [V65] 파이프라인 성능 프로파일링
 from modules.core.prompt_builder import PromptBuilder  # [V64 P2-2]
+from modules.core.runtime_paths import resolve_project_dir, resolve_projects_root
 from modules.core.services.audit_service import AuditService  # [Phase 4B-1]
 from modules.core.services.project_service import ProjectService  # [Phase 4B-3]
 from modules.core.services.state_service import StateService  # [Phase 4B-3]
@@ -72,6 +74,16 @@ from modules.validation.threshold_helper import _threshold as _val_threshold  # 
 # 아래 변수만 미리 선언 (boot 전 참조 방어)
 V50_MODULES_AVAILABLE = False  # _attach_agents()에서 실제 판정
 STAGE0_AVAILABLE = False  # _lazy_load_stage0()에서 실제 판정
+
+
+@dataclass(slots=True)
+class BootstrapStatus:
+    core_ok: bool = False
+    v50_ok: bool = False
+    partial_failures: list[str] = field(default_factory=list)
+
+    def __bool__(self) -> bool:
+        return self.core_ok
 
 
 def _lazy_load_stage0():
@@ -229,6 +241,7 @@ from modules.core.constants import (
 _V50_MODULE_MODEL = AIModels.V50_MODULE_MODEL
 _FLASH_ANALYSIS_MODEL = AIModels.FLASH_ANALYSIS_MODEL
 _SUMMARY_MODEL = AIModels.SUMMARY_MODEL
+_APP_ROOT = Path(__file__).resolve().parent
 
 
 class SovereignApp:
@@ -258,6 +271,7 @@ class SovereignApp:
         self._stage2_orch = Stage2Orchestrator(app=self)  # [V64.P3]
         self._stage3_orch = Stage3Orchestrator(app=self)  # [Phase 4C-1a]
         self._stage4_orch = Stage4Orchestrator(app=self)  # [V64.P3]
+        self._bootstrap_status = BootstrapStatus()
         self.perf_timer = PerfTimer("Pipeline")  # [V65] 파이프라인 성능 프로파일링
         self.world_state = None  # [V68] WorldStateManager (Stage 4에서 lazy init)
         self.fact_ledger = None  # [V68] FactLedger 누적 팩트 원장 (Stage 4에서 lazy init)
@@ -775,16 +789,23 @@ class SovereignApp:
 
         # 사유별 카운트
         reason_counts = {}
-        specific_issues = []
+        bucket_samples = {}
+        detail_samples = []
 
         for reject in rejection_history:
-            reason = reject.get("reason", "unknown")
+            reason = str(reject.get("reason", "unknown") or "unknown")
             # 사유 정규화
             normalized = self._normalize_rejection_reason(reason)
             reason_counts[normalized] = reason_counts.get(normalized, 0) + 1
-            # 구체적 이슈 수집
-            if reject.get("specific_issue"):
-                specific_issues.append(reject["specific_issue"])
+            bucket_samples.setdefault(normalized, [])
+            compact_reason = reason[:100]
+            if compact_reason and compact_reason not in bucket_samples[normalized]:
+                bucket_samples[normalized].append(compact_reason)
+
+            for detail_key in ("specific_issue", "failure_category", "fix_scope"):
+                detail = str(reject.get(detail_key, "") or "").strip()
+                if detail and detail not in detail_samples:
+                    detail_samples.append(detail[:120])
 
         if not reason_counts:
             return ""
@@ -804,16 +825,19 @@ class SovereignApp:
 
         for reason, count in top_reasons:
             lines.append(f"   🔴 {reason}: {count}회")
+            samples = bucket_samples.get(reason, [])
+            if samples:
+                lines.append(f"      ↳ 대표 사유: {samples[0]}")
             # 패턴별 수정 가이드
             guide = self._get_rejection_fix_guide(reason)
             if guide:
                 lines.append(f"      💡 수정 방향: {guide}")
 
-        if specific_issues:
+        if detail_samples:
             lines.append("")
             lines.append("📋 구체적 문제 지점:")
-            for issue in specific_issues[:3]:  # 최대 3개
-                lines.append(f"   - {issue[:100]}...")
+            for issue in detail_samples[:3]:
+                lines.append(f"   - {issue}")
 
         lines.extend(["", "=" * 60, ""])
 
@@ -826,21 +850,52 @@ class SovereignApp:
 
         if "중복" in reason or "duplicate" in reason_lower:
             return "아이템 중복 획득"
-        if "수여" in reason or "grant" in reason_lower:
-            return "수여물 타임라인 오류"
+        if "수여" in reason or "grant" in reason_lower or "획득 시점" in reason:
+            return "수여/획득 타이밍 오류"
         if "부상" in reason or "injury" in reason_lower or "회복" in reason:
             return "부상/회복 연속성 오류"
-        if "위치" in reason or "location" in reason_lower:
-            return "위치 연속성 오류"
-        if "소지" in reason or "inventory" in reason_lower:
+        if "위치" in reason or "location" in reason_lower or "이동" in reason:
+            return "위치/이동 연속성 오류"
+        if "소지" in reason or "inventory" in reason_lower or "장비" in reason:
             return "소지품 연속성 오류"
-        if "내공" in reason or "energy" in reason_lower:
-            return "내공 상태 연속성 오류"
-        if "json" in reason_lower or "parsing" in reason_lower:
+        if "내공" in reason or "energy" in reason_lower or "마나" in reason or "자원" in reason:
+            return "내공/자원 상태 오류"
+        if "json" in reason_lower or "parsing" in reason_lower or "format" in reason_lower:
             return "JSON 파싱 오류"
-        if "길이" in reason or "length" in reason_lower:
-            return "분량 부족"
-        if "범위" in reason or "scope" in reason_lower:
+        if (
+            "설정" in reason
+            or "모순" in reason
+            or "continuity" in reason_lower
+            or "consistency" in reason_lower
+            or "충돌" in reason
+        ):
+            return "설정/연속성 충돌"
+        if (
+            "인과" in reason
+            or "logic" in reason_lower
+            or "causal" in reason_lower
+            or "구조" in reason
+            or "개연" in reason
+        ):
+            return "인과/구조 붕괴"
+        if (
+            "반복" in reason
+            or "정체" in reason
+            or "stagn" in reason_lower
+            or "repet" in reason_lower
+            or "루프" in reason
+        ):
+            return "반복 전개/서사 정체"
+        if (
+            "길이" in reason
+            or "length" in reason_lower
+            or "분량" in reason
+            or "밀도" in reason
+            or "후반" in reason
+            or "scene count" in reason_lower
+        ):
+            return "밀도/분량 부족"
+        if "범위" in reason or "scope" in reason_lower or "화수" in reason or "ep_count" in reason_lower:
             return "범위 초과/미달"
 
         return "기타"
@@ -849,16 +904,20 @@ class SovereignApp:
         """정규화된 REJECT 사유에 대한 수정 가이드"""
         guides = {
             "아이템 중복 획득": "이전 Arc에서 획득한 아이템 목록을 확인하고, 새 아이템만 설계하세요.",
-            "수여물 타임라인 오류": "수여 시점 이전에 해당 수여물을 언급하지 마세요. 수여 장면을 먼저 작성하세요.",
+            "수여/획득 타이밍 오류": "획득/수여 장면보다 먼저 결과물을 사용하지 말고, 획득 시점을 Arc 본문에 명시하세요.",
             "부상/회복 연속성 오류": "직전 Arc 종료 시 부상 상태를 확인하고, 회복 장면 없이 멀쩡해지지 마세요.",
-            "위치 연속성 오류": "직전 Arc 종료 위치에서 시작하고, 이동 경로를 명시하세요.",
+            "위치/이동 연속성 오류": "직전 Arc 종료 위치에서 시작하고, 이동 경로를 명시하세요.",
             "소지품 연속성 오류": "직전 Arc 종료 시 소지품 그대로 시작하고, 새 획득은 명확히 구분하세요.",
-            "내공 상태 연속성 오류": "내공 소모/회복을 누적 추적하고, 급격한 변화를 피하세요.",
+            "내공/자원 상태 오류": "내공·마나·자원 소모/회복을 누적 추적하고, 급격한 변화를 피하세요.",
             "JSON 파싱 오류": "출력이 순수 JSON인지 확인하세요. 설명문이나 마크다운을 포함하지 마세요.",
-            "분량 부족": "각 화당 최소 800자 이상 작성하세요.",
+            "밀도/분량 부족": "후반부 사건과 반응을 늘리고, 씬별 목표 분량을 먼저 배정하세요.",
             "범위 초과/미달": "할당된 화수 범위를 정확히 지키세요.",
+            "설정/연속성 충돌": "직전 Arc의 상태, 인물 관계, 세계 규칙을 체크리스트로 고정한 뒤 설계를 다시 정렬하세요.",
+            "인과/구조 붕괴": "사건의 원인-결과 사슬을 다시 쓰고, 장면 의존성을 줄여 구조를 단순화하세요.",
+            "반복 전개/서사 정체": "같은 목적·장소·대화가 반복되는 구간을 줄이고, 장면마다 서사적 전진을 1개 이상 배치하세요.",
+            "기타": "반복된 raw REJECT 사유를 그대로 제약 블록에 승격하고, 가장 최근 수정 지시부터 우선 반영하세요.",
         }
-        return guides.get(normalized_reason, "")
+        return guides.get(normalized_reason, guides["기타"])
 
     def _emergency_shutdown(self) -> None:
         """
@@ -943,6 +1002,41 @@ class SovereignApp:
             self.diversity_engine = None
             return False
 
+    def _get_projects_root(self) -> Path:
+        return resolve_projects_root(_APP_ROOT)
+
+    def _get_project_dir(self, project_name: str) -> Path:
+        return resolve_project_dir(project_name, _APP_ROOT)
+
+    def _get_current_project_log_path(self, filename: str) -> Path:
+        if self.current_project and hasattr(self.current_project, "paths"):
+            return self.current_project.paths.root / "logs" / filename
+        if self.current_project and getattr(self.current_project, "name", ""):
+            return self._get_project_dir(self.current_project.name) / "logs" / filename
+        raise RuntimeError("current project is not bound")
+
+    def _reload_project_environment(self, project_name: str) -> Path | None:
+        """Load project-local environment from the bound project root."""
+        project_env_path = self._get_project_dir(project_name) / ".env"
+        if not project_env_path.exists():
+            return None
+
+        load_dotenv(project_env_path, override=True)
+        print(f"   🔑 [V60.37] 프로젝트별 API 키 로드: {project_env_path}")
+
+        new_api_key = os.getenv("GOOGLE_API_KEY")
+        if new_api_key:
+            self.sys = StudioSystem(api_client=genai.Client(api_key=new_api_key))
+            # [V61.9] 프로젝트별 멀티키 재초기화 (GOOGLE_API_KEY_2~9 반영)
+            from modules.domain.agents.base_agent import BaseAgent
+
+            BaseAgent._keys_initialized = False
+            BaseAgent._current_key_idx = 0
+            BaseAgent._context_caches.clear()
+            BaseAgent._init_api_keys()
+
+        return project_env_path
+
     def boot(self):
         self.ui.title("V40 SOVEREIGN COCKPIT", "Multi-Genre Production Factory")
 
@@ -955,24 +1049,10 @@ class SovereignApp:
             return
 
         # [V60.37] 프로젝트별 .env 로드 지원
-        project_env_path = Path(self._PROJECTS_DIR) / project_name / ".env"
-        if project_env_path.exists():
-            load_dotenv(project_env_path, override=True)
-            print(f"   🔑 [V60.37] 프로젝트별 API 키 로드: {project_env_path}")
-            # API 클라이언트 재초기화
-            new_api_key = os.getenv("GOOGLE_API_KEY")
-            if new_api_key:
-                self.sys = StudioSystem(api_client=genai.Client(api_key=new_api_key))
-                # [V61.9] 프로젝트별 멀티키 재초기화 (GOOGLE_API_KEY_2~9 반영)
-                from modules.domain.agents.base_agent import BaseAgent
-
-                BaseAgent._keys_initialized = False
-                BaseAgent._current_key_idx = 0
-                BaseAgent._context_caches.clear()
-                BaseAgent._init_api_keys()
+        self._reload_project_environment(project_name)
 
         _genre_type = self.selected_genre.get("type", "wuxia") if isinstance(self.selected_genre, dict) else "wuxia"
-        self.sys.boot_v20_project(project_name, genre=_genre_type)
+        self.sys.boot_v20_project(project_name, genre=_genre_type, projects_root=self._get_projects_root())
         self.current_project = self.sys.project
 
         # [LOG-1] 프로젝트별 로그 경로 갱신
@@ -1267,7 +1347,7 @@ class SovereignApp:
 
     def _check_vector_db_lock(self, project_name: str) -> bool:
         """[DB-MERGE] DB file integrity check (project_data.db)."""
-        db_file = Path(self._PROJECTS_DIR) / project_name / "project_data.db"
+        db_file = self._get_project_dir(project_name) / "project_data.db"
         if db_file.exists() and db_file.stat().st_size == 0:
             self.ui.log(f"🚨 [Critical] DB file ({db_file.name}) looks corrupted (0KB).")
             self.ui.log("💡 [Fix] Remove the file and rerun from Stage 0.")
@@ -1554,7 +1634,7 @@ class SovereignApp:
         if self.stage2_optimizer:
             self.ui.log("   ⚡ [V60.25] Stage 2 Optimizer 활성화 (StateSnapshot + AutoCorrector + ConstraintAmplifier)")
 
-    def _init_v50_modules(self, _v50: dict | None) -> None:
+    def _init_v50_modules(self, _v50: dict | None) -> list[str]:
         """[God-2] V50 서사 품질 향상 모듈 전체 초기화.
 
         Args:
@@ -1633,10 +1713,8 @@ class SovereignApp:
                 if _fl_loaded:
                     self.ui.log(f"   📚 [V51.4] 실패 기록 {len(self.failure_learner.records)}건 로드(DB)")
                 else:
-                    failure_log_path = os.path.join(
-                        self._PROJECTS_DIR, self.current_project.name, "logs", "failure_learning.json"
-                    )
-                    if os.path.exists(failure_log_path):
+                    failure_log_path = self._get_current_project_log_path("failure_learning.json")
+                    if failure_log_path.exists():
                         self.failure_learner.load_from_json(failure_log_path)
                         if self.failure_learner.records:
                             _snapshot = {
@@ -1687,10 +1765,8 @@ class SovereignApp:
                 # [DB-Eff-P1] DB 우선 로드, 폴백: 파일
                 _cv_db_count = self.character_voice.load_from_db(self.current_project.db)
                 if _cv_db_count == 0:
-                    voice_log_path = os.path.join(
-                        self._PROJECTS_DIR, self.current_project.name, "logs", "character_voice.json"
-                    )
-                    if os.path.exists(voice_log_path):
+                    voice_log_path = self._get_current_project_log_path("character_voice.json")
+                    if voice_log_path.exists():
                         self.character_voice.load_from_json(voice_log_path)
                         self.character_voice.save_to_db(self.current_project.db)
                         self.ui.log("   🎭 [DB-Eff] character_voice JSON→DB 마이그레이션 완료")
@@ -1702,8 +1778,8 @@ class SovereignApp:
                 # [DB-Eff-P1] DB 우선 로드, 폴백: 파일
                 _ft_db_count = self.foreshadow_tracker.load_from_db(self.current_project.db)
                 if _ft_db_count == 0:
-                    foreshadow_log_path = os.path.join(self._PROJECTS_DIR, self.current_project.name, "logs", "foreshadow.json")
-                    if os.path.exists(foreshadow_log_path):
+                    foreshadow_log_path = self._get_current_project_log_path("foreshadow.json")
+                    if foreshadow_log_path.exists():
                         self.foreshadow_tracker.load_from_json(foreshadow_log_path)
                         self.foreshadow_tracker.save_to_db(self.current_project.db)
                         self.ui.log("   🔮 [DB-Eff] foreshadow JSON→DB 마이그레이션 완료")
@@ -1757,8 +1833,8 @@ class SovereignApp:
 
                 # V60.26-5 캐릭터 음성 프로파일러 (V58, 기존 V51.5보다 고급)
                 self.voice_profiler = _v50["CharacterVoiceProfiler"]()
-                voice_profiler_path = os.path.join(self._PROJECTS_DIR, self.current_project.name, "logs", "voice_profiles.json")
-                if os.path.exists(voice_profiler_path):
+                voice_profiler_path = self._get_current_project_log_path("voice_profiles.json")
+                if voice_profiler_path.exists():
                     try:
                         with open(voice_profiler_path, encoding="utf-8") as f:
                             profiles_data = json.load(f)
@@ -1878,13 +1954,16 @@ class SovereignApp:
 
                 # 기존 에피소드에서 데이터 로드
                 self._load_v50_history()
+                return []
 
             except Exception as v50_err:
                 self.ui.log(f"   ⚠️ [V50] 모듈 초기화 실패 (비치명적): {v50_err}")
+                return [f"v50_init_failed:{type(v50_err).__name__}:{v50_err}"]
         else:
             self.ui.log("   ⚠️ [V50] 모듈 미설치 - 기본 모드")
+            return []
 
-    def _attach_agents(self) -> bool:
+    def _attach_agents(self) -> BootstrapStatus:
         """
         [V38 패치] 방어적 에이전트 초기화
         [INF-I8] lazy import 적용 — 에이전트/V50 모듈을 이 시점에서만 import
@@ -1893,7 +1972,7 @@ class SovereignApp:
         Manager, Weaver)를 초기화합니다.
 
         Returns:
-            bool: 초기화 성공 여부
+            BootstrapStatus: core/v50/partial failure 상태
         """
         try:
             # [INF-I8] Stage 전용 에이전트 lazy import
@@ -1914,7 +1993,12 @@ class SovereignApp:
 
             if not models:
                 self.ui.log("🚨 [Critical] 모델 설정을 불러올 수 없습니다.")
-                return False
+                self._bootstrap_status = BootstrapStatus(
+                    core_ok=False,
+                    v50_ok=False,
+                    partial_failures=["missing_model_map"],
+                )
+                return self._bootstrap_status
 
             default_model = AIModels.STAGE2_MAIN_MODEL  # [V65] 중앙 상수 참조
             self._init_core_agents(_agents=_agents, _v50=_v50, models=models, default_model=default_model)
@@ -1923,7 +2007,12 @@ class SovereignApp:
             for name, agent in self.agents.items():
                 if not hasattr(agent, "ask"):
                     self.ui.log(f"🚨 [Critical] {name} 에이전트 초기화 실패")
-                    return False
+                    self._bootstrap_status = BootstrapStatus(
+                        core_ok=False,
+                        v50_ok=False,
+                        partial_failures=[f"agent_missing_ask:{name}"],
+                    )
+                    return self._bootstrap_status
 
             # [V43] Director에 장르 및 V0128 설정 주입
             if self.selected_genre:
@@ -2011,17 +2100,30 @@ class SovereignApp:
             # ═══════════════════════════════════════════════════════════════
             # [V50] 서사 품질 향상 모듈 초기화
             # ═══════════════════════════════════════════════════════════════
-            self._init_v50_modules(_v50=_v50)
+            partial_failures = self._init_v50_modules(_v50=_v50)
+
+            self._bootstrap_status = BootstrapStatus(
+                core_ok=True,
+                v50_ok=not partial_failures,
+                partial_failures=partial_failures,
+            )
+            if partial_failures:
+                self.ui.log(f"   ⚠️ [Bootstrap] optional module partial failure {len(partial_failures)}건")
 
             self.ui.log("✅ [System] 모든 에이전트 안전하게 초기화 완료")
-            return True
+            return self._bootstrap_status
 
         except Exception as e:
             self.ui.log(f"🚨 [Critical] 에이전트 초기화 중 오류: {e}")
+            self._bootstrap_status = BootstrapStatus(
+                core_ok=False,
+                v50_ok=False,
+                partial_failures=[f"critical_attach_error:{type(e).__name__}:{e}"],
+            )
             import traceback
 
             traceback.print_exc()
-            return False
+            return self._bootstrap_status
 
     def _load_v50_history(self) -> None:
         """
@@ -2141,6 +2243,7 @@ class SovereignApp:
                     "4": "🚀 Stage 4: Sovereign Production (Writing)",  # 분리됨
                     "5": "Exit",
                     "6": "🔄 One-Stop: Arc-by-Arc 자동 파이프라인",
+                    "7": "🧭 One-Stop: Frontier Lag (S3=-1 / S4=-2)",
                     "44": "⏪ [ROLLBACK] Stage 4 회차별 롤백 (Episode Rewind)",
                     "77": "🧹 [WIPE] 원고 생산 기록만 삭제 (Stage 4 초기화)",
                     "88": "🔥 [RESET] Stage 2 (Arcs) 초기화",
@@ -2172,6 +2275,8 @@ class SovereignApp:
                     break
                 elif choice == "6":
                     self._one_stop_pipeline()
+                elif choice == "7":
+                    self._one_stop_pipeline_frontier_lag()
                 elif choice == "44":
                     self._rollback_episode()
                 elif choice == "77":
@@ -2411,11 +2516,17 @@ class SovereignApp:
 
         # 1. 현재 메모리의 성경 데이터 최종 저장
         if hasattr(self.current_project, "master_bible"):
-            self.current_project.save_v20_anchor("bible", self.current_project.master_bible)
+            try:
+                self.current_project.save_v20_anchor("bible", self.current_project.master_bible)
+            except Exception as bible_err:
+                print(f"⚠️ [Shutdown] Bible 저장 실패: {bible_err}", flush=True)
 
         # [V40] 장르 정보 저장
         if self.selected_genre and hasattr(self.current_project, "db"):
-            self.current_project.db.save_anchor("genre_info", self.selected_genre)
+            try:
+                self.current_project.db.save_anchor("genre_info", self.selected_genre)
+            except Exception as genre_err:
+                print(f"⚠️ [Shutdown] genre_info 저장 실패: {genre_err}", flush=True)
 
         # [3-E] 아이템 접미사 안전망 자동 확장 (LLM 심사 → YAML append)
         if getattr(self, "semantic_item_registry", None) and self.selected_genre:
@@ -2497,13 +2608,17 @@ class SovereignApp:
         self._stage01_helpers.stage_1_volumes()  # [Phase 4C-1b-b] thin delegate
 
     def _get_max_episode_from_manuscripts(self):
-        """기존 원고 파일에서 최대 에피소드 번호 추출"""
+        """원고 진행 head를 hybrid getter 기준으로 반환한다."""
         try:
+            latest_ep_fn = getattr(self.current_project, "get_latest_episode_number", None)
+            if callable(latest_ep_fn):
+                return max(0, int(latest_ep_fn() or 1) - 1)
+
+            import re as _re
+
             draft_files = list(self.current_project.paths.drafts.glob("*.txt"))
             if not draft_files:
                 return 0
-
-            import re as _re
 
             max_ep = 0
             for f in draft_files:
@@ -3025,12 +3140,12 @@ class SovereignApp:
         Returns:
             str: 선택된 프로젝트 이름
         """
-        root = Path(self._PROJECTS_DIR)
+        root = self._get_projects_root()
         root.mkdir(parents=True, exist_ok=True)
         # Desktop bridge also derives 1-based project_index from a lexical sort.
         projects = sorted(d.name for d in root.iterdir() if d.is_dir())
         if not projects:  # [V70] 빈 프로젝트 폴더 방어
-            self.ui.log("❌ projects/ 폴더에 프로젝트가 없습니다. 먼저 프로젝트를 생성하세요.")
+            self.ui.log(f"❌ 프로젝트 루트({root})에 프로젝트가 없습니다. 먼저 프로젝트를 생성하세요.")
             return ""
         for i, p in enumerate(projects):
             print(f" {i + 1}. {p}")
@@ -3091,10 +3206,11 @@ class SovereignApp:
                 logging.warning(f"[Sweep35] StateExtractor cache clear failed (non-blocking): {_se_err}")
             try:
                 _ft = getattr(self, "foreshadow_tracker", None)
-                if _ft is not None and hasattr(_ft, "clear"):
-                    _ft.clear()
-                    if self.current_project and hasattr(self.current_project, "db"):
-                        _ft.save_to_db(self.current_project.db)
+                if _ft is not None and self.current_project and hasattr(self.current_project, "db"):
+                    if hasattr(_ft, "load_from_db"):
+                        _ft.load_from_db(self.current_project.db)
+                    elif hasattr(_ft, "clear"):
+                        _ft.clear()
             except Exception as _ft_err:
                 logging.warning(f"[SafeOps] rewind_stage_2 foreshadow sync failed (non-blocking): {_ft_err}")
 
@@ -3129,11 +3245,12 @@ class SovereignApp:
             # [TF7-P1-08] ForeshadowTracker 롤백 동기화 — stale 복선 방지
             try:
                 _ft = getattr(self, "foreshadow_tracker", None)
-                if _ft is not None and hasattr(_ft, "clear"):
-                    _ft.clear()
-                    if self.current_project and hasattr(self.current_project, "db"):
-                        _ft.save_to_db(self.current_project.db)
-                        logging.info("[TF7-P1-08] ForeshadowTracker 초기화 및 DB 저장 완료")
+                if _ft is not None and self.current_project and hasattr(self.current_project, "db"):
+                    if hasattr(_ft, "load_from_db"):
+                        _ft.load_from_db(self.current_project.db)
+                        logging.info("[TF7-P1-08] ForeshadowTracker DB 상태 재로드 완료")
+                    elif hasattr(_ft, "clear"):
+                        _ft.clear()
             except Exception as _ft_err:
                 logging.warning(f"[TF7-P1-08] ForeshadowTracker rollback sync 실패 (비치명): {_ft_err}")
 
@@ -3422,47 +3539,345 @@ class SovereignApp:
 
         # [Phase 4C-2a/2b/2c] DI 컨텍스트 주입 (lazy init 후)
         # [S-13] 조건부 모듈 8종 → conditional_modules dict
-        from modules.core.stage4_context import _CONDITIONAL_MODULE_KEYS, Stage4Context
+        from modules.core.stage4_context import Stage4Context
 
-        _cm = {k: getattr(self, k, None) for k in _CONDITIONAL_MODULE_KEYS if getattr(self, k, None) is not None}
-
-        self._stage4_orch.ctx = Stage4Context(
-            ui=self.ui,
-            current_project=self.current_project,
-            agents=self.agents,
-            sys=self.sys,
-            state_tracker=self.state_tracker,
-            memory=getattr(self, "memory", None),
-            context_advisor=getattr(self, "context_advisor", None),
-            world_state=self.world_state,
-            fact_ledger=self.fact_ledger,
-            character_voice=getattr(self, "character_voice", None),
-            perf_timer=getattr(self, "perf_timer", None),
-            foreshadow_tracker=getattr(self, "foreshadow_tracker", None),
-            failure_learner=getattr(self, "failure_learner", None),
-            diversity_engine=getattr(self, "diversity_engine", None),
-            semantic_plot_guard=getattr(self, "semantic_plot_guard", None),
-            selected_genre=getattr(self, "selected_genre", None),
-            quality_dashboard=getattr(self, "quality_dashboard", None),
-            pacing_analyzer=getattr(self, "pacing_analyzer", None),
-            pass_rate_monitor=getattr(self, "pass_rate_monitor", None),
-            emotion_tracker=getattr(self, "emotion_tracker", None),  # [TF7-P2-06]
-            conditional_modules=_cm,
-            # [4C-2c] 콜백 7종
-            get_int_input=self._get_int_input,
-            build_item_acquisition_timeline=self._build_item_acquisition_timeline,
-            load_narrative_summaries=self._load_narrative_summaries,
-            get_protagonist_name=self._get_protagonist_name,
-            generate_narrative_summary=self._generate_narrative_summary,
-            flush_audit_buffer=self._flush_audit_buffer,
-            safe_commit=self._safe_commit,
-        )
+        self._stage4_orch.ctx = Stage4Context.from_app(self)
 
         return self._stage4_orch.stage_4_v2_chief_writer(limit_mode=limit_mode, target_ep=target_ep)
 
     # ═══════════════════════════════════════════════════════════════
     # [OneStop] Arc-by-Arc 자동 파이프라인
     # ═══════════════════════════════════════════════════════════════
+    def _compute_frontier_targets(
+        self,
+        *,
+        ep_start: int,
+        ep_end: int,
+        designed_frontier_arc_no: int,
+        true_final_arc_no: int,
+    ) -> dict[str, Any]:
+        """[FrontierLag] 현재 설계 frontier 기준 Stage 3/4 목표 회차 계산."""
+        is_true_final_frontier = designed_frontier_arc_no >= true_final_arc_no
+        if is_true_final_frontier:
+            stage3_target = ep_end
+            stage4_target = ep_end
+        else:
+            stage3_target = max(ep_start, ep_end - 1)
+            stage4_target = max(ep_start, ep_end - 2)
+        return {
+            "frontier_ep_start": ep_start,
+            "frontier_ep_end": ep_end,
+            "designed_frontier_arc_no": designed_frontier_arc_no,
+            "true_final_arc_no": true_final_arc_no,
+            "is_true_final_frontier": is_true_final_frontier,
+            "stage3_target": stage3_target,
+            "stage4_target": stage4_target,
+        }
+
+    def _resolve_one_stop_frontier_lag_plan(
+        self, *, total_arcs: int, designed_arcs: list[dict[str, Any]] | None = None
+    ) -> dict[str, Any] | None:
+        """[FrontierLag] 설계 frontier, 목표 회차, 현재 정렬 상태를 단일 plan으로 반환."""
+        arcs = designed_arcs if designed_arcs is not None else (self.current_project.db.load_anchor("arcs") or [])
+        if not arcs:
+            return None
+
+        frontier_arc = arcs[-1]
+        ep_start = int(frontier_arc.get("ep_start", 1) or 1)
+        ep_end = int(frontier_arc.get("ep_end", ep_start + 4) or (ep_start + 4))
+        targets = self._compute_frontier_targets(
+            ep_start=ep_start,
+            ep_end=ep_end,
+            designed_frontier_arc_no=len(arcs),
+            true_final_arc_no=total_arcs,
+        )
+
+        bp_max = int(self.current_project.db.get_latest_blueprint_number() or 0)
+        ms_max = int(self.current_project.get_latest_episode_number() or 1) - 1
+
+        def _classify_alignment(max_ep: int, target_ep: int) -> str:
+            if max_ep < target_ep:
+                return "backlog"
+            if max_ep == target_ep:
+                return "aligned"
+            return "ahead"
+
+        return {
+            **targets,
+            "bp_max": bp_max,
+            "ms_max": ms_max,
+            "stage3_alignment": _classify_alignment(bp_max, targets["stage3_target"]),
+            "stage4_alignment": _classify_alignment(ms_max, targets["stage4_target"]),
+        }
+
+    def _one_stop_pipeline_frontier_lag(self) -> None:
+        """[FrontierLag] Stage 2 frontier는 유지하되 Stage 3/4는 한 박자 늦춰 미래 정보를 확보."""
+        self._show_resume_status()
+
+        if not self.current_project.master_bible:
+            self.current_project.master_bible = self.current_project.db.load_anchor("bible")
+        if not self.current_project.master_bible:
+            self.ui.log("❌ Bible 데이터가 없습니다. Stage 0을 먼저 실행하세요.")
+            return
+
+        bible_root = self.current_project.master_bible.get("MasterBible", self.current_project.master_bible)
+        arcs_source = bible_root.get("plot_roadmap", [])
+        total_arcs = len(arcs_source)
+        if total_arcs == 0:
+            self.ui.log("❌ plot_roadmap이 비어 있습니다. Stage 0에서 Treatment를 먼저 설정하세요.")
+            return
+
+        all_arcs = self.current_project.db.load_anchor("arcs") or []
+        designed_arcs = len(all_arcs)
+        remaining_design = max(0, total_arcs - designed_arcs)
+
+        self.ui.log(f"\n{'═' * 60}")
+        self.ui.log("🧭 [FrontierLag] One-Stop Frontier Lag")
+        self.ui.log(f"   설계 frontier: {designed_arcs} / {total_arcs} (추가 설계 가능: {remaining_design}개)")
+        if designed_arcs > 0:
+            current_plan = self._resolve_one_stop_frontier_lag_plan(total_arcs=total_arcs, designed_arcs=all_arcs)
+            if current_plan:
+                self.ui.log(
+                    "   현재 정렬:"
+                    f" S3→{current_plan['stage3_target']} ({current_plan['stage3_alignment']})"
+                    f" / S4→{current_plan['stage4_target']} ({current_plan['stage4_alignment']})"
+                )
+                self.ui.log(
+                    f"   현재 증거: bp_max={current_plan['bp_max']} / ms_max={current_plan['ms_max']}"
+                )
+        self.ui.log(f"{'═' * 60}\n")
+
+        total_manuscripts = 0
+        arcs_advanced = 0
+
+        if remaining_design <= 0:
+            final_plan = self._resolve_one_stop_frontier_lag_plan(total_arcs=total_arcs, designed_arcs=all_arcs)
+            if not final_plan:
+                self.ui.log("❌ 설계된 Arc가 없어 Frontier Lag final close를 수행할 수 없습니다.")
+                return
+
+            arc_ep_start = final_plan["frontier_ep_start"]
+            arc_ep_end = final_plan["frontier_ep_end"]
+            self.ui.log("   🏁 모든 Arc가 이미 설계되어 final close만 수행합니다.")
+            self.ui.log(
+                "   🧭 [FrontierLag]"
+                f" true_final={final_plan['true_final_arc_no']}"
+                f", frontier={final_plan['designed_frontier_arc_no']}"
+                f", ep={arc_ep_start}~{arc_ep_end}"
+                f", S3→{final_plan['stage3_target']} ({final_plan['stage3_alignment']})"
+                f", S4→{final_plan['stage4_target']} ({final_plan['stage4_alignment']})"
+            )
+
+            try:
+                from modules.core.stage3_context import Stage3Context
+
+                self._stage3_orch.ctx = Stage3Context.from_app(self)
+                self._stage3_orch.stage_3_batch_blueprinting(target_ep=final_plan["stage3_target"])
+            except Exception as s3_err:
+                self.ui.log(f"   ❌ [Stage 3] Final close 오류: {str(s3_err)[:100]}")
+                return
+
+            ms_max_before = self._get_max_episode_from_manuscripts()
+            try:
+                self._stage_4_v2_chief_writer(target_ep=final_plan["stage4_target"])
+                ms_max_after = self._get_max_episode_from_manuscripts()
+                total_manuscripts += max(0, ms_max_after - ms_max_before)
+            except Exception as s4_err:
+                self.ui.log(f"   ❌ [Stage 4] Final close 오류: {str(s4_err)[:100]}")
+                return
+        else:
+            default_count = min(remaining_design, 3)
+            batch_size = self._get_int_input(
+                f"👉 몇 개 Arc를 추가 설계할까요? (1~{remaining_design}, 기본: {default_count}): ",
+                default=default_count,
+                min_val=1,
+                max_val=remaining_design,
+            )
+            if batch_size is None:
+                batch_size = default_count
+            target_count = batch_size
+
+            while True:
+                for arc_offset in range(target_count):
+                    current_arc_no = designed_arcs + arcs_advanced + 1
+                    self.ui.log(f"\n{'━' * 60}")
+                    self.ui.log(
+                        f"🧭 [FrontierLag] Arc {current_arc_no}/{total_arcs} frontier 전진 ({arc_offset + 1}/{target_count})"
+                    )
+                    self.ui.log(f"{'━' * 60}")
+
+                    refreshed_arcs = self.current_project.db.load_anchor("arcs") or []
+                    if current_arc_no <= len(refreshed_arcs):
+                        current_arc = refreshed_arcs[current_arc_no - 1]
+                        arc_ep_start = current_arc.get("ep_start", 1)
+                        arc_ep_end = current_arc.get("ep_end", arc_ep_start + 4)
+                        self.ui.log(
+                            f"   ✅ [Stage 2] Arc {current_arc_no} 이미 설계됨 (ep {arc_ep_start}~{arc_ep_end}) — 건너뜀"
+                        )
+                    else:
+                        self.ui.log(f"\n   📐 [Stage 2] Arc {current_arc_no} 설계 중...")
+                        try:
+                            from modules.core.stage2_context import Stage2Context
+
+                            self._stage2_orch.ctx = Stage2Context.from_app(self)
+
+                            try:
+                                loop = asyncio.get_running_loop()
+                            except RuntimeError:
+                                loop = None
+
+                            if loop and loop.is_running():
+                                import concurrent.futures
+
+                                with concurrent.futures.ThreadPoolExecutor() as executor:
+                                    future = executor.submit(
+                                        asyncio.run,
+                                        self._stage2_orch.stage_2_arcs_async_logic(target_arc_count=1),
+                                    )
+                                    future.result(timeout=600)
+                            else:
+                                asyncio.run(self._stage2_orch.stage_2_arcs_async_logic(target_arc_count=1))
+
+                            _s2_ctx = self._stage2_orch.ctx
+                            if _s2_ctx is not None and getattr(_s2_ctx, "state_tracker", None) is not None:
+                                self.state_tracker = _s2_ctx.state_tracker
+                            self._state_tracker_loaded_arcs = getattr(_s2_ctx, "state_tracker_loaded_arcs", 0)
+                        except Exception as s2_err:
+                            self.ui.log(f"   ❌ [Stage 2] Arc {current_arc_no} 설계 실패: {str(s2_err)[:100]}")
+                            self.ui.log("   🛑 Arc 없이 진행 불가 — 파이프라인을 중단합니다.")
+                            break
+
+                        refreshed_arcs = self.current_project.db.load_anchor("arcs") or []
+                        if current_arc_no > len(refreshed_arcs):
+                            self.ui.log(f"   ❌ [Stage 2] Arc {current_arc_no} 생성이 확인되지 않습니다.")
+                            self.ui.log("   🛑 파이프라인을 중단합니다.")
+                            break
+
+                        current_arc = refreshed_arcs[current_arc_no - 1]
+                        arc_ep_start = current_arc.get("ep_start", 1)
+                        arc_ep_end = current_arc.get("ep_end", arc_ep_start + 4)
+                        self.ui.log(f"   ✅ [Stage 2] Arc {current_arc_no} 완료 (ep {arc_ep_start}~{arc_ep_end})")
+
+                    frontier_plan = self._resolve_one_stop_frontier_lag_plan(
+                        total_arcs=total_arcs,
+                        designed_arcs=refreshed_arcs,
+                    )
+                    if not frontier_plan:
+                        self.ui.log("   ❌ [FrontierLag] 설계 frontier 계산 실패")
+                        break
+
+                    self.ui.log(
+                        "   🧭 [FrontierLag]"
+                        f" true_final={frontier_plan['true_final_arc_no']}"
+                        f", frontier={frontier_plan['designed_frontier_arc_no']}"
+                        f", ep={frontier_plan['frontier_ep_start']}~{frontier_plan['frontier_ep_end']}"
+                        f", S3→{frontier_plan['stage3_target']} ({frontier_plan['stage3_alignment']})"
+                        f", S4→{frontier_plan['stage4_target']} ({frontier_plan['stage4_alignment']})"
+                    )
+                    self.ui.log(
+                        f"   📌 [FrontierLag] bp_max={frontier_plan['bp_max']} / ms_max={frontier_plan['ms_max']}"
+                    )
+
+                    self.ui.log(
+                        "\n"
+                        f"   📐 [Stage 3] Blueprint frontier 동기화"
+                        f" (target <= ep {frontier_plan['stage3_target']})..."
+                    )
+                    try:
+                        from modules.core.stage3_context import Stage3Context
+
+                        self._stage3_orch.ctx = Stage3Context.from_app(self)
+                        s3_result = self._stage3_orch.stage_3_batch_blueprinting(
+                            target_ep=frontier_plan["stage3_target"]
+                        )
+                        s3_success = s3_result.get("success_count", 0) if s3_result else 0
+                        s3_fail = s3_result.get("fail_count", 0) if s3_result else 0
+
+                        if s3_success == 0 and s3_fail > 0:
+                            self.ui.log(f"   ⚠️ [Stage 3] Blueprint 생성 실패 (성공: 0, 실패: {s3_fail})")
+                            try:
+                                skip_choice = input("   건너뛰고 다음 Arc로? (1=건너뛰기 / 2=중단, 기본: 2): ").strip()
+                            except (EOFError, KeyboardInterrupt):
+                                skip_choice = "2"
+                            if skip_choice != "1":
+                                self.ui.log("   🛑 사용자 요청으로 파이프라인을 중단합니다.")
+                                break
+                            self.ui.log("   ⏭️ Stage 3 건너뛰고 다음 Arc로...")
+                            arcs_advanced += 1
+                            continue
+                        elif s3_success == 0 and s3_fail == 0:
+                            self.ui.log(
+                                f"   ✅ [Stage 3] 이미 frontier target({frontier_plan['stage3_target']}화)까지 정렬됨"
+                            )
+                        else:
+                            self.ui.log(f"   ✅ [Stage 3] Blueprint 완료 (성공: {s3_success}, 실패: {s3_fail})")
+                    except Exception as s3_err:
+                        self.ui.log(f"   ❌ [Stage 3] Blueprint 생성 오류: {str(s3_err)[:100]}")
+                        try:
+                            skip_choice = input("   건너뛰고 다음 Arc로? (1=건너뛰기 / 2=중단, 기본: 2): ").strip()
+                        except (EOFError, KeyboardInterrupt):
+                            skip_choice = "2"
+                        if skip_choice != "1":
+                            self.ui.log("   🛑 사용자 요청으로 파이프라인을 중단합니다.")
+                            break
+                        arcs_advanced += 1
+                        continue
+
+                    self.ui.log(
+                        "\n"
+                        f"   🚀 [Stage 4] Manuscript frontier 동기화"
+                        f" (target <= ep {frontier_plan['stage4_target']})..."
+                    )
+                    ms_max_before = self._get_max_episode_from_manuscripts()
+                    try:
+                        self._stage_4_v2_chief_writer(target_ep=frontier_plan["stage4_target"])
+                        ms_max_after = self._get_max_episode_from_manuscripts()
+                        arc_manuscripts = max(0, ms_max_after - ms_max_before)
+                        total_manuscripts += arc_manuscripts
+                        self.ui.log(f"   ✅ [Stage 4] 원고 완료 ({arc_manuscripts}화 생산)")
+                    except KeyboardInterrupt:
+                        self.ui.log("\n   ⚠️ 사용자 중단 요청.")
+                        break
+                    except Exception as s4_err:
+                        self.ui.log(f"   ❌ [Stage 4] 원고 집필 오류: {str(s4_err)[:100]}")
+                        self.ui.log("   (기존 에러 핸들링에 따라 최선 결과 수용)")
+
+                    arcs_advanced += 1
+                else:
+                    self.ui.log(f"\n   ✅ 요청한 {target_count}개 Arc frontier 전진 완료!")
+
+                    remaining_design = total_arcs - (designed_arcs + arcs_advanced)
+                    if remaining_design <= 0:
+                        self.ui.log("   🎉 모든 Arc frontier 전진 완료!")
+                        break
+
+                    target_count = min(remaining_design, batch_size)
+                    self.ui.log(
+                        "   🔁 [FrontierLag] 승인 없이 자동 계속"
+                        f" (남은 Arc: {remaining_design}개 / 다음 tranche: {target_count}개 / batch_size: {batch_size})"
+                    )
+                    continue
+                break
+
+        final_arcs = self.current_project.db.load_anchor("arcs") or []
+        final_plan = self._resolve_one_stop_frontier_lag_plan(total_arcs=total_arcs, designed_arcs=final_arcs)
+        self.ui.log(f"\n{'═' * 60}")
+        self.ui.log("📊 [FrontierLag] 파이프라인 완료 보고")
+        self.ui.log(f"   추가 설계 Arc: {arcs_advanced}개")
+        self.ui.log(f"   전체 Arc: {len(final_arcs)}/{total_arcs}")
+        self.ui.log(f"   생산 원고: 약 {total_manuscripts}화")
+        if final_plan:
+            self.ui.log(
+                f"   최종 정렬: S3→{final_plan['stage3_target']} ({final_plan['stage3_alignment']})"
+                f" / S4→{final_plan['stage4_target']} ({final_plan['stage4_alignment']})"
+            )
+        self.ui.log(f"{'═' * 60}\n")
+
+        try:
+            input("[Enter] 메뉴로 돌아가기")
+        except (EOFError, KeyboardInterrupt):
+            pass
+
     def _one_stop_pipeline(self) -> None:
         """[OneStop] Arc 1개씩 Stage 2→3→4를 순차 실행하여 상류 오염을 조기 감지."""
         self._show_resume_status()

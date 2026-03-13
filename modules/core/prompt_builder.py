@@ -10,6 +10,7 @@ import json
 import logging
 import re
 
+from modules.core.arc_state_utils import compute_terminal_arc_state
 from modules.core.constants import ManuscriptLimits
 from modules.core.genre_schema_builder import get_item_suffixes
 from modules.core.tactical_utils import extract_episode_tactical
@@ -554,9 +555,12 @@ class PromptBuilder:
         다음 Arc 설계 시 명확한 제약으로 주입
         """
         if not all_refined_arcs:
-            return "서사 시작점"
+            return self._decorate_arc_context_for_target("서사 시작점", current_arc_no)
         if not self._app or not getattr(self._app, "agents", None):
-            return self.generate_arc_context_fallback(all_refined_arcs)
+            return self._decorate_arc_context_for_target(
+                self.generate_arc_context_fallback(all_refined_arcs),
+                current_arc_no,
+            )
 
         try:
             state_extractor = self._app.agents.get("state_extractor")
@@ -576,23 +580,30 @@ class PromptBuilder:
                     "StateExtractor generated context",
                     {
                         "arc_count": arc_count,
+                        "target_arc_no": current_arc_no,
                         "items_tracked": len(cumulative_state.get("inventory", {}).get("current_items", [])),
                     },
                 )
 
-                return constraint_prompt
+                return self._decorate_arc_context_for_target(constraint_prompt, current_arc_no)
 
         except Exception as se_err:
             if hasattr(self._app, "_audit_event"):
                 self._app._audit_event(
                     "v60_10_state_extractor_error",
                     "StateExtractor failed, using fallback",
-                    {"error": str(se_err)[:100]},
+                    {"error": str(se_err)[:100], "target_arc_no": current_arc_no},
                 )
             if getattr(getattr(self._app, "ui", None), "log", None):
                 self._app.ui.log(f"      ⚠️ [V60.10] StateExtractor 실패, Python 폴백 사용: {str(se_err)[:50]}")
 
-        return self.generate_arc_context_fallback(all_refined_arcs)
+        return self._decorate_arc_context_for_target(self.generate_arc_context_fallback(all_refined_arcs), current_arc_no)
+
+    @staticmethod
+    def _decorate_arc_context_for_target(context_text: str, current_arc_no: int | None) -> str:
+        if not current_arc_no:
+            return context_text
+        return f"[다음 Arc #{current_arc_no} 설계 기준]\n{context_text}"
 
     def generate_arc_context_fallback(self, all_refined_arcs: list) -> str:
         """[V60.10] StateExtractor 실패 시 Python 기반 폴백"""
@@ -645,57 +656,15 @@ class PromptBuilder:
                         _seen_grant_names.add(grant_item)
                         all_grants_received.append(f"Arc{arc_label}: {grant_item}")
 
-        korean_hal = {"일": 10, "이": 20, "삼": 30, "사": 40, "오": 50, "육": 60, "칠": 70, "팔": 80, "구": 90}
-        korean_pun = {"일": 1, "이": 2, "삼": 3, "사": 4, "오": 5, "육": 6, "칠": 7, "팔": 8, "구": 9}
-
-        total_energy_consumed = 0
-        energy_history = []
-
-        for prev_arc in all_refined_arcs:
-            prev_status = prev_arc.get("status_shadow", {})
-            energy_loss_str = str(prev_status.get("internal_energy_loss", "0%"))
-
-            match = re.search(r"(\d+)%", energy_loss_str)
-            if match:
-                loss = int(match.group(1))
-                total_energy_consumed += loss
-                energy_history.append(f"Arc{prev_arc.get('arc_no')}: -{loss}%")
-            else:
-                loss = 0
-                for k, v in korean_hal.items():
-                    if f"{k}할" in energy_loss_str or f"{k} 할" in energy_loss_str:
-                        loss += v
-                        break
-                for k, v in korean_pun.items():
-                    if f"{k}푼" in energy_loss_str or f"{k} 푼" in energy_loss_str:
-                        loss += v
-                        break
-                if loss > 0:
-                    total_energy_consumed += loss
-                    energy_history.append(f"Arc{prev_arc.get('arc_no')}: -{loss}%")
-
-        final_energy = arc_end_state.get("internal_energy")
-        if final_energy is None:
-            final_energy = max(0, 100 - total_energy_consumed)
-
-        try:
-            final_energy = int(str(final_energy).replace("%", "").strip())
-        except (ValueError, TypeError):
-            final_energy = 50
-
-        if final_energy < 10:
-            final_energy = max(10, final_energy)
-
-        final_injuries = arc_end_state.get("injuries") or "없음"
-        final_location = arc_end_state.get("location") or joint_docs.get("final_location", "알 수 없음")
-        final_equipment = arc_end_state.get("equipment")
-        if final_equipment is None:
-            final_equipment = joint_docs.get("physical_inventory", "알 수 없음")
-        if isinstance(final_equipment, list):
-            final_equipment = ", ".join(str(x) for x in final_equipment) or "없음"
+        terminal_state = compute_terminal_arc_state(all_refined_arcs)
+        final_energy = terminal_state["final_energy"]
+        final_injuries = terminal_state["injuries"]
+        final_location = terminal_state["location"]
+        final_equipment = terminal_state["equipment_text"]
 
         acquired_items_str = "\n   ".join(all_acquired_items) if all_acquired_items else "없음"
         grants_str = "\n   ".join(all_grants_received) if all_grants_received else "없음"
+        energy_history = terminal_state["energy_history"]
         energy_history_str = " → ".join(energy_history) if energy_history else "소모 없음"
 
         return (
@@ -905,6 +874,7 @@ class PromptBuilder:
             "blueprint_text": blueprint_text,
             "history": [],
             "npc_profiles": {},
+            "external_pov_insert_policy": "",
             "pov": "",  # [V70] 시점 정보
         }
 
@@ -940,8 +910,11 @@ class PromptBuilder:
             try:
                 _bible_root = app.current_project.master_bible.get("MasterBible", {})
                 _pov = _bible_root.get("protagonist_config", {}).get("pov", "")
+                _external_policy = _bible_root.get("protagonist_config", {}).get("external_pov_insert_policy", "")
                 if _pov:
                     context["pov"] = _pov
+                if _external_policy:
+                    context["external_pov_insert_policy"] = _external_policy
             except (AttributeError, KeyError, TypeError):
                 pass  # POV 미설정 시 정상 생략
 

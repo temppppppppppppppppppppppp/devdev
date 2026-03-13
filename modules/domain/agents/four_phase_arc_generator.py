@@ -219,6 +219,90 @@ def _format_investment_advisory(results: list[dict]) -> str:
     return "\n".join(lines)
 
 
+def _merge_candidate_quality_flag(
+    flag: dict,
+    *,
+    force_reject: bool = False,
+    force_pass_with_fix: bool = False,
+    score_cap: int | None = None,
+    reason: str = "",
+    feedback: str = "",
+) -> dict:
+    if force_reject:
+        flag["force_reject"] = True
+    if force_pass_with_fix:
+        flag["force_pass_with_fix"] = True
+    if isinstance(score_cap, int):
+        current = flag.get("score_cap")
+        flag["score_cap"] = min(int(current), score_cap) if isinstance(current, int) else score_cap
+    if reason:
+        reasons = flag.setdefault("reasons", [])
+        if reason not in reasons:
+            reasons.append(reason[:160])
+    if feedback:
+        snippets = flag.setdefault("_feedback_snippets", [])
+        if feedback not in snippets:
+            snippets.append(feedback[:240])
+            flag["feedback"] = "\n".join(snippets[:3])
+    return flag
+
+
+def _build_candidate_quality_flags(
+    candidates: list[dict],
+    ns3b_notes: list[tuple[int, str]],
+    investment_advisories: list[dict],
+) -> list[dict]:
+    flags = [
+        {
+            "force_reject": False,
+            "force_pass_with_fix": False,
+            "score_cap": None,
+            "reasons": [],
+            "feedback": "",
+        }
+        for _ in candidates
+    ]
+
+    for idx, note in ns3b_notes:
+        if 0 <= idx < len(flags):
+            _merge_candidate_quality_flag(
+                flags[idx],
+                force_pass_with_fix=True,
+                score_cap=89,
+                reason=f"ns3b:{note}",
+                feedback=f"NS-3-B mismatch requires at least PASS_WITH_FIX.\n{note}",
+            )
+
+    for advisory in investment_advisories:
+        if not isinstance(advisory, dict):
+            continue
+        idx = advisory.get("candidate_idx")
+        if not isinstance(idx, int) or not (0 <= idx < len(flags)):
+            continue
+        severity = str(advisory.get("severity", "MINOR")).upper()
+        text = str(advisory.get("text") or advisory.get("issue") or "").strip()
+        if severity == "CRITICAL":
+            _merge_candidate_quality_flag(
+                flags[idx],
+                force_reject=True,
+                score_cap=69,
+                reason=f"investment-critical:{text or 'critical_advisory'}",
+                feedback=f"Critical investment advisory blocks automatic PASS.\n{text}".strip(),
+            )
+        elif severity == "MAJOR":
+            _merge_candidate_quality_flag(
+                flags[idx],
+                force_pass_with_fix=True,
+                score_cap=89,
+                reason=f"investment-major:{text or 'major_advisory'}",
+                feedback=f"Major investment advisory requires at least PASS_WITH_FIX.\n{text}".strip(),
+            )
+
+    for flag in flags:
+        flag.pop("_feedback_snippets", None)
+    return flags
+
+
 def _ns4_extract_time_markers(arc_data: dict) -> list:
     """[NS-4-S2] Arc tactical_doc/beat_sequence에서 날짜·상대시간 마커 추출 (regex, LLM 0회)."""
     import re as _re
@@ -730,7 +814,9 @@ class FourPhaseArcGenerator(BaseAgent):
             _ns3b_director_advisory = ""
             _investment_director_advisory = ""
             _investment_advisory: list[dict] = []
+            _candidate_quality_flags: list[dict] = []
             if all_candidates:
+                _ns3b_note_items: list[tuple[int, str]] = []
                 _ns3b_notes: list[str] = []
                 for _idx, _cand in enumerate(all_candidates, start=1):
                     if not isinstance(_cand, dict):
@@ -740,6 +826,7 @@ class FourPhaseArcGenerator(BaseAgent):
                     _warn = _check_arc_vs_block_targets(_cand, curr_block, arc_no)
                     if _warn:
                         _strategy = _cand.get("_strategy", f"candidate-{_idx}")
+                        _ns3b_note_items.append((_idx - 1, _warn))
                         _ns3b_notes.append(f"- 후보 {_idx} ({_strategy}): {_warn}")
                 if _ns3b_notes:
                     _ns3b_director_advisory = "[NS-3-B 수치 목표 괴리 경고]\n" + "\n".join(_ns3b_notes)
@@ -784,11 +871,27 @@ class FourPhaseArcGenerator(BaseAgent):
                 except Exception as e:
                     logging.warning("[F] Investment advisory generation failed: %s", str(e)[:120])
 
+            if all_candidates:
+                _candidate_quality_flags = _build_candidate_quality_flags(
+                    all_candidates,
+                    _ns3b_note_items,
+                    _investment_advisory,
+                )
+
             # ═══════════════════════════════════════════════════════════════
             # PHASE 2.6: DIRECTOR SELECTION — 후보 비교 선택 [TF-47]
             # ═══════════════════════════════════════════════════════════════
             if director and all_candidates:
-                _valid_for_director = [c for c in all_candidates if c.get("tactical_doc")]
+                _paired_for_director = [
+                    (cand, _candidate_quality_flags[idx] if idx < len(_candidate_quality_flags) else {})
+                    for idx, cand in enumerate(all_candidates)
+                    if cand.get("tactical_doc")
+                ]
+                _non_reject_pairs = [pair for pair in _paired_for_director if not pair[1].get("force_reject")]
+                if _non_reject_pairs:
+                    _paired_for_director = _non_reject_pairs
+                _valid_for_director = [pair[0] for pair in _paired_for_director]
+                _valid_quality_flags = [pair[1] for pair in _paired_for_director]
                 if _valid_for_director:
                     logging.info(f" [TF-47] Director Arc 비교 선택 ({len(_valid_for_director)}개 후보)")
                     try:
@@ -806,6 +909,7 @@ class FourPhaseArcGenerator(BaseAgent):
                             prev_arc_context=prev_arc_context,
                             constraint_block=full_constraint_block,
                             advisory=_director_advisory,
+                            candidate_quality_flags=_valid_quality_flags,
                         )
                         _dir_decision = _dir_result.get("decision", "REJECT")
                         _dir_arc = _dir_result.get("selected_arc")
@@ -881,8 +985,19 @@ class FourPhaseArcGenerator(BaseAgent):
                             continue  # retry loop
 
                     except Exception as e:
-                        logging.warning(f"[TF-47] Director 비교 실패, Validator 폴백: {str(e)[:100]}")
-                        best_arc = all_candidates[0]
+                        logging.warning(f"[TF-47] Director 비교 실패, fail-closed retry: {str(e)[:100]}")
+                        _dir_feedback = f"Director compare failed: {str(e)[:100]}"
+                        feedback = (
+                            f"{_base_director_feedback}\n[Director compare failure]\n{_dir_feedback}"
+                            if _base_director_feedback
+                            else _dir_feedback
+                        )
+                        pipeline_result["phases"]["director_selection"] = {
+                            "status": "error",
+                            "score": 0,
+                            "error": str(e)[:120],
+                        }
+                        continue
 
             # Director 미사용/실패 시 1순위 후보 폴백
             if best_arc is None and all_candidates:

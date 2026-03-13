@@ -12,12 +12,13 @@ import logging as _logging
 import time as _time
 import traceback as _traceback
 
-from modules.core.artifact_logging import build_candidate_key, snapshot_logged_artifact
+from modules.core.artifact_logging import build_candidate_key, normalize_artifact_meta, snapshot_logged_artifact
 from modules.core.constants import ContextLimits, Emojis, ErrorMessages
 from modules.core.continuity_pin_guard import apply_continuity_pins
 from modules.core.context_advisor import RetrievalSources
 from modules.core.fact_ledger import summarize_fact_ledger_numbers_block
 from modules.core.logging_keys import build_attempt_key, resolve_logging_session_id
+from modules.core.project_support import build_style_guide_summary, resolve_project_pov_contract
 from modules.core.semantic_query_broker import SemanticQueryBroker
 from modules.core.tactical_utils import extract_episode_tactical
 
@@ -171,58 +172,16 @@ def _build_world_state_advisory(world_state, *, max_chars: int = 1800) -> str:
 
 def _build_style_guide_advisory(project, *, max_chars: int = 600) -> str:
     """Blueprint semantic_context용 compact StyleGuide 요약."""
-    if project is None:
-        return ""
-
-    style_data = {}
-    try:
-        loader = getattr(project, "load_v20_anchor", None)
-        raw_style = loader("style_guide") if callable(loader) else None
-        if isinstance(raw_style, dict):
-            style_data = raw_style
-    except Exception as style_err:
-        _logging.debug("[QR-1] Stage3 StyleGuide 로드 실패 (비치명): %s", style_err)
-
-    bible_root = {}
-    try:
-        master_bible = getattr(project, "master_bible", None)
-        if isinstance(master_bible, dict):
-            bible_root = master_bible.get("MasterBible", master_bible)
-    except Exception:
-        bible_root = {}
-    protagonist_config = bible_root.get("protagonist_config", {}) if isinstance(bible_root, dict) else {}
-    bible_pov = str(protagonist_config.get("pov", "") or "").strip()
-
-    tone = str(style_data.get("tone", "") or "").strip()
-    pov = bible_pov or str(style_data.get("pov", "") or "").strip()
-    sentence_length = str(style_data.get("sentence_length", "") or "").strip()
-    paragraph_style = str(style_data.get("paragraph_style", "") or "").strip()
-    anti_ai_patterns = [str(item).strip() for item in (style_data.get("anti_ai_patterns") or []) if str(item).strip()]
-    forbidden_expr = [
-        str(item).strip() for item in (style_data.get("forbidden_expressions") or []) if str(item).strip()
-    ]
-
-    if not any([tone, pov, sentence_length, paragraph_style, anti_ai_patterns, forbidden_expr]):
-        return ""
-
-    lines = ["[StyleGuide 문체/anti-AI 참고]"]
-    core_bits: list[str] = []
-    if tone:
-        core_bits.append(f"톤={tone}")
-    if pov:
-        core_bits.append(f"시점={pov}")
-    if sentence_length:
-        core_bits.append(f"문장 길이={sentence_length}")
-    if paragraph_style:
-        core_bits.append(f"문단 스타일={paragraph_style}")
-    if core_bits:
-        lines.append("- " + ", ".join(core_bits))
-    if anti_ai_patterns:
-        lines.append("- anti-AI 금지: " + ", ".join(anti_ai_patterns[:6]))
-    if forbidden_expr:
-        lines.append("- 금지 표현: " + ", ".join(forbidden_expr[:5]))
-
-    return "\n".join(lines)[:max_chars]
+    return build_style_guide_summary(
+        project,
+        heading="[StyleGuide 문체/anti-AI 참고]",
+        max_chars=max_chars,
+        include_dialogue_ratio=False,
+        secondary_style_key="paragraph_style",
+        secondary_style_label="문단 스타일",
+        anti_ai_limit=6,
+        forbidden_limit=5,
+    )
 
 
 def _compose_stage3_work_focus_text(
@@ -566,9 +525,13 @@ class Stage3Orchestrator:
         existing_bp_max = ctx.current_project.db.get_latest_blueprint_number()  # 0 if empty
 
         # [Smart Skip] 기존 원고가 있다면 원고 기준으로도 체크
-        existing_ms_max_ep = (
-            ctx.get_max_episode_from_manuscripts() if callable(ctx.get_max_episode_from_manuscripts) else 0
-        )
+        latest_ep_fn = getattr(ctx.current_project, "get_latest_episode_number", None)
+        if callable(latest_ep_fn):
+            existing_ms_max_ep = max(0, int(latest_ep_fn() or 1) - 1)
+        else:
+            existing_ms_max_ep = (
+                ctx.get_max_episode_from_manuscripts() if callable(ctx.get_max_episode_from_manuscripts) else 0
+            )
 
         # 둘 중 큰 값을 기준으로 (Blueprint나 원고가 있는 화 다음부터)
         production_head = max(existing_bp_max, existing_ms_max_ep)
@@ -831,7 +794,14 @@ class Stage3Orchestrator:
                 working_ep, arc_no, arc_data, blueprint, pipeline_result, prev_blueprints, success_count, fail_count
             )
         else:
-            return self._handle_failure(working_ep, pipeline_result, success_count, fail_count, arc_no=arc_no)
+            return self._handle_failure(
+                working_ep,
+                pipeline_result,
+                success_count,
+                fail_count,
+                arc_no=arc_no,
+                blueprint=blueprint,
+            )
 
     # ─────────────────────────────────────────────────────────────
     # Entity Registry 캐시
@@ -994,11 +964,11 @@ class Stage3Orchestrator:
 
             # [S3-I1] Smart Context Retrieval — 과거 유사 Blueprint 참조
             try:
-                _s3_memory = getattr(self.app, "vec_memory", None) or getattr(self.app, "memory", None)
-                _s3_advisor = getattr(self.app, "context_advisor", None)
+                _s3_memory = getattr(ctx, "memory", None)
+                _s3_advisor = getattr(ctx, "context_advisor", None)
                 _s3_genre = ""
-                if hasattr(self.app, "selected_genre") and self.app.selected_genre:
-                    _s3_genre = self.app.selected_genre.get("type", "")
+                if getattr(ctx, "selected_genre", None):
+                    _s3_genre = ctx.selected_genre.get("type", "")
 
                 from modules.validation.threshold_helper import _threshold as _s3_th
 
@@ -1330,6 +1300,7 @@ class Stage3Orchestrator:
         _quality_gate_failed = bool(pipeline_result.get("quality_gate_failed", False))
         _quality_risk = bool(pipeline_result.get("quality_risk", False) or _quality_gate_failed)
         _observability_flags = _build_stage3_observability_flags(pipeline_result.get("_stage3_observability"))
+        _pov_contract = resolve_project_pov_contract(ctx.current_project)
         _duration_ms = int(pipeline_result.get("_stage3_duration_ms") or 0) or None
 
         # [LOG-1] 판정 경로 세션 로깅
@@ -1419,6 +1390,39 @@ class Stage3Orchestrator:
                     content_hash=_artifact_meta["content_hash"],
                     artifact_path=_artifact_meta["artifact_path"],
                 )
+                if hasattr(_db, "save_director_selection"):
+                    _selection_kwargs = self._build_stage3_director_selection_kwargs(
+                        pipeline_result,
+                        ep_num=working_ep,
+                        attempt_num=_attempt_num,
+                        attempt_key=_attempt_key,
+                        selected_strategy=_selected_strategy,
+                        score=_score,
+                        candidate_key=_candidate_key,
+                        advisory_flags=_observability_flags,
+                        artifact_meta=_artifact_meta,
+                    )
+                    if _selection_kwargs:
+                        try:
+                            _db.save_director_selection(**_selection_kwargs)
+                        except Exception as _ds_err:
+                            _logging.debug("[director_selections] Stage3 PASS 기록 실패 (비차단): %s", _ds_err)
+            _logging.info(
+                "[STAGE3_EPISODE_SUMMARY] ep=%d arc=%d attempt_key=%s verdict=%s score=%s strategy=%s candidate_key=%s artifact=%s observability=%s primary_pov=%s external_pov_insert_policy=%s style_guide_extracted_pov=%s effective_pov=%s",
+                working_ep,
+                arc_no,
+                _attempt_key,
+                _final_verdict,
+                _score,
+                _selected_strategy,
+                _candidate_key,
+                str(_artifact_meta.get("artifact_path", "") or "-"),
+                ",".join(sorted(_observability_flags.keys())) if _observability_flags else "-",
+                _pov_contract.get("primary_pov", "") or "-",
+                _pov_contract.get("external_pov_insert_policy", "") or "-",
+                _pov_contract.get("style_guide_extracted_pov", "") or "-",
+                _pov_contract.get("effective_pov", "") or "-",
+            )
         except Exception as _sa_err:
             _logging.debug("[stage_attempts] Stage3 PASS 기록 실패 (비차단): %s", _sa_err)
 
@@ -1477,6 +1481,7 @@ class Stage3Orchestrator:
                 blueprint["_continuity_pins"] = _pin_result["changes"]
                 ctx.ui.log(f"   [PinGuard] ep {working_ep} continuity pins applied: {len(_pin_result['changes'])}")
             if _pin_result.get("unresolved"):
+                blueprint["_continuity_pin_unresolved"] = _pin_result["unresolved"]
                 ctx.ui.log(f"   ?슚 [PinGuard] ep {working_ep} unresolved continuity pins")
                 if callable(ctx.audit_event):
                     ctx.audit_event(
@@ -1484,12 +1489,6 @@ class Stage3Orchestrator:
                         "stage3 continuity pin unresolved",
                         {"ep_num": working_ep, "items": _pin_result["unresolved"][:3]},
                     )
-                return {
-                    "next_ep": working_ep + 1,
-                    "success_count": success_count,
-                    "fail_count": fail_count + 1,
-                    "break": True,
-                }
 
         if callable(ctx.validate_blueprint_integrity) and not ctx.validate_blueprint_integrity(blueprint):
             ctx.ui.log(f"   🚨 [Integrity] 제{working_ep}화 Blueprint 무결성 실패")
@@ -1638,6 +1637,103 @@ class Stage3Orchestrator:
 
         return " | ".join(parts)[:500]
 
+    @staticmethod
+    def _stage3_selected_label(selected_index: object) -> str:
+        try:
+            idx = int(selected_index)
+        except (TypeError, ValueError):
+            return ""
+        if 0 <= idx < 26:
+            return chr(ord("A") + idx)
+        return ""
+
+    @staticmethod
+    def _build_stage3_director_selection_kwargs(
+        pipeline_result: dict,
+        *,
+        ep_num: int,
+        attempt_num: int,
+        attempt_key: str,
+        selected_strategy: str,
+        score: int,
+        candidate_key: str,
+        advisory_flags: dict | None = None,
+        artifact_meta: dict | None = None,
+    ) -> dict | None:
+        """Build a Stage 3 director_selections payload when compare metadata is available."""
+        if not isinstance(pipeline_result, dict):
+            return None
+
+        phases = pipeline_result.get("phases", {})
+        if not isinstance(phases, dict):
+            return None
+
+        validate = phases.get("validate", {})
+        if not isinstance(validate, dict) or not validate:
+            return None
+
+        verdict = str(pipeline_result.get("final_verdict") or validate.get("verdict") or "").strip()
+        if not verdict:
+            return None
+
+        selected_index = validate.get("selected_index", 0)
+        selection_reason = str(
+            validate.get("selection_reason")
+            or validate.get("comparison_notes")
+            or validate.get("feedback")
+            or validate.get("summary")
+            or ""
+        ).strip()
+        verdict_reason = str(
+            validate.get("verdict_reason")
+            or validate.get("feedback")
+            or pipeline_result.get("error")
+            or selection_reason
+            or ""
+        ).strip()
+        fix_scope = str(validate.get("fix_scope", "") or "").strip()
+
+        _advisory = dict(advisory_flags or {})
+        contradictions = validate.get("contradictions")
+        if isinstance(contradictions, list) and contradictions:
+            _advisory["contradictions"] = [str(item)[:160] for item in contradictions[:5]]
+        fix_scope_reasoning = str(validate.get("fix_scope_reasoning", "") or "").strip()
+        if fix_scope_reasoning:
+            _advisory["fix_scope_reasoning"] = fix_scope_reasoning[:300]
+        if fix_scope:
+            _advisory["fix_scope"] = fix_scope
+
+        phase = str(validate.get("phase", "") or "").strip()
+        candidate_count = validate.get("candidate_count")
+        try:
+            candidate_count = int(candidate_count)
+        except (TypeError, ValueError):
+            candidate_count = 3 if phase == "director_compare" else 1
+
+        _artifact = normalize_artifact_meta(
+            artifact_meta,
+            fallback_candidate_key=candidate_key,
+        )
+
+        return {
+            "ep_num": ep_num,
+            "round_num": attempt_num,
+            "selected_label": Stage3Orchestrator._stage3_selected_label(selected_index),
+            "selected_strategy": str(selected_strategy or ""),
+            "verdict": verdict,
+            "stage": 3,
+            "score": int(score or 0),
+            "selection_reason": selection_reason[:200],
+            "candidate_count": max(1, int(candidate_count or 1)),
+            "fix_scope": fix_scope,
+            "advisory_warnings": _advisory or None,
+            "verdict_reason": verdict_reason[:500],
+            "attempt_key": str(attempt_key or ""),
+            "candidate_key": _artifact["candidate_key"],
+            "content_hash": _artifact["content_hash"],
+            "artifact_path": _artifact["artifact_path"],
+        }
+
     def _detect_inventory_gaps(self, blueprint: dict, arc_data: dict) -> list[dict]:
         """[TF-49] Blueprint 참조 아이템 중 현재 미보유 항목 탐지."""
         ctx = self.ctx
@@ -1705,7 +1801,7 @@ class Stage3Orchestrator:
         ]
 
     def _handle_failure(
-        self, working_ep, pipeline_result, success_count, fail_count, arc_no: int | None = None
+        self, working_ep, pipeline_result, success_count, fail_count, arc_no: int | None = None, blueprint=None
     ) -> dict:
         """Blueprint 생성 실패 시 처리. 항상 break=True를 반환하여 루프를 종료한다
         (순차 의존성: 후속 에피소드는 현재 에피소드 Blueprint에 의존)."""
@@ -1749,8 +1845,21 @@ class Stage3Orchestrator:
             )
             _candidate_key = build_candidate_key(strategy=_selected_strategy, fallback="stage3")
             _observability_flags = _build_stage3_observability_flags(pipeline_result.get("_stage3_observability"))
+            _pov_contract = resolve_project_pov_contract(ctx.current_project)
             _duration_ms = int(pipeline_result.get("_stage3_duration_ms") or 0) or None
             _failure_category = _classify_stage3_failure_category(pipeline_result)
+            _artifact_meta = normalize_artifact_meta(None, fallback_candidate_key=_candidate_key)
+            if isinstance(blueprint, dict):
+                _artifact_meta = snapshot_logged_artifact(
+                    getattr(ctx, "current_project", None),
+                    stage=3,
+                    ep_num=working_ep,
+                    arc_num=_arc_num,
+                    attempt_num=_attempt_num,
+                    candidate_key=_candidate_key,
+                    artifact_kind="selected_blueprint",
+                    payload=blueprint,
+                )
             if not isinstance(_score, int):
                 try:
                     _score = int(_score)
@@ -1793,6 +1902,39 @@ class Stage3Orchestrator:
                     prompt_version=_prompt_version,
                     candidate_key=_candidate_key,
                 )
+                if hasattr(_db, "save_director_selection"):
+                    _selection_kwargs = self._build_stage3_director_selection_kwargs(
+                        pipeline_result,
+                        ep_num=working_ep,
+                        attempt_num=_attempt_num,
+                        attempt_key=_attempt_key,
+                        selected_strategy=_selected_strategy,
+                        score=_score,
+                        candidate_key=_candidate_key,
+                        advisory_flags=_observability_flags,
+                        artifact_meta=_artifact_meta,
+                    )
+                    if _selection_kwargs:
+                        try:
+                            _db.save_director_selection(**_selection_kwargs)
+                        except Exception as _ds_err:
+                            _logging.debug("[director_selections] Stage3 REJECT 기록 실패 (비차단): %s", _ds_err)
+            _logging.info(
+                "[STAGE3_EPISODE_SUMMARY] ep=%d arc=%d attempt_key=%s verdict=%s score=%s failure=%s candidate_key=%s reject_reason=%s observability=%s primary_pov=%s external_pov_insert_policy=%s style_guide_extracted_pov=%s effective_pov=%s",
+                working_ep,
+                _arc_num,
+                _attempt_key,
+                _final_verdict,
+                _score,
+                _failure_category or "-",
+                _candidate_key,
+                _reject_reason[:160],
+                ",".join(sorted(_observability_flags.keys())) if _observability_flags else "-",
+                _pov_contract.get("primary_pov", "") or "-",
+                _pov_contract.get("external_pov_insert_policy", "") or "-",
+                _pov_contract.get("style_guide_extracted_pov", "") or "-",
+                _pov_contract.get("effective_pov", "") or "-",
+            )
         except Exception as _sa_err:
             _logging.debug("[stage_attempts] Stage3 REJECT 기록 실패 (비차단): %s", _sa_err)
 

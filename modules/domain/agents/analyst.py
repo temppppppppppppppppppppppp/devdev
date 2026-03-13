@@ -136,15 +136,7 @@ class Analyst(BaseAgent):
         return "\n\n".join(part for part in parts if part)
 
     def _cache_project_name(self, cache_type: str) -> str:
-        current_project = getattr(self.context, "current_project", None)
-        raw_name = (
-            getattr(current_project, "name", None)
-            or getattr(self.context, "project_name", None)
-            or getattr(self.context, "genre", None)
-            or "default"
-        )
-        safe_name = re.sub(r"[^0-9A-Za-z_.-]+", "_", str(raw_name or "")).strip("_.") or "default"
-        return f"{safe_name}_{cache_type}"[:80]
+        return self._context_cache_project_namespace(cache_type)
 
     @staticmethod
     def _build_cached_task_stub(task_label: str, extra: str = "") -> str:

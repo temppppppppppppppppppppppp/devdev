@@ -1,7 +1,11 @@
-"""[Phase 4B-3] StateService — 검증/아키타입/패턴 헬퍼 서비스
+"""[Phase 4B-3] StateService — validation/pattern helper service
 
 원본: main_a.py:2707-3132 (14개 메서드, ~345줄)
-Protocol 참조: modules/protocols/app_services.py StateServiceProtocol
+
+NOTE:
+- 이 구현체는 PromptBuilder/FeedbackSystem 기반 helper 묶음이다.
+- `modules/protocols/app_services.py::StateServiceProtocol`은 `StateTracker` facade surface를
+  모델링하며, 본 helper service의 conform target이 아니다.
 """
 
 from __future__ import annotations

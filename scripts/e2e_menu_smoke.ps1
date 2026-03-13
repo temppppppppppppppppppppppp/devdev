@@ -8,6 +8,7 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+$Utf8NoBom = [System.Text.UTF8Encoding]::new($false)
 
 function Try-ParseJson {
     param(
@@ -73,7 +74,7 @@ function Save-Json {
         [object]$Object
     )
     $json = $Object | ConvertTo-Json -Depth 100
-    Set-Content -Path $Path -Value $json -Encoding UTF8
+    [System.IO.File]::WriteAllText($Path, $json, $Utf8NoBom)
 }
 
 function Append-Jsonl {
@@ -82,7 +83,7 @@ function Append-Jsonl {
         [object]$Object
     )
     $line = $Object | ConvertTo-Json -Depth 100 -Compress
-    Add-Content -Path $Path -Value $line -Encoding UTF8
+    [System.IO.File]::AppendAllText($Path, $line + [Environment]::NewLine, $Utf8NoBom)
 }
 
 $cases = @(
@@ -199,7 +200,7 @@ try {
             $lastFailure = $entry
             $line = "FAIL {0}: expected(status={1}, code={2}) actual(status={3}, code={4}, kind={5})" -f `
                 $case.id, $case.expectStatus, $case.expectCode, $actualStatus, $actualCode, $http.kind
-            Add-Content -Path $failLogPath -Value $line -Encoding UTF8
+            [System.IO.File]::AppendAllText($failLogPath, $line + [Environment]::NewLine, $Utf8NoBom)
             Write-Host $line
 
             if ($StopOnFail) {
@@ -237,7 +238,7 @@ try {
     $fallbackPath = Join-Path $OutDir "smoke-failures.log"
     try {
         New-Item -ItemType Directory -Path $OutDir -Force | Out-Null
-        Add-Content -Path $fallbackPath -Value ("FATAL: " + $_.Exception.Message) -Encoding UTF8
+        [System.IO.File]::AppendAllText($fallbackPath, ("FATAL: " + $_.Exception.Message) + [Environment]::NewLine, $Utf8NoBom)
     } catch {
     }
     Write-Host ("FATAL smoke script error: " + $_.Exception.Message)

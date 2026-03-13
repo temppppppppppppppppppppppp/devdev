@@ -42,6 +42,9 @@ class ReverseExpander:
     _WORLD_SAMPLE_MAX = 6000
     _EPISODE_BIBLE_MAX_CHARS = 10000
 
+    class DraftEncodingError(UnicodeError):
+        """입력 원고를 안전하게 복구할 수 없을 때 발생."""
+
     def __init__(self, project_context=None, llm_client=None) -> None:
         self.project = project_context
         self.client = llm_client
@@ -142,21 +145,7 @@ class ReverseExpander:
     def load_drafts_from_file(self, file_path: str) -> int:
         """단일 파일에서 에피소드들 로드"""
         path = Path(file_path)
-        try:
-            with open(path, encoding="utf-8") as f:
-                text = f.read()
-        except UnicodeDecodeError:
-            # [TF-R3-S0-01] cp949/euc-kr 등 비-UTF-8 파일 폴백
-            logging.warning(f"[!] UTF-8 인코딩 실패, cp949로 재시도: {file_path}")
-            try:
-                with open(path, encoding="cp949") as f:
-                    text = f.read()
-            except UnicodeDecodeError:
-                logging.warning(f"[!] cp949도 실패, errors='replace'로 최종 폴백: {file_path}")
-                with open(path, encoding="utf-8", errors="replace") as f:
-                    text = f.read()
-                if "\ufffd" in text:
-                    logging.warning(f"[!] errors='replace' 폴백으로 깨진 문자(U+FFFD) 포함됨: {file_path}")
+        text = self._read_draft_text(path)
 
         # ⓚ 제N화 패턴으로 분리
         pattern = r"ⓚ\s*제(\d+)화[.\s]*([^\n]*)"
@@ -207,24 +196,27 @@ class ReverseExpander:
         numbered_files.sort(key=lambda x: x[0])
 
         for ep_num, f in numbered_files:
-            try:
-                with open(f, encoding="utf-8") as fp:
-                    content = fp.read()
-            except UnicodeDecodeError:
-                # [TF-R3-S0-03] cp949 폴백 (load_drafts_from_file과 동일 패턴)
-                logging.warning(f"[!] UTF-8 실패, cp949 재시도: {f}")
-                try:
-                    with open(f, encoding="cp949") as fp:
-                        content = fp.read()
-                except UnicodeDecodeError:
-                    logging.warning(f"[!] cp949도 실패, errors='replace'로 최종 폴백: {f}")
-                    with open(f, encoding="utf-8", errors="replace") as fp:
-                        content = fp.read()
-                    if "\ufffd" in content:
-                        logging.warning(f"[!] errors='replace' 폴백으로 깨진 문자(U+FFFD) 포함됨: {f}")
+            content = self._read_draft_text(f)
             self.raw_drafts.append({"ep_num": ep_num, "title": f"제{ep_num}화", "content": content})
 
         return len(self.raw_drafts)
+
+    def _read_draft_text(self, path: Path) -> str:
+        """원고 입력은 UTF-8을 우선하고 cp949 복구까지만 허용한다."""
+        try:
+            with open(path, encoding="utf-8") as handle:
+                return handle.read()
+        except UnicodeDecodeError:
+            logging.warning(f"[!] UTF-8 인코딩 실패, cp949로 재시도: {path}")
+
+        try:
+            with open(path, encoding="cp949") as handle:
+                return handle.read()
+        except UnicodeDecodeError as exc:
+            logging.error("[!] 복구 불가 인코딩 입력 감지, fail-closed 처리: %s", path)
+            raise self.DraftEncodingError(
+                f"UTF-8/cp949로 복구할 수 없는 입력 파일입니다: {path}"
+            ) from exc
 
     # ============================================
     # Phase 2: 장르 감지 및 프리셋 초기화
@@ -628,6 +620,7 @@ JSON:
             # 4. 회차별 상태 추출 (ProgressBar)
             print_info(f"회차별 상태 추출 ({len(self.raw_drafts)}개 에피소드)")
             self._extract_episode_bibles_with_progress()
+            self._ensure_plot_roadmap()
 
             # 5. 스타일 가이드 추출
             with Spinner("스타일 가이드 추출 중", style="star"):
@@ -660,6 +653,7 @@ JSON:
 
             logging.info("[*] 회차별 상태 추출...")
             self.extract_episode_bibles()
+            self._ensure_plot_roadmap()
 
             logging.info("[*] 스타일 가이드 추출...")
             self.extract_style_guide()
@@ -672,6 +666,82 @@ JSON:
             logging.warning("[ReverseExpander] 스타일 가이드 추출 실패 — None 반환")
 
         return self.bible, self.episode_bibles, self.style_guide
+
+    def _build_arc_stubs(self) -> list[dict[str, Any]]:
+        """역설계 결과를 plot_roadmap/arc anchor 양쪽에서 재사용할 수 있는 arc stub으로 정규화한다."""
+        if not self.raw_drafts:
+            return []
+
+        ep_nums = sorted([d["ep_num"] for d in self.raw_drafts if d.get("ep_num") is not None])
+        if not ep_nums:
+            return []
+
+        max_ep = max(ep_nums)
+        epa = VolumeSettings.EPISODES_PER_ARC
+        arc_count = (max_ep - 1) // epa + 1
+
+        ep_bible_map = (
+            {eb.get("ep_num"): eb for eb in self.episode_bibles if eb.get("ep_num") is not None}
+            if self.episode_bibles
+            else {}
+        )
+
+        arc_stubs = []
+        for arc_no in range(1, arc_count + 1):
+            ep_start = (arc_no - 1) * epa + 1
+            ep_end = min(arc_no * epa, max_ep)
+            arc_episodes = [
+                d for d in self.raw_drafts if d.get("ep_num") is not None and ep_start <= d["ep_num"] <= ep_end
+            ]
+            if not arc_episodes:
+                continue
+
+            arc_events = []
+            for ep in arc_episodes:
+                ep_bible = ep_bible_map.get(ep["ep_num"], {})
+                arc_events.extend(ep_bible.get("key_events", []))
+
+            arc_stubs.append(
+                {
+                    "_stub": True,
+                    "_source": "reverse_engineered",
+                    "arc_no": arc_no,
+                    "volume_no": (arc_no - 1) // VolumeSettings.ARCS_PER_VOLUME + 1,
+                    "ep_start": ep_start,
+                    "ep_end": ep_end,
+                    "ep_count": max(0, ep_end - ep_start + 1),
+                    "tactical_doc": f"[역설계] Arc {arc_no}: 제{ep_start}화~제{ep_end}화 (원고 존재)",
+                    "key_events": arc_events[:10],
+                    "joint_docs": {},
+                    "state_changes": {},
+                }
+            )
+
+        return arc_stubs
+
+    def _ensure_plot_roadmap(self) -> int:
+        if not isinstance(self.bible, dict):
+            return 0
+
+        master = self.bible.get("MasterBible")
+        if not isinstance(master, dict):
+            return 0
+
+        existing = master.get("plot_roadmap", [])
+        if isinstance(existing, list) and existing:
+            return len(existing)
+
+        roadmap = []
+        for i, arc in enumerate(self._build_arc_stubs()):
+            entry = {"block_no": i + 1}
+            entry.update(arc)
+            roadmap.append(entry)
+
+        if not roadmap:
+            return 0
+
+        master["plot_roadmap"] = roadmap
+        return len(roadmap)
 
     def _extract_episode_bibles_with_progress(self) -> None:
         """스피너와 함께 회차별 상태 추출 — [G-2] 배치 내 순차 처리."""
@@ -947,53 +1017,9 @@ JSON:
 
     def _save_arc_stubs(self, ctx) -> int:
         """Arc stub을 arcs anchor에 저장"""
-        if not self.raw_drafts:
+        arc_stubs = self._build_arc_stubs()
+        if not arc_stubs:
             return 0
-
-        # 에피소드 범위로 Arc 계산
-        ep_nums = sorted([d["ep_num"] for d in self.raw_drafts if d.get("ep_num") is not None])
-        if not ep_nums:
-            return 0
-        max_ep = max(ep_nums)
-        epa = VolumeSettings.EPISODES_PER_ARC
-        arc_count = (max_ep - 1) // epa + 1
-
-        _eb_map = (
-            {eb.get("ep_num"): eb for eb in self.episode_bibles if eb.get("ep_num") is not None}
-            if self.episode_bibles
-            else {}
-        )  # [P1-A3-1] None 키 필터, hoisted before loop
-        arc_stubs = []
-        for arc_no in range(1, arc_count + 1):
-            ep_start = (arc_no - 1) * epa + 1
-            ep_end = min(arc_no * epa, max_ep)
-
-            # 해당 Arc의 에피소드들
-            arc_episodes = [
-                d for d in self.raw_drafts if d.get("ep_num") is not None and ep_start <= d["ep_num"] <= ep_end
-            ]
-            if not arc_episodes:
-                continue
-
-            # Arc 내 key_events 수집
-            arc_events = []
-            for ep in arc_episodes:
-                _ep_bible = _eb_map.get(ep["ep_num"], {})
-                arc_events.extend(_ep_bible.get("key_events", []))
-
-            stub = {
-                "_stub": True,
-                "_source": "reverse_engineered",
-                "arc_no": arc_no,
-                "volume_no": (arc_no - 1) // VolumeSettings.ARCS_PER_VOLUME + 1,
-                "ep_start": ep_start,
-                "ep_end": ep_end,
-                "tactical_doc": f"[역설계] Arc {arc_no}: 제{ep_start}화~제{ep_end}화 (원고 존재)",
-                "key_events": arc_events[:10],  # 최대 10개
-                "joint_docs": {},
-                "state_changes": {},
-            }
-            arc_stubs.append(stub)
 
         # arcs anchor에 저장
         try:

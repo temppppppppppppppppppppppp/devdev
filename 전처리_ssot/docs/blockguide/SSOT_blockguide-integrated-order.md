@@ -224,7 +224,19 @@
 ### 3A. `seed_baseline_sync`와 `sequential_production`을 구분한다
 
 Production을 시작하거나 compaction 뒤 재개할 때는 먼저
-`treatments/preprocess/{work_id}/docs/sequential_run_status.md`를 읽는다.
+상태 파일을 읽는다.
+
+읽기 우선순위:
+
+1. `treatments/preprocess/{work_id}/sequential_run_status.json` (primary)
+2. `treatments/preprocess/{work_id}/docs/sequential_run_status.md` (deprecated fallback, 유예 기간 내만 허용)
+3. 둘 다 없으면 `status_missing` → `restart_at_block_001`
+
+cutover 기준:
+
+- 기존 작품: `run_class`가 `sequential_production`으로 전환 시 JSON 필수
+- 신규 작품: Stage 0 완료 시 JSON 필수
+- 유예: cutover 후 30일간 md 병행, 이후 JSON-only (md-only는 hard_fail)
 
 run class는 아래 둘만 허용한다.
 
@@ -286,7 +298,7 @@ run class는 아래 둘만 허용한다.
 5. 첫 블록(`Block 1`) 또는 아크 전환 직후 첫 블록(`11/21/31/41/51/61`)이면 더 느리게 간다.
 6. 이번 턴 생산 단위는 블록 1개로 고정한다.
 7. 직전 블록의 수동 감리 메모가 없으면 다음 블록으로 넘어가지 않는다.
-8. `treatments/preprocess/{work_id}/docs/sequential_run_status.md`가 있으면 먼저 읽는다.
+8. 상태 파일을 먼저 읽는다: `sequential_run_status.json` (primary) → `.md` (deprecated fallback, 유예 기간 내만).
 9. `run_class = seed_baseline_sync`면 기존 block 폴더와 `04_tr_final/`은 참고 seed로만 취급한다.
 10. 최고 번호 block 디렉터리 개수나 final draft 존재만으로 진행률을 판정하지 않는다.
 11. 재개 근거가 모호하면 `Block 001`부터 다시 시작한다.
@@ -331,9 +343,21 @@ run class는 아래 둘만 허용한다.
 - P0 또는 감리 FAIL
 - 직전 SSOT 부재
 - 직전 단위 수동 감리 메모 부재
-- `sequential_run_status.md`와 실제 수동 감리 기록이 충돌
+- `sequential_run_status.json` (또는 .md deprecated fallback)와 실제 수동 감리 기록이 충돌
 - `seed_baseline_sync`를 `sequential_production`처럼 취급하려는 시도
 - 사용자가 방향 수정 또는 수동 검토를 명시
+
+**정지 게이트가 아닌 것 (멈추면 안 되는 것):**
+
+- **단계 전환**: Stage 0→Planning, Planning→Production, Production→BI는 정지 게이트가 아니다. 직전 단계가 정상 완료되었으면 §2 판정표에 따라 다음 단계로 **멈추지 않고** 자동 진행한다.
+- **큰 마일스톤 도달**: Phase 0 JSON 완성, TR 70블록 완성, BI 스켈레톤 완성 등 큰 산출물 생성 직후에 사용자에게 "계속할까요?"를 묻는 것은 금지한다. 정지 게이트가 발동하지 않았으면 §2 판정표로 다음 단계를 결정하고 바로 실행한다.
+- **확인 질문 자체**: 정지 게이트에 해당하지 않는 상황에서 사용자에게 진행 여부를 묻는 행위는 auto-run 위반이다.
+
+**컨텍스트 열화 방지 (전 모델 공통):**
+
+- **하드캡**: 한 세션에서 블록 7개 초과 생산 금지. 7블록 도달 시 `{work_id}_production_state.json` 저장 후 정지. 컨텍스트가 남아 있어도 멈춘다.
+- **품질 저하 감지**: 매 블록 생산 후, 이번 블록의 `deal_type`이 직전 3블록 중 하나와 동일하면 즉시 정지. "품질 저하 감지. state 저장 완료. 새 세션에서 재개 필요." 출력. 요약하여 이어 쓰지 않는다.
+- **상세 규약**: `TF-LCP-long-context-persistence.md`, `TF-OBP-output-boundary-protocol.md`
 
 ---
 
@@ -355,6 +379,9 @@ run class는 아래 둘만 허용한다.
 12. weakness는 이름 치환이 아니라 구조 차이로 확인한다.
 13. `auto-run`은 순서 자동 진행이지, 스크립트 자동 실행이 아니다.
 14. Production은 항상 블록 1개씩 쌓고, 각 블록마다 수동 감리를 남긴다.
+15. **단계 전환은 정지 게이트가 아니다.** Phase 0 끝나면 멈추지 말고 Production으로, TR 끝나면 멈추지 말고 BI로 바로 넘어간다. "계속할까요?"를 묻지 않는다.
+16. **블록 7개 넘기지 마라.** 한 세션에서 7블록 생산하면 무조건 멈추고 state 저장. 요약해서 이어 쓰지 마라.
+17. **deal_type이 겹치면 멈춰라.** 이번 블록 deal_type이 직전 3블록과 같으면 품질 저하다. 즉시 멈추고 새 세션에서 다시 시작.
 
 ---
 

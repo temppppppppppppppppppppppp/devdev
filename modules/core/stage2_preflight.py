@@ -9,6 +9,7 @@ import threading
 from modules.core.constants import smart_truncate
 from modules.core.context_advisor import RetrievalSources
 from modules.core.fact_ledger import summarize_fact_ledger_numbers_block
+from modules.core.project_support import build_style_guide_summary
 from modules.core.semantic_query_broker import SemanticQueryBroker
 from modules.validation.threshold_helper import _threshold
 
@@ -97,6 +98,52 @@ class Stage2PreflightAnalysis:
                 _consume(container.get(key))
 
         return names[:50]
+
+    @staticmethod
+    def _build_stage3_to_2_reverse_feedback_fallback(
+        arc_stage3_failures: list[dict],
+        global_arc_no: int,
+        *,
+        status: str,
+    ) -> str:
+        reason_counts = {}
+        detail_lines = []
+        for failure in arc_stage3_failures:
+            reason = str(failure.get("reason", "사유 미상") or "사유 미상")[:120]
+            reason_counts[reason] = reason_counts.get(reason, 0) + 1
+            issue = str(failure.get("specific_issue", "") or "").strip()
+            if issue and issue not in detail_lines:
+                detail_lines.append(issue[:120])
+
+        lines = [
+            "",
+            "=" * 50,
+            f"[V60.9 Arc {global_arc_no} Blueprint 반복 실패 - fallback]",
+            "=" * 50,
+            f"Stage3->2 reverse feedback helper 상태: {status}",
+            f"Blueprint 설계 실패 {len(arc_stage3_failures)}회 누적.",
+            "다음 Arc 재시도에서는 아래 실패 사유를 직접 구조 제약으로 승격하세요.",
+        ]
+        for reason, count in sorted(reason_counts.items(), key=lambda item: (-item[1], item[0]))[:3]:
+            lines.append(f"  - {reason}: {count}회")
+        if detail_lines:
+            lines.append("")
+            lines.append("반복된 구체 지시:")
+            for issue in detail_lines[:3]:
+                lines.append(f"  - {issue}")
+        lines.extend(
+            [
+                "",
+                "권장 조치:",
+                "  1. 핵심 갈등 축을 줄여 Blueprint 의존성을 단순화할 것",
+                "  2. 아이템/NPC 배치 시점을 명시해 설정 충돌을 줄일 것",
+                "  3. 직전 실패 사유가 반복된 장면은 Arc 구조에서 제거 또는 재배치할 것",
+                "",
+                "=" * 50,
+                "",
+            ]
+        )
+        return "\n".join(lines)
 
     def _execute_stage2_retrieval_plan(
         self,
@@ -290,63 +337,14 @@ class Stage2PreflightAnalysis:
     def _build_style_guide_summary(self, *, max_chars: int = 1200) -> str:
         """Stage 2 Analyst용 compact StyleGuide 요약."""
         project = getattr(self.ctx, "current_project", None)
-        if project is None:
-            return ""
-
-        style_data = {}
-        try:
-            loader = getattr(project, "load_v20_anchor", None)
-            raw_style = loader("style_guide") if callable(loader) else None
-            if isinstance(raw_style, dict):
-                style_data = raw_style
-        except Exception as style_err:
-            logging.debug("[QR-1] Stage2 StyleGuide 로드 실패 (비치명): %s", style_err)
-
-        bible_root = {}
-        try:
-            master_bible = getattr(project, "master_bible", None)
-            if isinstance(master_bible, dict):
-                bible_root = master_bible.get("MasterBible", master_bible)
-        except Exception:
-            bible_root = {}
-        protagonist_config = bible_root.get("protagonist_config", {}) if isinstance(bible_root, dict) else {}
-        bible_pov = str(protagonist_config.get("pov", "") or "").strip()
-
-        tone = str(style_data.get("tone", "") or "").strip()
-        pov = bible_pov or str(style_data.get("pov", "") or "").strip()
-        sentence_length = str(style_data.get("sentence_length", "") or "").strip()
-        description_style = str(style_data.get("description_style", "") or "").strip()
-        dialogue_ratio = style_data.get("dialogue_ratio")
-        anti_ai_patterns = [str(item).strip() for item in (style_data.get("anti_ai_patterns") or []) if str(item).strip()]
-        forbidden_expr = [
-            str(item).strip() for item in (style_data.get("forbidden_expressions") or []) if str(item).strip()
-        ]
-
-        if not any([tone, pov, sentence_length, description_style, anti_ai_patterns, forbidden_expr]):
-            return ""
-
-        core_bits: list[str] = []
-        if tone:
-            core_bits.append(f"톤={tone}")
-        if pov:
-            core_bits.append(f"시점={pov}")
-        if isinstance(dialogue_ratio, (int, float)):
-            core_bits.append(f"대화 비율={dialogue_ratio:.0%}")
-        if sentence_length:
-            core_bits.append(f"문장 길이={sentence_length}")
-        if description_style:
-            core_bits.append(f"묘사={description_style}")
-
-        lines = ["[문체 가이드 요약]"]
-        if core_bits:
-            lines.append("- " + ", ".join(core_bits))
-        if anti_ai_patterns:
-            lines.append("- anti-AI 금지: " + ", ".join(anti_ai_patterns[:5]))
-        if forbidden_expr:
-            lines.append("- 금지 표현: " + ", ".join(forbidden_expr[:5]))
-
-        text = "\n".join(lines).strip()
-        return smart_truncate(text, max_chars=max_chars, head_chars=max_chars // 2)
+        return build_style_guide_summary(
+            project,
+            heading="[문체 가이드 요약]",
+            max_chars=max_chars,
+            include_dialogue_ratio=True,
+            secondary_style_key="description_style",
+            secondary_style_label="묘사",
+        )
 
     def _build_protagonist_config_summary(self) -> str:
         """Stage 2 enhanced_context 상단용 compact protagonist_config 요약."""
@@ -366,8 +364,9 @@ class Stage2PreflightAnalysis:
         world_origin = str(protagonist_config.get("world_origin", "") or "").strip()
         incarnation_type = str(protagonist_config.get("incarnation_type", "") or "").strip()
         pov = str(protagonist_config.get("pov", "") or "").strip()
+        external_pov_insert_policy = str(protagonist_config.get("external_pov_insert_policy", "") or "").strip()
 
-        if not any([world_origin, incarnation_type, pov]):
+        if not any([world_origin, incarnation_type, pov, external_pov_insert_policy]):
             return ""
 
         lines = ["[주인공 설정 요약]"]
@@ -378,6 +377,8 @@ class Stage2PreflightAnalysis:
             parts.append(f"환생 유형={incarnation_type}")
         if pov:
             parts.append(f"시점={pov}")
+        if external_pov_insert_policy:
+            parts.append(f"외부 시점 삽입={external_pov_insert_policy}")
         if parts:
             lines.append("- " + ", ".join(parts))
         if pov == "1인칭":
@@ -938,42 +939,59 @@ class Stage2PreflightAnalysis:
             self.ctx.ui.log(f"      📢 [V60.21] Focus Mode 활성화 - 컨텍스트 {context_size:,}자 (제약 보존)")
 
         # [V60.9] Stage 3→2 역방향 피드백 주입
-        try:
-            if self.ctx.stage_rejection_history:
-                arc_stage3_failures = [
-                    r
-                    for r in self.ctx.stage_rejection_history
-                    if r.get("stage") == 3 and r.get("arc_no") == global_arc_no
-                ]
-                if len(arc_stage3_failures) >= 3:
-                    reverse_feedback_3to2 = self.ctx.generate_reverse_feedback_stage3_to_2(
-                        architect_failures=arc_stage3_failures, arc_no=global_arc_no
-                    )
-                    if reverse_feedback_3to2:
-                        stage3_warning = "\n\n🔄 [V60.9 Stage 3→2 역방향 피드백]\n"
-                        stage3_warning += f"이 Arc(#{global_arc_no})에서 Blueprint 설계가 {len(arc_stage3_failures)}회 실패했습니다.\n"
-                        stage3_warning += "Arc 구조 자체에 문제가 있을 수 있습니다.\n\n"
-                        stage3_warning += f"[Blueprint 실패 패턴 분석]\n{reverse_feedback_3to2}\n"
-                        enhanced_context = stage3_warning + "\n" + enhanced_context
-                        self.ctx.ui.log(
-                            f"      🔄 [V60.9] Stage 3→2 역방향 피드백 주입 ({len(arc_stage3_failures)}회 실패 기반)"
+        if self.ctx.stage_rejection_history:
+            arc_stage3_failures = [
+                r for r in self.ctx.stage_rejection_history if r.get("stage") == 3 and r.get("arc_no") == global_arc_no
+            ]
+            if len(arc_stage3_failures) >= 3:
+                reverse_feedback_3to2 = ""
+                callback = getattr(self.ctx, "generate_reverse_feedback_stage3_to_2", None)
+                if callable(callback):
+                    try:
+                        reverse_feedback_3to2 = callback(
+                            architect_failures=arc_stage3_failures,
+                            arc_no=global_arc_no,
                         )
-        except Exception as rf32_err:
-            if callable(getattr(self.ctx, "audit_event", None)):
-                self.ctx.audit_event(
-                    "v60_9_stage3to2_error", "stage 3→2 reverse feedback failed", {"error": str(rf32_err)[:100]}
-                )
+                    except Exception as rf32_err:
+                        if callable(getattr(self.ctx, "audit_event", None)):
+                            self.ctx.audit_event(
+                                "v60_9_stage3to2_error",
+                                "stage 3→2 reverse feedback failed",
+                                {"error": str(rf32_err)[:100], "arc_no": global_arc_no},
+                            )
+                        reverse_feedback_3to2 = self._build_stage3_to_2_reverse_feedback_fallback(
+                            arc_stage3_failures,
+                            global_arc_no,
+                            status=f"callback_error:{type(rf32_err).__name__}",
+                        )
+                else:
+                    reverse_feedback_3to2 = self._build_stage3_to_2_reverse_feedback_fallback(
+                        arc_stage3_failures,
+                        global_arc_no,
+                        status="callback_missing",
+                    )
+
+                if reverse_feedback_3to2:
+                    stage3_warning = "\n\n🔄 [V60.9 Stage 3→2 역방향 피드백]\n"
+                    stage3_warning += f"이 Arc(#{global_arc_no})에서 Blueprint 설계가 {len(arc_stage3_failures)}회 실패했습니다.\n"
+                    stage3_warning += "Arc 구조 자체에 문제가 있을 수 있습니다.\n\n"
+                    stage3_warning += f"[Blueprint 실패 패턴 분석]\n{reverse_feedback_3to2}\n"
+                    enhanced_context = stage3_warning + "\n" + enhanced_context
+                    self.ctx.ui.log(
+                        f"      🔄 [V60.9] Stage 3→2 역방향 피드백 주입 ({len(arc_stage3_failures)}회 실패 기반)"
+                    )
 
         # [Item4] Stage 4→2 역방향 피드백 주입 (이전 Arc 집필 난이도 기반)
         try:
+            stage4_feedback_callback = getattr(self.ctx, "generate_reverse_feedback_stage4_to_2", None)
             if (
                 global_arc_no > 1
                 and self.ctx.pass_rate_monitor
-                and self.ctx.generate_reverse_feedback_stage4_to_2
+                and callable(stage4_feedback_callback)
                 and hasattr(self.ctx.pass_rate_monitor, "get_arc_difficulty")
             ):
                 prev_difficulty = self.ctx.pass_rate_monitor.get_arc_difficulty(global_arc_no - 1)
-                reverse_feedback_4to2 = self.ctx.generate_reverse_feedback_stage4_to_2(prev_difficulty)
+                reverse_feedback_4to2 = stage4_feedback_callback(prev_difficulty)
                 if reverse_feedback_4to2:
                     stage4_warning = "\n\n🔄 [Item4 Stage 4→2 역방향 피드백]\n"
                     stage4_warning += f"{reverse_feedback_4to2}\n"

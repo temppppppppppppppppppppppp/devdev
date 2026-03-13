@@ -209,7 +209,7 @@ preprocess 작업공간에는 이미 block 디렉터리나 final draft가 채워
 
 재개 규칙:
 
-1. Production 재개 전 `treatments/preprocess/{work_id}/docs/sequential_run_status.md`를 먼저 읽는다.
+1. Production 재개 전 상태 파일을 읽는다: `sequential_run_status.json` (primary) → `.md` (deprecated fallback, 유예 기간 내만).
 2. `run_class = sequential_production`이고 `last_sequential_block_pass = N`이며 `manual_audit_ready = true`면 다음 단위는 `Block {N+1}`이다.
 3. `run_class = seed_baseline_sync`면 `03_tr_blocks/`에 블록이 이미 많이 있어도 진행률은 0 또는 기록된 실제 순차 PASS 수로 본다.
 4. `04_tr_final/` 존재, 최고 번호 block 디렉터리, final draft 존재만으로는 다음 블록을 정하지 않는다.
@@ -231,7 +231,7 @@ preprocess 작업공간에는 이미 block 디렉터리나 final draft가 채워
 
 - 사용자가 명시적으로 방향을 바꾸는 경우
 - 필수 SSOT(`Phase 0`, 직전 `draft`)가 없거나 손상된 경우
-- `sequential_run_status.md`와 실제 수동 감리 기록이 충돌하는 경우
+- `sequential_run_status.json` (또는 .md fallback)와 실제 수동 감리 기록이 충돌하는 경우
 - `seed_baseline_sync`를 진짜 순차 production 완료처럼 취급하려는 경우
 - 감리에서 P0가 떠서 다음 배치로 넘어갈 수 없는 경우
 
@@ -255,8 +255,8 @@ preprocess 작업공간에는 이미 block 디렉터리나 final draft가 채워
 4. `auto-run`의 의미는 **다음 블록으로 순차 진행**이지, Python 스크립트를 전량 실행하라는 뜻이 아니다.
 5. 1~3이 모두 참이고 수동 감리 메모가 있으면 사용자 입력 없이 다음 단위로 진행한다.
 5. 1개라도 거짓이면 즉시 정지하고 실패 지점을 보고한다.
-6. 컨텍스트 compaction이 발생해도 같은 원칙을 유지한다. 이 경우 `Phase 0` -> `sequential_run_status.md` -> 직전 수동 감리 -> 직전 `candidate/fixed` 순으로 다시 연다.
-7. `sequential_run_status.md`가 `seed_baseline_sync`면 자동 재개 시작점은 `Block 001`이다.
+6. 컨텍스트 compaction이 발생해도 같은 원칙을 유지한다. 이 경우 `Phase 0` -> `sequential_run_status.json` (또는 .md fallback) -> 직전 수동 감리 -> 직전 `candidate/fixed` 순으로 다시 연다.
+7. 상태 파일의 `run_class`가 `seed_baseline_sync`면 자동 재개 시작점은 `Block 001`이다.
 8. candidate/fixed/draft/check/merge 산출물과 모든 감리 보고서는 **UTF-8 only**로 저장한다. 한글 오염은 P0다.
 
 권장 연속 진행 순서:
@@ -270,7 +270,7 @@ preprocess 작업공간에는 이미 block 디렉터리나 final draft가 채워
 - UTF-8 파싱 실패
 - `???`, `�`, 인코딩 오염 탐지
 - 직전 블록 수동 감리 메모 없음
-- `sequential_run_status.md`와 실제 audit history 불일치
+- `sequential_run_status.json` (또는 .md deprecated fallback)와 실제 audit history 불일치
 - `seed_baseline_sync`를 순차 production 완료처럼 취급
 - 사용자가 검토/수정/중단을 명시
 - 정리 삭제처럼 되돌리기 어려운 후처리가 필요한 경우

@@ -114,6 +114,61 @@ class Stage2Orchestrator:
                 except Exception:
                     pass
 
+    def _compose_rejection_pattern_feedback(self, arc_rejections: list, global_arc_no: int) -> str:
+        """Return retry-pattern feedback or an explicit diagnostic fallback."""
+        if not arc_rejections:
+            return ""
+
+        callback = getattr(self.ctx, "analyze_rejection_pattern_v60", None)
+        if callable(callback):
+            try:
+                return callback(arc_rejections, global_arc_no) or ""
+            except Exception as exc:
+                if callable(getattr(self.ctx, "audit_event", None)):
+                    self.ctx.audit_event(
+                        "stage2_rejection_pattern_error",
+                        "analyze_rejection_pattern_v60 callback failed",
+                        {"arc_no": global_arc_no, "error": str(exc)[:120]},
+                    )
+                reason_suffix = f"callback_error={type(exc).__name__}"
+            else:
+                reason_suffix = ""
+        else:
+            reason_suffix = "callback_missing"
+
+        reason_counts = {}
+        specific_issues = []
+        for reject in arc_rejections:
+            reason = str(reject.get("reason", "사유 미상") or "사유 미상")[:120]
+            reason_counts[reason] = reason_counts.get(reason, 0) + 1
+            issue = str(reject.get("specific_issue", "") or "").strip()
+            if issue and issue not in specific_issues:
+                specific_issues.append(issue[:120])
+
+        top_reasons = sorted(reason_counts.items(), key=lambda item: (-item[1], item[0]))[:3]
+        lines = [
+            "",
+            "=" * 60,
+            f"⚠️ [V60.10] Arc {global_arc_no} 반복 REJECT 진단",
+            "=" * 60,
+            "retry pattern helper를 사용할 수 없어 raw rejection history를 직접 요약합니다.",
+        ]
+        if reason_suffix:
+            lines.append(f"진단 상태: {reason_suffix}")
+        lines.append("")
+        lines.append(f"📊 총 {len(arc_rejections)}회 REJECT 발생")
+        for reason, count in top_reasons:
+            lines.append(f"   - {reason}: {count}회")
+        if specific_issues:
+            lines.append("")
+            lines.append("📋 반복된 구체 지시:")
+            for issue in specific_issues[:3]:
+                lines.append(f"   - {issue}")
+        lines.append("")
+        lines.append("💡 다음 재시도에서는 위 사유와 구체 지시를 Arc 설계 제약으로 직접 반영하세요.")
+        lines.extend(["", "=" * 60, ""])
+        return "\n".join(lines)
+
     # ═══════════════════════════════════════════════════════════════════════
     # 메인 파이프라인
     # ═══════════════════════════════════════════════════════════════════════
@@ -492,7 +547,7 @@ class Stage2Orchestrator:
                             if r.get("stage") == 2 and r.get("arc_no") == global_arc_no
                         ]
                         if arc_rejections:
-                            pattern_analysis = self.ctx.analyze_rejection_pattern_v60(arc_rejections, global_arc_no)
+                            pattern_analysis = self._compose_rejection_pattern_feedback(arc_rejections, global_arc_no)
                             if pattern_analysis:
                                 current_feedback = pattern_analysis + "\n" + current_feedback
                                 self.ctx.ui.log(f"      🔍 [V60.10] REJECT 패턴 분석 주입 ({len(arc_rejections)}건)")

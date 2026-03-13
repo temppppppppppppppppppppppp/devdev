@@ -509,6 +509,7 @@ class TestStage2PassWithFix:
         ctx.audit_event = MagicMock()
         ctx.semantic_plot_guard = None
         ctx.validate_arc_integrity = MagicMock(return_value=True)
+        ctx.validate_arc_data_fields = None
         ctx.current_project = MagicMock()
         ctx.safe_commit_async = AsyncMock(return_value=True)
         ctx.generate_arc_context_v60 = MagicMock(return_value="context_text")
@@ -2117,6 +2118,47 @@ class TestPFImprovements:
         assert su["seed"] == "kept"
         assert su["ending"] == "tightened"
         assert su["tone"] == "clean"
+
+    def test_pf3_pass_with_fix_reaudit_preserves_reasoning_and_open_review(self):
+        ctx = _make_ctx()
+        cw = MagicMock()
+        cw.inplace_patch.return_value = [{"manuscript": "patched manuscript " * 220}]
+
+        rc = _make_round_ctx(cw)
+        ir = Stage4InterviewRound(ctx)
+        dr = _director_result_pass_with_fix(score=60)
+
+        ctx.agents["director"].select_and_judge_ensemble.side_effect = [
+            {
+                "verdict": "PASS_WITH_FIX",
+                "score": 75,
+                "feedback": {"action_items": ["tighten the ending"]},
+                "fix_scope": "inplace",
+                "fix_scope_reasoning": "local fix still valid",
+                "open_review": "voice drifts in the middle",
+            },
+            {
+                "verdict": "PASS",
+                "score": 95,
+            },
+        ]
+
+        v, _ms, _su, _dr_out, _fb, _patch_trace = ir._execute_pass_with_fix_loop(
+            verdict="PASS_WITH_FIX",
+            final_manuscript=_MANUSCRIPT_TEXT,
+            final_state_updates={},
+            director_result=dr,
+            director_feedback="needs a fix",
+            round_ctx=rc,
+            round_num=0,
+            score=60,
+            quality_gate_score=90,
+            director_mandatory_context="",
+        )
+
+        assert v == "PASS"
+        assert "local fix still valid" in cw.inplace_patch.call_args_list[1].kwargs["director_feedback"]
+        assert "voice drifts in the middle" in cw.inplace_patch.call_args_list[1].kwargs["director_feedback"]
 
     def test_pf3_reject_does_not_adopt_patch(self):
         """[PF-3] Director REJECT → 원본 유지 (디렉터 주권주의)."""

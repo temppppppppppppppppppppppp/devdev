@@ -138,7 +138,14 @@
         "updated_at",
         "notes"
       ],
-      "enforcement_state": "standard_locked_not_yet_mandatory"
+      "enforcement_state": "mandatory_on_cutover",
+      "cutover_trigger": "run_class_changes_to_sequential_production",
+      "cutover_rules": {
+        "existing_works": "mandatory when run_class transitions from seed_baseline_sync to sequential_production",
+        "new_works": "mandatory at stage0_completion (phase0_ready_snapshot.manual_audit_pass == true)",
+        "grace_period": "md_parallel_allowed_30_days_after_cutover",
+        "fallback_after_grace": "json_only"
+      }
     },
     {
       "artifact_id": "audit_status",
@@ -161,7 +168,14 @@
         "updated_at",
         "notes"
       ],
-      "enforcement_state": "standard_locked_not_yet_mandatory"
+      "enforcement_state": "mandatory_on_cutover",
+      "cutover_trigger": "first_manual_audit_pass_on_any_block",
+      "cutover_rules": {
+        "existing_works": "mandatory when first block receives manual_audit_pass in sequential_production",
+        "new_works": "mandatory at stage0_completion (phase0_ready_snapshot.manual_audit_pass == true)",
+        "grace_period": "md_parallel_allowed_30_days_after_cutover",
+        "fallback_after_grace": "json_only"
+      }
     }
   ],
   "transitional_artifacts": [

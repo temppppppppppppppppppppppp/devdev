@@ -4,14 +4,25 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import MagicMock
 
+import main_a
 from modules.core.repetition_guard import RepetitionGuard
 
 
-def test_main_a_boot_has_empty_project_guard():
-    source = Path("main_a.py").read_text(encoding="utf-8")
-    assert "project_name = self._select_project()" in source
-    assert "if not project_name:" in source
+def test_main_a_boot_returns_early_when_project_selection_is_empty():
+    ui = SimpleNamespace(title=MagicMock(), log=MagicMock())
+    app = SimpleNamespace(
+        ui=ui,
+        _select_genre=MagicMock(return_value={"type": "investment", "name": "투자"}),
+        _select_project=MagicMock(return_value=""),
+    )
+
+    result = main_a.SovereignApp.boot(app)
+
+    assert result is None
+    ui.log.assert_called_once_with("⚠️ 프로젝트 선택이 취소되어 부팅을 중단합니다.")
 
 
 def test_main_a_critical_error_handler_has_current_project_null_guard():

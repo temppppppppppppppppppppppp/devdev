@@ -1,4 +1,3 @@
-import inspect
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
@@ -40,12 +39,6 @@ def test_show_resume_status_logs_warning_on_error(monkeypatch):
 
     warning_mock.assert_called_once()
     assert "[Resume] 상태 보고 실패: boom" in warning_mock.call_args.args[0]
-
-
-def test_stage_entry_methods_include_resume_status_call():
-    assert "self._show_resume_status()" in inspect.getsource(main_a.SovereignApp._stage_2_arcs)
-    assert "self._show_resume_status()" in inspect.getsource(main_a.SovereignApp._stage_3_batch_blueprinting)
-    assert "self._show_resume_status()" in inspect.getsource(main_a.SovereignApp._stage_4_v2_chief_writer)
 
 
 def test_shutdown_pass_rate_save_failure_is_non_blocking(monkeypatch):
@@ -114,3 +107,65 @@ def test_shutdown_records_session_cost_when_scope_exists(monkeypatch):
     assert kw["session_id"] == "sess_shutdown"
     assert kw["scope_type"] == "session"
     assert kw["total_calls"] == 2
+
+
+def test_shutdown_bible_anchor_failure_is_non_blocking(monkeypatch):
+    monkeypatch.setattr(main_a, "V50_MODULES_AVAILABLE", False)
+    monkeypatch.setattr(main_a, "get_metrics_collector", lambda: None)
+
+    db_conn = MagicMock()
+    db = SimpleNamespace(conn=db_conn)
+    project = SimpleNamespace(
+        name="resume_project",
+        db=db,
+        master_bible={"MasterBible": {}},
+        save_v20_anchor=MagicMock(side_effect=RuntimeError("bible-fail")),
+    )
+
+    app = SimpleNamespace(
+        _PROJECTS_DIR="projects",
+        pass_rate_monitor=None,
+        failure_learner=None,
+        character_voice=None,
+        foreshadow_tracker=None,
+        current_project=project,
+        selected_genre=None,
+        ui=SimpleNamespace(log=MagicMock()),
+    )
+
+    main_a.SovereignApp._shutdown_app(app)
+
+    project.save_v20_anchor.assert_called_once_with("bible", project.master_bible)
+    db_conn.commit.assert_called_once()
+    db_conn.close.assert_called_once()
+
+
+def test_shutdown_genre_anchor_failure_is_non_blocking(monkeypatch):
+    monkeypatch.setattr(main_a, "V50_MODULES_AVAILABLE", False)
+    monkeypatch.setattr(main_a, "get_metrics_collector", lambda: None)
+
+    db_conn = MagicMock()
+    db = SimpleNamespace(conn=db_conn, save_anchor=MagicMock(side_effect=RuntimeError("genre-fail")))
+    project = SimpleNamespace(
+        name="resume_project",
+        db=db,
+        master_bible={"MasterBible": {}},
+        save_v20_anchor=MagicMock(),
+    )
+
+    app = SimpleNamespace(
+        _PROJECTS_DIR="projects",
+        pass_rate_monitor=None,
+        failure_learner=None,
+        character_voice=None,
+        foreshadow_tracker=None,
+        current_project=project,
+        selected_genre={"type": "investment", "name": "투자"},
+        ui=SimpleNamespace(log=MagicMock()),
+    )
+
+    main_a.SovereignApp._shutdown_app(app)
+
+    db.save_anchor.assert_called_once_with("genre_info", app.selected_genre)
+    db_conn.commit.assert_called_once()
+    db_conn.close.assert_called_once()

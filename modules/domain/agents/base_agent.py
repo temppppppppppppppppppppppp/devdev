@@ -1742,6 +1742,26 @@ class BaseAgent:
     # ═══════════════════════════════════════════════════════════════════════════
 
     # 클래스 변수: 캐시 저장소
+    @staticmethod
+    def _sanitize_context_cache_token(value: object) -> str:
+        return re.sub(r"[^0-9A-Za-z_.-]+", "_", str(value or "")).strip("_.")
+
+    def _context_cache_project_namespace(self, *scope_parts: object) -> str:
+        current_project = getattr(self.context, "current_project", None) if self.context else None
+        project_token = (
+            self._sanitize_context_cache_token(getattr(current_project, "work_id", None))
+            or self._sanitize_context_cache_token(getattr(current_project, "name", None))
+            or self._sanitize_context_cache_token(getattr(self.context, "project_name", None) if self.context else None)
+            or self._sanitize_context_cache_token(getattr(self.context, "genre", None) if self.context else None)
+            or "default"
+        )
+        tokens = [project_token]
+        for part in scope_parts:
+            token = self._sanitize_context_cache_token(part)
+            if token:
+                tokens.append(token)
+        return "_".join(tokens)[:80]
+
     _context_caches = {}  # {cache_key: {"name": str, "created_at": float, "content_hash": str}}
     _cache_lock = threading.Lock()  # [INF-P1-8] _context_caches 동시 접근 보호
     _CONTEXT_CACHE_MAX = int(_SYSTEM_CFG.get("cache", {}).get("context_max_entries", 50))

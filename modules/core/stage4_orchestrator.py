@@ -8,10 +8,12 @@ SovereignApp에서 분리된 Stage 4 관련 메서드:
 """
 
 import dataclasses
+import inspect
 import logging
 import re
 
 from modules.core.llm_generate import generate_content_via_router
+from modules.core.project_support import load_style_guide_anchor, resolve_project_bible_pov
 from modules.core.stage4_context_builder import Stage4ContextBuilder
 from modules.core.stage4_interview_round import Stage4InterviewRound
 from modules.core.stage4_post_processor import Stage4PostProcessor
@@ -261,6 +263,54 @@ class Stage4Orchestrator:
                     setattr(agent, "_current_ep_num", _ep_value)
                 except Exception:
                     pass
+
+    def _build_stage4_to_3_reverse_feedback(self, *, director_feedback: str, previous_attempt: dict | None) -> str:
+        try:
+            inspect.getattr_static(self.app, "_generate_reverse_feedback_stage4_to_3")
+        except AttributeError:
+            callback = None
+        else:
+            callback = getattr(self.app, "_generate_reverse_feedback_stage4_to_3", None)
+        if not callable(callback):
+            return ""
+
+        reason_parts: list[str] = []
+        if director_feedback:
+            reason_parts.append(str(director_feedback))
+        if isinstance(previous_attempt, dict):
+            for key in ("rejection_reason", "open_review", "verdict_reason"):
+                value = str(previous_attempt.get(key, "") or "").strip()
+                if value and value not in reason_parts:
+                    reason_parts.append(value)
+            action_items = previous_attempt.get("action_items", [])
+            if isinstance(action_items, list) and action_items:
+                reason_parts.append(" / ".join(str(item) for item in action_items[:3]))
+        reject_reason = "\n".join(part for part in reason_parts if part).strip()
+        if not reject_reason:
+            return ""
+
+        pre_checklist_result = None
+        if isinstance(previous_attempt, dict):
+            checklist = previous_attempt.get("consistency_checklist")
+            if isinstance(checklist, dict) and checklist:
+                pre_checklist_result = checklist
+
+        try:
+            return callback(
+                writer_reject_reason=reject_reason,
+                pre_checklist_result=pre_checklist_result,
+            ) or ""
+        except Exception as exc:
+            logging.warning("[Stage4->3] reverse feedback helper 실패: %s", exc)
+            return ""
+
+    @staticmethod
+    def _merge_blueprint_feedback(director_feedback: str, reverse_feedback: str) -> str:
+        direct = str(director_feedback or "").strip()
+        reverse = str(reverse_feedback or "").strip()
+        if reverse and direct and reverse not in direct:
+            return f"{reverse}\n\n[Stage4 원문 피드백]\n{direct}"
+        return reverse or direct
 
     # ═══════════════════════════════════════════════════════════════════════
     # [LM-A-1] Bible → world_laws 자동 등록 (최초 1회)
@@ -1113,9 +1163,17 @@ JSON으로 출력:
                         )
                         _bp_agent = self.ctx.agents.get("three_phase_bp")
                         if _bp_agent:
+                            _reverse_feedback_43 = self._build_stage4_to_3_reverse_feedback(
+                                director_feedback=director_feedback,
+                                previous_attempt=previous_attempt,
+                            )
+                            _blueprint_feedback = self._merge_blueprint_feedback(
+                                director_feedback,
+                                _reverse_feedback_43,
+                            )
                             _patched_bp = _bp_agent._inplace_patch_blueprint(
                                 original_blueprint=round_ctx.blueprint,
-                                director_feedback=director_feedback,
+                                director_feedback=_blueprint_feedback,
                                 ep_num=next_ep,
                                 arc_data=round_ctx.arc_data,
                             )
@@ -1164,10 +1222,15 @@ JSON으로 출력:
                         self.ctx.ui.log(
                             f"   🔄 [V75-B] LOGIC_ERROR {_logic_error_streak}연속 → 블루프린트 재생성 시도..."
                         )
+                        _reverse_feedback_43 = self._build_stage4_to_3_reverse_feedback(
+                            director_feedback=director_feedback,
+                            previous_attempt=previous_attempt,
+                        )
                         _new_bp = self._regenerate_blueprint(
                             next_ep,
                             round_ctx.arc_data,
                             round_ctx,
+                            external_feedback=self._merge_blueprint_feedback(director_feedback, _reverse_feedback_43),
                         )
                         if _new_bp:
                             _v75b_success = True
@@ -1268,6 +1331,7 @@ JSON으로 출력:
         ep_num: int,
         arc_data: dict,
         round_ctx: _RoundContext,
+        external_feedback: str = "",
     ) -> dict | None:
         """[V75-B] Stage 3 블루프린트 재생성 (단일 에피소드)."""
         try:
@@ -1301,6 +1365,7 @@ JSON으로 출력:
                 arc_idx=(arc_data.get("arc_no") or 1) - 1,
                 prev_blueprint=prev_bp,
                 prev_blueprints=[],
+                external_feedback=str(external_feedback or ""),
                 entity_registry=_entity_registry,
                 protagonist_name=_prot_name,
                 protagonist_config=_prot_config,
@@ -1397,19 +1462,25 @@ JSON으로 출력:
         output_dir = self.ctx.current_project.paths.drafts
         output_dir.mkdir(exist_ok=True)
         total_planned_ep = self.ctx.current_project.db.get_latest_blueprint_number()
+        current_written = max(0, int(self.ctx.current_project.get_latest_episode_number() or 1) - 1)
 
         # 4. 플랫폼 스타일 선택
         if target_ep is not None:
-            pass  # [OneStop] caller가 직접 target_ep 지정
+            if target_ep <= current_written:
+                self.ctx.ui.log(f"✅ 이미 {current_written}화까지 완료되어 제{target_ep}화 집필은 건너뜁니다.")
+                return None
         elif limit_mode:
             # [TF-CX-BUG-02] 입력 범위 역전 방어: 블루프린트가 0개인 경우
             if total_planned_ep == 0:
                 self.ctx.ui.log("⚠️ 블루프린트가 없습니다. Stage 3에서 먼저 설계도를 생성해주세요.")
                 return None
+            if current_written >= total_planned_ep:
+                self.ctx.ui.log(f"✅ 이미 {current_written}화까지 완료되어 추가 집필할 범위가 없습니다.")
+                return None
             target_ep = self.ctx.get_int_input(
-                f"\n👉 몇 화까지 집필하시겠습니까? (최대 {total_planned_ep}화): ",
-                default=None,
-                min_val=1,
+                f"\n👉 몇 화까지 집필하시겠습니까? (현재 {current_written}화 / 최대 {total_planned_ep}화): ",
+                default=total_planned_ep,
+                min_val=current_written + 1,
                 max_val=total_planned_ep,
             )
         else:
@@ -1421,7 +1492,7 @@ JSON으로 출력:
         # [V60.95] 스타일 가이드 로드
         style_guide = ""
         reference_excerpt = ""
-        saved_style = self.ctx.current_project.load_v20_anchor("style_guide")
+        saved_style = load_style_guide_anchor(self.ctx.current_project)
         if saved_style and STAGE0_AVAILABLE:
             try:
                 from modules.core.stage0 import StyleGuide
@@ -1429,9 +1500,7 @@ JSON으로 출력:
                 loaded_sg = StyleGuide.from_dict(saved_style)
                 # [V70] Bible의 protagonist_config.pov로 오버라이드
                 try:
-                    _bible = self.ctx.current_project.master_bible or {}
-                    _bible_root = _bible.get("MasterBible", _bible)
-                    _bible_pov = _bible_root.get("protagonist_config", {}).get("pov", "")
+                    _bible_pov = resolve_project_bible_pov(self.ctx.current_project)
                     if _bible_pov:
                         if loaded_sg.pov and _bible_pov != loaded_sg.pov:  # [TF-31-2]
                             logging.warning("[TF-31-2] StyleGuide POV(%s) ≠ Bible POV(%s) — Bible 우선 적용",
@@ -1455,9 +1524,7 @@ JSON으로 출력:
             try:
                 from modules.core.stage0 import StyleGuide as _SG
 
-                _bible = self.ctx.current_project.master_bible or {}
-                _bible_root = _bible.get("MasterBible", _bible)
-                _bible_pov = _bible_root.get("protagonist_config", {}).get("pov", "")
+                _bible_pov = resolve_project_bible_pov(self.ctx.current_project)
                 if _bible_pov:
                     _min_sg = _SG(pov=_bible_pov)
                     style_guide = _min_sg.to_prompt()

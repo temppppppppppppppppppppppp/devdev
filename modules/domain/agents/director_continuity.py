@@ -146,14 +146,35 @@ class DirectorContinuityValidator:
                         return True
                 return False
 
+            def _canonicalize_location_alias(text: str) -> str:
+                raw = " ".join(str(text or "").strip().lower().split())
+                if not raw:
+                    return ""
+                alias_map = {
+                    "office": "\uC0AC\uBB34\uC2E4",
+                    "\uC624\uD53C\uC2A4": "\uC0AC\uBB34\uC2E4",
+                    "\uC9D1\uBB34\uC2E4": "\uC0AC\uBB34\uC2E4",
+                    "\uC0AC\uBB34\uC2E4": "\uC0AC\uBB34\uC2E4",
+                }
+                for source, canonical in alias_map.items():
+                    raw = raw.replace(source, canonical)
+                return raw
+
             filtered_mismatches = []
             for m in mismatches:
                 reg = m.get("registered_name", "")
                 var = m.get("found_variant", "")
+                category = str(m.get("category", "") or "").strip().lower()
                 if _is_abbreviation(reg, var):
                     # 약칭은 WARNING/REJECT 트리거에서 제외
                     logging.debug(" [V61-ABBREV] 약칭 오탐 필터: %s → %s", reg, var)
                     continue
+                if category == "location":
+                    reg_alias = _canonicalize_location_alias(reg)
+                    var_alias = _canonicalize_location_alias(var)
+                    if reg_alias and reg_alias == var_alias:
+                        logging.debug(" [V61-ALIAS] location alias filtered: %s -> %s", reg, var)
+                        continue
                 filtered_mismatches.append(m)
 
             mismatches = filtered_mismatches
@@ -644,7 +665,7 @@ class DirectorContinuityValidator:
             return {"decision": "PASS", "issues": [], "feedback": ""}
 
         try:
-            project_name = getattr(self._d.context, "project_name", "") if hasattr(self._d, "context") else ""
+            project_name = self._d._context_cache_project_namespace("ep", ep_num)
 
             if self._cached_blueprint_ep != ep_num:
                 recent_blueprints = db.get_recent_blueprints(ep_num, limit=limit)
@@ -758,7 +779,7 @@ class DirectorContinuityValidator:
             return {"decision": "PASS", "conflicts": [], "summary": ""}
 
         try:
-            project_name = getattr(self._d.context, "project_name", "") if hasattr(self._d, "context") else ""
+            project_name = self._d._context_cache_project_namespace("ep", ep_num)
 
             if self._cached_manuscript_ep != ep_num:
                 recent_manuscripts = db.get_recent_manuscripts(ep_num, limit=limit)

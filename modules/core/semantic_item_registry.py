@@ -163,7 +163,7 @@ class SemanticItemRegistry:
                     # 앞부분이 있으면 그것도 포함 (태극검, 철혈사자패)
                     return normalized
                 # 포함하는 경우
-                match = re.search(rf"([가-힣]*{kw})", normalized)
+                match = re.search(rf"([가-힣]*{kw})(?:\s|$)", normalized)
                 if match:
                     return match.group(1)
 
@@ -412,7 +412,14 @@ class SemanticItemRegistry:
     # ═══════════════════════════════════════════════════════════════
 
     def transfer_item(
-        self, name: str, from_owner: str, to_owner: str, arc: int, episode: int = 0, reason: str = ""
+        self,
+        name: str,
+        from_owner: str,
+        to_owner: str,
+        arc: int,
+        episode: int = 0,
+        reason: str = "",
+        protagonist_name: str = "주인공",
     ) -> bool:
         """
         아이템 소유권 이전
@@ -448,7 +455,7 @@ class SemanticItemRegistry:
             entry.current_owner = to_owner
 
             # 주인공이 아닌 타인에게 이전 시 "분배됨" 상태
-            if to_owner and to_owner != "주인공" and "팽무진" not in to_owner:
+            if to_owner and not self._is_protagonist_owner(to_owner, protagonist_name):
                 entry.current_state = "분배됨"
             else:
                 entry.current_state = "소지중"
@@ -547,9 +554,8 @@ class SemanticItemRegistry:
                 entry.consumed_arc == 0
                 and entry.current_state not in ["분배됨", "분실", "파괴", "소모됨"]
                 and (
-                    entry.current_owner == protagonist_name
-                    or entry.current_owner == ""
-                    or "팽무진" in entry.current_owner
+                    entry.current_owner == ""
+                    or self._is_protagonist_owner(entry.current_owner, protagonist_name)
                 )
             ):
                 result.append(
@@ -582,11 +588,18 @@ class SemanticItemRegistry:
             # 분배된 것이 아니고, 소모되지 않은 것만
             if entry.current_state in ["분배됨", "분실", "파괴", "소모됨"]:
                 return False
-            if entry.current_owner and entry.current_owner != protagonist_name:
-                if "팽무진" not in entry.current_owner:
-                    return False
+            if entry.current_owner and not self._is_protagonist_owner(entry.current_owner, protagonist_name):
+                return False
             return True
         return False
+
+    @staticmethod
+    def _is_protagonist_owner(owner: str, protagonist_name: str = "주인공") -> bool:
+        owner_text = str(owner or "").strip()
+        protagonist_text = str(protagonist_name or "주인공").strip()
+        if not owner_text:
+            return False
+        return owner_text == protagonist_text or protagonist_text in owner_text or owner_text == "주인공"
 
     def get_all_items(self, include_consumed: bool = False) -> dict[str, dict]:
         """모든 아이템 목록 반환 (V49.7 생애주기 포함)"""

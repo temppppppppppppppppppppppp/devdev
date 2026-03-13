@@ -1,10 +1,10 @@
 {
   "version": "v1",
-  "updated_at": "2026-03-06",
+  "updated_at": "2026-03-13",
   "keys": {
     "0": {
       "requires_sub_key": true,
-      "allowed_sub_keys": ["0", "1", "2", "3", "4", "5", "6"],
+      "allowed_sub_keys": ["0", "1", "2", "3", "4", "5", "6", "7"],
       "steps": []
     },
     "1": {
@@ -99,6 +99,32 @@
       "steps": []
     },
     "6": {
+      "requires_sub_key": false,
+      "steps": [
+        {
+          "step_id": "onestop_batch_count",
+          "type": "int",
+          "required": true,
+          "default": 1,
+          "min": 1,
+          "max": 20
+        },
+        {
+          "step_id": "onestop_fail_action",
+          "type": "enum",
+          "required": true,
+          "options": ["skip", "stop"],
+          "default": "stop"
+        },
+        {
+          "step_id": "onestop_continue",
+          "type": "bool",
+          "required": true,
+          "default": true
+        }
+      ]
+    },
+    "7": {
       "requires_sub_key": false,
       "steps": [
         {

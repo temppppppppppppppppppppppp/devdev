@@ -2,7 +2,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from modules.core.artifact_logging import build_candidate_key, snapshot_logged_artifact
+from modules.core.artifact_logging import build_candidate_key, normalize_artifact_meta, snapshot_logged_artifact
 
 
 def _project(root: Path):
@@ -53,3 +53,13 @@ def test_snapshot_logged_artifact_write_failure_is_soft_failure(tmp_path):
     soft_failures = tmp_path / "logs" / "soft_failures.jsonl"
     assert soft_failures.exists()
     assert "artifact_logging" in soft_failures.read_text(encoding="utf-8")
+
+
+def test_normalize_artifact_meta_fills_missing_fields():
+    result = normalize_artifact_meta({"candidate_key": "A|balanced"}, fallback_artifact_path="logs/x.txt")
+
+    assert result == {
+        "candidate_key": "A|balanced",
+        "content_hash": "",
+        "artifact_path": "logs/x.txt",
+    }

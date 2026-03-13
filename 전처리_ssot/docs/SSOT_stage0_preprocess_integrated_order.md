@@ -73,8 +73,8 @@ Stage 0가 끝난 뒤 preprocess 작업공간이 이미 채워져 있더라도, 
 
 그래서 Production handoff에는 아래 상태 파일을 같이 둔다.
 
-- `treatments/preprocess/{work_id}/docs/sequential_run_status.md`
-- 표준 target: `treatments/preprocess/{work_id}/sequential_run_status.json`
+- **primary**: `treatments/preprocess/{work_id}/sequential_run_status.json`
+- deprecated fallback (유예 기간 내만): `treatments/preprocess/{work_id}/docs/sequential_run_status.md`
 - 표준 schema: `../contracts/sequential_run_status.schema.json`
 
 이 파일의 목적:
@@ -99,7 +99,25 @@ notes: free text
 - `sequential_production`만 실제 production 진행률로 인정한다.
 - 상태 파일이 없고 workspace가 미리 채워져 있으면, 기본값은 `seed_baseline_sync`로 본다.
 - 이 상태 파일은 **Stage 0 완료 필수 산출물 4개에는 포함되지 않지만**, Production handoff의 기준 상태 파일이다.
-- 현재는 `md` fallback을 허용하지만, JSON 표준 스키마와 target path는 이미 고정됐다.
+- **cutover 기준 (기계 파싱용)**:
+  - 기존 작품: `run_class`가 `sequential_production`으로 전환되는 시점부터 JSON 필수
+  - 신규 작품: `phase0_ready_snapshot.manual_audit_pass == true` 시점부터 JSON 필수
+  - 유예: cutover 이후 30일간 md 병행 허용, 이후 JSON-only
+  - 읽기 우선순위: JSON → (유예 기간 내) md fallback → (유예 만료) status_missing 처리
+  - 계약 참조: `contracts/artifact_contracts.json` `cutover_rules`, `contracts/quality_gates.json` `cutover_gate`
+
+## 2B. Audit 상태 파일
+
+Production에서 첫 블록 수동 감리 PASS가 나오면 audit 상태도 JSON으로 기록한다.
+
+- `treatments/preprocess/{work_id}/audit_status.json`
+- 표준 schema: `../contracts/audit_status.schema.json`
+
+cutover 기준:
+
+- 기존 작품: 첫 블록 `manual_audit_pass` 시점부터 JSON 필수
+- 신규 작품: `phase0_ready_snapshot.manual_audit_pass == true` 시점부터 JSON 필수
+- 유예: cutover 이후 30일간 기존 감리 보고서(bi_5pass.md, 수동 메모) 병행, 이후 JSON-only
 
 ---
 
@@ -142,7 +160,7 @@ notes: free text
 Production handoff 추가 규칙:
 
 - preprocess 작업공간에 block 디렉터리나 final draft가 이미 있더라도 그것만으로는 sequential progress를 인정하지 않는다.
-- Stage 0를 끝낸 뒤 production으로 넘길 때는 `docs/sequential_run_status.md`에 현재 상태를 먼저 적는다.
+- Stage 0를 끝낸 뒤 production으로 넘길 때는 `sequential_run_status.json` (primary) 또는 `docs/sequential_run_status.md` (deprecated fallback)에 현재 상태를 먼저 적는다.
 - seed만 있는 기지는 `run_class = seed_baseline_sync`, `last_sequential_block_pass = 0`, `next_block = Block 001`로 시작한다.
 
 금지:
@@ -177,6 +195,8 @@ Production handoff 추가 규칙:
 - `source_manifest`에 정본/참고본 구분이 있다
 - `material_bundle_summary`가 작품 전장에 바로 옮길 수 있는 재료를 담고 있다
 - `phase0_ready_snapshot.manual_audit_pass == true`
+
+**Go 행동 규칙:** Go 조건이 전부 충족되면 **멈추지 않고** Planning으로 바로 넘긴다. "Stage 0 끝났습니다. Planning으로 갈까요?"를 묻는 것은 금지한다. 단계 전환은 정지 게이트가 아니다.
 
 ---
 

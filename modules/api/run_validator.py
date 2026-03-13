@@ -22,10 +22,11 @@ logger = logging.getLogger(__name__)
 # ─── 허용 상수 ──────────────────────────────────────────────────────────────
 
 ALLOWED_KEYS: frozenset[str] = frozenset(
-    {"0", "1", "2", "3", "4", "5", "6", "44", "77", "88", "99"}
+    {"0", "1", "2", "3", "4", "5", "6", "7", "44", "77", "88", "99"}
 )
-ALLOWED_SUB_KEYS: frozenset[str] = frozenset({"0", "1", "2", "3", "4", "5", "6"})
+ALLOWED_SUB_KEYS: frozenset[str] = frozenset({"0", "1", "2", "3", "4", "5", "6", "7"})
 RISK_KEYS: frozenset[str] = frozenset({"44", "77", "88", "99"})
+ACTIVE_RUN_STATES: frozenset[str] = frozenset({"starting", "running", "stopping"})
 
 
 # ─── 결과 타입 ───────────────────────────────────────────────────────────────
@@ -82,7 +83,7 @@ def validate_run_request(
         return _err(400, "SUB_KEY_NOT_ALLOWED", f"sub_key is not allowed for key={key}.")
 
     # 4. 중복 실행 차단
-    if runner_state == "running":
+    if runner_state in ACTIVE_RUN_STATES:
         logger.warning("RUN_ALREADY_ACTIVE key=%r", key)
         return _err(409, "RUN_ALREADY_ACTIVE", "Another run is already active.")
 

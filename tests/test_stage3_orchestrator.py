@@ -3,6 +3,7 @@
 추출 대상: _stage_3_batch_blueprinting (main_a.py → stage3_orchestrator.py)
 """
 
+import logging
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -48,6 +49,9 @@ def app_mock():
     app.selected_genre = {"type": "wuxia"}
     app.sys.api_client = MagicMock()
     app.preset_registry = MagicMock()
+    app.memory = None
+    app.context_advisor = None
+    app._session_logger = MagicMock()
 
     # V68 lazy init (already initialized)
     app.state_tracker = MagicMock()
@@ -272,6 +276,97 @@ class TestStageAttemptObservability:
         assert kwargs["duration_ms"] == 987
         assert kwargs["advisory_flags"]["semantic_ctx_sources"] == ["legacy_semantic_context"]
 
+    def test_handle_success_persists_stage3_director_selection(self, orch, app_mock, tmp_path):
+        app_mock.current_project.paths = MagicMock()
+        app_mock.current_project.paths.root = tmp_path
+        pipeline_result = {
+            "final_verdict": "PASS",
+            "last_score": 91,
+            "phases": {
+                "generate": {"selected_strategy": "dialogue_focused", "selected_score": 91},
+                "validate": {
+                    "phase": "director_compare",
+                    "selected_index": 1,
+                    "comparison_notes": "후보 2가 전술 반영과 연속성에서 가장 안정적",
+                    "verdict": "PASS",
+                },
+            },
+            "_stage3_duration_ms": 1500,
+            "_stage3_observability": {
+                "semantic_ctx_chars": 1200,
+                "source_counts": {"vec_memory": 2, "db_npc_history": 1},
+                "advisor_path_used": True,
+                "planned_slots_count": 3,
+            },
+        }
+
+        orch._handle_success(
+            working_ep=2,
+            arc_no=1,
+            arc_data={"arc_no": 1},
+            blueprint={"integrated_scenario": "ok", "scene_breakdown": {"s1": "scene"}},
+            pipeline_result=pipeline_result,
+            prev_blueprints=[],
+            success_count=0,
+            fail_count=0,
+        )
+
+        ds_kw = app_mock.current_project.db.save_director_selection.call_args.kwargs
+        sa_kw = app_mock.current_project.db.save_stage_attempt.call_args.kwargs
+        assert ds_kw["stage"] == 3
+        assert ds_kw["selected_label"] == "B"
+        assert ds_kw["selected_strategy"] == "dialogue_focused"
+        assert ds_kw["verdict"] == "PASS"
+        assert ds_kw["selection_reason"] == "후보 2가 전술 반영과 연속성에서 가장 안정적"
+        assert ds_kw["attempt_key"] == sa_kw["attempt_key"]
+        assert ds_kw["candidate_key"] == sa_kw["candidate_key"]
+        assert ds_kw["artifact_path"] == sa_kw["artifact_path"]
+
+    def test_handle_failure_persists_stage3_director_selection(self, orch, app_mock, tmp_path):
+        app_mock.current_project.paths = MagicMock()
+        app_mock.current_project.paths.root = tmp_path
+        pipeline_result = {
+            "final_verdict": "REJECT",
+            "last_score": 44,
+            "phases": {
+                "generate": {"selected_strategy": "action_focused", "selected_score": 44},
+                "validate": {
+                    "phase": "director_compare",
+                    "selected_index": 0,
+                    "comparison_notes": "후보 1이 상대적으로 낫지만 전면 재설계가 필요함",
+                    "verdict": "REJECT",
+                    "feedback": "전술 사건 재배치 필요",
+                    "fix_scope": "full",
+                    "contradictions": ["timeline mismatch"],
+                },
+            },
+            "_stage3_duration_ms": 987,
+            "_stage3_observability": {
+                "semantic_ctx_chars": 222,
+                "source_counts": {"legacy_semantic_context": 1},
+                "advisor_path_used": False,
+            },
+        }
+
+        orch._handle_failure(
+            working_ep=3,
+            pipeline_result=pipeline_result,
+            success_count=0,
+            fail_count=0,
+            arc_no=1,
+            blueprint={"integrated_scenario": "candidate", "scene_breakdown": {"s1": "scene"}},
+        )
+
+        ds_kw = app_mock.current_project.db.save_director_selection.call_args.kwargs
+        assert ds_kw["stage"] == 3
+        assert ds_kw["selected_label"] == "A"
+        assert ds_kw["selected_strategy"] == "action_focused"
+        assert ds_kw["verdict"] == "REJECT"
+        assert ds_kw["fix_scope"] == "full"
+        assert ds_kw["artifact_path"].endswith("selected_blueprint__action_focused.json")
+        assert (tmp_path / ds_kw["artifact_path"]).exists()
+        assert ds_kw["advisory_warnings"]["contradictions"] == ["timeline mismatch"]
+
 
 class TestLoadPrevBlueprint:
     def test_returns_none_for_ep1(self, orch):
@@ -488,6 +583,59 @@ class TestGenerateBlueprint:
         assert call_kwargs["work_focus"]["tracking_slots"] == ["핵심 배우 라인"]
 
     @patch("modules.core.spinners.StageSpinner")
+    def test_stage3_advisor_uses_ctx_services_not_hidden_app(self, MockSpinner, app_mock):
+        spinner = MagicMock()
+        spinner.update_detail = MagicMock()
+        MockSpinner.return_value.__enter__.return_value = spinner
+        app_mock.current_project.db.get_recent_manuscripts.return_value = []
+        app_mock.sys.guard = MagicMock()
+        app_mock.sys.guard.select_retrieval_focus.return_value = {
+            "tracking_slots": ["핵심 배우 라인"],
+            "mandatory_scene_engines": [],
+            "registry_profiles": [],
+        }
+
+        ctx_advisor = MagicMock()
+        ctx_memory = MagicMock()
+        ctx_memory.retrieve_multi_query_context.return_value = "vec context"
+        ctx_advisor.plan_stage3_retrieval.return_value = MagicMock(
+            slots=[MagicMock(category="genre_context_1", query="genre query", source="vec_memory", max_chars=400)]
+        )
+
+        ctx = Stage3Context.from_app(app_mock)
+        ctx.context_advisor = ctx_advisor
+        ctx.memory = ctx_memory
+
+        app_mock.context_advisor = None
+        app_mock.memory = None
+
+        orch = Stage3Orchestrator(app=app_mock, context=ctx)
+
+        def threshold_side_effect(key, default=None):
+            if key == "smart_retrieval.enabled":
+                return True
+            if key == "smart_retrieval.stage3_enabled":
+                return True
+            if key == "context.vector_max_results_s4":
+                return 8
+            return default
+
+        with patch("modules.validation.threshold_helper._threshold", side_effect=threshold_side_effect):
+            orch._generate_blueprint(
+                working_ep=1,
+                arc_data=app_mock.current_project.arcs[0],
+                arc_idx=0,
+                prev_blueprint=None,
+                prev_blueprints=[],
+                entity_registry={"characters": [{"name": "윤서아"}]},
+                protagonist_name="장무기",
+                protagonist_config={},
+            )
+
+        ctx_advisor.plan_stage3_retrieval.assert_called_once()
+        assert ctx_advisor.plan_stage3_retrieval.call_args.kwargs["genre"] == "wuxia"
+
+    @patch("modules.core.spinners.StageSpinner")
     def test_stage3_work_focus_relation_slice_included_in_semantic_context(self, MockSpinner, orch, app_mock):
         spinner = MagicMock()
         spinner.update_detail = MagicMock()
@@ -648,6 +796,52 @@ class TestProcessSingleEpisode:
         assert (tmp_path / prm_kw["artifact_path"]).exists()
         assert db_kw["artifact_path"] == prm_kw["artifact_path"]
 
+    def test_stage3_success_logs_episode_summary(self, orch, app_mock, caplog):
+        app_mock.current_project.master_bible = {
+            "MasterBible": {"protagonist_config": {"pov": "3인칭", "external_pov_insert_policy": "제한적 허용"}}
+        }
+        blueprint = {"integrated_scenario": "test", "scene_breakdown": {"s1": "scene"}}
+        pipeline_result = {
+            "final_verdict": "PASS",
+            "last_score": 87,
+            "_stage3_observability": {"work_focus_present": True, "planned_slots_count": 2},
+            "phases": {"generate": {"selected_strategy": "A", "selected_score": 87}},
+        }
+
+        with caplog.at_level(logging.INFO):
+            orch._handle_success(3, 1, {}, blueprint, pipeline_result, [], 0, 0)
+
+        assert "[STAGE3_EPISODE_SUMMARY]" in caplog.text
+        assert "attempt_key=s3:ep3:arc1:a1" in caplog.text
+        assert "strategy=A" in caplog.text
+        assert "candidate_key=A" in caplog.text
+        assert "primary_pov=3인칭" in caplog.text
+        assert "external_pov_insert_policy=제한적 허용" in caplog.text
+        assert "style_guide_extracted_pov=-" in caplog.text
+
+    def test_stage3_failure_logs_episode_summary(self, orch, app_mock, caplog):
+        app_mock.current_project.master_bible = {
+            "MasterBible": {"protagonist_config": {"pov": "1인칭", "external_pov_insert_policy": "금지"}}
+        }
+        pipeline_result = {
+            "final_verdict": "REJECT",
+            "last_score": 41,
+            "reject_reason": "continuity problem",
+            "_stage3_observability": {"work_focus_present": True},
+            "phases": {"generate": {"selected_strategy": "B", "selected_score": 41}},
+        }
+
+        with caplog.at_level(logging.INFO):
+            orch._handle_failure(4, pipeline_result, 0, 0, arc_no=2)
+
+        assert "[STAGE3_EPISODE_SUMMARY]" in caplog.text
+        assert "attempt_key=s3:ep4:arc2:a1" in caplog.text
+        assert "failure=continuity" in caplog.text
+        assert "candidate_key=B" in caplog.text
+        assert "primary_pov=1인칭" in caplog.text
+        assert "external_pov_insert_policy=금지" in caplog.text
+        assert "style_guide_extracted_pov=-" in caplog.text
+
 
 # ── Result Handlers ──────────────────────────────────────────
 
@@ -671,6 +865,21 @@ class TestHandleSuccess:
         result = orch._handle_success(3, 1, {}, bp, pr, [], 2, 0)
         assert result["fail_count"] == 1
         app_mock.current_project.save_episode_blueprint.assert_not_called()
+
+    def test_unresolved_continuity_pins_do_not_discard_blueprint(self, orch, app_mock):
+        bp = {"integrated_scenario": "text", "scene_breakdown": {"s1": "scene"}}
+        pr = {"phases": {"generate": {"selected_strategy": "A", "selected_score": 85}}}
+
+        with patch(
+            "modules.core.stage3_orchestrator.apply_continuity_pins",
+            return_value={"blueprint": bp, "changes": [], "unresolved": [{"type": "proper_noun_pin"}]},
+        ):
+            result = orch._handle_success(3, 1, {"tactical_doc": ""}, bp, pr, [], 0, 0)
+
+        assert result["success_count"] == 1
+        assert bp["_continuity_pin_unresolved"][0]["type"] == "proper_noun_pin"
+        app_mock.current_project.save_episode_blueprint.assert_called_once_with(3, bp)
+        app_mock._audit_event.assert_called()
 
 
 class TestHandleFailure:
@@ -707,6 +916,24 @@ class TestStage3BatchBlueprintingEntryPoint:
 
         app_mock._write_audit_summary.assert_called_once_with("stage3_complete")
         app_mock.current_project.save_episode_blueprint.assert_called_once()
+
+    def test_target_prompt_uses_hybrid_project_head(self, app_mock):
+        app_mock.current_project.db.get_latest_blueprint_number.return_value = 0
+        app_mock.current_project.get_latest_episode_number = MagicMock(return_value=4)
+        app_mock._get_max_episode_from_manuscripts.return_value = 0
+        app_mock._get_int_input.return_value = 4
+
+        orch = Stage3Orchestrator(app=app_mock)
+        orch._process_single_episode = MagicMock(
+            return_value={"next_ep": 5, "success_count": 1, "fail_count": 0, "break": True}
+        )
+
+        orch.stage_3_batch_blueprinting()
+
+        call = app_mock._get_int_input.call_args
+        assert "현재 3화" in call.args[0]
+        assert call.kwargs["min_val"] == 4
+        assert call.kwargs["max_val"] == 5
 
 
 # ── [Phase 4C-4] Stage3Context DI 테스트 ─────────────────────
@@ -754,13 +981,17 @@ class TestStage3ContextDI:
         assert result == "장무기"
 
     def test_from_app_all_slots(self, app_mock):
-        """from_app이 20개 슬롯 전부 매핑하는지 확인"""
+        """from_app이 Stage3Context 슬롯 전부 매핑하는지 확인"""
+        app_mock.memory = MagicMock()
+        app_mock.context_advisor = MagicMock()
         ctx = Stage3Context.from_app(app_mock)
         assert ctx.ui is app_mock.ui
         assert ctx.current_project is app_mock.current_project
         assert ctx.agents is app_mock.agents
         assert ctx.sys is app_mock.sys
         assert ctx.state_tracker is app_mock.state_tracker
+        assert ctx.memory is app_mock.memory
+        assert ctx.context_advisor is app_mock.context_advisor
         assert ctx.world_state is app_mock.world_state
         assert ctx.fact_ledger is app_mock.fact_ledger
         assert ctx.adversarial_self_play is app_mock.adversarial_self_play
@@ -777,10 +1008,11 @@ class TestStage3ContextDI:
         assert ctx.validate_arc_data_fields is app_mock._validate_arc_data_fields
         assert ctx.validate_blueprint_integrity is app_mock._validate_blueprint_integrity
         assert ctx.fix_entity_registry_protagonist is app_mock._fix_entity_registry_protagonist
+        assert ctx.session_logger is app_mock._session_logger
 
     def test_slots_count_20(self):
         """__slots__ 개수 검증"""
-        assert len(Stage3Context.__slots__) == 22  # pass_rate_monitor + session_logger
+        assert len(Stage3Context.__slots__) == 24  # memory + context_advisor + session_logger
 
     def test_ctx_sync_after_lazy_init(self, app_mock):
         """lazy init 후 state_tracker/world_state/fact_ledger가 ctx에 sync되는지 확인"""

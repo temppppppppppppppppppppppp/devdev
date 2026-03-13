@@ -19,13 +19,18 @@ from typing import Any, Protocol, runtime_checkable
 
 @runtime_checkable
 class UIServiceProtocol(Protocol):
-    """UI 로깅/출력 서비스
+    """StudioVisualizer-style UI surface.
 
     근거:
     - stage4_orchestrator.py:260  self.app.ui.log(...)
     - stage4_orchestrator.py:283  self.app.ui.title(...)
     - stage2_orchestrator.py:79   self.app.ui.log(...)
     합계: 209건 (stage2: 99, stage4: 110)
+
+    NOTE:
+    - 이 Protocol은 `main_a.py`의 `self.ui` surface를 모델링한다.
+    - `modules/core/services/ui_service.py::UIService`는 별도의 입력/선택 helper이며
+      이 Protocol의 conform 대상이 아니다.
     """
 
     def log(self, message: str) -> None: ...
@@ -114,10 +119,15 @@ class ProjectRepositoryProtocol(Protocol):
 
 @runtime_checkable
 class StateServiceProtocol(Protocol):
-    """상태 추적 서비스 (StateTracker facade)
+    """StateTracker-style state facade.
 
     StateTracker 70개 public 메서드 중 오케스트레이터가 실제 호출하는 메서드만 정의.
     근거: stage2_orchestrator.py (60건), stage4_orchestrator.py (47건)
+
+    NOTE:
+    - 이 Protocol은 `modules.domain.agents.state_tracker.StateTracker` 계열 facade를 모델링한다.
+    - `modules/core/services/state_service.py::StateService`는 검증/패턴 helper 서비스이며
+      의도적으로 이 Protocol 전체를 구현하지 않는다.
     """
 
     # --- 아크 상태 추출 (stage2에서 호출) ---
