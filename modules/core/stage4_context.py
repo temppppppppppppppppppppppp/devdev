@@ -155,6 +155,28 @@ class Stage4Context:
         """[S-13] 조건부 모듈 조회 헬퍼."""
         return self.conditional_modules.get(name)
 
+    @property
+    def generate_writer_guidance_v60_8(self):
+        return self._stage4_context_budget_meta.get("_generate_writer_guidance_v60_8")
+
+    @generate_writer_guidance_v60_8.setter
+    def generate_writer_guidance_v60_8(self, callback):
+        if callback is None:
+            self._stage4_context_budget_meta.pop("_generate_writer_guidance_v60_8", None)
+            return
+        self._stage4_context_budget_meta["_generate_writer_guidance_v60_8"] = callback
+
+    @property
+    def enrich_director_result(self):
+        return self._stage4_context_budget_meta.get("_enrich_director_result")
+
+    @enrich_director_result.setter
+    def enrich_director_result(self, callback):
+        if callback is None:
+            self._stage4_context_budget_meta.pop("_enrich_director_result", None)
+            return
+        self._stage4_context_budget_meta["_enrich_director_result"] = callback
+
     @classmethod
     def from_app(cls, app):
         """SovereignApp에서 전체 속성 추출"""
