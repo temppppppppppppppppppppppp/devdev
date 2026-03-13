@@ -27,20 +27,23 @@ from __future__ import annotations
 import time
 import uuid
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any, Optional
+
+import yaml
 
 
 # ---------------------------------------------------------------------------
 # 계약 상수 (api-contract-v1.yaml / prompt-map-v1.json 기준)
 # ---------------------------------------------------------------------------
 
-VALID_KEYS = {"0", "1", "2", "3", "4", "5", "6", "44", "77", "88", "99"}
+VALID_KEYS = {"0", "1", "2", "3", "4", "5", "6", "7", "44", "77", "88", "99"}
 
 # key=0만 sub_key 필요, 나머지는 불허
 KEY_REQUIRES_SUB_KEY = {"0"}
 KEY_FORBIDDEN_SUB_KEY = VALID_KEYS - KEY_REQUIRES_SUB_KEY
 
-KEY_0_ALLOWED_SUB_KEYS = {"0", "1", "2", "3", "4", "5", "6"}
+KEY_0_ALLOWED_SUB_KEYS = {"0", "1", "2", "3", "4", "5", "6", "7"}
 
 RISK_KEYS = {"44", "77", "88", "99"}
 
@@ -77,7 +80,7 @@ class Prompt:
 @dataclass
 class RunState:
     run_id: str
-    status: str = "running"  # running | waiting_input | stopping | idle
+    status: str = "running"  # idle | starting | running | stopping | error
     prompts: dict[str, Prompt] = field(default_factory=dict)
 
 
@@ -186,7 +189,6 @@ class RouterStub:
         """활성 run에 미해결 프롬프트 등록 (Mode B 시뮬레이션)."""
         assert self._active_run is not None
         self._active_run.prompts[prompt_id] = Prompt(prompt_id=prompt_id, step_id=step_id)
-        self._active_run.status = "waiting_input"
 
     def _register_approval(self, approvers: list[str],
                            ttl: float = APPROVAL_TTL_SEC) -> str:
@@ -243,13 +245,13 @@ class TestKeyValidation:
             assert res["ok"] is True, f"sub_key={sk!r} should be accepted"
 
     def test_non_key0_with_sub_key_returns_SUB_KEY_NOT_ALLOWED(self, router):
-        for k in ("1", "2", "3", "4", "6"):
+        for k in ("1", "2", "3", "4", "6", "7"):
             router._reset()
             res = router.post_run(k, sub_key="1")
             assert res["ok"] is False
             assert res["code"] == "SUB_KEY_NOT_ALLOWED", f"key={k}"
 
-    @pytest.mark.parametrize("k", ["1", "2", "3", "4", "5", "6"])
+    @pytest.mark.parametrize("k", ["1", "2", "3", "4", "5", "6", "7"])
     def test_normal_keys_accepted_without_sub_key(self, router, k):
         res = router.post_run(k)
         assert res["ok"] is True
@@ -467,6 +469,18 @@ EXPECTED_ERROR_CODES = {
     "PROMPT_ALREADY_RESOLVED",
 }
 
+DOCUMENT_ONLY_ERROR_CODES = {
+    "INTERNAL_ERROR",
+    "INVALID_PROJECT",
+    "INVALID_REQUEST",
+}
+
+CONTRACT_PATH = Path(__file__).resolve().parents[1] / "docs" / "implementation" / "api-contract-v1.yaml"
+
+
+def _load_contract_spec() -> dict[str, Any]:
+    return yaml.safe_load(CONTRACT_PATH.read_text(encoding="utf-8"))
+
 
 class TestErrorCodeCoverage:
 
@@ -519,3 +533,35 @@ class TestErrorCodeCoverage:
         codes = self._collect_codes(router)
         extra = codes - EXPECTED_ERROR_CODES
         assert not extra, f"정의되지 않은 오류코드 발생: {extra}"
+
+
+class TestContractDocumentSurface:
+
+    def test_contract_uses_bridge_server_port_8300(self):
+        spec = _load_contract_spec()
+        assert spec["servers"][0]["url"] == "http://127.0.0.1:8300"
+
+    def test_contract_contains_quality_and_safe_ops_endpoints(self):
+        spec = _load_contract_spec()
+        required_paths = {
+            "/quality/summary",
+            "/quality/dashboard",
+            "/safe-ops/preview",
+            "/quality/review",
+        }
+        assert required_paths.issubset(spec["paths"])
+
+    def test_error_envelope_enum_includes_document_only_codes(self):
+        spec = _load_contract_spec()
+        error_codes = set(
+            spec["components"]["schemas"]["ErrorEnvelope"]["properties"]["code"]["enum"]
+        )
+        assert EXPECTED_ERROR_CODES.issubset(error_codes)
+        assert DOCUMENT_ONLY_ERROR_CODES.issubset(error_codes)
+
+    def test_status_envelope_enum_matches_runtime_states(self):
+        spec = _load_contract_spec()
+        status_states = set(
+            spec["components"]["schemas"]["StatusEnvelope"]["properties"]["data"]["properties"]["state"]["enum"]
+        )
+        assert status_states == {"idle", "starting", "running", "stopping", "error"}

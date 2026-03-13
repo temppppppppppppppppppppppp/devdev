@@ -31,6 +31,8 @@ def _make_ctx():
     ctx.semantic_plot_guard = None
     ctx.load_narrative_summaries = MagicMock(return_value="")
     ctx.build_item_acquisition_timeline = MagicMock(return_value="")
+    ctx.generate_writer_guidance_v60_8 = None
+    ctx.enrich_director_result = None
     return ctx
 
 
@@ -558,6 +560,34 @@ class TestBuildMandatoryContext:
             "reflexion_prompt",
         }
         assert "writer mandatory" in result["mandatory_context"]
+
+    @patch("modules.core.stage4_context_builder._build_justification", return_value="just")
+    @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")
+    def test_writer_guidance_is_injected_into_live_prompt_path(self, *_mocks):
+        ctx = _make_ctx()
+        ctx.generate_writer_guidance_v60_8 = MagicMock(return_value="high impact guidance")
+        cb = Stage4ContextBuilder(ctx)
+        anchor_sys = MagicMock()
+        anchor_sys.get_relevant_anchors.return_value = []
+        anchor_sys.get_critical_anchors.return_value = []
+
+        result = cb.build_mandatory_context(
+            next_ep=5,
+            arc_data={"arc_no": 1},
+            arc_tactical="전술",
+            prev_text="이전 원고 " * 30,
+            prev_ending="엔딩",
+            hud_report="HUD",
+            writer_agent=MagicMock(),
+            anchor_sys=anchor_sys,
+            s4_genre_type="wuxia",
+            v50_modules_available=False,
+            blueprint={"scene_breakdown": {}},
+        )
+
+        ctx.generate_writer_guidance_v60_8.assert_called_once()
+        assert "[Writer Guidance]" in result["justification_prompt"]
+        assert "high impact guidance" in result["justification_prompt"]
 
     def test_pacing_analyzer_param_used(self):
         cb = Stage4ContextBuilder(_make_ctx())

@@ -666,6 +666,7 @@ class Stage2Finalizer:
             _current_audit = audit
             _fix_ok = False
             _applied_patches: list[str] = []
+            _patch_pressure_exceeded = False
 
             for _fix_i in range(_MAX_FIX):
                 # [TF-33][PF-1] Director fix_scope 기반 수정 전략 라우팅 — 누락 시 점수 기반 폴백
@@ -726,6 +727,13 @@ class Stage2Finalizer:
                     _change_ratio = calc_patch_change_ratio(_orig_j, _patch_j)
                     _max_ratio = float(_threshold("patch_mode.inplace_max_change_ratio", 0.30))
                     if _change_ratio > _max_ratio:
+                        _patch_pressure_exceeded = True
+                        _patch_pressure = _current_audit.setdefault("patch_pressure", {})
+                        _patch_pressure["exceeded"] = True
+                        _patch_pressure["count"] = int(_patch_pressure.get("count", 0)) + 1
+                        _patch_pressure["change_ratio"] = round(float(_change_ratio), 4)
+                        _patch_pressure["max_ratio"] = round(float(_max_ratio), 4)
+                        _patch_pressure["attempt"] = _fix_i + 1
                         logging.warning(
                             "[F-2] InPlace Arc 변경 비율 %.1f%% > %.0f%% (S2)",
                             _change_ratio * 100,
@@ -780,10 +788,15 @@ class Stage2Finalizer:
                         )
                         break
                     _current_arc = _patched
+                    if _patch_pressure_exceeded and isinstance(_current_audit.get("patch_pressure"), dict):
+                        _re_audit["patch_pressure"] = dict(_current_audit["patch_pressure"])
+                    _current_audit = _re_audit
                     _fix_ok = True
                     break
                 elif _re_d == "PASS_WITH_FIX":
                     _current_arc = _patched
+                    if _patch_pressure_exceeded and isinstance(_current_audit.get("patch_pressure"), dict):
+                        _re_audit["patch_pressure"] = dict(_current_audit["patch_pressure"])
                     _current_audit = _re_audit  # 다음 반복
                 else:  # REJECT
                     break
@@ -791,9 +804,20 @@ class Stage2Finalizer:
             if _fix_ok:
                 refined_arc.clear()
                 refined_arc.update(_current_arc)
+                audit = _current_audit
                 _d_decision = "PASS"
                 _score = _re_s  # [TF-46] 재심사 점수로 갱신 (stale score → QualityGate 오작동 방지)
-                self.ctx.ui.log("      ✅ [TF-32-V] Arc 수정 완료 → PASS 확정")
+                if _patch_pressure_exceeded:
+                    _d_decision = "PASS_WITH_FIX"
+                    audit["decision"] = "PASS_WITH_FIX"
+                    audit["reason"] = (
+                        f"{str(audit.get('reason', '')).strip()}\n[PatchPressure] In-place patch ratio exceeded threshold."
+                    ).strip()
+                    self.ctx.ui.log("      ⚠️ [TF-32-V] Patch pressure exceeded -> keep PASS_WITH_FIX")
+                else:
+                    audit["decision"] = "PASS"
+                if not _patch_pressure_exceeded:
+                    self.ctx.ui.log("      ✅ [TF-32-V] Arc 수정 완료 → PASS 확정")
             else:
                 _d_decision = "REJECT"
                 audit["decision"] = "REJECT"
@@ -878,11 +902,23 @@ class Stage2Finalizer:
             refined_arc["joint_docs"] = enriched_block.get("joint_docs", {})
             refined_arc["status_shadow"] = enriched_block.get("status_shadow", {})
 
+            if callable(getattr(self.ctx, "validate_arc_data_fields", None)):
+                repaired_arc = self.ctx.validate_arc_data_fields(refined_arc, global_arc_no)
+                if repaired_arc is None:
+                    current_feedback = "Arc 데이터 기본 구조를 복구하지 못했습니다. 완전한 JSON 구조로 다시 설계하라."
+                    refined_arc = None
+                    if st_snapshot and generation_method.startswith("four_phase") and self.ctx.state_tracker:
+                        for _k, _v in st_snapshot.items():
+                            if hasattr(self.ctx.state_tracker, _k):
+                                setattr(self.ctx.state_tracker, _k, _v)
+                    return {"action": "retry", "current_feedback": current_feedback}
+                refined_arc = repaired_arc
+
             critical_missing = []
             if not refined_arc.get("hybrid_composition"):
                 self.ctx.ui.log(f"⚠️ [Arc {global_arc_no}] 패턴 구성(hybrid_composition) 누락 - 기본값 주입")
                 if callable(getattr(self.ctx, "audit_event", None)):
-                    self.ctx.audit_event("data_missing", "hybrid_composition missing", {"arc_no": global_arc_no})
+                    self.ctx.audit_event("field_repair", "hybrid_composition default injected", {"arc_no": global_arc_no})
                 refined_arc["hybrid_composition"] = {
                     "primary": "standard_progression",
                     "secondary": [],
@@ -893,7 +929,7 @@ class Stage2Finalizer:
             if not refined_arc.get("joint_docs"):
                 self.ctx.ui.log(f"⚠️ [Arc {global_arc_no}] joint_docs 누락 - 기본값 주입")
                 if callable(getattr(self.ctx, "audit_event", None)):
-                    self.ctx.audit_event("data_missing", "joint_docs missing", {"arc_no": global_arc_no})
+                    self.ctx.audit_event("field_repair", "joint_docs default injected", {"arc_no": global_arc_no})
                 refined_arc["joint_docs"] = {
                     "final_location": "위치 미정",
                     "physical_inventory": ["물품 미정"],
@@ -963,7 +999,7 @@ class Stage2Finalizer:
             if not refined_arc.get("status_shadow"):
                 self.ctx.ui.log(f"⚠️ [Arc {global_arc_no}] status_shadow 누락 - 기본값 주입")
                 if callable(getattr(self.ctx, "audit_event", None)):
-                    self.ctx.audit_event("data_missing", "status_shadow missing", {"arc_no": global_arc_no})
+                    self.ctx.audit_event("field_repair", "status_shadow default injected", {"arc_no": global_arc_no})
                 refined_arc["status_shadow"] = {
                     "internal_energy_loss": "0%",
                     "expected_injuries": "없음",
@@ -973,6 +1009,12 @@ class Stage2Finalizer:
 
             if len(critical_missing) >= RecoveryLimits.CRITICAL_MISSING_THRESHOLD:
                 self.ctx.ui.log(f"🚨 [Arc {global_arc_no}] 핵심 데이터 과다 누락({len(critical_missing)}개)")
+                if callable(getattr(self.ctx, "audit_event", None)):
+                    self.ctx.audit_event(
+                        "integrity_fail",
+                        "critical fields missing beyond repair threshold",
+                        {"arc_no": global_arc_no, "missing": critical_missing},
+                    )
                 current_feedback = f"필수 키 누락: {', '.join(critical_missing)}. 완전한 JSON 구조로 재설계하라."
                 refined_arc = None
                 # [P1-B1] StateTracker 롤백
@@ -1302,11 +1344,11 @@ class Stage2Finalizer:
                 attempt=attempt,
                 generation_method=generation_method,
                 selected_strategy=(
-                    refined_arc.get("_ensemble_meta", {}).get("best_strategy")
-                    or refined_arc.get("_strategy", "")
+                    _rejected_arc.get("_ensemble_meta", {}).get("best_strategy")
+                    or _rejected_arc.get("_strategy", "")
                     or generation_method
                 )
-                if isinstance(refined_arc, dict)
+                if isinstance(_rejected_arc, dict)
                 else generation_method,
                 audit=audit,
                 duration_ms=_director_duration_ms,
@@ -1646,12 +1688,24 @@ class Stage2Finalizer:
                 logging.debug(f"[SILENT] dashboard metrics (REJECT): {e}")
 
         if self.ctx.stage_rejection_history is not None:  # [Sweep4] None 가드
+            _failure_category = self._extract_failure_category(audit)
+            _score_breakdown = audit.get("score_breakdown", {})
+            if not isinstance(_score_breakdown, dict):
+                _score_breakdown = {}
             self.ctx.stage_rejection_history.append(
                 {
                     "stage": 2,
                     "arc_no": global_arc_no,
                     "reason": str(audit.get("reason", ""))[:200],
                     "attempt": attempt + 1,
+                    "specific_issue": str(audit.get("re_slice_instruction", "") or "")[:200],
+                    "failure_category": _failure_category or "",
+                    "fix_scope": str(audit.get("fix_scope", "") or "")[:40],
+                    "score_breakdown": {
+                        str(key): value
+                        for key, value in list(_score_breakdown.items())[:5]
+                        if isinstance(value, int | float)
+                    },
                 }
             )
 
@@ -1709,5 +1763,13 @@ class Stage2Finalizer:
                 flags["votes"] = votes
             if isinstance(pass_votes, int):
                 flags["pass_votes"] = pass_votes
+
+        patch_pressure = audit.get("patch_pressure")
+        if isinstance(patch_pressure, dict):
+            if patch_pressure.get("exceeded"):
+                flags["patch_pressure_exceeded"] = 1
+            count = patch_pressure.get("count")
+            if isinstance(count, int):
+                flags["patch_pressure_count"] = count
 
         return flags or None

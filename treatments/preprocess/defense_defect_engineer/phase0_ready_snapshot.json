@@ -1,0 +1,26 @@
+{
+  "work_id": "defense_defect_engineer",
+  "snapshot_date": "2026-03-12",
+  "source_manifest_exists": true,
+  "profile_lock_exists": true,
+  "material_bundle_summary_exists": true,
+  "phase0_ready_snapshot_exists": true,
+  "primary_profile": "business_growth_profile",
+  "secondary_profile": null,
+  "canonical_source_count": 3,
+  "core_material_count": 11,
+  "npc_pool_count": 8,
+  "crisis_pool_count": 10,
+  "do_not_fake_count": 5,
+  "manual_audit_pass": true,
+  "manual_audit_note": "Stage 0 전처리 4개 산출물 전량 완성. 기획안에서 10개 사업축, 16 NPC, 14 deal_type, 11 패배, 10 복선이 구체적 현장 재료로 채워져 있다. 추상 일반론 0건. Phase 0 설계 진입 가능.",
+  "go_conditions_met": [
+    "정본/참고본 구분 완료",
+    "Phase 0에 바로 옮길 재료 확보",
+    "do_not_fake 5개 항목 명시",
+    "수동 감리 메모 3줄 이상",
+    "profile_lock 주/보조 프로파일 명확",
+    "UTF-8 파싱 정상"
+  ],
+  "stop_conditions_triggered": []
+}

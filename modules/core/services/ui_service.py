@@ -1,7 +1,11 @@
-"""[Phase 4B-2] UIService — UI 헬퍼 메서드 서비스
+"""[Phase 4B-2] UIService — UI helper service
 
 원본: main_a.py:1117-1186, 2752-2790, 3219-3242 (4개 메서드, 132줄)
-Protocol: modules/protocols/app_services.py UIServiceProtocol (log/title은 StudioVisualizer 직접)
+
+NOTE:
+- 이 구현체는 Bible/Treatment 선택, 정수 입력, 테이블 출력 helper를 담당한다.
+- `modules/protocols/app_services.py::UIServiceProtocol`은 `self.ui`의 log/title surface를
+  모델링하며, 본 helper service의 conform target이 아니다.
 """
 
 from __future__ import annotations

@@ -13,6 +13,16 @@
 import json
 import logging
 
+from modules.core.project_support import (
+    EXTERNAL_POV_INSERT_POLICY_OPTIONS,
+    INCARNATION_TYPE_OPTIONS,
+    POV_OPTIONS,
+    WORLD_ORIGIN_OPTIONS,
+    default_external_pov_insert_policy,
+    resolve_external_pov_insert_policy_choice,
+    resolve_indexed_menu_choice,
+)
+
 
 class Stage01Helpers:
     """
@@ -50,6 +60,7 @@ class Stage01Helpers:
             app.ui.log("  [4] 📥 Bible JSON 임포트")
             app.ui.log("  [5] 📈 Block 확장 - 기존 Treatment에 블록 추가")
             app.ui.log("  [6] 🎨 스타일 레퍼런스 분석 - 참조 원고에서 문체 DNA 추출")
+            app.ui.log("  [7] 🛡 작품가드 설정 (선택)")
         app.ui.log("\n  [0] 취소")
 
         try:
@@ -75,6 +86,9 @@ class Stage01Helpers:
         elif p0_choice == "6" and STAGE0_AVAILABLE:
             self.stage_0_extended(mode=5)
             return
+        elif p0_choice == "7" and STAGE0_AVAILABLE:
+            self.stage_0_extended(mode=6)
+            return
 
         # 기존 방식 계속...
         bible_file = app._ui_select_bible()
@@ -98,13 +112,17 @@ class Stage01Helpers:
         app.ui.log("\n📌 [V60.87] 주인공 기본 설정")
 
         app.ui.log("   🌍 주인공의 세계관 출신을 선택하세요:")
-        app.ui.log("      [1] 원시인 - 현대 지식/용어 사용 제한 (권장: 무협/판타지)")
-        app.ui.log("      [2] 현대인 - 제약 없음 (권장: 회귀/빙의물)")
+        app.ui.log("      [1] 현대인 - 제약 없음 (권장: 회귀/빙의물)")
+        app.ui.log("      [2] 원시인 - 현대 지식/용어 사용 제한 (권장: 무협/판타지)")
         try:
             world_choice = input("   선택 (기본: 1): ").strip()
         except (EOFError, KeyboardInterrupt, ValueError):
-            world_choice = "1"
-        world_origin = "현대인" if world_choice == "2" else "원시인"
+            world_choice = ""
+        world_origin = resolve_indexed_menu_choice(
+            WORLD_ORIGIN_OPTIONS,
+            world_choice,
+            default="현대인",
+        )
 
         app.ui.log("   🎭 주인공의 유형을 선택하세요:")
         app.ui.log("      [1] 회귀자 - 먼 미래에서 과거로 회귀 (기억 보존)")
@@ -114,9 +132,12 @@ class Stage01Helpers:
         try:
             type_choice = input("   선택 (기본: 1): ").strip()
         except (EOFError, KeyboardInterrupt, ValueError):
-            type_choice = "1"
-        incarnation_types = {"1": "회귀자", "2": "빙의자", "3": "환생자", "4": "기타"}
-        incarnation_type = incarnation_types.get(type_choice, "회귀자")
+            type_choice = ""
+        incarnation_type = resolve_indexed_menu_choice(
+            INCARNATION_TYPE_OPTIONS,
+            type_choice,
+            default="일반",
+        )
 
         app.ui.log("   📖 서술 시점을 선택하세요:")
         app.ui.log("      [1] 1인칭 - 주인공 '나'의 시점 (몰입감↑, 정보 제한)")
@@ -126,14 +147,36 @@ class Stage01Helpers:
         try:
             pov_choice = input("   선택 (기본: 2): ").strip()
         except (EOFError, KeyboardInterrupt, ValueError):
-            pov_choice = "2"
-        pov_types = {"1": "1인칭", "2": "3인칭", "3": "전지적", "4": "혼합"}
-        selected_pov = pov_types.get(pov_choice, "3인칭")
+            pov_choice = ""
+        selected_pov = resolve_indexed_menu_choice(
+            POV_OPTIONS,
+            pov_choice,
+            default="3인칭",
+        )
+
+        genre_type = ""
+        if app.selected_genre:
+            genre_type = str(app.selected_genre.get("type", "") or "").strip().lower()
+        default_policy = default_external_pov_insert_policy(selected_pov, genre=genre_type)
+        default_index = EXTERNAL_POV_INSERT_POLICY_OPTIONS.index(default_policy) + 1
+        app.ui.log("   📝 외부 시점 삽입 정책을 선택하세요:")
+        for i, option in enumerate(EXTERNAL_POV_INSERT_POLICY_OPTIONS, 1):
+            app.ui.log(f"      [{i}] {option}")
+        try:
+            policy_choice = input(f"   선택 (기본: {default_index}): ").strip()
+        except (EOFError, KeyboardInterrupt, ValueError):
+            policy_choice = ""
+        selected_external_policy = resolve_external_pov_insert_policy_choice(
+            policy_choice,
+            primary_pov=selected_pov,
+            genre=genre_type,
+        )
 
         protagonist_config = {
             "world_origin": world_origin,
             "incarnation_type": incarnation_type,
             "pov": selected_pov,
+            "external_pov_insert_policy": selected_external_policy,
         }
         app.ui.log(f"   ✅ 설정 완료: {world_origin} / {incarnation_type} / {selected_pov}")
 
@@ -277,7 +320,7 @@ class Stage01Helpers:
     # [4C-1b-b] _stage_0_extended
     # ─────────────────────────────────────────────────────────────
     def stage_0_extended(self, mode: int = 0):
-        """[V60.95] Stage 0 확장 기능 — dispatcher + 5 핸들러."""
+        """[V60.95] Stage 0 확장 기능 — dispatcher + 6 핸들러."""
         app = self.app
 
         from modules.core.spinners import STAGE0_AVAILABLE
@@ -297,11 +340,21 @@ class Stage01Helpers:
             if genre_type:
                 stage0_manager.genre = genre_type.lower()
                 stage0_manager.preset_registry = PresetRegistry(base_genre=genre_type.lower())
+        try:
+            master_bible = getattr(app.current_project, "master_bible", None) or {}
+            bible_root = master_bible.get("MasterBible", master_bible) if isinstance(master_bible, dict) else {}
+            protagonist_config = bible_root.get("protagonist_config", {}) if isinstance(bible_root, dict) else {}
+            if isinstance(protagonist_config, dict) and protagonist_config:
+                stage0_manager.protagonist_config = dict(protagonist_config)
+        except Exception as _pov_contract_err:
+            logging.debug("[Stage0Helpers] protagonist_config preload failed: %s", _pov_contract_err)
 
         if mode == 0:
             choice = stage0_manager.show_menu(is_new_project=True)
             if choice == 4:
                 choice = 5
+            elif choice == 5:
+                choice = 6
         else:
             choice = mode
 
@@ -311,6 +364,7 @@ class Stage01Helpers:
             3: self._s0_handle_bible_import,
             4: self._s0_handle_block_extension,
             5: self._s0_handle_style_analysis,
+            6: self._s0_handle_work_guard,
         }
         handler = handlers.get(choice)
         if handler is None:
@@ -450,13 +504,112 @@ class Stage01Helpers:
         return None, None
 
     @staticmethod
+    def _s0_handle_work_guard(_app, stage0_manager):
+        """choice=6: 작품가드 설정."""
+        stage0_manager.manage_work_guard()
+        try:
+            input("\n[Enter] 메뉴로 돌아가기")
+        except (EOFError, KeyboardInterrupt, ValueError):
+            pass
+        return None, None
+
+    @staticmethod
+    def _build_plot_roadmap_from_treatment(treatment) -> list[dict]:
+        """Stage 2가 기대하는 flat plot_roadmap 형태로 treatment를 정규화한다."""
+        if isinstance(treatment, dict):
+            treatment = treatment.get("treatments", [])
+        if not isinstance(treatment, list):
+            return []
+
+        refined_roadmap = []
+        for i, block in enumerate(treatment):
+            if not isinstance(block, dict):
+                continue
+            entry = {"block_no": i + 1}
+            entry.update(block)
+            refined_roadmap.append(entry)
+        return refined_roadmap
+
+    @staticmethod
+    def _build_plot_roadmap_from_saved_arcs(app) -> list[dict]:
+        """역설계 경로에서는 저장된 arc stub을 roadmap placeholder로 승격한다."""
+        project = getattr(app, "current_project", None)
+        db = getattr(project, "db", None)
+        if db is None or not hasattr(db, "load_anchor"):
+            return []
+
+        try:
+            arcs = db.load_anchor("arcs") or []
+        except Exception as exc:
+            logging.warning(f"[Stage0] arcs anchor 로드 실패: {exc}")
+            return []
+
+        if isinstance(arcs, dict):
+            arcs = list(arcs.values())
+        if not isinstance(arcs, list):
+            return []
+
+        refined_roadmap = []
+        for i, arc in enumerate(arcs):
+            if not isinstance(arc, dict):
+                continue
+            entry = {"block_no": i + 1}
+            for key in (
+                "arc_no",
+                "volume_no",
+                "ep_start",
+                "ep_end",
+                "ep_count",
+                "tactical_doc",
+                "key_events",
+                "joint_docs",
+                "state_changes",
+                "_stub",
+                "_source",
+            ):
+                if key in arc:
+                    entry[key] = arc[key]
+            if (
+                "ep_count" not in entry
+                and isinstance(entry.get("ep_start"), int)
+                and isinstance(entry.get("ep_end"), int)
+            ):
+                entry["ep_count"] = max(0, entry["ep_end"] - entry["ep_start"] + 1)
+            refined_roadmap.append(entry)
+        return refined_roadmap
+
+    @classmethod
+    def _ensure_plot_roadmap(cls, app, bible, treatment) -> int:
+        """Stage 0 결과 저장 전에 plot_roadmap 누락을 보정한다."""
+        if not isinstance(bible, dict):
+            return 0
+
+        master = bible.get("MasterBible")
+        bible_root = master if isinstance(master, dict) else bible
+        existing = bible_root.get("plot_roadmap", [])
+        if isinstance(existing, list) and existing:
+            return len(existing)
+
+        refined_roadmap = cls._build_plot_roadmap_from_treatment(treatment)
+        if not refined_roadmap:
+            refined_roadmap = cls._build_plot_roadmap_from_saved_arcs(app)
+        if not refined_roadmap:
+            return 0
+
+        bible_root["plot_roadmap"] = refined_roadmap
+        return len(refined_roadmap)
+
+    @staticmethod
     def _s0_save_results(app, stage0_manager, bible, treatment):
         """공통 후처리: Bible/Treatment DB 저장 + 리로드."""
         if bible:
             try:
+                injected_blocks = Stage01Helpers._ensure_plot_roadmap(app, bible, treatment)
                 app.current_project.master_bible = bible
                 app.current_project.save_v20_anchor("bible", bible)
                 app.ui.log("✅ Bible이 DB에 저장되었습니다.")
+                if injected_blocks:
+                    app.ui.log(f"   ✅ plot_roadmap 준비 완료: {injected_blocks} 블록")
 
                 master = bible.get("MasterBible", bible)
                 protagonist_config = master.get("protagonist_config", {})

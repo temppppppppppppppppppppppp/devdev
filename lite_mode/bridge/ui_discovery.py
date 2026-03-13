@@ -13,6 +13,8 @@ Google이 Gemini UI를 변경해도 자동 적응.
 비용: 캘리브레이션 1회당 Flash API 호출 1회 ≈ $0.001 이하
 """
 
+# Manual-only helper. This module is not part of the production API/Desktop runtime path.
+
 import json
 import time
 import urllib.error

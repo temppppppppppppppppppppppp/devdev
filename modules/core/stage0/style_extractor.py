@@ -7,6 +7,7 @@ Style Extractor V2 - 문체 DNA 추출기
 [V61.8] 강화: 리듬 분석, 감정 렌더링, anti-AI 패턴, 모범 문단 큐레이션
 """
 
+import hashlib
 import json
 import logging
 import os
@@ -17,6 +18,7 @@ from pathlib import Path
 from typing import Any
 
 from modules.core.llm_generate import generate_content_via_router
+from modules.core.project_support import normalize_external_pov_insert_policy
 
 
 @dataclass
@@ -26,6 +28,10 @@ class StyleGuide:
     # === 기존 필드 (V1 호환) ===
     tone: str = "중립"  # 냉소적/유머/진지/가벼움/어두움
     pov: str = "1인칭"  # 1인칭/3인칭/전지적/혼합
+    extracted_pov: str = ""
+    selected_primary_pov: str = ""
+    effective_primary_pov: str = ""
+    external_pov_insert_policy: str = ""
     sentence_length: str = "medium"  # short/medium/long
     dialogue_ratio: float = 0.3  # 대화 비율 (0.0-1.0)
     description_style: str = "균형"  # 간결/균형/묘사적
@@ -240,11 +246,132 @@ class StyleExtractor:
     """[V2] 문체 DNA 추출기 - 정밀 클로닝"""
 
     API_DELAY = 0.5  # LLM 호출 간격
+    CACHE_META_VERSION = "s0-style-cache-v2"
+    CACHE_SAMPLING_POLICY = "sample-text-1m/front-back-llm/deep-anti-ai-v1"
+    CACHE_PROMPT_CONTRACT = "style-extractor-v2-frontback-anti-ai"
 
     def __init__(self, llm_client=None, genre: str = "") -> None:
         self.client = llm_client
         self.genre = genre  # [QI-1-B2] 장르별 가중치 분기용
         self._latest_curated_passages: list[str] = []
+        self.last_cache_status = "cold"
+
+    @classmethod
+    def _prompt_contract_hash(cls) -> str:
+        return hashlib.sha256(cls.CACHE_PROMPT_CONTRACT.encode("utf-8")).hexdigest()
+
+    @staticmethod
+    def _reference_manifest(ref_dir: Path) -> list[dict[str, Any]]:
+        manifest: list[dict[str, Any]] = []
+        if not ref_dir.exists():
+            return manifest
+        for txt_file in sorted(ref_dir.rglob("*.txt")):
+            try:
+                stat = txt_file.stat()
+            except OSError:
+                continue
+            manifest.append(
+                {
+                    "path": txt_file.relative_to(ref_dir).as_posix(),
+                    "size": stat.st_size,
+                    "mtime_ns": stat.st_mtime_ns,
+                }
+            )
+        return manifest
+
+    @classmethod
+    def _manifest_hash(cls, manifest: list[dict[str, Any]]) -> str:
+        payload = json.dumps(manifest, ensure_ascii=False, sort_keys=True)
+        return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+    @classmethod
+    def _build_cache_meta(
+        cls,
+        genre: str,
+        ref_dir: Path,
+        *,
+        selected_primary_pov: str = "",
+        external_pov_insert_policy: str = "",
+    ) -> dict[str, Any]:
+        from modules.core.constants import AIModels
+
+        manifest = cls._reference_manifest(ref_dir)
+        normalized_primary_pov = str(selected_primary_pov or "").strip()
+        normalized_external_policy = normalize_external_pov_insert_policy(
+            external_pov_insert_policy,
+            primary_pov=normalized_primary_pov,
+            genre=genre,
+        )
+        return {
+            "cache_meta_version": cls.CACHE_META_VERSION,
+            "analysis_version": StyleGuide.analysis_version,
+            "genre": genre,
+            "model_id": str(getattr(AIModels, "TIER_1_ARCHITECT", "") or ""),
+            "sampling_policy": cls.CACHE_SAMPLING_POLICY,
+            "prompt_contract_hash": cls._prompt_contract_hash(),
+            "reference_manifest": manifest,
+            "reference_manifest_hash": cls._manifest_hash(manifest),
+            "selected_primary_pov": normalized_primary_pov,
+            "external_pov_insert_policy": normalized_external_policy,
+        }
+
+    @classmethod
+    def _load_cache_payload(cls, cache_path: Path) -> tuple[dict[str, Any], dict[str, Any]]:
+        cached_data = json.loads(cache_path.read_text(encoding="utf-8"))
+        if isinstance(cached_data, dict) and "style_guide" in cached_data:
+            style_payload = cached_data.get("style_guide") or {}
+            cache_meta = cached_data.get("_cache_meta") or {}
+            return (
+                style_payload if isinstance(style_payload, dict) else {},
+                cache_meta if isinstance(cache_meta, dict) else {},
+            )
+        return cached_data if isinstance(cached_data, dict) else {}, {}
+
+    @classmethod
+    def _wrap_cache_payload(cls, guide: StyleGuide, cache_meta: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "_cache_meta": cache_meta,
+            "style_guide": guide.to_dict(),
+        }
+
+    @classmethod
+    def _cache_meta_matches(cls, cached_meta: dict[str, Any], current_meta: dict[str, Any]) -> bool:
+        required_keys = (
+            "cache_meta_version",
+            "analysis_version",
+            "genre",
+            "model_id",
+            "sampling_policy",
+            "prompt_contract_hash",
+            "reference_manifest_hash",
+            "selected_primary_pov",
+            "external_pov_insert_policy",
+        )
+        return all(cached_meta.get(key) == current_meta.get(key) for key in required_keys)
+
+    def _apply_pov_contract(
+        self,
+        guide: StyleGuide,
+        *,
+        selected_primary_pov: str = "",
+        external_pov_insert_policy: str = "",
+    ) -> StyleGuide:
+        extracted_pov = str(getattr(guide, "extracted_pov", "") or guide.pov or "").strip()
+        selected_pov = str(selected_primary_pov or getattr(guide, "selected_primary_pov", "") or "").strip()
+        effective_pov = selected_pov or extracted_pov
+        external_policy = normalize_external_pov_insert_policy(
+            external_pov_insert_policy or getattr(guide, "external_pov_insert_policy", ""),
+            primary_pov=selected_pov or effective_pov,
+            genre=self.genre,
+        )
+
+        guide.extracted_pov = extracted_pov
+        guide.selected_primary_pov = selected_pov
+        guide.effective_primary_pov = effective_pov
+        guide.external_pov_insert_policy = external_policy
+        if effective_pov:
+            guide.pov = effective_pov
+        return guide
 
     # ═══════════════════════════════════════════════════════════════
     # 메인 추출 메서드
@@ -791,12 +918,19 @@ JSON만 출력하세요.
 
         return works
 
-    def extract_from_references(self, genre: str) -> StyleGuide | None:
+    def extract_from_references(
+        self,
+        genre: str,
+        cache_mode: str = "use",
+        *,
+        selected_primary_pov: str = "",
+        external_pov_insert_policy: str = "",
+    ) -> StyleGuide | None:
         """
         장르별 레퍼런스 폴더에서 스타일 추출
 
         [S0-I5] 캐싱 강화: style_guide.json으로 결과 캐싱.
-        레퍼런스 파일 mtime이 변경되지 않으면 캐시 사용 (LLM 3-4회 호출 절감).
+        reference manifest / 분석 버전 / 모델 / 샘플링 / 프롬프트 계약이 유지되면 캐시 사용.
 
         Args:
             genre: 장르 타입
@@ -804,24 +938,47 @@ JSON만 출력하세요.
         Returns:
             StyleGuide 또는 None
         """
+        cache_mode = cache_mode if cache_mode in {"use", "refresh", "reset"} else "use"
         self.genre = genre  # [QI-1-B2] extract_from_references 호출 시 장르 동기화
         ref_dir = Path("config/style_references") / genre
         cache_path = ref_dir / "style_guide.json"
+        current_meta = self._build_cache_meta(
+            genre,
+            ref_dir,
+            selected_primary_pov=selected_primary_pov,
+            external_pov_insert_policy=external_pov_insert_policy,
+        )
 
-        # [S0-I5] 캐시 유효성 검사: 레퍼런스 파일 최신 mtime vs 캐시 mtime
-        if cache_path.exists():
+        if cache_mode == "reset" and cache_path.exists():
             try:
-                cache_mtime = cache_path.stat().st_mtime
-                ref_latest_mtime = self._get_latest_ref_mtime(ref_dir)
-                if ref_latest_mtime > 0 and cache_mtime >= ref_latest_mtime:
-                    cached_data = json.loads(cache_path.read_text(encoding="utf-8"))
-                    guide = StyleGuide.from_dict(cached_data)
+                cache_path.unlink()
+                logging.info("[S0-I5] 스타일 캐시 삭제 후 재분석: %s", cache_path)
+            except OSError as exc:
+                logging.warning("[S0-I5] 스타일 캐시 삭제 실패, 계속 진행: %s", exc)
+
+        if cache_mode == "use" and cache_path.exists():
+            try:
+                cached_style, cached_meta = self._load_cache_payload(cache_path)
+                if cached_meta and self._cache_meta_matches(cached_meta, current_meta):
+                    guide = self._apply_pov_contract(
+                        StyleGuide.from_dict(cached_style),
+                        selected_primary_pov=selected_primary_pov,
+                        external_pov_insert_policy=external_pov_insert_policy,
+                    )
+                    self.last_cache_status = "hit"
                     logging.info(f"[S0-I5] 캐시 히트: {cache_path} (LLM 호출 절감)")
                     return guide
+                if cached_meta:
+                    logging.info("[S0-I5] 캐시 메타 불일치 — 재분석 진행")
                 else:
-                    logging.info("[S0-I5] 캐시 만료 — 레퍼런스 파일 변경 감지")
+                    logging.info("[S0-I5] 구형 캐시 포맷 감지 — 재분석 진행")
             except Exception as e:
                 logging.warning(f"[S0-I5] 캐시 로드 실패, 재분석 진행: {e}")
+        elif cache_mode == "refresh":
+            self.last_cache_status = "refresh"
+            logging.info("[S0-I5] 캐시 무시 모드 — 재분석 진행")
+        elif cache_mode == "reset":
+            self.last_cache_status = "reset"
 
         works = self.load_reference_manuscripts(genre)
         if not works:
@@ -837,32 +994,25 @@ JSON만 출력하세요.
         logging.info(f"[*] 총 {len(all_drafts)}화, 작품 {len(works)}개 분석")
 
         guide = self.extract_from_drafts(all_drafts, reference_name=", ".join(work_names))
+        guide = self._apply_pov_contract(
+            guide,
+            selected_primary_pov=selected_primary_pov,
+            external_pov_insert_policy=external_pov_insert_policy,
+        )
         guide.reference_works = list(works.keys())
+        if self.last_cache_status not in {"refresh", "reset"}:
+            self.last_cache_status = "miss"
 
         # [S0-I5] 결과를 JSON 캐시로 저장
         try:
             cache_path.parent.mkdir(parents=True, exist_ok=True)
-            cache_path.write_text(guide.to_json(), encoding="utf-8")
+            cache_payload = self._wrap_cache_payload(guide, current_meta)
+            cache_path.write_text(json.dumps(cache_payload, ensure_ascii=False, indent=2), encoding="utf-8")
             logging.info(f"[S0-I5] 스타일 캐시 저장: {cache_path}")
         except Exception as e:
             logging.warning(f"[S0-I5] 캐시 저장 실패 (비차단): {e}")
 
         return guide
-
-    @staticmethod
-    def _get_latest_ref_mtime(ref_dir: Path) -> float:
-        """[S0-I5] 레퍼런스 디렉토리 내 .txt 파일 중 가장 최신 mtime 반환"""
-        latest = 0.0
-        if not ref_dir.exists():
-            return 0.0
-        for txt_file in ref_dir.rglob("*.txt"):
-            try:
-                mtime = txt_file.stat().st_mtime
-                if mtime > latest:
-                    latest = mtime
-            except OSError:
-                continue
-        return latest
 
     # ═══════════════════════════════════════════════════════════════
     # 유틸리티

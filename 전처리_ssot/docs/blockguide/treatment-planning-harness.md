@@ -873,6 +873,12 @@ weakness:
 - `Phase 0 JSON` 또는 동등한 설계 SSOT 생성 완료
 - 이후 단계는 `treatment-production-harness-v2.md`의 연속 진행 규칙으로 인계
 
+**Phase 0 완료 후 행동 (필수):**
+
+- Phase 0 JSON이 정상 생성되면 이 문서의 역할은 끝난다. **멈추지 않고** 즉시 `SSOT_blockguide-integrated-order.md` §2 판정표를 재적용하여 다음 단계(Production)로 자동 진행한다.
+- "Phase 0 끝났습니다. 계속할까요?"를 묻는 것은 금지한다. 정지 게이트가 발동하지 않았으면 다음 단위(Production Block 001)로 바로 넘어간다.
+- 단계 전환은 정지 게이트가 아니다.
+
 ---
 
 ## 15. 나쁜 기획 vs 좋은 기획 비교

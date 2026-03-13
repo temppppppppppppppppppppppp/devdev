@@ -6,9 +6,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from dotenv import load_dotenv
-
+from .constants import HUDKeys, NPCHUDKeys
 from .db_manager import DBError, DBManager
+from .runtime_paths import resolve_project_dir, resolve_projects_root
 
 
 def safe_nested_get(data: Any, *keys, default=None) -> Any:
@@ -45,11 +45,15 @@ class ProjectPaths:
 class ProjectContext:
     """[V20 Data Anchor] SQLite S등급 엔진을 탑재한 데이터 주권 관리자"""
 
-    def __init__(self, project_name: str, root_dir: str = "projects"):
-        load_dotenv(override=True)
-
+    def __init__(self, project_name: str, root_dir: str | Path | None = None):
         self.name = project_name
-        self.base_path = Path(root_dir) / self.name
+        default_root = Path(__file__).resolve().parents[2]
+        if root_dir is None:
+            self.projects_root = resolve_projects_root(default_root)
+            self.base_path = resolve_project_dir(project_name, default_root)
+        else:
+            self.projects_root = Path(root_dir)
+            self.base_path = self.projects_root / self.name
         self.db_path = self.base_path / "project_data.db"
 
         self.selected_tone = {"name": "Sovereign Standard", "writer": "DB Mode"}
@@ -224,8 +228,7 @@ class ProjectContext:
             # [C] Martial Tracker(HUD) 강제 동기화
             # [V49 FIX] ep_num=0 하드코딩 제거 - 실제 에피소드 저장은 commit_full_episode_data에서 수행
             # bible 저장 시에는 HUD 동기화를 하지 않음 (잘못된 ep_num으로 덮어쓰기 방지)
-            protagonist = bible_root.get("MartialHUD", {}).get("Protagonist", {})
-            actual_data = protagonist.get("actual_truth", {})
+            actual_data = self._get_protagonist_actual_truth_node(bible_root)
             if actual_data:
                 # 현재 최신 에피소드 번호 조회
                 # [V70] get_latest_episode_number()는 NEXT ep 반환 → -1로 현재 ep 계산
@@ -499,14 +502,15 @@ class ProjectContext:
                     if not isinstance(new_npc, dict):
                         continue
                     npc_name = new_npc.get("name") or new_npc.get("Name")
+                    npc_hud_key = self._get_npc_hud_key()
                     for target in bible_npcs:
                         if target.get("name") == npc_name:
-                            if "NPC_Martial_HUD" in new_npc:
-                                new_hud = new_npc["NPC_Martial_HUD"]
+                            if npc_hud_key in new_npc:
+                                new_hud = new_npc[npc_hud_key]
                                 # [V45 Fix] new_hud가 dict가 아니면 건너뜀 (AttributeError 방지)
                                 if not isinstance(new_hud, dict):
                                     continue
-                                old_hud = target.get("NPC_Martial_HUD", {})
+                                old_hud = target.get(npc_hud_key, {})
                                 # [V45 Fix] old_hud도 dict 보장
                                 if not isinstance(old_hud, dict):
                                     old_hud = {}
@@ -535,7 +539,7 @@ class ProjectContext:
                                     logging.info(f" [NPC Trace] {npc_name} 변화 감지: {', '.join(changes)}")
 
                                 # 데이터 병합 (성경 메모리 동기화)
-                                target.setdefault("NPC_Martial_HUD", {}).update(new_hud)
+                                target.setdefault(npc_hud_key, {}).update(new_hud)
                             break
 
             # --- [Part 3: 원자적 저장 - Bible 먼저, DB 나중] ---
@@ -624,7 +628,10 @@ class ProjectContext:
         state = self.db.get_latest_state()
         if not state:
             bible_root = self.master_bible.get("MasterBible", self.master_bible)
-            return bible_root.get("MartialHUD", bible_root.get("martial_hud", {}))
+            hud_key = self._get_protagonist_hud_key(bible_root if isinstance(bible_root, dict) else {})
+            if isinstance(bible_root, dict):
+                return bible_root.get(hud_key, bible_root.get("martial_hud", {}))
+            return {}
         return state
 
     def get_sequential_context(self, current_ep) -> tuple:
@@ -662,6 +669,51 @@ class ProjectContext:
         except Exception:
             # 파일 확인 실패 시 DB 값 사용
             return db_ep
+
+    def _get_genre_type(self) -> str:
+        genre = getattr(self, "genre", None)
+        if isinstance(genre, dict):
+            return str(genre.get("type") or genre.get("name") or "")
+        return str(genre or "")
+
+    def _get_protagonist_hud_key(self, bible_root: dict) -> str:
+        genre_type = self._get_genre_type()
+        candidates = [HUDKeys.get_hud_root(genre_type)] if genre_type else []
+        for hud_key in (
+            "MartialHUD",
+            "FinanceHUD",
+            "HunterHUD",
+            "ComposerHUD",
+            "CookingHUD",
+            "JoseonHUD",
+            "ActorHUD",
+            "SportsHUD",
+            "MedicalHUD",
+            "FantasyHUD",
+        ):
+            if hud_key not in candidates:
+                candidates.append(hud_key)
+
+        for hud_key in candidates:
+            hud = bible_root.get(hud_key, {}) if isinstance(bible_root, dict) else {}
+            protagonist = hud.get("Protagonist", {}) if isinstance(hud, dict) else {}
+            if isinstance(protagonist, dict):
+                return hud_key
+        return HUDKeys.get_hud_root(genre_type)
+
+    def _get_protagonist_actual_truth_node(self, bible_root: dict) -> dict:
+        if not isinstance(bible_root, dict):
+            return {}
+        hud_key = self._get_protagonist_hud_key(bible_root)
+        hud = bible_root.get(hud_key, {})
+        protagonist = hud.get("Protagonist", {}) if isinstance(hud, dict) else {}
+        if not isinstance(protagonist, dict):
+            return {}
+        actual_truth = protagonist.get("actual_truth", {})
+        return actual_truth if isinstance(actual_truth, dict) else {}
+
+    def _get_npc_hud_key(self) -> str:
+        return NPCHUDKeys.get_key(self._get_genre_type())
 
     # --- [Bridge 보완: 15대 지표 데이터 가드] ---
     def record_martial_stats(self, ep_num, stats_data) -> None:

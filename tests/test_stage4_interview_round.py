@@ -2,11 +2,13 @@
 
 import inspect
 import json
+import logging
 import time
 from pathlib import Path
 from unittest.mock import MagicMock, mock_open, patch
 
 from modules.core.context_advisor import RetrievalPlan, RetrievalSlot, RetrievalSources
+from modules.core.stage4_context import Stage4Context
 from modules.core.stage4_interview_round import Stage4InterviewRound
 from modules.core.stage4_orchestrator import Stage4Orchestrator, _RoundContext
 
@@ -31,6 +33,10 @@ def _make_ctx():
     ctx.agents = {"director": MagicMock()}
     ctx.context_advisor = None
     ctx.memory = None
+    ctx.adaptive_manager = None
+    ctx.failure_learner = None
+    ctx.quality_dashboard = None
+    ctx.enrich_director_result = None
     ctx.get_module = MagicMock(return_value=None)
     return ctx
 
@@ -443,6 +449,35 @@ class TestInterviewRoundRun:
         director_kwargs = ctx.agents["director"].select_and_judge_ensemble.call_args.kwargs
         assert "[작품 시점]" in director_kwargs["mandatory_context"]
         assert "기본 POV: 혼합" in director_kwargs["mandatory_context"]
+
+    def test_director_mandatory_context_includes_external_pov_policy(self):
+        ctx = _make_ctx()
+        ctx.current_project.master_bible = {
+            "MasterBible": {"protagonist_config": {"pov": "혼합", "external_pov_insert_policy": "제한적 허용"}}
+        }
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.chief_writer.generate_ensemble.return_value = [_candidate()]
+        round_ctx.manuscript_validator.validate_all_candidates.return_value = [_validation_result()]
+        ctx.agents["director"].select_and_judge_ensemble.return_value = {
+            "selected": "A",
+            "verdict": "PASS",
+            "score": 95,
+            "selection_reason": "ok",
+            "selected_candidate": {"manuscript": "통과 원고", "title": "통과"},
+            "state_updates": {},
+        }
+
+        ir.run(
+            round_num=0,
+            stage4_spinner=MagicMock(),
+            director_feedback="",
+            previous_attempt={},
+            round_ctx=round_ctx,
+        )
+
+        director_kwargs = ctx.agents["director"].select_and_judge_ensemble.call_args.kwargs
+        assert "policy: 제한적 허용" in director_kwargs["mandatory_context"]
 
     def test_build_history_parser_accepts_inline_header_without_newline(self):
         ctx = _make_ctx()
@@ -877,6 +912,28 @@ class TestRecordS4Attempt:
         assert kw["attempt_key"] == "s4:ep1:arc1:a1"
         assert kw["final_verdict"] == "REJECT"
 
+    def test_record_s4_attempt_persists_semantic_failure_fields(self):
+        ctx = _make_ctx()
+        ctx.pass_rate_monitor = MagicMock()
+        ir = Stage4InterviewRound(ctx)
+
+        ir._record_s4_attempt(
+            episode=2,
+            round_num=1,
+            success=False,
+            score=61,
+            verdict="REJECT",
+            reject_reason="retry needed",
+            error_category="LOGIC_ERROR",
+            reject_bucket="post_select_conflict",
+            score_breakdown={"narrative_flow": 9},
+        )
+
+        kw = ctx.pass_rate_monitor.record_attempt.call_args.kwargs
+        assert kw["error_category"] == "LOGIC_ERROR"
+        assert kw["reject_bucket"] == "post_select_conflict"
+        assert kw["score_breakdown"]["narrative_flow"] == 9
+
     def test_attempt_key_uses_metrics_session_id_when_available(self):
         ctx = _make_ctx()
         ctx.current_project.metrics_session_id = "sess_stage4"
@@ -1232,6 +1289,177 @@ class TestRecordS4Attempt:
         round_ctx.chief_writer.regenerate_with_feedback.assert_not_called()
         round_ctx.chief_writer.inplace_patch.assert_called_once()
 
+    """
+    def test_firewall_continuity_reject_promotes_patch_path(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+
+        result = ir._handle_reject(
+            director_result={
+                "selected_candidate": {"manuscript": "candidate manuscript", "strategy_name": "balanced"},
+                "selection_reason": "best candidate",
+                "verdict_reason": "Contradiction Firewall: CRITICAL 1건",
+                "feedback": {"issues": ["scene overlap conflict"]},
+                "action_items": ["revise the opening beat"],
+                "fix_scope": "inplace",
+                "fix_scope_reasoning": "minor local fix",
+                "open_review": "직전 화와 같은 사건이 반복됩니다.",
+                "firewall_triggered": True,
+                "firewall_reason": "Contradiction Firewall: CRITICAL 1건",
+                "contradiction_types": ["scene_overlap"],
+            },
+            director_feedback="initial reject",
+            candidates=[_candidate()],
+            validation_results=[_validation_result()],
+            round_ctx=round_ctx,
+            round_num=0,
+            previous_attempt={},
+            is_patch=False,
+            is_patch_fallback=False,
+            prev_score=94,
+            prev_manuscript="previous manuscript",
+            asp_manuscript=None,
+            tot_used=False,
+            mad_used=False,
+            selected="A",
+            score=44,
+            error_category="",
+        )
+
+        assert result.error_category == "LOGIC_ERROR"
+        assert result.previous_attempt["reject_bucket"] == "post_select_conflict"
+        assert result.previous_attempt["fix_scope"] == "partial"
+        assert result.previous_attempt["firewall_triggered"] is True
+        assert "continuity replay" in result.director_feedback
+
+    def test_firewall_numeric_reject_does_not_promote_patch_path(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+
+        result = ir._handle_reject(
+            director_result={
+                "selected_candidate": {"manuscript": "candidate manuscript", "strategy_name": "balanced"},
+                "selection_reason": "best candidate",
+                "verdict_reason": "Contradiction Firewall: CRITICAL 1건",
+                "feedback": {"issues": ["numeric contradiction"]},
+                "action_items": ["fix the numbers"],
+                "fix_scope": "inplace",
+                "fix_scope_reasoning": "minor local fix",
+                "open_review": "",
+                "firewall_triggered": True,
+                "firewall_reason": "Contradiction Firewall: CRITICAL 1건",
+                "contradiction_types": ["arithmetic"],
+            },
+            director_feedback="initial reject",
+            candidates=[_candidate()],
+            validation_results=[_validation_result()],
+            round_ctx=round_ctx,
+            round_num=0,
+            previous_attempt={},
+            is_patch=False,
+            is_patch_fallback=False,
+            prev_score=94,
+            prev_manuscript="previous manuscript",
+            asp_manuscript=None,
+            tot_used=False,
+            mad_used=False,
+            selected="A",
+            score=44,
+            error_category="",
+        )
+
+        assert result.previous_attempt["reject_bucket"] != "post_select_conflict"
+        assert result.previous_attempt["fix_scope"] == "inplace"
+        assert result.error_category == ""
+
+    """
+
+    def test_firewall_continuity_reject_promotes_patch_path(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+
+        result = ir._handle_reject(
+            director_result={
+                "selected_candidate": {"manuscript": "candidate manuscript", "strategy_name": "balanced"},
+                "selection_reason": "best candidate",
+                "verdict_reason": "Contradiction Firewall: CRITICAL 1",
+                "feedback": {"issues": ["scene overlap conflict"]},
+                "action_items": ["revise the opening beat"],
+                "fix_scope": "inplace",
+                "fix_scope_reasoning": "minor local fix",
+                "open_review": "The previous episode event is being repeated.",
+                "firewall_triggered": True,
+                "firewall_reason": "Contradiction Firewall: CRITICAL 1",
+                "contradiction_types": ["scene_overlap"],
+            },
+            director_feedback="initial reject",
+            candidates=[_candidate()],
+            validation_results=[_validation_result()],
+            round_ctx=round_ctx,
+            round_num=0,
+            previous_attempt={},
+            is_patch=False,
+            is_patch_fallback=False,
+            prev_score=94,
+            prev_manuscript="previous manuscript",
+            asp_manuscript=None,
+            tot_used=False,
+            mad_used=False,
+            selected="A",
+            score=44,
+            error_category="",
+        )
+
+        assert result.error_category == "LOGIC_ERROR"
+        assert result.previous_attempt["reject_bucket"] == "post_select_conflict"
+        assert result.previous_attempt["fix_scope"] == "partial"
+        assert result.previous_attempt["firewall_triggered"] is True
+        assert "continuity replay" in result.director_feedback
+
+    def test_firewall_numeric_reject_does_not_promote_patch_path(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+
+        result = ir._handle_reject(
+            director_result={
+                "selected_candidate": {"manuscript": "candidate manuscript", "strategy_name": "balanced"},
+                "selection_reason": "best candidate",
+                "verdict_reason": "Contradiction Firewall: CRITICAL 1",
+                "feedback": {"issues": ["numeric contradiction"]},
+                "action_items": ["fix the numbers"],
+                "fix_scope": "inplace",
+                "fix_scope_reasoning": "minor local fix",
+                "open_review": "",
+                "firewall_triggered": True,
+                "firewall_reason": "Contradiction Firewall: CRITICAL 1",
+                "contradiction_types": ["arithmetic"],
+            },
+            director_feedback="initial reject",
+            candidates=[_candidate()],
+            validation_results=[_validation_result()],
+            round_ctx=round_ctx,
+            round_num=0,
+            previous_attempt={},
+            is_patch=False,
+            is_patch_fallback=False,
+            prev_score=94,
+            prev_manuscript="previous manuscript",
+            asp_manuscript=None,
+            tot_used=False,
+            mad_used=False,
+            selected="A",
+            score=44,
+            error_category="",
+        )
+
+        assert result.previous_attempt["reject_bucket"] != "post_select_conflict"
+        assert result.previous_attempt["fix_scope"] == "inplace"
+        assert result.error_category == ""
+
     def test_retry_regenerate_uses_reduced_strategy_budget_for_constraint_violation(self):
         ctx = _make_ctx()
         ir = Stage4InterviewRound(ctx)
@@ -1357,6 +1585,65 @@ class TestRecordS4Attempt:
         assert prm_kw["artifact_path"].endswith("final_manuscript__A_balanced.txt")
         assert (tmp_path / prm_kw["artifact_path"]).exists()
         assert db_kw["artifact_path"] == prm_kw["artifact_path"]
+
+    """
+    def test_record_s4_attempt_persists_rationale_fields(self):
+        ctx = _make_ctx()
+        ctx.pass_rate_monitor = MagicMock()
+        ir = Stage4InterviewRound(ctx)
+
+        ir._record_s4_attempt(
+            episode=2,
+            round_num=1,
+            success=False,
+            score=61,
+            verdict="REJECT",
+            reject_reason="retry needed",
+            selection_reason="best candidate",
+            verdict_reason="Contradiction Firewall: CRITICAL 1건",
+            open_review="직전 화와 같은 사건 반복",
+            fix_scope_reasoning="frontier conflict",
+            runtime_advisory="[Advisory 핵심 요약 - 재시도 시 반영]\n- keep continuity",
+            retry_directives="keep the ending distinct",
+        )
+
+        db_kw = ctx.current_project.db.save_stage_attempt.call_args.kwargs
+        assert db_kw["selection_reason"] == "best candidate"
+        assert db_kw["verdict_reason"] == "Contradiction Firewall: CRITICAL 1건"
+        assert db_kw["open_review"] == "직전 화와 같은 사건 반복"
+        assert db_kw["fix_scope_reasoning"] == "frontier conflict"
+        assert "Advisory 핵심 요약" in db_kw["runtime_advisory"]
+        assert db_kw["retry_directives"] == "keep the ending distinct"
+
+    """
+
+    def test_record_s4_attempt_persists_rationale_fields(self):
+        ctx = _make_ctx()
+        ctx.pass_rate_monitor = MagicMock()
+        ir = Stage4InterviewRound(ctx)
+
+        ir._record_s4_attempt(
+            episode=2,
+            round_num=1,
+            success=False,
+            score=61,
+            verdict="REJECT",
+            reject_reason="retry needed",
+            selection_reason="best candidate",
+            verdict_reason="Contradiction Firewall: CRITICAL 1",
+            open_review="The previous episode event is being repeated.",
+            fix_scope_reasoning="frontier conflict",
+            runtime_advisory="[Advisory digest - apply on retry]\n- keep continuity",
+            retry_directives="keep the ending distinct",
+        )
+
+        db_kw = ctx.current_project.db.save_stage_attempt.call_args.kwargs
+        assert db_kw["selection_reason"] == "best candidate"
+        assert db_kw["verdict_reason"] == "Contradiction Firewall: CRITICAL 1"
+        assert db_kw["open_review"] == "The previous episode event is being repeated."
+        assert db_kw["fix_scope_reasoning"] == "frontier conflict"
+        assert "Advisory digest" in db_kw["runtime_advisory"]
+        assert db_kw["retry_directives"] == "keep the ending distinct"
 
     def test_process_verdict_uses_reaudit_score_for_final_state_and_attempt(self):
         ctx = _make_ctx()
@@ -1567,6 +1854,123 @@ class TestRecordS4Attempt:
         assert payload["initial_score"] == 95
         assert payload["final_score"] == 95
         assert payload["attempt_key"] == "s4:ep5:arc0:a1"
+
+    def test_append_episode_log_includes_top_level_token_aliases(self):
+        ctx = _make_ctx()
+        ctx.current_project.name = "proj"
+        ir = Stage4InterviewRound(ctx)
+        ir._round_start_ts = time.monotonic() - 1
+        ir._get_round_metrics_delta = MagicMock(
+            return_value={
+                "total_calls": 2,
+                "total_tokens": 222,
+                "total_cost_usd": 0.22,
+                "model_breakdown": {"gemini-2.5-pro": {"tokens": 222, "cost": 0.22}},
+            }
+        )
+
+        with patch("builtins.open", mock_open()) as mocked_open, patch("os.makedirs"):
+            ir._append_episode_log(
+                ep_num=8,
+                round_num=0,
+                director_result={
+                    "verdict": "PASS",
+                    "score": 91,
+                    "selected": "B",
+                    "selection_reason": "clear win",
+                    "selected_candidate": {"strategy_name": "balanced"},
+                    "score_breakdown": {},
+                    "action_items": [],
+                    "open_review": "",
+                },
+                is_patch=False,
+                patch_fallback=False,
+                tot_used=False,
+                mad_used=False,
+                asp_used=False,
+                model="gemini-2.5-pro",
+                reject_bucket="",
+                validation_warnings=[],
+            )
+
+        payload = json.loads("".join(call.args[0] for call in mocked_open().write.call_args_list).strip())
+        assert payload["token_cost"] == 0.22
+        assert payload["token_usage"]["total_calls"] == 2
+        assert payload["token_usage"]["total_tokens"] == 222
+        assert payload["token_usage"]["model_breakdown"]["gemini-2.5-pro"]["tokens"] == 222
+
+    def test_log_round_outcome_emits_attempt_key_and_artifact(self, caplog):
+        ctx = _make_ctx()
+        ctx.current_project.metrics_session_id = "sess_round"
+        ir = Stage4InterviewRound(ctx)
+
+        with caplog.at_level(logging.INFO):
+            ir._log_round_outcome(
+                next_ep=9,
+                round_num=1,
+                arc_num=3,
+                initial_verdict="PASS_WITH_FIX",
+                final_verdict="PASS",
+                initial_score=82,
+                final_score=91,
+                patch_mode=True,
+                patch_fallback=False,
+                warning_count=3,
+                final_warning_count=1,
+                reject_bucket="",
+                candidate_key="B|balanced",
+                artifact_path="logs/artifacts/stage4/final.txt",
+            )
+
+        assert "[s4:ep9:arc3:a2:sess_round] round_complete" in caplog.text
+        assert "initial=PASS_WITH_FIX/82" in caplog.text
+        assert "final=PASS/91" in caplog.text
+        assert "candidate_key=B|balanced" in caplog.text
+        assert "artifact=logs/artifacts/stage4/final.txt" in caplog.text
+
+    def test_append_episode_log_separates_candidate_and_final_warnings_for_pass_rows(self):
+        ctx = _make_ctx()
+        ctx.current_project.name = "proj"
+        ir = Stage4InterviewRound(ctx)
+        ir._round_start_ts = time.monotonic() - 1
+        ir._get_round_metrics_delta = MagicMock(
+            return_value={
+                "total_calls": 1,
+                "total_tokens": 1000,
+                "total_cost_usd": 0.1,
+                "model_breakdown": {"gemini-2.5-pro": {"tokens": 1000, "cost": 0.1}},
+            }
+        )
+
+        with patch("builtins.open", mock_open()) as mocked_open, patch("os.makedirs"):
+            ir._append_episode_log(
+                ep_num=6,
+                round_num=0,
+                director_result={
+                    "verdict": "PASS",
+                    "score": 96,
+                    "selected": "A",
+                    "selection_reason": "accepted",
+                    "selected_candidate": {"strategy_name": "balanced"},
+                    "score_breakdown": {},
+                    "action_items": [],
+                    "open_review": "",
+                },
+                is_patch=False,
+                patch_fallback=False,
+                tot_used=False,
+                mad_used=False,
+                asp_used=False,
+                model="gemini-2.5-pro",
+                reject_bucket="",
+                validation_warnings=["candidate-only warning"],
+                final_warnings=["final-only warning"],
+            )
+
+        payload = json.loads("".join(call.args[0] for call in mocked_open().write.call_args_list).strip())
+        assert payload["warnings"] == ["final-only warning"]
+        assert payload["final_warnings"] == ["final-only warning"]
+        assert payload["candidate_warnings"] == ["candidate-only warning"]
 
     def test_pass_with_fix_run_logs_initial_and_final_verdicts(self):
         ctx = _make_ctx()
@@ -2008,9 +2412,17 @@ class TestModuleStructure:
         source = inspect.getsource(Stage4InterviewRound)
         assert "self.app" not in source
 
-    def test_main_a_stage4_context_includes_pass_rate_monitor(self):
-        source = Path("main_a.py").read_text(encoding="utf-8")
-        assert 'pass_rate_monitor=getattr(self, "pass_rate_monitor", None),' in source
+    def test_stage4_context_from_app_extracts_pass_rate_monitor(self):
+        app = MagicMock(spec=[])
+        app.ui = MagicMock()
+        app.current_project = MagicMock()
+        app.agents = {}
+        app.sys = MagicMock()
+        app.pass_rate_monitor = MagicMock()
+
+        ctx = Stage4Context.from_app(app)
+
+        assert ctx.pass_rate_monitor is app.pass_rate_monitor
 
 
 class TestSlotMaxChars:

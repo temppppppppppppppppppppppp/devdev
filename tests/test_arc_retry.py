@@ -18,6 +18,7 @@ def _build_stage2_finalizer_with_reject() -> Stage2Finalizer:
     ctx.audit_event = MagicMock()
     ctx.semantic_plot_guard = None
     ctx.validate_arc_integrity = MagicMock(return_value=True)
+    ctx.validate_arc_data_fields = None
     ctx.current_project = MagicMock()
     ctx.current_project.db = MagicMock()
     ctx.safe_commit_async = AsyncMock(return_value=True)

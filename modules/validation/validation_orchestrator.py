@@ -469,16 +469,11 @@ class ValidationOrchestrator:
         unjustifiable = consistency_result.get("unjustifiable_violations", [])
         if unjustifiable:
             logging.warning(f"❌ CONSISTENCY 실패: {len(unjustifiable)}개 정당화 불가 위반")
-            return {
-                "final_decision": "REJECT",
-                "reason": "CONSISTENCY 검증 실패 - 정당화 불가 모순",
+            results["_consistency_advisory"] = {
+                "source": "ConsistencyValidator",
                 "violations": unjustifiable,
-                "consistency_result": consistency_result,
-                "blocking_result": blocking_result,
-                "total_score": 0,
                 "feedback": consistency_result.get("feedback", ""),
-                "detailed_feedback": consistency_result.get("feedback", ""),
-                "self_consistency_used": False,
+                "severity": "CRITICAL",
             }
 
         # 정당화 가능 위반은 점수 감점으로 처리
@@ -653,22 +648,21 @@ class ValidationOrchestrator:
 
                     logging.warning(f" RETROSPECTIVE: {violation_count}개 장기 일관성 위반 ({severity})")
 
-                    # CRITICAL 위반이 있으면 즉시 REJECT
+                    penalty = 0
                     if severity == "CRITICAL":
-                        return {
-                            "final_decision": "REJECT",
-                            "reason": "장기 일관성 CRITICAL 위반",
-                            "retrospective_result": retrospective_result,
-                            "blocking_result": blocking_result,
-                            "total_score": 0,
-                            "feedback": retrospective_result.get("message", ""),
-                            "detailed_feedback": self._format_retrospective_feedback(retrospective_result),
-                            "self_consistency_used": False,
-                        }
+                        penalty = 15
+                    elif severity == "HIGH":
+                        penalty = 10
+                    elif severity == "MEDIUM":
+                        penalty = 5
 
-                    # HIGH 이상이면 점수 감점
-                    if severity in ["HIGH", "MEDIUM"]:
-                        penalty = 10 if severity == "HIGH" else 5
+                    if penalty > 0:
+                        results["_retrospective_advisory"] = {
+                            "source": "RetrospectiveValidator",
+                            "violations": retrospective_result.get("violations", []),
+                            "feedback": self._format_retrospective_feedback(retrospective_result),
+                            "severity": severity,
+                        }
                         total_score = max(0, total_score - penalty)
                         logging.warning(f" 장기 일관성 감점: -{penalty}점 (새 총점: {total_score})")
                 else:
@@ -712,6 +706,12 @@ class ValidationOrchestrator:
             _advisory_parts.append(f"[CONTINUITY] {_cont_adv['feedback']}")
         if _blk_adv:
             _advisory_parts.append(f"[BLOCKING] {_blk_adv['feedback']}")
+        _cons_adv = results.get("_consistency_advisory")
+        if _cons_adv:
+            _advisory_parts.append(f"[CONSISTENCY] {_cons_adv['feedback']}")
+        _retro_adv = results.get("_retrospective_advisory")
+        if _retro_adv:
+            _advisory_parts.append(f"[RETROSPECTIVE] {_retro_adv['feedback']}")
         if _advisory_parts:
             feedback = feedback + " | Director advisory: " + " / ".join(_advisory_parts)
 
@@ -1316,13 +1316,11 @@ class ValidationOrchestrator:
         unjustifiable = consistency_result.get("unjustifiable_violations", [])
         if unjustifiable:
             logging.warning(f"❌ CONSISTENCY 실패: {len(unjustifiable)}개 정당화 불가 위반")
-            return {
-                "final_decision": "REJECT",
-                "reason": "CONSISTENCY 검증 실패 - 정당화 불가 모순",
+            results["_consistency_advisory"] = {
+                "source": "ConsistencyValidator",
                 "violations": unjustifiable,
-                **results,
-                "total_score": 0,
                 "feedback": consistency_result.get("feedback", ""),
+                "severity": "CRITICAL",
             }
 
         consistency_penalty = consistency_result.get("score_penalty", 0)
@@ -1411,6 +1409,9 @@ class ValidationOrchestrator:
             _advisory_parts.append(f"[CONTINUITY] {_cont_adv['feedback']}")
         if _blk_adv:
             _advisory_parts.append(f"[BLOCKING] {_blk_adv['feedback']}")
+        _cons_adv = results.get("_consistency_advisory")
+        if _cons_adv:
+            _advisory_parts.append(f"[CONSISTENCY] {_cons_adv['feedback']}")
         if _advisory_parts:
             feedback = feedback + " | Director advisory: " + " / ".join(_advisory_parts)
 

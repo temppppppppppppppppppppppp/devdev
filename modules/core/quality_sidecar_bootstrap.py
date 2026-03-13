@@ -6,9 +6,8 @@ import logging
 from pathlib import Path
 from typing import Any
 
-import yaml
-
 from modules.core.db_manager import DBManager
+from modules.core.project_support import inspect_project_support_assets, load_work_guard_summary
 from modules.core.quality_signal_metrics import compute_quality_signal_bundle
 
 logger = logging.getLogger(__name__)
@@ -109,33 +108,6 @@ def _load_manuscript_text(project_dir: Path, db: DBManager, ep_num: int) -> str:
     return next((candidate for candidate in candidates if candidate), "")
 
 
-def _load_work_guard_summary(project_dir: Path) -> dict[str, Any]:
-    payload = {
-        "work_guard_exists": False,
-        "tracking_slots": 0,
-        "registry_profiles": 0,
-        "role_fit_constraints": 0,
-    }
-    work_guard_path = project_dir / "config" / "work_guard.yaml"
-    if not work_guard_path.exists():
-        return payload
-
-    payload["work_guard_exists"] = True
-    try:
-        data = yaml.safe_load(work_guard_path.read_text(encoding="utf-8")) or {}
-    except Exception as exc:
-        logger.debug("work_guard load failed for %s: %s", work_guard_path, exc)
-        return payload
-
-    work_identity = data.get("work_identity", data) if isinstance(data, dict) else {}
-    if isinstance(work_identity, dict):
-        for key in ("tracking_slots", "registry_profiles", "role_fit_constraints"):
-            value = work_identity.get(key) or []
-            if isinstance(value, list):
-                payload[key] = len(value)
-    return payload
-
-
 def _get_latest_stage4_selection(db: DBManager, ep_num: int) -> dict[str, Any] | None:
     predicate = DBManager._director_stage_predicate(4)
     with db._lock:
@@ -177,7 +149,12 @@ def inspect_quality_sidecar_health(project_dir: Path, db: DBManager) -> dict[str
         "missing_label_eps": max(0, len(stage4_validations) - label_count),
         "missing_signal_eps": max(0, len(stage4_validations) - signal_count),
     }
-    payload.update(_load_work_guard_summary(project_dir))
+    support_assets = inspect_project_support_assets(project_dir)
+    payload.update(load_work_guard_summary(project_dir))
+    payload["author_directives_exists"] = bool(support_assets["author_directives"]["exists"])
+    payload["style_guide_exists"] = bool(support_assets["style_guide"]["exists"])
+    payload["style_tone"] = str(support_assets["style_guide"]["tone"] or "")
+    payload["style_pov"] = str(support_assets["style_guide"]["pov"] or "")
     return payload
 
 
@@ -193,7 +170,10 @@ def bootstrap_quality_sidecars(project_dir: Path, db: DBManager) -> dict[str, An
         "backfilled_signals": 0,
         "missing_manuscript_eps": [],
     }
-    report.update(_load_work_guard_summary(project_dir))
+    support_assets = inspect_project_support_assets(project_dir)
+    report.update(load_work_guard_summary(project_dir))
+    report["author_directives_exists"] = bool(support_assets["author_directives"]["exists"])
+    report["style_guide_exists"] = bool(support_assets["style_guide"]["exists"])
 
     if not latest_validations:
         return report

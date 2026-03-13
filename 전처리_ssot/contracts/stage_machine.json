@@ -91,8 +91,9 @@
   ],
   "production_resume_contract": {
     "status_contract_schema": "전처리_ssot/contracts/sequential_run_status.schema.json",
-    "transitional_status_file": "treatments/preprocess/{work_id}/docs/sequential_run_status.md",
-    "future_status_file": "treatments/preprocess/{work_id}/sequential_run_status.json",
+    "primary_status_file": "treatments/preprocess/{work_id}/sequential_run_status.json",
+    "deprecated_fallback_file": "treatments/preprocess/{work_id}/docs/sequential_run_status.md",
+    "read_priority": "json_first; md_fallback_only_during_grace_period",
     "ignore_for_progress": [
       "treatments/preprocess/{work_id}/03_tr_blocks directory count",
       "treatments/preprocess/{work_id}/04_tr_final existence",
@@ -104,8 +105,9 @@
   },
   "audit_state_contract": {
     "status_contract_schema": "전처리_ssot/contracts/audit_status.schema.json",
-    "future_status_file": "treatments/preprocess/{work_id}/audit_status.json",
-    "transitional_human_reports": [
+    "primary_status_file": "treatments/preprocess/{work_id}/audit_status.json",
+    "read_priority": "json_first; human_reports_fallback_only_during_grace_period",
+    "deprecated_human_reports": [
       "phase0_check.md",
       "tr_gate_report.md",
       "bi_5pass.md",

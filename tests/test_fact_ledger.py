@@ -48,6 +48,23 @@ def test_get_alive_characters_handles_non_dict_entries():
     assert alive == ["정상생존"]
 
 
+def test_dead_character_updates_are_ignored_for_followup_state_changes():
+    ledger = FactLedger(_EmptyStubDB())
+    ledger.update_from_state_changes(1, {"npc_deaths": [{"name": "흑풍", "cause": "전투"}]})
+    ledger.update_from_state_changes(
+        2,
+        {
+            "npc_injuries": [{"name": "흑풍", "state": "중상"}],
+            "npc_movements": [{"name": "흑풍", "to": "개봉"}],
+            "npc_personality_changes": [{"name": "흑풍", "traits": "냉정"}],
+            "npc_npc_relationships": [{"npc1": "흑풍", "npc2": "주인공", "relation": "협력"}],
+        },
+    )
+
+    history = ledger.get_character("흑풍")["history"]
+    assert history == ["ep1: 사망 (원인: 전투)"]
+
+
 # ══════════════════════════════════════════════════════════════
 # [TF-C07] 수치 팩트 자동 추출 테스트
 # ══════════════════════════════════════════════════════════════

@@ -151,6 +151,15 @@ class ProjectService:
                     break
         return min(candidate_episodes) if candidate_episodes else target_no
 
+    def _rollback_open_transaction(self, project: Any) -> None:
+        conn = getattr(getattr(project, "db", None), "conn", None)
+        if conn is None or not getattr(conn, "in_transaction", False):
+            return
+        try:
+            conn.rollback()
+        except Exception as exc:  # pragma: no cover - defensive cleanup
+            logging.warning("[ProjectService] rollback cleanup failed: %s", exc)
+
     def reset_stage_2(self) -> bool:
         """Clear all Stage 2 arc design and every downstream episode artifact."""
         project = self._project_fn()
@@ -159,7 +168,7 @@ class ProjectService:
             return False
 
         try:
-            project.db.reset_after(1)
+            project.db.reset_after(1, commit=False)
             self._clear_stage2_metadata(project)
             self._clear_stage2_summary_anchors(project)
             project.db.cursor.execute("DELETE FROM anchors WHERE key = 'arcs'")
@@ -185,6 +194,7 @@ class ProjectService:
             input("\n[Enter] Return to menu")
             return True
         except Exception as exc:
+            self._rollback_open_transaction(project)
             self._ui.log(f"Stage 2 reset failed: {exc}")
             return False
 
@@ -219,10 +229,14 @@ class ProjectService:
             return False
 
         try:
-            project.db.reset_after(target_ep)
+            project.db.reset_after(target_ep, commit=False)
             self._clear_stage2_metadata(project, from_arc_no=target_no)
             self._clear_stage2_summary_anchors(project, from_arc_no=target_no)
-            project.db.save_anchor("arcs", updated_arcs)
+            if not project.db.save_anchor("arcs", updated_arcs):
+                raise RuntimeError("failed to save arcs anchor during rewind")
+            if not self._safe_commit():
+                self._ui.log("DB commit failed during Stage 2 rewind")
+                return False
 
             project.arcs = updated_arcs
             if hasattr(project, "volumes"):
@@ -247,6 +261,7 @@ class ProjectService:
             input("\n[Enter] Return to menu")
             return True
         except Exception as exc:
+            self._rollback_open_transaction(project)
             self._ui.log(f"Stage 2 rewind failed: {exc}")
             return False
 
@@ -301,15 +316,19 @@ class ProjectService:
                                 protagonist["actual_truth"] = past_actual
                                 pending_bible = bible_data
 
-            project.db.reset_after(target_ep)
+            project.db.reset_after(target_ep, commit=False)
             project.db.cursor.execute(
                 "UPDATE seeds SET status = 'active', recovered_ep = NULL WHERE recovered_ep >= ?",
                 (target_ep,),
             )
-            project.db.commit()
+            if pending_bible is not None:
+                if not project.db.save_anchor("bible", pending_bible):
+                    raise RuntimeError("failed to save bible anchor during rollback")
+            if not self._safe_commit():
+                self._ui.log("DB commit failed during rollback")
+                return False
 
             if pending_bible is not None:
-                project.db.save_anchor("bible", pending_bible)
                 project.master_bible = pending_bible
                 self._ui.log(f"   [Rollback] HUD restored from episode {target_ep - 1}.")
 
@@ -331,6 +350,7 @@ class ProjectService:
             self._assert_rollback_invariants(target_ep)
             return True
         except Exception as exc:
+            self._rollback_open_transaction(project)
             self._ui.log(f"Rollback failed: {exc}")
             return False
 
@@ -366,9 +386,11 @@ class ProjectService:
 
         project = self._project_fn()
         try:
-            project.db.reset_after(1)
+            project.db.reset_after(1, commit=False)
             project.db.cursor.execute("UPDATE seeds SET status = 'active', recovered_ep = NULL")
-            project.db.commit()
+            if not self._safe_commit():
+                self._ui.log("DB commit failed during production wipe")
+                return False
 
             self._delete_all_draft_files(project)
 
@@ -384,5 +406,6 @@ class ProjectService:
             input("\n[Enter] Return to menu")
             return True
         except Exception as exc:
+            self._rollback_open_transaction(project)
             self._ui.log(f"Wipe failed: {exc}")
             return False

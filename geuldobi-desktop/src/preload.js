@@ -7,8 +7,8 @@ contextBridge.exposeInMainWorld("geuldobiDesktop", {
   onAppReady: (handler) => ipcRenderer.on("app:ready", (_, payload) => handler(payload)),
 
   // Bridge API — HTTP 경유 (main process fetch)
-  runKey: (key, subKey, inputs) =>
-    ipcRenderer.invoke("bridge:run", { key, subKey, inputs }),
+  runKey: (key, subKey, inputs, approvalId = null) =>
+    ipcRenderer.invoke("bridge:run", { key, subKey, inputs, approvalId }),
   stopRun: () => ipcRenderer.invoke("bridge:stop"),
   getStatus: () => ipcRenderer.invoke("bridge:status"),
   getQualitySummary: (project, lookback = 5) =>
@@ -43,6 +43,10 @@ contextBridge.exposeInMainWorld("geuldobiDesktop", {
   loadProjectConfigSurfaces: (project) => ipcRenderer.invoke("project:load-config-surfaces", project),
   saveProjectConfigSurfaces: (project, authorDirectives = "", workGuardYaml = "") =>
     ipcRenderer.invoke("project:save-config-surfaces", { project, authorDirectives, workGuardYaml }),
+  listWorkGuardTemplates: (genre = "") =>
+    ipcRenderer.invoke("project:list-work-guard-templates", { genre }),
+  applyWorkGuardTemplate: (project, templatePath) =>
+    ipcRenderer.invoke("project:apply-work-guard-template", { project, templatePath }),
 
   // 작업 폴더
   openWorkspaceFolder: () => ipcRenderer.invoke("workspace:open-folder"),

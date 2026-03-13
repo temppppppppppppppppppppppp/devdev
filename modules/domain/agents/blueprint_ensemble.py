@@ -20,6 +20,7 @@ from concurrent.futures import TimeoutError as FutureTimeoutError
 from modules.core.constants import AIModels, GenreTypes, smart_truncate
 from modules.core.hud_utils import build_hud_context as _build_hud_context_shared
 from modules.core.prompt_loader import PromptLoader
+from modules.core.project_support import normalize_external_pov_insert_policy
 from modules.core.tactical_utils import extract_episode_tactical
 
 from .base_agent import _SYSTEM_CFG, BaseAgent
@@ -101,6 +102,73 @@ SCENE_PRESETS = {
     "cliffhanger": "화 끝 훅. 급박한 전개, 긴장 최고조에서 끊기.",
     "resolution": "갈등 해소, 정리. 여운 있는 마무리.",
 }
+
+
+def build_external_pov_policy_constraint(primary_pov: str, external_pov_insert_policy: str, *, genre: str = "") -> str:
+    pov = str(primary_pov or "").strip()
+    policy = normalize_external_pov_insert_policy(external_pov_insert_policy, primary_pov=pov, genre=genre)
+
+    if pov == "1인칭":
+        if policy == "금지":
+            return """### [V-POV] 외부 시점 삽입 정책: 금지
+- 주인공 부재 장면 금지
+- villain_scheme, side_glimpse, omniscient_hint 프리셋 사용 금지
+- 모든 씬은 주인공이 직접 관찰/행동 가능한 범위 안에서만 설계"""
+        if policy == "제한적 허용":
+            return """### [V-POV] 외부 시점 삽입 정책: 제한적 허용
+- 기본은 1인칭 유지
+- side_glimpse만 씬 전환(***) 뒤 1회성 짧은 반응 컷으로 허용
+- villain_scheme, omniscient_hint는 사용 금지
+- 외부 시점 컷이 본편 POV를 대체하지 않게 설계"""
+        return """### [V-POV] 외부 시점 삽입 정책: 적극 허용
+- 기본은 1인칭 유지하되, 씬 전환(***) 뒤 외부 시점 컷을 전략적으로 허용
+- side_glimpse, villain_scheme, omniscient_hint를 짧은 삽입 컷으로만 사용
+- 동일 씬 내부 시점 혼합은 금지"""
+
+    if pov == "3인칭":
+        if policy == "금지":
+            return """### [V-POV] 외부 시점 삽입 정책: 금지
+- 주인공 중심 3인칭만 유지
+- villain_scheme, side_glimpse, omniscient_hint 프리셋 사용 금지"""
+        if policy == "제한적 허용":
+            return """### [V-POV] 외부 시점 삽입 정책: 제한적 허용
+- villain_scheme, side_glimpse는 씬 전환(***) 뒤 짧게만 사용 (1-2문단)
+- omniscient_hint는 화당 1회 이내로 제한
+- 외부 시점은 반응/위협 암시/정보 경제에만 사용"""
+        return """### [V-POV] 외부 시점 삽입 정책: 적극 허용
+- 3인칭 본류를 유지하되 외부 시점 컷을 scene-level로 허용
+- villain_scheme, side_glimpse, omniscient_hint를 아크 흐름에 맞춰 사용
+- 같은 장면 안에서 시점을 뒤섞지 말고 씬 경계(***)를 명확히 둘 것"""
+
+    if pov == "전지적":
+        if policy == "금지":
+            return """### [V-POV] 외부 시점 삽입 정책: 금지
+- 전지적 서술은 허용하되 별도 외부 POV 프리셋은 사용 금지
+- 시점 전환 효과를 남용하지 말고 핵심 서술자 관점을 유지"""
+        if policy == "제한적 허용":
+            return """### [V-POV] 외부 시점 삽입 정책: 제한적 허용
+- 전지적 서술을 본류로 유지
+- side_glimpse, villain_scheme, omniscient_hint는 장면 효과용으로만 절제 사용"""
+        return """### [V-POV] 외부 시점 삽입 정책: 적극 허용
+- 전지적 서술을 기반으로 scene-level 외부 POV 컷을 자유롭게 설계 가능
+- 단, 과도한 빈도와 중복 설명은 금지"""
+
+    if pov == "혼합":
+        if policy == "금지":
+            return """### [V-POV] 혼합 시점 + 외부 시점 금지
+- 혼합은 허용하되 외부 반응 컷/악역 컷/전지적 힌트 프리셋은 사용 금지
+- 선택된 시점 전환 외 추가 삽입 컷을 넣지 말 것"""
+        if policy == "제한적 허용":
+            return """### [V-POV] 혼합 시점 + 제한적 외부 시점
+- scene-level switching은 허용
+- 외부 삽입 컷은 reaction/foreshadowing 용도로만 제한 사용
+- 같은 씬 내부 시점 혼합은 금지"""
+        return """### [V-POV] 혼합 시점 + 적극적 외부 시점
+- 혼합 시점 작품으로 설계하되 scene 경계를 명확히 둘 것
+- side_glimpse, villain_scheme, omniscient_hint를 전략적으로 사용할 수 있음
+- 동일 씬 내부 시점 혼합과 불필요한 churn은 금지"""
+
+    return ""
 
 
 class BlueprintEnsembleGenerator(BaseAgent):
@@ -221,7 +289,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
             cache_type="blueprint_ensemble",
             content=shared_context,
             ttl_seconds=600,
-            project_name=f"ep{ep_num}",
+            project_name=self._context_cache_project_namespace("ep", ep_num),
         )
         cache_name = cache_info.get("cache_name")
 
@@ -416,6 +484,14 @@ class BlueprintEnsembleGenerator(BaseAgent):
 - omniscient_hint는 화당 1회 이내로 제한"""
 
             # [TF-I23/I24] 독자 피드백 컨텍스트 (advisory-only)
+            _external_pov_insert_policy = (
+                protagonist_config.get("external_pov_insert_policy", "") if isinstance(protagonist_config, dict) else ""
+            )
+            _pov_constraint = build_external_pov_policy_constraint(
+                _pov,
+                _external_pov_insert_policy,
+                genre=genre,
+            )
             _reader_fb = self._build_reader_feedback_context(ep_num)
             _work_retrieval_contract = ""
             try:

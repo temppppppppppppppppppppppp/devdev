@@ -24,12 +24,13 @@
 ## Entry Points
 - Primary:
   - `main_a.py` 메인 메뉴 `choice == "0"` → `_phase_0_recovery()` → `Stage01Helpers.phase_0_recovery()`
-  - `Stage01Helpers.stage_0_extended(mode)` (`mode=1..5`)
+  - `Stage01Helpers.stage_0_extended(mode)` (`mode=1..6`)
     - `1`: 컨셉 → Bible/Treatment 생성
     - `2`: 역설계
     - `3`: Bible 임포트
     - `4`: Block 확장
     - `5`: 스타일 레퍼런스 분석
+    - `6`: 작품가드 설정(선택)
 - Secondary:
   - `StageZeroManager.run_new_project_flow()`
   - `StageZeroManager.run_reverse_engineering_flow()`
@@ -49,6 +50,7 @@
   - 장르 선택 또는 자동 감지.
   - 주인공 설정: `world_origin`, `incarnation_type`, `pov`.
   - Block 확장 방향 힌트 / 배치별 승인 입력.
+  - 작품가드 소스 YAML (`work_guards/**/*.yaml`) 또는 프로젝트별 `{project}/config/work_guard.yaml`
   - VecMemory 인스턴스 (`persist_to_vectordb()` 외부 주입).
 
 ## Outputs
@@ -59,6 +61,7 @@
   - `stage0_output/style_guide.json`
   - `stage0_output/preset_state.json`
   - `stage0_output/stage0_state.json` (`StageZeroManager.save_state()` 경로)
+  - `{project}/config/work_guard.yaml` (선택)
   - 프로젝트 루트: `treatment_generated.json`, `treatment_extended.json`
 - DB updates:
   - `save_v20_anchor("bible", bible)`
@@ -108,7 +111,8 @@
   - `ReverseExpander.raw_drafts`, `episode_bibles`, `style_guide`
   - `StageZeroManager.load_state()` 로드 결과
 - Invalidation rules:
-  - 스타일 캐시는 레퍼런스 디렉토리 내 `.txt` 최신 `mtime`보다 캐시가 오래되면 무효화된다.
+  - 스타일 캐시는 `reference_manifest_hash`, `analysis_version`, `model_id`, `sampling_policy`, `prompt_contract_hash` 중 하나라도 달라지면 무효화된다.
+  - Stage 0 스타일 분석은 `캐시 사용 / 캐시 무시 후 재분석 / 장르 캐시 삭제 후 재분석` 3모드를 가진다.
   - Stage 0 재실행 시 `bible`, `preset_state`, `style_guide` 앵커는 새 값으로 덮어쓴다.
   - `treatment_generated.json` / `treatment_extended.json`은 자동 무효화 메커니즘 없이 최신 실행 결과로 덮어쓴다.
   - 역설계 Arc stub은 기존 `arcs` anchor에 병합되며, 없는 `arc_no`만 append 후 stub enrich가 수행된다.
@@ -129,7 +133,8 @@
     - `API_DELAY=0.5s`, 모델 간 1초 대기
     - per-model 지수 백오프 재시도는 없다
   - 역설계 파일 로딩:
-    - `utf-8` → `cp949` → `utf-8(errors="replace")`
+    - `utf-8` → `cp949`
+    - 둘 다 실패하면 `errors="replace"`로 진행하지 않고 조기 중단한다
   - `persist_to_db()`:
     - `begin()` → 다중 저장 → `commit()`
     - 실패 시 `rollback()`

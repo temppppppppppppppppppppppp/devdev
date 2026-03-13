@@ -5,8 +5,11 @@
 1. 6종 Protocol이 @runtime_checkable로 isinstance 사용 가능
 2. 필수 메서드를 구현한 Mock이 isinstance 통과
 3. 필수 메서드 누락 시 isinstance 실패
-4. __init__.py re-export 정상 동작
+4. actual helper service와 facade protocol의 관계가 명시적으로 고정됨
+5. __init__.py re-export 정상 동작
 """
+
+from types import SimpleNamespace
 
 import pytest
 
@@ -248,6 +251,33 @@ class TestStateServiceProtocol:
             # 나머지 48개 누락
 
         assert not isinstance(Partial(), StateServiceProtocol)
+
+
+class TestActualHelperServiceParity:
+    def test_extracted_ui_service_does_not_claim_studio_ui_protocol(self):
+        from modules.core.services.ui_service import UIService
+        from modules.protocols.app_services import UIServiceProtocol
+
+        helper = UIService(
+            ui=SimpleNamespace(log=lambda message: None, console=SimpleNamespace(print=lambda *args, **kwargs: None)),
+            project_fn=lambda: None,
+        )
+
+        assert not isinstance(helper, UIServiceProtocol)
+
+    def test_extracted_state_service_does_not_claim_state_tracker_protocol(self):
+        from modules.core.services.state_service import StateService
+        from modules.protocols.app_services import StateServiceProtocol
+
+        helper = StateService(
+            ui=SimpleNamespace(log=lambda message: None),
+            audit_event_fn=lambda *args, **kwargs: None,
+            genre_fn=lambda: {"type": "wuxia"},
+            prompt_builder=SimpleNamespace(),
+            feedback_system=SimpleNamespace(),
+        )
+
+        assert not isinstance(helper, StateServiceProtocol)
 
 
 # ──────────────────────────────────────────────────────────────

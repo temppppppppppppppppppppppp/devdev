@@ -362,6 +362,22 @@ class InformationDiffusion:
 
         return {"valid": len(violations) == 0, "violations": violations, "warnings": warnings}
 
+    @staticmethod
+    def _normalize_npc_context(npc_name: str, payload: Any) -> dict[str, Any]:
+        if isinstance(payload, dict):
+            return {
+                "name": npc_name,
+                "current_location": str(payload.get("current_location") or payload.get("location") or ""),
+                "faction": str(payload.get("faction") or ""),
+                "isolated": bool(payload.get("isolated", False)),
+            }
+        return {
+            "name": npc_name,
+            "current_location": str(payload or ""),
+            "faction": "",
+            "isolated": False,
+        }
+
     def propagate_event(
         self, event_id: str, current_arc: int, current_episode: int, npc_locations: dict[str, str]
     ) -> list[str]:
@@ -388,14 +404,22 @@ class InformationDiffusion:
         time_passed = current_episode - event_ep
 
         newly_informed = []
+        protagonist_faction = self._get_protagonist_faction()
 
-        for npc_name, npc_location in npc_locations.items():
+        for npc_name, npc_payload in npc_locations.items():
             if self.npc_knows(npc_name, event_id):
                 continue  # 이미 앎
+
+            npc = self._normalize_npc_context(npc_name, npc_payload)
+            npc_location = npc.get("current_location", "")
 
             # 전파 조건 확인
             if npc_location == event_location:
                 distance_type = "same_location"
+            elif npc.get("faction") and protagonist_faction and npc.get("faction") == protagonist_faction:
+                distance_type = "same_faction"
+            elif npc.get("isolated", False):
+                distance_type = "isolated"
             elif self._is_nearby(event_location, npc_location):
                 distance_type = "nearby_region"
             else:

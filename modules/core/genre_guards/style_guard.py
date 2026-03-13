@@ -100,6 +100,9 @@ class StyleGuard(BaseGuard):
         """기존 장르 검증 + 문체 기반 추가 검증."""
         result = self._base.run_deep_validation(manuscript, current_state)
         violations = result.get("violations", [])
+        warning_violations = list(result.get("warning_violations", []) or [])
+        has_warning = bool(result.get("has_warning", False))
+        warning_summary = str(result.get("warning_summary", "") or "")
 
         for pattern in self._anti_ai:
             if pattern in manuscript:
@@ -140,7 +143,10 @@ class StyleGuard(BaseGuard):
 
         return {
             "has_critical": has_critical,
+            "has_warning": has_warning,
             "violations": violations,
+            "warning_violations": warning_violations,
+            "warning_summary": warning_summary,
             "summary": summary,
             "feedback": feedback,
         }

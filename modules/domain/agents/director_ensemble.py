@@ -60,6 +60,126 @@ def _canonical_score_breakdown(raw: dict | None = None, *, length_score: int = 0
     return base
 
 
+def _normalize_quality_gate_reasons(raw: object) -> list[str]:
+    if not isinstance(raw, list):
+        return []
+    return [str(item)[:160] for item in raw if str(item).strip()]
+
+
+def _short_text(value: object, limit: int = 200) -> str:
+    text = str(value or "").strip()
+    if not text:
+        return ""
+    return text[:limit]
+
+
+def _log_director_frame(
+    *,
+    stage: str,
+    ep_num: int,
+    decision: str,
+    score: int,
+    selected_label: str,
+    selection_reason: str = "",
+    verdict_reason: str = "",
+    comparison_notes: str = "",
+    contradictions: list | None = None,
+    fix_scope: str = "",
+    open_review: str = "",
+    thinking: str = "",
+) -> None:
+    _selection_reason = _short_text(selection_reason, 240)
+    _verdict_reason = _short_text(verdict_reason, 240)
+    _comparison_notes = _short_text(comparison_notes, 240)
+    _open_review = _short_text(open_review, 240)
+    _thinking = _short_text(thinking, 1200)
+    _contradictions = list(contradictions or [])
+
+    logging.info(
+        "[DirectorFrame] stage=%s ep=%s verdict=%s score=%s selected=%s fix_scope=%s contradictions=%d",
+        stage,
+        ep_num,
+        decision,
+        score,
+        selected_label,
+        fix_scope or "",
+        len(_contradictions),
+    )
+    if _selection_reason:
+        logging.info("[DirectorFrame] stage=%s ep=%s selection_reason=%s", stage, ep_num, _selection_reason)
+    if _verdict_reason and _verdict_reason != _selection_reason:
+        logging.info("[DirectorFrame] stage=%s ep=%s verdict_reason=%s", stage, ep_num, _verdict_reason)
+    if _comparison_notes:
+        logging.info("[DirectorFrame] stage=%s ep=%s comparison=%s", stage, ep_num, _comparison_notes)
+    if _open_review:
+        logging.info("[DirectorFrame] stage=%s ep=%s open_review=%s", stage, ep_num, _open_review)
+    if _contradictions:
+        logging.warning(
+            "[DirectorFrame] stage=%s ep=%s contradiction_count=%d first=%s",
+            stage,
+            ep_num,
+            len(_contradictions),
+            _short_text(_contradictions[0], 200),
+        )
+    if _thinking:
+        logging.debug("[DirectorThinking] stage=%s ep=%s %s", stage, ep_num, _thinking)
+
+
+def _apply_candidate_quality_gate(result: dict, quality_flag: dict | None) -> dict:
+    if not isinstance(result, dict) or not isinstance(quality_flag, dict) or not quality_flag:
+        return result
+
+    decision = str(result.get("decision", "REJECT") or "REJECT")
+    score = _safe_int(result.get("score", 0), 0)
+    feedback = str(result.get("feedback", "") or "")
+    reasons = list(_normalize_quality_gate_reasons(result.get("quality_gate_reasons")))
+
+    score_cap = quality_flag.get("score_cap")
+    if isinstance(score_cap, (int, float)):
+        score = min(score, int(score_cap))
+
+    reasons.extend(_normalize_quality_gate_reasons(quality_flag.get("reasons")))
+    gate_feedback = str(quality_flag.get("feedback", "") or "").strip()
+
+    if quality_flag.get("force_reject"):
+        decision = "REJECT"
+        if gate_feedback:
+            feedback = f"{gate_feedback}\n{feedback}".strip() if feedback else gate_feedback
+    elif quality_flag.get("force_pass_with_fix") and decision == "PASS":
+        decision = "PASS_WITH_FIX"
+        if gate_feedback:
+            feedback = f"{gate_feedback}\n{feedback}".strip() if feedback else gate_feedback
+
+    result["decision"] = decision
+    result["score"] = score
+    result["feedback"] = feedback if decision != "PASS" else ""
+    result["quality_gate_triggered"] = bool(
+        quality_flag.get("force_reject")
+        or quality_flag.get("force_pass_with_fix")
+        or isinstance(score_cap, (int, float))
+    )
+    result["quality_gate_reasons"] = reasons
+    return result
+
+
+def _arc_compare_fallback_result(candidates: list[dict]) -> dict:
+    best = candidates[0] if candidates else None
+    return {
+        "decision": "REJECT",
+        "selected_index": 0,
+        "selected_arc": best,
+        "score": 0,
+        "contradictions": [],
+        "reason": "Director compare unavailable; retry required",
+        "feedback": "Director compare failed before a trustworthy selection was made.",
+        "comparison_notes": "Fallback reject (compare failed)",
+        "fix_scope": "",
+        "fallback_triggered": True,
+        "quality_gate_triggered": True,
+        "quality_gate_reasons": ["director_compare_fallback"],
+    }
+
+
 class DirectorEnsembleSelector:
     """
     [V64 P2-1] Director에서 분리된 앙상블 선택 모듈
@@ -251,6 +371,19 @@ Architect가 inplace 단계에서 즉시 교정하고 재제출한다. 소소한
             logging.info(
                 f"[Stage3 Director] Blueprint {decision} (점수: {score}) 후보{selected_idx + 1} | {reason[:120] if reason else ''}"
             )
+            _log_director_frame(
+                stage="stage3",
+                ep_num=ep_num,
+                decision=decision,
+                score=score,
+                selected_label=str(selected_idx + 1),
+                selection_reason=reason,
+                verdict_reason=reason,
+                comparison_notes=comparison_notes,
+                contradictions=contradictions,
+                fix_scope=str(result.get("fix_scope", "") or ""),
+                thinking=getattr(self._d, "_last_thinking", ""),
+            )
             print(f"\n   {'=' * 56}")
             print(f"      [Stage3 Director] Blueprint {decision} (점수: {score})")
             print(f"      선택: 후보 {selected_idx + 1}")
@@ -335,13 +468,13 @@ Architect가 inplace 단계에서 즉시 교정하고 재제출한다. 소소한
                 "feedback": "시나리오가 800자 이상이어야 합니다.",
             }
 
-        # [TF-36] 대원칙 3 경고: Director LLM 없이 Python-only PASS
-        logging.warning(" [대원칙3] _evaluate_single_blueprint: Python-only PASS (Director LLM 미호출)")
+        # [TF-36] Director 주권: 단일 후보라도 LLM 검토 없이 자동 PASS하지 않는다.
+        logging.warning(" [대원칙3] _evaluate_single_blueprint: Director LLM 미호출 — fail closed")
         return {
-            "decision": "PASS",
-            "score": 75,
-            "reason": "기본 기준 충족 (Python-only, Director LLM 미호출)",
-            "feedback": "",
+            "decision": "REJECT",
+            "score": 55,
+            "reason": "Director LLM 미호출 상태의 단일 후보 자동 PASS 금지",
+            "feedback": "단일 후보는 Director 비교/재평가 없이 자동 승인할 수 없습니다.",
         }
 
     def _fallback_first_candidate(
@@ -369,6 +502,7 @@ Architect가 inplace 단계에서 즉시 교정하고 재제출한다. 소소한
         prev_arc_context: str,
         constraint_block: str = "",
         advisory: str = "",
+        candidate_quality_flags: list[dict] | None = None,
     ) -> dict:
         """[TF-47] Arc 후보 비교 선택 + PASS/REJECT/PASS_WITH_FIX 판정.
 
@@ -560,7 +694,7 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
 
             if not isinstance(result, dict):
                 logging.warning(" [TF-47] Arc 비교 응답 파싱 실패 → Python 폴백")
-                return self._fallback_arc_selection(candidates)
+                return _arc_compare_fallback_result(candidates)
 
             selected_idx = _safe_int(result.get("selected_index", 0), 0)
             if selected_idx < 0 or selected_idx >= len(candidates):
@@ -575,6 +709,9 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
                 contradictions = []
             comparison_notes = str(result.get("comparison_notes", ""))
             reason = str(result.get("reason", ""))
+            quality_flag = None
+            if isinstance(candidate_quality_flags, list) and 0 <= selected_idx < len(candidate_quality_flags):
+                quality_flag = candidate_quality_flags[selected_idx]
 
             logging.info(f" [TF-47] 후보 {selected_idx + 1} 선택 ({decision}, 점수: {score})")
             if contradictions:
@@ -586,6 +723,19 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
 
             logging.info(
                 f"[Stage2 Director] Arc {decision} (점수: {score}) 후보{selected_idx + 1} | {reason[:120] if reason else ''}"
+            )
+            _log_director_frame(
+                stage="stage2",
+                ep_num=arc_no,
+                decision=decision,
+                score=score,
+                selected_label=f"{selected_idx + 1}:{candidates[selected_idx].get('_strategy', '?')}",
+                selection_reason=reason,
+                verdict_reason=reason,
+                comparison_notes=comparison_notes,
+                contradictions=contradictions,
+                fix_scope=str(result.get("fix_scope", "") or ""),
+                thinking=getattr(self._d, "_last_thinking", ""),
             )
             print(f"\n   {'=' * 56}")
             print(f"      [Stage2 Director] Arc 비교 판정: {decision} (점수: {score})")
@@ -605,7 +755,7 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
                 print(f"      💭 [Director Thinking]\n{_thinking}")
             print(f"   {'=' * 56}\n")
 
-            return {
+            final_result = {
                 "decision": decision,
                 "selected_index": selected_idx,
                 "selected_arc": candidates[selected_idx],
@@ -615,16 +765,20 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
                 "feedback": result.get("feedback", "") if decision != "PASS" else "",
                 "comparison_notes": comparison_notes,
                 "fix_scope": result.get("fix_scope", ""),
+                "quality_gate_triggered": False,
+                "quality_gate_reasons": [],
             }
+            return _apply_candidate_quality_gate(final_result, quality_flag)
 
         except Exception as e:
             logging.warning(f" [TF-47] Arc 비교 오류: {str(e)[:80]} → Python 폴백")
-            return self._fallback_arc_selection(candidates)
+            return _arc_compare_fallback_result(candidates)
 
     @staticmethod
     def _fallback_arc_selection(candidates: list[dict]) -> dict:
         """[TF-47] LLM 실패 시 Python 폴백 — 첫 번째 후보 PASS 반환."""
         logging.warning(" [TF-47] 폴백 — 첫 번째 후보 선택 (Python)")
+        return _arc_compare_fallback_result(candidates)
         best = candidates[0] if candidates else None
         return {
             "decision": "PASS",
@@ -864,7 +1018,7 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
                     cache_type="director_ensemble",
                     content=stable_context,
                     ttl_seconds=600,
-                    project_name=f"ep{ep_num}",
+                    project_name=self._d._context_cache_project_namespace("ep", ep_num),
                 )
                 cache_name = cache_info.get("cache_name")
                 _was_cached = cache_info.get("cached", False)
@@ -1093,11 +1247,10 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
             if original_verdict == "REJECT":
                 # [TF-22b] 디렉터 주권: Director REJECT는 Python이 뒤집지 않음
                 final_verdict = "REJECT"
-            elif adaptive_result.get("adjusted") and original_verdict in ("PASS", "PASS_WITH_FIX"):  # [TF-32]
-                # [Sweep59] 적응형 하향 조정 (PASS+저점수→REJECT)
-                final_verdict = "REJECT"
             elif v60_97_swapped:
                 final_verdict = "REJECT"  # 스왑된 후보는 REJECT (적응형이 별도로 승격하지 않는 한)
+            elif adaptive_result.get("adjusted") and original_verdict in ("PASS", "PASS_WITH_FIX"):  # [TF-32]
+                final_verdict = original_verdict
             else:
                 final_verdict = "PASS"
 
@@ -1140,6 +1293,20 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
         logging.info(
             f"[Stage4 Director] 판정: {final_verdict} (점수: {score}) 후보{selected_letter} | 원래: {original_verdict}"
         )
+        _issues = feedback.get("issues", []) if isinstance(feedback, dict) else []
+        _log_director_frame(
+            stage="stage4",
+            ep_num=ep_num,
+            decision=final_verdict,
+            score=score,
+            selected_label=str(selected_letter),
+            selection_reason=_selection_reason,
+            verdict_reason=_verdict_reason,
+            contradictions=_issues,
+            fix_scope=_fix_scope,
+            open_review=_open_review,
+            thinking=getattr(self._d, "_last_thinking", ""),
+        )
         print(f"\n   {'=' * 56}")
         print(f"      [Stage4 Director] 원고 앙상블 판정: {final_verdict} (점수: {score})")
         print(f"      선택: 후보 {selected_letter} | 원래 판정: {original_verdict}")
@@ -1153,7 +1320,6 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
             _sb_str = ", ".join(f"{k}={v}" for k, v in _sb.items() if isinstance(v, int | float))
             if _sb_str:
                 print(f"      점수 분해: {_sb_str}")
-        _issues = feedback.get("issues", []) if isinstance(feedback, dict) else []
         if _issues:
             for _iss in _issues[:5]:
                 print(f"      이슈: {str(_iss)[:150]}")

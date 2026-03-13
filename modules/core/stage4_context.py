@@ -1,5 +1,7 @@
 """[Phase 4C-2a/2b/2c] Stage4 DI 컨텍스트 — 속성·콜백 의존 주입"""
 
+import inspect
+
 # [S-13] 조건부 모듈 8종 키 상수
 _CONDITIONAL_MODULE_KEYS = (
     "pre_director_checklist",
@@ -11,6 +13,19 @@ _CONDITIONAL_MODULE_KEYS = (
     "tree_of_thoughts",
     "multi_agent_deliberation",
 )
+
+
+def _safe_getattr(obj, name: str, default=None):
+    if obj is None:
+        return default
+    try:
+        inspect.getattr_static(obj, name)
+    except AttributeError:
+        return default
+    try:
+        return getattr(obj, name)
+    except AttributeError:
+        return default
 
 
 class Stage4Context:
@@ -97,6 +112,8 @@ class Stage4Context:
         load_narrative_summaries=None,
         get_protagonist_name=None,
         generate_narrative_summary=None,
+        generate_writer_guidance_v60_8=None,
+        enrich_director_result=None,
         flush_audit_buffer=None,
         safe_commit=None,
         session_logger=None,
@@ -122,15 +139,17 @@ class Stage4Context:
         self.pass_rate_monitor = pass_rate_monitor
         self.emotion_tracker = emotion_tracker  # [TF7-P2-06]
         self.conditional_modules = conditional_modules or {}
+        self._stage4_context_budget_meta = {}
         self.get_int_input = get_int_input
         self.build_item_acquisition_timeline = build_item_acquisition_timeline
         self.load_narrative_summaries = load_narrative_summaries
         self.get_protagonist_name = get_protagonist_name
         self.generate_narrative_summary = generate_narrative_summary
+        self.generate_writer_guidance_v60_8 = generate_writer_guidance_v60_8
+        self.enrich_director_result = enrich_director_result
         self.flush_audit_buffer = flush_audit_buffer
         self.safe_commit = safe_commit
         self.session_logger = session_logger
-        self._stage4_context_budget_meta = {}
 
     def get_module(self, name: str):
         """[S-13] 조건부 모듈 조회 헬퍼."""
@@ -142,7 +161,7 @@ class Stage4Context:
         # [S-13] 조건부 모듈 8종을 dict로 구성
         cm = {}
         for key in _CONDITIONAL_MODULE_KEYS:
-            val = getattr(app, key, None)
+            val = _safe_getattr(app, key, None)
             if val is not None:
                 cm[key] = val
 
@@ -151,29 +170,31 @@ class Stage4Context:
             current_project=app.current_project,
             agents=app.agents,
             sys=app.sys,
-            state_tracker=getattr(app, "state_tracker", None),
-            memory=getattr(app, "memory", None),
-            context_advisor=getattr(app, "context_advisor", None),
-            world_state=getattr(app, "world_state", None),
-            fact_ledger=getattr(app, "fact_ledger", None),
-            character_voice=getattr(app, "character_voice", None),
-            perf_timer=getattr(app, "perf_timer", None),
-            foreshadow_tracker=getattr(app, "foreshadow_tracker", None),
-            failure_learner=getattr(app, "failure_learner", None),
-            diversity_engine=getattr(app, "diversity_engine", None),
-            semantic_plot_guard=getattr(app, "semantic_plot_guard", None),
-            selected_genre=getattr(app, "selected_genre", None),
-            quality_dashboard=getattr(app, "quality_dashboard", None),
-            pacing_analyzer=getattr(app, "pacing_analyzer", None),
-            pass_rate_monitor=getattr(app, "pass_rate_monitor", None),
-            emotion_tracker=getattr(app, "emotion_tracker", None),
+            state_tracker=_safe_getattr(app, "state_tracker", None),
+            memory=_safe_getattr(app, "memory", None),
+            context_advisor=_safe_getattr(app, "context_advisor", None),
+            world_state=_safe_getattr(app, "world_state", None),
+            fact_ledger=_safe_getattr(app, "fact_ledger", None),
+            character_voice=_safe_getattr(app, "character_voice", None),
+            perf_timer=_safe_getattr(app, "perf_timer", None),
+            foreshadow_tracker=_safe_getattr(app, "foreshadow_tracker", None),
+            failure_learner=_safe_getattr(app, "failure_learner", None),
+            diversity_engine=_safe_getattr(app, "diversity_engine", None),
+            semantic_plot_guard=_safe_getattr(app, "semantic_plot_guard", None),
+            selected_genre=_safe_getattr(app, "selected_genre", None),
+            quality_dashboard=_safe_getattr(app, "quality_dashboard", None),
+            pacing_analyzer=_safe_getattr(app, "pacing_analyzer", None),
+            pass_rate_monitor=_safe_getattr(app, "pass_rate_monitor", None),
+            emotion_tracker=_safe_getattr(app, "emotion_tracker", None),
             conditional_modules=cm,
-            get_int_input=getattr(app, "_get_int_input", None),
-            build_item_acquisition_timeline=getattr(app, "_build_item_acquisition_timeline", None),
-            load_narrative_summaries=getattr(app, "_load_narrative_summaries", None),
-            get_protagonist_name=getattr(app, "_get_protagonist_name", None),
-            generate_narrative_summary=getattr(app, "_generate_narrative_summary", None),
-            flush_audit_buffer=getattr(app, "_flush_audit_buffer", None),
-            safe_commit=getattr(app, "_safe_commit", None),
-            session_logger=getattr(app, "_session_logger", None),
+            get_int_input=_safe_getattr(app, "_get_int_input", None),
+            build_item_acquisition_timeline=_safe_getattr(app, "_build_item_acquisition_timeline", None),
+            load_narrative_summaries=_safe_getattr(app, "_load_narrative_summaries", None),
+            get_protagonist_name=_safe_getattr(app, "_get_protagonist_name", None),
+            generate_narrative_summary=_safe_getattr(app, "_generate_narrative_summary", None),
+            generate_writer_guidance_v60_8=_safe_getattr(app, "_generate_writer_guidance_v60_8", None),
+            enrich_director_result=_safe_getattr(app, "_enrich_director_result", None),
+            flush_audit_buffer=_safe_getattr(app, "_flush_audit_buffer", None),
+            safe_commit=_safe_getattr(app, "_safe_commit", None),
+            session_logger=_safe_getattr(app, "_session_logger", None),
         )

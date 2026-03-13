@@ -40,7 +40,7 @@
         height: 100dvh;
         padding: 12px;
         display: grid;
-        grid-template-rows: auto 1fr;
+        grid-template-rows: auto auto 1fr;
         gap: 10px;
         background:
           linear-gradient(180deg, rgba(255,255,255,0.28), rgba(255,255,255,0)),
@@ -77,6 +77,195 @@
         color: var(--muted);
         font: inherit;
         cursor: pointer;
+      }
+
+      .workspace-nav {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.92));
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+      }
+
+      .workspace-nav-btn {
+        border: 1px solid var(--line);
+        background: #fff;
+        color: var(--muted);
+        border-radius: 999px;
+        padding: 8px 14px;
+        font: inherit;
+        font-size: 13px;
+        cursor: pointer;
+        transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+      }
+
+      .workspace-nav-btn:hover {
+        background: #f8fafc;
+      }
+
+      .workspace-nav-btn.active {
+        background: #0f172a;
+        border-color: #0f172a;
+        color: #fff;
+      }
+
+      .workspace-host {
+        height: 100%;
+        min-height: 0;
+        overflow: hidden;
+      }
+
+      .workspace-view {
+        display: none;
+        height: 100%;
+        min-height: 0;
+        overflow: hidden;
+      }
+
+      .workspace-view.active {
+        display: block;
+      }
+
+      .workspace-shell {
+        display: grid;
+        grid-template-columns: 280px minmax(0, 1fr);
+        gap: 10px;
+        min-height: 0;
+        height: 100%;
+        overflow: hidden;
+      }
+
+      .workspace-shell.single {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .workspace-main-col {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        min-height: 0;
+        overflow: hidden;
+      }
+
+      .workspace-scroll {
+        min-height: 0;
+        overflow: auto;
+      }
+
+      .office-page-panel {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+      }
+
+      .office-page-panel .canvas-wrap {
+        min-height: 320px;
+      }
+
+      .quality-page-shell {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        min-height: 0;
+        height: 100%;
+        overflow: auto;
+        overflow-x: hidden;
+        padding: 0 8px 24px 0;
+      }
+
+      .quality-page-panel {
+        min-height: 0;
+        overflow: hidden;
+      }
+
+      .quality-page-panel .panel-title {
+        margin-bottom: 4px;
+      }
+
+      .quality-page-panel .panel-sub {
+        margin-bottom: 10px;
+      }
+
+      .agent-board-panel {
+        padding-bottom: 16px;
+        margin-bottom: 4px;
+      }
+
+      .agent-board-panel .agent-board {
+        margin-top: 2px;
+      }
+
+      .event-feed-panel {
+        padding-bottom: 18px;
+        margin-bottom: 8px;
+      }
+
+      .event-feed-panel .live-feed {
+        min-height: 140px;
+        max-height: 260px;
+        border-style: solid;
+      }
+
+      .run-view #logPanel {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        flex: 1;
+      }
+
+      .run-view #logPanel .log-box {
+        min-height: 240px;
+        max-height: none;
+        flex: 1;
+      }
+
+      .project-shell {
+        display: grid;
+        grid-template-columns: minmax(280px, 0.9fr) minmax(0, 1.1fr);
+        gap: 10px;
+        min-height: 0;
+        height: 100%;
+        overflow: hidden;
+      }
+
+      .project-shell > .panel {
+        min-height: 0;
+        overflow: auto;
+      }
+
+      .project-page-content {
+        display: block;
+      }
+
+      .project-form-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+      }
+
+      .model-readonly-note {
+        margin-top: 8px;
+        font-size: 11px;
+        line-height: 1.45;
+        color: var(--muted);
+        background: #f8fafc;
+        border: 1px dashed var(--line);
+        border-radius: 8px;
+        padding: 8px 10px;
+      }
+
+      .model-readonly-field {
+        opacity: 0.7;
+      }
+
+      .model-readonly-field select,
+      .model-readonly-field button {
+        pointer-events: none;
       }
 
       .shell {
@@ -1950,6 +2139,41 @@
       .stage0-sub-btn.stage0-wip:hover {
         background: #57534e;
       }
+      .stage0-sub-controls {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-top: 8px;
+        padding: 10px 12px;
+        border-radius: 8px;
+        background: rgba(15, 23, 42, 0.24);
+        border: 1px solid rgba(148, 163, 184, 0.18);
+      }
+      .stage0-sub-control-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .stage0-sub-control-row label {
+        font-size: 12px;
+        color: #cbd5e1;
+        min-width: 88px;
+      }
+      .stage0-inline-select {
+        flex: 1;
+        min-width: 160px;
+        border-radius: 6px;
+        border: 1px solid rgba(148, 163, 184, 0.28);
+        background: rgba(15, 23, 42, 0.74);
+        color: #f8fafc;
+        padding: 6px 10px;
+      }
+      .stage0-inline-hint {
+        font-size: 11px;
+        color: #94a3b8;
+        line-height: 1.5;
+      }
 
       /* ── 장르 필요 안내 배지 ── */
       .genre-required-hint {
@@ -2417,6 +2641,26 @@
       }
 
       @media (max-width: 900px) {
+        .workspace-nav {
+          flex-wrap: wrap;
+        }
+
+        .workspace-shell,
+        .project-shell {
+          grid-template-columns: 1fr;
+          grid-template-rows: auto 1fr;
+          height: auto;
+        }
+
+        .workspace-view {
+          overflow: auto;
+        }
+
+        .workspace-main-col,
+        .workspace-host {
+          overflow: visible;
+        }
+
         .shell {
           grid-template-columns: 1fr;
           grid-template-rows: auto 1fr;
@@ -2535,23 +2779,39 @@
                 </button>
                 <div class="stage0-sub-menu" id="stage0SubMenu">
                   <button type="button" class="stage0-sub-btn menu-btn" data-action="stage_0" data-key="0" data-sub-key="1">
-                    <span class="label">기존 방식 (Bible/Treatment 선택)</span>
+                    <span class="label">기존 방식 (Bible/Treatment 생성)</span>
                   </button>
-                  <button type="button" class="stage0-sub-btn menu-btn stage0-wip" data-action="stage_0" data-key="0" data-sub-key="2">
-                    <span class="label">(개선 중) 컨셉 → Bible 생성 (AI 확장)</span>
+                  <button type="button" class="stage0-sub-btn menu-btn" data-action="stage_0" data-key="0" data-sub-key="2">
+                    <span class="label">컨셉 → Bible 생성</span>
                   </button>
-                  <button type="button" class="stage0-sub-btn menu-btn stage0-wip" data-action="stage_0" data-key="0" data-sub-key="3">
-                    <span class="label">(개선 중) 역설계 — 기존 원고에서 추출</span>
+                  <button type="button" class="stage0-sub-btn menu-btn" data-action="stage_0" data-key="0" data-sub-key="3">
+                    <span class="label">역설계 — 기존 원고에서 추출</span>
                   </button>
-                  <button type="button" class="stage0-sub-btn menu-btn stage0-wip" data-action="stage_0" data-key="0" data-sub-key="4">
-                    <span class="label">(개선 중) Bible JSON 임포트</span>
+                  <button type="button" class="stage0-sub-btn menu-btn" data-action="stage_0" data-key="0" data-sub-key="4">
+                    <span class="label">Bible JSON 임포트</span>
                   </button>
-                  <button type="button" class="stage0-sub-btn menu-btn stage0-wip" data-action="stage_0" data-key="0" data-sub-key="5">
-                    <span class="label">(개선 중) Block 확장 — Treatment에 블록 추가</span>
+                  <button type="button" class="stage0-sub-btn menu-btn" data-action="stage_0" data-key="0" data-sub-key="5">
+                    <span class="label">Block 확장 — Treatment에 블록 추가</span>
                   </button>
                   <button type="button" class="stage0-sub-btn menu-btn" data-action="stage_0" data-key="0" data-sub-key="6">
                     <span class="label">스타일 레퍼런스 분석</span>
                   </button>
+                  <button type="button" class="stage0-sub-btn menu-btn" data-action="stage_0" data-key="0" data-sub-key="7">
+                    <span class="label">작품가드 설정 (선택)</span>
+                  </button>
+                  <div class="stage0-sub-controls">
+                    <div class="stage0-sub-control-row">
+                      <label for="stage0StyleCacheMode">스타일 캐시</label>
+                      <select id="stage0StyleCacheMode" class="stage0-inline-select">
+                        <option value="use" selected>캐시 사용</option>
+                        <option value="refresh">캐시 무시 후 재분석</option>
+                        <option value="reset">캐시 삭제 후 재분석</option>
+                      </select>
+                    </div>
+                    <div class="stage0-inline-hint">
+                      `스타일 레퍼런스 분석` 실행 시에만 적용됩니다. `작품가드 설정`은 선택형이며, 넣지 않아도 이후 Stage 2~4는 그대로 진행됩니다.
+                    </div>
+                  </div>
                 </div>
 
                 <!-- Stage 2~4 + One-Stop -->
@@ -2566,6 +2826,9 @@
                 </button>
                 <button type="button" class="menu-btn genre-gated" data-action="one_stop" data-key="6" disabled>
                   <span class="label">One-Stop</span><span class="meta">key 6</span>
+                </button>
+                <button type="button" class="menu-btn genre-gated" data-action="one_stop_frontier_lag" data-key="7" disabled>
+                  <span class="label">Frontier Lag</span><span class="meta">key 7</span>
                 </button>
               </div>
             </div>
@@ -2998,6 +3261,14 @@
             <span class="field-label">작품 가드 YAML</span>
             <span class="field-hint">저장 위치: {project}/config/work_guard.yaml · 작품별 금기어 등</span>
             <textarea class="settings-textarea" id="workGuardYaml" placeholder="extra_forbidden_terms:&#10;  - 예시_금기어"></textarea>
+            <div class="input-row">
+              <select class="btn-sm" id="workGuardTemplateSelect" style="flex:1">
+                <option value="">템플릿 선택</option>
+              </select>
+              <button type="button" class="btn-sm" id="refreshWorkGuardTemplatesBtn">목록 새로고침</button>
+              <button type="button" class="btn-sm" id="applyWorkGuardTemplateBtn">템플릿 적용</button>
+            </div>
+            <span class="field-hint" id="workGuardTemplateMeta">root/work_guards 라이브러리에서 현재 장르 기준 템플릿을 불러옵니다.</span>
           </div>
         </div>
 
@@ -3263,7 +3534,7 @@
         skipAnimation: false,
         mute: false,
         frame: 0,
-        currentStage: null,   // "stage_0" | "stage_2" | "stage_3" | "stage_4" | "one_stop" | null
+        currentStage: null,   // "stage_0" | "stage_2" | "stage_3" | "stage_4" | "one_stop" | "one_stop_frontier_lag" | null
         currentSubKey: null,
         currentStageTitle: "대기",
         currentStageSummary: "실행 버튼을 기다리는 중",
@@ -3350,6 +3621,7 @@
         stage_3: { title: "Stage 3 · Blueprint", summary: "에피소드 골격을 만들고 검증 체인을 통과시키는 단계", short: "BLUEPRINT" },
         stage_4: { title: "Stage 4 · 원고 생산", summary: "Chief Writer 원고 작성과 Director 감사가 이어진다", short: "MANUSCRIPT" },
         one_stop: { title: "One-Stop", summary: "Arc부터 원고까지 전체 파이프라인을 한 번에 실행", short: "FULL RUN" },
+        one_stop_frontier_lag: { title: "Frontier Lag", summary: "Arc frontier는 전진시키고 Stage 3/4는 한 박자 늦춰 실행", short: "FRONTIER" },
         rollback: { title: "Rollback", summary: "이전 에피소드 기준으로 롤백을 수행", short: "ROLLBACK" },
         wipe: { title: "Wipe", summary: "프로젝트 산출물을 초기화하는 위험 작업", short: "WIPE" },
         reset: { title: "Reset", summary: "프로젝트 상태를 리셋하는 운영 작업", short: "RESET" },
@@ -3359,14 +3631,15 @@
 
       const STAGE0_SUB_META = {
         "1": { title: "Stage 0 · 기존 방식", summary: "Bible/Treatment를 골라 초기 설정을 진행", short: "SETUP" },
-        "2": { title: "Stage 0 · 컨셉 확장", summary: "컨셉에서 Bible을 생성하는 확장 경로", short: "CONCEPT" },
-        "3": { title: "Stage 0 · 역설계", summary: "기존 원고에서 설정을 추출하는 역설계 경로", short: "REVERSE" },
+        "2": { title: "Stage 0 · 컨셉 확장", summary: "컨셉 한 줄에서 Bible/Treatment 초안을 생성하는 경로", short: "CONCEPT" },
+        "3": { title: "Stage 0 · 역설계", summary: "기존 원고에서 설정과 스타일을 역추출하는 경로", short: "REVERSE" },
         "4": { title: "Stage 0 · Bible 임포트", summary: "기존 Bible JSON을 가져와 초기 상태를 구성", short: "IMPORT" },
         "5": { title: "Stage 0 · Block 확장", summary: "Treatment에 블록을 추가해 설계를 확장", short: "BLOCKS" },
-        "6": { title: "Stage 0 · 스타일 레퍼런스", summary: "참조 작품을 분석해 스타일 가이드를 만드는 경로", short: "STYLE REF" },
+        "6": { title: "Stage 0 · 스타일 레퍼런스", summary: "참조 작품을 분석하고 스타일 캐시 모드를 선택하는 경로", short: "STYLE REF" },
+        "7": { title: "Stage 0 · 작품가드", summary: "선택형 작품가드 템플릿을 가져오거나 초기화하는 경로", short: "WORK GUARD" },
       };
 
-      const PIPELINE_ORDER = ["stage_0", "stage_2", "stage_3", "stage_4", "one_stop"];
+      const PIPELINE_ORDER = ["stage_0", "stage_2", "stage_3", "stage_4", "one_stop", "one_stop_frontier_lag"];
 
       function resolveActionMeta(action, subKey) {
         if (action === "stage_0" && subKey && STAGE0_SUB_META[subKey]) {
@@ -3382,6 +3655,7 @@
         stage_3:  ["writer", "director", "critic", "manager"],          // ThreePhaseBP=writer, Director=심사, Consensus=critic
         stage_4:  ["writer", "director", "critic", "manager"],          // ChiefWriter+Director+4Validators+StateTracker
         one_stop: ["writer", "director", "analyst", "critic", "manager"],
+        one_stop_frontier_lag: ["writer", "director", "analyst", "critic", "manager"],
         rollback: ["manager", "director"],
         wipe: ["manager", "director"],
         reset: ["manager", "director"],
@@ -3436,6 +3710,23 @@
       function shortenText(text, limit) {
         if (!text) return "";
         return text.length > limit ? text.slice(0, limit - 1) + "…" : text;
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function sanitizeToken(value, fallback = "pending") {
+        const token = String(value ?? "")
+          .trim()
+          .toLowerCase()
+          .replace(/[^a-z0-9_-]/g, "");
+        return token || fallback;
       }
 
       function hexToRgba(hex, alpha = 1) {
@@ -3545,6 +3836,7 @@
             stage_3: "rgba(59, 130, 246, 0.14)",
             stage_4: "rgba(251, 191, 36, 0.16)",
             one_stop: "rgba(168, 85, 247, 0.14)",
+            one_stop_frontier_lag: "rgba(244, 114, 182, 0.16)",
           };
           chip.style.background = stageAccent[key] || "linear-gradient(180deg, #ffffff, #f8fafc)";
           const idx = PIPELINE_ORDER.indexOf(key);
@@ -3751,16 +4043,21 @@
           if (!action) continue;
           const card = document.createElement("div");
           card.className = "safe-ops-card";
+          const actionTitle = escapeHtml(action.title || key);
+          const targetLabel = action.requires_target ? "target 필요" : "즉시 preview";
+          const actionSummary = escapeHtml(action.summary || "");
+          const actionImpact = escapeHtml(formatSafeOpsImpactCounts(action));
+          const actionNote = escapeHtml((action.notes || [])[0] || "추가 메모 없음");
           card.innerHTML = `
             <div class="safe-ops-card-head">
-              <span class="safe-ops-card-title">${action.title || key}</span>
+              <span class="safe-ops-card-title">${actionTitle}</span>
               <span class="safe-ops-chip ${action.requires_target ? "is-target" : ""}">
-                ${action.requires_target ? "target 필요" : "즉시 preview"}
+                ${targetLabel}
               </span>
             </div>
-            <div class="safe-ops-card-copy">${action.summary || ""}</div>
-            <div class="safe-ops-card-impact"><strong>영향</strong> · ${formatSafeOpsImpactCounts(action)}</div>
-            <div class="safe-ops-card-note">${(action.notes || [])[0] || "추가 메모 없음"}</div>
+            <div class="safe-ops-card-copy">${actionSummary}</div>
+            <div class="safe-ops-card-impact"><strong>영향</strong> · ${actionImpact}</div>
+            <div class="safe-ops-card-note">${actionNote}</div>
           `;
           safeOpsGrid.appendChild(card);
         }
@@ -3818,17 +4115,22 @@
 
         for (const item of items) {
           const card = document.createElement("div");
-          const status = item.status || "pending";
+          const status = sanitizeToken(item.status, "pending");
+          const shortLabel = escapeHtml(item.short || item.key || "-");
+          const titleLabel = escapeHtml(item.title || item.label || item.key || "Artifact");
+          const metaLabel = escapeHtml(item.meta || item.label || "");
+          const detailLabel = escapeHtml(item.detail || "");
+          const pathLabel = escapeHtml(item.path || "경로 정보 없음");
           card.className = `artifact-card is-${status}`;
           card.innerHTML = `
             <div class="artifact-card-top">
-              <span class="artifact-short">${item.short || item.key || "-"}</span>
+              <span class="artifact-short">${shortLabel}</span>
               <span class="artifact-status-chip is-${status}">${getArtifactStatusLabel(status)}</span>
             </div>
-            <div class="artifact-card-title">${item.title || item.label || item.key || "Artifact"}</div>
-            <div class="artifact-card-meta">${item.meta || item.label || ""}</div>
-            <div class="artifact-card-detail">${item.detail || ""}</div>
-            <div class="artifact-card-path">${item.path || "경로 정보 없음"}</div>
+            <div class="artifact-card-title">${titleLabel}</div>
+            <div class="artifact-card-meta">${metaLabel}</div>
+            <div class="artifact-card-detail">${detailLabel}</div>
+            <div class="artifact-card-path">${pathLabel}</div>
           `;
           artifactLadderGrid.appendChild(card);
         }
@@ -3871,8 +4173,9 @@
             const summaryRate = Math.round(Number(row.summary_included_rate || 0) * 100);
             const relationRate = Math.round(Number(row.relation_slice_rate || 0) * 100);
             const warningRate = Math.round(Number(row.coverage_warning_rate || 0) * 100);
+            const stageLabel = escapeHtml(row.stage || "unknown");
             card.innerHTML = `
-              <div class="retrieval-stage-label">${row.stage || "unknown"}</div>
+              <div class="retrieval-stage-label">${stageLabel}</div>
               <div class="retrieval-stage-value">${summaryRate}%</div>
               <div class="retrieval-stage-meta">summary slot 포함률</div>
               <div class="retrieval-stage-meta">work focus ${workRate}% · relation slice ${relationRate}%</div>
@@ -3890,8 +4193,9 @@
           for (const row of warnings.slice(0, 6)) {
             const item = document.createElement("div");
             item.className = "pattern-item";
+            const warningLabel = escapeHtml(row.warning || "unknown_warning");
             item.innerHTML = `
-              <div class="pattern-item-title">${row.warning || "unknown_warning"}</div>
+              <div class="pattern-item-title">${warningLabel}</div>
               <div class="pattern-item-meta">누적 ${row.count || 0}회</div>
             `;
             retrievalWarningList.appendChild(item);
@@ -3910,11 +4214,14 @@
               .map(([key, value]) => `${key} ${value}`)
               .join(" · ");
             const warningsText = (row.coverage_warnings || []).join(" · ");
+            const stageLabel = escapeHtml(String(row.stage || "unknown").toUpperCase());
+            const safeSources = escapeHtml(sources || "source count 없음");
+            const safeWarningsText = escapeHtml(warningsText || "coverage warning 없음");
             item.innerHTML = `
-              <div class="pattern-item-title">ep ${row.ep_num ?? "-"} · ${String(row.stage || "unknown").toUpperCase()}</div>
+              <div class="pattern-item-title">ep ${row.ep_num ?? "-"} · ${stageLabel}</div>
               <div class="pattern-item-meta">summary ${row.work_slot_summary_included ? "yes" : "no"} · relation ${row.relation_slice_included ? "yes" : "no"}</div>
-              <div class="pattern-item-meta">${sources || "source count 없음"}</div>
-              <div class="pattern-item-meta">${warningsText || "coverage warning 없음"}</div>
+              <div class="pattern-item-meta">${safeSources}</div>
+              <div class="pattern-item-meta">${safeWarningsText}</div>
             `;
             retrievalRecentList.appendChild(item);
           }
@@ -3990,15 +4297,17 @@
         for (const [key, meta] of Object.entries(QUALITY_SIGNAL_META)) {
           const stat = summary.signals?.[key] || {};
           const card = document.createElement("div");
-          card.className = `quality-signal-card is-${stat.status || "watch"}`;
+          const signalStatus = sanitizeToken(stat.status, "watch");
+          card.className = `quality-signal-card is-${signalStatus}`;
 
           const deltaValue = Number(stat.delta || 0);
           const trendMap = { up: "상승", down: "하강", flat: "유지" };
           const deltaSign = deltaValue > 0 ? "+" : "";
-          const valueText = meta.format(stat.value || 0);
-          const medianText = meta.format(stat.median || 0);
+          const valueText = escapeHtml(meta.format(stat.value || 0));
+          const medianText = escapeHtml(meta.format(stat.median || 0));
           const recentValues = (summary.recent || []).map((row) => row?.[meta.field]);
           const sparkMarkup = buildSparklineSvg(recentValues, stat.status || "watch");
+          const signalReason = escapeHtml(describeSignal(key, stat));
 
           card.innerHTML = `
             <div class="quality-signal-label">${meta.label}</div>
@@ -4007,7 +4316,7 @@
             <div class="quality-signal-spark">${sparkMarkup || ""}</div>
             <div class="quality-signal-meta">median ${medianText}</div>
             <div class="quality-signal-meta">${trendMap[stat.trend] || "유지"} · Δ ${deltaSign}${meta.format(deltaValue)}</div>
-            <div class="quality-signal-reason">${describeSignal(key, stat)}</div>
+            <div class="quality-signal-reason">${signalReason}</div>
           `;
           qualityRadar.appendChild(card);
         }
@@ -4112,9 +4421,10 @@
           const row = document.createElement("tr");
           const verdict = String(rowData.verdict || "").toUpperCase();
           const verdictClass = verdict === "PASS" ? "is-pass" : verdict === "PASS_WITH_FIX" ? "is-pwf" : verdict === "REJECT" ? "is-reject" : "";
+          const verdictLabel = escapeHtml(verdict || "-");
           row.innerHTML = `
             <td>${rowData.ep_num ?? "-"}</td>
-            <td><span class="compare-verdict ${verdictClass}">${verdict || "-"}</span></td>
+            <td><span class="compare-verdict ${verdictClass}">${verdictLabel}</span></td>
             <td>${rowData.score ?? "-"}</td>
             <td>${rowData.ced != null ? Number(rowData.ced).toFixed(2) : "-"}</td>
             <td>${rowData.ai_slop != null ? Number(rowData.ai_slop).toFixed(2) : "-"}</td>
@@ -4140,8 +4450,9 @@
           for (const stat of stageStats.slice(0, 3)) {
             const card = document.createElement("div");
             card.className = "stage-stat-card";
+            const stageLabel = escapeHtml(stat.stage);
             card.innerHTML = `
-              <div class="stage-stat-label">Stage ${stat.stage}</div>
+              <div class="stage-stat-label">Stage ${stageLabel}</div>
               <div class="stage-stat-value">${Number(stat.pass_rate || 0).toFixed(1)}%</div>
               <div class="stage-stat-meta">평균 ${Number(stat.avg_score || 0).toFixed(1)}점 · 총 ${stat.total || 0}회</div>
             `;
@@ -4157,8 +4468,9 @@
           for (const item of topTypes.slice(0, 5)) {
             const node = document.createElement("div");
             node.className = "pattern-item";
+            const typeLabel = escapeHtml(item.type || "unknown");
             node.innerHTML = `
-              <div class="pattern-item-title">${item.type || "unknown"}</div>
+              <div class="pattern-item-title">${typeLabel}</div>
               <div class="pattern-item-meta">누적 ${item.count || 0}회</div>
             `;
             failurePatternList.appendChild(node);
@@ -4173,8 +4485,9 @@
           for (const item of ranges.slice(0, 5)) {
             const node = document.createElement("div");
             node.className = "pattern-item";
+            const rangeLabel = escapeHtml(item.range);
             node.innerHTML = `
-              <div class="pattern-item-title">${item.range}</div>
+              <div class="pattern-item-title">${rangeLabel}</div>
               <div class="pattern-item-meta">REJECT ${item.count || 0}회</div>
             `;
             failureRangeList.appendChild(node);
@@ -4225,10 +4538,14 @@
             card.className = "pattern-item";
             const verdict = row.verdict ? ` · ${row.verdict}${row.score ? ` ${row.score}점` : ""}` : "";
             const notes = (row.signal_notes || []).join(" · ");
+            const noteLabel = escapeHtml(row.note || "메모 없음");
+            const verdictLabel = escapeHtml(verdict);
+            const notesLabel = escapeHtml(notes || "신호 메모 없음");
+            const operatorLabel = escapeHtml(row.operator_label);
             card.innerHTML = `
-              <div class="pattern-item-title">ep ${row.ep_num} <span class="observation-label-chip ${getObservationLabelClass(row.operator_label)}">${row.operator_label}</span></div>
-              <div class="pattern-item-meta">${row.note || "메모 없음"}${verdict}</div>
-              <div class="pattern-item-meta">${notes || "신호 메모 없음"}</div>
+              <div class="pattern-item-title">ep ${row.ep_num} <span class="observation-label-chip ${getObservationLabelClass(row.operator_label)}">${operatorLabel}</span></div>
+              <div class="pattern-item-meta">${noteLabel}${verdictLabel}</div>
+              <div class="pattern-item-meta">${notesLabel}</div>
             `;
             qualityObservationList.appendChild(card);
           }
@@ -4242,9 +4559,11 @@
           for (const item of candidates.slice(0, 4)) {
             const card = document.createElement("div");
             card.className = "candidate-card";
+            const signalLabel = escapeHtml(item.signal);
+            const reasonLabel = escapeHtml(item.reason);
             card.innerHTML = `
-              <strong>${item.signal} advisory 후보</strong>
-              <span>${item.reason}</span>
+              <strong>${signalLabel} advisory 후보</strong>
+              <span>${reasonLabel}</span>
               <span>동행 관측 ${item.count || 0}건</span>
             `;
             qualityAdvisoryList.appendChild(card);
@@ -4377,6 +4696,13 @@
         }
       }
 
+      const SAFE_OPS_ACTION_LABELS = {
+        wipe: "프로젝트 전체 초기화",
+        reset: "프로젝트 리셋",
+        rewind: "에피소드 되감기",
+        rollback: "에피소드 롤백",
+      };
+
       async function confirmSafeOpsAction(action, label) {
         const safeOps = await loadSafeOpsPreview();
         const spec = safeOps.actions?.[action];
@@ -4402,6 +4728,17 @@
         return new Promise((resolve) => {
           _safeOpsConfirmResolve = resolve;
         });
+      }
+
+      async function requestRiskApprovalId(action, label) {
+        const title = SAFE_OPS_ACTION_LABELS[action] || label || action;
+        const raw = window.prompt(
+          `[${title}] 승인 ID를 입력하세요.\n승인 없이 위험 키는 실행되지 않습니다.`,
+          ""
+        );
+        if (raw == null) return null;
+        const approvalId = String(raw).trim();
+        return approvalId || null;
       }
 
       saveQualityObservationBtn.addEventListener("click", async () => {
@@ -4784,7 +5121,7 @@
       }
 
       // 애니메이션이 실행되는 스테이지 (생산 공정만)
-      const ANIMATED_STAGES = new Set(["stage_2", "stage_3", "stage_4", "one_stop"]);
+      const ANIMATED_STAGES = new Set(["stage_2", "stage_3", "stage_4", "one_stop", "one_stop_frontier_lag"]);
 
       function startRunningLoop() {
         officeState.isRunning = true;
@@ -5449,10 +5786,14 @@
         // 장르 인덱스 (main_a.py _select_genre 번호)
         if (projectConfig.genre) {
           inputs.genre_index = (cliContract.genreIndexMap || {})[projectConfig.genre] || cliContract.defaultGenreIndex || 1;
+          inputs.genre_type = projectConfig.genre;
         }
         // 프로젝트 인덱스 (main_a.py _select_project 번호, 1-based)
         if (projectConfig.projectIndex) {
           inputs.project_index = projectConfig.projectIndex;
+        }
+        if (projectConfig.project) {
+          inputs.project_name = projectConfig.project;
         }
         // DOM 입력 필드 우선, settingsStore 폴백 (설정 모달 열기 전에도 동작)
         const k1 = document.getElementById("apiKey1");
@@ -5466,6 +5807,10 @@
         const slack = document.getElementById("slackWebhook");
         const slackVal = (slack && slack.value.trim()) || settingsStore.slackWebhook;
         if (slackVal) inputs.slack_webhook = slackVal;
+        const stage0StyleCacheMode = document.getElementById("stage0StyleCacheMode");
+        if (stage0StyleCacheMode && stage0StyleCacheMode.value) {
+          inputs.stage0_style_cache_mode = stage0StyleCacheMode.value;
+        }
         return inputs;
       }
 
@@ -6208,16 +6553,6 @@
           return;
         }
 
-        // (개선 중) Stage 0 옵션 경고
-        if (action === "stage_0" && ["2", "3", "4", "5"].includes(subKey)) {
-          const proceed = confirm(
-            "⚠️ 이 기능은 현재 개선 중입니다.\n\n" +
-            "웬만하면 사용을 금지합니다.\n" +
-            "정말 실행하시겠습니까?"
-          );
-          if (!proceed) return;
-        }
-
         if (action === "stop") {
           setCurrentFocus(
             "중지 요청",
@@ -6273,9 +6608,9 @@
         }
 
         // ── 파괴적 작업 확인 (검증 통과 후) ──
-        const destructiveActions = { wipe: "프로젝트 전체 초기화", reset: "프로젝트 리셋", rewind: "에피소드 되감기", rollback: "에피소드 롤백" };
-        if (destructiveActions[action]) {
-          const proceed = await confirmSafeOpsAction(action, destructiveActions[action]);
+        let approvalId = null;
+        if (SAFE_OPS_ACTION_LABELS[action]) {
+          const proceed = await confirmSafeOpsAction(action, SAFE_OPS_ACTION_LABELS[action]);
           if (!proceed) {
             appendLog(`[System] ${label} 취소됨`, null, {
               agent: "manager",
@@ -6285,6 +6620,21 @@
               bubble: "취소됐어요",
               status: "취소",
               agentDetail: "위험 작업 미실행",
+              significant: true,
+            });
+            return;
+          }
+          approvalId = await requestRiskApprovalId(action, label);
+          if (!approvalId) {
+            appendLog(`[System] ${label} 승인 ID 입력이 없어 취소됨`, null, {
+              agent: "manager",
+              stage: action,
+              summary: `${label} 승인 ID 누락`,
+              detail: "위험 키 실행 전 approval_id 입력이 필요하지만 사용자가 입력하지 않음",
+              bubble: "승인 ID 필요",
+              bubbleColor: "#92400e",
+              status: "취소",
+              agentDetail: "dual-control 승인 ID 미제공",
               significant: true,
             });
             return;
@@ -6316,7 +6666,7 @@
             significant: true,
           });
           try {
-            const result = await window.geuldobiDesktop.runKey(key, subKey, inputs);
+            const result = await window.geuldobiDesktop.runKey(key, subKey, inputs, approvalId);
             if (!result.ok) {
               appendLog(`[System] 실행 실패: ${result.message}`, null, {
                 agent: "manager",
@@ -6434,6 +6784,10 @@
       const workGuardPresetSectBtn = document.getElementById("wgPresetSect");
       const workGuardReloadBtn = document.getElementById("wgReloadFromYaml");
       const workGuardClearBtn = document.getElementById("wgClearHelper");
+      const workGuardTemplateSelect = document.getElementById("workGuardTemplateSelect");
+      const refreshWorkGuardTemplatesBtn = document.getElementById("refreshWorkGuardTemplatesBtn");
+      const applyWorkGuardTemplateBtn = document.getElementById("applyWorkGuardTemplateBtn");
+      const workGuardTemplateMeta = document.getElementById("workGuardTemplateMeta");
 
       // 로컬 설정 저장소 (스텁)
       const settingsStore = {
@@ -6684,8 +7038,293 @@
         syncWorkGuardTextareaFromHelper();
       }
 
-      function openSettings() {
+      async function refreshWorkGuardTemplateList() {
+        if (!workGuardTemplateSelect) return;
+        const previous = workGuardTemplateSelect.value;
+        workGuardTemplateSelect.innerHTML = '<option value="">템플릿 선택</option>';
+
+        if (!window.geuldobiDesktop || typeof window.geuldobiDesktop.listWorkGuardTemplates !== "function") {
+          if (workGuardTemplateMeta) {
+            workGuardTemplateMeta.textContent = "work_guard 템플릿 브리지 surface를 찾지 못했습니다.";
+          }
+          return;
+        }
+
+        try {
+          const res = await window.geuldobiDesktop.listWorkGuardTemplates(projectConfig.genre || "");
+          if (!res || !res.ok) {
+            if (workGuardTemplateMeta) {
+              workGuardTemplateMeta.textContent = `템플릿 목록 로드 실패: ${(res && res.message) || "알 수 없는 오류"}`;
+            }
+            return;
+          }
+
+          const templates = Array.isArray(res.templates) ? res.templates : [];
+          templates.forEach((template) => {
+            const option = document.createElement("option");
+            option.value = template.path;
+            option.textContent = template.label || template.relativePath || template.path;
+            workGuardTemplateSelect.appendChild(option);
+          });
+
+          if (previous && templates.some((template) => template.path === previous)) {
+            workGuardTemplateSelect.value = previous;
+          }
+
+          if (workGuardTemplateMeta) {
+            if (templates.length) {
+              workGuardTemplateMeta.textContent = `${templates.length}개 템플릿 · 현재 장르 ${projectConfig.genre || "미설정"} 기준으로 정렬`;
+            } else {
+              workGuardTemplateMeta.textContent = "사용 가능한 work_guard 템플릿이 없습니다. root/work_guards 아래 YAML을 추가하세요.";
+            }
+          }
+        } catch (err) {
+          if (workGuardTemplateMeta) {
+            workGuardTemplateMeta.textContent = `템플릿 목록 로드 오류: ${err.message}`;
+          }
+        }
+      }
+
+      async function applySelectedWorkGuardTemplate() {
+        if (!projectConfig.project) {
+          appendLog("[설정] 프로젝트를 먼저 선택하세요.");
+          return;
+        }
+        if (!workGuardTemplateSelect || !workGuardTemplateSelect.value) {
+          appendLog("[설정] 적용할 작품가드 템플릿을 먼저 선택하세요.");
+          return;
+        }
+        if (!window.geuldobiDesktop || typeof window.geuldobiDesktop.applyWorkGuardTemplate !== "function") {
+          appendLog("[설정] 작품가드 템플릿 적용 surface를 찾지 못했습니다.");
+          return;
+        }
+        try {
+          const res = await window.geuldobiDesktop.applyWorkGuardTemplate(
+            projectConfig.project,
+            workGuardTemplateSelect.value
+          );
+          if (!res || !res.ok) {
+            appendLog(`[설정] 작품가드 템플릿 적용 실패: ${(res && res.message) || "알 수 없는 오류"}`);
+            return;
+          }
+          projectSettingsStore.workGuardYaml = res.workGuardYaml || "";
+          syncSettingsUI();
+          appendLog(`[설정] 작품가드 템플릿 적용: ${res.relativePath || workGuardTemplateSelect.value}`);
+        } catch (err) {
+          appendLog(`[설정] 작품가드 템플릿 적용 오류: ${err.message}`);
+        }
+      }
+
+      function setSettingsTab(tabId) {
+        const tabButtons = Array.from(document.querySelectorAll(".settings-panel .tab-btn"));
+        const tabContents = Array.from(document.querySelectorAll(".settings-panel .tab-content"));
+        let activeTabId = tabId;
+        if (!tabContents.some((content) => content.id === activeTabId)) {
+          activeTabId = tabButtons.find((button) => !button.disabled)?.dataset.tab || tabButtons[0]?.dataset.tab || "";
+        }
+        tabButtons.forEach((button) => {
+          button.classList.toggle("active", button.dataset.tab === activeTabId);
+        });
+        tabContents.forEach((content) => {
+          content.classList.toggle("active", content.id === activeTabId);
+        });
+      }
+
+      function setWorkspaceView(viewName) {
+        document.querySelectorAll(".workspace-nav-btn").forEach((button) => {
+          button.classList.toggle("active", button.dataset.view === viewName);
+        });
+        document.querySelectorAll(".workspace-view").forEach((view) => {
+          view.classList.toggle("active", view.dataset.view === viewName);
+        });
+      }
+
+      function buildWorkspacePanel(title, subtitle = "") {
+        const panel = document.createElement("article");
+        panel.className = "panel";
+
+        const titleEl = document.createElement("h2");
+        titleEl.className = "panel-title";
+        titleEl.textContent = title;
+        panel.appendChild(titleEl);
+
+        if (subtitle) {
+          const subEl = document.createElement("p");
+          subEl.className = "panel-sub";
+          subEl.textContent = subtitle;
+          panel.appendChild(subEl);
+        }
+
+        return panel;
+      }
+
+      function initializeModelTabReadonly() {
+        const modelTab = document.getElementById("tab-model");
+        if (!modelTab || modelTab.dataset.readonlyApplied === "true") return;
+        modelTab.dataset.readonlyApplied = "true";
+
+        const stubNotice = modelTab.querySelector(".stub-notice");
+        if (stubNotice) {
+          stubNotice.textContent = "모델 설정 - 현재 read-only. 실제 적용 모델은 config/models.yaml 기준이며 이 화면에서 저장되지 않습니다.";
+        }
+
+        ["modelCW", "modelDir", "modelAnl"].forEach((id) => {
+          const field = document.getElementById(id);
+          const row = field ? field.closest(".input-row") : null;
+          if (row) row.classList.add("model-readonly-field");
+          if (field) field.disabled = true;
+        });
+
+        const applyRecommended = document.getElementById("applyRecommendedModel");
+        if (applyRecommended) {
+          applyRecommended.disabled = true;
+          applyRecommended.classList.add("model-readonly-field");
+        }
+
+        if (!modelTab.querySelector(".model-readonly-note")) {
+          const note = document.createElement("div");
+          note.className = "model-readonly-note";
+          note.textContent = "CW, Director, Analyst 기본값은 현재 worktree의 models.yaml을 따릅니다. UI에서 값을 바꿔도 런타임에 반영되지 않으므로, misleading control 대신 read-only로 잠급니다.";
+          modelTab.appendChild(note);
+        }
+      }
+
+      function initializeWorkspaceLayout() {
+        if (document.getElementById("workspaceNav")) return;
+
+        const page = document.querySelector(".page");
+        const topbar = document.querySelector(".topbar");
+        const currentShell = document.querySelector(".shell");
+        const runPanel = currentShell ? currentShell.querySelector("article.panel") : null;
+        const officePanel = document.getElementById("officePanel");
+        const logPanel = document.getElementById("logPanel");
+        const materialAccordion = document.getElementById("cat-material")?.closest(".accordion-item");
+        const qualityRadarPanel = officePanel ? officePanel.querySelector(".quality-radar-panel") : null;
+        const qualityInsightGrid = officePanel ? officePanel.querySelector(".quality-insight-grid") : null;
+        const agentBoardNode = document.getElementById("agentBoard");
+        const eventFeedNode = document.getElementById("eventFeed");
+        const projectTab = document.getElementById("tab-project");
+        const projectTabButton = document.querySelector('.settings-panel .tab-btn[data-tab="tab-project"]');
+        if (!page || !topbar || !currentShell || !runPanel || !officePanel || !logPanel || !projectTab) return;
+
+        const workspaceNav = document.createElement("nav");
+        workspaceNav.className = "workspace-nav";
+        workspaceNav.id = "workspaceNav";
+
+        const workspaceHost = document.createElement("div");
+        workspaceHost.className = "workspace-host";
+
+        const viewSpecs = [
+          { key: "run", label: "Run" },
+          { key: "office", label: "Office" },
+          { key: "quality", label: "Quality" },
+          { key: "project", label: "Project" }
+        ];
+
+        const viewMap = {};
+        viewSpecs.forEach(({ key, label }) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "workspace-nav-btn";
+          button.dataset.view = key;
+          button.textContent = label;
+          button.addEventListener("click", () => setWorkspaceView(key));
+          workspaceNav.appendChild(button);
+
+          const view = document.createElement("section");
+          view.className = `workspace-view ${key}-view`;
+          view.dataset.view = key;
+          workspaceHost.appendChild(view);
+          viewMap[key] = view;
+        });
+
+        topbar.insertAdjacentElement("afterend", workspaceNav);
+        currentShell.replaceWith(workspaceHost);
+
+        const runTitle = runPanel.querySelector(".panel-title");
+        const runSub = runPanel.querySelector(".panel-sub");
+        if (runTitle) runTitle.textContent = "실행";
+        if (runSub) runSub.textContent = "실행과 운영 제어만 이 화면에 남깁니다.";
+
+        const runShell = document.createElement("div");
+        runShell.className = "workspace-shell";
+        const runMainCol = document.createElement("div");
+        runMainCol.className = "workspace-main-col";
+        viewMap.run.appendChild(runShell);
+        runShell.append(runPanel, runMainCol);
+        runMainCol.appendChild(logPanel);
+
+        if (qualityRadarPanel) viewMap.quality.appendChild(qualityRadarPanel);
+        if (qualityInsightGrid) viewMap.quality.appendChild(qualityInsightGrid);
+
+        if (agentBoardNode) {
+          const agentPanel = buildWorkspacePanel("Agent Board", "에이전트 상태와 최근 발화 흔적");
+          agentPanel.classList.add("quality-page-panel", "agent-board-panel");
+          agentPanel.appendChild(agentBoardNode);
+          viewMap.quality.appendChild(agentPanel);
+        }
+
+        if (eventFeedNode) {
+          const feedPanel = buildWorkspacePanel("Event Feed", "최근 주요 이벤트와 런타임 신호");
+          feedPanel.classList.add("quality-page-panel", "event-feed-panel");
+          feedPanel.appendChild(eventFeedNode);
+          viewMap.quality.appendChild(feedPanel);
+        }
+
+        const qualityShell = document.createElement("div");
+        qualityShell.className = "quality-page-shell";
+        while (viewMap.quality.firstChild) {
+          qualityShell.appendChild(viewMap.quality.firstChild);
+        }
+        viewMap.quality.appendChild(qualityShell);
+
+        officePanel.classList.add("office-page-panel");
+        const officeShell = document.createElement("div");
+        officeShell.className = "workspace-shell single";
+        officeShell.appendChild(officePanel);
+        viewMap.office.appendChild(officeShell);
+
+        const projectShell = document.createElement("div");
+        projectShell.className = "project-shell";
+        viewMap.project.appendChild(projectShell);
+
+        const projectMaterialsPanel = buildWorkspacePanel("재료", "Bible, Treatment, 그리고 프로젝트 준비물");
+        const projectConfigPanel = buildWorkspacePanel("프로젝트 설정", "작품 가드와 작가 지시사항을 여기서 관리합니다.");
+        projectShell.append(projectMaterialsPanel, projectConfigPanel);
+
+        if (materialAccordion) {
+          projectMaterialsPanel.appendChild(materialAccordion);
+        }
+
+        projectTabButton?.remove();
+        projectTab.classList.remove("tab-content", "active");
+        projectTab.classList.add("project-page-content");
+        projectConfigPanel.appendChild(projectTab);
+
+        const actionRow = document.createElement("div");
+        actionRow.className = "project-form-actions";
+
+        const projectSaveBtn = document.createElement("button");
+        projectSaveBtn.type = "button";
+        projectSaveBtn.className = "top-action";
+        projectSaveBtn.textContent = "프로젝트 저장";
+        projectSaveBtn.addEventListener("click", () => settingsSave.click());
+
+        const projectOpenSettingsBtn = document.createElement("button");
+        projectOpenSettingsBtn.type = "button";
+        projectOpenSettingsBtn.className = "top-action";
+        projectOpenSettingsBtn.textContent = "API / 시스템 설정";
+        projectOpenSettingsBtn.addEventListener("click", () => openSettings("tab-api"));
+
+        actionRow.append(projectSaveBtn, projectOpenSettingsBtn);
+        projectConfigPanel.appendChild(actionRow);
+
+        setWorkspaceView("run");
+      }
+
+      function openSettings(tabId = null) {
         syncSettingsUI();
+        setSettingsTab(tabId);
         settingsOverlay.classList.add("open");
       }
 
@@ -6738,15 +7377,16 @@
           workGuardEl.value = projectSettingsStore.workGuardYaml || "";
           syncWorkGuardHelperFromYaml(workGuardEl.value);
         }
+        refreshWorkGuardTemplateList().catch(() => {});
       }
 
+      initializeWorkspaceLayout();
+      initializeModelTabReadonly();
+
       // 탭 전환
-      document.querySelectorAll(".tab-btn").forEach((btn) => {
+      document.querySelectorAll(".settings-panel .tab-btn").forEach((btn) => {
         btn.addEventListener("click", () => {
-          document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
-          document.querySelectorAll(".tab-content").forEach((c) => c.classList.remove("active"));
-          btn.classList.add("active");
-          document.getElementById(btn.dataset.tab).classList.add("active");
+          setSettingsTab(btn.dataset.tab);
         });
       });
 
@@ -6849,6 +7489,16 @@
         fillWorkGuardHelperFields({});
         syncWorkGuardTextareaFromHelper();
       });
+      if (refreshWorkGuardTemplatesBtn) {
+        refreshWorkGuardTemplatesBtn.addEventListener("click", () => {
+          refreshWorkGuardTemplateList().catch(() => {});
+        });
+      }
+      if (applyWorkGuardTemplateBtn) {
+        applyWorkGuardTemplateBtn.addEventListener("click", () => {
+          applySelectedWorkGuardTemplate().catch(() => {});
+        });
+      }
 
       // 시스템 탭 — 연출 토글 버튼
       sysToggleSkipBtn.addEventListener("click", () => {
@@ -6934,7 +7584,7 @@
       });
 
       // 설정 버튼
-      settingsBtn.addEventListener("click", openSettings);
+      settingsBtn.addEventListener("click", () => openSettings("tab-api"));
 
       // 작업 폴더 열기 버튼
       document.getElementById("openWorkspaceBtn").addEventListener("click", async () => {
@@ -7036,6 +7686,14 @@
         }
       });
 
+      function setAccordionCollapsed(targetId, collapsed) {
+        const body = document.getElementById(targetId);
+        const header = document.querySelector(`.category-header[data-target="${targetId}"]`);
+        if (!body || !header) return;
+        body.classList.toggle("collapsed", collapsed);
+        header.classList.toggle("collapsed", collapsed);
+      }
+
       // Accordion toggle (독립 토글, 자동 접기 없음)
       document.querySelectorAll(".category-header").forEach((header) => {
         header.addEventListener("click", () => {
@@ -7045,6 +7703,10 @@
           header.classList.toggle("collapsed", isCollapsed);
         });
       });
+
+      setAccordionCollapsed("cat-material", false);
+      setAccordionCollapsed("cat-produce", true);
+      setAccordionCollapsed("cat-ops", true);
 
       // ── 장르 게이팅 (장르 미설정 시 비활성) ──
       function updateGenreGating() {
@@ -7086,7 +7748,8 @@
             if (f.isDir) continue;
             const item = document.createElement("div");
             item.className = "material-file-item";
-            item.innerHTML = `<span class="file-name" title="${f.name}">${f.name}</span>`
+            const safeFileName = escapeHtml(f.name);
+            item.innerHTML = `<span class="file-name" title="${safeFileName}">${safeFileName}</span>`
               + `<span class="file-size">${_formatSize(f.size)}</span>`
               + `<button type="button" class="file-del" title="삭제">✕</button>`;
             item.querySelector(".file-del").addEventListener("click", async () => {

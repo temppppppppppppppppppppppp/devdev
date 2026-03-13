@@ -35,7 +35,7 @@ NPC 등록                앙상블 + 검증 체인              합격/불합 �
 - **코드 분할 완료**: stage4 orch -64%, chief_writer -62%, stage2 orch -66%, interview_round run() -48%
 - **완료된 주요 작업군** (150건+ 전량 완료, 개별 이력은 git log 참조):
   - 인프라: DI 전환, DB-SSOT, Ruff 0, Protocol 표준화, God Object 해체 3차
-  - 품질: NC-1~3(수치 정합성), NS-1~4(수치 자기검증), WritingDirective, Self-Critique 15개 체크
+  - 품질: NC-1~3(수치 정합성), NS-1~4(수치 자기검증), WritingDirective, Self-Critique 17개 체크
   - 장기기억: LM-A~I(7개 advisory), TruthGate, Smart Context Retrieval
   - 수정전략: PASS_WITH_FIX 3-tier(inplace/partial/full), fix_scope 라우팅
   - 멀티프로바이더: LLMProvider Protocol + Router + 4 Provider (Gemini only 운영)
@@ -68,7 +68,7 @@ NPC 등록                앙상블 + 검증 체인              합격/불합 �
 | `modules/domain/agents/base_agent.py` | AI 에이전트 베이스 (Context Caching 포함) |
 | `modules/domain/agents/chief_writer.py` | Chief Writer (854줄 + context/quality 서브모듈) |
 | `modules/domain/agents/chief_writer_context.py` | CW 컨텍스트 빌더 (1,074줄) |
-| `modules/domain/agents/chief_writer_quality.py` | CW 품질 게이트 (465줄, self-critique 15개 체크) |
+| `modules/domain/agents/chief_writer_quality.py` | CW 품질 게이트 (465줄, self-critique 17개 체크) |
 | **Advisory 체인** (Stage4, ThreadPoolExecutor 8병렬) | |
 | `modules/core/truth_gate.py` | 메모리 오염 방지 (7개 검사) |
 | `modules/core/npc_drift_advisor.py` | NPC 속성 표류 LLM advisory |
@@ -145,11 +145,11 @@ NPC 등록                앙상블 + 검증 체인              합격/불합 �
 - `STRUCTURAL_MIN_SCORE = 50` 소프트필터 (최소 1개 보장)
 
 ### 주요 필드명 주의
-- `protagonist_items` vs `items_acquired`: API 스키마가 `protagonist_items` 강제. 14파일 21곳 폴백 패턴 적용됨.
+- `protagonist_items` vs `items_acquired`: API 스키마가 `protagonist_items` 강제. 현재 코드 기준 19파일 39곳에 우선-폴백 소비 패턴 적용됨.
 - `cumulative_elapsed`: WorldState 필드, 한국어 시간 파서 `_parse_elapsed_days()`
 
-### Self-Critique 체크 (15개)
-1~4: 기본(사망NPC/분량/대사비율/씬전환), 5: 동기약속 방치, 6: WritingDirective 준수, 7: 표현 신선도, 8: ending_hook, 9: 산술 일관성, 10: 메타용어 노출, 11: 감정 고착, 12: 시간 논리, 13: 문단 구조, 14: 톤 일관성, 15: 씬 전환 마커
+### Self-Critique 체크 (17개)
+1~4: 기본(사망NPC/분량/대사비율/씬전환), 5: 동기약속 방치, 6: WritingDirective 준수, 7: 표현 신선도, 8: AI-tell 패턴, 9: ending_hook, 10: 산술 일관성, 11: 메타용어 노출, 12: 엔딩 참신성, 13: 시간 논리, 14: 문단 구조, 15: 톤 일관성, 16: POV 일관성, 17: 씬 전환 마커
 
 ### DB Advisory (Python 자동감지, 참고용)
 - Stage4 Director: DB-1(pacing), DB-2(satisfaction), DB-6(reveals), DB-8(reflexion)

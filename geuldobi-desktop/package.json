@@ -1,6 +1,6 @@
 {
   "name": "geuldobi-desktop",
-  "version": "1.0.0",
+  "version": "1.5.0",
   "description": "글도비 — AI 웹소설 자동 생성 데스크톱",
   "main": "src/main.js",
   "scripts": {
@@ -8,7 +8,7 @@
     "start:spike": "cmd /C \"set ELECTRON_RUN_AS_NODE=&& set SPIKE_AUTOCLOSE_MS=5000&& electron .\"",
     "build": "electron-builder --win",
     "build:dir": "electron-builder --win --dir",
-    "test": "echo \"No tests configured\""
+    "test": "cmd /C \"cd .. && python -m pytest -q tests/test_run_validator.py tests/test_api_contract.py tests/test_frontend_frontier_lag_wiring.py tests/test_frontend_stage0_connectivity.py tests/test_ui_renderer_sanitization.py tests/test_desktop_contract_refresh.py tests/test_desktop_work_guard_template_contract.py tests/test_process_runner_stage0_inputs.py\""
   },
   "keywords": [],
   "author": "",

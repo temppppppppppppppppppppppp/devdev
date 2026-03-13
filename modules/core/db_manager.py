@@ -575,7 +575,13 @@ class DBManager:
                 prompt_version TEXT,
                 candidate_key TEXT,
                 content_hash TEXT,
-                artifact_path TEXT
+                artifact_path TEXT,
+                selection_reason TEXT,
+                verdict_reason TEXT,
+                open_review TEXT,
+                fix_scope_reasoning TEXT,
+                runtime_advisory TEXT,
+                retry_directives TEXT
             )
             """
         )
@@ -592,6 +598,12 @@ class DBManager:
             "candidate_key",
             "content_hash",
             "artifact_path",
+            "selection_reason",
+            "verdict_reason",
+            "open_review",
+            "fix_scope_reasoning",
+            "runtime_advisory",
+            "retry_directives",
         ):
             try:
                 self.cursor.execute(f"ALTER TABLE stage_attempts ADD COLUMN {_col} TEXT")
@@ -2315,7 +2327,8 @@ class DBManager:
                 self.cursor.execute("DELETE FROM npc_relationship_edges WHERE updated_ep >= ?", (target_ep,))
                 # [LM-D] 관계 변경 이력 롤백
                 self.cursor.execute("DELETE FROM npc_relationship_history WHERE change_ep >= ?", (target_ep,))
-                self.conn.commit()
+                if commit:
+                    self.conn.commit()
             except Exception as e:
                 self.conn.rollback()
                 logging.error("[B4-P1-4] reset_after(ep>=%s) 트랜잭션 실패 — rollback 수행: %s", target_ep, e)
@@ -2325,11 +2338,12 @@ class DBManager:
             for k in invalidate_eps:
                 del self._cumulative_bible_cache[k]
             # 로어는 시간 개념이 모호하므로 유지하거나 별도 정책 필요 (여기선 유지)
-        # [TF-24] VACUUM은 lock 밖에서 실행 (장시간 lock 점유 방지)
-        try:
-            self.conn.execute("VACUUM")
-        except Exception as _vac_err:
-            logging.debug("[DBManager] VACUUM 실패 (비치명): %s", _vac_err)
+        # [TF-24] VACUUM은 커밋 경로에서만 lock 밖에서 실행 (장시간 lock 점유 방지)
+        if commit:
+            try:
+                self.conn.execute("VACUUM")
+            except Exception as _vac_err:
+                logging.debug("[DBManager] VACUUM 실패 (비치명): %s", _vac_err)
 
     def get_rollback_impact(self, target_ep: int) -> dict:
         """[D-2] 롤백 영향 범위 조회 — 삭제될 데이터 건수 미리보기."""
@@ -3099,6 +3113,12 @@ class DBManager:
         candidate_key: str | None = None,
         content_hash: str | None = None,
         artifact_path: str | None = None,
+        selection_reason: str | None = None,
+        verdict_reason: str | None = None,
+        open_review: str | None = None,
+        fix_scope_reasoning: str | None = None,
+        runtime_advisory: str | None = None,
+        retry_directives: str | None = None,
     ) -> None:
         """[Log-2] Save one stage attempt record in non-blocking mode."""
         try:
@@ -3110,8 +3130,9 @@ class DBManager:
                        (session_id, ts, stage, ep_num, arc_num, attempt_num,
                         verdict, score, failure_category, reject_reason,
                         fix_scope, model, duration_ms, advisory_flags, attempt_key, generation_method, prompt_version,
-                        candidate_key, content_hash, artifact_path)
-                       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                        candidate_key, content_hash, artifact_path, selection_reason, verdict_reason, open_review,
+                        fix_scope_reasoning, runtime_advisory, retry_directives)
+                       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                     (
                         session_id,
                         ts,
@@ -3133,6 +3154,12 @@ class DBManager:
                         str(candidate_key or ""),
                         str(content_hash or ""),
                         str(artifact_path or ""),
+                        (selection_reason or "")[:500],
+                        (verdict_reason or "")[:500],
+                        (open_review or "")[:500],
+                        (fix_scope_reasoning or "")[:500],
+                        (runtime_advisory or "")[:500],
+                        (retry_directives or "")[:500],
                     ),
                 )
                 self.conn.commit()

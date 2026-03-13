@@ -471,3 +471,54 @@ class TestAppNoneGuards:
     def test_build_item_acquisition_timeline_with_none_app_returns_empty(self, builder):
         result = builder.build_item_acquisition_timeline(1)
         assert result == ""
+
+
+class TestGenerateArcContextV60Bound:
+    def test_app_bound_path_uses_state_extractor_and_audit(self, builder_with_mock_app):
+        state_extractor = MagicMock()
+        state_extractor.extract_cumulative_state.return_value = {
+            "inventory": {"current_items": ["청풍검"]},
+        }
+        state_extractor.generate_constraint_prompt.return_value = "constraint prompt"
+        builder_with_mock_app._app.agents["state_extractor"] = state_extractor
+
+        result = builder_with_mock_app.generate_arc_context_v60(
+            [{"arc_no": 1, "joint_docs": {}, "status_shadow": {}, "state_constraints": {"arc_end_state": {}}}],
+            current_arc_no=2,
+        )
+
+        assert result.startswith("[다음 Arc #2 설계 기준]")
+        assert "constraint prompt" in result
+        state_extractor.extract_cumulative_state.assert_called_once()
+        builder_with_mock_app._app._audit_event.assert_called_once()
+        audit_payload = builder_with_mock_app._app._audit_event.call_args.args[2]
+        assert audit_payload["target_arc_no"] == 2
+
+    def test_app_bound_path_uses_cache_on_repeat_call(self, builder_with_mock_app):
+        state_extractor = MagicMock()
+        state_extractor.extract_cumulative_state.return_value = {"inventory": {"current_items": []}}
+        state_extractor.generate_constraint_prompt.return_value = "constraint prompt"
+        builder_with_mock_app._app.agents["state_extractor"] = state_extractor
+        arcs = [{"arc_no": 1, "joint_docs": {}, "status_shadow": {}, "state_constraints": {"arc_end_state": {}}}]
+
+        builder_with_mock_app.generate_arc_context_v60(arcs, current_arc_no=2)
+        builder_with_mock_app.generate_arc_context_v60(arcs, current_arc_no=3)
+
+        state_extractor.extract_cumulative_state.assert_called_once()
+
+    def test_current_arc_no_changes_output_even_on_fallback(self, builder_with_mock_app):
+        arcs = [
+            {
+                "arc_no": 1,
+                "joint_docs": {},
+                "status_shadow": {"internal_energy_loss": "10%"},
+                "state_constraints": {"arc_end_state": {}},
+            }
+        ]
+
+        result_a = builder_with_mock_app.generate_arc_context_v60(arcs, current_arc_no=2)
+        result_b = builder_with_mock_app.generate_arc_context_v60(arcs, current_arc_no=5)
+
+        assert result_a != result_b
+        assert result_a.startswith("[다음 Arc #2 설계 기준]")
+        assert result_b.startswith("[다음 Arc #5 설계 기준]")

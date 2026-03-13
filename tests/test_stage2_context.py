@@ -113,6 +113,11 @@ class TestStage2Context:
         assert ctx.build_focused_context is None
         assert ctx.generate_arc_context_v60 is None
         assert ctx.generate_reverse_feedback_stage4_to_2 is None
+        assert ctx.retry_feedback_missing_callbacks == {
+            "required": [],
+            "optional_with_fallback": [],
+            "observability_only": [],
+        }
 
     def test_context_advisor_stored_when_injected(self, mock_deps):
         advisor = MagicMock()
@@ -137,6 +142,34 @@ class TestStage2Context:
         assert ctx.get_int_input is None
         assert ctx.state_tracker is None
         assert ctx.context_advisor is None
+        assert ctx.retry_feedback_missing_callbacks["required"] == ["analyze_rejection_pattern_v60"]
+        assert "generate_arc_context_v60" in ctx.retry_feedback_missing_callbacks["optional_with_fallback"]
+
+    def test_from_app_falls_back_to_feedback_and_prompt_builders(self):
+        app = type("App", (), {})()
+        app.ui = MagicMock()
+        app.current_project = MagicMock()
+        app.agents = {}
+        app.sys = MagicMock()
+        app._feedback_system = MagicMock()
+        app._prompt_builder = MagicMock()
+        app._feedback_system.generate_reverse_feedback_stage3_to_2 = MagicMock()
+        app._feedback_system.build_minimal_arc_context = MagicMock()
+        app._feedback_system.get_adaptive_feedback_intensity = MagicMock()
+        app._prompt_builder.generate_arc_context_v60 = MagicMock()
+
+        ctx = Stage2Context.from_app(app)
+
+        assert ctx.generate_reverse_feedback_stage3_to_2 is app._feedback_system.generate_reverse_feedback_stage3_to_2
+        assert ctx.build_minimal_arc_context is app._feedback_system.build_minimal_arc_context
+        assert ctx.get_adaptive_feedback_intensity is app._feedback_system.get_adaptive_feedback_intensity
+        assert ctx.generate_arc_context_v60 is app._prompt_builder.generate_arc_context_v60
+        assert ctx.retry_feedback_missing_callbacks["required"] == ["analyze_rejection_pattern_v60"]
+
+    def test_retry_feedback_contract_tracks_expected_tiers(self, ctx):
+        assert ctx.retry_feedback_contract["analyze_rejection_pattern_v60"] == "required"
+        assert ctx.retry_feedback_contract["generate_reverse_feedback_stage3_to_2"] == "optional_with_fallback"
+        assert ctx.retry_feedback_contract["generate_arc_context_v60"] == "optional_with_fallback"
 
     def test_keyword_only_init(self):
         """위치 인자로 생성 시 TypeError"""
@@ -184,3 +217,20 @@ class TestStage2OrchestratorCtx:
         """self.app 접근 유지 (레거시 호환)"""
         orch = Stage2Orchestrator(app=app_mock)
         assert orch.app is app_mock
+
+    def test_rejection_pattern_helper_falls_back_to_diagnostic(self, app_mock):
+        orch = Stage2Orchestrator(app=app_mock)
+        orch.ctx.audit_event = MagicMock()
+        orch.ctx.analyze_rejection_pattern_v60 = None
+
+        message = orch._compose_rejection_pattern_feedback(
+            [
+                {"stage": 2, "arc_no": 3, "reason": "반복 전개", "specific_issue": "후반부 이벤트 부족"},
+                {"stage": 2, "arc_no": 3, "reason": "반복 전개"},
+            ],
+            3,
+        )
+
+        assert "callback_missing" in message
+        assert "반복 전개" in message
+        assert "후반부 이벤트 부족" in message

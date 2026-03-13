@@ -3,7 +3,7 @@ info:
   title: Geuldobi Runner API
   version: v1
 servers:
-  - url: http://127.0.0.1:8000
+  - url: http://127.0.0.1:8300
 paths:
   /run:
     post:
@@ -102,6 +102,144 @@ paths:
               schema:
                 $ref: '#/components/schemas/StatusEnvelope'
 
+  /quality/summary:
+    get:
+      summary: Get recent quality signal summary for a project
+      parameters:
+        - name: project
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: lookback
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 5
+      responses:
+        '200':
+          description: Quality summary response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OkEnvelope'
+        '400':
+          description: Invalid project
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '500':
+          description: Internal error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /quality/dashboard:
+    get:
+      summary: Get read-only quality dashboard aggregates for a project
+      parameters:
+        - name: project
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: lookback
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 5
+      responses:
+        '200':
+          description: Quality dashboard response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OkEnvelope'
+        '400':
+          description: Invalid project
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '500':
+          description: Internal error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /safe-ops/preview:
+    get:
+      summary: Get read-only safe operations preview for a project
+      parameters:
+        - name: project
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Safe ops preview response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OkEnvelope'
+        '400':
+          description: Invalid project
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '500':
+          description: Internal error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /quality/review:
+    post:
+      summary: Save operator quality review for an episode
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [project, ep_num, operator_label]
+              properties:
+                project:
+                  type: string
+                ep_num:
+                  type: integer
+                operator_label:
+                  type: string
+                note:
+                  type: string
+      responses:
+        '200':
+          description: Review accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OkEnvelope'
+        '400':
+          description: Invalid request or invalid project
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '500':
+          description: Internal error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
 components:
   schemas:
     RunRequest:
@@ -110,7 +248,7 @@ components:
       properties:
         key:
           type: string
-          enum: ['0', '1', '2', '3', '4', '5', '6', '44', '77', '88', '99']
+          enum: ['0', '1', '2', '3', '4', '5', '6', '7', '44', '77', '88', '99']
         sub_key:
           type: string
           nullable: true
@@ -170,9 +308,12 @@ components:
           properties:
             state:
               type: string
-              enum: [idle, running, waiting_input, stopping, error]
+              enum: [idle, starting, running, stopping, error]
             run_id:
               type: string
+              nullable: true
+            pid:
+              type: integer
               nullable: true
 
     ErrorEnvelope:
@@ -198,6 +339,9 @@ components:
             - RISK_APPROVAL_DUAL_CONTROL_REQUIRED
             - INVALID_PROMPT_ID
             - PROMPT_ALREADY_RESOLVED
+            - INTERNAL_ERROR
+            - INVALID_PROJECT
+            - INVALID_REQUEST
         message:
           type: string
         data:

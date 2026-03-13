@@ -271,8 +271,8 @@ class TestDirectorEnsemble:
         assert result["selected_index"] == -1
         assert result["selected_blueprint"] is None
 
-    def test_compare_and_select_single_candidate_pass(self, director):
-        """19. Single candidate with sufficient content gets PASS."""
+    def test_compare_and_select_single_candidate_fail_closed_without_director_llm(self, director):
+        """19. 단일 후보는 Director LLM 없이 자동 PASS하지 않는다."""
         candidate = {
             "integrated_scenario": "A" * 1000,
             "scene_breakdown": {"scene1": "x", "scene2": "y", "scene3": "z", "scene4": "w"},
@@ -283,7 +283,8 @@ class TestDirectorEnsemble:
         result = director.compare_and_select_blueprint(
             candidates=[candidate], arc_data={"tactical_doc": "전술서 내용"}, ep_num=1
         )
-        assert result["decision"] == "PASS"
+        assert result["decision"] == "REJECT"
+        assert "Director LLM" in result["reason"]
         assert result["selected_index"] == 0
         assert result["selected_blueprint"] is not None
 
@@ -1015,16 +1016,17 @@ class TestDirectorArcComparison:
         assert result["selected_arc"] is None
 
     def test_compare_and_select_arc_single_fallback(self, director):
-        """단일 후보 + LLM 파싱 실패 → Python 폴백 PASS."""
+        """단일 후보 + LLM 파싱 실패 → fail-closed REJECT."""
         director.ask = MagicMock(return_value="invalid json response")
         director._extract_json_robust = MagicMock(return_value=None)
 
         arc = {"tactical_doc": "A" * 3000, "arc_no": 1, "ep_count": 5, "_strategy": "balanced"}
         result = director.compare_and_select_arc(candidates=[arc], arc_no=1, curr_block={}, prev_arc_context="")
         # 단일 후보도 compare_and_select_arc 내부 호출됨 → LLM 실패 시 폴백
-        assert result["decision"] == "PASS"
+        assert result["decision"] == "REJECT"
         assert result["selected_index"] == 0
         assert result["selected_arc"] is arc
+        assert result["quality_gate_triggered"] is True
 
     def test_compare_and_select_arc_multi_pass(self, director):
         """다중 후보 + LLM PASS → 올바른 선택 반환."""
@@ -1068,6 +1070,91 @@ class TestDirectorArcComparison:
         assert result["selected_index"] == 1
         assert result["selected_arc"] is arcs[1]
         assert result["score"] == 92
+
+    def test_compare_and_select_arc_preserves_director_pass_with_fix_when_adaptive_adjusts(self, director):
+        director.ask = MagicMock(return_value="json")
+        director._extract_json_robust = MagicMock(
+            return_value={
+                "selected_index": 0,
+                "decision": "PASS_WITH_FIX",
+                "score": 84,
+                "contradictions": [],
+                "reason": "경미한 수정만 필요",
+                "comparison_notes": "후보 1이 가장 안정적",
+                "feedback": "장면 연결만 다듬으면 됨",
+                "fix_scope": "inplace",
+            }
+        )
+        director._escape_braces = MagicMock(side_effect=lambda x: x)
+        director.apply_adaptive_decision = MagicMock(
+            return_value={"decision": "CONDITIONAL_PASS", "adjusted": True, "threshold_used": 85, "reason": "strict"}
+        )
+
+        arcs = [
+            {
+                "tactical_doc": "A" * 3000,
+                "arc_no": 1,
+                "ep_count": 5,
+                "_strategy": "balanced",
+                "joint_docs": {},
+                "state_constraints": {},
+            },
+            {
+                "tactical_doc": "B" * 3000,
+                "arc_no": 1,
+                "ep_count": 5,
+                "_strategy": "dense",
+                "joint_docs": {},
+                "state_constraints": {},
+            },
+        ]
+
+        result = director.compare_and_select_arc(candidates=arcs, arc_no=1, curr_block={}, prev_arc_context="")
+
+        assert result["decision"] == "PASS_WITH_FIX"
+        assert result["fix_scope"] == "inplace"
+
+    def test_compare_and_select_arc_quality_gate_downgrades_pass(self, director):
+        director.ask = MagicMock(return_value="json")
+        director._extract_json_robust = MagicMock(
+            return_value={
+                "selected_index": 1,
+                "decision": "PASS",
+                "score": 95,
+                "contradictions": [],
+                "reason": "picked",
+                "comparison_notes": "quality gate check",
+                "feedback": "",
+                "fix_scope": "inplace",
+            }
+        )
+        director._escape_braces = MagicMock(side_effect=lambda x: x)
+
+        arcs = [
+            {"tactical_doc": "A" * 3000, "_strategy": "conservative", "joint_docs": {}, "state_constraints": {}},
+            {"tactical_doc": "B" * 3000, "_strategy": "balanced", "joint_docs": {}, "state_constraints": {}},
+        ]
+        result = director.compare_and_select_arc(
+            candidates=arcs,
+            arc_no=1,
+            curr_block={},
+            prev_arc_context="",
+            candidate_quality_flags=[
+                {},
+                {
+                    "force_pass_with_fix": True,
+                    "score_cap": 89,
+                    "reasons": ["investment-major:mismatch"],
+                    "feedback": "Major investment advisory requires at least PASS_WITH_FIX.",
+                },
+            ],
+        )
+
+        assert result["decision"] == "PASS_WITH_FIX"
+        assert result["score"] == 89
+        assert result["quality_gate_triggered"] is True
+        assert result["quality_gate_reasons"] == ["investment-major:mismatch"]
+        assert "PASS_WITH_FIX" in result["feedback"]
 
     def test_compare_and_select_arc_multi_reject(self, director):
         """다중 후보 + LLM REJECT → feedback 포함."""
@@ -1161,10 +1248,11 @@ class TestDirectorArcComparison:
         ]
         result = director.compare_and_select_arc(candidates=arcs, arc_no=1, curr_block={}, prev_arc_context="")
         # 예외 시 Python 폴백 → PASS, 첫 번째 후보 선택
-        assert result["decision"] == "PASS"
+        assert result["decision"] == "REJECT"
         assert result["selected_index"] == 0
         assert result["selected_arc"] is arcs[0]
-        assert "폴백" in result["comparison_notes"]
+        assert result["quality_gate_triggered"] is True
+        assert "Fallback" in result["comparison_notes"]
 
     def test_compare_and_select_arc_index_clamping(self, director):
         """LLM이 selected_index 범위 초과 → 0으로 클램프."""

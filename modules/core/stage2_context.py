@@ -1,5 +1,6 @@
 """[Phase 4C-3] Stage2 DI 컨텍스트 — 속성·콜백 의존 주입"""
 
+import inspect
 import weakref
 
 
@@ -15,6 +16,93 @@ def _make_sync_callback(app_ref):
             setattr(app, "_cumulative_state_cache", cache)
 
     return _sync
+
+
+_RETRY_FEEDBACK_CALLBACK_SPECS = {
+    "generate_structured_arc_feedback": {
+        "tier": "optional_with_fallback",
+        "fallbacks": (("_feedback_system", "generate_structured_arc_feedback"),),
+    },
+    "generate_reverse_feedback_stage3_to_2": {
+        "tier": "optional_with_fallback",
+        "fallbacks": (("_feedback_system", "generate_reverse_feedback_stage3_to_2"),),
+    },
+    "generate_reverse_feedback_stage4_to_2": {
+        "tier": "optional_with_fallback",
+        "fallbacks": (("_feedback_system", "generate_reverse_feedback_stage4_to_2"),),
+    },
+    "build_strong_kind_feedback": {
+        "tier": "optional_with_fallback",
+        "fallbacks": (("_feedback_system", "build_strong_kind_feedback"),),
+    },
+    "build_minimal_arc_context": {
+        "tier": "optional_with_fallback",
+        "fallbacks": (("_feedback_system", "build_minimal_arc_context"),),
+    },
+    "build_focused_context": {
+        "tier": "optional_with_fallback",
+        "fallbacks": (("_feedback_system", "build_focused_context"),),
+    },
+    "analyze_rejection_pattern_v60": {
+        "tier": "required",
+        "fallbacks": (),
+    },
+    "get_adaptive_feedback_intensity": {
+        "tier": "optional_with_fallback",
+        "fallbacks": (("_feedback_system", "get_adaptive_feedback_intensity"),),
+    },
+    "generate_arc_context_v60": {
+        "tier": "optional_with_fallback",
+        "fallbacks": (("_prompt_builder", "generate_arc_context_v60"),),
+    },
+}
+
+
+def _safe_getattr(obj, name, default=None):
+    if obj is None:
+        return default
+    try:
+        inspect.getattr_static(obj, name)
+    except AttributeError:
+        return default
+    try:
+        return getattr(obj, name)
+    except AttributeError:
+        return default
+
+
+def _resolve_retry_feedback_callback(app, callback_name: str):
+    direct_name = f"_{callback_name}"
+    callback = _safe_getattr(app, direct_name, None)
+    if callable(callback):
+        return callback
+
+    spec = _RETRY_FEEDBACK_CALLBACK_SPECS.get(callback_name, {})
+    for container_name, method_name in spec.get("fallbacks", ()):
+        container = _safe_getattr(app, container_name, None)
+        method = _safe_getattr(container, method_name, None)
+        if callable(method):
+            return method
+    return None
+
+
+def _build_retry_feedback_contract(app):
+    callbacks = {}
+    contract = {}
+    missing = {
+        "required": [],
+        "optional_with_fallback": [],
+        "observability_only": [],
+    }
+
+    for callback_name, spec in _RETRY_FEEDBACK_CALLBACK_SPECS.items():
+        contract[callback_name] = spec["tier"]
+        resolved = _resolve_retry_feedback_callback(app, callback_name)
+        callbacks[callback_name] = resolved
+        if not callable(resolved):
+            missing[spec["tier"]].append(callback_name)
+
+    return callbacks, contract, missing
 
 
 class Stage2Context:
@@ -95,6 +183,9 @@ class Stage2Context:
         "generate_arc_context_v60",
         # [Sweep3-D2] 캐시 키 동기화 콜백
         "sync_cache_key_to_app",
+        # [MRF-T1] callback contract / missing ledger
+        "retry_feedback_contract",
+        "retry_feedback_missing_callbacks",
         # [LOG-1] 세션 로거
         "session_logger",
     )
@@ -152,6 +243,8 @@ class Stage2Context:
         generate_arc_context_v60=None,
         # [Sweep3-D2]
         sync_cache_key_to_app=None,
+        retry_feedback_contract=None,
+        retry_feedback_missing_callbacks=None,
         # [LOG-1]
         session_logger=None,
     ):
@@ -202,58 +295,69 @@ class Stage2Context:
         self.get_adaptive_feedback_intensity = get_adaptive_feedback_intensity
         self.generate_arc_context_v60 = generate_arc_context_v60
         self.sync_cache_key_to_app = sync_cache_key_to_app
+        self.retry_feedback_contract = retry_feedback_contract or {
+            name: spec["tier"] for name, spec in _RETRY_FEEDBACK_CALLBACK_SPECS.items()
+        }
+        self.retry_feedback_missing_callbacks = retry_feedback_missing_callbacks or {
+            "required": [],
+            "optional_with_fallback": [],
+            "observability_only": [],
+        }
         self.session_logger = session_logger
 
     @classmethod
     def from_app(cls, app):
         """SovereignApp에서 전체 속성 추출"""
+        retry_callbacks, retry_contract, retry_missing = _build_retry_feedback_contract(app)
         return cls(
             ui=app.ui,
             current_project=app.current_project,
             agents=app.agents,
             sys=app.sys,
-            state_tracker=getattr(app, "state_tracker", None),
-            selected_genre=getattr(app, "selected_genre", None),
-            preset_registry=getattr(app, "preset_registry", None),
-            perf_timer=getattr(app, "perf_timer", None),
-            semantic_plot_guard=getattr(app, "semantic_plot_guard", None),
-            failure_learner=getattr(app, "failure_learner", None),
-            memory=getattr(app, "memory", None),
-            context_advisor=getattr(app, "context_advisor", None),
-            stage2_optimizer=getattr(app, "stage2_optimizer", None),
-            arc_draft_validator=getattr(app, "arc_draft_validator", None),
-            arc_corrector=getattr(app, "arc_corrector", None),
-            constraint_compiler=getattr(app, "constraint_compiler", None),
-            stage_rejection_history=getattr(app, "stage_rejection_history", None),
-            pass_rate_monitor=getattr(app, "pass_rate_monitor", None),
-            quality_dashboard=getattr(app, "quality_dashboard", None),
-            quality_amplifier=getattr(app, "quality_amplifier", None),
-            agent_intelligence=getattr(app, "agent_intelligence", None),
-            constitutional_checker=getattr(app, "constitutional_checker", None),
-            self_reflector=getattr(app, "self_reflector", None),
-            use_arc_corrector=getattr(app, "use_arc_corrector", False),
-            adversarial_self_play=getattr(app, "adversarial_self_play", None),
-            audit_event=getattr(app, "_audit_event", None),
-            cumulative_state_cache=getattr(app, "_cumulative_state_cache", None),
-            cumulative_state_cache_key=getattr(app, "_cumulative_state_cache_key", None),
-            write_audit_summary=getattr(app, "_write_audit_summary", None),
-            validate_arc_mapping=getattr(app, "_validate_arc_mapping", None),
-            validate_arc_integrity=getattr(app, "_validate_arc_integrity", None),
-            state_tracker_loaded_arcs=getattr(app, "_state_tracker_loaded_arcs", None),
-            safe_commit_async=getattr(app, "_safe_commit_async", None),
-            get_max_episode_from_manuscripts=getattr(app, "_get_max_episode_from_manuscripts", None),
-            get_int_input=getattr(app, "_get_int_input", None),
-            generate_structured_arc_feedback=getattr(app, "_generate_structured_arc_feedback", None),
-            generate_reverse_feedback_stage3_to_2=getattr(app, "_generate_reverse_feedback_stage3_to_2", None),
-            generate_reverse_feedback_stage4_to_2=getattr(app, "_generate_reverse_feedback_stage4_to_2", None),
-            fix_entity_registry_protagonist=getattr(app, "_fix_entity_registry_protagonist", None),
-            calculate_arc_from_episode=getattr(app, "_calculate_arc_from_episode", None),
-            build_strong_kind_feedback=getattr(app, "_build_strong_kind_feedback", None),
-            build_minimal_arc_context=getattr(app, "_build_minimal_arc_context", None),
-            build_focused_context=getattr(app, "_build_focused_context", None),
-            analyze_rejection_pattern_v60=getattr(app, "_analyze_rejection_pattern_v60", None),
-            get_adaptive_feedback_intensity=getattr(app, "_get_adaptive_feedback_intensity", None),
-            generate_arc_context_v60=getattr(app, "_generate_arc_context_v60", None),
+            state_tracker=_safe_getattr(app, "state_tracker", None),
+            selected_genre=_safe_getattr(app, "selected_genre", None),
+            preset_registry=_safe_getattr(app, "preset_registry", None),
+            perf_timer=_safe_getattr(app, "perf_timer", None),
+            semantic_plot_guard=_safe_getattr(app, "semantic_plot_guard", None),
+            failure_learner=_safe_getattr(app, "failure_learner", None),
+            memory=_safe_getattr(app, "memory", None),
+            context_advisor=_safe_getattr(app, "context_advisor", None),
+            stage2_optimizer=_safe_getattr(app, "stage2_optimizer", None),
+            arc_draft_validator=_safe_getattr(app, "arc_draft_validator", None),
+            arc_corrector=_safe_getattr(app, "arc_corrector", None),
+            constraint_compiler=_safe_getattr(app, "constraint_compiler", None),
+            stage_rejection_history=_safe_getattr(app, "stage_rejection_history", None),
+            pass_rate_monitor=_safe_getattr(app, "pass_rate_monitor", None),
+            quality_dashboard=_safe_getattr(app, "quality_dashboard", None),
+            quality_amplifier=_safe_getattr(app, "quality_amplifier", None),
+            agent_intelligence=_safe_getattr(app, "agent_intelligence", None),
+            constitutional_checker=_safe_getattr(app, "constitutional_checker", None),
+            self_reflector=_safe_getattr(app, "self_reflector", None),
+            use_arc_corrector=_safe_getattr(app, "use_arc_corrector", False),
+            adversarial_self_play=_safe_getattr(app, "adversarial_self_play", None),
+            audit_event=_safe_getattr(app, "_audit_event", None),
+            cumulative_state_cache=_safe_getattr(app, "_cumulative_state_cache", None),
+            cumulative_state_cache_key=_safe_getattr(app, "_cumulative_state_cache_key", None),
+            write_audit_summary=_safe_getattr(app, "_write_audit_summary", None),
+            validate_arc_mapping=_safe_getattr(app, "_validate_arc_mapping", None),
+            validate_arc_integrity=_safe_getattr(app, "_validate_arc_integrity", None),
+            state_tracker_loaded_arcs=_safe_getattr(app, "_state_tracker_loaded_arcs", None),
+            safe_commit_async=_safe_getattr(app, "_safe_commit_async", None),
+            get_max_episode_from_manuscripts=_safe_getattr(app, "_get_max_episode_from_manuscripts", None),
+            get_int_input=_safe_getattr(app, "_get_int_input", None),
+            generate_structured_arc_feedback=retry_callbacks["generate_structured_arc_feedback"],
+            generate_reverse_feedback_stage3_to_2=retry_callbacks["generate_reverse_feedback_stage3_to_2"],
+            generate_reverse_feedback_stage4_to_2=retry_callbacks["generate_reverse_feedback_stage4_to_2"],
+            fix_entity_registry_protagonist=_safe_getattr(app, "_fix_entity_registry_protagonist", None),
+            calculate_arc_from_episode=_safe_getattr(app, "_calculate_arc_from_episode", None),
+            build_strong_kind_feedback=retry_callbacks["build_strong_kind_feedback"],
+            build_minimal_arc_context=retry_callbacks["build_minimal_arc_context"],
+            build_focused_context=retry_callbacks["build_focused_context"],
+            analyze_rejection_pattern_v60=retry_callbacks["analyze_rejection_pattern_v60"],
+            get_adaptive_feedback_intensity=retry_callbacks["get_adaptive_feedback_intensity"],
+            generate_arc_context_v60=retry_callbacks["generate_arc_context_v60"],
             sync_cache_key_to_app=_make_sync_callback(weakref.ref(app)),
-            session_logger=getattr(app, "_session_logger", None),
+            retry_feedback_contract=retry_contract,
+            retry_feedback_missing_callbacks=retry_missing,
+            session_logger=_safe_getattr(app, "_session_logger", None),
         )

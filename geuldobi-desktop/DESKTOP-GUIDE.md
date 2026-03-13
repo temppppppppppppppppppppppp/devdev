@@ -95,13 +95,13 @@ powershell -ExecutionPolicy Bypass -File build_release.ps1
 |------|---------|--------|
 | Step 1 | 내장 Python 다운로드 + pip 패키지 설치 | `python-embed/` 폴더 |
 | Step 2 | bridge_server를 PyInstaller로 빌드 | `dist/backend/backend.exe` |
-| Step 3 | Electron Builder로 설치 파일 생성 | `geuldobi-desktop/dist/Geuldobi Setup 1.0.0.exe` |
+| Step 3 | Electron Builder로 설치 파일 생성 | `geuldobi-desktop/dist/Geuldobi Setup 1.5.0.exe` |
 
 ### 빌드 결과물
 
 ```
 geuldobi-desktop/dist/
-└── Geuldobi Setup 1.0.0.exe    ← 이걸 사용자에게 주면 됨 (~300MB)
+└── Geuldobi Setup 1.5.0.exe    ← 이걸 사용자에게 주면 됨 (~300MB)
 ```
 
 ### 첫 빌드 시 시간
@@ -120,7 +120,7 @@ geuldobi-desktop/dist/
 
 ### 사용자가 할 일
 
-1. `Geuldobi Setup 1.0.0.exe` 더블클릭
+1. `Geuldobi Setup 1.5.0.exe` 더블클릭
 2. 설치 경로 선택 (기본값 OK)
 3. 설치 완료 → 바탕화면 아이콘 클릭
 4. 첫 실행 시 설정에서 Gemini API 키 입력

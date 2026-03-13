@@ -105,13 +105,15 @@
     }
   ],
   "transitional_notes": {
-    "current_resume_pointer": "treatments/preprocess/{work_id}/docs/sequential_run_status.md",
-    "future_resume_pointer": "treatments/preprocess/{work_id}/sequential_run_status.json",
-    "future_audit_status_pointer": "treatments/preprocess/{work_id}/audit_status.json",
-    "current_bi_audit_evidence": [
+    "primary_resume_pointer": "treatments/preprocess/{work_id}/sequential_run_status.json",
+    "deprecated_resume_fallback": "treatments/preprocess/{work_id}/docs/sequential_run_status.md",
+    "primary_audit_pointer": "treatments/preprocess/{work_id}/audit_status.json",
+    "deprecated_audit_fallback": [
       "bible/audit_reports/*_bi_5pass*.md",
       "preprocess 05_bi_work/bi_5pass.md",
       "manual audit memo"
-    ]
+    ],
+    "fallback_deprecation": "md fallback allowed during 30-day grace period after cutover; json_only after grace expires",
+    "read_priority": "json_first; if json missing and within grace period, read md; if json missing and grace expired, treat as status_missing"
   }
 }

@@ -35,6 +35,17 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from modules.core.project_support import (
+    INCARNATION_TYPE_OPTIONS,
+    EXTERNAL_POV_INSERT_POLICY_OPTIONS,
+    POV_OPTIONS,
+    WORLD_ORIGIN_OPTIONS,
+    default_external_pov_insert_policy,
+    normalize_external_pov_insert_policy,
+    resolve_external_pov_insert_policy_choice,
+    resolve_indexed_menu_choice,
+)
+
 
 class StageZeroManager:
     """
@@ -59,9 +70,11 @@ class StageZeroManager:
     }
 
     # 주인공 설정 옵션
-    WORLD_ORIGIN_OPTIONS = ["현대인", "원시인"]
-    INCARNATION_TYPES = ["회귀자", "빙의자", "환생자", "일반"]
-    POV_OPTIONS = ["1인칭", "3인칭", "전지적", "혼합"]
+    WORLD_ORIGIN_OPTIONS = list(WORLD_ORIGIN_OPTIONS)
+    INCARNATION_TYPES = list(INCARNATION_TYPE_OPTIONS)
+    POV_OPTIONS = list(POV_OPTIONS)
+    WORK_GUARD_LIBRARY_ROOT = Path("work_guards")
+    EXTERNAL_POV_INSERT_POLICY_OPTIONS = list(EXTERNAL_POV_INSERT_POLICY_OPTIONS)
 
     def __init__(self, project_path: str = None, llm_client=None):
         self.project_path = project_path
@@ -75,6 +88,127 @@ class StageZeroManager:
         self.episode_bibles: list[dict[str, Any]] = []
         self.style_guide: StyleGuide | None = None
         self.protagonist_config: dict[str, Any] = {}
+
+    def _project_work_guard_path(self) -> Path | None:
+        if not self.project_path:
+            return None
+        return Path(self.project_path) / "config" / "work_guard.yaml"
+
+    def _list_work_guard_templates(self) -> list[Path]:
+        roots: list[Path] = []
+        if self.genre:
+            roots.append(self.WORK_GUARD_LIBRARY_ROOT / self.genre)
+        roots.append(self.WORK_GUARD_LIBRARY_ROOT)
+
+        candidates: dict[str, Path] = {}
+        for root in roots:
+            if not root.exists():
+                continue
+            for pattern in ("*.yaml", "*.yml"):
+                for path in sorted(root.glob(pattern)):
+                    candidates[str(path.resolve())] = path
+        return sorted(candidates.values(), key=lambda item: str(item).lower())
+
+    def _build_default_work_guard_yaml(self) -> str:
+        work_type = self.genre or "custom"
+        tracking_slots = {
+            "investment": ["지분 구조 변화", "현금흐름 압박", "시장 심리 변화"],
+            "wuxia": ["문파 위상 변화", "무공 성장 축", "원한/은원 추적"],
+            "hunter": ["파티 전력 변화", "게이트 위협 축", "자원/장비 확보"],
+        }.get(work_type, ["작품 핵심 갈등", "관계 변화", "추적 슬롯"])
+        scene_engines = {
+            "investment": ["협상", "실사", "IR/브리핑"],
+            "wuxia": ["비무", "수련", "문파 정치"],
+            "hunter": ["공략", "브리핑", "전리품 정산"],
+        }.get(work_type, ["핵심 장면 엔진"])
+
+        slot_lines = "\n".join(f"    - {slot}" for slot in tracking_slots)
+        engine_lines = "\n".join(f"    - {engine}" for engine in scene_engines)
+        return (
+            "work_identity:\n"
+            f"  work_type: {work_type}\n"
+            "  one_line_truth: \"\"\n"
+            "  mandatory_lexicon: []\n"
+            "  forbidden_flattenings: []\n"
+            "  tracking_slots:\n"
+            f"{slot_lines}\n"
+            "  mandatory_scene_engines:\n"
+            f"{engine_lines}\n"
+            "  registry_profiles: []\n"
+            "  role_fit_constraints: []\n"
+        )
+
+    def manage_work_guard(self) -> None:
+        project_guard_path = self._project_work_guard_path()
+        if project_guard_path is None:
+            print("[!] 프로젝트 경로가 없어 Work Guard를 관리할 수 없습니다.")
+            return
+
+        print("\n" + "-" * 40)
+        print("작품가드 설정 (선택)")
+        print("-" * 40)
+        print("  [1] 라이브러리에서 가져오기")
+        print("  [2] 기본 템플릿으로 초기화")
+        print("  [3] 현재 프로젝트 작품가드 미리보기")
+        print("  [4] 현재 프로젝트 작품가드 삭제")
+        print("\n  [0] 돌아가기")
+
+        try:
+            choice = input("\n  선택: ").strip()
+        except (EOFError, KeyboardInterrupt, ValueError):
+            choice = "0"
+
+        if choice == "0":
+            return
+
+        project_guard_path.parent.mkdir(parents=True, exist_ok=True)
+
+        if choice == "1":
+            templates = self._list_work_guard_templates()
+            if not templates:
+                print("[!] 가져올 작품가드 템플릿이 없습니다. work_guards/ 아래에 YAML을 두세요.")
+                return
+            print("\n  사용 가능한 템플릿:")
+            for idx, template in enumerate(templates, 1):
+                print(f"  [{idx}] {template.as_posix()}")
+            try:
+                template_choice = int(input("\n  가져올 번호: ").strip())
+                selected = templates[template_choice - 1]
+            except (ValueError, IndexError, EOFError, KeyboardInterrupt):
+                print("[!] 잘못된 선택입니다.")
+                return
+            project_guard_path.write_text(selected.read_text(encoding="utf-8"), encoding="utf-8")
+            print(f"[v] 작품가드 가져오기 완료: {selected} -> {project_guard_path}")
+            return
+
+        if choice == "2":
+            project_guard_path.write_text(self._build_default_work_guard_yaml(), encoding="utf-8")
+            print(f"[v] 기본 작품가드 초기화 완료: {project_guard_path}")
+            return
+
+        if choice == "3":
+            from modules.core.project_support import load_work_guard_summary
+
+            summary = load_work_guard_summary(Path(self.project_path))
+            if not summary.get("work_guard_exists"):
+                print("[*] 현재 프로젝트에는 작품가드가 없습니다. baseline 경로로 진행 중입니다.")
+                return
+            print(f"  - 경로: {project_guard_path}")
+            print(f"  - work_type: {summary.get('work_type', '') or '(미지정)'}")
+            print(f"  - tracking_slots: {summary.get('tracking_slots', 0)}")
+            print(f"  - registry_profiles: {summary.get('registry_profiles', 0)}")
+            print(f"  - role_fit_constraints: {summary.get('role_fit_constraints', 0)}")
+            return
+
+        if choice == "4":
+            if project_guard_path.exists():
+                project_guard_path.unlink()
+                print(f"[v] 작품가드 삭제 완료: {project_guard_path}")
+            else:
+                print("[*] 삭제할 작품가드가 없습니다.")
+            return
+
+        print("[!] 잘못된 선택입니다.")
 
     # ============================================
     # 메뉴 시스템
@@ -91,6 +225,7 @@ class StageZeroManager:
             print("  [2] 역설계 → 기존 원고에서 설정 추출")
             print("  [3] Bible 임포트 → 기존 JSON 불러오기")
             print("  [4] 스타일 레퍼런스 분석 → 참조 원고에서 문체 DNA 추출")
+            print("  [5] 작품가드 설정 (선택)")
             print("\n  [0] 취소")
         else:
             print("\n  [1] Bible 재생성/수정")
@@ -98,6 +233,7 @@ class StageZeroManager:
             print("  [3] 스타일 가이드 재추출")
             print("  [4] 프리셋 관리")
             print("  [5] 스타일 레퍼런스 분석 → 참조 원고에서 문체 DNA 추출")
+            print("  [6] 작품가드 설정 (선택)")
             print("\n  [0] 메인 메뉴로")
 
         try:
@@ -141,39 +277,59 @@ class StageZeroManager:
         for i, opt in enumerate(self.WORLD_ORIGIN_OPTIONS, 1):
             print(f"  [{i}] {opt}")
         try:
-            choice = int(input("    선택: ").strip()) - 1
-            if 0 <= choice < len(self.WORLD_ORIGIN_OPTIONS):
-                config["world_origin"] = self.WORLD_ORIGIN_OPTIONS[choice]
-            else:
-                config["world_origin"] = "현대인"
+            raw_choice = input("    선택: ").strip()
         except (ValueError, IndexError, EOFError):
-            config["world_origin"] = "현대인"
+            raw_choice = ""
+        config["world_origin"] = resolve_indexed_menu_choice(
+            tuple(self.WORLD_ORIGIN_OPTIONS),
+            raw_choice,
+            default="현대인",
+        )
 
         # 회귀/빙의 타입
         print("\n  [캐릭터 타입]")
         for i, opt in enumerate(self.INCARNATION_TYPES, 1):
             print(f"  [{i}] {opt}")
         try:
-            choice = int(input("    선택: ").strip()) - 1
-            if 0 <= choice < len(self.INCARNATION_TYPES):
-                config["incarnation_type"] = self.INCARNATION_TYPES[choice]
-            else:
-                config["incarnation_type"] = "일반"
+            raw_choice = input("    선택: ").strip()
         except (ValueError, IndexError, EOFError):
-            config["incarnation_type"] = "일반"
+            raw_choice = ""
+        config["incarnation_type"] = resolve_indexed_menu_choice(
+            tuple(self.INCARNATION_TYPES),
+            raw_choice,
+            default="일반",
+        )
 
         # [D-1] 시점(POV) 선택
         print("\n  [시점(POV)]")
         for i, opt in enumerate(self.POV_OPTIONS, 1):
             print(f"  [{i}] {opt}")
         try:
-            choice = int(input("    선택: ").strip()) - 1
-            if 0 <= choice < len(self.POV_OPTIONS):
-                config["pov"] = self.POV_OPTIONS[choice]
-            else:
-                config["pov"] = "3인칭"
+            raw_choice = input("    선택: ").strip()
         except (ValueError, IndexError, EOFError):
-            config["pov"] = "3인칭"
+            raw_choice = ""
+        config["pov"] = resolve_indexed_menu_choice(
+            tuple(self.POV_OPTIONS),
+            raw_choice,
+            default="3인칭",
+        )
+
+        print("\n  [????쒖젏 ?쎌엯 ?뺤콉]")
+        default_policy = default_external_pov_insert_policy(config.get("pov", ""), genre=self.genre)
+        default_index = 1
+        for i, opt in enumerate(self.EXTERNAL_POV_INSERT_POLICY_OPTIONS, 1):
+            if opt == default_policy:
+                default_index = i
+            print(f"  [{i}] {opt}")
+        try:
+            raw_choice = input(f"    ?좏깮 (湲곕낯: {default_index}): ").strip()
+        except (ValueError, IndexError, EOFError):
+            raw_choice = ""
+        config["external_pov_insert_policy"] = resolve_external_pov_insert_policy_choice(
+            raw_choice,
+            primary_pov=config.get("pov", ""),
+            genre=self.genre,
+        )
 
         return config
 
@@ -213,6 +369,38 @@ class StageZeroManager:
         # 4. 생성
         return self.generate_from_concept(concept)
 
+    @staticmethod
+    def _build_plot_roadmap_from_treatment(treatment: list[dict[str, Any]] | None) -> list[dict[str, Any]]:
+        if not isinstance(treatment, list):
+            return []
+
+        refined_roadmap = []
+        for i, block in enumerate(treatment):
+            if not isinstance(block, dict):
+                continue
+            entry = {"block_no": i + 1}
+            entry.update(block)
+            refined_roadmap.append(entry)
+        return refined_roadmap
+
+    @classmethod
+    def _ensure_plot_roadmap(cls, bible: dict[str, Any], treatment: list[dict[str, Any]] | None) -> int:
+        if not isinstance(bible, dict):
+            return 0
+
+        master = bible.get("MasterBible")
+        bible_root = master if isinstance(master, dict) else bible
+        existing = bible_root.get("plot_roadmap", [])
+        if isinstance(existing, list) and existing:
+            return len(existing)
+
+        refined_roadmap = cls._build_plot_roadmap_from_treatment(treatment)
+        if not refined_roadmap:
+            return 0
+
+        bible_root["plot_roadmap"] = refined_roadmap
+        return len(refined_roadmap)
+
     def generate_from_concept(self, concept: str) -> tuple[dict, list, StyleGuide | None]:
         """컨셉에서 Bible + Treatment 생성"""
         expander = StoryExpander(genre=self.genre, llm_client=self.client)
@@ -241,6 +429,7 @@ class StageZeroManager:
         # Treatment 생성
         print("  [*] Treatment 생성 중...")
         self.treatment = expander.generate_treatment(60)
+        self._ensure_plot_roadmap(self.bible, self.treatment)
 
         # 저장
         if self.project_path:
@@ -275,9 +464,14 @@ class StageZeroManager:
         expander = ReverseExpander(llm_client=self.client)
         output_dir = str(Path(self.project_path) / "stage0_output") if self.project_path else None
 
-        self.bible, self.episode_bibles, self.style_guide = expander.run(
-            input_path=input_path, output_dir=output_dir or ".", genre=genre if genre else None
-        )
+        try:
+            self.bible, self.episode_bibles, self.style_guide = expander.run(
+                input_path=input_path, output_dir=output_dir or ".", genre=genre if genre else None
+            )
+        except ReverseExpander.DraftEncodingError as exc:
+            logging.warning("[Stage0] 역설계 입력 인코딩 오류: %s", exc)
+            print(f"[!] 인코딩 오류로 역설계를 중단합니다: {exc}")
+            return {}, [], None
 
         self.genre = expander.preset_registry.base_genre if expander.preset_registry else ""
         self.preset_registry = expander.preset_registry
@@ -381,7 +575,7 @@ class StageZeroManager:
     # 스타일 레퍼런스 분석
     # ============================================
 
-    def run_reference_analysis(self, genre: str = None) -> StyleGuide | None:
+    def run_reference_analysis(self, genre: str = None, cache_mode: str | None = None) -> StyleGuide | None:
         """config/style_references/{genre}/ 폴더의 참조 원고를 분석하여 StyleGuide 생성"""
         # 장르 결정
         if not genre:
@@ -413,14 +607,46 @@ class StageZeroManager:
         if confirm != "y":
             return None
 
+        if cache_mode is None:
+            print("\n  [스타일 캐시 모드]")
+            print("  [1] 캐시 사용 (기본)")
+            print("  [2] 캐시 무시하고 재분석")
+            print("  [3] 장르 캐시 삭제 후 재분석")
+            try:
+                cache_choice = input("\n  선택 (기본: 1): ").strip() or "1"
+            except (EOFError, KeyboardInterrupt, ValueError):
+                cache_choice = "1"
+            cache_mode = {"1": "use", "2": "refresh", "3": "reset"}.get(cache_choice, "use")
+        else:
+            cache_mode = cache_mode if cache_mode in {"use", "refresh", "reset"} else "use"
+
         # 분석 실행
         extractor = StyleExtractor(llm_client=self.client)
         print("\n  [*] 문체 DNA 추출 중... (대량 원고 분석 - 시간 소요)")
-        self.style_guide = extractor.extract_from_references(genre)
+        selected_primary_pov = ""
+        external_pov_insert_policy = ""
+        if isinstance(self.protagonist_config, dict):
+            selected_primary_pov = str(self.protagonist_config.get("pov", "") or "").strip()
+            external_pov_insert_policy = str(
+                self.protagonist_config.get("external_pov_insert_policy", "") or ""
+            ).strip()
+        self.style_guide = extractor.extract_from_references(
+            genre,
+            cache_mode=cache_mode,
+            selected_primary_pov=selected_primary_pov,
+            external_pov_insert_policy=external_pov_insert_policy,
+        )
         self.genre = genre
 
         if self.style_guide:
+            cache_status_map = {
+                "hit": "장르 캐시 재사용",
+                "refresh": "캐시 무시 후 재분석",
+                "reset": "캐시 삭제 후 재분석",
+                "miss": "캐시 미스 후 재분석",
+            }
             print(f"\n  [v] 문체 DNA 추출 완료 (v{self.style_guide.analysis_version})")
+            print(f"  - 캐시 처리: {cache_status_map.get(extractor.last_cache_status, '재분석')}")
             print(
                 f"  - 분석 원고: {self.style_guide.source_episode_count}편 / {self.style_guide.source_char_count:,}자"
             )

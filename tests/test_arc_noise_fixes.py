@@ -83,6 +83,33 @@ def test_arc_noise3_abbreviation_filtered():
     assert result["decision"] == "PASS"
 
 
+def test_arc_noise3_location_alias_filtered():
+    validator = _make_continuity_validator(
+        {
+            "decision": "WARNING",
+            "mismatches": [
+                {
+                    "category": "location",
+                    "registered_name": "사무실",
+                    "found_variant": "오피스",
+                    "severity": "MAJOR",
+                    "context": "오피스에서 회의를 시작한다",
+                }
+            ],
+            "fix_instructions": "장소 표기 통일",
+        }
+    )
+
+    result = validator.validate_entity_consistency(
+        content="오피스에서 회의를 시작한다",
+        entity_registry={"locations": [{"name": "사무실"}]},
+        content_type="arc",
+    )
+
+    assert result["mismatches"] == []
+    assert result["decision"] == "PASS"
+
+
 def test_arc_noise3_real_mismatch_passes_through():
     validator = _make_continuity_validator(
         {

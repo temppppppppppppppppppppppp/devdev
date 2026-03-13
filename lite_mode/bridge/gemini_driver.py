@@ -12,6 +12,8 @@
   pip install selenium webdriver-manager beautifulsoup4 pyautogui
 """
 
+# Manual-only helper. This module is not a production router fallback.
+
 import ctypes
 import json
 import os

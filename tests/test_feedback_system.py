@@ -20,6 +20,7 @@ PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from modules.core.feedback_system import FeedbackSystem
+from modules.core.prompt_builder import PromptBuilder
 
 # ══════════════════════════════════════════════════════════════
 # Fixtures
@@ -311,6 +312,28 @@ class TestBuildMinimalArcContext:
         assert "100%" in result
         assert "110%" not in result
 
+    def test_multi_arc_energy_matches_prompt_builder_fallback(self, fs):
+        arcs = [
+            {
+                "arc_no": 1,
+                "state_constraints": {"arc_end_state": {}},
+                "joint_docs": {"physical_inventory": []},
+                "status_shadow": {"internal_energy_loss": "20%"},
+            },
+            {
+                "arc_no": 2,
+                "state_constraints": {"arc_end_state": {}},
+                "joint_docs": {"final_location": "무림맹", "physical_inventory": ["청풍검"]},
+                "status_shadow": {"internal_energy_loss": "30%", "expected_injuries": "타박상"},
+            },
+        ]
+
+        minimal = fs.build_minimal_arc_context(arcs, "이청풍")
+        fallback = PromptBuilder(app=None).generate_arc_context_fallback(arcs)
+
+        assert "내공: 50%" in minimal
+        assert "[⚡ 최종 내공]: 50%" in fallback
+
 
 # ══════════════════════════════════════════════════════════════
 # Test 8: generate_structured_arc_feedback
@@ -475,6 +498,30 @@ class TestGenerateReverseFeedbackStage4To2:
         """hard가 아니면 빈 문자열."""
         assert fs.generate_reverse_feedback_stage4_to_2({"arc_no": 2, "difficulty": "normal"}) == ""
         assert fs.generate_reverse_feedback_stage4_to_2(None) == ""
+
+    def test_semantic_failures_add_specific_guidance(self, fs):
+        result = fs.generate_reverse_feedback_stage4_to_2(
+            {
+                "arc_no": 7,
+                "difficulty": "hard",
+                "avg_attempts": 3.4,
+                "hard_episodes": [61, 62],
+                "semantic_failures": [
+                    {
+                        "episode": 61,
+                        "attempt_num": 2,
+                        "error_category": "LOGIC_ERROR",
+                        "reject_bucket": "post_select_conflict",
+                        "score_breakdown": {"narrative_flow": 9, "scene_composition": 11},
+                        "reject_reason": "후반 구조 충돌",
+                    }
+                ],
+            }
+        )
+
+        assert "LOGIC_ERROR" in result
+        assert "post_select_conflict" in result
+        assert "narrative_flow" in result
 
 
 # ══════════════════════════════════════════════════════════════

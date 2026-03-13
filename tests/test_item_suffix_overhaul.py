@@ -154,3 +154,15 @@ def test_review_and_apply_skips_below_threshold():
 
     result = FailureAnalyzer(db=None).review_and_apply_suffixes(registry, genre="investment")
     assert result["reviewed"] == 0
+
+
+def test_semantic_registry_respects_runtime_protagonist_name():
+    registry = SemanticItemRegistry()
+    registry.register_item("법인인감", arc_no=1, owner="윤지후")
+
+    assert registry.is_protagonist_item("법인인감", protagonist_name="윤지후") is True
+    assert registry.get_protagonist_items("윤지후")[0]["name"] == "법인인감"
+
+    registry.transfer_item("법인인감", from_owner="윤지후", to_owner="재무팀장", arc=2, protagonist_name="윤지후")
+    lifecycle = registry.get_item_lifecycle("법인인감")
+    assert lifecycle["current_state"] == "분배됨"

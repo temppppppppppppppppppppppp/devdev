@@ -20,6 +20,23 @@ def build_candidate_key(*, label: str = "", strategy: str = "", fallback: str = 
     return str(fallback or "").strip()
 
 
+def normalize_artifact_meta(
+    meta: Any,
+    *,
+    fallback_candidate_key: str = "",
+    fallback_content_hash: str = "",
+    fallback_artifact_path: str = "",
+) -> dict[str, str]:
+    """Normalize artifact linkage metadata into a stable dict shape."""
+    if not isinstance(meta, dict):
+        meta = {}
+    return {
+        "candidate_key": str(meta.get("candidate_key", "") or fallback_candidate_key or "").strip(),
+        "content_hash": str(meta.get("content_hash", "") or fallback_content_hash or "").strip(),
+        "artifact_path": str(meta.get("artifact_path", "") or fallback_artifact_path or "").strip(),
+    }
+
+
 def snapshot_logged_artifact(
     project,
     *,

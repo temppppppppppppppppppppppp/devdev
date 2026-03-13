@@ -1,5 +1,7 @@
 """DBManager current-API regression tests."""
 
+import sqlite3
+
 import pytest
 
 from modules.core.db_manager import DBConnectionError, DBError, DBManager
@@ -50,6 +52,20 @@ def test_transaction_rolls_back_on_exception(db):
             raise RuntimeError("rollback trigger")
 
     assert db.load_anchor("tx_key", default=None) == {}
+
+
+def test_reset_after_commit_false_keeps_changes_uncommitted(db):
+    db.save_manuscript(1, "제목1", "내용1")
+
+    db.reset_after(1, commit=False)
+
+    assert db.conn.in_transaction is True
+    other = sqlite3.connect(db.db_path)
+    try:
+        assert other.execute("SELECT COUNT(*) FROM manuscripts").fetchone()[0] == 1
+    finally:
+        other.close()
+    db.conn.rollback()
 
 
 def test_close_then_query_raises_connection_error(tmp_path):
@@ -310,6 +326,39 @@ def test_save_stage_attempt_and_director_selection_persist_attempt_key(db):
     assert sa_row["candidate_key"] == "A|balanced"
     assert sa_row["content_hash"] == "hash-stage-attempt"
     assert sa_row["artifact_path"].endswith("final_manuscript__A_balanced.txt")
+
+
+def test_save_stage_attempt_persists_rationale_fields(db):
+    db.save_stage_attempt(
+        stage=4,
+        verdict="REJECT",
+        attempt_num=2,
+        ep_num=6,
+        arc_num=2,
+        score=61,
+        attempt_key="s4:ep6:arc2:a2",
+        selection_reason="best candidate",
+        verdict_reason="Contradiction Firewall: CRITICAL 1",
+        open_review="The previous episode event is being repeated.",
+        fix_scope_reasoning="frontier conflict",
+        runtime_advisory="[Advisory digest - apply on retry]\n- keep continuity",
+        retry_directives="keep the ending distinct",
+    )
+
+    row = db.conn.execute(
+        """
+        SELECT selection_reason, verdict_reason, open_review, fix_scope_reasoning, runtime_advisory, retry_directives
+        FROM stage_attempts
+        WHERE ep_num = 6 AND stage = 4
+        """
+    ).fetchone()
+
+    assert row["selection_reason"] == "best candidate"
+    assert row["verdict_reason"] == "Contradiction Firewall: CRITICAL 1"
+    assert row["open_review"] == "The previous episode event is being repeated."
+    assert row["fix_scope_reasoning"] == "frontier conflict"
+    assert "Advisory digest" in row["runtime_advisory"]
+    assert row["retry_directives"] == "keep the ending distinct"
 
 
 def test_get_strategy_win_rates_supports_stage2_filters(db):

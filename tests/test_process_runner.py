@@ -1,12 +1,54 @@
 """ProcessRunner 단위 테스트 — Step 4a/4b 검증."""
 
 import asyncio
+import json
+import sqlite3
 import time
 
 import pytest
 
 from modules.api import process_runner
 from modules.api.process_runner import ProcessRunner, _strip_ansi
+
+
+def _seed_runner_project(
+    tmp_path,
+    monkeypatch,
+    *,
+    project_name: str = "sample-project",
+    selected_genre_type: str = "investment",
+    stored_genre_type: str | None = None,
+) -> dict:
+    projects_root = tmp_path / "projects"
+    project_dir = projects_root / project_name
+    project_dir.mkdir(parents=True)
+
+    db_path = project_dir / "project_data.db"
+    with sqlite3.connect(db_path) as conn:
+        conn.execute(
+            """
+            CREATE TABLE anchors (
+                key TEXT PRIMARY KEY,
+                data TEXT,
+                updated_at TEXT
+            )
+            """
+        )
+        if stored_genre_type is not None:
+            payload = json.dumps({"name": stored_genre_type, "type": stored_genre_type}, ensure_ascii=False)
+            conn.execute(
+                "INSERT INTO anchors (key, data, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)",
+                ("genre_info", payload),
+            )
+        conn.commit()
+
+    monkeypatch.setenv("GEULDOBI_PROJECTS_ROOT", str(projects_root))
+    return {
+        "genre_index": 3,
+        "genre_type": selected_genre_type,
+        "project_index": 1,
+        "project_name": project_name,
+    }
 
 
 class TestStripAnsi:
@@ -69,29 +111,38 @@ class TestProcessRunnerState:
 class TestStdinSequence:
     """stdin 시퀀스 빌드 테스트."""
 
-    def test_basic_key_mode_a(self):
+    def test_basic_key_mode_a_skips_genre_confirm_when_genre_matches(self, monkeypatch, tmp_path):
         runner = ProcessRunner()
         runner._mode = "A"
-        seq = runner._build_stdin_sequence("4", None, None)
+        inputs = _seed_runner_project(
+            tmp_path,
+            monkeypatch,
+            stored_genre_type="investment",
+        )
+        seq = runner._build_stdin_sequence("4", None, inputs)
         lines = seq.strip().split("\n")
         assert lines[0] == "3"  # genre_index default (투자물)
         assert lines[1] == ""   # [Enter] 프로젝트 이동
         assert lines[2] == "1"  # project_index default
-        assert lines[3] == "y"  # 장르 불일치 확인
-        assert lines[4] == "4"  # menu key
+        assert lines[3] == "4"  # same genre: confirm 없이 menu key 진입
         # 확인 패딩 5개
-        assert lines[5:10] == ["y"] * 5
-        assert lines[10] == "5"  # exit
+        assert lines[4:9] == ["y"] * 5
+        assert lines[9] == "5"  # exit
 
-    def test_stage0_with_subkey_mode_a(self):
+    def test_stage0_with_subkey_mode_a_injects_genre_confirm_on_mismatch(self, monkeypatch, tmp_path):
         runner = ProcessRunner()
         runner._mode = "A"
-        seq = runner._build_stdin_sequence("0", "1", None)
+        inputs = _seed_runner_project(
+            tmp_path,
+            monkeypatch,
+            stored_genre_type="wuxia",
+        )
+        seq = runner._build_stdin_sequence("0", "1", inputs)
         lines = seq.strip().split("\n")
         assert lines[0] == "3"  # genre
         assert lines[1] == ""   # [Enter]
         assert lines[2] == "1"  # project
-        assert lines[3] == "y"  # confirm
+        assert lines[3] == "y"  # mismatch confirm
         assert lines[4] == "0"  # stage 0
         assert lines[5] == "1"  # sub_key
 
@@ -102,33 +153,49 @@ class TestStdinSequence:
         lines = seq.strip().split("\n")
         assert lines[2] == "3"  # project at position 2
 
-    def test_custom_confirm_count_mode_a(self):
+    def test_custom_confirm_count_mode_a(self, monkeypatch, tmp_path):
         runner = ProcessRunner()
         runner._mode = "A"
-        seq = runner._build_stdin_sequence("6", None, {"confirm_count": 10})
+        inputs = _seed_runner_project(
+            tmp_path,
+            monkeypatch,
+            stored_genre_type="wuxia",
+        )
+        inputs["confirm_count"] = 10
+        seq = runner._build_stdin_sequence("6", None, inputs)
         lines = seq.strip().split("\n")
         # 1 genre + 1 enter + 1 project + 1 confirm + 1 key + 10 confirms + 1 exit = 16
         assert len(lines) == 16
 
-    def test_mode_b_boot_sequence(self):
-        """Mode B: boot 시퀀스만 주입 (장르→Enter→프로젝트→확인→메뉴키)."""
+    def test_mode_b_boot_sequence_skips_confirm_when_stored_genre_absent(self, monkeypatch, tmp_path):
+        """Mode B: stored genre가 없으면 confirm을 미리 주입하지 않는다."""
         runner = ProcessRunner()
         runner._mode = "B"
-        seq = runner._build_stdin_sequence("4", None, None)
+        inputs = _seed_runner_project(
+            tmp_path,
+            monkeypatch,
+            stored_genre_type=None,
+        )
+        seq = runner._build_stdin_sequence("4", None, inputs)
         lines = seq.strip().split("\n")
         assert lines[0] == "3"  # genre_index default (투자물)
         assert lines[1] == ""   # [Enter]
         assert lines[2] == "1"  # project_index default
-        assert lines[3] == "y"  # confirm
-        assert lines[4] == "4"  # menu key
-        assert len(lines) == 5  # Mode B: 확인 패딩/exit 없음
+        assert lines[3] == "4"  # stored genre absent: confirm 없이 menu key 진입
+        assert len(lines) == 4  # Mode B: 확인 패딩/exit 없음
 
-    def test_mode_b_stage0_subkey(self):
-        """Mode B: Stage 0 sub_key 포함."""
+    def test_mode_b_stage0_subkey_injects_confirm_on_mismatch(self, monkeypatch, tmp_path):
+        """Mode B: stored genre mismatch일 때만 confirm을 먼저 소비한다."""
         runner = ProcessRunner()
         runner._mode = "B"
-        seq = runner._build_stdin_sequence("0", "1", None)
+        inputs = _seed_runner_project(
+            tmp_path,
+            monkeypatch,
+            stored_genre_type="wuxia",
+        )
+        seq = runner._build_stdin_sequence("0", "1", inputs)
         lines = seq.strip().split("\n")
+        assert lines[3] == "y"  # mismatch confirm
         assert lines[4] == "0"  # stage 0
         assert lines[5] == "1"  # sub_key
         assert len(lines) == 6

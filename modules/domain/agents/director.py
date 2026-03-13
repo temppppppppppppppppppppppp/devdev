@@ -149,6 +149,7 @@ class Director(BaseAgent):
         prev_arc_context,
         constraint_block="",
         advisory="",
+        candidate_quality_flags=None,
     ):
         """[TF-47] 위임 → DirectorEnsembleSelector"""
         return self._ensemble.compare_and_select_arc(
@@ -158,6 +159,7 @@ class Director(BaseAgent):
             prev_arc_context,
             constraint_block,
             advisory=advisory,
+            candidate_quality_flags=candidate_quality_flags,
         )
 
     def audit_manuscript(

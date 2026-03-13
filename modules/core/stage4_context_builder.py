@@ -3,6 +3,7 @@
 """
 
 import json
+import inspect
 import logging
 import re
 from typing import TYPE_CHECKING
@@ -2507,6 +2508,29 @@ class Stage4ContextBuilder:
             justification_prompt = _build_justification(hud_report, genre_name)
         except Exception as e:
             self.ctx.ui.log(f"   ⚠️ Justification 실패 (비치명): {e}")
+
+        writer_guidance_callback = None
+        try:
+            inspect.getattr_static(self.ctx, "generate_writer_guidance_v60_8")
+        except AttributeError:
+            writer_guidance_callback = None
+        else:
+            writer_guidance_callback = getattr(self.ctx, "generate_writer_guidance_v60_8", None)
+        if callable(writer_guidance_callback):
+            try:
+                writer_guidance = writer_guidance_callback(
+                    blueprint=blueprint or {},
+                    prev_manuscript=prev_text or "",
+                )
+                if writer_guidance:
+                    guidance_block = f"[Writer Guidance]\n{writer_guidance}"
+                    justification_prompt = (
+                        f"{justification_prompt}\n\n{guidance_block}".strip()
+                        if justification_prompt
+                        else guidance_block
+                    )
+            except Exception as writer_guidance_err:
+                self.ctx.ui.log(f"   ⚠️ Writer guidance 실패 (비치명): {writer_guidance_err}")
 
         try:
             if next_ep >= 20:

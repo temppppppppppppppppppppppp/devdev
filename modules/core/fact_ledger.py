@@ -213,6 +213,8 @@ class FactLedger:
                 continue
             name = injury.get("name", "") or injury.get("npc", "")
             if name:
+                if self._is_dead_character(name):
+                    continue
                 # [Sweep55] LLM 스키마는 "state" 키 사용 (경상/중상/위독)
                 injury_type = injury.get("state", "") or injury.get("type", "") or injury.get("injury", "")
                 self._upsert_character(name, ep_num, note=f"부상: {injury_type}" if injury_type else "부상")
@@ -223,6 +225,8 @@ class FactLedger:
                 continue
             name = move.get("name", "") or move.get("npc", "")
             if name:
+                if self._is_dead_character(name):
+                    continue
                 dest = move.get("destination", "") or move.get("to", "")
                 if dest:
                     self._upsert_character(name, ep_num, note=f"이동: {dest}")
@@ -233,6 +237,8 @@ class FactLedger:
                 continue
             name = pers.get("name", "") or pers.get("npc", "")
             if name:
+                if self._is_dead_character(name):
+                    continue
                 traits = pers.get("traits", "") or pers.get("personality_traits", "")
                 motivation = pers.get("motivation", "") or pers.get("primary_motivation", "")
                 role_val = pers.get("role", "")
@@ -250,6 +256,8 @@ class FactLedger:
             npc1 = rel.get("npc1", "")
             npc2 = rel.get("npc2", "")
             relation = rel.get("relation", "")
+            if self._is_dead_character(npc1) or self._is_dead_character(npc2):
+                continue
             if npc1 and npc2 and relation:
                 self._upsert_character(npc1, ep_num, note=f"{npc2}와 관계: {relation}")
                 self._upsert_character(npc2, ep_num, note=f"{npc1}와 관계: {relation}")
@@ -642,6 +650,10 @@ class FactLedger:
     def get_character(self, name: str) -> dict | None:
         """특정 캐릭터 정보 조회."""
         return self._ledger.get("characters", {}).get(name)
+
+    def _is_dead_character(self, name: str) -> bool:
+        info = self.get_character(name)
+        return isinstance(info, dict) and info.get("status") == "dead"
 
     def get_item(self, name: str) -> dict | None:
         """특정 아이템 정보 조회."""

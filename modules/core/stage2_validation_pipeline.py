@@ -112,6 +112,7 @@ class Stage2ValidationPipeline:
             global_arc_no=global_arc_no,
             draft_validator_passed=draft_validator_passed,
             _python_advisories=_python_advisories,
+            _auto_corrections=_auto_corrections,
         )
         refined_arc = b3_result["refined_arc"]
         draft_validator_passed = b3_result["draft_validator_passed"]
@@ -133,6 +134,10 @@ class Stage2ValidationPipeline:
             _python_advisories=_python_advisories,
         )
         refined_arc = b4_result["refined_arc"]
+        self._append_auto_correction_pressure_advisory(
+            corrections=_auto_corrections,
+            advisories=_python_advisories,
+        )
 
         self.ctx.ui.log("      ✅ [TF-38] Pre-Director 검증 완료 → Director 심사 대기")
         return {
@@ -148,6 +153,47 @@ class Stage2ValidationPipeline:
     # ─────────────────────────────────────────────────────────────
     # [B-1-9b] Extracted private methods from run_validation()
     # ─────────────────────────────────────────────────────────────
+
+    def _append_auto_correction_pressure_advisory(self, *, corrections: list, advisories: list) -> None:
+        if not corrections or not isinstance(advisories, list):
+            return
+        if any(a.get("source") == "auto_correct_pressure" for a in advisories if isinstance(a, dict)):
+            return
+
+        try:
+            threshold = max(1, int(_threshold("arc.auto_correct_pressure_threshold", 3)))
+        except (TypeError, ValueError):
+            threshold = 3
+        if len(corrections) < threshold:
+            return
+
+        labels: list[str] = []
+        for item in corrections[:5]:
+            if isinstance(item, dict):
+                label = (
+                    item.get("category")
+                    or item.get("rule")
+                    or item.get("type")
+                    or item.get("issue")
+                    or item.get("change_summary")
+                    or ""
+                )
+            else:
+                label = str(item)
+            label = str(label).strip()
+            if label:
+                labels.append(label[:40])
+
+        advisories.append(
+            {
+                "source": "auto_correct_pressure",
+                "severity": "MAJOR",
+                "message": (
+                    f"Auto-correct pressure detected: {len(corrections)} corrections applied "
+                    f"(threshold={threshold}). Hotspots: {', '.join(dict.fromkeys(labels))}"
+                ).strip(),
+            }
+        )
 
     def _run_pre_validation_checks(
         self,
@@ -499,6 +545,7 @@ class Stage2ValidationPipeline:
         global_arc_no: int,
         draft_validator_passed: bool,
         _python_advisories: list,
+        _auto_corrections: list,
     ) -> dict:
         """[B-1-9b-B3] Full DraftValidator + ArcCorrector integration.
 
@@ -569,6 +616,7 @@ class Stage2ValidationPipeline:
                                 refined_arc = corrected_arc
                                 corrections_made = correction_log.get("corrections_made", [])
                                 corrections_failed = correction_log.get("corrections_failed", [])
+                                _auto_corrections.extend(corrections_made)
                                 self.ctx.ui.log(
                                     f"      ✅ [V60.42] ArcCorrector 수정 완료 ({len(corrections_made)}개 수정)"
                                 )

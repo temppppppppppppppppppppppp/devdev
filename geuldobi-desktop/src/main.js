@@ -14,6 +14,47 @@ if (!app || !BrowserWindow || !ipcMain) {
   );
 }
 
+const DEBUG_LOG_PATH = path.join(
+  process.env.LOCALAPPDATA || path.join(os.homedir(), "AppData", "Local"),
+  "Geuldobi",
+  "electron-main.log"
+);
+
+function debugLog(...parts) {
+  const line = `[${new Date().toISOString()}] ${parts
+    .map((part) => {
+      if (part instanceof Error) return `${part.name}: ${part.message}\n${part.stack || ""}`;
+      if (typeof part === "string") return part;
+      try {
+        return JSON.stringify(part);
+      } catch {
+        return String(part);
+      }
+    })
+    .join(" ")}\n`;
+  try {
+    fs.mkdirSync(path.dirname(DEBUG_LOG_PATH), { recursive: true });
+    fs.appendFileSync(DEBUG_LOG_PATH, line, "utf8");
+  } catch {
+    // Ignore debug logging failures.
+  }
+}
+
+process.on("uncaughtException", (err) => {
+  debugLog("uncaughtException", err);
+});
+
+process.on("unhandledRejection", (reason) => {
+  debugLog("unhandledRejection", reason);
+});
+
+debugLog("main.js boot", {
+  pid: process.pid,
+  packaged: app.isPackaged,
+  resourcesPath: process.resourcesPath,
+  cwd: process.cwd(),
+});
+
 const SPLASH_WIDTH = 400;
 const SPLASH_HEIGHT = 260;
 const SPLASH_FALLBACK_MS = 8000; // uvicorn 기동 대기 포함
@@ -112,6 +153,7 @@ function startBackend() {
   }
 
   try {
+    debugLog("startBackend", { cmd, args, cwd });
     backendProcess = spawn(cmd, args, {
       cwd,
       env: {
@@ -131,15 +173,18 @@ function startBackend() {
 
     backendProcess.stdout.on("data", (data) => {
       console.log(`[backend] ${data.toString().trim()}`);
+      debugLog("backend stdout", data.toString().trim());
     });
 
     backendProcess.stderr.on("data", (data) => {
       // uvicorn logs to stderr by default
       console.log(`[backend] ${data.toString().trim()}`);
+      debugLog("backend stderr", data.toString().trim());
     });
 
     backendProcess.on("error", (err) => {
       console.error(`[backend] spawn error: ${err.message}`);
+      debugLog("backend error", err);
       backendProcess = null;
     });
 
@@ -152,6 +197,7 @@ function startBackend() {
 
     backendProcess.on("exit", (code, signal) => {
       console.log(`[backend] exited code=${code} signal=${signal}`);
+      debugLog("backend exit", { code, signal });
       backendProcess = null;
       // 예기치 않은 종료 시 자동 재시작 (최대 2회)
       if (code !== 0 && code !== null && !app.isQuitting && backendRestartCount < MAX_BACKEND_RESTARTS) {
@@ -168,6 +214,7 @@ function startBackend() {
     });
   } catch (err) {
     console.error(`[backend] failed to start: ${err.message}`);
+    debugLog("startBackend failed", err);
     backendProcess = null;
   }
 }
@@ -210,8 +257,24 @@ function createMainWindow() {
     }
   });
 
-  mainWindow.loadFile(path.join(__dirname, "index.html"));
+  debugLog("createMainWindow", {
+    preload: path.join(__dirname, "preload.js"),
+    html: path.join(__dirname, "index.html"),
+  });
+  mainWindow.webContents.on("did-finish-load", () => {
+    debugLog("mainWindow did-finish-load");
+  });
+  mainWindow.webContents.on("did-fail-load", (_event, code, description, url, isMainFrame) => {
+    debugLog("mainWindow did-fail-load", { code, description, url, isMainFrame });
+  });
+  mainWindow.webContents.on("render-process-gone", (_event, details) => {
+    debugLog("mainWindow render-process-gone", details);
+  });
+  mainWindow.loadFile(path.join(__dirname, "index.html")).catch((err) => {
+    debugLog("mainWindow loadFile rejected", err);
+  });
   mainWindow.on("closed", () => {
+    debugLog("mainWindow closed");
     mainWindow = null;
   });
 }
@@ -238,10 +301,23 @@ function createSplashWindow() {
   splashWindow.once("ready-to-show", () => {
     splashWindow.show();
     console.log("splash window shown");
+    debugLog("splashWindow ready-to-show");
   });
 
-  splashWindow.loadFile(path.join(__dirname, "splash", "splash.html"));
+  splashWindow.webContents.on("did-finish-load", () => {
+    debugLog("splashWindow did-finish-load");
+  });
+  splashWindow.webContents.on("did-fail-load", (_event, code, description, url, isMainFrame) => {
+    debugLog("splashWindow did-fail-load", { code, description, url, isMainFrame });
+  });
+  splashWindow.webContents.on("render-process-gone", (_event, details) => {
+    debugLog("splashWindow render-process-gone", details);
+  });
+  splashWindow.loadFile(path.join(__dirname, "splash", "splash.html")).catch((err) => {
+    debugLog("splashWindow loadFile rejected", err);
+  });
   splashWindow.on("closed", () => {
+    debugLog("splashWindow closed");
     splashWindow = null;
   });
 }
@@ -249,6 +325,7 @@ function createSplashWindow() {
 function switchToMain(reason) {
   if (didSwitchToMain) return;
   didSwitchToMain = true;
+  debugLog("switchToMain", { reason });
 
   if (fallbackTimer) {
     clearTimeout(fallbackTimer);
@@ -269,10 +346,12 @@ function switchToMain(reason) {
 
 function bootstrapWindows() {
   firstRun = ensureFirstRunFlag();
+  debugLog("bootstrapWindows", { firstRun });
   createMainWindow();
   createSplashWindow();
 
   fallbackTimer = setTimeout(() => {
+    debugLog("fallbackTimer fired");
     switchToMain("fallback-timeout");
   }, SPLASH_FALLBACK_MS);
 }
@@ -288,6 +367,7 @@ ipcMain.handle("splash:get-config", () => {
 });
 
 ipcMain.on("splash:backend-ready", () => {
+  debugLog("ipc splash:backend-ready");
   switchToMain("backend-idle");
 });
 
@@ -312,10 +392,13 @@ async function bridgeFetch(urlPath, options = {}) {
   }
 }
 
-ipcMain.handle("bridge:run", async (_, { key, subKey, inputs }) => {
+ipcMain.handle("bridge:run", async (_, { key, subKey, inputs, approvalId }) => {
   const body = { key };
   if (subKey) body.sub_key = subKey;
   if (inputs && Object.keys(inputs).length > 0) body.inputs = inputs;
+  if (typeof approvalId === "string" && approvalId.trim()) {
+    body.approval_id = approvalId.trim();
+  }
   return bridgeFetch("/run", { method: "POST", body: JSON.stringify(body) });
 });
 
@@ -533,6 +616,13 @@ function getProjectConfigDir(projectName) {
   return path.join(getProjectRoot(projectName), "config");
 }
 
+function getWorkGuardLibraryDir() {
+  if (app.isPackaged) {
+    return path.join(getWorkspaceDir(), "work_guards");
+  }
+  return path.resolve(__dirname, "..", "..", "work_guards");
+}
+
 function getProjectConfigSurfaces(projectName) {
   const configDir = getProjectConfigDir(projectName);
   return {
@@ -540,6 +630,52 @@ function getProjectConfigSurfaces(projectName) {
     authorDirectivesPath: path.join(configDir, "author_directives.txt"),
     workGuardPath: path.join(configDir, "work_guard.yaml"),
   };
+}
+
+function listWorkGuardTemplates(genre = "") {
+  const libraryRoot = path.resolve(getWorkGuardLibraryDir());
+  const requestedGenre = String(genre || "").trim().toLowerCase().replace(/[^a-z0-9_]/g, "");
+  const candidateRoots = [];
+  if (requestedGenre) {
+    candidateRoots.push(path.join(libraryRoot, requestedGenre));
+  }
+  candidateRoots.push(libraryRoot);
+
+  const seen = new Set();
+  const templates = [];
+  for (const root of candidateRoots) {
+    if (!fs.existsSync(root)) continue;
+    const entries = fs.readdirSync(root, { withFileTypes: true })
+      .filter((entry) => entry.isFile() && /\.(ya?ml)$/i.test(entry.name))
+      .sort((left, right) => left.name.localeCompare(right.name));
+    for (const entry of entries) {
+      const fullPath = path.resolve(root, entry.name);
+      if (seen.has(fullPath)) continue;
+      seen.add(fullPath);
+      const relativePath = path.relative(libraryRoot, fullPath);
+      const scope = path.dirname(relativePath) === "." ? "common" : path.dirname(relativePath).replace(/\\/g, "/");
+      templates.push({
+        path: fullPath,
+        relativePath: relativePath.replace(/\\/g, "/"),
+        label: relativePath.replace(/\\/g, "/"),
+        scope,
+      });
+    }
+  }
+  return templates;
+}
+
+function resolveWorkGuardTemplatePath(templatePath) {
+  const libraryRoot = path.resolve(getWorkGuardLibraryDir());
+  const resolved = path.resolve(String(templatePath || ""));
+  const relative = path.relative(libraryRoot, resolved);
+  if (!relative || relative.startsWith("..") || path.isAbsolute(relative) || !fs.existsSync(resolved)) {
+    throw new Error("유효한 work_guard template 경로가 아닙니다.");
+  }
+  if (!/\.(ya?ml)$/i.test(resolved)) {
+    throw new Error("work_guard template는 YAML 파일이어야 합니다.");
+  }
+  return resolved;
 }
 
 function getDefaultAuthorDirectives() {
@@ -622,6 +758,38 @@ ipcMain.handle("project:save-config-surfaces", async (_, payload = {}) => {
   }
 });
 
+ipcMain.handle("project:list-work-guard-templates", async (_, payload = {}) => {
+  try {
+    const genre = typeof payload.genre === "string" ? payload.genre : "";
+    return {
+      ok: true,
+      templates: listWorkGuardTemplates(genre),
+      libraryRoot: getWorkGuardLibraryDir(),
+    };
+  } catch (err) {
+    return { ok: false, templates: [], message: err.message };
+  }
+});
+
+ipcMain.handle("project:apply-work-guard-template", async (_, payload = {}) => {
+  try {
+    const project = typeof payload.project === "string" ? payload.project : "";
+    const templatePath = resolveWorkGuardTemplatePath(payload.templatePath);
+    const { configDir, workGuardPath } = getProjectConfigSurfaces(project);
+    fs.mkdirSync(configDir, { recursive: true });
+    const workGuardYaml = fs.readFileSync(templatePath, "utf8");
+    fs.writeFileSync(workGuardPath, workGuardYaml, "utf8");
+    return {
+      ok: true,
+      workGuardYaml,
+      templatePath,
+      relativePath: path.relative(getWorkGuardLibraryDir(), templatePath).replace(/\\/g, "/"),
+    };
+  } catch (err) {
+    return { ok: false, message: err.message, workGuardYaml: "" };
+  }
+});
+
 // ─── 작업 폴더 열기 IPC ──────────────────────────────────────────────────────
 
 ipcMain.handle("workspace:open-folder", async () => {
@@ -640,6 +808,7 @@ ipcMain.handle("workspace:get-path", async () => {
 // ─── 앱 수명주기 ─────────────────────────────────────────────────────────────
 
 app.whenReady().then(() => {
+  debugLog("app.whenReady");
   // 1. uvicorn 백엔드 기동 (splash가 폴링으로 감지)
   startBackend();
 
@@ -654,6 +823,7 @@ app.whenReady().then(() => {
   }
 
   app.on("activate", () => {
+    debugLog("app activate", { windowCount: BrowserWindow.getAllWindows().length });
     if (BrowserWindow.getAllWindows().length === 0) {
       didSwitchToMain = false;
       bootstrapWindows();
@@ -662,6 +832,7 @@ app.whenReady().then(() => {
 });
 
 app.on("window-all-closed", () => {
+  debugLog("window-all-closed");
   stopBackend();
   if (process.platform !== "darwin") {
     app.quit();
@@ -669,6 +840,7 @@ app.on("window-all-closed", () => {
 });
 
 app.on("before-quit", () => {
+  debugLog("before-quit");
   app.isQuitting = true;
   stopBackend();
 });
