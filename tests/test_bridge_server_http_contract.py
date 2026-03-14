@@ -83,6 +83,17 @@ def test_run_key0_missing_sub_key_returns_contract_error_from_real_app():
     assert payload["code"] == "SUB_KEY_REQUIRED"
 
 
+def test_run_key0_hidden_cancel_sub_key_is_rejected_from_real_app():
+    with TestClient(app) as client:
+        client.app.state.runner = _DummyRunner()
+        response = client.post("/run", json={"key": "0", "sub_key": "0"})
+
+    assert response.status_code == 400
+    payload = response.json()
+    assert payload["ok"] is False
+    assert payload["code"] == "INVALID_SUB_KEY"
+
+
 def test_run_rejects_when_runner_is_starting():
     with TestClient(app) as client:
         client.app.state.runner = _DummyRunner(state="starting", run_id="run-active", pid=222)

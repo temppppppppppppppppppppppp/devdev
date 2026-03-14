@@ -16,6 +16,7 @@ from main_a import SovereignApp  # noqa: E402
 from modules.core.db_manager import DBManager  # noqa: E402
 from modules.core.pass_rate_monitor import PassRateMonitor  # noqa: E402
 from modules.core.stage4_canary_tools import (  # noqa: E402
+    build_stage4_branch_inventory,
     build_stage4_canary_summary,
     prepare_stage4_canary_project,
 )
@@ -38,6 +39,12 @@ def parse_args() -> argparse.Namespace:
     analyze = subparsers.add_parser("analyze", help="analyze an existing canary project")
     analyze.add_argument("--project", required=True)
     analyze.add_argument("--target-ep", type=int, default=4)
+
+    branch_inventory = subparsers.add_parser(
+        "branch-inventory", help="aggregate multiple canary summaries into branch-proof coverage"
+    )
+    branch_inventory.add_argument("--project", action="append", required=True)
+    branch_inventory.add_argument("--output", required=True)
 
     full = subparsers.add_parser("full", help="prepare, run, and analyze in one command")
     full.add_argument("--source-project", required=True)
@@ -64,6 +71,11 @@ def main() -> int:
 
     if args.command == "analyze":
         payload = analyze_canary(args.project, target_ep=args.target_ep)
+        _print_json(payload)
+        return 0
+
+    if args.command == "branch-inventory":
+        payload = branch_inventory(args.project, output_path=args.output)
         _print_json(payload)
         return 0
 
@@ -113,9 +125,31 @@ def analyze_canary(project_name: str, *, target_ep: int) -> dict:
     project_root = PROJECT_ROOT / "projects" / project_name
     summary = build_stage4_canary_summary(project_root, target_ep=target_ep)
     summary_path = project_root / "logs" / "canary_summary.json"
+    companion_audit_path = project_root / "logs" / "canary_companion_audit.json"
     summary_path.parent.mkdir(parents=True, exist_ok=True)
     summary_path.write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
+    companion_audit_path.write_text(
+        json.dumps(
+            {
+                "project_locator": summary.get("project_locator", ""),
+                "proof_record_summary": summary.get("proof_record_summary", {}),
+                "companion_audit_summary": summary.get("companion_audit_summary", {}),
+            },
+            ensure_ascii=False,
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
     return summary
+
+
+def branch_inventory(project_names: list[str], *, output_path: str) -> dict:
+    project_roots = [PROJECT_ROOT / "projects" / project_name for project_name in project_names]
+    payload = build_stage4_branch_inventory(project_roots)
+    out_path = PROJECT_ROOT / output_path
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    return payload
 
 
 def _boot_app(project_name: str, selected_genre: dict) -> SovereignApp:

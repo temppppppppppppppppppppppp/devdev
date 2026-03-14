@@ -1,0 +1,119 @@
+{
+  "contract_id": "stage4-pass-artifact-contract-v1",
+  "status": "active",
+  "primary_source": "modules/core/stage4_post_processor.py",
+  "owner": "Stage4PostProcessor.process_pass_result",
+  "pass_result_surface": {
+    "bool_true_means": "hard sinks completed; soft sinks may still be degraded",
+    "bool_false_means": "hard sink incomplete or pre-hard-commit failure",
+    "notes": [
+      "process_pass_result does not currently emit a dedicated completeness enum.",
+      "Artifact completeness status is derived from the bool return plus structured soft-failure and audit evidence."
+    ]
+  },
+  "artifact_completeness_codes": {
+    "hard_complete_soft_clean": {
+      "result_bool": true,
+      "soft_failure_required": false,
+      "audit_hard_failure_required": false
+    },
+    "hard_complete_soft_degraded": {
+      "result_bool": true,
+      "soft_failure_required": true,
+      "audit_hard_failure_required": false
+    },
+    "hard_incomplete": {
+      "result_bool": false,
+      "soft_failure_required": false,
+      "audit_hard_failure_required": "optional",
+      "notes": [
+        "episode_bible hard failure currently surfaces through audit_event plus final False return.",
+        "manuscript DB failure returns False immediately before soft-failure reporting begins."
+      ]
+    }
+  },
+  "hard_sinks": [
+    {
+      "sink_id": "manuscript_db_commit",
+      "storage": "DB",
+      "method": "current_project.db.save_manuscript",
+      "owner_step": "initial manual transaction block in process_pass_result",
+      "failure_effect": "return_false_immediately"
+    },
+    {
+      "sink_id": "episode_bible_db_commit",
+      "storage": "DB",
+      "method": "current_project.db.save_episode_bible",
+      "owner_step": "_collect_manager_and_build_delta",
+      "failure_effect": "_meta_save_failed=true then final return_false",
+      "audit_event": "episode_bible_save_failed"
+    }
+  ],
+  "soft_sinks": [
+    {
+      "sink_id": "state_log_summary",
+      "storage": "DB",
+      "method": "current_project.db.save_state_log_with_summary",
+      "soft_failure_operation": "save_state_log_with_summary"
+    },
+    {
+      "sink_id": "world_state_and_fact_ledger_atomic",
+      "storage": "world_state + fact_ledger",
+      "method": "_save_world_state_atomic",
+      "soft_failure_operation": "save_world_state_atomic"
+    },
+    {
+      "sink_id": "episode_quality_label_sidecar",
+      "storage": "DB",
+      "method": "current_project.db.save_episode_quality_label",
+      "soft_failure_operation": "save_episode_quality_label"
+    },
+    {
+      "sink_id": "episode_quality_signal_sidecar",
+      "storage": "DB",
+      "method": "current_project.db.save_episode_quality_signal",
+      "soft_failure_operation": "save_episode_quality_signal"
+    }
+  ],
+  "supporting_soft_sinks": [
+    {
+      "sink_id": "episode_text_export",
+      "storage": "filesystem",
+      "method": "file_path.write_text",
+      "failure_effect": "ui_warning_only"
+    },
+    {
+      "sink_id": "cost_record",
+      "storage": "DB",
+      "method": "current_project.db.save_cost_record",
+      "failure_effect": "warning_only"
+    },
+    {
+      "sink_id": "character_voice_sidecar",
+      "storage": "DB",
+      "method": "character_voice.save_to_db",
+      "failure_effect": "warning_only"
+    },
+    {
+      "sink_id": "foreshadow_sidecar",
+      "storage": "DB",
+      "method": "foreshadow_tracker.save_to_db",
+      "failure_effect": "warning_only"
+    }
+  ],
+  "operator_surface": {
+    "hard_incomplete": [
+      "process_pass_result returns False",
+      "episode_bible hard failure also emits audit_event('episode_bible_save_failed')"
+    ],
+    "soft_degraded": [
+      "process_pass_result returns True",
+      "soft_failures.jsonl records stage4_post_processor.* operation rows",
+      "ui warning log remains non-fatal"
+    ],
+    "soft_clean": [
+      "process_pass_result returns True",
+      "no stage4_post_processor soft-failure rows emitted for the episode"
+    ]
+  }
+}

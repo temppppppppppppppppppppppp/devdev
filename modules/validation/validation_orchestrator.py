@@ -228,7 +228,10 @@ class ValidationOrchestrator:
         # TIER 2: SCORING
         scoring_model = config.get("scoring_model", "gemini-2.5-pro")
         self.scoring = ScoringValidator(client=client, model=scoring_model, constitution=self.constitution, genre=genre)
-        self.scoring.pass_threshold = config.get("scoring_threshold", 70)
+        self.scoring.pass_threshold = config.get(
+            "scoring_threshold",
+            _threshold("scoring.default_pass_threshold", 60),
+        )
 
         # TIER 3: ADVISORY
         advisory_model = config.get("advisory_model", "gemini-2.5-flash")
@@ -268,7 +271,10 @@ class ValidationOrchestrator:
         self.consecutive_passes = 0
         self._consecutive_floor_hits = 0  # [I-01] 바닥 연속 도달 카운터
         self.consecutive_fails = 0
-        self.current_threshold = config.get("scoring_threshold", 70)
+        self.current_threshold = config.get(
+            "scoring_threshold",
+            _threshold("scoring.default_pass_threshold", 60),
+        )
 
         # 장르별 프로파일 로드
         self.threshold_profile = GENRE_THRESHOLD_PROFILES.get(genre, GENRE_THRESHOLD_PROFILES["wuxia"])

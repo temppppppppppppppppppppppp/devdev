@@ -2002,14 +2002,14 @@ class TestPFImprovements:
         assert int(val) == 2000
 
     def test_pf2_inplace_preserve_ratio_yaml(self):
-        """[TF-IPG] YAML?먯꽌 inplace_min_preserve_ratio 媛?濡쒕뱶 ?뺤씤."""
+        """[TF-IPG] YAML에서 inplace_min_preserve_ratio 값 로드 확인."""
         from modules.validation.threshold_helper import _threshold
 
         val = _threshold("patch_mode.inplace_min_preserve_ratio", 0.70)
         assert float(val) == 0.70
 
     def test_pf3_pass_with_fix_shrunk_patch_becomes_reject(self):
-        """[TF-IPG] PASS_WITH_FIX ??70% 誘몃쭔 異뺤냼 patch??議곗슜??REJECT ?꾪솚."""
+        """[TF-IPG] PASS_WITH_FIX 보존율 70% 미만 축소 patch는 적용하지 않고 REJECT 전환."""
         ctx = _make_ctx()
         cw = MagicMock()
         _original_text = "original " * 500

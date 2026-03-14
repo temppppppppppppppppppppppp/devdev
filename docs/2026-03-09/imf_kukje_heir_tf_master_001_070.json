@@ -1,7 +1,7 @@
 {
   "_schema_version": "tf-master.v1",
-  "_schema_description": "IMF? ??? ???? ??? ??? Block 1-70 integrated treatment draft",
-  "_last_updated": "2026-03-10",
+  "_schema_description": "IMF로 무너진 국제그룹 후계자 회귀물 Block 1-70 integrated treatment draft",
+  "_last_updated": "2026-03-14",
   "source_steps": [
     "docs/2026-03-09/imf_kukje_heir_tf_step1.json",
     "docs/2026-03-09/imf_kukje_heir_tf_step2.json",
@@ -159,7 +159,7 @@
     {
       "block": "Block 10",
       "capital_after": "150억",
-      "section": "unknown"
+      "section": "잔해 회수"
     },
     {
       "block": "Block 20",

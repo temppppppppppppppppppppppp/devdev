@@ -235,6 +235,55 @@ class TestMetaKwargs:
         record = json.loads(filepath.read_text(encoding="utf-8").strip())
         assert record["meta"]["generation_method"] == "four_phase"
 
+    def test_decision_join_metadata_persists_in_meta(self, logger, log_dir):
+        logger.log_decision(
+            stage="stage4",
+            ep_num=7,
+            decision_type="manuscript",
+            result="PASS",
+            score=96,
+            attempt_key="s4:ep7:arc1:a1:sess_demo",
+            candidate_key="A|balanced",
+            content_hash="hash-7",
+            artifact_path="logs/artifacts/stage4/ep_0007/attempt_01/final_manuscript__A_balanced.txt",
+            selection_reason="best candidate",
+            verdict_reason="final pass rationale",
+            runtime_advisory="[advisory] keep continuity",
+        )
+        filepath = log_dir / "decisions.jsonl"
+        record = json.loads(filepath.read_text(encoding="utf-8").strip())
+        assert record["meta"]["attempt_key"] == "s4:ep7:arc1:a1:sess_demo"
+        assert record["meta"]["candidate_key"] == "A|balanced"
+        assert record["meta"]["content_hash"] == "hash-7"
+        assert record["meta"]["artifact_path"].endswith("final_manuscript__A_balanced.txt")
+        assert record["meta"]["selection_reason"] == "best candidate"
+        assert record["meta"]["verdict_reason"] == "final pass rationale"
+        assert record["meta"]["runtime_advisory"] == "[advisory] keep continuity"
+
+    def test_ui_event_creates_ui_events_jsonl(self, logger, log_dir):
+        logger.log_ui_event(
+            session_id="sess-ui",
+            seq=3,
+            component="Stage4",
+            stage=4,
+            ep_num=9,
+            round_num=2,
+            attempt_key="s4:ep9:arc1:a2:sess-ui",
+            message="operator-visible frame",
+            meta={"origin": "unit"},
+        )
+        filepath = log_dir / "ui_events.jsonl"
+        record = json.loads(filepath.read_text(encoding="utf-8").strip())
+        assert record["session_id"] == "sess-ui"
+        assert record["seq"] == 3
+        assert record["component"] == "Stage4"
+        assert record["stage"] == 4
+        assert record["ep_num"] == 9
+        assert record["round_num"] == 2
+        assert record["attempt_key"] == "s4:ep9:arc1:a2:sess-ui"
+        assert record["message"] == "operator-visible frame"
+        assert record["meta"]["origin"] == "unit"
+
 
 # ── 에러 내성 ────────────────────────────────────────────────
 

@@ -90,6 +90,31 @@ def test_reload_project_environment_prefers_bound_project_dir(monkeypatch, tmp_p
     init_api_keys.assert_called_once()
 
 
+def test_reload_project_environment_without_project_env_keeps_agent_cache_state(monkeypatch, tmp_path):
+    explicit_root = tmp_path / "external-projects"
+    project_dir = explicit_root / "demo"
+    project_dir.mkdir(parents=True)
+
+    monkeypatch.setenv("GEULDOBI_PROJECTS_ROOT", str(explicit_root))
+    monkeypatch.setenv("GOOGLE_API_KEY", "root-key")
+    monkeypatch.setattr(BaseAgent, "_context_caches", {"stale": "value"}, raising=False)
+    monkeypatch.setattr(BaseAgent, "_keys_initialized", True, raising=False)
+    monkeypatch.setattr(BaseAgent, "_current_key_idx", 2, raising=False)
+    init_api_keys = MagicMock()
+    monkeypatch.setattr(BaseAgent, "_init_api_keys", init_api_keys)
+
+    app = _make_minimal_app()
+    app.sys = SimpleNamespace(api_client="existing-client")
+
+    loaded_path = SovereignApp._reload_project_environment(app, "demo")
+
+    assert loaded_path is None
+    assert app.sys.api_client == "existing-client"
+    assert BaseAgent._context_caches == {"stale": "value"}
+    assert BaseAgent._current_key_idx == 2
+    init_api_keys.assert_not_called()
+
+
 def test_current_project_log_path_uses_bound_project_root(tmp_path):
     app = _make_minimal_app()
     app.current_project = SimpleNamespace(
@@ -100,6 +125,42 @@ def test_current_project_log_path_uses_bound_project_root(tmp_path):
     log_path = SovereignApp._get_current_project_log_path(app, "voice_profiles.json")
 
     assert log_path == (tmp_path / "external-projects" / "demo" / "logs" / "voice_profiles.json").resolve()
+
+
+def test_ui_events_buffer_until_project_binding_then_flush():
+    app = _make_minimal_app()
+    app._pending_ui_events = []
+    app._session_logger = SimpleNamespace(log_ui_event=MagicMock())
+    app.metrics_session_id = "sess_ui"
+    app.current_project = None
+
+    SovereignApp._capture_ui_event(
+        app,
+        {
+            "seq": 1,
+            "component": "UI",
+            "message": "boot visible",
+            "event_kind": "log",
+            "render_format": "text",
+            "visible": True,
+            "meta": {"origin": "boot"},
+        },
+    )
+
+    assert len(app._pending_ui_events) == 1
+
+    db = SimpleNamespace(save_ui_event=MagicMock())
+    app.current_project = SimpleNamespace(db=db, metrics_session_id="sess_ui")
+
+    SovereignApp._flush_pending_ui_events(app)
+
+    app._session_logger.log_ui_event.assert_called_once()
+    db.save_ui_event.assert_called_once()
+    payload = app._session_logger.log_ui_event.call_args.kwargs
+    assert payload["session_id"] == "sess_ui"
+    assert payload["message"] == "boot visible"
+    assert payload["meta"]["origin"] == "boot"
+    assert app._pending_ui_events == []
 
 
 def test_boot_does_not_touch_legacy_quad_cache_helper(monkeypatch, tmp_path):

@@ -1,7 +1,10 @@
 # 글도비 데스크톱 — 개발·빌드·배포 가이드
 
 > 비개발자도 설치할 수 있는 Windows 데스크톱 앱.
-> Python 설치 불필요 — 전체 바이너리로 배포. 소스 코드 비공개.
+> Python 설치 불필요 — `backend.exe + engine source bundle + embedded python`으로 배포.
+
+> Runtime contract: `source_bundle_primary`
+> Authoritative Electron entry: `geuldobi-desktop/src/main.js`
 
 ---
 
@@ -13,16 +16,21 @@
 └── resources/
     ├── backend/
     │   └── backend.exe         ← FastAPI 서버 (PyInstaller)
+    ├── python-embed/
+    │   └── python.exe          ← main_a.py 실행용 내장 Python
     └── engine/
-        └── engine.exe          ← 글도비 파이프라인 (PyInstaller, 소스 비공개)
+        ├── main_a.py           ← 글도비 파이프라인 진입점
+        ├── modules/            ← engine source bundle
+        └── config/             ← engine 설정 bundle
 ```
 
 **역할 분담:**
 | 구성요소 | 뭘 하나 | 기술 |
 |----------|---------|------|
 | `Geuldobi.exe` | 창 띄우고, 버튼 누르면 백엔드에 명령 보냄 | Electron |
-| `backend.exe` | HTTP/WebSocket 서버. UI 명령 받아서 engine.exe 실행 | FastAPI + PyInstaller |
-| `engine.exe` | 글도비 파이프라인 바이너리 (main_a.py + modules + config 번들) | PyInstaller |
+| `backend.exe` | HTTP/WebSocket 서버. UI 명령 받아서 내장 Python으로 `main_a.py` 실행 | FastAPI + PyInstaller |
+| `resources/engine/` | 글도비 파이프라인 source bundle (`main_a.py + modules + config`) | staged source bundle |
+| `resources/python-embed/python.exe` | packaged 런타임에서 source bundle 실행 | Embedded Python |
 
 **앱 실행 흐름:**
 ```
@@ -31,7 +39,7 @@
 3. Splash 화면이 "준비 중..." 표시
 4. backend.exe가 준비되면 → 메인 화면 전환
 5. 사용자가 "Stage 4 실행" 버튼 클릭
-6. backend.exe가 python.exe로 main_a.py 실행
+6. backend.exe가 내장 `python.exe`로 `resources/engine/main_a.py` 실행
 7. 실시간 로그가 WebSocket으로 UI에 표시
 8. 완료되면 결과 표시
 ```
@@ -94,8 +102,8 @@ powershell -ExecutionPolicy Bypass -File build_release.ps1
 | 단계 | 뭘 하나 | 결과물 |
 |------|---------|--------|
 | Step 1 | 내장 Python 다운로드 + pip 패키지 설치 | `python-embed/` 폴더 |
-| Step 2 | bridge_server를 PyInstaller로 빌드 | `dist/backend/backend.exe` |
-| Step 3 | Electron Builder로 설치 파일 생성 | `geuldobi-desktop/dist/Geuldobi Setup 1.5.0.exe` |
+| Step 2 | `bridge_server`를 PyInstaller로 빌드하고 engine source bundle stage | `dist/backend/backend.exe`, `dist/engine/main_a.py` |
+| Step 3 | Electron Builder로 설치 파일 생성 후 packaged resource inventory 검증 | `geuldobi-desktop/dist/Geuldobi Setup 1.5.0.exe` |
 
 ### 빌드 결과물
 
@@ -103,6 +111,19 @@ powershell -ExecutionPolicy Bypass -File build_release.ps1
 geuldobi-desktop/dist/
 └── Geuldobi Setup 1.5.0.exe    ← 이걸 사용자에게 주면 됨 (~300MB)
 ```
+
+### 릴리스 최소 검증 체크리스트
+
+배포 전 공식 desktop gate는 아래 두 줄을 유지한다.
+
+```bash
+cd geuldobi-desktop
+npm test
+npm run start:spike
+```
+
+- `npm test`는 live bridge, dashboard, risk gate, renderer direct surface, websocket transport, packaged runtime, shadow-entry hygiene focused regression을 함께 돈다.
+- `npm run start:spike`는 splash -> backend -> main window handoff가 실제 런타임에서 깨지지 않았는지 확인하는 최소 runtime proof다.
 
 ### 첫 빌드 시 시간
 
@@ -215,8 +236,8 @@ build/
         │ subprocess (stdin pre-feed)
         ▼
 ┌───────────────────────────────────────┐
-│  python.exe main_a.py                 │
-│  (내장 Python으로 파이프라인 실행)    │
+│  python-embed/python.exe main_a.py    │
+│  (resources/engine source bundle 실행)│
 │  stdout → backend → WS → UI 로그     │
 └───────────────────────────────────────┘
 ```
@@ -280,6 +301,7 @@ app.whenReady().then(() => {
 
 - **개발 모드**: Python에 `fastapi`, `uvicorn` 설치 확인 → `pip install fastapi uvicorn websockets`
 - **배포 모드**: `resources/backend/backend.exe`가 있는지 확인
+- **배포 모드**: `resources/engine/main_a.py`, `resources/python-embed/python.exe`가 있는지 확인
 - 포트 8300이 다른 프로그램에 점유됐는지 확인 → `netstat -ano | findstr 8300`
 
 ### 빌드가 실패함
@@ -318,3 +340,13 @@ npm install
 → `Geuldobi Setup 1.0.1.exe` 생성
 
 빌드 후 해당 .exe를 사용자에게 전달하거나, 나중에 auto-update 서버에 올리면 됨.
+# Shipping Freeze Note
+
+- Runtime model: `source_bundle_primary`
+- Authoritative Electron entry: `geuldobi-desktop/src/main.js`
+- Shadow entries: `geuldobi-desktop/main.js`, root `main.js`
+- Alternate/manual-only surfaces: `lite_mode/`, `test_mode/`
+- Reference archive surface: `UI/`
+- `npm test` is the official desktop subset gate, not the full repo regression envelope.
+- `npm run start:spike` is the minimum runtime handoff proof.
+- Consolidated guide: `docs/2026-03-13/shipping-reality-live-surface-guide.md`

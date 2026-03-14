@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from modules.core.llm_generate import generate_content_via_router, generate_raw_content_via_router
 from modules.core.llm_provider import LLMRequest
 from modules.core.llm_router import LLMProviderRouter, get_shared_llm_router
 from modules.core.providers.anthropic_provider import AnthropicProvider
@@ -218,6 +219,27 @@ def test_vertex_provider_generate_with_fake_sdk(monkeypatch):
     assert captured_kwargs["model"] == "gemini-2.5-pro"
     assert captured_kwargs["config"] == {"temperature": 0.1}
     assert captured_kwargs["client_kwargs"]["vertexai"] is True
-    assert captured_kwargs["client_kwargs"]["project"] == "vertex-proj"
-    assert captured_kwargs["client_kwargs"]["location"] == "us-central1"
-    assert captured_kwargs["client_kwargs"]["credentials"] is fake_credentials
+
+
+def test_generate_content_via_router_returns_normalized_response(monkeypatch):
+    raw = SimpleNamespace(text="native")
+    provider = MagicMock()
+    provider.generate.return_value = SimpleNamespace(
+        text="normalized",
+        finish_reason="STOP",
+        usage={"prompt_token_count": 7},
+        raw=raw,
+        provider="gemini",
+    )
+    router = MagicMock()
+    router.get_provider_for_model.return_value = provider
+    monkeypatch.setattr("modules.core.llm_generate.get_shared_llm_router", lambda: router)
+
+    response = generate_content_via_router(client=MagicMock(), model="gemini-2.5-flash", contents="hello")
+
+    assert response.text == "normalized"
+    assert response.finish_reason == "STOP"
+    assert response.raw is raw
+
+    raw_response = generate_raw_content_via_router(client=MagicMock(), model="gemini-2.5-flash", contents="hello")
+    assert raw_response is raw

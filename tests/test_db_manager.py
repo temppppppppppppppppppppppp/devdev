@@ -54,6 +54,30 @@ def test_transaction_rolls_back_on_exception(db):
     assert db.load_anchor("tx_key", default=None) == {}
 
 
+def test_save_stage_attempt_respects_outer_transaction_rollback(db):
+    with pytest.raises(DBError):
+        with db.transaction():
+            persisted = db.save_stage_attempt(
+                stage=4,
+                verdict="PASS",
+                attempt_num=1,
+                ep_num=22,
+                arc_num=2,
+                score=91,
+                attempt_key="s4:ep22:arc2:a1:sess_tx",
+                candidate_key="A|balanced",
+                content_hash="hash-tx",
+                artifact_path="logs/artifacts/stage4/ep_0022/attempt_01/final_manuscript__A_balanced.txt",
+            )
+            assert persisted is True
+            raise RuntimeError("rollback trigger")
+
+    row = db.conn.execute(
+        "SELECT COUNT(*) AS cnt FROM stage_attempts WHERE attempt_key = 's4:ep22:arc2:a1:sess_tx'"
+    ).fetchone()
+    assert row["cnt"] == 0
+
+
 def test_reset_after_commit_false_keeps_changes_uncommitted(db):
     db.save_manuscript(1, "제목1", "내용1")
 
@@ -359,6 +383,60 @@ def test_save_stage_attempt_persists_rationale_fields(db):
     assert row["fix_scope_reasoning"] == "frontier conflict"
     assert "Advisory digest" in row["runtime_advisory"]
     assert row["retry_directives"] == "keep the ending distinct"
+
+
+def test_save_ui_event_persists_meta_json(db):
+    persisted = db.save_ui_event(
+        session_id="sess-ui",
+        seq=7,
+        stage=4,
+        ep_num=12,
+        round_num=1,
+        attempt_key="s4:ep12:arc2:a1:sess-ui",
+        component="Stage4",
+        event_kind="log",
+        level="info",
+        message="director frame visible",
+        meta={"origin": "unit"},
+    )
+
+    row = db.conn.execute(
+        """
+        SELECT session_id, seq, stage, ep_num, round_num, attempt_key, component, message, meta_json
+        FROM ui_events
+        WHERE session_id = 'sess-ui'
+        """
+    ).fetchone()
+
+    assert persisted is True
+    assert row["seq"] == 7
+    assert row["stage"] == 4
+    assert row["ep_num"] == 12
+    assert row["round_num"] == 1
+    assert row["attempt_key"] == "s4:ep12:arc2:a1:sess-ui"
+    assert row["component"] == "Stage4"
+    assert row["message"] == "director frame visible"
+    assert "origin" in row["meta_json"]
+
+
+def test_save_ui_event_respects_outer_transaction_rollback(db):
+    with pytest.raises(DBError):
+        with db.transaction():
+            persisted = db.save_ui_event(
+                session_id="sess-ui-tx",
+                seq=1,
+                stage=3,
+                ep_num=5,
+                component="Stage3",
+                message="buffered event",
+            )
+            assert persisted is True
+            raise RuntimeError("rollback trigger")
+
+    row = db.conn.execute(
+        "SELECT COUNT(*) AS cnt FROM ui_events WHERE session_id = 'sess-ui-tx'"
+    ).fetchone()
+    assert row["cnt"] == 0
 
 
 def test_get_strategy_win_rates_supports_stage2_filters(db):

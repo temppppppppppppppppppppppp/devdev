@@ -230,6 +230,64 @@ class Stage4InterviewRound:
             ),
         )
 
+    def _log_session_decision(
+        self,
+        *,
+        next_ep: int,
+        round_num: int,
+        arc_num: int,
+        verdict: str,
+        score: int,
+        selected: str,
+        error_category: str,
+        reason: str,
+        fix_scope: str,
+        open_review: str,
+        action_items: list | None,
+        attempt_key: str,
+        artifact_meta: dict | None = None,
+        selection_artifact_meta: dict | None = None,
+        initial_verdict: str = "",
+        initial_score: int = 0,
+        selection_reason: str = "",
+        verdict_reason: str = "",
+        runtime_advisory: str = "",
+        retry_directives: str = "",
+    ) -> None:
+        _sl = getattr(self.ctx, "session_logger", None)
+        if not _sl:
+            return
+        _artifact = normalize_artifact_meta(artifact_meta)
+        _selection = normalize_artifact_meta(selection_artifact_meta)
+        _sl.log_decision(
+            stage="stage4",
+            ep_num=next_ep,
+            round_num=round_num,
+            decision_type="manuscript",
+            result=str(verdict or ""),
+            score=int(score or 0),
+            selected=str(selected or ""),
+            arc_no=int(arc_num or 0),
+            error_category=str(error_category or ""),
+            reason=self._compact_text(reason, limit=500),
+            selection_reason=self._compact_text(selection_reason, limit=500),
+            verdict_reason=self._compact_text(verdict_reason, limit=500),
+            fix_scope=str(fix_scope or ""),
+            open_review=self._compact_text(open_review, limit=300),
+            action_items=list(action_items or [])[:20],
+            attempt_key=str(attempt_key or ""),
+            candidate_key=_artifact["candidate_key"],
+            content_hash=_artifact["content_hash"],
+            artifact_path=_artifact["artifact_path"],
+            selection_candidate_key=_selection["candidate_key"],
+            selection_content_hash=_selection["content_hash"],
+            selection_artifact_path=_selection["artifact_path"],
+            initial_verdict=str(initial_verdict or ""),
+            initial_score=int(initial_score or 0),
+            runtime_advisory=self._compact_text(runtime_advisory, limit=500),
+            retry_directives=self._compact_text(retry_directives, limit=500),
+        )
+
     def _get_round_metrics_delta(self) -> dict:
         start = self._normalize_scope_summary(getattr(self, "_round_metrics_start", {}))
         current = self._peek_round_scope_summary()
@@ -1386,7 +1444,15 @@ class Stage4InterviewRound:
 
         stage4_spinner.update_detail(f"제{next_ep}화 · {round_num + 1}차 면담 · 앙상블 생성")
         self.ctx.ui.log(f"\n🎬 [{round_num + 1}차 면담] Chief Writer 앙상블 생성 중...")
-        print(f"   🎬 [{round_num + 1}차 면담] 원고 앙상블 생성 중...")
+        self.ctx.ui.log(
+            f"   🎬 [{round_num + 1}차 면담] 원고 앙상블 생성 중...",
+            stage="stage4",
+            component="chief_writer_ensemble",
+            ep_num=next_ep,
+            arc_num=round_ctx.arc_data.get("arc_no", 0),
+            round_num=round_num,
+            event_kind="progress",
+        )
         self._log_attempt_event(
             logging.INFO,
             next_ep=next_ep,
@@ -1526,16 +1592,72 @@ class Stage4InterviewRound:
             arc_num=round_ctx.arc_data.get("arc_no", 0),
             message=f"director_review_start candidates={len(candidates)}",
         )
-        print(f"\n   {'=' * 56}")
-        print(f"   🎬 Director 면담 시작 (제{next_ep}화, {round_num + 1}차)")
-        print(f"   후보 수: {len(candidates)}개")
+        self.ctx.ui.log(
+            f"\n   {'=' * 56}",
+            stage="stage4",
+            component="director_review",
+            ep_num=next_ep,
+            arc_num=round_ctx.arc_data.get("arc_no", 0),
+            round_num=round_num,
+            event_kind="section",
+        )
+        self.ctx.ui.log(
+            f"   🎬 Director 면담 시작 (제{next_ep}화, {round_num + 1}차)",
+            stage="stage4",
+            component="director_review",
+            ep_num=next_ep,
+            arc_num=round_ctx.arc_data.get("arc_no", 0),
+            round_num=round_num,
+            event_kind="progress",
+        )
+        self.ctx.ui.log(
+            f"   후보 수: {len(candidates)}개",
+            stage="stage4",
+            component="director_review",
+            ep_num=next_ep,
+            arc_num=round_ctx.arc_data.get("arc_no", 0),
+            round_num=round_num,
+            event_kind="summary",
+            meta={"candidate_count": len(candidates)},
+        )
         for _pi, _pv in enumerate(validation_results):
             _pw = _pv.get("warnings", [])
             _label = ["A", "B", "C"][_pi] if _pi < 3 else str(_pi + 1)
-            print(f"   후보 {_label}: 경고 {len(_pw)}건, 분량 {len(candidates[_pi].get('manuscript', ''))}자")
+            self.ctx.ui.log(
+                f"   후보 {_label}: 경고 {len(_pw)}건, 분량 {len(candidates[_pi].get('manuscript', ''))}자",
+                stage="stage4",
+                component="director_review",
+                ep_num=next_ep,
+                arc_num=round_ctx.arc_data.get("arc_no", 0),
+                round_num=round_num,
+                event_kind="summary",
+                meta={
+                    "candidate_label": _label,
+                    "warning_count": len(_pw),
+                    "manuscript_length": len(candidates[_pi].get("manuscript", "")),
+                },
+            )
             for _pwi in _pw[:5]:
-                print(f"      - {_pwi}")
-        print(f"   {'=' * 56}")
+                self.ctx.ui.log(
+                    f"      - {_pwi}",
+                    stage="stage4",
+                    component="director_review",
+                    ep_num=next_ep,
+                    arc_num=round_ctx.arc_data.get("arc_no", 0),
+                    round_num=round_num,
+                    event_kind="warning",
+                    level="warning",
+                    meta={"candidate_label": _label},
+                )
+        self.ctx.ui.log(
+            f"   {'=' * 56}",
+            stage="stage4",
+            component="director_review",
+            ep_num=next_ep,
+            arc_num=round_ctx.arc_data.get("arc_no", 0),
+            round_num=round_num,
+            event_kind="section",
+        )
         # [V65] PerfTimer: Director 대면 측정
         try:
             self.ctx.perf_timer.start(f"s4_ep{next_ep}_director_r{round_num}")
@@ -1825,28 +1947,6 @@ class Stage4InterviewRound:
         self.ctx.ui.log(f"   📊 Director 판정: {verdict} (점수: {score}, 선택: 후보 {selected})")
         self.ctx.ui.log(f"      └─ 사유: {reason[:80]}...")
 
-        # [LOG-1] 판정 경로 세션 로깅
-        _sl = getattr(self.ctx, "session_logger", None)
-        if _sl:
-            try:
-                _sl.log_decision(
-                    stage="stage4",
-                    ep_num=next_ep,
-                    round_num=round_num,
-                    decision_type="manuscript",
-                    result=verdict,
-                    score=score,
-                    selected=selected,
-                    error_category=error_category,
-                    reason=reason[:500],
-                    fix_scope=director_result.get("fix_scope", ""),
-                    open_review=str(director_result.get("open_review", ""))[:300],
-                    action_items=director_result.get("action_items", []),
-                    attempt_key=_attempt_key,
-                )
-            except Exception as _e:
-                logging.debug("[SilentPass:Stage4:SessionLog] %s", _e)
-
         self._log_attempt_event(
             logging.INFO,
             next_ep=next_ep,
@@ -1855,15 +1955,55 @@ class Stage4InterviewRound:
             message="director_verdict=%s score=%s selected=%s error_category=%s reason=%s",
             args=(verdict, score, selected, error_category or "-", reason[:120]),
         )
-        print("\n   📊 Director 판정 결과:")
-        print(f"      판정: {verdict} | 점수: {score} | 선택: 후보 {selected}")
-        print(f"      사유: {reason[:120]}")
+        self.ctx.ui.log(
+            "\n   📊 Director 판정 결과:",
+            stage="stage4",
+            component="director_review",
+            ep_num=next_ep,
+            arc_num=round_ctx.arc_data.get("arc_no", 0),
+            round_num=round_num,
+            event_kind="section",
+        )
+        self.ctx.ui.log(
+            f"      판정: {verdict} | 점수: {score} | 선택: 후보 {selected}",
+            stage="stage4",
+            component="director_review",
+            ep_num=next_ep,
+            arc_num=round_ctx.arc_data.get("arc_no", 0),
+            round_num=round_num,
+            event_kind="result",
+            meta={"verdict": verdict, "score": score, "selected_candidate": selected},
+        )
+        self.ctx.ui.log(
+            f"      사유: {reason[:120]}",
+            stage="stage4",
+            component="director_review",
+            ep_num=next_ep,
+            arc_num=round_ctx.arc_data.get("arc_no", 0),
+            round_num=round_num,
+            event_kind="summary",
+        )
         _action_items = director_result.get("action_items", [])
         if _action_items:
-            print("      지시사항:")
+            self.ctx.ui.log(
+                "      지시사항:",
+                stage="stage4",
+                component="director_review",
+                ep_num=next_ep,
+                arc_num=round_ctx.arc_data.get("arc_no", 0),
+                round_num=round_num,
+                event_kind="summary",
+            )
             for _ai in _action_items[:5]:
-                print(f"         - {_ai}")
-        print()
+                self.ctx.ui.log(
+                    f"         - {_ai}",
+                    stage="stage4",
+                    component="director_review",
+                    ep_num=next_ep,
+                    arc_num=round_ctx.arc_data.get("arc_no", 0),
+                    round_num=round_num,
+                    event_kind="instruction",
+                )
 
         # [D-4] Director 선택 기록 (비차단)
         _selection_artifact_meta = normalize_artifact_meta(None)
@@ -1979,6 +2119,25 @@ class Stage4InterviewRound:
                         payload=getattr(_pass_result, "final_manuscript", ""),
                     )
                 )
+            _session_selection_reason = str(
+                (
+                    _trace_director_result.get("selection_reason")
+                    or director_result.get("selection_reason", "")
+                )
+                if isinstance(_trace_director_result, dict)
+                else director_result.get("selection_reason", "")
+            )
+            _session_verdict_reason = str(
+                (
+                    _trace_director_result.get("verdict_reason")
+                    or reason
+                    or _session_selection_reason
+                )
+                if isinstance(_trace_director_result, dict)
+                else (reason or _session_selection_reason)
+            )
+            _session_runtime_advisory = self._build_retry_advisory_digest()
+            _session_retry_directives = ""
             self._append_episode_log(
                 ep_num=next_ep,
                 round_num=round_num,
@@ -2002,8 +2161,8 @@ class Stage4InterviewRound:
                         if isinstance(_trace_director_result, dict)
                         else director_feedback
                     ),
-                    "runtime_advisory": self._build_retry_advisory_digest(),
-                    "retry_directives": "",
+                    "runtime_advisory": _session_runtime_advisory,
+                    "retry_directives": _session_retry_directives,
                 },
                 patch_trace=_trace_patch_trace,
                 arc_num=round_ctx.arc_data.get("arc_no", 0),
@@ -2038,6 +2197,47 @@ class Stage4InterviewRound:
                 candidate_key=_log_artifact_meta["candidate_key"],
                 artifact_path=_log_artifact_meta["artifact_path"],
             )
+            try:
+                self._log_session_decision(
+                    next_ep=next_ep,
+                    round_num=round_num,
+                    arc_num=round_ctx.arc_data.get("arc_no", 0),
+                    verdict=_trace_final_verdict,
+                    score=_trace_final_score,
+                    selected=selected,
+                    error_category=error_category,
+                    reason=(
+                        (_trace_director_result.get("verdict_reason") or reason)
+                        if isinstance(_trace_director_result, dict)
+                        else reason
+                    ),
+                    fix_scope=(
+                        _trace_director_result.get("fix_scope", "")
+                        if isinstance(_trace_director_result, dict)
+                        else director_result.get("fix_scope", "")
+                    ),
+                    open_review=(
+                        _trace_director_result.get("open_review", "")
+                        if isinstance(_trace_director_result, dict)
+                        else director_result.get("open_review", "")
+                    ),
+                    action_items=(
+                        _trace_director_result.get("action_items", [])
+                        if isinstance(_trace_director_result, dict)
+                        else director_result.get("action_items", [])
+                    ),
+                    attempt_key=_attempt_key,
+                    artifact_meta=_log_artifact_meta,
+                    selection_artifact_meta=_selection_artifact_meta,
+                    initial_verdict=verdict,
+                    initial_score=score,
+                    selection_reason=_session_selection_reason,
+                    verdict_reason=_session_verdict_reason,
+                    runtime_advisory=_session_runtime_advisory,
+                    retry_directives=_session_retry_directives,
+                )
+            except Exception as _e:
+                logging.debug("[SilentPass:Stage4:SessionLog] %s", _e)
             return _pass_result
         # [B-1-3b] REJECT 처리 → 위임
         _reject_result = self._handle_reject(
@@ -2063,6 +2263,25 @@ class Stage4InterviewRound:
         if isinstance(getattr(_reject_result, "previous_attempt", None), dict):
             _log_reject_bucket = str(_reject_result.previous_attempt.get("reject_bucket", "") or "")
         _reject_artifact_meta = normalize_artifact_meta(getattr(_reject_result, "attempt_artifact_meta", {}) or {})
+        _session_selection_reason = str(
+            (
+                _trace_director_result.get("selection_reason")
+                or director_result.get("selection_reason", "")
+            )
+            if isinstance(_trace_director_result, dict)
+            else director_result.get("selection_reason", "")
+        )
+        _session_verdict_reason = str(
+            (
+                _trace_director_result.get("verdict_reason")
+                or reason
+                or _session_selection_reason
+            )
+            if isinstance(_trace_director_result, dict)
+            else (reason or _session_selection_reason)
+        )
+        _session_runtime_advisory = str((_reject_result.previous_attempt or {}).get("runtime_advisory", "") or "")
+        _session_retry_directives = str((_reject_result.previous_attempt or {}).get("retry_directives", "") or "")
         self._append_episode_log(
             ep_num=next_ep,
             round_num=round_num,
@@ -2081,8 +2300,8 @@ class Stage4InterviewRound:
             validation_warnings=_validation_warnings,
             feedback_provenance={
                 "director_feedback": str((_reject_result.previous_attempt or {}).get("director_feedback_text", "") or ""),
-                "runtime_advisory": str((_reject_result.previous_attempt or {}).get("runtime_advisory", "") or ""),
-                "retry_directives": str((_reject_result.previous_attempt or {}).get("retry_directives", "") or ""),
+                "runtime_advisory": _session_runtime_advisory,
+                "retry_directives": _session_retry_directives,
             },
             patch_trace=_trace_patch_trace,
             arc_num=round_ctx.arc_data.get("arc_no", 0),
@@ -2116,6 +2335,47 @@ class Stage4InterviewRound:
             candidate_key=_reject_artifact_meta["candidate_key"],
             artifact_path=_reject_artifact_meta["artifact_path"],
         )
+        try:
+            self._log_session_decision(
+                next_ep=next_ep,
+                round_num=round_num,
+                arc_num=round_ctx.arc_data.get("arc_no", 0),
+                verdict=_trace_final_verdict or "REJECT",
+                score=_trace_final_score,
+                selected=selected,
+                error_category=error_category,
+                reason=(
+                    (_trace_director_result.get("verdict_reason") or reason)
+                    if isinstance(_trace_director_result, dict)
+                    else reason
+                ),
+                fix_scope=(
+                    _trace_director_result.get("fix_scope", "")
+                    if isinstance(_trace_director_result, dict)
+                    else director_result.get("fix_scope", "")
+                ),
+                open_review=(
+                    _trace_director_result.get("open_review", "")
+                    if isinstance(_trace_director_result, dict)
+                    else director_result.get("open_review", "")
+                ),
+                action_items=(
+                    _trace_director_result.get("action_items", [])
+                    if isinstance(_trace_director_result, dict)
+                    else director_result.get("action_items", [])
+                ),
+                attempt_key=_attempt_key,
+                artifact_meta=_reject_artifact_meta,
+                selection_artifact_meta=_selection_artifact_meta,
+                initial_verdict=verdict,
+                initial_score=score,
+                selection_reason=_session_selection_reason,
+                verdict_reason=_session_verdict_reason,
+                runtime_advisory=_session_runtime_advisory,
+                retry_directives=_session_retry_directives,
+            )
+        except Exception as _e:
+            logging.debug("[SilentPass:Stage4:SessionLog] %s", _e)
         return _reject_result
 
     def _run_pre_director_validation(
@@ -2214,9 +2474,27 @@ class Stage4InterviewRound:
                         validation_results[ci]["focus_points"].append(
                             f"Python 검증 경고 {len(bv_failures)}건 (Director 판단 필요)"
                         )
-                        print(f"      ⚠️ 후보{ci + 1} Python 검증 경고 {len(bv_failures)}건 → Director에 전달")
+                        self.ctx.ui.log(
+                            f"      ⚠️ 후보{ci + 1} Python 검증 경고 {len(bv_failures)}건 → Director에 전달",
+                            stage="stage4",
+                            component="python_prevalidation",
+                            ep_num=next_ep,
+                            round_num=round_num,
+                            event_kind="warning",
+                            level="warning",
+                            meta={"candidate_index": ci + 1, "failure_count": len(bv_failures)},
+                        )
                         for f in bv_failures:
-                            print(f"         - [{f.get('severity', '?')}] {f.get('reason', '?')}")
+                            self.ctx.ui.log(
+                                f"         - [{f.get('severity', '?')}] {f.get('reason', '?')}",
+                                stage="stage4",
+                                component="python_prevalidation",
+                                ep_num=next_ep,
+                                round_num=round_num,
+                                event_kind="warning",
+                                level="warning",
+                                meta={"candidate_index": ci + 1, "severity": f.get("severity", "?")},
+                            )
         except Exception as _bv_err:
             self.ctx.ui.log(f"      ⚠️ [V66.1] BlockingValidator 실행 실패: {str(_bv_err)[:60]}")
 
@@ -2272,7 +2550,14 @@ class Stage4InterviewRound:
             logging.warning(f" [V66.2] 파괴 엔티티 검사 오류: {_de_err}")
 
         # [SC-5] Director 벡터 메모리 컨텍스트 조립 (후보 공통 1회)
-        print("      ⏳ [SC-5] Director 벡터 메모리 수집 중...")
+        self.ctx.ui.log(
+            "      ⏳ [SC-5] Director 벡터 메모리 수집 중...",
+            stage="stage4",
+            component="director_vector_memory",
+            ep_num=next_ep,
+            round_num=round_num,
+            event_kind="progress",
+        )
         _director_memory_context = ""
         _plan = None
         _work_focus: dict[str, object] = {}
@@ -2397,7 +2682,15 @@ class Stage4InterviewRound:
                     if _budget > 0 and len(_director_memory_context) > _budget:
                         _director_memory_context = _director_memory_context[:_budget]
                     logging.info(f"[SC-5] Director 벡터 메모리 {len(_mem_parts)}건, {len(_director_memory_context)}자")
-                    print(f"      ✅ [SC-5] {len(_mem_parts)}건 수집 완료")
+                    self.ctx.ui.log(
+                        f"      ✅ [SC-5] {len(_mem_parts)}건 수집 완료",
+                        stage="stage4",
+                        component="director_vector_memory",
+                        ep_num=next_ep,
+                        round_num=round_num,
+                        event_kind="result",
+                        meta={"memory_part_count": len(_mem_parts)},
+                    )
                     _use_advisor_path = True
             if not _use_advisor_path:
                 _director_memory_context = ""
@@ -2919,7 +3212,7 @@ class Stage4InterviewRound:
         director_memory_context: str,
         error_category: str,
     ):
-        """[B-1-3b] PASS/PASS_WITH_FIX ??. Returns (result|None, director_feedback, previous_attempt, trace_meta)."""
+        """[B-1-3b] PASS/PASS_WITH_FIX 결과를 후처리한다. Returns (result|None, director_feedback, previous_attempt, trace_meta)."""
         from modules.core.stage4_types import _InterviewRoundResult
         from modules.validation.threshold_helper import _threshold
 
@@ -3825,7 +4118,15 @@ class Stage4InterviewRound:
         logging.debug(
             "Advisory 검증 시작 — 8개 병렬 실행 (TruthGate, NPC, 수치, 회상, 정보역설, 관계, 장기반복, 수치정합)"
         )
-        print("      \u23f3 Advisory 체인 8개 병렬 실행 중...")
+        _round_num = getattr(self, "_god1_round_num", None)
+        self.ctx.ui.log(
+            "      \u23f3 Advisory 체인 8개 병렬 실행 중...",
+            stage="stage4",
+            component="advisory_chain",
+            ep_num=next_ep,
+            round_num=_round_num,
+            event_kind="progress",
+        )
 
         futures = {}
         _advisory_parts: list[str] = []
@@ -3874,9 +4175,25 @@ class Stage4InterviewRound:
             executor.shutdown(wait=False, cancel_futures=True)
 
         if _advisory_parts:
-            print(f"      \u2705 Advisory 체인 완료 — {len(_advisory_parts)}건 경고")
+            self.ctx.ui.log(
+                f"      \u2705 Advisory 체인 완료 — {len(_advisory_parts)}건 경고",
+                stage="stage4",
+                component="advisory_chain",
+                ep_num=next_ep,
+                round_num=_round_num,
+                event_kind="result",
+                meta={"warning_count": len(_advisory_parts)},
+            )
         else:
-            print("      \u2705 Advisory 체인 완료 — 경고 없음")
+            self.ctx.ui.log(
+                "      \u2705 Advisory 체인 완료 — 경고 없음",
+                stage="stage4",
+                component="advisory_chain",
+                ep_num=next_ep,
+                round_num=_round_num,
+                event_kind="result",
+                meta={"warning_count": 0},
+            )
         return _advisory_parts
 
     # ── [TF-50] Advisory private methods ──────────────────────────────
@@ -4577,7 +4894,7 @@ class Stage4InterviewRound:
         reject_bucket: str = "",
         score_breakdown: dict | None = None,
     ) -> dict:
-        """Stage 4 ?? ??? ???? DB? ??? ??."""
+        """Stage 4 시도 결과를 stage_attempts DB에 저장한다."""
         if duration_ms is None and hasattr(self, "_round_start_ts"):
             try:
                 duration_ms = int((time.monotonic() - self._round_start_ts) * 1000)
@@ -4641,7 +4958,7 @@ class Stage4InterviewRound:
                     artifact_path=_artifact_meta["artifact_path"],
                 )
             except Exception as _e:
-                logging.debug("[InterviewRound] PassRateMonitor ?? ?? (??): %s", _e)
+                logging.debug("[InterviewRound] PassRateMonitor 기록 실패 (비차단): %s", _e)
 
         try:
             _db = getattr(getattr(self.ctx, "current_project", None), "db", None)

@@ -5,7 +5,33 @@ import faulthandler
 import os
 import sys
 
+_STDIO_BOOTSTRAPPED = False
+
+
+def _bootstrap_windows_stdio_utf8() -> None:
+    """Normalize Windows console stdio before bootstrap notices hit stderr."""
+
+    global _STDIO_BOOTSTRAPPED
+    if _STDIO_BOOTSTRAPPED:
+        return
+    if sys.platform != "win32" or "pytest" in sys.modules:
+        return
+
+    try:
+        import io
+
+        # Console-only fallback. Durable sinks still need explicit UTF-8 writers.
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
+        if hasattr(sys.stdin, "reconfigure"):
+            sys.stdin.reconfigure(encoding="utf-8", errors="replace")
+        _STDIO_BOOTSTRAPPED = True
+    except (AttributeError, OSError):
+        return
+
 # [CrosscutR70] 읽기전용 디렉토리/디스크풀 시 앱 크래시 방지
+_bootstrap_windows_stdio_utf8()
+
 try:
     _fault_log = open("crash_dump.log", "a", encoding="utf-8")
     faulthandler.enable(file=_fault_log, all_threads=True)
@@ -16,7 +42,7 @@ except OSError as _fh_err:
 
 # Windows에서 UTF-8 인코딩 강제 설정 (이모지 및 한글 출력 지원)
 # pytest 환경에서는 capture fd 충돌 방지를 위해 스킵
-if sys.platform == "win32" and "pytest" not in sys.modules:
+if not _STDIO_BOOTSTRAPPED and sys.platform == "win32" and "pytest" not in sys.modules:
     try:
         import io
 
@@ -51,7 +77,9 @@ import modules.core.spinners as _spinners_mod  # [V65] 플래그 동기화용
 from modules.core.constants import VolumeSettings
 from modules.core.feedback_system import FeedbackSystem  # [V64 P2-3]
 from modules.core.llm_generate import generate_content_via_router
+from modules.core.logging_keys import resolve_logging_session_id
 from modules.core.metrics_collector import get_metrics_collector  # [V49.3] 비용 추적 시스템
+from modules.core.models_config import load_models_yaml
 from modules.core.narrative_diversity import NarrativeDiversityEngine  # [V48] 서사 다양성 엔진
 from modules.core.perf_timer import PerfTimer  # [V65] 파이프라인 성능 프로파일링
 from modules.core.prompt_builder import PromptBuilder  # [V64 P2-2]
@@ -269,6 +297,7 @@ class SovereignApp:
         self.memory = None
         self.agents = {}
         self.current_project = None
+        self.metrics_session_id = None
         self.runtime_audit = []
         self.selected_genre = None  # [V40] 선택된 장르 정보
         self.diversity_engine = None  # [V48] 서사 다양성 엔진
@@ -296,6 +325,8 @@ class SovereignApp:
             max_prompt_chars=int(_val_threshold("session_logging.max_prompt_chars", 200000)),
             max_rotations=int(_val_threshold("session_logging.max_rotations", 10)),
         )
+        self._pending_ui_events: list[dict[str, Any]] = []
+        self.ui.set_operator_event_sink(self._capture_ui_event)
         from modules.domain.agents.base_agent import BaseAgent as _BA
 
         _BA.set_session_logger(self._session_logger)
@@ -424,6 +455,53 @@ class SovereignApp:
                     self.ui.log(f"{Emojis.WARNING} [DB] 롤백도 실패: {rollback_error}")
                 return False
         return False
+
+    def _resolve_ui_event_session_id(self) -> str | None:
+        fallback = None
+        try:
+            from modules.core.logger import _studio_logger
+
+            if _studio_logger is not None:
+                fallback = getattr(_studio_logger, "session_name", None)
+        except Exception:
+            fallback = None
+        return resolve_logging_session_id(
+            getattr(self, "current_project", None),
+            getattr(self, "metrics_session_id", None),
+            fallback=fallback,
+        )
+
+    def _persist_ui_event(self, event: dict) -> None:
+        payload = dict(event)
+        payload["session_id"] = self._resolve_ui_event_session_id()
+        self._session_logger.log_ui_event(**payload)
+        current_project = getattr(self, "current_project", None)
+        db = getattr(current_project, "db", None)
+        if db is not None and hasattr(db, "save_ui_event"):
+            db.save_ui_event(**payload)
+
+    def _capture_ui_event(self, event: dict) -> None:
+        if not isinstance(event, dict):
+            return
+        current_project = getattr(self, "current_project", None)
+        if current_project is None or getattr(current_project, "db", None) is None:
+            pending = getattr(self, "_pending_ui_events", None)
+            if isinstance(pending, list):
+                pending.append(dict(event))
+            return
+        self._persist_ui_event(event)
+
+    def _flush_pending_ui_events(self) -> None:
+        pending = getattr(self, "_pending_ui_events", None)
+        if not pending:
+            return
+        current_project = getattr(self, "current_project", None)
+        if current_project is None or getattr(current_project, "db", None) is None:
+            return
+        buffered = list(pending)
+        pending.clear()
+        for event in buffered:
+            self._persist_ui_event(event)
 
     async def _safe_commit_async(self) -> bool:
         """
@@ -1035,7 +1113,7 @@ class SovereignApp:
             return None
 
         load_dotenv(project_env_path, override=True)
-        print(f"   🔑 [V60.37] 프로젝트별 API 키 로드: {project_env_path}")
+        self.ui.log(f"   🔑 [V60.37] 프로젝트별 API 키 로드: {project_env_path}")
 
         new_api_key = os.getenv("GOOGLE_API_KEY")
         if new_api_key:
@@ -1084,6 +1162,7 @@ class SovereignApp:
             if isinstance(_metrics_session_id, str) and _metrics_session_id.strip():
                 self.metrics_session_id = _metrics_session_id.strip()
                 self.current_project.metrics_session_id = self.metrics_session_id
+        self._flush_pending_ui_events()
 
         # [Sweep3-D1] 프로젝트 전환 시 PromptLoader 캐시 무효화
         from modules.core.prompt_loader import PromptLoader
@@ -1170,22 +1249,12 @@ class SovereignApp:
         self._run_main_process()
 
     def _load_models_yaml(self) -> dict:
-        """Load models config from project config first, then root config."""
-        candidates = []
-        if self.current_project and hasattr(self.current_project, "paths"):
-            candidates.append(self.current_project.paths.config / "models.yaml")
-        candidates.append(Path("config/models.yaml"))
-
-        for model_path in candidates:
-            try:
-                if model_path.exists():
-                    with open(model_path, encoding="utf-8") as f:
-                        config = yaml.safe_load(f) or {}
-                    if isinstance(config, dict):
-                        return config
-            except Exception as e:
-                self.ui.log(f"{Emojis.WARNING} [Config] models.yaml load failed: {e}")
-        return {}
+        """Load the canonical repo-root models config."""
+        try:
+            return load_models_yaml()
+        except Exception as e:
+            self.ui.log(f"{Emojis.WARNING} [Config] models.yaml load failed: {e}")
+            return {}
 
     def _get_agent_model_map(self) -> dict:
         config = self._load_models_yaml()
@@ -2371,7 +2440,15 @@ class SovereignApp:
         """[V27 Safe Shutdown] 앱 종료 시에만 DB 연결을 완전히 해제"""
         import sys
 
-        print("\n🛑 [System] 시스템 종료 시퀀스 가동...", flush=True)
+        def _shutdown_log(message: str, **context):
+            context.setdefault("stage", "shutdown")
+            context.setdefault("component", "shutdown")
+            if getattr(self, "ui", None):
+                self.ui.log(message, **context)
+            else:  # pragma: no cover - failsafe path
+                print(message, flush=True)
+
+        _shutdown_log("\n🛑 [System] 시스템 종료 시퀀스 가동...", event_kind="progress")
         sys.stdout.flush()
 
         # [V49.3] 비용 추적 리포트 출력 및 저장 (타임아웃 적용)
@@ -2394,11 +2471,21 @@ class SovereignApp:
                 try:
                     future.result(timeout=5)  # 전체 메트릭 처리에 5초 타임아웃
                 except concurrent.futures.TimeoutError:
-                    print("⚠️ [Metrics] 메트릭 처리 타임아웃 (건너뜀)", flush=True)
+                    _shutdown_log(
+                        "⚠️ [Metrics] 메트릭 처리 타임아웃 (건너뜀)",
+                        component="metrics",
+                        level="warning",
+                        event_kind="warning",
+                    )
             finally:
                 executor.shutdown(wait=False)  # 타임아웃 시 즉시 진행, 스레드 대기 안 함
         except Exception as metrics_err:
-            print(f"⚠️ [Metrics] 비용 추적 리포트 생성 실패: {metrics_err}", flush=True)
+            _shutdown_log(
+                f"⚠️ [Metrics] 비용 추적 리포트 생성 실패: {metrics_err}",
+                component="metrics",
+                level="warning",
+                event_kind="warning",
+            )
 
         # [Phase 6] Session 단위 잔여 비용 스냅샷 저장 (비차단)
         try:
@@ -2424,22 +2511,43 @@ class SovereignApp:
                         total_cost_usd=scope.get("total_cost_usd", 0.0),
                         model_breakdown=scope.get("model_breakdown", "{}"),
                     )
-                    print(
+                    _shutdown_log(
                         f"💾 [CostDB] Session 비용 저장: ${scope.get('total_cost_usd', 0.0):.4f} "
                         f"({scope.get('total_tokens', 0):,} tokens)",
-                        flush=True,
+                        component="cost_db",
+                        event_kind="result",
+                        meta={
+                            "total_cost_usd": scope.get("total_cost_usd", 0.0),
+                            "total_tokens": scope.get("total_tokens", 0),
+                            "total_calls": scope.get("total_calls", 0),
+                        },
                     )
         except Exception as cost_err:
-            print(f"⚠️ [CostDB] Session 비용 저장 실패: {cost_err}", flush=True)
+            _shutdown_log(
+                f"⚠️ [CostDB] Session 비용 저장 실패: {cost_err}",
+                component="cost_db",
+                level="warning",
+                event_kind="warning",
+            )
 
         # [Phase 2] PassRateMonitor 종료 시 flush 저장
         if V50_MODULES_AVAILABLE and getattr(self, "pass_rate_monitor", None):
             try:
                 self.pass_rate_monitor.save()
                 record_count = len(getattr(self.pass_rate_monitor, "records", []))
-                print(f"📈 [PassRate] 통과율 기록 저장: {record_count}건", flush=True)
+                _shutdown_log(
+                    f"📈 [PassRate] 통과율 기록 저장: {record_count}건",
+                    component="pass_rate",
+                    event_kind="result",
+                    meta={"record_count": record_count},
+                )
             except Exception as pr_err:
-                print(f"⚠️ [PassRate] 저장 실패: {pr_err}", flush=True)
+                _shutdown_log(
+                    f"⚠️ [PassRate] 저장 실패: {pr_err}",
+                    component="pass_rate",
+                    level="warning",
+                    event_kind="warning",
+                )
 
         # [Phase 4] Director 선택 편향 진단 (advisory)
         if (
@@ -2455,13 +2563,33 @@ class SovereignApp:
                     bias_result = self.quality_dashboard.detect_director_bias(selections)
                     warnings = bias_result.get("bias_warnings", [])
                     if warnings:
-                        print("⚖️ [Director Bias] 편향 경고:", flush=True)
+                        _shutdown_log(
+                            "⚖️ [Director Bias] 편향 경고:",
+                            component="director_bias",
+                            level="warning",
+                            event_kind="warning",
+                            meta={"warning_count": len(warnings)},
+                        )
                         for warning in warnings[:5]:
-                            print(f"   - {warning}", flush=True)
+                            _shutdown_log(
+                                f"   - {warning}",
+                                component="director_bias",
+                                level="warning",
+                                event_kind="warning",
+                            )
                     else:
-                        print("⚖️ [Director Bias] 유의미한 편향 경고 없음", flush=True)
+                        _shutdown_log(
+                            "⚖️ [Director Bias] 유의미한 편향 경고 없음",
+                            component="director_bias",
+                            event_kind="result",
+                        )
             except Exception as bias_err:
-                print(f"⚠️ [Director Bias] 분석 실패: {bias_err}", flush=True)
+                _shutdown_log(
+                    f"⚠️ [Director Bias] 분석 실패: {bias_err}",
+                    component="director_bias",
+                    level="warning",
+                    event_kind="warning",
+                )
 
         # [Phase 3] 장기 품질 드리프트 감지 (advisory)
         if V50_MODULES_AVAILABLE and getattr(self, "quality_dashboard", None):
@@ -2469,20 +2597,35 @@ class SovereignApp:
                 drift = self.quality_dashboard.detect_quality_drift(stage=4, min_windows=3, window_size=10)
                 drift_status = drift.get("drift", "insufficient_data")
                 if drift_status == "declining":
-                    print(
+                    _shutdown_log(
                         f"📉 [Quality Drift] Stage 4 품질 하락 감지: "
                         f"최근 평균 {drift.get('recent_avg', 0)}점, 전체 평균 {drift.get('overall_avg', 0)}점",
-                        flush=True,
+                        component="quality_drift",
+                        level="warning",
+                        event_kind="warning",
+                        meta={"drift_status": drift_status},
                     )
                 elif drift_status == "improving":
-                    print(
+                    _shutdown_log(
                         f"📈 [Quality Drift] Stage 4 품질 상승 추세: 최근 평균 {drift.get('recent_avg', 0)}점",
-                        flush=True,
+                        component="quality_drift",
+                        event_kind="result",
+                        meta={"drift_status": drift_status},
                     )
                 elif drift_status == "stable":
-                    print(f"➡️ [Quality Drift] Stage 4 품질 안정: 평균 {drift.get('overall_avg', 0)}점", flush=True)
+                    _shutdown_log(
+                        f"➡️ [Quality Drift] Stage 4 품질 안정: 평균 {drift.get('overall_avg', 0)}점",
+                        component="quality_drift",
+                        event_kind="result",
+                        meta={"drift_status": drift_status},
+                    )
             except Exception as drift_err:
-                print(f"⚠️ [Quality Drift] 분석 실패: {drift_err}", flush=True)
+                _shutdown_log(
+                    f"⚠️ [Quality Drift] 분석 실패: {drift_err}",
+                    component="quality_drift",
+                    level="warning",
+                    event_kind="warning",
+                )
 
         # [V51.4] 실패 학습 기록 저장
         if V50_MODULES_AVAILABLE and self.failure_learner and self.current_project:
@@ -2530,49 +2673,99 @@ class SovereignApp:
                 )
                 self.current_project.db.conn.commit()
                 stats = self.failure_learner.get_failure_stats()
-                print(f"📚 [V51.4] 실패 학습 기록 저장(DB): {stats['total_failures']}건", flush=True)
+                _shutdown_log(
+                    f"📚 [V51.4] 실패 학습 기록 저장(DB): {stats['total_failures']}건",
+                    component="failure_learner",
+                    event_kind="result",
+                    meta={"total_failures": stats["total_failures"]},
+                )
             except Exception as fl_err:
-                print(f"⚠️ [V51.4] 실패 기록 저장 실패: {fl_err}", flush=True)
+                _shutdown_log(
+                    f"⚠️ [V51.4] 실패 기록 저장 실패: {fl_err}",
+                    component="failure_learner",
+                    level="warning",
+                    event_kind="warning",
+                )
 
         # [V51.5] 캐릭터 음성 프로필 저장
         if V50_MODULES_AVAILABLE and self.character_voice and self.current_project:
             try:
                 self.character_voice.save_to_db(self.current_project.db)
-                print(f"🎭 [V51.5] 캐릭터 음성 저장: {len(self.character_voice.profiles)}명", flush=True)
+                _shutdown_log(
+                    f"🎭 [V51.5] 캐릭터 음성 저장: {len(self.character_voice.profiles)}명",
+                    component="character_voice",
+                    event_kind="result",
+                    meta={"profile_count": len(self.character_voice.profiles)},
+                )
             except Exception as cv_err:
-                print(f"⚠️ [V51.5] 캐릭터 음성 저장 실패: {cv_err}", flush=True)
+                _shutdown_log(
+                    f"⚠️ [V51.5] 캐릭터 음성 저장 실패: {cv_err}",
+                    component="character_voice",
+                    level="warning",
+                    event_kind="warning",
+                )
 
         # [V51.6] 복선 추적 저장
         if V50_MODULES_AVAILABLE and self.foreshadow_tracker and self.current_project:
             try:
                 self.foreshadow_tracker.save_to_db(self.current_project.db)
                 stats = self.foreshadow_tracker.get_stats()
-                print(f"🔮 [V51.6] 복선 저장: {stats['total']}개 (회수율: {stats['payoff_rate']}%)", flush=True)
+                _shutdown_log(
+                    f"🔮 [V51.6] 복선 저장: {stats['total']}개 (회수율: {stats['payoff_rate']}%)",
+                    component="foreshadow",
+                    event_kind="result",
+                    meta={"total": stats["total"], "payoff_rate": stats["payoff_rate"]},
+                )
             except Exception as fs_err:
-                print(f"⚠️ [V51.6] 복선 저장 실패: {fs_err}", flush=True)
+                _shutdown_log(
+                    f"⚠️ [V51.6] 복선 저장 실패: {fs_err}",
+                    component="foreshadow",
+                    level="warning",
+                    event_kind="warning",
+                )
 
         # [TF7-P2-06] EmotionArcTracker 종료 저장
         if V50_MODULES_AVAILABLE and getattr(self, "emotion_tracker", None) and self.current_project:
             try:
                 if hasattr(self.current_project, "db"):
                     self.emotion_tracker.save_to_db(self.current_project.db)
-                    print(f"💓 [V60.26] 감정선 기록 저장: {len(self.emotion_tracker.history)}건", flush=True)
+                    _shutdown_log(
+                        f"💓 [V60.26] 감정선 기록 저장: {len(self.emotion_tracker.history)}건",
+                        component="emotion_tracker",
+                        event_kind="result",
+                        meta={"history_count": len(self.emotion_tracker.history)},
+                    )
             except Exception as _et_err:
-                print(f"⚠️ [V60.26] 감정선 저장 실패: {_et_err}", flush=True)
+                _shutdown_log(
+                    f"⚠️ [V60.26] 감정선 저장 실패: {_et_err}",
+                    component="emotion_tracker",
+                    level="warning",
+                    event_kind="warning",
+                )
 
         # 1. 현재 메모리의 성경 데이터 최종 저장
         if hasattr(self.current_project, "master_bible"):
             try:
                 self.current_project.save_v20_anchor("bible", self.current_project.master_bible)
             except Exception as bible_err:
-                print(f"⚠️ [Shutdown] Bible 저장 실패: {bible_err}", flush=True)
+                _shutdown_log(
+                    f"⚠️ [Shutdown] Bible 저장 실패: {bible_err}",
+                    component="bible",
+                    level="warning",
+                    event_kind="warning",
+                )
 
         # [V40] 장르 정보 저장
         if self.selected_genre and hasattr(self.current_project, "db"):
             try:
                 self.current_project.db.save_anchor("genre_info", self.selected_genre)
             except Exception as genre_err:
-                print(f"⚠️ [Shutdown] genre_info 저장 실패: {genre_err}", flush=True)
+                _shutdown_log(
+                    f"⚠️ [Shutdown] genre_info 저장 실패: {genre_err}",
+                    component="genre_info",
+                    level="warning",
+                    event_kind="warning",
+                )
 
         # [3-E] 아이템 접미사 안전망 자동 확장 (LLM 심사 → YAML append)
         if getattr(self, "semantic_item_registry", None) and self.selected_genre:
@@ -2600,13 +2793,24 @@ class SovereignApp:
                     self.semantic_item_registry, genre=_genre_type, llm_ask=_llm_ask
                 )
                 if _result["approved"]:
-                    print(
+                    _shutdown_log(
                         f"🔧 [ItemGap] 접미사 자동 추가: {_result['approved']} "
                         f"(심사 {_result['reviewed']}건, 거절 {len(_result['rejected'])}건)",
-                        flush=True,
+                        component="item_gap",
+                        event_kind="result",
+                        meta={
+                            "approved": _result["approved"],
+                            "reviewed": _result["reviewed"],
+                            "rejected_count": len(_result["rejected"]),
+                        },
                     )
                 elif _result["reviewed"] > 0:
-                    print(f"🔧 [ItemGap] 심사 {_result['reviewed']}건 — 추가 없음", flush=True)
+                    _shutdown_log(
+                        f"🔧 [ItemGap] 심사 {_result['reviewed']}건 — 추가 없음",
+                        component="item_gap",
+                        event_kind="result",
+                        meta={"approved": 0, "reviewed": _result["reviewed"]},
+                    )
             except Exception as _gap_err:
                 logging.debug("[ItemGap] 접미사 자동 확장 실패: %s", _gap_err)
 
@@ -2616,7 +2820,12 @@ class SovereignApp:
                 self.memory.close()
                 self.ui.log("[System] VecMemory 연결 해제 완료")
             except Exception as mem_err:
-                print(f"VecMemory close 오류: {mem_err}", flush=True)
+                _shutdown_log(
+                    f"VecMemory close 오류: {mem_err}",
+                    component="vec_memory",
+                    level="warning",
+                    event_kind="warning",
+                )
 
         # 2. DB 연결 종료 (이 시점에 close를 수행)
         # [V44] try-finally로 안전한 연결 종료 보장
@@ -2627,15 +2836,25 @@ class SovereignApp:
                     db_conn.commit()
                     self.ui.log("[System] DB 커밋 완료")
                 except Exception as e:
-                    print(f"종료 중 DB 커밋 오류: {e}", flush=True)
+                    _shutdown_log(
+                        f"종료 중 DB 커밋 오류: {e}",
+                        component="database",
+                        level="warning",
+                        event_kind="warning",
+                    )
                 finally:
                     try:
                         db_conn.close()
                         self.ui.log("[System] DB 연결 안전하게 해제됨")
                     except Exception as close_err:
-                        print(f"DB close 오류: {close_err}", flush=True)
+                        _shutdown_log(
+                            f"DB close 오류: {close_err}",
+                            component="database",
+                            level="warning",
+                            event_kind="warning",
+                        )
 
-        print("✅ [System] 종료 완료", flush=True)
+        _shutdown_log("✅ [System] 종료 완료", event_kind="result")
 
     def _phase_0_recovery(self):
         """[V60.95] Phase 0: 프로젝트 설정 서브메뉴"""
@@ -3694,7 +3913,13 @@ class SovereignApp:
             "stage4_alignment": _classify_alignment(ms_max, targets["stage4_target"]),
         }
 
-    def _one_stop_pipeline_frontier_lag(self) -> None:
+    def _one_stop_pipeline_frontier_lag(
+        self,
+        *,
+        max_arc_advances: int | None = None,
+        batch_size_override: int | None = None,
+        wait_for_menu_return: bool = True,
+    ) -> dict[str, Any]:
         """[FrontierLag] Stage 2 frontier는 유지하되 Stage 3/4는 한 박자 늦춰 미래 정보를 확보."""
         self._show_resume_status()
 
@@ -3718,6 +3943,16 @@ class SovereignApp:
         self.ui.log(f"\n{'═' * 60}")
         self.ui.log("🧭 [FrontierLag] One-Stop Frontier Lag")
         self.ui.log(f"   설계 frontier: {designed_arcs} / {total_arcs} (추가 설계 가능: {remaining_design}개)")
+        requested_arc_limit = None
+        if max_arc_advances is not None:
+            try:
+                requested_arc_limit = max(1, int(max_arc_advances))
+            except (TypeError, ValueError):
+                requested_arc_limit = None
+        requested_limit_hit = False
+        stop_reason = "completed"
+        if requested_arc_limit is not None:
+            self.ui.log(f"   🎯 [FrontierLag] 하네스 정지 경계: {requested_arc_limit}개 Arc 전진 후 정지")
         if designed_arcs > 0:
             current_plan = self._resolve_one_stop_frontier_lag_plan(total_arcs=total_arcs, designed_arcs=all_arcs)
             if current_plan:
@@ -3734,11 +3969,27 @@ class SovereignApp:
         total_manuscripts = 0
         arcs_advanced = 0
 
+        def _mark_requested_limit_hit() -> None:
+            nonlocal requested_limit_hit, stop_reason
+            requested_limit_hit = True
+            stop_reason = "requested_arc_limit_reached"
+            self.ui.log(
+                f"   🛑 [FrontierLag] 요청된 Arc 경계 도달"
+                f" ({arcs_advanced}/{requested_arc_limit}) — 자동 정지"
+            )
+
         if remaining_design <= 0:
             final_plan = self._resolve_one_stop_frontier_lag_plan(total_arcs=total_arcs, designed_arcs=all_arcs)
             if not final_plan:
                 self.ui.log("❌ 설계된 Arc가 없어 Frontier Lag final close를 수행할 수 없습니다.")
-                return
+                return {
+                    "arcs_advanced": arcs_advanced,
+                    "total_manuscripts": total_manuscripts,
+                    "requested_arc_limit": requested_arc_limit,
+                    "requested_limit_hit": requested_limit_hit,
+                    "stop_reason": "final_close_plan_missing",
+                    "final_plan": None,
+                }
 
             arc_ep_start = final_plan["frontier_ep_start"]
             arc_ep_end = final_plan["frontier_ep_end"]
@@ -3759,7 +4010,14 @@ class SovereignApp:
                 self._stage3_orch.stage_3_batch_blueprinting(target_ep=final_plan["stage3_target"])
             except Exception as s3_err:
                 self.ui.log(f"   ❌ [Stage 3] Final close 오류: {str(s3_err)[:100]}")
-                return
+                return {
+                    "arcs_advanced": arcs_advanced,
+                    "total_manuscripts": total_manuscripts,
+                    "requested_arc_limit": requested_arc_limit,
+                    "requested_limit_hit": requested_limit_hit,
+                    "stop_reason": "stage3_final_close_error",
+                    "final_plan": final_plan,
+                }
 
             ms_max_before = self._get_max_episode_from_manuscripts()
             try:
@@ -3768,17 +4026,31 @@ class SovereignApp:
                 total_manuscripts += max(0, ms_max_after - ms_max_before)
             except Exception as s4_err:
                 self.ui.log(f"   ❌ [Stage 4] Final close 오류: {str(s4_err)[:100]}")
-                return
+                return {
+                    "arcs_advanced": arcs_advanced,
+                    "total_manuscripts": total_manuscripts,
+                    "requested_arc_limit": requested_arc_limit,
+                    "requested_limit_hit": requested_limit_hit,
+                    "stop_reason": "stage4_final_close_error",
+                    "final_plan": final_plan,
+                }
         else:
             default_count = min(remaining_design, 3)
-            batch_size = self._get_int_input(
-                f"👉 몇 개 Arc를 추가 설계할까요? (1~{remaining_design}, 기본: {default_count}): ",
-                default=default_count,
-                min_val=1,
-                max_val=remaining_design,
-            )
-            if batch_size is None:
-                batch_size = default_count
+            if batch_size_override is not None:
+                try:
+                    batch_size = max(1, min(int(batch_size_override), remaining_design))
+                except (TypeError, ValueError):
+                    batch_size = default_count
+                self.ui.log(f"   🤖 [FrontierLag] 하네스 batch_size override 적용: {batch_size}")
+            else:
+                batch_size = self._get_int_input(
+                    f"👉 몇 개 Arc를 추가 설계할까요? (1~{remaining_design}, 기본: {default_count}): ",
+                    default=default_count,
+                    min_val=1,
+                    max_val=remaining_design,
+                )
+                if batch_size is None:
+                    batch_size = default_count
             target_count = batch_size
 
             while True:
@@ -3885,9 +4157,13 @@ class SovereignApp:
                                 skip_choice = "2"
                             if skip_choice != "1":
                                 self.ui.log("   🛑 사용자 요청으로 파이프라인을 중단합니다.")
+                                stop_reason = "stage3_user_abort"
                                 break
                             self.ui.log("   ⏭️ Stage 3 건너뛰고 다음 Arc로...")
                             arcs_advanced += 1
+                            if requested_arc_limit is not None and arcs_advanced >= requested_arc_limit:
+                                _mark_requested_limit_hit()
+                                break
                             continue
                         elif s3_success == 0 and s3_fail == 0:
                             self.ui.log(
@@ -3903,8 +4179,12 @@ class SovereignApp:
                             skip_choice = "2"
                         if skip_choice != "1":
                             self.ui.log("   🛑 사용자 요청으로 파이프라인을 중단합니다.")
+                            stop_reason = "stage3_exception_user_abort"
                             break
                         arcs_advanced += 1
+                        if requested_arc_limit is not None and arcs_advanced >= requested_arc_limit:
+                            _mark_requested_limit_hit()
+                            break
                         continue
 
                     self.ui.log(
@@ -3921,12 +4201,18 @@ class SovereignApp:
                         self.ui.log(f"   ✅ [Stage 4] 원고 완료 ({arc_manuscripts}화 생산)")
                     except KeyboardInterrupt:
                         self.ui.log("\n   ⚠️ 사용자 중단 요청.")
+                        stop_reason = "keyboard_interrupt"
                         break
                     except Exception as s4_err:
                         self.ui.log(f"   ❌ [Stage 4] 원고 집필 오류: {str(s4_err)[:100]}")
                         self.ui.log("   (기존 에러 핸들링에 따라 최선 결과 수용)")
 
                     arcs_advanced += 1
+                    if requested_arc_limit is not None and arcs_advanced >= requested_arc_limit:
+                        _mark_requested_limit_hit()
+                        break
+                if requested_limit_hit:
+                    break
                 else:
                     self.ui.log(f"\n   ✅ 요청한 {target_count}개 Arc frontier 전진 완료!")
 
@@ -3957,10 +4243,20 @@ class SovereignApp:
             )
         self.ui.log(f"{'═' * 60}\n")
 
-        try:
-            input("[Enter] 메뉴로 돌아가기")
-        except (EOFError, KeyboardInterrupt):
-            pass
+        if wait_for_menu_return:
+            try:
+                input("[Enter] 메뉴로 돌아가기")
+            except (EOFError, KeyboardInterrupt):
+                pass
+
+        return {
+            "arcs_advanced": arcs_advanced,
+            "total_manuscripts": total_manuscripts,
+            "requested_arc_limit": requested_arc_limit,
+            "requested_limit_hit": requested_limit_hit,
+            "stop_reason": stop_reason,
+            "final_plan": final_plan,
+        }
 
     def _one_stop_pipeline(self) -> None:
         """[OneStop] Arc 1개씩 Stage 2→3→4를 순차 실행하여 상류 오염을 조기 감지."""

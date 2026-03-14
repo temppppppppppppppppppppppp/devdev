@@ -13,6 +13,7 @@ import logging
 import re
 from pathlib import Path
 
+from modules.core.constants import smart_truncate
 from modules.core.jsonl_io import append_jsonl_record
 from modules.core.llm_generate import generate_content_via_router
 from modules.core.project_support import load_style_guide_anchor, resolve_project_bible_pov
@@ -24,6 +25,24 @@ from modules.core.stage4_types import _RoundContext
 from modules.validation.threshold_helper import _threshold
 
 _perf_logger = logging.getLogger(__name__)  # [V65] PerfTimer 로깅
+
+
+def _clamp_reference_excerpt(reference_excerpt: str, *, max_chars: int | None = None) -> str:
+    """Clamp Stage 0 reference excerpts before Stage 4 prompt injection."""
+
+    text = str(reference_excerpt or "").strip()
+    if not text:
+        return ""
+
+    limit = int(max_chars or _threshold("context.reference_excerpt_chars", 8000))
+    if limit <= 0:
+        return ""
+    if len(text) <= limit:
+        return text
+
+    trimmed = smart_truncate(text, max_chars=limit, head_chars=max(1200, int(limit * 0.72)))
+    logging.info("[Stage4] reference_excerpt budget clamp applied: %d -> %d chars", len(text), len(trimmed))
+    return trimmed
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -936,7 +955,15 @@ JSON으로 출력:
             _max_rounds = max(1, _max_rounds)
 
             for interview_round in range(_max_rounds):
-                print(f"   🔄 [Round {interview_round + 1}/{_max_rounds}] 원고 생성 시도...")
+                self.ctx.ui.log(
+                    f"   🔄 [Round {interview_round + 1}/{_max_rounds}] 원고 생성 시도...",
+                    stage="stage4",
+                    component="round_execution",
+                    ep_num=next_ep,
+                    arc_num=round_ctx.arc_data.get("arc_no", 0),
+                    round_num=interview_round,
+                    event_kind="progress",
+                )
                 _round_result = self.interview_round.run(
                     round_num=interview_round,
                     stage4_spinner=stage4_spinner,
@@ -945,7 +972,16 @@ JSON으로 출력:
                     round_ctx=round_ctx,
                 )
                 if _round_result.verdict in ("PASS", "PASS_WITH_FIX"):  # [TF-32]
-                    print(f"   ✅ [Round {interview_round + 1}] {_round_result.verdict}")
+                    self.ctx.ui.log(
+                        f"   ✅ [Round {interview_round + 1}] {_round_result.verdict}",
+                        stage="stage4",
+                        component="round_execution",
+                        ep_num=next_ep,
+                        arc_num=round_ctx.arc_data.get("arc_no", 0),
+                        round_num=interview_round,
+                        event_kind="result",
+                        meta={"verdict": _round_result.verdict},
+                    )
                     final_manuscript = _round_result.final_manuscript
                     final_title = _round_result.final_title
                     final_state_updates = _round_result.final_state_updates
@@ -1042,7 +1078,17 @@ JSON으로 출력:
                     break
                 director_feedback = _round_result.director_feedback
                 previous_attempt = _round_result.previous_attempt
-                print(f"   ❌ [Round {interview_round + 1}/{_max_rounds}] REJECT → 다음 라운드")
+                self.ctx.ui.log(
+                    f"   ❌ [Round {interview_round + 1}/{_max_rounds}] REJECT → 다음 라운드",
+                    stage="stage4",
+                    component="round_execution",
+                    ep_num=next_ep,
+                    arc_num=round_ctx.arc_data.get("arc_no", 0),
+                    round_num=interview_round,
+                    event_kind="result",
+                    level="warning",
+                    meta={"verdict": "REJECT"},
+                )
 
                 _current_score = (previous_attempt or {}).get("score", 0)
                 try:
@@ -1517,6 +1563,8 @@ JSON으로 출력:
             except Exception as e:
                 self.ctx.ui.log(f"⚠️ 스타일 가이드 로드 실패: {e}")
                 saved_style = None
+
+        reference_excerpt = _clamp_reference_excerpt(reference_excerpt)
 
         # [V70] 스타일 가이드 없어도 Bible에 POV 설정이 있으면 최소 가이드 생성
         if not style_guide and STAGE0_AVAILABLE:

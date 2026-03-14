@@ -4,6 +4,119 @@ info:
   version: v1
 servers:
   - url: http://127.0.0.1:8300
+x-renderer-network-surfaces:
+  approved_direct:
+    splash_status_poll:
+      owner: splashWindow
+      purpose: Poll backend readiness before the splash screen hands off to the main window.
+      allowed_reason: Splash bootstrap needs a direct health check before the renderer switches to bridge-managed runtime control.
+      transport: fetch
+      origin: http://127.0.0.1:8300
+      path: /status
+      source_files:
+        - geuldobi-desktop/src/splash/splash.html
+        - geuldobi-desktop/src/splash/splash.js
+        - geuldobi-desktop/src/main.js
+      regression_tests:
+        - tests/test_desktop_direct_surface_contract.py::test_approved_direct_surface_inventory_matches_source_code
+        - tests/test_desktop_direct_surface_contract.py::test_renderer_csp_connect_src_matches_documented_direct_allowlist
+    runtime_events_stream:
+      owner: mainWindow
+      purpose: Receive live backend lifecycle events inside the office renderer.
+      allowed_reason: The renderer consumes the event stream directly while backend HTTP control remains bridge-managed.
+      transport: websocket
+      origin: ws://127.0.0.1:8300
+      path: /events
+      source_files:
+        - geuldobi-desktop/src/index.html
+        - geuldobi-desktop/src/main.js
+      regression_tests:
+        - tests/test_desktop_direct_surface_contract.py::test_approved_direct_surface_inventory_matches_source_code
+        - tests/test_desktop_direct_surface_contract.py::test_renderer_csp_connect_src_matches_documented_direct_allowlist
+    gemini_api_key_validation:
+      owner: mainWindow
+      purpose: Validate operator-provided Google API keys before save.
+      allowed_reason: This settings flow must verify the upstream provider directly against the operator-entered credential.
+      transport: fetch
+      origin: https://generativelanguage.googleapis.com
+      path: /v1beta/models
+      source_files:
+        - geuldobi-desktop/src/index.html
+      regression_tests:
+        - tests/test_desktop_direct_surface_contract.py::test_approved_direct_surface_inventory_matches_source_code
+        - tests/test_desktop_direct_surface_contract.py::test_renderer_csp_connect_src_matches_documented_direct_allowlist
+  bridge_managed:
+    owner: preload_main_bridge
+    purpose: Keep renderer HTTP mutations and backend reads behind the Electron preload and main-process bridge.
+    allowed_reason: Backend HTTP control plane stays on IPC so renderer direct network ownership remains explicitly limited to the approved direct surfaces above.
+    preload_methods:
+      - getQualityDashboard
+      - getQualitySummary
+      - getSafeOpsPreview
+      - getStatus
+      - resolvePrompt
+      - runKey
+      - saveQualityReview
+      - stopRun
+    backend_routes:
+      - /quality/dashboard
+      - /quality/review
+      - /quality/summary
+      - /run
+      - /run/{run_id}/input
+      - /safe-ops/preview
+      - /status
+      - /stop
+    source_files:
+      - geuldobi-desktop/src/preload.js
+      - geuldobi-desktop/src/main.js
+    regression_tests:
+      - tests/test_desktop_direct_surface_contract.py::test_bridge_managed_backend_routes_match_main_process_bridge
+  csp_connect_src:
+    main_window:
+      source_file: geuldobi-desktop/src/index.html
+      origins:
+        - https://generativelanguage.googleapis.com
+        - ws://127.0.0.1:8300
+    splash_window:
+      source_file: geuldobi-desktop/src/splash/splash.html
+      origins:
+        - http://127.0.0.1:8300
+x-desktop-bridge-transport:
+  owner: electron_main_bridge
+  scope: preload ipc handlers that proxy backend HTTP and expose websocket URL metadata to the renderer.
+  renderer_boundary:
+    backend_error_namespace: ErrorEnvelope.code from backend HTTP responses
+    desktop_transport_namespace:
+      envelope_version: desktop_bridge_v1
+      network_error_code: NETWORK_ERROR
+      http_error_code_format: HTTP_<status_code>
+      returned_shape:
+        ok: false
+        code: NETWORK_ERROR | HTTP_<status_code>
+        message: transport-layer summary for the renderer
+        data_fields:
+          - envelope_version
+          - namespace
+          - transport_status
+          - url_path
+          - backend_code
+          - backend_message
+      operator_meaning:
+        - desktop transport codes come from Electron main, not from backend ErrorEnvelope.code.
+        - backend_code and backend_message are optional diagnostics echoed inside data when bridgeFetch received a backend JSON error body.
+  websocket_runtime:
+    url: ws://127.0.0.1:8300/events
+    source_files:
+      - geuldobi-desktop/src/main.js
+      - geuldobi-desktop/src/index.html
+      - modules/api/bridge_server.py
+      - modules/api/prompt_broker.py
+      - docs/implementation/event-schema-v1.json
+    regression_tests:
+      - tests/test_desktop_transport_contract.py::test_desktop_bridge_transport_contract_matches_main_process_source
+      - tests/test_desktop_transport_contract.py::test_runtime_websocket_event_types_match_schema_and_emitters
+      - tests/test_desktop_transport_contract.py::test_runtime_websocket_payload_contract_matches_renderer_and_backend_usage
 paths:
   /run:
     post:
@@ -108,9 +221,10 @@ paths:
       parameters:
         - name: project
           in: query
-          required: false
+          required: true
           schema:
             type: string
+            minLength: 1
         - name: lookback
           in: query
           required: false
@@ -143,9 +257,10 @@ paths:
       parameters:
         - name: project
           in: query
-          required: false
+          required: true
           schema:
             type: string
+            minLength: 1
         - name: lookback
           in: query
           required: false
@@ -178,9 +293,10 @@ paths:
       parameters:
         - name: project
           in: query
-          required: false
+          required: true
           schema:
             type: string
+            minLength: 1
       responses:
         '200':
           description: Safe ops preview response
@@ -200,6 +316,26 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
+
+  /events:
+    x-websocket:
+      summary: Stream run lifecycle events over WebSocket
+      protocol: ws
+      direction: server_push
+      event_schema: ./event-schema-v1.json
+      runtime_event_types:
+        - run_started
+        - stdout
+        - prompt_request
+        - prompt_resolved
+        - prompt_timeout
+        - run_completed
+        - run_failed
+        - run_stopped
+      client_messages:
+        description: Optional text keepalive frames are ignored by the server.
+        schema:
+          type: string
 
   /quality/review:
     post:
@@ -248,10 +384,13 @@ components:
       properties:
         key:
           type: string
-          enum: ['0', '1', '2', '3', '4', '5', '6', '7', '44', '77', '88', '99']
+          description: Public /run menu key. UI-only exit action key 5 is excluded.
+          enum: ['0', '1', '2', '3', '4', '6', '7', '44', '77', '88', '99']
         sub_key:
           type: string
           nullable: true
+          enum: ['1', '2', '3', '4', '5', '6', '7']
+          description: When key='0', public Stage 0 sub_key values are '1'..'7'. Internal cancel path '0' is not part of the public /run contract.
         inputs:
           type: object
           additionalProperties: true

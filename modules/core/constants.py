@@ -5,23 +5,12 @@
 
 import logging
 
+from modules.core.models_config import load_model_name
+
 
 def _load_model_from_yaml(section: str, key: str, fallback: str) -> str:
     """[SSOT] config/models.yaml에서 모델명 로드. 파일 없으면 fallback 반환."""
-    try:
-        from pathlib import Path
-
-        import yaml
-
-        yaml_path = Path(__file__).parent.parent.parent / "config" / "models.yaml"
-        if yaml_path.exists():
-            data = yaml.safe_load(yaml_path.read_text(encoding="utf-8"))
-            value = (data or {}).get(section, {}).get(key)
-            if value and isinstance(value, str):
-                return value
-    except Exception:
-        pass
-    return fallback
+    return load_model_name(section=section, key=key, fallback=fallback)
 
 
 # [INF-P2-7] Lazy threshold: _threshold()를 모듈 임포트 시점이 아닌

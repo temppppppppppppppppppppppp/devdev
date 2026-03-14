@@ -640,3 +640,381 @@ def test_sink_alignment_uses_selection_candidate_key_from_episode_production_whe
         assert result["status"] == "ok"
     finally:
         db.close()
+
+
+def test_failure_analyzer_sink_alignment_summary_includes_session_decisions_when_requested(tmp_path):
+    db = DBManager(tmp_path / "test_sink_alignment_session.db")
+    try:
+        attempt_key = "s4:ep51:arc5:a1:sess_join"
+        artifact_path = "logs/artifacts/stage4/ep_0051/attempt_01/final_manuscript__A_balanced.txt"
+        artifact_file = tmp_path / artifact_path
+        artifact_file.parent.mkdir(parents=True, exist_ok=True)
+        artifact_file.write_text("artifact", encoding="utf-8")
+
+        db.save_stage_attempt(
+            stage=4,
+            verdict="PASS",
+            attempt_num=1,
+            ep_num=51,
+            arc_num=5,
+            score=97,
+            session_id="sess_join",
+            attempt_key=attempt_key,
+            candidate_key="A|balanced",
+            content_hash="hash-join",
+            artifact_path=artifact_path,
+        )
+
+        logs_dir = tmp_path / "logs"
+        (logs_dir / "session").mkdir(parents=True, exist_ok=True)
+        (logs_dir / "session" / "decisions.jsonl").write_text(
+            json.dumps(
+                {
+                    "stage": "stage4",
+                    "ep_num": 51,
+                    "round_num": 0,
+                    "decision_type": "manuscript",
+                    "result": "PASS",
+                    "score": 97,
+                    "meta": {
+                        "attempt_key": attempt_key,
+                        "candidate_key": "A|balanced",
+                        "content_hash": "hash-join",
+                        "artifact_path": artifact_path,
+                    },
+                },
+                ensure_ascii=False,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        (logs_dir / "pass_rate_monitor.json").write_text(
+            json.dumps(
+                {
+                    "records": [
+                        {
+                            "stage": 4,
+                            "episode": 51,
+                            "arc": 5,
+                            "attempt_num": 1,
+                            "success": True,
+                            "attempt_key": attempt_key,
+                            "final_verdict": "PASS",
+                            "candidate_key": "A|balanced",
+                            "content_hash": "hash-join",
+                            "artifact_path": artifact_path,
+                        }
+                    ]
+                },
+                ensure_ascii=False,
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+
+        analyzer = FailureAnalyzer(db, project_path=tmp_path)
+        without_session = analyzer.sink_alignment_summary(stage=4, include_session_decisions=False)
+        with_session = analyzer.sink_alignment_summary(stage=4, include_session_decisions=True)
+
+        assert without_session["coverage"]["session_decisions"] == 0
+        assert with_session["coverage"]["session_decisions"] == 1
+        assert with_session["status"] == "ok"
+        assert with_session["final_sink_missing"] == {}
+    finally:
+        db.close()
+
+
+def test_failure_analyzer_sink_alignment_summary_can_filter_to_latest_session(tmp_path):
+    db = DBManager(tmp_path / "test_sink_alignment_session_filter.db")
+    try:
+        old_key = "s4:ep61:arc6:a1:old_sess"
+        new_key = "s4:ep62:arc6:a1:new_sess"
+        old_artifact = "logs/artifacts/stage4/ep_0061/attempt_01/final_manuscript__A.txt"
+        new_artifact = "logs/artifacts/stage4/ep_0062/attempt_01/final_manuscript__A.txt"
+
+        for artifact in (old_artifact, new_artifact):
+            artifact_file = tmp_path / artifact
+            artifact_file.parent.mkdir(parents=True, exist_ok=True)
+            artifact_file.write_text("artifact", encoding="utf-8")
+
+        db.save_stage_attempt(
+            stage=4,
+            verdict="PASS",
+            attempt_num=1,
+            ep_num=61,
+            arc_num=6,
+            score=95,
+            session_id="old_sess",
+            attempt_key=old_key,
+            candidate_key="A|balanced",
+            content_hash="hash-old",
+            artifact_path=old_artifact,
+        )
+        db.save_stage_attempt(
+            stage=4,
+            verdict="PASS",
+            attempt_num=1,
+            ep_num=62,
+            arc_num=6,
+            score=97,
+            session_id="new_sess",
+            attempt_key=new_key,
+            candidate_key="A|balanced",
+            content_hash="hash-new",
+            artifact_path=new_artifact,
+        )
+        db.save_director_selection(
+            ep_num=61,
+            round_num=1,
+            selected_label="candidate_a",
+            selected_strategy="balanced",
+            verdict="PASS",
+            score=95,
+            stage=4,
+            attempt_key=old_key,
+            candidate_key="A|balanced",
+            content_hash="hash-old",
+            artifact_path=old_artifact,
+        )
+        db.save_director_selection(
+            ep_num=62,
+            round_num=1,
+            selected_label="candidate_a",
+            selected_strategy="balanced",
+            verdict="PASS",
+            score=97,
+            stage=4,
+            attempt_key=new_key,
+            candidate_key="A|balanced",
+            content_hash="hash-new",
+            artifact_path=new_artifact,
+        )
+
+        logs_dir = tmp_path / "logs"
+        logs_dir.mkdir(parents=True, exist_ok=True)
+        (logs_dir / "episode_production.jsonl").write_text(
+            "\n".join(
+                [
+                    json.dumps(
+                        {
+                            "ep": 61,
+                            "attempt_key": old_key,
+                            "verdict": "PASS",
+                            "initial_verdict": "PASS",
+                            "final_verdict": "PASS",
+                            "final_score": 95,
+                            "candidate_key": "A|balanced",
+                            "content_hash": "hash-old",
+                            "artifact_path": old_artifact,
+                            "patch_trace": {"patch_strategy": "", "structural_attempted": False},
+                        },
+                        ensure_ascii=False,
+                    ),
+                    json.dumps(
+                        {
+                            "ep": 62,
+                            "attempt_key": new_key,
+                            "verdict": "PASS",
+                            "initial_verdict": "PASS",
+                            "final_verdict": "PASS",
+                            "final_score": 97,
+                            "candidate_key": "A|balanced",
+                            "content_hash": "hash-new",
+                            "artifact_path": new_artifact,
+                            "patch_trace": {"patch_strategy": "", "structural_attempted": False},
+                        },
+                        ensure_ascii=False,
+                    ),
+                ]
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        (logs_dir / "pass_rate_monitor.json").write_text(
+            json.dumps(
+                {
+                    "records": [
+                        {
+                            "stage": 4,
+                            "episode": 62,
+                            "arc": 6,
+                            "attempt_num": 1,
+                            "success": True,
+                            "attempt_key": new_key,
+                            "final_verdict": "PASS",
+                            "candidate_key": "A|balanced",
+                            "content_hash": "hash-new",
+                            "artifact_path": new_artifact,
+                        }
+                    ]
+                },
+                ensure_ascii=False,
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+
+        analyzer = FailureAnalyzer(db, project_path=tmp_path)
+        unfiltered = analyzer.sink_alignment_summary(stage=4)
+        filtered = analyzer.sink_alignment_summary(stage=4, session_id="new_sess")
+
+        assert unfiltered["status"] == "warn"
+        assert unfiltered["final_sink_missing"]["pass_rate_monitor"]["count"] == 1
+        assert filtered["status"] == "ok"
+        assert filtered["session_filter"] == "new_sess"
+        assert filtered["attempts_considered"] == 1
+        assert filtered["coverage"]["stage_attempts"] == 1
+        assert filtered["coverage"]["pass_rate_monitor"] == 1
+        assert filtered["coverage"]["director_selections"] == 1
+        assert filtered["coverage"]["episode_production"] == 1
+    finally:
+        db.close()
+
+
+def test_load_session_decision_entries_preserves_stage4_rationale_and_provenance_fields(tmp_path):
+    db = DBManager(tmp_path / "test_session_decisions_stage4.db")
+    try:
+        session_dir = tmp_path / "logs" / "session"
+        session_dir.mkdir(parents=True, exist_ok=True)
+        (session_dir / "decisions.jsonl").write_text(
+            json.dumps(
+                {
+                    "stage": "stage4",
+                    "ep_num": 9,
+                    "round_num": 0,
+                    "decision_type": "manuscript",
+                    "result": "PASS",
+                    "score": 97,
+                    "meta": {
+                        "attempt_key": "s4:ep9:arc1:a1:sess_meta",
+                        "candidate_key": "A|balanced",
+                        "content_hash": "hash-stage4",
+                        "artifact_path": "logs/artifacts/stage4/ep_0009/attempt_01/final_manuscript__A_balanced.txt",
+                        "selection_reason": "best candidate",
+                        "verdict_reason": "final pass rationale",
+                        "reason": "final pass rationale",
+                        "runtime_advisory": "[advisory] keep continuity",
+                        "retry_directives": "preserve the ending cadence",
+                    },
+                },
+                ensure_ascii=False,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+
+        analyzer = FailureAnalyzer(db, project_path=tmp_path)
+        rows = analyzer._load_session_decision_entries(stage=4)
+
+        assert len(rows) == 1
+        assert rows[0]["attempt_key"] == "s4:ep9:arc1:a1:sess_meta"
+        assert rows[0]["selection_reason"] == "best candidate"
+        assert rows[0]["verdict_reason"] == "final pass rationale"
+        assert rows[0]["runtime_advisory"] == "[advisory] keep continuity"
+        assert rows[0]["retry_directives"] == "preserve the ending cadence"
+    finally:
+        db.close()
+
+
+def test_failure_analyzer_sink_alignment_summary_aligns_stage3_session_rationale_with_director_selection(tmp_path):
+    db = DBManager(tmp_path / "test_sink_alignment_stage3_rationale.db")
+    try:
+        attempt_key = "s3:ep12:arc1:a1:sess_stage3"
+        artifact_path = "logs/artifacts/stage3/ep_0012/attempt_01/final_blueprint__dialogue_focused.json"
+        artifact_file = tmp_path / artifact_path
+        artifact_file.parent.mkdir(parents=True, exist_ok=True)
+        artifact_file.write_text("{}", encoding="utf-8")
+
+        db.save_stage_attempt(
+            stage=3,
+            verdict="PASS",
+            attempt_num=1,
+            ep_num=12,
+            arc_num=1,
+            score=93,
+            session_id="sess_stage3",
+            attempt_key=attempt_key,
+            candidate_key="dialogue_focused",
+            content_hash="hash-stage3",
+            artifact_path=artifact_path,
+        )
+        db.save_director_selection(
+            ep_num=12,
+            round_num=1,
+            selected_label="B",
+            selected_strategy="dialogue_focused",
+            verdict="PASS",
+            score=93,
+            selection_reason="후보 B가 감정선과 연속성 연결이 가장 안정적",
+            fix_scope="inplace",
+            stage=3,
+            verdict_reason="구조 리스크 없이 바로 사용 가능",
+            attempt_key=attempt_key,
+            candidate_key="dialogue_focused",
+            content_hash="hash-stage3",
+            artifact_path=artifact_path,
+        )
+
+        logs_dir = tmp_path / "logs"
+        (logs_dir / "session").mkdir(parents=True, exist_ok=True)
+        (logs_dir / "session" / "decisions.jsonl").write_text(
+            json.dumps(
+                {
+                    "stage": "stage3",
+                    "ep_num": 12,
+                    "round_num": 0,
+                    "decision_type": "blueprint",
+                    "result": "PASS",
+                    "score": 93,
+                    "meta": {
+                        "attempt_key": attempt_key,
+                        "candidate_key": "dialogue_focused",
+                        "content_hash": "hash-stage3",
+                        "artifact_path": artifact_path,
+                        "reason": "구조 리스크 없이 바로 사용 가능",
+                        "selection_reason": "후보 B가 감정선과 연속성 연결이 가장 안정적",
+                        "verdict_reason": "구조 리스크 없이 바로 사용 가능",
+                        "fix_scope": "inplace",
+                    },
+                },
+                ensure_ascii=False,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        (logs_dir / "pass_rate_monitor.json").write_text(
+            json.dumps(
+                {
+                    "records": [
+                        {
+                            "stage": 3,
+                            "episode": 12,
+                            "arc": 1,
+                            "attempt_num": 1,
+                            "success": True,
+                            "attempt_key": attempt_key,
+                            "final_verdict": "PASS",
+                            "candidate_key": "dialogue_focused",
+                            "content_hash": "hash-stage3",
+                            "artifact_path": artifact_path,
+                        }
+                    ]
+                },
+                ensure_ascii=False,
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+
+        analyzer = FailureAnalyzer(db, project_path=tmp_path)
+        result = analyzer.sink_alignment_summary(stage=3, include_session_decisions=True)
+
+        assert result["coverage"]["director_selections"] == 1
+        assert result["coverage"]["session_decisions"] == 1
+        assert result["selection_reason_mismatches"] == []
+        assert result["verdict_reason_mismatches"] == []
+        assert result["fix_scope_mismatches"] == []
+        assert result["rationale_metadata_missing"] == []
+        assert result["status"] == "ok"
+    finally:
+        db.close()

@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "temp-queue-state-contract-v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "generated_at",
+    "queue_mode",
+    "active_item_count",
+    "roadmap",
+    "items"
+  ],
+  "properties": {
+    "version": {
+      "const": "temp-queue-state-v1"
+    },
+    "generated_at": {
+      "type": "string"
+    },
+    "queue_mode": {
+      "type": "string",
+      "enum": [
+        "empty",
+        "single",
+        "aggregate"
+      ]
+    },
+    "active_item_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "roadmap": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "temp_path",
+        "canonical_path",
+        "status"
+      ],
+      "properties": {
+        "temp_path": {
+          "type": "string"
+        },
+        "canonical_path": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "draft",
+            "active",
+            "closed"
+          ]
+        }
+      }
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "topic",
+          "temp_path",
+          "canonical_path",
+          "status",
+          "depends_on",
+          "mirror_present",
+          "canonical_present"
+        ],
+        "properties": {
+          "topic": {
+            "type": "string"
+          },
+          "temp_path": {
+            "type": "string"
+          },
+          "canonical_path": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "in_progress",
+              "completed",
+              "blocked"
+            ]
+          },
+          "depends_on": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "mirror_present": {
+            "type": "boolean"
+          },
+          "canonical_present": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

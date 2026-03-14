@@ -1,0 +1,43 @@
+{
+  "unit": "BGR-E5",
+  "status": "frozen",
+  "composition_root": "main_a.py",
+  "stage3_context": {
+    "authority_factory": "Stage3Context.from_app(self)",
+    "refresh_points": [
+      "main_a.SovereignApp.stage_3_batch_blueprinting",
+      "modules.core.stage3_orchestrator.Stage3Orchestrator.ctx"
+    ],
+    "lazy_init_sync_fields": [
+      "state_tracker",
+      "world_state",
+      "fact_ledger"
+    ]
+  },
+  "models_config": {
+    "source_of_truth": "config/models.yaml",
+    "policy": "repo_root_only",
+    "consumers": [
+      "main_a.SovereignApp._load_models_yaml",
+      "modules.core.constants.AIModels",
+      "modules.domain.agents.base_agent._load_model_config",
+      "modules.core.llm_router._load_provider_configs"
+    ]
+  },
+  "provider_helpers": {
+    "normalized_response_contract": "modules.core.llm_provider.LLMResponse",
+    "normalized_helpers": [
+      "modules.core.llm_generate.generate_content_via_router",
+      "modules.domain.agents.base_agent.BaseAgent._generate_llm_response"
+    ],
+    "legacy_raw_compatibility": [
+      "modules.core.llm_generate.generate_raw_content_via_router",
+      "modules.domain.agents.base_agent.BaseAgent._generate_content"
+    ]
+  },
+  "stage4_reference_excerpt": {
+    "guard_helper": "modules.core.stage4_orchestrator._clamp_reference_excerpt",
+    "threshold_key": "context.reference_excerpt_chars",
+    "applied_in": "Stage4Orchestrator._prepare_stage4_session"
+  }
+}

@@ -3,6 +3,8 @@ import os, sys, json, sqlite3
 from pathlib import Path
 from dotenv import load_dotenv
 
+# [manual-only] Host-bound helper. Not part of the live app/runtime path.
+
 load_dotenv()
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 

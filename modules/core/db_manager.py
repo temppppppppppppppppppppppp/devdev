@@ -612,6 +612,37 @@ class DBManager:
                 logging.debug("[DBManager] stage_attempts %s 마이그레이션 스킵: %s", _col, _e)
         self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_stage_attempts_attempt_key ON stage_attempts(attempt_key)")
 
+        self.cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS ui_events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                session_id TEXT,
+                ts TEXT NOT NULL,
+                seq INTEGER,
+                stage INTEGER,
+                ep_num INTEGER,
+                arc_num INTEGER,
+                round_num INTEGER,
+                attempt_key TEXT,
+                component TEXT NOT NULL,
+                event_kind TEXT NOT NULL,
+                level TEXT NOT NULL,
+                render_format TEXT NOT NULL DEFAULT 'text',
+                message TEXT NOT NULL,
+                visible INTEGER NOT NULL DEFAULT 1,
+                selection_value TEXT,
+                prompt_id TEXT,
+                artifact_path TEXT,
+                meta_json TEXT
+            )
+            """
+        )
+        self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_ui_events_session ON ui_events(session_id)")
+        self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_ui_events_stage_ep ON ui_events(stage, ep_num)")
+        self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_ui_events_attempt_key ON ui_events(attempt_key)")
+        self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_ui_events_component ON ui_events(component)")
+        self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_ui_events_ts ON ui_events(ts)")
+
         # 16. [Phase 6] 비용 추적 로그
         self.cursor.execute("""
             CREATE TABLE IF NOT EXISTS cost_log (
@@ -3119,12 +3150,14 @@ class DBManager:
         fix_scope_reasoning: str | None = None,
         runtime_advisory: str | None = None,
         retry_directives: str | None = None,
-    ) -> None:
+    ) -> bool:
         """[Log-2] Save one stage attempt record in non-blocking mode."""
+        nested = False
         try:
             ts = datetime.now().isoformat(timespec="seconds")
             _advisory_json = json.dumps(advisory_flags, ensure_ascii=False) if advisory_flags else None
             with self._lock:
+                nested = self.conn.in_transaction
                 self.cursor.execute(
                     """INSERT INTO stage_attempts
                        (session_id, ts, stage, ep_num, arc_num, attempt_num,
@@ -3162,9 +3195,87 @@ class DBManager:
                         (retry_directives or "")[:500],
                     ),
                 )
-                self.conn.commit()
+                if not nested:
+                    self.conn.commit()
+            return True
         except Exception as _e:
+            with self._lock:
+                if not nested and self.conn is not None and self.conn.in_transaction:
+                    try:
+                        self.conn.rollback()
+                    except Exception:
+                        pass
             logging.debug("[stage_attempts] save_stage_attempt failed (non-blocking): %s", _e)
+            return False
+
+    def save_ui_event(
+        self,
+        *,
+        session_id: str | None = None,
+        ts: str | None = None,
+        seq: int | None = None,
+        stage: int | None = None,
+        ep_num: int | None = None,
+        arc_num: int | None = None,
+        round_num: int | None = None,
+        attempt_key: str | None = None,
+        component: str = "UI",
+        event_kind: str = "log",
+        level: str = "info",
+        render_format: str = "text",
+        message: str = "",
+        visible: bool = True,
+        selection_value: str | None = None,
+        prompt_id: str | None = None,
+        artifact_path: str | None = None,
+        meta: dict | None = None,
+    ) -> bool:
+        """Persist one operator-visible UI event in non-blocking mode."""
+        nested = False
+        try:
+            event_ts = str(ts or datetime.now().isoformat(timespec="seconds"))
+            meta_json = json.dumps(meta, ensure_ascii=False, default=str) if meta is not None else None
+            with self._lock:
+                nested = self.conn.in_transaction
+                self.cursor.execute(
+                    """INSERT INTO ui_events
+                       (session_id, ts, seq, stage, ep_num, arc_num, round_num, attempt_key,
+                        component, event_kind, level, render_format, message, visible,
+                        selection_value, prompt_id, artifact_path, meta_json)
+                       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                    (
+                        str(session_id or ""),
+                        event_ts,
+                        int(seq) if seq is not None else None,
+                        int(stage) if stage is not None else None,
+                        int(ep_num) if ep_num is not None else None,
+                        int(arc_num) if arc_num is not None else None,
+                        int(round_num) if round_num is not None else None,
+                        str(attempt_key or ""),
+                        str(component or "UI"),
+                        str(event_kind or "log"),
+                        str(level or "info"),
+                        str(render_format or "text"),
+                        str(message or "")[:4000],
+                        1 if visible else 0,
+                        str(selection_value or "")[:500] if selection_value is not None else None,
+                        str(prompt_id or "")[:200] if prompt_id is not None else None,
+                        str(artifact_path or "")[:1000] if artifact_path is not None else None,
+                        meta_json,
+                    ),
+                )
+                if not nested:
+                    self.conn.commit()
+            return True
+        except Exception as _e:
+            with self._lock:
+                if not nested and self.conn is not None and self.conn.in_transaction:
+                    try:
+                        self.conn.rollback()
+                    except Exception:
+                        pass
+            logging.debug("[ui_events] save_ui_event failed (non-blocking): %s", _e)
+            return False
 
     def get_fix_scope_stats(self, lookback: int = 200) -> list[dict]:
         """[A-3] fix_scope × verdict 교차 집계."""

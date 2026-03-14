@@ -17,15 +17,18 @@ import logging
 from dataclasses import dataclass
 from typing import Optional
 
+from modules.api.control_plane_contract import (
+    ALLOWED_STAGE0_SUB_KEYS,
+    PUBLIC_RUN_KEYS,
+    RISK_KEYS,
+)
+
 logger = logging.getLogger(__name__)
 
 # ─── 허용 상수 ──────────────────────────────────────────────────────────────
 
-ALLOWED_KEYS: frozenset[str] = frozenset(
-    {"0", "1", "2", "3", "4", "5", "6", "7", "44", "77", "88", "99"}
-)
-ALLOWED_SUB_KEYS: frozenset[str] = frozenset({"0", "1", "2", "3", "4", "5", "6", "7"})
-RISK_KEYS: frozenset[str] = frozenset({"44", "77", "88", "99"})
+ALLOWED_KEYS: frozenset[str] = PUBLIC_RUN_KEYS
+ALLOWED_SUB_KEYS: frozenset[str] = ALLOWED_STAGE0_SUB_KEYS
 ACTIVE_RUN_STATES: frozenset[str] = frozenset({"starting", "running", "stopping"})
 
 

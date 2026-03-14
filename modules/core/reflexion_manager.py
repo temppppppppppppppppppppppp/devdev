@@ -84,19 +84,24 @@ class ReflexionManager:
                 break
 
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        nested_tx = bool(getattr(self.context.db, "in_transaction", False))
 
         if existing:
             # 빈도 증가
             new_frequency = existing["frequency"] + 1
 
-            self.context.db.execute_update(
-                """UPDATE reflexion_memory
-                   SET frequency = ?, last_seen = ?, last_ep = ?
-                   WHERE pattern_type = ?""",
-                (new_frequency, timestamp, ep_num, pattern_key),
-            )
-            # Commit to persist frequency update
-            self.context.db.conn.commit()
+            with self.context.db.transaction():
+                self.context.db.execute_update(
+                    """UPDATE reflexion_memory
+                       SET frequency = ?, last_seen = ?, last_ep = ?
+                       WHERE pattern_type = ?""",
+                    (new_frequency, timestamp, ep_num, pattern_key),
+                )
+            if nested_tx:
+                self.memory = []
+                self.loaded = False
+                logging.info(f" [Reflexion] nested transaction active; cache refresh deferred for '{pattern_key}'")
+                return
 
             existing["frequency"] = new_frequency
             existing["last_seen"] = timestamp
@@ -105,14 +110,18 @@ class ReflexionManager:
 
         else:
             # 새 패턴 추가
-            self.context.db.execute_update(
-                """INSERT INTO reflexion_memory
-                   (pattern_type, description, frequency, solution, first_seen, last_seen, first_ep, last_ep)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
-                (pattern_key, description, 1, solution, timestamp, timestamp, ep_num, ep_num),
-            )
-            # Commit to persist new pattern
-            self.context.db.conn.commit()
+            with self.context.db.transaction():
+                self.context.db.execute_update(
+                    """INSERT INTO reflexion_memory
+                       (pattern_type, description, frequency, solution, first_seen, last_seen, first_ep, last_ep)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                    (pattern_key, description, 1, solution, timestamp, timestamp, ep_num, ep_num),
+                )
+            if nested_tx:
+                self.memory = []
+                self.loaded = False
+                logging.info(f" [Reflexion] nested transaction active; cache refresh deferred for '{pattern_key}'")
+                return
 
             new_pattern = {
                 "pattern_type": pattern_key,

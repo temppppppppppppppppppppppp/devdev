@@ -1,0 +1,373 @@
+AGENTS.md:6: CLAUDE_REF: - `CLAUDE.md`는 호환용 shim이며 독립 운영 기준으로 쓰지 않는다
+AGENTS.md:32: TEMP_REF: - `execution SSOT`의 `docs/temp/` 카피본도 3pass 감리 완료 후에만 생성/갱신
+AGENTS.md:47: CLAUDE_REF: - workspace precedence is `AGENTS.md` -> init harness -> specialized harness -> contracts/templates -> local notes -> `CLAUDE.md` shim
+AGENTS.md:48: TEMP_REF: - canonical dated docs beat `docs/temp/` mirrors, and live workspace evidence beats stale survey text
+AGENTS.md:64: TEMP_REF: - optional `docs/temp/queue-state.json` should follow `docs/implementation/temp-queue-state-contract-v1.json`
+AGENTS.md:88: TEMP_REF: - 같은 `execution SSOT` 카피본을 `docs/temp/`에도 함께 저장
+AGENTS.md:89: TEMP_REF: - `docs/temp/` 카피본은 취합/후처리/검토 후 비워도 되지만, 정본 없는 temp 단독 저장은 금지
+AGENTS.md:93: TEMP_REF: - `docs/temp/` 정리는 정본 존재와 temp 동기화가 확인된 뒤에만 수행
+AGENTS.md:94: TEMP_REF: - `docs/temp/`의 실행문서 카피본은 active execution queue로 간주
+CLAUDE.md:1: CLAUDE_REF: # CLAUDE.md Compatibility Shim
+CLAUDE.md:14: CLAUDE_REF: - if `CLAUDE.md` and `AGENTS.md` differ, `AGENTS.md` wins
+CLAUDE.md:15: CLAUDE_REF: - if a companion harness differs from old `CLAUDE.md` guidance, the harness wins
+CLAUDE.md:18: CLAUDE_REF: - older docs in this repository may still reference `CLAUDE.md`
+docs/2026-02-26/opus_tf_full_audit.md:60: CLAUDE_REF: - **재감리**: **INTENTIONAL (비이슈)** — V70.1 주석: "대원칙 준수: Python은 수집만, 판단은 Director(LLM)가". CLAUDE.md 대원칙 1+3 정합. Python이 경고를 warnings/focus_points에 추가하여 Director에 전달.
+docs/2026-02-27/continuity_director_improvement_plan.md:203: CLAUDE_REF: - CLAUDE.md 대원칙 2 완벽 이행 (팩트 수정 권한은 LLM만)
+docs/2026-02-27/continuity_director_improvement_plan.md:288: CLAUDE_REF: A안이 CLAUDE.md 원칙(팩트 수정은 LLM만)에 더 부합. B안은 Python이 자동으로 Bible을 수정하므로 원칙 위반.
+docs/2026-02-27/continuity_director_improvement_plan_final.md:146: CLAUDE_REF: | BlockingValidator advisory | CLAUDE.md 대원칙 1번("Python은 수집만, 판단은 LLM이") 명시적 이행. L499 주석 `[V70.1]`. |
+docs/2026-02-27/continuity_director_improvement_plan_verified.md:157: CLAUDE_REF: CLAUDE.md 대원칙 1번의 명시적 이행. **개선 대상 아님 — 대원칙 위반 없음.**
+docs/2026-03-03/LM-Tier-implementation-spec.md:244: CLAUDE_REF: 최종: pytest 전체 + ruff + CLAUDE.md 업데이트 + 커밋
+docs/2026-03-04/custom-framework-vs-langchain-langgraph.md:206: CLAUDE_REF: **완화**: CLAUDE.md + 참고자료.md + 상세한 코드 주석으로 인수인계 문서화 유지.
+docs/2026-03-04/custom-framework-vs-langchain-langgraph.md:267: CLAUDE_REF: 4. **유일한 실질적 약점은 생태계 부재다.** 이는 문서화(CLAUDE.md, 참고자료.md)와 테스트 커버리지로 완화 가능하다.
+docs/2026-03-04/custom-framework-vs-langchain-langgraph.md:389: CLAUDE_REF: - `CLAUDE.md` — 대원칙 및 현황
+docs/2026-03-04/외부_참고_스킬_레퍼런스.md:1524: CLAUDE_REF: > ⚠️ **CLAUDE.md 대원칙 교차 확인 완료** (2026-03-04 재감리)
+docs/2026-03-04/외부_참고_스킬_레퍼런스.md:1545: CLAUDE_REF: - **대원칙 근거**: CLAUDE.md 대원칙 3 "디렉터 주권주의 (내각제)" — Director가 최종 품질 결정권
+docs/2026-03-04/외부_참고_스킬_레퍼런스.md:1791: CLAUDE_REF: | **Constitutional AI**                    | 원칙("헌법") 기반 자기 비판 → 자기 수정, 인간 피드백 불필요          | `chief_writer_quality.py` self-critique | 현재 5가지 체크 → **CLAUDE.md 대원칙을 "헌법"으로** 주입하면 CAI 패턴 완성 |
+docs/2026-03-04/외부_참고_스킬_레퍼런스.md:1804: CLAUDE_REF: │  ③ Constitutional AI 방식 → CLAUDE.md 대원칙 기반 자기 수정             │
+docs/2026-03-04/외부_참고_스킬_레퍼런스.md:2126: CLAUDE_REF: ## 44. CLAUDE.md 대원칙 교차 감리 (3회)
+docs/2026-03-04/외부_참고_스킬_레퍼런스.md:2128: CLAUDE_REF: > §33~43 전체를 CLAUDE.md 4대 원칙 기준으로 감리.
+docs/2026-03-04/외부_참고_스킬_레퍼런스.md:2154: CLAUDE_REF: | 프롬프트 수   | §29 YAML "21개"                          | §38 YAML "21개"                   | 🟢 일관 — 실제 `config/prompts/*.yaml` **43개** (CLAUDE.md L75). ⚠️ **§29·§38 모두 "21개"로 오기 → "43개"로 교정 필요** |
+docs/2026-03-04/외부_참고_스킬_레퍼런스.md:2159: CLAUDE_REF: 2. §29·§38: YAML "21개" → "43개" (CLAUDE.md L75 기준)
+docs/2026-03-04/외부_참고_스킬_레퍼런스.md:2168: CLAUDE_REF: | **미활용 모듈 0비용**     | §36-2 | import 0건 → 연결만                          | 🟢 **정확** — 코드 존재 확인 (CLAUDE.md §264 참조)                                  |
+docs/2026-03-04/외부_참고_스킬_레퍼런스.md:2182: CLAUDE_REF: │           CLAUDE.md 대원칙 교차 감리 최종         │
+docs/2026-03-04/외부_참고_스킬_레퍼런스.md:3526: CLAUDE_REF: | **§44-2** | YAML "21개" → "43개" (CLAUDE.md L75 기준) | CLAUDE.md 기재 수치가 실 파일 수와 불일치 — 실제 22개 | §44-2의 교정 자체도 재교정 필요: **22개**가 정확 |
+docs/2026-03-04/외부_참고_스킬_레퍼런스.md:3846: CLAUDE_REF: *문서 갱신 이력: 초판 2026-03-04 / 1~5차 감리 / 프레임워크 비교 (§19~22) / 외부 ROI (§23~25) / 원고·코딩·상업코드 (§26~28) / 정규화·표준화·강화 (§29) / 추가 ROI (§30) / 라이브러리 27종 (§31) / Stage3 에러 (§32) / **고도화 1~3차** (§33~38) / **5회 다관점 리서치** (§39~43) / **CLAUDE.md 감리** (§44) / **10회 시스템 최적화 리서치** (§45 인프라 최적화 + §46 검색·관측성·테스트) / **미연시 VN UI/UX** (§47) / **10회 탐사+3회 감리** (R1~R10+A1~A3) / **UI/UX 5단계 고도화+3단계 감리** (H1~H5+GA1~GA3) / **Antigravity 코드 실사 3회+감리 3회** (§48) / **코드 실사 기반 실행 우선순위 — 감리 6회 정정판** (§49)*
+docs/2026-03-05/codex-p0-prompt.md:12: CLAUDE_REF: ## 대원칙 (CLAUDE.md 발췌 — 절대 위반 금지)
+docs/2026-03-05/codex-p0-prompt.md:123: CLAUDE_REF: - **CLAUDE.md**: 프로젝트 대원칙 + 현재 상태
+docs/2026-03-05/codex-p1-prompt.md:12: CLAUDE_REF: ## 대원칙 (CLAUDE.md 발췌 — 절대 위반 금지)
+docs/2026-03-05/codex-p1-prompt.md:312: CLAUDE_REF: - **CLAUDE.md**: 대원칙 + 현재 상태
+docs/2026-03-05/codex-pwf-s2-fix.md:34: CLAUDE_REF: ## 대원칙 (CLAUDE.md 발췌 — 절대 위반 금지)
+docs/2026-03-05/codex-s3-score-logging-fix.md:42: CLAUDE_REF: ## 대원칙 (CLAUDE.md 발췌 — 절대 위반 금지)
+docs/2026-03-05/codex-ui-webgal-light-proposal.md:1247: BROKEN_IMPL_REF: docs/implementation/ui-flow-v1.md
+docs/2026-03-05/codex-ui-webgal-light-proposal.md:1248: BROKEN_IMPL_REF: docs/implementation/risk-operations-v1.md
+docs/2026-03-05/codex-ui-webgal-light-proposal.md:1249: BROKEN_IMPL_REF: docs/implementation/e2e-matrix-v1.md
+docs/2026-03-05/TF-LLM-ease-accuracy-improvement-spec.md:1049: CLAUDE_REF: **CLAUDE.md 업데이트**: 전체 오더 완료 후 1회. "완료된 것" 리스트에 추가, 테스트 기준선 갱신.
+docs/2026-03-05/TF-LLM-ease-accuracy-improvement-spec.md:1061: CLAUDE_REF: | 실파이프라인 정합 | ✅ CORRECT | 6단계 후처리 체인·advisory 체인 8개·DI 슬롯 24개 CLAUDE.md 기준 일치 |
+docs/2026-03-06/00_전수조사_3차_마스터_오더.md:33: CLAUDE_REF: 2단계. 감리 1회 — CLAUDE.md 명시 의도적 설계 오탐 제거
+docs/2026-03-06/00_전수조사_4차_마스터_오더.md:19: CLAUDE_REF: | `modules/domain/agents/director_continuity.py` | 동일 — Context Caching 사용 중(CLAUDE.md 명시)이나 미배정 | **높음** |
+docs/2026-03-06/00_전수조사_4차_마스터_오더.md:35: CLAUDE_REF: 2단계. 감리 1회 — CLAUDE.md 명시 의도적 설계 오탐 제거
+docs/2026-03-06/00_전수조사_4차_마스터_오더.md:82: CLAUDE_REF: 일부(config_manager, response_schemas)는 CLAUDE.md 패치 이력이 있어 실질적 위험이 존재.
+docs/2026-03-06/00_전수조사_5차_마스터_오더.md:27: CLAUDE_REF: 2단계. 감리 1회 — CLAUDE.md 명시 의도적 설계 오탐 제거
+docs/2026-03-06/00_전수조사_5차_마스터_오더.md:105: CLAUDE_REF: - 3단계 truth_gate 8번째 메서드: CLAUDE.md "P2 후순위" — 미구현 확인 ✅/❌
+docs/2026-03-06/00_전수조사_5차_마스터_오더.md:176: CLAUDE_REF: - LLM 0회 확인 (CLAUDE.md "LLM 0회" 명시)
+docs/2026-03-06/00_전수조사_5차_마스터_오더.md:183: CLAUDE_REF: - CLAUDE.md: "_generate_prev_context() → 다음 Arc arc_start_state.location 강제 주입 코드는 미구현(P1 잔여)"
+docs/2026-03-06/00_전수조사_5차_마스터_오더.md:223: CLAUDE_REF: - CLAUDE.md "arc_pos==1 시 CW mandatory_context에 위치 변경 묘사 의무화 지시 prepend"
+docs/2026-03-06/00_전수조사_5차_마스터_오더.md:287: CLAUDE_REF: **배경**: 2차 전수조사에서 P2로 유보된 3건 + CLAUDE.md 미구현 P1 잔여 1건.
+docs/2026-03-06/00_전수조사_5차_마스터_오더.md:302: CLAUDE_REF: - CLAUDE.md "advisory 성격" 명시 확인
+docs/2026-03-06/00_전수조사_5차_마스터_오더.md:316: CLAUDE_REF: - CLAUDE.md: "four_phase_arc_generator._generate_prev_context() → 다음 Arc
+docs/2026-03-06/00_전수조사_마스터_오더.md:21: CLAUDE_REF: → CLAUDE.md 명시 의도적 설계 제거
+docs/2026-03-06/00_전수조사_마스터_오더.md:477: CLAUDE_REF: - 1회: CLAUDE.md 명시 의도적 설계 제거
+docs/2026-03-06/2번터미널.md:83: CLAUDE_REF: - CLAUDE.md 기재 PASS_WITH_FIX routing 분기 조건:
+docs/2026-03-06/2차_10번터미널.md:24: CLAUDE_REF: 001 | modules/core/constants.py:222~251 | P2 | GAP | CLAUDE.md "AIModels 16개 attr" → 실제 19개 attr (SSOT 기능 정상, 문서 카운트만 오래된 값)
+docs/2026-03-06/2차_10번터미널.md:28: CLAUDE_REF: - **판정**: 오탐 후보 (기능 정상). CLAUDE.md 카운트 수정 권장 → P2
+docs/2026-03-06/2차_10번터미널.md:66: CLAUDE_REF: 005 | modules/domain/agents/base_agent.py:464,953,1116,1739 | P2 | GAP | API_DELAY 적용 4곳 vs CLAUDE.md "3곳 모두" 언급 (문서-코드 불일치)
+docs/2026-03-06/2차_10번터미널.md:70: CLAUDE_REF: - CLAUDE.md "3곳 모두" → ask() B-1-9c 분할 후 4개 private 메서드에 각 1곳씩 적용된 것으로 추정
+docs/2026-03-06/2차_10번터미널.md:79: CLAUDE_REF: - CLAUDE.md: "base_agent.py:47 fallback_chain 키·metrics_collector.py 가격표는 변경 불필요"
+docs/2026-03-06/2차_10번터미널.md:161: CLAUDE_REF: 014 | modules/models/npc.py:20~33 | P2 | GAP | NPCEntry에 deceased 필드 없음 — CLAUDE.md 대원칙 4 "deceased=True" vs 실제 status="dead" 표현 불일치
+docs/2026-03-06/2차_10번터미널.md:181: CLAUDE_REF: ## 감리 1회 — CLAUDE.md 명시 의도적 설계 교차 확인
+docs/2026-03-06/2차_10번터미널.md:185: CLAUDE_REF: | CFG-2 gemini-3.x 하드코딩 | CLAUDE.md "P2 유보(호출자 명시 주입)" 확인. DEFAULT_MODEL_FALLBACK_CHAIN은 미래 모델 예비 등록 패턴으로 보임. P2 유지. |
+docs/2026-03-06/2차_10번터미널.md:216: CLAUDE_REF: | TF-10-01 | P2 | modules/core/constants.py:219 | CLAUDE.md AIModels 카운트 "16개" → "19개" 수정 (문서 동기화) |
+docs/2026-03-06/2차_10번터미널.md:218: CLAUDE_REF: | TF-10-03 | P2 | modules/domain/agents/base_agent.py:153 | CLAUDE.md "API_DELAY 3곳" → "4곳" 수정 (문서 동기화) |
+docs/2026-03-06/2차_11-16번통합보고서.md:129: CLAUDE_REF: 대원칙 직접 위반은 아니나 CLAUDE.md "LLM 모델 설정 SSOT 완료" 정책 위반.
+docs/2026-03-06/2차_11-16번통합보고서.md:173: CLAUDE_REF: | S0-1 — PresetRegistry → StateTracker 연동 | CLAUDE.md "Stage 0 ↔ Stage 2 연동: StateTracker가 PresetRegistry 참조" 완료 명시 ✅ |
+docs/2026-03-06/2차_11-16번통합보고서.md:205: CLAUDE_REF: | CF-tone_presets — tone_presets.json | CLAUDE.md 별도 검수 지시 없음. 참조 파일 확인 범위 외 ✅ |
+docs/2026-03-06/2차_11번터미널.md:61: CLAUDE_REF: 판정: P1 유지 (AIModels.* 미사용은 CLAUDE.md Model SSOT 정책 위반)
+docs/2026-03-06/2차_11번터미널.md:94: CLAUDE_REF: | S0-1 — PresetRegistry → StateTracker 연동 | CLAUDE.md §현재 상태 "Stage 0 ↔ Stage 2 연동: StateTracker가 PresetRegistry 참조" 완료 명시. main_a.py는 담당 파일 외 (0번 터미널) |
+docs/2026-03-06/2차_12번터미널.md:72: CLAUDE_REF: ### 감리 1회 — CLAUDE.md 명시 의도적 설계 제거
+docs/2026-03-06/2차_13번터미널.md:117: CLAUDE_REF: ### 감리 1회 — CLAUDE.md 의도적 설계 오탐 제거
+docs/2026-03-06/2차_14번터미널.md:92: CLAUDE_REF: ### 1회차 — CLAUDE.md 명시 의도적 설계 오탐 제거
+docs/2026-03-06/2차_15번터미널.md:100: CLAUDE_REF: - **OP-5 (`reference_anchor.py`)**: CLAUDE.md "6차 전수조사 P1 — config_manager/reference_anchor/confidence_calibration SSOT" 완료 기록과 코드 `AIModels.FLASH_ANALYSIS_MODEL` 일치 확인.
+docs/2026-03-06/2차_17번터미널.md:40: CLAUDE_REF: → NC-3B CLAUDE.md 설계대로 ✅
+docs/2026-03-06/2차_17번터미널.md:63: CLAUDE_REF: CLAUDE.md "NC-3B — director.yaml 4곳에 [NC-3B] few-shot golden example 삽입" 완료 이력
+docs/2026-03-06/2차_17번터미널.md:144: CLAUDE_REF: ## 2단계: 감리 1회 — CLAUDE.md 의도적 설계 오탐 제거
+docs/2026-03-06/2차_17번터미널.md:147: CLAUDE_REF: 명시되지 않음. CLAUDE.md "TF-57-A"는 언급 없음 (코드 내 주석만 존재). 의도적 설계가 아님.
+docs/2026-03-06/2차_17번터미널.md:150: CLAUDE_REF: **TF-17-14 (entity consistency fail-open)**: CLAUDE.md entity_consistency는 advisory 체크.
+docs/2026-03-06/2차_17번터미널.md:155: CLAUDE_REF: **TF-17-12 (blueprint continuity REJECT)**: CLAUDE.md "Blueprint 연속성 검증 (Python + 캐싱)" 명시.
+docs/2026-03-06/2차_18번터미널.md:83: CLAUDE_REF: CLAUDE.md TF-45 설계 의도: "하위 호환 브릿지(internal_energy_loss alias) 존재 확인"
+docs/2026-03-06/2차_18번터미널.md:179: CLAUDE_REF: ## 2단계: 감리 1회 — CLAUDE.md 의도적 설계 오탐 제거
+docs/2026-03-06/2차_18번터미널.md:182: CLAUDE_REF: CLAUDE.md 주석에 "실패 시 None" + 즉시 fallback 설계가 명시. P2 (ROI 낮음) 적절.
+docs/2026-03-06/2차_18번터미널.md:185: CLAUDE_REF: **TF-18-10 (RS-2 internal_energy_loss 브릿지 누락)**: CLAUDE.md "하위호환 브릿지(internal_energy_loss alias)
+docs/2026-03-06/2차_18번터미널.md:189: CLAUDE_REF: **TF-18-20 (DB Protocol 프로덕션 미활용)**: CLAUDE.md B-3 "Protocol 전면 표준화 완료" 이력.
+docs/2026-03-06/2차_19번터미널.md:19: CLAUDE_REF: ## 2단계. 감리 1회 — CLAUDE.md 명시 의도적 설계 오탐 제거
+docs/2026-03-06/2차_1번터미널.md:41: CLAUDE_REF: ### 감리 1회 — 오탐 1차 제거 (CLAUDE.md 의도적 설계)
+docs/2026-03-06/2차_20번터미널.md:17: CLAUDE_REF: | TF-20-04 | P2 | CLAUDE.md / 코드 주석 | GAP | 의료 장르 예외(`[TF-4T-B]`) CLAUDE.md 미문서화 |
+docs/2026-03-06/2차_20번터미널.md:32: CLAUDE_REF: CLAUDE.md 명시 패턴 `Block N/Arc N/Stage N/Blueprint/treatment` 전량 커버. ✅
+docs/2026-03-06/2차_20번터미널.md:161: CLAUDE_REF: | 3단계: truth_gate 8번째 메서드 | CLAUDE.md "P2 후순위" | ❌ 미구현 (의도적 유보) |
+docs/2026-03-06/2차_20번터미널.md:166: CLAUDE_REF: CLAUDE.md 4th wall 항목에 "의료/미용 장르에서 Stage/treatment 제외" 설명 추가 권장.
+docs/2026-03-06/2차_20번터미널.md:211: CLAUDE_REF: ## 감리 1회 — CLAUDE.md 의도적 설계 오탐 제거
+docs/2026-03-06/2차_20번터미널.md:249: CLAUDE_REF: 4. **TF-20-04** — CLAUDE.md 4th wall 항목에 의료 장르 예외(`[TF-4T-B]`) 문서화 추가.
+docs/2026-03-06/2차_21번터미널.md:235: CLAUDE_REF: | TF-21-01 | N/A (설계 의도) | NO-OP | CLAUDE.md 명시 설계. 오탐 제거 |
+docs/2026-03-06/2차_22번터미널.md:142: CLAUDE_REF: | TF-22-01 | **P1** | CLAUDE.md 공식 미구현 P1 잔여. 안전망 3중 존재하나 완전한 보장 아님. 패치 방향 수립 완료. |
+docs/2026-03-06/2차_23번터미널.md:137: CLAUDE_REF: ## 2단계: 감리 1회 — CLAUDE.md 의도적 설계 오탐 제거
+docs/2026-03-06/2차_24번터미널.md:47: CLAUDE_REF: - CLAUDE.md "Arc 경계 공간 연속성 — director.yaml 2곳(VARIABLE_PROMPT L72, SELECTION_PROMPT L359)에 Arc 첫 화 MAJOR 감점 조항 추가" → AUDIT 프롬프트 언급 없음
+docs/2026-03-06/2차_25번터미널.md:110: CLAUDE_REF: **CLAUDE.md 명시**: `"four_phase_arc_generator._generate_prev_context() → 다음 Arc arc_start_state.location 강제 주입 코드는 미구현(P1 잔여)"`
+docs/2026-03-06/2차_25번터미널.md:170: CLAUDE_REF: ## 감리 1회 — CLAUDE.md 의도적 설계 오탐 제거
+docs/2026-03-06/2차_25번터미널.md:177: CLAUDE_REF: | P1-R location 미구현 | 오탐 아님 | CLAUDE.md 직접 "미구현(P1 잔여)" 명시 |
+docs/2026-03-06/2차_26번터미널.md:259: CLAUDE_REF: ## 감리 1회 — CLAUDE.md 의도적 설계 오탐 제거
+docs/2026-03-06/2차_26번터미널.md:262: CLAUDE_REF: - **TF-26-06 (fact_ledger 문자열 무시)**: CLAUDE.md TF-45 "key_stat_change 장르 중립화"는 스키마/프롬프트 레벨. fact_ledger의 `isinstance(energy, int | float)` 조건은 TF-45 이전 코드 유지로, 명시적 설계 아님 → **GAP 유지**
+docs/2026-03-06/2차_26번터미널.md:263: CLAUDE_REF: - **TF-26-01 (NC3_KEYS 10개)**: CLAUDE.md "9차 전수조사 NC-3 스키마 timeline_arc_consistency 키 동기화" — 스키마와 director_ensemble._nc3_keys는 동기화됐으나 테스트의 NC3_KEYS는 미갱신. 의도적 설계 아님 → **GAP 유지**
+docs/2026-03-06/2차_2번터미널.md:33: CLAUDE_REF: | ARC-5 | arc_ensemble.py:114 | - | OK | model_tier="gemini-2.5-pro" 기본값 — `[SSOT-P2]` 주석 명시, CLAUDE.md P2 유보 7개 목록 포함 |
+docs/2026-03-06/2차_2번터미널.md:39: CLAUDE_REF: | ARC-11 | stage3_context.py:16 | P2 | GAP | CLAUDE.md "19슬롯" 기재 vs 실제 __slots__ 21개 (adversarial_self_play + session_logger 추가됨) — 문서 불일치 |
+docs/2026-03-06/2차_2번터미널.md:54: CLAUDE_REF: | 공통-D | arc_ensemble.py:114 | - | OK | P2 유보 확인 (CLAUDE.md 명시) |
+docs/2026-03-06/2차_2번터미널.md:66: CLAUDE_REF: ### 감리 1회 — CLAUDE.md 명시 의도적 설계 제거
+docs/2026-03-06/2차_2번터미널.md:89: CLAUDE_REF: | 04 | stage3_context.py:12 | P2 | GAP | CLAUDE.md "19슬롯" 기재 vs 실제 21슬롯 — 문서 불일치 |
+docs/2026-03-06/2차_2번터미널.md:102: CLAUDE_REF: | TF-2-04 | P2 | stage3_context.py:12 | CLAUDE.md "19슬롯" → "21슬롯" 문서 교정 (adversarial_self_play + session_logger 포함) |
+docs/2026-03-06/2차_3번터미널.md:71: CLAUDE_REF: ### 감리 1회 — CLAUDE.md 명시 의도적 설계 제거
+docs/2026-03-06/2차_3번터미널.md:75: CLAUDE_REF: | 공통-D #11~13 (모델명 하드코딩) | **유지** | CLAUDE.md "P2 유보(호출자 명시 주입)" 7개 파일 목록에 blueprint_ensemble/validator/three_phase 포함 여부 불명확 — 확정 보류, 취합 시 0번 터미널 교차 확인 필요 |
+docs/2026-03-06/2차_3번터미널.md:140: CLAUDE_REF: - **공통-D #011~013** — CLAUDE.md P2 유보 7개 파일 목록에 blueprint 관련 파일 포함 여부 불명확. 0번 취합 시 판단 위임
+docs/2026-03-06/2차_4번터미널.md:61: CLAUDE_REF: ### 1회차 — CLAUDE.md 명시 의도적 설계 제거
+docs/2026-03-06/2차_4번터미널.md:64: CLAUDE_REF: - S4-3: `_MAX_FIX = 3`의 `range(3)`은 0,1,2 → 3회 실행. CLAUDE.md "최대3회" 명시와 일치. → 오탐 제거.
+docs/2026-03-06/2차_4번터미널.md:69: CLAUDE_REF: - S4-10 (patch_state_updates merge): `tests/integration/test_patch_wiring.py` 에서 save_episode_bible mock 확인. TF-46 merge 로직은 `test_pass_with_fix.py` 커버 (CLAUDE.md 명시 "테스트 3개").
+docs/2026-03-06/2차_4번터미널.md:71: CLAUDE_REF: - S4-1 (V75-D): `test_pass_with_fix.py` 3개 테스트 커버 (CLAUDE.md 명시).
+docs/2026-03-06/2차_4번터미널.md:75: CLAUDE_REF: - 공통-C: stage4_orchestrator._handle_round_outcome() 내 Python이 verdict를 변경하는 경로 없음. PASS_WITH_FIX bypass (QualityGate)는 대원칙 3 준수용 의도적 설계 (TF-46 CLAUDE.md 명시). → 대원칙 위반 없음.
+docs/2026-03-06/2차_5번터미널.md:64: CLAUDE_REF: ### 1차 감리 — CLAUDE.md 명시 의도적 설계 제거
+docs/2026-03-06/2차_5번터미널.md:68: CLAUDE_REF: - **공통-H**: CLAUDE.md: "TruthGate(LM-A) → … 전부 `_director_mc_parts`에 주입, Director 최종 판정" — 의도적 분리. **오탐 제거**.
+docs/2026-03-06/2차_5번터미널.md:73: CLAUDE_REF: - **CW-1~CW-6**: 9차 전수조사/TF-G/TF-I/TF-47 패치 항목들. CLAUDE.md 완료 기록과 코드 일치 확인.
+docs/2026-03-06/2차_5번터미널.md:74: CLAUDE_REF: - **writer.py:38 하드코딩**: CLAUDE.md "Model SSOT 완료" 항목에 writer.py 명시 없음. 9차 전수조사에서 "모델 SSOT 3건" 패치 대상이 `state_tracker_npc`/`manuscript_validator`. Writer 미포함 → 실제 GAP.
+docs/2026-03-06/2차_7번터미널.md:80: CLAUDE_REF: ### 1회 — CLAUDE.md 의도적 설계 확인
+docs/2026-03-06/2차_7번터미널.md:82: CLAUDE_REF: - **001 (ADV-1)**: CLAUDE.md "8차 전수조사(LM-E/F/D except Exception 보강)"에 LM-A(truth_gate)는 미포함. truth_gate.py L436 실제로 `JSONDecodeError, ValueError, RuntimeError`만. → **유효 BUG 유지**
+docs/2026-03-06/2차_7번터미널.md:84: CLAUDE_REF: - **005 (ADV-9)**: CLAUDE.md "1인칭 시점 전용" 명시됨. 호출부 의존은 설계 의도일 수 있으나 파일 내 보호 장치 없음. → **GAP P1 유지**
+docs/2026-03-06/2차_8번터미널.md:53: CLAUDE_REF: | 공통-D | metrics_collector.py:70 | OK | CLAUDE.md 명시: "metrics_collector.py 가격표는 변경 불필요" — 의도적 설계 제외 |
+docs/2026-03-06/2차_8번터미널.md:63: CLAUDE_REF: ### 감리 1회 — CLAUDE.md 명시 의도적 설계 제거
+docs/2026-03-06/2차_8번터미널.md:65: CLAUDE_REF: - **공통-D (metrics_collector MODEL_COSTS)**: CLAUDE.md 명시 → 오탐, 제거
+docs/2026-03-06/3번터미널.md:31: CLAUDE_REF: - NS-4 실제 구현 위치: `four_phase_arc_generator.py` (CLAUDE.md NS-4-S2/S4 패치 기준)
+docs/2026-03-06/3번터미널.md:152: CLAUDE_REF: `stage3_orchestrator` → `blueprint._stage3_meta.quality_risk` → `stage4_interview_round` Director advisory 주입. 전달 경로 완비. V75-D 조기 트리거(`quality_risk=True` 시 1연속)도 `stage4_orchestrator`에서 동적 설정 (CLAUDE.md S3-META 명시).
+docs/2026-03-06/3번터미널.md:181: CLAUDE_REF: | TF-34가 Stage 2에 적용되는가? | CLAUDE.md TF-34 내용: "compare 경로 fix_scope 전파(L133)" — Stage 4 Validator 패치 (L133은 stage4_interview_round.py 기준) | **Stage 2 해당 없음** |
+docs/2026-03-06/3번터미널.md:199: CLAUDE_REF: | four_phase_arc_generator.py에서 NS-4 wiring 확인 가능한가? | CLAUDE.md NS-4-S2/S4 커밋 b8c06d8에서 완료 확인 | **OK 유지** |
+docs/2026-03-06/6번터미널.md:109: CLAUDE_REF: **CLAUDE.md 기재**: "four_phase_arc_generator._generate_prev_context() → 다음 Arc arc_start_state.location 강제 주입 코드는 미구현(P1 잔여)"와 동일 맥락의 Arc 경계 연속성 미완성 항목 — P1 잔여 항목과 함께 검토 권장
+docs/2026-03-06/pipeline-run-audit-01_codex-order.md:315: CLAUDE_REF: - [x] CLAUDE.md 기존 기록과 충돌 없음
+docs/2026-03-06/감리2_메타감사_Opus.md:28: CLAUDE_REF: | MA-05 | INFO | 22번+25번 | 중복 식별 | TF-22-01과 TF-25-P1-R이 동일 이슈(arc_start_state.location 미구현) 중복 보고. CLAUDE.md P1 잔여로 명시된 알려진 이슈. 중복 자체는 독립 터미널 구조상 불가피. |
+docs/2026-03-06/감리2_메타감사_Opus.md:98: CLAUDE_REF: - **실제 코드**: CLAUDE.md "미구현(P1 잔여)" 명시. 코드 확인 결과 미구현 맞음.
+docs/2026-03-10/god-object-audit.md:224: CLAUDE_REF: ## 참고: 기존 분할 이력 (CLAUDE.md 기준)
+docs/2026-03-10/OPUS-7doc-side-effect-consistency-audit.md:145: CLAUDE_REF: | CLAUDE.md | 3,826 | **불일치 — 실제 3,832** |
+docs/2026-03-10/OPUS-7doc-side-effect-consistency-audit.md:147: CLAUDE_REF: > **CLAUDE.md 갱신 필요**: `3,826 collected` → `3,832 collected`
+docs/2026-03-10/OPUS-7doc-side-effect-consistency-audit.md:216: CLAUDE_REF: | CLAUDE.md | 테스트 카운트 3,826 | 실제 3,832 — 갱신 필요 |
+docs/2026-03-10/stage-map-5pass-audit-claude-ssot.md:1: CLAUDE_REF: # stage_map 5pass audit (CLAUDE.md SSOT)
+docs/2026-03-10/stage-map-5pass-audit-claude-ssot.md:4: CLAUDE_REF: > Scope: `docs/stage_map/*` vs `CLAUDE.md` + current codebase
+docs/2026-03-10/stage-map-5pass-audit-claude-ssot.md:17: CLAUDE_REF: 1. `CLAUDE.md`와 실제 코드 기준으로 Stage 3 QualityGate는 더 이상 `80`이 아니다. 현재는 `Stage 2/3/4 공통 90`이다.
+docs/2026-03-10/stage-map-5pass-audit-claude-ssot.md:23: CLAUDE_REF: ## Pass 1. SSOT 추출 (`CLAUDE.md`)
+docs/2026-03-10/stage-map-5pass-audit-claude-ssot.md:27: CLAUDE_REF: - Director 주권주의: `CLAUDE.md`
+docs/2026-03-10/stage-map-5pass-audit-claude-ssot.md:28: CLAUDE_REF: - PASS_WITH_FIX + `fix_scope` 3-tier 라우팅: `CLAUDE.md`
+docs/2026-03-10/stage-map-5pass-audit-claude-ssot.md:29: CLAUDE_REF: - QualityGate 규칙: `CLAUDE.md`에서 `PASS일 때만 score < 90이면 REJECT`, `PASS_WITH_FIX는 bypass`
+docs/2026-03-10/stage-map-5pass-audit-claude-ssot.md:30: CLAUDE_REF: - `PatchModeThresholds.PATCH`는 dead code 제거 완료: `CLAUDE.md`
+docs/2026-03-10/stage-map-5pass-audit-claude-ssot.md:31: CLAUDE_REF: - Stage 2/3/4는 unified `quality_gate_score=90`: `CLAUDE.md` + 현재 코드 일치
+docs/2026-03-10/stage-map-5pass-audit-claude-ssot.md:35: CLAUDE_REF: - `CLAUDE.md`의 `현재 상태 (2026-03-07)` 블록
+docs/2026-03-10/stage-map-5pass-audit-claude-ssot.md:36: CLAUDE_REF: - `CLAUDE.md`의 당시 테스트 기준선 `3,614 passed`
+docs/2026-03-10/stage-map-5pass-audit-claude-ssot.md:183: CLAUDE_REF: - `CLAUDE.md`의 `3,614 passed`
+docs/2026-03-10/stage-map-5pass-audit-claude-ssot.md:200: CLAUDE_REF: - 이번 감리는 `CLAUDE.md -> 코드 -> active stage_map -> historical docs -> 오탐 제거` 순서의 5pass로 수행했다.
+docs/2026-03-10/stage-quality-improvement-audit-3pass.md:217: CLAUDE_REF: 사용자가 지목한 완료 항목명은 저장 위치가 분산돼 있어 `CLAUDE.md` 자체보다 현재 코드와 테스트 흔적으로 교차 검증했다.
+docs/2026-03-10/TF-OPT-optimization-audit.md:23: CLAUDE_REF: | Context Caching 2개만 사용 | **오탐** | 실제 **5개 에이전트** 사용 중: ChiefWriter(L265), ArcEnsemble(L265), BprintEnsemble(L204), DirectorEnsemble(L772), DirectorContinuity(L653/L767). CLAUDE.md 부정확 → 수정 완료. |
+docs/2026-03-10/TF-OPT-optimization-audit.md:26: CLAUDE_REF: > **CLAUDE.md 수정 2건 반영 완료**:
+docs/2026-03-12/system-wide-full-audit-3pass-merged-final.md:284: CLAUDE_REF: - `CLAUDE.md`는 production direct `generate_content()` 잔류가 `gemini_provider.py`와 `response_schemas.py` 독스트링 예제의 2곳뿐이라고 적는다.
+docs/2026-03-12/system-wide-full-audit-3pass-merged-final.md:289: CLAUDE_REF: - 문서 주장: `CLAUDE.md:115`
+docs/2026-03-12/system-wide-full-audit-3pass-merged-final.md:290: CLAUDE_REF: - config 잔존: `config/models.yaml:47-48`, `CLAUDE.md:114`
+docs/2026-03-12/system-wide-full-audit-3pass-merged-final.md:445: CLAUDE_REF: | E-007 | routing/docs | 문서는 production direct call 잔류가 2곳뿐이라 적는다 | doc | `CLAUDE.md:115` | P1 | +1 | confirmed |
+docs/2026-03-12/system-wide-full-audit-3pass-merged-final.md:446: CLAUDE_REF: | E-008 | config SSOT | deprecated fallback_chain entry가 여전히 남아 있다 | config+doc | `config/models.yaml:47-48`, `CLAUDE.md:114` | P2/Obs | +1 | confirmed |
+docs/2026-03-12/system-wide-full-audit-3pass.md:103: CLAUDE_REF: - **영향**: 멀티 프로바이더 전환 시 이 경로만 Gemini 고정. CLAUDE.md "잔류 2곳만" 기록과 불일치 (실제 3곳)
+docs/2026-03-12/system-wide-full-audit-3pass.md:106: CLAUDE_REF: - **수정 방안**: `generate_content_via_router()` 경유로 교체 또는 CLAUDE.md 기록 갱신
+docs/2026-03-12/system-wide-full-audit-3pass.md:338: CLAUDE_REF: 5. **CLAUDE.md 갱신** — TF-IPR 완료 기록 + direct API 잔류 3곳→2곳 교정
+docs/2026-03-12/system-wide-full-remediation-execution-plan.md:115: CLAUDE_REF: - `CLAUDE.md`
+docs/2026-03-12/system-wide-full-remediation-execution-plan.md:126: CLAUDE_REF: - `config/models.yaml` deprecated fallback entry와 `CLAUDE.md` SSOT 설명의 drift를 닫는다.
+docs/2026-03-12/TF-S4-logging-reinforcement-audit.md:583: CLAUDE_REF: | 4차 | 설계의도 대조 (CLAUDE.md Advisory 심각도, preflight fail-open, base_agent 절단 복구) | 양호 항목 확인 |
+docs/2026-03-13/D-T2-detail-agents-models-audit.md:145: CLAUDE_REF: **오탐 검토**: CLAUDE.md "기본값: gemini=true, 나머지 false" — 현재 Gemini-only 운영이므로 즉각적 문제 없음.
+docs/2026-03-13/D-T2-detail-agents-models-audit.md:182: CLAUDE_REF: - `protagonist_items` vs `items_acquired`: StateConstraints 모델에서 양쪽 모두 정의 (`protagonist_items: list[str]`, `items_acquired: list | None = None`) — CLAUDE.md 14파일 21곳 폴백 패턴과 일치 ✅
+docs/2026-03-13/D-T2-detail-agents-models-audit.md:249: CLAUDE_REF: | FP-3 | Gemini API caches not deleted on eviction | **제거** | FP-1: TTL 자동 만료 설계 (CLAUDE.md "Context Caching TTL" 참조) |
+docs/2026-03-13/D-T2-detail-agents-models-audit.md:250: CLAUDE_REF: | FP-4 | Error swallowing in cache creation | **제거** | FP-1: 비차단 진행 의도적 설계 (CLAUDE.md "비차단 갱신" 원칙) |
+docs/2026-03-13/D-T3-detail-tests-audit.md:102: CLAUDE_REF: - `CLAUDE.md`의 테스트 기준선은 `3,847 collected`이지만 xfail 현황 ledger는 별도로 없다.
+docs/2026-03-13/OPUS-TF-5terminal-consolidated-findings-3pass-reaudit.md:17: CLAUDE_REF: - `T3-040`과 `T4-P2-CF01`은 같은 표면의 중복이 아니라 `CLAUDE.md`와 `director.yaml`에 걸친 별도 문서 드리프트다.
+docs/2026-03-13/OPUS-TF-5terminal-consolidated-findings-3pass-reaudit.md:169: CLAUDE_REF: - [T3-stage3-4-pipeline-audit-report.md](C:/Users/User/Desktop/글도비/docs/2026-03-13/T3-stage3-4-pipeline-audit-report.md)의 `T3-040`: `CLAUDE.md` Self-Critique 개수 드리프트
+docs/2026-03-13/OPUS-TF-5terminal-consolidated-findings.md:62: CLAUDE_REF: | T4-P2-CF01 "NC-3 17개→20개" | T3-040 (P3) | Self-Critique 개수 불일치 동일 근본 원인. T4가 director.yaml 4곳 특정으로 더 상세 → T4 유지, T3-040은 CLAUDE.md 문서 갱신으로 분리 |
+docs/2026-03-13/OPUS-TF-5terminal-consolidated-findings.md:64: CLAUDE_REF: **순 삭제: 3건** (T1-04 → T5 통합, T3-040 CLAUDE.md 부분은 T5 문서갱신에 통합)
+docs/2026-03-13/OPUS-TF-5terminal-consolidated-findings.md:279: CLAUDE_REF: | CLAUDE.md protagonist_items | "14파일 21곳" | **18파일 35곳** | T5 전수조사 |
+docs/2026-03-13/OPUS-TF-5terminal-consolidated-findings.md:280: CLAUDE_REF: | CLAUDE.md 비무협 3단 방어 | "truth_gate.py P2" | **chief_writer_quality._check_system_term_exposure()** | T5 교차검증 |
+docs/2026-03-13/OPUS-TF-5terminal-consolidated-findings.md:281: CLAUDE_REF: | CLAUDE.md Self-Critique | "15개" | **17+1개 (18개)** | T3-040 |
+docs/2026-03-13/OPUS-TF-5terminal-deep-dive-execution-3pass-audit.md:106: CLAUDE_REF: ### P2-3. `CLAUDE.md` 기준선과 대원칙 연결이 살아 있다
+docs/2026-03-13/OPUS-TF-5terminal-deep-dive-execution-3pass-audit.md:110: CLAUDE_REF: - 기준 문서에 [CLAUDE.md](C:/Users/User/Desktop/글도비/CLAUDE.md) 포함
+docs/2026-03-13/OPUS-TF-5terminal-deep-dive-execution-3pass-audit.md:111: CLAUDE_REF: - 원칙 B에서 Director sovereignty 판정을 `CLAUDE.md` 기준으로 고정
+docs/2026-03-13/OPUS-TF-5terminal-deep-dive-execution-ssot.md:19: CLAUDE_REF: - [CLAUDE.md](C:/Users/User/Desktop/글도비/CLAUDE.md)
+docs/2026-03-13/OPUS-TF-5terminal-deep-dive-execution-ssot.md:65: CLAUDE_REF: - `디렉터 주권주의` 위반 여부는 `CLAUDE.md` 기준으로 최종 판정한다.
+docs/2026-03-13/OPUS-TF-5terminal-deep-dive-execution-ssot.md:99: CLAUDE_REF: - `CLAUDE.md` 대원칙과 테스트 기준선
+docs/2026-03-13/OPUS-TF-5terminal-deep-dive-execution-ssot.md:173: CLAUDE_REF: - 대원칙 3과 4 관련 건은 `CLAUDE.md` 직접 대조가 포함된다.
+docs/2026-03-13/OPUS-TF-5terminal-deep-dive-master-audit-order.md:32: CLAUDE_REF: - 코드 증거 재확인 + CLAUDE.md 대조 + 기존 T1~T5 보고서 대조
+docs/2026-03-13/OPUS-TF-5terminal-deep-dive-master-audit-order.md:431: CLAUDE_REF: - PASS 2: 코드 증거 재확인 + CLAUDE.md 대조 + 기존 T2 보고서 대조 → 중복·오탐 제거
+docs/2026-03-13/OPUS-TF-5terminal-deep-dive-master-audit-order.md:437: CLAUDE_REF: ■ 참조: CLAUDE.md, 1차 T2 보고서 (OPUS-TF-T2-stage0-to-stage2-consolidated-findings.md)
+docs/2026-03-13/OPUS-TF-5terminal-deep-dive-master-audit-order.md:473: CLAUDE_REF: 4. T4-P1-03/04: 각각 코드 경로 확정, CLAUDE.md 대원칙 3과 최종 대조
+docs/2026-03-13/OPUS-TF-5terminal-deep-dive-master-audit-order.md:488: CLAUDE_REF: ■ 참조: CLAUDE.md, 1차 T2/T3/T4/T5 보고서 전량
+docs/2026-03-13/OPUS-TF-5terminal-deep-dive-master-audit-order.md:525: CLAUDE_REF: ■ 참조: CLAUDE.md, 프로덕션 모듈 시그니처 (import 정합성 확인용)
+docs/2026-03-13/OPUS-TF-5terminal-deep-dive-master-audit-order.md:573: CLAUDE_REF: ■ 참조: CLAUDE.md, api-contract-v1.yaml, 1차 T5 보고서 (T5-API 섹션)
+docs/2026-03-13/OPUS-TF-5terminal-deep-dive-master-audit-order.md:628: CLAUDE_REF: ■ 참조: CLAUDE.md, 1차 T1~T5 보고서 전량 (기존 플래그 항목)
+docs/2026-03-13/OPUS-TF-5terminal-detail-master-audit-order.md:33: CLAUDE_REF: - **CLAUDE.md 대조**: 의도적 설계(문서화된 패턴)인지 확인 → 의도적이면 **오탐 제거**
+docs/2026-03-13/OPUS-TF-5terminal-detail-master-audit-order.md:48: CLAUDE_REF: | FP-1 | CLAUDE.md 문서화된 의도적 설계 | NC-1 자동감점 없음은 대원칙 3 준수 |
+docs/2026-03-13/OPUS-TF-5terminal-detail-master-audit-order.md:397: CLAUDE_REF: - PASS 2: 코드 증거 재확인 + CLAUDE.md 대조 + 테스트 대조 → 오탐 제거
+docs/2026-03-13/OPUS-TF-5terminal-detail-master-audit-order.md:403: CLAUDE_REF: ■ 참조: CLAUDE.md, 1차 마스터 오더 T1 범위 (경계 확인용)
+docs/2026-03-13/OPUS-TF-5terminal-detail-master-audit-order.md:433: CLAUDE_REF: - PASS 2: 코드 증거 재확인 + CLAUDE.md 대조 + 테스트 대조 → 오탐 제거
+docs/2026-03-13/OPUS-TF-5terminal-detail-master-audit-order.md:439: CLAUDE_REF: ■ 참조: CLAUDE.md (protagonist_items, Context Caching 섹션), 1차 T2/T3 범위
+docs/2026-03-13/OPUS-TF-5terminal-detail-master-audit-order.md:479: CLAUDE_REF: ■ 참조: CLAUDE.md (테스트 기준선 3,847), pytest 출력
+docs/2026-03-13/OPUS-TF-5terminal-detail-master-audit-order.md:525: CLAUDE_REF: ■ 참조: CLAUDE.md (Config SSOT, 장르 가드, prompt 섹션), prompt_loader.py, genre_guards/
+docs/2026-03-13/OPUS-TF-5terminal-detail-master-audit-order.md:566: CLAUDE_REF: ■ 참조: CLAUDE.md, geuldobi-desktop/DESKTOP-GUIDE.md, package.json
+docs/2026-03-13/OPUS-TF-5terminal-master-audit-order.md:29: CLAUDE_REF: 5. **계약 준수**: CLAUDE.md 4대 원칙, SSOT contract, API contract 위반 없는가
+docs/2026-03-13/OPUS-TF-5terminal-master-audit-order.md:49: CLAUDE_REF: - **오탐 최소화**: 의도적 설계(CLAUDE.md 문서화된 패턴)를 결함으로 보고하지 말 것
+docs/2026-03-13/OPUS-TF-5terminal-master-audit-order.md:626: CLAUDE_REF: ■ 참조: CLAUDE.md, docs/implementation/api-contract-v1.yaml
+docs/2026-03-13/OPUS-TF-5terminal-master-audit-order.md:653: CLAUDE_REF: ■ 참조: CLAUDE.md (Stage2 Director Selection, 비무협 장르 오염 방지 섹션)
+docs/2026-03-13/OPUS-TF-5terminal-master-audit-order.md:681: CLAUDE_REF: ■ 참조: CLAUDE.md (PASS_WITH_FIX, Self-Critique, Context Caching 섹션)
+docs/2026-03-13/OPUS-TF-5terminal-master-audit-order.md:713: CLAUDE_REF: ■ 참조: CLAUDE.md (Advisory 체인, NC-1/NC-3, 대원칙 3·4 섹션)
+docs/2026-03-13/OPUS-TF-5terminal-master-audit-order.md:751: CLAUDE_REF: ■ 참조: CLAUDE.md (비무협 장르 오염 방지, protagonist_items, WorldState 섹션)
+docs/2026-03-13/OPUS-TF-5terminal-master-audit-order.md:780: CLAUDE_REF: - [x] 검사 포인트가 CLAUDE.md 대원칙/주의사항을 전량 반영하는가
+docs/2026-03-13/OPUS-TF-5terminal-remediation-execution-3pass-audit.md:70: CLAUDE_REF: - `CLAUDE.md`
+docs/2026-03-13/OPUS-TF-5terminal-remediation-execution-ssot.md:186: CLAUDE_REF: - [CLAUDE.md](C:/Users/User/Desktop/글도비/CLAUDE.md)
+docs/2026-03-13/OPUS-TF-5terminal-remediation-execution-ssot.md:192: CLAUDE_REF: - `CLAUDE.md`의 Self-Critique 개수 표기와 protagonist_items 통계를 현행화한다.
+docs/2026-03-13/OPUS-TF-5terminal-remediation-execution-ssot.md:199: CLAUDE_REF: - `CLAUDE.md`의 핵심 운영 수치가 현행 코드와 맞는다.
+docs/2026-03-13/OPUS-TF-T1-infrastructure-findings.md:288: CLAUDE_REF: - **response_schemas.py direct generate_content()**: L769 독스트링 예제만. CLAUDE.md 허용 범위.
+docs/2026-03-13/OPUS-TF-T2-stage0-to-stage2-consolidated-findings.md:110: CLAUDE_REF: - **근거**: CLAUDE.md 허용 목록(gemini_provider/vertex_provider/response_schemas)에 analyst.py 미포함. 현재 Gemini only 운영이므로 런타임 문제 없으나, 멀티 프로바이더 전환 시 장애.
+docs/2026-03-13/OPUS-TF-T5-domain-auxiliary-findings.md:162: CLAUDE_REF: - 문서 부정확: CLAUDE.md "truth_gate.py P2 메타용어 감지" → 실제는 `chief_writer_quality.py`
+docs/2026-03-13/OPUS-TF-T5-domain-auxiliary-findings.md:163: CLAUDE_REF: - CLAUDE.md "14파일 21곳 protagonist_items 폴백" → 실제 **18파일 35곳**
+docs/2026-03-13/OPUS-TF-T5-domain-auxiliary-findings.md:175: CLAUDE_REF: | 항목 | CLAUDE.md | 실제 |
+docs/2026-03-13/OPUS-TF-T5-domain-auxiliary-findings.md:193: CLAUDE_REF: | 3단: 메타용어 감지 | **CLAUDE.md 부정확** | truth_gate가 아닌 chief_writer_quality._check_system_term_exposure()가 전담 |
+docs/2026-03-13/OPUS-TF-T5-domain-auxiliary-findings.md:222: CLAUDE_REF: | CLAUDE.md protagonist_items | "14파일 21곳" → "18파일 35곳" |
+docs/2026-03-13/OPUS-TF-T5-domain-auxiliary-findings.md:223: CLAUDE_REF: | CLAUDE.md 비무협 3단 방어 | "truth_gate.py P2" → "chief_writer_quality.py _check_system_term_exposure()" |
+docs/2026-03-13/S2D-T4-finalizer-director-integration-findings.md:173: CLAUDE_REF: - **Analysis**: `arc_ensemble.py`는 `return None, valid_candidates`로 반환하며, Python 자동선택 잔류 없음. Director가 `compare_and_select_arc()`에서 최종 선택한다. CLAUDE.md 명시 사항과 정합.
+docs/2026-03-13/S2D-T4-finalizer-director-integration-findings.md:181: CLAUDE_REF: - **Analysis**: `STRUCTURAL_MIN_SCORE = 50`이 적용되며, 전부 미달 시 `scored_candidates[:1]`로 최소 1개 보장. CLAUDE.md 명시 사항과 정합.
+docs/2026-03-13/S2D-T4-finalizer-director-integration-findings.md:231: CLAUDE_REF: - **Analysis**: CLAUDE.md 명시: "PASS_WITH_FIX는 bypass (Director 주권 존중)". 코드가 `_d_decision == "PASS"` 조건으로 정확히 이를 구현. 정합.
+docs/2026-03-13/S2D-T4-finalizer-director-integration-findings.md:239: CLAUDE_REF: - **Analysis**: `_build_arc_dependency_advisory` (DB-3)와 `_build_character_voice_advisory` (DB-7)는 모두 문자열을 반환하여 `_story_context`에 추가한다. Director의 `audit_strategic_plan()` 호출 시 `story_context` 파라미터로 전달되어 LLM Director가 참고한다. Python은 정보 수집/포맷팅만 수행하며 판정에 개입하지 않는다. CLAUDE.md 명시: "Stage2 Finalizer: DB-3(arc_dependencies), DB-7(character_voice)". 정합.
+docs/2026-03-13/S2D-T4-finalizer-director-integration-findings.md:268: CLAUDE_REF: 3. **Director auto-selection 잔류 없음** — CLAUDE.md 명시 사항과 코드가 정합.
+docs/2026-03-13/SZ0-T2-principle-compliance-audit-findings.md:122: CLAUDE_REF: - CLAUDE.md 기준: "통계적 점수 계산"은 위반 아님
+docs/2026-03-13/SZ0-T2-principle-compliance-audit-findings.md:128: CLAUDE_REF: - CLAUDE.md 기준: "통계적 점수 계산"은 위반 아님
+docs/2026-03-13/SZ0-T2-principle-compliance-audit-findings.md:137: CLAUDE_REF: - CLAUDE.md 기준: "LLM 응답의 구조적 후처리"에 해당
+docs/2026-03-13/SZ0-T2-principle-compliance-audit-findings.md:205: CLAUDE_REF: | C-1 | 타입 강제로 LLM 출력 변경 | 허용 | CLAUDE.md "타입 변환, 필드명 정규화" 명시적 허용 |
+docs/2026-03-13/SZ0-T3-preset-schema-hud-contract-findings.md:91: CLAUDE_REF: - 현재 10개 장르가 안정화되어 있고 "동적 장르 확장 폐기"가 확정되었으므로(CLAUDE.md), 실질적 위험은 낮다.
+docs/2026-03-13/SZ0-T3-preset-schema-hud-contract-findings.md:305: CLAUDE_REF: | 1-9: Python 하드코딩 (P3-11 사전 배정) | 오탐 | "동적 장르 확장 폐기" 확정(CLAUDE.md). 10개 장르 안정화 상태에서 의도된 설계. |
+docs/2026-03-13/SZ0-T4-style-extraction-downstream-injection-findings.md:32: CLAUDE_REF: - **반론 후보**: CLAUDE.md 명시 — "타입 변환, 필드명 정규화, 포맷 변환, 통계적 점수"는 위반 아님
+docs/2026-03-13/SZ0-T4-style-extraction-downstream-injection-findings.md:78: CLAUDE_REF: **검증 방법**: 함수 동작 분석 + CLAUDE.md 위반/비위반 기준 대조
+docs/2026-03-13/SZ0-T4-style-extraction-downstream-injection-findings.md:86: CLAUDE_REF: 4. CLAUDE.md 명시: "통계적 점수"는 위반 아님
+docs/2026-03-13/SZ0-T4-style-extraction-downstream-injection-findings.md:123: CLAUDE_REF: 1. CLAUDE.md: "Director가 최종 **품질 결정권**. Chief Writer·Analyst 등은 **초안 제출**만, **합격/불합격/수정 지시**는 Director가 내림."
+docs/2026-03-13/SZ0-T4-style-extraction-downstream-injection-findings.md:141: CLAUDE_REF: 4. CLAUDE.md 명시: "`gemini_provider.py`(합법) + `vertex_provider.py`(합법)"만 직접 `generate_content()` 허용이지만, `_ensure_client()`는 `generate_content()`를 직접 호출하지 않음
+docs/2026-03-13/SZ0-T4-style-extraction-downstream-injection-findings.md:197: CLAUDE_REF: - CLAUDE.md 명시: "통계적 점수"는 위반 아님.
+docs/2026-03-13/SZ0-T5-integration-wiring-regression-findings.md:72: CLAUDE_REF: - `CLAUDE.md`에 "~~동적 장르 확장~~ → 폐기 (템플릿 복제 방식 10개 장르 검증 완료)"로 명시적 NO-GO 결정
+docs/2026-03-13/T3-stage3-4-pipeline-audit-report.md:44: CLAUDE_REF: - [x] T3-014: **오탐**. CLAUDE.md 명시: "PASS_WITH_FIX는 bypass (Director 주권 존중)". 대원칙 3 준수.
+docs/2026-03-13/T3-stage3-4-pipeline-audit-report.md:52: CLAUDE_REF: - [x] T3-020: **오탐**. 30KB guard는 JSON 구조체(Arc/Blueprint) 한정. plain text 원고는 `smart_truncate` 150KB 절단이 합리적. CLAUDE.md 기술도 Arc/Blueprint 문맥.
+docs/2026-03-13/T3-stage3-4-pipeline-audit-report.md:66: CLAUDE_REF: - [x] T3-040: **진탐**. 코드 17개 + 분량재검사 1건 = 18개. CLAUDE.md "15개" outdated.
+docs/2026-03-13/T3-stage3-4-pipeline-audit-report.md:174: CLAUDE_REF: | T3-040 | `chief_writer_quality.py` L267-338 | Self-Critique 번호 불일치 — CLAUDE.md 15개 vs 코드 17+1개 (진탐 확정) |
+docs/2026-03-13/T3-stage3-4-pipeline-audit-report.md:203: CLAUDE_REF: | T3-014 | P2 | CLAUDE.md 명시: "PASS_WITH_FIX는 bypass (Director 주권 존중)". 대원칙 3 의도적 준수. |
+docs/2026-03-13/T3-stage3-4-pipeline-audit-report.md:237: CLAUDE_REF: 3. **T3-040** (문서 정합) — CLAUDE.md Self-Critique 번호 업데이트
+docs/2026-03-13/TF-S4DD-T2-logic-flow-correctness-findings.md:107: CLAUDE_REF: This explicitly checks only `"PASS"`, not `"PASS_WITH_FIX"`. Therefore PASS_WITH_FIX bypasses QualityGate as documented in CLAUDE.md. This is intentional -- Director sovereignty means if the Director says "pass with fix", the quality gate doesn't second-guess it.
+docs/2026-03-13/TF-S4DD-T2-logic-flow-correctness-findings.md:146: CLAUDE_REF: - **File**: CLAUDE.md mentions "30KB -> return None (full fallback)". This applies to `four_phase_arc_generator.py` and `three_phase_blueprint_generator.py` InPlace, NOT to manuscript InPlace in `chief_writer.py`.
+docs/2026-03-13/TF-S4DD-T3-advisory-chain-completeness-findings.md:50: CLAUDE_REF: All 10 advisories from CLAUDE.md are present:
+docs/2026-03-13/TF-S4DD-T3-advisory-chain-completeness-findings.md:62: CLAUDE_REF: | Advisory | Tier | Kind | CLAUDE.md Spec | Match? |
+docs/2026-03-13/TF-S4DD-T3-advisory-chain-completeness-findings.md:91: CLAUDE_REF: But the CLAUDE.md spec classifies NumericDrift as INFO, and `_classify_advisory_tier` returns tier=1 (INFO). The `[MAJOR]` label here is the **per-item severity from the advisor module**, not the overall advisory tier. The formatting pass (L1616) would apply `[INFO]` to it since it doesn't match any MAJOR tags. This is **cosmetically inconsistent** but functionally correct — the suppression logic uses tier=1, which is correct.
+docs/2026-03-13/TF-S4DD-T3-advisory-chain-completeness-findings.md:277: CLAUDE_REF: | 3.2 Severity tagging | PASS | Matches CLAUDE.md spec; minor cosmetic: NumericDrift items say [MAJOR] internally |
+docs/2026-03-13/XC-ERR-T1-silent-exception-swallow-findings.md:255: CLAUDE_REF: 2. **`logging.debug` + return 기본값 (advisory 경로)**: CLAUDE.md 대원칙 1 준수 (Python 수집만)
+docs/2026-03-14/operations-governance-maturation-roadmap.md:35: TEMP_REF: - `docs/temp/` regularly has `3+` concurrent execution items
+docs/2026-03-14/operations-governance-maturation-roadmap.md:49: CLAUDE_REF: - `CLAUDE.md` is a compatibility shim only
+docs/2026-03-14/operations-governance-maturation-roadmap.md:70: TEMP_REF: - active execution mirrors in `docs/temp/` have explicit meaning
+docs/2026-03-14/operations-governance-maturation-roadmap.md:82: TEMP_REF: - `docs/temp/queue-state.json` can be generated for operators and tooling
+docs/2026-03-14/residual-print-ui-log-db-full-survey-3pass-execution-ssot.md:6: TEMP_REF: Temp Mirror Path: `docs/temp/residual-print-ui-log-db-full-survey-3pass-execution-ssot.md`
+docs/2026-03-14/temp-execution-queue-process-health-scorecard.md:5: TEMP_REF: Scope: `docs/temp active execution queue`
+docs/2026-03-14/temp-execution-queue-process-health-scorecard.md:22: TEMP_REF: | closure readiness | amber | `docs/temp/queue-state.json` | active queue items remain pending or in progress |
+docs/implementation/canonical-naming-contract.md:27: TEMP_REF: - `docs/temp/<topic>-execution-ssot.md`
+docs/implementation/canonical-naming-contract.md:28: TEMP_REF: - `docs/temp/execution-roadmap.md`
+docs/implementation/canonical-naming-contract.md:29: TEMP_REF: - `docs/temp/queue-state.json`
+docs/implementation/document-3pass-audit-harness.md:104: TEMP_REF: - Do not mirror an execution SSOT to `docs/temp/` before this audit completes.
+docs/implementation/evidence-manifest-harness.md:32: TEMP_REF: - they are not mirrored into `docs/temp/`
+docs/implementation/execution-closure-harness.md:22: TEMP_REF: - `docs/temp/` cleanup is about to happen
+docs/implementation/execution-closure-harness.md:67: TEMP_REF: - If the queue is exhausted, remove `docs/temp/execution-roadmap.md`.
+docs/implementation/execution-closure-harness.md:68: TEMP_REF: - If `docs/temp/queue-state.json` exists, refresh it or remove it when the queue becomes empty.
+docs/implementation/execution-closure-harness.md:69: TEMP_REF: - Leave `docs/temp/README.md`.
+docs/implementation/execution-closure-template.md:12: TEMP_REF: Temp Mirror Path: `docs/temp/<topic>-execution-ssot.md` | `none`
+docs/implementation/execution-closure-template.md:14: TEMP_REF: Temp Roadmap Path: `docs/temp/execution-roadmap.md` | `none`
+docs/implementation/execution-roadmap-template.md:3: TEMP_REF: Use this template when two or more execution SSOT mirror copies exist in `docs/temp/`.
+docs/implementation/execution-roadmap-template.md:12: TEMP_REF: Temp Mirror Path: `docs/temp/execution-roadmap.md`
+docs/implementation/execution-roadmap-template.md:14: TEMP_REF: - `docs/temp/<item-a>-execution-ssot.md`
+docs/implementation/execution-roadmap-template.md:15: TEMP_REF: - `docs/temp/<item-b>-execution-ssot.md`
+docs/implementation/execution-roadmap-template.md:25: TEMP_REF: | `<item-a>` | `docs/YYYY-MM-DD/...` | `docs/temp/...` | pending | `<note>` |
+docs/implementation/execution-roadmap-template.md:26: TEMP_REF: | `<item-b>` | `docs/YYYY-MM-DD/...` | `docs/temp/...` | pending | `<note>` |
+docs/implementation/execution-roadmap-template.md:80: TEMP_REF: - when all items are completed, remove `docs/temp/execution-roadmap.md`
+docs/implementation/execution-roadmap-template.md:81: TEMP_REF: - remove `docs/temp/queue-state.json` if present
+docs/implementation/execution-roadmap-template.md:82: TEMP_REF: - leave `docs/temp/README.md`
+docs/implementation/execution-roadmap-template.md:89: TEMP_REF: - then refresh `docs/temp/execution-roadmap.md`
+docs/implementation/execution-ssot-template.md:12: TEMP_REF: Temp Mirror Path: `docs/temp/<topic>-execution-ssot.md`
+docs/implementation/execution-ssot-template.md:87: TEMP_REF: - optional queue state entry: `docs/temp/queue-state.json`
+docs/implementation/operations-governance-map.md:20: TEMP_REF: 6. Local operating notes such as `docs/temp/README.md`
+docs/implementation/operations-governance-map.md:21: CLAUDE_REF: 7. Compatibility shims such as `CLAUDE.md`
+docs/implementation/operations-governance-map.md:41: TEMP_REF: - Canonical dated documents in `docs/YYYY-MM-DD/` beat mirror copies in `docs/temp/`.
+docs/implementation/operations-governance-map.md:60: TEMP_REF: - Execution SSOT documents must exist canonically before they are mirrored into `docs/temp/`.
+docs/implementation/operations-governance-map.md:67: CLAUDE_REF: - If `CLAUDE.md` says one thing and `AGENTS.md` says another, `AGENTS.md` wins.
+docs/implementation/ops-validator-harness.md:15: TEMP_REF: - a new execution SSOT mirror was added to `docs/temp/`
+docs/implementation/ops-validator-harness.md:22: TEMP_REF: - every `docs/temp/*-execution-ssot.md` has a canonical dated counterpart
+docs/implementation/ops-validator-harness.md:25: TEMP_REF: - multiple temp execution SSOT mirrors require `docs/temp/execution-roadmap.md`
+docs/implementation/ops-validator-harness.md:27: TEMP_REF: - optional `docs/temp/queue-state.json` matches the active temp queue when present
+docs/implementation/ops-validator-harness.md:57: TEMP_REF: 3. optionally refresh `docs/temp/queue-state.json` with `python scripts/sync_temp_queue_state.py`
+docs/implementation/stale-reference-sweep-harness.md:18: CLAUDE_REF: - a compatibility shim such as `CLAUDE.md` was altered
+docs/implementation/stale-reference-sweep-harness.md:23: CLAUDE_REF: - references that still treat `CLAUDE.md` as authority rather than shim
+docs/implementation/stale-reference-sweep-harness.md:25: TEMP_REF: - outdated path policy statements about `docs/temp/`
+docs/implementation/stale-reference-sweep-harness.md:33: CLAUDE_REF: rg -n "CLAUDE\.md|AGENTS\.md|execution-roadmap|docs/temp" AGENTS.md CLAUDE.md docs
+docs/implementation/stale-reference-sweep-harness.md:33: TEMP_REF: rg -n "CLAUDE\.md|AGENTS\.md|execution-roadmap|docs/temp" AGENTS.md CLAUDE.md docs
+docs/implementation/stale-reference-sweep-harness.md:37: TEMP_REF: rg -n "ready for implementation|execution-ready|closed" docs/temp docs/20*
+docs/implementation/system-full-survey-execution-harness.md:27: TEMP_REF: - Keep survey, audit, evidence, and canonical execution outputs in dated `docs/` locations, while also mirroring execution SSOT documents into `docs/temp/` for downstream collation.
+docs/implementation/system-full-survey-execution-harness.md:56: TEMP_REF: - Execution SSOT mirror copies: `docs/temp/`
+docs/implementation/system-full-survey-execution-harness.md:61: TEMP_REF: - copy the same file to `docs/temp/`
+docs/implementation/system-full-survey-execution-harness.md:62: TEMP_REF: - never use `docs/temp/` as the only copy
+docs/implementation/system-full-survey-execution-harness.md:64: TEMP_REF: `docs/temp/` may be cleared after downstream collation or post-processing because the canonical copy already lives in `docs/YYYY-MM-DD/`.
+docs/implementation/system-full-survey-execution-harness.md:68: TEMP_REF: - After each material edit, overwrite the `docs/temp/` mirror copy from the canonical file.
+docs/implementation/system-full-survey-execution-harness.md:69: TEMP_REF: - Do not manually hotfix the `docs/temp/` copy without syncing the canonical file in the same turn.
+docs/implementation/system-full-survey-execution-harness.md:70: TEMP_REF: - Treat the `docs/temp/` copy as a disposable working mirror, not as an authority.
+docs/implementation/system-full-survey-execution-harness.md:93: TEMP_REF: `docs/temp/` is the active execution queue for execution SSOT mirror copies.
+docs/implementation/system-full-survey-execution-harness.md:96: TEMP_REF: - an execution SSOT mirror in `docs/temp/` means the item is pending or active for realization
+docs/implementation/system-full-survey-execution-harness.md:97: TEMP_REF: - once the execution SSOT is realized and closed, remove its mirror copy from `docs/temp/`
+docs/implementation/system-full-survey-execution-harness.md:99: TEMP_REF: - `docs/temp/` is for execution handling, not long-term storage
+docs/implementation/system-full-survey-execution-harness.md:101: TEMP_REF: Operationally, "empty temp" means clearing active execution artifacts from `docs/temp/`.
+docs/implementation/system-full-survey-execution-harness.md:102: TEMP_REF: Static operator notes such as `docs/temp/README.md` may remain.
+docs/implementation/system-full-survey-execution-harness.md:105: TEMP_REF: If `docs/temp/` contains two or more execution SSOT mirror copies, do not execute them independently in arbitrary order.
+docs/implementation/system-full-survey-execution-harness.md:112: TEMP_REF: - first create an aggregate roadmap covering all execution SSOTs currently in `docs/temp/`
+docs/implementation/system-full-survey-execution-harness.md:118: TEMP_REF: - temp mirror: `docs/temp/execution-roadmap.md`
+docs/implementation/system-full-survey-execution-harness.md:121: TEMP_REF: - inventory of all execution SSOT mirrors currently in `docs/temp/`
+docs/implementation/system-full-survey-execution-harness.md:129: TEMP_REF: - remove completed execution SSOT mirrors from `docs/temp/`
+docs/implementation/system-full-survey-execution-harness.md:131: TEMP_REF: - leave `docs/temp/` clear of active execution artifacts
+docs/implementation/system-full-survey-execution-harness.md:150: TEMP_REF: - create or refresh the `docs/temp/` execution SSOT mirror only after the 3-pass document audit is complete
+docs/implementation/system-full-survey-execution-harness.md:163: TEMP_REF: - Inspect `docs/temp/` execution mirrors before starting implementation work.
+docs/implementation/system-full-survey-execution-harness.md:219: TEMP_REF: - When the execution SSOT passes the document 3-pass audit, create a mirror copy in `docs/temp/` in the same turn.
+docs/implementation/system-full-survey-execution-harness.md:230: TEMP_REF: - `docs/temp/*-execution-ssot.md` mirror copy
+docs/implementation/system-full-survey-execution-harness.md:232: TEMP_REF: - `docs/temp/execution-roadmap.md` mirror copy
+docs/implementation/system-full-survey-execution-harness.md:238: TEMP_REF: - `docs/temp/README.md`
+docs/implementation/system-full-survey-execution-harness.md:239: TEMP_REF: - optional `docs/temp/queue-state.json`
+docs/implementation/system-full-survey-execution-harness.md:263: TEMP_REF: For execution SSOT documents, write the dated `docs/` file first as canonical and then create the `docs/temp/` mirror copy.
+docs/implementation/system-full-survey-execution-harness.md:282: TEMP_REF: - Do not put survey or audit artifacts in `docs/temp/` by default.
+docs/implementation/system-full-survey-execution-harness.md:283: TEMP_REF: - Do not leave an execution SSOT only in `docs/temp/`.
+docs/implementation/system-full-survey-execution-harness.md:284: TEMP_REF: - Do not treat the `docs/temp/` copy as canonical.
+docs/implementation/system-full-survey-execution-harness.md:285: TEMP_REF: - Do not edit only the `docs/temp/` mirror.
+docs/implementation/system-full-survey-execution-harness.md:288: TEMP_REF: - Do not keep realized execution SSOT mirrors in `docs/temp/`.
+docs/implementation/system-full-survey-execution-harness.md:289: TEMP_REF: - Do not clear `docs/temp/` until the canonical file exists and the mirror has been refreshed from it.
+docs/implementation/system-full-survey-execution-harness.md:299: TEMP_REF: - the same execution SSOT is copied to `docs/temp/` after document 3-pass audit
+docs/implementation/system-full-survey-execution-harness.md:300: TEMP_REF: - if multiple execution SSOT mirrors exist in `docs/temp/`, create an aggregate execution roadmap before realization
+docs/implementation/system-full-survey-execution-harness.md:303: TEMP_REF: - review, collate, or post-process from `docs/temp/`
+docs/implementation/system-full-survey-execution-harness.md:306: TEMP_REF: This keeps canonical history in dated archives while letting `docs/temp/` act as a disposable execution inbox.
+docs/implementation/system-order-init-harness.md:56: TEMP_REF: - Inspect `docs/temp/` before doing substantial work.
+docs/implementation/system-order-init-harness.md:73: TEMP_REF: - if `docs/temp/execution-roadmap.md` exists, follow it first
+docs/implementation/system-order-init-harness.md:118: TEMP_REF: - Execution mirrors in `docs/temp/` are queue copies, not canonical files.
+docs/implementation/system-order-preflight-harness.md:32: TEMP_REF: - Inspect `docs/temp/` for execution mirrors, roadmap, and queue-state files.
+docs/implementation/system-order-preflight-harness.md:52: TEMP_REF: - refreshed `docs/temp/queue-state.json`
+docs/implementation/temp-execution-queue-roadmap-harness.md:18: TEMP_REF: - Standardize how `docs/temp/` execution SSOT mirror copies are treated as an active execution queue.
+docs/implementation/temp-execution-queue-roadmap-harness.md:24: TEMP_REF: - `docs/temp/` contains `*-execution-ssot.md`
+docs/implementation/temp-execution-queue-roadmap-harness.md:25: TEMP_REF: - `docs/temp/execution-roadmap.md` exists
+docs/implementation/temp-execution-queue-roadmap-harness.md:32: TEMP_REF: Inspect `docs/temp/` and classify:
+docs/implementation/temp-execution-queue-roadmap-harness.md:56: TEMP_REF: - two or more execution SSOT mirrors exist in `docs/temp/`
+docs/implementation/temp-execution-queue-roadmap-harness.md:62: TEMP_REF: - temp roadmap mirror: `docs/temp/execution-roadmap.md`
+docs/implementation/temp-execution-queue-roadmap-harness.md:88: TEMP_REF: - `docs/temp/queue-state.json` may be used as a machine-readable queue snapshot.
+docs/implementation/temp-execution-queue-roadmap-harness.md:99: TEMP_REF: - remove only that mirror copy from `docs/temp/`
+docs/implementation/temp-execution-queue-roadmap-harness.md:106: TEMP_REF: - remove remaining execution SSOT mirrors from `docs/temp/`
+docs/implementation/temp-execution-queue-roadmap-harness.md:107: TEMP_REF: - remove `docs/temp/execution-roadmap.md`
+docs/implementation/temp-execution-queue-roadmap-harness.md:108: TEMP_REF: - remove `docs/temp/queue-state.json` if it exists
+docs/implementation/temp-execution-queue-roadmap-harness.md:109: TEMP_REF: - leave `docs/temp/README.md`
+docs/implementation/temp-execution-queue-roadmap-harness.md:115: TEMP_REF: - Do not treat `docs/temp/` as archival storage.
+docs/stage_map/metrics_baseline.md:11: CLAUDE_REF: | Full test suite | `3,831 passed / 16 skipped / 0 failed` | 2026-03-10 | `CLAUDE.md` | Latest verified full-suite baseline recorded in repo guidance |
+docs/stage_map/metrics_baseline.md:12: CLAUDE_REF: | Ruff | `0 violations` | 2026-03-10 | `CLAUDE.md` | Keep as last verified full-repo lint baseline |
+docs/stage_map/UPDATE_ORDER.md:37: CLAUDE_REF: - `config/settings/validation.yaml`, `constants.py`, `CLAUDE.md` -> `metrics_baseline.md`
+docs/temp/queue-state.json:10: TEMP_REF: "temp_path": "docs/temp/residual-print-ui-log-db-full-survey-3pass-execution-ssot.md",
+docs/temp/README.md:1: TEMP_REF: # docs/temp Operating Note
+docs/temp/README.md:13: TEMP_REF: - files in `docs/temp/` are mirror copies, not canonical authorities
+docs/temp/README.md:15: TEMP_REF: - do not keep an execution SSOT only in `docs/temp/`
+docs/temp/README.md:16: TEMP_REF: - `docs/temp/` may be cleared after collation, but only after confirming the canonical dated copy exists
+docs/temp/README.md:18: TEMP_REF: - a mirrored execution SSOT in `docs/temp/` means it is pending or active for realization
+docs/temp/README.md:19: TEMP_REF: - `docs/temp/queue-state.json` is optional, but if used it must reflect the live queue and be deleted when the queue is empty
+docs/temp/README.md:21: TEMP_REF: - once realization is complete, remove that execution SSOT mirror from `docs/temp/`
+docs/temp/README.md:25: TEMP_REF: - once the roadmap is exhausted, clear active execution artifacts from `docs/temp/`
+docs/temp/residual-print-ui-log-db-full-survey-3pass-execution-ssot.md:6: TEMP_REF: Temp Mirror Path: `docs/temp/residual-print-ui-log-db-full-survey-3pass-execution-ssot.md`

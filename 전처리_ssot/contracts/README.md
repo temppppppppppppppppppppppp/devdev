@@ -41,3 +41,9 @@
 
 - `treatments/preprocess/{work_id}/sequential_run_status.json`
 - `treatments/preprocess/{work_id}/audit_status.json`
+
+읽기 우선순위:
+
+- production resume: `sequential_run_status.json` first
+- deprecated fallback: `docs/sequential_run_status.md` only within grace period
+- audit resume: `audit_status.json` first

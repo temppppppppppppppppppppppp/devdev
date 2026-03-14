@@ -2,20 +2,38 @@ from __future__ import annotations
 
 from typing import Any
 
-from modules.core.llm_provider import LLMRequest
+from modules.core.llm_provider import LLMRequest, LLMResponse
 from modules.core.llm_router import get_shared_llm_router
 
 
-def generate_content_via_router(*, client: Any, model: str, contents: Any, config: Any | None = None) -> Any:
-    """Provider-routed generate helper that preserves native response objects.
-
-    Phase 2 migrates direct Gemini call sites onto this helper so downstream
-    parsing can stay unchanged while provider selection moves behind the router.
-    """
+def generate_llm_response_via_router(
+    *,
+    client: Any,
+    model: str,
+    contents: Any,
+    config: Any | None = None,
+) -> LLMResponse:
+    """Provider-routed helper with a normalized response envelope."""
 
     provider = get_shared_llm_router().get_provider_for_model(model)
-    response = provider.generate(
+    return provider.generate(
         client=client,
         request=LLMRequest(model=model, contents=contents, config=config),
     )
-    return response.raw
+
+
+def generate_content_via_router(*, client: Any, model: str, contents: Any, config: Any | None = None) -> LLMResponse:
+    """Return normalized `LLMResponse` for helper-layer callers.
+
+    Direct callers should read `.text`, `.finish_reason`, and `.usage`.
+    Provider-native shape stays available on `.raw` for diagnostics and staged
+    compatibility.
+    """
+
+    return generate_llm_response_via_router(client=client, model=model, contents=contents, config=config)
+
+
+def generate_raw_content_via_router(*, client: Any, model: str, contents: Any, config: Any | None = None) -> Any:
+    """Compatibility seam for callers that still need provider-native `raw`."""
+
+    return generate_llm_response_via_router(client=client, model=model, contents=contents, config=config).raw

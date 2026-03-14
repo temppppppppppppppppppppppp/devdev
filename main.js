@@ -1,3 +1,9 @@
+/*
+ * Manual debug shadow entry only.
+ * Authoritative Electron entry lives at geuldobi-desktop/src/main.js.
+ * Do not use this file for packaged/runtime contract changes.
+ */
+
 const electron = require("electron");
 const app = electron.app;
 const BrowserWindow = electron.BrowserWindow;
