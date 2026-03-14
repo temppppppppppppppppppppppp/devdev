@@ -38,7 +38,7 @@ MUTATES_PROJECT_STATE = True
 
 @contextmanager
 def _noop_spinner(*_args, **_kwargs):
-    yield
+    yield MagicMock(update_detail=MagicMock())
 
 
 def _normalize_arcs(raw_arcs: object) -> list[dict]:
@@ -130,7 +130,7 @@ def _build_mock_app(db: DBManager, bible: dict, arcs: list[dict]) -> MagicMock:
     )
     app._get_protagonist_name = MagicMock(return_value="\uc2dc\uc724")
     app._fix_entity_registry_protagonist = MagicMock(side_effect=lambda registry, _name: registry)
-    app._safe_commit = MagicMock(side_effect=lambda: db.conn.commit())
+    app._safe_commit = MagicMock(side_effect=lambda: db.conn.commit() or True)
     app._audit_event = MagicMock()
     app._write_audit_summary = MagicMock()
 
@@ -198,11 +198,9 @@ def main() -> None:
         print(f"[OK] data loaded: arcs={len(arcs)}")
 
         app = _build_mock_app(db, bible, arcs)
-        ctx = Stage3Context(
-            ui=app.ui,
-            current_project=app.current_project,
-            get_protagonist_name=lambda: "\uc2dc\uc724",
-        )
+        # Keep the smoke runner aligned with the e2e contract surface so
+        # commit, validation, and audit callbacks are wired exactly once.
+        ctx = Stage3Context.from_app(app)
 
         print("[RUN] Stage3 start (3 episodes, mock LLM)...")
         with patch("modules.core.spinners.StageSpinner", _noop_spinner):

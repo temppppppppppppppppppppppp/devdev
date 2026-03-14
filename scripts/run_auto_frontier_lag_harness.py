@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import signal
 import subprocess
 import sys
 import time
@@ -23,10 +24,17 @@ from main_a import SovereignApp  # noqa: E402
 from modules.core.db_manager import DBManager  # noqa: E402
 from modules.core.failure_analyzer import FailureAnalyzer  # noqa: E402
 from modules.core.pass_rate_monitor import PassRateMonitor  # noqa: E402
+from modules.core.project_support import (  # noqa: E402
+    EXTERNAL_POV_INSERT_POLICY_OPTIONS,
+    INCARNATION_TYPE_OPTIONS,
+    POV_OPTIONS,
+    WORLD_ORIGIN_OPTIONS,
+)
 
 DEFAULT_SEED_PROFILE = "00_20260314"
 DEFAULT_BATCH_SIZE = 1
 DEFAULT_POLL_INTERVAL_SECONDS = 30 * 60
+PROCESS_CHECK_INTERVAL_SECONDS = 5
 MANUAL_PROFILE_DOC = "docs/2026-03-14/main-a-manual-stage0-selection-harness-00_20260314.md"
 HARNESS_SSOT_DOC = "docs/2026-03-14/auto-frontier-lag-n-arc-test-harness-ssot.md"
 PROMPT_WAIT_MARKERS = (
@@ -224,7 +232,11 @@ def run_harness(
         seed_profile=seed_profile,
         batch_size=batch_size,
     )
-    process = subprocess.Popen(command, cwd=str(PROJECT_ROOT))
+    process = subprocess.Popen(
+        command,
+        cwd=str(PROJECT_ROOT),
+        creationflags=_worker_creationflags(),
+    )
 
     poll_history: list[dict[str, Any]] = []
     previous = capture_poll_snapshot(project_root, process=process)
@@ -232,17 +244,26 @@ def run_harness(
     idle_windows = 0
     watchdog_status = "progressing"
     termination_reason = ""
+    poll_interval_seconds = max(1, int(poll_interval_seconds or DEFAULT_POLL_INTERVAL_SECONDS))
+    next_poll_deadline = time.monotonic() + poll_interval_seconds
 
-    while process.poll() is None:
-        time.sleep(max(1, int(poll_interval_seconds)))
-        current = capture_poll_snapshot(project_root, process=process)
-        poll_history.append(current)
-        watchdog_status, idle_windows = classify_poll_transition(previous, current, idle_windows)
-        if watchdog_status in {"stalled", "failed"}:
-            termination_reason = watchdog_status
-            _terminate_process_tree(process)
+    while True:
+        if process.poll() is not None:
             break
-        previous = current
+        now = time.monotonic()
+        if now >= next_poll_deadline:
+            current = capture_poll_snapshot(project_root, process=process)
+            poll_history.append(current)
+            watchdog_status, idle_windows = classify_poll_transition(previous, current, idle_windows)
+            if watchdog_status in {"stalled", "failed"}:
+                termination_reason = watchdog_status
+                _terminate_process_tree(process)
+                break
+            previous = current
+            next_poll_deadline = now + poll_interval_seconds
+            continue
+        sleep_for = min(PROCESS_CHECK_INTERVAL_SECONDS, max(0.1, next_poll_deadline - now))
+        time.sleep(sleep_for)
 
     exit_code = process.wait()
     final_snapshot = capture_poll_snapshot(project_root, process=process)
@@ -282,6 +303,18 @@ def build_worker_command(*, target_project: str, arc_count: int, seed_profile: s
         "--batch-size",
         str(max(1, int(batch_size or DEFAULT_BATCH_SIZE))),
     ]
+
+
+def _worker_creationflags() -> int:
+    return int(getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0))
+
+
+def _menu_choice_for_value(options: tuple[str, ...] | list[str], expected: str) -> str:
+    expected_text = str(expected).strip()
+    for index, option in enumerate(options, 1):
+        if str(option).strip() == expected_text:
+            return str(index)
+    raise ValueError(f"semantic option not found: {expected_text!r}")
 
 
 def run_worker(*, target_project: str, arc_count: int, seed_profile: str, batch_size: int) -> dict[str, Any]:
@@ -369,13 +402,17 @@ def _boot_app(project_name: str, selected_genre: dict[str, Any]) -> SovereignApp
 
 
 def _apply_stage0_existing_profile(app: SovereignApp, profile: HarnessProfile) -> None:
+    protagonist = profile.protagonist_config
     responses = [
         "1",
         profile.treatment_auto_condense,
-        "2",
-        "1",
-        "4",
-        "3",
+        _menu_choice_for_value(WORLD_ORIGIN_OPTIONS, protagonist["world_origin"]),
+        _menu_choice_for_value(INCARNATION_TYPE_OPTIONS, protagonist["incarnation_type"]),
+        _menu_choice_for_value(POV_OPTIONS, protagonist["pov"]),
+        _menu_choice_for_value(
+            EXTERNAL_POV_INSERT_POLICY_OPTIONS,
+            protagonist["external_pov_insert_policy"],
+        ),
         "",
     ]
     with (
@@ -394,9 +431,14 @@ def _apply_stage0_existing_profile(app: SovereignApp, profile: HarnessProfile) -
 
 
 def _apply_stage0_style_profile(app: SovereignApp, profile: HarnessProfile) -> None:
+    cache_choice = {
+        "use": "1",
+        "refresh": "2",
+        "reset": "3",
+    }.get(profile.style_analysis_mode, "1")
     responses = [
         profile.style_analysis_confirm,
-        "1" if profile.style_analysis_mode == "use" else "2",
+        cache_choice,
         "",
     ]
     with patch("builtins.input", side_effect=responses):
@@ -687,20 +729,19 @@ def run_three_pass_audit(
     poll_history: list[dict[str, Any]],
 ) -> dict[str, Any]:
     pass1 = bool(worker_result) and bool(poll_history)
-    pass2 = not (
-        judgment == "success"
-        and (
-            not boundary_reached
-            or str(stage3_summary.get("status", "") or "ok") != "ok"
-            or str(stage4_summary.get("status", "") or "ok") != "ok"
-            or bool(root_cause)
-        )
+    pass2 = (judgment == "success") == (
+        boundary_reached
+        and str(stage3_summary.get("status", "") or "ok") == "ok"
+        and str(stage4_summary.get("status", "") or "ok") == "ok"
+        and not bool(root_cause)
     )
     pass3 = bool(judgment) and ((judgment == "success" and not root_cause) or (judgment != "success" and bool(root_cause)))
     passed = sum(1 for item in (pass1, pass2, pass3) if item)
-    confidence = 70 + passed * 10
-    if passed == 3 and judgment == "success":
-        confidence = 95
+    confidence = 60 + passed * 10
+    if judgment == "success":
+        confidence = 95 if passed == 3 else min(confidence, 90)
+    else:
+        confidence = min(confidence, 90)
     return {
         "passes": {
             "pass1_fact_extraction": pass1,
@@ -733,11 +774,14 @@ def write_execution_ssot(analysis: dict[str, Any]) -> Path:
         f"- manual_profile_doc: `{MANUAL_PROFILE_DOC}`",
         f"- harness_ssot_doc: `{HARNESS_SSOT_DOC}`",
         f"- arc_count: {analysis.get('arc_count', 0)}",
+        "- worker_model: subprocess-owned Python worker booting `SovereignApp` via direct seams",
         "",
         "## Terminal Watchdog",
         "",
         "- review cadence: every 30 minutes from the terminal-owned watchdog",
         "- no hard process timeout was part of the contract",
+        f"- responsive process check interval: {PROCESS_CHECK_INTERVAL_SECONDS}s",
+        "- graceful stop path: CTRL_BREAK / Ctrl+C first, terminate/kill only as fallback",
         f"- poll_count: {analysis.get('poll_count', 0)}",
         f"- poll_history_path: `{analysis.get('poll_history_path', '')}`",
         "",
@@ -805,6 +849,17 @@ def _ensure_pass_rate_monitor(app: SovereignApp, project_root: Path) -> None:
 def _terminate_process_tree(process: subprocess.Popen[Any]) -> None:
     if process.poll() is not None:
         return
+    ctrl_break = getattr(signal, "CTRL_BREAK_EVENT", None)
+    if ctrl_break is not None:
+        try:
+            process.send_signal(ctrl_break)
+        except Exception:
+            pass
+        else:
+            for _ in range(10):
+                if process.poll() is not None:
+                    return
+                time.sleep(1)
     try:
         process.terminate()
     except Exception:
