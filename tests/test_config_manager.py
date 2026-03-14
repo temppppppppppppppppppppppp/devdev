@@ -212,8 +212,8 @@ def test_scoring_threshold_no_yaml_uses_default(tmp_path, monkeypatch):
     if hasattr(sv._threshold, "_cfg"):
         del sv._threshold._cfg
 
-    result = sv._threshold("scoring.default_pass_threshold", 70)
-    assert result == 70
+    result = sv._threshold("scoring.default_pass_threshold", 60)
+    assert result == 60
 
 
 def test_scoring_threshold_yaml_override(tmp_path, monkeypatch):
@@ -229,8 +229,8 @@ def test_scoring_threshold_yaml_override(tmp_path, monkeypatch):
     if hasattr(sv._threshold, "_cfg"):
         del sv._threshold._cfg
 
-    assert sv._threshold("scoring.default_pass_threshold", 70) == 65
-    assert sv._threshold("scoring.genre_thresholds.wuxia", 70) == 60
+    assert sv._threshold("scoring.default_pass_threshold", 60) == 65
+    assert sv._threshold("scoring.genre_thresholds.wuxia", 60) == 60
 
 
 def test_threshold_type_mismatch_uses_default(tmp_path, monkeypatch):

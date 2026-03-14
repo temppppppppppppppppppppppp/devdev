@@ -1,13 +1,31 @@
 # Workspace Instructions
 
-## Blockguide First
+## Track Split
+
+이 워크스페이스의 오더는 아래 두 트랙으로 분리한다.
+
+- `글도비 시스템 오더`
+  - 코드베이스 조사/수정, `main_a.py`, `modules/`, `scripts/`, `tests/`, `UI/`, `geuldobi-desktop/`, 런타임, DB, 회귀, 리팩터, 성능, 로깅, control plane, persistence, process runner, desktop/app 연결, `docs/20xx-xx-xx/` 아래 시스템 감사 오더
+  - 이 경우 **블록가이드 문서를 먼저 읽지 않는다.**
+  - `phase0_design`, `tr_block_070_draft`, `BI` 파일 존재로 단계를 판정하지 않는다.
+- `서사 파이프라인 오더`
+  - 작품 기획, `work_id` 기반 `Treatment/BI`, `Phase 0`, `TR draft`, `BI`, 감리, 정합성, 밀도 점검, 전처리 handoff, 작품 기준 `다음 스텝/계속/승인`
+  - 이 경우에만 아래 `Blockguide First` 규칙을 적용한다.
+
+판정 원칙:
+
+- 대상이 코드/시스템/앱/테스트면 시스템 오더다.
+- 대상이 작품/`work_id`/`treatments/`/`bible/` 산출물이면 서사 파이프라인 오더다.
+- `다음 스텝`, `계속`, `승인`만으로는 블록가이드 트리거가 아니다. 현재 대상이 작품 파이프라인일 때만 트리거다.
+
+## Blockguide First (Narrative Pipeline Only)
 
 이 워크스페이스에서 아래 작업이 들어오면 먼저 `docs/blockguide/SSOT_blockguide-integrated-order.md`를 UTF-8로 읽는다.
 
 - 작품 기획안 작성 또는 수정
 - `work_id` 기준 Treatment/BI 생성
 - `Phase 0`, `TR draft`, `BI`, 감리, 정합성, 밀도 점검
-- `다음 스텝`, `계속`, `승인` 기반 자동 진행
+- 특정 작품/`work_id`가 이미 정해진 상태에서 `다음 스텝`, `계속`, `승인` 기반 자동 진행
 
 그다음 아래 문서를 UTF-8로 읽는다.
 
@@ -19,7 +37,7 @@
 
 4. `docs/blockguide/alt_history_db_harness.md`
 
-## Stage Detection
+## Narrative Stage Detection
 
 현재 단계는 메모리가 아니라 파일 존재로 판정한다.
 
@@ -28,7 +46,7 @@
 - `tr_block_070_draft` 있음, `0_bi_{work_id}.json` 없음: BI 단계
 - `BI`가 있어도 감리 FAIL이면 완료가 아니다
 
-## Execution Rules
+## Narrative Execution Rules
 
 - 한 번에 1단위만 진행한다.
 - 애매하면 더 작은 단위로 쪼갠다.

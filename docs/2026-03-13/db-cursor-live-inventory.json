@@ -1,0 +1,182 @@
+{
+  "contract_id": "db-cursor-live-inventory-v1",
+  "status": "active",
+  "primary_source": "modules/core/db_manager.py",
+  "policy": {
+    "lock_model": "threading.RLock",
+    "preferred_pattern": "with self._lock: cur = self.conn.cursor()",
+    "legacy_pattern": "self.cursor.execute(...)",
+    "legacy_note_source": "DBManager docstring [INF-P1-1]",
+    "new_or_modified_code_rule": "do_not_add_new_shared_cursor_usage"
+  },
+  "source_scan_rules": {
+    "shared_cursor_token": "self.cursor.execute|self.cursor.executemany|self.cursor.fetchone|self.cursor.fetchall",
+    "local_cursor_token": "self.conn.cursor()",
+    "mixed_bootstrap_methods": [
+      "_boot_db"
+    ]
+  },
+  "inventory_counts": {
+    "shared_cursor_methods": 66,
+    "local_cursor_methods": 27,
+    "mixed_bootstrap_methods": 1
+  },
+  "current_preferred_local_cursor": {
+    "classification": "current_preferred",
+    "methods": [
+      "_boot_db",
+      "_migrate_vec_memory_db",
+      "begin",
+      "execute_query",
+      "execute_update",
+      "save_manuscript",
+      "get_manuscript",
+      "get_blueprint",
+      "update_martial_tracker",
+      "save_episode_bible",
+      "get_episode_bible",
+      "get_cumulative_bible",
+      "get_all_episode_bibles",
+      "get_episode_bibles_before",
+      "delete_episode_bibles_after",
+      "upsert_canonical_fact",
+      "get_canonical_facts",
+      "upsert_timeline_entry",
+      "get_timeline_range",
+      "upsert_npc_relationship_edge",
+      "get_npc_relationship_edges",
+      "get_relationship_history",
+      "get_all_relationship_pairs_with_history",
+      "upsert_arc_dependency",
+      "get_arc_dependencies",
+      "_migrate_world_state_timeline_if_needed",
+      "get_all_character_voices"
+    ]
+  },
+  "legacy_shared_cursor_surfaces": [
+    {
+      "surface_id": "bootstrap_schema_and_migrations",
+      "classification": "allowed_temporary_legacy",
+      "rationale": "Bootstrap schema creation and migration still mix shared cursor reads/writes with one-off local cursor helpers during DB open.",
+      "methods": [
+        "_boot_db"
+      ]
+    },
+    {
+      "surface_id": "seed_and_lore_live_legacy",
+      "classification": "allowed_temporary_legacy",
+      "rationale": "Seed and lore surfaces are still live, but they are not the highest-risk transaction/proof net hotspots in this tranche.",
+      "methods": [
+        "sync_seeds",
+        "archive_seed",
+        "update_lore_item",
+        "update_lore_items_batch",
+        "get_lore_list_by_category"
+      ]
+    },
+    {
+      "surface_id": "narrative_state_and_causal_legacy",
+      "classification": "allowed_temporary_legacy",
+      "rationale": "Blueprint/state/causal persistence still relies on shared cursor today; inventory is frozen first so later migration can happen against one list.",
+      "methods": [
+        "save_blueprint",
+        "get_previous_blueprint",
+        "save_state_log_with_summary",
+        "get_latest_state",
+        "load_state_log",
+        "get_causal_summary_chain",
+        "get_recent_causal_links",
+        "get_causal_links_by_entities",
+        "update_karma",
+        "get_all_karma",
+        "save_causal_links"
+      ]
+    },
+    {
+      "surface_id": "sync_recent_and_history_legacy",
+      "classification": "allowed_temporary_legacy",
+      "rationale": "Recent-history and sync helper readers remain shared-cursor legacy, but they are lower priority than safe-op/proof surfaces for immediate migration.",
+      "methods": [
+        "get_sync_status",
+        "update_sync_status",
+        "get_active_seeds",
+        "get_recent_blueprints",
+        "get_recent_manuscripts",
+        "get_manuscripts_range",
+        "get_npc_recent_episodes",
+        "get_recent_manuscript_excerpts",
+        "insert_npc_change",
+        "get_npc_history",
+        "get_npc_latest_fields"
+      ]
+    },
+    {
+      "surface_id": "anchor_and_commit_factory_priority",
+      "classification": "must_migrate",
+      "rationale": "Anchors and episode-factory commit participate in recovery/provenance semantics and should not stay on shared cursor indefinitely.",
+      "methods": [
+        "save_anchor",
+        "load_anchor",
+        "load_all_anchors",
+        "commit_episode_factory"
+      ]
+    },
+    {
+      "surface_id": "transaction_and_safe_op_priority",
+      "classification": "must_migrate",
+      "rationale": "Transaction begin/reset/rollback-impact surfaces define safe-op semantics and are the highest-risk shared-cursor paths under WAL plus check_same_thread=False.",
+      "methods": [
+        "transaction",
+        "get_latest_episode_number",
+        "get_latest_blueprint_number",
+        "get_context_manuscripts",
+        "reset_after",
+        "get_rollback_impact"
+      ]
+    },
+    {
+      "surface_id": "director_quality_attempt_cost_priority",
+      "classification": "must_migrate",
+      "rationale": "Director selections, quality signals, stage attempts, LLM call logging, sentence hashes, pacing, and cost records drive live proof and operator-visible observability.",
+      "methods": [
+        "save_director_selection",
+        "save_episode_quality_label",
+        "save_episode_quality_signal",
+        "get_episode_quality_signal",
+        "save_episode_quality_observation",
+        "get_episode_quality_observation",
+        "get_recent_episode_quality_observations",
+        "get_recent_episode_quality_signals",
+        "get_episode_quality_label",
+        "get_recent_episode_quality_labels",
+        "get_recent_episode_scores",
+        "get_stage_attempts_for_arc",
+        "save_llm_call",
+        "save_stage_attempt",
+        "get_fix_scope_stats",
+        "get_strategy_win_rates",
+        "get_selection_analysis",
+        "save_cost_record",
+        "get_cost_summary",
+        "get_recent_selections",
+        "store_sentence_hashes",
+        "find_repeated_sentence_hashes",
+        "get_sentence_hashes",
+        "save_satisfaction_tag",
+        "get_satisfaction_tag",
+        "get_recent_satisfaction_tags",
+        "save_pacing_record",
+        "get_recent_pacing_records"
+      ]
+    }
+  ],
+  "must_migrate_priority_floor": [
+    "save_anchor",
+    "load_anchor",
+    "save_llm_call",
+    "save_stage_attempt",
+    "transaction",
+    "reset_after",
+    "get_rollback_impact"
+  ]
+}

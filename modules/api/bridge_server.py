@@ -28,9 +28,9 @@ from collections import Counter
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Annotated, Any
 
-from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, Query, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import JSONResponse
 
 from modules.api.process_runner import MODE_B_KEYS, PROJECT_ROOT, ProcessRunner
@@ -39,6 +39,8 @@ from modules.api.prompt_classifier import classify as classify_prompt
 from modules.api.risk_approval import RiskApprovalGate
 from modules.api.run_validator import RISK_KEYS, validate_run_request
 from modules.core.db_manager import DBManager
+from modules.core.failure_analyzer import FailureAnalyzer
+from modules.core.jsonl_io import append_jsonl_record
 from modules.core.project_support import inspect_project_support_assets
 from modules.core.quality_dashboard import QualityDashboard
 from modules.core.quality_sidecar_bootstrap import inspect_quality_sidecar_health
@@ -173,6 +175,42 @@ def _err(code: str, message: str, run_id: str | None = None) -> dict:
     return {"ok": False, "run_id": run_id, "code": code, "message": message, "data": None}
 
 
+def _resolve_control_plane_provenance_log_path(app: FastAPI) -> Path:
+    override = getattr(app.state, "control_plane_provenance_log_path", None)
+    if override:
+        return Path(override)
+    return Path("logs") / "control-plane-provenance.jsonl"
+
+
+def _write_control_plane_provenance(
+    app: FastAPI,
+    *,
+    key: str,
+    sub_key: str | None,
+    run_id: str,
+    approval_id: str | None,
+    mode: str,
+) -> None:
+    path = _resolve_control_plane_provenance_log_path(app)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    append_jsonl_record(
+        path,
+        {
+            "ts": _ts(),
+            "route": "/run",
+            "protocol_surface": "backend_cli_menu_protocol_wrapper",
+            "key": key,
+            "sub_key": sub_key,
+            "risk_key": key in RISK_KEYS,
+            "approval_id": str(approval_id or "").strip(),
+            "run_id": run_id,
+            "mode": mode,
+            "desktop_mode": bool(os.environ.get("GEULDOBI_DESKTOP_MODE")),
+            "engine_env_run_id": run_id,
+        },
+    )
+
+
 def _get_projects_root() -> Path:
     return resolve_projects_root(PROJECT_ROOT)
 
@@ -255,6 +293,26 @@ def _quality_dashboard_defaults(project: str, lookback: int) -> dict:
             "recent_count": 0,
             "top_components": [],
             "recent": [],
+        },
+        "proof_status": {
+            "available": False,
+            "status": "unavailable",
+            "sink_alignment_status": "unavailable",
+            "runtime_summary_status": "unavailable",
+            "summary": "No proof artifacts available.",
+        },
+        "sink_alignment_summary": {
+            "available": False,
+            "lookback": lookback,
+            "stages": {},
+        },
+        "runtime_audit_summary": {
+            "available": False,
+            "tag": "",
+            "timestamp": "",
+            "summary_role": "",
+            "contract": {},
+            "proof_digest": {},
         },
         "retrieval_summary": {
             "available": False,
@@ -1157,6 +1215,129 @@ def _load_runtime_health(project_dir: Path, *, limit: int = 10) -> dict:
     return payload
 
 
+def _count_alignment_issues(value: Any) -> int:
+    if isinstance(value, list):
+        return len(value)
+    if isinstance(value, dict):
+        total = 0
+        for item in value.values():
+            if isinstance(item, dict) and "count" in item:
+                try:
+                    total += int(item.get("count", 0) or 0)
+                except (TypeError, ValueError):
+                    total += 0
+            else:
+                total += 1
+        return total
+    return 0
+
+
+def _compact_sink_alignment_summary(summary: dict | None) -> dict:
+    if not isinstance(summary, dict) or not summary:
+        return {}
+    issue_fields = (
+        "final_sink_missing",
+        "lifecycle_sink_missing",
+        "lifecycle_missing_in_final_sinks",
+        "final_verdict_mismatches",
+        "final_score_mismatches",
+        "initial_verdict_mismatches",
+        "patch_strategy_mismatches",
+        "candidate_key_mismatches",
+        "selection_candidate_key_mismatches",
+        "content_hash_mismatches",
+        "artifact_path_mismatches",
+        "artifact_metadata_missing",
+        "artifact_missing_files",
+    )
+    issue_counts = {
+        field: _count_alignment_issues(summary.get(field))
+        for field in issue_fields
+        if _count_alignment_issues(summary.get(field)) > 0
+    }
+    session_rows_without_attempt_key = int(summary.get("session_decision_rows_without_attempt_key", 0) or 0)
+    if session_rows_without_attempt_key > 0:
+        issue_counts["session_decision_rows_without_attempt_key"] = session_rows_without_attempt_key
+    return {
+        "stage": int(summary.get("stage", 0) or 0),
+        "status": str(summary.get("status", "") or ""),
+        "attempts_considered": int(summary.get("attempts_considered", 0) or 0),
+        "complete_final_attempts": int(summary.get("complete_final_attempts", 0) or 0),
+        "complete_lifecycle_attempts": int(summary.get("complete_lifecycle_attempts", 0) or 0),
+        "coverage": dict(summary.get("coverage") or {}),
+        "issue_counts": issue_counts,
+    }
+
+
+def _load_runtime_audit_summary(project_dir: Path) -> dict:
+    payload = {
+        "available": False,
+        "tag": "",
+        "timestamp": "",
+        "summary_role": "",
+        "contract": {},
+        "proof_digest": {},
+    }
+    summary_path = project_dir / "logs" / "runtime_audit_summary.json"
+    if not summary_path.exists():
+        return payload
+
+    summary = _safe_json_load(summary_path)
+    if not isinstance(summary, dict):
+        return payload
+
+    payload["available"] = True
+    payload["tag"] = str(summary.get("tag", "") or "")
+    payload["timestamp"] = str(summary.get("timestamp", "") or "")
+    payload["summary_role"] = str(summary.get("summary_role", "") or "")
+    contract = summary.get("contract", {})
+    payload["contract"] = contract if isinstance(contract, dict) else {}
+    proof_digest = summary.get("proof_digest", {})
+    payload["proof_digest"] = proof_digest if isinstance(proof_digest, dict) else {}
+    return payload
+
+
+def _build_dashboard_proof_status(*, sink_alignment_summary: dict, runtime_audit_summary: dict) -> dict:
+    sink_stages = sink_alignment_summary.get("stages", {}) if isinstance(sink_alignment_summary, dict) else {}
+    sink_stage_statuses = [
+        str(stage_summary.get("status", "") or "")
+        for stage_summary in sink_stages.values()
+        if isinstance(stage_summary, dict)
+    ]
+    if not sink_stage_statuses:
+        sink_alignment_status = "unavailable"
+    elif any(status not in ("", "ok") for status in sink_stage_statuses):
+        sink_alignment_status = "warn"
+    else:
+        sink_alignment_status = "ok"
+
+    proof_digest = runtime_audit_summary.get("proof_digest", {}) if isinstance(runtime_audit_summary, dict) else {}
+    runtime_summary_status = str(proof_digest.get("status", "") or "")
+    if not runtime_summary_status:
+        runtime_summary_status = "unavailable"
+
+    available = sink_alignment_status != "unavailable" or runtime_summary_status != "unavailable"
+    if sink_alignment_status == "warn" or runtime_summary_status == "warn":
+        status = "warn"
+    elif available:
+        status = "ok"
+    else:
+        status = "unavailable"
+
+    summary_map = {
+        "ok": "Proof sinks aligned.",
+        "warn": "Proof chain has alignment gaps.",
+        "unavailable": "No proof artifacts available.",
+    }
+    return {
+        "available": available,
+        "status": status,
+        "sink_alignment_status": sink_alignment_status,
+        "runtime_summary_status": runtime_summary_status,
+        "summary": summary_map.get(status, summary_map["unavailable"]),
+    }
+
+
 def _build_quality_dashboard_payload(project: str, lookback: int) -> dict:
     db_path = _get_project_db_path(project)
     project_dir = _get_project_dir(project)
@@ -1174,9 +1355,14 @@ def _build_quality_dashboard_payload(project: str, lookback: int) -> dict:
     payload["score_trend"] = dashboard.get_score_trend_summary(stage=4, recent_n=max(safe_lookback, 5))
     payload["failure_patterns"] = _build_failure_patterns(dashboard.get_failure_patterns())
     payload["runtime_health"] = _load_runtime_health(project_dir, limit=max(safe_lookback, 5))
+    payload["runtime_audit_summary"] = _load_runtime_audit_summary(project_dir)
     payload["retrieval_summary"] = dashboard.get_retrieval_summary(recent_n=max(safe_lookback, 8))
     payload["artifact_ladder"] = _build_artifact_ladder_payload(project, project_dir, db_path)
     payload["safe_ops"] = _build_safe_ops_preview_payload(project, project_dir, db_path)
+    payload["proof_status"] = _build_dashboard_proof_status(
+        sink_alignment_summary=payload["sink_alignment_summary"],
+        runtime_audit_summary=payload["runtime_audit_summary"],
+    )
 
     if not db_path.exists():
         return payload
@@ -1185,6 +1371,24 @@ def _build_quality_dashboard_payload(project: str, lookback: int) -> dict:
     calibration_health = payload["calibration"]["data_health"]
     try:
         calibration_health = inspect_quality_sidecar_health(project_dir, db)
+        analyzer = FailureAnalyzer(db, project_path=project_dir)
+        sink_alignment = {
+            "available": False,
+            "lookback": max(safe_lookback, 20),
+            "stages": {},
+        }
+        for stage in (3, 4):
+            compact = _compact_sink_alignment_summary(
+                analyzer.sink_alignment_summary(
+                    stage=stage,
+                    lookback=max(safe_lookback, 20),
+                    include_session_decisions=True,
+                )
+            )
+            if compact:
+                sink_alignment["stages"][f"stage{stage}"] = compact
+        sink_alignment["available"] = bool(sink_alignment["stages"])
+        payload["sink_alignment_summary"] = sink_alignment
         quality_summary = db.get_quality_signal_summary(lookback=safe_lookback)
         quality_summary["project"] = project
         payload["quality_summary"] = quality_summary
@@ -1222,6 +1426,10 @@ def _build_quality_dashboard_payload(project: str, lookback: int) -> dict:
         signals=compare_signals,
         observations=observations,
         data_health=calibration_health,
+    )
+    payload["proof_status"] = _build_dashboard_proof_status(
+        sink_alignment_summary=payload["sink_alignment_summary"],
+        runtime_audit_summary=payload["runtime_audit_summary"],
     )
     if not payload["available"]:
         payload["available"] = bool(payload["stage_stats"] or payload["episode_trend"])
@@ -1356,6 +1564,17 @@ async def run_endpoint(request: Request) -> JSONResponse:
         )
 
     logger.info("RUN_STARTED run_id=%r key=%r", run_id, key)
+    try:
+        _write_control_plane_provenance(
+            request.app,
+            key=key,
+            sub_key=sub_key,
+            run_id=run_id,
+            approval_id=approval_id,
+            mode="B" if use_mode_b else "A",
+        )
+    except Exception:
+        logger.exception("control-plane provenance write failed run_id=%r", run_id)
 
     # run_started 이벤트 브로드캐스트
     await ws_manager.broadcast(_build_event(run_id, "run_started", {"key": key}))
@@ -1431,7 +1650,7 @@ async def status_endpoint(request: Request) -> JSONResponse:
 
 
 @app.get("/quality/summary")
-async def quality_summary_endpoint(project: str = "", lookback: int = 5) -> JSONResponse:
+async def quality_summary_endpoint(project: Annotated[str, Query(min_length=1)], lookback: int = 5) -> JSONResponse:
     """프로젝트 최근 품질 신호 요약 조회."""
     try:
         payload = _build_quality_dashboard_payload(project, lookback)
@@ -1448,7 +1667,7 @@ async def quality_summary_endpoint(project: str = "", lookback: int = 5) -> JSON
 
 
 @app.get("/quality/dashboard")
-async def quality_dashboard_endpoint(project: str = "", lookback: int = 5) -> JSONResponse:
+async def quality_dashboard_endpoint(project: Annotated[str, Query(min_length=1)], lookback: int = 5) -> JSONResponse:
     """프로젝트 품질 대시보드용 read-only 집계 조회."""
     try:
         payload = _build_quality_dashboard_payload(project, lookback)
@@ -1462,7 +1681,7 @@ async def quality_dashboard_endpoint(project: str = "", lookback: int = 5) -> JS
 
 
 @app.get("/safe-ops/preview")
-async def safe_ops_preview_endpoint(project: str = "") -> JSONResponse:
+async def safe_ops_preview_endpoint(project: Annotated[str, Query(min_length=1)]) -> JSONResponse:
     """프로젝트 Safe Ops read-only preview 조회."""
     try:
         project_dir = _get_project_dir(project)

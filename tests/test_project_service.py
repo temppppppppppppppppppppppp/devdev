@@ -86,6 +86,14 @@ class TestResetStage2:
         assert call("DELETE FROM anchors WHERE key LIKE 'narrative_summary_ep_%'") in execute_calls
         assert call("DELETE FROM anchors WHERE key = 'arcs'") in execute_calls
 
+        outcome = svc.last_destructive_result
+        assert outcome is not None
+        assert outcome.operation == "reset_stage_2"
+        assert outcome.target_ep == 1
+        assert outcome.status == "success"
+        assert outcome.runtime_restore_ok is True
+        assert outcome.cache_invalidation_required is True
+
     def test_commit_failure_returns_false(self, ui_mock, project_mock, genre_fn, memory_mock):
         svc = ProjectService(
             project_fn=lambda: project_mock,
@@ -102,6 +110,12 @@ class TestResetStage2:
         assert result is False
         svc._rollback_open_transaction.assert_called_once_with(project_mock)
         ui_mock.log.assert_any_call("DB commit failed during Stage 2 reset")
+        outcome = svc.last_destructive_result
+        assert outcome is not None
+        assert outcome.operation == "reset_stage_2"
+        assert outcome.status == "aborted"
+        assert outcome.runtime_restore_ok is False
+        assert outcome.cache_invalidation_required is False
 
 
 class TestRewindStage2:
@@ -144,6 +158,13 @@ class TestRewindStage2:
             and c.args[1] == (3,)
             for c in execute_calls
         )
+        outcome = svc.last_destructive_result
+        assert outcome is not None
+        assert outcome.operation == "rewind_stage_2"
+        assert outcome.target_ep == 3
+        assert outcome.status == "success"
+        assert outcome.runtime_restore_ok is True
+        assert outcome.cache_invalidation_required is True
 
     def test_rewind_commit_failure_returns_false_without_runtime_mutation(
         self, ui_mock, project_mock, genre_fn, memory_mock
@@ -251,6 +272,144 @@ class TestRollbackEpisode:
         memory_mock.delete_episodes_from.assert_not_called()
         ui_mock.log.assert_any_call("DB commit failed during rollback")
 
+    def test_rollback_post_commit_load_failure_surfaces_partial_result_and_clears_agent_context_cache(
+        self, ui_mock, project_mock, safe_commit_mock, genre_fn, memory_mock
+    ):
+        from modules.domain.agents.base_agent import BaseAgent
+
+        emotion_tracker = MagicMock()
+        emotion_tracker.history = [(2, "neutral", 0.5), (4, "hope", 0.7)]
+        state_delta_tracker = MagicMock()
+        state_delta_tracker.energy_history = []
+        state_delta_tracker.injury_history = []
+        invalidate_tracker = MagicMock()
+        project_mock.db.cursor.fetchone.return_value = None
+        project_mock._load_from_db.side_effect = RuntimeError("load boom")
+
+        svc = ProjectService(
+            project_fn=lambda: project_mock,
+            ui=ui_mock,
+            safe_commit_fn=safe_commit_mock,
+            genre_fn=genre_fn,
+            memory_fn=lambda: memory_mock,
+            state_tracker_invalidator=invalidate_tracker,
+            emotion_tracker_fn=lambda: emotion_tracker,
+            state_delta_tracker_fn=lambda: state_delta_tracker,
+        )
+
+        with BaseAgent._cache_lock:
+            original_cache = dict(BaseAgent._context_caches)
+            BaseAgent._context_caches.clear()
+            BaseAgent._context_caches["stale"] = {"name": "stale-cache"}
+
+        try:
+            with patch("builtins.input", side_effect=["3", "y", ""]):
+                result = svc.rollback_episode()
+
+            assert result is True
+            invalidate_tracker.assert_called_once()
+            emotion_tracker.rollback_to.assert_called_once_with(3)
+            state_delta_tracker.rollback_to.assert_called_once_with(3)
+
+            outcome = svc.last_destructive_result
+            assert outcome is not None
+            assert outcome.status == "partial_restore_failed"
+            assert outcome.db_committed is True
+            assert outcome.cache_invalidation_required is True
+            assert any(
+                failure["step"] == "project.load_from_db" and "load boom" in failure["reason"]
+                for failure in outcome.partial_failures
+            )
+
+            logs = [call.args[0] for call in ui_mock.log.call_args_list if call.args]
+            assert any("[Partial] rollback_episode committed" in message for message in logs)
+            assert not any("[Success] Rollback completed" in message for message in logs)
+            with BaseAgent._cache_lock:
+                assert BaseAgent._context_caches == {}
+        finally:
+            with BaseAgent._cache_lock:
+                BaseAgent._context_caches.clear()
+                BaseAgent._context_caches.update(original_cache)
+
+    def test_rollback_tracker_failure_trims_tracker_residue_and_records_partial_result(
+        self, ui_mock, project_mock, safe_commit_mock, genre_fn, memory_mock
+    ):
+        class _Entry:
+            def __init__(self, episode: int) -> None:
+                self.episode = episode
+
+        emotion_tracker = MagicMock()
+        emotion_tracker.history = [(1, "neutral", 0.5), (3, "hope", 0.7), (4, "triumph", 0.9)]
+        emotion_tracker.rollback_to.side_effect = RuntimeError("emotion boom")
+
+        state_delta_tracker = MagicMock()
+        state_delta_tracker.energy_history = [_Entry(2), _Entry(5)]
+        state_delta_tracker.injury_history = [_Entry(1), _Entry(4)]
+        state_delta_tracker.rollback_to.side_effect = RuntimeError("delta boom")
+        project_mock.db.cursor.fetchone.return_value = None
+
+        svc = ProjectService(
+            project_fn=lambda: project_mock,
+            ui=ui_mock,
+            safe_commit_fn=safe_commit_mock,
+            genre_fn=genre_fn,
+            memory_fn=lambda: memory_mock,
+            emotion_tracker_fn=lambda: emotion_tracker,
+            state_delta_tracker_fn=lambda: state_delta_tracker,
+        )
+
+        with patch("builtins.input", side_effect=["3", "y", ""]):
+            result = svc.rollback_episode()
+
+        assert result is True
+        assert all(entry[0] < 3 for entry in emotion_tracker.history)
+        assert [entry.episode for entry in state_delta_tracker.energy_history] == [2]
+        assert [entry.episode for entry in state_delta_tracker.injury_history] == [1]
+
+        outcome = svc.last_destructive_result
+        assert outcome is not None
+        assert outcome.status == "partial_restore_failed"
+        steps = {failure["step"] for failure in outcome.partial_failures}
+        assert "emotion_history.rollback_to" in steps
+        assert "state_delta_tracker.rollback_to" in steps
+
+    def test_rollback_invariant_leak_surfaces_partial_result_even_without_tracker_exception(
+        self, ui_mock, project_mock, safe_commit_mock, genre_fn, memory_mock
+    ):
+        class _Entry:
+            def __init__(self, episode: int) -> None:
+                self.episode = episode
+
+        emotion_tracker = MagicMock()
+        emotion_tracker.history = [(1, "neutral", 0.5), (4, "hope", 0.7)]
+        state_delta_tracker = MagicMock()
+        state_delta_tracker.energy_history = [_Entry(2), _Entry(4)]
+        state_delta_tracker.injury_history = [_Entry(1)]
+        project_mock.db.cursor.fetchone.return_value = None
+
+        svc = ProjectService(
+            project_fn=lambda: project_mock,
+            ui=ui_mock,
+            safe_commit_fn=safe_commit_mock,
+            genre_fn=genre_fn,
+            memory_fn=lambda: memory_mock,
+            emotion_tracker_fn=lambda: emotion_tracker,
+            state_delta_tracker_fn=lambda: state_delta_tracker,
+        )
+
+        with patch("builtins.input", side_effect=["3", "y", ""]):
+            result = svc.rollback_episode()
+
+        assert result is True
+        outcome = svc.last_destructive_result
+        assert outcome is not None
+        assert outcome.status == "partial_restore_failed"
+        assert {"emotion_history.invariant", "state_delta_tracker.invariant"} <= {
+            failure["step"] for failure in outcome.partial_failures
+        }
+        logs = [call.args[0] for call in ui_mock.log.call_args_list if call.args]
+        assert any("[Partial] rollback_episode committed" in message for message in logs)
+
 
 class TestWipeProductionData:
     def test_confirm_n_returns_false(self, svc, project_mock):
@@ -276,6 +435,13 @@ class TestWipeProductionData:
             c.args and c.args[0] == "DELETE FROM anchors WHERE key LIKE 'narrative_summary_ep_%'"
             for c in execute_calls
         )
+        outcome = svc.last_destructive_result
+        assert outcome is not None
+        assert outcome.operation == "wipe_production_data"
+        assert outcome.target_ep == 1
+        assert outcome.status == "success"
+        assert outcome.runtime_restore_ok is True
+        assert outcome.cache_invalidation_required is True
 
     def test_commit_failure_rolls_back_open_transaction(self, ui_mock, project_mock, genre_fn, memory_mock):
         svc = ProjectService(

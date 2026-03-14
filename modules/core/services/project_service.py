@@ -6,11 +6,41 @@ import json
 import logging
 import re
 from collections.abc import Callable
+from dataclasses import dataclass, field
 from typing import Any
 
 from modules.core.constants import HUDKeys
 
 _DRAFT_EP_RE = re.compile(r"(?:ep_)?(\d{1,5})\.txt")
+
+
+@dataclass(slots=True)
+class DestructiveOpResult:
+    """Structured outcome for destructive project operations."""
+
+    operation: str
+    target_ep: int
+    db_committed: bool = False
+    partial_failures: list[dict[str, str]] = field(default_factory=list)
+
+    @property
+    def status(self) -> str:
+        if not self.db_committed:
+            return "aborted"
+        if self.partial_failures:
+            return "partial_restore_failed"
+        return "success"
+
+    @property
+    def runtime_restore_ok(self) -> bool:
+        return self.db_committed and not self.partial_failures
+
+    @property
+    def cache_invalidation_required(self) -> bool:
+        return self.db_committed
+
+    def add_partial_failure(self, step: str, exc: Exception) -> None:
+        self.partial_failures.append({"step": step, "reason": str(exc)})
 
 
 class ProjectService:
@@ -41,6 +71,7 @@ class ProjectService:
         self._preset_registry_restorer = preset_registry_restorer
         self._emotion_tracker_fn = emotion_tracker_fn
         self._state_delta_tracker_fn = state_delta_tracker_fn
+        self.last_destructive_result: DestructiveOpResult | None = None
 
     def _delete_draft_files_from_episode(self, project: Any, target_ep: int) -> None:
         for draft_file in project.paths.drafts.glob("*.txt"):
@@ -60,42 +91,196 @@ class ProjectService:
             except OSError as exc:
                 logging.error("[ProjectService] Failed to delete draft %s: %s", draft_file.name, exc)
 
-    def _restore_runtime_state(self, target_ep: int) -> None:
+    def _trim_emotion_tracker_history(self, tracker: Any, target_ep: int) -> None:
+        history = getattr(tracker, "history", None)
+        if not isinstance(history, list):
+            return
+        trimmed_history = []
+        for entry in history:
+            try:
+                ep_num = entry[0]
+            except Exception:
+                trimmed_history.append(entry)
+                continue
+            if not isinstance(ep_num, int) or ep_num < target_ep:
+                trimmed_history.append(entry)
+        tracker.history = trimmed_history
+
+    def _trim_state_delta_tracker_history(self, tracker: Any, target_ep: int) -> None:
+        energy_history = getattr(tracker, "energy_history", None)
+        if isinstance(energy_history, list):
+            tracker.energy_history = [
+                entry for entry in energy_history if not isinstance(getattr(entry, "episode", None), int) or entry.episode < target_ep
+            ]
+
+        injury_history = getattr(tracker, "injury_history", None)
+        if isinstance(injury_history, list):
+            tracker.injury_history = [
+                entry for entry in injury_history if not isinstance(getattr(entry, "episode", None), int) or entry.episode < target_ep
+            ]
+
+    def _clear_base_agent_context_caches(self) -> None:
+        from modules.domain.agents.base_agent import BaseAgent
+
+        with BaseAgent._cache_lock:
+            BaseAgent._context_caches.clear()
+
+    def _collect_rollback_invariant_failures(self, target_ep: int) -> list[dict[str, str]]:
+        failures: list[dict[str, str]] = []
+        if self._emotion_tracker_fn and callable(self._emotion_tracker_fn):
+            tracker = self._emotion_tracker_fn()
+            history = getattr(tracker, "history", None) if tracker is not None else None
+            if isinstance(history, list) and history:
+                try:
+                    max_ep = max(entry[0] for entry in history)
+                except Exception:
+                    max_ep = None
+                if isinstance(max_ep, int) and max_ep >= target_ep:
+                    logging.warning(
+                        "[RollbackInvariant] EmotionArcTracker max ep=%d >= target_ep=%d after rollback",
+                        max_ep,
+                        target_ep,
+                    )
+                    failures.append(
+                        {
+                            "step": "emotion_history.invariant",
+                            "reason": f"max ep={max_ep} >= target_ep={target_ep}",
+                        }
+                    )
+
+        if self._state_delta_tracker_fn and callable(self._state_delta_tracker_fn):
+            tracker = self._state_delta_tracker_fn()
+            energy_history = getattr(tracker, "energy_history", None) if tracker is not None else None
+            if isinstance(energy_history, list) and energy_history:
+                try:
+                    max_ep = max(entry.episode for entry in energy_history)
+                except Exception:
+                    max_ep = None
+                if isinstance(max_ep, int) and max_ep >= target_ep:
+                    logging.warning(
+                        "[RollbackInvariant] StateDeltaTracker max ep=%d >= target_ep=%d after rollback",
+                        max_ep,
+                        target_ep,
+                    )
+                    failures.append(
+                        {
+                            "step": "state_delta_tracker.invariant",
+                            "reason": f"max ep={max_ep} >= target_ep={target_ep}",
+                        }
+                    )
+
+        return failures
+
+    def _run_restore_step(
+        self,
+        result: DestructiveOpResult,
+        step: str,
+        fn: Callable[[], None],
+        *,
+        failure_label: str,
+        fallback: Callable[[], None] | None = None,
+    ) -> None:
+        try:
+            fn()
+        except Exception as exc:
+            result.add_partial_failure(step, exc)
+            self._ui.log(f"   [{failure_label}] restore failed: {exc}")
+            if fallback is not None:
+                try:
+                    fallback()
+                except Exception as fallback_exc:
+                    result.add_partial_failure(f"{step}.fallback", fallback_exc)
+                    self._ui.log(f"   [{failure_label}] fallback failed: {fallback_exc}")
+
+    def _restore_runtime_state(self, target_ep: int, *, operation: str) -> DestructiveOpResult:
+        result = DestructiveOpResult(operation=operation, target_ep=target_ep, db_committed=True)
         project = self._project_fn()
         if hasattr(project, "_load_from_db"):
-            project._load_from_db()
+            self._run_restore_step(
+                result,
+                "project.load_from_db",
+                project._load_from_db,
+                failure_label="ProjectState",
+            )
         if self._invalidate_tracker:
-            self._invalidate_tracker()
+            self._run_restore_step(
+                result,
+                "state_tracker.invalidate",
+                self._invalidate_tracker,
+                failure_label="StateTracker",
+            )
 
         world_state = self._world_state_fn() if self._world_state_fn else None
         if world_state is not None and hasattr(world_state, "rollback_to"):
-            try:
-                world_state.rollback_to(target_ep)
-            except Exception as exc:  # pragma: no cover - non-blocking UI path
-                self._ui.log(f"   [WorldState] rollback_to failed: {exc}")
+            self._run_restore_step(
+                result,
+                "world_state.rollback_to",
+                lambda: world_state.rollback_to(target_ep),
+                failure_label="WorldState",
+            )
 
         fact_ledger = self._fact_ledger_fn() if self._fact_ledger_fn else None
         if fact_ledger is not None and hasattr(fact_ledger, "rollback_to"):
-            try:
-                fact_ledger.rollback_to(target_ep)
-            except Exception as exc:  # pragma: no cover - non-blocking UI path
-                self._ui.log(f"   [FactLedger] rollback_to failed: {exc}")
+            self._run_restore_step(
+                result,
+                "fact_ledger.rollback_to",
+                lambda: fact_ledger.rollback_to(target_ep),
+                failure_label="FactLedger",
+            )
 
         if self._emotion_tracker_fn and callable(self._emotion_tracker_fn):
             tracker = self._emotion_tracker_fn()
             if tracker is not None and hasattr(tracker, "rollback_to"):
-                tracker.rollback_to(target_ep)
+                self._run_restore_step(
+                    result,
+                    "emotion_history.rollback_to",
+                    lambda: tracker.rollback_to(target_ep),
+                    failure_label="EmotionTracker",
+                    fallback=lambda: self._trim_emotion_tracker_history(tracker, target_ep),
+                )
 
         if self._state_delta_tracker_fn and callable(self._state_delta_tracker_fn):
             tracker = self._state_delta_tracker_fn()
             if tracker is not None and hasattr(tracker, "rollback_to"):
-                tracker.rollback_to(target_ep)
+                self._run_restore_step(
+                    result,
+                    "state_delta_tracker.rollback_to",
+                    lambda: tracker.rollback_to(target_ep),
+                    failure_label="StateDeltaTracker",
+                    fallback=lambda: self._trim_state_delta_tracker_history(tracker, target_ep),
+                )
 
         if self._preset_registry_restorer:
-            try:
-                self._preset_registry_restorer()
-            except Exception as exc:  # pragma: no cover - non-blocking UI path
-                self._ui.log(f"   [PresetRegistry] restore failed (ignored): {exc}")
+            self._run_restore_step(
+                result,
+                "preset_registry.restore",
+                self._preset_registry_restorer,
+                failure_label="PresetRegistry",
+            )
+
+        self._run_restore_step(
+            result,
+            "base_agent.context_cache_clear",
+            self._clear_base_agent_context_caches,
+            failure_label="BaseAgent",
+        )
+        for failure in self._collect_rollback_invariant_failures(target_ep):
+            if failure not in result.partial_failures:
+                result.partial_failures.append(failure)
+        self.last_destructive_result = result
+        return result
+
+    def _log_destructive_outcome(self, result: DestructiveOpResult, success_message: str) -> None:
+        if result.status == "success":
+            self._ui.log(success_message)
+            return
+        self._ui.log(
+            f"[Partial] {result.operation} committed, but runtime restore reported {len(result.partial_failures)} issue(s)."
+        )
+        for failure in result.partial_failures:
+            step = failure.get("step", "unknown")
+            reason = failure.get("reason", "unknown")
+            self._ui.log(f"   [Partial] {step}: {reason}")
 
     def _clear_stage2_summary_anchors(self, project: Any, from_arc_no: int | None = None) -> None:
         project.db.cursor.execute("DELETE FROM anchors WHERE key = 'volumes'")
@@ -176,11 +361,14 @@ class ProjectService:
 
     def reset_stage_2(self) -> bool:
         """Clear all Stage 2 arc design and every downstream episode artifact."""
+        self.last_destructive_result = None
         project = self._project_fn()
         confirm = input("\nReally reset Stage 2 arcs and all downstream production data? (y/n): ").strip().lower()
         if confirm != "y":
             return False
 
+        result = DestructiveOpResult(operation="reset_stage_2", target_ep=1)
+        self.last_destructive_result = result
         try:
             project.db.reset_after(1, commit=False)
             self._clear_stage2_metadata(project)
@@ -191,6 +379,7 @@ class ProjectService:
                 self._rollback_open_transaction(project)
                 self._ui.log("DB commit failed during Stage 2 reset")
                 return False
+            result.db_committed = True
 
             project.arcs = []
             if hasattr(project, "volumes"):
@@ -205,10 +394,10 @@ class ProjectService:
             except Exception as exc:  # pragma: no cover - non-blocking UI path
                 self._ui.log(f"   [VectorDB] delete_all_episodes failed: {exc}")
 
-            self._restore_runtime_state(1)
-            self._ui.log("Stage 2 reset complete. Arc design and downstream artifacts were cleared.")
+            result = self._restore_runtime_state(1, operation="reset_stage_2")
+            self._log_destructive_outcome(result, "Stage 2 reset complete. Arc design and downstream artifacts were cleared.")
             input("\n[Enter] Return to menu")
-            return True
+            return result.cache_invalidation_required
         except Exception as exc:
             self._rollback_open_transaction(project)
             self._ui.log(f"Stage 2 reset failed: {exc}")
@@ -216,6 +405,7 @@ class ProjectService:
 
     def rewind_stage_2(self) -> bool:
         """Rewind arc design from a target arc number and purge downstream artifacts."""
+        self.last_destructive_result = None
         project = self._project_fn()
         if not getattr(project, "arcs", None):
             self._ui.log("No arc data is available.")
@@ -244,6 +434,8 @@ class ProjectService:
         if confirm != "y":
             return False
 
+        result = DestructiveOpResult(operation="rewind_stage_2", target_ep=target_ep)
+        self.last_destructive_result = result
         try:
             project.db.reset_after(target_ep, commit=False)
             self._clear_stage2_metadata(project, from_arc_no=target_no)
@@ -255,6 +447,7 @@ class ProjectService:
                 self._rollback_open_transaction(project)
                 self._ui.log("DB commit failed during Stage 2 rewind")
                 return False
+            result.db_committed = True
 
             project.arcs = updated_arcs
             if hasattr(project, "volumes"):
@@ -274,10 +467,13 @@ class ProjectService:
             except Exception as exc:  # pragma: no cover - non-blocking UI path
                 self._ui.log(f"   [VectorDB] delete_episodes_from failed: {exc}")
 
-            self._restore_runtime_state(target_ep)
-            self._ui.log(f"Arc rewind complete. Arc {target_no}+ and downstream episode data were removed.")
+            result = self._restore_runtime_state(target_ep, operation="rewind_stage_2")
+            self._log_destructive_outcome(
+                result,
+                f"Arc rewind complete. Arc {target_no}+ and downstream episode data were removed.",
+            )
             input("\n[Enter] Return to menu")
-            return True
+            return result.cache_invalidation_required
         except Exception as exc:
             self._rollback_open_transaction(project)
             self._ui.log(f"Stage 2 rewind failed: {exc}")
@@ -285,6 +481,7 @@ class ProjectService:
 
     def rollback_episode(self) -> bool:
         """Rollback to the state immediately before a target episode."""
+        self.last_destructive_result = None
         project = self._project_fn()
         latest_ep = project.get_latest_episode_number() - 1
 
@@ -311,6 +508,8 @@ class ProjectService:
             self._ui.log("Cancelled.")
             return False
 
+        result = DestructiveOpResult(operation="rollback_episode", target_ep=target_ep)
+        self.last_destructive_result = result
         try:
             pending_bible = None
             if target_ep > 1:
@@ -347,6 +546,7 @@ class ProjectService:
                 self._rollback_open_transaction(project)
                 self._ui.log("DB commit failed during rollback")
                 return False
+            result.db_committed = True
 
             if pending_bible is not None:
                 project.master_bible = pending_bible
@@ -364,11 +564,13 @@ class ProjectService:
             except Exception as exc:  # pragma: no cover - non-blocking UI path
                 self._ui.log(f"   [VectorDB] delete failed: {exc}")
 
-            self._restore_runtime_state(target_ep)
-            self._ui.log(f"\n[Success] Rollback completed to the state before episode {target_ep}.")
+            result = self._restore_runtime_state(target_ep, operation="rollback_episode")
+            self._log_destructive_outcome(
+                result,
+                f"\n[Success] Rollback completed to the state before episode {target_ep}.",
+            )
             input("\n[Enter] Return to menu")
-            self._assert_rollback_invariants(target_ep)
-            return True
+            return result.cache_invalidation_required
         except Exception as exc:
             self._rollback_open_transaction(project)
             self._ui.log(f"Rollback failed: {exc}")
@@ -376,35 +578,18 @@ class ProjectService:
 
     def _assert_rollback_invariants(self, target_ep: int) -> None:
         """Warn if runtime trackers still carry events at or after target_ep."""
-        if self._emotion_tracker_fn and callable(self._emotion_tracker_fn):
-            tracker = self._emotion_tracker_fn()
-            if tracker is not None and hasattr(tracker, "history") and tracker.history:
-                max_ep = max(entry[0] for entry in tracker.history)
-                if max_ep >= target_ep:
-                    logging.warning(
-                        "[RollbackInvariant] EmotionArcTracker max ep=%d >= target_ep=%d after rollback",
-                        max_ep,
-                        target_ep,
-                    )
-
-        if self._state_delta_tracker_fn and callable(self._state_delta_tracker_fn):
-            tracker = self._state_delta_tracker_fn()
-            if tracker is not None and hasattr(tracker, "energy_history") and tracker.energy_history:
-                max_ep = max(entry.episode for entry in tracker.energy_history)
-                if max_ep >= target_ep:
-                    logging.warning(
-                        "[RollbackInvariant] StateDeltaTracker max ep=%d >= target_ep=%d after rollback",
-                        max_ep,
-                        target_ep,
-                    )
+        self._collect_rollback_invariant_failures(target_ep)
 
     def wipe_production_data(self) -> bool:
         """Delete every episode-derived production artifact while keeping setup data."""
+        self.last_destructive_result = None
         confirm = input("\nReally wipe manuscripts, blueprints, logs, and episode-derived memory? (y/n): ").strip().lower()
         if confirm != "y":
             return False
 
         project = self._project_fn()
+        result = DestructiveOpResult(operation="wipe_production_data", target_ep=1)
+        self.last_destructive_result = result
         try:
             project.db.reset_after(1, commit=False)
             self._clear_narrative_summary_anchors(project)
@@ -413,6 +598,7 @@ class ProjectService:
                 self._rollback_open_transaction(project)
                 self._ui.log("DB commit failed during production wipe")
                 return False
+            result.db_committed = True
 
             self._delete_all_draft_files(project)
 
@@ -423,10 +609,10 @@ class ProjectService:
             except Exception as exc:  # pragma: no cover - non-blocking UI path
                 self._ui.log(f"   [VectorDB] full delete failed: {exc}")
 
-            self._restore_runtime_state(1)
-            self._ui.log("[Wipe] Production artifacts were cleared. Setup data remains intact.")
+            result = self._restore_runtime_state(1, operation="wipe_production_data")
+            self._log_destructive_outcome(result, "[Wipe] Production artifacts were cleared. Setup data remains intact.")
             input("\n[Enter] Return to menu")
-            return True
+            return result.cache_invalidation_required
         except Exception as exc:
             self._rollback_open_transaction(project)
             self._ui.log(f"Wipe failed: {exc}")

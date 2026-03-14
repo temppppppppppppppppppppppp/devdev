@@ -5,7 +5,6 @@
   },
   "validation": {
     "use_v0128": true,
-    "scoring_threshold": 70,
     "use_self_consistency": true,
     "consistency_votes": 3,
     "use_retrospective": true

@@ -6,6 +6,8 @@ import os, sys, json, time
 from pathlib import Path
 from dotenv import load_dotenv
 
+# [manual-only] Host-bound helper. Not part of the live app/runtime path.
+
 load_dotenv()
 
 # 프로젝트 루트를 sys.path에 추가

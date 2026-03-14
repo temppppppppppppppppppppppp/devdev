@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld("geuldobiDesktop", {
   runKey: (key, subKey, inputs, approvalId = null) =>
     ipcRenderer.invoke("bridge:run", { key, subKey, inputs, approvalId }),
   stopRun: () => ipcRenderer.invoke("bridge:stop"),
+  // Dead-candidate compatibility surface. No active renderer consumer today.
   getStatus: () => ipcRenderer.invoke("bridge:status"),
   getQualitySummary: (project, lookback = 5) =>
     ipcRenderer.invoke("bridge:get-quality-summary", { project, lookback }),
@@ -50,5 +51,6 @@ contextBridge.exposeInMainWorld("geuldobiDesktop", {
 
   // 작업 폴더
   openWorkspaceFolder: () => ipcRenderer.invoke("workspace:open-folder"),
+  // Dead-candidate compatibility surface. No active renderer consumer today.
   getWorkspacePath: () => ipcRenderer.invoke("workspace:get-path"),
 });

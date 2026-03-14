@@ -70,6 +70,7 @@ class StudioLogger:
         self.session_start = datetime.now()
         self.session_name = session_name or self.session_start.strftime("%Y%m%d_%H%M%S")
         self.log_file = self.log_dir / f"session_{self.session_name}.log"
+        self._bootstrap_log_file = self.log_file
 
         # "글도비" 명명 로거 — 파일 전용 (콘솔 출력 없음)
         self.root_logger = logging.getLogger("글도비")
@@ -185,11 +186,40 @@ class StudioLogger:
         """파일 출력 레벨 변경"""
         self.file_handler.setLevel(level)
 
+    def _flush_file_handlers(self) -> None:
+        for handler in (self.file_handler, getattr(self, "_root_file_handler", None)):
+            if handler is None:
+                continue
+            try:
+                handler.flush()
+            except Exception:
+                pass
+
+    def _seed_retarget_log_file(self, target_log_file: Path) -> None:
+        source_log_file = Path(getattr(self, "_bootstrap_log_file", self.log_file))
+        if source_log_file == target_log_file or not source_log_file.exists():
+            return
+
+        source_text = source_log_file.read_text(encoding="utf-8")
+        if not source_text:
+            return
+
+        if not target_log_file.exists():
+            target_log_file.write_text(source_text, encoding="utf-8")
+            return
+
+        target_text = target_log_file.read_text(encoding="utf-8")
+        if target_text.startswith(source_text):
+            return
+        target_log_file.write_text(source_text + target_text, encoding="utf-8")
+
     def retarget(self, new_log_dir: Path) -> None:
         """[TF-26] 프로젝트 선택 후 로그 파일 경로를 projects/{name}/logs/로 이동."""
         new_log_dir = Path(new_log_dir)
         new_log_dir.mkdir(parents=True, exist_ok=True)
         new_log_file = new_log_dir / f"session_{self.session_name}.log"
+        self._flush_file_handlers()
+        self._seed_retarget_log_file(new_log_file)
 
         # "글도비" 로거 file handler 교체
         self.root_logger.removeHandler(self.file_handler)

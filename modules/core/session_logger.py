@@ -36,7 +36,7 @@ class SessionLogger:
         로테이션 파일 최대 개수.
     """
 
-    _CATEGORIES = ("llm_io", "decisions", "state_changes")
+    _CATEGORIES = ("llm_io", "decisions", "state_changes", "ui_events")
 
     def __init__(
         self,
@@ -163,6 +163,62 @@ class SessionLogger:
         if source:
             data["source"] = source
         self._write("state_changes", data)
+
+    def log_ui_event(
+        self,
+        *,
+        session_id: str | None = None,
+        seq: int | None = None,
+        level: str = "info",
+        component: str = "UI",
+        stage: int | str | None = None,
+        ep_num: int | None = None,
+        arc_num: int | None = None,
+        round_num: int | None = None,
+        attempt_key: str | None = None,
+        event_kind: str = "log",
+        render_format: str = "text",
+        message: str = "",
+        visible: bool = True,
+        selection_value: str | None = None,
+        prompt_id: str | None = None,
+        artifact_path: str | None = None,
+        meta: dict | None = None,
+        ts: str | None = None,
+    ) -> None:
+        """Persist operator-visible UI events to ``ui_events.jsonl``."""
+        data = {
+            "session_id": str(session_id or "").strip(),
+            "level": str(level or "info"),
+            "component": str(component or "UI"),
+            "event_kind": str(event_kind or "log"),
+            "render_format": str(render_format or "text"),
+            "message": self._truncate(message),
+            "visible": bool(visible),
+        }
+        if ts:
+            data["ts"] = str(ts)
+        if seq is not None:
+            data["seq"] = int(seq)
+        if stage not in (None, ""):
+            data["stage"] = stage
+        if ep_num is not None:
+            data["ep_num"] = int(ep_num)
+        if arc_num is not None:
+            data["arc_num"] = int(arc_num)
+        if round_num is not None:
+            data["round_num"] = int(round_num)
+        if attempt_key:
+            data["attempt_key"] = str(attempt_key)
+        if selection_value:
+            data["selection_value"] = self._truncate(str(selection_value))
+        if prompt_id:
+            data["prompt_id"] = str(prompt_id)
+        if artifact_path:
+            data["artifact_path"] = str(artifact_path)
+        if meta:
+            data["meta"] = self._safe_serialize(meta)
+        self._write("ui_events", data)
 
     # ── internal ─────────────────────────────────────────────
 

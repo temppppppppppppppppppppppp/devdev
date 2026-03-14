@@ -1,0 +1,45 @@
+{
+  "contract_id": "encoding-boundary-contract-v1",
+  "status": "active",
+  "durable_sink_policy": {
+    "encoding": "utf-8",
+    "durable_writers_must_not_use_errors_mode": [
+      "replace",
+      "ignore"
+    ],
+    "covered_surfaces": [
+      "main_a.py -> crash_dump.log",
+      "modules/core/logger.py -> session log files",
+      "scripts/run_stage4_smoke.py -> manuscript text outputs"
+    ]
+  },
+  "console_runtime_policy": {
+    "allowed_non_durable_fallbacks": [
+      "main_a.py Windows stdio bootstrap uses TextIOWrapper(..., errors='replace') before bootstrap stderr notices",
+      "modules/api/process_runner.py runtime tail decode uses utf-8/errors='replace' for ephemeral stdout/stderr diagnostics only",
+      "scripts/run_stage4_smoke.py console fallback may use cp949/errors='ignore' for terminal-only printing"
+    ],
+    "must_not_define_durable_sink_policy": true
+  },
+  "stage0_input_policy": {
+    "authoritative_reader": "modules/core/stage0/reverse_expander.py",
+    "read_order": [
+      "utf-8",
+      "cp949"
+    ],
+    "failure_mode": "fail_closed"
+  },
+  "historical_artifacts": [
+    {
+      "path": "p1_rerun_1arc.err.log",
+      "classification": "historical-cp949-bootstrap-stderr",
+      "source_path": "main_a.py",
+      "source_cause": "bootstrap stderr notice was emitted before Windows UTF-8 stdio normalization",
+      "status": "legacy-evidence-do-not-overwrite"
+    }
+  ],
+  "scanner_generated_artifact_policy": {
+    "ignore_name_glob": "mojibake-global-survey-*.json",
+    "reason": "survey refresh outputs are generated evidence artifacts, not part of the active mojibake source/runtime baseline"
+  }
+}

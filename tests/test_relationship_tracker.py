@@ -448,6 +448,9 @@ class TestGenerateTransitionPrompt:
         result = tracker.generate_transition_prompt("의심", "경외")
         assert "경외" in result
         assert "trigger" in result
+        assert "관계 전이 가이드" in result
+        assert "정당화" in result
+        assert "→" in result
 
     def test_unknown_transition(self, tracker):
         """알 수 없는 전환은 빈 문자열"""

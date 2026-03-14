@@ -7,11 +7,12 @@
 
 import pytest
 
+from modules.api.control_plane_contract import ALLOWED_STAGE0_SUB_KEYS
 from modules.api.run_validator import validate_run_request
 
 # ─── INVALID_KEY ─────────────────────────────────────────────────────────────
 
-@pytest.mark.parametrize("bad_key", ["10", "33", "100", "", "x", "0x0"])
+@pytest.mark.parametrize("bad_key", ["5", "10", "33", "100", "", "x", "0x0"])
 def test_invalid_key_returns_400(bad_key: str) -> None:
     result = validate_run_request(key=bad_key, sub_key=None, runner_state="idle")
     assert not result.ok
@@ -31,7 +32,7 @@ def test_key0_missing_sub_key_returns_400(sub_key) -> None:
 
 # ─── INVALID_SUB_KEY ─────────────────────────────────────────────────────────
 
-@pytest.mark.parametrize("bad_sub", ["8", "99", "a", "-1"])
+@pytest.mark.parametrize("bad_sub", ["0", "8", "99", "a", "-1"])
 def test_key0_invalid_sub_key_returns_400(bad_sub: str) -> None:
     result = validate_run_request(key="0", sub_key=bad_sub, runner_state="idle")
     assert not result.ok
@@ -41,7 +42,7 @@ def test_key0_invalid_sub_key_returns_400(bad_sub: str) -> None:
 
 # ─── SUB_KEY_NOT_ALLOWED ─────────────────────────────────────────────────────
 
-@pytest.mark.parametrize("key", ["1", "2", "3", "4", "5", "6", "7", "44", "77", "88", "99"])
+@pytest.mark.parametrize("key", ["1", "2", "3", "4", "6", "7", "44", "77", "88", "99"])
 def test_non_zero_key_with_sub_key_returns_400(key: str) -> None:
     result = validate_run_request(key=key, sub_key="1", runner_state="idle")
     assert not result.ok
@@ -69,7 +70,7 @@ def test_key0_active_runner_states_also_blocked(runner_state: str) -> None:
 
 # ─── 정상 통과 ───────────────────────────────────────────────────────────────
 
-@pytest.mark.parametrize("key", ["1", "2", "3", "4", "5", "6", "7", "44", "77", "88", "99"])
+@pytest.mark.parametrize("key", ["1", "2", "3", "4", "6", "7", "44", "77", "88", "99"])
 def test_valid_non_zero_keys_pass(key: str) -> None:
     result = validate_run_request(key=key, sub_key=None, runner_state="idle")
     assert result.ok
@@ -77,14 +78,25 @@ def test_valid_non_zero_keys_pass(key: str) -> None:
     assert result.code == "OK"
 
 
-@pytest.mark.parametrize("sub_key", ["0", "1", "2", "3", "4", "5", "6", "7"])
+@pytest.mark.parametrize("sub_key", sorted(ALLOWED_STAGE0_SUB_KEYS))
 def test_key0_all_valid_sub_keys_pass(sub_key: str) -> None:
     result = validate_run_request(key="0", sub_key=sub_key, runner_state="idle")
     assert result.ok
     assert result.http_status == 202
 
 
+def test_public_stage0_contract_excludes_hidden_zero_sub_key() -> None:
+    assert ALLOWED_STAGE0_SUB_KEYS == frozenset({"1", "2", "3", "4", "5", "6", "7"})
+
+
 def test_non_running_states_do_not_block() -> None:
     for state in ("idle", "error"):
         result = validate_run_request(key="2", sub_key=None, runner_state=state)
         assert result.ok, f"State '{state}' should not block"
+
+
+def test_ui_only_exit_key_is_rejected_from_public_run() -> None:
+    result = validate_run_request(key="5", sub_key=None, runner_state="idle")
+    assert not result.ok
+    assert result.http_status == 400
+    assert result.code == "INVALID_KEY"

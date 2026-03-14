@@ -1,10 +1,7 @@
 from __future__ import annotations
 
-from pathlib import Path
-
-import yaml
-
 from modules.core.llm_provider import LLMProvider
+from modules.core.models_config import load_models_yaml, resolve_models_yaml_path
 from modules.core.providers.anthropic_provider import AnthropicProvider
 from modules.core.providers.gemini_provider import GeminiProvider
 from modules.core.providers.openai_provider import OpenAIProvider
@@ -24,25 +21,22 @@ DEFAULT_PROVIDER_CONFIGS = {
 }
 
 
-def _resolve_models_config_path() -> Path:
-    return Path(__file__).resolve().parents[2] / "config" / "models.yaml"
+def _resolve_models_config_path():
+    return resolve_models_yaml_path()
 
 
 def _load_provider_configs() -> dict[str, dict]:
     path = _resolve_models_config_path()
     configs = {name: values.copy() for name, values in DEFAULT_PROVIDER_CONFIGS.items()}
     try:
-        if path.exists():
-            with open(path, encoding="utf-8") as f:
-                data = yaml.safe_load(f) or {}
-            provider_data = data.get("providers", {})
-            if isinstance(provider_data, dict):
-                for name, values in provider_data.items():
-                    if isinstance(name, str) and isinstance(values, dict):
-                        merged = configs.get(name, {}).copy()
-                        merged.update(values)
-                        configs[name] = merged
-    except (OSError, yaml.YAMLError):
+        provider_data = load_models_yaml(path=path).get("providers", {})
+        if isinstance(provider_data, dict):
+            for name, values in provider_data.items():
+                if isinstance(name, str) and isinstance(values, dict):
+                    merged = configs.get(name, {}).copy()
+                    merged.update(values)
+                    configs[name] = merged
+    except OSError:
         pass
     return configs
 

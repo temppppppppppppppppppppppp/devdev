@@ -1,0 +1,45 @@
+geuldobi-desktop/DESKTOP-GUIDE.md: electron_when_ready
+geuldobi-desktop/src/main.js: electron_when_ready, ipc_main, browser_window, subprocess_spawn
+geuldobi-desktop/temp-electron-loadcheck.js: electron_when_ready, browser_window
+geuldobi-desktop/temp-electron-paths.js: electron_when_ready
+main.js: electron_when_ready, ipc_main, browser_window, subprocess_spawn
+main_a.py: python_main
+modules/api/bridge_server.py: fastapi
+modules/api/process_runner.py: subprocess_spawn
+modules/core/stage0/spinner.py: python_main
+RESET.py: python_main
+scripts/audit_bi_5pass.py: python_main
+scripts/backfill_quality_sidecars.py: python_main
+scripts/build_bi_from_phase0_and_tr.py: python_main
+scripts/build_chaebol_allowance_zero_assets.py: python_main
+scripts/build_execution_roadmap.py: python_main
+scripts/build_fallen_prince_buys_joseon_assets.py: python_main
+scripts/generate_evidence_manifest.py: python_main
+scripts/generate_tr_bibles.py: python_main
+scripts/mojibake_global_survey.py: python_main
+scripts/ops_support.py: subprocess_spawn
+scripts/ops_validator.py: python_main
+scripts/populate_process_health_scorecard.py: python_main, subprocess_spawn
+scripts/process_and_audit_tr_bi_loop.py: python_main, subprocess_spawn
+scripts/repair_tr_korean_utf8.py: python_main
+scripts/run_stage2_smoke.py: python_main
+scripts/run_stage34_canary.py: python_main
+scripts/run_stage3_smoke.py: python_main
+scripts/run_stage4_canary.py: python_main
+scripts/run_stage4_smoke.py: python_main
+scripts/run_stale_reference_sweep.py: python_main
+scripts/sync_temp_queue_state.py: python_main
+scripts/tr_batch_harness.py: python_main
+scripts/validate_deep_global_survey_bundle.py: python_main
+scripts/validate_manual_sweep.py: python_main
+smoke_sc.py: python_main
+tests/stage3_isolated_test/test_stage3_arc3.py: python_main
+tests/stage3_isolated_test/test_stage3_arc3_v2.py: python_main
+tests/stage3_isolated_test/test_stage3_production.py: python_main
+tests/stage4_v2_test/test_batch_1_to_10.py: python_main
+tests/stage4_v2_test/test_episode_1.py: python_main
+tests/test_desktop_shadow_hygiene.py: ipc_main
+tests/test_desktop_work_guard_template_contract.py: ipc_main
+tests/test_integrity.py: python_main
+tests/test_ns4_timeline_arc.py: python_main
+tests/test_v55_modules.py: python_main

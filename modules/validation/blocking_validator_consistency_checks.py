@@ -9,14 +9,16 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from modules.validation.blocking_validator import BlockingValidator
 
-# [Phase 4.2] Justification pattern ???
+# [Phase 4.2] Justification pattern support
 try:
     from modules.core.justification_patterns import get_justification_guide, get_pattern_description
 
     JUSTIFICATION_AVAILABLE = True
 except ImportError:
     JUSTIFICATION_AVAILABLE = False
-    logging.warning("?? [BlockingValidator] justification_patterns ?? ?? ?? - ?? ?? ????")
+    logging.warning(
+        "[BlockingValidator] justification_patterns 모듈을 불러오지 못했습니다. 정당화 가이드 체크는 건너뜁니다."
+    )
 
 
 class BlockingValidatorConsistencyChecks:

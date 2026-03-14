@@ -15,16 +15,17 @@
     "run_id": {
       "type": "string"
     },
-    "type": {
-      "type": "string",
-      "enum": [
-        "run_started",
-        "progress",
-        "prompt_request",
-        "prompt_resolved",
-        "prompt_timeout",
+      "type": {
+        "type": "string",
+        "enum": [
+          "run_started",
+          "stdout",
+          "prompt_request",
+          "prompt_resolved",
+          "prompt_timeout",
         "run_completed",
-        "run_failed"
+        "run_failed",
+        "run_stopped"
       ]
     },
     "ts": {
@@ -64,18 +65,74 @@
               },
               "input_type": {
                 "type": "string",
-                "enum": ["enum", "int", "string", "bool"]
+                "enum": ["enum", "int", "string", "bool", "enter", "multiline"]
               },
               "options": {
                 "type": "array",
                 "items": {
-                  "type": "string"
+                  "type": "object",
+                  "required": ["key", "label"],
+                  "properties": {
+                    "key": {
+                      "type": "string"
+                    },
+                    "label": {
+                      "type": "string"
+                    }
+                  }
                 }
               },
               "default": {},
+              "prompt_text": {
+                "type": "string"
+              },
               "timeout_sec": {
                 "type": "integer",
                 "minimum": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "run_started"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object",
+            "required": ["key"],
+            "properties": {
+              "key": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "stdout"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object",
+            "required": ["text"],
+            "properties": {
+              "text": {
+                "type": "string"
               }
             }
           }
@@ -105,6 +162,78 @@
                 "enum": ["user", "default"]
               }
             }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "enum": ["run_completed", "run_failed"]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object",
+            "required": ["returncode"],
+            "properties": {
+              "returncode": {
+                "type": "integer"
+              },
+              "key": {
+                "type": ["string", "null"]
+              },
+              "sub_key": {
+                "type": ["string", "null"]
+              },
+              "mode": {
+                "type": ["string", "null"]
+              },
+              "started_at": {
+                "type": ["string", "null"]
+              },
+              "duration_ms": {
+                "type": ["integer", "null"],
+                "minimum": 0
+              },
+              "last_prompt_step": {
+                "type": ["string", "null"]
+              },
+              "stdout_tail": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "stderr_tail": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "failure_phase": {
+                "type": ["string", "null"]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "run_stopped"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object"
           }
         }
       }

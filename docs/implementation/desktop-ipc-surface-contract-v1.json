@@ -1,0 +1,181 @@
+{
+  "contract_version": "desktop_ipc_surface_v1",
+  "authoritative_electron_entry": "geuldobi-desktop/src/main.js",
+  "authoritative_preload_entry": "geuldobi-desktop/src/preload.js",
+  "active_renderer_consumers": [
+    "geuldobi-desktop/src/index.html",
+    "geuldobi-desktop/src/splash/splash.js"
+  ],
+  "root_shadow_entry": {
+    "path": "geuldobi-desktop/main.js",
+    "classification": "compatibility_shim_only",
+    "must_not_contain": [
+      "ipcMain.handle",
+      "ipcMain.on",
+      "GEULDOBI_ENGINE_EXE",
+      "packaged env wiring"
+    ]
+  },
+  "live_preload_methods": [
+    {
+      "name": "getSplashConfig",
+      "channel": "splash:get-config",
+      "owner": "splash bootstrap",
+      "active_consumer": "geuldobi-desktop/src/splash/splash.js"
+    },
+    {
+      "name": "notifyBackendReady",
+      "channel": "splash:backend-ready",
+      "owner": "splash bootstrap",
+      "active_consumer": "geuldobi-desktop/src/splash/splash.js"
+    },
+    {
+      "name": "onAppReady",
+      "channel": "app:ready",
+      "owner": "desktop handoff",
+      "active_consumer": "geuldobi-desktop/src/index.html"
+    },
+    {
+      "name": "runKey",
+      "channel": "bridge:run",
+      "owner": "desktop run control",
+      "active_consumer": "geuldobi-desktop/src/index.html"
+    },
+    {
+      "name": "stopRun",
+      "channel": "bridge:stop",
+      "owner": "desktop run control",
+      "active_consumer": "geuldobi-desktop/src/index.html"
+    },
+    {
+      "name": "getQualitySummary",
+      "channel": "bridge:get-quality-summary",
+      "owner": "quality operator surface",
+      "active_consumer": "geuldobi-desktop/src/index.html"
+    },
+    {
+      "name": "getQualityDashboard",
+      "channel": "bridge:get-quality-dashboard",
+      "owner": "quality operator surface",
+      "active_consumer": "geuldobi-desktop/src/index.html"
+    },
+    {
+      "name": "getSafeOpsPreview",
+      "channel": "bridge:get-safe-ops-preview",
+      "owner": "safe-op operator surface",
+      "active_consumer": "geuldobi-desktop/src/index.html"
+    },
+    {
+      "name": "saveQualityReview",
+      "channel": "bridge:save-quality-review",
+      "owner": "quality operator surface",
+      "active_consumer": "geuldobi-desktop/src/index.html"
+    },
+    {
+      "name": "getBackendUrl",
+      "channel": "bridge:get-url",
+      "owner": "renderer websocket bootstrap",
+      "active_consumer": "geuldobi-desktop/src/index.html"
+    },
+    {
+      "name": "getCliContract",
+      "channel": "bridge:get-cli-contract",
+      "owner": "stage 0 contract UI",
+      "active_consumer": "geuldobi-desktop/src/index.html"
+    },
+    {
+      "name": "saveSettings",
+      "channel": "bridge:save-settings",
+      "owner": "settings persistence",
+      "active_consumer": "geuldobi-desktop/src/index.html"
+    },
+    {
+      "name": "loadSettings",
+      "channel": "bridge:load-settings",
+      "owner": "settings persistence",
+      "active_consumer": "geuldobi-desktop/src/index.html"
+    },
+    {
+      "name": "listMaterialFiles",
+      "channel": "material:list-files",
+      "owner": "material manager",
+      "active_consumer": "geuldobi-desktop/src/index.html"
+    },
+    {
+      "name": "importMaterialFile",
+      "channel": "material:import-file",
+      "owner": "material manager",
+      "active_consumer": "geuldobi-desktop/src/index.html"
+    },
+    {
+      "name": "deleteMaterialFile",
+      "channel": "material:delete-file",
+      "owner": "material manager",
+      "active_consumer": "geuldobi-desktop/src/index.html"
+    },
+    {
+      "name": "resolvePrompt",
+      "channel": "bridge:resolve-prompt",
+      "owner": "mode-b prompt loop",
+      "active_consumer": "geuldobi-desktop/src/index.html"
+    },
+    {
+      "name": "listProjects",
+      "channel": "project:list",
+      "owner": "project selector",
+      "active_consumer": "geuldobi-desktop/src/index.html"
+    },
+    {
+      "name": "createProject",
+      "channel": "project:create",
+      "owner": "project selector",
+      "active_consumer": "geuldobi-desktop/src/index.html"
+    },
+    {
+      "name": "loadProjectConfigSurfaces",
+      "channel": "project:load-config-surfaces",
+      "owner": "project config surface",
+      "active_consumer": "geuldobi-desktop/src/index.html"
+    },
+    {
+      "name": "saveProjectConfigSurfaces",
+      "channel": "project:save-config-surfaces",
+      "owner": "project config surface",
+      "active_consumer": "geuldobi-desktop/src/index.html"
+    },
+    {
+      "name": "listWorkGuardTemplates",
+      "channel": "project:list-work-guard-templates",
+      "owner": "work guard template UI",
+      "active_consumer": "geuldobi-desktop/src/index.html"
+    },
+    {
+      "name": "applyWorkGuardTemplate",
+      "channel": "project:apply-work-guard-template",
+      "owner": "work guard template UI",
+      "active_consumer": "geuldobi-desktop/src/index.html"
+    },
+    {
+      "name": "openWorkspaceFolder",
+      "channel": "workspace:open-folder",
+      "owner": "workspace utility",
+      "active_consumer": "geuldobi-desktop/src/index.html"
+    }
+  ],
+  "dead_candidate_preload_methods": [
+    {
+      "name": "getStatus",
+      "channel": "bridge:status",
+      "classification": "dead-candidate",
+      "reason": "no active renderer consumer in index.html or splash.js; retain only as manual/debug compatibility surface",
+      "must_not_be_treated_as_live": true
+    },
+    {
+      "name": "getWorkspacePath",
+      "channel": "workspace:get-path",
+      "classification": "dead-candidate",
+      "reason": "no active renderer consumer in index.html or splash.js; retain only as manual/debug compatibility surface",
+      "must_not_be_treated_as_live": true
+    }
+  ]
+}

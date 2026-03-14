@@ -1,3 +1,8 @@
+"""
+[manual-only] Host-bound DB mutation helper.
+This script rewrites a specific local SQLite project and is not part of the live app/runtime path.
+"""
+
 import json
 import sqlite3
 from pathlib import Path

@@ -1003,7 +1003,7 @@ class Stage3Orchestrator:
                     )
                     _s3_parts = []
                     # NOTE: S3 전용 키 없음 — S4의 vector_max_results_s4를 의도적으로 공유
-                    _s3_max_results = int(_s3_th("context.vector_max_results_s4", 16))
+                    _s3_max_results = int(_s3_th("context.vector_max_results_s4", 50))
                     for _slot in getattr(_s3_plan, "slots", []) or []:
                         _slot_query = str(getattr(_slot, "query", "") or "").strip()
                         if not _slot_query:
@@ -1241,7 +1241,14 @@ class Stage3Orchestrator:
                         _bp_prev_hud = None
 
                 _s3_spinner.update_detail(f"제{working_ep}화 · Blueprint 생성")
-                print(f"      ⏳ 제{working_ep}화 Blueprint 생성 시작 (최대 10회 시도)...")
+                ctx.ui.log(
+                    f"      ⏳ 제{working_ep}화 Blueprint 생성 시작 (최대 10회 시도)...",
+                    stage="stage3",
+                    component="blueprint_generation",
+                    ep_num=working_ep,
+                    arc_num=arc_idx,
+                    event_kind="progress",
+                )
                 blueprint, pipeline_result = ctx.agents["three_phase_bp"].generate(
                     ep_num=working_ep,
                     arc_data=arc_data,
@@ -1265,7 +1272,15 @@ class Stage3Orchestrator:
                 _bp_score = pipeline_result.get(
                     "last_score", pipeline_result.get("phases", {}).get("generate", {}).get("selected_score", 0)
                 )
-                print(f"      📊 제{working_ep}화 Blueprint 결과: {_verdict} (score={_bp_score})")
+                ctx.ui.log(
+                    f"      📊 제{working_ep}화 Blueprint 결과: {_verdict} (score={_bp_score})",
+                    stage="stage3",
+                    component="blueprint_generation",
+                    ep_num=working_ep,
+                    arc_num=arc_idx,
+                    event_kind="result",
+                    meta={"verdict": _verdict, "score": _bp_score},
+                )
 
         except Exception as gen_err:
             _logging.error(f" [V61.3] 제{working_ep}화 Blueprint 생성 크래시: {str(gen_err)[:100]}")
@@ -1306,21 +1321,6 @@ class Stage3Orchestrator:
         _duration_ms = int(pipeline_result.get("_stage3_duration_ms") or 0) or None
 
         # [LOG-1] 판정 경로 세션 로깅
-        _sl = getattr(ctx, "session_logger", None)
-        if _sl:
-            try:
-                _sl.log_decision(
-                    stage="stage3",
-                    ep_num=working_ep,
-                    decision_type="blueprint",
-                    result=_final_verdict,
-                    score=pipeline_result.get("last_score", 0),
-                    arc_no=arc_no,
-                    quality_risk=_quality_risk,
-                )
-            except Exception:
-                pass
-
         try:
             _db = getattr(getattr(ctx, "current_project", None), "db", None)
             _attempt_num = self._extract_stage3_attempt_num(pipeline_result)
@@ -1339,16 +1339,51 @@ class Stage3Orchestrator:
                 pipeline_result.get("phases", {}).get("generate", {}).get("selected_strategy", "unknown") or "unknown"
             )
             _candidate_key = build_candidate_key(strategy=_selected_strategy, fallback="stage3")
-            _artifact_meta = snapshot_logged_artifact(
-                getattr(ctx, "current_project", None),
-                stage=3,
-                ep_num=working_ep,
-                arc_num=arc_no,
-                attempt_num=_attempt_num,
-                candidate_key=_candidate_key,
-                artifact_kind="final_blueprint",
-                payload=blueprint if isinstance(blueprint, dict) else None,
+            _artifact_meta = normalize_artifact_meta(
+                snapshot_logged_artifact(
+                    getattr(ctx, "current_project", None),
+                    stage=3,
+                    ep_num=working_ep,
+                    arc_num=arc_no,
+                    attempt_num=_attempt_num,
+                    candidate_key=_candidate_key,
+                    artifact_kind="final_blueprint",
+                    payload=blueprint if isinstance(blueprint, dict) else None,
+                ),
+                fallback_candidate_key=_candidate_key,
             )
+            _selection_kwargs = self._build_stage3_director_selection_kwargs(
+                pipeline_result,
+                ep_num=working_ep,
+                attempt_num=_attempt_num,
+                attempt_key=_attempt_key,
+                selected_strategy=_selected_strategy,
+                score=_score,
+                candidate_key=_candidate_key,
+                advisory_flags=_observability_flags,
+                artifact_meta=_artifact_meta,
+            )
+            _sl = getattr(ctx, "session_logger", None)
+            if _sl:
+                try:
+                    self._log_stage3_session_decision(
+                        _sl,
+                        ep_num=working_ep,
+                        verdict=_final_verdict,
+                        score=pipeline_result.get("last_score", 0),
+                        arc_no=arc_no,
+                        quality_risk=_quality_risk,
+                        attempt_key=_attempt_key,
+                        candidate_key=_artifact_meta["candidate_key"],
+                        content_hash=_artifact_meta["content_hash"],
+                        artifact_path=_artifact_meta["artifact_path"],
+                        reason=str((_selection_kwargs or {}).get("verdict_reason", "") or ""),
+                        selection_reason=str((_selection_kwargs or {}).get("selection_reason", "") or ""),
+                        verdict_reason=str((_selection_kwargs or {}).get("verdict_reason", "") or ""),
+                        fix_scope=str((_selection_kwargs or {}).get("fix_scope", "") or ""),
+                    )
+                except Exception as _log_err:
+                    _logging.debug("[TF-26] session_logger.log_decision failed: %s", str(_log_err)[:100])
             if not isinstance(_score, int):
                 try:
                     _score = int(_score)
@@ -1393,17 +1428,6 @@ class Stage3Orchestrator:
                     artifact_path=_artifact_meta["artifact_path"],
                 )
                 if hasattr(_db, "save_director_selection"):
-                    _selection_kwargs = self._build_stage3_director_selection_kwargs(
-                        pipeline_result,
-                        ep_num=working_ep,
-                        attempt_num=_attempt_num,
-                        attempt_key=_attempt_key,
-                        selected_strategy=_selected_strategy,
-                        score=_score,
-                        candidate_key=_candidate_key,
-                        advisory_flags=_observability_flags,
-                        artifact_meta=_artifact_meta,
-                    )
                     if _selection_kwargs:
                         try:
                             _db.save_director_selection(**_selection_kwargs)
@@ -1650,6 +1674,46 @@ class Stage3Orchestrator:
         return ""
 
     @staticmethod
+    def _log_stage3_session_decision(
+        session_logger,
+        *,
+        ep_num: int,
+        verdict: str,
+        score: int,
+        arc_no: int | None,
+        quality_risk: bool,
+        attempt_key: str,
+        candidate_key: str,
+        content_hash: str,
+        artifact_path: str,
+        reject_reason: str = "",
+        reason: str = "",
+        selection_reason: str = "",
+        verdict_reason: str = "",
+        fix_scope: str = "",
+    ) -> None:
+        if not session_logger:
+            return
+        session_logger.log_decision(
+            stage="stage3",
+            ep_num=ep_num,
+            decision_type="blueprint",
+            result=str(verdict or ""),
+            score=int(score or 0),
+            arc_no=arc_no,
+            quality_risk=bool(quality_risk),
+            reject_reason=str(reject_reason or "")[:500],
+            reason=str(reason or "")[:500],
+            selection_reason=str(selection_reason or "")[:500],
+            verdict_reason=str(verdict_reason or "")[:500],
+            fix_scope=str(fix_scope or "")[:40],
+            attempt_key=str(attempt_key or ""),
+            candidate_key=str(candidate_key or ""),
+            content_hash=str(content_hash or ""),
+            artifact_path=str(artifact_path or ""),
+        )
+
+    @staticmethod
     def _build_stage3_director_selection_kwargs(
         pipeline_result: dict,
         *,
@@ -1812,19 +1876,6 @@ class Stage3Orchestrator:
         ctx.ui.log(f"   ❌ 제{working_ep}화 Blueprint 생성 실패")
 
         # [LOG-1] 판정 경로 세션 로깅 (REJECT)
-        _sl = getattr(ctx, "session_logger", None)
-        if _sl:
-            try:
-                _sl.log_decision(
-                    stage="stage3",
-                    ep_num=working_ep,
-                    decision_type="blueprint",
-                    result=pipeline_result.get("final_verdict", "REJECT"),
-                    score=pipeline_result.get("last_score", 0),
-                )
-            except Exception as e:
-                _logging.debug("[TF-26] session_logger.log_decision failed: %s", str(e)[:100])
-
         try:
             _db = getattr(getattr(ctx, "current_project", None), "db", None)
             _final_verdict = str(pipeline_result.get("final_verdict", "REJECT"))
@@ -1852,16 +1903,52 @@ class Stage3Orchestrator:
             _failure_category = _classify_stage3_failure_category(pipeline_result)
             _artifact_meta = normalize_artifact_meta(None, fallback_candidate_key=_candidate_key)
             if isinstance(blueprint, dict):
-                _artifact_meta = snapshot_logged_artifact(
-                    getattr(ctx, "current_project", None),
-                    stage=3,
-                    ep_num=working_ep,
-                    arc_num=_arc_num,
-                    attempt_num=_attempt_num,
-                    candidate_key=_candidate_key,
-                    artifact_kind="selected_blueprint",
-                    payload=blueprint,
+                _artifact_meta = normalize_artifact_meta(
+                    snapshot_logged_artifact(
+                        getattr(ctx, "current_project", None),
+                        stage=3,
+                        ep_num=working_ep,
+                        arc_num=_arc_num,
+                        attempt_num=_attempt_num,
+                        candidate_key=_candidate_key,
+                        artifact_kind="selected_blueprint",
+                        payload=blueprint,
+                    ),
+                    fallback_candidate_key=_candidate_key,
                 )
+            _selection_kwargs = self._build_stage3_director_selection_kwargs(
+                pipeline_result,
+                ep_num=working_ep,
+                attempt_num=_attempt_num,
+                attempt_key=_attempt_key,
+                selected_strategy=_selected_strategy,
+                score=_score,
+                candidate_key=_candidate_key,
+                advisory_flags=_observability_flags,
+                artifact_meta=_artifact_meta,
+            )
+            _sl = getattr(ctx, "session_logger", None)
+            if _sl:
+                try:
+                    self._log_stage3_session_decision(
+                        _sl,
+                        ep_num=working_ep,
+                        verdict=_final_verdict,
+                        score=pipeline_result.get("last_score", 0),
+                        arc_no=_arc_num,
+                        quality_risk=bool(pipeline_result.get("quality_risk", False)),
+                        attempt_key=_attempt_key,
+                        candidate_key=_artifact_meta["candidate_key"],
+                        content_hash=_artifact_meta["content_hash"],
+                        artifact_path=_artifact_meta["artifact_path"],
+                        reject_reason=_reject_reason,
+                        reason=str((_selection_kwargs or {}).get("verdict_reason", _reject_reason) or ""),
+                        selection_reason=str((_selection_kwargs or {}).get("selection_reason", "") or ""),
+                        verdict_reason=str((_selection_kwargs or {}).get("verdict_reason", _reject_reason) or ""),
+                        fix_scope=str((_selection_kwargs or {}).get("fix_scope", "") or ""),
+                    )
+                except Exception as _log_err:
+                    _logging.debug("[TF-26] session_logger.log_decision failed: %s", str(_log_err)[:100])
             if not isinstance(_score, int):
                 try:
                     _score = int(_score)
@@ -1880,6 +1967,8 @@ class Stage3Orchestrator:
                         attempt_key=_attempt_key,
                         final_verdict=_final_verdict,
                         candidate_key=_candidate_key,
+                        content_hash=_artifact_meta["content_hash"],
+                        artifact_path=_artifact_meta["artifact_path"],
                     )
                 except Exception as _prm_err:
                     _logging.debug("[stage3_prm] Stage3 REJECT 기록 실패 (비차단): %s", _prm_err)
@@ -1903,19 +1992,10 @@ class Stage3Orchestrator:
                     attempt_key=_attempt_key,
                     prompt_version=_prompt_version,
                     candidate_key=_candidate_key,
+                    content_hash=_artifact_meta["content_hash"],
+                    artifact_path=_artifact_meta["artifact_path"],
                 )
                 if hasattr(_db, "save_director_selection"):
-                    _selection_kwargs = self._build_stage3_director_selection_kwargs(
-                        pipeline_result,
-                        ep_num=working_ep,
-                        attempt_num=_attempt_num,
-                        attempt_key=_attempt_key,
-                        selected_strategy=_selected_strategy,
-                        score=_score,
-                        candidate_key=_candidate_key,
-                        advisory_flags=_observability_flags,
-                        artifact_meta=_artifact_meta,
-                    )
                     if _selection_kwargs:
                         try:
                             _db.save_director_selection(**_selection_kwargs)

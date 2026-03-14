@@ -1,0 +1,53 @@
+{
+  "proof_version": "v1",
+  "generated_at": "2026-03-14T09:20:00",
+  "execution_unit": "MJB-E4",
+  "policy": {
+    "semantic_change": "forbidden",
+    "scope": "runtime-visible literals, docstrings, warnings, focused test copy only"
+  },
+  "entries": [
+    {
+      "path": "modules/core/relationship_tracker.py",
+      "status": "cleaned",
+      "restored_surface": "module docstring",
+      "proof_note": "Facade description restored without changing public API."
+    },
+    {
+      "path": "modules/core/relationship_tracker_npc.py",
+      "status": "cleaned",
+      "restored_surface": "generate_transition_prompt docstring and returned guidance text",
+      "proof_note": "Prompt semantics preserved; output now uses readable Korean guidance."
+    },
+    {
+      "path": "modules/validation/blocking_validator_consistency_checks.py",
+      "status": "cleaned",
+      "restored_surface": "import-fallback warning message",
+      "proof_note": "Validation semantics unchanged; fallback warning made readable."
+    },
+    {
+      "path": "modules/core/pre_director_checklist.py",
+      "status": "cleaned",
+      "restored_surface": "lazy-init checker docstrings",
+      "proof_note": "Docstring-only cleanup."
+    },
+    {
+      "path": "modules/core/stage4_interview_round.py",
+      "status": "cleaned",
+      "restored_surface": "Stage4 docstrings and PassRateMonitor debug log",
+      "proof_note": "No routing or persistence semantics changed."
+    },
+    {
+      "path": "tests/test_relationship_tracker.py",
+      "status": "cleaned",
+      "restored_surface": "focused prompt assertions",
+      "proof_note": "Locks readable prompt contract."
+    },
+    {
+      "path": "tests/test_pass_with_fix.py",
+      "status": "cleaned",
+      "restored_surface": "test docstrings",
+      "proof_note": "Test-only wording cleanup."
+    }
+  ]
+}

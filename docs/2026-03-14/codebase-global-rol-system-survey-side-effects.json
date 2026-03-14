@@ -1,0 +1,708 @@
+{
+  "topic": "codebase-global-rol-system-survey",
+  "pattern_totals": {
+    "print": 671,
+    "ui_log": 768,
+    "logging": 1784,
+    "console_print": 47,
+    "open_write": 47,
+    "path_write_text": 175,
+    "json_dump": 25,
+    "sqlite_related": 420,
+    "subprocess": 13,
+    "network": 52,
+    "input_calls": 70
+  },
+  "top_files_by_pattern": {
+    "print": [
+      {
+        "path": "modules/core/stage0/__init__.py",
+        "count": 100
+      },
+      {
+        "path": "tests/stage3_isolated_test/test_stage3_arc3.py",
+        "count": 57
+      },
+      {
+        "path": "tests/stage3_isolated_test/test_stage3_production.py",
+        "count": 49
+      },
+      {
+        "path": "main_a.py",
+        "count": 44
+      },
+      {
+        "path": "tests/stage3_isolated_test/test_stage3_arc3_v2.py",
+        "count": 41
+      },
+      {
+        "path": "tests/stage4_v2_test/test_episode_1.py",
+        "count": 39
+      },
+      {
+        "path": "modules/domain/agents/director_ensemble.py",
+        "count": 29
+      },
+      {
+        "path": "tests/stage4_v2_test/test_batch_1_to_10.py",
+        "count": 26
+      },
+      {
+        "path": "smoke_sc.py",
+        "count": 25
+      },
+      {
+        "path": "RESET.py",
+        "count": 21
+      },
+      {
+        "path": "modules/core/stage4_interview_round.py",
+        "count": 20
+      },
+      {
+        "path": "scripts/validate_manual_sweep.py",
+        "count": 15
+      },
+      {
+        "path": "modules/domain/agents/three_phase_blueprint_generator.py",
+        "count": 12
+      },
+      {
+        "path": "modules/domain/agents/base_agent.py",
+        "count": 11
+      },
+      {
+        "path": "modules/domain/agents/director_auditor.py",
+        "count": 10
+      },
+      {
+        "path": "modules/core/stage0/style_extractor.py",
+        "count": 9
+      },
+      {
+        "path": "modules/core/stage0/spinner.py",
+        "count": 8
+      },
+      {
+        "path": "scripts/run_stage4_smoke.py",
+        "count": 8
+      },
+      {
+        "path": "fix_costs.py",
+        "count": 8
+      },
+      {
+        "path": "modules/domain/agents/arc_ensemble.py",
+        "count": 7
+      }
+    ],
+    "ui_log": [
+      {
+        "path": "main_a.py",
+        "count": 247
+      },
+      {
+        "path": "modules/core/stage01_helpers.py",
+        "count": 105
+      },
+      {
+        "path": "modules/core/stage4_post_processor.py",
+        "count": 56
+      },
+      {
+        "path": "modules/core/stage4_orchestrator.py",
+        "count": 51
+      },
+      {
+        "path": "modules/core/stage3_orchestrator.py",
+        "count": 46
+      },
+      {
+        "path": "modules/core/stage2_orchestrator.py",
+        "count": 45
+      },
+      {
+        "path": "modules/core/stage2_validation_pipeline.py",
+        "count": 36
+      },
+      {
+        "path": "modules/core/stage4_interview_round.py",
+        "count": 36
+      },
+      {
+        "path": "modules/core/stage2_finalizer.py",
+        "count": 31
+      },
+      {
+        "path": "modules/core/services/project_service.py",
+        "count": 29
+      },
+      {
+        "path": "modules/core/stage2_preflight.py",
+        "count": 28
+      },
+      {
+        "path": "modules/core/services/state_service.py",
+        "count": 18
+      },
+      {
+        "path": "modules/core/stage4_context_builder.py",
+        "count": 13
+      },
+      {
+        "path": "modules/core/services/ui_service.py",
+        "count": 8
+      },
+      {
+        "path": "modules/domain/agents/block_enricher.py",
+        "count": 8
+      },
+      {
+        "path": "modules/core/prompt_builder.py",
+        "count": 3
+      },
+      {
+        "path": "modules/core/logger.py",
+        "count": 2
+      },
+      {
+        "path": "modules/protocols/app_services.py",
+        "count": 2
+      },
+      {
+        "path": "modules/core/error_helper.py",
+        "count": 1
+      },
+      {
+        "path": "modules/core/martial_manager.py",
+        "count": 1
+      }
+    ],
+    "logging": [
+      {
+        "path": "modules/core/stage4_interview_round.py",
+        "count": 105
+      },
+      {
+        "path": "modules/core/stage2_preflight.py",
+        "count": 85
+      },
+      {
+        "path": "modules/core/db_manager.py",
+        "count": 81
+      },
+      {
+        "path": "modules/domain/agents/four_phase_arc_generator.py",
+        "count": 70
+      },
+      {
+        "path": "modules/validation/validation_orchestrator.py",
+        "count": 67
+      },
+      {
+        "path": "modules/domain/agents/base_agent.py",
+        "count": 59
+      },
+      {
+        "path": "modules/domain/agents/director_ensemble.py",
+        "count": 56
+      },
+      {
+        "path": "modules/core/stage4_context_builder.py",
+        "count": 55
+      },
+      {
+        "path": "modules/core/project_manager.py",
+        "count": 52
+      },
+      {
+        "path": "modules/core/stage2_finalizer.py",
+        "count": 52
+      },
+      {
+        "path": "modules/domain/agents/three_phase_blueprint_generator.py",
+        "count": 49
+      },
+      {
+        "path": "modules/domain/agents/director_auditor.py",
+        "count": 48
+      },
+      {
+        "path": "modules/core/stage4_post_processor.py",
+        "count": 46
+      },
+      {
+        "path": "modules/core/stage3_orchestrator.py",
+        "count": 42
+      },
+      {
+        "path": "modules/core/stage0/reverse_expander.py",
+        "count": 40
+      },
+      {
+        "path": "modules/domain/agents/analyst.py",
+        "count": 35
+      },
+      {
+        "path": "modules/core/stage2_validation_pipeline.py",
+        "count": 34
+      },
+      {
+        "path": "modules/domain/agents/chief_writer.py",
+        "count": 34
+      },
+      {
+        "path": "modules/core/failure_analyzer.py",
+        "count": 30
+      },
+      {
+        "path": "modules/domain/agents/state_tracker_npc.py",
+        "count": 26
+      }
+    ],
+    "console_print": [
+      {
+        "path": "modules/core/stage0/spinner.py",
+        "count": 40
+      },
+      {
+        "path": "modules/core/studio_visualizer.py",
+        "count": 6
+      },
+      {
+        "path": "modules/core/services/ui_service.py",
+        "count": 1
+      }
+    ],
+    "open_write": [
+      {
+        "path": "modules/core/stage0/__init__.py",
+        "count": 7
+      },
+      {
+        "path": "modules/core/data_collector.py",
+        "count": 6
+      },
+      {
+        "path": "modules/core/stage0/reverse_expander.py",
+        "count": 4
+      },
+      {
+        "path": "main_a.py",
+        "count": 3
+      },
+      {
+        "path": "modules/core/stage0/story_expander.py",
+        "count": 3
+      },
+      {
+        "path": "modules/core/stage01_helpers.py",
+        "count": 2
+      },
+      {
+        "path": "tests/stage3_isolated_test/test_stage3_production.py",
+        "count": 2
+      },
+      {
+        "path": "tests/stage4_v2_test/test_batch_1_to_10.py",
+        "count": 2
+      },
+      {
+        "path": "modules/api/risk_approval.py",
+        "count": 1
+      },
+      {
+        "path": "modules/core/character_voice.py",
+        "count": 1
+      },
+      {
+        "path": "modules/core/failure_learning.py",
+        "count": 1
+      },
+      {
+        "path": "modules/core/foreshadow_tracker.py",
+        "count": 1
+      },
+      {
+        "path": "modules/core/jsonl_io.py",
+        "count": 1
+      },
+      {
+        "path": "modules/core/metrics_collector.py",
+        "count": 1
+      },
+      {
+        "path": "modules/core/pass_rate_monitor.py",
+        "count": 1
+      },
+      {
+        "path": "modules/core/quality_dashboard.py",
+        "count": 1
+      },
+      {
+        "path": "modules/core/session_logger.py",
+        "count": 1
+      },
+      {
+        "path": "modules/core/soft_failure.py",
+        "count": 1
+      },
+      {
+        "path": "modules/core/stage2_orchestrator.py",
+        "count": 1
+      },
+      {
+        "path": "modules/core/services/audit_service.py",
+        "count": 1
+      }
+    ],
+    "path_write_text": [
+      {
+        "path": "tests/test_stage4_canary_tools.py",
+        "count": 30
+      },
+      {
+        "path": "tests/test_failure_analyzer.py",
+        "count": 20
+      },
+      {
+        "path": "tests/test_bridge_quality_summary.py",
+        "count": 13
+      },
+      {
+        "path": "tests/test_mojibake_global_survey.py",
+        "count": 10
+      },
+      {
+        "path": "tests/test_audit_service.py",
+        "count": 7
+      },
+      {
+        "path": "tests/test_quality_sidecar_bootstrap.py",
+        "count": 6
+      },
+      {
+        "path": "tests/test_stage0_work_guard_style_cache.py",
+        "count": 5
+      },
+      {
+        "path": "tests/test_vec_memory.py",
+        "count": 5
+      },
+      {
+        "path": "scripts/tr_batch_harness.py",
+        "count": 4
+      },
+      {
+        "path": "tests/test_ui_service.py",
+        "count": 4
+      },
+      {
+        "path": "modules/core/project_manager.py",
+        "count": 3
+      },
+      {
+        "path": "scripts/run_stage4_canary.py",
+        "count": 3
+      },
+      {
+        "path": "tests/test_ingest_i_materials_quarantine.py",
+        "count": 3
+      },
+      {
+        "path": "tests/test_project_support.py",
+        "count": 3
+      },
+      {
+        "path": "modules/core/logger.py",
+        "count": 2
+      },
+      {
+        "path": "modules/core/stage0/__init__.py",
+        "count": 2
+      },
+      {
+        "path": "scripts/build_execution_roadmap.py",
+        "count": 2
+      },
+      {
+        "path": "scripts/run_stage4_smoke.py",
+        "count": 2
+      },
+      {
+        "path": "scripts/run_stale_reference_sweep.py",
+        "count": 2
+      },
+      {
+        "path": "tests/test_bgr_e5_continuity_contract.py",
+        "count": 2
+      }
+    ],
+    "json_dump": [
+      {
+        "path": "modules/core/data_collector.py",
+        "count": 4
+      },
+      {
+        "path": "modules/core/stage0/__init__.py",
+        "count": 4
+      },
+      {
+        "path": "modules/core/stage01_helpers.py",
+        "count": 2
+      },
+      {
+        "path": "modules/core/stage0/reverse_expander.py",
+        "count": 2
+      },
+      {
+        "path": "modules/core/stage0/story_expander.py",
+        "count": 2
+      },
+      {
+        "path": "tests/stage3_isolated_test/test_stage3_production.py",
+        "count": 2
+      },
+      {
+        "path": "main_a.py",
+        "count": 1
+      },
+      {
+        "path": "modules/core/character_voice.py",
+        "count": 1
+      },
+      {
+        "path": "modules/core/failure_learning.py",
+        "count": 1
+      },
+      {
+        "path": "modules/core/foreshadow_tracker.py",
+        "count": 1
+      },
+      {
+        "path": "modules/core/metrics_collector.py",
+        "count": 1
+      },
+      {
+        "path": "modules/core/pass_rate_monitor.py",
+        "count": 1
+      },
+      {
+        "path": "tests/stage3_isolated_test/test_stage3_arc3.py",
+        "count": 1
+      },
+      {
+        "path": "tests/stage3_isolated_test/test_stage3_arc3_v2.py",
+        "count": 1
+      },
+      {
+        "path": "tests/stage4_v2_test/test_batch_1_to_10.py",
+        "count": 1
+      }
+    ],
+    "sqlite_related": [
+      {
+        "path": "modules/core/db_manager.py",
+        "count": 44
+      },
+      {
+        "path": "main_a.py",
+        "count": 23
+      },
+      {
+        "path": "modules/protocols/db_repository.py",
+        "count": 18
+      },
+      {
+        "path": "tests/test_edge_cases.py",
+        "count": 17
+      },
+      {
+        "path": "modules/core/vec_memory.py",
+        "count": 15
+      },
+      {
+        "path": "tests/test_integration.py",
+        "count": 14
+      },
+      {
+        "path": "tests/test_stage3_orchestrator.py",
+        "count": 13
+      },
+      {
+        "path": "tests/test_vec_memory.py",
+        "count": 13
+      },
+      {
+        "path": "tests/test_protocols_services.py",
+        "count": 12
+      },
+      {
+        "path": "modules/domain/agents/base_agent.py",
+        "count": 9
+      },
+      {
+        "path": "tests/integration/test_pipeline_smoke.py",
+        "count": 9
+      },
+      {
+        "path": "modules/core/stage3_orchestrator.py",
+        "count": 7
+      },
+      {
+        "path": "tests/test_audit_service.py",
+        "count": 7
+      },
+      {
+        "path": "tests/test_bridge_quality_summary.py",
+        "count": 7
+      },
+      {
+        "path": "tests/test_integrity.py",
+        "count": 7
+      },
+      {
+        "path": "tests/test_main_a_stage_entry_contracts.py",
+        "count": 7
+      },
+      {
+        "path": "tests/test_runtime_ownership_contract.py",
+        "count": 7
+      },
+      {
+        "path": "tests/test_session_logger.py",
+        "count": 7
+      },
+      {
+        "path": "RESET.py",
+        "count": 7
+      },
+      {
+        "path": "modules/core/character_voice_profiler.py",
+        "count": 6
+      }
+    ],
+    "subprocess": [
+      {
+        "path": "modules/api/process_runner.py",
+        "count": 6
+      },
+      {
+        "path": "geuldobi-desktop/src/main.js",
+        "count": 2
+      },
+      {
+        "path": "main.js",
+        "count": 2
+      },
+      {
+        "path": "scripts/ops_support.py",
+        "count": 1
+      },
+      {
+        "path": "scripts/populate_process_health_scorecard.py",
+        "count": 1
+      },
+      {
+        "path": "scripts/process_and_audit_tr_bi_loop.py",
+        "count": 1
+      }
+    ],
+    "network": [
+      {
+        "path": "modules/api/bridge_server.py",
+        "count": 16
+      },
+      {
+        "path": "geuldobi-desktop/src/index.html",
+        "count": 10
+      },
+      {
+        "path": "tests/test_desktop_transport_contract.py",
+        "count": 7
+      },
+      {
+        "path": "geuldobi-desktop/DESKTOP-GUIDE.md",
+        "count": 7
+      },
+      {
+        "path": "tests/test_api_contract.py",
+        "count": 3
+      },
+      {
+        "path": "tests/test_desktop_direct_surface_contract.py",
+        "count": 3
+      },
+      {
+        "path": "modules/api/prompt_broker.py",
+        "count": 1
+      },
+      {
+        "path": "modules/core/slack_bot.py",
+        "count": 1
+      },
+      {
+        "path": "geuldobi-desktop/src/main.js",
+        "count": 1
+      },
+      {
+        "path": "geuldobi-desktop/src/preload.js",
+        "count": 1
+      },
+      {
+        "path": "geuldobi-desktop/src/splash/splash.js",
+        "count": 1
+      },
+      {
+        "path": "main.js",
+        "count": 1
+      }
+    ],
+    "input_calls": [
+      {
+        "path": "modules/core/stage01_helpers.py",
+        "count": 19
+      },
+      {
+        "path": "modules/core/stage0/__init__.py",
+        "count": 14
+      },
+      {
+        "path": "main_a.py",
+        "count": 11
+      },
+      {
+        "path": "modules/core/services/project_service.py",
+        "count": 10
+      },
+      {
+        "path": "tests/test_stage01_fixes.py",
+        "count": 4
+      },
+      {
+        "path": "RESET.py",
+        "count": 4
+      },
+      {
+        "path": "tests/test_stage234_fixes.py",
+        "count": 3
+      },
+      {
+        "path": "modules/core/stage4_post_processor.py",
+        "count": 2
+      },
+      {
+        "path": "modules/api/process_runner.py",
+        "count": 1
+      },
+      {
+        "path": "modules/core/services/ui_service.py",
+        "count": 1
+      },
+      {
+        "path": "smoke_sc.py",
+        "count": 1
+      }
+    ]
+  }
+}

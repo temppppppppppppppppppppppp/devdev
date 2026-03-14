@@ -86,6 +86,8 @@ def test_bootstrap_quality_sidecars_backfills_legacy_stage4_rows(tmp_path):
     assert health["quality_signal_rows"] == 1
     assert health["stage4_validation_eps"] == 1
     assert health["role_fit_constraints"] == 1
+    assert health["style_effective_pov"] == ""
+    assert health["style_pov_contract"] == "effective_pov"
 
 
 def test_quality_dashboard_endpoint_is_read_only_for_legacy_quality_sidecars(tmp_path, monkeypatch):
@@ -174,5 +176,7 @@ def test_quality_dashboard_endpoint_is_read_only_for_legacy_quality_sidecars(tmp
     assert data["calibration"]["data_health"]["quality_label_rows"] == 0
     assert data["calibration"]["data_health"]["quality_signal_rows"] == 0
     assert data["calibration"]["data_health"]["manual_review_rows"] == 0
+    assert data["calibration"]["data_health"]["style_effective_pov"] == ""
+    assert data["calibration"]["data_health"]["style_pov_contract"] == "effective_pov"
     assert "review" in data["calibration"]["next_step"]
     assert before_counts == after_counts

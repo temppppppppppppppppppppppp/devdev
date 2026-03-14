@@ -4,7 +4,12 @@
   "keys": {
     "0": {
       "requires_sub_key": true,
-      "allowed_sub_keys": ["0", "1", "2", "3", "4", "5", "6", "7"],
+      "allowed_sub_keys": ["1", "2", "3", "4", "5", "6", "7"],
+      "internal_only_sub_keys": {
+        "0": {
+          "ui_only_action": "cancel_stage0"
+        }
+      },
       "steps": []
     },
     "1": {
@@ -92,11 +97,6 @@
           "default": "adopt_best"
         }
       ]
-    },
-    "5": {
-      "requires_sub_key": false,
-      "ui_only_action": "exit_app",
-      "steps": []
     },
     "6": {
       "requires_sub_key": false,
@@ -191,6 +191,11 @@
           "max": 99
         }
       ]
+    }
+  },
+  "internal_actions": {
+    "5": {
+      "ui_only_action": "exit_app"
     }
   }
 }

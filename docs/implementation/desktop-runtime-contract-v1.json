@@ -1,0 +1,42 @@
+{
+  "contract_version": "desktop_runtime_v1",
+  "runtime_model_id": "source_bundle_primary",
+  "authoritative_electron_entry": "src/main.js",
+  "packaged_resource_inventory": [
+    "backend/backend.exe",
+    "engine/main_a.py",
+    "python-embed/python.exe"
+  ],
+  "extra_resources": [
+    {
+      "from": "../dist/backend",
+      "to": "backend"
+    },
+    {
+      "from": "../dist/engine",
+      "to": "engine"
+    },
+    {
+      "from": "../python-embed",
+      "to": "python-embed"
+    }
+  ],
+  "desktop_main_packaged_env": [
+    "GEULDOBI_DESKTOP_MODE",
+    "GEULDOBI_PACKAGED_RUNTIME_MODEL",
+    "GEULDOBI_PROJECTS_ROOT",
+    "GEULDOBI_WORKSPACE"
+  ],
+  "backend_entry_packaged_env": [
+    "GEULDOBI_ENGINE_ROOT",
+    "GEULDOBI_PACKAGED_RUNTIME_MODEL",
+    "GEULDOBI_PROJECTS_ROOT",
+    "GEULDOBI_PYTHON_PATH"
+  ],
+  "primary_launch_paths": {
+    "backend_binary": "resources/backend/backend.exe",
+    "engine_entry": "resources/engine/main_a.py",
+    "embedded_python": "resources/python-embed/python.exe"
+  },
+  "engine_exe_primary": false
+}

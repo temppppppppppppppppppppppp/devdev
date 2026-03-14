@@ -1,0 +1,113 @@
+smoke_sc.py:57:def main():
+main.js:10:const ipcMain = electron.ipcMain;
+main.js:17:if (!app || !BrowserWindow || !ipcMain) {
+main.js:207:  mainWindow = new BrowserWindow({
+main.js:226:  splashWindow = new BrowserWindow({
+main.js:288:ipcMain.handle("splash:get-config", () => {
+main.js:296:ipcMain.on("splash:backend-ready", () => {
+main.js:321:ipcMain.handle("bridge:run", async (_, { key, subKey, inputs }) => {
+main.js:328:ipcMain.handle("bridge:stop", async () => {
+main.js:332:ipcMain.handle("bridge:status", async () => {
+main.js:336:ipcMain.handle("bridge:get-url", () => {
+main.js:340:ipcMain.handle("bridge:get-cli-contract", () => {
+main.js:344:ipcMain.handle("bridge:get-quality-summary", async (_, { project, lookback = 5 }) => {
+main.js:352:ipcMain.handle("bridge:get-quality-dashboard", async (_, { project, lookback = 5 }) => {
+main.js:360:ipcMain.handle("bridge:get-safe-ops-preview", async (_, { project }) => {
+main.js:365:ipcMain.handle("bridge:save-quality-review", async (_, { project, epNum, operatorLabel, note = "" }) => {
+main.js:377:ipcMain.handle("bridge:resolve-prompt", async (_, { runId, promptId, value }) => {
+main.js:386:ipcMain.handle("bridge:save-settings", async (_, settings) => {
+main.js:398:ipcMain.handle("bridge:load-settings", async () => {
+main.js:434:ipcMain.handle("material:list-files", async (_, folder) => {
+main.js:456:ipcMain.handle("material:import-file", async (_, folder) => {
+main.js:495:ipcMain.handle("material:delete-file", async (_, folder, fileName) => {
+main.js:555:ipcMain.handle("project:list", async () => {
+main.js:576:ipcMain.handle("project:create", async (_, name) => {
+main.js:597:ipcMain.handle("project:load-config-surfaces", async (_, projectName) => {
+main.js:612:ipcMain.handle("project:save-config-surfaces", async (_, payload = {}) => {
+main.js:633:ipcMain.handle("workspace:open-folder", async () => {
+main.js:641:ipcMain.handle("workspace:get-path", async () => {
+geuldobi-desktop\temp-electron-loadcheck.js:5:  const w = new BrowserWindow({show:false, webPreferences:{preload:path.resolve('geuldobi-desktop/src/preload.js'), contextIsolation:true, nodeIntegration:false}});
+scripts\validate_manual_sweep.py:217:def main() -> int:
+scripts\validate_manual_sweep.py:218:    parser = argparse.ArgumentParser(description="Validate manual sweep findings markdown.")
+scripts\tr_batch_harness.py:1362:def build_parser() -> argparse.ArgumentParser:
+scripts\tr_batch_harness.py:1363:    parser = argparse.ArgumentParser(description="Batch harness for treatment block production")
+scripts\tr_batch_harness.py:1400:def main() -> int:
+scripts\sync_temp_queue_state.py:76:def main() -> int:
+geuldobi-desktop\src\main.js:4:const ipcMain = electron.ipcMain;
+geuldobi-desktop\src\main.js:12:if (!app || !BrowserWindow || !ipcMain) {
+geuldobi-desktop\src\main.js:256:  mainWindow = new BrowserWindow({
+geuldobi-desktop\src\main.js:295:  splashWindow = new BrowserWindow({
+geuldobi-desktop\src\main.js:377:ipcMain.handle("splash:get-config", () => {
+geuldobi-desktop\src\main.js:385:ipcMain.on("splash:backend-ready", () => {
+geuldobi-desktop\src\main.js:444:ipcMain.handle("bridge:run", async (_, { key, subKey, inputs, approvalId }) => {
+geuldobi-desktop\src\main.js:454:ipcMain.handle("bridge:stop", async () => {
+geuldobi-desktop\src\main.js:459:ipcMain.handle("bridge:status", async () => {
+geuldobi-desktop\src\main.js:463:ipcMain.handle("bridge:get-url", () => {
+geuldobi-desktop\src\main.js:467:ipcMain.handle("bridge:get-cli-contract", () => {
+geuldobi-desktop\src\main.js:471:ipcMain.handle("bridge:get-quality-summary", async (_, { project, lookback = 5 }) => {
+geuldobi-desktop\src\main.js:479:ipcMain.handle("bridge:get-quality-dashboard", async (_, { project, lookback = 5 }) => {
+geuldobi-desktop\src\main.js:487:ipcMain.handle("bridge:get-safe-ops-preview", async (_, { project }) => {
+geuldobi-desktop\src\main.js:492:ipcMain.handle("bridge:save-quality-review", async (_, { project, epNum, operatorLabel, note = "" }) => {
+geuldobi-desktop\src\main.js:504:ipcMain.handle("bridge:resolve-prompt", async (_, { runId, promptId, value }) => {
+geuldobi-desktop\src\main.js:513:ipcMain.handle("bridge:save-settings", async (_, settings) => {
+geuldobi-desktop\src\main.js:525:ipcMain.handle("bridge:load-settings", async () => {
+geuldobi-desktop\src\main.js:561:ipcMain.handle("material:list-files", async (_, folder) => {
+geuldobi-desktop\src\main.js:583:ipcMain.handle("material:import-file", async (_, folder) => {
+geuldobi-desktop\src\main.js:622:ipcMain.handle("material:delete-file", async (_, folder, fileName) => {
+geuldobi-desktop\src\main.js:735:ipcMain.handle("project:list", async () => {
+geuldobi-desktop\src\main.js:756:ipcMain.handle("project:create", async (_, name) => {
+geuldobi-desktop\src\main.js:777:ipcMain.handle("project:load-config-surfaces", async (_, projectName) => {
+geuldobi-desktop\src\main.js:792:ipcMain.handle("project:save-config-surfaces", async (_, payload = {}) => {
+geuldobi-desktop\src\main.js:811:ipcMain.handle("project:list-work-guard-templates", async (_, payload = {}) => {
+geuldobi-desktop\src\main.js:824:ipcMain.handle("project:apply-work-guard-template", async (_, payload = {}) => {
+geuldobi-desktop\src\main.js:845:ipcMain.handle("workspace:open-folder", async () => {
+geuldobi-desktop\src\main.js:854:ipcMain.handle("workspace:get-path", async () => {
+tests\stage4_v2_test\test_episode_1.py:258:    parser = argparse.ArgumentParser()
+tests\stage4_v2_test\test_batch_1_to_10.py:278:    parser = argparse.ArgumentParser()
+tests\stage3_isolated_test\test_stage3_production.py:288:def main():
+tests\stage3_isolated_test\test_stage3_arc3_v2.py:231:def main():
+tests\stage3_isolated_test\test_stage3_arc3.py:272:def main():
+scripts\run_stale_reference_sweep.py:28:def main() -> int:
+scripts\run_stale_reference_sweep.py:29:    parser = argparse.ArgumentParser(description="Sweep the repo for stale operational references and produce findings docs.")
+scripts\run_stage4_smoke.py:7:    python scripts/run_stage4_smoke.py
+scripts\run_stage4_smoke.py:160:def main() -> None:
+scripts\run_stage4_canary.py:26:    parser = argparse.ArgumentParser(description="Stage 4 canary helper")
+scripts\run_stage4_canary.py:59:def main() -> int:
+scripts\run_stage3_smoke.py:7:    python scripts/run_stage3_smoke.py
+scripts\run_stage3_smoke.py:183:def main() -> None:
+scripts\run_stage34_canary.py:27:    parser = argparse.ArgumentParser(description="Stage 3->4 frontier canary helper")
+scripts\run_stage34_canary.py:54:def main() -> int:
+scripts\run_stage2_smoke.py:7:    python scripts/run_stage2_smoke.py
+scripts\run_stage2_smoke.py:152:async def run_stage2_smoke() -> None:
+scripts\run_stage2_smoke.py:306:def main() -> None:
+scripts\run_stage2_smoke.py:307:    asyncio.run(run_stage2_smoke())
+scripts\repair_tr_korean_utf8.py:699:def main() -> int:
+scripts\process_and_audit_tr_bi_loop.py:237:def main() -> int:
+scripts\populate_process_health_scorecard.py:44:def main() -> int:
+scripts\populate_process_health_scorecard.py:45:    parser = argparse.ArgumentParser(description="Populate a process health scorecard from current governance state.")
+scripts\ops_validator.py:295:def main() -> int:
+scripts\ops_validator.py:296:    parser = argparse.ArgumentParser(description="Validate temp execution queue and canonical mirror integrity.")
+scripts\mojibake_global_survey.py:336:def main() -> int:
+scripts\mojibake_global_survey.py:337:    parser = argparse.ArgumentParser(description="Read-only mojibake survey for the current workspace.")
+scripts\build_fallen_prince_buys_joseon_assets.py:1061:def main() -> int:
+scripts\build_execution_roadmap.py:114:def main() -> int:
+scripts\build_execution_roadmap.py:115:    parser = argparse.ArgumentParser(description="Build a canonical + temp aggregate execution roadmap from the temp queue.")
+scripts\build_chaebol_allowance_zero_assets.py:942:def main() -> int:
+scripts\build_bi_from_phase0_and_tr.py:505:def main() -> int:
+scripts\build_bi_from_phase0_and_tr.py:506:    parser = argparse.ArgumentParser(description=__doc__)
+scripts\backfill_quality_sidecars.py:25:def main() -> int:
+scripts\backfill_quality_sidecars.py:26:    parser = argparse.ArgumentParser(description="Backfill quality sidecar tables from legacy logs/manuscripts.")
+scripts\audit_bi_5pass.py:138:def main() -> int:
+scripts\audit_bi_5pass.py:139:    parser = argparse.ArgumentParser(description=__doc__)
+tests\test_desktop_work_guard_template_contract.py:16:    assert 'ipcMain.handle("project:list-work-guard-templates"' in MAIN_JS
+tests\test_desktop_work_guard_template_contract.py:17:    assert 'ipcMain.handle("project:apply-work-guard-template"' in MAIN_JS
+tests\test_desktop_work_guard_template_contract.py:28:    assert 'ipcMain.handle("bridge:run", async (_, { key, subKey, inputs, approvalId })' in MAIN_JS
+tests\test_desktop_shadow_hygiene.py:30:    assert 'ipcMain.handle(' not in ROOT_MAIN
+tests\test_desktop_shadow_hygiene.py:34:    assert 'ipcMain.handle("project:list-work-guard-templates"' in LIVE_MAIN
+tests\test_desktop_shadow_hygiene.py:56:        assert f'ipcMain.handle("{channel}"' in LIVE_MAIN
+tests\test_encoding_boundary_contract.py:49:    source = _read_source("scripts/run_stage4_smoke.py")
+tests\test_run_stage4_canary.py:5:import scripts.run_stage4_canary as canary_script
+tests\test_run_stage34_canary.py:5:import scripts.run_stage34_canary as canary_script
+tests\test_run_stage34_canary.py:8:def test_run_stage34_canary_uses_frontier_lag_and_analyzes():
+modules\api\bridge_server.py:1441:async def lifespan(app: FastAPI):
+modules\api\bridge_server.py:1465:app = FastAPI(

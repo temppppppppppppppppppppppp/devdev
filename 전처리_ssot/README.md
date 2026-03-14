@@ -238,15 +238,15 @@ treatments/preprocess/{work_id}/
 
 둘은 역할이 다르다.
 
-### 5.1 `sequential_run_status.md`는 왜 필요한가
+### 5.1 `sequential_run_status.json`과 fallback `.md`는 왜 필요한가
 
 작품별 생산기지에는 기존 canonical `TR`을 복제해 둔 seed baseline이 들어 있을 수 있다.
 이건 참고용 작업 기반이지, SSOT가 요구하는 **실제 순차 production 기록**이 아니다.
 
 그래서 진행률은 block 폴더 개수로 읽지 않고 아래 상태 파일로 읽는다.
 
-- `treatments/preprocess/{work_id}/docs/sequential_run_status.md`
-- 표준 target: `treatments/preprocess/{work_id}/sequential_run_status.json`
+- primary: `treatments/preprocess/{work_id}/sequential_run_status.json`
+- deprecated fallback: `treatments/preprocess/{work_id}/docs/sequential_run_status.md`
 
 읽는 법:
 
@@ -284,7 +284,7 @@ Stage 0에서 Planning으로 넘어가려면 아래 4개가 있어야 한다.
 
 Production 진입 해석:
 
-- Production 재개 전에는 항상 `docs/sequential_run_status.md`를 읽는다.
+- Production 재개 전에는 항상 `sequential_run_status.json`을 먼저 읽고, 유예 기간에만 `.md` fallback을 읽는다.
 - 상태 파일이 없거나 모호하면 `Block 001`부터 다시 간다.
 - seed baseline만 있는 기지는 진짜 완주본으로 취급하지 않는다.
 

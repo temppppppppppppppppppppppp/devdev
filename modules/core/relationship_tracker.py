@@ -1,6 +1,6 @@
 """
 [Phase 2.1] Relationship State Machine
-NPC-??? ?? ?? ?? ? ??.
+NPC 관계 상태 추적 및 전이 검증 모듈.
 
 [R5-2b] Split into 2 submodules:
 - relationship_tracker_npc.py

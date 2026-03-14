@@ -154,7 +154,9 @@ def inspect_quality_sidecar_health(project_dir: Path, db: DBManager) -> dict[str
     payload["author_directives_exists"] = bool(support_assets["author_directives"]["exists"])
     payload["style_guide_exists"] = bool(support_assets["style_guide"]["exists"])
     payload["style_tone"] = str(support_assets["style_guide"]["tone"] or "")
-    payload["style_pov"] = str(support_assets["style_guide"]["pov"] or "")
+    payload["style_effective_pov"] = str(support_assets["style_guide"]["effective_pov"] or "")
+    payload["style_pov"] = payload["style_effective_pov"]
+    payload["style_pov_contract"] = "effective_pov"
     return payload
 
 
@@ -174,6 +176,9 @@ def bootstrap_quality_sidecars(project_dir: Path, db: DBManager) -> dict[str, An
     report.update(load_work_guard_summary(project_dir))
     report["author_directives_exists"] = bool(support_assets["author_directives"]["exists"])
     report["style_guide_exists"] = bool(support_assets["style_guide"]["exists"])
+    report["style_effective_pov"] = str(support_assets["style_guide"]["effective_pov"] or "")
+    report["style_pov"] = report["style_effective_pov"]
+    report["style_pov_contract"] = "effective_pov"
 
     if not latest_validations:
         return report

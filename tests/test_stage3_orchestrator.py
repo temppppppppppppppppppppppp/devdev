@@ -3,12 +3,14 @@
 추출 대상: _stage_3_batch_blueprinting (main_a.py → stage3_orchestrator.py)
 """
 
+import json
 import logging
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
 
+from modules.core.session_logger import SessionLogger
 from modules.core.stage3_context import Stage3Context
 from modules.core.stage3_orchestrator import Stage3Orchestrator
 
@@ -367,6 +369,58 @@ class TestStageAttemptObservability:
         assert ds_kw["artifact_path"].endswith("selected_blueprint__action_focused.json")
         assert (tmp_path / ds_kw["artifact_path"]).exists()
         assert ds_kw["advisory_warnings"]["contradictions"] == ["timeline mismatch"]
+
+    def test_handle_success_writes_session_decision_row_with_join_metadata(self, orch, app_mock, tmp_path):
+        app_mock.current_project.paths = MagicMock()
+        app_mock.current_project.paths.root = tmp_path
+        session_logger = SessionLogger(tmp_path / "logs" / "session", enabled=True)
+        app_mock._session_logger = session_logger
+        orch.ctx.session_logger = session_logger
+        pipeline_result = {
+            "final_verdict": "PASS",
+            "last_score": 93,
+            "phases": {
+                "generate": {"selected_strategy": "dialogue_focused", "selected_score": 93},
+                "validate": {
+                    "verdict": "PASS",
+                    "selection_reason": "후보 B가 감정선과 연속성 연결이 가장 안정적",
+                    "verdict_reason": "구조 리스크 없이 바로 사용 가능",
+                    "fix_scope": "inplace",
+                },
+            },
+        }
+
+        orch._handle_success(
+            working_ep=4,
+            arc_no=1,
+            arc_data={"arc_no": 1},
+            blueprint={"integrated_scenario": "ok", "scene_breakdown": {"s1": "scene"}},
+            pipeline_result=pipeline_result,
+            prev_blueprints=[],
+            success_count=0,
+            fail_count=0,
+        )
+
+        decisions_path = tmp_path / "logs" / "session" / "decisions.jsonl"
+        rows = [
+            json.loads(line)
+            for line in decisions_path.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+        row = rows[-1]
+        meta = row["meta"]
+
+        assert row["stage"] == "stage3"
+        assert row["result"] == "PASS"
+        assert meta["attempt_key"].startswith("s3:ep4:arc1:a")
+        assert meta["candidate_key"] == "dialogue_focused"
+        assert meta["content_hash"]
+        assert meta["artifact_path"].endswith("final_blueprint__dialogue_focused.json")
+        assert meta["reason"] == "구조 리스크 없이 바로 사용 가능"
+        assert meta["selection_reason"] == "후보 B가 감정선과 연속성 연결이 가장 안정적"
+        assert meta["verdict_reason"] == "구조 리스크 없이 바로 사용 가능"
+        assert meta["fix_scope"] == "inplace"
+        assert (tmp_path / meta["artifact_path"]).exists()
 
 
 class TestLoadPrevBlueprint:

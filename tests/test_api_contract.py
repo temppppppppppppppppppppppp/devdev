@@ -32,18 +32,25 @@ from typing import Any, Optional
 
 import yaml
 
+from modules.api.control_plane_contract import (
+    ALLOWED_STAGE0_SUB_KEYS,
+    INTERNAL_STAGE0_SUB_KEYS,
+    INTERNAL_UI_ACTION_KEYS,
+    PUBLIC_RUN_KEYS,
+)
+
 
 # ---------------------------------------------------------------------------
 # 계약 상수 (api-contract-v1.yaml / prompt-map-v1.json 기준)
 # ---------------------------------------------------------------------------
 
-VALID_KEYS = {"0", "1", "2", "3", "4", "5", "6", "7", "44", "77", "88", "99"}
+VALID_KEYS = set(PUBLIC_RUN_KEYS)
 
 # key=0만 sub_key 필요, 나머지는 불허
 KEY_REQUIRES_SUB_KEY = {"0"}
 KEY_FORBIDDEN_SUB_KEY = VALID_KEYS - KEY_REQUIRES_SUB_KEY
 
-KEY_0_ALLOWED_SUB_KEYS = {"0", "1", "2", "3", "4", "5", "6", "7"}
+KEY_0_ALLOWED_SUB_KEYS = set(ALLOWED_STAGE0_SUB_KEYS)
 
 RISK_KEYS = {"44", "77", "88", "99"}
 
@@ -234,7 +241,12 @@ class TestKeyValidation:
         assert res["code"] == "SUB_KEY_REQUIRED"
 
     def test_key0_with_invalid_sub_key_returns_INVALID_SUB_KEY(self, router):
-        res = router.post_run("0", sub_key="9")
+        res = router.post_run("0", sub_key="0")
+        assert res["ok"] is False
+        assert res["code"] == "INVALID_SUB_KEY"
+
+    def test_key0_hidden_cancel_sub_key_is_not_publicly_accepted(self, router):
+        res = router.post_run("0", sub_key="0")
         assert res["ok"] is False
         assert res["code"] == "INVALID_SUB_KEY"
 
@@ -251,11 +263,17 @@ class TestKeyValidation:
             assert res["ok"] is False
             assert res["code"] == "SUB_KEY_NOT_ALLOWED", f"key={k}"
 
-    @pytest.mark.parametrize("k", ["1", "2", "3", "4", "5", "6", "7"])
+    @pytest.mark.parametrize("k", ["1", "2", "3", "4", "6", "7"])
     def test_normal_keys_accepted_without_sub_key(self, router, k):
         res = router.post_run(k)
         assert res["ok"] is True
         assert "run_id" in res
+
+    def test_ui_only_exit_key_rejected_from_public_run(self, router):
+        res = router.post_run("5")
+        assert res["ok"] is False
+        assert res["code"] == "INVALID_KEY"
+        assert res["status"] == 400
 
 
 # ---------------------------------------------------------------------------
@@ -476,10 +494,22 @@ DOCUMENT_ONLY_ERROR_CODES = {
 }
 
 CONTRACT_PATH = Path(__file__).resolve().parents[1] / "docs" / "implementation" / "api-contract-v1.yaml"
+PROMPT_MAP_PATH = Path(__file__).resolve().parents[1] / "docs" / "implementation" / "prompt-map-v1.json"
+EVENT_SCHEMA_PATH = Path(__file__).resolve().parents[1] / "docs" / "implementation" / "event-schema-v1.json"
 
 
 def _load_contract_spec() -> dict[str, Any]:
     return yaml.safe_load(CONTRACT_PATH.read_text(encoding="utf-8"))
+
+
+def _load_prompt_map() -> dict[str, Any]:
+    import json
+
+    return json.loads(PROMPT_MAP_PATH.read_text(encoding="utf-8"))
+
+
+def _load_event_schema() -> dict[str, Any]:
+    return yaml.safe_load(EVENT_SCHEMA_PATH.read_text(encoding="utf-8"))
 
 
 class TestErrorCodeCoverage:
@@ -548,8 +578,24 @@ class TestContractDocumentSurface:
             "/quality/dashboard",
             "/safe-ops/preview",
             "/quality/review",
+            "/events",
         }
         assert required_paths.issubset(spec["paths"])
+
+    def test_quality_and_safe_ops_project_query_is_required(self):
+        spec = _load_contract_spec()
+        for path in ("/quality/summary", "/quality/dashboard", "/safe-ops/preview"):
+            params = spec["paths"][path]["get"]["parameters"]
+            project_param = next(param for param in params if param["name"] == "project")
+            assert project_param["required"] is True
+            assert project_param["schema"]["minLength"] == 1
+
+    def test_events_websocket_contract_is_formally_declared(self):
+        spec = _load_contract_spec()
+        ws_contract = spec["paths"]["/events"]["x-websocket"]
+        assert ws_contract["protocol"] == "ws"
+        assert ws_contract["direction"] == "server_push"
+        assert ws_contract["event_schema"] == "./event-schema-v1.json"
 
     def test_error_envelope_enum_includes_document_only_codes(self):
         spec = _load_contract_spec()
@@ -559,9 +605,42 @@ class TestContractDocumentSurface:
         assert EXPECTED_ERROR_CODES.issubset(error_codes)
         assert DOCUMENT_ONLY_ERROR_CODES.issubset(error_codes)
 
+    def test_run_request_enum_matches_public_run_contract(self):
+        spec = _load_contract_spec()
+        run_keys = set(spec["components"]["schemas"]["RunRequest"]["properties"]["key"]["enum"])
+        assert run_keys == PUBLIC_RUN_KEYS
+        assert "5" not in run_keys
+        assert "7" in run_keys
+
+    def test_prompt_map_keeps_exit_app_as_internal_only_action(self):
+        prompt_map = _load_prompt_map()
+        assert set(prompt_map["keys"]) == PUBLIC_RUN_KEYS
+        assert prompt_map["internal_actions"] == {"5": {"ui_only_action": "exit_app"}}
+        assert INTERNAL_UI_ACTION_KEYS == {"5": "exit_app"}
+
+    def test_stage0_prompt_map_public_sub_keys_match_contract_and_hide_cancel(self):
+        prompt_map = _load_prompt_map()
+        stage0 = prompt_map["keys"]["0"]
+        assert set(stage0["allowed_sub_keys"]) == KEY_0_ALLOWED_SUB_KEYS
+        assert stage0["internal_only_sub_keys"] == {"0": {"ui_only_action": "cancel_stage0"}}
+        assert INTERNAL_STAGE0_SUB_KEYS == {"0": "cancel_stage0"}
+        assert "0" not in stage0["allowed_sub_keys"]
+
+    def test_run_request_sub_key_schema_matches_public_stage0_contract(self):
+        spec = _load_contract_spec()
+        sub_key_schema = spec["components"]["schemas"]["RunRequest"]["properties"]["sub_key"]
+        assert set(sub_key_schema["enum"]) == KEY_0_ALLOWED_SUB_KEYS
+        assert sub_key_schema["nullable"] is True
+
     def test_status_envelope_enum_matches_runtime_states(self):
         spec = _load_contract_spec()
         status_states = set(
             spec["components"]["schemas"]["StatusEnvelope"]["properties"]["data"]["properties"]["state"]["enum"]
         )
         assert status_states == {"idle", "starting", "running", "stopping", "error"}
+
+    def test_event_schema_covers_runtime_websocket_event_types(self):
+        event_schema = _load_event_schema()
+        event_types = set(event_schema["properties"]["type"]["enum"])
+        assert {"run_started", "stdout", "prompt_request", "prompt_resolved", "prompt_timeout"}.issubset(event_types)
+        assert {"run_completed", "run_failed", "run_stopped"}.issubset(event_types)

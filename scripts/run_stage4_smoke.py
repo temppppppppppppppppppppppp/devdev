@@ -56,6 +56,11 @@ class _NoopReferenceAnchor:
         pass
 
 
+def _console_only_fallback_text(text: str) -> str:
+    """Best-effort console fallback. Durable outputs still stay UTF-8."""
+    return text.encode("cp949", errors="ignore").decode("cp949", errors="ignore")
+
+
 def _make_mock_project(db: DBManager, bible: dict, arcs: list[dict], output_dir: Path):
     project = MagicMock()
     project.db = db
@@ -77,7 +82,7 @@ def _make_stage4_ctx(project) -> Stage4Context:
         try:
             print(text)
         except UnicodeEncodeError:
-            print(text.encode("cp949", errors="ignore").decode("cp949", errors="ignore"))
+            print(_console_only_fallback_text(text))
 
     ui = MagicMock()
     ui.log = _safe_log

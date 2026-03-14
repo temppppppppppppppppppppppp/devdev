@@ -1,0 +1,67 @@
+{
+  "contract_version": "v1",
+  "summary": "Classify live, manual-only, shadow, and residue surfaces so they are not mistaken for runtime entry points.",
+  "live_surfaces": {
+    "desktop_entry": {
+      "path": "geuldobi-desktop/src/main.js",
+      "role": "active_entry"
+    },
+    "desktop_package": {
+      "path": "geuldobi-desktop/package.json",
+      "role": "authoritative_loader",
+      "main": "src/main.js"
+    }
+  },
+  "manual_only_surfaces": [
+    {
+      "path": "lite_mode/bridge/ui_discovery.py",
+      "role": "manual_ui_discovery_helper"
+    },
+    {
+      "path": "lite_mode/bridge/gemini_driver.py",
+      "role": "manual_raw_provider_driver"
+    },
+    {
+      "path": "lite_mode/manual_ui_discovery_probe.py",
+      "role": "manual_probe"
+    },
+    {
+      "path": "tools/normalize_arcs_db.py",
+      "role": "host_bound_db_mutation"
+    },
+    {
+      "path": "tools/fix_future_items.py",
+      "role": "host_bound_db_mutation"
+    },
+    {
+      "path": "tools2/expand_ep15.py",
+      "role": "host_bound_generation_helper"
+    },
+    {
+      "path": "tools2/style_transfer.py",
+      "role": "host_bound_generation_helper"
+    },
+    {
+      "path": "main_tools/blueprint_editor.py",
+      "role": "host_bound_blueprint_editor"
+    }
+  ],
+  "shadow_surfaces": [
+    {
+      "path": "geuldobi-desktop/main.js",
+      "role": "stale_compatibility_shim"
+    },
+    {
+      "path": "main.js",
+      "role": "manual_debug_shadow_entry"
+    }
+  ],
+  "residue_surfaces": {
+    "directories": [
+      "MagicMock"
+    ],
+    "globs": [
+      "temp-*"
+    ]
+  }
+}

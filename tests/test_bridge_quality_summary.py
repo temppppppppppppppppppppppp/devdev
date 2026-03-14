@@ -4,6 +4,7 @@ import json
 from modules.api import bridge_server
 from modules.core.db_manager import DBManager
 from modules.core.quality_dashboard import QualityDashboard
+from modules.core.services.audit_service import AuditService
 
 
 def test_quality_summary_endpoint_reads_project_sidecar(tmp_path, monkeypatch):
@@ -235,6 +236,197 @@ def test_quality_dashboard_endpoint_combines_result_and_patterns(tmp_path, monke
     assert data["calibration"]["total_reviews"] == 2
     assert data["calibration"]["recent_observations"][0]["ep_num"] == 3
     assert data["calibration"]["recent_observations"][0]["operator_label"] == "AI 티"
+
+
+def test_quality_dashboard_endpoint_surfaces_proof_status_and_sink_alignment(tmp_path, monkeypatch):
+    monkeypatch.setattr(bridge_server, "PROJECT_ROOT", tmp_path)
+    project_dir = tmp_path / "projects" / "demo"
+    project_dir.mkdir(parents=True)
+    logs_dir = project_dir / "logs"
+    (logs_dir / "session").mkdir(parents=True, exist_ok=True)
+
+    db = DBManager(project_dir / "project_data.db")
+    attempt_key_s3 = "s3:ep6:arc1:a1:sess_demo"
+    attempt_key_s4 = "s4:ep6:arc1:a1:sess_demo"
+    stage3_artifact = "logs/artifacts/stage3/ep_0006/attempt_01/final_blueprint__balanced.json"
+    stage4_artifact = "logs/artifacts/stage4/ep_0006/attempt_01/final_manuscript__A_balanced.txt"
+    try:
+        (project_dir / stage3_artifact).parent.mkdir(parents=True, exist_ok=True)
+        (project_dir / stage3_artifact).write_text("{}", encoding="utf-8")
+        (project_dir / stage4_artifact).parent.mkdir(parents=True, exist_ok=True)
+        (project_dir / stage4_artifact).write_text("manuscript", encoding="utf-8")
+
+        db.save_stage_attempt(
+            stage=3,
+            verdict="PASS",
+            attempt_num=1,
+            ep_num=6,
+            arc_num=1,
+            score=90,
+            session_id="sess_demo",
+            attempt_key=attempt_key_s3,
+            candidate_key="balanced",
+            content_hash="hash-s3",
+            artifact_path=stage3_artifact,
+        )
+        db.save_stage_attempt(
+            stage=4,
+            verdict="PASS",
+            attempt_num=1,
+            ep_num=6,
+            arc_num=1,
+            score=96,
+            session_id="sess_demo",
+            attempt_key=attempt_key_s4,
+            candidate_key="A|balanced",
+            content_hash="hash-s4",
+            artifact_path=stage4_artifact,
+        )
+        db.save_director_selection(
+            ep_num=6,
+            round_num=1,
+            selected_label="A",
+            selected_strategy="balanced",
+            verdict="PASS",
+            score=96,
+            stage=4,
+            attempt_key=attempt_key_s4,
+            candidate_key="A|balanced",
+            content_hash="hash-s4",
+            artifact_path=stage4_artifact,
+        )
+        (logs_dir / "session" / "decisions.jsonl").write_text(
+            "\n".join(
+                [
+                    json.dumps(
+                        {
+                            "stage": "stage3",
+                            "ep_num": 6,
+                            "decision_type": "blueprint",
+                            "result": "PASS",
+                            "score": 90,
+                            "meta": {
+                                "attempt_key": attempt_key_s3,
+                                "candidate_key": "balanced",
+                                "content_hash": "hash-s3",
+                                "artifact_path": stage3_artifact,
+                            },
+                        },
+                        ensure_ascii=False,
+                    ),
+                    json.dumps(
+                        {
+                            "stage": "stage4",
+                            "ep_num": 6,
+                            "decision_type": "manuscript",
+                            "result": "PASS",
+                            "score": 96,
+                            "meta": {
+                                "attempt_key": attempt_key_s4,
+                                "candidate_key": "A|balanced",
+                                "content_hash": "hash-s4",
+                                "artifact_path": stage4_artifact,
+                                "selection_candidate_key": "A|balanced",
+                                "selection_content_hash": "hash-s4",
+                                "selection_artifact_path": stage4_artifact,
+                            },
+                        },
+                        ensure_ascii=False,
+                    ),
+                ]
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        (logs_dir / "pass_rate_monitor.json").write_text(
+            json.dumps(
+                {
+                    "records": [
+                        {
+                            "stage": 3,
+                            "episode": 6,
+                            "arc": 1,
+                            "attempt_num": 1,
+                            "success": True,
+                            "attempt_key": attempt_key_s3,
+                            "final_verdict": "PASS",
+                            "candidate_key": "balanced",
+                            "content_hash": "hash-s3",
+                            "artifact_path": stage3_artifact,
+                        },
+                        {
+                            "stage": 4,
+                            "episode": 6,
+                            "arc": 1,
+                            "attempt_num": 1,
+                            "success": True,
+                            "attempt_key": attempt_key_s4,
+                            "final_verdict": "PASS",
+                            "candidate_key": "A|balanced",
+                            "content_hash": "hash-s4",
+                            "artifact_path": stage4_artifact,
+                            "patch_strategy": "",
+                            "structural_attempted": False,
+                        },
+                    ]
+                },
+                ensure_ascii=False,
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+        (logs_dir / "episode_production.jsonl").write_text(
+            json.dumps(
+                {
+                    "ep": 6,
+                    "attempt_key": attempt_key_s4,
+                    "verdict": "PASS",
+                    "initial_verdict": "PASS",
+                    "final_verdict": "PASS",
+                    "final_score": 96,
+                    "candidate_key": "A|balanced",
+                    "selection_candidate_key": "A|balanced",
+                    "content_hash": "hash-s4",
+                    "artifact_path": stage4_artifact,
+                    "patch_trace": {"patch_strategy": "", "structural_attempted": False},
+                },
+                ensure_ascii=False,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+
+        audit_service = AuditService(
+            runtime_audit=[],
+            project_paths_fn=lambda: type("Paths", (), {"root": project_dir})(),
+            ui_log_fn=lambda _msg: None,
+        )
+        audit_service.audit_event("heartbeat", "ok")
+        audit_service.write_audit_summary("proof_snapshot")
+    finally:
+        db.close()
+
+    response = asyncio.run(bridge_server.quality_dashboard_endpoint(project="demo", lookback=5))
+    payload = json.loads(response.body.decode("utf-8"))
+
+    assert response.status_code == 200
+    assert payload["ok"] is True
+    data = payload["data"]
+    assert data["runtime_health"]["available"] is False
+    assert data["proof_status"]["available"] is True
+    assert data["proof_status"]["status"] == "ok"
+    assert data["proof_status"]["sink_alignment_status"] == "ok"
+    assert data["proof_status"]["runtime_summary_status"] == "ok"
+    assert data["sink_alignment_summary"]["available"] is True
+    assert data["sink_alignment_summary"]["stages"]["stage3"]["coverage"]["session_decisions"] == 1
+    assert data["sink_alignment_summary"]["stages"]["stage4"]["coverage"]["session_decisions"] == 1
+    assert data["runtime_audit_summary"]["available"] is True
+    assert data["runtime_audit_summary"]["summary_role"] == "runtime_heartbeat_with_proof_digest"
+    assert data["runtime_audit_summary"]["contract"]["summary_scope"] == "runtime_heartbeat_plus_compact_proof_digest"
+    assert data["runtime_audit_summary"]["contract"]["attempt_truth_authoritative"] is False
+    assert "pass_rate_monitor" in data["runtime_audit_summary"]["contract"]["authoritative_attempt_sinks"]
+    assert data["runtime_audit_summary"]["proof_digest"]["status"] == "ok"
+    assert data["runtime_audit_summary"]["proof_digest"]["stages"]["stage4"]["coverage"]["session_decisions"] == 1
 
 
 def test_safe_ops_preview_endpoint_exposes_stage_split(tmp_path, monkeypatch):

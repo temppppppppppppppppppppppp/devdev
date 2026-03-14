@@ -133,7 +133,7 @@ class PreDirectorChecklist:
 
     @property
     def narrative_checker(self):
-        """[R5-2c] ?? ?? ???? (lazy init)."""
+        """[R5-2c] 서사 흐름 체크 서브모듈 (lazy init)."""
         if self._narrative_checker is None:
             from modules.core.pre_director_narrative_checker import PreDirectorNarrativeChecker
 
@@ -142,7 +142,7 @@ class PreDirectorChecklist:
 
     @property
     def style_checker(self):
-        """[R5-2c] ??? ?? ???? (lazy init)."""
+        """[R5-2c] 문체 품질 체크 서브모듈 (lazy init)."""
         if self._style_checker is None:
             from modules.core.pre_director_style_checker import PreDirectorStyleChecker
 
