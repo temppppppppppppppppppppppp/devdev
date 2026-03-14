@@ -9,11 +9,9 @@ Source Survey Docs:
 - `docs/2026-03-14/codebase-global-rol-system-full-survey-3pass-audit.md`
 Roadmap Authority: `single-ssot`
 Live Workspace Revalidation: 2026-03-14 PASS
-Revalidated Confidence: 96%
+Revalidated Confidence: 97%
 Queue Snapshot:
-- `docs/temp/residual-print-ui-log-db-full-survey-3pass-execution-ssot.md`
 - `docs/temp/runtime-bootstrap-orchestration-hardening-execution-ssot.md`
-- `docs/temp/stage0-operator-surface-contract-hardening-execution-ssot.md`
 - `docs/temp/desktop-control-plane-surface-hardening-execution-ssot.md`
 - `docs/temp/regression-canary-surface-rationalization-execution-ssot.md`
 
@@ -26,9 +24,9 @@ Queue Snapshot:
 
 | Item | Canonical Path | Temp Path | Status | Notes |
 | --- | --- | --- | --- | --- |
-| `residual-print-ui-log-db-full-survey-3pass` | `docs/2026-03-14/residual-print-ui-log-db-full-survey-3pass-execution-ssot.md` | `docs/temp/residual-print-ui-log-db-full-survey-3pass-execution-ssot.md` | in_progress | tranche 1 substrate landed; tranche 2 core runtime conversion landed; Stage 0/menu allowlist remains |
-| `runtime-bootstrap-orchestration-hardening` | `docs/2026-03-14/runtime-bootstrap-orchestration-hardening-execution-ssot.md` | `docs/temp/runtime-bootstrap-orchestration-hardening-execution-ssot.md` | pending | reduces monolithic runtime ownership |
-| `stage0-operator-surface-contract-hardening` | `docs/2026-03-14/stage0-operator-surface-contract-hardening-execution-ssot.md` | `docs/temp/stage0-operator-surface-contract-hardening-execution-ssot.md` | pending | depends on event substrate and boot seams |
+| `residual-print-ui-log-db-full-survey-3pass` | `docs/2026-03-14/residual-print-ui-log-db-full-survey-3pass-execution-ssot.md` | `(removed after closure)` | completed | all planned tranches landed; runtime/operator surface unified across substrate, runtime, domain-agent, and Stage 0 scopes |
+| `runtime-bootstrap-orchestration-hardening` | `docs/2026-03-14/runtime-bootstrap-orchestration-hardening-execution-ssot.md` | `docs/temp/runtime-bootstrap-orchestration-hardening-execution-ssot.md` | in_progress | slice 1 landed: boot/shutdown ownership seams extracted in `main_a.py` |
+| `stage0-operator-surface-contract-hardening` | `docs/2026-03-14/stage0-operator-surface-contract-hardening-execution-ssot.md` | `(removed after closure)` | completed | typed Stage 0 operator contract landed through shared UI helpers and callback-based progress reporting |
 | `desktop-control-plane-surface-hardening` | `docs/2026-03-14/desktop-control-plane-surface-hardening-execution-ssot.md` | `docs/temp/desktop-control-plane-surface-hardening-execution-ssot.md` | pending | depends on stable Stage 0 and event/control contracts |
 | `regression-canary-surface-rationalization` | `docs/2026-03-14/regression-canary-surface-rationalization-execution-ssot.md` | `docs/temp/regression-canary-surface-rationalization-execution-ssot.md` | pending | should run after upstream contracts stabilize |
 
@@ -126,9 +124,9 @@ Priority basis:
 
 | Item | Status | Last Update | Blocker |
 | --- | --- | --- | --- |
-| `residual-print-ui-log-db-full-survey-3pass` | in_progress | 2026-03-14 | Stage 0/menu-heavy surfaces, bootstrap fail-safe prints, and threaded metrics-report prints still remain |
-| `runtime-bootstrap-orchestration-hardening` | pending | 2026-03-14 | waits on substrate alignment |
-| `stage0-operator-surface-contract-hardening` | pending | 2026-03-14 | waits on substrate and boot seams |
+| `residual-print-ui-log-db-full-survey-3pass` | completed | 2026-03-14 | none |
+| `runtime-bootstrap-orchestration-hardening` | in_progress | 2026-03-14 | stage attachment and optional-module activation still inline |
+| `stage0-operator-surface-contract-hardening` | completed | 2026-03-14 | none |
 | `desktop-control-plane-surface-hardening` | pending | 2026-03-14 | waits on Stage 0 and contract stabilization |
 | `regression-canary-surface-rationalization` | pending | 2026-03-14 | waits on upstream contract stabilization |
 
@@ -140,12 +138,12 @@ Allowed statuses:
 
 ## 7A. Current-State Revalidation
 - Revalidated against live workspace drift across runtime, observability, Stage 0, desktop, and canary surfaces. No second roadmap is justified; this document remains the only SSOT roadmap for the active queue.
-- `residual-print-ui-log-db-full-survey-3pass`: still first. The durable `ui_events` substrate and the core Stage 3/4 runtime conversions have landed, but Stage 0/menu-heavy operator surfaces and explicit residual-print allowlists still belong here before downstream items should leapfrog it.
-- `runtime-bootstrap-orchestration-hardening`: still second. `main_a.py` remains monolithic, while new cache-preservation and runtime-restore behaviors increase the value of extracting explicit ownership seams.
-- `stage0-operator-surface-contract-hardening`: still third. Stage 0 remains `print`/`input` heavy, even though `ProjectService` now emits richer `ui.log`-based destructive-operation outcomes.
+- `residual-print-ui-log-db-full-survey-3pass`: completed. The durable `ui_events` substrate, the core non-interactive runtime conversions, the explicit runtime print allowlist, the domain-agent callback rollout, and the Stage 0 typed operator surface are all landed. The temp mirror for this item should no longer remain in the active queue.
+- `runtime-bootstrap-orchestration-hardening`: now in progress. `boot()` and `_shutdown_app()` are reduced to explicit orchestration helpers, but stage attachment and optional-module activation still remain inline in `main_a.py`.
+- `stage0-operator-surface-contract-hardening`: completed. The shared Stage 0 operator contract now exists across `StudioVisualizer`, `UIService`, `StageZeroManager`, `Stage01Helpers`, and `StyleExtractor`; the temp mirror for this item should no longer remain in the active queue.
 - `desktop-control-plane-surface-hardening`: still fourth. The compatibility shim hardening in `geuldobi-desktop/main.js` is real progress, but root `main.js`, preload/backend contracts, and shadow governance still need coordinated work.
 - `regression-canary-surface-rationalization`: still last. Canary proof artifacts became richer, but tier separation should still be codified after upstream contracts stabilize.
-- Revalidation outcome: queue order unchanged; dependency graph unchanged; all five items remain pending and active.
+- Revalidation outcome: items 1 and 3 are completed and removed from the active temp queue; downstream roadmap focus now shifts to runtime bootstrap, desktop control plane, and regression/canary rationalization.
 
 ## 8. Queue Cleanup Rule
 - remove a temp execution SSOT mirror immediately after that item is realized and closed

@@ -59,6 +59,43 @@ class TestResolveLoggingDb:
         assert none_context_agent._resolve_logging_db() is None
 
 
+class TestOperatorLogBridge:
+    def test_operator_log_uses_context_ui_log_with_metadata(self):
+        client = MagicMock()
+        ui = SimpleNamespace(log=MagicMock())
+        context = SimpleNamespace(ui=ui, current_stage=4, current_ep=12)
+        agent = BaseAgent(context=context, client=client, model_tier="gemini-2.5-flash")
+        agent._current_context_tag = "stage4:ep12"
+
+        ok = agent._operator_log("hello", level="warning", meta={"kind": "test"})
+
+        assert ok is True
+        ui.log.assert_called_once()
+        args, kwargs = ui.log.call_args
+        assert args == ("hello",)
+        assert kwargs["component"] == "BaseAgent"
+        assert kwargs["event_kind"] == "agent_log"
+        assert kwargs["stage"] == "stage4"
+        assert kwargs["ep_num"] == 12
+        assert kwargs["attempt_key"] == "stage4:ep12"
+        assert kwargs["level"] == "warning"
+        assert kwargs["meta"] == {"kind": "test"}
+
+    def test_operator_log_falls_back_to_message_only_callback(self):
+        client = MagicMock()
+        callback = MagicMock(side_effect=[TypeError("no kwargs"), None])
+        context = SimpleNamespace(operator_log=callback)
+        agent = BaseAgent(context=context, client=client, model_tier="gemini-2.5-flash")
+
+        ok = agent._operator_log("fallback")
+
+        assert ok is True
+        assert callback.call_args_list[0].args == ("fallback",)
+        assert callback.call_args_list[0].kwargs["component"] == "BaseAgent"
+        assert callback.call_args_list[1].args == ("fallback",)
+        assert callback.call_args_list[1].kwargs == {}
+
+
 class TestContextCacheNamespace:
     def test_prefers_current_project_identity(self):
         client = MagicMock()

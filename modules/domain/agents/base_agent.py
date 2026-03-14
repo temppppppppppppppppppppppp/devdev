@@ -329,6 +329,54 @@ class BaseAgent:
         """[V49.3] 에이전트 이름 반환 (비용 추적용)"""
         return self._agent_name
 
+    def _resolve_operator_log_fn(self):
+        for owner in (self, getattr(self, "context", None)):
+            if owner is None:
+                continue
+            for attr_name in ("operator_log", "operator_log_fn", "ui_log_fn"):
+                candidate = getattr(owner, attr_name, None)
+                if callable(candidate):
+                    return candidate
+            ui = getattr(owner, "ui", None)
+            candidate = getattr(ui, "log", None) if ui is not None else None
+            if callable(candidate):
+                return candidate
+        return None
+
+    def _resolve_operator_stage_label(self):
+        stage = getattr(self, "_current_stage", None)
+        if stage is None:
+            stage = getattr(self.context, "current_stage", None)
+        if stage is None:
+            return None
+        if isinstance(stage, int):
+            return f"stage{stage}"
+        if isinstance(stage, str):
+            normalized = stage.strip()
+            return normalized or None
+        return str(stage)
+
+    def _operator_log(self, message: str, **context) -> bool:
+        log_fn = self._resolve_operator_log_fn()
+        if log_fn is None:
+            return False
+
+        payload = {
+            "component": self._agent_name,
+            "event_kind": "agent_log",
+            "stage": self._resolve_operator_stage_label(),
+            "ep_num": self._resolve_episode_number(),
+        }
+        context_tag = getattr(self, "_current_context_tag", None)
+        if context_tag:
+            payload["attempt_key"] = str(context_tag)
+        payload.update({key: value for key, value in context.items() if value is not None})
+        try:
+            log_fn(str(message), **payload)
+        except TypeError:
+            log_fn(str(message))
+        return True
+
     def _generate_llm_response(self, *, model: str, contents, config) -> LLMResponse:
         """Return provider-neutral `LLMResponse` for helper-layer consumers."""
         request = LLMRequest(model=model, contents=contents, config=config)
@@ -610,8 +658,9 @@ class BaseAgent:
                     response = self._generate_content(model=current_model, contents=current_prompt, config=config)
                     _api_elapsed = time.time() - _api_t0
                     if _api_elapsed > 30:
-                        print(
-                            f"      ⏱️ [API] {self._agent_name} model={current_model} attempt={attempt} → {_api_elapsed:.1f}s"
+                        self._operator_log(
+                            f"⏱️ [API] {self._agent_name} model={current_model} attempt={attempt} → {_api_elapsed:.1f}s",
+                            meta={"model": current_model, "attempt": attempt, "elapsed_seconds": round(_api_elapsed, 1)},
                         )
                     # [V60.97] 성공 시 카운터 리셋
                     rate_limit_retry_count = 0
@@ -622,8 +671,14 @@ class BaseAgent:
                             BaseAgent._rotation_count = 0
                 except Exception as api_error:
                     # [Diag] API 오류 발생 시 즉시 표시
-                    print(
-                        f"      ⚠️ [API-ERR] {self._agent_name} model={current_model} attempt={attempt} err={type(api_error).__name__}: {str(api_error)[:120]}"
+                    self._operator_log(
+                        f"⚠️ [API-ERR] {self._agent_name} model={current_model} attempt={attempt} err={type(api_error).__name__}: {str(api_error)[:120]}",
+                        level="warning",
+                        meta={
+                            "model": current_model,
+                            "attempt": attempt,
+                            "error_type": type(api_error).__name__,
+                        },
                     )
                     # [B-1-9:C2] API 오류 처리 — 네트워크/Rate Limit/쿼터 분기
                     _err = self._handle_api_error(
@@ -648,14 +703,26 @@ class BaseAgent:
                     quota_retry_count = _err["quota_retry_count"]
 
                     if _err["action"] == "continue":
-                        print(f"      🔄 [API-ERR] {self._agent_name} → continue (retry) model={_err['current_model']}")
+                        self._operator_log(
+                            f"🔄 [API-ERR] {self._agent_name} → continue (retry) model={_err['current_model']}",
+                            level="warning",
+                            meta={"action": "continue", "model": _err["current_model"]},
+                        )
                         continue
                     elif _err["action"] == "fallback_response":
                         response = _err["response"]
-                        print(f"      🔄 [API-ERR] {self._agent_name} → fallback model={_err['current_model']}")
+                        self._operator_log(
+                            f"🔄 [API-ERR] {self._agent_name} → fallback model={_err['current_model']}",
+                            level="warning",
+                            meta={"action": "fallback_response", "model": _err["current_model"]},
+                        )
                         # fall through to response processing
                     else:  # "raise"
-                        print(f"      ❌ [API-ERR] {self._agent_name} → raise (포기)")
+                        self._operator_log(
+                            f"❌ [API-ERR] {self._agent_name} → raise (포기)",
+                            level="error",
+                            meta={"action": "raise", "model": _err["current_model"]},
+                        )
                         raise api_error
 
                 # [B-1-9:C3] 응답 추출 + 병합 + 이어쓰기 판정
@@ -676,8 +743,13 @@ class BaseAgent:
                 if _resp["action"] == "continue":
                     current_prompt = _resp["current_prompt"]
                     _cont_elapsed = time.time() - _ask_t0
-                    print(
-                        f"      🔁 [CONT] {self._agent_name} 이어쓰기 attempt={attempt + 1} (누적 {_cont_elapsed:.1f}s, 현재 응답={len(full_response)}자)"
+                    self._operator_log(
+                        f"🔁 [CONT] {self._agent_name} 이어쓰기 attempt={attempt + 1} (누적 {_cont_elapsed:.1f}s, 현재 응답={len(full_response)}자)",
+                        meta={
+                            "attempt": attempt + 1,
+                            "elapsed_seconds": round(_cont_elapsed, 1),
+                            "response_chars": len(full_response),
+                        },
                     )
                     time.sleep(1)
                     attempt += 1
@@ -687,8 +759,14 @@ class BaseAgent:
 
             _total_elapsed = time.time() - _ask_t0
             if _total_elapsed > 15:
-                print(
-                    f"      📊 [ASK] {self._agent_name} 총 {_total_elapsed:.1f}s (model={current_model}, attempts={attempt + 1}, 응답={len(full_response)}자)"
+                self._operator_log(
+                    f"📊 [ASK] {self._agent_name} 총 {_total_elapsed:.1f}s (model={current_model}, attempts={attempt + 1}, 응답={len(full_response)}자)",
+                    meta={
+                        "model": current_model,
+                        "attempts": attempt + 1,
+                        "elapsed_seconds": round(_total_elapsed, 1),
+                        "response_chars": len(full_response),
+                    },
                 )
 
             # [V49.3] 비용 추적 종료 (성공) — 실측 토큰 우선, fallback 추정
@@ -990,8 +1068,14 @@ class BaseAgent:
             )
 
             # 대기 중 — 콘솔 표시
-            print(
-                f"      🌐 [NET-RETRY] {self._agent_name} 네트워크 재시도 {network_retry_count}/{self.MAX_NETWORK_RETRIES} ({wait_time}초 대기)"
+            self._operator_log(
+                f"🌐 [NET-RETRY] {self._agent_name} 네트워크 재시도 {network_retry_count}/{self.MAX_NETWORK_RETRIES} ({wait_time}초 대기)",
+                level="warning",
+                meta={
+                    "retry_count": network_retry_count,
+                    "max_retries": self.MAX_NETWORK_RETRIES,
+                    "wait_seconds": wait_time,
+                },
             )
             time.sleep(wait_time)
 
@@ -1027,8 +1111,15 @@ class BaseAgent:
             result["rate_limit_retry_count"] = rate_limit_retry_count
             # Linear Backoff: 30초 → 60초 → 90초 (분당 제한 대응)
             wait_time = 30 * rate_limit_retry_count
-            print(
-                f"      ⏳ [RATE-LIMIT] {self._agent_name} {current_model} → {wait_time}초 대기 ({rate_limit_retry_count}/{max_rate_limit_retries})"
+            self._operator_log(
+                f"⏳ [RATE-LIMIT] {self._agent_name} {current_model} → {wait_time}초 대기 ({rate_limit_retry_count}/{max_rate_limit_retries})",
+                level="warning",
+                meta={
+                    "model": current_model,
+                    "retry_count": rate_limit_retry_count,
+                    "max_retries": max_rate_limit_retries,
+                    "wait_seconds": wait_time,
+                },
             )
             logging.info(f" [V60.97 Rate Limit] {current_model} 분당 제한 감지 → {wait_time}초 대기 후 재시도 ({rate_limit_retry_count}/{max_rate_limit_retries})"
             )
@@ -1068,7 +1159,11 @@ class BaseAgent:
                         BaseAgent._key_rotation_pending = True
 
                 error_type = "Quota 소진" if is_quota_exhausted else "Rate Limit 초과"
-                print(f"      🔄 [QUOTA-FB] {self._agent_name} {old_model} {error_type} → {current_model}로 전환")
+                self._operator_log(
+                    f"🔄 [QUOTA-FB] {self._agent_name} {old_model} {error_type} → {current_model}로 전환",
+                    level="warning",
+                    meta={"from_model": old_model, "to_model": current_model, "error_type": error_type},
+                )
                 logging.info(f" [V60.97 Fallback] {old_model} {error_type} → {current_model}로 전환")
                 # [INF-I5] 폴백 전환 구조화 로그
                 logging.debug("[SilentPass:Agent] fallback agent=%s from=%s to=%s reason=%s",
@@ -1232,8 +1327,10 @@ class BaseAgent:
         Returns:
             str — 백업 응답 / 병합 응답 / 부분 응답 / 에러 응답
         """
-        print(
-            f"      🆘 [BACKUP] {self._agent_name} 백업 모델 호출 시작 (backup={self.backup_model}, error_type={error_type})"
+        self._operator_log(
+            f"🆘 [BACKUP] {self._agent_name} 백업 모델 호출 시작 (backup={self.backup_model}, error_type={error_type})",
+            level="warning",
+            meta={"backup_model": self.backup_model, "error_type": error_type},
         )
         _backup_t0 = time.monotonic()
         try:

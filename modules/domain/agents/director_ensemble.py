@@ -384,24 +384,27 @@ Architect가 inplace 단계에서 즉시 교정하고 재제출한다. 소소한
                 fix_scope=str(result.get("fix_scope", "") or ""),
                 thinking=getattr(self._d, "_last_thinking", ""),
             )
-            print(f"\n   {'=' * 56}")
-            print(f"      [Stage3 Director] Blueprint {decision} (점수: {score})")
-            print(f"      선택: 후보 {selected_idx + 1}")
+            _operator_lines = [
+                f"[Stage3 Director] Blueprint {decision} (점수: {score})",
+                f"선택: 후보 {selected_idx + 1}",
+            ]
             if reason:
-                print(f"      사유: {reason[:200]}")
+                _operator_lines.append(f"사유: {reason[:200]}")
             if comparison_notes:
-                print(f"      비교: {comparison_notes[:200]}")
+                _operator_lines.append(f"비교: {comparison_notes[:200]}")
             if contradictions:
-                for c in contradictions[:3]:
-                    print(f"      모순: {str(c)[:150]}")
+                _operator_lines.extend(f"모순: {str(c)[:150]}" for c in contradictions[:3])
             _bp_feedback = result.get("feedback", "")
             if decision == "REJECT" and _bp_feedback:
-                print(f"      피드백: {str(_bp_feedback)[:200]}")
-            # [TF-28c] Director thinking 표시 (절삭 없음)
+                _operator_lines.append(f"피드백: {str(_bp_feedback)[:200]}")
             _thinking = getattr(self._d, "_last_thinking", "")
             if _thinking:
-                print(f"      💭 [Director Thinking]\n{_thinking}")
-            print(f"   {'=' * 56}\n")
+                _operator_lines.append(f"💭 [Director Thinking]\n{_thinking}")
+            for _line in _operator_lines:
+                self._d._operator_log(
+                    _line,
+                    meta={"component": "Director", "stage": "stage3", "ep_num": ep_num, "score": score},
+                )
 
             return {
                 "decision": decision,
@@ -737,23 +740,27 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
                 fix_scope=str(result.get("fix_scope", "") or ""),
                 thinking=getattr(self._d, "_last_thinking", ""),
             )
-            print(f"\n   {'=' * 56}")
-            print(f"      [Stage2 Director] Arc 비교 판정: {decision} (점수: {score})")
-            print(f"      선택: 후보 {selected_idx + 1} ({candidates[selected_idx].get('_strategy', '?')})")
+            _operator_lines = [
+                f"[Stage2 Director] Arc 비교 판정: {decision} (점수: {score})",
+                f"선택: 후보 {selected_idx + 1} ({candidates[selected_idx].get('_strategy', '?')})",
+            ]
             if reason:
-                print(f"      사유: {reason[:200]}")
+                _operator_lines.append(f"사유: {reason[:200]}")
             if comparison_notes:
-                print(f"      비교: {comparison_notes[:200]}")
+                _operator_lines.append(f"비교: {comparison_notes[:200]}")
             if contradictions:
-                for c in contradictions[:3]:
-                    print(f"      모순: {str(c)[:150]}")
+                _operator_lines.extend(f"모순: {str(c)[:150]}" for c in contradictions[:3])
             _fb = result.get("feedback", "")
             if decision != "PASS" and _fb:
-                print(f"      피드백: {str(_fb)[:200]}")
+                _operator_lines.append(f"피드백: {str(_fb)[:200]}")
             _thinking = getattr(self._d, "_last_thinking", "")
             if _thinking:
-                print(f"      💭 [Director Thinking]\n{_thinking}")
-            print(f"   {'=' * 56}\n")
+                _operator_lines.append(f"💭 [Director Thinking]\n{_thinking}")
+            for _line in _operator_lines:
+                self._d._operator_log(
+                    _line,
+                    meta={"component": "Director", "stage": "stage2", "ep_num": arc_no, "score": score},
+                )
 
             final_result = {
                 "decision": decision,
@@ -1307,31 +1314,35 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
             open_review=_open_review,
             thinking=getattr(self._d, "_last_thinking", ""),
         )
-        print(f"\n   {'=' * 56}")
-        print(f"      [Stage4 Director] 원고 앙상블 판정: {final_verdict} (점수: {score})")
-        print(f"      선택: 후보 {selected_letter} | 원래 판정: {original_verdict}")
+        _operator_lines = [
+            f"[Stage4 Director] 원고 앙상블 판정: {final_verdict} (점수: {score})",
+            f"선택: 후보 {selected_letter} | 원래 판정: {original_verdict}",
+        ]
         _sel_reason = _selection_reason
         if _sel_reason:
-            print(f"      선택 사유: {str(_sel_reason)[:200]}")
+            _operator_lines.append(f"선택 사유: {str(_sel_reason)[:200]}")
         if _verdict_reason and _verdict_reason != _selection_reason:
-            print(f"      verdict_reason: {_verdict_reason[:200]}")
+            _operator_lines.append(f"verdict_reason: {_verdict_reason[:200]}")
         _sb = _canonical_score_breakdown(result.get("score_breakdown", {}))
         if _sb:
             _sb_str = ", ".join(f"{k}={v}" for k, v in _sb.items() if isinstance(v, int | float))
             if _sb_str:
-                print(f"      점수 분해: {_sb_str}")
+                _operator_lines.append(f"점수 분해: {_sb_str}")
         if _issues:
             for _iss in _issues[:5]:
-                print(f"      이슈: {str(_iss)[:150]}")
+                _operator_lines.append(f"이슈: {str(_iss)[:150]}")
         if _open_review and _open_review not in ("특이사항 없음", "없음", ""):
-            print(f"      자유 리뷰: {_open_review[:200]}")
+            _operator_lines.append(f"자유 리뷰: {_open_review[:200]}")
         if adaptive_result.get("reason"):
-            print(f"      적응형: {adaptive_result['reason']}")
-        # [TF-28c] Director thinking 표시 (절삭 없음)
+            _operator_lines.append(f"적응형: {adaptive_result['reason']}")
         _thinking = getattr(self._d, "_last_thinking", "")
         if _thinking:
-            print(f"      💭 [Director Thinking]\n{_thinking}")
-        print(f"   {'=' * 56}\n")
+            _operator_lines.append(f"💭 [Director Thinking]\n{_thinking}")
+        for _line in _operator_lines:
+            self._d._operator_log(
+                _line,
+                meta={"component": "Director", "stage": "stage4", "ep_num": ep_num, "score": score},
+            )
 
         return {
             "selected": selected_letter,

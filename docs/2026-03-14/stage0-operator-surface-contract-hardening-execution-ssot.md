@@ -1,7 +1,7 @@
 # Stage 0 Operator Surface Contract Hardening Execution SSOT
 
 Date: 2026-03-14
-Status: ready for implementation
+Status: completed
 Canonical Path: `docs/2026-03-14/stage0-operator-surface-contract-hardening-execution-ssot.md`
 Temp Mirror Path: `docs/temp/stage0-operator-surface-contract-hardening-execution-ssot.md`
 Source Survey Docs:
@@ -18,7 +18,7 @@ Evidence Artifacts:
 Side-Effect Coverage: covered
 Confidence Target: 95%
 Live Workspace Revalidation: 2026-03-14 PASS
-Revalidated Confidence: 96%
+Revalidated Confidence: 97%
 
 ## 1. Intent
 - Replace the remaining CLI-era Stage 0 interaction model with a governed operator surface contract.
@@ -90,6 +90,12 @@ Revalidated Confidence: 96%
 3. Normalize spinner/progress output into the same operator surface contract.
 4. Align desktop prompt resolution and Stage 0 operator persistence with the new contract.
 
+Implementation note:
+- 2026-03-14 current workspace now lands typed `menu_block`, `prompt`, `selection`, and `summary` helpers in `StudioVisualizer`.
+- `modules/core/stage0/__init__.py`, `modules/core/services/ui_service.py`, and `modules/core/stage01_helpers.py` now route Stage 0 prompt and selection surfaces through that typed operator contract.
+- `modules/core/stage0/style_extractor.py` now emits progress through a callback-based reporting surface instead of raw prints.
+- `modules/core/stage0/spinner.py` remains the only Stage 0 console-specialized surface, and its residual raw prints are limited to fallback blank-line rendering and file-bottom demo/test code rather than active Stage 0 workflows.
+
 ## 8. Acceptance Criteria
 - Stage 0 no longer depends on free-form raw `print` as its primary operator surface.
 - Prompt and selection flows can be represented consistently in CLI, Rich, and desktop contexts.
@@ -104,10 +110,12 @@ Revalidated Confidence: 96%
 
 ## 9A. Current-State Revalidation
 - Revalidated against live workspace state in `modules/core/stage01_helpers.py`, `modules/core/services/ui_service.py`, `modules/core/services/project_service.py`, and `modules/core/stage0/__init__.py`.
-- Stage 0 remains structurally mixed: `modules/core/stage0/__init__.py` still has `100` raw `print(...)` calls and `14` `input(...)` calls; `modules/core/stage01_helpers.py` still carries `105` `ui.log(...)` calls and `19` `input(...)` calls; `modules/core/services/ui_service.py` still contains `5` raw `print(...)` calls.
+- Stage 0 no longer depends on raw `print(...)` in its primary interactive surfaces: `modules/core/stage0/__init__.py`, `modules/core/services/ui_service.py`, `modules/core/stage0/style_extractor.py`, and `modules/core/stage01_helpers.py` now carry `0` raw `print(...)` calls.
+- Stage 0 prompt paths now run through typed UI helpers when a live `StudioVisualizer` is present, while retaining guarded fallback `input(...)` only for non-UI test or shim paths.
+- `tests/test_ui_service.py`, `tests/test_stage0_fixes.py`, `tests/test_stage0_work_guard_style_cache.py`, `tests/test_stage01_helpers.py`, `tests/test_stage01_fixes.py`, `tests/test_process_runner_stage0_inputs.py`, and `tests/test_frontend_stage0_connectivity.py` all pass against the new contract.
 - `ProjectService` now emits structured destructive-operation outcomes and partial restore failures through `ui.log`. That strengthens the case for a typed operator contract because mutation confirmation and runtime-restore status are becoming richer than plain prompt/print flows.
-- No contradictory desktop-first or silent-automation path has landed in current code; direct blocking `input(...)` remains part of the live Stage 0 operator surface.
-- Revalidation outcome: document direction unchanged; dependency on the operator-event substrate and runtime seam work remains valid.
+- No contradictory desktop-first or silent-automation path has landed in current code; the live Stage 0 operator surface now routes through the same operator-event persistence direction established by the residual-print execution work.
+- Revalidation outcome: document direction confirmed; the planned Stage 0 operator contract is landed; this execution SSOT is complete.
 
 ## 10. Guardrails
 - Do not collapse Stage 0 into silent automation; preserve explicit operator checkpoints.
@@ -115,7 +123,7 @@ Revalidated Confidence: 96%
 - Do not diverge from the operator-event persistence direction already queued in the residual-print execution doc.
 
 ## 11. Temp Queue Notes
-- temp status: pending
+- temp status: completed
 - cleanup condition: remove mirror after implementation and closure
 - roadmap dependency: execute after operator-event substrate and runtime bootstrap ownership are stabilized
 
@@ -123,3 +131,7 @@ Revalidated Confidence: 96%
 - validator command: `python scripts/ops_validator.py`
 - closure harness: `docs/implementation/execution-closure-harness.md`
 - execution-start rule: re-run the document 3-pass audit and confirm at least 95% confidence against the current workspace state before patching code from this document
+
+Closure note:
+- This execution SSOT is closed as completed on 2026-03-14.
+- The temp mirror should be removed from the active execution queue after roadmap sync.

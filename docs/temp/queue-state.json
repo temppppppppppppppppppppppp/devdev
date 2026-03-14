@@ -1,8 +1,8 @@
 {
   "version": "temp-queue-state-v1",
-  "generated_at": "2026-03-14T07:50:48.356091+00:00",
+  "generated_at": "2026-03-14T09:01:41.655127+00:00",
   "queue_mode": "aggregate",
-  "active_item_count": 5,
+  "active_item_count": 3,
   "roadmap": {
     "temp_path": "docs/temp/execution-roadmap.md",
     "canonical_path": "docs/2026-03-14/codebase-global-rol-system-survey-execution-roadmap.md",
@@ -28,27 +28,9 @@
       "canonical_present": true
     },
     {
-      "topic": "residual-print-ui-log-db-full-survey-3pass",
-      "temp_path": "docs/temp/residual-print-ui-log-db-full-survey-3pass-execution-ssot.md",
-      "canonical_path": "docs/2026-03-14/residual-print-ui-log-db-full-survey-3pass-execution-ssot.md",
-      "status": "in_progress",
-      "depends_on": [],
-      "mirror_present": true,
-      "canonical_present": true
-    },
-    {
       "topic": "runtime-bootstrap-orchestration-hardening",
       "temp_path": "docs/temp/runtime-bootstrap-orchestration-hardening-execution-ssot.md",
       "canonical_path": "docs/2026-03-14/runtime-bootstrap-orchestration-hardening-execution-ssot.md",
-      "status": "pending",
-      "depends_on": [],
-      "mirror_present": true,
-      "canonical_present": true
-    },
-    {
-      "topic": "stage0-operator-surface-contract-hardening",
-      "temp_path": "docs/temp/stage0-operator-surface-contract-hardening-execution-ssot.md",
-      "canonical_path": "docs/2026-03-14/stage0-operator-surface-contract-hardening-execution-ssot.md",
       "status": "pending",
       "depends_on": [],
       "mirror_present": true,
