@@ -48,13 +48,16 @@ class TestGetIntInput:
         with patch("builtins.input", side_effect=["0", "11", "5"]):
             result = svc.get_int_input("prompt: ", min_val=1, max_val=10)
         assert result == 5
-        assert ui_mock.log.call_count == 2
+        warning_messages = [call.args[0] for call in ui_mock.log.call_args_list if call.args]
+        assert warning_messages.count("⚠️ 최소값은 1입니다.") == 1
+        assert warning_messages.count("⚠️ 최대값은 10입니다.") == 1
 
     def test_non_digit_retries(self, svc, ui_mock):
         with patch("builtins.input", side_effect=["abc", "3"]):
             result = svc.get_int_input("prompt: ", min_val=1, max_val=10)
         assert result == 3
-        ui_mock.log.assert_any_call("⚠️ 숫자만 입력 가능합니다.")
+        warning_messages = [call.args[0] for call in ui_mock.log.call_args_list if call.args]
+        assert "⚠️ 숫자만 입력 가능합니다." in warning_messages
 
     def test_exhausted_attempts_returns_default(self, svc):
         with patch("builtins.input", side_effect=["x", "y", "z"]):

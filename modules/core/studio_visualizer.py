@@ -80,16 +80,18 @@ class StudioVisualizer:
 
     def log(self, text: str, **context) -> None:
         message = str(text)
-        self.console.print(f"   [dim]{message}[/]")
-        logging.getLogger("UI").info(message)  # [TF-26] 파일 듀얼 출력
-        if self._operator_event_sink is None:
-            return
-        self._operator_event_seq += 1
         meta = context.pop("meta", {})
         if not isinstance(meta, dict):
             meta = {"value": meta}
         if context:
             meta = {**meta, **context}
+        visible = bool(meta.get("visible", True))
+        if visible:
+            self.console.print(f"   [dim]{message}[/]")
+        logging.getLogger("UI").info(message)  # [TF-26] 파일 듀얼 출력
+        if self._operator_event_sink is None:
+            return
+        self._operator_event_seq += 1
         event = {
             "seq": self._operator_event_seq,
             "level": str(meta.pop("level", "info")),
@@ -112,6 +114,52 @@ class StudioVisualizer:
             self._operator_event_sink(event)
         except Exception as exc:  # pragma: no cover - non-blocking console path
             logging.getLogger("UI").debug("operator event sink failed: %s", exc)
+
+    def menu_block(self, title: str, options: list[str], **context) -> None:
+        self.log(
+            str(title),
+            event_kind="menu",
+            render_format="menu",
+            **context,
+        )
+        for option in options:
+            self.log(
+                str(option),
+                event_kind="menu_option",
+                render_format="menu",
+                **context,
+            )
+
+    def prompt(self, prompt_text: str, **context) -> str:
+        prompt_context = dict(context)
+        prompt_context.setdefault("event_kind", "prompt")
+        prompt_context.setdefault("render_format", "prompt")
+        self.log(str(prompt_text), **prompt_context)
+        response = self.console.input(str(prompt_text))
+        response_context = dict(context)
+        response_context.setdefault("event_kind", "prompt_response")
+        response_context.setdefault("render_format", "input")
+        response_context.setdefault("selection_value", response)
+        response_context.setdefault("visible", False)
+        self.log(str(prompt_text), **response_context)
+        return response
+
+    def selection(self, label: str, selection_value, **context) -> None:
+        self.log(
+            str(label),
+            event_kind="selection",
+            render_format="selection",
+            selection_value=selection_value,
+            **context,
+        )
+
+    def summary(self, text: str, **context) -> None:
+        self.log(
+            str(text),
+            event_kind="summary",
+            render_format="summary",
+            **context,
+        )
 
     def spinner(self, text: str):
         """로딩 스피너 컨텍스트 매니저"""

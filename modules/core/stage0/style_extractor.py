@@ -255,6 +255,13 @@ class StyleExtractor:
         self.genre = genre  # [QI-1-B2] 장르별 가중치 분기용
         self._latest_curated_passages: list[str] = []
         self.last_cache_status = "cold"
+        self.progress_callback = None
+
+    def _report_progress(self, message: str, **meta) -> None:
+        if callable(self.progress_callback):
+            self.progress_callback(str(message), **meta)
+            return
+        logging.info("[StyleExtractor] %s", message)
 
     @classmethod
     def _prompt_contract_hash(cls) -> str:
@@ -402,37 +409,45 @@ class StyleExtractor:
         else:
             sampled_text = all_text
 
-        print(f"  [*] 문체 분석 시작: {total_episodes}화, {total_chars:,}자", flush=True)
+        self._report_progress(
+            f"[*] 문체 분석 시작: {total_episodes}화, {total_chars:,}자",
+            total_episodes=total_episodes,
+            total_chars=total_chars,
+        )
 
         # Phase 1: Python 통계 분석
-        print(f"  [1/5] 통계 분석... ({total_chars:,}자 중 {len(sampled_text):,}자 샘플링)", flush=True)
+        self._report_progress(
+            f"[1/5] 통계 분석... ({total_chars:,}자 중 {len(sampled_text):,}자 샘플링)",
+            phase=1,
+            sampled_chars=len(sampled_text),
+        )
         stats = self._analyze_statistics_v2(sampled_text)
 
         # Phase 2: 샘플 큐레이션
-        print("  [2/5] 샘플 큐레이션...", flush=True)
+        self._report_progress("[2/5] 샘플 큐레이션...", phase=2)
         curated = self._curate_samples(sampled_text)
 
         # Phase 3: 리듬 분석
-        print("  [3/5] 리듬 분석...", flush=True)
+        self._report_progress("[3/5] 리듬 분석...", phase=3)
         rhythm = self._analyze_rhythm(drafts)
 
         # Phase 4: LLM 심층 분석
         qualitative = {}
         if self.client or os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY"):
-            print("  [4/5] LLM 심층 분석...", flush=True)
+            self._report_progress("[4/5] LLM 심층 분석...", phase=4)
             qualitative = self._deep_llm_analysis(drafts)
             if not isinstance(qualitative, dict):
                 qualitative = {}
 
             # Phase 5: Anti-AI 패턴 생성
-            print("  [5/5] Anti-AI 패턴 생성...", flush=True)
+            self._report_progress("[5/5] Anti-AI 패턴 생성...", phase=5)
             anti = self._generate_anti_patterns(drafts, curated.get("exemplary_passages", []))
             if not isinstance(anti, dict):
                 anti = {}
             qualitative.update(anti)
         else:
-            print("  [4/5] LLM 없음 - 통계 분석만 사용", flush=True)
-            print("  [5/5] 스킵", flush=True)
+            self._report_progress("[4/5] LLM 없음 - 통계 분석만 사용", phase=4)
+            self._report_progress("[5/5] 스킵", phase=5)
 
         # 병합
         merged = {**stats, **curated, **rhythm, **qualitative}
@@ -445,7 +460,10 @@ class StyleExtractor:
             merged["reference_works"] = [reference_name]
 
         guide = StyleGuide(**{k: v for k, v in merged.items() if k in {f.name for f in fields(StyleGuide)}})
-        print(f"  [OK] 문체 DNA 추출 완료 (v2, {total_episodes}화 분석)", flush=True)
+        self._report_progress(
+            f"[OK] 문체 DNA 추출 완료 (v2, {total_episodes}화 분석)",
+            total_episodes=total_episodes,
+        )
         return guide
 
     # ═══════════════════════════════════════════════════════════════

@@ -1,7 +1,7 @@
 # Runtime Bootstrap and Orchestration Hardening Execution SSOT
 
 Date: 2026-03-14
-Status: ready for implementation
+Status: in_progress
 Canonical Path: `docs/2026-03-14/runtime-bootstrap-orchestration-hardening-execution-ssot.md`
 Temp Mirror Path: `docs/temp/runtime-bootstrap-orchestration-hardening-execution-ssot.md`
 Source Survey Docs:
@@ -17,7 +17,7 @@ Evidence Artifacts:
 Side-Effect Coverage: covered
 Confidence Target: 95%
 Live Workspace Revalidation: 2026-03-14 PASS
-Revalidated Confidence: 96%
+Revalidated Confidence: 97%
 
 ## 1. Intent
 - Reduce runtime authority concentration in `main_a.py`.
@@ -25,9 +25,9 @@ Revalidated Confidence: 96%
 - Make later observability, Stage 0, and desktop changes lower-risk by shrinking the live blast radius.
 
 ## 2. Baseline Facts
-- `main_a.py` is `4222` LOC and still performs stdio bootstrap, faulthandler setup, env load, project selection, DB/session/audit service wiring, optional module bootstrap, stage orchestration, and shutdown.
+- `main_a.py` is `4620` LOC and still performs stdio bootstrap, faulthandler setup, env load, project selection, DB/session/audit service wiring, optional module bootstrap, stage orchestration, and shutdown.
 - `modules/core/stage01_helpers.py` is now a live `905` LOC seam carrying Stage 0 and Stage 1 helper flows, including `105` `ui.log(...)` calls and `19` `input(...)` calls.
-- `main_a.py` still contains `44` raw `print(...)` calls, `247` `ui.log(...)` calls, `11` `input(...)` calls, and multiple DB commit/rollback paths.
+- `main_a.py` now contains `4` raw `print(...)` calls, `257` `ui.log(...)` calls, `11` `input(...)` calls, and multiple DB commit/rollback paths.
 - `modules/core/stage4_interview_round.py`, `modules/core/stage4_context_builder.py`, `modules/core/stage3_orchestrator.py`, and `modules/core/stage2_*` remain tightly coupled to the app shell.
 - Shutdown behavior still mixes metrics, pass-rate persistence, failure learning, cache saves, DB close, and memory close in one path.
 
@@ -112,11 +112,13 @@ Revalidated Confidence: 96%
 - validator plus current-state document re-audit before implementation start
 
 ## 9A. Current-State Revalidation
-- Revalidated against live workspace changes in `main_a.py`, `modules/api/bridge_server.py`, `modules/api/process_runner.py`, `modules/core/services/project_service.py`, `modules/domain/agents/base_agent.py`, and `tests/test_main_a_boot_binding.py`.
-- `main_a.py` remains `4222` LOC with `44` raw `print(...)`, `247` `ui.log(...)`, and `11` `input(...)` calls, so the monolithic runtime shell problem is still present.
-- `_reload_project_environment()` in `main_a.py` still resets `BaseAgent` key state only when a project-local `.env` exists; the new boot-binding test now explicitly asserts that cache/key state is preserved when no project env is rebound. That makes runtime ownership extraction more important, not less, because shell code still owns global agent cache transitions.
-- `ProjectService` now carries a structured `DestructiveOpResult` plus partial runtime-restore failure reporting. This adds a clearer runtime-restore seam, but it remains attached to the live app shell and does not remove the broader `main_a.py` authority concentration.
-- Revalidation outcome: document direction unchanged; prerequisites unchanged; this item should still follow the operator-event substrate decision.
+- Revalidated against live workspace changes in `main_a.py`, `modules/core/services/project_service.py`, `tests/test_main_a_boot_binding.py`, `tests/test_resume_status.py`, `tests/test_bootstrap_status.py`, and `tests/test_main_a_persistence_helpers.py`.
+- Slice 1 landed. `boot()` is now reduced to orchestration over `_bind_selected_project()`, `_restore_boot_runtime_state()`, `_ensure_project_genre_alignment()`, `_initialize_project_genre_runtime()`, and `_initialize_project_runtime_support()`.
+- Shutdown ownership now has explicit seams. `_shutdown_app()` delegates to `_persist_shutdown_metrics()`, `_persist_shutdown_cost_scope()`, `_persist_shutdown_advisory_state()`, `_persist_shutdown_trackers()`, `_persist_shutdown_project_state()`, and `_close_shutdown_resources()`.
+- `main_a.py` still remains the runtime composition root, but the live shell now carries `4` raw `print(...)`, `257` `ui.log(...)`, and `11` `input(...)` calls instead of the prior heavier bootstrap/shutdown inline surface.
+- `_reload_project_environment()` still resets `BaseAgent` key state only when a project-local `.env` exists, and the new binding helper preserves that behavior while moving project selection and runtime sink retargeting behind an explicit boot seam.
+- Focused verification passed: `41` tests across boot binding, shutdown orchestration, bootstrap status, persistence helpers, sweep guards, and raw print allowlist.
+- Revalidation outcome: direction unchanged, item is now `in_progress`, and the next safe slice is stage attachment / optional-module activation extraction.
 
 ## 10. Guardrails
 - Do not mix this work with behavioral changes to stage logic.
@@ -124,7 +126,7 @@ Revalidated Confidence: 96%
 - Do not modify the current queue order without refreshing the aggregate roadmap.
 
 ## 11. Temp Queue Notes
-- temp status: pending
+- temp status: in_progress
 - cleanup condition: remove mirror after implementation and closure
 - roadmap dependency: execute after the operator-event substrate decision is stable
 

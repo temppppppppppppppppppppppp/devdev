@@ -1,7 +1,7 @@
 # Residual Print to UI Log + DB Persistence Full Survey 3-Pass Execution SSOT
 
 Date: 2026-03-14
-Status: in progress
+Status: completed
 Canonical Path: `docs/2026-03-14/residual-print-ui-log-db-full-survey-3pass-execution-ssot.md`
 Temp Mirror Path: `docs/temp/residual-print-ui-log-db-full-survey-3pass-execution-ssot.md`
 Source Survey Docs:
@@ -14,7 +14,7 @@ Evidence Artifacts:
 Side-Effect Coverage: covered
 Confidence Target: 95%
 Live Workspace Revalidation: 2026-03-14 PASS
-Revalidated Confidence: 96%
+Revalidated Confidence: 97%
 Primary References:
 - `00_test_print_ast.txt`
 - `00_test_print.txt`
@@ -334,7 +334,7 @@ Deliverables:
 
 Implementation note:
 - 2026-03-14 current workspace now includes `SessionLogger.log_ui_event(...)`, `DBManager.save_ui_event(...)`, `StudioVisualizer` operator-event sink wiring, `main_a.py` bootstrap buffering, and `AuditService` proof-digest visibility for `ui_events`.
-- Remaining work for this execution SSOT is Tranche 2+ runtime conversion and allowlist cleanup of residual `print(...)` call sites.
+- Tranche 1 substrate is landed. Remaining work for this execution SSOT is downstream runtime conversion, callback rollout, and Stage 0 migration only.
 
 ### Tranche 2. Direct Runtime Conversion
 Target files:
@@ -351,8 +351,10 @@ Deliverables:
 
 Implementation note:
 - 2026-03-14 current workspace now converts direct runtime progress/result frames in `modules/core/stage3_orchestrator.py`, `modules/core/stage4_orchestrator.py`, and `modules/core/stage4_interview_round.py` into `ui.log(...)` with operator-event metadata.
-- `main_a.py` shutdown persistence and advisory summaries now route through a `_shutdown_log(...)` helper backed by `ui.log(...)`, while threaded metrics-report prints remain intentionally excluded from this tranche because the metrics worker currently emits from a separate thread.
-- Remaining work in this tranche is now the explicit allowlist and the interactive/menu-heavy surfaces in `modules/core/services/ui_service.py` plus the remaining bootstrap/menu prints in `main_a.py`.
+- `main_a.py` shutdown persistence and advisory summaries now route through a `_shutdown_log(...)` helper backed by `ui.log(...)`, and the metrics summary/save messages now return from the worker thread and emit on the main thread through `ui.log(...)`.
+- `main_a.py` genre/project selection lists now emit through `ui.log(...)`, which reduces raw runtime `print(...)` use to bootstrap-only fail-safe paths plus the `_shutdown_log(...)` hard fallback.
+- `tests/test_runtime_print_allowlist.py` now locks the runtime allowlist to five explicit `main_a.py` prints: faulthandler bootstrap, import-failure bootstrap, and the `_shutdown_log(...)` fallback print.
+- Remaining work after this tranche is no longer the core runtime conversion. The remaining work is Tranche 3 domain-agent callback rollout and Tranche 4 Stage 0 interactive migration, especially `modules/core/services/ui_service.py`.
 
 ### Tranche 3. Domain-Agent Callback Rollout
 Target files:
@@ -366,6 +368,12 @@ Deliverables:
 - no direct UI dependency in deep runtime code
 - persisted director and agent frames
 
+Implementation note:
+- 2026-03-14 current workspace now lands `BaseAgent._operator_log(...)` plus callback resolution via injected operator callbacks or `context.ui.log`.
+- The rollout now covers `base_agent.py`, `arc_ensemble.py`, `blueprint_ensemble.py`, `chief_writer.py`, `chief_writer_quality.py`, `analyst.py`, `three_phase_blueprint_generator.py`, `unified_arc_validator.py`, `director_ensemble.py`, and `director_auditor.py`.
+- `tests/test_base_agent.py` now guards the bridge contract, and `tests/test_runtime_print_allowlist.py` now forbids new raw prints across the migrated domain-agent files.
+- Remaining work after this tranche is Tranche 4 Stage 0 interactive migration.
+
 ### Tranche 4. Stage 0 Interactive Migration
 Target files:
 - `modules/core/stage0/__init__.py`
@@ -377,6 +385,12 @@ Deliverables:
 - typed menu/prompt/selection helpers
 - persisted operator interaction trail
 - no raw Stage 0 `print(...)` outside explicit demo blocks
+
+Implementation note:
+- 2026-03-14 current workspace now lands typed `menu_block`, `prompt`, `selection`, and `summary` helpers in `StudioVisualizer`, and routes `UIService`, `StageZeroManager`, and `Stage01Helpers` through that typed operator surface.
+- `modules/core/stage0/__init__.py`, `modules/core/services/ui_service.py`, `modules/core/stage0/style_extractor.py`, and `modules/core/stage01_helpers.py` now carry `0` raw `print(...)` calls.
+- `modules/core/stage0/spinner.py` still contains blank-line fallback prints and bottom-of-file demo/test prints only; these remain the explicit Stage 0 exception surface rather than live operator workflow output.
+- `StyleExtractor` progress now routes through a callback-compatible progress surface instead of raw prints, so Stage 0 analysis progress is durable and later analyzable.
 
 ### Tranche 5. Policy and Guardrails
 Target files:
@@ -403,6 +417,7 @@ Deliverables:
 - Add bridge tests for `StudioVisualizer.log(...)`.
 - Add migration regressions for Stage 3 and Stage 4 operator-visible flows.
 - Add a runtime print guard test for target runtime paths.
+- Keep the runtime print allowlist bounded to bootstrap-only exceptions.
 
 ## 9. Non-Goals and Guardrails
 - Do not treat bare `logging.*` as a substitute for operator-visible output.
@@ -415,10 +430,15 @@ Deliverables:
 ## 9A. Current-State Revalidation
 - Revalidated against live workspace changes in `main_a.py`, `modules/core/logger.py`, `modules/core/session_logger.py`, `modules/core/db_manager.py`, `modules/core/services/audit_service.py`, `modules/api/bridge_server.py`, and `modules/api/process_runner.py`.
 - The required substrate is now present in live code: `SessionLogger.log_ui_event(...)`, `DBManager.save_ui_event(...)`, `StudioVisualizer` operator-event sink wiring, `main_a.py` bootstrap buffering, and `AuditService` proof-digest coverage for `ui_events` have all landed.
-- `modules/core/stage4_interview_round.py` now carries `0` raw `print(...)` calls, while `main_a.py` is down to `13` residual `print(...)` calls that are concentrated in bootstrap fail-safe paths, threaded metrics reporting, protagonist/entity helper traces, and interactive menu surfaces.
-- `modules/core/services/ui_service.py` remains intentionally raw-`print` heavy because it belongs to the later Stage 0 interactive migration tranche, not the direct runtime conversion tranche.
+- `modules/core/stage4_interview_round.py` now carries `0` raw `print(...)` calls, and `main_a.py` is down to `5` raw `print(...)` calls: four bootstrap-only fail-safe prints and one `_shutdown_log(...)` fallback print.
+- `tests/test_runtime_print_allowlist.py` now enforces that no new raw prints appear in `main_a.py`, `modules/core/stage3_orchestrator.py`, `modules/core/stage4_orchestrator.py`, or `modules/core/stage4_interview_round.py` outside the explicit allowlist.
+- The domain-agent callback rollout is now live: `BaseAgent` resolves a shared operator callback bridge, and the migrated agent files now emit operator-visible frames through `ui.log(...)`-compatible callbacks instead of raw `print(...)`.
+- `tests/test_runtime_print_allowlist.py` now also enforces `0` raw `print(...)` calls across the migrated domain-agent files, and `tests/test_base_agent.py` covers metadata-bearing bridge emission plus message-only fallback callbacks.
+- The Stage 0 interactive migration is now live: `StudioVisualizer` provides typed menu/prompt/selection helpers, `UIService` and `StageZeroManager` use that surface, `Stage01Helpers` routes menu prompts through the same operator contract, and `StyleExtractor` progress uses callback-based reporting.
+- `tests/test_runtime_print_allowlist.py` now also enforces `0` raw `print(...)` calls across `modules/core/services/ui_service.py`, `modules/core/stage0/__init__.py`, `modules/core/stage0/style_extractor.py`, and `modules/core/stage01_helpers.py`.
+- The only residual Stage 0 raw prints now sit in `modules/core/stage0/spinner.py`, where they are limited to fallback blank-line rendering and file-bottom demo/test code rather than active Stage 0 operator workflows.
 - `bridge_server.py` now writes `control-plane-provenance.jsonl` through an explicit helper path, which reinforces the multi-sink durability direction but does not supersede this operator-event substrate order.
-- Revalidation outcome: document direction unchanged; tranche ordering unchanged; Tranche 1 is landed, Tranche 2 core-runtime conversion is materially advanced but not yet closed, and this document remains the first queue item and the prerequisite for later operator-surface work.
+- Revalidation outcome: document direction unchanged; tranche ordering unchanged; Tranche 1 substrate, Tranche 2 non-interactive runtime conversion plus allowlist guardrails, Tranche 3 domain-agent callback rollout, and Tranche 4 Stage 0 interactive migration are all landed. This execution SSOT is now complete.
 
 ## 10. Final Order
 The correct direction is:
@@ -427,5 +447,9 @@ The correct direction is:
 - That surface must persist to both `ui_events.jsonl` and a DB `ui_events` table.
 - The migration must be executed by class, not by blind replacement.
 - The first implementation target is the substrate and direct-runtime class, then domain callbacks, then Stage 0 interactive conversion.
+
+Closure note:
+- This execution SSOT is closed as completed on 2026-03-14.
+- The temp mirror should be removed from the active execution queue after roadmap sync.
 
 This gives the system a later-analyzable record of what the operator actually saw, while preserving live console usability.

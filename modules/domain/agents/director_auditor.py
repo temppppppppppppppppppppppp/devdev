@@ -755,23 +755,36 @@ class DirectorQualityAuditor:
         # --- Director Audit 상세 출력 ---
         _aud_decision = result.get("decision", "?")
         _aud_score = result.get("score", 0)
-        print(f"\n   {'=' * 56}")
-        print(f"      [Stage4 Audit] {audit_mode} {_aud_decision} (점수: {_aud_score})")
+        self._d._operator_log(
+            f"[Stage4 Audit] {audit_mode} {_aud_decision} (점수: {_aud_score})",
+            meta={"component": "DirectorAudit", "score": _aud_score, "audit_mode": audit_mode},
+        )
         _aud_sb = result.get("score_breakdown", {})
         if _aud_sb:
             _sb_str = ", ".join(f"{k}={v}" for k, v in _aud_sb.items() if isinstance(v, int | float))
             if _sb_str:
-                print(f"      점수 분해: {_sb_str}")
+                self._d._operator_log(
+                    f"점수 분해: {_sb_str}",
+                    meta={"component": "DirectorAudit", "score": _aud_score, "audit_mode": audit_mode},
+                )
         _aud_reason = result.get("reason", "")
         if _aud_reason:
-            print(f"      사유: {str(_aud_reason)[:200]}")
+            self._d._operator_log(
+                f"사유: {str(_aud_reason)[:200]}",
+                meta={"component": "DirectorAudit", "score": _aud_score, "audit_mode": audit_mode},
+            )
         _aud_fb = result.get("feedback", "")
         if _aud_fb:
-            print(f"      피드백: {str(_aud_fb)[:200]}")
+            self._d._operator_log(
+                f"피드백: {str(_aud_fb)[:200]}",
+                meta={"component": "DirectorAudit", "score": _aud_score, "audit_mode": audit_mode},
+            )
         _aud_or = result.get("open_review", "")
         if _aud_or and _aud_or not in ("특이사항 없음", "없음", ""):
-            print(f"      자유 리뷰: {str(_aud_or)[:200]}")
-        print(f"   {'=' * 56}\n")
+            self._d._operator_log(
+                f"자유 리뷰: {str(_aud_or)[:200]}",
+                meta={"component": "DirectorAudit", "score": _aud_score, "audit_mode": audit_mode},
+            )
 
         return result
 
@@ -992,7 +1005,10 @@ class DirectorQualityAuditor:
 
         # 애매한 구간 → 추가 평가 진행
         logging.info(f" [V49.3] 애매한 결과({first_decision}, score={first_score}) → Self-Consistency 활성화")
-        print(f"      ⚖️ [Director] 애매한 결과(score={first_score}) → 추가 투표 진행...")
+        self._d._operator_log(
+            f"⚖️ [Director] 애매한 결과(score={first_score}) → 추가 투표 진행...",
+            meta={"component": "DirectorAudit", "score": first_score},
+        )
 
         evaluations = [first_eval]
 
@@ -1043,8 +1059,15 @@ class DirectorQualityAuditor:
                             eval_decision = eval_result.get("decision", "REJECT")
                             eval_score = _safe_int_score(eval_result.get("score", 0), 0)
                             logging.info(f"Vote {vote_idx + 1}: {eval_decision} (score={eval_score})")
-                            print(
-                                f"      ⚖️ [Director] 투표 {len(evaluations)}/{len(vote_tasks) + 1}: {eval_decision} (score={eval_score})"
+                            self._d._operator_log(
+                                f"⚖️ [Director] 투표 {len(evaluations)}/{len(vote_tasks) + 1}: {eval_decision} (score={eval_score})",
+                                meta={
+                                    "component": "DirectorAudit",
+                                    "decision": eval_decision,
+                                    "score": eval_score,
+                                    "vote_index": len(evaluations),
+                                    "vote_total": len(vote_tasks) + 1,
+                                },
                             )
                     except FutureTimeoutError:
                         logging.warning(" [V61.3] Vote 타임아웃")
@@ -1099,8 +1122,15 @@ class DirectorQualityAuditor:
 
         logging.info(f"✅ [V49.3] Self-Consistency 완료: {final_decision} (PASS {pass_votes}/{len(evaluations)}, median={median_score})"
         )
-        print(
-            f"      ✅ [Director] SC 완료: {final_decision} (PASS {pass_votes}/{len(evaluations)}, median={median_score})"
+        self._d._operator_log(
+            f"✅ [Director] SC 완료: {final_decision} (PASS {pass_votes}/{len(evaluations)}, median={median_score})",
+            meta={
+                "component": "DirectorAudit",
+                "decision": final_decision,
+                "pass_votes": pass_votes,
+                "vote_total": len(evaluations),
+                "median_score": median_score,
+            },
         )
 
         result["_director_thinking"] = _first_thinking  # [TF-28c]

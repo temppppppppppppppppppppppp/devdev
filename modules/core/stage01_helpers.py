@@ -36,6 +36,23 @@ class Stage01Helpers:
         self.app = app
 
     @staticmethod
+    def _prompt_with_ui(app, prompt_text: str, **context) -> str:
+        ui = getattr(app, "ui", None)
+        if hasattr(type(ui), "prompt"):
+            return ui.prompt(prompt_text, component="Stage0", stage="stage0", **context)
+        try:
+            return input(prompt_text)
+        except (EOFError, KeyboardInterrupt, ValueError):
+            return ""
+
+    @classmethod
+    def _pause_with_ui(cls, app, prompt_text: str = "\n[Enter] 메뉴로 돌아가기", **context) -> None:
+        try:
+            cls._prompt_with_ui(app, prompt_text, **context)
+        except (EOFError, KeyboardInterrupt, ValueError):
+            pass
+
+    @staticmethod
     def validate_volume_boundaries(vol_data, vol_idx):
         """권 전략 문서의 미래 권 누수와 비정상 payload를 검증한다."""
         if not isinstance(vol_data, dict):
@@ -115,7 +132,7 @@ class Stage01Helpers:
         app.ui.log("\n  [0] 취소")
 
         try:
-            p0_choice = input("\n  선택 (기본: 1): ").strip()
+            p0_choice = self._prompt_with_ui(app, "\n  선택 (기본: 1): ", prompt_id="stage0_phase0_choice").strip()
         except (EOFError, KeyboardInterrupt, ValueError):
             p0_choice = "1"
 
@@ -152,7 +169,11 @@ class Stage01Helpers:
         # [V60.10] Treatment Block 농축 옵션
         try:
             enrich_choice = (
-                input("   🔧 [V60.10] Treatment Block 자동 농축을 수행하시겠습니까? (y/N): ").strip().lower()
+                self._prompt_with_ui(
+                    app,
+                    "   🔧 [V60.10] Treatment Block 자동 농축을 수행하시겠습니까? (y/N): ",
+                    prompt_id="stage0_enrich_treatment_confirm",
+                ).strip().lower()
             )
         except (EOFError, KeyboardInterrupt, ValueError):
             enrich_choice = "n"
@@ -166,7 +187,7 @@ class Stage01Helpers:
         app.ui.log("      [1] 현대인 - 제약 없음 (권장: 회귀/빙의물)")
         app.ui.log("      [2] 원시인 - 현대 지식/용어 사용 제한 (권장: 무협/판타지)")
         try:
-            world_choice = input("   선택 (기본: 1): ").strip()
+            world_choice = self._prompt_with_ui(app, "   선택 (기본: 1): ", prompt_id="stage0_world_origin_choice").strip()
         except (EOFError, KeyboardInterrupt, ValueError):
             world_choice = ""
         world_origin = resolve_indexed_menu_choice(
@@ -181,7 +202,7 @@ class Stage01Helpers:
         app.ui.log("      [3] 환생자 - 아기로 다시 태어남")
         app.ui.log("      [4] 기타 - 특별한 유형 없음")
         try:
-            type_choice = input("   선택 (기본: 1): ").strip()
+            type_choice = self._prompt_with_ui(app, "   선택 (기본: 1): ", prompt_id="stage0_incarnation_choice").strip()
         except (EOFError, KeyboardInterrupt, ValueError):
             type_choice = ""
         incarnation_type = resolve_indexed_menu_choice(
@@ -196,7 +217,7 @@ class Stage01Helpers:
         app.ui.log("      [3] 전지적 - 모든 캐릭터 내면 접근 가능")
         app.ui.log("      [4] 혼합 - 씬 전환마다 시점을 바꿔 사용할 수 있음")
         try:
-            pov_choice = input("   선택 (기본: 2): ").strip()
+            pov_choice = self._prompt_with_ui(app, "   선택 (기본: 2): ", prompt_id="stage0_pov_choice").strip()
         except (EOFError, KeyboardInterrupt, ValueError):
             pov_choice = ""
         selected_pov = resolve_indexed_menu_choice(
@@ -214,7 +235,11 @@ class Stage01Helpers:
         for i, option in enumerate(EXTERNAL_POV_INSERT_POLICY_OPTIONS, 1):
             app.ui.log(f"      [{i}] {option}")
         try:
-            policy_choice = input(f"   선택 (기본: {default_index}): ").strip()
+            policy_choice = self._prompt_with_ui(
+                app,
+                f"   선택 (기본: {default_index}): ",
+                prompt_id="stage0_external_pov_choice",
+            ).strip()
         except (EOFError, KeyboardInterrupt, ValueError):
             policy_choice = ""
         selected_external_policy = resolve_external_pov_insert_policy_choice(
@@ -270,10 +295,7 @@ class Stage01Helpers:
             app.current_project._load_from_db()
             app.ui.log("✨ [Success] 설계도(50개)와 원고 역사가 무결하게 통합되었습니다.")
 
-        try:
-            input("\n[Enter] 메뉴로 돌아가기")
-        except (EOFError, KeyboardInterrupt, ValueError):
-            pass
+        Stage01Helpers._pause_with_ui(app)
 
     # ─────────────────────────────────────────────────────────────
     # [4C-1b-a] _extend_blocks
@@ -318,12 +340,19 @@ class Stage01Helpers:
         )
 
         try:
-            extend_count = int(input("\n   추가할 블록 수 (기본: 10): ").strip() or "10")
+            extend_count = int(
+                self._prompt_with_ui(app, "\n   추가할 블록 수 (기본: 10): ", prompt_id="stage0_extend_count").strip()
+                or "10"
+            )
         except (ValueError, EOFError, KeyboardInterrupt):
             extend_count = 10
 
         try:
-            direction_hint = input("   방향 힌트 (예: '클라이맥스로', '새 빌런 등장', 생략 가능): ").strip()
+            direction_hint = self._prompt_with_ui(
+                app,
+                "   방향 힌트 (예: '클라이맥스로', '새 빌런 등장', 생략 가능): ",
+                prompt_id="stage0_extend_direction_hint",
+            ).strip()
         except (EOFError, KeyboardInterrupt, ValueError):
             direction_hint = ""
 
@@ -336,7 +365,11 @@ class Stage01Helpers:
                 app.ui.log(f"   ... 외 {len(batch) - 3}개")
 
             try:
-                confirm = input("   계속 진행하시겠습니까? (Y/n): ").strip().lower()
+                confirm = self._prompt_with_ui(
+                    app,
+                    "   계속 진행하시겠습니까? (Y/n): ",
+                    prompt_id="stage0_extend_confirm_batch",
+                ).strip().lower()
             except (EOFError, KeyboardInterrupt, ValueError):
                 confirm = "y"
             return confirm != "n"
@@ -384,7 +417,7 @@ class Stage01Helpers:
 
         project_path = str(app.current_project.paths.root) if app.current_project else None
         llm_client = getattr(app.sys, "api_client", None) if hasattr(app, "sys") else None
-        stage0_manager = StageZeroManager(project_path=project_path, llm_client=llm_client)
+        stage0_manager = StageZeroManager(project_path=project_path, llm_client=llm_client, ui=app.ui)
 
         if app.selected_genre:
             genre_type = app.selected_genre.get("type", "")
@@ -531,10 +564,7 @@ class Stage01Helpers:
 
                 traceback.print_exc()
 
-        try:
-            input("\n[Enter] 메뉴로 돌아가기")
-        except (EOFError, KeyboardInterrupt, ValueError):
-            pass
+        Stage01Helpers._pause_with_ui(app)
         return None, None  # 자체 저장 완료, 공통 후처리 불필요
 
     @staticmethod
@@ -548,20 +578,14 @@ class Stage01Helpers:
                 app.ui.log("✅ [V70] StyleGuide DB 저장 완료 (anchor: style_guide)")
             except Exception as sg_err:
                 logging.warning(f" StyleGuide DB 저장 실패: {sg_err}")
-        try:
-            input("\n[Enter] 메뉴로 돌아가기")
-        except (EOFError, KeyboardInterrupt, ValueError):
-            pass
+        Stage01Helpers._pause_with_ui(app)
         return None, None
 
     @staticmethod
-    def _s0_handle_work_guard(_app, stage0_manager):
+    def _s0_handle_work_guard(app, stage0_manager):
         """choice=6: 작품가드 설정."""
         stage0_manager.manage_work_guard()
-        try:
-            input("\n[Enter] 메뉴로 돌아가기")
-        except (EOFError, KeyboardInterrupt, ValueError):
-            pass
+        Stage01Helpers._pause_with_ui(app)
         return None, None
 
     @staticmethod
@@ -702,10 +726,7 @@ class Stage01Helpers:
             except Exception as e:
                 logging.warning(f"❌ Stage 0 결과 리로드 실패: {e}")
 
-        try:
-            input("\n[Enter] 메뉴로 돌아가기")
-        except (EOFError, KeyboardInterrupt, ValueError):
-            pass
+        Stage01Helpers._pause_with_ui(app)
 
     # ─────────────────────────────────────────────────────────────
     # [4C-1b-b] _stage_1_volumes
@@ -719,15 +740,12 @@ class Stage01Helpers:
         # [V41 Patch] 스킵 옵션 제공
         app.ui.log("💡 Stage 1은 선택 사항입니다. 스킵해도 Stage 2 진행이 가능합니다.")
         try:
-            skip_choice = input("   [1] 진행  [2] 스킵 (기본: 1): ").strip()
+            skip_choice = self._prompt_with_ui(app, "   [1] 진행  [2] 스킵 (기본: 1): ", prompt_id="stage1_skip_choice").strip()
         except (EOFError, KeyboardInterrupt, ValueError):
             skip_choice = "1"
         if skip_choice == "2":
             app.ui.log("⏭️ Stage 1을 건너뜁니다. Stage 2에서 기본값으로 진행됩니다.")
-            try:
-                input("\n[Enter] 메뉴로 돌아가기")
-            except (EOFError, KeyboardInterrupt, ValueError):
-                pass
+            self._pause_with_ui(app)
             return
 
         # [V38 패치] 안전한 커밋으로 변경
@@ -736,10 +754,7 @@ class Stage01Helpers:
         # [V38 패치] 안전한 데이터 추출 [V44 강화: None 체크]
         if not app.current_project or not hasattr(app.current_project, "master_bible"):
             app.ui.log("❌ 프로젝트가 로드되지 않았습니다.")
-            try:
-                input("\n[Enter] 메뉴로 돌아가기")
-            except (EOFError, KeyboardInterrupt, ValueError):
-                pass
+            self._pause_with_ui(app)
             return
         master_bible = app.current_project.master_bible or {}
         bible_root = master_bible.get("MasterBible", master_bible) if isinstance(master_bible, dict) else {}
@@ -762,10 +777,7 @@ class Stage01Helpers:
 
         if not arcs_source:
             app.ui.log("❌ 에러: 성경 내 로드맵 데이터가 없습니다. Phase 0을 다시 실행하세요.")
-            try:
-                input("\n[Enter] 메뉴로 돌아가기")
-            except (EOFError, KeyboardInterrupt, ValueError):
-                pass
+            self._pause_with_ui(app)
             return
 
         from modules.core.constants import Emojis, RetryLimits, VolumeSettings
@@ -899,7 +911,4 @@ class Stage01Helpers:
             app._show_volume_table(final_volumes)
         app.ui.log(f"✨ [Complete] {len(final_volumes)}권 대서사시 로드맵이 DB에 최종 안착되었습니다.")
 
-        try:
-            input("\n[Enter] 메뉴로 이동")
-        except (EOFError, KeyboardInterrupt, ValueError):
-            pass
+        self._pause_with_ui(app, "\n[Enter] 메뉴로 이동", prompt_id="stage1_return_to_menu")

@@ -323,7 +323,10 @@ class BlueprintEnsembleGenerator(BaseAgent):
                         cache_name=cache_name,  # [Tier4-11]
                     )
                     futures[future] = strategy["name"]
-                    print(f"      🎲 [Blueprint] 전략 '{strategy['name']}' 생성 시작")
+                    self._operator_log(
+                        f"🎲 [Blueprint] 전략 '{strategy['name']}' 생성 시작",
+                        meta={"strategy": strategy["name"]},
+                    )
 
                 # [V61.3] 타임아웃 적용 - 야간 무인 운영 시 무한 대기 방지
                 try:
@@ -336,15 +339,24 @@ class BlueprintEnsembleGenerator(BaseAgent):
                                 result["_strategy"] = strategy_name
                                 candidates.append(result)
                                 logging.info(f" {strategy_name} 생성 완료")
-                                print(
-                                    f"      ✓ [Blueprint] '{strategy_name}' 생성 완료 ({time.monotonic() - _tp_t0:.0f}초)"
+                                self._operator_log(
+                                    f"✓ [Blueprint] '{strategy_name}' 생성 완료 ({time.monotonic() - _tp_t0:.0f}초)",
+                                    meta={"strategy": strategy_name, "elapsed_seconds": round(time.monotonic() - _tp_t0, 1)},
                                 )
                         except FutureTimeoutError:
                             logging.warning(f" [V61.3] {strategy_name} 타임아웃 ({self.SINGLE_CANDIDATE_TIMEOUT}초)")
-                            print(f"      ✗ [Blueprint] '{strategy_name}' 타임아웃")
+                            self._operator_log(
+                                f"✗ [Blueprint] '{strategy_name}' 타임아웃",
+                                level="warning",
+                                meta={"strategy": strategy_name, "timeout_seconds": self.SINGLE_CANDIDATE_TIMEOUT},
+                            )
                         except Exception as e:
                             logging.warning(f" {strategy_name} 실패: {str(e)[:50]}")
-                            print(f"      ✗ [Blueprint] '{strategy_name}' 실패")
+                            self._operator_log(
+                                f"✗ [Blueprint] '{strategy_name}' 실패",
+                                level="warning",
+                                meta={"strategy": strategy_name},
+                            )
                 except FutureTimeoutError:
                     # 전체 앙상블 타임아웃 - 완료된 후보만 사용
                     logging.warning(f" [V61.3] 블루프린트 앙상블 타임아웃 ({self.ENSEMBLE_TIMEOUT}초) - 완료된 {len(candidates)}개 후보 사용"
@@ -404,7 +416,10 @@ class BlueprintEnsembleGenerator(BaseAgent):
         # [V60.85] Director가 선택할 수 있도록 후보 목록 반환
         # Python은 선택하지 않음 - Director에게 전체 전달
         logging.info(f" [BPEnsemble] {len(qualified_candidates)}개 후보 → Director 선택 대기")
-        print(f"      📋 [Blueprint] {len(qualified_candidates)}개 후보 통과 → Director 선택 대기")
+        self._operator_log(
+            f"📋 [Blueprint] {len(qualified_candidates)}개 후보 통과 → Director 선택 대기",
+            meta={"qualified_candidates": len(qualified_candidates)},
+        )
 
         # 메타데이터 저장 (Director 비교용)
         for idx, candidate in enumerate(qualified_candidates):
@@ -555,7 +570,10 @@ class BlueprintEnsembleGenerator(BaseAgent):
                 return None
 
             _strategy_name = strategy.get("name", "unknown")
-            print(f"      ⏳ [Blueprint] '{_strategy_name}' LLM 호출 중...")
+            self._operator_log(
+                f"⏳ [Blueprint] '{_strategy_name}' LLM 호출 중...",
+                meta={"strategy": _strategy_name},
+            )
             response = self._ask_with_cached_context(
                 cache_name=cache_name,
                 prompt=prompt,
@@ -563,7 +581,10 @@ class BlueprintEnsembleGenerator(BaseAgent):
                 thinking_level="medium",
                 full_prompt_fallback=full_prompt_fallback,
             )
-            print(f"      📝 [Blueprint] '{_strategy_name}' 응답 수신 ({len(response):,}자)")
+            self._operator_log(
+                f"📝 [Blueprint] '{_strategy_name}' 응답 수신 ({len(response):,}자)",
+                meta={"strategy": _strategy_name, "response_chars": len(response)},
+            )
             result = self._extract_json_robust(response)
 
             if not isinstance(result, dict):

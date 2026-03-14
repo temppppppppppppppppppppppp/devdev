@@ -109,6 +109,37 @@ def test_shutdown_records_session_cost_when_scope_exists(monkeypatch):
     assert kw["total_calls"] == 2
 
 
+def test_shutdown_metrics_summary_and_saved_path_are_logged_via_ui(monkeypatch):
+    monkeypatch.setattr(main_a, "V50_MODULES_AVAILABLE", False)
+
+    collector = MagicMock()
+    collector.get_summary_report.return_value = "summary-line"
+    collector.save_metrics.return_value = "metrics.json"
+    collector.snapshot_and_reset_scope.return_value = {}
+    monkeypatch.setattr(main_a, "get_metrics_collector", lambda: collector)
+
+    db_conn = MagicMock()
+    db = SimpleNamespace(conn=db_conn)
+    ui = SimpleNamespace(log=MagicMock())
+    project = SimpleNamespace(name="resume_project", db=db, save_v20_anchor=MagicMock())
+    app = SimpleNamespace(
+        _PROJECTS_DIR="projects",
+        pass_rate_monitor=None,
+        failure_learner=None,
+        character_voice=None,
+        foreshadow_tracker=None,
+        current_project=project,
+        selected_genre=None,
+        ui=ui,
+    )
+
+    main_a.SovereignApp._shutdown_app(app)
+
+    logs = [call.args[0] for call in ui.log.call_args_list if call.args]
+    assert any("summary-line" in message for message in logs)
+    assert any("세션 메트릭 저장: metrics.json" in message for message in logs)
+
+
 def test_shutdown_bible_anchor_failure_is_non_blocking(monkeypatch):
     monkeypatch.setattr(main_a, "V50_MODULES_AVAILABLE", False)
     monkeypatch.setattr(main_a, "get_metrics_collector", lambda: None)
@@ -169,3 +200,29 @@ def test_shutdown_genre_anchor_failure_is_non_blocking(monkeypatch):
     db.save_anchor.assert_called_once_with("genre_info", app.selected_genre)
     db_conn.commit.assert_called_once()
     db_conn.close.assert_called_once()
+
+
+def test_shutdown_app_delegates_to_split_helpers(monkeypatch):
+    calls: list[str] = []
+
+    def _shutdown_log(_self, message, **_context):
+        if "종료 시퀀스" in message:
+            calls.append("start")
+        elif "종료 완료" in message:
+            calls.append("end")
+
+    monkeypatch.setattr(main_a.SovereignApp, "_shutdown_log", _shutdown_log)
+    monkeypatch.setattr(main_a.SovereignApp, "_persist_shutdown_metrics", lambda _self: calls.append("metrics"))
+    monkeypatch.setattr(main_a.SovereignApp, "_persist_shutdown_cost_scope", lambda _self: calls.append("cost"))
+    monkeypatch.setattr(
+        main_a.SovereignApp, "_persist_shutdown_advisory_state", lambda _self: calls.append("advisory")
+    )
+    monkeypatch.setattr(main_a.SovereignApp, "_persist_shutdown_trackers", lambda _self: calls.append("trackers"))
+    monkeypatch.setattr(
+        main_a.SovereignApp, "_persist_shutdown_project_state", lambda _self: calls.append("project")
+    )
+    monkeypatch.setattr(main_a.SovereignApp, "_close_shutdown_resources", lambda _self: calls.append("close"))
+
+    main_a.SovereignApp._shutdown_app(SimpleNamespace())
+
+    assert calls == ["start", "metrics", "cost", "advisory", "trackers", "project", "close", "end"]

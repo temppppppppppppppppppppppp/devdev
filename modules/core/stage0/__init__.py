@@ -31,6 +31,7 @@ except ImportError:
     SPINNER_AVAILABLE = False
 
 import json
+import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -76,9 +77,10 @@ class StageZeroManager:
     WORK_GUARD_LIBRARY_ROOT = Path("work_guards")
     EXTERNAL_POV_INSERT_POLICY_OPTIONS = list(EXTERNAL_POV_INSERT_POLICY_OPTIONS)
 
-    def __init__(self, project_path: str = None, llm_client=None):
+    def __init__(self, project_path: str = None, llm_client=None, ui=None):
         self.project_path = project_path
         self.client = llm_client
+        self.ui = ui
 
         # 결과물
         self.genre: str = ""
@@ -88,6 +90,43 @@ class StageZeroManager:
         self.episode_bibles: list[dict[str, Any]] = []
         self.style_guide: StyleGuide | None = None
         self.protagonist_config: dict[str, Any] = {}
+
+    def _ui_log(self, text: str, **context) -> None:
+        message = str(text)
+        if hasattr(type(self.ui), "log"):
+            self.ui.log(message, component="Stage0", stage="stage0", **context)
+            return
+        logging.getLogger("Stage0").info(message)
+        sys.stdout.write(f"{message}\n")
+
+    def _ui_menu(self, title: str, options: list[str], **context) -> None:
+        if hasattr(type(self.ui), "menu_block"):
+            self.ui.menu_block(title, options, component="Stage0", stage="stage0", **context)
+            return
+        self._ui_log(title, event_kind="menu", render_format="menu", **context)
+        for option in options:
+            self._ui_log(option, event_kind="menu_option", render_format="menu", **context)
+
+    def _ui_prompt(self, prompt_text: str, **context) -> str:
+        if hasattr(type(self.ui), "prompt"):
+            return self.ui.prompt(prompt_text, component="Stage0", stage="stage0", **context)
+        logging.getLogger("Stage0").info(prompt_text)
+        try:
+            return input(prompt_text)
+        except (EOFError, KeyboardInterrupt, ValueError):
+            return ""
+
+    def _ui_selection(self, label: str, selection_value, **context) -> None:
+        if hasattr(type(self.ui), "selection"):
+            self.ui.selection(label, selection_value, component="Stage0", stage="stage0", **context)
+            return
+        self._ui_log(
+            label,
+            event_kind="selection",
+            render_format="selection",
+            selection_value=selection_value,
+            **context,
+        )
 
     def _project_work_guard_path(self) -> Path | None:
         if not self.project_path:
@@ -141,20 +180,23 @@ class StageZeroManager:
     def manage_work_guard(self) -> None:
         project_guard_path = self._project_work_guard_path()
         if project_guard_path is None:
-            print("[!] 프로젝트 경로가 없어 Work Guard를 관리할 수 없습니다.")
+            self._ui_log("[!] 프로젝트 경로가 없어 Work Guard를 관리할 수 없습니다.", level="warning")
             return
 
-        print("\n" + "-" * 40)
-        print("작품가드 설정 (선택)")
-        print("-" * 40)
-        print("  [1] 라이브러리에서 가져오기")
-        print("  [2] 기본 템플릿으로 초기화")
-        print("  [3] 현재 프로젝트 작품가드 미리보기")
-        print("  [4] 현재 프로젝트 작품가드 삭제")
-        print("\n  [0] 돌아가기")
+        self._ui_menu(
+            "작품가드 설정 (선택)",
+            [
+                "[1] 라이브러리에서 가져오기",
+                "[2] 기본 템플릿으로 초기화",
+                "[3] 현재 프로젝트 작품가드 미리보기",
+                "[4] 현재 프로젝트 작품가드 삭제",
+                "[0] 돌아가기",
+            ],
+            prompt_id="stage0_work_guard_menu",
+        )
 
         try:
-            choice = input("\n  선택: ").strip()
+            choice = self._ui_prompt("\n  선택: ", prompt_id="stage0_work_guard_choice").strip()
         except (EOFError, KeyboardInterrupt, ValueError):
             choice = "0"
 
@@ -166,24 +208,29 @@ class StageZeroManager:
         if choice == "1":
             templates = self._list_work_guard_templates()
             if not templates:
-                print("[!] 가져올 작품가드 템플릿이 없습니다. work_guards/ 아래에 YAML을 두세요.")
+                self._ui_log("[!] 가져올 작품가드 템플릿이 없습니다. work_guards/ 아래에 YAML을 두세요.", level="warning")
                 return
-            print("\n  사용 가능한 템플릿:")
-            for idx, template in enumerate(templates, 1):
-                print(f"  [{idx}] {template.as_posix()}")
+            self._ui_menu(
+                "사용 가능한 템플릿:",
+                [f"[{idx}] {template.as_posix()}" for idx, template in enumerate(templates, 1)],
+                prompt_id="stage0_work_guard_template_menu",
+            )
             try:
-                template_choice = int(input("\n  가져올 번호: ").strip())
+                template_choice = int(
+                    self._ui_prompt("\n  가져올 번호: ", prompt_id="stage0_work_guard_template_choice").strip()
+                )
                 selected = templates[template_choice - 1]
             except (ValueError, IndexError, EOFError, KeyboardInterrupt):
-                print("[!] 잘못된 선택입니다.")
+                self._ui_log("[!] 잘못된 선택입니다.", level="warning")
                 return
             project_guard_path.write_text(selected.read_text(encoding="utf-8"), encoding="utf-8")
-            print(f"[v] 작품가드 가져오기 완료: {selected} -> {project_guard_path}")
+            self._ui_selection("작품가드 템플릿", selected.as_posix(), prompt_id="stage0_work_guard_template_choice", visible=False)
+            self._ui_log(f"[v] 작품가드 가져오기 완료: {selected} -> {project_guard_path}")
             return
 
         if choice == "2":
             project_guard_path.write_text(self._build_default_work_guard_yaml(), encoding="utf-8")
-            print(f"[v] 기본 작품가드 초기화 완료: {project_guard_path}")
+            self._ui_log(f"[v] 기본 작품가드 초기화 완료: {project_guard_path}")
             return
 
         if choice == "3":
@@ -191,24 +238,24 @@ class StageZeroManager:
 
             summary = load_work_guard_summary(Path(self.project_path))
             if not summary.get("work_guard_exists"):
-                print("[*] 현재 프로젝트에는 작품가드가 없습니다. baseline 경로로 진행 중입니다.")
+                self._ui_log("[*] 현재 프로젝트에는 작품가드가 없습니다. baseline 경로로 진행 중입니다.")
                 return
-            print(f"  - 경로: {project_guard_path}")
-            print(f"  - work_type: {summary.get('work_type', '') or '(미지정)'}")
-            print(f"  - tracking_slots: {summary.get('tracking_slots', 0)}")
-            print(f"  - registry_profiles: {summary.get('registry_profiles', 0)}")
-            print(f"  - role_fit_constraints: {summary.get('role_fit_constraints', 0)}")
+            self._ui_log(f"- 경로: {project_guard_path}", event_kind="summary", render_format="summary")
+            self._ui_log(f"- work_type: {summary.get('work_type', '') or '(미지정)'}", event_kind="summary", render_format="summary")
+            self._ui_log(f"- tracking_slots: {summary.get('tracking_slots', 0)}", event_kind="summary", render_format="summary")
+            self._ui_log(f"- registry_profiles: {summary.get('registry_profiles', 0)}", event_kind="summary", render_format="summary")
+            self._ui_log(f"- role_fit_constraints: {summary.get('role_fit_constraints', 0)}", event_kind="summary", render_format="summary")
             return
 
         if choice == "4":
             if project_guard_path.exists():
                 project_guard_path.unlink()
-                print(f"[v] 작품가드 삭제 완료: {project_guard_path}")
+                self._ui_log(f"[v] 작품가드 삭제 완료: {project_guard_path}")
             else:
-                print("[*] 삭제할 작품가드가 없습니다.")
+                self._ui_log("[*] 삭제할 작품가드가 없습니다.")
             return
 
-        print("[!] 잘못된 선택입니다.")
+        self._ui_log("[!] 잘못된 선택입니다.", level="warning")
 
     # ============================================
     # 메뉴 시스템
@@ -216,49 +263,49 @@ class StageZeroManager:
 
     def show_menu(self, is_new_project: bool = True) -> int:
         """Stage 0 메인 메뉴 표시"""
-        print("\n" + "=" * 50)
-        print("Stage 0 - 프로젝트 설정")
-        print("=" * 50)
-
         if is_new_project:
-            print("\n  [1] 컨셉 입력 → Bible + Treatment 생성")
-            print("  [2] 역설계 → 기존 원고에서 설정 추출")
-            print("  [3] Bible 임포트 → 기존 JSON 불러오기")
-            print("  [4] 스타일 레퍼런스 분석 → 참조 원고에서 문체 DNA 추출")
-            print("  [5] 작품가드 설정 (선택)")
-            print("\n  [0] 취소")
+            options = [
+                "[1] 컨셉 입력 → Bible + Treatment 생성",
+                "[2] 역설계 → 기존 원고에서 설정 추출",
+                "[3] Bible 임포트 → 기존 JSON 불러오기",
+                "[4] 스타일 레퍼런스 분석 → 참조 원고에서 문체 DNA 추출",
+                "[5] 작품가드 설정 (선택)",
+                "[0] 취소",
+            ]
         else:
-            print("\n  [1] Bible 재생성/수정")
-            print("  [2] 역설계 추가 (원고 추가 분석)")
-            print("  [3] 스타일 가이드 재추출")
-            print("  [4] 프리셋 관리")
-            print("  [5] 스타일 레퍼런스 분석 → 참조 원고에서 문체 DNA 추출")
-            print("  [6] 작품가드 설정 (선택)")
-            print("\n  [0] 메인 메뉴로")
+            options = [
+                "[1] Bible 재생성/수정",
+                "[2] 역설계 추가 (원고 추가 분석)",
+                "[3] 스타일 가이드 재추출",
+                "[4] 프리셋 관리",
+                "[5] 스타일 레퍼런스 분석 → 참조 원고에서 문체 DNA 추출",
+                "[6] 작품가드 설정 (선택)",
+                "[0] 메인 메뉴로",
+            ]
+        self._ui_menu("Stage 0 - 프로젝트 설정", options, prompt_id="stage0_main_menu")
 
         try:
-            choice = input("\n  선택: ").strip()
+            choice = self._ui_prompt("\n  선택: ", prompt_id="stage0_main_menu_choice").strip()
+            self._ui_selection("Stage 0 메인 메뉴", choice, prompt_id="stage0_main_menu_choice", visible=False)
             return int(choice) if choice.isdigit() else -1
         except (ValueError, EOFError):
             return -1
 
     def show_genre_menu(self) -> str:
         """장르 선택 메뉴"""
-        print("\n" + "-" * 40)
-        print("장르 선택")
-        print("-" * 40)
-
         genres = list(self.SUPPORTED_GENRES.items())
-        for i, (code, name) in enumerate(genres, 1):
-            print(f"  [{i}] {name} ({code})")
-        print("\n  [0] 자동 감지")
+        options = [f"[{i}] {name} ({code})" for i, (code, name) in enumerate(genres, 1)]
+        options.append("[0] 자동 감지")
+        self._ui_menu("장르 선택", options, prompt_id="stage0_genre_menu")
 
         try:
-            choice = input("\n  선택: ").strip()
+            choice = self._ui_prompt("\n  선택: ", prompt_id="stage0_genre_choice").strip()
             if choice == "0":
+                self._ui_selection("장르 선택", "auto", prompt_id="stage0_genre_choice", visible=False)
                 return ""  # 자동 감지
             idx = int(choice) - 1
             if 0 <= idx < len(genres):
+                self._ui_selection("장르 선택", genres[idx][0], prompt_id="stage0_genre_choice", visible=False)
                 return genres[idx][0]
         except (ValueError, IndexError, EOFError):
             pass
@@ -268,16 +315,14 @@ class StageZeroManager:
         """주인공 설정 메뉴"""
         config = {}
 
-        print("\n" + "-" * 40)
-        print("주인공 기본 설정")
-        print("-" * 40)
-
         # 세계관 출신
-        print("\n  [세계관 출신]")
-        for i, opt in enumerate(self.WORLD_ORIGIN_OPTIONS, 1):
-            print(f"  [{i}] {opt}")
+        self._ui_menu(
+            "주인공 기본 설정 / 세계관 출신",
+            [f"[{i}] {opt}" for i, opt in enumerate(self.WORLD_ORIGIN_OPTIONS, 1)],
+            prompt_id="stage0_world_origin_menu",
+        )
         try:
-            raw_choice = input("    선택: ").strip()
+            raw_choice = self._ui_prompt("    선택: ", prompt_id="stage0_world_origin_choice").strip()
         except (ValueError, IndexError, EOFError):
             raw_choice = ""
         config["world_origin"] = resolve_indexed_menu_choice(
@@ -285,13 +330,16 @@ class StageZeroManager:
             raw_choice,
             default="현대인",
         )
+        self._ui_selection("세계관 출신", config["world_origin"], prompt_id="stage0_world_origin_choice", visible=False)
 
         # 회귀/빙의 타입
-        print("\n  [캐릭터 타입]")
-        for i, opt in enumerate(self.INCARNATION_TYPES, 1):
-            print(f"  [{i}] {opt}")
+        self._ui_menu(
+            "주인공 기본 설정 / 캐릭터 타입",
+            [f"[{i}] {opt}" for i, opt in enumerate(self.INCARNATION_TYPES, 1)],
+            prompt_id="stage0_incarnation_menu",
+        )
         try:
-            raw_choice = input("    선택: ").strip()
+            raw_choice = self._ui_prompt("    선택: ", prompt_id="stage0_incarnation_choice").strip()
         except (ValueError, IndexError, EOFError):
             raw_choice = ""
         config["incarnation_type"] = resolve_indexed_menu_choice(
@@ -299,13 +347,16 @@ class StageZeroManager:
             raw_choice,
             default="일반",
         )
+        self._ui_selection("캐릭터 타입", config["incarnation_type"], prompt_id="stage0_incarnation_choice", visible=False)
 
         # [D-1] 시점(POV) 선택
-        print("\n  [시점(POV)]")
-        for i, opt in enumerate(self.POV_OPTIONS, 1):
-            print(f"  [{i}] {opt}")
+        self._ui_menu(
+            "주인공 기본 설정 / 시점(POV)",
+            [f"[{i}] {opt}" for i, opt in enumerate(self.POV_OPTIONS, 1)],
+            prompt_id="stage0_pov_menu",
+        )
         try:
-            raw_choice = input("    선택: ").strip()
+            raw_choice = self._ui_prompt("    선택: ", prompt_id="stage0_pov_choice").strip()
         except (ValueError, IndexError, EOFError):
             raw_choice = ""
         config["pov"] = resolve_indexed_menu_choice(
@@ -313,22 +364,33 @@ class StageZeroManager:
             raw_choice,
             default="3인칭",
         )
+        self._ui_selection("시점(POV)", config["pov"], prompt_id="stage0_pov_choice", visible=False)
 
-        print("\n  [외부 시점 삽입 정책]")
         default_policy = default_external_pov_insert_policy(config.get("pov", ""), genre=self.genre)
         default_index = 1
+        options = []
         for i, opt in enumerate(self.EXTERNAL_POV_INSERT_POLICY_OPTIONS, 1):
             if opt == default_policy:
                 default_index = i
-            print(f"  [{i}] {opt}")
+            options.append(f"[{i}] {opt}")
+        self._ui_menu("주인공 기본 설정 / 외부 시점 삽입 정책", options, prompt_id="stage0_external_pov_menu")
         try:
-            raw_choice = input(f"    선택 (기본: {default_index}): ").strip()
+            raw_choice = self._ui_prompt(
+                f"    선택 (기본: {default_index}): ",
+                prompt_id="stage0_external_pov_choice",
+            ).strip()
         except (ValueError, IndexError, EOFError):
             raw_choice = ""
         config["external_pov_insert_policy"] = resolve_external_pov_insert_policy_choice(
             raw_choice,
             primary_pov=config.get("pov", ""),
             genre=self.genre,
+        )
+        self._ui_selection(
+            "외부 시점 삽입 정책",
+            config["external_pov_insert_policy"],
+            prompt_id="stage0_external_pov_choice",
+            visible=False,
         )
 
         return config
@@ -342,19 +404,21 @@ class StageZeroManager:
         # 1. 장르 선택
         self.genre = self.show_genre_menu()
         if not self.genre:
-            print("[*] 컨셉에서 장르 자동 감지 예정")
+            self._ui_log("[*] 컨셉에서 장르 자동 감지 예정")
 
         # 2. 주인공 설정
         self.protagonist_config = self.show_protagonist_config_menu()
 
         # 3. 컨셉 입력
-        print("\n" + "-" * 40)
-        print("스토리 컨셉 입력 (여러 줄 가능, 빈 줄로 종료)")
-        print("-" * 40)
+        self._ui_menu(
+            "스토리 컨셉 입력 (여러 줄 가능, 빈 줄로 종료)",
+            ["빈 줄을 입력하면 종료됩니다."],
+            prompt_id="stage0_concept_intro",
+        )
         lines = []
         try:
             while True:
-                line = input()
+                line = self._ui_prompt("", prompt_id="stage0_concept_line")
                 if not line:
                     break
                 lines.append(line)
@@ -363,7 +427,7 @@ class StageZeroManager:
         concept = "\n".join(lines)
 
         if not concept.strip():
-            print("[!] 컨셉이 입력되지 않았습니다.")
+            self._ui_log("[!] 컨셉이 입력되지 않았습니다.", level="warning")
             return {}, [], None
 
         # 4. 생성
@@ -406,19 +470,19 @@ class StageZeroManager:
         expander = StoryExpander(genre=self.genre, llm_client=self.client)
 
         # 분석
-        print("\n  [*] 컨셉 분석 중...")
+        self._ui_log("[*] 컨셉 분석 중...", event_kind="summary", render_format="summary")
         expander.analyze_concept(concept)
 
         # 장르 업데이트
         if not self.genre:
             self.genre = expander.genre
-            print(f"  [v] 감지된 장르: {self.genre}")
+            self._ui_log(f"[v] 감지된 장르: {self.genre}", event_kind="summary", render_format="summary")
 
         # 프리셋 초기화
         self.preset_registry = expander.preset_registry
 
         # Bible 생성
-        print("  [*] Bible 생성 중...")
+        self._ui_log("[*] Bible 생성 중...", event_kind="summary", render_format="summary")
         self.bible = expander.generate_bible(self.protagonist_config)
 
         # [TF-R2-S01-04] Bible 실패 시 조기 종료
@@ -427,7 +491,7 @@ class StageZeroManager:
             return {}, [], None
 
         # Treatment 생성
-        print("  [*] Treatment 생성 중...")
+        self._ui_log("[*] Treatment 생성 중...", event_kind="summary", render_format="summary")
         self.treatment = expander.generate_treatment(60)
         self._ensure_plot_roadmap(self.bible, self.treatment)
 
@@ -435,7 +499,7 @@ class StageZeroManager:
         if self.project_path:
             output_dir = Path(self.project_path) / "stage0_output"
             expander.save_all(str(output_dir))
-            print(f"  [v] 저장 완료: {output_dir}")
+            self._ui_log(f"[v] 저장 완료: {output_dir}", event_kind="summary", render_format="summary")
 
         return self.bible, self.treatment, None
 
@@ -447,14 +511,14 @@ class StageZeroManager:
         """역설계 플로우"""
         # 입력 경로
         if not input_path:
-            print("\n  원고 경로 입력 (파일 또는 폴더):")
+            self._ui_log("원고 경로 입력 (파일 또는 폴더):", event_kind="prompt", render_format="prompt")
             try:
-                input_path = input("  > ").strip()
+                input_path = self._ui_prompt("  > ", prompt_id="stage0_reverse_path").strip()
             except (EOFError, KeyboardInterrupt, ValueError):
                 input_path = ""
 
         if not input_path or not Path(input_path).exists():
-            print("[!] 유효하지 않은 경로입니다.")
+            self._ui_log("[!] 유효하지 않은 경로입니다.", level="warning")
             return {}, [], None
 
         # 장르 (선택사항)
@@ -470,7 +534,7 @@ class StageZeroManager:
             )
         except ReverseExpander.DraftEncodingError as exc:
             logging.warning("[Stage0] 역설계 입력 인코딩 오류: %s", exc)
-            print(f"[!] 인코딩 오류로 역설계를 중단합니다: {exc}")
+            self._ui_log(f"[!] 인코딩 오류로 역설계를 중단합니다: {exc}", level="warning")
             return {}, [], None
 
         self.genre = expander.preset_registry.base_genre if expander.preset_registry else ""
@@ -488,15 +552,15 @@ class StageZeroManager:
     def import_bible(self, bible_path: str = None) -> dict[str, Any]:
         """기존 Bible JSON 임포트"""
         if not bible_path:
-            print("\n  Bible JSON 경로 입력:")
+            self._ui_log("Bible JSON 경로 입력:", event_kind="prompt", render_format="prompt")
             try:
-                bible_path = input("  > ").strip()
+                bible_path = self._ui_prompt("  > ", prompt_id="stage0_bible_import_path").strip()
             except (EOFError, KeyboardInterrupt, ValueError):
                 bible_path = ""
 
         path = Path(bible_path)
         if not path.exists() or path.suffix.lower() != ".json":
-            print("[!] 유효하지 않은 JSON 파일입니다.")
+            self._ui_log("[!] 유효하지 않은 JSON 파일입니다.", level="warning")
             return {}
 
         try:
@@ -521,7 +585,7 @@ class StageZeroManager:
             # 프리셋 초기화
             self.preset_registry = PresetRegistry(base_genre=self.genre)
 
-            print(f"  [v] Bible 임포트 완료 (장르: {self.genre})")
+            self._ui_log(f"[v] Bible 임포트 완료 (장르: {self.genre})", event_kind="summary", render_format="summary")
             return self.bible
 
         except Exception as e:
@@ -538,36 +602,31 @@ class StageZeroManager:
             self.preset_registry = PresetRegistry(base_genre=self.genre)
 
         while True:
-            print("\n" + "-" * 40)
-            print("프리셋 관리")
-            print("-" * 40)
-            print(f"\n  현재 활성: {list(self.preset_registry.active_presets)}")
-            print("\n  사용 가능한 프리셋:")
-
             available = [g for g in PresetRegistry.GENRE_PRESETS.keys() if g not in self.preset_registry.active_presets]
-            for i, g in enumerate(available, 1):
-                print(f"  [{i}] + {g}")
-
             active = [g for g in self.preset_registry.active_presets if g != "common"]
-            for i, g in enumerate(active, len(available) + 1):
-                print(f"  [{i}] - {g}")
-
-            print("\n    [0] 돌아가기")
+            options = [f"현재 활성: {list(self.preset_registry.active_presets)}", "사용 가능한 프리셋:"]
+            options.extend(f"[{i}] + {g}" for i, g in enumerate(available, 1))
+            options.extend(f"[{i}] - {g}" for i, g in enumerate(active, len(available) + 1))
+            options.append("[0] 돌아가기")
+            self._ui_menu("프리셋 관리", options, prompt_id="stage0_preset_menu")
 
             try:
-                choice = int(input("\n    선택: ").strip())
+                raw_choice = self._ui_prompt("\n    선택: ", prompt_id="stage0_preset_choice").strip()
+                choice = int(raw_choice)
                 if choice == 0:
                     break
                 elif choice <= len(available):
                     preset = available[choice - 1]
                     self.preset_registry.activate_preset(preset)
-                    print(f"  [v] {preset} 활성화")
+                    self._ui_selection("프리셋 활성화", preset, prompt_id="stage0_preset_choice", visible=False)
+                    self._ui_log(f"[v] {preset} 활성화")
                 else:
                     idx = choice - len(available) - 1
                     if 0 <= idx < len(active):
                         preset = active[idx]
                         self.preset_registry.deactivate_preset(preset)
-                        print(f"  [v] {preset} 비활성화")
+                        self._ui_selection("프리셋 비활성화", preset, prompt_id="stage0_preset_choice", visible=False)
+                        self._ui_log(f"[v] {preset} 비활성화")
             except (ValueError, IndexError, EOFError):
                 pass
 
@@ -583,37 +642,47 @@ class StageZeroManager:
         if not genre:
             genre = self.show_genre_menu()
         if not genre:
-            print("[!] 장르가 지정되지 않았습니다.")
+            self._ui_log("[!] 장르가 지정되지 않았습니다.", level="warning")
             return None
 
         # 레퍼런스 로드
         ref_data = StyleExtractor.load_reference_manuscripts(genre)
         if not ref_data:
             ref_base = Path("config/style_references") / genre
-            print(f"[!] 레퍼런스 원고가 없습니다: {ref_base}/")
-            print(f"  폴더 구조: config/style_references/{genre}/작품명/0001.txt")
+            self._ui_log(f"[!] 레퍼런스 원고가 없습니다: {ref_base}/", level="warning")
+            self._ui_log(f"폴더 구조: config/style_references/{genre}/작품명/0001.txt", level="warning")
             return None
 
         total_eps = sum(len(eps) for eps in ref_data.values())
         works = list(ref_data.keys())
-        print(f"\n  [*] 레퍼런스 로드 완료: {len(works)}개 작품, {total_eps}개 에피소드")
+        self._ui_log(f"[*] 레퍼런스 로드 완료: {len(works)}개 작품, {total_eps}개 에피소드", event_kind="summary", render_format="summary")
         for w in works:
-            print(f"  - {w}: {len(ref_data[w])}편")
+            self._ui_log(f"- {w}: {len(ref_data[w])}편", event_kind="summary", render_format="summary")
 
         try:
-            confirm = input("\n  분석을 시작하시겠습니까? (y/n): ").strip().lower()
+            confirm = self._ui_prompt(
+                "\n  분석을 시작하시겠습니까? (y/n): ",
+                prompt_id="stage0_style_analysis_confirm",
+            ).strip().lower()
         except (EOFError, KeyboardInterrupt, ValueError):
             confirm = "n"
         if confirm != "y":
             return None
 
         if cache_mode is None:
-            print("\n  [스타일 캐시 모드]")
-            print("  [1] 캐시 사용 (기본)")
-            print("  [2] 캐시 무시하고 재분석")
-            print("  [3] 장르 캐시 삭제 후 재분석")
+            self._ui_menu(
+                "스타일 캐시 모드",
+                [
+                    "[1] 캐시 사용 (기본)",
+                    "[2] 캐시 무시하고 재분석",
+                    "[3] 장르 캐시 삭제 후 재분석",
+                ],
+                prompt_id="stage0_style_cache_menu",
+            )
             try:
-                cache_choice = input("\n  선택 (기본: 1): ").strip() or "1"
+                cache_choice = (
+                    self._ui_prompt("\n  선택 (기본: 1): ", prompt_id="stage0_style_cache_choice").strip() or "1"
+                )
             except (EOFError, KeyboardInterrupt, ValueError):
                 cache_choice = "1"
             cache_mode = {"1": "use", "2": "refresh", "3": "reset"}.get(cache_choice, "use")
@@ -621,8 +690,14 @@ class StageZeroManager:
             cache_mode = cache_mode if cache_mode in {"use", "refresh", "reset"} else "use"
 
         # 분석 실행
-        extractor = StyleExtractor(llm_client=self.client)
-        print("\n  [*] 문체 DNA 추출 중... (대량 원고 분석 - 시간 소요)")
+        extractor = StyleExtractor(llm_client=self.client, genre=genre)
+        extractor.progress_callback = lambda message, **meta: self._ui_log(
+            message,
+            event_kind="summary",
+            render_format="summary",
+            meta=meta,
+        )
+        self._ui_log("[*] 문체 DNA 추출 중... (대량 원고 분석 - 시간 소요)", event_kind="summary", render_format="summary")
         selected_primary_pov = ""
         external_pov_insert_policy = ""
         if isinstance(self.protagonist_config, dict):
@@ -645,14 +720,16 @@ class StageZeroManager:
                 "reset": "캐시 삭제 후 재분석",
                 "miss": "캐시 미스 후 재분석",
             }
-            print(f"\n  [v] 문체 DNA 추출 완료 (v{self.style_guide.analysis_version})")
-            print(f"  - 캐시 처리: {cache_status_map.get(extractor.last_cache_status, '재분석')}")
-            print(
-                f"  - 분석 원고: {self.style_guide.source_episode_count}편 / {self.style_guide.source_char_count:,}자"
+            self._ui_log(f"[v] 문체 DNA 추출 완료 (v{self.style_guide.analysis_version})", event_kind="summary", render_format="summary")
+            self._ui_log(f"- 캐시 처리: {cache_status_map.get(extractor.last_cache_status, '재분석')}", event_kind="summary", render_format="summary")
+            self._ui_log(
+                f"- 분석 원고: {self.style_guide.source_episode_count}편 / {self.style_guide.source_char_count:,}자",
+                event_kind="summary",
+                render_format="summary",
             )
-            print(f"  - 참조 작품: {', '.join(self.style_guide.reference_works or [])}")
-            print(f"  - 모범 문단: {len(self.style_guide.exemplary_passages or [])}개")
-            print(f"  - AI 금지 패턴: {len(self.style_guide.anti_ai_patterns or [])}개")
+            self._ui_log(f"- 참조 작품: {', '.join(self.style_guide.reference_works or [])}", event_kind="summary", render_format="summary")
+            self._ui_log(f"- 모범 문단: {len(self.style_guide.exemplary_passages or [])}개", event_kind="summary", render_format="summary")
+            self._ui_log(f"- AI 금지 패턴: {len(self.style_guide.anti_ai_patterns or [])}개", event_kind="summary", render_format="summary")
 
             # 저장
             if self.project_path:
@@ -661,7 +738,7 @@ class StageZeroManager:
                 try:  # [TF-11-08] OSError 방어 — 디스크 오류 시 비정상 종료 방지
                     with open(output_dir / "style_guide.json", "w", encoding="utf-8") as f:
                         f.write(self.style_guide.to_json())
-                    print(f"  - 저장: {output_dir / 'style_guide.json'}")
+                    self._ui_log(f"- 저장: {output_dir / 'style_guide.json'}", event_kind="summary", render_format="summary")
                 except OSError as _oe:
                     import logging as _log
                     _log.warning("[Stage0] style_guide.json 저장 실패 (계속 진행): %s", _oe)
@@ -718,7 +795,7 @@ class StageZeroManager:
             with open(out / "style_guide.json", "w", encoding="utf-8") as f:
                 f.write(self.style_guide.to_json())
 
-        print(f"  [v] 상태 저장: {out}")
+        self._ui_log(f"[v] 상태 저장: {out}", event_kind="summary", render_format="summary")
 
     @classmethod
     def load_state(cls, project_path: str, llm_client=None) -> "StageZeroManager":
