@@ -1128,6 +1128,134 @@ class SovereignApp:
 
         return project_env_path
 
+    def _retarget_project_runtime_sinks(self) -> None:
+        current_project = getattr(self, "current_project", None)
+        paths = getattr(current_project, "paths", None)
+        if paths is None:
+            return
+
+        session_logger = getattr(self, "_session_logger", None)
+        if session_logger is not None and hasattr(session_logger, "set_log_dir"):
+            session_logger.set_log_dir(paths.root / "logs" / "session")
+
+        from modules.core.logger import _studio_logger
+
+        if _studio_logger is not None:
+            _studio_logger.retarget(paths.root / "logs")
+
+        collector = get_metrics_collector(paths.root / "logs" / "metrics")
+        metrics_session_id = getattr(collector, "session_id", None)
+        if isinstance(metrics_session_id, str) and metrics_session_id.strip():
+            self.metrics_session_id = metrics_session_id.strip()
+            setattr(current_project, "metrics_session_id", self.metrics_session_id)
+
+        SovereignApp._flush_pending_ui_events(self)
+
+    def _bind_selected_project(self, project_name: str) -> None:
+        reload_env = getattr(self, "_reload_project_environment", None)
+        if callable(reload_env):
+            reload_env(project_name)
+
+        genre_type = self.selected_genre.get("type", "wuxia") if isinstance(self.selected_genre, dict) else "wuxia"
+        projects_root_fn = getattr(self, "_get_projects_root", None)
+        projects_root = projects_root_fn() if callable(projects_root_fn) else None
+        self.sys.boot_v20_project(project_name, genre=genre_type, projects_root=projects_root)
+        self.current_project = self.sys.project
+        SovereignApp._retarget_project_runtime_sinks(self)
+
+    def _restore_boot_runtime_state(self) -> None:
+        from modules.core.prompt_loader import PromptLoader
+
+        PromptLoader().invalidate_cache()
+
+        restore_preset_registry = getattr(self, "_restore_preset_registry", None)
+        if callable(restore_preset_registry):
+            restore_preset_registry()
+        if getattr(self, "preset_registry", None) is not None:
+            self.ui.log("   ✅ [TF7-P0-03] preset_registry DB에서 복원 완료")
+
+    def _ensure_project_genre_alignment(self) -> bool:
+        current_project = getattr(self, "current_project", None)
+        if current_project is None:
+            return False
+
+        current_project.genre = self.selected_genre
+        db = getattr(current_project, "db", None)
+        if db is None:
+            return True
+
+        stored_genre = db.load_anchor("genre_info")
+        if stored_genre:
+            if stored_genre.get("type") != self.selected_genre["type"]:
+                self.ui.log("⚠️ [Warning] 프로젝트 장르 불일치 감지!")
+                self.ui.log(f"   저장된 장르: {stored_genre.get('name', '알 수 없음')}")
+                self.ui.log(f"   선택한 장르: {self.selected_genre['name']}")
+
+                choice = input("\n계속하시겠습니까? (y/n): ").strip().lower()
+                if choice != "y":
+                    self.ui.log("❌ 시스템을 종료합니다.")
+                    SovereignApp._emergency_shutdown(self)
+                    sys.exit(0)
+        else:
+            db.save_anchor("genre_info", self.selected_genre)
+            self.ui.log(f"💾 프로젝트 장르 정보 저장: {self.selected_genre['name']}")
+
+        return True
+
+    def _initialize_project_genre_runtime(self) -> None:
+        current_project = getattr(self, "current_project", None)
+        if current_project is None:
+            return
+
+        from modules.core.genre_hud_manager import create_hud_manager, log_hud_compatibility_report
+
+        self.sys.hud = create_hud_manager(self.selected_genre["type"], current_project)
+        self.ui.log(f"   ✅ [{self.selected_genre['name']}] HUD 시스템 초기화 완료")
+        log_hud_compatibility_report(self.sys.hud, logger=self.ui.log)
+
+        from modules.core.genre_guards import create_genre_guard
+
+        self.sys.guard = create_genre_guard(self.selected_genre["type"])
+        current_project.guard = self.sys.guard
+        self.ui.log(f"🛡️ [{self.selected_genre['name']}] Guard 시스템 초기화 완료")
+
+        work_guard_path = current_project.paths.config / "work_guard.yaml"
+        if work_guard_path.exists():
+            from modules.core.genre_guards.work_guard import WorkGuard
+
+            self.sys.guard = WorkGuard(self.sys.guard, work_guard_path)
+            current_project.guard = self.sys.guard
+            self.ui.log("   🧥 WorkGuard 적용 완료 (작품별 커스텀 규칙 활성)")
+
+    def _initialize_project_runtime_support(self, project_name: str) -> bool:
+        check_vector_db_lock = getattr(self, "_check_vector_db_lock", None)
+        if callable(check_vector_db_lock) and not check_vector_db_lock(project_name):
+            self.ui.log("❌ [System] 치명적 데이터 결함으로 인해 기동을 중단합니다.")
+            return False
+
+        current_project = getattr(self, "current_project", None)
+        if current_project is None or getattr(current_project, "db", None) is None:
+            return False
+
+        current_project.paths.memory.mkdir(parents=True, exist_ok=True)
+        self.memory = VecMemory(
+            api_key=os.getenv("GOOGLE_API_KEY", ""),
+            ui_log=self.ui.log,
+            conn=current_project.db.conn,
+            lock=current_project.db._lock,
+        )
+        if self.memory.is_operational():
+            self.ui.log("✅ [VecMemory] sqlite-vec 벡터 엔진 초기화 완료")
+        else:
+            self.ui.log(f"⚠️ [VecMemory] 벡터 엔진 비활성: {self.memory.initialization_error}")
+
+        attach_agents = getattr(self, "_attach_agents", None)
+        if callable(attach_agents) and not attach_agents():
+            self.ui.log("❌ [System] 에이전트 초기화 실패로 인해 기동을 중단합니다.")
+            return False
+
+        return True
+
     def boot(self):
         self.ui.title("V40 SOVEREIGN COCKPIT", "Multi-Genre Production Factory")
 
@@ -1140,110 +1268,13 @@ class SovereignApp:
             return
 
         # [V60.37] 프로젝트별 .env 로드 지원
-        self._reload_project_environment(project_name)
+        SovereignApp._bind_selected_project(self, project_name)
 
-        _genre_type = self.selected_genre.get("type", "wuxia") if isinstance(self.selected_genre, dict) else "wuxia"
-        self.sys.boot_v20_project(project_name, genre=_genre_type, projects_root=self._get_projects_root())
-        self.current_project = self.sys.project
-
-        # [LOG-1] 프로젝트별 로그 경로 갱신
-        if hasattr(self.current_project, "paths"):
-            self._session_logger.set_log_dir(self.current_project.paths.root / "logs" / "session")
-            # [TF-26] StudioLogger도 프로젝트별 경로로 이동
-            from modules.core.logger import _studio_logger
-
-            if _studio_logger is not None:
-                _studio_logger.retarget(self.current_project.paths.root / "logs")
-            # [V73] MetricsCollector 프로젝트별 경로 갱신
-            from modules.core.metrics_collector import get_metrics_collector
-
-            _metrics_collector = get_metrics_collector(self.current_project.paths.root / "logs" / "metrics")
-            _metrics_session_id = getattr(_metrics_collector, "session_id", None)
-            if isinstance(_metrics_session_id, str) and _metrics_session_id.strip():
-                self.metrics_session_id = _metrics_session_id.strip()
-                self.current_project.metrics_session_id = self.metrics_session_id
-        self._flush_pending_ui_events()
-
-        # [Sweep3-D1] 프로젝트 전환 시 PromptLoader 캐시 무효화
-        from modules.core.prompt_loader import PromptLoader
-
-        PromptLoader().invalidate_cache()
-
-        # [TF-7-P0-03] preset_state anchor → app.preset_registry 복원 (프로젝트 로드 시)
-        self._restore_preset_registry()
-        if self.preset_registry is not None:
-            self.ui.log("   ✅ [TF7-P0-03] preset_registry DB에서 복원 완료")
-
-        # [V40] 장르 정보를 프로젝트에 주입
-        self.current_project.genre = self.selected_genre
-
-        # [V40] 기존 프로젝트의 장르 정보 확인 및 동기화
-        if hasattr(self.current_project, "db"):
-            stored_genre = self.current_project.db.load_anchor("genre_info")
-            if stored_genre:
-                # 기존 프로젝트의 장르와 선택한 장르가 다르면 경고
-                if stored_genre.get("type") != self.selected_genre["type"]:
-                    self.ui.log("⚠️ [Warning] 프로젝트 장르 불일치 감지!")
-                    self.ui.log(f"   저장된 장르: {stored_genre.get('name', '알 수 없음')}")
-                    self.ui.log(f"   선택한 장르: {self.selected_genre['name']}")
-
-                    choice = input("\n계속하시겠습니까? (y/n): ").strip().lower()
-                    if choice != "y":
-                        self.ui.log("🛑 시스템을 종료합니다.")
-                        # [V40.1 Critical Fix] 안전한 종료 처리
-                        self._emergency_shutdown()
-                        sys.exit(0)
-            else:
-                # 장르 정보가 없으면 현재 선택한 장르로 저장
-                self.current_project.db.save_anchor("genre_info", self.selected_genre)
-                self.ui.log(f"💾 프로젝트 장르 정보 저장: {self.selected_genre['name']}")
-
-        # [V40] 장르별 HUD 매니저 초기화
-        from modules.core.genre_hud_manager import create_hud_manager, log_hud_compatibility_report
-
-        self.sys.hud = create_hud_manager(self.selected_genre["type"], self.current_project)
-        self.ui.log(f"   ✅ [{self.selected_genre['name']}] HUD 시스템 초기화 완료")
-
-        # [V61.3] HUD 호환성 체크 (에러 사전 감지)
-        log_hud_compatibility_report(self.sys.hud, logger=self.ui.log)
-
-        # [V40] 장르별 GenreGuard 초기화
-        from modules.core.genre_guards import create_genre_guard
-
-        self.sys.guard = create_genre_guard(self.selected_genre["type"])
-        self.current_project.guard = self.sys.guard  # 프로젝트 컨텍스트에 가드 주입
-        self.ui.log(f"✅ [{self.selected_genre['name']}] Guard 시스템 초기화 완료")
-
-        # [WorkGuard] 작품별 Guard YAML 적용
-        work_guard_path = self.current_project.paths.config / "work_guard.yaml"
-        if work_guard_path.exists():
-            from modules.core.genre_guards.work_guard import WorkGuard
-
-            self.sys.guard = WorkGuard(self.sys.guard, work_guard_path)
-            self.current_project.guard = self.sys.guard
-            self.ui.log("   📋 WorkGuard 적용 완료 (작품별 커스텀 규칙 활성)")
-
-        # [V27.5] 벡터 DB 무결성 점검
-        if not self._check_vector_db_lock(project_name):
-            self.ui.log("🛑 [System] 치명적 데이터 결함으로 인해 기동을 중지합니다.")
+        SovereignApp._restore_boot_runtime_state(self)
+        if not SovereignApp._ensure_project_genre_alignment(self):
             return
-
-        # [Phase 4D-2] sqlite-vec 벡터 메모리 초기화 (ChromaDB 대체)
-        self.current_project.paths.memory.mkdir(parents=True, exist_ok=True)
-        self.memory = VecMemory(
-            api_key=os.getenv("GOOGLE_API_KEY", ""),
-            ui_log=self.ui.log,
-            conn=self.current_project.db.conn,
-            lock=self.current_project.db._lock,
-        )
-        if self.memory.is_operational():
-            self.ui.log("✅ [VecMemory] sqlite-vec 벡터 엔진 초기화 완료")
-        else:
-            self.ui.log(f"⚠️ [VecMemory] 벡터 엔진 비활성: {self.memory.initialization_error}")
-
-        # [V38 패치] 에이전트 초기화 검증
-        if not self._attach_agents():
-            self.ui.log("🛑 [System] 에이전트 초기화 실패로 인해 기동을 중지합니다.")
+        SovereignApp._initialize_project_genre_runtime(self)
+        if not SovereignApp._initialize_project_runtime_support(self, project_name):
             return
 
         self._run_main_process()
@@ -2267,7 +2298,16 @@ class SovereignApp:
 
             return "주인공"
         except Exception as e:
-            print(f"      ⚠️ [V61.2] 주인공 이름 추출 실패: {e}")
+            if getattr(self, "ui", None):
+                self.ui.log(
+                    f"      ⚠️ [V61.2] 주인공 이름 추출 실패: {e}",
+                    stage="runtime",
+                    component="protagonist_lookup",
+                    level="warning",
+                    event_kind="warning",
+                )
+            else:
+                logging.warning("[V61.2] 주인공 이름 추출 실패: %s", e)
             return "주인공"
 
     def _fix_entity_registry_protagonist(self, entity_registry: dict, protagonist_name: str = None) -> dict:
@@ -2306,7 +2346,16 @@ class SovereignApp:
         old_name = protagonist_row.get("name", "?")
         if old_name != protagonist_name:
             protagonist_row["name"] = protagonist_name
-            print(f"      🔒 [V62.4] Entity Registry 주인공 보정: {old_name} → {protagonist_name}")
+            if getattr(self, "ui", None):
+                self.ui.log(
+                    f"      🔒 [V62.4] Entity Registry 주인공 보정: {old_name} → {protagonist_name}",
+                    stage="runtime",
+                    component="entity_registry",
+                    event_kind="result",
+                    meta={"old_name": old_name, "new_name": protagonist_name},
+                )
+            else:
+                logging.info("[V62.4] Entity Registry 주인공 보정: %s -> %s", old_name, protagonist_name)
         if protagonist_row.get("role") not in ("주인공", "protagonist", "주역"):
             protagonist_row["role"] = "주인공"
         protagonist_row.setdefault("context", "락 고정")
@@ -2436,31 +2485,27 @@ class SovereignApp:
     # SovereignApp 클래스 내부에 추가할 메서드
     # [수정] main_a.py / SovereignApp 클래스 내부 메서드
 
-    def _shutdown_app(self):
-        """[V27 Safe Shutdown] 앱 종료 시에만 DB 연결을 완전히 해제"""
-        import sys
+    def _shutdown_log(self, message: str, **context) -> None:
+        context.setdefault("stage", "shutdown")
+        context.setdefault("component", "shutdown")
+        ui = getattr(self, "ui", None)
+        log_fn = getattr(ui, "log", None)
+        if callable(log_fn):
+            log_fn(message, **context)
+            return
 
-        def _shutdown_log(message: str, **context):
-            context.setdefault("stage", "shutdown")
-            context.setdefault("component", "shutdown")
-            if getattr(self, "ui", None):
-                self.ui.log(message, **context)
-            else:  # pragma: no cover - failsafe path
-                print(message, flush=True)
-
-        _shutdown_log("\n🛑 [System] 시스템 종료 시퀀스 가동...", event_kind="progress")
+        text = message if message.endswith("\n") else f"{message}\n"
+        sys.stdout.write(text)
         sys.stdout.flush()
 
-        # [V49.3] 비용 추적 리포트 출력 및 저장 (타임아웃 적용)
-        # [V49.4 FIX] 전체 메트릭 처리에 타임아웃 적용 (get_metrics_collector뿐 아니라 리포트 생성/저장도)
+    def _persist_shutdown_metrics(self) -> None:
         def _process_metrics():
-            """메트릭 처리 전체를 별도 함수로 분리"""
             collector = get_metrics_collector()
-            if collector:
-                report = collector.get_summary_report()
-                print("\n" + report, flush=True)
-                saved_path = collector.save_metrics()
-                print(f"📊 [Metrics] 세션 메트릭 저장: {saved_path}", flush=True)
+            if not collector:
+                return None, None
+            report = collector.get_summary_report()
+            saved_path = collector.save_metrics()
+            return report, saved_path
 
         try:
             import concurrent.futures
@@ -2469,40 +2514,54 @@ class SovereignApp:
             try:
                 future = executor.submit(_process_metrics)
                 try:
-                    future.result(timeout=5)  # 전체 메트릭 처리에 5초 타임아웃
+                    report, saved_path = future.result(timeout=5)
+                    if report:
+                        SovereignApp._shutdown_log(
+                            self,
+                            "\n" + report,
+                            component="metrics",
+                            event_kind="summary",
+                        )
+                    if saved_path:
+                        SovereignApp._shutdown_log(
+                            self,
+                            f"📊 [Metrics] 세션 메트릭 저장: {saved_path}",
+                            component="metrics",
+                            event_kind="result",
+                            artifact_path=str(saved_path),
+                        )
                 except concurrent.futures.TimeoutError:
-                    _shutdown_log(
+                    SovereignApp._shutdown_log(
+                        self,
                         "⚠️ [Metrics] 메트릭 처리 타임아웃 (건너뜀)",
                         component="metrics",
                         level="warning",
                         event_kind="warning",
                     )
             finally:
-                executor.shutdown(wait=False)  # 타임아웃 시 즉시 진행, 스레드 대기 안 함
+                executor.shutdown(wait=False)
         except Exception as metrics_err:
-            _shutdown_log(
+            SovereignApp._shutdown_log(
+                self,
                 f"⚠️ [Metrics] 비용 추적 리포트 생성 실패: {metrics_err}",
                 component="metrics",
                 level="warning",
                 event_kind="warning",
             )
 
-        # [Phase 6] Session 단위 잔여 비용 스냅샷 저장 (비차단)
+    def _persist_shutdown_cost_scope(self) -> None:
         try:
             collector = get_metrics_collector()
-            if (
-                collector
-                and self.current_project
-                and hasattr(self.current_project, "db")
-                and hasattr(self.current_project.db, "save_cost_record")
-            ):
+            current_project = getattr(self, "current_project", None)
+            db = getattr(current_project, "db", None)
+            if collector and db is not None and hasattr(db, "save_cost_record"):
                 scope = collector.snapshot_and_reset_scope()
                 if (
                     scope.get("total_calls", 0) > 0
                     or scope.get("total_tokens", 0) > 0
                     or scope.get("total_cost_usd", 0.0) > 0
                 ):
-                    self.current_project.db.save_cost_record(
+                    db.save_cost_record(
                         session_id=collector.session_id,
                         scope_type="session",
                         scope_id=0,
@@ -2511,7 +2570,8 @@ class SovereignApp:
                         total_cost_usd=scope.get("total_cost_usd", 0.0),
                         model_breakdown=scope.get("model_breakdown", "{}"),
                     )
-                    _shutdown_log(
+                    SovereignApp._shutdown_log(
+                        self,
                         f"💾 [CostDB] Session 비용 저장: ${scope.get('total_cost_usd', 0.0):.4f} "
                         f"({scope.get('total_tokens', 0):,} tokens)",
                         component="cost_db",
@@ -2523,47 +2583,51 @@ class SovereignApp:
                         },
                     )
         except Exception as cost_err:
-            _shutdown_log(
+            SovereignApp._shutdown_log(
+                self,
                 f"⚠️ [CostDB] Session 비용 저장 실패: {cost_err}",
                 component="cost_db",
                 level="warning",
                 event_kind="warning",
             )
 
-        # [Phase 2] PassRateMonitor 종료 시 flush 저장
+    def _persist_shutdown_advisory_state(self) -> None:
         if V50_MODULES_AVAILABLE and getattr(self, "pass_rate_monitor", None):
             try:
                 self.pass_rate_monitor.save()
                 record_count = len(getattr(self.pass_rate_monitor, "records", []))
-                _shutdown_log(
+                SovereignApp._shutdown_log(
+                    self,
                     f"📈 [PassRate] 통과율 기록 저장: {record_count}건",
                     component="pass_rate",
                     event_kind="result",
                     meta={"record_count": record_count},
                 )
             except Exception as pr_err:
-                _shutdown_log(
+                SovereignApp._shutdown_log(
+                    self,
                     f"⚠️ [PassRate] 저장 실패: {pr_err}",
                     component="pass_rate",
                     level="warning",
                     event_kind="warning",
                 )
 
-        # [Phase 4] Director 선택 편향 진단 (advisory)
+        current_project = getattr(self, "current_project", None)
+        db = getattr(current_project, "db", None)
         if (
             V50_MODULES_AVAILABLE
             and getattr(self, "quality_dashboard", None)
-            and self.current_project
-            and hasattr(self.current_project, "db")
-            and hasattr(self.current_project.db, "get_selection_analysis")
+            and db is not None
+            and hasattr(db, "get_selection_analysis")
         ):
             try:
-                selections = self.current_project.db.get_selection_analysis(lookback=100)
+                selections = db.get_selection_analysis(lookback=100)
                 if selections:
                     bias_result = self.quality_dashboard.detect_director_bias(selections)
                     warnings = bias_result.get("bias_warnings", [])
                     if warnings:
-                        _shutdown_log(
+                        SovereignApp._shutdown_log(
+                            self,
                             "⚖️ [Director Bias] 편향 경고:",
                             component="director_bias",
                             level="warning",
@@ -2571,33 +2635,36 @@ class SovereignApp:
                             meta={"warning_count": len(warnings)},
                         )
                         for warning in warnings[:5]:
-                            _shutdown_log(
+                            SovereignApp._shutdown_log(
+                                self,
                                 f"   - {warning}",
                                 component="director_bias",
                                 level="warning",
                                 event_kind="warning",
                             )
                     else:
-                        _shutdown_log(
+                        SovereignApp._shutdown_log(
+                            self,
                             "⚖️ [Director Bias] 유의미한 편향 경고 없음",
                             component="director_bias",
                             event_kind="result",
                         )
             except Exception as bias_err:
-                _shutdown_log(
+                SovereignApp._shutdown_log(
+                    self,
                     f"⚠️ [Director Bias] 분석 실패: {bias_err}",
                     component="director_bias",
                     level="warning",
                     event_kind="warning",
                 )
 
-        # [Phase 3] 장기 품질 드리프트 감지 (advisory)
         if V50_MODULES_AVAILABLE and getattr(self, "quality_dashboard", None):
             try:
                 drift = self.quality_dashboard.detect_quality_drift(stage=4, min_windows=3, window_size=10)
                 drift_status = drift.get("drift", "insufficient_data")
                 if drift_status == "declining":
-                    _shutdown_log(
+                    SovereignApp._shutdown_log(
+                        self,
                         f"📉 [Quality Drift] Stage 4 품질 하락 감지: "
                         f"최근 평균 {drift.get('recent_avg', 0)}점, 전체 평균 {drift.get('overall_avg', 0)}점",
                         component="quality_drift",
@@ -2606,32 +2673,37 @@ class SovereignApp:
                         meta={"drift_status": drift_status},
                     )
                 elif drift_status == "improving":
-                    _shutdown_log(
+                    SovereignApp._shutdown_log(
+                        self,
                         f"📈 [Quality Drift] Stage 4 품질 상승 추세: 최근 평균 {drift.get('recent_avg', 0)}점",
                         component="quality_drift",
                         event_kind="result",
                         meta={"drift_status": drift_status},
                     )
                 elif drift_status == "stable":
-                    _shutdown_log(
+                    SovereignApp._shutdown_log(
+                        self,
                         f"➡️ [Quality Drift] Stage 4 품질 안정: 평균 {drift.get('overall_avg', 0)}점",
                         component="quality_drift",
                         event_kind="result",
                         meta={"drift_status": drift_status},
                     )
             except Exception as drift_err:
-                _shutdown_log(
+                SovereignApp._shutdown_log(
+                    self,
                     f"⚠️ [Quality Drift] 분석 실패: {drift_err}",
                     component="quality_drift",
                     level="warning",
                     event_kind="warning",
                 )
 
-        # [V51.4] 실패 학습 기록 저장
-        if V50_MODULES_AVAILABLE and self.failure_learner and self.current_project:
+    def _persist_shutdown_trackers(self) -> None:
+        current_project = getattr(self, "current_project", None)
+        db = getattr(current_project, "db", None)
+
+        if V50_MODULES_AVAILABLE and getattr(self, "failure_learner", None) and current_project:
             try:
-                # [DB-Eff-P2] failure_learning JSON 저장 제거 → DB(reflexion_memory) 저장
-                _snapshot = {
+                snapshot = {
                     "records": [
                         {
                             "category": r.category.value,
@@ -2646,10 +2718,10 @@ class SovereignApp:
                     ],
                     "stats": self.failure_learner.get_failure_stats(),
                 }
-                _ts = time.strftime("%Y-%m-%d %H:%M:%S")
-                _first_ep = min((int(r.episode) for r in self.failure_learner.records), default=0)
-                _last_ep = max((int(r.episode) for r in self.failure_learner.records), default=0)
-                self.current_project.db.conn.execute(
+                ts = time.strftime("%Y-%m-%d %H:%M:%S")
+                first_ep = min((int(r.episode) for r in self.failure_learner.records), default=0)
+                last_ep = max((int(r.episode) for r in self.failure_learner.records), default=0)
+                db.conn.execute(
                     """INSERT INTO reflexion_memory
                        (pattern_type, description, frequency, solution, first_seen, last_seen, first_ep, last_ep)
                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -2662,125 +2734,131 @@ class SovereignApp:
                          last_ep=excluded.last_ep""",
                     (
                         "failure_learner_snapshot",
-                        json.dumps(_snapshot, ensure_ascii=False),
+                        json.dumps(snapshot, ensure_ascii=False),
                         len(self.failure_learner.records),
                         "failure_learner_snapshot",
-                        _ts,
-                        _ts,
-                        _first_ep,
-                        _last_ep,
+                        ts,
+                        ts,
+                        first_ep,
+                        last_ep,
                     ),
                 )
-                self.current_project.db.conn.commit()
+                db.conn.commit()
                 stats = self.failure_learner.get_failure_stats()
-                _shutdown_log(
+                SovereignApp._shutdown_log(
+                    self,
                     f"📚 [V51.4] 실패 학습 기록 저장(DB): {stats['total_failures']}건",
                     component="failure_learner",
                     event_kind="result",
                     meta={"total_failures": stats["total_failures"]},
                 )
             except Exception as fl_err:
-                _shutdown_log(
+                SovereignApp._shutdown_log(
+                    self,
                     f"⚠️ [V51.4] 실패 기록 저장 실패: {fl_err}",
                     component="failure_learner",
                     level="warning",
                     event_kind="warning",
                 )
 
-        # [V51.5] 캐릭터 음성 프로필 저장
-        if V50_MODULES_AVAILABLE and self.character_voice and self.current_project:
+        if V50_MODULES_AVAILABLE and getattr(self, "character_voice", None) and current_project:
             try:
-                self.character_voice.save_to_db(self.current_project.db)
-                _shutdown_log(
+                self.character_voice.save_to_db(db)
+                SovereignApp._shutdown_log(
+                    self,
                     f"🎭 [V51.5] 캐릭터 음성 저장: {len(self.character_voice.profiles)}명",
                     component="character_voice",
                     event_kind="result",
                     meta={"profile_count": len(self.character_voice.profiles)},
                 )
             except Exception as cv_err:
-                _shutdown_log(
+                SovereignApp._shutdown_log(
+                    self,
                     f"⚠️ [V51.5] 캐릭터 음성 저장 실패: {cv_err}",
                     component="character_voice",
                     level="warning",
                     event_kind="warning",
                 )
 
-        # [V51.6] 복선 추적 저장
-        if V50_MODULES_AVAILABLE and self.foreshadow_tracker and self.current_project:
+        if V50_MODULES_AVAILABLE and getattr(self, "foreshadow_tracker", None) and current_project:
             try:
-                self.foreshadow_tracker.save_to_db(self.current_project.db)
+                self.foreshadow_tracker.save_to_db(db)
                 stats = self.foreshadow_tracker.get_stats()
-                _shutdown_log(
+                SovereignApp._shutdown_log(
+                    self,
                     f"🔮 [V51.6] 복선 저장: {stats['total']}개 (회수율: {stats['payoff_rate']}%)",
                     component="foreshadow",
                     event_kind="result",
                     meta={"total": stats["total"], "payoff_rate": stats["payoff_rate"]},
                 )
             except Exception as fs_err:
-                _shutdown_log(
+                SovereignApp._shutdown_log(
+                    self,
                     f"⚠️ [V51.6] 복선 저장 실패: {fs_err}",
                     component="foreshadow",
                     level="warning",
                     event_kind="warning",
                 )
 
-        # [TF7-P2-06] EmotionArcTracker 종료 저장
-        if V50_MODULES_AVAILABLE and getattr(self, "emotion_tracker", None) and self.current_project:
+        if V50_MODULES_AVAILABLE and getattr(self, "emotion_tracker", None) and current_project:
             try:
-                if hasattr(self.current_project, "db"):
-                    self.emotion_tracker.save_to_db(self.current_project.db)
-                    _shutdown_log(
+                if db is not None:
+                    self.emotion_tracker.save_to_db(db)
+                    SovereignApp._shutdown_log(
+                        self,
                         f"💓 [V60.26] 감정선 기록 저장: {len(self.emotion_tracker.history)}건",
                         component="emotion_tracker",
                         event_kind="result",
                         meta={"history_count": len(self.emotion_tracker.history)},
                     )
-            except Exception as _et_err:
-                _shutdown_log(
-                    f"⚠️ [V60.26] 감정선 저장 실패: {_et_err}",
+            except Exception as et_err:
+                SovereignApp._shutdown_log(
+                    self,
+                    f"⚠️ [V60.26] 감정선 저장 실패: {et_err}",
                     component="emotion_tracker",
                     level="warning",
                     event_kind="warning",
                 )
 
-        # 1. 현재 메모리의 성경 데이터 최종 저장
-        if hasattr(self.current_project, "master_bible"):
+    def _persist_shutdown_project_state(self) -> None:
+        current_project = getattr(self, "current_project", None)
+        db = getattr(current_project, "db", None)
+
+        if hasattr(current_project, "master_bible"):
             try:
-                self.current_project.save_v20_anchor("bible", self.current_project.master_bible)
+                current_project.save_v20_anchor("bible", current_project.master_bible)
             except Exception as bible_err:
-                _shutdown_log(
+                SovereignApp._shutdown_log(
+                    self,
                     f"⚠️ [Shutdown] Bible 저장 실패: {bible_err}",
                     component="bible",
                     level="warning",
                     event_kind="warning",
                 )
 
-        # [V40] 장르 정보 저장
-        if self.selected_genre and hasattr(self.current_project, "db"):
+        if self.selected_genre and db is not None:
             try:
-                self.current_project.db.save_anchor("genre_info", self.selected_genre)
+                db.save_anchor("genre_info", self.selected_genre)
             except Exception as genre_err:
-                _shutdown_log(
+                SovereignApp._shutdown_log(
+                    self,
                     f"⚠️ [Shutdown] genre_info 저장 실패: {genre_err}",
                     component="genre_info",
                     level="warning",
                     event_kind="warning",
                 )
 
-        # [3-E] 아이템 접미사 안전망 자동 확장 (LLM 심사 → YAML append)
         if getattr(self, "semantic_item_registry", None) and self.selected_genre:
             try:
                 from modules.core.failure_analyzer import FailureAnalyzer
 
-                _genre_type = self.selected_genre.get("type", "") if isinstance(self.selected_genre, dict) else ""
-                _analyzer = FailureAnalyzer(
-                    db=self.current_project.db if hasattr(self.current_project, "db") else None
-                )
-                _llm_ask = None
+                genre_type = self.selected_genre.get("type", "") if isinstance(self.selected_genre, dict) else ""
+                analyzer = FailureAnalyzer(db=db if db is not None else None)
+                llm_ask = None
                 if hasattr(self, "sys") and hasattr(self.sys, "api_client"):
-                    _client = self.sys.api_client
+                    client = self.sys.api_client
 
-                    def _llm_ask(prompt, _c=_client):
+                    def llm_ask(prompt, _c=client):
                         from modules.core.constants import AIModels
 
                         resp = generate_content_via_router(
@@ -2789,72 +2867,87 @@ class SovereignApp:
                             contents=prompt,
                         )
                         return resp.text or ""
-                _result = _analyzer.review_and_apply_suffixes(
-                    self.semantic_item_registry, genre=_genre_type, llm_ask=_llm_ask
+
+                result = analyzer.review_and_apply_suffixes(
+                    self.semantic_item_registry, genre=genre_type, llm_ask=llm_ask
                 )
-                if _result["approved"]:
-                    _shutdown_log(
-                        f"🔧 [ItemGap] 접미사 자동 추가: {_result['approved']} "
-                        f"(심사 {_result['reviewed']}건, 거절 {len(_result['rejected'])}건)",
+                if result["approved"]:
+                    SovereignApp._shutdown_log(
+                        self,
+                        f"🔧 [ItemGap] 접미사 자동 추가: {result['approved']} "
+                        f"(심사 {result['reviewed']}건, 거절 {len(result['rejected'])}건)",
                         component="item_gap",
                         event_kind="result",
                         meta={
-                            "approved": _result["approved"],
-                            "reviewed": _result["reviewed"],
-                            "rejected_count": len(_result["rejected"]),
+                            "approved": result["approved"],
+                            "reviewed": result["reviewed"],
+                            "rejected_count": len(result["rejected"]),
                         },
                     )
-                elif _result["reviewed"] > 0:
-                    _shutdown_log(
-                        f"🔧 [ItemGap] 심사 {_result['reviewed']}건 — 추가 없음",
+                elif result["reviewed"] > 0:
+                    SovereignApp._shutdown_log(
+                        self,
+                        f"🔧 [ItemGap] 심사 {result['reviewed']}건 — 추가 없음",
                         component="item_gap",
                         event_kind="result",
-                        meta={"approved": 0, "reviewed": _result["reviewed"]},
+                        meta={"approved": 0, "reviewed": result["reviewed"]},
                     )
-            except Exception as _gap_err:
-                logging.debug("[ItemGap] 접미사 자동 확장 실패: %s", _gap_err)
+            except Exception as gap_err:
+                logging.debug("[ItemGap] 접미사 자동 확장 실패: %s", gap_err)
 
-        # 1-b. VecMemory 연결 종료
-        if hasattr(self, "memory") and self.memory:
+    def _close_shutdown_resources(self) -> None:
+        if getattr(self, "memory", None):
             try:
                 self.memory.close()
                 self.ui.log("[System] VecMemory 연결 해제 완료")
             except Exception as mem_err:
-                _shutdown_log(
+                SovereignApp._shutdown_log(
+                    self,
                     f"VecMemory close 오류: {mem_err}",
                     component="vec_memory",
                     level="warning",
                     event_kind="warning",
                 )
 
-        # 2. DB 연결 종료 (이 시점에 close를 수행)
-        # [V44] try-finally로 안전한 연결 종료 보장
-        if self.current_project and hasattr(self.current_project, "db") and self.current_project.db:
-            db_conn = self.current_project.db.conn
-            if db_conn:
+        current_project = getattr(self, "current_project", None)
+        db = getattr(current_project, "db", None)
+        db_conn = getattr(db, "conn", None)
+        if db_conn:
+            try:
+                db_conn.commit()
+                self.ui.log("[System] DB 커밋 완료")
+            except Exception as commit_err:
+                SovereignApp._shutdown_log(
+                    self,
+                    f"종료 중 DB 커밋 오류: {commit_err}",
+                    component="database",
+                    level="warning",
+                    event_kind="warning",
+                )
+            finally:
                 try:
-                    db_conn.commit()
-                    self.ui.log("[System] DB 커밋 완료")
-                except Exception as e:
-                    _shutdown_log(
-                        f"종료 중 DB 커밋 오류: {e}",
+                    db_conn.close()
+                    self.ui.log("[System] DB 연결 안전하게 해제됨")
+                except Exception as close_err:
+                    SovereignApp._shutdown_log(
+                        self,
+                        f"DB close 오류: {close_err}",
                         component="database",
                         level="warning",
                         event_kind="warning",
                     )
-                finally:
-                    try:
-                        db_conn.close()
-                        self.ui.log("[System] DB 연결 안전하게 해제됨")
-                    except Exception as close_err:
-                        _shutdown_log(
-                            f"DB close 오류: {close_err}",
-                            component="database",
-                            level="warning",
-                            event_kind="warning",
-                        )
 
-        _shutdown_log("✅ [System] 종료 완료", event_kind="result")
+    def _shutdown_app(self):
+        """[V27 Safe Shutdown] 앱 종료 시에만 DB 연결을 완전히 해제"""
+        SovereignApp._shutdown_log(self, "\n🛑 [System] 시스템 종료 시퀀스 가동...", event_kind="progress")
+        sys.stdout.flush()
+        SovereignApp._persist_shutdown_metrics(self)
+        SovereignApp._persist_shutdown_cost_scope(self)
+        SovereignApp._persist_shutdown_advisory_state(self)
+        SovereignApp._persist_shutdown_trackers(self)
+        SovereignApp._persist_shutdown_project_state(self)
+        SovereignApp._close_shutdown_resources(self)
+        SovereignApp._shutdown_log(self, "✅ [System] 종료 완료", event_kind="result")
 
     def _phase_0_recovery(self):
         """[V60.95] Phase 0: 프로젝트 설정 서브메뉴"""
@@ -3380,10 +3473,30 @@ class SovereignApp:
             },
         }
 
-        print(f"\n{Emojis.BOOK} [V40 Multi-Genre Factory] 장르를 선택하십시오:\n")
+        self.ui.log(
+            f"\n{Emojis.BOOK} [V40 Multi-Genre Factory] 장르를 선택하십시오:\n",
+            stage="stage0",
+            component="genre_selection",
+            event_kind="prompt",
+            prompt_id="select_genre",
+        )
         for key, genre in genres.items():
-            print(f"   {key}. {genre['name']}")
-            print(f"      → {genre['description']}\n")
+            self.ui.log(
+                f"   {key}. {genre['name']}",
+                stage="stage0",
+                component="genre_selection",
+                event_kind="choice_list",
+                selection_value=key,
+                meta={"genre_name": genre["name"]},
+            )
+            self.ui.log(
+                f"      → {genre['description']}\n",
+                stage="stage0",
+                component="genre_selection",
+                event_kind="choice_detail",
+                selection_value=key,
+                meta={"genre_name": genre["name"]},
+            )
 
         choice = self._get_int_input(
             f"{Emojis.PENCIL} Choice (1.무협 / 2.헌터 / 3.투자 / 4.판타지 / 5.작곡가 / 6.요리 / 7.대체역사 / 8.배우물 / 9.스포츠 / 10.의학): ",  # [V70] 번호 정합성 수정
@@ -3438,7 +3551,14 @@ class SovereignApp:
             self.ui.log(f"❌ 프로젝트 루트({root})에 프로젝트가 없습니다. 먼저 프로젝트를 생성하세요.")
             return ""
         for i, p in enumerate(projects):
-            print(f" {i + 1}. {p}")
+            self.ui.log(
+                f" {i + 1}. {p}",
+                stage="stage0",
+                component="project_selection",
+                event_kind="choice_list",
+                selection_value=i + 1,
+                meta={"project_name": p},
+            )
         idx = (self._get_int_input("\n👉 Choice: ", default=1, min_val=1, max_val=len(projects)) or 1) - 1
         return projects[idx]
 

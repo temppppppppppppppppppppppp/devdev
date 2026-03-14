@@ -28,7 +28,9 @@ def test_select_project_uses_explicit_projects_root(monkeypatch, tmp_path):
     selected = SovereignApp._select_project(app)
 
     assert selected == "beta"
-    app.ui.log.assert_not_called()
+    logs = [call.args[0] for call in app.ui.log.call_args_list if call.args]
+    assert " 1. alpha" in logs
+    assert " 2. beta" in logs
 
 
 def test_check_vector_db_lock_uses_explicit_projects_root(monkeypatch, tmp_path):
@@ -227,3 +229,62 @@ def test_boot_does_not_touch_legacy_quad_cache_helper(monkeypatch, tmp_path):
     app._ignite_quad_cache_system.assert_not_called()
     app._attach_agents.assert_called_once()
     app._run_main_process.assert_not_called()
+
+
+def test_bind_selected_project_retargets_runtime_sinks_and_flushes_ui_events(monkeypatch, tmp_path):
+    project_root = (tmp_path / "projects" / "demo").resolve()
+    (project_root / "logs").mkdir(parents=True)
+
+    db = SimpleNamespace(save_ui_event=MagicMock())
+    current_project = SimpleNamespace(
+        name="demo",
+        db=db,
+        paths=SimpleNamespace(root=project_root),
+    )
+
+    studio_logger = SimpleNamespace(retarget=MagicMock())
+    monkeypatch.setattr("modules.core.logger._studio_logger", studio_logger)
+
+    collector = SimpleNamespace(session_id="sess-123")
+    monkeypatch.setattr(main_a, "get_metrics_collector", lambda path=None: collector)
+
+    sys_obj = SimpleNamespace(project=None)
+
+    def _boot_v20_project(project_name, genre="wuxia", projects_root=None):
+        assert project_name == "demo"
+        assert genre == "investment"
+        assert projects_root == (tmp_path / "projects").resolve()
+        sys_obj.project = current_project
+
+    sys_obj.boot_v20_project = _boot_v20_project
+
+    app = _make_minimal_app()
+    app.sys = sys_obj
+    app.selected_genre = {"type": "investment", "name": "투자"}
+    app._session_logger = SimpleNamespace(set_log_dir=MagicMock(), log_ui_event=MagicMock())
+    app._pending_ui_events = [
+        {
+            "seq": 1,
+            "component": "UI",
+            "message": "boot visible",
+            "event_kind": "log",
+            "render_format": "text",
+            "visible": True,
+            "meta": {"origin": "boot"},
+        }
+    ]
+    app._reload_project_environment = MagicMock()
+    app._get_projects_root = MagicMock(return_value=(tmp_path / "projects").resolve())
+    app.metrics_session_id = None
+
+    SovereignApp._bind_selected_project(app, "demo")
+
+    app._reload_project_environment.assert_called_once_with("demo")
+    assert app.current_project is current_project
+    app._session_logger.set_log_dir.assert_called_once_with(project_root / "logs" / "session")
+    studio_logger.retarget.assert_called_once_with(project_root / "logs")
+    assert app.metrics_session_id == "sess-123"
+    assert current_project.metrics_session_id == "sess-123"
+    app._session_logger.log_ui_event.assert_called_once()
+    db.save_ui_event.assert_called_once()
+    assert app._pending_ui_events == []

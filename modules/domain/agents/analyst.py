@@ -1367,14 +1367,25 @@ class Analyst(BaseAgent):
         loop = asyncio.get_running_loop()
         _block_id = raw_block.get("block_id", "?")
         # [Diag] 프롬프트 구성요소 크기 분해
-        print(
-            f"      📐 [Enrich] Block {_block_id} 프롬프트 구성: curr={len(safe_curr)}자 prev={len(effective_prev)}자 next={len(safe_next)}자 seeds={len(safe_seeds)}자 total_prompt={len(prompt)}자"
+        self._operator_log(
+            f"📐 [Enrich] Block {_block_id} 프롬프트 구성: curr={len(safe_curr)}자 prev={len(effective_prev)}자 next={len(safe_next)}자 seeds={len(safe_seeds)}자 total_prompt={len(prompt)}자",
+            meta={
+                "block_id": _block_id,
+                "curr_chars": len(safe_curr),
+                "prev_chars": len(effective_prev),
+                "next_chars": len(safe_next),
+                "seeds_chars": len(safe_seeds),
+                "prompt_chars": len(prompt),
+            },
         )
         try:
             import time as _time
 
             _t0 = _time.time()
-            print(f"      ⏳ [Enrich] Block {_block_id} LLM 호출 (model={self.primary_model}, prompt={len(prompt)}자)")
+            self._operator_log(
+                f"⏳ [Enrich] Block {_block_id} LLM 호출 (model={self.primary_model}, prompt={len(prompt)}자)",
+                meta={"block_id": _block_id, "model": self.primary_model, "prompt_chars": len(prompt)},
+            )
             logging.info(
                 "[Enrich] Block %s 농축 시작 (model=%s, prompt=%d자)", _block_id, self.primary_model, len(prompt)
             )
@@ -1389,8 +1400,14 @@ class Analyst(BaseAgent):
                 ),
             )
             _elapsed = _time.time() - _t0
-            print(
-                f"      ✅ [Enrich] Block {_block_id} 완료 ({_elapsed:.1f}s, model={self.primary_model}, 응답={len(raw_res or '')}자)"
+            self._operator_log(
+                f"✅ [Enrich] Block {_block_id} 완료 ({_elapsed:.1f}s, model={self.primary_model}, 응답={len(raw_res or '')}자)",
+                meta={
+                    "block_id": _block_id,
+                    "model": self.primary_model,
+                    "elapsed_seconds": round(_elapsed, 1),
+                    "response_chars": len(raw_res or ""),
+                },
             )
             logging.info(
                 "[Enrich] Block %s 농축 완료 (model=%s, %.1fs, 응답=%d자)",

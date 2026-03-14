@@ -443,7 +443,10 @@ class ArcEnsembleGenerator(BaseAgent):
                     futures[future] = strategy["name"]
 
                 _strat_names = ", ".join(futures.values())
-                print(f"      🎲 [Arc] {len(futures)}개 전략 병렬 생성 중 ({_strat_names})...")
+                self._operator_log(
+                    f"🎲 [Arc] {len(futures)}개 전략 병렬 생성 중 ({_strat_names})...",
+                    meta={"candidate_count": len(futures), "strategies": list(futures.values())},
+                )
                 # [V61.3] 타임아웃 적용 - 야간 무인 운영 시 무한 대기 방지
                 try:
                     for future in as_completed(futures, timeout=self.ENSEMBLE_TIMEOUT):
@@ -454,14 +457,25 @@ class ArcEnsembleGenerator(BaseAgent):
                             if result:
                                 result["_strategy"] = strategy_name
                                 candidates.append(result)
-                                print(f"      ✓ [Arc] '{strategy_name}' 생성 완료 ({time.monotonic() - _tp_t0:.0f}초)")
+                                self._operator_log(
+                                    f"✓ [Arc] '{strategy_name}' 생성 완료 ({time.monotonic() - _tp_t0:.0f}초)",
+                                    meta={"strategy": strategy_name, "elapsed_seconds": round(time.monotonic() - _tp_t0, 1)},
+                                )
                         except FutureTimeoutError:
                             logging.warning(f" [V61.3] {strategy_name} 전략 타임아웃 ({self.SINGLE_CANDIDATE_TIMEOUT}초)"
                             )
-                            print(f"      ✗ [Arc] '{strategy_name}' 타임아웃")
+                            self._operator_log(
+                                f"✗ [Arc] '{strategy_name}' 타임아웃",
+                                level="warning",
+                                meta={"strategy": strategy_name, "timeout_seconds": self.SINGLE_CANDIDATE_TIMEOUT},
+                            )
                         except Exception as e:
                             logging.warning(f" [Ensemble] {strategy_name} 전략 실패: {str(e)[:50]}")
-                            print(f"      ✗ [Arc] '{strategy_name}' 실패")
+                            self._operator_log(
+                                f"✗ [Arc] '{strategy_name}' 실패",
+                                level="warning",
+                                meta={"strategy": strategy_name},
+                            )
                 except FutureTimeoutError:
                     # 전체 앙상블 타임아웃 - 완료된 후보만 사용
                     logging.warning(f" [V61.3] 앙상블 전체 타임아웃 ({self.ENSEMBLE_TIMEOUT}초) - 완료된 {len(candidates)}개 후보 사용"
@@ -504,8 +518,14 @@ class ArcEnsembleGenerator(BaseAgent):
             else:
                 logging.info(f" [Ensemble] {candidate.get('_strategy', '?')} 제외: tactical_doc {tactical_len}자 < {min_tactical_length}자 (ep_count={ep_count})"
                 )
-                print(
-                    f"      ✗ [Arc] '{candidate.get('_strategy', '?')}' 분량 미달 ({tactical_len}자 < {min_tactical_length}자)"
+                self._operator_log(
+                    f"✗ [Arc] '{candidate.get('_strategy', '?')}' 분량 미달 ({tactical_len}자 < {min_tactical_length}자)",
+                    level="warning",
+                    meta={
+                        "strategy": candidate.get("_strategy", "?"),
+                        "tactical_chars": tactical_len,
+                        "min_required_chars": min_tactical_length,
+                    },
                 )
 
         # [V60.74] 유효한 후보가 없으면 최장 후보 선택 + 경고 레벨 판단
@@ -558,7 +578,14 @@ class ArcEnsembleGenerator(BaseAgent):
         logging.warning(" [Ensemble] 후보 비교:")
         _filtered_count = len(candidates) - len(scored_candidates)
         _filter_note = f" (분량미달 {_filtered_count}개 제외)" if _filtered_count > 0 else ""
-        print(f"      📋 [Arc] {len(scored_candidates)}/{len(candidates)}개 후보 비교{_filter_note}")
+        self._operator_log(
+            f"📋 [Arc] {len(scored_candidates)}/{len(candidates)}개 후보 비교{_filter_note}",
+            meta={
+                "scored_candidates": len(scored_candidates),
+                "total_candidates": len(candidates),
+                "filtered_count": _filtered_count,
+            },
+        )
         for c in scored_candidates:
             strategy = c.get("_strategy", "?")
             score = c.get("_score", 0)
@@ -566,7 +593,10 @@ class ArcEnsembleGenerator(BaseAgent):
             issue_summary = f" - {issues[0][:40]}..." if issues else ""
             marker = "✓" if c in valid_candidates else "×"
             logging.info(f"{marker} {strategy}: {score}점{issue_summary}")
-            print(f"        {marker} {strategy}: {score}점{issue_summary}")
+            self._operator_log(
+                f"{marker} [Arc] {strategy}: {score}점{issue_summary}",
+                meta={"strategy": strategy, "score": score, "qualified": c in valid_candidates},
+            )
         logging.info(
             " [TF-S2] Python은 선택하지 않음 — 유효 후보 %d개를 Director 비교 단계로 전달",
             len(valid_candidates),
