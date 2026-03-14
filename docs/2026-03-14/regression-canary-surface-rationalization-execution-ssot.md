@@ -1,7 +1,7 @@
 # Regression and Canary Surface Rationalization Execution SSOT
 
 Date: 2026-03-14
-Status: ready for implementation
+Status: closed
 Canonical Path: `docs/2026-03-14/regression-canary-surface-rationalization-execution-ssot.md`
 Temp Mirror Path: `docs/temp/regression-canary-surface-rationalization-execution-ssot.md`
 Source Survey Docs:
@@ -106,8 +106,9 @@ Revalidated Confidence: 96%
 - Revalidated against live workspace changes in `modules/core/stage4_canary_tools.py`, `scripts/run_stage4_canary.py`, `tests/test_run_stage4_canary.py`, and the surrounding desktop/runtime contract tests.
 - The canary surface has become more explicit, not less: `run_stage4_canary.py` now writes both `canary_summary.json` and `canary_companion_audit.json`, and it exposes a `branch_inventory(...)` output path for proof coverage inventory.
 - `stage4_canary_tools.py` now tracks companion audit status, branch coverage, and retry-path proof gaps. This is useful groundwork for tiering, but it also confirms that canary helpers remain mutation-heavy runtime probes rather than safe read-only checks.
-- Current tests now assert artifact writes for companion audits and branch inventory output. That improves proof hygiene but does not yet create the contract-safe versus mutation-heavy taxonomy this document calls for.
-- Revalidation outcome: document direction unchanged; this item remains the final queue step because it should codify validation tiers after upstream runtime, operator-surface, and desktop contracts settle.
+- `scripts/regression_validation_tiers.py` and `docs/implementation/regression-validation-tier-contract-v1.json` now codify the regression surface into `contract_safe`, `focused_mutation`, and `full_canary_proof` lanes, and the smoke/canary entrypoints now self-label their mutation tier.
+- Current tests now assert artifact writes for companion audits and branch inventory output, and the new tier contract tests ensure the classification inventory stays synchronized with the runner entrypoints.
+- Revalidation outcome: acceptance criteria satisfied. The validation surface now exposes bounded tiers, mutation-heavy helpers are explicitly labeled, and this execution doc can point future changes to stable validation subsets.
 
 ## 10. Guardrails
 - Do not collapse all validation into one oversized suite recommendation.
@@ -123,3 +124,13 @@ Revalidated Confidence: 96%
 - validator command: `python scripts/ops_validator.py`
 - closure harness: `docs/implementation/execution-closure-harness.md`
 - execution-start rule: re-run the document 3-pass audit and confirm at least 95% confidence against the current workspace state before patching code from this document
+
+## 13. Closure Note
+- closure status: `closed`
+- verification evidence:
+  - `python -m pytest -q tests/test_regression_validation_tier_contract.py tests/test_run_stage4_canary.py tests/test_run_stage34_canary.py`
+  - `python -m py_compile scripts/regression_validation_tiers.py scripts/run_stage4_canary.py scripts/run_stage34_canary.py scripts/run_stage2_smoke.py scripts/run_stage3_smoke.py scripts/run_stage4_smoke.py`
+- residual risk:
+  - live canary helpers still remain mutation-heavy by design; this item clarifies that boundary rather than removing it.
+  - future new smoke/canary entrypoints must be added to the shared tier inventory and contract doc to stay inside the taxonomy.
+- temp cleanup action: remove `docs/temp/regression-canary-surface-rationalization-execution-ssot.md`, `docs/temp/execution-roadmap.md`, and `docs/temp/queue-state.json` after roadmap synchronization.

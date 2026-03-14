@@ -1,0 +1,66 @@
+{
+  "contract_version": "regression_validation_tier_v1",
+  "tiers": {
+    "contract_safe": {
+      "summary": "Read-only contract and containment checks that should not mutate live project state.",
+      "mutates_project_state": false,
+      "tests": [
+        "tests/test_bridge_server_desktop_risk_gate.py",
+        "tests/test_desktop_contract_refresh.py",
+        "tests/test_desktop_direct_surface_contract.py",
+        "tests/test_desktop_packaging_contract.py",
+        "tests/test_desktop_shadow_hygiene.py",
+        "tests/test_desktop_transport_contract.py",
+        "tests/test_runtime_ownership_contract.py",
+        "tests/test_runtime_paths.py",
+        "tests/test_runtime_print_allowlist.py",
+        "tests/test_surface_containment_contract.py"
+      ],
+      "scripts": []
+    },
+    "focused_mutation": {
+      "summary": "Targeted smoke and runner helper coverage that touches fixture or project state but stays narrower than full live canary proof.",
+      "mutates_project_state": true,
+      "tests": [
+        "tests/test_run_stage4_canary.py",
+        "tests/test_run_stage34_canary.py"
+      ],
+      "scripts": [
+        "scripts/e2e_menu_smoke.ps1",
+        "scripts/run_stage2_smoke.py",
+        "scripts/run_stage3_smoke.py",
+        "scripts/run_stage4_smoke.py"
+      ]
+    },
+    "full_canary_proof": {
+      "summary": "Live proof helpers that boot app surfaces, patch input, and write proof artifacts into project logs.",
+      "mutates_project_state": true,
+      "tests": [],
+      "scripts": [
+        "scripts/run_stage4_canary.py",
+        "scripts/run_stage34_canary.py"
+      ]
+    }
+  },
+  "recommended_subsets": {
+    "contract_safe": [
+      "tests/test_desktop_shadow_hygiene.py",
+      "tests/test_desktop_direct_surface_contract.py",
+      "tests/test_desktop_transport_contract.py",
+      "tests/test_bridge_server_desktop_risk_gate.py",
+      "tests/test_runtime_ownership_contract.py",
+      "tests/test_runtime_print_allowlist.py"
+    ],
+    "focused_mutation": [
+      "tests/test_run_stage4_canary.py",
+      "tests/test_run_stage34_canary.py",
+      "scripts/run_stage2_smoke.py",
+      "scripts/run_stage3_smoke.py",
+      "scripts/run_stage4_smoke.py"
+    ],
+    "full_canary_proof": [
+      "scripts/run_stage4_canary.py",
+      "scripts/run_stage34_canary.py"
+    ]
+  }
+}

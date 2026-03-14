@@ -1,0 +1,105 @@
+{
+  "total_hits": 113,
+  "top_files": [
+    {
+      "path": "scripts/validate_manual_sweep.py",
+      "count": 15
+    },
+    {
+      "path": "scripts/run_stage4_smoke.py",
+      "count": 8
+    },
+    {
+      "path": "modules/core/stage0/spinner.py",
+      "count": 8
+    },
+    {
+      "path": "scripts/run_stage2_smoke.py",
+      "count": 7
+    },
+    {
+      "path": "scripts/process_and_audit_tr_bi_loop.py",
+      "count": 6
+    },
+    {
+      "path": "scripts/tf_c1_patch.py",
+      "count": 6
+    },
+    {
+      "path": "scripts/run_stage3_smoke.py",
+      "count": 5
+    },
+    {
+      "path": "scripts/run_stale_reference_sweep.py",
+      "count": 5
+    },
+    {
+      "path": "scripts/backfill_quality_sidecars.py",
+      "count": 4
+    },
+    {
+      "path": "scripts/build_chaebol_allowance_zero_assets.py",
+      "count": 4
+    },
+    {
+      "path": "scripts/build_fallen_prince_buys_joseon_assets.py",
+      "count": 4
+    },
+    {
+      "path": "scripts/ops_validator.py",
+      "count": 4
+    },
+    {
+      "path": "scripts/validate_deep_global_survey_bundle.py",
+      "count": 4
+    },
+    {
+      "path": "scripts/tr_batch_harness.py",
+      "count": 4
+    },
+    {
+      "path": "main_a.py",
+      "count": 3
+    },
+    {
+      "path": "scripts/build_bi_from_phase0_and_tr.py",
+      "count": 3
+    },
+    {
+      "path": "scripts/build_execution_roadmap.py",
+      "count": 3
+    },
+    {
+      "path": "scripts/sync_temp_queue_state.py",
+      "count": 3
+    },
+    {
+      "path": "scripts/audit_bi_5pass.py",
+      "count": 2
+    },
+    {
+      "path": "scripts/mojibake_global_survey.py",
+      "count": 2
+    },
+    {
+      "path": "scripts/populate_process_health_scorecard.py",
+      "count": 2
+    },
+    {
+      "path": "scripts/repair_tr_korean_utf8.py",
+      "count": 2
+    },
+    {
+      "path": "modules/core/stage2_finalizer.py",
+      "count": 2
+    },
+    {
+      "path": "﻿main_a.py",
+      "count": 1
+    },
+    {
+      "path": "scripts/run_auto_frontier_lag_harness.py",
+      "count": 1
+    }
+  ]
+}

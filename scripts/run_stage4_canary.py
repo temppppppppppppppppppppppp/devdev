@@ -1,4 +1,8 @@
-"""Prepare, run, and analyze a repeatable Stage 4 canary project."""
+"""Prepare, run, and analyze a repeatable Stage 4 canary project.
+
+Validation tier: full_canary_proof
+Mutation boundary: boots live app surfaces, patches input, and writes proof artifacts.
+"""
 
 from __future__ import annotations
 
@@ -20,6 +24,10 @@ from modules.core.stage4_canary_tools import (  # noqa: E402
     build_stage4_canary_summary,
     prepare_stage4_canary_project,
 )
+from scripts.regression_validation_tiers import FULL_CANARY_PROOF  # noqa: E402
+
+VALIDATION_TIER = FULL_CANARY_PROOF
+MUTATES_PROJECT_STATE = True
 
 
 def parse_args() -> argparse.Namespace:

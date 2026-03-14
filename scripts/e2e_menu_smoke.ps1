@@ -1,3 +1,8 @@
+<# 
+Validation tier: focused_mutation
+Mutation boundary: writes smoke artifacts and can touch live backend state.
+#>
+
 param(
     [string]$BaseUrl = "http://127.0.0.1:8000",
     [string]$OutDir = "artifacts/smoke",

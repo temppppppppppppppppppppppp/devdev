@@ -3,6 +3,9 @@
 Runs Stage3 with mocked LLM agents, persists blueprints to the real project DB,
 and exports blueprint JSON files under plans/blueprints/.
 
+Validation tier: focused_mutation
+Mutation boundary: writes fixture-project DB and blueprint artifacts.
+
 Usage:
     python scripts/run_stage3_smoke.py
 """
@@ -23,11 +26,14 @@ from modules.core.db_manager import DBManager  # noqa: E402
 from modules.core.stage3_context import Stage3Context  # noqa: E402
 from modules.core.stage3_orchestrator import Stage3Orchestrator  # noqa: E402
 from modules.models.blueprint import Blueprint  # noqa: E402
+from scripts.regression_validation_tiers import FOCUSED_MUTATION  # noqa: E402
 
 PROJECT_NAME = "\ucf54\ub371\uc2a4_\ud14c\uc2a4\ud2b8"
 PROJECT_DIR = PROJECT_ROOT / "projects" / PROJECT_NAME
 DB_PATH = PROJECT_DIR / "project_data.db"
 BP_OUTPUT_DIR = PROJECT_DIR / "plans" / "blueprints"
+VALIDATION_TIER = FOCUSED_MUTATION
+MUTATES_PROJECT_STATE = True
 
 
 @contextmanager

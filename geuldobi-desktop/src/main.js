@@ -8,6 +8,11 @@ const fs = require("fs");
 const os = require("os");
 const path = require("path");
 const { attachConsoleRelay } = require("./console_relay");
+const {
+  IPC_CHANNELS,
+  BRIDGE_MANAGED_ROUTES,
+  buildRunInputRoute,
+} = require("./desktop_control_plane_contract");
 
 if (!app || !BrowserWindow || !ipcMain) {
   throw new Error(
@@ -441,56 +446,60 @@ async function bridgeFetch(urlPath, options = {}) {
   }
 }
 
-ipcMain.handle("bridge:run", async (_, { key, subKey, inputs, approvalId }) => {
+ipcMain.handle(IPC_CHANNELS.bridge.run, async (_, { key, subKey, inputs, approvalId }) => {
   const body = { key };
   if (subKey) body.sub_key = subKey;
   if (inputs && Object.keys(inputs).length > 0) body.inputs = inputs;
   if (typeof approvalId === "string" && approvalId.trim()) {
     body.approval_id = approvalId.trim();
   }
-  return bridgeFetch("/run", { method: "POST", body: JSON.stringify(body) });
+  return bridgeFetch(BRIDGE_MANAGED_ROUTES.run, { method: "POST", body: JSON.stringify(body) });
 });
 
-ipcMain.handle("bridge:stop", async () => {
-  return bridgeFetch("/stop", { method: "POST" });
+ipcMain.handle(IPC_CHANNELS.bridge.stop, async () => {
+  return bridgeFetch(BRIDGE_MANAGED_ROUTES.stop, { method: "POST" });
 });
 
 // Dead-candidate compatibility surface. No active renderer consumer today.
-ipcMain.handle("bridge:status", async () => {
-  return bridgeFetch("/status");
+ipcMain.handle(IPC_CHANNELS.bridge.status, async () => {
+  return bridgeFetch(BRIDGE_MANAGED_ROUTES.status);
 });
 
-ipcMain.handle("bridge:get-url", () => {
+ipcMain.handle(IPC_CHANNELS.bridge.getUrl, () => {
   return { wsUrl: EVENTS_WS_URL, httpUrl: STATUS_BASE_URL };
 });
 
-ipcMain.handle("bridge:get-cli-contract", () => {
+ipcMain.handle(IPC_CHANNELS.bridge.getCliContract, () => {
   return CLI_CONTRACT;
 });
 
-ipcMain.handle("bridge:get-quality-summary", async (_, { project, lookback = 5 }) => {
+ipcMain.handle(IPC_CHANNELS.bridge.getQualitySummary, async (_, { project, lookback = 5 }) => {
   const safeProject = String(project || "").trim();
   const safeLookback = Number.isFinite(Number(lookback)) ? Number(lookback) : 5;
   return bridgeFetch(
-    `/quality/summary?project=${encodeURIComponent(safeProject)}&lookback=${encodeURIComponent(String(safeLookback))}`
+    `${BRIDGE_MANAGED_ROUTES.qualitySummary}?project=${encodeURIComponent(safeProject)}&lookback=${encodeURIComponent(
+      String(safeLookback)
+    )}`
   );
 });
 
-ipcMain.handle("bridge:get-quality-dashboard", async (_, { project, lookback = 5 }) => {
+ipcMain.handle(IPC_CHANNELS.bridge.getQualityDashboard, async (_, { project, lookback = 5 }) => {
   const safeProject = String(project || "").trim();
   const safeLookback = Number.isFinite(Number(lookback)) ? Number(lookback) : 5;
   return bridgeFetch(
-    `/quality/dashboard?project=${encodeURIComponent(safeProject)}&lookback=${encodeURIComponent(String(safeLookback))}`
+    `${BRIDGE_MANAGED_ROUTES.qualityDashboard}?project=${encodeURIComponent(safeProject)}&lookback=${encodeURIComponent(
+      String(safeLookback)
+    )}`
   );
 });
 
-ipcMain.handle("bridge:get-safe-ops-preview", async (_, { project }) => {
+ipcMain.handle(IPC_CHANNELS.bridge.getSafeOpsPreview, async (_, { project }) => {
   const safeProject = String(project || "").trim();
-  return bridgeFetch(`/safe-ops/preview?project=${encodeURIComponent(safeProject)}`);
+  return bridgeFetch(`${BRIDGE_MANAGED_ROUTES.safeOpsPreview}?project=${encodeURIComponent(safeProject)}`);
 });
 
-ipcMain.handle("bridge:save-quality-review", async (_, { project, epNum, operatorLabel, note = "" }) => {
-  return bridgeFetch("/quality/review", {
+ipcMain.handle(IPC_CHANNELS.bridge.saveQualityReview, async (_, { project, epNum, operatorLabel, note = "" }) => {
+  return bridgeFetch(BRIDGE_MANAGED_ROUTES.qualityReview, {
     method: "POST",
     body: JSON.stringify({
       project,
@@ -501,8 +510,8 @@ ipcMain.handle("bridge:save-quality-review", async (_, { project, epNum, operato
   });
 });
 
-ipcMain.handle("bridge:resolve-prompt", async (_, { runId, promptId, value }) => {
-  return bridgeFetch(`/run/${encodeURIComponent(runId)}/input`, {
+ipcMain.handle(IPC_CHANNELS.bridge.resolvePrompt, async (_, { runId, promptId, value }) => {
+  return bridgeFetch(buildRunInputRoute(runId), {
     method: "POST",
     body: JSON.stringify({ prompt_id: promptId, value }),
   });
@@ -510,7 +519,7 @@ ipcMain.handle("bridge:resolve-prompt", async (_, { runId, promptId, value }) =>
 
 // ─── 설정 영속화 IPC ─────────────────────────────────────────────────────────
 
-ipcMain.handle("bridge:save-settings", async (_, settings) => {
+ipcMain.handle(IPC_CHANNELS.bridge.saveSettings, async (_, settings) => {
   try {
     const dir = path.dirname(SETTINGS_PATH);
     fs.mkdirSync(dir, { recursive: true });
@@ -522,7 +531,7 @@ ipcMain.handle("bridge:save-settings", async (_, settings) => {
   }
 });
 
-ipcMain.handle("bridge:load-settings", async () => {
+ipcMain.handle(IPC_CHANNELS.bridge.loadSettings, async () => {
   try {
     if (!fs.existsSync(SETTINGS_PATH)) return null;
     const raw = fs.readFileSync(SETTINGS_PATH, "utf8");
@@ -558,7 +567,7 @@ function getMaterialRoot() {
   return getEngineRoot();
 }
 
-ipcMain.handle("material:list-files", async (_, folder) => {
+ipcMain.handle(IPC_CHANNELS.material.listFiles, async (_, folder) => {
   if (folder !== "bible" && folder !== "treatments") {
     return { ok: false, files: [], message: "invalid folder" };
   }
@@ -580,7 +589,7 @@ ipcMain.handle("material:list-files", async (_, folder) => {
   }
 });
 
-ipcMain.handle("material:import-file", async (_, folder) => {
+ipcMain.handle(IPC_CHANNELS.material.importFile, async (_, folder) => {
   if (folder !== "bible" && folder !== "treatments") {
     return { ok: false, message: "invalid folder" };
   }
@@ -619,7 +628,7 @@ ipcMain.handle("material:import-file", async (_, folder) => {
   return { ok: true, imported };
 });
 
-ipcMain.handle("material:delete-file", async (_, folder, fileName) => {
+ipcMain.handle(IPC_CHANNELS.material.deleteFile, async (_, folder, fileName) => {
   if (folder !== "bible" && folder !== "treatments") {
     return { ok: false, message: "invalid folder" };
   }
@@ -732,7 +741,7 @@ function getDefaultAuthorDirectives() {
   return "# 절대 지시 사항을 입력하세요.\n";
 }
 
-ipcMain.handle("project:list", async () => {
+ipcMain.handle(IPC_CHANNELS.project.list, async () => {
   try {
     const dir = getProjectsDir();
     if (!fs.existsSync(dir)) {
@@ -753,7 +762,7 @@ ipcMain.handle("project:list", async () => {
   }
 });
 
-ipcMain.handle("project:create", async (_, name) => {
+ipcMain.handle(IPC_CHANNELS.project.create, async (_, name) => {
   if (!name || typeof name !== "string") {
     return { ok: false, message: "프로젝트 이름을 입력하세요" };
   }
@@ -774,7 +783,7 @@ ipcMain.handle("project:create", async (_, name) => {
   }
 });
 
-ipcMain.handle("project:load-config-surfaces", async (_, projectName) => {
+ipcMain.handle(IPC_CHANNELS.project.loadConfigSurfaces, async (_, projectName) => {
   try {
     const { authorDirectivesPath, workGuardPath } = getProjectConfigSurfaces(projectName);
     const authorDirectives = fs.existsSync(authorDirectivesPath)
@@ -789,7 +798,7 @@ ipcMain.handle("project:load-config-surfaces", async (_, projectName) => {
   }
 });
 
-ipcMain.handle("project:save-config-surfaces", async (_, payload = {}) => {
+ipcMain.handle(IPC_CHANNELS.project.saveConfigSurfaces, async (_, payload = {}) => {
   try {
     const project = typeof payload.project === "string" ? payload.project : "";
     const { configDir, authorDirectivesPath, workGuardPath } = getProjectConfigSurfaces(project);
@@ -808,7 +817,7 @@ ipcMain.handle("project:save-config-surfaces", async (_, payload = {}) => {
   }
 });
 
-ipcMain.handle("project:list-work-guard-templates", async (_, payload = {}) => {
+ipcMain.handle(IPC_CHANNELS.project.listWorkGuardTemplates, async (_, payload = {}) => {
   try {
     const genre = typeof payload.genre === "string" ? payload.genre : "";
     return {
@@ -821,7 +830,7 @@ ipcMain.handle("project:list-work-guard-templates", async (_, payload = {}) => {
   }
 });
 
-ipcMain.handle("project:apply-work-guard-template", async (_, payload = {}) => {
+ipcMain.handle(IPC_CHANNELS.project.applyWorkGuardTemplate, async (_, payload = {}) => {
   try {
     const project = typeof payload.project === "string" ? payload.project : "";
     const templatePath = resolveWorkGuardTemplatePath(payload.templatePath);
@@ -842,7 +851,7 @@ ipcMain.handle("project:apply-work-guard-template", async (_, payload = {}) => {
 
 // ─── 작업 폴더 열기 IPC ──────────────────────────────────────────────────────
 
-ipcMain.handle("workspace:open-folder", async () => {
+ipcMain.handle(IPC_CHANNELS.workspace.openFolder, async () => {
   const dir = app.isPackaged ? getWorkspaceDir() : path.resolve(__dirname, "..", "..");
   fs.mkdirSync(dir, { recursive: true });
   const { shell } = electron;
@@ -851,7 +860,7 @@ ipcMain.handle("workspace:open-folder", async () => {
 });
 
 // Dead-candidate compatibility surface. No active renderer consumer today.
-ipcMain.handle("workspace:get-path", async () => {
+ipcMain.handle(IPC_CHANNELS.workspace.getPath, async () => {
   const dir = app.isPackaged ? getWorkspaceDir() : path.resolve(__dirname, "..", "..");
   return { ok: true, path: dir };
 });
