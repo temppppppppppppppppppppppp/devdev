@@ -25,6 +25,8 @@ def test_live_and_shadow_entries_follow_contract():
     root_shadow = _read(CONTRACT["shadow_surfaces"][1]["path"])
     assert "Manual debug shadow entry only." in root_shadow
     assert "Authoritative Electron entry lives at geuldobi-desktop/src/main.js." in root_shadow
+    assert 'module.exports = require("./geuldobi-desktop/src/main.js");' in root_shadow
+    assert 'ipcMain.handle(' not in root_shadow
 
 
 def test_manual_only_surfaces_are_marked_and_not_live_entries():

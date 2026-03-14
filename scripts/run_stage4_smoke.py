@@ -3,6 +3,9 @@
 Runs Stage4 with 3 seam mocks, persists manuscripts to the real project DB,
 and exports manuscript JSON files under plans/manuscripts/.
 
+Validation tier: focused_mutation
+Mutation boundary: writes fixture-project DB and manuscript artifacts.
+
 Usage:
     python scripts/run_stage4_smoke.py
 """
@@ -23,11 +26,14 @@ if str(PROJECT_ROOT) not in sys.path:
 from modules.core.db_manager import DBManager  # noqa: E402
 from modules.core.stage4_context import Stage4Context  # noqa: E402
 from modules.core.stage4_orchestrator import Stage4Orchestrator, _RoundOutcome, _SessionConfig  # noqa: E402
+from scripts.regression_validation_tiers import FOCUSED_MUTATION  # noqa: E402
 
 PROJECT_NAME = "\ucf54\ub371\uc2a4_\ud14c\uc2a4\ud2b8"
 PROJECT_DIR = PROJECT_ROOT / "projects" / PROJECT_NAME
 DB_PATH = PROJECT_DIR / "project_data.db"
 MS_OUTPUT_DIR = PROJECT_DIR / "plans" / "manuscripts"
+VALIDATION_TIER = FOCUSED_MUTATION
+MUTATES_PROJECT_STATE = True
 
 MOCK_MANUSCRIPT = (
     "\uc2dc\uc724\uc740 \ubaa8\ub2c8\ud130 \uc55e\uc5d0\uc11c \uc22b\uc790 \ud750\ub984\uc744 \ub530\ub77c\uac00\uba70 \ud638\ud761\uc744 \uace0\ub978\ub2e4. "
