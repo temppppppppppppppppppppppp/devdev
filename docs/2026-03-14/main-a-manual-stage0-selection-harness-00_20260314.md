@@ -1,6 +1,7 @@
 # `main_a.py` Manual Stage 0 Selection Harness - `00_20260314`
 
 Created: 2026-03-14
+Last Re-Audited: 2026-03-14
 Status: `captured-from-terminal-log`
 Scope: system-track manual runtime replay
 Source: pasted interactive terminal log captured during `python main_a.py`
@@ -39,7 +40,7 @@ Important:
 - Bible list order can change
 - roadmap list order can change
 
-So future replay should prefer `semantic_target` over raw ordinal numbers when the list order differs.
+Future replay should prefer `semantic_target` over raw ordinal numbers when list ordering differs.
 
 ## 4. Captured Operator Transcript
 
@@ -65,9 +66,9 @@ So future replay should prefer `semantic_target` over raw ordinal numbers when t
 | 18 | prompt | `Enter` | `메뉴로 돌아가기` | after style extraction |
 | 19 | prompt | `Enter` | `메뉴로 돌아가기` | second return prompt seen in log |
 
-## 5. Replay-Friendly Input Sequence
+## 5. Replay-Friendly Raw Input Sequence
 
-Use this only when the displayed list ordering matches the captured session:
+Use this only when the displayed list ordering still matches the captured session:
 
 ```text
 3
@@ -150,7 +151,7 @@ It does not guarantee:
 
 ## 9. Recommended Next Upgrade
 
-If this should become durable runtime evidence rather than a manual note, the next step is:
+If this should become stronger runtime evidence rather than a manual note, the next step is:
 
 - persist Stage 0 operator prompts and selections as structured session events
 - store both `display_index` and `resolved_target_label`

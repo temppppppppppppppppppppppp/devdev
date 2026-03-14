@@ -1,95 +1,120 @@
 # Auto Frontier-Lag N-Arc Test Harness SSOT
 
 Created: 2026-03-14
-Status: `implemented-not-executed`
+Last Re-Audited: 2026-03-14
+Status: `implemented-heavy-design-not-executed`
 Track: system-order
 Blockguide policy: do not read `docs/blockguide/*`
 
 Related documents:
 - `docs/2026-03-14/main-a-manual-stage0-selection-harness-00_20260314.md`
-- `docs/2026-03-12/stage4-canary-execution-runbook.md`
 - `docs/2026-03-14/global-remediation-postfix-3pass-closure.md`
+- `docs/2026-03-13/stage4-canary-archive-locator-note.md`
 
-## 1. Purpose
-
-This harness defines a future automation path for the operator intent:
-
-- create a fresh project under `projects/`
-- replay the exact Stage 0 choices already captured from the manual run
-- enter menu `7. Frontier Lag`
-- continue until a user-requested arc target is reached
-- do not use a process timeout
-- poll every 30 minutes
-- run the polling watchdog inside the same terminal-owned harness session
-- decide autonomously whether the run is:
-  - progressing normally
-  - stalled
-  - failed
-- terminate if needed
-- analyze logs and persisted sinks
-- write a canonical SSOT execution document
-- re-audit that document until confidence reaches at least `95%`
-
-This document is a specification and operating contract.
-It does **not** imply that the harness is executed in this turn.
-
-Current implementation surface:
-
+Implementation surface:
 - `scripts/run_auto_frontier_lag_harness.py`
+- `main_a.py`
 - `tests/test_auto_frontier_lag_harness.py`
 - `tests/test_one_stop_frontier_lag_auto_continue.py`
 
-## 2. Operator Trigger Contract
+## 1. Purpose
 
-The canonical operator phrase family is:
+This harness defines the operator automation path for intents such as:
 
 - `자동테스트 10아크런`
-- `자동테스트 N아크런`
+- `자동테스트 N 아크런`
 - `N아크 Frontier Lag 테스트`
+
+The harness is responsible for:
+
+1. creating a fresh project under `projects/`
+2. replaying the captured Stage 0 semantic selections
+3. entering `7. Frontier Lag`
+4. continuing until the requested arc count is reached
+5. avoiding hard process timeouts
+6. polling every 30 minutes from the same terminal-owned execution tree
+7. deciding whether the run is progressing, stalled, failed, or complete
+8. stopping gracefully when required
+9. analyzing DB/log/artifact sinks
+10. writing a canonical runtime analysis SSOT with an internal 3-pass audit
+
+This document is an operating contract.
+It does not imply that the harness is executed in this turn.
+
+## 2. Runtime Model
+
+The heavy-design runtime model is:
+
+- parent process:
+  - `scripts/run_auto_frontier_lag_harness.py run ...`
+  - owns the 30-minute watchdog
+  - writes poll history
+  - performs sink analysis
+  - writes the execution SSOT
+- worker process:
+  - `scripts/run_auto_frontier_lag_harness.py worker ...`
+  - boots `SovereignApp` inside its own Python subprocess
+  - replays Stage 0 selections through controlled seams
+  - runs `_one_stop_pipeline_frontier_lag(...)`
+
+Important:
+
+- the worker is a subprocess, but it does not rely on brittle raw terminal scraping for the full flow
+- instead it boots `SovereignApp` directly and uses thin runtime seams
+- the watchdog still belongs to the same terminal-owned execution tree
+
+## 3. Operator Trigger Contract
+
+Canonical trigger family:
+
+- `자동테스트 10아크런`
+- `자동테스트 20 아크런`
+- `15아크 Frontier Lag 테스트`
 
 Normalization rule:
 
-- parse `N` as the requested frontier target arc count
-- preserve the captured Stage 0 semantic choices unless the operator explicitly overrides them
-- treat this as a new test-project run, never as an in-place mutation of an existing production project
+- parse `N` as the requested arc target
+- preserve the captured Stage 0 semantic profile unless the operator overrides it
+- always create a new test project
+- never mutate the seed project in place
 
-## 3. Default Input Profile
+## 4. Default Input Profile
 
-Unless the operator overrides it, the harness replays the semantic profile captured in:
+Unless overridden, the harness replays the semantic profile captured in:
 
 - `docs/2026-03-14/main-a-manual-stage0-selection-harness-00_20260314.md`
 
 Default semantic choices:
 
 1. genre = `투자 (Investment Fiction)`
-2. project seed profile = `00_20260314`
+2. seed profile = `00_20260314`
 3. Stage 0 mode = `기존 방식 - Bible/Treatment 파일 선택`
 4. Bible = `01_bi_투자물_골든_카나리아 테스트.json`
 5. roadmap = `01_tr_투자물_골든_카나리아 테스트.json`
-6. Treatment block auto-condense = `no`
+6. Treatment block auto-condense = `n`
 7. protagonist config:
    - `world_origin = 원시인`
    - `incarnation_type = 회귀자`
    - `pov = 혼합`
    - `external_pov_insert_policy = 적극 허용`
-8. Stage 0 style analysis:
-   - run submenu `6`
-   - start analysis = `yes`
-   - style cache mode = `캐시 사용`
+8. style analysis:
+   - submenu `6`
+   - confirm = `y`
+   - cache mode = `use`
 
-Selection resolution rule:
+Replay rule:
 
-- replay by semantic label first
-- use raw ordinals only if the displayed menu ordering still matches the captured run
+- resolve by semantic value first
+- only fall back to raw ordinal assumptions where the runtime seam explicitly guarantees it
 
-## 4. Project Creation Rule
+## 5. Project Creation Rule
 
-The harness must create a new project folder under `projects/`.
+The harness must create a new target project.
 
 Recommended naming pattern:
 
 ```text
-projects/auto_test_<yyyymmdd>_<hhmmss>_<base_project>_<n>arc
+projects/auto_test_<yyyymmdd>_<hhmmss>_<seed_profile>_<n>arc
 ```
 
 Example:
@@ -98,334 +123,217 @@ Example:
 projects/auto_test_20260314_193000_00_20260314_10arc
 ```
 
-Creation invariants:
+Invariants:
 
-- never reuse an old target project silently
-- never mutate the seed project in place
-- persist a harness manifest inside the new project logs directory
-
-Recommended manifest path:
+- fail if the target project already exists
+- do not silently reuse an old target project
+- write a manifest to:
 
 ```text
 projects/<target>/logs/auto_frontier_lag_harness_manifest.json
 ```
 
-## 5. Runtime Execution Contract
+## 6. Frontier Lag Stop-Boundary
 
-The harness owns the following sequence:
+The heavy design uses an internal stop boundary rather than a wall-clock kill.
 
-1. boot `python main_a.py`
-2. replay Stage 0 semantic selections
-3. return to the main menu
-4. choose menu `7`
-5. run `Frontier Lag`
-6. stop when the requested arc target is reached
+Current implementation seam:
 
-Important constraint:
+- `SovereignApp._one_stop_pipeline_frontier_lag(max_arc_advances=..., batch_size_override=..., wait_for_menu_return=False)`
 
-- raw menu `7` behavior may auto-continue farther than the intended test scope
-- therefore the automation layer must use a **thin stop boundary** so that `N아크런` actually stops at arc `N`
-- this boundary must not be implemented as a shell timeout
+Required semantics:
 
-Allowed stop-boundary strategies:
-
-- clamp the effective frontier plan to the requested arc target
-- or stop immediately after the requested designed frontier arc is completed
+- `max_arc_advances = N` means stop after exactly `N` advanced arcs
+- `batch_size_override` is allowed for bounded test runs
+- `wait_for_menu_return=False` avoids interactive menu blocking at worker end
 
 Disallowed strategy:
 
-- killing the run just because a wall-clock timeout elapsed
+- stopping only because a shell timeout elapsed
 
-## 6. No-Timeout Rule
+## 7. No-Timeout Rule
 
-The harness must not set a hard process timeout.
+The harness must not use:
 
-That means:
+- `subprocess.run(..., timeout=...)`
+- shell-level forced timeout wrappers
+- fixed “kill after X hours” logic
 
-- no `subprocess timeout=...`
-- no shell-level forced timeout
-- no “2 hours and kill regardless” rule
+Instead:
 
-Instead, the harness uses liveness polling plus explicit stall/failure heuristics.
+- the watchdog polls every 30 minutes
+- the parent process checks worker liveness on a shorter internal cadence
+- completion may happen much earlier than the 30-minute review window
 
-## 7. Terminal-Side Watchdog Rule
+## 8. Watchdog Contract
 
-The 30-minute checker is a terminal-side watchdog owned by the harness itself.
+The watchdog is terminal-owned and runs inside the parent harness process.
 
-That means:
+Polling model:
 
-- the run process and the watchdog process live inside the same terminal-owned execution tree
-- the watchdog wakes up every `30 minutes`, inspects state, then goes back to sleep
-- the watchdog is **not** a timeout controller
-- the watchdog may keep observing the run for many hours if progress continues
-
-Operational interpretation:
-
-- `30 minutes` means review cadence, not forced kill threshold
-- a single quiet 30-minute window is only a liveness observation
-- termination happens only after the stall/failure heuristics say it should happen
-
-Recommended runtime split:
-
-1. runner process
-   - owns `python main_a.py` and menu replay
-2. watchdog process
-   - owns 30-minute polling, status judgment, and graceful stop requests
-3. analyzer process
-   - runs after success / stall / failure stop
-
-## 8. 30-Minute Polling Contract
-
-Polling interval:
-
-- every `30 minutes`
+- review cadence: every `30 minutes`
+- responsive process check: every `5 seconds`
+- if the worker exits early, the parent should notice promptly and must not sleep for the remaining 30-minute window
 
 Each poll captures:
 
-- process alive / exited state
-- current session log size delta
-- latest session log tail
-- blueprint count delta
-- manuscript draft count delta
-- `stage_attempts` Stage 3/4 row deltas
-- `director_selections` row deltas
-- `runtime_audit_summary.json` tag/count deltas if present
+- process alive / exit code
+- current session log path
+- session log size delta
+- session log tail
+- blueprint count
+- draft count
+- Stage 3 attempt count
+- Stage 4 attempt count
+- Stage 3 / Stage 4 director selection counts
+- runtime audit summary event count
+- harness phase from manifest
+- prompt-blocked signal
 
-Recommended poll artifact:
+Poll history artifact:
 
 ```text
 projects/<target>/logs/auto_frontier_lag_poll_history.jsonl
 ```
 
-Polling duration rule:
-
-- keep polling until one of `success`, `stalled`, or `failed` is reached
-- do not stop polling just because the wall-clock run time became large
-
 ## 9. Progress / Stall / Failure Heuristics
 
 ### Progressing
 
-Classify as `progressing` if at least one of the following moved since the previous poll:
+Classify as `progressing` if any of these changed since the previous poll:
 
-- session log grew
-- blueprint count increased
-- draft count increased
-- Stage 3 or Stage 4 attempt rows increased
-- runtime summary advanced
+- session log size
+- blueprint count
+- draft count
+- Stage 3 attempt count
+- Stage 4 attempt count
+- Stage 3 director-selection count
+- Stage 4 director-selection count
+- runtime audit total events
+- manifest phase
+
+### Waiting Prompt
+
+Classify as `waiting_prompt` if:
+
+- no progress moved
+- but the latest session-log tail shows a known input wait marker
 
 ### Stalled
 
 Classify as `stall-candidate` if:
 
-- process is still alive
-- and **none** of the tracked progress indicators changed for one full 30-minute window
+- the worker is still alive
+- and no progress signals moved for one full 30-minute window
+- and no prompt-blocked marker is present
 
-Classify as `stalled` if:
-
-- `stall-candidate` repeats for two consecutive polls
-- and no intentional blocking prompt requiring operator input is detected
-
-Upon `stalled`:
-
-- terminate the process gracefully if possible
-- if graceful termination fails, perform controlled stop
-- then proceed to log/sink analysis
+Classify as `stalled` if the same condition repeats for two consecutive poll windows.
 
 ### Failed
 
-Classify as `failed` if any of the following is observed:
+Classify as `failed` if:
 
-- process exits non-zero
-- traceback or fatal exception is written to the active session log
-- `crash_dump.log` is updated with the matching run
-- the run enters a persistent error loop with no forward progress
-- required Stage 3/4 sinks become structurally inconsistent for the current session
+- the worker exits non-zero
+- traceback markers appear
+- `crash_dump.log` evidence appears in the active log tail
+- or sink alignment later proves structurally broken for the current session
 
-Upon `failed`:
+## 10. Graceful Stop Contract
 
-- stop any still-alive child process if needed
-- freeze artifacts
-- proceed to root-cause analysis
+Primary stop intent:
 
-### Success
+- send `CTRL_BREAK` / `Ctrl+C` style interrupt to the worker process group first
 
-Classify as `success` if:
+Fallback order:
 
-- requested arc target was reached
-- stop boundary triggered at the correct arc frontier
-- Stage 3/4 current-session sinks are analyzable
-- no fatal runtime failure occurred
+1. graceful interrupt
+2. terminate
+3. kill
 
-Success does **not** imply quality PASS for every episode.
-It only means the requested test harness run completed its intended scope.
+Rationale:
 
-## 10. Post-Run Analysis Contract
+- give the runtime a chance to flush logs and exit cleanly
+- do not rely on hard kill first
 
-After stop, the harness must analyze:
+## 11. Analysis Contract
 
-- active session log
-- `pass_rate_monitor.json`
-- `runtime_audit_summary.json`
-- Stage 3 `stage_attempts`
-- Stage 4 `stage_attempts`
-- `director_selections`
-- `session/decisions.jsonl`
-- drafts and blueprints produced in the run
+After worker completion or forced stop, the parent analyzer must:
 
-Primary analysis questions:
+1. read worker result JSON
+2. read harness manifest
+3. read `runtime_audit_summary.json`
+4. read `pass_rate_monitor.json` if present
+5. inspect `stage_attempts` and `director_selections`
+6. run `FailureAnalyzer.sink_alignment_summary()` for:
+   - Stage 3 current session
+   - Stage 4 current session
+7. derive:
+   - `boundary_reached`
+   - `root_cause`
+   - `judgment`
+   - `shared_session_id`
 
-1. Did the harness stop at the correct arc boundary?
-2. Did the run actually progress through Stage 3 and Stage 4?
-3. Was the final state a success, stall, or fail?
-4. What is the nearest concrete root cause if the run stalled or failed?
-5. Are sink mismatches current-session or legacy carryover?
+Analysis artifacts:
 
-Recommended analysis artifact names:
-
+- `logs/auto_frontier_lag_worker_result.json`
 - `logs/auto_frontier_lag_analysis.json`
-- `logs/auto_frontier_lag_failure_digest.json`
+- `logs/auto_frontier_lag_failure_digest.json` when needed
 
-## 11. SSOT Documentation Contract
+## 12. SSOT Output Contract
 
-After analysis, the harness owner must produce a canonical execution document under:
-
-```text
-docs/YYYY-MM-DD/
-```
-
-Recommended canonical document pattern:
+For every analyzed run, write:
 
 ```text
 docs/YYYY-MM-DD/auto-frontier-lag-<n>arc-runtime-analysis-ssot.md
 ```
 
-The SSOT must include:
+The generated SSOT must include:
 
-- run target and project locator
-- exact semantic input profile used
-- stop condition used
-- watchdog poll cadence and terminal-side observation rule
-- poll history summary
-- success / stall / fail judgment
-- concrete evidence files
-- root-cause statement
-- next action or no-action judgment
+- input profile reference
+- worker model
+- watchdog cadence
+- no-timeout statement
+- graceful stop path
+- poll history path
+- Stage 3 current-session sink status
+- Stage 4 current-session sink status
+- 3-pass audit result
+- confidence score
 
-## 12. 3-Pass Audit Manual
+## 13. Internal 3-Pass Audit
 
-The documentation rule is mandatory:
+The harness’ internal runtime-analysis doc uses a compact 3-pass audit:
 
-1. Pass 1 — fact extraction
-   - verify logs, DB sinks, and artifacts say the same thing
-2. Pass 2 — contradiction check
-   - verify no claim in the doc exceeds the evidence
-3. Pass 3 — decision audit
-   - verify judgment, residuals, and next step are correctly bounded
+1. pass 1: fact extraction
+2. pass 2: contradiction check
+3. pass 3: decision audit
 
 Confidence rule:
 
-- do not finalize the SSOT until confidence is at least `95%`
-- if confidence is below `95%`, re-audit and revise
+- ordinary pass count raises confidence
+- only a clean success can finalize at `95%`
+- a degraded or failed run must not claim final confidence `95%`
 
-## 13. Manual Interpretation of `자동테스트 10아크런`
+## 14. Current Re-Audit Findings
 
-The phrase:
+2026-03-14 heavy-design re-audit findings:
 
-```text
-자동테스트 10아크런
-```
+1. fixed: Korean trigger and prompt marker literals must remain canonical UTF-8 text
+2. fixed: Stage 0 protagonist replay should resolve by semantic menu value, not hard-coded raw ordinals
+3. fixed: the watchdog must not block for the full 30-minute interval after a quick worker exit
+4. fixed: graceful stop should attempt `CTRL_BREAK` / `Ctrl+C` semantics before terminate/kill
+5. fixed: runtime analysis SSOT should describe the real worker model, not imply raw TTY replay only
 
-means:
+Residual notes:
 
-1. create a fresh project under `projects/`
-2. replay the preserved Stage 0 configuration choices
-3. enter Frontier Lag via menu `7`
-4. continue until `10 arcs` are completed
-5. do not use a timeout
-6. poll every `30 minutes` from the harness-owned terminal watchdog
-7. stop autonomously on success / stall / failure
-8. analyze logs and sinks
-9. write a canonical SSOT
-10. re-audit until confidence `>= 95%`
+- execution has not been performed in this turn
+- actual runtime proof still depends on a future live run
 
-## 14. Non-Goals
+## 15. Out of Scope
 
-This harness is not:
+This harness does not currently promise:
 
-- a production launcher
-- a replacement for full-repo regression
-- a guarantee of commercial success
-- a substitute for separate real-project validation
-
-It is an automated runtime test-and-analysis harness.
-
-## 15. Recommended Future Implementation Split
-
-When implemented, split it into three layers:
-
-1. `selection replay layer`
-   - resolves semantic menu choices
-2. `frontier execution layer`
-   - runs menu `7` with arc stop boundary
-3. `analysis + SSOT layer`
-   - polls, stops, analyzes, and writes the dated document
-
-Recommended future script pattern:
-
-```text
-scripts/run_auto_frontier_lag_harness.py
-```
-
-Recommended command pattern:
-
-```powershell
-python scripts/run_auto_frontier_lag_harness.py --arc-count 10 --seed-profile 00_20260314
-```
-
-## 16. Ten-Step Hardening Path
-
-If the harness is upgraded aggressively, use this ten-step order:
-
-1. semantic menu resolver
-   - choose by label first, ordinal second
-2. fresh-project creation guard
-   - never mutate the seed project in place
-3. Frontier Lag stop-boundary clamp
-   - stop exactly at requested arc count
-4. operator-prompt detector
-   - distinguish intentional waiting from silent stall
-5. terminal-side watchdog
-   - 30-minute review cadence without timeout semantics
-6. same-session sink triangulation
-   - compare log, `stage_attempts`, `director_selections`, `decisions.jsonl`
-7. automatic stall / failure digest
-   - produce nearest concrete root-cause summary
-8. canonical SSOT autowriter
-   - write dated runtime-analysis document automatically
-9. built-in 3-pass auditor
-   - fact extraction, contradiction check, decision audit
-10. confidence gate and preset aliases
-   - finalize only at `>= 95%`
-   - support triggers like `자동테스트 10아크런`
-
-Recommended interpretation:
-
-- the first usable harness is steps `1` through `7`
-- the fully productized harness is steps `1` through `10`
-
-## 17. Decision For This Turn
-
-This turn freezes the harness design only.
-
-Implemented in this turn:
-
-- harness SSOT document creation
-- harness runner / worker / watchdog script
-- requested arc stop-boundary seam
-- focused regression for helper / worker / stop-boundary contract
-
-Not implemented in this turn:
-
-- live run
-- production confidence from an actual executed harness run
+- packaged desktop orchestration
+- full repo regression gating
+- narrative pipeline automation
+- productized UI controls for harness management

@@ -27,6 +27,10 @@ def test_build_worker_command_targets_same_script_and_has_no_timeout_flag():
     assert "--timeout" not in command
 
 
+def test_menu_choice_for_value_resolves_semantic_option():
+    assert harness._menu_choice_for_value(("현대인", "원시인"), "원시인") == "2"
+
+
 def test_classify_poll_transition_marks_stalled_after_two_idle_windows():
     previous = {
         "process_exit_code": None,
@@ -82,7 +86,7 @@ def test_run_three_pass_audit_only_finalizes_success_at_95():
     assert degraded["finalized"] is False
 
 
-def test_write_execution_ssot_mentions_terminal_watchdog(tmp_path):
+def test_write_execution_ssot_mentions_terminal_watchdog_and_ctrl_break(tmp_path):
     analysis = {
         "generated_at": "2026-03-14T12:00:00",
         "project_locator": "projects/auto_test_demo",
@@ -115,7 +119,64 @@ def test_write_execution_ssot_mentions_terminal_watchdog(tmp_path):
     text = path.read_text(encoding="utf-8")
     assert "terminal-owned watchdog" in text
     assert "no hard process timeout" in text
+    assert "CTRL_BREAK / Ctrl+C first" in text
     assert "confidence: 95%" in text
+
+
+def test_terminate_process_tree_prefers_ctrl_break_when_available():
+    process = MagicMock()
+    process.poll.side_effect = [None, None, 0]
+
+    with patch.object(harness.signal, "CTRL_BREAK_EVENT", 1, create=True), patch.object(harness.time, "sleep"):
+        harness._terminate_process_tree(process)
+
+    process.send_signal.assert_called_once_with(1)
+    process.terminate.assert_not_called()
+
+
+def test_run_harness_does_not_wait_full_poll_window_after_quick_worker_exit(tmp_path):
+    class FakeProcess:
+        def __init__(self):
+            self.exit_code = None
+
+        def poll(self):
+            return self.exit_code
+
+        def wait(self):
+            return 0 if self.exit_code is None else self.exit_code
+
+    process = FakeProcess()
+    snapshots = [
+        {"captured_at": "t0", "process_exit_code": None},
+        {"captured_at": "t1", "process_exit_code": 0},
+    ]
+    sleeps: list[float] = []
+
+    def fake_sleep(seconds):
+        sleeps.append(seconds)
+        process.exit_code = 0
+
+    with (
+        patch.object(harness, "PROJECT_ROOT", tmp_path),
+        patch.object(harness, "build_execution_plan", return_value={"target_project": "auto_test_demo"}),
+        patch.object(harness, "build_worker_command", return_value=["python", "worker"]),
+        patch.object(harness.subprocess, "Popen", return_value=process),
+        patch.object(harness, "capture_poll_snapshot", side_effect=snapshots),
+        patch.object(harness, "_write_poll_history"),
+        patch.object(harness, "analyze_project", return_value={"judgment": "success"}),
+        patch.object(harness.time, "sleep", side_effect=fake_sleep),
+    ):
+        payload = harness.run_harness(
+            arc_count=10,
+            seed_profile="00_20260314",
+            batch_size=1,
+            poll_interval_seconds=1800,
+            target_project="",
+            trigger="자동테스트 10아크런",
+        )
+
+    assert payload["process_exit_code"] == 0
+    assert sleeps == [harness.PROCESS_CHECK_INTERVAL_SECONDS]
 
 
 def test_run_worker_calls_frontier_with_requested_arc_limit_and_writes_result(tmp_path):
