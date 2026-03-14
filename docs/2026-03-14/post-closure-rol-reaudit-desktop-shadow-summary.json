@@ -1,0 +1,32 @@
+{
+  "main.js": {
+    "has_ipcMain_handle": false,
+    "has_runtime_logic_marker": true,
+    "has_authority_marker": true,
+    "has_control_plane_registry": false
+  },
+  "geuldobi-desktop/main.js": {
+    "has_ipcMain_handle": false,
+    "has_runtime_logic_marker": true,
+    "has_authority_marker": true,
+    "has_control_plane_registry": false
+  },
+  "geuldobi-desktop/src/main.js": {
+    "has_ipcMain_handle": true,
+    "has_runtime_logic_marker": false,
+    "has_authority_marker": false,
+    "has_control_plane_registry": true
+  },
+  "geuldobi-desktop/src/preload.js": {
+    "has_ipcMain_handle": false,
+    "has_runtime_logic_marker": false,
+    "has_authority_marker": false,
+    "has_control_plane_registry": true
+  },
+  "geuldobi-desktop/src/desktop_control_plane_contract.js": {
+    "has_ipcMain_handle": false,
+    "has_runtime_logic_marker": false,
+    "has_authority_marker": false,
+    "has_control_plane_registry": true
+  }
+}

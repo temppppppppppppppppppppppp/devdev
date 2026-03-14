@@ -14,6 +14,7 @@ SPLASH_HTML = (ROOT / "geuldobi-desktop/src/splash/splash.html").read_text(encod
 SPLASH_JS = (ROOT / "geuldobi-desktop/src/splash/splash.js").read_text(encoding="utf-8")
 PRELOAD_JS = (ROOT / "geuldobi-desktop/src/preload.js").read_text(encoding="utf-8")
 MAIN_JS = (ROOT / "geuldobi-desktop/src/main.js").read_text(encoding="utf-8")
+CONTROL_PLANE_JS = (ROOT / "geuldobi-desktop/src/desktop_control_plane_contract.js").read_text(encoding="utf-8")
 
 
 def _network_contract() -> dict:
@@ -70,14 +71,14 @@ def _extract_direct_surfaces() -> dict[str, dict[str, str]]:
 
 def _extract_bridge_managed_routes() -> frozenset[str]:
     route_patterns = {
-        "/run": r'bridgeFetch\("/run",',
-        "/stop": r'bridgeFetch\("/stop"',
-        "/status": r'bridgeFetch\("/status"\)',
-        "/quality/summary": r"bridgeFetch\(\s*`/quality/summary\?",
-        "/quality/dashboard": r"bridgeFetch\(\s*`/quality/dashboard\?",
-        "/safe-ops/preview": r"bridgeFetch\(`/safe-ops/preview\?",
-        "/quality/review": r'bridgeFetch\("/quality/review",',
-        "/run/{run_id}/input": r"bridgeFetch\(`/run/\$\{encodeURIComponent\(runId\)\}/input`",
+        "/run": r"bridgeFetch\(BRIDGE_MANAGED_ROUTES\.run,",
+        "/stop": r"bridgeFetch\(BRIDGE_MANAGED_ROUTES\.stop",
+        "/status": r"bridgeFetch\(BRIDGE_MANAGED_ROUTES\.status\)",
+        "/quality/summary": r"BRIDGE_MANAGED_ROUTES\.qualitySummary",
+        "/quality/dashboard": r"BRIDGE_MANAGED_ROUTES\.qualityDashboard",
+        "/safe-ops/preview": r"BRIDGE_MANAGED_ROUTES\.safeOpsPreview",
+        "/quality/review": r"bridgeFetch\(BRIDGE_MANAGED_ROUTES\.qualityReview,",
+        "/run/{run_id}/input": r"bridgeFetch\(buildRunInputRoute\(runId\)",
     }
     return frozenset(
         route
@@ -126,6 +127,8 @@ def test_bridge_managed_backend_routes_match_main_process_bridge():
 
     assert frozenset(contract["backend_routes"]) == _extract_bridge_managed_routes()
     assert frozenset(contract["preload_methods"]) == _extract_bridge_preload_methods()
+    assert "const BRIDGE_MANAGED_ROUTES = Object.freeze" in CONTROL_PLANE_JS
+    assert "function buildRunInputRoute(runId)" in CONTROL_PLANE_JS
     assert contract["owner"] == "preload_main_bridge"
     assert contract["purpose"]
     assert contract["allowed_reason"]

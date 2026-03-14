@@ -1,7 +1,7 @@
 # Desktop Control Plane Surface Hardening Execution SSOT
 
 Date: 2026-03-14
-Status: ready for implementation
+Status: closed
 Canonical Path: `docs/2026-03-14/desktop-control-plane-surface-hardening-execution-ssot.md`
 Temp Mirror Path: `docs/temp/desktop-control-plane-surface-hardening-execution-ssot.md`
 Source Survey Docs:
@@ -115,10 +115,15 @@ Revalidated Confidence: 97%
 
 ## 9A. Current-State Revalidation
 - Revalidated against live workspace changes in `geuldobi-desktop/src/main.js`, `geuldobi-desktop/src/preload.js`, `geuldobi-desktop/main.js`, `main.js`, `modules/api/bridge_server.py`, `modules/api/process_runner.py`, `geuldobi-desktop/package.json`, and the desktop contract tests.
-- `geuldobi-desktop/main.js` is now an explicit `10`-line compatibility shim that delegates to `./src/main.js`. This partially satisfies the shadow-fencing direction already captured by this document.
-- The root `main.js` still remains a manual debug shadow with duplicated runtime/control-plane logic, so authority drift risk has not been eliminated; it has merely become easier to identify.
+- `geuldobi-desktop/main.js` is now an explicit `10`-line compatibility shim that delegates to `./src/main.js`.
+- The root `main.js` is now a thin manual-debug shadow shim that delegates to `./geuldobi-desktop/src/main.js` and no longer carries duplicated runtime/control-plane logic.
 - `geuldobi-desktop/src/main.js` and `src/preload.js` now carry explicit bridge transport constants plus `approvalId` propagation, while `bridge_server.py` exposes an explicit control-plane provenance log path. Those are contract-surface changes, not a reason to split or reorder the roadmap item.
-- Revalidation outcome: document direction unchanged; tranche 1 is partially pre-hardened in live code, but the item remains pending until authoritative entry, preload, backend routes, and shadow governance are aligned together.
+- Tranche 2 landed. `geuldobi-desktop/src/desktop_control_plane_contract.js` now owns shared IPC channel names and bridge-managed route inventory for both `src/main.js` and `src/preload.js`.
+- Focused verification passed:
+  - `14` tests across desktop shadow hygiene, surface containment, transport contract, direct surface contract, and desktop risk-gate coverage
+  - `20` tests across desktop packaging, runtime paths, desktop contract refresh, and desktop work-guard template contract coverage
+  - node smoke: `tests/test_desktop_preload_bridge_behavior.js`, `tests/test_desktop_material_offline_behavior.js`, `tests/test_splash_runtime_behavior.js`
+- Revalidation outcome: acceptance criteria satisfied for this item. Shadow authority, preload/main IPC naming, bridge-managed route inventory, and packaging/runtime assumptions are now explicitly fenced and regression-backed.
 
 ## 10. Guardrails
 - Do not mix renderer UI redesign with control-plane hardening.
@@ -134,3 +139,16 @@ Revalidated Confidence: 97%
 - validator command: `python scripts/ops_validator.py`
 - closure harness: `docs/implementation/execution-closure-harness.md`
 - execution-start rule: re-run the document 3-pass audit and confirm at least 95% confidence against the current workspace state before patching code from this document
+
+## 13. Closure Note
+- closure status: `closed`
+- verification evidence:
+  - `python -m pytest -q tests/test_desktop_shadow_hygiene.py tests/test_surface_containment_contract.py tests/test_desktop_direct_surface_contract.py tests/test_desktop_transport_contract.py tests/test_bridge_server_desktop_risk_gate.py`
+  - `python -m pytest -q tests/test_desktop_packaging_contract.py tests/test_runtime_paths.py tests/test_desktop_contract_refresh.py tests/test_desktop_work_guard_template_contract.py`
+  - `node tests/test_desktop_preload_bridge_behavior.js`
+  - `node tests/test_desktop_material_offline_behavior.js`
+  - `node tests/test_splash_runtime_behavior.js`
+- residual risk:
+  - renderer UI churn is intentionally out of scope for this control-plane item.
+  - downstream regression/canary tier separation remains active in the final queue item.
+- temp cleanup action: remove `docs/temp/desktop-control-plane-surface-hardening-execution-ssot.md` after roadmap and queue synchronization.

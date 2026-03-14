@@ -2080,6 +2080,133 @@ class SovereignApp:
             self.ui.log("   ⚠️ [V50] 모듈 미설치 - 기본 모드")
             return []
 
+    def _load_bootstrap_components(self) -> tuple[dict, dict | None]:
+        """Load lazy bootstrap components and synchronize spinner flags."""
+        global V50_MODULES_AVAILABLE, STAGE0_AVAILABLE
+
+        _agents = _lazy_load_agents()
+        _v50 = _lazy_load_v50_modules()
+        _lazy_load_stage0()
+
+        _spinners_mod.V50_MODULES_AVAILABLE = V50_MODULES_AVAILABLE
+        _spinners_mod.STAGE0_AVAILABLE = STAGE0_AVAILABLE
+        return _agents, _v50
+
+    def _resolve_project_guard(self):
+        """Return the current guard, optionally wrapped with StyleGuard metadata."""
+        guard = getattr(self.sys, "guard", None)
+        if not guard:
+            return None
+
+        try:
+            _sg_data = self.current_project.load_v20_anchor("style_guide")
+            if _sg_data and isinstance(_sg_data, dict):
+                from modules.core.genre_guards import StyleGuard
+                from modules.core.stage0 import StyleGuide
+
+                _sg = StyleGuide.from_dict(_sg_data)
+                guard = StyleGuard(guard, _sg)
+                self.ui.log("   🎨 StyleGuard 래핑 완료 (문체 기반 검증 활성)")
+        except Exception as e:
+            logging.warning(f"[D-3] StyleGuard 래핑 실패 (장르 Guard만 사용): {e}")
+
+        return guard
+
+    def _apply_genre_bindings(self) -> None:
+        """Bind genre and guard state onto the active director/writer agents."""
+        if not self.selected_genre:
+            return
+
+        genre_type = self.selected_genre.get("type", "wuxia")
+        director = self.agents["director"]
+        director.set_genre(genre_type)
+        self.ui.log(f"   🎭 Director 장르 설정: {genre_type}")
+
+        guard = self._resolve_project_guard()
+        if guard is not None:
+            director.set_guard(guard)
+            self.ui.log("   🛡️ Director Guard 연결 완료")
+
+            writer = self.agents.get("writer")
+            if writer and hasattr(writer, "set_guard"):
+                writer.set_guard(guard)
+
+        writer = self.agents.get("writer")
+        if writer:
+            if hasattr(writer, "set_genre"):
+                writer.set_genre(genre_type)
+            self.ui.log("   ✍️ Writer Guard/Genre 연결 완료")
+
+    def _load_validation_settings(self) -> dict:
+        """Load runtime validation settings from project config or root fallback."""
+        try:
+            settings_path = self.current_project.paths.config / "settings.json"
+            if not settings_path.exists():
+                settings_path = Path("config/settings.json")
+
+            if settings_path.exists():
+                with open(settings_path, encoding="utf-8") as f:
+                    return json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError, OSError):
+            return {}
+
+        return {}
+
+    def _apply_validation_settings(self, settings: dict) -> None:
+        """Apply validation feature toggles onto initialized agents."""
+        validation_config = settings.get("validation", {})
+        if validation_config.get("use_v0128", False):
+            self.agents["director"].set_v0128_enabled(True)
+            self.ui.log("   ✅ V0128 검증 시스템 활성화")
+
+    def _bootstrap_continuity_inspector(self) -> None:
+        """Load continuity tracker state when the inspector supports it."""
+        try:
+            ci = self.agents.get("continuity_inspector")
+            if ci and hasattr(ci, "v49_7_enabled") and ci.v49_7_enabled:
+                arcs_data = self.current_project.db.load_anchor("arcs") or []
+                if arcs_data:
+                    load_result = ci.load_trackers_from_db(arcs_data)
+                    self.ui.log(
+                        f"   🔩 [V49.7] 트래커 초기화 완료: "
+                        f"복선 {load_result.get('foreshadowings', 0)}개 "
+                        f"관계 {load_result.get('relationships', 0)}개 "
+                        f"파워 {load_result.get('power_entries', 0)}개"
+                    )
+                else:
+                    self.ui.log("   🔩 [V49.7] 트래커 대기 (Arc 데이터 없음)")
+            else:
+                self.ui.log("   ⏭️ [V49.7] 모듈 미설치 - 기본 검증 모드")
+        except Exception as tracker_err:
+            self.ui.log(f"   ⏭️ [V49.7] 트래커 초기화 실패 (비치명적): {tracker_err}")
+
+    def _validate_initialized_agents(self) -> BootstrapStatus | None:
+        """Ensure every initialized agent exposes the required ask contract."""
+        for name, agent in self.agents.items():
+            if not hasattr(agent, "ask"):
+                self.ui.log(f"🚨 [Critical] {name} 에이전트 초기화 실패")
+                self._bootstrap_status = BootstrapStatus(
+                    core_ok=False,
+                    v50_ok=False,
+                    partial_failures=[f"agent_missing_ask:{name}"],
+                )
+                return self._bootstrap_status
+
+        return None
+
+    def _finalize_bootstrap_status(self, partial_failures: list[str]) -> BootstrapStatus:
+        """Persist the final bootstrap result and emit the closing operator logs."""
+        self._bootstrap_status = BootstrapStatus(
+            core_ok=True,
+            v50_ok=not partial_failures,
+            partial_failures=partial_failures,
+        )
+        if partial_failures:
+            self.ui.log(f"   ⚠️ [Bootstrap] optional module partial failure {len(partial_failures)}건")
+
+        self.ui.log("✅ [System] 모든 에이전트 안전하게 초기화 완료")
+        return self._bootstrap_status
+
     def _attach_agents(self) -> BootstrapStatus:
         """
         [V38 패치] 방어적 에이전트 초기화
@@ -2092,19 +2219,7 @@ class SovereignApp:
             BootstrapStatus: core/v50/partial failure 상태
         """
         try:
-            # [INF-I8] Stage 전용 에이전트 lazy import
-            global V50_MODULES_AVAILABLE, STAGE0_AVAILABLE
-            _agents = _lazy_load_agents()
-
-            # [INF-I8] V50 모듈 lazy import
-            _v50 = _lazy_load_v50_modules()
-
-            # [INF-I8] Stage 0 lazy import
-            _lazy_load_stage0()
-
-            # [V65][INF-I8] spinners 모듈에 가용성 플래그 동기화 (lazy import 후)
-            _spinners_mod.V50_MODULES_AVAILABLE = V50_MODULES_AVAILABLE
-            _spinners_mod.STAGE0_AVAILABLE = STAGE0_AVAILABLE
+            _agents, _v50 = self._load_bootstrap_components()
 
             models = self._get_agent_model_map()
 
@@ -2120,115 +2235,20 @@ class SovereignApp:
             default_model = AIModels.STAGE2_MAIN_MODEL  # [V65] 중앙 상수 참조
             self._init_core_agents(_agents=_agents, _v50=_v50, models=models, default_model=default_model)
 
-            # 초기화 검증
-            for name, agent in self.agents.items():
-                if not hasattr(agent, "ask"):
-                    self.ui.log(f"🚨 [Critical] {name} 에이전트 초기화 실패")
-                    self._bootstrap_status = BootstrapStatus(
-                        core_ok=False,
-                        v50_ok=False,
-                        partial_failures=[f"agent_missing_ask:{name}"],
-                    )
-                    return self._bootstrap_status
+            invalid_status = self._validate_initialized_agents()
+            if invalid_status:
+                return invalid_status
 
-            # [V43] Director에 장르 및 V0128 설정 주입
-            if self.selected_genre:
-                genre_type = self.selected_genre.get("type", "wuxia")
-                self.agents["director"].set_genre(genre_type)
-                self.ui.log(f"   🎭 Director 장르 설정: {genre_type}")
-
-                # [V60.90] Director에 Guard 연결 (장르별 특화 검증용)
-                if hasattr(self.sys, "guard") and self.sys.guard:
-                    _guard = self.sys.guard
-                    # [D-3] StyleGuide 존재 시 StyleGuard 래핑
-                    try:
-                        _sg_data = self.current_project.load_v20_anchor("style_guide")
-                        if _sg_data and isinstance(_sg_data, dict):
-                            from modules.core.genre_guards import StyleGuard
-                            from modules.core.stage0 import StyleGuide
-
-                            _sg = StyleGuide.from_dict(_sg_data)
-                            _guard = StyleGuard(_guard, _sg)
-                            self.ui.log("   🎨 StyleGuard 래핑 완료 (문체 기반 검증 활성)")
-                    except Exception as e:
-                        logging.warning(f"[D-3] StyleGuard 래핑 실패 (장르 Guard만 사용): {e}")
-
-                    self.agents["director"].set_guard(_guard)
-                    self.ui.log("   🛡️ Director Guard 연결 완료")
-
-                    # [V60.90] Writer에 Guard/Genre 연결 (장르별 프롬프트 주입용)
-                    # [ContractR94] Director와 동일 guard(_guard) 사용 — StyleGuard 포함
-                    if "writer" in self.agents:
-                        if hasattr(self.agents["writer"], "set_guard"):
-                            self.agents["writer"].set_guard(_guard)
-
-                # Writer genre는 guard 유무와 무관하게 설정
-                if "writer" in self.agents:
-                    if hasattr(self.agents["writer"], "set_genre"):
-                        self.agents["writer"].set_genre(genre_type)
-                    self.ui.log("   ✍️ Writer Guard/Genre 연결 완료")
-
-            # V0128 검증 시스템 활성화 여부 확인
-            # [V44 Fix] settings 변수 안전하게 로드
-            # [V60 Fix] 프로젝트 config 없으면 루트 config로 fallback
-            try:
-                settings_path = self.current_project.paths.config / "settings.json"
-                if not settings_path.exists():
-                    # 프로젝트 설정 없으면 루트 config로 fallback
-                    settings_path = Path("config/settings.json")
-
-                if settings_path.exists():
-                    with open(settings_path, encoding="utf-8") as f:
-                        settings = json.load(f)
-                else:
-                    settings = {}
-            except (FileNotFoundError, json.JSONDecodeError, OSError):  # [V64.P4] OPTIONAL: settings load
-                settings = {}
-
-            validation_config = settings.get("validation", {})
-            if validation_config.get("use_v0128", False):
-                self.agents["director"].set_v0128_enabled(True)
-                self.ui.log("   ✅ V0128 검증 시스템 활성화")
-
-            # ═══════════════════════════════════════════════════════════════
-            # [V49.7] ContinuityInspector 트래커 초기화
-            # ═══════════════════════════════════════════════════════════════
-            try:
-                if "continuity_inspector" in self.agents:
-                    ci = self.agents["continuity_inspector"]
-                    if hasattr(ci, "v49_7_enabled") and ci.v49_7_enabled:
-                        # DB에서 Arc 데이터 로드하여 트래커 초기화
-                        arcs_data = self.current_project.db.load_anchor("arcs") or []
-                        if arcs_data:
-                            load_result = ci.load_trackers_from_db(arcs_data)
-                            self.ui.log(
-                                f"   🔧 [V49.7] 트래커 초기화 완료: "
-                                f"복선 {load_result.get('foreshadowings', 0)}개, "
-                                f"관계 {load_result.get('relationships', 0)}개, "
-                                f"파워 {load_result.get('power_entries', 0)}개"
-                            )
-                        else:
-                            self.ui.log("   🔧 [V49.7] 트래커 대기 (Arc 데이터 없음)")
-                    else:
-                        self.ui.log("   ⚠️ [V49.7] 모듈 미설치 - 기본 검증 모드")
-            except Exception as tracker_err:
-                self.ui.log(f"   ⚠️ [V49.7] 트래커 초기화 실패 (비치명적): {tracker_err}")
+            self._apply_genre_bindings()
+            self._apply_validation_settings(self._load_validation_settings())
+            self._bootstrap_continuity_inspector()
 
             # ═══════════════════════════════════════════════════════════════
             # [V50] 서사 품질 향상 모듈 초기화
             # ═══════════════════════════════════════════════════════════════
             partial_failures = self._init_v50_modules(_v50=_v50)
 
-            self._bootstrap_status = BootstrapStatus(
-                core_ok=True,
-                v50_ok=not partial_failures,
-                partial_failures=partial_failures,
-            )
-            if partial_failures:
-                self.ui.log(f"   ⚠️ [Bootstrap] optional module partial failure {len(partial_failures)}건")
-
-            self.ui.log("✅ [System] 모든 에이전트 안전하게 초기화 완료")
-            return self._bootstrap_status
+            return self._finalize_bootstrap_status(partial_failures)
 
         except Exception as e:
             self.ui.log(f"🚨 [Critical] 에이전트 초기화 중 오류: {e}")
