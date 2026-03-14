@@ -1,8 +1,4 @@
-"""[Phase 4B-1] AuditService — 감사 이벤트 버퍼링/기록 서비스
-
-원본: main_a.py:2992-3044 (3개 메서드, 53줄)
-Protocol: modules/protocols/app_services.py AuditServiceProtocol
-"""
+"""Audit service for buffered runtime audit logging and summary writing."""
 
 from __future__ import annotations
 
@@ -13,13 +9,15 @@ from typing import Any
 
 
 class AuditService:
-    """감사 이벤트를 버퍼링하고 파일로 기록하는 서비스.
+    """Buffer runtime audit events and persist log/summary artifacts."""
 
-    Args:
-        runtime_audit: SovereignApp.runtime_audit 리스트 참조 공유
-        project_paths_fn: () -> paths 또는 None (lazy 접근)
-        ui_log_fn: UI 로깅 함수 (실패 시 경고 출력)
-    """
+    _AUTHORITATIVE_ATTEMPT_SINKS = (
+        "stage_attempts",
+        "pass_rate_monitor",
+        "session_decisions",
+        "episode_production",
+        "director_selections",
+    )
 
     def __init__(
         self,
@@ -34,12 +32,11 @@ class AuditService:
 
     @property
     def buffer(self) -> list[dict]:
-        """현재 버퍼 참조 (하위 호환용)"""
+        """Return the live audit buffer reference."""
         return self._buffer
 
-    # ── audit_event ──────────────────────────────────────────────
     def audit_event(self, event_type: str, message: str, data: dict | None = None) -> None:
-        """[V66.1] B-3: 배치 버퍼 방식 — 버퍼에 append, 파일 I/O 지연"""
+        """Append an audit event to memory and the flush buffer."""
         event = {
             "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
             "type": event_type,
@@ -51,9 +48,8 @@ class AuditService:
             self._runtime_audit[:] = self._runtime_audit[-500:]
         self._buffer.append(event)
 
-    # ── flush_audit_buffer ───────────────────────────────────────
     def flush_audit_buffer(self) -> None:
-        """[V66.1] B-3: 버퍼를 한 번에 파일 기록."""
+        """Flush the in-memory audit buffer to ``runtime_audit.jsonl``."""
         paths = self._project_paths_fn()
         if not self._buffer or paths is None:
             return
@@ -61,16 +57,146 @@ class AuditService:
             log_dir = paths.root / "logs"
             log_dir.mkdir(parents=True, exist_ok=True)
             log_path = log_dir / "runtime_audit.jsonl"
-            with log_path.open("a", encoding="utf-8") as f:
+            with log_path.open("a", encoding="utf-8") as handle:
                 for event in self._buffer:
-                    f.write(json.dumps(event, ensure_ascii=False) + "\n")
+                    handle.write(json.dumps(event, ensure_ascii=False) + "\n")
             self._buffer.clear()
-        except Exception as e:
-            self._ui_log(f"⚠️ [Audit] 로그 기록 실패: {e}")
+        except Exception as exc:
+            self._ui_log(f"[Audit] log write failed: {exc}")
 
-    # ── write_audit_summary ──────────────────────────────────────
+    @staticmethod
+    def _count_issue_entries(value: object) -> int:
+        if isinstance(value, list):
+            return len(value)
+        if isinstance(value, dict):
+            total = 0
+            for item in value.values():
+                if isinstance(item, dict) and "count" in item:
+                    try:
+                        total += int(item.get("count", 0) or 0)
+                    except (TypeError, ValueError):
+                        total += 0
+                else:
+                    total += 1
+            return total
+        return 0
+
+    def _compact_sink_alignment_summary(self, summary: dict | None) -> dict:
+        if not isinstance(summary, dict) or not summary:
+            return {}
+        issue_fields = (
+            "final_sink_missing",
+            "lifecycle_sink_missing",
+            "lifecycle_missing_in_final_sinks",
+            "final_verdict_mismatches",
+            "final_score_mismatches",
+            "initial_verdict_mismatches",
+            "patch_strategy_mismatches",
+            "candidate_key_mismatches",
+            "selection_candidate_key_mismatches",
+            "content_hash_mismatches",
+            "artifact_path_mismatches",
+            "artifact_metadata_missing",
+            "selection_reason_mismatches",
+            "verdict_reason_mismatches",
+            "fix_scope_mismatches",
+            "rationale_metadata_missing",
+            "artifact_missing_files",
+        )
+        issue_counts = {
+            field: self._count_issue_entries(summary.get(field))
+            for field in issue_fields
+            if self._count_issue_entries(summary.get(field)) > 0
+        }
+        session_rows_without_attempt_key = int(summary.get("session_decision_rows_without_attempt_key", 0) or 0)
+        if session_rows_without_attempt_key > 0:
+            issue_counts["session_decision_rows_without_attempt_key"] = session_rows_without_attempt_key
+        return {
+            "status": str(summary.get("status", "") or ""),
+            "attempts_considered": int(summary.get("attempts_considered", 0) or 0),
+            "complete_final_attempts": int(summary.get("complete_final_attempts", 0) or 0),
+            "complete_lifecycle_attempts": int(summary.get("complete_lifecycle_attempts", 0) or 0),
+            "legacy_key_attempts": int(summary.get("legacy_key_attempts", 0) or 0),
+            "session_scoped_attempts": int(summary.get("session_scoped_attempts", 0) or 0),
+            "coverage": dict(summary.get("coverage") or {}),
+            "issue_counts": issue_counts,
+        }
+
+    def _build_proof_digest(self, paths) -> dict:
+        log_dir = paths.root / "logs"
+        digest = {
+            "available": False,
+            "status": "unavailable",
+            "artifacts": {
+                "db_available": bool((paths.root / "project_data.db").exists()),
+                "session_decisions_exists": bool((log_dir / "session" / "decisions.jsonl").exists()),
+                "ui_events_jsonl_exists": bool((log_dir / "session" / "ui_events.jsonl").exists()),
+                "pass_rate_monitor_exists": bool((log_dir / "pass_rate_monitor.json").exists()),
+                "episode_production_exists": bool((log_dir / "episode_production.jsonl").exists()),
+                "runtime_audit_jsonl_exists": bool((log_dir / "runtime_audit.jsonl").exists()),
+                "ui_events_db_available": False,
+                "ui_events_count": 0,
+                "ui_event_coverage_status": "missing",
+            },
+            "stages": {},
+        }
+        db_path = paths.root / "project_data.db"
+        if not db_path.exists():
+            return digest
+
+        try:
+            from modules.core.db_manager import DBManager
+            from modules.core.failure_analyzer import FailureAnalyzer
+
+            db = DBManager(db_path)
+            try:
+                try:
+                    ui_event_count = int(db.conn.execute("SELECT COUNT(*) AS cnt FROM ui_events").fetchone()["cnt"])
+                except Exception:
+                    ui_event_count = 0
+                digest["artifacts"]["ui_events_db_available"] = True
+                digest["artifacts"]["ui_events_count"] = ui_event_count
+                if digest["artifacts"]["ui_events_jsonl_exists"] and ui_event_count > 0:
+                    digest["artifacts"]["ui_event_coverage_status"] = "ok"
+                elif digest["artifacts"]["ui_events_jsonl_exists"] or ui_event_count > 0:
+                    digest["artifacts"]["ui_event_coverage_status"] = "partial"
+                analyzer = FailureAnalyzer(db, project_path=paths.root)
+                for stage in (3, 4):
+                    summary = analyzer.sink_alignment_summary(stage=stage, include_session_decisions=True)
+                    compact = self._compact_sink_alignment_summary(summary)
+                    if compact:
+                        digest["stages"][f"stage{stage}"] = compact
+            finally:
+                db.close()
+        except Exception as exc:
+            digest["status"] = "warn"
+            digest["error"] = str(exc)[:200]
+            return digest
+
+        stage_statuses = [entry.get("status", "") for entry in digest["stages"].values() if isinstance(entry, dict)]
+        digest["available"] = bool(digest["stages"])
+        if not stage_statuses:
+            digest["status"] = "unavailable"
+        elif any(status not in ("", "ok") for status in stage_statuses):
+            digest["status"] = "warn"
+        else:
+            digest["status"] = "ok"
+        return digest
+
+    @classmethod
+    def _build_summary_contract(cls) -> dict:
+        return {
+            "summary_scope": "runtime_heartbeat_plus_compact_proof_digest",
+            "attempt_truth_authoritative": False,
+            "authoritative_attempt_sinks": list(cls._AUTHORITATIVE_ATTEMPT_SINKS),
+            "proof_digest_truth_scope": "committed_persistence_only",
+            "authoritative_attempt_truth_note": (
+                "Use DB/JSONL/artifact sink join for authoritative attempt truth."
+            ),
+        }
+
     def write_audit_summary(self, tag: str = "snapshot") -> None:
-        """[V66.1] B-3: 요약 기록 전 버퍼 flush"""
+        """Write a runtime heartbeat plus compact proof digest summary."""
         self.flush_audit_buffer()
         paths = self._project_paths_fn()
         if paths is None:
@@ -79,26 +205,29 @@ class AuditService:
             summary = {
                 "tag": tag,
                 "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+                "summary_role": "runtime_heartbeat_with_proof_digest",
                 "total_events": len(self._runtime_audit),
                 "counts": {},
                 "latest_event_type": "",
                 "recent_events": [],
             }
+            summary["contract"] = self._build_summary_contract()
             recent_events = self._runtime_audit[-10:]
-            for evt in self._runtime_audit[-200:]:
-                summary["counts"][evt["type"]] = summary["counts"].get(evt["type"], 0) + 1
+            for event in self._runtime_audit[-200:]:
+                summary["counts"][event["type"]] = summary["counts"].get(event["type"], 0) + 1
             if recent_events:
                 summary["latest_event_type"] = str(recent_events[-1].get("type", "") or "")
                 summary["recent_events"] = [
                     {
-                        "type": str(evt.get("type", "") or ""),
-                        "message": str(evt.get("message", "") or "")[:160],
+                        "type": str(event.get("type", "") or ""),
+                        "message": str(event.get("message", "") or "")[:160],
                     }
-                    for evt in recent_events
+                    for event in recent_events
                 ]
+            summary["proof_digest"] = self._build_proof_digest(paths)
             log_dir = paths.root / "logs"
             log_dir.mkdir(parents=True, exist_ok=True)
             summary_path = log_dir / "runtime_audit_summary.json"
             summary_path.write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
-        except Exception as e:
-            self._ui_log(f"⚠️ [Audit] 요약 기록 실패: {e}")
+        except Exception as exc:
+            self._ui_log(f"[Audit] summary write failed: {exc}")

@@ -1,0 +1,8 @@
+{
+  "version": "temp-queue-state-v1",
+  "generated_at": "YYYY-MM-DDTHH:MM:SSZ",
+  "queue_mode": "empty",
+  "active_item_count": 0,
+  "roadmap": null,
+  "items": []
+}

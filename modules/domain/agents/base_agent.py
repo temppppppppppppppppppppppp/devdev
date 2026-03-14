@@ -12,8 +12,9 @@ from google import genai
 from google.genai import types
 
 from modules.core.constants import ContextLimits  # [TF-25-04] validation.yaml SSOT
-from modules.core.llm_provider import LLMRequest
+from modules.core.llm_provider import LLMRequest, LLMResponse
 from modules.core.llm_router import get_shared_llm_router
+from modules.core.models_config import load_models_yaml, resolve_models_yaml_path
 from modules.validation.threshold_helper import _threshold
 
 # [V44] 에스케이프 유틸리티 임포트
@@ -79,19 +80,16 @@ def _resolve_backup_model(primary_model: str, fallback_chain: dict[str, str]) ->
 
 def _resolve_models_config_path() -> Path:
     """Return config/models.yaml path from project root."""
-    return Path(__file__).resolve().parents[3] / "config" / "models.yaml"
+    return resolve_models_yaml_path()
 
 
 def _load_model_config() -> dict:
     """Load config/models.yaml. Return empty dict on failure."""
-    config_path = _resolve_models_config_path()
     try:
-        if config_path.exists():
-            with open(config_path, encoding="utf-8") as f:
-                data = yaml.safe_load(f) or {}
-                if isinstance(data, dict):
-                    return data
-    except (OSError, yaml.YAMLError):
+        data = load_models_yaml(path=_resolve_models_config_path())
+        if isinstance(data, dict):
+            return data
+    except OSError:
         logging.warning("models.yaml 로드 실패 — 하드코딩 모델 목록 사용")
     return {}
 
@@ -331,18 +329,18 @@ class BaseAgent:
         """[V49.3] 에이전트 이름 반환 (비용 추적용)"""
         return self._agent_name
 
-    def _generate_content(self, *, model: str, contents, config):
-        """Phase 1 provider shim.
-
-        Downstream parsing in BaseAgent still expects the native Gemini response
-        object, so the provider keeps `raw` intact and this helper returns it.
-        """
-
+    def _generate_llm_response(self, *, model: str, contents, config) -> LLMResponse:
+        """Return provider-neutral `LLMResponse` for helper-layer consumers."""
         request = LLMRequest(model=model, contents=contents, config=config)
         provider = self._llm_router.get_provider_for_model(model)
         response = provider.generate(client=self.client, request=request)
         self._last_llm_usage = response.usage  # 실측 토큰 보존
-        return response.raw
+        return response
+
+    def _generate_content(self, *, model: str, contents, config):
+        """Legacy raw-response compatibility seam for BaseAgent internals."""
+
+        return self._generate_llm_response(model=model, contents=contents, config=config).raw
 
     @staticmethod
     def _coerce_usage_int(value) -> int:

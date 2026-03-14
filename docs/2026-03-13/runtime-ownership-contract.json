@@ -1,0 +1,234 @@
+{
+  "contract_id": "runtime-ownership-contract-v1",
+  "status": "active",
+  "composition_root": {
+    "primary_entry_module": "main_a.py",
+    "primary_app_class": "SovereignApp",
+    "classification": "current_composition_root",
+    "non_goals": [
+      "thin facade",
+      "stale shell",
+      "library-style reusable framework entry"
+    ]
+  },
+  "stage_entry_wrappers": [
+    {
+      "stage": "stage2",
+      "wrapper_method": "SovereignApp._stage_2_arcs",
+      "orchestrator_attr": "_stage2_orch",
+      "context_factory": "Stage2Context.from_app(self)",
+      "delegate": "Stage2Orchestrator.stage_2_arcs_async_logic",
+      "write_back_to_app": [
+        "state_tracker",
+        "_state_tracker_loaded_arcs"
+      ]
+    },
+    {
+      "stage": "stage3",
+      "wrapper_method": "SovereignApp._stage_3_batch_blueprinting",
+      "orchestrator_attr": "_stage3_orch",
+      "context_factory": "Stage3Context.from_app(self)",
+      "delegate": "Stage3Orchestrator.stage_3_batch_blueprinting",
+      "write_back_to_app": []
+    },
+    {
+      "stage": "stage4",
+      "wrapper_method": "SovereignApp._stage_4_v2_chief_writer",
+      "orchestrator_attr": "_stage4_orch",
+      "pre_delegate_lazy_init": [
+        "state_tracker",
+        "world_state",
+        "fact_ledger"
+      ],
+      "context_factory": "Stage4Context.from_app(self)",
+      "delegate": "Stage4Orchestrator.stage_4_v2_chief_writer",
+      "write_back_to_app": []
+    }
+  ],
+  "stage_context_factories": {
+    "stage2": {
+      "module": "modules/core/stage2_context.py",
+      "factory_method": "Stage2Context.from_app",
+      "safe_reader": "_safe_getattr",
+      "required_live_base": [
+        "ui",
+        "current_project",
+        "agents",
+        "sys"
+      ],
+      "optional_state_and_services": [
+        "state_tracker",
+        "world_state",
+        "selected_genre",
+        "preset_registry",
+        "perf_timer",
+        "semantic_plot_guard",
+        "failure_learner",
+        "memory",
+        "context_advisor",
+        "stage2_optimizer",
+        "arc_draft_validator",
+        "arc_corrector",
+        "constraint_compiler",
+        "stage_rejection_history",
+        "pass_rate_monitor",
+        "quality_dashboard",
+        "quality_amplifier",
+        "agent_intelligence",
+        "constitutional_checker",
+        "self_reflector",
+        "use_arc_corrector",
+        "adversarial_self_play"
+      ],
+      "direct_callbacks": [
+        "audit_event",
+        "cumulative_state_cache",
+        "cumulative_state_cache_key",
+        "write_audit_summary",
+        "validate_arc_data_fields",
+        "validate_arc_mapping",
+        "validate_arc_integrity",
+        "state_tracker_loaded_arcs",
+        "safe_commit_async",
+        "get_max_episode_from_manuscripts",
+        "get_int_input",
+        "fix_entity_registry_protagonist",
+        "calculate_arc_from_episode",
+        "sync_cache_key_to_app",
+        "session_logger"
+      ],
+      "retry_feedback_callbacks": [
+        "generate_structured_arc_feedback",
+        "generate_reverse_feedback_stage3_to_2",
+        "generate_reverse_feedback_stage4_to_2",
+        "build_strong_kind_feedback",
+        "build_minimal_arc_context",
+        "build_focused_context",
+        "analyze_rejection_pattern_v60",
+        "get_adaptive_feedback_intensity",
+        "generate_arc_context_v60"
+      ]
+    },
+    "stage3": {
+      "module": "modules/core/stage3_context.py",
+      "factory_method": "Stage3Context.from_app",
+      "safe_reader": "getattr",
+      "required_live_base": [
+        "ui",
+        "current_project",
+        "agents",
+        "sys"
+      ],
+      "optional_state_and_services": [
+        "state_tracker",
+        "memory",
+        "context_advisor",
+        "world_state",
+        "fact_ledger",
+        "adversarial_self_play",
+        "preset_registry",
+        "selected_genre",
+        "pass_rate_monitor"
+      ],
+      "callbacks_and_observers": [
+        "get_protagonist_name",
+        "audit_event",
+        "write_audit_summary",
+        "get_arc_context_for_episode",
+        "get_max_episode_from_manuscripts",
+        "get_int_input",
+        "safe_commit",
+        "validate_arc_data_fields",
+        "validate_blueprint_integrity",
+        "fix_entity_registry_protagonist",
+        "session_logger"
+      ]
+    },
+    "stage4": {
+      "module": "modules/core/stage4_context.py",
+      "factory_method": "Stage4Context.from_app",
+      "safe_reader": "_safe_getattr",
+      "required_live_base": [
+        "ui",
+        "current_project",
+        "agents",
+        "sys"
+      ],
+      "optional_state_and_services": [
+        "state_tracker",
+        "memory",
+        "context_advisor",
+        "world_state",
+        "fact_ledger",
+        "character_voice",
+        "perf_timer",
+        "foreshadow_tracker",
+        "failure_learner",
+        "diversity_engine",
+        "semantic_plot_guard",
+        "selected_genre",
+        "quality_dashboard",
+        "pacing_analyzer",
+        "pass_rate_monitor",
+        "emotion_tracker",
+        "session_logger"
+      ],
+      "conditional_modules": [
+        "pre_director_checklist",
+        "confidence_calibrator",
+        "prompt_weighter",
+        "cross_verifier",
+        "chain_of_verification",
+        "adversarial_self_play",
+        "tree_of_thoughts",
+        "multi_agent_deliberation"
+      ],
+      "callbacks": [
+        "get_int_input",
+        "build_item_acquisition_timeline",
+        "load_narrative_summaries",
+        "get_protagonist_name",
+        "extract_npc_profiles",
+        "generate_narrative_summary",
+        "generate_writer_guidance_v60_8",
+        "enrich_director_result",
+        "audit_event",
+        "write_audit_summary",
+        "flush_audit_buffer",
+        "safe_commit"
+      ]
+    }
+  },
+  "repair_seam_ownership": [
+    {
+      "surface": "main_a.py:SovereignApp._stage_2_arcs",
+      "classification": "stage_ownership",
+      "rationale": "live Stage 2 entry wrapper and post-delegate write-back owner"
+    },
+    {
+      "surface": "main_a.py:SovereignApp._stage_3_batch_blueprinting",
+      "classification": "stage_ownership",
+      "rationale": "live Stage 3 entry wrapper and context injection owner"
+    },
+    {
+      "surface": "main_a.py:SovereignApp._stage_4_v2_chief_writer",
+      "classification": "stage_ownership",
+      "rationale": "live Stage 4 entry wrapper and lazy-init owner"
+    },
+    {
+      "surface": "modules/core/stage2_context.py:Stage2Context.from_app",
+      "classification": "downstream_compatibility",
+      "rationale": "Stage 2 consumer-facing DI snapshot boundary"
+    },
+    {
+      "surface": "modules/core/stage3_context.py:Stage3Context.from_app",
+      "classification": "downstream_compatibility",
+      "rationale": "Stage 3 consumer-facing DI snapshot boundary"
+    },
+    {
+      "surface": "modules/core/stage4_context.py:Stage4Context.from_app",
+      "classification": "downstream_compatibility",
+      "rationale": "Stage 4 consumer-facing DI snapshot boundary"
+    }
+  ]
+}

@@ -12,6 +12,7 @@ Features:
 """
 
 import json
+import os
 import statistics
 import threading
 import time
@@ -147,7 +148,8 @@ class MetricsCollector:
         self.metrics_dir.mkdir(parents=True, exist_ok=True)
 
         # 세션 정보
-        self.session_id = datetime.now().strftime("%Y%m%d_%H%M%S")
+        env_run_id = str(os.environ.get("GEULDOBI_RUN_ID", "") or "").strip()
+        self.session_id = env_run_id or datetime.now().strftime("%Y%m%d_%H%M%S")
         self.session_start = datetime.now()
 
         # 메트릭 저장소

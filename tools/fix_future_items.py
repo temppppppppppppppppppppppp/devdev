@@ -1,3 +1,8 @@
+"""
+[manual-only] Host-bound DB/export mutation helper.
+This script targets a manually selected local project DB/export and is not part of the live app/runtime path.
+"""
+
 import argparse
 import json
 import sqlite3

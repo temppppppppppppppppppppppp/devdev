@@ -245,7 +245,7 @@ class DirectorQualityAuditor:
             default_config = {
                 "scoring_model": self._d.primary_model,
                 "advisory_model": AIModels.FLASH_ANALYSIS_MODEL,  # [TF-16-03] models.yaml SSOT
-                "scoring_threshold": 70,  # [TF-I06] 65→70 YAML/코드 일치
+                "scoring_threshold": _threshold("scoring.default_pass_threshold", 60),
                 "use_self_consistency": True,
                 "consistency_votes": 3,
                 # [SSOT] validation.yaml orchestrator 섹션과 동기화
@@ -268,7 +268,6 @@ class DirectorQualityAuditor:
                     _sj_val = _sj.get("validation", {})
                     # [TF-16-03] scoring_model/advisory_model 제거 — models.yaml SSOT 우회 방지
                     _SETTINGS_KEYS = {
-                        "scoring_threshold",
                         "use_self_consistency",
                         "consistency_votes",
                         "use_retrospective",

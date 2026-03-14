@@ -8,6 +8,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, mock_open, patch
 
 from modules.core.context_advisor import RetrievalPlan, RetrievalSlot, RetrievalSources
+from modules.core.session_logger import SessionLogger
 from modules.core.stage4_context import Stage4Context
 from modules.core.stage4_interview_round import Stage4InterviewRound
 from modules.core.stage4_orchestrator import Stage4Orchestrator, _RoundContext
@@ -407,6 +408,66 @@ class TestInterviewRoundRun:
 
         assert result.verdict == "PASS"
         assert result.final_manuscript == "통과 원고"
+
+    def test_pass_writes_session_decision_row_with_join_metadata(self, tmp_path):
+        ctx = _make_ctx()
+        ctx.current_project.paths = MagicMock()
+        ctx.current_project.paths.root = tmp_path
+        ctx.session_logger = SessionLogger(tmp_path / "logs" / "session", enabled=True)
+        ir = Stage4InterviewRound(ctx)
+        ir._build_retry_advisory_digest = MagicMock(return_value="[advisory] keep continuity")
+        round_ctx = _make_round_ctx()
+        round_ctx.next_ep = 7
+        round_ctx.arc_data = {"arc_no": 2}
+        round_ctx.chief_writer.generate_ensemble.return_value = [_candidate()]
+        round_ctx.manuscript_validator.validate_all_candidates.return_value = [_validation_result()]
+        ctx.agents["director"].select_and_judge_ensemble.return_value = {
+            "selected": "A",
+            "verdict": "PASS",
+            "score": 95,
+            "selection_reason": "ok",
+            "verdict_reason": "pass rationale",
+            "selected_candidate": {
+                "manuscript": "pass manuscript",
+                "title": "pass",
+                "strategy_name": "balanced",
+            },
+            "state_updates": {},
+        }
+
+        result = ir.run(
+            round_num=0,
+            stage4_spinner=MagicMock(),
+            director_feedback="",
+            previous_attempt={},
+            round_ctx=round_ctx,
+        )
+
+        decisions_path = tmp_path / "logs" / "session" / "decisions.jsonl"
+        rows = [
+            json.loads(line)
+            for line in decisions_path.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+        row = rows[-1]
+        meta = row["meta"]
+
+        assert result.verdict == "PASS"
+        assert row["stage"] == "stage4"
+        assert row["result"] == "PASS"
+        assert meta["attempt_key"].startswith("s4:ep7:arc2:a")
+        assert meta["candidate_key"]
+        assert meta["content_hash"]
+        assert meta["artifact_path"].endswith(".txt")
+        assert meta["selection_candidate_key"] == "A|balanced"
+        assert meta["selection_artifact_path"].endswith("selected_candidate__A_balanced.txt")
+        assert meta["reason"] == "pass rationale"
+        assert meta["selection_reason"] == "ok"
+        assert meta["verdict_reason"] == "pass rationale"
+        assert meta["runtime_advisory"] == "[advisory] keep continuity"
+        assert meta["retry_directives"] == ""
+        assert (tmp_path / meta["artifact_path"]).exists()
+        assert (tmp_path / meta["selection_artifact_path"]).exists()
 
     def test_reject_returns_reject(self):
         ctx = _make_ctx()

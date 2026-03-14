@@ -149,6 +149,86 @@ class FailureAnalyzer:
             rows.append(row)
         return rows
 
+    def _load_session_decision_entries(self, stage: int | None = None) -> list[dict]:
+        """decisions.jsonl loader for session-level attempt join checks."""
+        if self.project_path is None:
+            return []
+
+        log_path = self.project_path / "logs" / "session" / "decisions.jsonl"
+        if not log_path.exists():
+            return []
+
+        stage_label = f"stage{max(1, int(stage))}" if stage is not None else ""
+        entries: list[dict] = []
+        try:
+            with log_path.open("r", encoding="utf-8") as handle:
+                for raw_line in handle:
+                    line = raw_line.strip()
+                    if not line:
+                        continue
+                    try:
+                        row = json.loads(line)
+                    except (TypeError, ValueError, json.JSONDecodeError):
+                        continue
+                    if stage_label and str(row.get("stage", "") or "").strip().lower() != stage_label:
+                        continue
+                    meta = row.get("meta", {})
+                    if not isinstance(meta, dict):
+                        meta = {}
+                    entries.append(
+                        {
+                            "attempt_key": str(meta.get("attempt_key", row.get("attempt_key", "")) or "").strip(),
+                            "final_verdict": str(row.get("result", "") or "").strip(),
+                            "final_score": self._coerce_int(row.get("score")),
+                            "candidate_key": str(meta.get("candidate_key", row.get("candidate_key", "")) or "").strip(),
+                            "content_hash": str(meta.get("content_hash", row.get("content_hash", "")) or "").strip(),
+                            "artifact_path": str(meta.get("artifact_path", row.get("artifact_path", "")) or "").strip(),
+                            "selection_candidate_key": str(
+                                meta.get("selection_candidate_key", row.get("selection_candidate_key", "")) or ""
+                            ).strip(),
+                            "selection_content_hash": str(
+                                meta.get("selection_content_hash", row.get("selection_content_hash", "")) or ""
+                            ).strip(),
+                            "selection_artifact_path": str(
+                                meta.get("selection_artifact_path", row.get("selection_artifact_path", "")) or ""
+                            ).strip(),
+                            "reason": str(meta.get("reason", row.get("reason", "")) or "").strip(),
+                            "selection_reason": str(
+                                meta.get(
+                                    "selection_reason",
+                                    row.get("selection_reason", meta.get("reason", row.get("reason", ""))),
+                                )
+                                or ""
+                            ).strip(),
+                            "verdict_reason": str(
+                                meta.get(
+                                    "verdict_reason",
+                                    row.get(
+                                        "verdict_reason",
+                                        meta.get("reason", row.get("reason", meta.get("selection_reason", ""))),
+                                    ),
+                                )
+                                or ""
+                            ).strip(),
+                            "fix_scope": str(meta.get("fix_scope", row.get("fix_scope", "")) or "").strip(),
+                            "runtime_advisory": str(
+                                meta.get("runtime_advisory", row.get("runtime_advisory", "")) or ""
+                            ).strip(),
+                            "retry_directives": str(
+                                meta.get("retry_directives", row.get("retry_directives", "")) or ""
+                            ).strip(),
+                        }
+                    )
+        except Exception as _e:
+            self._report_soft_failure(
+                "load_session_decision_entries",
+                _e,
+                message="session decisions load failed",
+            )
+            logging.debug("[FailureAnalyzer] decisions.jsonl load failed: %s", _e)
+            return []
+        return entries
+
     @staticmethod
     def _coerce_int(value) -> int | None:
         try:
@@ -160,6 +240,17 @@ class FailureAnalyzer:
     def _attempt_key_has_session_scope(attempt_key: str) -> bool:
         parts = [part for part in str(attempt_key or "").split(":") if part]
         return len(parts) > 4
+
+    @staticmethod
+    def _attempt_key_matches_session_id(attempt_key: str, session_id: str) -> bool:
+        normalized_key = str(attempt_key or "").strip()
+        normalized_session = str(session_id or "").strip()
+        if not normalized_key or not normalized_session:
+            return False
+        parts = [part for part in normalized_key.split(":") if part]
+        if not parts:
+            return False
+        return parts[-1] == normalized_session
 
     @staticmethod
     def _compact_examples(values: list[str], limit: int = 5) -> dict:
@@ -206,29 +297,50 @@ class FailureAnalyzer:
             return "REJECT"
         return ""
 
-    def sink_alignment_summary(self, stage: int = 4, lookback: int = 100) -> dict:
+    def sink_alignment_summary(
+        self,
+        stage: int = 4,
+        lookback: int = 100,
+        *,
+        include_session_decisions: bool = False,
+        session_id: str | None = None,
+    ) -> dict:
         """Cross-check attempt-key alignment across DB and JSON sinks."""
         stage = max(1, int(stage or 4))
         lookback = max(1, int(lookback or 100))
+        session_id = str(session_id or "").strip()
 
         try:
-            stage_attempt_rows = self.db.conn.execute(
-                """
-                SELECT id, attempt_key, verdict, score, session_id,
-                       candidate_key, content_hash, artifact_path
-                FROM stage_attempts
-                WHERE stage = ? AND COALESCE(attempt_key, '') != ''
-                ORDER BY id DESC
-                LIMIT ?
-                """,
-                (stage, lookback),
-            ).fetchall()
+            if session_id:
+                stage_attempt_rows = self.db.conn.execute(
+                    """
+                    SELECT id, attempt_key, verdict, score, session_id,
+                           candidate_key, content_hash, artifact_path
+                    FROM stage_attempts
+                    WHERE stage = ? AND COALESCE(attempt_key, '') != '' AND session_id = ?
+                    ORDER BY id DESC
+                    LIMIT ?
+                    """,
+                    (stage, session_id, lookback),
+                ).fetchall()
+            else:
+                stage_attempt_rows = self.db.conn.execute(
+                    """
+                    SELECT id, attempt_key, verdict, score, session_id,
+                           candidate_key, content_hash, artifact_path
+                    FROM stage_attempts
+                    WHERE stage = ? AND COALESCE(attempt_key, '') != ''
+                    ORDER BY id DESC
+                    LIMIT ?
+                    """,
+                    (stage, lookback),
+                ).fetchall()
         except Exception as _e:
             self._report_soft_failure(
                 "sink_alignment_stage_attempts",
                 _e,
                 message="stage_attempts load for sink_alignment_summary failed",
-                extra={"stage": stage},
+                extra={"stage": stage, "session_id": session_id},
             )
             logging.debug("[FailureAnalyzer] sink_alignment stage_attempts failed: %s", _e)
             return {}
@@ -251,6 +363,8 @@ class FailureAnalyzer:
             attempt_key = str(row.get("attempt_key", "") or "").strip()
             if not attempt_key:
                 continue
+            if session_id and not self._attempt_key_matches_session_id(attempt_key, session_id):
+                continue
             pass_rate_monitor[attempt_key] = {
                 "final_verdict": self._final_verdict_from_monitor(row),
                 "patch_strategy": str(row.get("patch_strategy", "") or ""),
@@ -261,29 +375,32 @@ class FailureAnalyzer:
             }
 
         director_selections: dict[str, dict] = {}
-        if stage in (2, 4):
+        if stage in (2, 3, 4):
             try:
                 director_rows = self.db.conn.execute(
                     """
-                    SELECT id, attempt_key, verdict, score, candidate_key, content_hash, artifact_path
+                    SELECT id, attempt_key, verdict, score, candidate_key, content_hash, artifact_path,
+                           selection_reason, verdict_reason, fix_scope
                     FROM director_selections
-                    WHERE COALESCE(stage, 4) = ? AND COALESCE(attempt_key, '') != ''
+                    WHERE COALESCE(stage, CASE WHEN ? = 3 THEN 3 ELSE 4 END) = ? AND COALESCE(attempt_key, '') != ''
                     ORDER BY id DESC
                     LIMIT ?
                     """,
-                    (stage, lookback),
+                    (stage, stage, lookback),
                 ).fetchall()
             except Exception as _e:
                 self._report_soft_failure(
                     "sink_alignment_director_selections",
                     _e,
                     message="director_selections load for sink_alignment_summary failed",
-                    extra={"stage": stage},
+                    extra={"stage": stage, "session_id": session_id},
                 )
                 logging.debug("[FailureAnalyzer] sink_alignment director_selections failed: %s", _e)
                 director_rows = []
             for row in director_rows:
                 attempt_key = str(row["attempt_key"] or "").strip()
+                if session_id and not self._attempt_key_matches_session_id(attempt_key, session_id):
+                    continue
                 if attempt_key and attempt_key not in director_selections:
                     director_selections[attempt_key] = {
                         "initial_verdict": str(row["verdict"] or ""),
@@ -291,13 +408,31 @@ class FailureAnalyzer:
                         "candidate_key": str(row["candidate_key"] or "").strip(),
                         "content_hash": str(row["content_hash"] or "").strip(),
                         "artifact_path": str(row["artifact_path"] or "").strip(),
+                        "selection_reason": str(row["selection_reason"] or "").strip(),
+                        "verdict_reason": str(row["verdict_reason"] or "").strip(),
+                        "fix_scope": str(row["fix_scope"] or "").strip(),
                     }
+
+        session_decisions: dict[str, dict] = {}
+        session_decision_rows_without_attempt_key = 0
+        if include_session_decisions:
+            for row in self._load_session_decision_entries(stage=stage)[-lookback:]:
+                attempt_key = str(row.get("attempt_key", "") or "").strip()
+                if not attempt_key:
+                    session_decision_rows_without_attempt_key += 1
+                    continue
+                if session_id and not self._attempt_key_matches_session_id(attempt_key, session_id):
+                    continue
+                if attempt_key not in session_decisions:
+                    session_decisions[attempt_key] = row
 
         episode_production: dict[str, dict] = {}
         if stage == 4:
             for row in self._load_episode_production_entries(min_score=0)[-lookback:]:
                 attempt_key = str(row.get("attempt_key", "") or "").strip()
                 if not attempt_key:
+                    continue
+                if session_id and not self._attempt_key_matches_session_id(attempt_key, session_id):
                     continue
                 patch_trace = row.get("patch_trace", {}) or {}
                 if not isinstance(patch_trace, dict):
@@ -310,23 +445,31 @@ class FailureAnalyzer:
                     "candidate_key": str(row.get("candidate_key", "") or "").strip(),
                     "content_hash": str(row.get("content_hash", "") or "").strip(),
                     "artifact_path": str(row.get("artifact_path", "") or "").strip(),
+                    "selection_reason": str(row.get("selection_reason", row.get("reason", "")) or "").strip(),
+                    "verdict_reason": str(
+                        row.get("verdict_reason", row.get("reason", row.get("selection_reason", ""))) or ""
+                    ).strip(),
                     "selection_candidate_key": str(
                         row.get("selection_candidate_key", row.get("candidate_key", "")) or ""
                     ).strip(),
                 }
 
         final_union = set(stage_attempts) | set(pass_rate_monitor)
+        if include_session_decisions:
+            final_union |= set(session_decisions)
         lifecycle_union = set()
         if stage == 4:
             lifecycle_union = set(director_selections) | set(episode_production)
         attempts_considered = final_union | lifecycle_union
-        if not attempts_considered:
+        if not attempts_considered and session_decision_rows_without_attempt_key <= 0:
             return {}
 
         final_missing = {
             "stage_attempts": self._compact_examples(list(final_union - set(stage_attempts))),
             "pass_rate_monitor": self._compact_examples(list(final_union - set(pass_rate_monitor))),
         }
+        if include_session_decisions:
+            final_missing["session_decisions"] = self._compact_examples(list(final_union - set(session_decisions)))
         final_missing = {key: value for key, value in final_missing.items() if value}
 
         lifecycle_missing: dict[str, dict] = {}
@@ -354,6 +497,10 @@ class FailureAnalyzer:
         content_hash_mismatches: list[dict] = []
         artifact_path_mismatches: list[dict] = []
         artifact_metadata_missing: list[dict] = []
+        selection_reason_mismatches: list[dict] = []
+        verdict_reason_mismatches: list[dict] = []
+        fix_scope_mismatches: list[dict] = []
+        rationale_metadata_missing: list[dict] = []
         artifact_missing_files: list[dict] = []
 
         for attempt_key in sorted(attempts_considered):
@@ -362,6 +509,8 @@ class FailureAnalyzer:
                 final_verdicts["stage_attempts"] = stage_attempts[attempt_key]["final_verdict"]
             if attempt_key in pass_rate_monitor:
                 final_verdicts["pass_rate_monitor"] = pass_rate_monitor[attempt_key]["final_verdict"]
+            if attempt_key in session_decisions:
+                final_verdicts["session_decisions"] = session_decisions[attempt_key]["final_verdict"]
             if attempt_key in episode_production:
                 final_verdicts["episode_production"] = episode_production[attempt_key]["final_verdict"]
             final_verdicts = {key: value for key, value in final_verdicts.items() if value}
@@ -371,6 +520,8 @@ class FailureAnalyzer:
             final_scores = {}
             if attempt_key in stage_attempts and stage_attempts[attempt_key]["final_score"] is not None:
                 final_scores["stage_attempts"] = stage_attempts[attempt_key]["final_score"]
+            if attempt_key in session_decisions and session_decisions[attempt_key]["final_score"] is not None:
+                final_scores["session_decisions"] = session_decisions[attempt_key]["final_score"]
             if attempt_key in episode_production and episode_production[attempt_key]["final_score"] is not None:
                 final_scores["episode_production"] = episode_production[attempt_key]["final_score"]
             if len(set(final_scores.values())) > 1:
@@ -412,6 +563,12 @@ class FailureAnalyzer:
                     "candidate_key": pass_rate_monitor[attempt_key]["candidate_key"],
                     "content_hash": pass_rate_monitor[attempt_key]["content_hash"],
                     "artifact_path": pass_rate_monitor[attempt_key]["artifact_path"],
+                }
+            if attempt_key in session_decisions:
+                final_artifact_fields["session_decisions"] = {
+                    "candidate_key": session_decisions[attempt_key]["candidate_key"],
+                    "content_hash": session_decisions[attempt_key]["content_hash"],
+                    "artifact_path": session_decisions[attempt_key]["artifact_path"],
                 }
             if attempt_key in episode_production:
                 final_artifact_fields["episode_production"] = {
@@ -466,6 +623,57 @@ class FailureAnalyzer:
                         }
                     )
 
+            if include_session_decisions:
+                rationale_values_by_field: dict[str, dict[str, str]] = {}
+                if attempt_key in director_selections:
+                    rationale_values_by_field.setdefault("selection_reason", {})[
+                        "director_selections"
+                    ] = director_selections[attempt_key]["selection_reason"]
+                    rationale_values_by_field.setdefault("verdict_reason", {})[
+                        "director_selections"
+                    ] = director_selections[attempt_key]["verdict_reason"]
+                    rationale_values_by_field.setdefault("fix_scope", {})[
+                        "director_selections"
+                    ] = director_selections[attempt_key]["fix_scope"]
+                if attempt_key in session_decisions:
+                    rationale_values_by_field.setdefault("selection_reason", {})[
+                        "session_decisions"
+                    ] = str(session_decisions[attempt_key].get("selection_reason", "") or "").strip()
+                    rationale_values_by_field.setdefault("verdict_reason", {})[
+                        "session_decisions"
+                    ] = str(session_decisions[attempt_key].get("verdict_reason", "") or "").strip()
+                    rationale_values_by_field.setdefault("fix_scope", {})[
+                        "session_decisions"
+                    ] = str(session_decisions[attempt_key].get("fix_scope", "") or "").strip()
+                if attempt_key in episode_production:
+                    rationale_values_by_field.setdefault("selection_reason", {})[
+                        "episode_production"
+                    ] = str(episode_production[attempt_key].get("selection_reason", "") or "").strip()
+                    rationale_values_by_field.setdefault("verdict_reason", {})[
+                        "episode_production"
+                    ] = str(episode_production[attempt_key].get("verdict_reason", "") or "").strip()
+
+                for field_name, collector in (
+                    ("selection_reason", selection_reason_mismatches),
+                    ("verdict_reason", verdict_reason_mismatches),
+                    ("fix_scope", fix_scope_mismatches),
+                ):
+                    values_by_sink = rationale_values_by_field.get(field_name, {})
+                    if len(values_by_sink) < 2:
+                        continue
+                    nonempty_values = self._nonempty_value_map(values_by_sink)
+                    if len(set(nonempty_values.values())) > 1:
+                        collector.append({"attempt_key": attempt_key, **nonempty_values})
+                    missing_sinks = self._missing_value_sinks(values_by_sink)
+                    if missing_sinks and nonempty_values:
+                        rationale_metadata_missing.append(
+                            {
+                                "attempt_key": attempt_key,
+                                "field": field_name,
+                                "sinks": missing_sinks,
+                            }
+                        )
+
         session_scoped_attempts = sum(
             1 for attempt_key in attempts_considered if self._attempt_key_has_session_scope(attempt_key)
         )
@@ -492,18 +700,25 @@ class FailureAnalyzer:
                 content_hash_mismatches,
                 artifact_path_mismatches,
                 artifact_metadata_missing,
+                selection_reason_mismatches,
+                verdict_reason_mismatches,
+                fix_scope_mismatches,
+                rationale_metadata_missing,
                 artifact_missing_files,
+                session_decision_rows_without_attempt_key > 0,
             )
         )
 
         return {
             "stage": stage,
+            "session_filter": session_id,
             "attempts_considered": len(attempts_considered),
             "coverage": {
                 "stage_attempts": len(stage_attempts),
                 "pass_rate_monitor": len(pass_rate_monitor),
                 "director_selections": len(director_selections),
                 "episode_production": len(episode_production),
+                "session_decisions": len(session_decisions),
             },
             "complete_final_attempts": complete_final_attempts,
             "director_lifecycle_attempts": len(lifecycle_union),
@@ -520,9 +735,14 @@ class FailureAnalyzer:
             "content_hash_mismatches": content_hash_mismatches[:10],
             "artifact_path_mismatches": artifact_path_mismatches[:10],
             "artifact_metadata_missing": artifact_metadata_missing[:10],
+            "selection_reason_mismatches": selection_reason_mismatches[:10],
+            "verdict_reason_mismatches": verdict_reason_mismatches[:10],
+            "fix_scope_mismatches": fix_scope_mismatches[:10],
+            "rationale_metadata_missing": rationale_metadata_missing[:10],
             "artifact_missing_files": artifact_missing_files[:10],
             "session_scoped_attempts": session_scoped_attempts,
             "legacy_key_attempts": len(attempts_considered) - session_scoped_attempts,
+            "session_decision_rows_without_attempt_key": session_decision_rows_without_attempt_key,
             "status": "warn" if has_issues else "ok",
         }
 

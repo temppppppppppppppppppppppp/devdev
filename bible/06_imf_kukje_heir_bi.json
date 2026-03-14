@@ -1,7 +1,11 @@
 {
   "_schema_version": "tf-continuity.v1",
-  "_last_updated": "2026-03-10",
+  "_last_updated": "2026-03-14",
   "source_master": "docs/2026-03-09/imf_kukje_heir_tf_master_001_070.json",
+  "project_title": "국제를 다시 세우는 후계자",
+  "title_aliases": [
+    "국제를 다시 일으키는 유일한 후계자"
+  ],
   "cleanup_scope": [
     "canonical_name_unification",
     "capital_chain_verification",
@@ -11,18 +15,61 @@
   ],
   "canonical_name_map": [
     {
-      "canonical": "???",
+      "canonical": "서태윤",
       "replaced_aliases": [
-        "???"
+        "서태윤 자신"
       ],
-      "role": "??? ??/?? ?? ?"
+      "role": "국제그룹 창업주 외손자, 국제상사 말단 팀장"
     },
     {
-      "canonical": "???",
-      "replaced_aliases": [
-        "???"
-      ],
-      "role": "???? ? ?? ??"
+      "canonical": "박원식",
+      "replaced_aliases": [],
+      "role": "주채권은행 부행장"
+    },
+    {
+      "canonical": "민서영",
+      "replaced_aliases": [],
+      "role": "국제상사 과장"
+    },
+    {
+      "canonical": "오민석",
+      "replaced_aliases": [],
+      "role": "영도조선소 노조위원장"
+    },
+    {
+      "canonical": "김해진",
+      "replaced_aliases": [],
+      "role": "구조조정 전문 변호사"
+    },
+    {
+      "canonical": "한규철",
+      "replaced_aliases": [],
+      "role": "작은아버지, 국제레저 대표"
+    },
+    {
+      "canonical": "레온 첸",
+      "replaced_aliases": [],
+      "role": "홍콩계 부실채권 펀드 파트너"
+    },
+    {
+      "canonical": "배정호",
+      "replaced_aliases": [],
+      "role": "부산항 운영 과장"
+    },
+    {
+      "canonical": "조태수",
+      "replaced_aliases": [],
+      "role": "재정경제부 실무관"
+    },
+    {
+      "canonical": "서연옥 여사",
+      "replaced_aliases": [],
+      "role": "가문 원로"
+    },
+    {
+      "canonical": "라시드 알 하산",
+      "replaced_aliases": [],
+      "role": "중동 발주처 실무총괄"
     }
   ],
   "verified_chains": {
@@ -32,43 +79,59 @@
       {
         "from_block": "Block 10",
         "to_block": "Block 11",
-        "capital_after": "150?"
+        "capital_after": "150억",
+        "next_section": "채권단 역공"
       },
       {
         "from_block": "Block 20",
         "to_block": "Block 21",
-        "capital_after": "330?"
+        "capital_after": "330억",
+        "next_section": "산업 되사기"
       },
       {
         "from_block": "Block 30",
         "to_block": "Block 31",
-        "capital_after": "520?"
+        "capital_after": "520억",
+        "next_section": "해운 사이클 선점"
       },
       {
         "from_block": "Block 40",
         "to_block": "Block 41",
-        "capital_after": "810?"
+        "capital_after": "810억",
+        "next_section": "글로벌 연결"
       },
       {
         "from_block": "Block 50",
         "to_block": "Block 51",
-        "capital_after": "1250?"
+        "capital_after": "1250억",
+        "next_section": "가문 청산"
       },
       {
         "from_block": "Block 60",
         "to_block": "Block 61",
-        "capital_after": "1680?"
+        "capital_after": "1680억",
+        "next_section": "국제 재건"
       }
     ]
   },
   "npc_end_state": {
-    "???": "??? ??? ??, ???? ?? ?? ?? ???? ??? ?? ???.",
-    "?? ?": "?? ??? ?? ?? ??? ?? ???? ?? ????."
+    "서태윤": "실패의 시간을 성장의 연료로 바꾼 창업자형 오너가 된다.",
+    "박원식": "국제홀딩스 출범을 채권단 내부에서도 정당화하는 핵심 우군이 된다.",
+    "민서영": "브랜드와 실적을 동시에 묶는 대외 커뮤니케이션 중심이 된다.",
+    "오민석": "2차 생산 확장까지 현장에서 책임지는 산업 장수로 자리잡는다.",
+    "김해진": "서태윤의 가문 청산 전쟁을 실무에서 함께 끌고 가는 핵심 법률 장수로 올라선다.",
+    "한규철": "남은 지분마저 잃으며 공식적으로 국제 바깥 사람으로 밀려난다.",
+    "레온 첸": "국제 글로벌 딜 집행의 동시 축을 맡는 공동 플레이어가 된다.",
+    "배정호": "신항 축까지 통합 설계하는 부산권 물류 총괄로 올라선다.",
+    "조태수": "검찰과 금감원 대응에서도 서태윤 측 제도권 방어선을 완성한다.",
+    "서연옥 여사": "서태윤에게 의결권 위임을 주며 공개적으로 후계 정당성을 인정한다.",
+    "라시드 알 하산": "서태윤의 수정 완수안을 신뢰하며 재개 협상 창구를 열어준다."
   },
   "future_extension_guardrails": [
-    "Block 71 ???? ???, ??? ??? ????.",
-    "? ??? capital_before? ?? block capital_after? ??? ????.",
-    "? ??? ? block relationship_delta.before? ? bible? npc_end_state ?? ?? after? ???? ???.",
-    "????? ?? ??? ??? ?? ???? ??? ?? ???? ?? ????? ????."
+    "Block 71 이후에도 Block 70의 capital_after 2500억을 출발점으로 유지하고, 더 낮은 초기 자본으로 리셋하지 않는다.",
+    "국제홀딩스, 글로벌 소싱 허브, 첫 흑자축, 국제 전용 외자 펀드는 이미 확보된 자산으로 유지한다.",
+    "민서영, 박원식, 레온 첸, 오민석, 김해진, 배정호, 조태수의 최종 관계 상태는 후속 블록에서 되돌리지 않고 확장 방향으로만 사용한다.",
+    "한규철은 Block 68 이후 국제 바깥 인물로 남으며, 재등장하더라도 내부 의결권 회복 없이 외부 적대 축으로만 사용한다.",
+    "후속 확장은 IMF 패자의 낙인을 성장 서사로 뒤집은 뒤 국제가 산업판을 넓혀가는 방향이어야 한다."
   ]
 }

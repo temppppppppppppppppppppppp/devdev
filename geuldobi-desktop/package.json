@@ -8,7 +8,7 @@
     "start:spike": "cmd /C \"set ELECTRON_RUN_AS_NODE=&& set SPIKE_AUTOCLOSE_MS=5000&& electron .\"",
     "build": "electron-builder --win",
     "build:dir": "electron-builder --win --dir",
-    "test": "cmd /C \"cd .. && python -m pytest -q tests/test_run_validator.py tests/test_api_contract.py tests/test_frontend_frontier_lag_wiring.py tests/test_frontend_stage0_connectivity.py tests/test_ui_renderer_sanitization.py tests/test_desktop_contract_refresh.py tests/test_desktop_work_guard_template_contract.py tests/test_process_runner_stage0_inputs.py\""
+    "test": "cmd /C \"cd .. && python -m pytest -q tests/test_run_validator.py tests/test_api_contract.py tests/test_frontend_frontier_lag_wiring.py tests/test_frontend_stage0_connectivity.py tests/test_ui_renderer_sanitization.py tests/test_desktop_contract_refresh.py tests/test_desktop_work_guard_template_contract.py tests/test_process_runner_stage0_inputs.py tests/test_bridge_server_http_contract.py tests/test_bridge_server_desktop_risk_gate.py tests/test_bridge_quality_summary.py tests/test_desktop_direct_surface_contract.py tests/test_desktop_transport_contract.py tests/test_desktop_packaging_contract.py tests/test_desktop_shadow_hygiene.py tests/test_runtime_paths.py && node tests/test_desktop_preload_bridge_behavior.js && node tests/test_desktop_material_offline_behavior.js && node tests/test_splash_runtime_behavior.js\""
   },
   "keywords": [],
   "author": "",

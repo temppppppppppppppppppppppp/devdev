@@ -1,0 +1,9 @@
+python_tests: 301
+javascript_tests: 4
+other: 233
+stage_pipeline: 34
+persistence_observability: 18
+desktop_ui: 13
+backend_control_plane: 7
+canary_scripts: run_stage34_canary.py, run_stage4_canary.py
+smoke_scripts: run_stage2_smoke.py, run_stage3_smoke.py, run_stage4_smoke.py

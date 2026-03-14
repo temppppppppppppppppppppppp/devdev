@@ -1,4 +1,5 @@
 import logging
+from collections.abc import Callable
 
 from rich import box
 from rich.console import Console
@@ -12,6 +13,8 @@ class StudioVisualizer:
     def __init__(self) -> None:
         self.console = Console()
         self.layout = Layout()
+        self._operator_event_sink: Callable[[dict], None] | None = None
+        self._operator_event_seq = 0
 
     def make_cockpit_layout(self, ep_num: int, martial_data: str, causal_data: str):
         """화면을 좌/우로 분할하여 정보를 배치합니다."""
@@ -72,9 +75,43 @@ class StudioVisualizer:
             self.console.print(f"   [bold yellow]{key}.[/] {value}")
         return self.console.input("\n   👉 [bold]Choice:[/bold] ")
 
-    def log(self, text: str) -> None:
-        self.console.print(f"   [dim]{text}[/]")
-        logging.getLogger("UI").info(text)  # [TF-26] 파일 듀얼 출력
+    def set_operator_event_sink(self, sink: Callable[[dict], None] | None) -> None:
+        self._operator_event_sink = sink
+
+    def log(self, text: str, **context) -> None:
+        message = str(text)
+        self.console.print(f"   [dim]{message}[/]")
+        logging.getLogger("UI").info(message)  # [TF-26] 파일 듀얼 출력
+        if self._operator_event_sink is None:
+            return
+        self._operator_event_seq += 1
+        meta = context.pop("meta", {})
+        if not isinstance(meta, dict):
+            meta = {"value": meta}
+        if context:
+            meta = {**meta, **context}
+        event = {
+            "seq": self._operator_event_seq,
+            "level": str(meta.pop("level", "info")),
+            "component": str(meta.pop("component", "UI")),
+            "stage": meta.pop("stage", None),
+            "ep_num": meta.pop("ep_num", None),
+            "arc_num": meta.pop("arc_num", None),
+            "round_num": meta.pop("round_num", None),
+            "attempt_key": meta.pop("attempt_key", None),
+            "event_kind": str(meta.pop("event_kind", "log")),
+            "render_format": str(meta.pop("render_format", "text")),
+            "message": message,
+            "visible": bool(meta.pop("visible", True)),
+            "selection_value": meta.pop("selection_value", None),
+            "prompt_id": meta.pop("prompt_id", None),
+            "artifact_path": meta.pop("artifact_path", None),
+            "meta": meta or None,
+        }
+        try:
+            self._operator_event_sink(event)
+        except Exception as exc:  # pragma: no cover - non-blocking console path
+            logging.getLogger("UI").debug("operator event sink failed: %s", exc)
 
     def spinner(self, text: str):
         """로딩 스피너 컨텍스트 매니저"""

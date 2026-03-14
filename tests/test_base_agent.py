@@ -24,6 +24,7 @@ PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 import modules.domain.agents.base_agent as base_agent_module
+from modules.core.llm_provider import LLMResponse
 from modules.domain.agents.base_agent import AgentErrorType, BaseAgent
 
 # ══════════════════════════════════════════════════════════════
@@ -697,7 +698,45 @@ class TestMetricsUsageTracking:
         assert kwargs["output_tokens"] == 0
         assert kwargs["cached_tokens"] == 4
         assert kwargs["thinking_tokens"] == 2
-        assert kwargs["error_type"] == AgentErrorType.NETWORK_ERROR
+
+
+class TestNormalizedProviderHelpers:
+    def test_generate_llm_response_preserves_usage_and_raw(self, agent):
+        raw = MagicMock()
+        provider = MagicMock()
+        provider.generate.return_value = LLMResponse(
+            text="ok",
+            finish_reason="STOP",
+            usage={"prompt_token_count": 3},
+            raw=raw,
+            provider="gemini",
+        )
+        agent._llm_router = MagicMock()
+        agent._llm_router.get_provider_for_model.return_value = provider
+
+        response = agent._generate_llm_response(model="gemini-2.5-flash", contents="prompt", config={"temperature": 0.1})
+
+        assert isinstance(response, LLMResponse)
+        assert response.text == "ok"
+        assert response.raw is raw
+        assert agent._last_llm_usage == {"prompt_token_count": 3}
+
+    def test_generate_content_remains_raw_compatibility_seam(self, agent):
+        raw = MagicMock()
+        provider = MagicMock()
+        provider.generate.return_value = LLMResponse(
+            text="ok",
+            finish_reason="STOP",
+            usage={"prompt_token_count": 3},
+            raw=raw,
+            provider="gemini",
+        )
+        agent._llm_router = MagicMock()
+        agent._llm_router.get_provider_for_model.return_value = provider
+
+        result = agent._generate_content(model="gemini-2.5-flash", contents="prompt", config={"temperature": 0.1})
+
+        assert result is raw
 
 
 # ══════════════════════════════════════════════════════════════

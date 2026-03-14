@@ -77,6 +77,39 @@ def prepare_stage4_canary_project(
     return payload
 
 
+def prepare_stage34_canary_project(
+    source_root: str | Path,
+    target_root: str | Path,
+    *,
+    from_ep: int = 1,
+    force: bool = False,
+) -> dict:
+    """Copy a baseline project and reset Stage 3/4 outputs on the copy."""
+    source = Path(source_root)
+    target = Path(target_root)
+    from_ep = _normalize_from_ep(from_ep)
+    if not source.exists():
+        raise FileNotFoundError(f"source project not found: {source}")
+    if source.resolve() == target.resolve():
+        raise ValueError("source and target project must be different for stage3/4 canary prep")
+    if target.exists():
+        if not force:
+            raise FileExistsError(f"target project already exists: {target}")
+        shutil.rmtree(target)
+
+    shutil.copytree(source, target)
+    cleanup = reset_stage34_outputs(target, from_ep=from_ep)
+    payload = {
+        "prepared_at": datetime.now().isoformat(timespec="seconds"),
+        "source_project": source.name,
+        "target_project": target.name,
+        "from_ep": int(from_ep),
+        "cleanup": cleanup,
+    }
+    _write_json(target / "logs" / "stage34_canary_prep.json", payload)
+    return payload
+
+
 def reset_stage4_outputs(project_root: str | Path, *, from_ep: int = 1) -> dict:
     """Delete Stage 4 and episode-derived outputs while preserving Stage 3 blueprints."""
     root = Path(project_root)
@@ -100,18 +133,40 @@ def reset_stage4_outputs(project_root: str | Path, *, from_ep: int = 1) -> dict:
     }
 
 
-def build_stage4_canary_summary(project_root: str | Path, *, target_ep: int | None = None) -> dict:
-    """Summarize a prepared or completed Stage 4 canary project."""
+def reset_stage34_outputs(project_root: str | Path, *, from_ep: int = 1) -> dict:
+    """Delete Stage 3/4 outputs while preserving Stage 2 arc design and anchors."""
     root = Path(project_root)
+    from_ep = _normalize_from_ep(from_ep)
     db_path = root / "project_data.db"
     if not db_path.exists():
         raise FileNotFoundError(f"project database not found: {db_path}")
 
     db = DBManager(db_path)
     try:
+        impact = _collect_stage34_cleanup_impact(db, from_ep=from_ep)
+        _delete_stage34_db_outputs(db, from_ep=from_ep)
+    finally:
+        db.close()
+
+    files = _clear_stage34_files(root, from_ep=from_ep)
+    return {
+        "from_ep": from_ep,
+        "db_impact": impact,
+        "file_cleanup": files,
+    }
+
+
+def build_stage4_canary_summary(project_root: str | Path, *, target_ep: int | None = None) -> dict:
+    """Summarize a prepared or completed Stage 4 canary project."""
+    root = Path(project_root)
+    db_path = root / "project_data.db"
+    if not db_path.exists():
+        raise FileNotFoundError(f"project database not found: {db_path}")
+    project_locator = _build_project_locator(root)
+
+    db = DBManager(db_path)
+    try:
         analyzer = FailureAnalyzer(db, project_path=root)
-        patch_trace_summary = analyzer.patch_trace_summary()
-        sink_alignment_summary = analyzer.sink_alignment_summary(stage=4)
         stage4_attempt_rows = db.conn.execute(
             """
             SELECT id, ep_num, attempt_num, verdict, score, session_id, attempt_key
@@ -130,7 +185,19 @@ def build_stage4_canary_summary(project_root: str | Path, *, target_ep: int | No
             ORDER BY id ASC
             """
         ).fetchall()
+        latest_session_id = latest_session_id_from_rows(stage4_attempt_rows)
+        patch_trace_summary = analyzer.patch_trace_summary()
+        sink_alignment_summary = analyzer.sink_alignment_summary(stage=4)
+        current_session_sink_alignment_summary = analyzer.sink_alignment_summary(
+            stage=4,
+            session_id=latest_session_id,
+        )
+        stage3_sink_alignment_summary = analyzer.sink_alignment_summary(stage=3, include_session_decisions=True)
         rationale_contract_summary = _summarize_stage4_rationale_contract(db)
+        companion_audit_summary = _summarize_stage4_companion_audit(
+            db,
+            latest_session_id=latest_session_id,
+        )
     finally:
         db.close()
 
@@ -138,10 +205,6 @@ def build_stage4_canary_summary(project_root: str | Path, *, target_ep: int | No
     draft_files = sorted(root.glob("drafts/ep_*.txt"))
     pass_rate_monitor_exists = (root / "logs" / "pass_rate_monitor.json").exists()
     canary_prep = _read_json(root / "logs" / "canary_prep.json")
-
-    latest_session_id = ""
-    if stage4_attempt_rows:
-        latest_session_id = str(stage4_attempt_rows[-1]["session_id"] or "").strip()
 
     hard_gates = _evaluate_stage4_canary_gates(
         target_ep=target_ep,
@@ -152,10 +215,20 @@ def build_stage4_canary_summary(project_root: str | Path, *, target_ep: int | No
         sink_alignment_summary=sink_alignment_summary,
         rationale_contract_summary=rationale_contract_summary,
     )
+    proof_scope_summary = _build_stage4_canary_proof_scope_summary(
+        stage3_sink_alignment_summary=stage3_sink_alignment_summary,
+        stage4_sink_alignment_summary=sink_alignment_summary,
+        rationale_contract_summary=rationale_contract_summary,
+    )
+    proof_record_summary = _build_stage4_proof_record_summary(
+        project_root=root,
+        project_locator=project_locator,
+        latest_session_id=latest_session_id,
+    )
 
     return {
         "project": root.name,
-        "project_locator": _build_project_locator(root),
+        "project_locator": project_locator,
         "project_root": str(root),
         "target_ep": int(target_ep) if target_ep is not None else None,
         "prepared_from": canary_prep.get("source_project"),
@@ -168,10 +241,306 @@ def build_stage4_canary_summary(project_root: str | Path, *, target_ep: int | No
         "director_stage4_rows": len(director_stage4_rows),
         "pass_rate_monitor_exists": pass_rate_monitor_exists,
         "patch_trace_summary": patch_trace_summary,
+        "stage3_sink_alignment_summary": stage3_sink_alignment_summary,
         "sink_alignment_summary": sink_alignment_summary,
+        "current_session_sink_alignment_summary": current_session_sink_alignment_summary,
         "rationale_contract_summary": rationale_contract_summary,
+        "companion_audit_summary": companion_audit_summary,
+        "proof_scope_summary": proof_scope_summary,
+        "proof_record_summary": proof_record_summary,
         "hard_gates": hard_gates,
     }
+
+
+def build_stage4_branch_inventory(project_roots: list[str | Path]) -> dict:
+    """Aggregate multiple current/historical canary summaries into branch-proof coverage."""
+    entries: list[dict] = []
+    missing_projects: list[dict[str, str]] = []
+
+    for project_root in project_roots:
+        root = Path(project_root)
+        summary_path = root / "logs" / "canary_summary.json"
+        summary = _read_json(summary_path)
+        if not summary:
+            missing_projects.append(
+                {
+                    "project_root": str(root),
+                    "summary_path": str(summary_path),
+                }
+            )
+            continue
+
+        rationale_summary = summary.get("rationale_contract_summary", {}) or {}
+        companion_summary = summary.get("companion_audit_summary", {}) or {}
+        sink_summary = summary.get("sink_alignment_summary", {}) or {}
+        current_session_sink_summary = summary.get("current_session_sink_alignment_summary", {}) or {}
+        patch_summary = summary.get("patch_trace_summary", {}) or {}
+        proof_record = summary.get("proof_record_summary", {}) or {}
+        hard_gates = summary.get("hard_gates", {}) or {}
+        patch_count = int(patch_summary.get("count", 0) or 0)
+        retry_required_row_count = int(rationale_summary.get("retry_required_row_count", 0) or 0)
+
+        entry = {
+            "project": str(summary.get("project", root.name) or root.name),
+            "project_root": str(root),
+            "project_locator": str(summary.get("project_locator", "") or _build_project_locator(root)),
+            "latest_session_id": str(summary.get("latest_session_id", "") or ""),
+            "classification": str(proof_record.get("classification", "") or ""),
+            "proof_origin": str(proof_record.get("proof_origin", "") or ""),
+            "hard_gates_status": str(hard_gates.get("status", "") or "missing"),
+            "sink_alignment_status": _summary_status(sink_summary, default="missing"),
+            "current_session_sink_alignment_status": _summary_status(current_session_sink_summary, default="missing"),
+            "rationale_contract_status": _summary_status(rationale_summary, default="missing"),
+            "companion_audit_status": _summary_status(companion_summary, default="missing"),
+            "patch_trace_exercised": patch_count > 0,
+            "patch_trace_count": patch_count,
+            "retry_contract_exercised": retry_required_row_count > 0,
+            "retry_required_row_count": retry_required_row_count,
+            "retry_context_missing_rows": len(rationale_summary.get("rows_missing_retry_context") or []),
+            "warnings": list(hard_gates.get("warnings") or []),
+            "errors": list(hard_gates.get("errors") or []),
+        }
+        entries.append(entry)
+
+    current_entries = [entry for entry in entries if entry.get("classification") == "current"]
+
+    def _pick_pass_basis() -> dict:
+        for entry in current_entries:
+            if (
+                entry["sink_alignment_status"] == "ok"
+                and entry["rationale_contract_status"] == "ok"
+                and entry["companion_audit_status"] == "ok"
+            ):
+                return {
+                    "status": "covered",
+                    "basis_project_locator": entry["project_locator"],
+                    "latest_session_id": entry["latest_session_id"],
+                    "hard_gates_status": entry["hard_gates_status"],
+                    "note": "same-session current live proof with sink/rationale/companion audit all ok",
+                }
+        return {
+            "status": "missing",
+            "basis_project_locator": "",
+            "latest_session_id": "",
+            "hard_gates_status": "missing",
+            "note": "no current proof entry satisfies sink/rationale/companion ok together",
+        }
+
+    def _pick_patch_basis() -> dict:
+        for entry in current_entries:
+            if (
+                entry["patch_trace_exercised"]
+                and entry["rationale_contract_status"] == "ok"
+                and entry["companion_audit_status"] == "ok"
+            ):
+                note = "current live patch branch exercised"
+                if entry["current_session_sink_alignment_status"] == "ok":
+                    note += "; same-session sink alignment is ok"
+                elif entry["sink_alignment_status"] != "ok":
+                    note += "; sink alignment for the whole run is not closure-grade, so this is branch-only proof"
+                return {
+                    "status": "covered",
+                    "basis_project_locator": entry["project_locator"],
+                    "latest_session_id": entry["latest_session_id"],
+                    "hard_gates_status": entry["hard_gates_status"],
+                    "note": note,
+                }
+        return {
+            "status": "missing",
+            "basis_project_locator": "",
+            "latest_session_id": "",
+            "hard_gates_status": "missing",
+            "note": "no current proof entry exercised patch_trace",
+        }
+
+    def _pick_retry_basis() -> dict:
+        for entry in current_entries:
+            if entry["retry_contract_exercised"] and entry["retry_context_missing_rows"] == 0:
+                note = "current live retry-required row exists and retry context contract is populated"
+                if entry["current_session_sink_alignment_status"] == "ok":
+                    note += "; same-session sink alignment is ok"
+                return {
+                    "status": "covered",
+                    "basis_project_locator": entry["project_locator"],
+                    "latest_session_id": entry["latest_session_id"],
+                    "hard_gates_status": entry["hard_gates_status"],
+                    "note": note,
+                }
+        return {
+            "status": "missing",
+            "basis_project_locator": "",
+            "latest_session_id": "",
+            "hard_gates_status": "missing",
+            "note": "no current proof entry exercised retry-required Stage 4 rows",
+        }
+
+    branch_coverage = {
+        "pass_path_current_basis": _pick_pass_basis(),
+        "patch_path_current_basis": _pick_patch_basis(),
+        "retry_path_current_basis": _pick_retry_basis(),
+    }
+
+    unresolved_runtime_only = []
+    if branch_coverage["retry_path_current_basis"]["status"] != "covered":
+        unresolved_runtime_only.append("stage4_retry_contract_not_exercised_live")
+
+    return {
+        "summary_role": "stage4_runtime_branch_proof_inventory",
+        "entries_considered": len(entries),
+        "missing_projects": missing_projects,
+        "proof_entries": entries,
+        "branch_coverage": branch_coverage,
+        "unresolved_runtime_only": unresolved_runtime_only,
+    }
+
+
+def _build_stage4_canary_proof_scope_summary(
+    *,
+    stage3_sink_alignment_summary: dict,
+    stage4_sink_alignment_summary: dict,
+    rationale_contract_summary: dict,
+) -> dict:
+    stage3_observed = bool(stage3_sink_alignment_summary)
+    stage4_observed = bool(stage4_sink_alignment_summary)
+    rationale_observed = bool(rationale_contract_summary)
+
+    covered_surfaces = [
+        "stage4_live_context_path",
+        "stage4_sink_alignment",
+        "stage4_rationale_contract",
+    ]
+    if stage3_observed:
+        covered_surfaces.append("stage3_sink_alignment_probe")
+
+    uncovered_surfaces = [
+        "stage3_live_generation_path",
+        "backend_wide_multi_stage_runtime",
+    ]
+    if not stage3_observed:
+        uncovered_surfaces.append("stage3_sink_probe_missing")
+
+    return {
+        "summary_role": "stage4_live_canary_with_stage3_sink_probe",
+        "backend_wide_proof": False,
+        "scope_status": "partial_multi_stage_probe" if stage3_observed else "stage4_only",
+        "stage4_live_context_regression": "covered",
+        "stage4_sink_alignment_status": _summary_status(stage4_sink_alignment_summary, default="missing"),
+        "stage3_sink_probe_status": _summary_status(stage3_sink_alignment_summary, default="missing"),
+        "rationale_contract_status": _summary_status(rationale_contract_summary, default="missing"),
+        "covered_surfaces": covered_surfaces,
+        "uncovered_surfaces": uncovered_surfaces,
+        "notes": [
+            "This canary is not a backend-wide proof net.",
+            "Stage 3 is observed via sink alignment only; it does not rerun live Stage 3 generation.",
+        ],
+        "observability_contract": {
+            "stage3_sink_alignment_observed": stage3_observed,
+            "stage4_sink_alignment_observed": stage4_observed,
+            "stage4_rationale_contract_observed": rationale_observed,
+        },
+    }
+
+
+def _build_stage4_proof_record_summary(
+    *,
+    project_root: Path,
+    project_locator: str,
+    latest_session_id: str,
+) -> dict:
+    is_historical = "기록용" in project_root.parts
+    return {
+        "classification": "historical" if is_historical else "current",
+        "proof_origin": "archived_project" if is_historical else "current_workspace_refresh",
+        "project_locator": project_locator,
+        "summary_path": "logs/canary_summary.json",
+        "companion_audit_path": "logs/canary_companion_audit.json",
+        "latest_session_id": latest_session_id,
+        "refreshed_at": datetime.now().isoformat(timespec="seconds"),
+    }
+
+
+def _summarize_stage4_companion_audit(db: DBManager, *, latest_session_id: str) -> dict:
+    required_stage_attempt_fields = [
+        "attempt_key",
+        "candidate_key",
+        "content_hash",
+        "artifact_path",
+        "selection_reason",
+        "verdict_reason",
+    ]
+    params: tuple[object, ...]
+    where_clause = "WHERE stage = 4"
+    params = ()
+    if latest_session_id:
+        where_clause += " AND session_id = ?"
+        params = (latest_session_id,)
+
+    rows = db.conn.execute(
+        f"""
+        SELECT ep_num, attempt_num, verdict, session_id, attempt_key, candidate_key, content_hash,
+               artifact_path, selection_reason, verdict_reason
+        FROM stage_attempts
+        {where_clause}
+        ORDER BY id ASC
+        """,
+        params,
+    ).fetchall()
+
+    director_reasons: dict[str, dict[str, str]] = {}
+    director_rows = db.conn.execute(
+        """
+        SELECT attempt_key, selection_reason, verdict_reason, fix_scope
+        FROM director_selections
+        WHERE """
+        + DBManager._director_stage_predicate(4)
+        + """
+        ORDER BY id ASC
+        """
+    ).fetchall()
+    for row in director_rows:
+        attempt_key = str(row["attempt_key"] or "").strip()
+        if attempt_key and attempt_key not in director_reasons:
+            director_reasons[attempt_key] = {
+                "selection_reason": str(row["selection_reason"] or "").strip(),
+                "verdict_reason": str(row["verdict_reason"] or "").strip(),
+                "fix_scope": str(row["fix_scope"] or "").strip(),
+            }
+
+    summary = {
+        "status": "ok",
+        "latest_session_id": latest_session_id,
+        "row_count": len(rows),
+        "required_stage_attempt_fields": required_stage_attempt_fields,
+        "rows_missing_required_fields": [],
+        "director_companion_rows": len(director_reasons),
+        "director_rationale_available": 0,
+        "note": "Same-run stage_attempt provenance/rationale fields must stand on their own; director_selections is companion evidence only.",
+    }
+
+    for row in rows:
+        missing_fields = [field for field in required_stage_attempt_fields if not str(row[field] or "").strip()]
+        attempt_key = str(row["attempt_key"] or "").strip()
+        director_has_rationale = False
+        if attempt_key in director_reasons:
+            director_payload = director_reasons[attempt_key]
+            director_has_rationale = bool(
+                director_payload.get("selection_reason") or director_payload.get("verdict_reason")
+            )
+        if director_has_rationale:
+            summary["director_rationale_available"] += 1
+        if missing_fields:
+            summary["rows_missing_required_fields"].append(
+                {
+                    "attempt_key": attempt_key,
+                    "locator": _format_stage4_attempt_locator(row),
+                    "missing_fields": missing_fields,
+                    "director_rationale_available": director_has_rationale,
+                }
+            )
+
+    if summary["rows_missing_required_fields"]:
+        summary["status"] = "fail"
+    return summary
 
 
 def _summarize_stage4_rationale_contract(db: DBManager) -> dict:
@@ -256,6 +625,26 @@ def _collect_stage4_cleanup_impact(db: DBManager, *, from_ep: int) -> dict[str, 
     return impact
 
 
+def _collect_stage34_cleanup_impact(db: DBManager, *, from_ep: int) -> dict[str, int]:
+    cur = db.cursor
+    impact = _collect_stage4_cleanup_impact(db, from_ep=from_ep)
+    impact["blueprints_removed"] = int(
+        cur.execute("SELECT COUNT(*) AS c FROM blueprints WHERE ep_num >= ?", (from_ep,)).fetchone()["c"]
+    )
+    impact["stage3_attempts"] = int(
+        cur.execute("SELECT COUNT(*) AS c FROM stage_attempts WHERE stage = 3 AND ep_num >= ?", (from_ep,)).fetchone()[
+            "c"
+        ]
+    )
+    impact["stage3_director_selections"] = int(
+        cur.execute(
+            "SELECT COUNT(*) AS c FROM director_selections WHERE ep_num >= ? AND " + DBManager._director_stage_predicate(3),
+            (from_ep,),
+        ).fetchone()["c"]
+    )
+    return impact
+
+
 def _delete_stage4_db_outputs(db: DBManager, *, from_ep: int) -> None:
     cur = db.cursor
     started_tx = not db.conn.in_transaction
@@ -299,6 +688,55 @@ def _delete_stage4_db_outputs(db: DBManager, *, from_ep: int) -> None:
         pass
 
 
+def _delete_stage34_db_outputs(db: DBManager, *, from_ep: int) -> None:
+    cur = db.cursor
+    started_tx = not db.conn.in_transaction
+    if started_tx:
+        cur.execute("BEGIN")
+    try:
+        for table in ("state_logs", "causal_graph", "manuscripts", "martial_tracker"):
+            cur.execute(f"DELETE FROM {table} WHERE ep_num >= ?", (from_ep,))
+        cur.execute("DELETE FROM episode_bibles WHERE ep_num >= ?", (from_ep,))
+        cur.execute("DELETE FROM sync_status WHERE ep_num >= ?", (from_ep,))
+        cur.execute("DELETE FROM karma_status WHERE last_updated_ep >= ?", (from_ep,))
+        cur.execute("DELETE FROM npc_history WHERE episode_no >= ?", (from_ep,))
+        cur.execute("DELETE FROM episode_sentence_hashes WHERE episode_number >= ?", (from_ep,))
+        cur.execute("DELETE FROM episode_satisfaction_tags WHERE ep_num >= ?", (from_ep,))
+        cur.execute(
+            "DELETE FROM director_selections WHERE ep_num >= ? AND " + DBManager._director_stage_predicate(4),
+            (from_ep,),
+        )
+        cur.execute("DELETE FROM episode_pacing WHERE ep_num >= ?", (from_ep,))
+        cur.execute("DELETE FROM episode_quality_labels WHERE ep_num >= ?", (from_ep,))
+        cur.execute("DELETE FROM episode_quality_signals WHERE ep_num >= ?", (from_ep,))
+        cur.execute("DELETE FROM episode_quality_observations WHERE ep_num >= ?", (from_ep,))
+        cur.execute("DELETE FROM stage_attempts WHERE stage = 4 AND ep_num >= ?", (from_ep,))
+        try:
+            cur.execute("DELETE FROM episode_fts WHERE rowid >= ?", (from_ep,))
+        except Exception:
+            pass
+        cur.execute("DELETE FROM episode_meta WHERE ep_num >= ?", (from_ep,))
+        cur.execute("DELETE FROM foreshadow WHERE planted_ep >= ?", (from_ep,))
+        cur.execute("DELETE FROM npc_relationship_edges WHERE updated_ep >= ?", (from_ep,))
+        cur.execute("DELETE FROM npc_relationship_history WHERE change_ep >= ?", (from_ep,))
+        cur.execute("DELETE FROM seeds WHERE planted_ep >= ?", (from_ep,))
+        cur.execute("UPDATE seeds SET status = 'active', recovered_ep = NULL WHERE recovered_ep >= ?", (from_ep,))
+        cur.execute("DELETE FROM blueprints WHERE ep_num >= ?", (from_ep,))
+        cur.execute(
+            "DELETE FROM director_selections WHERE ep_num >= ? AND " + DBManager._director_stage_predicate(3),
+            (from_ep,),
+        )
+        cur.execute("DELETE FROM stage_attempts WHERE stage = 3 AND ep_num >= ?", (from_ep,))
+        db.conn.commit()
+    except Exception:
+        db.conn.rollback()
+        raise
+    try:
+        db.conn.execute("VACUUM")
+    except Exception:
+        pass
+
+
 def _clear_stage4_files(project_root: Path, *, from_ep: int) -> dict[str, int]:
     drafts_removed = 0
     drafts_dir = project_root / "drafts"
@@ -330,6 +768,20 @@ def _clear_stage4_files(project_root: Path, *, from_ep: int) -> dict[str, int]:
         "log_entries_removed": logs_removed,
         "memory_entries_removed": memory_removed,
     }
+
+
+def _clear_stage34_files(project_root: Path, *, from_ep: int) -> dict[str, int]:
+    cleanup = _clear_stage4_files(project_root, from_ep=from_ep)
+    blueprints_removed = 0
+    blueprints_dir = project_root / "plans" / "blueprints"
+    if blueprints_dir.exists():
+        for blueprint in blueprints_dir.glob("ep_*.json"):
+            ep_num = _extract_ep_num(blueprint.name)
+            if ep_num is not None and ep_num >= from_ep:
+                blueprint.unlink(missing_ok=True)
+                blueprints_removed += 1
+    cleanup["blueprint_files_removed"] = blueprints_removed
+    return cleanup
 
 
 def _evaluate_stage4_canary_gates(
@@ -427,6 +879,18 @@ def _format_stage4_attempt_locator(row) -> str:
     attempt_num = int(row["attempt_num"] or 0)
     verdict = str(row["verdict"] or "").strip() or "UNKNOWN"
     return f"ep{ep_num}:a{attempt_num}:{verdict}"
+
+
+def latest_session_id_from_rows(rows) -> str:
+    if not rows:
+        return ""
+    return str(rows[-1]["session_id"] or "").strip()
+
+
+def _summary_status(summary: dict, *, default: str) -> str:
+    if not summary:
+        return default
+    return str(summary.get("status", "") or default)
 
 
 def _build_project_locator(project_root: Path) -> str:

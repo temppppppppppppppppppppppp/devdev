@@ -1,7 +1,20 @@
+import json
+import re
 from pathlib import Path
 
+from modules.api.control_plane_contract import ALLOWED_STAGE0_SUB_KEYS
 
 INDEX_HTML = Path("geuldobi-desktop/src/index.html").read_text(encoding="utf-8")
+PROMPT_MAP = json.loads(Path("docs/implementation/prompt-map-v1.json").read_text(encoding="utf-8"))
+
+
+def _stage0_renderer_sub_keys() -> set[str]:
+    return set(
+        re.findall(
+            r'data-action="stage_0"[^>]*data-key="0"[^>]*data-sub-key="(\d+)"',
+            INDEX_HTML,
+        )
+    )
 
 
 def test_stage0_submenu_labels_match_backend_modes():
@@ -17,6 +30,14 @@ def test_stage0_submenu_labels_match_backend_modes():
     for sub_key, label in expected_pairs:
         assert sub_key in INDEX_HTML
         assert label in INDEX_HTML
+
+
+def test_stage0_public_submenu_keys_match_prompt_map_and_validator_contract():
+    renderer_sub_keys = _stage0_renderer_sub_keys()
+    prompt_map_sub_keys = set(PROMPT_MAP["keys"]["0"]["allowed_sub_keys"])
+    assert renderer_sub_keys == prompt_map_sub_keys
+    assert renderer_sub_keys == set(ALLOWED_STAGE0_SUB_KEYS)
+    assert "0" not in renderer_sub_keys
 
 
 def test_stage0_style_cache_mode_selector_exists():

@@ -159,7 +159,7 @@ class Stage2PreflightAnalysis:
         if not memory or not plan or not getattr(plan, "slots", None):
             return ""
 
-        max_results = int(_threshold("context.vector_max_results_s2", 16))
+        max_results = int(_threshold("context.vector_max_results_s2", 40))
         sections: list[str] = []
         ordered_slots = sorted(plan.slots, key=lambda slot: getattr(slot, "priority", 2))
         _VM = RetrievalSources.VEC_MEMORY
@@ -1186,7 +1186,7 @@ class Stage2PreflightAnalysis:
                                 _s2_vector_ctx = self.ctx.memory.retrieve_high_res_context(
                                     enriched_block.get("block_theme", ""),
                                     current_ep_start,
-                                    n_results=int(_threshold("context.vector_max_results_s2", 16)),
+                                    n_results=int(_threshold("context.vector_max_results_s2", 40)),
                                 )
                     except Exception as e:  # [V64.P4] OPTIONAL: vector search — non-blocking
                         _audit_cb = getattr(self.ctx, "audit_event", None)

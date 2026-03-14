@@ -7,6 +7,7 @@ const { spawn } = require("child_process");
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
+const { attachConsoleRelay } = require("./console_relay");
 
 if (!app || !BrowserWindow || !ipcMain) {
   throw new Error(
@@ -59,6 +60,13 @@ const SPLASH_WIDTH = 400;
 const SPLASH_HEIGHT = 260;
 const SPLASH_FALLBACK_MS = 8000; // uvicorn 기동 대기 포함
 const STATUS_BASE_URL = "http://127.0.0.1:8300";
+const EVENTS_WS_URL = "ws://127.0.0.1:8300/events";
+const PACKAGED_RUNTIME_MODEL = "source_bundle_primary";
+const DESKTOP_BRIDGE_TRANSPORT = Object.freeze({
+  networkErrorCode: "NETWORK_ERROR",
+  httpErrorPrefix: "HTTP_",
+  envelopeVersion: "desktop_bridge_v1",
+});
 const SPIKE_AUTOCLOSE_MS = Number(process.env.SPIKE_AUTOCLOSE_MS || "0");
 const CLI_CONTRACT = Object.freeze({
   defaultGenreIndex: 3,
@@ -162,9 +170,9 @@ function startBackend() {
         PYTHONUNBUFFERED: "1",
         GEULDOBI_DESKTOP_MODE: "1",
         ...(app.isPackaged ? {
+          GEULDOBI_PACKAGED_RUNTIME_MODEL: PACKAGED_RUNTIME_MODEL,
           GEULDOBI_WORKSPACE: getWorkspaceDir(),
           GEULDOBI_PROJECTS_ROOT: path.join(getWorkspaceDir(), "projects"),
-          GEULDOBI_ENGINE_EXE: path.join(process.resourcesPath, "engine", "engine.exe"),
         } : {}),
       },
       stdio: ["ignore", "pipe", "pipe"],
@@ -261,6 +269,10 @@ function createMainWindow() {
     preload: path.join(__dirname, "preload.js"),
     html: path.join(__dirname, "index.html"),
   });
+  attachConsoleRelay(mainWindow.webContents, {
+    windowName: "mainWindow",
+    logFn: debugLog,
+  });
   mainWindow.webContents.on("did-finish-load", () => {
     debugLog("mainWindow did-finish-load");
   });
@@ -304,6 +316,10 @@ function createSplashWindow() {
     debugLog("splashWindow ready-to-show");
   });
 
+  attachConsoleRelay(splashWindow.webContents, {
+    windowName: "splashWindow",
+    logFn: debugLog,
+  });
   splashWindow.webContents.on("did-finish-load", () => {
     debugLog("splashWindow did-finish-load");
   });
@@ -381,14 +397,47 @@ async function bridgeFetch(urlPath, options = {}) {
       headers: { "Content-Type": "application/json", ...options.headers },
     });
     if (!res.ok) {
+      let backendPayload = null;
       const text = await res.text().catch(() => "");
+      if (text) {
+        try {
+          backendPayload = JSON.parse(text);
+        } catch {
+          backendPayload = null;
+        }
+      }
       console.error(`Bridge HTTP ${res.status}: ${url}`, text.slice(0, 200));
+      return {
+        ok: false,
+        code: `${DESKTOP_BRIDGE_TRANSPORT.httpErrorPrefix}${res.status}`,
+        message: `?쒕쾭 ?ㅻ쪟 (${res.status})`,
+        data: {
+          envelope_version: DESKTOP_BRIDGE_TRANSPORT.envelopeVersion,
+          namespace: "desktop_transport",
+          transport_status: res.status,
+          url_path: urlPath,
+          backend_code: typeof backendPayload?.code === "string" ? backendPayload.code : null,
+          backend_message: typeof backendPayload?.message === "string" ? backendPayload.message : null,
+        },
+      };
       return { ok: false, code: `HTTP_${res.status}`, message: `서버 오류 (${res.status})`, data: null };
     }
     return await res.json();
   } catch (err) {
     console.error(`Bridge fetch failed: ${url}`, err.message);
-    return { ok: false, code: "NETWORK_ERROR", message: err.message, data: null };
+    return {
+      ok: false,
+      code: DESKTOP_BRIDGE_TRANSPORT.networkErrorCode,
+      message: err.message,
+      data: {
+        envelope_version: DESKTOP_BRIDGE_TRANSPORT.envelopeVersion,
+        namespace: "desktop_transport",
+        transport_status: null,
+        url_path: urlPath,
+        backend_code: null,
+        backend_message: null,
+      },
+    };
   }
 }
 
@@ -406,12 +455,13 @@ ipcMain.handle("bridge:stop", async () => {
   return bridgeFetch("/stop", { method: "POST" });
 });
 
+// Dead-candidate compatibility surface. No active renderer consumer today.
 ipcMain.handle("bridge:status", async () => {
   return bridgeFetch("/status");
 });
 
 ipcMain.handle("bridge:get-url", () => {
-  return { wsUrl: "ws://127.0.0.1:8300/events", httpUrl: STATUS_BASE_URL };
+  return { wsUrl: EVENTS_WS_URL, httpUrl: STATUS_BASE_URL };
 });
 
 ipcMain.handle("bridge:get-cli-contract", () => {
@@ -800,6 +850,7 @@ ipcMain.handle("workspace:open-folder", async () => {
   return { ok: true, path: dir };
 });
 
+// Dead-candidate compatibility surface. No active renderer consumer today.
 ipcMain.handle("workspace:get-path", async () => {
   const dir = app.isPackaged ? getWorkspaceDir() : path.resolve(__dirname, "..", "..");
   return { ok: true, path: dir };

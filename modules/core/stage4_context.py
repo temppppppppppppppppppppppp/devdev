@@ -37,8 +37,8 @@ class Stage4Context:
             semantic_plot_guard, selected_genre, quality_dashboard,
             pacing_analyzer, pass_rate_monitor
     [S-13] 조건부 모듈 8종 → conditional_modules dict 통합
-    [4C-2c] 콜백 11종: get_int_input, build_item_acquisition_timeline,
-            load_narrative_summaries, get_protagonist_name,
+    [4C-2c] 콜백 12종: get_int_input, build_item_acquisition_timeline,
+            load_narrative_summaries, get_protagonist_name, extract_npc_profiles,
             generate_narrative_summary, generate_writer_guidance_v60_8,
             enrich_director_result, audit_event, write_audit_summary,
             flush_audit_buffer, safe_commit
@@ -69,17 +69,12 @@ class Stage4Context:
         "emotion_tracker",  # [TF7-P2-06] EmotionArcTracker 배선
         # [S-13] 조건부 모듈 8종 → 1 composite dict
         "conditional_modules",
-        # [4C-2c] 콜백 11종
+        # [4C-2c] 직접 슬롯 콜백 7종
         "get_int_input",
         "build_item_acquisition_timeline",
         "load_narrative_summaries",
         "get_protagonist_name",
-        "extract_npc_profiles",
         "generate_narrative_summary",
-        "generate_writer_guidance_v60_8",
-        "enrich_director_result",
-        "audit_event",
-        "write_audit_summary",
         "flush_audit_buffer",
         "safe_commit",
         # [LOG-1] 세션 로거
@@ -168,27 +163,65 @@ class Stage4Context:
         """[S-13] 조건부 모듈 조회 헬퍼."""
         return self.conditional_modules.get(name)
 
+    def _get_callback(self, name: str):
+        callbacks = self._stage4_context_budget_meta.get("_callbacks")
+        if not isinstance(callbacks, dict):
+            return None
+        return callbacks.get(name)
+
+    def _set_callback(self, name: str, callback):
+        callbacks = self._stage4_context_budget_meta.get("_callbacks")
+        if callback is None:
+            if isinstance(callbacks, dict):
+                callbacks.pop(name, None)
+                if not callbacks:
+                    self._stage4_context_budget_meta.pop("_callbacks", None)
+            return
+
+        if not isinstance(callbacks, dict):
+            callbacks = {}
+            self._stage4_context_budget_meta["_callbacks"] = callbacks
+        callbacks[name] = callback
+
+    @property
+    def extract_npc_profiles(self):
+        return self._get_callback("extract_npc_profiles")
+
+    @extract_npc_profiles.setter
+    def extract_npc_profiles(self, callback):
+        self._set_callback("extract_npc_profiles", callback)
+
     @property
     def generate_writer_guidance_v60_8(self):
-        return self._stage4_context_budget_meta.get("_generate_writer_guidance_v60_8")
+        return self._get_callback("generate_writer_guidance_v60_8")
 
     @generate_writer_guidance_v60_8.setter
     def generate_writer_guidance_v60_8(self, callback):
-        if callback is None:
-            self._stage4_context_budget_meta.pop("_generate_writer_guidance_v60_8", None)
-            return
-        self._stage4_context_budget_meta["_generate_writer_guidance_v60_8"] = callback
+        self._set_callback("generate_writer_guidance_v60_8", callback)
 
     @property
     def enrich_director_result(self):
-        return self._stage4_context_budget_meta.get("_enrich_director_result")
+        return self._get_callback("enrich_director_result")
 
     @enrich_director_result.setter
     def enrich_director_result(self, callback):
-        if callback is None:
-            self._stage4_context_budget_meta.pop("_enrich_director_result", None)
-            return
-        self._stage4_context_budget_meta["_enrich_director_result"] = callback
+        self._set_callback("enrich_director_result", callback)
+
+    @property
+    def audit_event(self):
+        return self._get_callback("audit_event")
+
+    @audit_event.setter
+    def audit_event(self, callback):
+        self._set_callback("audit_event", callback)
+
+    @property
+    def write_audit_summary(self):
+        return self._get_callback("write_audit_summary")
+
+    @write_audit_summary.setter
+    def write_audit_summary(self, callback):
+        self._set_callback("write_audit_summary", callback)
 
     @classmethod
     def from_app(cls, app):

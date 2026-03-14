@@ -30,6 +30,7 @@ from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
 from pathlib import Path
 
+from modules.api.control_plane_contract import ALLOWED_STAGE0_SUB_KEYS, MODE_B_KEYS
 from modules.core.runtime_paths import (
     resolve_engine_root,
     resolve_project_dir,
@@ -61,6 +62,11 @@ def _strip_ansi(text: str) -> str:
     return _ANSI_RE.sub("", text).rstrip()
 
 
+def _decode_runtime_stream(raw: bytes) -> str:
+    """Decode ephemeral runtime stream data without defining durable sink policy."""
+    return raw.decode("utf-8", errors="replace")
+
+
 # ─── Callback 타입 ────────────────────────────────────────────────────────────
 
 OnLineCallback = Callable[[str], Awaitable[None]]
@@ -75,8 +81,6 @@ _STAGE0_STYLE_ANALYSIS_SUB_KEY = "6"
 _PROMPT_DETECT_TIMEOUT = 0.5
 _RUNTIME_TAIL_LINES = 8
 
-# Mode B 대상 키 — 전체 (main_a.py boot 흐름이 인터랙티브)
-MODE_B_KEYS = frozenset({"0", "1", "2", "3", "4", "5", "6", "44", "77", "88", "99"})
 _GENRE_INDEX_TO_TYPE = {
     "1": "wuxia",
     "2": "hunter",
@@ -104,6 +108,15 @@ def _resolve_stage0_style_cache_choice(inputs: dict | None) -> str | None:
         return None
     cache_mode = str(inputs.get("stage0_style_cache_mode") or "").strip().lower()
     return {"use": "1", "refresh": "2", "reset": "3"}.get(cache_mode)
+
+
+def _normalize_public_stage0_sub_key(sub_key: str | None) -> str:
+    normalized = str(sub_key or "").strip()
+    if not normalized:
+        raise ValueError("sub_key is required for public Stage 0 runs")
+    if normalized not in ALLOWED_STAGE0_SUB_KEYS:
+        raise ValueError(f"sub_key '{normalized}' is not part of the public Stage 0 contract")
+    return normalized
 
 
 def _resolve_requested_genre_type(inputs: dict | None) -> str | None:
@@ -476,7 +489,7 @@ class ProcessRunner:
                 raw = await proc.stdout.readline()
                 if not raw:
                     break  # EOF
-                text = _strip_ansi(raw.decode("utf-8", errors="replace"))
+                text = _strip_ansi(_decode_runtime_stream(raw))
                 if not text:
                     continue
                 self._remember_stdout_line(text)
@@ -495,9 +508,7 @@ class ProcessRunner:
                 try:
                     stderr_data = await proc.stderr.read()
                     if stderr_data:
-                        for line in stderr_data.decode(
-                            "utf-8", errors="replace"
-                        ).splitlines():
+                        for line in _decode_runtime_stream(stderr_data).splitlines():
                             stripped = _strip_ansi(line)
                             if stripped:
                                 self._remember_stderr_line(stripped)
@@ -579,7 +590,7 @@ class ProcessRunner:
                 if not chunk:
                     break  # EOF
 
-                buffer += chunk.decode("utf-8", errors="replace")
+                buffer += _decode_runtime_stream(chunk)
 
                 # 완성된 줄 처리
                 while "\n" in buffer:
@@ -619,9 +630,7 @@ class ProcessRunner:
                 try:
                     stderr_data = await proc.stderr.read()
                     if stderr_data:
-                        for line in stderr_data.decode(
-                            "utf-8", errors="replace"
-                        ).splitlines():
+                        for line in _decode_runtime_stream(stderr_data).splitlines():
                             stripped = _strip_ansi(line)
                             if stripped:
                                 self._remember_stderr_line(stripped)
@@ -688,6 +697,7 @@ class ProcessRunner:
             return "\n".join(str(x) for x in inputs["stdin_lines"]) + "\n"
 
         inject_genre_confirm = _should_inject_boot_genre_confirm(inputs)
+        stage0_sub_key = _normalize_public_stage0_sub_key(sub_key) if key == "0" else None
 
         # Mode B: boot 시퀀스만 사전 주입 (장르→Enter→프로젝트→[필요 시 확인]→메뉴키)
         # stdin은 열어두고, stage-specific 프롬프트만 실시간 감지+UI 처리
@@ -700,10 +710,10 @@ class ProcessRunner:
             lines.append(str(project_index))
             if inject_genre_confirm:
                 lines.append("y")
-            if key == "0" and sub_key:
+            if key == "0":
                 lines.append("0")
-                lines.append(str(sub_key))
-                if str(sub_key) == _STAGE0_STYLE_ANALYSIS_SUB_KEY:
+                lines.append(stage0_sub_key)
+                if stage0_sub_key == _STAGE0_STYLE_ANALYSIS_SUB_KEY:
                     cache_choice = _resolve_stage0_style_cache_choice(inputs)
                     if cache_choice:
                         lines.append("y")
@@ -731,10 +741,10 @@ class ProcessRunner:
             lines.append("y")
 
         # 5. 메인 메뉴 키 + sub_key
-        if key == "0" and sub_key:
+        if key == "0":
             lines.append("0")
-            lines.append(str(sub_key))
-            if str(sub_key) == _STAGE0_STYLE_ANALYSIS_SUB_KEY:
+            lines.append(stage0_sub_key)
+            if stage0_sub_key == _STAGE0_STYLE_ANALYSIS_SUB_KEY:
                 cache_choice = _resolve_stage0_style_cache_choice(inputs)
                 if cache_choice:
                     lines.append("y")
@@ -761,6 +771,8 @@ class ProcessRunner:
         env = os.environ.copy()
         env["PYTHONIOENCODING"] = "utf-8"
         env["PYTHONUNBUFFERED"] = "1"
+        if isinstance(self._run_id, str) and self._run_id.strip():
+            env["GEULDOBI_RUN_ID"] = self._run_id.strip()
 
         inputs = inputs or {}
 

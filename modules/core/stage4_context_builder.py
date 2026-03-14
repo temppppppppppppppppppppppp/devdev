@@ -1490,6 +1490,13 @@ class Stage4ContextBuilder:
             headroom,
         )
 
+        prev_budget_meta = getattr(self.ctx, "_stage4_context_budget_meta", {}) or {}
+        preserved_callbacks = None
+        if isinstance(prev_budget_meta, dict):
+            callbacks = prev_budget_meta.get("_callbacks")
+            if isinstance(callbacks, dict) and callbacks:
+                preserved_callbacks = dict(callbacks)
+
         self.ctx._stage4_context_budget_meta = {
             "sc_chars": len(sc_header),
             "mc_chars": len(mc_body),
@@ -1497,6 +1504,8 @@ class Stage4ContextBuilder:
             "limit_chars": limit,
             "headroom_chars": headroom,
         }
+        if preserved_callbacks:
+            self.ctx._stage4_context_budget_meta["_callbacks"] = preserved_callbacks
         mandatory_context = (sc_header + "\n\n" + mc_body).strip() if sc_header else mc_body
         if limit > 0 and len(mandatory_context) > limit:
             compressor = ContextCompressor()
