@@ -96,7 +96,29 @@ class TestWriteAuditSummary:
         assert data["total_events"] == 1
         assert "evt" in data["counts"]
 
-    def test_write_summary_includes_structured_proof_digest(self, svc, tmp_project):
+    def test_write_summary_runs_pre_summary_hook_before_proof_digest(self, runtime_audit, tmp_project):
+        sentinel = tmp_project.root / "logs" / "pass_rate_monitor.json"
+
+        def _write_sentinel():
+            sentinel.parent.mkdir(parents=True, exist_ok=True)
+            sentinel.write_text('{"records": []}', encoding="utf-8")
+
+        svc = AuditService(
+            runtime_audit=runtime_audit,
+            project_paths_fn=lambda: tmp_project,
+            ui_log_fn=lambda msg: None,
+            before_summary_write_fn=_write_sentinel,
+        )
+        svc._build_proof_digest = lambda _paths: {"hook_ran": sentinel.exists()}
+
+        svc.audit_event("evt", "msg")
+        svc.write_audit_summary("hook_tag")
+
+        summary_path = tmp_project.root / "logs" / "runtime_audit_summary.json"
+        data = json.loads(summary_path.read_text(encoding="utf-8"))
+        assert data["proof_digest"]["hook_ran"] is True
+
+    def test_write_summary_includes_structured_proof_digest(self, svc, tmp_project, monkeypatch):
         db = DBManager(tmp_project.root / "project_data.db")
         attempt_key = "s4:ep9:arc1:a1:sess_proof"
         artifact_path = "logs/artifacts/stage4/ep_0009/attempt_01/final_manuscript__A_balanced.txt"
@@ -219,6 +241,14 @@ class TestWriteAuditSummary:
                 + "\n",
                 encoding="utf-8",
             )
+
+            from modules.core import db_manager as db_manager_module
+
+            class _ExplodingDBManager:
+                def __init__(self, *_args, **_kwargs):
+                    raise AssertionError("proof digest must not re-enter DBManager boot")
+
+            monkeypatch.setattr(db_manager_module, "DBManager", _ExplodingDBManager)
 
             svc.audit_event("evt", "msg")
             svc.write_audit_summary("proof_tag")

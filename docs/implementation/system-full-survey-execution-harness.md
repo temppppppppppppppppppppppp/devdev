@@ -20,6 +20,7 @@ Templates:
 Reference Aids:
 - `docs/implementation/codebase-global-survey-coverage-contract.md`
 - `docs/implementation/canonical-naming-contract.md`
+- `docs/implementation/commit-state-minimal-contract.md`
 - `docs/implementation/side-effect-survey-checklist.md`
 - `docs/implementation/queue-priority-rubric.md`
 - `docs/implementation/temp-queue-state-contract-v1.json`
@@ -86,6 +87,10 @@ Recommended header fields:
 - `Status`
 - `Canonical Path`
 - `Temp Mirror Path`
+- `Baseline Commit`
+- `Baseline Dirty Summary`
+- `Resume Commit`
+- `Resume Drift Summary`
 - `Source Survey Docs`
 - `Evidence Artifacts`
 - `Side-Effect Coverage`
@@ -94,6 +99,8 @@ If a short format is used, at minimum include:
 - canonical path
 - temp mirror path
 - source survey docs
+- baseline commit
+- baseline dirty summary
 
 ### 3.6 Temp Execution Queue Rule
 `docs/temp/` is the active execution queue for execution SSOT mirror copies.
@@ -173,10 +180,12 @@ Detailed document audit mechanics live in `docs/implementation/document-3pass-au
 - For codebase-global survey requests, treat the default deliverable as a bundled documentation set: tranche survey coverage, area execution SSOT docs for action-bearing areas, and one SSOT roadmap if two or more execution docs are produced.
 - For deep codebase-global survey requests, also use `docs/implementation/deep-global-integrity-survey-harness.md`.
 - If implementation is about to begin from an execution SSOT or roadmap, re-run the document 3-pass audit and confidence gate on the governing canonical doc against the live workspace before patching code.
+- During that revalidation, refresh `Resume Commit` and `Resume Drift Summary` instead of relying only on generic `current workspace state` wording.
 
 ### Step 1. Baseline Harvest
 - Read only the minimum prior docs needed to avoid duplicate work.
 - Prefer the most recent final audit or execution SSOT for the same topic.
+- Capture the minimal commit-state baseline using `docs/implementation/commit-state-minimal-contract.md`.
 - Record why the baseline may no longer be sufficient:
   - live-code-changed
   - artifact-contradiction

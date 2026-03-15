@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import json
+import sqlite3
 import time
 from collections.abc import Callable
+from types import SimpleNamespace
 from typing import Any
 
 
@@ -24,10 +26,14 @@ class AuditService:
         runtime_audit: list,
         project_paths_fn: Callable[[], Any],
         ui_log_fn: Callable[[str], None],
+        before_summary_write_fn: Callable[[], None] | None = None,
+        project_db_fn: Callable[[], Any] | None = None,
     ) -> None:
         self._runtime_audit = runtime_audit
         self._project_paths_fn = project_paths_fn
         self._ui_log = ui_log_fn
+        self._before_summary_write = before_summary_write_fn
+        self._project_db_fn = project_db_fn
         self._buffer: list[dict] = []
 
     @property
@@ -122,6 +128,19 @@ class AuditService:
             "issue_counts": issue_counts,
         }
 
+    def _resolve_proof_digest_db(self, db_path) -> tuple[Any, bool]:
+        if callable(self._project_db_fn):
+            try:
+                project_db = self._project_db_fn()
+            except Exception:
+                project_db = None
+            if getattr(project_db, "conn", None) is not None:
+                return project_db, False
+
+        conn = sqlite3.connect(f"{db_path.resolve().as_uri()}?mode=ro", uri=True, check_same_thread=False, timeout=30.0)
+        conn.row_factory = sqlite3.Row
+        return SimpleNamespace(conn=conn, db_path=db_path), True
+
     def _build_proof_digest(self, paths) -> dict:
         log_dir = paths.root / "logs"
         digest = {
@@ -145,10 +164,9 @@ class AuditService:
             return digest
 
         try:
-            from modules.core.db_manager import DBManager
             from modules.core.failure_analyzer import FailureAnalyzer
 
-            db = DBManager(db_path)
+            db, should_close = self._resolve_proof_digest_db(db_path)
             try:
                 try:
                     ui_event_count = int(db.conn.execute("SELECT COUNT(*) AS cnt FROM ui_events").fetchone()["cnt"])
@@ -167,7 +185,8 @@ class AuditService:
                     if compact:
                         digest["stages"][f"stage{stage}"] = compact
             finally:
-                db.close()
+                if should_close:
+                    db.conn.close()
         except Exception as exc:
             digest["status"] = "warn"
             digest["error"] = str(exc)[:200]
@@ -202,6 +221,11 @@ class AuditService:
         if paths is None:
             return
         try:
+            if callable(self._before_summary_write):
+                try:
+                    self._before_summary_write()
+                except Exception as exc:
+                    self._ui_log(f"[Audit] pre-summary hook failed: {exc}")
             summary = {
                 "tag": tag,
                 "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),

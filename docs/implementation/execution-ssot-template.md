@@ -10,6 +10,11 @@ Date: YYYY-MM-DD
 Status: draft | active | execution-ready | closed
 Canonical Path: `docs/YYYY-MM-DD/<topic>-execution-ssot.md`
 Temp Mirror Path: `docs/temp/<topic>-execution-ssot.md`
+Commit State:
+- Baseline Commit: `<git rev-parse HEAD at evidence start>`
+- Baseline Dirty Summary: `clean | dirty: ...`
+- Resume Commit: `same-as-baseline | <git rev-parse HEAD at resume/revalidation>`
+- Resume Drift Summary: `none | ...`
 Source Survey Docs:
 - `docs/YYYY-MM-DD/<topic>-full-survey-audit-order.md`
 - `docs/YYYY-MM-DD/<topic>-3pass-audit.md`
@@ -97,5 +102,6 @@ Before final save:
 
 Before starting implementation from this document:
 - re-run the document 3-pass audit against the current workspace state
+- refresh `Resume Commit` and `Resume Drift Summary`
 - confirm the document still reflects live code and dependencies
 - confirm estimated confidence is at least 95%

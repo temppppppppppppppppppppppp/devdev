@@ -1169,6 +1169,35 @@ class TestRecordS4Attempt:
         assert kw["arc"] == 1
         assert kw["attempt_key"] == "s4:ep1:arc1:a2"
 
+    def test_patch_run_moves_patch_provenance_into_advisory_metadata(self):
+        ctx = _make_ctx()
+        ctx.pass_rate_monitor = MagicMock()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.chief_writer.inplace_patch.return_value = []
+        round_ctx.chief_writer.patch_with_feedback.return_value = [_candidate()]
+        round_ctx.manuscript_validator.validate_all_candidates.return_value = [_validation_result()]
+        ctx.agents["director"].select_and_judge_ensemble.return_value = {
+            "selected": "A",
+            "verdict": "PASS",
+            "score": 80,
+            "selection_reason": "ok",
+            "selected_candidate": _candidate(),
+            "state_updates": {},
+        }
+
+        ir.run(
+            round_num=1,
+            stage4_spinner=MagicMock(),
+            director_feedback="feedback",
+            previous_attempt={"score": 70, "best_manuscript": "draft"},
+            round_ctx=round_ctx,
+        )
+
+        db_kwargs = ctx.current_project.db.save_director_selection.call_args.kwargs
+        assert db_kwargs["selection_reason"] == "ok"
+        assert db_kwargs["advisory_warnings"]["patch_context"] == {"tag": "patch", "score": 70}
+
     def test_patch_fallback_records_method_ensemble(self):
         ctx = _make_ctx()
         ctx.pass_rate_monitor = MagicMock()

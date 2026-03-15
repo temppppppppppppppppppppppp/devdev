@@ -1,0 +1,90 @@
+## Menu 7 source sites
+Path: main_a.py
+### Lines 2429-2430
+2429:                    "6": "🔄 One-Stop: Arc-by-Arc 자동 파이프라인",
+2430:                    "7": "🧭 One-Stop: Frontier Lag (S3=-1 / S4=-2)",
+
+### Lines 4179-4194
+4179:            if batch_size_override is not None:
+4180:                try:
+4181:                    batch_size = max(1, min(int(batch_size_override), remaining_design))
+4182:                except (TypeError, ValueError):
+4183:                    batch_size = default_count
+4184:                self.ui.log(f"   🤖 [FrontierLag] 하네스 batch_size override 적용: {batch_size}")
+4185:            else:
+4186:                batch_size = self._get_int_input(
+4187:                    f"👉 몇 개 Arc를 추가 설계할까요? (1~{remaining_design}, 기본: {default_count}): ",
+4188:                    default=default_count,
+4189:                    min_val=1,
+4190:                    max_val=remaining_design,
+4191:                )
+4192:                if batch_size is None:
+4193:                    batch_size = default_count
+4194:            target_count = batch_size
+
+### Lines 4292-4302
+4292:                        if s3_success == 0 and s3_fail > 0:
+4293:                            self.ui.log(f"   ⚠️ [Stage 3] Blueprint 생성 실패 (성공: 0, 실패: {s3_fail})")
+4294:                            try:
+4295:                                skip_choice = input("   건너뛰고 다음 Arc로? (1=건너뛰기 / 2=중단, 기본: 2): ").strip()
+4296:                            except (EOFError, KeyboardInterrupt):
+4297:                                skip_choice = "2"
+4298:                            if skip_choice != "1":
+4299:                                self.ui.log("   🛑 사용자 요청으로 파이프라인을 중단합니다.")
+4300:                                stop_reason = "stage3_user_abort"
+4301:                                break
+4302:                            self.ui.log("   ⏭️ Stage 3 건너뛰고 다음 Arc로...")
+
+### Lines 4314-4323
+4314:                    except Exception as s3_err:
+4315:                        self.ui.log(f"   ❌ [Stage 3] Blueprint 생성 오류: {str(s3_err)[:100]}")
+4316:                        try:
+4317:                            skip_choice = input("   건너뛰고 다음 Arc로? (1=건너뛰기 / 2=중단, 기본: 2): ").strip()
+4318:                        except (EOFError, KeyboardInterrupt):
+4319:                            skip_choice = "2"
+4320:                        if skip_choice != "1":
+4321:                            self.ui.log("   🛑 사용자 요청으로 파이프라인을 중단합니다.")
+4322:                            stop_reason = "stage3_exception_user_abort"
+4323:                            break
+
+### Lines 4386-4388
+4386:        if wait_for_menu_return:
+4387:            try:
+4388:                input("[Enter] 메뉴로 돌아가기")
+
+## Runtime evidence: 260314-print.txt
+### Lines 251-256
+251:   🧭 [FrontierLag] One-Stop Frontier Lag
+252:      설계 frontier: 0 / 60 (추가 설계 가능: 60개)
+253:   ════════════════════════════════════════════════════════════
+254:
+255:   👉 몇 개 Arc를 추가 설계할까요? (1~60, 기본: 3): 
+256:👉 몇 개 Arc를 추가 설계할까요? (1~60, 기본: 3): 5
+
+## Runtime evidence: session_20260314_213845.log
+### Lines 331-339
+331:[2026-03-14 21:39:29] [INFO] [UI] 🧭 [FrontierLag] One-Stop Frontier Lag
+332:[2026-03-14 21:39:29] [INFO] [UI]    설계 frontier: 0 / 60 (추가 설계 가능: 60개)
+333:[2026-03-14 21:39:29] [INFO] [UI] ════════════════════════════════════════════════════════════
+334:
+335:[2026-03-14 21:39:29] [INFO] [UI] 👉 몇 개 Arc를 추가 설계할까요? (1~60, 기본: 3): 
+336:[2026-03-14 21:39:29] [DEBUG] [root] [ui_events] save_ui_event failed (non-blocking): invalid literal for int() with base 10: 'stage0'
+337:[2026-03-14 21:39:32] [INFO] [UI] 👉 몇 개 Arc를 추가 설계할까요? (1~60, 기본: 3): 
+338:[2026-03-14 21:39:32] [DEBUG] [root] [ui_events] save_ui_event failed (non-blocking): invalid literal for int() with base 10: 'stage0'
+339:[2026-03-14 21:39:32] [INFO] [UI] 👉 몇 개 Arc를 추가 설계할까요? (1~60, 기본: 3): 
+
+## Predecessor harness contract
+### docs/2026-03-14/auto-frontier-lag-n-arc-test-harness-ssot.md 136-148
+136:## 6. Frontier Lag Stop-Boundary
+137:
+138:The heavy design uses an internal stop boundary rather than a wall-clock kill.
+139:
+140:Current implementation seam:
+141:
+142:- `SovereignApp._one_stop_pipeline_frontier_lag(max_arc_advances=..., batch_size_override=..., wait_for_menu_return=False)`
+143:
+144:Required semantics:
+145:
+146:- `max_arc_advances = N` means stop after exactly `N` advanced arcs
+147:- `batch_size_override` is allowed for bounded test runs
+148:- `wait_for_menu_return=False` avoids interactive menu blocking at worker end

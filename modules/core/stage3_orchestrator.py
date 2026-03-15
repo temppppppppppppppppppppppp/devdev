@@ -1789,7 +1789,7 @@ class Stage3Orchestrator:
             "verdict": verdict,
             "stage": 3,
             "score": int(score or 0),
-            "selection_reason": selection_reason[:200],
+            "selection_reason": selection_reason[:500],
             "candidate_count": max(1, int(candidate_count or 1)),
             "fix_scope": fix_scope,
             "advisory_warnings": _advisory or None,

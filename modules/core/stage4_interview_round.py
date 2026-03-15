@@ -2010,13 +2010,13 @@ class Stage4InterviewRound:
         try:
             _session_id = resolve_logging_session_id(getattr(self.ctx, "current_project", None))
             _selection_reason = selection_reason
+            _selection_advisory = dict(_advisory_summary or {})
             if _is_patch:
                 _tag = "patch-fallback" if _is_patch_fallback else "patch"
-                _selection_reason = (
-                    f"[{_tag}|score={_prev_score}] {selection_reason}"
-                    if selection_reason
-                    else f"[{_tag}|score={_prev_score}]"
-                )
+                _selection_advisory["patch_context"] = {
+                    "tag": _tag,
+                    "score": _prev_score,
+                }
             _sel_candidate = director_result.get("selected_candidate", {})
             if not isinstance(_sel_candidate, dict):
                 _sel_candidate = {}
@@ -2050,7 +2050,7 @@ class Stage4InterviewRound:
                 selection_reason=_selection_reason,
                 candidate_count=len(candidates) if candidates else 0,
                 fix_scope=director_result.get("fix_scope", ""),  # [A-3]
-                advisory_warnings=_advisory_summary or None,
+                advisory_warnings=_selection_advisory or None,
                 verdict_reason=verdict_reason,
                 pre_firewall_score=director_result.get("pre_firewall_score", score),
                 firewall_triggered=bool(director_result.get("firewall_triggered")),

@@ -84,6 +84,84 @@ class DBManager:
             return json.loads(fallback)
 
     @staticmethod
+    def _normalize_ui_event_stage(stage: int | str | None) -> tuple[int | None, str | None]:
+        if stage is None:
+            return None, None
+        if isinstance(stage, str):
+            label = stage.strip()
+            if not label:
+                return None, None
+            if label.lstrip("-").isdigit():
+                return int(label), None
+            lowered = label.lower()
+            if lowered == "shutdown":
+                return None, label
+            if lowered.startswith("stage") and lowered[5:].isdigit():
+                return int(lowered[5:]), label
+            raise ValueError(f"unsupported ui_event stage label: {stage}")
+        return int(stage), None
+
+    @staticmethod
+    def _merge_ui_event_stage_label(meta: dict | None, stage_label: str | None) -> dict | None:
+        if stage_label is None:
+            return meta
+        if meta is None:
+            merged: dict[str, object] = {}
+        elif isinstance(meta, dict):
+            merged = dict(meta)
+        else:
+            return meta
+        merged.setdefault("stage_label", stage_label)
+        return merged
+
+    @staticmethod
+    def _column_def_pairs(*pairs: tuple[str, str]) -> tuple[tuple[str, str], ...]:
+        return tuple((str(name), str(definition)) for name, definition in pairs)
+
+    def _get_table_columns(self, table_name: str) -> set[str]:
+        self.cursor.execute(f"PRAGMA table_info({table_name})")  # noqa: S608
+        return {str(row["name"]) for row in self.cursor.fetchall()}
+
+    def _ensure_columns_exist(
+        self,
+        table_name: str,
+        column_defs: tuple[tuple[str, str], ...],
+        *,
+        log_label: str,
+    ) -> list[str]:
+        existing_columns = self._get_table_columns(table_name)
+        missing_columns = [(name, definition) for name, definition in column_defs if name not in existing_columns]
+        if not missing_columns:
+            return []
+
+        added_columns: list[str] = []
+        failure: Exception | None = None
+        for column_name, column_definition in missing_columns:
+            try:
+                self.cursor.execute(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_definition}")  # noqa: S608
+                self.conn.commit()
+                added_columns.append(column_name)
+            except Exception as exc:
+                failure = exc
+                try:
+                    self.conn.rollback()
+                except Exception:
+                    pass
+                break
+
+        if added_columns:
+            logging.info("[DBManager] %s compatibility migration added columns: %s", log_label, ", ".join(added_columns))
+        if failure is not None:
+            remaining_columns = [name for name, _ in missing_columns[len(added_columns) :]]
+            logging.warning(
+                "[DBManager] %s compatibility migration failed after %s: %s",
+                log_label,
+                ", ".join(added_columns + remaining_columns),
+                failure,
+            )
+        return added_columns
+
+    @staticmethod
     def _is_db_corruption_error(exc: Exception) -> bool:
         """SQLite 손상 계열 에러 판별."""
         text = str(exc).lower()
@@ -534,22 +612,20 @@ class DBManager:
         self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_llm_calls_ep ON llm_calls(ep_num)")
         self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_llm_calls_ts ON llm_calls(ts)")
         # [Log-Phase2] Existing DB compatibility migration
-        for _col in (
-            "input_tokens",
-            "output_tokens",
-            "cached_tokens",
-            "thinking_tokens",
-            "total_cost_usd",
-            "prompt_snippet",
-            "response_snippet",
-            "thinking_snippet",
-        ):
-            try:
-                _col_type = "REAL" if _col == "total_cost_usd" else ("INTEGER" if _col.endswith("_tokens") else "TEXT")
-                self.cursor.execute(f"ALTER TABLE llm_calls ADD COLUMN {_col} {_col_type}")
-                self.conn.commit()
-            except Exception as _e:
-                logging.debug("[DBManager] llm_calls 컬럼 마이그레이션 스킵(%s): %s", _col, _e)
+        self._ensure_columns_exist(
+            "llm_calls",
+            self._column_def_pairs(
+                ("input_tokens", "INTEGER"),
+                ("output_tokens", "INTEGER"),
+                ("cached_tokens", "INTEGER"),
+                ("thinking_tokens", "INTEGER"),
+                ("total_cost_usd", "REAL"),
+                ("prompt_snippet", "TEXT"),
+                ("response_snippet", "TEXT"),
+                ("thinking_snippet", "TEXT"),
+            ),
+            log_label="llm_calls",
+        )
 
         # [Log-2] Stage-level attempt telemetry
         self.cursor.execute(
@@ -591,25 +667,24 @@ class DBManager:
             "CREATE INDEX IF NOT EXISTS idx_stage_attempts_category ON stage_attempts(failure_category)"
         )
         # [TF-60][OPT-3] stage_attempts 컬럼 마이그레이션 (기존 DB 호환)
-        for _col in (
-            "generation_method",
-            "prompt_version",
-            "attempt_key",
-            "candidate_key",
-            "content_hash",
-            "artifact_path",
-            "selection_reason",
-            "verdict_reason",
-            "open_review",
-            "fix_scope_reasoning",
-            "runtime_advisory",
-            "retry_directives",
-        ):
-            try:
-                self.cursor.execute(f"ALTER TABLE stage_attempts ADD COLUMN {_col} TEXT")
-                self.conn.commit()
-            except Exception as _e:
-                logging.debug("[DBManager] stage_attempts %s 마이그레이션 스킵: %s", _col, _e)
+        self._ensure_columns_exist(
+            "stage_attempts",
+            self._column_def_pairs(
+                ("generation_method", "TEXT"),
+                ("prompt_version", "TEXT"),
+                ("attempt_key", "TEXT"),
+                ("candidate_key", "TEXT"),
+                ("content_hash", "TEXT"),
+                ("artifact_path", "TEXT"),
+                ("selection_reason", "TEXT"),
+                ("verdict_reason", "TEXT"),
+                ("open_review", "TEXT"),
+                ("fix_scope_reasoning", "TEXT"),
+                ("runtime_advisory", "TEXT"),
+                ("retry_directives", "TEXT"),
+            ),
+            log_label="stage_attempts",
+        )
         self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_stage_attempts_attempt_key ON stage_attempts(attempt_key)")
 
         self.cursor.execute(
@@ -2711,7 +2786,7 @@ class DBManager:
                     selected_strategy,
                     verdict,
                     score,
-                    selection_reason[:200] if selection_reason else "",
+                    selection_reason[:500] if selection_reason else "",
                     candidate_count,
                     fix_scope or "",
                     _adv_json,
@@ -3214,7 +3289,7 @@ class DBManager:
         session_id: str | None = None,
         ts: str | None = None,
         seq: int | None = None,
-        stage: int | None = None,
+        stage: int | str | None = None,
         ep_num: int | None = None,
         arc_num: int | None = None,
         round_num: int | None = None,
@@ -3234,7 +3309,9 @@ class DBManager:
         nested = False
         try:
             event_ts = str(ts or datetime.now().isoformat(timespec="seconds"))
-            meta_json = json.dumps(meta, ensure_ascii=False, default=str) if meta is not None else None
+            normalized_stage, stage_label = self._normalize_ui_event_stage(stage)
+            meta_payload = self._merge_ui_event_stage_label(meta, stage_label)
+            meta_json = json.dumps(meta_payload, ensure_ascii=False, default=str) if meta_payload is not None else None
             with self._lock:
                 nested = self.conn.in_transaction
                 self.cursor.execute(
@@ -3247,7 +3324,7 @@ class DBManager:
                         str(session_id or ""),
                         event_ts,
                         int(seq) if seq is not None else None,
-                        int(stage) if stage is not None else None,
+                        normalized_stage,
                         int(ep_num) if ep_num is not None else None,
                         int(arc_num) if arc_num is not None else None,
                         int(round_num) if round_num is not None else None,
