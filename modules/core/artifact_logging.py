@@ -50,7 +50,7 @@ def snapshot_logged_artifact(
 ) -> dict:
     """Persist a stable snapshot for an attempt and return linkage metadata."""
     serialized = _serialize_payload(payload)
-    content_hash = hashlib.sha256(serialized["hash_bytes"]).hexdigest() if serialized["hash_bytes"] else ""
+    content_hash = hashlib.sha256(serialized["persisted_bytes"]).hexdigest() if serialized["persisted_bytes"] else ""
     artifact_path = ""
     root = _resolve_project_root(project)
     if root is not None and serialized["text"]:
@@ -91,27 +91,27 @@ def snapshot_logged_artifact(
 
 def _serialize_payload(payload: Any) -> dict[str, bytes | str]:
     if payload is None:
-        return {"text": "", "hash_bytes": b"", "suffix": ".txt"}
+        return {"text": "", "persisted_bytes": b"", "suffix": ".txt"}
 
     if isinstance(payload, str):
         text = payload
         return {
             "text": text,
-            "hash_bytes": text.encode("utf-8"),
+            "persisted_bytes": text.encode("utf-8"),
             "suffix": ".txt",
         }
 
-    canonical = json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str)
     pretty = json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True, default=str)
     return {
         "text": pretty,
-        "hash_bytes": canonical.encode("utf-8"),
+        "persisted_bytes": pretty.encode("utf-8"),
         "suffix": ".json",
     }
 
 
 def _write_artifact_snapshot(file_path: Path, text: str) -> None:
-    file_path.write_text(text, encoding="utf-8")
+    # Write exact UTF-8 bytes so the stored content hash can describe the on-disk artifact bytes.
+    file_path.write_bytes(text.encode("utf-8"))
 
 
 def _resolve_project_root(project) -> Path | None:

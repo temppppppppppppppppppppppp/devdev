@@ -105,6 +105,16 @@ class TestDisabledMode:
         disabled_logger.log_state_change(ep_num=1, change_type="ws")
         assert not log_dir.exists() or not list(log_dir.iterdir())
 
+    def test_begin_shutdown_disables_future_writes(self, logger, log_dir):
+        logger.begin_shutdown()
+
+        logger.log_llm_call(agent_name="test", model="test", prompt="test", response="test")
+        logger.log_decision(stage="s4", ep_num=1)
+        logger.log_state_change(ep_num=1, change_type="ws")
+        logger.log_ui_event(session_id="sess", message="ignored")
+
+        assert not log_dir.exists() or not list(log_dir.iterdir())
+
 
 # ── 프롬프트 절삭 ──────────────────────────────────────────
 

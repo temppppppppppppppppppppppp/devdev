@@ -1,0 +1,55 @@
+# codebase-global-log-evidence-merged Artifact Truth Evidence
+
+Project: projects/00_260315
+
+## 1. Artifact Inventory
+- stage2: 3
+- stage3: 12
+- stage4: 28
+
+## 2. Stage Attempt Artifact Integrity
+- rows with artifact_path: 29
+- stage2: 3
+- stage3: 12
+- stage4: 14
+- missing files: 0
+- zero-byte files: 0
+- utf-8 decode failures: 0
+- json parse failures (stage2/stage3): 0
+- content_hash mismatches: 29
+
+Representative mismatches:
+- s2:ep1:arc1:a1:20260315_144741 | logs/artifacts/stage2/arc_001/attempt_01/final_arc__creative.json | expected=576799a01032f81ff9d3270bb76ae7135bfccb4ad32ad48db1103df420d69089 actual=24671aa757fd896d1ab7fffadfb3f34ed533dabe668251a357193cc322391f17
+- s2:ep2:arc2:a1:20260315_144741 | logs/artifacts/stage2/arc_002/attempt_01/final_arc__creative.json | expected=7c51e6743a74434166f33c28562e0a9ff144fbd6c78e9173c85e4a2b51093ef2 actual=650e9b0c25618148ce7110a929d1b389636133604f323a4eeecb07d5e3ff0329
+- s2:ep3:arc3:a1:20260315_144741 | logs/artifacts/stage2/arc_003/attempt_01/final_arc__conservative.json | expected=65cfe197eb6fe4deca892407d49c2fb05feeb3bc24da6b83f1d44231a230f1be actual=11136aa9f7e9e4c2acf1e126da998c86aef50df442cc3130611206e261d88e53
+- s3:ep1:arc1:a1:20260315_144741 | logs/artifacts/stage3/ep_0001/attempt_01/final_blueprint__action_focused.json | expected=b8374b2997d2a998261c5a9c8a6483999746afa9d5608ed892e97d25e54d6654 actual=daf951f32a543f3d18e7922abbb9b6fdb6621e98473ec25154b1a6e07d490a49
+- s3:ep2:arc1:a1:20260315_144741 | logs/artifacts/stage3/ep_0002/attempt_01/final_blueprint__dialogue_focused.json | expected=7cbceb90b6dfef9e1ee4c2e26ca66b98d4c7fda3d0d4de8d741d9bedd94d18c1 actual=05c811377aba3149345e7f372bcc1b30703997dd4ed3d7de2d64a7be077082f3
+- s3:ep3:arc1:a1:20260315_144741 | logs/artifacts/stage3/ep_0003/attempt_01/final_blueprint__dialogue_focused.json | expected=50e55ba58a1a76a3398d8d40bbd0075768b361aa8f61c3490cdcacd4853504be actual=fcc18bf07c71de04257648b0917fc753bdad33a5a5045264884ab734d838accf
+- s3:ep4:arc1:a1:20260315_144741 | logs/artifacts/stage3/ep_0004/attempt_01/final_blueprint__action_focused.json | expected=0d672c3ef719c39181214890bb4c5ad12ce5f9c5fad937380d3528fb1a86ce4a actual=96a572345e56fe8dcad193efec5b5b40095396a16489cd306cdc0cdfdfec3443
+- s3:ep5:arc2:a1:20260315_144741 | logs/artifacts/stage3/ep_0005/attempt_01/final_blueprint__dialogue_focused.json | expected=1faa6d63512f23da08c60eb6f5a8a315b63442854253ca9233a0b239e4fd8ccd actual=046a851f0d5c46b960e10ef1fbbd94624267028cbdf0e0a99db22e5b15d66247
+
+## 3. Episode Production Linkage
+- records: 19
+- linked records with attempt_key: 14
+- event-only records without attempt_key: 5
+- content_hash mismatches across artifact_path/selection_artifact_path: 28
+- selection path oddities: 14
+
+Event-only examples:
+- {"ts": "2026-03-15T15:49:07", "ep": 5, "event": "TF49b_PREFLIGHT", "streak": 1, "success": true}
+- {"ts": "2026-03-15T15:58:47", "ep": 6, "event": "TF49b_PREFLIGHT", "streak": 1, "success": true}
+- {"ts": "2026-03-15T16:25:34", "ep": 7, "event": "TF49b_PREFLIGHT", "streak": 1, "success": true}
+- {"ts": "2026-03-15T16:34:19", "ep": 8, "event": "TF49b_PREFLIGHT", "streak": 1, "success": true}
+- {"ts": "2026-03-15T16:46:35", "ep": 9, "event": "TF49b_PREFLIGHT", "streak": 1, "success": true}
+
+Selection path oddity examples:
+- {"attempt_key": "s4:ep1:arc1:a1:20260315_144741", "ep": 1, "candidate_key": "C|\\uade0\\ud615 \\uc804\\ub7b5", "artifact_path": "logs/artifacts/stage4/ep_0001/attempt_01/final_manuscript__C.txt", "selection_artifact_path": "logs/artifacts/stage4/ep_0001/attempt_01/selected_candidate__C.txt", "content_hash": "51ede4a0779c905ccdf16146355dad2b29fdd33307327851a4c43338e742f8dc", "selection_content_hash": "51ede4a0779c905ccdf16146355dad2b29fdd33307327851a4c43338e742f8dc"}
+- {"attempt_key": "s4:ep2:arc1:a1:20260315_144741", "ep": 2, "candidate_key": "C|\\uae34\\uc7a5\\uac10 + \\ubc18\\uc804 \\uac15\\uc870", "artifact_path": "logs/artifacts/stage4/ep_0002/attempt_01/final_manuscript__C.txt", "selection_artifact_path": "logs/artifacts/stage4/ep_0002/attempt_01/selected_candidate__C.txt", "content_hash": "5704d993542e266c3db46e6ef2162159c4e0397af9a962bac00490ab58e430ba", "selection_content_hash": "5704d993542e266c3db46e6ef2162159c4e0397af9a962bac00490ab58e430ba"}
+- {"attempt_key": "s4:ep3:arc1:a1:20260315_144741", "ep": 3, "candidate_key": "C|\\uade0\\ud615 \\uc804\\ub7b5", "artifact_path": "logs/artifacts/stage4/ep_0003/attempt_01/final_manuscript__C.txt", "selection_artifact_path": "logs/artifacts/stage4/ep_0003/attempt_01/selected_candidate__C.txt", "content_hash": "bfe133ecf92bb9cf25e0423bfa208a5ebe0b59df9fc2aa57bfc8f297c330c902", "selection_content_hash": "bfe133ecf92bb9cf25e0423bfa208a5ebe0b59df9fc2aa57bfc8f297c330c902"}
+- {"attempt_key": "s4:ep4:arc1:a1:20260315_144741", "ep": 4, "candidate_key": "A|InPlace \\uc218\\uc815", "artifact_path": "logs/artifacts/stage4/ep_0004/attempt_01/patched_after_fix__A_InPlace.txt", "selection_artifact_path": "logs/artifacts/stage4/ep_0004/attempt_01/selected_before_fix__C.txt", "content_hash": "e62f0145b39565a3f9458d288cfd187f26483ce5c935004b375992db1264f689", "selection_content_hash": "b3c0536febe6f78591b3b7e2a052e241fee25f16486bacb23ab3ac0cce6e59d1"}
+- {"attempt_key": "s4:ep5:arc2:a1:20260315_144741", "ep": 5, "candidate_key": "A|InPlace \\uc218\\uc815", "artifact_path": "logs/artifacts/stage4/ep_0005/attempt_01/patched_after_fix__A_InPlace.txt", "selection_artifact_path": "logs/artifacts/stage4/ep_0005/attempt_01/selected_before_fix__A.txt", "content_hash": "8e0917465afcb16cd580f68a4a4cc36dba511a56da6a5fdbdb83b5eba2a16e22", "selection_content_hash": "b37b97cdd2bd9c71a058a0c2fa1f2b3adf707532a3e9fa1274476e4ae7140653"}
+
+## 4. Interpretation Guardrail
+- files exist and decode/parse cleanly, so current defect surface is not zero-byte or invalid-utf8 artifact corruption
+- stored content_hash / selection_content_hash metadata is systematically stale against current bytes on disk
+- this is action-bearing for persistence/observability because DB/JSONL lineage cannot currently prove artifact truth
