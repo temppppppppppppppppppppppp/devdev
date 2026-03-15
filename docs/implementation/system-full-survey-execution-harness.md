@@ -201,6 +201,11 @@ Detailed document audit mechanics live in `docs/implementation/document-3pass-au
 - Save reusable survey artifacts in `docs/YYYY-MM-DD/` unless the user explicitly wants another path.
 - If evidence volume is large or likely to be reused, create an evidence manifest.
 - If the survey is deep or global, use the triangulation contract for claims that drive severity or execution planning.
+- If generated runtime artifacts are in scope, inspect the actual artifact files directly rather than relying only on logs, DB rows, hashes, or summaries.
+- For blueprint/manuscript/episode-style artifacts, build evidence across three layers:
+  - artifact truth: file existence, byte stability, decode/parse integrity, and on-disk hash truth
+  - metadata truth: DB/JSONL/summary/rationale linkage to those files
+  - narrative truth: content-level contradictions, and mismatches against blueprint/selection/verdict claims
 
 ### Step 2A. Side-Effect Sweep
 Before closing the inventory, explicitly inspect side-effects tied to the target surface.
@@ -210,6 +215,7 @@ Default checklist:
 
 Minimum side-effect categories:
 - file writes and artifact generation
+- actual artifact content integrity and content-level truth when runtime-generated artifacts are part of scope
 - DB writes, schema touchpoints, and transaction boundaries
 - JSONL/log/audit sink writes
 - console, UI, and operator-visible output surfaces

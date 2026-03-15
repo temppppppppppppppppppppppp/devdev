@@ -14,8 +14,8 @@ import traceback as _traceback
 
 from modules.core.artifact_logging import build_candidate_key, normalize_artifact_meta, snapshot_logged_artifact
 from modules.core.constants import ContextLimits, Emojis, ErrorMessages
-from modules.core.continuity_pin_guard import apply_continuity_pins
 from modules.core.context_advisor import RetrievalSources
+from modules.core.continuity_pin_guard import apply_continuity_pins
 from modules.core.fact_ledger import summarize_fact_ledger_numbers_block
 from modules.core.logging_keys import build_attempt_key, resolve_logging_session_id
 from modules.core.project_support import build_style_guide_summary, resolve_project_pov_contract

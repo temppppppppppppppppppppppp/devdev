@@ -1,15 +1,15 @@
 ﻿# backend-front-control-plane-connectivity-hardening-remediation Execution SSOT
 
 Date: 2026-03-15
-Status: execution-ready
+Status: closed
 Canonical Path: `docs/2026-03-15/backend-front-control-plane-connectivity-hardening-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/backend-front-control-plane-connectivity-hardening-remediation-execution-ssot.md`
 Commit State:
-- Baseline Commit: `d2982aa2790f5ab81529f1e8d87cf6f6006f13c9`
-- Baseline Dirty Summary: `dirty: unrelated investment/style/pdf/log artifacts already present`
+- Baseline Commit: `bbb00a77c7356a32fe6358642cff0d3d445b7e8e`
+- Baseline Dirty Summary: `dirty: active roadmap/temp docs, menu7/runtime/frontier edits, post-remediation bundle docs, unrelated pdf/style/log artifacts, and untracked projects/000/`
 - Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `none`
-Source Survey Docs: `docs/2026-03-15/codebase-global-log-evidence-merged-3pass-audit.md`; `docs/2026-03-15/codebase-global-log-evidence-merged-deep-global-survey.md`
+- Resume Drift Summary: `renderer run/stop now use bridge command readiness independent of websocket open-state; getStatus is live; status reconnect snapshots carry pending prompts; bridgeFetch has explicit timeout semantics; minimal desktop runtime proof completed via start:spike`
+Source Survey Docs: `docs/2026-03-15/codebase-global-log-evidence-merged-3pass-audit.md`; `docs/2026-03-15/codebase-global-log-evidence-merged-deep-global-survey.md`; `docs/2026-03-15/backend-front-control-plane-connectivity-hardening-remediation-3pass-audit.md`
 Evidence Artifacts: `docs/2026-03-15/codebase-global-log-evidence-merged-backend-front-connectivity.txt`; `docs/2026-03-15/codebase-global-log-evidence-merged-surface-anchor-inventory.txt`; `docs/2026-03-15/codebase-global-log-evidence-merged-side-effects.txt`
 Side-Effect Coverage: covered
 
@@ -97,8 +97,8 @@ Excluded:
 - Do not keep silent renderer prompt drop as an implicit policy.
 
 ## 12. Temp Queue Notes
-- temp status: pending
-- cleanup condition: remove temp mirror only after realization is validated and closed
+- temp status: completed
+- cleanup condition: satisfied; remove temp mirror after closure refresh
 - roadmap dependency: third item in `docs/2026-03-15/codebase-global-log-evidence-merged-execution-roadmap.md`
 
 ## 13. Validation And Closure Hooks
@@ -106,3 +106,28 @@ Excluded:
 - bundle validator: `python scripts/validate_deep_global_survey_bundle.py --survey-doc docs/2026-03-15/codebase-global-log-evidence-merged-deep-global-survey.md --strict`
 - closure harness: `docs/implementation/execution-closure-harness.md`
 - execution-start rule: re-run the document 3-pass audit and confirm at least 95% confidence against the current workspace state before patching code from this document
+
+## 14. Closure Evidence
+- Implemented:
+  - `geuldobi-desktop/src/index.html`
+  - `geuldobi-desktop/src/preload.js`
+  - `geuldobi-desktop/src/main.js`
+  - `geuldobi-desktop/src/desktop_control_plane_contract.js`
+  - `modules/api/bridge_server.py`
+  - `modules/api/prompt_broker.py`
+  - `docs/implementation/api-contract-v1.yaml`
+  - `docs/implementation/desktop-ipc-surface-contract-v1.json`
+  - targeted regression tests
+- Verification completed:
+  - `python -m py_compile modules/api/bridge_server.py modules/api/prompt_broker.py tests/test_bridge_server_http_contract.py tests/test_desktop_shadow_hygiene.py tests/test_desktop_transport_contract.py`
+  - `node --check geuldobi-desktop/src/main.js`
+  - `node --check geuldobi-desktop/src/preload.js`
+  - inline `vm.Script(...)` syntax parse of the `index.html` runtime script
+  - `python -m pytest tests/test_bridge_server_http_contract.py`
+  - `python -m pytest tests/test_desktop_shadow_hygiene.py tests/test_desktop_transport_contract.py tests/test_desktop_direct_surface_contract.py`
+  - `npm run start:spike`
+- Closure judgment:
+  - command-path readiness and websocket readiness are now explicit separate surfaces
+  - concurrent prompt requests are queued and reconnect can recover pending prompt state through `/status`
+  - bridge timeout behavior is documented and regression-tested
+  - minimal desktop runtime proof exists for splash -> backend -> main window handoff

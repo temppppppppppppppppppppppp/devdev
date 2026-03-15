@@ -39,6 +39,11 @@ def _build_frontier_app(*, total_arcs: int, batch_size: int, stage3_results, pla
         db=db,
     )
     app.ui = SimpleNamespace(log=MagicMock())
+    app._ui_service = SimpleNamespace(
+        get_choice_input=MagicMock(return_value="2"),
+        confirm=MagicMock(return_value=False),
+        pause=MagicMock(),
+    )
     app._show_resume_status = MagicMock()
     app._get_int_input = MagicMock(return_value=batch_size)
     app._get_max_episode_from_manuscripts = MagicMock(side_effect=manuscripts_after)
@@ -113,11 +118,18 @@ def test_frontier_lag_uses_default_batch_without_boundary_input():
             raise AssertionError(f"unexpected input prompt: {prompt}")
 
         with patch("builtins.input", side_effect=_input_side_effect):
-            SovereignApp._one_stop_pipeline_frontier_lag(app)
+            result = SovereignApp._one_stop_pipeline_frontier_lag(app)
 
-    app._get_int_input.assert_not_called()
+    app._get_int_input.assert_called_once_with(
+        "👉 이번 실행에서 몇 개 Arc를 처리할까요? (1~2, 기본: 2): ",
+        default=2,
+        min_val=1,
+        max_val=2,
+    )
     assert app._stage3_orch.stage_3_batch_blueprinting.call_count == 2
     assert app._stage_4_v2_chief_writer.call_count == 2
+    assert result["requested_arc_limit"] == 2
+    assert result["requested_limit_hit"] is True
     default_batch_logs = [
         call.args[0]
         for call in app.ui.log.call_args_list
@@ -134,7 +146,7 @@ def test_frontier_lag_uses_default_batch_without_boundary_input():
 def test_frontier_lag_auto_shrinks_last_tranche_to_remaining():
     app = _build_frontier_app(
         total_arcs=4,
-        batch_size=3,
+        batch_size=4,
         stage3_results=[
             {"success_count": 1, "fail_count": 0},
             {"success_count": 1, "fail_count": 0},
@@ -207,10 +219,17 @@ def test_frontier_lag_auto_shrinks_last_tranche_to_remaining():
             raise AssertionError(f"unexpected input prompt: {prompt}")
 
         with patch("builtins.input", side_effect=_input_side_effect):
-            SovereignApp._one_stop_pipeline_frontier_lag(app)
+            result = SovereignApp._one_stop_pipeline_frontier_lag(app)
 
-    app._get_int_input.assert_not_called()
+    app._get_int_input.assert_called_once_with(
+        "👉 이번 실행에서 몇 개 Arc를 처리할까요? (1~4, 기본: 3): ",
+        default=3,
+        min_val=1,
+        max_val=4,
+    )
     assert app._stage3_orch.stage_3_batch_blueprinting.call_count == 4
+    assert result["requested_arc_limit"] == 4
+    assert result["requested_limit_hit"] is True
     default_batch_logs = [
         call.args[0]
         for call in app.ui.log.call_args_list
@@ -223,6 +242,90 @@ def test_frontier_lag_auto_shrinks_last_tranche_to_remaining():
     ]
     assert len(auto_continue_logs) == 1
     assert "다음 tranche: 1개" in auto_continue_logs[0]
+
+
+def test_frontier_lag_interactive_requested_arc_limit_stops_at_requested_total():
+    app = _build_frontier_app(
+        total_arcs=4,
+        batch_size=2,
+        stage3_results=[
+            {"success_count": 1, "fail_count": 0},
+            {"success_count": 1, "fail_count": 0},
+            {"success_count": 1, "fail_count": 0},
+        ],
+        plans=[
+            {
+                "true_final_arc_no": 4,
+                "designed_frontier_arc_no": 1,
+                "frontier_ep_start": 1,
+                "frontier_ep_end": 3,
+                "stage3_target": 2,
+                "stage4_target": 1,
+                "stage3_alignment": "aligned",
+                "stage4_alignment": "aligned",
+                "bp_max": 2,
+                "ms_max": 1,
+            },
+            {
+                "true_final_arc_no": 4,
+                "designed_frontier_arc_no": 2,
+                "frontier_ep_start": 4,
+                "frontier_ep_end": 6,
+                "stage3_target": 5,
+                "stage4_target": 4,
+                "stage3_alignment": "aligned",
+                "stage4_alignment": "aligned",
+                "bp_max": 5,
+                "ms_max": 4,
+            },
+            {
+                "true_final_arc_no": 4,
+                "designed_frontier_arc_no": 3,
+                "frontier_ep_start": 7,
+                "frontier_ep_end": 9,
+                "stage3_target": 8,
+                "stage4_target": 7,
+                "stage3_alignment": "aligned",
+                "stage4_alignment": "aligned",
+                "bp_max": 8,
+                "ms_max": 7,
+            },
+        ],
+        manuscripts_after=[0, 0, 0, 0, 0, 0],
+    )
+
+    fake_stage2 = _make_stage_context_module("Stage2Context")
+    fake_stage3 = _make_stage_context_module("Stage3Context")
+
+    with patch.dict(
+        sys.modules,
+        {"modules.core.stage2_context": fake_stage2, "modules.core.stage3_context": fake_stage3},
+    ):
+        def _input_side_effect(prompt=""):
+            if prompt == "[Enter] 메뉴로 돌아가기":
+                return ""
+            raise AssertionError(f"unexpected input prompt: {prompt}")
+
+        with patch("builtins.input", side_effect=_input_side_effect):
+            result = SovereignApp._one_stop_pipeline_frontier_lag(app)
+
+    app._get_int_input.assert_called_once_with(
+        "👉 이번 실행에서 몇 개 Arc를 처리할까요? (1~4, 기본: 3): ",
+        default=3,
+        min_val=1,
+        max_val=4,
+    )
+    assert app._stage3_orch.stage_3_batch_blueprinting.call_count == 2
+    assert app._stage_4_v2_chief_writer.call_count == 2
+    assert result["arcs_advanced"] == 2
+    assert result["requested_arc_limit"] == 2
+    assert result["requested_limit_hit"] is True
+    auto_continue_logs = [
+        call.args[0] for call in app.ui.log.call_args_list if "승인 없이 자동 계속" in str(call.args[0])
+    ]
+    assert auto_continue_logs == []
+    limit_logs = [call.args[0] for call in app.ui.log.call_args_list if "요청된 Arc 경계 도달" in str(call.args[0])]
+    assert len(limit_logs) == 1
 
 
 def test_frontier_lag_keeps_stage3_abort_prompt():
@@ -257,9 +360,16 @@ def test_frontier_lag_keeps_stage3_abort_prompt():
         with patch("builtins.input", return_value="2") as mocked_input:
             result = SovereignApp._one_stop_pipeline_frontier_lag(app)
 
-    app._get_int_input.assert_not_called()
-    assert mocked_input.call_count == 2
-    assert "건너뛰고 다음 Arc로?" in mocked_input.call_args_list[0].args[0]
+    app._get_int_input.assert_called_once_with(
+        "👉 이번 실행에서 몇 개 Arc를 처리할까요? (1~2, 기본: 2): ",
+        default=2,
+        min_val=1,
+        max_val=2,
+    )
+    mocked_input.assert_not_called()
+    app._ui_service.get_choice_input.assert_called_once()
+    assert "건너뛰고 다음 Arc로?" in app._ui_service.get_choice_input.call_args.args[0]
+    app._ui_service.pause.assert_called_once_with("[Enter] 메뉴로 돌아가기", prompt_id="frontier_lag_return_to_menu")
     app._stage_4_v2_chief_writer.assert_not_called()
     assert result["stop_reason"] == "stage3_user_abort"
 

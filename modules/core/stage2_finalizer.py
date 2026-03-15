@@ -551,8 +551,7 @@ class Stage2Finalizer:
         if _voice_advisory:
             _story_context = f"{_story_context}\n\n{_voice_advisory}" if _story_context else _voice_advisory
 
-        self.ctx.ui.log("      🤔 [TF-38] Director 전략적 무결성 검수 중...")
-        print("      🤔 [Director] 전략적 무결성 검수 중 (LLM 호출, 1~3분 소요)...")
+        self.ctx.ui.log("      🤔 [Director] 전략적 무결성 검수 중 (LLM 호출, 1~3분 소요)...")
         # [G7] Director 심사 호출 크래시 방어
         try:
             audit = self.ctx.agents["director"].audit_strategic_plan(
@@ -587,7 +586,6 @@ class Stage2Finalizer:
         _d_score = audit.get("score", "?")
         _d_reason = audit.get("reason", "")
         _d_status = "✅" if _d_decision in ("PASS", "PASS_WITH_FIX") else "❌"
-        print(f"      {_d_status} [Director] {_d_decision} (score={_d_score})")
         self.ctx.ui.log(f"\n      🎬 [Director] {_d_decision} (score={_d_score})")
         if _d_reason:
             for _i in range(0, len(str(_d_reason)), 80):

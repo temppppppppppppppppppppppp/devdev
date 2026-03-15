@@ -19,6 +19,112 @@ from .base_guard import BaseGuard
 _logger = logging.getLogger(__name__)
 
 
+class WorkGuardConfigError(ValueError):
+    """Raised when a present work_guard.yaml cannot be trusted."""
+
+
+_ROOT_SCALAR_LIST_FIELDS = (
+    "extra_forbidden_terms",
+    "extra_allowed_terms",
+    "extra_mandatory_concepts",
+    "custom_rules",
+)
+_WORK_IDENTITY_SCALAR_LIST_FIELDS = (
+    "tracking_slots",
+    "mandatory_scene_engines",
+    "forbidden_flattenings",
+    "mandatory_lexicon",
+    "protagonist_weapon",
+    "business_axes",
+    "control_axes",
+)
+
+
+def _raise_config_error(path: Path, message: str) -> None:
+    raise WorkGuardConfigError(f"{path}: {message}")
+
+
+def _validate_scalar_list_field(value: Any, *, path: Path, field_name: str) -> None:
+    if value is None:
+        return
+    if not isinstance(value, list):
+        _raise_config_error(path, f"'{field_name}' must be a list")
+    for idx, item in enumerate(value):
+        if isinstance(item, (dict, list)):
+            _raise_config_error(path, f"'{field_name}[{idx}]' must be a scalar value")
+
+
+def _validate_list_field(value: Any, *, path: Path, field_name: str) -> None:
+    if value is None:
+        return
+    if not isinstance(value, list):
+        _raise_config_error(path, f"'{field_name}' must be a list")
+
+
+def _validate_character_constraints(value: Any, *, path: Path) -> None:
+    if value is None:
+        return
+    if not isinstance(value, dict):
+        _raise_config_error(path, "'character_constraints' must be a mapping")
+    for key, constraints in value.items():
+        if not isinstance(constraints, list):
+            _raise_config_error(path, f"'character_constraints.{key}' must be a list")
+        for idx, item in enumerate(constraints):
+            if isinstance(item, (dict, list)):
+                _raise_config_error(path, f"'character_constraints.{key}[{idx}]' must be a scalar value")
+
+
+def validate_work_guard_config(data: Any, yaml_path: Path | str) -> dict[str, Any]:
+    path = Path(yaml_path)
+    if data is None:
+        return {}
+    if not isinstance(data, dict):
+        _raise_config_error(path, "top-level YAML must be a mapping")
+
+    for field_name in _ROOT_SCALAR_LIST_FIELDS:
+        _validate_scalar_list_field(data.get(field_name), path=path, field_name=field_name)
+
+    _validate_list_field(data.get("extra_forbidden_patterns"), path=path, field_name="extra_forbidden_patterns")
+    _validate_character_constraints(data.get("character_constraints"), path=path)
+
+    work_identity = data.get("work_identity")
+    if work_identity is not None:
+        if not isinstance(work_identity, dict):
+            _raise_config_error(path, "'work_identity' must be a mapping")
+        for field_name in _WORK_IDENTITY_SCALAR_LIST_FIELDS:
+            _validate_scalar_list_field(
+                work_identity.get(field_name),
+                path=path,
+                field_name=f"work_identity.{field_name}",
+            )
+        _validate_list_field(
+            work_identity.get("registry_profiles"),
+            path=path,
+            field_name="work_identity.registry_profiles",
+        )
+        _validate_list_field(
+            work_identity.get("role_fit_constraints"),
+            path=path,
+            field_name="work_identity.role_fit_constraints",
+        )
+
+    return data
+
+
+def load_work_guard_config(yaml_path: Path | str) -> dict[str, Any]:
+    path = Path(yaml_path)
+    if not path.exists():
+        return {}
+    try:
+        with open(path, encoding="utf-8") as handle:
+            data = yaml.safe_load(handle)
+    except yaml.YAMLError as exc:
+        raise WorkGuardConfigError(f"{path}: YAML parse failed ({exc.__class__.__name__})") from exc
+    except Exception as exc:
+        raise WorkGuardConfigError(f"{path}: YAML load failed ({exc.__class__.__name__})") from exc
+    return validate_work_guard_config(data, path)
+
+
 class WorkGuard(BaseGuard):
     """작품별 work_guard.yaml 기반 추가 검증 래퍼."""
 
@@ -316,6 +422,10 @@ class WorkGuard(BaseGuard):
             return {}
 
     # ── 위임 메서드 (StyleGuard 패턴 동일) ────────────────────
+
+    @staticmethod
+    def _load_yaml(yaml_path: Path | str) -> dict:
+        return load_work_guard_config(yaml_path)
 
     def get_genre_name(self) -> str:
         return f"{self._base.get_genre_name()}+Work"

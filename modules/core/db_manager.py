@@ -3155,7 +3155,9 @@ class DBManager:
 
         placeholders = ", ".join("?" for _ in stages)
         sql = (
-            "SELECT stage, ep_num, arc_num, attempt_num, verdict, score, failure_category, reject_reason, advisory_flags, prompt_version "
+            "SELECT stage, ep_num, arc_num, attempt_num, attempt_key, verdict, score, failure_category, reject_reason, "
+            "advisory_flags, prompt_version, fix_scope, candidate_key, content_hash, artifact_path, selection_reason, "
+            "verdict_reason, open_review, fix_scope_reasoning, runtime_advisory, retry_directives "
             f"FROM stage_attempts WHERE arc_num = ? AND stage IN ({placeholders})"
         )
         params: list = [arc_num, *stages]

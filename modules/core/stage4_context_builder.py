@@ -2,8 +2,8 @@
 [B-1-2] Stage4 Context Builder — 에피소드 컨텍스트 수집 및 프롬프트 조립.
 """
 
-import json
 import inspect
+import json
 import logging
 import re
 from typing import TYPE_CHECKING
@@ -582,7 +582,7 @@ class Stage4ContextBuilder:
                             reason = str(row.get("reason", "") or "")
                             reason_str = f" ({reason[:30]})" if reason else ""
                             npc_block.append(
-                                f"  [변경 {row.get('episode_no', '?')}화] "
+                                f"  [변경 {row.get('episode_no', 'unknown')}화] "
                                 f"{row.get('field_name', '')}: {str(row.get('old_value', ''))[:30]} → "
                                 f"{str(row.get('new_value', ''))[:30]}{reason_str}"
                             )
@@ -733,7 +733,7 @@ class Stage4ContextBuilder:
         if not text:
             return set()
         tokens: set[str] = set()
-        for token in re.split(r"[\s,|/:;()\[\]{}<>\"'`~!@#$%^&*+=?!.…-]+", text):
+        for token in re.split(r"[\s,|/:;()\[\]{}<>\"'`~!@#$%^&*+=?!.\u2026-]+", text):
             token = token.strip()
             if len(token) < 2:
                 continue
@@ -1073,7 +1073,7 @@ class Stage4ContextBuilder:
                 lines = []
                 for name, info in remaining_dead[:8]:
                     if isinstance(info, dict):
-                        lines.append(f"- {name} (제{info.get('ep', '?')}화, {self._trim_summary_value(info.get('cause'), 24)})")
+                        lines.append(f"- {name} (제{info.get('ep', 'unknown')}화, {self._trim_summary_value(info.get('cause'), 24)})")
                     else:
                         lines.append(f"- {name}")
                 parts.append(f"[사망 NPC - CP 비포함 {len(lines)}명]\n" + "\n".join(lines))
@@ -1690,12 +1690,29 @@ class Stage4ContextBuilder:
         if not isinstance(_rows, list) or not _rows:
             return ""
 
+        def _compact(_value: object, limit: int = 120) -> str:
+            _text = " ".join(str(_value or "").split())
+            if len(_text) <= limit:
+                return _text
+            return _text[: limit - 3].rstrip() + "..."
+
         _noteworthy: list[dict] = []
         for _row in _rows:
             if not isinstance(_row, dict):
                 continue
             _verdict = str(_row.get("verdict", "") or "").strip()
-            if _verdict in {"REJECT", "PASS_WITH_FIX", "PASS_WITH_WARNING"} or _row.get("reject_reason"):
+            if _verdict in {"REJECT", "PASS_WITH_FIX", "PASS_WITH_WARNING"} or any(
+                _row.get(_field)
+                for _field in (
+                    "reject_reason",
+                    "selection_reason",
+                    "verdict_reason",
+                    "open_review",
+                    "fix_scope_reasoning",
+                    "runtime_advisory",
+                    "retry_directives",
+                )
+            ):
                 _noteworthy.append(_row)
 
         if not _noteworthy:
@@ -1703,13 +1720,19 @@ class Stage4ContextBuilder:
 
         _category_counts: dict[str, int] = {}
         _reason_samples: list[str] = []
+        _retry_samples: list[str] = []
         for _row in _noteworthy:
             _category = str(_row.get("failure_category", "") or "").strip()
             if _category:
                 _category_counts[_category] = _category_counts.get(_category, 0) + 1
-            _reason = str(_row.get("reject_reason", "") or "").strip()
-            if _reason and _reason not in _reason_samples:
-                _reason_samples.append(_reason[:120])
+            for _field in ("reject_reason", "verdict_reason", "selection_reason", "open_review"):
+                _reason = _compact(_row.get(_field, ""))
+                if _reason and _reason not in _reason_samples:
+                    _reason_samples.append(_reason)
+            for _field in ("fix_scope_reasoning", "runtime_advisory", "retry_directives"):
+                _retry = _compact(_row.get(_field, ""))
+                if _retry and _retry not in _retry_samples:
+                    _retry_samples.append(_retry)
 
         _top_categories = sorted(_category_counts.items(), key=lambda item: item[1], reverse=True)[:3]
         _lines = [
@@ -1722,6 +1745,10 @@ class Stage4ContextBuilder:
             _lines.append("대표 사유:")
             for _reason in _reason_samples[:3]:
                 _lines.append(f"- {_reason}")
+        if _retry_samples:
+            _lines.append("대표 보정/재시도 지시:")
+            for _retry in _retry_samples[:3]:
+                _lines.append(f"- {_retry}")
 
         return "\n".join(_lines)
 
@@ -1976,7 +2003,7 @@ class Stage4ContextBuilder:
 
     # ── [NC-2 GAP-1] 씬 유사도 분석 유틸 ──────────────────────────
 
-    _SCENE_SPLIT_RE = re.compile(r"\n(?:#{1,3}\s+씬\s*\d+|---+|\*\*\*+|\n{3,})")
+    _SCENE_SPLIT_RE = re.compile(r"\n(?:#{1,3}\s+\uC52C\s*\d+|---+|\*\*\*+|\n{3,})")
 
     @classmethod
     def _split_scenes(cls, text: str) -> list[str]:

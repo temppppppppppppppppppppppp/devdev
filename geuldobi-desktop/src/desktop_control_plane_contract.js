@@ -48,6 +48,7 @@ const PRELOAD_METHOD_CHANNELS = Object.freeze({
     onAppReady: IPC_CHANNELS.app.ready,
     runKey: IPC_CHANNELS.bridge.run,
     stopRun: IPC_CHANNELS.bridge.stop,
+    getStatus: IPC_CHANNELS.bridge.status,
     getQualitySummary: IPC_CHANNELS.bridge.getQualitySummary,
     getQualityDashboard: IPC_CHANNELS.bridge.getQualityDashboard,
     getSafeOpsPreview: IPC_CHANNELS.bridge.getSafeOpsPreview,
@@ -69,7 +70,6 @@ const PRELOAD_METHOD_CHANNELS = Object.freeze({
     openWorkspaceFolder: IPC_CHANNELS.workspace.openFolder,
   }),
   deadCandidate: Object.freeze({
-    getStatus: IPC_CHANNELS.bridge.status,
     getWorkspacePath: IPC_CHANNELS.workspace.getPath,
   }),
 });

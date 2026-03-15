@@ -1,14 +1,14 @@
 ﻿# source-text-and-runtime-encoding-hygiene-remediation Execution SSOT
 
 Date: 2026-03-15
-Status: execution-ready
+Status: closed
 Canonical Path: `docs/2026-03-15/source-text-and-runtime-encoding-hygiene-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/source-text-and-runtime-encoding-hygiene-remediation-execution-ssot.md`
 Commit State:
 - Baseline Commit: `d2982aa2790f5ab81529f1e8d87cf6f6006f13c9`
 - Baseline Dirty Summary: `dirty: unrelated investment/style/pdf/log artifacts already present`
 - Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `none`
+- Resume Drift Summary: `lane was realized in d2982aa2 + bbb00a77; current closure refresh revalidates UTF-8/hygiene behavior and closes the final detector false-positive edge around mixed ASCII/Hangul terminal questions`
 Source Survey Docs: `docs/2026-03-15/codebase-global-log-evidence-merged-3pass-audit.md`; `docs/2026-03-15/codebase-global-log-evidence-merged-deep-global-survey.md`
 Evidence Artifacts: `docs/2026-03-15/codebase-global-log-evidence-merged-source-inventory.txt`; `docs/2026-03-15/codebase-global-log-evidence-merged-hotspot-ranking.txt`; `docs/2026-03-15/codebase-global-log-evidence-merged-runtime-log-db-evidence.txt`
 Side-Effect Coverage: covered
@@ -101,8 +101,8 @@ Excluded:
 - Do not claim runtime sink repair from this lane alone.
 
 ## 12. Temp Queue Notes
-- temp status: pending
-- cleanup condition: remove temp mirror only after realization is validated and closed
+- temp status: closed
+- cleanup condition: satisfied; remove the temp mirror during this closure refresh
 - roadmap dependency: second item in `docs/2026-03-15/codebase-global-log-evidence-merged-execution-roadmap.md`
 
 ## 13. Validation And Closure Hooks
@@ -110,3 +110,24 @@ Excluded:
 - bundle validator: `python scripts/validate_deep_global_survey_bundle.py --survey-doc docs/2026-03-15/codebase-global-log-evidence-merged-deep-global-survey.md --strict`
 - closure harness: `docs/implementation/execution-closure-harness.md`
 - execution-start rule: re-run the document 3-pass audit and confirm at least 95% confidence against the current workspace state before patching code from this document
+
+## 14. Closure Evidence
+- Implemented:
+  - `main_a.py`
+  - `modules/core/services/ui_service.py`
+  - `modules/core/studio_visualizer.py`
+  - `scripts/check_utf8_hygiene.py`
+  - `tests/test_check_utf8_hygiene.py`
+  - `tests/test_encoding_boundary_contract.py`
+  - `tests/test_studio_visualizer.py`
+  - `tests/test_ui_service.py`
+- Realized outcomes:
+  - the UTF-8 hygiene path is shell-safe on the Windows cp949 host
+  - legitimate Korean prompts no longer trip the old broad question-mark heuristic, including the current mixed ASCII/Hangul terminal-question edge such as `Arc로?`
+  - scoped operator-facing source and tooling surfaces remain under the UTF-8 guard without reopening the broader runtime lanes
+- Verification:
+  - `python -m py_compile main_a.py modules/core/services/ui_service.py modules/core/studio_visualizer.py scripts/check_utf8_hygiene.py tests/test_check_utf8_hygiene.py tests/test_encoding_boundary_contract.py tests/test_studio_visualizer.py tests/test_ui_service.py`
+  - `python -m pytest tests/test_ui_service.py tests/test_studio_visualizer.py tests/test_check_utf8_hygiene.py tests/test_encoding_boundary_contract.py` -> `34 passed`
+  - `python scripts/check_utf8_hygiene.py main_a.py modules/core/services/ui_service.py modules/core/studio_visualizer.py scripts/check_utf8_hygiene.py tests/test_check_utf8_hygiene.py tests/test_encoding_boundary_contract.py` -> `clean`
+- Residual risk:
+  - the detector remains intentionally conservative around explicit leading-`?` corruption tokens and triple-question placeholders; broader repo-wide source re-audit is outside this closure pass

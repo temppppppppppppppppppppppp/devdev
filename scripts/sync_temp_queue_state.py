@@ -3,9 +3,8 @@ from __future__ import annotations
 import json
 import re
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-
 
 ROOT = Path(__file__).resolve().parents[1]
 TEMP = ROOT / "docs" / "temp"
@@ -81,7 +80,7 @@ def main() -> int:
     if not exec_docs:
         payload = {
             "version": "temp-queue-state-v1",
-            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "generated_at": datetime.now(UTC).isoformat(),
             "queue_mode": "empty",
             "active_item_count": 0,
             "roadmap": None,
@@ -100,7 +99,7 @@ def main() -> int:
             }
         payload = {
             "version": "temp-queue-state-v1",
-            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "generated_at": datetime.now(UTC).isoformat(),
             "queue_mode": queue_mode,
             "active_item_count": len(items),
             "roadmap": roadmap,

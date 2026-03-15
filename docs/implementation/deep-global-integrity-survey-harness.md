@@ -65,6 +65,11 @@ Deep global survey output should normally include all of the following:
 - collect micro hotspot and side-effect evidence
 - collect cross-cut integrity views using the matrix template
 - collect operational verification and regression surface notes
+- when generated artifacts are part of the surveyed runtime, add an artifact-truth tranche that inspects actual blueprint/manuscript/episode files, not only surrounding telemetry
+- artifact-heavy surveys should explicitly separate:
+  - artifact truth
+  - metadata truth
+  - narrative truth
 
 ### Step C. Close Contradictions Before Synthesis
 - apply the triangulation contract to critical claims

@@ -361,6 +361,47 @@ def test_recent_episode_scores_and_stage_attempts_queries(db):
     assert attempts[0]["prompt_version"]
 
 
+def test_get_stage_attempts_for_arc_returns_rich_rationale_and_artifact_fields(db):
+    db.save_stage_attempt(
+        stage=4,
+        verdict="REJECT",
+        attempt_num=2,
+        ep_num=9,
+        arc_num=2,
+        score=61,
+        attempt_key="s4:ep9:arc2:a2",
+        failure_category="continuity",
+        reject_reason="The previous ending is being contradicted.",
+        fix_scope="inplace",
+        prompt_version="chief_writer@v2|director@v2",
+        candidate_key="A|balanced",
+        content_hash="hash-stage4",
+        artifact_path="logs/artifacts/stage4/ep_0009/attempt_02/rejected_best__A_balanced.txt",
+        selection_reason="Best local candidate, but still inconsistent.",
+        verdict_reason="Contradiction Firewall: CRITICAL 1",
+        open_review="Carry over the prior ending state instead of resetting it.",
+        fix_scope_reasoning="Local ending repair is sufficient.",
+        runtime_advisory="[Advisory digest] keep the prior ending state visible.",
+        retry_directives="Do not repeat the previous ending beat verbatim.",
+    )
+
+    attempts = db.get_stage_attempts_for_arc(2, stages=(4,), verdict="REJECT", limit=5)
+
+    assert len(attempts) == 1
+    row = attempts[0]
+    assert row["attempt_key"] == "s4:ep9:arc2:a2"
+    assert row["candidate_key"] == "A|balanced"
+    assert row["content_hash"] == "hash-stage4"
+    assert row["artifact_path"].endswith("rejected_best__A_balanced.txt")
+    assert row["selection_reason"] == "Best local candidate, but still inconsistent."
+    assert row["verdict_reason"] == "Contradiction Firewall: CRITICAL 1"
+    assert row["open_review"] == "Carry over the prior ending state instead of resetting it."
+    assert row["fix_scope_reasoning"] == "Local ending repair is sufficient."
+    assert "Advisory digest" in row["runtime_advisory"]
+    assert row["retry_directives"] == "Do not repeat the previous ending beat verbatim."
+    assert row["advisory_flags"] == {}
+
+
 def test_save_stage_attempt_and_director_selection_persist_attempt_key(db):
     db.save_director_selection(
         5,

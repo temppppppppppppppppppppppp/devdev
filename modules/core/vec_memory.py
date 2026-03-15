@@ -60,7 +60,7 @@ class VecMemory:
     def __init__(self, db_path=None, api_key: str = "", *, ui_log=None, conn=None, lock=None) -> None:
         self._db_path = str(db_path) if db_path else ":memory:"
         self._api_key = api_key or os.getenv("GOOGLE_API_KEY", "")
-        self._ui_log = ui_log or (lambda msg: print(f"[VecMemory] {msg}"))
+        self._ui_log = ui_log or (lambda msg: logging.getLogger("VecMemory").info("[VecMemory] %s", msg))
 
         # 상태 플래그
         self.has_valid_memory = False

@@ -10,10 +10,12 @@ TARGETS = {
     ROOT / "main_a.py": [
         "Faulthandler 활성화",
         "Faulthandler 초기화 실패",
-        "Stage 0 모듈 로드 실패",
-        "[V50] 일부 모듈 미설치",
-        "print(message, flush=True)",
     ],
+    ROOT / "modules" / "core" / "stage0" / "spinner.py": [
+        "print()",
+    ],
+    ROOT / "modules" / "core" / "stage2_finalizer.py": [],
+    ROOT / "modules" / "core" / "vec_memory.py": [],
     ROOT / "modules" / "core" / "stage3_orchestrator.py": [],
     ROOT / "modules" / "core" / "stage4_orchestrator.py": [],
     ROOT / "modules" / "core" / "stage4_interview_round.py": [],

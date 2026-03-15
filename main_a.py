@@ -158,7 +158,7 @@ def _lazy_load_stage0():
         STAGE0_AVAILABLE = True
         return PresetRegistry, StyleGuide
     except ImportError as e:
-        print(f"[!] Stage 0 모듈 로드 실패: {e}")
+        logging.getLogger(__name__).warning("[Stage0 Bootstrap] Stage 0 module load failed: %s", e)
         STAGE0_AVAILABLE = False
         return None, None
 
@@ -274,7 +274,7 @@ def _lazy_load_v50_modules():
         }
     except ImportError as e:
         V50_MODULES_AVAILABLE = False
-        print(f"⚠️ [V50] 일부 모듈 미설치: {e}")
+        logging.getLogger(__name__).warning("[V50 Bootstrap] Optional V50 modules unavailable: %s", e)
         return None
 
 
@@ -396,6 +396,9 @@ class SovereignApp:
             preset_registry_restorer=self._restore_preset_registry,
             emotion_tracker_fn=lambda: getattr(self, "emotion_tracker", None),
             state_delta_tracker_fn=lambda: getattr(self, "state_delta_tracker", None),
+            int_input_fn=self._get_int_input,
+            confirm_fn=self._confirm,
+            pause_fn=self._pause,
         )
 
         # [V64.P4] 동적 주입 속성 선언 (monkey-patching 제거)
@@ -1216,8 +1219,10 @@ class SovereignApp:
                 self.ui.log(f"   저장된 장르: {stored_genre.get('name', '알 수 없음')}")
                 self.ui.log(f"   선택한 장르: {self.selected_genre['name']}")
 
-                choice = input("\n계속하시겠습니까? (y/n): ").strip().lower()
-                if choice != "y":
+                if not self._confirm(
+                    "\n계속하시겠습니까? (y/n): ",
+                    prompt_id="project_genre_alignment_confirm",
+                ):
                     self.ui.log("❌ 시스템을 종료합니다.")
                     SovereignApp._emergency_shutdown(self)
                     sys.exit(0)
@@ -1246,9 +1251,13 @@ class SovereignApp:
 
         work_guard_path = current_project.paths.config / "work_guard.yaml"
         if work_guard_path.exists():
-            from modules.core.genre_guards.work_guard import WorkGuard
+            from modules.core.genre_guards.work_guard import WorkGuard, WorkGuardConfigError
 
-            self.sys.guard = WorkGuard(self.sys.guard, work_guard_path)
+            try:
+                self.sys.guard = WorkGuard(self.sys.guard, work_guard_path)
+            except WorkGuardConfigError as exc:
+                self.ui.log(f"⚠️ [Config] invalid work_guard.yaml: {exc}")
+                raise
             current_project.guard = self.sys.guard
             self.ui.log("   🧥 WorkGuard 적용 완료 (작품별 커스텀 규칙 활성)")
 
@@ -1564,8 +1573,12 @@ class SovereignApp:
                 self.ui.log(f"   ... 외 {len(needs_enrichment) - 5}개")
 
             # 4. 사용자 확인
-            proceed = input(f"   → {len(needs_enrichment)}개 Block을 농축하시겠습니까? (Y/n): ").strip().lower()
-            if proceed == "n":
+            proceed = self._confirm(
+                f"   → {len(needs_enrichment)}개 Block을 농축하시겠습니까? (Y/n): ",
+                default=True,
+                prompt_id="stage0_treatment_enrichment_confirm",
+            )
+            if not proceed:
                 self.ui.log("⏭️ 농축을 건너뜁니다.")
                 return treatment_file
 
@@ -2469,8 +2482,11 @@ class SovereignApp:
                     if not status.get("Stage 1 (Volumes)", False):
                         self.ui.log("⚠️ Stage 1 (Volume Strategy)이 완료되지 않았습니다.")
                         self.ui.log("💡 Volume 전략 없이도 Arc 설계를 진행할 수 있습니다.")
-                        skip_confirm = input("   Stage 1을 건너뛰고 진행하시겠습니까? (y/N): ").strip().lower()
-                        if skip_confirm != "y":
+                        skip_confirm = self._confirm(
+                            "   Stage 1을 건너뛰고 진행하시겠습니까? (y/N): ",
+                            prompt_id="stage1_skip_confirm",
+                        )
+                        if not skip_confirm:
                             continue
                     self._stage_2_arcs()
                 elif choice == "3":
@@ -3222,9 +3238,37 @@ class SovereignApp:
         min_val: int | None = None,
         max_val: int | None = None,
         attempts: int = RetryLimits.USER_INPUT_ATTEMPTS,
+        prompt_id: str | None = None,
     ) -> int | None:
         """[4B-2] Facade → UIService"""
-        return self._ui_service.get_int_input(prompt, default, min_val, max_val, attempts)
+        return self._ui_service.get_int_input(prompt, default, min_val, max_val, attempts, prompt_id)
+
+    def _get_choice_input(
+        self,
+        prompt: str,
+        choices,
+        default: str | None = None,
+        attempts: int = RetryLimits.USER_INPUT_ATTEMPTS,
+        prompt_id: str | None = None,
+        invalid_message: str | None = None,
+    ) -> str | None:
+        """[TF-011] Facade → UIService choice prompts."""
+        return self._ui_service.get_choice_input(prompt, choices, default, attempts, prompt_id, invalid_message)
+
+    def _confirm(
+        self,
+        prompt: str,
+        *,
+        default: bool = False,
+        attempts: int = RetryLimits.USER_INPUT_ATTEMPTS,
+        prompt_id: str | None = None,
+    ) -> bool:
+        """[TF-011] Facade → UIService confirm prompts."""
+        return self._ui_service.confirm(prompt, default=default, attempts=attempts, prompt_id=prompt_id)
+
+    def _pause(self, prompt: str = "\n[Enter] Return to menu", *, prompt_id: str | None = None) -> None:
+        """[TF-011] Facade → UIService pause prompts."""
+        self._ui_service.pause(prompt, prompt_id=prompt_id)
 
     def _extract_block_index(self, block_id: Any) -> int | None:
         """블록 ID 문자열에서 인덱스 번호 추출"""
@@ -3598,7 +3642,7 @@ class SovereignApp:
             self.preset_registry = _PresetRegistry(base_genre=base_genre)
             self.ui.log(f"   📦 프리셋 초기화: {base_genre}")
 
-        input("\n[Enter] 프로젝트 선택으로 이동")
+        self._pause("\n[Enter] 프로젝트 선택으로 이동", prompt_id="stage0_project_selection_pause")
 
         return selected
 
@@ -4231,12 +4275,24 @@ class SovereignApp:
                     batch_size = default_count
                 self.ui.log(f"   🤖 [FrontierLag] 하네스 batch_size override 적용: {batch_size}")
             else:
+                requested_arc_limit = self._get_int_input(
+                    f"👉 이번 실행에서 몇 개 Arc를 처리할까요? (1~{remaining_design}, 기본: {default_count}): ",
+                    default=default_count,
+                    min_val=1,
+                    max_val=remaining_design,
+                )
+                if requested_arc_limit is None:
+                    requested_arc_limit = default_count
                 batch_size = default_count
+                self.ui.log(f"   🎯 [FrontierLag] 이번 실행 목표 Arc 수: {requested_arc_limit}")
                 self.ui.log(
                     "   [FrontierLag] auto-selected default batch_size: "
                     f"{batch_size} (remaining_design={remaining_design})"
                 )
             target_count = batch_size
+            if requested_arc_limit is not None:
+                remaining_requested = max(1, requested_arc_limit - arcs_advanced)
+                target_count = min(target_count, remaining_requested)
 
             while True:
                 tranche_completed = True
@@ -4343,10 +4399,12 @@ class SovereignApp:
 
                         if s3_success == 0 and s3_fail > 0:
                             self.ui.log(f"   ⚠️ [Stage 3] Blueprint 생성 실패 (성공: 0, 실패: {s3_fail})")
-                            try:
-                                skip_choice = input("   건너뛰고 다음 Arc로? (1=건너뛰기 / 2=중단, 기본: 2): ").strip()
-                            except (EOFError, KeyboardInterrupt):
-                                skip_choice = "2"
+                            skip_choice = self._get_choice_input(
+                                "   건너뛰고 다음 Arc로? (1=건너뛰기 / 2=중단, 기본: 2): ",
+                                choices=("1", "2"),
+                                default="2",
+                                prompt_id="frontier_lag_stage3_skip_choice",
+                            ) or "2"
                             if skip_choice != "1":
                                 self.ui.log("   🛑 사용자 요청으로 파이프라인을 중단합니다.")
                                 stop_reason = "stage3_user_abort"
@@ -4367,10 +4425,12 @@ class SovereignApp:
                             self.ui.log(f"   ✅ [Stage 3] Blueprint 완료 (성공: {s3_success}, 실패: {s3_fail})")
                     except Exception as s3_err:
                         self.ui.log(f"   ❌ [Stage 3] Blueprint 생성 오류: {str(s3_err)[:100]}")
-                        try:
-                            skip_choice = input("   건너뛰고 다음 Arc로? (1=건너뛰기 / 2=중단, 기본: 2): ").strip()
-                        except (EOFError, KeyboardInterrupt):
-                            skip_choice = "2"
+                        skip_choice = self._get_choice_input(
+                            "   건너뛰고 다음 Arc로? (1=건너뛰기 / 2=중단, 기본: 2): ",
+                            choices=("1", "2"),
+                            default="2",
+                            prompt_id="frontier_lag_stage3_exception_skip_choice",
+                        ) or "2"
                         if skip_choice != "1":
                             self.ui.log("   🛑 사용자 요청으로 파이프라인을 중단합니다.")
                             stop_reason = "stage3_exception_user_abort"
@@ -4422,6 +4482,12 @@ class SovereignApp:
                     break
 
                 target_count = min(remaining_design, batch_size)
+                if requested_arc_limit is not None:
+                    remaining_requested = requested_arc_limit - arcs_advanced
+                    if remaining_requested <= 0:
+                        _mark_requested_limit_hit()
+                        break
+                    target_count = min(target_count, remaining_requested)
                 self.ui.log(
                     "   🔁 [FrontierLag] 승인 없이 자동 계속"
                     f" (남은 Arc: {remaining_design}개 / 다음 tranche: {target_count}개 / batch_size: {batch_size})"
@@ -4443,10 +4509,7 @@ class SovereignApp:
         self.ui.log(f"{'═' * 60}\n")
 
         if wait_for_menu_return:
-            try:
-                input("[Enter] 메뉴로 돌아가기")
-            except (EOFError, KeyboardInterrupt):
-                pass
+            self._pause("[Enter] 메뉴로 돌아가기", prompt_id="frontier_lag_return_to_menu")
 
         return {
             "arcs_advanced": arcs_advanced,
@@ -4596,10 +4659,12 @@ class SovereignApp:
                     if s3_success == 0 and s3_fail > 0:
                         # 실제 실패
                         self.ui.log(f"   ⚠️ [Stage 3] Blueprint 생성 실패 (성공: 0, 실패: {s3_fail})")
-                        try:
-                            skip_choice = input("   건너뛰고 다음 Arc로? (1=건너뛰기 / 2=중단, 기본: 2): ").strip()
-                        except (EOFError, KeyboardInterrupt):
-                            skip_choice = "2"
+                        skip_choice = self._get_choice_input(
+                            "   건너뛰고 다음 Arc로? (1=건너뛰기 / 2=중단, 기본: 2): ",
+                            choices=("1", "2"),
+                            default="2",
+                            prompt_id="one_stop_stage3_skip_choice",
+                        ) or "2"
                         if skip_choice != "1":
                             self.ui.log("   🛑 사용자 요청으로 파이프라인을 중단합니다.")
                             break
@@ -4613,10 +4678,12 @@ class SovereignApp:
                         self.ui.log(f"   ✅ [Stage 3] Blueprint 완료 (성공: {s3_success}, 실패: {s3_fail})")
                 except Exception as s3_err:
                     self.ui.log(f"   ❌ [Stage 3] Blueprint 생성 오류: {str(s3_err)[:100]}")
-                    try:
-                        skip_choice = input("   건너뛰고 다음 Arc로? (1=건너뛰기 / 2=중단, 기본: 2): ").strip()
-                    except (EOFError, KeyboardInterrupt):
-                        skip_choice = "2"
+                    skip_choice = self._get_choice_input(
+                        "   건너뛰고 다음 Arc로? (1=건너뛰기 / 2=중단, 기본: 2): ",
+                        choices=("1", "2"),
+                        default="2",
+                        prompt_id="one_stop_stage3_exception_skip_choice",
+                    ) or "2"
                     if skip_choice != "1":
                         self.ui.log("   🛑 사용자 요청으로 파이프라인을 중단합니다.")
                         break
@@ -4651,12 +4718,12 @@ class SovereignApp:
                     self.ui.log("   🎉 모든 Arc 처리 완료!")
                     break
 
-                try:
-                    cont_choice = input(
-                        f"   계속할까요? (남은 Arc: {remaining}개) (1=계속 / 2=중단, 기본: 1): "
-                    ).strip()
-                except (EOFError, KeyboardInterrupt):
-                    cont_choice = "2"
+                cont_choice = self._get_choice_input(
+                    f"   계속할까요? (남은 Arc: {remaining}개) (1=계속 / 2=중단, 기본: 1): ",
+                    choices=("1", "2"),
+                    default="1",
+                    prompt_id="one_stop_continue_choice",
+                ) or "1"
                 if cont_choice == "2":
                     self.ui.log("   🛑 사용자 요청으로 파이프라인을 중단합니다.")
                     break
@@ -4689,10 +4756,7 @@ class SovereignApp:
         self.ui.log(f"   생산 원고: 약 {total_manuscripts}화")
         self.ui.log(f"{'═' * 60}\n")
 
-        try:
-            input("[Enter] 메뉴로 돌아가기")
-        except (EOFError, KeyboardInterrupt):
-            pass
+        self._pause("[Enter] 메뉴로 돌아가기", prompt_id="one_stop_return_to_menu")
 
 
 if __name__ == "__main__":

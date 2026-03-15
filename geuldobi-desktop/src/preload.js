@@ -11,8 +11,8 @@ contextBridge.exposeInMainWorld("geuldobiDesktop", {
   runKey: (key, subKey, inputs, approvalId = null) =>
     ipcRenderer.invoke(PRELOAD_METHOD_CHANNELS.live.runKey, { key, subKey, inputs, approvalId }),
   stopRun: () => ipcRenderer.invoke(PRELOAD_METHOD_CHANNELS.live.stopRun),
-  // Dead-candidate compatibility surface. No active renderer consumer today.
-  getStatus: () => ipcRenderer.invoke(PRELOAD_METHOD_CHANNELS.deadCandidate.getStatus),
+  // Live status surface for command readiness and reconnect resync.
+  getStatus: () => ipcRenderer.invoke(PRELOAD_METHOD_CHANNELS.live.getStatus),
   getQualitySummary: (project, lookback = 5) =>
     ipcRenderer.invoke(PRELOAD_METHOD_CHANNELS.live.getQualitySummary, { project, lookback }),
   getQualityDashboard: (project, lookback = 5) =>

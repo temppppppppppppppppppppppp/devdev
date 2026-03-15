@@ -3546,6 +3546,7 @@
         lastVerdict: null,
         lastVerdictScore: null,
         backendConnected: false,
+        commandReady: false,
         runStartedAt: null,
         qualitySummary: {
           available: false,
@@ -5128,6 +5129,9 @@
         officeState.mode = "RUNNING";
         officeState.runStartedAt = Date.now();
         setVerdictState(null, null);
+        _currentPrompt = null;
+        _pendingPromptQueue = [];
+        document.getElementById("promptOverlay").classList.remove("open");
         setPromptState(false, "대기 중인 입력 없음");
         setStateBadge("RUNNING");
         setEffectBanner("", "");
@@ -5141,6 +5145,9 @@
         officeState.isRunning = false;
         officeState.mode = "IDLE";
         officeState.runStartedAt = null;
+        _currentPrompt = null;
+        _pendingPromptQueue = [];
+        document.getElementById("promptOverlay").classList.remove("open");
         setPromptState(false, "대기 중인 입력 없음");
         setStateBadge("IDLE");
         setEffectBanner("", "");
@@ -5769,6 +5776,22 @@
       let _backendConnected = false;
       let _ws = null;
       let _wsReconnectTimer = null;
+      let _commandPathReady = false;
+      let _statusSyncInFlight = null;
+      let _pendingPromptQueue = [];
+
+      const RUN_KEY_ACTIONS = Object.freeze({
+        "0": "stage_0",
+        "2": "stage_2",
+        "3": "stage_3",
+        "4": "stage_4",
+        "6": "one_stop",
+        "7": "one_stop_frontier_lag",
+        "44": "rollback",
+        "77": "wipe",
+        "88": "reset",
+        "99": "rewind",
+      });
 
       // Desktop-side CLI contract fallback. The main process supplies the same map via IPC.
       let cliContract = {
@@ -5965,6 +5988,117 @@
         }
       });
 
+      function _refreshBackendStatusBadge() {
+        officeState.backendConnected = _backendConnected;
+        officeState.commandReady = _commandPathReady;
+        if (_backendConnected && _commandPathReady) {
+          readyBadge.textContent = "이벤트 연결됨 / 명령 가능";
+          return;
+        }
+        if (_backendConnected) {
+          readyBadge.textContent = "이벤트 연결됨 / 명령 점검 중";
+          return;
+        }
+        if (_commandPathReady) {
+          readyBadge.textContent = "이벤트 재연결 대기 / 명령 가능";
+          return;
+        }
+        readyBadge.textContent = "백엔드 점검 필요";
+      }
+
+      function _resolveActionFromRunKey(key) {
+        return RUN_KEY_ACTIONS[String(key || "")] || null;
+      }
+
+      function _hasTrackedPrompt(promptId) {
+        if (!promptId) return false;
+        if (_currentPrompt && _currentPrompt.promptId === promptId) return true;
+        return _pendingPromptQueue.some((entry) => entry?.payload?.prompt_id === promptId);
+      }
+
+      function _showNextQueuedPrompt() {
+        if (_currentPrompt || _pendingPromptQueue.length === 0) return;
+        const nextPrompt = _pendingPromptQueue.shift();
+        if (nextPrompt) {
+          _showPromptDialog(nextPrompt, { source: "queued-replay" });
+        }
+      }
+
+      function _applyRuntimeStatusSnapshot(statusData, reason = "status-sync") {
+        const data = statusData && typeof statusData === "object" ? statusData : {};
+        const runtimeState = String(data.state || "idle");
+        const action = _resolveActionFromRunKey(data.key);
+        const subKey = data.sub_key || null;
+
+        if (action) {
+          const meta = resolveActionMeta(action, subKey);
+          if (officeState.currentStage !== action || officeState.currentSubKey !== subKey) {
+            setActionState(action, meta.title, subKey);
+          }
+        }
+
+        if (["starting", "running", "stopping"].includes(runtimeState)) {
+          if (!officeState.isRunning) {
+            startRunningLoop();
+          }
+          const meta = action
+            ? resolveActionMeta(action, subKey)
+            : { title: "실행 중", summary: "브리지 status 기준 런타임이 진행 중" };
+          const detail = _backendConnected
+            ? "브리지 status와 이벤트 스트림 상태를 다시 맞추는 중"
+            : "명령 경로는 유지되고 이벤트 스트림 재연결을 기다리는 중";
+          setCurrentFocus(
+            reason === "ws-open" ? `${meta.title} 재동기화` : meta.title,
+            detail
+          );
+        } else if (runtimeState === "idle" && officeState.isRunning && !_currentPrompt && _pendingPromptQueue.length === 0) {
+          stopLoop();
+        }
+
+        if (data.run_id && Array.isArray(data.pending_prompts)) {
+          for (const promptPayload of data.pending_prompts) {
+            const promptId = promptPayload?.prompt_id;
+            if (!promptId || _hasTrackedPrompt(promptId)) continue;
+            _showPromptDialog({ run_id: data.run_id, payload: promptPayload }, { source: reason });
+          }
+        }
+      }
+
+      async function _syncRuntimeStatus(reason = "status-sync") {
+        if (!window.geuldobiDesktop || typeof window.geuldobiDesktop.getStatus !== "function") {
+          _commandPathReady = false;
+          _refreshBackendStatusBadge();
+          return null;
+        }
+
+        if (_statusSyncInFlight) {
+          return _statusSyncInFlight;
+        }
+
+        _statusSyncInFlight = (async () => {
+          try {
+            const result = await window.geuldobiDesktop.getStatus();
+            if (!result || !result.ok) {
+              _commandPathReady = false;
+              _refreshBackendStatusBadge();
+              return null;
+            }
+            _commandPathReady = true;
+            _refreshBackendStatusBadge();
+            _applyRuntimeStatusSnapshot(result.data || {}, reason);
+            return result.data || null;
+          } catch {
+            _commandPathReady = false;
+            _refreshBackendStatusBadge();
+            return null;
+          } finally {
+            _statusSyncInFlight = null;
+          }
+        })();
+
+        return _statusSyncInFlight;
+      }
+
       function _connectWebSocket() {
         if (_ws && _ws.readyState <= WebSocket.OPEN) return;
         if (!window.geuldobiDesktop) return;
@@ -5973,9 +6107,8 @@
           _ws = new WebSocket(wsUrl);
           _ws.onopen = () => {
             _backendConnected = true;
-            officeState.backendConnected = true;
             if (_wsReconnectTimer) { clearTimeout(_wsReconnectTimer); _wsReconnectTimer = null; }
-            readyBadge.textContent = "백엔드 연결됨";
+            _refreshBackendStatusBadge();
             appendLog("[System] 백엔드 연결됨", null, {
               agent: "manager",
               summary: "백엔드 연결 완료",
@@ -5986,6 +6119,7 @@
               significant: true,
             });
             refreshQualitySummary();
+            void _syncRuntimeStatus("ws-open");
           };
           _ws.onmessage = (event) => {
             try {
@@ -5996,9 +6130,8 @@
           };
           _ws.onclose = () => {
             _backendConnected = false;
-            officeState.backendConnected = false;
             if (_wsReconnectTimer) clearTimeout(_wsReconnectTimer);
-            readyBadge.textContent = "백엔드 재연결 대기";
+            _refreshBackendStatusBadge();
             setCurrentFocus("백엔드 재연결 대기", "3초 뒤 브리지 WebSocket 재연결을 시도함");
             speakAgent("manager", "재연결 중...", {
               color: "#92400e",
@@ -6016,6 +6149,7 @@
               agentDetail: "브리지 연결 복구 시도",
               significant: true,
             });
+            void _syncRuntimeStatus("ws-close");
             _wsReconnectTimer = setTimeout(_connectWebSocket, 3000);
           };
           _ws.onerror = () => {};
@@ -6135,6 +6269,7 @@
               agentDetail: "사용자 응답이 없어 기본값으로 계속 진행",
               significant: true,
             });
+            _showNextQueuedPrompt();
             break;
         }
       }
@@ -6144,7 +6279,7 @@
       let _bootPhase = false;     // Stage 0 부트 단계 — stdout 출력 억제
       let _autoExitAfterStage0 = false;  // Stage 0 완료 후 메인 메뉴에서 자동 Exit
 
-      function _showPromptDialog(data) {
+      function _showPromptDialog(data, options = {}) {
         // 부트 단계 종료 — 첫 프롬프트 도착 시 정상 출력 모드로 전환
         if (_bootPhase) {
           _bootPhase = false;
@@ -6161,6 +6296,9 @@
         }
         // Stage 0 완료 후 메인 메뉴 → 자동 종료 ("5" Exit 전송)
         const payload = data.payload;
+        const promptId = payload?.prompt_id;
+        if (!promptId) return;
+        if (_hasTrackedPrompt(promptId)) return;
         if (_autoExitAfterStage0 && !_bootPhase) {
           const hasExit = payload.options && payload.options.some(o => /exit/i.test(o.label));
           if (hasExit) {
@@ -6184,10 +6322,24 @@
             return;
           }
         }
-        // 이미 프롬프트 다이얼로그가 열려 있으면 무시 (동시 요청 방지)
+        // 이미 프롬프트 다이얼로그가 열려 있으면 명시적으로 큐잉
         const overlay = document.getElementById("promptOverlay");
         if (overlay.classList.contains("open") && _currentPrompt) {
-          console.warn("[prompt] ignoring concurrent prompt_request while dialog open");
+          if (_hasTrackedPrompt(promptId)) return;
+          _pendingPromptQueue.push(data);
+          const queuedCount = _pendingPromptQueue.length + 1;
+          console.warn("[prompt] queueing concurrent prompt_request while dialog open");
+          setPromptState(true, `입력 대기 ${queuedCount}건`);
+          appendLog(`[System] 추가 입력 대기 등록: ${payload.prompt_text || "사용자 응답 필요"}`, null, {
+            agent: "manager",
+            stage: officeState.currentStage,
+            summary: "입력 대기 큐 등록",
+            detail: `${payload.prompt_text || "추가 응답 필요"} / 누적 ${queuedCount}건`,
+            bubble: "입력 대기 누적",
+            status: "입력 대기",
+            agentDetail: "동시 프롬프트를 큐에 보관",
+            significant: true,
+          });
           return;
         }
         const title = document.getElementById("promptTitle");
@@ -6199,7 +6351,7 @@
 
         _currentPrompt = {
           runId: data.run_id,
-          promptId: payload.prompt_id,
+          promptId,
           inputType: payload.input_type,
         };
 
@@ -6227,6 +6379,18 @@
           agentDetail: "Mode B 프롬프트 응답을 기다리는 중",
           significant: true,
         });
+        if (options.source === "ws-open" || options.source === "queued-replay" || options.source === "ws-close") {
+          appendLog(`[System] 입력 상태 재동기화: ${payload.prompt_text || "사용자 응답 필요"}`, null, {
+            agent: "manager",
+            stage: officeState.currentStage,
+            summary: "프롬프트 재동기화",
+            detail: `source=${options.source}`,
+            bubble: "입력 상태 복구",
+            status: "재동기화",
+            agentDetail: "status snapshot 또는 큐로 입력 상태를 복구",
+            significant: true,
+          });
+        }
 
         optionsDiv.innerHTML = "";
         inputRow.style.display = "none";
@@ -6327,6 +6491,7 @@
           agentDetail: "사용자 입력을 런타임 stdin으로 전달",
           significant: true,
         });
+        _showNextQueuedPrompt();
       }
 
       // 프롬프트 확인 버튼
@@ -6561,8 +6726,35 @@
               : "현재 실행 중인 작업을 멈추는 중"
           );
           setPromptState(false, "대기 중인 입력 없음");
-          if (window.geuldobiDesktop && _backendConnected) {
-            try { await window.geuldobiDesktop.stopRun(); } catch (e) {
+          if (window.geuldobiDesktop) {
+            if (!_backendConnected) {
+              appendLog("[System] 이벤트 스트림 재연결 대기 중이지만 중지 명령은 계속 시도합니다", null, {
+                agent: "manager",
+                summary: "이벤트 재연결 대기",
+                detail: "WebSocket 재연결 전에도 bridge /stop 경로는 계속 시도",
+                bubble: "명령 경로 유지",
+                bubbleColor: "#92400e",
+                status: "재연결",
+                agentDetail: "bridge status로 상태를 다시 확인하는 중",
+                significant: true,
+              });
+              await _syncRuntimeStatus("pre-stop");
+            }
+            try {
+              const result = await window.geuldobiDesktop.stopRun();
+              if (result && result.ok === false) {
+                appendLog(`[System] 중지 실패: ${result.message}`, null, {
+                  agent: "manager",
+                  summary: "중지 실패",
+                  detail: result.message,
+                  bubble: "중지 실패",
+                  bubbleColor: "#991b1b",
+                  status: "오류",
+                  agentDetail: "bridge /stop 호출이 실패함",
+                  significant: true,
+                });
+              }
+            } catch (e) {
               appendLog("[System] 중지 실패: " + e.message, null, {
                 agent: "manager",
                 summary: "중지 실패",
@@ -6576,11 +6768,11 @@
             }
           } else {
             stopLoop();
-            appendLog("[System] 중지됨 (오프라인)", null, {
+            appendLog("[System] 중지됨 (브라우저 모드)", null, {
               agent: "manager",
-              summary: "오프라인 중지",
-              detail: "백엔드 미연결 상태에서 로컬 UI만 정지 처리",
-              bubble: "오프라인 정지",
+              summary: "브라우저 모드 중지",
+              detail: "Electron 브리지 없이 로컬 UI 상태만 정지 처리",
+              bubble: "브라우저 모드",
               status: "중지",
               agentDetail: "로컬 상태만 정리 완료",
               significant: true,
@@ -6652,7 +6844,21 @@
         }
 
         // ── 실행 요청 ──
-        if (window.geuldobiDesktop && _backendConnected) {
+        if (window.geuldobiDesktop) {
+          if (!_backendConnected) {
+            appendLog(`[System] 이벤트 스트림 재연결 대기 중이지만 ${label} 요청은 브리지로 계속 시도합니다`, null, {
+              agent: "manager",
+              stage: action,
+              summary: `${label} 재연결 대기 실행`,
+              detail: "run/stop 명령 경로와 websocket 이벤트 스트림을 분리해 처리",
+              bubble: "명령 경로 유지",
+              bubbleColor: "#92400e",
+              status: "재연결",
+              agentDetail: "bridge status로 상태를 다시 확인하는 중",
+              significant: true,
+            });
+            await _syncRuntimeStatus("pre-run");
+          }
           appendLog(action === "stage_0"
             ? `[System] ${label} — 초기화 중... 잠시 기다려주세요`
             : `[System] ${label} 시작 요청...`, null, {
@@ -6679,6 +6885,8 @@
                 agentDetail: "브리지 호출 실패",
                 significant: true,
               });
+            } else if (!_backendConnected) {
+              void _syncRuntimeStatus("post-run");
             }
           } catch (e) {
             appendLog(`[System] 연결 실패: ${e.message}`, null, {
@@ -6694,15 +6902,15 @@
             });
           }
         } else {
-          appendLog(`[System] 백엔드 미연결 — 실행 불가`, null, {
+          appendLog(`[System] Electron 환경 외부 — 실행 불가`, null, {
             agent: "manager",
             stage: action,
             summary: `${label} 실행 불가`,
-            detail: "백엔드 연결이 없어 /run 요청을 보낼 수 없음",
-            bubble: "백엔드 미연결",
+            detail: "브리지 IPC가 없는 환경이라 /run 요청을 보낼 수 없음",
+            bubble: "브라우저 모드",
             bubbleColor: "#92400e",
             status: "대기",
-            agentDetail: "브리지 연결 확인 필요",
+            agentDetail: "Electron 환경에서만 실행 가능",
             significant: true,
           });
         }
@@ -6746,8 +6954,8 @@
 
       if (window.geuldobiDesktop && typeof window.geuldobiDesktop.onAppReady === "function") {
         window.geuldobiDesktop.onAppReady(({ reason }) => {
-          readyBadge.textContent = `진입 완료: ${reason}`;
           setCurrentFocus("앱 진입 완료", `Electron 메인 화면 진입 사유: ${reason}`);
+          _refreshBackendStatusBadge();
         });
       }
 
@@ -7913,19 +8121,35 @@
       // Backend WS 연결 시도
       if (window.geuldobiDesktop) {
         _connectWebSocket();
+        void _syncRuntimeStatus("startup");
         setTimeout(() => {
-          if (!_backendConnected) {
+          if (_backendConnected) return;
+          void _syncRuntimeStatus("startup-watchdog").then(() => {
+            if (_backendConnected) return;
+            if (_commandPathReady) {
+              appendLog("[System] 이벤트 스트림 재연결 대기 — 명령 경로는 이미 사용 가능합니다", null, {
+                agent: "manager",
+                summary: "이벤트 재연결 대기",
+                detail: "status 응답은 정상이므로 실행/중지 명령은 계속 보낼 수 있음",
+                bubble: "명령 경로 유지",
+                bubbleColor: "#92400e",
+                status: "재연결",
+                agentDetail: "WebSocket만 복구되면 이벤트 스트림이 다시 붙음",
+                significant: true,
+              });
+              return;
+            }
             appendLog("[System] 백엔드 미감지 — 설정 확인 후 앱 재시작 필요", null, {
               agent: "manager",
               summary: "백엔드 미감지",
-              detail: "5초 내 WebSocket 연결 실패, 설정 또는 브리지 상태 확인 필요",
+              detail: "5초 내 websocket/status 모두 실패, 설정 또는 브리지 상태 확인 필요",
               bubble: "백엔드 확인 필요",
               bubbleColor: "#92400e",
               status: "점검 필요",
               agentDetail: "브리지 프로세스 상태 점검 필요",
               significant: true,
             });
-          }
+          });
         }, 5000);
       } else {
         appendLog("[System] Electron 환경 외부 — 기능 제한됨", null, {

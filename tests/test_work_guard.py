@@ -3,6 +3,8 @@
 import textwrap
 from pathlib import Path
 
+import pytest
+
 
 class MockBaseGuard:
     """BaseGuard 최소 mock."""
@@ -79,6 +81,29 @@ class TestWorkGuardInit:
         p = _write_yaml(tmp_path, "")
         guard = WorkGuard(MockBaseGuard(), p)
         assert guard.get_genre_name() == "TEST+Work"
+
+    def test_invalid_yaml_raises_config_error(self, tmp_path):
+        from modules.core.genre_guards.work_guard import WorkGuard, WorkGuardConfigError
+
+        p = _write_yaml(tmp_path, "work_identity: [broken")
+
+        with pytest.raises(WorkGuardConfigError, match="YAML parse failed"):
+            WorkGuard(MockBaseGuard(), p)
+
+    def test_invalid_work_identity_shape_raises_config_error(self, tmp_path):
+        from modules.core.genre_guards.work_guard import WorkGuard, WorkGuardConfigError
+
+        p = _write_yaml(
+            tmp_path,
+            """\
+            work_identity:
+              tracking_slots:
+                key: value
+            """,
+        )
+
+        with pytest.raises(WorkGuardConfigError, match="work_identity.tracking_slots"):
+            WorkGuard(MockBaseGuard(), p)
 
 
 # ── extra_forbidden_terms 병합 ───────────────────────────────

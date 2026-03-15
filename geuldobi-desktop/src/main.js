@@ -65,6 +65,7 @@ const SPLASH_WIDTH = 400;
 const SPLASH_HEIGHT = 260;
 const SPLASH_FALLBACK_MS = 8000; // uvicorn 기동 대기 포함
 const STATUS_BASE_URL = "http://127.0.0.1:8300";
+const BRIDGE_FETCH_TIMEOUT_MS = 5000;
 const EVENTS_WS_URL = "ws://127.0.0.1:8300/events";
 const PACKAGED_RUNTIME_MODEL = "source_bundle_primary";
 const DESKTOP_BRIDGE_TRANSPORT = Object.freeze({
@@ -396,10 +397,13 @@ ipcMain.on("splash:backend-ready", () => {
 
 async function bridgeFetch(urlPath, options = {}) {
   const url = `${STATUS_BASE_URL}${urlPath}`;
+  const timeoutController = new AbortController();
+  const timeoutId = setTimeout(() => timeoutController.abort(), BRIDGE_FETCH_TIMEOUT_MS);
   try {
     const res = await fetch(url, {
       ...options,
       headers: { "Content-Type": "application/json", ...options.headers },
+      signal: options.signal || timeoutController.signal,
     });
     if (!res.ok) {
       let backendPayload = null;
@@ -415,7 +419,7 @@ async function bridgeFetch(urlPath, options = {}) {
       return {
         ok: false,
         code: `${DESKTOP_BRIDGE_TRANSPORT.httpErrorPrefix}${res.status}`,
-        message: `?쒕쾭 ?ㅻ쪟 (${res.status})`,
+        message: `서버 오류 (${res.status})`,
         data: {
           envelope_version: DESKTOP_BRIDGE_TRANSPORT.envelopeVersion,
           namespace: "desktop_transport",
@@ -425,15 +429,15 @@ async function bridgeFetch(urlPath, options = {}) {
           backend_message: typeof backendPayload?.message === "string" ? backendPayload.message : null,
         },
       };
-      return { ok: false, code: `HTTP_${res.status}`, message: `서버 오류 (${res.status})`, data: null };
     }
     return await res.json();
   } catch (err) {
     console.error(`Bridge fetch failed: ${url}`, err.message);
+    const isTimeout = err?.name === "AbortError";
     return {
       ok: false,
       code: DESKTOP_BRIDGE_TRANSPORT.networkErrorCode,
-      message: err.message,
+      message: isTimeout ? `bridge timeout (${BRIDGE_FETCH_TIMEOUT_MS}ms)` : err.message,
       data: {
         envelope_version: DESKTOP_BRIDGE_TRANSPORT.envelopeVersion,
         namespace: "desktop_transport",
@@ -443,6 +447,8 @@ async function bridgeFetch(urlPath, options = {}) {
         backend_message: null,
       },
     };
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
 
@@ -460,7 +466,7 @@ ipcMain.handle(IPC_CHANNELS.bridge.stop, async () => {
   return bridgeFetch(BRIDGE_MANAGED_ROUTES.stop, { method: "POST" });
 });
 
-// Dead-candidate compatibility surface. No active renderer consumer today.
+// Renderer command-path health and reconnect resync surface.
 ipcMain.handle(IPC_CHANNELS.bridge.status, async () => {
   return bridgeFetch(BRIDGE_MANAGED_ROUTES.status);
 });

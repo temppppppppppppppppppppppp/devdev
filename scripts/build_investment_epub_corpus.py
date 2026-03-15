@@ -1,14 +1,18 @@
 from __future__ import annotations
 
 import argparse
-from pathlib import Path
 import sys
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from scripts.investment_corpus_support import build_corpus, dump_json, load_title_manifest
+from scripts.investment_corpus_support import (  # noqa: E402 - entrypoint path bootstrap must precede imports
+    build_corpus,
+    dump_json,
+    load_title_manifest,
+)
 
 
 def parse_args() -> argparse.Namespace:

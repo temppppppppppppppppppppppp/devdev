@@ -14,7 +14,10 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from modules.core.response_schemas import validate_bible_structure, validate_treatment_structure
+from modules.core.response_schemas import (  # noqa: E402 - entrypoint path bootstrap must precede imports
+    validate_bible_structure,
+    validate_treatment_structure,
+)
 
 WORK_ID = "chaebol_allowance_zero"
 TITLE = "재벌 3세인데 용돈이 0원"

@@ -45,11 +45,11 @@ def test_dead_candidate_ipc_surfaces_are_split_from_live_inventory():
     live_methods = {entry["name"]: entry["channel"] for entry in IPC_SURFACE_CONTRACT["live_preload_methods"]}
     dead_methods = {entry["name"]: entry["channel"] for entry in IPC_SURFACE_CONTRACT["dead_candidate_preload_methods"]}
 
+    assert live_methods["getStatus"] == "bridge:status"
     assert dead_methods == {
-        "getStatus": "bridge:status",
         "getWorkspacePath": "workspace:get-path",
     }
-    assert "getStatus" not in INDEX_HTML
+    assert "getStatus" in INDEX_HTML
     assert "getWorkspacePath" not in INDEX_HTML
     assert "getStatus" not in SPLASH_JS
     assert "getWorkspacePath" not in SPLASH_JS

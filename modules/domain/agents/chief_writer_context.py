@@ -29,7 +29,6 @@ from .chief_writer_prompts import (
     get_writing_guidelines_section,
 )
 
-
 _GENRE_CODE_ALIASES = {
     "무협": "wuxia",
     "wuxia": "wuxia",

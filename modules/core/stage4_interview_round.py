@@ -4143,7 +4143,8 @@ class Stage4InterviewRound:
         genre_name: str,
     ) -> list[str]:
         """[B-1-3b][TF-50] Advisory chain 병렬 실행, Director mandatory_context 파트 반환."""
-        from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError, as_completed
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+        from concurrent.futures import TimeoutError as FuturesTimeoutError
 
         logging.debug(
             "Advisory 검증 시작 — 8개 병렬 실행 (TruthGate, NPC, 수치, 회상, 정보역설, 관계, 장기반복, 수치정합)"
