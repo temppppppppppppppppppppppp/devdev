@@ -1,3 +1,4 @@
+import hashlib
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -30,7 +31,28 @@ def test_snapshot_logged_artifact_persists_and_returns_linkage(tmp_path):
     assert result["candidate_key"] == "A|balanced"
     assert result["content_hash"]
     assert result["artifact_path"].endswith("selected_before_fix__A_balanced.txt")
-    assert (tmp_path / result["artifact_path"]).read_text(encoding="utf-8") == "hello world"
+    persisted = (tmp_path / result["artifact_path"]).read_bytes()
+    assert persisted.decode("utf-8") == "hello world"
+    assert result["content_hash"] == hashlib.sha256(persisted).hexdigest()
+
+
+def test_snapshot_logged_artifact_hash_matches_persisted_json_bytes(tmp_path):
+    project = _project(tmp_path)
+
+    result = snapshot_logged_artifact(
+        project,
+        stage=3,
+        ep_num=4,
+        attempt_num=1,
+        candidate_key="blueprint",
+        artifact_kind="integrated_blueprint",
+        payload={"title": "Blueprint", "scene_count": 3},
+    )
+
+    persisted = (tmp_path / result["artifact_path"]).read_bytes()
+
+    assert persisted.decode("utf-8").startswith("{\n")
+    assert result["content_hash"] == hashlib.sha256(persisted).hexdigest()
 
 
 def test_snapshot_logged_artifact_write_failure_is_soft_failure(tmp_path):

@@ -226,3 +226,31 @@ def test_shutdown_app_delegates_to_split_helpers(monkeypatch):
     main_a.SovereignApp._shutdown_app(SimpleNamespace())
 
     assert calls == ["start", "metrics", "cost", "advisory", "trackers", "project", "close", "end"]
+
+
+def test_shutdown_freezes_runtime_telemetry_and_writes_final_audit_summary(monkeypatch):
+    monkeypatch.setattr(main_a, "V50_MODULES_AVAILABLE", False)
+    monkeypatch.setattr(main_a, "get_metrics_collector", lambda: None)
+
+    db_conn = MagicMock()
+    db = SimpleNamespace(conn=db_conn, begin_shutdown=MagicMock())
+    session_logger = SimpleNamespace(begin_shutdown=MagicMock())
+    write_audit_summary = MagicMock()
+    app = SimpleNamespace(
+        _PROJECTS_DIR="projects",
+        pass_rate_monitor=None,
+        failure_learner=None,
+        character_voice=None,
+        foreshadow_tracker=None,
+        current_project=SimpleNamespace(name="resume_project", db=db, save_v20_anchor=MagicMock()),
+        selected_genre=None,
+        _session_logger=session_logger,
+        _write_audit_summary=write_audit_summary,
+        ui=SimpleNamespace(log=MagicMock()),
+    )
+
+    main_a.SovereignApp._shutdown_app(app)
+
+    session_logger.begin_shutdown.assert_called_once()
+    db.begin_shutdown.assert_called_once()
+    write_audit_summary.assert_called_once_with("shutdown_final")

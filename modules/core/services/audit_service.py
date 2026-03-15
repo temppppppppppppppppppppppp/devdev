@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 import sqlite3
 import time
 from collections.abc import Callable
@@ -133,6 +134,57 @@ class AuditService:
         conn.row_factory = sqlite3.Row
         return SimpleNamespace(conn=conn, db_path=db_path), True
 
+    @staticmethod
+    def _latest_plain_log_token(log_dir) -> str:
+        latest_token = ""
+        latest_mtime = -1.0
+        for path in log_dir.glob("session_*.log"):
+            match = re.fullmatch(r"session_(.+)\.log", path.name)
+            if not match:
+                continue
+            try:
+                mtime = path.stat().st_mtime
+            except OSError:
+                continue
+            if mtime >= latest_mtime:
+                latest_mtime = mtime
+                latest_token = match.group(1).strip()
+        return latest_token
+
+    @staticmethod
+    def _latest_structured_session_id(db) -> str:
+        queries = (
+            "SELECT session_id FROM stage_attempts WHERE COALESCE(session_id, '') != '' ORDER BY id DESC LIMIT 1",
+            "SELECT session_id FROM ui_events WHERE COALESCE(session_id, '') != '' ORDER BY id DESC LIMIT 1",
+            "SELECT session_id FROM llm_calls WHERE COALESCE(session_id, '') != '' ORDER BY id DESC LIMIT 1",
+        )
+        for sql in queries:
+            try:
+                row = db.conn.execute(sql).fetchone()
+            except Exception:
+                row = None
+            if not row:
+                continue
+            value = str(row["session_id"] or "").strip()
+            if value:
+                return value
+        return ""
+
+    def _build_session_lineage(self, *, log_dir, db) -> dict:
+        plain_log_token = self._latest_plain_log_token(log_dir)
+        structured_session_id = self._latest_structured_session_id(db)
+        if plain_log_token and structured_session_id:
+            status = "unified" if plain_log_token == structured_session_id else "split_mapped"
+        elif plain_log_token or structured_session_id:
+            status = "partial"
+        else:
+            status = "missing"
+        return {
+            "plain_log_token": plain_log_token,
+            "structured_session_id": structured_session_id,
+            "status": status,
+        }
+
     def _build_proof_digest(self, paths) -> dict:
         log_dir = paths.root / "logs"
         digest = {
@@ -164,6 +216,7 @@ class AuditService:
                     ui_event_count = int(db.conn.execute("SELECT COUNT(*) AS cnt FROM ui_events").fetchone()["cnt"])
                 except Exception:
                     ui_event_count = 0
+                digest["session_lineage"] = self._build_session_lineage(log_dir=log_dir, db=db)
                 digest["artifacts"]["ui_events_db_available"] = True
                 digest["artifacts"]["ui_events_count"] = ui_event_count
                 if digest["artifacts"]["ui_events_jsonl_exists"] and ui_event_count > 0:

@@ -63,6 +63,7 @@ class DBManager:
         self.cursor = None  # [INF-P1-1] legacy — prefer local cursors in methods
         # [V45] 멀티스레드 안전성을 위한 Lock
         self._lock = threading.RLock()
+        self._accept_runtime_telemetry_writes = True
         # [V64 P2-7] 누적 Bible 증분 캐시 {up_to_ep: cumulative_dict}
         self._cumulative_bible_cache: dict = {}
         self._boot_db()
@@ -1103,6 +1104,7 @@ class DBManager:
     def close(self) -> None:
         """[Phase 4A] DB 연결 안전 종료"""
         with self._lock:
+            self._accept_runtime_telemetry_writes = False
             if self.conn:
                 try:
                     if self.conn.in_transaction:
@@ -1112,6 +1114,15 @@ class DBManager:
                 finally:
                     self.conn = None
                     self.cursor = None
+
+    def begin_shutdown(self) -> None:
+        """Freeze best-effort runtime telemetry writes before resource teardown."""
+        with self._lock:
+            self._accept_runtime_telemetry_writes = False
+
+    @property
+    def accepts_runtime_telemetry_writes(self) -> bool:
+        return bool(self._accept_runtime_telemetry_writes and self.conn is not None)
 
     @property
     def in_transaction(self) -> bool:
@@ -2768,7 +2779,11 @@ class DBManager:
         artifact_path: str = "",
     ) -> None:
         """Persist director selection result."""
+        if not self.accepts_runtime_telemetry_writes:
+            return
         with self._lock:
+            if not self.accepts_runtime_telemetry_writes:
+                return
             nested = self.conn.in_transaction
             _adv_json = json.dumps(advisory_warnings, ensure_ascii=False) if advisory_warnings else None
             self.cursor.execute(
@@ -2802,6 +2817,42 @@ class DBManager:
             )
             if not nested:
                 self.commit()
+
+    def update_director_selection_rationale(
+        self,
+        *,
+        attempt_key: str,
+        selection_reason: str = "",
+        verdict_reason: str = "",
+        fix_scope: str = "",
+    ) -> bool:
+        """Update the latest director selection row for an attempt with final rationale fields."""
+        if not attempt_key:
+            return False
+        with self._lock:
+            nested = self.conn.in_transaction
+            cur = self.cursor.execute(
+                """
+                UPDATE director_selections
+                SET selection_reason = ?, verdict_reason = ?, fix_scope = ?
+                WHERE id = (
+                    SELECT id
+                    FROM director_selections
+                    WHERE attempt_key = ?
+                    ORDER BY id DESC
+                    LIMIT 1
+                )
+                """,
+                (
+                    selection_reason[:500] if selection_reason else "",
+                    verdict_reason[:500] if verdict_reason else "",
+                    fix_scope or "",
+                    str(attempt_key),
+                ),
+            )
+            if not nested:
+                self.commit()
+            return int(cur.rowcount or 0) > 0
 
     def save_episode_quality_label(self, ep_num: int, labels: dict) -> None:
         """PASS 에피소드의 정규화된 품질 라벨 저장."""
@@ -3154,6 +3205,8 @@ class DBManager:
     ) -> None:
         """[Log-1] Save one LLM call record in non-blocking mode."""
         try:
+            if not self.accepts_runtime_telemetry_writes:
+                return
             ts = datetime.now().isoformat(timespec="seconds")
             # [Log-Phase2] Keep DB size bounded: snippets only for failed calls.
             _prompt_snip = str(prompt_snippet)[:3000] if (not success and prompt_snippet) else None
@@ -3161,6 +3214,8 @@ class DBManager:
             # [TF-58] thinking은 성공 호출에서도 저장 (Director 구조 결함 분석용), 5000자 제한
             _thinking_snip = str(thinking_snippet)[:5000] if thinking_snippet else None
             with self._lock:
+                if not self.accepts_runtime_telemetry_writes:
+                    return
                 self.cursor.execute(
                     """INSERT INTO llm_calls
                        (session_id, ts, stage, ep_num, agent_name, model,
@@ -3229,9 +3284,13 @@ class DBManager:
         """[Log-2] Save one stage attempt record in non-blocking mode."""
         nested = False
         try:
+            if not self.accepts_runtime_telemetry_writes:
+                return False
             ts = datetime.now().isoformat(timespec="seconds")
             _advisory_json = json.dumps(advisory_flags, ensure_ascii=False) if advisory_flags else None
             with self._lock:
+                if not self.accepts_runtime_telemetry_writes:
+                    return False
                 nested = self.conn.in_transaction
                 self.cursor.execute(
                     """INSERT INTO stage_attempts
@@ -3308,11 +3367,15 @@ class DBManager:
         """Persist one operator-visible UI event in non-blocking mode."""
         nested = False
         try:
+            if not self.accepts_runtime_telemetry_writes:
+                return False
             event_ts = str(ts or datetime.now().isoformat(timespec="seconds"))
             normalized_stage, stage_label = self._normalize_ui_event_stage(stage)
             meta_payload = self._merge_ui_event_stage_label(meta, stage_label)
             meta_json = json.dumps(meta_payload, ensure_ascii=False, default=str) if meta_payload is not None else None
             with self._lock:
+                if not self.accepts_runtime_telemetry_writes:
+                    return False
                 nested = self.conn.in_transaction
                 self.cursor.execute(
                     """INSERT INTO ui_events

@@ -11,7 +11,7 @@ Commit State:
 - Baseline Commit: `d2982aa2790f5ab81529f1e8d87cf6f6006f13c9`
 - Baseline Dirty Summary: `dirty: unrelated investment/style/pdf/log artifacts already present; merged survey authority is bounded to included source paths plus selected 00_260315 runtime artifacts`
 - Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `none`
+- Resume Drift Summary: `artifact-truth addendum and 15일 transcript supplement folded into the same bounded survey scope`
 
 ## 1. Intent
 - Merge a full codebase-global static survey with the latest secured runtime evidence from `projects/00_260315`.
@@ -38,6 +38,8 @@ Commit State:
   - `projects/00_260315/logs/session/llm_io.jsonl`
   - `projects/00_260315/logs/episode_production.jsonl`
   - `projects/00_260315/project_data.db`
+  - referenced Stage 2/3/4 artifacts under `projects/00_260315/logs/artifacts/`
+  - supplemental operator transcript `15일.txt`
 - predecessor authority considered:
   - `docs/2026-03-15/codebase-global-cleanroom-source-only-deep-global-survey.md`
   - `docs/2026-03-15/codebase-global-live-merge-00_260315-post-run-merge-audit.md`
@@ -87,8 +89,11 @@ Commit State:
   - structured UI sinks use `session_id=20260315_144741`
 - direct runtime outcomes:
   - menu `7` no longer asks the older one-time tranche prompt on this secured run; the plain log records `auto-selected default batch_size: 3`
+  - `15일.txt` corroborates the same no-input FrontierLag path and shows auto-continue continuing past the first tranche
   - summary finalization still lands before the system fully quiesces
   - two UI-event writes and at least one `llm_calls` write hit a closed DB after shutdown
+  - all referenced Stage 2/3/4 artifact files currently exist and decode cleanly, but their persisted hash metadata does not match current bytes on disk
+  - the app-level shutdown path can log completion before Python teardown fully quiesces, as shown by post-completion `threading/_python_exit` and `BaseEventLoop.__del__` exceptions in `15일.txt`
 
 ## 5. Micro View
 - hotspot ranking:
@@ -114,17 +119,23 @@ Commit State:
   - final `ui_events` DB count: `1446`
   - final `ui_events.jsonl` count: `1448`
   - summary Stage 4 issue counts: `selection_reason_mismatches=2`, `verdict_reason_mismatches=2`
+  - artifact inventory counts: `stage2=3`, `stage3=12`, `stage4=28`
+  - `stage_attempts` rows with `artifact_path`: `29`; `content_hash` mismatches against current bytes: `29/29`
+  - linked `episode_production` attempt rows: `14`; `content_hash` or `selection_content_hash` mismatches against current bytes: `28`
+  - artifact structural non-findings: `missing=0`, `zero-byte=0`, `utf-8 decode failures=0`, `stage2/stage3 json parse failures=0`
+  - `episode_production.jsonl` also carries `5` event-only rows without `attempt_key`, so it is not a pure attempt-truth sink
 - localized mismatch proof:
   - the Stage 4 mismatch table resolves the `2 + 2` counts to attempt keys `s4:ep4:arc1:a1:20260315_144741` and `s4:ep5:arc2:a1:20260315_144741`
   - latest ep10 and ep11 Stage 4 rows are not the mismatch surface
+  - artifact-truth mismatch proof spans Stage 2, Stage 3, and Stage 4 rather than only the two bounded rationale-mismatch attempts
 
 ## 6. Cross-Cut Integrity Matrix
 - Companion matrix: `docs/2026-03-15/codebase-global-log-evidence-merged-cross-cut-integrity-matrix.md`
 - Key summary:
   - source corruption and shell-safe output are now one combined lane because both source text and host emission materially affect operator-visible evidence
-  - persistence and observability remain the highest-value runtime lane because the secured run proves stale summary timing, late writes after close, session-id split, and bounded Stage 4 rationale drift
+  - persistence and observability are now the highest-value runtime lane because the secured run plus artifact-truth sweep prove stale summary timing, late writes after close, session-id split, systematic artifact-hash drift, and bounded Stage 4 rationale drift
   - backend-front connectivity remains action-bearing from source evidence even though the secured run is CLI-only
-  - runtime/operator prompt fragmentation still exists, but the latest run retained the repaired FrontierLag and prompt-dedup behavior
+  - runtime/operator prompt fragmentation still exists, but the latest secured evidence retained the repaired FrontierLag and prompt-dedup behavior
 
 ## 7. Operational and Regression View
 - tests and smoke surface:
@@ -154,11 +165,14 @@ Commit State:
 - contradictions still open:
   - summary contract vs actual finalization point
   - session token split across plain log and structured sinks
+  - stored artifact hash lineage vs actual bytes on disk
+  - shutdown completion message vs process-level teardown exceptions
   - source/output encoding boundary responsibilities
   - desktop/control-plane severity without fresh runtime proof
 - uncertainty bounds:
   - no fresh desktop runtime capture in this bundle
   - exact late-write callback chain is inferred from logs plus code ownership, not fully instrumented end-to-end
+  - exact stale-hash capture point is still inferred from artifact comparisons rather than direct write-order instrumentation
   - unrelated dirty files remain outside authority unless explicitly read
 
 ## 9. Severity and Action Map
@@ -170,7 +184,9 @@ Commit State:
     - stale summary timestamp
     - late `ui_events` / `llm_calls` writes after DB close
     - plain-log vs structured session-id split
+    - systematic `content_hash` / `selection_content_hash` drift against durable artifacts
     - exact Stage 4 rationale mismatch table
+    - post-completion teardown exceptions after claimed shutdown success
   - backend-front/control-plane connectivity gaps remain action-bearing from current source evidence
 - `P2` items:
   - runtime/operator prompt authority remains fragmented, but the latest secured run retained the key user-facing fixes
@@ -189,7 +205,7 @@ Commit State:
 | Area | Classification | Canonical Execution Doc | Notes |
 | --- | --- | --- | --- |
 | source text and runtime/output encoding hygiene | action-bearing | `docs/2026-03-15/source-text-and-runtime-encoding-hygiene-remediation-execution-ssot.md` | merges source corruption repair, shell-safe tooling, and operator-visible encoding trust |
-| persistence/observability finalization and sink alignment | action-bearing | `docs/2026-03-15/persistence-observability-finalization-and-sink-alignment-remediation-execution-ssot.md` | closes stale summary timing, late writes after close, session-id lineage, and Stage 4 rationale mismatch drift |
+| persistence/observability finalization and sink alignment | action-bearing | `docs/2026-03-15/persistence-observability-finalization-and-sink-alignment-remediation-execution-ssot.md` | closes stale summary timing, late writes after close, session-id lineage, artifact hash truth drift, teardown exceptions, and Stage 4 rationale mismatch drift |
 | backend-front/control-plane connectivity | action-bearing | `docs/2026-03-15/backend-front-control-plane-connectivity-hardening-remediation-execution-ssot.md` | remains source-led until a fresh desktop run is captured |
 | runtime/operator surface unification | action-bearing | `docs/2026-03-15/runtime-operator-surface-unification-refresh-remediation-execution-ssot.md` | narrowed to prompt-authority reduction after latest CLI fixes held |
 | UI asset packs | no-execution-doc-required | none | not the main runtime-control surface in this bundle |
@@ -202,24 +218,25 @@ Commit State:
 - temp roadmap mirror:
   - `docs/temp/execution-roadmap.md`
 - execution order basis:
-  - source/output encoding first, then runtime-proven persistence finalization, then desktop/backend connectivity hardening, then prompt-authority unification
+  - runtime-proven persistence finalization first, then source/output encoding, then desktop/backend connectivity hardening, then prompt-authority unification
 - lane structure:
-  - Phase 1: source text and runtime/output encoding hygiene
-  - Phase 2: persistence/observability finalization and sink alignment
+  - Phase 1: persistence/observability finalization and sink alignment
+  - Phase 2: source text and runtime/output encoding hygiene
   - Phase 3: backend-front/control-plane connectivity hardening
   - Phase 4: runtime/operator surface unification refresh
 
 ## 12. Confidence Summary
 - estimated score:
-  - `97/100`
+  - `98/100`
 - score rationale:
   - global source coverage remained intact from the earlier clean-room sweep and was re-anchored with fresh raw inventory artifacts
-  - runtime evidence is durable and triangulated across plain log, summary JSON, pass-rate JSON, JSONL sinks, and the project DB
+  - runtime evidence is durable and triangulated across plain log, supplemental transcript, summary JSON, pass-rate JSON, JSONL sinks, artifact files, and the project DB
   - the main contradiction clusters are now either closed or explicitly bounded in the ledger
   - the action map converges to four coherent execution lanes under one roadmap
 - reasons the score is not higher:
   - no fresh desktop/Electron runtime capture
   - exact late-write call-chain instrumentation is still inferred rather than directly traced end-to-end
+  - exact stale-hash capture point is still inferred rather than directly instrumented
   - unrelated dirty workspace changes remain present and must stay out of future realization scope unless explicitly included
 - final save decision:
   - allowed because the merged bundle exceeds the 95% gate and its remaining uncertainty is explicit rather than hidden

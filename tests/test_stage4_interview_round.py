@@ -2455,6 +2455,12 @@ class TestRecordS4Attempt:
         assert payload["selection_candidate_key"] == db_kwargs["candidate_key"]
         assert payload["selection_candidate_key"] == "A|균형 전략"
         assert payload["selection_artifact_path"] == db_kwargs["artifact_path"]
+        ctx.current_project.db.update_director_selection_rationale.assert_called_once_with(
+            attempt_key="s4:ep1:arc1:a1",
+            selection_reason="re-audit accepted",
+            verdict_reason="ending needs a local fix",
+            fix_scope="inplace",
+        )
 
     def test_reject_episode_log_uses_final_attempt_meta_and_preserves_selection_meta(self, tmp_path):
         ctx = _make_ctx()
@@ -2501,6 +2507,12 @@ class TestRecordS4Attempt:
         assert payload["selection_candidate_key"] == db_kwargs["candidate_key"]
         assert payload["selection_candidate_key"] == "B|균형 전략"
         assert payload["selection_artifact_path"] == db_kwargs["artifact_path"]
+        ctx.current_project.db.update_director_selection_rationale.assert_called_once_with(
+            attempt_key="s4:ep1:arc1:a1",
+            selection_reason="best candidate",
+            verdict_reason="conflict",
+            fix_scope="",
+        )
 
     def test_pass_with_fix_loop_sets_and_clears_structural_patch_context(self):
         ctx = _make_ctx()
