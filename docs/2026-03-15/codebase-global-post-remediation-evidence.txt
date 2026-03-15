@@ -1,0 +1,215 @@
+═══════════════════════════════════════════════════════════════
+Post-Remediation Raw Evidence Log
+Baseline: bbb00a77 | Date: 2026-03-15
+═══════════════════════════════════════════════════════════════
+
+──────────────────────────────────────────────────────────────
+SECTION 1: FILE COUNTS (fresh measurement)
+──────────────────────────────────────────────────────────────
+
+modules/*.py:  244 files
+tests/*.py:    315 files
+scripts/*.py:   34 files
+root *.py:       8 files
+config files:   47 (YAML/JSON) + 21 (laws/seeds JSON)
+total .py:     601
+
+modules/ LOC breakdown:
+  core/         80,860 (genre_guards 7.5K, services 1.5K, stage0 5.3K)
+  domain/       38,880 (agents: 48 files)
+  validation/    8,486
+  api/           3,233
+  models/          478
+  protocols/       688
+  TOTAL:       138,260
+
+tests/ LOC:    77,833
+scripts/ LOC:  13,762
+root .py LOC:   6,088
+
+──────────────────────────────────────────────────────────────
+SECTION 2: RUFF VIOLATIONS (fresh measurement)
+──────────────────────────────────────────────────────────────
+
+$ ruff check modules/ scripts/ main_a.py --statistics
+20  I001   [*] unsorted-imports
+ 9  E402   [ ] module-import-not-at-top-of-file
+ 9  UP045  [*] non-pep604-annotation-optional
+ 8  UP006  [*] non-pep585-annotation
+ 8  UP035  [-] deprecated-import
+ 5  UP017  [*] datetime-timezone-utc
+ 4  F401   [*] unused-import
+ 2  UP037  [*] quoted-annotation
+ 1  UP041  [*] timeout-error-alias
+Found 66 errors.
+[*] 52 fixable with the `--fix` option.
+
+Previous count (plan): 186
+Reduction: 120 violations (64% decrease)
+
+──────────────────────────────────────────────────────────────
+SECTION 3: LANE 1 IMPLEMENTATION EVIDENCE
+──────────────────────────────────────────────────────────────
+
+3a. db_manager.py (3,743 lines)
+  L66:   _accept_runtime_telemetry_writes = True
+  L1118: def begin_shutdown(self):
+  L1119:     self._accept_runtime_telemetry_writes = False
+  L2821: def update_director_selection_rationale(...)
+  Gated methods: save_director_selection, insert_llm_call,
+                 save_stage_attempt, save_ui_event
+
+3b. artifact_logging.py (147 lines)
+  L53:  content_hash = hashlib.sha256(serialized["persisted_bytes"]).hexdigest()
+  L100: "persisted_bytes": text.encode("utf-8")  [text payload]
+  L107: "persisted_bytes": json_str.encode("utf-8")  [JSON payload]
+  L114: file_path.write_bytes(text.encode("utf-8"))
+
+3c. session_logger.py (355 lines)
+  L51:  self._enabled = True
+  L69:  def begin_shutdown(self):
+  L70:      self._enabled = False
+  L96:  if not self._enabled: return  [log_llm_call]
+  L128: if not self._enabled: return  [log_decision]
+  L155: if not self._enabled: return  [log_state_change]
+  L194: if not self._enabled: return  [log_ui_event]
+
+3d. stage4_interview_round.py (5,037 lines)
+  Rationale sync point 1: L2138-2153
+  Rationale sync point 2: L2297-2314
+  Both: getattr chain + hasattr guard + debug-level exception logging
+
+3e. audit_service.py (303 lines)
+  L173-186: _build_session_lineage()
+    plain_log_token: regex from session_*.log filename
+    structured_session_id: DB query across 3 tables
+    status: unified | split_mapped | partial | missing
+  L256: proof_digest_truth_scope = "committed_persistence_only"
+  L133: mode=ro (read-only DB access for proof)
+  L269: before_summary_write_fn() pre-hook (quiescent point)
+
+3f. main_a.py shutdown sequence (L3003-3018):
+  L3003: _persist_shutdown_metrics()
+  L3004: _persist_shutdown_cost_scope()
+  L3005: _persist_shutdown_advisory_state()
+  L3006: _persist_shutdown_trackers()
+  L3007: _persist_shutdown_project_state()
+  L3009: session_logger.begin_shutdown()    [JSONL freeze]
+  L3013: db.begin_shutdown()                [DB telemetry freeze]
+  L3015: _write_audit_summary("shutdown_final") [proof digest]
+  L3018: _close_shutdown_resources()         [DB close]
+
+──────────────────────────────────────────────────────────────
+SECTION 4: DI CONTEXT SLOT COUNTS
+──────────────────────────────────────────────────────────────
+
+Stage2Context: 47 __slots__
+  5 required: ui, current_project, agents, sys, state_tracker
+  1 world_state
+  18 extended: selected_genre ... use_arc_corrector, adversarial_self_play
+  21 callbacks: audit_event ... generate_arc_context_v60
+  1 sync: sync_cache_key_to_app
+  1 session_logger
+
+Stage3Context: 19 __slots__
+  2 required: ui, current_project
+  11 properties: agents, sys, state_tracker ... pass_rate_monitor
+  10 callbacks: get_protagonist_name ... fix_entity_registry_protagonist
+  1 session_logger
+
+Stage4Context: 26 __slots__
+  5 required: ui, current_project, agents, sys, state_tracker
+  14 extended: memory ... emotion_tracker
+  1 conditional_modules (dict: 8 keys)
+  7 callbacks (direct) + 5 property-backed
+  2 meta: session_logger, _stage4_context_budget_meta
+
+──────────────────────────────────────────────────────────────
+SECTION 5: SERVICES INVENTORY
+──────────────────────────────────────────────────────────────
+
+modules/core/services/ (5 files, 1,522 LOC):
+  audit_service.py    303 LOC  7+ methods
+  state_service.py    373 LOC  15 methods
+  project_service.py  619 LOC  24+ methods
+  ui_service.py       222 LOC  11 methods
+  __init__.py           5 LOC  re-exports
+
+──────────────────────────────────────────────────────────────
+SECTION 6: GUARD CHAIN
+──────────────────────────────────────────────────────────────
+
+Chain: GenreGuard → WorkGuard → StyleGuard
+
+Genre guards (10):
+  wuxia, hunter, investment, fantasy, actor, alt_history,
+  composer, cooking, medical, sports
+
+Base + composite: base_guard.py, work_guard.py, style_guard.py
+Total: 13 guard classes
+
+──────────────────────────────────────────────────────────────
+SECTION 7: PERSISTENCE SINKS
+──────────────────────────────────────────────────────────────
+
+DB operations: 29+ (17 INSERT/UPSERT + 12 UPDATE)
+DB safety: RLock + WAL + nested tx detection + 30s timeout
+
+JSONL sinks (11):
+  session_*.jsonl (4 categories: llm_io, decisions, state_changes, ui_events)
+  runtime_audit.jsonl
+  episode_production.jsonl
+  quality_metrics.jsonl
+  failure_analysis.jsonl
+  quality_dashboard.jsonl
+  soft_failures.jsonl
+  canary_*.jsonl
+
+File writes: 18 patterns (10 open('w') + 8 write_text())
+Console: 130 print() across 30 files
+
+──────────────────────────────────────────────────────────────
+SECTION 8: CONTRADICTION STATUS
+──────────────────────────────────────────────────────────────
+
+C-01 mojibake/hygiene:     RESOLVED (d2982aa2+bbb00a77)
+C-02 prompt authority:     RESOLVED (UIService, 0 bare input())
+C-05 backend-front:        PARTIALLY RESOLVED (contract, no runtime)
+C-06 prompt lifecycle:     RESOLVED (PromptBroker state machine)
+Log C-02 proof timing:     RESOLVED (committed_persistence_only)
+Log C-05 session identity: RESOLVED (dual lineage tracking)
+Log C-07/08 hash+teardown: RESOLVED (SHA256 persisted + multi-phase)
+
+──────────────────────────────────────────────────────────────
+SECTION 9: UNCERTAINTY STATUS
+──────────────────────────────────────────────────────────────
+
+U-01 desktop tests:     OPEN (0 test files)
+U-02 Lane 1 tests:      RESOLVED (929 LOC across 3 suites)
+U-03 reconnect:         BOUNDED (1s poll, 30s timeout)
+U-04 splash timeout:    RESOLVED (8s + 5s per-fetch)
+U-05 UI service:        RESOLVED (222 LOC, no TODO)
+U-06 command/WS:        RESOLVED (HTTP commands, WS events)
+Log U-01 log consume:   BOUNDED (WS for real-time, logs post-mortem)
+Log U-02 late-write:    RESOLVED (begin_shutdown before DB writes)
+Log U-05 hash timing:   RESOLVED (hash on payload pre-write)
+
+──────────────────────────────────────────────────────────────
+SECTION 10: CONFIDENCE SCORE
+──────────────────────────────────────────────────────────────
+
+Scope/path completeness:     20/20
+View completeness:           15/15
+Side-effects/durability:     14/15  (-1 desktop gap)
+Evidence triangulation:      14/15  (-1 desktop contract-only)
+Contradiction closure:        9/10  (-1 C-05 partial)
+Uncertainty ledger:           9/10  (-1 U-01 open)
+SSOT/roadmap alignment:     10/10
+Verification artifacts:       5/5
+TOTAL:                       96/100
+
+95% gate: PASSED
+
+═══════════════════════════════════════════════════════════════
+END OF EVIDENCE LOG
+═══════════════════════════════════════════════════════════════

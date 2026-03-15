@@ -86,7 +86,11 @@
       "Bash(ruff check:*)",
       "Bash(tail:*)",
       "Bash(cd C:\\\\Users\\\\wjjo\\\\Desktop\\\\글도비:*)",
-      "Bash(git pull:*)"
+      "Bash(git pull:*)",
+      "Bash(PYTHONIOENCODING=utf-8 python3 << 'PYEOF'\nimport sys\n# Scenario B: V75-D가 이 세션에서 발생했는데 grep이 놓쳤을 가능성\nwith open\\(\"C:/Users/User/Desktop/글도비/projects/00_260315/logs/session_20260315_144654.log\", \"r\", encoding=\"utf-8\"\\) as f:\n    for i, line in enumerate\\(f, 1\\):\n        low = line.lower\\(\\)\n        if any\\(kw in low for kw in [\"v75\", \"inplace 패치\", \"재생성\", \"블루프린트 수정\", \"blueprint patch\", \"blueprint regen\", \"escalation_event\", \"에스컬레이션\"]\\):\n            print\\(f\"L{i}: {line.rstrip\\(\\)[:200]}\"\\)\nPYEOF)",
+      "Bash(PYTHONIOENCODING=utf-8 python3 << 'PYEOF'\nimport os\n# Check what logs exist in projects/000\nlog_dir = \"C:/Users/User/Desktop/글도비/projects/000/logs\"\nfor root, dirs, files in os.walk\\(log_dir\\):\n    for f in files:\n        fp = os.path.join\\(root, f\\)\n        sz = os.path.getsize\\(fp\\)\n        rel = os.path.relpath\\(fp, log_dir\\)\n        if sz > 0:\n            print\\(f\"{rel} \\({sz:,} bytes\\)\"\\)\nPYEOF)",
+      "Bash(PYTHONIOENCODING=utf-8 python3 << 'PYEOF'\n# Search for V75-B/V75-D escalation events in projects/000\nwith open\\(\"C:/Users/User/Desktop/글도비/projects/000/logs/session_20260315_190600.log\", \"r\", encoding=\"utf-8\"\\) as f:\n    for i, line in enumerate\\(f, 1\\):\n        low = line.lower\\(\\)\n        if any\\(kw in line for kw in [\"V75-D\", \"V75-B\", \"블루프린트 재생성\", \"블루프린트 inplace\", \"inplace 패치 시도\", \"inplace 패치 성공\", \"재생성 성공\", \"재생성 실패\", \"FULL_REGEN\"]\\):\n            print\\(f\"L{i}: {line.rstrip\\(\\)[:250]}\"\\)\nPYEOF)",
+      "Bash(PYTHONIOENCODING=utf-8 python3 << 'PYEOF'\n# Full escalation timeline in projects/000\nwith open\\(\"C:/Users/User/Desktop/글도비/projects/000/logs/session_20260315_190600.log\", \"r\", encoding=\"utf-8\"\\) as f:\n    for i, line in enumerate\\(f, 1\\):\n        if any\\(kw in line for kw in [\"V75-D\", \"V75-B\", \"LOGIC_ERROR\", \"블루프린트 inplace\", \"블루프린트 재생성\", \"inplace 패치\", \"재생성 성공\", \"재생성 실패\", \"FULL_REGEN\", \"round_complete\", \"post-select conflicts\"]\\):\n            print\\(f\"L{i}: {line.rstrip\\(\\)[:250]}\"\\)\nPYEOF)"
     ]
   }
 }

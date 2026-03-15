@@ -5,6 +5,13 @@
 - 현재 워크스페이스 운영 SSOT는 `AGENTS.md`
 - `CLAUDE.md`는 호환용 shim이며 독립 운영 기준으로 쓰지 않는다
 
+## 대원칙 (절대 위반 금지)
+
+1. **Python은 수집만, 판단은 LLM이** — Python은 데이터 수집·포맷팅·전달만. "오류인가?", "수정할까?" 같은 판단은 LLM 에이전트가 담당.
+2. **팩트시트 수정 권한은 LLM만** — NPC 속성, 세계관 설정, 관계도를 수정하는 건 LLM뿐. Python이 자동으로 팩트를 덮어쓰면 안 됨.
+3. **디렉터 주권주의 (내각제)** — Director가 최종 품질 결정권. Chief Writer·Analyst 등은 초안 제출만, 합격/불합격/수정 지시는 Director가 내림. Director를 우회하면 안 됨.
+4. **사망 캐릭터는 회상/언급만 허용** — `deceased=True` NPC가 행동/대사로 등장하면 REJECT. 회상·과거 장면·타인 언급은 허용.
+
 ## Track Split
 
 이 워크스페이스의 오더는 아래 두 트랙으로 분리한다.
@@ -111,6 +118,8 @@
 
 - 전수조사/실행문서 류는 사이드이펙트 조사까지 기본 포함
 - 최소 조사 대상: file write, DB write, JSONL/log/audit sink, console/UI 출력, rollback/recovery/retry, cache/global state, bootstrap fallback, config/env mutation
+- 조사 범위에 실제 산출물(blueprint, manuscript, episode artifact)이 포함되면 로그/DB/hash만 보지 말고 실물 파일 본문도 직접 조사한다.
+- 실제 산출물 조사는 최소 `artifact truth`(존재/bytes/hash), `metadata truth`(DB/JSONL/summary/rationale linkage), `narrative truth`(본문 내용 모순, blueprint/selection/verdict와의 불일치) 3층을 함께 다룬다.
 - 해당 항목이 비적용이면 생략하지 말고 문서에 비적용이라고 명시
 - fresh live run을 병행하는 경우에는 `docs/implementation/live-run-merge-survey-harness.md`를 함께 읽고, run 중에는 raw evidence와 draft watchlist만 확정하며 final SSOT/closure는 post-run merge audit 이후에만 저장
 

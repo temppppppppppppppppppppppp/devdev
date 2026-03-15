@@ -51,11 +51,15 @@ def test_desktop_bridge_transport_contract_matches_main_process_source():
     assert namespace["envelope_version"] == "desktop_bridge_v1"
     assert namespace["network_error_code"] == "NETWORK_ERROR"
     assert namespace["http_error_code_format"] == "HTTP_<status_code>"
+    assert namespace["request_timeout_ms"] == 5000
 
     assert 'networkErrorCode: "NETWORK_ERROR"' in MAIN_JS
     assert 'httpErrorPrefix: "HTTP_"' in MAIN_JS
     assert 'envelopeVersion: "desktop_bridge_v1"' in MAIN_JS
     assert 'namespace: "desktop_transport"' in MAIN_JS
+    assert "const BRIDGE_FETCH_TIMEOUT_MS = 5000;" in MAIN_JS
+    assert "new AbortController()" in MAIN_JS
+    assert "clearTimeout(timeoutId);" in MAIN_JS
     assert "backend_code:" in MAIN_JS
     assert "backend_message:" in MAIN_JS
     assert "url_path:" in MAIN_JS
@@ -126,3 +130,11 @@ def test_runtime_websocket_payload_contract_matches_renderer_and_backend_usage()
 
     prompt_timeout = _payload_schema_for("prompt_timeout")
     assert prompt_timeout["required"] == ["prompt_id", "applied_default"]
+
+
+def test_renderer_control_plane_resync_contract_matches_source():
+    assert "window.geuldobiDesktop.getStatus()" in INDEX_HTML
+    assert "let _commandPathReady = false;" in INDEX_HTML
+    assert "let _pendingPromptQueue = [];" in INDEX_HTML
+    assert '[prompt] queueing concurrent prompt_request while dialog open' in INDEX_HTML
+    assert 'pending_prompts' in BRIDGE_SERVER

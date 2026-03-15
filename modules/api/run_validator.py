@@ -15,12 +15,13 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import Optional
 
 from modules.api.control_plane_contract import (
     ALLOWED_STAGE0_SUB_KEYS,
     PUBLIC_RUN_KEYS,
-    RISK_KEYS,
+)
+from modules.api.control_plane_contract import (
+    RISK_KEYS as CONTROL_PLANE_RISK_KEYS,
 )
 
 logger = logging.getLogger(__name__)
@@ -29,6 +30,7 @@ logger = logging.getLogger(__name__)
 
 ALLOWED_KEYS: frozenset[str] = PUBLIC_RUN_KEYS
 ALLOWED_SUB_KEYS: frozenset[str] = ALLOWED_STAGE0_SUB_KEYS
+RISK_KEYS: frozenset[str] = CONTROL_PLANE_RISK_KEYS
 ACTIVE_RUN_STATES: frozenset[str] = frozenset({"starting", "running", "stopping"})
 
 
@@ -53,7 +55,7 @@ def _err(http_status: int, code: str, message: str) -> ValidationResult:
 
 def validate_run_request(
     key: str,
-    sub_key: Optional[str],
+    sub_key: str | None,
     runner_state: str,
 ) -> ValidationResult:
     """POST /run 요청의 key/sub_key/상태를 검증한다.

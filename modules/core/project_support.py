@@ -7,9 +7,8 @@ import logging
 from pathlib import Path
 from typing import Any
 
-import yaml
-
 from modules.core.constants import smart_truncate
+from modules.core.genre_guards.work_guard import WorkGuardConfigError, load_work_guard_config
 
 logger = logging.getLogger(__name__)
 
@@ -239,6 +238,8 @@ def build_style_guide_summary(
 def load_work_guard_summary(project_dir: Path) -> dict[str, Any]:
     payload = {
         "work_guard_exists": False,
+        "work_guard_valid": True,
+        "work_guard_error": "",
         "work_type": "",
         "tracking_slots": 0,
         "registry_profiles": 0,
@@ -250,8 +251,15 @@ def load_work_guard_summary(project_dir: Path) -> dict[str, Any]:
 
     payload["work_guard_exists"] = True
     try:
-        data = yaml.safe_load(work_guard_path.read_text(encoding="utf-8")) or {}
+        data = load_work_guard_config(work_guard_path)
+    except WorkGuardConfigError as exc:
+        payload["work_guard_valid"] = False
+        payload["work_guard_error"] = str(exc)
+        logger.debug("work_guard load failed for %s: %s", work_guard_path, exc)
+        return payload
     except Exception as exc:
+        payload["work_guard_valid"] = False
+        payload["work_guard_error"] = f"{work_guard_path}: unexpected load failure ({exc.__class__.__name__})"
         logger.debug("work_guard load failed for %s: %s", work_guard_path, exc)
         return payload
 
@@ -304,7 +312,9 @@ def inspect_project_support_assets(project_dir: Path) -> dict[str, dict[str, Any
         "work_guard": {
             "path": work_guard,
             "exists": work_guard.exists(),
-            "ready": work_guard.exists() and work_guard.stat().st_size > 0,
+            "ready": work_guard.exists()
+            and work_guard.stat().st_size > 0
+            and bool(work_guard_summary.get("work_guard_valid", True)),
             **work_guard_summary,
         },
         "style_guide": {

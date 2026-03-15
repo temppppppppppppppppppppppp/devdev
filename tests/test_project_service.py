@@ -117,6 +117,29 @@ class TestResetStage2:
         assert outcome.runtime_restore_ok is False
         assert outcome.cache_invalidation_required is False
 
+    def test_uses_injected_prompt_callbacks_before_fallback(self, ui_mock, project_mock, safe_commit_mock, genre_fn, memory_mock):
+        confirm_fn = MagicMock(return_value=False)
+        pause_fn = MagicMock()
+        int_input_fn = MagicMock()
+        svc = ProjectService(
+            project_fn=lambda: project_mock,
+            ui=ui_mock,
+            safe_commit_fn=safe_commit_mock,
+            genre_fn=genre_fn,
+            memory_fn=lambda: memory_mock,
+            int_input_fn=int_input_fn,
+            confirm_fn=confirm_fn,
+            pause_fn=pause_fn,
+        )
+
+        with patch("builtins.input", side_effect=AssertionError("raw input should not run")):
+            result = svc.reset_stage_2()
+
+        assert result is False
+        confirm_fn.assert_called_once()
+        int_input_fn.assert_not_called()
+        pause_fn.assert_not_called()
+
 
 class TestRewindStage2:
     def test_no_arcs_returns_false(self, ui_mock, safe_commit_mock, genre_fn, memory_mock):
@@ -187,6 +210,26 @@ class TestRewindStage2:
         assert project_mock.arcs == original_arcs
         memory_mock.delete_episodes_from.assert_not_called()
         ui_mock.log.assert_any_call("DB commit failed during Stage 2 rewind")
+
+    def test_rewind_uses_injected_numeric_prompt_callback(self, ui_mock, project_mock, safe_commit_mock, genre_fn, memory_mock):
+        confirm_fn = MagicMock(return_value=False)
+        int_input_fn = MagicMock(return_value=2)
+        svc = ProjectService(
+            project_fn=lambda: project_mock,
+            ui=ui_mock,
+            safe_commit_fn=safe_commit_mock,
+            genre_fn=genre_fn,
+            memory_fn=lambda: memory_mock,
+            int_input_fn=int_input_fn,
+            confirm_fn=confirm_fn,
+        )
+
+        with patch("builtins.input", side_effect=AssertionError("raw input should not run")):
+            result = svc.rewind_stage_2()
+
+        assert result is False
+        int_input_fn.assert_called_once()
+        confirm_fn.assert_called_once()
 
 
 class TestRollbackEpisode:

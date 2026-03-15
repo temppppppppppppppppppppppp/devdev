@@ -59,6 +59,9 @@ class ProjectService:
         preset_registry_restorer: Callable[[], None] | None = None,
         emotion_tracker_fn: Callable[[], Any] | None = None,
         state_delta_tracker_fn: Callable[[], Any] | None = None,
+        int_input_fn: Callable[..., int | None] | None = None,
+        confirm_fn: Callable[..., bool] | None = None,
+        pause_fn: Callable[..., None] | None = None,
     ) -> None:
         self._project_fn = project_fn
         self._ui = ui
@@ -71,7 +74,70 @@ class ProjectService:
         self._preset_registry_restorer = preset_registry_restorer
         self._emotion_tracker_fn = emotion_tracker_fn
         self._state_delta_tracker_fn = state_delta_tracker_fn
+        self._int_input_fn = int_input_fn
+        self._confirm_fn = confirm_fn
+        self._pause_fn = pause_fn
         self.last_destructive_result: DestructiveOpResult | None = None
+
+    def _ask_int(
+        self,
+        prompt: str,
+        *,
+        default: int | None = None,
+        min_val: int | None = None,
+        max_val: int | None = None,
+        attempts: int = 3,
+        prompt_id: str | None = None,
+    ) -> int | None:
+        if self._int_input_fn is not None:
+            return self._int_input_fn(
+                prompt,
+                default=default,
+                min_val=min_val,
+                max_val=max_val,
+                attempts=attempts,
+                prompt_id=prompt_id,
+            )
+        try:
+            raw = input(prompt).strip()
+        except (EOFError, KeyboardInterrupt, ValueError):
+            return default
+        if raw == "":
+            return default
+        if not raw.isdigit():
+            return None
+        value = int(raw)
+        if min_val is not None and value < min_val:
+            return None
+        if max_val is not None and value > max_val:
+            return None
+        return value
+
+    def _confirm_action(
+        self,
+        prompt: str,
+        *,
+        default: bool = False,
+        prompt_id: str | None = None,
+    ) -> bool:
+        if self._confirm_fn is not None:
+            return bool(self._confirm_fn(prompt, default=default, prompt_id=prompt_id))
+        try:
+            raw = input(prompt).strip().lower()
+        except (EOFError, KeyboardInterrupt, ValueError):
+            return default
+        if raw == "":
+            return default
+        return raw == "y"
+
+    def _pause(self, prompt: str = "\n[Enter] Return to menu", *, prompt_id: str | None = None) -> None:
+        if self._pause_fn is not None:
+            self._pause_fn(prompt, prompt_id=prompt_id)
+            return
+        try:
+            input(prompt)
+        except (EOFError, KeyboardInterrupt, ValueError):
+            return
 
     def _delete_draft_files_from_episode(self, project: Any, target_ep: int) -> None:
         for draft_file in project.paths.drafts.glob("*.txt"):
@@ -363,8 +429,10 @@ class ProjectService:
         """Clear all Stage 2 arc design and every downstream episode artifact."""
         self.last_destructive_result = None
         project = self._project_fn()
-        confirm = input("\nReally reset Stage 2 arcs and all downstream production data? (y/n): ").strip().lower()
-        if confirm != "y":
+        if not self._confirm_action(
+            "\nReally reset Stage 2 arcs and all downstream production data? (y/n): ",
+            prompt_id="safe_ops_reset_stage2_confirm",
+        ):
             return False
 
         result = DestructiveOpResult(operation="reset_stage_2", target_ep=1)
@@ -396,7 +464,7 @@ class ProjectService:
 
             result = self._restore_runtime_state(1, operation="reset_stage_2")
             self._log_destructive_outcome(result, "Stage 2 reset complete. Arc design and downstream artifacts were cleared.")
-            input("\n[Enter] Return to menu")
+            self._pause("\n[Enter] Return to menu", prompt_id="safe_ops_reset_stage2_pause")
             return result.cache_invalidation_required
         except Exception as exc:
             self._rollback_open_transaction(project)
@@ -414,24 +482,24 @@ class ProjectService:
         total_arcs = len(project.arcs)
         self._ui.log(f"Current arcs: {total_arcs}")
 
-        target_input = input(f"\nRewind from which arc? (1-{total_arcs}): ").strip()
-        if not target_input.isdigit():
+        target_no = self._ask_int(
+            f"\nRewind from which arc? (1-{total_arcs}): ",
+            min_val=1,
+            max_val=total_arcs,
+            prompt_id="safe_ops_rewind_stage2_target",
+        )
+        if target_no is None:
             self._ui.log("Only numeric input is allowed.")
-            return False
-
-        target_no = int(target_input)
-        if target_no < 1 or target_no > total_arcs:
-            self._ui.log(f"Please enter a value between 1 and {total_arcs}.")
             return False
 
         updated_arcs = [arc for arc in project.arcs if isinstance(arc, dict) and arc.get("arc_no", 0) < target_no]
         removed_arcs = [arc for arc in project.arcs if isinstance(arc, dict) and arc.get("arc_no", 0) >= target_no]
         target_ep = self._infer_rewind_target_ep(removed_arcs, target_no)
 
-        confirm = input(
-            f"Delete arc {target_no} through arc {total_arcs} and purge downstream data from episode {target_ep}? (y/n): "
-        ).strip().lower()
-        if confirm != "y":
+        if not self._confirm_action(
+            f"Delete arc {target_no} through arc {total_arcs} and purge downstream data from episode {target_ep}? (y/n): ",
+            prompt_id="safe_ops_rewind_stage2_confirm",
+        ):
             return False
 
         result = DestructiveOpResult(operation="rewind_stage_2", target_ep=target_ep)
@@ -472,7 +540,7 @@ class ProjectService:
                 result,
                 f"Arc rewind complete. Arc {target_no}+ and downstream episode data were removed.",
             )
-            input("\n[Enter] Return to menu")
+            self._pause("\n[Enter] Return to menu", prompt_id="safe_ops_rewind_stage2_pause")
             return result.cache_invalidation_required
         except Exception as exc:
             self._rollback_open_transaction(project)
@@ -490,21 +558,20 @@ class ProjectService:
             return False
 
         self._ui.log(f"Latest episode: {latest_ep}")
-        target_input = input(f"\nRollback from which episode? (1-{latest_ep}): ").strip()
-
-        if not target_input.isdigit():
+        target_ep = self._ask_int(
+            f"\nRollback from which episode? (1-{latest_ep}): ",
+            min_val=1,
+            max_val=latest_ep,
+            prompt_id="safe_ops_rollback_episode_target",
+        )
+        if target_ep is None:
             self._ui.log("Only numeric input is allowed.")
             return False
 
-        target_ep = int(target_input)
-        if target_ep < 1 or target_ep > latest_ep:
-            self._ui.log(f"Please enter a value between 1 and {latest_ep}.")
-            return False
-
-        confirm = input(
-            f"\nDelete every artifact for episode >= {target_ep} and return to the state before episode {target_ep}? (y/n): "
-        ).strip().lower()
-        if confirm != "y":
+        if not self._confirm_action(
+            f"\nDelete every artifact for episode >= {target_ep} and return to the state before episode {target_ep}? (y/n): ",
+            prompt_id="safe_ops_rollback_episode_confirm",
+        ):
             self._ui.log("Cancelled.")
             return False
 
@@ -569,7 +636,7 @@ class ProjectService:
                 result,
                 f"\n[Success] Rollback completed to the state before episode {target_ep}.",
             )
-            input("\n[Enter] Return to menu")
+            self._pause("\n[Enter] Return to menu", prompt_id="safe_ops_rollback_episode_pause")
             return result.cache_invalidation_required
         except Exception as exc:
             self._rollback_open_transaction(project)
@@ -583,8 +650,10 @@ class ProjectService:
     def wipe_production_data(self) -> bool:
         """Delete every episode-derived production artifact while keeping setup data."""
         self.last_destructive_result = None
-        confirm = input("\nReally wipe manuscripts, blueprints, logs, and episode-derived memory? (y/n): ").strip().lower()
-        if confirm != "y":
+        if not self._confirm_action(
+            "\nReally wipe manuscripts, blueprints, logs, and episode-derived memory? (y/n): ",
+            prompt_id="safe_ops_wipe_production_data_confirm",
+        ):
             return False
 
         project = self._project_fn()
@@ -611,7 +680,7 @@ class ProjectService:
 
             result = self._restore_runtime_state(1, operation="wipe_production_data")
             self._log_destructive_outcome(result, "[Wipe] Production artifacts were cleared. Setup data remains intact.")
-            input("\n[Enter] Return to menu")
+            self._pause("\n[Enter] Return to menu", prompt_id="safe_ops_wipe_production_data_pause")
             return result.cache_invalidation_required
         except Exception as exc:
             self._rollback_open_transaction(project)

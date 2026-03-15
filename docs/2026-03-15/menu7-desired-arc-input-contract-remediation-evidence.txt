@@ -1,0 +1,38 @@
+menu7-desired-arc-input-contract-remediation
+generated_at: 2026-03-15
+baseline_commit: bbb00a77c7356a32fe6358642cff0d3d445b7e8e
+baseline_dirty_summary: dirty: harness/test edits plus unrelated investment/style/pdf/log artifacts and untracked projects/000/
+
+current-source anchors
+- main_a.py:4104-4455 -> _one_stop_pipeline_frontier_lag already exposes max_arc_advances and batch_size_override seams
+- main_a.py:4135-4163, 4358, 4381, 4409 -> requested_arc_limit and _mark_requested_limit_hit already implement bounded stop semantics that fit "이번 실행 총량"
+- main_a.py:4227-4237 -> current interactive normal path does not call _get_int_input and instead logs auto-selected default batch_size
+- main_a.py:4460-4507 -> menu 6 already asks once for a desired total Arc count with default min(remaining, 3); this is the closest reusable interaction pattern
+
+current Frontier Lag tests
+- tests/test_one_stop_frontier_lag_auto_continue.py:118 -> normal path currently asserts app._get_int_input.assert_not_called()
+- tests/test_one_stop_frontier_lag_auto_continue.py:212 -> auto-shrink test also asserts zero _get_int_input calls
+- tests/test_one_stop_frontier_lag_auto_continue.py:260 -> Stage 3 abort path preserves safety prompts while keeping zero _get_int_input calls
+- tests/test_one_stop_frontier_lag_auto_continue.py:341-348 -> bounded requested-limit path uses batch_size_override=3 and still asserts no interactive prompt
+- tests/test_auto_frontier_lag_harness.py:248-255 -> harness worker still enters Frontier Lag with batch_size_override and verifies _shutdown_app path instead of console prompting
+
+harness seam
+- scripts/run_auto_frontier_lag_harness.py:350-355 -> worker invokes _one_stop_pipeline_frontier_lag(max_arc_advances=..., batch_size_override=..., wait_for_menu_return=False)
+- docs/2026-03-14/auto-frontier-lag-n-arc-test-harness-ssot.md -> bounded harness semantics explicitly depend on batch_size_override
+
+authority conflict
+- docs/2026-03-14/frontier-lag-nonstop-contract-remediation-execution-ssot.md -> closed operator contract says zero normal-path prompt and auto-select default 3
+- docs/2026-03-15/interactive-prompt-contract-refresh-execution-ssot.md -> closed operator contract says one-time prompt whose meaning is initial tranche size
+- current live code aligns with the 2026-03-14 contract, but the requested new contract is different from both predecessors: one-time prompt whose meaning is total Arc count for this invocation
+- operator clarification to carry into the new SSOT:
+  - the earlier "Enter 없이 계속 진행" intent means no extra confirmation prompt after the operator chooses or accepts the default
+  - the new contract is therefore not "always no prompt"; it is "selection is possible, and pressing Enter immediately accepts default 3 and runs those 3 Arc nonstop"
+
+queue integration
+- docs/temp/ currently already contains four active execution mirrors plus docs/temp/execution-roadmap.md
+- docs/2026-03-15/runtime-operator-surface-unification-refresh-remediation-execution-ssot.md still broadly owns prompt-authority work; a dedicated menu7 contract item is needed so that menu7 arc-count policy does not stay implicit inside the broad lane
+
+side-effect notes
+- no schema or DB contract change is implied by this documentation cycle
+- future implementation will change operator-visible prompt text, prompt telemetry, and Frontier Lag regression expectations
+- batch_size_override must remain a prompt-free harness bypass after the future implementation

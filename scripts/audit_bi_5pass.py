@@ -19,8 +19,12 @@ SCRIPTS_DIR = ROOT / "scripts"
 if str(SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_DIR))
 
-from modules.core.response_schemas import validate_bible_structure, validate_treatment_structure
-from tr_batch_harness import compute_treatment_metrics
+from tr_batch_harness import compute_treatment_metrics  # noqa: E402 - entrypoint path bootstrap must precede imports
+
+from modules.core.response_schemas import (  # noqa: E402 - entrypoint path bootstrap must precede imports
+    validate_bible_structure,
+    validate_treatment_structure,
+)
 
 GARBLED_RE = re.compile(r"\?{2,}|�|\ufffd")
 FOREIGN_TOKENS = [

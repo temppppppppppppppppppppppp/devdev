@@ -1,0 +1,93 @@
+Stage4 CW Context / DB Retrieval / Reject Persistence Evidence
+Date: 2026-03-15
+Status: raw-evidence
+Scope: source-and-test anchored investigation for post-run audit readiness
+Not-In-Scope: fresh runtime log re-merge, backend-front control plane, menu7 operator contract
+Commit State:
+- Baseline Commit: `bbb00a77c7356a32fe6358642cff0d3d445b7e8e`
+- Baseline Dirty Summary: `dirty: AGENTS/docs/harness/menu7 docs edits, harness/test edits, deleted local transcript file, unrelated pdf/style/log artifacts, and untracked projects/000/`
+
+[CW historical-context intake]
+- `modules/core/stage4_context_builder.py:1749-1973`
+  - `prepare_episode_context()` builds `prev_manuscripts_text`, `episode_digest`, `world_state_summary`
+  - recent full manuscripts come from `get_manuscripts_range(...)`
+  - mid/long lookback is downgraded to summaries and anchors
+- `modules/core/stage4_context_builder.py:2088-2620`
+  - `build_mandatory_context()` composes DB facts, world state, timeline, canonical constraints, continuity packet, relation slices, semantic plot, foreshadow, extended lookback
+- `modules/core/stage4_context_builder.py:1444-1516`
+  - `_compose_mandatory_context_with_headroom()` trims the combined SC/MC payload against a budget
+- `modules/core/stage4_orchestrator.py:812-856`
+  - `mandatory_context` is trimmed again before Stage 4 generation
+- `modules/domain/agents/chief_writer_context.py:388-467`
+  - CW prompt builder injects `mandatory_context` and `prev_manuscripts_text`
+  - `prev_manuscripts_text` passes through `smart_truncate(...)`
+- `modules/core/stage4_interview_round.py:1261-1358`
+  - `_build_common_writer_kwargs()` forwards `mandatory_context`, `prev_manuscripts_text`, `world_state_summary`, `chain_link_section`, `state_tracker`, inventory/martial/dead NPC state
+- `modules/core/stage4_interview_round.py:3816-3831`
+  - CW retry path uses `chief_writer.regenerate_with_feedback(...)`
+- `modules/domain/agents/chief_writer.py:799-950`
+  - retry prompt enriches feedback with `rejection_reason`, `score_breakdown`, `validation_warnings`, `fix_scope_reasoning`, `open_review`, `action_items`, `selection_reason`
+
+[Director critique surfaces]
+- `modules/domain/agents/director_ensemble.py:813-977`
+  - Director receives `mandatory_context`, `prev_manuscripts_text`, story context, digest, previous ending
+- `modules/domain/agents/director_ensemble.py:1264-1366`
+  - normalized output includes `selection_reason`, `verdict_reason`, `feedback`, `action_items`, `open_review`, `fix_scope_reasoning`, `consistency_checklist`, `contradiction_types`
+- `modules/core/stage4_interview_round.py:1986-2054`
+  - Director `action_items` and rationale are surfaced to operator/runtime flow
+- `modules/core/stage4_interview_round.py:3456-3604`
+  - retry feedback provenance and Stage 4 persistence path carry `selection_reason`, `verdict_reason`, `open_review`, `fix_scope_reasoning`, `runtime_advisory`, `retry_directives`
+- `tests/test_a2_open_review_cw.py`
+- `tests/test_tf29_open_review.py`
+  - `open_review` propagation from Director to CW retry is explicitly tested
+
+[DB retrieval quality]
+- `modules/core/db_manager.py:1186-1212`
+  - `get_manuscript`, `get_blueprint`
+- `modules/core/db_manager.py:1681-1858`
+  - `load_anchor`, `get_canonical_facts`, relationship retrieval
+- `modules/core/db_manager.py:2636-2686`
+  - `get_manuscripts_range()` returns recent full manuscripts
+  - `get_recent_manuscript_excerpts()` returns excerpt-only slices
+- `modules/core/db_manager.py:3145-3173`
+  - `get_stage_attempts_for_arc()` only returns `stage, ep_num, arc_num, attempt_num, verdict, score, failure_category, reject_reason, advisory_flags, prompt_version`
+  - it does not return `selection_reason`, `verdict_reason`, `open_review`, `fix_scope_reasoning`, `runtime_advisory`, `retry_directives`, artifact lineage fields
+- `modules/core/stage4_context_builder.py:1681-1718`
+  - Stage 4 Stage-2-failure carryover uses `get_stage_attempts_for_arc(...)`
+  - resulting context can only summarize `failure_category` and `reject_reason`
+- `tests/test_db_manager.py:309-359`
+  - current tests for `get_stage_attempts_for_arc()` only assert `failure_category`/`prompt_version` style outputs, matching the thin helper contract
+
+[Reject rationale persistence sufficiency]
+- `modules/core/db_manager.py:645-661`
+  - `stage_attempts` schema includes `reject_reason`, `selection_reason`, `verdict_reason`, `open_review`, `fix_scope_reasoning`, `runtime_advisory`, `retry_directives`
+- `modules/core/db_manager.py:3265-3329`
+  - `save_stage_attempt(...)` persists those fields with 500-char caps
+- `modules/core/db_manager.py:2767-2848`
+  - `director_selections` also persists `selection_reason`, `verdict_reason`, `fix_scope`
+- `modules/core/stage4_interview_round.py:4802-4886`
+  - `episode_production` payload persists selection/verdict/open review plus advisory provenance
+- `modules/core/stage4_interview_round.py:4906-5028`
+  - `_record_s4_attempt()` forwards rich rationale fields into DB save
+- `tests/test_db_manager.py:448-478`
+  - DB test proves rich rationale fields are stored
+- `tests/test_stage4_interview_round.py:1816-1842`
+  - `_record_s4_attempt()` test proves forwarding of rationale fields
+- `tests/test_stage4_interview_round.py:1990-2076`
+  - `episode_production` log tests prove `selection_reason` and `verdict_reason` persistence
+
+[Post-run retrieval nuance]
+- `modules/core/failure_analyzer.py:383-411`
+  - sink-alignment load reads richer `director_selections` rationale fields directly from SQL
+- `modules/core/failure_analyzer.py:629-681`
+  - mismatch analysis compares `selection_reason`, `verdict_reason`, `fix_scope` across DB/session/artifact sinks
+- interpretation:
+  - DB persistence is richer than generic helper APIs
+  - some post-run analysis paths bypass thin helpers and recover richer truth
+
+[Working classification]
+- This is not best described as `miswiring`
+- Likely classifications:
+  - CW historical-context quality risk = budgeted context loss / prioritization drift
+  - DB recall risk = helper-surface thinness and inconsistent retrieval authority
+  - reject-reason sufficiency = mostly sufficient persistence, but bounded by field caps and helper omissions

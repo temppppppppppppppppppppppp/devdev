@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import logging
 import re
-from typing import Callable
+from collections.abc import Callable
 
 from modules.core.prompt_loader import PromptLoader
 

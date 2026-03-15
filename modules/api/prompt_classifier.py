@@ -11,7 +11,6 @@ from __future__ import annotations
 import re
 from typing import Any
 
-
 # ─── 프롬프트 감지 패턴 (순서 중요: 먼저 매칭된 것 우선) ─────────────────────
 
 _PROMPT_PATTERNS: list[tuple[re.Pattern, str, str]] = [

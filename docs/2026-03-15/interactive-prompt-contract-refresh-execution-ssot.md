@@ -8,7 +8,7 @@ Commit State:
 - Baseline Commit: `083c86d9bbbef7ace001732b2f422eae25bd2038`
 - Baseline Dirty Summary: `dirty: 79 tracked, 4 untracked; hotspots: main_a.py, docs/2026-03-14/*, docs/implementation/*, modules/core/*, tests/*`
 - Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `none`
+- Resume Drift Summary: `later superseded for menu7 arc-count policy by docs/2026-03-15/menu7-desired-arc-input-contract-remediation-execution-ssot.md`
 Source Survey Docs:
 - `docs/2026-03-15/interactive-prompt-contract-refresh-3pass-audit.md`
 Evidence Artifacts:
@@ -161,3 +161,6 @@ Excluded:
 - residual risk:
   - a fresh full CLI live smoke run was not repeated in this turn
   - shutdown-race behavior observed in the earlier fresh run remains outside this closed item
+- authority note:
+  - superseded for menu `7` Arc-count interaction policy by `docs/2026-03-15/menu7-desired-arc-input-contract-remediation-execution-ssot.md`
+  - prompt dedup and hidden telemetry normalization results recorded here remain valid predecessor evidence for later prompt-surface work

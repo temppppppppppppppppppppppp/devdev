@@ -21,8 +21,9 @@ Mode B: 인터랙티브 프롬프트 브로커 (prompt_broker.py)
 
 import asyncio
 import threading
-from datetime import datetime, timezone
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple
+from collections.abc import Callable
+from datetime import UTC, datetime
+from typing import Any
 
 
 class PromptState:
@@ -35,18 +36,18 @@ class PromptState:
         input_type: str,       # "enum" | "int" | "string" | "bool"
         default: Any,
         timeout_sec: int,
-        options: Optional[List[str]] = None,
+        options: list[dict[str, str]] | None = None,
     ) -> None:
         self.prompt_id = prompt_id
         self.step_id = step_id
         self.input_type = input_type
         self.default = default
         self.timeout_sec = timeout_sec
-        self.options: List[str] = options or []
+        self.options: list[dict[str, str]] = options or []
 
         self.prompt_text: str = ""  # 원본 프롬프트 텍스트 (UI 표시용)
         self.resolved: bool = False
-        self.value: Optional[Any] = None
+        self.value: Any | None = None
         self._event: asyncio.Event = asyncio.Event()
 
 
@@ -66,8 +67,8 @@ class PromptBroker:
     ) -> None:
         self._emit = emit_fn
         self._next_seq = seq_counter_fn
-        self._prompts: Dict[str, PromptState] = {}          # prompt_id -> PromptState
-        self._run_prompts: Dict[str, Set[str]] = {}         # run_id -> {prompt_id, ...}
+        self._prompts: dict[str, PromptState] = {}          # prompt_id -> PromptState
+        self._run_prompts: dict[str, list[str]] = {}        # run_id -> [prompt_id, ...]
         self._lock = threading.Lock()
 
     # ------------------------------------------------------------------
@@ -75,7 +76,7 @@ class PromptBroker:
     # ------------------------------------------------------------------
 
     def _ts(self) -> str:
-        return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S+00:00")
+        return datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%S+00:00")
 
     def _build_event(self, run_id: str, event_type: str, payload: dict) -> dict:
         """event-schema-v1.json 필수 필드 준수."""
@@ -87,6 +88,19 @@ class PromptBroker:
             "ts": self._ts(),
             "payload": payload,
         }
+
+    def _build_prompt_payload(self, prompt: PromptState) -> dict:
+        payload: dict = {
+            "prompt_id": prompt.prompt_id,
+            "step_id": prompt.step_id,
+            "input_type": prompt.input_type,
+            "default": prompt.default,
+            "timeout_sec": prompt.timeout_sec,
+            "prompt_text": prompt.prompt_text,
+        }
+        if prompt.options:
+            payload["options"] = prompt.options
+        return payload
 
     # ------------------------------------------------------------------
     # 공개 API
@@ -101,26 +115,17 @@ class PromptBroker:
         """
         with self._lock:
             self._prompts[prompt.prompt_id] = prompt
-            self._run_prompts.setdefault(run_id, set()).add(prompt.prompt_id)
+            prompt_ids = self._run_prompts.setdefault(run_id, [])
+            if prompt.prompt_id not in prompt_ids:
+                prompt_ids.append(prompt.prompt_id)
 
-        # prompt_request 이벤트 발행
-        payload: dict = {
-            "prompt_id": prompt.prompt_id,
-            "step_id": prompt.step_id,
-            "input_type": prompt.input_type,
-            "default": prompt.default,
-            "timeout_sec": prompt.timeout_sec,
-            "prompt_text": prompt.prompt_text,
-        }
-        if prompt.options:
-            payload["options"] = prompt.options
-
+        payload = self._build_prompt_payload(prompt)
         self._emit(run_id, self._build_event(run_id, "prompt_request", payload))
 
         # 타임아웃 대기
         try:
             await asyncio.wait_for(prompt._event.wait(), timeout=float(prompt.timeout_sec))
-        except asyncio.TimeoutError:
+        except TimeoutError:
             with self._lock:
                 if not prompt.resolved:
                     prompt.resolved = True
@@ -139,7 +144,7 @@ class PromptBroker:
 
     def resolve(
         self, run_id: str, prompt_id: str, value: Any
-    ) -> Tuple[str, Optional[str]]:
+    ) -> tuple[str, str | None]:
         """
         /run/{run_id}/input 처리: 사용자 응답을 pending prompt에 연결.
 
@@ -179,6 +184,22 @@ class PromptBroker:
     def cleanup_run(self, run_id: str) -> None:
         """run 종료(run_completed / run_failed) 시 관련 prompt 정리."""
         with self._lock:
-            prompt_ids = self._run_prompts.pop(run_id, set())
+            prompt_ids = self._run_prompts.pop(run_id, [])
             for pid in prompt_ids:
                 self._prompts.pop(pid, None)
+
+    def snapshot_run(self, run_id: str) -> dict:
+        """Return unresolved prompt payloads for reconnect/status resync."""
+        with self._lock:
+            prompt_ids = list(self._run_prompts.get(run_id, []))
+            pending_prompts = []
+            for prompt_id in prompt_ids:
+                prompt = self._prompts.get(prompt_id)
+                if prompt is None or prompt.resolved:
+                    continue
+                pending_prompts.append(self._build_prompt_payload(prompt))
+
+        return {
+            "pending_prompt_count": len(pending_prompts),
+            "pending_prompts": pending_prompts,
+        }

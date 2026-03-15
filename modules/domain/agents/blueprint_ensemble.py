@@ -19,8 +19,8 @@ from concurrent.futures import TimeoutError as FutureTimeoutError
 
 from modules.core.constants import AIModels, GenreTypes, smart_truncate
 from modules.core.hud_utils import build_hud_context as _build_hud_context_shared
-from modules.core.prompt_loader import PromptLoader
 from modules.core.project_support import normalize_external_pov_insert_policy
+from modules.core.prompt_loader import PromptLoader
 from modules.core.tactical_utils import extract_episode_tactical
 
 from .base_agent import _SYSTEM_CFG, BaseAgent

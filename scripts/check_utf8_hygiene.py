@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import argparse
+import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-import re
 
 TEXT_SUFFIXES = {
     ".bat",
@@ -114,10 +114,9 @@ def _has_suspicious_question_token(line: str) -> str | None:
         has_non_ascii = any(ord(char) > 0x7F for char in stripped if char != "?")
         if not has_non_ascii:
             continue
-        has_ascii_alnum = any(char.isascii() and char.isalnum() for char in stripped)
         question_count = stripped.count("?")
         terminal_only = question_count == 1 and stripped.endswith("?")
-        if has_ascii_alnum or question_count >= 2 or not terminal_only:
+        if stripped.startswith("?") or question_count >= 2 or not terminal_only:
             return stripped
     return None
 

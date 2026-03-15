@@ -22,10 +22,8 @@ import concurrent.futures
 import logging
 import threading
 from functools import partial
-from pathlib import Path
 
-from modules.core.soft_failure import report_soft_failure
-from modules.core.soft_failure import resolve_db_log_dir, resolve_logs_dir, resolve_project_log_dir
+from modules.core.soft_failure import report_soft_failure, resolve_db_log_dir, resolve_logs_dir, resolve_project_log_dir
 
 from .action_scene_evaluator import ActionSceneEvaluator
 from .advisory_validator import AdvisoryValidator

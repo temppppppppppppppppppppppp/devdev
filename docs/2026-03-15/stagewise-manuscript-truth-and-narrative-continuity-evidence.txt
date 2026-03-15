@@ -1,0 +1,32 @@
+status	raw-evidence
+project	projects/000
+session_log	projects/000/logs/session_20260315_190600.log
+stage2_artifact_files	2
+stage3_artifact_files	7
+stage4_artifact_files	21
+plans_blueprints	7
+stage2_arc1_artifact	projects/000/logs/artifacts/stage2/arc_001/attempt_01/final_arc__creative.json
+stage2_arc1_constraint_summary	blank
+stage2_arc2_artifact	projects/000/logs/artifacts/stage2/arc_002/attempt_01/final_arc__conservative.json
+stage2_arc2_constraint_summary	present
+stage3_ep4_blueprint	projects/000/logs/artifacts/stage3/ep_0004/attempt_01/final_blueprint__dialogue_focused.json
+stage3_ep4_ending_hook	legal-pressure phone call from attorney
+stage3_ep5_blueprint	projects/000/logs/artifacts/stage3/ep_0005/attempt_01/final_blueprint__action_focused.json
+stage3_ep5_expected_ending	physical-threat cliffhanger after coercing PB
+stage4_ep4_terminal_artifact	projects/000/logs/artifacts/stage4/ep_0004/attempt_03/patched_after_fix__A.txt
+stage4_ep4_terminal_shape	patched-final artifact instead of final_manuscript__*.txt
+stage4_ep5_terminal_artifact	projects/000/logs/artifacts/stage4/ep_0005/attempt_04/final_manuscript__C.txt
+stage4_ep5_terminal_shape	final_manuscript__*.txt
+stage4_ep4_selected_artifact	projects/000/logs/artifacts/stage4/ep_0004/attempt_03/selected_candidate__A.txt
+stage4_ep5_selected_artifact	projects/000/logs/artifacts/stage4/ep_0005/attempt_04/selected_candidate__C.txt
+decisions_jsonl	projects/000/logs/session/decisions.jsonl
+episode_production_jsonl	projects/000/logs/episode_production.jsonl
+decisions_ep4_stage3	stage3 ep4 PASS; ending hook is legal-pressure phone call
+decisions_ep5_stage3	stage3 ep5 PASS; selected blueprint still frames the episode around additional leverage/escalation and ends on physical threat
+episode_production_ep5_round2	stage4 ep5 REJECT; reason says blueprint conflicts with ep4 ending because ep4 already committed full 20억 all-in
+episode_production_ep5_round3	stage4 ep5 PASS; reason says candidate C preserves ep4 all-in continuity while keeping the intended tension
+direct_read_ep4_terminal	stage4 ep4 terminal artifact ends on attorney call and legal-pressure hook
+direct_read_ep5_terminal	stage4 ep5 terminal artifact starts from the post-investment drawdown and ends on the physical-threat hook
+primary_gap_1	artifact truth is strong, but stage2 carryover metadata begins with blank constraint_summary in arc 1
+primary_gap_2	stage3 blueprint pass authority is not enough to block cross-episode continuity contradictions before stage4
+primary_gap_3	stage4 final narrative truth is recoverable, but terminal artifact authority is uneven because patched finals and final_manuscript finals use different terminal shapes

@@ -1,4 +1,6 @@
 import os
+import re
+from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
@@ -127,6 +129,25 @@ def test_current_project_log_path_uses_bound_project_root(tmp_path):
     log_path = SovereignApp._get_current_project_log_path(app, "voice_profiles.json")
 
     assert log_path == (tmp_path / "external-projects" / "demo" / "logs" / "voice_profiles.json").resolve()
+
+
+def test_main_a_routes_prompt_helpers_through_ui_service_source():
+    source = Path(main_a.__file__).read_text(encoding="utf-8")
+
+    assert "def _get_choice_input(" in source
+    assert "return self._ui_service.get_choice_input(" in source
+    assert "def _confirm(" in source
+    assert "return self._ui_service.confirm(" in source
+    assert "def _pause(" in source
+    assert "self._ui_service.pause(" in source
+    assert "confirm_fn=self._confirm" in source
+    assert "pause_fn=self._pause" in source
+
+
+def test_main_a_has_no_bare_input_calls():
+    source = Path(main_a.__file__).read_text(encoding="utf-8")
+
+    assert re.search(r"(?<!\.)\binput\(", source) is None
 
 
 def test_ui_events_buffer_until_project_binding_then_flush():
@@ -288,3 +309,38 @@ def test_bind_selected_project_retargets_runtime_sinks_and_flushes_ui_events(mon
     app._session_logger.log_ui_event.assert_called_once()
     db.save_ui_event.assert_called_once()
     assert app._pending_ui_events == []
+
+
+def test_initialize_project_genre_runtime_rejects_invalid_work_guard(monkeypatch, tmp_path):
+    from modules.core.genre_guards.work_guard import WorkGuardConfigError
+
+    project_root = (tmp_path / "projects" / "demo").resolve()
+    config_dir = project_root / "config"
+    config_dir.mkdir(parents=True)
+    (config_dir / "work_guard.yaml").write_text("work_identity: [broken", encoding="utf-8")
+
+    app = _make_minimal_app()
+    app.selected_genre = {"type": "investment", "name": "investment"}
+    app.sys = SimpleNamespace()
+    app.current_project = SimpleNamespace(paths=SimpleNamespace(config=config_dir))
+
+    monkeypatch.setattr("modules.core.genre_hud_manager.create_hud_manager", lambda *_args, **_kwargs: SimpleNamespace())
+    monkeypatch.setattr("modules.core.genre_hud_manager.log_hud_compatibility_report", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(
+        "modules.core.genre_guards.create_genre_guard",
+        lambda *_args, **_kwargs: SimpleNamespace(
+            FORBIDDEN_TERMS=[],
+            ALLOWED_TERMS=[],
+            MANDATORY_CONCEPTS=[],
+        ),
+    )
+
+    try:
+        SovereignApp._initialize_project_genre_runtime(app)
+    except WorkGuardConfigError as exc:
+        assert "YAML parse failed" in str(exc)
+    else:
+        raise AssertionError("expected WorkGuardConfigError")
+
+    logged = [call.args[0] for call in app.ui.log.call_args_list if call.args]
+    assert any("invalid work_guard.yaml" in message for message in logged)
