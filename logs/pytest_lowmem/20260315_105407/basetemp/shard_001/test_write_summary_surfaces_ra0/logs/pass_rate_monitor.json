@@ -1,0 +1,16 @@
+{
+  "records": [
+    {
+      "stage": 3,
+      "episode": 12,
+      "arc": 1,
+      "attempt_num": 1,
+      "success": true,
+      "attempt_key": "s3:ep12:arc1:a1:sess_warn",
+      "final_verdict": "PASS",
+      "candidate_key": "dialogue_focused",
+      "content_hash": "hash-stage3",
+      "artifact_path": "logs/artifacts/stage3/ep_0012/attempt_01/final_blueprint__dialogue_focused.json"
+    }
+  ]
+}

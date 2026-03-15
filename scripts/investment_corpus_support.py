@@ -26,6 +26,335 @@ SCENE_BREAK_RE = re.compile(
     r"^(?:[*#=\-~_]{3,}|(?:\*\s*){3,}|\[(?:장면|시점|전환|컷)[^\]]{0,20}\])$",
     re.IGNORECASE,
 )
+COMMON_SURNAMES = (
+    "김",
+    "이",
+    "박",
+    "최",
+    "정",
+    "강",
+    "조",
+    "윤",
+    "장",
+    "임",
+    "한",
+    "오",
+    "서",
+    "신",
+    "권",
+    "황",
+    "안",
+    "송",
+    "전",
+    "홍",
+    "유",
+    "고",
+    "문",
+    "양",
+    "손",
+    "배",
+    "허",
+    "남",
+    "심",
+    "노",
+    "하",
+    "곽",
+    "성",
+    "차",
+    "주",
+    "우",
+    "구",
+    "나",
+    "민",
+    "진",
+    "지",
+    "엄",
+    "채",
+    "원",
+)
+PERSON_STOPWORDS = {
+    "주인공",
+    "아버지",
+    "어머니",
+    "할아버지",
+    "할머니",
+    "형님",
+    "누나",
+    "오빠",
+    "언니",
+    "동생",
+    "회장님",
+    "부회장",
+    "사장님",
+    "대표님",
+    "팀장님",
+    "실장님",
+    "부장님",
+    "차장님",
+    "과장님",
+    "대리님",
+    "상무님",
+    "전무님",
+    "이사님",
+    "상무",
+    "전무",
+    "이사",
+    "대표",
+    "회장",
+    "사장",
+    "부장",
+    "차장",
+    "과장",
+    "대리",
+    "실장",
+    "팀장",
+    "비서실",
+    "재벌가",
+    "재벌집",
+    "투자자",
+    "주주들",
+    "이사회",
+    "대한민",
+    "대한국",
+}
+ORG_SUFFIXES = (
+    "그룹",
+    "홀딩스",
+    "전자",
+    "물산",
+    "건설",
+    "증권",
+    "캐피탈",
+    "미디어",
+    "상사",
+    "제약",
+    "바이오",
+    "인터내셔널",
+    "모터스",
+    "조선",
+    "통신",
+    "화학",
+    "식품",
+    "벤처스",
+    "게임즈",
+    "엔터",
+    "엔터테인먼트",
+    "스튜디오",
+    "호텔",
+    "백화점",
+)
+ORG_STOPWORDS = set(ORG_SUFFIXES) | {
+    "대기업",
+    "중견기업",
+    "중소기업",
+    "재벌그룹",
+    "금융그룹",
+    "증권사",
+    "은행권",
+}
+PERSON_ALIAS_FAMILIES = (
+    "강",
+    "고",
+    "권",
+    "김",
+    "나",
+    "남",
+    "문",
+    "민",
+    "박",
+    "배",
+    "백",
+    "서",
+    "성",
+    "손",
+    "송",
+    "신",
+    "안",
+    "양",
+    "오",
+    "우",
+    "유",
+    "윤",
+    "이",
+    "임",
+    "장",
+    "전",
+    "정",
+    "조",
+    "진",
+    "차",
+    "채",
+    "최",
+    "한",
+    "허",
+    "홍",
+    "황",
+)
+PERSON_ALIAS_GIVEN = (
+    "도윤",
+    "서진",
+    "하준",
+    "민성",
+    "태윤",
+    "지호",
+    "준혁",
+    "시우",
+    "선우",
+    "도현",
+    "유진",
+    "소윤",
+    "서윤",
+    "하린",
+    "유나",
+    "지안",
+    "채원",
+    "예린",
+    "현서",
+    "민지",
+    "다온",
+    "은호",
+    "재현",
+    "수빈",
+    "지민",
+    "현우",
+    "예준",
+    "서우",
+    "가은",
+    "연서",
+)
+COMMON_GIVEN_NAMES = {
+    "가은",
+    "강민",
+    "건우",
+    "경민",
+    "규리",
+    "다온",
+    "도윤",
+    "도현",
+    "동현",
+    "동훈",
+    "민규",
+    "민성",
+    "민서",
+    "민석",
+    "민재",
+    "민정",
+    "민지",
+    "서연",
+    "서우",
+    "서윤",
+    "서준",
+    "서진",
+    "석원",
+    "선우",
+    "성민",
+    "성훈",
+    "소윤",
+    "수빈",
+    "수아",
+    "수연",
+    "수현",
+    "승민",
+    "승우",
+    "승한",
+    "시우",
+    "아린",
+    "연서",
+    "연우",
+    "예린",
+    "예성",
+    "예은",
+    "예준",
+    "유나",
+    "유리",
+    "유민",
+    "유석",
+    "유정",
+    "유진",
+    "윤아",
+    "윤원",
+    "윤재",
+    "은지",
+    "은호",
+    "이다",
+    "재현",
+    "재희",
+    "정민",
+    "정우",
+    "정원",
+    "정훈",
+    "지민",
+    "지성",
+    "지안",
+    "지우",
+    "지윤",
+    "지은",
+    "지호",
+    "지훈",
+    "진우",
+    "진희",
+    "채린",
+    "채원",
+    "태성",
+    "태윤",
+    "태준",
+    "태호",
+    "하린",
+    "하준",
+    "현서",
+    "현석",
+    "현수",
+    "현우",
+    "현정",
+    "현주",
+    "혜린",
+    "혜진",
+    "호준",
+    "효진",
+    "희원",
+}
+ORG_ALIAS_PREFIXES = (
+    "한백",
+    "동림",
+    "세원",
+    "서광",
+    "유선",
+    "해원",
+    "태림",
+    "성한",
+    "재민",
+    "정한",
+    "다온",
+    "율성",
+    "현우",
+    "은성",
+    "서현",
+    "민하",
+    "청우",
+    "한결",
+    "선재",
+    "도원",
+    "신우",
+    "가온",
+    "로한",
+    "이안",
+    "예성",
+    "남해",
+    "청림",
+    "세강",
+    "우성",
+    "한울",
+)
+_SURNAME_PATTERN = "|".join(re.escape(name) for name in COMMON_SURNAMES)
+_ORG_SUFFIX_PATTERN = "|".join(sorted((re.escape(name) for name in ORG_SUFFIXES), key=len, reverse=True))
+PERSON_CANDIDATE_RE = re.compile(
+    rf"(?<![가-힣A-Za-z])(?P<name>(?:{_SURNAME_PATTERN})[가-힣]{{2}})"
+    rf"(?=(?:[은는이가을를와과도만의에로께서한테에게보다부터까지랑씨님]|[\s.,!?\"'“”‘’…:;\)\]])|$)"
+)
+ORG_CANDIDATE_RE = re.compile(
+    rf"(?<![가-힣A-Za-z0-9])(?P<name>[A-Za-z0-9가-힣]{{2,20}}(?:{_ORG_SUFFIX_PATTERN}))"
+    rf"(?=(?:[은는이가을를와과도만의에로께서한테에게보다부터까지랑]|[\s.,!?\"'“”‘’…:;\)\]])|$)"
+)
 
 PURE_NUMBER_RE = re.compile(r"^(?P<episode>\d+)\.epub$", re.IGNORECASE)
 ID_NUMBER_RE = re.compile(r"^(?P<source_id>\d+)_(?P<episode>\d+)\.epub$", re.IGNORECASE)
@@ -713,6 +1042,218 @@ def build_corpus(
     error_log = "\n".join(error_lines).strip()
     (output_root / "errors.log").write_text(f"{error_log}\n" if error_log else "", encoding="utf-8")
     return manifest_payload
+
+
+def _collect_person_candidates(texts: list[str], *, min_frequency: int) -> list[str]:
+    counts: dict[str, int] = {}
+    for text in texts:
+        for match in PERSON_CANDIDATE_RE.finditer(text):
+            candidate = match.group("name").strip()
+            if len(candidate) != 3:
+                continue
+            if candidate in PERSON_STOPWORDS:
+                continue
+            if candidate[1:] not in COMMON_GIVEN_NAMES:
+                continue
+            counts[candidate] = counts.get(candidate, 0) + 1
+    ordered = sorted(counts.items(), key=lambda item: (-item[1], -len(item[0]), item[0]))
+    return [candidate for candidate, count in ordered if count >= min_frequency]
+
+
+def _collect_org_candidates(texts: list[str], *, min_frequency: int) -> list[str]:
+    counts: dict[str, int] = {}
+    for text in texts:
+        for match in ORG_CANDIDATE_RE.finditer(text):
+            candidate = match.group("name").strip()
+            if candidate in ORG_STOPWORDS:
+                continue
+            counts[candidate] = counts.get(candidate, 0) + 1
+    ordered = sorted(counts.items(), key=lambda item: (-item[1], -len(item[0]), item[0]))
+    return [candidate for candidate, count in ordered if count >= min_frequency]
+
+
+def _person_alias_for(candidate: str, *, used_aliases: set[str]) -> str:
+    family_index = int(hashlib.sha1(candidate.encode("utf-8")).hexdigest()[:8], 16) % len(PERSON_ALIAS_FAMILIES)
+    given_index = int(hashlib.sha1((candidate + "::given").encode("utf-8")).hexdigest()[:8], 16) % len(
+        PERSON_ALIAS_GIVEN
+    )
+    for offset in range(len(PERSON_ALIAS_FAMILIES) * len(PERSON_ALIAS_GIVEN)):
+        family = PERSON_ALIAS_FAMILIES[(family_index + offset) % len(PERSON_ALIAS_FAMILIES)]
+        given = PERSON_ALIAS_GIVEN[(given_index + offset) % len(PERSON_ALIAS_GIVEN)]
+        alias = f"{family}{given}"
+        if alias != candidate and alias not in used_aliases:
+            used_aliases.add(alias)
+            return alias
+    msg = f"unable to allocate unique person alias for {candidate}"
+    raise ValueError(msg)
+
+
+def _split_org_suffix(candidate: str) -> tuple[str, str]:
+    for suffix in sorted(ORG_SUFFIXES, key=len, reverse=True):
+        if candidate.endswith(suffix) and len(candidate) > len(suffix):
+            return candidate[: -len(suffix)], suffix
+    return candidate, ""
+
+
+def _org_alias_for(candidate: str, *, used_aliases: set[str]) -> str:
+    _, suffix = _split_org_suffix(candidate)
+    prefix_index = int(hashlib.sha1(candidate.encode("utf-8")).hexdigest()[:8], 16) % len(ORG_ALIAS_PREFIXES)
+    for offset in range(len(ORG_ALIAS_PREFIXES)):
+        prefix = ORG_ALIAS_PREFIXES[(prefix_index + offset) % len(ORG_ALIAS_PREFIXES)]
+        alias = f"{prefix}{suffix}"
+        if alias != candidate and alias not in used_aliases:
+            used_aliases.add(alias)
+            return alias
+    msg = f"unable to allocate unique org alias for {candidate}"
+    raise ValueError(msg)
+
+
+def build_title_pseudonym_map(
+    texts: list[str],
+    *,
+    min_person_frequency: int = 5,
+    min_org_frequency: int = 3,
+) -> dict[str, dict[str, str]]:
+    used_aliases: set[str] = set()
+    persons = {
+        candidate: _person_alias_for(candidate, used_aliases=used_aliases)
+        for candidate in _collect_person_candidates(texts, min_frequency=min_person_frequency)
+    }
+    organizations = {
+        candidate: _org_alias_for(candidate, used_aliases=used_aliases)
+        for candidate in _collect_org_candidates(texts, min_frequency=min_org_frequency)
+    }
+    return {
+        "persons": persons,
+        "organizations": organizations,
+    }
+
+
+def apply_pseudonym_map(text: str, pseudonym_map: dict[str, dict[str, str]]) -> tuple[str, dict[str, int]]:
+    replacements: list[tuple[str, str]] = []
+    for category in ("organizations", "persons"):
+        category_map = pseudonym_map.get(category, {})
+        replacements.extend(category_map.items())
+
+    working = text
+    replacement_counts: dict[str, int] = {}
+    placeholders: dict[str, str] = {}
+    for index, (original, alias) in enumerate(sorted(replacements, key=lambda item: (-len(item[0]), item[0]))):
+        placeholder = f"@@PSEUDO_{index:04d}@@"
+        working, count = re.subn(re.escape(original), placeholder, working)
+        if count:
+            placeholders[placeholder] = alias
+            replacement_counts[original] = count
+
+    for placeholder, alias in placeholders.items():
+        working = working.replace(placeholder, alias)
+    return working, replacement_counts
+
+
+def build_pseudonymized_corpus(
+    input_root: Path,
+    output_root: Path,
+    *,
+    min_person_frequency: int = 5,
+    min_org_frequency: int = 3,
+) -> dict[str, Any]:
+    source_manifest = json.loads((input_root / "manifest.json").read_text(encoding="utf-8"))
+    title_entries = source_manifest.get("titles", [])
+    _prepare_output_dir(output_root)
+    titles_root = output_root / "titles"
+    titles_root.mkdir(parents=True, exist_ok=True)
+
+    rewritten_titles: list[dict[str, Any]] = []
+    entity_map_payload: dict[str, Any] = {
+        "generated_at": now_iso(),
+        "input_root": str(input_root),
+        "output_root": str(output_root),
+        "titles": {},
+    }
+
+    for entry in title_entries:
+        if not isinstance(entry, dict):
+            continue
+        title = str(entry.get("title", "")).strip()
+        output_dir_value = str(entry.get("output_dir", "")).strip()
+        slug = str(entry.get("slug") or slugify_title(title))
+        if not title or not output_dir_value or not entry.get("written_episode_count"):
+            rewritten_titles.append(entry)
+            continue
+
+        source_title_dir = Path(output_dir_value)
+        episodes = sorted(source_title_dir.glob("*.txt"))
+        texts = [episode.read_text(encoding="utf-8").rstrip("\n") for episode in episodes]
+        pseudonym_map = build_title_pseudonym_map(
+            texts,
+            min_person_frequency=min_person_frequency,
+            min_org_frequency=min_org_frequency,
+        )
+
+        title_output_dir = titles_root / slug
+        _prepare_output_dir(title_output_dir)
+        total_replacements = 0
+        per_episode_replacements: list[dict[str, Any]] = []
+        for episode_path, text in zip(episodes, texts, strict=False):
+            rewritten_text, replacement_counts = apply_pseudonym_map(text, pseudonym_map)
+            (title_output_dir / episode_path.name).write_text(f"{rewritten_text}\n", encoding="utf-8")
+            total_replacements += sum(replacement_counts.values())
+            per_episode_replacements.append(
+                {
+                    "episode_file": episode_path.name,
+                    "replacement_count": sum(replacement_counts.values()),
+                    "replacements": replacement_counts,
+                }
+            )
+
+        rewritten_entry = dict(entry)
+        rewritten_entry["output_dir"] = str(title_output_dir)
+        rewritten_entry["pseudonymized"] = True
+        rewritten_entry["pseudonymization"] = {
+            "person_count": len(pseudonym_map["persons"]),
+            "organization_count": len(pseudonym_map["organizations"]),
+            "replacement_count": total_replacements,
+            "per_episode": per_episode_replacements,
+        }
+        rewritten_titles.append(rewritten_entry)
+        entity_map_payload["titles"][title] = pseudonym_map
+
+    rewritten_manifest = {
+        "generated_at": now_iso(),
+        "source_manifest_path": str(input_root / "manifest.json"),
+        "input_root": str(input_root),
+        "output_root": str(output_root),
+        "trust_policy": "epub_only_pseudonymized_variant",
+        "pseudonymization_profile": {
+            "min_person_frequency": min_person_frequency,
+            "min_org_frequency": min_org_frequency,
+            "strategy": "title_scoped_stable_aliases",
+        },
+        "titles": rewritten_titles,
+        "summary": {
+            "title_count": sum(1 for entry in rewritten_titles if isinstance(entry, dict)),
+            "written_title_count": sum(
+                1 for entry in rewritten_titles if isinstance(entry, dict) and entry.get("written_episode_count")
+            ),
+            "written_episode_count": sum(
+                int(entry.get("written_episode_count", 0) or 0) for entry in rewritten_titles if isinstance(entry, dict)
+            ),
+            "pseudonymized_title_count": sum(
+                1 for entry in rewritten_titles if isinstance(entry, dict) and entry.get("pseudonymized")
+            ),
+        },
+    }
+
+    (output_root / "manifest.json").write_text(
+        json.dumps(rewritten_manifest, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+    (output_root / "entity_map.json").write_text(
+        json.dumps(entity_map_payload, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+    (output_root / "errors.log").write_text("", encoding="utf-8")
+    return rewritten_manifest
 
 
 def _jsonl_record(system_instruction: str, prompt: str, completion: str) -> dict[str, Any]:
