@@ -108,7 +108,15 @@ def test_runtime_websocket_payload_contract_matches_renderer_and_backend_usage()
 
     run_exit = _payload_schema_for("run_failed")
     assert run_exit["required"] == ["returncode"]
-    assert {"stdout_tail", "stderr_tail", "failure_phase", "last_prompt_step", "duration_ms"}.issubset(
+    assert {
+        "stdout_tail",
+        "stderr_tail",
+        "stderr_authoritative",
+        "stderr_decode_policy",
+        "failure_phase",
+        "last_prompt_step",
+        "duration_ms",
+    }.issubset(
         run_exit["properties"]
     )
     assert '_build_event(run_id, etype, _build_run_exit_payload(runner, returncode))' in BRIDGE_SERVER

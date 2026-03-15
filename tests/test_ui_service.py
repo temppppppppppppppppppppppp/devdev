@@ -64,6 +64,22 @@ class TestGetIntInput:
             result = svc.get_int_input("prompt: ", default=99, attempts=3)
         assert result == 99
 
+    def test_hidden_selection_message_does_not_repeat_prompt_text(self, svc, ui_mock):
+        with patch("builtins.input", return_value="5"):
+            result = svc.get_int_input("prompt: ", min_val=1, max_val=10)
+
+        assert result == 5
+        prompt_messages = [call.args[0] for call in ui_mock.log.call_args_list if call.args and call.args[0] == "prompt: "]
+        assert len(prompt_messages) == 1
+        selection_calls = [
+            call
+            for call in ui_mock.log.call_args_list
+            if call.kwargs.get("event_kind") == "selection"
+        ]
+        assert len(selection_calls) == 1
+        assert selection_calls[0].args[0] == "[int_input_selected]"
+        assert selection_calls[0].kwargs["meta"]["prompt_text"] == "prompt: "
+
 
 # ── select_bible ─────────────────────────────────────────────────
 

@@ -1,14 +1,14 @@
 # Frontier Lag Nonstop Contract Remediation Execution SSOT
 
 Date: 2026-03-14
-Status: execution-ready
+Status: closed
 Canonical Path: `docs/2026-03-14/frontier-lag-nonstop-contract-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/frontier-lag-nonstop-contract-remediation-execution-ssot.md`
 Commit State:
 - Baseline Commit: `2a4d45a4896282d9cf96e67e8daff9dd0287ef4f`
 - Baseline Dirty Summary: `dirty: 7 tracked, 3 untracked; hotspots: docs/implementation/*, 260314-print.txt`
 - Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `none`
+- Resume Drift Summary: `realized in live workspace with main_a.py normal-path prompt removal and targeted frontier regression updates`
 Source Survey Docs:
 - `docs/2026-03-14/codebase-global-rol-db-log-frontier-lag-3pass-audit.md`
 - `docs/2026-03-14/codebase-global-rol-db-log-frontier-lag-reaudit.md`
@@ -106,8 +106,8 @@ Excluded:
 - Do not change downstream Stage 2/3/4 sequencing or backlog semantics as part of this item.
 
 ## 12. Temp Queue Notes
-- temp status: pending
-- cleanup condition: remove the temp mirror after implementation, validation, and closure update land in both the canonical SSOT and the active roadmap
+- temp status: completed
+- cleanup condition: satisfied on `2026-03-15` after canonical closure and roadmap sync
 - roadmap dependency: `docs/2026-03-14/codebase-global-rol-db-log-frontier-lag-execution-roadmap.md`
 
 ## 13. Validation and Closure Hooks
@@ -115,3 +115,17 @@ Excluded:
 - closure harness: `docs/implementation/execution-closure-harness.md`
 - optional queue state entry: `docs/temp/queue-state.json`
 - execution-start rule: re-run this document through the 3-pass audit and reconfirm 95% confidence against the live workspace before patching code
+
+## 14. Closure Note
+- closure date: `2026-03-15`
+- closure status: `closed`
+- implementation result:
+  - `main_a.py` normal path no longer asks the initial Arc-count question and now auto-selects `min(remaining_design, 3)` unless `batch_size_override` is provided
+  - Stage 3 abort and exception exits now stop the enclosing Frontier Lag tranche cleanly instead of re-entering the outer loop
+- verification evidence:
+  - `python -m pytest tests/test_one_stop_frontier_lag_auto_continue.py -q` with `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1` -> `4 passed`
+  - `python -m pytest tests/test_auto_frontier_lag_harness.py -q` with `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1` -> `9 passed`
+  - prompt-site reinspection confirmed the normal-path `_get_int_input(...)` call is gone while Stage 3 failure prompts and `wait_for_menu_return` remain
+- residual risk:
+  - no active residual risk inside this item
+  - earlier low-memory runner stalls were traced to watchdog memory waits and one real Frontier Lag abort-loop bug; the abort-loop bug is fixed and a pytest orphan-cleanup rule was added to workspace governance

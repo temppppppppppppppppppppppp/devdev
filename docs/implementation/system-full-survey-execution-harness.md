@@ -6,6 +6,7 @@ Applies To: system-track orders only
 Companion First-Read: `docs/implementation/system-order-init-harness.md`
 Related Companions:
 - `docs/implementation/system-order-preflight-harness.md`
+- `docs/implementation/live-run-merge-survey-harness.md`
 - `docs/implementation/deep-global-integrity-survey-harness.md`
 - `docs/implementation/temp-execution-queue-roadmap-harness.md`
 - `docs/implementation/document-3pass-audit-harness.md`
@@ -47,6 +48,7 @@ Use this harness when the request is a system-track order and includes one or mo
 - remediation execution plan
 - global or subsystem-wide codebase inspection
 - residual inventory before patching
+- fresh live run paired with survey or audit
 
 Do not use this harness for narrative pipeline work. Narrative pipeline continues to use the blockguide harness set.
 
@@ -179,6 +181,7 @@ Detailed document audit mechanics live in `docs/implementation/document-3pass-au
 - If the user asks for `global`, `repo-wide`, or `전역 전체` survey coverage, use `docs/implementation/codebase-global-survey-coverage-contract.md`.
 - For codebase-global survey requests, treat the default deliverable as a bundled documentation set: tranche survey coverage, area execution SSOT docs for action-bearing areas, and one SSOT roadmap if two or more execution docs are produced.
 - For deep codebase-global survey requests, also use `docs/implementation/deep-global-integrity-survey-harness.md`.
+- If the user explicitly pairs the survey with a fresh live run, also load `docs/implementation/live-run-merge-survey-harness.md` and keep outputs provisional until post-run merge.
 - If implementation is about to begin from an execution SSOT or roadmap, re-run the document 3-pass audit and confidence gate on the governing canonical doc against the live workspace before patching code.
 - During that revalidation, refresh `Resume Commit` and `Resume Drift Summary` instead of relying only on generic `current workspace state` wording.
 
@@ -266,6 +269,9 @@ Create one or more of the following, depending on scope:
 - `docs/YYYY-MM-DD/*-evidence.txt`
 - `docs/YYYY-MM-DD/*-evidence-manifest.md`
 - `docs/YYYY-MM-DD/*-evidence.json`
+- `docs/YYYY-MM-DD/*-preflight-watchlist.md`
+- `docs/YYYY-MM-DD/*-live-run-evidence-manifest.md`
+- `docs/YYYY-MM-DD/*-post-run-merge-audit.md`
 - `docs/YYYY-MM-DD/*-side-effects.txt`
 - `docs/YYYY-MM-DD/*-side-effects.json`
 - `docs/YYYY-MM-DD/*-cross-cut-integrity-matrix.md`

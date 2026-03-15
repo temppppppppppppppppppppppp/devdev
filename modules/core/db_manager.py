@@ -98,7 +98,7 @@ class DBManager:
                 return None, label
             if lowered.startswith("stage") and lowered[5:].isdigit():
                 return int(lowered[5:]), label
-            raise ValueError(f"unsupported ui_event stage label: {stage}")
+            return None, label
         return int(stage), None
 
     @staticmethod
