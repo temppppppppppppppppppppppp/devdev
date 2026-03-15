@@ -221,6 +221,7 @@ class TestWriteAuditSummary:
                 ),
                 encoding="utf-8",
             )
+            (tmp_project.root / "logs" / "session_legacy_token.log").write_text("session log", encoding="utf-8")
             (tmp_project.root / "logs" / "episode_production.jsonl").write_text(
                 json.dumps(
                     {
@@ -268,6 +269,9 @@ class TestWriteAuditSummary:
             assert data["proof_digest"]["artifacts"]["ui_events_db_available"] is True
             assert data["proof_digest"]["artifacts"]["ui_events_count"] == 1
             assert data["proof_digest"]["artifacts"]["ui_event_coverage_status"] == "ok"
+            assert data["proof_digest"]["session_lineage"]["plain_log_token"] == "legacy_token"
+            assert data["proof_digest"]["session_lineage"]["structured_session_id"] == "sess_proof"
+            assert data["proof_digest"]["session_lineage"]["status"] == "split_mapped"
             assert data["proof_digest"]["stages"]["stage4"]["status"] == "ok"
             assert data["proof_digest"]["stages"]["stage4"]["coverage"]["session_decisions"] == 1
         finally:

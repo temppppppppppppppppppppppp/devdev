@@ -10,11 +10,14 @@ Related Execution Docs: `docs/2026-03-15/source-text-and-runtime-encoding-hygien
 - evidence scope:
   - current source tree across `main_a.py`, `modules/`, `scripts/`, `tests/`, `UI/`, `geuldobi-desktop/`, and `config/`
   - latest secured runtime evidence from `projects/00_260315`
+  - supplemental operator transcript from `15일.txt`
+  - referenced Stage 2/3/4 artifact files under `projects/00_260315/logs/artifacts/`
 - freshness note:
   - source and runtime evidence were re-read against the live workspace on 2026-03-15 at baseline commit `d2982aa2790f5ab81529f1e8d87cf6f6006f13c9`
 - known gaps:
   - no fresh Electron/Desktop live run was captured in this bundle
-  - run-time authority is strongest for the CLI run and its durable sinks
+  - desktop/control-plane claims remain source-led
+  - artifact-hash drift is runtime-proven, but the exact write point that stamps the stale hash is still inferential
 
 ## 2. Artifact Index
 
@@ -27,6 +30,8 @@ Related Execution Docs: `docs/2026-03-15/source-text-and-runtime-encoding-hygien
 | `docs/2026-03-15/codebase-global-log-evidence-merged-backend-front-connectivity.txt` | focused evidence | desktop/control-plane source sweep | fresh | survey + execution | renderer/preload/main/bridge/prompt-broker seams |
 | `docs/2026-03-15/codebase-global-log-evidence-merged-runtime-log-db-evidence.txt` | runtime evidence | plain log + JSONL + DB + summary synthesis | fresh | survey + execution | current secured run counts, timestamps, and late-write proof |
 | `docs/2026-03-15/codebase-global-log-evidence-merged-stage4-rationale-mismatch-table.json` | runtime evidence | DB/JSONL join | fresh | survey + persistence lane | localizes the `2 + 2` Stage 4 rationale mismatches to exact attempt keys |
+| `docs/2026-03-15/codebase-global-log-evidence-merged-artifact-truth-evidence.txt` | runtime evidence | artifact existence/hash/parse sweep | fresh | survey + persistence lane | proves artifact files are present and decodable while stored hash lineage is systematically stale |
+| `docs/2026-03-15/codebase-global-log-evidence-merged-artifact-hash-mismatch-table.json` | runtime evidence | DB/JSONL-to-artifact hash comparison | fresh | survey + persistence lane | every current `stage_attempts` artifact hash and every linked `episode_production` artifact hash mismatches on-disk bytes |
 | `docs/2026-03-15/codebase-global-log-evidence-merged-cross-cut-integrity-matrix.md` | matrix | survey synthesis | fresh | survey + roadmap | merged source/runtime ownership and action mapping |
 | `docs/2026-03-15/codebase-global-log-evidence-merged-uncertainty-contradiction-ledger.md` | ledger | survey synthesis | fresh | survey + roadmap | explicit contradiction and uncertainty bounds |
 | `docs/2026-03-15/codebase-global-log-evidence-merged-3pass-audit.md` | audit | document review | fresh | survey governance | pass1/pass2/pass3 coverage for the bundle and queue |
@@ -42,6 +47,10 @@ Related Execution Docs: `docs/2026-03-15/source-text-and-runtime-encoding-hygien
 - `projects/00_260315/logs/session/llm_io.jsonl`
 - `projects/00_260315/logs/episode_production.jsonl`
 - `projects/00_260315/project_data.db`
+- `projects/00_260315/logs/artifacts/stage2/`
+- `projects/00_260315/logs/artifacts/stage3/`
+- `projects/00_260315/logs/artifacts/stage4/`
+- `15일.txt`
 
 ## 4. Predecessor Authority
 - static-only predecessor:

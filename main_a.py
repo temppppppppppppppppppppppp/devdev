@@ -6,6 +6,7 @@ import os
 import sys
 
 _STDIO_BOOTSTRAPPED = False
+_ASYNCIO_POLICY_BOOTSTRAPPED = False
 
 
 def _bootstrap_windows_stdio_utf8() -> None:
@@ -30,7 +31,29 @@ def _bootstrap_windows_stdio_utf8() -> None:
         return
 
 # [CrosscutR70] 읽기전용 디렉토리/디스크풀 시 앱 크래시 방지
+def _bootstrap_windows_asyncio_policy() -> None:
+    """Prefer selector policy on Windows to reduce Proactor loop teardown noise."""
+
+    global _ASYNCIO_POLICY_BOOTSTRAPPED
+    if _ASYNCIO_POLICY_BOOTSTRAPPED:
+        return
+    if sys.platform != "win32" or "pytest" in sys.modules:
+        return
+
+    try:
+        import asyncio
+
+        selector_policy = getattr(asyncio, "WindowsSelectorEventLoopPolicy", None)
+        if selector_policy is None:
+            return
+        asyncio.set_event_loop_policy(selector_policy())
+        _ASYNCIO_POLICY_BOOTSTRAPPED = True
+    except Exception:
+        return
+
+
 _bootstrap_windows_stdio_utf8()
+_bootstrap_windows_asyncio_policy()
 
 try:
     _fault_log = open("crash_dump.log", "a", encoding="utf-8")
@@ -2944,7 +2967,10 @@ class SovereignApp:
         db_conn = getattr(db, "conn", None)
         if db_conn:
             try:
-                db_conn.commit()
+                if hasattr(db, "resolve_pending_transaction"):
+                    db.resolve_pending_transaction(commit=True)
+                else:
+                    db_conn.commit()
                 self.ui.log("[System] DB 커밋 완료")
             except Exception as commit_err:
                 SovereignApp._shutdown_log(
@@ -2956,7 +2982,10 @@ class SovereignApp:
                 )
             finally:
                 try:
-                    db_conn.close()
+                    if hasattr(db, "close"):
+                        db.close()
+                    else:
+                        db_conn.close()
                     self.ui.log("[System] DB 연결 안전하게 해제됨")
                 except Exception as close_err:
                     SovereignApp._shutdown_log(
@@ -2976,6 +3005,15 @@ class SovereignApp:
         SovereignApp._persist_shutdown_advisory_state(self)
         SovereignApp._persist_shutdown_trackers(self)
         SovereignApp._persist_shutdown_project_state(self)
+        session_logger = getattr(self, "_session_logger", None)
+        if session_logger is not None and hasattr(session_logger, "begin_shutdown"):
+            session_logger.begin_shutdown()
+        current_project = getattr(self, "current_project", None)
+        db = getattr(current_project, "db", None)
+        if db is not None and hasattr(db, "begin_shutdown"):
+            db.begin_shutdown()
+        if hasattr(self, "_write_audit_summary"):
+            self._write_audit_summary("shutdown_final")
         SovereignApp._close_shutdown_resources(self)
         SovereignApp._shutdown_log(self, "✅ [System] 종료 완료", event_kind="result")
 

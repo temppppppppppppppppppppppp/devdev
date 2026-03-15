@@ -66,6 +66,10 @@ class SessionLogger:
         """프로젝트 선택 후 경로 갱신."""
         self._log_dir = Path(new_dir)
 
+    def begin_shutdown(self) -> None:
+        """Freeze best-effort JSONL telemetry writes before process teardown."""
+        self._enabled = False
+
     def get_health_snapshot(self) -> dict:
         """Return recent logger health state for diagnostics."""
         return {
@@ -187,6 +191,8 @@ class SessionLogger:
         ts: str | None = None,
     ) -> None:
         """Persist operator-visible UI events to ``ui_events.jsonl``."""
+        if not self._enabled:
+            return
         data = {
             "session_id": str(session_id or "").strip(),
             "level": str(level or "info"),

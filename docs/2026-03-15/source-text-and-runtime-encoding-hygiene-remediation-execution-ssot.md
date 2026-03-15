@@ -103,7 +103,7 @@ Excluded:
 ## 12. Temp Queue Notes
 - temp status: pending
 - cleanup condition: remove temp mirror only after realization is validated and closed
-- roadmap dependency: first item in `docs/2026-03-15/codebase-global-log-evidence-merged-execution-roadmap.md`
+- roadmap dependency: second item in `docs/2026-03-15/codebase-global-log-evidence-merged-execution-roadmap.md`
 
 ## 13. Validation And Closure Hooks
 - validator command: `python scripts/ops_validator.py --strict`

@@ -2138,6 +2138,21 @@ class Stage4InterviewRound:
             )
             _session_runtime_advisory = self._build_retry_advisory_digest()
             _session_retry_directives = ""
+            _current_db = getattr(getattr(self.ctx, "current_project", None), "db", None)
+            if _current_db is not None and hasattr(_current_db, "update_director_selection_rationale"):
+                try:
+                    _current_db.update_director_selection_rationale(
+                        attempt_key=_attempt_key,
+                        selection_reason=_session_selection_reason,
+                        verdict_reason=_session_verdict_reason,
+                        fix_scope=(
+                            _trace_director_result.get("fix_scope", "")
+                            if isinstance(_trace_director_result, dict)
+                            else director_result.get("fix_scope", "")
+                        ),
+                    )
+                except Exception as _e:
+                    logging.debug("[Stage4] director rationale sync failed: %s", _e)
             self._append_episode_log(
                 ep_num=next_ep,
                 round_num=round_num,
@@ -2282,6 +2297,21 @@ class Stage4InterviewRound:
         )
         _session_runtime_advisory = str((_reject_result.previous_attempt or {}).get("runtime_advisory", "") or "")
         _session_retry_directives = str((_reject_result.previous_attempt or {}).get("retry_directives", "") or "")
+        _current_db = getattr(getattr(self.ctx, "current_project", None), "db", None)
+        if _current_db is not None and hasattr(_current_db, "update_director_selection_rationale"):
+            try:
+                _current_db.update_director_selection_rationale(
+                    attempt_key=_attempt_key,
+                    selection_reason=_session_selection_reason,
+                    verdict_reason=_session_verdict_reason,
+                    fix_scope=(
+                        _trace_director_result.get("fix_scope", "")
+                        if isinstance(_trace_director_result, dict)
+                        else director_result.get("fix_scope", "")
+                    ),
+                )
+            except Exception as _e:
+                logging.debug("[Stage4] director rationale sync failed: %s", _e)
         self._append_episode_log(
             ep_num=next_ep,
             round_num=round_num,

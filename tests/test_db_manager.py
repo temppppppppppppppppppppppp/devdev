@@ -170,6 +170,60 @@ def test_save_llm_call_persists_token_and_cost_fields(db):
     assert row["total_cost_usd"] == pytest.approx(0.0123)
 
 
+def test_runtime_telemetry_writes_are_blocked_after_begin_shutdown(db):
+    db.begin_shutdown()
+
+    db.save_llm_call(
+        agent_name="chief_writer",
+        model="gemini-2.5-pro",
+        prompt_chars=100,
+        response_chars=200,
+        duration_ms=321,
+        success=True,
+        session_id="sess-frozen",
+    )
+    director_written = db.save_stage_attempt(
+        stage=4,
+        verdict="PASS",
+        attempt_num=1,
+        ep_num=2,
+        arc_num=1,
+        attempt_key="s4:ep2:arc1:a1:sess-frozen",
+    )
+    ui_written = db.save_ui_event(
+        session_id="sess-frozen",
+        seq=1,
+        stage=4,
+        component="Stage4",
+        message="should be dropped",
+    )
+    db.save_director_selection(
+        2,
+        1,
+        "A",
+        "balanced",
+        "PASS",
+        attempt_key="s4:ep2:arc1:a1:sess-frozen",
+        stage=4,
+    )
+
+    llm_row = db.conn.execute("SELECT COUNT(*) AS cnt FROM llm_calls WHERE session_id = 'sess-frozen'").fetchone()
+    stage_row = db.conn.execute(
+        "SELECT COUNT(*) AS cnt FROM stage_attempts WHERE attempt_key = 's4:ep2:arc1:a1:sess-frozen'"
+    ).fetchone()
+    ui_row = db.conn.execute("SELECT COUNT(*) AS cnt FROM ui_events WHERE session_id = 'sess-frozen'").fetchone()
+    ds_row = db.conn.execute(
+        "SELECT COUNT(*) AS cnt FROM director_selections WHERE attempt_key = 's4:ep2:arc1:a1:sess-frozen'"
+    ).fetchone()
+
+    assert director_written is False
+    assert ui_written is False
+    assert llm_row["cnt"] == 0
+    assert stage_row["cnt"] == 0
+    assert ui_row["cnt"] == 0
+    assert ds_row["cnt"] == 0
+
+
 def test_get_manuscripts_range_returns_ordered_rows(db):
     db.save_manuscript(1, "t1", "c1")
     db.save_manuscript(2, "t2", "c2")
@@ -351,6 +405,44 @@ def test_save_stage_attempt_and_director_selection_persist_attempt_key(db):
     assert sa_row["candidate_key"] == "A|balanced"
     assert sa_row["content_hash"] == "hash-stage-attempt"
     assert sa_row["artifact_path"].endswith("final_manuscript__A_balanced.txt")
+
+
+def test_update_director_selection_rationale_updates_latest_attempt_row(db):
+    db.save_director_selection(
+        5,
+        1,
+        "A",
+        "balanced",
+        "PASS_WITH_FIX",
+        score=88,
+        selection_reason="initial rationale",
+        verdict_reason="initial verdict",
+        fix_scope="inplace",
+        stage=4,
+        attempt_key="s4:ep5:arc2:a2",
+    )
+
+    updated = db.update_director_selection_rationale(
+        attempt_key="s4:ep5:arc2:a2",
+        selection_reason="re-audited rationale",
+        verdict_reason="re-audited verdict",
+        fix_scope="ending_only",
+    )
+
+    row = db.conn.execute(
+        """
+        SELECT selection_reason, verdict_reason, fix_scope
+        FROM director_selections
+        WHERE attempt_key = 's4:ep5:arc2:a2'
+        ORDER BY id DESC
+        LIMIT 1
+        """
+    ).fetchone()
+
+    assert updated is True
+    assert row["selection_reason"] == "re-audited rationale"
+    assert row["verdict_reason"] == "re-audited verdict"
+    assert row["fix_scope"] == "ending_only"
 
 
 def test_save_stage_attempt_persists_rationale_fields(db):
