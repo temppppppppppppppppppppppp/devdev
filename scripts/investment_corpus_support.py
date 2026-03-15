@@ -22,9 +22,64 @@ COLOPHON_MARKERS = ("전자책 출간일", "펴낸이", "펴낸곳", "이메일"
 MIN_BODY_CHARS = 500
 MIN_SAMPLE_TOKENS = 40
 DEFAULT_SYSTEM_INSTRUCTION = "앞 문체와 호흡을 유지해 자연스럽게 이어 쓴다."
+STYLE_CONTROL_SYSTEM_INSTRUCTION = "주어진 제어 조건과 도입 앵커를 유지해 한국형 웹소설 회차 초안을 작성한다."
+DEFAULT_STYLE_CONTROL_GENRE = "현대판타지 / 재벌 / 기업 / 회귀"
+GEMINI_SUPERVISED_TUNING_USD_PER_MILLION_TOKENS = 25.0
+DEFAULT_USD_KRW_RATE = 1470.0
 SCENE_BREAK_RE = re.compile(
     r"^(?:[*#=\-~_]{3,}|(?:\*\s*){3,}|\[(?:장면|시점|전환|컷)[^\]]{0,20}\])$",
     re.IGNORECASE,
+)
+HEADING_RE = re.compile(r"^\d+\s*화[.\s].*$")
+TRANSITION_PREFIXES = (
+    "한편",
+    "그 시각",
+    "잠시 후",
+    "다음 날",
+    "며칠 뒤",
+    "그날 밤",
+    "이후",
+    "그러는 사이",
+)
+TONE_KEYWORDS: dict[str, tuple[str, ...]] = {
+    "상승": ("성공", "승리", "상승", "확대", "수익", "돌파", "기회", "축하", "미소", "행복"),
+    "압박": ("위기", "불안", "긴장", "추락", "도망", "감옥", "각혈", "피", "절망", "흔들"),
+    "복수": ("복수", "원망", "살생부", "되갚", "응징", "원수", "증오"),
+    "협상": ("협상", "계약", "제안", "조건", "합의", "설득", "지분", "투자", "인수"),
+    "가문": ("후계", "손자", "아이", "며느리", "증조", "가문", "혼인"),
+}
+GOAL_KEYWORDS: dict[str, tuple[str, ...]] = {
+    "복수 동기 각인": ("복수", "원망", "살생부", "되갚", "응징", "회귀", "두 번째 기회"),
+    "기업 우위 확보": ("지분", "인수", "계약", "투자", "최대주주", "실소유주"),
+    "위기 돌파": ("위기", "부도", "압박", "추락", "감옥", "도망", "각혈", "피", "추징금", "징역"),
+    "관계/가문 진전": ("결혼", "아이", "며느리", "손자", "증조", "혼인"),
+    "정체/비밀 공개": ("정체", "비밀", "실소유주", "드러", "밝혀", "회귀"),
+    "판 확대": ("확장", "글로벌", "시장", "방어벽", "동맹", "타워"),
+}
+TONE_LABEL_WEIGHTS = {"상승": 1.0, "압박": 1.4, "복수": 1.8, "협상": 1.2, "가문": 0.8}
+GOAL_LABEL_WEIGHTS = {
+    "복수 동기 각인": 1.8,
+    "기업 우위 확보": 1.2,
+    "위기 돌파": 1.4,
+    "관계/가문 진전": 1.0,
+    "정체/비밀 공개": 1.4,
+    "판 확대": 1.1,
+}
+CONFLICT_KEYWORDS = (
+    "위기",
+    "압박",
+    "복수",
+    "배신",
+    "전쟁",
+    "함정",
+    "추락",
+    "부도",
+    "조사",
+    "갈등",
+    "원망",
+    "긴장",
+    "피",
+    "각혈",
 )
 COMMON_SURNAMES = (
     "김",
@@ -768,6 +823,443 @@ def _take_tail_by_tokens(paragraphs: list[str], token_lengths: list[int], target
     return _join_paragraphs(paragraphs[start_index:])
 
 
+def _trim_episode_heading(paragraphs: list[str]) -> list[str]:
+    if not paragraphs:
+        return []
+    first = paragraphs[0].strip()
+    if HEADING_RE.match(first):
+        return paragraphs[1:]
+    return paragraphs
+
+
+def _dialogue_ratio(text: str) -> float:
+    normalized = _normalize_text(text)
+    if not normalized:
+        return 0.0
+    quote_spans = re.findall(r"[“\"']([^”\"']+)[”\"']", normalized)
+    quoted_length = sum(len(span) for span in quote_spans)
+    return max(0.0, min(1.0, quoted_length / max(1, len(normalized))))
+
+
+def _dialogue_ratio_label(ratio: float) -> str:
+    if ratio < 0.12:
+        return "낮음"
+    if ratio < 0.28:
+        return "중간"
+    return "높음"
+
+
+def _narrative_pov(text: str) -> str:
+    normalized = _normalize_text(text)
+    first_person_hits = sum(normalized.count(token) for token in (" 나는 ", " 내가 ", " 나는", "\n나는 ", "\n내가 "))
+    first_person_hits += normalized.count("내가")
+    first_person_hits += normalized.count("나는")
+    third_person_hits = sum(normalized.count(token) for token in (" 그는 ", " 그녀는 ", " 그가 ", " 그녀가 "))
+    if first_person_hits >= max(3, third_person_hits + 1):
+        return "1인칭 내면 밀착"
+    if third_person_hits >= max(3, first_person_hits + 1):
+        return "3인칭 근접"
+    return "혼합/불명"
+
+
+def _score_keyword_buckets(text: str, keyword_map: dict[str, tuple[str, ...]]) -> dict[str, int]:
+    normalized = _normalize_text(text)
+    scores: dict[str, int] = {}
+    for label, keywords in keyword_map.items():
+        scores[label] = sum(normalized.count(keyword) for keyword in keywords)
+    return scores
+
+
+def _top_keyword_label(
+    text: str,
+    keyword_map: dict[str, tuple[str, ...]],
+    *,
+    default: str,
+    label_weights: dict[str, float] | None = None,
+) -> str:
+    scores = _score_keyword_buckets(text, keyword_map)
+    best_label = default
+    best_score = -1.0
+    for label, score in scores.items():
+        weighted_score = score * (label_weights or {}).get(label, 1.0)
+        if weighted_score > best_score:
+            best_label = label
+            best_score = weighted_score
+    return best_label if best_score > 0 else default
+
+
+def _conflict_intensity(text: str) -> int:
+    normalized = _normalize_text(text)
+    if not normalized:
+        return 1
+    weighted_hits = 0
+    for keyword in CONFLICT_KEYWORDS:
+        multiplier = 2 if keyword in {"복수", "배신", "전쟁", "함정", "부도", "추락", "각혈", "피"} else 1
+        weighted_hits += normalized.count(keyword) * multiplier
+    punctuation_hits = normalized.count("!") + normalized.count("?")
+    density = ((weighted_hits * 30) + punctuation_hits * 5) / max(1, estimate_token_count(normalized))
+    if density >= 1.00:
+        return 5
+    if density >= 0.72:
+        return 4
+    if density >= 0.48:
+        return 3
+    if density >= 0.24:
+        return 2
+    return 1
+
+
+def _opening_mode(paragraphs: list[str]) -> str:
+    if not paragraphs:
+        return "상황 도입"
+    first = paragraphs[0].strip()
+    if first.startswith(("“", '"', "'")):
+        return "대사 도입"
+    if any(token in first for token in ("!", "?", "쿨럭", "피", "충격", "폭락", "추징금")):
+        return "충격 도입"
+    return "상황 도입"
+
+
+def _scene_count(paragraphs: list[str], token_lengths: list[int]) -> int:
+    if not paragraphs:
+        return 0
+    explicit_breaks = sum(1 for paragraph in paragraphs if _is_scene_break(paragraph))
+    if explicit_breaks:
+        return explicit_breaks + 1
+    transition_hits = sum(1 for paragraph in paragraphs if paragraph.startswith(TRANSITION_PREFIXES))
+    rough_by_tokens = max(1, round(sum(token_lengths) / 320))
+    return max(1, min(8, max(rough_by_tokens, 1 + transition_hits)))
+
+
+def _cliffhanger_type(text: str) -> str:
+    tail = _normalize_text(text)
+    if not tail:
+        return "다음 국면 예고형"
+    if any(token in tail for token in ("비밀", "정체", "실소유주", "드러", "밝혀", "회귀")):
+        return "비밀 공개형"
+    if any(token in tail for token in ("위기", "함정", "추락", "부도", "체포", "각혈", "피")):
+        return "위기 도래형"
+    if any(token in tail for token in ("축하", "성공", "미소", "행복", "완.", "完", "수락")):
+        return "보상형"
+    if any(token in tail for token in ("복수", "전쟁", "시작", "지켜 낼", "돌아오", "간다")):
+        return "선언형"
+    if "?" in tail and any(token in tail for token in ("누구", "무엇", "어떻게", "왜")):
+        return "질문형"
+    return "다음 국면 예고형"
+
+
+def _style_pacing(scene_count: int, dialogue_ratio: float) -> str:
+    if scene_count >= 5 or dialogue_ratio >= 0.30:
+        return "빠름"
+    if scene_count <= 2 and dialogue_ratio < 0.12:
+        return "느림"
+    return "중간"
+
+
+def _style_rules(
+    *, pov: str, dialogue_ratio_label: str, scene_count: int, tone: str, pacing: str, opening_mode: str
+) -> list[str]:
+    rules: list[str] = []
+    if pov == "1인칭 내면 밀착":
+        rules.append("주인공의 계산과 감정을 1인칭으로 즉시 드러낸다.")
+    elif pov == "3인칭 근접":
+        rules.append("주인공 시점에 바짝 붙은 3인칭 서술을 유지한다.")
+    else:
+        rules.append("주인공 중심의 밀착 시점을 유지한다.")
+
+    if dialogue_ratio_label == "높음":
+        rules.append("대사와 짧은 반응문을 교차해 리듬을 빠르게 유지한다.")
+    elif dialogue_ratio_label == "중간":
+        rules.append("대사와 설명을 번갈아 배치해 장면을 밀어붙인다.")
+    else:
+        rules.append("짧은 서술문 위주로 상황을 압축하고 필요한 순간에만 대사를 쓴다.")
+
+    if scene_count >= 4:
+        rules.append("장면 전환을 자주 사용해 정보와 긴장을 빠르게 넘긴다.")
+    elif scene_count <= 2:
+        rules.append("한 국면의 압박을 길게 끌며 감정선과 계산을 눌러 쌓는다.")
+    else:
+        rules.append("2~4개 장면으로 압박과 보상을 교차한다.")
+
+    if tone == "복수":
+        rules.append("원망과 복수 동기를 짧고 강한 문장으로 박아 넣는다.")
+    elif tone == "압박":
+        rules.append("몸 상태, 표정, 주변 반응을 짧게 끊어 긴장을 올린다.")
+    elif tone == "협상":
+        rules.append("직함, 조건, 숫자를 박아 넣어 기업물의 힘을 살린다.")
+    elif tone == "상승":
+        rules.append("성과와 우위를 숫자와 반응으로 선명하게 보여 준다.")
+    else:
+        rules.append("가문과 관계 변화를 감정 보상과 함께 묶어 준다.")
+
+    if pacing == "빠름":
+        rules.append("문단은 짧게 끊고 장면마다 결과를 하나씩 남긴다.")
+    elif pacing == "느림":
+        rules.append("문장 호흡을 너무 길게 늘리지 말고 압박을 천천히 조여 간다.")
+
+    if opening_mode == "충격 도입":
+        rules.append("첫 장면의 충격을 바로 서사의 추진력으로 연결한다.")
+    elif opening_mode == "대사 도입":
+        rules.append("첫 대사에서 인물 관계와 권력차를 곧바로 드러낸다.")
+    else:
+        rules.append("도입 장면의 상황 설명은 짧게 끝내고 갈등을 바로 호출한다.")
+    return rules
+
+
+def _find_completion_start_index(
+    paragraphs: list[str], token_lengths: list[int], *, target_completion_tokens: int
+) -> int:
+    if len(paragraphs) < 2:
+        return 1
+    total_tokens = sum(token_lengths)
+    running_tokens = 0
+    best_index = 1
+    best_score: tuple[int, int, int] | None = None
+    for index in range(1, len(paragraphs)):
+        running_tokens += token_lengths[index - 1]
+        remaining_tokens = total_tokens - running_tokens
+        near_scene_break = _is_scene_break(paragraphs[index - 1]) or _is_scene_break(paragraphs[index])
+        score = (0 if near_scene_break else 1, abs(remaining_tokens - target_completion_tokens), -index)
+        if best_score is None or score < best_score:
+            best_score = score
+            best_index = index
+    return best_index
+
+
+def _format_style_control_prompt(
+    *,
+    title: str,
+    genre: str,
+    task_name: str,
+    section_goal: str,
+    anchor_text: str,
+    pov: str,
+    tone: str,
+    episode_goal: str,
+    conflict_intensity: int,
+    scene_count: int,
+    dialogue_ratio: float,
+    dialogue_ratio_label: str,
+    cliffhanger_type: str,
+    pacing: str,
+    opening_mode: str,
+    style_rules: list[str],
+) -> str:
+    dialogue_percent = round(dialogue_ratio * 100)
+    rules_text = "\n".join(f"- {rule}" for rule in style_rules)
+    return _normalize_text(
+        f"""
+작품: {title}
+훈련 과제: {task_name}
+
+장르: {genre}
+시점: {pov}
+톤: {tone}
+회차 목표: {episode_goal}
+구간 목표: {section_goal}
+갈등 강도: {conflict_intensity}/5
+장면 수: {scene_count}
+대사 비율: {dialogue_ratio_label} ({dialogue_percent}%)
+클리프행어 유형: {cliffhanger_type}
+전개 속도: {pacing}
+도입 방식: {opening_mode}
+
+문체 규칙:
+{rules_text}
+
+도입 앵커:
+{anchor_text}
+
+요구사항:
+- 위 제어값과 문체 규칙을 유지한다.
+- 앵커 다음 장면부터 자연스럽게 이어 쓴다.
+- {section_goal}
+"""
+    )
+
+
+def _build_style_control_examples(
+    title: str,
+    text: str,
+    *,
+    genre: str,
+    body_anchor_tokens: int,
+    body_completion_tokens: int,
+    ending_prompt_tokens: int,
+    ending_completion_tokens: int,
+) -> tuple[list[dict[str, str]], dict[str, Any]]:
+    paragraphs = _trim_episode_heading(_split_paragraphs(text))
+    if len(paragraphs) < 3:
+        return ([], {})
+
+    token_lengths = _paragraph_token_lengths(paragraphs)
+    if sum(token_lengths) < max(
+        body_anchor_tokens + body_completion_tokens, ending_prompt_tokens + ending_completion_tokens
+    ):
+        return ([], {})
+
+    full_text = _join_paragraphs(paragraphs)
+    tail_window = _take_tail_by_tokens(paragraphs, token_lengths, max(ending_completion_tokens, 220))
+    dialogue_ratio = _dialogue_ratio(full_text)
+    dialogue_ratio_label = _dialogue_ratio_label(dialogue_ratio)
+    pov = _narrative_pov(full_text)
+    tone = _top_keyword_label(full_text, TONE_KEYWORDS, default="상승", label_weights=TONE_LABEL_WEIGHTS)
+    episode_goal = _top_keyword_label(
+        full_text,
+        GOAL_KEYWORDS,
+        default="기업 우위 확보",
+        label_weights=GOAL_LABEL_WEIGHTS,
+    )
+    conflict_intensity = _conflict_intensity(full_text)
+    scene_count = _scene_count(paragraphs, token_lengths)
+    cliffhanger_type = _cliffhanger_type(tail_window)
+    pacing = _style_pacing(scene_count, dialogue_ratio)
+    opening_mode = _opening_mode(paragraphs)
+    style_rules = _style_rules(
+        pov=pov,
+        dialogue_ratio_label=dialogue_ratio_label,
+        scene_count=scene_count,
+        tone=tone,
+        pacing=pacing,
+        opening_mode=opening_mode,
+    )
+
+    examples: list[dict[str, str]] = []
+
+    body_anchor_end = _window_end_index(paragraphs, token_lengths, start_index=0, target_tokens=body_anchor_tokens)
+    body_completion_end = _window_end_index(
+        paragraphs,
+        token_lengths,
+        start_index=body_anchor_end,
+        target_tokens=body_completion_tokens,
+    )
+    body_anchor = _join_paragraphs(paragraphs[:body_anchor_end])
+    body_completion = _join_paragraphs(paragraphs[body_anchor_end:body_completion_end])
+    if (
+        estimate_token_count(body_anchor) >= MIN_SAMPLE_TOKENS
+        and estimate_token_count(body_completion) >= MIN_SAMPLE_TOKENS
+    ):
+        examples.append(
+            {
+                "section": "middle_continuation",
+                "prompt": _format_style_control_prompt(
+                    title=title,
+                    genre=genre,
+                    task_name="중반 전개 이어쓰기",
+                    section_goal="주인공의 계산과 우위 확보 과정을 중반부 전개로 밀어붙인다.",
+                    anchor_text=body_anchor,
+                    pov=pov,
+                    tone=tone,
+                    episode_goal=episode_goal,
+                    conflict_intensity=conflict_intensity,
+                    scene_count=scene_count,
+                    dialogue_ratio=dialogue_ratio,
+                    dialogue_ratio_label=dialogue_ratio_label,
+                    cliffhanger_type=cliffhanger_type,
+                    pacing=pacing,
+                    opening_mode=opening_mode,
+                    style_rules=style_rules,
+                ),
+                "completion": body_completion,
+            }
+        )
+
+    ending_start = _find_completion_start_index(
+        paragraphs,
+        token_lengths,
+        target_completion_tokens=ending_completion_tokens,
+    )
+    ending_prompt_source = paragraphs[:ending_start]
+    ending_prompt = _take_tail_by_tokens(
+        ending_prompt_source,
+        _paragraph_token_lengths(ending_prompt_source),
+        ending_prompt_tokens,
+    )
+    ending_completion_end = _window_end_index(
+        paragraphs,
+        token_lengths,
+        start_index=ending_start,
+        target_tokens=ending_completion_tokens,
+    )
+    ending_completion = _join_paragraphs(paragraphs[ending_start:ending_completion_end])
+    if (
+        estimate_token_count(ending_prompt) >= MIN_SAMPLE_TOKENS
+        and estimate_token_count(ending_completion) >= MIN_SAMPLE_TOKENS
+    ):
+        examples.append(
+            {
+                "section": "ending_cliffhanger",
+                "prompt": _format_style_control_prompt(
+                    title=title,
+                    genre=genre,
+                    task_name="종결 장면 작성",
+                    section_goal=f"회차를 {cliffhanger_type}로 닫아 다음 화를 당긴다.",
+                    anchor_text=ending_prompt,
+                    pov=pov,
+                    tone=tone,
+                    episode_goal=episode_goal,
+                    conflict_intensity=conflict_intensity,
+                    scene_count=scene_count,
+                    dialogue_ratio=dialogue_ratio,
+                    dialogue_ratio_label=dialogue_ratio_label,
+                    cliffhanger_type=cliffhanger_type,
+                    pacing=pacing,
+                    opening_mode=opening_mode,
+                    style_rules=style_rules,
+                ),
+                "completion": ending_completion,
+            }
+        )
+
+    profile = {
+        "pov": pov,
+        "tone": tone,
+        "episode_goal": episode_goal,
+        "conflict_intensity": conflict_intensity,
+        "scene_count": scene_count,
+        "dialogue_ratio": round(dialogue_ratio, 4),
+        "dialogue_ratio_label": dialogue_ratio_label,
+        "cliffhanger_type": cliffhanger_type,
+        "pacing": pacing,
+        "opening_mode": opening_mode,
+    }
+    return (examples, profile)
+
+
+def _stable_episode_partition(episode_paths: list[Path], holdout_fraction: float) -> tuple[set[str], set[str]]:
+    if len(episode_paths) < 2:
+        names = {path.name for path in episode_paths}
+        return (names, set())
+
+    ordered = sorted(episode_paths, key=lambda path: hashlib.sha1(path.name.encode("utf-8")).hexdigest())
+    holdout_count = max(1, round(len(ordered) * holdout_fraction))
+    holdout_count = min(holdout_count, len(ordered) - 1)
+    holdout_names = {path.name for path in ordered[:holdout_count]}
+    train_names = {path.name for path in ordered if path.name not in holdout_names}
+    return (train_names, holdout_names)
+
+
+def estimate_supervised_tuning_cost(
+    train_tokens: int,
+    *,
+    epochs: int,
+    usd_per_million_tokens: float = GEMINI_SUPERVISED_TUNING_USD_PER_MILLION_TOKENS,
+    usd_krw_rate: float = DEFAULT_USD_KRW_RATE,
+) -> dict[str, float]:
+    epoch_tokens = max(0, train_tokens)
+    total_tokens = epoch_tokens * max(1, epochs)
+    usd_cost = (total_tokens / 1_000_000) * usd_per_million_tokens
+    krw_cost = usd_cost * usd_krw_rate
+    return {
+        "train_tokens": float(train_tokens),
+        "epochs": float(epochs),
+        "usd_per_million_tokens": usd_per_million_tokens,
+        "usd_krw_rate": usd_krw_rate,
+        "estimated_cost_usd": round(usd_cost, 2),
+        "estimated_cost_krw": round(krw_cost),
+    }
+
+
 def html_to_text(raw_html: str) -> str:
     parser = _TextExtractor()
     parser.feed(raw_html)
@@ -1452,6 +1944,147 @@ def build_gemini_dataset(
         "per_title_counts": per_title_counts,
     }
     (gemini_root / "dataset_manifest.json").write_text(
+        json.dumps(dataset_manifest, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+    return dataset_manifest
+
+
+def build_style_control_dataset(
+    input_root: Path,
+    *,
+    title: str,
+    output_root: Path,
+    genre: str = DEFAULT_STYLE_CONTROL_GENRE,
+    system_instruction: str = STYLE_CONTROL_SYSTEM_INSTRUCTION,
+    holdout_fraction: float = 0.15,
+    body_anchor_tokens: int = 220,
+    body_completion_tokens: int = 900,
+    ending_prompt_tokens: int = 220,
+    ending_completion_tokens: int = 700,
+    usd_per_million_tokens: float = GEMINI_SUPERVISED_TUNING_USD_PER_MILLION_TOKENS,
+    usd_krw_rate: float = DEFAULT_USD_KRW_RATE,
+) -> dict[str, Any]:
+    manifest_path = input_root / "manifest.json"
+    corpus_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    title_entries = {
+        entry["title"]: entry
+        for entry in corpus_manifest.get("titles", [])
+        if isinstance(entry, dict) and entry.get("written_episode_count")
+    }
+    if title not in title_entries:
+        msg = f"title not found in corpus manifest: {title}"
+        raise ValueError(msg)
+
+    title_entry = title_entries[title]
+    title_dir = Path(title_entry["output_dir"])
+    episodes = sorted(title_dir.glob("*.txt"))
+    if not episodes:
+        msg = f"no episode txt files found for title: {title}"
+        raise ValueError(msg)
+
+    output_root.mkdir(parents=True, exist_ok=True)
+    train_path = output_root / "train.jsonl"
+    val_path = output_root / "val.jsonl"
+    train_episode_names, holdout_episode_names = _stable_episode_partition(episodes, holdout_fraction)
+
+    train_lines: list[str] = []
+    val_lines: list[str] = []
+    example_hashes: set[str] = set()
+    train_token_total = 0
+    val_token_total = 0
+    example_type_counts = {"middle_continuation": 0, "ending_cliffhanger": 0}
+    per_episode_counts: dict[str, dict[str, Any]] = {}
+
+    for episode_path in episodes:
+        text = episode_path.read_text(encoding="utf-8").strip()
+        examples, profile = _build_style_control_examples(
+            title,
+            text,
+            genre=genre,
+            body_anchor_tokens=body_anchor_tokens,
+            body_completion_tokens=body_completion_tokens,
+            ending_prompt_tokens=ending_prompt_tokens,
+            ending_completion_tokens=ending_completion_tokens,
+        )
+        split_name = "train" if episode_path.name in train_episode_names else "val"
+        per_episode_counts[episode_path.name] = {
+            "split": split_name,
+            "example_count": 0,
+            "profile": profile,
+        }
+        for example in examples:
+            prompt = example["prompt"]
+            completion = example["completion"]
+            digest = hashlib.sha256(f"{episode_path.name}\0{prompt}\0{completion}".encode()).hexdigest()
+            if digest in example_hashes:
+                continue
+            example_hashes.add(digest)
+            record = _jsonl_record(system_instruction, prompt, completion)
+            line = json.dumps(record, ensure_ascii=False)
+            example_tokens = (
+                estimate_token_count(system_instruction)
+                + estimate_token_count(prompt)
+                + estimate_token_count(completion)
+            )
+            if split_name == "train":
+                train_lines.append(line)
+                train_token_total += example_tokens
+            else:
+                val_lines.append(line)
+                val_token_total += example_tokens
+            example_type_counts[example["section"]] += 1
+            per_episode_counts[episode_path.name]["example_count"] += 1
+
+    train_path.write_text(("\n".join(train_lines) + "\n") if train_lines else "", encoding="utf-8")
+    val_path.write_text(("\n".join(val_lines) + "\n") if val_lines else "", encoding="utf-8")
+
+    cost_epoch_1 = estimate_supervised_tuning_cost(
+        train_token_total,
+        epochs=1,
+        usd_per_million_tokens=usd_per_million_tokens,
+        usd_krw_rate=usd_krw_rate,
+    )
+    cost_epoch_3 = estimate_supervised_tuning_cost(
+        train_token_total,
+        epochs=3,
+        usd_per_million_tokens=usd_per_million_tokens,
+        usd_krw_rate=usd_krw_rate,
+    )
+    dataset_manifest = {
+        "generated_at": now_iso(),
+        "input_root": str(input_root),
+        "title": title,
+        "title_output_dir": str(title_dir),
+        "output_root": str(output_root),
+        "train_path": str(train_path),
+        "val_path": str(val_path),
+        "genre": genre,
+        "system_instruction": system_instruction,
+        "window_strategy": "control_conditioned_episode_segments",
+        "train_episode_count": len(train_episode_names),
+        "holdout_episode_count": len(holdout_episode_names),
+        "train_example_count": len(train_lines),
+        "val_example_count": len(val_lines),
+        "train_tokens_estimated": train_token_total,
+        "val_tokens_estimated": val_token_total,
+        "body_anchor_tokens": body_anchor_tokens,
+        "body_completion_tokens": body_completion_tokens,
+        "ending_prompt_tokens": ending_prompt_tokens,
+        "ending_completion_tokens": ending_completion_tokens,
+        "example_type_counts": example_type_counts,
+        "train_episode_names": sorted(train_episode_names),
+        "holdout_episode_names": sorted(holdout_episode_names),
+        "per_episode_counts": per_episode_counts,
+        "cost_estimate": {
+            "pricing_basis": "usd_per_million_training_tokens",
+            "usd_per_million_tokens": usd_per_million_tokens,
+            "usd_krw_rate": usd_krw_rate,
+            "epoch_1": cost_epoch_1,
+            "epoch_3": cost_epoch_3,
+        },
+    }
+    (output_root / "dataset_manifest.json").write_text(
         json.dumps(dataset_manifest, ensure_ascii=False, indent=2),
         encoding="utf-8",
     )

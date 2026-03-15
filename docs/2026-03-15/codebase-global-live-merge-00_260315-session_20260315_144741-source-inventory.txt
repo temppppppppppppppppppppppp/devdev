@@ -1,0 +1,42 @@
+Codebase Global Live Merge 00_260315 Session 20260315_144741 Source Inventory
+Date: 2026-03-15
+Status: draft-live-run-pending
+Baseline Commit: d2982aa2
+
+[scope]
+- included roots:
+  - main_a.py
+  - modules/
+  - scripts/
+  - tests/
+  - UI/
+  - geuldobi-desktop/
+  - config/
+- excluded by inventory pass:
+  - .git
+  - node_modules
+  - dist
+  - build
+  - __pycache__
+  - .pytest_cache
+  - .ruff_cache
+  - .hypothesis
+  - win-unpacked
+  - python-embed
+
+[active-source counts]
+- modules: files=265 bytes=7241852
+- scripts: files=36 bytes=643193
+- tests: files=354 bytes=4217904
+- UI: files=637 bytes=351444333
+- geuldobi-desktop: files=49 bytes=1272083
+- config: files=55 bytes=21152181
+
+[sub-area counts]
+- modules/core: 175 files
+- modules/domain: 46 files
+- tests/test_*.py: 282 files
+
+[notes]
+- geuldobi-desktop counts exclude node_modules/dist/build
+- UI is asset-heavy and large in bytes, but not the dominant live control plane
