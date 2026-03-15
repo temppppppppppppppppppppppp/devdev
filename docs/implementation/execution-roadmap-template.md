@@ -12,6 +12,11 @@ Date: YYYY-MM-DD
 Status: draft | active | closed
 Canonical Path: `docs/YYYY-MM-DD/<topic>-execution-roadmap.md`
 Temp Mirror Path: `docs/temp/execution-roadmap.md`
+Commit State:
+- Baseline Commit: `<git rev-parse HEAD at roadmap evidence start>`
+- Baseline Dirty Summary: `clean | dirty: ...`
+- Resume Commit: `same-as-baseline | <git rev-parse HEAD at resume/revalidation>`
+- Resume Drift Summary: `none | ...`
 Queue Snapshot:
 - `docs/temp/<item-a>-execution-ssot.md`
 - `docs/temp/<item-b>-execution-ssot.md`
@@ -94,6 +99,7 @@ Before final save:
 
 Before starting implementation from this roadmap:
 - re-run the document 3-pass audit against the current workspace state
+- refresh `Resume Commit` and `Resume Drift Summary`
 - confirm the ordering, dependencies, and controlled execution SSOT set are still valid
 - confirm no parallel SSOT roadmap exists for the same active bundle
 - confirm estimated confidence is at least 95%

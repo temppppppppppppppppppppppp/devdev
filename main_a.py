@@ -339,6 +339,8 @@ class SovereignApp:
             runtime_audit=self.runtime_audit,
             project_paths_fn=lambda: self.current_project.paths if self.current_project else None,
             ui_log_fn=self.ui.log,
+            before_summary_write_fn=self._save_pass_rate_monitor_for_audit_summary,
+            project_db_fn=lambda: self.current_project.db if self.current_project else None,
         )
         self._audit_buffer = self._audit_service.buffer  # 하위 호환 참조
         atexit.register(self._flush_audit_buffer)  # [V66.1] B-3: 프로세스 종료 시 flush 보장
@@ -2611,6 +2613,14 @@ class SovereignApp:
                 event_kind="warning",
             )
 
+    def _save_pass_rate_monitor_for_audit_summary(self) -> None:
+        if not (V50_MODULES_AVAILABLE and getattr(self, "pass_rate_monitor", None)):
+            return
+        try:
+            self.pass_rate_monitor.save()
+        except Exception as pr_err:
+            logging.debug("[Audit] pass_rate_monitor save before summary failed: %s", pr_err)
+
     def _persist_shutdown_advisory_state(self) -> None:
         if V50_MODULES_AVAILABLE and getattr(self, "pass_rate_monitor", None):
             try:
@@ -4183,14 +4193,11 @@ class SovereignApp:
                     batch_size = default_count
                 self.ui.log(f"   🤖 [FrontierLag] 하네스 batch_size override 적용: {batch_size}")
             else:
-                batch_size = self._get_int_input(
-                    f"👉 몇 개 Arc를 추가 설계할까요? (1~{remaining_design}, 기본: {default_count}): ",
-                    default=default_count,
-                    min_val=1,
-                    max_val=remaining_design,
+                batch_size = default_count
+                self.ui.log(
+                    "   [FrontierLag] auto-selected default batch_size: "
+                    f"{batch_size} (remaining_design={remaining_design})"
                 )
-                if batch_size is None:
-                    batch_size = default_count
             target_count = batch_size
 
             while True:

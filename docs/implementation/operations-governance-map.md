@@ -48,6 +48,7 @@ Specific-over-general rule:
 - Live workspace code beats stale survey text.
 - Newly generated evidence beats recalled counts or older snapshots.
 - Historical documents remain useful for lineage, not for overriding current facts.
+- For ROL surveys, re-audits, execution SSOTs, and roadmaps, use `docs/implementation/commit-state-minimal-contract.md` to anchor baseline and resume state without turning documents into git transcripts.
 
 ## 5. Queue Governance
 - An aggregate roadmap controls multi-item realization once two or more execution SSOT mirrors are present.

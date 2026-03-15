@@ -68,6 +68,7 @@ Check:
 - file paths and artifact paths are correct
 - counts and inventories are internally consistent
 - canonical path and temp mirror path are not inverted
+- when the document is a ROL survey, re-audit, execution SSOT, or roadmap, the minimal commit-state fields are present and coherent
 - referenced survey docs, evidence artifacts, and side-effect coverage are coherent
 - no contradiction between AGENTS rules and harness rules
 
@@ -75,6 +76,7 @@ Typical failures:
 - stale counts
 - mismatched file names
 - drift between canonical and temp semantics
+- missing or stale baseline/resume commit-state metadata on a resumed ROL doc
 - overclaiming beyond inspected evidence
 - missing canonical/temp metadata on execution docs
 

@@ -1,6 +1,8 @@
 """[Log-Phase2] Failure snippet persistence and analyzer query tests."""
 
+import logging
 import os
+import sqlite3
 import tempfile
 
 import pytest
@@ -217,3 +219,89 @@ def test_save_stage_attempt_generation_method(tmp_db):
     assert row is not None
     assert row["generation_method"] == "four_phase"
     assert row["prompt_version"] == "ensemble@v1|director@v1"
+
+
+def test_reboot_current_schema_emits_no_duplicate_column_noise(tmp_path, caplog):
+    from modules.core.db_manager import DBManager
+
+    db_path = tmp_path / "current_logging.db"
+    db = DBManager(db_path)
+    db.close()
+
+    with caplog.at_level(logging.DEBUG):
+        reopened = DBManager(db_path)
+    try:
+        messages = [record.getMessage() for record in caplog.records]
+        assert not any("llm_calls 컬럼 마이그레이션 스킵" in message for message in messages)
+        assert not any("stage_attempts" in message and "마이그레이션 스킵" in message for message in messages)
+        assert not any("compatibility migration added columns" in message for message in messages)
+    finally:
+        reopened.close()
+
+
+def test_legacy_logging_tables_receive_missing_columns_safely(tmp_path, caplog):
+    from modules.core.db_manager import DBManager
+
+    db_path = tmp_path / "legacy_logging.db"
+    conn = sqlite3.connect(db_path)
+    try:
+        conn.execute(
+            """
+            CREATE TABLE llm_calls (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                session_id TEXT,
+                ts TEXT NOT NULL,
+                stage INTEGER,
+                ep_num INTEGER,
+                agent_name TEXT NOT NULL,
+                model TEXT NOT NULL,
+                prompt_chars INTEGER,
+                response_chars INTEGER,
+                duration_ms INTEGER,
+                success INTEGER NOT NULL DEFAULT 1,
+                error_type TEXT,
+                error_msg TEXT,
+                verdict TEXT,
+                context_tag TEXT
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE stage_attempts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                session_id TEXT,
+                ts TEXT NOT NULL,
+                stage INTEGER NOT NULL,
+                ep_num INTEGER,
+                arc_num INTEGER,
+                attempt_num INTEGER NOT NULL DEFAULT 1,
+                verdict TEXT NOT NULL,
+                score INTEGER,
+                failure_category TEXT,
+                reject_reason TEXT,
+                fix_scope TEXT,
+                model TEXT,
+                duration_ms INTEGER,
+                advisory_flags TEXT
+            )
+            """
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    with caplog.at_level(logging.INFO):
+        db = DBManager(db_path)
+    try:
+        llm_cols = {row["name"] for row in db.conn.execute("PRAGMA table_info(llm_calls)").fetchall()}
+        stage_cols = {row["name"] for row in db.conn.execute("PRAGMA table_info(stage_attempts)").fetchall()}
+
+        assert {"input_tokens", "output_tokens", "thinking_snippet", "total_cost_usd"} <= llm_cols
+        assert {"generation_method", "attempt_key", "selection_reason", "retry_directives"} <= stage_cols
+
+        messages = [record.getMessage() for record in caplog.records]
+        assert sum("llm_calls compatibility migration added columns" in message for message in messages) == 1
+        assert sum("stage_attempts compatibility migration added columns" in message for message in messages) == 1
+    finally:
+        db.close()

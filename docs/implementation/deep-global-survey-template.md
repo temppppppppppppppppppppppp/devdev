@@ -13,6 +13,11 @@ Related Evidence Manifest: `docs/YYYY-MM-DD/<topic>-evidence-manifest.md`
 Roadmap Policy: `single-ssot`
 Confidence Model: `docs/implementation/integrity-confidence-scoring-contract.md`
 Confidence Target: 95%
+Commit State:
+- Baseline Commit: `<git rev-parse HEAD at survey start>`
+- Baseline Dirty Summary: `clean | dirty: ...`
+- Resume Commit: `same-as-baseline | <git rev-parse HEAD at re-audit or continuation>`
+- Resume Drift Summary: `none | ...`
 
 ## 1. Intent
 - Why this deep survey exists.

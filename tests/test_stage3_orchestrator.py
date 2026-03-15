@@ -423,6 +423,31 @@ class TestStageAttemptObservability:
         assert (tmp_path / meta["artifact_path"]).exists()
 
 
+    def test_build_stage3_director_selection_kwargs_keeps_500_char_rationale(self):
+        selection_reason = "r" * 450
+        payload = Stage3Orchestrator._build_stage3_director_selection_kwargs(
+            {
+                "final_verdict": "PASS",
+                "phases": {
+                    "validate": {
+                        "verdict": "PASS",
+                        "selected_index": 1,
+                        "selection_reason": selection_reason,
+                    }
+                },
+            },
+            ep_num=4,
+            attempt_num=1,
+            attempt_key="s3:ep4:arc1:a1",
+            selected_strategy="dialogue_focused",
+            score=93,
+            candidate_key="dialogue_focused",
+        )
+
+        assert payload is not None
+        assert payload["selection_reason"] == selection_reason
+
+
 class TestLoadPrevBlueprint:
     def test_returns_none_for_ep1(self, orch):
         result = orch._load_prev_blueprint(1)

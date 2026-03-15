@@ -65,4 +65,4 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-addopts = "--tb=short -o console_output_style=count"
+addopts = "-p no:xdist --tb=short -o console_output_style=count"
