@@ -179,6 +179,32 @@ def test_run_harness_does_not_wait_full_poll_window_after_quick_worker_exit(tmp_
     assert sleeps == [harness.PROCESS_CHECK_INTERVAL_SECONDS]
 
 
+def test_apply_stage0_style_profile_absorbs_additional_pause_prompts(tmp_path):
+    project_root = tmp_path / "projects" / "auto_test_style"
+    style_file = project_root / "stage0_output" / "style_guide.json"
+    fake_db = MagicMock()
+    fake_db.load_anchor.return_value = {}
+    prompt_values: list[str] = []
+
+    def fake_stage0_extended(*, mode):
+        assert mode == 5
+        for _ in range(5):
+            prompt_values.append(input("style replay prompt"))
+        style_file.parent.mkdir(parents=True, exist_ok=True)
+        style_file.write_text("{}", encoding="utf-8")
+
+    app = SimpleNamespace(
+        current_project=SimpleNamespace(paths=SimpleNamespace(root=project_root), db=fake_db),
+        _stage_0_extended=fake_stage0_extended,
+    )
+
+    harness._apply_stage0_style_profile(app, harness.default_profile())
+
+    assert prompt_values[:2] == ["y", "1"]
+    assert prompt_values[2:] == ["", "", ""]
+    assert style_file.exists()
+
+
 def test_run_worker_calls_frontier_with_requested_arc_limit_and_writes_result(tmp_path):
     project_root = tmp_path / "projects" / "auto_test_20260314_120000_00_20260314_10arc"
     (project_root / "logs").mkdir(parents=True, exist_ok=True)
@@ -197,6 +223,7 @@ def test_run_worker_calls_frontier_with_requested_arc_limit_and_writes_result(tm
                 "stop_reason": "requested_arc_limit_reached",
             }
         ),
+        _shutdown_app=MagicMock(),
         memory=None,
     )
 
@@ -205,7 +232,7 @@ def test_run_worker_calls_frontier_with_requested_arc_limit_and_writes_result(tm
         patch.object(harness, "_boot_app", return_value=app),
         patch.object(harness, "_apply_stage0_existing_profile"),
         patch.object(harness, "_apply_stage0_style_profile"),
-        patch.object(harness, "_close_app_handles"),
+        patch.object(harness, "_close_app_handles") as close_handles,
     ):
         payload = harness.run_worker(
             target_project="auto_test_20260314_120000_00_20260314_10arc",
@@ -224,3 +251,5 @@ def test_run_worker_calls_frontier_with_requested_arc_limit_and_writes_result(tm
         (project_root / "logs" / "auto_frontier_lag_worker_result.json").read_text(encoding="utf-8")
     )
     assert worker_result["frontier_result"]["requested_limit_hit"] is True
+    app._shutdown_app.assert_called_once_with()
+    close_handles.assert_not_called()

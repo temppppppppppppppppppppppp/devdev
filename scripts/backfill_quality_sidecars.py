@@ -8,8 +8,11 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from modules.core.db_manager import DBManager
-from modules.core.quality_sidecar_bootstrap import bootstrap_quality_sidecars, inspect_quality_sidecar_health
+from modules.core.db_manager import DBManager  # noqa: E402 - entrypoint path bootstrap must precede imports
+from modules.core.quality_sidecar_bootstrap import (  # noqa: E402 - entrypoint path bootstrap must precede imports
+    bootstrap_quality_sidecars,
+    inspect_quality_sidecar_health,
+)
 
 
 def _project_root() -> Path:

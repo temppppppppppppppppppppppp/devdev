@@ -17,10 +17,9 @@ from __future__ import annotations
 import json
 import logging
 import uuid
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Dict, Optional
 
 from modules.api.run_validator import ValidationResult
 
@@ -45,7 +44,7 @@ class ApprovalRecord:
     status: str  # "approved" | "expired" | "rejected_dual_control"
 
     @classmethod
-    def from_dict(cls, d: dict) -> "ApprovalRecord":
+    def from_dict(cls, d: dict) -> ApprovalRecord:
         def _dt(s: str) -> datetime:
             return datetime.fromisoformat(s)
 
@@ -86,10 +85,10 @@ class RiskApprovalGate:
 
     def __init__(
         self,
-        store: Optional[Dict[str, ApprovalRecord]] = None,
+        store: dict[str, ApprovalRecord] | None = None,
         audit_log_path: Path = _DEFAULT_AUDIT_LOG,
     ) -> None:
-        self._store: Dict[str, ApprovalRecord] = store if store is not None else {}
+        self._store: dict[str, ApprovalRecord] = store if store is not None else {}
         self._audit_log_path = audit_log_path
 
     # ── 공개 API ────────────────────────────────────────────────────────────
@@ -101,9 +100,9 @@ class RiskApprovalGate:
     def validate(
         self,
         key: str,
-        approval_id: Optional[str],
+        approval_id: str | None,
         operator: str = "",
-        _now: Optional[datetime] = None,
+        _now: datetime | None = None,
     ) -> ValidationResult:
         """위험키 승인을 검증하고 결과를 감사 로그에 기록한다.
 
@@ -116,7 +115,7 @@ class RiskApprovalGate:
         Returns:
             ValidationResult — ok=True 이면 실행 허용.
         """
-        now = _now if _now is not None else datetime.now(tz=timezone.utc)
+        now = _now if _now is not None else datetime.now(tz=UTC)
 
         # 1. approval_id 없음
         if not approval_id:
@@ -144,7 +143,7 @@ class RiskApprovalGate:
         # 3. 만료 검사
         expires = record.expires_at
         if expires.tzinfo is None:
-            expires = expires.replace(tzinfo=timezone.utc)
+            expires = expires.replace(tzinfo=UTC)
         if now > expires:
             logger.warning(
                 "RISK_APPROVAL_EXPIRED approval_id=%r expires_at=%s now=%s",
@@ -185,11 +184,11 @@ class RiskApprovalGate:
     def _write_audit(
         self,
         key: str,
-        approval_id: Optional[str],
+        approval_id: str | None,
         operator: str,
         ts: datetime,
         result: ValidationResult,
-        record: Optional[ApprovalRecord] = None,
+        record: ApprovalRecord | None = None,
     ) -> None:
         """JSONL 감사 로그에 한 줄 추가한다."""
         entry: dict = {

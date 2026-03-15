@@ -387,7 +387,7 @@ def run_worker(*, target_project: str, arc_count: int, seed_profile: str, batch_
         _update_manifest(project_root, {"status": "worker_failed", "updated_at": _now_iso(), "error": str(exc)})
         return payload
     finally:
-        _close_app_handles(app)
+        _shutdown_worker_app(app)
 
 
 def _boot_app(project_name: str, selected_genre: dict[str, Any]) -> SovereignApp:
@@ -418,7 +418,7 @@ def _apply_stage0_existing_profile(app: SovereignApp, profile: HarnessProfile) -
     with (
         patch.object(app, "_ui_select_bible", return_value=profile.bible_file),
         patch.object(app, "_ui_select_treatment", return_value=profile.roadmap_file),
-        patch("builtins.input", side_effect=responses),
+        patch("builtins.input", side_effect=_iter_input_responses(responses)),
     ):
         app._phase_0_recovery()
 
@@ -440,8 +440,9 @@ def _apply_stage0_style_profile(app: SovereignApp, profile: HarnessProfile) -> N
         profile.style_analysis_confirm,
         cache_choice,
         "",
+        "",
     ]
-    with patch("builtins.input", side_effect=responses):
+    with patch("builtins.input", side_effect=_iter_input_responses(responses)):
         app._stage_0_extended(mode=5)
 
     style_anchor = app.current_project.db.load_anchor("style_guide") or {}
@@ -457,6 +458,26 @@ def _worker_runtime_input(prompt: str = "") -> str:
     if "[Enter] 메뉴로 돌아가기" in text:
         return ""
     return ""
+
+
+def _iter_input_responses(responses: list[str]) -> Any:
+    iterator = iter(responses)
+
+    def _next_response(*_args, **_kwargs) -> str:
+        return next(iterator, "")
+
+    return _next_response
+
+
+def _shutdown_worker_app(app: SovereignApp) -> None:
+    shutdown = getattr(app, "_shutdown_app", None)
+    if callable(shutdown):
+        try:
+            shutdown()
+            return
+        except Exception:
+            pass
+    _close_app_handles(app)
 
 
 def capture_poll_snapshot(project_root: Path, *, process: subprocess.Popen[Any] | None = None) -> dict[str, Any]:

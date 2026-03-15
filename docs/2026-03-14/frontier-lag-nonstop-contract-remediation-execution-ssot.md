@@ -8,7 +8,7 @@ Commit State:
 - Baseline Commit: `2a4d45a4896282d9cf96e67e8daff9dd0287ef4f`
 - Baseline Dirty Summary: `dirty: 7 tracked, 3 untracked; hotspots: docs/implementation/*, 260314-print.txt`
 - Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `realized in live workspace with main_a.py normal-path prompt removal and targeted frontier regression updates`
+- Resume Drift Summary: `realized in live workspace with main_a.py normal-path prompt removal and targeted frontier regression updates; later superseded for menu7 arc-count policy by docs/2026-03-15/menu7-desired-arc-input-contract-remediation-execution-ssot.md`
 Source Survey Docs:
 - `docs/2026-03-14/codebase-global-rol-db-log-frontier-lag-3pass-audit.md`
 - `docs/2026-03-14/codebase-global-rol-db-log-frontier-lag-reaudit.md`
@@ -129,3 +129,6 @@ Excluded:
 - residual risk:
   - no active residual risk inside this item
   - earlier low-memory runner stalls were traced to watchdog memory waits and one real Frontier Lag abort-loop bug; the abort-loop bug is fixed and a pytest orphan-cleanup rule was added to workspace governance
+- authority note:
+  - superseded only for forward-looking menu `7` Arc-count interaction policy by `docs/2026-03-15/menu7-desired-arc-input-contract-remediation-execution-ssot.md`
+  - bounded harness seams, failure-path prompts, and historical closure evidence in this document remain valid as predecessor context

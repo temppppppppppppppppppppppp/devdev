@@ -45,6 +45,13 @@ def test_legitimate_korean_question_prompt_is_allowed(tmp_path):
     assert collect_findings([target]) == []
 
 
+def test_mixed_ascii_hangul_terminal_question_token_is_allowed(tmp_path):
+    target = tmp_path / "arc_prompt.txt"
+    target.write_text("Arc\ub85c?\n", encoding="utf-8")
+
+    assert collect_findings([target]) == []
+
+
 def test_hangul_cjk_mixed_token_is_reported(tmp_path):
     target = tmp_path / "mixed.txt"
     target.write_text("\u4e2d\uac00\n", encoding="utf-8")

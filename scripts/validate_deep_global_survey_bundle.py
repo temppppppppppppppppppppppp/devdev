@@ -6,7 +6,6 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
 META_RE = re.compile(r"^(?P<key>[A-Za-z][A-Za-z0-9 /_-]*):(?:\s*(?P<value>.+?)\s*)?$")
 EXEC_DOC_RE = re.compile(r"`(?P<path>docs/[^`]+-execution-ssot\.md)`")

@@ -1,14 +1,14 @@
 ﻿# persistence-observability-finalization-and-sink-alignment-remediation Execution SSOT
 
 Date: 2026-03-15
-Status: execution-ready
+Status: closed
 Canonical Path: `docs/2026-03-15/persistence-observability-finalization-and-sink-alignment-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/persistence-observability-finalization-and-sink-alignment-remediation-execution-ssot.md`
 Commit State:
 - Baseline Commit: `d2982aa2790f5ab81529f1e8d87cf6f6006f13c9`
 - Baseline Dirty Summary: `dirty: unrelated investment/style/pdf/log artifacts already present`
 - Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `artifact-truth addendum and 15일 transcript supplement increase this lane's severity and scope`
+- Resume Drift Summary: `lane was realized in bbb00a77; current closure refresh revalidates persistence/session/artifact contracts and removes the final temp residue`
 Source Survey Docs: `docs/2026-03-15/codebase-global-log-evidence-merged-3pass-audit.md`; `docs/2026-03-15/codebase-global-log-evidence-merged-deep-global-survey.md`
 Evidence Artifacts: `docs/2026-03-15/codebase-global-log-evidence-merged-runtime-log-db-evidence.txt`; `docs/2026-03-15/codebase-global-log-evidence-merged-stage4-rationale-mismatch-table.json`; `docs/2026-03-15/codebase-global-log-evidence-merged-artifact-truth-evidence.txt`; `docs/2026-03-15/codebase-global-log-evidence-merged-artifact-hash-mismatch-table.json`; `docs/2026-03-15/codebase-global-log-evidence-merged-side-effects.txt`; `15일.txt`
 Side-Effect Coverage: covered
@@ -137,8 +137,8 @@ Excluded:
 - Do not widen this lane into desktop transport repair.
 
 ## 12. Temp Queue Notes
-- temp status: pending
-- cleanup condition: remove temp mirror only after realization is validated and closed
+- temp status: closed
+- cleanup condition: satisfied; remove the temp mirror during this closure refresh
 - roadmap dependency: first item in `docs/2026-03-15/codebase-global-log-evidence-merged-execution-roadmap.md`
 
 ## 13. Validation And Closure Hooks
@@ -146,3 +146,32 @@ Excluded:
 - bundle validator: `python scripts/validate_deep_global_survey_bundle.py --survey-doc docs/2026-03-15/codebase-global-log-evidence-merged-deep-global-survey.md --strict`
 - closure harness: `docs/implementation/execution-closure-harness.md`
 - execution-start rule: re-run the document 3-pass audit and confirm at least 95% confidence against the current workspace state before patching code from this document
+
+## 14. Closure Evidence
+- Implemented:
+  - `main_a.py`
+  - `modules/core/artifact_logging.py`
+  - `modules/core/db_manager.py`
+  - `modules/core/services/audit_service.py`
+  - `modules/core/session_logger.py`
+  - `modules/core/stage4_interview_round.py`
+  - `tests/test_artifact_logging.py`
+  - `tests/test_audit_service.py`
+  - `tests/test_db_manager.py`
+  - `tests/test_session_logger.py`
+  - `tests/test_stage4_interview_round.py`
+- Realized outcomes:
+  - late-write persistence ownership is now bounded behind the realized shutdown/finalization path recorded in `bbb00a77`
+  - artifact/content-hash capture moved onto the realized durable-write path instead of the earlier stale pre-final-write seam
+  - audit/session/stage4 sinks now align with the bounded runtime evidence and no longer require this lane to stay in the temp queue
+- Verification:
+  - `python -m py_compile main_a.py modules/core/artifact_logging.py modules/core/db_manager.py modules/core/services/audit_service.py modules/core/session_logger.py modules/core/stage4_interview_round.py tests/test_artifact_logging.py tests/test_audit_service.py tests/test_db_manager.py tests/test_session_logger.py tests/test_stage4_interview_round.py`
+  - `python -m pytest tests/test_artifact_logging.py` -> `5 passed`
+  - `python -m pytest tests/test_audit_service.py -k "runtime_audit"` -> `1 passed, 11 deselected`
+  - `python -m pytest tests/test_db_manager.py -k "stage_attempts_for_arc or save_stage_attempt_persists_rationale_fields"` -> `2 passed, 28 deselected`
+  - `python -m pytest tests/test_session_logger.py` -> `21 passed`
+  - `python -m pytest tests/test_stage4_interview_round.py` -> `76 passed`
+  - `python -m pytest tests/test_failure_analyzer.py -k "sink_alignment_uses_selection_candidate_key_from_episode_production_when_available or failure_analyzer_summary_reports_soft_failures"` -> `2 passed, 11 deselected`
+  - `python -m pytest tests/test_stage4_orchestrator.py -k "runtime_audit_summary"` -> `5 passed, 51 deselected`
+- Residual risk:
+  - no fresh bounded live rerun or artifact-hash sweep was repeated in this cleanup pass; closure relies on the realized lane evidence from `bbb00a77` plus the current targeted regression recheck

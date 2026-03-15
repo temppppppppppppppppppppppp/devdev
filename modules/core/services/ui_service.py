@@ -48,9 +48,26 @@ class UIService:
             return self._ui.prompt(prompt, component="Stage0UI", stage="stage0", **context)
         self._log(prompt, event_kind="prompt", render_format="prompt", **context)
         try:
-            return input(prompt)
+            response = input(prompt)
         except (EOFError, KeyboardInterrupt, ValueError):
-            return ""
+            response = ""
+        self._record_hidden_prompt_response(prompt, response, **context)
+        return response
+
+    def _record_hidden_prompt_response(self, prompt: str, response: str, **context) -> None:
+        meta = context.pop("meta", {})
+        if not isinstance(meta, dict):
+            meta = {"value": meta}
+        meta.setdefault("prompt_text", prompt)
+        self._log(
+            "[prompt_response]",
+            event_kind="prompt_response",
+            render_format="input",
+            selection_value=response,
+            visible=False,
+            meta=meta,
+            **context,
+        )
 
     def _selection(self, label: str, selection_value, **context) -> None:
         if hasattr(type(self._ui), "selection"):
@@ -220,3 +237,59 @@ class UIService:
             self._record_hidden_input_selection(prompt, value, prompt_id=prompt_id)
             return value
         return default
+
+    def get_choice_input(
+        self,
+        prompt: str,
+        choices,
+        default: str | None = None,
+        attempts: int = 3,
+        prompt_id: str | None = None,
+        invalid_message: str | None = None,
+    ) -> str | None:
+        normalized_choices = {str(choice).strip().lower() for choice in choices if str(choice).strip()}
+        normalized_default = str(default).strip().lower() if default is not None else None
+        if not normalized_choices:
+            return normalized_default
+
+        if normalized_default is not None and normalized_default not in normalized_choices:
+            self._log(f"⚠️ 기본 선택값 {default}이(가) 허용된 선택지에 없습니다.", level="warning")
+            normalized_default = None
+
+        allowed_label = ", ".join(sorted(normalized_choices))
+        for _ in range(attempts):
+            raw = self._prompt(prompt, prompt_id=prompt_id).strip().lower()
+            if raw == "":
+                return normalized_default
+            if raw in normalized_choices:
+                return raw
+            self._log(invalid_message or f"⚠️ 허용된 입력: {allowed_label}", level="warning")
+        return normalized_default
+
+    def confirm(
+        self,
+        prompt: str,
+        *,
+        default: bool = False,
+        attempts: int = 3,
+        prompt_id: str | None = None,
+    ) -> bool:
+        yes_values = {"y", "yes"}
+        no_values = {"n", "no"}
+        choice = self.get_choice_input(
+            prompt,
+            choices=yes_values | no_values,
+            default="y" if default else "n",
+            attempts=attempts,
+            prompt_id=prompt_id,
+            invalid_message="⚠️ y 또는 n을 입력하세요.",
+        )
+        return choice in yes_values
+
+    def pause(
+        self,
+        prompt: str = "\n[Enter] Return to menu",
+        *,
+        prompt_id: str | None = None,
+    ) -> None:
+        self._prompt(prompt, prompt_id=prompt_id)

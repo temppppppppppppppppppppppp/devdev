@@ -1639,12 +1639,25 @@ async def status_endpoint(request: Request) -> JSONResponse:
         {"ok": true, "code": "OK", "data": {"state": "idle|running|...", "run_id": "..."}}
     """
     runner: ProcessRunner = request.app.state.runner
+    broker: PromptBroker = request.app.state.prompt_broker
 
     data: dict = {"state": runner.state}
     if runner.run_id is not None:
         data["run_id"] = runner.run_id
     if runner.pid is not None:
         data["pid"] = runner.pid
+
+    diagnostics = runner.get_runtime_diagnostics()
+    for field in ("key", "sub_key", "mode", "started_at", "duration_ms", "last_prompt_step"):
+        value = diagnostics.get(field)
+        if value is not None:
+            data[field] = value
+
+    if runner.run_id is not None:
+        prompt_snapshot = broker.snapshot_run(runner.run_id)
+        if prompt_snapshot["pending_prompt_count"] > 0:
+            data["pending_prompt_count"] = prompt_snapshot["pending_prompt_count"]
+            data["pending_prompts"] = prompt_snapshot["pending_prompts"]
 
     return JSONResponse(status_code=200, content={"ok": True, "code": "OK", "data": data})
 

@@ -14,13 +14,14 @@ from pathlib import Path
 from statistics import mean
 from typing import Any
 
-
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from modules.core.response_schemas import validate_bible_structure, validate_treatment_structure
-
+from modules.core.response_schemas import (  # noqa: E402 - entrypoint path bootstrap must precede imports
+    validate_bible_structure,
+    validate_treatment_structure,
+)
 
 TR_BI_PAIRS = [
     ("dynasty_heir_possession", "a"),

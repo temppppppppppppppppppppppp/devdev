@@ -91,6 +91,7 @@ x-desktop-bridge-transport:
       envelope_version: desktop_bridge_v1
       network_error_code: NETWORK_ERROR
       http_error_code_format: HTTP_<status_code>
+      request_timeout_ms: 5000
       returned_shape:
         ok: false
         code: NETWORK_ERROR | HTTP_<status_code>
@@ -105,6 +106,7 @@ x-desktop-bridge-transport:
       operator_meaning:
         - desktop transport codes come from Electron main, not from backend ErrorEnvelope.code.
         - backend_code and backend_message are optional diagnostics echoed inside data when bridgeFetch received a backend JSON error body.
+        - bridge-managed HTTP calls abort after the documented request_timeout_ms and return NETWORK_ERROR with a timeout message.
   websocket_runtime:
     url: ws://127.0.0.1:8300/events
     source_files:
@@ -454,6 +456,55 @@ components:
             pid:
               type: integer
               nullable: true
+            key:
+              type: string
+              nullable: true
+            sub_key:
+              type: string
+              nullable: true
+            mode:
+              type: string
+              nullable: true
+            started_at:
+              type: string
+              nullable: true
+            duration_ms:
+              type: integer
+              nullable: true
+            last_prompt_step:
+              type: string
+              nullable: true
+            pending_prompt_count:
+              type: integer
+              minimum: 0
+            pending_prompts:
+              type: array
+              items:
+                type: object
+                required: [prompt_id, step_id, input_type, default, timeout_sec, prompt_text]
+                properties:
+                  prompt_id:
+                    type: string
+                  step_id:
+                    type: string
+                  input_type:
+                    type: string
+                    enum: [enum, int, string, bool, enter, multiline]
+                  default: {}
+                  timeout_sec:
+                    type: integer
+                  prompt_text:
+                    type: string
+                  options:
+                    type: array
+                    items:
+                      type: object
+                      required: [key, label]
+                      properties:
+                        key:
+                          type: string
+                        label:
+                          type: string
 
     ErrorEnvelope:
       type: object

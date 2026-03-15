@@ -623,6 +623,9 @@ class TestBuildMandatoryContext:
                     "verdict": "PASS_WITH_FIX",
                     "failure_category": "schema",
                     "reject_reason": "npc_deaths 타입 보정",
+                    "verdict_reason": "Keep the prior episode state intact.",
+                    "runtime_advisory": "[Advisory digest] keep chronology visible.",
+                    "retry_directives": "Avoid repeating the prior ending beat.",
                 },
             ]
         )
@@ -647,6 +650,9 @@ class TestBuildMandatoryContext:
         assert "[Stage 2 실패/보정 이력]" in result["mandatory_context"]
         assert "continuity(1)" in result["mandatory_context"]
         assert "timeline.start/end 불일치" in result["mandatory_context"]
+        assert "대표 보정/재시도 지시:" in result["mandatory_context"]
+        assert "keep chronology visible." in result["mandatory_context"]
+        assert "Avoid repeating the prior ending beat." in result["mandatory_context"]
         ctx.current_project.db.get_stage_attempts_for_arc.assert_called_once_with(3, stages=(2,), limit=12)
 
     @patch("modules.core.stage4_context_builder._build_justification", return_value="just")
@@ -740,10 +746,10 @@ class TestBuildMandatoryContext:
 
         result = cb.build_mandatory_context(
             next_ep=5,
-            arc_data={"arc_no": 1, "tactical_doc": "?꾩닠"},
+            arc_data={"arc_no": 1, "tactical_doc": "tactical note"},
             arc_tactical="",
             prev_text="x" * 200,
-            prev_ending="?붾뵫",
+            prev_ending="ending beat",
             hud_report="HUD",
             writer_agent=MagicMock(),
             anchor_sys=anchor_sys,

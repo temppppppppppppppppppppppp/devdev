@@ -55,7 +55,7 @@ class InvestmentArithmeticChecker:
         self.max_leverage = float(max_leverage)
 
     @classmethod
-    def from_yaml(cls) -> "InvestmentArithmeticChecker":
+    def from_yaml(cls) -> InvestmentArithmeticChecker:
         """validation.yaml 임계값으로 초기화."""
         return cls(
             tolerance=float(_threshold("investment_math.python_tolerance", 0.15)),

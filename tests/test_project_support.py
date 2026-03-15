@@ -127,6 +127,32 @@ def test_load_work_guard_summary_handles_missing_file(tmp_path):
     assert payload["tracking_slots"] == 0
 
 
+def test_load_work_guard_summary_marks_invalid_yaml(tmp_path):
+    project_dir = tmp_path / "demo"
+    (project_dir / "config").mkdir(parents=True)
+    (project_dir / "config" / "work_guard.yaml").write_text("work_identity: [broken", encoding="utf-8")
+
+    payload = load_work_guard_summary(project_dir)
+
+    assert payload["work_guard_exists"] is True
+    assert payload["work_guard_valid"] is False
+    assert "YAML parse failed" in payload["work_guard_error"]
+    assert payload["tracking_slots"] == 0
+
+
+def test_inspect_project_support_assets_marks_invalid_work_guard_not_ready(tmp_path):
+    project_dir = tmp_path / "demo"
+    (project_dir / "config").mkdir(parents=True)
+    (project_dir / "stage0_output").mkdir(parents=True)
+    (project_dir / "config" / "work_guard.yaml").write_text("work_identity: [broken", encoding="utf-8")
+
+    payload = inspect_project_support_assets(project_dir)
+
+    assert payload["work_guard"]["exists"] is True
+    assert payload["work_guard"]["ready"] is False
+    assert payload["work_guard"]["work_guard_valid"] is False
+
+
 def test_normalize_external_pov_insert_policy_defaults_by_primary_pov():
     assert normalize_external_pov_insert_policy("", primary_pov="3인칭") == "제한적 허용"
     assert normalize_external_pov_insert_policy("허용", primary_pov="1인칭") == "제한적 허용"

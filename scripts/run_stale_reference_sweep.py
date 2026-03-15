@@ -7,7 +7,6 @@ from pathlib import Path
 
 from ops_support import DOCS, ROOT, latest_dated_dir
 
-
 TEXT_FILE_SUFFIXES = {".md", ".txt", ".json", ".yaml", ".yml"}
 CLAUDE_RE = re.compile(r"\bCLAUDE\.md\b")
 DOCS_TEMP_RE = re.compile(r"\bdocs/temp\b")

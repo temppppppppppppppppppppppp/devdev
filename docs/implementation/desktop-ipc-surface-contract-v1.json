@@ -48,6 +48,12 @@
       "active_consumer": "geuldobi-desktop/src/index.html"
     },
     {
+      "name": "getStatus",
+      "channel": "bridge:status",
+      "owner": "command readiness / reconnect resync",
+      "active_consumer": "geuldobi-desktop/src/index.html"
+    },
+    {
       "name": "getQualitySummary",
       "channel": "bridge:get-quality-summary",
       "owner": "quality operator surface",
@@ -163,13 +169,6 @@
     }
   ],
   "dead_candidate_preload_methods": [
-    {
-      "name": "getStatus",
-      "channel": "bridge:status",
-      "classification": "dead-candidate",
-      "reason": "no active renderer consumer in index.html or splash.js; retain only as manual/debug compatibility surface",
-      "must_not_be_treated_as_live": true
-    },
     {
       "name": "getWorkspacePath",
       "channel": "workspace:get-path",

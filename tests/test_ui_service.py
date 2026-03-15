@@ -81,6 +81,34 @@ class TestGetIntInput:
         assert selection_calls[0].kwargs["meta"]["prompt_text"] == "prompt: "
 
 
+class TestPromptHelpers:
+    def test_choice_input_records_hidden_prompt_response_on_fallback(self, svc, ui_mock):
+        with patch("builtins.input", return_value="y"):
+            result = svc.get_choice_input("prompt: ", choices={"y", "n"})
+
+        assert result == "y"
+        prompt_response_calls = [
+            call
+            for call in ui_mock.log.call_args_list
+            if call.kwargs.get("event_kind") == "prompt_response"
+        ]
+        assert len(prompt_response_calls) == 1
+        assert prompt_response_calls[0].args[0] == "[prompt_response]"
+        assert prompt_response_calls[0].kwargs["selection_value"] == "y"
+        assert prompt_response_calls[0].kwargs["meta"]["prompt_text"] == "prompt: "
+
+    def test_confirm_uses_default_on_empty(self, svc):
+        with patch("builtins.input", return_value=""):
+            assert svc.confirm("continue? ", default=True) is True
+
+    def test_pause_uses_prompt_surface(self, svc, ui_mock):
+        with patch("builtins.input", return_value=""):
+            svc.pause("[Enter]", prompt_id="pause_test")
+
+        prompt_calls = [call for call in ui_mock.log.call_args_list if call.args and call.args[0] == "[Enter]"]
+        assert len(prompt_calls) == 1
+
+
 # ── select_bible ─────────────────────────────────────────────────
 
 
