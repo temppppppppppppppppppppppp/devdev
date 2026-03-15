@@ -9,6 +9,7 @@ from scripts.investment_corpus_support import (
     _make_local_examples,
     build_corpus,
     build_gemini_dataset,
+    build_pseudonymized_corpus,
     estimate_token_count,
     extract_epub_text,
     parse_episode_number,
@@ -241,3 +242,45 @@ def test_build_corpus_and_gemini_dataset(tmp_path: Path) -> None:
     assert first_record["contents"][1]["role"] == "model"
     assert len(train_lines) == dataset_manifest["train_example_count"]
     assert len(val_lines) == dataset_manifest["val_example_count"]
+
+
+def test_build_pseudonymized_corpus_rewrites_people_and_orgs(tmp_path: Path) -> None:
+    source_root = tmp_path / "source"
+    raw_root = tmp_path / "raw"
+    pseudo_root = tmp_path / "pseudo"
+    title = "금수저 투자백서"
+    title_dir = source_root / f"[연재]{title}" / "연재이펍"
+    title_dir.mkdir(parents=True)
+
+    repeated_body = (
+        "<p>강도윤은 태성그룹의 후계 구도를 냉정하게 읽었다.</p>"
+        "<p>강도윤이 태성그룹 본사로 향하자 태성그룹 전략실이 술렁였다.</p>"
+        "<p>강도윤은 결국 태성그룹 지분 구조를 뒤집겠다고 선언했다.</p>"
+    )
+    for episode in range(1, 3):
+        build_epub(
+            title_dir / f"{title} {episode}화.epub",
+            manifest_items=[("chapter1", "Text/chapter_1.xhtml")],
+            spine_ids=["chapter1"],
+            files={"OEBPS/Text/chapter_1.xhtml": html_doc(repeated_body * 20)},
+        )
+
+    build_corpus(source_root, raw_root, [title])
+    pseudo_manifest = build_pseudonymized_corpus(
+        raw_root,
+        pseudo_root,
+        min_person_frequency=2,
+        min_org_frequency=2,
+    )
+
+    pseudo_text = (pseudo_root / "titles" / "금수저_투자백서" / "0001.txt").read_text(encoding="utf-8")
+    entity_map = json.loads((pseudo_root / "entity_map.json").read_text(encoding="utf-8"))
+    title_map = entity_map["titles"][title]
+
+    assert pseudo_manifest["summary"]["pseudonymized_title_count"] == 1
+    assert "강도윤" in title_map["persons"]
+    assert "태성그룹" in title_map["organizations"]
+    assert "강도윤" not in pseudo_text
+    assert "태성그룹" not in pseudo_text
+    assert title_map["persons"]["강도윤"] in pseudo_text
+    assert title_map["organizations"]["태성그룹"] in pseudo_text

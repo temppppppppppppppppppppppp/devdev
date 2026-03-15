@@ -1,0 +1,45 @@
+{
+  "tag": "test_tag",
+  "timestamp": "2026-03-15 10:54:09",
+  "summary_role": "runtime_heartbeat_with_proof_digest",
+  "total_events": 1,
+  "counts": {
+    "evt": 1
+  },
+  "latest_event_type": "evt",
+  "recent_events": [
+    {
+      "type": "evt",
+      "message": "msg"
+    }
+  ],
+  "contract": {
+    "summary_scope": "runtime_heartbeat_plus_compact_proof_digest",
+    "attempt_truth_authoritative": false,
+    "authoritative_attempt_sinks": [
+      "stage_attempts",
+      "pass_rate_monitor",
+      "session_decisions",
+      "episode_production",
+      "director_selections"
+    ],
+    "proof_digest_truth_scope": "committed_persistence_only",
+    "authoritative_attempt_truth_note": "Use DB/JSONL/artifact sink join for authoritative attempt truth."
+  },
+  "proof_digest": {
+    "available": false,
+    "status": "unavailable",
+    "artifacts": {
+      "db_available": false,
+      "session_decisions_exists": false,
+      "ui_events_jsonl_exists": false,
+      "pass_rate_monitor_exists": false,
+      "episode_production_exists": false,
+      "runtime_audit_jsonl_exists": true,
+      "ui_events_db_available": false,
+      "ui_events_count": 0,
+      "ui_event_coverage_status": "missing"
+    },
+    "stages": {}
+  }
+}
