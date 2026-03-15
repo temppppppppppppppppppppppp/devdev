@@ -1,5 +1,6 @@
 """Markdown to PDF converter with Korean font support + clickable TOC."""
 import re
+import sys
 from pathlib import Path
 
 from fpdf import FPDF
@@ -33,6 +34,7 @@ def convert(md_path, pdf_path):
     in_toc = False
     toc_deferred = []  # (page, x, y, w, h, link_id) — 목차 링크 나중에 삽입
     links_set = set()  # set_link 완료된 title
+    keep_next_h2_on_page = False
 
     def parse_table(table_lines):
         rows = []
@@ -78,6 +80,14 @@ def convert(md_path, pdf_path):
             pdf.set_y(y_before + h)
 
     def draw_image(alt_text, rel_path):
+        width_scale = 1.0
+        if "|w=" in rel_path:
+            rel_path, width_hint = rel_path.rsplit("|w=", 1)
+            try:
+                width_scale = float(width_hint.strip())
+            except ValueError:
+                width_scale = 1.0
+            width_scale = max(0.2, min(width_scale, 1.0))
         img_path = (md_dir / rel_path).resolve()
         if not img_path.exists():
             pdf.set_font("Malgun", "B", 9)
@@ -91,7 +101,7 @@ def convert(md_path, pdf_path):
             img_w_px, img_h_px = img.size
 
         max_w = pdf.w - pdf.l_margin - pdf.r_margin
-        display_w = max_w
+        display_w = max_w * width_scale
         display_h = img_h_px * display_w / img_w_px
         caption_h = 6 if alt_text else 0
         required_h = display_h + caption_h + 4
@@ -100,7 +110,8 @@ def convert(md_path, pdf_path):
             pdf.add_page()
 
         y_before = pdf.get_y()
-        pdf.image(str(img_path), x=pdf.l_margin, y=y_before, w=display_w)
+        x_before = pdf.l_margin + ((max_w - display_w) / 2)
+        pdf.image(str(img_path), x=x_before, y=y_before, w=display_w)
         pdf.set_y(y_before + display_h + 2)
 
         if alt_text:
@@ -150,6 +161,17 @@ def convert(md_path, pdf_path):
             pdf.ln(3)
             continue
 
+        if stripped == "<!-- KEEP_NEXT_H2_ON_PAGE -->":
+            keep_next_h2_on_page = True
+            continue
+
+        if stripped == "<!-- PAGEBREAK -->":
+            top_threshold = getattr(pdf, "t_margin", 10) + 6
+            if pdf.get_y() > top_threshold:
+                pdf.add_page()
+            in_toc = False
+            continue
+
         # 구분선
         if stripped == "---":
             y = pdf.get_y()
@@ -178,7 +200,10 @@ def convert(md_path, pdf_path):
                 pdf.ln(4)
             else:
                 in_toc = False
-                pdf.add_page()
+                if keep_next_h2_on_page:
+                    keep_next_h2_on_page = False
+                else:
+                    pdf.add_page()
             # 링크 대상 등록
             if title in heading_links:
                 pdf.set_link(heading_links[title], y=pdf.get_y(), page=pdf.page_no())
@@ -282,6 +307,12 @@ def convert(md_path, pdf_path):
 
 
 if __name__ == "__main__":
-    md_file = r"C:\Users\wjjo\Desktop\글도비\docs\2026-03-11\프로젝트승인요청서-글도비.md"
-    pdf_file = r"C:\Users\wjjo\Desktop\글도비\docs\2026-03-11\프로젝트승인요청서-글도비.pdf"
+    if len(sys.argv) == 3:
+        md_file = sys.argv[1]
+        pdf_file = sys.argv[2]
+    elif len(sys.argv) == 1:
+        md_file = r"C:\Users\wjjo\Desktop\글도비\docs\2026-03-11\프로젝트승인요청서-글도비.md"
+        pdf_file = r"C:\Users\wjjo\Desktop\글도비\docs\2026-03-11\프로젝트승인요청서-글도비.pdf"
+    else:
+        raise SystemExit("Usage: python md2pdf.py <input.md> <output.pdf>")
     convert(md_file, pdf_file)

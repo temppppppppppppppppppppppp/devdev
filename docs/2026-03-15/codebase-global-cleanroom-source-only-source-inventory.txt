@@ -1,0 +1,50 @@
+Topic: codebase-global-cleanroom-source-only
+Date: 2026-03-15
+Scope Basis: current source tree only
+Excluded From Basis: prior survey docs, dated audit docs, live logs, DB files, projects/, data/, node_modules/, dist/, build/, __pycache__/
+
+Active source roots:
+- main_a.py: 1 file, 229780 bytes
+- modules: 265 files, 7241852 bytes
+- scripts: 36 files, 643193 bytes
+- tests: 354 files, 4217904 bytes
+- UI: 637 files, 351444333 bytes
+- geuldobi-desktop: 49 files, 1272083 bytes
+- config: 55 files, 21152181 bytes
+
+Immediate active subtrees:
+- modules/api: 8 files, 127262 bytes
+- modules/core: 180 files, 4884580 bytes
+- modules/domain: 48 files, 1807979 bytes
+- modules/models: 5 files, 16067 bytes
+- modules/protocols: 5 files, 27268 bytes
+- modules/validation: 17 files, 378696 bytes
+- geuldobi-desktop/src: 43 files, 1066488 bytes
+- config/prompts: 23 files, 277155 bytes
+- config/style_references: 11 files, 20752599 bytes
+
+Test surface notes:
+- root-level and nested test files observed: 308 by direct `test_*.py` sweep
+- subtrees present: chaos, e2e, integration, property, stage3_isolated_test, stage4_v2_test
+- category tags from heuristic text scan are broad and approximate; they were used only as support evidence, not as sole authority
+
+Operator and persistence anchor counts from source sweep:
+- raw input(...): 91
+- _get_int_input(...): 5
+- console.input(...): 2
+- save_anchor(...): 78
+- load_anchor(...): 146
+- save_stage_attempt: 76
+- save_director_selection: 87
+- save_ui_event: 19
+- save_llm_call: 28
+- write_audit_summary: 90
+- flush_audit_buffer: 77
+- sqlite3.connect(...): 23
+- .commit(...): 100
+- .rollback(...): 32
+- .jsonl literal mentions: 128
+
+Scope interpretation:
+- UI/ is asset-heavy and not treated as the primary operator-control runtime surface
+- geuldobi-desktop/src, modules/api, modules/core/services, and main_a.py form the live operator/control surface
