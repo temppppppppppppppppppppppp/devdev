@@ -1,0 +1,30 @@
+project_folder	projects/00_260315
+plain_session_log	projects/00_260315/logs/session_20260315_144654.log
+plain_log_session_token	20260315_144654
+structured_session_id	20260315_144741
+log_line_batch_auto	270	[FrontierLag] auto-selected default batch_size: 3 (remaining_design=60)
+log_line_db_closed	11934	[System] DB ?? ???? ???
+log_line_ui_sink_fail_1	11935	operator event sink failed: Cannot operate on a closed database.
+log_line_shutdown_complete	11936	? [System] ?? ??
+log_line_ui_sink_fail_2	11937	operator event sink failed: Cannot operate on a closed database.
+log_line_llm_call_fail	11945	[llm_calls] save_llm_call failed (non-blocking): Cannot operate on a closed database.
+summary_timestamp	2026-03-15 17:24:09
+summary_tag	stage4_complete
+summary_truth_scope	committed_persistence_only
+summary_stage4_selection_reason_mismatches	2
+summary_stage4_verdict_reason_mismatches	2
+summary_ui_events_db_count	1419
+summary_ui_event_coverage_status	ok
+pass_rate_last_updated	2026-03-15T17:24:25.933860
+pass_rate_total_records	29
+ui_events_jsonl_count	1448
+ui_events_db_count	1446
+ui_events_missing_in_db	2
+decisions_jsonl_count	32
+state_changes_jsonl_count	22
+llm_io_jsonl_count	342
+llm_io_last_ts	2026-03-15T17:24:58
+llm_calls_db_count	378
+episode_production_jsonl_count	19
+stage_attempts_by_stage	{"2": 3, "3": 12, "4": 14}
+director_selections_by_stage	{"2": 3, "3": 12, "4": 14}

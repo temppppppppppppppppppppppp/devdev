@@ -1,0 +1,7 @@
+main_a.py	files=1	textish=1
+modules	files=265	textish=265
+scripts	files=36	textish=35
+tests	files=354	textish=349
+UI	files=637	textish=6
+geuldobi-desktop	files=49	textish=16
+config	files=55	textish=49

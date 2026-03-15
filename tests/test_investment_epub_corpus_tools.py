@@ -5,11 +5,14 @@ import zipfile
 from pathlib import Path
 
 from scripts.investment_corpus_support import (
+    _build_style_control_examples,
+    _cliffhanger_type,
     _make_bridge_example,
     _make_local_examples,
     build_corpus,
     build_gemini_dataset,
     build_pseudonymized_corpus,
+    build_style_control_dataset,
     estimate_token_count,
     extract_epub_text,
     parse_episode_number,
@@ -284,3 +287,90 @@ def test_build_pseudonymized_corpus_rewrites_people_and_orgs(tmp_path: Path) -> 
     assert "태성그룹" not in pseudo_text
     assert title_map["persons"]["강도윤"] in pseudo_text
     assert title_map["organizations"]["태성그룹"] in pseudo_text
+
+
+def test_style_control_example_builder_extracts_control_profile() -> None:
+    text = "\n\n".join(
+        [
+            "1화. 돌아오다.",
+            ("나는 무너진 그룹의 잔해를 바라봤다. " * 18).strip(),
+            ("“이번엔 절대 안 진다.” 나는 낮게 중얼거렸다. " * 12).strip(),
+            "***",
+            ("투자자들은 나를 비웃었지만 나는 지분 구조를 다시 계산했다. " * 18).strip(),
+            ("결국 나는 복수를 시작하겠다고 선언했다. " * 15).strip(),
+        ]
+    )
+
+    examples, profile = _build_style_control_examples(
+        "독식하는 재벌 3세",
+        text,
+        genre="현대판타지 / 재벌 / 기업 / 회귀",
+        body_anchor_tokens=80,
+        body_completion_tokens=120,
+        ending_prompt_tokens=70,
+        ending_completion_tokens=90,
+    )
+
+    assert len(examples) == 2
+    assert profile["pov"] == "1인칭 내면 밀착"
+    assert profile["scene_count"] >= 2
+    assert profile["cliffhanger_type"] in {"선언형", "다음 국면 예고형"}
+    assert "회차 목표:" in examples[0]["prompt"]
+    assert "문체 규칙:" in examples[1]["prompt"]
+
+
+def test_cliffhanger_classifier_detects_reward_ending() -> None:
+    tail = "드디어 모든 계약이 끝났다. 모두가 웃었고 그는 행복한 미소를 지었다. 完."
+    assert _cliffhanger_type(tail) == "보상형"
+
+
+def test_build_style_control_dataset_writes_manifest_and_jsonl(tmp_path: Path) -> None:
+    input_root = tmp_path / "input"
+    title_slug = "독식하는_재벌_3세"
+    title_root = input_root / "titles" / title_slug
+    title_root.mkdir(parents=True)
+    for episode in range(1, 5):
+        body = "\n\n".join(
+            [
+                f"{episode}화. 테스트.",
+                ("나는 시장의 흐름을 읽었다. " * 18).strip(),
+                ("“이번 거래는 내가 먹는다.” " * 12).strip(),
+                "***",
+                ("지분 구조를 흔들며 투자자들을 압박했다. " * 16).strip(),
+                ("결국 나는 다음 판을 열겠다고 선언했다. " * 14).strip(),
+            ]
+        )
+        (title_root / f"{episode:04d}.txt").write_text(body, encoding="utf-8")
+
+    manifest = {
+        "titles": [
+            {
+                "title": "독식하는 재벌 3세",
+                "output_dir": str(title_root),
+                "written_episode_count": 4,
+            }
+        ]
+    }
+    (input_root / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    output_root = tmp_path / "style_control"
+    dataset_manifest = build_style_control_dataset(
+        input_root,
+        title="독식하는 재벌 3세",
+        output_root=output_root,
+        holdout_fraction=0.25,
+        body_anchor_tokens=80,
+        body_completion_tokens=120,
+        ending_prompt_tokens=70,
+        ending_completion_tokens=90,
+    )
+
+    train_lines = (output_root / "train.jsonl").read_text(encoding="utf-8").strip().splitlines()
+    val_lines = (output_root / "val.jsonl").read_text(encoding="utf-8").strip().splitlines()
+
+    assert dataset_manifest["train_example_count"] > 0
+    assert dataset_manifest["val_example_count"] > 0
+    assert dataset_manifest["window_strategy"] == "control_conditioned_episode_segments"
+    assert dataset_manifest["cost_estimate"]["epoch_3"]["estimated_cost_krw"] > 0
+    assert len(train_lines) == dataset_manifest["train_example_count"]
+    assert len(val_lines) == dataset_manifest["val_example_count"]
