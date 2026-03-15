@@ -66,7 +66,7 @@ def _build_frontier_app(*, total_arcs: int, batch_size: int, stage3_results, pla
 def test_frontier_lag_uses_default_batch_without_boundary_input():
     app = _build_frontier_app(
         total_arcs=2,
-        batch_size=1,
+        batch_size=2,
         stage3_results=[
             {"success_count": 1, "fail_count": 0},
             {"success_count": 1, "fail_count": 0},
@@ -115,7 +115,7 @@ def test_frontier_lag_uses_default_batch_without_boundary_input():
         with patch("builtins.input", side_effect=_input_side_effect):
             SovereignApp._one_stop_pipeline_frontier_lag(app)
 
-    assert app._get_int_input.call_count == 0
+    app._get_int_input.assert_not_called()
     assert app._stage3_orch.stage_3_batch_blueprinting.call_count == 2
     assert app._stage_4_v2_chief_writer.call_count == 2
     default_batch_logs = [
@@ -209,7 +209,7 @@ def test_frontier_lag_auto_shrinks_last_tranche_to_remaining():
         with patch("builtins.input", side_effect=_input_side_effect):
             SovereignApp._one_stop_pipeline_frontier_lag(app)
 
-    assert app._get_int_input.call_count == 0
+    app._get_int_input.assert_not_called()
     assert app._stage3_orch.stage_3_batch_blueprinting.call_count == 4
     default_batch_logs = [
         call.args[0]
@@ -255,11 +255,13 @@ def test_frontier_lag_keeps_stage3_abort_prompt():
         {"modules.core.stage2_context": fake_stage2, "modules.core.stage3_context": fake_stage3},
     ):
         with patch("builtins.input", return_value="2") as mocked_input:
-            SovereignApp._one_stop_pipeline_frontier_lag(app)
+            result = SovereignApp._one_stop_pipeline_frontier_lag(app)
 
+    app._get_int_input.assert_not_called()
     assert mocked_input.call_count == 2
     assert "건너뛰고 다음 Arc로?" in mocked_input.call_args_list[0].args[0]
     app._stage_4_v2_chief_writer.assert_not_called()
+    assert result["stop_reason"] == "stage3_user_abort"
 
 
 def test_frontier_lag_requested_arc_limit_stops_mid_auto_continue():

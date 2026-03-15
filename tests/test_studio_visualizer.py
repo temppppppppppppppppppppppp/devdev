@@ -42,3 +42,26 @@ def test_log_merges_extra_context_into_meta():
     event = sink.call_args.args[0]
     assert event["visible"] is False
     assert event["meta"]["custom"] == "value"
+
+
+def test_prompt_avoids_duplicate_console_render_and_keeps_prompt_metadata():
+    ui = StudioVisualizer()
+    ui.console = MagicMock()
+    ui.console.input.return_value = "3"
+    sink = MagicMock()
+    ui.set_operator_event_sink(sink)
+
+    result = ui.prompt("prompt: ", component="Stage0")
+
+    assert result == "3"
+    ui.console.print.assert_not_called()
+    ui.console.input.assert_called_once_with("prompt: ")
+    prompt_event = sink.call_args_list[0].args[0]
+    response_event = sink.call_args_list[1].args[0]
+    assert prompt_event["event_kind"] == "prompt"
+    assert prompt_event["message"] == "prompt: "
+    assert prompt_event["visible"] is True
+    assert response_event["event_kind"] == "prompt_response"
+    assert response_event["message"] == "[prompt_response]"
+    assert response_event["selection_value"] == "3"
+    assert response_event["meta"]["prompt_text"] == "prompt: "

@@ -36,7 +36,7 @@ try:
     _fault_log = open("crash_dump.log", "a", encoding="utf-8")
     faulthandler.enable(file=_fault_log, all_threads=True)
     atexit.register(_fault_log.close)
-    print("[V61.3] Faulthandler 활성화 → crash_dump.log", file=sys.stderr)
+    print("[V61.3] Faulthandler 활성화 → crash_dump.log")
 except OSError as _fh_err:
     print(f"[V61.3] Faulthandler 초기화 실패 (비차단): {_fh_err}", file=sys.stderr)
 
@@ -4201,6 +4201,7 @@ class SovereignApp:
             target_count = batch_size
 
             while True:
+                tranche_completed = True
                 for arc_offset in range(target_count):
                     current_arc_no = designed_arcs + arcs_advanced + 1
                     self.ui.log(f"\n{'━' * 60}")
@@ -4248,12 +4249,16 @@ class SovereignApp:
                         except Exception as s2_err:
                             self.ui.log(f"   ❌ [Stage 2] Arc {current_arc_no} 설계 실패: {str(s2_err)[:100]}")
                             self.ui.log("   🛑 Arc 없이 진행 불가 — 파이프라인을 중단합니다.")
+                            stop_reason = "stage2_design_error"
+                            tranche_completed = False
                             break
 
                         refreshed_arcs = self.current_project.db.load_anchor("arcs") or []
                         if current_arc_no > len(refreshed_arcs):
                             self.ui.log(f"   ❌ [Stage 2] Arc {current_arc_no} 생성이 확인되지 않습니다.")
                             self.ui.log("   🛑 파이프라인을 중단합니다.")
+                            stop_reason = "stage2_arc_missing_after_generation"
+                            tranche_completed = False
                             break
 
                         current_arc = refreshed_arcs[current_arc_no - 1]
@@ -4267,6 +4272,8 @@ class SovereignApp:
                     )
                     if not frontier_plan:
                         self.ui.log("   ❌ [FrontierLag] 설계 frontier 계산 실패")
+                        stop_reason = "frontier_plan_missing"
+                        tranche_completed = False
                         break
 
                     self.ui.log(
@@ -4305,11 +4312,13 @@ class SovereignApp:
                             if skip_choice != "1":
                                 self.ui.log("   🛑 사용자 요청으로 파이프라인을 중단합니다.")
                                 stop_reason = "stage3_user_abort"
+                                tranche_completed = False
                                 break
                             self.ui.log("   ⏭️ Stage 3 건너뛰고 다음 Arc로...")
                             arcs_advanced += 1
                             if requested_arc_limit is not None and arcs_advanced >= requested_arc_limit:
                                 _mark_requested_limit_hit()
+                                tranche_completed = False
                                 break
                             continue
                         elif s3_success == 0 and s3_fail == 0:
@@ -4327,10 +4336,12 @@ class SovereignApp:
                         if skip_choice != "1":
                             self.ui.log("   🛑 사용자 요청으로 파이프라인을 중단합니다.")
                             stop_reason = "stage3_exception_user_abort"
+                            tranche_completed = False
                             break
                         arcs_advanced += 1
                         if requested_arc_limit is not None and arcs_advanced >= requested_arc_limit:
                             _mark_requested_limit_hit()
+                            tranche_completed = False
                             break
                         continue
 
@@ -4349,6 +4360,7 @@ class SovereignApp:
                     except KeyboardInterrupt:
                         self.ui.log("\n   ⚠️ 사용자 중단 요청.")
                         stop_reason = "keyboard_interrupt"
+                        tranche_completed = False
                         break
                     except Exception as s4_err:
                         self.ui.log(f"   ❌ [Stage 4] 원고 집필 오류: {str(s4_err)[:100]}")
@@ -4357,24 +4369,26 @@ class SovereignApp:
                     arcs_advanced += 1
                     if requested_arc_limit is not None and arcs_advanced >= requested_arc_limit:
                         _mark_requested_limit_hit()
+                        tranche_completed = False
                         break
                 if requested_limit_hit:
                     break
-                else:
-                    self.ui.log(f"\n   ✅ 요청한 {target_count}개 Arc frontier 전진 완료!")
+                if not tranche_completed:
+                    break
 
-                    remaining_design = total_arcs - (designed_arcs + arcs_advanced)
-                    if remaining_design <= 0:
-                        self.ui.log("   🎉 모든 Arc frontier 전진 완료!")
-                        break
+                self.ui.log(f"\n   ✅ 요청한 {target_count}개 Arc frontier 전진 완료!")
 
-                    target_count = min(remaining_design, batch_size)
-                    self.ui.log(
-                        "   🔁 [FrontierLag] 승인 없이 자동 계속"
-                        f" (남은 Arc: {remaining_design}개 / 다음 tranche: {target_count}개 / batch_size: {batch_size})"
-                    )
-                    continue
-                break
+                remaining_design = total_arcs - (designed_arcs + arcs_advanced)
+                if remaining_design <= 0:
+                    self.ui.log("   🎉 모든 Arc frontier 전진 완료!")
+                    break
+
+                target_count = min(remaining_design, batch_size)
+                self.ui.log(
+                    "   🔁 [FrontierLag] 승인 없이 자동 계속"
+                    f" (남은 Arc: {remaining_design}개 / 다음 tranche: {target_count}개 / batch_size: {batch_size})"
+                )
+                continue
 
         final_arcs = self.current_project.db.load_anchor("arcs") or []
         final_plan = self._resolve_one_stop_frontier_lag_plan(total_arcs=total_arcs, designed_arcs=final_arcs)

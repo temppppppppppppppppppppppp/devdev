@@ -64,6 +64,19 @@ class UIService:
             **context,
         )
 
+    def _record_hidden_input_selection(self, prompt: str, selection_value, **context) -> None:
+        meta = context.pop("meta", {})
+        if not isinstance(meta, dict):
+            meta = {"value": meta}
+        meta.setdefault("prompt_text", prompt)
+        self._selection(
+            "[int_input_selected]",
+            selection_value,
+            visible=False,
+            meta=meta,
+            **context,
+        )
+
     # ── select_bible ─────────────────────────────────────────────
     def select_bible(self) -> str | None:
         """bible 폴더에서 성경(Lore) JSON 파일 선택. 원본: main_a.py:1117"""
@@ -192,7 +205,7 @@ class UIService:
                     if (min_val is not None and default < min_val) or (max_val is not None and default > max_val):
                         self._log(f"⚠️ 기본값 {default}이(가) 범위({min_val}~{max_val})를 벗어났습니다.", level="warning")
                         continue
-                self._selection(prompt, default, prompt_id=prompt_id, visible=False)
+                self._record_hidden_input_selection(prompt, default, prompt_id=prompt_id)
                 return default
             if not raw.isdigit():
                 self._log("⚠️ 숫자만 입력 가능합니다.", level="warning")
@@ -204,6 +217,6 @@ class UIService:
             if max_val is not None and value > max_val:
                 self._log(f"⚠️ 최대값은 {max_val}입니다.", level="warning")
                 continue
-            self._selection(prompt, value, prompt_id=prompt_id, visible=False)
+            self._record_hidden_input_selection(prompt, value, prompt_id=prompt_id)
             return value
         return default

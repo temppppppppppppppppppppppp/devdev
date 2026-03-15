@@ -291,7 +291,18 @@ class TestRuntimeDiagnostics:
         assert diagnostics["failure_phase"] == "prompt:style_choice"
         assert diagnostics["stdout_tail"][-1] == "stdout one"
         assert diagnostics["stderr_tail"][-1] == "stderr boom"
+        assert diagnostics["stderr_authoritative"] is False
+        assert diagnostics["stderr_decode_policy"] == "utf-8-replace"
         assert diagnostics["duration_ms"] >= 1000
+
+    def test_runtime_diagnostics_ignore_benign_bootstrap_stderr_notice(self):
+        runner = ProcessRunner()
+        runner._remember_stderr_line("[V61.3] Faulthandler 활성화 → crash_dump.log")
+
+        diagnostics = runner.get_runtime_diagnostics()
+
+        assert diagnostics["stderr_tail"] == []
+        assert diagnostics["failure_phase"] == "startup"
 
 
 class TestBridgeServerWiring:
@@ -335,3 +346,5 @@ class TestBridgeServerWiring:
         assert payload["failure_phase"] == "prompt:confirm_api"
         assert payload["stdout_tail"][-1] == "last stdout"
         assert payload["stderr_tail"][-1] == "last stderr"
+        assert payload["stderr_authoritative"] is False
+        assert payload["stderr_decode_policy"] == "utf-8-replace"

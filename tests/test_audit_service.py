@@ -374,6 +374,39 @@ class TestWriteAuditSummary:
         finally:
             db.close()
 
+    def test_write_summary_proof_digest_uses_committed_snapshot_only(self, runtime_audit, tmp_project):
+        db = DBManager(tmp_project.root / "project_data.db")
+        try:
+            svc = AuditService(
+                runtime_audit=runtime_audit,
+                project_paths_fn=lambda: tmp_project,
+                ui_log_fn=lambda msg: None,
+                project_db_fn=lambda: db,
+            )
+
+            with db.transaction():
+                persisted = db.save_ui_event(
+                    session_id="sess-uncommitted",
+                    seq=1,
+                    stage=4,
+                    ep_num=1,
+                    component="Stage4",
+                    message="not committed yet",
+                )
+                assert persisted is True
+
+                svc.audit_event("evt", "msg")
+                svc.write_audit_summary("committed_only")
+
+                summary_path = tmp_project.root / "logs" / "runtime_audit_summary.json"
+                data = json.loads(summary_path.read_text(encoding="utf-8"))
+
+                assert data["contract"]["proof_digest_truth_scope"] == "committed_persistence_only"
+                assert data["proof_digest"]["artifacts"]["ui_events_db_available"] is True
+                assert data["proof_digest"]["artifacts"]["ui_events_count"] == 0
+        finally:
+            db.close()
+
 
 class TestFacadeStub:
     def test_facade_stub_delegates_correctly(self):

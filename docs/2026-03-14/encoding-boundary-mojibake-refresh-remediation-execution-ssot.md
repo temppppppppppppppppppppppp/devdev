@@ -1,14 +1,14 @@
 # Encoding Boundary Mojibake Refresh Remediation Execution SSOT
 
 Date: 2026-03-14
-Status: execution-ready
+Status: closed
 Canonical Path: `docs/2026-03-14/encoding-boundary-mojibake-refresh-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/encoding-boundary-mojibake-refresh-remediation-execution-ssot.md`
 Commit State:
 - Baseline Commit: `2a4d45a4896282d9cf96e67e8daff9dd0287ef4f`
 - Baseline Dirty Summary: `dirty: 7 tracked, 3 untracked; hotspots: docs/implementation/*, 260314-print.txt`
 - Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `none`
+- Resume Drift Summary: `realized in live workspace with main_a.py bootstrap notice moved to stdout, ProcessRunner stderr marked diagnostic-only, and encoding transport/tests refreshed`
 Source Survey Docs:
 - `docs/2026-03-14/codebase-global-rol-db-log-frontier-lag-3pass-audit.md`
 - `docs/2026-03-14/codebase-global-rol-db-log-frontier-lag-reaudit.md`
@@ -106,8 +106,8 @@ Excluded:
 - Do not mix authoritative operator transcript rules with crash-dump or exception-trace capture rules.
 
 ## 12. Temp Queue Notes
-- temp status: pending
-- cleanup condition: remove the temp mirror after implementation, validation, and closure update land in both the canonical SSOT and the active roadmap
+- temp status: completed
+- cleanup condition: satisfied on `2026-03-15` after canonical closure, roadmap closure, and queue cleanup
 - roadmap dependency: `docs/2026-03-14/codebase-global-rol-db-log-frontier-lag-execution-roadmap.md`
 
 ## 13. Validation and Closure Hooks
@@ -115,3 +115,18 @@ Excluded:
 - closure harness: `docs/implementation/execution-closure-harness.md`
 - optional queue state entry: `docs/temp/queue-state.json`
 - execution-start rule: re-run this document through the 3-pass audit and reconfirm 95% confidence against the live workspace before patching code
+
+## 14. Closure Note
+- closure date: `2026-03-15`
+- closure status: `closed`
+- implementation result:
+  - `main_a.py` no longer emits the faulthandler activation banner on `stderr`; the benign bootstrap notice now stays on `stdout`
+  - `modules/api/process_runner.py` now labels `stderr` tails as diagnostic-only, declares `utf-8-replace` decode policy, and ignores the benign faulthandler activation banner if it appears on `stderr`
+  - `docs/2026-03-13/encoding-boundary-contract.json` and `docs/implementation/event-schema-v1.json` now codify authoritative `stdout` operator artifacts and non-authoritative `stderr` capture policy
+- verification evidence:
+  - `python -m pytest tests/test_encoding_boundary_contract.py -q` with `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1` -> `4 passed`
+  - `python -m pytest tests/test_process_runner.py -q` with `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1` -> `31 passed`
+  - `python -m pytest tests/test_desktop_transport_contract.py -q` with `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1` -> `3 passed`
+- residual risk:
+  - raw PowerShell `2>` artifacts remain non-authoritative by design and still require declared encoding metadata if someone keeps them for forensics
+  - no active code follow-up remains inside this queue item
