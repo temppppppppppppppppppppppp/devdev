@@ -71,6 +71,7 @@ geuldobi-desktop/src/sprites/desk_teacher_front.png
 
 # === 실행 로그 (enrich) ===
 logs/enrich/
+logs/pytest_lowmem/
 
 # === 실행 프로젝트 데이터 (로컬 전용) ===
 projects/001_*/

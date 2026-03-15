@@ -129,14 +129,6 @@ class AuditService:
         }
 
     def _resolve_proof_digest_db(self, db_path) -> tuple[Any, bool]:
-        if callable(self._project_db_fn):
-            try:
-                project_db = self._project_db_fn()
-            except Exception:
-                project_db = None
-            if getattr(project_db, "conn", None) is not None:
-                return project_db, False
-
         conn = sqlite3.connect(f"{db_path.resolve().as_uri()}?mode=ro", uri=True, check_same_thread=False, timeout=30.0)
         conn.row_factory = sqlite3.Row
         return SimpleNamespace(conn=conn, db_path=db_path), True

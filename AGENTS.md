@@ -34,12 +34,20 @@
 - raw evidence txt/json 생성 자체는 조사 중간에 가능하지만, 그것을 해석하거나 결론화한 문서는 3pass 감리 전 저장 완료로 취급하지 않는다
 - `execution SSOT` 또는 `aggregate roadmap`을 근거로 실제 코드 수정에 착수할 때는, 착수 시점의 최신 workspace 상태를 기준으로 해당 문서를 다시 3pass 감리하고 확신도 95% 이상을 재확인한 뒤에만 수정 작업을 시작한다
 
+## Encoding Guardrails
+
+- UTF-8은 시스템 오더와 서사 파이프라인 오더를 모두 포함하는 워크스페이스 전역 불변식이다.
+- touched text/code/doc/config 파일은 `cp949`, `euc-kr`, `latin-1`, replacement fallback 기반 저장 또는 blind decode를 금지한다.
+- touched 파일에는 `three-question placeholder`, `U+FFFD`, non-ASCII 인접 `?`, Hangul/CJK mixed-script mojibake token을 남기지 않는다. archival evidence나 literal example이 꼭 필요하면 명시적 `utf8-hygiene: allow-line` 또는 `utf8-hygiene: allow-file` marker와 rationale을 함께 둔다.
+- 터미널 출력만 깨졌을 가능성이 있으면 출력 렌더링을 근거로 패치하지 말고, explicit UTF-8 reader로 source bytes를 재확인한 뒤 수정한다.
+- 기본 가드레일은 `.editorconfig`의 UTF-8 pin과 `scripts/check_utf8_hygiene.py` + pre-commit hook이다.
+
 ## System Init Harness (System Track Only)
 
 시스템 오더는 먼저 `docs/implementation/system-order-init-harness.md`를 읽는다.
 
 - 이 하네스가 temp queue 점검, 현재 모드 판정, 다음으로 읽을 하네스 선택을 담당
-- 필요 시 `system-full-survey-execution-harness`, `temp-execution-queue-roadmap-harness`, `document-3pass-audit-harness`로 내려간다
+- 필요 시 `system-full-survey-execution-harness`, `live-run-merge-survey-harness`, `temp-execution-queue-roadmap-harness`, `document-3pass-audit-harness`로 내려간다
 - 템플릿이 필요하면 `execution-ssot-template`, `execution-roadmap-template`을 사용
 - `AGENTS.md`는 라우팅/불변식 위주로 유지하고, 상세 시작 절차는 init harness에 둔다
 
@@ -59,6 +67,9 @@
 - codebase-global survey bundles remain documentation-only, but may still create tranche survey docs, area execution SSOT docs, and an aggregate roadmap before any realization work
 - `ROL 전역 전체 전수조사` should default to `docs/implementation/codebase-global-survey-coverage-contract.md`
 - `ROL 전역 전체 전수조사` should use deep integrity survey mode by default via `docs/implementation/deep-global-integrity-survey-harness.md`
+- `ROL 전수조사-실전테스트 병행` and `ROL live-merge` should use `docs/implementation/live-run-merge-survey-harness.md`
+- live-merge mode means `static survey + fresh live run + post-run merge audit`; completed live-run evidence beats static inference, and stale survey text remains lower authority
+- during active live-merge mode, raw evidence and explicit draft watchlists may be saved, but canonical final survey conclusions, execution SSOT mirrors, roadmap closure, and "resolved/regressed" claims wait until the live run completes and the merged 3-pass audit finishes
 - deep global surveys should use `docs/implementation/single-ssot-roadmap-contract.md`
 - deep global survey claims should use `docs/implementation/evidence-triangulation-contract.md`
 - deep global survey confidence claims should use `docs/implementation/integrity-confidence-scoring-contract.md`
@@ -78,6 +89,7 @@
 - survey-only requests should stop at documentation outputs; for codebase-global survey bundles, that may still include area execution SSOT docs and an aggregate roadmap without entering realization
 - a deep codebase-global survey bundle may contain many execution SSOT docs but only one SSOT roadmap
 - direct focused patches may use compact mode and should not inflate into full-governance artifacts unless scope or risk justifies it
+- live-merge shorthand examples: `ROL 전수조사-실전테스트 병행`, `ROL live-merge`, `fresh live run + global survey`
 - shorthand examples: `ROL 전수조사만`, `ROL 실행문서까지`, `ROL 구현까지`, `rol compact bugfix`
 - global shorthand examples: `ROL 전역 전체 전수조사만`, `ROL 전역 전체 조사만`
 
@@ -92,12 +104,15 @@
 - execution SSOT
 - remediation execution plan
 - 잔여분 inventory 후 실행문서 작성
+- fresh live run 병행 조사
+- 실전테스트 중 전수조사
 
 기본 조사 원칙:
 
 - 전수조사/실행문서 류는 사이드이펙트 조사까지 기본 포함
 - 최소 조사 대상: file write, DB write, JSONL/log/audit sink, console/UI 출력, rollback/recovery/retry, cache/global state, bootstrap fallback, config/env mutation
 - 해당 항목이 비적용이면 생략하지 말고 문서에 비적용이라고 명시
+- fresh live run을 병행하는 경우에는 `docs/implementation/live-run-merge-survey-harness.md`를 함께 읽고, run 중에는 raw evidence와 draft watchlist만 확정하며 final SSOT/closure는 post-run merge audit 이후에만 저장
 
 경로 규칙:
 
@@ -150,7 +165,7 @@
 - `Phase 0` 없이 TR 생성 금지
 - `TR draft` 없이 BI 생성 금지
 - 감리 PASS 전 완료 선언 금지
-- UTF-8 only. `???`, `�` 탐지 시 즉시 중단 후 원인 보고
+- UTF-8 only. triple-question placeholder, `U+FFFD`, 또는 mixed-script mojibake 탐지 시 즉시 중단 후 원인 보고
 
 ## Pytest Memory Rule
 
@@ -158,4 +173,7 @@
 - 병렬 실행(`-n`, `xdist`, auto worker)은 사용자가 명시적으로 요구하고 메모리 여유가 확인된 경우에만 허용한다.
 - 기본 검증은 전체 스위트 일괄 실행보다 대상 파일/영역 기준 순차 shard 실행을 우선한다.
 - 메모리 압박이나 OOM 징후가 있으면 즉시 더 작은 shard로 쪼개서 순차 재실행한다.
+- `pytest` 또는 `scripts/run_pytest_lowmem.py`가 중단, 타임아웃, 사용자 abort로 끝났다면 바로 live `python` 프로세스를 커맨드라인 기준으로 확인하고, 테스트 runner/child만 종료한다.
+- 이 정리 단계에서는 IDE 언어 서버나 unrelated `python` 프로세스를 종료하지 않는다.
+- `logs/pytest_lowmem/`는 임시 검증 산출물로 취급한다. 필요한 pass/fail 근거를 확인한 뒤 stale 로그는 정리한다.
 - 검증 보고에는 어떤 테스트 파일 또는 shard를 어떤 순서로 돌렸는지 짧게 남긴다.

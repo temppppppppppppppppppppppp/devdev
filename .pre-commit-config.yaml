@@ -9,3 +9,11 @@ repos:
         args: [--fix]
       # Run the formatter
       - id: ruff-format
+  - repo: local
+    hooks:
+      - id: check-utf8-hygiene
+        name: check utf8 hygiene
+        entry: python scripts/check_utf8_hygiene.py
+        language: system
+        pass_filenames: true
+        files: '(^AGENTS\.md$|^\.pre-commit-config\.yaml$|^\.editorconfig$|.*\.(bat|cfg|css|csv|html|ini|js|json|jsonl|jsx|log|md|ps1|psm1|py|scss|spec|sql|toml|ts|tsx|txt|yaml|yml)$)'

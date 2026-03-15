@@ -20,6 +20,7 @@ Deep Survey Harness:
 Downstream companion harnesses:
 - `docs/implementation/system-order-preflight-harness.md`
 - `docs/implementation/system-full-survey-execution-harness.md`
+- `docs/implementation/live-run-merge-survey-harness.md`
 - `docs/implementation/deep-global-integrity-survey-harness.md`
 - `docs/implementation/execution-synthesis-harness.md`
 - `docs/implementation/temp-execution-queue-roadmap-harness.md`
@@ -68,6 +69,7 @@ Do not use this harness for narrative-pipeline orders.
 - If the user says `ROL` or `rol`, interpret it as the bounded `Recursive Ops Loop`.
 - If the user says `global`, `repo-wide`, `전역`, or `전역 전체`, load the global survey coverage contract unless the request narrows scope.
 - Treat `ROL 전역 전체 전수조사` as deep integrity survey mode by default unless the user explicitly asks for a lighter pass.
+- Treat `ROL 전수조사-실전테스트 병행`, `ROL live-merge`, or equivalent fresh-live-run-plus-survey wording as live-merge survey mode.
 
 ### Step 2. Inspect Active Temp Queue
 - Inspect `docs/temp/` before doing substantial work.
@@ -93,6 +95,11 @@ Mode B. Survey / Audit / Execution-Doc Production
 - use when the request is to inspect, survey, audit, classify, inventory, or write execution docs before patching
 - load the survey/execution harness next
 
+Mode B1. Live-Run Merge Survey
+- use when the request intentionally combines a fresh live run with parallel survey or audit work
+- load the survey/execution harness first, then `docs/implementation/live-run-merge-survey-harness.md`
+- treat mid-run artifacts as provisional evidence until the run reaches a terminal state
+
 Mode C. Direct Focused Patch
 - use when the request is a narrow code change and no broader survey or active temp queue should govern it
 - still respect document-save and temp-queue rules if new execution docs are created during the work
@@ -117,6 +124,8 @@ Bounded-loop rule:
 ### Step 4. Load Required Companion Harnesses
 - For survey, audit, execution SSOT, remediation-plan, or residual-inventory work:
   - read `docs/implementation/system-full-survey-execution-harness.md`
+- For survey or audit work intentionally paired with a fresh live run:
+  - read `docs/implementation/live-run-merge-survey-harness.md`
 - For codebase-wide global survey intent:
   - read `docs/implementation/codebase-global-survey-coverage-contract.md`
   - read `docs/implementation/deep-global-integrity-survey-harness.md`
@@ -156,11 +165,19 @@ Bounded-loop rule:
 - Human-facing docs follow the 3-pass save gate plus a confidence gate of at least 95% before final save.
 - Canonical execution docs live in `docs/YYYY-MM-DD/`.
 - Execution mirrors in `docs/temp/` are queue copies, not canonical files.
+- In live-merge survey mode, raw evidence and explicit draft watchlists may be saved before the run completes, but canonical conclusions, execution SSOT mirrors, roadmap closure, and final remediation claims wait until post-run merge audit.
 - Use the dedicated document-audit harness for the detailed pass procedure.
 - Run `python scripts/ops_validator.py` after material execution-doc or roadmap changes.
 - Run `python scripts/validate_deep_global_survey_bundle.py --survey-doc <canonical-master-survey-doc>` after material deep-global survey updates.
 - Run `python scripts/sync_temp_queue_state.py` when the live temp queue should be materialized for operators or tooling.
 - Use the closure harness before deleting temp queue artifacts.
+
+### Step 7. Apply Pytest Memory Cleanup
+- Treat `scripts/run_pytest_lowmem.py` logs as disposable execution artifacts, not durable authority.
+- If `pytest` or the low-memory runner is interrupted, times out, or appears stuck after the last expected shard, inspect live `python` processes by command line.
+- Terminate only the orphaned pytest runner and its pytest child processes.
+- Do not terminate unrelated `python` processes such as IDE language servers, notebooks, or user-owned background jobs.
+- After extracting the needed pass/fail evidence, clean stale `logs/pytest_lowmem/` directories so later turns do not inherit false-live test state.
 
 ## 4. Decision Matrix
 
@@ -171,6 +188,7 @@ Bounded-loop rule:
 | System order + multiple temp execution docs | create or refresh aggregate roadmap first |
 | System order + active roadmap + user asks to continue | follow roadmap |
 | System order + survey request | read survey/execution harness and produce survey docs first |
+| System order + fresh live run paired with survey | read survey/execution harness plus live-run-merge harness; final SSOT only after run completion |
 | Narrative order | do not use this harness |
 
 ## 5. Non-Goals
@@ -183,3 +201,5 @@ Bounded-loop rule:
 - Do not let a stale temp mirror override the canonical dated execution doc.
 - Do not inflate `AGENTS.md` with long procedural duplication that belongs here.
 - Do not start multi-item realization without checking whether a roadmap already exists.
+- Treat UTF-8 integrity as a workspace-wide invariant for touched text/code/doc/config files.
+- If a touched file shows invalid UTF-8, a triple-question placeholder, `U+FFFD`, non-ASCII-adjacent `?`, or suspicious Hangul/CJK mixed-script mojibake, stop and repair the source boundary before continuing.

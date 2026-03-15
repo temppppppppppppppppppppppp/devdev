@@ -23,16 +23,17 @@ Apply higher entries before lower ones.
 Within item 4, use this order when multiple specialized harnesses are relevant:
 1. `docs/implementation/system-order-preflight-harness.md`
 2. `docs/implementation/system-full-survey-execution-harness.md`
-3. `docs/implementation/deep-global-integrity-survey-harness.md`
-4. `docs/implementation/execution-synthesis-harness.md`
-5. `docs/implementation/temp-execution-queue-roadmap-harness.md`
-6. `docs/implementation/document-3pass-audit-harness.md`
-7. `docs/implementation/evidence-manifest-harness.md`
-8. `docs/implementation/ops-validator-harness.md`
-9. `docs/implementation/execution-closure-harness.md`
-10. `docs/implementation/exception-registry-harness.md`
-11. `docs/implementation/process-health-scorecard-harness.md`
-12. `docs/implementation/stale-reference-sweep-harness.md`
+3. `docs/implementation/live-run-merge-survey-harness.md`
+4. `docs/implementation/deep-global-integrity-survey-harness.md`
+5. `docs/implementation/execution-synthesis-harness.md`
+6. `docs/implementation/temp-execution-queue-roadmap-harness.md`
+7. `docs/implementation/document-3pass-audit-harness.md`
+8. `docs/implementation/evidence-manifest-harness.md`
+9. `docs/implementation/ops-validator-harness.md`
+10. `docs/implementation/execution-closure-harness.md`
+11. `docs/implementation/exception-registry-harness.md`
+12. `docs/implementation/process-health-scorecard-harness.md`
+13. `docs/implementation/stale-reference-sweep-harness.md`
 
 Specific-over-general rule:
 - if two documents at the same precedence level do not agree, the more specific one wins for that task
@@ -49,6 +50,7 @@ Specific-over-general rule:
 - Newly generated evidence beats recalled counts or older snapshots.
 - Historical documents remain useful for lineage, not for overriding current facts.
 - For ROL surveys, re-audits, execution SSOTs, and roadmaps, use `docs/implementation/commit-state-minimal-contract.md` to anchor baseline and resume state without turning documents into git transcripts.
+- In live-run-merge mode, completed live-run evidence beats static inference, while mid-run evidence remains provisional until the run reaches a documented terminal state.
 
 ## 5. Queue Governance
 - An aggregate roadmap controls multi-item realization once two or more execution SSOT mirrors are present.
@@ -68,6 +70,7 @@ Specific-over-general rule:
 - Filenames should follow `docs/implementation/canonical-naming-contract.md`.
 - Closure notes, if created, are canonical documents first and temp artifacts never.
 - Optional queue state files must follow `docs/implementation/temp-queue-state-contract-v1.json`.
+- During active live-run-merge mode, canonical closure claims and `docs/temp/` execution mirrors must wait until the post-run merged audit passes the normal save gate.
 
 ## 7. Conflict Resolution Examples
 - If `CLAUDE.md` says one thing and `AGENTS.md` says another, `AGENTS.md` wins.

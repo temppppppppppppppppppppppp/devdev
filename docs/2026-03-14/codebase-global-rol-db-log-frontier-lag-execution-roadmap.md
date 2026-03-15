@@ -1,17 +1,16 @@
 # Codebase Global ROL DB Log Frontier Lag Aggregate Execution Roadmap
 
 Date: 2026-03-14
-Status: active
+Status: closed
 Canonical Path: `docs/2026-03-14/codebase-global-rol-db-log-frontier-lag-execution-roadmap.md`
 Temp Mirror Path: `docs/temp/execution-roadmap.md`
 Commit State:
 - Baseline Commit: `2a4d45a4896282d9cf96e67e8daff9dd0287ef4f`
 - Baseline Dirty Summary: `dirty: 7 tracked, 3 untracked; hotspots: docs/implementation/*, 260314-print.txt`
 - Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `runtime-audit-rationale-sink-alignment and db-bootstrap-migration-noise realized with dirty changes in main_a.py, modules/core/*, and targeted tests`
+- Resume Drift Summary: `all four execution items realized by 2026-03-15; temp queue exhausted after encoding-boundary closure and queue cleanup`
 Queue Snapshot:
-- `docs/temp/frontier-lag-nonstop-contract-remediation-execution-ssot.md`
-- `docs/temp/encoding-boundary-mojibake-refresh-remediation-execution-ssot.md`
+- queue exhausted on `2026-03-15`; no active temp execution mirrors remain
 
 ## 1. Purpose
 - Control the reopened multi-item queue created by `docs/2026-03-14/codebase-global-rol-db-log-frontier-lag-reaudit.md`.
@@ -24,8 +23,8 @@ Queue Snapshot:
 | --- | --- | --- | --- | --- |
 | `runtime-audit-rationale-sink-alignment` | `docs/2026-03-14/runtime-audit-rationale-sink-alignment-remediation-execution-ssot.md` | `docs/temp/runtime-audit-rationale-sink-alignment-remediation-execution-ssot.md` | completed | closed on `2026-03-15`; temp mirror removed after verification and roadmap sync |
 | `db-bootstrap-migration-noise` | `docs/2026-03-14/db-bootstrap-migration-noise-remediation-execution-ssot.md` | `docs/temp/db-bootstrap-migration-noise-remediation-execution-ssot.md` | completed | closed on `2026-03-15`; temp mirror removed after verification and roadmap sync |
-| `frontier-lag-nonstop-contract` | `docs/2026-03-14/frontier-lag-nonstop-contract-remediation-execution-ssot.md` | `docs/temp/frontier-lag-nonstop-contract-remediation-execution-ssot.md` | pending | removes the menu `7` normal-path initial Arc-count prompt while preserving harness overrides and failure-path prompts |
-| `encoding-boundary-mojibake-refresh` | `docs/2026-03-14/encoding-boundary-mojibake-refresh-remediation-execution-ssot.md` | `docs/temp/encoding-boundary-mojibake-refresh-remediation-execution-ssot.md` | pending | restores authoritative operator-artifact encoding policy and fences stderr-only captures |
+| `frontier-lag-nonstop-contract` | `docs/2026-03-14/frontier-lag-nonstop-contract-remediation-execution-ssot.md` | `docs/temp/frontier-lag-nonstop-contract-remediation-execution-ssot.md` | completed | closed on `2026-03-15`; temp mirror removed after targeted pytest verification and roadmap sync |
+| `encoding-boundary-mojibake-refresh` | `docs/2026-03-14/encoding-boundary-mojibake-refresh-remediation-execution-ssot.md` | `docs/temp/encoding-boundary-mojibake-refresh-remediation-execution-ssot.md` | completed | closed on `2026-03-15`; temp mirror removed after targeted encoding/process-runner/transport verification and roadmap closure |
 
 ## 3. Dependency Graph
 - `runtime-audit-rationale-sink-alignment -> db-bootstrap-migration-noise`
@@ -69,14 +68,16 @@ Priority basis:
 - prerequisites: none
 - execution notes: preserve `batch_size_override`, failure prompts, and `wait_for_menu_return`
 - completion signal: interactive menu `7` no longer asks the initial Arc-count question on the normal path
-- temp cleanup action: remove the mirror after closure and roadmap ledger update
+- closure evidence: `4` Frontier Lag regression tests passed, `9` harness tests passed, prompt-site reinspection confirmed the normal-path prompt removal while preserving failure prompts on `2026-03-15`
+- temp cleanup action: completed on `2026-03-15`
 
 ### encoding-boundary-mojibake-refresh
 - goal: re-establish authoritative UTF-8 operator artifact rules and quarantine stderr-only capture ambiguity
 - prerequisites: runtime-audit sink truth is stable enough to define which artifacts are authoritative
 - execution notes: do not rewrite source text unless new evidence proves source corruption
 - completion signal: authoritative operator artifacts are UTF-8 clean and boundary-only stderr captures are documented or fenced
-- temp cleanup action: remove the mirror after closure and roadmap ledger update
+- closure evidence: `4` encoding-boundary contract tests passed, `31` ProcessRunner regression tests passed, `3` desktop transport contract tests passed, `python scripts/ops_validator.py --strict` passed on `2026-03-15`
+- temp cleanup action: completed on `2026-03-15`
 
 ## 6. Shared Risks and Side-Effects
 - shared write paths:
@@ -106,8 +107,8 @@ Priority basis:
 | --- | --- | --- | --- |
 | `runtime-audit-rationale-sink-alignment` | completed | 2026-03-15 | none |
 | `db-bootstrap-migration-noise` | completed | 2026-03-15 | none |
-| `frontier-lag-nonstop-contract` | pending | 2026-03-14 | none |
-| `encoding-boundary-mojibake-refresh` | pending | 2026-03-14 | waits on stable authoritative-artifact rules |
+| `frontier-lag-nonstop-contract` | completed | 2026-03-15 | none |
+| `encoding-boundary-mojibake-refresh` | completed | 2026-03-15 | none |
 
 ## 8. Queue Cleanup Rule
 - remove a temp execution SSOT mirror immediately after that item is realized and closed

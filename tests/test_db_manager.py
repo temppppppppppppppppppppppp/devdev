@@ -465,6 +465,32 @@ def test_save_ui_event_normalizes_stage_labels_and_preserves_original_label(db):
     assert shutdown_meta["stage_label"] == "shutdown"
 
 
+def test_save_ui_event_preserves_unknown_stage_labels_without_dropping_write(db):
+    persisted = db.save_ui_event(
+        session_id="sess-ui-unknown-stage",
+        seq=10,
+        stage="preflight",
+        component="System",
+        message="preflight visible",
+        meta={"origin": "unit"},
+    )
+
+    row = db.conn.execute(
+        """
+        SELECT stage, meta_json
+        FROM ui_events
+        WHERE session_id = 'sess-ui-unknown-stage'
+        """
+    ).fetchone()
+
+    meta = json.loads(row["meta_json"])
+
+    assert persisted is True
+    assert row["stage"] is None
+    assert meta["origin"] == "unit"
+    assert meta["stage_label"] == "preflight"
+
+
 def test_save_ui_event_respects_outer_transaction_rollback(db):
     with pytest.raises(DBError):
         with db.transaction():

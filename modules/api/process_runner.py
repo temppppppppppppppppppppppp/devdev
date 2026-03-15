@@ -67,6 +67,13 @@ def _decode_runtime_stream(raw: bytes) -> str:
     return raw.decode("utf-8", errors="replace")
 
 
+def _is_benign_stderr_line(text: str) -> bool:
+    normalized = str(text or "").strip()
+    if not normalized:
+        return True
+    return normalized.startswith("[V61.3] Faulthandler 활성화 → crash_dump.log")
+
+
 # ─── Callback 타입 ────────────────────────────────────────────────────────────
 
 OnLineCallback = Callable[[str], Awaitable[None]]
@@ -80,6 +87,7 @@ _STAGE0_STYLE_ANALYSIS_SUB_KEY = "6"
 # ─── Mode B 프롬프트 감지 타임아웃 (초) ──────────────────────────────────────
 _PROMPT_DETECT_TIMEOUT = 0.5
 _RUNTIME_TAIL_LINES = 8
+_RUNTIME_STDERR_DECODE_POLICY = "utf-8-replace"
 
 _GENRE_INDEX_TO_TYPE = {
     "1": "wuxia",
@@ -452,6 +460,8 @@ class ProcessRunner:
             "last_prompt_step": self._last_prompt_step,
             "stdout_tail": stdout_tail,
             "stderr_tail": stderr_tail,
+            "stderr_authoritative": False,
+            "stderr_decode_policy": _RUNTIME_STDERR_DECODE_POLICY,
             "failure_phase": self._infer_failure_phase(stdout_tail, stderr_tail),
         }
 
@@ -462,7 +472,7 @@ class ProcessRunner:
 
     def _remember_stderr_line(self, text: str) -> None:
         normalized = str(text or "").strip()
-        if normalized:
+        if normalized and not _is_benign_stderr_line(normalized):
             self._stderr_tail.append(normalized[:240])
 
     def _infer_failure_phase(self, stdout_tail: list[str], stderr_tail: list[str]) -> str:

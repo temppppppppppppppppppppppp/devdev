@@ -85,8 +85,9 @@ class StudioVisualizer:
             meta = {"value": meta}
         if context:
             meta = {**meta, **context}
+        emit_console = bool(meta.pop("emit_console", True))
         visible = bool(meta.get("visible", True))
-        if visible:
+        if visible and emit_console:
             self.console.print(f"   [dim]{message}[/]")
         logging.getLogger("UI").info(message)  # [TF-26] 파일 듀얼 출력
         if self._operator_event_sink is None:
@@ -134,14 +135,20 @@ class StudioVisualizer:
         prompt_context = dict(context)
         prompt_context.setdefault("event_kind", "prompt")
         prompt_context.setdefault("render_format", "prompt")
+        prompt_context.setdefault("emit_console", False)
         self.log(str(prompt_text), **prompt_context)
         response = self.console.input(str(prompt_text))
         response_context = dict(context)
+        response_meta = response_context.pop("meta", {})
+        if not isinstance(response_meta, dict):
+            response_meta = {"value": response_meta}
+        response_meta.setdefault("prompt_text", str(prompt_text))
+        response_context["meta"] = response_meta
         response_context.setdefault("event_kind", "prompt_response")
         response_context.setdefault("render_format", "input")
         response_context.setdefault("selection_value", response)
         response_context.setdefault("visible", False)
-        self.log(str(prompt_text), **response_context)
+        self.log("[prompt_response]", **response_context)
         return response
 
     def selection(self, label: str, selection_value, **context) -> None:
