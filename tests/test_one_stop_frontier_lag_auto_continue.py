@@ -63,7 +63,7 @@ def _build_frontier_app(*, total_arcs: int, batch_size: int, stage3_results, pla
     return app
 
 
-def test_frontier_lag_auto_continues_without_batch_boundary_input():
+def test_frontier_lag_uses_default_batch_without_boundary_input():
     app = _build_frontier_app(
         total_arcs=2,
         batch_size=1,
@@ -115,14 +115,20 @@ def test_frontier_lag_auto_continues_without_batch_boundary_input():
         with patch("builtins.input", side_effect=_input_side_effect):
             SovereignApp._one_stop_pipeline_frontier_lag(app)
 
-    assert app._get_int_input.call_count == 1
+    assert app._get_int_input.call_count == 0
     assert app._stage3_orch.stage_3_batch_blueprinting.call_count == 2
     assert app._stage_4_v2_chief_writer.call_count == 2
+    default_batch_logs = [
+        call.args[0]
+        for call in app.ui.log.call_args_list
+        if "auto-selected default batch_size" in str(call.args[0])
+    ]
+    assert len(default_batch_logs) == 1
+    assert "auto-selected default batch_size: 2" in default_batch_logs[0]
     auto_continue_logs = [
         call.args[0] for call in app.ui.log.call_args_list if "승인 없이 자동 계속" in str(call.args[0])
     ]
-    assert len(auto_continue_logs) == 1
-    assert "다음 tranche: 1개" in auto_continue_logs[0]
+    assert auto_continue_logs == []
 
 
 def test_frontier_lag_auto_shrinks_last_tranche_to_remaining():
@@ -203,8 +209,15 @@ def test_frontier_lag_auto_shrinks_last_tranche_to_remaining():
         with patch("builtins.input", side_effect=_input_side_effect):
             SovereignApp._one_stop_pipeline_frontier_lag(app)
 
-    assert app._get_int_input.call_count == 1
+    assert app._get_int_input.call_count == 0
     assert app._stage3_orch.stage_3_batch_blueprinting.call_count == 4
+    default_batch_logs = [
+        call.args[0]
+        for call in app.ui.log.call_args_list
+        if "auto-selected default batch_size" in str(call.args[0])
+    ]
+    assert len(default_batch_logs) == 1
+    assert "auto-selected default batch_size: 3" in default_batch_logs[0]
     auto_continue_logs = [
         call.args[0] for call in app.ui.log.call_args_list if "승인 없이 자동 계속" in str(call.args[0])
     ]

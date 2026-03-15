@@ -1,5 +1,6 @@
 """DBManager current-API regression tests."""
 
+import json
 import sqlite3
 
 import pytest
@@ -419,6 +420,51 @@ def test_save_ui_event_persists_meta_json(db):
     assert "origin" in row["meta_json"]
 
 
+def test_save_ui_event_normalizes_stage_labels_and_preserves_original_label(db):
+    persisted_stage = db.save_ui_event(
+        session_id="sess-ui-stage",
+        seq=8,
+        stage="stage4",
+        ep_num=12,
+        component="Stage4",
+        message="director frame visible",
+        meta={"origin": "unit"},
+    )
+    persisted_shutdown = db.save_ui_event(
+        session_id="sess-ui-shutdown",
+        seq=9,
+        stage="shutdown",
+        component="System",
+        message="shutdown visible",
+    )
+
+    stage_row = db.conn.execute(
+        """
+        SELECT stage, meta_json
+        FROM ui_events
+        WHERE session_id = 'sess-ui-stage'
+        """
+    ).fetchone()
+    shutdown_row = db.conn.execute(
+        """
+        SELECT stage, meta_json
+        FROM ui_events
+        WHERE session_id = 'sess-ui-shutdown'
+        """
+    ).fetchone()
+
+    stage_meta = json.loads(stage_row["meta_json"])
+    shutdown_meta = json.loads(shutdown_row["meta_json"])
+
+    assert persisted_stage is True
+    assert persisted_shutdown is True
+    assert stage_row["stage"] == 4
+    assert stage_meta["origin"] == "unit"
+    assert stage_meta["stage_label"] == "stage4"
+    assert shutdown_row["stage"] is None
+    assert shutdown_meta["stage_label"] == "shutdown"
+
+
 def test_save_ui_event_respects_outer_transaction_rollback(db):
     with pytest.raises(DBError):
         with db.transaction():
@@ -483,3 +529,29 @@ def test_save_director_selection_persists_firewall_metadata(db):
     assert row["pre_firewall_score"] == 100
     assert row["firewall_triggered"] == 1
     assert row["firewall_reason"] == "Contradiction Firewall: CRITICAL 1건"
+
+def test_save_director_selection_keeps_selection_reason_up_to_500_chars(db):
+    long_reason = "r" * 450
+
+    db.save_director_selection(
+        8,
+        1,
+        "B",
+        "balanced",
+        "PASS",
+        score=95,
+        selection_reason=long_reason,
+        verdict_reason="ready to use",
+        stage=4,
+        attempt_key="s4:ep8:arc2:a1",
+    )
+
+    row = db.cursor.execute(
+        """
+        SELECT selection_reason
+        FROM director_selections
+        WHERE attempt_key = 's4:ep8:arc2:a1'
+        """
+    ).fetchone()
+
+    assert row["selection_reason"] == long_reason

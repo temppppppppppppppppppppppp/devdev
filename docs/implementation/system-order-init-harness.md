@@ -42,6 +42,7 @@ Available templates:
 - `docs/implementation/uncertainty-contradiction-ledger-template.md`
 Available contracts and checklists:
 - `docs/implementation/canonical-naming-contract.md`
+- `docs/implementation/commit-state-minimal-contract.md`
 - `docs/implementation/temp-queue-state-contract-v1.json`
 - `docs/implementation/temp-queue-state-template.json`
 - `docs/implementation/queue-priority-rubric.md`
@@ -102,6 +103,17 @@ Bounded-loop rule:
 - do not generate roadmap or closure artifacts when queue conditions do not require them
 - codebase-global survey bundles may still generate tranche survey docs, area execution SSOT docs, and an aggregate roadmap as documentation outputs without being treated as implementation
 
+### Step 3A. Capture Minimal Commit State
+- For substantial survey, re-audit, execution-SSOT, or roadmap work, capture the minimal commit-state anchor early.
+- Use `docs/implementation/commit-state-minimal-contract.md`.
+- Record:
+  - `Baseline Commit`
+  - `Baseline Dirty Summary`
+- When resuming or revalidating later in a different work phase, refresh:
+  - `Resume Commit`
+  - `Resume Drift Summary`
+- Keep this bounded. Prefer short summaries over raw git transcript dumps.
+
 ### Step 4. Load Required Companion Harnesses
 - For survey, audit, execution SSOT, remediation-plan, or residual-inventory work:
   - read `docs/implementation/system-full-survey-execution-harness.md`
@@ -116,6 +128,8 @@ Bounded-loop rule:
   - read `docs/implementation/temp-execution-queue-roadmap-harness.md`
 - For creating or updating human-facing docs:
   - read `docs/implementation/document-3pass-audit-harness.md`
+- For recording minimal git workspace anchors on ROL docs:
+  - read `docs/implementation/commit-state-minimal-contract.md`
 - For reusable evidence indexing:
   - read `docs/implementation/evidence-manifest-harness.md`
 - For queue validation or canonical/mirror integrity checks:
