@@ -9,6 +9,7 @@ from modules.core.project_support import (
     resolve_project_bible_pov,
     resolve_project_external_pov_insert_policy,
     resolve_project_pov_contract,
+    resolve_style_dialogue_ratio_target,
 )
 
 
@@ -84,6 +85,11 @@ def test_resolve_project_pov_contract_handles_style_provenance():
 def test_resolve_project_bible_pov_returns_empty_for_missing_payload():
     assert resolve_project_bible_pov(DummyProject()) == ""
     assert resolve_project_external_pov_insert_policy(DummyProject()) == ""
+
+
+def test_resolve_style_dialogue_ratio_target_accepts_percent_strings():
+    assert resolve_style_dialogue_ratio_target({"dialogue_ratio": "40%"}) == 0.4
+    assert resolve_style_dialogue_ratio_target(project=DummyProject(style_data={"dialogue_ratio": 0.35})) == 0.35
 
 
 def test_inspect_project_support_assets_reports_ready_flags(tmp_path):
