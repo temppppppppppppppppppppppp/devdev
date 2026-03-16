@@ -211,6 +211,68 @@ def _write_control_plane_provenance(
     )
 
 
+def _load_control_plane_provenance_summary(app: FastAPI, *, limit: int = 5) -> dict[str, Any]:
+    path = _resolve_control_plane_provenance_log_path(app)
+    payload: dict[str, Any] = {
+        "available": False,
+        "recent_count": 0,
+        "risk_row_count": 0,
+        "desktop_mode_count": 0,
+        "latest": {},
+        "recent": [],
+    }
+    if not path.exists():
+        return payload
+
+    rows: list[dict[str, Any]] = []
+    try:
+        with path.open("r", encoding="utf-8") as handle:
+            for raw_line in handle:
+                line = raw_line.strip()
+                if not line:
+                    continue
+                try:
+                    row = json.loads(line)
+                except (TypeError, ValueError, json.JSONDecodeError):
+                    continue
+                if isinstance(row, dict):
+                    rows.append(row)
+    except Exception as exc:
+        logger.debug("control_plane_provenance load failed for %s: %s", path, exc)
+        return payload
+
+    if not rows:
+        return payload
+
+    recent_rows = rows[-max(1, int(limit)) :]
+    compact_recent = [
+        {
+            "ts": str(row.get("ts", "") or ""),
+            "route": str(row.get("route", "") or ""),
+            "key": str(row.get("key", "") or ""),
+            "sub_key": str(row.get("sub_key", "") or ""),
+            "risk_key": bool(row.get("risk_key", False)),
+            "approval_id": str(row.get("approval_id", "") or ""),
+            "run_id": str(row.get("run_id", "") or ""),
+            "mode": str(row.get("mode", "") or ""),
+            "desktop_mode": bool(row.get("desktop_mode", False)),
+        }
+        for row in reversed(recent_rows)
+    ]
+    latest = compact_recent[0] if compact_recent else {}
+    payload.update(
+        {
+            "available": True,
+            "recent_count": len(compact_recent),
+            "risk_row_count": sum(1 for row in rows if bool(row.get("risk_key", False))),
+            "desktop_mode_count": sum(1 for row in rows if bool(row.get("desktop_mode", False))),
+            "latest": latest,
+            "recent": compact_recent,
+        }
+    )
+    return payload
+
+
 def _get_projects_root() -> Path:
     return resolve_projects_root(PROJECT_ROOT)
 
@@ -1733,6 +1795,10 @@ async def status_endpoint(request: Request) -> JSONResponse:
         if prompt_snapshot["pending_prompt_count"] > 0:
             data["pending_prompt_count"] = prompt_snapshot["pending_prompt_count"]
             data["pending_prompts"] = prompt_snapshot["pending_prompts"]
+
+    control_plane_provenance = _load_control_plane_provenance_summary(request.app)
+    if control_plane_provenance["available"]:
+        data["control_plane_provenance"] = control_plane_provenance
 
     return JSONResponse(status_code=200, content={"ok": True, "code": "OK", "data": data})
 

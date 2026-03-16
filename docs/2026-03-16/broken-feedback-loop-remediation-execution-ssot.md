@@ -132,7 +132,7 @@ Pass 2 result:
 - no project-specific recovery claim was promoted into this document
 - `0_260316` is used only as regression evidence, not as the subject of this SSOT
 
-Pass 3 result: tranche sequencing remains valid; all three planned tranches are now closed, and the remaining open item is the low-priority control-plane provenance reader.
+Pass 3 result: tranche sequencing remains valid; all three planned tranches are closed, the low-priority control-plane provenance reader is now closed, and the remaining open items are opportunistic helper / instrumentation follow-ups only.
 
 ## Signal Taxonomy
 
@@ -155,7 +155,7 @@ Pass 3 result: tranche sequencing remains valid; all three planned tranches are 
 | `FailureLearner` | `LIVE` / `WORKING` | n/a | keep as a working loop, not a remediation target |
 | `cost_log` DB summary | `READ-ONLY / WORKING` | `CLOSED` in bridge quality dashboard | `get_cost_summary()` now feeds a production `cost_summary` payload without becoming a Python control gate |
 | shutdown metric totals | `ADVISORY` | logs only | do not confuse shutdown sink consumption with runtime cost control |
-| control-plane provenance | `OPEN` | write-only log | not a tranche priority, but remains an uncovered reader path |
+| control-plane provenance | `READ-ONLY / WORKING` | `CLOSED` in bridge `/status` summary | `bridge_server.py` now reads recent `control-plane-provenance.jsonl` rows into an optional status payload without changing write semantics |
 
 ## Execution Decision
 
@@ -299,7 +299,7 @@ Targeted verification:
 Status:
 
 - completed on `2026-03-16` after a live-code validity gate and fresh 3-pass audit
-- no further tranche remains after closure; only the low-priority `control-plane provenance` reader stays open outside the tranche queue
+- no further tranche remains after closure; the low-priority `control-plane provenance` reader is also closed, and only opportunistic helper follow-ups remain outside the tranche queue
 
 Validity gate result:
 
@@ -327,6 +327,9 @@ Targeted verification:
 - `python -m pytest -q tests/test_stage4_orchestrator.py -k "stage4_to_3_feedback"` -> `1 passed`
 - `python -m ruff check modules/core/stage3_orchestrator.py modules/api/bridge_server.py tests/test_stage3_orchestrator.py tests/test_stage2_preflight.py tests/test_bridge_quality_summary.py` -> `All checks passed`
 - `python scripts/ops_validator.py` -> `errors=0 warnings=0`
+- post-tranche bounded addendum: `modules/api/bridge_server.py` now exposes an optional `control_plane_provenance` summary on `/status`
+- `python -m pytest -q tests/test_bridge_server_http_contract.py` -> `8 passed`
+- `python -m pytest -q tests/test_control_plane_approval_provenance_ssot.py tests/test_bridge_server_desktop_risk_gate.py` -> `7 passed`
 
 ## Acceptance Criteria
 
@@ -343,7 +346,6 @@ Targeted verification:
 
 | Item | Status | Impact |
 | --- | --- | --- |
-| `control-plane provenance` runtime reader absence | open | low |
 | `MetricsCollector.record_retry()` caller absence | open | low |
 | `PassRateMonitor.get_patch_effectiveness()` unused helper | open | low |
 | `QualityDashboard.get_quality_signal_snapshot()` unused helper | open | low |

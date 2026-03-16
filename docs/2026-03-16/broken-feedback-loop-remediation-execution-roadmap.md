@@ -14,6 +14,7 @@ Confidence: `96%`
 - the project SSOT owns `0_260316` recovery, stop-point, integrity, resumability, and project-specific regression authority
 - this roadmap owns ordering, overlap classification, and sync rules between the two SSOTs
 - all planned tranches are now closed; no active tranche remains
+- the low-priority `control-plane provenance` reader is also closed via bridge `/status`; only opportunistic helper cleanups remain
 
 ## Why Not One SSOT
 
@@ -108,6 +109,7 @@ Selection rule:
   - `stage3_orchestrator.py` now persists compact Stage 3 reject-history entries used by the existing Stage 3→2 threshold trigger
   - `bridge_server.py` now exposes `cost_summary` from `DBManager.get_cost_summary()` in the bridge quality dashboard
   - existing Stage 4→3 auto-trigger behavior was revalidated and left intact
+  - post-tranche bounded closure also landed: `bridge_server.py` now reads recent `control-plane-provenance.jsonl` rows into an optional `/status` summary
 - regression gate:
   - Stage 4→2 reverse difficulty path remains intact
   - Stage 4→3 and Stage 3→2 are now reclassified from fragile to working based on fresh live-code evidence
@@ -117,6 +119,8 @@ Selection rule:
   - `tests/test_stage2_preflight.py` -> `27 passed`
   - `tests/test_bridge_quality_summary.py tests/test_cost_tracking.py` -> `15 passed`
   - `tests/test_stage4_orchestrator.py -k "stage4_to_3_feedback"` -> `1 passed`
+  - `tests/test_bridge_server_http_contract.py` -> `8 passed`
+  - `tests/test_control_plane_approval_provenance_ssot.py tests/test_bridge_server_desktop_risk_gate.py` -> `7 passed`
   - `ruff check` on touched producer/consumer/test files -> `All checks passed`
   - `python scripts/ops_validator.py` -> `errors=0 warnings=0`
 
@@ -131,6 +135,7 @@ Selection rule:
 - do not rewrite project-only recovery sections for system-only remediation movement
 - after the doc refresh, automatically choose the next highest-priority pending tranche whose starting gate still passes
 - current outcome: no pending tranche remains; the roadmap is closed pending any future re-open triggered by a fresh validity gate
+- residual low-priority items are now outside the remediation queue unless a future validity gate promotes them
 
 ## Acceptance Criteria
 
