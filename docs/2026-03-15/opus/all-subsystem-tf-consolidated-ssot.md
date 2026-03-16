@@ -61,7 +61,7 @@
 | 1 | TF-CW-01 | ChiefWriter | chief_writer.py:L584-602 | error_fallback (manuscript="", error=True)가 Director까지 전파 | 신규 |
 | 2 | TF-CW-08 | ChiefWriter | chief_writer.py:L539-546 | TPE 전체 크래시 → 빈 candidates → error_fallback → 빈 원고 Director 전달 | 신규 |
 | 3 | TF-NPC-01 | NPC Tracker | state_tracker_npc.py:L2052 | Operator precedence 모호성 (and/or 괄호 부재) — emotion summary 로직 오류 | 신규 |
-| 4 | TF-NPC-02 | NPC Tracker | state_tracker_npc.py:L2029-2033 | Emotion regex `(?:주인공\|주인공)` 중복 앵커 — 실제 캐릭터명 미매칭, 전체 감정 fallback 데드코드 | 신규 |
+| 4 | TF-NPC-02 | NPC Tracker | state_tracker_npc.py:L2029-2033 | Emotion regex 비캡처 그룹에 `주인공` 중복 앵커가 들어가 실제 캐릭터명 미매칭, 전체 감정 fallback 데드코드 | 신규 |
 | 5 | TF-NPC-03 | NPC Tracker | state_tracker_npc.py:L719 | Death regex "운명" FP — 일반 서사 텍스트에서 사망 오탐 | 신규 |
 | 6 | TF-NPC-04 | NPC Tracker | state_tracker_npc.py:L435-458 | `_is_standalone_name` context-blind — 회상 장면 억제가 전체 텍스트에 적용 | 신규 |
 | 7 | TF-BA-01 | Base Agent | base_agent.py:L1893-1933 | 로컬 TTL vs 서버 TTL drift → 만료 캐시 사용 → API 에러 + 이중 비용 | 신규 |

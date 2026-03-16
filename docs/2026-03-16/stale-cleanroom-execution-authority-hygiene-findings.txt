@@ -1,0 +1,36 @@
+Date: 2026-03-16
+Topic: stale cleanroom execution authority hygiene
+
+Baseline Commit: d6c81c1976d9812d447c2a78e2aeb36f7aed666a
+Baseline Dirty Summary: dirty workspace already contained runtime/stage/test edits, desktop packaging edits, project artifacts, and 2026-03-16 manuscript docs
+
+Scope:
+- docs/2026-03-15/backend-front-control-plane-connectivity-remediation-execution-ssot.md
+- docs/2026-03-15/runtime-operator-surface-unification-remediation-execution-ssot.md
+- docs/2026-03-15/source-text-utf8-hygiene-remediation-execution-ssot.md
+- docs/2026-03-15/persistence-observability-boundary-remediation-execution-ssot.md
+- docs/2026-03-15/codebase-global-cleanroom-source-only-execution-roadmap.md
+
+Findings:
+1. backend-front predecessor still showed Status: execution-ready even though successor hardening lane was realized and closed.
+2. runtime/operator predecessor still showed Status: execution-ready even though refresh lane was realized and closed.
+3. source-text predecessor still showed Status: execution-ready even though combined encoding hygiene lane was realized and closed.
+4. persistence predecessor still showed Status: execution-ready even though finalization/sink-alignment lane was realized and closed.
+5. cleanroom aggregate roadmap still showed Status: active with pending queue inventory even though current temp queue is empty and post-remediation roadmap is closed.
+
+Successor Mapping:
+- backend-front predecessor -> docs/2026-03-15/backend-front-control-plane-connectivity-hardening-remediation-execution-ssot.md
+- runtime/operator predecessor -> docs/2026-03-15/runtime-operator-surface-unification-refresh-remediation-execution-ssot.md
+- source-text predecessor -> docs/2026-03-15/source-text-and-runtime-encoding-hygiene-remediation-execution-ssot.md
+- persistence predecessor -> docs/2026-03-15/persistence-observability-finalization-and-sink-alignment-remediation-execution-ssot.md
+- cleanroom roadmap -> docs/2026-03-15/codebase-global-post-remediation-execution-roadmap.md
+
+Action:
+- demote the four predecessor SSOTs to superseded historical predecessors
+- demote the old cleanroom roadmap to a superseded historical roadmap
+- set stale temp-mirror paths to none on those five active-looking documents
+- add explicit historical supersession notices so preserved body content is not misread as live queue state
+
+Intentionally Not Rewritten:
+- dated survey bundles, evidence manifests, and cross-cut matrices that cite the old docs as historical outputs
+- already closed execution docs whose headers still preserve historical temp paths but do not present active authority

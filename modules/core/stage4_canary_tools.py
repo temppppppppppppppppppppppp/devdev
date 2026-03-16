@@ -193,6 +193,7 @@ def build_stage4_canary_summary(project_root: str | Path, *, target_ep: int | No
             session_id=latest_session_id,
         )
         stage3_sink_alignment_summary = analyzer.sink_alignment_summary(stage=3, include_session_decisions=True)
+        final_authority_contract_summary = sink_alignment_summary.get("final_authority_contract", {}) or {}
         rationale_contract_summary = _summarize_stage4_rationale_contract(db)
         companion_audit_summary = _summarize_stage4_companion_audit(
             db,
@@ -244,6 +245,7 @@ def build_stage4_canary_summary(project_root: str | Path, *, target_ep: int | No
         "stage3_sink_alignment_summary": stage3_sink_alignment_summary,
         "sink_alignment_summary": sink_alignment_summary,
         "current_session_sink_alignment_summary": current_session_sink_alignment_summary,
+        "final_authority_contract_summary": final_authority_contract_summary,
         "rationale_contract_summary": rationale_contract_summary,
         "companion_audit_summary": companion_audit_summary,
         "proof_scope_summary": proof_scope_summary,
@@ -274,6 +276,7 @@ def build_stage4_branch_inventory(project_roots: list[str | Path]) -> dict:
         companion_summary = summary.get("companion_audit_summary", {}) or {}
         sink_summary = summary.get("sink_alignment_summary", {}) or {}
         current_session_sink_summary = summary.get("current_session_sink_alignment_summary", {}) or {}
+        final_authority_contract_summary = summary.get("final_authority_contract_summary", {}) or {}
         patch_summary = summary.get("patch_trace_summary", {}) or {}
         proof_record = summary.get("proof_record_summary", {}) or {}
         hard_gates = summary.get("hard_gates", {}) or {}
@@ -290,6 +293,7 @@ def build_stage4_branch_inventory(project_roots: list[str | Path]) -> dict:
             "hard_gates_status": str(hard_gates.get("status", "") or "missing"),
             "sink_alignment_status": _summary_status(sink_summary, default="missing"),
             "current_session_sink_alignment_status": _summary_status(current_session_sink_summary, default="missing"),
+            "final_authority_contract_status": _summary_status(final_authority_contract_summary, default="missing"),
             "rationale_contract_status": _summary_status(rationale_summary, default="missing"),
             "companion_audit_status": _summary_status(companion_summary, default="missing"),
             "patch_trace_exercised": patch_count > 0,

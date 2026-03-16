@@ -44,10 +44,25 @@ def test_backend_entry_and_desktop_main_align_on_source_bundle_runtime():
     assert PACKAGE_JSON["main"] == RUNTIME_CONTRACT["authoritative_electron_entry"]
 
 
+def test_package_build_scripts_stage_workspace_seed_before_builder():
+    scripts = PACKAGE_JSON["scripts"]
+    assert "prepare:workspace-seed" in scripts
+    assert "build_workspace_seed.py" in scripts["prepare:workspace-seed"]
+    assert "prepare:workspace-seed" in scripts["build"]
+    assert "prepare:workspace-seed" in scripts["build:dir"]
+
+
+def test_desktop_main_seeds_packaged_workspace_materials_before_backend_boot():
+    assert 'path.join(process.resourcesPath, "workspace-seed")' in DESKTOP_MAIN
+    assert 'for (const folder of ["bible", "treatments", "projects"])' in DESKTOP_MAIN
+    assert "syncPackagedWorkspaceSeed();" in DESKTOP_MAIN
+
+
 def test_desktop_guide_describes_source_bundle_runtime_not_engine_exe_product():
     assert RUNTIME_CONTRACT["runtime_model_id"] in DESKTOP_GUIDE
     assert "Authoritative Electron entry: `geuldobi-desktop/src/main.js`" in DESKTOP_GUIDE
     assert "engine source bundle" in DESKTOP_GUIDE
     assert "resources/engine/main_a.py" in DESKTOP_GUIDE
     assert "resources/python-embed/python.exe" in DESKTOP_GUIDE
+    assert "resources/workspace-seed/seed-manifest.json" in DESKTOP_GUIDE
     assert "engine.exe" not in DESKTOP_GUIDE

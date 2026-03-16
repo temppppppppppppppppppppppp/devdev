@@ -149,9 +149,9 @@ class DirectorGradingSystem:
             "structure": ["scene_completeness", "scope_overflow", "required_scenes"],
             "prose": ["prose_rhythm", "vocabulary_diversity", "show_dont_tell"],
             "consistency": ["character_consistency", "relationship_consistency", "continuity"],
-            "engagement": ["emotion_arc", "commercial_appeal", "cliffhanger"],
+            "engagement": ["emotion_arc", "cliffhanger"],
             "commercial": ["commercial_appeal", "pattern_diversity"],
-            "satisfaction": ["reader_satisfaction", "emotion_arc"],  # [Phase 3-D1]
+            "satisfaction": ["reader_satisfaction"],  # [Phase 3-D1]
         }
 
         related_items = category_mapping.get(category, [])
@@ -402,7 +402,7 @@ class DirectorGradingSystem:
         """
         lines = [
             f"\n{'=' * 60}",
-            f"📊 [V59] 품질 등급 리포트 - 제{grade_result.get('ep_num', '?')}화",
+            f"[V59] 품질 등급 리포트 - 제{grade_result.get('ep_num', 'unknown')}화",
             f"{'=' * 60}\n",
         ]
 
@@ -683,6 +683,6 @@ class DirectorGradingSystem:
 
             applied[key] = value
 
-        is_approved = len(rejected) == 0 or len(applied) > 0
+        is_approved = len(rejected) == 0
 
         return {"approved": is_approved, "applied_updates": applied, "rejected_updates": rejected, "warnings": warnings}

@@ -120,11 +120,38 @@ class _EmptyStubDB:
         return None
 
 
+class _BrokenSaveDB(_EmptyStubDB):
+    def save_anchor(self, _name, _payload):
+        raise RuntimeError("write fail")
+
+
 def test_update_number_established_value_set():
     """[P0-2] 초기값이 established_value에 기록됨."""
     ledger = FactLedger(_EmptyStubDB())
     ledger.update_number("재산", 100, "냥", 1)
     assert ledger._ledger["numbers"]["재산"]["established_value"] == 100
+
+
+def test_save_sets_degraded_contract_on_failure():
+    ledger = FactLedger(_BrokenSaveDB())
+
+    result = ledger.save()
+
+    assert result is False
+    assert ledger.last_save_ok is False
+    assert ledger.last_save_error == "write fail"
+
+
+def test_save_clears_degraded_contract_on_success():
+    ledger = FactLedger(_EmptyStubDB())
+    ledger.last_save_ok = False
+    ledger.last_save_error = "stale error"
+
+    result = ledger.save()
+
+    assert result is True
+    assert ledger.last_save_ok is True
+    assert ledger.last_save_error is None
 
 
 def test_update_number_established_value_not_overwritten():

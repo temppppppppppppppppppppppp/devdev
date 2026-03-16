@@ -103,14 +103,19 @@ powershell -ExecutionPolicy Bypass -File build_release.ps1
 |------|---------|--------|
 | Step 1 | 내장 Python 다운로드 + pip 패키지 설치 | `python-embed/` 폴더 |
 | Step 2 | `bridge_server`를 PyInstaller로 빌드하고 engine source bundle stage | `dist/backend/backend.exe`, `dist/engine/main_a.py` |
-| Step 3 | Electron Builder로 설치 파일 생성 후 packaged resource inventory 검증 | `geuldobi-desktop/dist/Geuldobi Setup 1.5.0.exe` |
+| Step 3 | Electron Builder로 설치 파일 생성 후 packaged resource inventory 검증 | `geuldobi-desktop/dist/Geuldobi Setup 1.5.6.exe` |
 
 ### 빌드 결과물
 
 ```
 geuldobi-desktop/dist/
-└── Geuldobi Setup 1.5.0.exe    ← 이걸 사용자에게 주면 됨 (~300MB)
+└── Geuldobi Setup 1.5.6.exe    ← 이걸 사용자에게 주면 됨 (~300MB)
 ```
+
+추가 packaged sample seed:
+- `resources/workspace-seed/seed-manifest.json`
+- 첫 실행 시 누락된 `bible/`, `treatments/`, `projects/`만 사용자 작업 폴더로 복사
+- 기본 샘플은 투자물 canary BI/TR JSON + 투자물 sample project cache/manuscript bundle
 
 ### 릴리스 최소 검증 체크리스트
 
@@ -141,7 +146,7 @@ npm run start:spike
 
 ### 사용자가 할 일
 
-1. `Geuldobi Setup 1.5.0.exe` 더블클릭
+1. `Geuldobi Setup 1.5.6.exe` 더블클릭
 2. 설치 경로 선택 (기본값 OK)
 3. 설치 완료 → 바탕화면 아이콘 클릭
 4. 첫 실행 시 설정에서 Gemini API 키 입력
@@ -160,6 +165,9 @@ npm run start:spike
 ├── bible\                    ← Bible 파일
 ├── treatments\               ← Treatment 파일
 └── projects\                 ← 프로젝트별 데이터 (DB, 원고 등)
+
+첫 packaged 실행에서는 `resources/workspace-seed/seed-manifest.json` 기준으로
+누락된 canary BI/TR JSON과 투자물 sample project(`projects/investment_canary_demo`)가 자동 시드된다.
 
 %LOCALAPPDATA%\Geuldobi\      ← 앱 설정 (숨김 경로, 사용자가 직접 건드릴 필요 없음)
 ├── settings.json             ← API 키, 설정 등

@@ -230,6 +230,10 @@ class TestPhase0Recovery:
             helpers.phase_0_recovery()
         # _load_from_db가 호출되지 않아야 함 (dna_success=False)
         app_mock.current_project._load_from_db.assert_not_called()
+        app_mock._audit_event.assert_called_once()
+        assert app_mock._audit_event.call_args.args[0] == "dna_sync_failed"
+        logged = " ".join(str(c) for c in app_mock.ui.log.call_args_list)
+        assert "DNA sync failed" in logged
 
     def test_sync_error_nonfatal(self, helpers, app_mock):
         """원고 동기화 오류가 발생해도 비차단"""

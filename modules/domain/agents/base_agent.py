@@ -1986,6 +1986,7 @@ class BaseAgent:
             )
 
         try:
+            self._reset_usage_tracking()
             # [V61.7] 전략 프롬프트를 ask()와 동일한 형식으로 래핑
             directives = self._escape_braces(getattr(self.context, "author_directives", ""))
             wrapped_prompt = (
@@ -2017,6 +2018,13 @@ class BaseAgent:
             config = types.GenerateContentConfig(**config_params)
 
             _cached_t0 = time.monotonic()
+            metric_id = None
+            if METRICS_ENABLED:
+                try:
+                    collector = get_metrics_collector()
+                    metric_id = collector.start_call(self.agent_name, self.primary_model)
+                except Exception as e:
+                    logging.debug(f"[SILENT] cached metrics startup: {e}")
             time.sleep(self.API_DELAY)
             response = self._generate_content(
                 model=self.primary_model,
@@ -2059,15 +2067,43 @@ class BaseAgent:
                 )
             except Exception:
                 pass
+            if METRICS_ENABLED and metric_id:
+                try:
+                    collector = get_metrics_collector()
+                    metric_usage = self._build_metric_usage_payload(
+                        collector=collector,
+                        prompt_text=wrapped_prompt,
+                        response_text=_cached_text,
+                    )
+                    collector.end_call(metric_id, success=bool(_cached_text), **metric_usage)
+                except Exception as e:
+                    logging.debug(f"[SILENT] cached metrics end (success): {e}")
             return _cached_text
 
         except Exception as e:
+            _cached_duration_ms = int((time.monotonic() - _cached_t0) * 1000) if "_cached_t0" in locals() else 0
+            if METRICS_ENABLED and "metric_id" in locals() and metric_id:
+                try:
+                    collector = get_metrics_collector()
+                    metric_usage = self._build_metric_usage_payload(
+                        collector=collector,
+                        prompt_text=wrapped_prompt if "wrapped_prompt" in locals() else str(prompt or ""),
+                        response_text="",
+                    )
+                    collector.end_call(
+                        metric_id,
+                        success=False,
+                        error_type=self._classify_error(e),
+                        **metric_usage,
+                    )
+                except Exception as metrics_err:
+                    logging.debug(f"[SILENT] cached metrics end (failure): {metrics_err}")
             try:
                 self._log_llm_call_to_db(
                     model=self.primary_model,
                     prompt_text=wrapped_prompt if "wrapped_prompt" in locals() else str(prompt or ""),
                     response_text="",
-                    duration_ms=0,
+                    duration_ms=_cached_duration_ms,
                     success=False,
                     error=e,
                     context_tag="cached_context",

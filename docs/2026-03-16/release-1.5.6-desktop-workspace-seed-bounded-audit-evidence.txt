@@ -1,0 +1,91 @@
+release-1.5.6 desktop workspace-seed bounded audit evidence
+date: 2026-03-16
+status: final
+
+commit-state
+- baseline_commit: d6c81c1976d9812d447c2a78e2aeb36f7aed666a
+- baseline_dirty_summary: dirty: 53 tracked, 57 untracked; hotspots: docs/2026-03-15/backend-front-control-plane-connectivity-remediation-execution-ssot.md, docs/2026-03-15/codebase-global-cleanroom-source-only-execution-roadmap.md, docs/2026-03-15/opus/3pass-audit-master-summary.md, docs/implementation/desktop-runtime-contract-v1.json, geuldobi-desktop/DESKTOP-GUIDE.md, geuldobi-desktop/package-lock.json
+- resume_commit: same-as-baseline
+- resume_drift_summary: none
+
+scope
+- included: geuldobi-desktop/package.json
+- included: geuldobi-desktop/package-lock.json
+- included: geuldobi-desktop/src/main.js
+- included: geuldobi-desktop/scripts/build_workspace_seed.py
+- included: build/build_release.ps1
+- included: docs/implementation/desktop-runtime-contract-v1.json
+- included: tests/test_desktop_packaging_contract.py
+- included: geuldobi-desktop/dist/Geuldobi Setup 1.5.6.exe
+- included: geuldobi-desktop/dist/win-unpacked/resources/workspace-seed/seed-manifest.json
+- included: geuldobi-desktop/dist/win-unpacked/resources/app.asar
+- included: C:\Users\User\Documents\글도비
+- included: %LOCALAPPDATA%\Geuldobi\electron-main.log
+- excluded: installer UX/manual click-through
+- excluded: full end-to-end story generation run
+
+static-contract
+- package.json version: 1.5.6
+- package-lock.json root version: 1.5.6
+- package.json scripts.build: npm run prepare:workspace-seed && electron-builder --win
+- package.json scripts.build:dir: npm run prepare:workspace-seed && electron-builder --win --dir
+- package.json extraResources includes:
+  - ../dist/backend -> backend
+  - ../dist/engine -> engine
+  - ../build/python-embed -> python-embed
+  - ../dist/workspace-seed -> workspace-seed
+- desktop-runtime-contract packaged_resource_inventory includes workspace-seed/seed-manifest.json
+
+seed-materials
+- bible source match: bible/01_bi_투자물_골든_카나리아 테스트.json
+- treatment source match: treatments/01_tr_투자물_골든_카나리아 테스트.json
+- sample project source: projects/0
+- staged target name: investment_canary_demo
+- staged file count from seed-manifest.json: 55
+
+artifact-existence
+- geuldobi-desktop/dist/Geuldobi Setup 1.5.6.exe exists
+- geuldobi-desktop/dist/win-unpacked/resources/workspace-seed/seed-manifest.json exists
+- geuldobi-desktop/dist/win-unpacked/resources/workspace-seed/bible/01_bi_투자물_골든_카나리아 테스트.json exists
+- geuldobi-desktop/dist/win-unpacked/resources/workspace-seed/treatments/01_tr_투자물_골든_카나리아 테스트.json exists
+- geuldobi-desktop/dist/win-unpacked/resources/workspace-seed/projects/investment_canary_demo/project_data.db exists
+- geuldobi-desktop/dist/win-unpacked/resources/workspace-seed/projects/investment_canary_demo/drafts/ep_0001.txt exists
+- geuldobi-desktop/dist/win-unpacked/resources/workspace-seed/projects/investment_canary_demo/logs/artifacts/stage4 exists
+
+asar-byte-proof
+- app.asar contains byte string: workspace seed sync complete = True
+- app.asar contains byte string: syncPackagedWorkspaceSeed = True
+- app.asar contains byte string: workspace-seed = True
+- app.asar contains byte string: path.join(process.resourcesPath, "workspace-seed") = True
+- app.asar contains byte string index: copyMissingTree = 19912505
+- app.asar contains byte string index: for (const folder of ["bible", "treatments", "projects"]) = 19913436
+
+validation
+- python -m py_compile geuldobi-desktop/scripts/build_workspace_seed.py -> pass
+- node --check geuldobi-desktop/src/main.js -> pass
+- python geuldobi-desktop/scripts/build_workspace_seed.py -> pass
+- python -m pytest tests/test_desktop_packaging_contract.py -> 6 passed
+- python -m pytest tests/test_desktop_packaging_contract.py tests/test_bridge_server_http_contract.py tests/test_desktop_shadow_hygiene.py tests/test_desktop_transport_contract.py tests/test_desktop_direct_surface_contract.py -> 23 passed
+- python scripts/check_utf8_hygiene.py geuldobi-desktop/package.json geuldobi-desktop/package-lock.json geuldobi-desktop/src/main.js geuldobi-desktop/DESKTOP-GUIDE.md geuldobi-desktop/scripts/build_workspace_seed.py tests/test_desktop_packaging_contract.py build/build_release.ps1 docs/implementation/desktop-runtime-contract-v1.json -> pass
+- powershell -ExecutionPolicy Bypass -File build/build_release.ps1 -> pass
+
+runtime-smoke
+- pre-smoke documents workspace probe:
+  - C:\Users\User\Documents\글도비\bible\01_bi_투자물_골든_카나리아 테스트.json missing
+  - C:\Users\User\Documents\글도비\treatments\01_tr_투자물_골든_카나리아 테스트.json missing
+  - C:\Users\User\Documents\글도비\projects\investment_canary_demo missing
+- packaged smoke command:
+  - Start-Process geuldobi-desktop/dist/win-unpacked/Geuldobi.exe with SPIKE_AUTOCLOSE_MS=15000
+- observed result:
+  - process returned exit=0
+  - no new 2026-03-16 packaged boot line appended to %LOCALAPPDATA%\Geuldobi\electron-main.log
+  - no seeded files appeared under C:\Users\User\Documents\글도비
+- repeated packaged smoke with working directory set to win-unpacked:
+  - process returned exit=0
+  - same result: no new log line, no seeded files
+
+interpretation
+- static contract integrity: supported
+- packaged artifact content inclusion: supported
+- packaged runtime proof for first-run seed copy: inconclusive
+- reason for inconclusive runtime proof: unpacked packaged exe exited cleanly without leaving debug-log breadcrumbs or creating missing seed targets during this audit window

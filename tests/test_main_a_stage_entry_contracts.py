@@ -70,7 +70,57 @@ def test_stage4_wrapper_builds_context_from_app_and_preserves_session_logger():
     assert result == "ok"
     assert isinstance(stage4_orch.ctx, Stage4Context)
     assert stage4_orch.ctx.session_logger is app._session_logger
-    stage4_orch.stage_4_v2_chief_writer.assert_called_once_with(limit_mode=False, target_ep=4)
+    stage4_orch.stage_4_v2_chief_writer.assert_called_once_with(limit_mode=False, target_ep=4, skip_pause=False)
+
+
+def test_stage4_wrapper_forwards_skip_pause_to_orchestrator():
+    stage4_orch = SimpleNamespace(ctx=None, stage_4_v2_chief_writer=MagicMock(return_value="ok"))
+    app = SimpleNamespace(
+        _show_resume_status=MagicMock(),
+        _stage4_orch=stage4_orch,
+        ui=SimpleNamespace(log=MagicMock(), console=SimpleNamespace(clear=MagicMock()), title=MagicMock()),
+        current_project=SimpleNamespace(master_bible={"MasterBible": {}}, arcs=[], db=MagicMock()),
+        agents={},
+        sys=MagicMock(),
+        state_tracker=MagicMock(),
+        world_state=MagicMock(),
+        fact_ledger=MagicMock(),
+        memory=MagicMock(),
+        context_advisor=MagicMock(),
+        character_voice=None,
+        perf_timer=MagicMock(),
+        foreshadow_tracker=None,
+        failure_learner=None,
+        diversity_engine=None,
+        semantic_plot_guard=None,
+        selected_genre={"type": "investment", "name": "투자"},
+        quality_dashboard=None,
+        pacing_analyzer=None,
+        pass_rate_monitor=None,
+        emotion_tracker=None,
+        pre_director_checklist=None,
+        confidence_calibrator=None,
+        prompt_weighter=None,
+        cross_verifier=None,
+        chain_of_verification=None,
+        adversarial_self_play=None,
+        tree_of_thoughts=None,
+        multi_agent_deliberation=None,
+        _get_int_input=MagicMock(),
+        _build_item_acquisition_timeline=MagicMock(),
+        _load_narrative_summaries=MagicMock(),
+        _get_protagonist_name=MagicMock(),
+        _generate_narrative_summary=MagicMock(),
+        _flush_audit_buffer=MagicMock(),
+        _safe_commit=MagicMock(),
+        _session_logger=MagicMock(),
+    )
+
+    result = main_a.SovereignApp._stage_4_v2_chief_writer(app, limit_mode=False, target_ep=4, skip_pause=True)
+
+    assert result == "ok"
+    assert isinstance(stage4_orch.ctx, Stage4Context)
+    stage4_orch.stage_4_v2_chief_writer.assert_called_once_with(limit_mode=False, target_ep=4, skip_pause=True)
 
 
 def test_stage4_wrapper_lazy_inits_live_context_before_delegate(monkeypatch):
@@ -150,7 +200,7 @@ def test_stage4_wrapper_lazy_inits_live_context_before_delegate(monkeypatch):
     assert stage4_orch.ctx.world_state is world_state
     assert stage4_orch.ctx.fact_ledger is fact_ledger
     assert stage4_orch.ctx.session_logger is app._session_logger
-    stage4_orch.stage_4_v2_chief_writer.assert_called_once_with(limit_mode=False, target_ep=4)
+    stage4_orch.stage_4_v2_chief_writer.assert_called_once_with(limit_mode=False, target_ep=4, skip_pause=False)
 
 
 def test_stage3_wrapper_calls_resume_status_and_delegates_with_fresh_ctx(monkeypatch):

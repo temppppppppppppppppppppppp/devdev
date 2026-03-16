@@ -697,6 +697,62 @@ class TestMetricsUsageTracking:
         assert kwargs["cached_tokens"] == 15
         assert kwargs["thinking_tokens"] == 7
 
+    def test_cached_context_metrics_cover_success_path(self, agent, monkeypatch):
+        collector = MagicMock()
+        collector.start_call.return_value = "cached_metric"
+
+        monkeypatch.setattr(base_agent_module, "METRICS_ENABLED", True)
+        monkeypatch.setattr(base_agent_module, "get_metrics_collector", lambda: collector)
+        monkeypatch.setattr(base_agent_module.time, "sleep", lambda *_args, **_kwargs: None)
+
+        response = MagicMock()
+        response.text = json.dumps({"content": "cached"})
+
+        def fake_generate(**_kwargs):
+            agent._last_llm_usage = {
+                "prompt_token_count": 21,
+                "candidates_token_count": 8,
+                "cached_content_token_count": 5,
+                "thoughts_token_count": 1,
+            }
+            return response
+
+        agent._generate_content = fake_generate
+        agent._log_llm_call_to_db = MagicMock()
+
+        result = agent._ask_with_cached_context(cache_name="cached/ctx", prompt="prompt")
+
+        assert json.loads(result)["content"] == "cached"
+        collector.start_call.assert_called_once_with(agent.agent_name, agent.primary_model)
+        collector.end_call.assert_called_once()
+        kwargs = collector.end_call.call_args.kwargs
+        assert kwargs["success"] is True
+        assert kwargs["input_tokens"] == 21
+        assert kwargs["output_tokens"] == 8
+        assert kwargs["cached_tokens"] == 5
+        assert kwargs["thinking_tokens"] == 1
+
+    def test_cached_context_metrics_cover_failure_before_fallback(self, agent, monkeypatch):
+        collector = MagicMock()
+        collector.start_call.return_value = "cached_metric_fail"
+
+        monkeypatch.setattr(base_agent_module, "METRICS_ENABLED", True)
+        monkeypatch.setattr(base_agent_module, "get_metrics_collector", lambda: collector)
+        monkeypatch.setattr(base_agent_module.time, "sleep", lambda *_args, **_kwargs: None)
+
+        agent._generate_content = MagicMock(side_effect=RuntimeError("cached boom"))
+        agent._classify_error = MagicMock(return_value=AgentErrorType.NETWORK_ERROR)
+        agent.ask = MagicMock(return_value='{"fallback": true}')
+        agent._log_llm_call_to_db = MagicMock()
+
+        result = agent._ask_with_cached_context(cache_name="cached/ctx", prompt="prompt")
+
+        assert json.loads(result)["fallback"] is True
+        collector.end_call.assert_called_once()
+        kwargs = collector.end_call.call_args.kwargs
+        assert kwargs["success"] is False
+        assert kwargs["error_type"] == AgentErrorType.NETWORK_ERROR
+
     def test_backup_recovery_uses_measured_usage_and_closes_failed_metric(self, agent, monkeypatch):
         collector = MagicMock()
         collector.start_call.return_value = "backup_metric"

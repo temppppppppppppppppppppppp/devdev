@@ -4005,7 +4005,7 @@ class SovereignApp:
         self._narrative_summaries_cache = result
         return result
 
-    def _stage_4_v2_chief_writer(self, limit_mode: bool = False, *, target_ep: int | None = None) -> None:
+    def _stage_4_v2_chief_writer(self, limit_mode: bool = False, *, target_ep: int | None = None, skip_pause: bool = False) -> None:
         """[V64.P3] Stage 4 V2 Chief Writer -> Stage4Orchestrator 위임
         [V69.1] Stage 4 진입 시 StateTracker/WorldState/FactLedger lazy init
         """
@@ -4078,7 +4078,7 @@ class SovereignApp:
         # Legacy manual DI equivalent: context_advisor=getattr(self, "context_advisor", None),
         self._stage4_orch.ctx = Stage4Context.from_app(self)
 
-        return self._stage4_orch.stage_4_v2_chief_writer(limit_mode=limit_mode, target_ep=target_ep)
+        return self._stage4_orch.stage_4_v2_chief_writer(limit_mode=limit_mode, target_ep=target_ep, skip_pause=skip_pause)
 
     # ═══════════════════════════════════════════════════════════════
     # [OneStop] Arc-by-Arc 자동 파이프라인
@@ -4253,7 +4253,7 @@ class SovereignApp:
 
             ms_max_before = self._get_max_episode_from_manuscripts()
             try:
-                self._stage_4_v2_chief_writer(target_ep=final_plan["stage4_target"])
+                self._stage_4_v2_chief_writer(target_ep=final_plan["stage4_target"], skip_pause=True)
                 ms_max_after = self._get_max_episode_from_manuscripts()
                 total_manuscripts += max(0, ms_max_after - ms_max_before)
             except Exception as s4_err:
@@ -4450,7 +4450,7 @@ class SovereignApp:
                     )
                     ms_max_before = self._get_max_episode_from_manuscripts()
                     try:
-                        self._stage_4_v2_chief_writer(target_ep=frontier_plan["stage4_target"])
+                        self._stage_4_v2_chief_writer(target_ep=frontier_plan["stage4_target"], skip_pause=True)
                         ms_max_after = self._get_max_episode_from_manuscripts()
                         arc_manuscripts = max(0, ms_max_after - ms_max_before)
                         total_manuscripts += arc_manuscripts
@@ -4694,7 +4694,7 @@ class SovereignApp:
                 self.ui.log(f"\n   🚀 [Stage 4] 원고 집필 중 (ep {arc_ep_start}~{arc_ep_end})...")
                 ms_max_before = self._get_max_episode_from_manuscripts()  # [감리] pre-baseline
                 try:
-                    self._stage_4_v2_chief_writer(target_ep=arc_ep_end)
+                    self._stage_4_v2_chief_writer(target_ep=arc_ep_end, skip_pause=True)
                     # 생산된 원고 수 확인 (delta 방식 — 과다 집계 방지)
                     ms_max_after = self._get_max_episode_from_manuscripts()
                     arc_manuscripts = max(0, ms_max_after - ms_max_before)

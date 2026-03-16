@@ -1,9 +1,12 @@
 # runtime-operator-surface-unification-remediation Execution SSOT
 
 Date: 2026-03-15
-Status: execution-ready
+Status: superseded-by-runtime-operator-surface-unification-refresh
+Successor: `docs/2026-03-15/runtime-operator-surface-unification-refresh-remediation-execution-ssot.md`
 Canonical Path: `docs/2026-03-15/runtime-operator-surface-unification-remediation-execution-ssot.md`
-Temp Mirror Path: `docs/temp/runtime-operator-surface-unification-remediation-execution-ssot.md`
+Temp Mirror Path: `none`
+Queue Disposition: `historical cleanroom predecessor only; excluded from active queue`
+Authority Class: `historical predecessor; do not use as live execution authority`
 Commit State:
 - Baseline Commit: `d2982aa2790f5ab81529f1e8d87cf6f6006f13c9`
 - Baseline Dirty Summary: `dirty: unrelated investment/style/docs/log artifacts already present`
@@ -12,6 +15,12 @@ Commit State:
 Source Survey Docs: `docs/2026-03-15/codebase-global-cleanroom-source-only-3pass-audit.md`; `docs/2026-03-15/codebase-global-cleanroom-source-only-deep-global-survey.md`
 Evidence Artifacts: `docs/2026-03-15/codebase-global-cleanroom-source-only-source-inventory.txt`; `docs/2026-03-15/codebase-global-cleanroom-source-only-surface-anchor-inventory.txt`; `docs/2026-03-15/codebase-global-cleanroom-source-only-side-effects.txt`
 Side-Effect Coverage: covered
+
+## Historical Supersession Notice
+
+- This cleanroom execution SSOT is retained as a historical predecessor only.
+- Live execution authority moved to `docs/2026-03-15/runtime-operator-surface-unification-refresh-remediation-execution-ssot.md`, which was later realized and closed under the post-remediation roadmap.
+- Any `execution-ready`, temp-path, or roadmap semantics below are historical snapshot content, not current queue state.
 
 ## 1. Intent
 - Centralize operator prompt authority across console mode and wrapper prompt surfaces.

@@ -1399,21 +1399,22 @@ class Stage4PostProcessor:
         except Exception as _cr_err:
             logging.warning("[Phase 3-B] 크로스 에피소드 반복 감지 실패 (비차단): %s", _cr_err)
 
-    def run_post_episode_tasks(self) -> None:
+    def run_post_episode_tasks(self, *, skip_pause: bool = False) -> None:
         """[4-R1-d] Session wrap-up: logs, vector sync."""
         # [V62.3] Stage 4 루프 종료
         self.ctx.ui.log(f"\n{'=' * 50}")
         self.ctx.ui.log("📋 Stage 4 집필 세션 종료.")
-        try:
-            # [S4-P2-3] 자동화 환경에서 blocking input() 방지
-            import sys
+        if not skip_pause:
+            try:
+                # [S4-P2-3] 자동화 환경에서 blocking input() 방지
+                import sys
 
-            if sys.stdin and sys.stdin.isatty():
-                input("   ⏎ Enter를 누르면 메뉴로 돌아갑니다...")
-            else:
-                self.ctx.ui.log("   (비대화 모드 — 자동 진행)")
-        except (EOFError, OSError):
-            pass
+                if sys.stdin and sys.stdin.isatty():
+                    input("   ⏎ Enter를 누르면 메뉴로 돌아갑니다...")
+                else:
+                    self.ctx.ui.log("   (비대화 모드 — 자동 진행)")
+            except (EOFError, OSError):
+                pass
 
         # [V62.3] 벡터 메모리 일괄 동기화
         # [V66.3] 벡터 메모리 비활성화 시 스킵

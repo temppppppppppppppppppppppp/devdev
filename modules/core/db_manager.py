@@ -2649,6 +2649,22 @@ class DBManager:
             )
             return [dict(row) for row in cur.fetchall()]
 
+    def get_episode_meta_summaries(self, start_ep: int, end_ep: int) -> list[dict]:
+        """Return `episode_meta` summaries for start_ep <= ep_num < end_ep."""
+        safe_start = int(start_ep)
+        safe_end = int(end_ep)
+        if safe_end <= safe_start:
+            return []
+
+        with self._lock:
+            cur = self.cursor.execute(
+                """SELECT ep_num, summary FROM episode_meta
+                   WHERE ep_num >= ? AND ep_num < ?
+                   ORDER BY ep_num ASC""",
+                (safe_start, safe_end),
+            )
+            return [dict(row) for row in cur.fetchall()]
+
     def get_npc_recent_episodes(self, npc_name: str, before_ep: int, limit: int = 5) -> list[int]:
         """
         episode_meta.entity_names(쉼표 구분)에서 특정 NPC가 등장한 최근 에피소드 번호 조회.
@@ -3180,6 +3196,145 @@ class DBManager:
                 row["advisory_flags"] = {}
             parsed_rows.append(row)
         return parsed_rows
+
+    def get_stage4_final_authority_rows(
+        self,
+        *,
+        limit: int = 100,
+        session_id: str | None = None,
+    ) -> list[dict]:
+        """Return explicit Stage 4 final-authority rows with companion-role metadata."""
+        limit = max(1, int(limit or 100))
+        session_id = str(session_id or "").strip()
+
+        stage_attempt_where = "WHERE stage = 4 AND COALESCE(attempt_key, '') != ''"
+        params: list[object] = []
+        if session_id:
+            stage_attempt_where += " AND session_id = ?"
+            params.append(session_id)
+        params.append(limit)
+
+        sql = f"""
+            WITH latest_stage_attempts AS (
+                SELECT sa.id,
+                       sa.ep_num,
+                       sa.attempt_num,
+                       sa.verdict,
+                       sa.score,
+                       sa.session_id,
+                       sa.attempt_key,
+                       sa.candidate_key,
+                       sa.content_hash,
+                       sa.artifact_path
+                FROM stage_attempts sa
+                JOIN (
+                    SELECT MAX(id) AS last_id
+                    FROM stage_attempts
+                    {stage_attempt_where}
+                    GROUP BY attempt_key
+                    ORDER BY MAX(id) DESC
+                    LIMIT ?
+                ) latest ON latest.last_id = sa.id
+            ),
+            latest_director AS (
+                SELECT ds.id,
+                       ds.attempt_key,
+                       ds.verdict,
+                       ds.score,
+                       ds.candidate_key,
+                       ds.content_hash,
+                       ds.artifact_path
+                FROM director_selections ds
+                JOIN (
+                    SELECT MAX(id) AS last_id
+                    FROM director_selections
+                    WHERE {self._director_stage_predicate(4)} AND COALESCE(attempt_key, '') != ''
+                    GROUP BY attempt_key
+                ) latest ON latest.last_id = ds.id
+            )
+            SELECT lsa.ep_num,
+                   lsa.attempt_num,
+                   lsa.verdict AS final_verdict,
+                   lsa.score AS final_score,
+                   lsa.session_id,
+                   lsa.attempt_key,
+                   lsa.candidate_key AS final_candidate_key,
+                   lsa.content_hash AS final_content_hash,
+                   lsa.artifact_path AS final_artifact_path,
+                   ld.verdict AS selection_verdict,
+                   ld.score AS selection_score,
+                   ld.candidate_key AS selection_candidate_key,
+                   ld.content_hash AS selection_content_hash,
+                   ld.artifact_path AS selection_artifact_path
+            FROM latest_stage_attempts lsa
+            LEFT JOIN latest_director ld ON ld.attempt_key = lsa.attempt_key
+            ORDER BY lsa.id DESC
+        """
+
+        with self._lock:
+            cur = self.conn.execute(sql, tuple(params))
+            rows = [dict(row) for row in cur.fetchall()]
+
+        resolved_rows: list[dict] = []
+        for row in rows:
+            final_content_hash = str(row.get("final_content_hash") or "").strip()
+            final_artifact_path = str(row.get("final_artifact_path") or "").strip()
+            selection_content_hash = str(row.get("selection_content_hash") or "").strip()
+            selection_artifact_path = str(row.get("selection_artifact_path") or "").strip()
+            selection_candidate_key = str(row.get("selection_candidate_key") or "").strip()
+
+            diff_fields: list[str] = []
+            if (
+                final_content_hash
+                and selection_content_hash
+                and final_content_hash != selection_content_hash
+            ):
+                diff_fields.append("content_hash")
+            if (
+                final_artifact_path
+                and selection_artifact_path
+                and final_artifact_path != selection_artifact_path
+            ):
+                diff_fields.append("artifact_path")
+
+            selection_row_present = bool(
+                selection_candidate_key
+                or selection_content_hash
+                or selection_artifact_path
+                or str(row.get("selection_verdict") or "").strip()
+            )
+            if not selection_row_present:
+                companion_status = "missing"
+            elif diff_fields:
+                companion_status = "pre_final_candidate"
+            else:
+                companion_status = "same_as_final"
+
+            resolved_rows.append(
+                {
+                    "ep_num": int(row.get("ep_num") or 0),
+                    "attempt_num": int(row.get("attempt_num") or 0),
+                    "attempt_key": str(row.get("attempt_key") or "").strip(),
+                    "session_id": str(row.get("session_id") or "").strip(),
+                    "final_verdict": str(row.get("final_verdict") or "").strip(),
+                    "final_score": row.get("final_score"),
+                    "final_candidate_key": str(row.get("final_candidate_key") or "").strip(),
+                    "final_content_hash": final_content_hash,
+                    "final_artifact_path": final_artifact_path,
+                    "selection_verdict": str(row.get("selection_verdict") or "").strip(),
+                    "selection_score": row.get("selection_score"),
+                    "selection_candidate_key": selection_candidate_key,
+                    "selection_content_hash": selection_content_hash,
+                    "selection_artifact_path": selection_artifact_path,
+                    "final_authority_sink": "stage_attempts",
+                    "selection_role": "historical_companion" if selection_row_present else "missing",
+                    "selection_companion_status": companion_status,
+                    "selection_companion_diff_fields": diff_fields,
+                    "selection_matches_final_artifact": selection_row_present and not diff_fields,
+                }
+            )
+
+        return resolved_rows
 
     def save_llm_call(
         self,

@@ -40,16 +40,16 @@ def _make_mock_inspector():
 
     # 패턴들
     inspector.acquire_patterns = [
-        r"['\"]?([가-힣a-zA-Z0-9]{2,25})['\"]?(?:을|를)\s*(?:획득|챙기|얻|주워\s*들|가져)",
+        r"['\"]?([가-힣a-zA-Z0-9]{2,25})['\"]?(?:을|를)\s*(?:획득|챙기|얻|주워\s*들|가져)",  # utf8-hygiene: allow-line regex optional quantifier
     ]
     inspector.grant_patterns = [
-        r"['\"]?([가-힣a-zA-Z0-9]{2,25})['\"]?(?:을|를)\s*(?:하사|수여|내리|던져\s*주|건네)",
+        r"['\"]?([가-힣a-zA-Z0-9]{2,25})['\"]?(?:을|를)\s*(?:하사|수여|내리|던져\s*주|건네)",  # utf8-hygiene: allow-line regex optional quantifier
     ]
     inspector.possession_patterns = [
-        r"품속.*?(.+?)(?:이|가)\s*(?:있|자리)",
+        r"품속.*?(.+?)(?:이|가)\s*(?:있|자리)",  # utf8-hygiene: allow-line regex optional quantifier
     ]
     inspector.usage_patterns = [
-        r"['\"]?([가-힣a-zA-Z0-9]{2,25})['\"]?(?:을|를)\s*(?:뽑아\s*들|집어\s*들|꺼내\s*들)",
+        r"['\"]?([가-힣a-zA-Z0-9]{2,25})['\"]?(?:을|를)\s*(?:뽑아\s*들|집어\s*들|꺼내\s*들)",  # utf8-hygiene: allow-line regex optional quantifier
     ]
     inspector.distribution_patterns = []
 
@@ -936,6 +936,20 @@ class TestContinuityManuscriptLLMFailure:
             current_ep=2, manuscript=manuscript, blueprint={"scene_breakdown": {}}, prev_manuscripts=prev
         )
         assert result["decision"] == "PASS"
+
+    def test_relationship_history_tracks_terminal_states(self):
+        validator = ContinuityManuscriptValidator(_make_mock_inspector())
+
+        result = validator._track_relationship_history(
+            current_ep=2,
+            manuscript="사병은 무릎을 꿇고 굴복했다.",
+            prev_manuscripts=[{"ep_num": 1, "content": "사병은 원수를 향해 적대의 살기를 드러냈다."}],
+        )
+
+        jumps = [item for item in result["violations"] if item.get("type") == "relationship_jump"]
+        assert jumps
+        assert jumps[0]["from_state"] == "적대"
+        assert jumps[0]["to_state"] == "굴복"
 
 
 class TestContinuityBlueprintLLMFailure:
