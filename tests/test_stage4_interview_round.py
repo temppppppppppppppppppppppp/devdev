@@ -231,6 +231,36 @@ class TestInterviewRoundHelpers:
         assert "[STYLE] ai_slop score 1.20" in provenance["evidence_summary"]
         assert "[STYLE] dialogue_ratio 24% < style target 40%" in provenance["merged_feedback"]
 
+    def test_retry_feedback_provenance_includes_structured_validation_handoff(self):
+        ir = Stage4InterviewRound(_make_ctx())
+
+        provenance = ir._build_retry_feedback_provenance(
+            director_result={"feedback": {}},
+            director_feedback="",
+            selected_validation={
+                "npc_drift_warnings": [
+                    {
+                        "npc": "연홍",
+                        "field": "말투",
+                        "expected": "반말",
+                        "found_in_ms": "존댓말",
+                    }
+                ],
+                "numeric_consistency_warnings": [
+                    {
+                        "severity": "MAJOR",
+                        "text": "[수치 불일치] 원고 '포지션 60억' vs FactLedger '포지션'=40억",
+                    }
+                ],
+                "coverage_warnings": ["missing_relation_slice"],
+            },
+            round_num=1,
+        )
+
+        assert "[NPC] 연홍 말투:" in provenance["evidence_summary"]
+        assert "[FACT] [수치 불일치]" in provenance["merged_feedback"]
+        assert "[COVERAGE] 관계 의미 질의가 빠졌다." in provenance["merged_feedback"]
+
     def test_advisory_style_signals_reports_runtime_core_gaps(self):
         ctx = _make_ctx()
         ctx.current_project.db.get_quality_signal_summary.return_value = {
@@ -431,6 +461,16 @@ class TestAdvisoryChain:
             local_results[0]["npc_drift_warnings"] = [{"npc": "연홍"}]
             return ["[NpcDriftAdvisor]"]
 
+        def _numeric_consistency(_candidates, local_results, _next_ep):
+            seen_ids["numeric"] = id(local_results)
+            local_results[0]["numeric_consistency_warnings"] = [
+                {
+                    "severity": "MAJOR",
+                    "text": "[수치 불일치] 원고 '포지션 60억' vs FactLedger '포지션'=40억",
+                }
+            ]
+            return ["[NumericConsistency]"]
+
         with (
             patch("concurrent.futures.ThreadPoolExecutor", _FakeExecutor),
             patch("concurrent.futures.as_completed", side_effect=lambda futures, timeout=None: list(futures)),
@@ -441,7 +481,8 @@ class TestAdvisoryChain:
             patch.object(ir, "_advisory_info_paradox", return_value=[]),
             patch.object(ir, "_advisory_rel_drift", return_value=[]),
             patch.object(ir, "_advisory_long_term_rep", return_value=[]),
-            patch.object(ir, "_advisory_numeric_consistency", return_value=[]),
+            patch.object(ir, "_advisory_numeric_consistency", side_effect=_numeric_consistency),
+            patch.object(ir, "_advisory_style_signals", return_value=[]),
         ):
             result = ir._run_advisory_chain(
                 candidates=[_candidate()],
@@ -450,12 +491,74 @@ class TestAdvisoryChain:
                 genre_name="무협",
             )
 
-        assert result == ["[TruthGate Advisory]", "[NpcDriftAdvisor]"]
+        assert result == ["[TruthGate Advisory]", "[NpcDriftAdvisor]", "[NumericConsistency]"]
         assert seen_ids["truth"] != id(validation_results)
         assert seen_ids["npc"] != id(validation_results)
+        assert seen_ids["numeric"] != id(validation_results)
         assert seen_ids["truth"] != seen_ids["npc"]
         assert validation_results[0]["truth_gate_warnings"][0]["text"] == "사망 NPC 등장"
         assert validation_results[0]["npc_drift_warnings"][0]["npc"] == "연홍"
+        assert "포지션 60억" in validation_results[0]["numeric_consistency_warnings"][0]["text"]
+
+
+class TestPreDirectorValidation:
+    def test_pre_director_validation_attaches_coverage_warnings_to_candidates(self):
+        ctx = _make_ctx()
+        ctx.memory = MagicMock()
+        ctx.context_advisor = MagicMock()
+        ctx.context_advisor.plan_director_retrieval.return_value = RetrievalPlan(
+            stage="director",
+            episode_num=4,
+            slots=[
+                RetrievalSlot(
+                    category="work_relationship_context",
+                    query="관계 변화 이력: 주인공, 연홍",
+                    source=RetrievalSources.DB_NPC_RELATIONSHIP,
+                    priority=1,
+                )
+            ],
+            total_budget_chars=800,
+        )
+        ir = Stage4InterviewRound(ctx)
+        ir._god1_stage4_spinner = MagicMock()
+        ir._god1_round_num = 0
+        ir._god1_arc_pos = 1
+        ir._god1_total_ep_in_arc = 10
+        ir._god1_arc_data = {}
+        ir._god1_prev_manuscript = ""
+
+        round_ctx = _make_round_ctx()
+        round_ctx.manuscript_validator.validate_all_candidates.return_value = [_validation_result()]
+
+        def threshold_side_effect(key, default=None):
+            if key == "smart_retrieval.enabled":
+                return True
+            if key == "smart_retrieval.director_enabled":
+                return True
+            if key == "context.vector_max_results_s4":
+                return 16
+            return default
+
+        with (
+            patch("modules.validation.threshold_helper._threshold", side_effect=threshold_side_effect),
+            patch.object(ir, "_resolve_director_work_focus", return_value={"tracking_slots": ["소꿉친구 라인"]}),
+            patch.object(ir, "_build_director_work_focus_summary", return_value="[작품 추적 슬롯 요약]\n- 소꿉친구 라인"),
+            patch.object(ir, "_build_director_relationship_context", return_value=""),
+        ):
+            validation_results = ir._run_pre_director_validation(
+                candidates=[_candidate()],
+                next_ep=4,
+                blueprint={"characters": ["연홍"]},
+                prev_text="이전 원고",
+                hud_report="HUD",
+                genre_name="무협",
+                manuscript_validator=round_ctx.manuscript_validator,
+                consistency_validator=round_ctx.consistency_validator,
+                blocking_validator=round_ctx.blocking_validator,
+                continuity_validator=round_ctx.continuity_validator,
+            )
+
+        assert validation_results[0]["coverage_warnings"] == ["missing_relation_slice"]
 
 
 class TestInterviewRoundRun:
@@ -589,6 +692,57 @@ class TestInterviewRoundRun:
         assert result.verdict == "REJECT"
         assert result.final_manuscript is None
         assert "[Advisory 핵심 요약 - 재시도 시 반영]" in result.previous_attempt["rejection_reason"]
+
+    def test_reject_preserves_structured_validation_warnings_for_retry(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.chief_writer.generate_ensemble.return_value = [_candidate()]
+        round_ctx.manuscript_validator.validate_all_candidates.return_value = [
+            {
+                "warnings": [],
+                "warning_count": 0,
+                "focus_points": [],
+                "metrics": {"length": 2000},
+                "npc_drift_warnings": [
+                    {
+                        "npc": "연홍",
+                        "field": "말투",
+                        "expected": "반말",
+                        "found_in_ms": "존댓말",
+                    }
+                ],
+                "numeric_consistency_warnings": [
+                    {
+                        "severity": "MAJOR",
+                        "text": "[수치 불일치] 원고 '포지션 60억' vs FactLedger '포지션'=40억",
+                    }
+                ],
+                "coverage_warnings": ["missing_relation_slice"],
+            }
+        ]
+        ir._run_advisory_chain = MagicMock(return_value=[])
+        ctx.agents["director"].select_and_judge_ensemble.return_value = {
+            "selected": "A",
+            "verdict": "REJECT",
+            "score": 40,
+            "selection_reason": "부족",
+            "feedback": {"issues": ["문제"]},
+            "action_items": ["수정1"],
+            "selected_candidate": {"manuscript": "거절 원고"},
+        }
+
+        result = ir.run(
+            round_num=0,
+            stage4_spinner=MagicMock(),
+            director_feedback="",
+            previous_attempt={},
+            round_ctx=round_ctx,
+        )
+
+        assert any("[후보 A] [NPC]" in warning for warning in result.previous_attempt["validation_warnings"])
+        assert any("[후보 A] [FACT]" in warning for warning in result.previous_attempt["validation_warnings"])
+        assert any("[후보 A] [COVERAGE]" in warning for warning in result.previous_attempt["validation_warnings"])
 
     def test_patch_and_fallback_use_ctx_state_tracker(self):
         ctx = _make_ctx()
