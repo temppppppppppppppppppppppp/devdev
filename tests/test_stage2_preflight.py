@@ -303,6 +303,25 @@ class TestPreflightArcAnalysis:
         out = preflight._preflight_arc_analysis(**_arc_analysis_kwargs(all_refined_arcs=arcs))
         assert "recent_patterns" not in out
 
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    def test_stage3_reverse_feedback_injected_after_three_stage3_failures(self, preflight):
+        preflight.ctx.stage_rejection_history = [
+            {"stage": 3, "arc_no": 1, "reason": "continuity", "attempt": 1},
+            {"stage": 3, "arc_no": 1, "reason": "continuity", "attempt": 2},
+            {"stage": 3, "arc_no": 1, "reason": "coverage", "attempt": 3},
+            {"stage": 2, "arc_no": 1, "reason": "ignore", "attempt": 1},
+        ]
+        preflight.ctx.generate_reverse_feedback_stage3_to_2 = MagicMock(return_value="reverse feedback")
+
+        preflight._preflight_arc_analysis(**_arc_analysis_kwargs(constraint_block=""))
+
+        preflight.ctx.generate_reverse_feedback_stage3_to_2.assert_called_once()
+        call_kw = preflight.ctx.generate_reverse_feedback_stage3_to_2.call_args.kwargs
+        assert call_kw["arc_no"] == 1
+        assert len(call_kw["architect_failures"]) == 3
+        assert all(item["stage"] == 3 for item in call_kw["architect_failures"])
+        preflight.ctx.ui.log.assert_called()
+
     def test_build_fact_ledger_context_reads_numbers_schema(self, preflight):
         preflight.ctx.current_project.db.load_anchor.side_effect = lambda key: (
             {

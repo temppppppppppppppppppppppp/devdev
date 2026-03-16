@@ -412,7 +412,11 @@ def test_quality_dashboard_endpoint_surfaces_proof_status_and_sink_alignment(tmp
     assert response.status_code == 200
     assert payload["ok"] is True
     data = payload["data"]
-    assert data["runtime_health"]["available"] is False
+    runtime_health = data["runtime_health"]
+    if runtime_health["available"]:
+        assert runtime_health["top_components"][0]["component"] == "failure_analyzer.sink_alignment_final_authority_contract"
+    else:
+        assert runtime_health["recent_count"] == 0
     assert data["proof_status"]["available"] is True
     assert data["proof_status"]["status"] == "ok"
     assert data["proof_status"]["sink_alignment_status"] == "ok"
@@ -427,6 +431,51 @@ def test_quality_dashboard_endpoint_surfaces_proof_status_and_sink_alignment(tmp
     assert "pass_rate_monitor" in data["runtime_audit_summary"]["contract"]["authoritative_attempt_sinks"]
     assert data["runtime_audit_summary"]["proof_digest"]["status"] == "ok"
     assert data["runtime_audit_summary"]["proof_digest"]["stages"]["stage4"]["coverage"]["session_decisions"] == 1
+
+
+def test_quality_dashboard_endpoint_surfaces_cost_summary(tmp_path, monkeypatch):
+    monkeypatch.setattr(bridge_server, "PROJECT_ROOT", tmp_path)
+    project_dir = tmp_path / "projects" / "demo"
+    project_dir.mkdir(parents=True)
+
+    db = DBManager(project_dir / "project_data.db")
+    try:
+        db.save_cost_record(
+            session_id="sess_ep3",
+            scope_type="episode",
+            scope_id=3,
+            total_calls=5,
+            total_tokens=900,
+            total_cost_usd=1.25,
+            model_breakdown={"gpt-5": {"calls": 5}},
+        )
+        db.save_cost_record(
+            session_id="sess_arc1",
+            scope_type="arc",
+            scope_id=1,
+            total_calls=2,
+            total_tokens=300,
+            total_cost_usd=0.5,
+            model_breakdown={"gpt-5-mini": {"calls": 2}},
+        )
+    finally:
+        db.close()
+
+    response = asyncio.run(bridge_server.quality_dashboard_endpoint(project="demo", lookback=5))
+    payload = json.loads(response.body.decode("utf-8"))
+
+    assert response.status_code == 200
+    assert payload["ok"] is True
+    cost_summary = payload["data"]["cost_summary"]
+    assert cost_summary["available"] is True
+    assert cost_summary["row_count"] == 2
+    assert cost_summary["latest_session_id"] == "sess_arc1"
+    assert cost_summary["total_calls"] == 7
+    assert cost_summary["total_tokens"] == 1200
+    assert cost_summary["total_cost_usd"] == 1.75
+    assert cost_summary["scope_counts"] == {"arc": 1, "episode": 1}
+    assert cost_summary["recent"][0]["scope_type"] == "arc"
+    assert cost_summary["recent"][1]["scope_type"] == "episode"
 
 
 def test_safe_ops_preview_endpoint_exposes_stage_split(tmp_path, monkeypatch):
