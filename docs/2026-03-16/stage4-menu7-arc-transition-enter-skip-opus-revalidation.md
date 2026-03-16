@@ -1,3 +1,5 @@
+<!-- [완료] -->
+<\!-- [참고자료] -->
 # Stage4 Menu7 Arc Transition Enter Skip OPUS Revalidation
 
 Date: 2026-03-16

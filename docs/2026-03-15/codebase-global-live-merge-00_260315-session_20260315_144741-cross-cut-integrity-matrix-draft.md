@@ -1,3 +1,4 @@
+<!-- [참고자료] -->
 # Codebase Global Live Merge 00_260315 Session 20260315_144741 Cross-Cut Integrity Matrix Draft
 
 Date: 2026-03-15

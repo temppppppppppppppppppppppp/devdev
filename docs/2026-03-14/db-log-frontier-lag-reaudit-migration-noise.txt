@@ -1,3 +1,4 @@
+<!-- [참고자료] -->
 # Duplicate-column migration noise clusters
 Total duplicate-column log lines: 80
 By table family: {'llm_calls': 32, 'stage_attempts': 48}

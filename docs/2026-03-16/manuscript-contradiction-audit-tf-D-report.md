@@ -1,3 +1,5 @@
+<!-- [참고자료] -->
+<\!-- [참고자료] -->
 # TF-D Manuscript Contradiction Audit Report
 
 **Date**: 2026-03-16

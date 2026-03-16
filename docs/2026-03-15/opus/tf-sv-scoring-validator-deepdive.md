@@ -1,3 +1,4 @@
+<!-- [참고자료] -->
 # TF-SV: ScoringValidator 딥다이브
 
 | Field | Value |

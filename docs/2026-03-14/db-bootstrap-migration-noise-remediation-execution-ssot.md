@@ -1,3 +1,4 @@
+<!-- [완료] -->
 # DB Bootstrap Migration Noise Remediation Execution SSOT
 
 Date: 2026-03-14

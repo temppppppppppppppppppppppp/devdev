@@ -1,3 +1,4 @@
+<!-- [참고자료] -->
 smoke_sc.py:57:def main():
 main.js:10:const ipcMain = electron.ipcMain;
 main.js:17:if (!app || !BrowserWindow || !ipcMain) {

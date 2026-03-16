@@ -1,3 +1,5 @@
+<!-- [참고자료] -->
+<\!-- [참고자료] -->
 # Post-Remediation Later Hardening Autopilot Prompt 3-Pass Audit
 
 Date: 2026-03-16

@@ -1,3 +1,4 @@
+<!-- [참고자료] -->
 Topic: codebase-global-cleanroom-source-only
 Date: 2026-03-15
 Mode: source-only side-effect sweep

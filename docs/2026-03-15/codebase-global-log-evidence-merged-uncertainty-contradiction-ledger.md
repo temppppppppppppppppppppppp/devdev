@@ -1,3 +1,4 @@
+<!-- [참고자료] -->
 ﻿# codebase-global-log-evidence-merged Uncertainty And Contradiction Ledger
 
 Date: 2026-03-15

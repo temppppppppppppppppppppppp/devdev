@@ -1,3 +1,4 @@
+<!-- [참고자료] -->
 AGENTS.md:6: CLAUDE_REF: - `CLAUDE.md`는 호환용 shim이며 독립 운영 기준으로 쓰지 않는다
 AGENTS.md:32: TEMP_REF: - `execution SSOT`의 `docs/temp/` 카피본도 3pass 감리 완료 후에만 생성/갱신
 AGENTS.md:47: CLAUDE_REF: - workspace precedence is `AGENTS.md` -> init harness -> specialized harness -> contracts/templates -> local notes -> `CLAUDE.md` shim

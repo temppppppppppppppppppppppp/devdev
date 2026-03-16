@@ -1,3 +1,4 @@
+<!-- [폐기] -->
 # backend-front-control-plane-connectivity-remediation Execution SSOT
 
 Date: 2026-03-15

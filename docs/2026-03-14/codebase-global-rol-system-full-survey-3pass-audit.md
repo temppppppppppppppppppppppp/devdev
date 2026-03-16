@@ -1,3 +1,4 @@
+<!-- [참고자료] -->
 # Codebase Global ROL System Full Survey 3-Pass Audit
 
 Date: 2026-03-14

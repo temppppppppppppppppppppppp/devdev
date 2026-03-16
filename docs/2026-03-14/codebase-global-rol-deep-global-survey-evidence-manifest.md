@@ -1,3 +1,4 @@
+<!-- [참고자료] -->
 # Codebase Global ROL Deep Global Survey Evidence Manifest
 
 Date: 2026-03-14

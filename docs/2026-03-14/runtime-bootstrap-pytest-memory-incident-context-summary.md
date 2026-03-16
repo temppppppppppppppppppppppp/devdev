@@ -1,3 +1,4 @@
+<!-- [참고자료] -->
 # Runtime Bootstrap / Pytest Memory Incident Context Summary
 
 Date: 2026-03-14

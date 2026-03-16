@@ -1,3 +1,4 @@
+<!-- [참고자료] -->
 # Codebase Stagewise Deep Survey 3-Pass Audit Draft
 
 Date: 2026-03-15

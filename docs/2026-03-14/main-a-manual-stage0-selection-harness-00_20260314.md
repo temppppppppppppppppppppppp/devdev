@@ -1,3 +1,4 @@
+<!-- [참고자료] -->
 # `main_a.py` Manual Stage 0 Selection Harness - `00_20260314`
 
 Created: 2026-03-14

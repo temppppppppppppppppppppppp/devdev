@@ -1,4 +1,6 @@
-﻿main_a.py:39:    print("[V61.3] Faulthandler 활성화 → crash_dump.log", file=sys.stderr)
+<!-- [참고자료] -->
+﻿<!-- [참고자료] -->
+main_a.py:39:    print("[V61.3] Faulthandler 활성화 → crash_dump.log", file=sys.stderr)
 main_a.py:41:    print(f"[V61.3] Faulthandler 초기화 실패 (비차단): {_fh_err}", file=sys.stderr)
 main_a.py:138:        print(f"[!] Stage 0 모듈 로드 실패: {e}")
 main_a.py:254:        print(f"⚠️ [V50] 일부 모듈 미설치: {e}")

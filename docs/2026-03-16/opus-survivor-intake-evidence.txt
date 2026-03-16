@@ -1,3 +1,5 @@
+<!-- [참고자료] -->
+<\!-- [참고자료] -->
 OPUS survivor intake evidence
 Date: 2026-03-16
 Baseline Commit: d6c81c1976d9812d447c2a78e2aeb36f7aed666a

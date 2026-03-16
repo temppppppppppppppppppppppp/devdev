@@ -1,3 +1,4 @@
+<!-- [완료] -->
 # Auto Frontier-Lag N-Arc Test Harness SSOT
 
 Created: 2026-03-14

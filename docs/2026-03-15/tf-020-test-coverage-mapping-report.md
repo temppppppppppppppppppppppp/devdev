@@ -1,3 +1,4 @@
+<!-- [참고자료] -->
 # TF-020 Test Coverage Mapping Report
 
 Date: 2026-03-15

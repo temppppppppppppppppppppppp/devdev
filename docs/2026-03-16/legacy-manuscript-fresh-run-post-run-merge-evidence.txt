@@ -1,3 +1,5 @@
+<!-- [참고자료] -->
+<\!-- [참고자료] -->
 Date: 2026-03-16
 Status: final-evidence
 Canonical Path: `docs/2026-03-16/legacy-manuscript-fresh-run-post-run-merge-evidence.txt`

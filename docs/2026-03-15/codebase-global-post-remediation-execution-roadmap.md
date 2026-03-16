@@ -1,3 +1,4 @@
+<!-- [참고자료] -->
 # codebase-global-post-remediation Aggregate Execution Roadmap
 
 Date: 2026-03-15

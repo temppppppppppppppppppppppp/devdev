@@ -1,3 +1,4 @@
+<!-- [완료] -->
 # Interactive Prompt Contract Refresh Execution SSOT
 
 Date: 2026-03-15

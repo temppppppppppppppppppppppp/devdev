@@ -1,3 +1,4 @@
+<!-- [참고자료] -->
 Topic: codebase-global-cleanroom-source-only
 Focus: backend-front connectivity
 Date: 2026-03-15

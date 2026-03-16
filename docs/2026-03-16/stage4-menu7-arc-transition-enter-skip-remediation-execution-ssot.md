@@ -1,3 +1,5 @@
+<!-- [완료] -->
+<\!-- [완료] -->
 # Stage4 Menu7 Arc Transition Enter Skip Remediation Execution SSOT
 
 Date: 2026-03-16

@@ -1,3 +1,5 @@
+<!-- [완료] -->
+<\!-- [참고자료] -->
 # Legacy Manuscript Authority Sink Alignment Execution Roadmap
 
 Date: 2026-03-16

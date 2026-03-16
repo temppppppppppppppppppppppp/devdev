@@ -1,3 +1,4 @@
+<!-- [완료] -->
 # Regression and Canary Surface Rationalization Execution SSOT
 
 Date: 2026-03-14

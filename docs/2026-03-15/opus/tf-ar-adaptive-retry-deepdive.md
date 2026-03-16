@@ -1,3 +1,4 @@
+<!-- [참고자료] -->
 # TF-AR: Adaptive Retry 전략 선택 딥다이브
 
 | Field | Value |

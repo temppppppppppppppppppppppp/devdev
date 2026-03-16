@@ -1,3 +1,4 @@
+<!-- [참고자료] -->
 # 전 스테이지 딥다이브 — 수정 후보 SSOT
 
 > Independent Re-Audit (Codex, 2026-03-16)

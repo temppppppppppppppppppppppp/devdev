@@ -1,3 +1,4 @@
+<!-- [참고자료] -->
 # 3-Pass Audit Master Summary (R2: 대원칙 적용 재감리)
 
 > Independent Re-Audit (Codex, 2026-03-16)

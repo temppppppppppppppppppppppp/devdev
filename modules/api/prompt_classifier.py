@@ -25,14 +25,14 @@ _PROMPT_PATTERNS: list[tuple[re.Pattern, str, str]] = [
     # 경로 입력 (> 프롬프트)
     (re.compile(r"^>\s*$"), "string", "path_input"),
     (re.compile(r"경로\s*입력"), "string", "path_input"),
-    # 숫자 범위 + 기본값 (예: "1~5, 기본: 3")
-    (re.compile(r"(\d+)\s*[~\-]\s*(\d+).*기본"), "int", "range_input"),
-    # 숫자 범위 입력 (예: "1~5 입력")
-    (re.compile(r"(\d+)\s*[~\-]\s*(\d+).*입력"), "int", "range_input"),
     # Choice / 선택 (괄호 내 옵션 포함, 예: "Choice (1.무협 / 2.헌터):")
     (re.compile(r"(?:👉\s*)?(?:Choice|선택)\s*(?:\(.*\))?\s*[:：]\s*$"), "enum", "choice"),
     # 선택 프롬프트 (기본값 있음)
     (re.compile(r"선택\s*\(?\s*기본\s*[:：]?\s*(\d+)\s*\)?\s*[:：]\s*$"), "enum", "choice"),
+    # 숫자 범위 + 기본값 (예: "1~5, 기본: 3")
+    (re.compile(r"(\d+)\s*[~\-]\s*(\d+).*기본"), "int", "range_input"),
+    # 숫자 범위 입력 (예: "1~5 입력")
+    (re.compile(r"(\d+)\s*[~\-]\s*(\d+).*입력"), "int", "range_input"),
     # 일반 프롬프트 (: 로 끝남)
     (re.compile(r"[:：]\s*$"), "string", "generic_input"),
 ]
@@ -46,6 +46,30 @@ _OPTION_LINE_RE = re.compile(
 
 # 기본값 추출
 _DEFAULT_RE = re.compile(r"기본\s*[:：]?\s*(\d+)")
+
+
+def _is_option_line(text: str) -> bool:
+    return bool(_OPTION_LINE_RE.match(text.strip()))
+
+
+def _derive_prompt_text(stripped: str, context_lines: list[str], input_type: str) -> str:
+    """Prefer the semantic label over a generic Choice(...) tail."""
+    if input_type != "enum":
+        return stripped
+
+    generic_choice = re.fullmatch(r"(?:👉\s*)?(?:Choice|선택)\s*(?:\(.*\))?\s*[:：]?", stripped)
+    if not generic_choice:
+        return stripped
+
+    for line in reversed(context_lines):
+        candidate = line.strip()
+        if not candidate or _is_option_line(candidate):
+            continue
+        parts = [part.strip() for part in re.split(r"\s{2,}", candidate) if part.strip()]
+        if parts:
+            return parts[-1]
+        return candidate
+    return stripped
 
 
 def is_prompt(text: str) -> bool:
@@ -128,6 +152,11 @@ def classify(text: str, context_lines: list[str] | None = None) -> dict:
         for m in re.finditer(r"(\d+)\s*[.·]\s*([^\s/,)]+)", stripped):
             options.append({"key": m.group(1), "label": m.group(2).strip()})
 
+    prompt_text = _derive_prompt_text(stripped, context_lines, input_type)
+
+    if input_type == "enum" and default is None and len(options) == 1:
+        default = options[0]["key"]
+
     # int 타입인데 범위가 감지되면 step_id 보강
     if input_type == "int" and not default:
         dm2 = _DEFAULT_RE.search(stripped)
@@ -139,5 +168,5 @@ def classify(text: str, context_lines: list[str] | None = None) -> dict:
         "step_id": step_id,
         "default": default,
         "options": options,
-        "prompt_text": stripped,
+        "prompt_text": prompt_text,
     }

@@ -1,3 +1,4 @@
+<!-- [참고자료] -->
 # codebase-global-cleanroom-source-only Evidence Manifest
 
 Date: 2026-03-15
