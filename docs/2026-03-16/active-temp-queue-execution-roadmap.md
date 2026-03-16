@@ -1,7 +1,7 @@
 # Active Temp Queue Aggregate Execution Roadmap
 
 Date: 2026-03-16
-Status: active
+Status: completed (all queue items closed)
 Canonical Path: `docs/2026-03-16/active-temp-queue-execution-roadmap.md`
 Temp Mirror Path: `docs/temp/execution-roadmap.md`
 Commit State:
@@ -66,7 +66,9 @@ Queue Snapshot:
   - `tests/test_stage4_context_builder.py` -> `51 passed`
   - `tests/test_stage4_orchestrator.py` -> `58 passed`
   - `tests/test_continuity_packet.py` -> `18 passed`
-- next sub-target within the remaining project item: `relationship/threat delta durable persistence`
+- `relationship/threat delta durable persistence` landed: format fix (strings→dicts) + state_log inclusion + WorldState/FactLedger extraction
+- `preflight/validator severity` evaluated: no change needed — inventory_count_drift + RelDrift advisory already operational
+- all project-specific priority items are now closed
 
 ## 3. Dependency Graph
 
@@ -154,7 +156,7 @@ Loop rule:
 | --- | --- | --- | --- |
 | desktop-stage0-edr-code1-failure | completed | 2026-03-16 | closed and removed from active temp queue |
 | investment-stage0-ui-hints-and-style-cache-visibility | completed | 2026-03-16 | closed and removed from active temp queue |
-| project-0-260316 | in progress (selected next sub-target: relationship/threat delta durable persistence) | 2026-03-16 | none |
+| project-0-260316 | **completed** — all priority items landed and verified | 2026-03-16 | none |
 
 ## 8. Queue Cleanup Rule
 
