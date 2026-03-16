@@ -14,7 +14,7 @@ Confidence: `96%`
 - the project SSOT owns `0_260316` recovery, stop-point, integrity, resumability, and project-specific regression authority
 - this roadmap owns ordering, overlap classification, and sync rules between the two SSOTs
 - all planned tranches are now closed; no active tranche remains
-- the low-priority `control-plane provenance` reader is also closed via bridge `/status`; only opportunistic helper cleanups remain
+- the low-priority `control-plane provenance` reader is also closed via bridge `/status`, and `PassRateMonitor.get_patch_effectiveness()` is now closed via bridge quality dashboard; only opportunistic helper cleanups remain
 
 ## Why Not One SSOT
 
@@ -135,7 +135,7 @@ Selection rule:
 - do not rewrite project-only recovery sections for system-only remediation movement
 - after the doc refresh, automatically choose the next highest-priority pending tranche whose starting gate still passes
 - current outcome: no pending tranche remains; the roadmap is closed pending any future re-open triggered by a fresh validity gate
-- residual low-priority items are now outside the remediation queue unless a future validity gate promotes them
+- residual low-priority items are now outside the remediation queue unless a future validity gate promotes them; `PassRateMonitor.get_patch_effectiveness()` no longer belongs to that residual set
 
 ## Acceptance Criteria
 
