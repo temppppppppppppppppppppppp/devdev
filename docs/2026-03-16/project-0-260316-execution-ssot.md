@@ -224,7 +224,7 @@ Core reconciliation sentence:
 
 ### Lane B: Project-Specific System Remediation
 
-**Decision:** keep project-specific remediation open here, but delegate shared broken-feedback bundle priority to the companion system SSOT.
+**Decision:** treat project-specific remediation as closed here, while delegating shared broken-feedback bundle priority to the companion system SSOT.
 
 **Why this lane is required**
 - Stage 4 re-entry can mix arc-derived tracker state with DB-derived persisted state (`main_a.py:4043-4096`)
