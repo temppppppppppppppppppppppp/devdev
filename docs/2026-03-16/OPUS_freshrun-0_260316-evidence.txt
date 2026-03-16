@@ -1,0 +1,258 @@
+================================================================================
+OPUS_freshrun-0_260316-evidence.txt
+Raw Evidence Collection — Freshrun 0_260316 중단 분석
+수집 시각: 2026-03-16
+================================================================================
+
+[E-1] SESSION METADATA
+──────────────────────────────────────────
+- 세션 로그: projects/0_260316/logs/session_20260316_110204.log
+- 세션 ID: 20260316_110208 (structured), 20260316_110204 (plain log)
+- 총 로그 라인: 9,130줄
+- 시작: 2026-03-16 11:02:05 (장르 선택 UI)
+- 마지막 로그: 2026-03-16 12:56:06
+- 총 경과: 1시간 54분 01초
+- 장르: 투자 (Investment Fiction)
+- 프로젝트: 0_260316
+- Chief Writer 모델: gemini-2.5-pro
+- 앙상블: 3개 병렬 생성
+
+[E-2] 중단 지점 로그 꼬리 (마지막 30줄 요약)
+──────────────────────────────────────────
+9102: [12:56:06] [V61.5] 컨텍스트 캐시 생성: manuscript (67229자)
+9103: [12:56:06] [V61.7] 컨텍스트 캐시 활용 (ep7, 67229자)
+9104: [12:56:06] [QR-3] ChiefWriter 전략 배분 완료: balanced=100%, narrative=0%, tension=0%
+9105-9107: [12:56:06] AFC enabled (3회 - 3개 병렬 worker)
+9108-9130: [12:56:06] 3개 병렬 HTTP POST 요청 시작
+  - Worker 1: send_request_headers → send_body → receive_response_headers.started
+  - Worker 2: connect_tcp → TLS → send_headers → send_body → receive_response_headers.started
+  - Worker 3: connect_tcp → TLS → send_headers → send_body → receive_response_headers.started
+
+마지막 줄 (L9130): receive_response_headers.started request=<Request [b'POST']>
+→ 3개 POST 모두 응답 대기 중 절단. 응답 수신 전.
+
+[E-3] TIMELINE (분 단위)
+──────────────────────────────────────────
+11:02:05  세션 시작, 장르 선택 (투자)
+11:02:06  프로젝트 선택 (0_260316)
+11:02~11:08  Stage 0 / 초기화
+11:08:17  Arc 1 생성 완료 (s2:ep1:arc1 PASS score=100)
+11:08:47  Arc 1 설계 확정
+11:12:21  Blueprint ep1 PASS (score=100, emotion_focused)
+11:13:46  Blueprint ep2 PASS (score=100, action_focused)
+11:15:11  Blueprint ep3 PASS (score=100, action_focused)
+11:15:11  Stage 3 Phase 1 완료 (4/4 성공)
+11:15:11  Stage 4 시작 (frontier sync, target <= ep6)
+11:21:00  ★ ep1 Stage 4 PASS (score=98, 1회, 348s, $0.465)
+11:31:16  ★ ep2 Stage 4 PASS (score=90, 1회+fix, 537s, $0.645)
+11:33:18  Stage 2 시작 - Arc 2 retrieval
+11:38:47  Arc 2 생성 완료 (PASS)
+11:39:22  Arc 2 설계 확정
+11:40:45  Blueprint ep4 PASS (score=100)
+11:42:10  Blueprint ep5 PASS (score=100)
+11:43:42  Blueprint ep6 PASS (score=100)
+11:45:05  Blueprint ep7 PASS (score=100)
+11:45:05  Stage 3 Phase 2 완료 (4/4 성공)
+11:45:06  Stage 4 V2 재가동 (target ep3~)
+11:51:10  ★ ep3 Stage 4 PASS (score=96, 1회, 348s, $0.649)
+11:58:39  ep4 Stage 4 R0 REJECT (score=99, NPC 이름 오류)
+12:03:13  ep4 Stage 4 R1 REJECT (score=90, 금지 표현 미수정)
+12:06:28  ★ ep4 Stage 4 R2 PASS (score=98, 3회 총, $0.956)
+12:07:50  ep5 TF-49b preflight PASS
+12:16:02  ep5 Stage 4 R0 REJECT (score=90, 장소 연속성 오류)
+12:18:44  ep5 Stage 4 R1 REJECT (score=44, 고유명사 오류 한미은행→한미증권)
+12:24:33  ep5 Stage 4 R2 REJECT (score=97, NPC 직급 불일치)
+12:25:03  V75-D Blueprint inplace 패치 실행 (고유명사 교정)
+12:32:23  ★ ep5 Stage 4 R3 PASS (score=90, 4회 총, $1.471)
+12:33:46  ep6 retrieval 시작
+12:39:34  ★ ep6 Stage 4 PASS (score=99, 1회, 348s, $0.542)
+12:41:08  Stage 4 ep6 complete 이벤트
+12:42:15  Arc 3 생성 피드백 주입 (s4_to_s2_feedback)
+12:42:15  Stage 2 시작 - Arc 3 retrieval
+12:47:59  Arc 3 auto-correct
+12:49:15  Arc 3 DB commit
+12:49:45  Arc 3 설계 확정 (PASS score=100)
+12:51:15  Blueprint ep8 PASS (score=100)
+12:52:45  Blueprint ep9 PASS (score=100)
+12:54:13  Blueprint ep10 PASS (score=100)
+12:55:35  Blueprint ep11 PASS (score=100)
+12:55:35  Stage 3 완료 통계 기록 (runtime_audit_summary)
+12:55:47  ep7 Stage 4 retrieval 시작 (mandatory_context=10086자)
+12:56:06  ep7 Stage 4 3개 병렬 API POST 발사
+12:56:06  ★★ 로그 절단 — 3개 POST 모두 응답 대기 중 ★★
+
+[E-4] DB INTEGRITY
+──────────────────────────────────────────
+PRAGMA integrity_check: ok
+
+테이블별 행 수:
+  sync_status: 6
+  anchors: 18
+  blueprints: 11
+  state_logs: 6
+  causal_graph: 33
+  manuscripts: 6  ← ep1-6만 (ep7 없음, 정상)
+  seeds: 6
+  encyclopedia: 14
+  episode_bibles: 6
+  npc_history: 5
+  episode_sentence_hashes: 734
+  episode_satisfaction_tags: 6
+  director_selections: 25
+  llm_calls: 276
+  stage_attempts: 25
+  ui_events: 1149
+  cost_log: 14
+  karma_status: 0
+  reflexion_memory: 0
+  martial_tracker: 4
+
+참고: vec0 모듈 누락으로 벡터 테이블 접근 불가 (sqlite-vec 미설치 환경)
+
+[E-5] DRAFT 파일 목록 + 크기
+──────────────────────────────────────────
+drafts/ep_0001.txt  11,274 bytes
+drafts/ep_0002.txt   9,761 bytes
+drafts/ep_0003.txt  15,245 bytes
+drafts/ep_0004.txt  12,086 bytes
+drafts/ep_0005.txt  10,410 bytes
+drafts/ep_0006.txt  10,370 bytes
+→ ep_0007.txt 없음 (정상 — 생성 전 중단)
+
+[E-6] DB manuscripts 테이블
+──────────────────────────────────────────
+ep1: 4,659자
+ep2: 4,011자
+ep3: 6,274자
+ep4: 4,981자
+ep5: 4,254자
+ep6: 4,293자
+→ 6건 (ep7 없음)
+
+[E-7] STAGE 4 ARTIFACT 파일 (21개)
+──────────────────────────────────────────
+ep_0001/attempt_01: final_manuscript__C.txt (11,169), selected_candidate__C.txt (11,169)
+ep_0002/attempt_01: patched_after_fix__A_InPlace.txt (9,669), selected_before_fix__A.txt (9,658)
+ep_0003/attempt_01: final_manuscript__A.txt (15,060), selected_candidate__A.txt (15,060)
+ep_0004/attempt_01: rejected_best__B_tension.txt (11,940), selected_candidate__B.txt (11,940)
+ep_0004/attempt_02: rejected_best__A_inplace_patch.txt (11,964), selected_before_fix__A_inplace_patch.txt (11,941)
+ep_0004/attempt_03: patched_after_fix__A_inplace_patch.txt (11,961), selected_candidate__A_inplace_patch.txt (11,961)
+ep_0005/attempt_01: rejected_best__C_tension.txt (12,600), selected_candidate__C.txt (12,600)
+ep_0005/attempt_02: rejected_best__A_inplace_patch.txt (12,550)
+ep_0005/attempt_03: rejected_best__A_inplace_patch.txt (12,565), selected_before_fix__A.txt (12,568)
+ep_0005/attempt_04: final_manuscript__A.txt (10,284), selected_candidate__A.txt (10,284)
+ep_0006/attempt_01: final_manuscript__B.txt (10,243), selected_candidate__B.txt (10,243)
+→ ep_0007 폴더 없음 (정상)
+→ 총 artifact: 35개 (stage2+3+4 포함)
+
+[E-8] CONTENT HASH 대조 (draft vs artifact)
+──────────────────────────────────────────
+ep1: draft SHA256=5ddd4e9b…  artifact SHA256=03cb89e6…  → MISMATCH
+ep5: draft SHA256=eea64507…  artifact SHA256=2317aa33…  → MISMATCH
+
+원인 추정: draft 파일은 BOM/헤더 포함 또는 인코딩 차이 (drafts ~10% 더 큼)
+- ep1: draft 11,274B vs artifact 11,169B (차이 105B)
+- ep5: draft 10,410B vs artifact 10,284B (차이 126B)
+→ 내용 부패가 아닌 포맷 차이로 판단됨
+
+[E-9] episode_production.jsonl 요약
+──────────────────────────────────────────
+총 14 레코드 (ep1~ep6, 각 에피소드별 라운드 포함)
+
+| EP | Rounds | Final Score | Final Attempts | Total Cost USD |
+|----|--------|-------------|----------------|----------------|
+| 1  | 1      | 98          | 1              | 0.465          |
+| 2  | 1      | 90          | 1 (+fix)       | 0.645          |
+| 3  | 1      | 96          | 1              | 0.649          |
+| 4  | 3      | 98          | 3              | 0.956          |
+| 5  | 4      | 90          | 4              | 1.471          |
+| 6  | 1      | 99          | 1              | 0.542          |
+
+총 Stage 4 비용: $4.728
+
+[E-10] pass_rate_monitor.json 요약
+──────────────────────────────────────────
+총 stage_attempts: 25건
+Stage 3: 11건 (11 PASS, 0 REJECT)
+Stage 4: 11건 (6 최종 PASS, 5 REJECT — ep4 2건, ep5 3건)
+Sink alignment issues:
+  - patch_strategy_mismatches: 2건
+  - selection_reason_mismatches: 1건
+  - verdict_reason_mismatches: 1건
+
+[E-11] soft_failures.jsonl 요약
+──────────────────────────────────────────
+총 8건, 모두 동일 패턴:
+  component: failure_analyzer
+  operation: sink_alignment_final_authority_contract
+  severity: warning
+  message: "stage4 final authority projection failed"
+  exception: "'types.SimpleNamespace' object has no attribute 'get_stage4_final_authority_rows'"
+  degraded: true, user_visible: false, learnable: true
+
+발생 시점 (UTC): 02:08, 02:15, 02:32, 02:39, 02:45, 03:41, 03:49, 03:55
+→ stage3 완료/stage4 완료 이벤트 직후마다 발생
+→ sink alignment projection의 API 미구현 문제 (기능 열화, 사용자 비가시)
+
+[E-12] runtime_audit_summary.json 핵심
+──────────────────────────────────────────
+- tag: stage3_complete
+- last_updated: 2026-03-16 12:55:35
+- total_events: 36
+- proof_digest.status: "warn"
+- stage3 status: "ok" (11/11 PASS)
+- stage4 status: "warn" (issue_counts: patch_strategy 2, selection_reason 1, verdict_reason 1)
+- session_lineage: split_mapped (plain_log_token ≠ structured_session_id)
+- ui_events_count: 1124, coverage: ok
+
+[E-13] quality_metrics.jsonl 핵심 품질 신호
+──────────────────────────────────────────
+| EP | CED | AI Slop | Compression | Burstiness | Complexity |
+|----|-----|---------|-------------|------------|------------|
+| 1  | 0.0 | 0.0     | 0.4602      | 17.98      | 41.16      |
+| 2  | 0.0 | 2.0     | 0.4526      | 17.07      | 42.01      |
+| 3  | 0.0 | 2.0     | 0.4337      | 21.40      | 44.86      |
+| 4  | 0.0 | 1.0     | 0.4500      | 17.53      | 44.00      |
+| 5  | 0.0 | 2.0     | 0.4463      | 19.10      | 42.98      |
+| 6  | 0.0 | 2.0     | 0.4355      | 18.99      | 46.25      |
+
+AI slop 히트: "어느새"(1), "입을 열었다"(4), "순식간에"(1), "고개를 끄덕였다"(1), "한순간"(1)
+CED(Continuity Error Detection): 전원 0.0 (깨끗)
+
+[E-14] style_guide.json 핵심
+──────────────────────────────────────────
+- tone: 진지
+- pov: 혼합 (추출: 1인칭, 적용: 혼합)
+- dialogue_ratio: 0.0 (참조 원고 기반 추출값)
+- sentence_length: medium
+- description_style: 간결
+- vocabulary_level: easy
+- genre: investment
+- source_char_count: 4,247,609자
+
+[E-15] decisions.jsonl 요약
+──────────────────────────────────────────
+총 29 레코드
+- Stage 2: 6건 (arc 3 + arc_design 3)
+- Stage 3: 11건 (ep1~11 blueprint, 전원 PASS score=100)
+- Stage 4: 12건 (ep1~6 manuscript, PASS 6 + REJECT 5 + 재PASS로 최종 6 에피소드 확정)
+
+[E-16] 마지막 이벤트 체인 (중단 직전)
+──────────────────────────────────────────
+12:55:35 → Blueprint ep11 PASS (Stage 3 Phase 3 완료)
+12:55:35 → runtime_audit_summary 갱신
+12:55:47 → ep7 Stage 4 retrieval 시작 (mandatory_context=10,086자)
+12:56:06 → TF-49b preflight (gemini-2.5-flash)
+12:56:06 → Tier4-12 hybrid lookback (2 parts, 8691자)
+12:56:06 → V68 직전 화 연결고리 로드
+12:56:06 → V74 Treatment genre_ext 주입
+12:56:06 → CP Continuity Packet 주입
+12:56:06 → SC plan: 7 slots, budget=300000
+12:56:06 → VecMem: hybrid ep<7 hits=4
+12:56:06 → QR-3 전략 배분: balanced=100%
+12:56:06 → 3x AFC enabled (gemini-2.5-pro)
+12:56:06 → 3개 병렬 POST 발사 → 응답 대기 중 절단
+
+================================================================================
+END OF EVIDENCE
+================================================================================

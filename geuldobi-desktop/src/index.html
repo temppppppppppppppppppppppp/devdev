@@ -344,6 +344,56 @@
         font-weight: 700;
       }
 
+      .menu-btn .label-row {
+        display: inline-flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .menu-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 18px;
+        padding: 1px 7px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.01em;
+        line-height: 1;
+        white-space: nowrap;
+      }
+
+      .menu-badge-recommend {
+        background: rgba(255, 247, 237, 0.18);
+        color: #fffbeb;
+        border-color: rgba(251, 191, 36, 0.4);
+      }
+
+      .menu-badge-discouraged {
+        background: rgba(15, 23, 42, 0.16);
+        color: rgba(226, 232, 240, 0.92);
+        border-color: rgba(148, 163, 184, 0.28);
+      }
+
+      .menu-btn-frontier-recommended {
+        background:
+          linear-gradient(135deg, #1e293b, #0f172a 56%, #1d4ed8);
+        box-shadow: inset 0 0 0 1px rgba(191, 219, 254, 0.22), 0 8px 16px rgba(15, 23, 42, 0.18);
+      }
+
+      .menu-btn-frontier-recommended:hover {
+        background:
+          linear-gradient(135deg, #172554, #0f172a 58%, #2563eb);
+      }
+
+      .menu-btn-frontier-recommended .label {
+        font-weight: 800;
+        letter-spacing: 0.01em;
+      }
+
       .menu-btn .meta {
         margin-left: 8px;
         font-size: 12px;
@@ -2779,25 +2829,25 @@
                 </button>
                 <div class="stage0-sub-menu" id="stage0SubMenu">
                   <button type="button" class="stage0-sub-btn menu-btn" data-action="stage_0" data-key="0" data-sub-key="1">
-                    <span class="label">기존 방식 (Bible/Treatment 생성)</span>
+                    <span class="label-row"><span class="label">기존 방식 (Bible/Treatment 생성)</span></span>
                   </button>
                   <button type="button" class="stage0-sub-btn menu-btn" data-action="stage_0" data-key="0" data-sub-key="2">
-                    <span class="label">컨셉 → Bible 생성</span>
+                    <span class="label-row"><span class="label">컨셉 → Bible 생성</span><span class="menu-badge menu-badge-discouraged">비추천</span></span>
                   </button>
                   <button type="button" class="stage0-sub-btn menu-btn" data-action="stage_0" data-key="0" data-sub-key="3">
-                    <span class="label">역설계 — 기존 원고에서 추출</span>
+                    <span class="label-row"><span class="label">역설계 — 기존 원고에서 추출</span><span class="menu-badge menu-badge-discouraged">비추천</span></span>
                   </button>
                   <button type="button" class="stage0-sub-btn menu-btn" data-action="stage_0" data-key="0" data-sub-key="4">
-                    <span class="label">Bible JSON 임포트</span>
+                    <span class="label-row"><span class="label">Bible JSON 임포트</span><span class="menu-badge menu-badge-discouraged">비추천</span></span>
                   </button>
                   <button type="button" class="stage0-sub-btn menu-btn" data-action="stage_0" data-key="0" data-sub-key="5">
-                    <span class="label">Block 확장 — Treatment에 블록 추가</span>
+                    <span class="label-row"><span class="label">Block 확장 — Treatment에 블록 추가</span><span class="menu-badge menu-badge-discouraged">비추천</span></span>
                   </button>
                   <button type="button" class="stage0-sub-btn menu-btn" data-action="stage_0" data-key="0" data-sub-key="6">
-                    <span class="label">스타일 레퍼런스 분석</span>
+                    <span class="label-row"><span class="label">스타일 레퍼런스 분석</span><span class="menu-badge menu-badge-recommend">추천</span></span>
                   </button>
                   <button type="button" class="stage0-sub-btn menu-btn" data-action="stage_0" data-key="0" data-sub-key="7">
-                    <span class="label">작품가드 설정 (선택)</span>
+                    <span class="label-row"><span class="label">작품가드 설정 (선택)</span></span>
                   </button>
                   <div class="stage0-sub-controls">
                     <div class="stage0-sub-control-row">
@@ -2816,19 +2866,19 @@
 
                 <!-- Stage 2~4 + One-Stop -->
                 <button type="button" class="menu-btn genre-gated" data-action="stage_2" data-key="2" disabled>
-                  <span class="label">Arc 설계</span><span class="meta">key 2</span>
+                  <span class="label-row"><span class="label">Arc 설계</span><span class="menu-badge menu-badge-discouraged">비추천</span></span><span class="meta">key 2</span>
                 </button>
                 <button type="button" class="menu-btn genre-gated" data-action="stage_3" data-key="3" disabled>
-                  <span class="label">Blueprint</span><span class="meta">key 3</span>
+                  <span class="label-row"><span class="label">Blueprint</span><span class="menu-badge menu-badge-discouraged">비추천</span></span><span class="meta">key 3</span>
                 </button>
                 <button type="button" class="menu-btn genre-gated" data-action="stage_4" data-key="4" disabled>
-                  <span class="label">원고 생산</span><span class="meta">key 4</span>
+                  <span class="label-row"><span class="label">원고 생산</span><span class="menu-badge menu-badge-discouraged">비추천</span></span><span class="meta">key 4</span>
                 </button>
                 <button type="button" class="menu-btn genre-gated" data-action="one_stop" data-key="6" disabled>
-                  <span class="label">One-Stop</span><span class="meta">key 6</span>
+                  <span class="label-row"><span class="label">One-Stop</span><span class="menu-badge menu-badge-discouraged">비추천</span></span><span class="meta">key 6</span>
                 </button>
-                <button type="button" class="menu-btn genre-gated" data-action="one_stop_frontier_lag" data-key="7" disabled>
-                  <span class="label">Frontier Lag</span><span class="meta">key 7</span>
+                <button type="button" class="menu-btn menu-btn-frontier-recommended genre-gated" data-action="one_stop_frontier_lag" data-key="7" disabled>
+                  <span class="label-row"><span class="label">Frontier Lag</span><span class="menu-badge menu-badge-recommend">추천</span></span><span class="meta">key 7</span>
                 </button>
               </div>
             </div>
@@ -3371,7 +3421,7 @@
     <!-- ── 투자물 외 장르 확인 모달 ── -->
     <div class="confirm-overlay" id="genreConfirmModal">
       <div class="confirm-panel">
-        <p class="confirm-msg" id="genreConfirmMsg">이 장르는 실파이프라인 테스트가 완료되지 않았습니다. 진행하시겠습니까?</p>
+        <p class="confirm-msg" id="genreConfirmMsg">이 장르는 실파이프라인 테스트가 완료되지 않았습니다. 진행하시겠습니까?</p><!-- utf8-hygiene: allow-line -->
         <div class="confirm-actions">
           <button type="button" class="btn-cancel" id="genreConfirmCancel">취소</button>
           <button type="button" class="btn-confirm" id="genreConfirmOk">진행</button>
@@ -5837,6 +5887,22 @@
         return inputs;
       }
 
+      function _isStage0StyleAnalysis(action, subKey) {
+        return action === "stage_0" && String(subKey || "") === "6";
+      }
+
+      function _describeStage0StyleCacheMode(mode) {
+        return {
+          use: "캐시 사용",
+          refresh: "캐시 무시 후 재분석",
+          reset: "캐시 삭제 후 재분석",
+        }[String(mode || "").toLowerCase()] || "캐시 사용";
+      }
+
+      function _shouldRevealBootStdout() {
+        return _isStage0StyleAnalysis(officeState.currentStage, officeState.currentSubKey);
+      }
+
       // ── 프로젝트 관리 ──
       const projectSelect = document.getElementById("projectSelect");
       const newProjectBtn = document.getElementById("newProjectBtn");
@@ -6531,7 +6597,7 @@
 
       function _handleStdoutLine(text) {
         // 부트 단계에서는 stdout 출력 억제 (초기화 로그 숨김)
-        if (_bootPhase) {
+        if (_bootPhase && !_shouldRevealBootStdout()) {
           console.log("[boot] " + text);
           return;
         }
@@ -6656,7 +6722,7 @@
         // 80자 넘는 분석·설명성 텍스트를 스크롤 큐에 추가
         if (text.length > 80 && !text.startsWith("[System]")) {
           // 문장 단위로 분할 (마침표/느낌표/물음표 기준)
-          const sentences = text.split(/(?<=[.!?。])\s*/).filter(s => s.length > 5);
+          const sentences = text.split(/(?<=[.!?。])\s*/).filter(s => s.length > 5); // utf8-hygiene: allow-line
           if (sentences.length >= 2) {
             _directorScroll = {
               lines: sentences.slice(0, 20), // 최대 20문장
@@ -6860,6 +6926,19 @@
         if (action === "stage_0") {
           _bootPhase = true;
           _autoExitAfterStage0 = true;
+        }
+        if (_isStage0StyleAnalysis(action, subKey)) {
+          const cacheModeLabel = _describeStage0StyleCacheMode(inputs.stage0_style_cache_mode);
+          appendLog(`[System] 스타일 캐시 모드: ${cacheModeLabel}`, null, {
+            agent: "manager",
+            stage: action,
+            summary: "스타일 캐시 설정",
+            detail: `${label} 실행 시 ${cacheModeLabel}가 적용되도록 요청`,
+            bubble: "캐시 모드 적용",
+            status: "설정 반영",
+            agentDetail: "Stage 0 스타일 분석 실행 전 캐시 모드를 확인",
+            significant: true,
+          });
         }
 
         // ── 실행 요청 ──

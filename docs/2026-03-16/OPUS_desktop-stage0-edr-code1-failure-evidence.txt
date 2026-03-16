@@ -1,0 +1,121 @@
+# Evidence: Desktop Stage 0 edr project code:1 failure
+# Collected: 2026-03-16
+# Baseline Commit: 5a0177666e6877070d726d983d3c3e1d03e812d2
+# Collector: Opus
+
+## E1. electron-main.log incident window (UTC)
+# Session: 04:05:22Z → 04:07:38Z (13:05~13:07 KST)
+04:05:22  main.js boot pid=31424
+04:05:46  backend started, CWD=C:\Users\wjjo\Documents\글도비
+04:05:48  Uvicorn running on http://127.0.0.1:8300
+04:05:48  GET /status 200, switchToMain
+04:05:51  WebSocket /events accepted
+04:05:51  3x [DBManager] sqlite-vec 로드 실패 WARNING
+04:05:51  GET /quality/dashboard?project=test 200
+04:06:47  POST /run 202 Accepted              ← INCIDENT RUN
+04:07:38  mainWindow closed, before-quit
+# NOTE: ZERO backend stderr/stdout between POST /run and window close.
+# Subprocess stderr goes to ProcessRunner, not to electron-main.log.
+
+## E2. control-plane-provenance.jsonl (incident run)
+{"ts":"2026-03-16T04:06:47+00:00","route":"/run","key":"0","sub_key":"1","run_id":"343432eb-8348-407e-898b-d76b6f33166e","mode":"B","desktop_mode":true}
+# Second attempt (after app restart):
+{"ts":"2026-03-16T04:07:52+00:00","route":"/run","key":"0","sub_key":"1","run_id":"99ae02c3-8e5a-4e0f-bc76-9733521d5988","mode":"B","desktop_mode":true}
+
+## E3. projects/edr directory state (live workspace)
+# Path: C:\Users\wjjo\Documents\글도비\projects\edr
+# Contents: COMPLETELY EMPTY (no config/, drafts/, memory/, plans/, project_data.db)
+# Timestamp: drwxr-xr-x Mar 16 13:07
+# Created by: desktop IPC project:create (main.js L867-885, fs.mkdirSync only)
+# Expected if ProjectContext.__init__ ran: config/, drafts/, memory/, plans/, project_data.db
+# Conclusion: ProjectContext.__init__ was NEVER reached.
+
+## E4. projects/test directory state (comparison, healthy)
+# Contents: config/, drafts/, logs/, memory/, plans/, project_data.db (897024 bytes)
+# Evidence of successful ProjectContext init + runtime.
+
+## E5. Workspace session logs (C:\Users\wjjo\Documents\글도비\logs\)
+# session_20260316_122127.log  ← 12:21 KST, NOT from desktop (no electron-main.log match)
+# session_20260316_122200.log  ← 12:22 KST, NOT from desktop
+# session_20260316_122736.log  ← 12:27 KST, NOT from desktop
+# NO session log for 13:06 KST incident run!
+# NO session log for any POST /run dispatch (12:07, 12:08, 13:06, 13:07 KST)!
+# Conclusion: ALL desktop-dispatched subprocess runs failed before session log init.
+
+## E6. Packaged app file structure
+C:\Users\wjjo\AppData\Local\Programs\Geuldobi\resources\
+├── app.asar           (Electron frontend)
+├── backend\
+│   ├── backend.exe    (PyInstaller Python 3.11, runs backend_entry.py → bridge_server)
+│   └── _internal\     (Python 3.11 DLLs/modules)
+├── engine\
+│   ├── main_a.py      (Engine entry point)
+│   ├── modules\       (Engine Python packages)
+│   ├── config\
+│   └── ...
+├── python-embed\
+│   ├── python.exe     (Embeddable Python 3.12)
+│   ├── python312._pth (sys.path restriction file)
+│   └── Lib\site-packages\  (google_genai, numpy, sqlite_vec, etc.)
+└── workspace-seed\
+
+## E7. python312._pth contents
+python312.zip
+.
+# Uncomment to run site.main() automatically
+import site
+# NOTE: "." resolves to python-embed dir, NOT CWD.
+# NOTE: ._pth file SUPPRESSES Python's normal script-dir insertion into sys.path.
+
+## E8. Root cause reproduction
+Command: "python-embed\python.exe" -u "engine\main_a.py"
+Result:
+  [V61.3] Faulthandler 활성화 → crash_dump.log
+  Traceback (most recent call last):
+    File "...\engine\main_a.py", line 99, in <module>
+      import modules.core.spinners as _spinners_mod
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  ModuleNotFoundError: No module named 'modules'
+Exit code: 1
+
+## E9. sys.path dump from embedded Python
+['C:\\...\\python-embed\\python312.zip',
+ 'C:\\...\\python-embed',
+ 'C:\\Users\\wjjo\\AppData\\Roaming\\Python\\Python312\\site-packages',
+ 'C:\\...\\python-embed\\Lib\\site-packages']
+# MISSING: 'C:\\...\\engine\\' (script directory NOT added due to ._pth)
+
+## E10. backend_entry.py sys.path bootstrap (backend.exe internal)
+# Line 21-23: backend_entry.py DOES add engine_root to sys.path:
+#   for candidate in (engine_root, backend_dir):
+#       if candidate not in sys.path:
+#           sys.path.insert(0, candidate)
+# Line 16: Sets GEULDOBI_PYTHON_PATH = python-embed/python.exe
+# Line 15: Sets GEULDOBI_ENGINE_ROOT = resources/engine
+# But: main_a.py does NOT replicate this sys.path bootstrap.
+
+## E11. process_runner launch command chain
+# _resolve_launch_command() (process_runner.py L211-225):
+#   GEULDOBI_ENGINE_EXE: NOT SET → skip
+#   main_script = PROJECT_ROOT / "main_a.py"
+#     PROJECT_ROOT = resolve_engine_root(...) = resources/engine (via GEULDOBI_ENGINE_ROOT env)
+#   python_exe = os.environ.get("GEULDOBI_PYTHON_PATH", sys.executable)
+#     = "resources/python-embed/python.exe"
+#   return ["resources/python-embed/python.exe", "-u", "resources/engine/main_a.py"]
+# _build_env() (process_runner.py L775-803):
+#   env = os.environ.copy()  ← inherits GEULDOBI_ENGINE_ROOT but NOT PYTHONPATH
+#   env["PYTHONIOENCODING"] = "utf-8"
+#   env["PYTHONUNBUFFERED"] = "1"
+#   NO PYTHONPATH set.
+
+## E12. preload.js module not found (separate issue)
+# All sessions show: "Error: module not found: ./desktop_control_plane_contract"
+# preload.js L6: const CONTRACT = require("./desktop_control_plane_contract")
+# desktop_control_plane_contract.js exists in src/ but NOT bundled into app.asar
+# Impact: window.geuldobiDesktop becomes undefined → renderer uses HTTP fallback
+
+## E13. Missing packages in embedded Python
+# NOT installed: anthropic, openai, tiktoken, jinja2
+# Installed: google_genai, numpy, sqlite_vec, pydantic, pyyaml, beautifulsoup4
+# Impact: lazy imports of anthropic/openai would fail at LLM call time (not at boot)
+# Current severity: latent — main_a.py dies before reaching any LLM call

@@ -12,6 +12,7 @@ import json
 import logging
 import os
 import re
+import shutil
 import time
 from dataclasses import asdict, dataclass, fields
 from pathlib import Path
@@ -19,6 +20,7 @@ from typing import Any
 
 from modules.core.llm_generate import generate_content_via_router
 from modules.core.project_support import normalize_external_pov_insert_policy
+from modules.core.runtime_paths import resolve_engine_root, resolve_workspace_root
 
 
 @dataclass
@@ -118,7 +120,7 @@ class StyleGuide:
 - 전환 시 명시적 장면 구분자 사용 (빈 줄 + 시간/장소 전환)
 - 주인공 씬: 1인칭 내면 서술 허용
 - 타 캐릭터 씬: 3인칭 제한적 시점 (해당 인물의 관찰·감정만)
-- 전지적 개입은 장(章) 도입부에서만 허용"""
+- 전지적 개입은 장(章) 도입부에서만 허용"""  # utf8-hygiene: allow-line
         # 미지정이면 빈 문자열
         return ""
 
@@ -234,7 +236,7 @@ _INVESTMENT_FINANCE_WORDS = set(
     "유동성|펀드|IPO|M&A|인수|합병|지분|투자금|원금|이자|부채|자산|자본금".split("|")
 )
 
-_INVESTMENT_NUMERIC_RE = re.compile(r"\d+[억만천]|\d+[.]\d+%|\d+%|\d+배|\d+[.]?\d*조")
+_INVESTMENT_NUMERIC_RE = re.compile(r"\d+[억만천]|\d+[.]\d+%|\d+%|\d+배|\d+[.]?\d*조")  # utf8-hygiene: allow-line
 
 _INVESTMENT_NEGOTIATION_VERBS = set(
     "제안했|거절했|계산했|판단했|협상했|분석했|결정했|투자했|매각했|인수했|"
@@ -266,6 +268,86 @@ class StyleExtractor:
     @classmethod
     def _prompt_contract_hash(cls) -> str:
         return hashlib.sha256(cls.CACHE_PROMPT_CONTRACT.encode("utf-8")).hexdigest()
+
+    @staticmethod
+    def _resolve_workspace_reference_dir(genre: str) -> Path:
+        workspace_root = resolve_workspace_root(Path.cwd())
+        return workspace_root / "config" / "style_references" / genre
+
+    @staticmethod
+    def _resolve_engine_reference_dir(genre: str) -> Path:
+        workspace_root = resolve_workspace_root(Path.cwd())
+        engine_root = resolve_engine_root(workspace_root)
+        return engine_root / "config" / "style_references" / genre
+
+    @staticmethod
+    def _has_reference_text_files(base_path: Path) -> bool:
+        return base_path.exists() and any(path.is_file() for path in base_path.rglob("*.txt"))
+
+    @classmethod
+    def _copy_missing_tree(cls, source: Path, destination: Path) -> None:
+        if source.is_dir():
+            destination.mkdir(parents=True, exist_ok=True)
+            for child in source.iterdir():
+                cls._copy_missing_tree(child, destination / child.name)
+            return
+        if destination.exists():
+            return
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, destination)
+
+    @classmethod
+    def _load_reference_manuscripts_from_dir(cls, base_path: Path) -> dict[str, list[str]]:
+        works: dict[str, list[str]] = {}
+        if not base_path.exists():
+            return works
+        for work_dir in sorted(base_path.iterdir()):
+            if not work_dir.is_dir():
+                continue
+            episodes = []
+            for txt_file in sorted(work_dir.glob("*.txt")):
+                try:
+                    text = txt_file.read_text(encoding="utf-8")
+                    if text.strip():
+                        episodes.append(text)
+                except Exception as e:
+                    logging.warning(f"[!] 파일 로드 실패: {txt_file.name}: {e}")
+            if episodes:
+                works[work_dir.name] = episodes
+                logging.info(f"[+] {work_dir.name}: {len(episodes)}화 로드")
+        return works
+
+    @classmethod
+    def prepare_reference_manuscripts(cls, genre: str) -> dict[str, Any]:
+        workspace_ref_dir = cls._resolve_workspace_reference_dir(genre)
+        if cls._has_reference_text_files(workspace_ref_dir):
+            return {
+                "status": "workspace",
+                "ref_dir": workspace_ref_dir,
+                "source_dir": None,
+                "works": cls._load_reference_manuscripts_from_dir(workspace_ref_dir),
+            }
+
+        packaged_ref_dir = cls._resolve_engine_reference_dir(genre)
+        if genre == "investment" and cls._has_reference_text_files(packaged_ref_dir):
+            try:
+                cls._copy_missing_tree(packaged_ref_dir, workspace_ref_dir)
+                logging.info("[S0-I5] 투자물 레퍼런스 초기화: packaged -> workspace (%s -> %s)", packaged_ref_dir, workspace_ref_dir)
+                return {
+                    "status": "packaged_sync",
+                    "ref_dir": workspace_ref_dir,
+                    "source_dir": packaged_ref_dir,
+                    "works": cls._load_reference_manuscripts_from_dir(workspace_ref_dir),
+                }
+            except Exception as exc:
+                logging.warning("[S0-I5] 투자물 레퍼런스 초기화 실패: %s", exc)
+
+        return {
+            "status": "missing",
+            "ref_dir": workspace_ref_dir,
+            "source_dir": packaged_ref_dir if packaged_ref_dir.exists() else None,
+            "works": {},
+        }
 
     @staticmethod
     def _reference_manifest(ref_dir: Path) -> list[dict[str, Any]]:
@@ -913,28 +995,12 @@ JSON만 출력하세요.
         Returns:
             {"작품명": [에피소드1, 에피소드2, ...], ...}
         """
-        base_path = Path("config/style_references") / genre
-        if not base_path.exists():
+        prepared = StyleExtractor.prepare_reference_manuscripts(genre)
+        base_path = prepared["ref_dir"]
+        if not prepared["works"]:
             logging.info(f"[!] 레퍼런스 폴더 없음: {base_path}")
             return {}
-
-        works = {}
-        for work_dir in sorted(base_path.iterdir()):
-            if not work_dir.is_dir():
-                continue
-            episodes = []
-            for txt_file in sorted(work_dir.glob("*.txt")):
-                try:
-                    text = txt_file.read_text(encoding="utf-8")
-                    if text.strip():
-                        episodes.append(text)
-                except Exception as e:
-                    logging.warning(f"[!] 파일 로드 실패: {txt_file.name}: {e}")
-            if episodes:
-                works[work_dir.name] = episodes
-                logging.info(f"[+] {work_dir.name}: {len(episodes)}화 로드")
-
-        return works
+        return prepared["works"]
 
     def extract_from_references(
         self,
@@ -958,7 +1024,7 @@ JSON만 출력하세요.
         """
         cache_mode = cache_mode if cache_mode in {"use", "refresh", "reset"} else "use"
         self.genre = genre  # [QI-1-B2] extract_from_references 호출 시 장르 동기화
-        ref_dir = Path("config/style_references") / genre
+        ref_dir = self._resolve_workspace_reference_dir(genre)
         cache_path = ref_dir / "style_guide.json"
         current_meta = self._build_cache_meta(
             genre,
@@ -1040,7 +1106,7 @@ JSON만 출력하세요.
         """한국어 문장 분리"""
         # 대화 내 마침표는 분리하지 않음
         # 한국어 종결어미 + 마침표/느낌표/물음표 기준
-        sents = re.split(r"(?<=[다요죠음함임까])[.!?]\s*|\n", text)
+        sents = re.split(r"(?<=[다요죠음함임까])[.!?]\s*|\n", text)  # utf8-hygiene: allow-line
         return [s.strip() for s in sents if s.strip() and len(s.strip()) > 3]
 
     @staticmethod

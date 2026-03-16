@@ -30,6 +30,9 @@ class _FakeDirector:
     def apply_adaptive_decision(self, score, original_decision, arc_pos, total_eps, retry_count):
         return {"decision": original_decision, "threshold_used": 65, "reason": ""}
 
+    def _operator_log(self, *_args, **_kwargs):
+        return None
+
 
 def _make_ensemble_response(
     *,

@@ -1745,6 +1745,22 @@ class ChiefWriter(BaseAgent):
                 summary_parts.append(f"action={' / '.join(action_items[:2])}")
             elif reason:
                 summary_parts.append(reason[:120])
+            contradiction_details = item.get("contradiction_details") or []
+            detail_lines: list[str] = []
+            for detail in contradiction_details[:2] if isinstance(contradiction_details, list) else []:
+                if isinstance(detail, dict):
+                    kind = str(detail.get("type", "") or "모순").strip()
+                    body = (
+                        str(detail.get("current_violation", "") or "").strip()
+                        or str(detail.get("description", "") or "").strip()
+                    )
+                    text = f"{kind}: {body[:60]}".strip()
+                else:
+                    text = str(detail or "").strip()[:60]
+                if text:
+                    detail_lines.append(text)
+            if detail_lines:
+                summary_parts.append(f"detail={' / '.join(detail_lines)}")
             if score not in ("", None):
                 summary_parts.append(f"score={score}")
             lines.append(f"- 시도 {idx}: " + " | ".join(summary_parts[:4]))

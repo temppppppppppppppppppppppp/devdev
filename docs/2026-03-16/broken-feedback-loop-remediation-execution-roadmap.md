@@ -1,0 +1,109 @@
+# Broken Feedback Loop Remediation Execution Roadmap
+
+Date: 2026-03-16
+Status: active canonical
+Canonical Path: `docs/2026-03-16/broken-feedback-loop-remediation-execution-roadmap.md`
+System SSOT: `docs/2026-03-16/broken-feedback-loop-remediation-execution-ssot.md`
+Project SSOT: `docs/2026-03-16/project-0-260316-execution-ssot.md`
+Confidence: `96%`
+
+## Summary
+
+- canonical structure is fixed as `2 SSOT + 1 roadmap`
+- the system SSOT owns bundle-wide broken feedback loop remediation
+- the project SSOT owns `0_260316` recovery, stop-point, integrity, resumability, and project-specific regression authority
+- this roadmap owns ordering, overlap classification, and sync rules between the two SSOTs
+
+## Why Not One SSOT
+
+- system scope and project scope are different
+- refresh cadence is different
+- recovery decisions and remediation queues use different acceptance gates
+- forcing both into one document would blur authority and make regression refreshes harder
+
+## Overlap Reconciliation
+
+| Topic | Classification | Canonical Authority | Note |
+| --- | --- | --- | --- |
+| `ai_slop` feedback gap | `shared-consistent` | system SSOT for remediation, project SSOT for proof corpus | same finding, different scope |
+| `npc_drift` retry handoff | `shared-needs-wording-sync` | system SSOT | project SSOT may reference it only as a Stage 4 example |
+| `open_review` | `shared-needs-wording-sync` | system SSOT | must distinguish same-round live handoff from dead label replay |
+| `coverage_warning` surfacing | `shared-needs-wording-sync` | system SSOT | project SSOT should not restate the full system taxonomy |
+| `FactLedger` fragility | `system-only` | system SSOT | keep out of project canonical lane except as regression observation |
+| `reverse_feedback` auto-trigger status | `system-only` | system SSOT | split Stage 4→2 from Stage 4→3 and Stage 3→2 |
+| `dialogue_ratio` target mismatch | `system-only` | system SSOT | not a `0_260316` recovery fact |
+| `cost_log` runtime reader gap | `system-only` | system SSOT | not a `0_260316` recovery fact |
+| `ep7` stop point, integrity, resumability | `project-only` | project SSOT | do not promote into system SSOT |
+| `Menu 7 이어가기`, `Arc 3 / Blueprint 11 / Manuscript 6` | `project-only` | project SSOT | remain project facts only |
+
+## Pre-Tranche Validity Rule
+
+- before every tranche, validate the current codebase against the system SSOT instead of starting from survey text alone
+- the validity check must confirm current producers, consumers, trigger paths, and authority boundaries for the tranche target
+- if live code no longer matches the tranche assumptions, refresh the system SSOT first and then re-sync the project SSOT wording if needed
+- `0_260316` stays the regression gate after the validity check passes; it is not a substitute for the validity check itself
+
+## Automatic Tranche Loop
+
+For every tranche, run the same control loop:
+
+1. current-code validity check
+2. bounded implementation
+3. fresh 3-pass audit
+4. canonical doc update and any required mirror sync
+5. select the next tranche from the refreshed roadmap
+
+Selection rule:
+
+- the next tranche is chosen only after step 4 completes
+- if the just-finished tranche changes taxonomy, priority, or regression assumptions, refresh this roadmap before selecting the next tranche
+- if no pending tranche clears the new validity gate, stop the loop and re-audit the governing docs first
+
+## Execution Order
+
+### 1. Tranche 1: Low-Risk / High-ROI Core Feedback Closure
+
+- implement the system SSOT Tranche 1 items first
+- starting gate: verify current style-signal producers, retry ingress, and Director-mediated handoff paths in live code
+- regression gate:
+  - `0_260316` shared Stage 4 findings still reproduce
+  - project SSOT recovery facts remain unchanged
+  - no new false hard rejects from style metrics
+
+### 2. Tranche 2: Validation / Escalation Hardening
+
+- implement the system SSOT Tranche 2 items next
+- starting gate: verify current `FactLedger`, `coverage_warning`, `npc_drift`, and escalation consumer paths in live code
+- regression gate:
+  - `0_260316` remains a valid proof corpus
+  - wording in the project SSOT remains consistent for shared topics
+  - shared items do not become duplicated canonical queues in the project SSOT
+
+### 3. Tranche 3: Reverse-Loop Automation / Observability Consumption
+
+- implement the system SSOT Tranche 3 items last
+- starting gate: verify current reverse-feedback trigger sites and `cost_log` consumption status in live code
+- regression gate:
+  - Stage 4→2 reverse difficulty path remains intact
+  - Stage 4→3 and Stage 3→2 are reclassified only after automation really exists
+  - runtime cost consumption changes do not break existing shutdown telemetry
+
+### 4. Post-Tranche Sync
+
+- after each tranche, refresh the system SSOT with a fresh 3-pass audit
+- do not start the next tranche until the new current-code validity check passes on the then-live codebase
+- only update the project SSOT if one of these changes:
+  - a shared finding changes wording or status
+  - `0_260316` regression evidence changes
+  - project recovery/resumability facts change
+- do not rewrite project-only recovery sections for system-only remediation movement
+- after the doc refresh, automatically choose the next highest-priority pending tranche whose starting gate still passes
+
+## Acceptance Criteria
+
+- the system SSOT and project SSOT remain non-overlapping in authority
+- shared topics stay classified as `shared-consistent` or `shared-needs-wording-sync`; `conflict` must remain `0`
+- implementers can choose the next tranche without consulting the raw `docs/sp` bundle
+- each tranche begins only after a current-code validity check confirms the roadmap assumptions still match live code
+- each tranche ends with updated docs before the next tranche is selected
+- `0_260316` continues serving as the regression gate for shared Stage 4 findings while remaining the sole authority for project recovery facts

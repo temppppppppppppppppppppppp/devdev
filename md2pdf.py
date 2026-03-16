@@ -13,7 +13,9 @@ def convert(md_path, pdf_path):
 
     md_dir = Path(md_path).resolve().parent
     pdf = FPDF()
-    pdf.set_auto_page_break(auto=True, margin=20)
+    default_page_break_margin = 20
+    summary_page_break_margin = 12
+    pdf.set_auto_page_break(auto=True, margin=default_page_break_margin)
 
     # 한국어 폰트 등록
     pdf.add_font("Malgun", "", r"C:\Windows\Fonts\malgun.ttf", uni=True)
@@ -35,6 +37,10 @@ def convert(md_path, pdf_path):
     toc_deferred = []  # (page, x, y, w, h, link_id) — 목차 링크 나중에 삽입
     links_set = set()  # set_link 완료된 title
     keep_next_h2_on_page = False
+    summary_mode = False
+
+    def summary_tuned(default_value, summary_value):
+        return summary_value if summary_mode else default_value
 
     def parse_table(table_lines):
         rows = []
@@ -44,6 +50,17 @@ def convert(md_path, pdf_path):
         rows = [r for r in rows if not all(set(c.strip()) <= set("-: ") for c in r)]
         return rows
 
+    def normalize_table_cell(cell_text):
+        text = cell_text.strip()
+        is_bold = False
+        if text.startswith("**") and text.endswith("**") and len(text) >= 4:
+            text = text[2:-2].strip()
+            is_bold = True
+        text = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", r"\1", text)
+        text = text.replace("`", "").replace("**", "")
+        text = re.sub(r"\s+", " ", text).strip()
+        return text, is_bold
+
     def draw_table(rows):
         if not rows:
             return
@@ -51,33 +68,62 @@ def convert(md_path, pdf_path):
         page_w = pdf.w - pdf.l_margin - pdf.r_margin
         col_w = page_w / num_cols
 
-        pdf.set_font("Malgun", "B", 8)
-        pdf.set_fill_color(240, 240, 240)
-        for cell in rows[0]:
-            pdf.cell(col_w, 7, cell[:80], border=1, align="L", fill=True)
-        pdf.ln()
+        table_font_size = summary_tuned(10.2, 8.8)
+        header_h = summary_tuned(8.8, 7.1)
+        cell_line_h = summary_tuned(6.2, 5.3)
+        row_unit_h = summary_tuned(7.6, 5.9)
+        if num_cols >= 6 and not summary_mode:
+            table_font_size = 8.4
+            header_h = 7.2
+            cell_line_h = 5.0
+            row_unit_h = 6.1
 
-        pdf.set_font("Malgun", "", 8)
+        normalized_header = [normalize_table_cell(cell[:80])[0] for cell in rows[0]]
+        normalized_rows = []
+        pdf.set_font("Malgun", "", table_font_size)
         for row in rows[1:]:
+            normalized_row = []
             cell_heights = []
             for i, cell in enumerate(row):
-                sw = pdf.get_string_width(cell[:200])
+                cell_text, is_bold = normalize_table_cell(cell[:200])
+                normalized_row.append((cell_text, is_bold))
+                sw = pdf.get_string_width(cell_text)
                 n_lines = max(1, int(sw / (col_w - 2)) + 1)
                 cell_heights.append(n_lines)
-            max_lines = max(cell_heights)
-            h = 6 * max_lines
+            max_lines = max(cell_heights) if cell_heights else 1
+            normalized_rows.append((normalized_row, row_unit_h * max_lines))
 
-            if pdf.get_y() + h > pdf.h - pdf.b_margin:
+        def draw_header():
+            pdf.set_font("Malgun", "B", table_font_size)
+            pdf.set_fill_color(240, 240, 240)
+            for cell_text in normalized_header:
+                pdf.cell(col_w, header_h, cell_text, border=1, align="L", fill=True)
+            pdf.ln()
+
+        full_table_height = header_h + sum(row_h for _, row_h in normalized_rows)
+        remaining_height = pdf.h - pdf.b_margin - pdf.get_y()
+        page_capacity = pdf.h - pdf.t_margin - pdf.b_margin
+
+        if full_table_height <= page_capacity and full_table_height > remaining_height:
+            pdf.add_page()
+
+        draw_header()
+
+        for normalized_row, row_h in normalized_rows:
+            if pdf.get_y() + row_h > pdf.h - pdf.b_margin:
                 pdf.add_page()
+                draw_header()
 
             y_before = pdf.get_y()
             for i in range(num_cols):
-                cell = row[i] if i < len(row) else ""
+                cell_text, is_bold = normalized_row[i] if i < len(normalized_row) else ("", False)
                 x = pdf.l_margin + i * col_w
-                pdf.rect(x, y_before, col_w, h)
+                pdf.rect(x, y_before, col_w, row_h)
                 pdf.set_xy(x + 1, y_before + 1)
-                pdf.multi_cell(col_w - 2, 5, cell[:200], border=0)
-            pdf.set_y(y_before + h)
+                pdf.set_font("Malgun", "B" if is_bold else "", table_font_size)
+                pdf.multi_cell(col_w - 2, cell_line_h, cell_text, border=0)
+            pdf.set_y(y_before + row_h)
+            pdf.set_font("Malgun", "", table_font_size)
 
     def draw_image(alt_text, rel_path):
         width_scale = 1.0
@@ -158,7 +204,7 @@ def convert(md_path, pdf_path):
 
         # 빈 줄
         if not stripped:
-            pdf.ln(3)
+            pdf.ln(summary_tuned(3, 2))
             continue
 
         if stripped == "<!-- KEEP_NEXT_H2_ON_PAGE -->":
@@ -166,6 +212,8 @@ def convert(md_path, pdf_path):
             continue
 
         if stripped == "<!-- PAGEBREAK -->":
+            summary_mode = False
+            pdf.set_auto_page_break(auto=True, margin=default_page_break_margin)
             top_threshold = getattr(pdf, "t_margin", 10) + 6
             if pdf.get_y() > top_threshold:
                 pdf.add_page()
@@ -195,6 +243,11 @@ def convert(md_path, pdf_path):
 
         if stripped.startswith("## "):
             title = stripped[3:].strip()
+            summary_mode = title == "1페이지 요약"
+            if summary_mode:
+                pdf.set_auto_page_break(auto=True, margin=summary_page_break_margin)
+            else:
+                pdf.set_auto_page_break(auto=True, margin=default_page_break_margin)
             if title == "목차":
                 in_toc = True
                 pdf.ln(4)
@@ -208,37 +261,43 @@ def convert(md_path, pdf_path):
             if title in heading_links:
                 pdf.set_link(heading_links[title], y=pdf.get_y(), page=pdf.page_no())
                 links_set.add(title)
-            pdf.set_font("Malgun", "B", 14)
-            pdf.multi_cell(0, 8, title)
-            pdf.ln(2)
+            pdf.set_font("Malgun", "B", summary_tuned(14, 13))
+            pdf.multi_cell(0, summary_tuned(8, 7), title)
+            pdf.ln(summary_tuned(2, 1.5))
             continue
 
         if stripped.startswith("### "):
             in_toc = False
-            pdf.ln(2)
-            pdf.set_font("Malgun", "B", 12)
-            pdf.multi_cell(0, 7, stripped[4:])
-            pdf.ln(1)
+            pdf.ln(summary_tuned(2, 1))
+            pdf.set_font("Malgun", "B", summary_tuned(12, 11))
+            pdf.multi_cell(0, summary_tuned(7, 6), stripped[4:])
+            pdf.ln(summary_tuned(1, 0.5))
             continue
         if stripped.startswith("#### "):
-            pdf.ln(1)
+            pdf.ln(summary_tuned(1, 0.5))
             pdf.set_font("Malgun", "B", 10)
-            pdf.multi_cell(0, 6, stripped[5:])
-            pdf.ln(1)
+            pdf.multi_cell(0, summary_tuned(6, 5.5), stripped[5:])
+            pdf.ln(summary_tuned(1, 0.5))
             continue
         if stripped.startswith("##### "):
             pdf.set_font("Malgun", "B", 10)
-            pdf.multi_cell(0, 6, stripped[6:])
-            pdf.ln(1)
+            pdf.multi_cell(0, summary_tuned(6, 5.5), stripped[6:])
+            pdf.ln(summary_tuned(1, 0.5))
             continue
 
         # 목차 영역의 리스트 → 클릭 가능 링크
         if in_toc and (stripped.startswith("- ") or stripped.startswith("* ")):
             item_text = stripped[2:].strip()
+            toc_label = item_text
+            toc_link_target = item_text
+            toc_match = re.match(r"^\[(.*?)\]\((.*?)\)$", item_text)
+            if toc_match:
+                toc_label = toc_match.group(1).strip()
+                toc_link_target = toc_label
             # heading_links에서 매칭 찾기
             matched_link = None
             for h_title, h_link in heading_links.items():
-                if h_title in item_text or item_text in h_title:
+                if h_title in toc_link_target or toc_link_target in h_title:
                     matched_link = h_link
                     break
             pdf.set_font("Malgun", "", 10)
@@ -247,9 +306,9 @@ def convert(md_path, pdf_path):
                 pdf.set_text_color(0, 0, 180)
             x_before = pdf.get_x()
             y_before = pdf.get_y()
-            pdf.cell(0, 6, "\u2022 " + item_text, ln=True)
+            pdf.cell(0, 6, "\u2022 " + toc_label, ln=True)
             if matched_link:
-                w = pdf.get_string_width("\u2022 " + item_text)
+                w = pdf.get_string_width("\u2022 " + toc_label)
                 toc_deferred.append((pdf.page_no(), x_before, y_before, w, 6, matched_link))
                 pdf.set_text_color(0, 0, 0)
             pdf.ln(1)
@@ -261,20 +320,20 @@ def convert(md_path, pdf_path):
             x_start = pdf.l_margin + 8
             y_top = pdf.get_y()
             pdf.set_x(x_start)
-            pdf.multi_cell(0, 5, stripped[2:])
+            pdf.multi_cell(0, summary_tuned(5, 4.5), stripped[2:])
             y_bottom = pdf.get_y()
             pdf.set_draw_color(150, 150, 150)
             pdf.line(pdf.l_margin + 4, y_top, pdf.l_margin + 4, y_bottom)
             pdf.set_draw_color(0, 0, 0)
-            pdf.ln(1)
+            pdf.ln(summary_tuned(1, 0.5))
             continue
 
         # 리스트
         if stripped.startswith("- ") or stripped.startswith("* "):
             pdf.set_font("Malgun", "", 10)
             pdf.set_x(pdf.l_margin + 5)
-            pdf.multi_cell(0, 5, "\u2022 " + stripped[2:])
-            pdf.ln(1)
+            pdf.multi_cell(0, summary_tuned(5, 4.5), "\u2022 " + stripped[2:])
+            pdf.ln(summary_tuned(1, 0.5))
             continue
 
         # 번호 리스트
@@ -282,15 +341,15 @@ def convert(md_path, pdf_path):
         if m:
             pdf.set_font("Malgun", "", 10)
             pdf.set_x(pdf.l_margin + 5)
-            pdf.multi_cell(0, 5, stripped)
-            pdf.ln(1)
+            pdf.multi_cell(0, summary_tuned(5, 4.5), stripped)
+            pdf.ln(summary_tuned(1, 0.5))
             continue
 
         # 일반 텍스트
         text = stripped.replace("**", "").replace("`", "")
         pdf.set_font("Malgun", "", 10)
-        pdf.multi_cell(0, 5, text)
-        pdf.ln(1)
+        pdf.multi_cell(0, summary_tuned(5, 4.5), text)
+        pdf.ln(summary_tuned(1, 0.5))
 
     # 마지막 테이블
     if in_table and table_lines:
