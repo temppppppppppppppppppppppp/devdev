@@ -14,6 +14,9 @@ from modules.core.context_compression import ContextCompressor
 from modules.core.semantic_query_broker import SemanticQueryBroker
 from modules.core.tactical_utils import extract_episode_tactical
 from modules.core.writer_prompt_builders import (
+    _check_hud_anomalies as _detect_hud_anomalies,
+)
+from modules.core.writer_prompt_builders import (
     build_anti_trope_instructions as _build_anti_trope,
 )
 from modules.core.writer_prompt_builders import (
@@ -939,6 +942,24 @@ class Stage4ContextBuilder:
             dashboard.record_retrieval_observation(ep_num=ep_num, stage=stage, observation=observation)
         except Exception as exc:
             logging.debug("[Stage4ContextBuilder] retrieval observation record failed: %s", exc)
+
+    def _record_hud_anomaly_observation(self, *, ep_num: int, db) -> None:
+        dashboard = getattr(self.ctx, "quality_dashboard", None)
+        if dashboard is None or not hasattr(dashboard, "record_hud_anomaly"):
+            return
+        try:
+            result = _detect_hud_anomalies(db, ep_num)
+        except Exception as exc:
+            logging.debug("[Stage4ContextBuilder] HUD anomaly detection failed: %s", exc)
+            return
+
+        anomalies = result.get("anomalies") if isinstance(result, dict) else None
+        if not isinstance(anomalies, list) or not anomalies:
+            return
+        try:
+            dashboard.record_hud_anomaly(ep_num=ep_num, anomalies=anomalies)
+        except Exception as exc:
+            logging.debug("[Stage4ContextBuilder] HUD anomaly record failed: %s", exc)
 
     def _prioritize_summaries_by_work_focus(
         self,
@@ -2248,6 +2269,7 @@ class Stage4ContextBuilder:
             _db = getattr(self.ctx.current_project, "db", None)
             _bible = getattr(self.ctx.current_project, "master_bible", {})
             mandatory_context = _build_writer_mandatory_context(_db, _bible, next_ep)
+            self._record_hud_anomaly_observation(ep_num=next_ep, db=_db)
         except Exception as e:
             self.ctx.ui.log(f"   ⚠️ Mandatory Context 실패 (비치명): {e}")
             mandatory_context = (

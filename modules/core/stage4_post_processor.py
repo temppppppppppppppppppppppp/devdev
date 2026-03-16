@@ -668,6 +668,7 @@ class Stage4PostProcessor:
         self._run_post_pass_advisories(
             next_ep=next_ep,
             final_manuscript=final_manuscript,
+            blueprint=blueprint,
             final_state_updates=final_state_updates,
             quality_labels=_quality_labels,
             quality_signals=_quality_signals,
@@ -1458,6 +1459,7 @@ class Stage4PostProcessor:
         *,
         next_ep,
         final_manuscript,
+        blueprint,
         final_state_updates,
         quality_labels=None,
         quality_signals=None,
@@ -1505,6 +1507,21 @@ class Stage4PostProcessor:
                 )
         except Exception as _pace_err:
             logging.warning("[TF-I24] 호흡 분석 저장 실패 (비차단): %s", _pace_err)
+
+        # ===== [TF-LP] Blueprint coverage instrumentation (advisory-only) =====
+        if self.ctx.quality_dashboard:
+            try:
+                _director = self.ctx.agents.get("director") if self.ctx.agents else None
+                _coverage_validator = getattr(_director, "_validate_blueprint_completeness_v60", None)
+                if callable(_coverage_validator) and final_manuscript and isinstance(blueprint, dict):
+                    _coverage_result = _coverage_validator(final_manuscript, blueprint)
+                    if isinstance(_coverage_result, dict):
+                        self.ctx.quality_dashboard.record_blueprint_coverage(
+                            ep_num=next_ep,
+                            coverage_result=_coverage_result,
+                        )
+            except Exception as _bp_cov_err:
+                logging.warning("[TF-LP] blueprint coverage instrumentation 실패 (비차단): %s", _bp_cov_err)
 
         # ===== [Phase 3-QR] 품질 회귀 감지 (advisory-only) =====
         if self.ctx.quality_dashboard:

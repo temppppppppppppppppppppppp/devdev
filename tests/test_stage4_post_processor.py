@@ -506,6 +506,37 @@ class TestProcessPassResult:
         assert record_kwargs["result"]["score"] == 95
         assert record_kwargs["result"]["quality_signals"]["ced_score"] > 0
 
+    def test_records_blueprint_coverage_on_dashboard(self, tmp_path):
+        pp = self._make_pp()
+        pp.ctx.current_project.db.save_manuscript.return_value = True
+        pp.ctx.quality_dashboard = MagicMock()
+        pp.ctx.quality_dashboard.detect_score_regression.return_value = {"is_regression": False, "severity": "none"}
+        pp.ctx.agents["director"]._validate_blueprint_completeness_v60.return_value = {
+            "valid": False,
+            "scene_coverage": 62.5,
+            "expected_scenes": 4,
+            "reflected_scenes": 2,
+            "warnings": ["씬 반영률 62.5%"],
+        }
+
+        result = pp.process_pass_result(
+            next_ep=9,
+            final_manuscript="장면 하나만 짧게 스치고 지나갔다. " * 120,
+            final_title="테스트",
+            final_state_updates={},
+            blueprint={"scene_breakdown": ["scene1", "scene2", "scene3", "scene4"]},
+            arc_data={"arc_no": 1},
+            output_dir=tmp_path,
+            v50_modules_available=False,
+            extract_chain_link_fn=lambda *_args, **_kwargs: {},
+        )
+
+        assert result is True
+        pp.ctx.quality_dashboard.record_blueprint_coverage.assert_called_once()
+        kwargs = pp.ctx.quality_dashboard.record_blueprint_coverage.call_args.kwargs
+        assert kwargs["ep_num"] == 9
+        assert kwargs["coverage_result"]["scene_coverage"] == 62.5
+
     def test_inventory_counts_flow_into_state_log_and_state_sinks(self, tmp_path):
         pp = self._make_pp()
         pp.ctx.current_project.db.save_manuscript.return_value = True
