@@ -62,6 +62,7 @@ def app_mock():
     app.world_state = MagicMock()
     app.fact_ledger = MagicMock()
     app.pass_rate_monitor = MagicMock()
+    app.stage_rejection_history = []
 
     # Facade methods
     app._audit_event = MagicMock()
@@ -962,6 +963,35 @@ class TestProcessSingleEpisode:
 
         cost_kw = app_mock.current_project.db.save_cost_record.call_args.kwargs
         assert cost_kw["session_id"] == "sess_stage3_reject"
+
+    def test_stage3_failure_appends_rejection_history_for_stage3_to_2_feedback(self, orch, app_mock):
+        pipeline_result = {
+            "final_verdict": "REJECT",
+            "last_score": 41,
+            "specific_issue": "scene order drift",
+            "fix_scope": "arc",
+            "phases": {
+                "generate": {"selected_strategy": "B", "selected_score": 41},
+                "validate": {
+                    "issues_count": 2,
+                    "score_breakdown": {"scene_flow": 8, "note": "ignore"},
+                },
+            },
+        }
+
+        orch._handle_failure(4, pipeline_result, 0, 0, arc_no=2)
+
+        assert len(app_mock.stage_rejection_history) == 1
+        entry = app_mock.stage_rejection_history[0]
+        assert entry["stage"] == 3
+        assert entry["arc_no"] == 2
+        assert entry["attempt"] == 1
+        assert entry["specific_issue"] == "scene order drift"
+        assert entry["failure_category"] == "validation_issue"
+        assert entry["fix_scope"] == "arc"
+        assert entry["score_breakdown"] == {"scene_flow": 8}
+        assert "score=41" in entry["reason"]
+        assert "strategy=B" in entry["reason"]
 
     def test_stage3_attempt_key_uses_metrics_session_id_when_available(self, orch, app_mock):
         app_mock.current_project.metrics_session_id = "sess_stage3"
