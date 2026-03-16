@@ -686,6 +686,38 @@ class TestBuildMandatoryContext:
         assert "[Writer Guidance]" in result["justification_prompt"]
         assert "high impact guidance" in result["justification_prompt"]
 
+    @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")
+    def test_build_mandatory_context_records_hud_anomaly_on_dashboard(self, _mock_build):
+        ctx = _make_ctx()
+        ctx.quality_dashboard = MagicMock()
+        ctx.current_project.db.get_manuscript.side_effect = [
+            {"hud_snapshot": {"internal_energy": 100, "realm": "삼류"}},
+            {"hud_snapshot": {"internal_energy": 100, "realm": "삼류"}},
+            {"hud_snapshot": {"internal_energy": 700, "realm": "삼류"}},
+        ]
+        cb = Stage4ContextBuilder(ctx)
+        anchor_sys = MagicMock()
+        anchor_sys.get_relevant_anchors.return_value = []
+        anchor_sys.get_critical_anchors.return_value = []
+
+        cb.build_mandatory_context(
+            next_ep=5,
+            arc_data={"arc_no": 1},
+            arc_tactical="전술",
+            prev_text="이전 원고",
+            prev_ending="엔딩",
+            hud_report="HUD",
+            writer_agent=MagicMock(),
+            anchor_sys=anchor_sys,
+            s4_genre_type="wuxia",
+            v50_modules_available=False,
+        )
+
+        ctx.quality_dashboard.record_hud_anomaly.assert_called_once()
+        kwargs = ctx.quality_dashboard.record_hud_anomaly.call_args.kwargs
+        assert kwargs["ep_num"] == 5
+        assert kwargs["anomalies"][0]["type"] == "내공 급상승"
+
     def test_pacing_analyzer_param_used(self):
         cb = Stage4ContextBuilder(_make_ctx())
         anchor_sys = MagicMock()
