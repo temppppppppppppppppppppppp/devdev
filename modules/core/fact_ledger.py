@@ -201,6 +201,31 @@ class FactLedger:
             if iname:
                 self._upsert_item(iname, ep_num, owner="주인공", status=action, note=f"{action}")
 
+        for item_name, raw_count in (state_changes.get("inventory_counts") or {}).items():
+            if not item_name:
+                continue
+            try:
+                count = int(raw_count)
+            except (TypeError, ValueError):
+                continue
+            if count <= 0:
+                continue
+            self._upsert_item(item_name, ep_num, owner="주인공", status="보유", quantity=count, note=f"수량 {count}")
+
+        for delta in state_changes.get("inventory_count_deltas") or []:
+            if not isinstance(delta, dict):
+                continue
+            item_name = delta.get("name", "")
+            if not item_name:
+                continue
+            try:
+                to_count = int(delta.get("to", 0) or 0)
+            except (TypeError, ValueError):
+                to_count = 0
+            status = "보유" if to_count > 0 else "분실"
+            note = f"수량 {delta.get('from', '?')} -> {to_count}"
+            self._upsert_item(item_name, ep_num, owner="주인공", status=status, quantity=to_count, note=note)
+
         # entity_destructions
         for dest in state_changes.get("entity_destructions") or []:  # [V70] None 방어
             if not isinstance(dest, dict):
@@ -422,13 +447,22 @@ class FactLedger:
             entry["history"].append(f"ep{ep_num}: {note}")
             entry["history"] = entry["history"][-self.MAX_HISTORY_PER_ENTITY :]
 
-    def _upsert_item(self, name: str, ep_num: int, owner: str = None, status: str = None, note: str = ""):
+    def _upsert_item(
+        self,
+        name: str,
+        ep_num: int,
+        owner: str = None,
+        status: str = None,
+        note: str = "",
+        quantity: int | None = None,
+    ):
         """아이템/무공 정보 생성 또는 갱신."""
         items = self._ledger["items"]
         if name not in items:
             items[name] = {
                 "owner": owner or "",
                 "status": status or "보유",
+                "quantity": quantity if isinstance(quantity, int) and quantity >= 0 else None,
                 "established_ep": ep_num,
                 "last_ep": ep_num,
                 "history": [],
@@ -438,6 +472,8 @@ class FactLedger:
             entry["owner"] = owner
         if status:
             entry["status"] = status
+        if isinstance(quantity, int) and quantity >= 0:
+            entry["quantity"] = quantity
         entry["last_ep"] = ep_num
         if note:
             entry["history"].append(f"ep{ep_num}: {note}")
@@ -551,8 +587,10 @@ class FactLedger:
                 for name, info in _active_item_shown:
                     owner = info.get("owner", "")
                     owner_str = f", 소유: {owner}" if owner else ""
+                    quantity = info.get("quantity")
+                    quantity_str = f" x{quantity}" if isinstance(quantity, int) and quantity > 1 else ""
                     parts.append(
-                        f"  - {name} ({info.get('status', '보유')}{owner_str}, ep{info.get('established_ep', '?')})"
+                        f"  - {name}{quantity_str} ({info.get('status', '보유')}{owner_str}, ep{info.get('established_ep', '?')})"
                     )
 
             if lost_items:

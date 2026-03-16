@@ -9,6 +9,7 @@ import re
 from contextlib import nullcontext as _nullcontext
 
 from modules.core.genre_schema_builder import is_wuxia
+from modules.core.inventory_state import compute_inventory_count_deltas, normalize_inventory_counts
 from modules.core.metrics_collector import get_metrics_collector
 from modules.core.project_support import resolve_project_pov_contract
 from modules.core.quality_signal_metrics import compute_quality_signal_bundle, extract_warning_count
@@ -852,12 +853,24 @@ class Stage4PostProcessor:
             if hasattr(self.ctx.current_project, "latest_state"):
                 prev_actual = self.ctx.current_project.latest_state.get("actual_truth", {})
 
-            prev_equipment = set(
-                prev_actual.get("equipment", []) if isinstance(prev_actual.get("equipment"), list) else []
+            prev_inventory_counts = normalize_inventory_counts(
+                prev_actual.get("inventory_counts") if isinstance(prev_actual, dict) else {}
             )
-            curr_equipment = set(
-                actual_truth.get("equipment", []) if isinstance(actual_truth.get("equipment"), list) else []
+            if not prev_inventory_counts and isinstance(prev_actual, dict):
+                prev_inventory_counts = normalize_inventory_counts(prev_actual.get("equipment", []))
+
+            curr_inventory_counts = normalize_inventory_counts(
+                actual_truth.get("inventory_counts") if isinstance(actual_truth, dict) else {}
             )
+            if not curr_inventory_counts and isinstance(actual_truth, dict):
+                curr_inventory_counts = normalize_inventory_counts(actual_truth.get("equipment", []))
+            if curr_inventory_counts and isinstance(actual_truth, dict):
+                actual_truth["inventory_counts"] = curr_inventory_counts
+
+            inventory_count_deltas = compute_inventory_count_deltas(prev_inventory_counts, curr_inventory_counts)
+
+            prev_equipment = set(prev_inventory_counts)
+            curr_equipment = set(curr_inventory_counts)
             # [TF-45] martial_arts diff는 무협 전용
             if is_wuxia(genre_type):
                 prev_martial = set(
@@ -1001,6 +1014,8 @@ class Stage4PostProcessor:
                 "causal_links": causal_links,
                 "karma_matrix": karma_matrix,
                 "knowledge_map": knowledge_map,
+                "inventory_counts": curr_inventory_counts,
+                "inventory_count_deltas": inventory_count_deltas,
             }
 
             logging.debug("[P2] bible_delta ep=%d: items=%d, npcs=%d, deaths=%d",
@@ -1090,6 +1105,8 @@ class Stage4PostProcessor:
                     "karma_matrix": karma_matrix,
                     "knowledge_map": knowledge_map,
                     "public_reputation": state_updates_from_audit.get("public_reputation", {}),
+                    "inventory_counts": curr_inventory_counts,
+                    "inventory_count_deltas": inventory_count_deltas,
                 }
                 try:
                     summary = f"제{next_ep}화 정산: {', '.join(all_new_items[:3]) if all_new_items else '변화없음'}"
@@ -1142,6 +1159,15 @@ class Stage4PostProcessor:
         _meta_db = getattr(self.ctx.current_project, "db", None)
         import copy as _copy
 
+        _inventory_payload = {}
+        if isinstance(bible_delta, dict):
+            _inventory_counts = bible_delta.get("inventory_counts")
+            _inventory_count_deltas = bible_delta.get("inventory_count_deltas")
+            if isinstance(_inventory_counts, dict) and _inventory_counts:
+                _inventory_payload["inventory_counts"] = dict(_inventory_counts)
+            if isinstance(_inventory_count_deltas, list) and _inventory_count_deltas:
+                _inventory_payload["inventory_count_deltas"] = list(_inventory_count_deltas)
+
         try:
             _ws_snap = _copy.deepcopy(self.ctx.world_state._state) if self.ctx.world_state else None
         except Exception:
@@ -1156,7 +1182,9 @@ class Stage4PostProcessor:
             with _ctx_mgr:
                 # ── WorldState 갱신 ──
                 if self.ctx.world_state:
-                    _ws_sc = final_state_updates or {}
+                    _ws_sc = dict(final_state_updates or {})
+                    if _inventory_payload:
+                        _ws_sc.update(_inventory_payload)
                     if _ws_sc:
                         self.ctx.world_state.update_from_state_changes(next_ep, _ws_sc)
 
@@ -1190,7 +1218,9 @@ class Stage4PostProcessor:
 
                 # ── FactLedger 갱신 ──
                 if self.ctx.fact_ledger:
-                    _fl_sc = final_state_updates or {}
+                    _fl_sc = dict(final_state_updates or {})
+                    if _inventory_payload:
+                        _fl_sc.update(_inventory_payload)
                     if _fl_sc:
                         self.ctx.fact_ledger.update_from_state_changes(next_ep, _fl_sc)
                     if bible_delta:

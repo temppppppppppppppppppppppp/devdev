@@ -8,7 +8,7 @@ Commit State:
 - Baseline Commit: `5a0177666e6877070d726d983d3c3e1d03e812d2`
 - Baseline Dirty Summary: `dirty: 2 tracked, 21 untracked; hotspots: projects/0_260316/project_data.db, docs/2026-03-16/*, docs/temp/*.md, projects/0_260316/0_temp.txt`
 - Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `desktop-stage0-edr-code1-failure and investment-stage0-ui-hints-and-style-cache-visibility are closed; project-0-260316 remains active after bounded fixable-firewall, contradiction-payload, and persisted-prev-hud precedence loops that passed targeted regressions`
+- Resume Drift Summary: `desktop-stage0-edr-code1-failure and investment-stage0-ui-hints-and-style-cache-visibility are closed; project-0-260316 remains active after bounded fixable-firewall, contradiction-payload, persisted-prev-hud, mandatory-context authority-precedence, and inventory-count-aware loops that passed targeted regressions`
 Queue Snapshot:
 - `docs/temp/project-0-260316-execution-ssot.md`
 3-Pass Audit:
@@ -47,7 +47,15 @@ Queue Snapshot:
   - `contradiction_details` propagation through retry feedback, PASS_WITH_FIX patching, and recent-attempt history
   - `prev_hud` persisted precedence in Stage 4 CV context: `manuscript.hud_snapshot -> state_logs.data.hud_snapshot -> state_logs.data.actual_truth -> live_hud.pro_root fallback`
   - `prev_hud_source` audit tagging for CV-context visibility
+  - overlapping `state_tracker` summaries now defer to persisted `world_state/fact_ledger` canonical blocks inside Stage 4 mandatory context
+  - count-aware inventory snapshots/deltas now flow through `actual_truth`, `state_logs`, `world_state`, and `fact_ledger`
+  - continuity validator now surfaces explicit opening inventory count shrinkage via `inventory_count_drift`
 - targeted verification passed:
+  - `tests/test_inventory_state.py` -> `2 passed`
+  - `tests/test_world_state_caps.py` -> `6 passed`
+  - `tests/test_fact_ledger.py` -> `14 passed`
+  - `tests/test_stage4_post_processor.py` -> `43 passed`
+  - `tests/test_validation.py` -> `29 passed`
   - `tests/test_v75c_contradiction_firewall.py` -> `14 passed`
   - `tests/test_a4_failure_pattern.py` -> `6 passed`
   - `tests/test_stage4_interview_round.py -k "extract_fix_feedback or retry_feedback_provenance"` -> `3 passed`
@@ -55,7 +63,10 @@ Queue Snapshot:
   - `tests/test_chief_writer.py -k "retry_history_feedback_is_included"` -> `1 passed`
   - `tests/test_stage4_cv_context.py` -> `20 passed`
   - `tests/test_stage4_interview_round.py` -> `80 passed`
-- next sub-target within the remaining project item: `Stage 4 state_tracker/world_state/fact_ledger authority precedence`
+  - `tests/test_stage4_context_builder.py` -> `51 passed`
+  - `tests/test_stage4_orchestrator.py` -> `58 passed`
+  - `tests/test_continuity_packet.py` -> `18 passed`
+- next sub-target within the remaining project item: `relationship/threat delta durable persistence`
 
 ## 3. Dependency Graph
 
@@ -114,7 +125,9 @@ Loop rule:
   - do not start with live rerun work
   - fixable-firewall routing plus contradiction payload propagation is already landed; do not reopen it unless the next validity gate finds drift
   - persisted prev_hud precedence is already landed in the Stage 4 CV path; do not reopen it unless the next validity gate finds drift
-  - next sub-target is `Stage 4 state_tracker/world_state/fact_ledger authority precedence`
+  - mandatory-context authority precedence between canonical persisted layers and overlapping state_tracker summaries is already landed; do not reopen it unless the next validity gate finds drift
+  - count-aware inventory persistence plus opening drift detection is already landed; do not reopen it unless the next validity gate finds drift
+  - next sub-target is `relationship/threat delta durable persistence`
   - land authority and persistence substrate fixes before ep7 recovery decisions
 - completion signal:
   - regression corpus and acceptance criteria in the 0_260316 SSOT pass
@@ -141,7 +154,7 @@ Loop rule:
 | --- | --- | --- | --- |
 | desktop-stage0-edr-code1-failure | completed | 2026-03-16 | closed and removed from active temp queue |
 | investment-stage0-ui-hints-and-style-cache-visibility | completed | 2026-03-16 | closed and removed from active temp queue |
-| project-0-260316 | in progress (selected next sub-target: state_tracker/world_state/fact_ledger authority precedence) | 2026-03-16 | none |
+| project-0-260316 | in progress (selected next sub-target: relationship/threat delta durable persistence) | 2026-03-16 | none |
 
 ## 8. Queue Cleanup Rule
 

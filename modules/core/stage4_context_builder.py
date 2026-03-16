@@ -958,6 +958,61 @@ class Stage4ContextBuilder:
             return summaries
         return [text for _, _, text in sorted(scored, key=lambda row: (-row[0], row[1]))]
 
+    def _filter_state_tracker_summaries_for_authority(
+        self,
+        summaries: dict[str, str],
+    ) -> tuple[dict[str, str], dict[str, str]]:
+        """Drop arc-derived summaries that overlap with persisted canonical layers."""
+        if not isinstance(summaries, dict) or not summaries:
+            return {}, {}
+
+        overlap_sources: dict[str, str] = {}
+        if getattr(self.ctx, "world_state", None):
+            overlap_sources.update(
+                {
+                    "dead_npc": "world_state",
+                    "item_state": "world_state",
+                    "relationship_changes": "world_state",
+                    "npc_injury": "world_state",
+                    "npc_movement": "world_state",
+                    "time_timeline": "world_state",
+                }
+            )
+        if getattr(self.ctx, "fact_ledger", None):
+            overlap_sources["financial_state"] = "fact_ledger"
+
+        kept: dict[str, str] = {}
+        suppressed: dict[str, str] = {}
+        for key, value in summaries.items():
+            if value is None:
+                continue
+            if overlap_sources.get(key) and str(value).strip():
+                suppressed[key] = overlap_sources[key]
+            else:
+                kept[key] = value
+        return kept, suppressed
+
+    @staticmethod
+    def _build_state_tracker_authority_note(suppressed: dict[str, str]) -> str:
+        if not isinstance(suppressed, dict) or not suppressed:
+            return ""
+
+        labels = {
+            "dead_npc": "사망/NPC 생존 상태",
+            "item_state": "아이템 보유 상태",
+            "relationship_changes": "관계 변화",
+            "npc_injury": "NPC 부상 상태",
+            "npc_movement": "NPC 이동 상태",
+            "time_timeline": "작중 시간선",
+            "financial_state": "금융 상태",
+        }
+        rendered = []
+        for key, source in suppressed.items():
+            rendered.append(f"- {labels.get(key, key)}: {source} canonical block 우선")
+        return "[Authority precedence]\n아래 persisted canonical 레이어가 같은 영역의 arc-derived state_tracker 요약보다 우선한다.\n" + "\n".join(
+            rendered[:8]
+        )
+
     def _build_condensed_world_state_summary(
         self,
         entities: dict[str, list[str] | str],
@@ -2345,49 +2400,67 @@ class Stage4ContextBuilder:
                     arc_no=_arc_no_for_st,
                     genre=s4_genre_type,
                 )
-                _ordered_summaries = self._prioritize_summaries_by_work_focus(list(_all_summaries.values()), _work_focus)
+                _filtered_summaries, _suppressed_summaries = self._filter_state_tracker_summaries_for_authority(
+                    _all_summaries
+                )
+                _authority_note = self._build_state_tracker_authority_note(_suppressed_summaries)
+                if _authority_note:
+                    _mc_parts.append(_authority_note)
+                _ordered_summaries = self._prioritize_summaries_by_work_focus(
+                    list(_filtered_summaries.values()),
+                    _work_focus,
+                )
                 for _summary in _ordered_summaries:
                     if _summary:
                         _mc_parts.append(_summary)
             except Exception as _st_err:
                 logging.warning("[S4-I2] get_all_summaries 실패, 개별 폴백: %s", _st_err)
                 # 폴백: 개별 호출 (하위 호환성 보장)
-                _fallback_summaries = [
-                    _st.get_entity_destruction_summary(),
-                    _st.get_resolved_plots_summary(),
-                    _st.get_npc_personality_summary(),
-                    _st.get_npc_npc_relationship_summary(),
-                    _st.get_permanent_injury_summary(),
-                    _st.get_time_timeline_summary(),
-                    _st.get_companion_summary(),
-                    _st.get_commitment_summary(),
-                    _st.get_protagonist_emotion_summary(),
-                    _st.get_item_state_summary(),
-                    _st.get_plot_suspension_summary(_arc_no_for_st),
-                    _st.get_npc_dialogue_style_summary(),
-                    _st.get_relationship_changes_summary(),
-                    _st.get_npc_injury_summary(),
-                    _st.get_npc_movement_summary(),
-                    _st.get_protagonist_skills_summary(),
-                    _st.get_dead_npc_summary(),
-                ]
+                _fallback_summary_map = {
+                    "entity_destruction": _st.get_entity_destruction_summary(),
+                    "resolved_plots": _st.get_resolved_plots_summary(),
+                    "npc_personality": _st.get_npc_personality_summary(),
+                    "npc_npc_relationship": _st.get_npc_npc_relationship_summary(),
+                    "permanent_injury": _st.get_permanent_injury_summary(),
+                    "time_timeline": _st.get_time_timeline_summary(),
+                    "companion": _st.get_companion_summary(),
+                    "commitment": _st.get_commitment_summary(),
+                    "protagonist_emotion": _st.get_protagonist_emotion_summary(),
+                    "item_state": _st.get_item_state_summary(),
+                    "plot_suspension": _st.get_plot_suspension_summary(_arc_no_for_st),
+                    "npc_dialogue_style": _st.get_npc_dialogue_style_summary(),
+                    "relationship_changes": _st.get_relationship_changes_summary(),
+                    "npc_injury": _st.get_npc_injury_summary(),
+                    "npc_movement": _st.get_npc_movement_summary(),
+                    "protagonist_skills": _st.get_protagonist_skills_summary(),
+                    "dead_npc": _st.get_dead_npc_summary(),
+                }
                 if s4_genre_type == "hunter":
-                    _fallback_summaries.extend(
-                        [
-                            _st.get_dungeon_clear_summary(),
-                            _st.get_skill_cooldown_summary(),
-                        ]
+                    _fallback_summary_map.update(
+                        {
+                            "dungeon_clear": _st.get_dungeon_clear_summary(),
+                            "skill_cooldown": _st.get_skill_cooldown_summary(),
+                        }
                     )
                 elif s4_genre_type == "fantasy":
-                    _fallback_summaries.extend(
-                        [
-                            _st.get_spell_repertoire_summary(),
-                            _st.get_blessing_curse_summary(),
-                        ]
+                    _fallback_summary_map.update(
+                        {
+                            "spell_repertoire": _st.get_spell_repertoire_summary(),
+                            "blessing_curse": _st.get_blessing_curse_summary(),
+                        }
                     )
                 elif s4_genre_type == "actor":
-                    _fallback_summaries.append(_st.get_filmography_summary())
-                _fallback_summaries = self._prioritize_summaries_by_work_focus(_fallback_summaries, _work_focus)
+                    _fallback_summary_map["filmography"] = _st.get_filmography_summary()
+                _filtered_summaries, _suppressed_summaries = self._filter_state_tracker_summaries_for_authority(
+                    _fallback_summary_map
+                )
+                _authority_note = self._build_state_tracker_authority_note(_suppressed_summaries)
+                if _authority_note:
+                    _mc_parts.append(_authority_note)
+                _fallback_summaries = self._prioritize_summaries_by_work_focus(
+                    list(_filtered_summaries.values()),
+                    _work_focus,
+                )
                 for _summary in _fallback_summaries:
                     if _summary:
                         _mc_parts.append(_summary)
