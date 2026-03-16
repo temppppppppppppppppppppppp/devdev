@@ -3,6 +3,7 @@ import json
 
 from modules.api import bridge_server
 from modules.core.db_manager import DBManager
+from modules.core.pass_rate_monitor import PassRateMonitor
 from modules.core.quality_dashboard import QualityDashboard
 from modules.core.services.audit_service import AuditService
 
@@ -476,6 +477,37 @@ def test_quality_dashboard_endpoint_surfaces_cost_summary(tmp_path, monkeypatch)
     assert cost_summary["scope_counts"] == {"arc": 1, "episode": 1}
     assert cost_summary["recent"][0]["scope_type"] == "arc"
     assert cost_summary["recent"][1]["scope_type"] == "episode"
+
+
+def test_quality_dashboard_endpoint_surfaces_patch_effectiveness(tmp_path, monkeypatch):
+    monkeypatch.setattr(bridge_server, "PROJECT_ROOT", tmp_path)
+    project_dir = tmp_path / "projects" / "demo"
+    project_dir.mkdir(parents=True)
+
+    monitor = PassRateMonitor(str(project_dir))
+    monitor.record_attempt(stage=4, episode=3, attempt_num=1, success=False, is_patch=False)
+    monitor.record_attempt(stage=4, episode=3, attempt_num=2, success=True, is_patch=True, prev_score=82.0)
+    monitor.record_attempt(stage=4, episode=4, attempt_num=1, success=False, is_patch=True, patch_fallback=True, prev_score=70.0)
+    monitor.record_attempt(stage=4, episode=5, attempt_num=1, success=True, is_patch=False)
+    monitor.save()
+
+    response = asyncio.run(bridge_server.quality_dashboard_endpoint(project="demo", lookback=5))
+    payload = json.loads(response.body.decode("utf-8"))
+
+    assert response.status_code == 200
+    assert payload["ok"] is True
+    patch_effectiveness = payload["data"]["patch_effectiveness"]
+    assert patch_effectiveness["available"] is True
+    assert patch_effectiveness["stage"] == 4
+    assert patch_effectiveness["lookback"] == 20
+    assert patch_effectiveness["total_attempts"] == 4
+    assert patch_effectiveness["patch_attempts"] == 2
+    assert patch_effectiveness["has_patch_attempts"] is True
+    assert patch_effectiveness["patch_success_rate"] == 0.5
+    assert patch_effectiveness["patch_fallback_rate"] == 0.5
+    assert patch_effectiveness["direct_patch_success_rate"] == 1.0
+    assert patch_effectiveness["non_patch_success_rate"] == 0.5
+    assert patch_effectiveness["avg_prev_score"] == 76.0
 
 
 def test_safe_ops_preview_endpoint_exposes_stage_split(tmp_path, monkeypatch):
