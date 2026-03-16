@@ -135,3 +135,20 @@ def test_end_call_applies_cached_token_discount(tmp_path):
         assert peek["model_breakdown"]["gemini-2.5-pro"]["thinking_tokens"] == 150
     finally:
         MetricsCollector.reset(tmp_path / "metrics")
+
+
+def test_end_call_retry_count_drives_retry_stats(tmp_path):
+    collector = MetricsCollector.reset(tmp_path / "metrics")
+    try:
+        metric_id = collector.start_call("Writer", "gemini-2.5-pro")
+        collector.end_call(metric_id, success=False, retry_count=2, input_tokens=100, output_tokens=20)
+
+        agent_stats = collector.get_agent_stats("Writer")
+        session_stats = collector.get_session_stats()
+
+        assert agent_stats["total_calls"] == 1
+        assert agent_stats["total_retries"] == 2
+        assert agent_stats["avg_retries_per_call"] == 2
+        assert session_stats.total_retries == 2
+    finally:
+        MetricsCollector.reset(tmp_path / "metrics")
