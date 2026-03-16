@@ -1,3 +1,5 @@
+<!-- [완료] -->
+<\!-- [완료] -->
 # TF-019 Guard Chain Config Validation 3-Pass Audit
 
 Date: 2026-03-16

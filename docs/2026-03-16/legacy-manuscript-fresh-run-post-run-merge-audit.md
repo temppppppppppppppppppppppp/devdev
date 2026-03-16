@@ -1,3 +1,5 @@
+<!-- [참고자료] -->
+<\!-- [참고자료] -->
 # Legacy Manuscript Fresh Run Post-Run Merge Audit
 
 Date: 2026-03-16

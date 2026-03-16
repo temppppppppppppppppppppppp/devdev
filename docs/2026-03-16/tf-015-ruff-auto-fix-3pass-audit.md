@@ -1,3 +1,5 @@
+<!-- [완료] -->
+<\!-- [완료] -->
 # TF-015 Ruff Auto-Fix 3-Pass Audit
 
 Date: 2026-03-16

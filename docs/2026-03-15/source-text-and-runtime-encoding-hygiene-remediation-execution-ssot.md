@@ -1,3 +1,4 @@
+<!-- [완료] -->
 ﻿# source-text-and-runtime-encoding-hygiene-remediation Execution SSOT
 
 Date: 2026-03-15

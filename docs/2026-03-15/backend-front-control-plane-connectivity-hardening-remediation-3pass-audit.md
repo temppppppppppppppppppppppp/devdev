@@ -1,3 +1,4 @@
+<!-- [완료] -->
 # Backend-Front Control-Plane Connectivity Hardening Remediation 3-Pass Audit
 
 Date: 2026-03-15

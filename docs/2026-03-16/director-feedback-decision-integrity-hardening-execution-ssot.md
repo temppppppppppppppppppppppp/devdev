@@ -1,3 +1,5 @@
+<!-- [완료] -->
+<\!-- [완료] -->
 # director-feedback-decision-integrity-hardening Execution SSOT
 
 Date: 2026-03-16

@@ -1,3 +1,4 @@
+<!-- [폐기] -->
 # source-text-utf8-hygiene-remediation Execution SSOT
 
 Date: 2026-03-15

@@ -1,3 +1,4 @@
+<!-- [참고자료] -->
 project_folder	projects/00_260315
 plain_session_log	projects/00_260315/logs/session_20260315_144654.log
 plain_log_session_token	20260315_144654

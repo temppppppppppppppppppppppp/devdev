@@ -1,3 +1,4 @@
+<!-- [참고자료] -->
 # codebase-global-cleanroom-source-only 3-Pass Audit
 
 Date: 2026-03-15

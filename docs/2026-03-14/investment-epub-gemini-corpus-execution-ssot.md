@@ -1,3 +1,4 @@
+<!-- [완료] -->
 # Investment EPUB Gemini Corpus Execution SSOT
 
 Date: 2026-03-14

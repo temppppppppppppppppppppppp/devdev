@@ -1,3 +1,4 @@
+<!-- [완료] -->
 # TF-018 DI Context Slot Audit Evaluation 3-Pass Audit
 
 Date: 2026-03-15

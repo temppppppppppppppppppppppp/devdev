@@ -1,3 +1,4 @@
+<!-- [참고자료] -->
 file_writes	runtime_audit_summary.json; runtime_audit.jsonl; session/*.jsonl; episode_production.jsonl; artifacts; project_data.db; desktop settings/material/project files
 DB_writes	stage_attempts; director_selections; ui_events; llm_calls; anchors; quality labels; commits and rollbacks across app/stage/service layers
 JSONL_log_audit_sinks	plain session log; session ui_events/decisions/state_changes/llm_io JSONL; runtime audit JSONL; pass_rate_monitor.json; runtime_audit_summary.json

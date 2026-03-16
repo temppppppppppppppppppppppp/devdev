@@ -80,9 +80,19 @@ async function testMaterialAndWorkspaceBridgeMethods() {
   assert.deepStrictEqual(invokeCalls[2], ["workspace:get-path"]);
 }
 
+async function testPreloadDoesNotDependOnLocalRelativeRequireForContract() {
+  const preloadSource = require("fs").readFileSync(
+    path.resolve(__dirname, "../geuldobi-desktop/src/preload.js"),
+    "utf8"
+  );
+  assert.ok(preloadSource.includes('const PRELOAD_METHOD_CHANNELS = Object.freeze({'));
+  assert.ok(!preloadSource.includes('require("./desktop_control_plane_contract")'));
+}
+
 Promise.resolve()
   .then(testSplashBridgeMethods)
   .then(testMaterialAndWorkspaceBridgeMethods)
+  .then(testPreloadDoesNotDependOnLocalRelativeRequireForContract)
   .catch((error) => {
     console.error(error);
     process.exitCode = 1;

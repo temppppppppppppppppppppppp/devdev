@@ -1,3 +1,5 @@
+<!-- [참고자료] -->
+<\!-- [참고자료] -->
 # Stale Cleanroom Execution Authority Hygiene Sweep
 
 Date: 2026-03-16

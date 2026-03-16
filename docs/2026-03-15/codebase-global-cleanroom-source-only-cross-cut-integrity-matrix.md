@@ -1,3 +1,4 @@
+<!-- [참고자료] -->
 # codebase-global-cleanroom-source-only Cross-Cut Integrity Matrix
 
 Date: 2026-03-15

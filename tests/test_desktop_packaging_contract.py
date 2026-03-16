@@ -6,6 +6,8 @@ ROOT = Path(".")
 PACKAGE_JSON = json.loads((ROOT / "geuldobi-desktop/package.json").read_text(encoding="utf-8"))
 BUILD_RELEASE = (ROOT / "build/build_release.ps1").read_text(encoding="utf-8")
 BACKEND_ENTRY = (ROOT / "build/backend_entry.py").read_text(encoding="utf-8")
+BACKEND_SPEC = (ROOT / "build/backend.spec").read_text(encoding="utf-8")
+PREPARE_PYTHON_EMBED = (ROOT / "build/prepare_python_embed.ps1").read_text(encoding="utf-8")
 DESKTOP_MAIN = (ROOT / "geuldobi-desktop/src/main.js").read_text(encoding="utf-8")
 DESKTOP_GUIDE = (ROOT / "geuldobi-desktop/DESKTOP-GUIDE.md").read_text(encoding="utf-8")
 RUNTIME_CONTRACT = json.loads(
@@ -50,6 +52,17 @@ def test_package_build_scripts_stage_workspace_seed_before_builder():
     assert "build_workspace_seed.py" in scripts["prepare:workspace-seed"]
     assert "prepare:workspace-seed" in scripts["build"]
     assert "prepare:workspace-seed" in scripts["build:dir"]
+
+
+def test_backend_build_runtime_includes_google_genai_hiddenimports():
+    assert '"google.genai"' in BACKEND_SPEC
+    assert '"google.genai.types"' in BACKEND_SPEC
+
+
+def test_build_scripts_install_google_genai_sdk_not_legacy_package_name():
+    assert "google-genai" in PREPARE_PYTHON_EMBED
+    assert "google-genai" in BUILD_RELEASE
+    assert "google-generativeai" not in PREPARE_PYTHON_EMBED
 
 
 def test_desktop_main_seeds_packaged_workspace_materials_before_backend_boot():

@@ -1,3 +1,4 @@
+<!-- [참고자료] -->
 # 전체 서브시스템 TF 통합 SSOT
 
 > Independent Re-Audit (Codex, 2026-03-16)

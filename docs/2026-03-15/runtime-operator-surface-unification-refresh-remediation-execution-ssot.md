@@ -1,3 +1,4 @@
+<!-- [완료] -->
 ﻿# runtime-operator-surface-unification-refresh-remediation Execution SSOT
 
 Date: 2026-03-15

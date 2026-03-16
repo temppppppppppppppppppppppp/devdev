@@ -1,3 +1,4 @@
+<!-- [참고자료] -->
 # Codebase Stagewise Uncertainty And Contradiction Ledger Draft
 
 Date: 2026-03-15

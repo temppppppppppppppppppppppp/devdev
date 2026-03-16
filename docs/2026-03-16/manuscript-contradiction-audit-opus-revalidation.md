@@ -1,3 +1,5 @@
+<!-- [참고자료] -->
+<\!-- [참고자료] -->
 # OPUS Manuscript Contradiction Audit Package Revalidation
 
 Date: 2026-03-16

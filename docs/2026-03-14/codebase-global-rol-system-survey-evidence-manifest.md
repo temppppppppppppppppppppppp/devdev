@@ -1,3 +1,4 @@
+<!-- [참고자료] -->
 # Codebase Global ROL System Survey Evidence Manifest
 
 Date: 2026-03-14

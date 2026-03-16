@@ -1,3 +1,4 @@
+<!-- [참고자료] -->
 # Operations Governance Stale Reference Sweep
 
 Date: 2026-03-14

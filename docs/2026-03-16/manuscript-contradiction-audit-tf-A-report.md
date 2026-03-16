@@ -1,3 +1,5 @@
+<!-- [참고자료] -->
+<\!-- [참고자료] -->
 # Manuscript Contradiction Audit Report (TF-A)
 
 **Project**: 기록용/00000

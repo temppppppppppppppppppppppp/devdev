@@ -1,3 +1,4 @@
+<!-- [참고자료] -->
 # Runtime Audit Rationale Sink Alignment Remediation Evidence Manifest
 
 Date: 2026-03-14

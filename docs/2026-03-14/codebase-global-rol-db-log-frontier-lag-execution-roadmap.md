@@ -1,3 +1,4 @@
+<!-- [참고자료] -->
 # Codebase Global ROL DB Log Frontier Lag Aggregate Execution Roadmap
 
 Date: 2026-03-14

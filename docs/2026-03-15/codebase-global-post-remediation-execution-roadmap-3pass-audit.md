@@ -1,3 +1,4 @@
+<!-- [참고자료] -->
 # codebase-global-post-remediation Execution Roadmap 3-Pass Audit
 
 Date: 2026-03-15

@@ -1,3 +1,4 @@
+<!-- [참고자료] -->
 # Stagewise Manuscript Truth Report
 
 Project: `projects/000`

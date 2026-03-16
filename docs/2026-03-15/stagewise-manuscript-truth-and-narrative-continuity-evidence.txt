@@ -1,3 +1,4 @@
+<!-- [참고자료] -->
 status	raw-evidence
 project	projects/000
 session_log	projects/000/logs/session_20260315_190600.log

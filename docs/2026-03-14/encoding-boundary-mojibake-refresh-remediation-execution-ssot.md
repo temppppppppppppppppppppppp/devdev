@@ -1,3 +1,4 @@
+<!-- [완료] -->
 # Encoding Boundary Mojibake Refresh Remediation Execution SSOT
 
 Date: 2026-03-14

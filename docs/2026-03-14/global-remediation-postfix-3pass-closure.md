@@ -1,3 +1,4 @@
+<!-- [참고자료] -->
 # Global Remediation Postfix 3PASS Closure
 
 Created: 2026-03-14
