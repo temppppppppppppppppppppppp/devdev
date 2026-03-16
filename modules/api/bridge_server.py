@@ -41,6 +41,7 @@ from modules.api.run_validator import RISK_KEYS, validate_run_request
 from modules.core.db_manager import DBManager
 from modules.core.failure_analyzer import FailureAnalyzer
 from modules.core.jsonl_io import append_jsonl_record
+from modules.core.pass_rate_monitor import PassRateMonitor
 from modules.core.project_support import inspect_project_support_assets
 from modules.core.quality_dashboard import QualityDashboard
 from modules.core.quality_sidecar_bootstrap import inspect_quality_sidecar_health
@@ -394,6 +395,19 @@ def _quality_dashboard_defaults(project: str, lookback: int) -> dict:
             "scope_counts": {},
             "recent": [],
         },
+        "patch_effectiveness": {
+            "available": False,
+            "stage": 4,
+            "lookback": max(lookback, 20),
+            "total_attempts": 0,
+            "patch_attempts": 0,
+            "has_patch_attempts": False,
+            "patch_success_rate": 0.0,
+            "patch_fallback_rate": 0.0,
+            "direct_patch_success_rate": 0.0,
+            "non_patch_success_rate": 0.0,
+            "avg_prev_score": 0.0,
+        },
         "calibration": {
             "available": False,
             "lookback": lookback,
@@ -477,6 +491,43 @@ def _build_cost_summary_payload(rows: list[dict] | None, lookback: int) -> dict[
             "total_cost_usd": round(total_cost_usd, 6),
             "scope_counts": dict(scope_counts),
             "recent": recent,
+        }
+    )
+    return payload
+
+
+def _build_patch_effectiveness_payload(summary: dict[str, Any] | None, lookback: int) -> dict[str, Any]:
+    payload: dict[str, Any] = {
+        "available": False,
+        "stage": 4,
+        "lookback": lookback,
+        "total_attempts": 0,
+        "patch_attempts": 0,
+        "has_patch_attempts": False,
+        "patch_success_rate": 0.0,
+        "patch_fallback_rate": 0.0,
+        "direct_patch_success_rate": 0.0,
+        "non_patch_success_rate": 0.0,
+        "avg_prev_score": 0.0,
+    }
+    if not isinstance(summary, dict) or not summary:
+        return payload
+
+    total_attempts = int(summary.get("total_attempts") or 0)
+    patch_attempts = int(summary.get("patch_attempts") or 0)
+    payload.update(
+        {
+            "available": total_attempts > 0,
+            "stage": int(summary.get("stage") or 4),
+            "lookback": int(summary.get("recent_n") or lookback),
+            "total_attempts": total_attempts,
+            "patch_attempts": patch_attempts,
+            "has_patch_attempts": patch_attempts > 0,
+            "patch_success_rate": round(float(summary.get("patch_success_rate") or 0.0), 4),
+            "patch_fallback_rate": round(float(summary.get("patch_fallback_rate") or 0.0), 4),
+            "direct_patch_success_rate": round(float(summary.get("direct_patch_success_rate") or 0.0), 4),
+            "non_patch_success_rate": round(float(summary.get("non_patch_success_rate") or 0.0), 4),
+            "avg_prev_score": round(float(summary.get("avg_prev_score") or 0.0), 2),
         }
     )
     return payload
@@ -1492,6 +1543,14 @@ def _build_quality_dashboard_payload(project: str, lookback: int) -> dict:
     payload["retrieval_summary"] = dashboard.get_retrieval_summary(recent_n=max(safe_lookback, 8))
     payload["artifact_ladder"] = _build_artifact_ladder_payload(project, project_dir, db_path)
     payload["safe_ops"] = _build_safe_ops_preview_payload(project, project_dir, db_path)
+    try:
+        monitor = PassRateMonitor(str(project_dir))
+        payload["patch_effectiveness"] = _build_patch_effectiveness_payload(
+            monitor.get_patch_effectiveness(stage=4, recent_n=max(safe_lookback, 20)),
+            max(safe_lookback, 20),
+        )
+    except Exception as exc:
+        logger.debug("patch_effectiveness load failed for %s: %s", project_dir, exc)
     payload["proof_status"] = _build_dashboard_proof_status(
         sink_alignment_summary=payload["sink_alignment_summary"],
         runtime_audit_summary=payload["runtime_audit_summary"],
