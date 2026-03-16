@@ -1,3 +1,4 @@
+<!-- [폐기] -->
 # persistence-observability-boundary-remediation Execution SSOT
 
 Date: 2026-03-15

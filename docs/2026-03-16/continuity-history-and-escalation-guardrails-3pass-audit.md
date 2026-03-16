@@ -1,3 +1,5 @@
+<!-- [완료] -->
+<\!-- [완료] -->
 # continuity-history-and-escalation-guardrails 3-Pass Audit
 
 Date: 2026-03-16

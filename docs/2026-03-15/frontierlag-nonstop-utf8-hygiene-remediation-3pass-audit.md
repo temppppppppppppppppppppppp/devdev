@@ -1,3 +1,4 @@
+<!-- [완료] -->
 # FrontierLag Nonstop UTF-8 Hygiene Remediation 3-Pass Audit
 
 Date: 2026-03-15

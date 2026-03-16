@@ -1,3 +1,4 @@
+<!-- [참고자료] -->
 ﻿# codebase-global-log-evidence-merged Cross-Cut Integrity Matrix
 
 Date: 2026-03-15

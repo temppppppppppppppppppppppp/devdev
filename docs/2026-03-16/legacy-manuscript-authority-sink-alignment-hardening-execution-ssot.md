@@ -1,3 +1,5 @@
+<!-- [완료] -->
+<\!-- [완료] -->
 # legacy-manuscript-authority-sink-alignment-hardening Execution SSOT
 
 Date: 2026-03-16

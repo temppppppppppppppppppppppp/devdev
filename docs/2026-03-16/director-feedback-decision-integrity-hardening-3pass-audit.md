@@ -1,3 +1,5 @@
+<!-- [완료] -->
+<\!-- [완료] -->
 # director-feedback-decision-integrity-hardening 3-Pass Audit
 
 Date: 2026-03-16

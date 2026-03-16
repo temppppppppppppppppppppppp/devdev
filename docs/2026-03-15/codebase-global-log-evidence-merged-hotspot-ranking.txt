@@ -1,3 +1,4 @@
+<!-- [참고자료] -->
 129777	config/style_references/investment/참조작품1/0_합본.txt
 129777	config/style_references/investment/0_합본_원본_backup.txt
 19306	geuldobi-desktop/src/splash/lucide.js

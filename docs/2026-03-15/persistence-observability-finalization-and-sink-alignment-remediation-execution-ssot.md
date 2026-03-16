@@ -1,3 +1,4 @@
+<!-- [완료] -->
 ﻿# persistence-observability-finalization-and-sink-alignment-remediation Execution SSOT
 
 Date: 2026-03-15

@@ -1,3 +1,4 @@
+<!-- [참고자료] -->
 geuldobi-desktop/DESKTOP-GUIDE.md: electron_when_ready
 geuldobi-desktop/src/main.js: electron_when_ready, ipc_main, browser_window, subprocess_spawn
 geuldobi-desktop/temp-electron-loadcheck.js: electron_when_ready, browser_window

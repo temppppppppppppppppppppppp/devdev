@@ -1,3 +1,4 @@
+<!-- [참고자료] -->
 ﻿# codebase-global-log-evidence-merged Evidence Manifest
 
 Date: 2026-03-15

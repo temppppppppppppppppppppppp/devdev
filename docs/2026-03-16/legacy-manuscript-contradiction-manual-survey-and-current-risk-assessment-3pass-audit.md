@@ -1,3 +1,5 @@
+<!-- [추적필요] -->
+<\!-- [추적필요] -->
 Date: 2026-03-16
 Status: final
 Canonical Path: `docs/2026-03-16/legacy-manuscript-contradiction-manual-survey-and-current-risk-assessment-3pass-audit.md`

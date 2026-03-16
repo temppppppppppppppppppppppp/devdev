@@ -1,3 +1,4 @@
+<!-- [참고자료] -->
 # Runtime Operator Prompt Authority Chain
 
 Date: 2026-03-15

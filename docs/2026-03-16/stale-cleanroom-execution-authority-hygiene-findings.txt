@@ -1,3 +1,5 @@
+<!-- [참고자료] -->
+<\!-- [참고자료] -->
 Date: 2026-03-16
 Topic: stale cleanroom execution authority hygiene
 

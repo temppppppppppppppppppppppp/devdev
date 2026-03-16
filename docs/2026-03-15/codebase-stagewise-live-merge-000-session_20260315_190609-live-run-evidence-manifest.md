@@ -1,3 +1,4 @@
+<!-- [참고자료] -->
 # Codebase Stagewise Live-Merge Evidence Manifest
 
 Date: 2026-03-15

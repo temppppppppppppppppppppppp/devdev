@@ -1,3 +1,4 @@
+<!-- [완료] -->
 # TF-017 JSONL Sink Consolidation Evaluation
 
 Date: 2026-03-15

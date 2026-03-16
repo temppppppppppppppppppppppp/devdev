@@ -1,3 +1,4 @@
+<!-- [참고자료] -->
 # Stage4 CW Context / DB Retrieval / Reject Persistence Investigation
 
 Date: 2026-03-15

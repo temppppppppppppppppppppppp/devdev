@@ -1,3 +1,5 @@
+<!-- [완료] -->
+<\!-- [완료] -->
 # continuity-history-and-escalation-guardrails Execution SSOT
 
 Date: 2026-03-16

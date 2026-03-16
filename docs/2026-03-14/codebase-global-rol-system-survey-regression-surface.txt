@@ -1,4 +1,6 @@
-﻿scripts\run_stage4_smoke.py
+<!-- [참고자료] -->
+﻿<!-- [참고자료] -->
+scripts\run_stage4_smoke.py
 scripts\run_stage4_canary.py
 scripts\run_stage3_smoke.py
 scripts\run_stage34_canary.py

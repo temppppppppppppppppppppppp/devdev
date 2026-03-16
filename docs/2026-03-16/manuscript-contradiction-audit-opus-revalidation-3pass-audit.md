@@ -1,3 +1,5 @@
+<!-- [참고자료] -->
+<\!-- [참고자료] -->
 Date: 2026-03-16
 Status: final
 Canonical Path: `docs/2026-03-16/manuscript-contradiction-audit-opus-revalidation-3pass-audit.md`

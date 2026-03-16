@@ -1,3 +1,4 @@
+<!-- [참고자료] -->
 # Stagewise Manuscript Truth / Narrative Continuity Investigation
 
 Date: 2026-03-15

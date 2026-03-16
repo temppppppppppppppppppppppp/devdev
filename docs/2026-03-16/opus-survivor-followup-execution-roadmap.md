@@ -1,3 +1,5 @@
+<!-- [완료] -->
+<\!-- [완료] -->
 # opus-survivor-followup Aggregate Execution Roadmap
 
 Date: 2026-03-16

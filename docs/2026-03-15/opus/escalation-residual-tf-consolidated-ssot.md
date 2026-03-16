@@ -1,3 +1,4 @@
+<!-- [참고자료] -->
 # 에스컬레이션 TF 잔여 항목 통합 SSOT
 
 > Independent Re-Audit (Codex, 2026-03-16)

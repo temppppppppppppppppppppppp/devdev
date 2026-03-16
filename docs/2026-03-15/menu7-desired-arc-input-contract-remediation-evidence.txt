@@ -1,3 +1,4 @@
+<!-- [참고자료] -->
 menu7-desired-arc-input-contract-remediation
 generated_at: 2026-03-15
 baseline_commit: bbb00a77c7356a32fe6358642cff0d3d445b7e8e

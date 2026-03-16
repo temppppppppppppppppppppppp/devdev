@@ -1,3 +1,4 @@
+<!-- [참고자료] -->
 # Codebase Global Live-Merge 00_260315 Preflight Watchlist
 
 Date: 2026-03-15

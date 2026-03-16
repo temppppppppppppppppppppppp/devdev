@@ -40,11 +40,35 @@ def _count_files(root: Path) -> int:
     return sum(1 for path in root.rglob("*") if path.is_file())
 
 
+def _stage_project_seed(project_dest: Path) -> dict:
+    if SAMPLE_PROJECT_SOURCE.exists():
+        _copy_tree(SAMPLE_PROJECT_SOURCE, project_dest)
+        return {
+            "source": str(SAMPLE_PROJECT_SOURCE.relative_to(ROOT)).replace("\\", "/"),
+            "packaged": str(project_dest.relative_to(DIST_SEED)).replace("\\", "/"),
+            "file_count": _count_files(project_dest),
+            "mode": "copied",
+        }
+
+    project_dest.mkdir(parents=True, exist_ok=True)
+    placeholder = project_dest / "README.txt"
+    placeholder.write_text(
+        "Sample project source was missing at build time.\n"
+        "Create a new project from the desktop app after first launch.\n",
+        encoding="utf-8",
+    )
+    return {
+        "source": None,
+        "packaged": str(project_dest.relative_to(DIST_SEED)).replace("\\", "/"),
+        "file_count": _count_files(project_dest),
+        "mode": "placeholder",
+        "reason": f"sample project source missing: {SAMPLE_PROJECT_SOURCE}",
+    }
+
+
 def main() -> None:
     bible_source = _require_single(ROOT / "bible", "01_bi_*.json")
     treatment_source = _require_single(ROOT / "treatments", "01_tr_*.json")
-    if not SAMPLE_PROJECT_SOURCE.exists():
-        raise RuntimeError(f"sample project source missing: {SAMPLE_PROJECT_SOURCE}")
 
     _reset_seed_dir()
 
@@ -54,7 +78,7 @@ def main() -> None:
 
     _copy_file(bible_source, bible_dest)
     _copy_file(treatment_source, treatment_dest)
-    _copy_tree(SAMPLE_PROJECT_SOURCE, project_dest)
+    project_record = _stage_project_seed(project_dest)
 
     manifest = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -73,11 +97,7 @@ def main() -> None:
                 }
             ],
             "projects": [
-                {
-                    "source": str(SAMPLE_PROJECT_SOURCE.relative_to(ROOT)).replace("\\", "/"),
-                    "packaged": str(project_dest.relative_to(DIST_SEED)).replace("\\", "/"),
-                    "file_count": _count_files(project_dest),
-                }
+                project_record
             ],
         },
     }

@@ -1,3 +1,4 @@
+<!-- [참고자료] -->
 # Stagewise Manuscript Truth / Narrative Continuity 3-Pass Audit
 
 Date: 2026-03-15

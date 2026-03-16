@@ -1,3 +1,4 @@
+<!-- [참고자료] -->
 # Encoding boundary samples
 ## Source strings in main_a.py (authoritative UTF-8 source)
 2430:'                    "7": "🧭 One-Stop: Frontier Lag (S3=-1 / S4=-2)",'

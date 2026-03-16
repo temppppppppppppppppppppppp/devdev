@@ -1,3 +1,5 @@
+<!-- [참고자료] -->
+<\!-- [참고자료] -->
 Date: 2026-03-16
 Status: final
 Canonical Path: `docs/2026-03-16/release-1.5.6-desktop-workspace-seed-bounded-audit-3pass-audit.md`

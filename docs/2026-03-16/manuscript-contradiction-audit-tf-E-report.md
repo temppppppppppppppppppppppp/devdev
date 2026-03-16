@@ -1,3 +1,5 @@
+<!-- [참고자료] -->
+<\!-- [참고자료] -->
 # TF-E: Manuscript Contradiction Audit Report
 
 **Auditor**: TF-E (Claude Opus 4.6)

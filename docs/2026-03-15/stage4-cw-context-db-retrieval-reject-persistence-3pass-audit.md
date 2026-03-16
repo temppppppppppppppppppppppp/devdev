@@ -1,3 +1,4 @@
+<!-- [참고자료] -->
 # Stage4 CW Context / DB Retrieval / Reject Persistence 3-Pass Audit
 
 Date: 2026-03-15

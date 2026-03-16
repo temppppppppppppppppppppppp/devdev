@@ -1,3 +1,5 @@
+<!-- [완료] -->
+<\!-- [완료] -->
 Date: 2026-03-16
 Status: final
 Canonical Path: `docs/2026-03-16/legacy-manuscript-contradiction-synthesis-master-report-3pass-audit.md`

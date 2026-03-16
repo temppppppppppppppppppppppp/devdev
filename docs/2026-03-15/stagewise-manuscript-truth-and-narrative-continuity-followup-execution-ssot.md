@@ -1,3 +1,4 @@
+<!-- [미완] -->
 # Stagewise Manuscript Truth / Narrative Continuity Follow-Up Execution SSOT
 
 Date: 2026-03-15
