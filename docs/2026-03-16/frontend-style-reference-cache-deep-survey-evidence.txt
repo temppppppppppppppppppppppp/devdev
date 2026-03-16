@@ -1,0 +1,108 @@
+Topic: frontend-style-reference-cache-deep-survey
+Date: 2026-03-16
+Mode: system-track survey-only
+
+Commit State:
+- Baseline Commit: 5a0177666e6877070d726d983d3c3e1d03e812d2
+- Baseline Dirty Summary: dirty: tracked app/frontend/stage0 surfaces already modified in workspace (`geuldobi-desktop/src/index.html`, `main_a.py`, `modules/core/stage0/*`, `package.json/lock`, related tests); additional logs/docs/temp drift present
+- Resume Commit: same-as-baseline
+- Resume Drift Summary: none
+
+Temp Queue Snapshot:
+- `docs/temp/execution-roadmap.md` present
+- `docs/temp/project-0-260316-execution-ssot.md` present
+- No temp queue mutation performed in this survey turn
+
+Code Anchors:
+- `geuldobi-desktop/src/index.html`
+  - line 2846: Stage 0 subkey 6 menu button
+  - line 2855: `stage0StyleCacheMode` inline selector
+  - line 5890: `_isStage0StyleAnalysis`
+  - line 5894: `_describeStage0StyleCacheMode`
+  - line 6598: `_handleStdoutLine`
+  - line 6785: `handleRunButtonClick`
+  - line 6932: renderer pre-run cache-mode log
+- `modules/api/process_runner.py`
+  - line 114: `_resolve_stage0_style_cache_choice`
+  - line 682: `_build_stdin_sequence`
+  - lines 726-730: Mode B style-analysis auto-injects `y` + cache choice
+  - lines 757-761: Mode A style-analysis auto-injects `y` + cache choice
+- `modules/core/stage0/__init__.py`
+  - line 637: `run_reference_analysis`
+  - line 649: `prepare_reference_manuscripts`
+  - line 710: engine-side cache-mode summary log
+  - lines 762-764: project-local `stage0_output/style_guide.json` write
+- `modules/core/stage0/style_extractor.py`
+  - line 321: `prepare_reference_manuscripts`
+  - line 353: `_reference_manifest`
+  - line 377: `_build_cache_meta`
+  - line 1005: `extract_from_references`
+  - line 1028: workspace-global cache path
+  - lines 1052/1062/1065/1088: cache status transitions
+  - line 1094: workspace-global cache write
+- `modules/core/project_support.py`
+  - line 276: `inspect_project_support_assets`
+  - line 282: support asset style guide source = `stage0_output/style_guide.json`
+- `modules/api/bridge_server.py`
+  - line 397: `_build_artifact_ladder_payload`
+  - line 497: TR derived-from-bible marker path
+- `modules/core/stage01_helpers.py`
+  - lines 585-590: style-analysis result saved to `anchors.style_guide`
+
+Live Workspace Evidence:
+- Workspace style-reference directory:
+  - `C:\Users\wjjo\Documents\글도비\config\style_references\investment`
+  - files:
+    - `0_합본_원본_backup.txt` (10,350,507 bytes, 2026-03-16 16:22:40)
+    - `style_guide.json` (28,896 bytes, 2026-03-16 16:41:39)
+    - `style_guide_test.json` (11,476 bytes, 2026-03-16 16:22:40)
+    - `style_seeds_final.txt` (12,671 bytes, 2026-03-16 16:22:40)
+    - directory `참조작품1\0_합본.txt` (10,348,911 bytes, 2026-03-16 16:22:40)
+- Project-local outputs:
+  - `C:\Users\wjjo\Documents\글도비\projects\00\stage0_output\style_guide.json` (27,641 bytes, 2026-03-16 16:45:29)
+  - `C:\Users\wjjo\Documents\글도비\projects\00\project_data.db` (13,938,688 bytes, 2026-03-16 17:11:22)
+- DB copy probe (`tmp_project_00_style_survey.db`):
+  - `anchors.style_guide` exists
+  - fields observed:
+    - `tone=진지`
+    - `pov=혼합`
+    - `effective_primary_pov=혼합`
+    - `external_pov_insert_policy=적극 허용`
+    - `analysis_version=v2`
+  - `anchors.bible` exists
+  - `anchors.genre_info` exists
+- Cache JSON probe (`config/style_references/investment/style_guide.json`):
+  - root keys: `_cache_meta`, `style_guide`
+  - `_cache_meta.genre=investment`
+  - `_cache_meta.model_id=gemini-2.5-pro`
+  - `_cache_meta.selected_primary_pov=혼합`
+  - `_cache_meta.external_pov_insert_policy=적극 허용`
+  - `style_guide.reference_works=['참조작품1']`
+  - `style_guide.source_episode_count=1`
+  - `style_guide.source_char_count=4247609`
+- Session log evidence (`projects/00/logs/session_20260316_164527.log`, UTF-8):
+  - line 122: `[*] 레퍼런스 로드 완료: 1개 작품, 1개 에피소드`
+  - line 127: `스타일 캐시 모드`
+  - line 134: `[*] 스타일 캐시 모드: 캐시 사용`
+  - line 138: `- 캐시 처리: 장르 캐시 재사용`
+  - line 144: `✅ [V70] StyleGuide DB 저장 완료 (anchor: style_guide)`
+- Stage 3/4 downstream proof (`projects/00/logs/session_20260316_164607.log`, UTF-8):
+  - line 792: `🎨 [V60.95] 저장된 스타일 가이드 로드됨 (톤: 진지, 시점: 혼합)`
+  - Stage 3 summaries carry `style_guide_extracted_pov=1인칭 effective_pov=혼합`
+  - Stage 4 summaries carry `style_guide_extracted_pov=1인칭 effective_pov=혼합`
+- Control-plane provenance:
+  - `C:\Users\wjjo\Documents\글도비\logs\control-plane-provenance.jsonl`
+  - line 13: run_id `0e8354ca-b967-4614-9883-fc5be824a0cd`, key `0`, sub_key `6`
+- Electron main log:
+  - `POST /run HTTP/1.1 202 Accepted` for Stage 0 subkey 6 at `2026-03-16T07:45:26Z`
+
+Derived Live Facts:
+- Style-analysis launch from desktop UI precommits cache behavior because the inline selector always contributes `inputs.stage0_style_cache_mode`.
+- The current run hit the workspace-global genre cache instead of recomputing:
+  - cache file mtime stayed at 16:41:39
+  - project-local output was written at 16:45:29
+  - session log explicitly says `장르 캐시 재사용`
+- Cache invalidation manifest spans more `.txt` files than the actual loaded reference works:
+  - manifest includes root-level backup/seeds txt files
+  - runtime loaded only `참조작품1` as one work / one episode
+- Project support / artifact ladder style-ready state is file-based (`stage0_output/style_guide.json`), not cache-file-based and not DB-anchor-based

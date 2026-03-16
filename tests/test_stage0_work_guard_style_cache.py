@@ -112,6 +112,27 @@ def test_style_cache_reset_mode_deletes_and_rebuilds(tmp_path, monkeypatch):
     assert saved_payload["style_guide"]["tone"] == "rebuilt"
 
 
+def test_prepare_reference_manuscripts_syncs_packaged_investment_refs(tmp_path, monkeypatch):
+    workspace_root = tmp_path / "workspace"
+    engine_root = tmp_path / "engine"
+    workspace_root.mkdir(parents=True, exist_ok=True)
+    packaged_ref_dir = engine_root / "config" / "style_references" / "investment" / "sample_work"
+    packaged_ref_dir.mkdir(parents=True, exist_ok=True)
+    (packaged_ref_dir / "0001.txt").write_text("투자물 레퍼런스 본문", encoding="utf-8")
+
+    monkeypatch.setenv("GEULDOBI_WORKSPACE", str(workspace_root))
+    monkeypatch.setenv("GEULDOBI_ENGINE_ROOT", str(engine_root))
+    monkeypatch.chdir(workspace_root)
+
+    prepared = StyleExtractor.prepare_reference_manuscripts("investment")
+
+    synced_file = workspace_root / "config" / "style_references" / "investment" / "sample_work" / "0001.txt"
+    assert prepared["status"] == "packaged_sync"
+    assert prepared["source_dir"] == engine_root / "config" / "style_references" / "investment"
+    assert synced_file.exists()
+    assert prepared["works"] == {"sample_work": ["투자물 레퍼런스 본문"]}
+
+
 def test_manage_work_guard_can_initialize_optional_template(tmp_path):
     project_dir = tmp_path / "project"
     manager = StageZeroManager(project_path=str(project_dir))
@@ -133,7 +154,15 @@ def test_run_reference_analysis_accepts_explicit_cache_mode(tmp_path):
     fake_style = StyleGuide(tone="calm", genre="investment")
     with (
         patch.object(StageZeroManager, "show_genre_menu", return_value="investment"),
-        patch("modules.core.stage0.StyleExtractor.load_reference_manuscripts", return_value={"ref": ["a"]}),
+        patch(
+            "modules.core.stage0.StyleExtractor.prepare_reference_manuscripts",
+            return_value={
+                "status": "workspace",
+                "ref_dir": tmp_path / "config" / "style_references" / "investment",
+                "source_dir": None,
+                "works": {"ref": ["a"]},
+            },
+        ),
         patch("builtins.input", return_value="y"),
         patch("modules.core.stage0.StyleExtractor.extract_from_references", return_value=fake_style) as mock_extract,
     ):
@@ -155,7 +184,15 @@ def test_run_reference_analysis_passes_pov_contract(tmp_path):
     fake_style = StyleGuide(tone="calm", genre="investment")
     with (
         patch.object(StageZeroManager, "show_genre_menu", return_value="investment"),
-        patch("modules.core.stage0.StyleExtractor.load_reference_manuscripts", return_value={"ref": ["a"]}),
+        patch(
+            "modules.core.stage0.StyleExtractor.prepare_reference_manuscripts",
+            return_value={
+                "status": "workspace",
+                "ref_dir": tmp_path / "config" / "style_references" / "investment",
+                "source_dir": None,
+                "works": {"ref": ["a"]},
+            },
+        ),
         patch("builtins.input", return_value="y"),
         patch("modules.core.stage0.StyleExtractor.extract_from_references", return_value=fake_style) as mock_extract,
     ):
@@ -168,3 +205,30 @@ def test_run_reference_analysis_passes_pov_contract(tmp_path):
         selected_primary_pov="혼합",
         external_pov_insert_policy="적극 허용",
     )
+
+
+def test_run_reference_analysis_logs_reference_sync_and_cache_mode(tmp_path):
+    manager = StageZeroManager(project_path=str(tmp_path))
+
+    fake_style = StyleGuide(tone="calm", genre="investment")
+    with (
+        patch.object(StageZeroManager, "show_genre_menu", return_value="investment"),
+        patch(
+            "modules.core.stage0.StyleExtractor.prepare_reference_manuscripts",
+            return_value={
+                "status": "packaged_sync",
+                "ref_dir": tmp_path / "config" / "style_references" / "investment",
+                "source_dir": tmp_path / "engine" / "config" / "style_references" / "investment",
+                "works": {"ref": ["a"]},
+            },
+        ),
+        patch("builtins.input", return_value="y"),
+        patch("modules.core.stage0.StyleExtractor.extract_from_references", return_value=fake_style),
+        patch.object(StageZeroManager, "_ui_log") as mock_ui_log,
+    ):
+        result = manager.run_reference_analysis(cache_mode="use")
+
+    assert result is fake_style
+    logged_messages = [call.args[0] for call in mock_ui_log.call_args_list if call.args]
+    assert any("투자물 레퍼런스 초기화" in message for message in logged_messages)
+    assert any("스타일 캐시 모드: 캐시 사용" in message for message in logged_messages)

@@ -1,0 +1,78 @@
+Date: 2026-03-16
+Topic: desktop-stage0-edr-code1-failure
+Purpose: synthesis-only evidence used to reconcile Codex and OPUS findings
+
+Commit State:
+- Baseline Commit: 5a0177666e6877070d726d983d3c3e1d03e812d2
+- Baseline Dirty Summary: dirty: 1 tracked, 13 untracked; hotspots: projects/0_260316/project_data.db, docs/2026-03-16/OPUS_*, docs/2026-03-16/desktop-stage0-edr-code1-*
+- Resume Commit: same-as-baseline
+- Resume Drift Summary: none
+
+Source Inputs:
+- docs/2026-03-16/desktop-stage0-edr-code1-failure-evidence.txt
+- docs/2026-03-16/desktop-stage0-edr-code1-failure-full-survey.md
+- docs/2026-03-16/desktop-stage0-edr-code1-static-analysis-report.md
+- docs/2026-03-16/OPUS_desktop-stage0-edr-code1-failure-evidence.txt
+- docs/2026-03-16/OPUS_desktop-stage0-edr-code1-failure-full-survey.md
+- docs/2026-03-16/OPUS_desktop-stage0-edr-code1-failure-3pass-audit.md
+
+Live Evidence Added During Synthesis:
+
+1. Embedded Python ignores `PYTHONPATH` in the current packaged runtime.
+   - Command:
+     - set `PYTHONPATH=C:\Users\wjjo\AppData\Local\Programs\Geuldobi\resources\engine`
+     - run `C:\Users\wjjo\AppData\Local\Programs\Geuldobi\resources\python-embed\python.exe -c "import sys, json; print(json.dumps(sys.path, ensure_ascii=False))"`
+   - Observed `sys.path`:
+     - `C:\Users\wjjo\AppData\Local\Programs\Geuldobi\resources\python-embed\python312.zip`
+     - `C:\Users\wjjo\AppData\Local\Programs\Geuldobi\resources\python-embed`
+     - `C:\Users\wjjo\AppData\Roaming\Python\Python312\site-packages`
+     - `C:\Users\wjjo\AppData\Local\Programs\Geuldobi\resources\python-embed\Lib\site-packages`
+   - `resources\engine` was absent from `sys.path`.
+
+2. Embedded Python still cannot import `modules` even when `PYTHONPATH` is set.
+   - Command:
+     - set `PYTHONPATH=C:\Users\wjjo\AppData\Local\Programs\Geuldobi\resources\engine`
+     - run `C:\Users\wjjo\AppData\Local\Programs\Geuldobi\resources\python-embed\python.exe -c "import modules, sys; print('OK')"`
+   - Result:
+     - `ModuleNotFoundError: No module named 'modules'`
+
+3. `main_a.py` imports `modules.core.spinners` at module import time, before `boot()`.
+   - Path: `main_a.py`
+   - Relevant sequence:
+     - `import os`
+     - `import sys`
+     - `load_dotenv(...)`
+     - `from google import genai`
+     - `import modules.core.spinners as _spinners_mod`
+   - Therefore a missing engine-root path fails before `_select_genre()`, `_select_project()`, or `_bind_selected_project()`.
+
+4. `backend_entry.py` bootstraps `sys.path` only for the packaged backend process, not for the child engine subprocess.
+   - Path: `build/backend_entry.py`
+   - Relevant lines:
+     - sets `GEULDOBI_ENGINE_ROOT`
+     - sets `GEULDOBI_PYTHON_PATH`
+     - `sys.path.insert(0, engine_root)` for backend process
+   - No equivalent bootstrap exists inside `main_a.py`.
+
+5. `process_runner.py` child launch contract still points packaged `/run` at embedded Python + `engine/main_a.py`.
+   - Path: `modules/api/process_runner.py`
+   - `_resolve_launch_command()` returns `[python_exe, "-u", str(main_script)]`
+   - `_build_env()` sets `PYTHONIOENCODING` and `PYTHONUNBUFFERED`, but no effective engine import bootstrap.
+
+6. Secondary latent risk remains after the import blocker.
+   - Static-only source:
+     - `modules/core/stage01_helpers.py`
+     - `modules/core/services/ui_service.py`
+     - `modules/api/bridge_server.py`
+     - `modules/api/process_runner.py`
+     - `geuldobi-desktop/src/index.html`
+   - Fact pattern:
+     - Stage 0 existing mode asks for Bible selection, Treatment selection, enrichment confirm, world-origin choice, protagonist-type choice, POV choice, and more.
+     - Renderer auto-resolves only `enter` and single-option enums.
+   - This evidence supports a post-unblock prompt-handoff risk, but it does not supersede the packaged import failure as the current incident blocker.
+
+Authority Resolution Notes:
+- OPUS root-cause evidence is stronger than the earlier Codex pre-bind inference because it includes direct packaged embedded-Python reproduction plus `sys.path` inspection.
+- The earlier Codex finding that `projects/edr` stayed unbootstrapped remains true, but is now treated as a downstream consequence of the earlier import failure.
+- The Codex static prompt-bridge analysis is retained as a contingent follow-up risk after the import blocker is removed.
+- The OPUS preload-contract finding is not promoted into the governing SSOT for this incident because the current packaged UI surface demonstrably allows project selection, project creation, and `/run` dispatch.
