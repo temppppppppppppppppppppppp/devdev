@@ -527,6 +527,31 @@ def test_failure_analyzer_sink_alignment_summary_reports_artifact_linkage_issues
             row["attempt_key"] == attempt_key_bad and row["artifact_path"] == bad_alt_artifact
             for row in result["artifact_missing_files"]
         )
+        assert result["final_authority_contract"] == {
+            "status": "ok",
+            "final_authority_sink": "stage_attempts",
+            "selection_role": "historical_companion",
+            "rows_considered": 2,
+            "aligned_selection_rows": 1,
+            "pre_final_selection_rows": 1,
+            "missing_selection_rows": 0,
+            "note": (
+                "Stage 4 final authority resolves from stage_attempts. "
+                "director_selections remains companion review history and may point to pre-final artifacts."
+            ),
+        }
+        assert result["selection_companion_pre_final_rows"] == [
+            {
+                "attempt_key": attempt_key_bad,
+                "ep_num": 42,
+                "attempt_num": 1,
+                "selection_artifact_path": "logs/artifacts/stage4/ep_0042/attempt_01/selected_before_fix__C_balanced.txt",
+                "final_artifact_path": bad_artifact,
+                "selection_content_hash": "hash-bad-director",
+                "final_content_hash": "hash-bad-db",
+                "diff_fields": ["content_hash", "artifact_path"],
+            }
+        ]
     finally:
         db.close()
 
@@ -637,6 +662,19 @@ def test_sink_alignment_uses_selection_candidate_key_from_episode_production_whe
         assert result["candidate_key_mismatches"] == []
         assert result["selection_candidate_key_mismatches"] == []
         assert result["artifact_path_mismatches"] == []
+        assert result["final_authority_contract"]["pre_final_selection_rows"] == 1
+        assert result["selection_companion_pre_final_rows"] == [
+            {
+                "attempt_key": attempt_key,
+                "ep_num": 7,
+                "attempt_num": 1,
+                "selection_artifact_path": "logs/artifacts/stage4/ep_0007/attempt_01/selected_before_fix__A.txt",
+                "final_artifact_path": good_artifact,
+                "selection_content_hash": "hash-selected",
+                "final_content_hash": "hash-ok",
+                "diff_fields": ["content_hash", "artifact_path"],
+            }
+        ]
         assert result["status"] == "ok"
     finally:
         db.close()

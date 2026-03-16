@@ -43,10 +43,10 @@ def _ns4_extract_time_markers(arc_data: dict) -> list:
 
     _text = str(tactical_doc) + "\n" + str(beat_seq)
     _patterns = [
-        r"\d{4}년\s*\d{1,2}월(?:\s*\d{1,2}일)?",
+        r"\d{4}년\s*\d{1,2}월(?:\s*\d{1,2}일)?",  # utf8-hygiene: allow-line regex optional quantifier
         r"\d{1,2}월\s*\d{1,2}일",
-        r"\d{1,2}월(?:\s*(?:말|초|중순|하순|상순))?",
-        r"\d+(?:일|주|달|개월|년)\s*(?:후|전)",
+        r"\d{1,2}월(?:\s*(?:말|초|중순|하순|상순))?",  # utf8-hygiene: allow-line regex optional quantifier
+        r"\d+(?:일|주|달|개월|년)\s*(?:후|전)",  # utf8-hygiene: allow-line regex optional quantifier
     ]
     _found = []
     for _p in _patterns:
@@ -2859,12 +2859,12 @@ class Stage4InterviewRound:
 
         _prev_manuscripts_text = round_ctx.prev_manuscripts_text
         story_context = round_ctx.story_context
-        _run_continuity = round_num == 0 and next_ep > 1 and final_manuscript
+        _director_agent = self.ctx.agents.get("director", None)
+        _run_continuity = next_ep > 1 and final_manuscript
         _run_history = (
-            round_num == 0
-            and _prev_manuscripts_text
+            _prev_manuscripts_text
             and final_manuscript
-            and hasattr(self.ctx.agents.get("director", None), "check_manuscript_history_conflicts")
+            and hasattr(_director_agent, "check_manuscript_history_conflicts")
         )
 
         if _run_continuity or _run_history:
@@ -3010,6 +3010,15 @@ class Stage4InterviewRound:
 
         for _fix_i in range(_MAX_FIX):
             if not _current_fb:
+                _empty_feedback_notice = "[TF-32-V] PASS_WITH_FIX 피드백 비어 있음 → retry 경로로 명시 이관"
+                logging.warning("[TF-32-V] PASS_WITH_FIX empty feedback abort: ep=%s round=%s", round_ctx.next_ep, round_num)
+                self.ctx.ui.log("   ⚠️ [TF-32-V] PASS_WITH_FIX 피드백 비어 있음 — silent break 금지, retry 경로 이관")
+                director_feedback = f"{director_feedback}\n{_empty_feedback_notice}".strip()
+                if isinstance(_current_audit_result, dict):
+                    _current_audit_result = dict(_current_audit_result)
+                    _current_audit_result.setdefault("verdict", "PASS_WITH_FIX")
+                    _current_audit_result["verdict_reason"] = _empty_feedback_notice
+                    _current_audit_result["open_review"] = _empty_feedback_notice
                 break
             # [TF-33][PF-1] Director fix_scope 기반 수정 전략 라우팅 — 누락 시 점수 기반 폴백
             _fix_scope = _current_audit_result.get("fix_scope", "") if isinstance(_current_audit_result, dict) else ""

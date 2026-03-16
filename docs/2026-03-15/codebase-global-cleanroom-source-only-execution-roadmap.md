@@ -1,15 +1,22 @@
 # codebase-global-cleanroom-source-only Aggregate Execution Roadmap
 
 Date: 2026-03-15
-Status: active
+Status: superseded-by-post-remediation
+Successor: `docs/2026-03-15/codebase-global-post-remediation-execution-roadmap.md`
 Canonical Path: `docs/2026-03-15/codebase-global-cleanroom-source-only-execution-roadmap.md`
-Temp Mirror Path: `docs/temp/execution-roadmap.md`
+Temp Mirror Path: `none`
 Commit State:
 - Baseline Commit: `d2982aa2790f5ab81529f1e8d87cf6f6006f13c9`
 - Baseline Dirty Summary: `dirty: unrelated investment/style/docs/log artifacts already present`
 - Resume Commit: `same-as-baseline`
 - Resume Drift Summary: `none`
-Queue Snapshot: `docs/temp/source-text-utf8-hygiene-remediation-execution-ssot.md`; `docs/temp/backend-front-control-plane-connectivity-remediation-execution-ssot.md`; `docs/temp/runtime-operator-surface-unification-remediation-execution-ssot.md`; `docs/temp/persistence-observability-boundary-remediation-execution-ssot.md`
+Queue Snapshot: `historical cleanroom snapshot only; the temp queue is no longer populated by these items`
+
+## Historical Supersession Notice
+
+- This roadmap is retained as a historical cleanroom queue snapshot only.
+- Live queue authority moved first to `docs/2026-03-15/codebase-global-log-evidence-merged-execution-roadmap.md` and then to `docs/2026-03-15/codebase-global-post-remediation-execution-roadmap.md`, which is now closed.
+- The pending inventory below is preserved as historical evidence and must not be read as current queue state.
 
 ## 1. Purpose
 - Govern the action-bearing execution queue created by the clean-room deep global survey.

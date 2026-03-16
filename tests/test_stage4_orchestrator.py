@@ -13,7 +13,7 @@ import dataclasses
 import json
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import ANY, MagicMock, patch
 
 import pytest
 
@@ -120,6 +120,30 @@ class TestPatchModeThresholds:
 
 
 class TestStage4AuditSummary:
+    def test_stage4_writer_forwards_skip_pause_to_interview_loop(self, mock_app):
+        from modules.core.stage4_orchestrator import Stage4Orchestrator
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.ui.log = MagicMock()
+        ctx.current_project = mock_app.current_project
+        ctx.agents = mock_app.agents
+        ctx.state_tracker = None
+        ctx.memory = None
+        ctx.context_advisor = None
+        ctx.perf_timer = MagicMock()
+        ctx.sys = mock_app.sys
+        ctx.audit_event = MagicMock()
+        ctx.write_audit_summary = MagicMock()
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+        orch._prepare_stage4_session = MagicMock(return_value=object())
+        orch._run_interview_loop = MagicMock(return_value=False)
+
+        orch.stage_4_v2_chief_writer(skip_pause=True)
+
+        orch._run_interview_loop.assert_called_once_with(ANY, skip_pause=True)
+
     def test_stage4_completion_writes_runtime_audit_summary(self, mock_app):
         from modules.core.stage4_orchestrator import Stage4Orchestrator
 
@@ -264,6 +288,37 @@ class TestStage4AuditSummary:
         assert not fallback_path.exists()
         rows = [json.loads(line) for line in expected_path.read_text(encoding="utf-8").splitlines() if line.strip()]
         assert rows[-1]["event"] == "TEST_EVENT"
+
+    def test_log_escalation_event_includes_optional_runtime_context(self, mock_app, tmp_path, monkeypatch):
+        from modules.core.stage4_orchestrator import Stage4Orchestrator
+
+        monkeypatch.chdir(tmp_path)
+        mock_app.current_project.name = "context_project"
+        mock_app.current_project.paths.root = tmp_path / "context_project"
+        ctx = MagicMock()
+        ctx.current_project = mock_app.current_project
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+        orch._log_escalation_event(
+            5,
+            "TEST_EVENT",
+            3,
+            success=False,
+            round_num=2,
+            attempt_key="s4:ep5:r3",
+            fix_scope="partial",
+            reason="history conflict repeated",
+            contradiction_type="timeline",
+        )
+
+        expected_path = mock_app.current_project.paths.root / "logs" / "episode_production.jsonl"
+        rows = [json.loads(line) for line in expected_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+        payload = rows[-1]
+        assert payload["round_num"] == 2
+        assert payload["attempt_key"] == "s4:ep5:r3"
+        assert payload["fix_scope"] == "partial"
+        assert payload["reason"] == "history conflict repeated"
+        assert payload["contradiction_type"] == "timeline"
 
 
 class TestPrepareStage4SessionLimits:

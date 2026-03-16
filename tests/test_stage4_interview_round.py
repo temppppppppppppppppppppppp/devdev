@@ -1380,6 +1380,44 @@ class TestRecordS4Attempt:
         assert previous_attempt["verdict_reason"] == "director pass before post-select"
         assert previous_attempt["reject_bucket"] == "post_select_conflict"
 
+    def test_post_select_checks_run_on_retry_rounds_too(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.next_ep = 3
+        round_ctx.prev_manuscripts_text = "━━━ 제1화 원고 ━━━\n이전 원고"
+        ctx.agents["director"].check_manuscript_continuity_with_cache.return_value = {
+            "decision": "PASS",
+            "summary": "",
+        }
+        ctx.agents["director"].check_manuscript_history_conflicts.return_value = {
+            "decision": "PASS",
+            "summary": "",
+        }
+
+        verdict, director_feedback, previous_attempt, error_category = ir._run_post_select_checks(
+            verdict="PASS",
+            final_manuscript="patched manuscript",
+            final_state_updates={},
+            next_ep=3,
+            round_num=1,
+            round_ctx=round_ctx,
+            director_result={},
+            director_feedback="",
+            score=95,
+            error_category="",
+            previous_attempt={},
+            stage4_spinner=MagicMock(),
+            director_memory_context="",
+        )
+
+        assert verdict == "PASS"
+        assert director_feedback == ""
+        assert previous_attempt == {}
+        assert error_category == ""
+        ctx.agents["director"].check_manuscript_continuity_with_cache.assert_called_once()
+        ctx.agents["director"].check_manuscript_history_conflicts.assert_called_once()
+
     def test_post_select_conflict_prefers_patch_before_inplace(self):
         ctx = _make_ctx()
         ir = Stage4InterviewRound(ctx)
@@ -1933,6 +1971,36 @@ class TestRecordS4Attempt:
         assert ir._record_s4_attempt.call_args.kwargs["score"] == 98
         assert trace_meta["final_verdict"] == "PASS"
         assert trace_meta["final_score"] == 98
+
+    def test_pass_with_fix_loop_logs_explicit_abort_when_feedback_missing(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        ir._extract_fix_feedback = MagicMock(return_value="")
+        round_ctx = _make_round_ctx()
+        round_ctx.next_ep = 2
+
+        verdict, final_manuscript, final_state_updates, director_result, director_feedback, patch_trace = (
+            ir._execute_pass_with_fix_loop(
+                verdict="PASS_WITH_FIX",
+                final_manuscript="candidate manuscript " * 200,
+                final_state_updates={},
+                director_result={"verdict": "PASS_WITH_FIX", "fix_scope": "inplace"},
+                director_feedback="initial feedback",
+                round_ctx=round_ctx,
+                round_num=0,
+                score=92,
+                quality_gate_score=80,
+                director_mandatory_context="",
+            )
+        )
+
+        assert verdict == "REJECT"
+        assert final_manuscript.startswith("candidate manuscript")
+        assert final_state_updates == {}
+        assert patch_trace == {}
+        assert "[TF-32-V] PASS_WITH_FIX 피드백 비어 있음" in director_feedback
+        assert director_result["verdict_reason"].startswith("[TF-32-V] PASS_WITH_FIX 피드백 비어 있음")
+        assert any("피드백 비어 있음" in call.args[0] for call in ctx.ui.log.call_args_list if call.args)
 
     def test_append_episode_log_includes_round_cost_and_strategy_flags(self):
         ctx = _make_ctx()

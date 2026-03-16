@@ -1,0 +1,100 @@
+Date: 2026-03-16
+Status: final
+Canonical Path: `docs/2026-03-16/legacy-real-manuscript-contradiction-survey-evidence.txt`
+Baseline Commit: `d6c81c1976d9812d447c2a78e2aeb36f7aed666a`
+Scope: `raw evidence for legacy real-manuscript contradiction survey`
+
+[corpus]
+{"project":"0","episodes":2,"chars":9040,"lines":236}
+{"project":"000","episodes":6,"chars":27634,"lines":574}
+{"project":"00_20260314","episodes":2,"chars":9549,"lines":190}
+{"project":"00_260315","episodes":11,"chars":54491,"lines":1085}
+
+[db-manuscript-vs-final-authority]
+{"project":"0","ep":1,"title":"제1화: 서재의 선언","artifact":"logs/artifacts/stage4/ep_0001/attempt_01/final_manuscript__A.txt","status":"MATCH"}
+{"project":"0","ep":2,"title":"보이지 않는 손길","artifact":"logs/artifacts/stage4/ep_0002/attempt_01/final_manuscript__B.txt","status":"MATCH"}
+{"project":"000","ep":1,"title":"선전포고","artifact":"logs/artifacts/stage4/ep_0001/attempt_01/final_manuscript__A.txt","status":"MATCH"}
+{"project":"000","ep":2,"title":"미친놈이거나, 혹은","artifact":"logs/artifacts/stage4/ep_0002/attempt_01/final_manuscript__A.txt","status":"MATCH"}
+{"project":"000","ep":3,"title":"제3화 복수의 제물","artifact":"logs/artifacts/stage4/ep_0003/attempt_01/final_manuscript__B.txt","status":"MATCH"}
+{"project":"000","ep":4,"title":"제4화 첫 번째 포탄","artifact":"logs/artifacts/stage4/ep_0004/attempt_03/patched_after_fix__A.txt","status":"MATCH"}
+{"project":"000","ep":5,"title":"게이트키퍼","artifact":"logs/artifacts/stage4/ep_0005/attempt_04/final_manuscript__C.txt","status":"MATCH"}
+{"project":"000","ep":6,"title":"제6화 벽 속의 눈","artifact":"logs/artifacts/stage4/ep_0006/attempt_01/final_manuscript__A.txt","status":"MATCH"}
+{"project":"00_20260314","ep":1,"title":"재가 된 시간, 타오르는 기억","artifact":"logs/artifacts/stage4/ep_0001/attempt_01/final_manuscript__C.txt","status":"MATCH"}
+{"project":"00_20260314","ep":2,"title":"제2화","artifact":"logs/artifacts/stage4/ep_0002/attempt_02/patched_after_fix__A_inplace_patch.txt","status":"MATCH"}
+{"project":"00_260315","ep":1,"title":"제1화: 재(再)의 아침","artifact":"logs/artifacts/stage4/ep_0001/attempt_01/final_manuscript__C.txt","status":"MATCH"}  # utf8-hygiene: allow-line literal manuscript title with CJK character
+{"project":"00_260315","ep":2,"title":"다른 대답","artifact":"logs/artifacts/stage4/ep_0002/attempt_01/final_manuscript__C.txt","status":"MATCH"}
+{"project":"00_260315","ep":3,"title":"속도전","artifact":"logs/artifacts/stage4/ep_0003/attempt_01/final_manuscript__C.txt","status":"MATCH"}
+{"project":"00_260315","ep":4,"title":"제4화 균열","artifact":"logs/artifacts/stage4/ep_0004/attempt_01/patched_after_fix__A_InPlace.txt","status":"MATCH"}
+{"project":"00_260315","ep":5,"title":"제5화: 문지기","artifact":"logs/artifacts/stage4/ep_0005/attempt_01/patched_after_fix__A_InPlace.txt","status":"MATCH"}
+{"project":"00_260315","ep":6,"title":"제6화: 심연의 오케스트라","artifact":"logs/artifacts/stage4/ep_0006/attempt_01/final_manuscript__C.txt","status":"MATCH"}
+{"project":"00_260315","ep":7,"title":"파열음","artifact":"logs/artifacts/stage4/ep_0007/attempt_01/final_manuscript__A.txt","status":"MATCH"}
+{"project":"00_260315","ep":8,"title":"제8화 그림자 포위망","artifact":"logs/artifacts/stage4/ep_0008/attempt_02/final_manuscript__B.txt","status":"MATCH"}
+{"project":"00_260315","ep":9,"title":"제9화 폭풍전야의 소음","artifact":"logs/artifacts/stage4/ep_0009/attempt_01/final_manuscript__A.txt","status":"MATCH"}
+{"project":"00_260315","ep":10,"title":"제10화","artifact":"logs/artifacts/stage4/ep_0010/attempt_02/patched_after_fix__A_inplace_patch.txt","status":"MATCH"}
+{"project":"00_260315","ep":11,"title":"제11화: 이해할 수 없는 예언","artifact":"logs/artifacts/stage4/ep_0011/attempt_02/final_manuscript__A.txt","status":"MATCH"}
+
+[manual-read-confirmation]
+Read directly in full:
+- projects/0/logs/artifacts/stage4/ep_0001/attempt_01/final_manuscript__A.txt
+- projects/0/logs/artifacts/stage4/ep_0002/attempt_01/final_manuscript__B.txt
+- projects/000/logs/artifacts/stage4/ep_0001/attempt_01/final_manuscript__A.txt
+- projects/000/logs/artifacts/stage4/ep_0002/attempt_01/final_manuscript__A.txt
+- projects/000/logs/artifacts/stage4/ep_0003/attempt_01/final_manuscript__B.txt
+- projects/000/logs/artifacts/stage4/ep_0004/attempt_03/patched_after_fix__A.txt
+- projects/000/logs/artifacts/stage4/ep_0005/attempt_04/final_manuscript__C.txt
+- projects/000/logs/artifacts/stage4/ep_0006/attempt_01/final_manuscript__A.txt
+- projects/00_20260314/logs/artifacts/stage4/ep_0001/attempt_01/final_manuscript__C.txt
+- projects/00_20260314/logs/artifacts/stage4/ep_0002/attempt_02/patched_after_fix__A_inplace_patch.txt
+- projects/00_260315/logs/artifacts/stage4/ep_0001/attempt_01/final_manuscript__C.txt
+- projects/00_260315/logs/artifacts/stage4/ep_0002/attempt_01/final_manuscript__C.txt
+- projects/00_260315/logs/artifacts/stage4/ep_0003/attempt_01/final_manuscript__C.txt
+- projects/00_260315/logs/artifacts/stage4/ep_0004/attempt_01/patched_after_fix__A_InPlace.txt
+- projects/00_260315/logs/artifacts/stage4/ep_0005/attempt_01/patched_after_fix__A_InPlace.txt
+- projects/00_260315/logs/artifacts/stage4/ep_0006/attempt_01/final_manuscript__C.txt
+- projects/00_260315/logs/artifacts/stage4/ep_0007/attempt_01/final_manuscript__A.txt
+- projects/00_260315/logs/artifacts/stage4/ep_0008/attempt_02/final_manuscript__B.txt
+- projects/00_260315/logs/artifacts/stage4/ep_0009/attempt_01/final_manuscript__A.txt
+- projects/00_260315/logs/artifacts/stage4/ep_0010/attempt_02/patched_after_fix__A_inplace_patch.txt
+- projects/00_260315/logs/artifacts/stage4/ep_0011/attempt_02/final_manuscript__A.txt
+
+[key-resolved-by-patch-evidence]
+projects/000 ep2 director selection:
+{"ep_num":2,"round_num":0,"verdict":"PASS","selected_label":"A","selection_reason":"후보 A는 연속성, Blueprint 반영률, 문장 품질 모든 면에서 가장 뛰어납니다. 특히 1화에서 획득한 '최신형 노트북'과 Blueprint에 명시된 '2006년형 노트북' 사이의 잠재적 모순을 '셀프 스토리지'라는 개연성 있는 장치를 통해 해결하며 주인공의 치밀한 성격을 강화하는 영리함을 보여주었습니다.","artifact_path":"logs/artifacts/stage4/ep_0002/attempt_01/selected_candidate__A.txt"}
+
+projects/000 ep4 rejected -> final:
+{"ep_num":4,"round_num":1,"verdict":"REJECT","selected_label":"A","verdict_reason":"3화 엔딩에서 절대적 충성을 보인 박성호 캐릭터가 4화에서 갑자기 계획에 대한 의구심을 표출하는 것은 중대한 연속성 오류입니다.","artifact_path":"logs/artifacts/stage4/ep_0004/attempt_02/rejected_best__A_inplace_patch.txt"}
+{"ep_num":4,"round_num":2,"verdict":"PASS","selected_label":"A","selection_reason":"후보 A는 3화 마지막에 주인공에게 절대적 신뢰를 보냈던 '박성호' 캐릭터의 연속성을 완벽하게 유지했다. 시장의 반대 동향을 언급하면서도 주인공의 계획을 의심하는 대신, 오히려 그의 수에 대한 경외감과 긴장감을 표현하는 대사로 처리하여 캐릭터 붕괴를 피하고 서사의 개연성을 높였다.","artifact_path":"logs/artifacts/stage4/ep_0004/attempt_03/selected_candidate__A.txt"}
+
+projects/000 ep5 contradiction firewall chain:
+{"ep_num":5,"round_num":0,"verdict":"REJECT","selected_label":"B","selection_reason":"후보 B는 직전 4화의 결말(20억 원 전액 투자 체결)과 5화 블루프린트의 전제(5억 선투자 후 15억 추가 투자) 사이에 존재하는 치명적인 연속성 모순을 유일하게 해결했습니다.","verdict_reason":"Contradiction Firewall: CRITICAL 1건","artifact_path":"logs/artifacts/stage4/ep_0005/attempt_01/rejected_best__B.txt"}
+{"ep_num":5,"round_num":2,"verdict":"REJECT","selected_label":"A","selection_reason":"후보 A는 4화 엔딩(20억 전액 투자 완료)과 5화 블루프린트(5억 선투자 후 15억 추가 투자) 사이의 치명적인 연속성 모순을 가장 지능적으로 해결했습니다.","verdict_reason":"Contradiction Firewall: CRITICAL 1건","artifact_path":"logs/artifacts/stage4/ep_0005/attempt_03/rejected_best__A.txt"}
+{"ep_num":5,"round_num":3,"verdict":"PASS","selected_label":"C","selection_reason":"후보 C는 세 후보 중 유일하게 직전 4화의 엔딩(20억 원 전액 투자)과 완벽하게 연속성을 유지했습니다. 후보 A와 B는 5억 원만 투자했다는 치명적인 설정 오류를 범한 반면, 후보 C는 20억 원 투자 이후 가격이 하락하는 상황을 설정하여 수학적으로도 정확하고 서사적으로도 더 높은 긴장감을 만들어냈습니다.","artifact_path":"logs/artifacts/stage4/ep_0005/attempt_04/selected_candidate__C.txt"}
+
+[metadata-authority-drift]
+projects/00_260315 ep4 director vs final:
+{"ep_num":4,"director_selected_label":"C","director_verdict":"PASS_WITH_FIX","director_artifact":"logs/artifacts/stage4/ep_0004/attempt_01/selected_before_fix__C.txt","director_content_hash":"b3c0536febe6f78591b3b7e2a052e241fee25f16486bacb23ab3ac0cce6e59d1","director_verdict_reason":"3화에서 이미 설치된 컴퓨터와 4화에서 새로 조립하는 컴퓨터의 관계가 명확하게 설명되지 않아 독자가 혼란을 느낄 여지가 있음."}
+{"ep_num":4,"stage_attempt_candidate_key":"A|InPlace 수정","stage_attempt_verdict":"PASS","stage_attempt_artifact":"logs/artifacts/stage4/ep_0004/attempt_01/patched_after_fix__A_InPlace.txt","stage_attempt_content_hash":"e62f0145b39565a3f9458d288cfd187f26483ce5c935004b375992db1264f689"}
+text relation: DIFF
+patch diff anchor:
+- pre-fix: `다음 날 오후, 텅 비었던 사무실은 거대한 상자들로 가득 찼다.`
+- patched: `다음 날 오후, 성북동 자택에서 옮겨온 거대한 상자들이 사무실을 가득 채웠다.`
+- pre-fix: `그것은 단순한 조립이 아니었다.`
+- patched: `그것은 단순한 재조립이 아니었다.`
+
+projects/00_260315 ep5 director vs final:
+{"ep_num":5,"director_selected_label":"A","director_verdict":"PASS_WITH_FIX","director_artifact":"logs/artifacts/stage4/ep_0005/attempt_01/selected_before_fix__A.txt","director_content_hash":"b37b97cdd2bd9c71a058a0c2fa1f2b3adf707532a3e9fa1274476e4ae7140653","director_verdict_reason":"WritingDirective에서 금지된 표현인 '강철'이 사용되었습니다. ('서늘한 강철 심이 박혀 있었다.')"}
+{"ep_num":5,"stage_attempt_candidate_key":"A|InPlace 수정","stage_attempt_verdict":"PASS","stage_attempt_artifact":"logs/artifacts/stage4/ep_0005/attempt_01/patched_after_fix__A_InPlace.txt","stage_attempt_content_hash":"8e0917465afcb16cd580f68a4a4cc36dba511a56da6a5fdbdb83b5eba2a16e22"}
+text relation: DIFF
+patch diff anchor:
+- pre-fix: `서늘한 강철 심이 박혀 있었다.`
+- patched: `흔들림 없는 단호함이 서려 있었다.`
+
+[resolved-before-publication]
+projects/00_260315 ep11 director selection:
+{"ep_num":11,"round_num":1,"verdict":"PASS","selected_label":"A","selection_reason":"후보 A는 연속성 오류 없이 블루프린트의 모든 요소를 충실하게 구현했습니다. 특히 주인공 한시우의 초인적인 평정심과 박성호의 내적 갈등 및 심리 변화를 효과적으로 묘사하여 높은 몰입감을 제공합니다. 반면, 후보 B는 박성호의 직책을 '팀장'에서 '차장'으로 잘못 표기하는 중대한 연속성 오류를 포함하고 있어 선택에서 배제되었습니다.","artifact_path":"logs/artifacts/stage4/ep_0011/attempt_02/selected_candidate__A.txt"}
+
+[manual-summary]
+- surviving hard contradiction found in final/patched authority: 0
+- resolved-by-patch or resolved-by-reselect confirmed from live metadata plus real text: 5
+- surviving metadata-authority drift confirmed from live DB/artifacts: 2 (`00_260315 ep4`, `00_260315 ep5`)
+- practical audit rule confirmed: `director_selections` alone is not sufficient final authority when `PASS_WITH_FIX` and in-place patching occurred

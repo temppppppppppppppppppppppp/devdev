@@ -1,0 +1,92 @@
+Date: 2026-03-16
+Scope: OPUS manuscript contradiction audit package revalidation
+Baseline Commit: d6c81c1976d9812d447c2a78e2aeb36f7aed666a
+Baseline Dirty Summary: dirty: runtime/stage modules and tests, desktop package/icon/version files, project artifacts/db, OPUS manuscript audit docs, and untracked 2026-03-16 survey docs
+
+Source Package:
+- docs/2026-03-16/manuscript-contradiction-audit-plan.md
+- docs/2026-03-16/manuscript-contradiction-audit-tf-A-report.md
+- docs/2026-03-16/manuscript-contradiction-audit-tf-B-report.md
+- docs/2026-03-16/manuscript-contradiction-audit-tf-C-report.md
+- docs/2026-03-16/manuscript-contradiction-audit-tf-D-report.md
+- docs/2026-03-16/manuscript-contradiction-audit-tf-E-report.md
+- docs/2026-03-16/manuscript-contradiction-audit-tf-F-report.md
+- docs/2026-03-16/manuscript-contradiction-audit-3pass-audit.md
+- docs/2026-03-16/manuscript-contradiction-audit-master-report.md
+
+Live Inventory Cross-Checks:
+- `projects/` live inventory contains `51` `project_data.db` files with `112` total `manuscripts` rows.
+- The OPUS package target set overlaps only `4` real projects:
+  - `projects/0/project_data.db` -> `4`
+  - `projects/000/project_data.db` -> `6`
+  - `projects/00_20260314/project_data.db` -> `2`
+  - `projects/00_260315/project_data.db` -> `11`
+- The OPUS package also includes many archival/test surfaces:
+  - `projects/기록용/00000/project_data.db` -> `15`
+  - `projects/기록용/000__t/project_data.db` -> `9`
+  - `projects/기록용/00_test_00_before_p1_rerun_20260311_182925/project_data.db` -> `6`
+  - `projects/기록용/00_test_00_backup_20260311_144327/project_data.db` -> `4`
+  - `projects/기록용/00_test_01/project_data.db` -> `4`
+  - `projects/기록용/00_test_02/project_data.db` -> `4`
+  - `projects/기록용/00_test_03/project_data.db` -> `2`
+  - `projects/기록용/00_test_05/project_data.db` -> `4`
+  - `projects/기록용/00_test_07/project_data.db` -> `4`
+  - `projects/기록용/00_test_07_runtime_proof_refresh_20260314/project_data.db` -> `4`
+  - `projects/기록용/00_test_08_live_runtime_proof_refresh_20260314/project_data.db` -> `4`
+  - `projects/기록용/00_test_09_full_live_runtime_proof_refresh_20260314/project_data.db` -> `4`
+  - `projects/기록용/00_test_10_retry_live_runtime_proof_refresh_20260314/project_data.db` -> `3`
+  - `projects/기록용/00_test_11_stage34_live_runtime_proof_refresh_20260314/project_data.db` -> `7`
+  - `projects/기록용/00_test_12_stage34_live_runtime_proof_refresh_20260314/project_data.db` -> `4`
+  - `projects/기록용/00/project_data.db` -> `2`
+  - `projects/기록용/01/project_data.db` -> `2`
+  - `projects/기록용/03/project_data.db` -> `2`
+  - `projects/기록용/0w/project_data.db` -> `2`
+  - `projects/코덱스_테스트/project_data.db` -> `3`
+
+Internal Consistency Checks:
+- `manuscript-contradiction-audit-plan.md` states `24개 DB`, `109화`, `546,661자`.
+- `manuscript-contradiction-audit-3pass-audit.md` repeats `24개 DB`, `109화`, `546,661자`.
+- `manuscript-contradiction-audit-master-report.md` header repeats `24개 DB`, `109화`, `546,661자`.
+- `manuscript-contradiction-audit-master-report.md` aggregate row states `110화`.
+- `manuscript-contradiction-audit-plan.md` labels `TF-F` as `13화`.
+- `manuscript-contradiction-audit-tf-F-report.md` labels itself `24 episodes total`.
+- `manuscript-contradiction-audit-tf-F-report.md` also marks `projects/코덱스_테스트` as `N/A (test artifact)`, creating ambiguity about whether those `3` rows belong in aggregate totals.
+
+Authority-Surface Coverage Checks:
+- The OPUS package references `episode_bibles` in the plan doc.
+- The OPUS package does not materially ground its judgments in:
+  - `director_selections`
+  - `stage_attempts`
+  - `selected_before_fix`
+  - `patched_after_fix`
+  - `final_manuscript`
+- Therefore the package is primarily a `DB manuscripts` reading memo, not a final-authority Stage 4 artifact audit.
+
+Cross-Source High-Authority Comparison:
+- `docs/2026-03-16/legacy-real-manuscript-contradiction-survey.md`
+  - direct read of real final/patched authority manuscripts
+  - conclusion: no surviving hard contradiction in final authority texts
+  - confirmed issue: stale metadata authority in `00_260315 ep4-5`
+- `docs/2026-03-16/legacy-manuscript-current-recurrence-supplemental-survey.md`
+  - live code recheck
+  - conclusion: stale metadata authority is still structurally possible now
+- `docs/2026-03-16/legacy-manuscript-contradiction-manual-survey-and-current-risk-assessment.md`
+  - manual survey method requires artifact truth + metadata truth + narrative truth together
+
+Direct OPUS Scope Signals:
+- TF-A targets `기록용/00000`
+- TF-C mixes `000__t` with `00_test_11_stage34_live_runtime_proof_refresh_20260314`
+- TF-D mixes `projects/000` with `기록용/00_test_00_before_p1_rerun_20260311_182925`
+- TF-E is entirely `기록용/00_test_*` surfaces
+- TF-F explicitly includes `projects/코덱스_테스트/project_data.db` and labels it `test artifact`
+
+Revalidation Consequences:
+- reusable:
+  - contradiction taxonomy `M-1` through `M-6`
+  - broad lead list of historical carryover/numeric/title/event drift hypotheses
+  - specific real-project watchlist references touching `projects/000` and `projects/00_260315`
+- downgraded:
+  - package-wide contradiction totals (`75`)
+  - package-wide severity totals (`CRITICAL 9 / IMPORTANT 29 / MINOR 37`)
+  - aggregate claim that `7/9 CRITICAL` are code-fixable
+  - direct execution priority derived from mixed real + archival + test surfaces

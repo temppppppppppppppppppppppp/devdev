@@ -143,16 +143,16 @@ Step 6: 최종 판정
 
 # [V59] 스킬 관련 패턴 (클래스 레벨 상수)
 SKILL_ACQUISITION_PATTERNS = [
-    r"['\"]?([가-힣a-zA-Z0-9]{2,20}(?:법|결|공|권법|검법|장법|각법|신법|보법|심법|기공))['\"]?(?:을|를)\s*(?:익히|배우|습득|전수받|깨달|체득)",
-    r"['\"]?([가-힣a-zA-Z0-9]{2,20}(?:초식|절초|절기|비기|오의))['\"]?(?:을|를)\s*(?:익히|배우|습득|전수받|터득)",
-    r"(?:전수|가르침|지도).*?['\"]?([가-힣a-zA-Z0-9]{2,20}(?:법|공|결|술))['\"]?",
-    r"비급.*?['\"]?([가-힣a-zA-Z0-9]{2,20}(?:법|공|결|심법))['\"]?",
+    r"['\"]?([가-힣a-zA-Z0-9]{2,20}(?:법|결|공|권법|검법|장법|각법|신법|보법|심법|기공))['\"]?(?:을|를)\s*(?:익히|배우|습득|전수받|깨달|체득)",  # utf8-hygiene: allow-line regex optional quantifier
+    r"['\"]?([가-힣a-zA-Z0-9]{2,20}(?:초식|절초|절기|비기|오의))['\"]?(?:을|를)\s*(?:익히|배우|습득|전수받|터득)",  # utf8-hygiene: allow-line regex optional quantifier
+    r"(?:전수|가르침|지도).*?['\"]?([가-힣a-zA-Z0-9]{2,20}(?:법|공|결|술))['\"]?",  # utf8-hygiene: allow-line regex optional quantifier
+    r"비급.*?['\"]?([가-힣a-zA-Z0-9]{2,20}(?:법|공|결|심법))['\"]?",  # utf8-hygiene: allow-line regex optional quantifier
 ]
 
 SKILL_USAGE_PATTERNS = [
-    r"['\"]?([가-힣a-zA-Z0-9]{2,20}(?:법|결|공|권법|검법|장법|각법|신법|보법))['\"]?(?:을|를)?\s*(?:펼치|시전|사용|발동|구사)",
-    r"['\"]?([가-힣a-zA-Z0-9]{2,20}(?:초식|절초|절기|비기|오의))['\"]?(?:을|를)?\s*(?:펼치|날리|전개)",
-    r"(?:내공|진기).*?['\"]?([가-힣a-zA-Z0-9]{2,20}(?:법|공|결))['\"]?",
+    r"['\"]?([가-힣a-zA-Z0-9]{2,20}(?:법|결|공|권법|검법|장법|각법|신법|보법))['\"]?(?:을|를)?\s*(?:펼치|시전|사용|발동|구사)",  # utf8-hygiene: allow-line regex optional quantifier
+    r"['\"]?([가-힣a-zA-Z0-9]{2,20}(?:초식|절초|절기|비기|오의))['\"]?(?:을|를)?\s*(?:펼치|날리|전개)",  # utf8-hygiene: allow-line regex optional quantifier
+    r"(?:내공|진기).*?['\"]?([가-힣a-zA-Z0-9]{2,20}(?:법|공|결))['\"]?",  # utf8-hygiene: allow-line regex optional quantifier
 ]
 
 
@@ -197,14 +197,14 @@ class ContinuityManuscriptValidator:
     # 원고 Python 사전 검증에서 사용하는 패턴 (인스턴스에서 복사)
     # =================================================================
     ACQUISITION_PATTERNS = [
-        r"['\"]?([가-힣a-zA-Z0-9]{2,25})['\"]?(?:을|를)\s*(?:획득|챙기|얻|주워\s*들|가져)",
-        r"['\"]?([가-힣a-zA-Z0-9]{2,25})['\"]?(?:을|를)\s*(?:손에\s*넣|가져가|챙겨\s*들)",
+        r"['\"]?([가-힣a-zA-Z0-9]{2,25})['\"]?(?:을|를)\s*(?:획득|챙기|얻|주워\s*들|가져)",  # utf8-hygiene: allow-line regex optional quantifier
+        r"['\"]?([가-힣a-zA-Z0-9]{2,25})['\"]?(?:을|를)\s*(?:손에\s*넣|가져가|챙겨\s*들)",  # utf8-hygiene: allow-line regex optional quantifier
     ]
 
     POSSESSION_PATTERNS = [
-        r"품속.*?(.+?)(?:이|가)\s*(?:있|자리)",
-        r"(.+?)(?:을|를)\s*(?:들어\s*보이|꺼내|쥐)",
-        r"(?:쥔|든|멘)\s*(.+?)",
+        r"품속.*?(.+?)(?:이|가)\s*(?:있|자리)",  # utf8-hygiene: allow-line regex optional quantifier
+        r"(.+?)(?:을|를)\s*(?:들어\s*보이|꺼내|쥐)",  # utf8-hygiene: allow-line regex optional quantifier
+        r"(?:쥔|든|멘)\s*(.+?)",  # utf8-hygiene: allow-line regex optional quantifier
     ]
 
     def inspect_manuscript(
@@ -1062,7 +1062,7 @@ class ContinuityManuscriptValidator:
             "적대": ["적대", "원수", "죽이겠", "공격", "증오", "살의", "적의"],
         }
 
-        STATE_ORDER = ["적대", "무시", "의심", "중립", "경외", "충성"]
+        STATE_ORDER = ["적대", "무시", "의심", "중립", "경외", "굴복", "충성", "사망"]
 
         NPC_KEYWORDS = [
             "사병",

@@ -17,10 +17,22 @@ def _make_stage_context_module(class_name: str):
     return mod
 
 
-def _build_frontier_app(*, total_arcs: int, batch_size: int, stage3_results, plans, manuscripts_after):
+def _build_frontier_app(
+    *,
+    total_arcs: int,
+    batch_size: int,
+    stage3_results,
+    plans,
+    manuscripts_after,
+    initial_designed_arcs: int = 0,
+):
     app = SovereignApp.__new__(SovereignApp)
     arcs = []
     arc_specs = [{"ep_start": i * 3 + 1, "ep_end": i * 3 + 3} for i in range(total_arcs)]
+    for idx in range(min(initial_designed_arcs, len(arc_specs))):
+        next_arc = dict(arc_specs[idx])
+        next_arc["arc_no"] = idx + 1
+        arcs.append(next_arc)
 
     async def _stage2_async_logic(target_arc_count=1):
         if len(arcs) < len(arc_specs):
@@ -128,6 +140,7 @@ def test_frontier_lag_uses_default_batch_without_boundary_input():
     )
     assert app._stage3_orch.stage_3_batch_blueprinting.call_count == 2
     assert app._stage_4_v2_chief_writer.call_count == 2
+    assert all(call.kwargs.get("skip_pause") is True for call in app._stage_4_v2_chief_writer.call_args_list)
     assert result["requested_arc_limit"] == 2
     assert result["requested_limit_hit"] is True
     default_batch_logs = [
@@ -326,6 +339,44 @@ def test_frontier_lag_interactive_requested_arc_limit_stops_at_requested_total()
     assert auto_continue_logs == []
     limit_logs = [call.args[0] for call in app.ui.log.call_args_list if "요청된 Arc 경계 도달" in str(call.args[0])]
     assert len(limit_logs) == 1
+
+
+def test_frontier_lag_final_close_propagates_skip_pause():
+    app = _build_frontier_app(
+        total_arcs=2,
+        batch_size=1,
+        stage3_results=[{"success_count": 1, "fail_count": 0}],
+        plans=[
+            {
+                "true_final_arc_no": 2,
+                "designed_frontier_arc_no": 2,
+                "frontier_ep_start": 4,
+                "frontier_ep_end": 6,
+                "stage3_target": 6,
+                "stage4_target": 6,
+                "stage3_alignment": "aligned",
+                "stage4_alignment": "aligned",
+                "bp_max": 6,
+                "ms_max": 2,
+            }
+        ],
+        manuscripts_after=[2, 4],
+        initial_designed_arcs=2,
+    )
+
+    fake_stage3 = _make_stage_context_module("Stage3Context")
+
+    with patch.dict(sys.modules, {"modules.core.stage3_context": fake_stage3}):
+        with patch("builtins.input") as mocked_input:
+            result = SovereignApp._one_stop_pipeline_frontier_lag(app, wait_for_menu_return=False)
+
+    app._get_int_input.assert_not_called()
+    app._stage3_orch.stage_3_batch_blueprinting.assert_called_once_with(target_ep=6)
+    app._stage_4_v2_chief_writer.assert_called_once_with(target_ep=6, skip_pause=True)
+    mocked_input.assert_not_called()
+    assert result["arcs_advanced"] == 0
+    assert result["total_manuscripts"] == 2
+    assert result["stop_reason"] == "completed"
 
 
 def test_frontier_lag_keeps_stage3_abort_prompt():

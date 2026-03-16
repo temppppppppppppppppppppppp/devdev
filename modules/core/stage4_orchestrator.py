@@ -635,7 +635,7 @@ JSON으로 출력:
             _perf_logger.warning(f"[V68] chain_link 추출 실패 (ep={ep_num}): {str(e)[:80]}")
             return {}
 
-    def _run_interview_loop(self, session: _SessionConfig) -> bool:
+    def _run_interview_loop(self, session: _SessionConfig, *, skip_pause: bool = False) -> bool:
         """[4-R1-e-4] Run main episode production loop.
 
         Returns True if caller should return early.
@@ -883,7 +883,7 @@ JSON으로 출력:
             _outcome = self._handle_round_outcome(round_ctx=_round_ctx)
             if _outcome.should_return:
                 # [Sweep45] 5회 실패 시에도 벡터 메모리 동기화 보장
-                self.post_processor.run_post_episode_tasks()
+                self.post_processor.run_post_episode_tasks(skip_pause=skip_pause)
                 return True
             final_manuscript = _outcome.final_manuscript
             final_title = _outcome.final_title
@@ -919,7 +919,7 @@ JSON으로 출력:
                         logging.debug("[Stage4] PassRateMonitor.check_alerts 실패 (무시): %s", _e)
 
         # [V62.3] Stage 4 루프 종료
-        self.post_processor.run_post_episode_tasks()
+        self.post_processor.run_post_episode_tasks(skip_pause=skip_pause)
 
         return False
 
@@ -1262,7 +1262,16 @@ JSON으로 출력:
                             _patch_err,
                         )
                     # [V76] 에스컬레이션 이벤트 로그
-                    self._log_escalation_event(next_ep, "V75-D_INPLACE", _logic_error_streak, success=_v75d_success)
+                    self._log_escalation_event(
+                        next_ep,
+                        "V75-D_INPLACE",
+                        _logic_error_streak,
+                        success=_v75d_success,
+                        round_num=interview_round,
+                        fix_scope=(previous_attempt or {}).get("fix_scope", ""),
+                        reason=director_feedback,
+                        contradiction_type=_curr_dominant_ct,
+                    )
 
                 # [V75-B] Step 2: inplace 시도 후에도 계속 실패 → 전면 재생성
                 elif _logic_error_streak >= 2 and _inplace_attempted and not _blueprint_regenerated:
@@ -1304,7 +1313,16 @@ JSON으로 출력:
                             _regen_err,
                         )
                     # [V76] 에스컬레이션 이벤트 로그
-                    self._log_escalation_event(next_ep, "V75-B_FULL_REGEN", _logic_error_streak, success=_v75b_success)
+                    self._log_escalation_event(
+                        next_ep,
+                        "V75-B_FULL_REGEN",
+                        _logic_error_streak,
+                        success=_v75b_success,
+                        round_num=interview_round,
+                        fix_scope=(previous_attempt or {}).get("fix_scope", ""),
+                        reason=director_feedback,
+                        contradiction_type=_curr_dominant_ct,
+                    )
 
         # ===== 설정된 라운드 수 모두 실패 =====
         # [V75-B] B-Full: 블루프린트 재생성까지 했는데도 실패 → Arc 재생성 제안
@@ -1350,7 +1368,19 @@ JSON으로 출력:
             should_return=False,
         )
 
-    def _log_escalation_event(self, ep_num, event_type, streak, *, success):
+    def _log_escalation_event(
+        self,
+        ep_num,
+        event_type,
+        streak,
+        *,
+        success,
+        round_num: int | None = None,
+        attempt_key: str = "",
+        fix_scope: str = "",
+        reason: str = "",
+        contradiction_type: str = "",
+    ):
         """[V76] 에스컬레이션 이벤트를 episode_production.jsonl에 기록."""
         try:
             import datetime
@@ -1367,6 +1397,17 @@ JSON으로 출력:
                 "streak": streak,
                 "success": success,
             }
+            if round_num is not None:
+                entry["round_num"] = int(round_num)
+            if attempt_key:
+                entry["attempt_key"] = str(attempt_key).strip()
+            if fix_scope:
+                entry["fix_scope"] = str(fix_scope).strip()
+            if contradiction_type:
+                entry["contradiction_type"] = str(contradiction_type).strip()
+            _reason = str(reason or "").strip()
+            if _reason:
+                entry["reason"] = _reason[:240]
             append_jsonl_record(Path(logs_dir) / "episode_production.jsonl", entry)
         except Exception as e:
             logging.warning("[V76] escalation log 실패: %s", e)
@@ -1617,7 +1658,7 @@ JSON으로 출력:
             total_planned_ep=total_planned_ep,
         )
 
-    def stage_4_v2_chief_writer(self, limit_mode: bool = False, *, target_ep: int | None = None) -> None:
+    def stage_4_v2_chief_writer(self, limit_mode: bool = False, *, target_ep: int | None = None, skip_pause: bool = False) -> None:
         """
         [V60.80] Stage 4 V2 - Chief Writer 주권주의 아키텍처
 
@@ -1636,7 +1677,7 @@ JSON으로 출력:
             if session is None:
                 return
             # 5. Episode production loop
-            _should_return = self._run_interview_loop(session)
+            _should_return = self._run_interview_loop(session, skip_pause=skip_pause)
             if _should_return:
                 return
             _audit_event = getattr(ctx, "audit_event", None)

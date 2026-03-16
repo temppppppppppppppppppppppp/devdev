@@ -1,0 +1,125 @@
+Date: 2026-03-16
+Status: raw-evidence
+Canonical Survey Target: docs/2026-03-16/legacy-manuscript-contradiction-manual-survey-and-current-risk-assessment.md
+Baseline Commit: d6c81c1976d9812d447c2a78e2aeb36f7aed666a
+Baseline Dirty Summary: dirty: desktop icon/version files, stage4/continuity runtime modules and tests, project runtime artifacts/db, opus memo edits, and untracked 2026-03-16 follow-up docs
+
+[Legacy Project Inventory]
+- projects/0
+  - db: projects/0/project_data.db
+  - db_manuscripts=2
+  - stage4_final_or_patched=2
+  - stage4_selections=2
+  - stage4_attempts=2
+- projects/000
+  - db: projects/000/project_data.db
+  - db_manuscripts=6
+  - stage4_final_or_patched=6
+  - stage4_selections=11
+  - stage4_attempts=11
+- projects/00_20260314
+  - db: projects/00_20260314/project_data.db
+  - db_manuscripts=2
+  - stage4_final_or_patched=2
+  - stage4_selections=3
+  - stage4_attempts=3
+- projects/00_260315
+  - db: projects/00_260315/project_data.db
+  - db_manuscripts=11
+  - stage4_final_or_patched=11
+  - stage4_selections=14
+  - stage4_attempts=14
+
+[Real Artifact Open Checks]
+- projects/000/logs/artifacts/stage4/ep_0004/attempt_03/patched_after_fix__A.txt
+  - chars=5052
+  - lines=113
+  - utf8_decode=ok
+  - first_line=한태민과의 통화가 남긴 불쾌한 잔상은 창밖의 야경이 어둠에 완전히 잠기고 나서야 비로소 가라앉았다.
+- projects/000/logs/artifacts/stage4/ep_0005/attempt_04/final_manuscript__C.txt
+  - chars=4040
+  - lines=104
+  - utf8_decode=ok
+  - first_line=한시우의 눈빛이 차갑게 가라앉았다. 그러나 목소리는 오히려 얼음장처럼 차분해졌다.
+- projects/00_260315/logs/artifacts/stage4/ep_0001/attempt_01/final_manuscript__C.txt
+  - chars=4730
+  - lines=77
+  - utf8_decode=ok
+  - first_line=차가운 금속이 척수를 훑고 지나가는 듯한 감각. 한시우는 눈을 떴다.
+- projects/00_260315/logs/artifacts/stage4/ep_0004/attempt_01/patched_after_fix__A_InPlace.txt
+  - chars=6002
+  - lines=106
+  - utf8_decode=ok
+  - first_line=수화기 너머, 최영진 변호사의 목소리에 묻어난 균열은 미세했지만 선명했다.
+
+[Representative Final/Patch Artifact Counts]
+- projects/0
+  - projects/0/logs/artifacts/stage4/ep_0001/attempt_01/final_manuscript__A.txt | chars=4538 | lines=121
+  - projects/0/logs/artifacts/stage4/ep_0002/attempt_01/final_manuscript__B.txt | chars=4502 | lines=115
+- projects/000
+  - projects/000/logs/artifacts/stage4/ep_0001/attempt_01/final_manuscript__A.txt | chars=5371 | lines=124
+  - projects/000/logs/artifacts/stage4/ep_0002/attempt_01/final_manuscript__A.txt | chars=4612 | lines=99
+  - projects/000/logs/artifacts/stage4/ep_0003/attempt_01/final_manuscript__B.txt | chars=4558 | lines=82
+  - projects/000/logs/artifacts/stage4/ep_0004/attempt_03/patched_after_fix__A.txt | chars=5052 | lines=113
+- projects/00_20260314
+  - projects/00_20260314/logs/artifacts/stage4/ep_0001/attempt_01/final_manuscript__C.txt | chars=4801 | lines=79
+  - projects/00_20260314/logs/artifacts/stage4/ep_0002/attempt_02/patched_after_fix__A_inplace_patch.txt | chars=4748 | lines=111
+- projects/00_260315
+  - projects/00_260315/logs/artifacts/stage4/ep_0001/attempt_01/final_manuscript__C.txt | chars=4730 | lines=77
+  - projects/00_260315/logs/artifacts/stage4/ep_0002/attempt_01/final_manuscript__C.txt | chars=4904 | lines=115
+  - projects/00_260315/logs/artifacts/stage4/ep_0003/attempt_01/final_manuscript__C.txt | chars=5704 | lines=140
+  - projects/00_260315/logs/artifacts/stage4/ep_0004/attempt_01/patched_after_fix__A_InPlace.txt | chars=6002 | lines=106
+
+[Code Anchors: Similar-Risk Surface]
+- modules/validation/validation_orchestrator.py:395-409
+  - continuity failure is converted to advisory, not immediate hard stop
+- modules/validation/validation_orchestrator.py:678-705
+  - continuity advisory is only a bounded score penalty before PASS / CONDITIONAL_PASS / REJECT
+- modules/validation/validation_orchestrator.py:229-242
+  - self-consistency is enabled with 3 votes
+- modules/validation/validation_orchestrator.py:745-796
+  - ambiguous-band scoring expands by extra votes and uses random soft-margin behavior
+- modules/validation/validation_orchestrator.py:1489-1524
+  - adaptive threshold changes by episode position, streak, and pattern adjustments
+- modules/validation/continuity_validator.py:117-145
+  - missing prev_hud returns degraded continuity failure
+- modules/validation/continuity_validator.py:227-239
+  - prev_hud DB fallback is absent; caller must inject it
+- modules/core/stage4_interview_round.py:3942-3955
+  - stage4 runtime injects prev_hud from runtime HUD object, not from durable manuscript artifact truth
+- modules/core/stage4_interview_round.py:2449-2552
+  - candidate-stage consistency / blocking / continuity checks are accumulated as warnings and focus points
+- modules/core/stage4_interview_round.py:2863-2965
+  - post-select continuity/history conflicts can still hard-downgrade PASS to REJECT
+- modules/core/stage4_context_builder.py:1772-1895
+  - stage4 lookback is bounded: recent 30 full manuscripts plus tiered summaries
+- modules/core/stage4_context_builder.py:1448-1515
+  - mandatory context is trimmed to fit budget
+- modules/core/stage4_context_builder.py:1669-1736
+  - stage2 failure context is injected into stage4 mandatory context
+- modules/core/stage4_context_builder.py:2193-2197
+  - stage2 failure context is placed near the front of mandatory context
+- modules/core/stage4_orchestrator.py:387-446
+  - continuity pins are applied against previous published text before validation
+- modules/core/stage4_orchestrator.py:1178-1335
+  - repeated logic contradictions can escalate into blueprint regeneration
+- modules/domain/agents/director.py:57-58
+  - manuscript history max episodes is capped at 30
+- modules/domain/agents/director.py:362-379
+  - manuscript continuity check uses bounded limit argument
+- modules/domain/agents/director_continuity.py:446-461
+  - history conflict check truncates to recent configured window and smart-truncates context
+- modules/domain/agents/director_continuity.py:750-859
+  - manuscript continuity cache uses recent manuscripts and a bounded limit
+- modules/domain/agents/base_agent.py:305-315
+  - prompt size gate truncates oversized prompts
+- modules/domain/agents/base_agent.py:2135-2137
+  - cache merge budget is capped per episode
+- modules/core/constants.py:145-165
+  - smart_truncate preserves head and tail but drops middle context
+- modules/core/db_manager.py:3161-3185
+  - stage_attempt retrieval for arc-level failure context is available
+- modules/core/db_manager.py:3274-3360
+  - stage_attempt persistence stores rationale, artifact_path, and retry directives
+- modules/core/stage4_interview_round.py:4937-5039
+  - stage4 attempts snapshot artifacts and persist rationale fields

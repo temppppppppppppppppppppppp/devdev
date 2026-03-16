@@ -12,7 +12,7 @@ import pytest
 
 from modules.core.session_logger import SessionLogger
 from modules.core.stage3_context import Stage3Context
-from modules.core.stage3_orchestrator import Stage3Orchestrator
+from modules.core.stage3_orchestrator import Stage3Orchestrator, _select_stage3_anchor_recent_window
 
 # ── Fixtures ─────────────────────────────────────────────────
 
@@ -95,6 +95,14 @@ class TestConstructor:
     def test_entity_cache_initialized(self, orch):
         assert orch._entity_cache_arc_idx == -1
         assert orch._cached_entity_registry is None
+
+
+class TestStage3AnchorRecentWindow:
+    def test_select_stage3_anchor_recent_window_keeps_older_anchors_and_recent_tail(self):
+        selected = _select_stage3_anchor_recent_window(list(range(1, 41)))
+
+        assert selected[:6] == [1, 4, 7, 10, 13, 16]
+        assert selected[6:] == list(range(17, 41))
 
 
 # ── V68 Lazy Init ────────────────────────────────────────────
@@ -501,6 +509,58 @@ class TestNs4TimelineHelpers:
 
 
 class TestGenerateBlueprint:
+    @patch("modules.core.spinners.StageSpinner")
+    def test_generate_blueprint_uses_anchor_recent_blueprint_window(self, MockSpinner, orch, app_mock):
+        spinner = MagicMock()
+        spinner.update_detail = MagicMock()
+        MockSpinner.return_value.__enter__.return_value = spinner
+        app_mock.current_project.db.get_recent_manuscripts.return_value = []
+        prev_blueprints = [
+            {"ep_num": ep, "integrated_scenario": f"blueprint {ep}", "scene_breakdown": {"s1": f"scene {ep}"}}
+            for ep in range(1, 41)
+        ]
+
+        orch._generate_blueprint(
+            working_ep=40,
+            arc_data=app_mock.current_project.arcs[0],
+            arc_idx=0,
+            prev_blueprint=prev_blueprints[-1],
+            prev_blueprints=prev_blueprints,
+            entity_registry={},
+            protagonist_name="장무기",
+            protagonist_config={},
+        )
+
+        passed_prev_blueprints = app_mock.agents["three_phase_bp"].generate.call_args.kwargs["prev_blueprints"]
+        assert [bp["ep_num"] for bp in passed_prev_blueprints[:6]] == [1, 4, 7, 10, 13, 16]
+        assert [bp["ep_num"] for bp in passed_prev_blueprints[6:]] == list(range(17, 41))
+
+    @patch("modules.core.spinners.StageSpinner")
+    def test_generate_blueprint_uses_anchor_recent_manuscript_window(self, MockSpinner, orch, app_mock):
+        spinner = MagicMock()
+        spinner.update_detail = MagicMock()
+        MockSpinner.return_value.__enter__.return_value = spinner
+        app_mock.current_project.db.get_recent_manuscripts.return_value = [
+            {"ep_num": ep, "title": f"제{ep}화", "content": f"원고 {ep}"}
+            for ep in range(1, 37)
+        ]
+
+        orch._generate_blueprint(
+            working_ep=40,
+            arc_data=app_mock.current_project.arcs[0],
+            arc_idx=0,
+            prev_blueprint=None,
+            prev_blueprints=[],
+            entity_registry={},
+            protagonist_name="장무기",
+            protagonist_config={},
+        )
+
+        prev_manuscripts_text = app_mock.agents["three_phase_bp"].generate.call_args.kwargs["prev_manuscripts_text"]
+        assert "━━━ 제1화 원고 ━━━" in prev_manuscripts_text
+        assert "━━━ 제36화 원고 ━━━" in prev_manuscripts_text
+        assert "━━━ 제2화 원고 ━━━" not in prev_manuscripts_text
+
     @patch("modules.core.spinners.StageSpinner")
     def test_world_state_advisory_included_in_semantic_context(self, MockSpinner, orch, app_mock):
         spinner = MagicMock()

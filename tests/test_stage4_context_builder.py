@@ -60,6 +60,7 @@ def _configure_hybrid_db(db, *, manuscripts=None, summaries=None, arcs=None):
     db.conn.cursor.return_value = local_cur
 
     db.get_manuscripts_range.return_value = manuscripts or []
+    db.get_episode_meta_summaries.return_value = summaries or []
     db.get_cumulative_bible.return_value = {}
 
     def _load_anchor_side_effect(key):
@@ -348,6 +349,8 @@ class TestPrepareEpisodeContext:
 
         assert "-- Tier2 summaries (21-60 episodes back) --" in result["prev_manuscripts_text"]
         assert "[EP 12 summary] summary tier2" in result["prev_manuscripts_text"]
+        db.get_episode_meta_summaries.assert_called_once_with(1, 10)
+        db.conn.cursor.assert_not_called()
 
     def test_hybrid_context_tier2_summary_respects_5k_cap(self):
         ctx = _make_ctx()

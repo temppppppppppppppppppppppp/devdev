@@ -295,6 +295,18 @@ class Stage01Helpers:
             app.current_project._load_from_db()
             app.ui.log("✨ [Success] 설계도(50개)와 원고 역사가 무결하게 통합되었습니다.")
 
+        else:
+            failure_payload = {
+                "bible_file": str(bible_file),
+                "treatment_file": str(treatment_file),
+                "protagonist_config": protagonist_config,
+            }
+            logging.warning("[Stage0] DNA sync failed; skipped post-processing")
+            audit_event = getattr(app, "_audit_event", None)
+            if callable(audit_event):
+                audit_event("dna_sync_failed", "force_sync_v25_dna returned False", failure_payload)
+            app.ui.log("[Warning] DNA sync failed. Stage 0 post-processing was skipped.")
+
         Stage01Helpers._pause_with_ui(app)
 
     # ─────────────────────────────────────────────────────────────

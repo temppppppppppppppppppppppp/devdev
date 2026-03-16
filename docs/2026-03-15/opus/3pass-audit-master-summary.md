@@ -12,6 +12,32 @@
 >
 > Confidence: 96% for the memo-only classification above. Confidence is below 95% for using this summary as direct execution authority because it still aggregates unsampled items by deference.
 
+## Independent Evidence Spot Check (Codex, 2026-03-16)
+
+Representative live-code checks against the OPUS bundle:
+
+| Claim | Source Doc | Live Check | Verdict |
+|-------|------------|------------|---------|
+| `S0-1` DNA sync failure silently continues | `all-stage-deepdive-fix-candidates-ssot.md` | `modules/core/stage01_helpers.py:260-297` has an `if dna_success:` block with no failure `else` branch | supported |
+| `S1-2` context accumulator grows without bound | `all-stage-deepdive-fix-candidates-ssot.md` | `modules/core/stage01_helpers.py:889-905` already applies `MAX_CONTEXT_VOLUMES = 3` sliding-window compression | contradicted |
+| `S2-2` rollback exists but is partial | `all-stage-deepdive-fix-candidates-ssot.md` | `modules/core/stage2_finalizer.py:1093-1120` rolls back DB and restores `st_snapshot` via shallow attribute replay | partially supported; original CRITICAL is overstated, later HIGH reclassification is more credible |
+| `S3-1` / `S3-2` long-history context is hard-cut | `all-stage-deepdive-fix-candidates-ssot.md` | `modules/core/stage3_orchestrator.py:1216-1226` truncates manuscript context by char count; `:1252-1256` passes `prev_blueprints[-30:]` | supported |
+| `S4-4` continuity runs only on round 0 | `all-stage-deepdive-fix-candidates-ssot.md` | `modules/core/stage4_interview_round.py:2862-2868` gates continuity/history on `round_num == 0` | supported |
+| `S4-5` empty feedback breaks patch loop | `all-stage-deepdive-fix-candidates-ssot.md` | `modules/core/stage4_interview_round.py:3011-3013` breaks when `_current_fb` is falsy | supported |
+| `X-2` WorldState / FactLedger save failures are non-blocking | `all-stage-deepdive-fix-candidates-ssot.md` | `modules/core/fact_ledger.py:114-119` and `modules/core/world_state.py:99-104` only log on save failure | supported |
+| `TF-CM-03` STATE_ORDER omits `사망` / `굴복` | `all-subsystem-tf-consolidated-ssot.md` | `modules/domain/agents/continuity_manuscript.py:1056-1065` includes both in keyword maps but not in `STATE_ORDER` | supported |
+| `TF-FB-01/02` quantified feedback uses fabricated numbers | `detail-subsystem-tf-consolidated-ssot.md` | `modules/core/feedback_system.py:109-179` computes heuristics and drops `audit_result.get(\"score_breakdown\", {})` on the floor | supported |
+| `TF-DG-01` partial reject can still approve | `detail-subsystem-tf-consolidated-ssot.md` | `modules/domain/agents/director_grading.py:686-688` sets `approved` when `len(rejected) == 0 or len(applied) > 0` | supported |
+| `TF-DG-02` category weighting duplicates fields | `detail-subsystem-tf-consolidated-ssot.md` | `modules/domain/agents/director_grading.py:148-155` uses `commercial_appeal` and `emotion_arc` in multiple buckets | supported |
+| `TF-S4CB-02` context builder bypasses DBManager | `detail-subsystem-tf-consolidated-ssot.md` | `modules/core/stage4_context_builder.py:1804-1816` directly uses `_db._lock` and `_db.conn.cursor()` | supported |
+| `TF-E2` severity upgrade depends on `UI 경고 없음` | `escalation-residual-tf-consolidated-ssot.md` | `modules/core/stage4_orchestrator.py:1271-1273`, `:1300`, `:1312-1313` already emit explicit `V75-B` UI logs | contradicted |
+| `TF-E3` escalation log schema is only 5 fields | `escalation-residual-tf-consolidated-ssot.md` | `modules/core/stage4_orchestrator.py:1353-1369` writes `{ts, ep, event, streak, success}` only | supported |
+
+Spot-check conclusion:
+- the OPUS bundle contains real, useful leads
+- the bundle also contains at least one materially stale rationale and one already-closed false-positive that stayed visible in the raw tables
+- use the bundle as a lead index, not as direct patch authority
+
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-03-16 |
