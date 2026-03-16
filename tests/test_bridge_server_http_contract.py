@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+
 from fastapi.testclient import TestClient
 
 from modules.api.bridge_server import app
@@ -64,9 +66,10 @@ class _DummyPromptBroker:
         return dict(self.snapshot)
 
 
-def test_status_returns_runtime_state_model():
+def test_status_returns_runtime_state_model(tmp_path):
     with TestClient(app) as client:
         client.app.state.runner = _DummyRunner(state="starting", run_id="run-123", pid=999)
+        client.app.state.control_plane_provenance_log_path = tmp_path / "missing-control-plane-provenance.jsonl"
 
         response = client.get("/status")
 
@@ -77,7 +80,7 @@ def test_status_returns_runtime_state_model():
     assert payload["data"] == {"state": "starting", "run_id": "run-123", "pid": 999}
 
 
-def test_status_includes_runtime_resync_snapshot_when_prompt_is_pending():
+def test_status_includes_runtime_resync_snapshot_when_prompt_is_pending(tmp_path):
     pending_prompt = {
         "prompt_id": "prompt-1",
         "step_id": "choice",
@@ -103,6 +106,7 @@ def test_status_includes_runtime_resync_snapshot_when_prompt_is_pending():
         client.app.state.prompt_broker = _DummyPromptBroker(
             {"pending_prompt_count": 1, "pending_prompts": [pending_prompt]}
         )
+        client.app.state.control_plane_provenance_log_path = tmp_path / "missing-control-plane-provenance.jsonl"
 
         response = client.get("/status")
 
@@ -116,6 +120,64 @@ def test_status_includes_runtime_resync_snapshot_when_prompt_is_pending():
     assert payload["data"]["last_prompt_step"] == "choice"
     assert payload["data"]["pending_prompt_count"] == 1
     assert payload["data"]["pending_prompts"] == [pending_prompt]
+
+
+def test_status_surfaces_control_plane_provenance_summary_when_log_exists(tmp_path):
+    provenance_log = tmp_path / "control-plane-provenance.jsonl"
+    provenance_log.write_text(
+        "\n".join(
+            [
+                json.dumps(
+                    {
+                        "ts": "2026-03-16T00:00:00+00:00",
+                        "route": "/run",
+                        "key": "2",
+                        "sub_key": "",
+                        "risk_key": False,
+                        "approval_id": "",
+                        "run_id": "run-older",
+                        "mode": "A",
+                        "desktop_mode": False,
+                    },
+                    ensure_ascii=False,
+                ),
+                json.dumps(
+                    {
+                        "ts": "2026-03-16T00:01:00+00:00",
+                        "route": "/run",
+                        "key": "44",
+                        "sub_key": "",
+                        "risk_key": True,
+                        "approval_id": "APR-001",
+                        "run_id": "run-risk",
+                        "mode": "B",
+                        "desktop_mode": True,
+                    },
+                    ensure_ascii=False,
+                ),
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    with TestClient(app) as client:
+        client.app.state.runner = _DummyRunner(state="idle")
+        client.app.state.control_plane_provenance_log_path = provenance_log
+
+        response = client.get("/status")
+
+    assert response.status_code == 200
+    payload = response.json()
+    summary = payload["data"]["control_plane_provenance"]
+    assert summary["available"] is True
+    assert summary["recent_count"] == 2
+    assert summary["risk_row_count"] == 1
+    assert summary["desktop_mode_count"] == 1
+    assert summary["latest"]["run_id"] == "run-risk"
+    assert summary["latest"]["approval_id"] == "APR-001"
+    assert summary["recent"][0]["mode"] == "B"
+    assert summary["recent"][1]["mode"] == "A"
 
 
 def test_run_invalid_key_returns_contract_error_from_real_app():
