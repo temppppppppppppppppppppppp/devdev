@@ -5,7 +5,7 @@ Status: completed canonical
 Canonical Path: `docs/2026-03-16/project-0-260316-execution-ssot.md`
 Temp Mirror Path: `docs/temp/project-0-260316-execution-ssot.md` (removed after closure)
 Commit State:
-- Baseline Commit: `3167fb2039ae54266d40f5d00d21b63f722a90de`
+- Baseline Commit: `391c882c4f8653f4c162a329cd6b60e3a850fc59`
 - Baseline Dirty Summary: `dirty: 1 tracked; hotspot: projects/test_project/logs/episode_production.jsonl`
 - Resume Commit: `same-as-baseline`
 - Resume Drift Summary: `none`
@@ -27,8 +27,8 @@ Authority Order:
 3. companion system SSOT for shared broken feedback loop remediation authority
 4. bounded inference
 Refresh Context:
-- workspace drift exists: `main_a.py`, `projects/0_260316/project_data.db`, and the broken feedback loop companion bundle
-- earlier draft metadata such as `Resume Drift Summary: none` is no longer authoritative
+- this canonical closure doc already absorbed the earlier merged re-audit drift across live code, project evidence, and the companion broken-feedback bundle
+- the commit-state block above reflects the latest doc-only closure hygiene re-audit, not the original execution turn
 - this document owns `0_260316` recovery, stop-point, integrity, resumability, and regression authority
 - the companion system SSOT owns bundle-wide remediation priority for shared broken feedback loop items
 
@@ -40,7 +40,7 @@ Refresh Context:
 - **Inference:** user-side manual interruption such as `Ctrl+C` or equivalent process termination is the highest-confidence cause, but it is not established as fact.
 - **Fact:** extant outputs are materially intact. `ep1` through `ep6` manuscripts, Stage 2/3/4 artifacts up to the frontier, and DB integrity all remain consistent; no corruption evidence was found.
 - **Decision:** project recovery is operationally authorized from `ep7` via resume flow.
-- **Decision:** project-specific system remediation remains open because Stage 4 still has authority, state-schema, and gate-policy defects that can reintroduce continuity drift even though this specific project is resumable.
+- **Decision:** project-specific remediation for `0_260316` is closed here after the bounded continuity substrate fixes, while shared broken-feedback follow-ups remain delegated to the companion system SSOT.
 
 ## Companion Boundary
 
