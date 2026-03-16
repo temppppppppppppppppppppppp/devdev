@@ -100,6 +100,10 @@ class TestSummaryVisibility:
                 "active_items": {f"item{i}": {"status": "보유"} for i in range(21)},
                 "destroyed": [{"name": f"장소{i}", "type": "장소", "ep": i} for i in range(11)],
                 "active_plots": [{"plot": f"플롯{i}", "since_ep": i} for i in range(11)],
+                "active_pressure_vectors": [
+                    {"text": "해독제를 찾지 못하면 독이 퍼진다.", "since_ep": 12},
+                    {"text": "흑풍회의 추격대가 문 앞까지 다가왔다.", "since_ep": 12},
+                ],
                 "timeline": [{"ep": i, "description": f"{i}일 경과"} for i in range(6)],
             }
         )
@@ -119,6 +123,8 @@ class TestSummaryVisibility:
         assert "(총 21개 중 20개 표시)" in summary
         assert "(총 11개 중 10개 표시)" in summary
         assert "(총 6개 중 5개 표시)" in summary
+        assert "[지속 압박/위협]" in summary
+        assert "해독제를 찾지 못하면 독이 퍼진다." in summary
 
 
 class TestInventoryCounts:
@@ -135,3 +141,23 @@ class TestInventoryCounts:
         assert ws._state["active_items"]["트레이딩용 컴퓨터"]["status"] == "보유"
         summary = ws.get_summary()
         assert "트레이딩용 컴퓨터 x3" in summary
+
+
+class TestActivePressureVectors:
+    def test_active_pressure_vectors_replace_and_clear(self, ws):
+        ws.update_from_state_changes(
+            ep_num=8,
+            state_changes={
+                "active_pressure_vectors": [
+                    {"text": "독이 전신으로 퍼지고 있다.", "source": "ending_hook", "cue_terms": ["독"]},
+                    {"text": "추격대가 계단을 오르고 있다.", "source": "cliffhanger", "cue_terms": ["추격대"]},
+                ]
+            },
+        )
+
+        assert len(ws._state["active_pressure_vectors"]) == 2
+        assert ws._state["active_pressure_vectors"][0]["text"] == "독이 전신으로 퍼지고 있다."
+
+        ws.update_from_state_changes(ep_num=9, state_changes={"active_pressure_vectors": []})
+
+        assert ws._state["active_pressure_vectors"] == []

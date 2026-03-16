@@ -215,6 +215,36 @@ class TestPrevHud:
         assert cv_context["prev_hud_source"] == "state_logs.data.actual_truth"
         assert cv_context["martial_hud"] == cv_context["prev_hud"]
 
+    def test_prev_hud_merges_active_pressure_vectors_from_state_log(self):
+        """manuscript hud_snapshot이 우선이어도 pressure surface는 state_log에서 보강한다."""
+        ctx = _make_ctx()
+        ctx.current_project.db.get_manuscript.return_value = {
+            "content": "이전 원고",
+            "hud_snapshot": {"name": "저장본", "wealth": "88억", "location": "부산"},
+        }
+        ctx.current_project.db.load_state_log.return_value = {
+            "summary": "이전 화 정산",
+            "data": {
+                "actual_truth": {
+                    "name": "상태로그",
+                    "active_pressure_vectors": [
+                        {"text": "추격대가 문 앞까지 도착했다.", "cue_terms": ["추격대"]},
+                    ],
+                }
+            },
+        }
+        hud_mock = MagicMock()
+        hud_mock.pro_root = {"name": "라이브 HUD", "wealth": "100억", "location": "서울"}
+        ctx.sys.hud = hud_mock
+
+        round_ctx = _make_round_ctx(next_ep=3)
+        cv_context = _run_and_capture_cv_context(ctx, round_ctx)
+
+        assert cv_context is not None
+        assert cv_context["prev_hud_source"] == "manuscript.hud_snapshot"
+        assert cv_context["prev_hud"]["name"] == "저장본"
+        assert cv_context["prev_hud"]["active_pressure_vectors"][0]["text"] == "추격대가 문 앞까지 도착했다."
+
     def test_prev_hud_injected_when_ep_gt_1(self):
         """persisted snapshot이 없으면 live HUD로 fallback한다."""
         ctx = _make_ctx()

@@ -1165,6 +1165,19 @@ class Stage4ContextBuilder:
             if cp_plots:
                 parts.append("[CP 상세 참조]\n- 이번 화 핵심 플롯 상세는 Continuity Packet 참조")
 
+        pressure_vectors = state.get("active_pressure_vectors", [])
+        if isinstance(pressure_vectors, list) and pressure_vectors:
+            pressure_lines = []
+            for vector in pressure_vectors[:5]:
+                if isinstance(vector, dict):
+                    text = self._trim_summary_value(vector.get("text"), 80)
+                else:
+                    text = self._trim_summary_value(vector, 80)
+                if text:
+                    pressure_lines.append(f"- {text}")
+            if pressure_lines:
+                parts.append("[지속 압박/위협]\n" + "\n".join(pressure_lines))
+
         if cp_locations:
             parts.append("[CP 상세 참조]\n- 이번 화 위치 맥락 상세는 Continuity Packet 참조")
 

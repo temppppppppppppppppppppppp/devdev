@@ -211,6 +211,30 @@ class TestContinuityCountAwareInventory:
         assert warnings[0]["prev_count"] == 3
         assert warnings[0]["current_count"] == 2
 
+    def test_threat_carryover_warning_when_opening_drops_pressure_cues(self):
+        from modules.validation.continuity_validator import ContinuityValidator
+
+        validator = ContinuityValidator()
+        validation_context = _minimal_blocking_context(mode="MANUSCRIPT")
+        validation_context["prev_hud"] = {
+            "actual_truth": {
+                "active_pressure_vectors": [
+                    {
+                        "text": "해독제를 찾지 못하면 독이 전신으로 퍼진다.",
+                        "cue_terms": ["해독제", "전신", "퍼진다"],
+                    }
+                ]
+            },
+            "location": "지하실",
+        }
+
+        manuscript = "새벽 공기가 차갑게 식어 있었다. 그는 창문 틈의 빛만 바라보며 숨을 골랐다."
+        result = validator.validate(2, manuscript, validation_context, prev_hud=validation_context["prev_hud"])
+
+        warnings = [w for w in result["warnings"] if isinstance(w, dict) and w.get("type") == "threat_carryover_drift"]
+        assert len(warnings) == 1
+        assert warnings[0]["pressure_text"] == "해독제를 찾지 못하면 독이 전신으로 퍼진다."
+
 
 class TestScoringValidator:
     """TIER 2: ScoringValidator tests."""
