@@ -321,6 +321,17 @@ def _quality_dashboard_defaults(project: str, lookback: int) -> dict:
             "top_warnings": [],
             "recent": [],
         },
+        "cost_summary": {
+            "available": False,
+            "lookback": lookback,
+            "row_count": 0,
+            "latest_session_id": "",
+            "total_calls": 0,
+            "total_tokens": 0,
+            "total_cost_usd": 0.0,
+            "scope_counts": {},
+            "recent": [],
+        },
         "calibration": {
             "available": False,
             "lookback": lookback,
@@ -347,6 +358,66 @@ def _quality_dashboard_defaults(project: str, lookback: int) -> dict:
             },
         },
     }
+
+
+def _build_cost_summary_payload(rows: list[dict] | None, lookback: int) -> dict[str, Any]:
+    payload: dict[str, Any] = {
+        "available": False,
+        "lookback": lookback,
+        "row_count": 0,
+        "latest_session_id": "",
+        "total_calls": 0,
+        "total_tokens": 0,
+        "total_cost_usd": 0.0,
+        "scope_counts": {},
+        "recent": [],
+    }
+    if not isinstance(rows, list) or not rows:
+        return payload
+
+    scope_counts: Counter[str] = Counter()
+    recent: list[dict[str, Any]] = []
+    total_calls = 0
+    total_tokens = 0
+    total_cost_usd = 0.0
+
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        scope_type = str(row.get("scope_type", "") or "").strip()
+        if scope_type:
+            scope_counts[scope_type] += 1
+        total_calls += int(row.get("total_calls") or 0)
+        total_tokens += int(row.get("total_tokens") or 0)
+        total_cost_usd += float(row.get("total_cost_usd") or 0.0)
+        recent.append(
+            {
+                "session_id": str(row.get("session_id", "") or ""),
+                "scope_type": scope_type,
+                "scope_id": int(row.get("scope_id") or 0),
+                "total_calls": int(row.get("total_calls") or 0),
+                "total_tokens": int(row.get("total_tokens") or 0),
+                "total_cost_usd": float(row.get("total_cost_usd") or 0.0),
+                "created_at": str(row.get("created_at", "") or ""),
+            }
+        )
+
+    if not recent:
+        return payload
+
+    payload.update(
+        {
+            "available": True,
+            "row_count": len(recent),
+            "latest_session_id": recent[0]["session_id"],
+            "total_calls": total_calls,
+            "total_tokens": total_tokens,
+            "total_cost_usd": round(total_cost_usd, 6),
+            "scope_counts": dict(scope_counts),
+            "recent": recent,
+        }
+    )
+    return payload
 
 
 def _safe_rel_path(path: Path, project_dir: Path) -> str:
@@ -1394,6 +1465,10 @@ def _build_quality_dashboard_payload(project: str, lookback: int) -> dict:
         payload["quality_summary"] = quality_summary
         payload["available"] = bool(quality_summary.get("available"))
         payload["latest_ep"] = quality_summary.get("latest_ep")
+        payload["cost_summary"] = _build_cost_summary_payload(
+            db.get_cost_summary(lookback=max(safe_lookback, 10)),
+            max(safe_lookback, 10),
+        )
 
         latest_ep = quality_summary.get("latest_ep")
         latest_label = db.get_episode_quality_label(latest_ep) if latest_ep else None

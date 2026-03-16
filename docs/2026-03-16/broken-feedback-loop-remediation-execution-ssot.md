@@ -1,7 +1,7 @@
 # Broken Feedback Loop Remediation Execution SSOT
 
 Date: 2026-03-16
-Status: active canonical
+Status: completed canonical
 Canonical Path: `docs/2026-03-16/broken-feedback-loop-remediation-execution-ssot.md`
 Companion Project SSOT: `docs/2026-03-16/project-0-260316-execution-ssot.md`
 Confidence After Fresh Merged 3-Pass Audit: `96%`
@@ -20,11 +20,11 @@ Scope Boundary:
 
 - **Fact:** `docs/sp` is not a project-run bundle. It is a system-wide broken feedback loop survey pack spanning Stage 0 style extraction, Stage 3 observability, Stage 4 retry handoff, cross-cutting sinks, bridge/desktop consumers, and reverse feedback paths.
 - **Fact:** most forward runtime loops already work. `DPW`, `FailureLearner`, Stage 4 streak logic, `quality_risk` early intervention, pass-rate difficulty tracking, and Stage 4→2 reverse difficulty feedback are live or working and should not be misclassified as broken.
-- **Fact:** the main broken area is not “signal absent everywhere” but “signal measured or surfaced without reaching the runtime-core decision loop.” This was especially true for `ai_slop`, `ced_score`, `coverage_warning`, and `cost_log`; after Tranche 2, the highest-priority remaining gaps are the reverse-feedback auto-trigger lanes and `cost_log` runtime consumption.
+- **Fact:** the main broken area is not “signal absent everywhere” but “signal measured or surfaced without reaching the runtime-core decision loop.” This was especially true for `ai_slop`, `ced_score`, `coverage_warning`, and `cost_log`; the fresh Tranche 3 validity gate showed that the remaining live gaps were narrower than the survey wording suggested.
 - **Fact:** `condex_*` supplements do not overturn the TF surveys. They mainly prove that several signals are visible in bridge/UI/operator surfaces even when they are still dead or weak in runtime-core retry routing.
 - **Fact:** two scope-sensitive names had to be normalized to eliminate false conflict:
   - `open_review` is live inside same-round `previous_attempt`, but `episode_quality_labels.open_review` replay is still dead for later generation loops.
-  - `reverse_feedback` is split: Stage 4→2 is working, while Stage 4→3 and Stage 3→2 remain fragile because they are not auto-triggered.
+  - `reverse_feedback` is split: Stage 4→2 and Stage 4→3 are already working in live code, while the real Stage 3→2 gap was missing Stage 3 reject-history persistence into the existing thresholded trigger.
 - **Decision:** remediation will use three tranches:
   - Tranche 1: style/core warning closure
   - Tranche 2: validation/escalation hardening
@@ -132,7 +132,7 @@ Pass 2 result:
 - no project-specific recovery claim was promoted into this document
 - `0_260316` is used only as regression evidence, not as the subject of this SSOT
 
-Pass 3 result: tranche sequencing remains valid; Tranche 2 is now closed and Tranche 3 is the next active lane.
+Pass 3 result: tranche sequencing remains valid; all three planned tranches are now closed, and the remaining open item is the low-priority control-plane provenance reader.
 
 ## Signal Taxonomy
 
@@ -149,11 +149,11 @@ Pass 3 result: tranche sequencing remains valid; Tranche 2 is now closed and Tra
 | `vocabulary_level` | `DEAD` | n/a | extracted and prompted, but never validated |
 | `FactLedger` continuity | `DIRECTOR-MEDIATED / STRUCTURED` | n/a | numeric-consistency conflicts now survive as explicit retry evidence and validation payloads without introducing Python final reject authority |
 | `reverse_feedback` Stage 4→2 | `WORKING` | n/a | already injected via Stage 2 preflight when arc difficulty is high |
-| `reverse_feedback` Stage 4→3 | `FRAGILE` | n/a | implemented helper, but not auto-triggered |
-| `reverse_feedback` Stage 3→2 | `FRAGILE` | n/a | thresholded helper exists, but still not a robust automatic loop |
+| `reverse_feedback` Stage 4→3 | `WORKING` | n/a | live Stage 4 orchestrator auto-injects reverse feedback into repeated logic-error blueprint retries |
+| `reverse_feedback` Stage 3→2 | `WORKING / THRESHOLDED` | n/a | Stage 2 preflight threshold was already live; Tranche 3 closes the missing Stage 3 reject-history persistence feeding that trigger |
 | `DPW` | `LIVE` | n/a | keep as a working loop, not a remediation target |
 | `FailureLearner` | `LIVE` / `WORKING` | n/a | keep as a working loop, not a remediation target |
-| `cost_log` DB summary | `DEAD` | n/a | `get_cost_summary()` has no production caller |
+| `cost_log` DB summary | `READ-ONLY / WORKING` | `CLOSED` in bridge quality dashboard | `get_cost_summary()` now feeds a production `cost_summary` payload without becoming a Python control gate |
 | shutdown metric totals | `ADVISORY` | logs only | do not confuse shutdown sink consumption with runtime cost control |
 | control-plane provenance | `OPEN` | write-only log | not a tranche priority, but remains an uncovered reader path |
 
@@ -296,27 +296,37 @@ Targeted verification:
 
 ### Tranche 3: Reverse-Loop Automation and Observability Consumption
 
-Priority:
+Status:
 
-1. Stage 4→3 reverse feedback auto-trigger
-2. Stage 3→2 reverse feedback auto-trigger
-3. `cost_log` runtime consumption
+- completed on `2026-03-16` after a live-code validity gate and fresh 3-pass audit
+- no further tranche remains after closure; only the low-priority `control-plane provenance` reader stays open outside the tranche queue
 
-Required shape:
+Validity gate result:
 
 - do not rebuild the already-working Stage 4→2 reverse difficulty path
-- only automate the fragile reverse paths that still depend on manual or thresholded manual-style invocation
-- either give `cost_log` a real runtime reader or explicitly demote it to audit-only so the dead loop disappears
+- Stage 4→3 was already auto-triggered in live code via repeated `LOGIC_ERROR` / `quality_risk` retry paths in `stage4_orchestrator.py`; no code change was needed there
+- Stage 3→2 had the thresholded consumer in `stage2_preflight.py`, but the producer side was incomplete because Stage 3 REJECT paths did not persist entries into `stage_rejection_history`
+- `cost_log` shutdown metrics were already persisted, but `DBManager.get_cost_summary()` still had no production read surface
 
-Starting gate:
+Bounded implementation landed:
 
-- rerun a codebase validity check on reverse-feedback helpers, trigger sites, and `cost_log` readers before patching
-- confirm Stage 4→2 remains `WORKING` and that Stage 4→3 / Stage 3→2 / runtime cost consumption still require tranche work
+- `modules/core/stage3_orchestrator.py` now appends compact Stage 3 REJECT history entries onto `app.stage_rejection_history`, matching the existing Stage 3→2 threshold contract used by `stage2_preflight.py`
+- `modules/api/bridge_server.py` now reads `DBManager.get_cost_summary()` into a bounded `cost_summary` dashboard payload so the DB summary path is no longer dead
+- no change was made to Stage 4→3 runtime logic because the validity gate confirmed it was already operational
 
-Regression gate:
+Targeted verification:
 
 - `0_260316` remains the shared Stage 4 regression fixture
 - bridge/UI consumers must continue working after runtime-core wiring changes
+- `python -m pytest -q tests/test_stage3_orchestrator.py -k "stage3_failure_appends_rejection_history_for_stage3_to_2_feedback"` -> `1 passed`
+- `python -m pytest -q tests/test_stage2_preflight.py -k "stage3_reverse_feedback_injected_after_three_stage3_failures"` -> `1 passed`
+- `python -m pytest -q tests/test_bridge_quality_summary.py -k "surfaces_cost_summary"` -> `1 passed`
+- `python -m pytest -q tests/test_stage3_orchestrator.py` -> `72 passed`
+- `python -m pytest -q tests/test_stage2_preflight.py` -> `27 passed`
+- `python -m pytest -q tests/test_bridge_quality_summary.py tests/test_cost_tracking.py` -> `15 passed`
+- `python -m pytest -q tests/test_stage4_orchestrator.py -k "stage4_to_3_feedback"` -> `1 passed`
+- `python -m ruff check modules/core/stage3_orchestrator.py modules/api/bridge_server.py tests/test_stage3_orchestrator.py tests/test_stage2_preflight.py tests/test_bridge_quality_summary.py` -> `All checks passed`
+- `python scripts/ops_validator.py` -> `errors=0 warnings=0`
 
 ## Acceptance Criteria
 
@@ -325,7 +335,7 @@ Regression gate:
 - each tranche completes the full loop of validity check -> implementation -> 3-pass audit -> doc update -> next-tranche selection
 - Tranche 1 is closed: `ai_slop`, `dialogue_ratio`, and `ced_score` now reach the runtime-core retry loop through bounded Director-mediated advisory routing without giving Python final quality sovereignty.
 - Tranche 2 closes the escalation gap for `FactLedger`, `coverage_warnings`, and `npc_drift`.
-- Tranche 3 distinguishes the already-working Stage 4→2 path from the still-fragile Stage 4→3 and Stage 3→2 paths and resolves the dead `cost_log` consumer gap.
+- Tranche 3 confirms the already-working Stage 4→2 and Stage 4→3 paths, closes the missing Stage 3→2 reject-history feed, and resolves the dead `cost_log` DB-summary consumer gap.
 - `0_260316` remains a valid regression fixture for shared Stage 4 findings after each tranche.
 - bridge/desktop/operator surfaces continue to function; runtime-core improvements must not break existing operator visibility.
 

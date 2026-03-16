@@ -1,7 +1,7 @@
 # Broken Feedback Loop Remediation Execution Roadmap
 
 Date: 2026-03-16
-Status: active canonical
+Status: completed canonical
 Canonical Path: `docs/2026-03-16/broken-feedback-loop-remediation-execution-roadmap.md`
 System SSOT: `docs/2026-03-16/broken-feedback-loop-remediation-execution-ssot.md`
 Project SSOT: `docs/2026-03-16/project-0-260316-execution-ssot.md`
@@ -13,7 +13,7 @@ Confidence: `96%`
 - the system SSOT owns bundle-wide broken feedback loop remediation
 - the project SSOT owns `0_260316` recovery, stop-point, integrity, resumability, and project-specific regression authority
 - this roadmap owns ordering, overlap classification, and sync rules between the two SSOTs
-- current active tranche after the latest doc refresh: `Tranche 3`
+- all planned tranches are now closed; no active tranche remains
 
 ## Why Not One SSOT
 
@@ -99,13 +99,26 @@ Selection rule:
 
 ### 3. Tranche 3: Reverse-Loop Automation / Observability Consumption
 
-- next active tranche
-- implement the system SSOT Tranche 3 items last
-- starting gate: verify current reverse-feedback trigger sites and `cost_log` consumption status in live code
+- completed on `2026-03-16`
+- live-code validity gate result:
+  - Stage 4→3 was already auto-triggered in `stage4_orchestrator.py`; no patch was needed there
+  - Stage 3→2 already had the thresholded consumer in `stage2_preflight.py`, but Stage 3 REJECT paths were not persisting `stage_rejection_history`
+  - `cost_log` DB summaries still lacked a production read surface
+- landed shape:
+  - `stage3_orchestrator.py` now persists compact Stage 3 reject-history entries used by the existing Stage 3→2 threshold trigger
+  - `bridge_server.py` now exposes `cost_summary` from `DBManager.get_cost_summary()` in the bridge quality dashboard
+  - existing Stage 4→3 auto-trigger behavior was revalidated and left intact
 - regression gate:
   - Stage 4→2 reverse difficulty path remains intact
-  - Stage 4→3 and Stage 3→2 are reclassified only after automation really exists
+  - Stage 4→3 and Stage 3→2 are now reclassified from fragile to working based on fresh live-code evidence
   - runtime cost consumption changes do not break existing shutdown telemetry
+- verification:
+  - `tests/test_stage3_orchestrator.py` -> `72 passed`
+  - `tests/test_stage2_preflight.py` -> `27 passed`
+  - `tests/test_bridge_quality_summary.py tests/test_cost_tracking.py` -> `15 passed`
+  - `tests/test_stage4_orchestrator.py -k "stage4_to_3_feedback"` -> `1 passed`
+  - `ruff check` on touched producer/consumer/test files -> `All checks passed`
+  - `python scripts/ops_validator.py` -> `errors=0 warnings=0`
 
 ### 4. Post-Tranche Sync
 
@@ -117,6 +130,7 @@ Selection rule:
   - project recovery/resumability facts change
 - do not rewrite project-only recovery sections for system-only remediation movement
 - after the doc refresh, automatically choose the next highest-priority pending tranche whose starting gate still passes
+- current outcome: no pending tranche remains; the roadmap is closed pending any future re-open triggered by a fresh validity gate
 
 ## Acceptance Criteria
 

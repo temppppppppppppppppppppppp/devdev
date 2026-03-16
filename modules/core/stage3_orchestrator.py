@@ -2078,6 +2078,38 @@ class Stage3Orchestrator:
             _logging.debug("[stage_attempts] Stage3 REJECT 기록 실패 (비차단): %s", _sa_err)
 
         # [S3-N-P1-3] DI 콜백 None 방어
+        try:
+            rejection_history = getattr(self.app, "stage_rejection_history", None)
+            if isinstance(rejection_history, list):
+                history_arc_no = self._resolve_stage3_arc_num(arc_no=arc_no, pipeline_result=pipeline_result)
+                history_reason = self._build_stage3_reject_reason(pipeline_result)
+                history_failure_category = _classify_stage3_failure_category(pipeline_result) or ""
+                history_attempt = self._extract_stage3_attempt_num(pipeline_result)
+                validate = (pipeline_result.get("phases") or {}).get("validate", {})
+                score_breakdown = {}
+                if isinstance(validate, dict):
+                    raw_breakdown = validate.get("score_breakdown", {})
+                    if isinstance(raw_breakdown, dict):
+                        score_breakdown = {
+                            str(key): value
+                            for key, value in list(raw_breakdown.items())[:5]
+                            if isinstance(value, int | float)
+                        }
+                rejection_history.append(
+                    {
+                        "stage": 3,
+                        "arc_no": history_arc_no,
+                        "reason": str(history_reason or "")[:200],
+                        "attempt": history_attempt,
+                        "specific_issue": str(pipeline_result.get("specific_issue", "") or "")[:200],
+                        "failure_category": history_failure_category,
+                        "fix_scope": str(pipeline_result.get("fix_scope", "") or "")[:40],
+                        "score_breakdown": score_breakdown,
+                    }
+                )
+        except Exception as _history_err:
+            _logging.debug("[stage3_history] reject history append failed: %s", _history_err)
+
         if callable(ctx.audit_event):
             ctx.audit_event(
                 "blueprint_fail",
