@@ -950,9 +950,13 @@ class Stage4PostProcessor:
                 witnesses = knowledge_map.get("new_witnesses", [])
                 misled = knowledge_map.get("new_misled", [])
                 if witnesses:
-                    relationship_changes.extend([f"목격: {w}" for w in witnesses if w])
+                    relationship_changes.extend([
+                        {"npc": w, "to": "목격자", "from": ""} for w in witnesses if w
+                    ])
                 if misled:
-                    relationship_changes.extend([f"오해: {m}" for m in misled if m])
+                    relationship_changes.extend([
+                        {"npc": m, "to": "오해 대상", "from": ""} for m in misled if m
+                    ])
 
             karma_matrix = state_updates_from_audit.get("karma_matrix", [])
             if isinstance(karma_matrix, list):
@@ -961,7 +965,11 @@ class Stage4PostProcessor:
                         obs = karma.get("obsession", 0)
                         val = karma.get("value", 0)
                         if obs > 50 or val > 50:
-                            relationship_changes.append(f"{karma['target']}: 집착{obs}/오해{val}")
+                            relationship_changes.append({
+                                "npc": karma["target"],
+                                "to": f"집착{obs}/오해{val}",
+                                "from": "",
+                            })
 
             reveal_list = []
             if isinstance(recovered, list):
@@ -1107,6 +1115,7 @@ class Stage4PostProcessor:
                     "public_reputation": state_updates_from_audit.get("public_reputation", {}),
                     "inventory_counts": curr_inventory_counts,
                     "inventory_count_deltas": inventory_count_deltas,
+                    "relationship_changes": relationship_changes,
                 }
                 try:
                     summary = f"제{next_ep}화 정산: {', '.join(all_new_items[:3]) if all_new_items else '변화없음'}"
@@ -1160,6 +1169,7 @@ class Stage4PostProcessor:
         import copy as _copy
 
         _inventory_payload = {}
+        _relationship_payload = {}
         if isinstance(bible_delta, dict):
             _inventory_counts = bible_delta.get("inventory_counts")
             _inventory_count_deltas = bible_delta.get("inventory_count_deltas")
@@ -1167,6 +1177,9 @@ class Stage4PostProcessor:
                 _inventory_payload["inventory_counts"] = dict(_inventory_counts)
             if isinstance(_inventory_count_deltas, list) and _inventory_count_deltas:
                 _inventory_payload["inventory_count_deltas"] = list(_inventory_count_deltas)
+            _rel_changes = bible_delta.get("relationship_changes")
+            if isinstance(_rel_changes, list) and _rel_changes:
+                _relationship_payload["relationship_changes"] = list(_rel_changes)
 
         try:
             _ws_snap = _copy.deepcopy(self.ctx.world_state._state) if self.ctx.world_state else None
@@ -1185,6 +1198,8 @@ class Stage4PostProcessor:
                     _ws_sc = dict(final_state_updates or {})
                     if _inventory_payload:
                         _ws_sc.update(_inventory_payload)
+                    if _relationship_payload:
+                        _ws_sc.update(_relationship_payload)
                     if _ws_sc:
                         self.ctx.world_state.update_from_state_changes(next_ep, _ws_sc)
 
@@ -1221,6 +1236,8 @@ class Stage4PostProcessor:
                     _fl_sc = dict(final_state_updates or {})
                     if _inventory_payload:
                         _fl_sc.update(_inventory_payload)
+                    if _relationship_payload:
+                        _fl_sc.update(_relationship_payload)
                     if _fl_sc:
                         self.ctx.fact_ledger.update_from_state_changes(next_ep, _fl_sc)
                     if bible_delta:

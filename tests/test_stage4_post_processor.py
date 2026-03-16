@@ -1,7 +1,7 @@
 """[B-1-1] Stage4PostProcessor unit tests."""
 
-import logging
 import json
+import logging
 from unittest.mock import MagicMock, patch
 
 from modules.core.stage4_orchestrator import Stage4Orchestrator
@@ -566,6 +566,60 @@ class TestProcessPassResult:
             "모니터": 2,
             "트레이딩용 컴퓨터": 3,
         }
+
+    def test_relationship_changes_flow_into_state_log_and_state_sinks(self, tmp_path):
+        """relationship_changes가 dict 형식으로 state_log, world_state, fact_ledger에 전달되는지 검증."""
+        pp = self._make_pp()
+        pp.ctx.current_project.db.save_manuscript.return_value = True
+        pp.ctx.current_project.latest_state = {}
+        pp.ctx.agents["manager"].update_state_and_lore_v20.return_value = {
+            "new_lore": {},
+            "knowledge_map_updates": {
+                "new_witnesses": ["박영호"],
+                "new_misled": ["이서연"],
+            },
+            "recovered_seeds": [],
+            "state_updates": {"actual_truth": {}},
+            "causal_links": [],
+        }
+
+        pp.ctx.world_state = MagicMock()
+        pp.ctx.world_state._state = {}
+        pp.ctx.fact_ledger = MagicMock()
+        pp.ctx.fact_ledger._ledger = {}
+        pp.ctx.fact_ledger.get_stats.return_value = {"characters": 2, "items": 0}
+
+        result = pp.process_pass_result(
+            next_ep=3,
+            final_manuscript="박영호는 그 장면을 목격했다. 이서연은 아직 진실을 모른다. " * 120,
+            final_title="테스트",
+            final_state_updates={},
+            blueprint={"scene_breakdown": []},
+            arc_data={"arc_no": 1},
+            output_dir=tmp_path,
+            v50_modules_available=False,
+            extract_chain_link_fn=lambda *_args, **_kwargs: {},
+        )
+
+        assert result is True
+
+        # state_log에 relationship_changes 존재
+        saved_state_log = pp.ctx.current_project.db.save_state_log_with_summary.call_args.args[1]
+        rel_in_log = saved_state_log["relationship_changes"]
+        assert len(rel_in_log) == 2
+        assert all(isinstance(r, dict) for r in rel_in_log)
+        assert rel_in_log[0] == {"npc": "박영호", "to": "목격자", "from": ""}
+        assert rel_in_log[1] == {"npc": "이서연", "to": "오해 대상", "from": ""}
+
+        # world_state에 relationship_changes 전달
+        ws_changes = pp.ctx.world_state.update_from_state_changes.call_args.args[1]
+        assert "relationship_changes" in ws_changes
+        assert ws_changes["relationship_changes"][0]["npc"] == "박영호"
+
+        # fact_ledger에 relationship_changes 전달
+        fl_changes = pp.ctx.fact_ledger.update_from_state_changes.call_args.args[1]
+        assert "relationship_changes" in fl_changes
+        assert fl_changes["relationship_changes"][1]["npc"] == "이서연"
 
 
 class TestRunPostEpisodeTasks:
