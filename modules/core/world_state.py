@@ -44,6 +44,45 @@ def _normalize_known_attr_value(raw) -> str:
     return str(raw or "").strip()
 
 
+def _normalize_pressure_vectors(raw_vectors, *, fallback_ep: int = 0) -> list[dict]:
+    normalized: list[dict] = []
+    seen_texts: set[str] = set()
+
+    if not isinstance(raw_vectors, list):
+        return normalized
+
+    for raw in raw_vectors:
+        if isinstance(raw, dict):
+            text = str(raw.get("text") or raw.get("pressure") or raw.get("label") or "").strip()
+            source = str(raw.get("source") or "").strip()
+            cue_terms = raw.get("cue_terms", [])
+            since_ep = raw.get("since_ep", fallback_ep)
+        else:
+            text = str(raw or "").strip()
+            source = ""
+            cue_terms = []
+            since_ep = fallback_ep
+
+        if len(text) < 2 or text in seen_texts:
+            continue
+
+        normalized_terms = []
+        if isinstance(cue_terms, list):
+            normalized_terms = [str(term).strip() for term in cue_terms if str(term).strip()]
+
+        normalized.append(
+            {
+                "text": text[:240],
+                "source": source,
+                "cue_terms": normalized_terms[:5],
+                "since_ep": since_ep if isinstance(since_ep, int) else fallback_ep,
+            }
+        )
+        seen_texts.add(text)
+
+    return normalized
+
+
 class WorldStateManager:
     """[V68] 세계 상태 문서 -- 장기연재 모순 방지"""
 
@@ -64,6 +103,7 @@ class WorldStateManager:
         "active_items": {},  # item_name -> {ep_acquired, status}
         "destroyed": [],  # [{name, type, ep, cause}]
         "active_plots": [],  # [{plot, status, since_ep}]
+        "active_pressure_vectors": [],  # [{text, source, cue_terms, since_ep}]
         "world_notes": [],  # 자유형 메모 (최대 10개)
         "world_laws": [],  # [{law, established_ep}] — 세계관 절대 법칙 (장기 기억 앵커)
         "timeline": [],  # [{ep, type, description}] — 시간 마커 (경과 시간, 계절, 날짜)
@@ -377,6 +417,17 @@ class WorldStateManager:
 
         except Exception as e:
             _logger.error("[WorldState] §7 완결 플롯 처리 실패: %s", e)
+
+        try:
+            # 7a. 지속 압박/위협 surface
+            if "active_pressure_vectors" in state_changes:
+                self._state["active_pressure_vectors"] = _normalize_pressure_vectors(
+                    state_changes.get("active_pressure_vectors") or [],
+                    fallback_ep=ep_num,
+                )[:5]
+
+        except Exception as e:
+            _logger.error("[WorldState] §7a 지속 압박/위협 처리 실패: %s", e)
 
         try:
             # 8. 동행자 변화
@@ -694,6 +745,8 @@ class WorldStateManager:
         try:
             if len(self._state["destroyed"]) > 100:
                 self._state["destroyed"] = self._state["destroyed"][-100:]
+            if len(self._state.get("active_pressure_vectors", [])) > 5:
+                self._state["active_pressure_vectors"] = self._state["active_pressure_vectors"][:5]
             if len(self._state.get("world_notes", [])) > 10:
                 self._state["world_notes"] = self._state["world_notes"][-10:]
         except Exception as e:
@@ -999,6 +1052,21 @@ class WorldStateManager:
                 plot_lines = [f"- {p.get('plot', 'unknown')} (제{p.get('since_ep', 'unknown')}화~)" for p in shown_plots]
                 plot_suffix = _build_truncation_suffix(len(plots), len(shown_plots))
                 parts.append(f"[진행 중 플롯{plot_suffix}]\n" + "\n".join(plot_lines))
+
+            pressure_vectors = self._state.get("active_pressure_vectors", [])
+            if pressure_vectors:
+                shown_vectors = pressure_vectors[:5]
+                pressure_lines = []
+                for vector in shown_vectors:
+                    if isinstance(vector, dict):
+                        text = str(vector.get("text", "") or "").strip()
+                    else:
+                        text = str(vector or "").strip()
+                    if text:
+                        pressure_lines.append(f"- {text}")
+                if pressure_lines:
+                    pressure_suffix = _build_truncation_suffix(len(pressure_vectors), len(shown_vectors))
+                    parts.append(f"[지속 압박/위협{pressure_suffix}]\n" + "\n".join(pressure_lines))
 
             # 세계관 절대 법칙
             world_laws = self._state.get("world_laws", [])

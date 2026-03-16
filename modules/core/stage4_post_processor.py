@@ -19,6 +19,55 @@ from modules.core.soft_failure import report_soft_failure, resolve_project_log_d
 class Stage4PostProcessor:
     """[B-1-1] Stage4 PASS 후처리 전담 모듈"""
 
+    _PRESSURE_STOPWORDS = {
+        "다음",
+        "계속",
+        "현재",
+        "상황",
+        "위기",
+        "긴장",
+        "시작",
+        "마침내",
+        "반격",
+        "예고",
+        "장면",
+        "순간",
+        "직후",
+        "직전",
+    }
+    _PRESSURE_PARTICLE_SUFFIXES = (
+        "으로부터",
+        "으로는",
+        "에서는",
+        "에게는",
+        "에게서",
+        "이라는",
+        "라는",
+        "이라고",
+        "라고",
+        "으로",
+        "에서",
+        "에게",
+        "한테",
+        "부터",
+        "까지",
+        "처럼",
+        "보다",
+        "으로",
+        "로",
+        "의",
+        "이",
+        "가",
+        "은",
+        "는",
+        "을",
+        "를",
+        "와",
+        "과",
+        "도",
+        "만",
+    )
+
     def __init__(self, ctx) -> None:
         self.ctx = ctx
 
@@ -141,6 +190,87 @@ class Stage4PostProcessor:
 
         entity_names.discard("")
         return {"event_types": event_types, "entity_names": entity_names, "summary_parts": summary_parts}
+
+    @classmethod
+    def _normalize_pressure_cue(cls, token: str) -> str:
+        text = re.sub(r"[^0-9A-Za-z가-힣]+", "", str(token or "").strip()).lower()
+        if not text or text.isdigit():
+            return ""
+        for suffix in cls._PRESSURE_PARTICLE_SUFFIXES:
+            if len(text) > len(suffix) + 1 and text.endswith(suffix):
+                text = text[: -len(suffix)]
+                break
+        if len(text) < 2 or text in cls._PRESSURE_STOPWORDS:
+            return ""
+        return text
+
+    @classmethod
+    def _extract_pressure_cue_terms(cls, text: str, *, max_terms: int = 5) -> list[str]:
+        cue_terms: list[str] = []
+        for token in re.findall(r"[0-9A-Za-z가-힣]+", str(text or "")):
+            normalized = cls._normalize_pressure_cue(token)
+            if normalized and normalized not in cue_terms:
+                cue_terms.append(normalized)
+            if len(cue_terms) >= max_terms:
+                break
+        return cue_terms
+
+    @classmethod
+    def _normalize_active_pressure_vectors(
+        cls,
+        raw_vectors,
+        *,
+        default_source: str = "",
+    ) -> list[dict]:
+        if not isinstance(raw_vectors, list):
+            return []
+
+        normalized_vectors: list[dict] = []
+        seen_texts: set[str] = set()
+        for raw in raw_vectors:
+            if isinstance(raw, dict):
+                text = str(raw.get("text") or raw.get("pressure") or raw.get("label") or "").strip()
+                source = str(raw.get("source") or default_source or "").strip()
+                cue_terms = raw.get("cue_terms", [])
+            else:
+                text = str(raw or "").strip()
+                source = str(default_source or "").strip()
+                cue_terms = []
+
+            if len(text) < 2 or text in seen_texts:
+                continue
+
+            normalized_terms: list[str] = []
+            if isinstance(cue_terms, list):
+                for cue in cue_terms:
+                    normalized = cls._normalize_pressure_cue(cue)
+                    if normalized and normalized not in normalized_terms:
+                        normalized_terms.append(normalized)
+            if not normalized_terms:
+                normalized_terms = cls._extract_pressure_cue_terms(text)
+
+            normalized_vectors.append(
+                {
+                    "source": source,
+                    "text": text[:240],
+                    "cue_terms": normalized_terms[:5],
+                }
+            )
+            seen_texts.add(text)
+
+        return normalized_vectors[:3]
+
+    @classmethod
+    def _build_active_pressure_vectors(cls, blueprint: dict | None) -> list[dict]:
+        if not isinstance(blueprint, dict):
+            return []
+
+        raw_vectors = []
+        for key in ("ending_hook", "cliffhanger", "expected_ending"):
+            value = blueprint.get(key)
+            if isinstance(value, str) and value.strip():
+                raw_vectors.append({"source": key, "text": value.strip()})
+        return cls._normalize_active_pressure_vectors(raw_vectors)
 
     # ------------------------------------------------------------------
     # [V73] 확정 원고 기준 자본금 역동기화
@@ -505,6 +635,7 @@ class Stage4PostProcessor:
             genre_type=_genre_type,
             critical_keys=_critical_keys,
             final_state_updates=final_state_updates,
+            blueprint=blueprint,
         )
         bible_delta = _delta["bible_delta"]
         actual_truth = _delta["actual_truth"]
@@ -776,6 +907,7 @@ class Stage4PostProcessor:
         genre_type,
         critical_keys,
         final_state_updates,
+        blueprint,
     ):
         """[B-1-9a:A3] Manager Future 회수 + bible_delta 조립 + state_log 저장.
 
@@ -852,6 +984,9 @@ class Stage4PostProcessor:
             prev_actual = {}
             if hasattr(self.ctx.current_project, "latest_state"):
                 prev_actual = self.ctx.current_project.latest_state.get("actual_truth", {})
+            prev_pressure_vectors = self._normalize_active_pressure_vectors(
+                prev_actual.get("active_pressure_vectors", []) if isinstance(prev_actual, dict) else []
+            )
 
             prev_inventory_counts = normalize_inventory_counts(
                 prev_actual.get("inventory_counts") if isinstance(prev_actual, dict) else {}
@@ -1008,6 +1143,13 @@ class Stage4PostProcessor:
             except Exception as _stv_err:
                 logging.warning("[SilentPass:V75] State-Text 검증 모듈 실패: %s", _stv_err)
 
+            active_pressure_vectors = self._build_active_pressure_vectors(blueprint)
+            pressure_vectors_changed = prev_pressure_vectors != active_pressure_vectors
+            if active_pressure_vectors or pressure_vectors_changed:
+                if not isinstance(actual_truth, dict):
+                    actual_truth = {}
+                actual_truth["active_pressure_vectors"] = list(active_pressure_vectors)
+
             all_new_items = list(set(new_items_from_equip + key_item_names + new_martial_arts))
 
             bible_delta = {
@@ -1025,6 +1167,8 @@ class Stage4PostProcessor:
                 "inventory_counts": curr_inventory_counts,
                 "inventory_count_deltas": inventory_count_deltas,
             }
+            if active_pressure_vectors or pressure_vectors_changed:
+                bible_delta["active_pressure_vectors"] = list(active_pressure_vectors)
 
             logging.debug("[P2] bible_delta ep=%d: items=%d, npcs=%d, deaths=%d",
                 next_ep,
@@ -1107,7 +1251,20 @@ class Stage4PostProcessor:
             except Exception as _cg_read_err:
                 logging.debug("[causal_graph] Director MC 주입 실패 (비치명): %s", _cg_read_err)
 
-            if actual_truth or state_updates_from_audit:
+            _should_persist_state_log = any(
+                [
+                    actual_truth,
+                    state_updates_from_audit,
+                    knowledge_map,
+                    karma_matrix,
+                    curr_inventory_counts,
+                    inventory_count_deltas,
+                    relationship_changes,
+                    active_pressure_vectors,
+                    pressure_vectors_changed,
+                ]
+            )
+            if _should_persist_state_log:
                 state_log_data = {
                     "actual_truth": actual_truth if actual_truth else final_state_updates,
                     "karma_matrix": karma_matrix,
@@ -1116,6 +1273,7 @@ class Stage4PostProcessor:
                     "inventory_counts": curr_inventory_counts,
                     "inventory_count_deltas": inventory_count_deltas,
                     "relationship_changes": relationship_changes,
+                    "active_pressure_vectors": list(active_pressure_vectors),
                 }
                 try:
                     summary = f"제{next_ep}화 정산: {', '.join(all_new_items[:3]) if all_new_items else '변화없음'}"
@@ -1136,6 +1294,7 @@ class Stage4PostProcessor:
                 + len(new_npc_names)
                 + len(npc_deaths)
                 + len(relationship_changes)
+                + len(active_pressure_vectors)
                 + len(reveal_list)
             )
             if changes_count > 0:
@@ -1146,6 +1305,11 @@ class Stage4PostProcessor:
                     self.ctx.ui.log(f"      • 신규/갱신 NPC: {', '.join(new_npc_names[:5])}")
                 if npc_deaths:
                     self.ctx.ui.log(f"      • NPC 사망: {', '.join(npc_deaths)}")
+                if active_pressure_vectors:
+                    self.ctx.ui.log(
+                        "      • 지속 압박/위협: "
+                        + ", ".join(vector.get("text", "")[:40] for vector in active_pressure_vectors[:2])
+                    )
                 if reveal_list:
                     self.ctx.ui.log(f"      • 복선 회수: {', '.join(reveal_list[:3])}")
             else:
@@ -1170,6 +1334,7 @@ class Stage4PostProcessor:
 
         _inventory_payload = {}
         _relationship_payload = {}
+        _pressure_payload = {}
         if isinstance(bible_delta, dict):
             _inventory_counts = bible_delta.get("inventory_counts")
             _inventory_count_deltas = bible_delta.get("inventory_count_deltas")
@@ -1180,6 +1345,14 @@ class Stage4PostProcessor:
             _rel_changes = bible_delta.get("relationship_changes")
             if isinstance(_rel_changes, list) and _rel_changes:
                 _relationship_payload["relationship_changes"] = list(_rel_changes)
+            _state_changes = bible_delta.get("state_changes")
+            _pressure_vectors = None
+            if "active_pressure_vectors" in bible_delta:
+                _pressure_vectors = bible_delta.get("active_pressure_vectors")
+            elif isinstance(_state_changes, dict) and "active_pressure_vectors" in _state_changes:
+                _pressure_vectors = _state_changes.get("active_pressure_vectors")
+            if isinstance(_pressure_vectors, list):
+                _pressure_payload["active_pressure_vectors"] = list(_pressure_vectors)
 
         try:
             _ws_snap = _copy.deepcopy(self.ctx.world_state._state) if self.ctx.world_state else None
@@ -1200,6 +1373,8 @@ class Stage4PostProcessor:
                         _ws_sc.update(_inventory_payload)
                     if _relationship_payload:
                         _ws_sc.update(_relationship_payload)
+                    if _pressure_payload:
+                        _ws_sc.update(_pressure_payload)
                     if _ws_sc:
                         self.ctx.world_state.update_from_state_changes(next_ep, _ws_sc)
 

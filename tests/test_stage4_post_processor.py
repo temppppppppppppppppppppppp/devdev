@@ -579,7 +579,7 @@ class TestProcessPassResult:
                 "new_misled": ["이서연"],
             },
             "recovered_seeds": [],
-            "state_updates": {"actual_truth": {}},
+            "state_updates": {},
             "causal_links": [],
         }
 
@@ -604,6 +604,7 @@ class TestProcessPassResult:
         assert result is True
 
         # state_log에 relationship_changes 존재
+        pp.ctx.current_project.db.save_state_log_with_summary.assert_called_once()
         saved_state_log = pp.ctx.current_project.db.save_state_log_with_summary.call_args.args[1]
         rel_in_log = saved_state_log["relationship_changes"]
         assert len(rel_in_log) == 2
@@ -620,6 +621,55 @@ class TestProcessPassResult:
         fl_changes = pp.ctx.fact_ledger.update_from_state_changes.call_args.args[1]
         assert "relationship_changes" in fl_changes
         assert fl_changes["relationship_changes"][1]["npc"] == "이서연"
+
+    def test_active_pressure_vectors_flow_into_state_log_bible_and_world_state(self, tmp_path):
+        """ending_hook/cliffhanger가 active_pressure_vectors로 persisted canonical path에 들어가는지 검증."""
+        pp = self._make_pp()
+        pp.ctx.current_project.db.save_manuscript.return_value = True
+        pp.ctx.current_project.latest_state = {}
+        pp.ctx.agents["manager"].update_state_and_lore_v20.return_value = {
+            "new_lore": {},
+            "knowledge_map_updates": {},
+            "recovered_seeds": [],
+            "state_updates": {},
+            "causal_links": [],
+        }
+
+        pp.ctx.world_state = MagicMock()
+        pp.ctx.world_state._state = {}
+        pp.ctx.fact_ledger = MagicMock()
+        pp.ctx.fact_ledger._ledger = {}
+        pp.ctx.fact_ledger.get_stats.return_value = {"characters": 0, "items": 0}
+
+        result = pp.process_pass_result(
+            next_ep=4,
+            final_manuscript="독기가 아직 가시지 않았다. 복도 끝의 발소리가 더 가까워졌다. " * 120,
+            final_title="테스트",
+            final_state_updates={},
+            blueprint={
+                "scene_breakdown": [],
+                "ending_hook": "독이 퍼지기 시작했다. 해독제가 필요하다.",
+                "cliffhanger": "흑풍회의 추격대가 문 앞에 도착했다.",
+            },
+            arc_data={"arc_no": 1},
+            output_dir=tmp_path,
+            v50_modules_available=False,
+            extract_chain_link_fn=lambda *_args, **_kwargs: {},
+        )
+
+        assert result is True
+
+        saved_state_log = pp.ctx.current_project.db.save_state_log_with_summary.call_args.args[1]
+        assert saved_state_log["actual_truth"]["active_pressure_vectors"][0]["source"] == "ending_hook"
+        assert saved_state_log["active_pressure_vectors"][1]["text"] == "흑풍회의 추격대가 문 앞에 도착했다."
+
+        saved_bible = pp.ctx.current_project.db.save_episode_bible.call_args.args[1]
+        assert saved_bible["state_changes"]["active_pressure_vectors"][0]["text"] == "독이 퍼지기 시작했다. 해독제가 필요하다."
+
+        ws_changes = pp.ctx.world_state.update_from_state_changes.call_args.args[1]
+        assert ws_changes["active_pressure_vectors"][1]["text"] == "흑풍회의 추격대가 문 앞에 도착했다."
+
+        pp.ctx.fact_ledger.update_from_state_changes.assert_not_called()
 
 
 class TestRunPostEpisodeTasks:

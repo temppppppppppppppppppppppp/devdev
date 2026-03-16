@@ -24,11 +24,60 @@ from modules.validation.threshold_helper import _threshold  # [Phase 5-B-2c]
 
 class ContinuityValidator:
     """
+    _PRESSURE_STOPWORDS = {
     TIER 0.5: 에피소드 간 연속성 검증
 
     BLOCKING보다 먼저 실행되어야 함.
     직전 에피소드 상태와 현재 원고/블루프린트 간 모순 감지.
     """
+
+    _PRESSURE_STOPWORDS = {
+        "다음",
+        "계속",
+        "현재",
+        "상황",
+        "위기",
+        "긴장",
+        "시작",
+        "마침내",
+        "반격",
+        "예고",
+        "장면",
+        "순간",
+        "직후",
+        "직전",
+    }
+    _PRESSURE_PARTICLE_SUFFIXES = (
+        "으로부터",
+        "으로는",
+        "에서는",
+        "에게서",
+        "에게는",
+        "이라는",
+        "라는",
+        "이라고",
+        "라고",
+        "으로",
+        "에서",
+        "에게",
+        "한테",
+        "부터",
+        "까지",
+        "처럼",
+        "보다",
+        "로",
+        "의",
+        "이",
+        "가",
+        "은",
+        "는",
+        "을",
+        "를",
+        "와",
+        "과",
+        "도",
+        "만",
+    )
 
     def __init__(self, context=None) -> None:
         """
@@ -161,6 +210,11 @@ class ContinuityValidator:
         if not count_check["passed"]:
             violations.extend(count_check["violations"])
         warnings.extend(count_check.get("warnings", []))
+
+        pressure_check = self._check_active_pressure_continuity(current_ep, manuscript, prev_hud)
+        if not pressure_check["passed"]:
+            violations.extend(pressure_check["violations"])
+        warnings.extend(pressure_check.get("warnings", []))
 
         # ═══════════════════════════════════════════════════════════════
         # 검증 2: 무기 소지 연속성
@@ -323,6 +377,103 @@ class ContinuityValidator:
         if equipment_data is None:
             equipment_data = hud.get("equipment", [])
         return normalize_inventory_counts(equipment_data)
+
+    def _normalize_pressure_cue(self, token: str) -> str:
+        text = re.sub(r"[^0-9A-Za-z가-힣]+", "", str(token or "").strip()).lower()
+        if not text or text.isdigit():
+            return ""
+        for suffix in self._PRESSURE_PARTICLE_SUFFIXES:
+            if len(text) > len(suffix) + 1 and text.endswith(suffix):
+                text = text[: -len(suffix)]
+                break
+        if len(text) < 2 or text in self._PRESSURE_STOPWORDS:
+            return ""
+        return text
+
+    def _extract_pressure_terms(self, text: str, *, max_terms: int = 8) -> list[str]:
+        terms: list[str] = []
+        for token in re.findall(r"[0-9A-Za-z가-힣]+", str(text or "")):
+            normalized = self._normalize_pressure_cue(token)
+            if normalized and normalized not in terms:
+                terms.append(normalized)
+            if len(terms) >= max_terms:
+                break
+        return terms
+
+    def _extract_active_pressure_vectors(self, hud: dict) -> list[dict]:
+        if not isinstance(hud, dict):
+            return []
+
+        actual_truth = hud.get("actual_truth", {})
+        if not isinstance(actual_truth, dict):
+            actual_truth = {}
+
+        raw_vectors = None
+        if "active_pressure_vectors" in actual_truth:
+            raw_vectors = actual_truth.get("active_pressure_vectors")
+        elif "active_pressure_vectors" in hud:
+            raw_vectors = hud.get("active_pressure_vectors")
+
+        vectors: list[dict] = []
+        seen_texts: set[str] = set()
+        if not isinstance(raw_vectors, list):
+            return vectors
+
+        for raw in raw_vectors:
+            if isinstance(raw, dict):
+                text = str(raw.get("text") or raw.get("pressure") or raw.get("label") or "").strip()
+                cue_terms = raw.get("cue_terms", [])
+            else:
+                text = str(raw or "").strip()
+                cue_terms = []
+            if len(text) < 2 or text in seen_texts:
+                continue
+
+            normalized_terms: list[str] = []
+            if isinstance(cue_terms, list):
+                for cue in cue_terms:
+                    normalized = self._normalize_pressure_cue(cue)
+                    if normalized and normalized not in normalized_terms:
+                        normalized_terms.append(normalized)
+            if not normalized_terms:
+                normalized_terms = self._extract_pressure_terms(text)
+
+            vectors.append({"text": text, "cue_terms": normalized_terms})
+            seen_texts.add(text)
+
+        return vectors
+
+    def _check_active_pressure_continuity(self, current_ep: int, manuscript: str, prev_hud: dict) -> dict:
+        """Persisted active pressure vectors should still surface in the opening unless intentionally cleared."""
+        pressure_vectors = self._extract_active_pressure_vectors(prev_hud)
+        if not pressure_vectors:
+            return {"passed": True, "violations": [], "warnings": []}
+
+        opening_text = manuscript[:1000] if len(manuscript) > 1000 else manuscript
+        opening_terms = set(self._extract_pressure_terms(opening_text, max_terms=24))
+        lowered_opening = opening_text.lower()
+
+        warnings = []
+        for vector in pressure_vectors[:3]:
+            vector_text = str(vector.get("text", "") or "").strip()
+            cue_terms = [str(term).strip() for term in vector.get("cue_terms", []) if str(term).strip()]
+            if vector_text and vector_text.lower() in lowered_opening:
+                continue
+            if cue_terms and any(term in opening_terms for term in cue_terms):
+                continue
+            warnings.append(
+                {
+                    "type": "threat_carryover_drift",
+                    "severity": "WARNING",
+                    "pressure_text": vector_text,
+                    "cue_terms": cue_terms,
+                    "prev_ep": current_ep - 1,
+                    "reason": "직전 화의 지속 압박/위협이 opening 초반에서 감지되지 않음",
+                    "fix_suggestion": "opening 초반에 직전 화의 위협/압박을 재호명하거나, 이미 해소됐다면 그 해소 근거를 먼저 명시하세요.",
+                }
+            )
+
+        return {"passed": True, "violations": [], "warnings": warnings}
 
     def _check_item_continuity(
         self, current_ep: int, manuscript: str, prev_hud: dict, prev_manuscript: str | None
