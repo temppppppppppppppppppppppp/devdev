@@ -3,14 +3,14 @@
 Date: 2026-03-16
 Status: completed (all queue items closed)
 Canonical Path: `docs/2026-03-16/active-temp-queue-execution-roadmap.md`
-Temp Mirror Path: `docs/temp/execution-roadmap.md`
+Temp Mirror Path: `docs/temp/execution-roadmap.md` (removed after closure)
 Commit State:
-- Baseline Commit: `5a0177666e6877070d726d983d3c3e1d03e812d2`
-- Baseline Dirty Summary: `dirty: 2 tracked, 21 untracked; hotspots: projects/0_260316/project_data.db, docs/2026-03-16/*, docs/temp/*.md, projects/0_260316/0_temp.txt`
+- Baseline Commit: `3167fb2039ae54266d40f5d00d21b63f722a90de`
+- Baseline Dirty Summary: `dirty: 1 tracked; hotspot: projects/test_project/logs/episode_production.jsonl`
 - Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `desktop-stage0-edr-code1-failure and investment-stage0-ui-hints-and-style-cache-visibility are closed; project-0-260316 remains active after bounded fixable-firewall, contradiction-payload, persisted-prev-hud, mandatory-context authority-precedence, and inventory-count-aware loops that passed targeted regressions`
+- Resume Drift Summary: `none`
 Queue Snapshot:
-- `docs/temp/project-0-260316-execution-ssot.md`
+- none (queue exhausted; only `docs/temp/README.md` remains)
 3-Pass Audit:
 - Pass 1 Structure and Scope: completed
 - Pass 2 Evidence and Consistency: completed
@@ -27,7 +27,7 @@ Queue Snapshot:
 
 | Item | Canonical Path | Temp Path | Status | Notes |
 | --- | --- | --- | --- | --- |
-| project-0-260316 | `docs/2026-03-16/project-0-260316-execution-ssot.md` | `docs/temp/project-0-260316-execution-ssot.md` | in progress | Stage 4 continuity substrate hardening for the 0_260316 evidence corpus |
+| project-0-260316 | `docs/2026-03-16/project-0-260316-execution-ssot.md` | `docs/temp/project-0-260316-execution-ssot.md` | completed | Stage 4 continuity substrate hardening for the 0_260316 evidence corpus |
 
 ## 2A. Recent Closure
 
@@ -66,13 +66,26 @@ Queue Snapshot:
   - `tests/test_stage4_context_builder.py` -> `51 passed`
   - `tests/test_stage4_orchestrator.py` -> `58 passed`
   - `tests/test_continuity_packet.py` -> `18 passed`
-- `relationship/threat delta durable persistence` landed: format fix (strings→dicts) + state_log inclusion + WorldState/FactLedger extraction
+- `relationship delta durable persistence` landed: format fix (strings→dicts) + state_log inclusion + WorldState/FactLedger extraction + state_log gate fix for `knowledge_map`-only cases
 - `preflight/validator severity` evaluated: no change needed — inventory_count_drift + RelDrift advisory already operational
-- all project-specific priority items are now closed
+- `threat carry-over durable persistence` landed as `active_pressure_vectors`
+  - producer: `stage4_post_processor` now derives/persists normalized pressure vectors through `actual_truth`, `state_logs`, and `bible_delta`
+  - canonical sink: `world_state` now stores the current unresolved pressure set and exposes `[지속 압박/위협]`
+  - Stage 4 consumers: condensed `stage4_context_builder` summary and `stage4_interview_round` prev_hud merge now surface the same persisted vectors
+  - validator: `continuity_validator` now warns with `threat_carryover_drift` when opening cues disappear
+- targeted verification passed for the threat tranche:
+  - `tests/test_stage4_post_processor.py` -> `45 passed`
+  - `tests/test_world_state_caps.py` + `tests/test_world_state_manager.py` -> `9 passed`
+  - `tests/test_validation.py` -> `30 passed`
+  - `tests/test_stage4_context_builder.py` -> `52 passed`
+  - `tests/test_stage4_cv_context.py` -> `21 passed`
+  - `tests/test_stage4_interview_round.py` -> `80 passed`
+  - `python -m ruff check ...` -> `All checks passed`
+- `project-0-260316` closure criteria are now satisfied; queue cleanup can proceed
 
 ## 3. Dependency Graph
 
-- no remaining cross-item hard dependency exists because only one active queue item remains.
+- no remaining cross-item hard dependency exists because the final active queue item is now closed.
 - shared substrate:
   - temp queue governance
   - document re-audit before implementation
@@ -89,13 +102,13 @@ Priority basis:
 1. `project-0-260316`
 
 Rationale:
-- `project-0-260316` is now the sole remaining active queue item, so the queue should not widen again until its canonical validity gate is refreshed against the current workspace state.
+- `project-0-260316` was the sole remaining active queue item and is now complete.
 
 ## 4B. Next Selected Item
 
-- next active queue item: `project-0-260316`
+- next active queue item: none
 - next loop entry condition:
-  - re-run that SSOT's current-code validity check before any code modification
+  - queue exhausted; use the companion system SSOT if a new tranche is explicitly selected
 
 ## 4A. Automatic Queue Loop
 
@@ -129,7 +142,8 @@ Loop rule:
   - persisted prev_hud precedence is already landed in the Stage 4 CV path; do not reopen it unless the next validity gate finds drift
   - mandatory-context authority precedence between canonical persisted layers and overlapping state_tracker summaries is already landed; do not reopen it unless the next validity gate finds drift
   - count-aware inventory persistence plus opening drift detection is already landed; do not reopen it unless the next validity gate finds drift
-  - next sub-target is `relationship/threat delta durable persistence`
+  - relationship delta durable persistence is closed; do not reopen it unless a new validity gate finds drift
+  - threat carry-over durable persistence is now closed via `active_pressure_vectors`; do not reopen it unless a new validity gate finds drift
   - land authority and persistence substrate fixes before ep7 recovery decisions
 - completion signal:
   - regression corpus and acceptance criteria in the 0_260316 SSOT pass
@@ -156,7 +170,7 @@ Loop rule:
 | --- | --- | --- | --- |
 | desktop-stage0-edr-code1-failure | completed | 2026-03-16 | closed and removed from active temp queue |
 | investment-stage0-ui-hints-and-style-cache-visibility | completed | 2026-03-16 | closed and removed from active temp queue |
-| project-0-260316 | **completed** — all priority items landed and verified | 2026-03-16 | none |
+| project-0-260316 | completed — relationship and threat carry-over substrates closed | 2026-03-16 | none |
 
 ## 8. Queue Cleanup Rule
 

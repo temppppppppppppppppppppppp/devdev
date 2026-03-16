@@ -1,13 +1,19 @@
 # Project 0_260316 Unified Execution SSOT
 
 Date: 2026-03-16
-Status: active canonical
+Status: completed canonical
 Canonical Path: `docs/2026-03-16/project-0-260316-execution-ssot.md`
-Temp Mirror Path: `docs/temp/project-0-260316-execution-ssot.md`
+Temp Mirror Path: `docs/temp/project-0-260316-execution-ssot.md` (removed after closure)
+Commit State:
+- Baseline Commit: `3167fb2039ae54266d40f5d00d21b63f722a90de`
+- Baseline Dirty Summary: `dirty: 1 tracked; hotspot: projects/test_project/logs/episode_production.jsonl`
+- Resume Commit: `same-as-baseline`
+- Resume Drift Summary: `none`
 Companion System SSOT: `docs/2026-03-16/broken-feedback-loop-remediation-execution-ssot.md`
 Source Survey Docs:
 - `docs/2026-03-16/project-0-260316-3arc-run-stop-survey.md`
 - `docs/2026-03-16/project-0-260316-stage4-continuity-and-codebase-survey.md`
+- `docs/2026-03-16/project-0-260316-threat-carryover-delta-audit.md`
 - `docs/2026-03-16/project-0-260316-pass-with-fix-firewall-survey.md`
 - `docs/2026-03-16/project-0-260316-ai-slop-feedback-loop-survey.md`
 - `docs/2026-03-16/OPUS_freshrun-0_260316-interruption-forensics.md`
@@ -226,7 +232,7 @@ Core reconciliation sentence:
 - `prev_hud` continuity now prefers persisted prior-episode truth, and overlapping `state_tracker` prompt summaries now defer to canonical persisted layers inside Stage 4 mandatory context; residual app-init object mixing still remains (`stage4_interview_round.py:3977-4044`, `stage4_context_builder.py:2339-2393`, `main_a.py:4043-4096`)
 - bounded local-fix routing is now landed, but only for narrow name/title/location/banned-term cases (`director_ensemble.py:1244-1571`)
 - contradiction payload now survives into retry and PASS_WITH_FIX feedback, but persisted-snapshot/authority issues still dominate the broader continuity risk (`stage4_interview_round.py:340-438`, `stage4_interview_round.py:3505-3604`, `stage4_interview_round.py:4681-4710`)
-- count-aware inventory persistence and opening drift detection are now landed, but relationship/threat carry-over and severity policy are still open (`inventory_state.py`, `stage4_post_processor.py`, `world_state.py`, `fact_ledger.py`, `continuity_validator.py`)
+- count-aware inventory persistence, relationship carry-over, and threat carry-over are now landed as persisted canonical surfaces; severity policy remains a validated no-change (`inventory_state.py`, `stage4_post_processor.py`, `world_state.py`, `fact_ledger.py`, `stage4_context_builder.py`, `stage4_interview_round.py`, `continuity_validator.py`)
 - preflight weakens office-state issues that matter in this project (`stage4_orchestrator.py:485-527`)
 
 **Shared bundle boundary**
@@ -247,9 +253,10 @@ The items above are canonicalized in the companion system SSOT and appear here o
 - only after that validity check passes should `0_260316` be used as the regression gate for shared findings
 
 **Priority order**
-1. ~~relationship/threat delta durable persistence~~ → **completed**
-2. ~~preflight/validator severity 정책 수정~~ → **evaluated: no change needed** (inventory_count_drift in continuity_validator already structurally detects count drift; preflight genre-tolerance TF-49b is intentional; RelDrift advisory is operational)
-3. use `0_260316` as the regression gate for companion system SSOT tranches
+1. ~~relationship delta durable persistence~~ → **completed** (state_log gate re-audited and fixed for `knowledge_map`-only cases)
+2. ~~threat carry-over durable persistence~~ → **completed** (`active_pressure_vectors` now persists through `actual_truth/state_log/bible_delta/world_state` and re-enters Stage 4 continuity surfaces)
+3. ~~preflight/validator severity 정책 수정~~ → **evaluated: no change needed** (inventory_count_drift in continuity_validator already structurally detects count drift; preflight genre-tolerance TF-49b is intentional; RelDrift advisory is operational)
+4. use `0_260316` as the regression gate for companion system SSOT tranches
 
 **Current loop delta (2026-03-16)**
 - bounded implementation landed for `fixable-firewall routing + detailed contradiction payload persistence`
@@ -280,22 +287,29 @@ The items above are canonicalized in the companion system SSOT and appear here o
   - `python -m pytest -q tests/test_stage4_context_builder.py` -> `51 passed`
   - `python -m pytest -q tests/test_stage4_orchestrator.py` -> `58 passed`
   - `python -m pytest -q tests/test_continuity_packet.py` -> `18 passed`
-- bounded implementation also landed for `relationship/threat delta durable persistence`
+- bounded implementation also landed for `relationship delta durable persistence`
 - `modules/core/stage4_post_processor.py:948-964` now generates relationship_changes as dict format `{npc, to, from}` instead of flat strings, matching what `world_state.py` and `fact_ledger.py` expect
-- `modules/core/stage4_post_processor.py:1103-1111` now includes `relationship_changes` in `state_log_data` (previously missing)
+- `modules/core/stage4_post_processor.py` now persists `relationship_changes` to `state_log_data` even when the audit only returned `knowledge_map_updates` and no `actual_truth`
 - `modules/core/stage4_post_processor.py:1162-1172` now extracts `relationship_changes` from `bible_delta` as `_relationship_payload` (parallel to `_inventory_payload`)
 - `modules/core/stage4_post_processor.py:1186-1190` and `1222-1226` now merge `_relationship_payload` into WorldState and FactLedger update calls
 - the full pipeline is: generation (dict format) → bible_delta → state_log → extraction → WorldState.update_from_state_changes() → FactLedger.update_from_state_changes() → persisted summary → re-injection via Stage 4 context_builder
+- bounded implementation now also landed for `threat carry-over durable persistence`
+- `modules/core/stage4_post_processor.py` now derives `active_pressure_vectors` from blueprint end-state signals (`ending_hook`, `cliffhanger`, `expected_ending`), normalizes cue terms, and persists them through `actual_truth`, `state_log_data`, and `bible_delta`
+- `modules/core/stage4_post_processor.py` now extracts `active_pressure_vectors` from `bible_delta/state_changes` during atomic metadata save and merges them into `WorldState.update_from_state_changes()`
+- `modules/core/world_state.py` now treats `active_pressure_vectors` as a first-class canonical surface, persists the current episode's unresolved pressure set, replays it on rollback, and surfaces `[지속 압박/위협]` in the canonical summary
+- `modules/core/stage4_context_builder.py` now keeps `[지속 압박/위협]` visible even in the condensed world-state summary path used when Continuity Packet entities are already injected
+- `modules/core/stage4_interview_round.py` now merges persisted `active_pressure_vectors` into `prev_hud` resolution even when `manuscript.hud_snapshot` wins source precedence, so the continuity validator sees the same durable threat surface
+- `modules/validation/continuity_validator.py` now emits `threat_carryover_drift` warnings when the opening drops all persisted pressure cues from the prior episode
 - preflight/validator severity evaluated: no code change needed — `inventory_count_drift` (WARNING) in continuity_validator handles count drift structurally; TF-49b preflight genre-tolerance is intentional; `RelDrift` advisory (MAJOR) is already operational in Stage 4 interview round L4573-4619
 - targeted verification passed:
-  - `tests/test_stage4_post_processor.py` -> `44 passed` (+1 new: `test_relationship_changes_flow_into_state_log_and_state_sinks`)
-  - `tests/test_world_state_manager.py` -> `2 passed`
-  - `tests/test_fact_ledger.py` -> `14 passed`
-  - `tests/test_validation.py` -> `29 passed`
+  - `tests/test_stage4_post_processor.py` -> `45 passed` (+1 new: `test_active_pressure_vectors_flow_into_state_log_bible_and_world_state`)
+  - `tests/test_world_state_caps.py` + `tests/test_world_state_manager.py` -> `9 passed`
+  - `tests/test_validation.py` -> `30 passed`
+  - `tests/test_stage4_cv_context.py` -> `21 passed`
   - `tests/test_stage4_interview_round.py` -> `80 passed`
-  - `tests/test_stage4_context_builder.py` -> `51 passed`
-  - `tests/test_stage4_orchestrator.py` -> `58 passed` (shard) + `tests/test_inventory_state.py` -> `2 passed` + `tests/test_world_state_caps.py` -> `6 passed` + `tests/test_continuity_packet.py` -> `18 passed`
-- project-specific system remediation: **all priority items closed**
+  - `tests/test_stage4_context_builder.py` -> `52 passed`
+  - `python -m ruff check ...` on touched producer/sink/validator files -> `All checks passed`
+- project-specific system remediation status: `relationship` and `threat` carry-over are both closed; only non-project-specific follow-ups remain
 
 **PASS_WITH_FIX subfinding**
 - highest-confidence local-fix candidates in `0_260316` are `ep4 round 0`, `ep4 round 1`, and `ep5 round 0`
@@ -309,7 +323,7 @@ The items above are canonicalized in the companion system SSOT and appear here o
 
 **Engineering stance**
 - operational decision: resume 가능
-- project-specific engineering decision: **resolved** — all priority items (relationship persistence, preflight severity, inventory counts, fixable firewall, prev_hud precedence, mandatory context authority) are landed and verified
+- project-specific engineering decision: **resolved** — relationship persistence and threat carry-over now both use persisted canonical substrates
 - bundle-wide broken feedback remediation authority: companion system SSOT
 
 ## Acceptance Criteria
@@ -320,12 +334,13 @@ The items above are canonicalized in the companion system SSOT and appear here o
 - no extra DB repair or artifact cleanup is required beforehand
 - continuation is clean, meaning no ep7 partial remnants had to be reconciled first
 
-### Project-Specific System Remediation Closure
+### Project-Specific System Remediation Status
 
 - [x] stale arc/state material can no longer override Tier 1 truth — mandatory_context authority precedence landed
 - [x] continuity uses a persisted previous snapshot instead of live HUD state — prev_hud persisted precedence landed
 - [x] `2 vs 3 computers` class drift becomes structurally detectable — inventory_count_drift in continuity_validator
-- [x] relationship and threat carry-over survive as durable state — relationship_changes dict pipeline landed (format fix + state_log + WorldState + FactLedger extraction)
+- [x] relationship carry-over survives as durable state — relationship_changes dict pipeline landed (format fix + state_log + WorldState + FactLedger extraction, plus `knowledge_map`-only state_log persistence)
+- [x] threat carry-over survives as durable state — `active_pressure_vectors` now persists via `actual_truth/state_log/bible_delta/world_state`, re-enters Stage 4 mandatory context, and emits `threat_carryover_drift` warnings when opening continuity drops it
 - [x] fixable-firewall local contradictions no longer force unnecessary outer rounds — fixable_firewall routing landed
 - companion system SSOT tranche work starts only after a current-code validity check confirms the shared assumptions still match live code
 - companion system SSOT tranche changes validate against `0_260316` without altering the project recovery facts above

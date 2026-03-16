@@ -894,6 +894,45 @@ class TestBuildMandatoryContext:
         assert "[아이템 상태]" in text
 
     @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")
+    def test_condensed_world_state_summary_keeps_active_pressure_vectors(self, *_mocks):
+        ctx = _make_ctx()
+        ctx.world_state = MagicMock()
+        ctx.world_state._state = {
+            "last_updated_ep": 8,
+            "protagonist": {"name": "서진우", "location": "지하실"},
+            "active_pressure_vectors": [
+                {"text": "해독제를 찾지 못하면 독이 전신으로 퍼진다.", "since_ep": 8},
+                {"text": "추격대가 문 앞까지 도착했다.", "since_ep": 8},
+            ],
+        }
+        ctx.world_state.get_summary.return_value = "[fallback world state]"
+        ctx.world_state.get_timeline_summary.return_value = ""
+        ctx.world_state.get_canonical_constraints.return_value = ""
+        ctx.state_tracker = MagicMock()
+        ctx.state_tracker.get_all_summaries.return_value = {}
+        cb = Stage4ContextBuilder(ctx)
+        anchor_sys = MagicMock()
+        anchor_sys.get_relevant_anchors.return_value = []
+        anchor_sys.get_critical_anchors.return_value = []
+
+        result = cb.build_mandatory_context(
+            next_ep=9,
+            blueprint={"scene_breakdown": [{"npcs": ["장천"]}]},
+            arc_data={"arc_no": 2, "state_changes": {"npc_deaths": ["장천"]}},
+            arc_tactical="전술",
+            prev_text="이전 원고 " * 30,
+            prev_ending="엔딩",
+            hud_report="HUD",
+            writer_agent=MagicMock(),
+            anchor_sys=anchor_sys,
+            s4_genre_type="wuxia",
+            v50_modules_available=False,
+        )
+
+        assert "[지속 압박/위협]" in result["mandatory_context"]
+        assert "해독제를 찾지 못하면 독이 전신으로 퍼진다." in result["mandatory_context"]
+
+    @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")
     def test_uses_advisor_retrieval_plan_when_available(self, *_mocks):
         ctx = _make_ctx()
         ctx.memory = MagicMock()

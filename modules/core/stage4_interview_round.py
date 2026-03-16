@@ -3974,6 +3974,27 @@ class Stage4InterviewRound:
             logging.warning(f"[SilentPass:InterviewRound] npc_profiles fallback 실패: {_npc_err!s:.100}")
             return {}
 
+    @staticmethod
+    def _merge_prev_hud_extras(hud_snapshot: dict, state_data: dict) -> dict:
+        if not isinstance(hud_snapshot, dict):
+            return {}
+        if not isinstance(state_data, dict):
+            return copy.deepcopy(hud_snapshot)
+
+        merged = copy.deepcopy(hud_snapshot)
+        actual_truth = state_data.get("actual_truth", {})
+        if not isinstance(actual_truth, dict):
+            actual_truth = {}
+
+        for key in ("active_pressure_vectors",):
+            if key in merged:
+                continue
+            if key in actual_truth:
+                merged[key] = copy.deepcopy(actual_truth.get(key))
+            elif key in state_data:
+                merged[key] = copy.deepcopy(state_data.get(key))
+        return merged
+
     def _resolve_prev_hud_snapshot(self, next_ep: int) -> tuple[dict, str]:
         """Prefer persisted previous-episode truth over live HUD fallback."""
         if next_ep <= 1:
@@ -3981,6 +4002,8 @@ class Stage4InterviewRound:
 
         _db = getattr(getattr(self.ctx, "current_project", None), "db", None)
         _prev_ep = next_ep - 1
+        _prev_ms = None
+        _state_data = {}
 
         if _db:
             try:
@@ -3989,11 +4012,6 @@ class Stage4InterviewRound:
                 logging.warning(
                     f"[SilentPass:InterviewRound] prev_hud manuscript load 실패: {_ms_err!s:.100}"
                 )
-            else:
-                if isinstance(_prev_ms, dict):
-                    _hud_snapshot = _prev_ms.get("hud_snapshot")
-                    if isinstance(_hud_snapshot, dict) and _hud_snapshot:
-                        return _hud_snapshot, "manuscript.hud_snapshot"
 
             try:
                 _state_log = _db.load_state_log(_prev_ep)
@@ -4002,21 +4020,29 @@ class Stage4InterviewRound:
                     f"[SilentPass:InterviewRound] prev_hud state_log load 실패: {_state_err!s:.100}"
                 )
             else:
-                _state_data = _state_log.get("data", {}) if isinstance(_state_log, dict) else {}
-                if isinstance(_state_data, dict):
-                    _hud_snapshot = _state_data.get("hud_snapshot")
-                    if isinstance(_hud_snapshot, dict) and _hud_snapshot:
-                        return _hud_snapshot, "state_logs.data.hud_snapshot"
+                _loaded_state = _state_log.get("data", {}) if isinstance(_state_log, dict) else {}
+                if isinstance(_loaded_state, dict):
+                    _state_data = _loaded_state
 
-                    _actual_truth = _state_data.get("actual_truth")
-                    if isinstance(_actual_truth, dict) and _actual_truth:
-                        return _actual_truth, "state_logs.data.actual_truth"
+            if isinstance(_prev_ms, dict):
+                _hud_snapshot = _prev_ms.get("hud_snapshot")
+                if isinstance(_hud_snapshot, dict) and _hud_snapshot:
+                    return self._merge_prev_hud_extras(_hud_snapshot, _state_data), "manuscript.hud_snapshot"
+
+            if isinstance(_state_data, dict):
+                _hud_snapshot = _state_data.get("hud_snapshot")
+                if isinstance(_hud_snapshot, dict) and _hud_snapshot:
+                    return self._merge_prev_hud_extras(_hud_snapshot, _state_data), "state_logs.data.hud_snapshot"
+
+                _actual_truth = _state_data.get("actual_truth")
+                if isinstance(_actual_truth, dict) and _actual_truth:
+                    return self._merge_prev_hud_extras(_actual_truth, _state_data), "state_logs.data.actual_truth"
 
         try:
             if hasattr(self.ctx.sys, "hud") and self.ctx.sys.hud:
                 _prev_hud = self.ctx.sys.hud.pro_root
                 if isinstance(_prev_hud, dict) and _prev_hud:
-                    return _prev_hud, "live_hud.pro_root"
+                    return self._merge_prev_hud_extras(_prev_hud, _state_data), "live_hud.pro_root"
         except Exception as _hud_err:
             logging.warning(f"[SilentPass:InterviewRound] prev_hud live fallback 실패: {_hud_err!s:.100}")
 
