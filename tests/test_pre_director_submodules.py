@@ -82,6 +82,17 @@ class TestDialogueRatio:
         # 과다 대화이므로 WARNING 또는 PASS
         assert any(i.severity in (CheckSeverity.WARNING, CheckSeverity.PASS) for i in items)
 
+    def test_dialogue_target_from_context_raises_warning_band(self, checker):
+        """style target이 높으면 fixed 30% 대신 target 기준으로 경고한다."""
+        narrative = "가" * 7400
+        dialogue = '"{}" '.format("나" * 100) * 26  # 대략 26%
+        ms = narrative + dialogue
+
+        items = checker._check_dialogue_ratio(ms, {"style_dialogue_ratio_target": 0.40})
+
+        assert any(item.severity == CheckSeverity.WARNING for item in items)
+        assert any("스타일 목표 40%" in item.message for item in items)
+
 
 # ─── _measure_scene_reflection ──────────────────────
 

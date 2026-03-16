@@ -404,6 +404,10 @@ class Stage4InterviewRound:
                     evidence_lines.append(
                         f"[VIOLATION] {self._compact_text(violation.get('reason', ''), 160)}"
                     )
+            for warning in (selected_validation.get("quality_signal_warnings") or [])[:3]:
+                text = self._compact_text(warning, 160)
+                if text:
+                    evidence_lines.append(f"[STYLE] {text}")
         evidence_summary = ""
         if evidence_lines:
             evidence_summary = "[근거 요약 - 수정 시 반드시 반영]\n" + "\n".join(f"  {line}" for line in evidence_lines)
@@ -1120,7 +1124,7 @@ class Stage4InterviewRound:
 
     @staticmethod
     def _merge_advisory_validation_results(target_results: list[dict], advisory_results: list[dict]) -> None:
-        tracked_keys = ("truth_gate_warnings", "npc_drift_warnings")
+        tracked_keys = ("truth_gate_warnings", "npc_drift_warnings", "quality_signal_warnings")
         for idx, advisory_result in enumerate(advisory_results or []):
             if idx >= len(target_results):
                 break
@@ -1753,7 +1757,7 @@ class Stage4InterviewRound:
         except Exception as _pov_err:
             logging.debug("[QI-POV] Director POV 주입 실패 (비치명): %s", _pov_err)
 
-        # [B-1-3b] Advisory chain (TruthGate, NpcDrift, NumericDrift, Flashback, InfoParadox, RelDrift)
+        # [B-1-3b] Advisory chain (TruthGate, NpcDrift, NumericDrift, Flashback, InfoParadox, RelDrift, StyleSignal)
         _advisory_parts = self._run_advisory_chain(candidates, validation_results, next_ep, genre_name)
         _advisory_parts = self._suppress_conflicting_advisories(_advisory_parts or [])
         _advisory_summary = {}
@@ -1773,6 +1777,8 @@ class Stage4InterviewRound:
                 _advisory_summary["info_paradox"] = 1
             if "[LM-P1]" in _part_s or "LongTerm" in _part_s:
                 _advisory_summary["long_term_rep"] = 1
+            if "StyleSignal" in _part_s:
+                _advisory_summary["style_signal"] = 1
         self._last_advisory_summary = dict(_advisory_summary)
         _formatted_advisory_parts: list[str] = []
         for _part in _advisory_parts or []:
@@ -1805,6 +1811,9 @@ class Stage4InterviewRound:
                 continue
             if any(_tag in _part_s for _tag in ("[LM-F]", "InfoParadox")):
                 _formatted_advisory_parts.append(f"[MAJOR · InfoParadox] {_part_s}")
+                continue
+            if "StyleSignal" in _part_s:
+                _formatted_advisory_parts.append(f"[MAJOR · StyleSignal] {_part_s}")
                 continue
             _formatted_advisory_parts.append(f"[INFO] {_part_s}")
         _advisory_parts = _formatted_advisory_parts
@@ -2816,6 +2825,14 @@ class Stage4InterviewRound:
                     _checklist_ctx["blueprint"] = blueprint
                 if _prev_manuscript:
                     _checklist_ctx["prev_manuscript"] = _prev_manuscript
+                try:
+                    from modules.core.project_support import resolve_style_dialogue_ratio_target
+
+                    _style_target = resolve_style_dialogue_ratio_target(project=getattr(self.ctx, "current_project", None))
+                    if _style_target is not None:
+                        _checklist_ctx["style_dialogue_ratio_target"] = _style_target
+                except Exception as _style_target_err:
+                    logging.debug("[Stage4] style dialogue target load 실패 (비치명): %s", _style_target_err)
                 for ci, cand in enumerate(candidates):
                     _ms = cand.get("manuscript", "")
                     if not _ms or ci >= len(validation_results):
@@ -4272,11 +4289,11 @@ class Stage4InterviewRound:
         from concurrent.futures import TimeoutError as FuturesTimeoutError
 
         logging.debug(
-            "Advisory 검증 시작 — 8개 병렬 실행 (TruthGate, NPC, 수치, 회상, 정보역설, 관계, 장기반복, 수치정합)"
+            "Advisory 검증 시작 — 9개 병렬 실행 (TruthGate, NPC, 수치, 회상, 정보역설, 관계, 장기반복, 수치정합, StyleSignal)"
         )
         _round_num = getattr(self, "_god1_round_num", None)
         self.ctx.ui.log(
-            "      \u23f3 Advisory 체인 8개 병렬 실행 중...",
+            "      \u23f3 Advisory 체인 9개 병렬 실행 중...",
             stage="stage4",
             component="advisory_chain",
             ep_num=next_ep,
@@ -4286,7 +4303,7 @@ class Stage4InterviewRound:
 
         futures = {}
         _advisory_parts: list[str] = []
-        executor = ThreadPoolExecutor(max_workers=8, thread_name_prefix="advisory")
+        executor = ThreadPoolExecutor(max_workers=9, thread_name_prefix="advisory")
         try:
             _truth_gate_results = self._clone_validation_results_for_advisory(validation_results)
             futures[executor.submit(self._advisory_truth_gate, candidates, _truth_gate_results, next_ep)] = (
@@ -4309,6 +4326,11 @@ class Stage4InterviewRound:
             futures[executor.submit(self._advisory_numeric_consistency, candidates, next_ep)] = (
                 "NumericConsistency",
                 None,
+            )
+            _style_signal_results = self._clone_validation_results_for_advisory(validation_results)
+            futures[executor.submit(self._advisory_style_signals, candidates, _style_signal_results, next_ep)] = (
+                "StyleSignal",
+                _style_signal_results,
             )
 
             for future in as_completed(futures, timeout=300):
@@ -4741,6 +4763,95 @@ class Stage4InterviewRound:
                 return ["\n".join(_nc_lines)]
         except (AttributeError, TypeError, ValueError, RuntimeError, OSError) as _nc_err:
             logging.warning("[NC-1] NumericConsistencyChecker 실패 (비치명): %s", str(_nc_err)[:80])
+        return []
+
+    def _advisory_style_signals(
+        self,
+        candidates: list[dict],
+        validation_results: list[dict],
+        next_ep: int,
+    ) -> list[str]:
+        """[TF-T1] StyleSignalAdvisor — ai_slop/CED/style-target drift advisory."""
+        try:
+            from modules.core.project_support import resolve_style_dialogue_ratio_target
+            from modules.core.quality_signal_metrics import compute_quality_signal_bundle
+            from modules.validation.dialogue_utils import count_dialogue_characters
+
+            _db = getattr(getattr(self.ctx, "current_project", None), "db", None)
+            _summary = {}
+            if _db and hasattr(_db, "get_quality_signal_summary"):
+                _summary = _db.get_quality_signal_summary(before_ep=next_ep, lookback=5) or {}
+            _signals = (_summary.get("signals") or {}) if isinstance(_summary, dict) else {}
+            _ai_median = float((_signals.get("ai_slop") or {}).get("median", 0.0) or 0.0)
+            _ced_median = float((_signals.get("ced") or {}).get("median", 0.0) or 0.0)
+            _target_dialogue_ratio = resolve_style_dialogue_ratio_target(project=getattr(self.ctx, "current_project", None))
+
+            _advisory_lines = [
+                "[StyleSignalAdvisor — ai_slop/CED/style-target drift, advisory only — 최종 판단은 Director]"
+            ]
+            _hit_count = 0
+
+            for _ci, _cand in enumerate(candidates):
+                _ms = _cand.get("manuscript", "") if isinstance(_cand, dict) else ""
+                if not _ms:
+                    continue
+
+                _vr = validation_results[_ci] if _ci < len(validation_results) and isinstance(validation_results[_ci], dict) else {}
+                _warning_count = int(_vr.get("warning_count", 0) or 0) if isinstance(_vr, dict) else 0
+                _bundle = compute_quality_signal_bundle(_ms, warning_count=_warning_count)
+                _candidate_lines: list[str] = []
+                _candidate_label = ["A", "B", "C"][_ci] if _ci < 3 else str(_ci + 1)
+
+                _ai_score = float(_bundle.get("ai_slop_score", 0.0) or 0.0)
+                _ai_hits = [item for item in (_bundle.get("ai_slop_hits") or []) if isinstance(item, dict)]
+                _ai_total_hits = sum(max(0, int(item.get("count", 0) or 0)) for item in _ai_hits)
+                _ai_threshold = max(0.6, _ai_median * 1.15 if _ai_median > 0 else 0.6)
+                if _ai_score >= _ai_threshold or _ai_total_hits >= 3:
+                    _hit_preview = ", ".join(
+                        f"{str(item.get('pattern', '') or '')}x{int(item.get('count', 0) or 0)}" for item in _ai_hits[:3]
+                    )
+                    if _ai_median > 0:
+                        _candidate_lines.append(
+                            f"ai_slop score {_ai_score:.2f} (recent median {_ai_median:.2f})"
+                            + (f" / hits={_hit_preview}" if _hit_preview else "")
+                        )
+                    else:
+                        _candidate_lines.append(
+                            f"ai_slop score {_ai_score:.2f}" + (f" / hits={_hit_preview}" if _hit_preview else "")
+                        )
+
+                _ced_score = float(_bundle.get("ced_score", 0.0) or 0.0)
+                _ced_threshold = max(1.0, _ced_median * 1.15 if _ced_median > 0 else 1.0)
+                if _ced_score >= _ced_threshold:
+                    if _ced_median > 0:
+                        _candidate_lines.append(
+                            f"ced_score {_ced_score:.2f} (recent median {_ced_median:.2f}, python warnings {_warning_count}건)"
+                        )
+                    else:
+                        _candidate_lines.append(f"ced_score {_ced_score:.2f} (python warnings {_warning_count}건)")
+
+                if _target_dialogue_ratio is not None and len(_ms) >= 1000:
+                    _dialogue_ratio = count_dialogue_characters(_ms) / max(len(_ms), 1)
+                    if _dialogue_ratio < _target_dialogue_ratio - 0.08:
+                        _candidate_lines.append(
+                            f"dialogue_ratio {_dialogue_ratio:.0%} < style target {_target_dialogue_ratio:.0%}"
+                        )
+                    elif _dialogue_ratio > _target_dialogue_ratio + 0.12:
+                        _candidate_lines.append(
+                            f"dialogue_ratio {_dialogue_ratio:.0%} > style target {_target_dialogue_ratio:.0%}"
+                        )
+
+                if _candidate_lines:
+                    _hit_count += len(_candidate_lines)
+                    _advisory_lines.extend(f"- [후보 {_candidate_label}] {line}" for line in _candidate_lines[:3])
+                    if isinstance(_vr, dict):
+                        _vr["quality_signal_warnings"] = list(_candidate_lines[:3])
+
+            if _hit_count:
+                logging.info("[StyleSignalAdvisor→Director] %d건 style/core 경고 전달", _hit_count)
+                return ["\n".join(_advisory_lines)]
+        except (AttributeError, TypeError, ValueError, RuntimeError, OSError) as _sig_err:
+            logging.warning("[TF-T1] StyleSignalAdvisor 실패 (비치명): %s", str(_sig_err)[:80])
         return []
 
     # ── [TF-32] PASS_WITH_FIX helpers ──────────────────────────────

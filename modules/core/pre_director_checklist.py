@@ -257,7 +257,7 @@ class PreDirectorChecklist:
             )
 
         # 2. 구조 체크 - 대화 (V60.5 고도화: 비율 분석 및 구체적 가이드)
-        dialogue_ratio_check = self.manuscript_checker._check_dialogue_ratio(manuscript)
+        dialogue_ratio_check = self.manuscript_checker._check_dialogue_ratio(manuscript, context)
         items.extend(dialogue_ratio_check)
 
         # 3. 구조 체크 - 문단

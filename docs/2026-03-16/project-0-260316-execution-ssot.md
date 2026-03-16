@@ -141,7 +141,7 @@ Pass 1 result: all governing frontier, timestamp, count, cost, and scope-boundar
 | `ep4 round 0` cause interpretation | local continuity issue existed, but exact token direction was not fully settled | some OPUS prose reversed the name direction | **Resolved:** canonical project truth is `한진호`; selected candidate drifted to `한태준` |
 | `ep5 round 0` contamination scope | stale state and local location drift were both suspected | some OPUS prose overstated this as `blueprint_0005` contamination | **Resolved:** selected manuscript drift is confirmed; `blueprint_0005` itself is clean on the core office/`한미증권` handoff |
 | `PASS_WITH_FIX` underuse | structure defects were already flagged | OPUS cost review implied several fixable reruns | **Resolved:** a narrow fixable-firewall subset exists (`ep4 r0`, `ep4 r1`, `ep5 r0`), and the bounded routing/payload fix is now landed in live code; `ep5 r2` remains outside it |
-| AI-slop feedback visibility | not previously normalized as a separate SSOT finding | companion system SSOT normalizes core-vs-operator split | **Resolved:** automatic `ai_slop` telemetry is telemetry-only for runtime-core retry; this document keeps it only as project evidence |
+| AI-slop feedback visibility | not previously normalized as a separate SSOT finding | companion system SSOT normalizes core-vs-operator split | **Resolved:** companion system SSOT now closes the bounded runtime-core advisory gap via Director-mediated style/core warnings; this document keeps it only as project evidence |
 | Broken feedback loop bundle scope | previously mixed into Lane B | companion system SSOT is broader than `0_260316` | **Resolved:** companion system SSOT owns remediation priority for shared bundle items; this document keeps project-only facts and risks |
 | Quality average figure | previously not normalized in SSOT | OPUS prose and summary metadata were not fully consistent | **Resolved:** use raw final score arithmetic `95.2` |
 
@@ -165,13 +165,13 @@ Pass 3 result: fit to guide project recovery and project-level regression owners
 
 | Topic | Classification | Canonical Authority | Project Treatment |
 | --- | --- | --- | --- |
-| `ai_slop` feedback gap | `shared-consistent` | companion system SSOT | retained only as `0_260316` proof corpus |
+| `ai_slop` feedback gap | `shared-consistent` | companion system SSOT | retained only as `0_260316` proof corpus; remediation status follows the companion system SSOT |
 | `npc_drift` retry handoff | `shared-needs-wording-sync` | companion system SSOT | referenced here only as Stage 4 evidence |
 | `open_review` | `shared-needs-wording-sync` | companion system SSOT | do not treat label replay and same-round handoff as the same path |
 | `coverage_warning` explicit surfacing | `shared-needs-wording-sync` | companion system SSOT | referenced here only where it affects Stage 4 proof |
 | `FactLedger` fragility | `system-only` | companion system SSOT | not promoted to a project-only canonical queue |
 | `reverse_feedback` auto-trigger status | `system-only` | companion system SSOT | not restated here except as regression implications |
-| `dialogue_ratio` target mismatch | `system-only` | companion system SSOT | out of scope for project recovery authority |
+| `dialogue_ratio` style-target linkage | `system-only` | companion system SSOT | out of scope for project recovery authority |
 | `cost_log` runtime reader gap | `system-only` | companion system SSOT | out of scope for project recovery authority |
 | `ep7` stop point / integrity / resumability | `project-only` | this document | do not promote into system remediation authority |
 | `Menu 7 이어가기`, `Arc 3 / Blueprint 11 / Manuscript 6` | `project-only` | this document | remain project facts only |
@@ -317,8 +317,9 @@ The items above are canonicalized in the companion system SSOT and appear here o
 - a narrow `fixable_firewall` lane is now live; do not relax Firewall globally beyond that bounded subset
 
 **Shared broken-feedback subfinding**
-- `ai_slop` telemetry-only routing is `shared-consistent` with the companion system SSOT
+- companion system SSOT now treats `ai_slop` / `ced_score` as Director-mediated advisory routing rather than telemetry-only runtime-core signals; this document keeps that authority external
 - `npc_drift` and `coverage_warning` are shared Stage 4 evidence, but their bundle-wide remediation authority is externalized
+- `dialogue_ratio` style-target linkage is now landed in the companion system SSOT and remains out of scope for project recovery authority
 - `open_review` must remain split between same-round retry handoff and dead sidecar replay; this document does not collapse those paths
 
 **Engineering stance**

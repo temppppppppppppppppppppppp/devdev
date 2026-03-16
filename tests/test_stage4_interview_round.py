@@ -213,6 +213,53 @@ class TestInterviewRoundHelpers:
         assert "[모순 세부]" in provenance["merged_feedback"]
         assert "한태준으로 표기됨" in provenance["director_feedback_text"]
 
+    def test_retry_feedback_provenance_includes_quality_signal_warnings(self):
+        ir = Stage4InterviewRound(_make_ctx())
+
+        provenance = ir._build_retry_feedback_provenance(
+            director_result={"feedback": {}},
+            director_feedback="",
+            selected_validation={
+                "quality_signal_warnings": [
+                    "ai_slop score 1.20 (recent median 0.40) / hits=그야말로x2",
+                    "dialogue_ratio 24% < style target 40%",
+                ]
+            },
+            round_num=1,
+        )
+
+        assert "[STYLE] ai_slop score 1.20" in provenance["evidence_summary"]
+        assert "[STYLE] dialogue_ratio 24% < style target 40%" in provenance["merged_feedback"]
+
+    def test_advisory_style_signals_reports_runtime_core_gaps(self):
+        ctx = _make_ctx()
+        ctx.current_project.db.get_quality_signal_summary.return_value = {
+            "available": True,
+            "signals": {
+                "ai_slop": {"median": 0.4},
+                "ced": {"median": 0.5},
+            },
+        }
+        ctx.current_project.load_v20_anchor = MagicMock(return_value={"dialogue_ratio": 0.40})
+        ir = Stage4InterviewRound(ctx)
+        candidates = [
+            {"manuscript": ("그야말로 놀라운 순간이었다. " * 140) + ('"짧게 말한다." ' * 18)},
+            {"manuscript": "담백한 원고 " * 300},
+        ]
+        validation_results = [
+            {"warning_count": 12, "warnings": []},
+            {"warning_count": 0, "warnings": []},
+        ]
+
+        advisory = ir._advisory_style_signals(candidates, validation_results, next_ep=7)
+
+        assert advisory
+        assert "StyleSignalAdvisor" in advisory[0]
+        assert "ai_slop score" in advisory[0]
+        assert "ced_score" in advisory[0]
+        assert "dialogue_ratio" in advisory[0]
+        assert validation_results[0]["quality_signal_warnings"]
+
     def test_build_reaudit_story_context_injects_patch_history(self):
         ir = Stage4InterviewRound(_make_ctx())
 

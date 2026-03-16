@@ -106,6 +106,38 @@ def load_style_guide_anchor(project) -> dict[str, Any]:
     return raw_style if isinstance(raw_style, dict) else {}
 
 
+def resolve_style_dialogue_ratio_target(
+    style_data: dict[str, Any] | None = None,
+    *,
+    project=None,
+) -> float | None:
+    if style_data is None and project is not None:
+        style_data = load_style_guide_anchor(project)
+
+    if not isinstance(style_data, dict):
+        return None
+
+    raw_value = style_data.get("dialogue_ratio")
+    if isinstance(raw_value, (int, float)):
+        value = float(raw_value)
+    elif isinstance(raw_value, str):
+        text = str(raw_value).strip().replace("%", "")
+        if not text:
+            return None
+        try:
+            value = float(text)
+        except ValueError:
+            return None
+        if value > 1.0:
+            value /= 100.0
+    else:
+        return None
+
+    if 0.0 < value < 1.0:
+        return value
+    return None
+
+
 def resolve_project_bible_pov(project) -> str:
     if project is None:
         return ""
