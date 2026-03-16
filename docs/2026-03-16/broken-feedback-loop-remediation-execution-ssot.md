@@ -132,7 +132,7 @@ Pass 2 result:
 - no project-specific recovery claim was promoted into this document
 - `0_260316` is used only as regression evidence, not as the subject of this SSOT
 
-Pass 3 result: tranche sequencing remains valid; all three planned tranches are closed, the low-priority control-plane provenance reader is now closed, `PassRateMonitor.get_patch_effectiveness()` is now surfaced in bridge quality dashboard, `HUD anomaly` / `blueprint coverage` producers are now recorded into `QualityDashboard`, and the remaining open items are opportunistic helper follow-ups only.
+Pass 3 result: tranche sequencing remains valid; all three planned tranches are closed, the low-priority control-plane provenance reader is now closed, `PassRateMonitor.get_patch_effectiveness()` and `QualityDashboard.get_quality_signal_snapshot()` are now surfaced in bridge quality dashboard, `HUD anomaly` / `blueprint coverage` producers are now recorded into `QualityDashboard`, and no known residual helper gaps remain in this remediation lane.
 
 ## Signal Taxonomy
 
@@ -155,6 +155,7 @@ Pass 3 result: tranche sequencing remains valid; all three planned tranches are 
 | `FailureLearner` | `LIVE` / `WORKING` | n/a | keep as a working loop, not a remediation target |
 | `cost_log` DB summary | `READ-ONLY / WORKING` | `CLOSED` in bridge quality dashboard | `get_cost_summary()` now feeds a production `cost_summary` payload without becoming a Python control gate |
 | `patch_effectiveness` pass-rate summary | `READ-ONLY / WORKING` | `CLOSED` in bridge quality dashboard | `PassRateMonitor.get_patch_effectiveness()` now feeds a bounded Stage 4 patch-loop summary without changing retry authority |
+| `quality_signal_snapshot` | `READ-ONLY / WORKING` | `CLOSED` in bridge quality dashboard | `QualityDashboard.get_quality_signal_snapshot()` now feeds a bounded recent-signal snapshot without changing quality authority |
 | `HUD anomaly` / `blueprint coverage` instrumentation | `READ-ONLY / WORKING` | `CLOSED` in quality dashboard summaries | Stage 4 mandatory-context build now records HUD anomaly observations and Stage 4 post-pass processing now records final manuscript blueprint coverage into `QualityDashboard` |
 | shutdown metric totals | `ADVISORY` | logs only | do not confuse shutdown sink consumption with runtime cost control |
 | control-plane provenance | `READ-ONLY / WORKING` | `CLOSED` in bridge `/status` summary | `bridge_server.py` now reads recent `control-plane-provenance.jsonl` rows into an optional status payload without changing write semantics |
@@ -301,7 +302,7 @@ Targeted verification:
 Status:
 
 - completed on `2026-03-16` after a live-code validity gate and fresh 3-pass audit
-- no further tranche remains after closure; the low-priority `control-plane provenance` reader, `PassRateMonitor.get_patch_effectiveness()` consumer, and `HUD anomaly` / `blueprint coverage` producers are also closed, and only opportunistic helper follow-ups remain outside the tranche queue
+- no further tranche remains after closure; the low-priority `control-plane provenance` reader, `PassRateMonitor.get_patch_effectiveness()` consumer, `QualityDashboard.get_quality_signal_snapshot()` consumer, and `HUD anomaly` / `blueprint coverage` producers are also closed
 
 Validity gate result:
 
@@ -324,17 +325,19 @@ Targeted verification:
 - `python -m pytest -q tests/test_stage2_preflight.py -k "stage3_reverse_feedback_injected_after_three_stage3_failures"` -> `1 passed`
 - `python -m pytest -q tests/test_bridge_quality_summary.py -k "surfaces_cost_summary"` -> `1 passed`
 - `python -m pytest -q tests/test_bridge_quality_summary.py -k "surfaces_patch_effectiveness"` -> `1 passed`
+- `python -m pytest -q tests/test_bridge_quality_summary.py -k "surfaces_quality_signal_snapshot"` -> `1 passed`
 - `python -m pytest -q tests/test_stage4_context_builder.py -k "records_hud_anomaly_on_dashboard"` -> `1 passed`
 - `python -m pytest -q tests/test_stage4_post_processor.py -k "records_blueprint_coverage_on_dashboard"` -> `1 passed`
 - `python -m pytest -q tests/test_stage3_orchestrator.py` -> `72 passed`
 - `python -m pytest -q tests/test_stage2_preflight.py` -> `27 passed`
-- `python -m pytest -q tests/test_bridge_quality_summary.py tests/test_cost_tracking.py` -> `16 passed`
+- `python -m pytest -q tests/test_bridge_quality_summary.py tests/test_cost_tracking.py` -> `18 passed`
 - `python -m pytest -q tests/test_stage4_context_builder.py tests/test_stage4_post_processor.py` -> `100 passed`
 - `python -m pytest -q tests/test_stage4_orchestrator.py -k "stage4_to_3_feedback"` -> `1 passed`
-- `python -m ruff check modules/core/stage3_orchestrator.py modules/api/bridge_server.py modules/core/stage4_context_builder.py modules/core/stage4_post_processor.py tests/test_stage3_orchestrator.py tests/test_stage2_preflight.py tests/test_bridge_quality_summary.py tests/test_stage4_context_builder.py tests/test_stage4_post_processor.py` -> `All checks passed`
+- `python -m ruff check modules/core/stage3_orchestrator.py modules/api/bridge_server.py modules/core/metrics_collector.py modules/core/stage4_context_builder.py modules/core/stage4_post_processor.py tests/test_stage3_orchestrator.py tests/test_stage2_preflight.py tests/test_bridge_quality_summary.py tests/test_cost_tracking.py tests/test_stage4_context_builder.py tests/test_stage4_post_processor.py` -> `All checks passed`
 - `python scripts/ops_validator.py` -> `errors=0 warnings=0`
 - post-tranche bounded addendum: `modules/api/bridge_server.py` now exposes an optional `control_plane_provenance` summary on `/status`
 - post-closure bounded addendum: `modules/core/stage4_context_builder.py` now records `HUD anomaly` observations and `modules/core/stage4_post_processor.py` now records final-manuscript `blueprint coverage` into `QualityDashboard`
+- post-closure bounded addendum: `modules/api/bridge_server.py` now exposes `quality_signal_snapshot`, and `modules/core/metrics_collector.py` removes dead `record_retry()` in favor of the existing `end_call(retry_count=...)` aggregation path
 - `python -m pytest -q tests/test_bridge_server_http_contract.py` -> `8 passed`
 - `python -m pytest -q tests/test_control_plane_approval_provenance_ssot.py tests/test_bridge_server_desktop_risk_gate.py` -> `7 passed`
 
@@ -351,12 +354,8 @@ Targeted verification:
 
 ## Open Items
 
-| Item | Status | Impact |
-| --- | --- | --- |
-| `MetricsCollector.record_retry()` caller absence | open | low |
-| `QualityDashboard.get_quality_signal_snapshot()` unused helper | open | low |
+None.
 
 Notes:
 
-- these open items are intentionally left out of the main tranches because they are lower ROI than the broken runtime-core feedback loops above
-- if a later tranche promotes them, this SSOT should be refreshed rather than patched ad hoc
+- if a future validity gate discovers a new low-priority helper or instrumentation gap, this SSOT should be refreshed rather than patched ad hoc

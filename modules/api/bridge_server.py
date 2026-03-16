@@ -320,6 +320,13 @@ def _quality_dashboard_defaults(project: str, lookback: int) -> dict:
             "latest_signal_summary": {},
             "project": project,
         },
+        "quality_signal_snapshot": {
+            "available": False,
+            "lookback": max(lookback, 5),
+            "samples": 0,
+            "latest": {},
+            "recent": [],
+        },
         "result_summary": {
             "available": False,
             "headline": "최근 심사 결과가 아직 없습니다.",
@@ -528,6 +535,46 @@ def _build_patch_effectiveness_payload(summary: dict[str, Any] | None, lookback:
             "direct_patch_success_rate": round(float(summary.get("direct_patch_success_rate") or 0.0), 4),
             "non_patch_success_rate": round(float(summary.get("non_patch_success_rate") or 0.0), 4),
             "avg_prev_score": round(float(summary.get("avg_prev_score") or 0.0), 2),
+        }
+    )
+    return payload
+
+
+def _build_quality_signal_snapshot_payload(summary: dict[str, Any] | None, lookback: int) -> dict[str, Any]:
+    payload: dict[str, Any] = {
+        "available": False,
+        "lookback": lookback,
+        "samples": 0,
+        "latest": {},
+        "recent": [],
+    }
+    if not isinstance(summary, dict) or not summary:
+        return payload
+
+    recent = summary.get("recent")
+    if not isinstance(recent, list):
+        recent = []
+
+    compact_recent: list[dict[str, Any]] = []
+    for row in recent:
+        if not isinstance(row, dict):
+            continue
+        compact_recent.append(
+            {
+                "ep_num": int(row.get("ep_num") or 0),
+                "stage": int(row.get("stage") or 0),
+                "quality_signals": dict(row.get("quality_signals") or {}),
+            }
+        )
+
+    samples = int(summary.get("samples") or len(compact_recent) or 0)
+    payload.update(
+        {
+            "available": samples > 0,
+            "lookback": lookback,
+            "samples": samples,
+            "latest": dict(summary.get("latest") or {}),
+            "recent": compact_recent,
         }
     )
     return payload
@@ -1535,6 +1582,10 @@ def _build_quality_dashboard_payload(project: str, lookback: int) -> dict:
         {"type": violation, "count": int(count)}
         for violation, count in (dashboard_summary.get("common_violations") or [])[:5]
     ]
+    payload["quality_signal_snapshot"] = _build_quality_signal_snapshot_payload(
+        dashboard.get_quality_signal_snapshot(recent_n=max(safe_lookback, 5)),
+        max(safe_lookback, 5),
+    )
     payload["episode_trend"] = dashboard.get_episode_trend(n_episodes=max(safe_lookback, 8))
     payload["score_trend"] = dashboard.get_score_trend_summary(stage=4, recent_n=max(safe_lookback, 5))
     payload["failure_patterns"] = _build_failure_patterns(dashboard.get_failure_patterns())
