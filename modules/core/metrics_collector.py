@@ -271,11 +271,6 @@ class MetricsCollector:
             # [INF-P1-4] 완료된 메트릭 엔트리 삭제 (메모리 누수 방지)
             del self._metrics[metric_id]
 
-    def record_retry(self, agent_name: str):
-        """재시도 기록 (간편 메서드)"""
-        with self._lock:
-            self._agent_retries[agent_name] += 1
-
     def estimate_tokens(self, text: str, is_input: bool = True) -> int:
         """
         텍스트의 토큰 수 추정 (간단한 휴리스틱)

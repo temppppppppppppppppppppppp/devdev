@@ -510,6 +510,45 @@ def test_quality_dashboard_endpoint_surfaces_patch_effectiveness(tmp_path, monke
     assert patch_effectiveness["avg_prev_score"] == 76.0
 
 
+def test_quality_dashboard_endpoint_surfaces_quality_signal_snapshot(tmp_path, monkeypatch):
+    monkeypatch.setattr(bridge_server, "PROJECT_ROOT", tmp_path)
+    project_dir = tmp_path / "projects" / "demo"
+    project_dir.mkdir(parents=True)
+
+    dashboard = QualityDashboard(project_dir)
+    dashboard.record_validation(
+        ep_num=2,
+        result={
+            "decision": "PASS",
+            "score": 88,
+            "quality_signals": {"ced_score": 1.4, "ai_slop_score": 0.3},
+        },
+        stage=4,
+    )
+    dashboard.record_validation(
+        ep_num=3,
+        result={
+            "decision": "PASS_WITH_FIX",
+            "score": 91,
+            "quality_signals": {"ced_score": 1.1, "ai_slop_score": 0.8},
+        },
+        stage=4,
+    )
+
+    response = asyncio.run(bridge_server.quality_dashboard_endpoint(project="demo", lookback=5))
+    payload = json.loads(response.body.decode("utf-8"))
+
+    assert response.status_code == 200
+    assert payload["ok"] is True
+    snapshot = payload["data"]["quality_signal_snapshot"]
+    assert snapshot["available"] is True
+    assert snapshot["lookback"] == 5
+    assert snapshot["samples"] == 2
+    assert snapshot["latest"]["ced_score"] == 1.1
+    assert snapshot["recent"][0]["ep_num"] == 2
+    assert snapshot["recent"][1]["quality_signals"]["ai_slop_score"] == 0.8
+
+
 def test_safe_ops_preview_endpoint_exposes_stage_split(tmp_path, monkeypatch):
     monkeypatch.setattr(bridge_server, "PROJECT_ROOT", tmp_path)
     project_dir = tmp_path / "projects" / "demo"
