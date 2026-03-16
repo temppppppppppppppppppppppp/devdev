@@ -8,9 +8,7 @@ from fastapi.testclient import TestClient
 
 from modules.api.bridge_server import app
 from modules.api.risk_approval import ApprovalRecord, RiskApprovalGate
-from modules.api.process_runner import ProcessRunner
 from modules.core.metrics_collector import MetricsCollector
-
 
 ROOT = Path(__file__).resolve().parents[1]
 CONTRACT_PATH = ROOT / "docs/2026-03-13/control-plane-approval-provenance-ssot.json"
@@ -109,6 +107,32 @@ def test_successful_risk_run_writes_approval_to_run_provenance_bridge(tmp_path: 
     assert row["run_id"] == payload["run_id"]
     assert row["engine_env_run_id"] == payload["run_id"]
     assert row["risk_key"] is True
+
+
+def test_status_reads_recent_control_plane_provenance_after_risk_run(tmp_path: Path) -> None:
+    gate = RiskApprovalGate(audit_log_path=tmp_path / "risk-approval-log.jsonl")
+    approval = _approval_record("APR-PROV-STATUS")
+    gate.register(approval)
+
+    with TestClient(app) as client:
+        client.app.state.runner = _DummyRunner()
+        client.app.state.risk_gate = gate
+        client.app.state.control_plane_provenance_log_path = tmp_path / "control-plane-provenance.jsonl"
+
+        response = client.post("/run", json={"key": "44", "approval_id": approval.approval_id})
+        assert response.status_code == 202
+
+        status_response = client.get("/status")
+
+    assert status_response.status_code == 200
+    payload = status_response.json()
+    summary = payload["data"]["control_plane_provenance"]
+    assert summary["available"] is True
+    assert summary["recent_count"] == 1
+    assert summary["risk_row_count"] == 1
+    assert summary["latest"]["run_id"] == response.json()["run_id"]
+    assert summary["latest"]["approval_id"] == approval.approval_id
+    assert summary["latest"]["risk_key"] is True
 
 
 def test_metrics_collector_uses_run_id_env_as_session_id(monkeypatch, tmp_path: Path) -> None:
