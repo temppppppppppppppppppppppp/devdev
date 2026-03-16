@@ -3,7 +3,7 @@
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from modules.core.context_advisor import RetrievalPlan, RetrievalSlot
+from modules.core.context_advisor import RetrievalPlan, RetrievalSlot, RetrievalSources
 from modules.core.stage4_context_builder import Stage4ContextBuilder
 from modules.core.stage4_orchestrator import Stage4Orchestrator, _RoundContext
 
@@ -1176,6 +1176,68 @@ class TestBuildMandatoryContext:
         assert kwargs["observation"]["relation_slice_included"] is True
         assert "[관계 의미 질의]" in result["mandatory_context"]
         assert "연홍" in result["mandatory_context"]
+
+    @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")
+    def test_build_mandatory_context_surfaces_retrieval_coverage_warnings(self, _mock_build):
+        ctx = _make_ctx()
+        ctx.memory = MagicMock()
+        ctx.db = MagicMock()
+        ctx.db.get_relationship_history.return_value = []
+        ctx.sys.guard = MagicMock()
+        ctx.sys.guard.select_retrieval_focus.return_value = {
+            "tracking_slots": ["소꿉친구 라인"],
+            "mandatory_scene_engines": [],
+            "registry_profiles": [],
+        }
+        ctx.context_advisor = MagicMock()
+        ctx.context_advisor.plan_stage4_retrieval.return_value = RetrievalPlan(
+            stage="stage4",
+            episode_num=7,
+            slots=[
+                RetrievalSlot(
+                    category="work_relationship_context",
+                    query="관계 변화 이력: 주인공, 연홍",
+                    source=RetrievalSources.DB_NPC_RELATIONSHIP,
+                    priority=1,
+                )
+            ],
+            total_budget_chars=1200,
+        )
+        cb = Stage4ContextBuilder(ctx)
+        anchor_sys = MagicMock()
+        anchor_sys.get_relevant_anchors.return_value = []
+        anchor_sys.get_critical_anchors.return_value = []
+
+        def threshold_side_effect(key, default=None):
+            if key == "smart_retrieval.enabled":
+                return True
+            if key == "smart_retrieval.stage4_enabled":
+                return True
+            if key == "context.vector_max_results_s4":
+                return 16
+            return default
+
+        with (
+            patch("modules.core.stage4_context_builder._threshold", side_effect=threshold_side_effect),
+            patch("modules.core.stage4_context_builder.SemanticQueryBroker") as broker_cls,
+        ):
+            broker_cls.return_value.build_stage4_relation_slice.return_value = ""
+            result = cb.build_mandatory_context(
+                next_ep=7,
+                arc_data={"arc_no": 1, "constraint_summary": "연홍과의 관계 회수"},
+                arc_tactical="소꿉친구 라인 회수",
+                prev_text="이전 화 원고",
+                prev_ending="연홍과의 인연을 다시 드러낼 필요가 남았다",
+                hud_report="HUD",
+                writer_agent=MagicMock(),
+                anchor_sys=anchor_sys,
+                s4_genre_type="investment",
+                v50_modules_available=False,
+                blueprint={"summary": "연홍과의 관계 축을 회수한다."},
+            )
+
+        assert "[검색 커버리지 경고]" in result["mandatory_context"]
+        assert "관계 의미 질의가 빠졌다." in result["mandatory_context"]
 
 
 class TestBuildRoundContext:

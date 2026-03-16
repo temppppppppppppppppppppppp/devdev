@@ -20,7 +20,7 @@ Scope Boundary:
 
 - **Fact:** `docs/sp` is not a project-run bundle. It is a system-wide broken feedback loop survey pack spanning Stage 0 style extraction, Stage 3 observability, Stage 4 retry handoff, cross-cutting sinks, bridge/desktop consumers, and reverse feedback paths.
 - **Fact:** most forward runtime loops already work. `DPW`, `FailureLearner`, Stage 4 streak logic, `quality_risk` early intervention, pass-rate difficulty tracking, and Stage 4→2 reverse difficulty feedback are live or working and should not be misclassified as broken.
-- **Fact:** the main broken area is not “signal absent everywhere” but “signal measured or surfaced without reaching the runtime-core decision loop.” This was especially true for `ai_slop`, `ced_score`, `coverage_warning`, and `cost_log`; after Tranche 1, the highest-priority remaining gaps are `coverage_warning`, `npc_drift`, `FactLedger`, and `cost_log`.
+- **Fact:** the main broken area is not “signal absent everywhere” but “signal measured or surfaced without reaching the runtime-core decision loop.” This was especially true for `ai_slop`, `ced_score`, `coverage_warning`, and `cost_log`; after Tranche 2, the highest-priority remaining gaps are the reverse-feedback auto-trigger lanes and `cost_log` runtime consumption.
 - **Fact:** `condex_*` supplements do not overturn the TF surveys. They mainly prove that several signals are visible in bridge/UI/operator surfaces even when they are still dead or weak in runtime-core retry routing.
 - **Fact:** two scope-sensitive names had to be normalized to eliminate false conflict:
   - `open_review` is live inside same-round `previous_attempt`, but `episode_quality_labels.open_review` replay is still dead for later generation loops.
@@ -109,7 +109,7 @@ Pass 1 result:
 | Topic | Tier 1 View | Tier 2/3 View | Resolution |
 | --- | --- | --- | --- |
 | Stage 0-2 overall | TF-A/B identify weak or dead style-extraction-derived fields | `condex` TF-A shows most Stage 0-2 runtime gates are closed | **Resolved:** Stage 0-2 runtime gates are mostly closed, but extracted style descriptors remain weak or dead unless wired into validators |
-| `coverage_warnings` | TF-C says advisory-only for core retry | `condex` TF-B says operator calibration consumes it | **Resolved:** operator advisory exists, runtime-core retry still weak/advisory |
+| `coverage_warnings` | TF-C says advisory-only for core retry | `condex` TF-B says operator calibration consumes it | **Resolved:** operator advisory existed first; Tranche 2 closes the runtime-core surfacing gap by making the warning explicit in mandatory context, validation payloads, and retry provenance |
 | Stage 4 quality signal bundle | TF-D says dead for CW retry | `condex` TF-C/E say bridge quality radar consumes it | **Resolved:** split `runtime-core` vs `operator/UI` consumers; Tranche 1 later closes the bounded runtime-core advisory gap without giving Python final authority |
 | `open_review` | TF-D frames label replay as dead | live code shows same-round `previous_attempt.open_review` reaches CW and bridge reads latest labels | **Resolved:** split `same-round retry handoff` from `cross-episode sidecar replay`; only the replay path is dead |
 | `reverse_feedback` | TF-F says Stage 4→3 and Stage 3→2 are fragile | `condex` TF-A proves Stage 4→2 is working | **Resolved:** split paths; do not classify `reverse_feedback` as one monolith |
@@ -132,7 +132,7 @@ Pass 2 result:
 - no project-specific recovery claim was promoted into this document
 - `0_260316` is used only as regression evidence, not as the subject of this SSOT
 
-Pass 3 result: tranche sequencing remains valid; Tranche 1 is now closed and Tranche 2 is the next active lane.
+Pass 3 result: tranche sequencing remains valid; Tranche 2 is now closed and Tranche 3 is the next active lane.
 
 ## Signal Taxonomy
 
@@ -143,11 +143,11 @@ Pass 3 result: tranche sequencing remains valid; Tranche 1 is now closed and Tra
 | `compression_ratio` / `burstiness` / `complexity` | `DEAD` for retry routing | `CLOSED` in bridge quality radar | keep-audit by default unless promoted |
 | `open_review` same-round handoff | `WORKING` | n/a | reaches CW through `previous_attempt` when Director emits it |
 | `open_review` label replay | `DEAD` | `CLOSED` in bridge latest-label summary | cross-episode reuse path is still missing |
-| `npc_drift` structured handoff | `ADVISORY-ONLY` | n/a | Director sees it, CW does not get a durable structured payload |
-| `coverage_warnings` | `ADVISORY-ONLY` / `WEAK` | `ADVISORY` in dashboard/bridge | explicit retry or rebuild surfacing is still missing |
+| `npc_drift` structured handoff | `DIRECTOR-MEDIATED / STRUCTURED` | n/a | structured payload now survives selected validation, retry provenance, and `previous_attempt.validation_warnings` into CW retry input |
+| `coverage_warnings` | `ADVISORY / EXPLICIT` | `ADVISORY` in dashboard/bridge | warning now survives as mandatory-context text plus selected-validation / retry evidence instead of dying in observability summaries |
 | `dialogue_ratio` | `ADVISORY / TARGET-AWARE` | n/a | measured in pre-director validation against the project StyleGuide target when available |
 | `vocabulary_level` | `DEAD` | n/a | extracted and prompted, but never validated |
-| `FactLedger` continuity | `FRAGILE` | n/a | data exists, but hard escalation is inconsistent or advisory-only |
+| `FactLedger` continuity | `DIRECTOR-MEDIATED / STRUCTURED` | n/a | numeric-consistency conflicts now survive as explicit retry evidence and validation payloads without introducing Python final reject authority |
 | `reverse_feedback` Stage 4→2 | `WORKING` | n/a | already injected via Stage 2 preflight when arc difficulty is high |
 | `reverse_feedback` Stage 4→3 | `FRAGILE` | n/a | implemented helper, but not auto-triggered |
 | `reverse_feedback` Stage 3→2 | `FRAGILE` | n/a | thresholded helper exists, but still not a robust automatic loop |
@@ -193,7 +193,7 @@ Loop rule:
 Status:
 
 - completed on `2026-03-16` after a live-code validity gate and fresh 3-pass audit
-- next selected tranche: `Tranche 2`
+- next selected tranche at closure time: `Tranche 2`
 
 Completed scope:
 
@@ -238,9 +238,14 @@ Targeted verification:
 
 ### Tranche 2: Validation / Escalation Hardening
 
+Status:
+
+- completed on `2026-03-16` after a live-code validity gate and fresh 3-pass audit
+- next selected tranche: `Tranche 3`
+
 Priority:
 
-1. `FactLedger` hard constraint escalation
+1. `FactLedger` explicit retry escalation
 2. `coverage_warnings` explicit surfacing
 3. `npc_drift` structured handoff
 
@@ -249,6 +254,7 @@ Required shape:
 - advisory-only facts that should block or escalate must become explicit runtime inputs
 - `coverage_warnings` must stop dying in observability summaries
 - `npc_drift` must become a structured Director-mediated retry artifact rather than a transient advisory only
+- maintain Director sovereignty; do not convert Python validation into a unilateral final reject gate
 
 Starting gate:
 
@@ -259,6 +265,34 @@ Regression gate:
 
 - confirm `0_260316` shared Stage 4 findings still reproduce as expected
 - confirm no project-specific recovery claim in the companion SSOT becomes stale
+
+Validity gate result:
+
+- `npc_drift` warnings already reached `validation_results`, but they still died before retry provenance and CW-facing durable payload handoff
+- `coverage_warnings` were still confined to Stage 3/4 observability summaries and dashboard readers; runtime-core retry did not see an explicit section
+- `FactLedger` numeric consistency already existed as a Director advisory, but the warning did not persist as structured validation payload or retry provenance
+- bounded decision: close the runtime-core escalation gap by promoting these signals into explicit Director-mediated retry inputs without adding Python final-authority veto logic
+
+Bounded implementation landed:
+
+- `modules/core/stage4_interview_round.py` now preserves `npc_drift`, `numeric_consistency`, and `coverage_warnings` in structured `validation_results`, retry provenance, stage-attempt warning payloads, and `previous_attempt.validation_warnings`
+- `modules/core/stage4_interview_round.py` now runs numeric-consistency advisory with a cloned validation payload and merges `numeric_consistency_warnings` back just like other structured advisory families
+- `modules/core/stage4_context_builder.py` now emits a dedicated `[검색 커버리지 경고]` mandatory-context section when retrieval coverage is structurally missing
+- no Python hard reject or auto-firewall authority was added; final accept/reject authority remains Director-mediated
+
+Targeted verification:
+
+- `python -m pytest -q tests/test_stage4_interview_round.py::TestInterviewRoundHelpers::test_retry_feedback_provenance_includes_structured_validation_handoff` -> `1 passed`
+- `python -m pytest -q tests/test_stage4_interview_round.py::TestAdvisoryChain::test_advisory_chain_uses_local_validation_copies_and_merges_back` -> `1 passed`
+- `python -m pytest -q tests/test_stage4_interview_round.py::TestPreDirectorValidation::test_pre_director_validation_attaches_coverage_warnings_to_candidates` -> `1 passed`
+- `python -m pytest -q tests/test_stage4_context_builder.py::TestBuildMandatoryContext::test_build_mandatory_context_surfaces_retrieval_coverage_warnings` -> `1 passed`
+- `python -m pytest -q tests/test_stage4_interview_round.py::TestInterviewRoundRun::test_reject_preserves_structured_validation_warnings_for_retry` -> `1 passed`
+- `python -m pytest -q tests/test_stage4_interview_round.py` -> `85 passed`
+- `python -m pytest -q tests/test_stage4_context_builder.py` -> `53 passed`
+- `python -m pytest -q tests/test_numeric_consistency_checker.py` -> `40 passed`
+- `python -m pytest -q tests/test_stage4_cv_context.py` -> `21 passed`
+- `python -m ruff check modules/core/stage4_interview_round.py modules/core/stage4_context_builder.py tests/test_stage4_interview_round.py tests/test_stage4_context_builder.py` -> `All checks passed`
+- `python scripts/ops_validator.py` -> `errors=0 warnings=0`
 
 ### Tranche 3: Reverse-Loop Automation and Observability Consumption
 

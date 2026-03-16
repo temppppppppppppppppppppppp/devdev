@@ -13,7 +13,7 @@ Confidence: `96%`
 - the system SSOT owns bundle-wide broken feedback loop remediation
 - the project SSOT owns `0_260316` recovery, stop-point, integrity, resumability, and project-specific regression authority
 - this roadmap owns ordering, overlap classification, and sync rules between the two SSOTs
-- current active tranche after the latest doc refresh: `Tranche 2`
+- current active tranche after the latest doc refresh: `Tranche 3`
 
 ## Why Not One SSOT
 
@@ -27,9 +27,9 @@ Confidence: `96%`
 | Topic | Classification | Canonical Authority | Note |
 | --- | --- | --- | --- |
 | `ai_slop` feedback gap | `shared-consistent` | system SSOT for remediation, project SSOT for proof corpus | same finding, different scope |
-| `npc_drift` retry handoff | `shared-needs-wording-sync` | system SSOT | project SSOT may reference it only as a Stage 4 example |
+| `npc_drift` retry handoff | `shared-consistent` | system SSOT | project SSOT keeps only the proof-corpus boundary while the system SSOT owns remediation status |
 | `open_review` | `shared-needs-wording-sync` | system SSOT | must distinguish same-round live handoff from dead label replay |
-| `coverage_warning` surfacing | `shared-needs-wording-sync` | system SSOT | project SSOT should not restate the full system taxonomy |
+| `coverage_warning` surfacing | `shared-consistent` | system SSOT | project SSOT keeps only the proof-corpus boundary while the system SSOT owns remediation status |
 | `FactLedger` fragility | `system-only` | system SSOT | keep out of project canonical lane except as regression observation |
 | `reverse_feedback` auto-trigger status | `system-only` | system SSOT | split Stage 4→2 from Stage 4→3 and Stage 3→2 |
 | `dialogue_ratio` style-target linkage | `system-only` | system SSOT | not a `0_260316` recovery fact |
@@ -79,8 +79,19 @@ Selection rule:
 
 ### 2. Tranche 2: Validation / Escalation Hardening
 
-- next active tranche
-- starting gate: verify current `FactLedger`, `coverage_warning`, `npc_drift`, and escalation consumer paths in live code
+- completed on `2026-03-16`
+- validity gate confirmed the real gap was not missing producers but missing structured runtime handoff for `FactLedger`, `coverage_warning`, and `npc_drift`
+- landed shape:
+  - `npc_drift` now survives selected-validation payloads, retry provenance, and CW-facing retry warning payloads
+  - `coverage_warning` now surfaces through a dedicated `[검색 커버리지 경고]` mandatory-context section and structured retry evidence
+  - `FactLedger` numeric consistency now survives as explicit Director-mediated retry evidence without introducing Python hard-reject authority
+- verification:
+  - `tests/test_stage4_interview_round.py` -> `85 passed`
+  - `tests/test_stage4_context_builder.py` -> `53 passed`
+  - `tests/test_numeric_consistency_checker.py` -> `40 passed`
+  - `tests/test_stage4_cv_context.py` -> `21 passed`
+  - `ruff check` on touched producer/consumer/test files -> `All checks passed`
+  - `python scripts/ops_validator.py` -> `errors=0 warnings=0`
 - regression gate:
   - `0_260316` remains a valid proof corpus
   - wording in the project SSOT remains consistent for shared topics
@@ -88,6 +99,7 @@ Selection rule:
 
 ### 3. Tranche 3: Reverse-Loop Automation / Observability Consumption
 
+- next active tranche
 - implement the system SSOT Tranche 3 items last
 - starting gate: verify current reverse-feedback trigger sites and `cost_log` consumption status in live code
 - regression gate:
