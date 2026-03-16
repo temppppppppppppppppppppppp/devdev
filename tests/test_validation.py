@@ -177,6 +177,41 @@ class TestBlockingValidator:
         assert result["passed"] is True
 
 
+class TestContinuityCountAwareInventory:
+    def test_extract_inventory_counts_prefers_structured_snapshot(self):
+        from modules.validation.continuity_validator import ContinuityValidator
+
+        validator = ContinuityValidator()
+        counts = validator._extract_inventory_counts(
+            {
+                "inventory_counts": {"트레이딩용 컴퓨터": 3},
+                "equipment": ["트레이딩용 컴퓨터 2대"],
+            }
+        )
+
+        assert counts == {"트레이딩용 컴퓨터": 3}
+
+    def test_inventory_count_drift_warning_when_opening_count_drops(self):
+        from modules.validation.continuity_validator import ContinuityValidator
+
+        validator = ContinuityValidator()
+        validation_context = _minimal_blocking_context(mode="MANUSCRIPT")
+        validation_context["prev_hud"] = {
+            "inventory_counts": {"트레이딩용 컴퓨터": 3},
+            "location": "개인 오피스",
+        }
+        validation_context["history"] = [{"text": "직전 화 사무실에는 트레이딩용 컴퓨터 3대가 놓여 있었다."}]
+
+        manuscript = "개인 오피스 안에는 트레이딩용 컴퓨터 2대만 켜져 있었다. 모니터 불빛이 흔들렸다."
+        result = validator.validate(2, manuscript, validation_context, prev_hud=validation_context["prev_hud"])
+
+        warnings = [w for w in result["warnings"] if isinstance(w, dict) and w.get("type") == "inventory_count_drift"]
+        assert len(warnings) == 1
+        assert warnings[0]["item"] == "트레이딩용 컴퓨터"
+        assert warnings[0]["prev_count"] == 3
+        assert warnings[0]["current_count"] == 2
+
+
 class TestScoringValidator:
     """TIER 2: ScoringValidator tests."""
 

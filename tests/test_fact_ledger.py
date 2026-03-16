@@ -218,3 +218,20 @@ def test_to_summary_includes_section_truncation_counters():
     assert "(총 12개 중 10개 표시)" in summary
     assert "(총 11개 중 10개 표시)" in summary
     assert "(총 18개 중 15개 표시)" in summary
+
+
+def test_inventory_counts_update_item_quantity_and_summary():
+    ledger = FactLedger(_EmptyStubDB())
+    ledger.update_from_state_changes(
+        ep_num=9,
+        state_changes={
+            "inventory_counts": {"트레이딩용 컴퓨터": 3},
+            "inventory_count_deltas": [{"name": "트레이딩용 컴퓨터", "from": 2, "to": 3, "delta": 1}],
+        },
+    )
+
+    entry = ledger._ledger["items"]["트레이딩용 컴퓨터"]
+    assert entry["quantity"] == 3
+    assert entry["status"] == "보유"
+    summary = ledger.to_summary()
+    assert "트레이딩용 컴퓨터 x3" in summary
