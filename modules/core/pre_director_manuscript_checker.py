@@ -30,7 +30,19 @@ class PreDirectorManuscriptChecker:
     # 대화/지문 비율
     # ──────────────────────────────────────────────
 
-    def _check_dialogue_ratio(self, manuscript: str) -> list[CheckItem]:
+    @staticmethod
+    def _resolve_dialogue_ratio_target(context: dict[str, Any] | None = None) -> float:
+        if not isinstance(context, dict):
+            return 0.30
+
+        raw_target = context.get("style_dialogue_ratio_target")
+        if isinstance(raw_target, (int, float)):
+            target = float(raw_target)
+            if 0.0 < target < 1.0:
+                return target
+        return 0.30
+
+    def _check_dialogue_ratio(self, manuscript: str, context: dict[str, Any] | None = None) -> list[CheckItem]:
         """
         [V60.5] 대화/지문 비율 분석 및 구체적 가이드
 
@@ -59,8 +71,9 @@ class PreDirectorManuscriptChecker:
         dialogue_count = count_dialogue_segments(manuscript)
         min_dialogue = self.host.MANUSCRIPT_REQUIRED["dialogue"][0]
 
-        ideal_dialogue_ratio = 0.30
-        ratio_diff = ideal_dialogue_ratio - dialogue_ratio  # noqa: F841
+        ideal_dialogue_ratio = self._resolve_dialogue_ratio_target(context)
+        lower_recommended = max(0.18, ideal_dialogue_ratio - 0.08)
+        upper_recommended = min(0.55, ideal_dialogue_ratio + 0.12)
 
         if dialogue_count < min_dialogue:
             items.append(
@@ -73,36 +86,48 @@ class PreDirectorManuscriptChecker:
                 )
             )
         elif dialogue_ratio < 0.15:
-            needed_chars = int((0.20 - dialogue_ratio) * total_chars)
+            needed_chars = int((max(0.20, lower_recommended) - dialogue_ratio) * total_chars)
             items.append(
                 CheckItem(
                     category=CheckCategory.STRUCTURE,
                     name="대화 비율",
                     passed=False,
                     severity=CheckSeverity.FAIL,
-                    message=f"대화 비율 심각 부족: {dialogue_ratio:.0%} (현재 {dialogue_chars}자) → 약 {needed_chars}자 대화 추가 필요",
+                    message=(
+                        f"대화 비율 심각 부족: {dialogue_ratio:.0%} "
+                        f"(스타일 목표 {ideal_dialogue_ratio:.0%}, 현재 {dialogue_chars}자) "
+                        f"→ 약 {needed_chars}자 대화 추가 필요"
+                    ),
                 )
             )
-        elif dialogue_ratio < 0.22:
-            needed_chars = int((0.25 - dialogue_ratio) * total_chars)
+        elif dialogue_ratio < lower_recommended:
+            needed_chars = int((ideal_dialogue_ratio - dialogue_ratio) * total_chars)
             items.append(
                 CheckItem(
                     category=CheckCategory.STRUCTURE,
                     name="대화 비율",
                     passed=True,
                     severity=CheckSeverity.WARNING,
-                    message=f"대화 비율 낮음: {dialogue_ratio:.0%} → {needed_chars}자 대화 추가 권장",
+                    message=(
+                        f"대화 비율 낮음: {dialogue_ratio:.0%} "
+                        f"(스타일 목표 {ideal_dialogue_ratio:.0%}) "
+                        f"→ {needed_chars}자 대화 추가 권장"
+                    ),
                 )
             )
-        elif dialogue_ratio > 0.50:
-            excess_chars = int((dialogue_ratio - 0.40) * total_chars)
+        elif dialogue_ratio > upper_recommended:
+            excess_chars = int((dialogue_ratio - ideal_dialogue_ratio) * total_chars)
             items.append(
                 CheckItem(
                     category=CheckCategory.STRUCTURE,
                     name="대화 비율",
                     passed=True,
                     severity=CheckSeverity.WARNING,
-                    message=f"대화 비율 과다: {dialogue_ratio:.0%} → 지문/묘사 {excess_chars}자 추가 권장",
+                    message=(
+                        f"대화 비율 과다: {dialogue_ratio:.0%} "
+                        f"(스타일 목표 {ideal_dialogue_ratio:.0%}) "
+                        f"→ 지문/묘사 {excess_chars}자 추가 권장"
+                    ),
                 )
             )
         else:
@@ -112,7 +137,10 @@ class PreDirectorManuscriptChecker:
                     name="대화/지문 비율",
                     passed=True,
                     severity=CheckSeverity.PASS,
-                    message=f"대화/지문 비율 양호 (대화 {dialogue_ratio:.0%}, 지문 {narrative_ratio:.0%})",
+                    message=(
+                        f"대화/지문 비율 양호 (대화 {dialogue_ratio:.0%}, "
+                        f"지문 {narrative_ratio:.0%}, 스타일 목표 {ideal_dialogue_ratio:.0%})"
+                    ),
                 )
             )
 

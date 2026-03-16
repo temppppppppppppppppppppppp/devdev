@@ -13,6 +13,7 @@ Confidence: `96%`
 - the system SSOT owns bundle-wide broken feedback loop remediation
 - the project SSOT owns `0_260316` recovery, stop-point, integrity, resumability, and project-specific regression authority
 - this roadmap owns ordering, overlap classification, and sync rules between the two SSOTs
+- current active tranche after the latest doc refresh: `Tranche 2`
 
 ## Why Not One SSOT
 
@@ -31,7 +32,7 @@ Confidence: `96%`
 | `coverage_warning` surfacing | `shared-needs-wording-sync` | system SSOT | project SSOT should not restate the full system taxonomy |
 | `FactLedger` fragility | `system-only` | system SSOT | keep out of project canonical lane except as regression observation |
 | `reverse_feedback` auto-trigger status | `system-only` | system SSOT | split Stage 4→2 from Stage 4→3 and Stage 3→2 |
-| `dialogue_ratio` target mismatch | `system-only` | system SSOT | not a `0_260316` recovery fact |
+| `dialogue_ratio` style-target linkage | `system-only` | system SSOT | not a `0_260316` recovery fact |
 | `cost_log` runtime reader gap | `system-only` | system SSOT | not a `0_260316` recovery fact |
 | `ep7` stop point, integrity, resumability | `project-only` | project SSOT | do not promote into system SSOT |
 | `Menu 7 이어가기`, `Arc 3 / Blueprint 11 / Manuscript 6` | `project-only` | project SSOT | remain project facts only |
@@ -63,16 +64,22 @@ Selection rule:
 
 ### 1. Tranche 1: Low-Risk / High-ROI Core Feedback Closure
 
-- implement the system SSOT Tranche 1 items first
-- starting gate: verify current style-signal producers, retry ingress, and Director-mediated handoff paths in live code
-- regression gate:
-  - `0_260316` shared Stage 4 findings still reproduce
-  - project SSOT recovery facts remain unchanged
-  - no new false hard rejects from style metrics
+- completed on `2026-03-16`
+- validity gate confirmed style-signal producers were live, operator/UI readers already existed, and the real gap was bounded Director-mediated retry ingress plus fixed-threshold `dialogue_ratio`
+- landed shape:
+  - `ai_slop` / `ced_score` now surface through `StyleSignalAdvisor` into Director-mediated retry feedback
+  - `dialogue_ratio` now reads the project style target in pre-director validation
+  - no new Python hard-reject authority was introduced
+- verification:
+  - `tests/test_project_support.py` -> `10 passed`
+  - `tests/test_pre_director_submodules.py` -> `21 passed`
+  - `tests/test_stage4_interview_round.py -k "quality_signal or advisory_style or retry_feedback_provenance"` -> `3 passed`
+  - `tests/test_stage4_interview_round.py` -> `82 passed`
+  - `ruff check` on touched producer/consumer/test files -> `All checks passed`
 
 ### 2. Tranche 2: Validation / Escalation Hardening
 
-- implement the system SSOT Tranche 2 items next
+- next active tranche
 - starting gate: verify current `FactLedger`, `coverage_warning`, `npc_drift`, and escalation consumer paths in live code
 - regression gate:
   - `0_260316` remains a valid proof corpus

@@ -20,7 +20,7 @@ Scope Boundary:
 
 - **Fact:** `docs/sp` is not a project-run bundle. It is a system-wide broken feedback loop survey pack spanning Stage 0 style extraction, Stage 3 observability, Stage 4 retry handoff, cross-cutting sinks, bridge/desktop consumers, and reverse feedback paths.
 - **Fact:** most forward runtime loops already work. `DPW`, `FailureLearner`, Stage 4 streak logic, `quality_risk` early intervention, pass-rate difficulty tracking, and Stage 4→2 reverse difficulty feedback are live or working and should not be misclassified as broken.
-- **Fact:** the main broken area is not “signal absent everywhere” but “signal measured or surfaced without reaching the runtime-core decision loop.” This is especially true for `ai_slop`, `ced_score`, `coverage_warning`, and `cost_log`.
+- **Fact:** the main broken area is not “signal absent everywhere” but “signal measured or surfaced without reaching the runtime-core decision loop.” This was especially true for `ai_slop`, `ced_score`, `coverage_warning`, and `cost_log`; after Tranche 1, the highest-priority remaining gaps are `coverage_warning`, `npc_drift`, `FactLedger`, and `cost_log`.
 - **Fact:** `condex_*` supplements do not overturn the TF surveys. They mainly prove that several signals are visible in bridge/UI/operator surfaces even when they are still dead or weak in runtime-core retry routing.
 - **Fact:** two scope-sensitive names had to be normalized to eliminate false conflict:
   - `open_review` is live inside same-round `previous_attempt`, but `episode_quality_labels.open_review` replay is still dead for later generation loops.
@@ -62,6 +62,8 @@ Scope Boundary:
 
 - `modules/core/stage0/style_extractor.py`
 - `modules/core/genre_guards/style_guard.py`
+- `modules/core/project_support.py`
+- `modules/core/pre_director_checklist.py`
 - `modules/core/pre_director_manuscript_checker.py`
 - `modules/core/stage2_preflight.py`
 - `modules/core/stage3_orchestrator.py`
@@ -108,7 +110,7 @@ Pass 1 result:
 | --- | --- | --- | --- |
 | Stage 0-2 overall | TF-A/B identify weak or dead style-extraction-derived fields | `condex` TF-A shows most Stage 0-2 runtime gates are closed | **Resolved:** Stage 0-2 runtime gates are mostly closed, but extracted style descriptors remain weak or dead unless wired into validators |
 | `coverage_warnings` | TF-C says advisory-only for core retry | `condex` TF-B says operator calibration consumes it | **Resolved:** operator advisory exists, runtime-core retry still weak/advisory |
-| Stage 4 quality signal bundle | TF-D says dead for CW retry | `condex` TF-C/E say bridge quality radar consumes it | **Resolved:** split `runtime-core` vs `operator/UI` consumers; canonical broken status remains for runtime-core retry |
+| Stage 4 quality signal bundle | TF-D says dead for CW retry | `condex` TF-C/E say bridge quality radar consumes it | **Resolved:** split `runtime-core` vs `operator/UI` consumers; Tranche 1 later closes the bounded runtime-core advisory gap without giving Python final authority |
 | `open_review` | TF-D frames label replay as dead | live code shows same-round `previous_attempt.open_review` reaches CW and bridge reads latest labels | **Resolved:** split `same-round retry handoff` from `cross-episode sidecar replay`; only the replay path is dead |
 | `reverse_feedback` | TF-F says Stage 4→3 and Stage 3→2 are fragile | `condex` TF-A proves Stage 4→2 is working | **Resolved:** split paths; do not classify `reverse_feedback` as one monolith |
 | `cost_log` | TF-E says `get_cost_summary()` has no runtime caller | `condex` TF-D shows shutdown metric totals are still consumed | **Resolved:** split `cost_log DB summary` from `metrics scope shutdown totals`; only the former is dead |
@@ -130,20 +132,20 @@ Pass 2 result:
 - no project-specific recovery claim was promoted into this document
 - `0_260316` is used only as regression evidence, not as the subject of this SSOT
 
-Pass 3 result: ready for implementation ordering and roadmap orchestration.
+Pass 3 result: tranche sequencing remains valid; Tranche 1 is now closed and Tranche 2 is the next active lane.
 
 ## Signal Taxonomy
 
 | Signal | Runtime-Core Status | Operator / UI Status | Canonical Interpretation |
 | --- | --- | --- | --- |
-| `ai_slop` / quality signal bundle | `DEAD` for retry routing | `CLOSED` in bridge quality radar | measured and surfaced, but still broken for CW/runtime remediation |
-| `ced_score` | `DEAD` for retry routing | `CLOSED` in bridge quality radar | good candidate for bounded warning injection |
+| `ai_slop` / quality signal bundle | `ADVISORY / DIRECTOR-MEDIATED` | `CLOSED` in bridge quality radar | measured, persisted, and now injected into Director-mediated retry feedback without becoming a Python hard gate |
+| `ced_score` | `ADVISORY / DIRECTOR-MEDIATED` | `CLOSED` in bridge quality radar | bounded warning injection is now live through the same Director-mediated advisory path |
 | `compression_ratio` / `burstiness` / `complexity` | `DEAD` for retry routing | `CLOSED` in bridge quality radar | keep-audit by default unless promoted |
 | `open_review` same-round handoff | `WORKING` | n/a | reaches CW through `previous_attempt` when Director emits it |
 | `open_review` label replay | `DEAD` | `CLOSED` in bridge latest-label summary | cross-episode reuse path is still missing |
 | `npc_drift` structured handoff | `ADVISORY-ONLY` | n/a | Director sees it, CW does not get a durable structured payload |
 | `coverage_warnings` | `ADVISORY-ONLY` / `WEAK` | `ADVISORY` in dashboard/bridge | explicit retry or rebuild surfacing is still missing |
-| `dialogue_ratio` | `ADVISORY` | n/a | measured with a fixed threshold, not the project StyleGuide target |
+| `dialogue_ratio` | `ADVISORY / TARGET-AWARE` | n/a | measured in pre-director validation against the project StyleGuide target when available |
 | `vocabulary_level` | `DEAD` | n/a | extracted and prompted, but never validated |
 | `FactLedger` continuity | `FRAGILE` | n/a | data exists, but hard escalation is inconsistent or advisory-only |
 | `reverse_feedback` Stage 4→2 | `WORKING` | n/a | already injected via Stage 2 preflight when arc difficulty is high |
@@ -188,28 +190,51 @@ Loop rule:
 
 ### Tranche 1: Style / Core Warning Closure
 
-Priority:
+Status:
+
+- completed on `2026-03-16` after a live-code validity gate and fresh 3-pass audit
+- next selected tranche: `Tranche 2`
+
+Completed scope:
 
 1. `ai_slop` / style digest wiring
 2. `dialogue_ratio` dynamic target linkage
 3. `ced_score` warning injection
 
-Required shape:
+Implemented shape:
 
 - Python may continue measuring raw metrics, but it must not become the final reject authority
 - any style remediation fed to CW must be Director-mediated
-- `dialogue_ratio` must stop using a fixed `0.30` ideal and instead read the project style target
+- `dialogue_ratio` now reads the project style target when available instead of using a fixed `0.30` ideal
 
-Starting gate:
+Validity gate result:
 
-- rerun a codebase validity check on `style_extractor`, `style_guard`, `pre_director_manuscript_checker`, post-pass quality signal persistence, and CW retry ingress before patching
-- confirm the tranche still targets a real runtime-core gap rather than an already-closed operator/UI-only sink
+- producers were confirmed live in `stage4_post_processor.py`, `quality_signal_metrics.py`, and the DB summary path
+- operator/UI consumers were already live in bridge quality radar, confirming the remaining gap was runtime-core retry ingress
+- `pre_director_manuscript_checker.py` still used a fixed `0.30` dialogue ideal, so the style-target linkage remained stale
+- `stage4_interview_round.py` still lacked bounded `ai_slop` / `ced_score` advisory routing into Director-mediated retry feedback
 
 Regression gate:
 
 - use `0_260316` as proof corpus
 - preserve `Menu 7` resumability and existing frontier facts
 - verify that shared style findings remain wording-consistent with the companion project SSOT
+
+Bounded implementation landed:
+
+- `modules/core/project_support.py` now normalizes project style-guide `dialogue_ratio` targets
+- `modules/core/pre_director_checklist.py` and `modules/core/pre_director_manuscript_checker.py` now run dialogue-ratio checks against the project style target when present
+- `modules/core/stage4_interview_round.py` now runs `StyleSignalAdvisor` and injects `ai_slop`, `ced_score`, and `dialogue_ratio` warnings into Director-mediated retry feedback and provenance
+
+Targeted verification:
+
+- `python -m pytest -q tests/test_project_support.py` -> `10 passed`
+- `python -m pytest -q tests/test_pre_director_submodules.py` -> `21 passed`
+- `python -m pytest -q tests/test_stage4_interview_round.py -k "quality_signal or advisory_style or retry_feedback_provenance"` -> `3 passed`
+- `python -m pytest -q tests/test_stage4_interview_round.py` -> `82 passed`
+- `python -m pytest -q tests/test_continuity_modules.py -k "PreDirectorChecklistDialogueRatio"` -> `2 passed`
+- `python -m pytest -q tests/test_pre_director_dialogue_quotes.py` -> `1 passed`
+- `python -m ruff check modules/core/project_support.py modules/core/pre_director_checklist.py modules/core/pre_director_manuscript_checker.py modules/core/stage4_interview_round.py tests/test_project_support.py tests/test_pre_director_submodules.py tests/test_stage4_interview_round.py` -> `All checks passed`
 
 ### Tranche 2: Validation / Escalation Hardening
 
@@ -264,7 +289,7 @@ Regression gate:
 - each tranche starts only after a current-code validity check confirms the targeted loop classification is still accurate
 - if the pre-tranche validity check discovers drift, this SSOT is refreshed with a new 3-pass audit before code changes begin
 - each tranche completes the full loop of validity check -> implementation -> 3-pass audit -> doc update -> next-tranche selection
-- Tranche 1 closes the runtime-core gap for `ai_slop`, `dialogue_ratio`, and `ced_score` without giving Python final quality sovereignty.
+- Tranche 1 is closed: `ai_slop`, `dialogue_ratio`, and `ced_score` now reach the runtime-core retry loop through bounded Director-mediated advisory routing without giving Python final quality sovereignty.
 - Tranche 2 closes the escalation gap for `FactLedger`, `coverage_warnings`, and `npc_drift`.
 - Tranche 3 distinguishes the already-working Stage 4→2 path from the still-fragile Stage 4→3 and Stage 3→2 paths and resolves the dead `cost_log` consumer gap.
 - `0_260316` remains a valid regression fixture for shared Stage 4 findings after each tranche.
