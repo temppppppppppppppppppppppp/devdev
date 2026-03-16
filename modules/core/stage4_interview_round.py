@@ -337,6 +337,85 @@ class Stage4InterviewRound:
             unique.append(text)
         return "\n".join(unique)[:limit]
 
+    @staticmethod
+    def _describe_coverage_warning(code: str) -> str:
+        mapping = {
+            "missing_work_slot_summary": "작품 추적 슬롯 요약이 컨텍스트에 없다. work focus continuity를 직접 회수할 것.",
+            "work_focus_without_slots": "work_focus가 감지됐지만 retrieval plan에 work_* slot이 없다. 작품 추적 포인트를 직접 반영할 것.",
+            "trimmed_work_slot_summary": "작품 추적 슬롯 요약이 context budget에서 잘렸다. 핵심 tracking slot을 직접 회수할 것.",
+            "missing_relation_slice": "관계 의미 질의가 빠졌다. 인물 관계 변화와 호칭 근거를 직접 회수할 것.",
+        }
+        return mapping.get(str(code or "").strip(), str(code or "").strip())
+
+    def _structured_validation_evidence_lines(
+        self,
+        validation_result: dict | None,
+        *,
+        candidate_label: str = "",
+        limit_per_key: int = 3,
+    ) -> list[str]:
+        if not isinstance(validation_result, dict):
+            return []
+
+        prefix = f"[후보 {candidate_label}] " if candidate_label else ""
+        lines: list[str] = []
+
+        for warning in (validation_result.get("npc_drift_warnings") or [])[:limit_per_key]:
+            if not isinstance(warning, dict):
+                continue
+            npc = self._compact_text(warning.get("npc", ""), 40)
+            field = self._compact_text(warning.get("field", ""), 40)
+            expected = self._compact_text(warning.get("expected", ""), 60)
+            found = self._compact_text(warning.get("found_in_ms", ""), 60)
+            body = f"{npc} {field}: 기대='{expected}' → 원고='{found}'".strip()
+            body = " ".join(part for part in body.split() if part)
+            if body:
+                lines.append(f"{prefix}[NPC] {body}")
+
+        for warning in (validation_result.get("numeric_consistency_warnings") or [])[:limit_per_key]:
+            if isinstance(warning, dict):
+                text = self._compact_text(warning.get("text", ""), 160)
+            else:
+                text = self._compact_text(warning, 160)
+            if text:
+                lines.append(f"{prefix}[FACT] {text}")
+
+        for warning in (validation_result.get("coverage_warnings") or [])[:limit_per_key]:
+            text = self._compact_text(self._describe_coverage_warning(str(warning or "")), 160)
+            if text:
+                lines.append(f"{prefix}[COVERAGE] {text}")
+
+        return lines
+
+    def _collect_validation_warning_lines(self, validation_results: list[dict], *, limit: int = 20) -> list[str]:
+        merged: list[str] = []
+        seen: set[str] = set()
+
+        for idx, validation_result in enumerate(validation_results or []):
+            if not isinstance(validation_result, dict):
+                continue
+
+            for warning in validation_result.get("warnings", []) or []:
+                text = self._compact_text(warning, 180)
+                if text and text not in seen:
+                    seen.add(text)
+                    merged.append(text)
+
+            label = ["A", "B", "C"][idx] if idx < 3 else str(idx + 1)
+            for line in self._structured_validation_evidence_lines(
+                validation_result,
+                candidate_label=label,
+                limit_per_key=2,
+            ):
+                if line not in seen:
+                    seen.add(line)
+                    merged.append(line)
+
+            if len(merged) >= limit:
+                break
+
+        return merged[:limit]
+
     def _build_retry_feedback_provenance(
         self,
         *,
@@ -408,6 +487,9 @@ class Stage4InterviewRound:
                 text = self._compact_text(warning, 160)
                 if text:
                     evidence_lines.append(f"[STYLE] {text}")
+            evidence_lines.extend(
+                self._structured_validation_evidence_lines(selected_validation, limit_per_key=3)
+            )
         evidence_summary = ""
         if evidence_lines:
             evidence_summary = "[근거 요약 - 수정 시 반드시 반영]\n" + "\n".join(f"  {line}" for line in evidence_lines)
@@ -1124,7 +1206,12 @@ class Stage4InterviewRound:
 
     @staticmethod
     def _merge_advisory_validation_results(target_results: list[dict], advisory_results: list[dict]) -> None:
-        tracked_keys = ("truth_gate_warnings", "npc_drift_warnings", "quality_signal_warnings")
+        tracked_keys = (
+            "truth_gate_warnings",
+            "npc_drift_warnings",
+            "numeric_consistency_warnings",
+            "quality_signal_warnings",
+        )
         for idx, advisory_result in enumerate(advisory_results or []):
             if idx >= len(target_results):
                 break
@@ -2150,7 +2237,7 @@ class Stage4InterviewRound:
         _trace_final_score = _trace_meta.get("final_score", score) if isinstance(_trace_meta, dict) else score
         _trace_patch_trace = _trace_meta.get("patch_trace", {}) if isinstance(_trace_meta, dict) else {}
         _is_patch = bool(_is_patch or _trace_patch_trace)
-        _validation_warnings = [w for vr in validation_results for w in vr.get("warnings", [])][:20]
+        _validation_warnings = self._collect_validation_warning_lines(validation_results, limit=20)
         if _pass_result is not None:
             _attempt_artifact_meta = normalize_artifact_meta(getattr(_pass_result, "attempt_artifact_meta", {}) or {})
             _log_artifact_meta = normalize_artifact_meta(_attempt_artifact_meta)
@@ -2799,6 +2886,10 @@ class Stage4InterviewRound:
             _coverage_warnings.append("work_focus_without_slots")
         if _source_counts.get(RetrievalSources.DB_NPC_RELATIONSHIP, 0) > 0 and "[관계 의미 질의]" not in _director_memory_context:
             _coverage_warnings.append("missing_relation_slice")
+        if _coverage_warnings:
+            for result in validation_results:
+                if isinstance(result, dict):
+                    result["coverage_warnings"] = list(_coverage_warnings)
         self._record_retrieval_observation(
             ep_num=next_ep,
             stage="director",
@@ -3607,7 +3698,7 @@ class Stage4InterviewRound:
                 "score_breakdown": director_result.get("score_breakdown", {}),
                 "selection_reason": director_result.get("selection_reason", ""),
                 "verdict_reason": director_result.get("verdict_reason", ""),
-                "validation_warnings": [w for vr in validation_results for w in vr.get("warnings", [])][:20],
+                "validation_warnings": self._collect_validation_warning_lines(validation_results, limit=20),
                 "reject_bucket": _reject_bucket,
                 "consistency_checklist": director_result.get("consistency_checklist", {}),
                 "_tot_used": _tot_used,
@@ -4323,9 +4414,17 @@ class Stage4InterviewRound:
             )
             futures[executor.submit(self._advisory_rel_drift, candidates, next_ep)] = ("RelDrift", None)
             futures[executor.submit(self._advisory_long_term_rep, candidates, next_ep)] = ("LongTermRep", None)
-            futures[executor.submit(self._advisory_numeric_consistency, candidates, next_ep)] = (
+            _numeric_consistency_results = self._clone_validation_results_for_advisory(validation_results)
+            futures[
+                executor.submit(
+                    self._advisory_numeric_consistency,
+                    candidates,
+                    _numeric_consistency_results,
+                    next_ep,
+                )
+            ] = (
                 "NumericConsistency",
-                None,
+                _numeric_consistency_results,
             )
             _style_signal_results = self._clone_validation_results_for_advisory(validation_results)
             futures[executor.submit(self._advisory_style_signals, candidates, _style_signal_results, next_ep)] = (
@@ -4710,7 +4809,12 @@ class Stage4InterviewRound:
             )
         return []
 
-    def _advisory_numeric_consistency(self, candidates: list[dict], next_ep: int) -> list[str]:
+    def _advisory_numeric_consistency(
+        self,
+        candidates: list[dict],
+        validation_results: list[dict],
+        next_ep: int,
+    ) -> list[str]:
         """[NC-1] NumericConsistencyChecker — Python-only 수치 정합성 advisory."""
         try:
             from modules.core.numeric_consistency_checker import NumericConsistencyChecker
@@ -4740,6 +4844,10 @@ class Stage4InterviewRound:
                     state_updates=_su,
                     prev_manuscript=_prev_ms,
                 )
+                if _warns and _ci < len(validation_results) and isinstance(validation_results[_ci], dict):
+                    validation_results[_ci].setdefault("numeric_consistency_warnings", []).extend(
+                        copy.deepcopy(_warns)
+                    )
                 for _w in _warns:
                     _w["_cand_idx"] = _ci
                 _nc_all.extend(_warns)

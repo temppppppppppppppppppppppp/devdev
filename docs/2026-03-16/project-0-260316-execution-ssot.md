@@ -166,9 +166,9 @@ Pass 3 result: fit to guide project recovery and project-level regression owners
 | Topic | Classification | Canonical Authority | Project Treatment |
 | --- | --- | --- | --- |
 | `ai_slop` feedback gap | `shared-consistent` | companion system SSOT | retained only as `0_260316` proof corpus; remediation status follows the companion system SSOT |
-| `npc_drift` retry handoff | `shared-needs-wording-sync` | companion system SSOT | referenced here only as Stage 4 evidence |
+| `npc_drift` retry handoff | `shared-consistent` | companion system SSOT | runtime-core remediation is now closed in the companion system SSOT; this document keeps only Stage 4 proof evidence |
 | `open_review` | `shared-needs-wording-sync` | companion system SSOT | do not treat label replay and same-round handoff as the same path |
-| `coverage_warning` explicit surfacing | `shared-needs-wording-sync` | companion system SSOT | referenced here only where it affects Stage 4 proof |
+| `coverage_warning` explicit surfacing | `shared-consistent` | companion system SSOT | runtime-core remediation is now closed in the companion system SSOT; this document keeps only Stage 4 proof evidence |
 | `FactLedger` fragility | `system-only` | companion system SSOT | not promoted to a project-only canonical queue |
 | `reverse_feedback` auto-trigger status | `system-only` | companion system SSOT | not restated here except as regression implications |
 | `dialogue_ratio` style-target linkage | `system-only` | companion system SSOT | out of scope for project recovery authority |
@@ -318,7 +318,7 @@ The items above are canonicalized in the companion system SSOT and appear here o
 
 **Shared broken-feedback subfinding**
 - companion system SSOT now treats `ai_slop` / `ced_score` as Director-mediated advisory routing rather than telemetry-only runtime-core signals; this document keeps that authority external
-- `npc_drift` and `coverage_warning` are shared Stage 4 evidence, but their bundle-wide remediation authority is externalized
+- `npc_drift` and `coverage_warning` bundle-wide remediation is now landed in the companion system SSOT; this document keeps only the shared Stage 4 proof boundary
 - `dialogue_ratio` style-target linkage is now landed in the companion system SSOT and remains out of scope for project recovery authority
 - `open_review` must remain split between same-round retry handoff and dead sidecar replay; this document does not collapse those paths
 

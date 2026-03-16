@@ -899,6 +899,29 @@ class Stage4ContextBuilder:
         return result
 
     @staticmethod
+    def _describe_retrieval_coverage_warning(code: str) -> str:
+        mapping = {
+            "missing_work_slot_summary": "작품 추적 슬롯 요약이 mandatory_context에 없다. work focus continuity를 직접 회수할 것.",
+            "work_focus_without_slots": "work_focus가 감지됐지만 retrieval plan에 work_* slot이 없다. 작품 추적 포인트를 직접 반영할 것.",
+            "trimmed_work_slot_summary": "작품 추적 슬롯 요약이 context budget에서 잘렸다. 핵심 tracking slot을 직접 회수할 것.",
+            "missing_relation_slice": "관계 의미 질의가 빠졌다. 인물 관계 변화와 호칭 근거를 직접 회수할 것.",
+        }
+        return mapping.get(str(code or "").strip(), str(code or "").strip())
+
+    def _build_retrieval_coverage_warning_section(self, coverage_warnings: list[str]) -> str:
+        lines: list[str] = []
+        seen: set[str] = set()
+        for code in coverage_warnings or []:
+            text = self._describe_retrieval_coverage_warning(str(code or ""))
+            if text and text not in seen:
+                seen.add(text)
+                lines.append(f"- {text}")
+        if not lines:
+            return ""
+        lines.append("- 이번 화 원고에서는 위 retrieval 근거를 직접 회수하고 관련 인물/작품 축을 명시적으로 재노출할 것.")
+        return "[검색 커버리지 경고]\n" + "\n".join(lines)
+
+    @staticmethod
     def _summarize_retrieval_sources(plan: "RetrievalPlan | None") -> dict[str, int]:
         counts: dict[str, int] = {}
         if not plan or not getattr(plan, "slots", None):
@@ -2639,23 +2662,45 @@ class Stage4ContextBuilder:
             _mc_parts = self._apply_context_budget(_mc_parts, _sc_budget)
 
         # [LS-5] SC Retrieval 결과와 non-SC 본문을 합산 budget 기준으로 재조립
-        mandatory_context = self._compose_mandatory_context_with_headroom(_sc_parts, _mc_parts)
         _source_counts = self._summarize_retrieval_sources(_retrieval_plan)
         if not _source_counts and any("[과거 유사 맥락" in str(_part) for _part in _mc_parts):
             _source_counts = {"legacy_multi_query": 1}
+
+        def _compute_coverage_warnings(context_text: str) -> list[str]:
+            warnings: list[str] = []
+            if _work_focus and not _slot_summary:
+                warnings.append("missing_work_slot_summary")
+            if _work_focus and _retrieval_plan and not any(
+                str(getattr(_slot, "category", "")).startswith("work_")
+                for _slot in (getattr(_retrieval_plan, "slots", []) or [])
+            ):
+                warnings.append("work_focus_without_slots")
+            if _slot_summary and "[작품 추적 슬롯 요약]" not in context_text:
+                warnings.append("trimmed_work_slot_summary")
+            if _source_counts.get(RetrievalSources.DB_NPC_RELATIONSHIP, 0) > 0 and "[관계 의미 질의]" not in context_text:
+                warnings.append("missing_relation_slice")
+            return warnings
+
+        mandatory_context = ""
         _coverage_warnings: list[str] = []
-        if _work_focus and not _slot_summary:
-            _coverage_warnings.append("missing_work_slot_summary")
-        if _work_focus and _retrieval_plan and not any(
-            str(getattr(_slot, "category", "")).startswith("work_")
-            for _slot in (getattr(_retrieval_plan, "slots", []) or [])
-        ):
-            _coverage_warnings.append("work_focus_without_slots")
+        _coverage_note = ""
+        _coverage_note_idx: int | None = None
+        for _ in range(3):
+            mandatory_context = self._compose_mandatory_context_with_headroom(_sc_parts, _mc_parts)
+            _coverage_warnings = _compute_coverage_warnings(mandatory_context)
+            _next_coverage_note = self._build_retrieval_coverage_warning_section(_coverage_warnings)
+            if not _next_coverage_note:
+                break
+            if _coverage_note == _next_coverage_note:
+                break
+            if _coverage_note_idx is None:
+                _mc_parts.insert(0, _next_coverage_note)
+                _coverage_note_idx = 0
+            else:
+                _mc_parts[_coverage_note_idx] = _next_coverage_note
+            _coverage_note = _next_coverage_note
+
         _slot_summary_survived = "[작품 추적 슬롯 요약]" in mandatory_context
-        if _slot_summary and not _slot_summary_survived:
-            _coverage_warnings.append("trimmed_work_slot_summary")
-        if _source_counts.get(RetrievalSources.DB_NPC_RELATIONSHIP, 0) > 0 and "[관계 의미 질의]" not in mandatory_context:
-            _coverage_warnings.append("missing_relation_slice")
         self._record_retrieval_observation(
             ep_num=next_ep,
             stage="stage4",
