@@ -819,6 +819,81 @@ class TestBuildMandatoryContext:
         assert "[스킬 쿨다운/사용 이력]" in result["mandatory_context"]
 
     @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")
+    def test_suppresses_overlapping_state_tracker_summaries_when_canonical_layers_exist(self, *_mocks):
+        ctx = _make_ctx()
+        ctx.world_state = MagicMock()
+        ctx.world_state.get_summary.return_value = "[세계 상태 요약]"
+        ctx.world_state.get_timeline_summary.return_value = "[타임라인 요약]"
+        ctx.world_state.get_canonical_constraints.return_value = "[Canonical NPC]"
+        ctx.fact_ledger = MagicMock()
+        ctx.fact_ledger.to_summary.return_value = "[팩트 원장 요약]"
+        ctx.fact_ledger.get_canonical_summary.return_value = "[Canonical Number]"
+        ctx.state_tracker = MagicMock()
+        ctx.state_tracker.get_all_summaries.return_value = {
+            "dead_npc": "[사망 NPC]\n- 장천",
+            "item_state": "[아이템 상태]\n- 흑검",
+            "relationship_changes": "[관계 변화]\n- 장천/소연 적대",
+            "financial_state": "[금융 상태]\n- 자본금 10억",
+            "entity_destruction": "[파괴 엔티티]\n- 흑풍회 본부 붕괴",
+        }
+        cb = Stage4ContextBuilder(ctx)
+        anchor_sys = MagicMock()
+        anchor_sys.get_relevant_anchors.return_value = []
+        anchor_sys.get_critical_anchors.return_value = []
+
+        result = cb.build_mandatory_context(
+            next_ep=5,
+            arc_data={"arc_no": 1},
+            arc_tactical="전술",
+            prev_text="이전 원고 " * 30,
+            prev_ending="엔딩",
+            hud_report="HUD",
+            writer_agent=MagicMock(),
+            anchor_sys=anchor_sys,
+            s4_genre_type="investment",
+            v50_modules_available=False,
+        )
+
+        text = result["mandatory_context"]
+        assert "[Authority precedence]" in text
+        assert "[파괴 엔티티]" in text
+        assert "[사망 NPC]" not in text
+        assert "[아이템 상태]" not in text
+        assert "[관계 변화]" not in text
+        assert "[금융 상태]" not in text
+
+    @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")
+    def test_keeps_state_tracker_summaries_when_no_canonical_layers_exist(self, *_mocks):
+        ctx = _make_ctx()
+        ctx.state_tracker = MagicMock()
+        ctx.state_tracker.get_all_summaries.return_value = {
+            "dead_npc": "[사망 NPC]\n- 장천",
+            "item_state": "[아이템 상태]\n- 흑검",
+        }
+        cb = Stage4ContextBuilder(ctx)
+        anchor_sys = MagicMock()
+        anchor_sys.get_relevant_anchors.return_value = []
+        anchor_sys.get_critical_anchors.return_value = []
+
+        result = cb.build_mandatory_context(
+            next_ep=5,
+            arc_data={"arc_no": 1},
+            arc_tactical="전술",
+            prev_text="이전 원고 " * 30,
+            prev_ending="엔딩",
+            hud_report="HUD",
+            writer_agent=MagicMock(),
+            anchor_sys=anchor_sys,
+            s4_genre_type="wuxia",
+            v50_modules_available=False,
+        )
+
+        text = result["mandatory_context"]
+        assert "[Authority precedence]" not in text
+        assert "[사망 NPC]" in text
+        assert "[아이템 상태]" in text
+
+    @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")
     def test_uses_advisor_retrieval_plan_when_available(self, *_mocks):
         ctx = _make_ctx()
         ctx.memory = MagicMock()

@@ -18,6 +18,7 @@
 import logging
 import re
 
+from modules.core.inventory_state import normalize_inventory_counts
 from modules.validation.threshold_helper import _threshold  # [Phase 5-B-2c]
 
 
@@ -156,6 +157,11 @@ class ContinuityValidator:
             violations.extend(item_check["violations"])
         warnings.extend(item_check.get("warnings", []))
 
+        count_check = self._check_inventory_count_continuity(current_ep, manuscript, prev_hud)
+        if not count_check["passed"]:
+            violations.extend(count_check["violations"])
+        warnings.extend(count_check.get("warnings", []))
+
         # ═══════════════════════════════════════════════════════════════
         # 검증 2: 무기 소지 연속성
         # ═══════════════════════════════════════════════════════════════
@@ -267,6 +273,10 @@ class ContinuityValidator:
 
     def _extract_equipment(self, hud: dict) -> set[str]:
         """HUD에서 장비 목록 추출"""
+        inventory_counts = self._extract_inventory_counts(hud)
+        if inventory_counts:
+            return set(inventory_counts.keys())
+
         equipment = set()
 
         # actual_truth.equipment 경로
@@ -291,6 +301,28 @@ class ContinuityValidator:
                     equipment.add(key.strip())
 
         return equipment
+
+    def _extract_inventory_counts(self, hud: dict) -> dict[str, int]:
+        """HUD에서 count-aware inventory를 추출."""
+        if not isinstance(hud, dict):
+            return {}
+
+        actual_truth = hud.get("actual_truth", {})
+        if not isinstance(actual_truth, dict):
+            actual_truth = {}
+
+        inventory_counts = normalize_inventory_counts(actual_truth.get("inventory_counts", {}))
+        if inventory_counts:
+            return inventory_counts
+
+        inventory_counts = normalize_inventory_counts(hud.get("inventory_counts", {}))
+        if inventory_counts:
+            return inventory_counts
+
+        equipment_data = actual_truth.get("equipment")
+        if equipment_data is None:
+            equipment_data = hud.get("equipment", [])
+        return normalize_inventory_counts(equipment_data)
 
     def _check_item_continuity(
         self, current_ep: int, manuscript: str, prev_hud: dict, prev_manuscript: str | None
@@ -337,6 +369,63 @@ class ContinuityValidator:
                         break
 
         return {"passed": len(violations) == 0, "violations": violations, "warnings": warnings}
+
+    _COUNT_UNIT_PATTERN = r"(?:개|대|병|자루|권|장|벌|알|정|통|칸|쌍|척)"
+
+    def _find_item_count_in_text(self, item_name: str, text: str) -> int | None:
+        if not item_name or not text:
+            return None
+
+        candidates = [item_name.strip()]
+        candidates.extend(sorted(self._extract_keywords(item_name), key=len, reverse=True)[:2])
+
+        for candidate in candidates:
+            if not candidate:
+                continue
+            escaped = re.escape(candidate)
+            patterns = [
+                rf"{escaped}\s*(\d+)\s*{self._COUNT_UNIT_PATTERN}",
+                rf"(\d+)\s*{self._COUNT_UNIT_PATTERN}\s*(?:의\s*)?{escaped}",
+            ]
+            for pattern in patterns:
+                match = re.search(pattern, text)
+                if not match:
+                    continue
+                try:
+                    return int(match.group(1))
+                except (TypeError, ValueError):
+                    continue
+        return None
+
+    def _check_inventory_count_continuity(self, current_ep: int, manuscript: str, prev_hud: dict) -> dict:
+        """명시적 opening count가 직전 persisted count보다 감소하면 경고한다."""
+        prev_counts = self._extract_inventory_counts(prev_hud)
+        if not prev_counts:
+            return {"passed": True, "violations": [], "warnings": []}
+
+        warnings = []
+        opening_text = manuscript[:800] if len(manuscript) > 800 else manuscript
+        for item_name, prev_count in prev_counts.items():
+            if prev_count <= 0:
+                continue
+            current_count = self._find_item_count_in_text(item_name, opening_text)
+            if current_count is None:
+                continue
+            if current_count < prev_count:
+                warnings.append(
+                    {
+                        "type": "inventory_count_drift",
+                        "severity": "WARNING",
+                        "item": item_name,
+                        "prev_count": prev_count,
+                        "current_count": current_count,
+                        "reason": f"직전 화 기준 '{item_name}' 수량은 {prev_count}인데 opening 묘사는 {current_count}로 감소함",
+                        "prev_ep": current_ep - 1,
+                        "fix_suggestion": "수량 감소가 의도됐다면 분실/소모 원인을 먼저 명시하고, 아니면 직전 화 수량에 맞춰 opening을 정렬하세요.",
+                    }
+                )
+
+        return {"passed": True, "violations": [], "warnings": warnings}
 
     def _check_weapon_continuity(
         self, current_ep: int, manuscript: str, prev_hud: dict, prev_manuscript: str | None

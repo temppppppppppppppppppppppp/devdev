@@ -506,6 +506,67 @@ class TestProcessPassResult:
         assert record_kwargs["result"]["score"] == 95
         assert record_kwargs["result"]["quality_signals"]["ced_score"] > 0
 
+    def test_inventory_counts_flow_into_state_log_and_state_sinks(self, tmp_path):
+        pp = self._make_pp()
+        pp.ctx.current_project.db.save_manuscript.return_value = True
+        pp.ctx.current_project.latest_state = {
+            "actual_truth": {"equipment": ["트레이딩용 컴퓨터 2대", "모니터 2대"]}
+        }
+        pp.ctx.agents["manager"].update_state_and_lore_v20.return_value = {
+            "new_lore": {},
+            "knowledge_map_updates": {},
+            "recovered_seeds": [],
+            "state_updates": {
+                "actual_truth": {
+                    "equipment": ["트레이딩용 컴퓨터 3대", {"name": "모니터", "count": 2}],
+                }
+            },
+            "causal_links": [],
+        }
+
+        pp.ctx.world_state = MagicMock()
+        pp.ctx.world_state._state = {}
+        pp.ctx.fact_ledger = MagicMock()
+        pp.ctx.fact_ledger._ledger = {}
+        pp.ctx.fact_ledger.get_stats.return_value = {"characters": 0, "items": 2}
+
+        result = pp.process_pass_result(
+            next_ep=6,
+            final_manuscript="사무실 안에는 트레이딩용 컴퓨터 3대와 모니터 2대가 켜져 있었다. " * 120,
+            final_title="테스트",
+            final_state_updates={},
+            blueprint={"scene_breakdown": []},
+            arc_data={"arc_no": 2},
+            output_dir=tmp_path,
+            v50_modules_available=False,
+            extract_chain_link_fn=lambda *_args, **_kwargs: {},
+        )
+
+        assert result is True
+        saved_state_log = pp.ctx.current_project.db.save_state_log_with_summary.call_args.args[1]
+        assert saved_state_log["actual_truth"]["inventory_counts"] == {
+            "모니터": 2,
+            "트레이딩용 컴퓨터": 3,
+        }
+        assert saved_state_log["inventory_count_deltas"] == [
+            {"name": "트레이딩용 컴퓨터", "from": 2, "to": 3, "delta": 1},
+        ]
+
+        world_state_changes = pp.ctx.world_state.update_from_state_changes.call_args.args[1]
+        assert world_state_changes["inventory_counts"] == {
+            "모니터": 2,
+            "트레이딩용 컴퓨터": 3,
+        }
+        assert world_state_changes["inventory_count_deltas"] == [
+            {"name": "트레이딩용 컴퓨터", "from": 2, "to": 3, "delta": 1},
+        ]
+
+        fact_ledger_changes = pp.ctx.fact_ledger.update_from_state_changes.call_args.args[1]
+        assert fact_ledger_changes["inventory_counts"] == {
+            "모니터": 2,
+            "트레이딩용 컴퓨터": 3,
+        }
+
 
 class TestRunPostEpisodeTasks:
     def test_vector_sync_called_when_operational(self):

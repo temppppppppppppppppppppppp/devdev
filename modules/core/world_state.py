@@ -256,6 +256,54 @@ class WorldStateManager:
             _logger.error("[WorldState] §4 아이템 처리 실패: %s", e)
 
         try:
+            # 4a. count-aware inventory snapshot
+            inventory_counts = state_changes.get("inventory_counts") or {}
+            if isinstance(inventory_counts, dict):
+                for item_name, raw_count in inventory_counts.items():
+                    if not item_name:
+                        continue
+                    try:
+                        count = int(raw_count)
+                    except (TypeError, ValueError):
+                        continue
+                    if count <= 0:
+                        continue
+                    entry = self._state["active_items"].setdefault(
+                        item_name,
+                        {
+                            "ep_acquired": ep_num,
+                            "status": "보유",
+                        },
+                    )
+                    entry["status"] = "보유"
+                    entry["quantity"] = count
+                    entry["last_count_ep"] = ep_num
+
+            for delta in state_changes.get("inventory_count_deltas") or []:
+                if not isinstance(delta, dict):
+                    continue
+                item_name = str(delta.get("name", "") or "").strip()
+                if not item_name:
+                    continue
+                entry = self._state["active_items"].setdefault(
+                    item_name,
+                    {
+                        "ep_acquired": ep_num,
+                        "status": "보유",
+                    },
+                )
+                try:
+                    to_count = int(delta.get("to", entry.get("quantity", 0)) or 0)
+                except (TypeError, ValueError):
+                    to_count = 0
+                entry["quantity"] = to_count
+                entry["last_count_ep"] = ep_num
+                entry["status"] = "보유" if to_count > 0 else "소실"
+
+        except Exception as e:
+            _logger.error("[WorldState] §4a 수량 인벤토리 처리 실패: %s", e)
+
+        try:
             # 5. 엔티티 파괴 (조직/장소)
             _existing_destroyed_names = {
                 d.get("name") for d in self._state["destroyed"] if isinstance(d, dict)
@@ -924,7 +972,12 @@ class WorldStateManager:
             active_items = {k: v for k, v in items.items() if isinstance(v, dict) and v.get("status", "보유") == "보유"}
             if active_items:
                 shown_items = list(active_items.keys())[:20]
-                item_lines = [f"- {name}" for name in shown_items]
+                item_lines = []
+                for name in shown_items:
+                    info = active_items.get(name, {})
+                    qty = info.get("quantity") if isinstance(info, dict) else None
+                    qty_suffix = f" x{qty}" if isinstance(qty, int) and qty > 1 else ""
+                    item_lines.append(f"- {name}{qty_suffix}")
                 item_suffix = _build_truncation_suffix(len(active_items), len(shown_items))
                 parts.append(f"[보유 아이템{item_suffix}]\n" + "\n".join(item_lines))
 

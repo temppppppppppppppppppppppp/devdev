@@ -119,3 +119,19 @@ class TestSummaryVisibility:
         assert "(총 21개 중 20개 표시)" in summary
         assert "(총 11개 중 10개 표시)" in summary
         assert "(총 6개 중 5개 표시)" in summary
+
+
+class TestInventoryCounts:
+    def test_inventory_counts_update_active_items_and_summary(self, ws):
+        ws.update_from_state_changes(
+            ep_num=7,
+            state_changes={
+                "inventory_counts": {"트레이딩용 컴퓨터": 3, "모니터": 2},
+                "inventory_count_deltas": [{"name": "트레이딩용 컴퓨터", "from": 2, "to": 3, "delta": 1}],
+            },
+        )
+
+        assert ws._state["active_items"]["트레이딩용 컴퓨터"]["quantity"] == 3
+        assert ws._state["active_items"]["트레이딩용 컴퓨터"]["status"] == "보유"
+        summary = ws.get_summary()
+        assert "트레이딩용 컴퓨터 x3" in summary

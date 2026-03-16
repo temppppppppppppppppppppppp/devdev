@@ -83,9 +83,9 @@ Refresh Context:
 - `modules/core/stage4_interview_round.py:401-424`
 - `modules/core/stage4_interview_round.py:3534-3560`
 - `modules/core/stage4_interview_round.py:3977-4044`
+- `modules/core/inventory_state.py:1-115`
 - `modules/core/stage4_post_processor.py:304-367`
-- `modules/core/stage4_post_processor.py:851-875`
-- `modules/core/stage4_post_processor.py:990-1004`
+- `modules/core/stage4_post_processor.py:856-1169`
 - `modules/core/stage4_post_processor.py:1299-1304`
 - `modules/core/quality_signal_metrics.py:129-202`
 - `modules/core/db_manager.py:2910-2940`
@@ -93,9 +93,10 @@ Refresh Context:
 - `modules/api/bridge_server.py:1021-1036`
 - `modules/domain/agents/chief_writer.py:799-920`
 - `modules/domain/agents/chief_writer.py:1551-1669`
-- `modules/core/world_state.py:237-255`
-- `modules/core/fact_ledger.py:191-202`
+- `modules/core/world_state.py:237-299`
+- `modules/core/fact_ledger.py:191-227`
 - `modules/core/fact_ledger.py:278-312`
+- `modules/validation/continuity_validator.py:274-423`
 - `modules/validation/blocking_validator_entity_checks.py:149-179`
 
 ### Companion Canonical System Authority
@@ -179,7 +180,9 @@ Pass 3 result: fit to guide project recovery and project-level regression owners
   - `modules/core/stage4_context_builder.py:1759-1762` and `2105-2480` show `arc_tactical` still participates in writer-facing mandatory context and retrieval planning.
   - `modules/core/stage4_orchestrator.py:1507-1540` shows Director continuity still gets a thinner `story_context` than the broader writer-facing packet.
   - `modules/core/stage4_interview_round.py:3977-4044` now resolves `prev_hud` with persisted precedence: `manuscript.hud_snapshot -> state_logs.data.hud_snapshot -> state_logs.data.actual_truth -> live sys.hud.pro_root fallback`.
-  - `modules/core/stage4_post_processor.py:851-875`, `990-1004`, `modules/core/world_state.py:237-255`, and `modules/core/fact_ledger.py:191-202` show inventory persistence remains name-based and set-based rather than count-aware.
+  - `modules/core/stage4_context_builder.py:920-1013` and `2339-2393` now suppress overlapping `state_tracker` summaries when `world_state`/`fact_ledger` canonical layers already cover the same domain, so arc-derived tracker summaries no longer outrank persisted continuity blocks inside Stage 4 mandatory context.
+  - `modules/core/inventory_state.py:1-115`, `modules/core/stage4_post_processor.py:856-1169`, `modules/core/world_state.py:260-299`, and `modules/core/fact_ledger.py:204-227` now preserve count-aware inventory snapshots/deltas through `actual_truth`, `state_logs`, `world_state`, and `fact_ledger`.
+  - `modules/validation/continuity_validator.py:305-423` now reads structured `inventory_counts` and warns on opening count drift such as persisted `3대` degrading to prose `2대`.
   - `modules/core/stage4_orchestrator.py:485-527` shows `컴퓨터` and `모니터` issue families are intentionally downgraded in preflight.
 - **Fact:** `0_260316` exposed a separate local routing defect, and a bounded repair is now live: `modules/domain/agents/director_ensemble.py:1244-1571` adds a narrow `firewall_fixable` route plus structured `contradiction_details`, while `modules/core/stage4_interview_round.py:340-438`, `modules/core/stage4_interview_round.py:3505-3604`, `modules/core/stage4_interview_round.py:4681-4710`, and `modules/domain/agents/chief_writer.py:1748-1764` now carry that detail into retry, PASS_WITH_FIX patching, and recent-attempt history.
 - **Fact:** shared broken-feedback topics such as `ai_slop`, `npc_drift`, `coverage_warning`, `open_review` replay, `FactLedger`, reverse feedback, `dialogue_ratio`, and `cost_log` are now canonically classified in the companion system SSOT and must not be re-authored here as independent system-wide queues.
@@ -220,10 +223,10 @@ Core reconciliation sentence:
 **Why this lane is required**
 - Stage 4 re-entry can mix arc-derived tracker state with DB-derived persisted state (`main_a.py:4043-4096`)
 - Director continuity remains thinner than writer-facing context (`stage4_orchestrator.py:1507-1540`)
-- `prev_hud` continuity now prefers persisted prior-episode truth, but that only closes the CV snapshot path; broader Stage 4 authority mixing still remains (`stage4_interview_round.py:3977-4044`, `main_a.py:4043-4096`)
+- `prev_hud` continuity now prefers persisted prior-episode truth, and overlapping `state_tracker` prompt summaries now defer to canonical persisted layers inside Stage 4 mandatory context; residual app-init object mixing still remains (`stage4_interview_round.py:3977-4044`, `stage4_context_builder.py:2339-2393`, `main_a.py:4043-4096`)
 - bounded local-fix routing is now landed, but only for narrow name/title/location/banned-term cases (`director_ensemble.py:1244-1571`)
 - contradiction payload now survives into retry and PASS_WITH_FIX feedback, but persisted-snapshot/authority issues still dominate the broader continuity risk (`stage4_interview_round.py:340-438`, `stage4_interview_round.py:3505-3604`, `stage4_interview_round.py:4681-4710`)
-- inventory facts are not count-aware (`stage4_post_processor.py`, `world_state.py`, `fact_ledger.py`)
+- count-aware inventory persistence and opening drift detection are now landed, but relationship/threat carry-over and severity policy are still open (`inventory_state.py`, `stage4_post_processor.py`, `world_state.py`, `fact_ledger.py`, `continuity_validator.py`)
 - preflight weakens office-state issues that matter in this project (`stage4_orchestrator.py:485-527`)
 
 **Shared bundle boundary**
@@ -244,11 +247,9 @@ The items above are canonicalized in the companion system SSOT and appear here o
 - only after that validity check passes should `0_260316` be used as the regression gate for shared findings
 
 **Priority order**
-1. Stage 4 authority hierarchy 정리
-2. inventory를 count-aware schema로 승격
-3. relationship/threat delta durable persistence
-4. preflight/validator severity 정책 수정
-5. use `0_260316` as the regression gate for companion system SSOT tranches
+1. relationship/threat delta durable persistence
+2. preflight/validator severity 정책 수정
+3. use `0_260316` as the regression gate for companion system SSOT tranches
 
 **Current loop delta (2026-03-16)**
 - bounded implementation landed for `fixable-firewall routing + detailed contradiction payload persistence`
@@ -256,7 +257,19 @@ The items above are canonicalized in the companion system SSOT and appear here o
 - the same path now emits `contradiction_details`, and `modules/core/stage4_interview_round.py:340-438`, `modules/core/stage4_interview_round.py:3505-3604`, `modules/core/stage4_interview_round.py:4681-4710`, plus `modules/domain/agents/chief_writer.py:1748-1764` preserve that detail through retry feedback, PASS_WITH_FIX patching, and recent-attempt history
 - bounded implementation also landed for `persisted prev_hud precedence` in the Stage 4 CV path
 - `modules/core/stage4_interview_round.py:3977-4044` now resolves `prev_hud` from persisted sources before any live HUD fallback and records `prev_hud_source` for audit visibility
+- bounded implementation also landed for `mandatory_context authority precedence` between `world_state/fact_ledger` and arc-derived `state_tracker` summaries
+- `modules/core/stage4_context_builder.py:920-1013` and `2339-2393` now suppress overlapping tracker summaries such as dead-NPC, item-state, relationship, movement, injury, timeline, and financial blocks when canonical persisted layers are already present
+- bounded implementation also landed for `inventory count-aware schema`
+- `modules/core/inventory_state.py:1-115` now normalizes counted inventory strings/dicts into deterministic `inventory_counts` and `inventory_count_deltas`
+- `modules/core/stage4_post_processor.py:856-1169` now threads those counts through `actual_truth`, `bible_delta`, `state_logs`, and the atomic `world_state` / `fact_ledger` save path
+- `modules/core/world_state.py:260-299` and `modules/core/fact_ledger.py:204-227` now persist per-item quantities instead of name-only presence, and summaries surface `xN` counts
+- `modules/validation/continuity_validator.py:305-423` now reads structured inventory counts and emits `inventory_count_drift` warnings when the opening prose explicitly shrinks a persisted count
 - targeted verification passed:
+  - `python -m pytest -q tests/test_inventory_state.py` -> `2 passed`
+  - `python -m pytest -q tests/test_world_state_caps.py` -> `6 passed`
+  - `python -m pytest -q tests/test_fact_ledger.py` -> `14 passed`
+  - `python -m pytest -q tests/test_stage4_post_processor.py` -> `43 passed`
+  - `python -m pytest -q tests/test_validation.py` -> `29 passed`
   - `python -m pytest -q tests/test_v75c_contradiction_firewall.py` -> `14 passed`
   - `python -m pytest -q tests/test_a4_failure_pattern.py` -> `6 passed`
   - `python -m pytest -q tests/test_stage4_interview_round.py -k "extract_fix_feedback or retry_feedback_provenance"` -> `3 passed`
@@ -264,7 +277,10 @@ The items above are canonicalized in the companion system SSOT and appear here o
   - `python -m pytest -q tests/test_chief_writer.py -k "retry_history_feedback_is_included"` -> `1 passed`
   - `python -m pytest -q tests/test_stage4_cv_context.py` -> `20 passed`
   - `python -m pytest -q tests/test_stage4_interview_round.py` -> `80 passed`
-- next selected sub-target inside this project item: `Stage 4 state_tracker/world_state/fact_ledger authority precedence`
+  - `python -m pytest -q tests/test_stage4_context_builder.py` -> `51 passed`
+  - `python -m pytest -q tests/test_stage4_orchestrator.py` -> `58 passed`
+  - `python -m pytest -q tests/test_continuity_packet.py` -> `18 passed`
+- next selected sub-target inside this project item: `relationship/threat delta durable persistence`
 
 **PASS_WITH_FIX subfinding**
 - highest-confidence local-fix candidates in `0_260316` are `ep4 round 0`, `ep4 round 1`, and `ep5 round 0`
