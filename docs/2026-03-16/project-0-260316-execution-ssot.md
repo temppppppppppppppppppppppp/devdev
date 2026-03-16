@@ -247,8 +247,8 @@ The items above are canonicalized in the companion system SSOT and appear here o
 - only after that validity check passes should `0_260316` be used as the regression gate for shared findings
 
 **Priority order**
-1. relationship/threat delta durable persistence
-2. preflight/validator severity 정책 수정
+1. ~~relationship/threat delta durable persistence~~ → **completed**
+2. ~~preflight/validator severity 정책 수정~~ → **evaluated: no change needed** (inventory_count_drift in continuity_validator already structurally detects count drift; preflight genre-tolerance TF-49b is intentional; RelDrift advisory is operational)
 3. use `0_260316` as the regression gate for companion system SSOT tranches
 
 **Current loop delta (2026-03-16)**
@@ -280,7 +280,22 @@ The items above are canonicalized in the companion system SSOT and appear here o
   - `python -m pytest -q tests/test_stage4_context_builder.py` -> `51 passed`
   - `python -m pytest -q tests/test_stage4_orchestrator.py` -> `58 passed`
   - `python -m pytest -q tests/test_continuity_packet.py` -> `18 passed`
-- next selected sub-target inside this project item: `relationship/threat delta durable persistence`
+- bounded implementation also landed for `relationship/threat delta durable persistence`
+- `modules/core/stage4_post_processor.py:948-964` now generates relationship_changes as dict format `{npc, to, from}` instead of flat strings, matching what `world_state.py` and `fact_ledger.py` expect
+- `modules/core/stage4_post_processor.py:1103-1111` now includes `relationship_changes` in `state_log_data` (previously missing)
+- `modules/core/stage4_post_processor.py:1162-1172` now extracts `relationship_changes` from `bible_delta` as `_relationship_payload` (parallel to `_inventory_payload`)
+- `modules/core/stage4_post_processor.py:1186-1190` and `1222-1226` now merge `_relationship_payload` into WorldState and FactLedger update calls
+- the full pipeline is: generation (dict format) → bible_delta → state_log → extraction → WorldState.update_from_state_changes() → FactLedger.update_from_state_changes() → persisted summary → re-injection via Stage 4 context_builder
+- preflight/validator severity evaluated: no code change needed — `inventory_count_drift` (WARNING) in continuity_validator handles count drift structurally; TF-49b preflight genre-tolerance is intentional; `RelDrift` advisory (MAJOR) is already operational in Stage 4 interview round L4573-4619
+- targeted verification passed:
+  - `tests/test_stage4_post_processor.py` -> `44 passed` (+1 new: `test_relationship_changes_flow_into_state_log_and_state_sinks`)
+  - `tests/test_world_state_manager.py` -> `2 passed`
+  - `tests/test_fact_ledger.py` -> `14 passed`
+  - `tests/test_validation.py` -> `29 passed`
+  - `tests/test_stage4_interview_round.py` -> `80 passed`
+  - `tests/test_stage4_context_builder.py` -> `51 passed`
+  - `tests/test_stage4_orchestrator.py` -> `58 passed` (shard) + `tests/test_inventory_state.py` -> `2 passed` + `tests/test_world_state_caps.py` -> `6 passed` + `tests/test_continuity_packet.py` -> `18 passed`
+- project-specific system remediation: **all priority items closed**
 
 **PASS_WITH_FIX subfinding**
 - highest-confidence local-fix candidates in `0_260316` are `ep4 round 0`, `ep4 round 1`, and `ep5 round 0`
@@ -294,7 +309,7 @@ The items above are canonicalized in the companion system SSOT and appear here o
 
 **Engineering stance**
 - operational decision: resume 가능
-- project-specific engineering decision: unresolved
+- project-specific engineering decision: **resolved** — all priority items (relationship persistence, preflight severity, inventory counts, fixable firewall, prev_hud precedence, mandatory context authority) are landed and verified
 - bundle-wide broken feedback remediation authority: companion system SSOT
 
 ## Acceptance Criteria
@@ -307,11 +322,11 @@ The items above are canonicalized in the companion system SSOT and appear here o
 
 ### Project-Specific System Remediation Closure
 
-- stale arc/state material can no longer override Tier 1 truth
-- continuity uses a persisted previous snapshot instead of live HUD state
-- `2 vs 3 computers` class drift becomes structurally detectable
-- relationship and threat carry-over survive as durable state
-- fixable-firewall local contradictions no longer force unnecessary outer rounds
+- [x] stale arc/state material can no longer override Tier 1 truth — mandatory_context authority precedence landed
+- [x] continuity uses a persisted previous snapshot instead of live HUD state — prev_hud persisted precedence landed
+- [x] `2 vs 3 computers` class drift becomes structurally detectable — inventory_count_drift in continuity_validator
+- [x] relationship and threat carry-over survive as durable state — relationship_changes dict pipeline landed (format fix + state_log + WorldState + FactLedger extraction)
+- [x] fixable-firewall local contradictions no longer force unnecessary outer rounds — fixable_firewall routing landed
 - companion system SSOT tranche work starts only after a current-code validity check confirms the shared assumptions still match live code
 - companion system SSOT tranche changes validate against `0_260316` without altering the project recovery facts above
 
