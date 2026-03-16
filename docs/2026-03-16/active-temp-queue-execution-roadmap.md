@@ -5,7 +5,7 @@ Status: completed (all queue items closed)
 Canonical Path: `docs/2026-03-16/active-temp-queue-execution-roadmap.md`
 Temp Mirror Path: `docs/temp/execution-roadmap.md` (removed after closure)
 Commit State:
-- Baseline Commit: `3167fb2039ae54266d40f5d00d21b63f722a90de`
+- Baseline Commit: `391c882c4f8653f4c162a329cd6b60e3a850fc59`
 - Baseline Dirty Summary: `dirty: 1 tracked; hotspot: projects/test_project/logs/episode_production.jsonl`
 - Resume Commit: `same-as-baseline`
 - Resume Drift Summary: `none`
@@ -27,7 +27,7 @@ Queue Snapshot:
 
 | Item | Canonical Path | Temp Path | Status | Notes |
 | --- | --- | --- | --- | --- |
-| project-0-260316 | `docs/2026-03-16/project-0-260316-execution-ssot.md` | `docs/temp/project-0-260316-execution-ssot.md` | completed | Stage 4 continuity substrate hardening for the 0_260316 evidence corpus |
+| project-0-260316 | `docs/2026-03-16/project-0-260316-execution-ssot.md` | removed after closure | completed | Stage 4 continuity substrate hardening for the 0_260316 evidence corpus |
 
 ## 2A. Recent Closure
 
@@ -39,7 +39,7 @@ Queue Snapshot:
   - targeted renderer/cache/reference regressions passed
   - fresh packaged style-analysis canary produced workspace investment references, workspace style cache, project-local style output, and project DB output in a fresh temp workspace
 
-## 2B. Current Progress
+## 2B. Final Realization Log
 
 - `project-0-260316` current-code validity gate passed for the persisted-snapshot continuity lane
 - landed this loop:
@@ -81,7 +81,7 @@ Queue Snapshot:
   - `tests/test_stage4_cv_context.py` -> `21 passed`
   - `tests/test_stage4_interview_round.py` -> `80 passed`
   - `python -m ruff check ...` -> `All checks passed`
-- `project-0-260316` closure criteria are now satisfied; queue cleanup can proceed
+- `project-0-260316` closure criteria were satisfied, and queue cleanup completed in the same loop
 
 ## 3. Dependency Graph
 
@@ -126,16 +126,16 @@ Loop rule:
 - if the changed item alters dependency order, refresh this roadmap before step 5
 - if the next item no longer clears its validity gate, stop the loop and re-audit before proceeding
 
-## 5. Per-Item Plan
+## 5. Per-Item Closure Record
 
 ### project-0-260316
 
 - goal:
   - fix Stage 4 continuity authority, structured inventory persistence, and critical continuity gating
 - prerequisites:
-  - re-run that SSOT's 3-pass audit against the live workspace state after any earlier queue item changes
-- loop contract:
-  - after closure, update this roadmap and choose the next pending item instead of starting ad hoc follow-up work
+  - this SSOT's 3-pass audit was re-run against the live workspace state before realization resumed
+- closure contract:
+  - after closure, this roadmap was updated instead of starting ad hoc follow-up work
 - execution notes:
   - do not start with live rerun work
   - fixable-firewall routing plus contradiction payload propagation is already landed; do not reopen it unless the next validity gate finds drift
@@ -146,9 +146,9 @@ Loop rule:
   - threat carry-over durable persistence is now closed via `active_pressure_vectors`; do not reopen it unless a new validity gate finds drift
   - land authority and persistence substrate fixes before ep7 recovery decisions
 - completion signal:
-  - regression corpus and acceptance criteria in the 0_260316 SSOT pass
+  - regression corpus and acceptance criteria in the 0_260316 SSOT passed
 - temp cleanup action:
-  - remove `docs/temp/project-0-260316-execution-ssot.md` after closure
+  - `docs/temp/project-0-260316-execution-ssot.md` removed after closure
 
 ## 6. Shared Risks and Side-Effects
 
