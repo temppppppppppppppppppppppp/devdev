@@ -646,11 +646,24 @@ class StageZeroManager:
             return None
 
         # 레퍼런스 로드
-        ref_data = StyleExtractor.load_reference_manuscripts(genre)
+        prepared_refs = StyleExtractor.prepare_reference_manuscripts(genre)
+        ref_base = Path(prepared_refs["ref_dir"])
+        if prepared_refs["status"] == "packaged_sync":
+            source_dir = prepared_refs.get("source_dir")
+            self._ui_log(
+                f"[*] 투자물 레퍼런스 초기화: 패키지 기본 레퍼런스를 작업 폴더로 동기화했습니다 ({source_dir} -> {ref_base})",
+                event_kind="summary",
+                render_format="summary",
+            )
+        ref_data = prepared_refs["works"]
         if not ref_data:
-            ref_base = Path("config/style_references") / genre
             self._ui_log(f"[!] 레퍼런스 원고가 없습니다: {ref_base}/", level="warning")
             self._ui_log(f"폴더 구조: config/style_references/{genre}/작품명/0001.txt", level="warning")
+            if genre == "investment":
+                self._ui_log(
+                    "[!] 투자물 스타일 레퍼런스를 찾지 못했습니다. 작업 폴더 config/style_references/investment 또는 패키지 설치본을 확인하세요.",
+                    level="warning",
+                )
             return None
 
         total_eps = sum(len(eps) for eps in ref_data.values())
@@ -688,6 +701,16 @@ class StageZeroManager:
             cache_mode = {"1": "use", "2": "refresh", "3": "reset"}.get(cache_choice, "use")
         else:
             cache_mode = cache_mode if cache_mode in {"use", "refresh", "reset"} else "use"
+        cache_mode_label_map = {
+            "use": "캐시 사용",
+            "refresh": "캐시 무시 후 재분석",
+            "reset": "캐시 삭제 후 재분석",
+        }
+        self._ui_log(
+            f"[*] 스타일 캐시 모드: {cache_mode_label_map.get(cache_mode, '캐시 사용')}",
+            event_kind="summary",
+            render_format="summary",
+        )
 
         # 분석 실행
         extractor = StyleExtractor(llm_client=self.client, genre=genre)

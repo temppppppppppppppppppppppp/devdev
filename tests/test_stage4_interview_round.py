@@ -25,6 +25,7 @@ def _make_ctx():
     ctx.current_project.db = MagicMock()
     ctx.current_project.db.get_recent_manuscripts.return_value = []
     ctx.current_project.db.get_manuscript.return_value = {"content": "이전 원고"}
+    ctx.current_project.db.load_state_log.return_value = None
     ctx.state_tracker = MagicMock()
     ctx.state_tracker.npc_registry = {}
     ctx.state_tracker.item_state_registry = {}
@@ -167,6 +168,50 @@ class TestInterviewRoundHelpers:
         assert "[수정 범위 근거]" in feedback
         assert "[Director 자유 리뷰]" in feedback
         assert "장면 전환이 급함" in feedback
+
+    def test_extract_fix_feedback_includes_contradiction_details(self):
+        ir = Stage4InterviewRound(_make_ctx())
+
+        feedback = ir._extract_fix_feedback(
+            {
+                "action_items": ["이름 표기만 정정"],
+                "contradiction_details": [
+                    {
+                        "severity": "CRITICAL",
+                        "type": "고유명사",
+                        "current_violation": "한태준으로 표기됨",
+                        "fix_suggestion": "한진호로 치환",
+                    }
+                ],
+            }
+        )
+
+        assert "[모순 세부]" in feedback
+        assert "한태준으로 표기됨" in feedback
+        assert "한진호로 치환" in feedback
+
+    def test_retry_feedback_provenance_includes_contradiction_details(self):
+        ir = Stage4InterviewRound(_make_ctx())
+
+        provenance = ir._build_retry_feedback_provenance(
+            director_result={
+                "feedback": {"issues": ["이름 일관성 수정"]},
+                "contradiction_details": [
+                    {
+                        "severity": "CRITICAL",
+                        "type": "고유명사",
+                        "current_violation": "한태준으로 표기됨",
+                        "fix_suggestion": "한진호로 치환",
+                    }
+                ],
+            },
+            director_feedback="",
+            selected_validation={},
+            round_num=1,
+        )
+
+        assert "[모순 세부]" in provenance["merged_feedback"]
+        assert "한태준으로 표기됨" in provenance["director_feedback_text"]
 
     def test_build_reaudit_story_context_injects_patch_history(self):
         ir = Stage4InterviewRound(_make_ctx())

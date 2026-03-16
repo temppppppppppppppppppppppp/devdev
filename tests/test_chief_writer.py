@@ -893,6 +893,9 @@ class TestRegenerateWithFeedback:
                     "action_items": ["시간 경과 명시"],
                     "score": 49,
                     "contradiction_types": ["타임라인"],
+                    "contradiction_details": [
+                        {"type": "타임라인", "current_violation": "하루 만에 일주일이 경과함"}
+                    ],
                 },
             ],
         }
@@ -915,6 +918,7 @@ class TestRegenerateWithFeedback:
         assert "[누적 실패 히스토리" in feedback
         assert "constraint_violation" in feedback
         assert "공통 실패 패턴" in feedback
+        assert "detail=타임라인: 하루 만에 일주일이 경과함" in feedback
 
     def test_candidate_diversity_warning_attached(self, chief_writer):
         candidates = [

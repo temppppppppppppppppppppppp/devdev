@@ -1,0 +1,129 @@
+Date: 2026-03-16
+Topic: desktop-stage0-edr-code1-failure
+Track: system
+
+Commit State:
+- Baseline Commit: 5a0177666e6877070d726d983d3c3e1d03e812d2
+- Baseline Dirty Summary: dirty: 1 tracked, 1 untracked; hotspots: projects/0_260316/project_data.db, projects/0_260316/0_temp.txt
+- Resume Commit: same-as-baseline
+- Resume Drift Summary: none
+
+Governance Sources:
+- AGENTS.md
+- docs/implementation/system-order-init-harness.md
+- docs/implementation/system-full-survey-execution-harness.md
+- docs/implementation/commit-state-minimal-contract.md
+- docs/implementation/document-3pass-audit-harness.md
+
+Observed Runtime Timeline:
+- Local packaged app failure surface:
+  - 2026-03-16 13:05:45 KST UI initialized
+  - 2026-03-16 13:05:51 KST backend connected
+  - 2026-03-16 13:06:47 KST Stage 0 run started
+  - 2026-03-16 13:06:51 KST run failed with code 1
+- electron-main.log later shows a second packaged session tied to new project creation:
+  - 2026-03-16T04:07:49Z GET /quality/dashboard?project=edr
+  - 2026-03-16T04:07:52Z POST /run HTTP/1.1 202 Accepted
+
+electron-main.log evidence:
+- Path: C:\Users\wjjo\AppData\Local\Geuldobi\electron-main.log
+- Relevant packaged app session:
+  - 2026-03-16T04:07:43Z app booted from installed Geuldobi.exe
+  - 2026-03-16T04:07:45Z backend idle and websocket connected
+  - 2026-03-16T04:07:49Z GET /quality/dashboard?project=test
+  - 2026-03-16T04:07:49Z GET /quality/dashboard?project=edr
+  - 2026-03-16T04:07:52Z POST /run accepted
+  - no durable stderr traceback or project-local log path was recorded after that acceptance
+
+control-plane provenance evidence:
+- Path: C:\Users\wjjo\Documents\글도비\logs\control-plane-provenance.jsonl
+- Relevant lines:
+  - {"ts":"2026-03-16T04:06:47+00:00","key":"0","sub_key":"1","run_id":"343432eb-8348-407e-898b-d76b6f33166e","mode":"B"}
+  - {"ts":"2026-03-16T04:07:52+00:00","key":"0","sub_key":"1","run_id":"99ae02c3-8e5a-4e0f-bc76-9733521d5988","mode":"B"}
+
+Workspace material evidence:
+- Bible dir: C:\Users\wjjo\Documents\글도비\bible
+  - 01_bi_투자물_골든_카나리아 테스트.json
+- Treatment dir: C:\Users\wjjo\Documents\글도비\treatments
+  - 01_tr_투자물_골든_카나리아 테스트.json
+
+Filesystem truth: edr project
+- Path: C:\Users\wjjo\Documents\글도비\projects\edr
+- Directory exists
+- No project_data.db under C:\Users\wjjo\Documents\글도비\projects\edr
+- No logs/ subtree under C:\Users\wjjo\Documents\글도비\projects\edr
+- No config/, drafts/, memory/, or plans/ children under C:\Users\wjjo\Documents\글도비\projects\edr
+- Search across C:\Users\wjjo found no alternate project_data.db for project name edr
+
+Filesystem truth: comparison project
+- Path: C:\Users\wjjo\Documents\글도비\projects\test
+- Contains:
+  - project_data.db
+  - config/
+  - drafts/
+  - memory/
+  - plans/
+  - logs/
+  - logs/session_*.log
+  - logs/session/ui_events.jsonl
+  - logs/metrics/*
+
+Comparison log evidence:
+- test manual ProcessRunner success logs:
+  - Path: C:\Users\wjjo\Documents\글도비\projects\test\logs\session_20260316_122736.log
+  - Contains:
+    - "Stage 0 - 프로젝트 설정"
+    - "[Bible Selection]"
+    - "[Roadmap Selection]"
+    - Stage 0 completion and DB sync lines
+- edr has no corresponding session log or ui_events.jsonl
+
+Workspace-root failure sink evidence:
+- Path checked: C:\Users\wjjo\Documents\글도비\logs\error.log
+- Result: missing
+- Interpretation: this packaged failure did not leave a durable workspace-root traceback file
+
+Code path evidence: desktop create/select/run
+- geuldobi-desktop/src/main.js
+  - IPC project.create creates only the project directory via fs.mkdirSync(dir, { recursive: true }) and returns success
+  - It does not create config/, drafts/, logs/, or project_data.db
+- geuldobi-desktop/src/index.html
+  - refreshProjectList computes projectConfig.projectIndex from lexical project list
+  - projectSelect change handler persists projectConfig.project and projectConfig.projectIndex
+  - _collectInputs sends both project_index and project_name
+
+Code path evidence: runner handoff
+- modules/api/process_runner.py
+  - _resolve_requested_project_name prefers inputs.project_name for metadata helpers
+  - _build_stdin_sequence in Mode B sends the boot sequence by numeric project_index
+  - project_name is not used as the direct selection token for engine stdin
+
+Code path evidence: engine bootstrap contract
+- main_a.py
+  - boot() flow: _select_genre -> _select_project -> _bind_selected_project -> _restore_boot_runtime_state -> _ensure_project_genre_alignment -> _initialize_project_runtime_support -> _run_main_process
+  - _bind_selected_project calls _reload_project_environment(project_name) then self.sys.boot_v20_project(project_name, ...)
+- modules/core/system.py
+  - boot_v20_project immediately instantiates ProjectContext(project_name, root_dir=projects_root)
+- modules/core/project_manager.py
+  - ProjectContext._initialize_structure creates root, config, drafts, memory, plans, plans/arcs, plans/blueprints, config/cash
+  - ProjectContext then constructs DBManager(self.paths.db_file), which should create project_data.db
+
+Code path evidence: logging / missing diagnostics
+- main_a.py
+  - _retarget_project_runtime_sinks only runs after current_project is bound
+  - _run_main_process exception handler writes to project-local logs/error.log if current_project exists, else to workspace-root logs/error.log
+  - __main__ is a bare SovereignApp().boot() call with no outer traceback persistence wrapper
+- modules/core/logger.py
+  - StudioLogger.retarget switches durable session log location only after project paths are available
+- modules/core/session_logger.py
+  - SessionLogger.set_log_dir likewise depends on project-local log dir retarget
+
+Observed inference boundary from evidence:
+- If StudioSystem.boot_v20_project -> ProjectContext had executed for edr, at least config/, drafts/, memory/, plans/, and project_data.db should exist under C:\Users\wjjo\Documents\글도비\projects\edr
+- Those artifacts do not exist
+- Therefore the durable failure boundary is before ProjectContext side effects became durable
+
+Unresolved items:
+- Exact thrown exception text for the edr packaged run is not durably captured in the workspace
+- The first accepted run_id 343432eb-8348-407e-898b-d76b6f33166e appears to precede explicit edr dashboard selection and is likely a prior non-edr attempt
+- The second accepted run_id 99ae02c3-8e5a-4e0f-bc76-9733521d5988 is the strongest edr-specific packaged failure candidate

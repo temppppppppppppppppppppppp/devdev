@@ -47,6 +47,19 @@ def test_stage0_style_cache_mode_selector_exists():
     assert '>캐시 삭제 후 재분석<' in INDEX_HTML
 
 
+def test_investment_menu_badges_are_rendered_without_mutating_labels():
+    assert '<span class="label">스타일 레퍼런스 분석</span><span class="menu-badge menu-badge-recommend">추천</span>' in INDEX_HTML
+    assert '<span class="label">Frontier Lag</span><span class="menu-badge menu-badge-recommend">추천</span>' in INDEX_HTML
+    assert '<span class="label">Arc 설계</span><span class="menu-badge menu-badge-discouraged">비추천</span>' in INDEX_HTML
+    assert '<span class="label">Blueprint</span><span class="menu-badge menu-badge-discouraged">비추천</span>' in INDEX_HTML
+    assert '<span class="label">원고 생산</span><span class="menu-badge menu-badge-discouraged">비추천</span>' in INDEX_HTML
+    assert '<span class="label">One-Stop</span><span class="menu-badge menu-badge-discouraged">비추천</span>' in INDEX_HTML
+    assert '<span class="label">컨셉 → Bible 생성</span><span class="menu-badge menu-badge-discouraged">비추천</span>' in INDEX_HTML
+    assert '<span class="label">역설계 — 기존 원고에서 추출</span><span class="menu-badge menu-badge-discouraged">비추천</span>' in INDEX_HTML
+    assert '<span class="label">Bible JSON 임포트</span><span class="menu-badge menu-badge-discouraged">비추천</span>' in INDEX_HTML
+    assert '<span class="label">Block 확장 — Treatment에 블록 추가</span><span class="menu-badge menu-badge-discouraged">비추천</span>' in INDEX_HTML
+
+
 def test_work_guard_template_controls_exist_in_project_tab():
     assert 'id="workGuardTemplateSelect"' in INDEX_HTML
     assert 'id="refreshWorkGuardTemplatesBtn"' in INDEX_HTML

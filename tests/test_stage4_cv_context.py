@@ -2,7 +2,7 @@
 
 3건의 runtime warning 수정을 검증:
 - P1: protagonist_name — HUDKeys.get_protagonist_name() 경로
-- P1: prev_hud — self.ctx.sys.hud.pro_root 배선
+- P1: prev_hud — persisted snapshot 우선, live HUD fallback
 - P2: ConsistencyValidator 3 checks (karma_matrix, villain_context, authority_context)
 """
 
@@ -21,6 +21,7 @@ def _make_ctx(*, master_bible=None, next_ep=3):
     ctx.current_project.db = MagicMock()
     ctx.current_project.db.get_recent_manuscripts.return_value = []
     ctx.current_project.db.get_manuscript.return_value = {"content": "이전 원고"}
+    ctx.current_project.db.load_state_log.return_value = None
     ctx.current_project.db.get_episode_bible.return_value = {}
     ctx.state_tracker = MagicMock()
     ctx.state_tracker.npc_registry = {}
@@ -170,14 +171,54 @@ class TestProtagonistName:
 
 
 # ═══════════════════════════════════════════════════════════════
-# Test 2: prev_hud — sys.hud.pro_root 배선
+# Test 2: prev_hud — persisted snapshot 우선 / live HUD fallback
 # ═══════════════════════════════════════════════════════════════
 
 
 class TestPrevHud:
-    def test_prev_hud_injected_when_ep_gt_1(self):
-        """next_ep > 1이고 HUD가 있으면 _cv_context['prev_hud']에 주입된다."""
+    def test_prev_hud_prefers_persisted_manuscript_snapshot(self):
+        """manuscripts.hud_snapshot이 있으면 live HUD보다 우선한다."""
         ctx = _make_ctx()
+        ctx.current_project.db.get_manuscript.return_value = {
+            "content": "이전 원고",
+            "hud_snapshot": {"name": "저장본", "wealth": "88억", "location": "부산"},
+        }
+        hud_mock = MagicMock()
+        hud_mock.pro_root = {"name": "라이브 HUD", "wealth": "100억", "location": "서울"}
+        ctx.sys.hud = hud_mock
+
+        round_ctx = _make_round_ctx(next_ep=3)
+        cv_context = _run_and_capture_cv_context(ctx, round_ctx)
+
+        assert cv_context is not None
+        assert cv_context["prev_hud"] == {"name": "저장본", "wealth": "88억", "location": "부산"}
+        assert cv_context["prev_hud_source"] == "manuscript.hud_snapshot"
+        assert cv_context["martial_hud"] == cv_context["prev_hud"]
+
+    def test_prev_hud_falls_back_to_state_log_actual_truth(self):
+        """manuscript hud_snapshot이 비어 있으면 state_logs.actual_truth를 사용한다."""
+        ctx = _make_ctx()
+        ctx.current_project.db.get_manuscript.return_value = {"content": "이전 원고", "hud_snapshot": {}}
+        ctx.current_project.db.load_state_log.return_value = {
+            "summary": "이전 화 정산",
+            "data": {"actual_truth": {"name": "상태로그", "wealth": "54억", "location": "대구"}},
+        }
+        hud_mock = MagicMock()
+        hud_mock.pro_root = {"name": "라이브 HUD", "wealth": "100억", "location": "서울"}
+        ctx.sys.hud = hud_mock
+
+        round_ctx = _make_round_ctx(next_ep=3)
+        cv_context = _run_and_capture_cv_context(ctx, round_ctx)
+
+        assert cv_context is not None
+        assert cv_context["prev_hud"] == {"name": "상태로그", "wealth": "54억", "location": "대구"}
+        assert cv_context["prev_hud_source"] == "state_logs.data.actual_truth"
+        assert cv_context["martial_hud"] == cv_context["prev_hud"]
+
+    def test_prev_hud_injected_when_ep_gt_1(self):
+        """persisted snapshot이 없으면 live HUD로 fallback한다."""
+        ctx = _make_ctx()
+        ctx.current_project.db.get_manuscript.return_value = {"content": "이전 원고", "hud_snapshot": {}}
         hud_mock = MagicMock()
         hud_mock.pro_root = {"name": "서진우", "wealth": "100억", "location": "서울"}
         ctx.sys.hud = hud_mock
@@ -187,6 +228,7 @@ class TestPrevHud:
 
         assert cv_context is not None
         assert cv_context["prev_hud"] == {"name": "서진우", "wealth": "100억", "location": "서울"}
+        assert cv_context["prev_hud_source"] == "live_hud.pro_root"
         assert cv_context["martial_hud"] == cv_context["prev_hud"]
 
     def test_prev_hud_empty_on_ep_1(self):
@@ -201,10 +243,12 @@ class TestPrevHud:
 
         assert cv_context is not None
         assert cv_context["prev_hud"] == {}
+        assert cv_context["prev_hud_source"] == "episode-1"
 
     def test_prev_hud_empty_when_no_hud(self):
         """HUD 모듈이 없으면 prev_hud는 빈 dict."""
         ctx = _make_ctx()
+        ctx.current_project.db.get_manuscript.return_value = {"content": "이전 원고", "hud_snapshot": {}}
         ctx.sys.hud = None
 
         round_ctx = _make_round_ctx(next_ep=3)
@@ -212,6 +256,7 @@ class TestPrevHud:
 
         assert cv_context is not None
         assert cv_context["prev_hud"] == {}
+        assert cv_context["prev_hud_source"] == ""
 
 
 # ═══════════════════════════════════════════════════════════════

@@ -9,6 +9,41 @@ _STDIO_BOOTSTRAPPED = False
 _ASYNCIO_POLICY_BOOTSTRAPPED = False
 
 
+def _bootstrap_engine_sys_path() -> None:
+    """Ensure packaged embedded Python can import the engine's local modules package."""
+
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    if script_dir not in sys.path:
+        sys.path.insert(0, script_dir)
+
+
+def _resolve_boot_error_log_path() -> str:
+    """Resolve a durable pre-project traceback sink for boot-time failures."""
+
+    workspace_root = os.environ.get("GEULDOBI_WORKSPACE") or os.getcwd()
+    return os.path.join(workspace_root, "logs", "error.log")
+
+
+def _persist_boot_failure_traceback() -> str | None:
+    """Write the current boot-time traceback before project-local sinks exist."""
+
+    try:
+        import traceback
+
+        error_log = _resolve_boot_error_log_path()
+        os.makedirs(os.path.dirname(error_log), exist_ok=True)
+        with open(error_log, "a", encoding="utf-8") as f:
+            f.write(f"\n{'=' * 50}\n")
+            f.write(f"Time: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
+            f.write(traceback.format_exc())
+        return error_log
+    except Exception:
+        return None
+
+
+_bootstrap_engine_sys_path()
+
+
 def _bootstrap_windows_stdio_utf8() -> None:
     """Normalize Windows console stdio before bootstrap notices hit stderr."""
 
@@ -4760,4 +4795,13 @@ class SovereignApp:
 
 
 if __name__ == "__main__":
-    SovereignApp().boot()
+    try:
+        SovereignApp().boot()
+    except KeyboardInterrupt:
+        raise
+    except Exception as exc:
+        error_log = _persist_boot_failure_traceback()
+        print(f"🚨 [Boot Critical Error] 시스템 부팅 실패: {exc}", file=sys.stderr)
+        if error_log:
+            print(f"📝 부트 에러 로그 저장: {error_log}", file=sys.stderr)
+        raise

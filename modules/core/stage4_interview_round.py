@@ -381,6 +381,16 @@ class Stage4InterviewRound:
         ]
         if open_review_lines and action_items:
             director_lines.extend(open_review_lines)
+        contradiction_detail_lines = self._compact_contradiction_detail_lines(
+            director_result.get("contradiction_details"),
+            max_items=3,
+            line_limit=180,
+        )
+        if contradiction_detail_lines:
+            for line in contradiction_detail_lines:
+                prefixed = f"[모순 세부] {line}"
+                if prefixed not in director_lines:
+                    director_lines.append(prefixed)
 
         evidence_lines: list[str] = []
         if isinstance(selected_validation, dict):
@@ -423,6 +433,36 @@ class Stage4InterviewRound:
             "runtime_advisory": runtime_advisory,
             "retry_directives": retry_directives,
         }
+
+    @staticmethod
+    def _compact_contradiction_detail_lines(
+        details: object,
+        *,
+        max_items: int = 3,
+        line_limit: int = 160,
+    ) -> list[str]:
+        if not isinstance(details, list):
+            return []
+
+        lines: list[str] = []
+        for item in details[:max_items]:
+            if isinstance(item, dict):
+                severity = str(item.get("severity", "") or "").strip().upper() or "ISSUE"
+                kind = str(item.get("type", "") or "모순").strip()
+                body = (
+                    str(item.get("current_violation", "") or "").strip()
+                    or str(item.get("description", "") or "").strip()
+                    or str(item.get("expected_truth", "") or "").strip()
+                )
+                fix = str(item.get("fix_suggestion", "") or "").strip()
+                line = f"[{severity}] {kind}: {body[:line_limit]}".strip()
+                if fix:
+                    line = f"{line} -> {fix[:120]}"
+            else:
+                line = str(item or "").strip()
+            if line:
+                lines.append(line[: max(line_limit, 80)])
+        return lines
 
     def _is_continuity_replay_reject(self, *, director_result: dict, director_feedback: str) -> bool:
         if not isinstance(director_result, dict) or not director_result.get("firewall_triggered"):
@@ -865,6 +905,13 @@ class Stage4InterviewRound:
             "action_items": list(previous_attempt.get("action_items", []) or [])[:3],
             "contradiction_types": list(previous_attempt.get("contradiction_types", []) or [])[:5],
         }
+        contradiction_details = Stage4InterviewRound._compact_contradiction_detail_lines(
+            previous_attempt.get("contradiction_details"),
+            max_items=2,
+            line_limit=120,
+        )
+        if contradiction_details:
+            snapshot["contradiction_details"] = contradiction_details
         return {k: v for k, v in snapshot.items() if v not in ("", [], {}, None)}
 
     def _inherit_attempt_history(self, previous_attempt: dict | None) -> list[dict]:
@@ -3217,6 +3264,7 @@ class Stage4InterviewRound:
                     "score_breakdown",
                     "error_category",
                     "contradiction_types",
+                    "contradiction_details",
                     "firewall_triggered",
                     "firewall_reason",
                     "fix_scope_reasoning",
@@ -3553,6 +3601,7 @@ class Stage4InterviewRound:
                 "open_review": director_result.get("open_review", ""),  # [TF-29] 자유 리뷰 보존
                 "error_category": error_category or director_result.get("error_category", ""),  # [A-4] 에러 카테고리 보존
                 "contradiction_types": director_result.get("contradiction_types", []),  # [A-4] 모순 유형 보존
+                "contradiction_details": list(director_result.get("contradiction_details", []) or [])[:3],
                 "firewall_triggered": bool(director_result.get("firewall_triggered")),
                 "firewall_reason": director_result.get("firewall_reason", ""),
                 "director_feedback_text": _feedback_provenance["director_feedback_text"],
@@ -3925,6 +3974,54 @@ class Stage4InterviewRound:
             logging.warning(f"[SilentPass:InterviewRound] npc_profiles fallback 실패: {_npc_err!s:.100}")
             return {}
 
+    def _resolve_prev_hud_snapshot(self, next_ep: int) -> tuple[dict, str]:
+        """Prefer persisted previous-episode truth over live HUD fallback."""
+        if next_ep <= 1:
+            return {}, "episode-1"
+
+        _db = getattr(getattr(self.ctx, "current_project", None), "db", None)
+        _prev_ep = next_ep - 1
+
+        if _db:
+            try:
+                _prev_ms = _db.get_manuscript(_prev_ep)
+            except Exception as _ms_err:
+                logging.warning(
+                    f"[SilentPass:InterviewRound] prev_hud manuscript load 실패: {_ms_err!s:.100}"
+                )
+            else:
+                if isinstance(_prev_ms, dict):
+                    _hud_snapshot = _prev_ms.get("hud_snapshot")
+                    if isinstance(_hud_snapshot, dict) and _hud_snapshot:
+                        return _hud_snapshot, "manuscript.hud_snapshot"
+
+            try:
+                _state_log = _db.load_state_log(_prev_ep)
+            except Exception as _state_err:
+                logging.warning(
+                    f"[SilentPass:InterviewRound] prev_hud state_log load 실패: {_state_err!s:.100}"
+                )
+            else:
+                _state_data = _state_log.get("data", {}) if isinstance(_state_log, dict) else {}
+                if isinstance(_state_data, dict):
+                    _hud_snapshot = _state_data.get("hud_snapshot")
+                    if isinstance(_hud_snapshot, dict) and _hud_snapshot:
+                        return _hud_snapshot, "state_logs.data.hud_snapshot"
+
+                    _actual_truth = _state_data.get("actual_truth")
+                    if isinstance(_actual_truth, dict) and _actual_truth:
+                        return _actual_truth, "state_logs.data.actual_truth"
+
+        try:
+            if hasattr(self.ctx.sys, "hud") and self.ctx.sys.hud:
+                _prev_hud = self.ctx.sys.hud.pro_root
+                if isinstance(_prev_hud, dict) and _prev_hud:
+                    return _prev_hud, "live_hud.pro_root"
+        except Exception as _hud_err:
+            logging.warning(f"[SilentPass:InterviewRound] prev_hud live fallback 실패: {_hud_err!s:.100}")
+
+        return {}, ""
+
     def _build_cv_context(self, next_ep: int, genre_name: str, blueprint, arc_data=None) -> dict:
         """[B-1-3b] ConsistencyValidator 컨텍스트 조립."""
         _cv_context = {
@@ -3939,17 +4036,10 @@ class Stage4InterviewRound:
             "blueprint": blueprint if isinstance(blueprint, dict) else {},
             "blueprint_text": str(blueprint or "")[:8000],
         }
-        # [P1-FIX] prev_hud 주입 — ContinuityValidator 연속성 검증 활성화
-        _prev_hud = {}
-        if next_ep > 1:
-            try:
-                if hasattr(self.ctx.sys, "hud") and self.ctx.sys.hud:
-                    _prev_hud = self.ctx.sys.hud.pro_root
-                    if not isinstance(_prev_hud, dict):
-                        _prev_hud = {}
-            except Exception as _hud_err:
-                logging.warning(f"[SilentPass:InterviewRound] prev_hud 로드 실패: {_hud_err!s:.100}")
+        # Prefer persisted previous-episode truth, then fall back to live HUD.
+        _prev_hud, _prev_hud_source = self._resolve_prev_hud_snapshot(next_ep)
         _cv_context["prev_hud"] = _prev_hud
+        _cv_context["prev_hud_source"] = _prev_hud_source
         # martial_hud도 동일 소스 (하위 호환)
         if _prev_hud:
             _cv_context["martial_hud"] = _prev_hud
@@ -4653,6 +4743,13 @@ class Stage4InterviewRound:
         open_review = str(director_result.get("open_review", "") or "").strip()
         if open_review and open_review not in ("특이사항 없음", "없음"):
             parts.append("[Director 자유 리뷰]\n" + open_review[:300])
+        contradiction_detail_lines = self._compact_contradiction_detail_lines(
+            director_result.get("contradiction_details"),
+            max_items=3,
+            line_limit=180,
+        )
+        if contradiction_detail_lines:
+            parts.append("[모순 세부]\n" + "\n".join(contradiction_detail_lines))
 
         deduped: list[str] = []
         seen: set[str] = set()

@@ -73,6 +73,154 @@ def _short_text(value: object, limit: int = 200) -> str:
     return text[:limit]
 
 
+_FIXABLE_FIREWALL_TYPE_TOKENS = {
+    "고유명사",
+    "이름",
+    "이름불일치",
+    "이름드리프트",
+    "고유명사일관성",
+    "propernoun",
+    "propername",
+    "namedrift",
+    "nameconsistency",
+    "직급",
+    "직함",
+    "호칭",
+    "rank",
+    "title",
+    "role",
+    "rankdrift",
+    "위치명",
+    "지명",
+    "장소명",
+    "장소",
+    "locationname",
+    "locationdrift",
+    "placename",
+    "금지표현",
+    "금칙표현",
+    "fictiontermleak",
+    "fictionterm",
+    "forbiddenterm",
+    "bannedexpression",
+}
+
+_FIXABLE_FIREWALL_TEXT_MARKERS = (
+    "고유명사",
+    "이름",
+    "직급",
+    "직함",
+    "호칭",
+    "위치명",
+    "지명",
+    "장소명",
+    "금지 표현",
+    "금칙 표현",
+    "fiction term",
+    "banned expression",
+    "proper noun",
+    "rank drift",
+    "title drift",
+)
+
+
+def _normalize_firewall_token(value: object) -> str:
+    return (
+        str(value or "")
+        .strip()
+        .lower()
+        .replace(" ", "")
+        .replace("_", "")
+        .replace("-", "")
+        .replace("/", "")
+    )
+
+
+def _normalize_contradiction_entries(raw: object) -> list[dict]:
+    if not isinstance(raw, list):
+        return []
+    return [item for item in raw if isinstance(item, dict)]
+
+
+def _compact_contradiction_details(entries: list[dict], *, limit: int = 5) -> list[dict]:
+    details: list[dict] = []
+    for item in entries[:limit]:
+        detail: dict[str, str] = {}
+        for key, cap in (
+            ("severity", 40),
+            ("type", 80),
+            ("current_violation", 240),
+            ("description", 240),
+            ("expected_truth", 240),
+            ("fix_suggestion", 200),
+        ):
+            value = str(item.get(key, "") or "").strip()
+            if value:
+                detail[key] = value[:cap]
+        if detail:
+            details.append(detail)
+    return details
+
+
+def _is_fixable_firewall_contradiction(detail: dict) -> bool:
+    if not isinstance(detail, dict) or not detail:
+        return False
+
+    if _normalize_firewall_token(detail.get("type")) in _FIXABLE_FIREWALL_TYPE_TOKENS:
+        return True
+
+    combined = " ".join(
+        str(detail.get(key, "") or "")
+        for key in ("type", "current_violation", "description", "expected_truth", "fix_suggestion")
+    ).lower()
+    return any(marker in combined for marker in _FIXABLE_FIREWALL_TEXT_MARKERS)
+
+
+def _build_contradiction_summary_lines(details: list[dict], *, limit: int = 3) -> list[str]:
+    lines: list[str] = []
+    for detail in details[:limit]:
+        severity = str(detail.get("severity", "") or "").strip().upper() or "ISSUE"
+        kind = str(detail.get("type", "") or "모순").strip()
+        body = (
+            str(detail.get("current_violation", "") or "").strip()
+            or str(detail.get("description", "") or "").strip()
+            or str(detail.get("expected_truth", "") or "").strip()
+        )
+        fix = str(detail.get("fix_suggestion", "") or "").strip()
+        line = f"[{severity}] {kind}: {body[:160]}".strip()
+        if fix:
+            line = f"{line} -> {fix[:120]}"
+        lines.append(line)
+    return lines
+
+
+def _classify_firewall_mode(
+    *,
+    contradictions: list[dict],
+    original_verdict: str,
+    score: int,
+    score_breakdown: dict | None,
+) -> tuple[str, str]:
+    if original_verdict not in ("PASS", "PASS_WITH_FIX"):
+        return "reject", ""
+    if score < 80:
+        return "reject", ""
+    if not contradictions or len(contradictions) > 3:
+        return "reject", ""
+    continuity_score = _safe_int((score_breakdown or {}).get("continuity_contradiction", 0), 0)
+    if continuity_score < 30:
+        return "reject", ""
+    if not all(_is_fixable_firewall_contradiction(detail) for detail in contradictions):
+        return "reject", ""
+
+    type_labels = [str(detail.get("type", "") or "").strip() for detail in contradictions if str(detail.get("type", "")).strip()]
+    type_summary = ", ".join(dict.fromkeys(type_labels[:3]))
+    reason = f"Fixable Contradiction Firewall: local contradiction {len(contradictions)}건"
+    if type_summary:
+        reason += f" ({type_summary})"
+    return "pass_with_fix", reason
+
+
 def _log_director_frame(
     *,
     stage: str,
@@ -1093,7 +1241,9 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
         # [TF-DIR-1] raw LLM 점수 보존 — NC-3B 교정 전 기준점 (Firewall 감사 추적용)
         _pre_firewall_score = score
         firewall_triggered = False
+        firewall_fixable = False
         firewall_reason = ""
+        _contradiction_details: list[dict] = []
 
         # ── [NC-3B] score_breakdown 합산 검증 ──────────────────
         _sb_raw = result.get("score_breakdown", {})
@@ -1123,31 +1273,51 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
         if isinstance(_contradiction_check, dict):
             _found = _contradiction_check.get("found_contradictions", [])
             if isinstance(_found, list) and _found:
+                _normalized_contradictions = _normalize_contradiction_entries(_found)
+                _contradiction_details = _compact_contradiction_details(_normalized_contradictions)
                 _critical_count = sum(
-                    1 for c in _found if isinstance(c, dict) and str(c.get("severity", "")).upper() == "CRITICAL"
+                    1
+                    for c in _normalized_contradictions
+                    if str(c.get("severity", "")).upper() == "CRITICAL"
                 )
                 _major_count = sum(
-                    1 for c in _found if isinstance(c, dict) and str(c.get("severity", "")).upper() == "MAJOR"
+                    1
+                    for c in _normalized_contradictions
+                    if str(c.get("severity", "")).upper() == "MAJOR"
                 )
                 firewall_triggered = False
-                if _critical_count >= 1:
-                    firewall_triggered = True
-                    firewall_reason = f"Contradiction Firewall: CRITICAL {_critical_count}건"
-                    logging.warning(f" [V75-C] Contradiction Firewall: CRITICAL {_critical_count}건 → REJECT 강제")
-                elif _major_count >= 2:
-                    firewall_triggered = True
-                    firewall_reason = f"Contradiction Firewall: MAJOR {_major_count}건"
-                    logging.warning(f" [V75-C] Contradiction Firewall: MAJOR {_major_count}건 → REJECT 강제")
+                firewall_fixable = False
+                _selected_manuscript = (
+                    str(selected_candidate.get("manuscript", "") or "") if isinstance(selected_candidate, dict) else ""
+                )
+                if _critical_count >= 1 or _major_count >= 2:
+                    _firewall_mode, _fixable_reason = _classify_firewall_mode(
+                        contradictions=_contradiction_details,
+                        original_verdict=str(original_verdict or ""),
+                        score=score,
+                        score_breakdown=_sb_raw if isinstance(_sb_raw, dict) else None,
+                    )
+                    if _firewall_mode == "pass_with_fix" and _selected_manuscript:
+                        firewall_fixable = True
+                        firewall_reason = _fixable_reason
+                        original_verdict = "PASS_WITH_FIX"
+                        score = min(score, 97)
+                        logging.warning(" [V75-C] %s → PASS_WITH_FIX", firewall_reason)
+                    else:
+                        firewall_triggered = True
+                        if _critical_count >= 1:
+                            firewall_reason = f"Contradiction Firewall: CRITICAL {_critical_count}건"
+                            logging.warning(f" [V75-C] Contradiction Firewall: CRITICAL {_critical_count}건 → REJECT 강제")
+                        else:
+                            firewall_reason = f"Contradiction Firewall: MAJOR {_major_count}건"
+                            logging.warning(f" [V75-C] Contradiction Firewall: MAJOR {_major_count}건 → REJECT 강제")
                 if firewall_triggered:
                     original_verdict = "REJECT"
                     _pre_firewall_score = score  # [TF-22b] 패치 모드용 원본 점수 보존
                     score = min(score, 44)  # adaptive floor=45 미만 → 승격 불가
-                    for _c in _found[:5]:
-                        if isinstance(_c, dict):
-                            logging.warning(
-                                f" [{_c.get('severity', '?')}] {str(_c.get('type', ''))}: "
-                                f"{str(_c.get('current_violation', ''))[:100]}"
-                            )
+                if firewall_triggered or firewall_fixable:
+                    for _line in _build_contradiction_summary_lines(_contradiction_details, limit=5):
+                        logging.warning(" %s", _line)
 
         # ── [NC-1] numeric_consistency_review 검증 ──────────────────
         _nc_review = result.get("numeric_consistency_review") or []
@@ -1264,9 +1434,11 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
         feedback = result.get("feedback", {})
         if isinstance(feedback, str):
             feedback = {"issues": [feedback]}
+        elif not isinstance(feedback, dict):
+            feedback = {}
         _selection_reason = str(result.get("selection_reason", "") or "")
         _verdict_reason = str(result.get("verdict_reason") or result.get("reject_reason") or "").strip()
-        if not _verdict_reason and firewall_triggered and firewall_reason:
+        if not _verdict_reason and (firewall_triggered or firewall_fixable) and firewall_reason:
             _verdict_reason = firewall_reason
         if not _verdict_reason and isinstance(feedback, dict):
             _feedback_issues = feedback.get("issues", []) or []
@@ -1279,11 +1451,35 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
         _selected_manuscript = (
             str(selected_candidate.get("manuscript", "") or "") if isinstance(selected_candidate, dict) else ""
         )
-        if firewall_triggered and _selected_manuscript:
+        _contradiction_summary_lines = _build_contradiction_summary_lines(_contradiction_details)
+        if (firewall_triggered or firewall_fixable) and _selected_manuscript:
             if _fix_scope not in ("partial", "full"):
                 _fix_scope = "inplace"
-            if not _fix_scope_reasoning and firewall_reason:
+            if not _fix_scope_reasoning:
                 _fix_scope_reasoning = firewall_reason
+                if _contradiction_summary_lines:
+                    _fix_scope_reasoning = f"{_fix_scope_reasoning}\n" + "\n".join(_contradiction_summary_lines)
+
+        if _contradiction_summary_lines:
+            _feedback_issues = [str(item).strip() for item in (feedback.get("issues") or []) if str(item).strip()]
+            for _line in _contradiction_summary_lines:
+                _issue = f"[Contradiction] {_line}"
+                if _issue not in _feedback_issues:
+                    _feedback_issues.append(_issue)
+            if _feedback_issues:
+                feedback["issues"] = _feedback_issues[:8]
+
+        if firewall_fixable:
+            _action_items = [str(item).strip() for item in (feedback.get("action_items") or []) if str(item).strip()]
+            for _detail in _contradiction_details[:3]:
+                _hint = str(_detail.get("fix_suggestion", "") or "").strip()
+                if not _hint:
+                    _kind = str(_detail.get("type", "") or "모순").strip()
+                    _hint = f"{_kind} 항목만 국소 정정하고 나머지 구조는 유지"
+                if _hint and _hint not in _action_items:
+                    _action_items.append(_hint[:160])
+            if _action_items:
+                feedback["action_items"] = _action_items[:5]
 
         # [V67.2] 자유 형식 리뷰 → feedback에 병합
         _open_review = result.get("open_review", "")
@@ -1356,6 +1552,7 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
             "verdict_reason": _verdict_reason,
             "reject_reason": _verdict_reason,
             "firewall_triggered": firewall_triggered,
+            "firewall_fixable": firewall_fixable,
             "firewall_reason": firewall_reason,
             "feedback": feedback,
             "state_updates": result.get("state_updates")
@@ -1371,6 +1568,7 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
             "fix_scope_reasoning": _fix_scope_reasoning,  # [TF-35] 수정 범위 근거 전파
             "numeric_consistency_review": _nc_review,  # [NC-1] Director 수치 판정 전파
             "consistency_checklist": _checklist,  # [NC-3] 일관성 체크리스트 전파
+            "contradiction_details": _contradiction_details,
             "contradiction_types": [  # [A-4] 모순 유형 전파
                 c.get("type", "")
                 for c in (
