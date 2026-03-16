@@ -454,6 +454,28 @@ class FailureAnalyzer:
                     ).strip(),
                 }
 
+        final_authority_rows: list[dict] = []
+        final_authority_by_attempt: dict[str, dict] = {}
+        if stage == 4:
+            try:
+                final_authority_rows = self.db.get_stage4_final_authority_rows(
+                    limit=lookback,
+                    session_id=session_id or None,
+                )
+                final_authority_by_attempt = {
+                    str(row.get("attempt_key") or "").strip(): row
+                    for row in final_authority_rows
+                    if str(row.get("attempt_key") or "").strip()
+                }
+            except Exception as _e:
+                self._report_soft_failure(
+                    "sink_alignment_final_authority_contract",
+                    _e,
+                    message="stage4 final authority projection failed",
+                    extra={"stage": stage, "session_id": session_id},
+                )
+                logging.debug("[FailureAnalyzer] sink_alignment final authority projection failed: %s", _e)
+
         final_union = set(stage_attempts) | set(pass_rate_monitor)
         if include_session_decisions:
             final_union |= set(session_decisions)
@@ -502,8 +524,35 @@ class FailureAnalyzer:
         fix_scope_mismatches: list[dict] = []
         rationale_metadata_missing: list[dict] = []
         artifact_missing_files: list[dict] = []
+        selection_companion_pre_final_rows: list[dict] = []
+        selection_companion_missing_rows: list[dict] = []
 
         for attempt_key in sorted(attempts_considered):
+            authority_row = final_authority_by_attempt.get(attempt_key)
+            if authority_row:
+                companion_status = str(authority_row.get("selection_companion_status") or "").strip()
+                if companion_status == "pre_final_candidate":
+                    selection_companion_pre_final_rows.append(
+                        {
+                            "attempt_key": attempt_key,
+                            "ep_num": authority_row.get("ep_num"),
+                            "attempt_num": authority_row.get("attempt_num"),
+                            "selection_artifact_path": authority_row.get("selection_artifact_path", ""),
+                            "final_artifact_path": authority_row.get("final_artifact_path", ""),
+                            "selection_content_hash": authority_row.get("selection_content_hash", ""),
+                            "final_content_hash": authority_row.get("final_content_hash", ""),
+                            "diff_fields": list(authority_row.get("selection_companion_diff_fields") or []),
+                        }
+                    )
+                elif companion_status == "missing":
+                    selection_companion_missing_rows.append(
+                        {
+                            "attempt_key": attempt_key,
+                            "ep_num": authority_row.get("ep_num"),
+                            "attempt_num": authority_row.get("attempt_num"),
+                        }
+                    )
+
             final_verdicts = {}
             if attempt_key in stage_attempts:
                 final_verdicts["stage_attempts"] = stage_attempts[attempt_key]["final_verdict"]
@@ -685,6 +734,34 @@ class FailureAnalyzer:
             for attempt_key in lifecycle_union
             if attempt_key in director_selections and attempt_key in episode_production
         )
+        final_authority_contract = {}
+        if stage == 4:
+            aligned_selection_rows = sum(
+                1
+                for row in final_authority_rows
+                if str(row.get("selection_companion_status") or "").strip() == "same_as_final"
+            )
+            pre_final_selection_rows = sum(
+                1
+                for row in final_authority_rows
+                if str(row.get("selection_companion_status") or "").strip() == "pre_final_candidate"
+            )
+            missing_selection_rows = sum(
+                1 for row in final_authority_rows if str(row.get("selection_companion_status") or "").strip() == "missing"
+            )
+            final_authority_contract = {
+                "status": "ok" if final_authority_rows else "missing",
+                "final_authority_sink": "stage_attempts",
+                "selection_role": "historical_companion",
+                "rows_considered": len(final_authority_rows),
+                "aligned_selection_rows": aligned_selection_rows,
+                "pre_final_selection_rows": pre_final_selection_rows,
+                "missing_selection_rows": missing_selection_rows,
+                "note": (
+                    "Stage 4 final authority resolves from stage_attempts. "
+                    "director_selections remains companion review history and may point to pre-final artifacts."
+                ),
+            }
 
         has_issues = any(
             (
@@ -740,6 +817,9 @@ class FailureAnalyzer:
             "fix_scope_mismatches": fix_scope_mismatches[:10],
             "rationale_metadata_missing": rationale_metadata_missing[:10],
             "artifact_missing_files": artifact_missing_files[:10],
+            "selection_companion_pre_final_rows": selection_companion_pre_final_rows[:10],
+            "selection_companion_missing_rows": selection_companion_missing_rows[:10],
+            "final_authority_contract": final_authority_contract,
             "session_scoped_attempts": session_scoped_attempts,
             "legacy_key_attempts": len(attempts_considered) - session_scoped_attempts,
             "session_decision_rows_without_attempt_key": session_decision_rows_without_attempt_key,
@@ -1582,7 +1662,7 @@ class FailureAnalyzer:
 
         prompt = (
             "다음은 웹소설 아이템 regex 안전망에 추가할 접미사 후보 목록입니다.\n"
-            '각 후보에 대해 "일반적인 아이템/도구/장비의 접미사로 적합한가?"를 판정해 주세요.\n\n'
+            '각 후보에 대해 "일반적인 아이템/도구/장비의 접미사로 적합한지" 판정해 주세요.\n\n'
             "판정 기준:\n"
             '- APPROVE: 해당 접미사가 아이템 카테고리를 나타냄 (예: "칼", "서", "증")\n'
             '- REJECT: 고유명사/브랜드/우연의 일치 (예: "프로", "플러스", "맥스")\n\n'

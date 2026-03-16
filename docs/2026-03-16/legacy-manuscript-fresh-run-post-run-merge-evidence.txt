@@ -1,0 +1,141 @@
+Date: 2026-03-16
+Status: final-evidence
+Canonical Path: `docs/2026-03-16/legacy-manuscript-fresh-run-post-run-merge-evidence.txt`
+Commit State:
+- Baseline Commit: `d6c81c1976d9812d447c2a78e2aeb36f7aed666a`
+- Baseline Dirty Summary: `dirty: runtime/stage modules and tests, desktop package/icon/version files, project 0/000 artifacts and db, OPUS manuscript docs, and untracked 2026-03-16 survey docs`
+- Resume Commit: `same-as-baseline`
+- Resume Drift Summary: `none`
+
+# Evidence Summary
+
+## 1. Temp Queue Baseline
+
+- `docs/temp/legacy-manuscript-authority-sink-alignment-hardening-execution-ssot.md`
+- `docs/temp/queue-state.json`
+- `docs/temp/README.md`
+
+## 2. Project `0` Fresh Bounded Run
+
+Source files:
+
+- `projects/0/logs/runtime_audit_summary.json`
+- `projects/0/logs/session_20260316_071001.log`
+- `projects/0/logs/episode_production.jsonl`
+- `projects/0/project_data.db`
+
+Terminal summary:
+
+- `tag = shutdown_final`
+- `timestamp = 2026-03-16 08:42:28`
+- `proof_digest.status = ok`
+- `proof_digest.stages.stage4.status = ok`
+- `proof_digest.stages.stage4.attempts_considered = 9`
+- `proof_digest.stages.stage4.complete_final_attempts = 9`
+- `proof_digest.stages.stage4.complete_lifecycle_attempts = 9`
+- `proof_digest.stages.stage4.issue_counts = {}`
+- `proof_digest.session_lineage.plain_log_token = 20260316_071001`
+- `proof_digest.session_lineage.structured_session_id = 20260316_071008`
+- `proof_digest.session_lineage.status = split_mapped`
+
+Session log terminal metrics:
+
+- `session id = 20260316_071008`
+- `duration = 1:32:20.658206`
+- `total calls = 213`
+- `total tokens = 2,658,618`
+- `success = 213 / 213`
+
+Fresh Stage 4 authority alignment check for session `20260316_071008`:
+
+- `ep1`: `final_manuscript__A` / `selected_candidate__A` / DB manuscript aligned
+- `ep2`: `final_manuscript__B` / `selected_candidate__B` / DB manuscript aligned
+- `ep3`: `final_manuscript__A` / `selected_candidate__A` / DB manuscript aligned
+- `ep4`: `final_manuscript__B` / `selected_candidate__B` / DB manuscript aligned
+- `ep5`: `patched_after_fix__A` / `selected_candidate__A` / DB manuscript aligned
+- `ep6`: `final_manuscript__C` / `selected_candidate__C` / DB manuscript aligned
+
+Focused ep5 patch proof:
+
+- `attempt_artifact = logs/artifacts/stage4/ep_0005/attempt_04/patched_after_fix__A.txt`
+- `selection_artifact = logs/artifacts/stage4/ep_0005/attempt_04/selected_candidate__A.txt`
+- `attempt_hash == selection_hash = true`
+- `attempt_hash == manuscript_hash = true`
+- `attempt_hash == artifact_text_hash = true`
+- `selection_hash == artifact_text_hash = true`
+
+## 3. Project `000` Fresh Startup Control
+
+Source files:
+
+- `projects/000/logs/runtime_audit_summary.json`
+- `projects/000/logs/session_20260316_070819.log`
+- `projects/000/logs/episode_production.jsonl`
+- `projects/000/project_data.db`
+
+Terminal summary:
+
+- `tag = shutdown_final`
+- `timestamp = 2026-03-16 07:08:42`
+- `total_events = 0`
+- `proof_digest.status = warn`
+- `proof_digest.stages.stage4.status = warn`
+- `proof_digest.stages.stage4.issue_counts.patch_strategy_mismatches = 1`
+- `proof_digest.session_lineage.plain_log_token = 20260316_070819`
+- `proof_digest.session_lineage.structured_session_id = 20260315_190609`
+- `proof_digest.session_lineage.status = split_mapped`
+
+Session log terminal metrics:
+
+- `session id = 20260316_070830`
+- `duration = 0:00:11.884987`
+- `total calls = 0`
+- `total tokens = 0`
+- `result = startup/shutdown only, no fresh generation work`
+
+Persisted Stage 4 authority alignment check for session `20260315_190609`:
+
+- `ep1`: `final_manuscript__A` / `selected_candidate__A` / DB manuscript aligned
+- `ep2`: `final_manuscript__A` / `selected_candidate__A` / DB manuscript aligned
+- `ep3`: `final_manuscript__B` / `selected_candidate__B` / DB manuscript aligned
+- `ep4`: `patched_after_fix__A` / `selected_candidate__A` / DB manuscript aligned
+- `ep5`: `final_manuscript__C` / `selected_candidate__C` / DB manuscript aligned
+- `ep6`: `final_manuscript__A` / `selected_candidate__A` / DB manuscript aligned
+
+Interpretation guard:
+
+- `patch_strategy_mismatches = 1` appears in the proof digest
+- no content-hash drift was reproduced in `director_selections` vs `stage_attempts` vs DB manuscripts for the persisted Stage 4 set
+
+## 4. Legacy Contrast: Project `00_260315`
+
+Source files:
+
+- `projects/00_260315/project_data.db`
+- `projects/00_260315/logs/artifacts/stage4/ep_0004/attempt_01/patched_after_fix__A_InPlace.txt`
+- `projects/00_260315/logs/artifacts/stage4/ep_0004/attempt_01/selected_before_fix__C.txt`
+- `projects/00_260315/logs/artifacts/stage4/ep_0005/attempt_01/patched_after_fix__A_InPlace.txt`
+- `projects/00_260315/logs/artifacts/stage4/ep_0005/attempt_01/selected_before_fix__A.txt`
+
+Legacy stale-authority check:
+
+- `ep4`
+  - `attempt_artifact = patched_after_fix__A_InPlace.txt`
+  - `selection_artifact = selected_before_fix__C.txt`
+  - `attempt_hash == selection_hash = false`
+  - `attempt_hash == manuscript_hash = true`
+  - `attempt_hash == patched artifact text hash = true`
+  - `selection_hash == selected_before_fix text hash = true`
+- `ep5`
+  - `attempt_artifact = patched_after_fix__A_InPlace.txt`
+  - `selection_artifact = selected_before_fix__A.txt`
+  - `attempt_hash == selection_hash = false`
+  - `attempt_hash == manuscript_hash = true`
+  - `attempt_hash == patched artifact text hash = true`
+  - `selection_hash == selected_before_fix text hash = true`
+
+## 5. Evidence-Level Conclusion
+
+- active bounded fresh/live surfaces (`projects/0`, current `projects/000` control state) do not reproduce stale content-hash drift
+- historical stale metadata authority remains real in `projects/00_260315 ep4-5`
+- the live issue is now narrower than the previous static-only synthesis: current risk is authority-contract ambiguity, consumer misread, and legacy stale-row handling

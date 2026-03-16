@@ -5,7 +5,8 @@
   "packaged_resource_inventory": [
     "backend/backend.exe",
     "engine/main_a.py",
-    "python-embed/python.exe"
+    "python-embed/python.exe",
+    "workspace-seed/seed-manifest.json"
   ],
   "extra_resources": [
     {
@@ -19,6 +20,10 @@
     {
       "from": "../python-embed",
       "to": "python-embed"
+    },
+    {
+      "from": "../dist/workspace-seed",
+      "to": "workspace-seed"
     }
   ],
   "desktop_main_packaged_env": [

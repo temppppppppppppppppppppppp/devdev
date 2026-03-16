@@ -1801,18 +1801,8 @@ class Stage4ContextBuilder:
         if _tier2_end > _tier2_start:
             _tier2_parts: list[str] = []
             try:
-                if hasattr(_db, "_lock"):
-                    with _db._lock:
-                        _cur = _db.conn.cursor()
-                        try:
-                            _cur.execute(
-                                "SELECT ep_num, summary FROM episode_meta "
-                                "WHERE ep_num >= ? AND ep_num < ? ORDER BY ep_num ASC",
-                                (_tier2_start, _tier2_end),
-                            )
-                            _rows = _cur.fetchall()
-                        finally:
-                            _cur.close()
+                if hasattr(_db, "get_episode_meta_summaries"):
+                    _rows = _db.get_episode_meta_summaries(_tier2_start, _tier2_end) or []
                 else:
                     _rows = []
 

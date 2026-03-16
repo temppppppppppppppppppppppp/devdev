@@ -520,6 +520,19 @@ class TestRunPostEpisodeTasks:
 
         ctx.memory.sync_v20_drafts.assert_called_once()
 
+    def test_skip_pause_bypasses_menu_return_input(self):
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.memory = MagicMock()
+        ctx.memory.is_operational.return_value = True
+        pp = Stage4PostProcessor(ctx)
+
+        with patch("builtins.input", side_effect=AssertionError("input should be skipped")) as mocked_input:
+            pp.run_post_episode_tasks(skip_pause=True)
+
+        mocked_input.assert_not_called()
+        ctx.memory.sync_v20_drafts.assert_called_once()
+
     def test_vector_sync_skipped_when_not_operational(self):
         ctx = MagicMock()
         ctx.ui = MagicMock()

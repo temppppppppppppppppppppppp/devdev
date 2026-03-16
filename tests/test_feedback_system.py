@@ -197,6 +197,26 @@ class TestQuantifyRejectFeedback:
         result = fs.quantify_reject_feedback(reason="씬 누락", content_length=5000, audit_result={})
         assert any("씬" in q["description"] for q in result)
 
+    def test_dialogue_quantification_uses_score_breakdown_when_available(self, fs):
+        result = fs.quantify_reject_feedback(
+            reason="대화 부족으로 건조함",
+            content_length=5000,
+            audit_result={
+                "score_breakdown": {
+                    "scene_composition": {"score": 4, "max": 10},
+                    "narrative_flow": 35,
+                }
+            },
+        )
+        score_items = [item for item in result if item.get("basis") == "score_breakdown"]
+        assert score_items
+        assert score_items[0]["evidence"]["scene_composition"] == 40.0
+        assert "evidence" in score_items[0]
+
+    def test_dialogue_quantification_marks_heuristic_fallback_without_scores(self, fs):
+        result = fs.quantify_reject_feedback(reason="대화 부족으로 건조함", content_length=5000, audit_result={})
+        assert any(item.get("basis") == "heuristic_fallback" for item in result)
+
     def test_no_issues(self, fs):
         """문제 없으면 빈 리스트"""
         result = fs.quantify_reject_feedback(reason="기타 문제", content_length=6000, audit_result={})

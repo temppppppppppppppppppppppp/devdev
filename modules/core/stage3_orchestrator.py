@@ -28,6 +28,9 @@ except Exception:  # notifier 미설치 시 비차단
     notifier = None
 
 _DB_ADVISORY_NOTICE = "(Python 자동 감지 — 오탐 가능, 참고용)"
+_STAGE3_HISTORY_RECENT_LIMIT = 24
+_STAGE3_HISTORY_ANCHOR_LIMIT = 6
+_STAGE3_HISTORY_CACHE_LIMIT = 36
 
 
 def _normalize_semantic_source_counts(source_counts: dict | None) -> dict[str, int]:
@@ -66,6 +69,51 @@ def _build_stage3_observability_flags(meta: dict | None) -> dict:
         "work_focus_present": bool(meta.get("work_focus_present", False)),
     }
     return {key: value for key, value in flags.items() if value not in ("", [], {}, None, 0, False)}
+
+
+def _select_stage3_anchor_recent_window(
+    items: list | None,
+    *,
+    recent_limit: int = _STAGE3_HISTORY_RECENT_LIMIT,
+    anchor_limit: int = _STAGE3_HISTORY_ANCHOR_LIMIT,
+) -> list:
+    """Keep a bounded recent tail plus a few older anchors in chronological order."""
+    if not isinstance(items, list) or not items:
+        return []
+
+    safe_recent = max(1, int(recent_limit))
+    safe_anchor = max(0, int(anchor_limit))
+    total_limit = safe_recent + safe_anchor
+    selected = list(items)
+    if len(selected) <= total_limit:
+        return selected
+
+    recent = selected[-safe_recent:]
+    older = selected[:-safe_recent]
+    if not older or safe_anchor == 0:
+        return recent
+
+    if len(older) <= safe_anchor:
+        anchors = older
+    elif safe_anchor == 1:
+        anchors = [older[0]]
+    else:
+        max_index = len(older) - 1
+        anchor_indexes: list[int] = []
+        for offset in range(safe_anchor):
+            candidate = round(offset * max_index / (safe_anchor - 1))
+            if not anchor_indexes or candidate != anchor_indexes[-1]:
+                anchor_indexes.append(candidate)
+        if len(anchor_indexes) < safe_anchor:
+            for idx in range(len(older)):
+                if idx in anchor_indexes:
+                    continue
+                anchor_indexes.append(idx)
+                if len(anchor_indexes) == safe_anchor:
+                    break
+        anchors = [older[idx] for idx in sorted(anchor_indexes)]
+
+    return anchors + recent
 
 
 def _classify_stage3_failure_category(pipeline_result: dict) -> str | None:
@@ -570,8 +618,8 @@ class Stage3Orchestrator:
         fail_count = 0
         prev_blueprints = []  # 연속성 검증용
 
-        # [V67] 이전 Blueprint들 로드 (최근 30개 — Gemini 대용량 컨텍스트 활용)
-        for prev_ep in range(max(1, working_ep - 30), working_ep):
+        # [S3-1][S3-2] 최근 tail만 자르지 않고 older anchor도 남길 수 있게 약간 더 넓게 적재.
+        for prev_ep in range(max(1, working_ep - _STAGE3_HISTORY_CACHE_LIMIT), working_ep):
             prev_bp = ctx.current_project.get_blueprint(prev_ep)
             if prev_bp:
                 prev_blueprints.append(prev_bp)
@@ -707,8 +755,8 @@ class Stage3Orchestrator:
         _existing_bp = ctx.current_project.get_blueprint(working_ep)
         if _existing_bp:
             prev_blueprints.append(_existing_bp)
-            if len(prev_blueprints) > 30:
-                prev_blueprints[:] = prev_blueprints[-30:]
+            if len(prev_blueprints) > _STAGE3_HISTORY_CACHE_LIMIT:
+                prev_blueprints[:] = prev_blueprints[-_STAGE3_HISTORY_CACHE_LIMIT:]
             ctx.ui.log(f"   ⏭️  제{working_ep}화 - 기존 설계도 존재, 스킵")
             return {"next_ep": working_ep + 1, "success_count": success_count, "fail_count": fail_count}
 
@@ -886,10 +934,10 @@ class Stage3Orchestrator:
             _beats = " ".join(str(b) for b in _beats)
         _text = str(_tactical) + "\n" + str(_beats)
         _patterns = [
-            r"\d{4}년\s*\d{1,2}월(?:\s*\d{1,2}일)?",  # 2006년 7월 12일
+            r"\d{4}년\s*\d{1,2}월(?:\s*\d{1,2}일)?",  # 2006년 7월 12일  # utf8-hygiene: allow-line regex optional quantifier
             r"\d{1,2}월\s*\d{1,2}일",  # 7월 12일
-            r"\d{1,2}월(?:\s*(?:말|초|중순|하순|상순))?",  # 5월 말
-            r"\d+(?:일|주|달|개월|년)\s*(?:후|전)",  # 2달 후
+            r"\d{1,2}월(?:\s*(?:말|초|중순|하순|상순))?",  # 5월 말  # utf8-hygiene: allow-line regex optional quantifier
+            r"\d+(?:일|주|달|개월|년)\s*(?:후|전)",  # 2달 후  # utf8-hygiene: allow-line regex optional quantifier
         ]
         _found = []
         for _p in _patterns:
@@ -963,6 +1011,8 @@ class Stage3Orchestrator:
             _s3_plan = None
             _source_counts: dict[str, int] = {}
             _coverage_warnings: list[str] = []
+            _stage3_blueprint_window = _select_stage3_anchor_recent_window(prev_blueprints)
+            _stage3_focus_window = _stage3_blueprint_window[-5:] if _stage3_blueprint_window else []
 
             # [S3-I1] Smart Context Retrieval — 과거 유사 Blueprint 참조
             try:
@@ -990,12 +1040,12 @@ class Stage3Orchestrator:
                     _s3_work_focus = _resolve_stage3_work_focus(
                         ctx,
                         arc_data=arc_data,
-                        prev_blueprints=prev_blueprints[-5:] if prev_blueprints else [],
+                        prev_blueprints=_stage3_focus_window,
                         entity_registry=entity_registry,
                     )
                     _s3_plan = _s3_advisor.plan_stage3_retrieval(
                         arc_data=arc_data,
-                        prev_blueprints=prev_blueprints[-5:] if prev_blueprints else [],
+                        prev_blueprints=_stage3_focus_window,
                         current_ep=working_ep,
                         npc_roster=_s3_npc_roster[:10],
                         genre=_s3_genre,
@@ -1166,7 +1216,7 @@ class Stage3Orchestrator:
                 or _resolve_stage3_work_focus(
                     ctx,
                     arc_data=arc_data,
-                    prev_blueprints=prev_blueprints[-5:] if prev_blueprints else [],
+                    prev_blueprints=_stage3_focus_window,
                     entity_registry=entity_registry,
                 ),
                 arc_data=arc_data,
@@ -1213,8 +1263,12 @@ class Stage3Orchestrator:
             with StageSpinner(3, f"제{working_ep}화") as _s3_spinner:
                 # [V67][S3-I5] 이전 원고 로드 — 단일 쿼리로 최적화 (N+1 → 1)
                 _prev_ms_for_bp = []
-                _recent_manuscripts = ctx.current_project.db.get_recent_manuscripts(before_ep=working_ep, limit=30)
-                for _ms_row in _recent_manuscripts:
+                _recent_manuscripts = ctx.current_project.db.get_recent_manuscripts(
+                    before_ep=working_ep,
+                    limit=_STAGE3_HISTORY_CACHE_LIMIT,
+                )
+                _selected_manuscripts = _select_stage3_anchor_recent_window(_recent_manuscripts)
+                for _ms_row in _selected_manuscripts:
                     _ms_text = _ms_row.get("content", "")
                     _ms_ep_num = _ms_row.get("ep_num", 0)
                     if _ms_text:
@@ -1227,7 +1281,10 @@ class Stage3Orchestrator:
                     )
                 if _prev_ms_for_bp:
                     _logging.info(
-                        f" [V67] Blueprint용 이전 원고 {len(_prev_ms_for_bp)}개 로드 ({len(_prev_ms_text_for_bp):,}자)"
+                        " [V67] Blueprint용 이전 원고 %d/%d개 로드 (%d자)",
+                        len(_prev_ms_for_bp),
+                        len(_recent_manuscripts),
+                        len(_prev_ms_text_for_bp),
                     )
 
                 # [TF-4] prev_hud 추출 — BlockingValidator consistency checks용
@@ -1253,7 +1310,7 @@ class Stage3Orchestrator:
                     ep_num=working_ep,
                     arc_data=arc_data,
                     prev_blueprint=prev_blueprint,
-                    prev_blueprints=prev_blueprints[-30:] if prev_blueprints else [],
+                    prev_blueprints=_stage3_blueprint_window,
                     max_retries=9,
                     director=ctx.agents["director"],
                     arc_idx=arc_idx,
@@ -1543,8 +1600,8 @@ class Stage3Orchestrator:
 
         # prev_blueprints 업데이트
         prev_blueprints.append(blueprint)
-        if len(prev_blueprints) > 30:
-            prev_blueprints[:] = prev_blueprints[-30:]
+        if len(prev_blueprints) > _STAGE3_HISTORY_CACHE_LIMIT:
+            prev_blueprints[:] = prev_blueprints[-_STAGE3_HISTORY_CACHE_LIMIT:]
 
         # 메트릭 기록
         # [S3-N-P1-3] DI 콜백 None 방어

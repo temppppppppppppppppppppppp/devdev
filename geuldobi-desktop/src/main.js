@@ -7,12 +7,56 @@ const { spawn } = require("child_process");
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
-const { attachConsoleRelay } = require("./console_relay");
-const {
-  IPC_CHANNELS,
-  BRIDGE_MANAGED_ROUTES,
-  buildRunInputRoute,
-} = require("./desktop_control_plane_contract");
+
+const EARLY_DEBUG_LOG_PATH = path.join(
+  process.env.LOCALAPPDATA || path.join(os.homedir(), "AppData", "Local"),
+  "Geuldobi",
+  "electron-main.log"
+);
+
+function earlyDebugLog(...parts) {
+  const line = `[${new Date().toISOString()}] ${parts
+    .map((part) => {
+      if (part instanceof Error) return `${part.name}: ${part.message}\n${part.stack || ""}`;
+      if (typeof part === "string") return part;
+      try {
+        return JSON.stringify(part);
+      } catch {
+        return String(part);
+      }
+    })
+    .join(" ")}\n`;
+  try {
+    fs.mkdirSync(path.dirname(EARLY_DEBUG_LOG_PATH), { recursive: true });
+    fs.appendFileSync(EARLY_DEBUG_LOG_PATH, line, "utf8");
+  } catch {
+    // Ignore debug logging failures.
+  }
+}
+
+earlyDebugLog("main.js prelocal-require", {
+  pid: process.pid,
+  execPath: process.execPath,
+  resourcesPath: process.resourcesPath,
+  cwd: process.cwd(),
+});
+
+let attachConsoleRelay;
+let IPC_CHANNELS;
+let BRIDGE_MANAGED_ROUTES;
+let buildRunInputRoute;
+try {
+  ({ attachConsoleRelay } = require("./console_relay"));
+  ({
+    IPC_CHANNELS,
+    BRIDGE_MANAGED_ROUTES,
+    buildRunInputRoute,
+  } = require("./desktop_control_plane_contract"));
+  earlyDebugLog("main.js local-require ready");
+} catch (err) {
+  earlyDebugLog("main.js local-require failure", err);
+  throw err;
+}
 
 if (!app || !BrowserWindow || !ipcMain) {
   throw new Error(
@@ -20,11 +64,7 @@ if (!app || !BrowserWindow || !ipcMain) {
   );
 }
 
-const DEBUG_LOG_PATH = path.join(
-  process.env.LOCALAPPDATA || path.join(os.homedir(), "AppData", "Local"),
-  "Geuldobi",
-  "electron-main.log"
-);
+const DEBUG_LOG_PATH = EARLY_DEBUG_LOG_PATH;
 
 function debugLog(...parts) {
   const line = `[${new Date().toISOString()}] ${parts
@@ -120,6 +160,62 @@ function getWorkspaceDir() {
   }
   // 개발 모드: 프로젝트 루트 그대로
   return path.resolve(__dirname, "..", "..");
+}
+
+function getPackagedWorkspaceSeedDir() {
+  return path.join(process.resourcesPath, "workspace-seed");
+}
+
+function copyMissingTree(sourcePath, targetPath) {
+  if (!fs.existsSync(sourcePath)) {
+    return;
+  }
+  const sourceStats = fs.statSync(sourcePath);
+  if (sourceStats.isDirectory()) {
+    fs.mkdirSync(targetPath, { recursive: true });
+    for (const entry of fs.readdirSync(sourcePath, { withFileTypes: true })) {
+      copyMissingTree(
+        path.join(sourcePath, entry.name),
+        path.join(targetPath, entry.name)
+      );
+    }
+    return;
+  }
+  if (fs.existsSync(targetPath)) {
+    return;
+  }
+  fs.mkdirSync(path.dirname(targetPath), { recursive: true });
+  fs.copyFileSync(sourcePath, targetPath);
+}
+
+function syncPackagedWorkspaceSeed() {
+  if (!app.isPackaged) {
+    return;
+  }
+  let seedDir = null;
+  let workspaceDir = null;
+  try {
+    seedDir = getPackagedWorkspaceSeedDir();
+    workspaceDir = getWorkspaceDir();
+    debugLog("workspace seed sync start", { seedDir, workspaceDir });
+    if (!fs.existsSync(seedDir)) {
+      debugLog("workspace seed missing", { seedDir });
+      return;
+    }
+    fs.mkdirSync(workspaceDir, { recursive: true });
+    for (const folder of ["bible", "treatments", "projects"]) {
+      const sourcePath = path.join(seedDir, folder);
+      if (!fs.existsSync(sourcePath)) {
+        debugLog("workspace seed folder missing", { sourcePath, folder });
+        continue;
+      }
+      copyMissingTree(sourcePath, path.join(workspaceDir, folder));
+    }
+    debugLog("workspace seed sync complete", { seedDir, workspaceDir });
+  } catch (err) {
+    debugLog("workspace seed sync failure", { seedDir, workspaceDir }, err);
+    throw err;
+  }
 }
 
 const SETTINGS_PATH = path.join(getAppDir(), "settings.json");
@@ -875,6 +971,7 @@ ipcMain.handle(IPC_CHANNELS.workspace.getPath, async () => {
 
 app.whenReady().then(() => {
   debugLog("app.whenReady");
+  syncPackagedWorkspaceSeed();
   // 1. uvicorn 백엔드 기동 (splash가 폴링으로 감지)
   startBackend();
 

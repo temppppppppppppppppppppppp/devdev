@@ -1,4 +1,4 @@
-"""
+﻿"""
 [V64 P2-3] FeedbackSystem — SovereignApp 피드백 생성 로직 캡슐화
 
 SovereignApp에서 분리된 15개 피드백 생성 메서드.
@@ -79,6 +79,25 @@ class FeedbackSystem:
     # 정량화 / 강화
     # ═══════════════════════════════════════════════════════════════════════
 
+    @staticmethod
+    def _normalize_score_breakdown_value(score_breakdown: dict, key: str) -> float | None:
+        """Return a score_breakdown entry as a 0-100 value when possible."""
+        if not isinstance(score_breakdown, dict):
+            return None
+
+        raw_value = score_breakdown.get(key)
+        if isinstance(raw_value, dict):
+            score = raw_value.get("score")
+            max_score = raw_value.get("max")
+            if isinstance(score, (int, float)) and isinstance(max_score, (int, float)) and max_score > 0:
+                return (score / max_score) * 100
+            return None
+
+        if isinstance(raw_value, (int, float)):
+            return float(raw_value)
+
+        return None
+
     def quantify_reject_feedback(self, reason: str, content_length: int, audit_result: dict) -> list:
         """
         [V60.6] REJECT 사유를 구체적 수치로 정량화
@@ -100,6 +119,7 @@ class FeedbackSystem:
                 quantified.append(
                     {
                         "type": "QUANTIFIED",
+                        "basis": "content_length",
                         "description": f"정확한 분량 보충: 총 {shortage}자 추가 필요",
                         "severity": "HIGH" if shortage > 500 else "MEDIUM",
                         "suggestion": f"대화 +{dialogue_add}자 | 묘사 +{desc_add}자 | 액션 +{action_add}자",
@@ -107,22 +127,44 @@ class FeedbackSystem:
                 )
 
         # 2. 대화 비율 정량화
-        audit_result.get("score_breakdown", {})
+        score_breakdown = audit_result.get("score_breakdown", {}) if isinstance(audit_result, dict) else {}
         if "대화" in reason or "건조" in reason:
-            current_dialogue_chars = int(content_length * 0.15)
-            target_dialogue_chars = int(content_length * 0.30)
-            dialogue_needed = target_dialogue_chars - current_dialogue_chars
+            dialogue_score = self._normalize_score_breakdown_value(score_breakdown, "scene_composition")
+            flow_score = self._normalize_score_breakdown_value(score_breakdown, "narrative_flow")
+            evidence = {}
+            if dialogue_score is not None:
+                evidence["scene_composition"] = round(dialogue_score, 1)
+            if flow_score is not None:
+                evidence["narrative_flow"] = round(flow_score, 1)
 
-            if dialogue_needed > 100:
-                dialogue_count_needed = dialogue_needed // 50
+            if evidence:
+                weakest_score = min(evidence.values())
                 quantified.append(
                     {
                         "type": "QUANTIFIED",
-                        "description": f"대화 분량 부족: {dialogue_needed}자 추가 필요",
-                        "severity": "HIGH" if dialogue_needed > 500 else "MEDIUM",
-                        "suggestion": f"대화 {dialogue_count_needed}~{dialogue_count_needed + 2}개 추가 (조연 리액션, 내면 독백 포함)",
+                        "basis": "score_breakdown",
+                        "description": f"대화 분량 부족: score_breakdown 근거 보완 필요 (최저 {weakest_score:.1f})",
+                        "severity": "HIGH" if weakest_score < 40 else "MEDIUM",
+                        "suggestion": "대화와 장면 연결을 먼저 보완하고 후반 감정 흐름을 이어줄 것",
+                        "evidence": evidence,
                     }
                 )
+            else:
+                current_dialogue_chars = int(content_length * 0.15)
+                target_dialogue_chars = int(content_length * 0.30)
+                dialogue_needed = target_dialogue_chars - current_dialogue_chars
+
+                if dialogue_needed > 100:
+                    dialogue_count_needed = dialogue_needed // 50
+                    quantified.append(
+                        {
+                            "type": "QUANTIFIED",
+                            "basis": "heuristic_fallback",
+                            "description": f"대화 분량 부족: {dialogue_needed}자 추가 필요",
+                            "severity": "HIGH" if dialogue_needed > 500 else "MEDIUM",
+                            "suggestion": f"대화 {dialogue_count_needed}~{dialogue_count_needed + 2}개 추가 (조연 리액션, 내면 독백 포함)",
+                        }
+                    )
 
         # 3. 씬 밀도 정량화
         if "밀도" in reason or "후반부" in reason or "요약" in reason:
@@ -134,6 +176,7 @@ class FeedbackSystem:
                 quantified.append(
                     {
                         "type": "QUANTIFIED",
+                        "basis": "heuristic_fallback",
                         "description": f"후반부 분량 부족: Scene 5-6에 {latter_shortage}자 추가 필요",
                         "severity": "HIGH",
                         "suggestion": f"Scene 5에 +{latter_shortage // 2}자, Scene 6에 +{latter_shortage // 2}자 배분",
@@ -145,6 +188,7 @@ class FeedbackSystem:
             quantified.append(
                 {
                     "type": "QUANTIFIED",
+                    "basis": "heuristic_fallback",
                     "description": "씬 반영 부족: Blueprint의 모든 씬 균등 반영 필요",
                     "severity": "HIGH",
                     "suggestion": "각 씬당 최소 700자 확보 (6개 씬 × 700자 = 4,200자 베이스라인)",
@@ -161,6 +205,7 @@ class FeedbackSystem:
                 quantified.append(
                     {
                         "type": "QUANTIFIED",
+                        "basis": "heuristic_fallback",
                         "description": f"감각 묘사 부족: {sensory_needed}개 추가 권장",
                         "severity": "MEDIUM",
                         "suggestion": "시각/청각/촉각/후각 중 2가지 이상 혼합하여 장면당 1-2개 추가",
@@ -172,6 +217,7 @@ class FeedbackSystem:
             quantified.append(
                 {
                     "type": "QUANTIFIED",
+                    "basis": "heuristic_fallback",
                     "description": "액션 밀도 부족: 동작 묘사 강화 필요",
                     "severity": "MEDIUM",
                     "suggestion": "무술 장면은 3박자 이상 교환(공격-방어-반격) 묘사. 최소 500자/액션씬",

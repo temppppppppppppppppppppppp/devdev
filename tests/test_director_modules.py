@@ -203,6 +203,19 @@ class TestDirectorGrading:
         score = grading_system._extract_category_score({}, "nonexistent")
         assert score == 50  # default fallback
 
+    def test_extract_category_score_uses_non_overlapping_metric_groups(self, grading_system):
+        breakdown = {
+            "emotion_arc": {"score": 7, "max": 10},
+            "cliffhanger": {"score": 7, "max": 10},
+            "commercial_appeal": {"score": 7, "max": 10},
+            "pattern_diversity": {"score": 7, "max": 10},
+            "reader_satisfaction": {"score": 7, "max": 10},
+        }
+
+        assert grading_system._extract_category_score(breakdown, "engagement") == 70
+        assert grading_system._extract_category_score(breakdown, "commercial") == 70
+        assert grading_system._extract_category_score(breakdown, "satisfaction") == 70
+
     def test_generate_revision_guide_grade_d(self, grading_system):
         """13. generate_revision_guide_v59 returns CRITICAL priority for grade D."""
         guide = grading_system.generate_revision_guide_v59(
@@ -764,6 +777,16 @@ class TestDirectorCoreMethods:
     def test_on_approve_workflow_rejects_excessive_increase(self, director):
         """60. on_approve_workflow rejects internal_energy increase beyond max."""
         result = director.on_approve_workflow(ep_num=1, state_updates={"internal_energy": "+999"}, current_hud={})
+        assert "internal_energy" in result["rejected_updates"]
+
+    def test_on_approve_workflow_mixed_updates_fail_closed(self, director):
+        result = director.on_approve_workflow(
+            ep_num=1,
+            state_updates={"realm": "새 경지", "internal_energy": "+999"},
+            current_hud={"realm": "현 경지"},
+        )
+        assert result["approved"] is False
+        assert "realm" in result["applied_updates"]
         assert "internal_energy" in result["rejected_updates"]
 
     def test_audit_manuscript_too_short(self, director):

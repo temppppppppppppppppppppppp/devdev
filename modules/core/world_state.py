@@ -79,6 +79,8 @@ class WorldStateManager:
         """
         self.db = db
         self._state: dict = self._load_or_init()
+        self.last_save_ok: bool | None = None
+        self.last_save_error: str | None = None
 
     # ═══════════════════════════════════════════════════════════════
     # 로드 / 저장
@@ -96,12 +98,18 @@ class WorldStateManager:
 
         return json.loads(json.dumps(self._INIT_STATE, ensure_ascii=False))  # deep copy
 
-    def save(self) -> None:
+    def save(self) -> bool:
         """DB anchor 'world_state'에 저장"""
         try:
             self.db.save_anchor("world_state", self._state)
+            self.last_save_ok = True
+            self.last_save_error = None
+            return True
         except Exception as e:
             _logger.error("[V68] WorldState: DB 저장 실패: %s", e)
+            self.last_save_ok = False
+            self.last_save_error = str(e)
+            return False
 
     # ═══════════════════════════════════════════════════════════════
     # state_changes 기반 자동 갱신
@@ -925,7 +933,7 @@ class WorldStateManager:
             if destroyed:
                 shown_destroyed = destroyed[-10:]
                 dest_lines = [
-                    f"- {d.get('name', '?')} ({d.get('type', '?')}, 제{d.get('ep', '?')}화)"
+                    f"- {d.get('name', 'unknown')} ({d.get('type', 'unknown')}, 제{d.get('ep', 'unknown')}화)"
                     for d in shown_destroyed  # 최근 10개
                 ]
                 destroyed_suffix = _build_truncation_suffix(len(destroyed), len(shown_destroyed))
@@ -935,7 +943,7 @@ class WorldStateManager:
             plots = self._state.get("active_plots", [])
             if plots:
                 shown_plots = plots[-10:]
-                plot_lines = [f"- {p.get('plot', '?')} (제{p.get('since_ep', '?')}화~)" for p in shown_plots]
+                plot_lines = [f"- {p.get('plot', 'unknown')} (제{p.get('since_ep', 'unknown')}화~)" for p in shown_plots]
                 plot_suffix = _build_truncation_suffix(len(plots), len(shown_plots))
                 parts.append(f"[진행 중 플롯{plot_suffix}]\n" + "\n".join(plot_lines))
 
@@ -943,7 +951,7 @@ class WorldStateManager:
             world_laws = self._state.get("world_laws", [])
             if world_laws:
                 law_lines = [
-                    f"- {e.get('law', '')} (제{e.get('established_ep', '?')}화 확립)"
+                    f"- {e.get('law', '')} (제{e.get('established_ep', 'unknown')}화 확립)"
                     for e in world_laws
                     if isinstance(e, dict) and e.get("law")
                 ]

@@ -486,6 +486,49 @@ def test_update_director_selection_rationale_updates_latest_attempt_row(db):
     assert row["fix_scope"] == "ending_only"
 
 
+def test_get_stage4_final_authority_rows_marks_selection_as_companion_when_patch_changes_artifact(db):
+    attempt_key = "s4:ep5:arc2:a2:sess-authority"
+    db.save_director_selection(
+        5,
+        1,
+        "A",
+        "balanced",
+        "PASS_WITH_FIX",
+        score=88,
+        selection_reason="initial rationale",
+        stage=4,
+        attempt_key=attempt_key,
+        candidate_key="A|balanced",
+        content_hash="hash-selected",
+        artifact_path="logs/artifacts/stage4/ep_0005/attempt_02/selected_before_fix__A_balanced.txt",
+    )
+    db.save_stage_attempt(
+        stage=4,
+        verdict="PASS",
+        attempt_num=2,
+        ep_num=5,
+        arc_num=2,
+        score=97,
+        session_id="sess-authority",
+        attempt_key=attempt_key,
+        prompt_version="chief_writer@v1|director@v1",
+        candidate_key="A|balanced",
+        content_hash="hash-final",
+        artifact_path="logs/artifacts/stage4/ep_0005/attempt_02/patched_after_fix__A_balanced.txt",
+    )
+
+    rows = db.get_stage4_final_authority_rows(limit=5)
+
+    assert len(rows) == 1
+    row = rows[0]
+    assert row["attempt_key"] == attempt_key
+    assert row["final_authority_sink"] == "stage_attempts"
+    assert row["selection_role"] == "historical_companion"
+    assert row["selection_companion_status"] == "pre_final_candidate"
+    assert row["selection_companion_diff_fields"] == ["content_hash", "artifact_path"]
+    assert row["selection_matches_final_artifact"] is False
+
+
 def test_save_stage_attempt_persists_rationale_fields(db):
     db.save_stage_attempt(
         stage=4,

@@ -1,0 +1,78 @@
+﻿@page {
+  size: A4;
+  margin: 14mm 10mm 14mm 10mm;
+}
+body {
+  font-family: "Malgun Gothic", "맑은 고딕", "Apple SD Gothic Neo", sans-serif;
+  line-height: 1.48;
+  font-size: 10.4pt;
+  color: #111;
+  margin: 0 auto;
+  max-width: 190mm;
+}
+h1, h2, h3, h4 {
+  page-break-after: avoid;
+  break-after: avoid-page;
+  margin-top: 1em;
+  margin-bottom: 0.35em;
+}
+h1 { font-size: 18pt; }
+h2 { font-size: 14pt; }
+h3 { font-size: 11.8pt; }
+p { margin: 0.38em 0; }
+ol, ul { margin: 0.3em 0 0.55em 1.2em; }
+li { margin: 0.12em 0; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.65em 0 0.9em;
+  font-size: 9pt;
+}
+th, td {
+  border: 1px solid #999;
+  padding: 5px 6px;
+  vertical-align: top;
+}
+th { background: #f2f2f2; }
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0.7em auto;
+}
+a { color: #111; text-decoration: none; }
+.summary-page {
+  font-size: 0.9em;
+  line-height: 1.35;
+  break-after: page;
+  page-break-after: always;
+}
+.summary-page h1 {
+  margin-top: 0;
+  margin-bottom: 0.25em;
+  font-size: 17pt;
+}
+.summary-page h2 {
+  margin-top: 0.6em;
+  margin-bottom: 0.22em;
+  font-size: 12.8pt;
+}
+.summary-page h3 {
+  margin-top: 0.55em;
+  margin-bottom: 0.2em;
+  font-size: 10.9pt;
+}
+.summary-page p { margin: 0.24em 0; }
+.summary-page ol, .summary-page ul { margin: 0.2em 0 0.35em 1.1em; }
+.summary-page li { margin: 0.08em 0; }
+.summary-page table {
+  margin: 0.4em 0 0.5em;
+  font-size: 7.9pt;
+}
+.summary-page th, .summary-page td { padding: 3px 4px; }
+.toc-page {
+  break-after: page;
+  page-break-after: always;
+}
+.toc-page ul { margin-top: 0.4em; }
+.toc-page li { margin: 0.22em 0; }

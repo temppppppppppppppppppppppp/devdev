@@ -225,6 +225,8 @@ def test_build_stage4_canary_summary_surfaces_warn_gates(tmp_path):
     assert summary["stage4_attempts"] == 1
     assert summary["proof_record_summary"]["classification"] == "current"
     assert summary["companion_audit_summary"]["status"] == "ok"
+    assert summary["final_authority_contract_summary"]["status"] == "ok"
+    assert summary["final_authority_contract_summary"]["final_authority_sink"] == "stage_attempts"
     assert summary["proof_scope_summary"]["backend_wide_proof"] is False
     assert summary["proof_scope_summary"]["stage3_sink_probe_status"] == "missing"
     assert summary["rationale_contract_summary"]["status"] == "ok"

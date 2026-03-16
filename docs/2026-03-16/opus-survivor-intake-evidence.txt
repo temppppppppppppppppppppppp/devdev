@@ -1,0 +1,32 @@
+OPUS survivor intake evidence
+Date: 2026-03-16
+Baseline Commit: d6c81c1976d9812d447c2a78e2aeb36f7aed666a
+
+[supported]
+- S0-1 -> modules/core/stage01_helpers.py:260-297 -> dna_success failure path has no failure else branch
+- S3-1 -> modules/core/stage3_orchestrator.py:1252-1256 -> prev_blueprints[-30:] hard cap present
+- S3-2 -> modules/core/stage3_orchestrator.py:1216-1226 -> manuscript context char truncation present
+- S4-4 -> modules/core/stage4_interview_round.py:2862-2868 -> continuity/history gated by round_num == 0
+- S4-5 -> modules/core/stage4_interview_round.py:3011-3013 -> empty feedback breaks fix loop
+- X-2 -> modules/core/fact_ledger.py:114-119; modules/core/world_state.py:99-104 -> save failures only log
+- TF-BA-02 -> modules/domain/agents/base_agent.py:1959-2081 -> cached path has no MetricsCollector start_call/end_call
+- TF-CM-03 -> modules/domain/agents/continuity_manuscript.py:1056-1065 -> keyword map includes death/surrender but STATE_ORDER omits them
+- TF-FB-01/02 -> modules/core/feedback_system.py:82-180 -> heuristic fabrication and dropped score_breakdown access
+- TF-DG-01 -> modules/domain/agents/director_grading.py:686-688 -> approve if any applied updates exist
+- TF-DG-02 -> modules/domain/agents/director_grading.py:148-155 -> duplicated category fields
+- TF-S4CB-02 -> modules/core/stage4_context_builder.py:1804-1816 -> direct _lock / conn.cursor access
+- TF-E3 -> modules/core/stage4_orchestrator.py:1353-1369 -> escalation log payload limited to 5 fields
+
+[partial]
+- S2-2 -> modules/core/stage2_finalizer.py:1093-1120 -> rollback exists, but only shallow attribute replay is visible
+
+[contradicted-or-closed]
+- S1-2 -> modules/core/stage01_helpers.py:889-905 -> MAX_CONTEXT_VOLUMES sliding window already present
+- TF-E2 -> modules/core/stage4_orchestrator.py:1271-1273,1300,1312-1313 -> V75-B UI warnings already exist
+- TF-SV-02 -> modules/validation/scoring_validator.py:957-961 -> design comment marks ±1 cap as intentional
+- TF-PLV-01 -> modules/validation/pre_llm_validator.py:133; modules/validation/validation_orchestrator.py:1185-1188 -> dead branch
+- X-3 -> memo line citation stale relative to current resume flow
+
+[authority-note]
+- Use supported items as survivor promotion candidates only.
+- Do not use contradicted, closed, false-positive, or unsampled items as direct patch authority.

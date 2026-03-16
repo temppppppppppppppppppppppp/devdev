@@ -83,6 +83,8 @@ class FactLedger:
         """
         self.db = db
         self._ledger: dict = self._load()
+        self.last_save_ok: bool | None = None
+        self.last_save_error: str | None = None
 
     def _load(self) -> dict:
         """DB anchor에서 팩트 원장 로드. 없으면 빈 스키마 반환."""
@@ -111,12 +113,18 @@ class FactLedger:
             "last_updated_ep": 0,
         }
 
-    def save(self) -> None:
+    def save(self) -> bool:
         """팩트 원장을 DB anchor에 저장."""
         try:
             self.db.save_anchor("fact_ledger", self._ledger)
+            self.last_save_ok = True
+            self.last_save_error = None
+            return True
         except Exception as e:
             _logger.warning(f"[V68] 팩트 원장 저장 실패: {e}")
+            self.last_save_ok = False
+            self.last_save_error = str(e)
+            return False
 
     @property
     def last_updated_ep(self) -> int:
@@ -521,7 +529,8 @@ class FactLedger:
                             cause = h.split(": ", 1)[-1] if ": " in h else h
                             break
                     cause_str = f" - {cause}" if cause else ""
-                    parts.append(f"  - {name} (ep{info.get('last_ep', '?')}에서 사망{cause_str})")
+                    last_ep = info.get("last_ep", "unknown")
+                    parts.append(f"  - {name} (ep{last_ep}에서 사망{cause_str})")
 
         # ── 아이템/무공 ──
         items = self._ledger.get("items", {})
@@ -566,7 +575,8 @@ class FactLedger:
             if destroyed_locs:
                 parts.append(f"\n[파괴된 장소 ({len(destroyed_locs)}개)]")
                 for name, info in destroyed_locs.items():
-                    parts.append(f"  - {name} (ep{info.get('last_ep', '?')}에서 파괴)")
+                    last_ep = info.get("last_ep", "unknown")
+                    parts.append(f"  - {name} (ep{last_ep}에서 파괴)")
 
             if active_locs:
                 _active_loc_shown = list(active_locs.items())[:10]
@@ -590,7 +600,8 @@ class FactLedger:
             if destroyed_orgs:
                 parts.append(f"\n[파괴된 조직 ({len(destroyed_orgs)}개)]")
                 for name, info in destroyed_orgs.items():
-                    parts.append(f"  - {name} (ep{info.get('last_ep', '?')}에서 파괴)")
+                    last_ep = info.get("last_ep", "unknown")
+                    parts.append(f"  - {name} (ep{last_ep}에서 파괴)")
 
             if active_orgs:
                 _active_org_shown = list(active_orgs.items())[:10]

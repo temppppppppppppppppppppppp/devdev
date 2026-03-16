@@ -1,9 +1,12 @@
 # persistence-observability-boundary-remediation Execution SSOT
 
 Date: 2026-03-15
-Status: execution-ready
+Status: superseded-by-persistence-observability-finalization-and-sink-alignment
+Successor: `docs/2026-03-15/persistence-observability-finalization-and-sink-alignment-remediation-execution-ssot.md`
 Canonical Path: `docs/2026-03-15/persistence-observability-boundary-remediation-execution-ssot.md`
-Temp Mirror Path: `docs/temp/persistence-observability-boundary-remediation-execution-ssot.md`
+Temp Mirror Path: `none`
+Queue Disposition: `historical cleanroom predecessor only; excluded from active queue`
+Authority Class: `historical predecessor; do not use as live execution authority`
 Commit State:
 - Baseline Commit: `d2982aa2790f5ab81529f1e8d87cf6f6006f13c9`
 - Baseline Dirty Summary: `dirty: unrelated investment/style/docs/log artifacts already present`
@@ -12,6 +15,12 @@ Commit State:
 Source Survey Docs: `docs/2026-03-15/codebase-global-cleanroom-source-only-3pass-audit.md`; `docs/2026-03-15/codebase-global-cleanroom-source-only-deep-global-survey.md`
 Evidence Artifacts: `docs/2026-03-15/codebase-global-cleanroom-source-only-source-inventory.txt`; `docs/2026-03-15/codebase-global-cleanroom-source-only-surface-anchor-inventory.txt`; `docs/2026-03-15/codebase-global-cleanroom-source-only-side-effects.txt`
 Side-Effect Coverage: covered
+
+## Historical Supersession Notice
+
+- This cleanroom execution SSOT is retained as a historical predecessor only.
+- Live execution authority moved to `docs/2026-03-15/persistence-observability-finalization-and-sink-alignment-remediation-execution-ssot.md`, which was later realized and closed under the post-remediation roadmap.
+- Any `execution-ready`, temp-path, or roadmap semantics below are historical snapshot content, not current queue state.
 
 ## 1. Intent
 - Tighten the boundary between persistence, audit, session logging, and runtime-stage callers.
