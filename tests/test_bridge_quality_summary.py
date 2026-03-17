@@ -33,6 +33,7 @@ def test_quality_summary_endpoint_reads_project_sidecar(tmp_path, monkeypatch):
 
     assert response.status_code == 200
     assert payload["ok"] is True
+    assert payload["data"]["authority_role"] == "companion_snapshot"
     assert payload["data"]["available"] is True
     assert payload["data"]["latest_ep"] == 3
     assert payload["data"]["signals"]["ced"]["value"] == 1.1
@@ -54,6 +55,7 @@ def test_quality_summary_endpoint_prefers_workspace_projects_root(tmp_path, monk
 
     assert response.status_code == 200
     assert payload["ok"] is True
+    assert payload["data"]["authority_role"] == "companion_snapshot"
     assert payload["data"]["available"] is True
     assert payload["data"]["latest_ep"] == 2
 
@@ -64,6 +66,28 @@ def test_quality_summary_endpoint_rejects_missing_project():
 
     assert response.status_code == 400
     assert payload["code"] == "INVALID_PROJECT"
+
+
+def test_quality_dashboard_endpoint_surfaces_authority_maps(tmp_path, monkeypatch):
+    monkeypatch.setattr(bridge_server, "PROJECT_ROOT", tmp_path)
+    project_dir = tmp_path / "projects" / "demo"
+    project_dir.mkdir(parents=True)
+
+    response = asyncio.run(bridge_server.quality_dashboard_endpoint(project="demo", lookback=5))
+    payload = json.loads(response.body.decode("utf-8"))
+
+    assert response.status_code == 200
+    assert payload["ok"] is True
+    data = payload["data"]
+    assert data["runtime_authority_summary"]["supported_entry"] == "geuldobi-desktop/src/main.js"
+    assert (
+        data["runtime_authority_summary"]["boot_log_surfaces"]["desktop_pre_bridge"]["path"]
+        == "%LOCALAPPDATA%/Geuldobi/electron-main.log"
+    )
+    assert (
+        data["control_plane_authority_summary"]["companion_snapshots"]["/quality/summary"]
+        == "read-only subset, not durable authority"
+    )
 
 
 def test_quality_dashboard_endpoint_combines_result_and_patterns(tmp_path, monkeypatch):
@@ -432,6 +456,156 @@ def test_quality_dashboard_endpoint_surfaces_proof_status_and_sink_alignment(tmp
     assert "pass_rate_monitor" in data["runtime_audit_summary"]["contract"]["authoritative_attempt_sinks"]
     assert data["runtime_audit_summary"]["proof_digest"]["status"] == "ok"
     assert data["runtime_audit_summary"]["proof_digest"]["stages"]["stage4"]["coverage"]["session_decisions"] == 1
+
+
+def test_quality_dashboard_endpoint_surfaces_gate_repair_summary(tmp_path, monkeypatch):
+    monkeypatch.setattr(bridge_server, "PROJECT_ROOT", tmp_path)
+    project_dir = tmp_path / "projects" / "demo"
+    project_dir.mkdir(parents=True)
+
+    db = DBManager(project_dir / "project_data.db")
+    attempt_key = "s4:ep8:arc1:a1:sess_gate"
+    artifact_path = "logs/artifacts/stage4/ep_0008/attempt_01/final_manuscript__A_balanced.txt"
+    advisory_flags = {
+        "gate_semantics": {
+            "director_verdict": "PASS_WITH_FIX",
+            "gate_basis": "bounded_local_repair",
+            "repair_scope": "inplace",
+        },
+        "fix_pack": {
+            "patch_targets": ["opening_location_name", "ending_location_name"],
+            "must_fix": ["rename both location anchors"],
+            "do_not_regress": ["scene mood", "timeline"],
+            "success_condition": "Only the two approved location labels should change.",
+            "target_kind": "entity_ref",
+        },
+        "retry_budget_axes": {"round": 1, "repair": 1, "guidance": 0},
+    }
+    try:
+        db.save_episode_quality_signal(
+            8,
+            {
+                "ced_score": 1.0,
+                "ai_slop_score": 0.3,
+                "compression_ratio": 0.28,
+                "burstiness": 8.6,
+                "complexity": 31.0,
+                "signal_summary": {"sentence_count": 42},
+            },
+        )
+        db.save_episode_quality_label(
+            8,
+            {
+                "score": 96,
+                "verdict": "PASS",
+                "selection_reason": "repair closed cleanly",
+                "open_review": "local rename fixed without regressions",
+                "score_breakdown": {"quality_engagement": 94},
+                "consistency_checklist": {"scene_variety": "OK"},
+            },
+        )
+        db.save_stage_attempt(
+            stage=4,
+            verdict="PASS",
+            attempt_num=1,
+            ep_num=8,
+            arc_num=1,
+            score=96,
+            session_id="sess_gate",
+            attempt_key=attempt_key,
+            candidate_key="A|balanced",
+            content_hash="hash-gate",
+            artifact_path=artifact_path,
+            advisory_flags=advisory_flags,
+            selection_reason="repair closed cleanly",
+            verdict_reason="two bounded anchors needed correction",
+            open_review="local rename fixed without regressions",
+        )
+        db.save_director_selection(
+            ep_num=8,
+            round_num=1,
+            selected_label="A",
+            selected_strategy="balanced",
+            verdict="PASS_WITH_FIX",
+            score=92,
+            selection_reason="local rename only",
+            candidate_count=3,
+            fix_scope="inplace",
+            advisory_warnings=advisory_flags,
+            stage=4,
+            verdict_reason="two bounded anchors need correction",
+            attempt_key=attempt_key,
+            candidate_key="A|balanced",
+            content_hash="hash-gate",
+            artifact_path=artifact_path,
+        )
+    finally:
+        db.close()
+
+    response = asyncio.run(bridge_server.quality_dashboard_endpoint(project="demo", lookback=5))
+    payload = json.loads(response.body.decode("utf-8"))
+
+    assert response.status_code == 200
+    assert payload["ok"] is True
+    data = payload["data"]
+    assert data["gate_repair_summary"]["available"] is True
+    assert data["gate_repair_summary"]["director_verdict"] == "PASS_WITH_FIX"
+    assert data["gate_repair_summary"]["gate_basis"] == "bounded_local_repair"
+    assert data["gate_repair_summary"]["repair_scope"] == "inplace"
+    assert data["gate_repair_summary"]["fix_pack"]["patch_targets"] == [
+        "opening_location_name",
+        "ending_location_name",
+    ]
+    assert data["gate_repair_summary"]["retry_budget_axes"] == {"round": 1, "repair": 1, "guidance": 0}
+    assert data["gate_repair_summary"]["authority"]["final_authority_sink"] == "stage_attempts"
+    assert data["gate_repair_summary"]["authority"]["selection_role"] == "historical_companion"
+    assert data["result_summary"]["gate_repair"]["director_verdict"] == "PASS_WITH_FIX"
+    assert data["result_summary"]["gate_repair"]["fix_pack"]["target_kind"] == "entity_ref"
+
+
+def test_quality_dashboard_endpoint_surfaces_config_authority_summary(tmp_path, monkeypatch):
+    monkeypatch.setattr(bridge_server, "PROJECT_ROOT", tmp_path)
+    project_dir = tmp_path / "projects" / "demo"
+    project_dir.mkdir(parents=True)
+    (tmp_path / "config" / "settings").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "config" / "prompts").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "config" / "settings" / "validation.yaml").write_text(
+        "scoring:\n  default_pass_threshold: 66\norchestrator:\n  use_self_consistency: true\n"
+        "context:\n  mandatory_context_max: 333333\npatch_mode:\n  inplace_below: 62\n"
+        "smart_retrieval:\n  stage4_total_budget: 222222\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "config" / "models.yaml").write_text(
+        "agents:\n  director: gemini-test-director\n  chief_writer: gemini-test-chief\n  analyst: gemini-test-analyst\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "config" / "prompts" / "director.yaml").write_text(
+        '_version: "v-test"\nENSEMBLE_SELECTION_PROMPT: |\n  hello {story_context}\n',
+        encoding="utf-8",
+    )
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        "modules.core.models_config.resolve_models_yaml_path",
+        lambda: tmp_path / "config" / "models.yaml",
+    )
+    monkeypatch.setenv("PROMPT_DIR", str(tmp_path / "config" / "prompts"))
+    from modules.core.prompt_loader import PromptLoader
+
+    PromptLoader._instance = None
+    PromptLoader._cache = {}
+    PromptLoader._metadata_cache = {}
+
+    response = asyncio.run(bridge_server.quality_dashboard_endpoint(project="demo", lookback=5))
+    payload = json.loads(response.body.decode("utf-8"))
+
+    assert response.status_code == 200
+    assert payload["ok"] is True
+    summary = payload["data"]["config_authority_summary"]
+    assert summary["available"] is True
+    assert summary["thresholds"]["scoring.default_pass_threshold"]["effective_value"] == 66
+    assert summary["models"]["director"]["effective_value"] == "gemini-test-director"
+    assert summary["prompts"]["director_ensemble_selection"]["prompt_version"] == "director@v-test"
+    assert summary["prompts"]["director_ensemble_selection"]["used_fallback"] is False
 
 
 def test_quality_dashboard_endpoint_surfaces_cost_summary(tmp_path, monkeypatch):

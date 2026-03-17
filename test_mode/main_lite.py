@@ -1,7 +1,12 @@
 """
-글도비라이트 V63.3 — Selenium Bridge ($0)
+글도비라이트 V63.3 — Selenium Bridge ($0) [test_mode copy]
 ==========================================
 Gemini 웹 자동화로 웹소설 생산. API 키 불필요.
+
+Authority label: COMPATIBILITY / MAINTENANCE ONLY
+    This is NOT part of the supported runtime authority chain.
+    Supported path: geuldobi-desktop/src/main.js -> bridge_server -> process_runner -> main_a.py
+    See modules/core/runtime_paths.py RUNTIME_AUTHORITY_CONTRACT for the canonical map.
 
 사전 조건:
   1. Chrome 디버깅 모드:

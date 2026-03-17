@@ -589,6 +589,8 @@ class TestPreflightEnrichment:
         kwargs = preflight.ctx.quality_dashboard.record_retrieval_observation.call_args.kwargs
         assert kwargs["stage"] == "stage2"
         assert kwargs["observation"]["relation_slice_included"] is True
+        assert kwargs["observation"]["provenance_ledger"]["source_pack"] == "stage2"
+        assert kwargs["observation"]["budget_ledger"]["budget_bucket"] == "smart_retrieval.stage2_total_budget"
         assert "[관계 의미 질의]" in vector_context
         assert "연홍" in vector_context
 

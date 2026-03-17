@@ -199,8 +199,14 @@ class QualityDashboard:
         observation = observation if isinstance(observation, dict) else {}
         coverage_warnings = [str(item).strip() for item in (observation.get("coverage_warnings") or []) if str(item).strip()]
         source_counts = observation.get("source_counts") or {}
+        provenance_ledger = observation.get("provenance_ledger") or {}
+        budget_ledger = observation.get("budget_ledger") or {}
         if not isinstance(source_counts, dict):
             source_counts = {}
+        if not isinstance(provenance_ledger, dict):
+            provenance_ledger = {}
+        if not isinstance(budget_ledger, dict):
+            budget_ledger = {}
 
         record = {
             "type": "retrieval_observation",
@@ -221,6 +227,8 @@ class QualityDashboard:
             "mandatory_context_chars": int(observation.get("mandatory_context_chars", 0) or 0),
             "protected_summary_survived": bool(observation.get("protected_summary_survived", False)),
             "trimmed_work_slot_summary": bool(observation.get("trimmed_work_slot_summary", False)),
+            "provenance_ledger": provenance_ledger,
+            "budget_ledger": budget_ledger,
         }
 
         self._process_record(record)
@@ -366,6 +374,8 @@ class QualityDashboard:
                 "relation_slice_included": bool(row.get("relation_slice_included")),
                 "coverage_warnings": list(row.get("coverage_warnings") or []),
                 "source_counts": dict(row.get("source_counts") or {}),
+                "provenance_ledger": dict(row.get("provenance_ledger") or {}),
+                "budget_ledger": dict(row.get("budget_ledger") or {}),
                 "timestamp": row.get("timestamp"),
             }
             for row in reversed(history[-recent_n:])

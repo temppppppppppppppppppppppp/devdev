@@ -14,7 +14,11 @@ import traceback as _traceback
 
 from modules.core.artifact_logging import build_candidate_key, normalize_artifact_meta, snapshot_logged_artifact
 from modules.core.constants import ContextLimits, Emojis, ErrorMessages
-from modules.core.context_advisor import RetrievalSources
+from modules.core.context_advisor import (
+    RetrievalSources,
+    build_context_budget_ledger,
+    build_context_observation,
+)
 from modules.core.continuity_pin_guard import apply_continuity_pins
 from modules.core.fact_ledger import summarize_fact_ledger_numbers_block
 from modules.core.logging_keys import build_attempt_key, resolve_logging_session_id
@@ -59,6 +63,8 @@ def _build_stage3_observability_flags(meta: dict | None) -> dict:
         for item in (meta.get("coverage_warnings") or [])
         if str(item or "").strip()
     ]
+    provenance_ledger = meta.get("provenance_ledger") if isinstance(meta.get("provenance_ledger"), dict) else {}
+    budget_ledger = meta.get("budget_ledger") if isinstance(meta.get("budget_ledger"), dict) else {}
     flags = {
         "semantic_ctx_chars": int(meta.get("semantic_ctx_chars") or 0),
         "semantic_ctx_sources": sorted(source_counts.keys()),
@@ -67,6 +73,8 @@ def _build_stage3_observability_flags(meta: dict | None) -> dict:
         "advisor_path_used": bool(meta.get("advisor_path_used", False)),
         "planned_slots_count": int(meta.get("planned_slots_count") or 0),
         "work_focus_present": bool(meta.get("work_focus_present", False)),
+        "provenance_ledger": provenance_ledger,
+        "budget_ledger": budget_ledger,
     }
     return {key: value for key, value in flags.items() if value not in ("", [], {}, None, 0, False)}
 
@@ -1011,6 +1019,7 @@ class Stage3Orchestrator:
             _s3_plan = None
             _source_counts: dict[str, int] = {}
             _coverage_warnings: list[str] = []
+            _stage3_observation: dict[str, object] = {}
             _stage3_blueprint_window = _select_stage3_anchor_recent_window(prev_blueprints)
             _stage3_focus_window = _stage3_blueprint_window[-5:] if _stage3_blueprint_window else []
 
@@ -1241,23 +1250,32 @@ class Stage3Orchestrator:
                 and "[관계 의미 질의]" not in _bp_semantic_ctx
             ):
                 _coverage_warnings.append("missing_relation_slice")
+            _stage3_budget_cap = int(getattr(_s3_plan, "total_budget_chars", 0) or 0)
+            _stage3_budget_ledger = build_context_budget_ledger(
+                stage="stage3",
+                configured_cap=_stage3_budget_cap,
+                effective_cap=_stage3_budget_cap,
+                consumed_chars=len(_bp_semantic_ctx),
+                overflow_chars=max(0, len(_bp_semantic_ctx) - _stage3_budget_cap) if _stage3_budget_cap > 0 else 0,
+            )
+            _stage3_observation = build_context_observation(
+                stage="stage3",
+                work_focus=_s3_work_focus,
+                retrieval_plan=_s3_plan,
+                source_counts=_source_counts,
+                coverage_warnings=_coverage_warnings,
+                advisor_path_used=bool(_s3_plan),
+                work_slot_summary_present=bool(_work_focus_advisory),
+                work_slot_summary_included="[작품 추적 슬롯 요약]" in _bp_semantic_ctx,
+                relation_slice_included="[관계 의미 질의]" in _bp_semantic_ctx,
+                vector_context_chars=len(_bp_semantic_ctx),
+                budget_ledger=_stage3_budget_ledger,
+            )
             _record_retrieval_observation(
                 self.app,
                 ep_num=working_ep,
                 stage="stage3",
-                observation={
-                    "work_focus_present": bool(_s3_work_focus),
-                    "tracking_slots_count": len(_s3_work_focus.get("tracking_slots") or []) if isinstance(_s3_work_focus, dict) else 0,
-                    "scene_engines_count": len(_s3_work_focus.get("mandatory_scene_engines") or []) if isinstance(_s3_work_focus, dict) else 0,
-                    "registry_profiles_count": len(_s3_work_focus.get("registry_profiles") or []) if isinstance(_s3_work_focus, dict) else 0,
-                    "planned_slots_count": len(getattr(_s3_plan, "slots", []) or []) if _s3_plan else 0,
-                    "advisor_path_used": bool(_s3_plan),
-                    "work_slot_summary_included": "[작품 추적 슬롯 요약]" in _bp_semantic_ctx,
-                    "relation_slice_included": "[관계 의미 질의]" in _bp_semantic_ctx,
-                    "source_counts": _source_counts,
-                    "coverage_warnings": _coverage_warnings,
-                    "vector_context_chars": len(_bp_semantic_ctx),
-                },
+                observation=_stage3_observation,
             )
 
             with StageSpinner(3, f"제{working_ep}화") as _s3_spinner:
@@ -1359,6 +1377,8 @@ class Stage3Orchestrator:
             "advisor_path_used": bool(_s3_plan),
             "planned_slots_count": len(getattr(_s3_plan, "slots", []) or []) if _s3_plan else 0,
             "work_focus_present": bool(_s3_work_focus),
+            "provenance_ledger": dict((_stage3_observation or {}).get("provenance_ledger") or {}),
+            "budget_ledger": dict((_stage3_observation or {}).get("budget_ledger") or {}),
         }
         return blueprint, pipeline_result
 

@@ -77,7 +77,15 @@ def test_status_returns_runtime_state_model(tmp_path):
     payload = response.json()
     assert payload["ok"] is True
     assert payload["code"] == "OK"
-    assert payload["data"] == {"state": "starting", "run_id": "run-123", "pid": 999}
+    assert payload["data"]["state"] == "starting"
+    assert payload["data"]["run_id"] == "run-123"
+    assert payload["data"]["pid"] == 999
+    assert payload["data"]["authority_role"] == "companion_snapshot"
+    assert payload["data"]["runtime_authority_summary"]["supported_entry"] == "geuldobi-desktop/src/main.js"
+    assert (
+        payload["data"]["control_plane_authority_summary"]["authoritative_sinks"]["control_plane_provenance"]
+        == "logs/control-plane-provenance.jsonl"
+    )
 
 
 def test_status_includes_runtime_resync_snapshot_when_prompt_is_pending(tmp_path):

@@ -225,6 +225,30 @@ class TestMetadata:
         with patch.object(loader, "_prompts_dir", sample_yaml):
             assert loader.get_prompt_version("test_domain") == "v1.2"
 
+    def test_resolve_prompt_reports_yaml_authority(self, sample_yaml):
+        loader = PromptLoader()
+        with patch.object(loader, "_prompts_dir", sample_yaml):
+            prompt, contract = loader.resolve_prompt("test_domain", "SIMPLE_PROMPT")
+            assert prompt is not None
+            assert contract["available"] is True
+            assert contract["used_fallback"] is False
+            assert contract["effective_source"] == "config/prompts/test_domain.yaml:SIMPLE_PROMPT"
+            assert contract["prompt_version"] == "test_domain@v1.2"
+
+    def test_resolve_prompt_uses_fallback_contract_when_key_missing(self, sample_yaml):
+        loader = PromptLoader()
+        with patch.object(loader, "_prompts_dir", sample_yaml):
+            prompt, contract = loader.resolve_prompt(
+                "test_domain",
+                "MISSING_PROMPT",
+                fallback="fallback text",
+                fallback_source="inline_test_fallback",
+            )
+            assert prompt == "fallback text"
+            assert contract["available"] is True
+            assert contract["used_fallback"] is True
+            assert contract["effective_source"] == "inline_test_fallback"
+
     def test_compose_version_tag_preserves_order_and_dedups(self, sample_yaml):
         other_yaml = sample_yaml / "other.yaml"
         other_yaml.write_text('_version: "v9"\nOTHER_PROMPT: |\n  hello\n', encoding="utf-8")

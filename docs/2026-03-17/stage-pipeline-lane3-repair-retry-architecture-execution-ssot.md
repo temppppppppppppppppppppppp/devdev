@@ -1,14 +1,14 @@
 # Stage Pipeline Lane 3 PASS_WITH_FIX and Retry Architecture Execution SSOT
 
 Date: 2026-03-17
-Status: execution-ready
+Status: closed
 Canonical Path: `docs/2026-03-17/stage-pipeline-lane3-repair-retry-architecture-execution-ssot.md`
-Temp Mirror Path: `docs/temp/stage-pipeline-lane3-repair-retry-architecture-execution-ssot.md`
+Temp Mirror Path: removed after closure
 Commit State:
 - Baseline Commit: `100ecd03557e1b8c7a3544b5285fc80e7105050c`
 - Baseline Dirty Summary: `dirty: 2 tracked docs, 1 tracked runtime log; hotspots: docs/2026-03-16/post-remediation-later-hardening-autopilot-prompt*.md, projects/test_project/logs/episode_production.jsonl`
-- Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `none`
+- Resume Commit: `2352b26a293ac330a0ff24da320363f9abdbbba1`
+- Resume Drift Summary: `1 commit since baseline; lane-1 and lane-2 closures landed; active queue reduced to lane-3; hotspots: modules/core/stage4_interview_round.py, modules/domain/agents/director_ensemble.py, modules/domain/agents/chief_writer.py, tests/test_stage4_interview_round.py, tests/test_director_modules.py, tests/test_chief_writer.py, projects/test_project/logs/episode_production.jsonl, docs/roadmap-v2.md`
 Source Survey Docs:
 - `docs/2026-03-17/stage-pipeline-process-integrity-global-survey.md`
 - `docs/2026-03-17/pass-with-fix-local-repair-contract-outline.md`
@@ -131,9 +131,9 @@ Excluded:
 - keep lane 3 dependent on lane 2 semantics where verdict and repair fields overlap
 
 ## 12. Temp Queue Notes
-- temp status: pending
+- temp status: closed
 - cleanup condition:
-  - remove `docs/temp/stage-pipeline-lane3-repair-retry-architecture-execution-ssot.md` only after implementation closes and the roadmap marks this item completed
+  - completed on 2026-03-17; temp mirror removed after lane closure and queue exhaustion cleanup
 - roadmap dependency:
   - `docs/2026-03-17/stage-pipeline-process-integrity-execution-roadmap.md`
 
@@ -142,3 +142,17 @@ Excluded:
 - closure harness: `docs/implementation/execution-closure-harness.md`
 - optional queue state entry: `docs/temp/queue-state.json`
 - execution-start rule: re-run the document 3-pass audit and confirm at least 95% confidence against the current workspace state before patching code from this document
+
+## 14. Closure Note
+- realized on 2026-03-17 against workspace commit anchor `2352b26a293ac330a0ff24da320363f9abdbbba1`
+- landed:
+  - explicit `Fix Pack` contract propagation across Director → Stage 4 → Chief Writer
+  - `PASS_WITH_FIX` eligibility gate with missing-contract downgrade and score-fallback removal
+  - multi-anchor local patch support via semantic `patch_targets`
+  - named retry budget axes surfaced in runtime logs
+- verification evidence:
+  - `python -m pytest tests/test_stage4_interview_round.py -k "pass_with_fix or retry_inplace_requires_fix_pack or post_select_conflict or reduced_strategy_budget or full_strategy_budget or firewall_numeric_reject" -q`
+  - `python -m pytest tests/test_chief_writer.py -k "structural_inplace_patch or fix_pack_preserves_multi_anchor_targets" -q`
+  - `python -m pytest tests/test_director_modules.py -k "prompt_packs_forward_and_gate_semantics_surface or fix_pack_is_normalized_and_forwarded" -q`
+  - `python -m pytest tests/test_stage4_orchestrator.py -k "stage4_to_3_feedback or director" -q`
+  - `python scripts/ops_validator.py`

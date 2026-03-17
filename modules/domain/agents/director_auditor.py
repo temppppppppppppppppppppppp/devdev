@@ -14,6 +14,7 @@ import re
 import statistics
 import time
 
+from modules.core.config_manager import ConfigManager
 from modules.core.constants import AIModels, ManuscriptLimits
 from modules.core.prompt_loader import PromptLoader
 from modules.validation.threshold_helper import _threshold
@@ -283,6 +284,20 @@ class DirectorQualityAuditor:
                             default_config[_k] = _sj_val[_k]
             except Exception as _sj_e:
                 logging.warning("[DirectorAuditor] settings.json 로드 실패 — 기본값 유지: %s", _sj_e)  # [TF-16-04]
+
+            _cfg = ConfigManager()
+            default_config["scoring_threshold"] = _cfg.get_guard_threshold("scoring.default_pass_threshold", 60)
+            for _key in (
+                "use_self_consistency",
+                "consistency_votes",
+                "use_pre_llm",
+                "catharsis_max_gap",
+                "use_retrospective",
+                "use_reflexion",
+                "use_adaptive_threshold",
+                "max_parallel_workers",
+            ):
+                default_config[_key] = _cfg.get_guard_threshold(f"orchestrator.{_key}", default_config[_key])
 
             if config:
                 default_config.update(config)
@@ -1220,9 +1235,9 @@ class DirectorQualityAuditor:
         if incarnation_type == "회귀자":
             # 미래 예언 패턴 (직접적 스포일러)
             future_spoiler_patterns = [
-                (r"(곧|머지않아|얼마 후면?)\s*.{0,20}(죽|망|멸|패)", "미래 예언"),
-                (r"(전생|회귀)\s*[에의]서?\s*(알|봤|경험)", "직접적 회귀 언급"),
-                (r"미래[에서의]?\s*.{0,10}(기억|지식)", "미래 지식 직접 언급"),
+                (r"(곧|머지않아|얼마 후면?)\s*.{0,20}(죽|망|멸|패)", "미래 예언"),  # utf8-hygiene: allow-line regex optional token
+                (r"(전생|회귀)\s*[에의]서?\s*(알|봤|경험)", "직접적 회귀 언급"),  # utf8-hygiene: allow-line regex optional token
+                (r"미래[에서의]?\s*.{0,10}(기억|지식)", "미래 지식 직접 언급"),  # utf8-hygiene: allow-line regex optional token
             ]
 
             for pattern, category in future_spoiler_patterns:

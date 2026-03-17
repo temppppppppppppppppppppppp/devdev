@@ -1,0 +1,82 @@
+1. scope
+- terminal: `T01`
+- primary mission: repo topology, entrypoints, authority map
+- mode: `ROL 전역 전체 전수조사만`
+- stop line: survey-only, no code edits, no execution SSOT creation, no roadmap creation
+- authority chain used for this evidence: `AGENTS.md` -> `docs/implementation/system-order-init-harness.md` -> `docs/implementation/system-full-survey-execution-harness.md` -> `docs/implementation/codebase-global-survey-coverage-contract.md` -> `docs/implementation/deep-global-integrity-survey-harness.md` -> `docs/2026-03-17/geuldobi-v2-quality-maximization-full-survey-audit-order.md` -> `docs/2026-03-17/geuldobi-v2-quality-maximization-roadmap-triage.md`
+- git anchor: `HEAD=2352b26a293ac330a0ff24da320363f9abdbbba1`
+- workspace state at read time: dirty worktree matches the canonical docs' baseline summary pattern; preserve as-is
+- temp queue state: `docs/temp/` contains only `README.md`; no active execution mirror or temp roadmap was present during this read
+
+2. included paths
+- governance/reference reads: `AGENTS.md`, `docs/implementation/system-order-init-harness.md`, `docs/implementation/system-full-survey-execution-harness.md`, `docs/implementation/codebase-global-survey-coverage-contract.md`, `docs/implementation/deep-global-integrity-survey-harness.md`
+- governing canonicals: `docs/2026-03-17/geuldobi-v2-quality-maximization-roadmap-triage.md`, `docs/2026-03-17/geuldobi-v2-quality-maximization-full-survey-audit-order.md`, `docs/2026-03-17/geuldobi-v2-quality-maximization-terminal-prompt-pack.md`
+- reference-only docs read for boundary context: `docs/2026-03-17/stage-pipeline-lane1-cw-context-architecture-execution-ssot.md`, `docs/2026-03-17/stage-pipeline-lane2-director-gate-semantics-execution-ssot.md`, `docs/2026-03-17/stage-pipeline-lane3-repair-retry-architecture-execution-ssot.md`, `docs/2026-03-17/stage-pipeline-process-integrity-execution-roadmap.md`
+- root/runtime entry surfaces: `main_a.py`, `main.js`, `geuldobi-desktop/src/main.js`
+- subsystem roots surveyed at topology level: `modules/`, `modules/api/`, `modules/core/`, `modules/domain/`, `modules/protocols/`, `modules/ui/`, `modules/validation/`, `UI/`, `geuldobi-desktop/`, `tests/`, `scripts/`
+- adjacent root utilities sampled for boundary classification: `smoke_sc.py`, `RESET.py`
+
+3. excluded paths
+- deep Stage 2/3/4 semantic audit inside `modules/core/stage2_*`, `modules/core/stage3_*`, `modules/core/stage4_*`; owned by `T03` to `T05`
+- operator-surface behavior review beyond topology boundary; owned by `T07`
+- test effectiveness and tooling economics beyond adjacency mapping; owned by `T08`
+- config/contract/cost/threshold meaning beyond boot/env boundary notes; owned by `T09`
+- narrative pipeline assets under `treatments/`, `bible/`, work-specific content review under `projects/`
+- temp/build/cache/archive roots such as `.git/`, `node_modules/`, `dist/`, `__pycache__/`
+- `docs/roadmap-v2.md` as authority; seed only, not used as governing source
+
+4. facts
+- Fact: repo root currently exposes two human-noticeable app entry files, but only one is authoritative for Electron runtime. Root `main.js` explicitly says the authoritative Electron entry is `geuldobi-desktop/src/main.js` and only sets `GEULDOBI_ROOT_SHADOW_ENTRY` before re-exporting that file (`main.js:5`, `main.js:10-14`).
+- Fact: packaged/desktop authority sits in `geuldobi-desktop/src/main.js`, not root `main.js`. The Electron main file imports `console_relay` and `desktop_control_plane_contract`, validates Electron main APIs, defines workspace-path helpers, syncs packaged workspace seed data, starts the backend, creates splash/main windows with `preload.js`, and registers IPC handlers for bridge/material/project/workspace surfaces (`geuldobi-desktop/src/main.js:49-54`, `geuldobi-desktop/src/main.js:156`, `geuldobi-desktop/src/main.js:191`, `geuldobi-desktop/src/main.js:239-277`, `geuldobi-desktop/src/main.js:358-409`, `geuldobi-desktop/src/main.js:479-976`).
+- Fact: desktop mode starts the Python backend via `python -m uvicorn modules.api.bridge_server:app --port 8300` in dev mode and passes workspace env such as `GEULDOBI_WORKSPACE` and `GEULDOBI_PROJECTS_ROOT` into the spawned backend process (`geuldobi-desktop/src/main.js:250`, `geuldobi-desktop/src/main.js:276-277`).
+- Fact: `modules/api/bridge_server.py` is the backend control-plane root. Its header declares `/run`, `/stop`, `/status`, `/events`, and `/run/{run_id}/input`, and the module wires `ProcessRunner`, `PromptBroker`, `RiskApprovalGate`, `DBManager`, `PassRateMonitor`, and `QualityDashboard` before constructing `app = FastAPI(...)` (`modules/api/bridge_server.py:4-8`, `modules/api/bridge_server.py:36-46`, `modules/api/bridge_server.py:1690-1712`, `modules/api/bridge_server.py:1720-2010`).
+- Fact: `modules/api/process_runner.py` is the process boundary between the bridge server and the engine app. Its file header describes it as a `main_a.py` subprocess wrapper; it resolves engine root, falls back to `python main_a.py` if packaged engine.exe is absent, maintains runner state, and writes stdin sequences for Mode A/Mode B operation (`modules/api/process_runner.py:1-13`, `modules/api/process_runner.py:44`, `modules/api/process_runner.py:217-224`, `modules/api/process_runner.py:228-331`, `modules/api/process_runner.py:688-776`).
+- Fact: `main_a.py` is the Python composition root for the engine path. It performs boot-time sys.path normalization, UTF-8 stdio bootstrap, Windows asyncio policy bootstrap, faulthandler activation, dotenv load, and large-scale module imports before defining `SovereignApp` (`main_a.py` top-of-file, `main_a.py:178`, `main_a.py:345`).
+- Fact: `SovereignApp` composes `StudioSystem`, `Stage2Orchestrator`, `Stage3Orchestrator`, `Stage4Orchestrator`, `SessionLogger`, `AuditService`, `UIService`, `StateService`, `ProjectService`, and later `VecMemory`; it also exposes many thin delegates back into those services and orchestrators (`main_a.py:354`, `main_a.py:370-422`, `main_a.py:1310-1319`, `main_a.py:3218-3371`, `main_a.py:4114-4116`).
+- Fact: direct CLI boot still exists. `main_a.py` ends with `if __name__ == "__main__": SovereignApp().boot()` and persists a boot traceback to `logs/error.log` if startup fails (`main_a.py:4797-4806`).
+- Fact: top-level subsystem roots under `modules/` are `api`, `core`, `domain`, `models`, `protocols`, `ui`, and `validation`. `modules/domain/` is currently centered on `agents/`. `modules/core/` also contains subroots such as `genre_guards`, `laws`, `providers`, `services`, and `stage0`.
+- Fact: `modules/ui/` is minimal at topology level (`__init__.py` only in the sampled read), while `geuldobi-desktop/src/` contains the active Electron shell files (`main.js`, `preload.js`, `desktop_control_plane_contract.js`, `console_relay.js`, `index.html`). Operator-app-shell gravity currently appears to be in `geuldobi-desktop/`, not `modules/ui/`.
+- Fact: `tests/` and `scripts/` are both broad first-class neighboring roots rather than small adjunct folders. `tests/` includes dedicated coverage for desktop, bridge, process runner, `main_a.py`, stage orchestration, and quality surfaces. `scripts/` includes operational validators, survey validators, canaries, smoke runners, and document/process helpers.
+- Fact: root utilities `smoke_sc.py` and `RESET.py` are not part of the packaged Electron entry chain. `smoke_sc.py` directly imports `main_a.SovereignApp`, auto-patches `config/settings/validation.yaml`, and runs a real-cost smoke path. `RESET.py` is a standalone destructive reset/rewind helper against `projects/` data.
+- Fact: the reference lane docs supplied by the user are already marked `closed`, and the aggregate stage-pipeline roadmap is also `closed`; their temp mirrors were deleted before this survey. For T01, they act as boundary context only, not active queue authority.
+- Inference: current live runtime topology is layered as `root main.js shadow -> geuldobi-desktop Electron main -> FastAPI bridge_server -> ProcessRunner -> main_a.py / SovereignApp -> Stage 2/3/4 orchestrators + services`.
+- Inference: `main_a.py` remains the highest blast-radius topology hotspot because both direct CLI use and desktop-mediated runs ultimately converge there.
+- Inference: root-level visual naming can mislead operators or tooling because `main.js` exists at repo root but is explicitly non-authoritative for packaged/runtime contract changes.
+
+5. hotspot files
+- `main_a.py`
+- `geuldobi-desktop/src/main.js`
+- `modules/api/bridge_server.py`
+- `modules/api/process_runner.py`
+- `main.js`
+- `AGENTS.md`
+- `docs/2026-03-17/geuldobi-v2-quality-maximization-full-survey-audit-order.md`
+- `docs/2026-03-17/geuldobi-v2-quality-maximization-roadmap-triage.md`
+
+6. side-effect notes
+- file writes / artifact generation: Fact: `main_a.py` opens `crash_dump.log` and has a boot-failure fallback sink to `logs/error.log`. Fact: `geuldobi-desktop/src/main.js` appends `electron-main.log` under LocalAppData and copies packaged seed trees into the user workspace on packaged boot.
+- DB writes, schema touchpoints, transaction boundaries: Open Question: topology confirms DB-bearing surfaces behind `main_a.py` services and `bridge_server.py` `DBManager` usage, but direct transaction mapping was not audited in T01. T06 should own this.
+- JSONL / log / audit sinks: Fact: `main_a.py` composes `SessionLogger` and `AuditService`. Fact: `bridge_server.py` writes control-plane provenance JSONL and serves quality/pass-rate data surfaces.
+- console / UI / operator-visible outputs: Fact: `main_a.py` still emits CLI/UI output through `UIService`. Fact: Electron main owns splash/main windows, preload bridge, and IPC handlers for operator-facing actions.
+- rollback / recovery / retry: Fact: `main_a.py` delegates reset, rewind, rollback, and wipe operations through `ProjectService`. Fact: `RESET.py` is a separate destructive maintenance path. Inference: retry/gate behavior shares the same composition root but deeper semantics belong to `T05`.
+- cache / singleton / global-state mutation: Fact: `main_a.py` uses module-level bootstrap flags for stdio/asyncio bootstrap. Fact: Electron main holds global window/process handles and backend restart counters. Open Question: cache/retention blast radius across long-lived app sessions needs deeper follow-up outside T01.
+- bootstrap fallback / config-env mutation: Fact: `main_a.py` calls `load_dotenv(override=True)`. Fact: root `main.js` sets `GEULDOBI_ROOT_SHADOW_ENTRY`. Fact: Electron main injects `GEULDOBI_WORKSPACE` and `GEULDOBI_PROJECTS_ROOT` into backend startup env. Fact: sampled root utility `smoke_sc.py` mutates `config/settings/validation.yaml` during smoke runs.
+
+7. contradictions or uncertainty
+- Open Question: root `main.js` exists in a way that can be mistaken for the authoritative Electron entry even though its own header denies that role. T07 should confirm whether operator docs and packaging flows consistently respect the shadow-entry contract.
+- Open Question: `modules/ui/` has minimal live weight compared with `geuldobi-desktop/`. This may be intentional reserve space or stale topology residue; T07 should classify it.
+- Open Question: root maintenance utilities (`smoke_sc.py`, `RESET.py`) bypass the desktop/bridge control plane and directly mutate config or project data. T02/T08 should decide whether they are sanctioned operational paths or maintenance-only exceptions.
+- Open Question: the dirty worktree includes modified closed lane docs plus deleted temp mirrors, while the new global survey docs are untracked. This is not a contradiction with the audit-order baseline, but T10 should preserve the distinction between prior closed lane authority and the current survey-only bundle.
+
+8. candidate execution areas
+- candidate only: entrypoint-authority hygiene around root `main.js` vs `geuldobi-desktop/src/main.js` if operator/tooling confusion is observed elsewhere
+- candidate only: composition-root blast-radius reduction around `main_a.py` if later terminals confirm that bootstrap, retry, persistence, and operator concerns are too tightly coupled for safe iteration
+- candidate only: control-plane contract consolidation across Electron IPC, FastAPI routes, and `ProcessRunner` if T07/T09 find drift between desktop contract JS, bridge routes, and runtime behavior
+- candidate only: maintenance-path isolation for direct root utilities that patch config or mutate `projects/` outside the desktop bridge
+
+9. follow-up requests for another terminal
+- `T02`: deep-audit bootstrap and runtime spine across `geuldobi-desktop/src/main.js` -> `modules/api/bridge_server.py` -> `modules/api/process_runner.py` -> `main_a.py`, especially fallback seams and packaged/dev divergence
+- `T06`: map durable write surfaces behind `ProjectService`, `DBManager`, session/audit sinks, and packaged workspace seed copy so topology claims connect to persistence truth
+- `T07`: confirm operator-visible authority boundaries among `geuldobi-desktop/src/`, `preload.js`, IPC routes, root `main.js`, and the near-empty `modules/ui/`
+- `T08`: check whether existing tests cover the shadow-entry contract, `ProcessRunner` subprocess boundary, packaged boot path, and direct root maintenance utilities
+- `T09`: audit env/config/contract spread around desktop control-plane channels, backend route contracts, and workspace-path env injection

@@ -112,6 +112,17 @@ def _validation_result():
     return {"warnings": [], "warning_count": 0, "focus_points": [], "metrics": {"length": 2000}}
 
 
+def _local_fix_pack(*patch_targets: str, target_kind: str = "entity_ref"):
+    targets = list(patch_targets) or ["opening_location_name"]
+    return {
+        "patch_targets": targets,
+        "must_fix": [f"{targets[0]} fact correction"],
+        "do_not_regress": ["scene mood", "timeline", "blocking"],
+        "success_condition": "Only the listed anchors are corrected while scene semantics stay intact.",
+        "target_kind": target_kind,
+    }
+
+
 class TestInterviewRoundInit:
     def test_init_with_ctx(self):
         ctx = _make_ctx()
@@ -1350,6 +1361,21 @@ class TestRecordS4Attempt:
         ctx = _make_ctx()
         ctx.pass_rate_monitor = MagicMock()
         ir = Stage4InterviewRound(ctx)
+        advisory_flags = {
+            "gate_semantics": {
+                "director_verdict": "PASS_WITH_FIX",
+                "gate_basis": "bounded_local_repair",
+                "repair_scope": "inplace",
+            },
+            "fix_pack": {
+                "patch_targets": ["opening_location_name", "ending_location_name"],
+                "must_fix": ["rename both location anchors"],
+                "do_not_regress": ["scene mood", "timeline"],
+                "success_condition": "Only the two location anchors change.",
+                "target_kind": "entity_ref",
+            },
+            "retry_budget_axes": {"round": 1, "repair": 1, "guidance": 0},
+        }
 
         ir._record_s4_attempt(
             episode=2,
@@ -1358,6 +1384,7 @@ class TestRecordS4Attempt:
             score=61,
             verdict="REJECT",
             reject_reason="retry needed",
+            advisory_flags=advisory_flags,
             error_category="LOGIC_ERROR",
             reject_bucket="post_select_conflict",
             score_breakdown={"narrative_flow": 9},
@@ -1367,6 +1394,11 @@ class TestRecordS4Attempt:
         assert kw["error_category"] == "LOGIC_ERROR"
         assert kw["reject_bucket"] == "post_select_conflict"
         assert kw["score_breakdown"]["narrative_flow"] == 9
+        assert kw["director_verdict"] == "PASS_WITH_FIX"
+        assert kw["gate_basis"] == "bounded_local_repair"
+        assert kw["repair_scope"] == "inplace"
+        assert kw["fix_pack"]["patch_targets"] == ["opening_location_name", "ending_location_name"]
+        assert kw["retry_budget_axes"] == {"round": 1, "repair": 1, "guidance": 0}
 
     def test_attempt_key_uses_metrics_session_id_when_available(self):
         ctx = _make_ctx()
@@ -1714,6 +1746,7 @@ class TestRecordS4Attempt:
                 "score": 70,
                 "best_manuscript": prev_manuscript,
                 "fix_scope": "inplace",
+                "fix_pack": _local_fix_pack("opening_location_name"),
                 "reject_bucket": "quality_issue",
                 "selected_strategy_key": "balanced",
             },
@@ -1771,7 +1804,7 @@ class TestRecordS4Attempt:
         ctx = _make_ctx()
         ir = Stage4InterviewRound(ctx)
         round_ctx = _make_round_ctx()
-        round_ctx.chief_writer.inplace_patch.return_value = [_candidate()]
+        round_ctx.chief_writer.patch_with_feedback.return_value = [_candidate()]
 
         candidates, is_patch, patch_fallback, prev_score, asp_manuscript = ir._generate_candidates(
             round_num=2,
@@ -1790,14 +1823,94 @@ class TestRecordS4Attempt:
             common_writer_kwargs={},
         )
 
-        assert candidates == round_ctx.chief_writer.inplace_patch.return_value
+        assert candidates == round_ctx.chief_writer.patch_with_feedback.return_value
         assert is_patch is True
         assert patch_fallback is False
         assert prev_score == 98
         assert asp_manuscript is None
-        round_ctx.chief_writer.patch_with_feedback.assert_not_called()
+        round_ctx.chief_writer.patch_with_feedback.assert_called_once()
         round_ctx.chief_writer.regenerate_with_feedback.assert_not_called()
-        round_ctx.chief_writer.inplace_patch.assert_called_once()
+        round_ctx.chief_writer.inplace_patch.assert_not_called()
+
+    def test_pass_with_fix_without_fix_pack_downgrades_before_inplace(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.chief_writer.generate_ensemble.return_value = [_candidate()]
+        round_ctx.manuscript_validator.validate_all_candidates.return_value = [_validation_result()]
+        ctx.agents["director"].select_and_judge_ensemble.return_value = {
+            "selected": "A",
+            "verdict": "PASS_WITH_FIX",
+            "score": 99,
+            "selection_reason": "high score but local cleanup needed",
+            "verdict_reason": "minor rename",
+            "feedback": {"action_items": ["fix the location label"]},
+            "action_items": ["fix the location label"],
+            "fix_scope": "inplace",
+            "selected_candidate": {"manuscript": "candidate manuscript " * 220, "strategy_name": "balanced"},
+        }
+
+        result = ir.run(
+            round_num=0,
+            stage4_spinner=MagicMock(),
+            director_feedback="",
+            previous_attempt={},
+            round_ctx=round_ctx,
+        )
+
+        assert result.verdict == "REJECT"
+        round_ctx.chief_writer.inplace_patch.assert_not_called()
+        saved_verdict = ctx.current_project.db.save_director_selection.call_args.kwargs["verdict"]
+        assert saved_verdict == "REJECT"
+
+    def test_retry_inplace_requires_fix_pack_and_routes_to_patch(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.chief_writer.patch_with_feedback.return_value = [_candidate()]
+
+        candidates, is_patch, patch_fallback, prev_score, asp_manuscript = ir._generate_candidates(
+            round_num=1,
+            chief_writer=round_ctx.chief_writer,
+            director_feedback="fix continuity only",
+            previous_attempt={
+                "score": 95,
+                "best_manuscript": "original manuscript",
+                "fix_scope": "inplace",
+                "reject_bucket": "quality_issue",
+                "selected_strategy_key": "balanced",
+            },
+            prev_manuscript="original manuscript",
+            style_guide="",
+            blueprint={},
+            common_writer_kwargs={},
+        )
+
+        assert candidates == round_ctx.chief_writer.patch_with_feedback.return_value
+        assert is_patch is True
+        assert patch_fallback is False
+        assert prev_score == 95
+        assert asp_manuscript is None
+        round_ctx.chief_writer.inplace_patch.assert_not_called()
+        round_ctx.chief_writer.patch_with_feedback.assert_called_once()
+        assert ir._last_retry_budget_axes["repair"] == "patch_revision"
+
+    def test_pass_with_fix_scene_model_target_downgrades_to_reject(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        result = ir._enforce_pass_with_fix_contract(
+            {
+                "verdict": "PASS_WITH_FIX",
+                "director_verdict": "PASS_WITH_FIX",
+                "final_verdict": "PASS_WITH_FIX",
+                "fix_scope": "inplace",
+                "fix_pack": _local_fix_pack("opening_location_name", target_kind="scene_model"),
+            }
+        )
+
+        assert result["final_verdict"] == "REJECT"
+        assert result["fix_scope"] == "partial"
+        assert result["gate_basis"] == "pass_with_fix_contract_scene_model_target"
 
     """
     def test_firewall_continuity_reject_promotes_patch_path(self):
@@ -1942,6 +2055,7 @@ class TestRecordS4Attempt:
                 "feedback": {"issues": ["numeric contradiction"]},
                 "action_items": ["fix the numbers"],
                 "fix_scope": "inplace",
+                "fix_pack": _local_fix_pack("portfolio_return_value"),
                 "fix_scope_reasoning": "minor local fix",
                 "open_review": "",
                 "firewall_triggered": True,
@@ -2255,6 +2369,13 @@ class TestRecordS4Attempt:
         ir._round_start_ts = time.monotonic() - 1
         ir._last_strategy_budget = "reduced"
         ir._last_strategy_count = 2
+        ir._last_retry_budget_axes = {
+            "round": "retry_round_2",
+            "repair": "patch_revision",
+            "strategy": "reduced",
+            "escalation": "mad",
+            "guidance": "augmented",
+        }
         ir._get_round_metrics_delta = MagicMock(
             return_value={
                 "total_calls": 4,
@@ -2297,6 +2418,7 @@ class TestRecordS4Attempt:
         assert payload["flags"]["strategy_budget"] == "reduced"
         assert payload["flags"]["strategy_count"] == 2
         assert payload["flags"]["reject_bucket"] == "constraint_violation"
+        assert payload["flags"]["retry_budget_axes"]["repair"] == "patch_revision"
         assert payload["patch_trace"]["patch_strategy"] == ""
         assert payload["patch_trace"]["patch_targets"] == []
         assert payload["patch_trace"]["unchanged_ratio"] is None
@@ -2585,6 +2707,7 @@ class TestRecordS4Attempt:
                 "feedback": {"action_items": ["tighten the ending"]},
                 "action_items": ["tighten the ending"],
                 "fix_scope": "inplace",
+                "fix_pack": _local_fix_pack("scene_2", target_kind="local_sentence"),
                 "selected_candidate": {"manuscript": "candidate manuscript " * 200, "strategy_name": "balanced"},
                 "score_breakdown": {},
                 "open_review": "",
@@ -2628,6 +2751,78 @@ class TestRecordS4Attempt:
         prm_kwargs = ctx.pass_rate_monitor.record_attempt.call_args.kwargs
         assert prm_kwargs["is_patch"] is True
 
+    def test_pass_with_fix_multi_anchor_fix_pack_is_logged_and_passes(self):
+        ctx = _make_ctx()
+        ctx.pass_rate_monitor = MagicMock()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.chief_writer.model_tier = "gemini-2.5-pro"
+        round_ctx.chief_writer.generate_ensemble.return_value = [_candidate()]
+
+        def _inplace_side_effect(**kwargs):
+            assert kwargs["fix_pack"]["patch_targets"] == ["opening_location_name", "ending_location_name"]
+            round_ctx.chief_writer._last_inplace_patch_trace = {
+                "patch_strategy": "inplace_patch",
+                "patch_targets": ["opening_location_name", "ending_location_name"],
+                "fallback_reason": "",
+                "focus": "",
+                "structural_attempted": False,
+            }
+            return [
+                {
+                    "manuscript": "patched manuscript " * 200,
+                    "patch_targets": ["opening_location_name", "ending_location_name"],
+                }
+            ]
+
+        round_ctx.chief_writer.inplace_patch.side_effect = _inplace_side_effect
+        round_ctx.manuscript_validator.validate_all_candidates.return_value = [_validation_result()]
+        ctx.agents["director"].select_and_judge_ensemble.side_effect = [
+            {
+                "selected": "A",
+                "verdict": "PASS_WITH_FIX",
+                "score": 94,
+                "selection_reason": "local rename only",
+                "verdict_reason": "two location anchors need correction",
+                "feedback": {"action_items": ["fix the location labels"]},
+                "action_items": ["fix the location labels"],
+                "fix_scope": "inplace",
+                "fix_pack": {
+                    "patch_targets": ["opening_location_name", "ending_location_name"],
+                    "must_fix": ["replace both location labels with the approved venue"],
+                    "do_not_regress": ["scene mood", "timeline", "blocking"],
+                    "success_condition": "Both anchors are corrected and the rest of the scene stays intact.",
+                    "target_kind": "entity_ref",
+                },
+                "selected_candidate": {"manuscript": "candidate manuscript " * 200, "strategy_name": "balanced"},
+                "score_breakdown": {},
+                "open_review": "",
+            },
+            {
+                "verdict": "PASS",
+                "score": 97,
+                "selection_reason": "re-audit accepted",
+                "open_review": "anchors corrected",
+                "score_breakdown": {"structure": 97},
+                "consistency_checklist": {"timeline": "ok"},
+            },
+        ]
+
+        with patch("builtins.open", mock_open()) as mocked_open, patch("os.makedirs"):
+            result = ir.run(
+                round_num=0,
+                stage4_spinner=MagicMock(),
+                director_feedback="",
+                previous_attempt={},
+                round_ctx=round_ctx,
+            )
+
+        assert result.verdict == "PASS"
+        payload = json.loads("".join(call.args[0] for call in mocked_open().write.call_args_list).strip())
+        assert payload["patch_trace"]["patch_targets"] == ["opening_location_name", "ending_location_name"]
+        assert payload["fix_pack"]["target_kind"] == "entity_ref"
+        assert payload["fix_pack"]["patch_targets"] == ["opening_location_name", "ending_location_name"]
+
     def test_pass_with_fix_run_logs_artifact_linkage(self, tmp_path):
         ctx = _make_ctx()
         ctx.current_project.name = "proj"
@@ -2661,6 +2856,7 @@ class TestRecordS4Attempt:
                 "feedback": {"action_items": ["tighten the ending"]},
                 "action_items": ["tighten the ending"],
                 "fix_scope": "inplace",
+                "fix_pack": _local_fix_pack("scene_2", target_kind="local_sentence"),
                 "selected_candidate": {"manuscript": "candidate manuscript " * 200, "strategy_name": "balanced"},
                 "score_breakdown": {},
                 "open_review": "",
@@ -2726,6 +2922,7 @@ class TestRecordS4Attempt:
                 "feedback": {"action_items": ["tighten the ending"]},
                 "action_items": ["tighten the ending"],
                 "fix_scope": "inplace",
+                "fix_pack": _local_fix_pack("scene_2", target_kind="local_sentence"),
                 "selected_candidate": {
                     "manuscript": "candidate manuscript " * 200,
                     "strategy": "balanced",
@@ -2871,6 +3068,7 @@ class TestRecordS4Attempt:
                 final_state_updates={},
                 director_result={
                     "fix_scope": "inplace",
+                    "fix_pack": _local_fix_pack("scene_2", target_kind="local_sentence"),
                     "action_items": ["엔딩 장면 보강"],
                     "feedback": {"action_items": ["엔딩 장면 보강"]},
                     "selected_candidate": {"manuscript": "candidate manuscript " * 220},
@@ -3093,3 +3291,146 @@ class TestSlotMaxChars:
         # slot.max_chars=500, so the content within [SC:event_claim] should be <= 500 chars
         sc_block = continuity_ctx.split("[SC:event_claim]\n")[-1] if "[SC:event_claim]" in continuity_ctx else ""
         assert len(sc_block) <= 500
+
+
+class TestLane2DirectorSemantics:
+    def test_director_input_packs_are_split_and_ordered(self):
+        ctx = _make_ctx()
+        ctx.current_project.master_bible = {
+            "MasterBible": {"protagonist_config": {"pov": "limited", "external_pov_insert_policy": "guarded"}}
+        }
+        ctx.current_project.db.get_strategy_win_rates.return_value = {"total": 4, "balanced": 0.5}
+        ctx.current_project.db.get_fix_scope_stats.return_value = [
+            {"fix_scope": "inplace", "verdict": "PASS", "cnt": 2}
+        ]
+        ctx.sys = MagicMock()
+        ctx.sys.guard = MagicMock()
+        ctx.sys.guard.get_director_review_advisory.return_value = "operator note"
+        ir = Stage4InterviewRound(ctx)
+        ir._run_advisory_chain = MagicMock(return_value=["truth advisory"])
+        round_ctx = _make_round_ctx()
+        round_ctx.chief_writer.generate_ensemble.return_value = [_candidate()]
+        validation_result = _validation_result()
+        validation_result["warnings"] = ["python warning"]
+        validation_result["warning_count"] = 1
+        validation_result["shared_failure_warnings"] = ["shared failure"]
+        round_ctx.manuscript_validator.validate_all_candidates.return_value = [validation_result]
+        ctx.agents["director"].select_and_judge_ensemble.return_value = {
+            "selected": "A",
+            "verdict": "PASS",
+            "score": 95,
+            "selection_reason": "ok",
+            "selected_candidate": {"manuscript": "pass manuscript", "title": "pass", "strategy_name": "balanced"},
+            "state_updates": {},
+        }
+
+        ir.run(
+            round_num=0,
+            stage4_spinner=MagicMock(),
+            director_feedback="history conflict",
+            previous_attempt={},
+            round_ctx=round_ctx,
+        )
+
+        director_kwargs = ctx.agents["director"].select_and_judge_ensemble.call_args.kwargs
+        assert "### [Decision Core]" in director_kwargs["decision_core"]
+        assert "### [Candidate Evidence]" in director_kwargs["candidate_evidence"]
+        assert "### [Reference Appendix]" in director_kwargs["reference_appendix"]
+        assert "shared failure" in director_kwargs["decision_core"]
+        assert "python warning" in director_kwargs["candidate_evidence"]
+        assert "history conflict" in director_kwargs["candidate_evidence"]
+        assert "operator note" in director_kwargs["reference_appendix"]
+        mandatory_context = director_kwargs["mandatory_context"]
+        assert mandatory_context.index("### [Decision Core]") < mandatory_context.index("### [Candidate Evidence]")
+        assert mandatory_context.index("### [Candidate Evidence]") < mandatory_context.index(
+            "### [Reference Appendix]"
+        )
+
+    def test_save_director_selection_persists_gate_semantics_payload(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.chief_writer.generate_ensemble.return_value = [_candidate()]
+        round_ctx.manuscript_validator.validate_all_candidates.return_value = [_validation_result()]
+        ctx.agents["director"].select_and_judge_ensemble.return_value = {
+            "selected": "A",
+            "verdict": "REJECT",
+            "director_verdict": "PASS_WITH_FIX",
+            "final_verdict": "REJECT",
+            "gate_basis": "quality_floor_fail",
+            "repair_scope": "partial",
+            "score": 44,
+            "selection_reason": "best candidate",
+            "verdict_reason": "quality floor fail",
+            "selected_candidate": {"manuscript": "candidate manuscript", "strategy_name": "balanced"},
+            "feedback": {"issues": ["quality floor"]},
+            "action_items": ["tighten ending"],
+        }
+
+        ir.run(
+            round_num=0,
+            stage4_spinner=MagicMock(),
+            director_feedback="",
+            previous_attempt={},
+            round_ctx=round_ctx,
+        )
+
+        kw = ctx.current_project.db.save_director_selection.call_args.kwargs
+        gate_semantics = kw["advisory_warnings"]["gate_semantics"]
+        assert gate_semantics["director_verdict"] == "PASS_WITH_FIX"
+        assert gate_semantics["final_verdict"] == "REJECT"
+        assert gate_semantics["gate_basis"] == "quality_floor_fail"
+        assert gate_semantics["repair_scope"] == "partial"
+
+    def test_append_episode_log_includes_gate_semantics(self):
+        ctx = _make_ctx()
+        ctx.current_project.name = "proj"
+        ir = Stage4InterviewRound(ctx)
+        ir._round_start_ts = time.monotonic() - 1
+        ir._get_round_metrics_delta = MagicMock(
+            return_value={
+                "total_calls": 1,
+                "total_tokens": 100,
+                "total_cost_usd": 0.01,
+                "model_breakdown": {"gemini-2.5-pro": {"tokens": 100, "cost": 0.01}},
+            }
+        )
+
+        with patch("builtins.open", mock_open()) as mocked_open, patch("os.makedirs"):
+            ir._append_episode_log(
+                ep_num=6,
+                round_num=0,
+                director_result={
+                    "verdict": "PASS_WITH_FIX",
+                    "director_verdict": "PASS_WITH_FIX",
+                    "final_verdict": "REJECT",
+                    "gate_basis": "quality_floor_fail",
+                    "repair_scope": "partial",
+                    "score": 83,
+                    "selected": "A",
+                    "selection_reason": "best candidate",
+                    "selected_candidate": {"strategy_name": "balanced"},
+                    "score_breakdown": {},
+                    "action_items": ["tighten ending"],
+                    "open_review": "",
+                },
+                initial_verdict="PASS_WITH_FIX",
+                final_verdict="REJECT",
+                initial_score=83,
+                final_score=44,
+                is_patch=False,
+                patch_fallback=False,
+                tot_used=False,
+                mad_used=False,
+                asp_used=False,
+                model="gemini-2.5-pro",
+                reject_bucket="quality_floor_fail",
+                validation_warnings=[],
+            )
+
+        written = "".join(call.args[0] for call in mocked_open().write.call_args_list)
+        payload = json.loads(written.strip())
+        assert payload["director_verdict"] == "PASS_WITH_FIX"
+        assert payload["final_verdict"] == "REJECT"
+        assert payload["gate_basis"] == "quality_floor_fail"
+        assert payload["repair_scope"] == "partial"

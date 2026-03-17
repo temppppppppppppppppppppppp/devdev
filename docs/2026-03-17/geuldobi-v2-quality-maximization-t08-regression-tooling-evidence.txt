@@ -1,0 +1,134 @@
+1. scope
+- Fact: terminal `T08`; mission = tests, smoke/canary, scripts, repair tooling, verification economics.
+- Fact: survey mode only; no code edits, no config/DB mutation, no test or script execution in this pass.
+- Fact: baseline commit = `2352b26a293ac330a0ff24da320363f9abdbbba1`.
+- Fact: baseline dirty summary = `dirty: config/prompts/director.yaml; stage-pipeline lane1~3 docs; modules/core/context_advisor.py; modules/core/stage4_context_builder.py; modules/core/stage4_interview_round.py; modules/domain/agents/chief_writer.py; modules/domain/agents/director_ensemble.py; modules/domain/agents/director_prompts.py; projects/test_project/logs/episode_production.jsonl; tests/test_chief_writer.py; tests/test_context_advisor.py; tests/test_director_modules.py; tests/test_stage4_context_builder.py; tests/test_stage4_interview_round.py; temp execution mirrors deleted; new 2026-03-17 survey docs and roadmap-v2 seed present`.
+- Fact: `docs/temp/` contained only `README.md`; no active execution mirror or roadmap controlled this lane.
+
+2. included paths
+- Fact: `tests/` source tests, including root tests plus `tests/e2e/`, `tests/integration/`, `tests/property/`, `tests/chaos/`, `tests/stage3_isolated_test/`, and `tests/stage4_v2_test/` source entries, excluding `__pycache__`.
+- Fact: `scripts/` regression and ops surfaces, with emphasis on `scripts/regression_validation_tiers.py`, `scripts/run_pytest_lowmem.py`, `scripts/run_stage2_smoke.py`, `scripts/run_stage3_smoke.py`, `scripts/run_stage4_smoke.py`, `scripts/run_stage4_canary.py`, `scripts/run_stage34_canary.py`, `scripts/e2e_menu_smoke.ps1`, `scripts/check_utf8_hygiene.py`, `scripts/ops_validator.py`, `scripts/mojibake_global_survey.py`, and `scripts/render_later_hardening_autopilot.py`.
+- Fact: root helpers classified for T08 relevance: `smoke_sc.py`, `tmp_utf8_check.py`.
+- Fact: supporting contract tests read for tool linkage: `tests/test_regression_validation_tier_contract.py`, `tests/test_run_pytest_lowmem.py`, `tests/test_run_stage4_canary.py`, `tests/test_run_stage34_canary.py`, `tests/test_stage4_canary_tools.py`, `tests/test_check_utf8_hygiene.py`, `tests/test_mojibake_global_survey.py`, `tests/test_render_later_hardening_autopilot.py`.
+
+3. excluded paths
+- Fact: `docs/roadmap-v2.md` excluded as non-authority seed.
+- Fact: reference-only lane execution docs were not used as primary sweep targets.
+- Fact: `tests/**/__pycache__/**` excluded as generated cache.
+- Fact: runtime payloads under `tests/stage3_isolated_test/*.json`, `tests/stage3_isolated_test/progress.log`, `tests/stage4_v2_test/project/**`, and `tests/stage4_v2_test/results/**` were treated as fixture/artifact payloads, not primary code surfaces.
+- Fact: root artifact files `00_test_print.txt`, `00_test_print_ast.txt`, `test_results.xml`, and `tmp_utf8_check.txt` were treated as outputs/scratch artifacts, not active tooling.
+- Fact: no live invocation of smoke/canary/root helper scripts was performed.
+
+4. facts
+- Fact: `tests/` inventory after excluding `__pycache__` = `360` files total, including `314` Python `test_*` files, `4` JS `test_*` files, `8` `e2e` tests, `2` `integration` tests, `4` `property` tests, `7` `chaos` tests, `5` `stage3_isolated_test` source tests, `2` `stage4_v2_test` source tests, and `33` non-test data/artifact files.
+- Fact: `scripts/` inventory after excluding `__pycache__` = `40` files total, including `38` Python files, `1` PowerShell file, `1` JSON file, `6` smoke/canary files, `7` validator/ops files, `5` repair/retry files, and `12` build/generate files.
+- Fact: `scripts/regression_validation_tiers.py` defines exactly three named tiers:
+  - `contract_safe`: `10` tests, `0` scripts, `mutates_project_state=False`.
+  - `focused_mutation`: `2` tests (`tests/test_run_stage4_canary.py`, `tests/test_run_stage34_canary.py`) plus `4` scripts (`scripts/e2e_menu_smoke.ps1`, `scripts/run_stage2_smoke.py`, `scripts/run_stage3_smoke.py`, `scripts/run_stage4_smoke.py`), `mutates_project_state=True`.
+  - `full_canary_proof`: `0` tests plus `2` scripts (`scripts/run_stage4_canary.py`, `scripts/run_stage34_canary.py`), `mutates_project_state=True`.
+- Fact: `tests/test_regression_validation_tier_contract.py` validates tier inventory contents and checks that smoke/canary scripts expose the expected `VALIDATION_TIER` markers; it does not execute those runners.
+- Fact: `scripts/run_pytest_lowmem.py` is a dedicated low-memory runner: default chunk size `12`, memory pause/resume thresholds `90.0/82.0`, default log root `logs/pytest_lowmem/<timestamp>`, per-shard `stdout`/`stderr` logs, and `memory_watchdog.log`. `tests/test_run_pytest_lowmem.py` covers target classification, sharding, command building, memory wait behavior, and rendered summary output.
+- Fact: `scripts/run_stage2_smoke.py`, `scripts/run_stage3_smoke.py`, and `scripts/run_stage4_smoke.py` each declare `Validation tier: focused_mutation` and explicit mutation boundaries against fixture-project DB/artifact surfaces.
+- Fact: `scripts/e2e_menu_smoke.ps1` declares `Validation tier: focused_mutation`, states that it can touch live backend state, and writes `artifacts/smoke/smoke-results.jsonl`, `artifacts/smoke/smoke-summary.json`, and `artifacts/smoke/smoke-failures.log`.
+- Fact: `scripts/run_stage4_canary.py` declares `Validation tier: full_canary_proof`, boots live app surfaces, ensures `PassRateMonitor`, and writes `projects/<name>/logs/canary_summary.json` and `projects/<name>/logs/canary_companion_audit.json`.
+- Fact: `scripts/run_stage34_canary.py` declares `Validation tier: full_canary_proof`, boots live app surfaces, runs frontier-lag flow, and writes `projects/<name>/logs/stage34_canary_summary.json` with Stage 3/4 session-alignment summaries.
+- Fact: `tests/test_run_stage4_canary.py`, `tests/test_run_stage34_canary.py`, and `tests/test_stage4_canary_tools.py` directly cover canary prepare/run/analyze behavior, summary writes, companion audit fields, rationale contract failures, retry-context failures, and branch-inventory aggregation.
+- Fact: direct lane-regression suites around current landed lane work are large and specific:
+  - `tests/test_stage4_interview_round.py` = `3066` lines.
+  - `tests/test_pass_with_fix.py` = `2023` lines.
+  - `tests/test_stage4_context_builder.py` = `1281` lines.
+  - `tests/test_director_modules.py` = `1206` lines.
+  - `tests/test_chief_writer.py` = `1182` lines.
+  - `tests/test_context_advisor.py` = `328` lines.
+- Fact: those large suites explicitly cover landed lane semantics such as `PASS_WITH_FIX`, `director_verdict`, `final_verdict`, `gate_basis`, `repair_scope`, `fix_pack`, `retry_budget_axes`, `token_cost`, artifact linkage, work-tracking slot injection, retrieval-plan ordering, context budgets, and retrieval coverage warnings.
+- Fact: upstream mocked-real-data smoke coverage exists outside the script runners through `tests/e2e/test_l3_stage2_realproject.py`, `tests/e2e/test_l3_stage3_smoke.py`, `tests/e2e/test_l3_stage4_smoke.py`, and `tests/integration/test_pipeline_smoke.py`.
+- Fact: keep-theme proxy coverage exists, but it is distributed:
+  - info-loss / truncation / budget proxies: `tests/test_stage4_context_builder.py`, `tests/test_stage2_preflight.py`, `tests/test_context_window_utilization.py`, `tests/test_session_logger.py`, `tests/test_base_agent.py`, `tests/test_world_state_caps.py`.
+  - failure-learning / gate / repair proxies: `tests/test_pass_with_fix.py`, `tests/test_stage4_interview_round.py`, `tests/test_validation_orchestrator_soft_failure.py`, `tests/chaos/test_feedback_loop.py`, `tests/test_stage4_canary_tools.py`.
+  - cost / token accounting proxies: `tests/test_cost_tracking.py`, `tests/test_bridge_quality_summary.py`, `tests/test_stage2_finalizer.py`, `tests/test_stage3_orchestrator.py`, `tests/test_stage4_interview_round.py`, `tests/test_stage4_post_processor.py`.
+  - long-run degradation proxies: `tests/test_quality_trend.py`, `tests/test_long_term_repetition.py`, `tests/test_cross_episode_repetition.py`, `tests/test_repetition_guard.py`, `tests/test_tier4_ensemble_caching.py`, `tests/test_world_state_caps.py`.
+- Fact: tooling coverage is uneven:
+  - `scripts/check_utf8_hygiene.py` has dedicated test linkage via `tests/test_check_utf8_hygiene.py`.
+  - `scripts/mojibake_global_survey.py` has dedicated test linkage via `tests/test_mojibake_global_survey.py`.
+  - `scripts/render_later_hardening_autopilot.py` has dedicated test linkage via `tests/test_render_later_hardening_autopilot.py`.
+  - `scripts/ops_validator.py` had no direct `tests/` reference in this sweep.
+  - `scripts/run_stage2_smoke.py`, `scripts/run_stage3_smoke.py`, and `scripts/run_stage4_smoke.py` are tier-listed, but their behavior is not backed by direct runner tests analogous to the canary scripts.
+- Fact: root helper `smoke_sc.py` is a live-cost/manual smoke path outside the tier inventory. It monkeypatches `input()`, writes `config/settings/validation.yaml`, restores that file on `atexit`, loads `GOOGLE_API_KEY`, boots the live app, and targets a real project path. No direct `tests/` reference was found.
+- Inference: existing automated coverage is strongest for landed lane regressions and contract-level tooling behavior, not for end-to-end validation of all triage `keep` themes.
+- Inference: verification economics are tiered but asymmetric: cheap `contract_safe` coverage is narrow, `focused_mutation` is broader but mutating, and `full_canary_proof` is the highest-cost lane while still depending on scripts/log artifacts rather than tier-listed tests.
+
+5. hotspot files
+- Fact: `tests/test_stage4_interview_round.py` (`3066` lines) is the densest regression hotspot for gate semantics, retry routing, artifact linkage, token-cost logging, and lane-3 regression containment.
+- Fact: `tests/test_pass_with_fix.py` (`2023` lines) is the densest cross-stage regression hotspot for `PASS_WITH_FIX` loops, Stage 2/3/4 routing, dead-NPC guard interactions, and fix-scope propagation.
+- Fact: `tests/test_stage4_context_builder.py` (`1281` lines) is the main hotspot for truncation, context budgeting, retrieval ordering, work-focus handoff, and coverage-warning behavior.
+- Fact: `tests/test_director_modules.py` (`1206` lines) is the main hotspot for director/final verdict split, quality-gate behavior, and `fix_pack` normalization.
+- Fact: `tests/test_chief_writer.py` (`1182` lines) is the main hotspot for patch behavior, feedback propagation, manuscript cache behavior, and common-context assembly.
+- Fact: `tests/test_stage4_canary_tools.py` (`509` lines) is the main hotspot for canary proof artifact semantics.
+- Fact: `tests/integration/test_pipeline_smoke.py` (`505` lines) is the main upstream runtime smoke hotspot shared with other terminals.
+- Fact: `scripts/run_pytest_lowmem.py` (`392` lines) is the main operator-facing runner for low-memory pytest policy.
+- Fact: `scripts/run_stage34_canary.py` (`301` lines) and `scripts/run_stage4_canary.py` (`175` lines) are the main high-cost proof runners.
+- Fact: `scripts/ops_validator.py` (`245` lines) is the main temp/canonical execution-doc integrity checker, but no direct test surface was found.
+- Fact: `smoke_sc.py` (`170` lines) is a high-risk root helper because it is live-cost, stateful, and outside the formal tier inventory.
+
+6. side-effect notes
+- Fact: file writes and artifact generation are applicable.
+  - `scripts/run_pytest_lowmem.py` writes shard logs under `logs/pytest_lowmem/`.
+  - smoke runners write fixture-project artifacts.
+  - canary runners write proof JSON files under project `logs/`.
+  - `scripts/e2e_menu_smoke.ps1` writes smoke artifacts under `artifacts/smoke/`.
+  - `smoke_sc.py` rewrites `config/settings/validation.yaml` and restores it on exit.
+- Fact: actual artifact content integrity is applicable, but not runtime-verified in this static pass.
+  - canary summaries and companion audits are asserted by tests, but no live artifact bytes were re-audited here.
+- Fact: DB writes are applicable.
+  - smoke runners explicitly use real or copied project DB surfaces.
+  - canary runners boot the live app and operate against project DB state.
+  - DB schema mutation was not observed in the inspected runner contracts.
+- Fact: JSONL/log/audit sinks are applicable.
+  - `scripts/e2e_menu_smoke.ps1` writes JSONL and log files.
+  - `scripts/run_pytest_lowmem.py` writes log shards and watchdog logs.
+  - `tests/test_validation_orchestrator_soft_failure.py` asserts `logs/soft_failures.jsonl`.
+  - canary runners write proof/audit JSON files.
+- Fact: console/UI/operator-visible output is applicable.
+  - low-memory pytest prints summarized shard results.
+  - smoke/canary scripts print JSON payloads.
+  - `smoke_sc.py` captures and prints `[SC]` logs.
+- Fact: rollback/recovery/retry paths are applicable.
+  - low-memory pytest waits for memory headroom before shard runs.
+  - canary runners save monitors, flush audit buffers, and close app handles.
+  - large lane regression suites assert retry and repair routing.
+- Fact: cache/global-state mutation is applicable.
+  - root `smoke_sc.py` monkeypatches `input()` and toggles validation settings.
+  - canary runners bootstrap `PassRateMonitor`.
+  - lane suites cover cache and eviction behavior.
+- Fact: config/env/bootstrap behavior is applicable.
+  - smoke/canary/root helpers load environment and bootstrap app/project selection.
+  - `scripts/ops_validator.py` inspects `docs/temp/` and canonical docs.
+- Fact: not-applicable minimum categories = none.
+
+7. contradictions or uncertainty
+- Fact: the formal tier contract calls `full_canary_proof` the highest proof lane, but the tier inventory gives it `0` tests and only mutating scripts.
+- Inference: the highest proof lane is therefore evidence-heavy and operationally expensive, not cheaply repeatable inside ordinary `pytest` subsets.
+- Fact: `scripts/run_pytest_lowmem.py` has a dedicated test suite, but it is absent from `scripts/regression_validation_tiers.py`.
+- Inference: the workspace has a tested low-memory runner that is operationally important under `AGENTS.md`, yet it is not part of the shared validation-tier contract.
+- Fact: `scripts/ops_validator.py` is prescribed by system harness docs, but this sweep found no direct test reference under `tests/`.
+- Inference: execution-doc integrity tooling is more governance-driven than regression-tested right now.
+- Fact: `scripts/run_stage2_smoke.py`, `scripts/run_stage3_smoke.py`, and `scripts/run_stage4_smoke.py` are tier-listed, but direct behavior coverage is mostly via separate e2e/integration suites or tier-marker checks rather than runner-specific unit tests.
+- Inference: script contract drift can slip in even when nearby stage behavior still passes.
+- Fact: root `smoke_sc.py` is live-cost and stateful, but it is outside the tier inventory and untested.
+- Inference: raw script counts overstate the repo's cheap automated verification surface because several scripts are manual/live or narrative-side utilities.
+- Open Question: should `T10` treat `smoke_sc.py` as legacy/manual-only and exclude it from any future default verification matrix?
+- Open Question: should `T10` request a separate delta-read of recent `logs/pytest_lowmem/` or canary output artifacts before making any evidence-strength claim beyond static coverage?
+
+8. candidate execution areas
+- Inference: add a canonical T08 verification matrix that maps each triage `keep` theme to cheapest proof path, mutation level, and artifact sink.
+- Inference: either add `scripts/run_pytest_lowmem.py` to the validation-tier contract or explicitly document why it remains outside the formal subsets.
+- Inference: add direct tests for `scripts/ops_validator.py` and nearby queue/doc validators so governance tooling is not single-sourced by documentation.
+- Inference: add runner-specific tests for `scripts/run_stage2_smoke.py`, `scripts/run_stage3_smoke.py`, and `scripts/run_stage4_smoke.py` instead of relying only on tier-marker checks and adjacent e2e suites.
+- Inference: split `smoke_sc.py` out of the default regression surface or relocate it under an explicit manual/live-cost namespace with stronger guardrails.
+- Inference: add a non-mutating proof path for cost/latency-duplication and long-run-degradation themes; current coverage is mostly unit-level proxies plus mutating canaries.
+
+9. follow-up requests for another terminal
+- Request for `T05`: validate whether the heavy lane regression suites actually cover the intended gate semantics and repair taxonomy, not just file-local branches.
+- Request for `T06`: inspect whether canary summary JSON, companion audit JSON, `soft_failures.jsonl`, and pass-rate artifacts remain durable and truthful on disk in live project outputs.
+- Request for `T07`: verify whether operator-visible surfaces expose canary proof status, low-memory pytest outcomes, cost summaries, and soft-failure signals without manual log spelunking.
+- Request for `T09`: verify whether the validation-tier contract, model-routing/cost config, and long-context thresholds align with the cost/truncation/latency assumptions implied by the current T08 tooling.

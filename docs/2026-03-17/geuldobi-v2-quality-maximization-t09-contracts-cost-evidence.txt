@@ -1,0 +1,115 @@
+1. scope
+- terminal: `T09`
+- mode: `ROL 전역 전체 전수조사만`, survey-only, no code/config mutation
+- baseline commit: `2352b26a293ac330a0ff24da320363f9abdbbba1`
+- resume drift: `same-as-baseline`, `none`
+- focus: cross-cut contracts/config, model routing, thresholds, cost/latency duplication, long-context policy
+- triage keep themes used here: `절삭 하드코딩 전수조사`, `테마 J 비용/지연 중복`, `테마 K 장기 연재 품질 열화`, config/contract side of `테마 N`
+- logging review attached only for triage `Pack D` and `Pack E`
+
+2. included paths
+- `config/models.yaml`
+- `config/settings/validation.yaml`
+- `config/settings.json`
+- `config/system.yaml`
+- `config/prompts/chief_writer.yaml`
+- `config/prompts/director.yaml`
+- `config/prompts/analyst.yaml`
+- `config/prompts/ensemble.yaml`
+- `modules/core/models_config.py`
+- `modules/core/llm_router.py`
+- `modules/core/config_manager.py`
+- `modules/validation/threshold_helper.py`
+- `modules/core/constants.py`
+- `modules/core/context_advisor.py`
+- `modules/core/stage3_orchestrator.py`
+- `modules/core/stage4_context_builder.py`
+- `modules/core/stage4_orchestrator.py`
+- `modules/core/stage4_interview_round.py`
+- `modules/core/prompt_loader.py`
+- `modules/core/metrics_collector.py`
+- `modules/core/session_logger.py`
+- `modules/core/quality_dashboard.py`
+- `modules/api/bridge_server.py`
+- `modules/domain/agents/base_agent.py`
+- `modules/domain/agents/director_ensemble.py`
+- `modules/domain/agents/director_auditor.py`
+- `modules/domain/agents/director_continuity.py`
+- `modules/domain/agents/director_prompts.py`
+- targeted tests around router, prompts, thresholds, budgets, cost tracking, world-state caps
+
+3. excluded paths
+- deep Stage 2/3 semantic handoff audit beyond threshold/routing touchpoints; owned by `T03`
+- CW prompt-content quality deep dive beyond contract drift and budget wiring; owned by `T04`
+- Director gate semantics deep dive beyond prompt/config authority drift; owned by `T05`
+- persistence truth of DB rows and artifact bodies; owned by `T06`
+- operator rendering completeness across UI/desktop surfaces; owned by `T07`
+- test-economics and broader regression inventory beyond targeted contract evidence; owned by `T08`
+- `docs/roadmap-v2.md` as authority; treated only as non-canonical seed
+
+4. facts
+- Fact: `config/models.yaml` is the live model-routing SSOT read by `modules/core/models_config.py`; `modules/core/llm_router.py` enforces provider enable flags from that file and infers provider by model prefix/name. Current default runtime enables only `gemini`; `anthropic`, `openai`, and `vertex_ai` are disabled.
+- Fact: `config/models.yaml` duplicates concrete model names in both `agents` and `role_constants`, and also defines a fallback chain (`gemini-2.5-pro -> gemini-2.5-flash`, `gemini-2.5-flash -> gemini-2.5-flash`). This is one central config file, but still a multi-surface contract inside the same file.
+- Fact: threshold authority is primarily `config/settings/validation.yaml`, reached through `modules/core/config_manager.py` and `modules/validation/threshold_helper.py`. Live values include `context.max_context_chars=1000000`, `context.mandatory_context_max=400000`, `smart_retrieval.stage4_total_budget=300000`, and `smart_retrieval.slot_max_chars_default=3000`.
+- Fact: fallback literals are not fully aligned to that YAML SSOT. `modules/core/context_advisor.py` still falls back to `1500` for `smart_retrieval.slot_max_chars_default`, `tests/property/test_budget_props.py` still codifies `1500`, and `modules/core/stage4_orchestrator.py` still falls back to `80000` for `context.mandatory_context_max`. By contrast, `modules/core/stage4_interview_round.py` and `modules/core/stage4_context_builder.py` already use `3000` and `400000`.
+- Fact: `modules/core/constants.py` maps `ContextLimits.MAX_CONTEXT_CHARS` to YAML-backed `_LazyThreshold("context.max_context_chars", 1_000_000)`, but `modules/domain/agents/base_agent.py` still applies a separate prompt-size gate that head-clips oversized prompts and marks `requires_human_intervention=True`. Long-context policy is therefore partly centralized and partly local.
+- Fact: prompt YAML files carry `_version` metadata, and `modules/core/prompt_loader.py` exposes `get_prompt_version()` and `compose_version_tag()`. Those version tags are consumed in Stage 2/3/4 orchestration and persistence paths, so runtime prompt authority is materially YAML-backed rather than comment-only.
+- Fact: live Director prompt authority is split. `modules/domain/agents/director_ensemble.py`, `modules/domain/agents/director_auditor.py`, and `modules/domain/agents/director_continuity.py` use `PromptLoader()` and the YAML prompt pack. `modules/domain/agents/director_prompts.py` still ships large inline prompt constants, including legacy `ENSEMBLE_SELECTION_PROMPT`.
+- Fact: `config/prompts/director.yaml` already contains the newer split contract (`ENSEMBLE_STABLE_CONTEXT`, `ENSEMBLE_VARIABLE_PROMPT`) plus expanded `PASS_WITH_FIX` and `fix_pack` rules. `modules/domain/agents/director_ensemble.py` prefers those split keys but still contains a fallback path for legacy `ENSEMBLE_SELECTION_PROMPT`. The worktree also has a dirty `config/prompts/director.yaml`, which increases drift risk for any code path still depending on inline constants.
+- Fact: `config/settings.json` remains a live secondary authority. `main_a.py` still loads it and applies `validation.use_v0128`; `modules/domain/agents/director_auditor.py` also merges `use_self_consistency`, `consistency_votes`, and `use_retrospective` from that JSON into its default config. `modules/validation/validation_orchestrator.py` already has YAML-backed defaults for the same knobs.
+- Fact: no live consumer was found for `config/settings.json` under `costs.max_retries` or `costs.temperature`. That makes the `costs` block appear stale or dead as a runtime contract.
+- Fact: `modules/core/metrics_collector.py` captures agent/model/retry/tokens/cached_tokens/thinking_tokens/duration and computes scope-level cost by model, including `vertexai:` normalization. It does not record an explicit `stage` field or a duplicate-analysis candidate group in its own metric record.
+- Fact: Triage `Pack D` is only partially satisfied across existing sinks. `modules/domain/agents/base_agent.py` and `modules/core/session_logger.py` add stage, prompt chars, usage, and duration in downstream logging; `modules/core/stage4_interview_round.py` writes round-level `model`, `duration_ms`, `round_total_tokens`, `round_total_cost_usd`, `round_model_breakdown`, `token_usage`, and `attempt_key`; `modules/api/bridge_server.py` aggregates DB cost rows for operator use. The required fields exist in pieces, not as one coherent cross-cut contract.
+- Fact: Triage `Pack E` is also partial. Long-run caps exist in `modules/core/world_state.py` (`destroyed` 100, `world_laws` 50 with CRITICAL pin preservation, `active_plots` 100), `modules/core/quality_dashboard.py` (history trim 500), and `config/system.yaml` plus `modules/domain/agents/base_agent.py` (context cache caps 50 entries, min 50000 chars). `modules/core/stage4_context_builder.py` and `modules/core/quality_dashboard.py` emit retrieval observations such as `source_counts`, `coverage_warnings`, `mandatory_context_chars`, and `trimmed_work_slot_summary`, but not the full Pack E set (`tier transition point`, `FIFO eviction or sampling count`, `entity/history visibility caps triggered`, `digest source type`, `summary compression count`) as one durable record.
+- Inference: T09's highest-confidence contract drift is not missing infrastructure but split authority. YAML thresholds and prompt packs exist, but code/test fallbacks and secondary config surfaces still preserve older values and older prompt contracts.
+- Inference: Cost and latency observability is good enough to estimate model spend and round-level concentration, but not good enough to reliably attribute duplicate-analysis groups or cache-hit semantics across all stages from one sink alone.
+- Inference: Long-run degradation protections exist, but Pack E observability is too fragmented to reconstruct why quality degraded over long serial runs without cross-reading multiple modules and sinks.
+- Open Question: `modules/domain/agents/director_prompts.py` may be a compatibility surface rather than dead code. If it is still intentionally public, the current YAML-vs-inline drift is a contract problem, not just cleanup debt.
+- Open Question: `config/settings.json` may be intended as a project override layer. If so, the workspace currently lacks a crisp documented precedence rule between that JSON and `config/settings/validation.yaml`.
+
+5. hotspot files
+- `config/settings/validation.yaml`: live threshold SSOT for long-context and smart-retrieval budgets.
+- `modules/core/context_advisor.py`: still carries `1500` fallback under a live YAML value of `3000`.
+- `modules/core/stage4_orchestrator.py`: still carries `80000` fallback under a live YAML value of `400000`.
+- `tests/property/test_budget_props.py`: preserves the older slot-floor contract and can legitimize stale defaults.
+- `config/prompts/director.yaml`: live Director prompt authority, versioned, currently dirty in worktree.
+- `modules/domain/agents/director_prompts.py`: inline prompt duplication with visible risk of semantic drift from YAML.
+- `modules/core/prompt_loader.py`: actual prompt authority loader and version-tag producer.
+- `config/settings.json`: secondary config authority with duplicated validation knobs and apparently dead `costs` block.
+- `modules/core/metrics_collector.py`: core cost accounting surface with no first-class `stage` or duplicate-group field.
+- `modules/core/session_logger.py`: per-call JSONL sink that carries richer runtime metadata than `MetricsCollector`.
+- `modules/core/quality_dashboard.py`: current retrieval-observation sink; strongest existing Pack E foothold, but still incomplete.
+- `modules/domain/agents/base_agent.py`: shared retry/fallback/cache path and logging/metrics bridge.
+
+6. side-effect notes
+- file write: covered. Relevant write-capable sinks are `session_logger`, `quality_dashboard`, and Stage 4 runtime logs; survey did not execute any writes besides this evidence artifact.
+- DB write: partial. T09 confirmed cost/attempt consumers and bridge aggregation surfaces, but durable row truth and schema integrity should be closed by `T06`.
+- JSONL/log/audit sink: covered. Existing Pack D/E-relevant sinks were inspected across JSONL, dashboard history, and episode-level logs.
+- console/UI output: partial. Bootstrap notices and bridge/dashboard payloads were inspected, but end-user/operator rendering sufficiency belongs to `T07`.
+- rollback/recovery/retry: covered for routing and retry-count semantics. Shared fallback chain, quota cache, and retry accounting were inspected; verdict semantics still belong to `T05`.
+- cache/global state: covered. Prompt loader cache, metrics singleton scope state, and BaseAgent context-cache caps were inspected.
+- bootstrap fallback: covered. Settings/root fallbacks and provider-disabled routing behavior were inspected.
+- config/env mutation: not applicable for this survey order. Only read paths and env-key contracts were inspected; no mutation performed.
+
+7. contradictions or uncertainty
+- Contradiction: live YAML says `smart_retrieval.slot_max_chars_default=3000`, while `modules/core/context_advisor.py` and `tests/property/test_budget_props.py` still encode `1500`.
+- Contradiction: live YAML says `context.mandatory_context_max=400000`, while `modules/core/stage4_orchestrator.py` still encodes `80000` as fallback.
+- Contradiction: runtime prompt hierarchy has moved to YAML + `PromptLoader`, but `modules/domain/agents/director_prompts.py` still exposes legacy inline constants; this conflicts with any assumption that Director prompt authority is singular.
+- Contradiction: `config/settings/validation.yaml` behaves like threshold SSOT, yet `config/settings.json` still overrides part of the same validation contract at bootstrap/auditor paths.
+- Uncertainty: `config/prompts/director.yaml` is dirty in the current worktree, so any uncommitted semantic change there may widen or narrow the observed drift later.
+- Uncertainty: Pack D and Pack E fields may exist in durable DB tables not fully inspected in this lane; T09 evidence only confirms the cross-cut contract from config/logging surfaces, not persistence closure.
+
+8. candidate execution areas
+- unify stale fallback literals in `modules/core/context_advisor.py`, `modules/core/stage4_orchestrator.py`, and related tests to the live YAML contract
+- decide whether `config/settings.json` remains a supported override layer; if yes, document precedence and narrow it; if no, retire duplicated validation and dead `costs` keys
+- collapse Director prompt authority to one source or formalize the compatibility/export contract for `modules/domain/agents/director_prompts.py`
+- upgrade cost telemetry so one durable sink satisfies Pack D with explicit `stage`, cache-hit semantics, and duplicate-analysis grouping
+- upgrade long-run degradation telemetry so one durable sink satisfies Pack E with tier transitions, eviction/cap triggers, digest source type, and compression counts
+
+9. follow-up requests for another terminal
+- `T04`: verify whether the `1500` vs `3000` slot-budget drift is still causing observable CW-side trim behavior in live Stage 4 context assembly.
+- `T05`: verify whether any live Director path can still execute against stale inline prompts from `modules/domain/agents/director_prompts.py`, especially around `PASS_WITH_FIX` and `fix_pack`.
+- `T06`: validate that DB rows and durable logs preserve `prompt_version`, stage, model breakdown, and retrieval-observation records strongly enough for Pack D/E use.
+- `T07`: check whether operator-visible surfaces expose enough Pack D/E state to diagnose cost duplication or long-run degradation without direct file access.
+- `T08`: map regression gaps around stale threshold defaults, `config/settings.json` dead/duplicate authority, and missing Pack D/E field assertions.
+- `T10`: log the contradiction between the lane-2 reference assumption of prompt alignment and the current live YAML-vs-inline Director prompt split.

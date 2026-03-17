@@ -9,7 +9,11 @@ import re
 from typing import TYPE_CHECKING
 
 from modules.core.constants import Stage2Limits, VolumeSettings
-from modules.core.context_advisor import RetrievalSources
+from modules.core.context_advisor import (
+    RetrievalSources,
+    build_context_budget_ledger,
+    build_context_observation,
+)
 from modules.core.context_compression import ContextCompressor
 from modules.core.semantic_query_broker import SemanticQueryBroker
 from modules.core.tactical_utils import extract_episode_tactical
@@ -1553,50 +1557,83 @@ class Stage4ContextBuilder:
         )
         return sections
 
-    def _compose_mandatory_context_with_headroom(self, sc_parts: list[str], mc_parts: list[str]) -> str:
-        """Compose SC + mandatory context while preserving headroom against final tail-trim."""
-        sc_header = "\n\n".join(sc_parts) if sc_parts else ""
-        mc_body = "\n\n".join(mc_parts)
+    @staticmethod
+    def _join_context_sections(parts: list[str]) -> str:
+        return "\n\n".join(part for part in parts if part)
+
+    def _compose_tiered_mandatory_context_with_headroom(
+        self,
+        tier0_parts: list[str],
+        tier1_parts: list[str],
+        tier2_parts: list[str],
+    ) -> str:
+        """Compose Tier 0/1/2 context while trimming advisory bulk before retrieval."""
+
+        def _combined_text(*bodies: str) -> str:
+            return self._join_context_sections([body for body in bodies if body])
+
+        tier0_body = self._join_context_sections(tier0_parts)
+        tier1_body = self._join_context_sections(tier1_parts)
+        tier2_body = self._join_context_sections(tier2_parts)
         limit = int(_threshold("context.mandatory_context_max", 400000))
         headroom = 0
-        if sc_header and limit > 0:
+
+        if tier1_body and limit > 0:
             headroom = min(20000, max(500, limit // 20))
             headroom = min(headroom, max(0, limit // 5))
-            available_for_mc = max(0, limit - len(sc_header) - headroom - 2)
-            if available_for_mc > 0 and len(mc_body) > available_for_mc and mc_parts:
-                trimmed_parts = self._apply_context_budget(list(mc_parts), available_for_mc)
-                mc_body = "\n\n".join(trimmed_parts)
+
+        if limit > 0 and tier2_body:
+            available_for_tier2 = max(0, limit - len(_combined_text(tier0_body, tier1_body)) - headroom)
+            if available_for_tier2 > 0 and len(tier2_body) > available_for_tier2 and tier2_parts:
+                trimmed_tier2 = self._apply_context_budget(list(tier2_parts), available_for_tier2)
+                tier2_body = self._join_context_sections(trimmed_tier2)
                 logging.info(
-                    "[S4:CTX] rebalanced mc_body against SC headroom (sc=%d, mc=%d, limit=%d, headroom=%d)",
-                    len(sc_header),
-                    len(mc_body),
+                    "[S4:CTX] trimmed tier2 against Tier0/Tier1 headroom (t0=%d, t1=%d, t2=%d, limit=%d, headroom=%d)",
+                    len(tier0_body),
+                    len(tier1_body),
+                    len(tier2_body),
                     limit,
                     headroom,
                 )
 
-        total_len = len(sc_header) + len(mc_body) + (2 if sc_header and mc_body else 0)
-        if limit > 0 and total_len > limit and mc_body:
-            compressor = ContextCompressor()
-            mc_budget = max(300, limit - len(sc_header) - (2 if sc_header else 0))
-            if len(mc_body) > mc_budget:
-                original_len = len(mc_body)
-                mc_body = compressor._smart_trim(mc_body, mc_budget)
-                logging.info("[S4:CTX] final mc_body trim %d→%d (limit=%d)", original_len, len(mc_body), limit)
+        total_len = len(_combined_text(tier0_body, tier1_body, tier2_body))
+        if limit > 0 and total_len > limit and tier1_body and tier1_parts:
+            available_for_tier1 = max(300, limit - len(_combined_text(tier0_body, tier2_body)))
+            if len(tier1_body) > available_for_tier1:
+                trimmed_tier1 = self._apply_context_budget(list(tier1_parts), available_for_tier1)
+                tier1_body = self._join_context_sections(trimmed_tier1)
+                logging.info(
+                    "[S4:CTX] trimmed tier1 after tier2 rebalance (t0=%d, t1=%d, t2=%d, limit=%d)",
+                    len(tier0_body),
+                    len(tier1_body),
+                    len(tier2_body),
+                    limit,
+                )
 
-        total_len = len(sc_header) + len(mc_body) + (2 if sc_header and mc_body else 0)
-        if limit > 0 and total_len > limit and sc_header:
-            compressor = ContextCompressor()
-            sc_budget = max(300, limit - len(mc_body) - (2 if mc_body else 0))
-            if len(sc_header) > sc_budget:
-                original_len = len(sc_header)
-                sc_header = compressor._smart_trim(sc_header, sc_budget)
-                logging.info("[S4:CTX] final sc_header trim %d→%d (limit=%d)", original_len, len(sc_header), limit)
-                total_len = len(sc_header) + len(mc_body) + (2 if sc_header and mc_body else 0)
+        compressor = ContextCompressor()
+        total_len = len(_combined_text(tier0_body, tier1_body, tier2_body))
+        if limit > 0 and total_len > limit and tier2_body:
+            tier2_budget = max(0, limit - len(_combined_text(tier0_body, tier1_body)))
+            original_len = len(tier2_body)
+            tier2_body = compressor._smart_trim(tier2_body, tier2_budget) if tier2_budget > 0 else ""
+            if len(tier2_body) != original_len:
+                logging.info("[S4:CTX] final tier2 trim %d→%d (limit=%d)", original_len, len(tier2_body), limit)
 
+        total_len = len(_combined_text(tier0_body, tier1_body, tier2_body))
+        if limit > 0 and total_len > limit and tier1_body:
+            tier1_budget = max(300, limit - len(_combined_text(tier0_body, tier2_body)))
+            if len(tier1_body) > tier1_budget:
+                original_len = len(tier1_body)
+                tier1_body = compressor._smart_trim(tier1_body, tier1_budget)
+                logging.info("[S4:CTX] final tier1 trim %d→%d (limit=%d)", original_len, len(tier1_body), limit)
+
+        mandatory_context = _combined_text(tier0_body, tier1_body, tier2_body)
+        total_len = len(mandatory_context)
         logging.info(
-            "[S4:CTX] compose pre-final sc=%d mc=%d total=%d limit=%d headroom=%d",
-            len(sc_header),
-            len(mc_body),
+            "[S4:CTX] compose pre-final tier0=%d tier1=%d tier2=%d total=%d limit=%d headroom=%d",
+            len(tier0_body),
+            len(tier1_body),
+            len(tier2_body),
             total_len,
             limit,
             headroom,
@@ -1610,22 +1647,42 @@ class Stage4ContextBuilder:
                 preserved_callbacks = dict(callbacks)
 
         self.ctx._stage4_context_budget_meta = {
-            "sc_chars": len(sc_header),
-            "mc_chars": len(mc_body),
+            "tier0_chars": len(tier0_body),
+            "tier1_chars": len(tier1_body),
+            "tier2_chars": len(tier2_body),
+            "sc_chars": len(tier1_body),
+            "mc_chars": len(_combined_text(tier0_body, tier2_body)),
             "total_chars": total_len,
             "limit_chars": limit,
             "headroom_chars": headroom,
         }
         if preserved_callbacks:
             self.ctx._stage4_context_budget_meta["_callbacks"] = preserved_callbacks
-        mandatory_context = (sc_header + "\n\n" + mc_body).strip() if sc_header else mc_body
-        if limit > 0 and len(mandatory_context) > limit:
-            compressor = ContextCompressor()
+        _final_total = total_len
+        _dropped_chars = 0
+        _overflow_chars = max(0, total_len - limit) if limit > 0 else 0
+        if limit > 0 and total_len > limit:
             original_len = len(mandatory_context)
             mandatory_context = compressor._smart_trim(mandatory_context, limit)
-            self.ctx._stage4_context_budget_meta["total_chars"] = len(mandatory_context)
+            _final_total = len(mandatory_context)
+            _dropped_chars = max(0, original_len - _final_total)
+            self.ctx._stage4_context_budget_meta["total_chars"] = _final_total
             logging.info("[S4:CTX] final combined trim %d→%d (limit=%d)", original_len, len(mandatory_context), limit)
+        self.ctx._stage4_context_budget_meta["budget_ledger"] = build_context_budget_ledger(
+            stage="stage4",
+            configured_cap=limit,
+            fallback_cap=400000,
+            effective_cap=limit,
+            consumed_chars=_final_total,
+            dropped_chars=_dropped_chars,
+            overflow_chars=_overflow_chars,
+            headroom_chars=headroom,
+        )
         return mandatory_context
+
+    def _compose_mandatory_context_with_headroom(self, sc_parts: list[str], mc_parts: list[str]) -> str:
+        """Backward-compatible wrapper for SC-first composition callers."""
+        return self._compose_tiered_mandatory_context_with_headroom([], sc_parts, mc_parts)
 
     def load_chain_link_section(self, next_ep: int) -> str:
         """
@@ -2292,7 +2349,9 @@ class Stage4ContextBuilder:
             cp_entities=cp_entities,
         )
 
-        _mc_parts = [mandatory_context] if mandatory_context else []
+        _tier0_parts = [mandatory_context] if mandatory_context else []
+        _tier1_parts: list[str] = []
+        _tier2_parts: list[str] = []
 
         _slot_summary = self._build_work_identity_slot_summary(
             focus=_work_focus,
@@ -2300,22 +2359,21 @@ class Stage4ContextBuilder:
             cp_entities=cp_entities,
         )
         if _slot_summary:
-            _mc_parts.insert(0, _slot_summary)
+            _tier1_parts.append(_slot_summary)
             logging.info("[WorkGuard] tracking slot summary 주입 (%d자)", len(_slot_summary))
 
         _stage2_failure_context = self._build_stage2_failure_context(arc_data)
         if _stage2_failure_context:
-            _insert_idx = 1 if _slot_summary else 0
-            _mc_parts.insert(_insert_idx, _stage2_failure_context)
+            _tier2_parts.append(_stage2_failure_context)
             logging.info("[Stage4ContextBuilder] stage2 failure context 주입 (%d자)", len(_stage2_failure_context))
 
         _ambient_npc_hint = self._suggest_ambient_npcs(blueprint or {})
         if _ambient_npc_hint:
-            _mc_parts.append(_ambient_npc_hint)
+            _tier2_parts.append(_ambient_npc_hint)
 
         _arc_cs = arc_data.get("constraint_summary", "") if arc_data else ""
         if _arc_cs:
-            _mc_parts.append(f"[Arc 제약 - MUST NOT DO]\n{_arc_cs}")
+            _tier0_parts.append(f"[Arc 제약 - MUST NOT DO]\n{_arc_cs}")
 
         if self.ctx.world_state:
             try:
@@ -2326,7 +2384,7 @@ class Stage4ContextBuilder:
                 else:
                     _ws_summary = self.ctx.world_state.get_summary(max_chars=50000)
                 if _ws_summary:
-                    _mc_parts.insert(0, _ws_summary)
+                    _tier0_parts.insert(0, _ws_summary)
                     logging.info(f" [V68] 세계 상태 문서 주입 ({len(_ws_summary)}자)")
             except Exception as _ws_err:
                 logging.warning(f" [V68] 세계 상태 문서 주입 실패 (비치명): {str(_ws_err)[:50]}")
@@ -2338,7 +2396,7 @@ class Stage4ContextBuilder:
             if getattr(self.ctx, "world_state", None):
                 _timeline_text = self.ctx.world_state.get_timeline_summary(max_chars=_timeline_budget)
             if _timeline_text:
-                _mc_parts.insert(0, _timeline_text)
+                _tier0_parts.insert(0, _timeline_text)
                 logging.info("[Phase3] 타임라인 주입 (%d자)", len(_timeline_text))
         except Exception as _tl_err:
             logging.warning("[Phase3] 타임라인 주입 실패 (비치명): %s", str(_tl_err)[:50])
@@ -2349,7 +2407,7 @@ class Stage4ContextBuilder:
                 if isinstance(_series_summary, dict):
                     _series_summary = _series_summary.get("summary", "") or str(_series_summary)
                 if _series_summary and len(str(_series_summary)) > 10:
-                    _mc_parts.append(f"[V68 시리즈 전체 요약]\n{_series_summary}")
+                    _tier2_parts.append(f"[V68 시리즈 전체 요약]\n{_series_summary}")
 
             _current_arc_no = arc_data.get("arc_no", 1) if arc_data else 1
             _current_vol = max(1, (_current_arc_no - 1) // int(VolumeSettings.ARCS_PER_VOLUME) + 1)
@@ -2362,7 +2420,7 @@ class Stage4ContextBuilder:
                     if _vs and len(str(_vs)) > 10:
                         _volume_summaries.append(f"[볼륨 {_vi}] {_vs}")
             if _volume_summaries:
-                _mc_parts.append("[V68 볼륨 요약]\n" + "\n".join(_volume_summaries))
+                _tier2_parts.append("[V68 볼륨 요약]\n" + "\n".join(_volume_summaries))
         except Exception as _hier_err:
             self.ctx.ui.log(f"   ⚠️ [V68] 계층형 요약 로드 실패 (비치명): {str(_hier_err)[:60]}")
 
@@ -2375,7 +2433,7 @@ class Stage4ContextBuilder:
                 else:
                     _fl_summary = self.ctx.fact_ledger.to_summary(max_chars=25000)
                 if _fl_summary:
-                    _mc_parts.insert(0, _fl_summary)
+                    _tier0_parts.insert(0, _fl_summary)
                     logging.info(f" [V68] 팩트 원장 주입 ({len(_fl_summary)}자)")
             except Exception as _fl_mc_err:
                 logging.warning(f" [V68] 팩트 원장 주입 실패 (비치명): {str(_fl_mc_err)[:50]}")
@@ -2392,7 +2450,7 @@ class Stage4ContextBuilder:
                 _l0_num = self.ctx.fact_ledger.get_canonical_summary(max_chars=int(_canonical_budget * 0.38))
             if _l0_npc or _l0_num:
                 _l0_block = "\n\n".join(x for x in [_l0_npc, _l0_num] if x)
-                _mc_parts.insert(0, _l0_block)
+                _tier0_parts.insert(0, _l0_block)
                 logging.info("[Phase1-L0] Canonical 고정 주입 (%d자)", len(_l0_block))
         except Exception as _l0_err:
             logging.warning("[Phase1-L0] Canonical 주입 실패 (비치명): %s", str(_l0_err)[:50])
@@ -2419,7 +2477,7 @@ class Stage4ContextBuilder:
                             "⚠️ 원고의 장르 수치(금액, 수익, 레벨, 경지 등)가 "
                             "위 Treatment 목표와 합리적으로 연결되어야 합니다."
                         )
-                        _mc_parts.insert(2, "\n".join(_ge_lines))
+                        _tier2_parts.append("\n".join(_ge_lines))
                         logging.info("[V74] Treatment genre_ext 주입 (arc_no=%d, %d필드)", _arc_no, len(_genre_ext))
         except Exception as _ge_err:
             logging.warning("[SilentPass:V74] Treatment genre_ext 주입 실패: %s", _ge_err)
@@ -2428,7 +2486,7 @@ class Stage4ContextBuilder:
             try:
                 cp_text = self._build_continuity_packet(cp_entities)
                 if cp_text:
-                    _mc_parts.insert(0, cp_text)
+                    _tier0_parts.insert(0, cp_text)
                     logging.info(
                         "[CP] Continuity Packet 주입 (%d자, NPC %d, 플롯 %d, 아이템 %d)",
                         len(cp_text),
@@ -2445,7 +2503,7 @@ class Stage4ContextBuilder:
                 _boundary_npcs = self._collect_npc_roster(arc_data=arc_data or {}, blueprint=blueprint or {})
             _npc_boundary_block = self._build_npc_boundary_block(_boundary_npcs)
             if _npc_boundary_block:
-                _mc_parts.insert(0, _npc_boundary_block)
+                _tier0_parts.insert(0, _npc_boundary_block)
         except Exception as _npc_boundary_err:
             logging.debug("[QI-NPC] NPC boundary block 생성 실패 (비치명): %s", _npc_boundary_err)
 
@@ -2463,14 +2521,14 @@ class Stage4ContextBuilder:
                 )
                 _authority_note = self._build_state_tracker_authority_note(_suppressed_summaries)
                 if _authority_note:
-                    _mc_parts.append(_authority_note)
+                    _tier2_parts.append(_authority_note)
                 _ordered_summaries = self._prioritize_summaries_by_work_focus(
                     list(_filtered_summaries.values()),
                     _work_focus,
                 )
                 for _summary in _ordered_summaries:
                     if _summary:
-                        _mc_parts.append(_summary)
+                        _tier2_parts.append(_summary)
             except Exception as _st_err:
                 logging.warning("[S4-I2] get_all_summaries 실패, 개별 폴백: %s", _st_err)
                 # 폴백: 개별 호출 (하위 호환성 보장)
@@ -2514,14 +2572,14 @@ class Stage4ContextBuilder:
                 )
                 _authority_note = self._build_state_tracker_authority_note(_suppressed_summaries)
                 if _authority_note:
-                    _mc_parts.append(_authority_note)
+                    _tier2_parts.append(_authority_note)
                 _fallback_summaries = self._prioritize_summaries_by_work_focus(
                     list(_filtered_summaries.values()),
                     _work_focus,
                 )
                 for _summary in _fallback_summaries:
                     if _summary:
-                        _mc_parts.append(_summary)
+                        _tier2_parts.append(_summary)
 
         try:
             arc_summaries = []
@@ -2533,7 +2591,7 @@ class Stage4ContextBuilder:
             if arc_summaries and _st:
                 _arc_summary_text = _st.format_arc_summary_for_prompt(arc_summaries)
                 if _arc_summary_text:
-                    _mc_parts.append(_arc_summary_text)
+                    _tier2_parts.append(_arc_summary_text)
         except Exception as e:
             self.ctx.ui.log(f"   ⚠️ [V66] Arc 요약 주입 실패 (비치명): {e}")
 
@@ -2559,6 +2617,7 @@ class Stage4ContextBuilder:
                         current_ep=next_ep,
                         npc_roster=_npc_roster,
                         genre=s4_genre_type,
+                        work_focus=_work_focus,
                         is_arc_boundary=_is_arc_boundary,
                         is_reject_retry=False,
                     )
@@ -2625,14 +2684,14 @@ class Stage4ContextBuilder:
                         current_arc_no=current_arc_no,
                     )
                     if _vector_memory:
-                        _mc_parts.append(f"[과거 유사 맥락 (벡터 검색)]\n{_vector_memory}")
+                        _tier1_parts.append(f"[과거 유사 맥락 (벡터 검색)]\n{_vector_memory}")
         except Exception as e:
             self.ctx.ui.log(f"   ⚠️ 벡터 검색 실패 (비치명): {e}")
 
         try:
             _ext_lookback = self.build_extended_lookback_digest(next_ep)
             if _ext_lookback:
-                _mc_parts.append(_ext_lookback)
+                _tier2_parts.append(_ext_lookback)
         except Exception as e:
             self.ctx.ui.log(f"   ⚠️ 확장 Lookback 실패 (비치명): {e}")
 
@@ -2640,7 +2699,7 @@ class Stage4ContextBuilder:
             if v50_modules_available and self.ctx.foreshadow_tracker:
                 _foreshadow_prompt = self.ctx.foreshadow_tracker.generate_writer_prompt(next_ep)
                 if _foreshadow_prompt:
-                    _mc_parts.append(_foreshadow_prompt)
+                    _tier2_parts.append(_foreshadow_prompt)
         except Exception as e:
             self.ctx.ui.log(f"   ⚠️ ForeshadowTracker 프롬프트 실패 (비치명): {e}")
 
@@ -2653,7 +2712,7 @@ class Stage4ContextBuilder:
                 if _spg_warnings:
                     _spg_text = self.ctx.semantic_plot_guard.format_warnings(_spg_warnings)
                     if _spg_text:
-                        _mc_parts.append(_spg_text)
+                        _tier2_parts.append(_spg_text)
             except Exception as e:
                 logging.warning(f"[SilentPass:ContextBuilder] SemanticPlotGuard 경고 주입 실패: {e!s:.100}")
 
@@ -2662,30 +2721,30 @@ class Stage4ContextBuilder:
                 _pacing_result = pacing_analyzer.analyze(prev_text)
                 _pacing_prompt = pacing_analyzer.generate_pacing_prompt(_pacing_result)
                 if _pacing_prompt:
-                    _mc_parts.append(_pacing_prompt)
+                    _tier2_parts.append(_pacing_prompt)
             except Exception as _pace_err:
                 self.ctx.ui.log(f"   ⚠️ [V65] 페이싱 분석 실패 (비치명): {str(_pace_err)[:60]}")
 
         try:
             _narrative_summaries = self.ctx.load_narrative_summaries()
             if _narrative_summaries:
-                _mc_parts.append(_narrative_summaries)
+                _tier2_parts.append(_narrative_summaries)
         except Exception as e:
             self.ctx.ui.log(f"   ⚠️ [V64.P4] 내러티브 요약 로드 실패 (비치명): {str(e)[:60]}")
 
         # [미래 Arc/Blueprint 주입] — CW·Director 공통 참조용
         _future_ctx = self._build_future_arc_context(next_ep, arc_data)
         if _future_ctx:
-            _mc_parts.append(_future_ctx)
+            _tier2_parts.append(_future_ctx)
 
         _sc_budget = int(getattr(_retrieval_plan, "total_budget_chars", 0) or 0)
         # [TF7-P1-03] SC 비활성 시 비-SC 필수 문맥이 절삭되지 않도록 양쪽 플래그 모두 확인
         if _threshold("smart_retrieval.enabled", True) and _threshold("smart_retrieval.stage4_enabled", True):
-            _mc_parts = self._apply_context_budget(_mc_parts, _sc_budget)
+            _tier2_parts = self._apply_context_budget(_tier2_parts, _sc_budget)
 
         # [LS-5] SC Retrieval 결과와 non-SC 본문을 합산 budget 기준으로 재조립
         _source_counts = self._summarize_retrieval_sources(_retrieval_plan)
-        if not _source_counts and any("[과거 유사 맥락" in str(_part) for _part in _mc_parts):
+        if not _source_counts and any("[과거 유사 맥락" in str(_part) for _part in _tier1_parts):
             _source_counts = {"legacy_multi_query": 1}
 
         def _compute_coverage_warnings(context_text: str) -> list[str]:
@@ -2708,7 +2767,12 @@ class Stage4ContextBuilder:
         _coverage_note = ""
         _coverage_note_idx: int | None = None
         for _ in range(3):
-            mandatory_context = self._compose_mandatory_context_with_headroom(_sc_parts, _mc_parts)
+            _tier1_body = _tier1_parts + _sc_parts
+            mandatory_context = self._compose_tiered_mandatory_context_with_headroom(
+                _tier0_parts,
+                _tier1_body,
+                _tier2_parts,
+            )
             _coverage_warnings = _compute_coverage_warnings(mandatory_context)
             _next_coverage_note = self._build_retrieval_coverage_warning_section(_coverage_warnings)
             if not _next_coverage_note:
@@ -2716,31 +2780,34 @@ class Stage4ContextBuilder:
             if _coverage_note == _next_coverage_note:
                 break
             if _coverage_note_idx is None:
-                _mc_parts.insert(0, _next_coverage_note)
+                _tier2_parts.insert(0, _next_coverage_note)
                 _coverage_note_idx = 0
             else:
-                _mc_parts[_coverage_note_idx] = _next_coverage_note
+                _tier2_parts[_coverage_note_idx] = _next_coverage_note
             _coverage_note = _next_coverage_note
 
         _slot_summary_survived = "[작품 추적 슬롯 요약]" in mandatory_context
+        _vector_context_chars = sum(len(str(_part or "")) for _part in _sc_parts)
+        _stage4_budget_ledger = dict((getattr(self.ctx, "_stage4_context_budget_meta", {}) or {}).get("budget_ledger") or {})
         self._record_retrieval_observation(
             ep_num=next_ep,
             stage="stage4",
-            observation={
-                "work_focus_present": bool(_work_focus),
-                "tracking_slots_count": len(_work_focus.get("tracking_slots") or []) if isinstance(_work_focus, dict) else 0,
-                "scene_engines_count": len(_work_focus.get("mandatory_scene_engines") or []) if isinstance(_work_focus, dict) else 0,
-                "registry_profiles_count": len(_work_focus.get("registry_profiles") or []) if isinstance(_work_focus, dict) else 0,
-                "planned_slots_count": len(getattr(_retrieval_plan, "slots", []) or []) if _retrieval_plan else 0,
-                "advisor_path_used": bool(_retrieval_plan),
-                "work_slot_summary_included": _slot_summary_survived,
-                "relation_slice_included": "[관계 의미 질의]" in mandatory_context,
-                "source_counts": _source_counts,
-                "coverage_warnings": _coverage_warnings,
-                "mandatory_context_chars": len(mandatory_context),
-                "protected_summary_survived": _slot_summary_survived,
-                "trimmed_work_slot_summary": bool(_slot_summary and not _slot_summary_survived),
-            },
+            observation=build_context_observation(
+                stage="stage4",
+                work_focus=_work_focus,
+                retrieval_plan=_retrieval_plan,
+                source_counts=_source_counts,
+                coverage_warnings=_coverage_warnings,
+                advisor_path_used=bool(_retrieval_plan),
+                work_slot_summary_present=bool(_slot_summary),
+                work_slot_summary_included=_slot_summary_survived,
+                relation_slice_included="[관계 의미 질의]" in mandatory_context,
+                vector_context_chars=_vector_context_chars,
+                mandatory_context_chars=len(mandatory_context),
+                protected_summary_survived=_slot_summary_survived,
+                trimmed_work_slot_summary=bool(_slot_summary and not _slot_summary_survived),
+                budget_ledger=_stage4_budget_ledger,
+            ),
         )
 
         try:

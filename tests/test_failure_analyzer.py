@@ -349,6 +349,126 @@ def test_failure_analyzer_sink_alignment_summary_detects_missing_and_mismatch(tm
         db.close()
 
 
+def test_failure_analyzer_sink_alignment_summary_tracks_gate_repair_contract_fields(tmp_path):
+    db = DBManager(tmp_path / "test_sink_alignment_gate_repair.db")
+    try:
+        mismatch_key = "s4:ep71:arc7:a1:sess_gate"
+        missing_key = "s4:ep72:arc7:a1:sess_gate"
+        no_meta_key = "s4:ep73:arc7:a1:sess_gate"
+
+        advisory_flags = {
+            "gate_semantics": {
+                "director_verdict": "PASS_WITH_FIX",
+                "gate_basis": "bounded_local_repair",
+                "repair_scope": "inplace",
+            },
+            "fix_pack": {
+                "target_kind": "entity_ref",
+                "patch_targets": ["opening_location_name", "ending_location_name"],
+            },
+            "retry_budget_axes": {"round": 1, "repair": 1},
+        }
+
+        db.save_stage_attempt(
+            stage=4,
+            verdict="PASS",
+            attempt_num=1,
+            ep_num=71,
+            arc_num=7,
+            score=96,
+            session_id="sess_gate",
+            attempt_key=mismatch_key,
+            advisory_flags=advisory_flags,
+        )
+        db.save_stage_attempt(
+            stage=4,
+            verdict="PASS",
+            attempt_num=1,
+            ep_num=72,
+            arc_num=7,
+            score=93,
+            session_id="sess_gate",
+            attempt_key=missing_key,
+            advisory_flags=advisory_flags,
+        )
+        db.save_stage_attempt(
+            stage=4,
+            verdict="PASS",
+            attempt_num=1,
+            ep_num=73,
+            arc_num=7,
+            score=90,
+            session_id="sess_gate",
+            attempt_key=no_meta_key,
+        )
+
+        logs_dir = tmp_path / "logs"
+        logs_dir.mkdir(parents=True, exist_ok=True)
+        (logs_dir / "pass_rate_monitor.json").write_text(
+            json.dumps(
+                {
+                    "records": [
+                        {
+                            "stage": 4,
+                            "episode": 71,
+                            "arc": 7,
+                            "attempt_num": 1,
+                            "success": True,
+                            "attempt_key": mismatch_key,
+                            "final_verdict": "PASS",
+                            "director_verdict": "REJECT",
+                            "gate_basis": "scene_rewrite",
+                            "repair_scope": "full",
+                            "fix_pack": {
+                                "target_kind": "scene_model",
+                                "patch_targets": ["scene_model"],
+                            },
+                            "retry_budget_axes": {"round": 2, "repair": 3},
+                        },
+                        {
+                            "stage": 4,
+                            "episode": 72,
+                            "arc": 7,
+                            "attempt_num": 1,
+                            "success": True,
+                            "attempt_key": missing_key,
+                            "final_verdict": "PASS",
+                        },
+                        {
+                            "stage": 4,
+                            "episode": 73,
+                            "arc": 7,
+                            "attempt_num": 1,
+                            "success": True,
+                            "attempt_key": no_meta_key,
+                            "final_verdict": "PASS",
+                        },
+                    ]
+                },
+                ensure_ascii=False,
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+
+        analyzer = FailureAnalyzer(db, project_path=tmp_path)
+        result = analyzer.sink_alignment_summary(stage=4)
+
+        assert any(item["attempt_key"] == mismatch_key for item in result["director_verdict_mismatches"])
+        assert any(item["attempt_key"] == mismatch_key for item in result["gate_basis_mismatches"])
+        assert any(item["attempt_key"] == mismatch_key for item in result["repair_scope_mismatches"])
+        assert any(item["attempt_key"] == mismatch_key for item in result["fix_pack_target_kind_mismatches"])
+        assert any(item["attempt_key"] == mismatch_key for item in result["fix_pack_patch_targets_mismatches"])
+        assert any(item["attempt_key"] == mismatch_key for item in result["retry_budget_axes_mismatches"])
+
+        missing_entries = [item for item in result["gate_repair_metadata_missing"] if item["attempt_key"] == missing_key]
+        assert any(item["field"] == "director_verdict" and "pass_rate_monitor" in item["sinks"] for item in missing_entries)
+        assert any(item["field"] == "fix_pack_patch_targets" and "pass_rate_monitor" in item["sinks"] for item in missing_entries)
+        assert not any(item["attempt_key"] == no_meta_key for item in result["gate_repair_metadata_missing"])
+    finally:
+        db.close()
+
+
 def test_failure_analyzer_sink_alignment_summary_reports_artifact_linkage_issues(tmp_path):
     db = DBManager(tmp_path / "test_sink_alignment_artifact.db")
     try:

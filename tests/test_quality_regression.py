@@ -168,6 +168,8 @@ class TestRetrievalObservationSummary:
                 "relation_slice_included": False,
                 "source_counts": {"vec_memory": 2, "db_npc_relationship": 1},
                 "coverage_warnings": ["missing_relation_slice"],
+                "provenance_ledger": {"source_pack": "stage2", "dropped_at": "stage2"},
+                "budget_ledger": {"budget_bucket": "smart_retrieval.stage2_total_budget", "configured_cap": 1200},
             },
         )
         db.record_retrieval_observation(
@@ -190,3 +192,5 @@ class TestRetrievalObservationSummary:
         assert any(row["stage"] == "stage2" for row in summary["stage_rows"])
         assert summary["top_warnings"][0]["warning"] == "missing_relation_slice"
         assert summary["recent"][0]["stage"] == "stage4"
+        assert summary["recent"][1]["provenance_ledger"]["source_pack"] == "stage2"
+        assert summary["recent"][1]["budget_ledger"]["budget_bucket"] == "smart_retrieval.stage2_total_budget"

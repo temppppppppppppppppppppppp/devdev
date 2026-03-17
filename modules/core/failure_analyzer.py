@@ -217,6 +217,19 @@ class FailureAnalyzer:
                             "retry_directives": str(
                                 meta.get("retry_directives", row.get("retry_directives", "")) or ""
                             ).strip(),
+                            "director_verdict": str(
+                                meta.get("director_verdict", row.get("director_verdict", "")) or ""
+                            ).strip(),
+                            "gate_basis": str(meta.get("gate_basis", row.get("gate_basis", "")) or "").strip(),
+                            "repair_scope": str(
+                                meta.get("repair_scope", row.get("repair_scope", "")) or ""
+                            ).strip(),
+                            "fix_pack": dict(meta.get("fix_pack") or {})
+                            if isinstance(meta.get("fix_pack"), dict)
+                            else {},
+                            "retry_budget_axes": dict(meta.get("retry_budget_axes") or {})
+                            if isinstance(meta.get("retry_budget_axes"), dict)
+                            else {},
                         }
                     )
         except Exception as _e:
@@ -263,7 +276,7 @@ class FailureAnalyzer:
     def _nonempty_value_map(values: dict[str, object]) -> dict[str, str]:
         result: dict[str, str] = {}
         for key, value in values.items():
-            normalized = str(value or "").strip()
+            normalized = FailureAnalyzer._normalize_alignment_value(value)
             if normalized:
                 result[key] = normalized
         return result
@@ -272,9 +285,75 @@ class FailureAnalyzer:
     def _missing_value_sinks(values: dict[str, object]) -> list[str]:
         missing: list[str] = []
         for key, value in values.items():
-            if not str(value or "").strip():
+            if not FailureAnalyzer._normalize_alignment_value(value):
                 missing.append(str(key))
         return missing
+
+    @staticmethod
+    def _normalize_alignment_value(value: object) -> str:
+        if isinstance(value, dict):
+            if not value:
+                return ""
+            return json.dumps(value, ensure_ascii=False, sort_keys=True)
+        if isinstance(value, list):
+            cleaned = [str(item).strip() for item in value if str(item).strip()]
+            if not cleaned:
+                return ""
+            return json.dumps(cleaned, ensure_ascii=False)
+        return str(value or "").strip()
+
+    @staticmethod
+    def _safe_dict(value: object) -> dict[str, object]:
+        return dict(value) if isinstance(value, dict) else {}
+
+    @staticmethod
+    def _safe_str_list(value: object, *, limit: int = 8) -> list[str]:
+        if not isinstance(value, list):
+            return []
+        items: list[str] = []
+        for raw in value:
+            text = str(raw or "").strip()
+            if text:
+                items.append(text)
+            if len(items) >= limit:
+                break
+        return items
+
+    @classmethod
+    def _safe_json_loads(cls, value: object, default: str = "{}") -> object:
+        if isinstance(value, (dict, list)):
+            return value
+        raw = value if isinstance(value, str) and value.strip() else default
+        try:
+            return json.loads(raw)
+        except Exception:
+            try:
+                return json.loads(default)
+            except Exception:
+                return {}
+
+    @classmethod
+    def _extract_gate_repair_bundle(
+        cls,
+        *,
+        gate_semantics: object = None,
+        fix_pack: object = None,
+        retry_budget_axes: object = None,
+        director_verdict: object = None,
+        gate_basis: object = None,
+        repair_scope: object = None,
+    ) -> dict[str, object]:
+        gate_payload = cls._safe_dict(gate_semantics)
+        fix_payload = cls._safe_dict(fix_pack)
+        retry_payload = cls._safe_dict(retry_budget_axes)
+        return {
+            "director_verdict": str(gate_payload.get("director_verdict") or director_verdict or "").strip(),
+            "gate_basis": str(gate_payload.get("gate_basis") or gate_basis or "").strip(),
+            "repair_scope": str(gate_payload.get("repair_scope") or repair_scope or "").strip(),
+            "fix_pack_target_kind": str(fix_payload.get("target_kind") or "").strip(),
+            "fix_pack_patch_targets": cls._safe_str_list(fix_payload.get("patch_targets")),
+            "retry_budget_axes": retry_payload,
+        }
 
     def _artifact_file_exists(self, artifact_path: str) -> bool | None:
         normalized = str(artifact_path or "").strip()
@@ -315,7 +394,7 @@ class FailureAnalyzer:
                 stage_attempt_rows = self.db.conn.execute(
                     """
                     SELECT id, attempt_key, verdict, score, session_id,
-                           candidate_key, content_hash, artifact_path
+                           candidate_key, content_hash, artifact_path, advisory_flags
                     FROM stage_attempts
                     WHERE stage = ? AND COALESCE(attempt_key, '') != '' AND session_id = ?
                     ORDER BY id DESC
@@ -327,7 +406,7 @@ class FailureAnalyzer:
                 stage_attempt_rows = self.db.conn.execute(
                     """
                     SELECT id, attempt_key, verdict, score, session_id,
-                           candidate_key, content_hash, artifact_path
+                           candidate_key, content_hash, artifact_path, advisory_flags
                     FROM stage_attempts
                     WHERE stage = ? AND COALESCE(attempt_key, '') != ''
                     ORDER BY id DESC
@@ -349,6 +428,9 @@ class FailureAnalyzer:
         for row in stage_attempt_rows:
             attempt_key = str(row["attempt_key"] or "").strip()
             if attempt_key and attempt_key not in stage_attempts:
+                advisory_flags = self._safe_json_loads(row["advisory_flags"], "{}")
+                if not isinstance(advisory_flags, dict):
+                    advisory_flags = {}
                 stage_attempts[attempt_key] = {
                     "final_verdict": str(row["verdict"] or ""),
                     "final_score": self._coerce_int(row["score"]),
@@ -356,6 +438,11 @@ class FailureAnalyzer:
                     "candidate_key": str(row["candidate_key"] or "").strip(),
                     "content_hash": str(row["content_hash"] or "").strip(),
                     "artifact_path": str(row["artifact_path"] or "").strip(),
+                    **self._extract_gate_repair_bundle(
+                        gate_semantics=advisory_flags.get("gate_semantics"),
+                        fix_pack=advisory_flags.get("fix_pack"),
+                        retry_budget_axes=advisory_flags.get("retry_budget_axes"),
+                    ),
                 }
 
         pass_rate_monitor: dict[str, dict] = {}
@@ -372,6 +459,13 @@ class FailureAnalyzer:
                 "candidate_key": str(row.get("candidate_key", "") or "").strip(),
                 "content_hash": str(row.get("content_hash", "") or "").strip(),
                 "artifact_path": str(row.get("artifact_path", "") or "").strip(),
+                **self._extract_gate_repair_bundle(
+                    director_verdict=row.get("director_verdict"),
+                    gate_basis=row.get("gate_basis"),
+                    repair_scope=row.get("repair_scope"),
+                    fix_pack=row.get("fix_pack"),
+                    retry_budget_axes=row.get("retry_budget_axes"),
+                ),
             }
 
         director_selections: dict[str, dict] = {}
@@ -380,7 +474,7 @@ class FailureAnalyzer:
                 director_rows = self.db.conn.execute(
                     """
                     SELECT id, attempt_key, verdict, score, candidate_key, content_hash, artifact_path,
-                           selection_reason, verdict_reason, fix_scope
+                           selection_reason, verdict_reason, fix_scope, advisory_warnings
                     FROM director_selections
                     WHERE COALESCE(stage, CASE WHEN ? = 3 THEN 3 ELSE 4 END) = ? AND COALESCE(attempt_key, '') != ''
                     ORDER BY id DESC
@@ -402,6 +496,15 @@ class FailureAnalyzer:
                 if session_id and not self._attempt_key_matches_session_id(attempt_key, session_id):
                     continue
                 if attempt_key and attempt_key not in director_selections:
+                    advisory_warnings = self._safe_json_loads(row["advisory_warnings"], "{}")
+                    if not isinstance(advisory_warnings, dict):
+                        advisory_warnings = {}
+                    has_explicit_gate_repair = bool(
+                        advisory_warnings.get("gate_semantics")
+                        or advisory_warnings.get("fix_pack")
+                        or advisory_warnings.get("retry_budget_axes")
+                        or str(row["fix_scope"] or "").strip()
+                    )
                     director_selections[attempt_key] = {
                         "initial_verdict": str(row["verdict"] or ""),
                         "initial_score": self._coerce_int(row["score"]),
@@ -411,6 +514,13 @@ class FailureAnalyzer:
                         "selection_reason": str(row["selection_reason"] or "").strip(),
                         "verdict_reason": str(row["verdict_reason"] or "").strip(),
                         "fix_scope": str(row["fix_scope"] or "").strip(),
+                        **self._extract_gate_repair_bundle(
+                            gate_semantics=advisory_warnings.get("gate_semantics"),
+                            fix_pack=advisory_warnings.get("fix_pack"),
+                            retry_budget_axes=advisory_warnings.get("retry_budget_axes"),
+                            director_verdict=row["verdict"] if has_explicit_gate_repair else "",
+                            repair_scope=row["fix_scope"] if has_explicit_gate_repair else "",
+                        ),
                     }
 
         session_decisions: dict[str, dict] = {}
@@ -452,6 +562,15 @@ class FailureAnalyzer:
                     "selection_candidate_key": str(
                         row.get("selection_candidate_key", row.get("candidate_key", "")) or ""
                     ).strip(),
+                    **self._extract_gate_repair_bundle(
+                        director_verdict=row.get("director_verdict"),
+                        gate_basis=row.get("gate_basis"),
+                        repair_scope=row.get("repair_scope"),
+                        fix_pack=row.get("fix_pack"),
+                        retry_budget_axes=(row.get("flags") or {}).get("retry_budget_axes")
+                        if isinstance(row.get("flags"), dict)
+                        else {},
+                    ),
                 }
 
         final_authority_rows: list[dict] = []
@@ -513,6 +632,12 @@ class FailureAnalyzer:
         final_verdict_mismatches: list[dict] = []
         final_score_mismatches: list[dict] = []
         initial_verdict_mismatches: list[dict] = []
+        director_verdict_mismatches: list[dict] = []
+        gate_basis_mismatches: list[dict] = []
+        repair_scope_mismatches: list[dict] = []
+        fix_pack_target_kind_mismatches: list[dict] = []
+        fix_pack_patch_targets_mismatches: list[dict] = []
+        retry_budget_axes_mismatches: list[dict] = []
         patch_strategy_mismatches: list[dict] = []
         candidate_key_mismatches: list[dict] = []
         selection_candidate_key_mismatches: list[dict] = []
@@ -522,6 +647,7 @@ class FailureAnalyzer:
         selection_reason_mismatches: list[dict] = []
         verdict_reason_mismatches: list[dict] = []
         fix_scope_mismatches: list[dict] = []
+        gate_repair_metadata_missing: list[dict] = []
         rationale_metadata_missing: list[dict] = []
         artifact_missing_files: list[dict] = []
         selection_companion_pre_final_rows: list[dict] = []
@@ -587,6 +713,45 @@ class FailureAnalyzer:
                             "episode_production": ep_verdict,
                         }
                     )
+
+            if stage == 4:
+                gate_repair_sinks: dict[str, dict[str, object]] = {}
+                if attempt_key in stage_attempts:
+                    gate_repair_sinks["stage_attempts"] = stage_attempts[attempt_key]
+                if attempt_key in pass_rate_monitor:
+                    gate_repair_sinks["pass_rate_monitor"] = pass_rate_monitor[attempt_key]
+                if attempt_key in session_decisions:
+                    gate_repair_sinks["session_decisions"] = session_decisions[attempt_key]
+                if attempt_key in episode_production:
+                    gate_repair_sinks["episode_production"] = episode_production[attempt_key]
+                if attempt_key in director_selections:
+                    gate_repair_sinks["director_selections"] = director_selections[attempt_key]
+
+                for field_name, collector, sinks in (
+                    ("director_verdict", director_verdict_mismatches, ("stage_attempts", "pass_rate_monitor", "session_decisions", "episode_production", "director_selections")),
+                    ("gate_basis", gate_basis_mismatches, ("stage_attempts", "pass_rate_monitor", "session_decisions", "episode_production", "director_selections")),
+                    ("repair_scope", repair_scope_mismatches, ("stage_attempts", "pass_rate_monitor", "session_decisions", "episode_production", "director_selections")),
+                    ("fix_pack_target_kind", fix_pack_target_kind_mismatches, ("stage_attempts", "pass_rate_monitor", "session_decisions", "episode_production", "director_selections")),
+                    ("fix_pack_patch_targets", fix_pack_patch_targets_mismatches, ("stage_attempts", "pass_rate_monitor", "session_decisions", "episode_production", "director_selections")),
+                    ("retry_budget_axes", retry_budget_axes_mismatches, ("stage_attempts", "pass_rate_monitor", "session_decisions", "episode_production")),
+                ):
+                    values_by_sink = {
+                        sink: gate_repair_sinks[sink].get(field_name)
+                        for sink in sinks
+                        if sink in gate_repair_sinks
+                    }
+                    nonempty_values = self._nonempty_value_map(values_by_sink)
+                    if len(set(nonempty_values.values())) > 1:
+                        collector.append({"attempt_key": attempt_key, **nonempty_values})
+                    missing_sinks = self._missing_value_sinks(values_by_sink)
+                    if nonempty_values and missing_sinks:
+                        gate_repair_metadata_missing.append(
+                            {
+                                "attempt_key": attempt_key,
+                                "field": field_name,
+                                "sinks": missing_sinks,
+                            }
+                        )
 
             if attempt_key in pass_rate_monitor and attempt_key in episode_production:
                 prm_strategy = pass_rate_monitor[attempt_key]["patch_strategy"]
@@ -771,6 +936,12 @@ class FailureAnalyzer:
                 final_verdict_mismatches,
                 final_score_mismatches,
                 initial_verdict_mismatches,
+                director_verdict_mismatches,
+                gate_basis_mismatches,
+                repair_scope_mismatches,
+                fix_pack_target_kind_mismatches,
+                fix_pack_patch_targets_mismatches,
+                retry_budget_axes_mismatches,
                 patch_strategy_mismatches,
                 candidate_key_mismatches,
                 selection_candidate_key_mismatches,
@@ -780,6 +951,7 @@ class FailureAnalyzer:
                 selection_reason_mismatches,
                 verdict_reason_mismatches,
                 fix_scope_mismatches,
+                gate_repair_metadata_missing,
                 rationale_metadata_missing,
                 artifact_missing_files,
                 session_decision_rows_without_attempt_key > 0,
@@ -806,6 +978,12 @@ class FailureAnalyzer:
             "final_verdict_mismatches": final_verdict_mismatches[:10],
             "final_score_mismatches": final_score_mismatches[:10],
             "initial_verdict_mismatches": initial_verdict_mismatches[:10],
+            "director_verdict_mismatches": director_verdict_mismatches[:10],
+            "gate_basis_mismatches": gate_basis_mismatches[:10],
+            "repair_scope_mismatches": repair_scope_mismatches[:10],
+            "fix_pack_target_kind_mismatches": fix_pack_target_kind_mismatches[:10],
+            "fix_pack_patch_targets_mismatches": fix_pack_patch_targets_mismatches[:10],
+            "retry_budget_axes_mismatches": retry_budget_axes_mismatches[:10],
             "patch_strategy_mismatches": patch_strategy_mismatches[:10],
             "candidate_key_mismatches": candidate_key_mismatches[:10],
             "selection_candidate_key_mismatches": selection_candidate_key_mismatches[:10],
@@ -815,6 +993,7 @@ class FailureAnalyzer:
             "selection_reason_mismatches": selection_reason_mismatches[:10],
             "verdict_reason_mismatches": verdict_reason_mismatches[:10],
             "fix_scope_mismatches": fix_scope_mismatches[:10],
+            "gate_repair_metadata_missing": gate_repair_metadata_missing[:10],
             "rationale_metadata_missing": rationale_metadata_missing[:10],
             "artifact_missing_files": artifact_missing_files[:10],
             "selection_companion_pre_final_rows": selection_companion_pre_final_rows[:10],
