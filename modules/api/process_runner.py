@@ -30,7 +30,11 @@ from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
 from pathlib import Path
 
-from modules.api.control_plane_contract import ALLOWED_STAGE0_SUB_KEYS, MODE_B_KEYS
+from modules.api.control_plane_contract import (
+    ALLOWED_STAGE0_SUB_KEYS,
+    AUTHORITY_ROLE_COMPANION_SNAPSHOT,
+    MODE_B_KEYS,
+)
 from modules.core.runtime_paths import (
     resolve_engine_root,
     resolve_project_dir,
@@ -452,6 +456,7 @@ class ProcessRunner:
         stdout_tail = list(self._stdout_tail)
         stderr_tail = list(self._stderr_tail)
         return {
+            "authority_role": AUTHORITY_ROLE_COMPANION_SNAPSHOT,
             "key": self._key,
             "sub_key": self._sub_key,
             "mode": self._mode,

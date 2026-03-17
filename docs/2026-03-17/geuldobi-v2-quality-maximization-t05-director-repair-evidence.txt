@@ -1,0 +1,98 @@
+1. scope
+- terminal: `T05`
+- mission: Director, validators, gate semantics, `PASS_WITH_FIX`, retry policy
+- mode: `ROL 전역 전체 전수조사만` / survey-only / no code edits / no execution SSOT / no roadmap
+- live baseline: `HEAD=2352b26a293ac330a0ff24da320363f9abdbbba1`
+- dirty state observed at start: tracked edits in lane1~3 code/tests/docs plus `projects/test_project/logs/episode_production.jsonl`; preserve as-is
+- temp queue check: `docs/temp/` contains only `README.md`; no active execution mirror or roadmap at survey start
+
+2. included paths
+- `docs/2026-03-17/geuldobi-v2-quality-maximization-full-survey-audit-order.md`
+- `docs/2026-03-17/geuldobi-v2-quality-maximization-roadmap-triage.md`
+- `docs/2026-03-17/geuldobi-v2-quality-maximization-terminal-prompt-pack.md`
+- `docs/2026-03-17/stage-pipeline-lane2-director-gate-semantics-execution-ssot.md` (reference-only)
+- `docs/2026-03-17/stage-pipeline-lane3-repair-retry-architecture-execution-ssot.md` (reference-only)
+- `modules/core/stage4_interview_round.py`
+- `modules/core/adaptive_retry.py`
+- `modules/domain/agents/director_ensemble.py`
+- `modules/domain/agents/director_prompts.py`
+- `modules/domain/agents/chief_writer.py`
+- `modules/validation/validation_orchestrator.py`
+- `modules/validation/blocking_validator.py`
+- `modules/validation/advisory_validator.py`
+- `modules/validation/threshold_helper.py`
+- `config/prompts/director.yaml`
+- `tests/test_stage4_interview_round.py`
+- `tests/test_director_modules.py`
+- `tests/test_chief_writer.py`
+- `tests/test_adaptive_retry.py`
+- `tests/integration/test_patch_wiring.py`
+- `projects/test_project/logs/episode_production.jsonl`
+
+3. excluded paths
+- `modules/core/stage4_context_builder.py`, `modules/core/context_advisor.py` deep audit belongs to `T04`
+- `projects/` artifact-truth beyond `projects/test_project/logs/episode_production.jsonl` belongs to `T06`
+- `UI/`, `geuldobi-desktop/`, dashboard/bridge rendering belongs to `T07`
+- repo-wide config/cost/threshold sprawl outside `config/prompts/director.yaml` belongs to `T09`
+- no code patching, no config mutation, no DB mutation, no execution-doc creation
+
+4. facts
+- Fact: `modules/core/stage4_interview_round.py:2399-2425` builds and forwards three Director prompt packs: `Decision Core`, `Candidate Evidence`, `Reference Appendix`.
+- Fact: `modules/domain/agents/director_prompts.py:31-65` and `config/prompts/director.yaml:29-64` accept the same three-pack contract, so lane-2 prompt split is live in code, not only in docs.
+- Fact: `modules/domain/agents/director_ensemble.py:177-193` derives explicit `gate_basis`; `modules/domain/agents/director_ensemble.py:1698-1780` returns `director_verdict`, `final_verdict`, `gate_basis`, `repair_scope`, `fix_scope`, and normalized `fix_pack`.
+- Fact: `modules/core/stage4_interview_round.py:1618-1685` normalizes `director_verdict/final_verdict/gate_basis/repair_scope` again at the Stage 4 boundary and builds a reusable gate-semantics payload.
+- Fact: `modules/core/stage4_interview_round.py:1542-1587` enforces the lane-3 `PASS_WITH_FIX` contract. Invalid local-repair cases downgrade to `REJECT` with `gate_basis=pass_with_fix_contract_*` and widened `repair_scope`.
+- Fact: `modules/core/stage4_interview_round.py:318-329` still derives `reject_bucket` from free-text keyword matching over `director_feedback` plus issues/action items. Downstream retry routing is therefore not fully driven by a structured enum.
+- Fact: `modules/core/stage4_interview_round.py:1589-1616` creates named `retry_budget_axes`; `modules/core/stage4_interview_round.py:4215-4221` stores them on `previous_attempt`; `modules/core/stage4_interview_round.py:4374-4535` uses `fix_scope`, `reject_bucket`, and Fix Pack readiness to branch into `inplace`, `patch`, or rewrite.
+- Fact: `modules/core/stage4_interview_round.py:4249-4267`, `modules/core/stage4_interview_round.py:2529-2589`, and `modules/core/stage4_interview_round.py:5668-5835` expose Pack B fields across UI/log text, `save_director_selection(... advisory_warnings=...)`, attempt artifacts, and `episode_production.jsonl`.
+- Fact: `modules/core/stage4_interview_round.py:4711-4773` injects `_failure_learner` into validator context; `modules/validation/validation_orchestrator.py:425-450` and `modules/validation/validation_orchestrator.py:1210-1234` route blocking failures into `_failure_learner` on both sync and parallel paths.
+- Fact: `modules/core/stage4_interview_round.py:4282-4312` separately records Stage 4 rejects into `ctx.failure_learner` and `ctx.adaptive_manager`, then optionally appends an adaptive injection prompt into retry feedback.
+- Fact: `modules/domain/agents/chief_writer.py:1058-1084`, `modules/domain/agents/chief_writer.py:1414-1613`, and `modules/domain/agents/chief_writer.py:1745-1750` consume Fix Pack guidance as a local repair contract and preserve `patch_targets` into patch traces/results.
+- Fact: `modules/validation/validation_orchestrator.py:1397-1425` converts validator outcomes into `PASS` / `CONDITIONAL_PASS` / `REJECT` plus a single merged `Director advisory` feedback string; `modules/validation/validation_orchestrator.py:1473-1525` and `modules/validation/validation_orchestrator.py:1614-1635` keep adaptive-threshold and retry-history state.
+- Fact: pre-test live artifact snapshot of `projects/test_project/logs/episode_production.jsonl` was `126` rows, with `director_verdict/gate_basis/repair_scope` present in `6` rows, non-empty `flags.retry_budget_axes` in `1` row, and non-empty `fix_pack` in `0` rows.
+- Fact: targeted pytest was run sequentially in this order:
+- `python -m pytest tests/test_director_modules.py -k "prompt_packs_forward_and_gate_semantics_surface or fix_pack_is_normalized_and_forwarded" -q` -> `2 passed`
+- `python -m pytest tests/test_stage4_interview_round.py -k "pass_with_fix_without_fix_pack_downgrades_before_inplace or retry_inplace_requires_fix_pack_and_routes_to_patch or pass_with_fix_scene_model_target_downgrades_to_reject or append_episode_log_includes_gate_semantics or pass_with_fix_multi_anchor_fix_pack_is_logged_and_passes" -q` -> `5 passed`
+- `python -m pytest tests/test_chief_writer.py -k "inplace_patch_fix_pack_preserves_multi_anchor_targets" -q` -> `1 passed`
+- `python -m pytest tests/test_adaptive_retry.py -q` -> `5 passed`
+- `python -m pytest tests/integration/test_patch_wiring.py -k "failure_learner_key_present_in_cv_context" -q` -> `1 passed`
+- `python -m pytest tests/test_stage4_interview_round.py -k "save_director_selection_persists_gate_semantics_payload or pass_with_fix_run_logs_initial_and_final_verdicts" -q` -> `2 passed`
+- `python -m pytest tests/integration/test_patch_wiring.py -k "failure_learner_record_failure_called_on_blocking_fail" -q` -> `1 passed`
+- Fact: post-test live artifact snapshot is now `128` rows. `director_verdict/gate_basis/repair_scope` exist in `8` rows, non-empty `flags.retry_budget_axes` in `3` rows, non-empty `fix_pack` in `0` rows, and `123/128` rows carry `MagicMock` model strings, so the current artifact is mostly test-driven rather than live-operator evidence.
+- Fact: the newest three Pack-B-rich rows are line-tail rows `126-128`; they show `gate_basis=pass_with_fix_contract_missing_fix_pack` or `quality_floor_fail` plus non-empty `retry_budget_axes`, but still no non-empty `fix_pack`.
+
+5. hotspot files
+- `modules/core/stage4_interview_round.py` - central fan-in/out for gate normalization, retry branching, persistence, UI, and JSONL logging
+- `modules/domain/agents/director_ensemble.py` - Director-side semantic split, gate-basis derivation, and operator log emission
+- `modules/validation/validation_orchestrator.py` - validator-to-advisory conversion, adaptive thresholds, and failure-learning reuse
+- `modules/domain/agents/chief_writer.py` - Fix Pack consumption and inplace-patch contract
+- `modules/core/adaptive_retry.py` - retry taxonomy, escalation recommendations, and shared state manager
+- `projects/test_project/logs/episode_production.jsonl` - only directly inspected durable artifact for Pack-B coverage in this lane
+
+6. side-effect notes
+- file writes: Stage 4 writes attempt artifacts and selection snapshots via `_record_s4_attempt` / `snapshot_logged_artifact`; this turn's targeted tests also appended `2` rows to `projects/test_project/logs/episode_production.jsonl`
+- DB writes: `save_director_selection(...)` and reject-side `save_cost_record(...)` are in the inspected path; DB schema mutation was not inspected and no schema mutation was performed
+- JSONL / log / audit sinks: `_append_episode_log()` writes Pack-B fields to `episode_production.jsonl`; `director_ensemble` emits `[DirectorFrame]`; validation soft-failure hooks exist for failure-learner exceptions
+- console / UI output: `self.ctx.ui.log(...)` exposes `director_verdict`, `final_verdict`, `gate_basis`, score, and patch fallback notices
+- rollback / recovery / retry: reject bucket drives `ToT` / `MAD` escalation, reduced/full strategy budgets, and `inplace -> patch -> rewrite` fallback
+- cache / global state: `_last_retry_budget_axes`, `_last_strategy_budget`, `_last_strategy_count`, `AdaptiveRetryStrategy` singleton context map, and `AdaptiveRetryManager` shared failure history are mutable runtime state
+- bootstrap fallback / config-env mutation: `_threshold(...)` reads config-backed floors/flags; no env mutation was observed in this lane and none was performed
+
+7. contradictions or uncertainty
+- Fact: lane-2/lane-3 semantic split and Pack-B logging are landed in code and covered by targeted tests.
+- Fact: live durable artifact coverage is still sparse. Even after targeted tests, only `8/128` rows carry `director_verdict/gate_basis/repair_scope`, only `3/128` rows carry non-empty `retry_budget_axes`, and no row carries a non-empty `fix_pack`.
+- Fact: `reject_bucket` remains heuristic (`modules/core/stage4_interview_round.py:318-329`) even though `gate_basis` and `repair_scope` are explicit. Semantic loss risk remains between validator/director meaning and retry routing.
+- Inference: repair/gate logging is sufficient for code-level landed validation, but not yet sufficient for strong live-run observability confidence across all lane-1~3 scenarios.
+- Open Question: do non-test Stage 4 runs emit successful `PASS_WITH_FIX -> PASS` rows with non-empty `fix_pack` into a durable sink, or is that only unit-tested through mocked file writes?
+- Open Question: does durable DB storage preserve `advisory_warnings.gate_semantics` and `fix_pack` without loss after Stage 4 post-processing, or is the durable truth only recoverable from JSONL/test logs?
+
+8. candidate execution areas
+- `director-reject-taxonomy-contract` - replace free-text `reject_bucket` heuristics with an explicit structured routing contract shared by validators, Director, and retry policy
+- `pack-b-live-log-coverage` - ensure successful `PASS_WITH_FIX` and re-audit paths emit non-empty `fix_pack` plus `retry_budget_axes` into durable artifacts, not only mocked test payloads
+- `failure-learning-retry-lineage` - make `failure_learner`, `adaptive_manager`, gate semantics, and retry directives reconstructable from one durable evidence chain
+
+9. follow-up requests for another terminal
+- `T06`: verify DB/artifact truth for `save_director_selection(... advisory_warnings.gate_semantics/fix_pack ...)`, attempt artifacts, and any post-processor transforms
+- `T07`: verify operator-visible surfaces show `director_verdict`, `final_verdict`, `gate_basis`, and `repair_scope` instead of collapsing to one verdict line
+- `T09`: audit threshold/config ownership for `quality floor`, `adaptive_threshold.floor`, patch enable flags, and strategy-budget policy so retry semantics are not drifting through hidden config
+- `T10`: if merged confidence needs Pack-B live evidence above unit-test level, request one targeted fresh live run that intentionally exercises `PASS_WITH_FIX success`, `quality_floor_fail`, and `post_select_conflict`

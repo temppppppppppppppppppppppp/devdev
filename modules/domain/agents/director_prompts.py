@@ -4,10 +4,21 @@ Director 에코시스템(director.py, director_ensemble.py, director_continuity.
 대형 프롬프트 문자열을 코드 로직에서 분리.
 """
 
+from modules.core.prompt_loader import PromptLoader
+
+
+def _load_director_prompt(key: str, fallback: str) -> tuple[str, dict]:
+    return PromptLoader().resolve_prompt(
+        "director",
+        key,
+        fallback=fallback,
+        fallback_source=f"modules/domain/agents/director_prompts.py:{key}",
+    )
+
 # -- Director Ensemble Prompts (from director_ensemble.py) --  [V64.P4]
 
 # [V60.80] Stage 4 앙상블 선택용 프롬프트
-ENSEMBLE_SELECTION_PROMPT = """
+_INLINE_ENSEMBLE_SELECTION_PROMPT = """
 [Role] 웹소설 1타 편집장 (Chief Director)
 [Task] 3개 원고 후보를 검토하고 최선을 선택한 뒤 PASS/REJECT 판정하라.
 
@@ -34,6 +45,8 @@ ENSEMBLE_SELECTION_PROMPT = """
 
 {prev_manuscripts_text}
 
+{decision_core}
+
 ---
 
 ### 📝 [후보 A - {strategy_a}]
@@ -57,6 +70,10 @@ ENSEMBLE_SELECTION_PROMPT = """
 
 ⚠️ Python 경고:
 {warnings_c}
+
+{candidate_evidence}
+
+{reference_appendix}
 
 ---
 
@@ -159,7 +176,7 @@ ENSEMBLE_SELECTION_PROMPT = """
 # -- Director Continuity Prompts (from director_continuity.py) --  [V64.P4]
 
 # [V60.87] 원고 역사 충돌 검사 프롬프트 — check_manuscript_history_conflicts, check_manuscript_continuity_with_cache에서 공유
-MANUSCRIPT_HISTORY_CONFLICT_PROMPT = """
+_INLINE_MANUSCRIPT_HISTORY_CONFLICT_PROMPT = """
 [Role] 원고 연속성 전문가 (Manuscript Continuity Expert)
 [Task] 현재 원고가 이전에 작성된 원고들과 충돌하는지 검사하라.
 
@@ -211,7 +228,7 @@ MANUSCRIPT_HISTORY_CONFLICT_PROMPT = """
 # =================================================================
 # [NEW] V30 Analyst 전용 전략 감사관(Strategic Plot Auditor) 프롬프트
 # =================================================================
-STRATEGIC_AUDIT_PROMPT_V30 = """
+_INLINE_STRATEGIC_AUDIT_PROMPT_V30 = """
 [Role] V30 Sovereign 전략 감사관 (Pragmatic Plot Auditor)
 [Task] Analyst가 설계한 '아크 전술서'의 논리적 무결성을 검수하되, 작가의 창의적 허용 범위를 존중하라.
 
@@ -284,6 +301,30 @@ Step 4: 인과율 밀도 검사
     "re_slice_instruction": "REJECT 시 반드시 구체적 수정 지시 포함. 예: '제N화에서 X 대신 Y를 하라', '아이템 Z를 삭제하고 W로 대체하라' 등 실행 가능한 지시"
 }}
 """
+
+
+ENSEMBLE_SELECTION_PROMPT, _ENSEMBLE_SELECTION_PROMPT_CONTRACT = _load_director_prompt(
+    "ENSEMBLE_SELECTION_PROMPT",
+    _INLINE_ENSEMBLE_SELECTION_PROMPT,
+)
+MANUSCRIPT_HISTORY_CONFLICT_PROMPT, _MANUSCRIPT_HISTORY_CONFLICT_PROMPT_CONTRACT = _load_director_prompt(
+    "MANUSCRIPT_HISTORY_CONFLICT_PROMPT",
+    _INLINE_MANUSCRIPT_HISTORY_CONFLICT_PROMPT,
+)
+STRATEGIC_AUDIT_PROMPT_V30, _STRATEGIC_AUDIT_PROMPT_V30_CONTRACT = _load_director_prompt(
+    "STRATEGIC_AUDIT_PROMPT_V30",
+    _INLINE_STRATEGIC_AUDIT_PROMPT_V30,
+)
+
+_DIRECTOR_PROMPT_CONTRACTS = {
+    "ENSEMBLE_SELECTION_PROMPT": _ENSEMBLE_SELECTION_PROMPT_CONTRACT,
+    "MANUSCRIPT_HISTORY_CONFLICT_PROMPT": _MANUSCRIPT_HISTORY_CONFLICT_PROMPT_CONTRACT,
+    "STRATEGIC_AUDIT_PROMPT_V30": _STRATEGIC_AUDIT_PROMPT_V30_CONTRACT,
+}
+
+
+def get_director_prompt_contract(key: str) -> dict:
+    return dict(_DIRECTOR_PROMPT_CONTRACTS.get(str(key or "").strip(), {}))
 
 
 # =================================================================

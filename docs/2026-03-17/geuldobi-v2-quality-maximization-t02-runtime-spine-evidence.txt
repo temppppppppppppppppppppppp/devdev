@@ -1,0 +1,170 @@
+1. scope
+- terminal: `T02`
+- mission: bootstrap, runtime spine, process runner, fallback seams
+- mode: `ROL 전역 전체 전수조사만`
+- stop-line: survey-only, no code edits, no execution SSOT, no roadmap creation
+- baseline commit: `2352b26a293ac330a0ff24da320363f9abdbbba1`
+- baseline dirty summary: `dirty: stage-pipeline lane1~3 code/tests/docs edits, temp execution mirror deletions, 1 runtime log, 1 untracked roadmap draft; preserve as-is`
+- temp queue check: `docs/temp/README.md` only; no active execution mirror or temp roadmap
+- governing docs read:
+  - `AGENTS.md`
+  - `docs/implementation/system-order-init-harness.md`
+  - `docs/implementation/system-full-survey-execution-harness.md`
+  - `docs/implementation/codebase-global-survey-coverage-contract.md`
+  - `docs/implementation/deep-global-integrity-survey-harness.md`
+  - `docs/implementation/commit-state-minimal-contract.md`
+  - `docs/2026-03-17/geuldobi-v2-quality-maximization-roadmap-triage.md`
+  - `docs/2026-03-17/geuldobi-v2-quality-maximization-full-survey-audit-order.md`
+  - `docs/2026-03-17/geuldobi-v2-quality-maximization-terminal-prompt-pack.md`
+  - reference-only: stage-pipeline lane1/lane2/lane3 execution SSOTs and stage-pipeline execution roadmap
+
+2. included paths
+- `main_a.py`
+- `modules/api/control_plane_contract.py`
+- `modules/api/run_validator.py`
+- `modules/api/risk_approval.py`
+- `modules/api/process_runner.py`
+- `modules/api/prompt_classifier.py`
+- `modules/api/prompt_broker.py`
+- `modules/api/bridge_server.py`
+- `modules/core/runtime_paths.py`
+- `modules/core/system.py`
+- `modules/core/quality_sidecar_bootstrap.py`
+- `modules/core/stage2_orchestrator.py`
+- `modules/core/stage3_orchestrator.py`
+- `modules/core/stage4_orchestrator.py`
+- `lite_mode/main_lite.py`
+- `lite_mode/run_stage.py`
+- `lite_mode/bridge/runner.py`
+- `test_mode/main_lite.py`
+- `test_mode/run_stage.py`
+- `test_mode/bridge/runner.py`
+- read-only verification surfaces:
+  - `tests/test_main_a_packaged_bootstrap_contract.py`
+  - `tests/test_encoding_boundary_contract.py`
+  - `tests/test_process_runner.py`
+  - `tests/test_process_runner_stage0_inputs.py`
+  - `tests/test_bridge_server_http_contract.py`
+  - `tests/test_bridge_server_desktop_risk_gate.py`
+  - `tests/test_control_plane_approval_provenance_ssot.py`
+
+3. excluded paths
+- detailed Stage 2/3 information-handoff quality semantics: `T03` owner
+- detailed CW context, prompt structure, truncation semantics: `T04` owner
+- detailed Director/PASS_WITH_FIX/retry semantics: `T05` owner
+- durable artifact truth, metadata truth, sink linkage deep audit: `T06` owner
+- UI/desktop/operator reconstruction review: `T07` owner
+- regression sufficiency and test economics conclusions: `T08` owner
+- config/model-routing/cost duplication interpretation: `T09` owner
+- `docs/roadmap-v2.md` as authority source
+- code patching, live mutation, temp execution queue opening
+
+4. facts
+- Fact: `main_a.py` bootstraps import path before local module imports (`main_a.py:12`, `main_a.py:44`), normalizes Windows UTF-8 stdio before runtime notices (`main_a.py:47`, `main_a.py:90`), installs Windows selector-event-loop fallback (`main_a.py:69`, `main_a.py:91`), and enables `faulthandler` to `crash_dump.log` before `SovereignApp` boot proceeds (`main_a.py:94`). `tests/test_main_a_packaged_bootstrap_contract.py` and `tests/test_encoding_boundary_contract.py` explicitly lock these boundaries.
+- Fact: boot-time failure persistence is workspace-scoped, not project-scoped. `_resolve_boot_error_log_path()` uses `GEULDOBI_WORKSPACE` or `os.getcwd()` (`main_a.py:20`), `_persist_boot_failure_traceback()` writes `logs/error.log` before project-local sinks exist (`main_a.py:27`), and the `__main__` guard calls it on fatal boot failure (`main_a.py:4803`).
+- Fact: `SovereignApp.boot()` order is stable and linear: genre selection -> project selection -> project-local `.env` reload -> `StudioSystem.boot_v20_project()` bind -> runtime sink retarget -> genre alignment -> HUD/Guard initialization -> `VecMemory` init -> lazy agent attach -> main menu loop (`main_a.py:1172`, `main_a.py:1194`, `main_a.py:1217`, `main_a.py:1299`, `main_a.py:1328`).
+- Fact: path/root precedence is centralized in `modules/core/runtime_paths.py`: `GEULDOBI_ENGINE_ROOT` overrides engine root, `GEULDOBI_WORKSPACE` overrides workspace root, and `GEULDOBI_PROJECTS_ROOT` overrides project root (`modules/core/runtime_paths.py:9`, `modules/core/runtime_paths.py:16`, `modules/core/runtime_paths.py:23`, `modules/core/runtime_paths.py:30`). `main_a.py`, `modules/api/process_runner.py`, and `modules/api/bridge_server.py` all consume this shared contract.
+- Fact: `StudioSystem.boot_v20_project()` is the primary project bootstrap substrate for the main runtime. It binds `ProjectContext`, common services, optional wuxia-only services, and leaves `guard` unbound until genre-specific runtime init (`modules/core/system.py:9`, `modules/core/system.py:22`). `check_v20_readiness()` reads Stage 0/1/2 completion directly from DB anchors (`modules/core/system.py:69`).
+- Fact: `_run_main_process()` is the top-level steady-state dispatcher for the main CLI runtime and exposes keys `0/1/2/3/4/5/6/7/44/77/88/99` (`main_a.py:2461`). This is the same menu protocol replayed by the desktop/API runner.
+- Fact: the main runtime uses thin Stage wrappers and extracted orchestrators. `_stage_2_arcs()` injects `Stage2Context` and delegates to `Stage2Orchestrator.stage_2_arcs_async_logic()` (`main_a.py:3185`, `modules/core/stage2_orchestrator.py:24`, `modules/core/stage2_orchestrator.py:224`). `_stage_3_batch_blueprinting()` injects `Stage3Context` and delegates to `Stage3Orchestrator.stage_3_batch_blueprinting()` (`main_a.py:3442`, `modules/core/stage3_orchestrator.py:457`, `modules/core/stage3_orchestrator.py:526`). `_stage_4_v2_chief_writer()` lazily initializes `StateTracker`, `WorldStateManager`, and `FactLedger`, injects `Stage4Context`, then delegates to `Stage4Orchestrator.stage_4_v2_chief_writer()` (`main_a.py:4043`, `modules/core/stage4_orchestrator.py:198`, `modules/core/stage4_orchestrator.py:1661`).
+- Fact: the reference-only lane docs confirm lane-1, lane-2, and lane-3 semantics already landed inside Stage 4 submodules (`stage4_context_builder.py`, `stage4_interview_round.py`, `director_ensemble.py`, `chief_writer.py`). T02 therefore treats them as downstream runtime delegates, not fresh runtime-spine inventions.
+- Fact: `modules/api/bridge_server.py` is the public control-plane spine for desktop/app transport. Lifespan wires `ProcessRunner`, `RiskApprovalGate`, and `PromptBroker` (`modules/api/bridge_server.py:1688`). `/run` validates request state, enforces risk approval for destructive keys, then starts the subprocess (`modules/api/bridge_server.py:1721`). `/stop` is idempotent (`modules/api/bridge_server.py:1864`). `/status` merges runner state, diagnostics, pending prompts, and recent provenance (`modules/api/bridge_server.py:1882`).
+- Fact: the public `/run` contract is Mode-B-first in live code. `MODE_B_KEYS = PUBLIC_RUN_KEYS` in `modules/api/control_plane_contract.py:19`, the public key set includes every exposed menu key (`modules/api/control_plane_contract.py:5`), and `bridge_server.run_endpoint()` derives `use_mode_b = key in MODE_B_KEYS` before delegating to `ProcessRunner.start()` (`modules/api/bridge_server.py:1721` plus imported contract).
+- Fact: `ProcessRunner` prefers packaged launch if `GEULDOBI_ENGINE_EXE` exists, otherwise falls back to `python -u main_a.py` (`modules/api/process_runner.py:211`). It fixes subprocess `cwd` to `resolve_workspace_root(PROJECT_ROOT)` and passes environment overrides such as `PYTHONIOENCODING=utf-8`, `PYTHONUNBUFFERED=1`, `GEULDOBI_RUN_ID`, optional API keys, and optional Slack webhook (`modules/api/process_runner.py:274`, `modules/api/process_runner.py:775`).
+- Fact: Mode B replays the `main_a.py` console protocol by stdin for the boot sequence only, then switches to prompt-brokered interaction. `_build_stdin_sequence()` injects `genre_index -> [Enter] -> project_index -> optional genre mismatch confirm -> menu key -> optional Stage 0 sub_key/cache choice` (`modules/api/process_runner.py:682`). Remaining prompts are detected from partial stdout in `_read_loop_mode_b()` (`modules/api/process_runner.py:562`), classified by regex in `prompt_classifier.py`, emitted via `PromptBroker.request_input()`, then returned to the subprocess through `write_stdin()` (`modules/api/prompt_classifier.py`, `modules/api/prompt_broker.py`, `modules/api/process_runner.py:423`).
+- Fact: runtime diagnostics intentionally treat stdout as the authoritative operator channel and stderr as supplemental `utf-8-replace` telemetry. `ProcessRunner.get_runtime_diagnostics()` emits `stdout_tail`, `stderr_tail`, `last_prompt_step`, and `failure_phase`, with `stderr_authoritative=False` and `_RUNTIME_STDERR_DECODE_POLICY="utf-8-replace"` (`modules/api/process_runner.py:90`, `modules/api/process_runner.py:446`). `tests/test_encoding_boundary_contract.py` and `tests/test_process_runner.py` lock this behavior.
+- Fact: the bridge layer persists control-plane provenance to `logs/control-plane-provenance.jsonl` and risk approvals to `logs/risk-approval-log.jsonl` (`modules/api/bridge_server.py:186`, `modules/api/risk_approval.py`). `tests/test_bridge_server_http_contract.py` and `tests/test_control_plane_approval_provenance_ssot.py` verify that `/status` can surface recent provenance summaries.
+- Fact: `lite_mode` and `test_mode` implement a separate runtime spine that bypasses `main_a.py`, `bridge_server.py`, `ProcessRunner`, `ProjectContext`, and DB-backed `StudioSystem`. `main_lite.py` selects a project folder and calls `BridgeRunner(project).run()` (`lite_mode/main_lite.py:33`, `lite_mode/main_lite.py:67`, same structure in `test_mode/main_lite.py`). `run_stage.py` directly invokes `BridgeRunner.run_stage_2/3/4()` (`lite_mode/run_stage.py:33`, `lite_mode/run_stage.py:52`, `lite_mode/bridge/runner.py:1341`, `lite_mode/bridge/runner.py:1450`, `lite_mode/bridge/runner.py:1562`, mirrored in `test_mode`).
+
+5. hotspot files
+- `main_a.py`
+  - boot boundary, sink retarget, main menu protocol, and Stage 2/3/4 delegate seams all live here
+- `modules/api/process_runner.py`
+  - subprocess launch fallback, stdin protocol replay, Mode B prompt detection, stop/kill recovery, and diagnostics live here
+- `modules/api/bridge_server.py`
+  - public `/run` orchestration, provenance logging, prompt resync, and runner status aggregation live here
+- `modules/api/control_plane_contract.py`
+  - public key set, risk-key set, and Mode B exposure are defined here
+- `modules/core/runtime_paths.py`
+  - engine/workspace/projects root precedence is centralized here
+- `modules/core/system.py`
+  - project bootstrap and readiness gating are centralized here
+- `modules/core/stage2_orchestrator.py`
+  - Stage 2 async runtime entry and fallback arc-number resolution live here
+- `modules/core/stage3_orchestrator.py`
+  - Stage 3 batch entry and observability flags are rooted here
+- `modules/core/stage4_orchestrator.py`
+  - Stage 4 runtime entry and pre-orchestration lazy state bootstrap live here
+- `lite_mode/bridge/runner.py`
+  - alternate Selenium/file-I/O runtime spine with its own reset/retry logic lives here
+- `test_mode/bridge/runner.py`
+  - duplicated alternate runtime spine lives here; drift risk mirrors `lite_mode`
+
+6. side-effect notes
+- file writes and artifact generation:
+  - workspace/root bootstrap sinks: `logs/error.log`, `crash_dump.log`
+  - bridge/operator sinks: `logs/control-plane-provenance.jsonl`, `logs/risk-approval-log.jsonl`
+  - after project bind, session/metrics/studio logs are retargeted to project-local logs (`main_a.py:1194`)
+  - Stage output files themselves are produced downstream of the Stage 2/3/4 delegates; content-level truth was not audited in T02
+- actual artifact content integrity:
+  - not-applicable for primary T02 lane
+  - generated manuscript/blueprint/treatment truth belongs to `T03` to `T06`
+- DB writes, schema touchpoints, transaction boundaries:
+  - boot can persist `genre_info` when absent during genre alignment
+  - the control-plane run path itself does not create schema migrations
+  - `bridge_server.py` also hosts non-run endpoints such as operator review write paths, but detailed durability is `T06` territory
+- JSONL/log/audit sink writes:
+  - control-plane provenance summary
+  - risk approval audit log
+  - session logger / UI event sink after project bind
+  - `runtime_audit` / audit-service buffer after app bind
+- console, UI, operator-visible outputs:
+  - `StudioVisualizer` menus and prompts in `main_a.py`
+  - WebSocket `/events` stream and `/status` pending prompt snapshot in `bridge_server.py`
+  - `ProcessRunner` retains `stdout_tail` and `stderr_tail` for failure triage
+- rollback, recovery, retry, compensation:
+  - runner stop path escalates terminate -> wait -> kill (`modules/api/process_runner.py:376`)
+  - main menu exposes destructive/safe-op routes `44/77/88/99`
+  - main runtime also exposes `6` and `7` one-stop orchestration loops that wrap Stage 2/3/4 together
+  - packaged launch fallback is `engine.exe -> python main_a.py`
+- cache, singleton, global-state mutation:
+  - project-local `.env` reload resets `BaseAgent` API-key state and context caches (`main_a.py:1172`)
+  - `ProcessRunner` maintains in-memory prompt state, runtime tails, and failure-phase memory
+  - Stage 4 wrapper maintains app-level lazy singletons for `state_tracker`, `world_state`, and `fact_ledger`
+- config mutation, env loading, bootstrap fallback behavior:
+  - project `.env` overrides runtime keys during project bind
+  - validation settings prefer project `config/settings.json` and fall back to repo-root `config/settings.json` (`main_a.py:2214`)
+  - model map prefers repo-root `models.yaml` and falls back to legacy orchestrator config (`main_a.py:1351`, `main_a.py:1360`)
+  - root resolution obeys `GEULDOBI_ENGINE_ROOT`, `GEULDOBI_WORKSPACE`, `GEULDOBI_PROJECTS_ROOT`
+
+7. contradictions or uncertainty
+- Fact: the public control plane exposes every public `/run` key as Mode B (`modules/api/control_plane_contract.py:19`), and bridge status/provenance tests also model Mode B-heavy behavior.
+- Inference: `ProcessRunner` Mode A is now a compatibility or internal path rather than the normal public desktop/backend transport.
+- Open Question: is any live caller still relying on Mode A-only behavior such as confirm padding plus auto-exit? `T08` should confirm from test/inventory coverage.
+- Fact: early boot failures persist to workspace/root sinks before project selection, while later runtime sinks are project-retargeted.
+- Inference: operator evidence for one failed run can split across workspace-level and project-level log roots.
+- Open Question: do any operator-visible surfaces expose workspace-level `logs/error.log` or `crash_dump.log` without filesystem inspection? `T07` should confirm.
+- Fact: `lite_mode` and `test_mode` duplicate a file-based Selenium runtime spine with near-identical entrypoints and bridge runners.
+- Inference: runtime behavior can drift between the main `main_a.py`/FastAPI spine and the Lite/Test spine even when both are treated as usable entrypoints.
+- Open Question: should `lite_mode` and `test_mode` be treated as supported runtime lanes, diagnostics harnesses, or legacy compatibility paths? `T01` and `T08` should classify.
+- Fact: `ProcessRunner._build_stdin_sequence()` hard-codes `main_a` prompt order, while `prompt_classifier.py` uses regex over prompt text and option formatting.
+- Inference: prompt wording drift in `main_a.py` can break remote execution without any underlying stage-logic regression.
+- Open Question: beyond Stage 0 and status/provenance tests, is there an end-to-end contract test that binds live `main_a.py` prompt surfaces to `prompt_classifier.py` step taxonomy? `T08` should verify.
+
+8. candidate execution areas
+- Inference: bootstrap/provenance unification is action-bearing. Early workspace-level boot failures and later project-level runtime logs are split across different roots and should likely be surfaced through one coherent operator contract.
+- Inference: the control-plane prompt contract is action-bearing. `ProcessRunner` and `prompt_classifier` are tightly coupled to `main_a.py` prompt order/text, so protocol hardening or stronger contract tests would reduce brittle runtime failures.
+- Inference: runtime-lane consolidation is action-bearing. The main CLI/API spine and the duplicated Lite/Test Selenium spine have separate bootstrap and retry stacks with no obvious single-source contract.
+- Inference: env/root precedence deserves a cross-cut execution follow-up. `GEULDOBI_*` roots, project `.env`, project-vs-root `settings.json`, and `models.yaml` legacy fallback all influence runtime startup and can produce different behavior across packaged, desktop, and source-tree launches.
+
+9. follow-up requests for another terminal
+- `T06`
+  - verify durable linkage for workspace boot logs, project-retargeted session logs, control-plane provenance, risk-approval audit, and any DB/UI-event persistence touched during boot/run
+- `T07`
+  - verify what operators can actually see for bootstrap failure state, runner diagnostics, pending prompts, provenance summaries, and safe-op availability
+- `T08`
+  - verify test coverage for Mode B prompt taxonomy, dormant Mode A behavior, packaged boot failure sinks, and Lite/Test duplicate runtime lanes
+- `T09`
+  - verify cross-cut config precedence for `GEULDOBI_*`, project `.env`, `settings.json` fallback, and model-map fallback because these alter runtime spine behavior before stage semantics even begin
+- `T10`
+  - treat `main_a.py`/bridge/process_runner coupling and the separate Lite/Test runtime spine as cross-cut merge-watch items, not isolated folder-local findings

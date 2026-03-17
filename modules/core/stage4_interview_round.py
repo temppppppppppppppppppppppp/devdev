@@ -62,6 +62,7 @@ class Stage4InterviewRound:
         self.time_warnings = []
         self._last_advisory_summary = {}
         self._last_advisory_details: list[str] = []
+        self._last_retry_budget_axes: dict[str, str] = {}
 
     def _build_retry_advisory_digest(self, *, max_items: int = 5) -> str:
         """Condense current-round advisory findings for CW retry feedback."""
@@ -251,6 +252,11 @@ class Stage4InterviewRound:
         initial_score: int = 0,
         selection_reason: str = "",
         verdict_reason: str = "",
+        director_verdict: str = "",
+        gate_basis: str = "",
+        repair_scope: str = "",
+        fix_pack: dict | None = None,
+        retry_budget_axes: dict | None = None,
         runtime_advisory: str = "",
         retry_directives: str = "",
     ) -> None:
@@ -284,6 +290,11 @@ class Stage4InterviewRound:
             selection_artifact_path=_selection["artifact_path"],
             initial_verdict=str(initial_verdict or ""),
             initial_score=int(initial_score or 0),
+            director_verdict=str(director_verdict or ""),
+            gate_basis=str(gate_basis or ""),
+            repair_scope=str(repair_scope or ""),
+            fix_pack=dict(fix_pack or {}),
+            retry_budget_axes=dict(retry_budget_axes or {}),
             runtime_advisory=self._compact_text(runtime_advisory, limit=500),
             retry_directives=self._compact_text(retry_directives, limit=500),
         )
@@ -1339,6 +1350,344 @@ class Stage4InterviewRound:
         ]
         return "\n".join(header) + "\n\n" + "\n\n".join(str(part).strip() for part in reference_parts if str(part).strip())
 
+    @staticmethod
+    def _join_director_pack_parts(parts: list[str] | tuple[str, ...]) -> str:
+        return "\n\n".join(str(part).strip() for part in parts if str(part).strip())
+
+    @classmethod
+    def _format_director_pack(cls, title: str, parts: list[str] | tuple[str, ...]) -> str:
+        body = cls._join_director_pack_parts(parts)
+        if not body:
+            return ""
+        return f"### [{title}]\n{body}"
+
+    @staticmethod
+    def _normalize_repair_scope_value(value: object) -> str:
+        scope = str(value or "").strip().lower()
+        return scope if scope in {"inplace", "partial", "full"} else "none"
+
+    @staticmethod
+    def _normalize_fix_target_kind(value: object) -> str:
+        raw = str(value or "").strip().lower().replace("-", "_").replace(" ", "_")
+        aliases = {
+            "entity": "entity_ref",
+            "entityref": "entity_ref",
+            "named_entity": "entity_ref",
+            "name_ref": "entity_ref",
+            "phrase": "local_phrase",
+            "localphrase": "local_phrase",
+            "sentence": "local_sentence",
+            "localsentence": "local_sentence",
+            "scene": "scene_model",
+            "scenelevel": "scene_model",
+            "scene_level": "scene_model",
+            "scene_model": "scene_model",
+        }
+        normalized = aliases.get(raw, raw)
+        return normalized if normalized in {"entity_ref", "local_phrase", "local_sentence", "scene_model"} else ""
+
+    @classmethod
+    def _resolve_primary_fix_target_kind(cls, kinds: list[str]) -> str:
+        normalized = [cls._normalize_fix_target_kind(item) for item in kinds]
+        cleaned = [item for item in normalized if item]
+        if not cleaned:
+            return ""
+        if "scene_model" in cleaned:
+            return "scene_model"
+        if "local_sentence" in cleaned:
+            return "local_sentence"
+        if "local_phrase" in cleaned:
+            return "local_phrase"
+        return "entity_ref"
+
+    @staticmethod
+    def _normalize_fix_pack_list(raw: object, *, limit: int = 5, item_limit: int = 160) -> list[str]:
+        if isinstance(raw, str):
+            candidates = [raw]
+        elif isinstance(raw, list):
+            candidates = raw
+        else:
+            return []
+        cleaned: list[str] = []
+        seen: set[str] = set()
+        for item in candidates:
+            text = " ".join(str(item or "").split()).strip()
+            if not text:
+                continue
+            text = text[:item_limit]
+            if text in seen:
+                continue
+            seen.add(text)
+            cleaned.append(text)
+            if len(cleaned) >= limit:
+                break
+        return cleaned
+
+    @classmethod
+    def _normalize_fix_pack(cls, raw: object) -> dict:
+        payload = raw if isinstance(raw, dict) else {}
+        patch_targets = cls._normalize_fix_pack_list(payload.get("patch_targets"), limit=6, item_limit=80)
+        must_fix = cls._normalize_fix_pack_list(payload.get("must_fix"), limit=6, item_limit=180)
+        do_not_regress = cls._normalize_fix_pack_list(payload.get("do_not_regress"), limit=6, item_limit=180)
+        success_condition = " ".join(str(payload.get("success_condition", "") or "").split()).strip()[:220]
+        evidence_summary = " ".join(str(payload.get("evidence_summary", "") or "").split()).strip()[:220]
+
+        raw_kinds = payload.get("target_kinds")
+        if isinstance(raw_kinds, str):
+            raw_kinds = [part.strip() for part in raw_kinds.split(",")]
+        elif not isinstance(raw_kinds, list):
+            raw_kinds = []
+        if payload.get("target_kind"):
+            raw_kinds = [payload.get("target_kind"), *raw_kinds]
+        target_kinds = []
+        for item in raw_kinds:
+            kind = cls._normalize_fix_target_kind(item)
+            if kind and kind not in target_kinds:
+                target_kinds.append(kind)
+        target_kind = cls._resolve_primary_fix_target_kind(target_kinds)
+
+        normalized = {
+            "patch_targets": patch_targets,
+            "must_fix": must_fix,
+            "do_not_regress": do_not_regress,
+            "success_condition": success_condition,
+            "target_kind": target_kind,
+        }
+        if target_kinds:
+            normalized["target_kinds"] = target_kinds
+        if evidence_summary:
+            normalized["evidence_summary"] = evidence_summary
+
+        has_payload = any(
+            normalized.get(key)
+            for key in ("patch_targets", "must_fix", "do_not_regress", "success_condition", "target_kind", "evidence_summary")
+        )
+        return normalized if has_payload else {}
+
+    @classmethod
+    def _evaluate_fix_pack_contract(cls, fix_pack: object) -> dict[str, object]:
+        normalized = cls._normalize_fix_pack(fix_pack)
+        if not normalized:
+            return {"ready": False, "reason": "missing_fix_pack", "fix_pack": {}}
+        if not normalized.get("patch_targets"):
+            return {"ready": False, "reason": "missing_patch_targets", "fix_pack": normalized}
+        if not normalized.get("must_fix"):
+            return {"ready": False, "reason": "missing_must_fix", "fix_pack": normalized}
+        if not normalized.get("do_not_regress"):
+            return {"ready": False, "reason": "missing_do_not_regress", "fix_pack": normalized}
+        if not normalized.get("success_condition"):
+            return {"ready": False, "reason": "missing_success_condition", "fix_pack": normalized}
+        target_kind = str(normalized.get("target_kind", "") or "")
+        if target_kind == "scene_model":
+            return {"ready": False, "reason": "scene_model_target", "fix_pack": normalized}
+        if target_kind not in {"entity_ref", "local_phrase", "local_sentence"}:
+            return {"ready": False, "reason": "invalid_target_kind", "fix_pack": normalized}
+        return {"ready": True, "reason": "", "fix_pack": normalized}
+
+    def _evaluate_pass_with_fix_contract(self, director_result: dict | None) -> dict[str, object]:
+        normalized = self._normalize_director_gate_semantics(director_result)
+        fix_scope = str(normalized.get("fix_scope", "") or "").strip().lower()
+        fix_pack_contract = self._evaluate_fix_pack_contract(normalized.get("fix_pack"))
+        if fix_scope != "inplace":
+            return {
+                "eligible": False,
+                "reason": "missing_fix_scope" if not fix_scope else "non_local_fix_scope",
+                "fix_scope": fix_scope,
+                "fix_pack": fix_pack_contract.get("fix_pack", {}),
+            }
+        if not fix_pack_contract.get("ready"):
+            return {
+                "eligible": False,
+                "reason": str(fix_pack_contract.get("reason", "") or "missing_fix_pack"),
+                "fix_scope": fix_scope,
+                "fix_pack": fix_pack_contract.get("fix_pack", {}),
+            }
+        return {
+            "eligible": True,
+            "reason": "",
+            "fix_scope": fix_scope,
+            "fix_pack": fix_pack_contract.get("fix_pack", {}),
+        }
+
+    @staticmethod
+    def _pass_with_fix_contract_message(reason: str) -> str:
+        messages = {
+            "missing_fix_scope": "explicit local fix_scope is missing",
+            "non_local_fix_scope": "fix_scope is not inplace-local",
+            "missing_fix_pack": "Fix Pack is missing",
+            "missing_patch_targets": "Fix Pack patch_targets is empty",
+            "missing_must_fix": "Fix Pack must_fix is empty",
+            "missing_do_not_regress": "Fix Pack do_not_regress is empty",
+            "missing_success_condition": "Fix Pack success_condition is empty",
+            "invalid_target_kind": "Fix Pack target_kind is not local-fixable",
+            "scene_model_target": "Fix Pack target_kind=scene_model requires broader rewrite",
+        }
+        return messages.get(reason, "PASS_WITH_FIX contract is invalid")
+
+    def _build_fix_pack_payload(self, director_result: dict | None) -> dict:
+        if not isinstance(director_result, dict):
+            return {}
+        fix_pack = self._normalize_fix_pack(director_result.get("fix_pack"))
+        if not fix_pack:
+            return {}
+        payload = {
+            "patch_targets": list(fix_pack.get("patch_targets") or []),
+            "must_fix": list(fix_pack.get("must_fix") or [])[:5],
+            "do_not_regress": list(fix_pack.get("do_not_regress") or [])[:5],
+            "success_condition": str(fix_pack.get("success_condition", "") or ""),
+            "target_kind": str(fix_pack.get("target_kind", "") or ""),
+        }
+        if fix_pack.get("evidence_summary"):
+            payload["evidence_summary"] = str(fix_pack.get("evidence_summary", "") or "")
+        if fix_pack.get("target_kinds"):
+            payload["target_kinds"] = list(fix_pack.get("target_kinds") or [])[:4]
+        return payload
+
+    def _enforce_pass_with_fix_contract(self, director_result: dict | None) -> dict:
+        normalized = self._normalize_director_gate_semantics(director_result)
+        if not normalized:
+            return {}
+        normalized["fix_pack"] = self._normalize_fix_pack(normalized.get("fix_pack"))
+        if str(normalized.get("final_verdict", "") or "").strip().upper() != "PASS_WITH_FIX":
+            return normalized
+
+        contract = self._evaluate_pass_with_fix_contract(normalized)
+        if contract.get("eligible"):
+            normalized["fix_scope"] = "inplace"
+            normalized["repair_scope"] = "inplace"
+            normalized["fix_pack"] = contract.get("fix_pack", {})
+            return normalized
+
+        reason = str(contract.get("reason", "") or "missing_fix_pack")
+        note = f"[Lane3 Gate] PASS_WITH_FIX downgraded: {self._pass_with_fix_contract_message(reason)}"
+        fallback_fix_scope = str(normalized.get("fix_scope", "") or "").strip().lower()
+        if fallback_fix_scope not in {"partial", "full"}:
+            fallback_fix_scope = "partial"
+        normalized["fix_scope"] = fallback_fix_scope
+        normalized["repair_scope"] = fallback_fix_scope
+        fix_scope_reasoning = str(normalized.get("fix_scope_reasoning", "") or "").strip()
+        if note not in fix_scope_reasoning:
+            normalized["fix_scope_reasoning"] = f"{fix_scope_reasoning}\n{note}".strip() if fix_scope_reasoning else note
+        verdict_reason = str(normalized.get("verdict_reason", "") or "").strip()
+        if note not in verdict_reason:
+            normalized["verdict_reason"] = f"{note}\n{verdict_reason}".strip() if verdict_reason else note
+        feedback = normalized.get("feedback")
+        if isinstance(feedback, str):
+            feedback = {"issues": [feedback]}
+        elif not isinstance(feedback, dict):
+            feedback = {}
+        issues = [str(item).strip() for item in (feedback.get("issues") or []) if str(item).strip()]
+        if note not in issues:
+            issues.insert(0, note)
+        feedback["issues"] = issues[:8]
+        normalized["feedback"] = feedback
+        normalized["action_items"] = feedback.get("action_items", []) if isinstance(feedback, dict) else []
+        normalized = self._apply_director_gate_update(
+            normalized,
+            final_verdict="REJECT",
+            gate_basis=f"pass_with_fix_contract_{reason}",
+            repair_scope=fallback_fix_scope,
+        )
+        return normalized
+
+    def _set_retry_budget_axes(
+        self,
+        *,
+        round_num: int,
+        repair_budget: str,
+        strategy_budget: str,
+        reject_bucket: str = "",
+        previous_attempt: dict | None = None,
+    ) -> dict[str, str]:
+        previous_attempt = previous_attempt if isinstance(previous_attempt, dict) else {}
+        guidance_budget = "augmented" if any(
+            str(previous_attempt.get(key, "") or "").strip()
+            for key in ("runtime_advisory", "retry_directives", "fix_scope_reasoning")
+        ) else "baseline"
+        escalation_budget = "none"
+        if reject_bucket == "structure_error":
+            escalation_budget = "tot"
+        elif reject_bucket == "constraint_violation":
+            escalation_budget = "mad"
+        axes = {
+            "round": "initial" if round_num == 0 else f"retry_round_{round_num + 1}",
+            "repair": str(repair_budget or ""),
+            "strategy": str(strategy_budget or ""),
+            "escalation": escalation_budget,
+            "guidance": guidance_budget,
+        }
+        self._last_retry_budget_axes = axes
+        return axes
+
+    def _normalize_director_gate_semantics(self, director_result: dict | None) -> dict:
+        if not isinstance(director_result, dict):
+            return {}
+        director_verdict = str(
+            director_result.get("director_verdict")
+            or director_result.get("original_verdict")
+            or director_result.get("verdict")
+            or "REJECT"
+        ).strip() or "REJECT"
+        final_verdict = str(
+            director_result.get("final_verdict")
+            or director_result.get("verdict")
+            or director_verdict
+            or "REJECT"
+        ).strip() or "REJECT"
+        repair_scope = self._normalize_repair_scope_value(
+            director_result.get("repair_scope") or director_result.get("fix_scope")
+        )
+        gate_basis = str(director_result.get("gate_basis") or "").strip()
+        if not gate_basis:
+            if final_verdict == "REJECT" and director_verdict in {"PASS", "PASS_WITH_FIX"}:
+                gate_basis = "quality_floor_fail"
+            elif final_verdict == "PASS":
+                gate_basis = "director_primary_pass"
+            elif final_verdict == "PASS_WITH_FIX":
+                gate_basis = "director_primary_pass_with_fix"
+            else:
+                gate_basis = "director_primary_reject"
+        director_result["director_verdict"] = director_verdict
+        director_result["final_verdict"] = final_verdict
+        director_result["gate_basis"] = gate_basis
+        director_result["repair_scope"] = repair_scope
+        director_result["fix_pack"] = self._normalize_fix_pack(director_result.get("fix_pack"))
+        director_result["verdict"] = final_verdict
+        return director_result
+
+    def _apply_director_gate_update(
+        self,
+        director_result: dict | None,
+        *,
+        final_verdict: str | None = None,
+        gate_basis: str | None = None,
+        repair_scope: str | None = None,
+    ) -> dict:
+        normalized = self._normalize_director_gate_semantics(director_result)
+        if not normalized:
+            return {}
+        if final_verdict:
+            normalized["final_verdict"] = str(final_verdict)
+            normalized["verdict"] = str(final_verdict)
+        if gate_basis:
+            normalized["gate_basis"] = str(gate_basis)
+        if repair_scope is not None:
+            normalized["repair_scope"] = self._normalize_repair_scope_value(repair_scope)
+        elif "repair_scope" not in normalized:
+            normalized["repair_scope"] = self._normalize_repair_scope_value(normalized.get("fix_scope"))
+        return normalized
+
+    def _build_gate_semantics_payload(self, director_result: dict | None) -> dict[str, str]:
+        normalized = self._normalize_director_gate_semantics(director_result)
+        if not normalized:
+            return {}
+        return {
+            "director_verdict": str(normalized.get("director_verdict", "") or ""),
+            "final_verdict": str(normalized.get("final_verdict", "") or ""),
+            "gate_basis": str(normalized.get("gate_basis", "") or ""),
+            "repair_scope": str(normalized.get("repair_scope", "none") or "none"),
+        }
+
     def _setup_writing_directive(
         self,
         chief_writer,
@@ -1804,14 +2153,16 @@ class Stage4InterviewRound:
         # [V66.3] C-1: mandatory_context + Python 검증 경고를 Director에 전달
         # validation_results에서 경고를 추출하여 mandatory_context에 병합
         _mandatory_text = mandatory_context if isinstance(mandatory_context, str) else str(mandatory_context or "")
-        _director_mc_parts = [_mandatory_text] if _mandatory_text else []
+        _decision_core_parts = [_mandatory_text] if _mandatory_text else []
+        _candidate_evidence_parts: list[str] = []
+        _reference_appendix_parts: list[str] = []
         _shared_failure_warnings = []
         for _vr in validation_results:
             _shared_failure_warnings = _vr.get("shared_failure_warnings", [])
             if _shared_failure_warnings:
                 break
         if _shared_failure_warnings:
-            _director_mc_parts.insert(0, "\n".join(_shared_failure_warnings))
+            _decision_core_parts.insert(0, "\n".join(_shared_failure_warnings))
         # [S3-META] quality_risk Blueprint → Director 사전 경고
         _s3_meta = round_ctx.blueprint.get("_stage3_meta", {}) if isinstance(round_ctx.blueprint, dict) else {}
         if _s3_meta.get("quality_risk"):
@@ -1820,7 +2171,7 @@ class Stage4InterviewRound:
                 f"(verdict={_s3_meta.get('final_verdict', '?')}, score={_s3_meta.get('last_score', '?')}). "
                 "로직 모순·연속성 결함 가능성 높음. 원고의 논리적 일관성을 중점 검토하세요."
             )
-            _director_mc_parts.append(_s3_warn)
+            _decision_core_parts.append(_s3_warn)
             logging.info("[S3-META] quality_risk=True → Director advisory 주입 (score=%s)", _s3_meta.get("last_score"))
         if not _writing_directive.is_empty():
             _wd_lines = ["[WritingDirective]"]
@@ -1830,7 +2181,7 @@ class Stage4InterviewRound:
                 _wd_lines.append(f"- expression_ban: {', '.join(_writing_directive.expression_ban)}")
             if _writing_directive.emotion_required:
                 _wd_lines.append(f"- emotion_required: {_writing_directive.emotion_required}")
-            _director_mc_parts.insert(0, "\n".join(_wd_lines))
+            _decision_core_parts.insert(0, "\n".join(_wd_lines))
         try:
             _mb = getattr(self.ctx.current_project, "master_bible", None) or {}
             _mb_root = _mb.get("MasterBible", _mb) if isinstance(_mb, dict) else {}
@@ -1838,9 +2189,9 @@ class Stage4InterviewRound:
             _pov = str(_protagonist_config.get("pov", "") or "").strip()
             _external_policy = str(_protagonist_config.get("external_pov_insert_policy", "") or "").strip()
             if _pov:
-                _director_mc_parts.insert(0, f"[작품 시점]\n- 기본 POV: {_pov}")
+                _decision_core_parts.insert(0, f"[작품 시점]\n- 기본 POV: {_pov}")
             if _external_policy:
-                _director_mc_parts.insert(0, f"[타자 시점 삽입 정책]\n- policy: {_external_policy}")
+                _decision_core_parts.insert(0, f"[타자 시점 삽입 정책]\n- policy: {_external_policy}")
         except Exception as _pov_err:
             logging.debug("[QI-POV] Director POV 주입 실패 (비치명): %s", _pov_err)
 
@@ -1905,7 +2256,7 @@ class Stage4InterviewRound:
             _formatted_advisory_parts.append(f"[INFO] {_part_s}")
         _advisory_parts = _formatted_advisory_parts
         self._last_advisory_details = list(_advisory_parts)
-        _director_mc_parts = _advisory_parts + _director_mc_parts
+        _candidate_evidence_parts.extend(_advisory_parts)
         self._log_attempt_event(
             logging.INFO,
             next_ep=next_ep,
@@ -1925,7 +2276,7 @@ class Stage4InterviewRound:
 
                     _time_str = NarrativeContextFormatter.format_cumulative_time(_cum_elapsed)
                     if _time_str:
-                        _director_mc_parts.append(f"[Timeline] 현재까지 경과 시간: {_time_str}")
+                        _candidate_evidence_parts.append(f"[Timeline] 현재까지 경과 시간: {_time_str}")
         except Exception as _te:
             logging.debug("[NC-2] cumulative_elapsed 주입 실패 (비치명): %s", _te)
 
@@ -1950,7 +2301,7 @@ class Stage4InterviewRound:
                             "※ 원고에서 과거 사건 언급 시 '며칠 전'/'얼마 전' 같은 표현이 "
                             "위 시간 간격과 일치하는지 확인하세요."
                         )
-                        _director_mc_parts.append("\n".join(_ns4_mc_lines))
+                        _candidate_evidence_parts.append("\n".join(_ns4_mc_lines))
                         logging.info(
                             "[NS-4-S4] Arc 시간 마커 Director 주입: arc_no=%d, prev=%s, cur=%s",
                             _ns4_arc_no,
@@ -1975,18 +2326,18 @@ class Stage4InterviewRound:
                             _recent_scene_kws,
                         )
                         if _sim_adv:
-                            _director_mc_parts.append(_sim_adv)
+                            _candidate_evidence_parts.append(_sim_adv)
                         break  # 첫 번째 유효 후보로 충분
         except Exception as _sim_err:
             logging.debug("[NC-2] 씬 유사도 advisory 실패 (비치명): %s", _sim_err)
 
         _diversity_advisory = self._build_candidate_diversity_advisory(candidates)
         if _diversity_advisory:
-            _director_mc_parts.append(_diversity_advisory)
+            _reference_appendix_parts.append(_diversity_advisory)
 
         # [TF-49b] Preflight advisory → Director에도 전달
         if _preflight_advisory:
-            _director_mc_parts.append(f"🔍 {_preflight_advisory}")
+            _candidate_evidence_parts.append(f"🔍 {_preflight_advisory}")
 
         _vr_warnings_for_director = []
         for _vr_idx, _vr in enumerate(validation_results):
@@ -1995,12 +2346,12 @@ class Stage4InterviewRound:
                 _label = ["A", "B", "C"][_vr_idx] if _vr_idx < 3 else f"{_vr_idx + 1}"
                 _vr_warnings_for_director.append(f"[후보 {_label} Python 감지 경고]\n" + "\n".join(_vr_warns[:30]))
         if _vr_warnings_for_director:
-            _director_mc_parts.append(
+            _candidate_evidence_parts.append(
                 "[V66.3] Python 사전 검증 결과 (Director 참고용)\n" + "\n\n".join(_vr_warnings_for_director)
             )
         # [V69.1] V67 원고 역사 충돌 + 연속성 충돌 경고를 Director에 전달
         if director_feedback and director_feedback.strip():
-            _director_mc_parts.append("🚨 [V69.1] Python 감지된 원고 충돌 경고 (참고용)\n" + director_feedback.strip())
+            _candidate_evidence_parts.append("🚨 [V69.1] Python 감지된 원고 충돌 경고 (참고용)\n" + director_feedback.strip())
         _db = getattr(getattr(self.ctx, "current_project", None), "db", None)
         _reference_only_parts: list[str] = []
         for _db_advisory in (
@@ -2040,16 +2391,27 @@ class Stage4InterviewRound:
             logging.debug(f"[A-3] fix_scope stats fetch 실패 (비치명): {_fs_err}")
         _reference_only_block = self._build_reference_only_block(_reference_only_parts)
         if _reference_only_block:
-            _director_mc_parts.append(_reference_only_block)
+            _reference_appendix_parts.append(_reference_only_block)
         try:
             _guard = getattr(getattr(self.ctx, "sys", None), "guard", None)
             if _guard and hasattr(_guard, "get_director_review_advisory"):
                 _work_review_advisory = str(_guard.get_director_review_advisory() or "").strip()
                 if _work_review_advisory:
-                    _director_mc_parts.append(_work_review_advisory)
+                    _reference_appendix_parts.append(_work_review_advisory)
         except Exception as _e:
             logging.debug("[Stage4] work review advisory 주입 실패: %s", _e)
-        _director_mandatory_context = "\n\n".join(str(x) for x in _director_mc_parts if x is not None)
+        _director_input_packs = {
+            "decision_core": self._format_director_pack("Decision Core", _decision_core_parts),
+            "candidate_evidence": self._format_director_pack("Candidate Evidence", _candidate_evidence_parts),
+            "reference_appendix": self._format_director_pack("Reference Appendix", _reference_appendix_parts),
+        }
+        _director_mandatory_context = self._join_director_pack_parts(
+            [
+                _director_input_packs["decision_core"],
+                _director_input_packs["candidate_evidence"],
+                _director_input_packs["reference_appendix"],
+            ]
+        )
 
         director_result = self.ctx.agents["director"].select_and_judge_ensemble(
             ep_num=next_ep,
@@ -2062,16 +2424,22 @@ class Stage4InterviewRound:
             retry_count=round_num,
             episode_digest=_episode_digest,
             mandatory_context=_director_mandatory_context,
+            decision_core=_director_input_packs["decision_core"],
+            candidate_evidence=_director_input_packs["candidate_evidence"],
+            reference_appendix=_director_input_packs["reference_appendix"],
             prev_manuscripts_text=_prev_manuscripts_text,  # [V67]
             story_context=story_context,  # [V67.1]
         )
+        director_result = self._normalize_director_gate_semantics(director_result)
+        director_result = self._enforce_pass_with_fix_contract(director_result)
         try:
             self.ctx.perf_timer.stop(f"s4_ep{next_ep}_director_r{round_num}")
         except Exception as e:
             logging.debug(f"[PerfTimer] stop director: {e}")
 
         selected = director_result.get("selected", "A")
-        verdict = director_result.get("verdict", "REJECT")
+        director_verdict = director_result.get("director_verdict", director_result.get("original_verdict", "REJECT"))
+        verdict = director_result.get("final_verdict", director_result.get("verdict", "REJECT"))
         score = director_result.get("score", 0)
         try:
             score = int(score)
@@ -2087,7 +2455,7 @@ class Stage4InterviewRound:
             arc_num=round_ctx.arc_data.get("arc_no", 0),
         )
 
-        self.ctx.ui.log(f"   📊 Director 판정: {verdict} (점수: {score}, 선택: 후보 {selected})")
+        self.ctx.ui.log(f"   📊 Director 판정: {verdict} (초기: {director_verdict}, 점수: {score}, 선택: 후보 {selected})")
         self.ctx.ui.log(f"      └─ 사유: {reason[:80]}...")
 
         self._log_attempt_event(
@@ -2095,8 +2463,16 @@ class Stage4InterviewRound:
             next_ep=next_ep,
             round_num=round_num,
             arc_num=round_ctx.arc_data.get("arc_no", 0),
-            message="director_verdict=%s score=%s selected=%s error_category=%s reason=%s",
-            args=(verdict, score, selected, error_category or "-", reason[:120]),
+            message="director_verdict=%s final_verdict=%s gate_basis=%s score=%s selected=%s error_category=%s reason=%s",
+            args=(
+                director_verdict,
+                verdict,
+                director_result.get("gate_basis", "-"),
+                score,
+                selected,
+                error_category or "-",
+                reason[:120],
+            ),
         )
         self.ctx.ui.log(
             "\n   📊 Director 판정 결과:",
@@ -2108,14 +2484,20 @@ class Stage4InterviewRound:
             event_kind="section",
         )
         self.ctx.ui.log(
-            f"      판정: {verdict} | 점수: {score} | 선택: 후보 {selected}",
+            f"      판정: {verdict} | 초기: {director_verdict} | gate: {director_result.get('gate_basis', '-')} | 점수: {score} | 선택: 후보 {selected}",
             stage="stage4",
             component="director_review",
             ep_num=next_ep,
             arc_num=round_ctx.arc_data.get("arc_no", 0),
             round_num=round_num,
             event_kind="result",
-            meta={"verdict": verdict, "score": score, "selected_candidate": selected},
+            meta={
+                "verdict": verdict,
+                "director_verdict": director_verdict,
+                "gate_basis": director_result.get("gate_basis", ""),
+                "score": score,
+                "selected_candidate": selected,
+            },
         )
         self.ctx.ui.log(
             f"      사유: {reason[:120]}",
@@ -2154,6 +2536,12 @@ class Stage4InterviewRound:
             _session_id = resolve_logging_session_id(getattr(self.ctx, "current_project", None))
             _selection_reason = selection_reason
             _selection_advisory = dict(_advisory_summary or {})
+            _gate_semantics = self._build_gate_semantics_payload(director_result)
+            if _gate_semantics:
+                _selection_advisory["gate_semantics"] = _gate_semantics
+            _fix_pack_payload = self._build_fix_pack_payload(director_result)
+            if _fix_pack_payload:
+                _selection_advisory["fix_pack"] = _fix_pack_payload
             if _is_patch:
                 _tag = "patch-fallback" if _is_patch_fallback else "patch"
                 _selection_advisory["patch_context"] = {
@@ -2281,6 +2669,9 @@ class Stage4InterviewRound:
             )
             _session_runtime_advisory = self._build_retry_advisory_digest()
             _session_retry_directives = ""
+            _session_gate_semantics = self._build_gate_semantics_payload(
+                _trace_director_result if isinstance(_trace_director_result, dict) else director_result
+            )
             _current_db = getattr(getattr(self.ctx, "current_project", None), "db", None)
             if _current_db is not None and hasattr(_current_db, "update_director_selection_rationale"):
                 try:
@@ -2391,6 +2782,13 @@ class Stage4InterviewRound:
                     initial_score=score,
                     selection_reason=_session_selection_reason,
                     verdict_reason=_session_verdict_reason,
+                    director_verdict=_session_gate_semantics.get("director_verdict", ""),
+                    gate_basis=_session_gate_semantics.get("gate_basis", ""),
+                    repair_scope=_session_gate_semantics.get("repair_scope", ""),
+                    fix_pack=self._build_fix_pack_payload(
+                        _trace_director_result if isinstance(_trace_director_result, dict) else director_result
+                    ),
+                    retry_budget_axes=dict(getattr(self, "_last_retry_budget_axes", {}) or {}),
                     runtime_advisory=_session_runtime_advisory,
                     retry_directives=_session_retry_directives,
                 )
@@ -2440,6 +2838,9 @@ class Stage4InterviewRound:
         )
         _session_runtime_advisory = str((_reject_result.previous_attempt or {}).get("runtime_advisory", "") or "")
         _session_retry_directives = str((_reject_result.previous_attempt or {}).get("retry_directives", "") or "")
+        _session_gate_semantics = self._build_gate_semantics_payload(
+            _trace_director_result if isinstance(_trace_director_result, dict) else director_result
+        )
         _current_db = getattr(getattr(self.ctx, "current_project", None), "db", None)
         if _current_db is not None and hasattr(_current_db, "update_director_selection_rationale"):
             try:
@@ -2544,6 +2945,13 @@ class Stage4InterviewRound:
                 initial_score=score,
                 selection_reason=_session_selection_reason,
                 verdict_reason=_session_verdict_reason,
+                director_verdict=_session_gate_semantics.get("director_verdict", ""),
+                gate_basis=_session_gate_semantics.get("gate_basis", ""),
+                repair_scope=_session_gate_semantics.get("repair_scope", ""),
+                fix_pack=self._build_fix_pack_payload(
+                    _trace_director_result if isinstance(_trace_director_result, dict) else director_result
+                ),
+                retry_budget_axes=dict(getattr(self, "_last_retry_budget_axes", {}) or {}),
                 runtime_advisory=_session_runtime_advisory,
                 retry_directives=_session_retry_directives,
             )
@@ -3089,6 +3497,12 @@ class Stage4InterviewRound:
                 f"   [A-3] {len(_post_select_conflicts)} post-select conflicts detected -> downgrade to REJECT"
             )
             verdict = "REJECT"
+            director_result = self._apply_director_gate_update(
+                director_result,
+                final_verdict="REJECT",
+                gate_basis="post_select_conflict",
+                repair_scope="partial" if (director_result or {}).get("fix_scope") != "full" else "full",
+            )
             # [TF-49] A-3 다운그레이드 시 error_category를 LOGIC_ERROR로 설정
             # → V75-D/V75-B 에스컬레이션 체인 트리거 (Blueprint 자동 수정)
             error_category = "LOGIC_ERROR"
@@ -3113,6 +3527,10 @@ class Stage4InterviewRound:
                 "selected_strategy_key": _sel_strategy_key,
                 "selection_reason": _selection_reason,
                 "verdict_reason": _verdict_reason,
+                "director_verdict": director_result.get("director_verdict", ""),
+                "final_verdict": director_result.get("final_verdict", verdict),
+                "gate_basis": director_result.get("gate_basis", "post_select_conflict"),
+                "repair_scope": director_result.get("repair_scope", _post_select_fix_scope),
                 "reject_bucket": "post_select_conflict",
                 "score_breakdown": director_result.get("score_breakdown", {}) if isinstance(director_result, dict) else {},
                 "consistency_checklist": director_result.get("consistency_checklist", {})
@@ -3158,7 +3576,7 @@ class Stage4InterviewRound:
         style_guide = round_ctx.style_guide
         _director_mandatory_context = director_mandatory_context
 
-        _current_audit_result = director_result  # [TF-33] 최신 audit 추적
+        _current_audit_result = self._enforce_pass_with_fix_contract(director_result)  # [TF-33] 최신 audit 추적
         _last_patched_ms = None  # [PF-3] 마지막 패치 원고 추적
         _last_patch_trace = {}
         _applied_patch_history: list[str] = []
@@ -3172,15 +3590,30 @@ class Stage4InterviewRound:
                 if isinstance(_current_audit_result, dict):
                     _current_audit_result = dict(_current_audit_result)
                     _current_audit_result.setdefault("verdict", "PASS_WITH_FIX")
+                    _current_audit_result = self._apply_director_gate_update(
+                        _current_audit_result,
+                        final_verdict="REJECT",
+                        gate_basis="empty_feedback_abort",
+                    )
                     _current_audit_result["verdict_reason"] = _empty_feedback_notice
                     _current_audit_result["open_review"] = _empty_feedback_notice
                 break
-            # [TF-33][PF-1] Director fix_scope 기반 수정 전략 라우팅 — 누락 시 점수 기반 폴백
+            _contract = self._evaluate_pass_with_fix_contract(_current_audit_result)
+            if not _contract.get("eligible"):
+                _contract_reason = str(_contract.get("reason", "") or "missing_fix_pack")
+                _contract_notice = (
+                    "[Lane3 Gate] PASS_WITH_FIX loop abort: "
+                    + self._pass_with_fix_contract_message(_contract_reason)
+                )
+                logging.warning("[Lane3 Gate] PASS_WITH_FIX loop abort (%s)", _contract_reason)
+                self.ctx.ui.log(f"   🔀 [Lane3 Gate] {_contract_notice}")
+                if isinstance(_current_audit_result, dict):
+                    _current_audit_result = self._enforce_pass_with_fix_contract(_current_audit_result)
+                director_feedback = f"{director_feedback}\n{_contract_notice}".strip()
+                break
+            _fix_pack = dict(_contract.get("fix_pack") or {})
+            # [TF-33] Director fix_scope 기반 수정 전략 라우팅 — explicit inplace contract only
             _fix_scope = _current_audit_result.get("fix_scope", "") if isinstance(_current_audit_result, dict) else ""
-            if not _fix_scope:
-                _inplace_thresh = int(_threshold("patch_mode.inplace_below", 60))
-                _fix_scope = "inplace" if score >= _inplace_thresh else "full"
-                logging.warning("[PF-1] fix_scope 누락 → score=%d fallback: %s", score, _fix_scope)
             if _fix_scope in ("partial", "full"):
                 self.ctx.ui.log(f"   🔀 [TF-33] fix_scope={_fix_scope!r} → inplace 불가, retry 경로 위임")
                 break  # → REJECT → retry 경로에서 patch/rewrite 처리
@@ -3200,6 +3633,7 @@ class Stage4InterviewRound:
                     director_feedback=_current_fb,
                     attempt_number=_fix_i + 1,
                     style_guide=style_guide,  # [TF-37]
+                    fix_pack=_fix_pack,
                 )
                 _patched_ms = _patched[0].get("manuscript", "") if _patched else ""
                 _patch_trace = dict(getattr(chief_writer, "_last_inplace_patch_trace", {}) or {})
@@ -3208,7 +3642,9 @@ class Stage4InterviewRound:
                         _patch_trace.get("patch_strategy") or _patched[0].get("strategy", "") or "inplace_patch"
                     )
                     if not _patch_trace.get("patch_targets"):
-                        _patch_trace["patch_targets"] = list(_patched[0].get("patch_targets") or [])
+                        _patch_trace["patch_targets"] = list(
+                            _patched[0].get("patch_targets") or _fix_pack.get("patch_targets") or []
+                        )
                 _last_patch_trace = _patch_trace
             except Exception as _e:
                 logging.warning(f"[TF-32-V] inplace 실패: {_e!s:.100}")
@@ -3303,6 +3739,8 @@ class Stage4InterviewRound:
                     prev_manuscripts_text=round_ctx.prev_manuscripts_text,
                     story_context=_re_story_context,
                 )
+                _re_audit = self._normalize_director_gate_semantics(_re_audit)
+                _re_audit = self._enforce_pass_with_fix_contract(_re_audit)
             except Exception:
                 logging.exception("[TF-35] 재심사 예외")
                 break
@@ -3318,13 +3756,22 @@ class Stage4InterviewRound:
             if _re_d == "PASS":
                 if _re_s < quality_gate_score:
                     self.ctx.ui.log(f"   ⚠️ [TF-35] 재심사 PASS이나 score={_re_s} < {quality_gate_score} → patch 종료")
+                    _current_audit_result = self._apply_director_gate_update(
+                        _re_audit,
+                        final_verdict="REJECT",
+                        gate_basis="quality_floor_fail",
+                    )
                     break
                 _current_ms = _patched_ms
                 _final_audit = dict(director_result) if isinstance(director_result, dict) else {}
                 if isinstance(_re_audit, dict):
                     _final_audit.update(_re_audit)
                 _final_audit["score"] = _re_s
-                director_result = _final_audit
+                director_result = self._apply_director_gate_update(
+                    _final_audit,
+                    final_verdict="PASS",
+                    gate_basis="patch_reaudit_pass",
+                )
                 # [TF-36] S4-010: 재심사 결과의 state_updates 반영 (merge, [TF-4T-C] 완전 교체 방지)
                 _re_su = _re_audit.get("state_updates")
                 if isinstance(_re_su, dict) and _re_su:
@@ -3340,12 +3787,21 @@ class Stage4InterviewRound:
                     final_state_updates = {**final_state_updates, **_re_su}
                 _current_fb = self._extract_fix_feedback(_re_audit) or _current_fb
             else:  # REJECT
-                _current_audit_result = _re_audit  # 재심사 verdict 반영 (PF-3 조건 판정용)
+                _current_audit_result = self._apply_director_gate_update(
+                    _re_audit,
+                    final_verdict="REJECT",
+                    gate_basis="patch_reaudit_fail",
+                )
                 break
 
         if _fix_ok:
             final_manuscript = _current_ms
             verdict = "PASS"
+            director_result = self._apply_director_gate_update(
+                director_result,
+                final_verdict="PASS",
+                gate_basis="patch_reaudit_pass",
+            )
             self.ctx.ui.log("   ✅ [TF-32-V] 원고 수정 완료 → PASS 확정")
         else:
             verdict = "REJECT"
@@ -3363,6 +3819,10 @@ class Stage4InterviewRound:
                 self.ctx.ui.log(f"   📈 [PF-3] PASS_WITH_FIX 소진 → 패치본 채택 (score={_last_re_score})")
             if isinstance(_current_audit_result, dict):
                 for _key in (
+                    "director_verdict",
+                    "final_verdict",
+                    "gate_basis",
+                    "repair_scope",
                     "selection_reason",
                     "verdict_reason",
                     "open_review",
@@ -3384,6 +3844,16 @@ class Stage4InterviewRound:
             _last_fs = _current_audit_result.get("fix_scope", "") if isinstance(_current_audit_result, dict) else ""
             if _last_fs:
                 director_result["fix_scope"] = _last_fs
+            director_result = self._apply_director_gate_update(
+                director_result,
+                final_verdict="REJECT",
+                gate_basis=(
+                    _current_audit_result.get("gate_basis", "")
+                    if isinstance(_current_audit_result, dict)
+                    else "patch_reaudit_fail"
+                )
+                or "patch_reaudit_fail",
+            )
             director_feedback += "\n[TF-32-V] PASS_WITH_FIX 수정 실패 → REJECT"
             self.ctx.ui.log("   ❌ [TF-32-V] 원고 수정 실패 → REJECT 전환")
 
@@ -3422,6 +3892,11 @@ class Stage4InterviewRound:
         if verdict == "PASS" and score < _quality_gate_score:
             self.ctx.ui.log(f"   [QualityGate] PASS -> score={score} < {_quality_gate_score}; downgrade to REJECT")
             verdict = "REJECT"
+            director_result = self._apply_director_gate_update(
+                director_result,
+                final_verdict="REJECT",
+                gate_basis="quality_floor_fail",
+            )
             director_feedback += (
                 f"\n[Quality Gate] Director PASS but score {score} is below {_quality_gate_score}. "
                 "Retry after improvement."
@@ -3485,6 +3960,9 @@ class Stage4InterviewRound:
                 final_state_updates["_director_quality_labels"] = {
                     "score": final_score,
                     "verdict": verdict,
+                    "director_verdict": director_result.get("director_verdict", ""),
+                    "gate_basis": director_result.get("gate_basis", ""),
+                    "repair_scope": director_result.get("repair_scope", "none"),
                     "selection_reason": director_result.get("selection_reason", ""),
                     "open_review": director_result.get("open_review", ""),
                     "score_breakdown": director_result.get("score_breakdown", {}) or {},
@@ -3524,7 +4002,12 @@ class Stage4InterviewRound:
                     arc=round_ctx.arc_data.get("arc_no", 0),
                     verdict=verdict,
                     fix_scope=director_result.get("fix_scope", "") if isinstance(director_result, dict) else None,
-                    advisory_flags=getattr(self, "_last_advisory_summary", None),
+                    advisory_flags={
+                        **(dict(getattr(self, "_last_advisory_summary", None) or {})),
+                        "gate_semantics": self._build_gate_semantics_payload(director_result),
+                        "fix_pack": self._build_fix_pack_payload(director_result),
+                        "retry_budget_axes": dict(getattr(self, "_last_retry_budget_axes", {}) or {}),
+                    },
                     model=getattr(getattr(round_ctx, "chief_writer", None), "model_tier", None),
                     patch_strategy=str(_patch_trace.get("patch_strategy", "") or ""),
                     structural_attempted=bool(_patch_trace.get("structural_attempted", False)),
@@ -3626,6 +4109,7 @@ class Stage4InterviewRound:
             )
             _resolved_fix_scope = str(director_result.get("fix_scope", "") or "")
             _resolved_fix_scope_reasoning = str(director_result.get("fix_scope_reasoning", "") or "")
+            _resolved_fix_pack = self._normalize_fix_pack(director_result.get("fix_pack"))
             if self._is_continuity_replay_reject(
                 director_result=director_result,
                 director_feedback=director_feedback,
@@ -3645,6 +4129,23 @@ class Stage4InterviewRound:
                     if _resolved_fix_scope_reasoning
                     else _continuity_notice
                 )
+
+            if _resolved_fix_scope == "inplace":
+                _fix_pack_contract = self._evaluate_fix_pack_contract(_resolved_fix_pack)
+                if not _fix_pack_contract.get("ready"):
+                    _resolved_fix_scope = "partial"
+                    _contract_reason = str(_fix_pack_contract.get("reason", "") or "missing_fix_pack")
+                    _contract_notice = (
+                        "[Lane3 Gate] REJECT retry widened to partial: "
+                        + self._pass_with_fix_contract_message(_contract_reason)
+                    )
+                    if _contract_notice not in director_feedback:
+                        director_feedback = _contract_notice + "\n" + director_feedback
+                    _resolved_fix_scope_reasoning = (
+                        f"{_resolved_fix_scope_reasoning}\n{_contract_notice}".strip()
+                        if _resolved_fix_scope_reasoning
+                        else _contract_notice
+                    )
 
             _seed_manuscript = (director_result.get("selected_candidate") or {}).get(
                 "manuscript", ""
@@ -3698,6 +4199,10 @@ class Stage4InterviewRound:
                 "score_breakdown": director_result.get("score_breakdown", {}),
                 "selection_reason": director_result.get("selection_reason", ""),
                 "verdict_reason": director_result.get("verdict_reason", ""),
+                "director_verdict": director_result.get("director_verdict", ""),
+                "final_verdict": director_result.get("final_verdict", "REJECT"),
+                "gate_basis": director_result.get("gate_basis", ""),
+                "repair_scope": director_result.get("repair_scope", "none"),
                 "validation_warnings": self._collect_validation_warning_lines(validation_results, limit=20),
                 "reject_bucket": _reject_bucket,
                 "consistency_checklist": director_result.get("consistency_checklist", {}),
@@ -3706,6 +4211,7 @@ class Stage4InterviewRound:
                 "state_updates": director_result.get("state_updates", {}),  # [TF-R4-S4-01] 폴백 시 HUD 복구용
                 "fix_scope": _resolved_fix_scope,  # [TF-23] Director 판단 수정 범위
                 "fix_scope_reasoning": _resolved_fix_scope_reasoning,  # [V73] 수정 범위 근거
+                "fix_pack": _resolved_fix_pack,
                 "open_review": director_result.get("open_review", ""),  # [TF-29] 자유 리뷰 보존
                 "error_category": error_category or director_result.get("error_category", ""),  # [A-4] 에러 카테고리 보존
                 "contradiction_types": director_result.get("contradiction_types", []),  # [A-4] 모순 유형 보존
@@ -3717,6 +4223,14 @@ class Stage4InterviewRound:
                 "retry_directives": _feedback_provenance["retry_directives"],
                 "prior_attempts": self._inherit_attempt_history(previous_attempt),
             }
+            _next_strategy_budget = "reduced" if _reject_bucket in {"quality_issue", "constraint_violation"} and _resolved_fix_scope != "full" else "full"
+            previous_attempt["retry_budget_axes"] = self._set_retry_budget_axes(
+                round_num=round_num + 1,
+                repair_budget="patch_revision" if _resolved_fix_scope in {"inplace", "partial"} else "rewrite_regenerate",
+                strategy_budget=_next_strategy_budget,
+                reject_bucket=_reject_bucket,
+                previous_attempt=previous_attempt,
+            )
             try:
                 self.ctx.current_project.db.save_cost_record(
                     session_id=resolve_logging_session_id(
@@ -3757,7 +4271,12 @@ class Stage4InterviewRound:
             verdict="REJECT",
             reject_reason=director_feedback,
             fix_scope=_resolved_fix_scope if verdict == "REJECT" else (director_result.get("fix_scope", "") if isinstance(director_result, dict) else None),
-            advisory_flags=getattr(self, "_last_advisory_summary", None),
+            advisory_flags={
+                **(dict(getattr(self, "_last_advisory_summary", None) or {})),
+                "gate_semantics": self._build_gate_semantics_payload(director_result),
+                "fix_pack": self._build_fix_pack_payload(director_result),
+                "retry_budget_axes": dict(getattr(self, "_last_retry_budget_axes", {}) or {}),
+            },
             model=getattr(getattr(round_ctx, "chief_writer", None), "model_tier", None),
             candidate_key=_candidate_key,
             artifact_payload=_sel_candidate.get("manuscript", "") or _prev_manuscript,
@@ -3867,6 +4386,11 @@ class Stage4InterviewRound:
         if round_num == 0:
             self._last_strategy_budget = "full"
             self._last_strategy_count = 3
+            self._set_retry_budget_axes(
+                round_num=round_num,
+                repair_budget="ensemble_generation",
+                strategy_budget="full",
+            )
             candidates = chief_writer.generate_ensemble(**_common_writer_kwargs)
         else:
             # [TF-23] 3단계 분기: InPlace → Patch → Rewrite (Director 판단 우선)
@@ -3875,6 +4399,9 @@ class Stage4InterviewRound:
             except (ValueError, TypeError):
                 _prev_score = 0
             _fix_scope = previous_attempt.get("fix_scope", "") if previous_attempt else ""
+            _fix_pack_contract = self._evaluate_fix_pack_contract(
+                previous_attempt.get("fix_pack") if isinstance(previous_attempt, dict) else None
+            )
             _reject_bucket = str(previous_attempt.get("reject_bucket", "") or "") if previous_attempt else ""
             _selected_strategy_key = (
                 str(previous_attempt.get("selected_strategy_key", "") or previous_attempt.get("selected_strategy", ""))
@@ -3890,12 +4417,13 @@ class Stage4InterviewRound:
                 and round_num <= 1
             )
 
-            # [TF-23] Director 판단 우선, 점수 fallback
+            # [Lane3] explicit local contract only — score fallback removed
             _use_inplace = (
                 _patch_enabled
                 and _prev_manuscript
                 and not _force_patch
-                and (_fix_scope == "inplace" or (not _fix_scope and _prev_score >= PatchModeThresholds.INPLACE))
+                and _fix_scope == "inplace"
+                and bool(_fix_pack_contract.get("ready"))
             )
             _use_patch = (
                 _force_patch
@@ -3904,12 +4432,19 @@ class Stage4InterviewRound:
                     and _prev_manuscript
                     and (
                         _fix_scope in ("inplace", "partial")  # inplace 실패 시 patch 폴백
-                        or (not _fix_scope and _prev_score >= _PATCH_REWRITE_THRESHOLD)
+                        or (_reject_bucket == "post_select_conflict" and _fix_scope != "full")
                     )
                 )
             )
 
             candidates = None  # [TF-23] 분기 전 초기화
+
+            if _fix_scope == "inplace" and not _fix_pack_contract.get("ready"):
+                logging.info(
+                    "[Lane3 Gate] retry inplace skipped: %s",
+                    self._pass_with_fix_contract_message(str(_fix_pack_contract.get("reason", "") or "missing_fix_pack")),
+                )
+                self.ctx.ui.log("   🔀 [Lane3 Gate] explicit Fix Pack 없는 inplace retry 금지 → patch/rewrite로 이관")
 
             # [PF-4] inplace 성공률 로깅 (진단용, 스킵하지 않음 — 디렉터 주권주의)
             if _use_inplace:
@@ -3923,11 +4458,19 @@ class Stage4InterviewRound:
                 self.ctx.ui.log(f"   🔧 [TF-23] InPlace: fix_scope={_fix_scope!r}, score={_prev_score}")
                 self._last_strategy_budget = "inplace"
                 self._last_strategy_count = 1
+                self._set_retry_budget_axes(
+                    round_num=round_num,
+                    repair_budget="inplace_local_repair",
+                    strategy_budget="inplace",
+                    reject_bucket=_reject_bucket,
+                    previous_attempt=previous_attempt,
+                )
                 candidates = chief_writer.inplace_patch(
                     original_manuscript=_prev_manuscript,
                     director_feedback=director_feedback,
                     attempt_number=round_num + 1,
                     style_guide=style_guide,  # [TF-37]
+                    fix_pack=dict(_fix_pack_contract.get("fix_pack") or {}),
                 )
                 # [TF-47] 빈 manuscript 후보도 실패로 간주
                 if not candidates or not any(c.get("manuscript", "").strip() for c in candidates):
@@ -3962,6 +4505,13 @@ class Stage4InterviewRound:
                 self.ctx.ui.log(f"   🔧 [Phase 3-5B] 패치 모드: score={_prev_score}, 원본 보존 수정")
                 self._last_strategy_budget = "patch"
                 self._last_strategy_count = 1
+                self._set_retry_budget_axes(
+                    round_num=round_num,
+                    repair_budget="patch_revision",
+                    strategy_budget="patch",
+                    reject_bucket=_reject_bucket,
+                    previous_attempt=previous_attempt,
+                )
                 candidates = chief_writer.patch_with_feedback(
                     **_common_writer_kwargs,
                     original_manuscript=_prev_manuscript,
@@ -3979,6 +4529,13 @@ class Stage4InterviewRound:
                     )
                     self._last_strategy_budget = _strategy_budget
                     self._last_strategy_count = _strategy_count
+                    self._set_retry_budget_axes(
+                        round_num=round_num,
+                        repair_budget="rewrite_regenerate",
+                        strategy_budget=_strategy_budget,
+                        reject_bucket=_reject_bucket,
+                        previous_attempt=previous_attempt,
+                    )
                     candidates = chief_writer.regenerate_with_feedback(
                         **_regen_kwargs,
                         previous_attempt=previous_attempt,
@@ -3994,6 +4551,13 @@ class Stage4InterviewRound:
                 )
                 self._last_strategy_budget = _strategy_budget
                 self._last_strategy_count = _strategy_count
+                self._set_retry_budget_axes(
+                    round_num=round_num,
+                    repair_budget="rewrite_regenerate",
+                    strategy_budget=_strategy_budget,
+                    reject_bucket=_reject_bucket,
+                    previous_attempt=previous_attempt,
+                )
                 candidates = chief_writer.regenerate_with_feedback(
                     **_regen_kwargs,
                     previous_attempt=previous_attempt,
@@ -4970,6 +5534,30 @@ class Stage4InterviewRound:
             return ""
 
         parts: list[str] = []
+        fix_pack = self._normalize_fix_pack(director_result.get("fix_pack"))
+        if fix_pack:
+            fix_pack_lines = []
+            target_kind = str(fix_pack.get("target_kind", "") or "").strip()
+            if target_kind:
+                fix_pack_lines.append(f"target_kind={target_kind}")
+            patch_targets = [str(item).strip() for item in (fix_pack.get("patch_targets") or []) if str(item).strip()]
+            if patch_targets:
+                fix_pack_lines.append("patch_targets=" + ", ".join(patch_targets[:6]))
+            must_fix = [str(item).strip() for item in (fix_pack.get("must_fix") or []) if str(item).strip()]
+            if must_fix:
+                fix_pack_lines.append("must_fix:\n" + "\n".join(f"- {item}" for item in must_fix[:5]))
+            do_not_regress = [str(item).strip() for item in (fix_pack.get("do_not_regress") or []) if str(item).strip()]
+            if do_not_regress:
+                fix_pack_lines.append("do_not_regress:\n" + "\n".join(f"- {item}" for item in do_not_regress[:5]))
+            success_condition = str(fix_pack.get("success_condition", "") or "").strip()
+            if success_condition:
+                fix_pack_lines.append("success_condition=" + success_condition[:220])
+            evidence_summary = str(fix_pack.get("evidence_summary", "") or "").strip()
+            if evidence_summary:
+                fix_pack_lines.append("evidence_summary=" + evidence_summary[:220])
+            if fix_pack_lines:
+                parts.append("[Fix Pack]\n" + "\n".join(fix_pack_lines))
+
         action_items = [str(a).strip() for a in (director_result.get("action_items") or []) if str(a).strip()]
         if action_items:
             parts.append("[핵심 수정 지시]\n" + "\n".join(action_items[:5]))
@@ -5019,6 +5607,10 @@ class Stage4InterviewRound:
         fix_scope = str(director_result.get("fix_scope", "") or "").strip()
         if fix_scope:
             summary_parts.append(f"scope={fix_scope}")
+        fix_pack = Stage4InterviewRound._normalize_fix_pack(director_result.get("fix_pack"))
+        target_kind = str(fix_pack.get("target_kind", "") or "").strip()
+        if target_kind:
+            summary_parts.append(f"target_kind={target_kind}")
         fix_scope_reasoning = str(director_result.get("fix_scope_reasoning", "") or "").strip()
         if fix_scope_reasoning:
             summary_parts.append(f"reason={fix_scope_reasoning[:120]}")
@@ -5029,6 +5621,8 @@ class Stage4InterviewRound:
         if compact_feedback:
             summary_parts.append(f"feedback={compact_feedback[:140]}")
         patch_targets = [str(item).strip() for item in (patch_trace.get("patch_targets") or []) if str(item).strip()]
+        if not patch_targets:
+            patch_targets = [str(item).strip() for item in (fix_pack.get("patch_targets") or []) if str(item).strip()]
         if patch_targets:
             summary_parts.append(f"targets={' / '.join(patch_targets[:3])}")
         patch_strategy = str(patch_trace.get("patch_strategy", "") or "").strip()
@@ -5153,9 +5747,12 @@ class Stage4InterviewRound:
             _round_metrics = self._get_round_metrics_delta()
             _selection_reason = (director_result.get("selection_reason") or "")[:500]
             _verdict_reason = (director_result.get("verdict_reason") or _selection_reason)[:500]
+            _gate_semantics = self._build_gate_semantics_payload(director_result)
+            _fix_pack = self._build_fix_pack_payload(director_result)
             _patch_trace = dict(patch_trace or {})
             _feedback_provenance = dict(feedback_provenance or {})
             _patch_targets = _patch_trace.get("patch_targets") or []
+            _retry_budget_axes = dict(getattr(self, "_last_retry_budget_axes", {}) or {})
             _session_id = resolve_logging_session_id(getattr(self.ctx, "current_project", None))
             _attempt_key = str(
                 attempt_key
@@ -5188,8 +5785,14 @@ class Stage4InterviewRound:
                 "score": _initial_score,
                 "initial_verdict": _initial_verdict,
                 "initial_score": _initial_score,
+                "director_verdict": _gate_semantics.get("director_verdict", _initial_verdict),
                 "final_verdict": _final_verdict,
                 "final_score": _final_score,
+                "gate_basis": _gate_semantics.get("gate_basis", ""),
+                "repair_scope": _gate_semantics.get(
+                    "repair_scope",
+                    self._normalize_repair_scope_value(director_result.get("fix_scope", "")),
+                ),
                 "selected": director_result.get("selected", ""),
                 "strategy": _sel_candidate.get("strategy", "") or _sel_candidate.get("strategy_name", ""),
                 "model": model,
@@ -5220,6 +5823,7 @@ class Stage4InterviewRound:
                     "strategy_budget": getattr(self, "_last_strategy_budget", "full"),
                     "strategy_count": getattr(self, "_last_strategy_count", 0),
                     "reject_bucket": reject_bucket,
+                    "retry_budget_axes": _retry_budget_axes,
                 },
                 "patch_trace": {
                     "patch_strategy": str(_patch_trace.get("patch_strategy", "") or ""),
@@ -5229,6 +5833,7 @@ class Stage4InterviewRound:
                     "focus": str(_patch_trace.get("focus", "") or ""),
                     "structural_attempted": bool(_patch_trace.get("structural_attempted", False)),
                 },
+                "fix_pack": _fix_pack,
                 "warnings": (_final_warnings[:20] if _final_verdict in ("PASS", "PASS_WITH_FIX") else _candidate_warnings[:20]),
                 "final_warnings": _final_warnings[:20],
                 "candidate_warnings": _candidate_warnings[:20],
@@ -5315,6 +5920,16 @@ class Stage4InterviewRound:
 
         if getattr(self.ctx, "pass_rate_monitor", None):
             try:
+                _gate_semantics = {}
+                _fix_pack = {}
+                _retry_budget_axes = {}
+                if isinstance(advisory_flags, dict):
+                    if isinstance(advisory_flags.get("gate_semantics"), dict):
+                        _gate_semantics = dict(advisory_flags.get("gate_semantics") or {})
+                    if isinstance(advisory_flags.get("fix_pack"), dict):
+                        _fix_pack = dict(advisory_flags.get("fix_pack") or {})
+                    if isinstance(advisory_flags.get("retry_budget_axes"), dict):
+                        _retry_budget_axes = dict(advisory_flags.get("retry_budget_axes") or {})
                 self.ctx.pass_rate_monitor.record_attempt(
                     stage=4,
                     episode=episode,
@@ -5330,6 +5945,11 @@ class Stage4InterviewRound:
                     patch_fallback=patch_fallback,
                     attempt_key=attempt_key,
                     final_verdict=str(verdict or ("PASS" if success else "REJECT")),
+                    director_verdict=str(_gate_semantics.get("director_verdict", "") or ""),
+                    gate_basis=str(_gate_semantics.get("gate_basis", "") or ""),
+                    repair_scope=str(_gate_semantics.get("repair_scope", "") or ""),
+                    fix_pack=_fix_pack,
+                    retry_budget_axes=_retry_budget_axes,
                     patch_strategy=str(patch_strategy or ""),
                     structural_attempted=bool(structural_attempted),
                     error_category=str(error_category or ""),

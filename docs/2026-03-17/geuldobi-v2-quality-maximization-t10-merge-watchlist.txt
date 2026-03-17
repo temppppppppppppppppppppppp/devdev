@@ -1,0 +1,165 @@
+Geuldobi V2 Quality Maximization T10 Merge Watchlist
+
+Date: 2026-03-17
+Status: raw watchlist
+Terminal: T10
+Mode: ROL 전역 전체 전수조사만
+Output Path: docs/2026-03-17/geuldobi-v2-quality-maximization-t10-merge-watchlist.txt
+
+Authorities:
+- AGENTS.md
+- docs/implementation/system-order-init-harness.md
+- docs/implementation/system-full-survey-execution-harness.md
+- docs/implementation/codebase-global-survey-coverage-contract.md
+- docs/implementation/deep-global-integrity-survey-harness.md
+- docs/implementation/document-3pass-audit-harness.md
+- docs/implementation/evidence-triangulation-contract.md
+- docs/implementation/integrity-confidence-scoring-contract.md
+- docs/2026-03-17/geuldobi-v2-quality-maximization-roadmap-triage.md
+- docs/2026-03-17/geuldobi-v2-quality-maximization-full-survey-audit-order.md
+- docs/2026-03-17/geuldobi-v2-quality-maximization-terminal-prompt-pack.md
+
+Scope:
+- T10 merge coordination only
+- survey-only
+- no code edits
+- no execution SSOT creation
+- no roadmap creation
+- no final survey save from this file alone
+
+Baseline:
+- baseline commit: `2352b26a293ac330a0ff24da320363f9abdbbba1`
+- docs/temp status: only `docs/temp/README.md` present; no active temp execution queue
+- current worktree remains dirty across lane1~3 code/tests/docs, runtime log, and new survey docs; preserve as-is
+- `docs/roadmap-v2.md` remains seed-only and is not used here as authority for findings
+
+Worker Artifact Inventory:
+- present:
+  - `docs/2026-03-17/geuldobi-v2-quality-maximization-t01-topology-evidence.txt`
+  - `docs/2026-03-17/geuldobi-v2-quality-maximization-t02-runtime-spine-evidence.txt`
+  - `docs/2026-03-17/geuldobi-v2-quality-maximization-t03-upstream-design-evidence.txt`
+  - `docs/2026-03-17/geuldobi-v2-quality-maximization-t04-cw-input-evidence.txt`
+  - `docs/2026-03-17/geuldobi-v2-quality-maximization-t05-director-repair-evidence.txt`
+  - `docs/2026-03-17/geuldobi-v2-quality-maximization-t06-persistence-evidence.txt`
+  - `docs/2026-03-17/geuldobi-v2-quality-maximization-t07-operator-surface-evidence.txt`
+  - `docs/2026-03-17/geuldobi-v2-quality-maximization-t08-regression-tooling-evidence.txt`
+  - `docs/2026-03-17/geuldobi-v2-quality-maximization-t09-contracts-cost-evidence.txt`
+- missing: none from `T01` to `T09`
+- interpretation:
+  - worker-evidence absence is no longer a blocker
+  - the bundle is now ready for merged survey drafting
+  - final confidence is still not scoreable as a governing artifact until the merged survey bundle is written and 3-pass audited
+
+Facts:
+- The triage doc's `already-landed` lane1~3 items should remain validation targets, not fresh invention items.
+- T03 and T04 both point to upstream-intent survival and context-budget accounting as still-open process questions after lane1.
+- T05, T06, and T07 all point to the same cross-cut risk: richer lane2/3 semantics are present in code and some raw sinks, but downstream durable/operator-visible surfaces may still collapse them toward `final_verdict/final_score`.
+- T09 found live contract drift in config and prompt authority:
+  - `smart_retrieval.slot_max_chars_default`: YAML `3000` vs code/test `1500`
+  - `context.mandatory_context_max`: YAML `400000` vs Stage 4 fallback `80000`
+  - Director prompt authority split between YAML/PromptLoader and legacy inline constants
+  - validation authority split between `config/settings/validation.yaml` and `config/settings.json`
+- T02 and T01 both found runtime/control-plane authority ambiguity:
+  - public control plane is effectively Mode-B-centric
+  - Mode-A looks compatibility-heavy
+  - root `main.js`, Lite/Test runtime lanes, and direct maintenance utilities can still confuse authority boundaries
+- T08 found verification-shape gaps:
+  - the highest proof lane is expensive and mutation-heavy
+  - `run_pytest_lowmem.py` is tested but not inside the shared validation-tier contract
+  - `ops_validator.py` is governance-prescribed but not strongly test-backed
+
+Merge-Ready Watchpoints:
+- Watchpoint 1: upstream provenance and context-budget contract
+  - sources: `T03`, `T04`, `T09`
+  - merged concern:
+    - Stage 2/3/4 handoff still lacks Pack-C-grade `present -> survived -> dropped_at` provenance
+    - Stage 2/3 combined semantic/context budgets can drift beyond local plan caps without a single final drop ledger
+    - CW-side truncation remains partly contract-less and partly literal
+- Watchpoint 2: lane2/3 semantic durability versus operator collapse
+  - sources: `T05`, `T06`, `T07`
+  - merged concern:
+    - `director_verdict`, `gate_basis`, `repair_scope`, `retry_budget_axes`, and `fix_pack` exist in code paths
+    - live durable artifacts and operator surfaces may still under-expose them
+    - pass-rate and downstream summaries still appear biased toward terminal verdict/score
+- Watchpoint 3: prompt/config authority drift
+  - sources: `T09`, `T04`, `T05`
+  - merged concern:
+    - YAML, fallback literals, inline prompt constants, and JSON settings are not yet one clean authority graph
+    - this can undermine claims about long-context policy, Director prompt semantics, and retrieval-slot budgets
+- Watchpoint 4: runtime/control-plane split and maintenance-path exceptions
+  - sources: `T01`, `T02`, `T07`, `T08`
+  - merged concern:
+    - Mode B is the public path, but Mode A compatibility paths remain
+    - Lite/Test runtime lanes and direct root utilities can drift from the main runtime contract
+    - early workspace-level boot logs and later project-local logs split operator truth
+- Watchpoint 5: proof and verification contract gaps
+  - sources: `T08`, `T06`, `T07`
+  - merged concern:
+    - evidence exists, but the cheapest repeatable proof path for several `keep` themes is still unclear
+    - governance tooling and runner scripts have weaker regression backing than core stage logic
+- Watchpoint 6: long-run degradation telemetry insufficiency
+  - sources: `T09`, `T06`, `T04`
+  - merged concern:
+    - Pack-E-grade telemetry for tier transitions, eviction triggers, digest source type, and compression counts is not yet clearly unified in one durable sink
+
+Candidate Contradictions Requiring Closure In The Merged Survey:
+- `config/prompts/director.yaml` and prompt-loader authority versus `modules/domain/agents/director_prompts.py` inline constants
+- `config/models.yaml` / `validation.yaml` / `settings.json` / hard-coded fallbacks disagreeing on budget and threshold semantics
+- rich lane2/3 semantics present at raw sink level versus thin verdict-centric operator and summary surfaces
+- saved `director_selections` or snapshot summaries being mistaken for final Stage 4 authority despite T06 showing post-fix truth can live elsewhere
+- T04 runtime evidence being stronger in `projects/0_260316` than in `projects/test_project`, limiting claims of uniform observability coverage
+
+Likely Action-Bearing Clusters:
+- `context-provenance-and-budget-contract`
+  - likely fed by `T03 + T04 + T09`
+- `gate-repair-observability-chain`
+  - likely fed by `T05 + T06 + T07`
+- `runtime-control-plane-authority-hygiene`
+  - likely fed by `T01 + T02 + T07 + T09`
+- `verification-proof-matrix`
+  - likely fed by `T08 + T06 + T07`
+- `cost-and-long-run-telemetry-contract`
+  - likely fed by `T09 + T06 + T08`
+
+Current Merge Blockers:
+- no worker-evidence blocker remains
+- blockers now are synthesis blockers:
+  - no canonical merged master survey doc yet
+  - no evidence manifest yet
+  - no cross-cut integrity matrix yet
+  - no uncertainty/contradiction ledger yet
+  - no 3-pass audit yet
+  - no confidence scoring pass against the merged bundle yet
+
+Targeted Delta-Read Priorities:
+- Priority 1: `T06 + T07`
+  - close whether richer lane2/3 semantics survive all the way from raw sinks to operator-visible truth surfaces
+  - confirm whether final-authority consumers still read stale snapshot surfaces such as `director_selections` or summary artifacts
+- Priority 2: `T09 + T05`
+  - close whether any live Director path can still drift through stale inline prompt authority or stale fallback thresholds
+  - confirm whether Pack-B semantics are live-run durable, not only unit-test durable
+- Priority 3: `T04 + T03`
+  - close Pack-C provenance: which Stage 2/3 fields must survive into Stage 4 and exactly where they currently drop
+- Priority 4: `T08`
+  - propose the cheapest non-mutating or low-mutating proof path per `keep` theme so merged-survey claims are testable
+- Priority 5: `T02 + T01`
+  - narrow whether Lite/Test/runtime-control-plane splits are active supported lanes or compatibility residue
+
+T10 Next Internal Steps:
+- Step 1: draft the canonical merged master survey from T01~T09 evidence
+- Step 2: draft the evidence manifest
+- Step 3: draft the cross-cut integrity matrix
+- Step 4: draft the uncertainty and contradiction ledger
+- Step 5: run 3-pass audit on the merged survey bundle
+- Step 6: only after that, decide whether action-bearing areas justify execution SSOT creation
+
+Execution-Doc Mapping:
+- none emitted from this watchlist
+- no execution SSOT or roadmap may be opened from this file alone
+- any action-bearing mapping must wait for the merged survey bundle plus 3-pass audit and confidence >= 95
+
+Confidence / Stop-Line:
+- operator confidence in this refreshed raw watchlist as a coordination artifact: 97%
+- this confidence applies to the watchlist itself, not to the unsaved merged survey bundle
+- the bundle is now evidence-ready for synthesis, but still below final-save readiness because the required merged artifacts do not yet exist
+- stop here at merge-watchlist refresh; do not claim final survey closure or execution readiness from this file alone

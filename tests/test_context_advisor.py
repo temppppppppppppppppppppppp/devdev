@@ -1,7 +1,15 @@
 """Unit tests for ContextAdvisor (SC-1)."""
 
 from modules.core.constants import GenreTypes
-from modules.core.context_advisor import ContextAdvisor, ContextBudgetTracker, RetrievalSlot, RetrievalSources
+from modules.core.context_advisor import (
+    ContextAdvisor,
+    ContextBudgetTracker,
+    RetrievalPlan,
+    RetrievalSlot,
+    RetrievalSources,
+    build_context_budget_ledger,
+    build_context_provenance_ledger,
+)
 
 
 def _make_enabled_advisor(*, llm_enricher=None):
@@ -117,6 +125,32 @@ def test_stage4_plan_accepts_scene_breakdown_dict():
     scene_slots = [slot for slot in plan.slots if slot.category == "scene_context"]
     assert scene_slots
     assert "장면1" in scene_slots[0].query
+
+
+def test_stage4_plan_includes_work_focus_slots_and_stage4_prefix():
+    advisor = _make_enabled_advisor()
+    plan = advisor.plan_stage4_retrieval(
+        arc_data={"state_changes": {}},
+        blueprint={"scene_breakdown": [{"goal": "연홍과 재회한다"}]},
+        prev_ending="소꿉친구 관계가 흔들렸다",
+        current_ep=11,
+        npc_roster=["주인공", "연홍"],
+        work_focus={
+            "tracking_slots": ["소꿉친구 관계선"],
+            "mandatory_scene_engines": ["관계 반전"],
+            "registry_profiles": [{"name": "relationship_registry", "purpose": "오래된 인연 변화 추적"}],
+        },
+    )
+
+    categories = {slot.category for slot in plan.slots}
+    assert "work_tracking_slot_1" in categories
+    assert "work_scene_engine_1" in categories
+    assert "work_registry_1" in categories
+
+    slot_map = {slot.category: slot for slot in plan.slots}
+    assert slot_map["work_tracking_slot_1"].source == RetrievalSources.DB_NPC_RELATIONSHIP
+    assert slot_map["work_tracking_slot_1"].query.startswith("stage4 작품 tracking slot")
+    assert slot_map["work_registry_1"].query.startswith("stage4 registry profile")
 
 
 def test_director_plan_uses_npc_mentions_from_manuscript():
@@ -331,6 +365,54 @@ def test_budget_tracker_reports_and_targets():
     targets = tracker.get_compression_targets()
     assert targets
     assert targets[0] == "b"
+
+
+def test_context_provenance_ledger_tracks_survival_and_drop_reason():
+    plan = RetrievalPlan(
+        stage="stage4",
+        episode_num=9,
+        slots=[
+            RetrievalSlot(category="work_relationship_context", query="rel", source=RetrievalSources.DB_NPC_RELATIONSHIP),
+            RetrievalSlot(category="scene_context", query="scene", source=RetrievalSources.VEC_MEMORY),
+        ],
+        total_budget_chars=1200,
+    )
+
+    ledger = build_context_provenance_ledger(
+        stage="stage4",
+        retrieval_plan=plan,
+        work_focus={"tracking_slots": ["핵심 배우 라인"]},
+        source_counts={"db_npc_relationship": 1, "vec_memory": 1},
+        coverage_warnings=["missing_relation_slice"],
+        work_slot_summary_present=True,
+        work_slot_summary_included=False,
+        relation_slice_included=False,
+        stage_context_chars=950,
+    )
+
+    assert ledger["source_pack"] == "stage4"
+    assert "work_slot_summary" in ledger["stage_present"]
+    assert "relation_slice" in ledger["stage_present"]
+    assert ledger["dropped_at"] == "stage4"
+    assert ledger["drop_reason"] == ["missing_relation_slice"]
+
+
+def test_context_budget_ledger_tracks_caps_and_trim_state():
+    ledger = build_context_budget_ledger(
+        stage="stage4",
+        configured_cap=900,
+        fallback_cap=400000,
+        effective_cap=900,
+        consumed_chars=860,
+        dropped_chars=40,
+        overflow_chars=40,
+        headroom_chars=50,
+    )
+
+    assert ledger["budget_bucket"] == "context.mandatory_context_max"
+    assert ledger["configured_cap"] == 900
+    assert ledger["fallback_cap"] == 400000
+    assert ledger["trim_applied"] is True
 
 
 def test_dedupe_slots_keeps_first_and_sorts_by_priority():

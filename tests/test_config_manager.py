@@ -160,6 +160,68 @@ def test_existing_api_getitem(tmp_path, monkeypatch):
     assert cm["limits"]["target_manuscript_length"] == 5000
 
 
+def test_guard_threshold_contract_reports_authoritative_source(tmp_path, monkeypatch):
+    _write_validation_yaml(tmp_path, "scoring:\n  default_pass_threshold: 67\n")
+    monkeypatch.chdir(tmp_path)
+    cm = ConfigManager()
+
+    contract = cm.get_guard_threshold_contract("scoring.default_pass_threshold", 60)
+
+    assert contract["effective_value"] == 67
+    assert contract["used_fallback"] is False
+    assert contract["effective_source"].endswith("config/settings/validation.yaml:scoring.default_pass_threshold")
+
+
+def test_guard_threshold_contract_uses_settings_json_compat_when_yaml_missing(tmp_path, monkeypatch):
+    config_dir = tmp_path / "config"
+    config_dir.mkdir(parents=True, exist_ok=True)
+    (config_dir / "settings.json").write_text(
+        '{"validation": {"use_self_consistency": false}}',
+        encoding="utf-8",
+    )
+    monkeypatch.chdir(tmp_path)
+    cm = ConfigManager()
+
+    contract = cm.get_guard_threshold_contract("orchestrator.use_self_consistency", True)
+
+    assert contract["effective_value"] is False
+    assert contract["used_compatibility"] is True
+    assert contract["effective_source"].endswith("config/settings.json:validation.use_self_consistency")
+
+
+def test_validation_yaml_beats_settings_json_compat(tmp_path, monkeypatch):
+    config_dir = tmp_path / "config"
+    config_dir.mkdir(parents=True, exist_ok=True)
+    (config_dir / "settings.json").write_text(
+        '{"validation": {"use_self_consistency": false}}',
+        encoding="utf-8",
+    )
+    _write_validation_yaml(tmp_path, "orchestrator:\n  use_self_consistency: true\n")
+    monkeypatch.chdir(tmp_path)
+    cm = ConfigManager()
+
+    contract = cm.get_guard_threshold_contract("orchestrator.use_self_consistency", False)
+
+    assert contract["effective_value"] is True
+    assert contract["used_compatibility"] is False
+    assert contract["effective_source"].endswith("config/settings/validation.yaml:orchestrator.use_self_consistency")
+
+
+def test_model_contract_reports_yaml_authority(tmp_path, monkeypatch):
+    models_path = tmp_path / "config" / "models.yaml"
+    models_path.parent.mkdir(parents=True, exist_ok=True)
+    models_path.write_text("agents:\n  director: gemini-test-director\n", encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr("modules.core.models_config.resolve_models_yaml_path", lambda: models_path)
+    cm = ConfigManager()
+
+    contract = cm.get_model_for_agent_contract("director")
+
+    assert contract["effective_value"] == "gemini-test-director"
+    assert contract["used_fallback"] is False
+    assert contract["effective_source"].endswith("config/models.yaml:agents.director")
+
+
 def test_missing_feature_flag_default(tmp_path, monkeypatch):
     """없는 플래그 → custom default"""
     _write_validation_yaml(tmp_path, "feature_flags:\n  a: true\n")

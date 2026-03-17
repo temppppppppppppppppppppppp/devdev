@@ -49,6 +49,11 @@ class AttemptRecord:
     patch_fallback: bool = False
     attempt_key: str = ""
     final_verdict: str = ""
+    director_verdict: str = ""
+    gate_basis: str = ""
+    repair_scope: str = ""
+    fix_pack: dict[str, Any] = field(default_factory=dict)
+    retry_budget_axes: dict[str, Any] = field(default_factory=dict)
     patch_strategy: str = ""
     structural_attempted: bool = False
     error_category: str = ""
@@ -146,6 +151,11 @@ class PassRateMonitor:
         patch_fallback: bool = False,
         attempt_key: str = "",
         final_verdict: str = "",
+        director_verdict: str = "",
+        gate_basis: str = "",
+        repair_scope: str = "",
+        fix_pack: dict[str, Any] | None = None,
+        retry_budget_axes: dict[str, Any] | None = None,
         patch_strategy: str = "",
         structural_attempted: bool = False,
         error_category: str = "",
@@ -190,6 +200,11 @@ class PassRateMonitor:
                 or build_attempt_key(stage=stage, ep_num=episode, arc_num=arc, attempt_num=attempt_num)
             ),
             final_verdict=str(final_verdict or ""),
+            director_verdict=str(director_verdict or ""),
+            gate_basis=str(gate_basis or ""),
+            repair_scope=str(repair_scope or ""),
+            fix_pack=dict(fix_pack or {}),
+            retry_budget_axes=dict(retry_budget_axes or {}),
             patch_strategy=str(patch_strategy or ""),
             structural_attempted=bool(structural_attempted),
             error_category=str(error_category or ""),
