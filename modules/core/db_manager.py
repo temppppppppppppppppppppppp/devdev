@@ -3336,6 +3336,92 @@ class DBManager:
 
         return resolved_rows
 
+    def get_latest_stage4_gate_repair_snapshot(self, session_id: str | None = None) -> dict[str, object]:
+        """Return the latest Stage 4 final-authority gate/repair snapshot for operator-facing summaries."""
+        session_id = str(session_id or "").strip()
+        params: list[object] = [4]
+        where_parts = ["stage = ?", "COALESCE(attempt_key, '') != ''"]
+        if session_id:
+            where_parts.append("session_id = ?")
+            params.append(session_id)
+
+        sql = f"""
+            SELECT id,
+                   ep_num,
+                   attempt_num,
+                   verdict,
+                   score,
+                   session_id,
+                   attempt_key,
+                   candidate_key,
+                   content_hash,
+                   artifact_path,
+                   advisory_flags,
+                   selection_reason,
+                   verdict_reason,
+                   open_review
+            FROM stage_attempts
+            WHERE {' AND '.join(where_parts)}
+            ORDER BY id DESC
+            LIMIT 1
+        """
+
+        with self._lock:
+            cur = self.conn.execute(sql, tuple(params))
+            row = cur.fetchone()
+
+        if not row:
+            return {}
+
+        item = dict(row)
+        advisory_flags = self._safe_json_loads(item.get("advisory_flags"), "{}")
+        if not isinstance(advisory_flags, dict):
+            advisory_flags = {}
+        gate_semantics = advisory_flags.get("gate_semantics")
+        if not isinstance(gate_semantics, dict):
+            gate_semantics = {}
+        fix_pack = advisory_flags.get("fix_pack")
+        if not isinstance(fix_pack, dict):
+            fix_pack = {}
+        retry_budget_axes = advisory_flags.get("retry_budget_axes")
+        if not isinstance(retry_budget_axes, dict):
+            retry_budget_axes = {}
+
+        payload: dict[str, object] = {
+            "ep_num": int(item.get("ep_num") or 0),
+            "attempt_num": int(item.get("attempt_num") or 0),
+            "attempt_key": str(item.get("attempt_key") or "").strip(),
+            "session_id": str(item.get("session_id") or "").strip(),
+            "final_verdict": str(item.get("verdict") or "").strip(),
+            "final_score": item.get("score"),
+            "candidate_key": str(item.get("candidate_key") or "").strip(),
+            "content_hash": str(item.get("content_hash") or "").strip(),
+            "artifact_path": str(item.get("artifact_path") or "").strip(),
+            "selection_reason": str(item.get("selection_reason") or "").strip(),
+            "verdict_reason": str(item.get("verdict_reason") or "").strip(),
+            "open_review": str(item.get("open_review") or "").strip(),
+            "director_verdict": str(gate_semantics.get("director_verdict") or "").strip(),
+            "gate_basis": str(gate_semantics.get("gate_basis") or "").strip(),
+            "repair_scope": str(gate_semantics.get("repair_scope") or "").strip(),
+            "fix_pack": fix_pack,
+            "retry_budget_axes": retry_budget_axes,
+            "final_authority_sink": "stage_attempts",
+        }
+
+        authority_rows = self.get_stage4_final_authority_rows(limit=1, session_id=session_id or None)
+        if authority_rows:
+            authority_row = authority_rows[0]
+            if str(authority_row.get("attempt_key") or "").strip() == payload["attempt_key"]:
+                payload["selection_role"] = str(authority_row.get("selection_role") or "").strip()
+                payload["selection_companion_status"] = str(
+                    authority_row.get("selection_companion_status") or ""
+                ).strip()
+                payload["selection_matches_final_artifact"] = bool(
+                    authority_row.get("selection_matches_final_artifact", False)
+                )
+
+        return payload
+
     def save_llm_call(
         self,
         agent_name: str,

@@ -1,0 +1,117 @@
+1. scope
+- terminal: `T06`
+- mission: persistence, durability, artifact truth, metadata truth
+- mode: `survey-only`
+- stop-line: no code edits, no execution SSOT, no roadmap creation
+- baseline commit: `2352b26a293ac330a0ff24da320363f9abdbbba1`
+- baseline dirty summary: `dirty: lane1~3 code/tests/docs edits, temp execution mirror deletions, modified projects/test_project/logs/episode_production.jsonl, new 2026-03-17 survey docs`
+- temp queue check: `docs/temp/` contains only `README.md`; no active execution mirror
+
+2. included paths
+- `modules/core/stage4_post_processor.py`
+- `modules/core/world_state.py`
+- `modules/core/db_manager.py`
+- `modules/core/session_logger.py`
+- `modules/core/services/audit_service.py`
+- `modules/core/artifact_logging.py`
+- `modules/core/pass_rate_monitor.py`
+- `modules/core/quality_dashboard.py`
+- `modules/core/jsonl_io.py`
+- `modules/core/failure_analyzer.py`
+- `modules/core/stage4_interview_round.py`
+- `modules/core/stage4_orchestrator.py`
+- `main_a.py`
+- `modules/api/bridge_server.py`
+- `projects/0_260316/`
+- `projects/test_project/` (comparison only)
+- persistence-focused tests under `tests/`
+
+3. excluded paths
+- `docs/roadmap-v2.md` as authority; seed only
+- reference-only lane1~3 execution SSOT docs as primary authority
+- narrative artifacts by `work_id`
+- `docs/temp/` beyond queue inspection
+- `projects/test_project/` as durable truth source; sparse fixture-like log only
+- any live mutation, DB write, or runtime process change
+
+4. facts
+- Fact: `Stage4PostProcessor._handle_success()` commits `manuscripts` plus `martial_tracker` inside explicit `BEGIN/COMMIT`, writes the published draft file only after DB commit, and soft-fails later sidecars instead of aborting the pass path.
+- Fact: `Stage4PostProcessor` later persists `episode_bibles`, `causal_graph`, `state_logs`, `world_state`, `fact_ledger`, `episode_satisfaction_tags`, `episode_pacing`, `episode_quality_labels`, and `episode_quality_signals`; `save_world_state_atomic()` snapshots in-memory `world_state` and `fact_ledger` and restores them on failure.
+- Fact: `WorldStateManager.save()` writes the full state through `DBManager.save_anchor("world_state", ...)`; `rollback_to()` rebuilds state by replaying `episode_bibles` and then saves the anchor again.
+- Fact: `artifact_logging.snapshot_logged_artifact()` writes exact UTF-8 bytes under `logs/artifacts/stage{n}/.../attempt_xx/...` and returns `candidate_key`, `content_hash`, and relative `artifact_path`.
+- Fact: `Stage4InterviewRound._record_s4_attempt()` snapshots the final artifact once and propagates the same linkage metadata into `pass_rate_monitor.json` and `stage_attempts`.
+- Fact: `Stage4InterviewRound._append_episode_log()` appends `logs/episode_production.jsonl` with both final artifact fields and selection companion fields: `artifact_path`, `selection_artifact_path`, `candidate_key`, `selection_candidate_key`, `content_hash`, `selection_content_hash`, `initial_verdict`, `final_verdict`, `gate_basis`, `repair_scope`, `patch_trace`, and rationale text.
+- Fact: `SessionLogger` writes `llm_io.jsonl`, `decisions.jsonl`, `state_changes.jsonl`, and `ui_events.jsonl` under `logs/session/` with per-process locking, rotation, and `soft_failures.jsonl` fallback.
+- Fact: `AuditService.write_audit_summary()` flushes `runtime_audit.jsonl`, saves `runtime_audit_summary.json`, and declares `proof_digest_truth_scope = committed_persistence_only`; it reads committed DB/JSONL/artifact sinks through `FailureAnalyzer`.
+- Fact: `FailureAnalyzer.sink_alignment_summary(stage=4)` treats `stage_attempts` as final authority and `director_selections` as a historical companion surface for pre-final selection metadata.
+- Fact: `projects/0_260316/project_data.db` exists and is `15101952` bytes.
+- Fact: `projects/0_260316` table counts from live DB: `manuscripts=6`, `episode_bibles=6`, `anchors=18`, `director_selections=25`, `stage_attempts=25`, `ui_events=1149`, `episode_quality_labels=6`, `episode_quality_signals=6`, `episode_quality_observations=0`, `causal_graph=33`, `state_logs=6`, `episode_pacing=6`, `episode_satisfaction_tags=6`, `llm_calls=276`.
+- Fact: `projects/0_260316/drafts/ep_0001.txt` through `ep_0006.txt` all exist and each matches `# {title}\n\n{manuscripts.content}` exactly.
+- Fact: For every live Stage 4 `PASS` attempt in `projects/0_260316`, `stage_attempts.artifact_path` exists on disk, the file SHA-256 matches `stage_attempts.content_hash`, and the artifact text matches `manuscripts.content` exactly for episodes `1..6`.
+- Fact: `projects/0_260316` anchor `world_state` exists with `updated_at=2026-03-16 03:40:59`, `version=1`, `last_updated_ep=6`; anchor `fact_ledger` has the same timestamp.
+- Fact: `projects/0_260316/logs/` surfaces present with nonzero size: `episode_production.jsonl`, `pass_rate_monitor.json`, `quality_metrics.jsonl`, `runtime_audit.jsonl`, `runtime_audit_summary.json`, `soft_failures.jsonl`, `session/decisions.jsonl`, `session/llm_io.jsonl`, `session/state_changes.jsonl`, `session/ui_events.jsonl`.
+- Fact: `quality_metrics.jsonl` in `projects/0_260316` contains `retrieval_observation=32` and `validation=25`; latest sampled row is a Stage 4 retrieval observation for `ep=7` at `2026-03-16T12:55:47.242631`.
+- Fact: `runtime_audit_summary.json` in `projects/0_260316` is tagged `stage3_complete` at `2026-03-16 12:55:35`; its proof digest still includes Stage 4 coverage and reports `status=warn`.
+- Fact: That same proof digest reports `stage4.issue_counts = {patch_strategy_mismatches: 2, selection_reason_mismatches: 1, verdict_reason_mismatches: 1}` and `session_lineage.status = split_mapped` with `plain_log_token=20260316_110204` and `structured_session_id=20260316_110208`.
+- Fact: A fresh live `FailureAnalyzer.sink_alignment_summary(stage=4, include_session_decisions=True)` on `projects/0_260316` reports `attempts_considered=11`, `complete_final_attempts=11`, `complete_lifecycle_attempts=11`, coverage of `11` rows across `stage_attempts`, `pass_rate_monitor`, `director_selections`, `episode_production`, and `session_decisions`, with `artifact_path_mismatches=0`, `artifact_metadata_missing=0`, and `artifact_missing_files=0`.
+- Fact: The same analyzer returns `final_authority_contract = {final_authority_sink: stage_attempts, selection_role: historical_companion, rows_considered: 11, aligned_selection_rows: 1, pre_final_selection_rows: 10, missing_selection_rows: 0}`.
+- Fact: Example attempt `s4:ep2:arc1:a1:20260316_110208` shows the split explicitly:
+- Fact: `director_selections` stores the initial `PASS_WITH_FIX` companion row with `candidate_key=A|서사 강조`, `content_hash=efa658...`, and `selection_artifact_path=logs/artifacts/stage4/ep_0002/attempt_01/selected_before_fix__A.txt`.
+- Fact: `stage_attempts`, `session/decisions.jsonl`, and `episode_production.jsonl` store the final `PASS` row with `candidate_key=A|InPlace 수정`, `content_hash=42f840...`, and `artifact_path=logs/artifacts/stage4/ep_0002/attempt_01/patched_after_fix__A_InPlace.txt`.
+- Fact: `episode_production.jsonl` in `projects/0_260316` has `13` rows, not `11`, because it also contains non-attempt event rows without `attempt_key`, including `TF49b_PREFLIGHT` and `V75-D_INPLACE`.
+- Fact: `soft_failures.jsonl` in `projects/0_260316` has `8` rows, all historical `failure_analyzer.sink_alignment_final_authority_contract` `AttributeError` events from `2026-03-16`; the current analyzer run succeeds.
+- Fact: `projects/test_project/` has only `logs/episode_production.jsonl` (`128` lines) and no `project_data.db`, `runtime_audit_summary.json`, `pass_rate_monitor.json`, or `quality_metrics.jsonl`; recent rows contain empty artifact paths and mock-model string payloads.
+
+5. hotspot files
+- `modules/core/stage4_post_processor.py`
+- `modules/core/stage4_interview_round.py`
+- `modules/core/db_manager.py`
+- `modules/core/services/audit_service.py`
+- `modules/core/failure_analyzer.py`
+- `modules/core/world_state.py`
+- `modules/core/session_logger.py`
+- `modules/core/artifact_logging.py`
+- `modules/core/pass_rate_monitor.py`
+- `modules/core/quality_dashboard.py`
+- `modules/core/jsonl_io.py`
+- `modules/core/stage4_orchestrator.py`
+- `main_a.py`
+- `modules/api/bridge_server.py`
+
+6. side-effect notes
+- file writes: covered
+- Fact: runtime writes include `drafts/ep_*.txt`, `logs/artifacts/stage*/...`, `logs/episode_production.jsonl`, `logs/pass_rate_monitor.json`, `logs/quality_metrics.jsonl`, `logs/runtime_audit.jsonl`, `logs/runtime_audit_summary.json`, `logs/soft_failures.jsonl`, and `logs/session/*.jsonl`.
+- DB / transaction: covered
+- Fact: `manuscripts` plus `martial_tracker` use explicit transaction control in `Stage4PostProcessor`; `world_state` and `fact_ledger` are grouped under `DBManager.transaction()` when available; many telemetry sinks (`stage_attempts`, `ui_events`, `llm_calls`) are best-effort and non-blocking.
+- JSONL / logs / audit sinks: covered
+- Fact: `append_jsonl_record()` uses a process-wide append lock; `SessionLogger` uses its own write lock and rotation; `AuditService` flushes in-memory audit buffer to `runtime_audit.jsonl` before writing summary.
+- console / UI / operator surface: partial
+- Fact: persistence chain stores UI-visible events in both DB (`ui_events`) and JSONL (`logs/session/ui_events.jsonl`), but operator rendering itself is owned by `T07`.
+- recovery / retry / compensation: partial
+- Fact: rollback exists for the primary `manuscripts` transaction and for in-memory `world_state` / `fact_ledger` snapshots; sidecars like quality labels, signals, pacing, and satisfaction tags degrade to `soft_failures.jsonl` instead of retrying inline.
+- cache / global state: partial
+- Fact: `PassRateMonitor` and `QualityDashboard` keep in-memory history and flush/snapshot later; `WorldStateManager` mutates process memory before anchor save; `episode_bible` cumulative cache invalidation happens on save.
+- bootstrap / config-env: partial
+- Fact: artifact/log roots fall back from `project.paths.root` to DB parent or fallback project paths; session lineage in proof digest explicitly records split plain-log vs structured session IDs.
+- external interfaces: partial
+- Fact: no external network call is required for the local persistence sinks themselves; `bridge_server` reads these sinks and exposes one DB write endpoint for `episode_quality_observations`.
+
+7. contradictions or uncertainty
+- Inference: `projects/0_260316` currently shows a strong artifact-truth chain for final Stage 4 passes: `stage_attempts -> artifact file -> manuscripts table -> drafts/ep_*.txt`.
+- Inference: `runtime_audit_summary.json` is a snapshot artifact, not a continuously refreshed truth surface; the live sample lags later `quality_metrics.jsonl` and `ui_events` writes.
+- Inference: `director_selections` is intentionally not the final authority for Stage 4 post-fix outputs; consumers that treat it as final will read pre-final artifacts and rationale.
+- Open Question: which operator surfaces outside `FailureAnalyzer` and `stage4 truth` tooling still consume `director_selections` directly without honoring `final_authority_contract`?
+- Open Question: whether stale `soft_failures.jsonl` rows are time-bounded before `runtime_health` or dashboard consumers present them as current degradation.
+- Open Question: whether the `stage4_complete` audit summary hook is acceptable as best-effort snapshotting, or whether late Stage 4 writes after `stage3_complete` should be considered a persistence freshness gap for operators.
+
+8. candidate execution areas
+- `stage4_complete` summary freshness versus later DB/JSONL writes
+- normalization guard for consumers that still treat `director_selections` as final Stage 4 truth
+- filtering contract for non-attempt `episode_production.jsonl` rows without `attempt_key`
+- historical-noise handling for `soft_failures.jsonl`
+- isolation of sparse fixture logs under `projects/test_project/` from operator-facing project truth
+
+9. follow-up requests for another terminal
+- `T05`: assess whether the live Stage 4 rationale mismatches and `patch_strategy_mismatches=2` are acceptable semantics or signal a gate/repair contract drift.
+- `T07`: verify that operator-facing surfaces distinguish snapshot summaries from fresher JSONL/DB state and do not surface `projects/test_project/` as a normal durable project.
+- `T09`: inspect whether session-id split mapping and summary cadence are driven by config/contract choices that should be unified or made explicit.

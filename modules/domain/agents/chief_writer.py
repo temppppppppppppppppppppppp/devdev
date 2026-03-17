@@ -1006,6 +1006,83 @@ class ChiefWriter(BaseAgent):
         self._last_inplace_patch_trace = trace
         return trace
 
+    @staticmethod
+    def _normalize_fix_pack(fix_pack: dict | None) -> dict:
+        payload = fix_pack if isinstance(fix_pack, dict) else {}
+
+        def _normalize_list(raw: object, *, limit: int, item_limit: int) -> list[str]:
+            if isinstance(raw, str):
+                items = [raw]
+            elif isinstance(raw, list):
+                items = raw
+            else:
+                return []
+            cleaned: list[str] = []
+            seen: set[str] = set()
+            for item in items:
+                text = " ".join(str(item or "").split()).strip()
+                if not text:
+                    continue
+                text = text[:item_limit]
+                if text in seen:
+                    continue
+                seen.add(text)
+                cleaned.append(text)
+                if len(cleaned) >= limit:
+                    break
+            return cleaned
+
+        patch_targets = _normalize_list(payload.get("patch_targets"), limit=6, item_limit=80)
+        must_fix = _normalize_list(payload.get("must_fix"), limit=6, item_limit=180)
+        do_not_regress = _normalize_list(payload.get("do_not_regress"), limit=6, item_limit=180)
+        success_condition = " ".join(str(payload.get("success_condition", "") or "").split()).strip()[:220]
+        target_kind = " ".join(str(payload.get("target_kind", "") or "").split()).strip()[:80]
+        evidence_summary = " ".join(str(payload.get("evidence_summary", "") or "").split()).strip()[:220]
+
+        normalized = {
+            "patch_targets": patch_targets,
+            "must_fix": must_fix,
+            "do_not_regress": do_not_regress,
+            "success_condition": success_condition,
+            "target_kind": target_kind,
+        }
+        if evidence_summary:
+            normalized["evidence_summary"] = evidence_summary
+
+        has_payload = any(
+            normalized.get(key)
+            for key in ("patch_targets", "must_fix", "do_not_regress", "success_condition", "target_kind", "evidence_summary")
+        )
+        return normalized if has_payload else {}
+
+    def _build_fix_pack_guidance(self, fix_pack: dict | None) -> str:
+        normalized = self._normalize_fix_pack(fix_pack)
+        if not normalized:
+            return ""
+
+        lines = ["[Fix Pack Local Repair Contract]"]
+        if normalized.get("target_kind"):
+            lines.append(f"- target_kind: {normalized['target_kind']}")
+        patch_targets = normalized.get("patch_targets") or []
+        if patch_targets:
+            lines.append("- patch_targets: " + ", ".join(patch_targets[:6]))
+        must_fix = normalized.get("must_fix") or []
+        if must_fix:
+            lines.append("- must_fix:")
+            lines.extend(f"  - {item}" for item in must_fix[:5])
+        do_not_regress = normalized.get("do_not_regress") or []
+        if do_not_regress:
+            lines.append("- do_not_regress:")
+            lines.extend(f"  - {item}" for item in do_not_regress[:5])
+        success_condition = str(normalized.get("success_condition", "") or "").strip()
+        if success_condition:
+            lines.append(f"- success_condition: {success_condition}")
+        evidence_summary = str(normalized.get("evidence_summary", "") or "").strip()
+        if evidence_summary:
+            lines.append(f"- evidence_summary: {evidence_summary}")
+        lines.append("- Keep the selected manuscript intact outside the listed anchors.")
+        return "\n".join(lines)
+
     def _classify_structural_patch_focus(self, director_feedback: str) -> str:
         feedback = str(director_feedback or "")
         if not feedback:
@@ -1334,11 +1411,14 @@ class ChiefWriter(BaseAgent):
         director_feedback: str,
         attempt_number: int,
         style_guide: str = "",  # [TF-37] 스타일 클로닝 갭 수정
+        fix_pack: dict | None = None,
     ) -> list[dict]:
         """[TF-23] LLM 1회 호출로 원고 in-place 수정. 실패 시 빈 리스트 → patch/rewrite 폴백."""
         from modules.core.constants import smart_truncate
         from modules.core.prompt_loader import PromptLoader
 
+        normalized_fix_pack = self._normalize_fix_pack(fix_pack)
+        fix_pack_guidance = self._build_fix_pack_guidance(normalized_fix_pack)
         blueprint = getattr(self, "_inplace_patch_blueprint", None)
         genre_name = str(getattr(self, "_inplace_patch_genre_name", "") or "")
         focus = self._classify_structural_patch_focus(director_feedback)
@@ -1346,7 +1426,15 @@ class ChiefWriter(BaseAgent):
         structural_attempted = False
         fallback_reason = ""
 
-        if not isinstance(blueprint, dict):
+        if normalized_fix_pack.get("patch_targets"):
+            self._set_last_inplace_patch_trace(
+                patch_strategy="inplace_patch",
+                patch_targets=list(normalized_fix_pack.get("patch_targets") or []),
+                fallback_reason="",
+                focus="",
+                structural_attempted=False,
+            )
+        elif not isinstance(blueprint, dict):
             fallback_reason = "missing_blueprint"
         elif not isinstance(scene_breakdown, dict) or len(scene_breakdown) < 2:
             fallback_reason = "missing_scene_breakdown"
@@ -1397,6 +1485,9 @@ class ChiefWriter(BaseAgent):
             return s.replace("{", "{{").replace("}", "}}")
 
         _style_text = _esc(style_guide) if style_guide else "기본 웹소설 문체"  # [TF-37]
+        _feedback_text = director_feedback
+        if fix_pack_guidance:
+            _feedback_text = f"{director_feedback}\n\n{fix_pack_guidance}".strip()
 
         # [F-4] 트렁케이션 경고
         _orig_len = len(original_manuscript or "")
@@ -1411,7 +1502,7 @@ class ChiefWriter(BaseAgent):
 
         if _patch_template:
             prompt = _patch_template.format(
-                feedback_text=_esc(director_feedback),
+                feedback_text=_esc(_feedback_text),
                 original_manuscript=_esc(smart_truncate(original_manuscript, max_chars=150000, head_chars=20000)),
                 style_guide=_style_text,  # [TF-37]
                 original_char_count=_orig_len,
@@ -1421,7 +1512,7 @@ class ChiefWriter(BaseAgent):
             prompt = (
                 "[원고 원본 보존 + 지적사항만 수정]\n\n"
                 + (f"## 문체 가이드\n{style_guide}\n\n" if style_guide else "")
-                + f"## Director 피드백\n{director_feedback}\n\n"
+                + f"## Director 피드백\n{_feedback_text}\n\n"
                 f"## 원본 원고\n{smart_truncate(original_manuscript, max_chars=150000, head_chars=20000)}\n\n"
                 f"전면 재작성하지 마세요. 지적된 부분만 고치세요."
             )
@@ -1502,15 +1593,24 @@ class ChiefWriter(BaseAgent):
                 )
                 return []
             _existing_trace = dict(getattr(self, "_last_inplace_patch_trace", {}) or {})
+            _trace_focus = "" if normalized_fix_pack.get("patch_targets") else str(_existing_trace.get("focus") or focus)
             self._set_last_inplace_patch_trace(
                 patch_strategy="inplace_patch",
-                patch_targets=list(_existing_trace.get("patch_targets") or []),
+                patch_targets=list(_existing_trace.get("patch_targets") or normalized_fix_pack.get("patch_targets") or []),
                 fallback_reason=str(_existing_trace.get("fallback_reason") or fallback_reason),
-                focus=str(_existing_trace.get("focus") or focus),
+                focus=_trace_focus,
                 structural_attempted=bool(_existing_trace.get("structural_attempted") or structural_attempted),
             )
             logging.info(f"✅ [TF-23] 원고 in-place 수정 완료 ({len(_manuscript)}자)")
-            return [{"manuscript": _manuscript, "strategy": "inplace_patch", "state_updates": _state_updates}]
+            result = {
+                "manuscript": _manuscript,
+                "strategy": "inplace_patch",
+                "state_updates": _state_updates,
+            }
+            patch_targets = list(_existing_trace.get("patch_targets") or normalized_fix_pack.get("patch_targets") or [])
+            if patch_targets:
+                result["patch_targets"] = patch_targets
+            return [result]
         except Exception as e:
             logging.warning(f"[TF-23] 원고 in-place 패치 실패: {e!s:.200}")
             return []
@@ -1645,6 +1745,9 @@ class ChiefWriter(BaseAgent):
         _history_feedback = self._build_retry_history_feedback(previous_attempt)
         if _history_feedback:
             enhanced_feedback += f"\n{_history_feedback}"
+        _fix_pack_guidance = self._build_fix_pack_guidance(previous_attempt.get("fix_pack"))
+        if _fix_pack_guidance:
+            enhanced_feedback += f"\n\n{_fix_pack_guidance}"
 
         failure_constraints = ""
         if previous_attempt.get("action_items"):

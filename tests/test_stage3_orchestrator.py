@@ -236,6 +236,8 @@ class TestStageAttemptObservability:
                 "advisor_path_used": True,
                 "planned_slots_count": 3,
                 "work_focus_present": True,
+                "provenance_ledger": {"source_pack": "stage3", "dropped_at": "stage3"},
+                "budget_ledger": {"budget_bucket": "smart_retrieval.stage3_total_budget", "configured_cap": 2400},
             },
         }
 
@@ -254,6 +256,8 @@ class TestStageAttemptObservability:
         assert kwargs["duration_ms"] == 4321
         assert kwargs["advisory_flags"]["semantic_ctx_chars"] == 1234
         assert kwargs["advisory_flags"]["semantic_ctx_sources"] == ["db_npc_relationship", "vec_memory"]
+        assert kwargs["advisory_flags"]["provenance_ledger"]["source_pack"] == "stage3"
+        assert kwargs["advisory_flags"]["budget_ledger"]["budget_bucket"] == "smart_retrieval.stage3_total_budget"
 
     def test_handle_failure_persists_failure_category_and_observability(self, orch, app_mock):
         pipeline_result = {
@@ -880,6 +884,8 @@ class TestGenerateBlueprint:
         kwargs = app_mock.quality_dashboard.record_retrieval_observation.call_args.kwargs
         assert kwargs["stage"] == "stage3"
         assert kwargs["observation"]["relation_slice_included"] is True
+        assert kwargs["observation"]["provenance_ledger"]["source_pack"] == "stage3"
+        assert kwargs["observation"]["budget_ledger"]["budget_bucket"] == "smart_retrieval.stage3_total_budget"
         assert "[관계 의미 질의]" in semantic_context
         assert "연홍" in semantic_context
 

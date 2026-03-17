@@ -33,21 +33,37 @@ from typing import Annotated, Any
 from fastapi import FastAPI, Query, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import JSONResponse
 
+from modules.api.control_plane_contract import (
+    AUTHORITY_ROLE_AUTHORITATIVE_SINK,
+    AUTHORITY_ROLE_COMPANION_SNAPSHOT,
+    build_control_plane_authority_summary,
+    get_control_plane_authority_role,
+)
 from modules.api.process_runner import MODE_B_KEYS, PROJECT_ROOT, ProcessRunner
 from modules.api.prompt_broker import PromptBroker, PromptState
 from modules.api.prompt_classifier import classify as classify_prompt
 from modules.api.risk_approval import RiskApprovalGate
 from modules.api.run_validator import RISK_KEYS, validate_run_request
+from modules.core.config_manager import ConfigManager
 from modules.core.db_manager import DBManager
 from modules.core.failure_analyzer import FailureAnalyzer
 from modules.core.jsonl_io import append_jsonl_record
 from modules.core.pass_rate_monitor import PassRateMonitor
 from modules.core.project_support import inspect_project_support_assets
+from modules.core.prompt_loader import PromptLoader
 from modules.core.quality_dashboard import QualityDashboard
 from modules.core.quality_sidecar_bootstrap import inspect_quality_sidecar_health
-from modules.core.runtime_paths import resolve_project_dir, resolve_projects_root
+from modules.core.runtime_paths import (
+    build_runtime_authority_summary,
+    resolve_project_dir,
+    resolve_projects_root,
+)
 
 logger = logging.getLogger(__name__)
+
+
+def _authority_role_for(surface: str, *, fallback: str = AUTHORITY_ROLE_COMPANION_SNAPSHOT) -> str:
+    return get_control_plane_authority_role(surface) or fallback
 
 _QUALITY_SIGNAL_LABELS = {
     "ced": "CED",
@@ -199,6 +215,9 @@ def _write_control_plane_provenance(
         {
             "ts": _ts(),
             "route": "/run",
+            "authority_role": _authority_role_for(
+                "control_plane_provenance", fallback=AUTHORITY_ROLE_AUTHORITATIVE_SINK
+            ),
             "protocol_surface": "backend_cli_menu_protocol_wrapper",
             "key": key,
             "sub_key": sub_key,
@@ -312,6 +331,7 @@ def _quality_dashboard_defaults(project: str, lookback: int) -> dict:
         },
         "quality_summary": {
             "available": False,
+            "authority_role": _authority_role_for("/quality/summary"),
             "lookback": lookback,
             "latest_ep": None,
             "signals": {},
@@ -339,6 +359,15 @@ def _quality_dashboard_defaults(project: str, lookback: int) -> dict:
             "signal_alerts": [],
             "next_action": "Stage 4 PASS 원고가 누적되면 결과 요약이 표시됩니다.",
         },
+        "config_authority_summary": {
+            "available": False,
+            "thresholds": {},
+            "models": {},
+            "prompts": {},
+        },
+        "control_plane_authority_summary": build_control_plane_authority_summary(),
+        "runtime_authority_summary": build_runtime_authority_summary(),
+        "gate_repair_summary": _build_gate_repair_summary(None),
         "episode_trend": [],
         "compare_rows": [],
         "score_trend": {
@@ -360,12 +389,14 @@ def _quality_dashboard_defaults(project: str, lookback: int) -> dict:
         },
         "runtime_health": {
             "available": False,
+            "authority_role": _authority_role_for("runtime_health"),
             "recent_count": 0,
             "top_components": [],
             "recent": [],
         },
         "proof_status": {
             "available": False,
+            "authority_role": _authority_role_for("proof_status"),
             "status": "unavailable",
             "sink_alignment_status": "unavailable",
             "runtime_summary_status": "unavailable",
@@ -373,11 +404,13 @@ def _quality_dashboard_defaults(project: str, lookback: int) -> dict:
         },
         "sink_alignment_summary": {
             "available": False,
+            "authority_role": _authority_role_for("sink_alignment_summary"),
             "lookback": lookback,
             "stages": {},
         },
         "runtime_audit_summary": {
             "available": False,
+            "authority_role": _authority_role_for("runtime_audit_summary"),
             "tag": "",
             "timestamp": "",
             "summary_role": "",
@@ -1039,7 +1072,7 @@ def _split_issue_text(text: str, *, limit: int = 3) -> list[str]:
     if not raw or raw in {"없음", "특이사항 없음", "문제 없음"}:
         return []
 
-    chunks = [piece.strip(" -•\t") for piece in re.split(r"[\r\n]+|(?<=[.!?])\s+|[;·]+", raw) if piece.strip()]
+    chunks = [piece.strip(" -•\t") for piece in re.split(r"[\r\n]+|(?<=[.!?])\s+|[;·]+", raw) if piece.strip()]  # utf8-hygiene: allow-line regex uses literal ? token safely
     if not chunks:
         chunks = [raw]
     return _dedupe_preserve_order(chunks)[:limit]
@@ -1117,6 +1150,55 @@ def _build_next_action(verdict: str | None, issues: list[str], signal_alerts: li
     if issues:
         return "이번 화의 지적 포인트를 다음 화 설계/원고에 미리 반영하세요."
     return "현재 품질 흐름을 유지하면서 다음 화에 같은 밀도와 톤을 이어가면 됩니다."
+
+
+def _build_gate_repair_summary(snapshot: dict | None) -> dict[str, Any]:
+    payload = {
+        "available": False,
+        "ep_num": None,
+        "attempt_num": None,
+        "attempt_key": "",
+        "final_verdict": None,
+        "final_score": None,
+        "director_verdict": None,
+        "gate_basis": None,
+        "repair_scope": None,
+        "fix_pack": {},
+        "retry_budget_axes": {},
+        "authority": {
+            "final_authority_sink": "",
+            "selection_role": "",
+            "selection_companion_status": "",
+            "selection_matches_final_artifact": False,
+        },
+    }
+    if not isinstance(snapshot, dict) or not snapshot:
+        return payload
+
+    fix_pack = snapshot.get("fix_pack")
+    retry_budget_axes = snapshot.get("retry_budget_axes")
+    payload.update(
+        {
+            "available": True,
+            "ep_num": snapshot.get("ep_num"),
+            "attempt_num": snapshot.get("attempt_num"),
+            "attempt_key": str(snapshot.get("attempt_key") or "").strip(),
+            "final_verdict": str(snapshot.get("final_verdict") or "").strip() or None,
+            "final_score": snapshot.get("final_score"),
+            "director_verdict": str(snapshot.get("director_verdict") or "").strip() or None,
+            "gate_basis": str(snapshot.get("gate_basis") or "").strip() or None,
+            "repair_scope": str(snapshot.get("repair_scope") or "").strip() or None,
+            "fix_pack": dict(fix_pack) if isinstance(fix_pack, dict) else {},
+            "retry_budget_axes": dict(retry_budget_axes) if isinstance(retry_budget_axes, dict) else {},
+            "authority": {
+                "final_authority_sink": str(snapshot.get("final_authority_sink") or "").strip(),
+                "selection_role": str(snapshot.get("selection_role") or "").strip(),
+                "selection_companion_status": str(snapshot.get("selection_companion_status") or "").strip(),
+                "selection_matches_final_artifact": bool(snapshot.get("selection_matches_final_artifact", False)),
+            },
+        }
+    )
+    return payload
 
 
 def _build_result_summary(
@@ -1397,6 +1479,7 @@ def _load_runtime_health(project_dir: Path, *, limit: int = 10) -> dict:
     log_path = project_dir / "logs" / "soft_failures.jsonl"
     payload = {
         "available": False,
+        "authority_role": _authority_role_for("runtime_health"),
         "recent_count": 0,
         "top_components": [],
         "recent": [],
@@ -1473,6 +1556,12 @@ def _compact_sink_alignment_summary(summary: dict | None) -> dict:
         "final_verdict_mismatches",
         "final_score_mismatches",
         "initial_verdict_mismatches",
+        "director_verdict_mismatches",
+        "gate_basis_mismatches",
+        "repair_scope_mismatches",
+        "fix_pack_target_kind_mismatches",
+        "fix_pack_patch_targets_mismatches",
+        "retry_budget_axes_mismatches",
         "patch_strategy_mismatches",
         "candidate_key_mismatches",
         "selection_candidate_key_mismatches",
@@ -1480,6 +1569,7 @@ def _compact_sink_alignment_summary(summary: dict | None) -> dict:
         "artifact_path_mismatches",
         "artifact_metadata_missing",
         "artifact_missing_files",
+        "gate_repair_metadata_missing",
     )
     issue_counts = {
         field: _count_alignment_issues(summary.get(field))
@@ -1503,6 +1593,7 @@ def _compact_sink_alignment_summary(summary: dict | None) -> dict:
 def _load_runtime_audit_summary(project_dir: Path) -> dict:
     payload = {
         "available": False,
+        "authority_role": _authority_role_for("runtime_audit_summary"),
         "tag": "",
         "timestamp": "",
         "summary_role": "",
@@ -1563,10 +1654,30 @@ def _build_dashboard_proof_status(*, sink_alignment_summary: dict, runtime_audit
     return {
         "available": available,
         "status": status,
+        "authority_role": _authority_role_for("proof_status"),
         "sink_alignment_status": sink_alignment_status,
         "runtime_summary_status": runtime_summary_status,
         "summary": summary_map.get(status, summary_map["unavailable"]),
     }
+
+
+def _build_config_authority_summary() -> dict[str, Any]:
+    try:
+        cfg = ConfigManager()
+        prompt_loader = PromptLoader()
+        summary = cfg.build_config_authority_summary()
+        summary["prompts"] = {
+            "director_ensemble_selection": prompt_loader.get_prompt_contract("director", "ENSEMBLE_SELECTION_PROMPT"),
+        }
+        return summary
+    except Exception as exc:
+        logger.debug("config authority summary unavailable: %s", exc)
+        return {
+            "available": False,
+            "thresholds": {},
+            "models": {},
+            "prompts": {},
+        }
 
 
 def _build_quality_dashboard_payload(project: str, lookback: int) -> dict:
@@ -1574,6 +1685,8 @@ def _build_quality_dashboard_payload(project: str, lookback: int) -> dict:
     project_dir = _get_project_dir(project)
     safe_lookback = max(1, min(int(lookback or 5), 20))
     payload = _quality_dashboard_defaults(project, safe_lookback)
+    payload["config_authority_summary"] = _build_config_authority_summary()
+    payload["result_summary"]["gate_repair"] = payload["gate_repair_summary"]
 
     dashboard = QualityDashboard(project_dir)
     dashboard_summary = dashboard.get_summary()
@@ -1612,6 +1725,7 @@ def _build_quality_dashboard_payload(project: str, lookback: int) -> dict:
 
     db = DBManager(db_path)
     calibration_health = payload["calibration"]["data_health"]
+    gate_repair_snapshot: dict[str, Any] | None = None
     try:
         calibration_health = inspect_quality_sidecar_health(project_dir, db)
         analyzer = FailureAnalyzer(db, project_path=project_dir)
@@ -1631,9 +1745,11 @@ def _build_quality_dashboard_payload(project: str, lookback: int) -> dict:
             if compact:
                 sink_alignment["stages"][f"stage{stage}"] = compact
         sink_alignment["available"] = bool(sink_alignment["stages"])
+        sink_alignment["authority_role"] = _authority_role_for("sink_alignment_summary")
         payload["sink_alignment_summary"] = sink_alignment
         quality_summary = db.get_quality_signal_summary(lookback=safe_lookback)
         quality_summary["project"] = project
+        quality_summary["authority_role"] = _authority_role_for("/quality/summary")
         payload["quality_summary"] = quality_summary
         payload["available"] = bool(quality_summary.get("available"))
         payload["latest_ep"] = quality_summary.get("latest_ep")
@@ -1641,6 +1757,7 @@ def _build_quality_dashboard_payload(project: str, lookback: int) -> dict:
             db.get_cost_summary(lookback=max(safe_lookback, 10)),
             max(safe_lookback, 10),
         )
+        gate_repair_snapshot = db.get_latest_stage4_gate_repair_snapshot()
 
         latest_ep = quality_summary.get("latest_ep")
         latest_label = db.get_episode_quality_label(latest_ep) if latest_ep else None
@@ -1664,7 +1781,9 @@ def _build_quality_dashboard_payload(project: str, lookback: int) -> dict:
         except Exception:
             pass
 
+    payload["gate_repair_summary"] = _build_gate_repair_summary(gate_repair_snapshot)
     payload["result_summary"] = _build_result_summary(payload["latest_ep"], latest_label, payload["quality_summary"])
+    payload["result_summary"]["gate_repair"] = payload["gate_repair_summary"]
     payload["compare_rows"] = _build_compare_rows(compare_labels, compare_signals)
     payload["calibration"] = _build_calibration_payload(
         latest_ep=payload["latest_ep"],
@@ -1888,7 +2007,12 @@ async def status_endpoint(request: Request) -> JSONResponse:
     runner: ProcessRunner = request.app.state.runner
     broker: PromptBroker = request.app.state.prompt_broker
 
-    data: dict = {"state": runner.state}
+    data: dict = {
+        "state": runner.state,
+        "authority_role": _authority_role_for("/status"),
+        "control_plane_authority_summary": build_control_plane_authority_summary(),
+        "runtime_authority_summary": build_runtime_authority_summary(),
+    }
     if runner.run_id is not None:
         data["run_id"] = runner.run_id
     if runner.pid is not None:
@@ -1908,6 +2032,9 @@ async def status_endpoint(request: Request) -> JSONResponse:
 
     control_plane_provenance = _load_control_plane_provenance_summary(request.app)
     if control_plane_provenance["available"]:
+        control_plane_provenance["authority_role"] = _authority_role_for(
+            "control_plane_provenance", fallback=AUTHORITY_ROLE_AUTHORITATIVE_SINK
+        )
         data["control_plane_provenance"] = control_plane_provenance
 
     return JSONResponse(status_code=200, content={"ok": True, "code": "OK", "data": data})

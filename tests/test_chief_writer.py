@@ -377,6 +377,50 @@ class TestChiefWriterStructuralInplacePatch:
             "structural_attempted": False,
         }
 
+    def test_inplace_patch_fix_pack_preserves_multi_anchor_targets(self, chief_writer):
+        original = "original manuscript " * 170
+        patched = "patched manuscript " * 150
+
+        chief_writer.ask = MagicMock(
+            return_value=json.dumps(
+                {
+                    "content": patched,
+                    "patch_state_updates": {"location": "renamed"},
+                },
+                ensure_ascii=False,
+            )
+        )
+
+        with patch("modules.core.prompt_loader.PromptLoader.load", return_value=None):
+            result = chief_writer.inplace_patch(
+                original_manuscript=original,
+                director_feedback="fix the opening and ending location labels only",
+                attempt_number=1,
+                fix_pack={
+                    "patch_targets": ["opening_location_name", "ending_location_name"],
+                    "must_fix": ["replace both labels with the approved venue"],
+                    "do_not_regress": ["scene mood", "timeline"],
+                    "success_condition": "Only the listed anchors are updated.",
+                    "target_kind": "entity_ref",
+                },
+            )
+
+        assert result == [
+            {
+                "manuscript": patched,
+                "strategy": "inplace_patch",
+                "state_updates": {"location": "renamed"},
+                "patch_targets": ["opening_location_name", "ending_location_name"],
+            }
+        ]
+        assert chief_writer._last_inplace_patch_trace == {
+            "patch_strategy": "inplace_patch",
+            "patch_targets": ["opening_location_name", "ending_location_name"],
+            "fallback_reason": "",
+            "focus": "",
+            "structural_attempted": False,
+        }
+
 
 # ══════════════════════════════════════════════════════════════
 # Test 1: ChiefWriter 초기화

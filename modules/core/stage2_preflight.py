@@ -7,7 +7,7 @@ import re
 import threading
 
 from modules.core.constants import smart_truncate
-from modules.core.context_advisor import RetrievalSources
+from modules.core.context_advisor import RetrievalSources, build_context_budget_ledger, build_context_observation
 from modules.core.fact_ledger import summarize_fact_ledger_numbers_block
 from modules.core.project_support import build_style_guide_summary
 from modules.core.semantic_query_broker import SemanticQueryBroker
@@ -1213,22 +1213,30 @@ class Stage2PreflightAnalysis:
                         and "[관계 의미 질의]" not in _s2_vector_ctx
                     ):
                         _coverage_warnings.append("missing_relation_slice")
+                    _stage2_budget_cap = int(getattr(_retrieval_plan, "total_budget_chars", 0) or 0)
+                    _stage2_budget_ledger = build_context_budget_ledger(
+                        stage="stage2",
+                        configured_cap=_stage2_budget_cap,
+                        effective_cap=_stage2_budget_cap,
+                        consumed_chars=len(_s2_vector_ctx),
+                        overflow_chars=max(0, len(_s2_vector_ctx) - _stage2_budget_cap) if _stage2_budget_cap > 0 else 0,
+                    )
                     self._record_retrieval_observation(
                         ep_num=current_ep_start,
                         stage="stage2",
-                        observation={
-                            "work_focus_present": bool(_work_focus),
-                            "tracking_slots_count": len(_work_focus.get("tracking_slots") or []) if isinstance(_work_focus, dict) else 0,
-                            "scene_engines_count": len(_work_focus.get("mandatory_scene_engines") or []) if isinstance(_work_focus, dict) else 0,
-                            "registry_profiles_count": len(_work_focus.get("registry_profiles") or []) if isinstance(_work_focus, dict) else 0,
-                            "planned_slots_count": len(getattr(_retrieval_plan, "slots", []) or []) if _retrieval_plan else 0,
-                            "advisor_path_used": bool(_use_advisor_path),
-                            "work_slot_summary_included": bool(_work_slot_summary and "[작품 추적 슬롯 요약]" in _s2_vector_ctx),
-                            "relation_slice_included": "[관계 의미 질의]" in _s2_vector_ctx,
-                            "source_counts": _source_counts,
-                            "coverage_warnings": _coverage_warnings,
-                            "vector_context_chars": len(_s2_vector_ctx),
-                        },
+                        observation=build_context_observation(
+                            stage="stage2",
+                            work_focus=_work_focus,
+                            retrieval_plan=_retrieval_plan,
+                            source_counts=_source_counts,
+                            coverage_warnings=_coverage_warnings,
+                            advisor_path_used=_use_advisor_path,
+                            work_slot_summary_present=bool(_work_slot_summary),
+                            work_slot_summary_included=bool(_work_slot_summary and "[작품 추적 슬롯 요약]" in _s2_vector_ctx),
+                            relation_slice_included="[관계 의미 질의]" in _s2_vector_ctx,
+                            vector_context_chars=len(_s2_vector_ctx),
+                            budget_ledger=_stage2_budget_ledger,
+                        ),
                     )
                     if _s2_vector_ctx:
                         self.ctx.ui.log(f"      🔎 [TF-38] 벡터 검색 완료 ({len(_s2_vector_ctx):,}자)")

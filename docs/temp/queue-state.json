@@ -1,0 +1,40 @@
+{
+  "version": "temp-queue-state-v1",
+  "generated_at": "2026-03-17T07:39:19.905707+00:00",
+  "queue_mode": "aggregate",
+  "active_item_count": 3,
+  "roadmap": {
+    "temp_path": "docs/temp/execution-roadmap.md",
+    "canonical_path": "docs/2026-03-17/geuldobi-v2-legacy-survey-reentry-execution-roadmap.md",
+    "status": "active"
+  },
+  "items": [
+    {
+      "topic": "geuldobi-v2-stage0-stage2-substrate-hardening",
+      "temp_path": "docs/temp/geuldobi-v2-stage0-stage2-substrate-hardening-execution-ssot.md",
+      "canonical_path": "docs/2026-03-17/geuldobi-v2-stage0-stage2-substrate-hardening-execution-ssot.md",
+      "status": "pending",
+      "depends_on": [],
+      "mirror_present": true,
+      "canonical_present": true
+    },
+    {
+      "topic": "geuldobi-v2-stage23-semantic-transport-restoration",
+      "temp_path": "docs/temp/geuldobi-v2-stage23-semantic-transport-restoration-execution-ssot.md",
+      "canonical_path": "docs/2026-03-17/geuldobi-v2-stage23-semantic-transport-restoration-execution-ssot.md",
+      "status": "pending",
+      "depends_on": [],
+      "mirror_present": true,
+      "canonical_present": true
+    },
+    {
+      "topic": "geuldobi-v2-stage23-semantic-validation-hardening",
+      "temp_path": "docs/temp/geuldobi-v2-stage23-semantic-validation-hardening-execution-ssot.md",
+      "canonical_path": "docs/2026-03-17/geuldobi-v2-stage23-semantic-validation-hardening-execution-ssot.md",
+      "status": "pending",
+      "depends_on": [],
+      "mirror_present": true,
+      "canonical_present": true
+    }
+  ]
+}

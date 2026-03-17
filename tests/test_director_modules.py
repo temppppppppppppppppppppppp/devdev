@@ -828,6 +828,15 @@ class TestDirectorCoreMethods:
         assert director.ENSEMBLE_SELECTION_PROMPT is not None
         assert len(director.ENSEMBLE_SELECTION_PROMPT) > 100
 
+    def test_director_prompt_contract_prefers_yaml_source(self, director):
+        from modules.domain.agents.director_prompts import get_director_prompt_contract
+
+        contract = get_director_prompt_contract("ENSEMBLE_SELECTION_PROMPT")
+
+        assert contract["available"] is True
+        assert contract["used_fallback"] is False
+        assert contract["effective_source"].startswith("config/prompts/director.yaml:")
+
 
 # ═══════════════════════════════════════════════════════════════
 # 6. DirectorEnsembleCaching Tests (TF-5)
@@ -1259,6 +1268,117 @@ class TestDirectorArcComparison:
         assert result["fix_scope"] == "inplace"
         assert "내공" in result["feedback"]
         assert result["selected_arc"] is arcs[0]
+
+
+class TestLane2DirectorEnsembleSemantics:
+    @pytest.fixture
+    def ensemble(self, mock_context, mock_client):
+        with patch.dict("os.environ", {"GOOGLE_API_KEY": "test-key-123"}):
+            from modules.domain.agents.director import Director
+            from modules.domain.agents.director_ensemble import DirectorEnsembleSelector as DirectorEnsemble
+
+            director = Director(context=mock_context, client=mock_client, model_tier="gemini-2.5-flash")
+            return DirectorEnsemble(director=director)
+
+    def test_prompt_packs_forward_and_gate_semantics_surface(self, ensemble):
+        load_calls = []
+
+        def _load(*args, **kwargs):
+            load_calls.append((args, kwargs))
+            prompt_name = args[1]
+            if prompt_name == "ENSEMBLE_STABLE_CONTEXT":
+                return "stable context"
+            if prompt_name == "ENSEMBLE_VARIABLE_PROMPT":
+                return "variable prompt"
+            return "fallback prompt"
+
+        ensemble._d._get_or_create_context_cache = MagicMock(side_effect=RuntimeError("cache error"))
+        ensemble._d._ask_with_cached_context = MagicMock()
+        ensemble._d.ask = MagicMock(return_value='{"selected":"A","verdict":"PASS_WITH_FIX","score":91}')
+        ensemble._d._extract_json_robust = MagicMock(
+            return_value={
+                "selected": "A",
+                "verdict": "PASS_WITH_FIX",
+                "score": 91,
+                "selection_reason": "picked",
+                "feedback": {"issues": [], "action_items": ["tighten ending"]},
+                "fix_scope": "partial",
+            }
+        )
+        ensemble._d.apply_adaptive_decision = MagicMock(
+            return_value={"decision": "PASS_WITH_FIX", "adjusted": False, "threshold_used": 65, "reason": ""}
+        )
+        ensemble._prompt_loader = MagicMock()
+        ensemble._prompt_loader.load = MagicMock(side_effect=_load)
+
+        candidates = [
+            {"strategy": "A", "manuscript": _LONG_MANUSCRIPT, "warnings": "", "state_updates": {}},
+            {"strategy": "B", "manuscript": _LONG_MANUSCRIPT, "warnings": "", "state_updates": {}},
+            {"strategy": "C", "manuscript": _LONG_MANUSCRIPT, "warnings": "", "state_updates": {}},
+        ]
+        result = ensemble.select_and_judge_ensemble(
+            ep_num=4,
+            candidates=candidates,
+            validation_results=[{}, {}, {}],
+            blueprint={},
+            previous_ending="",
+            decision_core="### [Decision Core]\ncore",
+            candidate_evidence="### [Candidate Evidence]\nevidence",
+            reference_appendix="### [Reference Appendix]\nappendix",
+        )
+
+        variable_call = next(call for call in load_calls if call[0][1] == "ENSEMBLE_VARIABLE_PROMPT")
+        assert variable_call[1]["decision_core"] == "### [Decision Core]\ncore"
+        assert variable_call[1]["candidate_evidence"] == "### [Candidate Evidence]\nevidence"
+        assert variable_call[1]["reference_appendix"] == "### [Reference Appendix]\nappendix"
+        assert result["director_verdict"] == "PASS_WITH_FIX"
+        assert result["final_verdict"] == "PASS_WITH_FIX"
+        assert result["gate_basis"] == "director_primary_pass_with_fix"
+        assert result["repair_scope"] == "partial"
+
+    def test_fix_pack_is_normalized_and_forwarded(self, ensemble):
+        ensemble._d._get_or_create_context_cache = MagicMock(side_effect=RuntimeError("cache error"))
+        ensemble._d._ask_with_cached_context = MagicMock()
+        ensemble._d.ask = MagicMock(return_value='{"selected":"A","verdict":"PASS_WITH_FIX","score":93}')
+        ensemble._d._extract_json_robust = MagicMock(
+            return_value={
+                "selected": "A",
+                "verdict": "PASS_WITH_FIX",
+                "score": 93,
+                "selection_reason": "picked",
+                "feedback": {"issues": [], "action_items": ["fix the location labels"]},
+                "fix_scope": "inplace",
+                "fix_pack": {
+                    "patch_targets": ["opening_location_name", "ending_location_name"],
+                    "must_fix": ["replace both labels with the approved venue"],
+                    "do_not_regress": ["scene mood", "timeline"],
+                    "success_condition": "Only the listed anchors are corrected.",
+                    "target_kind": "entity_ref",
+                },
+            }
+        )
+        ensemble._d.apply_adaptive_decision = MagicMock(
+            return_value={"decision": "PASS_WITH_FIX", "adjusted": False, "threshold_used": 65, "reason": ""}
+        )
+        ensemble._prompt_loader = MagicMock()
+        ensemble._prompt_loader.load = MagicMock(return_value="prompt")
+
+        candidates = [
+            {"strategy": "A", "manuscript": _LONG_MANUSCRIPT, "warnings": "", "state_updates": {}},
+            {"strategy": "B", "manuscript": _LONG_MANUSCRIPT, "warnings": "", "state_updates": {}},
+            {"strategy": "C", "manuscript": _LONG_MANUSCRIPT, "warnings": "", "state_updates": {}},
+        ]
+        result = ensemble.select_and_judge_ensemble(
+            ep_num=4,
+            candidates=candidates,
+            validation_results=[{}, {}, {}],
+            blueprint={},
+            previous_ending="",
+        )
+
+        assert result["fix_pack"]["target_kind"] == "entity_ref"
+        assert result["fix_pack"]["patch_targets"] == ["opening_location_name", "ending_location_name"]
+        assert result["fix_pack"]["must_fix"] == ["replace both labels with the approved venue"]
 
     def test_compare_and_select_arc_ask_exception_fallback(self, director):
         """LLM ask() 예외 → _fallback_arc_selection으로 PASS 폴백."""

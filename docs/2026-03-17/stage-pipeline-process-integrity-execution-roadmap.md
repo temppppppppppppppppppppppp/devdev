@@ -1,18 +1,16 @@
 # Stage Pipeline Process Integrity Aggregate Execution Roadmap
 
 Date: 2026-03-17
-Status: active
+Status: closed
 Canonical Path: `docs/2026-03-17/stage-pipeline-process-integrity-execution-roadmap.md`
-Temp Mirror Path: `docs/temp/execution-roadmap.md`
+Temp Mirror Path: removed after queue exhaustion
 Commit State:
 - Baseline Commit: `100ecd03557e1b8c7a3544b5285fc80e7105050c`
 - Baseline Dirty Summary: `dirty: 2 tracked docs, 1 tracked runtime log; hotspots: docs/2026-03-16/post-remediation-later-hardening-autopilot-prompt*.md, projects/test_project/logs/episode_production.jsonl`
-- Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `none`
+- Resume Commit: `2352b26a293ac330a0ff24da320363f9abdbbba1`
+- Resume Drift Summary: `1 commit since baseline; lane-2 revalidation and realization completed against the current workspace; lane-3 is now the active next item`
 Queue Snapshot:
-- `docs/temp/stage-pipeline-lane1-cw-context-architecture-execution-ssot.md`
-- `docs/temp/stage-pipeline-lane2-director-gate-semantics-execution-ssot.md`
-- `docs/temp/stage-pipeline-lane3-repair-retry-architecture-execution-ssot.md`
+- none active
 Confidence After 3-Pass Audit: `96%`
 
 ## 1. Purpose
@@ -27,9 +25,9 @@ Confidence After 3-Pass Audit: `96%`
 
 | Item | Canonical Path | Temp Path | Status | Notes |
 | --- | --- | --- | --- | --- |
-| `lane-1-cw-context-architecture` | `docs/2026-03-17/stage-pipeline-lane1-cw-context-architecture-execution-ssot.md` | `docs/temp/stage-pipeline-lane1-cw-context-architecture-execution-ssot.md` | pending | upstream context substrate for all later lanes |
-| `lane-2-director-gate-semantics` | `docs/2026-03-17/stage-pipeline-lane2-director-gate-semantics-execution-ssot.md` | `docs/temp/stage-pipeline-lane2-director-gate-semantics-execution-ssot.md` | pending | depends on cleaner context ranking and feeds lane 3 semantics |
-| `lane-3-repair-retry-architecture` | `docs/2026-03-17/stage-pipeline-lane3-repair-retry-architecture-execution-ssot.md` | `docs/temp/stage-pipeline-lane3-repair-retry-architecture-execution-ssot.md` | pending | retry and PASS_WITH_FIX lane; best started after lane 2 semantics stabilize |
+| `lane-1-cw-context-architecture` | `docs/2026-03-17/stage-pipeline-lane1-cw-context-architecture-execution-ssot.md` | removed after closure | completed | upstream context substrate landed; temp mirror removed after closure |
+| `lane-2-director-gate-semantics` | `docs/2026-03-17/stage-pipeline-lane2-director-gate-semantics-execution-ssot.md` | removed after closure | completed | semantic split and prompt-pack hierarchy landed; temp mirror removed after closure |
+| `lane-3-repair-retry-architecture` | `docs/2026-03-17/stage-pipeline-lane3-repair-retry-architecture-execution-ssot.md` | removed after closure | completed | PASS_WITH_FIX narrowing, Fix Pack contract, multi-anchor local patching, and retry budget axes landed |
 
 ## 3. Dependency Graph
 - `lane-1-cw-context-architecture -> lane-2-director-gate-semantics`
@@ -62,7 +60,7 @@ Priority basis:
 - completion signal:
   - Tier 0/1/2 composition is live and writer retrieval planning accepts `work_focus`
 - temp cleanup action:
-  - remove the lane 1 temp mirror after closure and mark status completed
+  - completed on 2026-03-17; temp mirror removed after closure
 
 ### lane-2-director-gate-semantics
 - goal:
@@ -74,7 +72,7 @@ Priority basis:
 - completion signal:
   - Director primary judgment, final outcome, gate basis, and advisory role are meaningfully separated
 - temp cleanup action:
-  - remove the lane 2 temp mirror after closure and mark status completed
+  - completed on 2026-03-17; temp mirror removed after closure
 
 ### lane-3-repair-retry-architecture
 - goal:
@@ -86,7 +84,7 @@ Priority basis:
 - completion signal:
   - PASS_WITH_FIX is a strict local-repair contract and retry budgets are represented coherently
 - temp cleanup action:
-  - remove the lane 3 temp mirror after closure and mark status completed
+  - completed on 2026-03-17; temp mirror removed and aggregate temp roadmap removed after queue exhaustion
 
 ## 6. Shared Risks and Side-Effects
 - shared write paths:
@@ -107,9 +105,9 @@ Priority basis:
 
 | Item | Status | Last Update | Blocker |
 | --- | --- | --- | --- |
-| `lane-1-cw-context-architecture` | pending | 2026-03-17 | none |
-| `lane-2-director-gate-semantics` | pending | 2026-03-17 | waits on lane 1 substrate or a fresh non-blocking validity gate |
-| `lane-3-repair-retry-architecture` | pending | 2026-03-17 | waits on lane 2 semantics |
+| `lane-1-cw-context-architecture` | completed | 2026-03-17 | none |
+| `lane-2-director-gate-semantics` | completed | 2026-03-17 | none |
+| `lane-3-repair-retry-architecture` | completed | 2026-03-17 | none |
 
 ## 8. Queue Cleanup Rule
 - remove a temp execution SSOT mirror immediately after that item is realized and closed
@@ -117,3 +115,10 @@ Priority basis:
 - when all items are completed, remove `docs/temp/execution-roadmap.md`
 - remove `docs/temp/queue-state.json` if present
 - leave `docs/temp/README.md`
+
+## 9. Closure Note
+- all three lanes are completed as of 2026-03-17
+- queue exhaustion cleanup removed:
+  - `docs/temp/stage-pipeline-lane3-repair-retry-architecture-execution-ssot.md`
+  - `docs/temp/execution-roadmap.md`
+- validator follow-up: `python scripts/ops_validator.py`

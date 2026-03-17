@@ -815,13 +815,17 @@ JSON으로 출력:
                 _original_len = len(mandatory_context)
                 _ctx_budget_meta = getattr(self.ctx, "_stage4_context_budget_meta", {}) or {}
                 if isinstance(_ctx_budget_meta, dict) and _ctx_budget_meta:
+                    _budget_ledger = _ctx_budget_meta.get("budget_ledger") or {}
                     _perf_logger.info(
-                        "[V66.1] mandatory_context pretrim meta sc=%s mc=%s total=%s limit=%s headroom=%s",
+                        "[V66.1] mandatory_context pretrim meta sc=%s mc=%s total=%s limit=%s headroom=%s effective=%s dropped=%s overflow=%s",
                         _ctx_budget_meta.get("sc_chars"),
                         _ctx_budget_meta.get("mc_chars"),
                         _ctx_budget_meta.get("total_chars"),
                         _ctx_budget_meta.get("limit_chars"),
                         _ctx_budget_meta.get("headroom_chars"),
+                        _budget_ledger.get("effective_cap"),
+                        _budget_ledger.get("dropped_chars"),
+                        _budget_ledger.get("overflow_chars"),
                     )
                 # 섹션 분리: "\n[" 또는 "\n\n[" 마커 기준으로 분할
                 _section_pattern = re.compile(r"\n(?=\[)")

@@ -73,6 +73,156 @@ def _short_text(value: object, limit: int = 200) -> str:
     return text[:limit]
 
 
+def _normalize_repair_scope(value: object) -> str:
+    scope = str(value or "").strip().lower()
+    return scope if scope in {"inplace", "partial", "full"} else "none"
+
+
+def _normalize_fix_target_kind(value: object) -> str:
+    raw = str(value or "").strip().lower().replace("-", "_").replace(" ", "_")
+    aliases = {
+        "entity": "entity_ref",
+        "entityref": "entity_ref",
+        "named_entity": "entity_ref",
+        "phrase": "local_phrase",
+        "localphrase": "local_phrase",
+        "sentence": "local_sentence",
+        "localsentence": "local_sentence",
+        "scene": "scene_model",
+        "scenelevel": "scene_model",
+        "scene_level": "scene_model",
+    }
+    normalized = aliases.get(raw, raw)
+    return normalized if normalized in {"entity_ref", "local_phrase", "local_sentence", "scene_model"} else ""
+
+
+def _resolve_primary_fix_target_kind(kinds: list[str]) -> str:
+    normalized = [_normalize_fix_target_kind(item) for item in kinds]
+    cleaned = [item for item in normalized if item]
+    if not cleaned:
+        return ""
+    if "scene_model" in cleaned:
+        return "scene_model"
+    if "local_sentence" in cleaned:
+        return "local_sentence"
+    if "local_phrase" in cleaned:
+        return "local_phrase"
+    return "entity_ref"
+
+
+def _normalize_fix_pack_list(raw: object, *, limit: int = 5, item_limit: int = 160) -> list[str]:
+    if isinstance(raw, str):
+        items = [raw]
+    elif isinstance(raw, list):
+        items = raw
+    else:
+        return []
+    cleaned: list[str] = []
+    seen: set[str] = set()
+    for item in items:
+        text = " ".join(str(item or "").split()).strip()
+        if not text:
+            continue
+        text = text[:item_limit]
+        if text in seen:
+            continue
+        seen.add(text)
+        cleaned.append(text)
+        if len(cleaned) >= limit:
+            break
+    return cleaned
+
+
+def _normalize_fix_pack(raw: object) -> dict:
+    payload = raw if isinstance(raw, dict) else {}
+    patch_targets = _normalize_fix_pack_list(payload.get("patch_targets"), limit=6, item_limit=80)
+    must_fix = _normalize_fix_pack_list(payload.get("must_fix"), limit=6, item_limit=180)
+    do_not_regress = _normalize_fix_pack_list(payload.get("do_not_regress"), limit=6, item_limit=180)
+    success_condition = _short_text(payload.get("success_condition", ""), limit=220)
+    evidence_summary = _short_text(payload.get("evidence_summary", ""), limit=220)
+
+    raw_kinds = payload.get("target_kinds")
+    if isinstance(raw_kinds, str):
+        raw_kinds = [part.strip() for part in raw_kinds.split(",")]
+    elif not isinstance(raw_kinds, list):
+        raw_kinds = []
+    if payload.get("target_kind"):
+        raw_kinds = [payload.get("target_kind"), *raw_kinds]
+    target_kinds = []
+    for item in raw_kinds:
+        kind = _normalize_fix_target_kind(item)
+        if kind and kind not in target_kinds:
+            target_kinds.append(kind)
+    target_kind = _resolve_primary_fix_target_kind(target_kinds)
+
+    normalized = {
+        "patch_targets": patch_targets,
+        "must_fix": must_fix,
+        "do_not_regress": do_not_regress,
+        "success_condition": success_condition,
+        "target_kind": target_kind,
+    }
+    if target_kinds:
+        normalized["target_kinds"] = target_kinds
+    if evidence_summary:
+        normalized["evidence_summary"] = evidence_summary
+
+    has_payload = any(
+        normalized.get(key)
+        for key in ("patch_targets", "must_fix", "do_not_regress", "success_condition", "target_kind", "evidence_summary")
+    )
+    return normalized if has_payload else {}
+
+
+def _derive_gate_basis(
+    *,
+    director_verdict: object,
+    final_verdict: object,
+    firewall_triggered: bool = False,
+) -> str:
+    director = str(director_verdict or "").strip().upper()
+    final = str(final_verdict or "").strip().upper()
+    if firewall_triggered:
+        return "continuity_firewall"
+    if final == "REJECT" and director in {"PASS", "PASS_WITH_FIX"} and director != final:
+        return "quality_floor_fail"
+    if final == "PASS":
+        return "director_primary_pass"
+    if final == "PASS_WITH_FIX":
+        return "director_primary_pass_with_fix"
+    return "director_primary_reject"
+
+
+def _normalize_director_prompt_packs(
+    *,
+    mandatory_context: object = "",
+    decision_core: object = "",
+    candidate_evidence: object = "",
+    reference_appendix: object = "",
+) -> dict[str, str]:
+    raw_mandatory = str(mandatory_context or "").strip()
+    raw_decision_core = str(decision_core or "").strip() or raw_mandatory
+    raw_candidate_evidence = str(candidate_evidence or "").strip()
+    raw_reference_appendix = str(reference_appendix or "").strip()
+    return {
+        "decision_core": _prompt_snippet(
+            raw_decision_core,
+            cap_name="context.director_mandatory_max",
+            default=400000,
+        ),
+        "candidate_evidence": _prompt_snippet(
+            raw_candidate_evidence,
+            cap_name="context.director_candidate_evidence_max",
+            default=220000,
+        ),
+        "reference_appendix": _prompt_snippet(
+            raw_reference_appendix,
+            cap_name="context.director_reference_appendix_max",
+            default=120000,
+        ),
+    }
+
+
 _FIXABLE_FIREWALL_TYPE_TOKENS = {
     "고유명사",
     "이름",
@@ -228,14 +378,19 @@ def _log_director_frame(
     decision: str,
     score: int,
     selected_label: str,
+    director_verdict: str = "",
+    gate_basis: str = "",
     selection_reason: str = "",
     verdict_reason: str = "",
     comparison_notes: str = "",
     contradictions: list | None = None,
     fix_scope: str = "",
+    repair_scope: str = "",
     open_review: str = "",
     thinking: str = "",
 ) -> None:
+    _director_verdict = _short_text(director_verdict, 120)
+    _gate_basis = _short_text(gate_basis, 120)
     _selection_reason = _short_text(selection_reason, 240)
     _verdict_reason = _short_text(verdict_reason, 240)
     _comparison_notes = _short_text(comparison_notes, 240)
@@ -244,13 +399,16 @@ def _log_director_frame(
     _contradictions = list(contradictions or [])
 
     logging.info(
-        "[DirectorFrame] stage=%s ep=%s verdict=%s score=%s selected=%s fix_scope=%s contradictions=%d",
+        "[DirectorFrame] stage=%s ep=%s verdict=%s director_verdict=%s gate_basis=%s score=%s selected=%s fix_scope=%s repair_scope=%s contradictions=%d",
         stage,
         ep_num,
         decision,
+        _director_verdict or "",
+        _gate_basis or "",
         score,
         selected_label,
         fix_scope or "",
+        repair_scope or "",
         len(_contradictions),
     )
     if _selection_reason:
@@ -959,6 +1117,9 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
         retry_count: int = 0,
         episode_digest: str = "",
         mandatory_context: str = "",
+        decision_core: str = "",
+        candidate_evidence: str = "",
+        reference_appendix: str = "",
         prev_manuscripts_text: str = "",
         story_context: str = "",
     ) -> dict:
@@ -995,6 +1156,11 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
                     "selected": "A",
                     "selected_candidate": {"manuscript": "", "error": True},
                     "verdict": "REJECT",
+                    "director_verdict": "REJECT",
+                    "final_verdict": "REJECT",
+                    "original_verdict": "REJECT",
+                    "gate_basis": "director_primary_reject",
+                    "repair_scope": "none",
                     "score": 0,
                     "feedback": {
                         "issues": ["빈 후보 리스트: 앙상블 생성 실패"],
@@ -1008,6 +1174,11 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
                 "selected": ["A", "B", "C"][best_idx],
                 "selected_candidate": candidates[best_idx],
                 "verdict": "REJECT",
+                "director_verdict": "REJECT",
+                "final_verdict": "REJECT",
+                "original_verdict": "REJECT",
+                "gate_basis": "director_primary_reject",
+                "repair_scope": "none",
                 "score": 30,
                 "feedback": {
                     "issues": [f"모든 후보 분량 미달: {lengths}자 (최소 {MIN_MANUSCRIPT_LENGTH}자 필요)"],
@@ -1058,6 +1229,17 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
         _prev_ms_esc = self._d._escape_braces(_prev_ms_for_director)
         _story_esc = self._d._escape_braces(story_context) if story_context else "(작품 설정 정보 없음)"
 
+        _prompt_packs = _normalize_director_prompt_packs(
+            mandatory_context=mandatory_context,
+            decision_core=decision_core,
+            candidate_evidence=candidate_evidence,
+            reference_appendix=reference_appendix,
+        )
+        _combined_context = "\n\n".join(part for part in _prompt_packs.values() if part)
+        _decision_core_esc = self._d._escape_braces(_prompt_packs["decision_core"])
+        _candidate_evidence_esc = self._d._escape_braces(_prompt_packs["candidate_evidence"])
+        _reference_appendix_esc = self._d._escape_braces(_prompt_packs["reference_appendix"])
+
         stable_context = self._prompt_loader.load(
             "director",
             "ENSEMBLE_STABLE_CONTEXT",
@@ -1080,6 +1262,9 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
                 strategy_c=info_c["strategy"],
                 manuscript_c=self._d._escape_braces(info_c["manuscript"]),
                 warnings_c=self._d._escape_braces(info_c["warnings"]),
+                decision_core=_decision_core_esc,
+                candidate_evidence=_candidate_evidence_esc,
+                reference_appendix=_reference_appendix_esc,
             )
             if stable_context
             else None
@@ -1113,6 +1298,7 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
 
 {self._d._escape_braces(_mc_for_director)}
 """
+        _mc_block = ""
 
         if not stable_context or not variable_prompt:
             # Fallback: split 프롬프트 없음 → legacy 단일 프롬프트 사용
@@ -1133,6 +1319,9 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
                 strategy_c=info_c["strategy"],
                 manuscript_c=self._d._escape_braces(info_c["manuscript"]),
                 warnings_c=self._d._escape_braces(info_c["warnings"]),
+                decision_core=_decision_core_esc,
+                candidate_evidence=_candidate_evidence_esc,
+                reference_appendix=_reference_appendix_esc,
             )
             if not prompt:
                 logging.warning("[Director] ENSEMBLE_SELECTION_PROMPT not found in prompt loader")
@@ -1140,6 +1329,11 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
                     "selected": "A",
                     "selected_candidate": candidates[0] if candidates else {},
                     "verdict": "REJECT",
+                    "director_verdict": "REJECT",
+                    "final_verdict": "REJECT",
+                    "original_verdict": "REJECT",
+                    "gate_basis": "director_primary_reject",
+                    "repair_scope": "none",
                     "score": 50,
                     "feedback": {"issues": ["Prompt loading failed: ENSEMBLE_SELECTION_PROMPT"]},
                     "state_updates": (candidates[0].get("state_updates") or {})
@@ -1148,7 +1342,6 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
                     "action_items": ["프롬프트 로더 설정 확인 필요"],
                     "prompt_error": True,
                 }
-            prompt += _mc_block
             try:
                 response = self._d.ask(prompt, temperature=0.1, thinking_level="high")
             except Exception as _ask_err:
@@ -1156,7 +1349,6 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
                 response = ""
         else:
             # [1M-CTX] Caching path — stable context (prev_manuscripts ~180K자) 캐시
-            variable_prompt += _mc_block
             # [TF-A] full_fallback 선제 절삭 — variable_prompt 보호
             # _apply_prompt_size_gate()는 단순 head 절삭이므로, 미리 stable_context를 줄여
             # full_fallback이 게이트 이내가 되도록 보장 (variable이 tail에서 잘리는 것 방지)
@@ -1215,6 +1407,11 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
                 else {},  # [TF-R4] LLM null 방어
                 "action_items": ["재생성 필요"],
                 "parsing_error": True,
+                "director_verdict": "REJECT",
+                "final_verdict": "REJECT",
+                "original_verdict": "REJECT",
+                "gate_basis": "director_primary_reject",
+                "repair_scope": "none",
             }
 
         selected_letter = str(result.get("selected", "A")).strip().upper()
@@ -1355,7 +1552,7 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
                     _nc_agree_count,
                 )
         else:
-            _mc = mandatory_context or ""
+            _mc = _combined_context or mandatory_context or ""
             if "[NumericConsistency" in _mc and "[NC-" in _mc:
                 # [TF-C] 미응답 감점 제거 — Director 주권 존중 (선택사항으로 변경)
                 logging.debug("[NC-1] Director가 numeric_consistency_review를 생략함 (선택사항, 감점 없음)")
@@ -1448,6 +1645,8 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
             _verdict_reason = _selection_reason
         _fix_scope = str(result.get("fix_scope", "") or "").strip()
         _fix_scope_reasoning = str(result.get("fix_scope_reasoning", "") or "").strip()
+        _fix_pack = _normalize_fix_pack(result.get("fix_pack"))
+        _repair_scope = _normalize_repair_scope(_fix_scope)
         _selected_manuscript = (
             str(selected_candidate.get("manuscript", "") or "") if isinstance(selected_candidate, dict) else ""
         )
@@ -1496,6 +1695,11 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
         logging.info(
             f"[Stage4 Director] 판정: {final_verdict} (점수: {score}) 후보{selected_letter} | 원래: {original_verdict}"
         )
+        _gate_basis = _derive_gate_basis(
+            director_verdict=original_verdict,
+            final_verdict=final_verdict,
+            firewall_triggered=firewall_triggered,
+        )
         _issues = feedback.get("issues", []) if isinstance(feedback, dict) else []
         _log_director_frame(
             stage="stage4",
@@ -1503,10 +1707,13 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
             decision=final_verdict,
             score=score,
             selected_label=str(selected_letter),
+            director_verdict=str(original_verdict or ""),
+            gate_basis=_gate_basis,
             selection_reason=_selection_reason,
             verdict_reason=_verdict_reason,
             contradictions=_issues,
             fix_scope=_fix_scope,
+            repair_scope=_repair_scope,
             open_review=_open_review,
             thinking=getattr(self._d, "_last_thinking", ""),
         )
@@ -1544,7 +1751,10 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
             "selected": selected_letter,
             "selected_candidate": selected_candidate,
             "verdict": final_verdict,
+            "director_verdict": original_verdict,
+            "final_verdict": final_verdict,
             "original_verdict": original_verdict,
+            "gate_basis": _gate_basis,
             "score": score,
             "pre_firewall_score": _pre_firewall_score,  # [TF-22b] 패치 모드용
             "score_breakdown": _canonical_score_breakdown(result.get("score_breakdown", {})),
@@ -1563,9 +1773,11 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
             "open_review": _open_review,  # [TF-29] 자유 리뷰 전파
             "adaptive_threshold": adaptive_result.get("threshold_used", 65),
             "adaptive_reason": adaptive_result.get("reason", ""),
+            "repair_scope": _repair_scope,
             "error_category": result.get("error_category", ""),  # [V75-B] LOGIC_ERROR 전파
             "fix_scope": _fix_scope,  # [TF-23] Director 판단 수정 범위
             "fix_scope_reasoning": _fix_scope_reasoning,  # [TF-35] 수정 범위 근거 전파
+            "fix_pack": _fix_pack,
             "numeric_consistency_review": _nc_review,  # [NC-1] Director 수치 판정 전파
             "consistency_checklist": _checklist,  # [NC-3] 일관성 체크리스트 전파
             "contradiction_details": _contradiction_details,

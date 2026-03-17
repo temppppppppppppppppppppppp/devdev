@@ -1,14 +1,14 @@
 # Stage Pipeline Lane 2 Director Gate Semantics and Prompt Austerity Execution SSOT
 
 Date: 2026-03-17
-Status: execution-ready
+Status: closed
 Canonical Path: `docs/2026-03-17/stage-pipeline-lane2-director-gate-semantics-execution-ssot.md`
 Temp Mirror Path: `docs/temp/stage-pipeline-lane2-director-gate-semantics-execution-ssot.md`
 Commit State:
 - Baseline Commit: `100ecd03557e1b8c7a3544b5285fc80e7105050c`
 - Baseline Dirty Summary: `dirty: 2 tracked docs, 1 tracked runtime log; hotspots: docs/2026-03-16/post-remediation-later-hardening-autopilot-prompt*.md, projects/test_project/logs/episode_production.jsonl`
-- Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `none`
+- Resume Commit: `2352b26a293ac330a0ff24da320363f9abdbbba1`
+- Resume Drift Summary: `1 commit since baseline; dirty lane-1 closure surfaces plus runtime log; hotspots: docs/2026-03-17/stage-pipeline-lane1-cw-context-architecture-execution-ssot.md, docs/2026-03-17/stage-pipeline-process-integrity-execution-roadmap.md, modules/core/context_advisor.py, modules/core/stage4_context_builder.py, tests/test_context_advisor.py, tests/test_stage4_context_builder.py, projects/test_project/logs/episode_production.jsonl`
 Source Survey Docs:
 - `docs/2026-03-17/stage-pipeline-process-integrity-global-survey.md`
 - `docs/2026-03-17/quality-gate-semantics-outline.md`
@@ -118,7 +118,7 @@ Excluded:
 - avoid premature dashboard/schema expansion before semantic contracts stabilize
 
 ## 12. Temp Queue Notes
-- temp status: pending
+- temp status: completed
 - cleanup condition:
   - remove `docs/temp/stage-pipeline-lane2-director-gate-semantics-execution-ssot.md` only after implementation closes and the roadmap marks this item completed
 - roadmap dependency:
@@ -129,3 +129,17 @@ Excluded:
 - closure harness: `docs/implementation/execution-closure-harness.md`
 - optional queue state entry: `docs/temp/queue-state.json`
 - execution-start rule: re-run the document 3-pass audit and confirm at least 95% confidence against the current workspace state before patching code from this document
+
+## 14. Closure Note
+- realization outcome:
+  - `modules/domain/agents/director_ensemble.py` now returns and logs explicit `director_verdict`, `final_verdict`, `gate_basis`, and `repair_scope` fields and accepts split Director prompt packs instead of relying on one overloaded context channel
+  - `modules/core/stage4_interview_round.py` now assembles Director input as `Decision Core -> Candidate Evidence -> Reference Appendix`, normalizes post-select and re-audit gate transitions through the split semantics contract, and persists gate semantics into selection metadata and episode logs
+  - `config/prompts/director.yaml` and `modules/domain/agents/director_prompts.py` now keep stable and fallback Director prompt paths aligned on the three-pack input contract
+- verification evidence:
+  - `python -m pytest tests/test_stage4_interview_round.py -k "Lane2DirectorSemantics or director_mandatory_context or save_director_selection_persists_verdict_metadata or append_episode_log" -q`
+  - `python -m pytest tests/test_director_modules.py -k "Lane2DirectorEnsembleSemantics or DirectorEnsembleCaching or ensemble_all_short_manuscripts_reject" -q`
+  - `python -m pytest tests/test_stage4_orchestrator.py -k "stage4_to_3_feedback or director" -q`
+  - `python -m pytest tests/test_pre_director_submodules.py -q`
+  - `python scripts/ops_validator.py`
+- residual risk:
+  - lane 3 retry-contract tightening is still pending; `PASS_WITH_FIX` budget policy and Fix Pack behavior may still refine downstream `gate_basis` consumers, but lane 2 semantic separation and prompt-pack hierarchy are now live and independently validated

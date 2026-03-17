@@ -127,6 +127,186 @@ class RetrievalPlan:
     used_llm: bool = False
 
 
+_STAGE_BUDGET_BUCKETS = {
+    "stage2": "smart_retrieval.stage2_total_budget",
+    "stage3": "smart_retrieval.stage3_total_budget",
+    "stage4": "context.mandatory_context_max",
+    "director": "smart_retrieval.director_total_budget",
+}
+
+
+def _clean_str_list(values: Any) -> list[str]:
+    cleaned: list[str] = []
+    for value in values or []:
+        text = str(value or "").strip()
+        if text and text not in cleaned:
+            cleaned.append(text)
+    return cleaned
+
+
+def normalize_context_source_counts(source_counts: dict | None) -> dict[str, int]:
+    if not isinstance(source_counts, dict):
+        return {}
+
+    normalized: dict[str, int] = {}
+    for key, value in source_counts.items():
+        name = str(key or "").strip()
+        if not name:
+            continue
+        try:
+            count = int(value or 0)
+        except (TypeError, ValueError):
+            continue
+        if count > 0:
+            normalized[name] = count
+    return normalized
+
+
+def build_context_budget_ledger(
+    *,
+    stage: str,
+    configured_cap: int = 0,
+    effective_cap: int = 0,
+    consumed_chars: int = 0,
+    dropped_chars: int = 0,
+    overflow_chars: int = 0,
+    fallback_cap: int = 0,
+    budget_bucket: str | None = None,
+    headroom_chars: int = 0,
+) -> dict[str, Any]:
+    configured_cap = max(0, int(configured_cap or 0))
+    fallback_cap = max(0, int(fallback_cap or 0))
+    effective_cap = max(0, int(effective_cap or configured_cap or fallback_cap or 0))
+    consumed_chars = max(0, int(consumed_chars or 0))
+    dropped_chars = max(0, int(dropped_chars or 0))
+    overflow_chars = max(0, int(overflow_chars or 0))
+    headroom_chars = max(0, int(headroom_chars or 0))
+    return {
+        "budget_bucket": str(budget_bucket or _STAGE_BUDGET_BUCKETS.get(stage, stage) or stage),
+        "configured_cap": configured_cap,
+        "fallback_cap": fallback_cap,
+        "effective_cap": effective_cap,
+        "consumed_chars": consumed_chars,
+        "dropped_chars": dropped_chars,
+        "overflow_chars": overflow_chars,
+        "headroom_chars": headroom_chars,
+        "trim_applied": bool(dropped_chars or overflow_chars),
+    }
+
+
+def build_context_provenance_ledger(
+    *,
+    stage: str,
+    retrieval_plan=None,
+    work_focus: dict[str, Any] | None = None,
+    source_counts: dict | None = None,
+    coverage_warnings: list[str] | None = None,
+    work_slot_summary_present: bool = False,
+    work_slot_summary_included: bool = False,
+    relation_slice_included: bool = False,
+    stage_context_chars: int = 0,
+    budget_bucket: str | None = None,
+) -> dict[str, Any]:
+    normalized_source_counts = normalize_context_source_counts(source_counts)
+    coverage_warnings = _clean_str_list(coverage_warnings)
+
+    slot_categories: list[str] = []
+    for slot in (getattr(retrieval_plan, "slots", []) or []):
+        category = str(getattr(slot, "category", "") or "").strip()
+        if category and category not in slot_categories:
+            slot_categories.append(category)
+
+    source_item = [f"slot:{category}" for category in slot_categories]
+    if not source_item and normalized_source_counts:
+        source_item = [f"source:{key}" for key in sorted(normalized_source_counts.keys())]
+    if not source_item:
+        source_item = ["legacy_context"]
+
+    stage_present = list(source_item)
+    if isinstance(work_focus, dict) and work_focus:
+        stage_present.append("work_focus")
+    if work_slot_summary_present:
+        stage_present.append("work_slot_summary")
+    if normalized_source_counts.get(RetrievalSources.DB_NPC_RELATIONSHIP, 0) > 0:
+        stage_present.append("relation_slice")
+    stage_present = _clean_str_list(stage_present)
+
+    stage_survived = []
+    if work_slot_summary_included:
+        stage_survived.append("work_slot_summary")
+    if relation_slice_included:
+        stage_survived.append("relation_slice")
+    if stage_context_chars > 0:
+        stage_survived.extend(source_item)
+    stage_survived = _clean_str_list(stage_survived)
+
+    return {
+        "source_pack": str(stage or "unknown"),
+        "source_item": source_item,
+        "stage_present": stage_present,
+        "stage_survived": stage_survived,
+        "dropped_at": str(stage or "unknown") if coverage_warnings else "",
+        "drop_reason": coverage_warnings,
+        "budget_bucket": str(budget_bucket or _STAGE_BUDGET_BUCKETS.get(stage, stage) or stage),
+        "context_chars": max(0, int(stage_context_chars or 0)),
+        "source_counts": normalized_source_counts,
+    }
+
+
+def build_context_observation(
+    *,
+    stage: str,
+    work_focus: dict[str, Any] | None = None,
+    retrieval_plan=None,
+    source_counts: dict | None = None,
+    coverage_warnings: list[str] | None = None,
+    advisor_path_used: bool = False,
+    work_slot_summary_present: bool = False,
+    work_slot_summary_included: bool = False,
+    relation_slice_included: bool = False,
+    vector_context_chars: int = 0,
+    mandatory_context_chars: int = 0,
+    protected_summary_survived: bool = False,
+    trimmed_work_slot_summary: bool = False,
+    budget_ledger: dict | None = None,
+) -> dict[str, Any]:
+    work_focus = work_focus if isinstance(work_focus, dict) else {}
+    normalized_source_counts = normalize_context_source_counts(source_counts)
+    coverage_warnings = _clean_str_list(coverage_warnings)
+    provenance_ledger = build_context_provenance_ledger(
+        stage=stage,
+        retrieval_plan=retrieval_plan,
+        work_focus=work_focus,
+        source_counts=normalized_source_counts,
+        coverage_warnings=coverage_warnings,
+        work_slot_summary_present=work_slot_summary_present,
+        work_slot_summary_included=work_slot_summary_included,
+        relation_slice_included=relation_slice_included,
+        stage_context_chars=max(int(vector_context_chars or 0), int(mandatory_context_chars or 0)),
+        budget_bucket=(budget_ledger or {}).get("budget_bucket"),
+    )
+    budget_ledger = budget_ledger if isinstance(budget_ledger, dict) else {}
+
+    return {
+        "work_focus_present": bool(work_focus),
+        "tracking_slots_count": len(work_focus.get("tracking_slots") or []),
+        "scene_engines_count": len(work_focus.get("mandatory_scene_engines") or []),
+        "registry_profiles_count": len(work_focus.get("registry_profiles") or []),
+        "planned_slots_count": len(getattr(retrieval_plan, "slots", []) or []) if retrieval_plan else 0,
+        "advisor_path_used": bool(advisor_path_used),
+        "work_slot_summary_included": bool(work_slot_summary_included),
+        "relation_slice_included": bool(relation_slice_included),
+        "source_counts": normalized_source_counts,
+        "coverage_warnings": coverage_warnings,
+        "vector_context_chars": max(0, int(vector_context_chars or 0)),
+        "mandatory_context_chars": max(0, int(mandatory_context_chars or 0)),
+        "protected_summary_survived": bool(protected_summary_survived),
+        "trimmed_work_slot_summary": bool(trimmed_work_slot_summary),
+        "provenance_ledger": provenance_ledger,
+        "budget_ledger": budget_ledger,
+    }
+
+
 class ContextBudgetTracker:
     """Tracks section-level usage and suggests trim targets when over budget."""
 
@@ -322,6 +502,7 @@ class ContextAdvisor:
         current_ep: int,
         npc_roster: list[Any] | None = None,
         genre: str = "",
+        work_focus: dict[str, Any] | None = None,
         *,
         is_arc_boundary: bool = False,
         is_reject_retry: bool = False,
@@ -333,6 +514,7 @@ class ContextAdvisor:
             "npc_roster": npc_roster or [],
             "genre": genre or "",
             "current_ep": current_ep,
+            "work_focus": work_focus or {},
             "is_arc_boundary": bool(is_arc_boundary),
             "is_reject_retry": bool(is_reject_retry),
         }
@@ -635,7 +817,7 @@ class ContextAdvisor:
 
         slots: list[RetrievalSlot] = self._build_work_focus_slots(
             context_data.get("work_focus", {}),
-            stage="director",
+            stage="stage4",
         )
         if prev_ending:
             slots.append(RetrievalSlot("prev_ending", f"직전 결말 연결 포인트: {prev_ending[:260]}", priority=1))
