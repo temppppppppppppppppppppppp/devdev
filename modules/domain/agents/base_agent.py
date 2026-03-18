@@ -42,6 +42,7 @@ class AgentErrorType:
     QUOTA_EXCEEDED = "quota_exceeded"
     MALFORMED_RESPONSE = "malformed_response"
     NETWORK_ERROR = "network_error"
+    SCHEMA_INCOMPATIBLE = "schema_incompatible"
     UNKNOWN = "unknown"
 
 
@@ -1507,6 +1508,8 @@ class BaseAgent:
             return AgentErrorType.NETWORK_ERROR
         elif "json" in error_str or "parse" in error_str or "decode" in error_str:
             return AgentErrorType.MALFORMED_RESPONSE
+        elif "not supported" in error_str and ("schema" in error_str or "additionalproperties" in error_str):
+            return AgentErrorType.SCHEMA_INCOMPATIBLE
         else:
             return AgentErrorType.UNKNOWN
 
@@ -1654,6 +1657,7 @@ class BaseAgent:
             AgentErrorType.QUOTA_EXCEEDED: "API 할당량 초과. 잠시 대기 후 재시도하세요.",
             AgentErrorType.NETWORK_ERROR: "네트워크 연결 오류. 인터넷 연결을 확인하세요.",
             AgentErrorType.MALFORMED_RESPONSE: "응답 형식 오류. 프롬프트를 단순화하여 재시도하세요.",
+            AgentErrorType.SCHEMA_INCOMPATIBLE: "응답 스키마가 현재 Gemini 경로와 호환되지 않습니다. 스키마 정의를 점검하세요.",
             AgentErrorType.UNKNOWN: "알 수 없는 오류. 로그를 확인하고 재시도하세요.",
         }
         return hints.get(error_type, hints[AgentErrorType.UNKNOWN])

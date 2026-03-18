@@ -281,10 +281,13 @@ class Director(BaseAgent):
         retry_count=0,
         episode_digest="",
         mandatory_context="",
+        decision_core="",
+        candidate_evidence="",
+        reference_appendix="",
         prev_manuscripts_text="",
         story_context="",
     ):
-        """[V67.1] 위임 → DirectorEnsembleSelector (story_context 추가)"""
+        """[V67.1] 위임 → DirectorEnsembleSelector (story_context + director packs 추가)"""
         return self._ensemble.select_and_judge_ensemble(
             ep_num,
             candidates,
@@ -296,6 +299,9 @@ class Director(BaseAgent):
             retry_count,
             episode_digest,
             mandatory_context=mandatory_context,
+            decision_core=decision_core,
+            candidate_evidence=candidate_evidence,
+            reference_appendix=reference_appendix,
             prev_manuscripts_text=prev_manuscripts_text,
             story_context=story_context,
         )

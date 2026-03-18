@@ -7,8 +7,8 @@ Temp Mirror Path: `removed 2026-03-18 after closure`
 Commit State:
 - Baseline Commit: `8eb5c955408e759c0d45585773604acf4ff2efcb`
 - Baseline Dirty Summary: `dirty: 24 tracked/deleted, 1 untracked; hotspots: docs/2026-03-17 closure corrections, modules/core/{stage2_preflight,stage2_finalizer,stage4_context_builder,story_expander,stage01_helpers,constraint_db,response_schemas}.py, modules/domain/agents/{arc_draft_validator,blueprint_constraint_compiler,blueprint_ensemble,director_ensemble,three_phase_blueprint_generator,unified_blueprint_validator}.py, modules/models/blueprint.py, tests/test_legacy_reentry_reaudit.py`
-- Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `none`
+- Resume Commit: `d4e96804898491ae67085a327bf35b080ced4364`
+- Resume Drift Summary: `1 commit since baseline; schema compatibility drift touched response_schemas.py, blueprint_ensemble.py, blueprint.py, three_phase_blueprint_generator.py, stage3_orchestrator.py`
 Source Survey Docs:
 - `docs/2026-03-18/geuldobi-v2-post-reentry-residual-risk-3pass-audit.md`
 - `docs/2026-03-17/geuldobi-v2-stage23-semantic-validation-hardening-execution-ssot.md`
@@ -137,3 +137,9 @@ Excluded:
   - `ruff format --check ...`
   - `python scripts/check_utf8_hygiene.py ...`
   - `python scripts/ops_validator.py --strict`
+
+## 15. Post-Closure Delta Re-Audit
+- re-audited on `2026-03-18` against workspace `d4e96804898491ae67085a327bf35b080ced4364`
+- this item still governs compare-mode advisory persistence, but it is not sufficient authority for Blueprint schema compatibility
+- schema failure overlap existed in the same Stage 3 surface (`response_schemas.py`, `blueprint_ensemble.py`, `blueprint.py`), and that compatibility remediation is now governed by `docs/2026-03-18/stage3-blueprint-schema-compatibility-execution-ssot.md`
+- closure note omission remains documented here rather than rewritten into a false expanded realization claim

@@ -47,7 +47,18 @@ def _build_frontier_app(
 
     db = SimpleNamespace(load_anchor=MagicMock(side_effect=_load_anchor))
     app.current_project = SimpleNamespace(
-        master_bible={"MasterBible": {"plot_roadmap": [{} for _ in range(total_arcs)]}},
+        master_bible={
+            "MasterBible": {
+                "plot_roadmap": [
+                    {
+                        "block_no": i + 1,
+                        "title": f"Arc {i + 1}",
+                        "key_events": [f"event_{i + 1}"],
+                    }
+                    for i in range(total_arcs)
+                ]
+            }
+        },
         db=db,
     )
     app.ui = SimpleNamespace(log=MagicMock())
@@ -379,6 +390,44 @@ def test_frontier_lag_final_close_propagates_skip_pause():
     assert result["stop_reason"] == "completed"
 
 
+def test_frontier_lag_final_close_blocks_when_stage4_backlog_makes_no_progress():
+    app = _build_frontier_app(
+        total_arcs=2,
+        batch_size=1,
+        stage3_results=[{"success_count": 1, "fail_count": 0}],
+        plans=[
+            {
+                "true_final_arc_no": 2,
+                "designed_frontier_arc_no": 2,
+                "frontier_ep_start": 4,
+                "frontier_ep_end": 6,
+                "stage3_target": 6,
+                "stage4_target": 6,
+                "stage3_alignment": "aligned",
+                "stage4_alignment": "backlog",
+                "bp_max": 6,
+                "ms_max": 2,
+            }
+        ],
+        manuscripts_after=[2, 2],
+        initial_designed_arcs=2,
+    )
+
+    fake_stage3 = _make_stage_context_module("Stage3Context")
+
+    with patch.dict(sys.modules, {"modules.core.stage3_context": fake_stage3}):
+        with patch("builtins.input") as mocked_input:
+            result = SovereignApp._one_stop_pipeline_frontier_lag(app, wait_for_menu_return=False)
+
+    app._get_int_input.assert_not_called()
+    app._stage3_orch.stage_3_batch_blueprinting.assert_called_once_with(target_ep=6)
+    app._stage_4_v2_chief_writer.assert_called_once_with(target_ep=6, skip_pause=True)
+    mocked_input.assert_not_called()
+    assert result["arcs_advanced"] == 0
+    assert result["total_manuscripts"] == 0
+    assert result["stop_reason"] == "stage4_final_close_no_progress"
+
+
 def test_frontier_lag_keeps_stage3_abort_prompt():
     app = _build_frontier_app(
         total_arcs=2,
@@ -423,6 +472,45 @@ def test_frontier_lag_keeps_stage3_abort_prompt():
     app._ui_service.pause.assert_called_once_with("[Enter] 메뉴로 돌아가기", prompt_id="frontier_lag_return_to_menu")
     app._stage_4_v2_chief_writer.assert_not_called()
     assert result["stop_reason"] == "stage3_user_abort"
+
+
+def test_frontier_lag_blocks_arc_advance_when_stage4_backlog_makes_no_progress():
+    app = _build_frontier_app(
+        total_arcs=2,
+        batch_size=1,
+        stage3_results=[{"success_count": 1, "fail_count": 0}],
+        plans=[
+            {
+                "true_final_arc_no": 2,
+                "designed_frontier_arc_no": 1,
+                "frontier_ep_start": 1,
+                "frontier_ep_end": 3,
+                "stage3_target": 2,
+                "stage4_target": 1,
+                "stage3_alignment": "backlog",
+                "stage4_alignment": "backlog",
+                "bp_max": 0,
+                "ms_max": 0,
+            }
+        ],
+        manuscripts_after=[0, 0],
+    )
+
+    fake_stage2 = _make_stage_context_module("Stage2Context")
+    fake_stage3 = _make_stage_context_module("Stage3Context")
+
+    with patch.dict(
+        sys.modules,
+        {"modules.core.stage2_context": fake_stage2, "modules.core.stage3_context": fake_stage3},
+    ):
+        with patch("builtins.input") as mocked_input:
+            result = SovereignApp._one_stop_pipeline_frontier_lag(app, wait_for_menu_return=False)
+
+    app._stage_4_v2_chief_writer.assert_called_once_with(target_ep=1, skip_pause=True)
+    mocked_input.assert_not_called()
+    assert result["arcs_advanced"] == 0
+    assert result["total_manuscripts"] == 0
+    assert result["stop_reason"] == "stage4_no_progress_blocked"
 
 
 def test_frontier_lag_requested_arc_limit_stops_mid_auto_continue():

@@ -4,6 +4,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from modules.domain.agents.base_agent import AgentErrorType
+
 
 @pytest.fixture
 def mock_context():
@@ -138,6 +140,58 @@ class TestBlueprintInplacePatchMode:
 
 class TestBlueprintPatchIntegration:
     """ThreePhaseBlueprintGenerator.generate() 내 in-place 분기 테스트."""
+
+    def test_schema_incompatible_failure_breaks_retry_loop(self, blueprint_generator, sample_arc_data):
+        blueprint_generator.constraint_compiler.compile.return_value = {}
+        blueprint_generator.ensemble.generate_ensemble.return_value = (None, [])
+        blueprint_generator.ensemble.last_error_type = AgentErrorType.SCHEMA_INCOMPATIBLE
+
+        result, pipeline = blueprint_generator.generate(
+            ep_num=1,
+            arc_data=sample_arc_data,
+            max_retries=9,
+        )
+
+        assert result is None
+        assert pipeline["final_verdict"] == "FAILED"
+        assert pipeline["failure_reason"] == AgentErrorType.SCHEMA_INCOMPATIBLE
+        assert pipeline["phases"]["generate"]["error_type"] == AgentErrorType.SCHEMA_INCOMPATIBLE
+        assert blueprint_generator.ensemble.generate_ensemble.call_count == 1
+
+    def test_schema_incompatible_does_not_emergency_fallback_previous_best(
+        self, blueprint_generator, sample_arc_data
+    ):
+        bp1 = {"ep_num": 1, "scene_list": [{"scene_no": 1}]}
+
+        blueprint_generator.constraint_compiler.compile.return_value = {}
+        blueprint_generator.ensemble.generate_ensemble.side_effect = [
+            (bp1, [bp1]),
+            (None, []),
+        ]
+        blueprint_generator.validator.validate.return_value = (
+            "REJECT",
+            {"score": 60, "feedback": "보강 필요", "issues": []},
+        )
+        blueprint_generator.ensemble.last_error_type = None
+        attempts = [(bp1, [bp1]), (None, [])]
+
+        def _set_schema_error(*args, **kwargs):
+            if len(attempts) == 1:
+                blueprint_generator.ensemble.last_error_type = AgentErrorType.SCHEMA_INCOMPATIBLE
+            return attempts.pop(0)
+
+        blueprint_generator.ensemble.generate_ensemble.side_effect = _set_schema_error
+
+        result, pipeline = blueprint_generator.generate(
+            ep_num=1,
+            arc_data=sample_arc_data,
+            max_retries=1,
+            director=MagicMock(),
+        )
+
+        assert result is None
+        assert pipeline["final_verdict"] == "FAILED"
+        assert pipeline["failure_reason"] == AgentErrorType.SCHEMA_INCOMPATIBLE
 
     def test_retry1_with_high_score_enters_inplace(self, blueprint_generator, sample_arc_data):
         """retry==1에서 score >= 60이면 in-place 진입 (ask() 호출, generate_ensemble 1회만)."""

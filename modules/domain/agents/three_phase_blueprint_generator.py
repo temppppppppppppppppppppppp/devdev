@@ -24,7 +24,7 @@ from modules.core.constants import AIModels
 from modules.models.blueprint import validate_blueprint
 from modules.validation.threshold_helper import _threshold
 
-from .base_agent import BaseAgent, _get_sub_component_models
+from .base_agent import AgentErrorType, BaseAgent, _get_sub_component_models
 from .blueprint_constraint_compiler import BlueprintConstraintCompiler
 from .blueprint_ensemble import BlueprintEnsembleGenerator
 from .unified_blueprint_validator import UnifiedBlueprintValidator
@@ -346,7 +346,20 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
             if not best_blueprint:
                 logging.warning("❌ [Phase 2] Ensemble 생성 실패")
                 self._operator_log("❌ [Phase 2] Ensemble 생성 실패", level="warning", meta={"phase": "generate"})
-                pipeline_result["phases"]["generate"] = {"status": "failed"}
+                _generate_error_type = getattr(self.ensemble, "last_error_type", None) or AgentErrorType.UNKNOWN
+                pipeline_result["phases"]["generate"] = {
+                    "status": "failed",
+                    "error_type": _generate_error_type,
+                }
+                if _generate_error_type == AgentErrorType.SCHEMA_INCOMPATIBLE:
+                    pipeline_result["failure_reason"] = AgentErrorType.SCHEMA_INCOMPATIBLE
+                    logging.error("❌ [Phase 2] schema_incompatible 감지 — retry loop 즉시 중단")
+                    self._operator_log(
+                        "🔌 [Phase 2] schema_incompatible 감지 — 즉시 중단",
+                        level="error",
+                        meta={"phase": "generate", "error_type": _generate_error_type},
+                    )
+                    break
                 feedback = "Blueprint 생성 실패. 다시 시도하세요."
                 continue
 
@@ -720,6 +733,10 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
         # 모든 재시도 실패
         # [TF-R4-S3-02] _prev_reject_score 사용 (validation_result는 stale 가능, 연속성 REJECT 시 갱신 안 됨)
         _last_score = _prev_reject_score
+        if pipeline_result.get("failure_reason") == AgentErrorType.SCHEMA_INCOMPATIBLE:
+            pipeline_result["final_verdict"] = "FAILED"
+            logging.warning(f"❌ [ThreePhase] 제{ep_num}화 schema_incompatible로 즉시 실패")
+            return None, pipeline_result
         # [TF-R3-S3-02] Director 주권주의: 점수 임계값 이상만 긴급 폴백 허용
         if best_blueprint and director and _last_score >= PatchModeThresholds.REWRITE:
             logging.warning(
