@@ -280,6 +280,11 @@ class TestClassifyError:
         error = Exception("json decode error at position 5")
         assert agent._classify_error(error) == AgentErrorType.MALFORMED_RESPONSE
 
+    def test_schema_incompatible_error(self, agent):
+        """현재 Gemini 경로에서 지원되지 않는 스키마 분류"""
+        error = Exception("additionalProperties is not supported in the Gemini API.")
+        assert agent._classify_error(error) == AgentErrorType.SCHEMA_INCOMPATIBLE
+
     def test_unknown_error(self, agent):
         """알 수 없는 에러"""
         error = Exception("Something completely unexpected happened")

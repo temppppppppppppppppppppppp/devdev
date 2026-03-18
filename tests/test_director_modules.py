@@ -685,9 +685,20 @@ class TestDirectorFacade:
         mock_result = {"selected": "A", "verdict": "PASS", "score": 80}
         director._ensemble.select_and_judge_ensemble = MagicMock(return_value=mock_result)
         result = director.select_and_judge_ensemble(
-            ep_num=1, candidates=[], validation_results=[], blueprint={}, previous_ending=""
+            ep_num=1,
+            candidates=[],
+            validation_results=[],
+            blueprint={},
+            previous_ending="",
+            decision_core="core",
+            candidate_evidence="evidence",
+            reference_appendix="appendix",
         )
         director._ensemble.select_and_judge_ensemble.assert_called_once()
+        _, kwargs = director._ensemble.select_and_judge_ensemble.call_args
+        assert kwargs["decision_core"] == "core"
+        assert kwargs["candidate_evidence"] == "evidence"
+        assert kwargs["reference_appendix"] == "appendix"
         assert result == mock_result
 
     def test_facade_history_conflicts_delegates(self, director):

@@ -520,8 +520,11 @@ BLUEPRINT_SCENE_ENTRY_SCHEMA = types.Schema(
         types.Schema(
             type=types.Type.OBJECT,
             properties={
+                "type": types.Schema(type=types.Type.STRING),
+                "title": types.Schema(type=types.Type.STRING),
                 "goal": types.Schema(type=types.Type.STRING),
                 "summary": types.Schema(type=types.Type.STRING),
+                "description": types.Schema(type=types.Type.STRING),
                 "characters": types.Schema(
                     anyOf=[
                         types.Schema(type=types.Type.STRING),
@@ -536,14 +539,63 @@ BLUEPRINT_SCENE_ENTRY_SCHEMA = types.Schema(
                 ),
                 "location": types.Schema(type=types.Type.STRING),
                 "content": types.Schema(type=types.Type.STRING),
+                "tension_level": types.Schema(type=types.Type.INTEGER),
             },
         ),
         types.Schema(type=types.Type.STRING),
     ],
     description=(
-        "Scene entry value. Prefer an object with goal/summary, characters, key_events, "
-        "and location; short string fallback remains allowed for compatibility."
+        "Scene entry value. Prefer an object with type/title, goal/summary, characters, "
+        "key_events, location, and tension_level; short string fallback remains allowed "
+        "for compatibility."
     ),
+)
+
+BLUEPRINT_SCENE_BREAKDOWN_SCHEMA = types.Schema(
+    type=types.Type.OBJECT,
+    properties={
+        f"scene_{scene_no}": deepcopy(BLUEPRINT_SCENE_ENTRY_SCHEMA)
+        for scene_no in range(1, 6)
+    },
+    description=(
+        "Scene breakdown map keyed by scene_1..scene_5. Runtime validation preserves the "
+        "dict contract while avoiding additionalProperties for current google-genai "
+        "compatibility."
+    ),
+)
+
+BLUEPRINT_PROTAGONIST_STATE_SCHEMA = types.Schema(
+    type=types.Type.OBJECT,
+    properties={
+        "mood": types.Schema(type=types.Type.STRING),
+        "injuries": types.Schema(type=types.Type.STRING),
+        "equipment": types.Schema(
+            anyOf=[
+                types.Schema(type=types.Type.STRING),
+                types.Schema(type=types.Type.ARRAY, items=types.Schema(type=types.Type.STRING)),
+            ]
+        ),
+    },
+)
+
+BLUEPRINT_ENDING_STATE_SCHEMA = types.Schema(
+    type=types.Type.OBJECT,
+    properties={
+        "location": types.Schema(type=types.Type.STRING),
+        "timeline": types.Schema(
+            anyOf=[
+                types.Schema(type=types.Type.STRING),
+                types.Schema(
+                    type=types.Type.OBJECT,
+                    properties={
+                        "expression": types.Schema(type=types.Type.STRING),
+                        "표현": types.Schema(type=types.Type.STRING),
+                    },
+                ),
+            ]
+        ),
+        "protagonist_status": types.Schema(type=types.Type.STRING),
+    },
 )
 
 
@@ -551,14 +603,8 @@ BLUEPRINT_SCHEMA = types.Schema(
     type=types.Type.OBJECT,
     properties={
         "episode_number": types.Schema(type=types.Type.INTEGER),
-        "scene_breakdown": types.Schema(
-            type=types.Type.OBJECT,
-            additionalProperties=BLUEPRINT_SCENE_ENTRY_SCHEMA,
-            description=(
-                "Scene breakdown map with typed entries. Each value should preferably be a "
-                "structured scene object instead of an untyped bare object."
-            ),
-        ),
+        "title": types.Schema(type=types.Type.STRING),
+        "scene_breakdown": BLUEPRINT_SCENE_BREAKDOWN_SCHEMA,
         "integrated_scenario": types.Schema(type=types.Type.STRING),
         "pacing_notes": types.Schema(type=types.Type.STRING),
         "target_beat": types.Schema(type=types.Type.STRING),
@@ -577,8 +623,13 @@ BLUEPRINT_SCHEMA = types.Schema(
         ),
         # [V49.5] 시간 흐름
         "time_flow": types.Schema(type=types.Type.STRING),  # 예: "같은 날 밤", "3일 후"
+        "start_location": types.Schema(type=types.Type.STRING),
+        "end_location": types.Schema(type=types.Type.STRING),
         "core_tension": types.Schema(type=types.Type.STRING),
         "expected_ending": types.Schema(type=types.Type.STRING),
+        "ending_hook": types.Schema(type=types.Type.STRING),
+        "protagonist_state": BLUEPRINT_PROTAGONIST_STATE_SCHEMA,
+        "ending_state": BLUEPRINT_ENDING_STATE_SCHEMA,
     },
     required=["episode_number", "scene_breakdown", "integrated_scenario"],
 )
