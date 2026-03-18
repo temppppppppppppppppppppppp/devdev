@@ -13,6 +13,7 @@
 import json
 import logging
 import re
+from copy import deepcopy
 
 from modules.core.project_support import (
     EXTERNAL_POV_INSERT_POLICY_OPTIONS,
@@ -22,6 +23,12 @@ from modules.core.project_support import (
     default_external_pov_insert_policy,
     resolve_external_pov_insert_policy_choice,
     resolve_indexed_menu_choice,
+)
+from modules.core.stage0_handoff import (
+    build_plot_roadmap_from_saved_arcs,
+    build_plot_roadmap_from_treatment,
+    ensure_plot_roadmap,
+    validate_plot_roadmap_entries,
 )
 
 
@@ -173,7 +180,9 @@ class Stage01Helpers:
                     app,
                     "   🔧 [V60.10] Treatment Block 자동 농축을 수행하시겠습니까? (y/N): ",
                     prompt_id="stage0_enrich_treatment_confirm",
-                ).strip().lower()
+                )
+                .strip()
+                .lower()
             )
         except (EOFError, KeyboardInterrupt, ValueError):
             enrich_choice = "n"
@@ -187,7 +196,9 @@ class Stage01Helpers:
         app.ui.log("      [1] 현대인 - 제약 없음 (권장: 회귀/빙의물)")
         app.ui.log("      [2] 원시인 - 현대 지식/용어 사용 제한 (권장: 무협/판타지)")
         try:
-            world_choice = self._prompt_with_ui(app, "   선택 (기본: 1): ", prompt_id="stage0_world_origin_choice").strip()
+            world_choice = self._prompt_with_ui(
+                app, "   선택 (기본: 1): ", prompt_id="stage0_world_origin_choice"
+            ).strip()
         except (EOFError, KeyboardInterrupt, ValueError):
             world_choice = ""
         world_origin = resolve_indexed_menu_choice(
@@ -202,7 +213,9 @@ class Stage01Helpers:
         app.ui.log("      [3] 환생자 - 아기로 다시 태어남")
         app.ui.log("      [4] 기타 - 특별한 유형 없음")
         try:
-            type_choice = self._prompt_with_ui(app, "   선택 (기본: 1): ", prompt_id="stage0_incarnation_choice").strip()
+            type_choice = self._prompt_with_ui(
+                app, "   선택 (기본: 1): ", prompt_id="stage0_incarnation_choice"
+            ).strip()
         except (EOFError, KeyboardInterrupt, ValueError):
             type_choice = ""
         incarnation_type = resolve_indexed_menu_choice(
@@ -377,11 +390,15 @@ class Stage01Helpers:
                 app.ui.log(f"   ... 외 {len(batch) - 3}개")
 
             try:
-                confirm = self._prompt_with_ui(
-                    app,
-                    "   계속 진행하시겠습니까? (Y/n): ",
-                    prompt_id="stage0_extend_confirm_batch",
-                ).strip().lower()
+                confirm = (
+                    self._prompt_with_ui(
+                        app,
+                        "   계속 진행하시겠습니까? (Y/n): ",
+                        prompt_id="stage0_extend_confirm_batch",
+                    )
+                    .strip()
+                    .lower()
+                )
             except (EOFError, KeyboardInterrupt, ValueError):
                 confirm = "y"
             return confirm != "n"
@@ -390,27 +407,55 @@ class Stage01Helpers:
         try:
             from modules.core.stage0.story_expander import StoryExpander
 
-            expander = StoryExpander(genre=stage0_manager.genre, llm_client=stage0_manager.client)
+            review_max_attempts = getattr(StoryExpander, "_STAGE0_REVIEW_MAX_ATTEMPTS", 2)
+            for attempt in range(1, review_max_attempts + 1):
+                expander = StoryExpander(genre=stage0_manager.genre, llm_client=stage0_manager.client)
 
-            app.ui.log(f"\n   🔄 Block {len(existing_treatment) + 1}부터 {extend_count}개 생성 시작...")
+                app.ui.log(f"\n   🔄 Block {len(existing_treatment) + 1}부터 {extend_count}개 생성 시작...")
 
-            extended_treatment = expander.extend_treatment(
-                existing_treatment=existing_treatment,
-                extend_count=extend_count,
-                direction_hint=direction_hint,
-                batch_size=10,
-                confirm_callback=confirm_batch,
-            )
+                extended_treatment = expander.extend_treatment(
+                    existing_treatment=existing_treatment,
+                    extend_count=extend_count,
+                    direction_hint=direction_hint,
+                    batch_size=10,
+                    confirm_callback=confirm_batch,
+                )
+                if not extended_treatment or len(extended_treatment) <= len(existing_treatment):
+                    app.ui.log("   ⚠️ 새 블록이 생성되지 않아 확장을 중단합니다.")
+                    return []
 
-            app.ui.log(f"\n   ✅ 확장 완료: {len(existing_treatment)} → {len(extended_treatment)} 블록")
-            return extended_treatment
+                working_bible = deepcopy(app.current_project.master_bible or {"MasterBible": {}})
+                ensure_plot_roadmap(app, working_bible, extended_treatment)
+                review = expander.review_stage0_candidate(
+                    bible=working_bible,
+                    treatment=extended_treatment,
+                    prior_treatment=existing_treatment,
+                    review_mode="extension",
+                    attempt=attempt,
+                    max_attempts=review_max_attempts,
+                )
+                decision = str(review.get("decision", "REJECT") or "REJECT").upper()
+                operator_message = str(review.get("operator_message", "") or review.get("reason", "") or "").strip()
+                if operator_message:
+                    app.ui.log(f"   [Stage0 Gate] {decision}: {operator_message}")
+                else:
+                    app.ui.log(f"   [Stage0 Gate] {decision}")
+                if decision == "PASS":
+                    app.ui.log(f"\n   ✅ 확장 완료: {len(existing_treatment)} → {len(extended_treatment)} 블록")
+                    return extended_treatment
+                if decision == "RETRY" and attempt < review_max_attempts:
+                    app.ui.log(f"   🔁 [Stage0 Gate] 확장 재시도 {attempt}/{review_max_attempts}")
+                    continue
+
+                app.ui.log("   ❌ [Stage0 Gate] 확장 결과가 저장 전 검토를 통과하지 못했습니다.")
+                return []
 
         except Exception as e:
             logging.warning(f"❌ Block 확장 중 오류: {e}")
             import traceback
 
             traceback.print_exc()
-            return existing_treatment
+            return []
 
     # ─────────────────────────────────────────────────────────────
     # [4C-1b-b] _stage_0_extended
@@ -545,36 +590,15 @@ class Stage01Helpers:
         """choice=4: Block 확장."""
         treatment = self.extend_blocks(stage0_manager)
         if treatment:
-            try:
-                treatment_path = app.current_project.paths.root / "treatment_extended.json"
-                with open(treatment_path, "w", encoding="utf-8") as f:
-                    json.dump({"treatments": treatment}, f, ensure_ascii=False, indent=2)
-                app.ui.log(f"✅ 확장된 Treatment 저장: {treatment_path}")
-                app.ui.log(f"   총 {len(treatment)} 블록")
-            except Exception as e:
-                logging.warning(f"❌ Treatment 저장 실패: {e}")
-
-            try:
-                refined_roadmap = []
-                for i, block in enumerate(treatment):
-                    entry = {"block_no": i + 1}
-                    entry.update(block)
-                    refined_roadmap.append(entry)
-
-                master_bible = app.current_project.master_bible or {}
-                bible_root = master_bible.get("MasterBible", master_bible)
-                bible_root["plot_roadmap"] = refined_roadmap
-                app.current_project.master_bible = {"MasterBible": bible_root}
-                app.current_project.save_v20_anchor("bible", app.current_project.master_bible)
-                app.current_project._load_from_db()
-
-                app.ui.log(f"✅ [V61] plot_roadmap 주입 완료: {len(refined_roadmap)} 블록 → Master Bible")
-                app.ui.log("   이제 Stage 2 (Arc 생성)를 진행할 수 있습니다.")
-            except Exception as pr_err:
-                logging.warning(f"❌ plot_roadmap 주입 실패: {pr_err}")
-                import traceback
-
-                traceback.print_exc()
+            bible = deepcopy(app.current_project.master_bible or {"MasterBible": {}})
+            self._persist_stage0_results(
+                app,
+                stage0_manager,
+                bible,
+                treatment,
+                treatment_filename="treatment_extended.json",
+                pause=False,
+            )
 
         Stage01Helpers._pause_with_ui(app)
         return None, None  # 자체 저장 완료, 공통 후처리 불필요
@@ -603,102 +627,68 @@ class Stage01Helpers:
     @staticmethod
     def _build_plot_roadmap_from_treatment(treatment) -> list[dict]:
         """Stage 2가 기대하는 flat plot_roadmap 형태로 treatment를 정규화한다."""
-        if isinstance(treatment, dict):
-            treatment = treatment.get("treatments", [])
-        if not isinstance(treatment, list):
-            return []
-
-        refined_roadmap = []
-        for i, block in enumerate(treatment):
-            if not isinstance(block, dict):
-                continue
-            entry = {"block_no": i + 1}
-            entry.update(block)
-            refined_roadmap.append(entry)
-        return refined_roadmap
+        return build_plot_roadmap_from_treatment(treatment)
 
     @staticmethod
     def _build_plot_roadmap_from_saved_arcs(app) -> list[dict]:
         """역설계 경로에서는 저장된 arc stub을 roadmap placeholder로 승격한다."""
-        project = getattr(app, "current_project", None)
-        db = getattr(project, "db", None)
-        if db is None or not hasattr(db, "load_anchor"):
-            return []
-
-        try:
-            arcs = db.load_anchor("arcs") or []
-        except Exception as exc:
-            logging.warning(f"[Stage0] arcs anchor 로드 실패: {exc}")
-            return []
-
-        if isinstance(arcs, dict):
-            arcs = list(arcs.values())
-        if not isinstance(arcs, list):
-            return []
-
-        refined_roadmap = []
-        for i, arc in enumerate(arcs):
-            if not isinstance(arc, dict):
-                continue
-            entry = {"block_no": i + 1}
-            for key in (
-                "arc_no",
-                "volume_no",
-                "ep_start",
-                "ep_end",
-                "ep_count",
-                "tactical_doc",
-                "key_events",
-                "joint_docs",
-                "state_changes",
-                "_stub",
-                "_source",
-            ):
-                if key in arc:
-                    entry[key] = arc[key]
-            if (
-                "ep_count" not in entry
-                and isinstance(entry.get("ep_start"), int)
-                and isinstance(entry.get("ep_end"), int)
-            ):
-                entry["ep_count"] = max(0, entry["ep_end"] - entry["ep_start"] + 1)
-            refined_roadmap.append(entry)
-        return refined_roadmap
+        return build_plot_roadmap_from_saved_arcs(app)
 
     @classmethod
     def _ensure_plot_roadmap(cls, app, bible, treatment) -> int:
         """Stage 0 결과 저장 전에 plot_roadmap 누락을 보정한다."""
-        if not isinstance(bible, dict):
-            return 0
-
-        master = bible.get("MasterBible")
-        bible_root = master if isinstance(master, dict) else bible
-        existing = bible_root.get("plot_roadmap", [])
-        if isinstance(existing, list) and existing:
-            return len(existing)
-
-        refined_roadmap = cls._build_plot_roadmap_from_treatment(treatment)
-        if not refined_roadmap:
-            refined_roadmap = cls._build_plot_roadmap_from_saved_arcs(app)
-        if not refined_roadmap:
-            return 0
-
-        bible_root["plot_roadmap"] = refined_roadmap
-        return len(refined_roadmap)
+        status = ensure_plot_roadmap(app, bible, treatment)
+        if status.warnings:
+            logging.warning(
+                "[Stage0:HandoffContract] plot_roadmap not Stage 2 ready (%s): %s",
+                status.source,
+                "; ".join(status.warnings[:5]),
+            )
+        return len(status.roadmap)
 
     @staticmethod
-    def _s0_save_results(app, stage0_manager, bible, treatment):
-        """공통 후처리: Bible/Treatment DB 저장 + 리로드."""
+    def _validate_plot_roadmap_entries(roadmap: list[dict]) -> list[str]:
+        """plot_roadmap 항목의 Stage 2 handoff contract를 검증한다.
+
+        Returns:
+            경고 메시지 목록. 빈 목록이면 contract 충족.
+        """
+        return validate_plot_roadmap_entries(roadmap)
+
+    @staticmethod
+    def _persist_stage0_results(
+        app,
+        stage0_manager,
+        bible,
+        treatment,
+        *,
+        treatment_filename: str = "treatment_generated.json",
+        pause: bool = True,
+    ) -> None:
+        """Shared Stage 0 persistence gate for fresh generation and extension."""
         bible_saved = False
         if bible:
             try:
-                injected_blocks = Stage01Helpers._ensure_plot_roadmap(app, bible, treatment)
+                status = ensure_plot_roadmap(app, bible, treatment)
+                strict_handoff = bool(treatment)
+                if status.warnings:
+                    logging.warning(
+                        "[Stage0:HandoffContract] plot_roadmap not Stage 2 ready (%s): %s",
+                        status.source,
+                        "; ".join(status.warnings[:5]),
+                    )
+                    if strict_handoff:
+                        app.ui.log("❌ [Stage0 Gate] Stage 2 handoff blocked: " + "; ".join(status.warnings[:3]))
+                        if pause:
+                            Stage01Helpers._pause_with_ui(app)
+                        return
+
                 app.current_project.master_bible = bible
                 app.current_project.save_v20_anchor("bible", bible)
                 bible_saved = True
                 app.ui.log("✅ Bible이 DB에 저장되었습니다.")
-                if injected_blocks:
-                    app.ui.log(f"   ✅ plot_roadmap 준비 완료: {injected_blocks} 블록")
+                if status.roadmap:
+                    app.ui.log(f"   ✅ plot_roadmap 준비 완료: {len(status.roadmap)} 블록")
 
                 master = bible.get("MasterBible", bible)
                 protagonist_config = master.get("protagonist_config", {})
@@ -724,7 +714,7 @@ class Stage01Helpers:
                 app.ui.log("⚠️ Bible 저장 실패로 Treatment 저장을 건너뜁니다.")
             else:
                 try:
-                    treatment_path = app.current_project.paths.root / "treatment_generated.json"
+                    treatment_path = app.current_project.paths.root / treatment_filename
                     with open(treatment_path, "w", encoding="utf-8") as f:
                         json.dump({"treatments": treatment}, f, ensure_ascii=False, indent=2)
                     app.ui.log(f"✅ Treatment 저장: {treatment_path}")
@@ -738,7 +728,13 @@ class Stage01Helpers:
             except Exception as e:
                 logging.warning(f"❌ Stage 0 결과 리로드 실패: {e}")
 
-        Stage01Helpers._pause_with_ui(app)
+        if pause:
+            Stage01Helpers._pause_with_ui(app)
+
+    @staticmethod
+    def _s0_save_results(app, stage0_manager, bible, treatment):
+        """공통 후처리: Bible/Treatment DB 저장 + 리로드."""
+        Stage01Helpers._persist_stage0_results(app, stage0_manager, bible, treatment, pause=True)
 
     # ─────────────────────────────────────────────────────────────
     # [4C-1b-b] _stage_1_volumes
@@ -752,7 +748,9 @@ class Stage01Helpers:
         # [V41 Patch] 스킵 옵션 제공
         app.ui.log("💡 Stage 1은 선택 사항입니다. 스킵해도 Stage 2 진행이 가능합니다.")
         try:
-            skip_choice = self._prompt_with_ui(app, "   [1] 진행  [2] 스킵 (기본: 1): ", prompt_id="stage1_skip_choice").strip()
+            skip_choice = self._prompt_with_ui(
+                app, "   [1] 진행  [2] 스킵 (기본: 1): ", prompt_id="stage1_skip_choice"
+            ).strip()
         except (EOFError, KeyboardInterrupt, ValueError):
             skip_choice = "1"
         if skip_choice == "2":

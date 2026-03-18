@@ -1,21 +1,30 @@
 # Geuldobi V2 Legacy Survey Validity ROI Audit
 
 Date: 2026-03-17
-Status: final
+Status: final (historical extraction audit; extracted bundle later realized and closed)
 Canonical Path: `docs/2026-03-17/geuldobi-v2-legacy-survey-validity-roi-audit.md`
 Commit State:
-- Baseline Commit: `2352b26a293ac330a0ff24da320363f9abdbbba1`
-- Baseline Dirty Summary: `dirty: prior lane1~3 and follow-on item edits, runtime log, authority-hygiene changes, survey bundles, and local drafts; preserve as-is`
+- Baseline Commit: `8eb5c955408e759c0d45585773604acf4ff2efcb`
+- Baseline Dirty Summary: `clean`
+- Resume Commit: `same-as-baseline`
+- Resume Drift Summary: `none`
 Source Survey Docs:
 - `docs/2026-03-17/별도 조사2/ssot_stage23-improvement-survey.md`
 - `docs/2026-03-17/별도 조사/ssot_integrated-survey.md`
 - `docs/2026-03-17/별도 조사2/ssot_stage0-stage2-architecture-survey.md`
+Side-Effect Coverage: `document-only revalidation; direct runtime/artifact mutation not applicable; related temp queue inspected`
 Confidence After 3-Pass Audit: `96%`
 
 ## 1. Intent
 - re-audit three legacy survey drafts against the live codebase
 - decide whether each draft is still valid, still accurate, and still worth execution effort
 - extract only the still-actionable, high-ROI material into fresh execution SSOT docs
+- treat the pulled audit / execution-doc bundle as `reference only` until the current HEAD is re-checked
+
+## 1A. Historical Note
+- findings below record the extraction-time baseline that justified opening the three execution items
+- as of 2026-03-18, all three extracted items were re-audited, corrected, realized, and closed
+- current live status belongs to the execution SSOTs and aggregate roadmap, not to unresolved reading of the baseline bullets below
 
 ## 2. Executive Decision
 - `ssot_stage23-improvement-survey.md`
@@ -41,10 +50,11 @@ Confidence After 3-Pass Audit: `96%`
 ### F1. `ssot_stage23-improvement-survey.md` is stale if read as a standalone controller
 Severity: medium
 
-The survey does not reflect the landed Stage 2/3/4 provenance and budget substrate:
+The survey does not reflect the landed Stage 2/3/4 provenance and budget substrate or the later Stage 4 tiered mandatory-context packing:
 - `modules/core/context_advisor.py:197`
 - `modules/core/stage2_preflight.py:1217`
 - `modules/core/stage3_orchestrator.py:1254`
+- `modules/core/stage4_context_builder.py:1560`
 - `modules/core/stage4_context_builder.py:2795`
 - `modules/core/quality_dashboard.py:202`
 
@@ -90,29 +100,23 @@ The following claims remain materially true in the live code:
   - `modules/core/stage2_finalizer.py:1039`
   - `modules/core/stage4_context_builder.py:2374`
 
-- relationship trigger / justification is still dropped in the Stage 2 preflight mapping path
-  - `modules/core/stage2_preflight.py:1418`
-  - `modules/core/context_advisor.py:999`
+- relationship trigger / justification was missing in the Stage 2 preflight mapping path at extraction time and later closed via `stage23-semantic-transport-restoration`
+  - current closure reference: `docs/2026-03-17/geuldobi-v2-stage23-semantic-transport-restoration-execution-ssot.md`
 
-- stop-line content still suffers tight extraction / formatting truncation
-  - `modules/domain/agents/blueprint_constraint_compiler.py:230`
-  - `modules/domain/agents/blueprint_constraint_compiler.py:131`
+- stop-line content used to suffer tight extraction / formatting truncation and later closed via `stage23-semantic-transport-restoration`
+  - current closure reference: `docs/2026-03-17/geuldobi-v2-stage23-semantic-transport-restoration-execution-ssot.md`
 
-- Blueprint schema still leaves `scene_breakdown` as a bare object and the model still accepts an untyped dict
-  - `modules/core/response_schemas.py:516`
-  - `modules/models/blueprint.py:29`
+- Blueprint schema/model used to leave `scene_breakdown` effectively untyped and later closed via `stage23-semantic-validation-hardening`
+  - current closure reference: `docs/2026-03-17/geuldobi-v2-stage23-semantic-validation-hardening-execution-ssot.md`
 
-- blueprint validation is still mostly structural and does not do beat-level fidelity checking
-  - `modules/domain/agents/unified_blueprint_validator.py:331`
+- blueprint validation was mostly structural at extraction time; bounded fidelity checks were later added in `stage23-semantic-validation-hardening`
+  - current closure reference: `docs/2026-03-17/geuldobi-v2-stage23-semantic-validation-hardening-execution-ssot.md`
 
-- tactical validation is still dominated by length and episode-marker checks, with no robust specificity proxy
-  - `modules/domain/agents/arc_ensemble.py:962`
-  - `modules/domain/agents/arc_draft_validator.py:382`
+- tactical validation was dominated by length and episode-marker checks at extraction time; bounded specificity proxies were later added in `stage23-semantic-validation-hardening`
+  - current closure reference: `docs/2026-03-17/geuldobi-v2-stage23-semantic-validation-hardening-execution-ssot.md`
 
-- Stage 0 Bible and Treatment generation still lack strong completeness / continuity gates
-  - `modules/core/stage0/story_expander.py:198`
-  - `modules/core/stage0/story_expander.py:305`
-  - `modules/core/stage0/story_expander.py:441`
+- Stage 0 Bible and Treatment generation lacked bounded completeness / continuity safeguards at extraction time and later closed the targeted gaps via `stage0-stage2-substrate-hardening`
+  - current closure reference: `docs/2026-03-17/geuldobi-v2-stage0-stage2-substrate-hardening-execution-ssot.md`
   - `modules/core/stage0/story_expander.py:478`
 
 - Stage 2 still keeps the `PASS_WITH_FIX` quality-floor asymmetry in finalizer logic
@@ -153,9 +157,9 @@ The following claims remain materially true in the live code:
     - Director SPOF redesign as a broad architecture project
 
 ## 5. Recommended Extraction
-- create one execution SSOT for Stage 2/3 semantic transport restoration
-- create one execution SSOT for Stage 0 / Stage 2 substrate hardening
-- create one execution SSOT for Stage 2/3 semantic validation hardening
+- retain the Stage 2/3 semantic transport restoration execution SSOT after current-head refresh
+- retain the Stage 0 / Stage 2 substrate hardening execution SSOT after current-head refresh
+- retain the Stage 2/3 semantic validation hardening execution SSOT after current-head refresh
 - keep `ssot_integrated-survey.md` as reference-only strategy input, not as a direct execution controller
 
 ## 6. 3-Pass Audit Notes
@@ -163,13 +167,16 @@ The following claims remain materially true in the live code:
 ### Pass 1. Validity
 - checked each survey against live code rather than trusting dated line references
 - separated concept validity from stale implementation detail
+- confirmed the prior pulled bundle needed revalidation because its baseline predates the current HEAD
 
 ### Pass 2. Accuracy
 - corrected specifically stale claims around:
   - landed provenance/budget observability
+  - Stage 4 tiered mandatory-context packing
   - `plot_roadmap` fallback
   - POV policy normalization
 
 ### Pass 3. ROI
 - removed already-landed or live-run-dependent items from direct execution extraction
 - kept only execution-worthy substrate and semantic-fidelity work
+- confirmed the same three execution tranches still survive current-head pruning

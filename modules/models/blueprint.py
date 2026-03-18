@@ -26,6 +26,17 @@ class BlueprintRelationshipChange(BaseModel):
     justification: str = ""
 
 
+class BlueprintScene(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
+    goal: str = ""
+    summary: str = ""
+    characters: list[str] | str = Field(default_factory=list)
+    key_events: list[str] | str = Field(default_factory=list)
+    location: str = ""
+    content: str = ""
+
+
 class Blueprint(BaseModel):
     """Blueprint 데이터 (response_schemas.py BLUEPRINT_SCHEMA 대응)
 
@@ -36,7 +47,7 @@ class Blueprint(BaseModel):
 
     # ── Schema 정의 필드 ──
     episode_number: int = 0
-    scene_breakdown: dict = Field(default_factory=dict)
+    scene_breakdown: dict[str, BlueprintScene | str] = Field(default_factory=dict)
     integrated_scenario: str = ""
     pacing_notes: str = ""
     target_beat: str = ""

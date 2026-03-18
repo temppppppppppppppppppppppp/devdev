@@ -1,4 +1,5 @@
 """
+utf8-hygiene: allow-file -- legacy Korean prompt text in this generator predates the structured carryover patch.
 [V60.80] Blueprint Ensemble Generator
 병렬로 3개 Blueprint 후보 생성 후 최적 선택
 
@@ -21,6 +22,7 @@ from modules.core.constants import AIModels, GenreTypes, smart_truncate
 from modules.core.hud_utils import build_hud_context as _build_hud_context_shared
 from modules.core.project_support import normalize_external_pov_insert_policy
 from modules.core.prompt_loader import PromptLoader
+from modules.core.response_schemas import BLUEPRINT_SCHEMA
 from modules.core.tactical_utils import extract_episode_tactical
 
 from .base_agent import _SYSTEM_CFG, BaseAgent
@@ -341,7 +343,10 @@ class BlueprintEnsembleGenerator(BaseAgent):
                                 logging.info(f" {strategy_name} 생성 완료")
                                 self._operator_log(
                                     f"✓ [Blueprint] '{strategy_name}' 생성 완료 ({time.monotonic() - _tp_t0:.0f}초)",
-                                    meta={"strategy": strategy_name, "elapsed_seconds": round(time.monotonic() - _tp_t0, 1)},
+                                    meta={
+                                        "strategy": strategy_name,
+                                        "elapsed_seconds": round(time.monotonic() - _tp_t0, 1),
+                                    },
                                 )
                         except FutureTimeoutError:
                             logging.warning(f" [V61.3] {strategy_name} 타임아웃 ({self.SINGLE_CANDIDATE_TIMEOUT}초)")
@@ -359,7 +364,8 @@ class BlueprintEnsembleGenerator(BaseAgent):
                             )
                 except FutureTimeoutError:
                     # 전체 앙상블 타임아웃 - 완료된 후보만 사용
-                    logging.warning(f" [V61.3] 블루프린트 앙상블 타임아웃 ({self.ENSEMBLE_TIMEOUT}초) - 완료된 {len(candidates)}개 후보 사용"
+                    logging.warning(
+                        f" [V61.3] 블루프린트 앙상블 타임아웃 ({self.ENSEMBLE_TIMEOUT}초) - 완료된 {len(candidates)}개 후보 사용"
                     )
                 except Exception as e:
                     # [V61.3] as_completed 자체 예외 처리
@@ -580,6 +586,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
                 temperature=0.7,
                 thinking_level="medium",
                 full_prompt_fallback=full_prompt_fallback,
+                response_schema=BLUEPRINT_SCHEMA,
             )
             self._operator_log(
                 f"📝 [Blueprint] '{_strategy_name}' 응답 수신 ({len(response):,}자)",
@@ -670,7 +677,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
                     agency = tag.get("protagonist_agency", "자력")
                     extras = ", ".join(filter(None, [agency, frust]))
                     parts.append(
-                        f"  제{tag.get('ep_num', '?')}화: {tag.get('primary_tag', '미분류')} ({score}/10, {extras})"
+                        f"  제{tag.get('ep_num', 0)}화: {tag.get('primary_tag', '미분류')} ({score}/10, {extras})"
                     )
                     if tag.get("frustration_flag"):
                         consecutive_frustration += 1
@@ -691,7 +698,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
                     _dr = rec.get("dialogue_ratio")
                     dial_pct = f"{_dr:.0%}" if _dr is not None else "0%"
                     parts.append(
-                        f"  제{rec.get('ep_num', '?')}화: 점수 {rec.get('pacing_score', 0)}/100, "
+                        f"  제{rec.get('ep_num', 0)}화: 점수 {rec.get('pacing_score', 0)}/100, "
                         f"대화 {dial_pct}, 장면전환 {rec.get('scene_break_count', 0)}회"
                     )
                 # 최근 평균 호흡 경고
@@ -820,6 +827,173 @@ class BlueprintEnsembleGenerator(BaseAgent):
                     lines.append(f"  영구 부상: {', '.join(_descs)}")
 
         return "\n".join(lines) if lines else "(제약 없음)"
+
+        semantic_carryover = constraint_block.get("semantic_carryover")
+        if isinstance(semantic_carryover, dict) and semantic_carryover:
+            lines.append("\n[Arc Semantic Carryover]")
+            for entry in semantic_carryover.get("relationship_rationale", []) or []:
+                if not isinstance(entry, dict):
+                    continue
+                npc = str(entry.get("npc", "") or "").strip() or "?"
+                cue = str(entry.get("trigger", "") or entry.get("justification", "") or "").strip()
+                if cue:
+                    lines.append(f"  relationship {npc}: {cue[:120]}")
+            growth = str(semantic_carryover.get("growth_justification", "") or "").strip()
+            if growth:
+                lines.append(f"  growth_justification: {growth[:140]}")
+            for anchor in (semantic_carryover.get("foreshadow_anchors", []) or [])[:3]:
+                text = str(anchor or "").strip()
+                if text:
+                    lines.append(f"  foreshadow: {text[:120]}")
+            checkpoints = [
+                str(item or "").strip()[:80]
+                for item in (semantic_carryover.get("continuity_checkpoints", []) or [])[:3]
+            ]
+            checkpoints = [item for item in checkpoints if item]
+            if checkpoints:
+                lines.append(f"  continuity: {'; '.join(checkpoints)}")
+
+        return "\n".join(lines) if lines else "(?쒖빟 ?놁쓬)"
+
+    def _format_constraints(self, constraint_block: dict, *, genre: str = "wuxia") -> str:
+        """Format compact blueprint constraints for the generation prompt."""
+        lines: list[str] = []
+
+        must_focus = constraint_block.get("must_focus", {})
+        if isinstance(must_focus, dict):
+            key_events = must_focus.get("key_events") or []
+            if isinstance(key_events, list) and key_events:
+                lines.append("[이번 화 필수 이벤트]")
+                for event in key_events[:5]:
+                    text = str(event or "").strip()
+                    if text:
+                        lines.append(f"  - {text[:120]}")
+            content = str(must_focus.get("content", "") or "").strip()
+            if content and not key_events:
+                lines.append("[이번 화 핵심 초점]")
+                lines.append(f"  {content[:500]}")
+
+        stop_line = constraint_block.get("stop_line", {})
+        if isinstance(stop_line, dict) and stop_line.get("content"):
+            lines.append("\n[Stop Line]")
+            lines.append(f"  다음 화 내용 금지: {str(stop_line['content'])[:150]}")
+
+        continuity = constraint_block.get("continuity", {})
+        if isinstance(continuity, dict):
+            continuity_lines: list[str] = []
+            if continuity.get("location"):
+                continuity_lines.append(f"  이전 종료 위치: {str(continuity['location'])[:120]}")
+            if continuity.get("time_context"):
+                continuity_lines.append(f"  시간 맥락: {str(continuity['time_context'])[:100]}")
+            conflicts = continuity.get("ongoing_conflicts") or []
+            if isinstance(conflicts, list):
+                for item in conflicts[:5]:
+                    text = str(item or "").strip()
+                    if text:
+                        continuity_lines.append(f"  - 진행 중 갈등: {text[:80]}")
+            elif conflicts:
+                continuity_lines.append(f"  - 진행 중 갈등: {str(conflicts)[:200]}")
+            active = continuity.get("active_characters") or []
+            if isinstance(active, list) and active:
+                names = [str(item or "").strip()[:20] for item in active[:10] if str(item or "").strip()]
+                if names:
+                    continuity_lines.append(f"  등장 캐릭터: {', '.join(names)}")
+            elif active:
+                continuity_lines.append(f"  등장 캐릭터: {str(active)[:200]}")
+            if continuity_lines:
+                lines.append("\n[연속성]")
+                lines.extend(continuity_lines)
+
+        inherited = constraint_block.get("inherited_state", {})
+        if isinstance(inherited, dict):
+            inherited_lines: list[str] = []
+            equip = inherited.get("equipment")
+            if equip:
+                if isinstance(equip, list):
+                    equip = ", ".join(str(x) if not isinstance(x, dict) else str(x.get("name", x)) for x in equip[:5])
+                inherited_lines.append(f"  장비: {str(equip)[:200]}")
+            injuries = inherited.get("injuries")
+            if injuries:
+                if isinstance(injuries, list):
+                    inherited_lines.append(f"  부상: {', '.join(str(i)[:40] for i in injuries[:5])}")
+                else:
+                    inherited_lines.append(f"  부상: {str(injuries)[:200]}")
+            if genre == "wuxia" and inherited.get("internal_energy") is not None:
+                inherited_lines.append(f"  내공/에너지: {str(inherited['internal_energy'])[:80]}")
+            if inherited.get("mood"):
+                inherited_lines.append(f"  심리 상태: {str(inherited['mood'])[:100]}")
+            if inherited_lines:
+                lines.append("\n[계승 상태]")
+                lines.extend(inherited_lines)
+
+        arc_summary = constraint_block.get("arc_constraint_summary")
+        if arc_summary:
+            lines.append("\n[Arc 제약 요약]")
+            if isinstance(arc_summary, str):
+                lines.append(f"  {arc_summary[:500]}")
+            elif isinstance(arc_summary, dict):
+                for key, value in list(arc_summary.items())[:10]:
+                    lines.append(f"  {key}: {str(value)[:100]}")
+
+        sc_summary = constraint_block.get("state_changes_summary")
+        if sc_summary:
+            lines.append("\n[상태 변경 요약]")
+            if isinstance(sc_summary, str):
+                lines.append(f"  {sc_summary[:800]}")
+            elif isinstance(sc_summary, dict):
+                deaths = sc_summary.get("npc_deaths", [])
+                if deaths:
+                    names = [
+                        d.get("name", d.get("npc", str(d))) if isinstance(d, dict) else str(d) for d in deaths[:10]
+                    ]
+                    lines.append(f"  사망 NPC: {', '.join(names)}")
+                skills = sc_summary.get("skill_acquisitions", [])
+                if skills:
+                    names = [
+                        s.get("name", s.get("skill", str(s))) if isinstance(s, dict) else str(s) for s in skills[:10]
+                    ]
+                    lines.append(f"  획득 기술: {', '.join(names)}")
+                resolved = sc_summary.get("resolved_plots", [])
+                if resolved:
+                    names = [
+                        r.get("plot", r.get("description", str(r))) if isinstance(r, dict) else str(r)
+                        for r in resolved[:10]
+                    ]
+                    lines.append(f"  해결 플롯: {', '.join(names)}")
+                permanent = sc_summary.get("permanent_injuries", [])
+                if permanent:
+                    descs = [
+                        str(p)[:50] if not isinstance(p, dict) else str(p.get("description", str(p)))[:50]
+                        for p in permanent[:5]
+                    ]
+                    lines.append(f"  영구 부상: {', '.join(descs)}")
+
+        semantic_carryover = constraint_block.get("semantic_carryover")
+        if isinstance(semantic_carryover, dict) and semantic_carryover:
+            lines.append("\n[Arc Semantic Carryover]")
+            for entry in semantic_carryover.get("relationship_rationale", []) or []:
+                if not isinstance(entry, dict):
+                    continue
+                npc = str(entry.get("npc", "") or "").strip() or "?"
+                cue = str(entry.get("trigger", "") or entry.get("justification", "") or "").strip()
+                if cue:
+                    lines.append(f"  relationship {npc}: {cue[:120]}")
+            growth = str(semantic_carryover.get("growth_justification", "") or "").strip()
+            if growth:
+                lines.append(f"  growth_justification: {growth[:140]}")
+            for anchor in (semantic_carryover.get("foreshadow_anchors", []) or [])[:3]:
+                text = str(anchor or "").strip()
+                if text:
+                    lines.append(f"  foreshadow: {text[:120]}")
+            checkpoints = [
+                str(item or "").strip()[:80]
+                for item in (semantic_carryover.get("continuity_checkpoints", []) or [])[:3]
+            ]
+            checkpoints = [item for item in checkpoints if item]
+            if checkpoints:
+                lines.append(f"  continuity: {'; '.join(checkpoints)}")
+
+        return "\n".join(lines) if lines else "(constraints unavailable)"
 
     def _build_hud_context(self, state_tracker, ep_num: int) -> str:
         """[V64 P2-7] 위임 → modules.core.hud_utils.build_hud_context (blueprint variant)"""

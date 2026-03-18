@@ -415,11 +415,7 @@ class TestStageAttemptObservability:
         )
 
         decisions_path = tmp_path / "logs" / "session" / "decisions.jsonl"
-        rows = [
-            json.loads(line)
-            for line in decisions_path.read_text(encoding="utf-8").splitlines()
-            if line.strip()
-        ]
+        rows = [json.loads(line) for line in decisions_path.read_text(encoding="utf-8").splitlines() if line.strip()]
         row = rows[-1]
         meta = row["meta"]
 
@@ -434,7 +430,6 @@ class TestStageAttemptObservability:
         assert meta["verdict_reason"] == "구조 리스크 없이 바로 사용 가능"
         assert meta["fix_scope"] == "inplace"
         assert (tmp_path / meta["artifact_path"]).exists()
-
 
     def test_build_stage3_director_selection_kwargs_keeps_500_char_rationale(self):
         selection_reason = "r" * 450
@@ -459,6 +454,36 @@ class TestStageAttemptObservability:
 
         assert payload is not None
         assert payload["selection_reason"] == selection_reason
+
+    def test_build_stage3_director_selection_kwargs_keeps_quality_risk_advisory(self):
+        payload = Stage3Orchestrator._build_stage3_director_selection_kwargs(
+            {
+                "final_verdict": "PASS",
+                "quality_risk": True,
+                "phases": {
+                    "validate": {
+                        "verdict": "PASS",
+                        "selected_index": 1,
+                        "selection_reason": "candidate 2 edges out the field",
+                        "quality_risk": True,
+                        "selected_candidate_advisory": {
+                            "quality_risk": True,
+                            "python_warnings": [{"message": "Arc NPC mention is thin"}],
+                        },
+                    }
+                },
+            },
+            ep_num=4,
+            attempt_num=1,
+            attempt_key="s3:ep4:arc1:a1",
+            selected_strategy="dialogue_focused",
+            score=93,
+            candidate_key="dialogue_focused",
+        )
+
+        assert payload is not None
+        assert payload["advisory_warnings"]["quality_risk"] is True
+        assert payload["advisory_warnings"]["selected_candidate_advisory"] == ["Arc NPC mention is thin"]
 
 
 class TestLoadPrevBlueprint:
@@ -546,8 +571,7 @@ class TestGenerateBlueprint:
         spinner.update_detail = MagicMock()
         MockSpinner.return_value.__enter__.return_value = spinner
         app_mock.current_project.db.get_recent_manuscripts.return_value = [
-            {"ep_num": ep, "title": f"제{ep}화", "content": f"원고 {ep}"}
-            for ep in range(1, 37)
+            {"ep_num": ep, "title": f"제{ep}화", "content": f"원고 {ep}"} for ep in range(1, 37)
         ]
 
         orch._generate_blueprint(
@@ -596,9 +620,7 @@ class TestGenerateBlueprint:
         MockSpinner.return_value.__enter__.return_value = spinner
         app_mock.current_project.db.get_recent_manuscripts.return_value = []
         app_mock.current_project.db.load_anchor.side_effect = lambda key: (
-            {"numbers": {"자본금": {"value": "10억", "unit": "원", "last_ep": 12}}}
-            if key == "fact_ledger"
-            else []
+            {"numbers": {"자본금": {"value": "10억", "unit": "원", "last_ep": 12}}} if key == "fact_ledger" else []
         )
 
         orch._generate_blueprint(

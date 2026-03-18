@@ -354,6 +354,57 @@ class TestDirectorEnsemble:
         assert result["selected_index"] == 1
         assert result["selected_blueprint"] == candidates[1]
 
+    def test_compare_and_select_multi_candidate_pass_with_fix_preserves_advisory(self, director):
+        candidates = [
+            {
+                "integrated_scenario": "A" * 1000,
+                "scene_breakdown": {"scene1": "x", "scene2": "y", "scene3": "z", "scene4": "w"},
+                "_ensemble_meta": {
+                    "strategy": "steady",
+                    "python_warnings": [],
+                    "quality_risk": False,
+                },
+            },
+            {
+                "integrated_scenario": "B" * 1000,
+                "scene_breakdown": {"scene1": "x", "scene2": "y", "scene3": "z", "scene4": "w"},
+                "_ensemble_meta": {
+                    "strategy": "sharp",
+                    "python_warnings": [
+                        {
+                            "severity": "MINOR",
+                            "category": "fidelity",
+                            "message": "Arc NPC mention is thin",
+                            "focus": "keep Yeonhwa visible in the scenario",
+                        }
+                    ],
+                    "quality_risk": True,
+                    "prevalidation_issue_count": 1,
+                },
+            },
+        ]
+        director._ensemble._d.ask = MagicMock(return_value="{}")
+        director._ensemble._d._extract_json_robust = MagicMock(
+            return_value={
+                "selected_index": 1,
+                "decision": "PASS_WITH_FIX",
+                "score": 84,
+                "reason": "best candidate with local fixes",
+                "comparison_notes": "candidate 2 wins on arc coverage",
+                "feedback": "tighten scene 3 and restate Yeonhwa's leverage",
+                "fix_scope": "inplace",
+                "fix_scope_reasoning": "local continuity cleanup is sufficient",
+                "contradictions": [],
+            }
+        )
+
+        result = director.compare_and_select_blueprint(candidates=candidates, arc_data={"tactical_doc": "x"}, ep_num=2)
+
+        assert result["decision"] == "PASS_WITH_FIX"
+        assert result["feedback"] == "tighten scene 3 and restate Yeonhwa's leverage"
+        assert result["selected_candidate_advisory"]["quality_risk"] is True
+        assert result["candidate_advisories"][1]["python_warnings"][0]["message"] == "Arc NPC mention is thin"
+
     def test_ensemble_all_short_manuscripts_reject(self, director):
         """22. select_and_judge_ensemble returns REJECT when all candidates are too short."""
         candidates = [

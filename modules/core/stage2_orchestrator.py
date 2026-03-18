@@ -202,10 +202,7 @@ class Stage2Orchestrator:
                 if not isinstance(arc, dict):
                     continue
                 ep_start = _safe_int(
-                    arc.get("ep_start")
-                    or arc.get("start_ep")
-                    or arc.get("episode_start")
-                    or arc.get("start_episode")
+                    arc.get("ep_start") or arc.get("start_ep") or arc.get("episode_start") or arc.get("start_episode")
                 )
                 ep_end = _safe_int(arc.get("ep_end") or arc.get("end_ep") or arc.get("episode_end"))
                 if ep_start > 0 and ep_end <= 0:
@@ -257,6 +254,15 @@ class Stage2Orchestrator:
             self.ctx.ui.log("⚠️ [Notice] Volume 전략이 없습니다. 기본값으로 Arc 설계를 진행합니다.")
         bible_root = bible_data.get("MasterBible", bible_data)
         arcs_source = bible_root.get("plot_roadmap", [])
+        from modules.core.stage0_handoff import check_plot_roadmap_ready
+
+        roadmap_status = check_plot_roadmap_ready(arcs_source, source="stage2_entry")
+        if not roadmap_status.ready:
+            self.ctx.ui.log("❌ [Stage 2] plot_roadmap이 비어 있거나 Stage 2 소비 필드를 충족하지 않습니다.")
+            if roadmap_status.warnings:
+                self.ctx.ui.log("   " + "; ".join(roadmap_status.warnings[:3]))
+            return
+        arcs_source = roadmap_status.roadmap
 
         # [V42] 주인공 이름 추출 (PROTAGONIST IDENTITY LOCK)
         # [V61.2 Fix] 장르별 HUD 탐색으로 변경
@@ -782,7 +788,8 @@ class Stage2Orchestrator:
                             if _se and hasattr(_se, "invalidate_cache"):
                                 _se.invalidate_cache(global_arc_no)
                         except Exception as cache_err:
-                            logging.warning("[Sweep5-D] state_extractor cache invalidation failed (arc=%s): %s",
+                            logging.warning(
+                                "[Sweep5-D] state_extractor cache invalidation failed (arc=%s): %s",
                                 global_arc_no,
                                 cache_err,
                             )

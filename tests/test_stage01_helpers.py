@@ -313,8 +313,8 @@ class TestExtendBlocks:
             result = mock_extend(helpers, stage0_mgr)
             assert len(result) == 2
 
-    def test_expander_exception_returns_existing(self, helpers, app_mock, tmp_path):
-        """StoryExpander 실패 시 기존 treatment 반환"""
+    def test_expander_exception_returns_empty(self, helpers, app_mock, tmp_path):
+        """StoryExpander 실패 시 저장 우회를 위해 빈 리스트 반환"""
         import json as _json
 
         treatment_file = tmp_path / "treatment_extended.json"
@@ -331,11 +331,13 @@ class TestExtendBlocks:
         with (
             redirect_stdout(StringIO()),
             patch("builtins.input", side_effect=["5", ""]),
-            patch("modules.core.stage0.story_expander.StoryExpander", side_effect=ImportError("no module")),
+            patch(
+                "modules.core.stage0.story_expander.StoryExpander",
+                MagicMock(side_effect=ImportError("no module"), _STAGE0_REVIEW_MAX_ATTEMPTS=2),
+            ),
         ):
             result = helpers.extend_blocks(stage0_mgr)
-        assert len(result) == 1
-        assert result[0]["block_id"] == "B1"
+        assert result == []
 
 
 # ── stage_0_extended ─────────────────────────────────────────
@@ -401,8 +403,8 @@ class TestStage0RoadmapInjection:
         app_mock.current_project.paths.root = tmp_path
         bible = {"MasterBible": {"ProjectData": {}}}
         treatment = [
-            {"title": "블록 1", "ep_start": 1, "ep_end": 5},
-            {"title": "블록 2", "ep_start": 6, "ep_end": 10},
+            {"title": "블록 1", "content": {"context": "도입", "reward": "출발"}, "ep_start": 1, "ep_end": 5},
+            {"title": "블록 2", "content": {"context": "전개", "reward": "전환"}, "ep_start": 6, "ep_end": 10},
         ]
         stage0_mgr = MagicMock()
         stage0_mgr.preset_registry = None
@@ -439,7 +441,7 @@ class TestStage0RoadmapInjection:
         app_mock.current_project.paths.root = tmp_path
         app_mock.current_project.save_v20_anchor.side_effect = RuntimeError("bible-fail")
         bible = {"MasterBible": {"ProjectData": {}}}
-        treatment = [{"title": "블록 1", "ep_start": 1, "ep_end": 5}]
+        treatment = [{"title": "블록 1", "content": {"context": "도입"}, "ep_start": 1, "ep_end": 5}]
         stage0_mgr = MagicMock()
         stage0_mgr.preset_registry = None
         stage0_mgr.style_guide = None
@@ -449,6 +451,44 @@ class TestStage0RoadmapInjection:
 
         assert not (tmp_path / "treatment_generated.json").exists()
         app_mock.current_project._load_from_db.assert_not_called()
+
+    def test_s0_save_results_blocks_title_only_handoff(self, app_mock, tmp_path):
+        app_mock.current_project.paths.root = tmp_path
+        bible = {"MasterBible": {"ProjectData": {}}}
+        treatment = [{"title": "블록 1", "summary": "요약만 있음", "ep_start": 1, "ep_end": 5}]
+        stage0_mgr = MagicMock()
+        stage0_mgr.preset_registry = None
+        stage0_mgr.style_guide = None
+
+        with patch("builtins.input", return_value=""):
+            Stage01Helpers._s0_save_results(app_mock, stage0_mgr, bible, treatment)
+
+        app_mock.current_project.save_v20_anchor.assert_not_called()
+        assert not (tmp_path / "treatment_generated.json").exists()
+
+    def test_validate_plot_roadmap_entries_flags_summary_only_entries(self):
+        warnings = Stage01Helpers._validate_plot_roadmap_entries(
+            [{"block_no": 1, "title": "블록 1", "summary": "요약만"}]
+        )
+
+        assert warnings
+        assert "title/summary only" in warnings[0]
+
+    def test_block_extension_routes_through_shared_persistence(self, helpers, app_mock):
+        stage0_mgr = MagicMock()
+        bible = {"MasterBible": {"ProjectData": {}}}
+        app_mock.current_project.master_bible = bible
+
+        with (
+            patch.object(helpers, "extend_blocks", return_value=[{"title": "블록 1", "content": {"context": "도입"}}]),
+            patch.object(helpers, "_persist_stage0_results") as persist,
+            patch.object(Stage01Helpers, "_pause_with_ui"),
+        ):
+            helpers._s0_handle_block_extension(app_mock, stage0_mgr)
+
+        persist.assert_called_once()
+        assert persist.call_args.kwargs["treatment_filename"] == "treatment_extended.json"
+        assert persist.call_args.kwargs["pause"] is False
 
     def test_mode_5_calls_reference_analysis(self, helpers, app_mock):
         """mode=5 → run_reference_analysis 호출"""

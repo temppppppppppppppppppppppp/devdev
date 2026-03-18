@@ -423,7 +423,9 @@ class TestPrepareEpisodeContext:
             arcs=[{"arc_no": 1, "episodes": [1, 2, 3]}],
         )
         db.get_manuscript.side_effect = lambda ep: {"content": f"ep{ep} " * 120}
-        ctx.current_project.load_v20_anchor.side_effect = lambda name: {"summary": long_summary} if name == "arc_summary_1" else None
+        ctx.current_project.load_v20_anchor.side_effect = lambda name: (
+            {"summary": long_summary} if name == "arc_summary_1" else None
+        )
         chief_writer = MagicMock()
         chief_writer._generate_episode_digest.return_value = ""
 
@@ -590,7 +592,9 @@ class TestBuildMandatoryContext:
             return default
 
         ctx.current_project.load_v20_anchor.side_effect = _load_v20_anchor
-        ctx.load_narrative_summaries = MagicMock(return_value="### 📚 장기 내러티브 요약 (과거 스토리)\n[제1-4화 요약] 별도 요약")
+        ctx.load_narrative_summaries = MagicMock(
+            return_value="### 📚 장기 내러티브 요약 (과거 스토리)\n[제1-4화 요약] 별도 요약"
+        )
         cb = Stage4ContextBuilder(ctx)
         anchor_sys = MagicMock()
         anchor_sys.get_relevant_anchors.return_value = []
@@ -1010,9 +1014,7 @@ class TestBuildMandatoryContext:
             )
 
         ctx.context_advisor.plan_stage4_retrieval.assert_called_once()
-        assert (
-            ctx.memory.retrieve_hybrid_context.call_count + ctx.memory.retrieve_multi_query_context.call_count
-        ) == 1
+        assert (ctx.memory.retrieve_hybrid_context.call_count + ctx.memory.retrieve_multi_query_context.call_count) == 1
         ctx.memory.retrieve_npc_context.assert_called_once()
         assert "[SC:scene_context]" in result["mandatory_context"]
         assert "[SC:npc_history]" in result["mandatory_context"]
@@ -1031,7 +1033,9 @@ class TestBuildMandatoryContext:
         ctx.context_advisor.plan_stage4_retrieval.return_value = RetrievalPlan(
             stage="stage4",
             episode_num=7,
-            slots=[RetrievalSlot(category="scene_context", query="장면1: 재회", source=RetrievalSources.STATIC, priority=1)],
+            slots=[
+                RetrievalSlot(category="scene_context", query="장면1: 재회", source=RetrievalSources.STATIC, priority=1)
+            ],
             total_budget_chars=1200,
         )
         cb = Stage4ContextBuilder(ctx)
@@ -1087,7 +1091,9 @@ class TestBuildMandatoryContext:
                     source=RetrievalSources.STATIC,
                     priority=1,
                 ),
-                RetrievalSlot(category="scene_context", query="장면1: 재회", source=RetrievalSources.STATIC, priority=1),
+                RetrievalSlot(
+                    category="scene_context", query="장면1: 재회", source=RetrievalSources.STATIC, priority=1
+                ),
             ],
             total_budget_chars=1200,
         )
@@ -1386,6 +1392,64 @@ class TestBuildMandatoryContext:
         assert "[검색 커버리지 경고]" in result["mandatory_context"]
         assert "관계 의미 질의가 빠졌다." in result["mandatory_context"]
         assert not result["mandatory_context"].startswith("[검색 커버리지 경고]")
+
+    @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")
+    def test_build_mandatory_context_warns_when_semantic_carryover_slot_is_missing(self, _mock_build):
+        ctx = _make_ctx()
+        ctx.memory = MagicMock()
+        ctx.context_advisor = MagicMock()
+        ctx.context_advisor.plan_stage4_retrieval.return_value = RetrievalPlan(
+            stage="stage4",
+            episode_num=7,
+            slots=[
+                RetrievalSlot(
+                    category="arc_semantic_carryover",
+                    query="[Arc Semantic Carryover]\nrelationship Han: Han hides the ledger",
+                    source=RetrievalSources.STATIC,
+                    priority=1,
+                )
+            ],
+            total_budget_chars=1200,
+        )
+        cb = Stage4ContextBuilder(ctx)
+        anchor_sys = MagicMock()
+        anchor_sys.get_relevant_anchors.return_value = []
+        anchor_sys.get_critical_anchors.return_value = []
+
+        def threshold_side_effect(key, default=None):
+            if key == "smart_retrieval.enabled":
+                return True
+            if key == "smart_retrieval.stage4_enabled":
+                return True
+            if key == "context.vector_max_results_s4":
+                return 16
+            return default
+
+        with (
+            patch("modules.core.stage4_context_builder._threshold", side_effect=threshold_side_effect),
+            patch.object(cb, "_execute_retrieval_plan", return_value=[]),
+        ):
+            result = cb.build_mandatory_context(
+                next_ep=7,
+                arc_data={
+                    "arc_no": 1,
+                    "ep_start": 1,
+                    "ep_count": 10,
+                    "semantic_carryover": {"relationship_rationale": []},
+                },
+                arc_tactical="arc tactical",
+                prev_text="x" * 200,
+                prev_ending="ending context",
+                hud_report="HUD",
+                writer_agent=MagicMock(),
+                anchor_sys=anchor_sys,
+                s4_genre_type="wuxia",
+                v50_modules_available=False,
+            )
+
+        kwargs = ctx.quality_dashboard.record_retrieval_observation.call_args.kwargs
+        assert "missing_semantic_carryover" in kwargs["observation"]["coverage_warnings"]
+        assert "[SC:arc_semantic_carryover]" not in result["mandatory_context"]
 
 
 class TestBuildRoundContext:

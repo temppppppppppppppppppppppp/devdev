@@ -65,6 +65,7 @@ def _bootstrap_windows_stdio_utf8() -> None:
     except (AttributeError, OSError):
         return
 
+
 # [CrosscutR70] 읽기전용 디렉토리/디스크풀 시 앱 크래시 방지
 def _bootstrap_windows_asyncio_policy() -> None:
     """Prefer selector policy on Windows to reduce Proactor loop teardown noise."""
@@ -1745,13 +1746,17 @@ class SovereignApp:
                 _flash_ask_cb = None
 
         self.agents = {
-            "analyst": Analyst(self.current_project, self.sys.api_client, model_tier=models.get("analyst", default_model)),
+            "analyst": Analyst(
+                self.current_project, self.sys.api_client, model_tier=models.get("analyst", default_model)
+            ),
             # [V65] Architect 삭제 (ThreePhaseBlueprintGenerator로 완전 대체)
             "writer": Writer(self.current_project, self.sys.api_client, model_tier=models.get("writer", default_model)),
             "director": Director(
                 self.current_project, self.sys.api_client, model_tier=models.get("director", default_model)
             ),
-            "manager": Manager(self.current_project, self.sys.api_client, model_tier=models.get("manager", default_model)),
+            "manager": Manager(
+                self.current_project, self.sys.api_client, model_tier=models.get("manager", default_model)
+            ),
             # [V45 Fix] weaver는 manager가 아닌 weaver 모델 사용 (fallback: manager)
             "weaver": Weaver(
                 self.current_project,
@@ -1785,9 +1790,7 @@ class SovereignApp:
                 self.current_project, self.sys.api_client, model_tier=AIModels.STAGE2_MAIN_MODEL
             ),
             # [V60.12] PreflightChecker - 생성 전 완벽 분석
-            "preflight": PreflightChecker(
-                self.current_project, self.sys.api_client, model_tier=_FLASH_ANALYSIS_MODEL
-            ),
+            "preflight": PreflightChecker(self.current_project, self.sys.api_client, model_tier=_FLASH_ANALYSIS_MODEL),
             # [V60.12] ArcCritic - Arc 즉시 비평
             "arc_critic": ArcCritic(self.current_project, self.sys.api_client, model_tier=AIModels.STAGE2_MAIN_MODEL),
             # [V60.12] ConsensusValidator - 3-LLM 합의 검증
@@ -1815,9 +1818,7 @@ class SovereignApp:
         create_stage2_optimizer = _v50["create_stage2_optimizer"] if _v50 else None
         self.stage2_optimizer = create_stage2_optimizer() if create_stage2_optimizer else None
         self.ui.log("   🔧 [V60.11] Stage 2 고도화 모듈 초기화 (Ensemble + DraftValidator + ConstraintCompiler)")
-        self.ui.log(
-            "   🚀 [V60.12] Stage 2 초기통과율 극대화 모듈 초기화 (FourPhase + Preflight + Critic + Consensus)"
-        )
+        self.ui.log("   🚀 [V60.12] Stage 2 초기통과율 극대화 모듈 초기화 (FourPhase + Preflight + Critic + Consensus)")
         self.ui.log(
             f"   🔧 [V60.42] Arc Corrector 초기화 (MAJOR 이슈 부분 수정: {'활성화' if self.use_arc_corrector else '비활성화'})"
         )
@@ -2030,7 +2031,9 @@ class SovereignApp:
                             profiles_data = json.load(f)
                             for name_key, profile_data in profiles_data.items():
                                 self.voice_profiler.add_profile(name_key, profile_data)
-                        self.ui.log(f"   🎭 [V60.26] 캐릭터 음성 프로파일러 로드 ({len(self.voice_profiler.profiles)}명)")
+                        self.ui.log(
+                            f"   🎭 [V60.26] 캐릭터 음성 프로파일러 로드 ({len(self.voice_profiler.profiles)}명)"
+                        )
                     except (
                         json.JSONDecodeError,
                         KeyError,
@@ -3131,10 +3134,7 @@ class SovereignApp:
                 if not isinstance(arc, dict):
                     continue
                 ep_start = _safe_int(
-                    arc.get("ep_start")
-                    or arc.get("start_ep")
-                    or arc.get("episode_start")
-                    or arc.get("start_episode")
+                    arc.get("ep_start") or arc.get("start_ep") or arc.get("episode_start") or arc.get("start_episode")
                 )
                 ep_end = _safe_int(arc.get("ep_end") or arc.get("end_ep") or arc.get("episode_end"))
                 if ep_start > 0 and ep_end <= 0:
@@ -4040,7 +4040,9 @@ class SovereignApp:
         self._narrative_summaries_cache = result
         return result
 
-    def _stage_4_v2_chief_writer(self, limit_mode: bool = False, *, target_ep: int | None = None, skip_pause: bool = False) -> None:
+    def _stage_4_v2_chief_writer(
+        self, limit_mode: bool = False, *, target_ep: int | None = None, skip_pause: bool = False
+    ) -> None:
         """[V64.P3] Stage 4 V2 Chief Writer -> Stage4Orchestrator 위임
         [V69.1] Stage 4 진입 시 StateTracker/WorldState/FactLedger lazy init
         """
@@ -4113,7 +4115,9 @@ class SovereignApp:
         # Legacy manual DI equivalent: context_advisor=getattr(self, "context_advisor", None),
         self._stage4_orch.ctx = Stage4Context.from_app(self)
 
-        return self._stage4_orch.stage_4_v2_chief_writer(limit_mode=limit_mode, target_ep=target_ep, skip_pause=skip_pause)
+        return self._stage4_orch.stage_4_v2_chief_writer(
+            limit_mode=limit_mode, target_ep=target_ep, skip_pause=skip_pause
+        )
 
     # ═══════════════════════════════════════════════════════════════
     # [OneStop] Arc-by-Arc 자동 파이프라인
@@ -4198,10 +4202,16 @@ class SovereignApp:
 
         bible_root = self.current_project.master_bible.get("MasterBible", self.current_project.master_bible)
         arcs_source = bible_root.get("plot_roadmap", [])
-        total_arcs = len(arcs_source)
-        if total_arcs == 0:
-            self.ui.log("❌ plot_roadmap이 비어 있습니다. Stage 0에서 Treatment를 먼저 설정하세요.")
+        from modules.core.stage0_handoff import check_plot_roadmap_ready
+
+        roadmap_status = check_plot_roadmap_ready(arcs_source, source="frontier_lag")
+        total_arcs = len(roadmap_status.roadmap)
+        if not roadmap_status.ready:
+            self.ui.log("❌ plot_roadmap이 비어 있거나 Stage 2 소비 필드를 충족하지 않습니다.")
+            if roadmap_status.warnings:
+                self.ui.log("   " + "; ".join(roadmap_status.warnings[:3]))
             return
+        arcs_source = roadmap_status.roadmap
 
         all_arcs = self.current_project.db.load_anchor("arcs") or []
         designed_arcs = len(all_arcs)
@@ -4228,9 +4238,7 @@ class SovereignApp:
                     f" S3→{current_plan['stage3_target']} ({current_plan['stage3_alignment']})"
                     f" / S4→{current_plan['stage4_target']} ({current_plan['stage4_alignment']})"
                 )
-                self.ui.log(
-                    f"   현재 증거: bp_max={current_plan['bp_max']} / ms_max={current_plan['ms_max']}"
-                )
+                self.ui.log(f"   현재 증거: bp_max={current_plan['bp_max']} / ms_max={current_plan['ms_max']}")
         self.ui.log(f"{'═' * 60}\n")
 
         total_manuscripts = 0
@@ -4240,10 +4248,7 @@ class SovereignApp:
             nonlocal requested_limit_hit, stop_reason
             requested_limit_hit = True
             stop_reason = "requested_arc_limit_reached"
-            self.ui.log(
-                f"   🛑 [FrontierLag] 요청된 Arc 경계 도달"
-                f" ({arcs_advanced}/{requested_arc_limit}) — 자동 정지"
-            )
+            self.ui.log(f"   🛑 [FrontierLag] 요청된 Arc 경계 도달 ({arcs_advanced}/{requested_arc_limit}) — 자동 정지")
 
         if remaining_design <= 0:
             final_plan = self._resolve_one_stop_frontier_lag_plan(total_arcs=total_arcs, designed_arcs=all_arcs)
@@ -4434,12 +4439,15 @@ class SovereignApp:
 
                         if s3_success == 0 and s3_fail > 0:
                             self.ui.log(f"   ⚠️ [Stage 3] Blueprint 생성 실패 (성공: 0, 실패: {s3_fail})")
-                            skip_choice = self._get_choice_input(
-                                "   건너뛰고 다음 Arc로? (1=건너뛰기 / 2=중단, 기본: 2): ",
-                                choices=("1", "2"),
-                                default="2",
-                                prompt_id="frontier_lag_stage3_skip_choice",
-                            ) or "2"
+                            skip_choice = (
+                                self._get_choice_input(
+                                    "   건너뛰고 다음 Arc로? (1=건너뛰기 / 2=중단, 기본: 2): ",
+                                    choices=("1", "2"),
+                                    default="2",
+                                    prompt_id="frontier_lag_stage3_skip_choice",
+                                )
+                                or "2"
+                            )
                             if skip_choice != "1":
                                 self.ui.log("   🛑 사용자 요청으로 파이프라인을 중단합니다.")
                                 stop_reason = "stage3_user_abort"
@@ -4460,12 +4468,15 @@ class SovereignApp:
                             self.ui.log(f"   ✅ [Stage 3] Blueprint 완료 (성공: {s3_success}, 실패: {s3_fail})")
                     except Exception as s3_err:
                         self.ui.log(f"   ❌ [Stage 3] Blueprint 생성 오류: {str(s3_err)[:100]}")
-                        skip_choice = self._get_choice_input(
-                            "   건너뛰고 다음 Arc로? (1=건너뛰기 / 2=중단, 기본: 2): ",
-                            choices=("1", "2"),
-                            default="2",
-                            prompt_id="frontier_lag_stage3_exception_skip_choice",
-                        ) or "2"
+                        skip_choice = (
+                            self._get_choice_input(
+                                "   건너뛰고 다음 Arc로? (1=건너뛰기 / 2=중단, 기본: 2): ",
+                                choices=("1", "2"),
+                                default="2",
+                                prompt_id="frontier_lag_stage3_exception_skip_choice",
+                            )
+                            or "2"
+                        )
                         if skip_choice != "1":
                             self.ui.log("   🛑 사용자 요청으로 파이프라인을 중단합니다.")
                             stop_reason = "stage3_exception_user_abort"
@@ -4568,10 +4579,16 @@ class SovereignApp:
 
         bible_root = self.current_project.master_bible.get("MasterBible", self.current_project.master_bible)
         arcs_source = bible_root.get("plot_roadmap", [])
-        total_arcs = len(arcs_source)
-        if total_arcs == 0:
-            self.ui.log("❌ plot_roadmap이 비어 있습니다. Stage 0에서 Treatment를 먼저 설정하세요.")
+        from modules.core.stage0_handoff import check_plot_roadmap_ready
+
+        roadmap_status = check_plot_roadmap_ready(arcs_source, source="one_stop")
+        total_arcs = len(roadmap_status.roadmap)
+        if not roadmap_status.ready:
+            self.ui.log("❌ plot_roadmap이 비어 있거나 Stage 2 소비 필드를 충족하지 않습니다.")
+            if roadmap_status.warnings:
+                self.ui.log("   " + "; ".join(roadmap_status.warnings[:3]))
             return
+        arcs_source = roadmap_status.roadmap
 
         all_arcs = self.current_project.db.load_anchor("arcs") or []
         designed_arcs = len(all_arcs)
@@ -4694,12 +4711,15 @@ class SovereignApp:
                     if s3_success == 0 and s3_fail > 0:
                         # 실제 실패
                         self.ui.log(f"   ⚠️ [Stage 3] Blueprint 생성 실패 (성공: 0, 실패: {s3_fail})")
-                        skip_choice = self._get_choice_input(
-                            "   건너뛰고 다음 Arc로? (1=건너뛰기 / 2=중단, 기본: 2): ",
-                            choices=("1", "2"),
-                            default="2",
-                            prompt_id="one_stop_stage3_skip_choice",
-                        ) or "2"
+                        skip_choice = (
+                            self._get_choice_input(
+                                "   건너뛰고 다음 Arc로? (1=건너뛰기 / 2=중단, 기본: 2): ",
+                                choices=("1", "2"),
+                                default="2",
+                                prompt_id="one_stop_stage3_skip_choice",
+                            )
+                            or "2"
+                        )
                         if skip_choice != "1":
                             self.ui.log("   🛑 사용자 요청으로 파이프라인을 중단합니다.")
                             break
@@ -4713,12 +4733,15 @@ class SovereignApp:
                         self.ui.log(f"   ✅ [Stage 3] Blueprint 완료 (성공: {s3_success}, 실패: {s3_fail})")
                 except Exception as s3_err:
                     self.ui.log(f"   ❌ [Stage 3] Blueprint 생성 오류: {str(s3_err)[:100]}")
-                    skip_choice = self._get_choice_input(
-                        "   건너뛰고 다음 Arc로? (1=건너뛰기 / 2=중단, 기본: 2): ",
-                        choices=("1", "2"),
-                        default="2",
-                        prompt_id="one_stop_stage3_exception_skip_choice",
-                    ) or "2"
+                    skip_choice = (
+                        self._get_choice_input(
+                            "   건너뛰고 다음 Arc로? (1=건너뛰기 / 2=중단, 기본: 2): ",
+                            choices=("1", "2"),
+                            default="2",
+                            prompt_id="one_stop_stage3_exception_skip_choice",
+                        )
+                        or "2"
+                    )
                     if skip_choice != "1":
                         self.ui.log("   🛑 사용자 요청으로 파이프라인을 중단합니다.")
                         break
@@ -4753,12 +4776,15 @@ class SovereignApp:
                     self.ui.log("   🎉 모든 Arc 처리 완료!")
                     break
 
-                cont_choice = self._get_choice_input(
-                    f"   계속할까요? (남은 Arc: {remaining}개) (1=계속 / 2=중단, 기본: 1): ",
-                    choices=("1", "2"),
-                    default="1",
-                    prompt_id="one_stop_continue_choice",
-                ) or "1"
+                cont_choice = (
+                    self._get_choice_input(
+                        f"   계속할까요? (남은 Arc: {remaining}개) (1=계속 / 2=중단, 기본: 1): ",
+                        choices=("1", "2"),
+                        default="1",
+                        prompt_id="one_stop_continue_choice",
+                    )
+                    or "1"
+                )
                 if cont_choice == "2":
                     self.ui.log("   🛑 사용자 요청으로 파이프라인을 중단합니다.")
                     break

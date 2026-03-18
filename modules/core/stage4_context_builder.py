@@ -357,8 +357,7 @@ class Stage4ContextBuilder:
         return (
             "[TF-J 배경 인물 힌트]\n"
             "아래는 각 씬 장소에 자연스러운 배경 인물 후보입니다. "
-            "이름 없이 역할만으로 활용하세요. 반드시 사용할 필요는 없습니다.\n"
-            + "\n".join(hints)
+            "이름 없이 역할만으로 활용하세요. 반드시 사용할 필요는 없습니다.\n" + "\n".join(hints)
         )
 
     def _extract_blueprint_entities(self, blueprint: dict, arc_data: dict | None = None) -> dict[str, list[str] | str]:
@@ -402,7 +401,7 @@ class Stage4ContextBuilder:
         npcs: list[str] = []
         seen_npcs: set[str] = set()
         for pool in ("alive_npcs", "dead_npcs"):
-            for name in (ws_state.get(pool) or {}):
+            for name in ws_state.get(pool) or {}:
                 npc_name = str(name).strip()
                 if npc_name and npc_name not in seen_npcs and npc_name in full_text:
                     npcs.append(npc_name)
@@ -414,7 +413,7 @@ class Stage4ContextBuilder:
                 seen_npcs.add(text)
 
         items: list[str] = []
-        for name in (ws_state.get("active_items") or {}):
+        for name in ws_state.get("active_items") or {}:
             item_name = str(name).strip()
             if item_name and item_name in full_text:
                 items.append(item_name)
@@ -564,11 +563,7 @@ class Stage4ContextBuilder:
             for pool in ("alive_npcs", "dead_npcs"):
                 info = (ws_state.get(pool) or {}).get(npc_name)
                 if info and isinstance(info, dict):
-                    desc = ", ".join(
-                        f"{key}={value}"
-                        for key, value in info.items()
-                        if value and key != "name"
-                    )
+                    desc = ", ".join(f"{key}={value}" for key, value in info.items() if value and key != "name")
                     if desc:
                         npc_block.append(f"  상태: {desc[:200]}")
                     if pool == "dead_npcs":
@@ -650,9 +645,7 @@ class Stage4ContextBuilder:
                         rel_hist = db.get_relationship_history(n1, n2, limit=5)
                         if not isinstance(rel_hist, list) or not rel_hist:
                             cur_rel = edge.get("relation", "?")
-                            rel_lines.append(
-                                f"  {n1} ↔ {n2}: {cur_rel} (ep{edge.get('since_ep', '?')}~)"
-                            )
+                            rel_lines.append(f"  {n1} ↔ {n2}: {cur_rel} (ep{edge.get('since_ep', '?')}~)")
                             continue
 
                         stages: list[str] = []
@@ -852,9 +845,7 @@ class Stage4ContextBuilder:
                 fields = [str(x).strip() for x in (profile.get("required_fields") or []) if str(x).strip()]
                 if not name:
                     continue
-                rendered_profiles.append(
-                    f"{name}" + (f"(fields={', '.join(fields[:4])})" if fields else "")
-                )
+                rendered_profiles.append(f"{name}" + (f"(fields={', '.join(fields[:4])})" if fields else ""))
             if rendered_profiles:
                 lines.append(f"- registry focus: {', '.join(rendered_profiles)}")
 
@@ -913,6 +904,10 @@ class Stage4ContextBuilder:
             "trimmed_work_slot_summary": "작품 추적 슬롯 요약이 context budget에서 잘렸다. 핵심 tracking slot을 직접 회수할 것.",
             "missing_relation_slice": "관계 의미 질의가 빠졌다. 인물 관계 변화와 호칭 근거를 직접 회수할 것.",
         }
+        mapping["missing_semantic_carryover"] = (
+            "Stage 2 semantic carryover was planned but did not survive into Stage 4 mandatory_context. "
+            "Directly restate the relation rationale and continuity anchors."
+        )
         return mapping.get(str(code or "").strip(), str(code or "").strip())
 
     def _build_retrieval_coverage_warning_section(self, coverage_warnings: list[str]) -> str:
@@ -925,7 +920,9 @@ class Stage4ContextBuilder:
                 lines.append(f"- {text}")
         if not lines:
             return ""
-        lines.append("- 이번 화 원고에서는 위 retrieval 근거를 직접 회수하고 관련 인물/작품 축을 명시적으로 재노출할 것.")
+        lines.append(
+            "- 이번 화 원고에서는 위 retrieval 근거를 직접 회수하고 관련 인물/작품 축을 명시적으로 재노출할 것."
+        )
         return "[검색 커버리지 경고]\n" + "\n".join(lines)
 
     @staticmethod
@@ -1057,8 +1054,9 @@ class Stage4ContextBuilder:
         rendered = []
         for key, source in suppressed.items():
             rendered.append(f"- {labels.get(key, key)}: {source} canonical block 우선")
-        return "[Authority precedence]\n아래 persisted canonical 레이어가 같은 영역의 arc-derived state_tracker 요약보다 우선한다.\n" + "\n".join(
-            rendered[:8]
+        return (
+            "[Authority precedence]\n아래 persisted canonical 레이어가 같은 영역의 arc-derived state_tracker 요약보다 우선한다.\n"
+            + "\n".join(rendered[:8])
         )
 
     def _build_condensed_world_state_summary(
@@ -1127,9 +1125,7 @@ class Stage4ContextBuilder:
         promises = [
             promise
             for promise in (state.get("promises") or [])
-            if isinstance(promise, dict)
-            and promise.get("text")
-            and promise.get("status") in ("pending", None, "")
+            if isinstance(promise, dict) and promise.get("text") and promise.get("status") in ("pending", None, "")
         ]
         if promises:
             promise_lines = []
@@ -1176,7 +1172,9 @@ class Stage4ContextBuilder:
                 lines = []
                 for name, info in remaining_dead[:8]:
                     if isinstance(info, dict):
-                        lines.append(f"- {name} (제{info.get('ep', 'unknown')}화, {self._trim_summary_value(info.get('cause'), 24)})")
+                        lines.append(
+                            f"- {name} (제{info.get('ep', 'unknown')}화, {self._trim_summary_value(info.get('cause'), 24)})"
+                        )
                     else:
                         lines.append(f"- {name}")
                 parts.append(f"[사망 NPC - CP 비포함 {len(lines)}명]\n" + "\n".join(lines))
@@ -1193,7 +1191,9 @@ class Stage4ContextBuilder:
 
         active_items = state.get("active_items", {})
         if isinstance(active_items, dict) and active_items:
-            item_lines = [f"- {name}" for name, info in list(active_items.items())[:20] if str(name).strip() not in cp_items]
+            item_lines = [
+                f"- {name}" for name, info in list(active_items.items())[:20] if str(name).strip() not in cp_items
+            ]
             if item_lines:
                 parts.append("[보유 아이템 - CP 비포함]\n" + "\n".join(item_lines[:12]))
             if cp_items:
@@ -1395,7 +1395,8 @@ class Stage4ContextBuilder:
                         )
                     else:
                         if _retrieval_mode not in ("dense", "hybrid", "sparse"):
-                            logging.warning("[Retrieval] 알 수 없는 retrieval_mode '%s', dense로 폴백",
+                            logging.warning(
+                                "[Retrieval] 알 수 없는 retrieval_mode '%s', dense로 폴백",
                                 _retrieval_mode,
                             )
                         result = memory.retrieve_multi_query_context(
@@ -1472,7 +1473,8 @@ class Stage4ContextBuilder:
 
         tracker = _build_tracker(sections)
         report = tracker.get_usage_report()
-        logging.info(f"[SC] Context budget: {report['used_chars']}/{report['total_budget_chars']} ({report['usage_pct']}%)"
+        logging.info(
+            f"[SC] Context budget: {report['used_chars']}/{report['total_budget_chars']} ({report['usage_pct']}%)"
         )
 
         if report["used_chars"] <= report["total_budget_chars"]:
@@ -1502,6 +1504,11 @@ class Stage4ContextBuilder:
                 target_indices.append(idx)
 
         protected_indices = [idx for idx in target_indices if sections[idx].startswith(protected_prefix)]
+        for idx in target_indices:
+            if idx in protected_indices:
+                continue
+            if sections[idx].startswith("[SC:arc_semantic_carryover]"):
+                protected_indices.append(idx)
         regular_indices = [idx for idx in target_indices if idx not in protected_indices]
 
         def _trim_indices(
@@ -1553,7 +1560,8 @@ class Stage4ContextBuilder:
         # 최종 보고용 tracker 1회 재생성
         tracker = _build_tracker(sections)
         report = tracker.get_usage_report()
-        logging.info(f"[SC] Context budget: {report['used_chars']}/{report['total_budget_chars']} ({report['usage_pct']}%)"
+        logging.info(
+            f"[SC] Context budget: {report['used_chars']}/{report['total_budget_chars']} ({report['usage_pct']}%)"
         )
         return sections
 
@@ -2042,7 +2050,8 @@ class Stage4ContextBuilder:
 
         _prev_manuscripts_text = "\n\n---\n\n".join(_prev_manuscripts_parts) if _prev_manuscripts_parts else ""
         if _prev_manuscripts_parts:
-            logging.info("[Tier4-12] hybrid lookback ready: parts=%d chars=%d",
+            logging.info(
+                "[Tier4-12] hybrid lookback ready: parts=%d chars=%d",
                 len(_prev_manuscripts_parts),
                 len(_prev_manuscripts_text),
             )
@@ -2374,6 +2383,11 @@ class Stage4ContextBuilder:
         _arc_cs = arc_data.get("constraint_summary", "") if arc_data else ""
         if _arc_cs:
             _tier0_parts.append(f"[Arc 제약 - MUST NOT DO]\n{_arc_cs}")
+
+        # [Transport] rationale_digest — bounded semantic carry-over from Stage 2
+        _arc_rd = arc_data.get("rationale_digest", "") if arc_data else ""
+        if _arc_rd:
+            _tier1_parts.append(f"[Arc 서사 근거]\n{_arc_rd}")
 
         if self.ctx.world_state:
             try:
@@ -2751,15 +2765,31 @@ class Stage4ContextBuilder:
             warnings: list[str] = []
             if _work_focus and not _slot_summary:
                 warnings.append("missing_work_slot_summary")
-            if _work_focus and _retrieval_plan and not any(
-                str(getattr(_slot, "category", "")).startswith("work_")
-                for _slot in (getattr(_retrieval_plan, "slots", []) or [])
+            if (
+                _work_focus
+                and _retrieval_plan
+                and not any(
+                    str(getattr(_slot, "category", "")).startswith("work_")
+                    for _slot in (getattr(_retrieval_plan, "slots", []) or [])
+                )
             ):
                 warnings.append("work_focus_without_slots")
             if _slot_summary and "[작품 추적 슬롯 요약]" not in context_text:
                 warnings.append("trimmed_work_slot_summary")
-            if _source_counts.get(RetrievalSources.DB_NPC_RELATIONSHIP, 0) > 0 and "[관계 의미 질의]" not in context_text:
+            if (
+                _source_counts.get(RetrievalSources.DB_NPC_RELATIONSHIP, 0) > 0
+                and "[관계 의미 질의]" not in context_text
+            ):
                 warnings.append("missing_relation_slice")
+            if (
+                _retrieval_plan
+                and any(
+                    str(getattr(_slot, "category", "") or "") == "arc_semantic_carryover"
+                    for _slot in (getattr(_retrieval_plan, "slots", []) or [])
+                )
+                and "[SC:arc_semantic_carryover]" not in context_text
+            ):
+                warnings.append("missing_semantic_carryover")
             return warnings
 
         mandatory_context = ""
@@ -2788,7 +2818,9 @@ class Stage4ContextBuilder:
 
         _slot_summary_survived = "[작품 추적 슬롯 요약]" in mandatory_context
         _vector_context_chars = sum(len(str(_part or "")) for _part in _sc_parts)
-        _stage4_budget_ledger = dict((getattr(self.ctx, "_stage4_context_budget_meta", {}) or {}).get("budget_ledger") or {})
+        _stage4_budget_ledger = dict(
+            (getattr(self.ctx, "_stage4_context_budget_meta", {}) or {}).get("budget_ledger") or {}
+        )
         self._record_retrieval_observation(
             ep_num=next_ep,
             stage="stage4",

@@ -73,6 +73,85 @@ def _short_text(value: object, limit: int = 200) -> str:
     return text[:limit]
 
 
+def _normalize_python_warning_entries(raw: object, *, limit: int = 4) -> list[dict]:
+    if not isinstance(raw, list):
+        return []
+
+    entries: list[dict] = []
+    seen: set[tuple[str, str, str]] = set()
+    for item in raw:
+        if isinstance(item, dict):
+            severity = _short_text(item.get("severity", "MINOR"), 16).upper() or "MINOR"
+            category = _short_text(item.get("category", "issue"), 40) or "issue"
+            message = _short_text(item.get("message") or item.get("issue") or item.get("evidence"), 160)
+            focus = _short_text(item.get("focus") or item.get("fix_hint"), 120)
+        else:
+            severity = "MINOR"
+            category = "issue"
+            message = _short_text(item, 160)
+            focus = ""
+        if not message:
+            continue
+        key = (severity, category, message)
+        if key in seen:
+            continue
+        seen.add(key)
+        entry = {"severity": severity, "category": category, "message": message}
+        if focus:
+            entry["focus"] = focus
+        entries.append(entry)
+        if len(entries) >= limit:
+            break
+    return entries
+
+
+def _format_compare_python_warning_block(meta: dict | None) -> str:
+    if not isinstance(meta, dict):
+        return ""
+
+    warning_entries = _normalize_python_warning_entries(meta.get("python_warnings", []), limit=3)
+    issue_count = _safe_int(meta.get("prevalidation_issue_count", len(warning_entries)), 0)
+    quality_risk = bool(meta.get("quality_risk", False) or warning_entries)
+    if not warning_entries and not issue_count and not quality_risk:
+        return ""
+
+    lines: list[str] = []
+    if issue_count:
+        lines.append(f"- issue_count: {issue_count}")
+    if quality_risk:
+        lines.append("- quality_risk: true")
+    for entry in warning_entries:
+        line = f"- [{entry['severity']}/{entry['category']}] {entry['message']}"
+        focus = entry.get("focus", "")
+        if focus:
+            line += f" | focus: {focus}"
+        lines.append(line)
+    return "\n".join(lines)
+
+
+def _collect_compare_candidate_advisories(candidates: list) -> list[dict]:
+    advisories: list[dict] = []
+    for idx, candidate in enumerate(candidates):
+        if not isinstance(candidate, dict):
+            advisories.append({"candidate_index": idx, "quality_risk": False})
+            continue
+        meta = candidate.get("_ensemble_meta", {})
+        if not isinstance(meta, dict):
+            meta = {}
+        item = {
+            "candidate_index": idx,
+            "strategy": _short_text(meta.get("strategy", f"candidate_{idx + 1}"), 60),
+            "issue_count": _safe_int(meta.get("prevalidation_issue_count", 0), 0),
+            "quality_risk": bool(meta.get("quality_risk", False)),
+        }
+        warning_entries = _normalize_python_warning_entries(meta.get("python_warnings", []), limit=3)
+        if warning_entries:
+            item["python_warnings"] = warning_entries
+            item["quality_risk"] = True
+        advisories.append(item)
+    return advisories
+
+
 def _normalize_repair_scope(value: object) -> str:
     scope = str(value or "").strip().lower()
     return scope if scope in {"inplace", "partial", "full"} else "none"
@@ -169,7 +248,14 @@ def _normalize_fix_pack(raw: object) -> dict:
 
     has_payload = any(
         normalized.get(key)
-        for key in ("patch_targets", "must_fix", "do_not_regress", "success_condition", "target_kind", "evidence_summary")
+        for key in (
+            "patch_targets",
+            "must_fix",
+            "do_not_regress",
+            "success_condition",
+            "target_kind",
+            "evidence_summary",
+        )
     )
     return normalized if has_payload else {}
 
@@ -275,15 +361,7 @@ _FIXABLE_FIREWALL_TEXT_MARKERS = (
 
 
 def _normalize_firewall_token(value: object) -> str:
-    return (
-        str(value or "")
-        .strip()
-        .lower()
-        .replace(" ", "")
-        .replace("_", "")
-        .replace("-", "")
-        .replace("/", "")
-    )
+    return str(value or "").strip().lower().replace(" ", "").replace("_", "").replace("-", "").replace("/", "")
 
 
 def _normalize_contradiction_entries(raw: object) -> list[dict]:
@@ -363,7 +441,9 @@ def _classify_firewall_mode(
     if not all(_is_fixable_firewall_contradiction(detail) for detail in contradictions):
         return "reject", ""
 
-    type_labels = [str(detail.get("type", "") or "").strip() for detail in contradictions if str(detail.get("type", "")).strip()]
+    type_labels = [
+        str(detail.get("type", "") or "").strip() for detail in contradictions if str(detail.get("type", "")).strip()
+    ]
     type_summary = ", ".join(dict.fromkeys(type_labels[:3]))
     reason = f"Fixable Contradiction Firewall: local contradiction {len(contradictions)}건"
     if type_summary:
@@ -556,6 +636,7 @@ class DirectorEnsembleSelector:
             strategy = meta.get("strategy", f"후보{idx + 1}")
             scene_count = meta.get("scene_count", len(bp.get("scene_breakdown", {})))
             length = meta.get("length", len(bp.get("integrated_scenario", "")))
+            advisory_block = _format_compare_python_warning_block(meta)
 
             integrated = bp.get("integrated_scenario", "")
             if not isinstance(integrated, str):
@@ -569,6 +650,15 @@ class DirectorEnsembleSelector:
 - 종료 위치: {bp.get("end_location", "?")}
 - 시간 흐름: {bp.get("time_flow", "?")}
 - 엔딩 훅: {str(bp.get("ending_hook") or "?")[:100]}
+{
+                f'''
+
+[Python Advisory]
+{advisory_block}
+'''
+                if advisory_block
+                else ""
+            }
 
 [시나리오 전문]
 {integrated}
@@ -588,6 +678,11 @@ class DirectorEnsembleSelector:
 
 ### 후보 목록
 {"".join(candidate_summaries)}
+
+### Python Advisory 해석 원칙
+- 위 Python Advisory는 구조/연속성/intent 관련 bounded factual hints다.
+- 자동 탈락 규칙이 아니며, 최종 선택/판단 권한은 Director에게 있다.
+- 다만 동급 후보라면 unresolved advisory/fidelity risk가 더 적은 후보를 우선하라.
 
 ### 🔍 일관성·모순 체크 항목 (각 후보를 아래 항목으로 반드시 검사)
 1. **사망·부재 NPC 활동**: 이전 화에서 사망하거나 퇴장한 NPC가 활동하는가?
@@ -614,8 +709,10 @@ class DirectorEnsembleSelector:
 
 🎯 **[TF-27] 100점 지향 원칙 — 절대 물러서지 마라**
 목표는 항상 **100점(모순 0건)**이다. 경미한 모순이라도 그냥 넘기지 마라.
-경미한 모순만 있는 후보 → **REJECT + fix_scope="inplace"** + feedback에 구체적 수정 지시.
-Architect가 inplace 단계에서 즉시 교정하고 재제출한다. 소소한 불일치라도 전부 잡아내고 교정 기회를 줘라.
+- 국소 수정으로 해결 가능하면 **PASS_WITH_FIX + fix_scope="inplace"** + feedback에 구체적 수정 지시.
+- 일부 씬 재구성이 필요하면 **REJECT + fix_scope="partial"**.
+- 전면 재설계가 필요하면 **REJECT + fix_scope="full"**.
+Architect가 repair loop에서 처리 가능한 범위라면 PASS_WITH_FIX를 사용하되, 그냥 PASS로 흘려보내지는 마라.
 
 ### 평가 기준 (가중치)
 1. **일관성·모순 없음** (40%): 확립된 사실·수치·관계·설정과 모순이 없는가?
@@ -626,16 +723,17 @@ Architect가 inplace 단계에서 즉시 교정하고 재제출한다. 소소한
 ### 출력 형식 (JSON)
 {{
     "selected_index": 0,
-    "decision": "PASS" | "REJECT",
+    "decision": "PASS" | "PASS_WITH_FIX" | "REJECT",
     "fix_scope": "inplace" | "partial" | "full",
     "score": 0-100,
     "contradictions": ["모순 설명 (구체적 — 어떤 사실과 무엇이 충돌하는지)", ...],  // 없으면 빈 배열
     "reason": "선택/판정 이유 (50자 이내)",
     "comparison_notes": "후보별 비교 분석 (각 후보의 장단점)",
-    "feedback": "REJECT인 경우 구체적 수정 지침"
+    "feedback": "PASS_WITH_FIX/REJECT인 경우 구체적 수정 지침",
+    "fix_scope_reasoning": "왜 이 수정 범위가 맞는지 근거"
 }}
 
-[TF-23] fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부씬재작성, full=전면재설계. PASS 시 "inplace".
+[TF-23] fix_scope: 수정 범위 판단. inplace=국소수정, partial=일부씬재작성, full=전면재설계. PASS 계열은 보통 "inplace".
 
 반드시 유효한 JSON만 출력하세요.
 """
@@ -661,6 +759,17 @@ Architect가 inplace 단계에서 즉시 교정하고 재제출한다. 소소한
             contradictions = result.get("contradictions", [])
             if not isinstance(contradictions, list):
                 contradictions = []
+            candidate_advisories = _collect_compare_candidate_advisories(candidates)
+            selected_candidate_advisory = (
+                candidate_advisories[selected_idx]
+                if 0 <= selected_idx < len(candidate_advisories)
+                else {"candidate_index": selected_idx, "quality_risk": False}
+            )
+            quality_risk = bool(
+                result.get("quality_risk", False)
+                or selected_candidate_advisory.get("quality_risk", False)
+                or decision == "PASS_WITH_FIX"
+            )
 
             logging.info(f" [Director] 후보 {selected_idx + 1} 선택 ({decision}, 점수: {score})")
             if contradictions:
@@ -701,7 +810,7 @@ Architect가 inplace 단계에서 즉시 교정하고 재제출한다. 소소한
             if contradictions:
                 _operator_lines.extend(f"모순: {str(c)[:150]}" for c in contradictions[:3])
             _bp_feedback = result.get("feedback", "")
-            if decision == "REJECT" and _bp_feedback:
+            if decision in ("REJECT", "PASS_WITH_FIX") and _bp_feedback:
                 _operator_lines.append(f"피드백: {str(_bp_feedback)[:200]}")
             _thinking = getattr(self._d, "_last_thinking", "")
             if _thinking:
@@ -719,10 +828,15 @@ Architect가 inplace 단계에서 즉시 교정하고 재제출한다. 소소한
                 "score": score,
                 "contradictions": contradictions,
                 "reason": result.get("reason", ""),
-                "feedback": result.get("feedback", "") if decision == "REJECT" else "",
+                "feedback": result.get("feedback", "") if decision in ("REJECT", "PASS_WITH_FIX") else "",
                 "comparison_notes": result.get("comparison_notes", ""),
                 "fix_scope": result.get("fix_scope", ""),  # [TF-23] Director 판단 수정 범위
                 "fix_scope_reasoning": result.get("fix_scope_reasoning", ""),  # [TF-35] 수정 범위 근거 전파
+                "selection_reason": result.get("selection_reason", "") or reason,
+                "verdict_reason": result.get("verdict_reason", "") or reason,
+                "quality_risk": quality_risk,
+                "candidate_advisories": candidate_advisories,
+                "selected_candidate_advisory": selected_candidate_advisory,
             }
 
         except Exception as e:
@@ -1473,14 +1587,10 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
                 _normalized_contradictions = _normalize_contradiction_entries(_found)
                 _contradiction_details = _compact_contradiction_details(_normalized_contradictions)
                 _critical_count = sum(
-                    1
-                    for c in _normalized_contradictions
-                    if str(c.get("severity", "")).upper() == "CRITICAL"
+                    1 for c in _normalized_contradictions if str(c.get("severity", "")).upper() == "CRITICAL"
                 )
                 _major_count = sum(
-                    1
-                    for c in _normalized_contradictions
-                    if str(c.get("severity", "")).upper() == "MAJOR"
+                    1 for c in _normalized_contradictions if str(c.get("severity", "")).upper() == "MAJOR"
                 )
                 firewall_triggered = False
                 firewall_fixable = False
@@ -1504,7 +1614,9 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
                         firewall_triggered = True
                         if _critical_count >= 1:
                             firewall_reason = f"Contradiction Firewall: CRITICAL {_critical_count}건"
-                            logging.warning(f" [V75-C] Contradiction Firewall: CRITICAL {_critical_count}건 → REJECT 강제")
+                            logging.warning(
+                                f" [V75-C] Contradiction Firewall: CRITICAL {_critical_count}건 → REJECT 강제"
+                            )
                         else:
                             firewall_reason = f"Contradiction Firewall: MAJOR {_major_count}건"
                             logging.warning(f" [V75-C] Contradiction Firewall: MAJOR {_major_count}건 → REJECT 강제")
@@ -1571,8 +1683,8 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
             "time_progression",
             "opening_diversity",
             "timeline_arc_consistency",  # [NS-4]
-            "fiction_term_leak",          # [TF-57-A]
-            "scene_variety",             # [TF-J]
+            "fiction_term_leak",  # [TF-57-A]
+            "scene_variety",  # [TF-J]
             "pacing_quality",
             "dialogue_naturalness",
             "pov_discipline",

@@ -51,7 +51,9 @@ class UnifiedBlueprintValidator:
     def __init__(self, context, client, model_tier: str = None):
         self.context = context
         self.client = client
-        self.model_tier = model_tier or _get_agent_default_model("unified_blueprint_validator") or AIModels.FLASH_ANALYSIS_MODEL
+        self.model_tier = (
+            model_tier or _get_agent_default_model("unified_blueprint_validator") or AIModels.FLASH_ANALYSIS_MODEL
+        )
         self.min_chars = BLUEPRINT_MIN_CHARS
 
     def _safe_causal_history(self) -> str:
@@ -63,6 +65,126 @@ class UnifiedBlueprintValidator:
         except Exception as e:
             logging.warning(f"[S3-P1-2] get_causal_history_summary DB 오류: {e!s:.100}")
             return ""
+
+    def _apply_dead_npc_advisory(
+        self,
+        pre_result: dict,
+        *,
+        blueprint: dict | None,
+        state_tracker,
+        working_ep: int,
+        arc_no: int,
+    ) -> list[dict]:
+        """Keep dead-NPC checks advisory-only and reusable across compare flows."""
+        if not state_tracker or not isinstance(blueprint, dict):
+            return []
+
+        dead_npc_violations = state_tracker.check_dead_npc_in_blueprint(blueprint, working_ep, arc_no)
+        if not dead_npc_violations:
+            return []
+
+        violation_names = [v["npc_name"] for v in dead_npc_violations]
+        pre_result.setdefault("issues", []).append(
+            {
+                "severity": "CRITICAL",
+                "category": "dead_npc",
+                "issue": f"죽은 NPC 등장: {', '.join(violation_names)}",
+                "evidence": dead_npc_violations[0]["reason"],
+                "fix_hint": "죽은 NPC는 회상/언급만 허용",
+            }
+        )
+        pre_result["has_critical"] = True
+        return dead_npc_violations
+
+    def _build_python_warning_entries(self, issues: list) -> tuple[list[dict], bool]:
+        """Compact Python findings so Director sees bounded evidence, not raw dumps."""
+        if not isinstance(issues, list):
+            return [], False
+
+        entries: list[dict] = []
+        seen: set[tuple[str, str, str]] = set()
+        for issue in issues:
+            if not isinstance(issue, dict):
+                continue
+            severity = str(issue.get("severity", "MINOR") or "MINOR").upper()
+            category = str(issue.get("category", "issue") or "issue").strip()[:40]
+            message = str(issue.get("issue") or issue.get("evidence") or "").strip()
+            if not message:
+                continue
+            key = (severity, category, message[:160])
+            if key in seen:
+                continue
+            seen.add(key)
+            entry = {
+                "source": "python_prevalidate",
+                "severity": severity,
+                "category": category,
+                "message": message[:160],
+            }
+            focus = str(issue.get("fix_hint", "") or "").strip()
+            if focus:
+                entry["focus"] = focus[:120]
+            entries.append(entry)
+            if len(entries) >= 4:
+                break
+
+        return entries, bool(entries)
+
+    def _prepare_compare_candidate(
+        self,
+        candidate: dict,
+        *,
+        candidate_index: int,
+        arc_data: dict,
+        constraint_block: dict,
+        prev_blueprint: dict | None,
+        state_tracker,
+        working_ep: int,
+        arc_idx: int,
+    ) -> tuple[dict, dict]:
+        """Attach bounded prevalidation evidence before Director compare selection."""
+        if not isinstance(candidate, dict):
+            return {"issues": [], "has_critical": False}, {
+                "candidate_index": candidate_index,
+                "quality_risk": False,
+            }
+
+        pre_result = self._python_pre_validate(
+            candidate,
+            constraint_block,
+            prev_blueprint,
+            state_tracker,
+            arc_data=arc_data,
+        )
+        candidate_arc_no = arc_data.get("arc_no", 0) if isinstance(arc_data, dict) else arc_idx
+        if candidate_arc_no <= 0:
+            candidate_arc_no = arc_idx
+        self._apply_dead_npc_advisory(
+            pre_result,
+            blueprint=candidate,
+            state_tracker=state_tracker,
+            working_ep=working_ep,
+            arc_no=candidate_arc_no,
+        )
+
+        python_warnings, quality_risk = self._build_python_warning_entries(pre_result.get("issues", []))
+        meta = candidate.get("_ensemble_meta", {})
+        if not isinstance(meta, dict):
+            meta = {}
+        meta["python_warnings"] = python_warnings
+        meta["quality_risk"] = quality_risk
+        meta["prevalidation_issue_count"] = len(pre_result.get("issues", []))
+        candidate["_ensemble_meta"] = meta
+
+        advisory = {
+            "candidate_index": candidate_index,
+            "strategy": str(meta.get("strategy", "") or "")[:60],
+            "issue_count": len(pre_result.get("issues", [])),
+            "quality_risk": quality_risk,
+        }
+        if python_warnings:
+            advisory["python_warnings"] = python_warnings
+        return pre_result, advisory
 
     def validate(
         self,
@@ -104,6 +226,22 @@ class UnifiedBlueprintValidator:
         if all_candidates and len(all_candidates) > 1 and director:
             logging.warning(f" [V60.85] Director 비교 선택 모드 ({len(all_candidates)}개 후보)")
 
+            compare_pre_results: list[dict] = []
+            candidate_advisories: list[dict] = []
+            for idx, candidate in enumerate(all_candidates):
+                _pre_result, _advisory = self._prepare_compare_candidate(
+                    candidate,
+                    candidate_index=idx,
+                    arc_data=arc_data,
+                    constraint_block=constraint_block,
+                    prev_blueprint=prev_blueprint,
+                    state_tracker=state_tracker,
+                    working_ep=working_ep,
+                    arc_idx=arc_idx,
+                )
+                compare_pre_results.append(_pre_result)
+                candidate_advisories.append(_advisory)
+
             compare_result = director.compare_and_select_blueprint(
                 candidates=all_candidates,
                 arc_data=arc_data,
@@ -114,38 +252,67 @@ class UnifiedBlueprintValidator:
             )
 
             verdict = compare_result.get("decision", "REJECT")
+            selected_idx = _safe_int(compare_result.get("selected_index", 0), 0)
+            if selected_idx < 0 or selected_idx >= len(all_candidates):
+                selected_idx = 0
             selected_bp = compare_result.get("selected_blueprint")
+            if not isinstance(selected_bp, dict) and 0 <= selected_idx < len(all_candidates):
+                selected_bp = all_candidates[selected_idx]
 
             _contradictions = compare_result.get("contradictions", [])
             if not isinstance(_contradictions, list):
                 _contradictions = []
 
+            if 0 <= selected_idx < len(compare_pre_results):
+                selected_pre_result = compare_pre_results[selected_idx]
+            else:
+                selected_pre_result = {"issues": [], "has_critical": False}
+            selected_candidate_advisory = (
+                candidate_advisories[selected_idx]
+                if 0 <= selected_idx < len(candidate_advisories)
+                else {"candidate_index": selected_idx, "quality_risk": False}
+            )
+            quality_risk = bool(
+                compare_result.get("quality_risk", False)
+                or selected_candidate_advisory.get("quality_risk", False)
+                or verdict in ("PASS_WITH_FIX", "PASS_WITH_WARNING")
+            )
+            selection_reason = str(compare_result.get("selection_reason") or compare_result.get("reason", "") or "")
+            verdict_reason = str(compare_result.get("verdict_reason") or selection_reason or "")
+
             result = {
                 "verdict": verdict,
-                "phase": "director_compare",
-                "issues": [],
-                "summary": compare_result.get("reason", ""),
+                "phase": "director_compare+python_prevalidate",
+                "issues": selected_pre_result.get("issues", []),
+                "summary": selection_reason,
                 "score": compare_result.get("score", 0),
                 "feedback": compare_result.get("feedback", ""),
                 "confidence": 0.9 if _safe_int(compare_result.get("score", 0), 0) >= 70 else 0.6,
-                "selected_index": compare_result.get("selected_index", 0),
+                "selected_index": selected_idx,
                 "selected_blueprint": selected_bp,
                 "comparison_notes": compare_result.get("comparison_notes", ""),
                 "contradictions": _contradictions,
                 "fix_scope": compare_result.get("fix_scope", ""),  # [TF-33] Director 수정 범위 전파
                 "fix_scope_reasoning": compare_result.get("fix_scope_reasoning", ""),  # [TF-33]
+                "selection_reason": selection_reason,
+                "verdict_reason": verdict_reason,
+                "quality_risk": quality_risk,
+                "candidate_count": len(all_candidates),
+                "candidate_advisories": candidate_advisories,
+                "selected_candidate_advisory": selected_candidate_advisory,
             }
 
-            status = "✅ PASS" if verdict == "PASS" else "❌ REJECT"
-            logging.info(f"{status} [Director] 후보 {compare_result.get('selected_index', 0) + 1} 선택, 점수: {compare_result.get('score', 0)}"
-            )
+            status = "✅ PASS" if verdict in ("PASS", "PASS_WITH_FIX", "PASS_WITH_WARNING") else "❌ REJECT"
+            logging.info(f"{status} [Director] 후보 {selected_idx + 1} 선택, 점수: {compare_result.get('score', 0)}")
 
             return verdict, result
 
         # ═══════════════════════════════════════════════════════════════
         # Phase A: Python 사전검사 (무료) - 경고만, REJECT 권한 없음
         # ═══════════════════════════════════════════════════════════════
-        pre_result = self._python_pre_validate(blueprint, constraint_block, prev_blueprint, state_tracker)
+        pre_result = self._python_pre_validate(
+            blueprint, constraint_block, prev_blueprint, state_tracker, arc_data=arc_data
+        )
 
         # [V60.96] 죽은 NPC 등장 체크 - 경고로 Director에게 전달 (디렉터주권주의)
         # [V60.97] arc_no 추출 (타임라인 비교용)
@@ -153,23 +320,16 @@ class UnifiedBlueprintValidator:
         if arc_no <= 0:
             arc_no = arc_idx
 
-        dead_npc_violations = []
-        if state_tracker:
-            dead_npc_violations = state_tracker.check_dead_npc_in_blueprint(blueprint, working_ep, arc_no)
-            if dead_npc_violations:
-                violation_names = [v["npc_name"] for v in dead_npc_violations]
-                logging.warning(f" [V60.96] 죽은 NPC 감지 → Director에게 전달: {', '.join(violation_names)}")
-                # Director 주의 포인트로 추가 (Python은 REJECT 안 함)
-                pre_result["issues"].append(
-                    {
-                        "severity": "CRITICAL",
-                        "category": "dead_npc",
-                        "issue": f"죽은 NPC 등장: {', '.join(violation_names)}",
-                        "evidence": dead_npc_violations[0]["reason"],
-                        "fix_hint": "사망한 NPC는 회상/언급만 가능",
-                    }
-                )
-                pre_result["has_critical"] = True
+        dead_npc_violations = self._apply_dead_npc_advisory(
+            pre_result,
+            blueprint=blueprint,
+            state_tracker=state_tracker,
+            working_ep=working_ep,
+            arc_no=arc_no,
+        )
+        if dead_npc_violations:
+            violation_names = [v["npc_name"] for v in dead_npc_violations]
+            logging.warning(f" [V60.96] 죽은 NPC 감지 → Director에게 전달: {', '.join(violation_names)}")
 
         # [V60.80] Python은 경고만 - REJECT 권한 없음, Director가 최종 판정
         if pre_result["has_critical"]:
@@ -290,6 +450,15 @@ class UnifiedBlueprintValidator:
 
             # Director의 verdict가 최종 결정!
             final_verdict = director_verdict
+            python_warnings, quality_risk = self._build_python_warning_entries(pre_result["issues"])
+            if python_warnings:
+                ensemble_meta = blueprint.get("_ensemble_meta", {}) if isinstance(blueprint, dict) else {}
+                if not isinstance(ensemble_meta, dict):
+                    ensemble_meta = {}
+                ensemble_meta["python_warnings"] = python_warnings
+                ensemble_meta["quality_risk"] = quality_risk
+                if isinstance(blueprint, dict):
+                    blueprint["_ensemble_meta"] = ensemble_meta
 
             result = {
                 "verdict": final_verdict,
@@ -309,6 +478,10 @@ class UnifiedBlueprintValidator:
                 "fix_scope": director_result.get("fix_scope", ""),  # [TF-33] Director 수정 범위 전파
                 "fix_scope_reasoning": director_result.get("fix_scope_reasoning", ""),  # [TF-33]
                 "re_slice_instruction": director_result.get("re_slice_instruction", ""),  # [TF-35] 수정 지시 전파
+                "selection_reason": director_result.get("selection_reason", "") or director_reason,
+                "verdict_reason": director_result.get("verdict_reason", "") or director_reason,
+                "quality_risk": quality_risk or final_verdict == "PASS_WITH_FIX",
+                "candidate_count": 1,
             }
 
             status = "✅ PASS" if final_verdict in ("PASS", "PASS_WITH_FIX") else "❌ REJECT"
@@ -334,6 +507,7 @@ class UnifiedBlueprintValidator:
         constraint_block: dict,
         prev_blueprint: dict | None,
         state_tracker=None,  # [V60.95] 고밀도 HUD 검증용
+        arc_data=None,  # [ValidationHardening] intent fidelity check용
     ) -> dict:
         """Python 사전검사 (무료, 빠름)"""
         issues = []
@@ -387,6 +561,53 @@ class UnifiedBlueprintValidator:
                     "fix_hint": "최소 3개 이상의 씬으로 구성",
                 }
             )
+
+        # [ValidationHardening] 3-A. 씬 내부 구조 검사
+        if scene_count > 0:
+            _shallow = 0
+            _scene_items = scenes.values() if isinstance(scenes, dict) else scenes
+            for _sv in _scene_items:
+                if isinstance(_sv, str):
+                    _shallow += 1
+                elif isinstance(_sv, dict):
+                    _has_goal = bool(_sv.get("goal") or _sv.get("목표") or _sv.get("summary") or _sv.get("요약"))
+                    if not _has_goal:
+                        _shallow += 1
+                else:
+                    _shallow += 1
+            if _shallow > 0:
+                issues.append(
+                    {
+                        "severity": "MINOR",
+                        "category": "structure",
+                        "issue": f"씬 구조 미비: {_shallow}/{scene_count}개 씬에 goal/summary 없음",
+                        "evidence": "scene_breakdown 항목에 goal 또는 summary 필드 필요",
+                        "fix_hint": "각 씬에 goal/summary를 명시하여 intent를 보존",
+                    }
+                )
+
+        # [ValidationHardening] 3-C. Intent fidelity — Arc NPC mention check
+        if arc_data and integrated:
+            _arc_sc = (arc_data.get("state_constraints") or {}) if isinstance(arc_data, dict) else {}
+            _arc_rels = _arc_sc.get("relationship_changes") or []
+            _arc_npcs: set[str] = set()
+            for _r in _arc_rels:
+                if isinstance(_r, dict):
+                    _n = _r.get("target") or _r.get("npc")
+                    if _n and isinstance(_n, str) and len(_n) >= 2:
+                        _arc_npcs.add(_n)
+            if _arc_npcs:
+                _mentioned = sum(1 for n in _arc_npcs if n in integrated)
+                if _mentioned == 0:
+                    issues.append(
+                        {
+                            "severity": "MINOR",
+                            "category": "fidelity",
+                            "issue": f"intent 불일치: Arc 관계 변화 NPC {len(_arc_npcs)}명 blueprint 미언급",
+                            "evidence": f"NPC: {', '.join(list(_arc_npcs)[:3])}",
+                            "fix_hint": "Arc 관계 변화 NPC가 blueprint 시나리오에 등장해야 함",
+                        }
+                    )
 
         # 4. 정지선 위반 체크 (CRITICAL)
         stop_line = constraint_block.get("stop_line", {})

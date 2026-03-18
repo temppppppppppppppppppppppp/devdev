@@ -153,6 +153,30 @@ def test_stage4_plan_includes_work_focus_slots_and_stage4_prefix():
     assert slot_map["work_registry_1"].query.startswith("stage4 registry profile")
 
 
+def test_stage4_plan_includes_semantic_carryover_slot():
+    advisor = _make_enabled_advisor()
+    plan = advisor.plan_stage4_retrieval(
+        arc_data={
+            "semantic_carryover": {
+                "relationship_rationale": [{"npc": "Han", "trigger": "Han hides the ledger"}],
+                "growth_justification": "Hero secures leverage after the audit leak",
+                "continuity_checkpoints": ["Keep Han suspicious of the forged numbers"],
+            },
+            "state_changes": {},
+        },
+        blueprint={"scene_breakdown": [{"goal": "stabilize the fund"}]},
+        prev_ending="the overnight hedge is still unresolved",
+        current_ep=11,
+        npc_roster=["Han"],
+        genre="investment",
+    )
+
+    slot_map = {slot.category: slot for slot in plan.slots}
+    assert "arc_semantic_carryover" in slot_map
+    assert slot_map["arc_semantic_carryover"].source == RetrievalSources.STATIC
+    assert "relationship Han" in slot_map["arc_semantic_carryover"].query
+
+
 def test_director_plan_uses_npc_mentions_from_manuscript():
     advisor = _make_enabled_advisor()
     plan = advisor.plan_director_retrieval(
@@ -173,7 +197,10 @@ def test_director_plan_includes_work_focus_slots_and_relationship_source():
     advisor = _make_enabled_advisor()
     plan = advisor.plan_director_retrieval(
         manuscript="",
-        blueprint={"core_event": "director checks ally loyalty", "state_changes": {"relationship_changes": ["한태하-연홍"]}},
+        blueprint={
+            "core_event": "director checks ally loyalty",
+            "state_changes": {"relationship_changes": ["한태하-연홍"]},
+        },
         current_ep=21,
         npc_roster=["한태하", "연홍"],
         work_focus={
@@ -372,7 +399,9 @@ def test_context_provenance_ledger_tracks_survival_and_drop_reason():
         stage="stage4",
         episode_num=9,
         slots=[
-            RetrievalSlot(category="work_relationship_context", query="rel", source=RetrievalSources.DB_NPC_RELATIONSHIP),
+            RetrievalSlot(
+                category="work_relationship_context", query="rel", source=RetrievalSources.DB_NPC_RELATIONSHIP
+            ),
             RetrievalSlot(category="scene_context", query="scene", source=RetrievalSources.VEC_MEMORY),
         ],
         total_budget_chars=1200,

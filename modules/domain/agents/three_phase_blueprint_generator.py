@@ -43,8 +43,12 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
         # 서브 모듈
         self.constraint_compiler = BlueprintConstraintCompiler()
         sub_models = _get_sub_component_models("three_phase_blueprint_generator")
-        self.ensemble = BlueprintEnsembleGenerator(context, client, sub_models.get("ensemble", AIModels.DEFAULT_ARCHITECT))
-        self.validator = UnifiedBlueprintValidator(context, client, sub_models.get("validator", AIModels.FLASH_ANALYSIS_MODEL))
+        self.ensemble = BlueprintEnsembleGenerator(
+            context, client, sub_models.get("ensemble", AIModels.DEFAULT_ARCHITECT)
+        )
+        self.validator = UnifiedBlueprintValidator(
+            context, client, sub_models.get("validator", AIModels.FLASH_ANALYSIS_MODEL)
+        )
 
         # 통계
         self.stats = {
@@ -237,7 +241,8 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
             _use_partial = (not _use_inplace) and _previous_best is not None and (_prev_fix_scope == "partial")
 
             if _use_inplace:
-                logging.info(f"[InPlace] Blueprint in-place 수정 진입 (fix_scope={_prev_fix_scope!r}, score={_prev_reject_score})"
+                logging.info(
+                    f"[InPlace] Blueprint in-place 수정 진입 (fix_scope={_prev_fix_scope!r}, score={_prev_reject_score})"
                 )
                 patched = self._inplace_patch_blueprint(
                     original_blueprint=_previous_best,
@@ -412,6 +417,22 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
 
             _selected_meta = best_blueprint.get("_ensemble_meta", {}) if isinstance(best_blueprint, dict) else {}
             _selected_strategy = _selected_meta.get("strategy", "")
+            _validation_selection_reason = str(
+                validation_result.get("selection_reason")
+                or validation_result.get("summary")
+                or validation_result.get("comparison_notes", "")
+                or ""
+            ).strip()
+            _validation_verdict_reason = str(
+                validation_result.get("verdict_reason")
+                or validation_result.get("summary")
+                or validation_result.get("feedback", "")
+                or _validation_selection_reason
+                or ""
+            ).strip()
+            _validation_quality_risk = bool(
+                validation_result.get("quality_risk", False) or verdict in ("PASS_WITH_FIX", "PASS_WITH_WARNING")
+            )
             pipeline_result["phases"]["validate"] = {
                 "status": "complete",
                 "verdict": verdict,
@@ -421,7 +442,24 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                 "phase": validation_result.get("phase", "unknown"),  # pre_validate/director/director_compare
                 "selected_index": validation_result.get("selected_index", 0),  # [V60.85] Director 선택 인덱스
                 "comparison_notes": validation_result.get("comparison_notes", ""),  # [V60.85] 비교 근거
+                "selection_reason": _validation_selection_reason,
+                "verdict_reason": _validation_verdict_reason,
+                "fix_scope": validation_result.get("fix_scope", ""),
+                "fix_scope_reasoning": validation_result.get("fix_scope_reasoning", ""),
+                "quality_risk": _validation_quality_risk,
+                "candidate_count": validation_result.get(
+                    "candidate_count",
+                    len(all_candidates) if isinstance(all_candidates, list) else 1,
+                ),
             }
+            _candidate_advisories = validation_result.get("candidate_advisories", [])
+            if isinstance(_candidate_advisories, list) and _candidate_advisories:
+                pipeline_result["phases"]["validate"]["candidate_advisories"] = _candidate_advisories[:3]
+            _selected_candidate_advisory = validation_result.get("selected_candidate_advisory", {})
+            if isinstance(_selected_candidate_advisory, dict) and _selected_candidate_advisory:
+                pipeline_result["phases"]["validate"]["selected_candidate_advisory"] = _selected_candidate_advisory
+            if _validation_quality_risk:
+                pipeline_result["quality_risk"] = True
 
             # [TF-28b] Stage 3 QualityGate — Stage 2/4와 동일 90점 통일
             _quality_gate_score = _threshold("scoring.quality_gate_score", 90)
@@ -503,13 +541,16 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
 
                             _orig_j = json.dumps(_current_bp, ensure_ascii=False)
                             _patch_j = json.dumps(_patched_bp, ensure_ascii=False)
-                            log_patch_diff("S3-Blueprint",
-                                           json.dumps(_current_bp, ensure_ascii=False, indent=2),
-                                           json.dumps(_patched_bp, ensure_ascii=False, indent=2))
+                            log_patch_diff(
+                                "S3-Blueprint",
+                                json.dumps(_current_bp, ensure_ascii=False, indent=2),
+                                json.dumps(_patched_bp, ensure_ascii=False, indent=2),
+                            )
                             _change_ratio = calc_patch_change_ratio(_orig_j, _patch_j)
                             _max_ratio = float(_th("patch_mode.inplace_max_change_ratio", 0.30))
                             if _change_ratio > _max_ratio:
-                                logging.warning("[F-2] InPlace Blueprint 변경 비율 %.1f%% > %.0f%% (S3)",
+                                logging.warning(
+                                    "[F-2] InPlace Blueprint 변경 비율 %.1f%% > %.0f%% (S3)",
                                     _change_ratio * 100,
                                     _max_ratio * 100,
                                 )
@@ -552,7 +593,8 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                             except (ValueError, TypeError):
                                 _re_score = 0
                             if _re_score < _quality_gate_score:
-                                logging.warning(f" [TF-35] 재심사 PASS이나 score={_re_score} < {_quality_gate_score} → patch 종료"
+                                logging.warning(
+                                    f" [TF-35] 재심사 PASS이나 score={_re_score} < {_quality_gate_score} → patch 종료"
                                 )
                                 break
                             _current_bp = _patched_bp
@@ -600,7 +642,8 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                             else {}
                         )
                         _prev_selection_reason = (
-                            _current_vr.get("summary")
+                            _current_vr.get("selection_reason")
+                            or _current_vr.get("summary")
                             or _current_vr.get("comparison_notes", "")
                             or str(_current_vr.get("feedback", ""))
                         )
@@ -637,7 +680,8 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                 else {}
             )
             _prev_selection_reason = (
-                validation_result.get("summary")
+                validation_result.get("selection_reason")
+                or validation_result.get("summary")
                 or validation_result.get("comparison_notes", "")
                 or str(validation_result.get("feedback", ""))
             )
@@ -678,7 +722,8 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
         _last_score = _prev_reject_score
         # [TF-R3-S3-02] Director 주권주의: 점수 임계값 이상만 긴급 폴백 허용
         if best_blueprint and director and _last_score >= PatchModeThresholds.REWRITE:
-            logging.warning(f" [ThreePhase] 제{ep_num}화 긴급 폴백 (score={_last_score} >= {PatchModeThresholds.REWRITE})"
+            logging.warning(
+                f" [ThreePhase] 제{ep_num}화 긴급 폴백 (score={_last_score} >= {PatchModeThresholds.REWRITE})"
             )
             pipeline_result["final_verdict"] = "PASS_WITH_WARNING"
             pipeline_result["quality_gate_failed"] = True
@@ -714,7 +759,9 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
 
         _full_json = json.dumps(original_blueprint, ensure_ascii=False, indent=2)
         if len(_full_json) > 30000:
-            logging.warning("[TRUNCATION] _inplace_patch_blueprint: Blueprint JSON %d자 > 30KB 상한 → InPlace 불가", len(_full_json))
+            logging.warning(
+                "[TRUNCATION] _inplace_patch_blueprint: Blueprint JSON %d자 > 30KB 상한 → InPlace 불가", len(_full_json)
+            )
             return None  # 절단 시 깨진 JSON → full rewrite 폴백
         original_json = _full_json
 
