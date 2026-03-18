@@ -1,4 +1,5 @@
 """
+utf8-hygiene: allow-file -- legacy Korean prompt text and mojibake-adjacent literals predate this patch; item 1 additions are bounded.
 [V60.80] Blueprint Constraint Compiler
 Arc에서 해당 화의 제약 조건을 구조화된 블록으로 컴파일
 
@@ -79,6 +80,7 @@ class BlueprintConstraintCompiler:
 
         # 6. [V63.2] Arc state_changes 요약 (Stage 2 → Stage 3 직접 전달)
         state_changes_summary = self._summarize_state_changes(arc_data.get("state_changes", {}))
+        semantic_carryover = self._normalize_semantic_carryover(arc_data.get("semantic_carryover"))
 
         # 7. 제약 블록 생성
         constraint_block = {
@@ -91,6 +93,7 @@ class BlueprintConstraintCompiler:
             "inherited_state": inherited_state,
             "arc_constraint_summary": arc_constraint_summary,  # [V63]
             "state_changes_summary": state_changes_summary,  # [V63.2]
+            "semantic_carryover": semantic_carryover,
         }
 
         return constraint_block
@@ -108,6 +111,12 @@ class BlueprintConstraintCompiler:
         lines = []
 
         # 헤더
+        semantic_lines = self._format_semantic_carryover_lines(constraint_block.get("semantic_carryover"))
+        if semantic_lines:
+            lines.append("### ARC semantic carryover")
+            lines.extend(semantic_lines)
+            lines.append("")
+
         lines.append("=" * 60)
         lines.append(f"[V60.80 BLUEPRINT CONSTRAINTS] 제{constraint_block['ep_num']}화")
         lines.append(f"Arc {constraint_block['arc_no']} - 위치: {constraint_block['arc_position']}")
@@ -128,7 +137,11 @@ class BlueprintConstraintCompiler:
         lines.append("### 🚨 STOP_LINE (다음 화 내용 - 절대 침범 금지)")
         stop_line = constraint_block.get("stop_line", {})
         if stop_line.get("content"):
-            lines.append(f"다음 화 예고: {stop_line['content'][:200]}")
+            _sl_raw = stop_line["content"]
+            _sl_display = _sl_raw[:500]
+            lines.append(f"다음 화 예고: {_sl_display}")
+            if len(_sl_raw) > 500:
+                lines.append(f"  (원본 {len(_sl_raw)}자 중 500자 표시 — 잔여분 생략)")
             lines.append("⚠️ 위 내용을 이번 화에서 다루면 즉시 REJECT")
         else:
             lines.append("(Arc 마지막 화 - 정지선 없음)")
@@ -235,7 +248,7 @@ class BlueprintConstraintCompiler:
                 if isinstance(_item, dict) and _item.get("ep_num") == next_ep:
                     _details = _item.get("details") or []
                     if isinstance(_details, list) and _details:
-                        content = "; ".join(d for d in _details if isinstance(d, str))[:300]
+                        content = "; ".join(d for d in _details if isinstance(d, str))[:800]
                     break
 
         # [S3-I4] 다중 정규식 폴백 패턴으로 다음 화 정지선 추출
@@ -244,7 +257,7 @@ class BlueprintConstraintCompiler:
                 pattern = pattern_template.format(ep=next_ep)
                 match = re.search(pattern, tactical_doc, re.DOTALL)
                 if match:
-                    content = match.group(1).strip()[:300]
+                    content = match.group(1).strip()[:800]
                 if content:
                     break
 
@@ -453,6 +466,84 @@ class BlueprintConstraintCompiler:
                     lines.append(f"✅ 완결 플롯: {rp} → 재발생 금지")
 
         return "\n".join(lines) if lines else ""
+
+    @staticmethod
+    def _normalize_semantic_carryover(payload: object) -> dict:
+        if not isinstance(payload, dict):
+            return {}
+
+        normalized: dict[str, object] = {}
+
+        rels = payload.get("relationship_rationale") or []
+        if isinstance(rels, list):
+            rel_rows: list[dict[str, str]] = []
+            for entry in rels[:4]:
+                if not isinstance(entry, dict):
+                    continue
+                npc = str(entry.get("npc", "") or entry.get("target", "") or "").strip()[:40]
+                trigger = str(entry.get("trigger", "") or "").strip()[:120]
+                justification = str(entry.get("justification", "") or "").strip()[:120]
+                if not (npc or trigger or justification):
+                    continue
+                row: dict[str, str] = {}
+                if npc:
+                    row["npc"] = npc
+                if trigger:
+                    row["trigger"] = trigger
+                if justification:
+                    row["justification"] = justification
+                if row:
+                    rel_rows.append(row)
+            if rel_rows:
+                normalized["relationship_rationale"] = rel_rows
+
+        growth = str(payload.get("growth_justification", "") or "").strip()[:140]
+        if growth:
+            normalized["growth_justification"] = growth
+
+        foreshadow = payload.get("foreshadow_anchors") or []
+        if isinstance(foreshadow, list):
+            anchors = [str(item).strip()[:120] for item in foreshadow[:3] if str(item).strip()]
+            if anchors:
+                normalized["foreshadow_anchors"] = anchors
+
+        checkpoints = payload.get("continuity_checkpoints") or []
+        if isinstance(checkpoints, list):
+            normalized_points = [str(item).strip()[:80] for item in checkpoints[:4] if str(item).strip()]
+            if normalized_points:
+                normalized["continuity_checkpoints"] = normalized_points
+
+        return normalized
+
+    @staticmethod
+    def _format_semantic_carryover_lines(payload: object) -> list[str]:
+        if not isinstance(payload, dict):
+            return []
+
+        lines: list[str] = []
+        for entry in payload.get("relationship_rationale", []) or []:
+            if not isinstance(entry, dict):
+                continue
+            npc = str(entry.get("npc", "") or "").strip() or "?"
+            cue = str(entry.get("trigger", "") or entry.get("justification", "") or "").strip()
+            if cue:
+                lines.append(f"- relationship {npc}: {cue[:120]}")
+
+        growth = str(payload.get("growth_justification", "") or "").strip()
+        if growth:
+            lines.append(f"- growth_justification: {growth[:140]}")
+
+        for anchor in (payload.get("foreshadow_anchors", []) or [])[:3]:
+            text = str(anchor or "").strip()
+            if text:
+                lines.append(f"- foreshadow: {text[:120]}")
+
+        checkpoints = [str(item or "").strip()[:80] for item in (payload.get("continuity_checkpoints", []) or [])[:3]]
+        checkpoints = [item for item in checkpoints if item]
+        if checkpoints:
+            lines.append(f"- continuity: {'; '.join(checkpoints)}")
+
+        return lines
 
 
 def create_blueprint_constraint_compiler():

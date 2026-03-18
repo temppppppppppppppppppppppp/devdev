@@ -37,8 +37,8 @@ from pathlib import Path
 from typing import Any
 
 from modules.core.project_support import (
-    INCARNATION_TYPE_OPTIONS,
     EXTERNAL_POV_INSERT_POLICY_OPTIONS,
+    INCARNATION_TYPE_OPTIONS,
     POV_OPTIONS,
     WORLD_ORIGIN_OPTIONS,
     default_external_pov_insert_policy,
@@ -46,6 +46,7 @@ from modules.core.project_support import (
     resolve_external_pov_insert_policy_choice,
     resolve_indexed_menu_choice,
 )
+from modules.core.stage0_handoff import build_plot_roadmap_from_treatment, ensure_plot_roadmap
 
 
 class StageZeroManager:
@@ -166,7 +167,7 @@ class StageZeroManager:
         return (
             "work_identity:\n"
             f"  work_type: {work_type}\n"
-            "  one_line_truth: \"\"\n"
+            '  one_line_truth: ""\n'
             "  mandatory_lexicon: []\n"
             "  forbidden_flattenings: []\n"
             "  tracking_slots:\n"
@@ -208,7 +209,9 @@ class StageZeroManager:
         if choice == "1":
             templates = self._list_work_guard_templates()
             if not templates:
-                self._ui_log("[!] 가져올 작품가드 템플릿이 없습니다. work_guards/ 아래에 YAML을 두세요.", level="warning")
+                self._ui_log(
+                    "[!] 가져올 작품가드 템플릿이 없습니다. work_guards/ 아래에 YAML을 두세요.", level="warning"
+                )
                 return
             self._ui_menu(
                 "사용 가능한 템플릿:",
@@ -224,7 +227,9 @@ class StageZeroManager:
                 self._ui_log("[!] 잘못된 선택입니다.", level="warning")
                 return
             project_guard_path.write_text(selected.read_text(encoding="utf-8"), encoding="utf-8")
-            self._ui_selection("작품가드 템플릿", selected.as_posix(), prompt_id="stage0_work_guard_template_choice", visible=False)
+            self._ui_selection(
+                "작품가드 템플릿", selected.as_posix(), prompt_id="stage0_work_guard_template_choice", visible=False
+            )
             self._ui_log(f"[v] 작품가드 가져오기 완료: {selected} -> {project_guard_path}")
             return
 
@@ -241,10 +246,24 @@ class StageZeroManager:
                 self._ui_log("[*] 현재 프로젝트에는 작품가드가 없습니다. baseline 경로로 진행 중입니다.")
                 return
             self._ui_log(f"- 경로: {project_guard_path}", event_kind="summary", render_format="summary")
-            self._ui_log(f"- work_type: {summary.get('work_type', '') or '(미지정)'}", event_kind="summary", render_format="summary")
-            self._ui_log(f"- tracking_slots: {summary.get('tracking_slots', 0)}", event_kind="summary", render_format="summary")
-            self._ui_log(f"- registry_profiles: {summary.get('registry_profiles', 0)}", event_kind="summary", render_format="summary")
-            self._ui_log(f"- role_fit_constraints: {summary.get('role_fit_constraints', 0)}", event_kind="summary", render_format="summary")
+            self._ui_log(
+                f"- work_type: {summary.get('work_type', '') or '(미지정)'}",
+                event_kind="summary",
+                render_format="summary",
+            )
+            self._ui_log(
+                f"- tracking_slots: {summary.get('tracking_slots', 0)}", event_kind="summary", render_format="summary"
+            )
+            self._ui_log(
+                f"- registry_profiles: {summary.get('registry_profiles', 0)}",
+                event_kind="summary",
+                render_format="summary",
+            )
+            self._ui_log(
+                f"- role_fit_constraints: {summary.get('role_fit_constraints', 0)}",
+                event_kind="summary",
+                render_format="summary",
+            )
             return
 
         if choice == "4":
@@ -347,7 +366,9 @@ class StageZeroManager:
             raw_choice,
             default="일반",
         )
-        self._ui_selection("캐릭터 타입", config["incarnation_type"], prompt_id="stage0_incarnation_choice", visible=False)
+        self._ui_selection(
+            "캐릭터 타입", config["incarnation_type"], prompt_id="stage0_incarnation_choice", visible=False
+        )
 
         # [D-1] 시점(POV) 선택
         self._ui_menu(
@@ -435,35 +456,46 @@ class StageZeroManager:
 
     @staticmethod
     def _build_plot_roadmap_from_treatment(treatment: list[dict[str, Any]] | None) -> list[dict[str, Any]]:
-        if not isinstance(treatment, list):
-            return []
-
-        refined_roadmap = []
-        for i, block in enumerate(treatment):
-            if not isinstance(block, dict):
-                continue
-            entry = {"block_no": i + 1}
-            entry.update(block)
-            refined_roadmap.append(entry)
-        return refined_roadmap
+        return build_plot_roadmap_from_treatment(treatment)
 
     @classmethod
     def _ensure_plot_roadmap(cls, bible: dict[str, Any], treatment: list[dict[str, Any]] | None) -> int:
-        if not isinstance(bible, dict):
-            return 0
+        status = ensure_plot_roadmap(None, bible, treatment)
+        if status.warnings:
+            logging.warning(
+                "[Stage0:HandoffContract] plot_roadmap not Stage 2 ready (%s): %s",
+                status.source,
+                "; ".join(status.warnings[:5]),
+            )
+        return len(status.roadmap)
 
-        master = bible.get("MasterBible")
-        bible_root = master if isinstance(master, dict) else bible
-        existing = bible_root.get("plot_roadmap", [])
-        if isinstance(existing, list) and existing:
-            return len(existing)
-
-        refined_roadmap = cls._build_plot_roadmap_from_treatment(treatment)
-        if not refined_roadmap:
-            return 0
-
-        bible_root["plot_roadmap"] = refined_roadmap
-        return len(refined_roadmap)
+    def _review_stage0_candidate(
+        self,
+        expander: StoryExpander,
+        *,
+        bible: dict[str, Any],
+        treatment: list[dict[str, Any]],
+        attempt: int,
+        max_attempts: int,
+    ) -> dict[str, Any]:
+        review = expander.review_stage0_candidate(
+            bible=bible,
+            treatment=treatment,
+            review_mode="fresh",
+            attempt=attempt,
+            max_attempts=max_attempts,
+        )
+        decision = str(review.get("decision", "REJECT") or "REJECT").upper()
+        operator_message = str(review.get("operator_message", "") or review.get("reason", "") or "").strip()
+        if operator_message:
+            self._ui_log(
+                f"[Stage0 Gate] {decision}: {operator_message}",
+                event_kind="summary",
+                render_format="summary",
+            )
+        else:
+            self._ui_log(f"[Stage0 Gate] {decision}", event_kind="summary", render_format="summary")
+        return review
 
     def generate_from_concept(self, concept: str) -> tuple[dict, list, StyleGuide | None]:
         """컨셉에서 Bible + Treatment 생성"""
@@ -481,25 +513,54 @@ class StageZeroManager:
         # 프리셋 초기화
         self.preset_registry = expander.preset_registry
 
-        # Bible 생성
-        self._ui_log("[*] Bible 생성 중...", event_kind="summary", render_format="summary")
-        self.bible = expander.generate_bible(self.protagonist_config)
+        review_max_attempts = getattr(expander, "_STAGE0_REVIEW_MAX_ATTEMPTS", 2)
+        accepted_review: dict[str, Any] | None = None
 
-        # [TF-R2-S01-04] Bible 실패 시 조기 종료
-        if not self.bible or not isinstance(self.bible, dict) or not self.bible.get("MasterBible"):
-            logging.warning("[!] Bible 생성 실패 — Treatment 생성 건너뜀")
+        for attempt in range(1, review_max_attempts + 1):
+            self._ui_log("[*] Bible generation in progress...", event_kind="summary", render_format="summary")
+            self.bible = expander.generate_bible(self.protagonist_config)
+
+            if not self.bible or not isinstance(self.bible, dict) or not self.bible.get("MasterBible"):
+                logging.warning("[Stage0] Bible generation failed; aborting before treatment generation")
+                return {}, [], None
+
+            self._ui_log("[*] Treatment generation in progress...", event_kind="summary", render_format="summary")
+            self.treatment = expander.generate_treatment(60)
+            self._ensure_plot_roadmap(self.bible, self.treatment)
+
+            review = self._review_stage0_candidate(
+                expander,
+                bible=self.bible,
+                treatment=self.treatment,
+                attempt=attempt,
+                max_attempts=review_max_attempts,
+            )
+            decision = str(review.get("decision", "REJECT") or "REJECT").upper()
+            if decision == "PASS":
+                accepted_review = review
+                break
+            if decision == "RETRY" and attempt < review_max_attempts:
+                self._ui_log(
+                    f"[Stage0 Gate] retrying candidate generation ({attempt}/{review_max_attempts})",
+                    event_kind="summary",
+                    render_format="summary",
+                )
+                continue
+            self._ui_log(
+                "[Stage0 Gate] stop-save: Stage 0 candidate did not clear the bounded review gate.",
+                level="warning",
+                event_kind="summary",
+                render_format="summary",
+            )
             return {}, [], None
 
-        # Treatment 생성
-        self._ui_log("[*] Treatment 생성 중...", event_kind="summary", render_format="summary")
-        self.treatment = expander.generate_treatment(60)
-        self._ensure_plot_roadmap(self.bible, self.treatment)
+        if accepted_review:
+            self.bible["_stage0_review"] = accepted_review
 
-        # 저장
         if self.project_path:
             output_dir = Path(self.project_path) / "stage0_output"
             expander.save_all(str(output_dir))
-            self._ui_log(f"[v] 저장 완료: {output_dir}", event_kind="summary", render_format="summary")
+            self._ui_log(f"[v] Save complete: {output_dir}", event_kind="summary", render_format="summary")
 
         return self.bible, self.treatment, None
 
@@ -668,15 +729,23 @@ class StageZeroManager:
 
         total_eps = sum(len(eps) for eps in ref_data.values())
         works = list(ref_data.keys())
-        self._ui_log(f"[*] 레퍼런스 로드 완료: {len(works)}개 작품, {total_eps}개 에피소드", event_kind="summary", render_format="summary")
+        self._ui_log(
+            f"[*] 레퍼런스 로드 완료: {len(works)}개 작품, {total_eps}개 에피소드",
+            event_kind="summary",
+            render_format="summary",
+        )
         for w in works:
             self._ui_log(f"- {w}: {len(ref_data[w])}편", event_kind="summary", render_format="summary")
 
         try:
-            confirm = self._ui_prompt(
-                "\n  분석을 시작하시겠습니까? (y/n): ",
-                prompt_id="stage0_style_analysis_confirm",
-            ).strip().lower()
+            confirm = (
+                self._ui_prompt(
+                    "\n  분석을 시작하시겠습니까? (y/n): ",
+                    prompt_id="stage0_style_analysis_confirm",
+                )
+                .strip()
+                .lower()
+            )
         except (EOFError, KeyboardInterrupt, ValueError):
             confirm = "n"
         if confirm != "y":
@@ -720,7 +789,9 @@ class StageZeroManager:
             render_format="summary",
             meta=meta,
         )
-        self._ui_log("[*] 문체 DNA 추출 중... (대량 원고 분석 - 시간 소요)", event_kind="summary", render_format="summary")
+        self._ui_log(
+            "[*] 문체 DNA 추출 중... (대량 원고 분석 - 시간 소요)", event_kind="summary", render_format="summary"
+        )
         selected_primary_pov = ""
         external_pov_insert_policy = ""
         if isinstance(self.protagonist_config, dict):
@@ -743,16 +814,36 @@ class StageZeroManager:
                 "reset": "캐시 삭제 후 재분석",
                 "miss": "캐시 미스 후 재분석",
             }
-            self._ui_log(f"[v] 문체 DNA 추출 완료 (v{self.style_guide.analysis_version})", event_kind="summary", render_format="summary")
-            self._ui_log(f"- 캐시 처리: {cache_status_map.get(extractor.last_cache_status, '재분석')}", event_kind="summary", render_format="summary")
+            self._ui_log(
+                f"[v] 문체 DNA 추출 완료 (v{self.style_guide.analysis_version})",
+                event_kind="summary",
+                render_format="summary",
+            )
+            self._ui_log(
+                f"- 캐시 처리: {cache_status_map.get(extractor.last_cache_status, '재분석')}",
+                event_kind="summary",
+                render_format="summary",
+            )
             self._ui_log(
                 f"- 분석 원고: {self.style_guide.source_episode_count}편 / {self.style_guide.source_char_count:,}자",
                 event_kind="summary",
                 render_format="summary",
             )
-            self._ui_log(f"- 참조 작품: {', '.join(self.style_guide.reference_works or [])}", event_kind="summary", render_format="summary")
-            self._ui_log(f"- 모범 문단: {len(self.style_guide.exemplary_passages or [])}개", event_kind="summary", render_format="summary")
-            self._ui_log(f"- AI 금지 패턴: {len(self.style_guide.anti_ai_patterns or [])}개", event_kind="summary", render_format="summary")
+            self._ui_log(
+                f"- 참조 작품: {', '.join(self.style_guide.reference_works or [])}",
+                event_kind="summary",
+                render_format="summary",
+            )
+            self._ui_log(
+                f"- 모범 문단: {len(self.style_guide.exemplary_passages or [])}개",
+                event_kind="summary",
+                render_format="summary",
+            )
+            self._ui_log(
+                f"- AI 금지 패턴: {len(self.style_guide.anti_ai_patterns or [])}개",
+                event_kind="summary",
+                render_format="summary",
+            )
 
             # 저장
             if self.project_path:
@@ -761,9 +852,12 @@ class StageZeroManager:
                 try:  # [TF-11-08] OSError 방어 — 디스크 오류 시 비정상 종료 방지
                     with open(output_dir / "style_guide.json", "w", encoding="utf-8") as f:
                         f.write(self.style_guide.to_json())
-                    self._ui_log(f"- 저장: {output_dir / 'style_guide.json'}", event_kind="summary", render_format="summary")
+                    self._ui_log(
+                        f"- 저장: {output_dir / 'style_guide.json'}", event_kind="summary", render_format="summary"
+                    )
                 except OSError as _oe:
                     import logging as _log
+
                     _log.warning("[Stage0] style_guide.json 저장 실패 (계속 진행): %s", _oe)
 
         return self.style_guide

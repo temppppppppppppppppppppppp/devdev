@@ -14,6 +14,8 @@
     # → 프롬프트에 constraint_block 주입
 """
 
+# utf8-hygiene: allow-file -- Korean regex patterns are intentional in this parser-heavy module.
+
 import logging
 import re
 from dataclasses import dataclass, field
@@ -538,9 +540,30 @@ class ConstraintDB:
 
         return "🚨 " + " | ".join(parts)
 
+    # [SubstrateGate] snapshot / restore — StateTracker와 대칭, retry 경로 안전성 명시
+    def snapshot(self) -> dict:
+        """arc_states와 semantic item registry의 deep copy를 반환한다 (retry rollback용)."""
+        import copy
+
+        return {
+            "arc_states": copy.deepcopy(self.arc_states),
+            "item_registry": copy.deepcopy(self.item_registry),
+        }
+
+    def restore(self, snap: dict) -> None:
+        """snapshot에서 arc_states와 semantic item registry를 복원한다."""
+        if isinstance(snap, dict) and "arc_states" in snap:
+            self.arc_states = snap["arc_states"]
+        if isinstance(snap, dict) and "item_registry" in snap:
+            self.item_registry = snap["item_registry"]
+
     def update_arc_state(self, arc_data: dict):
         """
-        Arc 설계 완료 후 상태 업데이트
+        Arc 설계 완료 후 상태 업데이트.
+
+        Contract: DB 커밋 성공 이후에만 호출해야 한다.
+        retry 경로에서는 이 메서드가 호출되지 않으므로
+        ConstraintDB 상태가 오염되지 않는다.
 
         Args:
             arc_data: 완료된 Arc 데이터
@@ -575,7 +598,9 @@ class ConstraintDB:
         if not isinstance(state_constraints, dict):
             state_constraints = {}  # LLM이 문자열 반환 시 방어
         # [BUG-F] protagonist_items 우선 폴백
-        new_acquired = state_constraints.get("protagonist_items") or state_constraints.get("items_acquired") or []  # [V70]
+        new_acquired = (
+            state_constraints.get("protagonist_items") or state_constraints.get("items_acquired") or []
+        )  # [V70]
 
         # [V49.4] Semantic Registry를 사용한 고급 중복 감지
         if self.item_registry and new_acquired:

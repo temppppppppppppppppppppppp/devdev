@@ -211,7 +211,7 @@ def build_context_provenance_ledger(
     coverage_warnings = _clean_str_list(coverage_warnings)
 
     slot_categories: list[str] = []
-    for slot in (getattr(retrieval_plan, "slots", []) or []):
+    for slot in getattr(retrieval_plan, "slots", []) or []:
         category = str(getattr(slot, "category", "") or "").strip()
         if category and category not in slot_categories:
             slot_categories.append(category)
@@ -555,7 +555,8 @@ class ContextAdvisor:
 
         if self._should_use_llm(stage, context_data):
             plan = self._llm_enrich_plan(plan, context_data)
-        logging.info(f"[SC] {stage} plan: {len(plan.slots)} slots, budget={plan.total_budget_chars}, llm={plan.used_llm}"
+        logging.info(
+            f"[SC] {stage} plan: {len(plan.slots)} slots, budget={plan.total_budget_chars}, llm={plan.used_llm}"
         )
         return plan
 
@@ -754,9 +755,7 @@ class ContextAdvisor:
         scene_engines = [
             str(item).strip() for item in (work_focus.get("mandatory_scene_engines") or []) if str(item).strip()
         ]
-        registry_profiles = [
-            item for item in (work_focus.get("registry_profiles") or []) if isinstance(item, dict)
-        ]
+        registry_profiles = [item for item in (work_focus.get("registry_profiles") or []) if isinstance(item, dict)]
 
         for idx, item in enumerate(tracking_slots[:3], start=1):
             source = self._infer_work_focus_source(item)
@@ -863,6 +862,17 @@ class ContextAdvisor:
                     "relationship_history",
                     rel_query,
                     source=RetrievalSources.DB_NPC_RELATIONSHIP,
+                    priority=2,
+                )
+            )
+
+        semantic_query = self._build_semantic_carryover_query(arc_data)
+        if semantic_query:
+            slots.append(
+                RetrievalSlot(
+                    "arc_semantic_carryover",
+                    semantic_query,
+                    source=RetrievalSources.STATIC,
                     priority=2,
                 )
             )
@@ -1012,6 +1022,42 @@ class ContextAdvisor:
             elif isinstance(item, str):
                 pairs.append(item.strip())
         return f"관계 변화 이력: {', '.join(pairs)[:200]}" if pairs else ""
+
+    @staticmethod
+    def _build_semantic_carryover_query(arc_data: Any) -> str:
+        if not isinstance(arc_data, dict):
+            return ""
+        payload = arc_data.get("semantic_carryover", {})
+        if not isinstance(payload, dict) or not payload:
+            return ""
+
+        lines: list[str] = []
+        for entry in payload.get("relationship_rationale", []) or []:
+            if not isinstance(entry, dict):
+                continue
+            npc = str(entry.get("npc", "") or entry.get("target", "") or "").strip()[:40]
+            cue = str(entry.get("trigger", "") or entry.get("justification", "") or "").strip()[:120]
+            if cue:
+                prefix = f"relationship {npc}: " if npc else "relationship: "
+                lines.append(prefix + cue)
+
+        growth = str(payload.get("growth_justification", "") or "").strip()[:140]
+        if growth:
+            lines.append(f"growth_justification: {growth}")
+
+        for anchor in (payload.get("foreshadow_anchors", []) or [])[:3]:
+            text = str(anchor or "").strip()[:120]
+            if text:
+                lines.append(f"foreshadow: {text}")
+
+        checkpoints = [str(item or "").strip()[:80] for item in (payload.get("continuity_checkpoints", []) or [])[:3]]
+        checkpoints = [item for item in checkpoints if item]
+        if checkpoints:
+            lines.append(f"continuity: {'; '.join(checkpoints)}")
+
+        if not lines:
+            return ""
+        return "[Arc Semantic Carryover]\n" + "\n".join(lines[:8])
 
     def _assign_slot_budgets(self, stage: str, slots: list[RetrievalSlot]) -> None:
         total_budget = self._get_stage_budget(stage)
