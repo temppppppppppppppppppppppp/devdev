@@ -1,0 +1,63 @@
+# ══════════════════════════════════════════════════════════════
+# .gitattributes — CRLF/LF 정규화 (S1-EX-001)
+# core.autocrlf=true 환경에서 diff 노이즈 제거
+# ══════════════════════════════════════════════════════════════
+
+# ── 기본: 모든 텍스트 파일 자동 감지 + LF 정규화 ──
+* text=auto
+
+# ── 소스 코드 ──
+*.py text eol=lf
+*.js text eol=lf
+*.ts text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+
+# ── 설정 파일 ──
+*.yaml text eol=lf
+*.yml text eol=lf
+*.json text eol=lf
+*.toml text eol=lf
+*.cfg text eol=lf
+*.ini text eol=lf
+*.env text eol=lf
+
+# ── 문서 ──
+*.md text eol=lf
+*.txt text eol=lf
+*.csv text eol=lf
+*.rst text eol=lf
+
+# ── 셸/스크립트 ──
+*.sh text eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# ── 바이너리 (diff/merge 비활성) ──
+*.pdf binary
+*.db binary
+*.db-journal binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.exe binary
+*.dll binary
+*.zip binary
+*.gz binary
+*.tar binary
+*.7z binary
+*.node binary
+*.pyc binary
+
+# ── Electron/Node 빌드 산출물 ──
+*.asar binary
+
+# ── JSONL (대용량 로그) ──
+*.jsonl text eol=lf
