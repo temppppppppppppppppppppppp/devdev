@@ -294,6 +294,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
             project_name=self._context_cache_project_namespace("ep", ep_num),
         )
         cache_name = cache_info.get("cache_name")
+        self.last_error_type = None
 
         _tp_t0 = time.monotonic()
 

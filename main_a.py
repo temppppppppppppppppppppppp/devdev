@@ -4184,6 +4184,27 @@ class SovereignApp:
             "stage4_alignment": _classify_alignment(ms_max, targets["stage4_target"]),
         }
 
+    @staticmethod
+    def _is_stage4_zero_progress_blocked(
+        *,
+        ms_max_before: int,
+        ms_max_after: int,
+        stage4_target: int | None,
+        stage4_alignment: str = "",
+    ) -> bool:
+        """Block FrontierLag auto-advance when Stage 4 backlog made no manuscript progress."""
+        if str(stage4_alignment or "").lower() != "backlog":
+            return False
+        if stage4_target is None:
+            return False
+        try:
+            before = int(ms_max_before or 0)
+            after = int(ms_max_after or 0)
+            target = int(stage4_target or 0)
+        except (TypeError, ValueError):
+            return False
+        return target > before and after <= before
+
     def _one_stop_pipeline_frontier_lag(
         self,
         *,
@@ -4295,6 +4316,25 @@ class SovereignApp:
             try:
                 self._stage_4_v2_chief_writer(target_ep=final_plan["stage4_target"], skip_pause=True)
                 ms_max_after = self._get_max_episode_from_manuscripts()
+                if self._is_stage4_zero_progress_blocked(
+                    ms_max_before=ms_max_before,
+                    ms_max_after=ms_max_after,
+                    stage4_target=final_plan["stage4_target"],
+                    stage4_alignment=final_plan.get("stage4_alignment", ""),
+                ):
+                    self.ui.log(
+                        "   ❌ [Stage 4] Final close blocked: "
+                        f"target <= ep {final_plan['stage4_target']} backlog unchanged "
+                        f"(ms_max={ms_max_after})"
+                    )
+                    return {
+                        "arcs_advanced": arcs_advanced,
+                        "total_manuscripts": total_manuscripts,
+                        "requested_arc_limit": requested_arc_limit,
+                        "requested_limit_hit": requested_limit_hit,
+                        "stop_reason": "stage4_final_close_no_progress",
+                        "final_plan": final_plan,
+                    }
                 total_manuscripts += max(0, ms_max_after - ms_max_before)
             except Exception as s4_err:
                 self.ui.log(f"   ❌ [Stage 4] Final close 오류: {str(s4_err)[:100]}")
@@ -4499,6 +4539,21 @@ class SovereignApp:
                         self._stage_4_v2_chief_writer(target_ep=frontier_plan["stage4_target"], skip_pause=True)
                         ms_max_after = self._get_max_episode_from_manuscripts()
                         arc_manuscripts = max(0, ms_max_after - ms_max_before)
+                        if self._is_stage4_zero_progress_blocked(
+                            ms_max_before=ms_max_before,
+                            ms_max_after=ms_max_after,
+                            stage4_target=frontier_plan["stage4_target"],
+                            stage4_alignment=frontier_plan.get("stage4_alignment", ""),
+                        ):
+                            self.ui.log(
+                                "   ❌ [Stage 4] 원고 집필 blocked: "
+                                f"target <= ep {frontier_plan['stage4_target']} backlog unchanged "
+                                f"(ms_max={ms_max_after})"
+                            )
+                            self.ui.log("   🛑 Stage 4 진척이 없어 다음 Arc로 진행하지 않습니다.")
+                            stop_reason = "stage4_no_progress_blocked"
+                            tranche_completed = False
+                            break
                         total_manuscripts += arc_manuscripts
                         self.ui.log(f"   ✅ [Stage 4] 원고 완료 ({arc_manuscripts}화 생산)")
                     except KeyboardInterrupt:
@@ -4508,7 +4563,10 @@ class SovereignApp:
                         break
                     except Exception as s4_err:
                         self.ui.log(f"   ❌ [Stage 4] 원고 집필 오류: {str(s4_err)[:100]}")
-                        self.ui.log("   (기존 에러 핸들링에 따라 최선 결과 수용)")
+                        self.ui.log("   🛑 Stage 4 오류로 다음 Arc 자동 진행을 중단합니다.")
+                        stop_reason = "stage4_error"
+                        tranche_completed = False
+                        break
 
                     arcs_advanced += 1
                     if requested_arc_limit is not None and arcs_advanced >= requested_arc_limit:

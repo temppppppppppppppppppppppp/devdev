@@ -68,9 +68,13 @@ def test_constraint_db_snapshot_restores_item_registry():
 def test_blueprint_schema_scene_breakdown_is_typed():
     scene_schema = BLUEPRINT_SCHEMA.properties["scene_breakdown"]
 
-    assert scene_schema.additional_properties is not None
-    assert scene_schema.additional_properties.any_of is not None
-    assert len(scene_schema.additional_properties.any_of) == 2
+    assert scene_schema.type.value == "OBJECT"
+    assert scene_schema.additional_properties is None
+    assert set(scene_schema.properties.keys()) == {f"scene_{idx}" for idx in range(1, 6)}
+    scene_entry_schema = scene_schema.properties["scene_1"]
+    assert any(branch.type.value == "OBJECT" for branch in scene_entry_schema.any_of)
+    assert "title" in BLUEPRINT_SCHEMA.properties
+    assert "ending_hook" in BLUEPRINT_SCHEMA.properties
 
 
 def test_blueprint_model_uses_typed_scene_entries():
