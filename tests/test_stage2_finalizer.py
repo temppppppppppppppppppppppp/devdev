@@ -2,6 +2,7 @@
 
 import asyncio
 import sys
+from copy import deepcopy
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -11,8 +12,8 @@ import pytest
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from modules.core.stage2_finalizer import Stage2Finalizer
 from modules.core.stage2_context import Stage2Context
+from modules.core.stage2_finalizer import Stage2Finalizer
 
 
 @pytest.fixture
@@ -261,6 +262,34 @@ class TestRunFinalize:
 
     @patch("modules.core.stage2_finalizer.validate_arc", side_effect=lambda x: x)
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    def test_run_finalize_persists_structured_semantic_carryover(self, _validate, finalizer, valid_refined_arc):
+        refined_arc = deepcopy(valid_refined_arc)
+        refined_arc["state_constraints"] = {
+            "relationship_changes": [
+                {
+                    "target": "Han",
+                    "trigger": "Han hides the ledger",
+                    "justification": "Hero now distrusts the missing entries",
+                }
+            ],
+            "power_changes": {"growth_justification": "Hero earns leverage after exposing the forged trade"},
+            "foreshadowings": [{"description": "The sealed vault entry will matter again"}],
+            "continuity_checkpoints": ["Keep Han's missing-ledger suspicion active"],
+        }
+        kwargs = _make_finalize_kwargs(refined_arc)
+
+        result = asyncio.run(finalizer.run_finalize(**kwargs))
+
+        assert result["action"] == "break"
+        saved_arc = kwargs["all_refined_arcs"][0]
+        assert saved_arc["semantic_carryover"]["relationship_rationale"][0]["npc"] == "Han"
+        assert saved_arc["semantic_carryover"]["growth_justification"].startswith("Hero earns leverage")
+        assert "foreshadow_anchors" in saved_arc["semantic_carryover"]
+        assert "continuity_checkpoints" in saved_arc["semantic_carryover"]
+        assert "Han" in saved_arc["rationale_digest"]
+
+    @patch("modules.core.stage2_finalizer.validate_arc", side_effect=lambda x: x)
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
     def test_director_pass_records_arc_cost(self, _validate, finalizer, valid_refined_arc):
         collector = MagicMock()
         collector.session_id = "sess_test"
@@ -333,7 +362,11 @@ class TestRunFinalize:
                 self.ui.log = MagicMock()
                 self.current_project = MagicMock()
                 self.agents = {"director": MagicMock()}
-                self.agents["director"].audit_strategic_plan.return_value = {"decision": "PASS", "score": 95, "reason": "ok"}
+                self.agents["director"].audit_strategic_plan.return_value = {
+                    "decision": "PASS",
+                    "score": 95,
+                    "reason": "ok",
+                }
                 self.agents["director"].ask.return_value = "volume summary text long enough"
                 self.sys = MagicMock()
                 self.state_tracker = SimpleNamespace(foo=0, bar=0)

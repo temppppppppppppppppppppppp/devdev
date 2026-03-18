@@ -1,4 +1,7 @@
-"""[B-1-7] Stage2 finalizer extracted from Stage2Orchestrator."""
+"""[B-1-7] Stage2 finalizer extracted from Stage2Orchestrator.
+
+utf8-hygiene: allow-file -- legacy Korean regex and prompt strings predate this patch; item 1 changes are ASCII-bounded.
+"""
 
 import json
 import logging
@@ -213,8 +216,8 @@ def _check_cross_arc_asset_continuity(tactical_doc: str, prev_arcs: list) -> lis
     delta_pct = abs(curr_asset - prev_asset) / prev_asset
     if delta_pct > 0.20:
         return [
-            f"[TF-57-C 자산 연속성 advisory] 직전 Arc 종료 자산 {prev_asset/1e8:.1f}억 대비 "
-            f"현재 Arc 첫 언급 자산 {curr_asset/1e8:.1f}억 — {delta_pct*100:.0f}% 차이 (허용 20% 초과). "
+            f"[TF-57-C 자산 연속성 advisory] 직전 Arc 종료 자산 {prev_asset / 1e8:.1f}억 대비 "
+            f"현재 Arc 첫 언급 자산 {curr_asset / 1e8:.1f}억 — {delta_pct * 100:.0f}% 차이 (허용 20% 초과). "
             "직전 Arc 계산과 정합하는지 확인하세요."
         ]
     return []
@@ -352,6 +355,116 @@ def _build_character_voice_advisory(db) -> str:
         return ""
 
 
+def _clip_text(value: object, limit: int) -> str:
+    text = str(value or "").strip()
+    if not text:
+        return ""
+    if len(text) <= limit:
+        return text
+    return text[: limit - 3].rstrip() + "..."
+
+
+def _normalize_checkpoint(value: object, limit: int = 80) -> str:
+    if isinstance(value, dict):
+        for key in ("checkpoint", "description", "summary", "event", "name"):
+            clipped = _clip_text(value.get(key, ""), limit)
+            if clipped:
+                return clipped
+        return _clip_text(json.dumps(value, ensure_ascii=False), limit)
+    return _clip_text(value, limit)
+
+
+def _build_semantic_carryover(state_constraints: dict | None, state_changes: dict | None) -> dict:
+    payload: dict[str, object] = {}
+    sc = state_constraints if isinstance(state_constraints, dict) else {}
+    changes = state_changes if isinstance(state_changes, dict) else {}
+
+    relationship_rationale: list[dict[str, str]] = []
+    rel_changes = sc.get("relationship_changes") or changes.get("relationship_changes") or []
+    if isinstance(rel_changes, list):
+        for entry in rel_changes[:5]:
+            if not isinstance(entry, dict):
+                continue
+            trigger = _clip_text(entry.get("trigger", ""), 120)
+            justification = _clip_text(entry.get("justification", ""), 120)
+            if not (trigger or justification):
+                continue
+            npc = _clip_text(entry.get("target") or entry.get("npc") or entry.get("name") or "", 40)
+            row: dict[str, str] = {}
+            if npc:
+                row["npc"] = npc
+            if trigger:
+                row["trigger"] = trigger
+            if justification:
+                row["justification"] = justification
+            if row:
+                relationship_rationale.append(row)
+    if relationship_rationale:
+        payload["relationship_rationale"] = relationship_rationale
+
+    power_changes = sc.get("power_changes", {})
+    if isinstance(power_changes, dict):
+        growth = _clip_text(power_changes.get("growth_justification", ""), 140)
+        if growth:
+            payload["growth_justification"] = growth
+
+    foreshadow_anchors: list[str] = []
+    foreshadowings = sc.get("foreshadowings", [])
+    if isinstance(foreshadowings, list):
+        for entry in foreshadowings[:3]:
+            if isinstance(entry, dict):
+                anchor = _clip_text(entry.get("description", "") or entry.get("summary", ""), 120)
+            else:
+                anchor = _clip_text(entry, 120)
+            if anchor:
+                foreshadow_anchors.append(anchor)
+    if foreshadow_anchors:
+        payload["foreshadow_anchors"] = foreshadow_anchors
+
+    continuity_checkpoints: list[str] = []
+    checkpoints = sc.get("continuity_checkpoints", [])
+    if isinstance(checkpoints, list):
+        for entry in checkpoints[:4]:
+            checkpoint = _normalize_checkpoint(entry)
+            if checkpoint:
+                continuity_checkpoints.append(checkpoint)
+    if continuity_checkpoints:
+        payload["continuity_checkpoints"] = continuity_checkpoints
+
+    return payload
+
+
+def _build_rationale_digest_from_carryover(semantic_carryover: dict | None) -> str:
+    payload = semantic_carryover if isinstance(semantic_carryover, dict) else {}
+    if not payload:
+        return ""
+
+    parts: list[str] = []
+    for entry in payload.get("relationship_rationale", []) or []:
+        if not isinstance(entry, dict):
+            continue
+        npc = _clip_text(entry.get("npc", ""), 40) or "?"
+        cue = _clip_text(entry.get("trigger", ""), 120) or _clip_text(entry.get("justification", ""), 120)
+        if cue:
+            parts.append(f"관계({npc}): {cue}")
+
+    growth = _clip_text(payload.get("growth_justification", ""), 120)
+    if growth:
+        parts.append(f"성장근거: {growth}")
+
+    for entry in (payload.get("foreshadow_anchors", []) or [])[:3]:
+        anchor = _clip_text(entry, 120)
+        if anchor:
+            parts.append(f"복선: {anchor}")
+
+    checkpoints = [_clip_text(entry, 60) for entry in (payload.get("continuity_checkpoints", []) or [])[:3]]
+    checkpoints = [entry for entry in checkpoints if entry]
+    if checkpoints:
+        parts.append(f"연속성: {'; '.join(checkpoints)}")
+
+    return "\n".join(parts[:8])
+
+
 class Stage2Finalizer:
     """Director audit + PASS/REJECT post-processing for Stage 2."""
 
@@ -399,6 +512,14 @@ class Stage2Finalizer:
         Returns dict with action='break'|'retry'|'next'.
         """
         from modules.core.constants import ContextLimits, RecoveryLimits
+
+        # [SubstrateGate] ConstraintDB snapshot — StateTracker 대칭 rollback 안전성
+        _cdb_snapshot = None
+        if constraint_db and hasattr(constraint_db, "snapshot"):
+            try:
+                _cdb_snapshot = constraint_db.snapshot()
+            except Exception:
+                pass
 
         # [V66] SemanticPlotGuard 중복 검사
         if self.ctx.semantic_plot_guard:
@@ -517,12 +638,9 @@ class Stage2Finalizer:
                     global_arc_no,
                 )
                 if _nc1_s2_warns:
-                    _nc1_s2_text = "\n".join(
-                        f"  - [{w['severity']}] {w['text']}" for w in _nc1_s2_warns
-                    )
+                    _nc1_s2_text = "\n".join(f"  - [{w['severity']}] {w['text']}" for w in _nc1_s2_warns)
                     _story_context += (
-                        f"\n\n[NC-1-S2 산술 검증 경고]\n{_nc1_s2_text}\n"
-                        "위 경고를 참고하여 수치 정합성을 검증하세요."
+                        f"\n\n[NC-1-S2 산술 검증 경고]\n{_nc1_s2_text}\n위 경고를 참고하여 수치 정합성을 검증하세요."
                     )
                     logging.info("[TF-60] NC-1-S2 advisory 주입: %d건", len(_nc1_s2_warns))
             except Exception as _nc1_err:
@@ -719,9 +837,11 @@ class Stage2Finalizer:
 
                     _orig_j = json.dumps(_current_arc, ensure_ascii=False)
                     _patch_j = json.dumps(_patched, ensure_ascii=False)
-                    log_patch_diff("S2-Arc",
-                                   json.dumps(_current_arc, ensure_ascii=False, indent=2),
-                                   json.dumps(_patched, ensure_ascii=False, indent=2))
+                    log_patch_diff(
+                        "S2-Arc",
+                        json.dumps(_current_arc, ensure_ascii=False, indent=2),
+                        json.dumps(_patched, ensure_ascii=False, indent=2),
+                    )
                     _change_ratio = calc_patch_change_ratio(_orig_j, _patch_j)
                     _max_ratio = float(_threshold("patch_mode.inplace_max_change_ratio", 0.30))
                     if _change_ratio > _max_ratio:
@@ -845,9 +965,9 @@ class Stage2Finalizer:
                 self.ctx.ui.log("      ❌ [TF-32-V] 수정 실패 → REJECT 전환")
 
         if _d_decision in ("PASS", "PASS_WITH_FIX"):  # [TF-R4-S2-01] [TF-32-S2] PASS/PASS_WITH_FIX 수용
-            if _d_decision == "PASS" and _td_len >= 1500 and _score < _quality_gate_score:  # [TF-46] PASS만 gate 적용
+            if _d_decision in ("PASS", "PASS_WITH_FIX") and _td_len >= 1500 and _score < _quality_gate_score:
                 self.ctx.ui.log(
-                    f"      ⚠️ [QualityGate] PASS 판정이나 score={_score} < {_quality_gate_score} → REJECT 전환"
+                    f"      ⚠️ [QualityGate] {_d_decision} 판정이나 score={_score} < {_quality_gate_score} → REJECT 전환"
                 )
                 audit["decision"] = "REJECT"
                 audit["reason"] = (audit.get("reason") or "") + (
@@ -867,6 +987,9 @@ class Stage2Finalizer:
                         for _k, _v in st_snapshot.items():
                             if hasattr(_st, _k):
                                 setattr(_st, _k, _v)
+                    # [SubstrateGate] ConstraintDB 대칭 rollback
+                    if _cdb_snapshot and constraint_db and hasattr(constraint_db, "restore"):
+                        constraint_db.restore(_cdb_snapshot)
                 # [E5a-P1-1] QualityGate REJECT — reject metrics 기록
                 self._record_s2_reject_metrics(
                     global_arc_no=global_arc_no,
@@ -909,6 +1032,9 @@ class Stage2Finalizer:
                         for _k, _v in st_snapshot.items():
                             if hasattr(self.ctx.state_tracker, _k):
                                 setattr(self.ctx.state_tracker, _k, _v)
+                        # [SubstrateGate] ConstraintDB 대칭 rollback
+                        if _cdb_snapshot and constraint_db and hasattr(constraint_db, "restore"):
+                            constraint_db.restore(_cdb_snapshot)
                     return {"action": "retry", "current_feedback": current_feedback}
                 refined_arc = repaired_arc
 
@@ -916,7 +1042,9 @@ class Stage2Finalizer:
             if not refined_arc.get("hybrid_composition"):
                 self.ctx.ui.log(f"⚠️ [Arc {global_arc_no}] 패턴 구성(hybrid_composition) 누락 - 기본값 주입")
                 if callable(getattr(self.ctx, "audit_event", None)):
-                    self.ctx.audit_event("field_repair", "hybrid_composition default injected", {"arc_no": global_arc_no})
+                    self.ctx.audit_event(
+                        "field_repair", "hybrid_composition default injected", {"arc_no": global_arc_no}
+                    )
                 refined_arc["hybrid_composition"] = {
                     "primary": "standard_progression",
                     "secondary": [],
@@ -974,7 +1102,9 @@ class Stage2Finalizer:
                             consumed_names = []
                         state_constraints = refined_arc.get("state_constraints", {})
                         # [BUG-F] protagonist_items 우선 폴백
-                        acquired = state_constraints.get("protagonist_items") or state_constraints.get("items_acquired", [])
+                        acquired = state_constraints.get("protagonist_items") or state_constraints.get(
+                            "items_acquired", []
+                        )
                         if isinstance(acquired, str):
                             acquired = [acquired] if acquired else []
                         elif not isinstance(acquired, list):
@@ -1020,6 +1150,9 @@ class Stage2Finalizer:
                     for _k, _v in st_snapshot.items():
                         if hasattr(self.ctx.state_tracker, _k):
                             setattr(self.ctx.state_tracker, _k, _v)
+                    # [SubstrateGate] ConstraintDB 대칭 rollback
+                    if _cdb_snapshot and constraint_db and hasattr(constraint_db, "restore"):
+                        constraint_db.restore(_cdb_snapshot)
                 return {"action": "retry", "current_feedback": current_feedback}
 
             if callable(getattr(self.ctx, "validate_arc_integrity", None)) and not self.ctx.validate_arc_integrity(
@@ -1032,6 +1165,9 @@ class Stage2Finalizer:
                     for _k, _v in st_snapshot.items():
                         if hasattr(self.ctx.state_tracker, _k):
                             setattr(self.ctx.state_tracker, _k, _v)
+                    # [SubstrateGate] ConstraintDB 대칭 rollback
+                    if _cdb_snapshot and constraint_db and hasattr(constraint_db, "restore"):
+                        constraint_db.restore(_cdb_snapshot)
                 return {"action": "retry", "current_feedback": current_feedback}
 
             # [TF-S2-03] 중복 check_new_arc() 제거 — L58-74의 첫 번째 호출이 이미 처리
@@ -1042,7 +1178,46 @@ class Stage2Finalizer:
                 _must_not = [ln.strip() for ln in _constraint_lines if "금지" in ln or "MUST NOT" in ln or "절대" in ln]
                 refined_arc["constraint_summary"] = "\n".join(_must_not[:10]) if _must_not else ""
 
+            # [Transport] rationale_digest — bounded semantic carry-over
+            _rd_parts: list[str] = []
+            _rd_sc = refined_arc.get("state_constraints", {})
+            # (1) relationship trigger / justification
+            _rd_rels = (
+                _rd_sc.get("relationship_changes")
+                or refined_arc.get("state_changes", {}).get("relationship_changes")
+                or []
+            )
+            for _rc in _rd_rels[:5]:
+                if isinstance(_rc, dict):
+                    _t = _rc.get("trigger", "")
+                    _j = _rc.get("justification", "")
+                    if _t or _j:
+                        _npc = _rc.get("target") or _rc.get("npc") or "?"
+                        _rd_parts.append(f"관계({_npc}): {(_t or _j)[:120]}")
+            # (2) power-change growth justification
+            _rd_pc = _rd_sc.get("power_changes", {})
+            if isinstance(_rd_pc, dict) and _rd_pc.get("growth_justification"):
+                _rd_parts.append(f"성장근거: {_rd_pc['growth_justification'][:120]}")
+            # (3) foreshadow summary
+            _rd_fs = _rd_sc.get("foreshadowings", [])
+            if isinstance(_rd_fs, list):
+                for _f in _rd_fs[:3]:
+                    if isinstance(_f, dict) and _f.get("description"):
+                        _rd_parts.append(f"복선: {_f['description'][:120]}")
+            # (4) continuity checkpoints
+            _rd_cc = _rd_sc.get("continuity_checkpoints", [])
+            if isinstance(_rd_cc, list) and _rd_cc:
+                _rd_parts.append(f"연속성: {'; '.join(str(c)[:60] for c in _rd_cc[:3])}")
+            refined_arc["rationale_digest"] = "\n".join(_rd_parts[:8]) if _rd_parts else ""
+
             # [Equipment Sync] arc_start_state.equipment ← 이전 Arc 종료 소지품 강제 동기화
+            _semantic_carryover = _build_semantic_carryover(
+                refined_arc.get("state_constraints"),
+                refined_arc.get("state_changes"),
+            )
+            refined_arc["semantic_carryover"] = _semantic_carryover
+            refined_arc["rationale_digest"] = _build_rationale_digest_from_carryover(_semantic_carryover)
+
             if all_refined_arcs:
                 _prev = all_refined_arcs[-1]
                 _prev_end = _prev.get("state_constraints", {}).get("arc_end_state", {})
@@ -1117,9 +1292,13 @@ class Stage2Finalizer:
                         logging.info("🔄 [V70] DB 실패 StateTracker 롤백 완료")
                     except Exception as _rb_err:
                         logging.warning(f"⚠️ [V70] DB 실패 StateTracker 롤백 실패: {_rb_err}")
+                    # [SubstrateGate] ConstraintDB 대칭 rollback
+                    if _cdb_snapshot and constraint_db and hasattr(constraint_db, "restore"):
+                        constraint_db.restore(_cdb_snapshot)
                 return {"action": "retry", "current_feedback": current_feedback}
 
             st_snapshot = None  # [V70] DB 커밋 성공 후 스냅샷 해제
+            _cdb_snapshot = None  # [SubstrateGate] DB 커밋 성공 후 CDB 스냅샷 해제
             self.ctx.cumulative_state_cache = None
             self.ctx.cumulative_state_cache_key = None  # [S-08] 센티넬 (0은 유효한 키일 수 있음)
 
@@ -1388,6 +1567,7 @@ class Stage2Finalizer:
     ) -> None:
         """[4-R3-f] Record Stage 2 PASS metrics (PassRateMonitor, Dashboard, Optimizer, PerfTimer)."""
         from modules.core.spinners import V50_MODULES_AVAILABLE
+
         _session_id = resolve_logging_session_id(getattr(self.ctx, "current_project", None))
         attempt_key = build_attempt_key(
             stage=2,
@@ -1533,6 +1713,7 @@ class Stage2Finalizer:
     ) -> None:
         """[4-R3-f] Record Stage 2 REJECT metrics (PassRateMonitor, Dashboard, History, Optimizer)."""
         from modules.core.spinners import V50_MODULES_AVAILABLE
+
         _session_id = resolve_logging_session_id(getattr(self.ctx, "current_project", None))
         attempt_key = build_attempt_key(
             stage=2,

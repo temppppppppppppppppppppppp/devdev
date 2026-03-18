@@ -58,11 +58,7 @@ def _build_stage3_observability_flags(meta: dict | None) -> dict:
     if not isinstance(meta, dict):
         return {}
     source_counts = _normalize_semantic_source_counts(meta.get("source_counts"))
-    coverage_warnings = [
-        str(item).strip()
-        for item in (meta.get("coverage_warnings") or [])
-        if str(item or "").strip()
-    ]
+    coverage_warnings = [str(item).strip() for item in (meta.get("coverage_warnings") or []) if str(item or "").strip()]
     provenance_ledger = meta.get("provenance_ledger") if isinstance(meta.get("provenance_ledger"), dict) else {}
     budget_ledger = meta.get("budget_ledger") if isinstance(meta.get("budget_ledger"), dict) else {}
     flags = {
@@ -327,9 +323,7 @@ def _build_stage3_work_focus_advisory(
     scene_engines = [
         str(item).strip() for item in (work_focus.get("mandatory_scene_engines") or []) if str(item).strip()
     ]
-    registry_profiles = [
-        item for item in (work_focus.get("registry_profiles") or []) if isinstance(item, dict)
-    ]
+    registry_profiles = [item for item in (work_focus.get("registry_profiles") or []) if isinstance(item, dict)]
     if not any([tracking_slots, scene_engines, registry_profiles]):
         return ""
 
@@ -1240,9 +1234,13 @@ class Stage3Orchestrator:
                 _source_counts = {"legacy_semantic_context": 1}
             if _s3_work_focus and not _work_focus_advisory:
                 _coverage_warnings.append("missing_work_slot_summary")
-            if _s3_work_focus and _s3_plan and not any(
-                str(getattr(_slot, "category", "")).startswith("work_")
-                for _slot in (getattr(_s3_plan, "slots", []) or [])
+            if (
+                _s3_work_focus
+                and _s3_plan
+                and not any(
+                    str(getattr(_slot, "category", "")).startswith("work_")
+                    for _slot in (getattr(_s3_plan, "slots", []) or [])
+                )
             ):
                 _coverage_warnings.append("work_focus_without_slots")
             if (
@@ -1845,6 +1843,20 @@ class Stage3Orchestrator:
             _advisory["fix_scope_reasoning"] = fix_scope_reasoning[:300]
         if fix_scope:
             _advisory["fix_scope"] = fix_scope
+        if bool(validate.get("quality_risk", False) or pipeline_result.get("quality_risk", False)):
+            _advisory["quality_risk"] = True
+        selected_candidate_advisory = validate.get("selected_candidate_advisory", {})
+        if isinstance(selected_candidate_advisory, dict) and selected_candidate_advisory:
+            _warning_messages: list[str] = []
+            for item in selected_candidate_advisory.get("python_warnings", [])[:3]:
+                if isinstance(item, dict):
+                    _message = str(item.get("message", "") or "").strip()
+                else:
+                    _message = str(item or "").strip()
+                if _message:
+                    _warning_messages.append(_message[:160])
+            if _warning_messages:
+                _advisory["selected_candidate_advisory"] = _warning_messages
 
         phase = str(validate.get("phase", "") or "").strip()
         candidate_count = validate.get("candidate_count")
@@ -1900,7 +1912,7 @@ class Stage3Orchestrator:
         _sc = arc_data.get("state_constraints", {}) if isinstance(arc_data, dict) else {}
         planned = set()
         # [BUG-F] protagonist_items 우선 폴백
-        for item in (_sc.get("protagonist_items") or _sc.get("items_acquired") or []):
+        for item in _sc.get("protagonist_items") or _sc.get("items_acquired") or []:
             if item:
                 planned.add(str(item))
         _end_eq = set(_sc.get("arc_end_state", {}).get("equipment", []))

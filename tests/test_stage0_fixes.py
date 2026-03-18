@@ -112,10 +112,13 @@ class TestPhaseB:
         src = tmp_path / "broken.txt"
         src.write_text("placeholder", encoding="utf-8")
 
-        with patch.object(StageZeroManager, "show_genre_menu", return_value=""), patch.object(
-            ReverseExpander,
-            "run",
-            side_effect=ReverseExpander.DraftEncodingError("UTF-8/cp949로 복구할 수 없는 입력 파일입니다"),
+        with (
+            patch.object(StageZeroManager, "show_genre_menu", return_value=""),
+            patch.object(
+                ReverseExpander,
+                "run",
+                side_effect=ReverseExpander.DraftEncodingError("UTF-8/cp949로 복구할 수 없는 입력 파일입니다"),
+            ),
         ):
             bible, episode_bibles, style_guide = manager.run_reverse_engineering_flow(str(src))
 
@@ -132,10 +135,17 @@ class TestPhaseB:
         expander = MagicMock()
         expander.genre = "wuxia"
         expander.preset_registry = MagicMock()
+        expander._STAGE0_REVIEW_MAX_ATTEMPTS = 2
+        expander.review_stage0_candidate.return_value = {
+            "decision": "PASS",
+            "reason": "ready",
+            "operator_message": "ready",
+            "issues": [],
+        }
         expander.generate_bible.return_value = {"MasterBible": {"ProjectData": {}}}
         expander.generate_treatment.return_value = [
-            {"title": "블록 1", "ep_start": 1, "ep_end": 5},
-            {"title": "블록 2", "ep_start": 6, "ep_end": 10},
+            {"title": "블록 1", "content": {"context": "도입", "reward": "단서 획득"}, "ep_start": 1, "ep_end": 5},
+            {"title": "블록 2", "content": {"context": "전개", "reward": "충돌 심화"}, "ep_start": 6, "ep_end": 10},
         ]
 
         with patch("modules.core.stage0.StoryExpander", return_value=expander):
@@ -147,6 +157,29 @@ class TestPhaseB:
         assert [block["block_no"] for block in roadmap] == [1, 2]
         assert roadmap[0]["title"] == "블록 1"
 
+    def test_generate_from_concept_stops_save_after_bounded_review_failure(self):
+        manager = StageZeroManager(project_path="dummy")
+        manager.genre = "wuxia"
+        expander = MagicMock()
+        expander.genre = "wuxia"
+        expander.preset_registry = MagicMock()
+        expander._STAGE0_REVIEW_MAX_ATTEMPTS = 2
+        expander.generate_bible.return_value = {"MasterBible": {"ProjectData": {}}}
+        expander.generate_treatment.return_value = [
+            {"title": "블록 1", "content": {"context": "도입", "reward": "출발"}, "ep_start": 1, "ep_end": 5}
+        ]
+        expander.review_stage0_candidate.side_effect = [
+            {"decision": "RETRY", "reason": "retry", "operator_message": "retry", "issues": ["weak"]},
+            {"decision": "REJECT", "reason": "reject", "operator_message": "reject", "issues": ["weak"]},
+        ]
+
+        with patch("modules.core.stage0.StoryExpander", return_value=expander):
+            bible, treatment, style_guide = manager.generate_from_concept("컨셉")
+
+        assert bible == {}
+        assert treatment == []
+        assert style_guide is None
+        expander.save_all.assert_not_called()
 
 
 # ──────────────────────────────────────────────

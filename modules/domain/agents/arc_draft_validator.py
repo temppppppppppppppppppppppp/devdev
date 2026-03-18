@@ -1,4 +1,5 @@
 """
+utf8-hygiene: allow-file -- Korean regex patterns are intentional in this validator module.
 [V60.56] Arc Draft Validator - Advisory Mode
 Python 사전 검증 → LLM에게 정보 제공용 (REJECT 권한 없음)
 
@@ -37,9 +38,7 @@ class ArcDraftValidator:
     def __init__(self, genre: str = "") -> None:
         # [BUG-3] 장르별 아이템 접미사 SSOT
         self._item_suffixes = get_item_suffixes(genre)
-        _suffix_group = "|".join(
-            sorted((re.escape(s) for s in self._item_suffixes), key=len, reverse=True)
-        )
+        _suffix_group = "|".join(sorted((re.escape(s) for s in self._item_suffixes), key=len, reverse=True))
         _suffix_group = _suffix_group or r"아이템"
 
         # 아이템 획득 패턴 (장르 동적 접미사)
@@ -173,6 +172,8 @@ class ArcDraftValidator:
         # [V60.94] 죽은 NPC 등장만 REJECT, 나머지는 advisory
         # critical_issues를 advisory_issues로 변환 (LLM에게 전달할 정보)
         advisory_issues = [c for c in critical_issues if "사망한" not in c and "죽은" not in c]
+        advisory_issues.extend(f"[warning] {w}" for w in warnings)
+        advisory_issues.extend(f"[suggestion] {s}" for s in suggestions)
 
         # [BUG-5] advisory_issues 세부 내용 로깅 (디버깅 지원)
         if advisory_issues:
@@ -519,6 +520,40 @@ class ArcDraftValidator:
         if checkpoint_result.get("state_mismatches"):
             warnings.append(f"화간 상태 불일치: {checkpoint_result['state_mismatches'][:2]}")
             penalty += len(checkpoint_result.get("state_mismatches", [])) * 3
+
+        # [ValidationHardening] 10. Named anchor spread — Arc NPC 언급 검사
+        if tactical and len(tactical) > 500:
+            _sc = arc.get("state_constraints") or {}
+            _npc_names: set[str] = set()
+            for _r in _sc.get("relationship_changes") or []:
+                if isinstance(_r, dict):
+                    _n = _r.get("target") or _r.get("npc")
+                    if _n and isinstance(_n, str) and len(_n) >= 2:
+                        _npc_names.add(_n)
+            for _r in (arc.get("state_changes") or {}).get("relationship_changes") or []:
+                if isinstance(_r, dict):
+                    _n = _r.get("target") or _r.get("npc")
+                    if _n and isinstance(_n, str) and len(_n) >= 2:
+                        _npc_names.add(_n)
+            if _npc_names:
+                _mentioned = sum(1 for n in _npc_names if n in tactical)
+                if _mentioned == 0:
+                    warnings.append(f"tactical_doc에 관계 변화 NPC 미언급: {', '.join(list(_npc_names)[:3])}")
+                    penalty += 3
+
+        # [ValidationHardening] 11. Concrete action density proxy
+        if tactical and len(tactical) > 800:
+            import re as _re
+
+            _action_count = len(
+                _re.findall(
+                    r"[가-힣]+(?:했다|한다|된다|받는다|얻는다|발견한다|도착한다|만난다|떠난다|싸운다|죽는다|깨닫는다)",
+                    tactical,
+                )
+            )
+            _sentence_approx = max(1, tactical.count("다.") + tactical.count("다\n"))
+            if _sentence_approx >= 5 and _action_count < max(2, _sentence_approx // 4):
+                suggestions.append(f"tactical_doc 구체성 부족: 행동 표현 {_action_count}개 / ~{_sentence_approx}문장")
 
         return {"penalty": penalty, "critical": critical, "warnings": warnings, "suggestions": suggestions}
 

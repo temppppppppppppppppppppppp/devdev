@@ -14,6 +14,7 @@ from typing import Any
 
 from modules.core.constants import AIModels, GenreTypes, smart_truncate
 from modules.core.llm_generate import generate_content_via_router
+from modules.core.stage0_handoff import ensure_plot_roadmap
 
 from .preset_registry import PresetRegistry
 
@@ -31,6 +32,8 @@ class StoryExpander:
 
     _CONCEPT_PROMPT_MAX = 4000
     _CONCEPT_PROMPT_HEAD = 2500
+    _STAGE0_REVIEW_MAX_ATTEMPTS = 2
+    _STAGE0_REVIEW_WINDOW = 3
 
     def __init__(self, genre: str = None, llm_client=None):
         self.genre = genre
@@ -88,7 +91,8 @@ class StoryExpander:
 
                     if is_retryable and attempt < self._MAX_RETRIES - 1:
                         delay = self._BASE_DELAY * (2**attempt)
-                        logging.warning(f"[S0-I3] {model} 일시적 오류 (attempt {attempt + 1}/{self._MAX_RETRIES}), "
+                        logging.warning(
+                            f"[S0-I3] {model} 일시적 오류 (attempt {attempt + 1}/{self._MAX_RETRIES}), "
                             f"{delay:.1f}초 후 재시도: {e}"
                         )
                         time.sleep(delay)
@@ -142,6 +146,158 @@ class StoryExpander:
             parts.append("세계 법칙: " + "; ".join(world_laws[:3]))
 
         return "\n".join(parts).strip()
+
+    @staticmethod
+    def _preview_blocks(blocks: list[dict[str, Any]] | None, *, limit: int = 3) -> list[dict[str, str]]:
+        if not isinstance(blocks, list):
+            return []
+        previews: list[dict[str, str]] = []
+        for block in blocks[-limit:]:
+            if not isinstance(block, dict):
+                continue
+            content = block.get("content", {})
+            reward = ""
+            if isinstance(content, dict):
+                reward = str(content.get("reward", "") or "").strip()
+            previews.append(
+                {
+                    "block_id": str(block.get("block_id", "") or "").strip(),
+                    "title": str(block.get("title", "") or "").strip(),
+                    "reward": reward[:160],
+                }
+            )
+        return previews
+
+    def _collect_stage0_review_facts(
+        self,
+        *,
+        bible: dict[str, Any],
+        treatment: list[dict[str, Any]],
+        review_mode: str,
+        prior_treatment: list[dict[str, Any]] | None = None,
+    ) -> dict[str, Any]:
+        status = ensure_plot_roadmap(None, bible, treatment)
+        master = bible.get("MasterBible", bible) if isinstance(bible, dict) else {}
+        core_identity = (
+            (((master.get("ProjectData") or {}).get("CoreIdentity")) or {}) if isinstance(master, dict) else {}
+        )
+        world_state = (master.get("WorldState") or {}) if isinstance(master, dict) else {}
+        key_npcs = (((master.get("AssetLibrary") or {}).get("KeyNPCs")) or []) if isinstance(master, dict) else []
+        world_laws = (master.get("WorldLaws") or []) if isinstance(master, dict) else []
+        completeness_warnings = list(bible.get("_completeness_warnings") or []) if isinstance(bible, dict) else []
+
+        prior_blocks = prior_treatment if isinstance(prior_treatment, list) else []
+        new_blocks = (
+            treatment[len(prior_blocks) :] if prior_blocks and len(treatment) >= len(prior_blocks) else treatment
+        )
+
+        return {
+            "review_mode": review_mode,
+            "bible_completeness": {
+                "warning_count": len(completeness_warnings),
+                "warnings": completeness_warnings[:8],
+                "has_core_identity": bool(core_identity),
+                "key_npc_count": len(key_npcs) if isinstance(key_npcs, list) else 0,
+                "world_law_count": len(world_laws) if isinstance(world_laws, list) else 0,
+                "has_current_era": bool(str(world_state.get("CurrentEra", "") or "").strip()),
+            },
+            "plot_roadmap": {
+                "entry_count": len(status.roadmap),
+                "source": status.source,
+                "ready": status.ready,
+                "warnings": status.warnings[:8],
+            },
+            "continuity_handoff": {
+                "window_size": self._STAGE0_REVIEW_WINDOW,
+                "prior_tail": self._preview_blocks(prior_blocks, limit=self._STAGE0_REVIEW_WINDOW),
+                "candidate_head": self._preview_blocks(
+                    new_blocks[: self._STAGE0_REVIEW_WINDOW], limit=self._STAGE0_REVIEW_WINDOW
+                ),
+                "candidate_tail": self._preview_blocks(new_blocks, limit=self._STAGE0_REVIEW_WINDOW),
+                "candidate_new_block_count": len(new_blocks) if isinstance(new_blocks, list) else 0,
+            },
+        }
+
+    @staticmethod
+    def _fallback_stage0_review(facts: dict[str, Any], *, attempt: int, max_attempts: int) -> dict[str, Any]:
+        completeness = facts.get("bible_completeness", {}) if isinstance(facts, dict) else {}
+        roadmap = facts.get("plot_roadmap", {}) if isinstance(facts, dict) else {}
+        blocking_issues: list[str] = []
+        warning_count = int(completeness.get("warning_count", 0) or 0)
+
+        if not bool(roadmap.get("ready")):
+            blocking_issues.extend(list(roadmap.get("warnings") or []))
+        if warning_count >= 2:
+            blocking_issues.extend(list(completeness.get("warnings") or [])[:4])
+
+        if not blocking_issues:
+            return {
+                "decision": "PASS",
+                "reason": "Deterministic Stage 0 facts stayed above the bounded floor.",
+                "operator_message": "Fallback gate passed with deterministic evidence only.",
+                "issues": [],
+            }
+
+        decision = "RETRY" if attempt < max_attempts else "REJECT"
+        return {
+            "decision": decision,
+            "reason": "Deterministic Stage 0 facts remained below the bounded floor.",
+            "operator_message": "Fallback gate escalated Stage 0 because the LLM review was unavailable.",
+            "issues": blocking_issues[:8],
+        }
+
+    def review_stage0_candidate(
+        self,
+        *,
+        bible: dict[str, Any],
+        treatment: list[dict[str, Any]],
+        review_mode: str,
+        attempt: int,
+        max_attempts: int,
+        prior_treatment: list[dict[str, Any]] | None = None,
+    ) -> dict[str, Any]:
+        facts = self._collect_stage0_review_facts(
+            bible=bible,
+            treatment=treatment,
+            review_mode=review_mode,
+            prior_treatment=prior_treatment,
+        )
+
+        prompt = f"""Review this Stage 0 candidate for save/handoff.
+Python only collected deterministic facts. Judge only from those facts.
+
+Decision rules:
+- PASS: safe to save and hand off to the next stage.
+- RETRY: recoverable by regenerating the candidate.
+- REJECT: do not save or hand off this candidate.
+- Prefer RETRY over REJECT unless this is the final bounded attempt or the structure is clearly unusable.
+
+Current attempt: {attempt} / {max_attempts}
+
+Facts:
+{json.dumps(facts, ensure_ascii=False, indent=2)}
+
+Return JSON:
+{{
+  "decision": "PASS|RETRY|REJECT",
+  "reason": "short reason",
+  "operator_message": "one-line message for the operator",
+  "issues": ["issue 1", "issue 2"]
+}}
+"""
+        raw = self._call_llm(prompt, temperature=0.1, max_tokens=1200)
+        parsed = self._parse_json(raw)
+        if not isinstance(parsed, dict):
+            return self._fallback_stage0_review(facts, attempt=attempt, max_attempts=max_attempts)
+
+        decision = str(parsed.get("decision", "") or "").upper()
+        if decision not in {"PASS", "RETRY", "REJECT"}:
+            return self._fallback_stage0_review(facts, attempt=attempt, max_attempts=max_attempts)
+        parsed["decision"] = decision
+        parsed["issues"] = [str(issue).strip() for issue in (parsed.get("issues") or []) if str(issue).strip()]
+        parsed.setdefault("reason", "")
+        parsed.setdefault("operator_message", parsed.get("reason", ""))
+        return parsed
 
     # ============================================
     # Phase 1: 컨셉 분석
@@ -252,6 +408,28 @@ class StoryExpander:
                 },
             },
         }
+
+        # [SubstrateGate] Bible bounded completeness check — Python은 fact 수집만
+        _cw: list[str] = []
+        _mb = self.bible.get("MasterBible", {})
+        _ci = _mb.get("ProjectData", {}).get("CoreIdentity", {})
+        _npcs = _mb.get("AssetLibrary", {}).get("KeyNPCs", [])
+        _wl = _mb.get("WorldLaws", [])
+        _persona = protagonist.get("persona", "") if isinstance(protagonist, dict) else ""
+        _background = protagonist.get("background", "") if isinstance(protagonist, dict) else ""
+        if not _ci:
+            _cw.append("protagonist CoreIdentity 빈 dict")
+        elif not (_ci.get("persona") or _ci.get("background") or _persona or _background):
+            _cw.append("protagonist persona/background 모두 누락")
+        if len(_npcs) < 2:
+            _cw.append(f"KeyNPCs {len(_npcs)}명 — 최소 2명 권장")
+        if not _wl:
+            _cw.append("WorldLaws 빈 목록")
+        if not _mb.get("WorldState", {}).get("CurrentEra"):
+            _cw.append("WorldState.CurrentEra 빈 값")
+        if _cw:
+            logging.warning("[Stage0:BibleGate] 완전성 경고: %s", "; ".join(_cw))
+            self.bible["_completeness_warnings"] = _cw
 
         return self.bible
 
@@ -384,7 +562,8 @@ JSON:
             current_block += batch_count
             remaining -= batch_count
 
-            logging.info(f"[v] Block {current_block - batch_count}~{current_block - 1} 생성 완료 ({len(extended)}/{extend_count})"
+            logging.info(
+                f"[v] Block {current_block - batch_count}~{current_block - 1} 생성 완료 ({len(extended)}/{extend_count})"
             )
 
         return self.treatment
@@ -487,9 +666,32 @@ JSON:
             )  # [V70] 인덱스 수정 (i는 이미 배치 시작)
             story_brief = self._build_story_brief()
 
+            # [SubstrateGate] cross-batch continuity for details
+            _continuity_ctx = ""
+            if detailed:
+                continuity_lines: list[str] = []
+                for prev in detailed[-self._STAGE0_REVIEW_WINDOW :]:
+                    if not isinstance(prev, dict):
+                        continue
+                    prev_id = prev.get("block_id", "?")
+                    prev_title = prev.get("title", "?")
+                    prev_content = prev.get("content", {})
+                    prev_reward = ""
+                    if isinstance(prev_content, dict):
+                        prev_reward = str(prev_content.get("reward", "") or "").strip()
+                    line = f"- {prev_id}: {prev_title}"
+                    if prev_reward:
+                        line += f" | result: {prev_reward[:100]}"
+                    continuity_lines.append(line)
+                if continuity_lines:
+                    _continuity_ctx = "\n## Recent accepted blocks (continuity carry-over)\n" + "\n".join(
+                        continuity_lines
+                    )
+
             prompt = f"""블록 상세:
 
 {story_brief}
+{_continuity_ctx}
 
 {skeleton_text}
 

@@ -235,7 +235,9 @@ ARC_STATE_SCHEMA = types.Schema(
         # [TF-59] 재무 상태 연속성 (투자물 등 비무협 장르용, optional)
         "capital": types.Schema(type=types.Type.STRING, description="보유 자본금 (예: '5억원', '$1M')"),
         "total_assets": types.Schema(type=types.Type.STRING, description="총 자산 (자본금+투자자산)"),
-        "portfolio_position": types.Schema(type=types.Type.STRING, description="현재 포지션 요약 (예: '삼성전자 1000주 보유')"),
+        "portfolio_position": types.Schema(
+            type=types.Type.STRING, description="현재 포지션 요약 (예: '삼성전자 1000주 보유')"
+        ),
     },
     required=["location", "equipment", "injuries", "internal_energy"],
     # capital/total_assets/portfolio_position은 optional — 무협 등은 생략
@@ -513,11 +515,50 @@ BLUEPRINT_PREFLIGHT_SCHEMA = types.Schema(
 )
 
 
+BLUEPRINT_SCENE_ENTRY_SCHEMA = types.Schema(
+    anyOf=[
+        types.Schema(
+            type=types.Type.OBJECT,
+            properties={
+                "goal": types.Schema(type=types.Type.STRING),
+                "summary": types.Schema(type=types.Type.STRING),
+                "characters": types.Schema(
+                    anyOf=[
+                        types.Schema(type=types.Type.STRING),
+                        types.Schema(type=types.Type.ARRAY, items=types.Schema(type=types.Type.STRING)),
+                    ]
+                ),
+                "key_events": types.Schema(
+                    anyOf=[
+                        types.Schema(type=types.Type.STRING),
+                        types.Schema(type=types.Type.ARRAY, items=types.Schema(type=types.Type.STRING)),
+                    ]
+                ),
+                "location": types.Schema(type=types.Type.STRING),
+                "content": types.Schema(type=types.Type.STRING),
+            },
+        ),
+        types.Schema(type=types.Type.STRING),
+    ],
+    description=(
+        "Scene entry value. Prefer an object with goal/summary, characters, key_events, "
+        "and location; short string fallback remains allowed for compatibility."
+    ),
+)
+
+
 BLUEPRINT_SCHEMA = types.Schema(
     type=types.Type.OBJECT,
     properties={
         "episode_number": types.Schema(type=types.Type.INTEGER),
-        "scene_breakdown": types.Schema(type=types.Type.OBJECT),
+        "scene_breakdown": types.Schema(
+            type=types.Type.OBJECT,
+            additionalProperties=BLUEPRINT_SCENE_ENTRY_SCHEMA,
+            description=(
+                "Scene breakdown map with typed entries. Each value should preferably be a "
+                "structured scene object instead of an untyped bare object."
+            ),
+        ),
         "integrated_scenario": types.Schema(type=types.Type.STRING),
         "pacing_notes": types.Schema(type=types.Type.STRING),
         "target_beat": types.Schema(type=types.Type.STRING),

@@ -215,7 +215,8 @@ class Stage2PreflightAnalysis:
                         )
                     else:
                         if _retrieval_mode not in ("dense", "hybrid", "sparse"):
-                            logging.warning("[Retrieval] 알 수 없는 retrieval_mode '%s', dense로 폴백",
+                            logging.warning(
+                                "[Retrieval] 알 수 없는 retrieval_mode '%s', dense로 폴백",
                                 _retrieval_mode,
                             )
                         result = memory.retrieve_multi_query_context(
@@ -464,9 +465,7 @@ class Stage2PreflightAnalysis:
         scene_engines = [
             str(item).strip() for item in (focus.get("mandatory_scene_engines") or []) if str(item).strip()
         ]
-        registry_profiles = [
-            item for item in (focus.get("registry_profiles") or []) if isinstance(item, dict)
-        ]
+        registry_profiles = [item for item in (focus.get("registry_profiles") or []) if isinstance(item, dict)]
 
         if not any([tracking_slots, scene_engines, registry_profiles]):
             return ""
@@ -479,7 +478,7 @@ class Stage2PreflightAnalysis:
         if registry_profiles:
             rendered_profiles = []
             for profile in registry_profiles[:2]:
-                name = str(profile.get('name', '') or '').strip()
+                name = str(profile.get("name", "") or "").strip()
                 fields = [str(item).strip() for item in (profile.get("required_fields") or []) if str(item).strip()]
                 if not name:
                     continue
@@ -715,7 +714,8 @@ class Stage2PreflightAnalysis:
                             if self.ctx.sync_cache_key_to_app:
                                 self.ctx.sync_cache_key_to_app(arc_count, cache=state_result)
                     except Exception as e:  # [V64.P4] CRITICAL: state extraction failure → NPC validation disabled
-                        logging.warning(f"[V64.P4] CRITICAL: extract_cumulative_state 실패 (NPC 검증 약화): {e}",
+                        logging.warning(
+                            f"[V64.P4] CRITICAL: extract_cumulative_state 실패 (NPC 검증 약화): {e}",
                             exc_info=True,
                         )
                         self.ctx.ui.log(
@@ -973,7 +973,9 @@ class Stage2PreflightAnalysis:
 
                 if reverse_feedback_3to2:
                     stage3_warning = "\n\n🔄 [V60.9 Stage 3→2 역방향 피드백]\n"
-                    stage3_warning += f"이 Arc(#{global_arc_no})에서 Blueprint 설계가 {len(arc_stage3_failures)}회 실패했습니다.\n"
+                    stage3_warning += (
+                        f"이 Arc(#{global_arc_no})에서 Blueprint 설계가 {len(arc_stage3_failures)}회 실패했습니다.\n"
+                    )
                     stage3_warning += "Arc 구조 자체에 문제가 있을 수 있습니다.\n\n"
                     stage3_warning += f"[Blueprint 실패 패턴 분석]\n{reverse_feedback_3to2}\n"
                     enhanced_context = stage3_warning + "\n" + enhanced_context
@@ -1013,7 +1015,8 @@ class Stage2PreflightAnalysis:
         logging.info(f"[S2-I8] enhanced_context 크기: {_ec_size:,}자 (constraint_block: {len(constraint_block):,}자)")
         _CONTEXT_WARNING_THRESHOLD = 100_000
         if _ec_size > _CONTEXT_WARNING_THRESHOLD:
-            logging.warning(f"[S2-I8] enhanced_context {_ec_size:,}자 > {_CONTEXT_WARNING_THRESHOLD:,}자 경고: "
+            logging.warning(
+                f"[S2-I8] enhanced_context {_ec_size:,}자 > {_CONTEXT_WARNING_THRESHOLD:,}자 경고: "
                 "Gemini context window 초과 가능성 — 컨텍스트 축소 권장"
             )
 
@@ -1071,7 +1074,8 @@ class Stage2PreflightAnalysis:
                 analyst_weapons["constraints"] = _compiler_block
                 logging.info(f"✅ [Constraints] 제약 블록 생성 완료 ({len(_compiler_block)}자)")
             except Exception as cc_err:
-                logging.warning(f" [C-2] ConstraintCompiler/Entity 추출 실패 (entity_registry 빈 dict 폴백): {str(cc_err)[:80]}"
+                logging.warning(
+                    f" [C-2] ConstraintCompiler/Entity 추출 실패 (entity_registry 빈 dict 폴백): {str(cc_err)[:80]}"
                 )
 
         # [Sweep48] constraint_block은 입력값 그대로 보존 (setup에서 이미 DB+Compiler 병합됨)
@@ -1164,12 +1168,12 @@ class Stage2PreflightAnalysis:
                                         logging.debug("[Stage2Preflight] SC perf_timer start 실패 (무시): %s", _e)
                                     try:
                                         _s2_vector_ctx = self._execute_stage2_retrieval_plan(
-                                        _retrieval_plan,
-                                        current_ep=current_ep_start,
-                                        npc_roster=_npc_roster,
-                                        current_arc_no=global_arc_no,
-                                        protagonist_name=protagonist_name,
-                                    )
+                                            _retrieval_plan,
+                                            current_ep=current_ep_start,
+                                            npc_roster=_npc_roster,
+                                            current_arc_no=global_arc_no,
+                                            protagonist_name=protagonist_name,
+                                        )
                                     finally:
                                         try:
                                             self.ctx.perf_timer.stop(_perf_key)
@@ -1203,9 +1207,13 @@ class Stage2PreflightAnalysis:
                     _coverage_warnings: list[str] = []
                     if _work_focus and not _work_slot_summary:
                         _coverage_warnings.append("missing_work_slot_summary")
-                    if _work_focus and _retrieval_plan and not any(
-                        str(getattr(_slot, "category", "")).startswith("work_")
-                        for _slot in (getattr(_retrieval_plan, "slots", []) or [])
+                    if (
+                        _work_focus
+                        and _retrieval_plan
+                        and not any(
+                            str(getattr(_slot, "category", "")).startswith("work_")
+                            for _slot in (getattr(_retrieval_plan, "slots", []) or [])
+                        )
                     ):
                         _coverage_warnings.append("work_focus_without_slots")
                     if (
@@ -1219,7 +1227,9 @@ class Stage2PreflightAnalysis:
                         configured_cap=_stage2_budget_cap,
                         effective_cap=_stage2_budget_cap,
                         consumed_chars=len(_s2_vector_ctx),
-                        overflow_chars=max(0, len(_s2_vector_ctx) - _stage2_budget_cap) if _stage2_budget_cap > 0 else 0,
+                        overflow_chars=max(0, len(_s2_vector_ctx) - _stage2_budget_cap)
+                        if _stage2_budget_cap > 0
+                        else 0,
                     )
                     self._record_retrieval_observation(
                         ep_num=current_ep_start,
@@ -1232,7 +1242,9 @@ class Stage2PreflightAnalysis:
                             coverage_warnings=_coverage_warnings,
                             advisor_path_used=_use_advisor_path,
                             work_slot_summary_present=bool(_work_slot_summary),
-                            work_slot_summary_included=bool(_work_slot_summary and "[작품 추적 슬롯 요약]" in _s2_vector_ctx),
+                            work_slot_summary_included=bool(
+                                _work_slot_summary and "[작품 추적 슬롯 요약]" in _s2_vector_ctx
+                            ),
                             relation_slice_included="[관계 의미 질의]" in _s2_vector_ctx,
                             vector_context_chars=len(_s2_vector_ctx),
                             budget_ledger=_stage2_budget_ledger,
@@ -1284,7 +1296,10 @@ class Stage2PreflightAnalysis:
                                 import json as _json_mod
 
                                 from modules.core.constants import calc_patch_change_ratio, log_patch_diff
-                                _pf_orig_j = _json_mod.dumps(previous_attempt.get("best_arc", {}), ensure_ascii=False, indent=2)
+
+                                _pf_orig_j = _json_mod.dumps(
+                                    previous_attempt.get("best_arc", {}), ensure_ascii=False, indent=2
+                                )
                                 _pf_patch_j = _json_mod.dumps(four_phase_arc, ensure_ascii=False, indent=2)
                                 log_patch_diff("S2-Preflight-Arc", _pf_orig_j, _pf_patch_j)
                                 _pf_cr = calc_patch_change_ratio(
@@ -1415,19 +1430,59 @@ class Stage2PreflightAnalysis:
 
                     # --- Fix 6: enriched_block → state_changes 매핑 보강 ---
                     _sc = refined_arc.get("state_changes", {})
+                    if not isinstance(_sc, dict):
+                        _sc = {}
                     # relationship_delta → relationship_changes
                     _rd = enriched_block.get("relationship_delta", [])
-                    if _rd and not _sc.get("relationship_changes"):
-                        _sc["relationship_changes"] = [
-                            {
-                                "npc": r.get("target", ""),
-                                "from": r.get("before", ""),
-                                "to": r.get("after", ""),
-                                "episode": None,  # [TF-S2PE-09] 미정 명시 (0 하드코딩 제거)
-                            }
-                            for r in _rd
-                            if isinstance(r, dict)
-                        ]
+                    if _rd:
+                        _existing_rel = _sc.get("relationship_changes")
+                        if not isinstance(_existing_rel, list):
+                            _existing_rel = []
+                            _sc["relationship_changes"] = _existing_rel
+
+                        for r in _rd:
+                            if not isinstance(r, dict):
+                                continue
+
+                            _target = r.get("target", "")
+                            _before = r.get("before", "")
+                            _after = r.get("after", "")
+                            _matched = None
+
+                            for _entry in _existing_rel:
+                                if not isinstance(_entry, dict):
+                                    continue
+                                _entry_target = _entry.get("npc") or _entry.get("target", "")
+                                _entry_before = (
+                                    _entry.get("from") or _entry.get("from_state") or _entry.get("before", "")
+                                )
+                                _entry_after = _entry.get("to") or _entry.get("to_state") or _entry.get("after", "")
+                                if _entry_target != _target:
+                                    continue
+                                if _before and _entry_before and _entry_before != _before:
+                                    continue
+                                if _after and _entry_after and _entry_after != _after:
+                                    continue
+                                _matched = _entry
+                                break
+
+                            if _matched is not None:
+                                if r.get("trigger") and not _matched.get("trigger"):
+                                    _matched["trigger"] = r.get("trigger", "")
+                                if r.get("justification") and not _matched.get("justification"):
+                                    _matched["justification"] = r.get("justification", "")
+                                continue
+
+                            _existing_rel.append(
+                                {
+                                    "npc": _target,
+                                    "from": _before,
+                                    "to": _after,
+                                    "trigger": r.get("trigger", ""),
+                                    "justification": r.get("justification", ""),
+                                    "episode": None,  # [TF-S2PE-09] 미정 명시 (0 하드코딩 제거)
+                                }
+                            )
                     # time_span → timeline
                     _ts = enriched_block.get("time_span", {})
                     if isinstance(_ts, dict) and _ts and not _sc.get("timeline", {}).get("start"):
@@ -1462,29 +1517,29 @@ class Stage2PreflightAnalysis:
                         _st_snapshot = {}
                     else:
                         _st_snapshot = {
-                        "npc_registry": _copy.deepcopy(_st.npc_registry),
-                        "resolved_plots": _copy.deepcopy(_st.resolved_plots),
-                        "entity_destructions": _copy.deepcopy(_st.entity_destructions),
-                        "protagonist_skills": _copy.deepcopy(
-                            _st.protagonist_skills
-                        ),  # [V70] shallow→deep (set/list 내부 변형 방어)
-                        "skill_acquisitions": _copy.deepcopy(
-                            _st.skill_acquisitions
-                        ),  # [V70] shallow→deep (list of dicts)
-                        "npc_npc_relationships": _copy.deepcopy(_st.npc_npc_relationships),
-                        "item_state_registry": _copy.deepcopy(_st.item_state_registry),
-                        "active_plots": _copy.deepcopy(_st.active_plots),
-                        # [V70] 누락 필드 추가 (lines 770-818에서 수정되는 필드들)
-                        "npc_dialogue_profiles": _copy.deepcopy(_st.npc_dialogue_profiles),
-                        "in_world_timeline": _copy.deepcopy(_st.in_world_timeline),
-                        "current_companions": _copy.deepcopy(_st.current_companions),
-                        "pending_commitments": _copy.deepcopy(_st.pending_commitments),
-                        "protagonist_emotion": _copy.deepcopy(_st.protagonist_emotion),
-                        "dungeon_clear_registry": _copy.deepcopy(_st.dungeon_clear_registry),
-                        "skill_cooldown_registry": _copy.deepcopy(_st.skill_cooldown_registry),
-                        "spell_repertoire": _copy.deepcopy(_st.spell_repertoire),
-                        "financial_number_registry": _copy.deepcopy(_st.financial_number_registry),  # [TF-R2-S2-12]
-                    }
+                            "npc_registry": _copy.deepcopy(_st.npc_registry),
+                            "resolved_plots": _copy.deepcopy(_st.resolved_plots),
+                            "entity_destructions": _copy.deepcopy(_st.entity_destructions),
+                            "protagonist_skills": _copy.deepcopy(
+                                _st.protagonist_skills
+                            ),  # [V70] shallow→deep (set/list 내부 변형 방어)
+                            "skill_acquisitions": _copy.deepcopy(
+                                _st.skill_acquisitions
+                            ),  # [V70] shallow→deep (list of dicts)
+                            "npc_npc_relationships": _copy.deepcopy(_st.npc_npc_relationships),
+                            "item_state_registry": _copy.deepcopy(_st.item_state_registry),
+                            "active_plots": _copy.deepcopy(_st.active_plots),
+                            # [V70] 누락 필드 추가 (lines 770-818에서 수정되는 필드들)
+                            "npc_dialogue_profiles": _copy.deepcopy(_st.npc_dialogue_profiles),
+                            "in_world_timeline": _copy.deepcopy(_st.in_world_timeline),
+                            "current_companions": _copy.deepcopy(_st.current_companions),
+                            "pending_commitments": _copy.deepcopy(_st.pending_commitments),
+                            "protagonist_emotion": _copy.deepcopy(_st.protagonist_emotion),
+                            "dungeon_clear_registry": _copy.deepcopy(_st.dungeon_clear_registry),
+                            "skill_cooldown_registry": _copy.deepcopy(_st.skill_cooldown_registry),
+                            "spell_repertoire": _copy.deepcopy(_st.spell_repertoire),
+                            "financial_number_registry": _copy.deepcopy(_st.financial_number_registry),  # [TF-R2-S2-12]
+                        }
 
                     # [V60.94] NPC 사망/무공 습득 추출 및 StateTracker 업데이트
                     # [TF-S2PE-05] 첫 9개 extract_* try/except 래핑 — 부분 업데이트 실패 명시 기록
@@ -1516,7 +1571,8 @@ class Stage2PreflightAnalysis:
                     try:
                         self.ctx.state_tracker._populate_genre_registries_from_arc(refined_arc)
                     except Exception as _e:
-                        logging.warning("[Sweep5-D] genre registry update failed: %s",
+                        logging.warning(
+                            "[Sweep5-D] genre registry update failed: %s",
                             _e,
                         )
                     if genre_for_tracker == "investment":
@@ -1526,7 +1582,8 @@ class Stage2PreflightAnalysis:
                                 "financial_registry", self.ctx.state_tracker.export_financial_registry()
                             )
                         except Exception as _fin_err:
-                            logging.warning("[SilentPass:Preflight] financial registry save failed: %s",
+                            logging.warning(
+                                "[SilentPass:Preflight] financial registry save failed: %s",
                                 _fin_err,
                             )
 
@@ -1539,7 +1596,8 @@ class Stage2PreflightAnalysis:
                             if indexed > 0:
                                 logging.warning(f" [V66] SemanticPlotGuard: {indexed}개 플롯 인덱싱")
                         except Exception as _e:
-                            logging.warning("[Sweep5-D] semantic plot indexing failed: %s",
+                            logging.warning(
+                                "[Sweep5-D] semantic plot indexing failed: %s",
                                 _e,
                             )
 
@@ -1606,7 +1664,8 @@ class Stage2PreflightAnalysis:
                         try:
                             removed = self.ctx.state_tracker.cleanup_npc_registry_with_llm(global_arc_no)
                             if removed:
-                                logging.info(f"\U0001f9f9 [V69] NPC 레지스트리 정리: {len(removed)}개 오탐 제거 ({', '.join(removed[:5])})"
+                                logging.info(
+                                    f"\U0001f9f9 [V69] NPC 레지스트리 정리: {len(removed)}개 오탐 제거 ({', '.join(removed[:5])})"
                                 )
                         except Exception as e:
                             logging.warning(f"\u26a0\ufe0f [V69] NPC 레지스트리 정리 실패 (비차단): {e}")
@@ -1627,8 +1686,8 @@ class Stage2PreflightAnalysis:
 
                     phases = pipeline_result.get("phases", {})
                     if phases.get("generate"):
-                        logging.info(f"- 후보 수: {phases['generate'].get('candidates_count', '?')}개")
-                        logging.info(f"- 선택 전략: {phases['generate'].get('selected_strategy', '?')}")
+                        logging.info(f"- 후보 수: {phases['generate'].get('candidates_count', 0)}개")
+                        logging.info(f"- 선택 전략: {phases['generate'].get('selected_strategy', 'unknown')}")
                 else:
                     logging.warning(" [V60.77] FourPhase 내부 검증 실패")
                     if pipeline_result.get("phases", {}).get("validate"):

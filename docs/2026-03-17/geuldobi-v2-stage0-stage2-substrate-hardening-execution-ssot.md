@@ -1,14 +1,21 @@
 # Geuldobi V2 Stage0 Stage2 Substrate Hardening Execution SSOT
 
 Date: 2026-03-17
-Status: execution-ready
+Status: closed
 Canonical Path: `docs/2026-03-17/geuldobi-v2-stage0-stage2-substrate-hardening-execution-ssot.md`
-Temp Mirror Path: `docs/temp/geuldobi-v2-stage0-stage2-substrate-hardening-execution-ssot.md`
+Temp Mirror Path: `removed 2026-03-18`
 Commit State:
-- Baseline Commit: `2352b26a293ac330a0ff24da320363f9abdbbba1`
-- Baseline Dirty Summary: `dirty: prior lane1~3 and follow-on item edits, runtime log, authority-hygiene changes, survey bundles, and local drafts; preserve as-is`
+- Baseline Commit: `8eb5c955408e759c0d45585773604acf4ff2efcb`
+- Baseline Dirty Summary: `dirty (item 1 realization + item 1 closure docs)`
 - Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `same commit; no active temp queue before opening this item`
+- Resume Drift Summary: `item 1 code landed in stage2_preflight, stage2_finalizer, stage4_context_builder, blueprint_constraint_compiler`
+Realization Summary:
+- Slice A: `story_expander.py:254` — Bible bounded completeness warning gate (5 fact checks, operator warning, `_completeness_warnings`, top-level protagonist persona/background awareness)
+- Slice A: `story_expander.py:478` — Treatment details cross-batch continuity (prev block id/title/reward)
+- Slice B: `stage01_helpers.py:686` — plot_roadmap handoff contract validation for both injected and preexisting roadmap paths
+- Slice C: `stage2_finalizer.py:847` — PASS_WITH_FIX quality floor 적용 (PASS-only → PASS+PASS_WITH_FIX)
+- Slice C: `constraint_db.py:541` — snapshot()/restore() expanded to cover semantic item registry state as well as `arc_states`
+- Slice C: `stage2_finalizer.py:400+` — CDB snapshot + retry-path rollback restore sites keep ConstraintDB and StateTracker aligned
 Source Survey Docs:
 - `docs/2026-03-17/별도 조사2/ssot_stage0-stage2-architecture-survey.md`
 - `docs/2026-03-17/geuldobi-v2-legacy-survey-validity-roi-audit.md`
@@ -71,11 +78,11 @@ Excluded:
 - remove accidental dependency on ConstraintDB having no rollback path by making the contract explicit or symmetric
 
 ## 5. Acceptance Criteria
-- weak Bible outputs fail a bounded completeness gate instead of silently passing
+- weak Bible outputs surface a bounded completeness warning gate instead of silently passing without operator signal
 - initial Treatment generation has at least one explicit continuity safeguard beyond title carry-over only
-- `plot_roadmap` handoff expectations are testable and no longer implicit
+- `plot_roadmap` handoff expectations are testable on both injected and preexisting roadmap paths
 - `PASS_WITH_FIX` cannot bypass the Stage 2 quality floor through promotion ambiguity
-- ConstraintDB / StateTracker lifecycle is explicit enough that retry-path safety is no longer accidental
+- ConstraintDB / StateTracker lifecycle is explicit enough that retry-path safety is no longer accidental, including semantic item registry state
 
 ## 6. Primary Risks
 - over-automating Stage 0 semantic rejection in Python
@@ -98,11 +105,46 @@ Excluded:
 ## 9. 3-Pass Audit Notes
 
 ### Pass 1. Validity
-- the substrate-quality and contract issues remain live in current code
+- the substrate-quality and contract issues remain live in current code after current-head revalidation
 
 ### Pass 2. Accuracy
 - corrected the old survey's treatment-only reading of `plot_roadmap` fallback
 - downgraded POV-policy concerns because normalization already exists
+- confirmed later context-surface drift did not close the Stage 0 / Stage 2 substrate gaps tracked here
 
 ### Pass 3. ROI
 - kept only the items that change upstream quality or correctness materially
+
+## 10. Realization Evidence
+- tests: 221 passed across 6 shards (finalizer 24, stage01_helpers 62, stage0 16, constraints+arc 30, protocol+sweep 33, preflight 72)
+- 1 pre-existing failure: `test_stage0_pov.py::TestPOVSelection::test_pov_first_person_selected` (StageZeroManager.ui missing — unrelated to this realization)
+- ruff: 0 violations
+- ruff format: clean after auto-format
+- UTF-8 hygiene: flagged lines are pre-existing Korean regex patterns (constraint_db L214-227, stage2_finalizer L118-175)
+- ops_validator --strict: PASS (errors=0, warnings=0)
+- queue-state.json: synced during the active queue and later removed after bundle closure
+
+## 11. Closure Note
+Date: 2026-03-18
+Status: closed
+
+### Verification Summary
+- re-audit corrected the earlier overclaim of a hard-fail completeness gate; live code is warning-oriented by design
+- re-audit also corrected existing-`plot_roadmap` validation coverage and ConstraintDB snapshot scope
+- acceptance criteria were re-checked against the live code for warning-oriented completeness signaling, Treatment continuity, handoff contract clarity, PASS_WITH_FIX quality floor, and ConstraintDB / StateTracker symmetry
+- targeted Stage 0, Stage 0/1 helper, Stage 2 finalizer, constraint, protocol, and preflight shards were reported as passing
+- one pre-existing unrelated POV test failure remains outside this item
+
+### Residual Risks
+- Bible completeness remains warning-oriented, so very weak Bible output can still pass
+- Treatment continuity only carries the immediately previous detailed block, not long-range continuity
+- ConstraintDB snapshot / restore is now explicit, but current live retry paths still mostly benefit future code motion rather than frequent present-day rollbacks
+
+### Follow-Up
+- active execution queue exhausted; no next queue item remains in this bundle
+- further Stage 0 / Stage 2 substrate expansion requires a fresh queue item or survey, not reuse of this closed lane
+
+### Temp Cleanup
+- execution SSOT mirror removed: yes (`docs/temp/geuldobi-v2-stage0-stage2-substrate-hardening-execution-ssot.md`)
+- roadmap mirror removed: yes (`docs/temp/execution-roadmap.md`)
+- queue-state refreshed or removed: yes (`docs/temp/queue-state.json` removed after queue exhaustion)

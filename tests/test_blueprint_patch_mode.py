@@ -96,9 +96,7 @@ class TestBlueprintInplacePatchMode:
 
         assert result is None
 
-    def test_yaml_load_failure_uses_inline_fallback(
-        self, blueprint_generator, sample_blueprint, sample_arc_data
-    ):
+    def test_yaml_load_failure_uses_inline_fallback(self, blueprint_generator, sample_blueprint, sample_arc_data):
         """YAML 로드 실패 시 인라인 폴백으로 ask() 호출."""
         patched = {**sample_blueprint, "scene_list": [{"scene_no": 1, "summary": "수정됨"}]}
         blueprint_generator.ensemble.ask.return_value = "{}"
@@ -170,6 +168,58 @@ class TestBlueprintPatchIntegration:
         assert blueprint_generator.ensemble.generate_ensemble.call_count == 1
         # in-place ask()는 retry 1에서 호출됨
         assert blueprint_generator.ensemble.ask.call_count == 1
+
+    def test_compare_mode_quality_risk_persists_in_pipeline(self, blueprint_generator, sample_arc_data):
+        bp_a = {
+            "ep_num": 1,
+            "scene_list": [{"scene_no": 1}],
+            "_ensemble_meta": {"strategy": "steady"},
+        }
+        bp_b = {
+            "ep_num": 1,
+            "scene_list": [{"scene_no": 1, "summary": "selected"}],
+            "_ensemble_meta": {"strategy": "sharp"},
+        }
+
+        blueprint_generator.constraint_compiler.compile.return_value = {}
+        blueprint_generator.ensemble.generate_ensemble.return_value = (bp_b, [bp_a, bp_b])
+        blueprint_generator.validator.validate.return_value = (
+            "PASS",
+            {
+                "score": 91,
+                "issues": [],
+                "confidence": 88,
+                "phase": "director_compare+python_prevalidate",
+                "selected_index": 1,
+                "selected_blueprint": bp_b,
+                "comparison_notes": "candidate 2 is stronger on arc delivery",
+                "selection_reason": "candidate 2 is stronger on arc delivery",
+                "verdict_reason": "pass but keep advisory visible",
+                "quality_risk": True,
+                "candidate_count": 2,
+                "candidate_advisories": [
+                    {"candidate_index": 0, "quality_risk": False},
+                    {"candidate_index": 1, "quality_risk": True},
+                ],
+                "selected_candidate_advisory": {
+                    "candidate_index": 1,
+                    "quality_risk": True,
+                    "python_warnings": [{"message": "Arc NPC mention is thin"}],
+                },
+            },
+        )
+
+        result, pipeline = blueprint_generator.generate(
+            ep_num=1,
+            arc_data=sample_arc_data,
+            max_retries=0,
+        )
+
+        assert result is not None
+        assert pipeline["final_verdict"] == "PASS"
+        assert pipeline["quality_risk"] is True
+        assert pipeline["phases"]["validate"]["selection_reason"] == "candidate 2 is stronger on arc delivery"
+        assert pipeline["phases"]["validate"]["selected_candidate_advisory"]["quality_risk"] is True
 
     def test_low_score_skips_inplace(self, blueprint_generator, sample_arc_data):
         """score < 50이면 in-place 미진입, 전면 재생성."""
