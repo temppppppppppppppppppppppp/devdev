@@ -1,8 +1,8 @@
 # S3: 프론트엔드 (Electron) SSOT
 
 > 최종 갱신: 2026-03-18
-> 소스: frontend-deepdive-3pass-audit, adversarial-3pass-audit R1/R2
-> 감리: 적대적 3-Pass 2회 (R1 + R2)
+> 소스: frontend-deepdive-3pass-audit, adversarial-3pass-audit R1/R2, react-adoption-deepdive-full-survey, react-migration-execution-roadmap
+> 감리: 적대적 3-Pass 2회 (R1 + R2) + React 도입 조사 3PASS + 적대적 3PASS
 
 ---
 
@@ -312,17 +312,104 @@ function sanitizeProjectName(name) {
 
 ---
 
-## 7. 수치 요약표
+## 7. React 도입 조사 결과
+
+> 상세 조사서: `OPUS/react 도입/react-adoption-deepdive-full-survey.md` (1,130행)
+> 실행 로드맵: `OPUS/react 도입/react-migration-execution-roadmap.md` (2,558행)
+
+### 7.1 현재 프론트엔드 정량 지표
+
+| 지표 | 수치 | 코드 근거 |
+|------|------|----------|
+| 함수 정의 (function + arrow) | 134개 | `index.html` 인라인 `<script>` |
+| getElementById | 198회 | `index.html` |
+| querySelector/All | 30회 (16+14) | `index.html` |
+| innerHTML 대입 | 50회 | `index.html` |
+| addEventListener | 63회 | `index.html` |
+| removeEventListener | **0회** | `index.html` — 리스너 누수 |
+| classList 조작 | 70회 | `index.html` |
+| .style.* 직접 변경 | 33회 | `index.html` |
+| CSS 클래스 (style 블록) | 281개 | `index.html:8-2772` |
+| CSS custom properties | 11개 | `index.html` `:root` |
+| @media 쿼리 | 3개 | 860px, 900px, 1280px |
+| 렌더 함수 | 21개 | 15 display + 6 refresh/update |
+| Canvas 드로잉 함수 | 16개 | `index.html:5233-5823` |
+| UI 섹션 | 32개 | TopBar ~ PromptOverlay |
+| 전역 상태 변수 | 21+개 | officeState 등 |
+
+### 7.2 React 도입 시 위협 (22건)
+
+| 심각도 | 건수 | 대표 위협 |
+|--------|------|----------|
+| **CRITICAL** | 2 | 21+ 전역 상태 마이그레이션 (B3.1), 하이브리드 DOM 소유권 충돌 (B3.2) |
+| **HIGH** | 6 | CSP 깨짐 (B1.2), app:ready 타이밍 (B2.3), WS 라이프사이클 (B2.4), 이중 빌드 출력 (B5.1), dev/prod 경로 분기 (B5.3), 기존 테스트 5-6개 파괴 (B6.1) |
+| **MEDIUM** | 6 | electron-builder 충돌, Vite file://, 순환 상태, 스프라이트 경로, 테스트 인프라 부재, StrictMode 이중 렌더 |
+| **LOW** | 8 | contextIsolation 호환, bridgeFetch 무변경, Canvas 공존, ASAR, 번들 크기(+142KB), 가상 DOM 오버헤드, 메모리, 성능 |
+| **블로커** | 0 | 없음 — 모든 위협에 완화책 존재 |
+
+### 7.3 React 도입 시 이득 (정량)
+
+| 현재 | React 전환 후 | 개선 |
+|------|-------------|------|
+| innerHTML 50건 | **0건** (JSX 자동 이스케이프) | XSS 표면 제거 |
+| addEventListener 63 / removeEventListener 0 | useEffect cleanup 자동 | 리스너 누수 해소 |
+| 전역 상태 21+개 분산 | Zustand 5 슬라이스 1 스토어 | 상태 추적 용이 |
+| 500ms 폴링 (setInterval) | 리액티브 구독 | 불필요 렌더 제거 |
+| CSS 281 전역 클래스 | CSS Modules 스코핑 | 클래스 충돌 제거 |
+| 테스트 커버리지 0% | **70%** 가능 | 회귀 방지 |
+| TypeScript 없음 | **전면 TypeScript** | 타입 안전 |
+| 파일 1개 8,266행 | **~50파일** 각 100-300행 | 협업·유지보수 |
+
+### 7.4 기술 선택 권장
+
+| 항목 | 선택 | 이유 |
+|------|------|------|
+| 프레임워크 | **React 19** | Electron Canvas 통합 성숙도, 생태계, 커뮤니티 |
+| 상태 관리 | **Zustand v5** | officeState 뮤테이션 패턴과 1:1 대응, 보일러플레이트 최소 |
+| CSS | **CSS Modules** | Vite 네이티브 지원, 런타임 비용 0, 현재 CSS 변수 시스템 호환 |
+| 빌드 | **electron-vite** | main/preload/renderer 3-프로세스 빌드 통합, HMR |
+| 테스트 | **Vitest + React Testing Library** | Vite 네이티브 통합, Jest 호환 API |
+
+### 7.5 마이그레이션 6단계 로드맵 요약
+
+| Phase | 내용 | 예상 시간 | 검증 기준 |
+|-------|------|----------|----------|
+| **0** | 빌드 인프라 (electron-vite + React + TS) | 8-12h | `npm run dev` "Hello React" 표시 |
+| **1** | 타입 기반 + Zustand 스토어 5개 + 훅 3개 | 16-24h | `tsc --noEmit` 에러 0건 |
+| **2** | 공유 UI 컴포넌트 10개 (Button, Card, Modal 등) | 20-28h | Vitest 컴포넌트 테스트 통과 |
+| **3** | 기능 패널 6개 (Settings→Log→Run→Quality→Office→Project) | 88-116h | 각 패널 기능 동일 확인 |
+| **4** | 레이아웃 셸 + initializeWorkspaceLayout 대체 | 12-16h | 인라인 `<script>` 0행 |
+| **5** | 정리 + 테스트 70% + strict mode | 16-24h | 레거시 코드 삭제 완료 |
+| **총계** | — | **160-220h** | 1인 풀타임 ~6주, 2-3인 팀 ~3-4주 |
+
+크리티컬 패스: Phase 0 → 1 → 2 → **3d (Quality, 최대 병목 24-32h)** → 4 → 5
+
+### 7.6 권장 시기
+
+| 시점 | 조치 |
+|------|------|
+| **지금~1.6.0** | 코드 수정 없음. 로드맵 확정만. |
+| **1.6.0 직후** | Phase 0-1 실행 (빌드 인프라 + 타입/스토어) |
+| **2.0.0 향해** | Phase 2-3 점진적 패널 전환 |
+| **2.0.0 이후** | Phase 4-5 레이아웃 셸 완성 + 정리 |
+
+### 7.7 비권장: 전면 재작성 (Big Bang)
+
+1인 개발 체제에서 3-5주 FE 차단 → 백엔드 개발 중단 → 1.6.0/2.0.0 릴리스 목표 위협. 점진적 Strangler Fig 패턴 권장.
+
+---
+
+## 8. 수치 종합 요약표
 
 | 지표 | 값 |
 |------|-----|
 | 총 소스 파일 | 3 (main.js, preload.js, index.html) |
 | 총 LOC | 9,373 |
 | IPC 채널 수 | 25 live + 1 DC (간략 그룹 11개, 전체 목록 → S2 §2.2) |
-| 전역 상태 변수 | 13 (officeState 30+ 하위 필드 별도) |
+| 전역 상태 변수 | 13 (§4.2 주요) / 21+ (§7.1 전체 let 포함); officeState 30+ 하위 필드 별도 |
 | Silent catch | 8 |
 | innerHTML 사용 지점 | 다수 (~95% escaped) |
-| HIGH 보안 이슈 | 1 (path traversal) |
+| HIGH 보안 이슈 | 1 (path traversal) — §7.2 마이그레이션 위협(HIGH 6건)은 별도 집계 |
 | MEDIUM 보안 이슈 | 3 |
 | LOW 보안 이슈 | 11 |
 | INFO 이슈 | 4 |
@@ -374,6 +461,8 @@ function sanitizeProjectName(name) {
 | frontend-deepdive-3pass-audit | OPUS/ | — | R1 감리 문서 |
 | adversarial-3pass-audit | OPUS/ | — | R2-1 감리 문서 |
 | adversarial-3pass-audit-r2 | OPUS/ | — | R2-2 감리 문서 |
+| react-adoption-deepdive-full-survey | OPUS/react 도입/ | 1,130 | React 도입 전면 딥다이브 |
+| react-migration-execution-roadmap | OPUS/react 도입/ | 2,558 | React 마이그레이션 실행 로드맵 |
 
 ---
 
