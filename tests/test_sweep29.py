@@ -66,6 +66,39 @@ def test_continuity_manuscript_incarnation_extract_logs_warning(caplog):
     assert "incarnation_type" in caplog.text
 
 
+def test_continuity_manuscript_prompt_preserves_tail_context(monkeypatch):
+    inspector = SimpleNamespace(
+        context=SimpleNamespace(master_bible={}),
+        ask=MagicMock(return_value='{"decision":"PASS","severity":"NONE","violations":[],"warnings":[]}'),
+        _extract_json_robust=MagicMock(
+            return_value={"decision": "PASS", "severity": "NONE", "violations": [], "warnings": []}
+        ),
+        _format_entity_registry=MagicMock(return_value=""),
+        _escape_braces=lambda x: x,
+    )
+    validator = ContinuityManuscriptValidator(inspector)
+    monkeypatch.setattr(validator, "_manuscript_python_precheck", lambda *_a, **_k: {"warnings": []})
+    monkeypatch.setattr(
+        validator,
+        "_format_prev_manuscripts",
+        lambda _prev: "HEAD-PREV\n" + ("P" * 60000) + "\nTAIL-PREV-TIMELINE",
+    )
+
+    result = validator.inspect_manuscript(
+        current_ep=4,
+        manuscript="HEAD-MS\n" + ("M" * 5000) + "\nTAIL-CM",
+        blueprint={"integrated_scenario": "HEAD-BP\n" + ("B" * 45000) + "\nTAIL-BP-SCENARIO"},
+        prev_manuscripts=[{"ep_num": 3, "content": "prev"}],
+    )
+
+    assert result["decision"] == "PASS"
+    prompt = inspector.ask.call_args.args[0]
+    assert "TAIL-CM" in prompt
+    assert "TAIL-PREV-TIMELINE" in prompt
+    assert "TAIL-BP-SCENARIO" in prompt
+    assert "...(중간 생략)..." in prompt
+
+
 def test_director_auditor_genre_validation_error_sets_degraded():
     d = SimpleNamespace(guard=MagicMock(), genre="wuxia")
     d.guard.run_deep_validation.side_effect = ValueError("schema mismatch")

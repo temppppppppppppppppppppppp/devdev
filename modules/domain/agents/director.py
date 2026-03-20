@@ -107,6 +107,7 @@ class Director(BaseAgent):
         if hasattr(self, "_caching"):
             self._caching.manuscript_cache_name = None
             self._caching._cached_manuscript_count = 0
+            self._caching._protagonist_config = None
         if hasattr(self, "_continuity"):
             self._continuity._cached_manuscript_ep = None
             self._continuity._cached_blueprint_ep = None

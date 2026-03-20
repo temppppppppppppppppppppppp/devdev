@@ -10,6 +10,7 @@ inspector reference를 통해 BaseAgent 메서드(ask, _extract_json_robust 등)
 import logging
 import re
 
+from modules.core.constants import smart_truncate
 from modules.core.prompt_loader import SafeDict
 
 # =================================================================
@@ -152,6 +153,13 @@ class ContinuityBlueprintValidator:
         """
         self._ci = inspector
 
+    def _fit_prompt_text(self, value: object, max_chars: int, head_ratio: float = 0.55) -> str:
+        text = "" if value is None else str(value)
+        if len(text) <= max_chars:
+            return text
+        head_chars = max(200, min(max_chars - 50, int(max_chars * head_ratio)))
+        return smart_truncate(text, max_chars=max_chars, head_chars=head_chars)
+
     def inspect(
         self,
         current_ep: int,
@@ -223,7 +231,9 @@ class ContinuityBlueprintValidator:
         prompt = CONTINUITY_INSPECTION_PROMPT.format_map(
             SafeDict(
                 current_ep=current_ep,
-                current_scenario=self._ci._escape_braces(current_scenario[:4000]),
+                current_scenario=self._ci._escape_braces(
+                    smart_truncate(current_scenario, max_chars=4000, head_chars=2200)
+                ),
                 prev_count=len(prev_blueprints),
                 prev_summaries=self._ci._escape_braces(prev_summaries),
                 entity_registry=self._ci._escape_braces(entity_registry_str),
@@ -394,7 +404,7 @@ class ContinuityBlueprintValidator:
             summary = f"""
 ═══ 제 {ep_num}화 ═══
 [핵심 사건]
-{key_sentences[:2000]}
+{self._fit_prompt_text(key_sentences, 2000)}
 
 [획득 아이템] {", ".join(items) if items else "없음"}
 [수여물] {", ".join(grants) if grants else "없음"}

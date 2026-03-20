@@ -119,7 +119,7 @@ Blueprint 설계도 생성  →   Director 후보 판정   →   CW 재작성/�
 **3단계 — 피드백으로 잘 고치기 (CW 재작성): HOLDING + 검증 완료**
 - CW는 랜덤 재생성이 **아님**. 3가지 구조적 수정 경로:
   - **inplace**: fix_pack 기반 외과적 장면 수정
-  - **patch**: 원본 90% 보존 + 지적사항만 수정 (3후보)
+  - **patch**: 원본 90% 보존 + 지적사항만 수정 (selected-strategy bounded regenerate 1후보)
   - **full**: 점수 분해 + action_items + "100% 미반영 시 재REJECT" 경고
 - 프로덕션 실증: ep_0005에서 패치가 특정 장면만 변경, 나머지 보존
 - Stage 4 무진척 시 즉시 중단 → 비용 폭증 방지

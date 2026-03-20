@@ -13,7 +13,7 @@ import time as _time
 import traceback as _traceback
 
 from modules.core.artifact_logging import build_candidate_key, normalize_artifact_meta, snapshot_logged_artifact
-from modules.core.constants import ContextLimits, Emojis, ErrorMessages
+from modules.core.constants import ContextLimits, Emojis, ErrorMessages, smart_truncate
 from modules.core.context_advisor import (
     RetrievalSources,
     build_context_budget_ledger,
@@ -22,6 +22,7 @@ from modules.core.context_advisor import (
 from modules.core.continuity_pin_guard import apply_continuity_pins
 from modules.core.fact_ledger import summarize_fact_ledger_numbers_block
 from modules.core.logging_keys import build_attempt_key, resolve_logging_session_id
+from modules.core.metrics_collector import get_metrics_collector
 from modules.core.project_support import build_style_guide_summary, resolve_project_pov_contract
 from modules.core.semantic_query_broker import SemanticQueryBroker
 from modules.core.tactical_utils import extract_episode_tactical
@@ -35,6 +36,18 @@ _DB_ADVISORY_NOTICE = "(Python 자동 감지 — 오탐 가능, 참고용)"
 _STAGE3_HISTORY_RECENT_LIMIT = 24
 _STAGE3_HISTORY_ANCHOR_LIMIT = 6
 _STAGE3_HISTORY_CACHE_LIMIT = 36
+
+
+def _peek_scope_total_cost_usd() -> float:
+    try:
+        collector = get_metrics_collector()
+        if collector is None or not hasattr(collector, "peek_scope"):
+            return 0.0
+        scope = collector.peek_scope() or {}
+        return float(scope.get("total_cost_usd", 0.0) or 0.0)
+    except Exception as exc:
+        _logging.debug("[Stage3] metrics scope peek failed (non-blocking): %s", exc)
+        return 0.0
 
 
 def _normalize_semantic_source_counts(source_counts: dict | None) -> dict[str, int]:
@@ -390,7 +403,13 @@ def _build_stage3_work_focus_advisory(
         _logging.debug("[Stage3] semantic relation slice 생성 실패 (비치명): %s", broker_err)
 
     text = "\n".join(lines)
-    return text if len(text) <= max_chars else text[: max_chars - 18] + "\n... (슬롯 요약 절삭)"
+    if len(text) > max_chars:
+        return smart_truncate(
+            text,
+            max_chars=max_chars,
+            head_chars=max(0, min(int(max_chars * 0.55), max_chars - 80)),
+        )
+    return text
 
 
 def _build_stage3_relationship_context(db, *, npc_names: list[str], protagonist_name: str = "", limit: int = 6) -> str:
@@ -1007,6 +1026,7 @@ class Stage3Orchestrator:
         from modules.core.spinners import StageSpinner
 
         _started_at = _time.perf_counter()
+        _started_cost_usd = _peek_scope_total_cost_usd()
         try:
             _bp_semantic_ctx = ""
             _s3_work_focus: dict[str, object] = {}
@@ -1085,7 +1105,14 @@ class Stage3Orchestrator:
                                     max_results=_s3_max_results,
                                 )
                             if _s3_text:
-                                _s3_parts.append(f"[SC:{_slot_category}]\n{str(_s3_text)[:_slot_max]}")
+                                _s3_parts.append(
+                                    f"[SC:{_slot_category}]\n"
+                                    + smart_truncate(
+                                        str(_s3_text),
+                                        max_chars=_slot_max,
+                                        head_chars=max(0, min(int(_slot_max * 0.55), _slot_max - 80)),
+                                    )
+                                )
                         except Exception as _s3_slot_err:
                             _logging.warning("[SilentPass:SC:Stage3] 슬롯 %s 실패: %s", _slot_category, _s3_slot_err)
                     if _s3_parts:
@@ -1291,9 +1318,10 @@ class Stage3Orchestrator:
                         _prev_ms_for_bp.append(f"━━━ 제{_ms_ep_num}화 원고 ━━━\n{_ms_text}")
                 _prev_ms_text_for_bp = "\n\n".join(_prev_ms_for_bp) if _prev_ms_for_bp else ""
                 if len(_prev_ms_text_for_bp) > ContextLimits.MAX_CONTEXT_CHARS:
-                    _prev_ms_text_for_bp = (
-                        _prev_ms_text_for_bp[: ContextLimits.MAX_CONTEXT_CHARS]
-                        + f"\n... ({ContextLimits.MAX_CONTEXT_CHARS // 1000}K자 절삭)"
+                    _prev_ms_text_for_bp = smart_truncate(
+                        _prev_ms_text_for_bp,
+                        max_chars=ContextLimits.MAX_CONTEXT_CHARS,
+                        head_chars=max(0, min(int(ContextLimits.MAX_CONTEXT_CHARS * 0.55), ContextLimits.MAX_CONTEXT_CHARS - 80)),
                     )
                 if _prev_ms_for_bp:
                     _logging.info(
@@ -1368,6 +1396,7 @@ class Stage3Orchestrator:
         if not isinstance(pipeline_result, dict):
             pipeline_result = {"final_verdict": "ERROR", "error": "invalid_pipeline_result"}
         pipeline_result["_stage3_duration_ms"] = max(0, int((_time.perf_counter() - _started_at) * 1000))
+        pipeline_result["_stage3_token_cost_usd"] = max(0.0, round(_peek_scope_total_cost_usd() - _started_cost_usd, 6))
         pipeline_result["_stage3_observability"] = {
             "semantic_ctx_chars": len(_bp_semantic_ctx),
             "source_counts": _normalize_semantic_source_counts(_source_counts),
@@ -1391,9 +1420,13 @@ class Stage3Orchestrator:
         _final_verdict = pipeline_result.get("final_verdict", "PASS")
         _quality_gate_failed = bool(pipeline_result.get("quality_gate_failed", False))
         _quality_risk = bool(pipeline_result.get("quality_risk", False) or _quality_gate_failed)
+        _revision_required = bool(
+            pipeline_result.get("revision_required", False) or _final_verdict in ("PASS_WITH_FIX", "PASS_WITH_WARNING")
+        )
         _observability_flags = _build_stage3_observability_flags(pipeline_result.get("_stage3_observability"))
         _pov_contract = resolve_project_pov_contract(ctx.current_project)
         _duration_ms = int(pipeline_result.get("_stage3_duration_ms") or 0) or None
+        _token_cost = float(pipeline_result.get("_stage3_token_cost_usd") or 0.0)
 
         # [LOG-1] 판정 경로 세션 로깅
         try:
@@ -1473,6 +1506,8 @@ class Stage3Orchestrator:
                         attempt_num=_attempt_num,
                         success=_final_verdict in ("PASS", "PASS_WITH_WARNING"),
                         generation_method="blueprint",
+                        duration_ms=_duration_ms or 0,
+                        token_cost=_token_cost,
                         attempt_key=_attempt_key,
                         final_verdict=str(_final_verdict),
                         candidate_key=_candidate_key,
@@ -1532,6 +1567,7 @@ class Stage3Orchestrator:
                 "final_verdict": _final_verdict,
                 "quality_gate_failed": _quality_gate_failed,
                 "quality_risk": _quality_risk,
+                "revision_required": _revision_required,
                 "last_score": pipeline_result.get("last_score", 0),
             }
             # [P0] _stage3_meta에 통합 — 최상위 중복 키 제거
@@ -1627,17 +1663,18 @@ class Stage3Orchestrator:
             ctx.audit_event(
                 "blueprint_success",
                 f"ep_{working_ep}_blueprint_generated",
-                {
-                    "ep_num": working_ep,
-                    "arc_no": arc_no,
-                    "strategy": pipeline_result.get("phases", {})
-                    .get("generate", {})
-                    .get("selected_strategy", "unknown"),
-                    "score": pipeline_result.get("phases", {}).get("generate", {}).get("selected_score", 0),
-                    "final_verdict": _final_verdict,
-                    "quality_risk": _quality_risk,
-                },
-            )
+                    {
+                        "ep_num": working_ep,
+                        "arc_no": arc_no,
+                        "strategy": pipeline_result.get("phases", {})
+                        .get("generate", {})
+                        .get("selected_strategy", "unknown"),
+                        "score": pipeline_result.get("phases", {}).get("generate", {}).get("selected_score", 0),
+                        "final_verdict": _final_verdict,
+                        "quality_risk": _quality_risk,
+                        "revision_required": _revision_required,
+                    },
+                )
 
         ctx.ui.log(f"   ✅ 제{working_ep}화 Blueprint 저장 완료")
         # [P6-02] QualityDashboard Stage3 PASS 기록
@@ -1649,13 +1686,25 @@ class Stage3Orchestrator:
                     _bp_score = pipeline_result.get("phases", {}).get("generate", {}).get("selected_score")
                 if _bp_score is None:
                     _bp_score = 1.0
+                _qd_warnings: list[str] = []
+                if _quality_gate_failed:
+                    _qd_warnings.append("quality_gate_failed")
+                if _quality_risk:
+                    _qd_warnings.append("quality_risk")
+                if _revision_required:
+                    _qd_warnings.append("revision_required")
                 _qd.record_validation(
                     ep_num=working_ep,
                     result={
-                        "decision": "PASS",
+                        "decision": _final_verdict if _final_verdict in ("PASS", "PASS_WITH_WARNING") else "PASS",
                         "score": _bp_score,
                         "violations": [],
-                        "warnings": [],
+                        "warnings": _qd_warnings,
+                        "quality_signals": {
+                            "quality_gate_failed": _quality_gate_failed,
+                            "quality_risk": _quality_risk,
+                            "revision_required": _revision_required,
+                        },
                     },
                     stage=3,
                 )
@@ -1845,6 +1894,8 @@ class Stage3Orchestrator:
             _advisory["fix_scope"] = fix_scope
         if bool(validate.get("quality_risk", False) or pipeline_result.get("quality_risk", False)):
             _advisory["quality_risk"] = True
+        if bool(validate.get("revision_required", False) or pipeline_result.get("revision_required", False)):
+            _advisory["revision_required"] = True
         selected_candidate_advisory = validate.get("selected_candidate_advisory", {})
         if isinstance(selected_candidate_advisory, dict) and selected_candidate_advisory:
             _warning_messages: list[str] = []
@@ -1989,6 +2040,7 @@ class Stage3Orchestrator:
             _observability_flags = _build_stage3_observability_flags(pipeline_result.get("_stage3_observability"))
             _pov_contract = resolve_project_pov_contract(ctx.current_project)
             _duration_ms = int(pipeline_result.get("_stage3_duration_ms") or 0) or None
+            _token_cost = float(pipeline_result.get("_stage3_token_cost_usd") or 0.0)
             _failure_category = _classify_stage3_failure_category(pipeline_result)
             _artifact_meta = normalize_artifact_meta(None, fallback_candidate_key=_candidate_key)
             if isinstance(blueprint, dict):
@@ -2053,6 +2105,8 @@ class Stage3Orchestrator:
                         success=False,
                         reject_reason=_reject_reason,
                         generation_method="blueprint",
+                        duration_ms=_duration_ms or 0,
+                        token_cost=_token_cost,
                         attempt_key=_attempt_key,
                         final_verdict=_final_verdict,
                         candidate_key=_candidate_key,

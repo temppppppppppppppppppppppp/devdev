@@ -26,7 +26,7 @@ import logging
 import re
 
 from modules.core.arc_summary_utils import generate_prev_arc_summary  # [V64.P4]
-from modules.core.constants import Stage2Limits
+from modules.core.constants import Stage2Limits, smart_truncate
 from modules.core.prompt_loader import SafeDict
 
 from .base_agent import BaseAgent
@@ -115,6 +115,13 @@ class UnifiedArcValidator(BaseAgent):
     def __init__(self, context, client, model_tier: str = None):
         super().__init__(context, client, model_tier)
         self.min_chars_per_ep = Stage2Limits.MIN_CHARS_PER_EPISODE
+
+    @staticmethod
+    def _fit_validator_prompt_text(value: str, max_chars: int, head_ratio: float = 0.55) -> str:
+        text = str(value or "")
+        if len(text) <= max_chars:
+            return text
+        return smart_truncate(text, max_chars=max_chars, head_chars=max(1, int(max_chars * head_ratio)))
 
     def validate(
         self,
@@ -594,6 +601,7 @@ class UnifiedArcValidator(BaseAgent):
 
         # 이전 Arc 요약 생성
         prev_summary = self._generate_prev_summary(prev_arcs)
+        constraints = self._fit_validator_prompt_text(constraints, 9000) if constraints else "(없음)"
 
         # Python 결과 포맷팅
         python_text = self._format_python_result(python_result)
@@ -601,7 +609,9 @@ class UnifiedArcValidator(BaseAgent):
         # 프롬프트 생성
         prompt = UNIFIED_VALIDATION_PROMPT.format_map(
             SafeDict(
-                arc_data=self._escape_braces(json.dumps(arc, ensure_ascii=False, indent=2)[:18000]),
+                arc_data=self._escape_braces(
+                    self._fit_validator_prompt_text(json.dumps(arc, ensure_ascii=False, indent=2), 18000)
+                ),
                 prev_summary=self._escape_braces(prev_summary),
                 constraints=self._escape_braces(constraints[:9000] if constraints else "(없음)"),
                 python_result=self._escape_braces(python_text),

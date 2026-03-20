@@ -10,6 +10,7 @@ Comprehensive unit tests for the Director facade and its 5 sub-modules:
 
 import logging
 import sys
+import types
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -130,14 +131,29 @@ class TestDirectorCaching:
         config = cm.get_protagonist_config()
         assert config == {}
 
+    def test_invalidate_caches_clears_protagonist_config_cache(self, director):
+        """6. invalidate_caches must clear protagonist_config cache for updated bible reads."""
+        first = director._get_protagonist_config()
+        assert first.get("world_origin") == "현대인"
+
+        director.context.master_bible = {
+            "MasterBible": {"protagonist_config": {"world_origin": "원시인", "incarnation_type": "회귀자"}}
+        }
+
+        director.invalidate_caches()
+
+        refreshed = director._get_protagonist_config()
+        assert refreshed.get("world_origin") == "원시인"
+        assert refreshed.get("incarnation_type") == "회귀자"
+
     def test_create_manuscript_cache_disabled(self, caching_manager):
-        """6. create_manuscript_cache returns None when disabled."""
+        """7. create_manuscript_cache returns None when disabled."""
         caching_manager.manuscript_cache_enabled = False
         result = caching_manager.create_manuscript_cache(MagicMock(), current_ep=5)
         assert result is None
 
     def test_create_manuscript_cache_no_previous(self, caching_manager):
-        """7. create_manuscript_cache returns None with no prior manuscripts."""
+        """8. create_manuscript_cache returns None with no prior manuscripts."""
         db = MagicMock()
         db.get_manuscript = MagicMock(return_value=None)
         result = caching_manager.create_manuscript_cache(db, current_ep=1)
@@ -405,6 +421,47 @@ class TestDirectorEnsemble:
         assert result["selected_candidate_advisory"]["quality_risk"] is True
         assert result["candidate_advisories"][1]["python_warnings"][0]["message"] == "Arc NPC mention is thin"
 
+    def test_compare_and_select_pass_with_warning_sets_revision_required_only(self, director):
+        candidates = [
+            {
+                "integrated_scenario": "A" * 1000,
+                "scene_breakdown": {"scene1": "x", "scene2": "y", "scene3": "z", "scene4": "w"},
+                "_ensemble_meta": {
+                    "strategy": "steady",
+                    "python_warnings": [],
+                    "quality_risk": False,
+                },
+            },
+            {
+                "integrated_scenario": "B" * 1000,
+                "scene_breakdown": {"scene1": "x", "scene2": "y", "scene3": "z", "scene4": "w"},
+                "_ensemble_meta": {
+                    "strategy": "sharp",
+                    "python_warnings": [],
+                    "quality_risk": False,
+                },
+            },
+        ]
+        director._ensemble._d.ask = MagicMock(return_value="{}")
+        director._ensemble._d._extract_json_robust = MagicMock(
+            return_value={
+                "selected_index": 1,
+                "decision": "PASS_WITH_WARNING",
+                "score": 81,
+                "reason": "usable with advisory",
+                "comparison_notes": "candidate 2 wins but still needs operator attention",
+                "feedback": "surface the weak continuity edge as an advisory",
+                "contradictions": [],
+            }
+        )
+
+        result = director.compare_and_select_blueprint(candidates=candidates, arc_data={"tactical_doc": "x"}, ep_num=2)
+
+        assert result["decision"] == "PASS_WITH_WARNING"
+        assert result["quality_risk"] is False
+        assert result["revision_required"] is True
+        assert result["selected_candidate_advisory"]["quality_risk"] is False
+
     def test_ensemble_all_short_manuscripts_reject(self, director):
         """22. select_and_judge_ensemble returns REJECT when all candidates are too short."""
         candidates = [
@@ -429,6 +486,33 @@ class TestDirectorEnsemble:
         )
         assert result["verdict"] == "REJECT"
         assert result["score"] == 20
+
+    def test_quick_judge_single_preserves_tail_context(self, director):
+        captured = {}
+
+        def _ask(prompt, **_kwargs):
+            captured["prompt"] = prompt
+            return '{"verdict":"PASS","score":88,"reason":"ok","critical_issues":[]}'
+
+        director._ensemble._d.ask = MagicMock(side_effect=_ask)
+        director._ensemble._d._extract_json_robust = MagicMock(
+            return_value={"verdict": "PASS", "score": 88, "reason": "ok", "critical_issues": []}
+        )
+
+        manuscript = "HEAD-MANUSCRIPT\n" + ("M" * 7000) + "\nTAIL-MANUSCRIPT"
+        blueprint = {"payload": "B" * 6000, "tail": "TAIL-BLUEPRINT"}
+
+        result = director._ensemble.quick_judge_single(
+            ep_num=1,
+            manuscript=manuscript,
+            blueprint=blueprint,
+            previous_ending="",
+        )
+
+        assert result["verdict"] == "PASS"
+        assert "TAIL-MANUSCRIPT" in captured["prompt"]
+        assert "TAIL-BLUEPRINT" in captured["prompt"]
+        assert "...(중간 생략)..." in captured["prompt"]
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -529,6 +613,81 @@ class TestDirectorContinuity:
 # ═══════════════════════════════════════════════════════════════
 # 5. DirectorAuditor Tests
 # ═══════════════════════════════════════════════════════════════
+
+
+def test_check_manuscript_history_with_cache_preserves_tail_context(director, monkeypatch):
+    director._caching.manuscript_cache_name = "cache-token"
+    director._extract_json_robust = MagicMock(return_value={"decision": "PASS", "conflicts": [], "summary": "ok"})
+
+    genai_mod = types.ModuleType("google.genai")
+    types_mod = types.ModuleType("google.genai.types")
+
+    class _FakeGenerateContentConfig:
+        def __init__(self, **kwargs):
+            self.kwargs = kwargs
+
+    types_mod.GenerateContentConfig = _FakeGenerateContentConfig
+    genai_mod.types = types_mod
+    monkeypatch.setitem(sys.modules, "google.genai", genai_mod)
+    monkeypatch.setitem(sys.modules, "google.genai.types", types_mod)
+
+    captured = {}
+
+    def _fake_router(**kwargs):
+        captured["prompt"] = kwargs["contents"]
+        return MagicMock(text='{"decision":"PASS","conflicts":[],"summary":"ok"}')
+
+    monkeypatch.setattr("modules.domain.agents.director_continuity.generate_content_via_router", _fake_router)
+
+    result = director.check_manuscript_history_with_cache(
+        ep_num=5,
+        current_manuscript="HEAD-CACHED-MS\n" + ("M" * 40000) + "\nTAIL-CACHED-MS",
+    )
+
+    assert result["decision"] == "PASS"
+    assert "HEAD-CACHED-MS" in captured["prompt"]
+    assert "TAIL-CACHED-MS" in captured["prompt"]
+    assert captured["prompt"].count("M") < 40000
+
+
+def test_check_manuscript_history_with_cache_source_has_no_legacy_head_cut():
+    src = Path("modules/domain/agents/director_continuity.py").read_text(encoding="utf-8")
+    assert "current_manuscript[:36000]" not in src
+
+
+def test_check_manuscript_history_conflicts_summary_fallback_preserves_tail_context(director):
+    director.ask = MagicMock(return_value="raw")
+    director._extract_json_robust = MagicMock(return_value={"decision": "PASS", "conflicts": [], "summary": "ok"})
+    captured = {}
+
+    def _load(_role, _prompt_name, **kwargs):
+        captured["history"] = kwargs["manuscript_history"]
+        return "prompt"
+
+    director._continuity._prompt_loader.load = MagicMock(side_effect=_load)
+
+    result = director.check_manuscript_history_conflicts(
+        ep_num=5,
+        current_manuscript="current manuscript",
+        manuscript_history=[
+            {
+                "ep_num": 4,
+                "summary": "",
+                "text": "HEAD-HISTORY\n" + ("H" * 800) + "\nTAIL-HISTORY",
+            }
+        ],
+        use_summary=True,
+    )
+
+    assert result["decision"] == "PASS"
+    assert "HEAD-HISTORY" in captured["history"]
+    assert "TAIL-HISTORY" in captured["history"]
+    assert captured["history"].count("H") < 800
+
+
+def test_check_manuscript_history_conflicts_source_has_no_summary_fallback_head_cut():
+    src = Path("modules/domain/agents/director_continuity.py").read_text(encoding="utf-8")
+    assert 'h.get("text", "")[:500]' not in src
 
 
 class TestDirectorContinuitySweep21:
@@ -1441,6 +1600,61 @@ class TestLane2DirectorEnsembleSemantics:
         assert result["fix_pack"]["target_kind"] == "entity_ref"
         assert result["fix_pack"]["patch_targets"] == ["opening_location_name", "ending_location_name"]
         assert result["fix_pack"]["must_fix"] == ["replace both labels with the approved venue"]
+
+    def test_fallback_prompt_preserves_stable_context_tail(self, ensemble):
+        captured = {}
+
+        def _load(*args, **kwargs):
+            prompt_name = args[1]
+            if prompt_name == "ENSEMBLE_STABLE_CONTEXT":
+                return "HEAD-STABLE\n" + ("S" * 420) + "\nTAIL-STABLE"
+            if prompt_name == "ENSEMBLE_VARIABLE_PROMPT":
+                return "VARIABLE-ANCHOR\n" + ("V" * 170)
+            return "fallback prompt"
+
+        def _ask(prompt, **_kwargs):
+            captured["prompt"] = prompt
+            return '{"selected":"A","verdict":"PASS","score":90}'
+
+        ensemble._d.MAX_CONTEXT_CHARS = 360
+        ensemble._d._get_or_create_context_cache = MagicMock(side_effect=RuntimeError("cache error"))
+        ensemble._d._ask_with_cached_context = MagicMock()
+        ensemble._d.ask = MagicMock(side_effect=_ask)
+        ensemble._d._extract_json_robust = MagicMock(
+            return_value={
+                "selected": "A",
+                "verdict": "PASS",
+                "score": 90,
+                "selection_reason": "picked",
+                "feedback": {"issues": [], "action_items": []},
+                "fix_scope": "none",
+            }
+        )
+        ensemble._d.apply_adaptive_decision = MagicMock(
+            return_value={"decision": "PASS", "adjusted": False, "threshold_used": 65, "reason": ""}
+        )
+        ensemble._prompt_loader = MagicMock()
+        ensemble._prompt_loader.load = MagicMock(side_effect=_load)
+
+        candidates = [
+            {"strategy": "A", "manuscript": _LONG_MANUSCRIPT, "warnings": "", "state_updates": {}},
+            {"strategy": "B", "manuscript": _LONG_MANUSCRIPT, "warnings": "", "state_updates": {}},
+            {"strategy": "C", "manuscript": _LONG_MANUSCRIPT, "warnings": "", "state_updates": {}},
+        ]
+        result = ensemble.select_and_judge_ensemble(
+            ep_num=4,
+            candidates=candidates,
+            validation_results=[{}, {}, {}],
+            blueprint={},
+            previous_ending="",
+            decision_core="### [Decision Core]\ncore",
+            candidate_evidence="### [Candidate Evidence]\nevidence",
+            reference_appendix="### [Reference Appendix]\nappendix",
+        )
+
+        assert result["final_verdict"] == "PASS"
+        assert "TAIL-STABLE" in captured["prompt"]
+        assert "VARIABLE-ANCHOR" in captured["prompt"]
 
     def test_compare_and_select_arc_ask_exception_fallback(self, director):
         """LLM ask() 예외 → _fallback_arc_selection으로 PASS 폴백."""

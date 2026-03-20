@@ -123,6 +123,56 @@ class TestContextBuilderInit:
         assert '_threshold("context.lookback_total_chars", 40000)' in src
 
 
+class TestContextTailPreservation:
+    def test_compose_work_focus_text_preserves_recent_tail_context(self):
+        cb = Stage4ContextBuilder(_make_ctx())
+
+        text = cb._compose_work_focus_text(
+            arc_data={"constraint_summary": "HEAD-CONFLICT\n" + ("A" * 180) + "\nTAIL-CONFLICT"},
+            arc_tactical="전술",
+            prev_ending="엔딩",
+            blueprint={"scene_breakdown": [{"summary": "SCENE-HEAD\n" + ("B" * 180) + "\nTAIL-WORK"}]},
+            cp_entities={"npcs": ["alice"], "items": [], "plots": [], "locations": []},
+            max_chars=180,
+        )
+
+        assert len(text) <= 180
+        assert "TAIL-WORK" in text or "TAIL-CONFLICT" in text
+
+    @patch("modules.core.stage4_context_builder.SemanticQueryBroker")
+    def test_work_identity_slot_summary_preserves_relation_slice_tail(self, broker_cls):
+        ctx = _make_ctx()
+        broker_cls.return_value.build_stage4_relation_slice.return_value = "[관계 의미 질의]\n" + ("R" * 220) + "TAIL-REL"
+        cb = Stage4ContextBuilder(ctx)
+
+        summary = cb._build_work_identity_slot_summary(
+            focus={
+                "tracking_slots": ["slot-a", "slot-b"],
+                "mandatory_scene_engines": ["engine-a"],
+                "registry_profiles": [{"name": "talent_registry", "required_fields": ["goal", "risk"]}],
+            },
+            arc_data={"constraint_summary": "갈등축"},
+            cp_entities={"npcs": ["alice"], "items": [], "plots": [], "locations": []},
+            max_chars=180,
+        )
+
+        assert len(summary) <= 180
+        assert "TAIL-REL" in summary
+
+    def test_fetch_manuscript_excerpt_preserves_recent_tail_context(self):
+        ctx = _make_ctx()
+        ctx.db = ctx.current_project.db
+        ctx.db.get_manuscripts_range.return_value = [
+            {"ep_num": 7, "content": "HEAD-MS\n" + ("M" * 900) + "\nTAIL-MS"}
+        ]
+        cb = Stage4ContextBuilder(ctx)
+
+        excerpt = cb._fetch_manuscript_excerpt(7, 7, max_chars=220)
+
+        assert len(excerpt) <= 220
+        assert "TAIL-MS" in excerpt
+
+
 class TestSuggestAmbientNpcs:
     def test_suggest_ambient_npcs_office(self):
         blueprint = {
@@ -968,6 +1018,57 @@ class TestBuildMandatoryContext:
         assert "[지속 압박/위협]" in result["mandatory_context"]
         assert "해독제를 찾지 못하면 독이 전신으로 퍼진다." in result["mandatory_context"]
 
+    def test_condensed_world_state_summary_preserves_recent_pressure_tail(self):
+        ctx = _make_ctx()
+        ctx.world_state = MagicMock()
+        ctx.world_state._state = {
+            "last_updated_ep": 8,
+            "protagonist": {"name": "서진우", "location": "지하실"},
+            "active_pressure_vectors": [{"text": "PRESSURE-HEAD\n" + ("P" * 220) + "\nTAIL-PRESSURE"}],
+            "alive_npcs": {},
+            "active_items": {},
+            "active_plots": [],
+        }
+        cb = Stage4ContextBuilder(ctx)
+
+        summary = cb._build_condensed_world_state_summary(
+            {"npcs": ["장천"], "items": [], "plots": [], "locations": []},
+            max_chars=180,
+        )
+
+        assert len(summary) <= 180
+        assert "TAIL-PRESSURE" in summary
+
+    def test_condensed_fact_ledger_summary_preserves_recent_tail(self):
+        ctx = _make_ctx()
+        ctx.fact_ledger = MagicMock()
+        ctx.fact_ledger._ledger = {
+            "last_updated_ep": 12,
+            "characters": {},
+            "items": {},
+            "numbers": {
+                "자본금": {
+                    "value": "10억",
+                    "unit": "원",
+                    "last_ep": 12,
+                },
+                "긴수치": {
+                    "value": "HEAD-NUM\n" + ("N" * 220) + "\nTAIL-NUM",
+                    "unit": "",
+                    "last_ep": 12,
+                },
+            },
+        }
+        cb = Stage4ContextBuilder(ctx)
+
+        summary = cb._build_condensed_fact_ledger_summary(
+            {"npcs": ["dummy"], "items": [], "plots": [], "locations": [], "_full_text": ""},
+            max_chars=180,
+        )
+
+        assert len(summary) <= 180
+        assert "TAIL-NUM" in summary
+
     @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")
     def test_uses_advisor_retrieval_plan_when_available(self, *_mocks):
         ctx = _make_ctx()
@@ -1392,6 +1493,51 @@ class TestBuildMandatoryContext:
         assert "[검색 커버리지 경고]" in result["mandatory_context"]
         assert "관계 의미 질의가 빠졌다." in result["mandatory_context"]
         assert not result["mandatory_context"].startswith("[검색 커버리지 경고]")
+
+    @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")
+    def test_build_mandatory_context_fallback_queries_preserve_tactical_tail_context(self, _mock_build):
+        ctx = _make_ctx()
+        ctx.memory = MagicMock()
+        ctx.memory.retrieve_multi_query_context.return_value = ""
+        ctx.context_advisor = None
+        cb = Stage4ContextBuilder(ctx)
+        anchor_sys = MagicMock()
+        anchor_sys.get_relevant_anchors.return_value = []
+        anchor_sys.get_critical_anchors.return_value = []
+
+        def threshold_side_effect(key, default=None):
+            if key == "smart_retrieval.enabled":
+                return False
+            if key == "smart_retrieval.stage4_enabled":
+                return False
+            if key == "context.vector_max_results_s4":
+                return 16
+            return default
+
+        with (
+            patch("modules.core.stage4_context_builder._threshold", side_effect=threshold_side_effect),
+            patch(
+                "modules.core.stage4_context_builder.extract_episode_tactical",
+                return_value="HEAD-EP-TAC\n" + ("T" * 2400) + "\nTAIL-EP-TAC",
+            ),
+        ):
+            cb.build_mandatory_context(
+                next_ep=7,
+                arc_data={"arc_no": 1, "episode_details": [{"ep_num": 7, "details": ["detail"]}]},
+                arc_tactical="HEAD-ARC-TAC\n" + ("A" * 2600) + "\nTAIL-ARC-TAC",
+                prev_text="이전 원고",
+                prev_ending="HEAD-ENDING\n" + ("E" * 200) + "\nTAIL-ENDING",
+                hud_report="HUD",
+                writer_agent=MagicMock(),
+                anchor_sys=anchor_sys,
+                s4_genre_type="investment",
+                v50_modules_available=False,
+                blueprint={},
+            )
+
+        queries = ctx.memory.retrieve_multi_query_context.call_args.kwargs["queries"]
+        assert any("TAIL-EP-TAC" in query for query in queries)
+        assert any("TAIL-ENDING" in query for query in queries)
 
     @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")
     def test_build_mandatory_context_warns_when_semantic_carryover_slot_is_missing(self, _mock_build):

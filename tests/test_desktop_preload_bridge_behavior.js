@@ -1,6 +1,20 @@
 const assert = require("assert");
 const Module = require("module");
 const path = require("path");
+const fs = require("fs");
+const vm = require("vm");
+const {
+  WINDOW_BRIDGE_NAME,
+  PRELOAD_METHOD_CHANNELS: CONTRACT_PRELOAD_METHOD_CHANNELS,
+  LIVE_PRELOAD_METHOD_NAMES,
+} = require("../geuldobi-desktop/src/desktop_control_plane_contract.js");
+const {
+  getDesktopBridge,
+  listMissingDesktopBridgeMethods,
+  isDesktopBridgeReady,
+  requireDesktopBridge,
+  createDesktopBridgeFacade,
+} = require("../geuldobi-desktop/src/desktop_bridge_client.js");
 
 function loadPreloadApi() {
   const invokeCalls = [];
@@ -73,15 +87,14 @@ async function testMaterialAndWorkspaceBridgeMethods() {
 
   await api.listMaterialFiles("bible");
   await api.openWorkspaceFolder();
-  await api.getWorkspacePath();
 
   assert.deepStrictEqual(invokeCalls[0], ["material:list-files", "bible"]);
   assert.deepStrictEqual(invokeCalls[1], ["workspace:open-folder"]);
-  assert.deepStrictEqual(invokeCalls[2], ["workspace:get-path"]);
+  assert.strictEqual("getWorkspacePath" in api, false);
 }
 
 async function testPreloadDoesNotDependOnLocalRelativeRequireForContract() {
-  const preloadSource = require("fs").readFileSync(
+  const preloadSource = fs.readFileSync(
     path.resolve(__dirname, "../geuldobi-desktop/src/preload.js"),
     "utf8"
   );
@@ -89,10 +102,83 @@ async function testPreloadDoesNotDependOnLocalRelativeRequireForContract() {
   assert.ok(!preloadSource.includes('require("./desktop_control_plane_contract")'));
 }
 
+async function testPreloadMethodChannelMapStaysInLockstepWithControlPlaneContract() {
+  const preloadPath = path.resolve(__dirname, "../geuldobi-desktop/src/preload.js");
+  const preloadSource = fs.readFileSync(preloadPath, "utf8");
+  const start = preloadSource.indexOf("const PRELOAD_METHOD_CHANNELS = Object.freeze({");
+  const end = preloadSource.indexOf("contextBridge.exposeInMainWorld(", start);
+
+  assert.ok(start >= 0, "PRELOAD_METHOD_CHANNELS block not found");
+  assert.ok(end >= 0, "preload API export block not found");
+
+  const block = preloadSource.slice(start, end).trim();
+  const context = {};
+  vm.runInNewContext(block + "\nthis.__channels = PRELOAD_METHOD_CHANNELS;", context, {
+    filename: "preload.js",
+  });
+
+  assert.deepStrictEqual(
+    JSON.parse(JSON.stringify(context.__channels)),
+    JSON.parse(JSON.stringify(CONTRACT_PRELOAD_METHOD_CHANNELS))
+  );
+}
+
+async function testDesktopBridgeClientTracksLiveContractShape() {
+  assert.strictEqual(WINDOW_BRIDGE_NAME, "geuldobiDesktop");
+  assert.deepStrictEqual([...LIVE_PRELOAD_METHOD_NAMES], Object.keys(CONTRACT_PRELOAD_METHOD_CHANNELS.live));
+
+  const calls = [];
+  const fakeBridge = Object.fromEntries(
+    LIVE_PRELOAD_METHOD_NAMES.map((methodName) => [
+      methodName,
+      (...args) => {
+        calls.push([methodName, ...args]);
+        return { ok: true, methodName, args };
+      },
+    ])
+  );
+  const fakeGlobal = { [WINDOW_BRIDGE_NAME]: fakeBridge };
+
+  assert.strictEqual(getDesktopBridge(fakeGlobal), fakeBridge);
+  assert.deepStrictEqual(listMissingDesktopBridgeMethods(fakeGlobal), []);
+  assert.strictEqual(isDesktopBridgeReady(fakeGlobal), true);
+
+  const facade = createDesktopBridgeFacade(fakeGlobal);
+  assert.ok(Object.isFrozen(facade));
+  const result = facade.getStatus("ignored");
+
+  assert.deepStrictEqual(calls[0], ["getStatus", "ignored"]);
+  assert.deepStrictEqual(result, { ok: true, methodName: "getStatus", args: ["ignored"] });
+}
+
+async function testDesktopBridgeClientReportsMissingBridgeMethods() {
+  const fakeGlobal = {
+    [WINDOW_BRIDGE_NAME]: {
+      getStatus: () => ({ ok: true }),
+    },
+  };
+
+  const missing = listMissingDesktopBridgeMethods(fakeGlobal);
+  assert.ok(missing.includes("runKey"));
+  assert.ok(missing.includes("openWorkspaceFolder"));
+  assert.strictEqual(isDesktopBridgeReady(fakeGlobal), false);
+  assert.throws(
+    () => requireDesktopBridge(fakeGlobal),
+    /missing methods/
+  );
+  assert.throws(
+    () => requireDesktopBridge({}),
+    /not available/
+  );
+}
+
 Promise.resolve()
   .then(testSplashBridgeMethods)
   .then(testMaterialAndWorkspaceBridgeMethods)
   .then(testPreloadDoesNotDependOnLocalRelativeRequireForContract)
+  .then(testPreloadMethodChannelMapStaysInLockstepWithControlPlaneContract)
+  .then(testDesktopBridgeClientTracksLiveContractShape)
+  .then(testDesktopBridgeClientReportsMissingBridgeMethods)
   .catch((error) => {
     console.error(error);
     process.exitCode = 1;

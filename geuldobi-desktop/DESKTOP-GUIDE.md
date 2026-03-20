@@ -124,11 +124,15 @@ geuldobi-desktop/dist/
 ```bash
 cd geuldobi-desktop
 npm test
+npm run test:desktop-contract
 npm run start:spike
+npm run start:desktop-spike
 ```
 
 - `npm test`는 live bridge, dashboard, risk gate, renderer direct surface, websocket transport, packaged runtime, shadow-entry hygiene focused regression을 함께 돈다.
+- `npm run test:desktop-contract`는 같은 curated desktop subset gate를 explicit alias로 부르는 이름이다.
 - `npm run start:spike`는 splash -> backend -> main window handoff가 실제 런타임에서 깨지지 않았는지 확인하는 최소 runtime proof다.
+- `npm run start:desktop-spike`는 같은 runtime proof를 explicit alias로 부르는 이름이다.
 
 ### 첫 빌드 시 시간
 
@@ -356,5 +360,7 @@ npm install
 - Alternate/manual-only surfaces: `lite_mode/`, `test_mode/`
 - Reference archive surface: `UI/`
 - `npm test` is the official desktop subset gate, not the full repo regression envelope.
+- `npm run test:desktop-contract` is the explicit alias for that same desktop subset gate.
 - `npm run start:spike` is the minimum runtime handoff proof.
+- `npm run start:desktop-spike` is the explicit alias for that same runtime proof.
 - Consolidated guide: `docs/2026-03-13/shipping-reality-live-surface-guide.md`

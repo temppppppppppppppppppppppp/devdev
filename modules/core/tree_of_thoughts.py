@@ -30,7 +30,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
-from modules.core.constants import AIModels
+from modules.core.constants import AIModels, smart_truncate
 from modules.core.llm_generate import generate_content_via_router
 from modules.core.tactical_utils import extract_episode_tactical
 
@@ -161,6 +161,14 @@ JSON 형식으로:
         self.model = model
         self.enabled = True
 
+    @staticmethod
+    def _fit_prompt_text(value: str, max_chars: int, head_ratio: float = 0.55) -> str:
+        """Prompt cap은 유지하되 최근 문맥을 같이 남긴다."""
+        text = str(value or "")
+        if len(text) <= max_chars:
+            return text
+        return smart_truncate(text, max_chars=max_chars, head_chars=max(1, int(max_chars * head_ratio)))
+
     def _call_llm(self, prompt: str, temperature: float = 0.7) -> str:
         """LLM 호출"""
         try:
@@ -262,7 +270,7 @@ JSON 형식으로:
 
     def _generate_approaches(self, task: str, context: dict[str, Any], n_branches: int) -> list[dict[str, str]]:
         """접근 방식 생성"""
-        context_str = json.dumps(context, ensure_ascii=False, default=str)[:2000]
+        context_str = self._fit_prompt_text(json.dumps(context, ensure_ascii=False, default=str), 2000)
 
         prompt = self.BRANCH_GENERATION_PROMPT.format(
             n_branches=n_branches,
@@ -291,7 +299,7 @@ JSON 형식으로:
 
     def _develop_path(self, task: str, context: dict[str, Any], approach: dict[str, str]) -> str:
         """경로 발전"""
-        context_str = json.dumps(context, ensure_ascii=False, default=str)[:2000]
+        context_str = self._fit_prompt_text(json.dumps(context, ensure_ascii=False, default=str), 2000)
 
         prompt = self.PATH_DEVELOPMENT_PROMPT.format(
             approach_name=approach.get("name", "전문가"),
@@ -306,7 +314,7 @@ JSON 형식으로:
         """경로 평가"""
         prompt = self.PATH_EVALUATION_PROMPT.format(
             task=task.replace("{", "{{").replace("}", "}}"),  # [V70] brace escape
-            output=output[:4000].replace("{", "{{").replace("}", "}}"),  # [V70] brace escape
+            output=self._fit_prompt_text(output, 4000).replace("{", "{{").replace("}", "}}"),  # [V70]
         )
 
         response = self._call_llm(prompt, temperature=0.2)
@@ -336,7 +344,7 @@ JSON 형식으로:
         if custom_generator:
             output = custom_generator({"name": "기본", "description": ""})
         else:
-            context_str = json.dumps(context, ensure_ascii=False, default=str)[:2000]
+            context_str = self._fit_prompt_text(json.dumps(context, ensure_ascii=False, default=str), 2000)
             prompt = f"[과제]\n{task}\n\n[컨텍스트]\n{context_str}\n\n위 과제를 수행하세요."
             output = self._call_llm(prompt)
 
@@ -621,10 +629,10 @@ JSON 형식으로:
 
 === 입력 정보 ===
 Arc 번호: {arc_no}
-Volume 전략: {self._escape(vol_strategy[:2000] if vol_strategy else "(없음)")}
+Volume 전략: {self._escape(self._fit_prompt_text(vol_strategy, 2000) if vol_strategy else "(없음)")}
 현재 블록 DNA: {self._escape(json.dumps(curr_block, ensure_ascii=False) if curr_block else "(없음)")}
-이전 Arc 맥락: {self._escape(prev_arc_context[:3000] if prev_arc_context else "(첫 Arc)")}
-이전 REJECT 피드백: {self._escape(feedback[:1000] if feedback else "(없음)")}
+이전 Arc 맥락: {self._escape(self._fit_prompt_text(prev_arc_context, 3000) if prev_arc_context else "(첫 Arc)")}
+이전 REJECT 피드백: {self._escape(self._fit_prompt_text(feedback, 1000) if feedback else "(없음)")}
 
 === 출력 JSON 스키마 ===
 {{

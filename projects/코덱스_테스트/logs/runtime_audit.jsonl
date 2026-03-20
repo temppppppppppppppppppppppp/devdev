@@ -1,0 +1,39 @@
+{"timestamp": "2026-03-18 12:55:09", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 1, "corrections": ["arc_end_state 위치 동기화: '서울 성북동 본가, 한시우의 개인 침실' → '서울 성북동 본가, 한시우의 개인 침실. 방금 통화를 마친 상태'", "arc_start_state에서 무협 전용 필드 제거: ['internal_energy']", "arc_end_state에서 무협 전용 필드 제거: ['internal_energy']"]}}
+{"timestamp": "2026-03-18 12:55:48", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-03-18 12:56:18", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 1, "target_arc_no": 2, "items_tracked": 3}}
+{"timestamp": "2026-03-18 13:04:35", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-03-18 13:04:35", "type": "blueprint_success", "message": "ep_1_blueprint_generated", "data": {"ep_num": 1, "arc_no": 1, "strategy": "emotion_focused", "score": 100, "final_verdict": "PASS", "quality_risk": true}}
+{"timestamp": "2026-03-18 13:07:53", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-03-18 13:07:53", "type": "blueprint_success", "message": "ep_2_blueprint_generated", "data": {"ep_num": 2, "arc_no": 1, "strategy": "emotion_focused", "score": 95, "final_verdict": "PASS", "quality_risk": true}}
+{"timestamp": "2026-03-18 13:14:12", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-03-18 13:14:12", "type": "blueprint_success", "message": "ep_3_blueprint_generated", "data": {"ep_num": 3, "arc_no": 1, "strategy": "action_focused", "score": 90, "final_verdict": "PASS", "quality_risk": true}}
+{"timestamp": "2026-03-18 13:19:29", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-03-18 13:19:29", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 1, "target_arc_no": 2, "items_tracked": 3}}
+{"timestamp": "2026-03-18 13:24:05", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 2, "corrections": ["[C-1] tactical_doc 메타 용어 'Arc'를 서사 용어로 치환", "[PATCH-B] 이전 Arc 소지품 소멸: [\"손에는 새로 개통한 해외 통신사 명의의 암호화된 위성 전화기. 책상 위에는 'SW 인베스트먼트' 법인 설립 관련 서류와 해외 증권사 계좌 개설 안내문이 놓여 있다.\"] (처분/폐기 사유 미기재)", "시작 위치 수정: '서울 성북동 본가, 한시우의 개인 침실' → '서울 성북동 본가, 한시우의 개인 침실. 방금 통화를 마친 상태'", "tactical_doc 위치 텍스트 동기화: '서울 성북동 본가, 한시우의 개인 침실' → '서울 성북동 본가, 한시우의 개인 침실. 방금 통화를 마친 상태'", "arc_end_state 위치 동기화: 'SW 인베스트먼트의 여의도 개인 사무실' → 'SW 인베스트먼트의 여의도 개인 사무실. 42인치 모니터 3개 중 하나에 WTI 시세창이 띄워져 있고, 나머지 두 개는 금 선물 차트와 에콰도르 관련 외신 속보 피드가 실시간으로 갱신되고 있다'"]}}
+{"timestamp": "2026-03-18 13:25:21", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-03-18 13:25:49", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 2, "target_arc_no": 3, "items_tracked": 4}}
+{"timestamp": "2026-03-18 13:32:56", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-03-18 13:32:56", "type": "blueprint_success", "message": "ep_4_blueprint_generated", "data": {"ep_num": 4, "arc_no": 1, "strategy": "emotion_focused", "score": 94, "final_verdict": "PASS", "quality_risk": true}}
+{"timestamp": "2026-03-18 13:34:17", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-03-18 13:34:17", "type": "blueprint_success", "message": "ep_5_blueprint_generated", "data": {"ep_num": 5, "arc_no": 2, "strategy": "emotion_focused", "score": 98, "final_verdict": "PASS", "quality_risk": true}}
+{"timestamp": "2026-03-18 13:38:04", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-03-18 13:38:04", "type": "blueprint_success", "message": "ep_6_blueprint_generated", "data": {"ep_num": 6, "arc_no": 2, "strategy": "dialogue_focused", "score": 98, "final_verdict": "PASS", "quality_risk": true}}
+{"timestamp": "2026-03-18 13:47:59", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-03-18 13:47:59", "type": "blueprint_success", "message": "ep_7_blueprint_generated", "data": {"ep_num": 7, "arc_no": 2, "strategy": "action_focused", "score": 100, "final_verdict": "PASS", "quality_risk": true}}
+{"timestamp": "2026-03-18 13:52:46", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-03-18 13:52:50", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 2, "target_arc_no": 3, "items_tracked": 4}}
+{"timestamp": "2026-03-18 13:59:37", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 3, "corrections": ["[C-1] tactical_doc 메타 용어 'Arc'를 서사 용어로 치환", "[PATCH-B] 이전 Arc 소지품 소멸: [\"암호화된 위성 전화기 옆에 놓인 'WTI 6월물 롱 포지션 체결 확인서' 한 장.\", '책상 위'] (처분/폐기 사유 미기재)", "시작 위치 수정: 'SW 인베스트먼트의 여의도 개인 사무실' → 'SW 인베스트먼트의 여의도 개인 사무실. 42인치 모니터 3개 중 하나에 WTI 시세창이 띄워져 있고, 나머지 두 개는 금 선물 차트와 에콰도르 관련 외신 속보 피드가 실시간으로 갱신되고 있다'", "tactical_doc 위치 텍스트 동기화: 'SW 인베스트먼트의 여의도 개인 사무실' → 'SW 인베스트먼트의 여의도 개인 사무실. 42인치 모니터 3개 중 하나에 WTI 시세창이 띄워져 있고, 나머지 두 개는 금 선물 차트와 에콰도르 관련 외신 속보 피드가 실시간으로 갱신되고 있다'", "arc_end_state 위치 동기화: 'SW 인베스트먼트의 여의도 개인 사무실' → '서울 여의도, SW인베스트먼트 개인 사무실. 통유리창 너머로 마포대교의 야경이 보이고, 책상 위 6대의 모니터는 여전히 WTI 원유와 금 선물 차트를 띄워놓은 채 빛나고 있다'"]}}
+{"timestamp": "2026-03-18 14:00:58", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-03-18 14:01:32", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 3, "target_arc_no": 4, "items_tracked": 5}}
+{"timestamp": "2026-03-18 14:03:04", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-03-18 14:03:04", "type": "blueprint_success", "message": "ep_8_blueprint_generated", "data": {"ep_num": 8, "arc_no": 2, "strategy": "dialogue_focused", "score": 98, "final_verdict": "PASS", "quality_risk": true}}
+{"timestamp": "2026-03-18 14:04:35", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-03-18 14:04:35", "type": "blueprint_success", "message": "ep_9_blueprint_generated", "data": {"ep_num": 9, "arc_no": 3, "strategy": "action_focused", "score": 100, "final_verdict": "PASS", "quality_risk": true}}
+{"timestamp": "2026-03-18 14:05:57", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-03-18 14:05:57", "type": "blueprint_success", "message": "ep_10_blueprint_generated", "data": {"ep_num": 10, "arc_no": 3, "strategy": "emotion_focused", "score": 98, "final_verdict": "PASS", "quality_risk": true}}
+{"timestamp": "2026-03-18 14:07:25", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-03-18 14:07:25", "type": "blueprint_success", "message": "ep_11_blueprint_generated", "data": {"ep_num": 11, "arc_no": 3, "strategy": "action_focused", "score": 100, "final_verdict": "PASS", "quality_risk": true}}
+{"timestamp": "2026-03-18 14:12:13", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-03-18 14:12:13", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 3, "target_arc_no": 4, "items_tracked": 5}}
+{"timestamp": "2026-03-18 14:24:23", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-03-18 16:01:45", "type": "stage4_complete", "message": "stage4 production completed", "data": {"target_ep": 2}}

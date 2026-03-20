@@ -1,5 +1,7 @@
 "use strict";
 
+const WINDOW_BRIDGE_NAME = "geuldobiDesktop";
+
 const IPC_CHANNELS = Object.freeze({
   splash: Object.freeze({
     getConfig: "splash:get-config",
@@ -37,7 +39,6 @@ const IPC_CHANNELS = Object.freeze({
   }),
   workspace: Object.freeze({
     openFolder: "workspace:open-folder",
-    getPath: "workspace:get-path",
   }),
 });
 
@@ -69,10 +70,9 @@ const PRELOAD_METHOD_CHANNELS = Object.freeze({
     applyWorkGuardTemplate: IPC_CHANNELS.project.applyWorkGuardTemplate,
     openWorkspaceFolder: IPC_CHANNELS.workspace.openFolder,
   }),
-  deadCandidate: Object.freeze({
-    getWorkspacePath: IPC_CHANNELS.workspace.getPath,
-  }),
 });
+
+const LIVE_PRELOAD_METHOD_NAMES = Object.freeze(Object.keys(PRELOAD_METHOD_CHANNELS.live));
 
 const BRIDGE_MANAGED_ROUTES = Object.freeze({
   run: "/run",
@@ -89,8 +89,10 @@ function buildRunInputRoute(runId) {
 }
 
 module.exports = {
+  WINDOW_BRIDGE_NAME,
   IPC_CHANNELS,
   PRELOAD_METHOD_CHANNELS,
+  LIVE_PRELOAD_METHOD_NAMES,
   BRIDGE_MANAGED_ROUTES,
   buildRunInputRoute,
 };

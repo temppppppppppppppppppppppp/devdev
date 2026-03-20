@@ -250,8 +250,8 @@ Director → PASS_WITH_FIX (score ≥ 90)
 | 조건 | 전략 | 메서드 | 후보 수 |
 |------|------|--------|--------|
 | fix_scope="inplace" or (없음 + score≥60) | InPlace | `_inplace_patch_*()` | 1 |
-| fix_scope="partial" or inplace 실패 | Partial | `patch_*_with_feedback(single_strategy=...)` | 1전략 3후보 |
-| fix_scope="full" or patch 실패 | Full | `generate()` / `regenerate_with_feedback()` | 다전략 3후보 |
+| fix_scope="partial" or inplace 실패 | Partial | `patch_*_with_feedback(single_strategy=...)` | 선택 전략 기준 bounded regenerate 1후보 |
+| fix_scope="full" or patch 실패 | Full | `generate()` / `regenerate_with_feedback()` | strategy budget에 따른 다전략 재생성 (보통 2~3후보) |
 
 ### 5.4 재심사 메서드
 

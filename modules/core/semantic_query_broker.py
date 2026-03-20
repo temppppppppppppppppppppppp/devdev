@@ -14,7 +14,25 @@ import re
 from collections import defaultdict
 from typing import Any
 
+from modules.core.constants import smart_truncate
+
 _logger = logging.getLogger(__name__)
+
+
+def _fit_relation_text(text: str, *, max_chars: int) -> str:
+    raw = str(text or "").strip()
+    if len(raw) <= max_chars:
+        return raw
+    if max_chars <= 1:
+        return raw[:max_chars]
+    if max_chars < 80:
+        tail_chars = max(8, min(max_chars // 3, max_chars - 2))
+        head_chars = max_chars - tail_chars - 1
+        if head_chars <= 0:
+            return raw[:max_chars]
+        return raw[:head_chars] + "…" + raw[-tail_chars:]
+    head_chars = max(0, min(int(max_chars * 0.55), max_chars - 80))
+    return smart_truncate(raw, max_chars=max_chars, head_chars=head_chars)
 
 
 def _normalize_attr_value(raw: Any) -> str:
@@ -438,7 +456,8 @@ class SemanticQueryBroker:
                 evidence_texts = []
                 for evidence in candidate.get("evidences", [])[:2]:
                     snippet = str(evidence.get("text", "") or "").strip()
-                    snippet = snippet[:36] + "..." if len(snippet) > 39 else snippet
+                    if len(snippet) > 39:
+                        snippet = _fit_relation_text(snippet, max_chars=39)
                     evidence_texts.append(f"{evidence.get('source', '?')}={snippet}")
                 rendered_candidates.append(
                     f"{candidate['name']} [{'; '.join(evidence_texts)}]"
@@ -449,7 +468,7 @@ class SemanticQueryBroker:
             return ""
         block = "\n".join(lines)
         if len(block) > max_chars:
-            block = block[: max_chars - 18] + "\n... (관계 질의 절삭)"
+            block = _fit_relation_text(block, max_chars=max_chars)
         return block
 
     def build_stage4_relation_slice(

@@ -212,6 +212,38 @@ class TestExtractSatisfactionTag:
         assert 1 <= result["satisfaction_score"] <= 10
         assert result["ep_num"] == 1
 
+    def test_satisfaction_prompt_preserves_tail_context(self, state_extractor):
+        """긴 원고도 tail marker가 prompt에 남아야 함"""
+        state_extractor.ask = MagicMock(
+            return_value=json.dumps({"primary_tag": "성취", "satisfaction_score": 9, "protagonist_agency": "자력"})
+        )
+
+        result = state_extractor.extract_satisfaction_tag("HEAD-MS\n" + ("가" * 25000) + "\nTAIL-SAT-MARKER", 8)
+
+        assert result["primary_tag"] == "성취"
+        prompt = state_extractor.ask.call_args.args[0]
+        assert "TAIL-SAT-MARKER" in prompt
+        assert "...(중간 생략)..." in prompt
+
+    def test_extract_state_prompt_preserves_tactical_tail(self, state_extractor):
+        """extract_state도 tactical_doc tail marker를 유지해야 함"""
+        state_extractor.ask = MagicMock(return_value={})
+
+        state_extractor.extract_state(
+            {
+                "arc_no": 9,
+                "tactical_doc": "HEAD-TAC\n" + ("전술 " * 7000) + "\nTAIL-TACTICAL-MARKER",
+                "joint_docs": {},
+                "status_shadow": {},
+                "state_constraints": {},
+                "beat_sequence": [],
+            }
+        )
+
+        prompt = state_extractor.ask.call_args.args[0]
+        assert "TAIL-TACTICAL-MARKER" in prompt
+        assert "...(중간 생략)..." in prompt
+
 
 # ── 4. Fallback 키워드 분류 ────────────────────────────────────
 
@@ -244,6 +276,11 @@ class TestFallbackSatisfactionTag:
         for text in ["승리", "패배", "전투", "이동했다", "수련했다", ""]:
             result = state_extractor._fallback_satisfaction_tag(text, 1)
             assert result["primary_tag"] in valid_tags
+
+    def test_fallback_satisfaction_tag_preserves_tail_keywords(self, state_extractor):
+        result = state_extractor._fallback_satisfaction_tag(("평온한 하루. " * 600) + "패배", 2)
+        assert result["primary_tag"] == "좌절"
+        assert result["frustration_flag"] is True
 
 
 # ── 5. Stage4 훅 통합 ─────────────────────────────────────────

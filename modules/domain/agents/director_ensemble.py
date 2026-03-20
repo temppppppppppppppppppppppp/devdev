@@ -766,9 +766,10 @@ Architect가 repair loop에서 처리 가능한 범위라면 PASS_WITH_FIX를 �
                 else {"candidate_index": selected_idx, "quality_risk": False}
             )
             quality_risk = bool(
-                result.get("quality_risk", False)
-                or selected_candidate_advisory.get("quality_risk", False)
-                or decision == "PASS_WITH_FIX"
+                result.get("quality_risk", False) or selected_candidate_advisory.get("quality_risk", False)
+            )
+            revision_required = bool(
+                result.get("revision_required", False) or decision in ("PASS_WITH_FIX", "PASS_WITH_WARNING")
             )
 
             logging.info(f" [Director] 후보 {selected_idx + 1} 선택 ({decision}, 점수: {score})")
@@ -835,6 +836,7 @@ Architect가 repair loop에서 처리 가능한 범위라면 PASS_WITH_FIX를 �
                 "selection_reason": result.get("selection_reason", "") or reason,
                 "verdict_reason": result.get("verdict_reason", "") or reason,
                 "quality_risk": quality_risk,
+                "revision_required": revision_required,
                 "candidate_advisories": candidate_advisories,
                 "selected_candidate_advisory": selected_candidate_advisory,
             }
@@ -1384,36 +1386,6 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
             else None
         )
 
-        # mandatory_context 블록 생성 (stable/legacy 양쪽 공통)
-        _mc_block = ""
-        if mandatory_context:
-            _dir_mc_max = _threshold("context.director_mandatory_max", 400000)
-            _mc_for_director = mandatory_context[:_dir_mc_max]
-            if len(mandatory_context) > _dir_mc_max:
-                _mc_for_director = (
-                    _mc_for_director[: _dir_mc_max - 50]
-                    + f"\n...(mandatory_context {_dir_mc_max:,}자 초과로 일부 생략)"
-                )
-            # [NC-1 SCM] 단일 후보 경고 주입
-            _scm_prefix = ""
-            if _scm_single_candidate:
-                _scm_prefix = (
-                    "\n\n⚠️ [단일 후보 경고] 분량 기준 통과 후보가 1개뿐입니다. "
-                    "절대 기준으로 독립 평가하세요. 경쟁 부재로 인한 과대 평가를 경계하세요.\n"
-                )
-                logging.info("[SCM] 단일 후보 독점 경고 주입")
-            _mc_block = f"""{_scm_prefix}
-
-### 📌 [V67] 참고 컨텍스트 (Python 수집 + StateTracker 상태)
-아래는 Python이 수집한 세계 상태와 advisory 분석 결과입니다.
-이 정보는 참고자료이며, 최종 판정은 당신(Director)의 전문적 판단에 따릅니다.
-사실 관계 모순(사망 NPC 부활, 미습득 아이템 사용 등)만 확인하고,
-스타일·시점·표현 방식에 대한 advisory 의견은 자율적으로 취사선택하세요.
-
-{self._d._escape_braces(_mc_for_director)}
-"""
-        _mc_block = ""
-
         if not stable_context or not variable_prompt:
             # Fallback: split 프롬프트 없음 → legacy 단일 프롬프트 사용
             prompt = self._prompt_loader.load(
@@ -1464,12 +1436,18 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
         else:
             # [1M-CTX] Caching path — stable context (prev_manuscripts ~180K자) 캐시
             # [TF-A] full_fallback 선제 절삭 — variable_prompt 보호
-            # _apply_prompt_size_gate()는 단순 head 절삭이므로, 미리 stable_context를 줄여
-            # full_fallback이 게이트 이내가 되도록 보장 (variable이 tail에서 잘리는 것 방지)
+            # BaseAgent 게이트 이전에도 stable_context를 budget에 맞춰 정리해
+            # variable_prompt가 fallback 프롬프트에서 밀리지 않도록 보장한다.
             _gate = int(getattr(self._d, "MAX_CONTEXT_CHARS", None) or ContextLimits.MAX_CONTEXT_CHARS)  # [TF-25-04]
             _stable_budget = max(0, _gate - len(variable_prompt) - 2)
             _stable_for_fallback = (
-                stable_context[:_stable_budget] if len(stable_context) > _stable_budget else stable_context
+                smart_truncate(
+                    stable_context,
+                    max_chars=_stable_budget,
+                    head_chars=max(0, min(int(_stable_budget * 0.55), _stable_budget - 80)),
+                )
+                if len(stable_context) > _stable_budget
+                else stable_context
             )
             full_fallback = _stable_for_fallback + "\n\n" + variable_prompt
 
@@ -1911,15 +1889,28 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
         if len(manuscript) < 3500:
             return {"verdict": "REJECT", "score": 20, "reason": f"분량 심각 부족: {len(manuscript)}자 (최소 3,500자)"}
 
+        _manuscript_snippet = _prompt_snippet(
+            manuscript,
+            cap_name="context.director_emergency_manuscript_max",
+            default=6000,
+            head_ratio=0.55,
+        )
+        _blueprint_snippet = _prompt_snippet(
+            str(blueprint),
+            cap_name="context.director_emergency_blueprint_max",
+            default=5000,
+            head_ratio=0.55,
+        )
+
         prompt = f"""
 [Role] 편집장 (Emergency Review)
 [Task] 냉동인간 Writer가 생성한 원고를 빠르게 검토하라.
 
 ### 원고 (제{ep_num}화)
-{self._d._escape_braces(manuscript[:6000])}
+{self._d._escape_braces(_manuscript_snippet)}
 
 ### Blueprint 요약
-{self._d._escape_braces(str(blueprint)[:5000])}
+{self._d._escape_braces(_blueprint_snippet)}
 
 ### 판정 기준 (완화됨)
 1. 분량 3,500자 이상: OK

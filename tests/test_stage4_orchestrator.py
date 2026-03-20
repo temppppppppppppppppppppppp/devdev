@@ -20,6 +20,7 @@ import pytest
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+from modules.core.chain_of_verification import ChainOfVerificationParseError
 from modules.core.constants import PatchModeThresholds
 
 
@@ -95,9 +96,7 @@ def mock_chief_writer():
     )
     cw.patch_with_feedback = MagicMock(
         return_value=[
-            {"text": "패치A", "strategy_name": "balanced"},
-            {"text": "패치B", "strategy_name": "narrative"},
-            {"text": "패치C", "strategy_name": "tension"},
+            {"text": "패치 단일 재생성", "strategy_name": "balanced"},
         ]
     )
     return cw
@@ -170,6 +169,39 @@ class TestStage4AuditSummary:
 
         ctx.audit_event.assert_called_once()
         ctx.write_audit_summary.assert_called_once_with("stage4_complete")
+
+    def test_log_target_ep_reached_writes_control_decision_and_audit_event(self, mock_app):
+        from modules.core.stage4_orchestrator import Stage4Orchestrator
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.ui.log = MagicMock()
+        ctx.current_project = mock_app.current_project
+        ctx.agents = mock_app.agents
+        ctx.state_tracker = None
+        ctx.memory = None
+        ctx.context_advisor = None
+        ctx.perf_timer = MagicMock()
+        ctx.sys = mock_app.sys
+        ctx.session_logger = MagicMock()
+        ctx.audit_event = MagicMock()
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+
+        orch._log_target_ep_reached(target_ep=2, next_ep=3)
+
+        ctx.session_logger.log_decision.assert_called_once()
+        decision_kwargs = ctx.session_logger.log_decision.call_args.kwargs
+        assert decision_kwargs["stage"] == "stage4_control"
+        assert decision_kwargs["decision_type"] == "target_ep_reached"
+        assert decision_kwargs["ep_num"] == 2
+        assert decision_kwargs["next_ep"] == 3
+
+        ctx.audit_event.assert_called_once_with(
+            "target_ep_reached",
+            "stage4 target episode reached",
+            {"target_ep": 2, "next_ep": 3},
+        )
 
     def test_stage4_early_return_does_not_write_runtime_audit_summary(self, mock_app):
         from modules.core.stage4_orchestrator import Stage4Orchestrator
@@ -514,10 +546,10 @@ class TestPatchModeBranching:
 
 
 class TestPatchWithFeedbackContract:
-    """patch_with_feedback()의 호출 규약과 반환값 검증."""
+    """patch_with_feedback()의 호출 규약과 bounded regenerate 반환값 검증."""
 
-    def test_patch_returns_3_candidates(self, mock_chief_writer):
-        """패치 모드 3후보 반환 확인"""
+    def test_patch_returns_single_strategy_candidate(self, mock_chief_writer):
+        """패치 모드는 selected-strategy bounded regenerate 1후보 계약으로 본다."""
         result = mock_chief_writer.patch_with_feedback(
             ep_num=10,
             blueprint={},
@@ -531,7 +563,8 @@ class TestPatchWithFeedbackContract:
             previous_attempt={"score": 65, "action_items": []},
             attempt_number=2,
         )
-        assert len(result) == 3
+        assert len(result) == 1
+        assert result[0]["strategy_name"] == "balanced"
         mock_chief_writer.patch_with_feedback.assert_called_once()
 
     def test_patch_fallback_on_empty(self, mock_chief_writer):
@@ -832,6 +865,52 @@ class TestHandleRoundOutcomeErrorPaths:
         assert result == {"scene_breakdown": {}}
         assert bp_agent.generate.call_args.kwargs["external_feedback"] == "translated reverse feedback"
 
+    def test_handle_round_outcome_retries_when_cove_verify_raises(self, orch_with_ctx, minimal_round_ctx, monkeypatch):
+        from modules.core.stage4_types import _InterviewRoundResult
+
+        orch = orch_with_ctx
+        cove = MagicMock()
+        cove.quick_verify.side_effect = [
+            (False, "관계 변화 의심"),
+            (True, ""),
+        ]
+        cove.verify.side_effect = ChainOfVerificationParseError("invalid cove json")
+        orch._ctx.get_module = MagicMock(side_effect=lambda name: cove if name == "chain_of_verification" else None)
+        orch._interview_round = MagicMock()
+        orch._interview_round.run = MagicMock(
+            side_effect=[
+                _InterviewRoundResult(
+                    verdict="PASS",
+                    director_feedback="",
+                    previous_attempt={},
+                    final_manuscript="초안 원고",
+                    final_title="제1화",
+                    final_state_updates={"hp": 10},
+                ),
+                _InterviewRoundResult(
+                    verdict="PASS",
+                    director_feedback="",
+                    previous_attempt={},
+                    final_manuscript="수정 원고",
+                    final_title="제1화",
+                    final_state_updates={"hp": 10},
+                ),
+            ]
+        )
+
+        import modules.core.spinners
+
+        monkeypatch.setattr(modules.core.spinners, "StageSpinner", MagicMock())
+
+        result = orch._handle_round_outcome(round_ctx=minimal_round_ctx)
+
+        assert result.should_return is False
+        assert result.final_manuscript == "수정 원고"
+        assert orch._interview_round.run.call_count == 2
+        second_call = orch._interview_round.run.call_args_list[1].kwargs
+        assert second_call["director_feedback"].startswith("[CoVe 사후검증 런타임 실패]")
+        assert second_call["previous_attempt"]["best_manuscript"] == "초안 원고"
+
 
 # ══════════════════════════════════════════════════════════════
 # Test: Stage4Orchestrator 초기화 + import
@@ -844,6 +923,16 @@ class TestStage4OrchestratorImport:
         from modules.core.stage4_orchestrator import Stage4Orchestrator
 
         assert Stage4Orchestrator is not None
+
+    def test_trim_mandatory_context_for_budget_preserves_recent_tail_context(self):
+        from modules.core.stage4_orchestrator import _trim_mandatory_context_for_budget
+
+        text = "[MANDATORY]\nHEAD-CONTEXT\n" + ("A" * 260) + "\nTAIL-CONTEXT"
+        trimmed = _trim_mandatory_context_for_budget(text, max_chars=180)
+
+        assert len(trimmed) <= 180
+        assert "HEAD-CONTEXT" in trimmed
+        assert "TAIL-CONTEXT" in trimmed
 
     def test_patch_threshold_imported(self):
         """_PATCH_REWRITE_THRESHOLD 모듈 상수 존재"""

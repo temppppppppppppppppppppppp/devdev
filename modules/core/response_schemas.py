@@ -129,7 +129,9 @@ ADVISORY_RESULT_SCHEMA = types.Schema(
 DIRECTOR_AUDIT_SCHEMA = types.Schema(
     type=types.Type.OBJECT,
     properties={
-        "decision": types.Schema(type=types.Type.STRING, enum=["PASS", "PASS_WITH_FIX", "REJECT"]),  # [TF-32]
+        "decision": types.Schema(
+            type=types.Type.STRING, enum=["PASS", "PASS_WITH_FIX", "PASS_WITH_WARNING", "REJECT"]
+        ),  # [TF-32]
         "score": types.Schema(type=types.Type.INTEGER, minimum=0, maximum=100),
         "fix_scope": types.Schema(
             type=types.Type.STRING,
@@ -178,7 +180,9 @@ DIRECTOR_AUDIT_SCHEMA = types.Schema(
 STRATEGIC_AUDIT_SCHEMA = types.Schema(
     type=types.Type.OBJECT,
     properties={
-        "decision": types.Schema(type=types.Type.STRING, enum=["PASS", "PASS_WITH_FIX", "REJECT"]),  # [TF-32]
+        "decision": types.Schema(
+            type=types.Type.STRING, enum=["PASS", "PASS_WITH_FIX", "PASS_WITH_WARNING", "REJECT"]
+        ),  # [TF-32]
         "score": types.Schema(type=types.Type.INTEGER, minimum=0, maximum=100),
         "fix_scope": types.Schema(
             type=types.Type.STRING,
@@ -356,6 +360,14 @@ ARC_DESIGN_SCHEMA = types.Schema(
         "ep_count": types.Schema(type=types.Type.INTEGER, minimum=2, maximum=6),
         "ep_start": types.Schema(type=types.Type.INTEGER),
         "ep_end": types.Schema(type=types.Type.INTEGER),
+        "pacing_decision": types.Schema(
+            type=types.Type.OBJECT,
+            properties={
+                "pace_mode": types.Schema(type=types.Type.STRING, description="compressed | standard | expanded"),
+                "ep_count_reasoning": types.Schema(type=types.Type.STRING),
+                "density_focus": types.Schema(type=types.Type.STRING),
+            },
+        ),
         "title": types.Schema(type=types.Type.STRING),
         "beat_sequence": types.Schema(type=types.Type.ARRAY, items=types.Schema(type=types.Type.STRING)),
         "state_constraints": ARC_STATE_CONSTRAINTS_SCHEMA,

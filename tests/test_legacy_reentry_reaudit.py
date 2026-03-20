@@ -121,6 +121,29 @@ def test_blueprint_constraint_compiler_preserves_semantic_carryover():
     assert "Han" in prompt
 
 
+def test_blueprint_constraint_prompt_preserves_tail_context():
+    compiler = BlueprintConstraintCompiler()
+    prompt = compiler.compile_to_prompt(
+        {
+            "ep_num": 4,
+            "arc_no": 2,
+            "arc_position": "2/5",
+            "must_focus": {"content": "HEAD-FOCUS\n" + ("F" * 900) + "\nTAIL-MUST-FOCUS", "key_events": []},
+            "stop_line": {"content": "HEAD-STOP\n" + ("S" * 900) + "\nTAIL-STOP-PROMPT"},
+            "continuity": {"prev_ending": "HEAD-END\n" + ("E" * 260) + "\nTAIL-PREV-ENDING"},
+            "inherited_state": {},
+            "arc_constraint_summary": "",
+            "state_changes_summary": "",
+            "semantic_carryover": {},
+        }
+    )
+
+    assert "TAIL-MUST-FOCUS" in prompt
+    assert "TAIL-STOP-PROMPT" in prompt
+    assert "TAIL-PREV-ENDING" in prompt
+    assert "...(중간 생략)..." in prompt
+
+
 def test_arc_draft_validator_promotes_specificity_signals_to_advisory():
     validator = ArcDraftValidator()
     tactical = ("분위기가 무겁다. 설명이 길다. 감정이 복잡하다. " * 30).strip()
@@ -195,3 +218,100 @@ def test_unified_blueprint_validator_compare_mode_keeps_python_prevalidation_iss
     assert result["selected_candidate_advisory"]["quality_risk"] is True
     assert len(result["candidate_advisories"]) == 2
     assert selected_blueprint["_ensemble_meta"]["python_warnings"]
+
+
+def test_unified_blueprint_validator_pass_with_warning_sets_revision_required_without_quality_risk():
+    selected_blueprint = {
+        "episode_number": 3,
+        "scene_breakdown": {
+            "scene_1": {"goal": "Meet ally"},
+            "scene_2": {"goal": "Trace clue"},
+            "scene_3": {"goal": "Escape"},
+            "scene_4": {"goal": "Hide"},
+        },
+        "integrated_scenario": "주인공이 동맹과 단서를 정리하고 다음 화로 넘어갈 준비를 한다. " * 60,
+    }
+    other_blueprint = {
+        "episode_number": 3,
+        "scene_breakdown": {
+            "scene_1": {"goal": "Scout"},
+            "scene_2": {"goal": "Report"},
+            "scene_3": {"goal": "Plan"},
+            "scene_4": {"goal": "Move"},
+        },
+        "integrated_scenario": "추가 후보 시나리오. " * 80,
+    }
+    director = MagicMock()
+    director.compare_and_select_blueprint.return_value = {
+        "decision": "PASS_WITH_WARNING",
+        "selected_blueprint": selected_blueprint,
+        "selected_index": 0,
+        "score": 83,
+        "reason": "usable with mild cleanup",
+        "feedback": "smooth one transition",
+        "comparison_notes": "candidate 1 is stable but still needs polish",
+        "contradictions": [],
+        "quality_risk": False,
+    }
+    state_tracker = MagicMock()
+    state_tracker.check_dead_npc_in_blueprint.return_value = []
+
+    validator = UnifiedBlueprintValidator(context=MagicMock(), client=MagicMock())
+    verdict, result = validator.validate(
+        blueprint=selected_blueprint,
+        arc_data={"arc_no": 3, "state_constraints": {"relationship_changes": []}},
+        constraint_block={},
+        prev_blueprint=None,
+        director=director,
+        working_ep=3,
+        arc_idx=1,
+        state_tracker=state_tracker,
+        all_candidates=[selected_blueprint, other_blueprint],
+    )
+
+    assert verdict == "PASS_WITH_WARNING"
+    assert result["quality_risk"] is False
+    assert result["revision_required"] is True
+    assert result["selected_candidate_advisory"]["quality_risk"] is False
+
+
+def test_unified_blueprint_validator_rejects_stop_line_clause_leak():
+    validator = UnifiedBlueprintValidator(context=MagicMock(), client=MagicMock())
+
+    blueprint = {
+        "scene_breakdown": {"scene_1": {}, "scene_2": {}, "scene_3": {}},
+        "integrated_scenario": (
+            "주인공은 황실 경매장 잠입 계획을 실행하고 독호와 재회해 은장도를 확보한다. " * 30
+        ),
+    }
+    pre_result = validator._python_pre_validate(
+        blueprint,
+        {"stop_line": {"content": "황실 경매장 잠입 계획을 실행하고 독호와 재회해 은장도를 확보한다"}},
+        prev_blueprint=None,
+        state_tracker=None,
+        arc_data={},
+    )
+
+    assert pre_result["has_critical"] is True
+    assert any(issue["category"] == "arc_compliance" for issue in pre_result["issues"])
+
+
+def test_unified_blueprint_validator_allows_light_stop_line_overlap_without_leak():
+    validator = UnifiedBlueprintValidator(context=MagicMock(), client=MagicMock())
+
+    blueprint = {
+        "scene_breakdown": {"scene_1": {}, "scene_2": {}, "scene_3": {}},
+        "integrated_scenario": (
+            "주인공은 황실 입구에서 정보를 모으고 다음 경매장 잠입을 준비한다. " * 30
+        ),
+    }
+    pre_result = validator._python_pre_validate(
+        blueprint,
+        {"stop_line": {"content": "황실 경매장 잠입 계획을 실행하고 독호와 재회해 은장도를 확보한다"}},
+        prev_blueprint=None,
+        state_tracker=None,
+        arc_data={},
+    )
+
+    assert pre_result["has_critical"] is False
+    assert not any(issue["category"] == "arc_compliance" for issue in pre_result["issues"])

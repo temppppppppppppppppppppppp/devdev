@@ -53,6 +53,16 @@ def _make_ctx():
 _MANUSCRIPT_TEXT = "테스트 원고입니다. " * 200  # ~3600 chars
 
 
+def _local_fix_pack(*patch_targets: str, target_kind: str = "entity_ref") -> dict:
+    return {
+        "patch_targets": list(patch_targets) or ["opening_location_name"],
+        "must_fix": ["Replace only the approved local anchor."],
+        "do_not_regress": ["overall structure", "timeline", "scene order"],
+        "success_condition": "Only the listed local anchors change.",
+        "target_kind": target_kind,
+    }
+
+
 def _make_round_ctx(chief_writer=None):
     """Stage4 round context with mock agents."""
     cw = chief_writer or MagicMock()
@@ -125,6 +135,7 @@ def _director_result_pass_with_fix(manuscript=_MANUSCRIPT_TEXT, score=93):
         "feedback": {"issues": ["경미한 표현 어색함"], "action_items": ["1문단 대사를 자연스럽게 수정"]},
         "action_items": ["1문단 대사를 자연스럽게 수정"],
         "fix_scope": "inplace",
+        "fix_pack": _local_fix_pack("opening_location_name"),
         "error_category": "",
     }
 
@@ -245,7 +256,7 @@ class TestPassWithFixVerdict:
         assert result.verdict == "REJECT"
 
     def test_pass_with_fix_short_patch_becomes_reject(self):
-        """PASS_WITH_FIX → inplace 결과 2000자 미만 → REJECT 전환."""
+        """PASS_WITH_FIX short patch는 REJECT + partial emergency retry route로 남긴다."""
         ctx = _make_ctx()
         cw = MagicMock()
         cw.generate_ensemble.return_value = [
@@ -269,6 +280,8 @@ class TestPassWithFixVerdict:
         )
 
         assert result.verdict == "REJECT"
+        assert result.previous_attempt["fix_scope"] == "partial"
+        assert "min_patched_length" in result.previous_attempt["fix_scope_reasoning"]
 
     def test_pass_with_fix_reaudit_reject(self):
         """PASS_WITH_FIX → patch 성공 → 재심사 REJECT → REJECT 전환."""
@@ -341,6 +354,7 @@ class TestPassWithFixVerdict:
             "feedback": {"action_items": ["추가 수정"]},
             "action_items": ["추가 수정"],
             "fix_scope": "inplace",
+            "fix_pack": _local_fix_pack("opening_location_name"),
             "error_category": "",
         }
         ctx.agents["director"].select_and_judge_ensemble.side_effect = [
@@ -582,6 +596,7 @@ class TestStage2PassWithFix:
             "reason": "경미한 수정 필요",
             "re_slice_instruction": "1문단 수정",
             "fix_scope": "inplace",
+            "fix_pack": _local_fix_pack("opening_location_name"),
         }
         reaudit = {
             "decision": "PASS",
@@ -618,6 +633,7 @@ class TestStage2PassWithFix:
             "reason": "경미한 수정 필요",
             "re_slice_instruction": "1문단 수정",
             "fix_scope": "inplace",
+            "fix_pack": _local_fix_pack("opening_location_name"),
         }
         ctx = self._make_s2_ctx(audit, patch_arc_return=None)  # patch 실패
         host = MagicMock()
@@ -646,6 +662,7 @@ class TestStage2PassWithFix:
             "reason": "수정 필요",
             "re_slice_instruction": "수정 지시",
             "fix_scope": "inplace",
+            "fix_pack": _local_fix_pack("opening_location_name"),
         }
         reaudit = {
             "decision": "REJECT",
@@ -685,6 +702,7 @@ class TestStage2PassWithFix:
             "score": 93,
             "reason": "추가 수정 필요",
             "re_slice_instruction": "2차 수정",
+            "fix_scope": "inplace",
         }
         reaudit_2 = {
             "decision": "PASS",
@@ -1223,6 +1241,35 @@ class TestFixScopeRouting:
         assert result["action"] == "retry"
         assert ctx.agents["four_phase"]._inplace_patch_arc.call_count == 0
         assert result.get("fix_scope") == "full"
+
+    def test_s2_fix_scope_missing_skips_inplace(self):
+        """Stage2: fix_scope 누락 → score fallback 없이 inplace 미호출, REJECT 전환."""
+        from modules.core.stage2_finalizer import Stage2Finalizer
+
+        audit = {
+            "decision": "PASS_WITH_FIX",
+            "score": 95,
+            "reason": "명시 scope 없이 수정 필요",
+            "re_slice_instruction": "로컬 수정이 필요한지 재판단",
+            "fix_scope": "",
+        }
+        ctx = TestStage2PassWithFix._make_s2_ctx(TestStage2PassWithFix(), audit)
+        host = MagicMock()
+        host.ctx = ctx
+        finalizer = Stage2Finalizer(host)
+        kwargs = TestStage2PassWithFix._make_kwargs(
+            TestStage2PassWithFix(), TestStage2PassWithFix._valid_arc(TestStage2PassWithFix())
+        )
+
+        with (
+            patch("modules.core.stage2_finalizer.validate_arc", side_effect=lambda x: x),
+            patch("modules.core.spinners.V50_MODULES_AVAILABLE", False),
+        ):
+            result = asyncio.run(finalizer.run_finalize(**kwargs))
+
+        assert result["action"] == "retry"
+        assert ctx.agents["four_phase"]._inplace_patch_arc.call_count == 0
+        assert result.get("fix_scope") == ""
 
     # ── Stage 3 ──
 
@@ -1930,7 +1977,7 @@ class TestPFImprovements:
     """[PF-1~4] PASS_WITH_FIX 개선 4건 테스트."""
 
     def test_pf1_fix_scope_missing_high_score(self):
-        """[PF-1] fix_scope 누락 + score=70 → 'inplace' 폴백."""
+        """[PF-1] Stage4는 fix_scope 누락 시 score와 무관하게 explicit contract failure다."""
         ctx = _make_ctx()
         cw = MagicMock()
         _patched_text = "수정된 원고입니다. " * 200
@@ -1944,11 +1991,6 @@ class TestPFImprovements:
         dr["fix_scope"] = ""  # 누락
 
         # 재심사 → PASS
-        ctx.agents["director"].select_and_judge_ensemble.return_value = {
-            "verdict": "PASS",
-            "score": 95,
-        }
-
         v, ms, su, dr_out, fb, patch_trace = ir._execute_pass_with_fix_loop(
             verdict="PASS_WITH_FIX",
             final_manuscript=_MANUSCRIPT_TEXT,
@@ -1961,14 +2003,13 @@ class TestPFImprovements:
             quality_gate_score=90,
             director_mandatory_context="",
         )
-        # score=70 >= inplace_below(60) → inplace 폴백
-        assert v == "PASS"
-        assert dr_out["score"] == 95
-        assert patch_trace["patch_strategy"] == "inplace_patch"
-        cw.inplace_patch.assert_called()
+        # Stage4는 score와 무관하게 explicit fix_scope 없으면 local patch를 열지 않는다
+        assert v == "REJECT"
+        assert patch_trace == {}
+        cw.inplace_patch.assert_not_called()
 
     def test_pf1_fix_scope_missing_low_score(self):
-        """[PF-1] fix_scope 누락 + score=40 → 'full' 폴백 (inplace 불가)."""
+        """[PF-1] Stage4는 low score에서도 fix_scope 누락을 계약 실패로 본다."""
         ctx = _make_ctx()
         cw = MagicMock()
         rc = _make_round_ctx(cw)
@@ -1989,7 +2030,7 @@ class TestPFImprovements:
             quality_gate_score=90,
             director_mandatory_context="",
         )
-        # score=40 < inplace_below(60) → full 폴백 → break → REJECT
+        # Stage4는 score와 무관하게 explicit fix_scope 없으면 local patch를 열지 않는다
         assert v == "REJECT"
         assert patch_trace == {}
         cw.inplace_patch.assert_not_called()
@@ -2009,7 +2050,7 @@ class TestPFImprovements:
         assert float(val) == 0.70
 
     def test_pf3_pass_with_fix_shrunk_patch_becomes_reject(self):
-        """[TF-IPG] PASS_WITH_FIX 보존율 70% 미만 축소 patch는 적용하지 않고 REJECT 전환."""
+        """[TF-IPG] 보존율 미달 inplace는 REJECT + partial emergency retry route를 남긴다."""
         ctx = _make_ctx()
         cw = MagicMock()
         _original_text = "original " * 500
@@ -2025,7 +2066,7 @@ class TestPFImprovements:
             final_manuscript=_original_text,
             final_state_updates={},
             director_result=dr,
-            director_feedback="?섏젙 ?꾩슂",
+            director_feedback="needs fix",
             round_ctx=rc,
             round_num=0,
             score=60,
@@ -2035,7 +2076,10 @@ class TestPFImprovements:
 
         assert v == "REJECT"
         assert ms == _original_text
+        assert dr_out["fix_scope"] == "partial"
+        assert "inplace_min_preserve_ratio" in dr_out["fix_scope_reasoning"]
         assert patch_trace["patch_strategy"] == "inplace_patch"
+        assert patch_trace["fallback_reason"] == "inplace_min_preserve_ratio"
         cw.inplace_patch.assert_called_once()
         ctx.agents["director"].select_and_judge_ensemble.assert_not_called()
 
@@ -2057,6 +2101,7 @@ class TestPFImprovements:
             "score": 75,
             "feedback": {"action_items": ["미세 수정"]},
             "fix_scope": "inplace",
+            "fix_pack": _local_fix_pack("opening_location_name"),
         }
 
         v, ms, su, dr_out, fb, patch_trace = ir._execute_pass_with_fix_loop(
@@ -2092,6 +2137,7 @@ class TestPFImprovements:
                 "score": 75,
                 "feedback": {"action_items": ["미세 수정"]},
                 "fix_scope": "inplace",
+                "fix_pack": _local_fix_pack("opening_location_name"),
                 "state_updates": {"ending": "tightened"},
             },
             {
@@ -2134,6 +2180,7 @@ class TestPFImprovements:
                 "score": 75,
                 "feedback": {"action_items": ["tighten the ending"]},
                 "fix_scope": "inplace",
+                "fix_pack": _local_fix_pack("opening_location_name"),
                 "fix_scope_reasoning": "local fix still valid",
                 "open_review": "voice drifts in the middle",
             },
@@ -2224,6 +2271,49 @@ class TestPFImprovements:
 
 
 # ── F-2 / F-3 / F-4 Tests ─────────────────────────────────────
+
+
+
+@patch("modules.core.constants.log_patch_diff")
+@patch("modules.core.constants.calc_patch_change_ratio", return_value=0.75)
+def test_pf2_high_change_ratio_is_advisory_not_hard_gate(
+    _ratio,
+    _log_diff,
+):
+    ctx = _make_ctx()
+    cw = MagicMock()
+    cw.inplace_patch.return_value = [{"manuscript": "patched manuscript " * 220}]
+
+    rc = _make_round_ctx(cw)
+    ir = Stage4InterviewRound(ctx)
+    dr = _director_result_pass_with_fix(score=60)
+
+    ctx.agents["director"].select_and_judge_ensemble.return_value = {
+        "verdict": "PASS",
+        "score": 95,
+    }
+
+    v, ms, su, dr_out, fb, patch_trace = ir._execute_pass_with_fix_loop(
+        verdict="PASS_WITH_FIX",
+        final_manuscript=_MANUSCRIPT_TEXT,
+        final_state_updates={},
+        director_result=dr,
+        director_feedback="needs fix",
+        round_ctx=rc,
+        round_num=0,
+        score=60,
+        quality_gate_score=90,
+        director_mandatory_context="",
+    )
+
+    assert v == "PASS"
+    assert ms == "patched manuscript " * 220
+    assert patch_trace["patch_strategy"] == "inplace_patch"
+    assert patch_trace["change_ratio"] == 0.75
+    assert patch_trace["unchanged_ratio"] == 0.25
+    validation_results = ctx.agents["director"].select_and_judge_ensemble.call_args.kwargs["validation_results"]
+    warnings = validation_results[0]["warnings"]
+    assert any("[F-2 경고]" in item for item in warnings)
 
 
 class TestF2PatchChangeRatio:
@@ -2367,6 +2457,43 @@ class TestS3MetaQualityRisk:
         call_args = ctx.agents["director"].select_and_judge_ensemble.call_args
         mc = call_args.kwargs.get("mandatory_context", "") if call_args.kwargs else ""
         assert "[S3-META 경고]" not in mc
+        assert "[S3-META 주의]" not in mc
+
+    def test_s3_meta_revision_required_injects_soft_advisory_without_risk_trigger(self):
+        ctx = _make_ctx()
+        round_ctx = _make_round_ctx()
+        round_ctx = dataclasses.replace(
+            round_ctx,
+            blueprint={
+                "integrated_scenario": "테스트",
+                "_stage3_meta": {
+                    "quality_risk": False,
+                    "revision_required": True,
+                    "final_verdict": "PASS_WITH_WARNING",
+                    "last_score": 81,
+                },
+            },
+        )
+        ctx.agents["director"].select_and_judge_ensemble.return_value = {
+            "verdict": "PASS",
+            "selected_strategy": "balanced",
+            "selected_index": 0,
+            "score": 90,
+            "feedback": "합격",
+        }
+        ir = Stage4InterviewRound(ctx)
+        ir.run(
+            round_num=0,
+            stage4_spinner=MagicMock(),
+            director_feedback="",
+            previous_attempt={},
+            round_ctx=round_ctx,
+        )
+        call_args = ctx.agents["director"].select_and_judge_ensemble.call_args
+        mc = call_args.kwargs.get("mandatory_context", "") if call_args.kwargs else ""
+        assert "[S3-META 경고]" not in mc
+        assert "[S3-META 주의]" in mc
+        assert "PASS_WITH_WARNING" in mc
 
     def test_v75d_early_trigger_with_quality_risk(self):
         """quality_risk=True + streak=1 → V75-D 트리거 (threshold 1)."""
@@ -2396,3 +2523,15 @@ class TestS3MetaQualityRisk:
         assert _threshold_safe == 2
         # streak=1 < threshold=2 → 미트리거
         assert _logic_error_streak < _threshold_safe
+
+    def test_v75d_revision_required_without_quality_risk_keeps_default_threshold(self):
+        blueprint = {
+            "integrated_scenario": "테스트",
+            "_stage3_meta": {"quality_risk": False, "revision_required": True, "final_verdict": "PASS_WITH_WARNING"},
+        }
+        _s3_meta = blueprint.get("_stage3_meta", {})
+        _quality_risk = bool(_s3_meta.get("quality_risk", False))
+        _v75d_threshold = 1 if _quality_risk else 2
+
+        assert _quality_risk is False
+        assert _v75d_threshold == 2

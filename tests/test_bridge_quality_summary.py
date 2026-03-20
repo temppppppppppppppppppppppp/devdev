@@ -1,5 +1,6 @@
 import asyncio
 import json
+from unittest.mock import patch
 
 from modules.api import bridge_server
 from modules.core.db_manager import DBManager
@@ -439,7 +440,10 @@ def test_quality_dashboard_endpoint_surfaces_proof_status_and_sink_alignment(tmp
     data = payload["data"]
     runtime_health = data["runtime_health"]
     if runtime_health["available"]:
-        assert runtime_health["top_components"][0]["component"] == "failure_analyzer.sink_alignment_final_authority_contract"
+        assert all(
+            item["component"] != "failure_analyzer.sink_alignment_final_authority_contract"
+            for item in runtime_health["top_components"]
+        )
     else:
         assert runtime_health["recent_count"] == 0
     assert data["proof_status"]["available"] is True
@@ -684,6 +688,113 @@ def test_quality_dashboard_endpoint_surfaces_patch_effectiveness(tmp_path, monke
     assert patch_effectiveness["avg_prev_score"] == 76.0
 
 
+def test_quality_dashboard_endpoint_surfaces_episode_rol(tmp_path, monkeypatch):
+    monkeypatch.setattr(bridge_server, "PROJECT_ROOT", tmp_path)
+    project_dir = tmp_path / "projects" / "demo"
+    project_dir.mkdir(parents=True)
+
+    dashboard = QualityDashboard(project_dir)
+    dashboard.record_validation(ep_num=3, result={"decision": "PASS_WITH_FIX", "score": 88}, stage=4)
+    dashboard.record_validation(ep_num=4, result={"decision": "PASS", "score": 90}, stage=4)
+
+    monitor = PassRateMonitor(str(project_dir))
+    monitor.record_attempt(stage=4, episode=3, attempt_num=1, success=False, token_cost=0.4, duration_ms=60000)
+    monitor.record_attempt(stage=4, episode=3, attempt_num=2, success=True, token_cost=0.6, duration_ms=60000)
+    monitor.record_attempt(stage=4, episode=4, attempt_num=1, success=True, token_cost=0.5, duration_ms=30000)
+    monitor.save()
+
+    response = asyncio.run(bridge_server.quality_dashboard_endpoint(project="demo", lookback=5))
+    payload = json.loads(response.body.decode("utf-8"))
+
+    assert response.status_code == 200
+    assert payload["ok"] is True
+    episode_rol = payload["data"]["episode_rol"]
+    assert episode_rol["available"] is True
+    assert episode_rol["stage"] == 4
+    assert episode_rol["lookback"] == 8
+    assert episode_rol["formula_version"] == "v1_quality_over_cost_time_retry"
+    assert episode_rol["row_count"] == 2
+    assert episode_rol["latest_ep"] == 4
+    assert episode_rol["best_ep"] == 4
+    assert episode_rol["best_rol"] == 90.0
+    assert episode_rol["avg_rol"] == 56.0
+    assert episode_rol["rows"][0]["ep_num"] == 3
+    assert episode_rol["rows"][0]["attempts"] == 2
+    assert episode_rol["rows"][0]["retry_penalty"] == 1
+    assert episode_rol["rows"][0]["token_cost_usd"] == 1.0
+    assert episode_rol["rows"][0]["duration_ms"] == 120000
+    assert episode_rol["rows"][0]["duration_minutes"] == 2.0
+    assert episode_rol["rows"][0]["investment_score"] == 4.0
+    assert episode_rol["rows"][0]["rol_score"] == 22.0
+    assert episode_rol["rows"][1]["ep_num"] == 4
+    assert episode_rol["rows"][1]["rol_score"] == 90.0
+
+
+def test_quality_dashboard_endpoint_surfaces_arc_cost_correlation(tmp_path, monkeypatch):
+    monkeypatch.setattr(bridge_server, "PROJECT_ROOT", tmp_path)
+    project_dir = tmp_path / "projects" / "demo"
+    project_dir.mkdir(parents=True)
+
+    db = DBManager(project_dir / "project_data.db")
+    try:
+        db.save_cost_record(
+            session_id="arc_1_a",
+            scope_type="arc",
+            scope_id=1,
+            total_calls=2,
+            total_tokens=500,
+            total_cost_usd=1.0,
+            model_breakdown={"gpt-5": {"calls": 2}},
+        )
+        db.save_cost_record(
+            session_id="arc_2_a",
+            scope_type="arc",
+            scope_id=2,
+            total_calls=3,
+            total_tokens=900,
+            total_cost_usd=2.0,
+            model_breakdown={"gpt-5": {"calls": 3}},
+        )
+        db.save_cost_record(
+            session_id="arc_2_b",
+            scope_type="arc",
+            scope_id=2,
+            total_calls=1,
+            total_tokens=300,
+            total_cost_usd=1.0,
+            model_breakdown={"gpt-5-mini": {"calls": 1}},
+        )
+    finally:
+        db.close()
+
+    monitor = PassRateMonitor(str(project_dir))
+    monitor.record_attempt(stage=4, episode=11, arc=1, attempt_num=1, success=True)
+    for attempt in range(1, 4):
+        monitor.record_attempt(stage=4, episode=21, arc=2, attempt_num=attempt, success=(attempt == 3))
+    monitor.save()
+
+    response = asyncio.run(bridge_server.quality_dashboard_endpoint(project="demo", lookback=5))
+    payload = json.loads(response.body.decode("utf-8"))
+
+    assert response.status_code == 200
+    assert payload["ok"] is True
+    arc_cost_correlation = payload["data"]["arc_cost_correlation"]
+    assert arc_cost_correlation["available"] is True
+    assert arc_cost_correlation["lookback"] == 8
+    assert arc_cost_correlation["row_count"] == 2
+    assert arc_cost_correlation["latest_arc_no"] == 2
+    assert arc_cost_correlation["costliest_arc_no"] == 2
+    assert arc_cost_correlation["hardest_arc_no"] == 2
+    assert arc_cost_correlation["correlation_coefficient"] == 1.0
+    assert arc_cost_correlation["correlation_label"] == "strong_positive"
+    assert arc_cost_correlation["rows"][0]["arc_no"] == 1
+    assert arc_cost_correlation["rows"][0]["total_cost_usd"] == 1.0
+    assert arc_cost_correlation["rows"][1]["arc_no"] == 2
+    assert arc_cost_correlation["rows"][1]["difficulty"] == "normal"
+    assert arc_cost_correlation["rows"][1]["total_cost_usd"] == 3.0
+    assert arc_cost_correlation["rows"][1]["cost_per_attempt_usd"] == 1.0
+
+
 def test_quality_dashboard_endpoint_surfaces_quality_signal_snapshot(tmp_path, monkeypatch):
     monkeypatch.setattr(bridge_server, "PROJECT_ROOT", tmp_path)
     project_dir = tmp_path / "projects" / "demo"
@@ -721,6 +832,29 @@ def test_quality_dashboard_endpoint_surfaces_quality_signal_snapshot(tmp_path, m
     assert snapshot["latest"]["ced_score"] == 1.1
     assert snapshot["recent"][0]["ep_num"] == 2
     assert snapshot["recent"][1]["quality_signals"]["ai_slop_score"] == 0.8
+
+
+def test_quality_dashboard_endpoint_surfaces_quality_dashboard_persistence_failure(tmp_path, monkeypatch):
+    monkeypatch.setattr(bridge_server, "PROJECT_ROOT", tmp_path)
+    project_dir = tmp_path / "projects" / "demo"
+    project_dir.mkdir(parents=True)
+
+    dashboard = QualityDashboard(project_dir)
+    with patch("modules.core.quality_dashboard.open", side_effect=OSError("disk full")):
+        dashboard.record_validation(
+            ep_num=2,
+            result={"decision": "PASS", "score": 88, "violations": []},
+            stage=4,
+        )
+
+    response = asyncio.run(bridge_server.quality_dashboard_endpoint(project="demo", lookback=5))
+    payload = json.loads(response.body.decode("utf-8"))
+
+    assert response.status_code == 200
+    assert payload["ok"] is True
+    runtime_health = payload["data"]["runtime_health"]
+    assert runtime_health["available"] is True
+    assert any(item["component"] == "quality_dashboard.save_record" for item in runtime_health["top_components"])
 
 
 def test_safe_ops_preview_endpoint_exposes_stage_split(tmp_path, monkeypatch):

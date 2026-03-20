@@ -448,6 +448,30 @@ def _quality_dashboard_defaults(project: str, lookback: int) -> dict:
             "non_patch_success_rate": 0.0,
             "avg_prev_score": 0.0,
         },
+        "episode_rol": {
+            "available": False,
+            "stage": 4,
+            "lookback": max(lookback, 8),
+            "formula_version": "v1_quality_over_cost_time_retry",
+            "formula": "quality_score / max(0.01, token_cost_usd + duration_minutes + retry_penalty)",
+            "row_count": 0,
+            "latest_ep": None,
+            "avg_rol": 0.0,
+            "best_ep": None,
+            "best_rol": 0.0,
+            "rows": [],
+        },
+        "arc_cost_correlation": {
+            "available": False,
+            "lookback": max(lookback, 8),
+            "row_count": 0,
+            "latest_arc_no": None,
+            "costliest_arc_no": None,
+            "hardest_arc_no": None,
+            "correlation_coefficient": None,
+            "correlation_label": "insufficient_data",
+            "rows": [],
+        },
         "calibration": {
             "available": False,
             "lookback": lookback,
@@ -568,6 +592,124 @@ def _build_patch_effectiveness_payload(summary: dict[str, Any] | None, lookback:
             "direct_patch_success_rate": round(float(summary.get("direct_patch_success_rate") or 0.0), 4),
             "non_patch_success_rate": round(float(summary.get("non_patch_success_rate") or 0.0), 4),
             "avg_prev_score": round(float(summary.get("avg_prev_score") or 0.0), 2),
+        }
+    )
+    return payload
+
+
+def _build_episode_rol_payload(summary: dict[str, Any] | None, lookback: int) -> dict[str, Any]:
+    payload: dict[str, Any] = {
+        "available": False,
+        "stage": 4,
+        "lookback": lookback,
+        "formula_version": "v1_quality_over_cost_time_retry",
+        "formula": "quality_score / max(0.01, token_cost_usd + duration_minutes + retry_penalty)",
+        "row_count": 0,
+        "latest_ep": None,
+        "avg_rol": 0.0,
+        "best_ep": None,
+        "best_rol": 0.0,
+        "rows": [],
+    }
+    if not isinstance(summary, dict) or not summary:
+        return payload
+
+    rows = summary.get("rows")
+    if not isinstance(rows, list):
+        rows = []
+
+    compact_rows: list[dict[str, Any]] = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        compact_rows.append(
+            {
+                "ep_num": int(row.get("ep_num") or 0),
+                "decision": str(row.get("decision") or "UNKNOWN"),
+                "success": bool(row.get("success", False)),
+                "quality_score": round(float(row.get("quality_score") or 0.0), 2),
+                "token_cost_usd": round(float(row.get("token_cost_usd") or 0.0), 6),
+                "duration_ms": int(row.get("duration_ms") or 0),
+                "duration_minutes": round(float(row.get("duration_minutes") or 0.0), 3),
+                "attempts": int(row.get("attempts") or 0),
+                "retry_penalty": int(row.get("retry_penalty") or 0),
+                "investment_score": round(float(row.get("investment_score") or 0.0), 6),
+                "rol_score": round(float(row.get("rol_score") or 0.0), 4),
+            }
+        )
+
+    payload.update(
+        {
+            "available": bool(summary.get("available")) and bool(compact_rows),
+            "stage": int(summary.get("stage") or 4),
+            "lookback": int(summary.get("recent_n") or lookback),
+            "formula_version": str(summary.get("formula_version") or payload["formula_version"]),
+            "formula": str(summary.get("formula") or payload["formula"]),
+            "row_count": len(compact_rows),
+            "latest_ep": int(summary.get("latest_ep") or 0) or None,
+            "avg_rol": round(float(summary.get("avg_rol") or 0.0), 4),
+            "best_ep": int(summary.get("best_ep") or 0) or None,
+            "best_rol": round(float(summary.get("best_rol") or 0.0), 4),
+            "rows": compact_rows,
+        }
+    )
+    return payload
+
+
+def _build_arc_cost_correlation_payload(summary: dict[str, Any] | None, lookback: int) -> dict[str, Any]:
+    payload: dict[str, Any] = {
+        "available": False,
+        "lookback": lookback,
+        "row_count": 0,
+        "latest_arc_no": None,
+        "costliest_arc_no": None,
+        "hardest_arc_no": None,
+        "correlation_coefficient": None,
+        "correlation_label": "insufficient_data",
+        "rows": [],
+    }
+    if not isinstance(summary, dict) or not summary:
+        return payload
+
+    rows = summary.get("rows")
+    if not isinstance(rows, list):
+        rows = []
+
+    compact_rows: list[dict[str, Any]] = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        compact_rows.append(
+            {
+                "arc_no": int(row.get("arc_no") or 0),
+                "difficulty": str(row.get("difficulty") or "unknown"),
+                "avg_attempts": round(float(row.get("avg_attempts") or 0.0), 1),
+                "episode_count": int(row.get("episode_count") or 0),
+                "total_attempts": int(row.get("total_attempts") or 0),
+                "hard_episode_count": int(row.get("hard_episode_count") or 0),
+                "semantic_failure_count": int(row.get("semantic_failure_count") or 0),
+                "total_cost_usd": round(float(row.get("total_cost_usd") or 0.0), 6),
+                "total_calls": int(row.get("total_calls") or 0),
+                "total_tokens": int(row.get("total_tokens") or 0),
+                "snapshot_count": int(row.get("snapshot_count") or 0),
+                "cost_per_episode_usd": round(float(row.get("cost_per_episode_usd") or 0.0), 6),
+                "cost_per_attempt_usd": round(float(row.get("cost_per_attempt_usd") or 0.0), 6),
+            }
+        )
+
+    payload.update(
+        {
+            "available": bool(summary.get("available")) and bool(compact_rows),
+            "lookback": int(summary.get("recent_n") or lookback),
+            "row_count": len(compact_rows),
+            "latest_arc_no": int(summary.get("latest_arc_no") or 0) or None,
+            "costliest_arc_no": int(summary.get("costliest_arc_no") or 0) or None,
+            "hardest_arc_no": int(summary.get("hardest_arc_no") or 0) or None,
+            "correlation_coefficient": round(float(summary.get("correlation_coefficient")), 4)
+            if summary.get("correlation_coefficient") is not None
+            else None,
+            "correlation_label": str(summary.get("correlation_label") or "insufficient_data"),
+            "rows": compact_rows,
         }
     )
     return payload
@@ -1687,6 +1829,7 @@ def _build_quality_dashboard_payload(project: str, lookback: int) -> dict:
     payload = _quality_dashboard_defaults(project, safe_lookback)
     payload["config_authority_summary"] = _build_config_authority_summary()
     payload["result_summary"]["gate_repair"] = payload["gate_repair_summary"]
+    monitor: PassRateMonitor | None = None
 
     dashboard = QualityDashboard(project_dir)
     dashboard_summary = dashboard.get_summary()
@@ -1709,12 +1852,26 @@ def _build_quality_dashboard_payload(project: str, lookback: int) -> dict:
     payload["safe_ops"] = _build_safe_ops_preview_payload(project, project_dir, db_path)
     try:
         monitor = PassRateMonitor(str(project_dir))
+        episode_rol_lookback = max(safe_lookback, 8)
+        stage4_quality_rows = [
+            {
+                "ep_num": int(row.get("ep_num") or 0),
+                "score": float(row.get("score") or 0.0),
+                "decision": str(row.get("decision") or "UNKNOWN"),
+            }
+            for row in dashboard.validation_history
+            if int(row.get("stage") or 4) == 4 and int(row.get("ep_num") or 0) > 0
+        ]
         payload["patch_effectiveness"] = _build_patch_effectiveness_payload(
             monitor.get_patch_effectiveness(stage=4, recent_n=max(safe_lookback, 20)),
             max(safe_lookback, 20),
         )
+        payload["episode_rol"] = _build_episode_rol_payload(
+            monitor.get_episode_rol_snapshot(stage4_quality_rows, stage=4, recent_n=episode_rol_lookback),
+            episode_rol_lookback,
+        )
     except Exception as exc:
-        logger.debug("patch_effectiveness load failed for %s: %s", project_dir, exc)
+        logger.debug("pass monitor dashboard payload load failed for %s: %s", project_dir, exc)
     payload["proof_status"] = _build_dashboard_proof_status(
         sink_alignment_summary=payload["sink_alignment_summary"],
         runtime_audit_summary=payload["runtime_audit_summary"],
@@ -1757,6 +1914,15 @@ def _build_quality_dashboard_payload(project: str, lookback: int) -> dict:
             db.get_cost_summary(lookback=max(safe_lookback, 10)),
             max(safe_lookback, 10),
         )
+        if monitor is not None:
+            arc_cost_lookback = max(safe_lookback, 8)
+            payload["arc_cost_correlation"] = _build_arc_cost_correlation_payload(
+                monitor.get_arc_cost_correlation(
+                    db.get_cost_summary(scope_type="arc", lookback=arc_cost_lookback * 10),
+                    recent_n=arc_cost_lookback,
+                ),
+                arc_cost_lookback,
+            )
         gate_repair_snapshot = db.get_latest_stage4_gate_repair_snapshot()
 
         latest_ep = quality_summary.get("latest_ep")

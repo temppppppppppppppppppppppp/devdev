@@ -12,6 +12,7 @@ Purpose:
 import json
 import logging
 
+from modules.core.constants import smart_truncate
 from modules.core.prompt_loader import SafeDict
 
 from .base_agent import BaseAgent
@@ -200,6 +201,14 @@ class StateExtractor(BaseAgent):
         # [V62.5] 상태 캐시: arc_no → extract_state 결과 (PASS된 Arc는 불변)
         self._state_cache: dict[int, dict] = {}
 
+    @staticmethod
+    def _fit_prompt_text(value: object, max_chars: int, head_ratio: float = 0.55) -> str:
+        """Prompt cap은 유지하되 최근 문맥을 같이 남긴다."""
+        text = str(value or "")
+        if len(text) <= max_chars:
+            return text
+        return smart_truncate(text, max_chars=max_chars, head_chars=max(1, int(max_chars * head_ratio)))
+
     def extract_state(self, arc_data: dict) -> dict:
         """
         단일 Arc에서 상태 추출
@@ -225,12 +234,13 @@ class StateExtractor(BaseAgent):
                 "\n".join(f"{k}: {v}" for k, v in (arc_data.get("tactical_doc") or {}).items())
                 if isinstance(arc_data.get("tactical_doc"), dict)
                 else (arc_data.get("tactical_doc") or "")
-            )[:20000],  # Gemini 대용량 컨텍스트 활용
+            ),
             "joint_docs": arc_data.get("joint_docs", {}),
             "status_shadow": arc_data.get("status_shadow", {}),
             "state_constraints": arc_data.get("state_constraints", {}),  # [V60.13] arc_end_state 포함
             "beat_sequence": arc_data.get("beat_sequence", []),
         }
+        cleaned_data["tactical_doc"] = self._fit_prompt_text(cleaned_data["tactical_doc"], 20000)
 
         prompt = STATE_EXTRACTION_PROMPT.format_map(
             SafeDict(
@@ -789,7 +799,7 @@ class StateExtractor(BaseAgent):
         prompt = SATISFACTION_TAG_PROMPT.format_map(
             SafeDict(
                 ep_num=ep_num,
-                manuscript=self._escape_braces(manuscript[:20000]),
+                manuscript=self._escape_braces(self._fit_prompt_text(manuscript, 20000)),
             )
         )
 
@@ -831,7 +841,7 @@ class StateExtractor(BaseAgent):
 
     def _fallback_satisfaction_tag(self, manuscript: str, ep_num: int) -> dict:
         """LLM 실패 시 Python 키워드 기반 fallback."""
-        text = manuscript[:3000] if manuscript else ""
+        text = self._fit_prompt_text(manuscript, 3000) if manuscript else ""
 
         # 키워드 기반 분류
         achievement_kw = ["승리", "성공", "돌파", "제압", "획득", "달성", "격파"]

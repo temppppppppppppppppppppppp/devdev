@@ -14,7 +14,7 @@ import json
 import logging
 import re
 
-from modules.core.constants import ManuscriptLimits
+from modules.core.constants import ManuscriptLimits, smart_truncate
 
 from .base_agent import BaseAgent
 
@@ -36,6 +36,14 @@ class Critic(BaseAgent):
     def __init__(self, context, client, model_tier=None) -> None:
         super().__init__(context, client, model_tier)
         self._agent_name = "Critic"
+
+    @staticmethod
+    def _fit_prompt_text(value: object, max_chars: int, head_ratio: float = 0.55) -> str:
+        """Prompt cap은 유지하되 최근 문맥을 같이 남긴다."""
+        text = str(value or "")
+        if len(text) <= max_chars:
+            return text
+        return smart_truncate(text, max_chars=max_chars, head_chars=max(1, int(max_chars * head_ratio)))
 
     def critique_manuscript(self, manuscript: str, hud_report: str, genre: str, prev_manuscript: str = "") -> dict:
         """
@@ -411,7 +419,7 @@ class Critic(BaseAgent):
 [주인공 상태]: {hud_report}
 
 [원고]
-{manuscript[:80000]}
+{self._fit_prompt_text(manuscript, 80000)}
 
 [비평 기준]
 1. "Show Don't Tell" - 감정을 직접 서술했는가?
@@ -533,14 +541,18 @@ JSON 형식으로 응답:
 
         import json as json_module
 
-        blueprint_text = json_module.dumps(blueprint, ensure_ascii=False, indent=2)[:100000] if blueprint else "없음"  # [1M-CTX] 50K → 100K
+        blueprint_text = (
+            self._fit_prompt_text(json_module.dumps(blueprint, ensure_ascii=False, indent=2), 100000)
+            if blueprint
+            else "없음"
+        )
 
         prompt = self.DEEP_REVIEW_PROMPT.format(
-            manuscript=self._escape_braces(manuscript[:100000]),
+            manuscript=self._escape_braces(self._fit_prompt_text(manuscript, 100000)),
             blueprint=self._escape_braces(blueprint_text),
             ep_num=ep_num,
             genre=genre,
-            prev_ending=self._escape_braces(prev_ending[:500]) if prev_ending else "없음",
+            prev_ending=self._escape_braces(self._fit_prompt_text(prev_ending, 500)) if prev_ending else "없음",
         )
 
         try:

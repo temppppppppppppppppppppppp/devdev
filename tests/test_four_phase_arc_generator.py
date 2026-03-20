@@ -69,6 +69,35 @@ def test_pre_collected_items_normalizes_dict_item_name():
     assert "{'name': '철검'}" not in pre_collected_items
 
 
+def test_generate_passes_pacing_suggestion_and_density_signals():
+    gen = _make_generator()
+    gen._determine_ep_count = MagicMock(return_value=(2, "compressed reason"))
+    curr_block = {
+        "title": "저자원 블록",
+        "context": "주인공이 다음 수를 고민한다. 긴장이 남아 있다.",
+        "content": "설명만 늘이지 말고 사건을 촘촘하게 전개해야 한다.",
+        "tension_level": 2,
+    }
+
+    arc, pipeline_result = gen.generate(
+        arc_no=1,
+        ep_start=1,
+        vol_strategy="std",
+        curr_block=curr_block,
+        prev_arcs=[],
+    )
+
+    assert arc is not None
+    assert pipeline_result["final_verdict"] == "PASS"
+    call_kwargs = gen.ensemble.generate_ensemble.call_args.kwargs
+    assert call_kwargs["ep_count_suggestion"] == 2
+    pacing_signals = call_kwargs["pacing_signals"]
+    assert pacing_signals["ep_count_suggestion"] == 2
+    assert pacing_signals["suggested_pace_mode"] == "compressed"
+    assert pacing_signals["low_resource_block"] is True
+    assert pacing_signals["reward_present"] is False
+
+
 def test_pre_collected_grants_normalizes_dict_item_name():
     gen = _make_generator()
     prev_arcs = [

@@ -1,5 +1,6 @@
 """Tests for Arc patch mode (FourPhaseArcGenerator.patch_arc_with_feedback)."""
 
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -160,6 +161,48 @@ class TestArcPatchMode:
         feedback = call_args.kwargs.get("feedback", "")
         assert "패치 모드" in feedback
         assert "밀도 부족" in feedback
+
+
+    def test_patch_mode_preserves_original_arc_tail_context(self, arc_generator, sample_arc):
+        """Large original Arc JSON should preserve tail context in patch prompt."""
+        patched_arc = {**sample_arc, "tactical_doc": "patched tactical"}
+        large_arc = {
+            **sample_arc,
+            "tactical_doc": "HEAD-ARC\n" + ("A" * 35000) + "\nTAIL-ARC",
+        }
+
+        arc_generator.ensemble.generate_ensemble.return_value = (None, [patched_arc])
+        arc_generator.validator.validate.return_value = ("PASS", {"issues": [], "confidence": 90})
+        arc_generator.preflight.analyze.return_value = {}
+        arc_generator.preflight.generate_analyst_injection.return_value = ""
+        arc_generator.compiler.compile.return_value = ""
+        arc_generator.negative_injector.generate_injection.return_value = ""
+        arc_generator.negative_injector.generate_self_check_prompt.return_value = ""
+
+        with patch("modules.core.prompt_loader.PromptLoader") as mock_loader_cls:
+            mock_loader_cls.return_value.load.side_effect = FileNotFoundError("not found")
+
+            result_arc, pipeline = arc_generator.patch_arc_with_feedback(
+                original_arc=large_arc,
+                director_feedback="keep structure",
+                attempt_number=2,
+                arc_no=1,
+                ep_start=1,
+                vol_strategy="",
+                curr_block={},
+                prev_arcs=[],
+            )
+
+        assert result_arc is not None
+        assert pipeline["final_verdict"] == "PASS"
+        feedback = arc_generator.ensemble.generate_ensemble.call_args.kwargs.get("feedback", "")
+        assert "HEAD-ARC" in feedback
+        assert "TAIL-ARC" in feedback
+        assert feedback.count("A") < 35000
+
+    def test_patch_mode_source_has_no_legacy_original_arc_head_cut(self):
+        src = Path("modules/domain/agents/four_phase_arc_generator.py").read_text(encoding="utf-8")
+        assert "_full_json[:30000]" not in src
 
 
 class TestPatchModeThreshold:

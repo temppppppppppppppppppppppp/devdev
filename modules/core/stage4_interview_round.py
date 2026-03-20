@@ -14,6 +14,7 @@ from modules.core.artifact_logging import (
     normalize_artifact_meta,
     snapshot_logged_artifact,
 )
+from modules.core.constants import smart_truncate
 from modules.core.context_advisor import RetrievalSources
 from modules.core.jsonl_io import append_jsonl_record
 from modules.core.logging_keys import build_attempt_key, resolve_logging_session_id
@@ -259,6 +260,8 @@ class Stage4InterviewRound:
         retry_budget_axes: dict | None = None,
         runtime_advisory: str = "",
         retry_directives: str = "",
+        firewall_triggered: bool = False,
+        firewall_reason: str = "",
     ) -> None:
         _sl = getattr(self.ctx, "session_logger", None)
         if not _sl:
@@ -297,6 +300,8 @@ class Stage4InterviewRound:
             retry_budget_axes=dict(retry_budget_axes or {}),
             runtime_advisory=self._compact_text(runtime_advisory, limit=500),
             retry_directives=self._compact_text(retry_directives, limit=500),
+            firewall_triggered=bool(firewall_triggered),
+            firewall_reason=self._compact_text(firewall_reason, limit=500),
         )
 
     def _get_round_metrics_delta(self) -> dict:
@@ -656,7 +661,13 @@ class Stage4InterviewRound:
         if npc_roster:
             parts.append(" ".join(str(name).strip() for name in npc_roster[:8] if str(name).strip()))
         combined = "\n".join(part for part in parts if part)
-        return combined[:max_chars]
+        if len(combined) > max_chars:
+            return smart_truncate(
+                combined,
+                max_chars=max_chars,
+                head_chars=max(0, min(int(max_chars * 0.55), max_chars - 80)),
+            )
+        return combined
 
     def _resolve_director_work_focus(
         self,
@@ -777,7 +788,13 @@ class Stage4InterviewRound:
             logging.debug("[Stage4] Director semantic relation slice 생성 실패 (비치명): %s", exc)
 
         text = "\n".join(lines)
-        return text if len(text) <= max_chars else text[: max_chars - 18] + "\n... (focus 요약 절삭)"
+        if len(text) > max_chars:
+            return smart_truncate(
+                text,
+                max_chars=max_chars,
+                head_chars=max(0, min(int(max_chars * 0.55), max_chars - 80)),
+            )
+        return text
 
     def _build_director_relationship_context(
         self,
@@ -2173,6 +2190,17 @@ class Stage4InterviewRound:
             )
             _decision_core_parts.append(_s3_warn)
             logging.info("[S3-META] quality_risk=True → Director advisory 주입 (score=%s)", _s3_meta.get("last_score"))
+        elif _s3_meta.get("revision_required"):
+            _s3_note = (
+                f"[S3-META 주의] 이 Blueprint는 Stage 3에서 추가 손질이 필요한 상태로 통과됨 "
+                f"(verdict={_s3_meta.get('final_verdict', '?')}, score={_s3_meta.get('last_score', '?')}). "
+                "치명 리스크로 간주할 필요는 없지만, 서술 밀도·표현 정리 필요성을 염두에 두고 검토하세요."
+            )
+            _decision_core_parts.append(_s3_note)
+            logging.info(
+                "[S3-META] revision_required=True → Director soft advisory 주입 (score=%s)",
+                _s3_meta.get("last_score"),
+            )
         if not _writing_directive.is_empty():
             _wd_lines = ["[WritingDirective]"]
             if _writing_directive.ending_style:
@@ -2791,6 +2819,18 @@ class Stage4InterviewRound:
                     retry_budget_axes=dict(getattr(self, "_last_retry_budget_axes", {}) or {}),
                     runtime_advisory=_session_runtime_advisory,
                     retry_directives=_session_retry_directives,
+                    firewall_triggered=bool(
+                        (
+                            _trace_director_result.get("firewall_triggered")
+                            if isinstance(_trace_director_result, dict)
+                            else director_result.get("firewall_triggered")
+                        )
+                    ),
+                    firewall_reason=(
+                        _trace_director_result.get("firewall_reason", "")
+                        if isinstance(_trace_director_result, dict)
+                        else director_result.get("firewall_reason", "")
+                    ),
                 )
             except Exception as _e:
                 logging.debug("[SilentPass:Stage4:SessionLog] %s", _e)
@@ -2954,6 +2994,18 @@ class Stage4InterviewRound:
                 retry_budget_axes=dict(getattr(self, "_last_retry_budget_axes", {}) or {}),
                 runtime_advisory=_session_runtime_advisory,
                 retry_directives=_session_retry_directives,
+                firewall_triggered=bool(
+                    (
+                        _trace_director_result.get("firewall_triggered")
+                        if isinstance(_trace_director_result, dict)
+                        else director_result.get("firewall_triggered")
+                    )
+                ),
+                firewall_reason=(
+                    _trace_director_result.get("firewall_reason", "")
+                    if isinstance(_trace_director_result, dict)
+                    else director_result.get("firewall_reason", "")
+                ),
             )
         except Exception as _e:
             logging.debug("[SilentPass:Stage4:SessionLog] %s", _e)
@@ -3045,8 +3097,22 @@ class Stage4InterviewRound:
                 _bv_ms = cand.get("manuscript", "")
                 if _bv_ms and ci < len(validation_results):
                     bv_result = blocking_validator.validate(_bv_ms, _cv_context)
-                    if not bv_result.get("passed", True):
-                        bv_failures = bv_result.get("failures", [])
+                    bv_failures = bv_result.get("failures", []) or []
+                    bv_advisory_warnings: list[str] = []
+                    _bv_seen_warnings: set[str] = set()
+                    for _raw_warning in bv_result.get("warnings", []) or []:
+                        _warning_text = str(_raw_warning or "").strip()
+                        if _warning_text and _warning_text not in _bv_seen_warnings:
+                            bv_advisory_warnings.append(_warning_text)
+                            _bv_seen_warnings.add(_warning_text)
+                    for _raw_check in bv_result.get("degraded_checks", []) or []:
+                        _check_name = str(_raw_check or "").strip()
+                        _warning_text = f"degraded: {_check_name}" if _check_name else ""
+                        if _warning_text and _warning_text not in _bv_seen_warnings:
+                            bv_advisory_warnings.append(_warning_text)
+                            _bv_seen_warnings.add(_warning_text)
+
+                    if bv_failures:
                         for f in bv_failures:
                             reason = f.get("reason", str(f))
                             severity = f.get("severity", "HIGH")
@@ -3076,6 +3142,25 @@ class Stage4InterviewRound:
                                 level="warning",
                                 meta={"candidate_index": ci + 1, "severity": f.get("severity", "?")},
                             )
+                    if bv_advisory_warnings:
+                        for advisory_warning in bv_advisory_warnings:
+                            validation_results[ci]["warnings"].append(
+                                f"[Python검증-ADVISORY] {advisory_warning}"
+                            )
+                        validation_results[ci]["warning_count"] = len(validation_results[ci]["warnings"])
+                        validation_results[ci]["focus_points"].append(
+                            f"Python 검증 advisory {len(bv_advisory_warnings)}건 (Director 참고)"
+                        )
+                        self.ctx.ui.log(
+                            f"      ⚠️ 후보{ci + 1} Python 검증 advisory {len(bv_advisory_warnings)}건 → Director에 전달",
+                            stage="stage4",
+                            component="python_prevalidation",
+                            ep_num=next_ep,
+                            round_num=round_num,
+                            event_kind="warning",
+                            level="warning",
+                            meta={"candidate_index": ci + 1, "advisory_count": len(bv_advisory_warnings)},
+                        )
         except Exception as _bv_err:
             self.ctx.ui.log(f"      ⚠️ [V66.1] BlockingValidator 실행 실패: {str(_bv_err)[:60]}")
 
@@ -3236,7 +3321,14 @@ class Stage4InterviewRound:
                                 max_results=_max_results,
                             )
                             if _npc_text:
-                                _mem_parts.append(f"[SC:npc]\n{str(_npc_text)[:_slot_max]}")
+                                _mem_parts.append(
+                                    "[SC:npc]\n"
+                                    + smart_truncate(
+                                        str(_npc_text),
+                                        max_chars=_slot_max,
+                                        head_chars=max(0, min(int(_slot_max * 0.55), _slot_max - 80)),
+                                    )
+                                )
                         elif _slot_source == RetrievalSources.DB_NPC_RELATIONSHIP:
                             _rel_text = self._build_director_relationship_context(
                                 db=getattr(self.ctx.current_project, "db", None),
@@ -3244,7 +3336,14 @@ class Stage4InterviewRound:
                                 protagonist_name=_protagonist_name,
                             )
                             if _rel_text:
-                                _mem_parts.append(f"[SC:{_slot_category}]\n{str(_rel_text)[:_slot_max]}")
+                                _mem_parts.append(
+                                    f"[SC:{_slot_category}]\n"
+                                    + smart_truncate(
+                                        str(_rel_text),
+                                        max_chars=_slot_max,
+                                        head_chars=max(0, min(int(_slot_max * 0.55), _slot_max - 80)),
+                                    )
+                                )
                         else:
                             _vec_text = _vec_mem.retrieve_multi_query_context(
                                 queries=[_slot_query],
@@ -3253,7 +3352,14 @@ class Stage4InterviewRound:
                                 max_results=_max_results,
                             )
                             if _vec_text:
-                                _mem_parts.append(f"[SC:{_slot_category}]\n{str(_vec_text)[:_slot_max]}")
+                                _mem_parts.append(
+                                    f"[SC:{_slot_category}]\n"
+                                    + smart_truncate(
+                                        str(_vec_text),
+                                        max_chars=_slot_max,
+                                        head_chars=max(0, min(int(_slot_max * 0.55), _slot_max - 80)),
+                                    )
+                                )
                     except Exception as _slot_err:
                         logging.warning(f"[SilentPass:SC:Director] 슬롯 {_slot_category} 실패: {_slot_err!s:.100}")
 
@@ -3261,7 +3367,11 @@ class Stage4InterviewRound:
                     _budget = int(_threshold("smart_retrieval.director_total_budget", 300000))
                     _director_memory_context = "\n\n".join(_mem_parts)
                     if _budget > 0 and len(_director_memory_context) > _budget:
-                        _director_memory_context = _director_memory_context[:_budget]
+                        _director_memory_context = smart_truncate(
+                            _director_memory_context,
+                            max_chars=_budget,
+                            head_chars=max(0, min(int(_budget * 0.55), _budget - 80)),
+                        )
                     logging.info(f"[SC-5] Director 벡터 메모리 {len(_mem_parts)}건, {len(_director_memory_context)}자")
                     self.ctx.ui.log(
                         f"      ✅ [SC-5] {len(_mem_parts)}건 수집 완료",
@@ -3648,6 +3758,17 @@ class Stage4InterviewRound:
                 _last_patch_trace = _patch_trace
             except Exception as _e:
                 logging.warning(f"[TF-32-V] inplace 실패: {_e!s:.100}")
+                _exception_notice = (
+                    f"[Lane3 Emergency] inplace 예외 ({type(_e).__name__}) → local 계약 실패로 간주, "
+                    "현재 시도는 REJECT, 다음 retry는 partial patch 경로로 이관"
+                )
+                _current_audit_result, director_feedback, _last_patch_trace = self._mark_pass_with_fix_inplace_contract_fail(
+                    current_audit_result=_current_audit_result,
+                    director_feedback=director_feedback,
+                    patch_trace=_last_patch_trace,
+                    failure_key="inplace_exception",
+                    notice=_exception_notice,
+                )
                 break
             finally:
                 setattr(chief_writer, "_inplace_patch_blueprint", None)
@@ -3655,6 +3776,18 @@ class Stage4InterviewRound:
             _min_patch_len = int(_threshold("patch_mode.min_patched_length", 2000))
             if not _patched_ms or len(_patched_ms) < _min_patch_len:
                 logging.warning("[TF-32-V] patch 결과 부족 (len=%d < %d)", len(_patched_ms or ""), _min_patch_len)
+                _length_notice = (
+                    f"[Lane3 Emergency] inplace 결과 길이 {len(_patched_ms or '')} < min_patched_length {_min_patch_len} "
+                    "→ local 계약 실패, 현재 시도는 REJECT, 다음 retry는 partial patch 경로로 이관"
+                )
+                _failure_key = "empty_patch" if not _patched_ms else "min_patched_length"
+                _current_audit_result, director_feedback, _last_patch_trace = self._mark_pass_with_fix_inplace_contract_fail(
+                    current_audit_result=_current_audit_result,
+                    director_feedback=director_feedback,
+                    patch_trace=_last_patch_trace,
+                    failure_key=_failure_key,
+                    notice=_length_notice,
+                )
                 break
 
             # [TF-IPG GAP-3] 원본 대비 축소 guard — 70% 미만이면 patch 폐기, 원본 유지
@@ -3664,6 +3797,18 @@ class Stage4InterviewRound:
                     "[TF-IPG] patch 축소 감지: %d자 → %d자 (%.0f%%, 하한 %.0f%%) → patch 폐기",
                     len(_current_ms), len(_patched_ms),
                     len(_patched_ms) / len(_current_ms) * 100, _min_preserve * 100,
+                )
+                _preserve_notice = (
+                    f"[Lane3 Emergency] inplace 보존율 {len(_patched_ms) / len(_current_ms):.0%} < "
+                    f"inplace_min_preserve_ratio {_min_preserve:.0%} → local 계약 실패, 현재 시도는 REJECT, "
+                    "다음 retry는 partial patch 경로로 이관"
+                )
+                _current_audit_result, director_feedback, _last_patch_trace = self._mark_pass_with_fix_inplace_contract_fail(
+                    current_audit_result=_current_audit_result,
+                    director_feedback=director_feedback,
+                    patch_trace=_last_patch_trace,
+                    failure_key="inplace_min_preserve_ratio",
+                    notice=_preserve_notice,
                 )
                 break
 
@@ -4393,7 +4538,9 @@ class Stage4InterviewRound:
             )
             candidates = chief_writer.generate_ensemble(**_common_writer_kwargs)
         else:
-            # [TF-23] 3단계 분기: InPlace → Patch → Rewrite (Director 판단 우선)
+            # [TF-23] retry repair-lane routing:
+            # Director가 fix_scope/reject_bucket 계약을 정하고,
+            # runtime이 그 계약을 InPlace → Patch → Rewrite lane으로 매핑한다.
             try:
                 _prev_score = int(previous_attempt.get("score", 0)) if previous_attempt else 0
             except (ValueError, TypeError):
@@ -5006,7 +5153,7 @@ class Stage4InterviewRound:
                         _advisory_parts.extend(result)
                         logging.debug("[Advisory] %s 완료 (%d건)", _name, len(result))
                 except Exception as e:
-                    logging.debug("[Advisory] %s 실패 (비치명): %s", _name, e)
+                    logging.warning("[Advisory] %s 실패 (비치명): %s", _name, e)
         except FuturesTimeoutError as timeout_err:
             logging.warning("[Advisory] 병렬 실행 타임아웃 — 미완료 future 취소 후 계속 진행: %s", timeout_err)
         finally:
@@ -5646,6 +5793,50 @@ class Stage4InterviewRound:
             return patch_block
         return story_context.rstrip() + "\n\n" + patch_block
 
+    def _mark_pass_with_fix_inplace_contract_fail(
+        self,
+        *,
+        current_audit_result: dict | None,
+        director_feedback: str,
+        patch_trace: dict | None,
+        failure_key: str,
+        notice: str,
+    ) -> tuple[dict, str, dict]:
+        updated_result = self._apply_director_gate_update(
+            current_audit_result,
+            final_verdict="REJECT",
+            gate_basis=f"pass_with_fix_inplace_contract_fail_{failure_key}",
+            repair_scope="partial",
+        )
+        updated_result["fix_scope"] = "partial"
+
+        existing_reasoning = str(updated_result.get("fix_scope_reasoning", "") or "").strip()
+        if notice not in existing_reasoning:
+            updated_result["fix_scope_reasoning"] = (
+                f"{existing_reasoning}\n{notice}".strip() if existing_reasoning else notice
+            )
+
+        existing_verdict_reason = str(updated_result.get("verdict_reason", "") or "").strip()
+        if notice not in existing_verdict_reason:
+            updated_result["verdict_reason"] = (
+                f"{existing_verdict_reason}\n{notice}".strip() if existing_verdict_reason else notice
+            )
+
+        existing_open_review = str(updated_result.get("open_review", "") or "").strip()
+        if notice not in existing_open_review:
+            updated_result["open_review"] = (
+                f"{existing_open_review}\n{notice}".strip() if existing_open_review else notice
+            )
+
+        updated_trace = dict(patch_trace or {})
+        updated_trace["patch_strategy"] = str(updated_trace.get("patch_strategy", "") or "inplace_patch")
+        updated_trace["fallback_reason"] = str(failure_key or "inplace_contract_fail")
+
+        logging.warning("[Lane3 Emergency] %s", notice)
+        self.ctx.ui.log(f"   ⚠️ [Lane3 Emergency] {notice}")
+        updated_feedback = f"{director_feedback}\n{notice}".strip()
+        return updated_result, updated_feedback, updated_trace
+
     # ── Stage 4 PassRateMonitor 기록 ──────────────────────────────
 
     def _build_manuscript_history_for_check(self, prev_manuscripts_text: str, next_ep: int) -> list:
@@ -5900,6 +6091,9 @@ class Stage4InterviewRound:
             attempt_num=round_num + 1,
             session_id=_session_id,
         )
+        _normalized_patch_strategy = str(patch_strategy or "").strip()
+        if is_patch and not _normalized_patch_strategy:
+            _normalized_patch_strategy = "patch_fallback_rewrite" if patch_fallback else "patch_with_feedback"
         _candidate_key = str(candidate_key or "").strip()
         _artifact_meta = {
             "candidate_key": _candidate_key,
@@ -5950,7 +6144,7 @@ class Stage4InterviewRound:
                     repair_scope=str(_gate_semantics.get("repair_scope", "") or ""),
                     fix_pack=_fix_pack,
                     retry_budget_axes=_retry_budget_axes,
-                    patch_strategy=str(patch_strategy or ""),
+                    patch_strategy=_normalized_patch_strategy,
                     structural_attempted=bool(structural_attempted),
                     error_category=str(error_category or ""),
                     reject_bucket=str(reject_bucket or ""),

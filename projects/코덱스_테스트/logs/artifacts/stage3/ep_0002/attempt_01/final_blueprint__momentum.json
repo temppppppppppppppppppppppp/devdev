@@ -1,0 +1,48 @@
+{
+  "core_tension": "liquidity crunch",
+  "ep_num": 2,
+  "episode_number": 2,
+  "expected_ending": "capital recovery",
+  "integrated_scenario": "Episode 2: market pressure rises",
+  "location": "office",
+  "pacing_notes": "fast, escalating pressure",
+  "protagonist_state": {},
+  "relationship_changes": [],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [],
+      "content": "",
+      "goal": "",
+      "key_events": [],
+      "location": "office",
+      "summary": "market pressure rises"
+    },
+    "scene_2": {
+      "characters": [],
+      "content": "",
+      "goal": "",
+      "key_events": [],
+      "location": "exchange",
+      "summary": "liquidity crunch"
+    },
+    "scene_3": {
+      "characters": [],
+      "content": "",
+      "goal": "",
+      "key_events": [],
+      "location": "war-room",
+      "summary": "risk control execution"
+    },
+    "scene_4": {
+      "characters": [],
+      "content": "",
+      "goal": "",
+      "key_events": [],
+      "location": "office",
+      "summary": "capital recovery"
+    }
+  },
+  "start_location": "office",
+  "target_beat": "arc pressure episode 2",
+  "time_flow": ""
+}

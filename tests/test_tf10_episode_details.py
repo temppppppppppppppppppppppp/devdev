@@ -238,6 +238,25 @@ def test_extract_episode_focus_uses_episode_details_first():
     assert "정확한 사건 B" in result["content"]
 
 
+def test_extract_episode_focus_extracts_arc_title_from_tactical_header():
+    arc_data = {
+        "tactical_doc": "제 4화: 의심의 씨앗",
+    }
+    result = _make_compiler()._extract_episode_focus(arc_data, ep_num=4, arc_position=1)
+
+    assert result["arc_title"] == "의심의 씨앗"
+
+
+def test_extract_episode_focus_falls_back_to_arc_top_title_when_header_is_generic():
+    arc_data = {
+        "title": "아버지의 서재",
+        "tactical_doc": "[제4화 전술 설계] 추적 시작",
+    }
+    result = _make_compiler()._extract_episode_focus(arc_data, ep_num=4, arc_position=1)
+
+    assert result["arc_title"] == "아버지의 서재"
+
+
 def test_extract_episode_focus_falls_back_to_beat_sequence_when_no_match():
     """해당 화 episode_details 없고 regex도 매칭 안 되면 beat_sequence 폴백"""
     arc_data = {
@@ -272,3 +291,16 @@ def test_extract_stop_line_uses_episode_details():
     }
     result = _make_compiler()._extract_stop_line(arc_data, ep_num=4, arc_position=1, ep_count=5)
     assert "정지선 사건 X" in (result.get("content") or "")
+
+
+def test_extract_stop_line_preserves_tail_context_from_episode_details():
+    arc_data = {
+        "tactical_doc": "제 5화: 다음 화 내용",
+        "episode_details": [
+            {"ep_num": 5, "details": ["HEAD-STOP " + ("S" * 1200) + " TAIL-STOP-LINE"]},
+        ],
+    }
+    result = _make_compiler()._extract_stop_line(arc_data, ep_num=4, arc_position=1, ep_count=5)
+
+    assert "TAIL-STOP-LINE" in (result.get("content") or "")
+    assert "...(중간 생략)..." in (result.get("content") or "")

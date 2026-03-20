@@ -21,6 +21,7 @@ import json
 import logging
 
 from modules.core.constants import AIModels
+from modules.core.logging_keys import build_attempt_key, resolve_logging_session_id
 from modules.models.blueprint import validate_blueprint
 from modules.validation.threshold_helper import _threshold
 
@@ -58,6 +59,54 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
             "phase3_pass": 0,
             "phase3_reject": 0,
         }
+
+    def _record_intermediate_reject(
+        self,
+        *,
+        ep_num: int,
+        arc_data: dict,
+        retry: int,
+        max_retries: int,
+        reject_reason: str,
+        event_tag: str,
+        candidate_key: str = "",
+    ) -> None:
+        """Record retry-loop rejects that would otherwise vanish before the next attempt."""
+        if retry >= max_retries:
+            return
+
+        monitor = getattr(self.context, "pass_rate_monitor", None)
+        recorder = getattr(monitor, "record_attempt", None)
+        if not callable(recorder):
+            return
+
+        try:
+            arc_num = int((arc_data or {}).get("arc_no", 0) or 0)
+        except (TypeError, ValueError, AttributeError):
+            arc_num = 0
+
+        attempt_num = max(1, int(retry or 0) + 1)
+        session_id = resolve_logging_session_id(getattr(self.context, "current_project", None))
+        base_attempt_key = build_attempt_key(
+            stage=3,
+            ep_num=ep_num,
+            arc_num=arc_num,
+            attempt_num=attempt_num,
+            session_id=session_id,
+        )
+        recorder(
+            stage=3,
+            episode=ep_num,
+            arc=arc_num,
+            attempt_num=attempt_num,
+            success=False,
+            reject_reason=str(reject_reason or event_tag),
+            generation_method="blueprint_intermediate",
+            attempt_key=f"{base_attempt_key}:intermediate:{event_tag}",
+            final_verdict="REJECT",
+            error_category=str(event_tag or ""),
+            candidate_key=str(candidate_key or ""),
+        )
 
     def generate(
         self,
@@ -134,6 +183,7 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
             "phases": {},
             "final_verdict": None,
             "retries": 0,
+            "revision_required": False,
         }
 
         # 피드백 초기화
@@ -346,7 +396,11 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
             if not best_blueprint:
                 logging.warning("❌ [Phase 2] Ensemble 생성 실패")
                 self._operator_log("❌ [Phase 2] Ensemble 생성 실패", level="warning", meta={"phase": "generate"})
-                _generate_error_type = getattr(self.ensemble, "last_error_type", None) or AgentErrorType.UNKNOWN
+                _generate_error_types = getattr(self.ensemble, "last_error_types", None) or []
+                if AgentErrorType.SCHEMA_INCOMPATIBLE in _generate_error_types:
+                    _generate_error_type = AgentErrorType.SCHEMA_INCOMPATIBLE
+                else:
+                    _generate_error_type = getattr(self.ensemble, "last_error_type", None) or AgentErrorType.UNKNOWN
                 pipeline_result["phases"]["generate"] = {
                     "status": "failed",
                     "error_type": _generate_error_type,
@@ -361,6 +415,14 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                     )
                     break
                 feedback = "Blueprint 생성 실패. 다시 시도하세요."
+                self._record_intermediate_reject(
+                    ep_num=ep_num,
+                    arc_data=arc_data,
+                    retry=retry,
+                    max_retries=max_retries,
+                    reject_reason=feedback,
+                    event_tag="generate_failed",
+                )
                 continue
 
             pipeline_result["phases"]["generate"] = {
@@ -401,6 +463,14 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                     # [S3-P1-4] += 누적 대신 _initial_feedback 기반 재구성
                     feedback = _initial_feedback + f"\n[연속성 오류]\n{continuity_feedback}"
                     logging.warning(" [V61.5] 연속성 검사 REJECT")
+                    self._record_intermediate_reject(
+                        ep_num=ep_num,
+                        arc_data=arc_data,
+                        retry=retry,
+                        max_retries=max_retries,
+                        reject_reason=continuity_feedback or "blueprint continuity reject",
+                        event_tag="continuity_reject",
+                    )
                     continue  # 다음 재시도로
 
             # [V60.85] 전체 후보를 Director에게 전달하여 비교 선택
@@ -443,8 +513,9 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                 or _validation_selection_reason
                 or ""
             ).strip()
-            _validation_quality_risk = bool(
-                validation_result.get("quality_risk", False) or verdict in ("PASS_WITH_FIX", "PASS_WITH_WARNING")
+            _validation_quality_risk = bool(validation_result.get("quality_risk", False))
+            _validation_revision_required = bool(
+                validation_result.get("revision_required", False) or verdict in ("PASS_WITH_FIX", "PASS_WITH_WARNING")
             )
             pipeline_result["phases"]["validate"] = {
                 "status": "complete",
@@ -460,6 +531,7 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                 "fix_scope": validation_result.get("fix_scope", ""),
                 "fix_scope_reasoning": validation_result.get("fix_scope_reasoning", ""),
                 "quality_risk": _validation_quality_risk,
+                "revision_required": _validation_revision_required,
                 "candidate_count": validation_result.get(
                     "candidate_count",
                     len(all_candidates) if isinstance(all_candidates, list) else 1,
@@ -473,6 +545,8 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                 pipeline_result["phases"]["validate"]["selected_candidate_advisory"] = _selected_candidate_advisory
             if _validation_quality_risk:
                 pipeline_result["quality_risk"] = True
+            if _validation_revision_required:
+                pipeline_result["revision_required"] = True
 
             # [TF-28b] Stage 3 QualityGate — Stage 2/4와 동일 90점 통일
             _quality_gate_score = _threshold("scoring.quality_gate_score", 90)
@@ -674,6 +748,15 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                             _previous_best = best_blueprint
                         else:
                             _previous_best = None
+                        self._record_intermediate_reject(
+                            ep_num=ep_num,
+                            arc_data=arc_data,
+                            retry=retry,
+                            max_retries=max_retries,
+                            reject_reason=feedback,
+                            event_tag="patch_retry_reject",
+                            candidate_key=_selected_strategy or "",
+                        )
                         continue  # generate 재시도 루프 진입
 
                 # [Step2] Pydantic ingress+egress
@@ -729,6 +812,15 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                 level="warning",
                 meta={"phase": "validate", "score": _score, "retry_index": retry + 1, "max_retries": max_retries + 1},
             )
+            self._record_intermediate_reject(
+                ep_num=ep_num,
+                arc_data=arc_data,
+                retry=retry,
+                max_retries=max_retries,
+                reject_reason=feedback,
+                event_tag="validation_reject",
+                candidate_key=_selected_strategy or "",
+            )
 
         # 모든 재시도 실패
         # [TF-R4-S3-02] _prev_reject_score 사용 (validation_result는 stale 가능, 연속성 REJECT 시 갱신 안 됨)
@@ -745,6 +837,7 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
             pipeline_result["final_verdict"] = "PASS_WITH_WARNING"
             pipeline_result["quality_gate_failed"] = True
             pipeline_result["quality_risk"] = True
+            pipeline_result["revision_required"] = True
             pipeline_result["last_score"] = _last_score
             best_blueprint = validate_blueprint(best_blueprint)  # [TF-R4-S3-03] Pydantic 검증
             return best_blueprint, pipeline_result

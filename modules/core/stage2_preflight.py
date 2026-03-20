@@ -237,7 +237,11 @@ class Stage2PreflightAnalysis:
 
             slot_max = int(getattr(slot, "max_chars", 0) or 0)
             if slot_max > 0 and len(result) > slot_max:
-                result = result[:slot_max]
+                result = smart_truncate(
+                    result,
+                    max_chars=slot_max,
+                    head_chars=max(0, min(int(slot_max * 0.55), slot_max - 80)),
+                )
 
             sections.append(f"[SC:{category}]\n{result}")
 
@@ -245,7 +249,11 @@ class Stage2PreflightAnalysis:
         joined = "\n\n".join(sections)
         budget = int(getattr(plan, "total_budget_chars", 0) or 0)
         if budget > 0 and len(joined) > budget:
-            joined = joined[:budget]
+            joined = smart_truncate(
+                joined,
+                max_chars=budget,
+                head_chars=max(0, min(int(budget * 0.55), budget - 80)),
+            )
             logging.info(f"[SC] stage2 budget truncation → {budget}자")
         return joined
 
@@ -587,16 +595,60 @@ class Stage2PreflightAnalysis:
             try:
                 if "preflight" in self.ctx.agents and all_refined_arcs:
                     try:
+                        _usable_preflight_arcs = []
+                        _skipped_hollow_arc_nos = []
+                        for _idx, _arc in enumerate(all_refined_arcs, start=1):
+                            if not isinstance(_arc, dict):
+                                _skipped_hollow_arc_nos.append(_idx)
+                                continue
+                            _tactical = _arc.get("tactical_doc")
+                            if isinstance(_tactical, dict):
+                                try:
+                                    _tactical = json.dumps(_tactical, ensure_ascii=False)
+                                except Exception:
+                                    _tactical = str(_tactical)
+                            if not str(_tactical or "").strip():
+                                _skipped_hollow_arc_nos.append(_arc.get("arc_no", _idx))
+                                continue
+                            _usable_preflight_arcs.append(_arc)
+                        if _skipped_hollow_arc_nos:
+                            logging.warning(
+                                "[Preflight] hollow previous arcs skipped before analyze: %s",
+                                _skipped_hollow_arc_nos,
+                            )
+                            try:
+                                self.ctx.ui.log(
+                                    f"      [Preflight] hollow previous arcs skipped: {_skipped_hollow_arc_nos}"
+                                )
+                            except Exception:
+                                pass
+                            if callable(getattr(self.ctx, "audit_event", None)):
+                                self.ctx.audit_event(
+                                    "preflight_hollow_prev_arcs_skipped",
+                                    "Preflight skipped hollow previous arcs",
+                                    {
+                                        "arc_no": global_arc_no,
+                                        "skipped_arc_nos": list(_skipped_hollow_arc_nos),
+                                        "usable_prev_arc_count": len(_usable_preflight_arcs),
+                                        "total_prev_arc_count": len(all_refined_arcs),
+                                    },
+                                )
                         _resolved_plots = ""
                         if self.ctx.state_tracker:
                             _resolved_plots = self.ctx.state_tracker.get_resolved_plots_summary()
                         _pf_result = self.ctx.agents["preflight"].analyze(
-                            all_refined_arcs, resolved_plots_summary=_resolved_plots
+                            _usable_preflight_arcs, resolved_plots_summary=_resolved_plots
                         )
                         if _pf_result:
+                            if _skipped_hollow_arc_nos and isinstance(_pf_result, dict):
+                                _pf_result["_input_hygiene"] = {
+                                    "skipped_hollow_arc_nos": list(_skipped_hollow_arc_nos),
+                                    "usable_prev_arc_count": len(_usable_preflight_arcs),
+                                    "total_prev_arc_count": len(all_refined_arcs),
+                                }
                             # LLM이 서사에서 추론한 부상은 신뢰 불가.
                             # arc_end_state.injuries (공식 DB 값)로 강제 덮어씀.
-                            _last_arc = all_refined_arcs[-1]
+                            _last_arc = _usable_preflight_arcs[-1] if _usable_preflight_arcs else {}
                             _actual_injuries = (
                                 _last_arc.get("state_constraints", {}).get("arc_end_state", {}).get("injuries")
                                 or "없음"
@@ -930,7 +982,9 @@ class Stage2PreflightAnalysis:
                     all_refined_arcs, protagonist_name or "주인공"
                 )
             else:
-                minimal_prev_context = enhanced_context[:15000]  # [Phase3-B] 2K→15K: 실패 반복 시 컨텍스트 역설 제거
+                minimal_prev_context = smart_truncate(
+                    enhanced_context, max_chars=15000, head_chars=8250
+                )  # [Phase3-B] retry fallback keeps recent tail
             if _preserved_constraints:
                 enhanced_context = f"{current_feedback}\n\n{_preserved_constraints}\n\n{minimal_prev_context}"
             else:
@@ -1257,22 +1311,18 @@ class Stage2PreflightAnalysis:
                         self.ctx.perf_timer.start(f"s2_arc_{global_arc_no}_generate")
                     except Exception as e:
                         logging.warning(f"[SilentPass:Preflight] perf_timer start failed: {e!s:.100}")
-                    # [TF-23] 3단계 분기: InPlace → Patch → Rewrite (Director 판단 우선)
-                    from modules.core.constants import PatchModeThresholds
-
                     _fix_scope = previous_attempt.get("fix_scope", "") if previous_attempt else ""
                     _prev_score = previous_attempt.get("score", 0) if previous_attempt else 0
                     _has_best_arc = bool(previous_attempt and previous_attempt.get("best_arc"))
 
-                    # [TF-23] Director 판단 우선, 점수 fallback
-                    _use_inplace = _has_best_arc and (
-                        _fix_scope == "inplace" or (not _fix_scope and _prev_score >= PatchModeThresholds.INPLACE)
-                    )
-                    _use_patch = _has_best_arc and (
-                        _fix_scope in ("inplace", "partial")  # inplace 실패 시 patch 폴백
-                        or (not _fix_scope and _prev_score >= PatchModeThresholds.REWRITE)
-                    )
+                    # [TF-23] Stage2도 explicit local contract only — fix_scope 누락 시 local patch 권한 없음
+                    _use_inplace = _has_best_arc and (_fix_scope == "inplace")
+                    _use_patch = _has_best_arc and (_fix_scope in ("inplace", "partial"))
                     _was_patch = bool(_use_patch)
+
+                    if _has_best_arc and not _fix_scope:
+                        logging.warning("[PF-1] previous_attempt.fix_scope 누락 → local patch authority 없음, full generate 위임")
+                        self.ctx.ui.log("   🔀 [PF-1] fix_scope 누락 → local patch 생략, full generate로 위임")
 
                     four_phase_arc = None
                     pipeline_result = {"final_verdict": None}
@@ -1689,11 +1739,32 @@ class Stage2PreflightAnalysis:
                         logging.info(f"- 후보 수: {phases['generate'].get('candidates_count', 0)}개")
                         logging.info(f"- 선택 전략: {phases['generate'].get('selected_strategy', 'unknown')}")
                 else:
-                    logging.warning(" [V60.77] FourPhase 내부 검증 실패")
-                    if pipeline_result.get("phases", {}).get("validate"):
-                        issues = pipeline_result["phases"]["validate"].get("issues_count", 0)
-                        logging.info(f"- 검증 이슈: {issues}개")
-                    director_feedback_for_fourphase = "FourPhase 내부 검증 실패. 구조적 문제 해결 필요."
+                    final_verdict = str(pipeline_result.get("final_verdict", "") or "").upper()
+                    validate_phase = pipeline_result.get("phases", {}).get("validate", {})
+                    issues = validate_phase.get("issues_count", 0) if isinstance(validate_phase, dict) else 0
+                    if final_verdict == "FAILED":
+                        logging.warning(" [V60.77] FourPhase 재시도 소진 실패")
+                        if issues:
+                            logging.info(f"- 최종 검증 이슈: {issues}개")
+                        if callable(getattr(self.ctx, "audit_event", None)):
+                            self.ctx.audit_event(
+                                "four_phase_failed",
+                                "retry budget exhausted",
+                                {
+                                    "arc_no": global_arc_no,
+                                    "retries": pipeline_result.get("retries", 0),
+                                    "issues_count": issues,
+                                },
+                            )
+                        director_feedback_for_fourphase = (
+                            "FourPhase 재시도 소진 실패 (final_verdict=FAILED). "
+                            "구조적 문제 해결 후 재시도 필요."
+                        )
+                    else:
+                        logging.warning(" [V60.77] FourPhase 내부 검증 실패")
+                        if issues:
+                            logging.info(f"- 검증 이슈: {issues}개")
+                        director_feedback_for_fourphase = "FourPhase 내부 검증 실패. 구조적 문제 해결 필요."
             except Exception as fp_err:
                 logging.warning(f"❌ [V60.77] FourPhase 오류: {str(fp_err)[:80]}")
                 if callable(getattr(self.ctx, "audit_event", None)):

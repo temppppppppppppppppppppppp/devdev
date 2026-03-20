@@ -3484,6 +3484,13 @@
       </div>
     </div>
 
+    <script src="./vendor/react.production.min.js"></script>
+    <script src="./vendor/react-dom.production.min.js"></script>
+    <script src="./quality_react_runtime.js"></script>
+    <script src="./quality_react_helpers.js"></script>
+    <script src="./quality_page_bootstrap.js"></script>
+    <script src="./renderer_state_react_helpers.js"></script>
+    <script src="./renderer_state_bootstrap.js"></script>
     <script>
       const canvas = document.getElementById("officeCanvas");
       const ctx = canvas.getContext("2d");
@@ -3558,6 +3565,9 @@
       const agentBoard = document.getElementById("agentBoard");
       const eventFeed = document.getElementById("eventFeed");
       const promptMissionCard = document.getElementById("promptMissionCard");
+      const reactRootRegistry = window.GeuldobiQualityReactRuntime
+        ? window.GeuldobiQualityReactRuntime.createRegistry()
+        : Object.create(null);
       const verdictMissionCard = document.getElementById("verdictMissionCard");
       const menuButtons = document.querySelectorAll(".menu-btn:not(.stage0-sub-btn)");
 
@@ -3577,6 +3587,17 @@
       }
       resizeCanvas();
       new ResizeObserver(resizeCanvas).observe(canvas.parentElement);
+
+      function scheduleOfficeCanvasResize() {
+        if (typeof requestAnimationFrame === "function") {
+          requestAnimationFrame(() => {
+            resizeCanvas();
+            requestAnimationFrame(resizeCanvas);
+          });
+          return;
+        }
+        setTimeout(resizeCanvas, 0);
+      }
 
       const officeState = {
         isRunning: false,
@@ -3839,19 +3860,173 @@
         renderMissionBoard();
       }
 
+      const BRIDGE_BACKEND_ERROR_META = Object.freeze({
+        "INVALID_KEY": Object.freeze({
+          userMessage: "알 수 없는 실행 키입니다. 메뉴 연결을 확인하세요.",
+          focusTitle: "실행 키 오류",
+        }),
+        "SUB_KEY_REQUIRED": Object.freeze({
+          userMessage: "세부 실행 키를 선택한 뒤 다시 시도하세요.",
+          focusTitle: "세부 키 필요",
+        }),
+        "SUB_KEY_NOT_ALLOWED": Object.freeze({
+          userMessage: "이 실행은 세부 실행 키를 받지 않습니다.",
+          focusTitle: "세부 키 불가",
+        }),
+        "INVALID_SUB_KEY": Object.freeze({
+          userMessage: "허용되지 않은 세부 실행 키입니다.",
+          focusTitle: "세부 키 오류",
+        }),
+        "RUN_ALREADY_ACTIVE": Object.freeze({
+          userMessage: "이미 다른 실행이 진행 중입니다. 현재 작업이 끝난 뒤 다시 시도하세요.",
+          focusTitle: "이미 실행 중",
+        }),
+        "RISK_APPROVAL_REQUIRED": Object.freeze({
+          userMessage: "위험 작업은 승인 ID가 필요합니다. 승인 ID를 입력한 뒤 다시 시도하세요.",
+          focusTitle: "승인 필요",
+        }),
+        "RISK_APPROVAL_EXPIRED": Object.freeze({
+          userMessage: "승인 ID가 만료되었습니다. 새 승인 ID를 입력하세요.",
+          focusTitle: "승인 만료",
+        }),
+        "RISK_APPROVAL_DUAL_CONTROL_REQUIRED": Object.freeze({
+          userMessage: "이 작업은 이중 통제가 필요합니다. 유효한 승인 ID를 입력하세요.",
+          focusTitle: "이중 승인 필요",
+        }),
+        "INVALID_PROMPT_ID": Object.freeze({
+          userMessage: "입력 요청이 만료되었거나 찾을 수 없습니다. 다시 시도하세요.",
+          focusTitle: "입력 요청 만료",
+        }),
+        "PROMPT_ALREADY_RESOLVED": Object.freeze({
+          userMessage: "이미 처리된 입력 요청입니다.",
+          focusTitle: "입력 중복 처리",
+        }),
+        "INTERNAL_ERROR": Object.freeze({
+          userMessage: "백엔드 내부 오류가 발생했습니다. 잠시 후 다시 시도하세요.",
+          focusTitle: "백엔드 내부 오류",
+        }),
+        "INVALID_PROJECT": Object.freeze({
+          userMessage: "유효한 프로젝트를 먼저 선택하세요.",
+          focusTitle: "프로젝트 선택 필요",
+        }),
+        "INVALID_REQUEST": Object.freeze({
+          userMessage: "요청 형식이 잘못되었습니다. 입력값을 다시 확인하세요.",
+          focusTitle: "요청 형식 오류",
+        }),
+      });
+
+      const BRIDGE_TRANSPORT_ERROR_META = Object.freeze({
+        "NETWORK_ERROR": Object.freeze({
+          userMessage: "백엔드 연결에 실패했습니다. 브리지 상태를 확인하세요.",
+          focusTitle: "백엔드 연결 실패",
+        }),
+        "HTTP_": Object.freeze({
+          userMessage: "브리지 요청이 서버에서 거부되었습니다.",
+          focusTitle: "브리지 요청 실패",
+        }),
+      });
+
+      function describeBridgeError(result, options = {}) {
+        const payload = result && typeof result === "object" ? result : {};
+        const data = payload.data && typeof payload.data === "object" ? payload.data : {};
+        const transportCode = typeof payload.code === "string" ? payload.code : "";
+        const backendCode = typeof data.backend_code === "string" ? data.backend_code : "";
+        const backendMessage = typeof data.backend_message === "string" ? data.backend_message.trim() : "";
+        const transportStatus = Number.isInteger(data.transport_status) ? data.transport_status : null;
+        const fallbackMessage = options.fallbackMessage || payload.message || "요청 처리에 실패했습니다.";
+        const selectedMeta = backendCode
+          ? BRIDGE_BACKEND_ERROR_META[backendCode]
+          : (
+            transportCode === "NETWORK_ERROR"
+              ? BRIDGE_TRANSPORT_ERROR_META["NETWORK_ERROR"]
+              : transportCode.startsWith("HTTP_")
+                ? BRIDGE_TRANSPORT_ERROR_META["HTTP_"]
+                : null
+          );
+        const userMessage = selectedMeta?.userMessage || fallbackMessage;
+        const detailParts = [userMessage];
+
+        if (backendMessage && backendMessage !== userMessage) {
+          detailParts.push(`원인: ${backendMessage}`);
+        } else if (!backendMessage && typeof payload.message === "string" && payload.message && payload.message !== userMessage) {
+          detailParts.push(`전송: ${payload.message}`);
+        }
+        if (backendCode) detailParts.push(`backend=${backendCode}`);
+        if (transportCode && transportCode !== backendCode) detailParts.push(`transport=${transportCode}`);
+        if (transportStatus != null) detailParts.push(`HTTP ${transportStatus}`);
+
+        return {
+          userMessage,
+          detail: detailParts.join(" · "),
+          focusTitle: options.focusTitle || selectedMeta?.focusTitle || "요청 실패",
+          backendCode,
+          transportCode,
+          effectiveCode: backendCode || transportCode || "UNKNOWN_ERROR",
+        };
+      }
+
+      function warnNonBlockingAsync(summary, err, options = {}) {
+        const detail = err?.message || options.fallbackDetail || "알 수 없는 오류";
+        console.warn(`${summary}:`, err);
+        if (options.focusTitle) {
+          setCurrentFocus(options.focusTitle, options.focusDetail || detail);
+        }
+        if (options.appendLog) {
+          appendLog(`[System] ${summary}: ${detail}`, null, {
+            agent: "manager",
+            summary: options.logSummary || summary,
+            detail: options.logDetail || detail,
+            bubble: options.bubble || "경고",
+            bubbleColor: options.bubbleColor || "#92400e",
+            status: options.status || "경고",
+            agentDetail: options.agentDetail || "비차단 오류가 발생했지만 수동 복구 가능",
+            significant: Boolean(options.significant),
+          });
+        }
+        return detail;
+      }
+
       function setPromptState(pending, detail) {
+        if (window.GeuldobiRendererStateBootstrap?.setPromptState) {
+          return window.GeuldobiRendererStateBootstrap.setPromptState({
+            officeState,
+            pending,
+            detail,
+            onRenderMissionBoard: renderMissionBoard,
+          });
+        }
         officeState.promptPending = !!pending;
         officeState.promptDetail = detail || (pending ? "사용자 입력을 기다리는 중" : "대기 중인 입력 없음");
         renderMissionBoard();
       }
 
       function setVerdictState(verdict, score) {
+        if (window.GeuldobiRendererStateBootstrap?.setVerdictState) {
+          return window.GeuldobiRendererStateBootstrap.setVerdictState({
+            officeState,
+            verdict,
+            score,
+            onRenderMissionBoard: renderMissionBoard,
+          });
+        }
         officeState.lastVerdict = verdict || null;
         officeState.lastVerdictScore = score || null;
         renderMissionBoard();
       }
 
       function setActionState(action, label, subKey) {
+        if (window.GeuldobiRendererStateBootstrap?.setActionState) {
+          return window.GeuldobiRendererStateBootstrap.setActionState({
+            officeState,
+            action,
+            label,
+            subKey,
+            resolveActionMeta,
+            onRenderMissionBoard: renderMissionBoard,
+            onRenderPipelineStrip: renderPipelineStrip,
+            onRenderAgentBoard: renderAgentBoard,
+          });
+        }
         const meta = resolveActionMeta(action, subKey);
         officeState.currentStage = action;
         officeState.currentSubKey = subKey || null;
@@ -3863,6 +4038,14 @@
       }
 
       function pushEventFeed(entry) {
+        if (window.GeuldobiRendererStateBootstrap?.pushEventFeed) {
+          return window.GeuldobiRendererStateBootstrap.pushEventFeed({
+            officeState,
+            entry,
+            nowLabel,
+            onRenderEventFeed: renderEventFeed,
+          });
+        }
         if (!entry || !entry.title) return;
         officeState.recentEvents.unshift({
           time: entry.time || nowLabel(),
@@ -3874,8 +4057,26 @@
         renderEventFeed();
       }
 
+      function renderPipelineStripReact(pipelineOrder = []) {
+        if (window.GeuldobiRendererStateReactHelpers?.renderPipelineStrip) {
+          return window.GeuldobiRendererStateReactHelpers.renderPipelineStrip({
+            container: pipelineStrip,
+            rootKey: "pipelineStrip",
+            pipelineOrder,
+            currentStage: officeState.currentStage,
+            isRunning: officeState.isRunning,
+            resolveActionMeta,
+            renderTree: renderReactTree,
+          });
+        }
+        return false;
+      }
+
       function renderPipelineStrip() {
         pipelineStrip.innerHTML = "";
+        if (renderPipelineStripReact(PIPELINE_ORDER)) {
+          return;
+        }
         const currentIndex = PIPELINE_ORDER.indexOf(officeState.currentStage);
         for (const key of PIPELINE_ORDER) {
           const chip = document.createElement("div");
@@ -4073,9 +4274,72 @@
           .join(" · ") || "현재 삭제 대상 건수는 0입니다.";
       }
 
+      function renderSafeOpsGridReact(actionRows = [], emptyText = "") {
+        if (window.GeuldobiQualityReactHelpers?.renderSafeOpsGrid) {
+          return window.GeuldobiQualityReactHelpers.renderSafeOpsGrid({
+            container: safeOpsGrid,
+            rootKey: "safeOpsGrid",
+            actionRows,
+            emptyText,
+            formatSafeOpsImpactCounts,
+            renderTree: renderReactTree,
+          });
+        }
+        if (!window.React || !window.ReactDOM || !safeOpsGrid) {
+          return false;
+        }
+        const e = window.React.createElement;
+        const nodes = actionRows.length
+          ? actionRows.map(({ key, action }, index) => {
+              const targetLabel = action.requires_target ? "target 필요" : "즉시 preview";
+              return e(
+                "div",
+                { className: "safe-ops-card", key: `safe-ops-${key}-${index}` },
+                e(
+                  "div",
+                  { className: "safe-ops-card-head" },
+                  e("span", { className: "safe-ops-card-title" }, action.title || key),
+                  e(
+                    "span",
+                    { className: `safe-ops-chip ${action.requires_target ? "is-target" : ""}`.trim() },
+                    targetLabel
+                  )
+                ),
+                e("div", { className: "safe-ops-card-copy" }, action.summary || ""),
+                e(
+                  "div",
+                  { className: "safe-ops-card-impact" },
+                  e("strong", null, "영향"),
+                  " · ",
+                  formatSafeOpsImpactCounts(action)
+                ),
+                e("div", { className: "safe-ops-card-note" }, (action.notes || [])[0] || "추가 메모 없음")
+              );
+            })
+          : [e("div", { className: "insight-empty", key: "safe-ops-empty" }, emptyText)];
+        return renderReactTree(
+          safeOpsGrid,
+          "safeOpsGrid",
+          e(window.React.Fragment, null, ...nodes)
+        );
+      }
+
       function renderSafeOpsPreview() {
         const insight = officeState.qualityInsights || createEmptyQualityDashboard(projectConfig.project);
         const safeOps = insight.safe_ops || createEmptyQualityDashboard(projectConfig.project).safe_ops;
+        if (window.GeuldobiQualityPageBootstrap?.renderSafeOpsPreviewSection) {
+          return window.GeuldobiQualityPageBootstrap.renderSafeOpsPreviewSection({
+            safeOpsMeta,
+            safeOpsGrid,
+            safeOpsHint,
+            project: projectConfig.project,
+            safeOps,
+            renderSafeOpsGridReact,
+            appendInsightEmpty,
+            escapeHtml,
+            formatSafeOpsImpactCounts,
+          });
+        }
 
         safeOpsMeta.textContent = projectConfig.project
           ? `${projectConfig.project} · latest ep ${safeOps.latest_ep || 0} · Arc ${safeOps.arc_count || 0}개`
@@ -4089,28 +4353,36 @@
         }
 
         const actionOrder = ["rollback", "wipe", "reset", "rewind"];
-        for (const key of actionOrder) {
-          const action = safeOps.actions?.[key];
-          if (!action) continue;
-          const card = document.createElement("div");
-          card.className = "safe-ops-card";
-          const actionTitle = escapeHtml(action.title || key);
-          const targetLabel = action.requires_target ? "target 필요" : "즉시 preview";
-          const actionSummary = escapeHtml(action.summary || "");
-          const actionImpact = escapeHtml(formatSafeOpsImpactCounts(action));
-          const actionNote = escapeHtml((action.notes || [])[0] || "추가 메모 없음");
-          card.innerHTML = `
-            <div class="safe-ops-card-head">
-              <span class="safe-ops-card-title">${actionTitle}</span>
-              <span class="safe-ops-chip ${action.requires_target ? "is-target" : ""}">
-                ${targetLabel}
-              </span>
-            </div>
-            <div class="safe-ops-card-copy">${actionSummary}</div>
-            <div class="safe-ops-card-impact"><strong>영향</strong> · ${actionImpact}</div>
-            <div class="safe-ops-card-note">${actionNote}</div>
-          `;
-          safeOpsGrid.appendChild(card);
+        const actionRows = actionOrder
+          .map((key) => ({ key, action: safeOps.actions?.[key] }))
+          .filter((row) => Boolean(row.action));
+        if (!renderSafeOpsGridReact(actionRows, "운영 작업 preview가 아직 없습니다.")) {
+          safeOpsGrid.innerHTML = "";
+        }
+        if (!actionRows.length && !window.React) {
+          appendInsightEmpty(safeOpsGrid, "운영 작업 preview가 아직 없습니다.");
+        } else if (actionRows.length && !window.React) {
+          for (const { key, action } of actionRows) {
+            const card = document.createElement("div");
+            card.className = "safe-ops-card";
+            const actionTitle = escapeHtml(action.title || key);
+            const targetLabel = action.requires_target ? "target 필요" : "즉시 preview";
+            const actionSummary = escapeHtml(action.summary || "");
+            const actionImpact = escapeHtml(formatSafeOpsImpactCounts(action));
+            const actionNote = escapeHtml((action.notes || [])[0] || "추가 메모 없음");
+            card.innerHTML = `
+              <div class="safe-ops-card-head">
+                <span class="safe-ops-card-title">${actionTitle}</span>
+                <span class="safe-ops-chip ${action.requires_target ? "is-target" : ""}">
+                  ${targetLabel}
+                </span>
+              </div>
+              <div class="safe-ops-card-copy">${actionSummary}</div>
+              <div class="safe-ops-card-impact"><strong>영향</strong> · ${actionImpact}</div>
+              <div class="safe-ops-card-note">${actionNote}</div>
+            `;
+            safeOpsGrid.appendChild(card);
+          }
         }
 
         safeOpsHint.textContent = safeOps.hint || "Rollback/Wipe/Reset/Rewind의 삭제/유지 범위를 확인하세요.";
@@ -4119,10 +4391,40 @@
       function renderArtifactLadder() {
         const insight = officeState.qualityInsights || createEmptyQualityDashboard(projectConfig.project);
         const artifact = insight.artifact_ladder || createEmptyQualityDashboard(projectConfig.project).artifact_ladder;
+        if (window.GeuldobiQualityPageBootstrap?.renderArtifactLadderSection) {
+          return window.GeuldobiQualityPageBootstrap.renderArtifactLadderSection({
+            artifactLadderMeta,
+            artifactLadderHint,
+            artifactSupportRow,
+            artifactLadderGrid,
+            project: projectConfig.project,
+            artifact,
+            renderArtifactLadderReact,
+            appendInsightEmpty,
+            buildArtifactFallbackHint,
+            sanitizeToken,
+            escapeHtml,
+            getArtifactStatusLabel,
+          });
+        }
 
         artifactLadderMeta.textContent = projectConfig.project
           ? `${projectConfig.project} 최신 산출물 상태와 다음 행동`
           : "프로젝트를 선택하면 최신 산출물과 다음 행동이 표시됩니다";
+
+        if (!projectConfig.project) {
+          artifactLadderHint.textContent = "프로젝트를 먼저 선택하세요.";
+          if (
+            renderArtifactLadderReact(artifact, {
+              short: "BI",
+              status: "대기",
+              title: "프로젝트 선택 대기",
+              detail: "프로젝트를 선택하면 현재 산출물 사다리와 최신 파일을 보여줍니다.",
+            })
+          ) {
+            return;
+          }
+        }
 
         artifactSupportRow.innerHTML = "";
         const supportChips = artifact.support || [];
@@ -4159,8 +4461,27 @@
         }
 
         if (!items.length) {
+          if (
+            renderArtifactLadderReact(
+              { ...artifact, items: [] },
+              {
+                short: "BI",
+                status: "대기",
+                title: "산출물 사다리 대기",
+                detail: "프로젝트 산출물 사다리를 아직 불러오지 못했습니다.",
+              }
+            )
+          ) {
+            artifactLadderHint.textContent = artifact.hint || "프로젝트 산출물 상태를 다시 불러오세요.";
+            return;
+          }
           appendInsightEmpty(artifactLadderGrid, "프로젝트 산출물 사다리를 아직 불러오지 못했습니다.");
           artifactLadderHint.textContent = artifact.hint || "프로젝트 산출물 상태를 다시 불러오세요.";
+          return;
+        }
+
+        if (renderArtifactLadderReact(artifact)) {
+          artifactLadderHint.textContent = artifact.hint || buildArtifactFallbackHint(items);
           return;
         }
 
@@ -4189,9 +4510,416 @@
         artifactLadderHint.textContent = artifact.hint || buildArtifactFallbackHint(items);
       }
 
+      function renderArtifactLadderReact(artifact, emptyState = null) {
+        if (window.GeuldobiQualityReactHelpers?.renderArtifactLadder) {
+          return window.GeuldobiQualityReactHelpers.renderArtifactLadder({
+            supportContainer: artifactSupportRow,
+            supportRootKey: "artifactSupportRow",
+            gridContainer: artifactLadderGrid,
+            gridRootKey: "artifactLadderGrid",
+            artifact,
+            emptyState,
+            sanitizeToken,
+            getArtifactStatusLabel,
+            renderTree: renderReactTree,
+          });
+        }
+        if (!window.React || !window.ReactDOM || !artifactSupportRow || !artifactLadderGrid) {
+          return false;
+        }
+        const e = window.React.createElement;
+        const supportChips = (artifact.support || []).length
+          ? artifact.support.map((support, index) =>
+              e(
+                "span",
+                {
+                  className: `artifact-support-chip is-${support.status || "pending"}`,
+                  key: `${support.label || "support"}-${index}`,
+                },
+                `${support.label} · ${support.value}`
+              )
+            )
+          : [
+              e(
+                "span",
+                { className: "artifact-support-chip", key: "support-empty" },
+                "지원 아티팩트 없음"
+              ),
+            ];
+
+        let gridCards = [];
+        if (emptyState) {
+          gridCards = [
+            e(
+              "div",
+              { className: "artifact-card is-pending", key: "artifact-empty" },
+              e(
+                "div",
+                { className: "artifact-card-top" },
+                e("span", { className: "artifact-short" }, emptyState.short || "BI"),
+                e("span", { className: "artifact-status-chip is-pending" }, emptyState.status || "대기")
+              ),
+              e("div", { className: "artifact-card-title" }, emptyState.title),
+              e("div", { className: "artifact-card-detail" }, emptyState.detail)
+            ),
+          ];
+        } else {
+          gridCards = (artifact.items || []).map((item, index) => {
+            const status = sanitizeToken(item.status, "pending");
+            return e(
+              "div",
+              { className: `artifact-card is-${status}`, key: `${item.key || "artifact"}-${index}` },
+              e(
+                "div",
+                { className: "artifact-card-top" },
+                e("span", { className: "artifact-short" }, item.short || item.key || "-"),
+                e(
+                  "span",
+                  { className: `artifact-status-chip is-${status}` },
+                  getArtifactStatusLabel(status)
+                )
+              ),
+              e("div", { className: "artifact-card-title" }, item.title || item.label || item.key || "Artifact"),
+              e("div", { className: "artifact-card-meta" }, item.meta || item.label || ""),
+              e("div", { className: "artifact-card-detail" }, item.detail || ""),
+              e("div", { className: "artifact-card-path" }, item.path || "경로 정보 없음")
+            );
+          });
+        }
+
+        const supportRendered = renderReactTree(
+          artifactSupportRow,
+          "artifactSupportRow",
+          e(window.React.Fragment, null, ...supportChips)
+        );
+        const gridRendered = renderReactTree(
+          artifactLadderGrid,
+          "artifactLadderGrid",
+          e(window.React.Fragment, null, ...gridCards)
+        );
+        return supportRendered && gridRendered;
+      }
+
+      function renderResultSignalAlertsReact(alerts = []) {
+        if (window.GeuldobiQualityReactHelpers?.renderResultSignalAlerts) {
+          return window.GeuldobiQualityReactHelpers.renderResultSignalAlerts({
+            container: resultSignalAlerts,
+            rootKey: "resultSignalAlerts",
+            alerts,
+            renderTree: renderReactTree,
+          });
+        }
+        if (!window.React || !window.ReactDOM || !resultSignalAlerts) {
+          return false;
+        }
+        const e = window.React.createElement;
+        const nodes = alerts.map((alertText, index) =>
+          e(
+            "span",
+            { className: "signal-alert-chip", key: `alert-${index}` },
+            alertText
+          )
+        );
+        return renderReactTree(
+          resultSignalAlerts,
+          "resultSignalAlerts",
+          e(window.React.Fragment, null, ...nodes)
+        );
+      }
+
+      function renderResultSummaryCopyReact(headline = "", reason = "") {
+        if (window.GeuldobiQualityReactHelpers?.renderResultSummaryCopy) {
+          return window.GeuldobiQualityReactHelpers.renderResultSummaryCopy({
+            headlineContainer: resultSummaryHeadline,
+            headlineRootKey: "resultSummaryHeadline",
+            headline,
+            reasonContainer: resultSummaryReason,
+            reasonRootKey: "resultSummaryReason",
+            reason,
+            renderTree: renderReactTree,
+          });
+        }
+        if (!window.React || !window.ReactDOM || !resultSummaryHeadline || !resultSummaryReason) {
+          return false;
+        }
+        const e = window.React.createElement;
+        const headlineRendered = renderReactTree(
+          resultSummaryHeadline,
+          "resultSummaryHeadline",
+          e(window.React.Fragment, null, headline)
+        );
+        const reasonRendered = renderReactTree(
+          resultSummaryReason,
+          "resultSummaryReason",
+          e(window.React.Fragment, null, reason)
+        );
+        return headlineRendered && reasonRendered;
+      }
+
+      function renderResultIssueListReact(issues = [], emptyText = "") {
+        if (window.GeuldobiQualityReactHelpers?.renderResultIssueList) {
+          return window.GeuldobiQualityReactHelpers.renderResultIssueList({
+            container: resultIssueList,
+            rootKey: "resultIssueList",
+            issues,
+            emptyText,
+            renderTree: renderReactTree,
+          });
+        }
+        if (!window.React || !window.ReactDOM || !resultIssueList) {
+          return false;
+        }
+        const e = window.React.createElement;
+        const nodes = issues.length
+          ? issues.slice(0, 3).map((issue, index) =>
+              e(
+                "li",
+                { className: "issue-item", key: `issue-${index}` },
+                issue
+              )
+            )
+          : [
+              e(
+                "div",
+                { className: "insight-empty", key: "issue-empty" },
+                emptyText
+              ),
+            ];
+        return renderReactTree(
+          resultIssueList,
+          "resultIssueList",
+          e(window.React.Fragment, null, ...nodes)
+        );
+      }
+
+      function renderResultActionGridReact(cards = []) {
+        if (window.GeuldobiQualityReactHelpers?.renderResultActionGrid) {
+          return window.GeuldobiQualityReactHelpers.renderResultActionGrid({
+            container: resultActionGrid,
+            rootKey: "resultActionGrid",
+            cards,
+            renderTree: renderReactTree,
+          });
+        }
+        if (!window.React || !window.ReactDOM || !resultActionGrid) {
+          return false;
+        }
+        const e = window.React.createElement;
+        const nodes = cards.map((card, index) =>
+          e(
+            "div",
+            { className: "action-card", key: `result-action-card-${index}` },
+            e("div", { className: "action-card-label" }, card.label),
+            e("div", { className: "action-card-copy" }, card.copy)
+          )
+        );
+        return renderReactTree(
+          resultActionGrid,
+          "resultActionGrid",
+          e(window.React.Fragment, null, ...nodes)
+        );
+      }
+
+      function renderResultNextActionReact(text = "") {
+        if (window.GeuldobiQualityReactHelpers?.renderResultNextAction) {
+          return window.GeuldobiQualityReactHelpers.renderResultNextAction({
+            container: resultNextAction,
+            rootKey: "resultNextAction",
+            text,
+            renderTree: renderReactTree,
+          });
+        }
+        if (!window.React || !window.ReactDOM || !resultNextAction) {
+          return false;
+        }
+        const e = window.React.createElement;
+        return renderReactTree(
+          resultNextAction,
+          "resultNextAction",
+          e(window.React.Fragment, null, text)
+        );
+      }
+
+      function renderRetrievalSummaryStripReact(summaryChips = []) {
+        if (window.GeuldobiQualityReactHelpers?.renderRetrievalSummaryStrip) {
+          return window.GeuldobiQualityReactHelpers.renderRetrievalSummaryStrip({
+            container: retrievalSummaryStrip,
+            rootKey: "retrievalSummaryStrip",
+            summaryChips,
+            renderTree: renderReactTree,
+          });
+        }
+        if (!window.React || !window.ReactDOM || !retrievalSummaryStrip) {
+          return false;
+        }
+        const e = window.React.createElement;
+        const nodes = summaryChips.map((label, index) =>
+          e(
+            "span",
+            { className: "trend-chip", key: `retrieval-summary-${index}` },
+            label
+          )
+        );
+        return renderReactTree(
+          retrievalSummaryStrip,
+          "retrievalSummaryStrip",
+          e(window.React.Fragment, null, ...nodes)
+        );
+      }
+
+      function renderRetrievalStageGridReact(stageRows = [], emptyText = "") {
+        if (window.GeuldobiQualityReactHelpers?.renderRetrievalStageGrid) {
+          return window.GeuldobiQualityReactHelpers.renderRetrievalStageGrid({
+            container: retrievalStageGrid,
+            rootKey: "retrievalStageGrid",
+            stageRows,
+            emptyText,
+            renderTree: renderReactTree,
+          });
+        }
+        if (!window.React || !window.ReactDOM || !retrievalStageGrid) {
+          return false;
+        }
+        const e = window.React.createElement;
+        const nodes = stageRows.length
+          ? stageRows.slice(0, 4).map((row, index) => {
+              const workRate = Math.round(Number(row.work_focus_rate || 0) * 100);
+              const summaryRate = Math.round(Number(row.summary_included_rate || 0) * 100);
+              const relationRate = Math.round(Number(row.relation_slice_rate || 0) * 100);
+              const warningRate = Math.round(Number(row.coverage_warning_rate || 0) * 100);
+              const stageLabel = String(row.stage || "unknown");
+              return e(
+                "div",
+                { className: "retrieval-stage-card", key: `retrieval-stage-${stageLabel}-${index}` },
+                e("div", { className: "retrieval-stage-label" }, stageLabel),
+                e("div", { className: "retrieval-stage-value" }, `${summaryRate}%`),
+                e("div", { className: "retrieval-stage-meta" }, "summary slot 포함률"),
+                e(
+                  "div",
+                  { className: "retrieval-stage-meta" },
+                  `work focus ${workRate}% · relation slice ${relationRate}%`
+                ),
+                e(
+                  "div",
+                  { className: "retrieval-stage-meta" },
+                  `coverage warning ${warningRate}% · 표본 ${row.total || 0}건`
+                )
+              );
+            })
+          : [e("div", { className: "insight-empty", key: "retrieval-stage-empty" }, emptyText)];
+        return renderReactTree(
+          retrievalStageGrid,
+          "retrievalStageGrid",
+          e(window.React.Fragment, null, ...nodes)
+        );
+      }
+
+      function renderRetrievalWarningListReact(warnings = [], emptyText = "") {
+        if (window.GeuldobiQualityReactHelpers?.renderRetrievalWarningList) {
+          return window.GeuldobiQualityReactHelpers.renderRetrievalWarningList({
+            container: retrievalWarningList,
+            rootKey: "retrievalWarningList",
+            warnings,
+            emptyText,
+            renderTree: renderReactTree,
+          });
+        }
+        if (!window.React || !window.ReactDOM || !retrievalWarningList) {
+          return false;
+        }
+        const e = window.React.createElement;
+        const nodes = warnings.length
+          ? warnings.slice(0, 6).map((row, index) =>
+              e(
+                "div",
+                { className: "pattern-item", key: `retrieval-warning-${index}` },
+                e("div", { className: "pattern-item-title" }, row.warning || "unknown_warning"),
+                e("div", { className: "pattern-item-meta" }, `누적 ${row.count || 0}회`)
+              )
+            )
+          : [
+              e(
+                "div",
+                { className: "insight-empty", key: "retrieval-warning-empty" },
+                emptyText
+              ),
+            ];
+        return renderReactTree(
+          retrievalWarningList,
+          "retrievalWarningList",
+          e(window.React.Fragment, null, ...nodes)
+        );
+      }
+
+      function renderRetrievalRecentListReact(recentRows = [], emptyText = "") {
+        if (window.GeuldobiQualityReactHelpers?.renderRetrievalRecentList) {
+          return window.GeuldobiQualityReactHelpers.renderRetrievalRecentList({
+            container: retrievalRecentList,
+            rootKey: "retrievalRecentList",
+            recentRows,
+            emptyText,
+            renderTree: renderReactTree,
+          });
+        }
+        if (!window.React || !window.ReactDOM || !retrievalRecentList) {
+          return false;
+        }
+        const e = window.React.createElement;
+        const nodes = recentRows.length
+          ? recentRows.slice(0, 6).map((row, index) => {
+              const sources = Object.entries(row.source_counts || {})
+                .map(([key, value]) => `${key} ${value}`)
+                .join(" · ");
+              const warningsText = (row.coverage_warnings || []).join(" · ");
+              const stageLabel = String(row.stage || "unknown").toUpperCase();
+              return e(
+                "div",
+                { className: "pattern-item", key: `retrieval-recent-${index}` },
+                e("div", { className: "pattern-item-title" }, `ep ${row.ep_num ?? "-"} · ${stageLabel}`),
+                e(
+                  "div",
+                  { className: "pattern-item-meta" },
+                  `summary ${row.work_slot_summary_included ? "yes" : "no"} · relation ${row.relation_slice_included ? "yes" : "no"}`
+                ),
+                e("div", { className: "pattern-item-meta" }, sources || "source count 없음"),
+                e("div", { className: "pattern-item-meta" }, warningsText || "coverage warning 없음")
+              );
+            })
+          : [
+              e(
+                "div",
+                { className: "insight-empty", key: "retrieval-recent-empty" },
+                emptyText
+              ),
+            ];
+        return renderReactTree(
+          retrievalRecentList,
+          "retrievalRecentList",
+          e(window.React.Fragment, null, ...nodes)
+        );
+      }
+
       function renderRetrievalInspector() {
         const insight = officeState.qualityInsights || createEmptyQualityDashboard(projectConfig.project);
         const retrieval = insight.retrieval_summary || createEmptyQualityDashboard(projectConfig.project).retrieval_summary;
+        if (window.GeuldobiQualityPageBootstrap?.renderRetrievalInspectorSection) {
+          return window.GeuldobiQualityPageBootstrap.renderRetrievalInspectorSection({
+            retrievalInspectorMeta,
+            retrievalSummaryStrip,
+            retrievalStageGrid,
+            retrievalWarningList,
+            retrievalRecentList,
+            retrievalInspectorHint,
+            project: projectConfig.project,
+            retrieval,
+            renderRetrievalSummaryStripReact,
+            renderRetrievalStageGridReact,
+            renderRetrievalWarningListReact,
+            renderRetrievalRecentListReact,
+            appendInsightEmpty,
+            escapeHtml,
+          });
+        }
 
         retrievalInspectorMeta.textContent = projectConfig.project
           ? `${projectConfig.project} 최근 retrieval 관측과 coverage 경고`
@@ -4205,18 +4933,23 @@
               `반복 경고 ${((retrieval.top_warnings || []).length || 0)}종`,
             ]
           : ["관측 0건", "retrieval summary 대기", "coverage 경고 없음"];
-        for (const label of summaryChips) {
-          const chip = document.createElement("span");
-          chip.className = "trend-chip";
-          chip.textContent = label;
-          retrievalSummaryStrip.appendChild(chip);
+        if (!renderRetrievalSummaryStripReact(summaryChips)) {
+          for (const label of summaryChips) {
+            const chip = document.createElement("span");
+            chip.className = "trend-chip";
+            chip.textContent = label;
+            retrievalSummaryStrip.appendChild(chip);
+          }
         }
 
         retrievalStageGrid.innerHTML = "";
         const stageRows = retrieval.stage_rows || [];
-        if (!stageRows.length) {
+        if (!renderRetrievalStageGridReact(stageRows, "Stage별 retrieval 관측이 아직 없습니다.")) {
+          retrievalStageGrid.innerHTML = "";
+        }
+        if (!stageRows.length && !window.React) {
           appendInsightEmpty(retrievalStageGrid, "Stage별 retrieval 관측이 아직 없습니다.");
-        } else {
+        } else if (stageRows.length && !window.React) {
           for (const row of stageRows.slice(0, 4)) {
             const card = document.createElement("div");
             card.className = "retrieval-stage-card";
@@ -4238,9 +4971,17 @@
 
         retrievalWarningList.innerHTML = "";
         const warnings = retrieval.top_warnings || [];
-        if (!warnings.length) {
+        if (
+          !renderRetrievalWarningListReact(
+            warnings,
+            "반복적으로 관찰된 retrieval 경고가 아직 없습니다."
+          )
+        ) {
+          retrievalWarningList.innerHTML = "";
+        }
+        if (!warnings.length && !window.React) {
           appendInsightEmpty(retrievalWarningList, "반복적으로 관찰된 retrieval 경고가 아직 없습니다.");
-        } else {
+        } else if (warnings.length && !window.React) {
           for (const row of warnings.slice(0, 6)) {
             const item = document.createElement("div");
             item.className = "pattern-item";
@@ -4255,9 +4996,12 @@
 
         retrievalRecentList.innerHTML = "";
         const recent = retrieval.recent || [];
-        if (!recent.length) {
+        if (!renderRetrievalRecentListReact(recent, "최근 retrieval 샘플이 아직 없습니다.")) {
+          retrievalRecentList.innerHTML = "";
+        }
+        if (!recent.length && !window.React) {
           appendInsightEmpty(retrievalRecentList, "최근 retrieval 샘플이 아직 없습니다.");
-        } else {
+        } else if (recent.length && !window.React) {
           for (const row of recent.slice(0, 6)) {
             const item = document.createElement("div");
             item.className = "pattern-item";
@@ -4284,16 +5028,58 @@
           : "retrieval 경고가 거의 없거나 아직 충분한 관측이 없습니다.";
       }
 
+      function renderQualityRadarFootReact(sentenceCount = 0, hits = []) {
+        if (window.GeuldobiQualityReactHelpers?.renderQualityRadarFoot) {
+          return window.GeuldobiQualityReactHelpers.renderQualityRadarFoot({
+            container: qualityRadarFoot,
+            rootKey: "qualityRadarFoot",
+            sentenceCount,
+            hits,
+            renderTree: renderReactTree,
+          });
+        }
+        if (!window.React || !window.ReactDOM || !qualityRadarFoot) {
+          return false;
+        }
+        const e = window.React.createElement;
+        const summaryLine = sentenceCount
+          ? `최근 문장 수 ${sentenceCount} · 상투어 hit 상위 패턴`
+          : "최근 문장/상투어 데이터가 아직 충분하지 않습니다.";
+        const chips = hits.length
+          ? hits.map((item, index) =>
+              e(
+                "span",
+                { className: "mini-chip", key: `quality-radar-foot-${item.pattern || 'pattern'}-${index}` },
+                `${item.pattern} × ${item.count}`
+              )
+            )
+          : [e("span", { className: "mini-chip", key: "quality-radar-foot-empty" }, "최근 상투어 hit 없음")];
+        return renderReactTree(
+          qualityRadarFoot,
+          "qualityRadarFoot",
+          e(
+            window.React.Fragment,
+            null,
+            e("div", null, summaryLine),
+            e("div", { className: "quality-radar-chips" }, ...chips)
+          )
+        );
+      }
+
       function renderQualityRadarFoot(summary) {
         qualityRadarFoot.innerHTML = "";
         const sentenceCount = summary.latest_signal_summary?.sentence_count || 0;
+        const hits = (summary.latest_ai_slop_hits || []).slice(0, 4);
+        if (renderQualityRadarFootReact(sentenceCount, hits)) {
+          return;
+        }
+
         const line = document.createElement("div");
         line.textContent = sentenceCount
           ? `최근 문장 수 ${sentenceCount} · 상투어 hit 상위 패턴`
           : "최근 문장/상투어 데이터가 아직 충분하지 않습니다.";
         qualityRadarFoot.appendChild(line);
 
-        const hits = (summary.latest_ai_slop_hits || []).slice(0, 4);
         if (!hits.length) {
           const none = document.createElement("div");
           none.className = "quality-radar-chips";
@@ -4316,7 +5102,114 @@
         qualityRadarFoot.appendChild(chipRow);
       }
 
+      function renderReactTree(container, rootKey, tree) {
+        if (!container || !window.React || !window.ReactDOM) {
+          return false;
+        }
+        if (window.GeuldobiQualityReactRuntime?.renderTree) {
+          return window.GeuldobiQualityReactRuntime.renderTree(
+            container,
+            rootKey,
+            tree,
+            reactRootRegistry
+          );
+        }
+        if (typeof window.ReactDOM.render === "function") {
+          window.ReactDOM.render(tree, container);
+          return true;
+        }
+        if (typeof window.ReactDOM.createRoot === "function") {
+          if (!reactRootRegistry[rootKey]) {
+            reactRootRegistry[rootKey] = window.ReactDOM.createRoot(container);
+          }
+          reactRootRegistry[rootKey].render(tree);
+          return true;
+        }
+        return false;
+      }
+
+      function renderQualityRadarReactCards(summary, emptyState = null) {
+        if (window.GeuldobiQualityReactHelpers?.renderQualityRadarCards) {
+          return window.GeuldobiQualityReactHelpers.renderQualityRadarCards({
+            container: qualityRadar,
+            rootKey: "qualityRadar",
+            summary,
+            emptyState,
+            QUALITY_SIGNAL_META,
+            sanitizeToken,
+            buildSparklineSvg,
+            describeSignal,
+            renderTree: renderReactTree,
+          });
+        }
+        if (!window.React || !window.ReactDOM || !qualityRadar) {
+          return false;
+        }
+        const e = window.React.createElement;
+        let cards = [];
+        if (emptyState) {
+          cards = [
+            e(
+              "div",
+              { className: "quality-signal-card is-empty", key: "empty" },
+              e("div", { className: "quality-signal-label" }, emptyState.label),
+              e("div", { className: "quality-signal-meta" }, emptyState.meta)
+            ),
+          ];
+        } else {
+          cards = Object.entries(QUALITY_SIGNAL_META).map(([key, meta]) => {
+            const stat = summary.signals?.[key] || {};
+            const signalStatus = sanitizeToken(stat.status, "watch");
+            const deltaValue = Number(stat.delta || 0);
+            const deltaSign = deltaValue > 0 ? "+" : "";
+            const trendMap = { up: "상승", down: "하강", flat: "유지" };
+            const recentValues = (summary.recent || []).map((row) => row?.[meta.field]);
+            const sparkMarkup = buildSparklineSvg(recentValues, stat.status || "watch");
+            return e(
+              "div",
+              { className: `quality-signal-card is-${signalStatus}`, key },
+              e("div", { className: "quality-signal-label" }, meta.label),
+              e("div", { className: "quality-signal-value" }, meta.format(stat.value || 0)),
+              e("div", { className: "quality-signal-meta" }, meta.hint),
+              e("div", {
+                className: "quality-signal-spark",
+                dangerouslySetInnerHTML: { __html: sparkMarkup || "" },
+              }),
+              e("div", { className: "quality-signal-meta" }, `median ${meta.format(stat.median || 0)}`),
+              e(
+                "div",
+                { className: "quality-signal-meta" },
+                `${trendMap[stat.trend] || "유지"} · Δ ${deltaSign}${meta.format(deltaValue)}`
+              ),
+              e("div", { className: "quality-signal-reason" }, describeSignal(key, stat))
+            );
+          });
+        }
+        return renderReactTree(
+          qualityRadar,
+          "qualityRadar",
+          e(window.React.Fragment, null, ...cards)
+        );
+      }
+
       function renderQualityRadar() {
+        if (window.GeuldobiQualityPageBootstrap?.renderQualityRadarSection) {
+          return window.GeuldobiQualityPageBootstrap.renderQualityRadarSection({
+            qualityRadar,
+            qualityRadarTitle,
+            qualityRadarMeta,
+            qualityRadarFoot,
+            summary: officeState.qualitySummary || {},
+            project: projectConfig.project,
+            renderQualityRadarReactCards,
+            renderQualityRadarFoot,
+            QUALITY_SIGNAL_META,
+            sanitizeToken,
+            buildSparklineSvg,
+            describeSignal,
+            escapeHtml,
+          });
+        }
         qualityRadar.innerHTML = "";
         const summary = officeState.qualitySummary || {};
 
@@ -4324,6 +5217,14 @@
           qualityRadarTitle.textContent = "최근 품질 신호";
           qualityRadarMeta.textContent = "프로젝트를 선택하면 최근 5화 기준 신호를 표시합니다";
           qualityRadarFoot.textContent = "프로젝트가 아직 선택되지 않았습니다.";
+          if (
+            renderQualityRadarReactCards(summary, {
+              label: "No Project",
+              meta: "PASS 원고가 쌓이면 CED, AI Slop, gzip, Rhythm, Density가 표시됩니다.",
+            })
+          ) {
+            return;
+          }
           const empty = document.createElement("div");
           empty.className = "quality-signal-card is-empty";
           empty.innerHTML = '<div class="quality-signal-label">No Project</div><div class="quality-signal-meta">PASS 원고가 쌓이면 CED, AI Slop, gzip, Rhythm, Density가 표시됩니다.</div>';
@@ -4337,6 +5238,14 @@
         if (!summary.available) {
           qualityRadarMeta.textContent = "최근 PASS 원고가 아직 없거나 신호를 불러오지 못했습니다";
           qualityRadarFoot.textContent = "Stage 4 PASS 원고가 저장되면 이 패널이 최근 5화 기준 상대 추세를 보여줍니다.";
+          if (
+            renderQualityRadarReactCards(summary, {
+              label: "Signals Pending",
+              meta: "신규 프로젝트이거나 아직 품질 신호가 기록되지 않았습니다.",
+            })
+          ) {
+            return;
+          }
           const empty = document.createElement("div");
           empty.className = "quality-signal-card is-empty";
           empty.innerHTML = '<div class="quality-signal-label">Signals Pending</div><div class="quality-signal-meta">신규 프로젝트이거나 아직 품질 신호가 기록되지 않았습니다.</div>';
@@ -4345,6 +5254,10 @@
         }
 
         qualityRadarMeta.textContent = `ep ${summary.latest_ep || "-"} · 최근 ${summary.lookback || 5}화 median 대비 상대 위치`;
+        if (renderQualityRadarReactCards(summary)) {
+          renderQualityRadarFoot(summary);
+          return;
+        }
         for (const [key, meta] of Object.entries(QUALITY_SIGNAL_META)) {
           const stat = summary.signals?.[key] || {};
           const card = document.createElement("div");
@@ -4376,6 +5289,31 @@
       }
 
       function renderResultSummary() {
+        if (window.GeuldobiQualityPageBootstrap?.renderResultSummarySection) {
+          return window.GeuldobiQualityPageBootstrap.renderResultSummarySection({
+            resultSummaryTitle,
+            resultSummaryMeta,
+            resultVerdictBadge,
+            resultSummaryHeadline,
+            resultSummaryReason,
+            resultSignalAlerts,
+            resultFixNow,
+            resultKeepNext,
+            resultAvoidNext,
+            resultIssueList,
+            resultNextAction,
+            project: projectConfig.project,
+            result:
+              (officeState.qualityInsights || createEmptyQualityDashboard(projectConfig.project)).result_summary ||
+              createEmptyQualityDashboard(projectConfig.project).result_summary,
+            renderResultSummaryCopyReact,
+            renderResultSignalAlertsReact,
+            renderResultActionGridReact,
+            renderResultIssueListReact,
+            renderResultNextActionReact,
+            appendInsightEmpty,
+          });
+        }
         const insight = officeState.qualityInsights || createEmptyQualityDashboard(projectConfig.project);
         const result = insight.result_summary || createEmptyQualityDashboard(projectConfig.project).result_summary;
         resultSummaryTitle.textContent = projectConfig.project ? `${projectConfig.project} · 최근 심사 결과` : "최근 심사 결과";
@@ -4386,15 +5324,36 @@
         resultVerdictBadge.className = "verdict-badge";
         if (!result.available) {
           resultVerdictBadge.textContent = "대기";
-          resultSummaryHeadline.textContent = "최근 결과가 아직 없습니다.";
-          resultSummaryReason.textContent = "Stage 4 PASS/PWF/REJECT 결과가 기록되면 여기에 핵심 요약이 표시됩니다.";
-          resultSignalAlerts.innerHTML = "";
-          resultFixNow.textContent = "지금 고칠 포인트가 여기에 표시됩니다.";
-          resultKeepNext.textContent = "다음 화에 유지할 강점이 여기에 표시됩니다.";
-          resultAvoidNext.textContent = "다음 화에서 피할 반복 패턴이 여기에 표시됩니다.";
-          resultIssueList.innerHTML = "";
-          appendInsightEmpty(resultIssueList, "이번 화의 핵심 이슈 3개가 여기에 표시됩니다.");
-          resultNextAction.textContent = "다음 행동 추천이 여기에 표시됩니다.";
+          if (
+            !renderResultSummaryCopyReact(
+              "최근 결과가 아직 없습니다.",
+              "Stage 4 PASS/PWF/REJECT 결과가 기록되면 여기에 핵심 요약이 표시됩니다."
+            )
+          ) {
+            resultSummaryHeadline.textContent = "최근 결과가 아직 없습니다.";
+            resultSummaryReason.textContent = "Stage 4 PASS/PWF/REJECT 결과가 기록되면 여기에 핵심 요약이 표시됩니다.";
+          }
+          if (!renderResultSignalAlertsReact([])) {
+            resultSignalAlerts.innerHTML = "";
+          }
+          if (
+            !renderResultActionGridReact([
+              { label: "Fix Now", copy: "지금 고칠 포인트가 여기에 표시됩니다." },
+              { label: "Keep Next", copy: "다음 화에 유지할 강점이 여기에 표시됩니다." },
+              { label: "Avoid Next", copy: "다음 화에서 피할 반복 패턴이 여기에 표시됩니다." },
+            ])
+          ) {
+            resultFixNow.textContent = "지금 고칠 포인트가 여기에 표시됩니다.";
+            resultKeepNext.textContent = "다음 화에 유지할 강점이 여기에 표시됩니다.";
+            resultAvoidNext.textContent = "다음 화에서 피할 반복 패턴이 여기에 표시됩니다.";
+          }
+          if (!renderResultIssueListReact([], "이번 화의 핵심 이슈 3개가 여기에 표시됩니다.")) {
+            resultIssueList.innerHTML = "";
+            appendInsightEmpty(resultIssueList, "이번 화의 핵심 이슈 3개가 여기에 표시됩니다.");
+          }
+          if (!renderResultNextActionReact("다음 행동 추천이 여기에 표시됩니다.")) {
+            resultNextAction.textContent = "다음 행동 추천이 여기에 표시됩니다.";
+          }
           return;
         }
 
@@ -4404,12 +5363,21 @@
         else if (verdict === "PASS_WITH_FIX") resultVerdictBadge.classList.add("is-pwf");
         else if (verdict === "REJECT") resultVerdictBadge.classList.add("is-reject");
 
-        resultSummaryHeadline.textContent = result.headline || "최근 심사 결과";
-        resultSummaryReason.textContent = result.selection_reason || result.open_review || "Director selection reason이 아직 없습니다.";
+        if (
+          !renderResultSummaryCopyReact(
+            result.headline || "최근 심사 결과",
+            result.selection_reason || result.open_review || "Director selection reason이 아직 없습니다."
+          )
+        ) {
+          resultSummaryHeadline.textContent = result.headline || "최근 심사 결과";
+          resultSummaryReason.textContent = result.selection_reason || result.open_review || "Director selection reason이 아직 없습니다.";
+        }
 
-        resultSignalAlerts.innerHTML = "";
         const alerts = result.signal_alerts || [];
-        if (alerts.length) {
+        if (!renderResultSignalAlertsReact(alerts)) {
+          resultSignalAlerts.innerHTML = "";
+        }
+        if (alerts.length && !window.React) {
           for (const alertText of alerts) {
             const chip = document.createElement("span");
             chip.className = "signal-alert-chip";
@@ -4419,15 +5387,39 @@
         }
 
         const fixNow = (result.fix_now || []).slice(0, 3);
-        resultFixNow.textContent = fixNow.length ? fixNow.join(" · ") : "즉시 고쳐야 할 경고가 아직 없습니다.";
-        resultKeepNext.textContent = result.keep_next || "다음 화에 유지할 강점이 아직 정리되지 않았습니다.";
-        resultAvoidNext.textContent = result.avoid_next || "다음 화에서 피할 반복 패턴이 아직 정리되지 않았습니다.";
+        if (
+          !renderResultActionGridReact([
+            {
+              label: "Fix Now",
+              copy: fixNow.length ? fixNow.join(" · ") : "즉시 고쳐야 할 경고가 아직 없습니다.",
+            },
+            {
+              label: "Keep Next",
+              copy: result.keep_next || "다음 화에 유지할 강점이 아직 정리되지 않았습니다.",
+            },
+            {
+              label: "Avoid Next",
+              copy: result.avoid_next || "다음 화에서 피할 반복 패턴이 아직 정리되지 않았습니다.",
+            },
+          ])
+        ) {
+          resultFixNow.textContent = fixNow.length ? fixNow.join(" · ") : "즉시 고쳐야 할 경고가 아직 없습니다.";
+          resultKeepNext.textContent = result.keep_next || "다음 화에 유지할 강점이 아직 정리되지 않았습니다.";
+          resultAvoidNext.textContent = result.avoid_next || "다음 화에서 피할 반복 패턴이 아직 정리되지 않았습니다.";
+        }
 
-        resultIssueList.innerHTML = "";
         const issues = result.issues || [];
-        if (!issues.length) {
+        if (
+          !renderResultIssueListReact(
+            issues,
+            "이번 화에서 즉시 강조할 이슈가 없거나 아직 집계되지 않았습니다."
+          )
+        ) {
+          resultIssueList.innerHTML = "";
+        }
+        if (!issues.length && !window.React) {
           appendInsightEmpty(resultIssueList, "이번 화에서 즉시 강조할 이슈가 없거나 아직 집계되지 않았습니다.");
-        } else {
+        } else if (issues.length && !window.React) {
           for (const issue of issues.slice(0, 3)) {
             const item = document.createElement("li");
             item.className = "issue-item";
@@ -4436,13 +5428,101 @@
           }
         }
 
-        resultNextAction.textContent = result.next_action || "다음 행동 추천이 없습니다.";
+        if (!renderResultNextActionReact(result.next_action || "다음 행동 추천이 없습니다.")) {
+          resultNextAction.textContent = result.next_action || "다음 행동 추천이 없습니다.";
+        }
+      }
+
+      function renderQualityTrendSummaryReact(chips = []) {
+        if (window.GeuldobiQualityReactHelpers?.renderQualityTrendSummary) {
+          return window.GeuldobiQualityReactHelpers.renderQualityTrendSummary({
+            container: qualityTrendSummary,
+            rootKey: "qualityTrendSummary",
+            chips,
+            renderTree: renderReactTree,
+          });
+        }
+        if (!window.React || !window.ReactDOM || !qualityTrendSummary) {
+          return false;
+        }
+        const e = window.React.createElement;
+        const nodes = chips.map((label, index) =>
+          e(
+            "span",
+            { className: "trend-chip", key: `trend-summary-${index}` },
+            label
+          )
+        );
+        return renderReactTree(
+          qualityTrendSummary,
+          "qualityTrendSummary",
+          e(window.React.Fragment, null, ...nodes)
+        );
+      }
+
+      function renderQualityCompareBodyReact(compareRows = [], emptyText = "") {
+        if (window.GeuldobiQualityReactHelpers?.renderQualityCompareBody) {
+          return window.GeuldobiQualityReactHelpers.renderQualityCompareBody({
+            container: qualityCompareBody,
+            rootKey: "qualityCompareBody",
+            compareRows,
+            emptyText,
+            renderTree: renderReactTree,
+          });
+        }
+        if (!window.React || !window.ReactDOM || !qualityCompareBody) {
+          return false;
+        }
+        const e = window.React.createElement;
+        const nodes = compareRows.length
+          ? compareRows.slice(0, 6).map((rowData, index) => {
+              const verdict = String(rowData.verdict || "").toUpperCase();
+              const verdictClass =
+                verdict === "PASS"
+                  ? "is-pass"
+                  : verdict === "PASS_WITH_FIX"
+                    ? "is-pwf"
+                    : verdict === "REJECT"
+                      ? "is-reject"
+                      : "";
+              return e(
+                "tr",
+                { key: `quality-compare-${rowData.ep_num ?? "ep"}-${index}` },
+                e("td", null, rowData.ep_num ?? "-"),
+                e(
+                  "td",
+                  null,
+                  e("span", { className: `compare-verdict ${verdictClass}`.trim() }, verdict || "-")
+                ),
+                e("td", null, rowData.score ?? "-"),
+                e("td", null, rowData.ced != null ? Number(rowData.ced).toFixed(2) : "-"),
+                e("td", null, rowData.ai_slop != null ? Number(rowData.ai_slop).toFixed(2) : "-")
+              );
+            })
+          : [e("tr", { key: "quality-compare-empty" }, e("td", { colSpan: 5 }, emptyText))];
+        return renderReactTree(
+          qualityCompareBody,
+          "qualityCompareBody",
+          e(window.React.Fragment, null, ...nodes)
+        );
       }
 
       function renderTrendCompare() {
         const insight = officeState.qualityInsights || createEmptyQualityDashboard(projectConfig.project);
         const scoreTrend = insight.score_trend || {};
         const compareRows = insight.compare_rows || [];
+        if (window.GeuldobiQualityPageBootstrap?.renderTrendCompareSection) {
+          return window.GeuldobiQualityPageBootstrap.renderTrendCompareSection({
+            trendPanelMeta,
+            qualityTrendSummary,
+            qualityCompareBody,
+            scoreTrend,
+            compareRows,
+            renderQualityTrendSummaryReact,
+            renderQualityCompareBodyReact,
+            escapeHtml,
+          });
+        }
 
         trendPanelMeta.textContent = scoreTrend.summary || "최근 회차 점수와 품질 신호를 비교합니다";
         qualityTrendSummary.innerHTML = "";
@@ -4453,35 +5533,140 @@
           `Δ ${Number(scoreTrend.delta || 0) > 0 ? "+" : ""}${Number(scoreTrend.delta || 0)}`,
           `샘플 ${scoreTrend.samples || 0}화`,
         ];
-        for (const label of chips) {
-          const chip = document.createElement("span");
-          chip.className = "trend-chip";
-          chip.textContent = label;
-          qualityTrendSummary.appendChild(chip);
+        if (!renderQualityTrendSummaryReact(chips)) {
+          for (const label of chips) {
+            const chip = document.createElement("span");
+            chip.className = "trend-chip";
+            chip.textContent = label;
+            qualityTrendSummary.appendChild(chip);
+          }
         }
 
         qualityCompareBody.innerHTML = "";
-        if (!compareRows.length) {
+        if (!renderQualityCompareBodyReact(compareRows, "최근 회차 비교 데이터가 아직 없습니다.")) {
+          qualityCompareBody.innerHTML = "";
+        }
+        if (!compareRows.length && !window.React) {
           const row = document.createElement("tr");
           row.innerHTML = '<td colspan="5">최근 회차 비교 데이터가 아직 없습니다.</td>';
           qualityCompareBody.appendChild(row);
           return;
         }
 
-        for (const rowData of compareRows.slice(0, 6)) {
-          const row = document.createElement("tr");
-          const verdict = String(rowData.verdict || "").toUpperCase();
-          const verdictClass = verdict === "PASS" ? "is-pass" : verdict === "PASS_WITH_FIX" ? "is-pwf" : verdict === "REJECT" ? "is-reject" : "";
-          const verdictLabel = escapeHtml(verdict || "-");
-          row.innerHTML = `
-            <td>${rowData.ep_num ?? "-"}</td>
-            <td><span class="compare-verdict ${verdictClass}">${verdictLabel}</span></td>
-            <td>${rowData.score ?? "-"}</td>
-            <td>${rowData.ced != null ? Number(rowData.ced).toFixed(2) : "-"}</td>
-            <td>${rowData.ai_slop != null ? Number(rowData.ai_slop).toFixed(2) : "-"}</td>
-          `;
-          qualityCompareBody.appendChild(row);
+        if (compareRows.length && !window.React) {
+          for (const rowData of compareRows.slice(0, 6)) {
+            const row = document.createElement("tr");
+            const verdict = String(rowData.verdict || "").toUpperCase();
+            const verdictClass = verdict === "PASS" ? "is-pass" : verdict === "PASS_WITH_FIX" ? "is-pwf" : verdict === "REJECT" ? "is-reject" : "";
+            const verdictLabel = escapeHtml(verdict || "-");
+            row.innerHTML = `
+              <td>${rowData.ep_num ?? "-"}</td>
+              <td><span class="compare-verdict ${verdictClass}">${verdictLabel}</span></td>
+              <td>${rowData.score ?? "-"}</td>
+              <td>${rowData.ced != null ? Number(rowData.ced).toFixed(2) : "-"}</td>
+              <td>${rowData.ai_slop != null ? Number(rowData.ai_slop).toFixed(2) : "-"}</td>
+            `;
+            qualityCompareBody.appendChild(row);
+          }
         }
+      }
+
+      function renderFailureStageStatsGridReact(stageStats = [], emptyText = "") {
+        if (window.GeuldobiQualityReactHelpers?.renderFailureStageStatsGrid) {
+          return window.GeuldobiQualityReactHelpers.renderFailureStageStatsGrid({
+            container: stageStatsGrid,
+            rootKey: "stageStatsGrid",
+            stageStats,
+            emptyText,
+            renderTree: renderReactTree,
+          });
+        }
+        if (!window.React || !window.ReactDOM || !stageStatsGrid) {
+          return false;
+        }
+        const e = window.React.createElement;
+        const nodes = stageStats.length
+          ? stageStats.slice(0, 3).map((stat, index) =>
+              e(
+                "div",
+                { className: "stage-stat-card", key: `stage-stat-${stat.stage || 'stage'}-${index}` },
+                e("div", { className: "stage-stat-label" }, `Stage ${stat.stage || "-"}`),
+                e("div", { className: "stage-stat-value" }, `${Number(stat.pass_rate || 0).toFixed(1)}%`),
+                e(
+                  "div",
+                  { className: "stage-stat-meta" },
+                  `평균 ${Number(stat.avg_score || 0).toFixed(1)}점 · 총 ${stat.total || 0}회`
+                )
+              )
+            )
+          : [e("div", { className: "insight-empty", key: "stage-stat-empty" }, emptyText)];
+        return renderReactTree(
+          stageStatsGrid,
+          "stageStatsGrid",
+          e(window.React.Fragment, null, ...nodes)
+        );
+      }
+
+      function renderFailurePatternListReact(items = [], emptyText = "") {
+        if (window.GeuldobiQualityReactHelpers?.renderFailurePatternList) {
+          return window.GeuldobiQualityReactHelpers.renderFailurePatternList({
+            container: failurePatternList,
+            rootKey: "failurePatternList",
+            items,
+            emptyText,
+            renderTree: renderReactTree,
+          });
+        }
+        if (!window.React || !window.ReactDOM || !failurePatternList) {
+          return false;
+        }
+        const e = window.React.createElement;
+        const nodes = items.length
+          ? items.slice(0, 5).map((item, index) =>
+              e(
+                "div",
+                { className: "pattern-item", key: `failure-pattern-${item.type || 'type'}-${index}` },
+                e("div", { className: "pattern-item-title" }, item.type || "unknown"),
+                e("div", { className: "pattern-item-meta" }, `누적 ${item.count || 0}회`)
+              )
+            )
+          : [e("div", { className: "insight-empty", key: "failure-pattern-empty" }, emptyText)];
+        return renderReactTree(
+          failurePatternList,
+          "failurePatternList",
+          e(window.React.Fragment, null, ...nodes)
+        );
+      }
+
+      function renderFailureRangeListReact(ranges = [], emptyText = "") {
+        if (window.GeuldobiQualityReactHelpers?.renderFailureRangeList) {
+          return window.GeuldobiQualityReactHelpers.renderFailureRangeList({
+            container: failureRangeList,
+            rootKey: "failureRangeList",
+            ranges,
+            emptyText,
+            renderTree: renderReactTree,
+          });
+        }
+        if (!window.React || !window.ReactDOM || !failureRangeList) {
+          return false;
+        }
+        const e = window.React.createElement;
+        const nodes = ranges.length
+          ? ranges.slice(0, 5).map((item, index) =>
+              e(
+                "div",
+                { className: "pattern-item", key: `failure-range-${item.range || 'range'}-${index}` },
+                e("div", { className: "pattern-item-title" }, item.range || "-"),
+                e("div", { className: "pattern-item-meta" }, `REJECT ${item.count || 0}회`)
+              )
+            )
+          : [e("div", { className: "insight-empty", key: "failure-range-empty" }, emptyText)];
+        return renderReactTree(
+          failureRangeList,
+          "failureRangeList",
+          e(window.React.Fragment, null, ...nodes)
+        );
       }
 
       function renderFailureWatch() {
@@ -4489,15 +5674,34 @@
         const stageStats = insight.stage_stats || [];
         const failurePatterns = insight.failure_patterns || {};
         const commonViolations = insight.common_violations || [];
+        if (window.GeuldobiQualityPageBootstrap?.renderFailureWatchSection) {
+          return window.GeuldobiQualityPageBootstrap.renderFailureWatchSection({
+            failureWatchMeta,
+            stageStatsGrid,
+            failurePatternList,
+            failureRangeList,
+            stageStats,
+            failurePatterns,
+            commonViolations,
+            renderFailureStageStatsGridReact,
+            renderFailurePatternListReact,
+            renderFailureRangeListReact,
+            appendInsightEmpty,
+            escapeHtml,
+          });
+        }
 
         failureWatchMeta.textContent = stageStats.length
           ? `Stage ${stageStats.map((row) => row.stage).join(", ")} 최근 통과율과 실패 패턴`
           : "실패 원인과 Stage별 통과 흐름을 요약합니다";
 
         stageStatsGrid.innerHTML = "";
-        if (!stageStats.length) {
+        if (!renderFailureStageStatsGridReact(stageStats, "Stage별 pass rate / avg score가 누적되면 여기에 표시됩니다.")) {
+          stageStatsGrid.innerHTML = "";
+        }
+        if (!stageStats.length && !window.React) {
           appendInsightEmpty(stageStatsGrid, "Stage별 pass rate / avg score가 누적되면 여기에 표시됩니다.");
-        } else {
+        } else if (stageStats.length && !window.React) {
           for (const stat of stageStats.slice(0, 3)) {
             const card = document.createElement("div");
             card.className = "stage-stat-card";
@@ -4513,9 +5717,12 @@
 
         failurePatternList.innerHTML = "";
         const topTypes = failurePatterns.top_types?.length ? failurePatterns.top_types : commonViolations;
-        if (!topTypes || !topTypes.length) {
+        if (!renderFailurePatternListReact(topTypes || [], "주요 실패 패턴이 아직 충분히 쌓이지 않았습니다.")) {
+          failurePatternList.innerHTML = "";
+        }
+        if ((!topTypes || !topTypes.length) && !window.React) {
           appendInsightEmpty(failurePatternList, "주요 실패 패턴이 아직 충분히 쌓이지 않았습니다.");
-        } else {
+        } else if (topTypes?.length && !window.React) {
           for (const item of topTypes.slice(0, 5)) {
             const node = document.createElement("div");
             node.className = "pattern-item";
@@ -4530,9 +5737,12 @@
 
         failureRangeList.innerHTML = "";
         const ranges = failurePatterns.by_episode_range || [];
-        if (!ranges.length) {
+        if (!renderFailureRangeListReact(ranges, "회차 구간별 실패 경향이 아직 없습니다.")) {
+          failureRangeList.innerHTML = "";
+        }
+        if (!ranges.length && !window.React) {
           appendInsightEmpty(failureRangeList, "회차 구간별 실패 경향이 아직 없습니다.");
-        } else {
+        } else if (ranges.length && !window.React) {
           for (const item of ranges.slice(0, 5)) {
             const node = document.createElement("div");
             node.className = "pattern-item";
@@ -4552,9 +5762,130 @@
         return "is-watch";
       }
 
+      function renderCalibrationSummaryReact(summaryChips = []) {
+        if (window.GeuldobiQualityReactHelpers?.renderCalibrationSummary) {
+          return window.GeuldobiQualityReactHelpers.renderCalibrationSummary({
+            container: calibrationSummary,
+            rootKey: "calibrationSummary",
+            summaryChips,
+            renderTree: renderReactTree,
+          });
+        }
+        if (!window.React || !window.ReactDOM || !calibrationSummary) {
+          return false;
+        }
+        const e = window.React.createElement;
+        const nodes = summaryChips.slice(0, 5).map((label, index) =>
+          e(
+            "span",
+            { className: "trend-chip", key: `calibration-summary-${index}` },
+            label
+          )
+        );
+        return renderReactTree(
+          calibrationSummary,
+          "calibrationSummary",
+          e(window.React.Fragment, null, ...nodes)
+        );
+      }
+
+      function renderQualityObservationListReact(recentObservations = [], emptyText = "") {
+        if (window.GeuldobiQualityReactHelpers?.renderQualityObservationList) {
+          return window.GeuldobiQualityReactHelpers.renderQualityObservationList({
+            container: qualityObservationList,
+            rootKey: "qualityObservationList",
+            recentObservations,
+            emptyText,
+            getObservationLabelClass,
+            renderTree: renderReactTree,
+          });
+        }
+        if (!window.React || !window.ReactDOM || !qualityObservationList) {
+          return false;
+        }
+        const e = window.React.createElement;
+        const nodes = recentObservations.length
+          ? recentObservations.slice(0, 6).map((row, index) => {
+              const verdict = row.verdict ? ` · ${row.verdict}${row.score ? ` ${row.score}점` : ""}` : "";
+              const notes = (row.signal_notes || []).join(" · ");
+              return e(
+                "div",
+                { className: "pattern-item", key: `quality-observation-${row.ep_num || 'ep'}-${index}` },
+                e(
+                  "div",
+                  { className: "pattern-item-title" },
+                  `ep ${row.ep_num}`,
+                  " ",
+                  e(
+                    "span",
+                    { className: `observation-label-chip ${getObservationLabelClass(row.operator_label)}`.trim() },
+                    row.operator_label
+                  )
+                ),
+                e("div", { className: "pattern-item-meta" }, `${row.note || "메모 없음"}${verdict}`),
+                e("div", { className: "pattern-item-meta" }, notes || "신호 메모 없음")
+              );
+            })
+          : [e("div", { className: "insight-empty", key: "quality-observation-empty" }, emptyText)];
+        return renderReactTree(
+          qualityObservationList,
+          "qualityObservationList",
+          e(window.React.Fragment, null, ...nodes)
+        );
+      }
+
+      function renderQualityAdvisoryListReact(candidates = [], emptyText = "") {
+        if (window.GeuldobiQualityReactHelpers?.renderQualityAdvisoryList) {
+          return window.GeuldobiQualityReactHelpers.renderQualityAdvisoryList({
+            container: qualityAdvisoryList,
+            rootKey: "qualityAdvisoryList",
+            candidates,
+            emptyText,
+            renderTree: renderReactTree,
+          });
+        }
+        if (!window.React || !window.ReactDOM || !qualityAdvisoryList) {
+          return false;
+        }
+        const e = window.React.createElement;
+        const nodes = candidates.length
+          ? candidates.slice(0, 4).map((item, index) =>
+              e(
+                "div",
+                { className: "candidate-card", key: `quality-advisory-${item.signal || 'signal'}-${index}` },
+                e("strong", null, `${item.signal} advisory 후보`),
+                e("span", null, item.reason || ""),
+                e("span", null, `동행 관측 ${item.count || 0}건`)
+              )
+            )
+          : [e("div", { className: "insight-empty", key: "quality-advisory-empty" }, emptyText)];
+        return renderReactTree(
+          qualityAdvisoryList,
+          "qualityAdvisoryList",
+          e(window.React.Fragment, null, ...nodes)
+        );
+      }
+
       function renderCalibrationDesk() {
         const insight = officeState.qualityInsights || createEmptyQualityDashboard(projectConfig.project);
         const calibration = insight.calibration || createEmptyQualityDashboard(projectConfig.project).calibration;
+        if (window.GeuldobiQualityPageBootstrap?.renderCalibrationDeskSection) {
+          return window.GeuldobiQualityPageBootstrap.renderCalibrationDeskSection({
+            calibrationMeta,
+            qualityObservationEp,
+            calibrationSummary,
+            qualityObservationList,
+            qualityAdvisoryList,
+            project: projectConfig.project,
+            latestEp: insight.latest_ep,
+            calibration,
+            renderCalibrationSummaryReact,
+            renderQualityObservationListReact,
+            renderQualityAdvisoryListReact,
+            appendInsightEmpty,
+            escapeHtml,
+          });
+        }
 
         calibrationMeta.textContent = calibration.available
           ? `최근 ${calibration.lookback || 5}화 기준 수기 관측 ${calibration.total_reviews || 0}건`
@@ -4572,18 +5903,28 @@
         const summaryChips = calibration.label_counts?.length
           ? calibration.label_counts.map((item) => `${item.label} ${item.count}건`)
           : [`허용 라벨 ${((calibration.allowed_labels || []).length || 5)}종`, "아직 관측 데이터 없음"];
-        for (const label of summaryChips.slice(0, 5)) {
-          const chip = document.createElement("span");
-          chip.className = "trend-chip";
-          chip.textContent = label;
-          calibrationSummary.appendChild(chip);
+        if (!renderCalibrationSummaryReact(summaryChips)) {
+          for (const label of summaryChips.slice(0, 5)) {
+            const chip = document.createElement("span");
+            chip.className = "trend-chip";
+            chip.textContent = label;
+            calibrationSummary.appendChild(chip);
+          }
         }
 
         qualityObservationList.innerHTML = "";
         const recentObservations = calibration.recent_observations || [];
-        if (!recentObservations.length) {
+        if (
+          !renderQualityObservationListReact(
+            recentObservations,
+            "좋음/경계/AI 티 같은 수기 관측이 쌓이면 여기서 최근 노트를 비교할 수 있습니다."
+          )
+        ) {
+          qualityObservationList.innerHTML = "";
+        }
+        if (!recentObservations.length && !window.React) {
           appendInsightEmpty(qualityObservationList, "좋음/경계/AI 티 같은 수기 관측이 쌓이면 여기서 최근 노트를 비교할 수 있습니다.");
-        } else {
+        } else if (recentObservations.length && !window.React) {
           for (const row of recentObservations.slice(0, 6)) {
             const card = document.createElement("div");
             card.className = "pattern-item";
@@ -4604,9 +5945,17 @@
 
         qualityAdvisoryList.innerHTML = "";
         const candidates = calibration.advisory_candidates || [];
-        if (!candidates.length) {
+        if (
+          !renderQualityAdvisoryListReact(
+            candidates,
+            calibration.next_step || "승격 후보가 아직 없습니다."
+          )
+        ) {
+          qualityAdvisoryList.innerHTML = "";
+        }
+        if (!candidates.length && !window.React) {
           appendInsightEmpty(qualityAdvisoryList, calibration.next_step || "승격 후보가 아직 없습니다.");
-        } else {
+        } else if (candidates.length && !window.React) {
           for (const item of candidates.slice(0, 4)) {
             const card = document.createElement("div");
             card.className = "candidate-card";
@@ -4623,6 +5972,17 @@
       }
 
       function renderQualityInsights() {
+        if (window.GeuldobiQualityPageBootstrap?.renderInsights) {
+          return window.GeuldobiQualityPageBootstrap.renderInsights({
+            renderSafeOpsPreview,
+            renderArtifactLadder,
+            renderRetrievalInspector,
+            renderResultSummary,
+            renderTrendCompare,
+            renderFailureWatch,
+            renderCalibrationDesk,
+          });
+        }
         renderSafeOpsPreview();
         renderArtifactLadder();
         renderRetrievalInspector();
@@ -4633,6 +5993,16 @@
       }
 
       async function refreshQualitySummary() {
+        if (window.GeuldobiQualityPageBootstrap?.refreshSummary) {
+          return window.GeuldobiQualityPageBootstrap.refreshSummary({
+            desktop: window.geuldobiDesktop,
+            project: projectConfig.project,
+            officeState,
+            createEmptyQualityDashboard,
+            renderQualityRadar,
+            renderQualityInsights,
+          });
+        }
         if (!window.geuldobiDesktop || !projectConfig.project) {
           officeState.qualityInsights = createEmptyQualityDashboard(projectConfig.project || null);
           officeState.qualitySummary = officeState.qualityInsights.quality_summary;
@@ -4709,6 +6079,16 @@
       }
 
       async function loadSafeOpsPreview() {
+        if (window.GeuldobiQualityPageBootstrap?.loadSafeOpsPreview) {
+          return window.GeuldobiQualityPageBootstrap.loadSafeOpsPreview({
+            desktop: window.geuldobiDesktop,
+            project: projectConfig.project,
+            officeState,
+            createEmptyQualityDashboard,
+            renderQualityInsights,
+            warn: console.warn.bind(console),
+          });
+        }
         if (!projectConfig.project || !window.geuldobiDesktop?.getSafeOpsPreview) {
           return officeState.qualityInsights?.safe_ops || createEmptyQualityDashboard(projectConfig.project).safe_ops;
         }
@@ -4829,16 +6209,39 @@
             qualityObservationNote.value = "";
             await refreshQualitySummary();
           } else {
-            appendLog(`[관측] 저장 실패: ${result?.message || "알 수 없는 오류"}`);
+            const errorInfo = describeBridgeError(result, { fallbackMessage: "품질 관측 저장에 실패했습니다." });
+            setCurrentFocus(errorInfo.focusTitle, errorInfo.userMessage);
+            appendLog(`[관측] 저장 실패: ${errorInfo.userMessage}`);
           }
         } catch (err) {
           appendLog(`[관측] 저장 오류: ${err.message}`);
         }
       });
 
+      function renderAgentBoardReact(agentList = [], activeKeys = []) {
+        if (window.GeuldobiRendererStateReactHelpers?.renderAgentBoard) {
+          return window.GeuldobiRendererStateReactHelpers.renderAgentBoard({
+            container: agentBoard,
+            rootKey: "agentBoard",
+            agents: agentList,
+            runtimeByKey: agentRuntime,
+            activeKeys,
+            officeIsRunning: officeState.isRunning,
+            hexToRgba,
+            shortenText,
+            renderTree: renderReactTree,
+          });
+        }
+        return false;
+      }
+
       function renderAgentBoard() {
         agentBoard.innerHTML = "";
-        const activeSet = new Set(getCurrentStageAgents());
+        const activeKeys = getCurrentStageAgents();
+        if (renderAgentBoardReact(agents, activeKeys)) {
+          return;
+        }
+        const activeSet = new Set(activeKeys);
         for (const agent of agents) {
           const runtime = agentRuntime[agent.spriteKey];
           const card = document.createElement("div");
@@ -4907,8 +6310,27 @@
         }
       }
 
+      function renderEventFeedReact(recentEvents = [], emptyText = "") {
+        if (window.GeuldobiRendererStateReactHelpers?.renderEventFeed) {
+          return window.GeuldobiRendererStateReactHelpers.renderEventFeed({
+            container: eventFeed,
+            rootKey: "eventFeed",
+            recentEvents,
+            getAgentMeta,
+            getAgentDisplayName,
+            hexToRgba,
+            emptyText,
+            renderTree: renderReactTree,
+          });
+        }
+        return false;
+      }
+
       function renderEventFeed() {
         eventFeed.innerHTML = "";
+        if (renderEventFeedReact(officeState.recentEvents, "중요 이벤트가 들어오면 여기서 요약됩니다.")) {
+          return;
+        }
         if (officeState.recentEvents.length === 0) {
           const empty = document.createElement("div");
           empty.className = "live-feed-empty";
@@ -4949,6 +6371,23 @@
       }
 
       function renderMissionBoard() {
+        if (window.GeuldobiRendererStateBootstrap?.renderMissionBoardSection) {
+          return window.GeuldobiRendererStateBootstrap.renderMissionBoardSection({
+            currentStageLabel,
+            currentStageDetail,
+            currentFocusLabel,
+            currentFocusMeta,
+            promptStatusLabel,
+            promptStatusMeta,
+            promptMissionCard,
+            verdictMissionCard,
+            verdictSummary,
+            verdictMeta,
+            runtimeBadge,
+            officeState,
+            formatDuration,
+          });
+        }
         currentStageLabel.textContent = officeState.currentStageTitle;
         currentStageDetail.textContent = officeState.currentStageSummary;
 
@@ -5054,56 +6493,73 @@
 
       function appendLog(message, verdict, meta = {}) {
         const rowMeta = inferLogMeta(message, verdict, meta);
-        const row = document.createElement("div");
-        row.className = "log-row";
-        row.dataset.agent = rowMeta.agent || "";
-        row.dataset.stage = rowMeta.stage || "";
+        let row;
+        let timeText;
+        if (window.GeuldobiRendererStateBootstrap?.buildLogRow) {
+          const built = window.GeuldobiRendererStateBootstrap.buildLogRow({
+            message,
+            verdict,
+            rowMeta,
+            currentSubKey: officeState.currentSubKey,
+            getAgentDisplayName,
+            resolveActionMeta,
+            nowLabel,
+          });
+          row = built.row;
+          timeText = built.timeText;
+        } else {
+          row = document.createElement("div");
+          row.className = "log-row";
+          row.dataset.agent = rowMeta.agent || "";
+          row.dataset.stage = rowMeta.stage || "";
 
-        const time = document.createElement("span");
-        time.className = "log-time";
-        time.textContent = nowLabel();
+          const time = document.createElement("span");
+          time.className = "log-time";
+          time.textContent = nowLabel();
+          timeText = time.textContent;
 
-        const main = document.createElement("div");
-        main.className = "log-main";
+          const main = document.createElement("div");
+          main.className = "log-main";
 
-        const metaRow = document.createElement("div");
-        metaRow.className = "log-meta-row";
-        if (rowMeta.agent) {
-          const agentChip = document.createElement("span");
-          agentChip.className = "log-chip log-chip-agent";
-          agentChip.textContent = getAgentDisplayName(rowMeta.agent);
-          metaRow.appendChild(agentChip);
-        }
-        if (rowMeta.stage) {
-          const stageChip = document.createElement("span");
-          stageChip.className = "log-chip log-chip-stage";
-          stageChip.textContent = resolveActionMeta(rowMeta.stage, officeState.currentSubKey).title;
-          metaRow.appendChild(stageChip);
-        }
-
-        const msg = document.createElement("span");
-        msg.className = "log-msg";
-        msg.textContent = message;
-
-        if (metaRow.childNodes.length > 0) main.appendChild(metaRow);
-        main.appendChild(msg);
-
-        row.append(time, main);
-
-        if (verdict) {
-          const badge = document.createElement("span");
-          badge.className = "verdict-badge";
-          if (verdict === "PASS") {
-            badge.classList.add("verdict-pass");
-            badge.textContent = "PASS";
-          } else if (verdict === "REJECT") {
-            badge.classList.add("verdict-reject");
-            badge.textContent = "REJECT";
-          } else {
-            badge.classList.add("verdict-pwf");
-            badge.textContent = "PWF";
+          const metaRow = document.createElement("div");
+          metaRow.className = "log-meta-row";
+          if (rowMeta.agent) {
+            const agentChip = document.createElement("span");
+            agentChip.className = "log-chip log-chip-agent";
+            agentChip.textContent = getAgentDisplayName(rowMeta.agent);
+            metaRow.appendChild(agentChip);
           }
-          row.appendChild(badge);
+          if (rowMeta.stage) {
+            const stageChip = document.createElement("span");
+            stageChip.className = "log-chip log-chip-stage";
+            stageChip.textContent = resolveActionMeta(rowMeta.stage, officeState.currentSubKey).title;
+            metaRow.appendChild(stageChip);
+          }
+
+          const msg = document.createElement("span");
+          msg.className = "log-msg";
+          msg.textContent = message;
+
+          if (metaRow.childNodes.length > 0) main.appendChild(metaRow);
+          main.appendChild(msg);
+
+          row.append(time, main);
+
+          if (verdict) {
+            const badge = document.createElement("span");
+            badge.className = "verdict-badge";
+            if (verdict === "PASS") {
+              badge.classList.add("verdict-pass");
+              badge.textContent = "PASS";
+            } else if (verdict === "REJECT") {
+              badge.classList.add("verdict-reject");
+              badge.textContent = "REJECT";
+            } else {
+              badge.classList.add("verdict-pwf");
+              badge.textContent = "PWF";
+            }
+            row.appendChild(badge);
+          }
         }
 
         logStream.appendChild(row);
@@ -5127,7 +6583,7 @@
 
         if (rowMeta.significant) {
           pushEventFeed({
-            time: time.textContent,
+            time: timeText,
             title: rowMeta.summary,
             detail: shortenText(rowMeta.detail, 96),
             agent: rowMeta.agent,
@@ -5144,6 +6600,12 @@
       }
 
       function setStateBadge(mode) {
+        if (window.GeuldobiRendererStateBootstrap?.setStateBadge) {
+          return window.GeuldobiRendererStateBootstrap.setStateBadge({
+            stateBadge,
+            mode,
+          });
+        }
         stateBadge.classList.remove("state-running", "state-idle", "state-pass", "state-pwf", "state-reject");
 
         if (mode === "RUNNING") {
@@ -5165,6 +6627,13 @@
       }
 
       function setEffectBanner(text, className) {
+        if (window.GeuldobiRendererStateBootstrap?.setEffectBanner) {
+          return window.GeuldobiRendererStateBootstrap.setEffectBanner({
+            effectBanner,
+            text,
+            className,
+          });
+        }
         effectBanner.textContent = text;
         effectBanner.classList.remove("pass", "pwf", "reject", "show");
         if (!text) return;
@@ -5181,7 +6650,14 @@
         setVerdictState(null, null);
         _currentPrompt = null;
         _pendingPromptQueue = [];
-        document.getElementById("promptOverlay").classList.remove("open");
+        if (window.GeuldobiRendererStateBootstrap?.setPromptOverlayOpen) {
+          window.GeuldobiRendererStateBootstrap.setPromptOverlayOpen({
+            promptOverlay: document.getElementById("promptOverlay"),
+            isOpen: false,
+          });
+        } else {
+          document.getElementById("promptOverlay").classList.remove("open");
+        }
         setPromptState(false, "대기 중인 입력 없음");
         setStateBadge("RUNNING");
         setEffectBanner("", "");
@@ -5197,7 +6673,14 @@
         officeState.runStartedAt = null;
         _currentPrompt = null;
         _pendingPromptQueue = [];
-        document.getElementById("promptOverlay").classList.remove("open");
+        if (window.GeuldobiRendererStateBootstrap?.setPromptOverlayOpen) {
+          window.GeuldobiRendererStateBootstrap.setPromptOverlayOpen({
+            promptOverlay: document.getElementById("promptOverlay"),
+            isOpen: false,
+          });
+        } else {
+          document.getElementById("promptOverlay").classList.remove("open");
+        }
         setPromptState(false, "대기 중인 입력 없음");
         setStateBadge("IDLE");
         setEffectBanner("", "");
@@ -5980,7 +7463,14 @@
           // 영속화
           settingsStore.project = name;
           if (window.geuldobiDesktop) {
-            window.geuldobiDesktop.saveSettings(settingsStore).catch(() => {});
+            window.geuldobiDesktop.saveSettings(settingsStore).catch((err) => {
+              warnNonBlockingAsync("프로젝트 선택 저장 실패", err, {
+                appendLog: true,
+                bubble: "저장 실패",
+                status: "경고",
+                agentDetail: "프로젝트 선택은 반영됐지만 로컬 설정 저장은 실패",
+              });
+            });
           }
         } else {
           projectConfig.project = null;
@@ -6057,6 +7547,13 @@
       function _refreshBackendStatusBadge() {
         officeState.backendConnected = _backendConnected;
         officeState.commandReady = _commandPathReady;
+        if (window.GeuldobiRendererStateBootstrap?.refreshBackendStatusBadge) {
+          return window.GeuldobiRendererStateBootstrap.refreshBackendStatusBadge({
+            readyBadge,
+            backendConnected: _backendConnected,
+            commandReady: _commandPathReady,
+          });
+        }
         if (_backendConnected && _commandPathReady) {
           readyBadge.textContent = "이벤트 연결됨 / 명령 가능";
           return;
@@ -6218,8 +7715,33 @@
             void _syncRuntimeStatus("ws-close");
             _wsReconnectTimer = setTimeout(_connectWebSocket, 3000);
           };
-          _ws.onerror = () => {};
-        }).catch(() => {});
+          _ws.onerror = (event) => {
+            const detail = event?.message || "브리지 WebSocket 오류 발생 — 자동 복구 대기 중";
+            console.error("WS error:", event);
+            setCurrentFocus("백엔드 연결 오류", detail);
+            appendLog("[System] 백엔드 연결 오류 감지", null, {
+              agent: "manager",
+              summary: "백엔드 연결 오류",
+              detail,
+              bubble: "연결 오류",
+              bubbleColor: "#991b1b",
+              status: "연결 오류",
+              agentDetail: "WebSocket 오류를 감지했고 onclose 후 재연결을 대기 중",
+              significant: true,
+            });
+          };
+        }).catch((err) => {
+          _backendConnected = false;
+          _refreshBackendStatusBadge();
+          warnNonBlockingAsync("백엔드 WebSocket 연결 준비 실패", err, {
+            appendLog: true,
+            focusTitle: "백엔드 연결 준비 실패",
+            bubble: "연결 준비 실패",
+            bubbleColor: "#991b1b",
+            status: "연결 오류",
+            agentDetail: "브리지 WebSocket URL 조회에 실패함",
+          });
+        });
       }
 
       function _handleWsEvent(ev) {
@@ -6250,7 +7772,9 @@
               if (result?.available) {
                 setCurrentFocus(result.headline || "최근 결과 업데이트", result.next_action || "결과 요약 패널을 확인하세요.");
               }
-            }).catch(() => {});
+            }).catch((err) => {
+              warnNonBlockingAsync("품질 요약 새로고침 실패", err);
+            });
             appendLog("[System] 실행 완료", null, {
               agent: "manager",
               stage: officeState.currentStage,
@@ -6322,7 +7846,14 @@
             // 프롬프트 해결됨 — 다이얼로그 이미 닫힘
             break;
           case "prompt_timeout":
-            document.getElementById("promptOverlay").classList.remove("open");
+            if (window.GeuldobiRendererStateBootstrap?.setPromptOverlayOpen) {
+              window.GeuldobiRendererStateBootstrap.setPromptOverlayOpen({
+                promptOverlay: document.getElementById("promptOverlay"),
+                isOpen: false,
+              });
+            } else {
+              document.getElementById("promptOverlay").classList.remove("open");
+            }
             _currentPrompt = null;
             setPromptState(false, `기본값 적용: ${ev.payload.applied_default}`);
             appendLog(`[System] 프롬프트 타임아웃 — 기본값 적용: ${ev.payload.applied_default}`, null, {
@@ -6373,7 +7904,19 @@
             const { run_id } = data;
             const pid = payload.prompt_id;
             if (window.geuldobiDesktop) {
-              window.geuldobiDesktop.resolvePrompt(run_id, pid, "5").catch(() => {});
+              window.geuldobiDesktop.resolvePrompt(run_id, pid, "5").catch((err) => {
+                warnNonBlockingAsync("Stage 0 자동 종료 입력 전송 실패", err, {
+                  appendLog: true,
+                  focusTitle: "자동 종료 입력 실패",
+                  focusDetail: "Exit 입력 전송에 실패해 수동 종료가 필요함",
+                  bubble: "입력 전송 실패",
+                  bubbleColor: "#991b1b",
+                  status: "입력 오류",
+                  agentDetail: "자동 Exit 입력 전송 실패로 수동 확인이 필요",
+                });
+                setPromptState(true, "자동 종료 입력 실패 — 직접 종료를 선택하세요");
+                _showPromptDialog(data, { source: "auto-exit-fallback" });
+              });
             }
             appendLog("[System] Stage 0 완료 — 프로세스 종료 중...", null, {
               agent: "manager",
@@ -6551,14 +8094,28 @@
           input.focus();
         }
 
-        overlay.classList.add("open");
+        if (window.GeuldobiRendererStateBootstrap?.setPromptOverlayOpen) {
+          window.GeuldobiRendererStateBootstrap.setPromptOverlayOpen({
+            promptOverlay: overlay,
+            isOpen: true,
+          });
+        } else {
+          overlay.classList.add("open");
+        }
       }
 
       function _resolveCurrentPrompt(value) {
         if (!_currentPrompt) return;
         const { runId, promptId } = _currentPrompt;
         _currentPrompt = null;
-        document.getElementById("promptOverlay").classList.remove("open");
+        if (window.GeuldobiRendererStateBootstrap?.setPromptOverlayOpen) {
+          window.GeuldobiRendererStateBootstrap.setPromptOverlayOpen({
+            promptOverlay: document.getElementById("promptOverlay"),
+            isOpen: false,
+          });
+        } else {
+          document.getElementById("promptOverlay").classList.remove("open");
+        }
         setPromptState(false, "대기 중인 입력 없음");
 
         if (window.geuldobiDesktop) {
@@ -6789,7 +8346,16 @@
         const label = button.querySelector(".label").textContent;
 
         console.log(`[UI] action=${action} key=${key} subKey=${subKey}`);
-        lastAction.textContent = `최근 클릭: ${label} (key: ${key || action})`;
+        if (window.GeuldobiRendererStateBootstrap?.setLastActionText) {
+          window.GeuldobiRendererStateBootstrap.setLastActionText({
+            lastAction,
+            label,
+            key,
+            action,
+          });
+        } else {
+          lastAction.textContent = `최근 클릭: ${label} (key: ${key || action})`;
+        }
 
         if (action === "genre_setting") {
           openGenreModal();
@@ -6828,10 +8394,12 @@
             try {
               const result = await window.geuldobiDesktop.stopRun();
               if (result && result.ok === false) {
-                appendLog(`[System] 중지 실패: ${result.message}`, null, {
+                const errorInfo = describeBridgeError(result, { fallbackMessage: "중지 요청 처리에 실패했습니다." });
+                setCurrentFocus(errorInfo.focusTitle, errorInfo.userMessage);
+                appendLog(`[System] 중지 실패: ${errorInfo.userMessage}`, null, {
                   agent: "manager",
                   summary: "중지 실패",
-                  detail: result.message,
+                  detail: errorInfo.detail,
                   bubble: "중지 실패",
                   bubbleColor: "#991b1b",
                   status: "오류",
@@ -6972,11 +8540,13 @@
           try {
             const result = await window.geuldobiDesktop.runKey(key, subKey, inputs, approvalId);
             if (!result.ok) {
-              appendLog(`[System] 실행 실패: ${result.message}`, null, {
+              const errorInfo = describeBridgeError(result, { fallbackMessage: `${label} 요청 처리에 실패했습니다.` });
+              setCurrentFocus(errorInfo.focusTitle, errorInfo.userMessage);
+              appendLog(`[System] 실행 실패: ${errorInfo.userMessage}`, null, {
                 agent: "manager",
                 stage: action,
                 summary: `${label} 요청 실패`,
-                detail: result.message,
+                detail: errorInfo.detail,
                 bubble: "요청 실패",
                 bubbleColor: "#991b1b",
                 status: "오류",
@@ -7015,6 +8585,14 @@
       }
 
       function updateToggleLabels() {
+        if (window.GeuldobiRendererStateBootstrap?.updateToggleLabels) {
+          return window.GeuldobiRendererStateBootstrap.updateToggleLabels({
+            toggleSkip,
+            toggleMute,
+            skipAnimation: officeState.skipAnimation,
+            mute: officeState.mute,
+          });
+        }
         toggleSkip.textContent = `Skip animation: ${officeState.skipAnimation ? "ON" : "OFF"}`;
         toggleMute.textContent = `Mute: ${officeState.mute ? "ON" : "OFF"}`;
         toggleSkip.classList.toggle("active", officeState.skipAnimation);
@@ -7046,6 +8624,13 @@
       const logPanel = document.getElementById("logPanel");
       const logToggleBtn = document.getElementById("logToggleBtn");
       logToggleBtn.addEventListener("click", () => {
+        if (window.GeuldobiRendererStateBootstrap?.setLogPanelCollapsed) {
+          window.GeuldobiRendererStateBootstrap.setLogPanelCollapsed({
+            logPanel,
+            logToggleBtn,
+          });
+          return;
+        }
         const collapsed = logPanel.classList.toggle("log-panel-collapsible");
         logToggleBtn.textContent = collapsed ? "펼치기" : "접기";
       });
@@ -7424,6 +9009,13 @@
       function setSettingsTab(tabId) {
         const tabButtons = Array.from(document.querySelectorAll(".settings-panel .tab-btn"));
         const tabContents = Array.from(document.querySelectorAll(".settings-panel .tab-content"));
+        if (window.GeuldobiRendererStateBootstrap?.setSettingsTab) {
+          return window.GeuldobiRendererStateBootstrap.setSettingsTab({
+            tabButtons,
+            tabContents,
+            tabId,
+          });
+        }
         let activeTabId = tabId;
         if (!tabContents.some((content) => content.id === activeTabId)) {
           activeTabId = tabButtons.find((button) => !button.disabled)?.dataset.tab || tabButtons[0]?.dataset.tab || "";
@@ -7437,15 +9029,33 @@
       }
 
       function setWorkspaceView(viewName) {
-        document.querySelectorAll(".workspace-nav-btn").forEach((button) => {
-          button.classList.toggle("active", button.dataset.view === viewName);
-        });
-        document.querySelectorAll(".workspace-view").forEach((view) => {
-          view.classList.toggle("active", view.dataset.view === viewName);
-        });
+        if (window.GeuldobiRendererStateBootstrap?.setWorkspaceView) {
+          window.GeuldobiRendererStateBootstrap.setWorkspaceView({
+            viewName,
+            buttons: document.querySelectorAll(".workspace-nav-btn"),
+            views: document.querySelectorAll(".workspace-view"),
+          });
+        } else {
+          document.querySelectorAll(".workspace-nav-btn").forEach((button) => {
+            button.classList.toggle("active", button.dataset.view === viewName);
+          });
+          document.querySelectorAll(".workspace-view").forEach((view) => {
+            view.classList.toggle("active", view.dataset.view === viewName);
+          });
+        }
+        if (viewName === "office") {
+          scheduleOfficeCanvasResize();
+        }
       }
 
       function buildWorkspacePanel(title, subtitle = "") {
+        if (window.GeuldobiRendererStateBootstrap?.buildWorkspacePanel) {
+          return window.GeuldobiRendererStateBootstrap.buildWorkspacePanel({
+            document,
+            title,
+            subtitle,
+          });
+        }
         const panel = document.createElement("article");
         panel.className = "panel";
 
@@ -7513,13 +9123,6 @@
         const projectTabButton = document.querySelector('.settings-panel .tab-btn[data-tab="tab-project"]');
         if (!page || !topbar || !currentShell || !runPanel || !officePanel || !logPanel || !projectTab) return;
 
-        const workspaceNav = document.createElement("nav");
-        workspaceNav.className = "workspace-nav";
-        workspaceNav.id = "workspaceNav";
-
-        const workspaceHost = document.createElement("div");
-        workspaceHost.className = "workspace-host";
-
         const viewSpecs = [
           { key: "run", label: "Run" },
           { key: "office", label: "Office" },
@@ -7527,102 +9130,173 @@
           { key: "project", label: "Project" }
         ];
 
-        const viewMap = {};
-        viewSpecs.forEach(({ key, label }) => {
-          const button = document.createElement("button");
-          button.type = "button";
-          button.className = "workspace-nav-btn";
-          button.dataset.view = key;
-          button.textContent = label;
-          button.addEventListener("click", () => setWorkspaceView(key));
-          workspaceNav.appendChild(button);
+        const scaffold = window.GeuldobiRendererStateBootstrap?.createWorkspaceScaffold
+          ? window.GeuldobiRendererStateBootstrap.createWorkspaceScaffold({
+              document,
+              viewSpecs,
+              onSelectView: setWorkspaceView,
+            })
+          : null;
 
-          const view = document.createElement("section");
-          view.className = `workspace-view ${key}-view`;
-          view.dataset.view = key;
-          workspaceHost.appendChild(view);
-          viewMap[key] = view;
-        });
+        const workspaceNav = scaffold ? scaffold.workspaceNav : document.createElement("nav");
+        const workspaceHost = scaffold ? scaffold.workspaceHost : document.createElement("div");
+        const viewMap = scaffold ? scaffold.viewMap : {};
+
+        if (!scaffold) {
+          workspaceNav.className = "workspace-nav";
+          workspaceNav.id = "workspaceNav";
+
+          workspaceHost.className = "workspace-host";
+
+          viewSpecs.forEach(({ key, label }) => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "workspace-nav-btn";
+            button.dataset.view = key;
+            button.textContent = label;
+            button.addEventListener("click", () => setWorkspaceView(key));
+            workspaceNav.appendChild(button);
+
+            const view = document.createElement("section");
+            view.className = `workspace-view ${key}-view`;
+            view.dataset.view = key;
+            workspaceHost.appendChild(view);
+            viewMap[key] = view;
+          });
+        }
 
         topbar.insertAdjacentElement("afterend", workspaceNav);
         currentShell.replaceWith(workspaceHost);
 
-        const runTitle = runPanel.querySelector(".panel-title");
-        const runSub = runPanel.querySelector(".panel-sub");
-        if (runTitle) runTitle.textContent = "실행";
-        if (runSub) runSub.textContent = "실행과 운영 제어만 이 화면에 남깁니다.";
+        if (window.GeuldobiRendererStateBootstrap?.mountRunWorkspace) {
+          window.GeuldobiRendererStateBootstrap.mountRunWorkspace({
+            document,
+            runView: viewMap.run,
+            runPanel,
+            logPanel,
+            titleText: "실행",
+            subtitleText: "실행과 운영 제어만 이 화면에 남깁니다.",
+          });
+        } else {
+          const runTitle = runPanel.querySelector(".panel-title");
+          const runSub = runPanel.querySelector(".panel-sub");
+          if (runTitle) runTitle.textContent = "실행";
+          if (runSub) runSub.textContent = "실행과 운영 제어만 이 화면에 남깁니다.";
 
-        const runShell = document.createElement("div");
-        runShell.className = "workspace-shell";
-        const runMainCol = document.createElement("div");
-        runMainCol.className = "workspace-main-col";
-        viewMap.run.appendChild(runShell);
-        runShell.append(runPanel, runMainCol);
-        runMainCol.appendChild(logPanel);
-
-        if (qualityRadarPanel) viewMap.quality.appendChild(qualityRadarPanel);
-        if (qualityInsightGrid) viewMap.quality.appendChild(qualityInsightGrid);
-
-        if (agentBoardNode) {
-          const agentPanel = buildWorkspacePanel("Agent Board", "에이전트 상태와 최근 발화 흔적");
-          agentPanel.classList.add("quality-page-panel", "agent-board-panel");
-          agentPanel.appendChild(agentBoardNode);
-          viewMap.quality.appendChild(agentPanel);
+          const runShell = document.createElement("div");
+          runShell.className = "workspace-shell";
+          const runMainCol = document.createElement("div");
+          runMainCol.className = "workspace-main-col";
+          viewMap.run.appendChild(runShell);
+          runShell.append(runPanel, runMainCol);
+          runMainCol.appendChild(logPanel);
         }
 
-        if (eventFeedNode) {
-          const feedPanel = buildWorkspacePanel("Event Feed", "최근 주요 이벤트와 런타임 신호");
-          feedPanel.classList.add("quality-page-panel", "event-feed-panel");
-          feedPanel.appendChild(eventFeedNode);
-          viewMap.quality.appendChild(feedPanel);
+        if (window.GeuldobiRendererStateBootstrap?.mountQualityWorkspace) {
+          window.GeuldobiRendererStateBootstrap.mountQualityWorkspace({
+            document,
+            qualityView: viewMap.quality,
+            qualityRadarPanel,
+            qualityInsightGrid,
+            agentBoardNode,
+            eventFeedNode,
+          });
+        } else {
+          if (qualityRadarPanel) viewMap.quality.appendChild(qualityRadarPanel);
+          if (qualityInsightGrid) viewMap.quality.appendChild(qualityInsightGrid);
+
+          if (agentBoardNode) {
+            const agentPanel = buildWorkspacePanel("Agent Board", "에이전트 상태와 최근 발화 흔적");
+            agentPanel.classList.add("quality-page-panel", "agent-board-panel");
+            agentPanel.appendChild(agentBoardNode);
+            viewMap.quality.appendChild(agentPanel);
+          }
+
+          if (eventFeedNode) {
+            const feedPanel = buildWorkspacePanel("Event Feed", "최근 주요 이벤트와 런타임 신호");
+            feedPanel.classList.add("quality-page-panel", "event-feed-panel");
+            feedPanel.appendChild(eventFeedNode);
+            viewMap.quality.appendChild(feedPanel);
+          }
+
+          const qualityShell = document.createElement("div");
+          qualityShell.className = "quality-page-shell";
+          while (viewMap.quality.firstChild) {
+            qualityShell.appendChild(viewMap.quality.firstChild);
+          }
+          viewMap.quality.appendChild(qualityShell);
         }
 
-        const qualityShell = document.createElement("div");
-        qualityShell.className = "quality-page-shell";
-        while (viewMap.quality.firstChild) {
-          qualityShell.appendChild(viewMap.quality.firstChild);
-        }
-        viewMap.quality.appendChild(qualityShell);
-
-        officePanel.classList.add("office-page-panel");
-        const officeShell = document.createElement("div");
-        officeShell.className = "workspace-shell single";
-        officeShell.appendChild(officePanel);
-        viewMap.office.appendChild(officeShell);
-
-        const projectShell = document.createElement("div");
-        projectShell.className = "project-shell";
-        viewMap.project.appendChild(projectShell);
-
-        const projectMaterialsPanel = buildWorkspacePanel("재료", "Bible, Treatment, 그리고 프로젝트 준비물");
-        const projectConfigPanel = buildWorkspacePanel("프로젝트 설정", "작품 가드와 작가 지시사항을 여기서 관리합니다.");
-        projectShell.append(projectMaterialsPanel, projectConfigPanel);
-
-        if (materialAccordion) {
-          projectMaterialsPanel.appendChild(materialAccordion);
+        if (window.GeuldobiRendererStateBootstrap?.mountOfficeWorkspace) {
+          window.GeuldobiRendererStateBootstrap.mountOfficeWorkspace({
+            document,
+            officeView: viewMap.office,
+            officePanel,
+          });
+        } else {
+          officePanel.classList.add("office-page-panel");
+          const officeShell = document.createElement("div");
+          officeShell.className = "workspace-shell single";
+          officeShell.appendChild(officePanel);
+          viewMap.office.appendChild(officeShell);
         }
 
-        projectTabButton?.remove();
-        projectTab.classList.remove("tab-content", "active");
-        projectTab.classList.add("project-page-content");
-        projectConfigPanel.appendChild(projectTab);
+        const projectMount = window.GeuldobiRendererStateBootstrap?.mountProjectWorkspace
+          ? window.GeuldobiRendererStateBootstrap.mountProjectWorkspace({
+              document,
+              projectView: viewMap.project,
+              materialAccordion,
+              projectTab,
+              projectTabButton,
+            })
+          : null;
+        const projectConfigPanel = projectMount ? projectMount.projectConfigPanel : (() => {
+          const projectShell = document.createElement("div");
+          projectShell.className = "project-shell";
+          viewMap.project.appendChild(projectShell);
 
-        const actionRow = document.createElement("div");
-        actionRow.className = "project-form-actions";
+          const projectMaterialsPanel = buildWorkspacePanel("재료", "Bible, Treatment, 그리고 프로젝트 준비물");
+          const fallbackProjectConfigPanel = buildWorkspacePanel("프로젝트 설정", "작품 가드와 작가 지시사항을 여기서 관리합니다.");
+          projectShell.append(projectMaterialsPanel, fallbackProjectConfigPanel);
 
-        const projectSaveBtn = document.createElement("button");
-        projectSaveBtn.type = "button";
-        projectSaveBtn.className = "top-action";
-        projectSaveBtn.textContent = "프로젝트 저장";
-        projectSaveBtn.addEventListener("click", () => settingsSave.click());
+          if (materialAccordion) {
+            projectMaterialsPanel.appendChild(materialAccordion);
+          }
 
-        const projectOpenSettingsBtn = document.createElement("button");
-        projectOpenSettingsBtn.type = "button";
-        projectOpenSettingsBtn.className = "top-action";
-        projectOpenSettingsBtn.textContent = "API / 시스템 설정";
-        projectOpenSettingsBtn.addEventListener("click", () => openSettings("tab-api"));
+          projectTabButton?.remove();
+          projectTab.classList.remove("tab-content", "active");
+          projectTab.classList.add("project-page-content");
+          fallbackProjectConfigPanel.appendChild(projectTab);
+          return fallbackProjectConfigPanel;
+        })();
 
-        actionRow.append(projectSaveBtn, projectOpenSettingsBtn);
+        const actionRow = window.GeuldobiRendererStateBootstrap?.buildProjectActionRow
+          ? window.GeuldobiRendererStateBootstrap.buildProjectActionRow({
+              document,
+              onSaveProject: () => settingsSave.click(),
+              onOpenSettings: () => openSettings("tab-api"),
+              saveLabel: "프로젝트 저장",
+              settingsLabel: "API / 시스템 설정",
+            })
+          : (() => {
+              const fallbackActionRow = document.createElement("div");
+              fallbackActionRow.className = "project-form-actions";
+
+              const projectSaveBtn = document.createElement("button");
+              projectSaveBtn.type = "button";
+              projectSaveBtn.className = "top-action";
+              projectSaveBtn.textContent = "프로젝트 저장";
+              projectSaveBtn.addEventListener("click", () => settingsSave.click());
+
+              const projectOpenSettingsBtn = document.createElement("button");
+              projectOpenSettingsBtn.type = "button";
+              projectOpenSettingsBtn.className = "top-action";
+              projectOpenSettingsBtn.textContent = "API / 시스템 설정";
+              projectOpenSettingsBtn.addEventListener("click", () => openSettings("tab-api"));
+
+              fallbackActionRow.append(projectSaveBtn, projectOpenSettingsBtn);
+              return fallbackActionRow;
+            })();
         projectConfigPanel.appendChild(actionRow);
 
         setWorkspaceView("run");
@@ -7631,10 +9305,22 @@
       function openSettings(tabId = null) {
         syncSettingsUI();
         setSettingsTab(tabId);
+        if (window.GeuldobiRendererStateBootstrap?.setSettingsOverlayOpen) {
+          return window.GeuldobiRendererStateBootstrap.setSettingsOverlayOpen({
+            settingsOverlay,
+            isOpen: true,
+          });
+        }
         settingsOverlay.classList.add("open");
       }
 
       function closeSettings() {
+        if (window.GeuldobiRendererStateBootstrap?.setSettingsOverlayOpen) {
+          return window.GeuldobiRendererStateBootstrap.setSettingsOverlayOpen({
+            settingsOverlay,
+            isOpen: false,
+          });
+        }
         settingsOverlay.classList.remove("open");
       }
 
@@ -7683,7 +9369,9 @@
           workGuardEl.value = projectSettingsStore.workGuardYaml || "";
           syncWorkGuardHelperFromYaml(workGuardEl.value);
         }
-        refreshWorkGuardTemplateList().catch(() => {});
+        refreshWorkGuardTemplateList().catch((err) => {
+          warnNonBlockingAsync("작품 가드 템플릿 목록 새로고침 실패", err);
+        });
       }
 
       initializeWorkspaceLayout();
@@ -7797,12 +9485,26 @@
       });
       if (refreshWorkGuardTemplatesBtn) {
         refreshWorkGuardTemplatesBtn.addEventListener("click", () => {
-          refreshWorkGuardTemplateList().catch(() => {});
+          refreshWorkGuardTemplateList().catch((err) => {
+            warnNonBlockingAsync("작품 가드 템플릿 새로고침 실패", err, {
+              appendLog: true,
+              bubble: "목록 새로고침 실패",
+              status: "경고",
+              agentDetail: "템플릿 목록을 다시 불러오지 못함",
+            });
+          });
         });
       }
       if (applyWorkGuardTemplateBtn) {
         applyWorkGuardTemplateBtn.addEventListener("click", () => {
-          applySelectedWorkGuardTemplate().catch(() => {});
+          applySelectedWorkGuardTemplate().catch((err) => {
+            warnNonBlockingAsync("작품 가드 템플릿 적용 실패", err, {
+              appendLog: true,
+              bubble: "템플릿 적용 실패",
+              status: "경고",
+              agentDetail: "선택한 템플릿을 YAML에 반영하지 못함",
+            });
+          });
         });
       }
 
@@ -7932,14 +9634,34 @@
 
       function openGenreModal() {
         updateGenreModalState();
+        if (window.GeuldobiRendererStateBootstrap?.setGenreModalOpen) {
+          return window.GeuldobiRendererStateBootstrap.setGenreModalOpen({
+            genreModal,
+            isOpen: true,
+          });
+        }
         genreModal.classList.add("open");
       }
 
       function closeGenreModal() {
+        if (window.GeuldobiRendererStateBootstrap?.setGenreModalOpen) {
+          return window.GeuldobiRendererStateBootstrap.setGenreModalOpen({
+            genreModal,
+            isOpen: false,
+          });
+        }
         genreModal.classList.remove("open");
       }
 
       function updateGenreModalState() {
+        if (window.GeuldobiRendererStateBootstrap?.updateGenreModalState) {
+          return window.GeuldobiRendererStateBootstrap.updateGenreModalState({
+            currentGenre: projectConfig.genre,
+            genreLabels: GENRE_LABELS,
+            genreCurrentLabel,
+            genreItems: document.querySelectorAll(".genre-item"),
+          });
+        }
         const label = projectConfig.genre ? GENRE_LABELS[projectConfig.genre] : "없음";
         genreCurrentLabel.textContent = `현재 선택: ${label}`;
         document.querySelectorAll(".genre-item").forEach((item) => {
@@ -7958,7 +9680,14 @@
         // 즉시 영속화
         if (window.geuldobiDesktop) {
           settingsStore.genre = genreKey;
-          window.geuldobiDesktop.saveSettings(settingsStore).catch(() => {});
+          window.geuldobiDesktop.saveSettings(settingsStore).catch((err) => {
+            warnNonBlockingAsync("장르 설정 저장 실패", err, {
+              appendLog: true,
+              bubble: "저장 실패",
+              status: "경고",
+              agentDetail: "장르 선택은 반영됐지만 로컬 설정 저장은 실패",
+            });
+          });
         }
       }
 
@@ -7967,32 +9696,60 @@
         if (e.target === genreModal) closeGenreModal();
       });
 
-      document.querySelectorAll(".genre-item").forEach((item) => {
-        item.addEventListener("click", () => {
-          const genreKey = item.dataset.genre;
-          if (genreKey === "investment") {
-            applyGenre(genreKey);
+        document.querySelectorAll(".genre-item").forEach((item) => {
+          item.addEventListener("click", () => {
+            const genreKey = item.dataset.genre;
+            if (genreKey === "investment") {
+              applyGenre(genreKey);
+            } else {
+              _pendingGenre = genreKey;
+              if (window.GeuldobiRendererStateBootstrap?.setGenreConfirmModalOpen) {
+                window.GeuldobiRendererStateBootstrap.setGenreConfirmModalOpen({
+                  genreConfirmModal,
+                  isOpen: true,
+                });
+                return;
+              }
+              genreConfirmModal.classList.add("open");
+            }
+          });
+        });
+
+        genreConfirmCancel.addEventListener("click", () => {
+          _pendingGenre = null;
+          if (window.GeuldobiRendererStateBootstrap?.setGenreConfirmModalOpen) {
+            window.GeuldobiRendererStateBootstrap.setGenreConfirmModalOpen({
+              genreConfirmModal,
+              isOpen: false,
+            });
+            return;
+          }
+          genreConfirmModal.classList.remove("open");
+        });
+
+        genreConfirmOk.addEventListener("click", () => {
+          if (window.GeuldobiRendererStateBootstrap?.setGenreConfirmModalOpen) {
+            window.GeuldobiRendererStateBootstrap.setGenreConfirmModalOpen({
+              genreConfirmModal,
+              isOpen: false,
+            });
           } else {
-            _pendingGenre = genreKey;
-            genreConfirmModal.classList.add("open");
+            genreConfirmModal.classList.remove("open");
+          }
+          if (_pendingGenre) {
+            applyGenre(_pendingGenre);
+            _pendingGenre = null;
           }
         });
-      });
-
-      genreConfirmCancel.addEventListener("click", () => {
-        _pendingGenre = null;
-        genreConfirmModal.classList.remove("open");
-      });
-
-      genreConfirmOk.addEventListener("click", () => {
-        genreConfirmModal.classList.remove("open");
-        if (_pendingGenre) {
-          applyGenre(_pendingGenre);
-          _pendingGenre = null;
-        }
-      });
 
       function setAccordionCollapsed(targetId, collapsed) {
+        if (window.GeuldobiRendererStateBootstrap?.setAccordionCollapsed) {
+          return window.GeuldobiRendererStateBootstrap.setAccordionCollapsed({
+            document,
+            targetId,
+            collapsed,
+          });
+        }
         const body = document.getElementById(targetId);
         const header = document.querySelector(`.category-header[data-target="${targetId}"]`);
         if (!body || !header) return;
@@ -8003,6 +9760,13 @@
       // Accordion toggle (독립 토글, 자동 접기 없음)
       document.querySelectorAll(".category-header").forEach((header) => {
         header.addEventListener("click", () => {
+          if (window.GeuldobiRendererStateBootstrap?.toggleAccordionCollapsed) {
+            window.GeuldobiRendererStateBootstrap.toggleAccordionCollapsed({
+              document,
+              header,
+            });
+            return;
+          }
           const targetId = header.dataset.target;
           const body = document.getElementById(targetId);
           const isCollapsed = body.classList.toggle("collapsed");
@@ -8017,15 +9781,23 @@
       // ── 장르 게이팅 (장르 미설정 시 비활성) ──
       function updateGenreGating() {
         const hasGenre = !!projectConfig.genre;
+        const hint = document.getElementById("genreRequiredHint");
+        const subMenu = document.getElementById("stage0SubMenu");
+        if (window.GeuldobiRendererStateBootstrap?.updateGenreGating) {
+          return window.GeuldobiRendererStateBootstrap.updateGenreGating({
+            hasGenre,
+            buttons: document.querySelectorAll(".genre-gated"),
+            hint,
+            subMenu,
+          });
+        }
         document.querySelectorAll(".genre-gated").forEach((btn) => {
           btn.disabled = !hasGenre;
         });
-        const hint = document.getElementById("genreRequiredHint");
         if (hint) hint.classList.toggle("show", !hasGenre);
         // Stage 0 서브메뉴도 장르 없으면 닫기
-        if (!hasGenre) {
-          const subMenu = document.getElementById("stage0SubMenu");
-          if (subMenu) subMenu.classList.remove("open");
+        if (!hasGenre && subMenu) {
+          subMenu.classList.remove("open");
         }
       }
 
@@ -8040,38 +9812,64 @@
         const container = document.getElementById(containerId);
         if (!container) return;
         if (!window.geuldobiDesktop) {
-          container.innerHTML = '<div class="material-empty">오프라인 모드</div>';
+          if (window.GeuldobiRendererStateBootstrap?.renderMaterialEmpty) {
+            window.GeuldobiRendererStateBootstrap.renderMaterialEmpty({ container, message: "오프라인 모드" });
+          } else {
+            container.innerHTML = '<div class="material-empty">오프라인 모드</div>';
+          }
           return;
         }
         try {
           const res = await window.geuldobiDesktop.listMaterialFiles(folder);
           if (!res.ok || res.files.length === 0) {
-            container.innerHTML = '<div class="material-empty">파일 없음</div>';
+            if (window.GeuldobiRendererStateBootstrap?.renderMaterialEmpty) {
+              window.GeuldobiRendererStateBootstrap.renderMaterialEmpty({ container, message: "파일 없음" });
+            } else {
+              container.innerHTML = '<div class="material-empty">파일 없음</div>';
+            }
             return;
           }
           container.innerHTML = "";
           for (const f of res.files) {
             if (f.isDir) continue;
-            const item = document.createElement("div");
-            item.className = "material-file-item";
-            const safeFileName = escapeHtml(f.name);
-            item.innerHTML = `<span class="file-name" title="${safeFileName}">${safeFileName}</span>`
-              + `<span class="file-size">${_formatSize(f.size)}</span>`
-              + `<button type="button" class="file-del" title="삭제">✕</button>`;
-            item.querySelector(".file-del").addEventListener("click", async () => {
-              if (!confirm(f.name + " 파일을 삭제하시겠습니까?")) return;
-              const del = await window.geuldobiDesktop.deleteMaterialFile(folder, f.name);
+            const handleDelete = async (deleteFolder, fileName) => {
+              if (!confirm(fileName + " 파일을 삭제하시겠습니까?")) return;
+              const del = await window.geuldobiDesktop.deleteMaterialFile(deleteFolder, fileName);
               if (del.ok) {
-                appendLog(`[재료] ${f.name} 삭제됨`);
-                refreshMaterialList(folder, containerId);
+                appendLog(`[재료] ${fileName} 삭제됨`);
+                refreshMaterialList(deleteFolder, containerId);
               } else {
-                appendLog(`[재료] ${f.name} 삭제 실패: ${del.message || "알 수 없는 오류"}`);
+                appendLog(`[재료] ${fileName} 삭제 실패: ${del.message || "알 수 없는 오류"}`);
               }
-            });
+            };
+            const item = window.GeuldobiRendererStateBootstrap?.buildMaterialFileItem
+              ? window.GeuldobiRendererStateBootstrap.buildMaterialFileItem({
+                  file: f,
+                  folder,
+                  formatSize: _formatSize,
+                  escapeHtml,
+                  onDelete: handleDelete,
+                })
+              : (() => {
+                  const fallbackItem = document.createElement("div");
+                  fallbackItem.className = "material-file-item";
+                  const safeFileName = escapeHtml(f.name);
+                  fallbackItem.innerHTML = `<span class="file-name" title="${safeFileName}">${safeFileName}</span>`
+                    + `<span class="file-size">${_formatSize(f.size)}</span>`
+                    + `<button type="button" class="file-del" title="삭제">✕</button>`;
+                  fallbackItem.querySelector(".file-del").addEventListener("click", async () => {
+                    await handleDelete(folder, f.name);
+                  });
+                  return fallbackItem;
+                })();
             container.appendChild(item);
           }
         } catch (err) {
-          container.innerHTML = '<div class="material-empty">로드 실패</div>';
+          if (window.GeuldobiRendererStateBootstrap?.renderMaterialEmpty) {
+            window.GeuldobiRendererStateBootstrap.renderMaterialEmpty({ container, message: "로드 실패" });
+          } else {
+            container.innerHTML = '<div class="material-empty">로드 실패</div>';
+          }
           appendLog(`[재료] ${folder} 목록 로드 실패: ${err.message}`);
         }
       }
@@ -8136,6 +9934,13 @@
       const logFilterSelect = document.getElementById("logFilterSelect");
 
       function applyLogFilter() {
+        if (window.GeuldobiRendererStateBootstrap?.applyLogFilter) {
+          return window.GeuldobiRendererStateBootstrap.applyLogFilter({
+            logSearchInput,
+            logFilterSelect,
+            logStream,
+          });
+        }
         const search = (logSearchInput.value || "").toLowerCase();
         const filter = logFilterSelect.value;
         const rows = logStream.querySelectorAll(".log-row");
@@ -8194,6 +9999,10 @@
               }
             }
             const saved = await window.geuldobiDesktop.loadSettings();
+            const recovery =
+              saved && typeof saved === "object" && saved.recovery && typeof saved.recovery === "object"
+                ? saved.recovery
+                : null;
             if (saved && typeof saved === "object") {
               settingsStore.apiKey1 = saved.apiKey1 || "";
               settingsStore.slackWebhook = saved.slackWebhook || "";
@@ -8203,11 +10012,18 @@
               settingsStore.targetLength = saved.targetLength || 5000;
               settingsStore.extraKeys = saved.extraKeys || {};
               settingsStore.project = saved.project || "";
-              // 장르는 매 실행마다 새로 설정 (잘못된 장르로 작업 방지)
-              // saved.genre는 로드하지 않음 — projectConfig.genre = null 유지
-              syncSettingsUI();
-              // 프로젝트 목록 로드 + 저장된 프로젝트 복원
-              await refreshProjectList();
+            }
+            // 장르는 매 실행마다 새로 설정 (잘못된 장르로 작업 방지)
+            // saved.genre는 로드하지 않음 — projectConfig.genre = null 유지
+            syncSettingsUI();
+            // 프로젝트 목록 로드 + 저장된 프로젝트 복원
+            await refreshProjectList();
+            if (recovery?.status === "factory_reset") {
+              setCurrentFocus("설정 초기화됨", "손상된 설정 파일을 기본값으로 복구했습니다. 필요시 API 키를 다시 입력하세요.");
+              appendLog("[설정] 설정 파일 손상 감지 — 기본값으로 초기화되었습니다.");
+            } else if (recovery?.status === "backup_restored") {
+              appendLog("[설정] 설정 파일 손상 감지 — .bak 백업에서 복구했습니다.");
+            } else if (saved && typeof saved === "object") {
               appendLog("[설정] 저장된 설정 로드 완료");
             }
           } catch (err) {

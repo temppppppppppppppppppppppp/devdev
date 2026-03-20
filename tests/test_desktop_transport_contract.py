@@ -1,5 +1,6 @@
 import json
 import re
+import subprocess
 from pathlib import Path
 
 import yaml
@@ -44,6 +45,31 @@ def _runtime_emitted_event_types() -> frozenset[str]:
     return frozenset(bridge_types | prompt_types)
 
 
+def _run_describe_bridge_error(payload: dict) -> dict:
+    script = f"""
+const fs = require("fs");
+const vm = require("vm");
+const source = fs.readFileSync({json.dumps(str(ROOT / "geuldobi-desktop" / "src" / "index.html"))}, "utf8");
+const start = source.indexOf('const BRIDGE_BACKEND_ERROR_META = Object.freeze({{');
+const end = source.indexOf('function warnNonBlockingAsync(summary, err, options = {{}}) {{', start);
+if (start < 0 || end < 0) {{
+  throw new Error("describeBridgeError block not found");
+}}
+const block = source.slice(start, end).trim();
+const context = {{ __payload: {json.dumps(payload)} }};
+vm.runInNewContext(block + "\\nthis.__result = describeBridgeError(__payload);", context);
+process.stdout.write(JSON.stringify(context.__result));
+"""
+    completed = subprocess.run(
+        ["node", "-e", script],
+        check=True,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+    )
+    return json.loads(completed.stdout)
+
+
 def test_desktop_bridge_transport_contract_matches_main_process_source():
     contract = _desktop_transport_contract()
     namespace = contract["renderer_boundary"]["desktop_transport_namespace"]
@@ -69,6 +95,9 @@ def test_desktop_bridge_transport_contract_matches_main_process_source():
     assert websocket_runtime["url"] == "ws://127.0.0.1:8300/events"
     assert 'const EVENTS_WS_URL = "ws://127.0.0.1:8300/events";' in MAIN_JS
     assert "new WebSocket(wsUrl)" in INDEX_HTML
+    assert 'console.error("WS error:", event);' in INDEX_HTML
+    assert 'setCurrentFocus("백엔드 연결 오류", detail);' in INDEX_HTML
+    assert 'status: "연결 오류"' in INDEX_HTML
 
 
 def test_runtime_websocket_event_types_match_schema_and_emitters():
@@ -138,3 +167,66 @@ def test_renderer_control_plane_resync_contract_matches_source():
     assert "let _pendingPromptQueue = [];" in INDEX_HTML
     assert '[prompt] queueing concurrent prompt_request while dialog open' in INDEX_HTML
     assert 'pending_prompts' in BRIDGE_SERVER
+
+
+def test_renderer_bridge_async_failures_are_not_silent():
+    empty_catch_re = re.compile(r"\.catch\(\s*\(\)\s*=>\s*\{\s*\}\s*\)")
+
+    assert not empty_catch_re.search(INDEX_HTML)
+    assert "function warnNonBlockingAsync(summary, err, options = {})" in INDEX_HTML
+    assert 'warnNonBlockingAsync("Stage 0 자동 종료 입력 전송 실패", err' in INDEX_HTML
+    assert '_showPromptDialog(data, { source: "auto-exit-fallback" });' in INDEX_HTML
+
+
+def test_renderer_bridge_error_mapping_covers_all_documented_codes():
+    backend_codes = API_CONTRACT["components"]["schemas"]["ErrorEnvelope"]["properties"]["code"]["enum"]
+
+    for code in backend_codes:
+        assert f'"{code}": Object.freeze(' in INDEX_HTML
+    assert '"NETWORK_ERROR": Object.freeze(' in INDEX_HTML
+    assert '"HTTP_": Object.freeze(' in INDEX_HTML
+    assert "function describeBridgeError(result, options = {})" in INDEX_HTML
+    assert "describeBridgeError(result, { fallbackMessage:" in INDEX_HTML
+
+
+def test_describe_bridge_error_prefers_backend_code_message():
+    payload = {
+        "ok": False,
+        "code": "HTTP_409",
+        "message": "서버 오류 (409)",
+        "data": {
+            "backend_code": "RUN_ALREADY_ACTIVE",
+            "backend_message": "another run is active",
+            "transport_status": 409,
+        },
+    }
+
+    result = _run_describe_bridge_error(payload)
+
+    assert result["effectiveCode"] == "RUN_ALREADY_ACTIVE"
+    assert result["backendCode"] == "RUN_ALREADY_ACTIVE"
+    assert result["transportCode"] == "HTTP_409"
+    assert "이미 다른 실행이 진행 중입니다." in result["userMessage"]
+    assert "backend=RUN_ALREADY_ACTIVE" in result["detail"]
+    assert "transport=HTTP_409" in result["detail"]
+
+
+def test_describe_bridge_error_handles_network_transport_failure():
+    payload = {
+        "ok": False,
+        "code": "NETWORK_ERROR",
+        "message": "bridge timeout (5000ms)",
+        "data": {
+            "backend_code": None,
+            "backend_message": None,
+            "transport_status": None,
+        },
+    }
+
+    result = _run_describe_bridge_error(payload)
+
+    assert result["effectiveCode"] == "NETWORK_ERROR"
+    assert result["backendCode"] == ""
+    assert result["transportCode"] == "NETWORK_ERROR"
+    assert "백엔드 연결에 실패했습니다." in result["userMessage"]
+    assert "전송: bridge timeout (5000ms)" in result["detail"]

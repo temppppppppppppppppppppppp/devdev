@@ -30,7 +30,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
-from modules.core.constants import ManuscriptLimits  # [V64.P4]
+from modules.core.constants import ManuscriptLimits, smart_truncate  # [V64.P4]
 from modules.core.llm_generate import generate_content_via_router
 
 
@@ -147,6 +147,14 @@ JSON 형식으로 냉정하게:
         self.enabled = True
         self.max_rounds = 2  # 최대 수정 라운드
 
+    @staticmethod
+    def _fit_prompt_text(value: str, max_chars: int, head_ratio: float = 0.55) -> str:
+        """Prompt cap은 유지하되 최근 문맥을 같이 남긴다."""
+        text = str(value or "")
+        if len(text) <= max_chars:
+            return text
+        return smart_truncate(text, max_chars=max_chars, head_chars=max(1, int(max_chars * head_ratio)))
+
     def _call_llm(self, prompt: str, temperature: float = 0.4) -> str:
         """LLM 호출"""
         try:
@@ -175,11 +183,11 @@ JSON 형식으로 냉정하게:
 
     def _get_adversary_feedback(self, content: str, content_type: str, context: dict[str, Any]) -> AdversaryFeedback:
         """가상 Director 피드백 생성"""
-        context_str = json.dumps(context, ensure_ascii=False, default=str)[:2000]
+        context_str = self._fit_prompt_text(json.dumps(context, ensure_ascii=False, default=str), 2000)
 
         prompt = self.ADVERSARY_PROMPT.format(
             content_type=content_type,
-            content=content[:6000].replace("{", "{{").replace("}", "}}"),  # [V70] brace escape
+            content=self._fit_prompt_text(content, 6000).replace("{", "{{").replace("}", "}}"),  # [V70]
             context=context_str.replace("{", "{{").replace("}", "}}"),  # [V70] brace escape
         )
 
@@ -211,7 +219,7 @@ JSON 형식으로 냉정하게:
 
         prompt = self.REVISION_PROMPT.format(
             content_type=content_type,
-            original=original[:8000].replace("{", "{{").replace("}", "}}"),  # [V70] brace escape
+            original=self._fit_prompt_text(original, 8000).replace("{", "{{").replace("}", "}}"),  # [V70]
             score=feedback.score,
             decision=feedback.decision,
             issues=(issues_text if issues_text else "없음").replace("{", "{{").replace("}", "}}"),  # [V70]
