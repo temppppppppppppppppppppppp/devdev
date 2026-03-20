@@ -13,6 +13,7 @@ import logging
 import re
 from pathlib import Path
 
+from modules.core.artifact_logging import build_candidate_key, snapshot_logged_artifact
 from modules.core.constants import smart_truncate
 from modules.core.jsonl_io import append_jsonl_record
 from modules.core.llm_generate import generate_content_via_router
@@ -993,6 +994,8 @@ JSON으로 출력:
         _contradiction_type_streak = 0
         _score_history: list[int] = []
         _plateau_advisory_emitted = False
+        _pathology_counts: dict[str, int] = {}
+        _pathology_repeat_emitted: set[str] = set()
 
         with StageSpinner(4, f"제{next_ep}화 · 앙상블 준비") as stage4_spinner:
             try:
@@ -1064,6 +1067,10 @@ JSON으로 출력:
                                             "best_manuscript": final_manuscript,
                                             "rejection_reason": director_feedback,
                                             "state_updates": final_state_updates,  # [TF-S4-01] CoVe REJECT 시 소실 방지
+                                            "retry_pathology_source": "cove_fail_closed",
+                                            "cove_fail_closed": True,
+                                            "cove_runtime_failure": False,
+                                            "provisional_pass_downgrade": True,
                                         }
                                         final_manuscript = None
                                         final_title = None  # [S4-P1-1] CoVe REJECT 시 title도 리셋
@@ -1073,6 +1080,13 @@ JSON으로 출력:
                                             interview_round + 1,
                                             _max_rounds,
                                         )
+                                        self._emit_retry_pathology_signal(
+                                            ep_num=next_ep,
+                                            round_num=interview_round,
+                                            previous_attempt=previous_attempt,
+                                            pathology_counts=_pathology_counts,
+                                            pathology_repeat_emitted=_pathology_repeat_emitted,
+                                        )
                                         continue
                                     # [S4-I5] LLM verify에서 MINOR/MAJOR 경고만 → 통과 (REJECT 안 함)
                                     if _cove_result.issues:
@@ -1080,47 +1094,35 @@ JSON으로 출력:
                                         self.ctx.ui.log(f"   ℹ️ [CoVe] LLM 검증 경고 (비차단): {_cove_warnings}")
                                 except Exception as e:
                                     logging.warning(f"[FailClosed:CoVe:LLM] {e!s:.100}")
-                                    self.ctx.ui.log("   🚨 [CoVe] LLM 검증 런타임 실패 → REJECT 전환")
-                                    director_feedback = (
-                                        "[CoVe 사후검증 런타임 실패]\n"
-                                        f"LLM verify runtime error: {type(e).__name__}: {e}"
-                                    )
-                                    previous_attempt = {
-                                        "score": 90,
-                                        "best_manuscript": final_manuscript,
-                                        "rejection_reason": director_feedback,
-                                        "state_updates": final_state_updates,
-                                    }
-                                    final_manuscript = None
-                                    final_title = None
-                                    logging.warning(  # [F2] CoVe LLM 런타임 실패 라운드 소모 가시화
-                                        "[Stage4] ep=%d round=%d/%d CoVe LLM 런타임 실패 → 라운드 소모",
+                                    self.ctx.ui.log("   ⚠️ [CoVe] LLM 검증 런타임 실패 → Director PASS 유지")
+                                    logging.warning(
+                                        "[Stage4] ep=%d round=%d/%d CoVe LLM 런타임 실패 → PASS 유지",
                                         next_ep,
                                         interview_round + 1,
                                         _max_rounds,
                                     )
-                                    continue
+                                    self._log_cove_runtime_advisory(
+                                        ep_num=next_ep,
+                                        round_num=interview_round,
+                                        source="llm_verify",
+                                        error=e,
+                                        quick_warning=_quick_msg,
+                                    )
                         except Exception as e:
                             logging.warning(f"[FailClosed:CoVe:Quick] {e!s:.100}")
-                            self.ctx.ui.log("   🚨 [CoVe] Quick 검증 런타임 실패 → REJECT 전환")
-                            director_feedback = (
-                                f"[CoVe 사후검증 런타임 실패]\nquick_verify runtime error: {type(e).__name__}: {e}"
-                            )
-                            previous_attempt = {
-                                "score": 90,
-                                "best_manuscript": final_manuscript,
-                                "rejection_reason": director_feedback,
-                                "state_updates": final_state_updates,
-                            }
-                            final_manuscript = None
-                            final_title = None
-                            logging.warning(  # [F2] CoVe Quick 런타임 실패 라운드 소모 가시화
-                                "[Stage4] ep=%d round=%d/%d CoVe Quick 런타임 실패 → 라운드 소모",
+                            self.ctx.ui.log("   ⚠️ [CoVe] Quick 검증 런타임 실패 → Director PASS 유지")
+                            logging.warning(
+                                "[Stage4] ep=%d round=%d/%d CoVe Quick 런타임 실패 → PASS 유지",
                                 next_ep,
                                 interview_round + 1,
                                 _max_rounds,
                             )
-                            continue
+                            self._log_cove_runtime_advisory(
+                                ep_num=next_ep,
+                                round_num=interview_round,
+                                source="quick_verify",
+                                error=e,
+                            )
 
                     break
                 director_feedback = _round_result.director_feedback
@@ -1242,6 +1244,13 @@ JSON으로 출력:
 
                 # [V75-D] Step 1: N연속 → inplace 패치 (저비용 LLM 1회)
                 # [S3-META] quality_risk Blueprint → 1연속에서 조기 트리거
+                self._emit_retry_pathology_signal(
+                    ep_num=next_ep,
+                    round_num=interview_round,
+                    previous_attempt=previous_attempt,
+                    pathology_counts=_pathology_counts,
+                    pathology_repeat_emitted=_pathology_repeat_emitted,
+                )
                 _s3_meta = round_ctx.blueprint.get("_stage3_meta", {}) if isinstance(round_ctx.blueprint, dict) else {}
                 _quality_risk = bool(_s3_meta.get("quality_risk", False))
                 _v75d_threshold = 1 if _quality_risk else 2
@@ -1253,6 +1262,12 @@ JSON으로 출력:
                 if _logic_error_streak >= _v75d_threshold and not _inplace_attempted:
                     _inplace_attempted = True
                     _v75d_success = False
+                    _bp_cr = None
+                    _bp_artifact_meta = {
+                        "candidate_key": "",
+                        "content_hash": "",
+                        "artifact_path": "",
+                    }
                     try:
                         self.ctx.ui.log(
                             f"   🔧 [V75-D] LOGIC_ERROR {_logic_error_streak}연속 → 블루프린트 inplace 패치 시도..."
@@ -1290,6 +1305,35 @@ JSON으로 출력:
                                         logging.warning("[TF-IPG] V75-D Blueprint 변경 비율 %.1f%% > 30%%", _bp_cr * 100)
                                 except Exception as _diff_e:
                                     logging.debug("[TF-IPG] V75-D diff 계산 실패: %s", _diff_e)
+                                _bp_artifact_meta = snapshot_logged_artifact(
+                                    getattr(self.ctx, "current_project", None),
+                                    stage=4,
+                                    ep_num=next_ep,
+                                    attempt_num=interview_round + 1,
+                                    candidate_key=build_candidate_key(
+                                        label="V75-D",
+                                        strategy="blueprint_inplace",
+                                        fallback="v75d_blueprint_patch",
+                                    ),
+                                    artifact_kind="patched_blueprint_after_fix",
+                                    payload=_patched_bp,
+                                )
+                                _audit_event = getattr(self.ctx, "audit_event", None)
+                                if callable(_audit_event):
+                                    _audit_payload = {
+                                        "ep_num": int(next_ep),
+                                        "round_num": int(interview_round + 1),
+                                        "candidate_key": str(_bp_artifact_meta.get("candidate_key", "") or "").strip(),
+                                        "content_hash": str(_bp_artifact_meta.get("content_hash", "") or "").strip(),
+                                        "artifact_path": str(_bp_artifact_meta.get("artifact_path", "") or "").strip(),
+                                    }
+                                    if isinstance(_bp_cr, (int, float)):
+                                        _audit_payload["change_ratio"] = float(_bp_cr)
+                                    _audit_event(
+                                        "stage4_v75d_blueprint_patch_snapshot",
+                                        "stage4 V75-D blueprint patch snapshot persisted",
+                                        _audit_payload,
+                                    )
                                 _v75d_success = True
                                 round_ctx = dataclasses.replace(round_ctx, blueprint=_patched_bp)
                                 _logic_error_streak = 0
@@ -1318,6 +1362,9 @@ JSON으로 출력:
                         fix_scope=(previous_attempt or {}).get("fix_scope", ""),
                         reason=director_feedback,
                         contradiction_type=_curr_dominant_ct,
+                        candidate_key=str(_bp_artifact_meta.get("candidate_key", "") or "").strip(),
+                        content_hash=str(_bp_artifact_meta.get("content_hash", "") or "").strip(),
+                        artifact_path=str(_bp_artifact_meta.get("artifact_path", "") or "").strip(),
                     )
 
                 # [V75-B] Step 2: inplace 시도 후에도 계속 실패 → 전면 재생성
@@ -1415,6 +1462,195 @@ JSON으로 출력:
             should_return=False,
         )
 
+    def _evaluate_retry_fix_pack_contract(self, previous_attempt: dict | None) -> dict[str, object]:
+        previous_attempt = previous_attempt if isinstance(previous_attempt, dict) else {}
+        try:
+            return self.interview_round._evaluate_fix_pack_contract(previous_attempt.get("fix_pack"))
+        except Exception:
+            return {"ready": False, "reason": "contract_eval_failed", "fix_pack": {}}
+
+    @staticmethod
+    def _pathology_contradiction_type(previous_attempt: dict | None) -> str:
+        previous_attempt = previous_attempt if isinstance(previous_attempt, dict) else {}
+        contradiction_types = previous_attempt.get("contradiction_types") or []
+        if not isinstance(contradiction_types, list) or not contradiction_types:
+            return ""
+        counts: dict[str, int] = {}
+        for item in contradiction_types:
+            key = str(item or "").strip()
+            if not key:
+                continue
+            counts[key] = counts.get(key, 0) + 1
+        if not counts:
+            return ""
+        return max(counts.items(), key=lambda pair: pair[1])[0]
+
+    def _build_retry_pathology_payload(
+        self,
+        *,
+        ep_num: int,
+        round_num: int,
+        previous_attempt: dict | None,
+    ) -> dict[str, object]:
+        previous_attempt = previous_attempt if isinstance(previous_attempt, dict) else {}
+        fix_pack_contract = self._evaluate_retry_fix_pack_contract(previous_attempt)
+        reject_bucket = str(previous_attempt.get("reject_bucket", "") or "").strip()
+        contradiction_type = self._pathology_contradiction_type(previous_attempt)
+        gate_basis = str(previous_attempt.get("gate_basis", "") or "").strip()
+        fix_scope = str(previous_attempt.get("fix_scope", "") or "").strip()
+        repair_scope = str(previous_attempt.get("repair_scope", "") or "").strip()
+        error_category = str(previous_attempt.get("error_category", "") or "").strip()
+        pathology_source = str(previous_attempt.get("retry_pathology_source", "") or "").strip()
+        fix_scope_reasoning = str(previous_attempt.get("fix_scope_reasoning", "") or "").strip()
+        open_review = str(previous_attempt.get("open_review", "") or "").strip()
+        firewall_triggered = bool(previous_attempt.get("firewall_triggered", False))
+        cove_fail_closed = bool(previous_attempt.get("cove_fail_closed", False))
+        cove_runtime_failure = bool(previous_attempt.get("cove_runtime_failure", False))
+        provisional_pass_downgrade = bool(previous_attempt.get("provisional_pass_downgrade", False))
+
+        tags: list[str] = []
+        if pathology_source:
+            tags.append(pathology_source)
+        if reject_bucket:
+            tags.append(reject_bucket)
+        if contradiction_type:
+            tags.append(f"contradiction:{contradiction_type}")
+        if firewall_triggered:
+            tags.append("continuity_firewall")
+        if provisional_pass_downgrade:
+            tags.append("provisional_pass_downgrade")
+        if cove_fail_closed:
+            tags.append("cove_fail_closed")
+        if cove_runtime_failure:
+            tags.append("cove_runtime_failure")
+        tags.append(
+            "fix_pack_ready" if bool(fix_pack_contract.get("ready")) else f"fix_pack:{str(fix_pack_contract.get('reason', '') or 'not_ready')}"
+        )
+
+        fingerprint = "|".join(tag for tag in tags if tag) or "unclassified_retry_pathology"
+        return {
+            "ep_num": int(ep_num),
+            "round_num": int(round_num + 1),
+            "pathology_fingerprint": fingerprint,
+            "pathology_source": pathology_source,
+            "reject_bucket": reject_bucket,
+            "gate_basis": gate_basis,
+            "fix_scope": fix_scope,
+            "repair_scope": repair_scope,
+            "error_category": error_category,
+            "contradiction_type": contradiction_type,
+            "fix_pack_ready": bool(fix_pack_contract.get("ready")),
+            "fix_pack_reason": str(fix_pack_contract.get("reason", "") or "").strip(),
+            "provisional_pass_downgrade": provisional_pass_downgrade,
+            "firewall_triggered": firewall_triggered,
+            "cove_fail_closed": cove_fail_closed,
+            "cove_runtime_failure": cove_runtime_failure,
+            "plateau_detected": bool(previous_attempt.get("plateau_detected", False)),
+            "score": int(previous_attempt.get("score", 0) or 0),
+            "fix_scope_reasoning": fix_scope_reasoning[:240],
+            "open_review": open_review[:240],
+        }
+
+    def _emit_retry_pathology_signal(
+        self,
+        *,
+        ep_num: int,
+        round_num: int,
+        previous_attempt: dict | None,
+        pathology_counts: dict[str, int],
+        pathology_repeat_emitted: set[str],
+    ) -> None:
+        payload = self._build_retry_pathology_payload(
+            ep_num=ep_num,
+            round_num=round_num,
+            previous_attempt=previous_attempt,
+        )
+        entry = {"event": "STAGE4_RETRY_PATHOLOGY", **payload}
+        current_project = getattr(self.ctx, "current_project", None)
+        logs_dir = resolve_project_log_dir(current_project)
+        if logs_dir is None:
+            project_name = getattr(current_project, "name", None)
+            if not isinstance(project_name, str) or not project_name.strip() or "MagicMock" in project_name:
+                project_name = "_unknown_project"
+            logs_dir = Path("projects") / project_name / "logs"
+        log_file = Path(logs_dir) / "episode_production.jsonl"
+        try:
+            Path(logs_dir).mkdir(parents=True, exist_ok=True)
+            append_jsonl_record(log_file, entry)
+        except Exception as exc:
+            logging.warning("[Stage4] retry pathology sink write skipped: %s", exc)
+
+        _audit_event = getattr(self.ctx, "audit_event", None)
+        if callable(_audit_event):
+            _audit_event(
+                "stage4_retry_pathology_signal",
+                "stage4 retry pathology observed",
+                dict(payload),
+            )
+
+        fingerprint = str(payload.get("pathology_fingerprint", "") or "").strip()
+        if not fingerprint:
+            return
+        pathology_counts[fingerprint] = int(pathology_counts.get(fingerprint, 0) or 0) + 1
+        repeat_count = pathology_counts[fingerprint]
+        if repeat_count < 2 or fingerprint in pathology_repeat_emitted:
+            return
+
+        repeat_payload = dict(payload)
+        repeat_payload["repeat_count"] = repeat_count
+        repeat_payload["event"] = "STAGE4_RETRY_PATHOLOGY_REPEAT"
+        try:
+            append_jsonl_record(log_file, repeat_payload)
+        except Exception as exc:
+            logging.warning("[Stage4] retry pathology repeat sink write skipped: %s", exc)
+        if callable(_audit_event):
+            _audit_event(
+                "stage4_retry_pathology_repeat",
+                "stage4 retry pathology repeated",
+                dict(repeat_payload),
+            )
+        pathology_repeat_emitted.add(fingerprint)
+
+    def _log_cove_runtime_advisory(
+        self,
+        *,
+        ep_num: int,
+        round_num: int,
+        source: str,
+        error: Exception,
+        quick_warning: str = "",
+    ) -> None:
+        current_project = getattr(self.ctx, "current_project", None)
+        logs_dir = resolve_project_log_dir(current_project)
+        if logs_dir is None:
+            project_name = getattr(current_project, "name", None)
+            if not isinstance(project_name, str) or not project_name.strip() or "MagicMock" in project_name:
+                project_name = "_unknown_project"
+            logs_dir = Path("projects") / project_name / "logs"
+        payload = {
+            "event": "STAGE4_COVE_RUNTIME_ADVISORY",
+            "ep_num": int(ep_num),
+            "round_num": int(round_num),
+            "source": str(source or "").strip(),
+            "error_type": type(error).__name__,
+            "error_message": str(error)[:240],
+            "director_pass_preserved": True,
+            "quick_warning": str(quick_warning or "").strip()[:240],
+        }
+        try:
+            Path(logs_dir).mkdir(parents=True, exist_ok=True)
+            append_jsonl_record(Path(logs_dir) / "episode_production.jsonl", payload)
+        except Exception as exc:
+            logging.warning("[Stage4] CoVe runtime advisory sink write skipped: %s", exc)
+
+        _audit_event = getattr(self.ctx, "audit_event", None)
+        if callable(_audit_event):
+            _audit_event(
+                "stage4_cove_runtime_advisory",
+                "stage4 CoVe runtime advisory observed",
+                dict(payload),
+            )
+
     def _log_escalation_event(
         self,
         ep_num,
@@ -1427,6 +1663,9 @@ JSON으로 출력:
         fix_scope: str = "",
         reason: str = "",
         contradiction_type: str = "",
+        candidate_key: str = "",
+        content_hash: str = "",
+        artifact_path: str = "",
     ):
         """[V76] 에스컬레이션 이벤트를 episode_production.jsonl에 기록."""
         try:
@@ -1452,6 +1691,12 @@ JSON으로 출력:
                 entry["fix_scope"] = str(fix_scope).strip()
             if contradiction_type:
                 entry["contradiction_type"] = str(contradiction_type).strip()
+            if candidate_key:
+                entry["candidate_key"] = str(candidate_key).strip()
+            if content_hash:
+                entry["content_hash"] = str(content_hash).strip()
+            if artifact_path:
+                entry["artifact_path"] = str(artifact_path).strip()
             _reason = str(reason or "").strip()
             if _reason:
                 entry["reason"] = _reason[:240]

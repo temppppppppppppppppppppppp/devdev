@@ -8,6 +8,7 @@ import logging
 import re
 import time
 from copy import deepcopy
+from typing import Any, Literal, NotRequired, TypedDict
 
 from modules.core.artifact_logging import build_candidate_key, snapshot_logged_artifact
 from modules.core.constants import VolumeSettings
@@ -30,6 +31,28 @@ def _peek_scope_total_cost_usd() -> float:
         return 0.0
 
 _DB_ADVISORY_NOTICE = "(Python 자동 감지 — 오탐 가능, 참고용)"
+
+
+class Stage2PassPreparationResult(TypedDict):
+    action: Literal["retry", "continue"]
+    current_feedback: NotRequired[str]
+    refined_arc: NotRequired[dict[str, Any]]
+
+
+class Stage2PassFinalizeTailResult(TypedDict):
+    action: Literal["retry", "break"]
+    current_feedback: str
+    last_refined_context: NotRequired[str]
+    current_ep_start: NotRequired[int]
+    director_feedback_for_fourphase: NotRequired[str]
+    st_snapshot: NotRequired[Any]
+
+
+class Stage2PassWithFixLoopResult(TypedDict):
+    refined_arc: dict[str, Any]
+    audit: dict[str, Any]
+    decision: Literal["PASS", "REJECT"]
+    score: int
 
 
 def _build_stage2_prompt_version(*, generation_method: str, is_patch: bool = False) -> str | None:
@@ -553,1029 +576,705 @@ class Stage2Finalizer:
             except (AttributeError, TypeError, RuntimeError) as e:
                 logging.warning(f"⚠️ [V64.P4-fix] 플롯 중복 감지 실패: {e}")
 
-        # [V65] PerfTimer: Director 대면 측정
-        _director_duration_ms = None
-        _director_t0 = time.monotonic()
-        try:
-            self.ctx.perf_timer.start(f"s2_arc_{global_arc_no}_director")
-        except (AttributeError, TypeError) as e:
-            logging.debug(f"[PerfTimer] start s2 director: {e}")
+        _expanded_prev_context, _story_context = self._build_stage2_director_story_context(
+            refined_arc=refined_arc,
+            enriched_block=enriched_block,
+            all_refined_arcs=all_refined_arcs,
+            global_arc_no=global_arc_no,
+            last_refined_context=last_refined_context,
+            bible_root=bible_root,
+            genre=genre,
+            protagonist_name=protagonist_name,
+            constraint_block=constraint_block,
+        )
 
-        # [V67] Director 컨텍스트 확장: 이전 30개 Arc tactical_doc 전문 전달
-        _expanded_prev_context = last_refined_context
-        if all_refined_arcs:
-            _prev_arc_docs = []
-            _prev_start = max(0, len(all_refined_arcs) - 30)
-            for _pa_idx in range(_prev_start, len(all_refined_arcs)):
-                _pa = all_refined_arcs[_pa_idx]
-                _pa_no = _pa.get("arc_no", _pa_idx + 1)
-                _pa_td = _pa.get("tactical_doc", "")
-                if isinstance(_pa_td, dict):
-                    _pa_td = json.dumps(_pa_td, ensure_ascii=False)
-                if _pa_td:
-                    _pa_ep_s = _pa.get("ep_start", "?")
-                    _pa_ep_e = _pa.get("ep_end", "?")
-                    _prev_arc_docs.append(f"━━━ Arc {_pa_no} (제{_pa_ep_s}화~제{_pa_ep_e}화) ━━━\n{_pa_td}")
-            if _prev_arc_docs:
-                _full_arc_history = "\n\n".join(_prev_arc_docs)
-                # 1M자 상한 (ContextLimits.MAX_CONTEXT_CHARS)
-                if len(_full_arc_history) > ContextLimits.MAX_CONTEXT_CHARS:
-                    _full_arc_history = _full_arc_history[: ContextLimits.MAX_CONTEXT_CHARS] + "\n... (1M자 절삭)"
-                _expanded_prev_context = (
-                    f"[V67] ═══ 이전 Arc 전술서 전문 ({len(_prev_arc_docs)}개) ═══\n"
-                    f"{_full_arc_history}\n\n"
-                    f"═══ 상태 요약 ═══\n{last_refined_context}"
-                )
-                logging.info(
-                    f"📚 [V67] Director 컨텍스트 확장: {len(_prev_arc_docs)}개 Arc ({len(_expanded_prev_context)}자)"
-                )
-
-        # [V67.1] story_context 조립
-        _story_context = ""
-        try:
-            _prot_config = bible_root.get("protagonist_config", {})
-            _sc_parts = [f"- 장르: {genre}"]
-            if _prot_config:
-                _sc_parts.append(f"- 주인공: {_prot_config.get('name', protagonist_name or '미상')}")
-                _incarnation = _prot_config.get("incarnation_type", "미상")
-                _sc_parts.append(f"- 환생 유형: {_incarnation}")
-                if _incarnation == "회귀자":
-                    _sc_parts.append("→ 회귀자: 미래를 알고 역사를 변경하려 함. 이것은 모순이 아님.")
-                elif _incarnation == "빙의자":
-                    _sc_parts.append("→ 빙의자: 원래 인물과 다른 인격.")
-                elif _incarnation == "환생자":
-                    _sc_parts.append("→ 환생자: 전생 기억 보유.")
-            _story_context = "\n".join(_sc_parts)
-        except (KeyError, TypeError, AttributeError) as e:
-            logging.warning(f"[SilentPass:Stage2Finalizer] 스토리 컨텍스트 생성 실패: {e!s:.100}")
-            _story_context = ""
-
-        # [BUG-B] NS-2 advisory를 Director 선택 시점 story_context에 선주입
-        if isinstance(enriched_block, dict):
-            _genre_ext = enriched_block.get("genre_ext", {})
-            if isinstance(_genre_ext, dict):
-                _target_capital = _genre_ext.get("capital_after")
-                if _target_capital:
-                    _story_context += (
-                        f"\n\n[NS-2 참고] Treatment 블록 목표 자본: {_target_capital}. "
-                        "Arc 설계 자본이 목표에서 과도하게 벗어나지 않도록 주의하십시오."
-                    )
-
-        # [TF-25-09] ArcAutoCorrector 수정 내역을 Director advisory로 주입
-        if constraint_block and "[Python 자동 수정" in constraint_block:
-            _corr_start = constraint_block.find("[Python 자동 수정")
-            _corr_end = constraint_block.find("\n\n[Python Pre-Director advisory", _corr_start)
-            _corr_advisory = (
-                constraint_block[_corr_start:_corr_end] if _corr_end > 0 else constraint_block[_corr_start:]
-            )
-            _story_context += f"\n\n⚠️ {_corr_advisory}"
-
-        # [TF-25-08] Python Pre-Director advisory를 Director 컨텍스트에 주입
-        if constraint_block and "[Python Pre-Director advisory" in constraint_block:
-            _adv_start = constraint_block.find("[Python Pre-Director advisory")
-            _adv_text = constraint_block[_adv_start:]
-            _story_context += f"\n\n⚠️ {_adv_text}"
-
-        # [TF-57-C] 크로스-Arc 자산 연속성 advisory
-        _tactical_doc = refined_arc.get("tactical_doc", "") if isinstance(refined_arc, dict) else ""
-        _cross_arc_issues = _check_cross_arc_asset_continuity(_tactical_doc, all_refined_arcs)
-        if _cross_arc_issues:
-            _story_context += "\n\n" + "\n".join(_cross_arc_issues)
-            logging.info("[TF-57-C] 크로스-Arc 자산 연속성 advisory 주입: %d건", len(_cross_arc_issues))
-
-        # [TF-60] NC-1-S2: tactical_doc 산술 검증 (advisory-only, Director 주권 준수)
-        if _tactical_doc:
-            try:
-                _nc1_s2_checker = NumericConsistencyChecker()
-                _nc1_s2_warns = _nc1_s2_checker.check_tactical_doc(
-                    _tactical_doc,
-                    global_arc_no,
-                )
-                if _nc1_s2_warns:
-                    _nc1_s2_text = "\n".join(f"  - [{w['severity']}] {w['text']}" for w in _nc1_s2_warns)
-                    _story_context += (
-                        f"\n\n[NC-1-S2 산술 검증 경고]\n{_nc1_s2_text}\n위 경고를 참고하여 수치 정합성을 검증하세요."
-                    )
-                    logging.info("[TF-60] NC-1-S2 advisory 주입: %d건", len(_nc1_s2_warns))
-            except Exception as _nc1_err:
-                logging.debug("[TF-60] NC-1-S2 검사 실패 (비치명): %s", _nc1_err)
-
-        # [TF-60 / NS-1-P 확장] _check_tactical_arithmetic — 첫 생성 경로에서도 실행
-        if _tactical_doc:
-            try:
-                _arith_first_issues = _check_tactical_arithmetic(str(_tactical_doc))
-                if _arith_first_issues:
-                    _arith_first_warn = "\n".join(f"  - {item}" for item in _arith_first_issues)
-                    logging.warning("[NS-1-P/S2] 첫 생성 arithmetic warning:\n%s", _arith_first_warn)
-                    _story_context += (
-                        f"\n\n[NS-1-P arithmetic warning]\n{_arith_first_warn}\n"
-                        "Please verify tactical_doc arithmetic before approving."
-                    )
-            except Exception as _arith_err:
-                logging.debug("[TF-60] _check_tactical_arithmetic 실패 (비치명): %s", _arith_err)
-
-        _db = getattr(getattr(self.ctx, "current_project", None), "db", None)
-        _arc_dep_advisory = _build_arc_dependency_advisory(_db, refined_arc.get("arc_no") or global_arc_no)
-        if _arc_dep_advisory:
-            _story_context = f"{_story_context}\n\n{_arc_dep_advisory}" if _story_context else _arc_dep_advisory
-
-        _voice_advisory = _build_character_voice_advisory(_db)
-        if _voice_advisory:
-            _story_context = f"{_story_context}\n\n{_voice_advisory}" if _story_context else _voice_advisory
-
-        self.ctx.ui.log("      🤔 [Director] 전략적 무결성 검수 중 (LLM 호출, 1~3분 소요)...")
-        # [G7] Director 심사 호출 크래시 방어
-        try:
-            audit = self.ctx.agents["director"].audit_strategic_plan(
-                refined_arc,
-                _expanded_prev_context,
-                curr_block=enriched_block,
-                protagonist_name=protagonist_name,
-                suspected_duplicates=suspected_duplicates,
-                entity_registry=entity_registry_for_director,
-                story_context=_story_context,  # [V67.1]
-            )
-        except (RuntimeError, OSError, ValueError) as _dir_err:
-            logging.warning(f"[G7] Director 심사 호출 실패: {_dir_err!s:.100}")
-            self.ctx.ui.log("      ⚠️ [Director] 심사 호출 실패 — 폴백 REJECT")
-            audit = {
-                "decision": "REJECT",
-                "score": 50,
-                "reason": "Director 호출 실패 — 폴백 REJECT",
-                "self_consistency": {},
-            }
-        try:
-            _elapsed = self.ctx.perf_timer.stop(f"s2_arc_{global_arc_no}_director")
-            if _elapsed and _elapsed > 0:
-                _director_duration_ms = max(0, int(_elapsed * 1000))
-        except (AttributeError, TypeError) as e:
-            logging.debug(f"[PerfTimer] stop s2 director: {e}")
-        if _director_duration_ms is None:
-            _director_duration_ms = max(0, int((time.monotonic() - _director_t0) * 1000))
-
-        # Director 심사 결과 사용자 출력
-        _d_decision = audit.get("decision", "?")
-        _d_score = audit.get("score", "?")
-        _d_reason = audit.get("reason", "")
-        _d_status = "✅" if _d_decision in ("PASS", "PASS_WITH_FIX") else "❌"
-        self.ctx.ui.log(f"\n      🎬 [Director] {_d_decision} (score={_d_score})")
-        if _d_reason:
-            for _i in range(0, len(str(_d_reason)), 80):
-                self.ctx.ui.log(f"         {str(_d_reason)[_i : _i + 80]}")
-        _d_contradictions = audit.get("contradictions", [])
-        if _d_contradictions and not isinstance(_d_contradictions, list):
-            _d_contradictions = [_d_contradictions] if _d_contradictions else []
-        if _d_contradictions:
-            self.ctx.ui.log(f"         📌 모순 {len(_d_contradictions)}건:")
-            for _c in _d_contradictions[:5]:
-                self.ctx.ui.log(f"            ▸ {str(_c)[:120]}")
-        if _d_decision == "REJECT" and audit.get("re_slice_instruction"):
-            self.ctx.ui.log(f"         🔧 수정지시: {str(audit['re_slice_instruction'])[:150]}")
-        # [TF-28c] Director thinking 표시 (절삭 없음)
-        _d_thinking = audit.get("_director_thinking", "")
-        if _d_thinking:
-            self.ctx.ui.log("      💭 [Director Thinking]")
-            self.ctx.ui.log(_d_thinking)
-
-        # ═══════════════════════════════════════════════════════════════
-        # [TF-25-07] V60.43 API 할당량 오류 감지 — 경고만 (대원칙 1+3 준수)
-        # Python은 판정을 변경하지 않음. Director REJECT 유지 → 오케스트레이터 재시도 루프가 처리.
-        # ═══════════════════════════════════════════════════════════════
-        if audit.get("decision") == "REJECT" and draft_validator_passed and consensus_passed:
-            self_consistency = audit.get("self_consistency", {})
-            scores = self_consistency.get("scores", [])
-            all_default_50 = len(scores) >= 2 and all(s == 50 for s in scores)
-            zero_count = sum(1 for s in scores if s == 0)
-            many_zeros = len(scores) >= 2 and zero_count >= len(scores) // 2
-            is_quota_failure = all_default_50 or many_zeros
-
-            if is_quota_failure:
-                logging.warning(
-                    "[TF-25-07] V60.43 API 쿼터 실패 패턴 감지 — Director REJECT 유지 (score=0이 %d/%d개)",
-                    zero_count,
-                    len(scores),
-                )
-                audit["v60_43_api_warning"] = True
-
-        from modules.validation.threshold_helper import _threshold
-
-        _quality_gate_score = _threshold("scoring.quality_gate_score", 90)
-        _score_raw = audit.get("score", 0)
-        try:
-            _score = int(_score_raw)
-        except (ValueError, TypeError):
-            _score = 0
+        audit, _director_duration_ms, _d_decision, _score = self._audit_stage2_director(
+            refined_arc=refined_arc,
+            expanded_prev_context=_expanded_prev_context,
+            enriched_block=enriched_block,
+            protagonist_name=protagonist_name,
+            suspected_duplicates=suspected_duplicates,
+            entity_registry_for_director=entity_registry_for_director,
+            story_context=_story_context,
+            global_arc_no=global_arc_no,
+            draft_validator_passed=draft_validator_passed,
+            consensus_passed=consensus_passed,
+        )
 
         _td = refined_arc.get("tactical_doc", "")
         _td_len = len(str(_td)) if isinstance(_td, dict) else len(_td or "")
+        from modules.validation.threshold_helper import _threshold
 
-        # [LOG-1] 판정 경로 세션 로깅
-        _sl = getattr(self.ctx, "session_logger", None)
-        if _sl:
-            try:
-                _sl.log_decision(
-                    stage="stage2",
-                    ep_num=global_arc_no,
-                    round_num=attempt,
-                    decision_type="arc",
-                    result=audit.get("decision", "UNKNOWN"),
-                    score=_score,
-                    generation_method=generation_method,
-                    reason=str(audit.get("reason", ""))[:500],
-                )
-            except (AttributeError, TypeError) as _e:
-                logging.debug("[SilentPass:S2:SessionLog] %s", _e)
+        _quality_gate_score = _threshold("scoring.quality_gate_score", 90)
+
+        self._log_stage2_session_decision(
+            audit=audit,
+            global_arc_no=global_arc_no,
+            attempt=attempt,
+            generation_method=generation_method,
+            score=_score,
+        )
 
         # [TF-32-VERIFY] PASS_WITH_FIX → patch + Director 재심사 반복 (최대 3회)
         _d_decision = audit.get("decision", "")
         if _d_decision == "PASS_WITH_FIX":
-            # [TF-46] PASS_WITH_FIX는 Director 주권 존중 — QualityGate 미적용, 바로 patch loop 진입
-            _MAX_FIX = 3
-            _four_phase = self.ctx.agents.get("four_phase")
-            _current_arc = dict(refined_arc)
-            _current_audit = audit
-            _fix_ok = False
-            _applied_patches: list[str] = []
-            _patch_pressure_exceeded = False
-
-            for _fix_i in range(_MAX_FIX):
-                # [TF-33] Stage2도 explicit local contract only — score fallback 제거
-                _fix_scope = _current_audit.get("fix_scope", "")
-                if not _fix_scope:
-                    logging.warning("[PF-1] fix_scope 누락 → local patch authority 없음, retry 경로 위임")
-                    self.ctx.ui.log("      🔀 [PF-1] fix_scope 누락 → inplace 권한 없음, retry 경로 위임")
-                    break
-                if _fix_scope in ("partial", "full"):
-                    self.ctx.ui.log(f"      🔀 [TF-33] fix_scope={_fix_scope!r} → inplace 불가, retry 경로 위임")
-                    break  # → REJECT → retry 경로에서 patch/rewrite 처리
-
-                _fix_instr = _current_audit.get("re_slice_instruction", "")
-                self.ctx.ui.log(
-                    f"      🔧 [TF-32-V] PASS_WITH_FIX patch #{_fix_i + 1}/{_MAX_FIX} (fix: {str(_fix_instr)[:80]})"
-                )
-
-                if not (_four_phase and hasattr(_four_phase, "_inplace_patch_arc")):
-                    logging.warning("[TF-32-V] four_phase 에이전트 미등록 → REJECT")
-                    break
-
-                try:
-                    _patched = _four_phase._inplace_patch_arc(
-                        original_arc=_current_arc,
-                        director_feedback=_fix_instr,
-                        arc_no=global_arc_no,
-                    )
-                except (RuntimeError, ValueError, OSError):
-                    logging.exception("[TF-32-V] inplace_patch_arc 예외")
-                    break
-                if not _patched:
-                    logging.warning("[TF-32-V] patch 실패 → REJECT")
-                    break
-
-                _patch_guard_signals = self._collect_arc_patch_guard_signals(
-                    original_arc=_current_arc,
-                    patched_arc=_patched,
-                )
-                if _patch_guard_signals:
-                    _signal_state = self._merge_patch_guard_signals(
-                        _current_audit,
-                        _patch_guard_signals,
-                        attempt=_fix_i + 1,
-                    )
-                    _signal_codes = ", ".join(_signal_state.get("codes", []))
-                    logging.warning(
-                        "[S2-ArcPatchSignals] attempt=%s arc=%s codes=%s",
-                        _fix_i + 1,
-                        global_arc_no,
-                        _signal_codes,
-                    )
-                    self.ctx.ui.log(
-                        "      ⚠️ [S2-ArcSignals] "
-                        f"attempt={_fix_i + 1} codes={_signal_codes or 'n/a'}"
-                    )
-                    if callable(getattr(self.ctx, "audit_event", None)):
-                        self.ctx.audit_event(
-                            "patch_guard_signal",
-                            "stage2 arc patch signals observed",
-                            {
-                                "arc_no": global_arc_no,
-                                "attempt": _fix_i + 1,
-                                "codes": list(_signal_state.get("codes", [])),
-                                "count": int(_signal_state.get("count", 0) or 0),
-                                "items": list(_patch_guard_signals),
-                            },
-                        )
-
-                # [NS-1-P] Detect arithmetic mismatch in inplace tactical_doc patch.
-                _arith_patch_ctx = ""
-                _tactical_patched = _patched.get("tactical_doc", "") if isinstance(_patched, dict) else ""
-                if _tactical_patched:
-                    _arith_issues = _check_tactical_arithmetic(str(_tactical_patched))
-                    if _arith_issues:
-                        _arith_warn = "\n".join(f"  - {item}" for item in _arith_issues)
-                        logging.warning("[NS-1-P] arithmetic warning detected in inplace patch:\n%s", _arith_warn)
-                        _arith_patch_ctx = (
-                            "\n\n[NS-1-P arithmetic warning in inplace patch]\n"
-                            f"{_arith_warn}\n"
-                            "Please verify the patched tactical_doc arithmetic before approving."
-                        )
-
-                # [InPlace-Diff] Arc 패치 전후 diff 로깅
-                try:
-                    from modules.core.constants import calc_patch_change_ratio, log_patch_diff
-
-                    _orig_j = json.dumps(_current_arc, ensure_ascii=False)
-                    _patch_j = json.dumps(_patched, ensure_ascii=False)
-                    log_patch_diff(
-                        "S2-Arc",
-                        json.dumps(_current_arc, ensure_ascii=False, indent=2),
-                        json.dumps(_patched, ensure_ascii=False, indent=2),
-                    )
-                    _change_ratio = calc_patch_change_ratio(_orig_j, _patch_j)
-                    _max_ratio = float(_threshold("patch_mode.inplace_max_change_ratio", 0.30))
-                    if _change_ratio > _max_ratio:
-                        _patch_pressure_exceeded = True
-                        _patch_pressure = _current_audit.setdefault("patch_pressure", {})
-                        _patch_pressure["exceeded"] = True
-                        _patch_pressure["count"] = int(_patch_pressure.get("count", 0)) + 1
-                        _patch_pressure["change_ratio"] = round(float(_change_ratio), 4)
-                        _patch_pressure["max_ratio"] = round(float(_max_ratio), 4)
-                        _patch_pressure["attempt"] = _fix_i + 1
-                        logging.warning(
-                            "[F-2] InPlace Arc 변경 비율 %.1f%% > %.0f%% (S2)",
-                            _change_ratio * 100,
-                            _max_ratio * 100,
-                        )
-                except Exception as _e:
-                    logging.debug("[S2-Finalizer] change_ratio 계산 실패: %s", _e)
-
-                # [PWF-S2] 패치 이력 적적 — Director 재심사 컨텍스트에 주입
-                if _fix_instr:
-                    _applied_patches.append(str(_fix_instr)[:200])
-
-                # Director 재심사 (동일 메서드)
-                self.ctx.ui.log(f"      🔄 [TF-38] Director 재심사 #{_fix_i + 1} 호출 중...")
-                # [PWF-S2] 재심사에 이미 적용된 패치를 story_context에 주입
-                # → curr_block 문서로 인한 동일 오류 재감지 가능성 최소화
-                _patch_ctx = _arith_patch_ctx
-                if _patch_guard_signals:
-                    _patch_ctx += self._format_patch_guard_signal_notice(
-                        _patch_guard_signals,
-                        attempt=_fix_i + 1,
-                    )
-                if _patch_pressure_exceeded and isinstance(_current_audit.get("patch_pressure"), dict):
-                    _pp = dict(_current_audit.get("patch_pressure") or {})
-                    _pp_notice = (
-                        "\n\n[F-2 advisory — high Arc patch pressure]\n"
-                        f"change_ratio={float(_pp.get('change_ratio', 0.0)):.1%}, "
-                        f"threshold={float(_pp.get('max_ratio', 0.0)):.0%}, "
-                        f"attempt={int(_pp.get('attempt', _fix_i + 1))}\n"
-                        "이 local Arc patch는 국소 수정 범위를 넘어설 수 있습니다. "
-                        "구조 일관성과 변경 정당성이 충분하면 PASS를 허용할 수 있지만, "
-                        "광범위 재작성처럼 보이면 PASS_WITH_FIX 또는 REJECT를 유지하세요."
-                    )
-                    _patch_ctx += _pp_notice
-                if _applied_patches:
-                    _patch_lines = "\n".join(f"- {p}" for p in _applied_patches)
-                    _patch_ctx += (
-                        "\n\n[PASS_WITH_FIX 재심사 — 이미 적용된 패치]\n"
-                        f"{_patch_lines}\n"
-                        "위 항목은 tactical_doc에 이미 반영되었습니다. "
-                        "curr_block 문서에서 동일 오류가 보여도 tactical_doc에서 수정되었으면 승인하세요."
-                    )
-                try:
-                    _re_audit = self.ctx.agents["director"].audit_strategic_plan(
-                        _patched,
-                        _expanded_prev_context,
-                        curr_block=enriched_block,
-                        protagonist_name=protagonist_name,
-                        suspected_duplicates=suspected_duplicates,
-                        entity_registry=entity_registry_for_director,
-                        story_context=(_story_context or "") + _patch_ctx,
-                    )
-                except (RuntimeError, ValueError, OSError):
-                    logging.exception("[TF-32-V] 재심사 예외")
-                    break
-
-                _re_d = _re_audit.get("decision", "REJECT")
-                _re_s = _re_audit.get("score", 0)
-                try:
-                    _re_s = int(_re_s)
-                except (ValueError, TypeError):
-                    _re_s = 0
-                self.ctx.ui.log(f"      🎬 [TF-32-V] 재심사 #{_fix_i + 1}: {_re_d} (score={_re_s})")
-
-                if _re_d == "PASS":
-                    if _re_s < _quality_gate_score:
-                        self.ctx.ui.log(
-                            f"      ⚠️ [TF-35] 재심사 PASS이나 score={_re_s} < {_quality_gate_score} → patch 종료"
-                        )
-                        break
-                    _current_arc = _patched
-                    if _patch_pressure_exceeded and isinstance(_current_audit.get("patch_pressure"), dict):
-                        _re_audit["patch_pressure"] = deepcopy(_current_audit["patch_pressure"])
-                    if isinstance(_current_audit.get("patch_guard_signals"), dict):
-                        _re_audit["patch_guard_signals"] = deepcopy(_current_audit["patch_guard_signals"])
-                    _current_audit = _re_audit
-                    _fix_ok = True
-                    break
-                elif _re_d == "PASS_WITH_FIX":
-                    _current_arc = _patched
-                    if _patch_pressure_exceeded and isinstance(_current_audit.get("patch_pressure"), dict):
-                        _re_audit["patch_pressure"] = deepcopy(_current_audit["patch_pressure"])
-                    if isinstance(_current_audit.get("patch_guard_signals"), dict):
-                        _re_audit["patch_guard_signals"] = deepcopy(_current_audit["patch_guard_signals"])
-                    _current_audit = _re_audit  # 다음 반복
-                else:  # REJECT
-                    break
-
-            if _fix_ok:
-                refined_arc.clear()
-                refined_arc.update(_current_arc)
-                audit = _current_audit
-                _d_decision = "PASS"
-                _score = _re_s  # [TF-46] 재심사 점수로 갱신 (stale score → QualityGate 오작동 방지)
-                if _patch_pressure_exceeded:
-                    audit["decision"] = "PASS"
-                    audit["reason"] = (
-                        f"{str(audit.get('reason', '')).strip()}\n"
-                        "[PatchPressure Advisory] In-place patch ratio exceeded threshold; "
-                        "Director re-audit cleared this Arc with explicit warning context."
-                    ).strip()
-                    _patch_pressure = audit.setdefault("patch_pressure", {})
-                    _patch_pressure["director_advisory_only"] = True
-                    _patch_pressure["cleared_verdict"] = "PASS"
-                    self.ctx.ui.log("      ⚠️ [TF-32-V] Patch pressure exceeded -> advisory only, PASS 유지")
-                else:
-                    audit["decision"] = "PASS"
-                if not _patch_pressure_exceeded:
-                    self.ctx.ui.log("      ✅ [TF-32-V] Arc 수정 완료 → PASS 확정")
-            else:
-                _d_decision = "REJECT"
-                audit["decision"] = "REJECT"
-                # [PF-3] PASS_WITH_FIX 소진 시에만 패치본 채택 — 디렉터 주권주의
-                _last_decision = _current_audit.get("decision", "")
-                if _last_decision == "PASS_WITH_FIX" and _current_arc != dict(refined_arc):
-                    refined_arc.clear()
-                    refined_arc.update(_current_arc)
-                    _pf3_score = _current_audit.get("score", _score)
-                    try:
-                        _pf3_score = int(_pf3_score)
-                    except (ValueError, TypeError):
-                        _pf3_score = _score
-                    audit["score"] = _pf3_score
-                    self.ctx.ui.log(f"      📈 [PF-3] PASS_WITH_FIX 소진 → 패치본 채택 (score={_pf3_score})")
-                # [TF-33] Director fix_scope + reasoning 보존 → retry 경로에서 patch/rewrite 라우팅
-                _last_fix_scope = _current_audit.get("fix_scope", "")
-                if _last_fix_scope:
-                    audit["fix_scope"] = _last_fix_scope
-                _last_fsr = _current_audit.get("fix_scope_reasoning", "")
-                if _last_fsr:
-                    audit["fix_scope_reasoning"] = _last_fsr
-                audit["reason"] = (audit.get("reason", "") or "") + (
-                    f"\n[TF-32-V] PASS_WITH_FIX 수정 {_MAX_FIX}회 내 미해결 → REJECT"
-                )
-                audit["re_slice_instruction"] = audit.get("re_slice_instruction") or "지적사항 미해결 — 재설계 필요"
-                self.ctx.ui.log("      ❌ [TF-32-V] 수정 실패 → REJECT 전환")
+            _pwf_result: Stage2PassWithFixLoopResult = self._run_stage2_pass_with_fix_loop(
+                refined_arc=refined_arc,
+                audit=audit,
+                expanded_prev_context=_expanded_prev_context,
+                enriched_block=enriched_block,
+                protagonist_name=protagonist_name,
+                suspected_duplicates=suspected_duplicates,
+                entity_registry_for_director=entity_registry_for_director,
+                story_context=_story_context,
+                global_arc_no=global_arc_no,
+                score=_score,
+            )
+            refined_arc = _pwf_result["refined_arc"]
+            audit = _pwf_result["audit"]
+            _d_decision = _pwf_result["decision"]
+            _score = _pwf_result["score"]
 
         if _d_decision in ("PASS", "PASS_WITH_FIX"):  # [TF-R4-S2-01] [TF-32-S2] PASS/PASS_WITH_FIX 수용
-            if _d_decision in ("PASS", "PASS_WITH_FIX") and _td_len >= 1500 and _score < _quality_gate_score:
-                self.ctx.ui.log(
-                    f"      ⚠️ [QualityGate] {_d_decision} 판정이나 score={_score} < {_quality_gate_score} → REJECT 전환"
-                )
-                audit["decision"] = "REJECT"
-                audit["reason"] = (audit.get("reason") or "") + (
-                    f"\n[Quality Gate] score {_score}점으로 {_quality_gate_score}점 미달."
-                )
-                audit["re_slice_instruction"] = audit.get("re_slice_instruction") or "품질 개선 후 재제출"
-                # [TF-30-4] QualityGate REJECT 사유를 FourPhase 재시도에 전달
-                director_feedback_for_fourphase = (
-                    f"[QualityGate REJECT] score {_score}점 < {_quality_gate_score}점.\n"
-                    f"{audit.get('reason', '')}\n"
-                    f"[수정 지시] {audit.get('re_slice_instruction', '품질 개선 후 재제출')}"
-                )
-                # [P1-B1] StateTracker 롤백 — FourPhase PASS 후 팬텀 데이터 방지
-                if st_snapshot and generation_method.startswith("four_phase"):
-                    _st = self.ctx.state_tracker
-                    if _st:
-                        for _k, _v in st_snapshot.items():
-                            if hasattr(_st, _k):
-                                setattr(_st, _k, _v)
-                    # [SubstrateGate] ConstraintDB 대칭 rollback
-                    if _cdb_snapshot and constraint_db and hasattr(constraint_db, "restore"):
-                        constraint_db.restore(_cdb_snapshot)
-                # [E5a-P1-1] QualityGate REJECT — reject metrics 기록
-                self._record_s2_reject_metrics(
-                    global_arc_no=global_arc_no,
-                    attempt=attempt,
-                    generation_method=generation_method,
-                    selected_strategy=(
-                        refined_arc.get("_ensemble_meta", {}).get("best_strategy")
-                        or refined_arc.get("_strategy", "")
-                        or generation_method
-                    )
-                    if isinstance(refined_arc, dict)
-                    else generation_method,
-                    audit=audit,
-                    is_patch=is_patch,
-                    prev_score=prev_score,
-                    patch_fallback=patch_fallback,
-                    artifact_payload=refined_arc if isinstance(refined_arc, dict) else None,
-                )
-                return {
-                    "action": "retry",
-                    "current_feedback": audit["reason"],
-                    "score": _score,
-                    "rejected_arc": refined_arc,
-                    "score_breakdown": {},
-                    "director_feedback_for_fourphase": director_feedback_for_fourphase,
-                    "fix_scope": audit.get("fix_scope", ""),  # [TF-23] Director 판단 수정 범위
-                }
-
-            ### [0124 핵심 3] 욕망 데이터 및 HUD 그림자 물리적 박제
-            refined_arc["arc_drive"] = arc_drive if arc_drive else {}
-            refined_arc["joint_docs"] = enriched_block.get("joint_docs", {})
-            refined_arc["status_shadow"] = enriched_block.get("status_shadow", {})
-
-            if callable(getattr(self.ctx, "validate_arc_data_fields", None)):
-                repaired_arc = self.ctx.validate_arc_data_fields(refined_arc, global_arc_no)
-                if repaired_arc is None:
-                    current_feedback = "Arc 데이터 기본 구조를 복구하지 못했습니다. 완전한 JSON 구조로 다시 설계하라."
-                    refined_arc = None
-                    if st_snapshot and generation_method.startswith("four_phase") and self.ctx.state_tracker:
-                        for _k, _v in st_snapshot.items():
-                            if hasattr(self.ctx.state_tracker, _k):
-                                setattr(self.ctx.state_tracker, _k, _v)
-                        # [SubstrateGate] ConstraintDB 대칭 rollback
-                        if _cdb_snapshot and constraint_db and hasattr(constraint_db, "restore"):
-                            constraint_db.restore(_cdb_snapshot)
-                    return {"action": "retry", "current_feedback": current_feedback}
-                refined_arc = repaired_arc
-
-            critical_missing = []
-            if not refined_arc.get("hybrid_composition"):
-                self.ctx.ui.log(f"⚠️ [Arc {global_arc_no}] 패턴 구성(hybrid_composition) 누락 - 기본값 주입")
-                if callable(getattr(self.ctx, "audit_event", None)):
-                    self.ctx.audit_event(
-                        "field_repair", "hybrid_composition default injected", {"arc_no": global_arc_no}
-                    )
-                refined_arc["hybrid_composition"] = {
-                    "primary": "standard_progression",
-                    "secondary": [],
-                    "mixing_logic": "기본 전개",
-                }
-                critical_missing.append("hybrid_composition")
-
-            if not refined_arc.get("joint_docs"):
-                self.ctx.ui.log(f"⚠️ [Arc {global_arc_no}] joint_docs 누락 - 기본값 주입")
-                if callable(getattr(self.ctx, "audit_event", None)):
-                    self.ctx.audit_event("field_repair", "joint_docs default injected", {"arc_no": global_arc_no})
-                refined_arc["joint_docs"] = {
-                    "final_location": "위치 미정",
-                    "physical_inventory": ["물품 미정"],
-                    "world_joint": "변화 없음",
-                }
-                critical_missing.append("joint_docs")
-
-            # [V49.6 NEW] physical_inventory 계승
-            curr_joint = refined_arc.get("joint_docs", {})
-            curr_inventory = curr_joint.get("physical_inventory", [])
-            # [B3-P1-2] physical_inventory 타입 정규화 (str|dict → list)
-            if isinstance(curr_inventory, str):
-                curr_inventory = [curr_inventory] if curr_inventory and curr_inventory != "[]" else []
-            elif isinstance(curr_inventory, dict):
-                curr_inventory = [curr_inventory] if curr_inventory else []
-            if not curr_inventory:
-                if all_refined_arcs:
-                    prev_joint = all_refined_arcs[-1].get("joint_docs", {})
-                    prev_inventory = prev_joint.get("physical_inventory", [])
-                    # [TF-R3-S2-02] 문자열 직렬화된 인벤토리 → 리스트 변환
-                    if isinstance(prev_inventory, str):
-                        try:
-                            import json as _json
-
-                            prev_inventory = _json.loads(prev_inventory)
-                        except (ValueError, TypeError):
-                            prev_inventory = []
-                    # [B3-P1-2] prev_inventory도 dict일 수 있음 → list 정규화
-                    if isinstance(prev_inventory, dict):
-                        prev_inventory = [prev_inventory] if prev_inventory else []
-                    if prev_inventory and prev_inventory != [] and prev_inventory != "[]":
-                        curr_status = refined_arc.get("status_shadow", {})
-                        consumed_raw = curr_status.get("item_consumption", [])
-                        if isinstance(consumed_raw, str):
-                            consumed_names = [consumed_raw] if consumed_raw else []
-                        elif isinstance(consumed_raw, list):
-                            consumed_names = []
-                            for consumed_item in consumed_raw:
-                                if isinstance(consumed_item, str):
-                                    consumed_names.append(consumed_item)
-                                elif isinstance(consumed_item, dict):
-                                    consumed_names.append(consumed_item.get("name", consumed_item.get("item", "")))
-                        else:
-                            consumed_names = []
-                        state_constraints = refined_arc.get("state_constraints", {})
-                        # [BUG-F] protagonist_items 우선 폴백
-                        acquired = state_constraints.get("protagonist_items") or state_constraints.get(
-                            "items_acquired", []
-                        )
-                        if isinstance(acquired, str):
-                            acquired = [acquired] if acquired else []
-                        elif not isinstance(acquired, list):
-                            # [TF-R3-S2-03] dict 등 비-리스트 타입 방어
-                            acquired = [acquired] if acquired else []
-                        if isinstance(prev_inventory, list):
-                            # [Sweep45] dict 아이템도 consumed 비교 가능하도록 이름 추출
-                            def _item_name(it):
-                                if isinstance(it, dict):
-                                    return it.get("name", it.get("item", ""))
-                                return str(it)
-
-                            inherited = [item for item in prev_inventory if _item_name(item) not in consumed_names]
-                            inherited.extend(acquired)
-                            refined_arc["joint_docs"]["physical_inventory"] = inherited
-                            self.ctx.ui.log(
-                                f"      🔄 [V49.6] physical_inventory 이전 Arc에서 계승: {inherited[:3]}{'...' if len(inherited) > 3 else ''}"
-                            )
-
-            if not refined_arc.get("status_shadow"):
-                self.ctx.ui.log(f"⚠️ [Arc {global_arc_no}] status_shadow 누락 - 기본값 주입")
-                if callable(getattr(self.ctx, "audit_event", None)):
-                    self.ctx.audit_event("field_repair", "status_shadow default injected", {"arc_no": global_arc_no})
-                refined_arc["status_shadow"] = {
-                    "internal_energy_loss": "0%",
-                    "expected_injuries": "없음",
-                    "item_consumption": [],
-                }
-                critical_missing.append("status_shadow")
-
-            if len(critical_missing) >= RecoveryLimits.CRITICAL_MISSING_THRESHOLD:
-                self.ctx.ui.log(f"🚨 [Arc {global_arc_no}] 핵심 데이터 과다 누락({len(critical_missing)}개)")
-                if callable(getattr(self.ctx, "audit_event", None)):
-                    self.ctx.audit_event(
-                        "integrity_fail",
-                        "critical fields missing beyond repair threshold",
-                        {"arc_no": global_arc_no, "missing": critical_missing},
-                    )
-                current_feedback = f"필수 키 누락: {', '.join(critical_missing)}. 완전한 JSON 구조로 재설계하라."
-                refined_arc = None
-                # [P1-B1] StateTracker 롤백
-                if st_snapshot and generation_method.startswith("four_phase") and self.ctx.state_tracker:
-                    for _k, _v in st_snapshot.items():
-                        if hasattr(self.ctx.state_tracker, _k):
-                            setattr(self.ctx.state_tracker, _k, _v)
-                    # [SubstrateGate] ConstraintDB 대칭 rollback
-                    if _cdb_snapshot and constraint_db and hasattr(constraint_db, "restore"):
-                        constraint_db.restore(_cdb_snapshot)
-                return {"action": "retry", "current_feedback": current_feedback}
-
-            if callable(getattr(self.ctx, "validate_arc_integrity", None)) and not self.ctx.validate_arc_integrity(
-                refined_arc
-            ):
-                current_feedback = "필수 키가 누락된 전술 설계입니다. 형식을 완전한 JSON으로 다시 출력하십시오."
-                refined_arc = None
-                # [P1-B1] StateTracker 롤백
-                if st_snapshot and generation_method.startswith("four_phase") and self.ctx.state_tracker:
-                    for _k, _v in st_snapshot.items():
-                        if hasattr(self.ctx.state_tracker, _k):
-                            setattr(self.ctx.state_tracker, _k, _v)
-                    # [SubstrateGate] ConstraintDB 대칭 rollback
-                    if _cdb_snapshot and constraint_db and hasattr(constraint_db, "restore"):
-                        constraint_db.restore(_cdb_snapshot)
-                return {"action": "retry", "current_feedback": current_feedback}
-
-            # [TF-S2-03] 중복 check_new_arc() 제거 — L58-74의 첫 번째 호출이 이미 처리
-
-            # [V63] constraint_summary 저장
-            if constraint_block:
-                _constraint_lines = constraint_block.strip().split("\n")
-                _must_not = [ln.strip() for ln in _constraint_lines if "금지" in ln or "MUST NOT" in ln or "절대" in ln]
-                refined_arc["constraint_summary"] = "\n".join(_must_not[:10]) if _must_not else ""
-
-            # [Transport] rationale_digest — bounded semantic carry-over
-            _rd_parts: list[str] = []
-            _rd_sc = refined_arc.get("state_constraints", {})
-            # (1) relationship trigger / justification
-            _rd_rels = (
-                _rd_sc.get("relationship_changes")
-                or refined_arc.get("state_changes", {}).get("relationship_changes")
-                or []
-            )
-            for _rc in _rd_rels[:5]:
-                if isinstance(_rc, dict):
-                    _t = _rc.get("trigger", "")
-                    _j = _rc.get("justification", "")
-                    if _t or _j:
-                        _npc = _rc.get("target") or _rc.get("npc") or "?"
-                        _rd_parts.append(f"관계({_npc}): {(_t or _j)[:120]}")
-            # (2) power-change growth justification
-            _rd_pc = _rd_sc.get("power_changes", {})
-            if isinstance(_rd_pc, dict) and _rd_pc.get("growth_justification"):
-                _rd_parts.append(f"성장근거: {_rd_pc['growth_justification'][:120]}")
-            # (3) foreshadow summary
-            _rd_fs = _rd_sc.get("foreshadowings", [])
-            if isinstance(_rd_fs, list):
-                for _f in _rd_fs[:3]:
-                    if isinstance(_f, dict) and _f.get("description"):
-                        _rd_parts.append(f"복선: {_f['description'][:120]}")
-            # (4) continuity checkpoints
-            _rd_cc = _rd_sc.get("continuity_checkpoints", [])
-            if isinstance(_rd_cc, list) and _rd_cc:
-                _rd_parts.append(f"연속성: {'; '.join(str(c)[:60] for c in _rd_cc[:3])}")
-            refined_arc["rationale_digest"] = "\n".join(_rd_parts[:8]) if _rd_parts else ""
-
-            # [Equipment Sync] arc_start_state.equipment ← 이전 Arc 종료 소지품 강제 동기화
-            _semantic_carryover = _build_semantic_carryover(
-                refined_arc.get("state_constraints"),
-                refined_arc.get("state_changes"),
-            )
-            refined_arc["semantic_carryover"] = _semantic_carryover
-            refined_arc["rationale_digest"] = _build_rationale_digest_from_carryover(_semantic_carryover)
-
-            if all_refined_arcs:
-                _prev = all_refined_arcs[-1]
-                _prev_end = _prev.get("state_constraints", {}).get("arc_end_state", {})
-                _correct_equip = _prev_end.get("equipment")
-                if _correct_equip is None:
-                    _correct_equip = _prev.get("joint_docs", {}).get("physical_inventory", [])
-                # 타입 정규화
-                if isinstance(_correct_equip, str):
-                    _correct_equip = [_correct_equip] if _correct_equip and _correct_equip != "[]" else []
-                elif isinstance(_correct_equip, dict):
-                    _correct_equip = [_correct_equip] if _correct_equip else []
-                elif not isinstance(_correct_equip, list):
-                    _correct_equip = []
-
-                _curr_sc = refined_arc.get("state_constraints", {})
-                _curr_start = _curr_sc.get("arc_start_state", {})
-                _old_equip = _curr_start.get("equipment", [])
-                if _old_equip != _correct_equip:
-                    _curr_start["equipment"] = _correct_equip
-                    _curr_sc["arc_start_state"] = _curr_start
-                    refined_arc["state_constraints"] = _curr_sc
-                    self.ctx.ui.log(
-                        f"      🔧 [Equipment Sync] Arc {global_arc_no} 시작 소지품 → "
-                        f"이전 Arc 종료 소지품으로 동기화 ({len(_correct_equip)}개 아이템)"
-                    )
-
-            # [P0-B3-1] arc_no 보장 — validate_arc 전 주입
-            if isinstance(refined_arc, dict) and "arc_no" not in refined_arc:
-                refined_arc["arc_no"] = global_arc_no
-            refined_arc = validate_arc(refined_arc)  # [Step2] Pydantic ingress+egress
-
-            # [NS-2] Advisory-only check: treatment block target vs arc_end_state alignment.
-            _ns2_warnings = _check_block_worldstate_alignment(enriched_block, refined_arc, global_arc_no)
-            if _ns2_warnings:
-                for _warn in _ns2_warnings:
-                    logging.warning(_warn)
-
-            all_refined_arcs.append(refined_arc)
-
-            ### [0124 핵심 4] DB 원자적 커밋
-            try:
-                self.ctx.current_project.save_v20_anchor("arcs", all_refined_arcs)
-                # [Codex-fix] safe_commit_async는 실패 시 예외 대신 False 반환
-                if callable(getattr(self.ctx, "safe_commit_async", None)):
-                    _commit_ok = await self.ctx.safe_commit_async()
-                    if not _commit_ok:
-                        raise RuntimeError("safe_commit_async returned False")
-            except (OSError, RuntimeError) as commit_err:
-                # [TF-C09] DB 트랜잭션 롤백 — 반쪽 커밋 방지
-                try:
-                    _conn = self.ctx.current_project.db.conn
-                    if _conn.in_transaction:
-                        _conn.rollback()
-                        logging.info("🔄 [TF-C09] DB rollback 완료 (Arc %d)", global_arc_no)
-                except Exception as _rb:
-                    logging.warning("⚠️ [TF-C09] DB rollback 실패: %s", _rb)
-                self.ctx.ui.log(f"🚨 [DB] Arc {global_arc_no} 저장 실패: {commit_err}")
-                if callable(getattr(self.ctx, "audit_event", None)):
-                    self.ctx.audit_event(
-                        "db_commit_error",
-                        "arc save failed in async",
-                        {"arc_no": global_arc_no, "error": str(commit_err)},
-                    )
-                all_refined_arcs.pop()
-                # [Sweep52] DB 실패 시 StateTracker 롤백 (st_snapshot 보존)
-                if st_snapshot:
-                    try:
-                        _st = self.ctx.state_tracker
-                        for _k, _v in st_snapshot.items():
-                            if hasattr(_st, _k):  # [감리] 다른 롤백 경로와 일관된 hasattr 가드
-                                setattr(_st, _k, _v)
-                        logging.info("🔄 [V70] DB 실패 StateTracker 롤백 완료")
-                    except Exception as _rb_err:
-                        logging.warning(f"⚠️ [V70] DB 실패 StateTracker 롤백 실패: {_rb_err}")
-                    # [SubstrateGate] ConstraintDB 대칭 rollback
-                    if _cdb_snapshot and constraint_db and hasattr(constraint_db, "restore"):
-                        constraint_db.restore(_cdb_snapshot)
-                return {"action": "retry", "current_feedback": current_feedback}
-
-            st_snapshot = None  # [V70] DB 커밋 성공 후 스냅샷 해제
-            _cdb_snapshot = None  # [SubstrateGate] DB 커밋 성공 후 CDB 스냅샷 해제
-            self.ctx.cumulative_state_cache = None
-            self.ctx.cumulative_state_cache_key = None  # [S-08] 센티넬 (0은 유효한 키일 수 있음)
-
-            # [Graph-Layer] Arc 인과 의존성 자동 기록 (순차 의존: 전화 Arc → 현재 Arc)
-            _arc_no = global_arc_no
-            if _arc_no > 1 and getattr(self.ctx, "current_project", None):
-                try:
-                    _desc = refined_arc.get("theme", "") or refined_arc.get("title", "")
-                    self.ctx.current_project.db.upsert_arc_dependency(
-                        from_arc=_arc_no - 1,
-                        to_arc=_arc_no,
-                        dep_type="causes",
-                        description=str(_desc)[:200],
-                    )
-                    # 명시적 prerequisite_arcs 필드 처리
-                    for _prereq in refined_arc.get("prerequisite_arcs") or []:
-                        if isinstance(_prereq, int) and _prereq != _arc_no:
-                            self.ctx.current_project.db.upsert_arc_dependency(_prereq, _arc_no, "requires", "")
-                except (AttributeError, TypeError) as _ade:
-                    logging.debug("[Stage2] arc_dependency 저장 실패 (비치명): %s", _ade)
-
-            # [B4-P1-1] constraint_db는 DB 커밋 이후 업데이트 — 실패해도 다음 루프에서 복구 가능
-            try:
-                constraint_db.update_arc_state(refined_arc)
-                self.ctx.ui.log(
-                    f"      🔒 [V49.4] ConstraintDB 업데이트 완료 (총 {len(constraint_db.arc_states)}개 Arc)"
-                )
-            except (AttributeError, TypeError, RuntimeError) as _cdb_err:
-                logging.warning("[B4-P1-1] constraint_db.update_arc_state 실패 (비치명적): %s", _cdb_err)
-
-            if callable(getattr(self.ctx, "generate_arc_context_v60", None)):
-                last_refined_context = self.ctx.generate_arc_context_v60(all_refined_arcs, global_arc_no + 1)
-            current_ep_start = refined_arc["ep_end"] + 1
-
-            # [4-R3-f] PASS 메트릭 기록
-            self._record_s2_pass_metrics(
+            quality_gate_result = self._maybe_reject_stage2_pass_for_quality_gate(
+                refined_arc=refined_arc,
+                audit=audit,
+                decision=_d_decision,
+                score=_score,
+                tactical_doc_len=_td_len,
+                quality_gate_score=_quality_gate_score,
+                st_snapshot=st_snapshot,
+                generation_method=generation_method,
+                cdb_snapshot=_cdb_snapshot,
+                constraint_db=constraint_db,
                 global_arc_no=global_arc_no,
                 attempt=attempt,
-                generation_method=generation_method,
-                selected_strategy=(
-                    refined_arc.get("_ensemble_meta", {}).get("best_strategy")
-                    or refined_arc.get("_strategy", "")
-                    or generation_method
-                )
-                if isinstance(refined_arc, dict)
-                else generation_method,
-                audit=audit,
-                duration_ms=_director_duration_ms,
                 is_patch=is_patch,
                 prev_score=prev_score,
                 patch_fallback=patch_fallback,
-                artifact_payload=refined_arc if isinstance(refined_arc, dict) else None,
             )
+            if quality_gate_result:
+                return quality_gate_result
 
-            # [Phase 6] Arc 단위 비용 스냅샷 저장 (비차단)
-            try:
-                collector = get_metrics_collector()
-                if collector and self.ctx.current_project and hasattr(self.ctx.current_project, "db"):
-                    scope = collector.snapshot_and_reset_scope()
-                    if (
-                        scope.get("total_calls", 0) > 0
-                        or scope.get("total_tokens", 0) > 0
-                        or scope.get("total_cost_usd", 0.0) > 0
-                    ):
-                        self.ctx.current_project.db.save_cost_record(
-                            session_id=collector.session_id,
-                            scope_type="arc",
-                            scope_id=global_arc_no,
-                            total_calls=scope.get("total_calls", 0),
-                            total_tokens=scope.get("total_tokens", 0),
-                            total_cost_usd=scope.get("total_cost_usd", 0.0),
-                            model_breakdown=scope.get("model_breakdown", "{}"),
-                        )
-            except (OSError, RuntimeError, TypeError) as cost_err:
-                logging.warning("[Phase 6] Arc 비용 기록 실패 (비차단): %s", cost_err)
+            prepared_result: Stage2PassPreparationResult = self._prepare_stage2_pass_arc_for_persistence(
+                refined_arc=refined_arc,
+                arc_drive=arc_drive,
+                enriched_block=enriched_block,
+                all_refined_arcs=all_refined_arcs,
+                global_arc_no=global_arc_no,
+                current_feedback=current_feedback,
+                generation_method=generation_method,
+                st_snapshot=st_snapshot,
+                cdb_snapshot=_cdb_snapshot,
+                constraint_db=constraint_db,
+                constraint_block=constraint_block,
+            )
+            if prepared_result.get("action") == "retry":
+                return prepared_result
+            refined_arc = prepared_result["refined_arc"]
 
-            # [LS-1] 계층적 요약 피라미드 — VolumeSettings.ARCS_PER_VOLUME 기준
-            _arcs_per_volume = max(1, int(VolumeSettings.ARCS_PER_VOLUME))
-            if global_arc_no > 0 and global_arc_no % _arcs_per_volume == 0:
-                try:
-                    _vol_no = global_arc_no // _arcs_per_volume
-                    _arc_summaries_for_vol = []
-                    for _ai in range(global_arc_no - (_arcs_per_volume - 1), global_arc_no + 1):
-                        _as = self.ctx.current_project.load_v20_anchor(f"arc_summary_{_ai}")
-                        if _as:
-                            # arc_summary는 dict 또는 str일 수 있음
-                            if isinstance(_as, dict):
-                                _as_text = _as.get("summary", "") or _as.get("text", "")
-                                if not _as_text:
-                                    # [V70] arc_summary dict를 읽기 좋은 텍스트로 변환
-                                    _parts = []
-                                    if _as.get("npc_status") and isinstance(_as["npc_status"], dict):
-                                        _parts.append(
-                                            "NPC: "
-                                            + ", ".join(
-                                                f"{n}({v.get('status', '')})" for n, v in _as["npc_status"].items()
-                                            )
-                                        )
-                                    if _as.get("world_changes"):
-                                        _parts.append(
-                                            "세계변화: " + "; ".join(str(w) for w in _as["world_changes"][:5])
-                                        )
-                                    if _as.get("resolved_plots"):
-                                        _parts.append(
-                                            "해결플롯: " + "; ".join(str(p) for p in _as["resolved_plots"][:5])
-                                        )
-                                    if _as.get("active_plots"):
-                                        _parts.append("진행플롯: " + "; ".join(str(p) for p in _as["active_plots"][:5]))
-                                    if _as.get("destroyed_entities"):
-                                        _parts.append(
-                                            "파괴: " + "; ".join(str(d) for d in _as["destroyed_entities"][:3])
-                                        )
-                                    _as_text = " | ".join(_parts) if _parts else str(_as)
-                            else:
-                                _as_text = str(_as)
-                            if _as_text:
-                                _arc_summaries_for_vol.append(f"Arc {_ai}: {_as_text}")
+            return await self._finalize_stage2_pass_persistence_and_tail(
+                refined_arc=refined_arc,
+                all_refined_arcs=all_refined_arcs,
+                global_arc_no=global_arc_no,
+                current_feedback=current_feedback,
+                st_snapshot=st_snapshot,
+                cdb_snapshot=_cdb_snapshot,
+                constraint_db=constraint_db,
+                last_refined_context=last_refined_context,
+                current_ep_start=current_ep_start,
+                director_feedback_for_fourphase=director_feedback_for_fourphase,
+                attempt=attempt,
+                generation_method=generation_method,
+                audit=audit,
+                director_duration_ms=_director_duration_ms,
+                is_patch=is_patch,
+                prev_score=prev_score,
+                patch_fallback=patch_fallback,
+            )
+        return self._handle_stage2_reject_path(
+            refined_arc=refined_arc,
+            audit=audit,
+            attempt=attempt,
+            generation_method=generation_method,
+            st_snapshot=st_snapshot,
+            director_feedback_for_fourphase=director_feedback_for_fourphase,
+            last_refined_context=last_refined_context,
+            current_ep_start=current_ep_start,
+            is_patch=is_patch,
+            prev_score=prev_score,
+            patch_fallback=patch_fallback,
+            global_arc_no=global_arc_no,
+            current_feedback=current_feedback,
+            director_duration_ms=_director_duration_ms,
+        )
 
-                    if _arc_summaries_for_vol:
-                        _vol_prompt = (
-                            f"아래 {_arcs_per_volume}개 아크 요약을 하나의 볼륨 요약으로 합쳐주세요.\n"
-                            "핵심 사건, 주요 인물 변화, 세계 상태 변화에 집중하세요.\n"
-                            "반드시 아래 3개 섹션으로만 정리하세요:\n"
-                            "[인물 아크]\n[핵심 갈등]\n[미해결 복선]\n"
-                            "전체 2000자 이내로 작성하세요.\n\n"
-                            + "\n".join(_arc_summaries_for_vol)
-                            + f"\n\n볼륨 {_vol_no} 요약:"
-                        )
-                        _vol_result = self.ctx.agents["director"].ask(_vol_prompt, temperature=0.2)
-                        if _vol_result and isinstance(_vol_result, str) and len(_vol_result) > 20:
-                            _vol_result = _trim_hierarchical_summary(_vol_result, 2000)
-                            self.ctx.current_project.save_v20_anchor(f"volume_summary_{_vol_no}", _vol_result)
-                            logging.info(f"📖 [V68] 볼륨 {_vol_no} 요약 저장 완료 ({len(_vol_result)}자)")
+    def _prepare_stage2_pass_arc_for_persistence(
+        self,
+        *,
+        refined_arc: dict,
+        arc_drive: dict,
+        enriched_block: dict,
+        all_refined_arcs: list,
+        global_arc_no: int,
+        current_feedback: str,
+        generation_method: str,
+        st_snapshot,
+        cdb_snapshot,
+        constraint_db,
+        constraint_block: str,
+    ) -> Stage2PassPreparationResult:
+        from modules.core.constants import RecoveryLimits
 
-                            # [V68] 시리즈 요약 갱신 — 기존 + 새 볼륨 통합
-                            try:
-                                _existing_series = self.ctx.current_project.load_v20_anchor("series_summary") or ""
-                                if isinstance(_existing_series, dict):
-                                    _existing_series = _existing_series.get("summary", "") or str(_existing_series)
-                                _series_prompt = (
-                                    "아래는 기존 시리즈 요약과 새 볼륨 요약입니다.\n"
-                                    "이를 통합하여 전체 시리즈 요약을 갱신하세요.\n"
-                                    "반드시 아래 3개 섹션으로만 정리하세요:\n"
-                                    "[인물 아크]\n[핵심 갈등]\n[미해결 복선]\n"
-                                    "핵심 사건, 주요 인물 변화, 세계 상태 변화에 집중하고 전체 5000자 이내로 작성하세요.\n\n"
-                                    f"기존 시리즈 요약:\n{_existing_series or '(아직 없음)'}\n\n"
-                                    f"새 볼륨 {_vol_no} 요약:\n{_vol_result}\n\n"
-                                    "갱신된 시리즈 요약:"
-                                )
-                                _series_result = self.ctx.agents["director"].ask(_series_prompt, temperature=0.2)
-                                if _series_result and isinstance(_series_result, str) and len(_series_result) > 20:
-                                    _series_result = _trim_hierarchical_summary(_series_result, 5000)
-                                    self.ctx.current_project.save_v20_anchor("series_summary", _series_result)
-                                    logging.info(f"📚 [V68] 시리즈 요약 갱신 완료 ({len(_series_result)}자)")
-                            except Exception as _se:
-                                logging.warning(f"⚠️ [V68] 시리즈 요약 갱신 실패 (비차단): {_se}")
-                        else:
-                            logging.warning("⚠️ [V68] 볼륨 요약 LLM 응답 불충분 — 건너뜀")
-                except Exception as _ve:
-                    logging.warning(f"⚠️ [V68] 볼륨 요약 생성 실패 (비차단): {_ve}")
+        refined_arc["arc_drive"] = arc_drive if arc_drive else {}
+        refined_arc["joint_docs"] = enriched_block.get("joint_docs", {})
+        refined_arc["status_shadow"] = enriched_block.get("status_shadow", {})
 
-            return {
-                "action": "break",
-                "last_refined_context": last_refined_context,
-                "current_ep_start": current_ep_start,
-                "current_feedback": current_feedback,
-                "director_feedback_for_fourphase": director_feedback_for_fourphase,
-                "st_snapshot": st_snapshot,
+        if callable(getattr(self.ctx, "validate_arc_data_fields", None)):
+            repaired_arc = self.ctx.validate_arc_data_fields(refined_arc, global_arc_no)
+            if repaired_arc is None:
+                current_feedback = "Arc 데이터 기본 구조를 복구하지 못했습니다. 완전한 JSON 구조로 다시 설계하라."
+                if st_snapshot and generation_method.startswith("four_phase") and self.ctx.state_tracker:
+                    for key, value in st_snapshot.items():
+                        if hasattr(self.ctx.state_tracker, key):
+                            setattr(self.ctx.state_tracker, key, value)
+                    if cdb_snapshot and constraint_db and hasattr(constraint_db, "restore"):
+                        constraint_db.restore(cdb_snapshot)
+                return {"action": "retry", "current_feedback": current_feedback}
+            refined_arc = repaired_arc
+
+        critical_missing = []
+        if not refined_arc.get("hybrid_composition"):
+            self.ctx.ui.log(f"⚠️ [Arc {global_arc_no}] 패턴 구성(hybrid_composition) 누락 - 기본값 주입")
+            if callable(getattr(self.ctx, "audit_event", None)):
+                self.ctx.audit_event("field_repair", "hybrid_composition default injected", {"arc_no": global_arc_no})
+            refined_arc["hybrid_composition"] = {
+                "primary": "standard_progression",
+                "secondary": [],
+                "mixing_logic": "기본 전개",
             }
-        else:
-            # [V60.77] Director REJECT (PASS_WITH_FIX는 위에서 PASS 경로로 처리됨)
-            _rejected_arc = refined_arc  # [Patch Mode] REJECT된 Arc 보존 (패치 모드 판단용)
-            base_feedback = audit.get("re_slice_instruction") or "밀도 보강 필요"
-            reject_reason = audit.get("reason") or "사유 미상"
-            _score_breakdown = {}
-            _self_consistency = audit.get("self_consistency", {})
-            if isinstance(_self_consistency, dict):
-                for _k in ("votes", "pass_votes", "median_score"):
-                    _v = _self_consistency.get(_k)
-                    if isinstance(_v, int | float):
-                        _score_breakdown[_k] = _v
+            critical_missing.append("hybrid_composition")
 
-            if callable(getattr(self.ctx, "get_adaptive_feedback_intensity", None)):
-                adaptive_intensity = self.ctx.get_adaptive_feedback_intensity(attempt, stage=2)
-                intensity_guide = f"\n\n[V60.9 재시도 가이드 ({attempt + 1}회차)]\n{adaptive_intensity['guidance']}"
-            else:
-                intensity_guide = ""
+        if not refined_arc.get("joint_docs"):
+            self.ctx.ui.log(f"⚠️ [Arc {global_arc_no}] joint_docs 누락 - 기본값 주입")
+            if callable(getattr(self.ctx, "audit_event", None)):
+                self.ctx.audit_event("field_repair", "joint_docs default injected", {"arc_no": global_arc_no})
+            refined_arc["joint_docs"] = {
+                "final_location": "위치 미정",
+                "physical_inventory": ["물품 미정"],
+                "world_joint": "변화 없음",
+            }
+            critical_missing.append("joint_docs")
 
-            self.ctx.ui.log(f"      🎬 [Director REJECT] {reject_reason[:100]}")
-            self.ctx.ui.log(f"      📋 피드백: {base_feedback[:100]}")
-
-            # [V70] StateTracker 롤백: FourPhase PASS → Director REJECT 시 팬텀 데이터 제거
-            if st_snapshot and generation_method.startswith("four_phase"):  # [TF-R2-S2-11] ASP 포함
+        curr_joint = refined_arc.get("joint_docs", {})
+        curr_inventory = curr_joint.get("physical_inventory", [])
+        if isinstance(curr_inventory, str):
+            curr_inventory = [curr_inventory] if curr_inventory and curr_inventory != "[]" else []
+        elif isinstance(curr_inventory, dict):
+            curr_inventory = [curr_inventory] if curr_inventory else []
+        if not curr_inventory and all_refined_arcs:
+            prev_joint = all_refined_arcs[-1].get("joint_docs", {})
+            prev_inventory = prev_joint.get("physical_inventory", [])
+            if isinstance(prev_inventory, str):
                 try:
-                    _st = self.ctx.state_tracker
-                    for _k, _v in st_snapshot.items():
-                        if hasattr(_st, _k):  # [감리] 다른 롤백 경로와 일관된 hasattr 가드
-                            setattr(_st, _k, _v)
-                    logging.info("🔄 [V70] StateTracker 롤백 완료 (Director REJECT)")
-                except Exception as _rb_err:
-                    logging.warning(f"⚠️ [V70] StateTracker 롤백 실패 (비차단): {_rb_err}")
-                st_snapshot = None
+                    import json as _json
 
-            director_feedback_for_fourphase = f"""[Director REJECT 사유]
+                    prev_inventory = _json.loads(prev_inventory)
+                except (ValueError, TypeError):
+                    prev_inventory = []
+            if isinstance(prev_inventory, dict):
+                prev_inventory = [prev_inventory] if prev_inventory else []
+            if prev_inventory and prev_inventory != [] and prev_inventory != "[]":
+                curr_status = refined_arc.get("status_shadow", {})
+                consumed_raw = curr_status.get("item_consumption", [])
+                if isinstance(consumed_raw, str):
+                    consumed_names = [consumed_raw] if consumed_raw else []
+                elif isinstance(consumed_raw, list):
+                    consumed_names = []
+                    for consumed_item in consumed_raw:
+                        if isinstance(consumed_item, str):
+                            consumed_names.append(consumed_item)
+                        elif isinstance(consumed_item, dict):
+                            consumed_names.append(consumed_item.get("name", consumed_item.get("item", "")))
+                else:
+                    consumed_names = []
+                state_constraints = refined_arc.get("state_constraints", {})
+                acquired = state_constraints.get("protagonist_items") or state_constraints.get("items_acquired", [])
+                if isinstance(acquired, str):
+                    acquired = [acquired] if acquired else []
+                elif not isinstance(acquired, list):
+                    acquired = [acquired] if acquired else []
+                if isinstance(prev_inventory, list):
+
+                    def _item_name(item):
+                        if isinstance(item, dict):
+                            return item.get("name", item.get("item", ""))
+                        return str(item)
+
+                    inherited = [item for item in prev_inventory if _item_name(item) not in consumed_names]
+                    inherited.extend(acquired)
+                    refined_arc["joint_docs"]["physical_inventory"] = inherited
+                    self.ctx.ui.log(
+                        f"      🔄 [V49.6] physical_inventory 이전 Arc에서 계승: {inherited[:3]}{'...' if len(inherited) > 3 else ''}"
+                    )
+
+        if not refined_arc.get("status_shadow"):
+            self.ctx.ui.log(f"⚠️ [Arc {global_arc_no}] status_shadow 누락 - 기본값 주입")
+            if callable(getattr(self.ctx, "audit_event", None)):
+                self.ctx.audit_event("field_repair", "status_shadow default injected", {"arc_no": global_arc_no})
+            refined_arc["status_shadow"] = {
+                "internal_energy_loss": "0%",
+                "expected_injuries": "없음",
+                "item_consumption": [],
+            }
+            critical_missing.append("status_shadow")
+
+        if len(critical_missing) >= RecoveryLimits.CRITICAL_MISSING_THRESHOLD:
+            self.ctx.ui.log(f"🚨 [Arc {global_arc_no}] 핵심 데이터 과다 누락({len(critical_missing)}개)")
+            if callable(getattr(self.ctx, "audit_event", None)):
+                self.ctx.audit_event(
+                    "integrity_fail",
+                    "critical fields missing beyond repair threshold",
+                    {"arc_no": global_arc_no, "missing": critical_missing},
+                )
+            current_feedback = f"필수 키 누락: {', '.join(critical_missing)}. 완전한 JSON 구조로 재설계하라."
+            if st_snapshot and generation_method.startswith("four_phase") and self.ctx.state_tracker:
+                for key, value in st_snapshot.items():
+                    if hasattr(self.ctx.state_tracker, key):
+                        setattr(self.ctx.state_tracker, key, value)
+                if cdb_snapshot and constraint_db and hasattr(constraint_db, "restore"):
+                    constraint_db.restore(cdb_snapshot)
+            return {"action": "retry", "current_feedback": current_feedback}
+
+        if callable(getattr(self.ctx, "validate_arc_integrity", None)) and not self.ctx.validate_arc_integrity(
+            refined_arc
+        ):
+            current_feedback = "필수 키가 누락된 전술 설계입니다. 형식을 완전한 JSON으로 다시 출력하십시오."
+            if st_snapshot and generation_method.startswith("four_phase") and self.ctx.state_tracker:
+                for key, value in st_snapshot.items():
+                    if hasattr(self.ctx.state_tracker, key):
+                        setattr(self.ctx.state_tracker, key, value)
+                if cdb_snapshot and constraint_db and hasattr(constraint_db, "restore"):
+                    constraint_db.restore(cdb_snapshot)
+            return {"action": "retry", "current_feedback": current_feedback}
+
+        if constraint_block:
+            constraint_lines = constraint_block.strip().split("\n")
+            must_not = [line.strip() for line in constraint_lines if "금지" in line or "MUST NOT" in line or "절대" in line]
+            refined_arc["constraint_summary"] = "\n".join(must_not[:10]) if must_not else ""
+
+        rationale_parts: list[str] = []
+        rationale_sc = refined_arc.get("state_constraints", {})
+        rationale_rels = (
+            rationale_sc.get("relationship_changes")
+            or refined_arc.get("state_changes", {}).get("relationship_changes")
+            or []
+        )
+        for relation_change in rationale_rels[:5]:
+            if isinstance(relation_change, dict):
+                trigger = relation_change.get("trigger", "")
+                justification = relation_change.get("justification", "")
+                if trigger or justification:
+                    npc = relation_change.get("target") or relation_change.get("npc") or "?"
+                    rationale_parts.append(f"관계({npc}): {(trigger or justification)[:120]}")
+        rationale_pc = rationale_sc.get("power_changes", {})
+        if isinstance(rationale_pc, dict) and rationale_pc.get("growth_justification"):
+            rationale_parts.append(f"성장근거: {rationale_pc['growth_justification'][:120]}")
+        rationale_fs = rationale_sc.get("foreshadowings", [])
+        if isinstance(rationale_fs, list):
+            for foreshadow in rationale_fs[:3]:
+                if isinstance(foreshadow, dict) and foreshadow.get("description"):
+                    rationale_parts.append(f"복선: {foreshadow['description'][:120]}")
+        rationale_cc = rationale_sc.get("continuity_checkpoints", [])
+        if isinstance(rationale_cc, list) and rationale_cc:
+            rationale_parts.append(f"연속성: {'; '.join(str(item)[:60] for item in rationale_cc[:3])}")
+        refined_arc["rationale_digest"] = "\n".join(rationale_parts[:8]) if rationale_parts else ""
+
+        semantic_carryover = _build_semantic_carryover(
+            refined_arc.get("state_constraints"),
+            refined_arc.get("state_changes"),
+        )
+        refined_arc["semantic_carryover"] = semantic_carryover
+        refined_arc["rationale_digest"] = _build_rationale_digest_from_carryover(semantic_carryover)
+
+        if all_refined_arcs:
+            prev_arc = all_refined_arcs[-1]
+            prev_end = prev_arc.get("state_constraints", {}).get("arc_end_state", {})
+            correct_equip = prev_end.get("equipment")
+            if correct_equip is None:
+                correct_equip = prev_arc.get("joint_docs", {}).get("physical_inventory", [])
+            if isinstance(correct_equip, str):
+                correct_equip = [correct_equip] if correct_equip and correct_equip != "[]" else []
+            elif isinstance(correct_equip, dict):
+                correct_equip = [correct_equip] if correct_equip else []
+            elif not isinstance(correct_equip, list):
+                correct_equip = []
+
+            curr_sc = refined_arc.get("state_constraints", {})
+            curr_start = curr_sc.get("arc_start_state", {})
+            old_equip = curr_start.get("equipment", [])
+            if old_equip != correct_equip:
+                curr_start["equipment"] = correct_equip
+                curr_sc["arc_start_state"] = curr_start
+                refined_arc["state_constraints"] = curr_sc
+                self.ctx.ui.log(
+                    f"      🔧 [Equipment Sync] Arc {global_arc_no} 시작 소지품 → "
+                    f"이전 Arc 종료 소지품으로 동기화 ({len(correct_equip)}개 아이템)"
+                )
+
+        if isinstance(refined_arc, dict) and "arc_no" not in refined_arc:
+            refined_arc["arc_no"] = global_arc_no
+        refined_arc = validate_arc(refined_arc)
+
+        ns2_warnings = _check_block_worldstate_alignment(enriched_block, refined_arc, global_arc_no)
+        if ns2_warnings:
+            for warn in ns2_warnings:
+                logging.warning(warn)
+
+        return {"action": "continue", "refined_arc": refined_arc}
+
+    async def _finalize_stage2_pass_persistence_and_tail(
+        self,
+        *,
+        refined_arc: dict,
+        all_refined_arcs: list,
+        global_arc_no: int,
+        current_feedback: str,
+        st_snapshot,
+        cdb_snapshot,
+        constraint_db,
+        last_refined_context: str,
+        current_ep_start: int,
+        director_feedback_for_fourphase: str,
+        attempt: int,
+        generation_method: str,
+        audit: dict,
+        director_duration_ms: int | None,
+        is_patch: bool,
+        prev_score: float,
+        patch_fallback: bool,
+    ) -> Stage2PassFinalizeTailResult:
+        all_refined_arcs.append(refined_arc)
+
+        try:
+            self.ctx.current_project.save_v20_anchor("arcs", all_refined_arcs)
+            if callable(getattr(self.ctx, "safe_commit_async", None)):
+                commit_ok = await self.ctx.safe_commit_async()
+                if not commit_ok:
+                    raise RuntimeError("safe_commit_async returned False")
+        except (OSError, RuntimeError) as commit_err:
+            try:
+                conn = self.ctx.current_project.db.conn
+                if conn.in_transaction:
+                    conn.rollback()
+                    logging.info("🔄 [TF-C09] DB rollback 완료 (Arc %d)", global_arc_no)
+            except Exception as rollback_err:
+                logging.warning("⚠️ [TF-C09] DB rollback 실패: %s", rollback_err)
+            self.ctx.ui.log(f"🚨 [DB] Arc {global_arc_no} 저장 실패: {commit_err}")
+            if callable(getattr(self.ctx, "audit_event", None)):
+                self.ctx.audit_event(
+                    "db_commit_error",
+                    "arc save failed in async",
+                    {"arc_no": global_arc_no, "error": str(commit_err)},
+                )
+            all_refined_arcs.pop()
+            if st_snapshot:
+                try:
+                    tracker = self.ctx.state_tracker
+                    for key, value in st_snapshot.items():
+                        if hasattr(tracker, key):
+                            setattr(tracker, key, value)
+                    logging.info("🔄 [V70] DB 실패 StateTracker 롤백 완료")
+                except Exception as rollback_err:
+                    logging.warning(f"⚠️ [V70] DB 실패 StateTracker 롤백 실패: {rollback_err}")
+                if cdb_snapshot and constraint_db and hasattr(constraint_db, "restore"):
+                    constraint_db.restore(cdb_snapshot)
+            return {"action": "retry", "current_feedback": current_feedback}
+
+        st_snapshot = None
+        cdb_snapshot = None
+        self.ctx.cumulative_state_cache = None
+        self.ctx.cumulative_state_cache_key = None
+
+        arc_no = global_arc_no
+        if arc_no > 1 and getattr(self.ctx, "current_project", None):
+            try:
+                desc = refined_arc.get("theme", "") or refined_arc.get("title", "")
+                self.ctx.current_project.db.upsert_arc_dependency(
+                    from_arc=arc_no - 1,
+                    to_arc=arc_no,
+                    dep_type="causes",
+                    description=str(desc)[:200],
+                )
+                for prereq in refined_arc.get("prerequisite_arcs") or []:
+                    if isinstance(prereq, int) and prereq != arc_no:
+                        self.ctx.current_project.db.upsert_arc_dependency(prereq, arc_no, "requires", "")
+            except (AttributeError, TypeError) as dep_err:
+                logging.debug("[Stage2] arc_dependency 저장 실패 (비치명): %s", dep_err)
+
+        try:
+            constraint_db.update_arc_state(refined_arc)
+            self.ctx.ui.log(f"      🔒 [V49.4] ConstraintDB 업데이트 완료 (총 {len(constraint_db.arc_states)}개 Arc)")
+        except (AttributeError, TypeError, RuntimeError) as cdb_err:
+            logging.warning("[B4-P1-1] constraint_db.update_arc_state 실패 (비치명적): %s", cdb_err)
+
+        if callable(getattr(self.ctx, "generate_arc_context_v60", None)):
+            last_refined_context = self.ctx.generate_arc_context_v60(all_refined_arcs, global_arc_no + 1)
+        current_ep_start = refined_arc["ep_end"] + 1
+
+        self._record_s2_pass_metrics(
+            global_arc_no=global_arc_no,
+            attempt=attempt,
+            generation_method=generation_method,
+            selected_strategy=(
+                refined_arc.get("_ensemble_meta", {}).get("best_strategy")
+                or refined_arc.get("_strategy", "")
+                or generation_method
+            )
+            if isinstance(refined_arc, dict)
+            else generation_method,
+            audit=audit,
+            duration_ms=director_duration_ms,
+            is_patch=is_patch,
+            prev_score=prev_score,
+            patch_fallback=patch_fallback,
+            artifact_payload=refined_arc if isinstance(refined_arc, dict) else None,
+        )
+
+        try:
+            collector = get_metrics_collector()
+            if collector and self.ctx.current_project and hasattr(self.ctx.current_project, "db"):
+                scope = collector.snapshot_and_reset_scope()
+                if (
+                    scope.get("total_calls", 0) > 0
+                    or scope.get("total_tokens", 0) > 0
+                    or scope.get("total_cost_usd", 0.0) > 0
+                ):
+                    self.ctx.current_project.db.save_cost_record(
+                        session_id=collector.session_id,
+                        scope_type="arc",
+                        scope_id=global_arc_no,
+                        total_calls=scope.get("total_calls", 0),
+                        total_tokens=scope.get("total_tokens", 0),
+                        total_cost_usd=scope.get("total_cost_usd", 0.0),
+                        model_breakdown=scope.get("model_breakdown", "{}"),
+                    )
+        except (OSError, RuntimeError, TypeError) as cost_err:
+            logging.warning("[Phase 6] Arc 비용 기록 실패 (비차단): %s", cost_err)
+
+        arcs_per_volume = max(1, int(VolumeSettings.ARCS_PER_VOLUME))
+        if global_arc_no > 0 and global_arc_no % arcs_per_volume == 0:
+            try:
+                volume_no = global_arc_no // arcs_per_volume
+                arc_summaries_for_volume = []
+                for arc_idx in range(global_arc_no - (arcs_per_volume - 1), global_arc_no + 1):
+                    arc_summary = self.ctx.current_project.load_v20_anchor(f"arc_summary_{arc_idx}")
+                    if arc_summary:
+                        if isinstance(arc_summary, dict):
+                            arc_summary_text = arc_summary.get("summary", "") or arc_summary.get("text", "")
+                            if not arc_summary_text:
+                                summary_parts = []
+                                if arc_summary.get("npc_status") and isinstance(arc_summary["npc_status"], dict):
+                                    summary_parts.append(
+                                        "NPC: "
+                                        + ", ".join(
+                                            f"{name}({value.get('status', '')})"
+                                            for name, value in arc_summary["npc_status"].items()
+                                        )
+                                    )
+                                if arc_summary.get("world_changes"):
+                                    summary_parts.append(
+                                        "세계변화: " + "; ".join(str(item) for item in arc_summary["world_changes"][:5])
+                                    )
+                                if arc_summary.get("resolved_plots"):
+                                    summary_parts.append(
+                                        "해결플롯: " + "; ".join(str(item) for item in arc_summary["resolved_plots"][:5])
+                                    )
+                                if arc_summary.get("active_plots"):
+                                    summary_parts.append(
+                                        "진행플롯: " + "; ".join(str(item) for item in arc_summary["active_plots"][:5])
+                                    )
+                                if arc_summary.get("destroyed_entities"):
+                                    summary_parts.append(
+                                        "파괴: " + "; ".join(str(item) for item in arc_summary["destroyed_entities"][:3])
+                                    )
+                                arc_summary_text = " | ".join(summary_parts) if summary_parts else str(arc_summary)
+                        else:
+                            arc_summary_text = str(arc_summary)
+                        if arc_summary_text:
+                            arc_summaries_for_volume.append(f"Arc {arc_idx}: {arc_summary_text}")
+
+                if arc_summaries_for_volume:
+                    volume_prompt = (
+                        f"아래 {arcs_per_volume}개 아크 요약을 하나의 볼륨 요약으로 합쳐주세요.\n"
+                        "핵심 사건, 주요 인물 변화, 세계 상태 변화에 집중하세요.\n"
+                        "반드시 아래 3개 섹션으로만 정리하세요:\n"
+                        "[인물 아크]\n[핵심 갈등]\n[미해결 복선]\n"
+                        "전체 2000자 이내로 작성하세요.\n\n"
+                        + "\n".join(arc_summaries_for_volume)
+                        + f"\n\n볼륨 {volume_no} 요약:"
+                    )
+                    volume_result = self.ctx.agents["director"].ask(volume_prompt, temperature=0.2)
+                    if volume_result and isinstance(volume_result, str) and len(volume_result) > 20:
+                        volume_result = _trim_hierarchical_summary(volume_result, 2000)
+                        self.ctx.current_project.save_v20_anchor(f"volume_summary_{volume_no}", volume_result)
+                        logging.info(f"📖 [V68] 볼륨 {volume_no} 요약 저장 완료 ({len(volume_result)}자)")
+
+                        try:
+                            existing_series = self.ctx.current_project.load_v20_anchor("series_summary") or ""
+                            if isinstance(existing_series, dict):
+                                existing_series = existing_series.get("summary", "") or str(existing_series)
+                            series_prompt = (
+                                "아래는 기존 시리즈 요약과 새 볼륨 요약입니다.\n"
+                                "이를 통합하여 전체 시리즈 요약을 갱신하세요.\n"
+                                "반드시 아래 3개 섹션으로만 정리하세요:\n"
+                                "[인물 아크]\n[핵심 갈등]\n[미해결 복선]\n"
+                                "핵심 사건, 주요 인물 변화, 세계 상태 변화에 집중하고 전체 5000자 이내로 작성하세요.\n\n"
+                                f"기존 시리즈 요약:\n{existing_series or '(아직 없음)'}\n\n"
+                                f"새 볼륨 {volume_no} 요약:\n{volume_result}\n\n"
+                                "갱신된 시리즈 요약:"
+                            )
+                            series_result = self.ctx.agents["director"].ask(series_prompt, temperature=0.2)
+                            if series_result and isinstance(series_result, str) and len(series_result) > 20:
+                                series_result = _trim_hierarchical_summary(series_result, 5000)
+                                self.ctx.current_project.save_v20_anchor("series_summary", series_result)
+                                logging.info(f"📚 [V68] 시리즈 요약 갱신 완료 ({len(series_result)}자)")
+                        except Exception as series_err:
+                            logging.warning(f"⚠️ [V68] 시리즈 요약 갱신 실패 (비차단): {series_err}")
+                    else:
+                        logging.warning("⚠️ [V68] 볼륨 요약 LLM 응답 불충분 — 건너뜀")
+            except Exception as volume_err:
+                logging.warning(f"⚠️ [V68] 볼륨 요약 생성 실패 (비차단): {volume_err}")
+
+        return {
+            "action": "break",
+            "last_refined_context": last_refined_context,
+            "current_ep_start": current_ep_start,
+            "current_feedback": current_feedback,
+            "director_feedback_for_fourphase": director_feedback_for_fourphase,
+            "st_snapshot": st_snapshot,
+        }
+
+    def _maybe_reject_stage2_pass_for_quality_gate(
+        self,
+        *,
+        refined_arc: dict,
+        audit: dict,
+        decision: str,
+        score: int,
+        tactical_doc_len: int,
+        quality_gate_score: int,
+        st_snapshot,
+        generation_method: str,
+        cdb_snapshot,
+        constraint_db,
+        global_arc_no: int,
+        attempt: int,
+        is_patch: bool,
+        prev_score: float,
+        patch_fallback: bool,
+    ) -> dict | None:
+        if decision not in ("PASS", "PASS_WITH_FIX") or tactical_doc_len < 1500 or score >= quality_gate_score:
+            return None
+
+        self.ctx.ui.log(f"      ⚠️ [QualityGate] {decision} 판정이나 score={score} < {quality_gate_score} → REJECT 전환")
+        audit["decision"] = "REJECT"
+        audit["reason"] = (audit.get("reason") or "") + (
+            f"\n[Quality Gate] score {score}점으로 {quality_gate_score}점 미달."
+        )
+        audit["re_slice_instruction"] = audit.get("re_slice_instruction") or "품질 개선 후 재제출"
+        director_feedback_for_fourphase = (
+            f"[QualityGate REJECT] score {score}점 < {quality_gate_score}점.\n"
+            f"{audit.get('reason', '')}\n"
+            f"[수정 지시] {audit.get('re_slice_instruction', '품질 개선 후 재제출')}"
+        )
+
+        if st_snapshot and generation_method.startswith("four_phase"):
+            tracker = self.ctx.state_tracker
+            if tracker:
+                for key, value in st_snapshot.items():
+                    if hasattr(tracker, key):
+                        setattr(tracker, key, value)
+            if cdb_snapshot and constraint_db and hasattr(constraint_db, "restore"):
+                constraint_db.restore(cdb_snapshot)
+
+        self._record_s2_reject_metrics(
+            global_arc_no=global_arc_no,
+            attempt=attempt,
+            generation_method=generation_method,
+            selected_strategy=(
+                refined_arc.get("_ensemble_meta", {}).get("best_strategy")
+                or refined_arc.get("_strategy", "")
+                or generation_method
+            )
+            if isinstance(refined_arc, dict)
+            else generation_method,
+            audit=audit,
+            is_patch=is_patch,
+            prev_score=prev_score,
+            patch_fallback=patch_fallback,
+            artifact_payload=refined_arc if isinstance(refined_arc, dict) else None,
+        )
+        return {
+            "action": "retry",
+            "current_feedback": audit["reason"],
+            "score": score,
+            "rejected_arc": refined_arc,
+            "score_breakdown": {},
+            "director_feedback_for_fourphase": director_feedback_for_fourphase,
+            "fix_scope": audit.get("fix_scope", ""),
+        }
+
+    def _handle_stage2_reject_path(
+        self,
+        *,
+        refined_arc: dict,
+        audit: dict,
+        attempt: int,
+        generation_method: str,
+        st_snapshot,
+        director_feedback_for_fourphase: str,
+        last_refined_context: str,
+        current_ep_start: int,
+        is_patch: bool,
+        prev_score: float,
+        patch_fallback: bool,
+        global_arc_no: int,
+        current_feedback: str,
+        director_duration_ms: int | None,
+    ) -> dict:
+        rejected_arc = refined_arc
+        base_feedback = audit.get("re_slice_instruction") or "밀도 보강 필요"
+        reject_reason = audit.get("reason") or "사유 미상"
+        score_breakdown = {}
+        self_consistency = audit.get("self_consistency", {})
+        if isinstance(self_consistency, dict):
+            for key in ("votes", "pass_votes", "median_score"):
+                value = self_consistency.get(key)
+                if isinstance(value, int | float):
+                    score_breakdown[key] = value
+
+        if callable(getattr(self.ctx, "get_adaptive_feedback_intensity", None)):
+            adaptive_intensity = self.ctx.get_adaptive_feedback_intensity(attempt, stage=2)
+            intensity_guide = f"\n\n[V60.9 재시도 가이드 ({attempt + 1}회차)]\n{adaptive_intensity['guidance']}"
+        else:
+            intensity_guide = ""
+
+        self.ctx.ui.log(f"      🎬 [Director REJECT] {reject_reason[:100]}")
+        self.ctx.ui.log(f"      📋 피드백: {base_feedback[:100]}")
+
+        if st_snapshot and generation_method.startswith("four_phase"):
+            try:
+                tracker = self.ctx.state_tracker
+                for key, value in st_snapshot.items():
+                    if hasattr(tracker, key):
+                        setattr(tracker, key, value)
+                logging.info("🔄 [V70] StateTracker 롤백 완료 (Director REJECT)")
+            except Exception as rollback_err:
+                logging.warning(f"⚠️ [V70] StateTracker 롤백 실패 (비차단): {rollback_err}")
+            st_snapshot = None
+
+        director_feedback_for_fourphase = f"""[Director REJECT 사유]
 {reject_reason}
 
 [수정 지시]
@@ -1584,29 +1283,27 @@ class Stage2Finalizer:
 [재시도 가이드]
 {intensity_guide}
 """
-            _rejected_arc = refined_arc if isinstance(refined_arc, dict) else None
-            refined_arc = None
-            self.ctx.ui.log(f"      🔄 [V60.77] Director 피드백 → FourPhase 대면 {min(attempt + 2, 5)}/5")
+        rejected_arc = refined_arc if isinstance(refined_arc, dict) else None
+        self.ctx.ui.log(f"      🔄 [V60.77] Director 피드백 → FourPhase 대면 {min(attempt + 2, 5)}/5")
 
-            # [4-R3-f] REJECT 메트릭 기록
-            self._record_s2_reject_metrics(
-                global_arc_no=global_arc_no,
-                attempt=attempt,
-                generation_method=generation_method,
-                selected_strategy=(
-                    _rejected_arc.get("_ensemble_meta", {}).get("best_strategy")
-                    or _rejected_arc.get("_strategy", "")
-                    or generation_method
-                )
-                if isinstance(_rejected_arc, dict)
-                else generation_method,
-                audit=audit,
-                duration_ms=_director_duration_ms,
-                is_patch=is_patch,
-                prev_score=prev_score,
-                patch_fallback=patch_fallback,
-                artifact_payload=_rejected_arc,
+        self._record_s2_reject_metrics(
+            global_arc_no=global_arc_no,
+            attempt=attempt,
+            generation_method=generation_method,
+            selected_strategy=(
+                rejected_arc.get("_ensemble_meta", {}).get("best_strategy")
+                or rejected_arc.get("_strategy", "")
+                or generation_method
             )
+            if isinstance(rejected_arc, dict)
+            else generation_method,
+            audit=audit,
+            duration_ms=director_duration_ms,
+            is_patch=is_patch,
+            prev_score=prev_score,
+            patch_fallback=patch_fallback,
+            artifact_payload=rejected_arc,
+        )
 
         return {
             "action": "retry",
@@ -1615,14 +1312,515 @@ class Stage2Finalizer:
             "current_feedback": current_feedback,
             "director_feedback_for_fourphase": director_feedback_for_fourphase,
             "st_snapshot": st_snapshot,
-            "score": audit.get("score", 0),  # [Patch Mode] Director 점수
-            "rejected_arc": _rejected_arc,  # [Patch Mode] REJECT된 Arc (패치 입력용)
-            "score_breakdown": _score_breakdown,
+            "score": audit.get("score", 0),
+            "rejected_arc": rejected_arc,
+            "score_breakdown": score_breakdown,
             "selection_reason": reject_reason,
             "validation_warnings": [reject_reason, base_feedback],
-            "fix_scope": audit.get("fix_scope", ""),  # [TF-33] Director 판단 수정 범위
-            "fix_scope_reasoning": audit.get("fix_scope_reasoning", ""),  # [TF-33]
+            "fix_scope": audit.get("fix_scope", ""),
+            "fix_scope_reasoning": audit.get("fix_scope_reasoning", ""),
         }
+
+    def _build_stage2_director_story_context(
+        self,
+        *,
+        refined_arc: dict,
+        enriched_block: dict,
+        all_refined_arcs: list,
+        global_arc_no: int,
+        last_refined_context: str,
+        bible_root: dict,
+        genre: str,
+        protagonist_name: str,
+        constraint_block: str,
+    ) -> tuple[str, str]:
+        from modules.core.constants import ContextLimits
+
+        expanded_prev_context = last_refined_context
+        if all_refined_arcs:
+            prev_arc_docs = []
+            prev_start = max(0, len(all_refined_arcs) - 30)
+            for prev_arc_idx in range(prev_start, len(all_refined_arcs)):
+                prev_arc = all_refined_arcs[prev_arc_idx]
+                prev_arc_no = prev_arc.get("arc_no", prev_arc_idx + 1)
+                prev_tactical = prev_arc.get("tactical_doc", "")
+                if isinstance(prev_tactical, dict):
+                    prev_tactical = json.dumps(prev_tactical, ensure_ascii=False)
+                if prev_tactical:
+                    prev_ep_start = prev_arc.get("ep_start", "?")
+                    prev_ep_end = prev_arc.get("ep_end", "?")
+                    prev_arc_docs.append(
+                        f"━━━ Arc {prev_arc_no} (제{prev_ep_start}화~제{prev_ep_end}화) ━━━\n{prev_tactical}"
+                    )
+            if prev_arc_docs:
+                full_arc_history = "\n\n".join(prev_arc_docs)
+                if len(full_arc_history) > ContextLimits.MAX_CONTEXT_CHARS:
+                    full_arc_history = full_arc_history[: ContextLimits.MAX_CONTEXT_CHARS] + "\n... (1M자 절삭)"
+                expanded_prev_context = (
+                    f"[V67] ═══ 이전 Arc 전술서 전문 ({len(prev_arc_docs)}개) ═══\n"
+                    f"{full_arc_history}\n\n"
+                    f"═══ 상태 요약 ═══\n{last_refined_context}"
+                )
+                logging.info(
+                    "📚 [V67] Director 컨텍스트 확장: %d개 Arc (%d자)",
+                    len(prev_arc_docs),
+                    len(expanded_prev_context),
+                )
+
+        story_context = ""
+        try:
+            prot_config = bible_root.get("protagonist_config", {})
+            sc_parts = [f"- 장르: {genre}"]
+            if prot_config:
+                sc_parts.append(f"- 주인공: {prot_config.get('name', protagonist_name or '미상')}")
+                incarnation = prot_config.get("incarnation_type", "미상")
+                sc_parts.append(f"- 환생 유형: {incarnation}")
+                if incarnation == "회귀자":
+                    sc_parts.append("→ 회귀자: 미래를 알고 역사를 변경하려 함. 이것은 모순이 아님.")
+                elif incarnation == "빙의자":
+                    sc_parts.append("→ 빙의자: 원래 인물과 다른 인격.")
+                elif incarnation == "환생자":
+                    sc_parts.append("→ 환생자: 전생 기억 보유.")
+            story_context = "\n".join(sc_parts)
+        except (KeyError, TypeError, AttributeError) as exc:
+            logging.warning(f"[SilentPass:Stage2Finalizer] 스토리 컨텍스트 생성 실패: {exc!s:.100}")
+            story_context = ""
+
+        if isinstance(enriched_block, dict):
+            genre_ext = enriched_block.get("genre_ext", {})
+            if isinstance(genre_ext, dict):
+                target_capital = genre_ext.get("capital_after")
+                if target_capital:
+                    story_context += (
+                        f"\n\n[NS-2 참고] Treatment 블록 목표 자본: {target_capital}. "
+                        "Arc 설계 자본이 목표에서 과도하게 벗어나지 않도록 주의하십시오."
+                    )
+
+        if constraint_block and "[Python 자동 수정" in constraint_block:
+            corr_start = constraint_block.find("[Python 자동 수정")
+            corr_end = constraint_block.find("\n\n[Python Pre-Director advisory", corr_start)
+            corr_advisory = constraint_block[corr_start:corr_end] if corr_end > 0 else constraint_block[corr_start:]
+            story_context += f"\n\n⚠️ {corr_advisory}"
+
+        if constraint_block and "[Python Pre-Director advisory" in constraint_block:
+            adv_start = constraint_block.find("[Python Pre-Director advisory")
+            adv_text = constraint_block[adv_start:]
+            story_context += f"\n\n⚠️ {adv_text}"
+
+        tactical_doc = refined_arc.get("tactical_doc", "") if isinstance(refined_arc, dict) else ""
+        cross_arc_issues = _check_cross_arc_asset_continuity(tactical_doc, all_refined_arcs)
+        if cross_arc_issues:
+            story_context += "\n\n" + "\n".join(cross_arc_issues)
+            logging.info("[TF-57-C] 크로스-Arc 자산 연속성 advisory 주입: %d건", len(cross_arc_issues))
+
+        if tactical_doc:
+            try:
+                checker = NumericConsistencyChecker()
+                warns = checker.check_tactical_doc(tactical_doc, global_arc_no)
+                if warns:
+                    nc1_text = "\n".join(f"  - [{w['severity']}] {w['text']}" for w in warns)
+                    story_context += (
+                        f"\n\n[NC-1-S2 산술 검증 경고]\n{nc1_text}\n위 경고를 참고하여 수치 정합성을 검증하세요."
+                    )
+                    logging.info("[TF-60] NC-1-S2 advisory 주입: %d건", len(warns))
+            except Exception as nc1_err:
+                logging.debug("[TF-60] NC-1-S2 검사 실패 (비치명): %s", nc1_err)
+
+        if tactical_doc:
+            try:
+                arithmetic_issues = _check_tactical_arithmetic(str(tactical_doc))
+                if arithmetic_issues:
+                    arithmetic_warn = "\n".join(f"  - {item}" for item in arithmetic_issues)
+                    logging.warning("[NS-1-P/S2] 첫 생성 arithmetic warning:\n%s", arithmetic_warn)
+                    story_context += (
+                        f"\n\n[NS-1-P arithmetic warning]\n{arithmetic_warn}\n"
+                        "Please verify tactical_doc arithmetic before approving."
+                    )
+            except Exception as arithmetic_err:
+                logging.debug("[TF-60] _check_tactical_arithmetic 실패 (비치명): %s", arithmetic_err)
+
+        db = getattr(getattr(self.ctx, "current_project", None), "db", None)
+        arc_dep_advisory = _build_arc_dependency_advisory(db, refined_arc.get("arc_no") or global_arc_no)
+        if arc_dep_advisory:
+            story_context = f"{story_context}\n\n{arc_dep_advisory}" if story_context else arc_dep_advisory
+
+        voice_advisory = _build_character_voice_advisory(db)
+        if voice_advisory:
+            story_context = f"{story_context}\n\n{voice_advisory}" if story_context else voice_advisory
+
+        return expanded_prev_context, story_context
+
+    def _audit_stage2_director(
+        self,
+        *,
+        refined_arc: dict,
+        expanded_prev_context: str,
+        enriched_block: dict,
+        protagonist_name: str,
+        suspected_duplicates: list,
+        entity_registry_for_director,
+        story_context: str,
+        global_arc_no: int,
+        draft_validator_passed: bool,
+        consensus_passed: bool,
+    ) -> tuple[dict, int, str, int]:
+        director_duration_ms = None
+        director_t0 = time.monotonic()
+        try:
+            self.ctx.perf_timer.start(f"s2_arc_{global_arc_no}_director")
+        except (AttributeError, TypeError) as exc:
+            logging.debug(f"[PerfTimer] start s2 director: {exc}")
+
+        self.ctx.ui.log("      🤔 [Director] 전략적 무결성 검수 중 (LLM 호출, 1~3분 소요)...")
+        try:
+            audit = self.ctx.agents["director"].audit_strategic_plan(
+                refined_arc,
+                expanded_prev_context,
+                curr_block=enriched_block,
+                protagonist_name=protagonist_name,
+                suspected_duplicates=suspected_duplicates,
+                entity_registry=entity_registry_for_director,
+                story_context=story_context,
+            )
+        except (RuntimeError, OSError, ValueError) as dir_err:
+            logging.warning(f"[G7] Director 심사 호출 실패: {dir_err!s:.100}")
+            self.ctx.ui.log("      ⚠️ [Director] 심사 호출 실패 — 폴백 REJECT")
+            audit = {
+                "decision": "REJECT",
+                "score": 50,
+                "reason": "Director 호출 실패 — 폴백 REJECT",
+                "self_consistency": {},
+            }
+
+        try:
+            elapsed = self.ctx.perf_timer.stop(f"s2_arc_{global_arc_no}_director")
+            if elapsed and elapsed > 0:
+                director_duration_ms = max(0, int(elapsed * 1000))
+        except (AttributeError, TypeError) as exc:
+            logging.debug(f"[PerfTimer] stop s2 director: {exc}")
+        if director_duration_ms is None:
+            director_duration_ms = max(0, int((time.monotonic() - director_t0) * 1000))
+
+        decision = audit.get("decision", "?")
+        decision_score = audit.get("score", "?")
+        reason = audit.get("reason", "")
+        self.ctx.ui.log(f"\n      🎬 [Director] {decision} (score={decision_score})")
+        if reason:
+            for idx in range(0, len(str(reason)), 80):
+                self.ctx.ui.log(f"         {str(reason)[idx : idx + 80]}")
+        contradictions = audit.get("contradictions", [])
+        if contradictions and not isinstance(contradictions, list):
+            contradictions = [contradictions] if contradictions else []
+        if contradictions:
+            self.ctx.ui.log(f"         📌 모순 {len(contradictions)}건:")
+            for contradiction in contradictions[:5]:
+                self.ctx.ui.log(f"            ▸ {str(contradiction)[:120]}")
+        if decision == "REJECT" and audit.get("re_slice_instruction"):
+            self.ctx.ui.log(f"         🔧 수정지시: {str(audit['re_slice_instruction'])[:150]}")
+        director_thinking = audit.get("_director_thinking", "")
+        if director_thinking:
+            self.ctx.ui.log("      💭 [Director Thinking]")
+            self.ctx.ui.log(director_thinking)
+
+        if audit.get("decision") == "REJECT" and draft_validator_passed and consensus_passed:
+            self_consistency = audit.get("self_consistency", {})
+            scores = self_consistency.get("scores", [])
+            all_default_50 = len(scores) >= 2 and all(s == 50 for s in scores)
+            zero_count = sum(1 for s in scores if s == 0)
+            many_zeros = len(scores) >= 2 and zero_count >= len(scores) // 2
+            is_quota_failure = all_default_50 or many_zeros
+            if is_quota_failure:
+                logging.warning(
+                    "[TF-25-07] V60.43 API 쿼터 실패 패턴 감지 — Director REJECT 유지 (score=0이 %d/%d개)",
+                    zero_count,
+                    len(scores),
+                )
+                audit["v60_43_api_warning"] = True
+
+        score_raw = audit.get("score", 0)
+        try:
+            score = int(score_raw)
+        except (ValueError, TypeError):
+            score = 0
+
+        return audit, director_duration_ms, decision, score
+
+    def _log_stage2_session_decision(
+        self,
+        *,
+        audit: dict,
+        global_arc_no: int,
+        attempt: int,
+        generation_method: str,
+        score: int,
+    ) -> None:
+        session_logger = getattr(self.ctx, "session_logger", None)
+        if session_logger:
+            try:
+                session_logger.log_decision(
+                    stage="stage2",
+                    ep_num=global_arc_no,
+                    round_num=attempt,
+                    decision_type="arc",
+                    result=audit.get("decision", "UNKNOWN"),
+                    score=score,
+                    generation_method=generation_method,
+                    reason=str(audit.get("reason", ""))[:500],
+                )
+            except (AttributeError, TypeError) as exc:
+                logging.debug("[SilentPass:S2:SessionLog] %s", exc)
+
+    def _run_stage2_pass_with_fix_loop(
+        self,
+        *,
+        refined_arc: dict,
+        audit: dict,
+        expanded_prev_context: str,
+        enriched_block: dict,
+        protagonist_name: str,
+        suspected_duplicates: list,
+        entity_registry_for_director,
+        story_context: str,
+        global_arc_no: int,
+        score: int,
+    ) -> Stage2PassWithFixLoopResult:
+        from modules.validation.threshold_helper import _threshold
+
+        max_fix = 3
+        four_phase = self.ctx.agents.get("four_phase")
+        current_arc = dict(refined_arc)
+        current_audit = audit
+        fix_ok = False
+        applied_patches: list[str] = []
+        patch_pressure_exceeded = False
+        re_score = score
+
+        for fix_i in range(max_fix):
+            fix_scope = current_audit.get("fix_scope", "")
+            if not fix_scope:
+                logging.warning("[PF-1] fix_scope 누락 → local patch authority 없음, retry 경로 위임")
+                self.ctx.ui.log("      🔀 [PF-1] fix_scope 누락 → inplace 권한 없음, retry 경로 위임")
+                break
+            if fix_scope in ("partial", "full"):
+                self.ctx.ui.log(f"      🔀 [TF-33] fix_scope={fix_scope!r} → inplace 불가, retry 경로 위임")
+                break
+
+            fix_instr = current_audit.get("re_slice_instruction", "")
+            self.ctx.ui.log(
+                f"      🔧 [TF-32-V] PASS_WITH_FIX patch #{fix_i + 1}/{max_fix} (fix: {str(fix_instr)[:80]})"
+            )
+
+            if not (four_phase and hasattr(four_phase, "_inplace_patch_arc")):
+                logging.warning("[TF-32-V] four_phase 에이전트 미등록 → REJECT")
+                break
+
+            try:
+                patched = four_phase._inplace_patch_arc(
+                    original_arc=current_arc,
+                    director_feedback=fix_instr,
+                    arc_no=global_arc_no,
+                )
+            except (RuntimeError, ValueError, OSError):
+                logging.exception("[TF-32-V] inplace_patch_arc 예외")
+                break
+            if not patched:
+                logging.warning("[TF-32-V] patch 실패 → REJECT")
+                break
+
+            patch_guard_signals = self._collect_arc_patch_guard_signals(
+                original_arc=current_arc,
+                patched_arc=patched,
+            )
+            if patch_guard_signals:
+                signal_state = self._merge_patch_guard_signals(
+                    current_audit,
+                    patch_guard_signals,
+                    attempt=fix_i + 1,
+                )
+                signal_codes = ", ".join(signal_state.get("codes", []))
+                logging.warning(
+                    "[S2-ArcPatchSignals] attempt=%s arc=%s codes=%s",
+                    fix_i + 1,
+                    global_arc_no,
+                    signal_codes,
+                )
+                self.ctx.ui.log(f"      ⚠️ [S2-ArcSignals] attempt={fix_i + 1} codes={signal_codes or 'n/a'}")
+                if callable(getattr(self.ctx, "audit_event", None)):
+                    self.ctx.audit_event(
+                        "patch_guard_signal",
+                        "stage2 arc patch signals observed",
+                        {
+                            "arc_no": global_arc_no,
+                            "attempt": fix_i + 1,
+                            "codes": list(signal_state.get("codes", [])),
+                            "count": int(signal_state.get("count", 0) or 0),
+                            "items": list(patch_guard_signals),
+                        },
+                    )
+
+            arith_patch_ctx = ""
+            tactical_patched = patched.get("tactical_doc", "") if isinstance(patched, dict) else ""
+            if tactical_patched:
+                arithmetic_issues = _check_tactical_arithmetic(str(tactical_patched))
+                if arithmetic_issues:
+                    arithmetic_warn = "\n".join(f"  - {item}" for item in arithmetic_issues)
+                    logging.warning("[NS-1-P] arithmetic warning detected in inplace patch:\n%s", arithmetic_warn)
+                    arith_patch_ctx = (
+                        "\n\n[NS-1-P arithmetic warning in inplace patch]\n"
+                        f"{arithmetic_warn}\n"
+                        "Please verify the patched tactical_doc arithmetic before approving."
+                    )
+
+            try:
+                from modules.core.constants import calc_patch_change_ratio, log_patch_diff
+
+                orig_json = json.dumps(current_arc, ensure_ascii=False)
+                patch_json = json.dumps(patched, ensure_ascii=False)
+                log_patch_diff(
+                    "S2-Arc",
+                    json.dumps(current_arc, ensure_ascii=False, indent=2),
+                    json.dumps(patched, ensure_ascii=False, indent=2),
+                )
+                change_ratio = calc_patch_change_ratio(orig_json, patch_json)
+                max_ratio = float(_threshold("patch_mode.inplace_max_change_ratio", 0.30))
+                if change_ratio > max_ratio:
+                    patch_pressure_exceeded = True
+                    patch_pressure = current_audit.setdefault("patch_pressure", {})
+                    patch_pressure["exceeded"] = True
+                    patch_pressure["count"] = int(patch_pressure.get("count", 0)) + 1
+                    patch_pressure["change_ratio"] = round(float(change_ratio), 4)
+                    patch_pressure["max_ratio"] = round(float(max_ratio), 4)
+                    patch_pressure["attempt"] = fix_i + 1
+                    logging.warning(
+                        "[F-2] InPlace Arc 변경 비율 %.1f%% > %.0f%% (S2)",
+                        change_ratio * 100,
+                        max_ratio * 100,
+                    )
+            except Exception as exc:
+                logging.debug("[S2-Finalizer] change_ratio 계산 실패: %s", exc)
+
+            if fix_instr:
+                applied_patches.append(str(fix_instr)[:200])
+
+            self.ctx.ui.log(f"      🔄 [TF-38] Director 재심사 #{fix_i + 1} 호출 중...")
+            patch_ctx = arith_patch_ctx
+            if patch_guard_signals:
+                patch_ctx += self._format_patch_guard_signal_notice(
+                    patch_guard_signals,
+                    attempt=fix_i + 1,
+                )
+            if patch_pressure_exceeded and isinstance(current_audit.get("patch_pressure"), dict):
+                patch_pressure = dict(current_audit.get("patch_pressure") or {})
+                patch_ctx += (
+                    "\n\n[F-2 advisory — high Arc patch pressure]\n"
+                    f"change_ratio={float(patch_pressure.get('change_ratio', 0.0)):.1%}, "
+                    f"threshold={float(patch_pressure.get('max_ratio', 0.0)):.0%}, "
+                    f"attempt={int(patch_pressure.get('attempt', fix_i + 1))}\n"
+                    "이 local Arc patch는 국소 수정 범위를 넘어설 수 있습니다. "
+                    "구조 일관성과 변경 정당성이 충분하면 PASS를 허용할 수 있지만, "
+                    "광범위 재작성처럼 보이면 PASS_WITH_FIX 또는 REJECT를 유지하세요."
+                )
+            if applied_patches:
+                patch_lines = "\n".join(f"- {patch}" for patch in applied_patches)
+                patch_ctx += (
+                    "\n\n[PASS_WITH_FIX 재심사 — 이미 적용된 패치]\n"
+                    f"{patch_lines}\n"
+                    "위 항목은 tactical_doc에 이미 반영되었습니다. "
+                    "curr_block 문서에서 동일 오류가 보여도 tactical_doc에서 수정되었으면 승인하세요."
+                )
+            try:
+                re_audit = self.ctx.agents["director"].audit_strategic_plan(
+                    patched,
+                    expanded_prev_context,
+                    curr_block=enriched_block,
+                    protagonist_name=protagonist_name,
+                    suspected_duplicates=suspected_duplicates,
+                    entity_registry=entity_registry_for_director,
+                    story_context=(story_context or "") + patch_ctx,
+                )
+            except (RuntimeError, ValueError, OSError):
+                logging.exception("[TF-32-V] 재심사 예외")
+                break
+
+            re_decision = re_audit.get("decision", "REJECT")
+            re_score = re_audit.get("score", 0)
+            try:
+                re_score = int(re_score)
+            except (ValueError, TypeError):
+                re_score = 0
+            self.ctx.ui.log(f"      🎬 [TF-32-V] 재심사 #{fix_i + 1}: {re_decision} (score={re_score})")
+
+            if re_decision == "PASS":
+                quality_gate_score = _threshold("scoring.quality_gate_score", 90)
+                if re_score < quality_gate_score:
+                    self.ctx.ui.log(
+                        f"      ⚠️ [TF-35] 재심사 PASS이나 score={re_score} < {quality_gate_score} → patch 종료"
+                    )
+                    break
+                current_arc = patched
+                if patch_pressure_exceeded and isinstance(current_audit.get("patch_pressure"), dict):
+                    re_audit["patch_pressure"] = deepcopy(current_audit["patch_pressure"])
+                if isinstance(current_audit.get("patch_guard_signals"), dict):
+                    re_audit["patch_guard_signals"] = deepcopy(current_audit["patch_guard_signals"])
+                current_audit = re_audit
+                fix_ok = True
+                break
+            if re_decision == "PASS_WITH_FIX":
+                current_arc = patched
+                if patch_pressure_exceeded and isinstance(current_audit.get("patch_pressure"), dict):
+                    re_audit["patch_pressure"] = deepcopy(current_audit["patch_pressure"])
+                if isinstance(current_audit.get("patch_guard_signals"), dict):
+                    re_audit["patch_guard_signals"] = deepcopy(current_audit["patch_guard_signals"])
+                current_audit = re_audit
+                continue
+            break
+
+        if fix_ok:
+            refined_arc.clear()
+            refined_arc.update(current_arc)
+            audit = current_audit
+            decision = "PASS"
+            score = re_score
+            if patch_pressure_exceeded:
+                audit["decision"] = "PASS"
+                audit["reason"] = (
+                    f"{str(audit.get('reason', '')).strip()}\n"
+                    "[PatchPressure Advisory] In-place patch ratio exceeded threshold; "
+                    "Director re-audit cleared this Arc with explicit warning context."
+                ).strip()
+                patch_pressure = audit.setdefault("patch_pressure", {})
+                patch_pressure["director_advisory_only"] = True
+                patch_pressure["cleared_verdict"] = "PASS"
+                self.ctx.ui.log("      ⚠️ [TF-32-V] Patch pressure exceeded -> advisory only, PASS 유지")
+            else:
+                audit["decision"] = "PASS"
+                self.ctx.ui.log("      ✅ [TF-32-V] Arc 수정 완료 → PASS 확정")
+            return {"refined_arc": refined_arc, "audit": audit, "decision": decision, "score": score}
+
+        audit["decision"] = "REJECT"
+        decision = "REJECT"
+        last_decision = current_audit.get("decision", "")
+        if last_decision == "PASS_WITH_FIX" and current_arc != dict(refined_arc):
+            refined_arc.clear()
+            refined_arc.update(current_arc)
+            patch_fix_score = current_audit.get("score", score)
+            try:
+                patch_fix_score = int(patch_fix_score)
+            except (ValueError, TypeError):
+                patch_fix_score = score
+            audit["score"] = patch_fix_score
+            self.ctx.ui.log(f"      📈 [PF-3] PASS_WITH_FIX 소진 → 패치본 채택 (score={patch_fix_score})")
+            score = patch_fix_score
+        last_fix_scope = current_audit.get("fix_scope", "")
+        if last_fix_scope:
+            audit["fix_scope"] = last_fix_scope
+        last_fix_scope_reasoning = current_audit.get("fix_scope_reasoning", "")
+        if last_fix_scope_reasoning:
+            audit["fix_scope_reasoning"] = last_fix_scope_reasoning
+        audit["reason"] = (audit.get("reason", "") or "") + f"\n[TF-32-V] PASS_WITH_FIX 수정 {max_fix}회 내 미해결 → REJECT"
+        audit["re_slice_instruction"] = audit.get("re_slice_instruction") or "지적사항 미해결 — 재설계 필요"
+        self.ctx.ui.log("      ❌ [TF-32-V] 수정 실패 → REJECT 전환")
+        return {"refined_arc": refined_arc, "audit": audit, "decision": decision, "score": score}
 
     def _record_s2_pass_metrics(
         self,

@@ -14,11 +14,52 @@ SovereignApp에서 분리된 Stage 2 관련 메서드:
 
 import asyncio
 import logging
+from typing import Any, Literal, NotRequired, TypedDict
 
 from modules.core.constants import VolumeSettings, smart_truncate
 from modules.core.stage2_contracts import TACTICAL_DOC_DUPLICATE_THRESHOLD
 
 DEFAULT_EP_COUNT = VolumeSettings.EPISODES_PER_ARC
+
+
+class Stage2BootstrapPayload(TypedDict):
+    ready: bool
+    bible_root: NotRequired[dict[str, Any]]
+    arcs_source: NotRequired[list[Any]]
+    volumes_strategy: NotRequired[list[Any]]
+    protagonist_name: NotRequired[str | None]
+    grand_obj: NotRequired[str]
+    all_refined_arcs: NotRequired[list[Any]]
+    done_count: NotRequired[int]
+    total_count: NotRequired[int]
+    target_limit: NotRequired[int]
+    constraint_db: NotRequired[Any]
+    genre_for_tracker: NotRequired[str]
+    last_refined_context: NotRequired[str]
+    sem: NotRequired[asyncio.Semaphore]
+
+
+class Stage2BatchEnrichmentPayload(TypedDict):
+    action: Literal["stop", "continue"]
+    last_refined_context: str
+    enriched_batch: list[tuple[int, dict[str, Any]]]
+
+
+class Stage2FinalizeTransitionPayload(TypedDict):
+    action: Literal["break", "retry", "next"]
+    last_refined_context: str
+    current_ep_start: int
+    current_feedback: str
+    director_feedback_for_fourphase: str
+    st_snapshot: Any
+    previous_attempt: dict[str, Any] | None
+
+
+class Stage2ArcFailurePayload(TypedDict):
+    action: Literal["skip", "retry", "abort"]
+    current_ep_start: NotRequired[int]
+    current_feedback: NotRequired[str]
+    constraint_block: NotRequired[str]
 
 
 class Stage2Orchestrator:
@@ -221,6 +262,535 @@ class Stage2Orchestrator:
 
         return (ep_num - 1) // DEFAULT_EP_COUNT + 1
 
+    def _bootstrap_stage2_arc_pipeline(
+        self, *, target_arc_count: int | None
+    ) -> Stage2BootstrapPayload:
+        """Prepare Stage 2 startup state before entering batch orchestration."""
+        from modules.core.constants import HUDKeys
+        from modules.core.constraint_db import ConstraintDB
+        from modules.core.stage0_handoff import check_plot_roadmap_ready
+        from modules.domain.agents.state_tracker import StateTracker
+
+        self.ctx.ui.log("🔞 [Stage 2] 0124 매니페스트 정합 엔진 및 멀티 공정 기동...")
+
+        if not self.ctx.current_project.master_bible:
+            self.ctx.current_project.master_bible = self.ctx.current_project.db.load_anchor("bible")
+        if not self.ctx.current_project.volumes:
+            self.ctx.current_project.volumes = self.ctx.current_project.db.load_anchor("volumes")
+
+        bible_data = self.ctx.current_project.master_bible
+        if not bible_data:
+            self.ctx.ui.log("❌ [Stage 2] Bible 데이터를 찾을 수 없습니다. Stage 0-1을 먼저 실행하세요.")
+            return {"ready": False}
+
+        volumes_strategy = self.ctx.current_project.volumes or []
+        if not volumes_strategy:
+            self.ctx.ui.log("⚠️ [Notice] Volume 전략이 없습니다. 기본값으로 Arc 단계를 진행합니다.")
+
+        bible_root = bible_data.get("MasterBible", bible_data)
+        arcs_source = bible_root.get("plot_roadmap", [])
+        roadmap_status = check_plot_roadmap_ready(arcs_source, source="stage2_entry")
+        if not roadmap_status.ready:
+            self.ctx.ui.log("❌ [Stage 2] plot_roadmap가 비어 있거나 Stage 2 준비 필드를 충족하지 않습니다.")
+            if roadmap_status.warnings:
+                self.ctx.ui.log("   " + "; ".join(roadmap_status.warnings[:3]))
+            return {"ready": False}
+        arcs_source = roadmap_status.roadmap
+
+        protagonist_name = None
+        genre = ""
+        try:
+            genre = self.ctx.selected_genre.get("type", "") if self.ctx.selected_genre else ""
+            protagonist_name = HUDKeys.get_protagonist_name(bible_root, genre)
+            if protagonist_name and protagonist_name != "주인공":
+                self.ctx.ui.log(f"📝 [V42] 주인공 이름 락: {protagonist_name}")
+        except Exception as e:
+            self.ctx.ui.log(f"⚠️ [V42] 주인공 이름 추출 실패: {e}")
+
+        project_data = bible_root.get("ProjectData", {})
+        meta_info = project_data.get("MetaInfo", {}) if isinstance(project_data, dict) else {}
+        grand_obj = meta_info.get("grand_objective", "천하제일") if isinstance(meta_info, dict) else "천하제일"
+
+        all_refined_arcs = self.ctx.current_project.db.load_anchor("arcs") or []
+        done_count = len(all_refined_arcs)
+        total_count = len(arcs_source)
+
+        existing_tracker_arcs = self.ctx.state_tracker_loaded_arcs or 0
+        if self.ctx.state_tracker is None or existing_tracker_arcs == 0 or existing_tracker_arcs > len(all_refined_arcs):
+            self.ctx.state_tracker = StateTracker(
+                preset_registry=self.ctx.preset_registry,
+                llm_client=self.ctx.sys.api_client,
+            )
+            self.ctx.state_tracker.bind_db(self.ctx.current_project.db)
+            self.ctx.state_tracker.bind_world_state(getattr(self.ctx, "world_state", None))
+            existing_tracker_arcs = 0
+            saved_financial_registry = self.ctx.current_project.load_v20_anchor("financial_registry", default=None)
+            if saved_financial_registry:
+                self.ctx.state_tracker.import_financial_registry(saved_financial_registry)
+
+        new_arcs_to_load = all_refined_arcs[existing_tracker_arcs:]
+        genre_for_tracker = self.ctx.selected_genre.get("type", "") if self.ctx.selected_genre else ""
+        self.ctx.state_tracker.full_extract_from_arcs(new_arcs_to_load, genre=genre_for_tracker)
+        self.ctx.state_tracker_loaded_arcs = len(all_refined_arcs)
+
+        if genre_for_tracker == "investment" and self.ctx.state_tracker.financial_number_registry:
+            self.ctx.current_project.save_v20_anchor(
+                "financial_registry",
+                self.ctx.state_tracker.export_financial_registry(),
+            )
+
+        if self.ctx.state_tracker.npc_registry:
+            dead_count = sum(1 for info in self.ctx.state_tracker.npc_registry.values() if info.get("status") == "dead")
+            total_npcs = len(self.ctx.state_tracker.npc_registry)
+            loaded_msg = f"(신규 {len(new_arcs_to_load)}개)" if new_arcs_to_load else "(캐시 재사용)"
+            self.ctx.ui.log(
+                f"      🧠 [V62.5] StateTracker: NPC {total_npcs}명 로드 (사망: {dead_count}명) {loaded_msg}"
+            )
+
+        existing_ms_max_ep = (
+            self.ctx.get_max_episode_from_manuscripts()
+            if callable(getattr(self.ctx, "get_max_episode_from_manuscripts", None))
+            else 0
+        )
+        if existing_ms_max_ep > 0:
+            skip_arc_no = self._resolve_arc_number_for_episode(existing_ms_max_ep)
+            if skip_arc_no > done_count:
+                self.ctx.ui.log(f"📚 [Manuscript Detected] 기존 원고 {existing_ms_max_ep}화까지 발견")
+                self.ctx.ui.log(
+                    f"⚠️  [Warning] Arc {skip_arc_no}까지 필요하지만 Arc {done_count}까지만 DB에 존재합니다."
+                )
+                self.ctx.ui.log(f"🔕 [Info] Arc {done_count + 1}부터 단계를 시작합니다. (원고→Arc 역추적 필요)")
+
+        if done_count >= total_count:
+            self.ctx.ui.log("✅ 모든 아크 단계가 이미 완료되었습니다.")
+            return {"ready": False}
+
+        self.ctx.ui.log(f"📤 현재 단계 완료: {done_count} / {total_count} 아크")
+        self.ctx.ui.log("🔕 Tip: 결과를 직접 보기 위해 1~10개(권장 2개 내외) 진행을 권장합니다.")
+
+        if target_arc_count is not None:
+            target_limit = min(done_count + target_arc_count, total_count)
+        else:
+            default_limit = min(done_count + 5, total_count)
+            if callable(getattr(self.ctx, "get_int_input", None)):
+                target_limit = self.ctx.get_int_input(
+                    f"🎛 몇 번 아크까지 단계하시겠습니까? (현재 {done_count + 1} ~ 최대 {total_count}): ",
+                    default=default_limit,
+                    min_val=done_count + 1,
+                    max_val=total_count,
+                )
+            else:
+                target_limit = default_limit
+        target_limit = max(done_count + 1, min(target_limit, total_count))
+
+        constraint_db = ConstraintDB(self.ctx.current_project)
+        self.ctx.ui.log(f"📝 [V49.4] ConstraintDB 초기화 완료 (기존 Arc: {len(constraint_db.arc_states)}개)")
+
+        self.ctx.cumulative_state_cache = None
+        self.ctx.cumulative_state_cache_key = None
+
+        return {
+            "ready": True,
+            "bible_root": bible_root,
+            "arcs_source": arcs_source,
+            "volumes_strategy": volumes_strategy,
+            "protagonist_name": protagonist_name,
+            "grand_obj": grand_obj,
+            "all_refined_arcs": all_refined_arcs,
+            "done_count": done_count,
+            "total_count": total_count,
+            "target_limit": target_limit,
+            "constraint_db": constraint_db,
+            "genre_for_tracker": genre_for_tracker,
+            "last_refined_context": "",
+            "sem": asyncio.Semaphore(5),
+        }
+
+    async def _run_stage2_batch_enrichment(
+        self,
+        *,
+        batch_start: int,
+        batch_end: int,
+        arcs_source: list,
+        all_refined_arcs: list,
+        last_refined_context: str,
+        total_count: int,
+        sem: asyncio.Semaphore,
+    ) -> Stage2BatchEnrichmentPayload:
+        """Run Stage 2 batch enrichment, sanitize results, and recover failed items."""
+        from modules.core.constants import RecoveryLimits
+        from modules.core.spinners import StageSpinner
+        import time as _time_mod
+
+        with StageSpinner(2, f"Batch {batch_start + 1}~{batch_end} batch enrich") as spinner:
+            self.ctx.ui.log(f"[Batch] {batch_start + 1}~{batch_end} range enrich start")
+
+            if callable(getattr(self.ctx, "generate_arc_context_v60", None)):
+                last_refined_context = self.ctx.generate_arc_context_v60(all_refined_arcs, batch_start + 1)
+            if all_refined_arcs:
+                self.ctx.ui.log(f"      [V60.10] StateExtractor: {len(all_refined_arcs)} arcs extracted")
+
+            enrich_done = 0
+            enrich_total = batch_end - batch_start
+            batch_ep_estimate = 1 if not all_refined_arcs else max(1, all_refined_arcs[-1].get("ep_end", 0) + 1)
+            self._set_agent_telemetry_context(ep_num=batch_ep_estimate)
+
+            async def throttled_enrich(idx):
+                nonlocal enrich_done
+                async with sem:
+                    prev_b = arcs_source[idx - 1] if idx > 0 else None
+                    curr_b = arcs_source[idx]
+                    bid = curr_b.get("block_id", f"Block {idx + 1}")
+                    self.ctx.ui.log(f"      [Enrich] {bid} task start")
+                    next_b_safe = (
+                        {
+                            "block_id": arcs_source[idx + 1].get("block_id", f"Block {idx + 2}"),
+                            "title": arcs_source[idx + 1].get("title", "untitled"),
+                        }
+                        if idx < total_count - 1
+                        else {"title": "final block"}
+                    )
+                    result = await self.ctx.agents["analyst"].enrich_raw_block_async(
+                        curr_b, prev_b, next_b_safe, [], transfused_history=last_refined_context
+                    )
+                    enrich_done += 1
+                    spinner.update_detail(f"Batch {batch_start + 1}~{batch_end} LLM enrich ({enrich_done}/{enrich_total})")
+                    self.ctx.ui.log(f"      [Enrich] {bid} task done ({enrich_done}/{enrich_total})")
+                    return result
+
+            enrichment_tasks = [throttled_enrich(i) for i in range(batch_start, batch_end)]
+            spinner.update_detail(f"Batch {batch_start + 1}~{batch_end} LLM enrich in progress (0/{enrich_total})...")
+            enrich_phase_t0 = _time_mod.time()
+            enriched_batch = await asyncio.gather(*enrichment_tasks, return_exceptions=True)
+            enrich_phase_elapsed = _time_mod.time() - enrich_phase_t0
+            self.ctx.ui.log(
+                f"      [Enrich Phase] Batch {batch_start + 1}~{batch_end} completed: {enrich_phase_elapsed:.1f}s ({enrich_total} items)"
+            )
+
+        indexed_batch = []
+        failed_indices = []
+        for idx, item in enumerate(enriched_batch):
+            source_arc_idx = batch_start + idx
+            if isinstance(item, Exception):
+                self.ctx.ui.log(f"[Enrich] parallel task failed (idx={source_arc_idx}): {item}")
+                if callable(getattr(self.ctx, "audit_event", None)):
+                    self.ctx.audit_event("enrich_error", "batch enrich failed", {"error": str(item), "arc_idx": source_arc_idx})
+                failed_indices.append(source_arc_idx)
+                continue
+            if not isinstance(item, dict):
+                self.ctx.ui.log(f"[Enrich] invalid data type (idx={source_arc_idx}): {type(item)}")
+                failed_indices.append(source_arc_idx)
+                continue
+            indexed_batch.append((source_arc_idx, item))
+
+        enriched_batch = indexed_batch
+
+        if failed_indices and len(enriched_batch) < (batch_end - batch_start):
+            self.ctx.ui.log(f"[Recovery] retrying {len(failed_indices)} failed items...")
+            recovery_map = {}
+
+            for failed_idx in failed_indices[: RecoveryLimits.MAX_PARALLEL_RECOVERY]:
+                try:
+                    prev_b = arcs_source[failed_idx - 1] if failed_idx > 0 else None
+                    curr_b = arcs_source[failed_idx]
+                    next_b_safe = (
+                        {
+                            "block_id": arcs_source[failed_idx + 1].get("block_id", f"Block {failed_idx + 2}"),
+                            "title": arcs_source[failed_idx + 1].get("title", "untitled"),
+                        }
+                        if failed_idx < total_count - 1
+                        else {"title": "final block"}
+                    )
+                    recovered_item = await self.ctx.agents["analyst"].enrich_raw_block_async(
+                        curr_b, prev_b, next_b_safe, [], transfused_history=last_refined_context
+                    )
+                    if isinstance(recovered_item, dict):
+                        recovery_map[failed_idx] = recovered_item
+                        self.ctx.ui.log(f"[Recovery] idx={failed_idx} recovered")
+                except Exception as retry_err:
+                    self.ctx.ui.log(f"[Recovery] idx={failed_idx} failed: {retry_err}")
+
+            if recovery_map:
+                original_batch_data = {orig_idx: arc_data for orig_idx, arc_data in enriched_batch if arc_data}
+                original_batch_data.update(recovery_map)
+                enriched_batch = []
+                for idx in range(batch_start, batch_end):
+                    if idx in original_batch_data:
+                        enriched_batch.append((idx, original_batch_data[idx]))
+                    else:
+                        self.ctx.ui.log(f"[Recovery] idx={idx} data missing - arc skipped")
+                        if callable(getattr(self.ctx, "audit_event", None)):
+                            self.ctx.audit_event("data_missing", "arc data not recovered", {"arc_idx": idx})
+
+        if not enriched_batch:
+            self.ctx.ui.log("[Critical] enrichment result is empty; stopping Stage 2 batch processing.")
+            if callable(getattr(self.ctx, "audit_event", None)):
+                self.ctx.audit_event("enrich_error", "empty batch after sanitize and recovery")
+            return {"action": "stop", "last_refined_context": last_refined_context, "enriched_batch": []}
+
+        return {
+            "action": "continue",
+            "last_refined_context": last_refined_context,
+            "enriched_batch": enriched_batch,
+        }
+
+    def _handle_stage2_finalize_transition(
+        self,
+        *,
+        fin: dict[str, Any],
+        global_arc_no: int,
+        attempt: int,
+        last_refined_context: str,
+        current_ep_start: int,
+        current_feedback: str,
+        director_feedback_for_fourphase: str,
+        st_snapshot,
+    ) -> Stage2FinalizeTransitionPayload:
+        """Apply Stage 2 finalizer outcome updates and return next-loop state."""
+        from modules.core.constants import PatchModeThresholds
+
+        action = fin.get("action", "")
+        last_refined_context = fin.get("last_refined_context", last_refined_context)
+        current_ep_start = fin.get("current_ep_start", current_ep_start)
+        current_feedback = fin.get("current_feedback", current_feedback)
+        director_feedback_for_fourphase = fin.get(
+            "director_feedback_for_fourphase", director_feedback_for_fourphase
+        )
+        st_snapshot = fin.get("st_snapshot", st_snapshot)
+
+        session_logger = getattr(self.ctx, "session_logger", None)
+        if session_logger:
+            try:
+                stage2_verdict = "PASS" if action == "break" else "REJECT"
+                session_logger.log_decision(
+                    stage="stage2",
+                    ep_num=0,
+                    round_num=attempt,
+                    decision_type="arc_design",
+                    result=stage2_verdict,
+                    score=fin.get("score", 0),
+                    arc_no=global_arc_no,
+                    fix_scope=fin.get("fix_scope", ""),
+                )
+            except Exception as log_err:
+                logging.debug("[SilentPass:Stage2:SessionLog] %s", log_err)
+
+        try:
+            rejected_score = int(fin.get("score", 0))
+        except (ValueError, TypeError):
+            rejected_score = 0
+
+        rejected_arc = fin.get("rejected_arc")
+        if action != "break" and rejected_score >= PatchModeThresholds.REWRITE and rejected_arc:
+            previous_attempt = {
+                "score": rejected_score,
+                "best_arc": rejected_arc,
+                "rejection_reason": fin.get("director_feedback_for_fourphase", ""),
+                "score_breakdown": fin.get("score_breakdown", {}),
+                "selection_reason": fin.get("selection_reason", ""),
+                "validation_warnings": fin.get("validation_warnings", []),
+                "fix_scope": fin.get("fix_scope", ""),
+                "selected_strategy": rejected_arc.get("_ensemble_meta", {}).get("best_strategy", ""),
+            }
+        else:
+            previous_attempt = None
+
+        if action in {"retry", "next"}:
+            try:
+                state_extractor = self.ctx.agents.get("state_extractor") if self.ctx.agents else None
+                if state_extractor and hasattr(state_extractor, "invalidate_cache"):
+                    state_extractor.invalidate_cache(global_arc_no)
+            except Exception as cache_err:
+                logging.warning(
+                    "[Sweep5-D] state_extractor cache invalidation failed (arc=%s): %s",
+                    global_arc_no,
+                    cache_err,
+                )
+
+        return {
+            "action": action,
+            "last_refined_context": last_refined_context,
+            "current_ep_start": current_ep_start,
+            "current_feedback": current_feedback,
+            "director_feedback_for_fourphase": director_feedback_for_fourphase,
+            "st_snapshot": st_snapshot,
+            "previous_attempt": previous_attempt,
+        }
+
+    async def _handle_stage2_arc_failure(
+        self,
+        *,
+        global_arc_no: int,
+        batch_start: int,
+        batch_end: int,
+        all_refined_arcs: list,
+        arcs_source: list,
+        constraint_db,
+        refined_arc: dict | None,
+        current_ep_start: int,
+    ) -> Stage2ArcFailurePayload:
+        """Write Stage 2 failure report and handle operator recovery choice."""
+        self.ctx.ui.log(f"⚠ [Critical] Arc {global_arc_no} 최종 설계 실패.")
+        if callable(getattr(self.ctx, "audit_event", None)):
+            self.ctx.audit_event(
+                "arc_design_failed",
+                "max retries exhausted",
+                {"arc_no": global_arc_no, "batch_start": batch_start, "batch_end": batch_end},
+            )
+
+        failure_report_path = self.ctx.current_project.paths.root / "logs" / f"arc_{global_arc_no}_failure_report.txt"
+        failure_report_path.parent.mkdir(parents=True, exist_ok=True)
+
+        arc_rejects = (
+            [r for r in self.ctx.stage_rejection_history if r.get("stage") == 2 and r.get("arc_no") == global_arc_no]
+            if self.ctx.stage_rejection_history
+            else []
+        )
+        current_constraints = self._fit_prompt_text(
+            constraint_db.generate_constraint_block(global_arc_no) if constraint_db else "N/A",
+            6000,
+        )
+
+        prev_items = []
+        for prev_arc in all_refined_arcs:
+            state_constraints = prev_arc.get("state_constraints", {})
+            items = state_constraints.get("protagonist_items") or state_constraints.get("items_acquired", [])
+            if items:
+                prev_items.extend(items if isinstance(items, list) else [items])
+
+        report_lines = [
+            f"{'=' * 60}",
+            f"Arc {global_arc_no} 실패 리포트",
+            f"{'=' * 60}",
+            "",
+            "[REJECT 히스토리]",
+        ]
+        for idx, reject_entry in enumerate(arc_rejects, 1):
+            report_lines.append(f"  시도 {reject_entry.get('attempt', idx)}: {reject_entry.get('reason', 'N/A')}")
+
+        report_lines.extend(
+            [
+                "",
+                "[이전 Arc에서 이미 획득한 아이템 - 중복 획득 금지]",
+            ]
+        )
+        for item in prev_items:
+            report_lines.append(f"  ❌ {item}")
+
+        report_lines.extend(
+            [
+                "",
+                "[현재 제약 조건]",
+                str(current_constraints)[:6000] if current_constraints else "없음",
+                "",
+                "[마지막 생성된 Arc 데이터]",
+            ]
+        )
+        if refined_arc:
+            report_lines.append(f"  tactical_doc 길이: {len(refined_arc.get('tactical_doc', ''))}자")
+            report_lines.append(
+                f"  items_acquired: {refined_arc.get('state_constraints', {}).get('protagonist_items') or refined_arc.get('state_constraints', {}).get('items_acquired', [])}"
+            )
+
+        report_content = "\n".join(report_lines)
+
+        def _write_failure_report(path, content):
+            with open(path, "w", encoding="utf-8") as file_handle:
+                file_handle.write(content)
+
+        await asyncio.to_thread(_write_failure_report, failure_report_path, report_content)
+
+        logging.info(f"\n{'=' * 60}")
+        logging.warning(f" [V60.46] Arc {global_arc_no} 실패 분석 리포트")
+        logging.info(f"{'=' * 60}")
+        logging.warning(f"\n REJECT 사유 ({len(arc_rejects)}회):")
+        for reject_entry in arc_rejects[-3:]:
+            logging.info(f"- {reject_entry.get('reason', 'N/A')[:100]}")
+        logging.info(f"\n 중복 획득 금지 아이템 ({len(prev_items)}개):")
+        for item in prev_items[:5]:
+            logging.info(f"- {item}")
+        if len(prev_items) > 5:
+            logging.info(f"... 외 {len(prev_items) - 5}개")
+        logging.info(f"\n 전체 리포트: {failure_report_path}")
+        logging.info(f"{'=' * 60}\n")
+
+        if all_refined_arcs:
+            self.ctx.ui.log(f"💾 [Auto-Save] 현재까지 {len(all_refined_arcs)}개 Arc 저장 완료.")
+
+        while True:
+            logging.info("[1] 건너뛰고 계속")
+            logging.info("[2] 중단")
+            logging.info("[3] 다시 하기 (자동)")
+            logging.info(" [4] 수동 개입 (리포트 확인 후 재시도)")
+            try:
+                user_choice = (await asyncio.to_thread(input, "   선택 (기본: 2): ")).strip()
+            except (EOFError, KeyboardInterrupt, ValueError):
+                user_choice = "2"
+
+            if user_choice == "1":
+                self.ctx.ui.log(f"⏭️ Arc {global_arc_no}을 건너뛰고 계속합니다.")
+                skip_ep_raw = (
+                    arcs_source[global_arc_no - 1].get("ep_count", DEFAULT_EP_COUNT)
+                    if global_arc_no <= len(arcs_source)
+                    else DEFAULT_EP_COUNT
+                )
+                try:
+                    skip_ep = int(skip_ep_raw)
+                except (TypeError, ValueError):
+                    skip_ep = DEFAULT_EP_COUNT
+                return {"action": "skip", "current_ep_start": current_ep_start + skip_ep}
+
+            if user_choice == "3":
+                self.ctx.ui.log(f"🔄 Arc {global_arc_no} 다시 시도합니다...")
+                return {
+                    "action": "retry",
+                    "current_feedback": "",
+                    "constraint_block": constraint_db.generate_constraint_block(global_arc_no),
+                }
+
+            if user_choice == "4":
+                logging.info(f"\n 리포트 파일을 확인하세요: {failure_report_path}")
+                logging.info(" 문제가 된 아이템이나 표현을 확인 후, 아래 옵션을 선택하세요.")
+                try:
+                    manual_input = (
+                        (
+                            await asyncio.to_thread(
+                                input,
+                                "   준비되면 [Enter]로 재시도, 'skip'으로 건너뛰기, 'quit'으로 중단: ",
+                            )
+                        )
+                        .strip()
+                        .lower()
+                    )
+                except (EOFError, KeyboardInterrupt, ValueError):
+                    manual_input = "quit"
+
+                if manual_input == "skip":
+                    self.ctx.ui.log(f"⏭️ Arc {global_arc_no}을 건너뛰고 계속합니다.")
+                    skip_ep_raw = (
+                        arcs_source[global_arc_no - 1].get("ep_count", DEFAULT_EP_COUNT)
+                        if global_arc_no <= len(arcs_source)
+                        else DEFAULT_EP_COUNT
+                    )
+                    try:
+                        skip_ep = int(skip_ep_raw)
+                    except (TypeError, ValueError):
+                        skip_ep = DEFAULT_EP_COUNT
+                    return {"action": "skip", "current_ep_start": current_ep_start + skip_ep}
+
+                if manual_input == "quit":
+                    self.ctx.ui.log("⏹️ 사용자 요청으로 공정을 중단합니다.")
+                    return {"action": "abort"}
+
+                self.ctx.ui.log(f"🔄 Arc {global_arc_no} 수동 확인 후 재시도...")
+                return {
+                    "action": "retry",
+                    "current_feedback": f"[사용자 수동 확인 완료] 이전 Arc에서 획득한 아이템: {', '.join(prev_items[:5])} 등 {len(prev_items)}개. 이 아이템들은 절대 다시 획득하면 안 됩니다!",
+                    "constraint_block": constraint_db.generate_constraint_block(global_arc_no),
+                }
+
+            self.ctx.ui.log("⏹️ 사용자 요청으로 공정을 중단합니다.")
+            return {"action": "abort"}
     # ═══════════════════════════════════════════════════════════════════════
     # 메인 파이프라인
     # ═══════════════════════════════════════════════════════════════════════
@@ -230,278 +800,46 @@ class Stage2Orchestrator:
         [V37 S-Grade: 260124 매니페스토]
         0124 욕망 엔진(Desire Engine) 통합 파이프라인 완전판
         """
-        # [V64.P3] lazy imports (main_a.py 스코프 밖이므로)
-        from modules.core.constants import (
-            HUDKeys,
-            PatchModeThresholds,
-            RecoveryLimits,
-            VolumeSettings,
-        )
-        from modules.core.constraint_db import ConstraintDB
+        # [V64.P3] lazy imports (main_a.py dependency split retained)
+        from modules.core.constants import VolumeSettings
         from modules.core.slack_bot import notifier
-        from modules.core.spinners import StageSpinner  # [V65] 스피너 (순환 참조 해소)
-        from modules.domain.agents.state_tracker import StateTracker
+        from modules.core.spinners import StageSpinner  # [V65] spinner (cycle-safe import)
 
-        ### [0124 핵심] 욕망 엔진 가동 로고 및 로그 출력
-        self.ctx.ui.log("🎯 [Stage 2] 0124 매니페스토: 욕망 엔진 및 인과율 용접 공정 기동...")
-
-        # 1. 기초 데이터 확보 및 무결성 점검
-        if not self.ctx.current_project.master_bible:
-            self.ctx.current_project.master_bible = self.ctx.current_project.db.load_anchor("bible")
-        if not self.ctx.current_project.volumes:
-            self.ctx.current_project.volumes = self.ctx.current_project.db.load_anchor("volumes")
-
-        bible_data = self.ctx.current_project.master_bible
-        if not bible_data:
-            self.ctx.ui.log("❌ [Stage 2] Bible 데이터를 찾을 수 없습니다. Stage 0-1을 먼저 실행하세요.")
-            return
-        # [V41 Patch] Stage 1 스킵 시 빈 volumes 안전 처리
-        volumes_strategy = self.ctx.current_project.volumes or []
-        if not volumes_strategy:
-            self.ctx.ui.log("⚠️ [Notice] Volume 전략이 없습니다. 기본값으로 Arc 설계를 진행합니다.")
-        bible_root = bible_data.get("MasterBible", bible_data)
-        arcs_source = bible_root.get("plot_roadmap", [])
-        from modules.core.stage0_handoff import check_plot_roadmap_ready
-
-        roadmap_status = check_plot_roadmap_ready(arcs_source, source="stage2_entry")
-        if not roadmap_status.ready:
-            self.ctx.ui.log("❌ [Stage 2] plot_roadmap이 비어 있거나 Stage 2 소비 필드를 충족하지 않습니다.")
-            if roadmap_status.warnings:
-                self.ctx.ui.log("   " + "; ".join(roadmap_status.warnings[:3]))
-            return
-        arcs_source = roadmap_status.roadmap
-
-        # [V42] 주인공 이름 추출 (PROTAGONIST IDENTITY LOCK)
-        # [V61.2 Fix] 장르별 HUD 탐색으로 변경
-        protagonist_name = None
-        genre = ""
-        try:
-            genre = self.ctx.selected_genre.get("type", "") if self.ctx.selected_genre else ""
-            protagonist_name = HUDKeys.get_protagonist_name(bible_root, genre)
-            if protagonist_name and protagonist_name != "주인공":
-                self.ctx.ui.log(f"🔒 [V42] 주인공 이름 락: {protagonist_name}")
-        except Exception as e:
-            self.ctx.ui.log(f"⚠️ [V42] 주인공 이름 추출 실패: {e}")
-
-        ### [V38 패치] 안전한 북극성 추출
-        project_data = bible_root.get("ProjectData", {})
-        meta_info = project_data.get("MetaInfo", {}) if isinstance(project_data, dict) else {}
-        grand_obj = meta_info.get("grand_objective", "천하제일") if isinstance(meta_info, dict) else "천하제일"
-
-        all_refined_arcs = self.ctx.current_project.db.load_anchor("arcs") or []
-        done_count = len(all_refined_arcs)
-        total_count = len(arcs_source)
-
-        # [V60.94] StateTracker 초기화 - NPC 생사/무공 습득/정보 추적
-        # [V62.5] 증분 업데이트: 기존 StateTracker가 있으면 재사용, 새 Arc만 추가
-        existing_tracker_arcs = self.ctx.state_tracker_loaded_arcs or 0
-        if (
-            self.ctx.state_tracker is None
-            or existing_tracker_arcs == 0
-            or existing_tracker_arcs > len(all_refined_arcs)
-        ):  # [V62.5] Arc 삭제 감지 → 리셋
-            self.ctx.state_tracker = StateTracker(
-                preset_registry=self.ctx.preset_registry, llm_client=self.ctx.sys.api_client
-            )
-            self.ctx.state_tracker.bind_db(self.ctx.current_project.db)  # [NPC-L1] NPC 이력 DB 배선
-            self.ctx.state_tracker.bind_world_state(getattr(self.ctx, "world_state", None))  # [TF-36] WorldState 배선
-            existing_tracker_arcs = 0
-            # [V63.4 P0] DB에서 금융 레지스트리 복원 (투자물)
-            _saved_fin = self.ctx.current_project.load_v20_anchor("financial_registry", default=None)
-            if _saved_fin:
-                self.ctx.state_tracker.import_financial_registry(_saved_fin)
-
-        new_arcs_to_load = all_refined_arcs[existing_tracker_arcs:]
-        _genre_for_tracker = self.ctx.selected_genre.get("type", "") if self.ctx.selected_genre else ""
-        self.ctx.state_tracker.full_extract_from_arcs(new_arcs_to_load, genre=_genre_for_tracker)
-        self.ctx.state_tracker_loaded_arcs = len(all_refined_arcs)
-
-        # [V63.4 P0] 금융 레지스트리 DB 영구 저장 (투자물)
-        if _genre_for_tracker == "investment" and self.ctx.state_tracker.financial_number_registry:
-            self.ctx.current_project.save_v20_anchor(
-                "financial_registry", self.ctx.state_tracker.export_financial_registry()
-            )
-
-        if self.ctx.state_tracker.npc_registry:
-            dead_count = sum(1 for info in self.ctx.state_tracker.npc_registry.values() if info.get("status") == "dead")
-            total_npcs = len(self.ctx.state_tracker.npc_registry)
-            loaded_msg = f"(신규 {len(new_arcs_to_load)}개)" if new_arcs_to_load else "(캐시 재사용)"
-            self.ctx.ui.log(
-                f"      👤 [V62.5] StateTracker: NPC {total_npcs}명 로드 (사망: {dead_count}명) {loaded_msg}"
-            )
-
-        # [V40.1 Smart Skip] 기존 원고가 있다면 해당 Arc까지 자동 건너뛰기
-        existing_ms_max_ep = (
-            self.ctx.get_max_episode_from_manuscripts()
-            if callable(getattr(self.ctx, "get_max_episode_from_manuscripts", None))
-            else 0
-        )
-        if existing_ms_max_ep > 0:
-            skip_arc_no = self._resolve_arc_number_for_episode(existing_ms_max_ep)
-            if skip_arc_no > done_count:
-                self.ctx.ui.log(f"📂 [Manuscript Detected] 기존 원고 {existing_ms_max_ep}화까지 발견")
-                self.ctx.ui.log(
-                    f"⚠️  [Warning] Arc {skip_arc_no}까지 필요하지만 Arc {done_count}까지만 DB에 존재합니다."
-                )
-                self.ctx.ui.log(f"💡 [Info] Arc {done_count + 1}부터 설계를 시작합니다. (원고와 Arc 동기화 필요)")
-
-        if done_count >= total_count:
-            self.ctx.ui.log("✅ 모든 아크 설계가 이미 완료되었습니다.")
+        startup: Stage2BootstrapPayload = self._bootstrap_stage2_arc_pipeline(target_arc_count=target_arc_count)
+        if not startup.get("ready"):
             return
 
-        ### [UI 세이프티 가드 복구] 사용자 경험 및 인과율 안정성 확보
-        self.ctx.ui.log(f"📊 현재 설계 완료: {done_count} / {total_count} 아크")
-        self.ctx.ui.log("💡 Tip: 인과율 정밀 용접을 위해 1회 10개(2개 배치) 이내 진행을 권장합니다.")
+        bible_root = startup["bible_root"]
+        arcs_source = startup["arcs_source"]
+        volumes_strategy = startup["volumes_strategy"]
+        protagonist_name = startup["protagonist_name"]
+        grand_obj = startup["grand_obj"]
+        all_refined_arcs = startup["all_refined_arcs"]
+        done_count = startup["done_count"]
+        total_count = startup["total_count"]
+        target_limit = startup["target_limit"]
+        sem = startup["sem"]
+        constraint_db = startup["constraint_db"]
+        _genre_for_tracker = startup["genre_for_tracker"]
+        genre = _genre_for_tracker
+        last_refined_context = startup["last_refined_context"]
 
-        if target_arc_count is not None:
-            # [OneStop] 프로그래밍 호출: 지정 개수만큼만 생성
-            target_limit = min(done_count + target_arc_count, total_count)
-        else:
-            default_limit = min(done_count + 5, total_count)
-            if callable(getattr(self.ctx, "get_int_input", None)):
-                target_limit = self.ctx.get_int_input(
-                    f"👉 몇 번 아크까지 설계하시겠습니까? (현재 {done_count + 1} ~ 최대 {total_count}): ",
-                    default=default_limit,
-                    min_val=done_count + 1,
-                    max_val=total_count,
-                )
-            else:
-                target_limit = default_limit
-        target_limit = max(done_count + 1, min(target_limit, total_count))
-
-        sem = asyncio.Semaphore(5)
-
-        # [V49.4] Pre-Generation Constraint DB 초기화
-        constraint_db = ConstraintDB(self.ctx.current_project)
-        self.ctx.ui.log(f"🔒 [V49.4] ConstraintDB 초기화 완료 (기존 Arc: {len(constraint_db.arc_states)}개)")
-
-        # [V62.5] extract_cumulative_state 배치 캐시
-        self.ctx.cumulative_state_cache = None
-        self.ctx.cumulative_state_cache_key = None  # [S-08] 센티넬
-        last_refined_context = ""  # [감리] UnboundLocalError 방지 — generate_arc_context_v60 비활성 시 폴백
-
-        # 2. 배치(Batch) 처리 루프 시작
+        # 2. Batch processing loop
         for batch_start in range(done_count, target_limit, 5):
             batch_end = min(batch_start + 5, target_limit)
             batch_start_count = len(all_refined_arcs)
-
-            # [V61.2] 배치 전체를 스피너로 감싸기
-            with StageSpinner(2, f"Batch {batch_start + 1}~{batch_end} 준비 및 농축") as spinner:
-                self.ctx.ui.log(f"📦 [Batch] {batch_start + 1}~{batch_end}번 구간 욕망 수혈 공정 가동...")
-
-                # [V60.10] 수혈 맥락 준비 - StateExtractor 활용
-                if callable(getattr(self.ctx, "generate_arc_context_v60", None)):
-                    last_refined_context = self.ctx.generate_arc_context_v60(all_refined_arcs, batch_start + 1)
-                if all_refined_arcs:
-                    self.ctx.ui.log(f"      🧠 [V60.10] StateExtractor: {len(all_refined_arcs)}개 Arc 상태 추출 완료")
-
-                # A. [병렬 농축 단계]
-                _enrich_done = 0
-                _enrich_total = batch_end - batch_start
-                _batch_ep_estimate = 1 if not all_refined_arcs else max(1, all_refined_arcs[-1].get("ep_end", 0) + 1)
-                self._set_agent_telemetry_context(ep_num=_batch_ep_estimate)
-
-                async def throttled_enrich(idx):
-                    nonlocal _enrich_done
-                    async with sem:
-                        prev_b = arcs_source[idx - 1] if idx > 0 else None
-                        curr_b = arcs_source[idx]
-                        _bid = curr_b.get("block_id", f"Block {idx + 1}")
-                        self.ctx.ui.log(f"      🔄 [Enrich] {_bid} 농축 시작...")
-                        next_b_safe = (
-                            {
-                                "block_id": arcs_source[idx + 1].get("block_id", f"Block {idx + 2}"),
-                                "title": arcs_source[idx + 1].get("title", "미정"),
-                            }
-                            if idx < total_count - 1
-                            else {"title": "최종 블록"}
-                        )
-                        _result = await self.ctx.agents["analyst"].enrich_raw_block_async(
-                            curr_b, prev_b, next_b_safe, [], transfused_history=last_refined_context
-                        )
-                        _enrich_done += 1
-                        spinner.update_detail(
-                            f"Batch {batch_start + 1}~{batch_end} LLM 농축 ({_enrich_done}/{_enrich_total})"
-                        )
-                        self.ctx.ui.log(f"      ✅ [Enrich] {_bid} 농축 완료 ({_enrich_done}/{_enrich_total})")
-                        return _result
-
-                enrichment_tasks = [throttled_enrich(i) for i in range(batch_start, batch_end)]
-                spinner.update_detail(f"Batch {batch_start + 1}~{batch_end} LLM 농축 중 (0/{_enrich_total})...")
-                import time as _time_mod
-
-                _enrich_phase_t0 = _time_mod.time()
-                enriched_batch = await asyncio.gather(*enrichment_tasks, return_exceptions=True)
-                _enrich_phase_elapsed = _time_mod.time() - _enrich_phase_t0
-                self.ctx.ui.log(
-                    f"      📊 [Enrich Phase] Batch {batch_start + 1}~{batch_end} 전체 농축 완료: {_enrich_phase_elapsed:.1f}s ({_enrich_total}건)"
-                )
-
-            # [안전성 패치] 실패한 항목에 대한 재시도 메커니즘
-            indexed_batch = []
-            failed_indices = []
-            for idx, item in enumerate(enriched_batch):
-                source_arc_idx = batch_start + idx
-                if isinstance(item, Exception):
-                    self.ctx.ui.log(f"⚠️ [Enrich] 병렬 농축 실패 (idx={source_arc_idx}): {item}")
-                    if callable(getattr(self.ctx, "audit_event", None)):
-                        self.ctx.audit_event(
-                            "enrich_error", "batch enrich failed", {"error": str(item), "arc_idx": source_arc_idx}
-                        )
-                    failed_indices.append(source_arc_idx)
-                    continue
-                if not isinstance(item, dict):
-                    self.ctx.ui.log(f"⚠️ [Enrich] 잘못된 데이터 타입 (idx={source_arc_idx}): {type(item)}")
-                    failed_indices.append(source_arc_idx)
-                    continue
-                indexed_batch.append((source_arc_idx, item))
-
-            enriched_batch = indexed_batch
-
-            # [V40.1 Critical Fix] 복구 시도
-            if failed_indices and len(enriched_batch) < (batch_end - batch_start):
-                self.ctx.ui.log(f"🔄 [Recovery] {len(failed_indices)}개 항목 순차 재시도 중...")
-                recovery_map = {}
-
-                for failed_idx in failed_indices[: RecoveryLimits.MAX_PARALLEL_RECOVERY]:
-                    try:
-                        prev_b = arcs_source[failed_idx - 1] if failed_idx > 0 else None
-                        curr_b = arcs_source[failed_idx]
-                        next_b_safe = (
-                            {
-                                "block_id": arcs_source[failed_idx + 1].get("block_id", f"Block {failed_idx + 2}"),
-                                "title": arcs_source[failed_idx + 1].get("title", "미정"),
-                            }
-                            if failed_idx < total_count - 1
-                            else {"title": "최종 블록"}
-                        )
-                        recovered_item = await self.ctx.agents["analyst"].enrich_raw_block_async(
-                            curr_b, prev_b, next_b_safe, [], transfused_history=last_refined_context
-                        )
-                        if isinstance(recovered_item, dict):
-                            recovery_map[failed_idx] = recovered_item
-                            self.ctx.ui.log(f"✅ [Recovery] idx={failed_idx} 복구 성공")
-                    except Exception as retry_err:
-                        self.ctx.ui.log(f"🚨 [Recovery] idx={failed_idx} 복구 실패: {retry_err}")
-
-                # [V43 Fix] 원래 위치에 삽입하여 순서 보장
-                if recovery_map:
-                    # [V70] compacted enriched_batch → 원본 인덱스 복원 (failed_indices 간격 반영)
-                    original_batch_data = {orig_idx: arc_data for orig_idx, arc_data in enriched_batch if arc_data}
-                    original_batch_data.update(recovery_map)
-                    enriched_batch = []
-                    for idx in range(batch_start, batch_end):
-                        if idx in original_batch_data:
-                            enriched_batch.append((idx, original_batch_data[idx]))
-                        else:
-                            self.ctx.ui.log(f"⚠️ [Recovery] idx={idx} 데이터 누락 - 해당 Arc 스킵")
-                            if callable(getattr(self.ctx, "audit_event", None)):
-                                self.ctx.audit_event("data_missing", "arc data not recovered", {"arc_idx": idx})
-
-            if not enriched_batch:
-                self.ctx.ui.log("❌ [Critical] 농축 결과가 비어 있습니다. 공정을 중단합니다.")
-                if callable(getattr(self.ctx, "audit_event", None)):
-                    self.ctx.audit_event("enrich_error", "empty batch after sanitize and recovery")
+            batch_result: Stage2BatchEnrichmentPayload = await self._run_stage2_batch_enrichment(
+                batch_start=batch_start,
+                batch_end=batch_end,
+                arcs_source=arcs_source,
+                all_refined_arcs=all_refined_arcs,
+                last_refined_context=last_refined_context,
+                total_count=total_count,
+                sem=sem,
+            )
+            last_refined_context = batch_result["last_refined_context"]
+            enriched_batch = batch_result["enriched_batch"]
+            if batch_result["action"] == "stop":
                 return
 
             ### [B. 사후 용접 및 고유 명사 앵커링]
@@ -738,254 +1076,56 @@ class Stage2Orchestrator:
                         genre=genre,
                         constraint_db=constraint_db,
                     )
-                    # [Sweep45] 조기 retry 리턴 시 누락 키 방어 (.get 폴백)
-                    last_refined_context = _fin.get("last_refined_context", last_refined_context)
-                    current_ep_start = _fin.get("current_ep_start", current_ep_start)
-                    current_feedback = _fin.get("current_feedback", current_feedback)
-                    director_feedback_for_fourphase = _fin.get(
-                        "director_feedback_for_fourphase", director_feedback_for_fourphase
+                    transition: Stage2FinalizeTransitionPayload = self._handle_stage2_finalize_transition(
+                        fin=_fin,
+                        global_arc_no=global_arc_no,
+                        attempt=attempt,
+                        last_refined_context=last_refined_context,
+                        current_ep_start=current_ep_start,
+                        current_feedback=current_feedback,
+                        director_feedback_for_fourphase=director_feedback_for_fourphase,
+                        st_snapshot=_st_snapshot,
                     )
-                    _st_snapshot = _fin.get("st_snapshot", _st_snapshot)
+                    last_refined_context = transition["last_refined_context"]
+                    current_ep_start = transition["current_ep_start"]
+                    current_feedback = transition["current_feedback"]
+                    director_feedback_for_fourphase = transition["director_feedback_for_fourphase"]
+                    _st_snapshot = transition["st_snapshot"]
+                    _previous_attempt = transition["previous_attempt"]
 
-                    # [LOG-1] Stage2 판정 경로 세션 로깅
-                    _sl = getattr(self.ctx, "session_logger", None)
-                    if _sl:
-                        try:
-                            _s2_verdict = "PASS" if _fin["action"] == "break" else "REJECT"
-                            _sl.log_decision(
-                                stage="stage2",
-                                ep_num=0,
-                                round_num=attempt,
-                                decision_type="arc_design",
-                                result=_s2_verdict,
-                                score=_fin.get("score", 0),
-                                arc_no=global_arc_no,
-                                fix_scope=_fin.get("fix_scope", ""),
-                            )
-                        except Exception as _e:
-                            logging.debug("[SilentPass:Stage2:SessionLog] %s", _e)
-
-                    # [Patch Mode] REJECT 시 previous_attempt 갱신 (패치 모드 판단용)
-                    try:
-                        _rej_score = int(_fin.get("score", 0))
-                    except (ValueError, TypeError):
-                        _rej_score = 0
-                    _rej_arc = _fin.get("rejected_arc")
-                    if _fin["action"] != "break" and _rej_score >= PatchModeThresholds.REWRITE and _rej_arc:
-                        _previous_attempt = {
-                            "score": _rej_score,
-                            "best_arc": _rej_arc,
-                            "rejection_reason": _fin.get("director_feedback_for_fourphase", ""),
-                            "score_breakdown": _fin.get("score_breakdown", {}),
-                            "selection_reason": _fin.get("selection_reason", ""),
-                            "validation_warnings": _fin.get("validation_warnings", []),
-                            "fix_scope": _fin.get("fix_scope", ""),  # [TF-23] Director 판단 수정 범위
-                            "selected_strategy": _rej_arc.get("_ensemble_meta", {}).get("best_strategy", ""),  # [TF-36]
-                        }
-                    else:
-                        _previous_attempt = None
-
-                    if _fin["action"] == "break":
+                    if transition["action"] == "break":
                         passed = True
                         break
-                    if _fin["action"] in {"retry", "next"}:
-                        # [Sweep4-D1] 동일 arc_no 재생성 시 StateExtractor 스탈 캐시 방지
-                        try:
-                            _se = self.ctx.agents.get("state_extractor") if self.ctx.agents else None
-                            if _se and hasattr(_se, "invalidate_cache"):
-                                _se.invalidate_cache(global_arc_no)
-                        except Exception as cache_err:
-                            logging.warning(
-                                "[Sweep5-D] state_extractor cache invalidation failed (arc=%s): %s",
-                                global_arc_no,
-                                cache_err,
-                            )
-                    if _fin["action"] == "retry":
+                    if transition["action"] == "retry":
                         attempt += 1
                         continue
-                    elif _fin["action"] == "next":
+                    elif transition["action"] == "next":
                         attempt += 1
                         continue
 
                     attempt += 1
 
                 if not passed:
-                    self.ctx.ui.log(f"🚨 [Critical] Arc {global_arc_no} 최종 설계 실패.")
-                    if callable(getattr(self.ctx, "audit_event", None)):
-                        self.ctx.audit_event(
-                            "arc_design_failed",
-                            "max retries exhausted",
-                            {"arc_no": global_arc_no, "batch_start": batch_start, "batch_end": batch_end},
-                        )
-
-                    # [V60.46] 실패 리포트 생성 및 출력
-                    failure_report_path = (
-                        self.ctx.current_project.paths.root / "logs" / f"arc_{global_arc_no}_failure_report.txt"
+                    failure_result: Stage2ArcFailurePayload = await self._handle_stage2_arc_failure(
+                        global_arc_no=global_arc_no,
+                        batch_start=batch_start,
+                        batch_end=batch_end,
+                        all_refined_arcs=all_refined_arcs,
+                        arcs_source=arcs_source,
+                        constraint_db=constraint_db,
+                        refined_arc=refined_arc,
+                        current_ep_start=current_ep_start,
                     )
-                    failure_report_path.parent.mkdir(parents=True, exist_ok=True)
-
-                    # [Sweep300-R2] None 가드 — L420 패턴과 일치
-                    arc_rejects = (
-                        [
-                            r
-                            for r in self.ctx.stage_rejection_history
-                            if r.get("stage") == 2 and r.get("arc_no") == global_arc_no
-                        ]
-                        if self.ctx.stage_rejection_history
-                        else []
-                    )
-                    current_constraints = self._fit_prompt_text(
-                        constraint_db.generate_constraint_block(global_arc_no) if constraint_db else "N/A",
-                        6000,
-                    )
-
-                    prev_items = []
-                    for prev_arc in all_refined_arcs:
-                        # [BUG-F] protagonist_items 우선 폴백
-                        _psc_orch = prev_arc.get("state_constraints", {})
-                        items = _psc_orch.get("protagonist_items") or _psc_orch.get("items_acquired", [])
-                        if items:
-                            prev_items.extend(items if isinstance(items, list) else [items])
-
-                    report_lines = [
-                        f"{'=' * 60}",
-                        f"Arc {global_arc_no} 실패 리포트",
-                        f"{'=' * 60}",
-                        "",
-                        "[REJECT 히스토리]",
-                    ]
-                    for i, rej in enumerate(arc_rejects, 1):
-                        report_lines.append(f"  시도 {rej.get('attempt', i)}: {rej.get('reason', 'N/A')}")
-
-                    report_lines.extend(
-                        [
-                            "",
-                            "[이전 Arc에서 이미 획득한 아이템 - 중복 획득 금지]",
-                        ]
-                    )
-                    for item in prev_items:
-                        report_lines.append(f"  ❌ {item}")
-
-                    report_lines.extend(
-                        [
-                            "",
-                            "[현재 제약 조건]",
-                            str(current_constraints)[:6000] if current_constraints else "없음",
-                            "",
-                            "[마지막 생성된 Arc 데이터]",
-                        ]
-                    )
-                    if refined_arc:
-                        report_lines.append(f"  tactical_doc 길이: {len(refined_arc.get('tactical_doc', ''))}자")
-                        report_lines.append(
-                            # [BUG-F] protagonist_items 우선 폴백
-                            f"  items_acquired: {refined_arc.get('state_constraints', {}).get('protagonist_items') or refined_arc.get('state_constraints', {}).get('items_acquired', [])}"
-                        )
-
-                    report_content = "\n".join(report_lines)
-
-                    def _write_failure_report(path, content):
-                        with open(path, "w", encoding="utf-8") as f:
-                            f.write(content)
-
-                    await asyncio.to_thread(_write_failure_report, failure_report_path, report_content)
-
-                    logging.info(f"\n{'=' * 60}")
-                    logging.warning(f" [V60.46] Arc {global_arc_no} 실패 분석 리포트")
-                    logging.info(f"{'=' * 60}")
-                    logging.warning(f"\n REJECT 사유 ({len(arc_rejects)}회):")
-                    for rej in arc_rejects[-3:]:
-                        logging.info(f"- {rej.get('reason', 'N/A')[:100]}")
-                    logging.info(f"\n 중복 획득 금지 아이템 ({len(prev_items)}개):")
-                    for item in prev_items[:5]:
-                        logging.info(f"- {item}")
-                    if len(prev_items) > 5:
-                        logging.info(f"... 외 {len(prev_items) - 5}개")
-                    logging.info(f"\n 전체 리포트: {failure_report_path}")
-                    logging.info(f"{'=' * 60}\n")
-
-                    if all_refined_arcs:
-                        self.ctx.ui.log(f"💾 [Auto-Save] 현재까지 {len(all_refined_arcs)}개 Arc 저장 완료.")
-
-                    # [V60.45] 다시 하기 옵션
-                    while True:
-                        logging.info("[1] 건너뛰고 계속")
-                        logging.info("[2] 중단")
-                        logging.info("[3] 다시 하기 (자동)")
-                        logging.info(" [4] 수동 개입 (리포트 확인 후 재시도)")
-                        try:
-                            user_choice = (await asyncio.to_thread(input, "   선택 (기본: 2): ")).strip()
-                        except (EOFError, KeyboardInterrupt, ValueError):
-                            user_choice = "2"
-
-                        if user_choice == "1":
-                            self.ctx.ui.log(f"⏭️ Arc {global_arc_no}을 건너뛰고 계속합니다.")
-                            _skip_ep_raw = (
-                                arcs_source[global_arc_no - 1].get("ep_count", DEFAULT_EP_COUNT)
-                                if global_arc_no <= len(arcs_source)
-                                else DEFAULT_EP_COUNT
-                            )
-                            try:
-                                _skip_ep = int(_skip_ep_raw)
-                            except (TypeError, ValueError):
-                                _skip_ep = DEFAULT_EP_COUNT
-                            current_ep_start += _skip_ep
-                            break
-                        elif user_choice == "3":
-                            self.ctx.ui.log(f"🔄 Arc {global_arc_no} 다시 시도합니다...")
-                            attempt = 0
-                            passed = False
-                            current_feedback = ""
-                            constraint_block = constraint_db.generate_constraint_block(global_arc_no)
-                            break
-                        elif user_choice == "4":
-                            logging.info(f"\n 리포트 파일을 확인하세요: {failure_report_path}")
-                            logging.info(" 문제가 된 아이템이나 표현을 확인 후, 아래 옵션을 선택하세요.")
-                            try:
-                                manual_input = (
-                                    (
-                                        await asyncio.to_thread(
-                                            input,
-                                            "   준비되면 [Enter]로 재시도, 'skip'으로 건너뛰기, 'quit'으로 중단: ",
-                                        )
-                                    )
-                                    .strip()
-                                    .lower()
-                                )
-                            except (EOFError, KeyboardInterrupt, ValueError):
-                                manual_input = "quit"
-                            if manual_input == "skip":
-                                self.ctx.ui.log(f"⏭️ Arc {global_arc_no}을 건너뛰고 계속합니다.")
-                                _skip_ep2_raw = (
-                                    arcs_source[global_arc_no - 1].get("ep_count", DEFAULT_EP_COUNT)
-                                    if global_arc_no <= len(arcs_source)
-                                    else DEFAULT_EP_COUNT
-                                )
-                                try:
-                                    _skip_ep2 = int(_skip_ep2_raw)
-                                except (TypeError, ValueError):
-                                    _skip_ep2 = DEFAULT_EP_COUNT
-                                current_ep_start += _skip_ep2
-                                break
-                            elif manual_input == "quit":
-                                _design_spinner.__exit__(None, None, None)
-                                self.ctx.ui.log("⏹️ 사용자 요청으로 공정을 중단합니다.")
-                                return
-                            else:
-                                self.ctx.ui.log(f"🔄 Arc {global_arc_no} 수동 확인 후 재시도...")
-                                attempt = 0
-                                passed = False
-                                current_feedback = f"[사용자 수동 확인 완료] 이전 Arc에서 획득한 아이템: {', '.join(prev_items[:5])} 등 {len(prev_items)}개. 이 아이템들은 절대 다시 획득하면 안 됩니다!"
-                                constraint_block = constraint_db.generate_constraint_block(global_arc_no)
-                                break
-                        else:
-                            _design_spinner.__exit__(None, None, None)
-                            self.ctx.ui.log("⏹️ 사용자 요청으로 공정을 중단합니다.")
-                            return
-
-                    if user_choice == "3":
-                        continue
-                    if user_choice == "4" and manual_input not in ("skip",):
+                    if failure_result["action"] == "abort":
+                        _design_spinner.__exit__(None, None, None)
+                        return
+                    if failure_result["action"] == "skip":
+                        current_ep_start = failure_result["current_ep_start"]
+                    elif failure_result["action"] == "retry":
+                        attempt = 0
+                        passed = False
+                        current_feedback = failure_result["current_feedback"]
+                        constraint_block = failure_result["constraint_block"]
                         continue
 
                 # [V60.45] 다음 Arc로

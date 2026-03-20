@@ -6,7 +6,7 @@ import inspect
 import json
 import logging
 import re
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, NotRequired, TypedDict
 
 from modules.core.constants import Stage2Limits, VolumeSettings, smart_truncate
 from modules.core.context_advisor import (
@@ -29,6 +29,30 @@ from modules.core.writer_prompt_builders import (
 from modules.core.writer_prompt_builders import (
     build_mandatory_context as _build_writer_mandatory_context,
 )
+
+
+class WorkRetrievalFocusPayload(TypedDict, total=False):
+    tracking_slots: list[str]
+    mandatory_scene_engines: list[str]
+    registry_profiles: list[dict[str, Any]]
+
+
+class Stage4RetrievalContextPayload(TypedDict):
+    retrieval_plan: Any
+    sc_parts: list[str]
+    tier1_parts: list[str]
+
+
+class Stage4RetrievalCoveragePayload(TypedDict):
+    mandatory_context: str
+    coverage_warnings: list[str]
+    source_counts: dict[str, int]
+    tier2_parts: list[str]
+
+
+class Stage4AuxiliarySectionsPayload(TypedDict):
+    tier1_parts: list[str]
+    tier2_parts: list[str]
 from modules.validation.threshold_helper import _threshold
 
 if TYPE_CHECKING:
@@ -811,7 +835,7 @@ class Stage4ContextBuilder:
         prev_ending: str,
         blueprint: dict | None,
         cp_entities: dict[str, list[str] | str] | None,
-    ) -> dict[str, object]:
+    ) -> WorkRetrievalFocusPayload:
         guard = getattr(getattr(self.ctx, "sys", None), "guard", None)
         if not guard or not hasattr(guard, "select_retrieval_focus"):
             return {}
@@ -834,7 +858,7 @@ class Stage4ContextBuilder:
     def _build_work_identity_slot_summary(
         self,
         *,
-        focus: dict[str, object],
+        focus: WorkRetrievalFocusPayload,
         arc_data: dict | None,
         cp_entities: dict[str, list[str] | str] | None,
         max_chars: int = 1800,
@@ -1945,6 +1969,546 @@ class Stage4ContextBuilder:
 
         return "\n".join(_lines)
 
+    def _build_tier0_mandatory_sections(
+        self,
+        *,
+        arc_data: dict,
+        blueprint: dict | None,
+        cp_entities: dict[str, list[str] | str],
+        mandatory_context: str,
+    ) -> list[str]:
+        """Assemble tier-0 mandatory sections in stable insertion order."""
+        tier0_parts = [mandatory_context] if mandatory_context else []
+
+        arc_constraint_summary = arc_data.get("constraint_summary", "") if arc_data else ""
+        if arc_constraint_summary:
+            tier0_parts.append(f"[Arc 제약 - MUST NOT DO]\n{arc_constraint_summary}")
+
+        if self.ctx.world_state:
+            try:
+                if cp_entities.get("npcs") or cp_entities.get("items") or cp_entities.get("plots"):
+                    world_state_summary = self._build_condensed_world_state_summary(cp_entities, max_chars=50000)
+                    if not world_state_summary:
+                        world_state_summary = self.ctx.world_state.get_summary(max_chars=50000)
+                else:
+                    world_state_summary = self.ctx.world_state.get_summary(max_chars=50000)
+                if world_state_summary:
+                    tier0_parts.insert(0, world_state_summary)
+                    logging.info(" [V68] 세계 상태 문서 주입 (%d자)", len(world_state_summary))
+            except Exception as world_state_err:
+                logging.warning(" [V68] 세계 상태 문서 주입 실패 (비치명): %s", str(world_state_err)[:50])
+
+        try:
+            timeline_budget = int(_threshold("context.timeline_budget", 3000))
+            timeline_text = ""
+            if getattr(self.ctx, "world_state", None):
+                timeline_text = self.ctx.world_state.get_timeline_summary(max_chars=timeline_budget)
+            if timeline_text:
+                tier0_parts.insert(0, timeline_text)
+                logging.info("[Phase3] 타임라인 주입 (%d자)", len(timeline_text))
+        except Exception as timeline_err:
+            logging.warning("[Phase3] 타임라인 주입 실패 (비치명): %s", str(timeline_err)[:50])
+
+        if self.ctx.fact_ledger:
+            try:
+                if cp_entities.get("npcs") or cp_entities.get("items") or cp_entities.get("_full_text"):
+                    fact_ledger_summary = self._build_condensed_fact_ledger_summary(cp_entities, max_chars=25000)
+                    if not fact_ledger_summary:
+                        fact_ledger_summary = self.ctx.fact_ledger.to_summary(max_chars=25000)
+                else:
+                    fact_ledger_summary = self.ctx.fact_ledger.to_summary(max_chars=25000)
+                if fact_ledger_summary:
+                    tier0_parts.insert(0, fact_ledger_summary)
+                    logging.info(" [V68] 팩트 원장 주입 (%d자)", len(fact_ledger_summary))
+            except Exception as fact_ledger_err:
+                logging.warning(" [V68] 팩트 원장 주입 실패 (비치명): %s", str(fact_ledger_err)[:50])
+
+        try:
+            canonical_budget = int(_threshold("context.canonical_facts_budget", 13000))
+            canonical_npc = ""
+            canonical_numeric = ""
+            if getattr(self.ctx, "world_state", None):
+                canonical_npc = self.ctx.world_state.get_canonical_constraints(max_chars=int(canonical_budget * 0.62))
+            if getattr(self.ctx, "fact_ledger", None):
+                canonical_numeric = self.ctx.fact_ledger.get_canonical_summary(max_chars=int(canonical_budget * 0.38))
+            if canonical_npc or canonical_numeric:
+                canonical_block = "\n\n".join(x for x in [canonical_npc, canonical_numeric] if x)
+                tier0_parts.insert(0, canonical_block)
+                logging.info("[Phase1-L0] Canonical 고정 주입 (%d자)", len(canonical_block))
+        except Exception as canonical_err:
+            logging.warning("[Phase1-L0] Canonical 주입 실패 (비치명): %s", str(canonical_err)[:50])
+
+        if blueprint:
+            try:
+                continuity_packet = self._build_continuity_packet(cp_entities)
+                if continuity_packet:
+                    tier0_parts.insert(0, continuity_packet)
+                    logging.info(
+                        "[CP] Continuity Packet 주입 (%d자, NPC %d, 플롯 %d, 아이템 %d)",
+                        len(continuity_packet),
+                        len(cp_entities["npcs"]),
+                        len(cp_entities["plots"]),
+                        len(cp_entities["items"]),
+                    )
+            except Exception as continuity_err:
+                logging.warning("[CP] Continuity Packet 생성 실패 (비치명): %s", str(continuity_err)[:80])
+
+        try:
+            boundary_npcs = list(cp_entities.get("npcs") or [])
+            if not boundary_npcs:
+                boundary_npcs = self._collect_npc_roster(arc_data=arc_data or {}, blueprint=blueprint or {})
+            npc_boundary_block = self._build_npc_boundary_block(boundary_npcs)
+            if npc_boundary_block:
+                tier0_parts.insert(0, npc_boundary_block)
+        except Exception as npc_boundary_err:
+            logging.debug("[QI-NPC] NPC boundary block 생성 실패 (비치명): %s", npc_boundary_err)
+
+        return tier0_parts
+
+    def _collect_stage4_retrieval_context(
+        self,
+        *,
+        next_ep: int,
+        arc_data: dict,
+        prev_ending: str,
+        arc_tactical: str,
+        blueprint: dict | None,
+        s4_genre_type: str,
+        work_focus: str,
+        tier1_parts: list[str],
+    ) -> Stage4RetrievalContextPayload:
+        """Collect Stage 4 retrieval context and append legacy vector memory blocks."""
+        retrieval_plan = None
+        sc_parts: list[str] = []
+
+        try:
+            if self.ctx.memory and prev_ending:
+                use_advisor_path = False
+                advisor = getattr(self.ctx, "context_advisor", None)
+                smart_enabled = bool(_threshold("smart_retrieval.enabled", True)) and bool(
+                    _threshold("smart_retrieval.stage4_enabled", True)
+                )
+                current_arc_no = arc_data.get("arc_no", 1) if arc_data else 1
+
+                if advisor and smart_enabled:
+                    arc_ep_start = arc_data.get("ep_start", next_ep) if arc_data else next_ep
+                    arc_ep_count = arc_data.get("ep_count", 0) if arc_data else 0
+                    arc_pos = next_ep - arc_ep_start + 1
+                    is_arc_boundary = arc_pos <= 1 or (arc_ep_count > 0 and arc_pos >= arc_ep_count)
+                    npc_roster = self._collect_npc_roster(arc_data=arc_data, blueprint=blueprint)
+                    retrieval_plan = advisor.plan_stage4_retrieval(
+                        arc_data=arc_data or {},
+                        blueprint=blueprint or {},
+                        prev_ending=prev_ending,
+                        current_ep=next_ep,
+                        npc_roster=npc_roster,
+                        genre=s4_genre_type,
+                        work_focus=work_focus,
+                        is_arc_boundary=is_arc_boundary,
+                        is_reject_retry=False,
+                    )
+                    perf_key = f"sc_stage4_ep{next_ep}_retrieval"
+                    try:
+                        self.ctx.perf_timer.start(perf_key)
+                    except Exception as perf_err:
+                        logging.debug("[Stage4ContextBuilder] perf_timer SC start 실패 (무시): %s", perf_err)
+                    try:
+                        arc_no_s4 = arc_data.get("arc_no", None) if arc_data else None
+                        for retrieved in self._execute_retrieval_plan(retrieval_plan, arc_no=arc_no_s4):
+                            sc_parts.append(retrieved)
+                    finally:
+                        try:
+                            self.ctx.perf_timer.stop(perf_key)
+                        except Exception as perf_err:
+                            logging.debug("[Stage4ContextBuilder] perf_timer SC stop 실패 (무시): %s", perf_err)
+                    use_advisor_path = True
+
+                mq_queries = [] if use_advisor_path else [prev_ending]
+                if (not use_advisor_path) and arc_data and arc_data.get("state_changes"):
+                    state_changes = arc_data["state_changes"]
+                    npc_names = []
+                    if not isinstance(state_changes, dict):
+                        state_changes = {}
+                    for field in ["npc_deaths", "relationship_changes", "npc_injuries"]:
+                        for entry in state_changes.get(field) or []:
+                            if isinstance(entry, dict):
+                                npc_name = entry.get("name") or entry.get("npc", "")
+                            elif isinstance(entry, str):
+                                npc_name = entry
+                            else:
+                                continue
+                            if npc_name:
+                                npc_names.append(npc_name)
+                    if npc_names:
+                        mq_queries.append(" ".join(npc_names[:5]))
+
+                if (not use_advisor_path) and arc_tactical and len(arc_tactical) > 50:
+                    episode_tactical = extract_episode_tactical(
+                        arc_tactical,
+                        next_ep,
+                        episode_details=(arc_data or {}).get("episode_details"),
+                        fallback_full=False,
+                    )
+                    if episode_tactical:
+                        mq_queries.append(_fit_context_text(episode_tactical, max_chars=1800))
+                    else:
+                        mq_queries.append(_fit_context_text(arc_tactical, max_chars=1800))
+
+                genre_queries = {
+                    "hunter": ["던전 클리어 각성 스킬 랭크"],
+                    "investment": ["포트폴리오 거래 수익률 투자"],
+                    "fantasy": ["마법 축복 주문 마나 정령"],
+                }
+                if (not use_advisor_path) and s4_genre_type in genre_queries:
+                    mq_queries.extend(genre_queries[s4_genre_type])
+
+                if mq_queries:
+                    vector_memory = self.ctx.memory.retrieve_multi_query_context(
+                        queries=mq_queries,
+                        current_ep=next_ep,
+                        n_per_query=3,
+                        max_results=_threshold("context.vector_max_results_s4", 50),
+                        current_arc_no=current_arc_no,
+                    )
+                    if vector_memory:
+                        tier1_parts.append(f"[과거 유사 맥락 (벡터 검색)]\n{vector_memory}")
+        except Exception as exc:
+            self.ctx.ui.log(f"   ⚠️ 벡터 검색 실패 (비치명): {exc}")
+
+        return {
+            "retrieval_plan": retrieval_plan,
+            "sc_parts": sc_parts,
+            "tier1_parts": tier1_parts,
+        }
+
+    def _compose_context_with_retrieval_coverage(
+        self,
+        *,
+        next_ep: int,
+        work_focus: str,
+        retrieval_plan,
+        tier0_parts: list[str],
+        tier1_parts: list[str],
+        sc_parts: list[str],
+        tier2_parts: list[str],
+        slot_summary: str,
+    ) -> Stage4RetrievalCoveragePayload:
+        """Compose mandatory context with SC retrieval coverage bookkeeping."""
+        sc_budget = int(getattr(retrieval_plan, "total_budget_chars", 0) or 0)
+        if _threshold("smart_retrieval.enabled", True) and _threshold("smart_retrieval.stage4_enabled", True):
+            tier2_parts = self._apply_context_budget(tier2_parts, sc_budget)
+
+        source_counts = self._summarize_retrieval_sources(retrieval_plan)
+        if not source_counts and any("[과거 유사 맥락" in str(part) for part in tier1_parts):
+            source_counts = {"legacy_multi_query": 1}
+
+        def _compute_coverage_warnings(context_text: str) -> list[str]:
+            warnings: list[str] = []
+            if work_focus and not slot_summary:
+                warnings.append("missing_work_slot_summary")
+            if (
+                work_focus
+                and retrieval_plan
+                and not any(
+                    str(getattr(slot, "category", "")).startswith("work_")
+                    for slot in (getattr(retrieval_plan, "slots", []) or [])
+                )
+            ):
+                warnings.append("work_focus_without_slots")
+            if slot_summary and "[작품 추적 슬롯 요약]" not in context_text:
+                warnings.append("trimmed_work_slot_summary")
+            if source_counts.get(RetrievalSources.DB_NPC_RELATIONSHIP, 0) > 0 and "[관계 의미 질의]" not in context_text:
+                warnings.append("missing_relation_slice")
+            if (
+                retrieval_plan
+                and any(
+                    str(getattr(slot, "category", "") or "") == "arc_semantic_carryover"
+                    for slot in (getattr(retrieval_plan, "slots", []) or [])
+                )
+                and "[SC:arc_semantic_carryover]" not in context_text
+            ):
+                warnings.append("missing_semantic_carryover")
+            return warnings
+
+        mandatory_context = ""
+        coverage_warnings: list[str] = []
+        coverage_note = ""
+        coverage_note_idx: int | None = None
+        for _ in range(3):
+            tier1_body = tier1_parts + sc_parts
+            mandatory_context = self._compose_tiered_mandatory_context_with_headroom(
+                tier0_parts,
+                tier1_body,
+                tier2_parts,
+            )
+            coverage_warnings = _compute_coverage_warnings(mandatory_context)
+            next_coverage_note = self._build_retrieval_coverage_warning_section(coverage_warnings)
+            if not next_coverage_note or coverage_note == next_coverage_note:
+                break
+            if coverage_note_idx is None:
+                tier2_parts.insert(0, next_coverage_note)
+                coverage_note_idx = 0
+            else:
+                tier2_parts[coverage_note_idx] = next_coverage_note
+            coverage_note = next_coverage_note
+
+        slot_summary_survived = "[작품 추적 슬롯 요약]" in mandatory_context
+        vector_context_chars = sum(len(str(part or "")) for part in sc_parts)
+        stage4_budget_ledger = dict(
+            (getattr(self.ctx, "_stage4_context_budget_meta", {}) or {}).get("budget_ledger") or {}
+        )
+        self._record_retrieval_observation(
+            ep_num=next_ep,
+            stage="stage4",
+            observation=build_context_observation(
+                stage="stage4",
+                work_focus=work_focus,
+                retrieval_plan=retrieval_plan,
+                source_counts=source_counts,
+                coverage_warnings=coverage_warnings,
+                advisor_path_used=bool(retrieval_plan),
+                work_slot_summary_present=bool(slot_summary),
+                work_slot_summary_included=slot_summary_survived,
+                relation_slice_included="[관계 의미 질의]" in mandatory_context,
+                vector_context_chars=vector_context_chars,
+                mandatory_context_chars=len(mandatory_context),
+                protected_summary_survived=slot_summary_survived,
+                trimmed_work_slot_summary=bool(slot_summary and not slot_summary_survived),
+                budget_ledger=stage4_budget_ledger,
+            ),
+        )
+
+        return {
+            "mandatory_context": mandatory_context,
+            "coverage_warnings": coverage_warnings,
+            "source_counts": source_counts,
+            "tier2_parts": tier2_parts,
+        }
+
+    def _build_tier12_auxiliary_sections(
+        self,
+        *,
+        next_ep: int,
+        arc_data: dict,
+        blueprint: dict | None,
+        s4_genre_type: str,
+        v50_modules_available: bool,
+        pacing_analyzer,
+        prev_text: str,
+        work_focus: str,
+        slot_summary: str,
+    ) -> Stage4AuxiliarySectionsPayload:
+        """Build tier-1/tier-2 auxiliary context sections outside the main coordinator."""
+        tier1_parts: list[str] = []
+        tier2_parts: list[str] = []
+
+        if slot_summary:
+            tier1_parts.append(slot_summary)
+            logging.info("[WorkGuard] tracking slot summary 주입 (%d자)", len(slot_summary))
+
+        stage2_failure_context = self._build_stage2_failure_context(arc_data)
+        if stage2_failure_context:
+            tier2_parts.append(stage2_failure_context)
+            logging.info("[Stage4ContextBuilder] stage2 failure context 주입 (%d자)", len(stage2_failure_context))
+
+        ambient_npc_hint = self._suggest_ambient_npcs(blueprint or {})
+        if ambient_npc_hint:
+            tier2_parts.append(ambient_npc_hint)
+
+        arc_rationale_digest = arc_data.get("rationale_digest", "") if arc_data else ""
+        if arc_rationale_digest:
+            tier1_parts.append(f"[Arc 서사 근거]\n{arc_rationale_digest}")
+
+        try:
+            series_summary = self.ctx.current_project.load_v20_anchor("series_summary")
+            if series_summary:
+                if isinstance(series_summary, dict):
+                    series_summary = series_summary.get("summary", "") or str(series_summary)
+                if series_summary and len(str(series_summary)) > 10:
+                    tier2_parts.append(f"[V68 시리즈 전체 요약]\n{series_summary}")
+
+            current_arc_no = arc_data.get("arc_no", 1) if arc_data else 1
+            current_volume = max(1, (current_arc_no - 1) // int(VolumeSettings.ARCS_PER_VOLUME) + 1)
+            volume_summaries = []
+            for volume_index in range(max(1, current_volume - 2), current_volume + 1):
+                volume_summary = self.ctx.current_project.load_v20_anchor(f"volume_summary_{volume_index}")
+                if volume_summary:
+                    if isinstance(volume_summary, dict):
+                        volume_summary = volume_summary.get("summary", "") or str(volume_summary)
+                    if volume_summary and len(str(volume_summary)) > 10:
+                        volume_summaries.append(f"[볼륨 {volume_index}] {volume_summary}")
+            if volume_summaries:
+                tier2_parts.append("[V68 볼륨 요약]\n" + "\n".join(volume_summaries))
+        except Exception as hierarchy_err:
+            self.ctx.ui.log(f"   ⚠️ [V68] 계층형 요약 로드 실패 (비치명): {str(hierarchy_err)[:60]}")
+
+        try:
+            master_bible = getattr(self.ctx.current_project, "master_bible", None) or {}
+            bible_root = master_bible.get("MasterBible", master_bible)
+            plot_roadmap = bible_root.get("plot_roadmap", [])
+            arc_no = arc_data.get("arc_no", 1) if arc_data else 1
+            arc_idx = arc_no - 1
+            if isinstance(plot_roadmap, list) and 0 <= arc_idx < len(plot_roadmap):
+                tr_block = plot_roadmap[arc_idx]
+                if isinstance(tr_block, dict):
+                    genre_ext = tr_block.get("genre_ext", {})
+                    if isinstance(genre_ext, dict) and genre_ext:
+                        genre_ext_lines = ["### [V74 Treatment] 이번 아크 장르 특화 정보"]
+                        for genre_key, genre_value in genre_ext.items():
+                            if isinstance(genre_value, dict | list):
+                                genre_ext_lines.append(f"  {genre_key}: {json.dumps(genre_value, ensure_ascii=False)}")
+                            else:
+                                genre_ext_lines.append(f"  {genre_key}: {genre_value}")
+                        genre_ext_lines.append(
+                            "⚠️ 원고의 장르 수치(금액, 수익, 레벨, 경지 등)가 위 Treatment 목표와 합리적으로 연결되어야 합니다."
+                        )
+                        tier2_parts.append("\n".join(genre_ext_lines))
+                        logging.info("[V74] Treatment genre_ext 주입 (arc_no=%d, %d필드)", arc_no, len(genre_ext))
+        except Exception as genre_ext_err:
+            logging.warning("[SilentPass:V74] Treatment genre_ext 주입 실패: %s", genre_ext_err)
+
+        state_tracker = self.ctx.state_tracker
+        if state_tracker:
+            arc_no_for_tracker = arc_data.get("arc_no", 0) if arc_data else 0
+            try:
+                all_summaries = state_tracker.get_all_summaries(
+                    arc_no=arc_no_for_tracker,
+                    genre=s4_genre_type,
+                )
+                filtered_summaries, suppressed_summaries = self._filter_state_tracker_summaries_for_authority(
+                    all_summaries
+                )
+                authority_note = self._build_state_tracker_authority_note(suppressed_summaries)
+                if authority_note:
+                    tier2_parts.append(authority_note)
+                ordered_summaries = self._prioritize_summaries_by_work_focus(
+                    list(filtered_summaries.values()),
+                    work_focus,
+                )
+                for summary in ordered_summaries:
+                    if summary:
+                        tier2_parts.append(summary)
+            except Exception as state_tracker_err:
+                logging.warning("[S4-I2] get_all_summaries 실패, 개별 폴백: %s", state_tracker_err)
+                fallback_summary_map = {
+                    "entity_destruction": state_tracker.get_entity_destruction_summary(),
+                    "resolved_plots": state_tracker.get_resolved_plots_summary(),
+                    "npc_personality": state_tracker.get_npc_personality_summary(),
+                    "npc_npc_relationship": state_tracker.get_npc_npc_relationship_summary(),
+                    "permanent_injury": state_tracker.get_permanent_injury_summary(),
+                    "time_timeline": state_tracker.get_time_timeline_summary(),
+                    "companion": state_tracker.get_companion_summary(),
+                    "commitment": state_tracker.get_commitment_summary(),
+                    "protagonist_emotion": state_tracker.get_protagonist_emotion_summary(),
+                    "item_state": state_tracker.get_item_state_summary(),
+                    "plot_suspension": state_tracker.get_plot_suspension_summary(arc_no_for_tracker),
+                    "npc_dialogue_style": state_tracker.get_npc_dialogue_style_summary(),
+                    "relationship_changes": state_tracker.get_relationship_changes_summary(),
+                    "npc_injury": state_tracker.get_npc_injury_summary(),
+                    "npc_movement": state_tracker.get_npc_movement_summary(),
+                    "protagonist_skills": state_tracker.get_protagonist_skills_summary(),
+                    "dead_npc": state_tracker.get_dead_npc_summary(),
+                }
+                if s4_genre_type == "hunter":
+                    fallback_summary_map.update(
+                        {
+                            "dungeon_clear": state_tracker.get_dungeon_clear_summary(),
+                            "skill_cooldown": state_tracker.get_skill_cooldown_summary(),
+                        }
+                    )
+                elif s4_genre_type == "fantasy":
+                    fallback_summary_map.update(
+                        {
+                            "spell_repertoire": state_tracker.get_spell_repertoire_summary(),
+                            "blessing_curse": state_tracker.get_blessing_curse_summary(),
+                        }
+                    )
+                elif s4_genre_type == "actor":
+                    fallback_summary_map["filmography"] = state_tracker.get_filmography_summary()
+
+                filtered_summaries, suppressed_summaries = self._filter_state_tracker_summaries_for_authority(
+                    fallback_summary_map
+                )
+                authority_note = self._build_state_tracker_authority_note(suppressed_summaries)
+                if authority_note:
+                    tier2_parts.append(authority_note)
+                fallback_summaries = self._prioritize_summaries_by_work_focus(
+                    list(filtered_summaries.values()),
+                    work_focus,
+                )
+                for summary in fallback_summaries:
+                    if summary:
+                        tier2_parts.append(summary)
+
+        try:
+            arc_summaries = []
+            current_arc_no = arc_data.get("arc_no", 1) if arc_data else 1
+            for prev_arc in range(max(1, current_arc_no - 3), current_arc_no):
+                arc_summary = self.ctx.current_project.load_v20_anchor(f"arc_summary_{prev_arc}")
+                if arc_summary and isinstance(arc_summary, dict):
+                    arc_summaries.append(arc_summary)
+            if arc_summaries and state_tracker:
+                arc_summary_text = state_tracker.format_arc_summary_for_prompt(arc_summaries)
+                if arc_summary_text:
+                    tier2_parts.append(arc_summary_text)
+        except Exception as arc_summary_err:
+            self.ctx.ui.log(f"   ⚠️ [V66] Arc 요약 주입 실패 (비치명): {arc_summary_err}")
+
+        try:
+            ext_lookback = self.build_extended_lookback_digest(next_ep)
+            if ext_lookback:
+                tier2_parts.append(ext_lookback)
+        except Exception as ext_lookback_err:
+            self.ctx.ui.log(f"   ⚠️ 확장 Lookback 실패 (비치명): {ext_lookback_err}")
+
+        try:
+            if v50_modules_available and self.ctx.foreshadow_tracker:
+                foreshadow_prompt = self.ctx.foreshadow_tracker.generate_writer_prompt(next_ep)
+                if foreshadow_prompt:
+                    tier2_parts.append(foreshadow_prompt)
+        except Exception as foreshadow_err:
+            self.ctx.ui.log(f"   ⚠️ ForeshadowTracker 프롬프트 실패 (비치명): {foreshadow_err}")
+
+        if self.ctx.semantic_plot_guard:
+            try:
+                tactical_text = arc_data.get("tactical_doc", "") if arc_data else ""
+                if isinstance(tactical_text, dict):
+                    tactical_text = str(tactical_text)
+                semantic_plot_guard_warnings = self.ctx.semantic_plot_guard.check_new_arc(tactical_doc=tactical_text)
+                if semantic_plot_guard_warnings:
+                    semantic_plot_guard_text = self.ctx.semantic_plot_guard.format_warnings(semantic_plot_guard_warnings)
+                    if semantic_plot_guard_text:
+                        tier2_parts.append(semantic_plot_guard_text)
+            except Exception as semantic_guard_err:
+                logging.warning(
+                    f"[SilentPass:ContextBuilder] SemanticPlotGuard 경고 주입 실패: {semantic_guard_err!s:.100}"
+                )
+
+        if pacing_analyzer and prev_text and len(prev_text) >= 100:
+            try:
+                pacing_result = pacing_analyzer.analyze(prev_text)
+                pacing_prompt = pacing_analyzer.generate_pacing_prompt(pacing_result)
+                if pacing_prompt:
+                    tier2_parts.append(pacing_prompt)
+            except Exception as pace_err:
+                self.ctx.ui.log(f"   ⚠️ [V65] 페이싱 분석 실패 (비치명): {str(pace_err)[:60]}")
+
+        try:
+            narrative_summaries = self.ctx.load_narrative_summaries()
+            if narrative_summaries:
+                tier2_parts.append(narrative_summaries)
+        except Exception as narrative_summary_err:
+            self.ctx.ui.log(f"   ⚠️ [V64.P4] 내러티브 요약 로드 실패 (비치명): {str(narrative_summary_err)[:60]}")
+
+        future_context = self._build_future_arc_context(next_ep, arc_data)
+        if future_context:
+            tier2_parts.append(future_context)
+
+        return {
+            "tier1_parts": tier1_parts,
+            "tier2_parts": tier2_parts,
+        }
+
     def prepare_episode_context(self, next_ep: int, arc_data: dict, chief_writer) -> dict:
         """에피소드별 컨텍스트 데이터 수집 (Arc 메타 + 이전 원고 + HUD + 연결고리)."""
         arc_pos = next_ep - arc_data.get("ep_start", next_ep) + 1
@@ -2365,7 +2929,7 @@ class Stage4ContextBuilder:
             except Exception as cp_entity_err:
                 logging.debug("[CP] blueprint entity 추출 실패 (비치명): %s", cp_entity_err)
 
-        _work_focus = self._resolve_work_retrieval_focus(
+        _work_focus: WorkRetrievalFocusPayload = self._resolve_work_retrieval_focus(
             stage="manuscript",
             arc_data=arc_data,
             arc_tactical=arc_tactical,
@@ -2374,489 +2938,59 @@ class Stage4ContextBuilder:
             cp_entities=cp_entities,
         )
 
-        _tier0_parts = [mandatory_context] if mandatory_context else []
-        _tier1_parts: list[str] = []
-        _tier2_parts: list[str] = []
-
+        _tier0_parts = self._build_tier0_mandatory_sections(
+            arc_data=arc_data,
+            blueprint=blueprint,
+            cp_entities=cp_entities,
+            mandatory_context=mandatory_context,
+        )
         _slot_summary = self._build_work_identity_slot_summary(
             focus=_work_focus,
             arc_data=arc_data,
             cp_entities=cp_entities,
         )
-        if _slot_summary:
-            _tier1_parts.append(_slot_summary)
-            logging.info("[WorkGuard] tracking slot summary 주입 (%d자)", len(_slot_summary))
-
-        _stage2_failure_context = self._build_stage2_failure_context(arc_data)
-        if _stage2_failure_context:
-            _tier2_parts.append(_stage2_failure_context)
-            logging.info("[Stage4ContextBuilder] stage2 failure context 주입 (%d자)", len(_stage2_failure_context))
-
-        _ambient_npc_hint = self._suggest_ambient_npcs(blueprint or {})
-        if _ambient_npc_hint:
-            _tier2_parts.append(_ambient_npc_hint)
-
-        _arc_cs = arc_data.get("constraint_summary", "") if arc_data else ""
-        if _arc_cs:
-            _tier0_parts.append(f"[Arc 제약 - MUST NOT DO]\n{_arc_cs}")
-
-        # [Transport] rationale_digest — bounded semantic carry-over from Stage 2
-        _arc_rd = arc_data.get("rationale_digest", "") if arc_data else ""
-        if _arc_rd:
-            _tier1_parts.append(f"[Arc 서사 근거]\n{_arc_rd}")
-
-        if self.ctx.world_state:
-            try:
-                if cp_entities.get("npcs") or cp_entities.get("items") or cp_entities.get("plots"):
-                    _ws_summary = self._build_condensed_world_state_summary(cp_entities, max_chars=50000)
-                    if not _ws_summary:
-                        _ws_summary = self.ctx.world_state.get_summary(max_chars=50000)
-                else:
-                    _ws_summary = self.ctx.world_state.get_summary(max_chars=50000)
-                if _ws_summary:
-                    _tier0_parts.insert(0, _ws_summary)
-                    logging.info(f" [V68] 세계 상태 문서 주입 ({len(_ws_summary)}자)")
-            except Exception as _ws_err:
-                logging.warning(f" [V68] 세계 상태 문서 주입 실패 (비치명): {str(_ws_err)[:50]}")
-
-        # [Phase3-L3] 타임라인 고정 주입 — world_state 요약 앞에 배치
-        try:
-            _timeline_budget = int(_threshold("context.timeline_budget", 3000))
-            _timeline_text = ""
-            if getattr(self.ctx, "world_state", None):
-                _timeline_text = self.ctx.world_state.get_timeline_summary(max_chars=_timeline_budget)
-            if _timeline_text:
-                _tier0_parts.insert(0, _timeline_text)
-                logging.info("[Phase3] 타임라인 주입 (%d자)", len(_timeline_text))
-        except Exception as _tl_err:
-            logging.warning("[Phase3] 타임라인 주입 실패 (비치명): %s", str(_tl_err)[:50])
-
-        try:
-            _series_summary = self.ctx.current_project.load_v20_anchor("series_summary")
-            if _series_summary:
-                if isinstance(_series_summary, dict):
-                    _series_summary = _series_summary.get("summary", "") or str(_series_summary)
-                if _series_summary and len(str(_series_summary)) > 10:
-                    _tier2_parts.append(f"[V68 시리즈 전체 요약]\n{_series_summary}")
-
-            _current_arc_no = arc_data.get("arc_no", 1) if arc_data else 1
-            _current_vol = max(1, (_current_arc_no - 1) // int(VolumeSettings.ARCS_PER_VOLUME) + 1)
-            _volume_summaries = []
-            for _vi in range(max(1, _current_vol - 2), _current_vol + 1):
-                _vs = self.ctx.current_project.load_v20_anchor(f"volume_summary_{_vi}")
-                if _vs:
-                    if isinstance(_vs, dict):
-                        _vs = _vs.get("summary", "") or str(_vs)
-                    if _vs and len(str(_vs)) > 10:
-                        _volume_summaries.append(f"[볼륨 {_vi}] {_vs}")
-            if _volume_summaries:
-                _tier2_parts.append("[V68 볼륨 요약]\n" + "\n".join(_volume_summaries))
-        except Exception as _hier_err:
-            self.ctx.ui.log(f"   ⚠️ [V68] 계층형 요약 로드 실패 (비치명): {str(_hier_err)[:60]}")
-
-        if self.ctx.fact_ledger:
-            try:
-                if cp_entities.get("npcs") or cp_entities.get("items") or cp_entities.get("_full_text"):
-                    _fl_summary = self._build_condensed_fact_ledger_summary(cp_entities, max_chars=25000)
-                    if not _fl_summary:
-                        _fl_summary = self.ctx.fact_ledger.to_summary(max_chars=25000)
-                else:
-                    _fl_summary = self.ctx.fact_ledger.to_summary(max_chars=25000)
-                if _fl_summary:
-                    _tier0_parts.insert(0, _fl_summary)
-                    logging.info(f" [V68] 팩트 원장 주입 ({len(_fl_summary)}자)")
-            except Exception as _fl_mc_err:
-                logging.warning(f" [V68] 팩트 원장 주입 실패 (비치명): {str(_fl_mc_err)[:50]}")
-
-        # [Phase1-L0] Canonical Constraints 최상단 고정 주입
-        # 중복 방지: role_at_intro+known_attrs (NPC, get_summary에 없음) + 수치 참조 목록만 담당
-        try:
-            _canonical_budget = int(_threshold("context.canonical_facts_budget", 13000))
-            _l0_npc = ""
-            _l0_num = ""
-            if getattr(self.ctx, "world_state", None):
-                _l0_npc = self.ctx.world_state.get_canonical_constraints(max_chars=int(_canonical_budget * 0.62))
-            if getattr(self.ctx, "fact_ledger", None):
-                _l0_num = self.ctx.fact_ledger.get_canonical_summary(max_chars=int(_canonical_budget * 0.38))
-            if _l0_npc or _l0_num:
-                _l0_block = "\n\n".join(x for x in [_l0_npc, _l0_num] if x)
-                _tier0_parts.insert(0, _l0_block)
-                logging.info("[Phase1-L0] Canonical 고정 주입 (%d자)", len(_l0_block))
-        except Exception as _l0_err:
-            logging.warning("[Phase1-L0] Canonical 주입 실패 (비치명): %s", str(_l0_err)[:50])
-
-        # [V74] Treatment genre_ext — 아크 장르 특화 목표 주입
-        try:
-            _mb = getattr(self.ctx.current_project, "master_bible", None) or {}
-            _bible_root = _mb.get("MasterBible", _mb)
-            _plot_roadmap = _bible_root.get("plot_roadmap", [])
-            _arc_no = arc_data.get("arc_no", 1) if arc_data else 1
-            _arc_idx = _arc_no - 1  # arc_no 1-based → plot_roadmap 0-based
-            if isinstance(_plot_roadmap, list) and 0 <= _arc_idx < len(_plot_roadmap):
-                _tr_block = _plot_roadmap[_arc_idx]
-                if isinstance(_tr_block, dict):
-                    _genre_ext = _tr_block.get("genre_ext", {})
-                    if isinstance(_genre_ext, dict) and _genre_ext:
-                        _ge_lines = ["### [V74 Treatment] 이번 아크 장르 특화 정보"]
-                        for _gk, _gv in _genre_ext.items():
-                            if isinstance(_gv, dict | list):
-                                _ge_lines.append(f"  {_gk}: {json.dumps(_gv, ensure_ascii=False)}")
-                            else:
-                                _ge_lines.append(f"  {_gk}: {_gv}")
-                        _ge_lines.append(
-                            "⚠️ 원고의 장르 수치(금액, 수익, 레벨, 경지 등)가 "
-                            "위 Treatment 목표와 합리적으로 연결되어야 합니다."
-                        )
-                        _tier2_parts.append("\n".join(_ge_lines))
-                        logging.info("[V74] Treatment genre_ext 주입 (arc_no=%d, %d필드)", _arc_no, len(_genre_ext))
-        except Exception as _ge_err:
-            logging.warning("[SilentPass:V74] Treatment genre_ext 주입 실패: %s", _ge_err)
-
-        if blueprint:
-            try:
-                cp_text = self._build_continuity_packet(cp_entities)
-                if cp_text:
-                    _tier0_parts.insert(0, cp_text)
-                    logging.info(
-                        "[CP] Continuity Packet 주입 (%d자, NPC %d, 플롯 %d, 아이템 %d)",
-                        len(cp_text),
-                        len(cp_entities["npcs"]),
-                        len(cp_entities["plots"]),
-                        len(cp_entities["items"]),
-                    )
-            except Exception as cp_err:
-                logging.warning("[CP] Continuity Packet 생성 실패 (비치명): %s", str(cp_err)[:80])
-
-        try:
-            _boundary_npcs = list(cp_entities.get("npcs") or [])
-            if not _boundary_npcs:
-                _boundary_npcs = self._collect_npc_roster(arc_data=arc_data or {}, blueprint=blueprint or {})
-            _npc_boundary_block = self._build_npc_boundary_block(_boundary_npcs)
-            if _npc_boundary_block:
-                _tier0_parts.insert(0, _npc_boundary_block)
-        except Exception as _npc_boundary_err:
-            logging.debug("[QI-NPC] NPC boundary block 생성 실패 (비치명): %s", _npc_boundary_err)
-
-        # [S4-I2] state_tracker 16종 요약을 get_all_summaries()로 일괄 수집
-        _st = self.ctx.state_tracker
-        if _st:
-            _arc_no_for_st = arc_data.get("arc_no", 0) if arc_data else 0
-            try:
-                _all_summaries = _st.get_all_summaries(
-                    arc_no=_arc_no_for_st,
-                    genre=s4_genre_type,
-                )
-                _filtered_summaries, _suppressed_summaries = self._filter_state_tracker_summaries_for_authority(
-                    _all_summaries
-                )
-                _authority_note = self._build_state_tracker_authority_note(_suppressed_summaries)
-                if _authority_note:
-                    _tier2_parts.append(_authority_note)
-                _ordered_summaries = self._prioritize_summaries_by_work_focus(
-                    list(_filtered_summaries.values()),
-                    _work_focus,
-                )
-                for _summary in _ordered_summaries:
-                    if _summary:
-                        _tier2_parts.append(_summary)
-            except Exception as _st_err:
-                logging.warning("[S4-I2] get_all_summaries 실패, 개별 폴백: %s", _st_err)
-                # 폴백: 개별 호출 (하위 호환성 보장)
-                _fallback_summary_map = {
-                    "entity_destruction": _st.get_entity_destruction_summary(),
-                    "resolved_plots": _st.get_resolved_plots_summary(),
-                    "npc_personality": _st.get_npc_personality_summary(),
-                    "npc_npc_relationship": _st.get_npc_npc_relationship_summary(),
-                    "permanent_injury": _st.get_permanent_injury_summary(),
-                    "time_timeline": _st.get_time_timeline_summary(),
-                    "companion": _st.get_companion_summary(),
-                    "commitment": _st.get_commitment_summary(),
-                    "protagonist_emotion": _st.get_protagonist_emotion_summary(),
-                    "item_state": _st.get_item_state_summary(),
-                    "plot_suspension": _st.get_plot_suspension_summary(_arc_no_for_st),
-                    "npc_dialogue_style": _st.get_npc_dialogue_style_summary(),
-                    "relationship_changes": _st.get_relationship_changes_summary(),
-                    "npc_injury": _st.get_npc_injury_summary(),
-                    "npc_movement": _st.get_npc_movement_summary(),
-                    "protagonist_skills": _st.get_protagonist_skills_summary(),
-                    "dead_npc": _st.get_dead_npc_summary(),
-                }
-                if s4_genre_type == "hunter":
-                    _fallback_summary_map.update(
-                        {
-                            "dungeon_clear": _st.get_dungeon_clear_summary(),
-                            "skill_cooldown": _st.get_skill_cooldown_summary(),
-                        }
-                    )
-                elif s4_genre_type == "fantasy":
-                    _fallback_summary_map.update(
-                        {
-                            "spell_repertoire": _st.get_spell_repertoire_summary(),
-                            "blessing_curse": _st.get_blessing_curse_summary(),
-                        }
-                    )
-                elif s4_genre_type == "actor":
-                    _fallback_summary_map["filmography"] = _st.get_filmography_summary()
-                _filtered_summaries, _suppressed_summaries = self._filter_state_tracker_summaries_for_authority(
-                    _fallback_summary_map
-                )
-                _authority_note = self._build_state_tracker_authority_note(_suppressed_summaries)
-                if _authority_note:
-                    _tier2_parts.append(_authority_note)
-                _fallback_summaries = self._prioritize_summaries_by_work_focus(
-                    list(_filtered_summaries.values()),
-                    _work_focus,
-                )
-                for _summary in _fallback_summaries:
-                    if _summary:
-                        _tier2_parts.append(_summary)
-
-        try:
-            arc_summaries = []
-            current_arc_no = arc_data.get("arc_no", 1) if arc_data else 1
-            for prev_arc in range(max(1, current_arc_no - 3), current_arc_no):
-                arc_sum = self.ctx.current_project.load_v20_anchor(f"arc_summary_{prev_arc}")
-                if arc_sum and isinstance(arc_sum, dict):
-                    arc_summaries.append(arc_sum)
-            if arc_summaries and _st:
-                _arc_summary_text = _st.format_arc_summary_for_prompt(arc_summaries)
-                if _arc_summary_text:
-                    _tier2_parts.append(_arc_summary_text)
-        except Exception as e:
-            self.ctx.ui.log(f"   ⚠️ [V66] Arc 요약 주입 실패 (비치명): {e}")
-
-        _retrieval_plan = None
-        _sc_parts: list[str] = []  # [Wave-B] SC Retrieval 결과 별도 수집 (mandatory_context 앞에 배치)
-        try:
-            if self.ctx.memory and prev_ending:
-                _use_advisor_path = False
-                _advisor = getattr(self.ctx, "context_advisor", None)
-                _smart_enabled = bool(_threshold("smart_retrieval.enabled", True)) and bool(
-                    _threshold("smart_retrieval.stage4_enabled", True)
-                )
-                if _advisor and _smart_enabled:
-                    _arc_ep_start = arc_data.get("ep_start", next_ep) if arc_data else next_ep
-                    _arc_ep_count = arc_data.get("ep_count", 0) if arc_data else 0
-                    _arc_pos = next_ep - _arc_ep_start + 1
-                    _is_arc_boundary = _arc_pos <= 1 or (_arc_ep_count > 0 and _arc_pos >= _arc_ep_count)
-                    _npc_roster = self._collect_npc_roster(arc_data=arc_data, blueprint=blueprint)
-                    _retrieval_plan = _advisor.plan_stage4_retrieval(
-                        arc_data=arc_data or {},
-                        blueprint=blueprint or {},
-                        prev_ending=prev_ending,
-                        current_ep=next_ep,
-                        npc_roster=_npc_roster,
-                        genre=s4_genre_type,
-                        work_focus=_work_focus,
-                        is_arc_boundary=_is_arc_boundary,
-                        is_reject_retry=False,
-                    )
-                    _perf_key = f"sc_stage4_ep{next_ep}_retrieval"
-                    try:
-                        self.ctx.perf_timer.start(_perf_key)
-                    except Exception as _e:
-                        logging.debug("[Stage4ContextBuilder] perf_timer SC start 실패 (무시): %s", _e)
-                    try:
-                        _arc_no_s4 = arc_data.get("arc_no", None) if arc_data else None
-                        for _retrieved in self._execute_retrieval_plan(_retrieval_plan, arc_no=_arc_no_s4):
-                            _sc_parts.append(_retrieved)  # [Wave-B] _mc_parts 대신 _sc_parts에 수집
-                    finally:
-                        try:
-                            self.ctx.perf_timer.stop(_perf_key)
-                        except Exception as _e:
-                            logging.debug("[Stage4ContextBuilder] perf_timer SC stop 실패 (무시): %s", _e)
-                    _use_advisor_path = True
-
-                _mq_queries = [] if _use_advisor_path else [prev_ending]
-                if (not _use_advisor_path) and arc_data and arc_data.get("state_changes"):
-                    _sc = arc_data["state_changes"]
-                    _npc_names = []
-                    if not isinstance(_sc, dict):
-                        _sc = {}
-                    for _field in ["npc_deaths", "relationship_changes", "npc_injuries"]:
-                        for _entry in _sc.get(_field) or []:
-                            # [Sweep54] string 엔트리 대응 (stage4_post_processor가 npc_deaths를 str로 생성)
-                            if isinstance(_entry, dict):
-                                _n = _entry.get("name") or _entry.get("npc", "")
-                            elif isinstance(_entry, str):
-                                _n = _entry
-                            else:
-                                continue
-                            if _n:
-                                _npc_names.append(_n)
-                    if _npc_names:
-                        _mq_queries.append(" ".join(_npc_names[:5]))
-                if (not _use_advisor_path) and arc_tactical and len(arc_tactical) > 50:
-                    # [TTE] 에피소드별 지능 추출 (단순 절삭 제거)
-                    _ep_tac = extract_episode_tactical(
-                        arc_tactical,
-                        next_ep,
-                        episode_details=(arc_data or {}).get("episode_details"),
-                        fallback_full=False,
-                    )
-                    if _ep_tac:
-                        _mq_queries.append(_fit_context_text(_ep_tac, max_chars=1800))
-                    else:
-                        _mq_queries.append(_fit_context_text(arc_tactical, max_chars=1800))
-                _genre_queries = {
-                    "hunter": ["던전 클리어 각성 스킬 랭크"],
-                    "investment": ["포트폴리오 거래 수익률 투자"],
-                    "fantasy": ["마법 축복 주문 마나 정령"],
-                }
-                if (not _use_advisor_path) and s4_genre_type in _genre_queries:
-                    _mq_queries.extend(_genre_queries[s4_genre_type])
-                if _mq_queries:
-                    _vector_memory = self.ctx.memory.retrieve_multi_query_context(
-                        queries=_mq_queries,
-                        current_ep=next_ep,
-                        n_per_query=3,
-                        max_results=_threshold("context.vector_max_results_s4", 50),
-                        current_arc_no=current_arc_no,
-                    )
-                    if _vector_memory:
-                        _tier1_parts.append(f"[과거 유사 맥락 (벡터 검색)]\n{_vector_memory}")
-        except Exception as e:
-            self.ctx.ui.log(f"   ⚠️ 벡터 검색 실패 (비치명): {e}")
-
-        try:
-            _ext_lookback = self.build_extended_lookback_digest(next_ep)
-            if _ext_lookback:
-                _tier2_parts.append(_ext_lookback)
-        except Exception as e:
-            self.ctx.ui.log(f"   ⚠️ 확장 Lookback 실패 (비치명): {e}")
-
-        try:
-            if v50_modules_available and self.ctx.foreshadow_tracker:
-                _foreshadow_prompt = self.ctx.foreshadow_tracker.generate_writer_prompt(next_ep)
-                if _foreshadow_prompt:
-                    _tier2_parts.append(_foreshadow_prompt)
-        except Exception as e:
-            self.ctx.ui.log(f"   ⚠️ ForeshadowTracker 프롬프트 실패 (비치명): {e}")
-
-        if self.ctx.semantic_plot_guard:
-            try:
-                tactical_text = arc_data.get("tactical_doc", "") if arc_data else ""
-                if isinstance(tactical_text, dict):
-                    tactical_text = str(tactical_text)
-                _spg_warnings = self.ctx.semantic_plot_guard.check_new_arc(tactical_doc=tactical_text)
-                if _spg_warnings:
-                    _spg_text = self.ctx.semantic_plot_guard.format_warnings(_spg_warnings)
-                    if _spg_text:
-                        _tier2_parts.append(_spg_text)
-            except Exception as e:
-                logging.warning(f"[SilentPass:ContextBuilder] SemanticPlotGuard 경고 주입 실패: {e!s:.100}")
-
-        if pacing_analyzer and prev_text and len(prev_text) >= 100:
-            try:
-                _pacing_result = pacing_analyzer.analyze(prev_text)
-                _pacing_prompt = pacing_analyzer.generate_pacing_prompt(_pacing_result)
-                if _pacing_prompt:
-                    _tier2_parts.append(_pacing_prompt)
-            except Exception as _pace_err:
-                self.ctx.ui.log(f"   ⚠️ [V65] 페이싱 분석 실패 (비치명): {str(_pace_err)[:60]}")
-
-        try:
-            _narrative_summaries = self.ctx.load_narrative_summaries()
-            if _narrative_summaries:
-                _tier2_parts.append(_narrative_summaries)
-        except Exception as e:
-            self.ctx.ui.log(f"   ⚠️ [V64.P4] 내러티브 요약 로드 실패 (비치명): {str(e)[:60]}")
-
-        # [미래 Arc/Blueprint 주입] — CW·Director 공통 참조용
-        _future_ctx = self._build_future_arc_context(next_ep, arc_data)
-        if _future_ctx:
-            _tier2_parts.append(_future_ctx)
-
-        _sc_budget = int(getattr(_retrieval_plan, "total_budget_chars", 0) or 0)
-        # [TF7-P1-03] SC 비활성 시 비-SC 필수 문맥이 절삭되지 않도록 양쪽 플래그 모두 확인
-        if _threshold("smart_retrieval.enabled", True) and _threshold("smart_retrieval.stage4_enabled", True):
-            _tier2_parts = self._apply_context_budget(_tier2_parts, _sc_budget)
-
-        # [LS-5] SC Retrieval 결과와 non-SC 본문을 합산 budget 기준으로 재조립
-        _source_counts = self._summarize_retrieval_sources(_retrieval_plan)
-        if not _source_counts and any("[과거 유사 맥락" in str(_part) for _part in _tier1_parts):
-            _source_counts = {"legacy_multi_query": 1}
-
-        def _compute_coverage_warnings(context_text: str) -> list[str]:
-            warnings: list[str] = []
-            if _work_focus and not _slot_summary:
-                warnings.append("missing_work_slot_summary")
-            if (
-                _work_focus
-                and _retrieval_plan
-                and not any(
-                    str(getattr(_slot, "category", "")).startswith("work_")
-                    for _slot in (getattr(_retrieval_plan, "slots", []) or [])
-                )
-            ):
-                warnings.append("work_focus_without_slots")
-            if _slot_summary and "[작품 추적 슬롯 요약]" not in context_text:
-                warnings.append("trimmed_work_slot_summary")
-            if (
-                _source_counts.get(RetrievalSources.DB_NPC_RELATIONSHIP, 0) > 0
-                and "[관계 의미 질의]" not in context_text
-            ):
-                warnings.append("missing_relation_slice")
-            if (
-                _retrieval_plan
-                and any(
-                    str(getattr(_slot, "category", "") or "") == "arc_semantic_carryover"
-                    for _slot in (getattr(_retrieval_plan, "slots", []) or [])
-                )
-                and "[SC:arc_semantic_carryover]" not in context_text
-            ):
-                warnings.append("missing_semantic_carryover")
-            return warnings
-
-        mandatory_context = ""
-        _coverage_warnings: list[str] = []
-        _coverage_note = ""
-        _coverage_note_idx: int | None = None
-        for _ in range(3):
-            _tier1_body = _tier1_parts + _sc_parts
-            mandatory_context = self._compose_tiered_mandatory_context_with_headroom(
-                _tier0_parts,
-                _tier1_body,
-                _tier2_parts,
-            )
-            _coverage_warnings = _compute_coverage_warnings(mandatory_context)
-            _next_coverage_note = self._build_retrieval_coverage_warning_section(_coverage_warnings)
-            if not _next_coverage_note:
-                break
-            if _coverage_note == _next_coverage_note:
-                break
-            if _coverage_note_idx is None:
-                _tier2_parts.insert(0, _next_coverage_note)
-                _coverage_note_idx = 0
-            else:
-                _tier2_parts[_coverage_note_idx] = _next_coverage_note
-            _coverage_note = _next_coverage_note
-
-        _slot_summary_survived = "[작품 추적 슬롯 요약]" in mandatory_context
-        _vector_context_chars = sum(len(str(_part or "")) for _part in _sc_parts)
-        _stage4_budget_ledger = dict(
-            (getattr(self.ctx, "_stage4_context_budget_meta", {}) or {}).get("budget_ledger") or {}
+        _tier_aux: Stage4AuxiliarySectionsPayload = self._build_tier12_auxiliary_sections(
+            next_ep=next_ep,
+            arc_data=arc_data,
+            blueprint=blueprint,
+            s4_genre_type=s4_genre_type,
+            v50_modules_available=v50_modules_available,
+            pacing_analyzer=pacing_analyzer,
+            prev_text=prev_text,
+            work_focus=_work_focus,
+            slot_summary=_slot_summary,
         )
-        self._record_retrieval_observation(
-            ep_num=next_ep,
-            stage="stage4",
-            observation=build_context_observation(
-                stage="stage4",
-                work_focus=_work_focus,
-                retrieval_plan=_retrieval_plan,
-                source_counts=_source_counts,
-                coverage_warnings=_coverage_warnings,
-                advisor_path_used=bool(_retrieval_plan),
-                work_slot_summary_present=bool(_slot_summary),
-                work_slot_summary_included=_slot_summary_survived,
-                relation_slice_included="[관계 의미 질의]" in mandatory_context,
-                vector_context_chars=_vector_context_chars,
-                mandatory_context_chars=len(mandatory_context),
-                protected_summary_survived=_slot_summary_survived,
-                trimmed_work_slot_summary=bool(_slot_summary and not _slot_summary_survived),
-                budget_ledger=_stage4_budget_ledger,
-            ),
+        _tier1_parts = _tier_aux["tier1_parts"]
+        _tier2_parts = _tier_aux["tier2_parts"]
+
+        _retrieval_result: Stage4RetrievalContextPayload = self._collect_stage4_retrieval_context(
+            next_ep=next_ep,
+            arc_data=arc_data,
+            prev_ending=prev_ending,
+            arc_tactical=arc_tactical,
+            blueprint=blueprint,
+            s4_genre_type=s4_genre_type,
+            work_focus=_work_focus,
+            tier1_parts=_tier1_parts,
         )
+        _retrieval_plan = _retrieval_result["retrieval_plan"]
+        _sc_parts = _retrieval_result["sc_parts"]
+        _tier1_parts = _retrieval_result["tier1_parts"]
+
+        _context_result: Stage4RetrievalCoveragePayload = self._compose_context_with_retrieval_coverage(
+            next_ep=next_ep,
+            work_focus=_work_focus,
+            retrieval_plan=_retrieval_plan,
+            tier0_parts=_tier0_parts,
+            tier1_parts=_tier1_parts,
+            sc_parts=_sc_parts,
+            tier2_parts=_tier2_parts,
+            slot_summary=_slot_summary,
+        )
+        mandatory_context = _context_result["mandatory_context"]
+        _coverage_warnings = _context_result["coverage_warnings"]
+        _source_counts = _context_result["source_counts"]
+        _tier2_parts = _context_result["tier2_parts"]
 
         try:
             anti_trope_prompt = _build_anti_trope(genre_name)

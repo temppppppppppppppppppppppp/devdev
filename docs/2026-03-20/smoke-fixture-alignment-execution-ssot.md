@@ -1,7 +1,7 @@
 # Smoke Fixture Alignment Execution SSOT
 
 Date: 2026-03-20
-Status: active
+Status: closed
 Canonical Path: `docs/2026-03-20/smoke-fixture-alignment-execution-ssot.md`
 Temp Mirror Path: `docs/temp/smoke-fixture-alignment-execution-ssot.md`
 Commit State:
@@ -49,8 +49,10 @@ The goal is not to patch one script ad hoc. The goal is to define and realize on
 - Stage 2 smoke on the seed lineage completed with degraded proof quality and produced `arc_3_failure_report.txt`.
 - A disposable clone of `projects/0_260318` unblocked Stage 3 smoke, but historical audit projects should not become the official smoke fixture source.
 - current realization now establishes `projects/smoke_fixture_demo/` as the canonical smoke fixture source lineage
+- `projects/smoke_fixture_demo/` has been restored at the canonical root from the archival copy under `projects/기록용/smoke_fixture_demo/`
 - `geuldobi-desktop/scripts/build_workspace_seed.py` now sources from `projects/smoke_fixture_demo` while still packaging to `investment_canary_demo`
 - `scripts/prepare_smoke_fixture.py` now exists as the bounded restore helper from canonical source to the hardcoded smoke target
+- smoke runners now share a bounded fixture-readiness gate and fail fast with a `prepare_smoke_fixture.py --force` instruction when the target is stale, shallow, or dirty
 
 ## 3. Scope
 
@@ -137,12 +139,29 @@ Recommended final shape:
 3. Script alignment tranche
    - only after the fixture contract is stable, adjust smoke restore/selection flow as needed
    - avoid premature hotfixing of hardcoded target naming
-   - status: in_progress
-   - bounded restore helper exists, but the smoke runners themselves are still unchanged
+   - status: completed
+   - bounded restore helper exists
+   - smoke runners now share a fixture-readiness gate via `modules/core/smoke_fixture_tools.py`
 4. Verification tranche
    - rerun desktop spike
    - rerun Stage 2/3/4 smoke against the aligned disposable fixture
    - confirm no historical audit project is used as the live smoke target
+   - status: in_progress
+   - latest verification run:
+     - `python scripts/prepare_smoke_fixture.py --force`
+     - `npm run start:desktop-spike`
+     - `python scripts/run_stage2_smoke.py`
+     - `python scripts/run_stage3_smoke.py`
+     - `python scripts/run_stage4_smoke.py`
+   - latest verification facts:
+     - desktop spike booted and auto-closed normally
+     - Stage 2/3/4 smoke all ran against `projects/코덱스_테스트`
+     - no historical audit project was used as the live smoke target
+     - Stage 2 still emitted bounded warnings and wrote `projects/코덱스_테스트/logs/arc_4_failure_report.txt`
+   - classification result:
+     - the residual Stage2 warning cluster was classified as a separate determinism issue, not a fixture-alignment blocker
+     - follow-up canonical audit: `docs/2026-03-20/stage2-smoke-rich-fixture-determinism-3pass-audit.md`
+     - follow-up execution item: `docs/2026-03-20/stage2-smoke-rich-fixture-determinism-execution-ssot.md`
 
 ## 9. Acceptance Criteria
 
@@ -174,13 +193,18 @@ Recommended final shape:
 - do not claim alignment if desktop spike and Stage 2/3/4 smokes still require different hidden fixture assumptions
 - do not widen this item into a general Stage 2/3/4 runtime redesign
 
-## 12. Temp Queue Notes
+## 12. Closure Notes
 
-- temp status: in_progress
-- cleanup condition:
-  - remove temp mirror after fixture alignment is implemented and verified
-- roadmap dependency:
-  - none currently; single execution SSOT item
+- closure decision:
+  - `closed`
+- closure basis:
+  - one canonical disposable smoke fixture lineage now exists
+  - desktop spike and Stage2/3/4 smoke all ran against the same disposable target
+  - no historical audit project was used as the live target
+- residual follow-up:
+  - Stage2 rich-fixture determinism moved into its own queue item
+- temp cleanup rule:
+  - remove `docs/temp/smoke-fixture-alignment-execution-ssot.md` after roadmap and replacement queue item are synced
 
 ## 13. Validation and Closure Hooks
 

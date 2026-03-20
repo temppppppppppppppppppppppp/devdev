@@ -3642,6 +3642,8 @@ class Stage4InterviewRound:
                 "gate_basis": director_result.get("gate_basis", "post_select_conflict"),
                 "repair_scope": director_result.get("repair_scope", _post_select_fix_scope),
                 "reject_bucket": "post_select_conflict",
+                "retry_pathology_source": "post_select_conflict",
+                "provisional_pass_downgrade": True,
                 "score_breakdown": director_result.get("score_breakdown", {}) if isinstance(director_result, dict) else {},
                 "consistency_checklist": director_result.get("consistency_checklist", {})
                 if isinstance(director_result, dict)
