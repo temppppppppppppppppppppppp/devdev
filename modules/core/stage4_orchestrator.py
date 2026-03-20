@@ -8,7 +8,6 @@ SovereignApp에서 분리된 Stage 4 관련 메서드:
 """
 
 import dataclasses
-import inspect
 import logging
 import re
 from pathlib import Path
@@ -326,12 +325,7 @@ class Stage4Orchestrator:
                     pass
 
     def _build_stage4_to_3_reverse_feedback(self, *, director_feedback: str, previous_attempt: dict | None) -> str:
-        try:
-            inspect.getattr_static(self.app, "_generate_reverse_feedback_stage4_to_3")
-        except AttributeError:
-            callback = None
-        else:
-            callback = getattr(self.app, "_generate_reverse_feedback_stage4_to_3", None)
+        callback = getattr(self.ctx, "generate_reverse_feedback_stage4_to_3", None)
         if not callable(callback):
             return ""
 

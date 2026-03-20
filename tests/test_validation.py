@@ -239,6 +239,25 @@ class TestContinuityCountAwareInventory:
 class TestScoringValidator:
     """TIER 2: ScoringValidator tests."""
 
+    def test_scoring_sanitize_window_defaults_to_target_length(self):
+        from modules.core.constants import ManuscriptLimits
+        from modules.validation.scoring_validator import _SANITIZE_MAX_CHARS
+
+        assert _SANITIZE_MAX_CHARS == int(ManuscriptLimits.TARGET_LENGTH)
+
+    def test_validate_exposes_scoring_input_meta_when_truncated(self, validation_context):
+        from modules.validation.scoring_validator import ScoringValidator
+
+        validator = ScoringValidator(client=None, model="gemini-2.5-flash")
+        long_text = "긴원고" * 2000
+
+        result = validator.validate(long_text, validation_context)
+
+        assert result["scoring_input_meta"]["limit"] == 5000
+        assert result["scoring_input_meta"]["original_length"] == len(long_text)
+        assert result["scoring_input_meta"]["final_length"] == 5000
+        assert result["scoring_input_meta"]["truncated"] is True
+
     def test_prose_rhythm_calculation(self, sample_manuscript):
         from modules.validation.scoring_validator import ScoringValidator
 
