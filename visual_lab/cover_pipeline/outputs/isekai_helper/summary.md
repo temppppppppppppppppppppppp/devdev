@@ -1,0 +1,55 @@
+# Cover AI Pipeline Summary: isekai_helper
+
+- generation model: `gemini-3-pro-image-preview`
+- judge model: `gemini-2.5-pro`
+- target title: `이세계 모험 헬퍼`
+
+## Ranking
+
+### 1. candidate_01_brush_dense.png
+- score: `132`
+- exact_title_match: `True`
+- detected_title: `이세계 모험 헬퍼`
+- title_accuracy: `10`
+- style_match: `8`
+- character_preservation: `10`
+- cover_impact: `9`
+- readability: `10`
+- issues: ``
+- summary: This is an excellent cover candidate. The title is perfectly accurate and rendered in a dynamic, high-contrast style that closely matches the reference image. The typography is well-placed, highly readable even at small sizes, and enhances the original artwork to create a professional and impactful final product.
+
+### 2. candidate_03_grunge_energy.png
+- score: `132`
+- exact_title_match: `True`
+- detected_title: `이세계 모험 헬퍼`
+- title_accuracy: `10`
+- style_match: `8`
+- character_preservation: `10`
+- cover_impact: `9`
+- readability: `10`
+- issues: ``
+- summary: An excellent cover candidate. The title is perfectly accurate and highly readable. The typography style effectively captures the modern, impactful feel of the reference image, and its placement and effects create a professional, high-impact cover. The character from the base image is perfectly preserved.
+
+### 3. candidate_02_sharp_calligraphy.png
+- score: `114`
+- exact_title_match: `True`
+- detected_title: `이세계 모험 헬퍼`
+- title_accuracy: `10`
+- style_match: `4`
+- character_preservation: `10`
+- cover_impact: `8`
+- readability: `10`
+- issues: `Typography style does not match the reference image.; The font is a generic fantasy style, not the sharp, modern style of the reference.`
+- summary: The candidate successfully and accurately applies the target title with excellent readability. The character is perfectly preserved from the base image, resulting in a high-impact, professional cover. The main weakness is the style match; the chosen font is a standard fantasy typeface and does not capture the sharp, dynamic, and modern feel of the reference typography.
+
+### 4. candidate_04_integrated_block.png
+- score: `94`
+- exact_title_match: `True`
+- detected_title: `이세계 모험 헬퍼`
+- title_accuracy: `10`
+- style_match: `2`
+- character_preservation: `10`
+- cover_impact: `3`
+- readability: `9`
+- issues: `Typography style does not match the reference image.; The font is generic and looks like a placeholder.; The typography lacks professional design and integration with the art.`
+- summary: The title is rendered perfectly and is highly readable. However, the typography is a significant weakness. It completely fails to match the dynamic, stylized mood of the reference image, instead using a very generic font that makes the cover look amateurish and cheapens its commercial impact. The character art is perfectly preserved, but the poor typography design is a major flaw.

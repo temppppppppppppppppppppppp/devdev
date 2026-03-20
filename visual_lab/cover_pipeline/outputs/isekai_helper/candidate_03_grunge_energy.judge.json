@@ -1,0 +1,13 @@
+{
+  "exact_title_match": true,
+  "detected_title": "이세계 모험 헬퍼",
+  "title_accuracy": 10,
+  "style_match": 8,
+  "character_preservation": 10,
+  "cover_impact": 9,
+  "readability": 10,
+  "issues": [],
+  "summary": "An excellent cover candidate. The title is perfectly accurate and highly readable. The typography style effectively captures the modern, impactful feel of the reference image, and its placement and effects create a professional, high-impact cover. The character from the base image is perfectly preserved.",
+  "candidate": "C:\\Users\\wjjo\\Desktop\\글도비\\projects\\cover_ai_pipeline\\outputs\\isekai_helper\\candidate_03_grunge_energy.png",
+  "score": 132
+}

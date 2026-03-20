@@ -1,0 +1,19 @@
+{
+  "ropan_style": 9,
+  "beauty": 9,
+  "polish": 9,
+  "composition_impact": 6,
+  "reference_energy_match": 1,
+  "anatomy_integrity": 7,
+  "text_cleanliness": 10,
+  "has_unwanted_text": false,
+  "issues": [
+    "Complete genre and energy mismatch with reference",
+    "Static, centered composition lacks impact",
+    "Hands are slightly stiff and doll-like",
+    "Generic fantasy aesthetic"
+  ],
+  "summary": "A beautifully rendered but generic Ropan-style portrait that completely fails to match the modern, action-oriented energy of the reference image. The composition is too static for a compelling cover.",
+  "candidate": "C:\\Users\\wjjo\\Desktop\\글도비\\visual_lab\\illustration_pipeline\\outputs\\d_ropan\\candidate_01_duchess_corridor.png",
+  "score": 174
+}

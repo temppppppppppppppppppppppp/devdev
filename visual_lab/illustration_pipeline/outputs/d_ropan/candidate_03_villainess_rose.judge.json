@@ -1,0 +1,17 @@
+{
+  "ropan_style": 9,
+  "beauty": 9,
+  "polish": 9,
+  "composition_impact": 9,
+  "reference_energy_match": 2,
+  "anatomy_integrity": 7,
+  "text_cleanliness": 10,
+  "has_unwanted_text": false,
+  "issues": [
+    "Hand anatomy is slightly off (long fingers, awkward grip).",
+    "Does not match the modern fantasy genre/energy of the reference image."
+  ],
+  "summary": "A high-quality romance-fantasy illustration with strong visual appeal and composition, but it completely misses the modern action genre of the reference and has minor hand anatomy flaws.",
+  "candidate": "C:\\Users\\wjjo\\Desktop\\글도비\\visual_lab\\illustration_pipeline\\outputs\\d_ropan\\candidate_03_villainess_rose.png",
+  "score": 187
+}

@@ -1,0 +1,13 @@
+{
+  "exact_title_match": true,
+  "detected_title": "이세계 모험 헬퍼",
+  "title_accuracy": 10,
+  "style_match": 8,
+  "character_preservation": 10,
+  "cover_impact": 9,
+  "readability": 10,
+  "issues": [],
+  "summary": "This is an excellent cover candidate. The title is perfectly accurate and rendered in a dynamic, high-contrast style that closely matches the reference image. The typography is well-placed, highly readable even at small sizes, and enhances the original artwork to create a professional and impactful final product.",
+  "candidate": "C:\\Users\\wjjo\\Desktop\\글도비\\projects\\cover_ai_pipeline\\outputs\\isekai_helper\\candidate_01_brush_dense.png",
+  "score": 132
+}

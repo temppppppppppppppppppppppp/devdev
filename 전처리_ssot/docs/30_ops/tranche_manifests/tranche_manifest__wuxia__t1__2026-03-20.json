@@ -1,0 +1,144 @@
+{
+  "schema_version": "1.0",
+  "tranche_id": "wuxia__t1__2026-03-20",
+  "snapshot_date": "2026-03-20",
+  "genre_family": "wuxia",
+  "lane_phase": "pilot_active",
+  "authority_path": "C:/Users/wjjo/Desktop/글도비/전처리_ssot/docs/30_ops/tranche_manifests/tranche_manifest__wuxia__t1__2026-03-20.json",
+  "source_corpus": {
+    "primary_root": "C:/Users/wjjo/Desktop/글도비/docs/실물기반 사각지대 테스트/원고",
+    "scratch_harbor_root": "C:/Users/wjjo/Desktop/수동_글도비",
+    "notes": [
+      "The primary authority for raw manuscript availability is the real-manuscript corpus under docs/실물기반 사각지대 테스트/원고.",
+      "수동_글도비 remains the scratch and workbench harbor, not the canonical raw-source index."
+    ]
+  },
+  "selection_rules": {
+    "inclusion_threshold": [
+      "realm ladder",
+      "martial lineage or manual logic",
+      "sect or clan politics",
+      "jianghu reputation or grievance economy"
+    ],
+    "minimum_required_hits": 3,
+    "exclusion_triggers": [
+      "primary loop is modern corporate power",
+      "primary loop is dungeon or raid combat rather than jianghu conflict",
+      "source availability is too thin for a 20-episode pilot slice"
+    ]
+  },
+  "selected_titles": [
+    {
+      "title_id": "wuxia__title__gonryun_mahyeop",
+      "title_slug": "gonryun_mahyeop",
+      "display_title": "곤륜마협",
+      "source_root": "C:/Users/wjjo/Desktop/글도비/docs/실물기반 사각지대 테스트/원고/무협_곤륜마협",
+      "episodes_available": 100,
+      "selection_role": "core_primary",
+      "subtype": "orthodox_sect_politics_growth",
+      "representative_why": "Has clear sect pressure, reusable cliffhanger material, and existing style/cliffhanger/scene-connection companion notes.",
+      "overfit_risks": [
+        "over-learning one sect's furniture as if it were universal wuxia law",
+        "treating local naming texture as portable structure"
+      ],
+      "intake_decision": "include",
+      "planned_slice": {
+        "episode_start": 1,
+        "episode_end": 20,
+        "shards": [
+          "ep001-010",
+          "ep011-020"
+        ]
+      },
+      "companion_refs": [
+        "C:/Users/wjjo/Desktop/글도비/docs/실물기반 사각지대 테스트/무협_곤륜마협_문체프로파일.md",
+        "C:/Users/wjjo/Desktop/글도비/docs/실물기반 사각지대 테스트/무협_곤륜마협_클리프행어.md",
+        "C:/Users/wjjo/Desktop/글도비/docs/실물기반 사각지대 테스트/무협_곤륜마협_화간연결.md"
+      ]
+    },
+    {
+      "title_id": "wuxia__title__pagong_geomje",
+      "title_slug": "pagong_geomje",
+      "display_title": "파공검제",
+      "source_root": "C:/Users/wjjo/Desktop/글도비/docs/실물기반 사각지대 테스트/원고/무협_파공검제",
+      "episodes_available": 100,
+      "selection_role": "core_secondary",
+      "subtype": "combat_reputation_payoff",
+      "representative_why": "Useful for combat-to-reputation conversion, hook/payoff timing, and public consequence mapping.",
+      "overfit_risks": [
+        "mistaking one title's sword-signature texture for a genre-general rule",
+        "flattening combat into mere victory escalation"
+      ],
+      "intake_decision": "include",
+      "planned_slice": {
+        "episode_start": 1,
+        "episode_end": 20,
+        "shards": [
+          "ep001-010",
+          "ep011-020"
+        ]
+      },
+      "companion_refs": [
+        "C:/Users/wjjo/Desktop/글도비/docs/실물기반 사각지대 테스트/무협_파공검제_문체프로파일.md",
+        "C:/Users/wjjo/Desktop/글도비/docs/실물기반 사각지대 테스트/무협_파공검제_클리프행어.md",
+        "C:/Users/wjjo/Desktop/글도비/docs/실물기반 사각지대 테스트/무협_파공검제_화간연결.md"
+      ]
+    },
+    {
+      "title_id": "wuxia__title__jaha_geomsin",
+      "title_slug": "jaha_geomsin",
+      "display_title": "자하검신",
+      "source_root": "C:/Users/wjjo/Desktop/글도비/docs/실물기반 사각지대 테스트/원고/무협_자하검신",
+      "episodes_available": 100,
+      "selection_role": "core_tertiary",
+      "subtype": "high_end_powerline_with_validation_pressure",
+      "representative_why": "Useful as a contrast title so the first pack does not collapse into a single orthodox-sect rhythm.",
+      "overfit_risks": [
+        "letting higher-power pacing distort entry-level wuxia cadence",
+        "over-generalizing late-run scale signals into early pilot logic"
+      ],
+      "intake_decision": "include",
+      "planned_slice": {
+        "episode_start": 1,
+        "episode_end": 20,
+        "shards": [
+          "ep001-010",
+          "ep011-020"
+        ]
+      },
+      "companion_refs": [
+        "C:/Users/wjjo/Desktop/글도비/docs/실물기반 사각지대 테스트/few-shot-bank/무협_자하검신.yaml",
+        "C:/Users/wjjo/Desktop/글도비/docs/실물기반 사각지대 테스트/분석/자하검신_ep051-100_분석.md"
+      ]
+    }
+  ],
+  "reserve_titles": [
+    {
+      "title_id": "wuxia__title__geomsin_jaerim",
+      "title_slug": "geomsin_jaerim",
+      "display_title": "검신재림",
+      "source_root": "C:/Users/wjjo/Desktop/글도비/docs/실물기반 사각지대 테스트/원고/무협_검신재림",
+      "episodes_available": 20,
+      "selection_role": "challenge_reserve",
+      "reserve_reason": "Kept as a reserve and challenge set because availability is thinner and better suited for post-pilot stress checks.",
+      "intake_decision": "reserve"
+    }
+  ],
+  "excluded_titles": [],
+  "execution_order": [
+    "wuxia__title__gonryun_mahyeop",
+    "wuxia__title__pagong_geomje",
+    "wuxia__title__jaha_geomsin"
+  ],
+  "review_gates": [
+    "The first title must complete segmentation shard 1 and segmentation shard 2 before tranche merge.",
+    "The first title tranche must pass pass1, pass2, pass3, and adversarial review before title two starts.",
+    "No title-local output may be promoted above candidate inside this tranche."
+  ],
+  "risk_register": [
+    "card explosion before consolidation",
+    "labeling source-specific furniture as portable structure",
+    "treating style similarity as if it were structural transfer"
+  ],
+  "owner_note": "This tranche is the first operational lane for the decomposition base and should remain narrow until the first title bundle survives review."
+}

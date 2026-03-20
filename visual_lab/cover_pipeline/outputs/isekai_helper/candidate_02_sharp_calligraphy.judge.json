@@ -1,0 +1,16 @@
+{
+  "exact_title_match": true,
+  "detected_title": "이세계 모험 헬퍼",
+  "title_accuracy": 10,
+  "style_match": 4,
+  "character_preservation": 10,
+  "cover_impact": 8,
+  "readability": 10,
+  "issues": [
+    "Typography style does not match the reference image.",
+    "The font is a generic fantasy style, not the sharp, modern style of the reference."
+  ],
+  "summary": "The candidate successfully and accurately applies the target title with excellent readability. The character is perfectly preserved from the base image, resulting in a high-impact, professional cover. The main weakness is the style match; the chosen font is a standard fantasy typeface and does not capture the sharp, dynamic, and modern feel of the reference typography.",
+  "candidate": "C:\\Users\\wjjo\\Desktop\\글도비\\projects\\cover_ai_pipeline\\outputs\\isekai_helper\\candidate_02_sharp_calligraphy.png",
+  "score": 114
+}
