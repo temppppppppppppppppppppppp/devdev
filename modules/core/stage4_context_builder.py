@@ -55,6 +55,13 @@ class Stage4AuxiliarySectionsPayload(TypedDict):
     tier2_parts: list[str]
 
 
+class Stage4MandatoryContextSeedPayload(TypedDict):
+    cp_entities: dict[str, Any]
+    work_focus: WorkRetrievalFocusPayload
+    tier0_parts: list[str]
+    slot_summary: str
+
+
 class Stage4PromptInjectionsPayload(TypedDict):
     anti_trope_prompt: str
     justification_prompt: str
@@ -2913,34 +2920,17 @@ class Stage4ContextBuilder:
         )
 
         mandatory_context = self._load_base_mandatory_context(next_ep=next_ep)
-
-        cp_entities = {"npcs": [], "items": [], "plots": [], "locations": [], "_full_text": ""}
-        if blueprint:
-            try:
-                cp_entities = self._extract_blueprint_entities(blueprint, arc_data=arc_data)
-            except Exception as cp_entity_err:
-                logging.debug("[CP] blueprint entity 추출 실패 (비치명): %s", cp_entity_err)
-
-        _work_focus: WorkRetrievalFocusPayload = self._resolve_work_retrieval_focus(
-            stage="manuscript",
+        _seed = self._build_mandatory_context_seed(
             arc_data=arc_data,
             arc_tactical=arc_tactical,
             prev_ending=prev_ending,
             blueprint=blueprint,
-            cp_entities=cp_entities,
-        )
-
-        _tier0_parts = self._build_tier0_mandatory_sections(
-            arc_data=arc_data,
-            blueprint=blueprint,
-            cp_entities=cp_entities,
             mandatory_context=mandatory_context,
         )
-        _slot_summary = self._build_work_identity_slot_summary(
-            focus=_work_focus,
-            arc_data=arc_data,
-            cp_entities=cp_entities,
-        )
+        cp_entities = _seed["cp_entities"]
+        _work_focus = _seed["work_focus"]
+        _tier0_parts = _seed["tier0_parts"]
+        _slot_summary = _seed["slot_summary"]
         _tier_aux: Stage4AuxiliarySectionsPayload = self._build_tier12_auxiliary_sections(
             next_ep=next_ep,
             arc_data=arc_data,
@@ -3038,6 +3028,48 @@ class Stage4ContextBuilder:
         except Exception as e:
             self.ctx.ui.log(f"   ⚠️ Mandatory Context 실패 (비치명): {e}")
             return "[경고] 필수 컨텍스트 로딩 실패 - 이전 에피소드 상태를 우선 참조하여 연속성을 유지하세요."
+
+    def _build_mandatory_context_seed(
+        self,
+        *,
+        arc_data: dict,
+        arc_tactical: str,
+        prev_ending: str,
+        blueprint: dict | None,
+        mandatory_context: str,
+    ) -> Stage4MandatoryContextSeedPayload:
+        cp_entities = {"npcs": [], "items": [], "plots": [], "locations": [], "_full_text": ""}
+        if blueprint:
+            try:
+                cp_entities = self._extract_blueprint_entities(blueprint, arc_data=arc_data)
+            except Exception as cp_entity_err:
+                logging.debug("[CP] blueprint entity 추출 실패 (비치명): %s", cp_entity_err)
+
+        work_focus: WorkRetrievalFocusPayload = self._resolve_work_retrieval_focus(
+            stage="manuscript",
+            arc_data=arc_data,
+            arc_tactical=arc_tactical,
+            prev_ending=prev_ending,
+            blueprint=blueprint,
+            cp_entities=cp_entities,
+        )
+        tier0_parts = self._build_tier0_mandatory_sections(
+            arc_data=arc_data,
+            blueprint=blueprint,
+            cp_entities=cp_entities,
+            mandatory_context=mandatory_context,
+        )
+        slot_summary = self._build_work_identity_slot_summary(
+            focus=work_focus,
+            arc_data=arc_data,
+            cp_entities=cp_entities,
+        )
+        return {
+            "cp_entities": cp_entities,
+            "work_focus": work_focus,
+            "tier0_parts": tier0_parts,
+            "slot_summary": slot_summary,
+        }
 
     def _build_mandatory_prompt_injections(
         self,
