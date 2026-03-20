@@ -145,6 +145,7 @@ class TestStage4Context:
         assert ctx.get_protagonist_name is None
         assert ctx.extract_npc_profiles is None
         assert ctx.generate_narrative_summary is None
+        assert ctx.generate_reverse_feedback_stage4_to_3 is None
         assert ctx.generate_writer_guidance_v60_8 is None
         assert ctx.enrich_director_result is None
         assert ctx.audit_event is None
@@ -181,6 +182,7 @@ class TestStage4Context:
         app_mock._get_protagonist_name = MagicMock()
         app_mock._extract_npc_profiles = MagicMock()
         app_mock._generate_narrative_summary = MagicMock()
+        app_mock._generate_reverse_feedback_stage4_to_3 = MagicMock()
         app_mock._generate_writer_guidance_v60_8 = MagicMock()
         app_mock._enrich_director_result = MagicMock()
         app_mock._audit_event = MagicMock()
@@ -195,6 +197,7 @@ class TestStage4Context:
         assert ctx.get_protagonist_name is app_mock._get_protagonist_name
         assert ctx.extract_npc_profiles is app_mock._extract_npc_profiles
         assert ctx.generate_narrative_summary is app_mock._generate_narrative_summary
+        assert ctx.generate_reverse_feedback_stage4_to_3 is app_mock._generate_reverse_feedback_stage4_to_3
         assert ctx.generate_writer_guidance_v60_8 is app_mock._generate_writer_guidance_v60_8
         assert ctx.enrich_director_result is app_mock._enrich_director_result
         assert ctx.audit_event is app_mock._audit_event
@@ -211,6 +214,7 @@ class TestStage4Context:
         app.sys = MagicMock()
         ctx = Stage4Context.from_app(app)
         assert ctx.get_int_input is None
+        assert ctx.generate_reverse_feedback_stage4_to_3 is None
         assert ctx.generate_writer_guidance_v60_8 is None
         assert ctx.enrich_director_result is None
         assert ctx.extract_npc_profiles is None
@@ -218,6 +222,15 @@ class TestStage4Context:
         assert ctx.write_audit_summary is None
         assert ctx.flush_audit_buffer is None
         assert ctx.safe_commit is None
+
+    def test_from_app_falls_back_to_feedback_system_reverse_feedback(self, app_mock):
+        feedback_system = MagicMock()
+        feedback_system.generate_reverse_feedback_stage4_to_3 = MagicMock()
+        app_mock._feedback_system = feedback_system
+
+        ctx = Stage4Context.from_app(app_mock)
+
+        assert ctx.generate_reverse_feedback_stage4_to_3 is feedback_system.generate_reverse_feedback_stage4_to_3
 
     def test_from_app_binds_real_item_timeline_method(self, mock_deps):
         class RealApp:

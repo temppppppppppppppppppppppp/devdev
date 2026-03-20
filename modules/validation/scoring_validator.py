@@ -5,16 +5,18 @@ LLM 기반 점수 평가 (가중치 합산)
 [V59] 장르별 가중치 / 세분화된 피드백 고도화
 """
 
+# utf8-hygiene: allow-file -- legacy Korean regex/prompt literals predate this bounded scoring-window alignment patch.
 import logging
 import re
 import statistics
 from collections import Counter
 
+from modules.core.constants import ManuscriptLimits
 from modules.core.llm_generate import generate_content_via_router
 from modules.validation.dialogue_utils import count_dialogue_segments
 from modules.validation.threshold_helper import _threshold  # [Phase 5-B-2c]
 
-_SANITIZE_MAX_CHARS = int(_threshold("scoring.sanitize_max_chars", 3000))
+_SANITIZE_MAX_CHARS = int(_threshold("scoring.sanitize_max_chars", int(ManuscriptLimits.TARGET_LENGTH)))
 _CV_OPTIMAL_LOW = float(_threshold("scoring.cv_optimal_low", 0.35))
 _CV_OPTIMAL_HIGH = float(_threshold("scoring.cv_optimal_high", 0.55))
 _WUXIA_MARTIAL_MIN = int(_threshold("scoring.wuxia_martial_min", 3))
@@ -95,7 +97,7 @@ class ScoringValidator:
             logging.warning(f"[WARNING] Guard 로드 실패 ({genre}): {e}")
             return None
 
-    def _sanitize_manuscript(self, text: str) -> str:
+    def _sanitize_manuscript(self, text: str) -> tuple[str, dict]:
         """
         🔒 Prompt Injection 방지 - 원고 텍스트 sanitization
 
@@ -104,7 +106,7 @@ class ScoringValidator:
         3. 길이 제한 적용
         """
         if not isinstance(text, str):
-            return str(text)
+            text = str(text)
 
         # 중괄호 이스케이프
         sanitized = text.replace("{", "{{").replace("}", "}}")
@@ -113,7 +115,15 @@ class ScoringValidator:
         sanitized = "".join(char for char in sanitized if char.isprintable() or char in "\n\r\t")
 
         # 길이 제한
-        return sanitized[:_SANITIZE_MAX_CHARS]
+        original_length = len(sanitized)
+        final_text = sanitized[:_SANITIZE_MAX_CHARS]
+        scoring_input_meta = {
+            "limit": _SANITIZE_MAX_CHARS,
+            "original_length": original_length,
+            "final_length": len(final_text),
+            "truncated": original_length > _SANITIZE_MAX_CHARS,
+        }
+        return final_text, scoring_input_meta
 
     def validate(self, manuscript: str, validation_context: dict) -> dict:
         """
@@ -132,6 +142,7 @@ class ScoringValidator:
             }
         """
         # Python으로 계산 가능한 항목 (LLM 불필요)
+        _, scoring_input_meta = self._sanitize_manuscript(manuscript)
         python_scores = self._calculate_python_scores(manuscript, validation_context)
 
         # LLM으로 평가해야 하는 항목
@@ -162,6 +173,7 @@ class ScoringValidator:
             "percentage": (total_score / max_score) * 100,
             "threshold": self.pass_threshold,
             "breakdown": all_scores,
+            "scoring_input_meta": scoring_input_meta,
             "message": f"{'PASS' if passed else 'FAIL'} - {total_score}/{max_score}점 (기준: {self.pass_threshold}점)",
         }
 
@@ -186,7 +198,7 @@ class ScoringValidator:
             return self._fallback_llm_scores(manuscript, context)
 
         # 🔒 Prompt Injection 방지 - 원고 텍스트 sanitization
-        safe_manuscript = self._sanitize_manuscript(manuscript)
+        safe_manuscript, _ = self._sanitize_manuscript(manuscript)
 
         # [V46] GenreGuard 기반 동적 컨텍스트 생성
         dynamic_context = self._generate_dynamic_context(context)

@@ -806,7 +806,7 @@ class TestHandleRoundOutcomeErrorPaths:
         from modules.core.stage4_types import _InterviewRoundResult
 
         orch = orch_with_ctx
-        orch.app._generate_reverse_feedback_stage4_to_3 = MagicMock(return_value="[S4->S3] blueprint hint")
+        orch._ctx.generate_reverse_feedback_stage4_to_3 = MagicMock(return_value="[S4->S3] blueprint hint")
         bp_agent = MagicMock()
         bp_agent._inplace_patch_blueprint.return_value = {"patched": True}
         orch._ctx.agents["three_phase_bp"] = bp_agent

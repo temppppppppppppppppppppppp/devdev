@@ -28,6 +28,17 @@ def _safe_getattr(obj, name: str, default=None):
         return default
 
 
+def _resolve_stage4_reverse_feedback_callback(app):
+    callback = _safe_getattr(app, "_generate_reverse_feedback_stage4_to_3", None)
+    if callable(callback):
+        return callback
+    feedback_system = _safe_getattr(app, "_feedback_system", None)
+    fallback = _safe_getattr(feedback_system, "generate_reverse_feedback_stage4_to_3", None)
+    if callable(fallback):
+        return fallback
+    return None
+
+
 class Stage4Context:
     """Stage4Orchestrator의 DI 컨텍스트.
 
@@ -115,6 +126,7 @@ class Stage4Context:
         get_protagonist_name=None,
         extract_npc_profiles=None,
         generate_narrative_summary=None,
+        generate_reverse_feedback_stage4_to_3=None,
         generate_writer_guidance_v60_8=None,
         enrich_director_result=None,
         audit_event=None,
@@ -151,6 +163,7 @@ class Stage4Context:
         self.get_protagonist_name = get_protagonist_name
         self.extract_npc_profiles = extract_npc_profiles
         self.generate_narrative_summary = generate_narrative_summary
+        self.generate_reverse_feedback_stage4_to_3 = generate_reverse_feedback_stage4_to_3
         self.generate_writer_guidance_v60_8 = generate_writer_guidance_v60_8
         self.enrich_director_result = enrich_director_result
         self.audit_event = audit_event
@@ -198,6 +211,14 @@ class Stage4Context:
     @generate_writer_guidance_v60_8.setter
     def generate_writer_guidance_v60_8(self, callback):
         self._set_callback("generate_writer_guidance_v60_8", callback)
+
+    @property
+    def generate_reverse_feedback_stage4_to_3(self):
+        return self._get_callback("generate_reverse_feedback_stage4_to_3")
+
+    @generate_reverse_feedback_stage4_to_3.setter
+    def generate_reverse_feedback_stage4_to_3(self, callback):
+        self._set_callback("generate_reverse_feedback_stage4_to_3", callback)
 
     @property
     def enrich_director_result(self):
@@ -261,6 +282,7 @@ class Stage4Context:
             get_protagonist_name=_safe_getattr(app, "_get_protagonist_name", None),
             extract_npc_profiles=_safe_getattr(app, "_extract_npc_profiles", None),
             generate_narrative_summary=_safe_getattr(app, "_generate_narrative_summary", None),
+            generate_reverse_feedback_stage4_to_3=_resolve_stage4_reverse_feedback_callback(app),
             generate_writer_guidance_v60_8=_safe_getattr(app, "_generate_writer_guidance_v60_8", None),
             enrich_director_result=_safe_getattr(app, "_enrich_director_result", None),
             audit_event=_safe_getattr(app, "_audit_event", None),
