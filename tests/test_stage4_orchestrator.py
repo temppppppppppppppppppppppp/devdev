@@ -1358,6 +1358,61 @@ class TestStage4OrchestratorImport:
         orch._context_builder.build_mandatory_context.assert_called_once()
         orch._build_writer_prompt_supplements.assert_called_once_with(anti_trope_prompt="anti")
 
+    def test_build_episode_round_context_delegates_with_prompt_bundle_fields(self, mock_app):
+        from modules.core.stage4_orchestrator import (
+            Stage4Orchestrator,
+            _EpisodePromptBundle,
+            _RoundContext,
+            _WriterPromptSupplements,
+        )
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.ui.log = MagicMock()
+        ctx.current_project = mock_app.current_project
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+        orch._context_builder = MagicMock()
+        orch._context_builder.build_round_context.return_value = MagicMock(spec=_RoundContext)
+        prompt_bundle = _EpisodePromptBundle(
+            genre_name="무협",
+            ctx_prompts={"mandatory_context": "mandatory", "anti_trope_prompt": "anti"},
+            prompt_supplements=_WriterPromptSupplements(
+                purism_prompt="purism",
+                npc_equipment_summary="equip",
+                effective_anti_trope="anti++",
+                intro_dna="CYNICAL",
+            ),
+        )
+
+        result = orch._build_episode_round_context(
+            ep_ctx={"prev_text": "prev"},
+            ctx_prompts={"mandatory_context": "mandatory", "anti_trope_prompt": "anti"},
+            chief_writer=MagicMock(),
+            manuscript_validator=MagicMock(),
+            consistency_validator=MagicMock(),
+            blocking_validator=MagicMock(),
+            continuity_validator=MagicMock(),
+            next_ep=5,
+            blueprint={"scene_breakdown": {}},
+            arc_data={"arc_no": 1},
+            story_context="story",
+            style_guide="style",
+            reference_excerpt="ref",
+            preflight_advisory="watch pacing",
+            prompt_bundle=prompt_bundle,
+        )
+
+        assert isinstance(result, MagicMock)
+        call_kwargs = orch._context_builder.build_round_context.call_args.kwargs
+        assert call_kwargs["purism_prompt"] == "purism"
+        assert call_kwargs["genre_name"] == "무협"
+        assert call_kwargs["npc_equipment_summary"] == "equip"
+        assert call_kwargs["effective_anti_trope"] == "anti++"
+        assert call_kwargs["intro_dna"] == "CYNICAL"
+        assert call_kwargs["mandatory_context"] == "mandatory"
+        assert call_kwargs["preflight_advisory"] == "watch pacing"
+
     def test_build_writer_prompt_supplements_combines_guard_diversity_and_bible_fields(self, mock_app):
         from modules.core.stage4_orchestrator import Stage4Orchestrator, _WriterPromptSupplements
 

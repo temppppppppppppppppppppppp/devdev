@@ -867,6 +867,49 @@ JSON으로 출력:
             prompt_supplements=prompt_supplements,
         )
 
+    def _build_episode_round_context(
+        self,
+        *,
+        ep_ctx: dict,
+        ctx_prompts: dict,
+        chief_writer,
+        manuscript_validator,
+        consistency_validator,
+        blocking_validator,
+        continuity_validator,
+        next_ep: int,
+        blueprint: dict,
+        arc_data: dict,
+        story_context: str,
+        style_guide: str,
+        reference_excerpt: str,
+        preflight_advisory: str,
+        prompt_bundle: _EpisodePromptBundle,
+    ) -> _RoundContext:
+        prompt_supplements = prompt_bundle.prompt_supplements
+        return self.context_builder.build_round_context(
+            ep_ctx=ep_ctx,
+            ctx_prompts=ctx_prompts,
+            chief_writer=chief_writer,
+            manuscript_validator=manuscript_validator,
+            consistency_validator=consistency_validator,
+            blocking_validator=blocking_validator,
+            continuity_validator=continuity_validator,
+            next_ep=next_ep,
+            blueprint=blueprint,
+            arc_data=arc_data,
+            purism_prompt=prompt_supplements.purism_prompt,
+            genre_name=prompt_bundle.genre_name,
+            npc_equipment_summary=prompt_supplements.npc_equipment_summary,
+            effective_anti_trope=prompt_supplements.effective_anti_trope,
+            intro_dna=prompt_supplements.intro_dna,
+            story_context=story_context,
+            style_guide=style_guide,
+            reference_excerpt=reference_excerpt,
+            mandatory_context=ctx_prompts["mandatory_context"],
+            preflight_advisory=preflight_advisory,
+        )
+
     def _run_interview_loop(self, session: _SessionConfig, *, skip_pause: bool = False) -> bool:
         """[4-R1-e-4] Run main episode production loop.
 
@@ -954,15 +997,9 @@ JSON으로 출력:
                 s4_genre_type=s4_genre_type,
                 v50_modules_available=v50_modules_available,
             )
-            genre_name = _prompt_bundle.genre_name
             _ctx_prompts = _prompt_bundle.ctx_prompts
             mandatory_context = _ctx_prompts["mandatory_context"]
             # reserved for future use: reference_anchor_prompt, justification_prompt, reflexion_prompt
-            _prompt_supplements = _prompt_bundle.prompt_supplements
-            purism_prompt = _prompt_supplements.purism_prompt
-            npc_equipment_summary = _prompt_supplements.npc_equipment_summary
-            _effective_anti_trope = _prompt_supplements.effective_anti_trope
-            intro_dna = _prompt_supplements.intro_dna
 
             self.ctx.ui.log(f"\n{'=' * 60}")
             self.ctx.ui.log(
@@ -1006,7 +1043,8 @@ JSON으로 출력:
                     )
 
             # [V61.6] 전체 면담 루프를 스피너로 감싸기
-            _round_ctx = self.context_builder.build_round_context(
+            _ctx_prompts["mandatory_context"] = mandatory_context
+            _round_ctx = self._build_episode_round_context(
                 ep_ctx=_ep_ctx,
                 ctx_prompts=_ctx_prompts,
                 chief_writer=chief_writer,
@@ -1017,16 +1055,11 @@ JSON으로 출력:
                 next_ep=next_ep,
                 blueprint=blueprint,
                 arc_data=arc_data,
-                purism_prompt=purism_prompt,
-                genre_name=genre_name,
-                npc_equipment_summary=npc_equipment_summary,
-                effective_anti_trope=_effective_anti_trope,
-                intro_dna=intro_dna,
                 story_context=story_context,
                 style_guide=style_guide,
                 reference_excerpt=reference_excerpt,
-                mandatory_context=mandatory_context,
                 preflight_advisory=_preflight_advisory,
+                prompt_bundle=_prompt_bundle,
             )
             # ===== Phase 4: Director 면담 (5회) =====
             _outcome = self._handle_round_outcome(round_ctx=_round_ctx)
