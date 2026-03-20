@@ -181,6 +181,24 @@ class TestPhaseB:
         assert style_guide is None
         expander.save_all.assert_not_called()
 
+    def test_generate_from_concept_aborts_on_bible_generation_error(self):
+        manager = StageZeroManager(project_path="dummy")
+        manager.genre = "wuxia"
+        expander = MagicMock()
+        expander.genre = "wuxia"
+        expander.preset_registry = MagicMock()
+        expander._STAGE0_REVIEW_MAX_ATTEMPTS = 2
+        expander.generate_bible.side_effect = StoryExpander.BibleGenerationError("contract fail")
+
+        with patch("modules.core.stage0.StoryExpander", return_value=expander):
+            bible, treatment, style_guide = manager.generate_from_concept("컨셉")
+
+        assert bible == {}
+        assert treatment == []
+        assert style_guide is None
+        expander.generate_treatment.assert_not_called()
+        expander.save_all.assert_not_called()
+
 
 # ──────────────────────────────────────────────
 # Phase C: 코드 위생

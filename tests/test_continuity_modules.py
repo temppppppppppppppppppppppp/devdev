@@ -237,6 +237,89 @@ class TestContinuityArcValidatorIntraArc:
         result = extract_episode_tactical(tactical_doc, 3, fallback_full=False)
         assert "마지막 내용" in result
 
+    def test_joint_docs_extractor_prompt_preserves_tail_context(self):
+        inspector = _make_mock_inspector()
+        inspector._extract_json_robust.return_value = {
+            "final_location": "market",
+            "physical_inventory": ["ledger"],
+            "world_joint": "stable",
+            "extraction_confidence": "HIGH",
+        }
+        validator = ContinuityArcValidator(inspector)
+
+        tactical_doc = (
+            "[제1화 전술 설계] 시작 내용\n"
+            "[제2화 전술 설계] 중간 내용\n"
+            f"[제3화 전술 설계] {'X' * 5000}TAIL-ARC-JOINT"
+        )
+
+        result = validator._extract_accurate_joint_docs(
+            tactical_doc=tactical_doc,
+            arc_no=2,
+            ep_end=3,
+            original_joint_docs={},
+        )
+
+        assert result["final_location"] == "market"
+        prompt = inspector.ask.call_args.args[0]
+        assert "TAIL-ARC-JOINT" in prompt
+        assert "...(중간 생략)..." in prompt
+
+    def test_inspect_arc_prompt_preserves_tactical_tail_context(self):
+        inspector = _make_mock_inspector()
+        validator = ContinuityArcValidator(inspector)
+
+        current_arc = {
+            "arc_no": 2,
+            "tactical_doc": "HEAD-TAC\n" + ("전술 " * 20000) + "\nTAIL-CONTINUITY-ARC",
+            "joint_docs": {"final_location": "시장", "physical_inventory": []},
+            "status_shadow": {"internal_energy_loss": "10%"},
+            "state_constraints": {"arc_start_state": {"internal_energy": 90, "injuries": "없음", "location": "시장"}},
+            "ep_start": 6,
+            "ep_end": 10,
+            "ep_count": 5,
+        }
+        prev_arcs = [
+            {
+                "arc_no": 1,
+                "tactical_doc": "이전 Arc",
+                "joint_docs": {"final_location": "시장", "physical_inventory": []},
+                "status_shadow": {"internal_energy_loss": "10%", "expected_injuries": "없음"},
+                "state_constraints": {"arc_end_state": {"internal_energy": 90, "injuries": "없음", "location": "시장"}},
+                "ep_start": 1,
+                "ep_end": 5,
+            }
+        ]
+
+        result = validator.inspect_arc(current_arc, prev_arcs=prev_arcs)
+
+        assert result["decision"] == "PASS"
+        prompt = inspector.ask.call_args.args[0]
+        assert "TAIL-CONTINUITY-ARC" in prompt
+        assert "...(중간 생략)..." in prompt
+
+    def test_format_prev_arcs_preserves_tactical_tail_context(self):
+        inspector = _make_mock_inspector()
+        validator = ContinuityArcValidator(inspector)
+
+        summary = validator._format_prev_arcs(
+            [
+                {
+                    "arc_no": 1,
+                    "tactical_doc": "HEAD-SUMMARY\n" + ("S" * 6000) + "\nTAIL-CONTINUITY-SUMMARY",
+                    "joint_docs": {"final_location": "산문", "physical_inventory": ["패"], "world_joint": "안정"},
+                    "status_shadow": {"internal_energy_loss": "5%", "expected_injuries": "없음"},
+                    "state_constraints": {"arc_end_state": {"internal_energy": 95, "injuries": "없음", "location": "산문"}},
+                    "ep_start": 1,
+                    "ep_end": 5,
+                    "episode_details": [],
+                }
+            ]
+        )
+
+        assert "TAIL-CONTINUITY-SUMMARY" in summary
+        assert "...(중간 생략)..." in summary
+
     def test_current_inventory_does_not_bypass_duplicate_detection(self):
         """[I-1] 현재 Arc 인벤토리와 동일 아이템이어도 중복 획득 검증은 수행되어야 한다."""
         inspector = _make_mock_inspector()
@@ -355,6 +438,28 @@ class TestContinuityManuscriptContradiction:
         assert issues[0].get("type") == "stupid_villain"
         assert issues[0].get("severity") == "MINOR"
 
+    def test_python_precheck_warns_on_rapid_recovery_in_opening(self):
+        inspector = _make_mock_inspector()
+        validator = ContinuityManuscriptValidator(inspector)
+
+        prev_manuscripts = [
+            {
+                "ep_num": 4,
+                "content": "직전 화 말미에 주인공이 큰 부상을 입고 피를 흘린 채로 쓰러졌다. 골절과 상처가 남아 있었다.",
+            }
+        ]
+        manuscript = "다음 장면의 시작에서 그는 거의 회복한 듯 멀쩡하게 걸어 들어왔다." + ("후속 문장 " * 120)
+
+        result = validator._manuscript_python_precheck(
+            current_ep=5,
+            manuscript=manuscript,
+            prev_manuscripts=prev_manuscripts,
+            blueprint={},
+        )
+
+        rapid_recovery = [w for w in result["warnings"] if w.get("type") == "rapid_recovery"]
+        assert len(rapid_recovery) == 1
+
     def test_time_flow_warning(self):
         """시간 흐름 검증 - 연속 대형 이벤트"""
         inspector = _make_mock_inspector()
@@ -365,6 +470,32 @@ class TestContinuityManuscriptContradiction:
 
         warnings = validator._check_time_flow(prev, manuscript)
         assert isinstance(warnings, list)
+
+    def test_time_flow_warns_when_same_day_followup_ignores_injury(self):
+        inspector = _make_mock_inspector()
+        validator = ContinuityManuscriptValidator(inspector)
+
+        prev = [{"ep_num": 3, "content": "격렬한 전투 끝에 주인공은 부상을 입고 골절까지 당했다."}]
+        manuscript = "그날 밤, 그는 다시 공격을 감행했고 또 다른 전투가 즉시 시작됐다."
+
+        warnings = validator._check_time_flow(prev, manuscript)
+        warning_types = {w.get("type") for w in warnings}
+
+        assert "unrealistic_timeline" in warning_types
+        assert "injury_ignored" in warning_types
+
+    def test_time_flow_time_passage_in_opening_suppresses_same_day_injury_warning(self):
+        inspector = _make_mock_inspector()
+        validator = ContinuityManuscriptValidator(inspector)
+
+        prev = [{"ep_num": 3, "content": "격렬한 전투 끝에 주인공은 부상을 입고 골절까지 당했다."}]
+        manuscript = "다음 날 아침, 그는 다시 공격에 나섰고 새로운 전투가 시작됐다."
+
+        warnings = validator._check_time_flow(prev, manuscript)
+        warning_types = {w.get("type") for w in warnings}
+
+        assert "unrealistic_timeline" not in warning_types
+        assert "injury_ignored" not in warning_types
 
 
 class TestContinuityManuscriptCrossEpisodeDuplication:
@@ -484,6 +615,22 @@ class TestContinuityBlueprintValidation:
         result = validator.inspect(current_ep=2, current_blueprint=current, prev_blueprints=prev)
         assert result["decision"] == "PASS"
         inspector.ask.assert_called_once()
+
+    def test_blueprint_prompt_preserves_tail_context(self):
+        inspector = _make_mock_inspector()
+        validator = ContinuityBlueprintValidator(inspector)
+        inspector._extract_key_sentences = MagicMock(return_value="HEAD-PREV\n" + ("P" * 3000) + "\nTAIL-PREV-BP")
+
+        prev = [{"ep_num": 1, "integrated_scenario": "이전 시나리오"}]
+        current = {"integrated_scenario": "HEAD-SCENARIO\n" + ("S" * 5000) + "\nTAIL-BP-SCENARIO"}
+
+        result = validator.inspect(current_ep=2, current_blueprint=current, prev_blueprints=prev)
+
+        assert result["decision"] == "PASS"
+        prompt = inspector.ask.call_args.args[0]
+        assert "TAIL-BP-SCENARIO" in prompt
+        assert "TAIL-PREV-BP" in prompt
+        assert "...(중간 생략)..." in prompt
 
     def test_python_precheck_duplicate_item(self):
         """Python 사전 검증 — 중복 획득"""

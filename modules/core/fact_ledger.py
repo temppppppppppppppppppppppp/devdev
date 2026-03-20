@@ -10,8 +10,59 @@ LLM 호출 없이 Python만으로 state_changes 기반 자동 갱신 — 비용 
 """
 
 import logging
+import re
 
 _logger = logging.getLogger(__name__)
+_DIRECT_FINANCIAL_FACT_KEYS = ("capital", "total_assets", "wealth")
+_KOREAN_UNIT_MAP = (
+    ("조", 1e12),
+    ("억", 1e8),
+    ("만", 1e4),
+)
+
+
+def _coerce_direct_financial_scalar(raw: object) -> float | None:
+    """Normalize direct financial scalar fields into won-scale floats."""
+    if isinstance(raw, bool):
+        return None
+    if isinstance(raw, (int, float)):
+        return float(raw)
+    if not isinstance(raw, str):
+        return None
+
+    text = raw.strip().replace(",", "")
+    if not text:
+        return None
+
+    sign = 1.0
+    if text[0] in "+-":
+        if text[0] == "-":
+            sign = -1.0
+        text = text[1:].strip()
+    if not text:
+        return None
+
+    total = 0.0
+    matched_unit = False
+    remaining = text
+
+    for unit, mult in _KOREAN_UNIT_MAP:
+        pattern = rf"([0-9]+(?:\.[0-9]+)?)\s*{re.escape(unit)}"
+        for value in re.findall(pattern, remaining):
+            total += float(value) * mult
+            matched_unit = True
+        remaining = re.sub(pattern, "", remaining)
+
+    if matched_unit:
+        tail = re.search(r"([0-9]+(?:\.[0-9]+)?)", remaining)
+        if tail:
+            total += float(tail.group(1))
+        return sign * total
+
+    plain = re.search(r"([0-9]+(?:\.[0-9]+)?)", remaining)
+    if not plain:
+        return None
+    return sign * float(plain.group(1))
 
 
 def _build_truncation_suffix(total: int, shown: int, *, unit: str = "개") -> str:
@@ -82,6 +133,8 @@ class FactLedger:
             db: DBManager 인스턴스 (save_anchor / load_anchor 지원)
         """
         self.db = db
+        self._degraded = False
+        self._degraded_reason = ""
         self._ledger: dict = self._load()
         self.last_save_ok: bool | None = None
         self.last_save_error: str | None = None
@@ -96,9 +149,15 @@ class FactLedger:
                 for key, default_val in defaults.items():
                     if key not in raw:
                         raw[key] = default_val
+                self._degraded = False
+                self._degraded_reason = ""
                 return raw
+            self._degraded = False
+            self._degraded_reason = ""
         except Exception as e:
             _logger.warning(f"⚠️ [V70] FactLedger DB 로드 실패, 초기화: {e}")
+            self._degraded = True
+            self._degraded_reason = str(e)
         return self._empty_ledger()
 
     @staticmethod
@@ -125,6 +184,14 @@ class FactLedger:
             self.last_save_ok = False
             self.last_save_error = str(e)
             return False
+
+    @property
+    def degraded(self) -> bool:
+        return bool(self._degraded)
+
+    @property
+    def degraded_reason(self) -> str:
+        return str(self._degraded_reason or "")
 
     @property
     def last_updated_ep(self) -> int:
@@ -375,6 +442,13 @@ class FactLedger:
         """[TF-C07] state_changes에서 수치 팩트 자동 추출 → update_number() 배선."""
         if not state_changes or not isinstance(state_changes, dict):
             return
+
+        # actual_truth/state_changes can carry direct financial scalar fields.
+        for fact_key in _DIRECT_FINANCIAL_FACT_KEYS:
+            amount = _coerce_direct_financial_scalar(state_changes.get(fact_key))
+            if amount is None:
+                continue
+            self.update_number(fact_key, amount, "won", ep_num, note="direct financial scalar extracted")
 
         # ── status_shadow (무협: 내공/체력 변동) ──
         shadow = state_changes.get("status_shadow") or {}

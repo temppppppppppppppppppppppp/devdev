@@ -29,9 +29,6 @@ const PRELOAD_METHOD_CHANNELS = Object.freeze({
     applyWorkGuardTemplate: "project:apply-work-guard-template",
     openWorkspaceFolder: "workspace:open-folder",
   }),
-  deadCandidate: Object.freeze({
-    getWorkspacePath: "workspace:get-path",
-  }),
 });
 
 contextBridge.exposeInMainWorld("geuldobiDesktop", {
@@ -91,6 +88,4 @@ contextBridge.exposeInMainWorld("geuldobiDesktop", {
 
   // 작업 폴더
   openWorkspaceFolder: () => ipcRenderer.invoke(PRELOAD_METHOD_CHANNELS.live.openWorkspaceFolder),
-  // Dead-candidate compatibility surface. No active renderer consumer today.
-  getWorkspacePath: () => ipcRenderer.invoke(PRELOAD_METHOD_CHANNELS.deadCandidate.getWorkspacePath),
 });

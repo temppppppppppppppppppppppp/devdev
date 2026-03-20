@@ -44,11 +44,16 @@ def test_shipping_guide_classifies_live_shadow_alternate_and_reference_surfaces(
 def test_shipping_guide_and_desktop_guide_mark_npm_test_as_subset_gate():
     test_script = PACKAGE_JSON["scripts"]["test"]
     assert "pytest -q" in test_script
+    assert PACKAGE_JSON["scripts"]["test:desktop-contract"] == test_script
     assert "npm --prefix geuldobi-desktop test" in SHIPPING_GUIDE
+    assert "npm --prefix geuldobi-desktop run test:desktop-contract" in SHIPPING_GUIDE
     assert "curated subset" in SHIPPING_GUIDE
     assert "not the full repo regression envelope" in SHIPPING_GUIDE
     assert "npm test" in DESKTOP_GUIDE
+    assert "npm run test:desktop-contract" in DESKTOP_GUIDE
     assert "desktop subset gate" in DESKTOP_GUIDE
     assert "not the full repo regression envelope" in DESKTOP_GUIDE
     assert "npm run start:spike" in SHIPPING_GUIDE
+    assert "npm run start:desktop-spike" in SHIPPING_GUIDE
     assert "npm run start:spike" in DESKTOP_GUIDE
+    assert "npm run start:desktop-spike" in DESKTOP_GUIDE

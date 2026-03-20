@@ -522,6 +522,32 @@ class TestPreflightEnrichmentDefaults:
         assert result["generation_method"] == "analyst"
         assert "검증 실패" in result["director_feedback_for_fourphase"]
 
+    def test_fourphase_failed_surfaces_retry_exhausted_feedback(self, s2_orch):
+        """FourPhase FAILED(재시도 소진) 시 caller가 명시적으로 구분 가능한 피드백을 받는다."""
+        fp_mock = MagicMock()
+        fp_mock.generate.return_value = (
+            None,
+            {
+                "final_verdict": "FAILED",
+                "retries": 9,
+                "phases": {"validate": {"issues_count": 4}},
+            },
+        )
+        s2_orch.ctx.agents = {"four_phase": fp_mock}
+        s2_orch.ctx.memory = None
+
+        result = s2_orch._preflight_enrichment(**self._make_enrichment_kwargs())
+
+        assert result["four_phase_passed"] is False
+        assert result["refined_arc"] is None
+        assert result["generation_method"] == "analyst"
+        assert "재시도 소진 실패" in result["director_feedback_for_fourphase"]
+        s2_orch.ctx.audit_event.assert_called_with(
+            "four_phase_failed",
+            "retry budget exhausted",
+            {"arc_no": 1, "retries": 9, "issues_count": 4},
+        )
+
 
 # ══════════════════════════════════════════════════════════════
 # [4-R3-h] _preflight_validation — REJECT path coverage

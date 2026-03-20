@@ -142,3 +142,27 @@ def test_update_number_syncs_to_db(tmp_path):
     facts = db.get_canonical_facts(fact_type="numerical")
     keys = [f["fact_key"] for f in facts]
     assert "수익률" in keys
+
+
+def test_direct_financial_scalars_sync_to_canonical_facts(tmp_path):
+    """direct finance keys in state_changes should flow into canonical_facts."""
+    from modules.core.fact_ledger import FactLedger
+
+    db = _make_db(tmp_path)
+    fl = FactLedger(db)
+    fl.update_from_state_changes(
+        9,
+        {
+            "capital": 2_000_000_000,
+            "total_assets": "23억",
+            "wealth": "+20억",
+            "market_insight": "hold",
+        },
+    )
+
+    facts = {fact["fact_key"]: fact for fact in db.get_canonical_facts(fact_type="numerical")}
+    assert facts["capital"]["value"]["value"] == 2_000_000_000
+    assert facts["capital"]["value"]["unit"] == "won"
+    assert facts["total_assets"]["value"]["value"] == 2_300_000_000
+    assert facts["wealth"]["value"]["value"] == 2_000_000_000
+    assert "market_insight" not in facts

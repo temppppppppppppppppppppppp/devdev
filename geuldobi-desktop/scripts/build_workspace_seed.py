@@ -8,7 +8,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 DIST_SEED = ROOT / "dist" / "workspace-seed"
-SAMPLE_PROJECT_SOURCE = ROOT / "projects" / "0"
+SAMPLE_PROJECT_SOURCE = ROOT / "projects" / "smoke_fixture_demo"
 SAMPLE_PROJECT_TARGET = "investment_canary_demo"
 
 

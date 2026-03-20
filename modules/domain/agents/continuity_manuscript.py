@@ -11,6 +11,7 @@ inspector reference를 통해 BaseAgent 메서드(ask, _extract_json_robust 등)
 import logging
 import re
 
+from modules.core.constants import smart_truncate
 from modules.core.prompt_loader import SafeDict
 
 # =================================================================
@@ -181,6 +182,13 @@ class ContinuityManuscriptValidator:
         # [V67.1] incarnation_type 캐시 — 회귀자 오탐 방지
         self._incarnation_type = self._extract_incarnation_type()
 
+    @staticmethod
+    def _fit_prompt_text(value: object, max_chars: int, head_ratio: float = 0.55) -> str:
+        text = str(value or "")
+        if len(text) <= max_chars:
+            return text
+        return smart_truncate(text, max_chars=max_chars, head_chars=max(1, int(max_chars * head_ratio)))
+
     def _extract_incarnation_type(self) -> str:
         """[V67.1] master_bible에서 incarnation_type 추출 (graceful fallback)"""
         try:
@@ -272,7 +280,7 @@ class ContinuityManuscriptValidator:
         if not blueprint_scenario:
             blueprint_scenario = str(blueprint.get("scene_breakdown", {}))
 
-        manuscript_excerpt = manuscript[:4000] if len(manuscript) > 4000 else manuscript
+        manuscript_excerpt = smart_truncate(manuscript, max_chars=4000, head_chars=2200)
         entity_registry_str = self._ci._format_entity_registry(entity_registry)
 
         prompt = MANUSCRIPT_CONTINUITY_PROMPT.format_map(
@@ -280,8 +288,8 @@ class ContinuityManuscriptValidator:
                 current_ep=current_ep,
                 manuscript_excerpt=self._ci._escape_braces(manuscript_excerpt),
                 prev_count=len(prev_manuscripts),
-                prev_manuscripts_timeline=self._ci._escape_braces(prev_timeline[:50000]),
-                blueprint_scenario=self._ci._escape_braces(blueprint_scenario[:40000]),  # [감리3차] 10K → 40K
+                prev_manuscripts_timeline=self._ci._escape_braces(self._fit_prompt_text(prev_timeline, 50000)),
+                blueprint_scenario=self._ci._escape_braces(self._fit_prompt_text(blueprint_scenario, 40000)),
                 entity_registry=self._ci._escape_braces(entity_registry_str),
             )
         )

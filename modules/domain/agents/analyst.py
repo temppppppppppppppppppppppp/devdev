@@ -1438,7 +1438,9 @@ class Analyst(BaseAgent):
             return merged
 
         except Exception as e:
-            logging.warning(f" [Enrich Critical Error] {e}")
+            logging.error("[Enrich Critical Error] %s", e)
+            raw_block["_enrich_skipped"] = True
+            raw_block["_enrich_error"] = str(e)
             return raw_block  # 실패 시 원본 DNA 반환
 
     @staticmethod

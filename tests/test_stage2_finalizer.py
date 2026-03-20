@@ -150,12 +150,16 @@ class TestCommitSemantics:
 class TestMetricsRecording:
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", True)
     def test_pass_metrics_with_monitor(self, finalizer):
-        finalizer._record_s2_pass_metrics(global_arc_no=1, attempt=0, generation_method="analyst", audit={"score": 88})
+        collector = MagicMock()
+        collector.peek_scope.return_value = {"total_cost_usd": 0.0123}
+        with patch("modules.core.stage2_finalizer.get_metrics_collector", return_value=collector):
+            finalizer._record_s2_pass_metrics(global_arc_no=1, attempt=0, generation_method="analyst", audit={"score": 88})
         kw = finalizer.ctx.pass_rate_monitor.record_attempt.call_args[1]
         assert kw["success"] is True
         assert kw["stage"] == 2
         assert kw["attempt_key"] == "s2:ep1:arc1:a1"
         assert kw["final_verdict"] == "PASS"
+        assert kw["token_cost"] == 0.0123
         qd_kw = finalizer.ctx.quality_dashboard.record_validation.call_args[1]
         assert qd_kw["result"]["decision"] == "PASS"
 
@@ -174,16 +178,20 @@ class TestMetricsRecording:
 
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", True)
     def test_reject_metrics_with_monitor(self, finalizer):
-        finalizer._record_s2_reject_metrics(
-            global_arc_no=4,
-            attempt=1,
-            generation_method="analyst",
-            audit={"score": 42, "reason": "bad structure", "re_slice_instruction": "장면 순서를 재배치"},
-        )
+        collector = MagicMock()
+        collector.peek_scope.return_value = {"total_cost_usd": 0.0456}
+        with patch("modules.core.stage2_finalizer.get_metrics_collector", return_value=collector):
+            finalizer._record_s2_reject_metrics(
+                global_arc_no=4,
+                attempt=1,
+                generation_method="analyst",
+                audit={"score": 42, "reason": "bad structure", "re_slice_instruction": "장면 순서를 재배치"},
+            )
         kw = finalizer.ctx.pass_rate_monitor.record_attempt.call_args[1]
         assert kw["success"] is False
         assert kw["attempt_key"] == "s2:ep4:arc4:a2"
         assert kw["final_verdict"] == "REJECT"
+        assert kw["token_cost"] == 0.0456
         assert len(finalizer.ctx.stage_rejection_history) == 1
         assert finalizer.ctx.stage_rejection_history[0]["arc_no"] == 4
         assert finalizer.ctx.stage_rejection_history[0]["specific_issue"] == "장면 순서를 재배치"
@@ -459,7 +467,7 @@ class TestRunFinalize:
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
     @patch("modules.core.constants.log_patch_diff")
     @patch("modules.core.constants.calc_patch_change_ratio", return_value=0.75)
-    def test_pass_with_fix_high_patch_pressure_stays_pass_with_fix(
+    def test_pass_with_fix_high_patch_pressure_is_advisory_only(
         self,
         _ratio,
         _log_diff,
@@ -491,9 +499,70 @@ class TestRunFinalize:
 
         assert result["action"] == "break"
         save_kw = finalizer.ctx.current_project.db.save_stage_attempt.call_args.kwargs
-        assert save_kw["verdict"] == "PASS_WITH_FIX"
+        assert save_kw["verdict"] == "PASS"
         assert save_kw["advisory_flags"]["patch_pressure_exceeded"] == 1
         assert save_kw["advisory_flags"]["patch_pressure_count"] == 1
+        selection_kw = finalizer.ctx.current_project.db.save_director_selection.call_args.kwargs
+        assert "[PatchPressure Advisory]" in selection_kw["selection_reason"]
+        story_context = finalizer.ctx.agents["director"].audit_strategic_plan.call_args_list[1].kwargs["story_context"]
+        assert "[F-2 advisory — high Arc patch pressure]" in story_context
+
+    @patch("modules.core.stage2_finalizer.validate_arc", side_effect=lambda x: x)
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    def test_pass_with_fix_records_arc_patch_guard_signals(self, _validate, finalizer, valid_refined_arc):
+        patched_arc = dict(valid_refined_arc)
+        patched_arc["tactical_doc"] = ""
+        patched_arc["joint_docs"] = {}
+        patched_arc["ep_count"] = 99
+        finalizer.ctx.agents["four_phase"] = MagicMock()
+        finalizer.ctx.agents["four_phase"]._inplace_patch_arc.return_value = patched_arc
+        finalizer.ctx.agents["director"].audit_strategic_plan.side_effect = [
+            {
+                "decision": "PASS_WITH_FIX",
+                "score": 93,
+                "reason": "needs local fix",
+                "re_slice_instruction": "tighten structure",
+                "fix_scope": "inplace",
+            },
+            {
+                "decision": "PASS",
+                "score": 95,
+                "reason": "accepted with warning visibility",
+            },
+        ]
+
+        kwargs = _make_finalize_kwargs(valid_refined_arc)
+        result = asyncio.run(finalizer.run_finalize(**kwargs))
+
+        assert result["action"] == "break"
+        save_kw = finalizer.ctx.current_project.db.save_stage_attempt.call_args.kwargs
+        assert save_kw["advisory_flags"]["arc_patch_signal_count"] == 3
+        assert "missing_tactical_doc" in save_kw["advisory_flags"]["arc_patch_signal_codes"]
+        assert "structured_section_dropped" in save_kw["advisory_flags"]["arc_patch_signal_codes"]
+        assert "episode_span_inconsistent" in save_kw["advisory_flags"]["arc_patch_signal_codes"]
+        story_context = finalizer.ctx.agents["director"].audit_strategic_plan.call_args_list[1].kwargs["story_context"]
+        assert "[S2 Arc patch signals]" in story_context
+        assert "missing_tactical_doc" in story_context
+        assert "episode_span_inconsistent" in story_context
+        finalizer.ctx.audit_event.assert_any_call(
+            "patch_guard_signal",
+            "stage2 arc patch signals observed",
+            {
+                "arc_no": 1,
+                "attempt": 1,
+                "codes": [
+                    "missing_tactical_doc",
+                    "structured_section_dropped",
+                    "episode_span_inconsistent",
+                ],
+                "count": 3,
+                "items": [
+                    {"code": "missing_tactical_doc", "detail": "patched tactical_doc is blank"},
+                    {"code": "structured_section_dropped", "detail": "joint_docs"},
+                    {"code": "episode_span_inconsistent", "detail": "ep_count(99) != expected(10)"},
+                ],
+            },
+        )
 
     def test_director_reject_returns_retry(self, finalizer, valid_refined_arc):
         finalizer.ctx.current_project.metrics_session_id = "sess_stage2_reject"

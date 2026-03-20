@@ -28,7 +28,20 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
+from modules.core.constants import smart_truncate
 from modules.core.llm_generate import generate_content_via_router
+
+
+class ChainOfVerificationError(RuntimeError):
+    """Base error for CoVe fail-closed paths."""
+
+
+class ChainOfVerificationLLMError(ChainOfVerificationError):
+    """Raised when the CoVe LLM call fails or returns an unusable payload."""
+
+
+class ChainOfVerificationParseError(ChainOfVerificationError):
+    """Raised when the CoVe LLM response cannot be parsed into the expected shape."""
 
 
 class VerificationType(Enum):
@@ -69,6 +82,14 @@ class VerificationResult:
     summary: str
     should_regenerate: bool
     correction_hints: str  # 수정 시 참고할 힌트
+
+
+def _fit_cove_text(value: object, max_chars: int, *, head_ratio: float = 0.55) -> str:
+    raw = str(value or "")
+    if len(raw) <= max_chars:
+        return raw
+    head_chars = max(0, min(int(max_chars * head_ratio), max_chars - 80))
+    return smart_truncate(raw, max_chars=max_chars, head_chars=head_chars)
 
 
 class ChainOfVerification:
@@ -142,23 +163,34 @@ JSON 형식으로 응답:
                 contents=prompt,
                 config={"temperature": temperature, "max_output_tokens": 2048},
             )
-            return response.text or ""  # [V70] None 방어
+            response_text = str(response.text or "").strip()  # [V70] None 방어
+            if not response_text:
+                raise ChainOfVerificationLLMError("empty LLM response")
+            return response_text
         except Exception as e:
             logging.warning(f"[ChainOfVerification] LLM 호출 실패: {e}")
-            return ""
+            if isinstance(e, ChainOfVerificationError):
+                raise
+            raise ChainOfVerificationLLMError(f"{type(e).__name__}: {e}") from e
 
     def _parse_result(self, response_text: str) -> dict[str, Any]:
         """응답 파싱"""
+        if not str(response_text or "").strip():
+            raise ChainOfVerificationParseError("empty verification payload")
         try:
             json_match = re.search(r"```json\s*(.*?)\s*```", response_text, re.DOTALL)
             parsed = json.loads(json_match.group(1)) if json_match else json.loads(response_text)
             if isinstance(parsed, list):
-                parsed = parsed[0] if parsed else {}
+                if not parsed:
+                    raise ChainOfVerificationParseError("empty JSON list payload")
+                parsed = parsed[0]
             if isinstance(parsed, dict):
                 return parsed
-        except (json.JSONDecodeError, ValueError):  # [V64.P4] JSON parse failure
-            pass
-        return {"passed": True, "overall_severity": "none", "issues": [], "summary": "파싱 실패 - 기본 통과"}
+        except ChainOfVerificationParseError:
+            raise
+        except (json.JSONDecodeError, TypeError, ValueError) as e:  # [V64.P4] JSON parse failure
+            raise ChainOfVerificationParseError(f"{type(e).__name__}: {e}") from e
+        raise ChainOfVerificationParseError(f"unexpected payload type: {type(parsed).__name__}")
 
     def _build_context_string(self, context: dict[str, Any]) -> str:
         """컨텍스트를 문자열로 변환"""
@@ -172,17 +204,23 @@ JSON 형식으로 응답:
         if "hud" in context:
             hud = context["hud"]
             if isinstance(hud, dict):
-                parts.append(f"[캐릭터 상태 (HUD)]\n{json.dumps(hud, ensure_ascii=False, indent=2)[:15000]}")
+                parts.append(
+                    f"[캐릭터 상태 (HUD)]\n{_fit_cove_text(json.dumps(hud, ensure_ascii=False, indent=2), 15000)}"
+                )
 
         if "blueprint" in context:
             bp = context["blueprint"]
             if isinstance(bp, dict):
-                parts.append(f"[Blueprint 설계]\n{json.dumps(bp, ensure_ascii=False, indent=2)[:24000]}")
+                parts.append(
+                    f"[Blueprint 설계]\n{_fit_cove_text(json.dumps(bp, ensure_ascii=False, indent=2), 24000)}"
+                )
 
         if "arc_data" in context:
             arc = context["arc_data"]
             if isinstance(arc, dict):
-                parts.append(f"[Arc 설계]\n{json.dumps(arc, ensure_ascii=False, indent=2)[:15000]}")
+                parts.append(
+                    f"[Arc 설계]\n{_fit_cove_text(json.dumps(arc, ensure_ascii=False, indent=2), 15000)}"
+                )
 
         if "inventory" in context:
             inv = context["inventory"]
@@ -236,11 +274,13 @@ JSON 형식으로 응답:
             )
 
         context_str = self._build_context_string(context)
+        generated_snippet = _fit_cove_text(generated_content, 30000)
+        context_snippet = _fit_cove_text(context_str, 15000)
 
         prompt = self.VERIFICATION_PROMPT.format(
             content_type=content_type,
-            generated_content=generated_content[:30000].replace("{", "{{").replace("}", "}}"),  # [V70] brace escape
-            context=context_str[:15000].replace("{", "{{").replace("}", "}}"),  # [V70] brace escape
+            generated_content=generated_snippet.replace("{", "{{").replace("}", "}}"),  # [V70] brace escape
+            context=context_snippet.replace("{", "{{").replace("}", "}}"),  # [V70] brace escape
         )
 
         response = self._call_llm(prompt)

@@ -355,6 +355,33 @@ class TestAdvisoryValidator:
         assert has_hint
 
 
+    def test_expression_improvement_prompt_preserves_tail_context(self, monkeypatch):
+        from modules.validation.advisory_validator import AdvisoryValidator
+
+        validator = AdvisoryValidator(client=MagicMock(), model="gemini-2.5-flash")
+        captured = {}
+
+        class _FakeResponse:
+            text = "[]"
+
+        def _fake_generate_content_via_router(**kwargs):
+            captured["prompt"] = kwargs["contents"]
+            return _FakeResponse()
+
+        monkeypatch.setattr(
+            "modules.validation.advisory_validator.generate_content_via_router",
+            _fake_generate_content_via_router,
+        )
+
+        suggestions = validator._suggest_expression_improvements(
+            "HEAD-ADV\n" + ("A" * 3000) + "\nTAIL-ADVISORY"
+        )
+
+        assert suggestions == []
+        assert "TAIL-ADVISORY" in captured["prompt"]
+        assert "...(중간 생략)..." in captured["prompt"]
+
+
 class TestValidationOrchestrator:
     """ValidationOrchestrator integration tests."""
 

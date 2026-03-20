@@ -2,6 +2,7 @@
 
 import json
 import logging
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from modules.core.stage4_orchestrator import Stage4Orchestrator
@@ -115,10 +116,11 @@ class TestProcessPassResult:
     def test_returns_false_on_db_failure(self, tmp_path):
         pp = self._make_pp()
         pp.ctx.current_project.db.save_manuscript.side_effect = RuntimeError("DB error")
+        manuscript = "테스트 원고 " * 500
 
         result = pp.process_pass_result(
             next_ep=1,
-            final_manuscript="테스트 원고 " * 500,
+            final_manuscript=manuscript,
             final_title="테스트",
             final_state_updates={},
             blueprint={"scene_breakdown": []},
@@ -129,6 +131,11 @@ class TestProcessPassResult:
         )
 
         assert result is False
+        dump_path = tmp_path / "emergency_ep_0001.txt"
+        assert dump_path.exists()
+        dump_text = dump_path.read_text(encoding="utf-8")
+        assert "# 테스트" in dump_text
+        assert manuscript[:40] in dump_text
 
     def test_hud_update_called(self, tmp_path):
         pp = self._make_pp()
@@ -653,6 +660,44 @@ class TestProcessPassResult:
         assert "relationship_changes" in fl_changes
         assert fl_changes["relationship_changes"][1]["npc"] == "이서연"
 
+    def test_karma_matrix_flows_into_karma_status_table(self, tmp_path):
+        pp = self._make_pp()
+        pp.ctx.current_project.db.save_manuscript.return_value = True
+        pp.ctx.current_project.latest_state = {}
+        pp.ctx.current_project.karma_status = {}
+        pp.ctx.agents["manager"].update_state_and_lore_v20.return_value = {
+            "new_lore": {},
+            "knowledge_map_updates": {},
+            "recovered_seeds": [],
+            "state_updates": {
+                "karma_matrix": [
+                    {"target": "npc_a", "value": 61, "obsession": 12},
+                    {"npc_name": "npc_b", "misunderstanding": 7, "obsession": 3},
+                    {"obsession": 99},
+                ]
+            },
+            "causal_links": [],
+        }
+
+        result = pp.process_pass_result(
+            next_ep=4,
+            final_manuscript="karma sink test " * 120,
+            final_title="test",
+            final_state_updates={},
+            blueprint={"scene_breakdown": []},
+            arc_data={"arc_no": 1},
+            output_dir=tmp_path,
+            v50_modules_available=False,
+            extract_chain_link_fn=lambda *_args, **_kwargs: {},
+        )
+
+        assert result is True
+        assert pp.ctx.current_project.db.update_karma.call_count == 2
+        assert pp.ctx.current_project.db.update_karma.call_args_list[0].args == ("npc_a", 61, 12, 4)
+        assert pp.ctx.current_project.db.update_karma.call_args_list[1].args == ("npc_b", 7, 3, 4)
+        assert pp.ctx.current_project.karma_status["npc_a"]["last_updated_ep"] == 4
+        assert pp.ctx.current_project.karma_status["npc_b"]["misunderstanding"] == 7
+
     def test_active_pressure_vectors_flow_into_state_log_bible_and_world_state(self, tmp_path):
         """ending_hook/cliffhanger가 active_pressure_vectors로 persisted canonical path에 들어가는지 검증."""
         pp = self._make_pp()
@@ -704,36 +749,57 @@ class TestProcessPassResult:
 
 
 class TestRunPostEpisodeTasks:
-    def test_vector_sync_called_when_operational(self):
+    def test_vector_sync_called_when_operational(self, tmp_path):
         ctx = MagicMock()
         ctx.ui = MagicMock()
         ctx.memory = MagicMock()
         ctx.memory.is_operational.return_value = True
+        ctx.current_project = MagicMock()
+        ctx.current_project.paths = MagicMock()
+        ctx.current_project.paths.drafts = tmp_path
         pp = Stage4PostProcessor(ctx)
 
         with patch("builtins.input", return_value=""):
             pp.run_post_episode_tasks()
 
-        ctx.memory.sync_v20_drafts.assert_called_once()
+        ctx.memory.sync_v20_drafts.assert_called_once_with(drafts_path=tmp_path)
 
-    def test_skip_pause_bypasses_menu_return_input(self):
+    def test_skip_pause_bypasses_menu_return_input(self, tmp_path):
         ctx = MagicMock()
         ctx.ui = MagicMock()
         ctx.memory = MagicMock()
         ctx.memory.is_operational.return_value = True
+        ctx.current_project = MagicMock()
+        ctx.current_project.paths = MagicMock()
+        ctx.current_project.paths.drafts = Path(tmp_path)
         pp = Stage4PostProcessor(ctx)
 
         with patch("builtins.input", side_effect=AssertionError("input should be skipped")) as mocked_input:
             pp.run_post_episode_tasks(skip_pause=True)
 
         mocked_input.assert_not_called()
-        ctx.memory.sync_v20_drafts.assert_called_once()
+        ctx.memory.sync_v20_drafts.assert_called_once_with(drafts_path=tmp_path)
 
     def test_vector_sync_skipped_when_not_operational(self):
         ctx = MagicMock()
         ctx.ui = MagicMock()
         ctx.memory = MagicMock()
         ctx.memory.is_operational.return_value = False
+        pp = Stage4PostProcessor(ctx)
+
+        with patch("builtins.input", return_value=""):
+            pp.run_post_episode_tasks()
+
+        ctx.memory.sync_v20_drafts.assert_not_called()
+
+    def test_vector_sync_skipped_when_drafts_path_missing(self):
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.memory = MagicMock()
+        ctx.memory.is_operational.return_value = True
+        ctx.current_project = MagicMock()
+        ctx.current_project.paths = MagicMock()
+        ctx.current_project.paths.drafts = None
         pp = Stage4PostProcessor(ctx)
 
         with patch("builtins.input", return_value=""):
@@ -801,15 +867,19 @@ class TestAtomicMetadataSave:
 
         # WorldState + FactLedger mock
         ws = MagicMock()
+        ws._state = {"last_updated_ep": 0}
         ws.update_from_state_changes = MagicMock()
         ws.update_protagonist_state = MagicMock()
         ws.save = MagicMock()
+        ws.rollback_to = MagicMock()
         ctx.world_state = ws
 
         fl = MagicMock()
+        fl._ledger = {"last_updated_ep": 0}
         fl.update_from_state_changes = MagicMock()
         fl.update_from_bible_delta = MagicMock()
         fl.save = MagicMock()
+        fl.rollback_to = MagicMock()
         fl.get_stats.return_value = {"characters": 5, "items": 3}
         ctx.fact_ledger = fl
 
@@ -869,6 +939,73 @@ class TestAtomicMetadataSave:
         )
 
         assert result is True  # 원고 저장은 성공 → True
+        pp.ctx.world_state.rollback_to.assert_not_called()
+
+    def test_sequential_mode_rolls_back_persisted_world_state(self):
+        """[TF-C10] transaction() 부재 시 부분 커밋된 WorldState를 rollback_to로 복구"""
+        pp = self._make_pp_with_metadata()
+        pp.ctx.current_project.db = object()  # transaction() 미지원 경로
+        pp.ctx.world_state.save.return_value = True
+        pp.ctx.fact_ledger.save.side_effect = RuntimeError("DB write error")
+
+        pp._save_world_state_atomic(
+            next_ep=3,
+            final_state_updates={"inventory_counts": {"gold": 1}},
+            bible_delta={},
+        )
+
+        pp.ctx.world_state.rollback_to.assert_called_once_with(3)
+        pp.ctx.fact_ledger.rollback_to.assert_not_called()
+        log_calls = [str(call.args[0]) for call in pp.ctx.ui.log.call_args_list if call.args]
+        assert any("메타데이터 트랜잭션 없음: 순차 저장 복구 모드" in text for text in log_calls)
+        assert any("WorldState 순차 저장 롤백 복구 완료" in text for text in log_calls)
+        assert any("메타데이터 원자적 저장 실패" in text for text in log_calls)
+
+    def test_world_state_save_false_surfaces_last_save_error(self, tmp_path):
+        pp = self._make_pp_with_metadata()
+        pp.ctx.current_project.db.save_manuscript.return_value = True
+        pp.ctx.world_state.save.return_value = False
+        pp.ctx.world_state.last_save_error = "world write fail"
+
+        result = pp.process_pass_result(
+            next_ep=1,
+            final_manuscript="테스트 원고 " * 500,
+            final_title="테스트",
+            final_state_updates={},
+            blueprint={"scene_breakdown": []},
+            arc_data={"arc_no": 1, "state_changes": {}},
+            output_dir=tmp_path,
+            v50_modules_available=False,
+            extract_chain_link_fn=lambda *_args, **_kwargs: {},
+        )
+
+        assert result is True
+        log_calls = [str(call.args[0]) for call in pp.ctx.ui.log.call_args_list if call.args]
+        assert any("WorldState save 실패: world write fail" in text for text in log_calls)
+        assert any("메타데이터 원자적 저장 실패" in text for text in log_calls)
+
+    def test_fact_ledger_save_false_surfaces_last_save_error(self, tmp_path):
+        pp = self._make_pp_with_metadata()
+        pp.ctx.current_project.db.save_manuscript.return_value = True
+        pp.ctx.fact_ledger.save.return_value = False
+        pp.ctx.fact_ledger.last_save_error = "ledger write fail"
+
+        result = pp.process_pass_result(
+            next_ep=1,
+            final_manuscript="테스트 원고 " * 500,
+            final_title="테스트",
+            final_state_updates={},
+            blueprint={"scene_breakdown": []},
+            arc_data={"arc_no": 1, "state_changes": {}},
+            output_dir=tmp_path,
+            v50_modules_available=False,
+            extract_chain_link_fn=lambda *_args, **_kwargs: {},
+        )
+
+        assert result is True
+        log_calls = [str(call.args[0]) for call in pp.ctx.ui.log.call_args_list if call.args]
+        assert any("FactLedger save 실패: ledger write fail" in text for text in log_calls)
+        assert any("메타데이터 원자적 저장 실패" in text for text in log_calls)
 
 
 class TestCapitalReconciliation:
@@ -1103,6 +1240,80 @@ class TestSoftFailureLogging:
         assert soft_failures.exists()
         rows = [json.loads(line) for line in soft_failures.read_text(encoding="utf-8").splitlines() if line.strip()]
         assert any(row["operation"] == "save_episode_quality_signal" for row in rows)
+
+    def test_karma_status_save_failure_is_logged_as_soft_failure(self, tmp_path):
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.sys = MagicMock()
+        ctx.sys.hud = MagicMock()
+        ctx.sys.hud.snapshot.return_value = {}
+        ctx.agents = {
+            "director": MagicMock(),
+            "manager": MagicMock(),
+            "state_extractor": MagicMock(),
+        }
+        ctx.agents["director"].on_approve_workflow.return_value = {}
+        ctx.agents["manager"].update_state_and_lore_v20.return_value = {
+            "new_lore": {},
+            "knowledge_map_updates": {},
+            "recovered_seeds": [],
+            "state_updates": {"karma_matrix": [{"target": "npc_a", "value": 14, "obsession": 9}]},
+            "causal_links": [],
+        }
+        ctx.agents["state_extractor"].extract_satisfaction_tag.return_value = None
+        ctx.memory = None
+        ctx.state_tracker = None
+        ctx.world_state = None
+        ctx.fact_ledger = None
+        ctx.character_voice = None
+        ctx.foreshadow_tracker = None
+        ctx.failure_learner = None
+        ctx.quality_dashboard = None
+        ctx.perf_timer = MagicMock()
+        ctx.flush_audit_buffer = MagicMock()
+        ctx.get_protagonist_name = lambda: "mc"
+        ctx.generate_narrative_summary = MagicMock()
+        ctx.audit_event = MagicMock()
+
+        db = MagicMock()
+        db.conn = MagicMock()
+        db.get_episode_bible.return_value = {}
+        db.load_anchor.return_value = []
+        db.save_manuscript.return_value = True
+        db.update_karma.side_effect = RuntimeError("karma table busy")
+
+        project = MagicMock()
+        project.db = db
+        project.name = "demo"
+        project.latest_state = {}
+        project.seed_tracker = None
+        project.karma_matrix = {}
+        project.master_bible = {
+            "MasterBible": {"AssetLibrary": {"KeyNPCs": []}, "protagonist_config": {"name": "mc"}},
+            "npc_registry": {},
+        }
+        project.paths = type("Paths", (), {"root": tmp_path})()
+        ctx.current_project = project
+
+        pp = Stage4PostProcessor(ctx)
+        result = pp.process_pass_result(
+            next_ep=2,
+            final_manuscript="karma soft failure " * 120,
+            final_title="test",
+            final_state_updates={},
+            blueprint={"scene_breakdown": []},
+            arc_data={"arc_no": 1},
+            output_dir=tmp_path,
+            v50_modules_available=False,
+            extract_chain_link_fn=lambda *_args, **_kwargs: {},
+        )
+
+        assert result is True
+        soft_failures = tmp_path / "logs" / "soft_failures.jsonl"
+        assert soft_failures.exists()
+        rows = [json.loads(line) for line in soft_failures.read_text(encoding="utf-8").splitlines() if line.strip()]
+        assert any(row["operation"] == "update_karma" for row in rows)
+        assert any(row["extra"].get("table") == "karma_status" for row in rows if isinstance(row.get("extra"), dict))
 
     def test_report_soft_failure_ignores_magicmock_root_without_db_path(self, tmp_path):
         ctx = MagicMock()

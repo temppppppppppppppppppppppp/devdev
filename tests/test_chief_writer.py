@@ -249,6 +249,34 @@ class TestChiefWriterInplacePatchGuards:
 
         assert result == []
 
+    def test_inplace_patch_truncation_preserves_recent_tail_context(self, chief_writer):
+        original = ("opening block " * 12000) + "\nTAIL-KEEP-CHIEF-WRITER-INPLACE\n"
+        patched = "patched manuscript " * 140
+        chief_writer.ask = MagicMock(
+            return_value=json.dumps(
+                {
+                    "content": patched,
+                    "patch_state_updates": {"tone": "stable"},
+                },
+                ensure_ascii=False,
+            )
+        )
+
+        with (
+            patch("modules.core.prompt_loader.PromptLoader.load", return_value=None),
+            patch("modules.domain.agents.chief_writer.logging.warning") as mock_warning,
+        ):
+            result = chief_writer.inplace_patch(
+                original_manuscript=original,
+                director_feedback="fix only continuity",
+                attempt_number=1,
+            )
+
+        assert result[0]["manuscript"] == patched
+        prompt = chief_writer.ask.call_args.args[0]
+        assert "TAIL-KEEP-CHIEF-WRITER-INPLACE" in prompt
+        assert any("[TRUNCATION]" in str(call.args[0]) for call in mock_warning.call_args_list)
+
     def test_patch_with_feedback_formats_length_placeholders(self, chief_writer):
         chief_writer.generate_ensemble = MagicMock(return_value=[{"manuscript": "patched"}])
         original = "original manuscript " * 160
@@ -281,6 +309,31 @@ class TestChiefWriterInplacePatchGuards:
         forwarded_feedback = chief_writer.generate_ensemble.call_args.kwargs["director_feedback"]
         assert f"chars={len(original)}" in forwarded_feedback
         assert f"min={int(len(original) * 0.9)}" in forwarded_feedback
+
+    def test_patch_with_feedback_truncation_preserves_recent_tail_context(self, chief_writer):
+        chief_writer.generate_ensemble = MagicMock(return_value=[{"manuscript": "patched"}])
+        original = ("middle section " * 12000) + "\nTAIL-KEEP-CHIEF-WRITER-FIXLOOP\n"
+
+        with patch("modules.domain.agents.chief_writer.logging.warning") as mock_warning:
+            result = chief_writer.patch_with_feedback(
+                ep_num=3,
+                blueprint={"ep_num": 3},
+                prev_manuscript="",
+                hud_report="",
+                arc_doc="",
+                master_bible={},
+                style_guide="keep tone",
+                original_manuscript=original,
+                director_feedback="fix local continuity only",
+                previous_attempt={},
+                attempt_number=2,
+            )
+
+        assert result == [{"manuscript": "patched"}]
+        chief_writer.generate_ensemble.assert_called_once()
+        forwarded_feedback = chief_writer.generate_ensemble.call_args.kwargs["director_feedback"]
+        assert "TAIL-KEEP-CHIEF-WRITER-FIXLOOP" in forwarded_feedback
+        assert any("[TRUNCATION]" in str(call.args[0]) for call in mock_warning.call_args_list)
 
 
 class TestChiefWriterStructuralInplacePatch:
@@ -832,7 +885,7 @@ class TestGenerateEnsemble:
             hud_report="",
             arc_doc="",
             master_bible=sample_master_bible,
-            genre_name="臾댄삊",
+            genre_name="무협",
             strategy_budget="reduced",
             preferred_strategy="tension",
         )
@@ -868,7 +921,7 @@ class TestGenerateEnsemble:
             hud_report="",
             arc_doc="",
             master_bible=sample_master_bible,
-            genre_name="臾댄삊",
+            genre_name="무협",
             strategy_budget="reduced",
         )
 

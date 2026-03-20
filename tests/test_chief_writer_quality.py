@@ -423,6 +423,29 @@ class TestFixAndRubric:
         m_generic.assert_not_called()
         host.ask.assert_called_with("expand prompt", temperature=0.5, thinking_level="low")
 
+    def test_fix_expand_prompt_preserves_hud_tail_context(self):
+        host = _make_host()
+        host.ask.return_value = '{"content":"expanded"}'
+        gate = ChiefWriterQualityGate(host)
+        captured = {}
+
+        def _fake_expand(**kwargs):
+            captured["kwargs"] = kwargs
+            return "expand prompt"
+
+        with (
+            patch("modules.domain.agents.chief_writer_quality.get_expand_length_prompt", side_effect=_fake_expand),
+            patch("modules.domain.agents.chief_writer_quality.get_fix_issues_prompt", return_value="generic prompt"),
+        ):
+            gate._fix_manuscript_issues(
+                '{"content":"orig"}',
+                {"issues": [{"type": "manuscript_length", "description": "짧음"}]},
+                "HEAD-HUD\n" + ("H" * 1200) + "\nTAIL-HUD-EXPAND",
+            )
+
+        assert "TAIL-HUD-EXPAND" in captured["kwargs"]["hud_report_escaped"]
+        assert "...(중간 생략)..." in captured["kwargs"]["hud_report_escaped"]
+
     def test_fix_uses_generic_prompt_for_other_issues(self):
         host = _make_host()
         host.ask.return_value = '{"content":"fixed"}'
@@ -439,6 +462,29 @@ class TestFixAndRubric:
         m_generic.assert_called_once()
         m_expand.assert_not_called()
         host.ask.assert_called_with("generic prompt", temperature=0.5, thinking_level="low")
+
+    def test_fix_generic_prompt_preserves_hud_tail_context(self):
+        host = _make_host()
+        host.ask.return_value = '{"content":"fixed"}'
+        gate = ChiefWriterQualityGate(host)
+        captured = {}
+
+        def _fake_generic(**kwargs):
+            captured["kwargs"] = kwargs
+            return "generic prompt"
+
+        with (
+            patch("modules.domain.agents.chief_writer_quality.get_expand_length_prompt", return_value="expand prompt"),
+            patch("modules.domain.agents.chief_writer_quality.get_fix_issues_prompt", side_effect=_fake_generic),
+        ):
+            gate._fix_manuscript_issues(
+                '{"content":"orig"}',
+                {"issues": [{"type": "hud_contradiction", "description": "desc"}]},
+                "HEAD-HUD\n" + ("G" * 1200) + "\nTAIL-HUD-GENERIC",
+            )
+
+        assert "TAIL-HUD-GENERIC" in captured["kwargs"]["hud_report_escaped"]
+        assert "...(중간 생략)..." in captured["kwargs"]["hud_report_escaped"]
 
     def test_evaluate_with_rubric_short(self):
         gate = ChiefWriterQualityGate(_make_host())

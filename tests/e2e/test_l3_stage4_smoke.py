@@ -246,6 +246,8 @@ def test_stage4_smoke_3ep(stage4_env):
 def test_stage4_loop_termination(stage4_env):
     """Loop should stop at target episode boundary."""
     orch, db, _output_dir, slim_process = _build_orchestrator(stage4_env, target_ep=2)
+    orch.ctx.session_logger = MagicMock()
+    orch.ctx.audit_event = MagicMock()
 
     orch.stage_4_v2_chief_writer(limit_mode=False)
 
@@ -254,6 +256,13 @@ def test_stage4_loop_termination(stage4_env):
     assert db.get_manuscript(3) is None
     assert db.get_latest_episode_number() == 3
     assert slim_process.call_count == 2
+    orch.ctx.session_logger.log_decision.assert_called_once()
+    decision_kwargs = orch.ctx.session_logger.log_decision.call_args.kwargs
+    assert decision_kwargs["stage"] == "stage4_control"
+    assert decision_kwargs["decision_type"] == "target_ep_reached"
+    assert decision_kwargs["ep_num"] == 2
+    assert decision_kwargs["next_ep"] == 3
+    assert any(call.args[0] == "target_ep_reached" for call in orch.ctx.audit_event.call_args_list)
 
 
 @patch("modules.core.reference_anchor.ReferenceAnchor", _NoopReferenceAnchor)

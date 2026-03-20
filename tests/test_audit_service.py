@@ -274,6 +274,10 @@ class TestWriteAuditSummary:
             assert data["proof_digest"]["session_lineage"]["status"] == "split_mapped"
             assert data["proof_digest"]["stages"]["stage4"]["status"] == "ok"
             assert data["proof_digest"]["stages"]["stage4"]["coverage"]["session_decisions"] == 1
+            runtime_audit_path = tmp_project.root / "logs" / "runtime_audit.jsonl"
+            if runtime_audit_path.exists():
+                runtime_audit_text = runtime_audit_path.read_text(encoding="utf-8")
+                assert "sink_alignment_final_authority_contract" not in runtime_audit_text
         finally:
             db.close()
 

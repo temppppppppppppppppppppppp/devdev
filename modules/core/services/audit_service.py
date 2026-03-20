@@ -5,10 +5,26 @@ from __future__ import annotations
 import json
 import re
 import sqlite3
+import threading
 import time
 from collections.abc import Callable
-from types import SimpleNamespace
 from typing import Any
+
+from modules.core.db_manager import DBManager
+
+
+class _ProofDigestDBFacade:
+    """Read-only DB facade with the minimal DBManager contract FailureAnalyzer expects."""
+
+    _director_stage_predicate = staticmethod(DBManager._director_stage_predicate)
+    get_stage4_final_authority_rows = DBManager.get_stage4_final_authority_rows
+
+    def __init__(self, db_path) -> None:
+        self.db_path = db_path
+        self.conn = sqlite3.connect(f"{db_path.resolve().as_uri()}?mode=ro", uri=True, check_same_thread=False, timeout=30.0)
+        self.conn.row_factory = sqlite3.Row
+        self.cursor = self.conn.cursor()
+        self._lock = threading.RLock()
 
 
 class AuditService:
@@ -130,9 +146,7 @@ class AuditService:
         }
 
     def _resolve_proof_digest_db(self, db_path) -> tuple[Any, bool]:
-        conn = sqlite3.connect(f"{db_path.resolve().as_uri()}?mode=ro", uri=True, check_same_thread=False, timeout=30.0)
-        conn.row_factory = sqlite3.Row
-        return SimpleNamespace(conn=conn, db_path=db_path), True
+        return _ProofDigestDBFacade(db_path), True
 
     @staticmethod
     def _latest_plain_log_token(log_dir) -> str:

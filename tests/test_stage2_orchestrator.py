@@ -1,3 +1,4 @@
+from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
@@ -39,3 +40,20 @@ def test_resolve_arc_number_for_episode_falls_back_to_default_bucket_when_bounda
 
     expected = (9 - 1) // VolumeSettings.EPISODES_PER_ARC + 1
     assert result == expected
+
+
+def test_fit_prompt_text_preserves_tail_context_for_failure_report():
+    orch = Stage2Orchestrator(app=MagicMock(), context=_make_ctx(arcs=[]))
+
+    text = "HEAD-CONSTRAINT\n" + ("C" * 8000) + "\nTAIL-STAGE2-CONSTRAINT"
+    result = orch._fit_prompt_text(text, 6000)
+
+    assert "TAIL-STAGE2-CONSTRAINT" in result
+    assert "...(중간 생략)..." in result
+
+
+def test_stage2_failure_report_source_normalizes_constraints_before_reporting():
+    src = Path("modules/core/stage2_orchestrator.py").read_text(encoding="utf-8")
+
+    assert "current_constraints = self._fit_prompt_text(" in src
+    assert "constraint_db.generate_constraint_block(global_arc_no) if constraint_db else \"N/A\"" in src

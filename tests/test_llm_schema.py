@@ -1,5 +1,11 @@
 from modules.core.llm_schema import schema_to_dict, to_gemini_schema
-from modules.core.response_schemas import ARC_DESIGN_SCHEMA, DIRECTOR_AUDIT_SCHEMA, get_schema_for_task, get_schema_spec_for_task
+from modules.core.response_schemas import (
+    ARC_DESIGN_SCHEMA,
+    DIRECTOR_AUDIT_SCHEMA,
+    STRATEGIC_AUDIT_SCHEMA,
+    get_schema_for_task,
+    get_schema_spec_for_task,
+)
 
 
 def test_get_schema_spec_for_task_returns_dict_spec():
@@ -24,6 +30,20 @@ def test_schema_roundtrip_preserves_required_and_nested_properties():
     )
 
 
+def test_director_audit_schema_accepts_pass_with_warning_verdict():
+    spec = schema_to_dict(DIRECTOR_AUDIT_SCHEMA)
+    decision_enum = spec["properties"]["decision"]["enum"]
+
+    assert "PASS_WITH_WARNING" in decision_enum
+
+
+def test_strategic_audit_schema_accepts_pass_with_warning_verdict():
+    spec = schema_to_dict(STRATEGIC_AUDIT_SCHEMA)
+    decision_enum = spec["properties"]["decision"]["enum"]
+
+    assert "PASS_WITH_WARNING" in decision_enum
+
+
 def test_arc_design_schema_uses_structured_state_change_contract():
     spec = schema_to_dict(ARC_DESIGN_SCHEMA)
     state_changes = spec["properties"]["state_changes"]["properties"]
@@ -44,3 +64,13 @@ def test_get_schema_spec_for_task_arc_design_preserves_state_change_shapes():
     assert state_changes["timeline"]["properties"]["start"]["properties"]["year"]["type"] == "integer"
     assert state_changes["timeline"]["properties"]["end"]["properties"]["month"]["type"] == "integer"
     assert state_changes["skill_acquisitions"]["items"]["properties"]["source"]["type"] == "string"
+
+
+def test_arc_design_schema_includes_pacing_decision_contract():
+    spec = schema_to_dict(ARC_DESIGN_SCHEMA)
+    pacing_decision = spec["properties"]["pacing_decision"]["properties"]
+
+    assert spec["properties"]["ep_count"]["minimum"] == 2
+    assert pacing_decision["pace_mode"]["type"] == "string"
+    assert pacing_decision["ep_count_reasoning"]["type"] == "string"
+    assert pacing_decision["density_focus"]["type"] == "string"

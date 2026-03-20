@@ -34,7 +34,7 @@ def _clamp_reference_excerpt(reference_excerpt: str, *, max_chars: int | None = 
     if not text:
         return ""
 
-    limit = int(max_chars or _threshold("context.reference_excerpt_chars", 8000))
+    limit = int(max_chars or _threshold("context.reference_excerpt_chars", 20000))
     if limit <= 0:
         return ""
     if len(text) <= limit:
@@ -43,6 +43,17 @@ def _clamp_reference_excerpt(reference_excerpt: str, *, max_chars: int | None = 
     trimmed = smart_truncate(text, max_chars=limit, head_chars=max(1200, int(limit * 0.72)))
     logging.info("[Stage4] reference_excerpt budget clamp applied: %d -> %d chars", len(text), len(trimmed))
     return trimmed
+
+
+def _trim_mandatory_context_for_budget(mandatory_context: str, *, max_chars: int) -> str:
+    """Preserve recent tail context when Stage 4 mandatory context overflows the budget."""
+
+    text = str(mandatory_context or "")
+    if len(text) <= max_chars:
+        return text
+
+    head_chars = max(0, min(int(max_chars * 0.55), max_chars - 80))
+    return smart_truncate(text, max_chars=max_chars, head_chars=head_chars)
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -244,6 +255,33 @@ class Stage4Orchestrator:
         if self._context_builder is None:
             self._context_builder = Stage4ContextBuilder(self.ctx)
         return self._context_builder
+
+    def _log_target_ep_reached(self, *, target_ep: int, next_ep: int) -> None:
+        """Record stage4 target-episode stop as a control-plane decision/audit event."""
+        _sl = getattr(self.ctx, "session_logger", None)
+        if _sl and hasattr(_sl, "log_decision"):
+            _sl.log_decision(
+                stage="stage4_control",
+                ep_num=int(target_ep),
+                round_num=0,
+                decision_type="target_ep_reached",
+                result="STOP",
+                score=0,
+                reason="stage4 target episode reached; stop before next episode generation",
+                target_ep=int(target_ep),
+                next_ep=int(next_ep),
+            )
+
+        _audit_event = getattr(self.ctx, "audit_event", None)
+        if callable(_audit_event):
+            _audit_event(
+                "target_ep_reached",
+                "stage4 target episode reached",
+                {
+                    "target_ep": int(target_ep),
+                    "next_ep": int(next_ep),
+                },
+            )
 
     def _load_chain_link_section(self, next_ep: int) -> str:
         return self.context_builder.load_chain_link_section(next_ep)
@@ -685,6 +723,7 @@ JSON으로 출력:
             self.interview_round.time_warnings = []  # [V70] 에피소드마다 리셋 (누적 방지)
             self._set_agent_telemetry_context(ep_num=next_ep, extra_agents=[chief_writer])
             if target_ep and next_ep > target_ep:
+                self._log_target_ep_reached(target_ep=int(target_ep), next_ep=int(next_ep))
                 self.ctx.ui.log(f"🏁 목표 회차({target_ep}화) 도달. 종료합니다.")
                 break
 
@@ -843,8 +882,9 @@ JSON으로 출력:
                     mandatory_context = "\n".join(_sections)
                     # [Sweep45] 첫 섹션 단독 > 50K 시 fallback truncation
                     if len(mandatory_context) > _mc_max:
-                        mandatory_context = (
-                            mandatory_context[: _mc_max - 50] + "\n\n...(컨텍스트 크기 초과로 일부 생략)"
+                        mandatory_context = _trim_mandatory_context_for_budget(
+                            mandatory_context,
+                            max_chars=_mc_max,
                         )
                     if _removed_count > 0:
                         _perf_logger.info(
@@ -855,7 +895,10 @@ JSON으로 출력:
                         )
                 else:
                     # 섹션 분리 불가 시 기존 방식 폴백
-                    mandatory_context = mandatory_context[: _mc_max - 50] + "\n\n...(컨텍스트 크기 초과로 일부 생략)"
+                    mandatory_context = _trim_mandatory_context_for_budget(
+                        mandatory_context,
+                        max_chars=_mc_max,
+                    )
                     self.ctx.ui.log(
                         f"   ⚠️ [V66.1] mandatory_context {_original_len}자 → {_mc_max:,}자로 truncate (폴백)"
                     )

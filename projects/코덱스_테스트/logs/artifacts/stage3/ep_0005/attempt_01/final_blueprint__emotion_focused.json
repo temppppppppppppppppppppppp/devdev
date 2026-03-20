@@ -1,0 +1,104 @@
+{
+  "_ensemble_meta": {
+    "candidate_index": 2,
+    "disqualified": [],
+    "length": 1408,
+    "prevalidation_issue_count": 2,
+    "python_warnings": [
+      {
+        "category": "structure",
+        "focus": "각 씬에 goal/summary를 명시하여 intent를 보존",
+        "message": "씬 구조 미비: 4/4개 씬에 goal/summary 없음",
+        "severity": "MINOR",
+        "source": "python_prevalidate"
+      },
+      {
+        "category": "fidelity",
+        "focus": "Arc 관계 변화 NPC가 blueprint 시나리오에 등장해야 함",
+        "message": "intent 불일치: Arc 관계 변화 NPC 1명 blueprint 미언급",
+        "severity": "MINOR",
+        "source": "python_prevalidate"
+      }
+    ],
+    "quality_risk": true,
+    "scene_count": 4,
+    "strategy": "emotion_focused",
+    "total_candidates": 3
+  },
+  "core_tension": "미래를 아는 포식자와 그를 알아보지 못하는 금융계 엘리트의 첫 접촉.",
+  "end_location": "한미증권 본사 VIP 데스크",
+  "ending_hook": "박성호는 펜을 돌리며 짓는 비웃음을 감추지 않았다. \"새파란 신생 투자사 대표라… 용돈이나 두둑이 쥐여 보내야겠군.\"",
+  "ending_state": {
+    "location": "한미증권 본사 VIP 데스크 (박성호 시점)",
+    "protagonist_status": "여의도에 사무실을 마련하고, 첫 투자를 위한 증권사 미팅을 잡아놓은 상태. 상대방(박성호)은 한시우를 완전히 얕보고 있음.",
+    "timeline": {
+      "표현": "2006년 1월 말, 오후"
+    }
+  },
+  "ep_num": 5,
+  "episode_number": 5,
+  "expected_ending": "한시우의 정체를 모르는 PB가 그를 얕잡아 보며 다음 화의 갈등을 예고한다.",
+  "integrated_scenario": "강남 오피스텔의 통유리창 너머로 도시의 불빛이 아득하게 펼쳐졌다. 한시우는 그 풍경을 무감각하게 응시했다. 이곳은 도피처였을 뿐, 결코 전장이 될 수 없었다. TV 화면 속에서 떠들썩하게 이란 핵 문제를 외치던 앵커의 얼굴과 그 위로 겹쳐졌던 자신의 차가운 미소를 떠올렸다. 사냥의 시간은 이미 시작되었다. 한시우는 하룻밤 만에 모든 짐을 정리했다. 짐이라 할 것도 없었다. 고급 정장 몇 벌과 암호화 위성 전화기가 전부였다. 성북동 본가는 돌아갈 수 없는 과거이자, 부숴야 할 감옥이었다. 이곳 강남의 오피스텔은 임시 거처일 뿐이다. 진정한 포식자는 사냥터의 가장 높은 곳에 둥지를 틀어야 했다. 다음 날 오후, 한시우는 여의도의 가장 높은 마천루 꼭대기 층에 서 있었다. 부동산 중개인은 신생 법인 대표라고 하기엔 너무 젊고, 그가 내뿜는 위압감에 주눅이 들어 있었다. '이곳으로 하지.' 한시우의 결정은 짧고 간결했다. 그는 계약서에 사인하며 1년 치 임대료와 보증금을 그 자리에서 이체했다. 수십억에 달하는 금액이었지만 그의 표정엔 아무런 변화도 없었다. 텅 빈 사무실 중앙에 선 한시우는 거대한 창밖으로 펼쳐진 풍경을 내려다보았다. 발아래에는 국회의사당과 금융감독원, 그리고 수많은 증권사들의 건물이 장난감처럼 펼쳐져 있었다. 대한민국의 돈과 권력이 흐르는 심장부. 이제 이곳이 한시우의 새로운 사냥터였다. 한시우는 책상 위에 암호화 위성 전화기와 새로 개통한 선불폰을 올려두었다. 그리고 망설임 없이 선불폰으로 한미증권 VIP 데스크에 전화를 걸었다. 'SW 인베스트먼트의 한시우 대표입니다.' 수화기 너머의 직원은 그의 젊은 목소리에 의아함을 느꼈지만, 이어지는 말에 숨을 삼켰다. '귀사 원자재 파트에서 가장 실력 있는 프라이빗 뱅커와 미팅을 잡고 싶습니다. 내일 오후, 시간 됩니까?' 그의 목소리에는 재벌가 막내의 어리광이나 치기가 아닌, 모든 것을 꿰뚫어 보는 자의 냉철한 권위가 실려 있었다. 약속이 잡히자 한시우는 말없이 전화를 끊었다. 첫 번째 미끼는 던져졌다. 같은 시각, 한미증권 VIP 데스크. 전화를 받은 직원은 얼떨떨한 표정으로 팀 내 최고 실적을 자랑하는 박성호 차장에게 다가갔다. '차장님, 방금 SW 인베스트먼트라는 곳에서 대표가 직접 전화했는데, 원자재 최고 전문가를 찾으시면서 내일 뵙자고…' 박성호는 서류에서 눈을 떼지도 않은 채 피식 웃었다. 'SW? 어디서 들어본 적도 없는 이름이군. 또 어느 집 도련님이 아버지 돈으로 장난질 시작했나 보지.' 그는 귀찮다는 듯 손을 내저었다. '알았어, 내가 나가지. 가서 비싼 와인이나 한 병 얻어 마시고 와야겠네.' 박성호의 눈에는 신생 투자사 대표라는 젊은이가 한낱 돈줄로만 보일 뿐이었다. 그는 내일 만날 '고객'이 대한민국 금융 시장을 뒤흔들 포식자라는 사실을 꿈에도 모른 채, 콧노래를 흥얼거리며 퇴근 준비를 시작했다.",
+  "location": "",
+  "pacing_notes": "초반부는 주인공의 내면적 결의와 행동력을 보여주며 속도감을 내고, 중반부에는 새로운 거점을 확보하며 스케일을 확장한다. 후반부에는 다음 화의 갈등을 유발할 인물과의 간접적인 첫 접촉을 그리고, 시점 전환을 통해 독자의 궁금증을 극대화한다.",
+  "protagonist_state": {
+    "equipment": [
+      "고급 정장",
+      "선불폰",
+      "암호화 위성 전화기"
+    ],
+    "injuries": "없음",
+    "mood": "냉철하고 목표 지향적, 계획 실행에 대한 차가운 만족감"
+  },
+  "relationship_changes": [],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [],
+      "content": "",
+      "goal": "",
+      "key_events": [],
+      "location": "강남의 임시 오피스텔",
+      "summary": "",
+      "tension_level": 4,
+      "title": "둥지를 떠나며",
+      "type": "opening_hook"
+    },
+    "scene_2": {
+      "characters": [],
+      "content": "",
+      "goal": "",
+      "key_events": [],
+      "location": "여의도 IFC 빌딩 (가상)",
+      "summary": "",
+      "tension_level": 5,
+      "title": "여의도의 심장",
+      "type": "daily_routine"
+    },
+    "scene_3": {
+      "characters": [],
+      "content": "",
+      "goal": "",
+      "key_events": [],
+      "location": "여의도 SW 인베스트먼트 사무실",
+      "summary": "",
+      "tension_level": 6,
+      "title": "첫 번째 포효",
+      "type": "dialogue_duel"
+    },
+    "scene_4": {
+      "characters": [],
+      "content": "",
+      "goal": "",
+      "key_events": [],
+      "location": "한미증권 본사 VIP 데스크",
+      "summary": "",
+      "tension_level": 5,
+      "title": "재벌가의 치기",
+      "type": "side_glimpse"
+    }
+  },
+  "start_location": "강남의 임시 오피스텔",
+  "target_beat": "",
+  "time_flow": "저녁 → 다음 날 오후",
+  "title": "사냥터의 주인"
+}

@@ -25,7 +25,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
-from modules.core.constants import ManuscriptLimits  # [V64.P4]
+from modules.core.constants import ManuscriptLimits, smart_truncate  # [V64.P4]
 from modules.core.llm_generate import generate_content_via_router
 
 
@@ -127,6 +127,13 @@ JSON 형식으로 응답:
         self.client = api_client
         self.model = model
         self.enabled = True
+
+    @staticmethod
+    def _fit_prompt_text(value: str, max_chars: int, head_ratio: float = 0.55) -> str:
+        text = str(value or "")
+        if len(text) <= max_chars:
+            return text
+        return smart_truncate(text, max_chars=max_chars, head_chars=max(1, int(max_chars * head_ratio)))
 
     def _call_llm(self, prompt: str, temperature: float = 0.1) -> str:
         """LLM 호출"""
@@ -308,10 +315,9 @@ JSON 형식으로 응답:
 
         # Phase 2: LLM Deep Check (선택적)
         if use_llm:
-            arc_text = json.dumps(arc_design, ensure_ascii=False, indent=2)[:40000]   # [감리3차] 12K → 40K
-            bp_text = json.dumps(blueprint, ensure_ascii=False, indent=2)[:60000]    # [감리3차] 18K → 60K
-
             # [V70] .format() → .replace() (템플릿 내 JSON 예시 브레이스 충돌 방지)
+            arc_text = self._fit_prompt_text(json.dumps(arc_design, ensure_ascii=False, indent=2), 40000)
+            bp_text = self._fit_prompt_text(json.dumps(blueprint, ensure_ascii=False, indent=2), 60000)
             prompt = self.ARCHITECT_COMPLIANCE_PROMPT.replace("{arc_design}", arc_text).replace("{blueprint}", bp_text)
 
             response = self._call_llm(prompt)
@@ -392,10 +398,9 @@ JSON 형식으로 응답:
 
         # Phase 2: LLM Deep Check (선택적)
         if use_llm:
-            bp_text = json.dumps(blueprint, ensure_ascii=False, indent=2)[:15000]  # [T1] 4K→15K: 10+씬 Blueprint 후반 누락 방지
-            ms_text = manuscript[:8000]
-
             # [V70] .format() → .replace() (템플릿 내 JSON 예시 브레이스 충돌 방지)
+            bp_text = self._fit_prompt_text(json.dumps(blueprint, ensure_ascii=False, indent=2), 15000)
+            ms_text = self._fit_prompt_text(manuscript, 8000)
             prompt = self.WRITER_COMPLIANCE_PROMPT.replace("{blueprint}", bp_text).replace("{manuscript}", ms_text)
 
             response = self._call_llm(prompt)

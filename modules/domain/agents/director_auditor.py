@@ -15,7 +15,7 @@ import statistics
 import time
 
 from modules.core.config_manager import ConfigManager
-from modules.core.constants import AIModels, ManuscriptLimits
+from modules.core.constants import AIModels, ManuscriptLimits, smart_truncate
 from modules.core.prompt_loader import PromptLoader
 from modules.validation.threshold_helper import _threshold
 from modules.validation.validation_orchestrator import ValidationOrchestrator
@@ -124,7 +124,9 @@ class DirectorQualityAuditor:
         Returns:
             dict: {decision, score, violations, severity, feedback}
         """
-        safe_manuscript = self._d._escape_braces(manuscript[:12000])  # [V66.1] 6000→12000자 확대
+        safe_manuscript = self._d._escape_braces(
+            smart_truncate(manuscript, max_chars=12000, head_chars=6600)
+        )  # [V66.1] 6000→12000자 확대
         safe_npc = self._d._escape_braces(json.dumps(npc_profiles, ensure_ascii=False))
         safe_traits = self._d._escape_braces(json.dumps(character_traits, ensure_ascii=False))
 

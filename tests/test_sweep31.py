@@ -20,6 +20,11 @@ def test_arc_critic_source_has_int_coercion_for_scores():
     assert 'score = int(result["total_score"])' in src
 
 
+def test_arc_critic_source_has_no_legacy_constraint_head_cut():
+    src = _read("modules/domain/agents/arc_critic.py")
+    assert 'constraints[:9000]' not in src
+
+
 def test_director_auditor_source_has_safe_int_scoring_path():
     src = _read("modules/domain/agents/director_auditor.py")
     assert "def _safe_int_score(value, default=50):" in src

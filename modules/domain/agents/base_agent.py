@@ -11,7 +11,7 @@ import yaml
 from google import genai
 from google.genai import types
 
-from modules.core.constants import ContextLimits  # [TF-25-04] validation.yaml SSOT
+from modules.core.constants import ContextLimits, smart_truncate  # [TF-25-04] validation.yaml SSOT
 from modules.core.llm_provider import LLMRequest, LLMResponse
 from modules.core.llm_router import get_shared_llm_router
 from modules.core.models_config import load_models_yaml, resolve_models_yaml_path
@@ -213,22 +213,22 @@ class BaseAgent:
 
     @classmethod
     def _try_rotate_key(cls):
-        """다음 API 키로 순환. 새 Client 반환 또는 None. [V61.7] Lock 보호."""
+        """다음 API 키로 순환. `(new_client, reason)` 반환. [V61.7] Lock 보호."""
         with cls._rotation_lock:
             cls._init_api_keys()
             if len(cls._api_keys) <= 1:
                 cls._key_rotation_pending = False
-                return None
+                return None, "single_key_only"
 
             # [V62.3] 전체 키 순환 완료 시 더 이상 순환하지 않음
             if cls._rotation_count >= len(cls._api_keys) - 1:
                 cls._key_rotation_pending = False
-                return None
+                return None, "all_keys_exhausted"
 
             # 너무 빠른 순환 방지
             if time.time() - cls._last_rotation_time < cls._MIN_ROTATION_INTERVAL:
                 cls._key_rotation_pending = False
-                return None
+                return None, "rotation_cooldown"
 
             old_idx = cls._current_key_idx
             prev_rotation_time = cls._last_rotation_time
@@ -257,7 +257,7 @@ class BaseAgent:
                 cls._rotation_count = max(0, cls._rotation_count - 1)
                 cls._key_rotation_pending = False
             logging.warning("[TF-15/P0] API key rotation client creation failed: %s", create_err)
-            return None
+            return None, "client_create_failed"
         logging.info(f" [V61.5] API 키 순환: Key {old_idx + 1} → Key {cls._current_key_idx + 1} (총 {len(cls._api_keys)}개)"
         )
         # [INF-I5] 키 순환 구조화 로그
@@ -266,7 +266,7 @@ class BaseAgent:
             cls._current_key_idx,
             len(cls._api_keys),
         )
-        return new_client
+        return new_client, None
 
     # [V61.2] 네트워크 복원력 설정 (야간 무인 운영 대응)
     API_TIMEOUT = _SYSTEM_CFG.get("api", {}).get("timeout", _threshold("retry.api_timeout_seconds", 300))
@@ -315,8 +315,12 @@ class BaseAgent:
             "\n\n[System Note] Prompt truncated by safety gate to prevent context overflow."
             " Focus on the most recent instructions."
         )
-        keep = max(0, max_chars - len(notice))
-        clipped = prompt[:keep] + notice
+        if max_chars <= len(notice):
+            clipped = notice[:max_chars]
+        else:
+            body_budget = max_chars - len(notice)
+            head_chars = max(0, min(int(body_budget * 0.55), body_budget - 80))
+            clipped = smart_truncate(prompt, max_chars=body_budget, head_chars=head_chars) + notice
         logging.warning("[TF3-H7] Prompt length gate applied: %d -> %d chars (agent=%s)",
             len(prompt),
             len(clipped),
@@ -618,9 +622,27 @@ class BaseAgent:
         with BaseAgent._rotation_lock:
             pending = BaseAgent._key_rotation_pending
         if pending:
-            new_client = self._try_rotate_key()
+            new_client, rotate_reason = self._try_rotate_key()
             if new_client:
                 self.client = new_client
+            elif rotate_reason:
+                _reason_messages = {
+                    "single_key_only": "추가 API 키가 없어 순환할 수 없음",
+                    "all_keys_exhausted": "사용 가능한 API 키 순환을 모두 소진함",
+                    "rotation_cooldown": "API 키 순환 쿨다운 중",
+                    "client_create_failed": "새 API 키 client 생성 실패",
+                }
+                _msg = _reason_messages.get(rotate_reason, f"알 수 없는 키 순환 실패 ({rotate_reason})")
+                _level = "warning" if rotate_reason != "rotation_cooldown" else "info"
+                self._operator_log(
+                    f"🔑 [KEY-ROTATE] {self._agent_name} {_msg}",
+                    level=_level,
+                    meta={"reason": rotate_reason},
+                )
+                if _level == "warning":
+                    logging.warning("[BaseAgent] key rotation unavailable: %s", rotate_reason)
+                else:
+                    logging.info("[BaseAgent] key rotation unavailable: %s", rotate_reason)
 
         # [B-1-9:C1] 모델 스택 구성 + config 조립 + 메트릭 시작
         _stack = self._build_model_stack(
@@ -1092,11 +1114,15 @@ class BaseAgent:
         # [V60.97] Rate Limit vs Quota Exhausted 구분
         error_str = str(api_error).lower()
 
-        # Rate Limit: 429 + (rate 또는 limit) - 분당 요청 제한
-        is_rate_limit = "429" in error_str and ("rate" in error_str or "limit" in error_str)
         # Quota Exhausted: resource_exhausted 또는 quota - 일일/월간 할당량 초과
-        is_quota_exhausted = "resource_exhausted" in error_str or ("quota" in error_str and "429" not in error_str)
-        # 애매한 경우 (429만 있음) - Rate Limit으로 간주
+        is_quota_exhausted = "resource_exhausted" in error_str or "quota" in error_str
+        # Rate Limit: 명시적 rate/limit 신호가 있는 429 - 분당 요청 제한
+        is_rate_limit = (
+            "429" in error_str
+            and not is_quota_exhausted
+            and ("rate" in error_str or "limit" in error_str or "too many requests" in error_str)
+        )
+        # 애매한 경우 (429만 있음) - 같은 모델 대기보다 즉시 폴백이 더 안전
         is_ambiguous_429 = "429" in error_str and not is_rate_limit and not is_quota_exhausted
 
         # ═══════════════════════════════════════════════════════════════
@@ -1104,7 +1130,7 @@ class BaseAgent:
         # ═══════════════════════════════════════════════════════════════
         is_gemini3_rate_limit = False  # [TF-MULTI] gemini-3 시리즈 폐기 — 현재 2.5-pro/flash만 사용
         if (
-            (is_rate_limit or is_ambiguous_429)
+            is_rate_limit
             and not is_gemini3_rate_limit
             and rate_limit_retry_count < max_rate_limit_retries
         ):
@@ -1134,6 +1160,7 @@ class BaseAgent:
         # ═══════════════════════════════════════════════════════════════
         if (
             is_quota_exhausted
+            or is_ambiguous_429
             or is_gemini3_rate_limit
             or (is_rate_limit and rate_limit_retry_count >= max_rate_limit_retries)
         ):
@@ -1159,7 +1186,12 @@ class BaseAgent:
                     if BaseAgent._rotation_count < len(BaseAgent._api_keys) - 1:
                         BaseAgent._key_rotation_pending = True
 
-                error_type = "Quota 소진" if is_quota_exhausted else "Rate Limit 초과"
+                if is_quota_exhausted:
+                    error_type = "Quota 소진"
+                elif is_ambiguous_429:
+                    error_type = "Ambiguous 429"
+                else:
+                    error_type = "Rate Limit 초과"
                 self._operator_log(
                     f"🔄 [QUOTA-FB] {self._agent_name} {old_model} {error_type} → {current_model}로 전환",
                     level="warning",

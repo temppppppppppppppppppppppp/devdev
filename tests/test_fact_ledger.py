@@ -93,6 +93,26 @@ def test_extract_numerical_facts_from_state_changes():
     assert nums["주인공_전투력"]["value"] == 45
 
 
+def test_extract_numerical_facts_from_direct_financial_scalars():
+    """[TF-C07] actual_truth direct finance scalars also sync into numbers."""
+    ledger = FactLedger(_StubDB())
+    state_changes = {
+        "capital": 2_000_000_000,
+        "total_assets": "23억",
+        "wealth": "+20억",
+        "market_insight": "매수 기회가 오고 있다",
+    }
+
+    ledger.update_from_state_changes(ep_num=15, state_changes=state_changes)
+
+    nums = ledger._ledger["numbers"]
+    assert nums["capital"]["value"] == 2_000_000_000
+    assert nums["capital"]["unit"] == "won"
+    assert nums["total_assets"]["value"] == 2_300_000_000
+    assert nums["wealth"]["value"] == 2_000_000_000
+    assert "market_insight" not in nums
+
+
 def test_extract_numerical_facts_empty_safe():
     """[TF-C07] 빈 state_changes에서도 안전"""
     ledger = FactLedger(_StubDB())
@@ -125,6 +145,11 @@ class _BrokenSaveDB(_EmptyStubDB):
         raise RuntimeError("write fail")
 
 
+class _BrokenLoadDB(_EmptyStubDB):
+    def load_anchor(self, _name):
+        raise RuntimeError("load fail")
+
+
 def test_update_number_established_value_set():
     """[P0-2] 초기값이 established_value에 기록됨."""
     ledger = FactLedger(_EmptyStubDB())
@@ -152,6 +177,21 @@ def test_save_clears_degraded_contract_on_success():
     assert result is True
     assert ledger.last_save_ok is True
     assert ledger.last_save_error is None
+
+
+def test_load_sets_degraded_contract_on_failure():
+    ledger = FactLedger(_BrokenLoadDB())
+
+    assert ledger.last_updated_ep == 0
+    assert ledger.degraded is True
+    assert ledger.degraded_reason == "load fail"
+
+
+def test_load_empty_anchor_keeps_non_degraded_contract():
+    ledger = FactLedger(_EmptyStubDB())
+
+    assert ledger.degraded is False
+    assert ledger.degraded_reason == ""
 
 
 def test_update_number_established_value_not_overwritten():

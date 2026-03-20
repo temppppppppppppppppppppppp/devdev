@@ -6,7 +6,7 @@ import json
 import logging
 import re
 
-from modules.core.constants import ManuscriptLimits
+from modules.core.constants import ManuscriptLimits, smart_truncate
 from modules.validation.threshold_helper import _threshold
 
 from .chief_writer_prompts import get_expand_length_prompt, get_fix_issues_prompt
@@ -28,6 +28,14 @@ class ChiefWriterQualityGate:
 
     def __init__(self, host):
         self.host = host
+
+    @staticmethod
+    def _fit_prompt_text(value: object, max_chars: int, head_ratio: float = 0.55) -> str:
+        """Prompt cap은 유지하되 최근 문맥을 같이 남긴다."""
+        text = str(value or "")
+        if len(text) <= max_chars:
+            return text
+        return smart_truncate(text, max_chars=max_chars, head_chars=max(1, int(max_chars * head_ratio)))
 
     def sanitize_leakage(self, text: str) -> str:
         """
@@ -1124,14 +1132,14 @@ class ChiefWriterQualityGate:
                 current_length=len(_content),
                 target_length=int(ManuscriptLimits.TARGET_LENGTH),
                 manuscript_escaped=self.host._escape_braces(manuscript),
-                hud_report_escaped=self.host._escape_braces(hud_report[:500]),
+                hud_report_escaped=self.host._escape_braces(self._fit_prompt_text(hud_report, 500)),
             )
             _thinking = "low"
         else:
             # [V65] 기존 범용 교정 프롬프트
             prompt = get_fix_issues_prompt(
                 fix_instructions_text=chr(10).join(fix_instructions),
-                hud_report_escaped=self.host._escape_braces(hud_report[:500]),
+                hud_report_escaped=self.host._escape_braces(self._fit_prompt_text(hud_report, 500)),
                 manuscript_escaped=self.host._escape_braces(manuscript),  # [TF-I09] 전문 전달 (8000자 절삭 제거)
             )
             _thinking = "low"

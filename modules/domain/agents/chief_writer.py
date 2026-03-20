@@ -1687,11 +1687,16 @@ class ChiefWriter(BaseAgent):
         # [TF-49b] Arc 계획 아이템 사전 정당화
         upcoming_arc_items: list[str] = None,
     ) -> list[dict]:
-        """[Phase 3-5B] 원본 원고를 보존하며 피드백 지적사항만 수정. 3후보 반환.
+        """[Phase 3-5B] 원본 원고를 보존하며 피드백 지적사항만 수정.
 
         패치 전용 프롬프트(PATCH_MODE_PROMPT)를 로드하여 원본 원고 + Director
         피드백을 director_feedback 섹션으로 포맷한 뒤, generate_ensemble()을
-        호출하여 3후보를 생성한다.
+        호출한다.
+
+        현재 runtime 의미는 broad 3-strategy ensemble이 아니라, 보통
+        `single_strategy=<previous selected strategy>`를 준 bounded regenerate
+        경로다. 즉 REJECT retry의 patch lane은 "선택된 전략 1개 대상 원문참조
+        재생성"에 가깝다.
 
         실패 시 빈 리스트 반환 → 호출측에서 full rewrite 폴백.
         """

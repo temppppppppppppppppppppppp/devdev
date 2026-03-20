@@ -1,4 +1,5 @@
 import json
+import sqlite3
 from pathlib import Path
 
 
@@ -13,6 +14,7 @@ DESKTOP_GUIDE = (ROOT / "geuldobi-desktop/DESKTOP-GUIDE.md").read_text(encoding=
 RUNTIME_CONTRACT = json.loads(
     (ROOT / "docs/implementation/desktop-runtime-contract-v1.json").read_text(encoding="utf-8")
 )
+WORKSPACE_SEED_BUILDER = (ROOT / "geuldobi-desktop/scripts/build_workspace_seed.py").read_text(encoding="utf-8")
 BUILD_RELEASE_NORMALIZED = BUILD_RELEASE.replace("\\\\", "\\")
 
 
@@ -23,6 +25,12 @@ def test_packaged_resources_stage_backend_engine_bundle_and_embedded_python():
         (item["from"], item["to"]) for item in RUNTIME_CONTRACT["extra_resources"]
     }
     assert mapped == expected
+    for resource in resources:
+        filters = set(resource["filter"])
+        assert "**/*" in filters
+        assert "!**/*.log" in filters
+        assert "!**/*.tmp" in filters
+        assert "!**/*.bak" in filters
 
 
 def test_build_release_verifies_source_bundle_packaging_inventory():
@@ -54,6 +62,33 @@ def test_package_build_scripts_stage_workspace_seed_before_builder():
     assert "prepare:workspace-seed" in scripts["build:dir"]
 
 
+def test_workspace_seed_builder_uses_canonical_smoke_fixture_source():
+    assert 'SAMPLE_PROJECT_SOURCE = ROOT / "projects" / "smoke_fixture_demo"' in WORKSPACE_SEED_BUILDER
+    assert 'SAMPLE_PROJECT_TARGET = "investment_canary_demo"' in WORKSPACE_SEED_BUILDER
+
+
+def test_canonical_smoke_fixture_source_meets_minimum_smoke_contract():
+    source_root = ROOT / "projects" / "smoke_fixture_demo"
+    db_path = source_root / "project_data.db"
+    assert source_root.exists()
+    assert db_path.exists()
+
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    try:
+        row = conn.execute("SELECT data FROM anchors WHERE key='arcs'").fetchone()
+        assert row is not None and row["data"]
+        arc_count = len(json.loads(row["data"]))
+        blueprint_count = conn.execute("SELECT COUNT(*) AS c FROM blueprints").fetchone()["c"]
+        manuscript_count = conn.execute("SELECT COUNT(*) AS c FROM manuscripts").fetchone()["c"]
+    finally:
+        conn.close()
+
+    assert arc_count >= 3
+    assert blueprint_count >= 3
+    assert manuscript_count == 0
+
+
 def test_backend_build_runtime_includes_google_genai_hiddenimports():
     assert '"google.genai"' in BACKEND_SPEC
     assert '"google.genai.types"' in BACKEND_SPEC
@@ -79,3 +114,11 @@ def test_desktop_guide_describes_source_bundle_runtime_not_engine_exe_product():
     assert "resources/python-embed/python.exe" in DESKTOP_GUIDE
     assert "resources/workspace-seed/seed-manifest.json" in DESKTOP_GUIDE
     assert "engine.exe" not in DESKTOP_GUIDE
+
+
+def test_package_file_filters_drop_unused_debug_desk_sprites_only():
+    files = PACKAGE_JSON["build"]["files"]
+
+    assert "src/**/*" in files
+    assert "!src/sprites/dbg_desk_*" in files
+    assert "!src/sprites/dbg_sheet_*" not in files

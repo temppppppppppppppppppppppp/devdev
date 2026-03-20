@@ -27,8 +27,9 @@ from modules.core.db_manager import DBManager  # noqa: E402
 from modules.core.stage4_context import Stage4Context  # noqa: E402
 from modules.core.stage4_orchestrator import Stage4Orchestrator, _RoundOutcome, _SessionConfig  # noqa: E402
 from scripts.regression_validation_tiers import FOCUSED_MUTATION  # noqa: E402
+from scripts.smoke_fixture_contract import BOUND_SMOKE_TARGET_PROJECT  # noqa: E402
 
-PROJECT_NAME = "\ucf54\ub371\uc2a4_\ud14c\uc2a4\ud2b8"
+PROJECT_NAME = BOUND_SMOKE_TARGET_PROJECT
 PROJECT_DIR = PROJECT_ROOT / "projects" / PROJECT_NAME
 DB_PATH = PROJECT_DIR / "project_data.db"
 MS_OUTPUT_DIR = PROJECT_DIR / "plans" / "manuscripts"

@@ -172,7 +172,7 @@ _fix_scope == "full" OR 나머지             →  전면 재작성 (L4539)
 - `original_manuscript`: 원본 원고 (90% 보존 강제)
 - `previous_attempt`: action_items, score_breakdown, fix_scope, fix_pack, open_review
 - → 프롬프트: "원본 구조/문체/장점 보존하면서 피드백 지적사항만 수정하세요" (L1737)
-- → 3후보 생성
+- → selected strategy 기준 bounded regenerate 1후보
 
 **전면 재작성** (`chief_writer.regenerate_with_feedback()` L799-951):
 - `director_feedback`: 전체 피드백

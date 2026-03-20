@@ -28,7 +28,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
-from modules.core.constants import AIModels
+from modules.core.constants import AIModels, smart_truncate
 from modules.core.llm_generate import generate_content_via_router
 
 
@@ -166,6 +166,13 @@ JSON 형식으로 응답:
         self.model = model
         self.enabled = True  # 활성화 여부
 
+    @staticmethod
+    def _fit_prompt_text(value: str, max_chars: int, head_ratio: float = 0.55) -> str:
+        text = str(value or "")
+        if len(text) <= max_chars:
+            return text
+        return smart_truncate(text, max_chars=max_chars, head_chars=max(1, int(max_chars * head_ratio)))
+
     def _call_llm(self, prompt: str, temperature: float = 0.3) -> str:
         """LLM 호출"""
         try:
@@ -214,8 +221,8 @@ JSON 형식으로 응답:
             return {"issues": [], "severity": "none", "overall_quality": 7}
 
         # [V70] 사용자 콘텐츠 내 {}는 .format()에서 KeyError 유발 → 이스케이프
-        _safe_output = output[:8000].replace("{", "{{").replace("}", "}}")
-        _safe_context = context[:3000].replace("{", "{{").replace("}", "}}")
+        _safe_output = self._fit_prompt_text(output, 8000).replace("{", "{{").replace("}", "}}")
+        _safe_context = self._fit_prompt_text(context, 3000).replace("{", "{{").replace("}", "}}")
         prompt = prompt_template.format(output=_safe_output, context=_safe_context)
         critique_text = self._call_llm(prompt, temperature=0.2)
 
@@ -246,7 +253,7 @@ JSON 형식으로 응답:
 
         critique_summary = json.dumps(critique, ensure_ascii=False, indent=2)
         # [V70] 사용자 콘텐츠 내 {}는 .format()에서 KeyError 유발 → 이스케이프
-        _safe_original = original[:12000].replace("{", "{{").replace("}", "}}")
+        _safe_original = self._fit_prompt_text(original, 12000).replace("{", "{{").replace("}", "}}")
         _safe_critique = critique_summary.replace("{", "{{").replace("}", "}}")
         prompt = self.IMPROVEMENT_PROMPT.format(original=_safe_original, critique=_safe_critique)
 

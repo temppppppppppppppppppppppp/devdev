@@ -42,6 +42,19 @@ def test_stage2_plan_builds_expected_slots():
     assert all(slot.max_chars > 0 for slot in plan.slots)
 
 
+def test_stage2_plan_preserves_tactical_tail_in_slot_query():
+    advisor = _make_enabled_advisor()
+    plan = advisor.plan_stage2_retrieval(
+        arc_data={"tactical_doc": "HEAD-TAC\n" + ("A" * 500) + "\nTAIL-STAGE2-TAC"},
+        current_ep=12,
+        npc_roster=[],
+    )
+
+    slot_map = {slot.category: slot for slot in plan.slots}
+    assert "TAIL-STAGE2-TAC" in slot_map["arc_tactical"].query
+    assert "...(중간 생략)..." in slot_map["arc_tactical"].query
+
+
 def test_stage2_plan_includes_work_focus_slots_and_source_mapping():
     advisor = _make_enabled_advisor()
     plan = advisor.plan_stage2_retrieval(
@@ -127,6 +140,45 @@ def test_stage4_plan_accepts_scene_breakdown_dict():
     assert "장면1" in scene_slots[0].query
 
 
+def test_stage4_scene_context_query_preserves_tail_context():
+    advisor = _make_enabled_advisor()
+    plan = advisor.plan_stage4_retrieval(
+        arc_data={"state_changes": {}},
+        blueprint={
+            "scene_breakdown": [
+                {"goal": "HEAD-SCENE\n" + ("S" * 120) + "\nTAIL-SCENE-ONE"},
+                {"summary": "HEAD-SCENE2\n" + ("T" * 120) + "\nTAIL-SCENE-TWO"},
+            ]
+        },
+        prev_ending="ending",
+        current_ep=11,
+        npc_roster=[],
+        genre="investment",
+    )
+
+    scene_slot = next(slot for slot in plan.slots if slot.category == "scene_context")
+    assert "TAIL-SCENE-ONE" in scene_slot.query
+    assert "TAIL-SCENE-TWO" in scene_slot.query
+    assert "...(중간 생략)..." in scene_slot.query
+
+
+def test_stage3_plan_preserves_tactical_and_hook_tail_in_slot_queries():
+    advisor = _make_enabled_advisor()
+    plan = advisor.plan_stage3_retrieval(
+        arc_data={"arc_tactical": "HEAD-STAGE3\n" + ("B" * 600) + "\nTAIL-STAGE3-TAC"},
+        prev_blueprints=[{"ending_hook": "HEAD-HOOK\n" + ("C" * 400) + "\nTAIL-STAGE3-HOOK"}],
+        current_ep=19,
+        npc_roster=[],
+        genre="investment",
+    )
+
+    slot_map = {slot.category: slot for slot in plan.slots}
+    assert "TAIL-STAGE3-TAC" in slot_map["similar_blueprint"].query
+    assert "TAIL-STAGE3-HOOK" in slot_map["continuity_hook"].query
+    assert "...(중간 생략)..." in slot_map["similar_blueprint"].query
+    assert "...(중간 생략)..." in slot_map["continuity_hook"].query
+
+
 def test_stage4_plan_includes_work_focus_slots_and_stage4_prefix():
     advisor = _make_enabled_advisor()
     plan = advisor.plan_stage4_retrieval(
@@ -193,6 +245,44 @@ def test_director_plan_uses_npc_mentions_from_manuscript():
     assert "location_item_consistency" in categories
 
 
+def test_stage4_and_director_plan_preserve_tail_context_in_slot_queries():
+    advisor = _make_enabled_advisor()
+
+    stage4_plan = advisor.plan_stage4_retrieval(
+        arc_data={
+            "tactical_doc": "HEAD-STAGE4\n" + ("D" * 700) + "\nTAIL-STAGE4-TAC",
+            "state_changes": {},
+        },
+        blueprint={"scene_breakdown": [{"goal": "hold the line"}]},
+        prev_ending="HEAD-END\n" + ("E" * 500) + "\nTAIL-STAGE4-END",
+        current_ep=21,
+        npc_roster=[],
+        genre="investment",
+    )
+    stage4_slots = {slot.category: slot for slot in stage4_plan.slots}
+    assert "TAIL-STAGE4-END" in stage4_slots["prev_ending"].query
+    assert "TAIL-STAGE4-TAC" in stage4_slots["arc_tactical"].query
+    assert "...(중간 생략)..." in stage4_slots["prev_ending"].query
+    assert "...(중간 생략)..." in stage4_slots["arc_tactical"].query
+
+    director_plan = advisor.plan_director_retrieval(
+        manuscript="HEAD-MS\n" + ("F" * 300) + "\nTAIL-DIRECTOR-MS",
+        blueprint={
+            "core_event": "HEAD-EVENT\n" + ("G" * 400) + "\nTAIL-DIRECTOR-EVENT",
+            "end_location": "HEAD-PLACE\n" + ("H" * 200) + "\nTAIL-DIRECTOR-PLACE",
+        },
+        current_ep=33,
+        npc_roster=[],
+    )
+    director_slots = {slot.category: slot for slot in director_plan.slots}
+    assert "TAIL-DIRECTOR-EVENT" in director_slots["event_claim"].query
+    assert "TAIL-DIRECTOR-PLACE" in director_slots["location_item_consistency"].query
+    assert "TAIL-DIRECTOR-MS" in director_slots["blueprint_alignment"].query
+    assert "...(중간 생략)..." in director_slots["event_claim"].query
+    assert "...(중간 생략)..." in director_slots["location_item_consistency"].query
+    assert "...(중간 생략)..." in director_slots["blueprint_alignment"].query
+
+
 def test_director_plan_includes_work_focus_slots_and_relationship_source():
     advisor = _make_enabled_advisor()
     plan = advisor.plan_director_retrieval(
@@ -214,6 +304,30 @@ def test_director_plan_includes_work_focus_slots_and_relationship_source():
     assert source_map["work_tracking_slot_1"] == RetrievalSources.DB_NPC_RELATIONSHIP
     assert source_map["work_registry_1"] == RetrievalSources.DB_NPC_RELATIONSHIP
     assert source_map["relationship_consistency"] == RetrievalSources.DB_NPC_RELATIONSHIP
+
+
+def test_relationship_history_query_preserves_tail_context():
+    advisor = _make_enabled_advisor()
+    plan = advisor.plan_stage4_retrieval(
+        arc_data={
+            "state_changes": {
+                "relationship_changes": [
+                    {"npc": "Han", "change": "HEAD-REL\n" + ("R" * 140) + "\nTAIL-REL-HAN"},
+                    {"npc": "Park", "change": "HEAD-REL2\n" + ("Q" * 140) + "\nTAIL-REL-PARK"},
+                ]
+            }
+        },
+        blueprint={"scene_breakdown": [{"goal": "hold the line"}]},
+        prev_ending="ending",
+        current_ep=21,
+        npc_roster=["Han", "Park"],
+        genre="investment",
+    )
+
+    slot_map = {slot.category: slot for slot in plan.slots}
+    assert "TAIL-REL-HAN" in slot_map["relationship_history"].query
+    assert "TAIL-REL-PARK" in slot_map["relationship_history"].query
+    assert "...(중간 생략)..." in slot_map["relationship_history"].query
 
 
 def test_should_use_llm_when_trigger_conditions_match():

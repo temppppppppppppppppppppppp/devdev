@@ -1,5 +1,10 @@
 # 글도비 전체 프로젝트 비용 계산 (Stage 0~4)
 
+PRO_INPUT_PER_MTOK = 1.25
+PRO_OUTPUT_PER_MTOK = 10.0
+FLASH_INPUT_PER_MTOK = 0.30
+FLASH_OUTPUT_PER_MTOK = 2.50
+
 print('=' * 70)
 print('글도비 250화 프로젝트 전체 비용 분석 (캐시 미사용)')
 print('=' * 70)
@@ -13,7 +18,7 @@ EXCHANGE_RATE = 1300
 print('=== Stage 0: Bible Recovery ===')
 analyst_bible_input = 20000  # 기존 원고 + treatment
 analyst_bible_output = 8192
-bible_cost = (analyst_bible_input / 1_000_000 * 1.25) + (analyst_bible_output / 1_000_000 * 5.0)
+bible_cost = (analyst_bible_input / 1_000_000 * PRO_INPUT_PER_MTOK) + (analyst_bible_output / 1_000_000 * PRO_OUTPUT_PER_MTOK)
 print(f'Analyst (Bible Recovery) 1회: ${bible_cost:.4f}')
 stage0_total = bible_cost
 print(f'Stage 0 총 비용: ${stage0_total:.2f} ({int(stage0_total * EXCHANGE_RATE):,}원)')
@@ -25,7 +30,7 @@ print()
 print('=== Stage 1: Volume Strategy ===')
 analyst_volume_input = 8000
 analyst_volume_output = 4096
-volume_cost = (analyst_volume_input / 1_000_000 * 1.25) + (analyst_volume_output / 1_000_000 * 5.0)
+volume_cost = (analyst_volume_input / 1_000_000 * PRO_INPUT_PER_MTOK) + (analyst_volume_output / 1_000_000 * PRO_OUTPUT_PER_MTOK)
 print(f'Analyst (Volume) 1회: ${volume_cost:.4f}')
 print(f'10개 Volume × 1회: ${volume_cost * 10:.2f}')
 stage1_total = volume_cost * 10
@@ -38,13 +43,13 @@ print()
 print('=== Stage 2: Arc Tactical Design ===')
 analyst_arc_input = 10000
 analyst_arc_output = 6144
-arc_cost = (analyst_arc_input / 1_000_000 * 1.25) + (analyst_arc_output / 1_000_000 * 5.0)
+arc_cost = (analyst_arc_input / 1_000_000 * PRO_INPUT_PER_MTOK) + (analyst_arc_output / 1_000_000 * PRO_OUTPUT_PER_MTOK)
 print(f'Analyst (Arc) 1회: ${arc_cost:.4f}')
 
 # Director 검수 (재시도 고려: 평균 1.5회)
 director_arc_input = 6000
 director_arc_output = 1000
-director_arc_cost = (director_arc_input / 1_000_000 * 0.075) + (director_arc_output / 1_000_000 * 0.30)
+director_arc_cost = (director_arc_input / 1_000_000 * FLASH_INPUT_PER_MTOK) + (director_arc_output / 1_000_000 * FLASH_OUTPUT_PER_MTOK)
 print(f'Director (Arc Review) 1회: ${director_arc_cost:.4f}')
 
 arc_with_review = (arc_cost + director_arc_cost) * 1.5  # 재시도 고려
@@ -60,17 +65,17 @@ print()
 print('=== Stage 3: Episode Blueprinting ===')
 weaver_input = 5000
 weaver_output = 2048
-weaver_cost = (weaver_input / 1_000_000 * 1.25) + (weaver_output / 1_000_000 * 5.0)
+weaver_cost = (weaver_input / 1_000_000 * PRO_INPUT_PER_MTOK) + (weaver_output / 1_000_000 * PRO_OUTPUT_PER_MTOK)
 print(f'Weaver (Arc Drive) 50회: ${weaver_cost * 50:.2f}')
 
 architect_input = 5000
 architect_output = 4096
-architect_cost = (architect_input / 1_000_000 * 0.075) + (architect_output / 1_000_000 * 0.30)
+architect_cost = (architect_input / 1_000_000 * FLASH_INPUT_PER_MTOK) + (architect_output / 1_000_000 * FLASH_OUTPUT_PER_MTOK)
 print(f'Architect 1회: ${architect_cost:.4f}')
 
 director_bp_input = 4000
 director_bp_output = 1000
-director_bp_cost = (director_bp_input / 1_000_000 * 0.075) + (director_bp_output / 1_000_000 * 0.30)
+director_bp_cost = (director_bp_input / 1_000_000 * FLASH_INPUT_PER_MTOK) + (director_bp_output / 1_000_000 * FLASH_OUTPUT_PER_MTOK)
 print(f'Director (Blueprint Review) 1회: ${director_bp_cost:.4f}')
 
 # 재시도 고려 (통과율 70%)
@@ -88,12 +93,12 @@ print()
 print('=== Stage 4: Manuscript Production (V41) ===')
 writer_input = 6000
 writer_output = 8192
-writer_cost = (writer_input / 1_000_000 * 1.25) + (writer_output / 1_000_000 * 5.0)
+writer_cost = (writer_input / 1_000_000 * PRO_INPUT_PER_MTOK) + (writer_output / 1_000_000 * PRO_OUTPUT_PER_MTOK)
 print(f'Writer 1회: ${writer_cost:.4f}')
 
 director_ms_input = 8000
 director_ms_output = 1000
-director_ms_cost = (director_ms_input / 1_000_000 * 0.075) + (director_ms_output / 1_000_000 * 0.30)
+director_ms_cost = (director_ms_input / 1_000_000 * FLASH_INPUT_PER_MTOK) + (director_ms_output / 1_000_000 * FLASH_OUTPUT_PER_MTOK)
 print(f'Director (Manuscript Review) 1회: ${director_ms_cost:.4f}')
 
 # 재시도 고려 (통과율 55%)
@@ -112,13 +117,13 @@ print(f'BLOCKING Validator: ${blocking_cost} (Python)')
 # SCORING: gemini-2.5-pro
 scoring_input = 8000
 scoring_output = 2000
-scoring_cost = (scoring_input / 1_000_000 * 1.25) + (scoring_output / 1_000_000 * 5.0)
+scoring_cost = (scoring_input / 1_000_000 * PRO_INPUT_PER_MTOK) + (scoring_output / 1_000_000 * PRO_OUTPUT_PER_MTOK)
 print(f'SCORING Evaluator: ${scoring_cost:.4f}')
 
 # ADVISORY: gemini-2.5-flash
 advisory_input = 8000
 advisory_output = 1000
-advisory_cost = (advisory_input / 1_000_000 * 0.075) + (advisory_output / 1_000_000 * 0.30)
+advisory_cost = (advisory_input / 1_000_000 * FLASH_INPUT_PER_MTOK) + (advisory_output / 1_000_000 * FLASH_OUTPUT_PER_MTOK)
 print(f'ADVISORY Evaluator: ${advisory_cost:.4f}')
 
 validation_cost = blocking_cost + scoring_cost + advisory_cost

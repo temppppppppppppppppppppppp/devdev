@@ -291,6 +291,118 @@ class TestClassifyError:
         assert agent._classify_error(error) == AgentErrorType.UNKNOWN
 
 
+class TestHandleApiError:
+    def test_ambiguous_429_prefers_immediate_fallback(self, agent, monkeypatch):
+        monkeypatch.setattr(base_agent_module.time, "sleep", lambda *_args, **_kwargs: None)
+        monkeypatch.setattr(base_agent_module.types, "GenerateContentConfig", lambda **kwargs: kwargs)
+        BaseAgent._quota_exhausted_models.clear()
+
+        response = MagicMock(name="fallback_response")
+        agent._generate_content = MagicMock(return_value=response)
+
+        result = agent._handle_api_error(
+            api_error=Exception("429"),
+            current_model="gemini-2.5-pro",
+            model_stack=["gemini-2.5-pro", "gemini-2.5-flash"],
+            config=object(),
+            current_prompt="prompt",
+            temperature=0.7,
+            response_schema={"type": "object"},
+            thinking_level=None,
+            network_retry_count=0,
+            rate_limit_retry_count=0,
+            quota_retry_count=0,
+            max_rate_limit_retries=3,
+            max_quota_retries=2,
+        )
+
+        assert result["action"] == "fallback_response"
+        assert result["current_model"] == "gemini-2.5-flash"
+        assert result["quota_retry_count"] == 1
+        assert result["rate_limit_retry_count"] == 0
+        assert result["response"] is response
+        agent._generate_content.assert_called_once()
+        assert "gemini-2.5-pro" in BaseAgent._quota_exhausted_models
+
+    def test_explicit_rate_limit_keeps_backoff_retry(self, agent, monkeypatch):
+        monkeypatch.setattr(base_agent_module.time, "sleep", lambda *_args, **_kwargs: None)
+        agent._generate_content = MagicMock()
+
+        result = agent._handle_api_error(
+            api_error=Exception("429 rate limit reached"),
+            current_model="gemini-2.5-pro",
+            model_stack=["gemini-2.5-pro", "gemini-2.5-flash"],
+            config=object(),
+            current_prompt="prompt",
+            temperature=0.7,
+            response_schema=None,
+            thinking_level=None,
+            network_retry_count=0,
+            rate_limit_retry_count=0,
+            quota_retry_count=0,
+            max_rate_limit_retries=3,
+            max_quota_retries=2,
+        )
+
+        assert result["action"] == "continue"
+        assert result["rate_limit_retry_count"] == 1
+        assert result["quota_retry_count"] == 0
+        agent._generate_content.assert_not_called()
+
+
+class TestKeyRotationSignal:
+    def test_try_rotate_key_reports_all_keys_exhausted_reason(self, monkeypatch):
+        monkeypatch.setattr(BaseAgent, "_keys_initialized", True)
+        monkeypatch.setattr(BaseAgent, "_api_keys", ["k1", "k2"])
+        monkeypatch.setattr(BaseAgent, "_current_key_idx", 1)
+        monkeypatch.setattr(BaseAgent, "_rotation_count", 1)
+        monkeypatch.setattr(BaseAgent, "_key_rotation_pending", True)
+
+        client, reason = BaseAgent._try_rotate_key()
+
+        assert client is None
+        assert reason == "all_keys_exhausted"
+
+    def test_ask_surfaces_rotation_exhaustion_to_operator(self, monkeypatch):
+        operator_log = MagicMock()
+        context = SimpleNamespace(author_directives="", operator_log=operator_log)
+        client = MagicMock()
+        agent = BaseAgent(context=context, client=client, model_tier="gemini-2.5-flash")
+
+        monkeypatch.setattr(base_agent_module, "METRICS_ENABLED", False)
+        monkeypatch.setattr(base_agent_module.time, "sleep", lambda *_args, **_kwargs: None)
+        monkeypatch.setattr(BaseAgent, "_key_rotation_pending", True)
+        agent._try_rotate_key = MagicMock(return_value=(None, "all_keys_exhausted"))
+        agent._build_model_stack = MagicMock(
+            return_value={
+                "model_stack": ["gemini-2.5-flash"],
+                "current_model": "gemini-2.5-flash",
+                "config": object(),
+                "metric_id": None,
+            }
+        )
+        agent._generate_content = MagicMock(return_value=object())
+        agent._accumulate_last_llm_usage = MagicMock()
+        agent._extract_and_merge_response = MagicMock(
+            return_value={
+                "full_response": '{"content":"ok"}',
+                "_thinking_text": "",
+                "action": "break",
+            }
+        )
+        agent._log_llm_call_to_db = MagicMock()
+        BaseAgent._session_logger_global = None
+
+        result = agent.ask("테스트 프롬프트")
+
+        assert result == '{"content":"ok"}'
+        assert operator_log.call_count >= 1
+        last_call = operator_log.call_args_list[-1]
+        assert "API 키 순환을 모두 소진함" in last_call.args[0]
+        assert last_call.kwargs["level"] == "warning"
+        assert last_call.kwargs["meta"]["reason"] == "all_keys_exhausted"
+
+
 # ══════════════════════════════════════════════════════════════
 # Test 5: _validate_response
 # ══════════════════════════════════════════════════════════════
@@ -869,10 +981,13 @@ class TestTimeoutAndPromptGate:
         assert config.http_options.timeout == int(agent.API_TIMEOUT) * 1000
 
     def test_prompt_size_gate_truncates(self, agent):
-        agent.MAX_CONTEXT_CHARS = 140
+        agent.MAX_CONTEXT_CHARS = 260
         agent.requires_human_intervention = False
 
-        clipped = agent._apply_prompt_size_gate("x" * 600)
-        assert len(clipped) <= 140
+        prompt = "HEAD-ANCHOR\n" + ("x" * 480) + "\nTAIL-ANCHOR"
+        clipped = agent._apply_prompt_size_gate(prompt)
+        assert len(clipped) <= 260
         assert "Prompt truncated" in clipped
+        assert "HEAD-ANCHOR" in clipped
+        assert "TAIL-ANCHOR" in clipped
         assert agent.requires_human_intervention is True

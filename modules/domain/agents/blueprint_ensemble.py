@@ -25,7 +25,7 @@ from modules.core.prompt_loader import PromptLoader
 from modules.core.response_schemas import BLUEPRINT_SCHEMA
 from modules.core.tactical_utils import extract_episode_tactical
 
-from .base_agent import _SYSTEM_CFG, BaseAgent
+from .base_agent import AgentErrorType, _SYSTEM_CFG, BaseAgent
 
 # [V60.95] 원시인 모드 금지어 Guard (JSON 기반)
 try:
@@ -173,6 +173,14 @@ def build_external_pov_policy_constraint(primary_pov: str, external_pov_insert_p
     return ""
 
 
+def _fit_compact_context(value: object, max_chars: int, *, head_ratio: float = 0.55) -> str:
+    raw = str(value or "")
+    if len(raw) <= max_chars:
+        return raw
+    head_chars = max(0, min(int(max_chars * head_ratio), max_chars - 80))
+    return smart_truncate(raw, max_chars=max_chars, head_chars=head_chars)
+
+
 class BlueprintEnsembleGenerator(BaseAgent):
     """
     [V60.80] Blueprint Ensemble Generator
@@ -190,6 +198,19 @@ class BlueprintEnsembleGenerator(BaseAgent):
         self._prompt_loader = PromptLoader()
         self.strategies = BLUEPRINT_STRATEGIES
         self.max_workers = 3
+        self.last_error_types: list[str] = []
+
+    @staticmethod
+    def _select_generate_error_type(error_types: list[str]) -> str | None:
+        """Collapse worker failures into one fast-fail hint for the caller."""
+        if not error_types:
+            return None
+        if AgentErrorType.SCHEMA_INCOMPATIBLE in error_types:
+            return AgentErrorType.SCHEMA_INCOMPATIBLE
+        non_unknown = [error_type for error_type in error_types if error_type and error_type != AgentErrorType.UNKNOWN]
+        if non_unknown:
+            return non_unknown[0]
+        return error_types[0]
 
     def generate_ensemble(
         self,
@@ -248,7 +269,11 @@ class BlueprintEnsembleGenerator(BaseAgent):
                         arc_focus = f"[{ep_num}화 핵심 사건 (Arc 설계 원본)]\n{_detail_text}\n\n{arc_focus}"
                     break
         # [TF-46] enrichment 후 안전캡 (12K→15K, enrichment 포함 여유)
-        arc_focus = arc_focus[:15000]
+        arc_focus = smart_truncate(
+            arc_focus,
+            max_chars=15000,
+            head_chars=max(0, min(int(15000 * 0.55), 15000 - 80)),
+        )
 
         # [V61.3] 병렬 실행 전에 genre 미리 로드 (SQLite thread-safety 문제 방지)
         genre = GenreTypes.WUXIA
@@ -295,6 +320,8 @@ class BlueprintEnsembleGenerator(BaseAgent):
         )
         cache_name = cache_info.get("cache_name")
         self.last_error_type = None
+        self.last_error_types = []
+        worker_error_types: list[str] = []
 
         _tp_t0 = time.monotonic()
 
@@ -337,7 +364,19 @@ class BlueprintEnsembleGenerator(BaseAgent):
                         strategy_name = futures[future]
                         try:
                             # [V61.3] 개별 후보에도 타임아웃 적용
-                            result = future.result(timeout=self.SINGLE_CANDIDATE_TIMEOUT)
+                            future_output = future.result(timeout=self.SINGLE_CANDIDATE_TIMEOUT)
+                            worker_error_type = None
+                            result = future_output
+                            if (
+                                isinstance(future_output, tuple)
+                                and len(future_output) == 2
+                                and future_output[0] is None
+                                and isinstance(future_output[1], str)
+                            ):
+                                result = future_output[0]
+                                worker_error_type = future_output[1]
+                            if worker_error_type:
+                                worker_error_types.append(worker_error_type)
                             if result and isinstance(result, dict):
                                 result["_strategy"] = strategy_name
                                 candidates.append(result)
@@ -351,6 +390,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
                                 )
                         except FutureTimeoutError:
                             logging.warning(f" [V61.3] {strategy_name} 타임아웃 ({self.SINGLE_CANDIDATE_TIMEOUT}초)")
+                            worker_error_types.append(AgentErrorType.TIMEOUT)
                             self._operator_log(
                                 f"✗ [Blueprint] '{strategy_name}' 타임아웃",
                                 level="warning",
@@ -358,6 +398,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
                             )
                         except Exception as e:
                             logging.warning(f" {strategy_name} 실패: {str(e)[:50]}")
+                            worker_error_types.append(self._classify_error(e))
                             self._operator_log(
                                 f"✗ [Blueprint] '{strategy_name}' 실패",
                                 level="warning",
@@ -388,6 +429,9 @@ class BlueprintEnsembleGenerator(BaseAgent):
             logging.info(f"[PerfTimer:BlueprintEnsemble] bp_ep{ep_num}_ensemble={time.monotonic() - _tp_t0:.2f}s")
         except Exception as _e:
             logging.debug("[BlueprintEnsemble] PerfTimer 기록 실패 (무시): %s", _e)
+
+        self.last_error_types = list(worker_error_types)
+        self.last_error_type = self._select_generate_error_type(worker_error_types)
 
         if not candidates:
             logging.warning("❌ [BPEnsemble] 모든 후보 생성 실패")
@@ -463,7 +507,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
         hud_context: str = "",  # [V60.95] 고밀도 HUD 컨텍스트
         genre: str = GenreTypes.WUXIA,  # [V61.3] 미리 로드한 genre (thread-safety)
         cache_name: str = "",  # [Tier4-11] shared context cache name
-    ) -> dict | None:
+    ) -> dict | tuple[None, str] | None:
         """단일 Blueprint 생성"""
         # [V61.3] 전체 메서드를 try-except로 감싸서 worker thread 크래시 방지
         try:
@@ -574,7 +618,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
                     full_prompt_fallback = prompt
             if not prompt:
                 logging.warning("[BPEnsemble] BLUEPRINT_GENERATION_PROMPT not found in prompt loader")
-                return None
+                return None, AgentErrorType.UNKNOWN
 
             _strategy_name = strategy.get("name", "unknown")
             self._operator_log(
@@ -596,11 +640,11 @@ class BlueprintEnsembleGenerator(BaseAgent):
             result = self._extract_json_robust(response)
 
             if not isinstance(result, dict):
-                return None
+                return None, AgentErrorType.SCHEMA_INCOMPATIBLE
 
             # 필수 필드 확인
             if "scene_breakdown" not in result or "integrated_scenario" not in result:
-                return None
+                return None, AgentErrorType.SCHEMA_INCOMPATIBLE
 
             return result
 
@@ -610,7 +654,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
 
             logging.error(f" [V61.3] BPEnsemble _generate_single 크래시: {str(e)[:80]}")
             logging.error(traceback.format_exc())
-            return None
+            return None, self._classify_error(e)
 
     def _build_protagonist_instructions(self, protagonist_config: dict, genre: str = "wuxia") -> str:
         """
@@ -717,190 +761,54 @@ class BlueprintEnsembleGenerator(BaseAgent):
         return "\n".join(parts) if parts else ""
 
     def _format_constraints(self, constraint_block: dict, *, genre: str = "wuxia") -> str:
-        """제약 조건 포맷팅"""
-        lines = []
-
-        # Must Focus
-        must_focus = constraint_block.get("must_focus", {})
-        if must_focus.get("key_events"):
-            lines.append("[이번 화 필수 이벤트]")
-            for event in must_focus["key_events"][:5]:
-                lines.append(f"  - {event}")
-
-        # Stop Line
-        stop_line = constraint_block.get("stop_line", {})
-        if stop_line.get("content"):
-            lines.append("\n🚨 [정지선 - 절대 침범 금지]")
-            lines.append(f"다음 화 내용: {stop_line['content'][:150]}")
-            lines.append("→ 위 내용을 이번 화에서 다루면 REJECT")
-
-        # Continuity — [TF-40] P1-1: ongoing_conflicts, active_characters, time_context 추가
-        continuity = constraint_block.get("continuity", {})
-        if continuity.get("location") or continuity.get("ongoing_conflicts") or continuity.get("active_characters"):
-            lines.append("\n[연속성]")
-            if continuity.get("location"):
-                lines.append(f"  이전 화 종료 위치: {continuity['location']}")
-                lines.append("  → 이 위치에서 시작해야 함")
-            if continuity.get("time_context"):
-                lines.append(f"  시간 맥락: {str(continuity['time_context'])[:100]}")
-            _conflicts = continuity.get("ongoing_conflicts", [])
-            if _conflicts:
-                if isinstance(_conflicts, list):
-                    for _c in _conflicts[:5]:
-                        lines.append(f"  - 진행 중인 갈등: {str(_c)[:80]}")
-                else:
-                    lines.append(f"  - 진행 중인 갈등: {str(_conflicts)[:200]}")
-            _active = continuity.get("active_characters", [])
-            if _active:
-                if isinstance(_active, list):
-                    lines.append(f"  등장 캐릭터: {', '.join(str(c)[:20] for c in _active[:10])}")
-                else:
-                    lines.append(f"  등장 캐릭터: {str(_active)[:200]}")
-
-        # Inherited State — [TF-40] P1-2: injuries, internal_energy, mood 추가
-        inherited = constraint_block.get("inherited_state", {})
-        _has_inherited = (
-            inherited.get("equipment")
-            or inherited.get("injuries")
-            or inherited.get("internal_energy")
-            or inherited.get("mood")
-        )
-        if _has_inherited:
-            lines.append("\n[계승 상태]")
-            if inherited.get("equipment"):
-                equip = inherited["equipment"]
-                if isinstance(equip, list):
-                    equip = ", ".join(str(x) if isinstance(x, dict) else x for x in equip[:5])
-                lines.append(f"  소지품: {equip}")
-            if inherited.get("injuries"):
-                _inj = inherited["injuries"]
-                if isinstance(_inj, list):
-                    lines.append(f"  부상: {', '.join(str(i)[:40] for i in _inj[:5])}")
-                else:
-                    lines.append(f"  부상: {str(_inj)[:200]}")
-            # [TF-41] P1-2: 무협 전용 — 비무협 장르는 내공 표시 스킵
-            if genre == "wuxia" and inherited.get("internal_energy") is not None:
-                lines.append(f"  내공/에너지: {inherited['internal_energy']}")
-            if inherited.get("mood"):
-                lines.append(f"  심리 상태: {str(inherited['mood'])[:100]}")
-
-        # [TF-40] P0-2: Arc 제약 요약 (Stage 2 제약 전달)
-        arc_summary = constraint_block.get("arc_constraint_summary")
-        if arc_summary:
-            lines.append("\n[Arc 제약 요약]")
-            if isinstance(arc_summary, str):
-                lines.append(f"  {arc_summary[:500]}")
-            elif isinstance(arc_summary, dict):
-                for _k, _v in list(arc_summary.items())[:10]:
-                    lines.append(f"  {_k}: {str(_v)[:100]}")
-
-        # [TF-40] P0-1: state_changes 요약 (사망NPC, 습득스킬, 완결플롯)
-        sc_summary = constraint_block.get("state_changes_summary")
-        if sc_summary:
-            lines.append("\n[상태 변경 요약]")
-            if isinstance(sc_summary, str):
-                lines.append(f"  {sc_summary[:800]}")  # [TF-40] 7필드 전량 수용 보장
-            elif isinstance(sc_summary, dict):
-                _deaths = sc_summary.get("npc_deaths", [])
-                if _deaths:
-                    _names = [
-                        d.get("name", d.get("npc", str(d))) if isinstance(d, dict) else str(d) for d in _deaths[:10]
-                    ]
-                    lines.append(f"  사망 NPC (부활 금지): {', '.join(_names)}")
-                _skills = sc_summary.get("skill_acquisitions", [])
-                if _skills:
-                    _names = [
-                        s.get("name", s.get("skill", str(s))) if isinstance(s, dict) else str(s) for s in _skills[:10]
-                    ]
-                    lines.append(f"  습득 기술: {', '.join(_names)}")
-                _resolved = sc_summary.get("resolved_plots", [])
-                if _resolved:
-                    _names = [
-                        r.get("plot", r.get("description", str(r))) if isinstance(r, dict) else str(r)
-                        for r in _resolved[:10]
-                    ]
-                    lines.append(f"  완결된 플롯 (재생성 금지): {', '.join(_names)}")
-                _perm = sc_summary.get("permanent_injuries", [])
-                if _perm:
-                    _descs = [
-                        str(p)[:50] if not isinstance(p, dict) else p.get("description", str(p))[:50] for p in _perm[:5]
-                    ]
-                    lines.append(f"  영구 부상: {', '.join(_descs)}")
-
-        return "\n".join(lines) if lines else "(제약 없음)"
-
-        semantic_carryover = constraint_block.get("semantic_carryover")
-        if isinstance(semantic_carryover, dict) and semantic_carryover:
-            lines.append("\n[Arc Semantic Carryover]")
-            for entry in semantic_carryover.get("relationship_rationale", []) or []:
-                if not isinstance(entry, dict):
-                    continue
-                npc = str(entry.get("npc", "") or "").strip() or "?"
-                cue = str(entry.get("trigger", "") or entry.get("justification", "") or "").strip()
-                if cue:
-                    lines.append(f"  relationship {npc}: {cue[:120]}")
-            growth = str(semantic_carryover.get("growth_justification", "") or "").strip()
-            if growth:
-                lines.append(f"  growth_justification: {growth[:140]}")
-            for anchor in (semantic_carryover.get("foreshadow_anchors", []) or [])[:3]:
-                text = str(anchor or "").strip()
-                if text:
-                    lines.append(f"  foreshadow: {text[:120]}")
-            checkpoints = [
-                str(item or "").strip()[:80]
-                for item in (semantic_carryover.get("continuity_checkpoints", []) or [])[:3]
-            ]
-            checkpoints = [item for item in checkpoints if item]
-            if checkpoints:
-                lines.append(f"  continuity: {'; '.join(checkpoints)}")
-
-        return "\n".join(lines) if lines else "(?쒖빟 ?놁쓬)"
-
-    def _format_constraints(self, constraint_block: dict, *, genre: str = "wuxia") -> str:
         """Format compact blueprint constraints for the generation prompt."""
         lines: list[str] = []
 
         must_focus = constraint_block.get("must_focus", {})
         if isinstance(must_focus, dict):
+            arc_title = str(must_focus.get("arc_title", "") or "").strip()
+            if arc_title:
+                lines.append("[이번 화 제목]")
+                lines.append(f"  {_fit_compact_context(arc_title, 120)}")
             key_events = must_focus.get("key_events") or []
             if isinstance(key_events, list) and key_events:
                 lines.append("[이번 화 필수 이벤트]")
                 for event in key_events[:5]:
                     text = str(event or "").strip()
                     if text:
-                        lines.append(f"  - {text[:120]}")
+                        lines.append(f"  - {_fit_compact_context(text, 120)}")
             content = str(must_focus.get("content", "") or "").strip()
             if content and not key_events:
                 lines.append("[이번 화 핵심 초점]")
-                lines.append(f"  {content[:500]}")
+                lines.append(f"  {_fit_compact_context(content, 500)}")
 
         stop_line = constraint_block.get("stop_line", {})
         if isinstance(stop_line, dict) and stop_line.get("content"):
             lines.append("\n[Stop Line]")
-            lines.append(f"  다음 화 내용 금지: {str(stop_line['content'])[:150]}")
+            lines.append(f"  다음 화 내용 금지: {_fit_compact_context(stop_line['content'], 150)}")
 
         continuity = constraint_block.get("continuity", {})
         if isinstance(continuity, dict):
             continuity_lines: list[str] = []
             if continuity.get("location"):
-                continuity_lines.append(f"  이전 종료 위치: {str(continuity['location'])[:120]}")
+                continuity_lines.append(f"  이전 종료 위치: {_fit_compact_context(continuity['location'], 120)}")
             if continuity.get("time_context"):
-                continuity_lines.append(f"  시간 맥락: {str(continuity['time_context'])[:100]}")
+                continuity_lines.append(f"  시간 맥락: {_fit_compact_context(continuity['time_context'], 100)}")
             conflicts = continuity.get("ongoing_conflicts") or []
             if isinstance(conflicts, list):
                 for item in conflicts[:5]:
                     text = str(item or "").strip()
                     if text:
-                        continuity_lines.append(f"  - 진행 중 갈등: {text[:80]}")
+                        continuity_lines.append(f"  - 진행 중 갈등: {_fit_compact_context(text, 80)}")
             elif conflicts:
-                continuity_lines.append(f"  - 진행 중 갈등: {str(conflicts)[:200]}")
+                continuity_lines.append(f"  - 진행 중 갈등: {_fit_compact_context(conflicts, 200)}")
             active = continuity.get("active_characters") or []
             if isinstance(active, list) and active:
-                names = [str(item or "").strip()[:20] for item in active[:10] if str(item or "").strip()]
+                names = [_fit_compact_context(str(item or "").strip(), 20) for item in active[:10] if str(item or "").strip()]
                 if names:
                     continuity_lines.append(f"  등장 캐릭터: {', '.join(names)}")
             elif active:
-                continuity_lines.append(f"  등장 캐릭터: {str(active)[:200]}")
+                continuity_lines.append(f"  등장 캐릭터: {_fit_compact_context(active, 200)}")
             if continuity_lines:
                 lines.append("\n[연속성]")
                 lines.extend(continuity_lines)
@@ -912,17 +820,19 @@ class BlueprintEnsembleGenerator(BaseAgent):
             if equip:
                 if isinstance(equip, list):
                     equip = ", ".join(str(x) if not isinstance(x, dict) else str(x.get("name", x)) for x in equip[:5])
-                inherited_lines.append(f"  장비: {str(equip)[:200]}")
+                inherited_lines.append(f"  장비: {_fit_compact_context(equip, 200)}")
             injuries = inherited.get("injuries")
             if injuries:
                 if isinstance(injuries, list):
-                    inherited_lines.append(f"  부상: {', '.join(str(i)[:40] for i in injuries[:5])}")
+                    inherited_lines.append(
+                        f"  부상: {', '.join(_fit_compact_context(i, 40) for i in injuries[:5])}"
+                    )
                 else:
-                    inherited_lines.append(f"  부상: {str(injuries)[:200]}")
+                    inherited_lines.append(f"  부상: {_fit_compact_context(injuries, 200)}")
             if genre == "wuxia" and inherited.get("internal_energy") is not None:
-                inherited_lines.append(f"  내공/에너지: {str(inherited['internal_energy'])[:80]}")
+                inherited_lines.append(f"  내공/에너지: {_fit_compact_context(inherited['internal_energy'], 80)}")
             if inherited.get("mood"):
-                inherited_lines.append(f"  심리 상태: {str(inherited['mood'])[:100]}")
+                inherited_lines.append(f"  심리 상태: {_fit_compact_context(inherited['mood'], 100)}")
             if inherited_lines:
                 lines.append("\n[계승 상태]")
                 lines.extend(inherited_lines)
@@ -931,16 +841,16 @@ class BlueprintEnsembleGenerator(BaseAgent):
         if arc_summary:
             lines.append("\n[Arc 제약 요약]")
             if isinstance(arc_summary, str):
-                lines.append(f"  {arc_summary[:500]}")
+                lines.append(f"  {_fit_compact_context(arc_summary, 500)}")
             elif isinstance(arc_summary, dict):
                 for key, value in list(arc_summary.items())[:10]:
-                    lines.append(f"  {key}: {str(value)[:100]}")
+                    lines.append(f"  {key}: {_fit_compact_context(value, 100)}")
 
         sc_summary = constraint_block.get("state_changes_summary")
         if sc_summary:
             lines.append("\n[상태 변경 요약]")
             if isinstance(sc_summary, str):
-                lines.append(f"  {sc_summary[:800]}")
+                lines.append(f"  {_fit_compact_context(sc_summary, 800)}")
             elif isinstance(sc_summary, dict):
                 deaths = sc_summary.get("npc_deaths", [])
                 if deaths:
@@ -964,7 +874,9 @@ class BlueprintEnsembleGenerator(BaseAgent):
                 permanent = sc_summary.get("permanent_injuries", [])
                 if permanent:
                     descs = [
-                        str(p)[:50] if not isinstance(p, dict) else str(p.get("description", str(p)))[:50]
+                        _fit_compact_context(p, 50)
+                        if not isinstance(p, dict)
+                        else _fit_compact_context(p.get("description", str(p)), 50)
                         for p in permanent[:5]
                     ]
                     lines.append(f"  영구 부상: {', '.join(descs)}")
@@ -978,16 +890,16 @@ class BlueprintEnsembleGenerator(BaseAgent):
                 npc = str(entry.get("npc", "") or "").strip() or "?"
                 cue = str(entry.get("trigger", "") or entry.get("justification", "") or "").strip()
                 if cue:
-                    lines.append(f"  relationship {npc}: {cue[:120]}")
+                    lines.append(f"  relationship {npc}: {_fit_compact_context(cue, 120)}")
             growth = str(semantic_carryover.get("growth_justification", "") or "").strip()
             if growth:
-                lines.append(f"  growth_justification: {growth[:140]}")
+                lines.append(f"  growth_justification: {_fit_compact_context(growth, 140)}")
             for anchor in (semantic_carryover.get("foreshadow_anchors", []) or [])[:3]:
                 text = str(anchor or "").strip()
                 if text:
-                    lines.append(f"  foreshadow: {text[:120]}")
+                    lines.append(f"  foreshadow: {_fit_compact_context(text, 120)}")
             checkpoints = [
-                str(item or "").strip()[:80]
+                _fit_compact_context(str(item or "").strip(), 80)
                 for item in (semantic_carryover.get("continuity_checkpoints", []) or [])[:3]
             ]
             checkpoints = [item for item in checkpoints if item]
@@ -1104,14 +1016,34 @@ class BlueprintEnsembleGenerator(BaseAgent):
                                 s_chars = [s_chars]
                             if isinstance(s_events, str):
                                 s_events = [s_events]
-                            chars_str = ", ".join(s_chars[:5]) if s_chars else ""
-                            events_str = "; ".join(s_events[:3]) if s_events else ""
-                            bp_lines.append(f"  [{sk}] {s_title} | 등장: {chars_str} | 이벤트: {events_str}")
+                            chars_str = (
+                                _fit_compact_context(
+                                    ", ".join(str(item or "").strip() for item in s_chars if str(item or "").strip()),
+                                    120,
+                                )
+                                if s_chars
+                                else ""
+                            )
+                            events_str = (
+                                _fit_compact_context(
+                                    "; ".join(str(item or "").strip() for item in s_events if str(item or "").strip()),
+                                    180,
+                                )
+                                if s_events
+                                else ""
+                            )
+                            bp_lines.append(
+                                f"  [{sk}] {_fit_compact_context(s_title, 80)} | 등장: {chars_str} | 이벤트: {events_str}"
+                            )
 
             bp_full = "\n".join(bp_lines)
             # 400K자 상한 (Gemini 1.05M 토큰 입력 여유)
             if len(bp_full) > 400000:
-                bp_full = bp_full[:400000] + "\n... (400K자 절삭)"
+                bp_full = smart_truncate(
+                    bp_full,
+                    max_chars=400000,
+                    head_chars=max(0, min(int(400000 * 0.55), 400000 - 80)),
+                )
             sections.append(bp_full)
 
         # ── [V67] 이전 원고 전문 ──
@@ -1124,7 +1056,11 @@ class BlueprintEnsembleGenerator(BaseAgent):
             )
             # 400K자 상한 (Gemini 1.05M 토큰 입력 여유)
             if len(ms_section) > 400000:
-                ms_section = ms_section[:400000] + "\n... (400K자 절삭)"
+                ms_section = smart_truncate(
+                    ms_section,
+                    max_chars=400000,
+                    head_chars=max(0, min(int(400000 * 0.55), 400000 - 80)),
+                )
             sections.append(ms_section)
 
         result = "\n\n".join(sections)

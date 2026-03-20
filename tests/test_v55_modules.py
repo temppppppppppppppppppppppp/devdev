@@ -128,6 +128,38 @@ class TestConstitutionalChecker:
             assert "❌" in examples
             assert "✅" in examples
 
+    def test_blueprint_constitution_preserves_tail_context(self):
+        from modules.core.constitutional_checker import ConstitutionalChecker
+
+        checker = ConstitutionalChecker(genre="wuxia")
+
+        prompt = checker.get_architect_constitution(
+            prev_blueprint={"ending_hook": "HEAD-END\n" + ("E" * 260) + "\nTAIL-ARCH-END"},
+            arc_data={"tactical_doc": "HEAD-TACTICAL\n" + ("T" * 320) + "\nTAIL-ARCH-TAC"},
+        )
+
+        assert "TAIL-ARCH-END" in prompt
+        assert "TAIL-ARCH-TAC" in prompt
+        assert "...(중간 생략)..." in prompt
+
+    def test_manuscript_constitution_preserves_scene_tail_context(self):
+        from modules.core.constitutional_checker import ConstitutionalChecker
+
+        checker = ConstitutionalChecker(genre="wuxia")
+
+        prompt = checker.get_writer_constitution(
+            blueprint={
+                "scene_breakdown": {
+                    "scene_1": {"description": "HEAD-SCENE\n" + ("S" * 120) + "\nTAIL-WRITER-SCENE"}
+                }
+            },
+            prev_manuscript="직전 화 마지막",
+            inventory=[],
+        )
+
+        assert "WRITER-SCENE" in prompt
+        assert "...(중간 생략)..." in prompt
+
     def test_full_injection(self, sample_arc):
         """전체 주입 프롬프트 테스트"""
         from modules.core.constitutional_checker import ConstitutionalChecker
@@ -206,6 +238,75 @@ class TestWriterTemplate:
         assert "passed" in result
         assert "length" in result
         assert "scene_coverage" in result
+
+    def test_generate_template_keeps_tail_of_prev_ending_for_opening_anchor(self):
+        from modules.core.writer_template import WriterTemplate
+
+        wt = WriterTemplate(genre="wuxia")
+        blueprint = {
+            "ep_num": 3,
+            "scene_breakdown": {"scene_1": {"description": "opening bridge"}, "scene_2": {"description": "ending hook"}},
+        }
+        prev_ending = "HEAD " + ("x" * 500) + " TAIL_ANCHOR_ALPHA TAIL_ANCHOR_BETA"
+
+        template = wt.generate_template(blueprint=blueprint, prev_ending=prev_ending)
+
+        assert len(template.opening_anchor) <= 300
+        assert "TAIL_ANCHOR_ALPHA" in template.opening_anchor
+        assert "TAIL_ANCHOR_BETA" in template.opening_anchor
+        assert "HEAD " not in template.opening_anchor
+
+    def test_validation_requires_opening_anchor_in_first_600_chars(self):
+        from modules.core.writer_template import WriterTemplate
+
+        wt = WriterTemplate(genre="wuxia")
+        blueprint = {
+            "ep_num": 3,
+            "scene_breakdown": {
+                "scene_1": {"description": "opening bridge"},
+                "scene_2": {"description": "conflict rise"},
+                "scene_3": {"description": "ending hook"},
+            },
+        }
+        template = wt.generate_template(
+            blueprint=blueprint,
+            prev_ending="... TAIL_ANCHOR_ALPHA TAIL_ANCHOR_BETA",
+        )
+        manuscript = (
+            ("opening bridge conflict rise " * 25)
+            + ("padding " * 120)
+            + " ending hook TAIL_ANCHOR_ALPHA TAIL_ANCHOR_BETA"
+        )
+
+        result = wt.validate_against_template(manuscript, template)
+
+        assert "직전 화와의 연결이 약함" in result["warnings"]
+
+    def test_validation_accepts_opening_anchor_when_present_in_first_600_chars(self):
+        from modules.core.writer_template import WriterTemplate
+
+        wt = WriterTemplate(genre="wuxia")
+        blueprint = {
+            "ep_num": 3,
+            "scene_breakdown": {
+                "scene_1": {"description": "opening bridge"},
+                "scene_2": {"description": "conflict rise"},
+                "scene_3": {"description": "ending hook"},
+            },
+        }
+        template = wt.generate_template(
+            blueprint=blueprint,
+            prev_ending="... TAIL_ANCHOR_ALPHA TAIL_ANCHOR_BETA",
+        )
+        manuscript = (
+            "opening bridge TAIL_ANCHOR_ALPHA conflict rise " * 10
+            + ("body " * 120)
+            + " ending hook"
+        )
+
+        result = wt.validate_against_template(manuscript, template)
+
+        assert "직전 화와의 연결이 약함" not in result["warnings"]
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

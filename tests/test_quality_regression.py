@@ -4,6 +4,7 @@ Tests detect_score_regression() and get_score_trend_summary() methods
 added to QualityDashboard in Phase 3 Step 1.
 """
 
+import json
 import sys
 from pathlib import Path
 from unittest.mock import patch
@@ -194,3 +195,27 @@ class TestRetrievalObservationSummary:
         assert summary["recent"][0]["stage"] == "stage4"
         assert summary["recent"][1]["provenance_ledger"]["source_pack"] == "stage2"
         assert summary["recent"][1]["budget_ledger"]["budget_bucket"] == "smart_retrieval.stage2_total_budget"
+
+
+class TestPersistenceHealth:
+    def test_save_record_failure_surfaces_persistence_health_and_soft_failure_sink(self, tmp_path):
+        project_dir = tmp_path / "demo"
+        db = QualityDashboard(project_path=project_dir)
+
+        with patch("modules.core.quality_dashboard.open", side_effect=OSError("disk full")):
+            db.record_validation(ep_num=1, result={"decision": "PASS", "score": 88}, stage=4)
+
+        summary = db.get_summary()
+
+        assert summary["persistence_health"]["available"] is True
+        assert summary["persistence_health"]["recent_count"] == 1
+        alert = summary["persistence_health"]["recent"][0]
+        assert alert["component"] == "quality_dashboard"
+        assert alert["operation"] == "save_record"
+        assert alert["exception_type"] == "OSError"
+
+        soft_failures = (project_dir / "logs" / "soft_failures.jsonl").read_text(encoding="utf-8").strip().splitlines()
+        assert len(soft_failures) == 1
+        payload = json.loads(soft_failures[0])
+        assert payload["component"] == "quality_dashboard"
+        assert payload["operation"] == "save_record"

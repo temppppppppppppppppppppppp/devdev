@@ -12,7 +12,11 @@ import pytest
 
 from modules.core.session_logger import SessionLogger
 from modules.core.stage3_context import Stage3Context
-from modules.core.stage3_orchestrator import Stage3Orchestrator, _select_stage3_anchor_recent_window
+from modules.core.stage3_orchestrator import (
+    Stage3Orchestrator,
+    _build_stage3_work_focus_advisory,
+    _select_stage3_anchor_recent_window,
+)
 
 # ── Fixtures ─────────────────────────────────────────────────
 
@@ -460,12 +464,14 @@ class TestStageAttemptObservability:
             {
                 "final_verdict": "PASS",
                 "quality_risk": True,
+                "revision_required": True,
                 "phases": {
                     "validate": {
                         "verdict": "PASS",
                         "selected_index": 1,
                         "selection_reason": "candidate 2 edges out the field",
                         "quality_risk": True,
+                        "revision_required": True,
                         "selected_candidate_advisory": {
                             "quality_risk": True,
                             "python_warnings": [{"message": "Arc NPC mention is thin"}],
@@ -483,6 +489,7 @@ class TestStageAttemptObservability:
 
         assert payload is not None
         assert payload["advisory_warnings"]["quality_risk"] is True
+        assert payload["advisory_warnings"]["revision_required"] is True
         assert payload["advisory_warnings"]["selected_candidate_advisory"] == ["Arc NPC mention is thin"]
 
 
@@ -962,7 +969,13 @@ class TestProcessSingleEpisode:
 
     def test_stage3_success_records_pass_rate_monitor(self, orch, app_mock):
         blueprint = {"integrated_scenario": "test", "scene_breakdown": {"s1": "scene"}}
-        pipeline_result = {"final_verdict": "PASS", "last_score": 87, "phases": {"generate": {"selected_score": 87}}}
+        pipeline_result = {
+            "final_verdict": "PASS",
+            "last_score": 87,
+            "phases": {"generate": {"selected_score": 87}},
+            "_stage3_duration_ms": 4321,
+            "_stage3_token_cost_usd": 0.123,
+        }
 
         orch._handle_success(3, 1, {}, blueprint, pipeline_result, [], 0, 0)
 
@@ -971,9 +984,17 @@ class TestProcessSingleEpisode:
         assert kw["success"] is True
         assert kw["final_verdict"] == "PASS"
         assert kw["attempt_key"] == "s3:ep3:arc1:a1"
+        assert kw["duration_ms"] == 4321
+        assert kw["token_cost"] == 0.123
 
     def test_stage3_failure_records_pass_rate_monitor(self, orch, app_mock):
-        pipeline_result = {"final_verdict": "REJECT", "last_score": 41, "phases": {"generate": {"selected_score": 41}}}
+        pipeline_result = {
+            "final_verdict": "REJECT",
+            "last_score": 41,
+            "phases": {"generate": {"selected_score": 41}},
+            "_stage3_duration_ms": 987,
+            "_stage3_token_cost_usd": 0.456,
+        }
 
         orch._handle_failure(4, pipeline_result, 0, 0, arc_no=2)
 
@@ -982,6 +1003,8 @@ class TestProcessSingleEpisode:
         assert kw["success"] is False
         assert kw["final_verdict"] == "REJECT"
         assert kw["attempt_key"] == "s3:ep4:arc2:a1"
+        assert kw["duration_ms"] == 987
+        assert kw["token_cost"] == 0.456
 
     def test_stage3_reject_cost_record_uses_metrics_session_id_when_available(self, orch, app_mock):
         app_mock.current_project.metrics_session_id = "sess_stage3_reject"
@@ -1187,6 +1210,30 @@ class TestStage3BatchBlueprintingEntryPoint:
 
         app_mock._write_audit_summary.assert_not_called()
 
+
+def test_stage3_work_focus_advisory_preserves_tail_context(app_mock):
+    app_mock.current_project.db.get_relationship_history.return_value = []
+
+    with patch("modules.core.stage3_orchestrator.SemanticQueryBroker") as broker_cls:
+        broker_cls.return_value.build_relation_slice.return_value = (
+            "[관계 의미 질의]\n" + ("R" * 220) + "TAIL-REL"
+        )
+        text = _build_stage3_work_focus_advisory(
+            {
+                "tracking_slots": ["head-slot"],
+                "mandatory_scene_engines": ["scene-engine"],
+                "registry_profiles": [],
+            },
+            arc_data={"constraint_summary": "conflict"},
+            entity_registry={"characters": [{"name": "alice"}, {"name": "bob"}]},
+            ctx=app_mock,
+            protagonist_name="hero",
+            max_chars=180,
+        )
+
+    assert len(text) <= 180
+    assert "TAIL-REL" in text
+
     def test_target_prompt_uses_hybrid_project_head(self, app_mock):
         app_mock.current_project.db.get_latest_blueprint_number.return_value = 0
         app_mock.current_project.get_latest_episode_number = MagicMock(return_value=4)
@@ -1204,6 +1251,79 @@ class TestStage3BatchBlueprintingEntryPoint:
         assert "현재 3화" in call.args[0]
         assert call.kwargs["min_val"] == 4
         assert call.kwargs["max_val"] == 5
+
+    @patch("modules.core.spinners.StageSpinner")
+    def test_stage3_prev_manuscripts_preserve_recent_tail_context(self, MockSpinner, orch, app_mock, monkeypatch):
+        spinner = MagicMock()
+        spinner.update_detail = MagicMock()
+        MockSpinner.return_value.__enter__.return_value = spinner
+        app_mock.current_project.db.get_recent_manuscripts.return_value = [
+            {"ep_num": 1, "content": "HEAD-MS\n" + ("M" * 500) + "\nTAIL-MS"}
+        ]
+
+        import modules.core.stage3_orchestrator as mod
+
+        monkeypatch.setattr(mod.ContextLimits, "MAX_CONTEXT_CHARS", 220)
+
+        orch._generate_blueprint(
+            working_ep=2,
+            arc_data=app_mock.current_project.arcs[0],
+            arc_idx=0,
+            prev_blueprint=None,
+            prev_blueprints=[],
+            entity_registry={"characters": [{"name": "윤서아"}]},
+            protagonist_name="장무기",
+            protagonist_config={},
+        )
+
+        prev_ms = app_mock.agents["three_phase_bp"].generate.call_args.kwargs["prev_manuscripts_text"]
+        assert len(prev_ms) <= 220
+        assert "TAIL-MS" in prev_ms
+
+    @patch("modules.core.spinners.StageSpinner")
+    def test_stage3_slot_max_preserves_recent_tail_context(self, MockSpinner, orch, app_mock):
+        spinner = MagicMock()
+        spinner.update_detail = MagicMock()
+        MockSpinner.return_value.__enter__.return_value = spinner
+        app_mock.current_project.db.get_recent_manuscripts.return_value = []
+        app_mock.context_advisor = MagicMock()
+        app_mock.memory = MagicMock()
+        app_mock.memory.retrieve_multi_query_context.return_value = "HEAD-S3 " + ("S" * 260) + " TAIL-S3"
+        app_mock.sys.guard = MagicMock()
+        app_mock.sys.guard.select_retrieval_focus.return_value = {
+            "tracking_slots": ["핵심 배우 라인"],
+            "mandatory_scene_engines": [],
+            "registry_profiles": [],
+        }
+        app_mock.context_advisor.plan_stage3_retrieval.return_value = MagicMock(
+            slots=[MagicMock(category="genre_context_1", query="genre query", source="vec_memory", max_chars=120)]
+        )
+
+        def threshold_side_effect(key, default=None):
+            if key == "smart_retrieval.enabled":
+                return True
+            if key == "smart_retrieval.stage3_enabled":
+                return True
+            if key == "context.vector_max_results_s4":
+                return 8
+            return default
+
+        with patch("modules.validation.threshold_helper._threshold", side_effect=threshold_side_effect):
+            orch._generate_blueprint(
+                working_ep=1,
+                arc_data=app_mock.current_project.arcs[0],
+                arc_idx=0,
+                prev_blueprint=None,
+                prev_blueprints=[],
+                entity_registry={"characters": [{"name": "윤서아"}]},
+                protagonist_name="장무기",
+                protagonist_config={},
+            )
+
+        semantic_context = app_mock.agents["three_phase_bp"].generate.call_args.kwargs["semantic_context"]
+        sc_block = semantic_context.split("[SC:genre_context_1]\n")[-1] if "[SC:genre_context_1]" in semantic_context else ""
+        assert len(sc_block) <= 120
+        assert "TAIL-S3" in sc_block
 
 
 # ── [Phase 4C-4] Stage3Context DI 테스트 ─────────────────────

@@ -7,6 +7,7 @@ import logging
 import os
 import re
 from contextlib import nullcontext as _nullcontext
+from pathlib import Path
 
 from modules.core.genre_schema_builder import is_wuxia
 from modules.core.inventory_state import compute_inventory_count_deltas, normalize_inventory_counts
@@ -102,6 +103,139 @@ class Stage4PostProcessor:
     def _resolve_project_log_dir(self):
         current_project = getattr(self.ctx, "current_project", None)
         return resolve_project_log_dir(current_project)
+
+    @staticmethod
+    def _write_emergency_manuscript_dump(*, output_dir, next_ep: int, final_title: str, final_manuscript: str) -> Path:
+        dump_dir = Path(output_dir)
+        dump_dir.mkdir(parents=True, exist_ok=True)
+        dump_path = dump_dir / f"emergency_ep_{next_ep:04d}.txt"
+        title = str(final_title or f"제{next_ep}화").strip() or f"제{next_ep}화"
+        dump_path.write_text(f"# {title}\n\n{final_manuscript}", encoding="utf-8")
+        return dump_path
+
+    @staticmethod
+    def _extract_save_error(manager, fallback: str) -> str:
+        raw = getattr(manager, "last_save_error", "")
+        if isinstance(raw, str) and raw.strip():
+            return raw.strip()
+        return fallback
+
+    def _raise_if_save_failed(self, *, manager, label: str, save_result) -> None:
+        if save_result is False:
+            error = self._extract_save_error(manager, f"{label}.save() returned False")
+            logging.warning("[TF-C10] %s save returned False: %s", label, error)
+            self.ctx.ui.log(f"   ⚠️ [TF-C10] {label} save 실패: {error}")
+            raise RuntimeError(f"{label}.save failed: {error}")
+
+    @staticmethod
+    def _normalize_karma_entry(entry) -> dict | None:
+        if not isinstance(entry, dict):
+            return None
+        npc_name = entry.get("target") or entry.get("npc_name") or entry.get("name") or ""
+        if not npc_name:
+            return None
+        misunderstanding = entry.get("misunderstanding")
+        if misunderstanding is None:
+            misunderstanding = entry.get("value")
+        if misunderstanding is None:
+            misunderstanding = entry.get("point", 0)
+        obsession = entry.get("obsession")
+        if obsession is None:
+            obsession = entry.get("point")
+        if obsession is None:
+            obsession = 0
+        return {
+            "npc_name": str(npc_name),
+            "misunderstanding": misunderstanding,
+            "obsession": obsession,
+        }
+
+    def _persist_karma_status(self, *, karma_matrix, next_ep: int) -> int:
+        if not isinstance(karma_matrix, list) or not karma_matrix:
+            return 0
+
+        current_project = getattr(self.ctx, "current_project", None)
+        db = getattr(current_project, "db", None)
+        update_karma = getattr(db, "update_karma", None)
+        if not callable(update_karma):
+            self._report_soft_failure(
+                operation="update_karma",
+                message="karma_status sink unavailable on Stage4 PASS path",
+                ep_num=next_ep,
+                extra={"table": "karma_status"},
+                user_visible=False,
+            )
+            return 0
+
+        karma_status_cache = getattr(current_project, "karma_status", None)
+        if not isinstance(karma_status_cache, dict):
+            karma_status_cache = {}
+            if current_project is not None:
+                try:
+                    current_project.karma_status = karma_status_cache
+                except Exception:
+                    karma_status_cache = {}
+
+        persisted = 0
+        for raw_entry in karma_matrix:
+            normalized = self._normalize_karma_entry(raw_entry)
+            if not normalized:
+                continue
+
+            npc_name = normalized["npc_name"]
+            try:
+                update_karma(
+                    npc_name,
+                    normalized["misunderstanding"],
+                    normalized["obsession"],
+                    next_ep,
+                )
+            except Exception as karma_err:
+                self._report_soft_failure(
+                    operation="update_karma",
+                    message="karma_status save failed after Stage4 PASS",
+                    exc=karma_err,
+                    ep_num=next_ep,
+                    extra={"table": "karma_status", "npc_name": npc_name},
+                )
+                self.ctx.ui.log(f"      [WARN] karma_status save failed: {npc_name} ({str(karma_err)[:40]})")
+                continue
+
+            karma_status_cache[npc_name] = {
+                "npc_name": npc_name,
+                "misunderstanding": normalized["misunderstanding"],
+                "obsession": normalized["obsession"],
+                "last_updated_ep": next_ep,
+            }
+            persisted += 1
+
+        return persisted
+
+    def _best_effort_rollback_manager(self, *, manager, label: str, target_ep: int) -> bool:
+        rollback_fn = getattr(manager, "rollback_to", None)
+        if not callable(rollback_fn):
+            logging.warning("[TF-C10] %s rollback_to unavailable during sequential save recovery", label)
+            return False
+        try:
+            rollback_fn(target_ep)
+        except Exception as rollback_err:
+            logging.warning(
+                "[TF-C10] %s rollback_to(%d) failed during sequential save recovery: %s",
+                label,
+                target_ep,
+                rollback_err,
+            )
+            try:
+                self.ctx.ui.log(f"   ⚠️ [TF-C10] {label} 순차 저장 롤백 실패: {str(rollback_err)[:60]}")
+            except Exception:
+                pass
+            return False
+        logging.warning("[TF-C10] %s sequential save repaired via rollback_to(%d)", label, target_ep)
+        try:
+            self.ctx.ui.log(f"   ↩️ [TF-C10] {label} 순차 저장 롤백 복구 완료")
+        except Exception:
+            pass
+        return True
 
     def _truth_gate_llm_ask(self, prompt: str) -> str:
         """[TF-30-1] TruthGate 세계법칙 검사용 LLM 콜백."""
@@ -277,14 +411,14 @@ class Stage4PostProcessor:
     # ------------------------------------------------------------------
     _CAPITAL_PATTERNS = [
         # "잔고 131억", "자본금 80억", "현금 57억"
-        re.compile(r"(?:잔고|자본금?|현금|자산|실탄|예수금)[이가은는:의]?\s*(?:약?\s*)?(\d[\d,.]*)\s*(억|만)"),
+        re.compile(r"(?:잔고|자본금?|현금|자산|실탄|예수금)[이가은는:의]?\s*(?:약?\s*)?(\d[\d,.]*)\s*(억|만)"),  # utf8-hygiene: allow-line regex ? quantifier adjacent to Hangul literals
         # "80억의 자본", "130억 원의 잔고"
-        re.compile(r"(\d[\d,.]*)\s*(억|만)\s*(?:원)?[의이가]?\s*(?:잔고|자본|현금|자산|실탄|예수금)"),
+        re.compile(r"(\d[\d,.]*)\s*(억|만)\s*(?:원)?[의이가]?\s*(?:잔고|자본|현금|자산|실탄|예수금)"),  # utf8-hygiene: allow-line regex ? quantifier adjacent to Hangul literals
     ]
     # [V73-P0] 복합 금액 패턴 (38억 3,154만 200원) — _extract에서 별도 처리
     _COMPOUND_CAPITAL_RE = re.compile(
-        r"(?:잔고|자본금?|현금|자산|실탄|예수금)[이가은는:의]?\s*(?:약?\s*)?"
-        r"(?:(\d[\d,.]*)\s*억)?\s*(?:(\d[\d,.]*)\s*만)?\s*(?:(\d[\d,.]*)\s*원?)?"
+        r"(?:잔고|자본금?|현금|자산|실탄|예수금)[이가은는:의]?\s*(?:약?\s*)?"  # utf8-hygiene: allow-line regex ? quantifier adjacent to Hangul literals
+        r"(?:(\d[\d,.]*)\s*억)?\s*(?:(\d[\d,.]*)\s*만)?\s*(?:(\d[\d,.]*)\s*원?)?"  # utf8-hygiene: allow-line regex ? quantifier adjacent to Hangul literals
     )
     # [V73-방어2] 대사(따옴표 내부) 제거용 패턴
     _DIALOGUE_RE = re.compile(r'["\u201c\u201d][^"\u201c\u201d]*["\u201c\u201d]')
@@ -305,11 +439,11 @@ class Stage4PostProcessor:
 
         eok = 0.0
         # 억 부분
-        m_eok = re.search(r"(\d+(?:\.\d+)?)\s*억", s)
+        m_eok = re.search(r"(\d+(?:\.\d+)?)\s*억", s)  # utf8-hygiene: allow-line regex ? quantifier adjacent to Hangul literals
         if m_eok:
             eok += float(m_eok.group(1))
         # 만 부분
-        m_man = re.search(r"(\d+(?:\.\d+)?)\s*만", s)
+        m_man = re.search(r"(\d+(?:\.\d+)?)\s*만", s)  # utf8-hygiene: allow-line regex ? quantifier adjacent to Hangul literals
         if m_man:
             eok += float(m_man.group(1)) / 10000
         # 억·만 모두 없으면 순수 숫자 → 원 단위로 간주
@@ -468,6 +602,17 @@ class Stage4PostProcessor:
             self.ctx.ui.log("   ✅ DB 저장 완료")
         except Exception as db_err:
             self.ctx.ui.log(f"   🚨 DB 저장 실패 (롤백 완료): {db_err}")
+            try:
+                dump_path = self._write_emergency_manuscript_dump(
+                    output_dir=output_dir,
+                    next_ep=next_ep,
+                    final_title=final_title,
+                    final_manuscript=final_manuscript,
+                )
+                self.ctx.ui.log(f"   🆘 비상 원고 저장: {dump_path.name}")
+            except Exception as dump_err:
+                logging.warning("[Stage4] 비상 원고 저장 실패 (비차단): %s", dump_err)
+                self.ctx.ui.log(f"   ⚠️ 비상 원고 저장 실패: {dump_err}")
             return False
 
         if isinstance(_quality_labels, dict) and hasattr(_db, "save_episode_quality_label"):
@@ -1289,6 +1434,8 @@ class Stage4PostProcessor:
                     )
                     self.ctx.ui.log(f"      ⚠️ state_logs 저장 실패: {str(state_err)[:30]}")
 
+            self._persist_karma_status(karma_matrix=karma_matrix, next_ep=next_ep)
+
             changes_count = (
                 len(all_new_items)
                 + len(lost_items_from_equip)
@@ -1363,9 +1510,19 @@ class Stage4PostProcessor:
             _fl_snap = _copy.deepcopy(self.ctx.fact_ledger._ledger) if self.ctx.fact_ledger else None
         except Exception:
             _fl_snap = None
+        _sequential_mode = False
+        _ws_persisted = False
+        _fl_persisted = False
         try:
             _txn = _meta_db.transaction() if _meta_db and hasattr(_meta_db, "transaction") else None
+            _sequential_mode = _txn is None
             _ctx_mgr = _txn if _txn is not None else _nullcontext()
+            if _sequential_mode and (self.ctx.world_state or self.ctx.fact_ledger):
+                logging.warning("[TF-C10] metadata transaction unavailable; using sequential save recovery mode")
+                try:
+                    self.ctx.ui.log("   ⚠️ [TF-C10] 메타데이터 트랜잭션 없음: 순차 저장 복구 모드")
+                except Exception:
+                    pass
             with _ctx_mgr:
                 # ── WorldState 갱신 ──
                 if self.ctx.world_state:
@@ -1391,8 +1548,13 @@ class Stage4PostProcessor:
                         ep_num=next_ep,
                         name=_ws_prot_name if _ws_prot_name else None,
                     )
-                    self.ctx.world_state.save()
-                    self.ctx.ui.log(f"   🌍 [V68] 세계 상태 갱신 완료 (제{next_ep}화)")
+                    _ws_saved = self.ctx.world_state.save()
+                    self._raise_if_save_failed(manager=self.ctx.world_state, label="WorldState", save_result=_ws_saved)
+                    _ws_persisted = True
+                    try:
+                        self.ctx.ui.log(f"   🌍 [V68] 세계 상태 갱신 완료 (제{next_ep}화)")
+                    except Exception as _ui_err:
+                        logging.warning("[TF-C10] WorldState post-save UI log 실패: %s", _ui_err)
 
                     # [LOG-1] 상태 변경 세션 로깅 — WorldState
                     _sl = getattr(self.ctx, "session_logger", None)
@@ -1421,11 +1583,20 @@ class Stage4PostProcessor:
                             self.ctx.fact_ledger.update_from_bible_delta(next_ep, bible_delta)
                         except Exception as _bd_err:
                             logging.warning("[V70] bible_delta 갱신 실패 (비차단): %s", _bd_err)
-                    self.ctx.fact_ledger.save()
-                    _fl_stats = self.ctx.fact_ledger.get_stats()
-                    self.ctx.ui.log(
-                        f"   📋 [V68] 팩트 원장 갱신 완료 (인물 {_fl_stats.get('characters', 0)}명, 아이템 {_fl_stats.get('items', 0)}개)"
-                    )
+                    _fl_saved = self.ctx.fact_ledger.save()
+                    self._raise_if_save_failed(manager=self.ctx.fact_ledger, label="FactLedger", save_result=_fl_saved)
+                    _fl_persisted = True
+                    try:
+                        _fl_stats = self.ctx.fact_ledger.get_stats()
+                    except Exception as _stats_err:
+                        logging.warning("[TF-C10] FactLedger post-save stats 조회 실패: %s", _stats_err)
+                        _fl_stats = {}
+                    try:
+                        self.ctx.ui.log(
+                            f"   📋 [V68] 팩트 원장 갱신 완료 (인물 {_fl_stats.get('characters', 0)}명, 아이템 {_fl_stats.get('items', 0)}개)"
+                        )
+                    except Exception as _ui_err:
+                        logging.warning("[TF-C10] FactLedger post-save UI log 실패: %s", _ui_err)
 
                     # [LOG-1] 상태 변경 세션 로깅 — FactLedger
                     _sl = getattr(self.ctx, "session_logger", None)
@@ -1440,17 +1611,41 @@ class Stage4PostProcessor:
                         except Exception:
                             pass
         except Exception as _meta_err:
+            _persisted_rollbacks = []
+            _ws_restored_via_rollback = False
+            _fl_restored_via_rollback = False
+            if _sequential_mode:
+                if _fl_persisted and self.ctx.fact_ledger:
+                    _fl_restored_via_rollback = self._best_effort_rollback_manager(
+                        manager=self.ctx.fact_ledger,
+                        label="FactLedger",
+                        target_ep=next_ep,
+                    )
+                    if _fl_restored_via_rollback:
+                        _persisted_rollbacks.append("FactLedger")
+                if _ws_persisted and self.ctx.world_state:
+                    _ws_restored_via_rollback = self._best_effort_rollback_manager(
+                        manager=self.ctx.world_state,
+                        label="WorldState",
+                        target_ep=next_ep,
+                    )
+                    if _ws_restored_via_rollback:
+                        _persisted_rollbacks.append("WorldState")
             # [TF-35b] in-memory 상태 복원
-            if _ws_snap is not None and self.ctx.world_state:
+            if _ws_snap is not None and self.ctx.world_state and not _ws_restored_via_rollback:
                 self.ctx.world_state._state = _ws_snap
-            if _fl_snap is not None and self.ctx.fact_ledger:
+            if _fl_snap is not None and self.ctx.fact_ledger and not _fl_restored_via_rollback:
                 self.ctx.fact_ledger._ledger = _fl_snap
             self._report_soft_failure(
                 operation="save_world_state_atomic",
                 message="world state/fact ledger atomic save failed and was rolled back",
                 exc=_meta_err,
                 ep_num=next_ep,
-                extra={"rolled_back": True},
+                extra={
+                    "rolled_back": True,
+                    "sequential_mode": _sequential_mode,
+                    "persisted_rollbacks": _persisted_rollbacks,
+                },
             )
             self.ctx.ui.log(f"   ⚠️ [TF-C10] 메타데이터 원자적 저장 실패 (비차단): {str(_meta_err)[:60]}")
 
@@ -1659,8 +1854,21 @@ class Stage4PostProcessor:
         # [V66.3] 벡터 메모리 비활성화 시 스킵
         if self.ctx.memory and self.ctx.memory.is_operational():
             try:
+                _drafts_path = None
+                _raw_drafts_path = getattr(
+                    getattr(getattr(self.ctx, "current_project", None), "paths", None),
+                    "drafts",
+                    None,
+                )
+                if isinstance(_raw_drafts_path, Path):
+                    _drafts_path = _raw_drafts_path
+                elif isinstance(_raw_drafts_path, (str, os.PathLike)):
+                    _drafts_path = Path(_raw_drafts_path)
+                if _drafts_path is None:
+                    self.ctx.ui.log("   ⚠️ 벡터 메모리 동기화 스킵 (drafts 경로 없음)")
+                    return
                 self.ctx.ui.log("   🔄 벡터 메모리 일괄 동기화 중...")
-                self.ctx.memory.sync_v20_drafts()
+                self.ctx.memory.sync_v20_drafts(drafts_path=_drafts_path)
                 self.ctx.ui.log("   ✅ 벡터 메모리 동기화 완료")
             except Exception as vec_err:
                 self.ctx.ui.log(f"   ⚠️ 벡터 메모리 동기화 실패 (비차단): {vec_err}")

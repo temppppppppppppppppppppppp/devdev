@@ -165,6 +165,91 @@ def test_block_enricher_source_routes_flash_calls_through_helper():
     assert src.count("self._ask_with_flash_model(") >= 3
 
 
+def test_block_enricher_retry_prompt_preserves_tail_context():
+    enricher = BlockEnricher.__new__(BlockEnricher)
+    enricher._escape_braces = lambda x: str(x).replace("{", "{{").replace("}", "}}")
+    enricher.analyze_block_density = MagicMock(
+        return_value={"needs_enrichment": True, "density_score": 0.2, "missing_elements": []}
+    )
+
+    first_result = {
+        "block_id": "B2",
+        "content": {
+            "context": "HEAD-RESULT\n" + ("R" * 70000) + "\nTAIL-BLOCK-RETRY",
+            "event_villain": "적",
+            "solution": "해결",
+            "reward": "보상",
+        },
+    }
+    second_result = {
+        "block_id": "B2",
+        "content": {
+            "context": "fixed",
+            "event_villain": "적",
+            "solution": "해결",
+            "reward": "보상",
+        },
+    }
+
+    prompts = []
+    ask_results = iter([first_result, second_result])
+    validations = iter(
+        [
+            {"validation_result": "FAIL", "issues": ["tail issue"]},
+            {"validation_result": "PASS", "issues": []},
+        ]
+    )
+
+    def _fake_ask(prompt, temperature=0.7):
+        prompts.append(prompt)
+        return next(ask_results)
+
+    enricher.ask = _fake_ask
+    enricher._validate_enrichment = MagicMock(side_effect=lambda **_kwargs: next(validations))
+    enricher._director_audit_block = MagicMock(return_value={"decision": "PASS", "total_score": 90})
+
+    result = enricher.enrich_block(
+        current_block={"block_id": "B2", "content": {"context": "short"}},
+        reference_block={"block_id": "B1", "content": {"context": "ref"}},
+        prev_block={"block_id": "B1"},
+        next_block={"block_id": "B3"},
+    )
+
+    assert result["enriched"] is True
+    assert len(prompts) == 2
+    assert "TAIL-BLOCK-RETRY" in prompts[1]
+    assert "...(중간 생략)..." in prompts[1]
+
+
+def test_block_enricher_causal_fix_prompt_preserves_tail_context():
+    enricher = BlockEnricher.__new__(BlockEnricher)
+    captured = {}
+
+    def _fake_ask(prompt, temperature=0.5):
+        captured["prompt"] = prompt
+        return {
+            "block_id": "B3",
+            "content": {"context": "ok", "event_villain": "e", "solution": "s", "reward": "r"},
+        }
+
+    enricher.ask = _fake_ask
+
+    result = enricher._re_enrich_with_causal_fix(
+        current_block={"block_id": "B3", "content": {"context": "short"}},
+        enriched_prev_block={"content": {"reward": "이전 보상"}},
+        next_block={"payload": "N" * 3000, "tail": "TAIL-NEXT-BLOCK"},
+        reference_block={"payload": "R" * 4000, "tail": "TAIL-REF-BLOCK"},
+        causal_issue="인과 누락",
+        protagonist_name="주인공",
+        genre="wuxia",
+    )
+
+    assert result["enriched"] is True
+    assert "TAIL-REF-BLOCK" in captured["prompt"]
+    assert "TAIL-NEXT-BLOCK" in captured["prompt"]
+    assert "...(중간 생략)..." in captured["prompt"]
+
+
 def test_chief_writer_quality_returns_structured_writing_directive_issues():
     gate = ChiefWriterQualityGate(_make_quality_host())
 

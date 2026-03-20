@@ -131,6 +131,56 @@ const CLI_CONTRACT = Object.freeze({
     medical: 10,
   }),
 });
+const DESKTOP_PUBLIC_RUN_KEYS = Object.freeze(["0", "1", "2", "3", "4", "6", "7", "44", "77", "88", "99"]);
+const DESKTOP_PUBLIC_RUN_KEY_SET = new Set(DESKTOP_PUBLIC_RUN_KEYS);
+const SETTINGS_PAYLOAD_MAX_BYTES = 1024 * 1024;
+
+function isAllowedDesktopRunKey(key) {
+  return DESKTOP_PUBLIC_RUN_KEY_SET.has(String(key ?? "").trim());
+}
+
+function buildDesktopGuardError(code, message, urlPath, transportStatus = 400) {
+  return {
+    ok: false,
+    code,
+    message,
+    data: {
+      envelope_version: DESKTOP_BRIDGE_TRANSPORT.envelopeVersion,
+      namespace: "desktop_transport",
+      transport_status: transportStatus,
+      url_path: urlPath,
+      backend_code: code,
+      backend_message: message,
+    },
+  };
+}
+
+function serializeDesktopSettingsPayload(settings) {
+  try {
+    const serialized = JSON.stringify(settings, null, 2);
+    if (typeof serialized !== "string") {
+      return {
+        ok: false,
+        code: "INVALID_SETTINGS_PAYLOAD",
+        message: "settings payload must be JSON-serializable",
+      };
+    }
+    if (Buffer.byteLength(serialized, "utf8") > SETTINGS_PAYLOAD_MAX_BYTES) {
+      return {
+        ok: false,
+        code: "SETTINGS_PAYLOAD_TOO_LARGE",
+        message: `settings payload exceeds ${SETTINGS_PAYLOAD_MAX_BYTES} bytes`,
+      };
+    }
+    return { ok: true, serialized };
+  } catch (err) {
+    return {
+      ok: false,
+      code: "INVALID_SETTINGS_PAYLOAD",
+      message: err?.message || "settings payload must be JSON-serializable",
+    };
+  }
+}
 
 let mainWindow = null;
 let splashWindow = null;
@@ -220,6 +270,119 @@ function syncPackagedWorkspaceSeed() {
 
 const SETTINGS_PATH = path.join(getAppDir(), "settings.json");
 
+function buildDefaultDesktopSettings() {
+  return {
+    apiKey1: "",
+    extraKeys: {},
+    slackWebhook: "",
+    timeout: 300,
+    keyRotate: 10,
+    qualityGate: 90,
+    targetLength: 5000,
+    project: "",
+  };
+}
+
+function normalizeDesktopSettings(rawSettings) {
+  const source = rawSettings && typeof rawSettings === "object" ? rawSettings : {};
+  const extraKeys =
+    source.extraKeys && typeof source.extraKeys === "object" && !Array.isArray(source.extraKeys)
+      ? { ...source.extraKeys }
+      : {};
+  return {
+    ...buildDefaultDesktopSettings(),
+    ...source,
+    extraKeys,
+  };
+}
+
+function persistDesktopSettings(settingsPath, settings) {
+  const dir = path.dirname(settingsPath);
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2), "utf8");
+  return settings;
+}
+
+function readDesktopSettingsFile(settingsPath) {
+  const raw = fs.readFileSync(settingsPath, "utf8");
+  return normalizeDesktopSettings(JSON.parse(raw));
+}
+
+function recoverDesktopSettingsFromBackup(settingsPath, backupPath) {
+  const recovered = readDesktopSettingsFile(backupPath);
+  persistDesktopSettings(settingsPath, recovered);
+  return {
+    ...recovered,
+    recovery: {
+      status: "backup_restored",
+      backupPath,
+    },
+  };
+}
+
+function factoryResetDesktopSettings(settingsPath, backupPath = "") {
+  const defaults = buildDefaultDesktopSettings();
+  persistDesktopSettings(settingsPath, defaults);
+  return {
+    ...defaults,
+    recovery: {
+      status: "factory_reset",
+      backupPath,
+    },
+  };
+}
+
+function loadDesktopSettingsFromDisk(settingsPath = SETTINGS_PATH) {
+  const backupPath = settingsPath + ".bak";
+  try {
+    if (!fs.existsSync(settingsPath)) {
+      if (!fs.existsSync(backupPath)) return null;
+      try {
+        return recoverDesktopSettingsFromBackup(settingsPath, backupPath);
+      } catch (backupErr) {
+        if (!(backupErr instanceof SyntaxError)) {
+          console.error("Settings backup load failed:", backupErr.message);
+          return null;
+        }
+        console.error("Settings backup JSON corrupted, factory reset required:", backupErr.message);
+        return factoryResetDesktopSettings(settingsPath, backupPath);
+      }
+    }
+
+    try {
+      return readDesktopSettingsFile(settingsPath);
+    } catch (parseErr) {
+      if (!(parseErr instanceof SyntaxError)) {
+        console.error("Settings load failed:", parseErr.message);
+        return null;
+      }
+      console.error("Settings JSON corrupted, attempting recovery:", parseErr.message);
+      if (!fs.existsSync(backupPath)) {
+        try {
+          fs.renameSync(settingsPath, backupPath);
+        } catch (backupMoveErr) {
+          console.warn("Settings backup preserve failed:", backupMoveErr.message);
+        }
+      }
+      if (fs.existsSync(backupPath)) {
+        try {
+          return recoverDesktopSettingsFromBackup(settingsPath, backupPath);
+        } catch (backupErr) {
+          if (!(backupErr instanceof SyntaxError)) {
+            console.error("Settings backup load failed:", backupErr.message);
+            return null;
+          }
+          console.error("Settings backup JSON corrupted, factory reset required:", backupErr.message);
+        }
+      }
+      return factoryResetDesktopSettings(settingsPath, fs.existsSync(backupPath) ? backupPath : "");
+    }
+  } catch (err) {
+    console.error("Settings load failed:", err.message);
+    return null;
+  }
+}
+
 function ensureFirstRunFlag() {
   const appDir = getAppDir();
   const markerFile = path.join(appDir, ".first_run");
@@ -235,6 +398,67 @@ function ensureFirstRunFlag() {
 // ─── Backend (uvicorn) 자동기동 ──────────────────────────────────────────────
 let backendRestartCount = 0;
 const MAX_BACKEND_RESTARTS = 2;
+let backendRestartDialogPromise = null;
+
+function getBackendDialogOwnerWindow() {
+  if (splashWindow && !splashWindow.isDestroyed()) {
+    return splashWindow;
+  }
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    return mainWindow;
+  }
+  return null;
+}
+
+async function handleBackendRestartLimitReached(context = {}) {
+  if (backendRestartDialogPromise || app.isQuitting) {
+    return;
+  }
+
+  const attemptCount = Number.isFinite(context.attemptCount)
+    ? context.attemptCount
+    : backendRestartCount;
+  const dialogOptions = {
+    type: "error",
+    buttons: ["재시작 시도", "종료"],
+    defaultId: 0,
+    cancelId: 1,
+    noLink: true,
+    title: "백엔드 연결 실패",
+    message: "백엔드가 반복적으로 종료되었습니다.",
+    detail: `백엔드가 ${attemptCount + 1}회 연속으로 비정상 종료되었습니다. 재시작을 다시 시도하거나 앱을 종료하세요.`,
+  };
+  const parentWindow = getBackendDialogOwnerWindow();
+
+  console.error("[backend] max restarts reached, prompting user");
+  debugLog("backend restart limit reached", {
+    ...context,
+    attemptCount,
+    maxRestarts: MAX_BACKEND_RESTARTS,
+  });
+
+  backendRestartDialogPromise = parentWindow
+    ? dialog.showMessageBox(parentWindow, dialogOptions)
+    : dialog.showMessageBox(dialogOptions);
+
+  try {
+    const { response } = await backendRestartDialogPromise;
+    if (response === 0) {
+      backendRestartCount = 0;
+      if (!backendProcess && !app.isQuitting) {
+        console.log("[backend] manual restart requested after restart limit");
+        startBackend();
+      }
+      return;
+    }
+    app.quit();
+  } catch (err) {
+    console.error(`[backend] restart-limit dialog failed: ${err.message}`);
+    debugLog("backend restart limit dialog failed", err);
+  } finally {
+    backendRestartDialogPromise = null;
+  }
+}
 
 function startBackend() {
   if (backendProcess) return;
@@ -319,7 +543,11 @@ function startBackend() {
           }
         }, 2000);
       } else if (backendRestartCount >= MAX_BACKEND_RESTARTS) {
-        console.error("[backend] max restarts reached, giving up");
+        void handleBackendRestartLimitReached({
+          code,
+          signal,
+          attemptCount: backendRestartCount,
+        });
       }
     });
   } catch (err) {
@@ -549,7 +777,15 @@ async function bridgeFetch(urlPath, options = {}) {
 }
 
 ipcMain.handle(IPC_CHANNELS.bridge.run, async (_, { key, subKey, inputs, approvalId }) => {
-  const body = { key };
+  const normalizedKey = String(key ?? "").trim();
+  if (!isAllowedDesktopRunKey(normalizedKey)) {
+    return buildDesktopGuardError(
+      "INVALID_KEY",
+      `Key '${normalizedKey}' is not allowed.`,
+      BRIDGE_MANAGED_ROUTES.run
+    );
+  }
+  const body = { key: normalizedKey };
   if (subKey) body.sub_key = subKey;
   if (inputs && Object.keys(inputs).length > 0) body.inputs = inputs;
   if (typeof approvalId === "string" && approvalId.trim()) {
@@ -623,9 +859,17 @@ ipcMain.handle(IPC_CHANNELS.bridge.resolvePrompt, async (_, { runId, promptId, v
 
 ipcMain.handle(IPC_CHANNELS.bridge.saveSettings, async (_, settings) => {
   try {
+    const serializedSettings = serializeDesktopSettingsPayload(settings);
+    if (!serializedSettings.ok) {
+      return {
+        ok: false,
+        code: serializedSettings.code,
+        message: serializedSettings.message,
+      };
+    }
     const dir = path.dirname(SETTINGS_PATH);
     fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(SETTINGS_PATH, JSON.stringify(settings, null, 2), "utf8");
+    fs.writeFileSync(SETTINGS_PATH, serializedSettings.serialized, "utf8");
     return { ok: true };
   } catch (err) {
     console.error("Settings save failed:", err.message);
@@ -634,22 +878,7 @@ ipcMain.handle(IPC_CHANNELS.bridge.saveSettings, async (_, settings) => {
 });
 
 ipcMain.handle(IPC_CHANNELS.bridge.loadSettings, async () => {
-  try {
-    if (!fs.existsSync(SETTINGS_PATH)) return null;
-    const raw = fs.readFileSync(SETTINGS_PATH, "utf8");
-    try {
-      return JSON.parse(raw);
-    } catch (parseErr) {
-      console.error("Settings JSON corrupted, resetting:", parseErr.message);
-      // 깨진 파일 백업 후 삭제
-      const backupPath = SETTINGS_PATH + ".bak";
-      try { fs.renameSync(SETTINGS_PATH, backupPath); } catch (_) {}
-      return null;
-    }
-  } catch (err) {
-    console.error("Settings load failed:", err.message);
-    return null;
-  }
+  return loadDesktopSettingsFromDisk(SETTINGS_PATH);
 });
 
 // ─── 재료 파일 관리 IPC ──────────────────────────────────────────────────────
@@ -762,7 +991,11 @@ function sanitizeProjectName(name) {
   if (typeof name !== "string") {
     return "";
   }
-  return name.trim().replace(/[<>:"/\\|?*]/g, "_");
+  const normalized = name.trim();
+  if (!normalized || /^\.+$/.test(normalized)) {
+    return "";
+  }
+  return normalized.replace(/[^a-zA-Z0-9가-힣ㄱ-ㅎㅏ-ㅣ_\- ]/g, "_");
 }
 
 function getProjectRoot(projectName) {
@@ -961,11 +1194,6 @@ ipcMain.handle(IPC_CHANNELS.workspace.openFolder, async () => {
   return { ok: true, path: dir };
 });
 
-// Dead-candidate compatibility surface. No active renderer consumer today.
-ipcMain.handle(IPC_CHANNELS.workspace.getPath, async () => {
-  const dir = app.isPackaged ? getWorkspaceDir() : path.resolve(__dirname, "..", "..");
-  return { ok: true, path: dir };
-});
 
 // ─── 앱 수명주기 ─────────────────────────────────────────────────────────────
 

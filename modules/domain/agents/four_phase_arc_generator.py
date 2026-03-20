@@ -20,7 +20,7 @@ import logging
 import re
 from collections.abc import Callable
 
-from modules.core.constants import ContextLimits, Stage2Limits
+from modules.core.constants import ContextLimits, Stage2Limits, smart_truncate
 from modules.core.fact_ledger import summarize_fact_ledger_numbers_block
 from modules.core.failure_analyzer import FailureAnalyzer
 from modules.validation.threshold_helper import _threshold
@@ -314,10 +314,10 @@ def _ns4_extract_time_markers(arc_data: dict) -> list:
 
     _text = str(tactical_doc) + "\n" + str(beat_seq)
     _patterns = [
-        r"\d{4}년\s*\d{1,2}월(?:\s*\d{1,2}일)?",
+        r"\d{4}년\s*\d{1,2}월(?:\s*\d{1,2}일)?",  # utf8-hygiene: allow-line regex quantifier
         r"\d{1,2}월\s*\d{1,2}일",
-        r"\d{1,2}월(?:\s*(?:말|초|중순|하순|상순))?",
-        r"\d+(?:일|주|달|개월|년)\s*(?:후|전)",
+        r"\d{1,2}월(?:\s*(?:말|초|중순|하순|상순))?",  # utf8-hygiene: allow-line regex quantifier
+        r"\d+(?:일|주|달|개월|년)\s*(?:후|전)",  # utf8-hygiene: allow-line regex quantifier
     ]
     _found = []
     for _p in _patterns:
@@ -463,6 +463,9 @@ class FourPhaseArcGenerator(BaseAgent):
         Returns:
             (ep_count, reasoning) - 3~6 범위의 화수와 결정 이유
         """
+        min_ep_count = 2
+        max_ep_count = Stage2Limits.MAX_EP_COUNT
+
         # 블록 내용 추출
         block_content = ""
         if isinstance(curr_block, dict):
@@ -476,19 +479,25 @@ class FourPhaseArcGenerator(BaseAgent):
         content_len = len(block_content.strip())
 
         # [V66.1] Python 휴리스틱: 텍스트 길이 + 문장 수 기반 판단
-        if content_len < 500:
-            ep_count = Stage2Limits.MIN_EP_COUNT  # 3화
-            reasoning = f"블록 정보량 부족 ({content_len}자 < 500자) → 최소 화수"
+        if content_len < 350:
+            ep_count = 2
+            reasoning = f"블록 정보량 매우 부족 ({content_len}자 < 350자) → 2화 압축"
+        elif content_len < 500:
+            ep_count = 3
+            reasoning = f"블록 정보량 부족 ({content_len}자 < 500자) → 3화 압축"
         elif content_len > 1500:
-            ep_count = Stage2Limits.MAX_EP_COUNT  # 6화
+            ep_count = max_ep_count  # 6화
             reasoning = f"블록 정보량 풍부 ({content_len}자 > 1500자) → 최대 화수"
         else:
-            # [PC-1-B] 500~1500자 구간: 문장 수 비례로 3~5화 결정
+            # [PC-1-B] 500~1500자 구간: 문장 수 비례로 2~5화 결정
             import re
 
-            sentence_count = len(re.split(r"[.。!?!\?\n]+", block_content))
-            if sentence_count <= 8:
-                ep_count = 3  # [PC-1-B] 4→3
+            sentence_count = len(re.split(r"[.。!?!\?\n]+", block_content))  # utf8-hygiene: allow-line regex quantifier
+            if sentence_count <= 5:
+                ep_count = 2
+                reasoning = f"낮은 정보량 ({content_len}자, {sentence_count}문장) → 2화"
+            elif sentence_count <= 8:
+                ep_count = 3
                 reasoning = f"보통 정보량 ({content_len}자, {sentence_count}문장) → 3화"
             elif sentence_count >= 15:
                 ep_count = 5  # [PC-1-B] 6→5
@@ -508,9 +517,63 @@ class FourPhaseArcGenerator(BaseAgent):
                 reasoning += f" / tension={tension_level} → -1화"
 
         # 범위 강제 (안전장치)
-        ep_count = max(Stage2Limits.MIN_EP_COUNT, min(Stage2Limits.MAX_EP_COUNT, ep_count))
+        ep_count = max(min_ep_count, min(max_ep_count, ep_count))
 
         return ep_count, reasoning
+
+    def _build_pacing_signal_payload(
+        self,
+        curr_block: dict,
+        ep_count_suggestion: int,
+        pacing_reason: str,
+    ) -> dict:
+        """Collect density signals while leaving the final ep_count judgment to the LLM."""
+        block_content = ""
+        item_hint_count = 0
+        reward_present = False
+        solution_present = False
+
+        if isinstance(curr_block, dict):
+            for key in ["context", "event_villain", "solution", "reward", "content"]:
+                val = curr_block.get(key, "")
+                if key == "reward":
+                    reward_present = bool(val)
+                if key == "solution":
+                    solution_present = bool(val)
+                if isinstance(val, str):
+                    block_content += val + " "
+                    if key in {"event_villain", "solution", "reward"}:
+                        item_hint_count += len(re.findall(r"[가-힣A-Za-z0-9_]+", val))
+                elif isinstance(val, dict):
+                    serialized = json.dumps(val, ensure_ascii=False)
+                    block_content += serialized + " "
+                    if key in {"event_villain", "solution", "reward"}:
+                        item_hint_count += len(re.findall(r"[가-힣A-Za-z0-9_]+", serialized))
+
+        content_len = len(block_content.strip())
+        sentence_count = len(re.split(r"[.。?!\n]+", block_content)) if block_content.strip() else 0  # utf8-hygiene: allow-line regex quantifier
+        tension_level = curr_block.get("tension_level") if isinstance(curr_block, dict) else None
+        low_resource_block = bool(item_hint_count <= 8 and not reward_present and not solution_present)
+
+        if ep_count_suggestion <= 3:
+            suggested_pace_mode = "compressed"
+        elif ep_count_suggestion >= 6:
+            suggested_pace_mode = "expanded"
+        else:
+            suggested_pace_mode = "standard"
+
+        return {
+            "content_len": content_len,
+            "sentence_count": sentence_count,
+            "tension_level": tension_level,
+            "item_hint_count": item_hint_count,
+            "reward_present": reward_present,
+            "solution_present": solution_present,
+            "low_resource_block": low_resource_block,
+            "ep_count_suggestion": ep_count_suggestion,
+            "suggested_pace_mode": suggested_pace_mode,
+            "pacing_reason": pacing_reason,
+        }
 
     def generate(
         self,
@@ -562,9 +625,10 @@ class FourPhaseArcGenerator(BaseAgent):
         except Exception as e:
             logging.debug("[TF-26] master_bible access failed (generate): %s", str(e)[:100])
 
-        # [V61.1] LLM 기반 가변 페이싱 - ep_count 동적 결정
-        ep_count, pacing_reason = self._determine_ep_count(curr_block, arc_no, prev_arcs)
-        logging.info(f" [V61.1] 가변 페이싱: {ep_count}화 결정 - {pacing_reason}")
+        # [V61.1] Python은 signal만 수집하고, 최종 ep_count 판단은 LLM이 맡는다.
+        ep_count_suggestion, pacing_reason = self._determine_ep_count(curr_block, arc_no, prev_arcs)
+        pacing_signals = self._build_pacing_signal_payload(curr_block, ep_count_suggestion, pacing_reason)
+        logging.info(f" [V61.1] LLM pacing suggestion: {ep_count_suggestion}화 추천 - {pacing_reason}")
 
         pipeline_result = {
             "arc_no": arc_no,
@@ -735,7 +799,8 @@ class FourPhaseArcGenerator(BaseAgent):
                         protagonist_name=protagonist_name,
                         protagonist_config=protagonist_config,  # [V60.88]
                         entity_registry=entity_registry,  # [V60.92] Entity Registry
-                        ep_count=ep_count,  # [V61.1] 가변 페이싱
+                        ep_count_suggestion=ep_count_suggestion,
+                        pacing_signals=pacing_signals,
                         retry=retry,  # [V61.5] 재시도 시 thinking 다운그레이드
                     )
                     # [SpareCandidate] 차순위 후보 보존 (best_arc가 있는 legacy 경로만)
@@ -1260,7 +1325,7 @@ class FourPhaseArcGenerator(BaseAgent):
                 len(_full_json),
                 (1 - 30000 / len(_full_json)) * 100,
             )
-        _original_text = _full_json[:30000]
+        _original_text = smart_truncate(_full_json, max_chars=30000, head_chars=16500)
 
         # 3) 패치 프롬프트 포맷
         if _patch_template:
@@ -1316,7 +1381,8 @@ class FourPhaseArcGenerator(BaseAgent):
         )
 
         # 5) Phase 2: Ensemble 생성 (패치 피드백 주입)
-        ep_count, _ = self._determine_ep_count(curr_block, arc_no, prev_arcs)
+        ep_count_suggestion, pacing_reason = self._determine_ep_count(curr_block, arc_no, prev_arcs)
+        pacing_signals = self._build_pacing_signal_payload(curr_block, ep_count_suggestion, pacing_reason)
         protagonist_config = {}
         try:
             master_bible = getattr(self.context, "master_bible", {})
@@ -1347,7 +1413,8 @@ class FourPhaseArcGenerator(BaseAgent):
                 protagonist_name=protagonist_name,
                 protagonist_config=protagonist_config,
                 entity_registry=entity_registry,
-                ep_count=ep_count,
+                ep_count_suggestion=ep_count_suggestion,
+                pacing_signals=pacing_signals,
                 retry=0,
                 single_strategy=rejected_strategy,  # [TF-36] partial 시 1개 전략만
             )
