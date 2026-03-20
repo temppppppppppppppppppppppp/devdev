@@ -1,0 +1,101 @@
+{
+  "schema": "arc_cadence_map_v1",
+  "title_id": "wuxia__title__gonryun_mahyeop",
+  "shard": "ep011-020",
+  "status": "candidate",
+  "date": "2026-03-20",
+  "arcs": [
+    {
+      "arc_id": "wuxia__title__gonryun_mahyeop__arc_001",
+      "arc_label": "sect_reformation_and_power_consolidation",
+      "episode_start": 1,
+      "episode_end": 13,
+      "arc_complete_in_shard": true,
+      "completion_marker": "ep013: 2-year timeskip confirms sect reformation stable; Paeng family departs; external alliance (Murim League) agreed",
+      "sub_phases_in_this_shard": [
+        {
+          "phase_label": "external_validation_and_alliance",
+          "episode_range": "011-013",
+          "function": "Paeng Suwon tests reformed Kunlun martial arts (Heo Jik bimu). Proposes Murim League revival with Kunlun support. Paeng Ganghwi's ki-hyeol healed → friendship seed. 2-year timeskip: sect training matures.",
+          "escalation_driver": "external validation pressure + political proposal",
+          "payoff_in_phase": "Kunlun proven strong to outsiders; alliance secured; protagonist's authority fully consolidated"
+        }
+      ]
+    },
+    {
+      "arc_id": "wuxia__title__gonryun_mahyeop__arc_002",
+      "arc_label": "elder_rescue_and_elixir_quest",
+      "episode_start": 13,
+      "episode_end_observed": 20,
+      "episode_end_estimated": "ep021-022 (elixir result + Unhu recovery)",
+      "arc_complete_in_shard": false,
+      "sub_phases": [
+        {
+          "phase_label": "crisis_and_emergency_treatment",
+          "episode_range": "013-015",
+          "function": "Unhu collapses (broken dantian + depleted life force). Protagonist attempts emergency repair: baek-hoe-hyeol strike to stop life force leak, dantian fragment reassembly with pure qi threading. Near-death struggle. Temporary stabilization achieved.",
+          "escalation_driver": "mentor death threat",
+          "payoff_in_phase": "Unhu stabilized for ~1 year; protagonist discovers treatment path through medical research"
+        },
+        {
+          "phase_label": "elixir_planning_and_resource_dispatch",
+          "episode_range": "015-016",
+          "function": "7-week medical research in library. Banseondan (Half-Immortal Elixir) plan. Entire sect mobilized in 5 teams to collect ingredients across Qinghai province. Protagonist departs solo to Xinjiang (Cheonma Singyo territory) for primary ingredient.",
+          "escalation_driver": "resource scarcity + time pressure (1 year limit)",
+          "payoff_in_phase": "全 sect committed to quest; protagonist alone faces most dangerous task"
+        },
+        {
+          "phase_label": "protagonist_solo_expedition",
+          "episode_range": "017-019",
+          "function": "Protagonist crosses Taklamakan desert. Rescues Baek family caravan from Hyeolsapung bandits. Captures Mugak-sa-ryong (hornless sand dragon), takes horn (primary ingredient) and half its inner core (combat medicine). Gifts dragon tails to Baek family.",
+          "escalation_driver": "combat danger (first real physical challenge since reincarnation) + past-life asset utilization",
+          "payoff_in_phase": "Primary ingredient secured; combat weakness exposed ('옛날 같지 않네'); backup resource (inner core) obtained; Baek family alliance seeded"
+        },
+        {
+          "phase_label": "elixir_production_and_sect_mobilization",
+          "episode_range": "019-020",
+          "function": "Return to Kunlun. 10-month boiling process begins. Protagonist tours all 4 dispatch teams, teaches efficient methods (martial arts as tools). Kunlun's activities clean up Qinghai province (bandits, roadblocks). Elixir nears completion — cliffhanger.",
+          "escalation_driver": "production logistics + sect capability gap",
+          "payoff_in_phase": "Kunlun's reputation soars across Qinghai; elixir production on track; but ep020 ends with 어라?"
+        }
+      ],
+      "escalation_interval_episodes": 2,
+      "payoff_interval_episodes": 3,
+      "recovery_interval_episodes": 0.5,
+      "cliffhanger_pattern": "mixed — ep013 hard cliff (Unhu collapse), ep017 medium cliff (bandit attack), ep020 hard cliff (elixir result unknown)",
+      "confidence": 78,
+      "notes": [
+        "Arc 002 is not complete; elixir result and Unhu recovery are in ep021+.",
+        "This arc introduces the first real external combat challenge for the protagonist (Mugak-sa-ryong).",
+        "The 어라? cliffhanger at ep020 end suggests either partial success or unexpected complication."
+      ]
+    }
+  ],
+  "suspected_carryover_seeds": [
+    {
+      "seed": "Murim League revival — 3-year timeline (1 year remaining after 2-year skip + ~1 year elixir project)",
+      "introduced_at": "ep012",
+      "expected_callback": "ep021+ (departure from Kunlun)"
+    },
+    {
+      "seed": "Cheonma Singyo internal chaos — 혈사풍 numbers unchecked, unknown attacker on 쌍각사룡",
+      "introduced_at": "ep018",
+      "expected_callback": "major arc (protagonist's past identity revealed)"
+    },
+    {
+      "seed": "Baek family's gift to protagonist — 무각사룡 꼬리로 만든 something",
+      "introduced_at": "ep019",
+      "expected_callback": "equipment upgrade or alliance deepening"
+    },
+    {
+      "seed": "Protagonist's combat weakness realization — '옛날 같지 않네'",
+      "introduced_at": "ep018-019",
+      "expected_callback": "training arc or combat crisis"
+    },
+    {
+      "seed": "Banseondan result — '어라?' suggests unexpected outcome",
+      "introduced_at": "ep020 final line",
+      "expected_callback": "ep021"
+    }
+  ]
+}
