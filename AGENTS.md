@@ -22,13 +22,13 @@
   - `phase0_design`, `tr_block_070_draft`, `BI` 파일 존재로 단계를 판정하지 않는다.
 - `서사 파이프라인 오더`
   - 작품 기획, `work_id` 기반 `Treatment/BI`, `Phase 0`, `TR draft`, `BI`, 감리, 정합성, 밀도 점검, 전처리 handoff, 작품 기준 `다음 스텝/계속/승인`
-  - 이 경우에만 아래 `Blockguide First` 규칙을 적용한다.
+  - 이 경우에만 아래 `Narrative Router First` 규칙과 `AGENTS.narrative-router.md`를 적용한다.
 
 판정 원칙:
 
 - 대상이 코드/시스템/앱/테스트면 시스템 오더다.
 - 대상이 작품/`work_id`/`treatments/`/`bible/` 산출물이면 서사 파이프라인 오더다.
-- `다음 스텝`, `계속`, `승인`만으로는 블록가이드 트리거가 아니다. 현재 대상이 작품 파이프라인일 때만 트리거다.
+- `다음 스텝`, `계속`, `승인`만으로는 narrative-router 트리거가 아니다. 현재 대상이 작품 파이프라인일 때만 트리거다.
 
 ## Document Save Rule
 
@@ -139,24 +139,25 @@
 - roadmap 소진 후에는 temp 내 active execution artifact를 비운다
 - 사용자가 다른 경로를 직접 지정하면 그 경로를 우선
 
-## Blockguide First (Narrative Pipeline Only)
+## Narrative Router First (Narrative Pipeline Only)
 
-이 워크스페이스에서 아래 작업이 들어오면 먼저 `docs/blockguide/SSOT_blockguide-integrated-order.md`를 UTF-8로 읽는다.
+이 워크스페이스에서 아래 작업이 들어오면 먼저 `docs/narrative-router/SSOT_narrative-router-integrated-order.md`를 UTF-8로 읽는다.
 
 - 작품 기획안 작성 또는 수정
 - `work_id` 기준 Treatment/BI 생성
 - `Phase 0`, `TR draft`, `BI`, 감리, 정합성, 밀도 점검
 - 특정 작품/`work_id`가 이미 정해진 상태에서 `다음 스텝`, `계속`, `승인` 기반 자동 진행
 
-그다음 아래 문서를 UTF-8로 읽는다.
+그다음 router가 family를 판정하고 해당 family 문서를 UTF-8로 읽는다.
 
-1. `docs/blockguide/treatment-planning-harness.md`
-2. `docs/blockguide/treatment-production-harness-v2.md`
-3. `docs/blockguide/bi-production-harness-v1.md`
+세부 family read order, operator runbook, routed CLI 예시는 충돌 완화를 위해 루트 `AGENTS.md`에 길게 적지 않고 `AGENTS.narrative-router.md`에서 관리한다.
 
-대상 작품이 `alt_history`이거나 역사 재료 DB 조회가 필요하면 추가로 아래 문서를 읽는다.
+핵심만 요약:
 
-4. `docs/blockguide/alt_history_db_harness.md`
+- 현판/헌터/현대판타지 business-power 계열은 `blockguide`
+- 무협/선협/강호/문파/경지 중심 작품은 `wuxguide`
+- 사용자가 family를 직접 지정하면 그 지시를 우선
+- 애매하면 `docs/narrative-router/SSOT_narrative-router-integrated-order.md`와 `AGENTS.narrative-router.md`의 판정 절차를 따른다
 
 ## Narrative Stage Detection
 

@@ -1,0 +1,47 @@
+{
+  "schema_version": "1.0",
+  "tranche_id": "{genre_family}__t{n}__{snapshot_date}",
+  "snapshot_date": "YYYY-MM-DD",
+  "genre_family": "{genre_family}",
+  "lane_phase": "pilot_active",
+  "authority_path": "{absolute_path_to_this_manifest}",
+  "source_corpus": {
+    "primary_root": "{absolute_primary_raw_corpus_root}",
+    "scratch_harbor_root": "{absolute_scratch_root}",
+    "notes": []
+  },
+  "selection_rules": {
+    "inclusion_threshold": [],
+    "minimum_required_hits": 0,
+    "exclusion_triggers": []
+  },
+  "selected_titles": [
+    {
+      "title_id": "{genre_family}__title__{title_slug}",
+      "title_slug": "{ascii_title_slug}",
+      "display_title": "{display_title}",
+      "source_root": "{absolute_source_root}",
+      "episodes_available": 0,
+      "selection_role": "{core_primary|core_secondary|core_tertiary}",
+      "subtype": "{subtype_label}",
+      "representative_why": "{one_sentence_why}",
+      "overfit_risks": [],
+      "intake_decision": "include",
+      "planned_slice": {
+        "episode_start": 1,
+        "episode_end": 20,
+        "shards": [
+          "ep001-010",
+          "ep011-020"
+        ]
+      },
+      "companion_refs": []
+    }
+  ],
+  "reserve_titles": [],
+  "excluded_titles": [],
+  "execution_order": [],
+  "review_gates": [],
+  "risk_register": [],
+  "owner_note": "{free_text_note}"
+}

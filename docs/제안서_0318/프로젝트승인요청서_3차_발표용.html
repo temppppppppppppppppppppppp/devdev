@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>글도비 1단계 승인 보고 - 발표용 PPT 생성기</title>
+    <script src="https://cdn.jsdelivr.net/gh/gitbrent/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        :root {
+            --bg: #f3efe7;
+            --ink: #17324d;
+            --muted: #5f6b78;
+            --line: #d4ccbf;
+            --surface: rgba(255, 255, 255, 0.9);
+            --accent: #ba6b2d;
+            --accent-soft: #efe1d4;
+            --navy-soft: #e5edf5;
+        }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            padding: 48px 28px;
+            background:
+                radial-gradient(circle at top right, rgba(186, 107, 45, 0.12), transparent 26%),
+                linear-gradient(180deg, #f7f3eb 0%, #ede6da 100%);
+            color: var(--ink);
+            font-family: "Segoe UI Variable Text", "Malgun Gothic", sans-serif;
+        }
+        .wrap {
+            max-width: 980px;
+            margin: 0 auto;
+        }
+        .hero {
+            display: grid;
+            grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+        .panel {
+            background: var(--surface);
+            border: 1px solid rgba(23, 50, 77, 0.08);
+            border-radius: 22px;
+            padding: 28px;
+            box-shadow: 0 18px 40px rgba(23, 50, 77, 0.08);
+            backdrop-filter: blur(12px);
+        }
+        .eyebrow {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: var(--navy-soft);
+            color: var(--ink);
+            font-size: 0.76rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            margin-bottom: 14px;
+        }
+        h1 {
+            margin: 0 0 10px;
+            font-size: 2.55rem;
+            line-height: 1.1;
+            letter-spacing: -0.04em;
+        }
+        .lede {
+            margin: 0 0 18px;
+            color: var(--muted);
+            line-height: 1.7;
+            font-size: 1rem;
+        }
+        .ask {
+            background: linear-gradient(135deg, rgba(23, 50, 77, 0.97), rgba(33, 65, 96, 0.92));
+            color: #fff;
+            border-radius: 18px;
+            padding: 18px 20px;
+            font-size: 0.98rem;
+            line-height: 1.65;
+        }
+        .ask strong {
+            color: #f6d2b2;
+        }
+        .meta-card {
+            display: grid;
+            gap: 14px;
+        }
+        .meta-box {
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            padding: 16px 18px;
+            background: rgba(255, 255, 255, 0.74);
+        }
+        .meta-box h2 {
+            margin: 0 0 8px;
+            font-size: 0.86rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+        .meta-box p {
+            margin: 0;
+            font-size: 1.02rem;
+            line-height: 1.55;
+        }
+        .preview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+        .slide-card {
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            padding: 18px 18px 16px;
+            background: rgba(255, 255, 255, 0.76);
+            min-height: 132px;
+        }
+        .slide-num {
+            color: var(--accent);
+            font-size: 0.78rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            margin-bottom: 8px;
+        }
+        .slide-card h3 {
+            margin: 0 0 8px;
+            font-size: 1.06rem;
+            letter-spacing: -0.02em;
+        }
+        .slide-card p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.55;
+            font-size: 0.92rem;
+        }
+        .actions {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 16px;
+            align-items: center;
+        }
+        .helper {
+            color: var(--muted);
+            line-height: 1.6;
+            font-size: 0.92rem;
+        }
+        button {
+            border: none;
+            border-radius: 16px;
+            padding: 18px 28px;
+            background: linear-gradient(135deg, #17324d, #ba6b2d);
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 800;
+            cursor: pointer;
+            letter-spacing: 0.01em;
+            box-shadow: 0 12px 26px rgba(23, 50, 77, 0.18);
+            transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+        }
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 18px 34px rgba(23, 50, 77, 0.22);
+        }
+        button:active {
+            transform: translateY(0);
+            opacity: 0.96;
+        }
+        @media (max-width: 840px) {
+            .hero {
+                grid-template-columns: 1fr;
+            }
+            .actions {
+                grid-template-columns: 1fr;
+            }
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <section class="hero">
+            <div class="panel">
+                <div class="eyebrow">PPT Generator</div>
+                <h1>글도비 1단계 승인 보고<br>발표용 PPT</h1>
+                <p class="lede">
+                    `프로젝트승인요청서_3차.md`를 발표용으로 줄인 버전이다.
+                    표 중심으로 재구성했고, 숫자 해석을 더 친절하게 붙였다.
+                </p>
+                <div class="ask">
+                    <strong>핵심 요청:</strong>
+                    최대 3,000만 원의 손실 상한을 정한 상태에서, 글도비를 회사 체계로 올려
+                    3~6작품 검증 구간까지 운영할 것인지 판단해 주시기 바란다.
+                </div>
+            </div>
+
+            <div class="meta-card">
+                <div class="meta-box">
+                    <h2>구성</h2>
+                    <p>총 6장. 표 중심. 제목 1장 + 핵심 질문 5장.</p>
+                </div>
+                <div class="meta-box">
+                    <h2>톤</h2>
+                    <p>금융 결재 톤을 유지하되, 발표용으로 문장을 더 풀어쓴 버전.</p>
+                </div>
+                <div class="meta-box">
+                    <h2>출력</h2>
+                    <p>브라우저에서 열고 버튼을 누르면 `.pptx`가 바로 내려받아진다.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="eyebrow">Slides</div>
+            <div class="preview" id="slide-preview"></div>
+
+            <div class="actions">
+                <div class="helper">
+                    파일을 브라우저에서 연 뒤 <strong>Download .pptx</strong>를 누르면 된다.
+                    다운로드 파일명은 `Glodobi_Approval_Stage1_Briefing.pptx`다.
+                </div>
+                <button onclick="generatePPT()">Download .pptx</button>
+            </div>
+        </section>
+    </div>
+
+    <script>
+    const SLIDES = [
+        {
+            title: '승인 요청 요약',
+            note: '결재 질문과 승인 범위를 첫 장에서 바로 정리한다.'
+        },
+        {
+            title: '왜 3,000만 원인가',
+            note: '운영비 환산, 손실 상한, 회수선 형성 구간을 한 장에서 설명한다.'
+        },
+        {
+            title: '인간은 원래 안전한가',
+            note: '인간 포트폴리오도 이미 편차와 미회수 위험이 큰 시장임을 보여 준다.'
+        },
+        {
+            title: '인간 대비 글도비의 장점',
+            note: 'RS 없음, 선인세 없음, IP 통제, 대량 생산, 로그 통제를 표로 비교한다.'
+        },
+        {
+            title: '이번 승인의 기준은 무엇인가',
+            note: '얼마를 벌 수 있느냐보다 얼마를 잃을 수 있느냐와 언제 멈출지를 본다.'
+        },
+        {
+            title: '진짜 가능한 수준이냐',
+            note: '몇 개를 더 돌렸는가보다 5개 서사 묶음 반복-개선 루프를 왜 돌고 있는지, 그게 무엇을 뜻하는지 설명한다.'
+        }
+    ];
+
+    function renderPreview() {
+        const root = document.getElementById('slide-preview');
+        root.innerHTML = SLIDES.map((slide, index) => `
+            <article class="slide-card">
+                <div class="slide-num">${String(index + 1).padStart(2, '0')}</div>
+                <h3>${slide.title}</h3>
+                <p>${slide.note}</p>
+            </article>
+        `).join('');
+    }
+
+    function generatePPT() {
+        const pptx = new PptxGenJS();
+        pptx.layout = 'LAYOUT_WIDE';
+        pptx.author = 'Codex';
+        pptx.company = '글도비';
+        pptx.subject = '글도비 1단계 승인 보고 발표용 요약';
+        pptx.title = '글도비 1단계 승인 보고';
+        pptx.lang = 'ko-KR';
+
+        const C = {
+            paper: 'F7F3EB',
+            paperAlt: 'EFE6D8',
+            white: 'FFFFFF',
+            ink: '17324D',
+            muted: '5F6B78',
+            line: 'D6CCBE',
+            navy: '17324D',
+            navySoft: 'E6EDF4',
+            accent: 'BA6B2D',
+            accentSoft: 'F1E2D4',
+            green: '2F6B4F',
+            greenSoft: 'E5F0E8',
+            red: '9E4438',
+            redSoft: 'F5E4DF'
+        };
+
+        const FONT = {
+            body: 'Malgun Gothic'
+        };
+
+        function addChrome(slide, title, subtitle, page, total) {
+            slide.background = { color: C.paper };
+            slide.addShape(pptx.ShapeType.rect, {
+                x: 0, y: 0, w: 13.333, h: 0.28,
+                line: { color: C.navy, pt: 0 },
+                fill: { color: C.navy }
+            });
+            slide.addText(title, {
+                x: 0.6, y: 0.48, w: 8.7, h: 0.45,
+                fontFace: FONT.body, fontSize: 24, bold: true, color: C.ink
+            });
+            if (subtitle) {
+                slide.addText(subtitle, {
+                    x: 0.6, y: 0.96, w: 8.8, h: 0.28,
+                    fontFace: FONT.body, fontSize: 10.5, color: C.muted
+                });
+            }
+            slide.addText(`${page}/${total}`, {
+                x: 12.1, y: 0.52, w: 0.55, h: 0.24,
+                fontFace: FONT.body, fontSize: 10, color: C.muted, align: 'right'
+            });
+        }
+
+        function cell(text, extra = {}) {
+            return {
+                text,
+                options: {
+                    fontFace: FONT.body,
+                    fontSize: 10.5,
+                    color: C.ink,
+                    fill: C.white,
+                    border: { type: 'solid', color: C.line, pt: 1 },
+                    margin: 0.06,
+                    valign: 'mid',
+                    ...extra
+                }
+            };
+        }
+
+        function header(text) {
+            return cell(text, {
+                bold: true,
+                color: C.white,
+                fill: C.navy,
+                align: 'center'
+            });
+        }
+
+        function addTable(slide, rows, options) {
+            slide.addTable(rows, {
+                fontFace: FONT.body,
+                fontSize: 10.5,
+                color: C.ink,
+                border: { type: 'solid', color: C.line, pt: 1 },
+                margin: 0.06,
+                ...options
+            });
+        }
+
+        function addCallout(slide, text, x, y, w, h, tone = 'navy') {
+            const fill = tone === 'accent' ? C.accentSoft : tone === 'green' ? C.greenSoft : C.navySoft;
+            const line = tone === 'accent' ? C.accent : tone === 'green' ? C.green : C.navy;
+            slide.addShape(pptx.ShapeType.roundRect, {
+                x, y, w, h,
+                rectRadius: 0.08,
+                line: { color: line, pt: 1.25 },
+                fill: { color: fill }
+            });
+            slide.addText(text, {
+                x: x + 0.16, y: y + 0.12, w: w - 0.32, h: h - 0.2,
+                fontFace: FONT.body, fontSize: 11.5, color: C.ink, bold: true, valign: 'mid'
+            });
+        }
+
+        const total = 6;
+        let slide;
+
+        // Slide 1
+        slide = pptx.addSlide();
+        addChrome(slide, '글도비 1단계 승인 보고', '발표용 요약 | 표 중심 구성', 1, total);
+        slide.addText('핵심 결재 질문', {
+            x: 0.6, y: 1.45, w: 2.4, h: 0.28,
+            fontFace: FONT.body, fontSize: 12, color: C.accent, bold: true
+        });
+        slide.addShape(pptx.ShapeType.roundRect, {
+            x: 0.6, y: 1.78, w: 12.0, h: 1.2,
+            line: { color: C.navy, pt: 1.2 },
+            fill: { color: C.white }
+        });
+        slide.addText('최대 3,000만 원의 손실 상한을 정한 상태에서,\n글도비를 회사 체계로 올려 3~6작품 검증 구간까지 운영할 것인지 판단해 주시기 바란다.', {
+            x: 0.85, y: 2.02, w: 11.5, h: 0.72,
+            fontFace: FONT.body, fontSize: 18, bold: true, color: C.ink, align: 'center', valign: 'mid'
+        });
+        addTable(slide, [
+            [header('항목'), header('요청 내용'), header('의미')],
+            [cell('승인 단위', { bold: true }), cell('1단계 한정 승인', { bold: true, color: C.accent, align: 'center' }), cell('전면 확대가 아니라 1단계 운영 승인')],
+            [cell('집행 상한', { bold: true }), cell('최대 3,000만 원', { bold: true, color: C.accent, align: 'center' }), cell('이번 단계 손실 상한')],
+            [cell('운영 범위', { bold: true }), cell('회사 체계 전환 + 3~6작품 검증', { bold: true, align: 'center' }), cell('회사 계정, 예산, 로그, 자산화 체계로 이동')],
+            [cell('중단 원칙', { bold: true }), cell('미달 시 즉시 중단 또는 재승인', { bold: true, align: 'center' }), cell('kill criteria를 승인 시점에 동시 확정')]
+        ], {
+            x: 0.6, y: 3.35, w: 12.0, h: 2.25
+        });
+        addCallout(slide, '이 발표는 “얼마를 벌 수 있느냐”보다 “얼마를 잃을 수 있느냐”와 “그 안에서 무엇을 검증하느냐”를 설명한다.', 0.6, 6.05, 12.0, 0.72, 'accent');
+
+        // Slide 2
+        slide = pptx.addSlide();
+        addChrome(slide, '왜 3,000만 원인가', '상한 숫자이면서 동시에 회수선이 비현실적이지 않은 구간인지 본다', 2, total);
+        addTable(slide, [
+            [header('근거'), header('숫자'), header('해석')],
+            [cell('9개월 환산 운영비'), cell('약 2,178만 ~ 2,880만 원', { bold: true, align: 'center' }), cell('현재 월 운영비 추정치를 2026-04~12로 환산한 값')],
+            [cell('이번 단계 손실 상한'), cell('최대 3,000만 원', { bold: true, color: C.accent, align: 'center' }), cell('검증 편차와 예비 집행 여지를 포함한 관리 숫자')],
+            [cell('작품당 P50 기준 회수선'), cell('3작품', { bold: true, align: 'center' }), cell('중앙값 수준 작품 3개면 회수선 형성')],
+            [cell('작품당 P25 기준 회수선'), cell('6작품', { bold: true, align: 'center' }), cell('보수적으로 잡아도 6작품이면 회수선 형성')],
+            [cell('몬테카를로 3작품 초과확률'), cell('83.9%', { bold: true, color: C.green, align: 'center' }), cell('160개 비교표본 분포 기준으로도 이미 높다')],
+            [cell('몬테카를로 6작품 초과확률'), cell('99.5%', { bold: true, color: C.green, align: 'center' }), cell('실무적으로 회수선이 거의 닫히는 구간')]
+        ], {
+            x: 0.6, y: 1.45, w: 12.0, h: 4.45
+        });
+        addCallout(slide, '정리하면, 3,000만 원은 깊은 손실 구간이라기보다 3~6작품 구간에서 회수 가능성을 설명할 수 있는 운영 상한에 가깝다.', 0.6, 6.05, 12.0, 0.72, 'green');
+
+        // Slide 3
+        slide = pptx.addSlide();
+        addChrome(slide, '인간은 원래 안전한가', '비교표본은 인간 시장도 이미 편차와 미회수 위험이 큰 구조임을 보여 준다', 3, total);
+        addTable(slide, [
+            [header('관찰'), header('숫자'), header('뜻')],
+            [cell('작품당 12개월 합산 P50'), cell('1,327만 원', { bold: true, align: 'center' }), cell('중앙값 작품도 절대적으로 높은 매출이 아니다')],
+            [cell('하위 50% 매출 점유율'), cell('5.9%', { bold: true, color: C.red, align: 'center' }), cell('절반의 작품이 전체 매출의 5.9%만 차지한다')],
+            [cell('하위 25% 매출 점유율'), cell('1.6%', { bold: true, color: C.red, align: 'center' }), cell('하위권은 구조적으로 매우 약하다')],
+            [cell('12개월 1,000만 미만 작품 수'), cell('74/160작품 (46%)', { bold: true, align: 'center' }), cell('절반 가까이가 12개월 1,000만 미만이다')],
+            [cell('선인세 500만 + 회사 몫 70% 미회수'), cell('60/160작품 (38%)', { bold: true, color: C.red, align: 'center' }), cell('인간 포트폴리오도 선인세 미회수 위험이 적지 않다')]
+        ], {
+            x: 0.6, y: 1.45, w: 12.0, h: 4.35
+        });
+        addCallout(slide, '즉 비교 기준이 인간이라고 해서 자동으로 안전해지는 것이 아니다. AI 운영비만 유독 위험하다고 보는 프레임은 시장 구조를 반만 보는 해석이다.', 0.6, 5.98, 12.0, 0.8, 'accent');
+
+        // Slide 4
+        slide = pptx.addSlide();
+        addChrome(slide, '인간 대비 글도비의 장점', '이번 승인안은 “잘 쓰느냐”만이 아니라 비용 구조와 통제 구조를 함께 본다', 4, total);
+        addTable(slide, [
+            [header('비교 항목'), header('인간 포트폴리오'), header('글도비 운영'), header('의미')],
+            [cell('선인세'), cell('작품별로 선지급이 필요하다'), cell('선인세가 없다', { bold: true, color: C.green, align: 'center' }), cell('초기 현금 유출을 운영비 중심으로 통제 가능')],
+            [cell('RS'), cell('매출 발생 후에도 배분이 계속 붙는다'), cell('RS가 없다', { bold: true, color: C.green, align: 'center' }), cell('성과 발생 이후에도 회사 몫이 더 남는다')],
+            [cell('IP 통제'), cell('권리와 협의 구조가 분산될 수 있다'), cell('IP 통제가 가능하다', { bold: true, color: C.green, align: 'center' }), cell('자산화와 후속 활용의 통제권이 높다')],
+            [cell('생산 방식'), cell('작품 수가 늘수록 인력 의존이 선형으로 늘어난다'), cell('대량 생산과 반복 검증이 가능하다', { bold: true, color: C.green, align: 'center' }), cell('검증 단위를 늘려도 운영 구조를 유지할 수 있다')],
+            [cell('운영 로그와 책임'), cell('개별 작가 단위로 비용과 과정이 분산된다'), cell('회사 계정과 로그로 통제가 가능하다', { bold: true, color: C.green, align: 'center' }), cell('사비 혼입과 책임 불명확 문제를 줄일 수 있다')]
+        ], {
+            x: 0.6, y: 1.45, w: 12.0, h: 4.65
+        });
+        addCallout(slide, '따라서 이번 안건은 단순히 “인간 대신 AI를 쓰자”가 아니라, 비용 구조와 권리 구조를 회사 통제 가능한 형태로 바꾸자는 제안이다.', 0.6, 6.22, 12.0, 0.58, 'green');
+
+        // Slide 5
+        slide = pptx.addSlide();
+        addChrome(slide, '이번 승인의 기준은 무엇인가', '신규 사업에서는 장기 매출 약속보다 손실 상한과 중단 기준이 더 중요하다', 5, total);
+        addTable(slide, [
+            [header('질문'), header('이번 문서의 답'), header('왜 이렇게 보나')],
+            [cell('얼마를 벌 수 있느냐'), cell('장기 매출 예측을 전면에 두지 않는다', { bold: true, align: 'center' }), cell('신규 사업의 장기 예측은 오차가 커서 쉽게 픽션이 된다')],
+            [cell('얼마를 잃을 수 있느냐'), cell('최대 3,000만 원 손실 상한', { bold: true, color: C.accent, align: 'center' }), cell('손실 상한을 먼저 고정하면 승인 부담이 작아진다')],
+            [cell('언제 계속 판단하느냐'), cell('2026-06 중간 점검 / 2026-12 계속·중단·재승인 판단', { bold: true, align: 'center' }), cell('일정을 미리 고정해 승인 이후 논점을 줄인다')],
+            [cell('언제 멈추느냐'), cell('미달 시 즉시 중단 또는 재승인', { bold: true, color: C.red, align: 'center' }), cell('중단 기준을 승인 시점에 함께 합의한다')],
+            [cell('실패해도 남는 것'), cell('운영 로그, 비용 데이터, 품질 판정, 운영 절차', { bold: true, align: 'center' }), cell('단순 소비가 아니라 판단 근거와 운영 자산이 남는다')]
+        ], {
+            x: 0.6, y: 1.45, w: 12.0, h: 4.55
+        });
+        addCallout(slide, '요약하면 이번 승인은 “성공을 약속하는 결재”가 아니라 “어디서 멈출지까지 포함해 통제 가능한 범위 안에서 검증할 것인가”를 묻는 결재다.', 0.6, 6.08, 12.0, 0.72, 'accent');
+
+        // Slide 6
+        slide = pptx.addSlide();
+        addChrome(slide, '진짜 가능한 수준이냐', '기술 판단은 “몇 개를 더 돌렸나”보다 “왜 5개 서사 묶음 반복-개선 루프를 돌고 있나”를 본다', 6, total);
+        addTable(slide, [
+            [header('검증 항목'), header('현재 상태'), header('의미')],
+            [cell('외부 흐름 정렬성'), cell('계획-생성-검증-수정, 상태 추적, 평가 분리 흐름과 정렬', { bold: true, align: 'center' }), cell('특이한 예외 구조가 아니라 최근 장편 생성 흐름과 맞물린다')],
+            [cell('현재 운영 방식'), cell('5개 서사 묶음 반복-개선 루프 운용 중', { bold: true, color: C.green, align: 'center' }), cell('단순 누적 수보다 품질 안정화와 비용 효율 개선에 초점이 있다')],
+            [cell('왜 5개 묶음인가'), cell('개선 효과를 보기엔 충분히 길고 비용 관리도 가능', { bold: true, align: 'center' }), cell('시연용 누적 기록이 아니라 개선 가성비를 보는 운영 단위다')],
+            [cell('현재 단계'), cell('내부 운영 검증과 개선 단계', { bold: true, color: C.accent, align: 'center' }), cell('즉시 대규모 상업화가 아니라 회사 체계 전환과 개선 루프의 안정화가 핵심이다')],
+            [cell('운영 판단의 의미'), cell('될까 말까보다 더 안정적으로 굴릴 방법을 보는 단계', { bold: true, align: 'center' }), cell('이번 승인은 연구 착수 승인이 아니라 운영 승인에 가깝다')]
+        ], {
+            x: 0.6, y: 1.45, w: 12.0, h: 4.48
+        });
+        addCallout(slide, '따라서 이번 승인은 “몇 개를 더 증명할 것인가”에 대한 승인이 아니라, 이미 돌아가는 구조의 5개 서사 묶음 반복-개선 루프를 회사 체계 안에서 더 안정적으로 돌릴 것인지에 대한 운영 승인이다. 실패하더라도 AI 글쓰기를 어디까지 내재화할 수 있는지에 대한 내부 판단 근거는 회사에 남는다.', 0.6, 5.94, 12.0, 0.92, 'green');
+
+        pptx.writeFile({ fileName: 'Glodobi_Approval_Stage1_Briefing.pptx' });
+    }
+
+    renderPreview();
+    </script>
+</body>
+</html>

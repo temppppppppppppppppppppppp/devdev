@@ -1,0 +1,17 @@
+{
+  "exact_title_match": true,
+  "detected_title": "이세계 모험 헬퍼",
+  "title_accuracy": 10,
+  "style_match": 2,
+  "character_preservation": 10,
+  "cover_impact": 3,
+  "readability": 9,
+  "issues": [
+    "Typography style does not match the reference image.",
+    "The font is generic and looks like a placeholder.",
+    "The typography lacks professional design and integration with the art."
+  ],
+  "summary": "The title is rendered perfectly and is highly readable. However, the typography is a significant weakness. It completely fails to match the dynamic, stylized mood of the reference image, instead using a very generic font that makes the cover look amateurish and cheapens its commercial impact. The character art is perfectly preserved, but the poor typography design is a major flaw.",
+  "candidate": "C:\\Users\\wjjo\\Desktop\\글도비\\projects\\cover_ai_pipeline\\outputs\\isekai_helper\\candidate_04_integrated_block.png",
+  "score": 94
+}

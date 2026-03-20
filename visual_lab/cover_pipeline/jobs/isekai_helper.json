@@ -1,0 +1,28 @@
+{
+  "job_id": "isekai_helper",
+  "base_image": "C:/Users/wjjo/Desktop/수동_글도비/이세계 모험 헬퍼_최재원(외주).jpg",
+  "style_reference": "C:/Users/wjjo/Desktop/수동_글도비/d.png",
+  "title": "이세계 모험 헬퍼",
+  "placement": "bottom-left",
+  "generation_model": "gemini-3-pro-image-preview",
+  "judge_model": "gemini-2.5-pro",
+  "output_dir": "C:/Users/wjjo/Desktop/글도비/visual_lab/cover_pipeline/outputs/isekai_helper",
+  "variants": [
+    {
+      "name": "brush_dense",
+      "extra_prompt": "Make the Korean title feel hand-drawn and premium, not like a default font. White core letters, strong cobalt blue outer energy, red slash accents, dense stacked composition, aggressive commercial webnovel cover mood."
+    },
+    {
+      "name": "sharp_calligraphy",
+      "extra_prompt": "Use sharper calligraphic tips and more elegant stroke tapering. Keep strong readability, but push it toward high-end serialized fantasy cover typography."
+    },
+    {
+      "name": "grunge_energy",
+      "extra_prompt": "Push rougher paint texture, imperfect edges, chromatic blue bleed, and rough red scratch marks. Keep the title exact and very readable."
+    },
+    {
+      "name": "integrated_block",
+      "extra_prompt": "Make the title block feel structurally integrated into the image, like a designed mass that balances the heroine rather than a sticker placed on top."
+    }
+  ]
+}

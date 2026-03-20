@@ -1,0 +1,25 @@
+{
+  "job_id": "d_ropan",
+  "reference_image": "C:/Users/wjjo/Desktop/수동_글도비/d.png",
+  "generation_model": "gemini-3-pro-image-preview",
+  "judge_model": "gemini-2.5-pro",
+  "output_dir": "C:/Users/wjjo/Desktop/글도비/visual_lab/illustration_pipeline/outputs/d_ropan",
+  "variants": [
+    {
+      "name": "duchess_corridor",
+      "prompt": "Use the reference only for dramatic cover staging, camera impact, and central character dominance. Reimagine it as a premium Korean romance fantasy cover illustration with no text at all. Create a breathtakingly beautiful noblewoman in an opulent palace corridor, elegant black or deep navy hair, jeweled gown, rich blue and gold lighting, painterly anime finish, luxurious details, and strong emotional magnetism."
+    },
+    {
+      "name": "blonde_empress",
+      "prompt": "Reimagine the reference as a luxurious ropan empress cover. No text, no logo, no letters anywhere. Beautiful blonde empress, white-gold gown, cathedral-like hall, sparkling particles, red ribbon accents, expensive serialized-cover polish, highly appealing face, graceful but powerful presence."
+    },
+    {
+      "name": "villainess_rose",
+      "prompt": "Turn the reference into a high-end romance-fantasy villainess cover with no text. Use a gorgeous dark-haired duchess or villainess, rose petals, crimson and cobalt accents, elegant palace architecture, extremely polished anime illustration quality, seductive but refined expression, and premium webnovel-cover impact."
+    },
+    {
+      "name": "silver_princess",
+      "prompt": "Reimagine the reference as an ultra-pretty silver-haired princess in a luminous fantasy palace. No typography or readable marks. Keep the same sense of dramatic cover hierarchy and perspective, but shift the entire mood into delicate, expensive romance fantasy with layered fabrics, jewels, magical glow, and strong commercial beauty."
+    }
+  ]
+}
