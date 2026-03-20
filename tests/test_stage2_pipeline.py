@@ -818,6 +818,25 @@ class TestAnalystEnrichBlock:
 
         assert asyncio.iscoroutinefunction(analyst.enrich_raw_block_async)
 
+    def test_general_exception_marks_enrich_skipped_and_logs_error(self, analyst, caplog):
+        import asyncio
+        import logging
+
+        analyst.context.sys = None
+        analyst._ask_with_analyst_cache = MagicMock(side_effect=RuntimeError("boom"))
+
+        raw_block = {"block_id": "B1", "title": "테스트 블록"}
+        with caplog.at_level(logging.ERROR):
+            result = asyncio.run(analyst.enrich_raw_block_async(dict(raw_block), None, None, []))
+
+        assert result["block_id"] == "B1"
+        assert result["_enrich_skipped"] is True
+        assert result["_enrich_error"] == "boom"
+        assert any(
+            record.levelno == logging.ERROR and "Enrich Critical Error" in record.getMessage()
+            for record in caplog.records
+        )
+
 
 # ══════════════════════════════════════════════════════════════
 # [Stage2Orchestrator] Test 23: stage_2_arcs_async_logic is async

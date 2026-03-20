@@ -10,7 +10,7 @@ from modules.core.constants import GenreTypes
 
 from .preset_registry import FieldDefinition, PresetRegistry
 from .reverse_expander import ReverseExpander
-from .story_expander import StoryExpander
+from .story_expander import StoryExpander, StoryExpanderBibleGenerationError
 from .style_extractor import StyleExtractor, StyleGuide
 
 # 스피너 유틸리티
@@ -518,7 +518,19 @@ class StageZeroManager:
 
         for attempt in range(1, review_max_attempts + 1):
             self._ui_log("[*] Bible generation in progress...", event_kind="summary", render_format="summary")
-            self.bible = expander.generate_bible(self.protagonist_config)
+            try:
+                self.bible = expander.generate_bible(self.protagonist_config)
+            except StoryExpanderBibleGenerationError as exc:
+                logging.warning("[Stage0] Bible generation failed: %s", exc)
+                self._ui_log(
+                    f"[!] Bible 생성 실패: {exc}",
+                    level="warning",
+                    event_kind="summary",
+                    render_format="summary",
+                )
+                self.bible = {}
+                self.treatment = []
+                return {}, [], None
 
             if not self.bible or not isinstance(self.bible, dict) or not self.bible.get("MasterBible"):
                 logging.warning("[Stage0] Bible generation failed; aborting before treatment generation")

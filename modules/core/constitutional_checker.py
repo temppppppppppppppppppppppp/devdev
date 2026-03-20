@@ -194,6 +194,22 @@ class ConstitutionalChecker:
         """
         self.genre = genre
 
+    @staticmethod
+    def _fit_prompt_text(value: object, max_chars: int, head_ratio: float = 0.55) -> str:
+        text = str(value or "")
+        if len(text) <= max_chars:
+            return text
+        marker = "...(중간 생략)..."
+        remaining = max_chars - len(marker)
+        if remaining <= 0:
+            return text[:max_chars]
+        min_tail_chars = min(16, max(1, remaining - 1))
+        head_chars = max(1, min(int(max_chars * head_ratio), remaining - min_tail_chars))
+        tail_chars = max(1, remaining - head_chars)
+        if head_chars + tail_chars > len(text):
+            return text
+        return f"{text[:head_chars]}{marker}{text[-tail_chars:]}"
+
     def get_analyst_constitution(self, prev_arcs: list[dict[str, Any]] = None, additional_constraints: str = "") -> str:
         """
         Stage 2 (Analyst/Arc) 헌법 프롬프트 생성
@@ -276,14 +292,14 @@ class ConstitutionalChecker:
             ending = prev_blueprint.get("ending_hook") or prev_blueprint.get("cliffhanger", "")
             if ending:
                 lines.append("\n📌 [직전 화 ending_hook - 반드시 이어받을 것]")
-                lines.append(f'   "{ending[:150]}"')
+                lines.append(f'   "{self._fit_prompt_text(ending, 150)}"')
 
         # Arc 범위
         if arc_data:
             tactical = arc_data.get("tactical_doc", "")
             if tactical:
                 lines.append("\n📌 [Arc tactical_doc 범위 - 초과 금지]")
-                lines.append(f"   {tactical[:200]}...")
+                lines.append(f"   {self._fit_prompt_text(tactical, 200)}")
 
         lines.append("\n📋 [자가 검증 체크리스트]")
         for article in self.BLUEPRINT_CONSTITUTION:
@@ -334,9 +350,9 @@ class ConstitutionalChecker:
                 lines.append("\n📋 [Blueprint 필수 씬 - 모두 반영할 것]")
                 for i, (scene_id, scene_data) in enumerate(list(scene_breakdown.items())[:6], 1):
                     if isinstance(scene_data, dict):
-                        desc = scene_data.get("description", str(scene_data))[:50]
+                        desc = self._fit_prompt_text(scene_data.get("description", str(scene_data)), 50)
                     else:
-                        desc = str(scene_data)[:50]
+                        desc = self._fit_prompt_text(scene_data, 50)
                     lines.append(f"   {i}. {scene_id}: {desc}")
 
         lines.append("\n📋 [자가 검증 체크리스트]")

@@ -17,7 +17,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from concurrent.futures import TimeoutError as FutureTimeoutError
 
 from modules.core.arc_summary_utils import generate_prev_arc_summary  # [V64.P4]
-from modules.core.constants import AIModels
+from modules.core.constants import AIModels, smart_truncate
 from modules.core.prompt_loader import SafeDict
 from modules.validation.threshold_helper import _threshold
 
@@ -145,6 +145,14 @@ CRITICAL 이슈가 하나라도 있으면 반드시 REJECT하세요.
 """
 
 
+def _fit_consensus_text(value: object, max_chars: int, *, head_ratio: float = 0.55) -> str:
+    raw = str(value or "")
+    if len(raw) <= max_chars:
+        return raw
+    head_chars = max(0, min(int(max_chars * head_ratio), max_chars - 80))
+    return smart_truncate(raw, max_chars=max_chars, head_chars=head_chars)
+
+
 class ConsensusValidator(BaseAgent):
     """
     [V60.12] Consensus Validator
@@ -189,7 +197,7 @@ class ConsensusValidator(BaseAgent):
             active_perspectives = self.perspectives
 
         prev_summary = self._generate_prev_summary(prev_arcs)
-        arc_data = json.dumps(arc, ensure_ascii=False, indent=2)[:6000]
+        arc_data = _fit_consensus_text(json.dumps(arc, ensure_ascii=False, indent=2), 6000)
 
         # [V60.56] Python advisory 정보 포맷팅
         advisory_text = "(없음)"
@@ -305,7 +313,7 @@ class ConsensusValidator(BaseAgent):
                 perspective_name=perspective["name"],
                 arc_data=self._escape_braces(arc_data),
                 prev_summary=self._escape_braces(prev_summary),
-                constraints=self._escape_braces(constraints[:6000] if constraints else "(없음)"),
+                constraints=self._escape_braces(_fit_consensus_text(constraints, 6000) if constraints else "(없음)"),
                 python_advisory=self._escape_braces(python_advisory_text),
             )
         )

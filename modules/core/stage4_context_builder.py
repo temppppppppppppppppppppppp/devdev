@@ -8,7 +8,7 @@ import logging
 import re
 from typing import TYPE_CHECKING
 
-from modules.core.constants import Stage2Limits, VolumeSettings
+from modules.core.constants import Stage2Limits, VolumeSettings, smart_truncate
 from modules.core.context_advisor import (
     RetrievalSources,
     build_context_budget_ledger,
@@ -33,6 +33,22 @@ from modules.validation.threshold_helper import _threshold
 
 if TYPE_CHECKING:
     from modules.core.context_advisor import RetrievalPlan
+
+
+def _fit_context_text(text: str, *, max_chars: int) -> str:
+    raw = str(text or "")
+    if len(raw) <= max_chars:
+        return raw
+    if max_chars <= 1:
+        return raw[:max_chars]
+    if max_chars < 80:
+        tail_chars = max(8, min(max_chars // 3, max_chars - 2))
+        head_chars = max_chars - tail_chars - 1
+        if head_chars <= 0:
+            return raw[:max_chars]
+        return raw[:head_chars] + "…" + raw[-tail_chars:]
+    head_chars = max(0, min(int(max_chars * 0.55), max_chars - 80))
+    return smart_truncate(raw, max_chars=max_chars, head_chars=head_chars)
 
 
 def _build_canonical_facts_section(db, full_text: str) -> str:
@@ -718,14 +734,14 @@ class Stage4ContextBuilder:
             return ""
 
         result = "\n".join(parts)
-        return result[:budget]
+        return _fit_context_text(result, max_chars=budget)
 
     @staticmethod
     def _trim_summary_value(value, max_chars: int = 60) -> str:
         text = str(value or "").strip()
         if len(text) <= max_chars:
             return text
-        return text[: max_chars - 1] + "…"
+        return _fit_context_text(text, max_chars=max_chars)
 
     @staticmethod
     def _tokenize_focus_terms(value: str) -> set[str]:
@@ -783,7 +799,7 @@ class Stage4ContextBuilder:
                     parts.append(" ".join(str(v).strip() for v in values[:8] if str(v).strip()))
         combined = "\n".join(part for part in parts if part)
         if len(combined) > max_chars:
-            return combined[:max_chars]
+            return _fit_context_text(combined, max_chars=max_chars)
         return combined
 
     def _resolve_work_retrieval_focus(
@@ -893,7 +909,7 @@ class Stage4ContextBuilder:
 
         result = "\n".join(lines)
         if len(result) > max_chars:
-            result = result[: max_chars - 20] + "\n... (슬롯 요약 절삭)"
+            result = _fit_context_text(result, max_chars=max_chars)
         return result
 
     @staticmethod
@@ -1231,7 +1247,7 @@ class Stage4ContextBuilder:
 
         result = "\n\n".join(part for part in parts if part)
         if len(result) > max_chars:
-            result = result[: max_chars - 20] + "\n... (세계 상태 절삭)"
+            result = _fit_context_text(result, max_chars=max_chars)
         return result
 
     def _build_condensed_fact_ledger_summary(
@@ -1315,7 +1331,7 @@ class Stage4ContextBuilder:
 
         result = "\n\n".join(part for part in parts if part)
         if len(result) > max_chars:
-            result = result[: max_chars - 18] + "\n... (팩트 원장 절삭)"
+            result = _fit_context_text(result, max_chars=max_chars)
         return result
 
     def _execute_retrieval_plan(self, plan: "RetrievalPlan", arc_no: int | None = None) -> list[str]:
@@ -1440,9 +1456,9 @@ class Stage4ContextBuilder:
             ep_no = row.get("ep_num", "?")
             content = str(row.get("content", "") or "")
             if content:
-                excerpts.append(f"[EP {ep_no} 원고 발췌]\n{content[:800]}")
+                excerpts.append(f"[EP {ep_no} 원고 발췌]\n{_fit_context_text(content, max_chars=800)}")
         combined = "\n\n".join(excerpts)
-        return combined[:max_chars]
+        return _fit_context_text(combined, max_chars=max_chars)
 
     def _parse_ep_range_from_query(self, query_text: str) -> tuple[int, int] | None:
         """query_text에서 'ep:N~M' 형식 파싱."""
@@ -2679,9 +2695,9 @@ class Stage4ContextBuilder:
                         fallback_full=False,
                     )
                     if _ep_tac:
-                        _mq_queries.append(_ep_tac[:1800])
+                        _mq_queries.append(_fit_context_text(_ep_tac, max_chars=1800))
                     else:
-                        _mq_queries.append(arc_tactical[:1800])
+                        _mq_queries.append(_fit_context_text(arc_tactical, max_chars=1800))
                 _genre_queries = {
                     "hunter": ["던전 클리어 각성 스킬 랭크"],
                     "investment": ["포트폴리오 거래 수익률 투자"],

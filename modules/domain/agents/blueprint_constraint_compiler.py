@@ -19,7 +19,7 @@ import json
 import logging
 import re
 
-from modules.core.constants import Stage2Limits
+from modules.core.constants import Stage2Limits, smart_truncate
 from modules.core.tactical_utils import _EPISODE_HEADER_PATTERNS, extract_episode_tactical
 
 
@@ -32,6 +32,13 @@ class BlueprintConstraintCompiler:
 
     def __init__(self) -> None:
         pass
+
+    @staticmethod
+    def _fit_prompt_text(value: object, max_chars: int, head_ratio: float = 0.55) -> str:
+        text = str(value or "")
+        if len(text) <= max_chars:
+            return text
+        return smart_truncate(text, max_chars=max_chars, head_chars=max(1, int(max_chars * head_ratio)))
 
     def compile(
         self,
@@ -126,7 +133,9 @@ class BlueprintConstraintCompiler:
         # MUST FOCUS
         lines.append("### 🎯 MUST_FOCUS (이번 화 핵심 - 반드시 포함)")
         must_focus = constraint_block.get("must_focus", {})
-        lines.append(f"내용: {must_focus.get('content', '정보 없음')[:500]}")
+        if must_focus.get("arc_title"):
+            lines.append(f"제목: {self._fit_prompt_text(must_focus.get('arc_title', ''), 120)}")
+        lines.append(f"내용: {self._fit_prompt_text(must_focus.get('content', '정보 없음'), 500)}")
         if must_focus.get("key_events"):
             lines.append("핵심 이벤트:")
             for event in must_focus["key_events"][:5]:
@@ -138,7 +147,7 @@ class BlueprintConstraintCompiler:
         stop_line = constraint_block.get("stop_line", {})
         if stop_line.get("content"):
             _sl_raw = stop_line["content"]
-            _sl_display = _sl_raw[:500]
+            _sl_display = self._fit_prompt_text(_sl_raw, 500)
             lines.append(f"다음 화 예고: {_sl_display}")
             if len(_sl_raw) > 500:
                 lines.append(f"  (원본 {len(_sl_raw)}자 중 500자 표시 — 잔여분 생략)")
@@ -151,7 +160,7 @@ class BlueprintConstraintCompiler:
         lines.append("### 🔗 CONTINUITY (이전 화 연속성)")
         continuity = constraint_block.get("continuity", {})
         if continuity.get("prev_ending"):
-            lines.append(f"직전 화 엔딩: {continuity['prev_ending'][:150]}...")
+            lines.append(f"직전 화 엔딩: {self._fit_prompt_text(continuity['prev_ending'], 150)}")
         if continuity.get("location"):
             lines.append(f"현재 위치: {continuity['location']}")
         if continuity.get("time_context"):
@@ -212,6 +221,8 @@ class BlueprintConstraintCompiler:
         if not isinstance(content, str):
             content = str(content) if content else ""
 
+        arc_title = self._extract_episode_title(arc_data, ep_num)
+
         # 핵심 이벤트 추출
         key_events = []
         if content:
@@ -226,7 +237,50 @@ class BlueprintConstraintCompiler:
             "content": content if content else "이번 화 전술 정보 없음",
             "key_events": key_events[:5],
             "arc_position": arc_position,
+            "arc_title": arc_title,
         }
+
+    def _extract_episode_title(self, arc_data: dict, ep_num: int) -> str:
+        """이번 화 제목 추출.
+
+        우선순위:
+        1. episode_details 내 제목성 필드
+        2. tactical_doc 에피소드 헤더
+        3. arc_data 최상위 title
+        """
+        episode_details = arc_data.get("episode_details") or []
+        if isinstance(episode_details, list):
+            for item in episode_details:
+                if not isinstance(item, dict) or item.get("ep_num") != ep_num:
+                    continue
+                for key in ("title", "ep_title", "episode_title", "name", "label"):
+                    value = str(item.get(key, "") or "").strip()
+                    if value:
+                        return value
+
+        tactical_doc = arc_data.get("tactical_doc", "")
+        if isinstance(tactical_doc, dict):
+            tactical_doc = json.dumps(tactical_doc, ensure_ascii=False, indent=2)
+        elif not isinstance(tactical_doc, str):
+            tactical_doc = str(tactical_doc or "")
+
+        if tactical_doc:
+            generic_markers = {"전술 설계", "전술", "tactical", "tactical doc", "arc tactical"}
+            title_patterns = [
+                r"\[\s*제\s*{ep}\s*화([^\]]*)\]",
+                r"#{{2,3}}\s*제\s*{ep}\s*화([^\n]*)",
+                r"\*\*제\s*{ep}\s*화([^*]*)\*\*",
+                r"제\s*{ep}\s*화\s*[:\-\u2013\u2014]\s*([^\n]+)",
+            ]
+            for pattern_template in title_patterns:
+                match = re.search(pattern_template.format(ep=ep_num), tactical_doc, re.MULTILINE)
+                if not match:
+                    continue
+                title = re.sub(r"\s+", " ", match.group(1).strip(" :-–—[]()"))
+                if title and title.lower() not in generic_markers:
+                    return title
+
+        return str(arc_data.get("title", "") or "").strip()
 
     def _extract_stop_line(self, arc_data: dict, ep_num: int, arc_position: int, ep_count: int) -> dict:
         """정지선 추출 (다음 화 내용)"""
@@ -248,7 +302,7 @@ class BlueprintConstraintCompiler:
                 if isinstance(_item, dict) and _item.get("ep_num") == next_ep:
                     _details = _item.get("details") or []
                     if isinstance(_details, list) and _details:
-                        content = "; ".join(d for d in _details if isinstance(d, str))[:800]
+                        content = self._fit_prompt_text("; ".join(d for d in _details if isinstance(d, str)), 800)
                     break
 
         # [S3-I4] 다중 정규식 폴백 패턴으로 다음 화 정지선 추출
@@ -257,7 +311,7 @@ class BlueprintConstraintCompiler:
                 pattern = pattern_template.format(ep=next_ep)
                 match = re.search(pattern, tactical_doc, re.DOTALL)
                 if match:
-                    content = match.group(1).strip()[:800]
+                    content = self._fit_prompt_text(match.group(1).strip(), 800)
                 if content:
                     break
 

@@ -11,7 +11,7 @@ import json
 import logging
 import re
 
-from modules.core.constants import Stage2Limits
+from modules.core.constants import Stage2Limits, smart_truncate
 from modules.core.prompt_loader import SafeDict
 from modules.core.tactical_utils import extract_episode_tactical
 
@@ -224,6 +224,14 @@ class ContinuityArcValidator:
         """
         self._ci = inspector
 
+    @staticmethod
+    def _fit_prompt_text(value: object, max_chars: int, head_ratio: float = 0.55) -> str:
+        """Prompt cap은 유지하되 최근 문맥을 같이 남긴다."""
+        text = str(value or "")
+        if len(text) <= max_chars:
+            return text
+        return smart_truncate(text, max_chars=max_chars, head_chars=max(1, int(max_chars * head_ratio)))
+
     def inspect_arc(self, current_arc: dict, prev_arcs: list[dict], entity_registry: dict = None) -> dict:
         """
         [V49] Arc 수준 연속성 검증 실행
@@ -368,7 +376,7 @@ class ContinuityArcValidator:
                 ep_count=ep_count,
                 ep_start=ep_start,
                 ep_end=ep_end,
-                tactical_doc=self._ci._escape_braces(tactical_doc[:50000]),
+                tactical_doc=self._ci._escape_braces(self._fit_prompt_text(tactical_doc, 50000)),
                 joint_docs=self._ci._escape_braces(json.dumps(joint_docs, ensure_ascii=False)),
                 status_shadow=self._ci._escape_braces(json.dumps(status_shadow, ensure_ascii=False)),
                 prev_arc_count=len(prev_arcs),
@@ -534,7 +542,13 @@ class ContinuityArcValidator:
             return original_joint_docs
 
         prompt = JOINT_DOCS_EXTRACTION_PROMPT.format_map(
-            SafeDict(arc_no=arc_no, last_ep=ep_end, last_ep_content=self._ci._escape_braces(last_ep_content[:4000]))
+            SafeDict(
+                arc_no=arc_no,
+                last_ep=ep_end,
+                last_ep_content=self._ci._escape_braces(
+                    smart_truncate(last_ep_content, max_chars=4000, head_chars=2200)
+                ),
+            )
         )
 
         try:
@@ -943,7 +957,7 @@ class ContinuityArcValidator:
 [수여물] {", ".join(grants) if grants else "없음"}
 
 [핵심 전술 요약]
-{_tac_summary[:4500]}
+{self._fit_prompt_text(_tac_summary, 4500)}
 """
             summaries.append(summary)
 

@@ -459,6 +459,22 @@ class ContextAdvisor:
         self.enabled = bool(_threshold("smart_retrieval.enabled", False))
         self.max_queries_per_plan = int(_threshold("smart_retrieval.max_queries_per_plan", 8))
 
+    @staticmethod
+    def _fit_slot_text(value: object, max_chars: int, head_ratio: float = 0.55) -> str:
+        text = str(value or "").strip()
+        if len(text) <= max_chars:
+            return text
+        marker = "...(중간 생략)..."
+        remaining = max_chars - len(marker)
+        if remaining <= 0:
+            return text[:max_chars]
+        min_tail_chars = min(16, max(1, remaining - 1))
+        head_chars = max(1, min(int(max_chars * head_ratio), remaining - min_tail_chars))
+        tail_chars = max(1, remaining - head_chars)
+        if head_chars + tail_chars > len(text):
+            return text
+        return f"{text[:head_chars]}{marker}{text[-tail_chars:]}"
+
     def plan_stage2_retrieval(
         self,
         arc_data: dict,
@@ -671,7 +687,13 @@ class ContextAdvisor:
             joined = ", ".join(str(item)[:30] for item in plot_suspension[:3])
             slots.append(RetrievalSlot("unresolved_plot", f"미해결 복선/보류 플롯: {joined}", priority=1))
         if tactical:
-            slots.append(RetrievalSlot("arc_tactical", f"아크 전술 키워드: {tactical[:260]}", priority=2))
+            slots.append(
+                RetrievalSlot(
+                    "arc_tactical",
+                    f"아크 전술 키워드: {self._fit_slot_text(tactical, 260)}",
+                    priority=2,
+                )
+            )
 
         return slots
 
@@ -693,7 +715,7 @@ class ContextAdvisor:
             slots.append(
                 RetrievalSlot(
                     "similar_blueprint",
-                    f"유사 블루프린트/아크 전술 키워드: {tactical[:300]}",
+                    f"유사 블루프린트/아크 전술 키워드: {self._fit_slot_text(tactical, 300)}",
                     priority=1,
                 )
             )
@@ -717,7 +739,7 @@ class ContextAdvisor:
                 slots.append(
                     RetrievalSlot(
                         "continuity_hook",
-                        f"직전 화 연결 포인트: {ending_hook[:200]}",
+                        f"직전 화 연결 포인트: {self._fit_slot_text(ending_hook, 200)}",
                         priority=1,
                     )
                 )
@@ -819,7 +841,13 @@ class ContextAdvisor:
             stage="stage4",
         )
         if prev_ending:
-            slots.append(RetrievalSlot("prev_ending", f"직전 결말 연결 포인트: {prev_ending[:260]}", priority=1))
+            slots.append(
+                RetrievalSlot(
+                    "prev_ending",
+                    f"직전 결말 연결 포인트: {self._fit_slot_text(prev_ending, 260)}",
+                    priority=1,
+                )
+            )
         if npc_names:
             slots.append(
                 RetrievalSlot(
@@ -835,7 +863,7 @@ class ContextAdvisor:
             slots.append(
                 RetrievalSlot(
                     "arc_tactical",
-                    f"아크 전술 연속성: {tactical[:320]}",
+                    f"아크 전술 연속성: {self._fit_slot_text(tactical, 320)}",
                     source=RetrievalSources.STATIC,
                     priority=2,
                 )
@@ -925,7 +953,13 @@ class ContextAdvisor:
 
         event_anchor = str(blueprint.get("core_event", "") or blueprint.get("story_goal", "")).strip()
         if event_anchor:
-            slots.append(RetrievalSlot("event_claim", f"원고 사건 주장 검증: {event_anchor[:240]}", priority=1))
+            slots.append(
+                RetrievalSlot(
+                    "event_claim",
+                    f"원고 사건 주장 검증: {self._fit_slot_text(event_anchor, 240)}",
+                    priority=1,
+                )
+            )
 
         rel_query = self._build_relationship_query(blueprint.get("state_changes", {}))
         if rel_query:
@@ -943,14 +977,18 @@ class ContextAdvisor:
             slots.append(
                 RetrievalSlot(
                     "location_item_consistency",
-                    f"위치/소지품 연속성 검증: {place[:120]}",
+                    f"위치/소지품 연속성 검증: {self._fit_slot_text(place, 120)}",
                     priority=2,
                 )
             )
 
         if manuscript:
             slots.append(
-                RetrievalSlot("blueprint_alignment", f"원고-블루프린트 정합 검토: {manuscript[:120]}", priority=3)
+                RetrievalSlot(
+                    "blueprint_alignment",
+                    f"원고-블루프린트 정합 검토: {self._fit_slot_text(manuscript, 120)}",
+                    priority=3,
+                )
             )
 
         return slots
@@ -999,11 +1037,11 @@ class ContextAdvisor:
                 for key in ("goal", "objective", "summary", "scene_goal"):
                     value = str(scene.get(key, "")).strip()
                     if value:
-                        parts.append(f"장면{idx}: {value[:52]}")
+                        parts.append(f"장면{idx}: {ContextAdvisor._fit_slot_text(value, 52)}")
                         break
             elif isinstance(scene, str):
-                parts.append(f"장면{idx}: {scene[:52]}")
-        return " | ".join(parts)[:260]
+                parts.append(f"장면{idx}: {ContextAdvisor._fit_slot_text(scene, 52)}")
+        return ContextAdvisor._fit_slot_text(" | ".join(parts), 260)
 
     @staticmethod
     def _build_relationship_query(state_changes: Any) -> str:
@@ -1018,10 +1056,11 @@ class ContextAdvisor:
                 who = str(item.get("npc", "") or item.get("target", "")).strip()
                 delta = str(item.get("change", "")).strip()
                 if who:
-                    pairs.append(f"{who}:{delta}" if delta else who)
+                    pair = f"{who}:{delta}" if delta else who
+                    pairs.append(ContextAdvisor._fit_slot_text(pair, 42))
             elif isinstance(item, str):
-                pairs.append(item.strip())
-        return f"관계 변화 이력: {', '.join(pairs)[:200]}" if pairs else ""
+                pairs.append(ContextAdvisor._fit_slot_text(item.strip(), 42))
+        return f"관계 변화 이력: {', '.join(pairs)}" if pairs else ""
 
     @staticmethod
     def _build_semantic_carryover_query(arc_data: Any) -> str:

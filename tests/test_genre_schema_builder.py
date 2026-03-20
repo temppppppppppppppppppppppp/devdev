@@ -305,6 +305,37 @@ class TestConstraintDBGenre:
         block = db.generate_constraint_block(for_arc=2)
         assert "내공" not in block
 
+    def test_load_failure_sets_degraded_contract(self):
+        from modules.core.constraint_db import ConstraintDB
+
+        class _BrokenContext:
+            class db:
+                @staticmethod
+                def load_anchor(_name):
+                    raise RuntimeError("constraint load fail")
+
+        db = ConstraintDB(project_context=_BrokenContext())
+
+        assert db.degraded is True
+        assert db.degraded_reason == "constraint load fail"
+
+    def test_validate_arc_design_includes_degraded_warning_when_load_failed(self):
+        from modules.core.constraint_db import ConstraintDB
+
+        class _BrokenContext:
+            class db:
+                @staticmethod
+                def load_anchor(_name):
+                    raise RuntimeError("constraint load fail")
+
+        db = ConstraintDB(project_context=_BrokenContext())
+        result = db.validate_arc_design({"arc_no": 2, "state_constraints": {"protagonist_items": ["청검"]}})
+
+        assert result["valid"] is True
+        assert result["degraded"] is True
+        assert result["degraded_reason"] == "constraint load fail"
+        assert "degraded: ConstraintDB load failed (constraint load fail)" in result["warnings"]
+
 
 # ── StateTracker genre-aware ────────────────────────────────────────────────
 

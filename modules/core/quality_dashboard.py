@@ -46,6 +46,7 @@ class QualityDashboard:
         self.blueprint_coverage: list[dict] = []
         self.quality_signal_history: list[dict] = []
         self.retrieval_observation_history: list[dict] = []
+        self.persistence_failures: list[dict] = []
 
         # 파일에서 기존 메트릭 로드
         if self.metrics_file and self.metrics_file.exists():
@@ -75,7 +76,7 @@ class QualityDashboard:
             decision = record.get("decision", "UNKNOWN")
             score = record.get("score", 0)
 
-            if decision == "PASS":
+            if decision in ("PASS", "PASS_WITH_WARNING"):
                 self.stage_stats[stage]["pass"] += 1
             else:
                 self.stage_stats[stage]["reject"] += 1
@@ -115,6 +116,8 @@ class QualityDashboard:
             self.quality_signal_history = self.quality_signal_history[-self._max_history :]
         if len(self.retrieval_observation_history) > self._max_history:
             self.retrieval_observation_history = self.retrieval_observation_history[-self._max_history :]
+        if len(self.persistence_failures) > self._max_history:
+            self.persistence_failures = self.persistence_failures[-self._max_history :]
 
         if stage is not None:
             scores = self.stage_stats[stage]["scores"]
@@ -246,6 +249,30 @@ class QualityDashboard:
                 f.write(json.dumps(record, ensure_ascii=False) + "\n")
         except Exception as e:
             logging.warning(f"[QualityDashboard] 레코드 저장 실패: {e}")
+            self._record_persistence_failure("save_record", e)
+
+    def _record_persistence_failure(self, operation: str, exc: Exception) -> None:
+        alert = {
+            "ts": datetime.now().astimezone().isoformat(),
+            "component": "quality_dashboard",
+            "operation": operation,
+            "message": "quality metrics persistence failed",
+            "exception_type": type(exc).__name__,
+            "metrics_path": str(self.metrics_file) if self.metrics_file else "",
+        }
+        self.persistence_failures.append(alert)
+        self._trim_histories()
+
+        if not self.project_path:
+            return
+
+        soft_path = self.project_path / "logs" / "soft_failures.jsonl"
+        try:
+            soft_path.parent.mkdir(parents=True, exist_ok=True)
+            with soft_path.open("a", encoding="utf-8") as handle:
+                handle.write(json.dumps(alert, ensure_ascii=False) + "\n")
+        except Exception as sink_exc:
+            logging.error("[QualityDashboard] persistence alert sink failed: %s", sink_exc)
 
     def get_summary(self) -> dict:
         """
@@ -271,6 +298,11 @@ class QualityDashboard:
             "avg_blueprint_coverage": 0,
             "common_violations": [],
             "latest_quality_signals": {},
+            "persistence_health": {
+                "available": False,
+                "recent_count": 0,
+                "recent": [],
+            },
             "retrieval_observations": {
                 "count": len(self.retrieval_observation_history),
                 "latest_stage": self.retrieval_observation_history[-1].get("stage")
@@ -310,6 +342,13 @@ class QualityDashboard:
         summary["common_violations"] = sorted(violation_counts.items(), key=lambda x: x[1], reverse=True)[:5]
         if self.quality_signal_history:
             summary["latest_quality_signals"] = self.quality_signal_history[-1].get("quality_signals", {})
+        if self.persistence_failures:
+            recent_persistence = self.persistence_failures[-5:]
+            summary["persistence_health"] = {
+                "available": True,
+                "recent_count": len(recent_persistence),
+                "recent": recent_persistence,
+            }
 
         return summary
 
@@ -1093,7 +1132,7 @@ class QualityDashboard:
                 continue
 
             scores = [float(r.get("score") or 0) for r in chunk]
-            passes = sum(1 for r in chunk if r.get("decision") == "PASS")
+            passes = sum(1 for r in chunk if r.get("decision") in ("PASS", "PASS_WITH_WARNING"))
             ep_start = chunk[0].get("ep_num", "?")
             ep_end = chunk[-1].get("ep_num", "?")
 

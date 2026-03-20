@@ -89,3 +89,24 @@ def test_answer_relation_intent_childhood_friend_uses_taxonomy_and_evidence():
     assert answer["candidates"]
     assert answer["candidates"][0]["name"] == "연홍"
     assert all(candidate["name"] != "철무" for candidate in answer["candidates"])
+
+
+def test_build_relation_slice_preserves_recent_tail_context():
+    broker = SemanticQueryBroker(protagonist_name="주인공")
+    broker.infer_relation_intents = lambda _focus_text: ["childhood_friend"]
+    broker.answer_relation_intent = lambda _intent, limit=2: {
+        "label": "소꿉친구",
+        "candidates": [
+            {
+                "name": "연홍",
+                "evidences": [
+                    {"source": "fact_ledger", "text": "HEAD-EVID\n" + ("E" * 120) + "\nTAIL-EVID"},
+                ],
+            }
+        ],
+    }
+
+    block = broker.build_relation_slice(focus_text="연홍 관계", max_chars=120)
+
+    assert len(block) <= 120
+    assert "TAIL-EVID" in block

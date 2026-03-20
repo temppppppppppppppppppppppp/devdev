@@ -1,4 +1,5 @@
 import logging
+from unittest.mock import MagicMock
 
 from modules.domain.agents.unified_arc_validator import UnifiedArcValidator
 
@@ -26,3 +27,45 @@ def test_dead_npc_check_warns_only_when_tracker_missing_with_history(caplog):
 
     assert issues == []
     assert "state_tracker missing with previous arcs" in caplog.text
+
+
+def test_llm_validate_preserves_tail_context():
+    validator = _make_validator()
+    validator.min_chars_per_ep = 300
+    validator._generate_prev_summary = MagicMock(return_value="PREV")
+    validator._format_python_result = MagicMock(return_value="PYTHON")
+    validator._operator_log = MagicMock()
+    captured = {}
+
+    def _ask(prompt, **_kwargs):
+        captured["prompt"] = prompt
+        return {
+            "verdict": "PASS",
+            "issues": [],
+            "contradictions": [],
+            "summary": "ok",
+            "confidence": 0.9,
+        }
+
+    validator.ask = MagicMock(side_effect=_ask)
+    validator._extract_json_robust = MagicMock(
+        return_value={
+            "verdict": "PASS",
+            "issues": [],
+            "contradictions": [],
+            "summary": "ok",
+            "confidence": 0.9,
+        }
+    )
+
+    result = validator._llm_validate(
+        arc={"payload": "A" * 20000, "tail": "TAIL-UAV-ARC"},
+        prev_arcs=[{"arc_no": 1}],
+        constraints="HEAD-CONSTRAINT\n" + ("C" * 10000) + "\nTAIL-UAV-CONSTRAINT",
+        python_result={"issues": [], "has_critical": False, "critical_summary": ""},
+    )
+
+    assert result["verdict"] == "PASS"
+    assert "TAIL-UAV-ARC" in captured["prompt"]
+    assert "TAIL-UAV-CONSTRAINT" in captured["prompt"]
+    assert "...(중간 생략)..." in captured["prompt"]

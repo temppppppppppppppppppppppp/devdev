@@ -30,9 +30,11 @@ It does not replace the lower-level contracts in `docs/implementation/*.json`; i
 ## Desktop Test Envelope
 
 - `npm --prefix geuldobi-desktop test` is the official desktop subset gate.
+- `npm --prefix geuldobi-desktop run test:desktop-contract` is the explicit alias for the same gate.
 - It is a curated subset for desktop bridge, contract, risk, runtime-path, packaging, and shadow hygiene checks.
 - It is not the full repo regression envelope.
 - `npm run start:spike` is the minimum runtime handoff proof for splash -> backend -> main window.
+- `npm run start:desktop-spike` is the explicit alias for that same runtime proof.
 
 ## Release Reading Rules
 

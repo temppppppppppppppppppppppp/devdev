@@ -27,11 +27,16 @@ except ImportError:
     SPINNER_AVAILABLE = False
 
 
+class StoryExpanderBibleGenerationError(RuntimeError):
+    """Raised when Stage 0 Bible generation cannot satisfy the minimal contract."""
+
+
 class StoryExpander:
     """스토리 확장기 - 컨셉 → Bible + Treatment"""
 
-    _CONCEPT_PROMPT_MAX = 4000
-    _CONCEPT_PROMPT_HEAD = 2500
+    BibleGenerationError = StoryExpanderBibleGenerationError
+    _CONCEPT_PROMPT_MAX = 12000
+    _CONCEPT_PROMPT_HEAD = 7000
     _STAGE0_REVIEW_MAX_ATTEMPTS = 2
     _STAGE0_REVIEW_WINDOW = 3
 
@@ -363,8 +368,9 @@ Return JSON:
 
         # [TF-S01-04] protagonist 빈값 검증 게이트
         if not protagonist or not isinstance(protagonist, dict) or "name" not in protagonist:
-            logging.error("[StoryExpander] LLM 실패: protagonist 생성 불가")
-            return self.bible
+            message = "protagonist generation failed"
+            logging.error("[StoryExpander] LLM 실패: %s", message)
+            raise StoryExpanderBibleGenerationError(message)
 
         # NPC 생성
         npcs = self._generate_npcs()
@@ -408,6 +414,15 @@ Return JSON:
                 },
             },
         }
+
+        master_bible = self.bible.get("MasterBible", {})
+        project_data = master_bible.get("ProjectData", {}) if isinstance(master_bible, dict) else {}
+        core_identity = project_data.get("CoreIdentity", {}) if isinstance(project_data, dict) else {}
+        if not isinstance(core_identity, dict) or not core_identity:
+            self.bible = {}
+            message = "MasterBible.ProjectData.CoreIdentity missing or empty"
+            logging.error("[Stage0:BibleGate] Bible contract failure: %s", message)
+            raise StoryExpanderBibleGenerationError(message)
 
         # [SubstrateGate] Bible bounded completeness check — Python은 fact 수집만
         _cw: list[str] = []
@@ -758,7 +773,12 @@ JSON:
 
             # Phase 2: Bible 생성
             with Spinner("Bible 생성 중", style="dots"):
-                self.generate_bible(protagonist_config)
+                try:
+                    self.generate_bible(protagonist_config)
+                except StoryExpanderBibleGenerationError as exc:
+                    logging.warning("[StoryExpander] generate_bible() 실패: %s", exc)
+                    self.treatment = []
+                    return {}, []
             if not self.bible:
                 logging.warning("[StoryExpander] generate_bible() 결과가 비어있음 — 조기 반환")
                 return self.bible, self.treatment
@@ -787,7 +807,12 @@ JSON:
             self.analyze_concept(concept)
 
             logging.info("[*] Bible 생성...")
-            self.generate_bible(protagonist_config)
+            try:
+                self.generate_bible(protagonist_config)
+            except StoryExpanderBibleGenerationError as exc:
+                logging.warning("[StoryExpander] generate_bible() 실패: %s", exc)
+                self.treatment = []
+                return {}, []
             if not self.bible:
                 logging.warning("[StoryExpander] generate_bible() 결과가 비어있음 — 조기 반환")
                 return self.bible, self.treatment

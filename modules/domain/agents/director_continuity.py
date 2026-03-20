@@ -79,7 +79,7 @@ class DirectorContinuityValidator:
 {self._d._escape_braces(registry_str)}
 
 ### 검증 대상 ({content_type})
-{self._d._escape_braces(content[:15000])}
+{self._d._escape_braces(smart_truncate(content, max_chars=15000, head_chars=8250))}
 
 ### 검증 기준
 ⚠️ 중요: 이름이 비슷해도 **다른 인물**이면 불일치가 아니다! (예: '김성태'와 '김태민'은 성만 같은 별개 인물)
@@ -450,7 +450,7 @@ class DirectorContinuityValidator:
         for h in recent_history:
             h_ep = h.get("ep_num", "?")
             if use_summary:
-                h_text = h.get("summary", "") or h.get("text", "")[:500]
+                h_text = h.get("summary", "") or smart_truncate(h.get("text", ""), max_chars=500, head_chars=275)
             else:
                 h_text = h.get("text", "") or h.get("summary", "")
             if h_text:
@@ -551,7 +551,7 @@ class DirectorContinuityValidator:
 ### 📋 검사 대상: 제{ep_num}화 신규 원고
 
 ### 현재 원고 (제{ep_num}화)
-{self._d._escape_braces(current_manuscript[:36000])}
+{self._d._escape_braces(smart_truncate(current_manuscript, max_chars=36000, head_chars=19800))}
 
 ### 🔍 검사 지시
 위 신규 원고가 캐시에 저장된 이전 원고들 (제1화~제{ep_num - 1}화)과 충돌하는지 검사하세요.

@@ -29,6 +29,25 @@ from .base_agent import _get_agent_default_model
 
 # Blueprint 검증용 최소 분량
 BLUEPRINT_MIN_CHARS = 800  # integrated_scenario 최소 길이
+_STOP_LINE_TOKEN_RE = re.compile(r"[0-9A-Za-z가-힣]{2,}")
+_STOP_LINE_SPLIT_RE = re.compile(r"[\n;,.!?/]+")
+_STOP_LINE_COMMON_TOKENS = {
+    "다음",
+    "다음화",
+    "이번",
+    "에피소드",
+    "장면",
+    "주인공",
+    "블루프린트",
+    "시나리오",
+    "계획",
+    "전개",
+    "준비",
+    "상황",
+    "현재",
+    "이후",
+    "화",
+}
 
 
 def _safe_int(value, default=0):
@@ -129,6 +148,64 @@ class UnifiedBlueprintValidator:
                 break
 
         return entries, bool(entries)
+
+    @staticmethod
+    def _extract_stop_line_clauses(text: str) -> list[str]:
+        if not isinstance(text, str):
+            return []
+        clauses: list[str] = []
+        seen: set[str] = set()
+        for raw in _STOP_LINE_SPLIT_RE.split(text):
+            clause = " ".join(str(raw).strip().split())
+            if len(clause) < 8:
+                continue
+            lowered = clause.lower()
+            if lowered in seen:
+                continue
+            seen.add(lowered)
+            clauses.append(clause)
+        return clauses
+
+    @staticmethod
+    def _extract_significant_stop_tokens(text: str) -> set[str]:
+        if not isinstance(text, str):
+            return set()
+        tokens: set[str] = set()
+        for token in _STOP_LINE_TOKEN_RE.findall(text.lower()):
+            if token.isdigit():
+                continue
+            if token in _STOP_LINE_COMMON_TOKENS:
+                continue
+            tokens.add(token)
+        return tokens
+
+    def _detect_stop_line_violation(self, stop_content: str, integrated: str) -> dict | None:
+        if not isinstance(stop_content, str) or not isinstance(integrated, str):
+            return None
+
+        integrated_norm = " ".join(integrated.lower().split())
+        if not integrated_norm:
+            return None
+        integrated_tokens = self._extract_significant_stop_tokens(integrated_norm)
+
+        for clause in self._extract_stop_line_clauses(stop_content):
+            clause_norm = " ".join(clause.lower().split())
+            if len(clause_norm) >= 12 and clause_norm in integrated_norm:
+                return {"mode": "clause_substring", "evidence": clause[:120]}
+
+            clause_tokens = self._extract_significant_stop_tokens(clause_norm)
+            if len(clause_tokens) < 3:
+                continue
+            overlap = clause_tokens & integrated_tokens
+            overlap_ratio = len(overlap) / max(len(clause_tokens), 1)
+            if len(overlap) >= 3 and overlap_ratio >= 0.75:
+                return {
+                    "mode": "token_overlap",
+                    "evidence": clause[:120],
+                    "overlap_tokens": sorted(overlap)[:5],
+                }
+
+        return None
 
     def _prepare_compare_candidate(
         self,
@@ -273,9 +350,10 @@ class UnifiedBlueprintValidator:
                 else {"candidate_index": selected_idx, "quality_risk": False}
             )
             quality_risk = bool(
-                compare_result.get("quality_risk", False)
-                or selected_candidate_advisory.get("quality_risk", False)
-                or verdict in ("PASS_WITH_FIX", "PASS_WITH_WARNING")
+                compare_result.get("quality_risk", False) or selected_candidate_advisory.get("quality_risk", False)
+            )
+            revision_required = bool(
+                compare_result.get("revision_required", False) or verdict in ("PASS_WITH_FIX", "PASS_WITH_WARNING")
             )
             selection_reason = str(compare_result.get("selection_reason") or compare_result.get("reason", "") or "")
             verdict_reason = str(compare_result.get("verdict_reason") or selection_reason or "")
@@ -297,6 +375,7 @@ class UnifiedBlueprintValidator:
                 "selection_reason": selection_reason,
                 "verdict_reason": verdict_reason,
                 "quality_risk": quality_risk,
+                "revision_required": revision_required,
                 "candidate_count": len(all_candidates),
                 "candidate_advisories": candidate_advisories,
                 "selected_candidate_advisory": selected_candidate_advisory,
@@ -480,7 +559,8 @@ class UnifiedBlueprintValidator:
                 "re_slice_instruction": director_result.get("re_slice_instruction", ""),  # [TF-35] 수정 지시 전파
                 "selection_reason": director_result.get("selection_reason", "") or director_reason,
                 "verdict_reason": director_result.get("verdict_reason", "") or director_reason,
-                "quality_risk": quality_risk or final_verdict == "PASS_WITH_FIX",
+                "quality_risk": quality_risk,
+                "revision_required": final_verdict in ("PASS_WITH_FIX", "PASS_WITH_WARNING"),
                 "candidate_count": 1,
             }
 
@@ -613,14 +693,19 @@ class UnifiedBlueprintValidator:
         stop_line = constraint_block.get("stop_line", {})
         stop_content = stop_line.get("content", "")
         if stop_content and len(stop_content) > 10:
-            stop_keywords = stop_content[:30].strip()
-            if stop_keywords in integrated:
+            stop_violation = self._detect_stop_line_violation(stop_content, integrated)
+            if stop_violation:
+                evidence = stop_violation.get("evidence", "") or stop_content[:30].strip()
+                overlap_tokens = stop_violation.get("overlap_tokens") or []
+                evidence_suffix = ""
+                if overlap_tokens:
+                    evidence_suffix = f" (overlap: {', '.join(overlap_tokens)})"
                 issues.append(
                     {
                         "severity": "CRITICAL",
                         "category": "arc_compliance",
                         "issue": "정지선 위반: 다음 화 내용 포함",
-                        "evidence": f"'{stop_keywords}...'가 본문에서 발견됨",
+                        "evidence": f"'{evidence}...'가 본문에서 발견됨{evidence_suffix}",
                         "fix_hint": "다음 화 내용을 제거하고 이번 화 범위 내에서만 작성",
                     }
                 )

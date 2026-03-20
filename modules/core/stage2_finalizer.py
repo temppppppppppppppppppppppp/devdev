@@ -7,6 +7,7 @@ import json
 import logging
 import re
 import time
+from copy import deepcopy
 
 from modules.core.artifact_logging import build_candidate_key, snapshot_logged_artifact
 from modules.core.constants import VolumeSettings
@@ -14,6 +15,19 @@ from modules.core.logging_keys import build_attempt_key, resolve_logging_session
 from modules.core.metrics_collector import get_metrics_collector
 from modules.core.numeric_consistency_checker import NumericConsistencyChecker
 from modules.models.arc import validate_arc
+
+
+def _peek_scope_total_cost_usd() -> float:
+    """Return the current metrics scope cost without resetting it."""
+    try:
+        collector = get_metrics_collector()
+        if collector is None or not hasattr(collector, "peek_scope"):
+            return 0.0
+        scope = collector.peek_scope() or {}
+        return float(scope.get("total_cost_usd", 0.0) or 0.0)
+    except Exception as exc:
+        logging.debug("[Stage2] metrics scope peek failed (non-blocking): %s", exc)
+        return 0.0
 
 _DB_ADVISORY_NOTICE = "(Python 자동 감지 — 오탐 가능, 참고용)"
 
@@ -785,12 +799,12 @@ class Stage2Finalizer:
             _patch_pressure_exceeded = False
 
             for _fix_i in range(_MAX_FIX):
-                # [TF-33][PF-1] Director fix_scope 기반 수정 전략 라우팅 — 누락 시 점수 기반 폴백
+                # [TF-33] Stage2도 explicit local contract only — score fallback 제거
                 _fix_scope = _current_audit.get("fix_scope", "")
                 if not _fix_scope:
-                    _inplace_thresh = int(_threshold("patch_mode.inplace_below", 60))
-                    _fix_scope = "inplace" if _score >= _inplace_thresh else "full"
-                    logging.warning("[PF-1] fix_scope 누락 → score=%d fallback: %s", _score, _fix_scope)
+                    logging.warning("[PF-1] fix_scope 누락 → local patch authority 없음, retry 경로 위임")
+                    self.ctx.ui.log("      🔀 [PF-1] fix_scope 누락 → inplace 권한 없음, retry 경로 위임")
+                    break
                 if _fix_scope in ("partial", "full"):
                     self.ctx.ui.log(f"      🔀 [TF-33] fix_scope={_fix_scope!r} → inplace 불가, retry 경로 위임")
                     break  # → REJECT → retry 경로에서 patch/rewrite 처리
@@ -816,6 +830,40 @@ class Stage2Finalizer:
                 if not _patched:
                     logging.warning("[TF-32-V] patch 실패 → REJECT")
                     break
+
+                _patch_guard_signals = self._collect_arc_patch_guard_signals(
+                    original_arc=_current_arc,
+                    patched_arc=_patched,
+                )
+                if _patch_guard_signals:
+                    _signal_state = self._merge_patch_guard_signals(
+                        _current_audit,
+                        _patch_guard_signals,
+                        attempt=_fix_i + 1,
+                    )
+                    _signal_codes = ", ".join(_signal_state.get("codes", []))
+                    logging.warning(
+                        "[S2-ArcPatchSignals] attempt=%s arc=%s codes=%s",
+                        _fix_i + 1,
+                        global_arc_no,
+                        _signal_codes,
+                    )
+                    self.ctx.ui.log(
+                        "      ⚠️ [S2-ArcSignals] "
+                        f"attempt={_fix_i + 1} codes={_signal_codes or 'n/a'}"
+                    )
+                    if callable(getattr(self.ctx, "audit_event", None)):
+                        self.ctx.audit_event(
+                            "patch_guard_signal",
+                            "stage2 arc patch signals observed",
+                            {
+                                "arc_no": global_arc_no,
+                                "attempt": _fix_i + 1,
+                                "codes": list(_signal_state.get("codes", [])),
+                                "count": int(_signal_state.get("count", 0) or 0),
+                                "items": list(_patch_guard_signals),
+                            },
+                        )
 
                 # [NS-1-P] Detect arithmetic mismatch in inplace tactical_doc patch.
                 _arith_patch_ctx = ""
@@ -869,6 +917,23 @@ class Stage2Finalizer:
                 # [PWF-S2] 재심사에 이미 적용된 패치를 story_context에 주입
                 # → curr_block 문서로 인한 동일 오류 재감지 가능성 최소화
                 _patch_ctx = _arith_patch_ctx
+                if _patch_guard_signals:
+                    _patch_ctx += self._format_patch_guard_signal_notice(
+                        _patch_guard_signals,
+                        attempt=_fix_i + 1,
+                    )
+                if _patch_pressure_exceeded and isinstance(_current_audit.get("patch_pressure"), dict):
+                    _pp = dict(_current_audit.get("patch_pressure") or {})
+                    _pp_notice = (
+                        "\n\n[F-2 advisory — high Arc patch pressure]\n"
+                        f"change_ratio={float(_pp.get('change_ratio', 0.0)):.1%}, "
+                        f"threshold={float(_pp.get('max_ratio', 0.0)):.0%}, "
+                        f"attempt={int(_pp.get('attempt', _fix_i + 1))}\n"
+                        "이 local Arc patch는 국소 수정 범위를 넘어설 수 있습니다. "
+                        "구조 일관성과 변경 정당성이 충분하면 PASS를 허용할 수 있지만, "
+                        "광범위 재작성처럼 보이면 PASS_WITH_FIX 또는 REJECT를 유지하세요."
+                    )
+                    _patch_ctx += _pp_notice
                 if _applied_patches:
                     _patch_lines = "\n".join(f"- {p}" for p in _applied_patches)
                     _patch_ctx += (
@@ -907,14 +972,18 @@ class Stage2Finalizer:
                         break
                     _current_arc = _patched
                     if _patch_pressure_exceeded and isinstance(_current_audit.get("patch_pressure"), dict):
-                        _re_audit["patch_pressure"] = dict(_current_audit["patch_pressure"])
+                        _re_audit["patch_pressure"] = deepcopy(_current_audit["patch_pressure"])
+                    if isinstance(_current_audit.get("patch_guard_signals"), dict):
+                        _re_audit["patch_guard_signals"] = deepcopy(_current_audit["patch_guard_signals"])
                     _current_audit = _re_audit
                     _fix_ok = True
                     break
                 elif _re_d == "PASS_WITH_FIX":
                     _current_arc = _patched
                     if _patch_pressure_exceeded and isinstance(_current_audit.get("patch_pressure"), dict):
-                        _re_audit["patch_pressure"] = dict(_current_audit["patch_pressure"])
+                        _re_audit["patch_pressure"] = deepcopy(_current_audit["patch_pressure"])
+                    if isinstance(_current_audit.get("patch_guard_signals"), dict):
+                        _re_audit["patch_guard_signals"] = deepcopy(_current_audit["patch_guard_signals"])
                     _current_audit = _re_audit  # 다음 반복
                 else:  # REJECT
                     break
@@ -926,12 +995,16 @@ class Stage2Finalizer:
                 _d_decision = "PASS"
                 _score = _re_s  # [TF-46] 재심사 점수로 갱신 (stale score → QualityGate 오작동 방지)
                 if _patch_pressure_exceeded:
-                    _d_decision = "PASS_WITH_FIX"
-                    audit["decision"] = "PASS_WITH_FIX"
+                    audit["decision"] = "PASS"
                     audit["reason"] = (
-                        f"{str(audit.get('reason', '')).strip()}\n[PatchPressure] In-place patch ratio exceeded threshold."
+                        f"{str(audit.get('reason', '')).strip()}\n"
+                        "[PatchPressure Advisory] In-place patch ratio exceeded threshold; "
+                        "Director re-audit cleared this Arc with explicit warning context."
                     ).strip()
-                    self.ctx.ui.log("      ⚠️ [TF-32-V] Patch pressure exceeded -> keep PASS_WITH_FIX")
+                    _patch_pressure = audit.setdefault("patch_pressure", {})
+                    _patch_pressure["director_advisory_only"] = True
+                    _patch_pressure["cleared_verdict"] = "PASS"
+                    self.ctx.ui.log("      ⚠️ [TF-32-V] Patch pressure exceeded -> advisory only, PASS 유지")
                 else:
                     audit["decision"] = "PASS"
                 if not _patch_pressure_exceeded:
@@ -1586,6 +1659,7 @@ class Stage2Finalizer:
             artifact_kind="final_arc",
             payload=artifact_payload,
         )
+        _token_cost = _peek_scope_total_cost_usd()
 
         if V50_MODULES_AVAILABLE and self.ctx.pass_rate_monitor:
             try:
@@ -1597,6 +1671,7 @@ class Stage2Finalizer:
                     success=True,
                     generation_method=generation_method,
                     duration_ms=duration_ms or 0,
+                    token_cost=_token_cost,
                     is_patch=is_patch,
                     prev_score=prev_score,
                     patch_fallback=patch_fallback,
@@ -1732,6 +1807,7 @@ class Stage2Finalizer:
             artifact_kind="rejected_arc",
             payload=artifact_payload,
         )
+        _token_cost = _peek_scope_total_cost_usd()
 
         if V50_MODULES_AVAILABLE and self.ctx.pass_rate_monitor:
             try:
@@ -1744,6 +1820,7 @@ class Stage2Finalizer:
                     reject_reason=str(audit.get("reason", ""))[:100],
                     generation_method=generation_method,
                     duration_ms=duration_ms or 0,
+                    token_cost=_token_cost,
                     is_patch=is_patch,
                     prev_score=prev_score,
                     patch_fallback=patch_fallback,
@@ -1915,6 +1992,129 @@ class Stage2Finalizer:
         return None
 
     @staticmethod
+    def _collect_arc_patch_guard_signals(*, original_arc: dict, patched_arc: dict) -> list[dict]:
+        """Return narrow, observational Arc patch signals for post-hoc review."""
+        if not isinstance(original_arc, dict) or not isinstance(patched_arc, dict):
+            return []
+
+        signals: list[dict] = []
+
+        original_tactical = str(original_arc.get("tactical_doc", "") or "").strip()
+        patched_tactical = str(patched_arc.get("tactical_doc", "") or "").strip()
+        if original_tactical and not patched_tactical:
+            signals.append(
+                {
+                    "code": "missing_tactical_doc",
+                    "detail": "patched tactical_doc is blank",
+                }
+            )
+
+        dropped_sections: list[str] = []
+        type_drift_sections: list[str] = []
+        for field in ("state_changes", "joint_docs", "status_shadow", "hybrid_composition"):
+            original_value = original_arc.get(field)
+            patched_value = patched_arc.get(field)
+            if isinstance(original_value, dict) and original_value:
+                if field not in patched_arc or not isinstance(patched_value, dict) or not patched_value:
+                    dropped_sections.append(field)
+            if field in patched_arc and patched_value not in (None, "") and not isinstance(patched_value, dict):
+                type_drift_sections.append(f"{field}:{type(patched_value).__name__}")
+
+        if dropped_sections:
+            signals.append(
+                {
+                    "code": "structured_section_dropped",
+                    "detail": ", ".join(dropped_sections),
+                }
+            )
+        if type_drift_sections:
+            signals.append(
+                {
+                    "code": "structured_section_type_drift",
+                    "detail": ", ".join(type_drift_sections),
+                }
+            )
+
+        original_arc_no = original_arc.get("arc_no")
+        patched_arc_no = patched_arc.get("arc_no")
+        if original_arc_no not in (None, "") and patched_arc_no not in (None, "", original_arc_no):
+            signals.append(
+                {
+                    "code": "arc_identity_drift",
+                    "detail": f"arc_no {original_arc_no} -> {patched_arc_no}",
+                }
+            )
+
+        span_detail = Stage2Finalizer._describe_episode_span_signal(patched_arc)
+        if span_detail:
+            signals.append({"code": "episode_span_inconsistent", "detail": span_detail})
+
+        return signals
+
+    @staticmethod
+    def _describe_episode_span_signal(arc: dict) -> str | None:
+        if not isinstance(arc, dict):
+            return None
+        try:
+            ep_start = int(arc.get("ep_start"))
+            ep_end = int(arc.get("ep_end"))
+            ep_count = int(arc.get("ep_count"))
+        except (TypeError, ValueError):
+            return "ep_start/ep_end/ep_count not all numeric"
+        if ep_end < ep_start:
+            return f"ep_end({ep_end}) < ep_start({ep_start})"
+        expected_count = (ep_end - ep_start) + 1
+        if ep_count != expected_count:
+            return f"ep_count({ep_count}) != expected({expected_count})"
+        return None
+
+    @staticmethod
+    def _merge_patch_guard_signals(audit: dict, signals: list[dict], *, attempt: int) -> dict:
+        state = audit.setdefault("patch_guard_signals", {})
+        items = state.setdefault("items", [])
+        for signal in signals:
+            code = str(signal.get("code", "")).strip()
+            detail = str(signal.get("detail", "")).strip()
+            if not code:
+                continue
+            items.append({"attempt": int(attempt), "code": code, "detail": detail})
+        seen: set[str] = set()
+        compact_codes: list[str] = []
+        for item in items:
+            code = str(item.get("code", "")).strip()
+            if code and code not in seen:
+                seen.add(code)
+                compact_codes.append(code)
+        state["count"] = len(items)
+        state["codes"] = compact_codes[:5]
+        state["attempt"] = int(attempt)
+        return state
+
+    @staticmethod
+    def _format_patch_guard_signal_notice(signals: list[dict], *, attempt: int) -> str:
+        if not signals:
+            return ""
+        lines = []
+        for signal in signals[:4]:
+            code = str(signal.get("code", "")).strip()
+            detail = str(signal.get("detail", "")).strip()
+            if not code:
+                continue
+            line = f"- {code}"
+            if detail:
+                line += f": {detail}"
+            lines.append(line)
+        if not lines:
+            return ""
+        return (
+            "\n\n[S2 Arc patch signals]\n"
+            f"attempt={int(attempt)}\n"
+            f"{chr(10).join(lines)}\n"
+            "These are runtime-observed structural signals for post-hoc review. "
+            "They are advisory unless another blocking rule says otherwise."
+        )
+
+    @staticmethod
     def _extract_advisory_flags(audit: dict) -> dict | None:
         """Collect advisory-like metadata already available in Director audit output."""
         if not isinstance(audit, dict):
@@ -1950,5 +2150,16 @@ class Stage2Finalizer:
             count = patch_pressure.get("count")
             if isinstance(count, int):
                 flags["patch_pressure_count"] = count
+
+        patch_guard_signals = audit.get("patch_guard_signals")
+        if isinstance(patch_guard_signals, dict):
+            count = patch_guard_signals.get("count")
+            if isinstance(count, int):
+                flags["arc_patch_signal_count"] = count
+            codes = patch_guard_signals.get("codes")
+            if isinstance(codes, list):
+                compact_codes = [str(code)[:40] for code in codes[:5] if str(code).strip()]
+                if compact_codes:
+                    flags["arc_patch_signal_codes"] = compact_codes
 
         return flags or None

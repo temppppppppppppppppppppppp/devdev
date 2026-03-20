@@ -511,6 +511,61 @@ class TestAdvisoryChain:
         assert validation_results[0]["npc_drift_warnings"][0]["npc"] == "연홍"
         assert "포지션 60억" in validation_results[0]["numeric_consistency_warnings"][0]["text"]
 
+    def test_partial_advisory_failure_logs_warning_and_continues(self, caplog):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        class _ImmediateFuture:
+            def __init__(self, fn, *args):
+                self._fn = fn
+                self._args = args
+
+            def result(self, timeout=None):
+                return self._fn(*self._args)
+
+            def done(self):
+                return True
+
+            def cancel(self):
+                return False
+
+        class _FakeExecutor:
+            def __init__(self, *args, **kwargs):
+                self.shutdown_calls = []
+
+            def submit(self, fn, *args, **kwargs):
+                return _ImmediateFuture(fn, *args)
+
+            def shutdown(self, wait=True, cancel_futures=False):
+                self.shutdown_calls.append((wait, cancel_futures))
+
+        def _truth_gate_failure(*_args, **_kwargs):
+            raise RuntimeError("truth gate exploded")
+
+        with (
+            patch("concurrent.futures.ThreadPoolExecutor", _FakeExecutor),
+            patch("concurrent.futures.as_completed", side_effect=lambda futures, timeout=None: list(futures)),
+            patch.object(ir, "_advisory_truth_gate", side_effect=_truth_gate_failure),
+            patch.object(ir, "_advisory_npc_drift", return_value=["[NpcDriftAdvisor]"]),
+            patch.object(ir, "_advisory_numeric_drift", return_value=[]),
+            patch.object(ir, "_advisory_flashback", return_value=[]),
+            patch.object(ir, "_advisory_info_paradox", return_value=[]),
+            patch.object(ir, "_advisory_rel_drift", return_value=[]),
+            patch.object(ir, "_advisory_long_term_rep", return_value=[]),
+            patch.object(ir, "_advisory_numeric_consistency", return_value=[]),
+            patch.object(ir, "_advisory_style_signals", return_value=[]),
+            caplog.at_level(logging.WARNING),
+        ):
+            result = ir._run_advisory_chain(
+                candidates=[_candidate()],
+                validation_results=[_validation_result()],
+                next_ep=1,
+                genre_name="무협",
+            )
+
+        assert result == ["[NpcDriftAdvisor]"]
+        assert "[Advisory] TruthGate 실패 (비치명): truth gate exploded" in caplog.text
+
 
 class TestPreDirectorValidation:
     def test_pre_director_validation_attaches_coverage_warnings_to_candidates(self):
@@ -570,6 +625,44 @@ class TestPreDirectorValidation:
             )
 
         assert validation_results[0]["coverage_warnings"] == ["missing_relation_slice"]
+
+    def test_run_pre_director_validation_forwards_blocking_degraded_advisory(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        ir._god1_stage4_spinner = MagicMock()
+        ir._god1_round_num = 0
+        ir._god1_arc_pos = 1
+        ir._god1_total_ep_in_arc = 10
+        ir._god1_arc_data = {}
+        ir._god1_prev_manuscript = ""
+
+        round_ctx = _make_round_ctx()
+        round_ctx.manuscript_validator.validate_all_candidates.return_value = [_validation_result()]
+        round_ctx.blocking_validator.validate.return_value = {
+            "passed": True,
+            "failures": [],
+            "warnings": ["degraded: relationship_consistency"],
+            "degraded_checks": ["relationship_consistency"],
+        }
+
+        validation_results = ir._run_pre_director_validation(
+            candidates=[_candidate()],
+            next_ep=4,
+            blueprint={"characters": ["연홍"]},
+            prev_text="이전 원고",
+            hud_report="HUD",
+            genre_name="무협",
+            manuscript_validator=round_ctx.manuscript_validator,
+            consistency_validator=round_ctx.consistency_validator,
+            blocking_validator=round_ctx.blocking_validator,
+            continuity_validator=round_ctx.continuity_validator,
+        )
+
+        assert validation_results[0]["warnings"] == [
+            "[Python검증-ADVISORY] degraded: relationship_consistency"
+        ]
+        assert validation_results[0]["warning_count"] == 1
+        assert validation_results[0]["focus_points"] == ["Python 검증 advisory 1건 (Director 참고)"]
 
 
 class TestInterviewRoundRun:
@@ -776,7 +869,12 @@ class TestInterviewRoundRun:
             round_num=1,
             stage4_spinner=MagicMock(),
             director_feedback="피드백",
-            previous_attempt={"score": 70, "best_manuscript": "원고"},
+            previous_attempt={
+                "score": 70,
+                "best_manuscript": "원고",
+                "fix_scope": "partial",
+                "reject_bucket": "post_select_conflict",
+            },
             round_ctx=round_ctx,
         )
 
@@ -1414,6 +1512,50 @@ class TestRecordS4Attempt:
         assert db_kw["attempt_key"] == "s4:ep1:arc1:a1:sess_stage4"
         assert db_kw["session_id"] == "sess_stage4"
 
+    def test_record_s4_attempt_defaults_patch_strategy_for_direct_patch(self):
+        ctx = _make_ctx()
+        ctx.pass_rate_monitor = MagicMock()
+        ir = Stage4InterviewRound(ctx)
+
+        ir._record_s4_attempt(
+            episode=2,
+            round_num=1,
+            success=False,
+            score=61,
+            is_patch=True,
+            patch_fallback=False,
+            arc=1,
+            verdict="REJECT",
+            reject_reason="retry needed",
+        )
+
+        kw = ctx.pass_rate_monitor.record_attempt.call_args.kwargs
+        assert kw["is_patch"] is True
+        assert kw["generation_method"] == "patch"
+        assert kw["patch_strategy"] == "patch_with_feedback"
+
+    def test_record_s4_attempt_defaults_patch_strategy_for_patch_fallback(self):
+        ctx = _make_ctx()
+        ctx.pass_rate_monitor = MagicMock()
+        ir = Stage4InterviewRound(ctx)
+
+        ir._record_s4_attempt(
+            episode=2,
+            round_num=1,
+            success=False,
+            score=61,
+            is_patch=True,
+            patch_fallback=True,
+            arc=1,
+            verdict="REJECT",
+            reject_reason="retry needed",
+        )
+
+        kw = ctx.pass_rate_monitor.record_attempt.call_args.kwargs
+        assert kw["is_patch"] is True
+        assert kw["generation_method"] == "ensemble"
+        assert kw["patch_strategy"] == "patch_fallback_rewrite"
+
     def test_patch_records_method_patch(self):
         ctx = _make_ctx()
         ctx.pass_rate_monitor = MagicMock()
@@ -1435,7 +1577,12 @@ class TestRecordS4Attempt:
             round_num=1,
             stage4_spinner=MagicMock(),
             director_feedback="피드백",
-            previous_attempt={"score": 70, "best_manuscript": "원고"},
+            previous_attempt={
+                "score": 70,
+                "best_manuscript": "원고",
+                "fix_scope": "partial",
+                "reject_bucket": "post_select_conflict",
+            },
             round_ctx=round_ctx,
         )
 
@@ -1468,7 +1615,12 @@ class TestRecordS4Attempt:
             round_num=1,
             stage4_spinner=MagicMock(),
             director_feedback="feedback",
-            previous_attempt={"score": 70, "best_manuscript": "draft"},
+            previous_attempt={
+                "score": 70,
+                "best_manuscript": "draft",
+                "fix_scope": "partial",
+                "reject_bucket": "post_select_conflict",
+            },
             round_ctx=round_ctx,
         )
 
@@ -1498,7 +1650,12 @@ class TestRecordS4Attempt:
             round_num=1,
             stage4_spinner=MagicMock(),
             director_feedback="피드백",
-            previous_attempt={"score": 70, "best_manuscript": "원고"},
+            previous_attempt={
+                "score": 70,
+                "best_manuscript": "원고",
+                "fix_scope": "partial",
+                "reject_bucket": "post_select_conflict",
+            },
             round_ctx=round_ctx,
         )
 
@@ -3147,6 +3304,56 @@ class TestRecordS4Attempt:
         assert payload["final_verdict"] == "REJECT"
         assert payload["flags"]["reject_bucket"] == "quality_issue"
 
+    def test_reject_decision_jsonl_persists_firewall_metadata(self, tmp_path):
+        ctx = _make_ctx()
+        ctx.current_project.metrics_session_id = "sess_stage4_firewall_jsonl"
+        ctx.current_project.paths = MagicMock()
+        ctx.current_project.paths.root = tmp_path
+        ctx.session_logger = SessionLogger(tmp_path / "logs" / "session", enabled=True)
+        ctx.pass_rate_monitor = MagicMock()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.chief_writer.generate_ensemble.return_value = [_candidate()]
+        round_ctx.manuscript_validator.validate_all_candidates.return_value = [_validation_result()]
+        ctx.agents["director"].select_and_judge_ensemble.return_value = {
+            "selected": "A",
+            "verdict": "REJECT",
+            "score": 44,
+            "selection_reason": "best candidate before firewall",
+            "verdict_reason": "Contradiction Firewall: CRITICAL 1",
+            "pre_firewall_score": 100,
+            "firewall_triggered": True,
+            "firewall_reason": "Contradiction Firewall: CRITICAL 1",
+            "feedback": {"issues": ["major contradiction"]},
+            "action_items": ["repair the final scene"],
+            "selected_candidate": {"manuscript": "candidate manuscript", "strategy_name": "balanced"},
+            "score_breakdown": {},
+            "open_review": "",
+        }
+
+        result = ir.run(
+            round_num=0,
+            stage4_spinner=MagicMock(),
+            director_feedback="",
+            previous_attempt={},
+            round_ctx=round_ctx,
+        )
+
+        decisions_path = tmp_path / "logs" / "session" / "decisions.jsonl"
+        rows = [
+            json.loads(line)
+            for line in decisions_path.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+        row = rows[-1]
+        meta = row["meta"]
+
+        assert result.verdict == "REJECT"
+        assert row["stage"] == "stage4"
+        assert row["result"] == "REJECT"
+        assert meta["firewall_triggered"] is True
+        assert meta["firewall_reason"] == "Contradiction Firewall: CRITICAL 1"
+
     def test_episode_log_write_failure_is_non_blocking_and_other_records_persist(self):
         ctx = _make_ctx()
         ctx.pass_rate_monitor = MagicMock()
@@ -3292,6 +3499,72 @@ class TestSlotMaxChars:
         sc_block = continuity_ctx.split("[SC:event_claim]\n")[-1] if "[SC:event_claim]" in continuity_ctx else ""
         assert len(sc_block) <= 500
 
+    def test_slot_max_chars_preserve_recent_tail_context(self):
+        ctx = _make_ctx()
+        ctx.context_advisor = MagicMock()
+        ctx.memory = MagicMock()
+        ctx.memory.retrieve_multi_query_context.return_value = "HEAD-VEC " + ("A" * 260) + " TAIL-VEC"
+        ctx.context_advisor.plan_director_retrieval.return_value = RetrievalPlan(
+            stage="director",
+            episode_num=3,
+            slots=[
+                RetrievalSlot(
+                    category="event_claim",
+                    query="event query",
+                    source=RetrievalSources.VEC_MEMORY,
+                    priority=1,
+                    max_chars=120,
+                ),
+            ],
+            total_budget_chars=50000,
+        )
+
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.next_ep = 3
+        round_ctx.prev_manuscripts_text = "history-present"
+        round_ctx.blueprint = {"characters": [{"name": "alice"}], "integrated_scenario": "x"}
+        round_ctx.chief_writer.generate_ensemble.return_value = [_candidate()]
+        round_ctx.manuscript_validator.validate_all_candidates.return_value = [_validation_result()]
+
+        ctx.agents["director"].check_manuscript_continuity_with_cache.return_value = {"decision": "PASS", "summary": ""}
+        ctx.agents["director"].check_manuscript_history_conflicts.return_value = {"decision": "PASS", "summary": ""}
+        ctx.agents["director"].select_and_judge_ensemble.return_value = {
+            "selected": "A",
+            "verdict": "PASS",
+            "score": 95,
+            "selection_reason": "ok",
+            "selected_candidate": {"manuscript": "pass manuscript", "title": "pass"},
+            "state_updates": {},
+        }
+
+        def _threshold_side_effect(key, default=None):
+            if key == "smart_retrieval.enabled":
+                return True
+            if key == "smart_retrieval.director_enabled":
+                return True
+            if key == "context.vector_max_results_s4":
+                return 16
+            if key == "smart_retrieval.director_total_budget":
+                return 50000
+            return default
+
+        with patch("modules.validation.threshold_helper._threshold", side_effect=_threshold_side_effect):
+            ir.run(
+                round_num=0,
+                stage4_spinner=MagicMock(),
+                director_feedback="",
+                previous_attempt={},
+                round_ctx=round_ctx,
+            )
+
+        continuity_ctx = ctx.agents["director"].check_manuscript_continuity_with_cache.call_args.kwargs[
+            "memory_context"
+        ]
+        sc_block = continuity_ctx.split("[SC:event_claim]\n")[-1] if "[SC:event_claim]" in continuity_ctx else ""
+        assert len(sc_block) <= 120
+        assert "TAIL-VEC" in sc_block
+
 
 class TestLane2DirectorSemantics:
     def test_director_input_packs_are_split_and_ordered(self):
@@ -3434,3 +3707,65 @@ class TestLane2DirectorSemantics:
         assert payload["final_verdict"] == "REJECT"
         assert payload["gate_basis"] == "quality_floor_fail"
         assert payload["repair_scope"] == "partial"
+
+
+def test_director_sc5_budget_preserves_recent_tail_context():
+    ctx = _make_ctx()
+    ctx.context_advisor = MagicMock()
+    ctx.quality_dashboard = MagicMock()
+    ctx.memory = MagicMock()
+    ctx.memory.retrieve_multi_query_context.return_value = "HEAD-VEC " + ("A" * 260) + " TAIL-VEC"
+    ctx.memory.retrieve_npc_context.return_value = "HEAD-NPC " + ("B" * 260) + " TAIL-NPC"
+    ctx.context_advisor.plan_director_retrieval.return_value = RetrievalPlan(
+        stage="director",
+        episode_num=3,
+        slots=[
+            RetrievalSlot(category="similar_blueprint", query="vec query", source="vec_memory", priority=1),
+            RetrievalSlot(category="npc_history", query="npc query", source="db_npc_history", priority=2),
+        ],
+        total_budget_chars=1000,
+    )
+
+    ir = Stage4InterviewRound(ctx)
+    ir._resolve_director_protagonist_name = MagicMock(return_value="hero")
+    round_ctx = _make_round_ctx()
+    round_ctx.next_ep = 3
+    round_ctx.prev_manuscripts_text = "history-present"
+    round_ctx.blueprint = {"characters": [{"name": "ally"}], "integrated_scenario": "x"}
+    round_ctx.chief_writer.generate_ensemble.return_value = [_candidate()]
+    round_ctx.manuscript_validator.validate_all_candidates.return_value = [_validation_result()]
+
+    ctx.agents["director"].check_manuscript_continuity_with_cache.return_value = {"decision": "PASS", "summary": ""}
+    ctx.agents["director"].check_manuscript_history_conflicts.return_value = {"decision": "PASS", "summary": ""}
+    ctx.agents["director"].select_and_judge_ensemble.return_value = {
+        "selected": "A",
+        "verdict": "PASS",
+        "score": 95,
+        "selection_reason": "ok",
+        "selected_candidate": {"manuscript": "pass manuscript", "title": "pass"},
+        "state_updates": {},
+    }
+
+    def _threshold_side_effect(key, default=None):
+        if key == "smart_retrieval.enabled":
+            return True
+        if key == "smart_retrieval.director_enabled":
+            return True
+        if key == "context.vector_max_results_s4":
+            return 16
+        if key == "smart_retrieval.director_total_budget":
+            return 180
+        return default
+
+    with patch("modules.validation.threshold_helper._threshold", side_effect=_threshold_side_effect):
+        ir.run(
+            round_num=0,
+            stage4_spinner=MagicMock(),
+            director_feedback="",
+            previous_attempt={},
+            round_ctx=round_ctx,
+        )
+
+    continuity_ctx = ctx.agents["director"].check_manuscript_continuity_with_cache.call_args.kwargs["memory_context"]
+    assert len(continuity_ctx) <= 180
+    assert "TAIL-NPC" in continuity_ctx

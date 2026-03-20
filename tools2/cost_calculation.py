@@ -1,15 +1,20 @@
 # 현실적인 API 비용 계산 (Gemini API 기준)
 
+PRO_INPUT_PER_MTOK = 1.25
+PRO_OUTPUT_PER_MTOK = 10.0
+FLASH_INPUT_PER_MTOK = 0.30
+FLASH_OUTPUT_PER_MTOK = 2.50
+
 print('=' * 60)
 print('글도비 V41 vs V0128 비용 비교 (250화 프로젝트)')
 print('=' * 60)
 print()
 
 # Gemini API 가격 (2026년 기준)
-# gemini-3-pro-preview: Input $1.25/M, Output $5.00/M
-# gemini-2.5-pro: Input $1.25/M, Output $5.00/M
-# gemini-2.5-flash: Input $0.075/M, Output $0.30/M
-# gemini-2.0-flash: Input $0.075/M, Output $0.30/M
+# gemini-3-pro-preview: Input $1.25/M, Output $10.00/M
+# gemini-2.5-pro: Input $1.25/M, Output $10.00/M
+# gemini-2.5-flash: Input $0.30/M, Output $2.50/M
+# gemini-2.0-flash: Input $0.30/M, Output $2.50/M
 
 EXCHANGE_RATE = 1300  # 1 USD = 1300 KRW
 
@@ -20,19 +25,19 @@ print()
 # Writer (gemini-3-pro-preview)
 writer_input = 6000  # blueprint + context + style seeds
 writer_output = 8192  # 원고 (최대 토큰)
-writer_cost_per_call = (writer_input / 1_000_000 * 1.25) + (writer_output / 1_000_000 * 5.0)
+writer_cost_per_call = (writer_input / 1_000_000 * PRO_INPUT_PER_MTOK) + (writer_output / 1_000_000 * PRO_OUTPUT_PER_MTOK)
 print(f'Writer 1회: ${writer_cost_per_call:.4f}')
 
 # Director (gemini-2.0-flash)
 director_input = 8000  # 원고 + arc_doc + history
 director_output = 1000  # 피드백 JSON
-director_cost_per_call = (director_input / 1_000_000 * 0.075) + (director_output / 1_000_000 * 0.30)
+director_cost_per_call = (director_input / 1_000_000 * FLASH_INPUT_PER_MTOK) + (director_output / 1_000_000 * FLASH_OUTPUT_PER_MTOK)
 print(f'Director 1회: ${director_cost_per_call:.4f}')
 
 # Architect (gemini-2.5-flash, Tier 1)
 architect_input = 5000
 architect_output = 4096
-architect_cost_per_call = (architect_input / 1_000_000 * 0.075) + (architect_output / 1_000_000 * 0.30)
+architect_cost_per_call = (architect_input / 1_000_000 * FLASH_INPUT_PER_MTOK) + (architect_output / 1_000_000 * FLASH_OUTPUT_PER_MTOK)
 print(f'Architect 1회: ${architect_cost_per_call:.4f}')
 
 # 에피소드당 평균 비용 (재시도 고려)
@@ -61,13 +66,13 @@ print(f'BLOCKING Validator: $0 (Python 기반)')
 # SCORING Evaluator (gemini-2.5-pro)
 scoring_input = 8000  # 원고 + context
 scoring_output = 2000  # 점수 + breakdown
-scoring_cost = (scoring_input / 1_000_000 * 1.25) + (scoring_output / 1_000_000 * 5.0)
+scoring_cost = (scoring_input / 1_000_000 * PRO_INPUT_PER_MTOK) + (scoring_output / 1_000_000 * PRO_OUTPUT_PER_MTOK)
 print(f'SCORING Evaluator: ${scoring_cost:.4f}')
 
 # ADVISORY Evaluator (gemini-2.5-flash)
 advisory_input = 8000
 advisory_output = 1000
-advisory_cost = (advisory_input / 1_000_000 * 0.075) + (advisory_output / 1_000_000 * 0.30)
+advisory_cost = (advisory_input / 1_000_000 * FLASH_INPUT_PER_MTOK) + (advisory_output / 1_000_000 * FLASH_OUTPUT_PER_MTOK)
 print(f'ADVISORY Evaluator: ${advisory_cost:.4f}')
 
 validation_cost_per_call = blocking_cost + scoring_cost + advisory_cost

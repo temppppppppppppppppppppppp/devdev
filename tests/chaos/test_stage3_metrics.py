@@ -59,6 +59,17 @@ def _fail_pipeline_result() -> dict:
     }
 
 
+def _warning_pipeline_result(score: float = 0.7) -> dict:
+    return {
+        "final_verdict": "PASS_WITH_WARNING",
+        "quality_gate_failed": True,
+        "quality_risk": True,
+        "revision_required": True,
+        "last_score": score,
+        "phases": {"generate": {"selected_score": score, "selected_strategy": "fallback"}},
+    }
+
+
 # ---------------------------------------------------------------------------
 # Test 1: _handle_success() calls record_validation(stage=3, decision="PASS")
 # ---------------------------------------------------------------------------
@@ -92,6 +103,37 @@ def test_handle_success_calls_record_validation_pass():
     result_arg = call_kwargs.get("result") or (call_args[1] if len(call_args) > 1 else None)
     assert result_arg is not None
     assert result_arg.get("decision") == "PASS"
+
+
+def test_handle_success_pass_with_warning_preserves_warning_signal():
+    qd = MagicMock()
+    orch = _make_orch(quality_dashboard=qd)
+
+    blueprint = {"ep_num": 3, "title": "테스트"}
+    prev_blueprints = []
+    pipeline_result = _warning_pipeline_result(score=0.72)
+
+    orch._handle_success(
+        working_ep=3,
+        arc_no=1,
+        arc_data={},
+        blueprint=blueprint,
+        pipeline_result=pipeline_result,
+        prev_blueprints=prev_blueprints,
+        success_count=0,
+        fail_count=0,
+    )
+
+    call_args, call_kwargs = qd.record_validation.call_args
+    result_arg = call_kwargs.get("result") or (call_args[1] if len(call_args) > 1 else None)
+    assert result_arg["decision"] == "PASS_WITH_WARNING"
+    assert "quality_gate_failed" in result_arg["warnings"]
+    assert "quality_risk" in result_arg["warnings"]
+    assert "revision_required" in result_arg["warnings"]
+    assert result_arg["quality_signals"]["quality_gate_failed"] is True
+    assert result_arg["quality_signals"]["quality_risk"] is True
+    assert result_arg["quality_signals"]["revision_required"] is True
+    assert blueprint["_stage3_meta"]["revision_required"] is True
 
 
 # ---------------------------------------------------------------------------

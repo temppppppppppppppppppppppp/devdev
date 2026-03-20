@@ -267,12 +267,18 @@ class TestPreflightArcAnalysis:
         assert out["generation_method"] == "analyst"
         preflight.ctx.build_minimal_arc_context.assert_called_once()
 
+    def test_focus_mode_fallback_source_preserves_recent_tail_context(self):
+        src = Path("modules/core/stage2_preflight.py").read_text(encoding="utf-8")
+        assert "enhanced_context[:15000]" not in src
+        assert "smart_truncate(" in src
+        assert "enhanced_context, max_chars=15000, head_chars=8250" in src
+
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
     def test_quality_trend_injected(self, preflight):
         preflight.ctx.quality_dashboard = MagicMock()
         preflight.ctx.quality_dashboard.get_score_trend_summary.return_value = {
             "trend": "up",
-            "summary": "?덉쭏 異붿꽭 ?곸듅",
+            "summary": "최근 추세 상승",
         }
         out = preflight._preflight_arc_analysis(**_arc_analysis_kwargs(constraint_block=""))
         preflight.ctx.quality_dashboard.get_score_trend_summary.assert_called_once_with(stage=2)
@@ -302,6 +308,39 @@ class TestPreflightArcAnalysis:
         ]
         out = preflight._preflight_arc_analysis(**_arc_analysis_kwargs(all_refined_arcs=arcs))
         assert "recent_patterns" not in out
+
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    def test_hollow_previous_arcs_are_skipped_before_preflight_analysis(self, preflight):
+        preflight.ctx.agents["preflight"].analyze.return_value = {
+            "item_timeline": [],
+            "absolute_prohibitions": [],
+            "relationship_map": {},
+        }
+        usable_arc = {"arc_no": 1, "tactical_doc": "usable tactical", "state_constraints": {"arc_end_state": {}}}
+        result = preflight._preflight_state_setup(
+            **_state_setup_kwargs(
+                all_refined_arcs=[
+                    usable_arc,
+                    {"arc_no": 2, "tactical_doc": ""},
+                    {"arc_no": 3},
+                ]
+            )
+        )
+
+        analyze_args, analyze_kwargs = preflight.ctx.agents["preflight"].analyze.call_args
+        assert analyze_args[0] == [usable_arc]
+        assert analyze_kwargs["resolved_plots_summary"] == "resolved"
+        assert result["cached_preflight_result"]["_input_hygiene"]["skipped_hollow_arc_nos"] == [2, 3]
+        preflight.ctx.audit_event.assert_any_call(
+            "preflight_hollow_prev_arcs_skipped",
+            "Preflight skipped hollow previous arcs",
+            {
+                "arc_no": 1,
+                "skipped_arc_nos": [2, 3],
+                "usable_prev_arc_count": 1,
+                "total_prev_arc_count": 3,
+            },
+        )
 
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
     def test_stage3_reverse_feedback_injected_after_three_stage3_failures(self, preflight):
@@ -390,6 +429,125 @@ class TestPreflightEnrichment:
         assert out["four_phase_passed"] is False
         assert "FourPhase" in out["director_feedback_for_fourphase"]
         assert "fail" in out["director_feedback_for_fourphase"]
+
+    @patch("modules.core.spinners.StageSpinner", MagicMock())
+    def test_inplace_failure_falls_back_to_patch_mode_in_same_attempt(self, preflight):
+        best_arc = {
+            "arc_no": 1,
+            "ep_start": 1,
+            "ep_end": 10,
+            "ep_count": 10,
+            "tactical_doc": "ORIGINAL ARC " * 120,
+            "state_changes": {},
+            "state_constraints": {
+                "arc_start_state": {"equipment": []},
+                "arc_end_state": {"equipment": []},
+            },
+        }
+        patched_arc = {
+            "arc_no": 1,
+            "ep_start": 1,
+            "ep_end": 10,
+            "ep_count": 10,
+            "tactical_doc": "PATCHED ARC " * 140,
+            "state_changes": {},
+            "state_constraints": {
+                "arc_start_state": {"equipment": []},
+                "arc_end_state": {"equipment": []},
+            },
+        }
+        previous_attempt = {
+            "best_arc": best_arc,
+            "fix_scope": "inplace",
+            "score": 95,
+            "rejection_reason": "keep structure, fix only local issue",
+            "selection_reason": "candidate 2 was closest",
+            "score_breakdown": {"continuity": 82, "clarity": 79},
+            "validation_warnings": ["minor drift"],
+            "selected_strategy": "ensemble_b",
+        }
+
+        preflight.ctx.agents["four_phase"]._inplace_patch_arc.return_value = None
+        preflight.ctx.agents["four_phase"].patch_arc_with_feedback.return_value = (
+            patched_arc,
+            {"final_verdict": "PASS", "patch_mode": True, "patch_fallback": False},
+        )
+        preflight.ctx.agents["four_phase"].generate.side_effect = AssertionError("generate() should not be called")
+
+        out = preflight._preflight_enrichment(**_enrichment_kwargs(previous_attempt=previous_attempt))
+
+        assert out["four_phase_passed"] is True
+        assert out["generation_method"] == "four_phase"
+        assert out["was_patch"] is True
+        assert out["patch_fallback"] is False
+        assert out["refined_arc"]["tactical_doc"].startswith("PATCHED ARC")
+
+        preflight.ctx.agents["four_phase"]._inplace_patch_arc.assert_called_once_with(
+            original_arc=best_arc,
+            director_feedback="keep structure, fix only local issue",
+            arc_no=1,
+        )
+        preflight.ctx.agents["four_phase"].patch_arc_with_feedback.assert_called_once()
+        patch_kwargs = preflight.ctx.agents["four_phase"].patch_arc_with_feedback.call_args.kwargs
+        assert patch_kwargs["original_arc"] == best_arc
+        assert patch_kwargs["attempt_number"] == 1
+        assert patch_kwargs["rejected_strategy"] == "ensemble_b"
+        assert "keep structure, fix only local issue" in patch_kwargs["director_feedback"]
+        assert "candidate 2 was closest" in patch_kwargs["director_feedback"]
+        assert "minor drift" in patch_kwargs["director_feedback"]
+        preflight.ctx.agents["four_phase"].generate.assert_not_called()
+
+    @patch("modules.core.spinners.StageSpinner", MagicMock())
+    def test_missing_fix_scope_skips_local_patch_and_uses_full_generate(self, preflight):
+        best_arc = {
+            "arc_no": 1,
+            "ep_start": 1,
+            "ep_end": 10,
+            "ep_count": 10,
+            "tactical_doc": "ORIGINAL ARC " * 120,
+            "state_changes": {},
+            "state_constraints": {
+                "arc_start_state": {"equipment": []},
+                "arc_end_state": {"equipment": []},
+            },
+        }
+        regenerated_arc = {
+            "arc_no": 1,
+            "ep_start": 1,
+            "ep_end": 10,
+            "ep_count": 10,
+            "tactical_doc": "REGENERATED ARC " * 140,
+            "state_changes": {},
+            "state_constraints": {
+                "arc_start_state": {"equipment": []},
+                "arc_end_state": {"equipment": []},
+            },
+        }
+        previous_attempt = {
+            "best_arc": best_arc,
+            "fix_scope": "",
+            "score": 95,
+            "rejection_reason": "director forgot to provide explicit local scope",
+            "selection_reason": "candidate 2 was closest",
+        }
+
+        preflight.ctx.agents["four_phase"]._inplace_patch_arc.side_effect = AssertionError("_inplace_patch_arc() should not be called")
+        preflight.ctx.agents["four_phase"].patch_arc_with_feedback.side_effect = AssertionError(
+            "patch_arc_with_feedback() should not be called"
+        )
+        preflight.ctx.agents["four_phase"].generate.return_value = (
+            regenerated_arc,
+            {"final_verdict": "PASS", "patch_mode": False, "patch_fallback": False},
+        )
+
+        out = preflight._preflight_enrichment(**_enrichment_kwargs(previous_attempt=previous_attempt))
+
+        assert out["four_phase_passed"] is True
+        assert out["generation_method"] == "four_phase"
+        assert out["was_patch"] is False
+        assert out["patch_fallback"] is False
+        assert out["refined_arc"]["tactical_doc"].startswith("REGENERATED ARC")
+        preflight.ctx.agents["four_phase"].generate.assert_called_once()
 
     @patch("modules.core.spinners.StageSpinner", MagicMock())
     def test_fourphase_pass_triggers_state_tracker_enrichment(self, preflight):
@@ -616,3 +774,23 @@ class TestGlobalBudgetTruncation:
 
         result = preflight._execute_stage2_retrieval_plan(plan, current_ep=5)
         assert len(result) <= 100
+
+    def test_global_budget_truncation_preserves_recent_tail_context(self, preflight):
+        preflight.ctx.memory = MagicMock()
+        preflight.ctx.memory.retrieve_multi_query_context.return_value = "HEAD-A " + ("a" * 240) + " TAIL-A"
+        preflight.ctx.memory.retrieve_npc_context.return_value = "HEAD-B " + ("b" * 240) + " TAIL-B"
+
+        plan = RetrievalPlan(
+            stage="stage2",
+            episode_num=5,
+            slots=[
+                RetrievalSlot(category="block_theme", query="theme query", source="vec_memory", priority=1),
+                RetrievalSlot(category="npc_recent", query="npc query", source="db_npc_history", priority=2),
+            ],
+            total_budget_chars=140,
+        )
+
+        result = preflight._execute_stage2_retrieval_plan(plan, current_ep=5)
+        assert len(result) <= 140
+        assert "[SC:block_theme]" in result
+        assert "TAIL-B" in result

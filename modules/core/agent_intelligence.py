@@ -28,6 +28,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
+from modules.core.constants import smart_truncate
+
 
 class AgentType(Enum):
     ANALYST = "analyst"
@@ -396,12 +398,13 @@ Scene 5: 최종 성공, 스승의 인정, 다음 단계 암시 (클리프행어)
     def generate_critique_request(self, output: str, agent_type: AgentType) -> str:
         """LLM에 자가 검토를 요청하는 프롬프트 생성"""
         template = self.get_self_critique_prompt(agent_type)
+        output_excerpt = smart_truncate(output or "", max_chars=3000, head_chars=1650)
 
         return f"""
 다음 출력물을 검토하고 점수를 매기세요.
 
 [출력물]
-{output[:3000]}  # 토큰 절약
+{output_excerpt}  # 토큰 절약
 
 {template}
 

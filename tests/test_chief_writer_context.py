@@ -1,6 +1,6 @@
 """[B-1-4] ChiefWriterContextBuilder unit tests."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from modules.domain.agents.chief_writer_context import ChiefWriterContextBuilder
 
@@ -87,6 +87,15 @@ class TestBuildCommonContext:
 
 
 class TestDigestAndGuards:
+    def test_fit_compact_text_preserves_tail_context(self):
+        builder = ChiefWriterContextBuilder(_make_host())
+
+        text = "HEAD-DIGEST\n" + ("A" * 80) + "\nTAIL-DIGEST"
+        result = builder._fit_compact_text(text, 30)
+
+        assert "TAIL-DIGEST" in result
+        assert "..." in result
+
     def test_generate_episode_digest_empty(self):
         builder = ChiefWriterContextBuilder(_make_host())
         assert builder._generate_episode_digest("", ep_num=5) == ""
@@ -96,6 +105,16 @@ class TestDigestAndGuards:
         manuscript = "가" * 220 + "철무련주가 숨을 거두었다. 시신이 식어갔다."
         digest = builder._generate_episode_digest(manuscript, ep_num=5)
         assert "사망 NPC" in digest
+
+    def test_generate_episode_digest_preserves_cliffhanger_tail_context(self):
+        builder = ChiefWriterContextBuilder(_make_host())
+        manuscript = "媛" * 220 + ("A" * 120) + " TAIL-CLIFF"
+
+        with patch("modules.domain.agents.chief_writer_context.re.search", return_value=True):
+            digest = builder._generate_episode_digest(manuscript, ep_num=5)
+
+        assert "TAIL-CLIFF" in digest
+        assert "..." in digest
 
     def test_detect_deaths_from_manuscript(self):
         builder = ChiefWriterContextBuilder(_make_host())
@@ -229,6 +248,44 @@ class TestMandatoryAndHelpers:
         result = builder._extract_recent_events(current_ep=4, n_episodes=3)
         assert isinstance(result, list)
         assert len(result) >= 1
+
+    def test_extract_recent_events_preserves_summary_tail_context(self):
+        host = _make_host()
+        host.context.db.load_state_log.side_effect = [
+            {
+                "summary": "HEAD-SUMMARY\n" + ("S" * 260) + "\nTAIL-RECENT-EVENT",
+                "data": {"major_changes": []},
+            },
+            None,
+            None,
+        ]
+        builder = ChiefWriterContextBuilder(host)
+        result = builder._extract_recent_events(current_ep=4, n_episodes=3)
+        assert any("TAIL-RECENT-EVENT" in item["description"] for item in result)
+        assert any("..." in item["description"] for item in result)
+
+    def test_extract_recent_events_preserves_major_change_tail_context(self):
+        host = _make_host()
+        host.context.db.load_state_log.side_effect = [
+            {
+                "summary": "",
+                "data": {
+                    "major_changes": [
+                        {
+                            "event": "HEAD-EVENT\n" + ("E" * 180) + "\nTAIL-MAJOR-EVENT",
+                            "consequence": "HEAD-CONSEQ\n" + ("C" * 180) + "\nTAIL-MAJOR-CONSEQ",
+                        }
+                    ]
+                },
+            },
+            None,
+            None,
+        ]
+        builder = ChiefWriterContextBuilder(host)
+        result = builder._extract_recent_events(current_ep=4, n_episodes=3)
+        assert any("TAIL-MAJOR-EVENT" in item["description"] for item in result)
+        assert any("TAIL-MAJOR-CONSEQ" in item["consequence"] for item in result)
+        assert any("..." in item["description"] for item in result)
 
     def test_extract_npc_last_states(self):
         builder = ChiefWriterContextBuilder(_make_host())

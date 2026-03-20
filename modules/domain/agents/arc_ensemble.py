@@ -18,7 +18,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from concurrent.futures import TimeoutError as FutureTimeoutError
 
-from modules.core.constants import GenreTypes, Stage2Limits
+from modules.core.constants import GenreTypes, Stage2Limits, smart_truncate
 from modules.core.genre_schema_builder import (
     build_state_constraints_schema,
     build_status_shadow_schema,
@@ -40,7 +40,9 @@ except ImportError:
 
 _ITEM_SUFFIXES_ALL = get_item_suffixes("")
 _ITEM_SUFFIX_GROUP = "|".join(sorted((re.escape(s) for s in _ITEM_SUFFIXES_ALL), key=len, reverse=True)) or r"아이템"
-_FORBIDDEN_ITEM_RE = re.compile(rf"([가-힣A-Za-z0-9][가-힣A-Za-z0-9\s]{{0,30}}(?:{_ITEM_SUFFIX_GROUP}))")
+_FORBIDDEN_ITEM_RE = re.compile(rf"([가-힣A-Za-z0-9][가-힣A-Za-z0-9\s]{{0,30}}(?:{_ITEM_SUFFIX_GROUP}))")  # utf8-hygiene: allow-line regex quantifier
+_ARC_MIN_EP_COUNT = 2
+_ARC_MAX_EP_COUNT = 6
 
 
 def _extract_forbidden_items(constraint_block: str) -> list[str]:
@@ -94,7 +96,7 @@ def _build_block_event_guard(curr_block: dict | None, max_field_len: int = 260) 
         if not text:
             continue
         if len(text) > max_field_len:
-            text = f"{text[:max_field_len].rstrip()}..."
+            text = _fit_arc_prompt_context(text, max_field_len)
         lines.append(f"- {key}: {text}")
 
     if not lines:
@@ -105,6 +107,14 @@ def _build_block_event_guard(curr_block: dict | None, max_field_len: int = 260) 
         "아래 항목은 현재 블록에서만 허용되는 사건 출처입니다:\n"
         + "\n".join(lines)
     )
+
+
+def _fit_arc_prompt_context(value: object, max_chars: int, *, head_ratio: float = 0.55) -> str:
+    raw = str(value or "")
+    if len(raw) <= max_chars:
+        return raw
+    head_chars = max(0, min(int(max_chars * head_ratio), max_chars - 80))
+    return smart_truncate(raw, max_chars=max_chars, head_chars=head_chars)
 
 
 # ── [장르별 에너지 시스템 블록] ──────────────────────────────────────
@@ -346,7 +356,9 @@ class ArcEnsembleGenerator(BaseAgent):
         protagonist_name: str = "주인공",  # [V60.18] 주인공 이름 (필수!)
         protagonist_config: dict = None,  # [V60.88] 주인공 설정 (world_origin, incarnation_type)
         entity_registry: dict = None,  # [V60.92] Entity Registry (NPC 명칭 일관성)
-        ep_count: int = None,  # [V61.1] 가변 페이싱 - 상위에서 결정된 ep_count
+        ep_count: int = None,  # backward-compat alias for ep_count_suggestion
+        pacing_signals: dict | None = None,  # Python-collected density signals
+        ep_count_suggestion: int = None,  # LLM pacing judgment에 넘길 추천 화수
         retry: int = 0,  # [V61.5] 재시도 횟수 (>0이면 thinking "medium"으로 다운그레이드)
         single_strategy: str = "",  # [TF-36] partial 시 1개 전략만
     ) -> tuple[dict | None, list[dict]]:
@@ -367,15 +379,24 @@ class ArcEnsembleGenerator(BaseAgent):
             protagonist_name: [V60.18] 주인공 이름 (환각 방지)
             protagonist_config: [V60.88] 주인공 설정 (world_origin, incarnation_type)
             entity_registry: [V60.92] Entity Registry (NPC 명칭 일관성)
-            ep_count: [V61.1] 가변 페이싱 - 상위에서 결정된 화수 (None이면 기본값 4)
+            ep_count: backward-compat alias
+            pacing_signals: Python이 수집한 density signals
+            ep_count_suggestion: Python이 수집한 pacing suggestion (최종 판단은 LLM)
 
         Returns:
             (best_arc, all_candidates) - 최적 Arc와 모든 후보 리스트
         """
-        # [V61.1] 가변 페이싱: 상위에서 결정된 ep_count 우선, 없으면 기본값 4
-        if ep_count is None:
-            ep_count = curr_block.get("ep_count", Stage2Limits.DEFAULT_EP_COUNT) if isinstance(curr_block, dict) else Stage2Limits.DEFAULT_EP_COUNT
-        ep_end = ep_start + ep_count - 1
+        if ep_count_suggestion is None:
+            ep_count_suggestion = ep_count
+        if ep_count_suggestion is None:
+            ep_count_suggestion = (
+                curr_block.get("ep_count", Stage2Limits.DEFAULT_EP_COUNT)
+                if isinstance(curr_block, dict)
+                else Stage2Limits.DEFAULT_EP_COUNT
+            )
+        ep_count_suggestion = self._coerce_ep_count(ep_count_suggestion, Stage2Limits.DEFAULT_EP_COUNT)
+        ep_end = ep_start + ep_count_suggestion - 1
+        pacing_signal_guide = self._build_pacing_signal_guide(curr_block, ep_count_suggestion, pacing_signals or {})
         candidates = []
 
         # [V61.3] 병렬 실행 전에 genre 미리 로드 (SQLite thread-safety 문제 방지)
@@ -437,6 +458,8 @@ class ArcEnsembleGenerator(BaseAgent):
                         protagonist_config=protagonist_config,  # [V60.88]
                         entity_registry=entity_registry,  # [V60.92]
                         genre=genre,  # [V61.3] 미리 로드한 genre 전달 (thread-safety)
+                        ep_count_suggestion=ep_count_suggestion,
+                        pacing_signal_guide=pacing_signal_guide,
                         retry=retry,  # [V61.5] 재시도 횟수 전달
                         cache_name=cache_name,  # [Tier4-11]
                     )
@@ -504,8 +527,7 @@ class ArcEnsembleGenerator(BaseAgent):
         if not candidates:
             return None, []
 
-        # [V60.73] tactical_doc 최소 길이 필터 (가변 페이싱: 화당 500자)
-        min_tactical_length = ep_count * Stage2Limits.MIN_CHARS_PER_EPISODE  # 3화=1500자, 4화=2000자, 6화=3000자
+        # [V60.73] tactical_doc 최소 길이 필터는 후보가 선택한 최종 ep_count를 기준으로 본다.
         valid_candidates = []
         for candidate in candidates:
             # [V60.74] tactical_doc 타입 안전 변환 (dict/list 처리)
@@ -513,10 +535,12 @@ class ArcEnsembleGenerator(BaseAgent):
             tactical = self._safe_tactical_str(tactical)
             candidate["tactical_doc"] = tactical  # 변환된 값으로 업데이트
             tactical_len = len(tactical)
+            candidate_ep_count = self._resolve_candidate_ep_count(candidate, ep_count_suggestion)
+            min_tactical_length = candidate_ep_count * Stage2Limits.MIN_CHARS_PER_EPISODE
             if tactical_len >= min_tactical_length:
                 valid_candidates.append(candidate)
             else:
-                logging.info(f" [Ensemble] {candidate.get('_strategy', '?')} 제외: tactical_doc {tactical_len}자 < {min_tactical_length}자 (ep_count={ep_count})"
+                logging.info(f" [Ensemble] {candidate.get('_strategy', '?')} 제외: tactical_doc {tactical_len}자 < {min_tactical_length}자 (ep_count={candidate_ep_count})"
                 )
                 self._operator_log(
                     f"✗ [Arc] '{candidate.get('_strategy', '?')}' 분량 미달 ({tactical_len}자 < {min_tactical_length}자)",
@@ -525,6 +549,7 @@ class ArcEnsembleGenerator(BaseAgent):
                         "strategy": candidate.get("_strategy", "?"),
                         "tactical_chars": tactical_len,
                         "min_required_chars": min_tactical_length,
+                        "ep_count": candidate_ep_count,
                     },
                 )
 
@@ -538,7 +563,8 @@ class ArcEnsembleGenerator(BaseAgent):
             candidates.sort(key=safe_tactical_len, reverse=True)
             longest = candidates[0]
             longest_len = safe_tactical_len(longest)
-            min_required = ep_count * Stage2Limits.MIN_CHARS_PER_EPISODE
+            longest_ep_count = self._resolve_candidate_ep_count(longest, ep_count_suggestion)
+            min_required = longest_ep_count * Stage2Limits.MIN_CHARS_PER_EPISODE
 
             # 권장값의 60% 미만이면 경고 레벨 높임
             if longest_len < min_required * 0.6:
@@ -625,6 +651,130 @@ class ArcEnsembleGenerator(BaseAgent):
         # [TF-S2] Python은 최종 후보를 고르지 않는다.
         return None, valid_candidates
 
+    def _coerce_ep_count(self, value: object, default: int) -> int:
+        if isinstance(value, bool):
+            value = default
+        if isinstance(value, str):
+            match = re.search(r"(\d+)", value)
+            value = int(match.group(1)) if match else default
+        try:
+            value = int(value)
+        except (TypeError, ValueError):
+            value = default
+        return max(_ARC_MIN_EP_COUNT, min(_ARC_MAX_EP_COUNT, value))
+
+    def _normalize_pace_mode(self, raw_mode: object) -> str:
+        mode = str(raw_mode or "").strip().lower()
+        if not mode:
+            return ""
+        if "compressed" in mode or "blitz" in mode:
+            return "compressed"
+        if "expanded" in mode or "epic" in mode:
+            return "expanded"
+        if "standard" in mode:
+            return "standard"
+        return ""
+
+    def _pace_mode_bounds(self, pace_mode: str) -> tuple[int, int]:
+        if pace_mode == "compressed":
+            return 2, 3
+        if pace_mode == "expanded":
+            return 6, 6
+        return 4, 5
+
+    def _infer_pace_mode(self, ep_count: int) -> str:
+        if ep_count <= 3:
+            return "compressed"
+        if ep_count >= 6:
+            return "expanded"
+        return "standard"
+
+    def _resolve_candidate_ep_count(self, candidate: dict, fallback_ep_count: int) -> int:
+        raw_ep_count = candidate.get("ep_count") if isinstance(candidate, dict) else fallback_ep_count
+        return self._coerce_ep_count(raw_ep_count, fallback_ep_count)
+
+    def _build_pacing_signal_guide(
+        self,
+        curr_block: dict | None,
+        ep_count_suggestion: int,
+        pacing_signals: dict,
+    ) -> str:
+        pace_mode = pacing_signals.get("suggested_pace_mode") or self._infer_pace_mode(ep_count_suggestion)
+        content_len = pacing_signals.get("content_len", 0)
+        sentence_count = pacing_signals.get("sentence_count", 0)
+        tension_level = pacing_signals.get("tension_level", "")
+        item_hint_count = pacing_signals.get("item_hint_count", 0)
+        reward_present = pacing_signals.get("reward_present", False)
+        solution_present = pacing_signals.get("solution_present", False)
+        low_resource_block = pacing_signals.get("low_resource_block", False)
+        pacing_reason = pacing_signals.get("pacing_reason", "")
+        block_title = curr_block.get("title", "") if isinstance(curr_block, dict) else ""
+
+        lines = [
+            "### [Pacing Signals - Python collected, LLM decides final ep_count]",
+            f"- suggested_ep_count: {ep_count_suggestion}",
+            f"- suggested_pace_mode: {pace_mode}",
+            f"- content_len_chars: {content_len}",
+            f"- sentence_count: {sentence_count}",
+            f"- item_hint_count: {item_hint_count}",
+            f"- reward_present: {bool(reward_present)}",
+            f"- solution_present: {bool(solution_present)}",
+            f"- low_resource_block: {bool(low_resource_block)}",
+        ]
+        if tension_level not in ("", None):
+            lines.append(f"- tension_level: {tension_level}")
+        if block_title:
+            lines.append(f"- block_title: {block_title}")
+        if pacing_reason:
+            lines.append(f"- suggestion_reason: {pacing_reason}")
+
+        lines.extend(
+            [
+                "",
+                "### [Pacing Ownership Rules]",
+                "- 최종 ep_count 판단은 Python이 아니라 너의 책임이다.",
+                "- suggested_ep_count는 참고값으로만 보고, 최종 ep_count와 pace_mode를 함께 결정하라.",
+                "- 자원(item/reward/solution)이 적으면 설명을 늘이지 말고 tactical progression을 더 촘촘하게 압축하라.",
+                "- 각 화마다 상태, 압박, 관계, 회수 중 최소 1개의 의미 있는 변화가 반드시 있어야 한다.",
+                "- 하드 자원이 적을수록 감정 설명 반복과 준비 동작만 있는 beat를 줄여라.",
+                "- item이나 reward가 적을수록 callback, foreshadow, payoff 밀도를 더 높여라.",
+            ]
+        )
+        return "\n".join(lines)
+
+    def _normalize_pacing_contract(self, result: dict, ep_start: int, ep_count_suggestion: int) -> dict:
+        pacing_decision = result.get("pacing_decision")
+        if not isinstance(pacing_decision, dict):
+            pacing_decision = {}
+
+        pace_mode = self._normalize_pace_mode(
+            pacing_decision.get("pace_mode") or pacing_decision.get("chosen_pacing")
+        )
+        ep_count = self._coerce_ep_count(result.get("ep_count"), ep_count_suggestion)
+
+        if pace_mode:
+            min_ep, max_ep = self._pace_mode_bounds(pace_mode)
+            if ep_count < min_ep or ep_count > max_ep:
+                logging.warning(
+                    " [Stage2-Pacing] pace_mode=%s but ep_count=%s -> clamp to %s~%s",
+                    pace_mode,
+                    ep_count,
+                    min_ep,
+                    max_ep,
+                )
+            ep_count = max(min_ep, min(max_ep, ep_count))
+        else:
+            pace_mode = self._infer_pace_mode(ep_count)
+
+        result["ep_start"] = ep_start
+        result["ep_count"] = ep_count
+        result["ep_end"] = ep_start + ep_count - 1
+        pacing_decision["pace_mode"] = pace_mode
+        pacing_decision.setdefault("ep_count_reasoning", "")
+        pacing_decision.setdefault("density_focus", "")
+        result["pacing_decision"] = pacing_decision
+        return result
+
     def _generate_single(
         self,
         arc_no: int,
@@ -642,6 +792,8 @@ class ArcEnsembleGenerator(BaseAgent):
         protagonist_config: dict = None,  # [V60.88]
         entity_registry: dict = None,  # [V60.92]
         genre: str = GenreTypes.WUXIA,  # [V61.3] 미리 로드한 genre (thread-safety)
+        ep_count_suggestion: int = None,
+        pacing_signal_guide: str = "",
         retry: int = 0,  # [V61.5] 재시도 횟수
         cache_name: str = "",  # [Tier4-11] shared context cache name
     ) -> dict | None:
@@ -753,6 +905,11 @@ class ArcEnsembleGenerator(BaseAgent):
                 logging.debug("[TF-26] critical_keys lookup failed: %s", str(e)[:100])
             _sc_genre_field = self._escape_braces(build_state_constraints_schema(genre, _ck))
             _ss_schema = self._escape_braces(build_status_shadow_schema(genre, _ck))
+            _vol_strategy_prompt = _fit_arc_prompt_context(vol_strategy, 6000) if vol_strategy else "(없음)"
+            _assets_prompt = (
+                _fit_arc_prompt_context(json.dumps(assets, ensure_ascii=False), 6000) if assets else "{}"
+            )
+            _feedback_prompt = _fit_arc_prompt_context(_merged_feedback, 9000) if _merged_feedback else "(없음)"
 
             prompt = self._prompt_loader.load(
                 "ensemble",
@@ -770,12 +927,13 @@ class ArcEnsembleGenerator(BaseAgent):
                     _cached_context_stub if _use_cached_context else (prev_arc_context or "시작점")
                 ),
                 curr_block=self._escape_braces(json.dumps(curr_block, ensure_ascii=False) if curr_block else "{}"),
+                pacing_signal_guide=self._escape_braces(pacing_signal_guide or ""),
                 block_event_guard=self._escape_braces(block_event_guard),
                 genre_ext_guide=self._escape_braces(genre_ext_guide),
                 extended_block_guide=self._escape_braces(extended_block_guide),  # [TF-9]
-                vol_strategy=self._escape_braces(vol_strategy[:6000] if vol_strategy else "(없음)"),
-                assets=self._escape_braces(json.dumps(assets, ensure_ascii=False)[:6000] if assets else "{}"),
-                feedback=self._escape_braces(_merged_feedback[:9000] if _merged_feedback else "(없음)"),
+                vol_strategy=self._escape_braces(_vol_strategy_prompt),
+                assets=self._escape_braces(_assets_prompt),
+                feedback=self._escape_braces(_feedback_prompt),
                 entity_registry_section=self._escape_braces(entity_registry_section),  # [V60.92]
                 energy_system_block=self._escape_braces(self._get_energy_system_block(genre, _ck)),
                 state_constraints_genre_field=_sc_genre_field,
@@ -798,16 +956,13 @@ class ArcEnsembleGenerator(BaseAgent):
                     constraint_block=self._escape_braces(constraint_block or "(없음)"),
                     prev_arc_context=self._escape_braces(prev_arc_context or "시작점"),
                     curr_block=self._escape_braces(json.dumps(curr_block, ensure_ascii=False) if curr_block else "{}"),
+                    pacing_signal_guide=self._escape_braces(pacing_signal_guide or ""),
                     block_event_guard=self._escape_braces(block_event_guard),
                     genre_ext_guide=self._escape_braces(genre_ext_guide),
                     extended_block_guide=self._escape_braces(extended_block_guide),  # [TF-9]
-                    vol_strategy=self._escape_braces(
-                        vol_strategy[:6000] if vol_strategy else "(없음)"
-                    ),  # [TF-46] 2K→4K
-                    assets=self._escape_braces(
-                        json.dumps(assets, ensure_ascii=False)[:6000] if assets else "{}"
-                    ),  # [TF-46] 2K→4K
-                    feedback=self._escape_braces(_merged_feedback[:9000] if _merged_feedback else "(없음)"),
+                    vol_strategy=self._escape_braces(_vol_strategy_prompt),
+                    assets=self._escape_braces(_assets_prompt),
+                    feedback=self._escape_braces(_feedback_prompt),
                     entity_registry_section=self._escape_braces(entity_registry_section),  # [V60.92]
                     energy_system_block=self._escape_braces(self._get_energy_system_block(genre, _ck)),
                     state_constraints_genre_field=_sc_genre_field,
@@ -840,8 +995,9 @@ class ArcEnsembleGenerator(BaseAgent):
             if not isinstance(result, dict) or result.get("parsing_error"):
                 return None
 
-            # 필수 필드 보장
-            result = self._ensure_required_fields(result, arc_no, ep_start, ep_end)
+            # 필수 필드 보장 전에 pacing contract를 정규화한다.
+            result = self._normalize_pacing_contract(result, ep_start, ep_count_suggestion or Stage2Limits.DEFAULT_EP_COUNT)
+            result = self._ensure_required_fields(result, arc_no, ep_start, result.get("ep_end", ep_end))
 
             return result
 

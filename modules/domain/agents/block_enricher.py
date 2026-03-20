@@ -14,7 +14,7 @@ import re
 import threading
 import time
 
-from modules.core.constants import AIModels
+from modules.core.constants import AIModels, smart_truncate
 from modules.core.prompt_loader import SafeDict
 from modules.validation.threshold_helper import _threshold
 
@@ -231,6 +231,14 @@ class BlockEnricher(BaseAgent):
             finally:
                 self.primary_model = original_model
 
+    @staticmethod
+    def _fit_prompt_text(value: object, max_chars: int, head_ratio: float = 0.55) -> str:
+        """Prompt cap은 유지하되 최근 문맥을 같이 남긴다."""
+        text = str(value or "")
+        if len(text) <= max_chars:
+            return text
+        return smart_truncate(text, max_chars=max_chars, head_chars=max(1, int(max_chars * head_ratio)))
+
     def analyze_block_density(self, block: dict) -> dict:
         """
         Block의 정보량을 분석하여 농축 필요 여부 판단
@@ -381,7 +389,7 @@ class BlockEnricher(BaseAgent):
 
             if validation.get("validation_result") == "FAIL":
                 # 1차 검증 실패 → 원본 보존 패치 모드
-                _original_text = json.dumps(result, ensure_ascii=False, indent=2)[:60000]
+                _original_text = self._fit_prompt_text(json.dumps(result, ensure_ascii=False, indent=2), 60000)
                 retry_prompt = (
                     prompt + f"\n\n[🔧 패치 모드: 이전 농축 결과 원본 보존 + 지적사항만 수정]"
                     f"\n## 이전 농축 결과\n{_original_text}"
@@ -416,7 +424,7 @@ class BlockEnricher(BaseAgent):
                 # Director REJECT → 원본 보존 패치 모드
                 feedback = director_audit.get("feedback", "품질 미달")
                 critical_issues = director_audit.get("critical_issues", [])
-                _original_text = json.dumps(result, ensure_ascii=False, indent=2)[:60000]
+                _original_text = self._fit_prompt_text(json.dumps(result, ensure_ascii=False, indent=2), 60000)
 
                 retry_prompt = (
                     prompt
@@ -881,13 +889,13 @@ class BlockEnricher(BaseAgent):
 {prev_reward}
 
 ### [📐 품질 기준]
-{json.dumps(reference_block, ensure_ascii=False)[:1500]}
+{self._fit_prompt_text(json.dumps(reference_block, ensure_ascii=False), 1500)}
 
 ### [🎯 재농축 대상]
 {json.dumps(current_block, ensure_ascii=False, indent=2)}
 
 ### [📚 다음 Block] (미래 오염 금지)
-{json.dumps(next_block, ensure_ascii=False)[:900] if next_block else "없음"}
+{self._fit_prompt_text(json.dumps(next_block, ensure_ascii=False), 900) if next_block else "없음"}
 
 ### [🔧 필수 수정사항]
 1. context 시작부에 이전 Block의 결과(획득물, 상태변화)를 자연스럽게 언급

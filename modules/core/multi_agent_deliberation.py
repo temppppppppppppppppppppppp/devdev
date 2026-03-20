@@ -29,6 +29,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
+from modules.core.constants import smart_truncate
 from modules.core.llm_generate import generate_content_via_router
 
 
@@ -192,6 +193,14 @@ JSON 형식:
         self.model = model
         self.enabled = True
 
+    @staticmethod
+    def _fit_prompt_text(value: str, max_chars: int, head_ratio: float = 0.55) -> str:
+        """Prompt cap은 유지하되 최근 문맥을 같이 남긴다."""
+        text = str(value or "")
+        if len(text) <= max_chars:
+            return text
+        return smart_truncate(text, max_chars=max_chars, head_chars=max(1, int(max_chars * head_ratio)))
+
     def _call_llm(self, prompt: str, temperature: float = 0.4) -> str:
         """LLM 호출"""
         try:
@@ -220,10 +229,10 @@ JSON 형식:
 
     def _get_agent_opinion(self, role: AgentRole, content: str, context: dict[str, Any]) -> AgentOpinion:
         """에이전트 의견 수집"""
-        context_str = json.dumps(context, ensure_ascii=False, default=str)[:2000]
+        context_str = self._fit_prompt_text(json.dumps(context, ensure_ascii=False, default=str), 2000)
 
         prompt = self.AGENT_PROMPTS[role].format(
-            content=content[:5000].replace("{", "{{").replace("}", "}}"),  # [V70] brace escape
+            content=self._fit_prompt_text(content, 5000).replace("{", "{{").replace("}", "}}"),  # [V70]
             context=context_str.replace("{", "{{").replace("}", "}}"),  # [V70] brace escape
         )
 
@@ -260,7 +269,7 @@ JSON 형식:
             return s.replace("{", "{{").replace("}", "}}")
 
         prompt = self.CONSENSUS_PROMPT.format(
-            content=_esc(content[:6000]),
+            content=_esc(self._fit_prompt_text(content, 6000)),
             analyst_score=analyst.score if analyst else 70,
             analyst_strengths=_esc(", ".join(analyst.strengths[:3])) if analyst else "없음",
             analyst_concerns=_esc(", ".join(analyst.concerns[:3])) if analyst else "없음",

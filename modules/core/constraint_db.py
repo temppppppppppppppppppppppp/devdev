@@ -65,6 +65,8 @@ class ConstraintDB:
         self._genre = genre
         self.arc_states: dict[int, ArcState] = {}
         self._grant_patterns = self._build_grant_patterns()
+        self._degraded = False
+        self._degraded_reason = ""
 
         # [V49.4] Semantic Item Registry 초기화
         self.item_registry = None
@@ -81,6 +83,8 @@ class ConstraintDB:
         try:
             arcs_data = self.context.db.load_anchor("arcs")
             if not arcs_data:
+                self._degraded = False
+                self._degraded_reason = ""
                 return
 
             # arcs_data가 리스트인 경우
@@ -93,9 +97,21 @@ class ConstraintDB:
                 for key, arc in arcs_data.items():
                     if isinstance(arc, dict):
                         self._parse_arc_state(arc)
+            self._degraded = False
+            self._degraded_reason = ""
 
         except Exception as e:
             logging.warning(f" [ConstraintDB] DB 로드 실패: {e}")
+            self._degraded = True
+            self._degraded_reason = str(e)
+
+    @property
+    def degraded(self) -> bool:
+        return bool(self._degraded)
+
+    @property
+    def degraded_reason(self) -> str:
+        return str(self._degraded_reason or "")
 
     def _parse_arc_state(self, arc_data: dict):
         """Arc 데이터에서 상태 추출"""
@@ -587,9 +603,17 @@ class ConstraintDB:
         try:
             arc_no = int(arc_data.get("arc_no", 0))
         except (ValueError, TypeError):
-            return {"valid": True, "violations": [], "warnings": ["arc_no 파싱 실패"]}
+            result = {"valid": True, "violations": [], "warnings": ["arc_no 파싱 실패"]}
+            if self.degraded:
+                result["degraded"] = True
+                result["degraded_reason"] = self.degraded_reason
+                result["warnings"].insert(0, f"degraded: ConstraintDB load failed ({self.degraded_reason})")
+            return result
         violations = []
         warnings = []
+
+        if self.degraded:
+            warnings.append(f"degraded: ConstraintDB load failed ({self.degraded_reason})")
 
         # 획득 금지 아이템 검사
         forbidden = set(self.get_forbidden_items(arc_no))
@@ -627,8 +651,11 @@ class ConstraintDB:
             # "X를 획득" 패턴 검사
             if re.search(rf"{re.escape(f_item)}[을를]?\s*(?:획득|얻|손에)", tactical):
                 violations.append(f"[CRITICAL] tactical_doc에서 '{f_item}' 재획득 시도 감지")
-
-        return {"valid": len(violations) == 0, "violations": violations, "warnings": warnings}
+        result = {"valid": len(violations) == 0, "violations": violations, "warnings": warnings}
+        if self.degraded:
+            result["degraded"] = True
+            result["degraded_reason"] = self.degraded_reason
+        return result
 
 
 def create_constraint_db(project_context, genre: str = "wuxia") -> ConstraintDB:

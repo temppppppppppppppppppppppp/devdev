@@ -29,6 +29,15 @@ class AdvisoryValidator:
         self.client = client
         self.model = model
 
+    @staticmethod
+    def _fit_prompt_text(value: object, max_chars: int, head_ratio: float = 0.55) -> str:
+        from modules.core.constants import smart_truncate
+
+        text = str(value or "")
+        if len(text) <= max_chars:
+            return text
+        return smart_truncate(text, max_chars=max_chars, head_chars=max(1, int(max_chars * head_ratio)))
+
     def validate(self, manuscript: str, validation_context: dict) -> dict:
         """
         ADVISORY 검증 실행
@@ -121,11 +130,12 @@ class AdvisoryValidator:
             return []
 
         try:
+            excerpt = self._fit_prompt_text(manuscript, 1500)
             prompt = f"""
 다음 원고에서 더 강렬하게 표현할 수 있는 부분 2-3곳을 지적하고,
 개선 제안을 하십시오:
 
-{manuscript[:1500]}
+{excerpt}
 
 JSON 형식으로 답하십시오:
 [

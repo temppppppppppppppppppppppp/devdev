@@ -451,13 +451,10 @@ class ValidationOrchestrator:
                         )
                         logging.debug("[ValidationOrchestrator] FailureLearner 기록 실패 (무시): %s", _e)
 
-            # 즉시 REJECT 대신 결과를 누적하여 후속 SCORING + Director 판정에 위임
-            results["_blocking_advisory"] = {
-                "source": "BlockingValidator",
-                "failures": _blk_failures,
-                "feedback": self._generate_blocking_feedback(blocking_result),
-                "severity": "HIGH",
-            }
+        # 즉시 REJECT 대신 결과를 누적하여 후속 SCORING + Director 판정에 위임
+        _blocking_advisory = self._build_blocking_advisory(blocking_result)
+        if _blocking_advisory is not None:
+            results["_blocking_advisory"] = _blocking_advisory
 
         if blocking_result["passed"]:
             logging.info(f"✅ BLOCKING 통과 (0/{blocking_result.get('failure_count', 0)} 실패)")
@@ -883,21 +880,76 @@ class ValidationOrchestrator:
 
         return "\n".join(feedback_parts)
 
+    @staticmethod
+    def _collect_blocking_warning_lines(blocking_result: dict) -> list[str]:
+        warning_lines: list[str] = []
+        seen: set[str] = set()
+
+        for raw_warning in blocking_result.get("warnings", []) or []:
+            warning_text = str(raw_warning or "").strip()
+            if warning_text and warning_text not in seen:
+                warning_lines.append(warning_text)
+                seen.add(warning_text)
+
+        for raw_check in blocking_result.get("degraded_checks", []) or []:
+            check_name = str(raw_check or "").strip()
+            synthesized = f"degraded: {check_name}" if check_name else ""
+            if synthesized and synthesized not in seen:
+                warning_lines.append(synthesized)
+                seen.add(synthesized)
+
+        return warning_lines
+
+    def _build_blocking_advisory(self, blocking_result: dict) -> dict | None:
+        failures = blocking_result.get("failures", []) or []
+        warning_lines = self._collect_blocking_warning_lines(blocking_result)
+        degraded_checks = [
+            str(raw_check).strip()
+            for raw_check in (blocking_result.get("degraded_checks", []) or [])
+            if str(raw_check).strip()
+        ]
+
+        if not failures and not warning_lines and not degraded_checks:
+            return None
+
+        return {
+            "source": "BlockingValidator",
+            "failures": failures,
+            "warnings": warning_lines,
+            "degraded_checks": degraded_checks,
+            "feedback": self._generate_blocking_feedback(blocking_result),
+            "severity": "HIGH" if failures else "MEDIUM",
+        }
+
     def _generate_blocking_feedback(self, blocking_result: dict) -> str:
-        """BLOCKING 실패 시 피드백 생성"""
-        failures = blocking_result.get("failures", [])
+        """BLOCKING advisory 피드백 생성"""
+        failures = blocking_result.get("failures", []) or []
+        warning_lines = self._collect_blocking_warning_lines(blocking_result)
 
-        feedback_parts = ["## BLOCKING 검증 실패\n"]
+        if failures:
+            feedback_parts = ["## BLOCKING 검증 실패\n"]
 
-        for failure in failures:
-            reason = failure.get("reason", "")
-            severity = failure.get("severity", "UNKNOWN")
+            for failure in failures:
+                reason = failure.get("reason", "")
+                severity = failure.get("severity", "UNKNOWN")
+                feedback_parts.append(f"- [{severity}] {reason}")
 
-            feedback_parts.append(f"- [{severity}] {reason}")
+            if warning_lines:
+                feedback_parts.append("\n### 추가 경고")
+                for warning in warning_lines:
+                    feedback_parts.append(f"- {warning}")
 
-        feedback_parts.append("\n위 문제를 수정 후 재제출하십시오.")
+            feedback_parts.append("\n위 문제를 수정 후 재제출하십시오.")
+            return "\n".join(feedback_parts)
 
-        return "\n".join(feedback_parts)
+        if warning_lines:
+            feedback_parts = ["## BLOCKING 검증 경고\n"]
+            for warning in warning_lines:
+                feedback_parts.append(f"- {warning}")
+            feedback_parts.append("\n즉시 REJECT는 아니지만 Director 검토가 필요합니다.")
+            return "\n".join(feedback_parts)
+
+        return ""
 
     def _generate_detailed_feedback(self, results: dict) -> str:
         """상세 피드백 생성"""
@@ -1235,12 +1287,9 @@ class ValidationOrchestrator:
                         )
                         logging.debug("[ValidationOrchestrator] FailureLearner(parallel) 기록 실패 (무시): %s", _e)
 
-            results["_blocking_advisory"] = {
-                "source": "BlockingValidator",
-                "failures": _blk_failures,
-                "feedback": self._generate_blocking_feedback(blocking_result),
-                "severity": "HIGH",
-            }
+        _blocking_advisory = self._build_blocking_advisory(blocking_result)
+        if _blocking_advisory is not None:
+            results["_blocking_advisory"] = _blocking_advisory
 
         logging.info("✅ Stage 1 통과 (PRE-LLM, CONTINUITY, BLOCKING)")
 

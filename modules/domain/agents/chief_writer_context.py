@@ -94,6 +94,20 @@ class ChiefWriterContextBuilder:
     def context(self):
         return self.host.context
 
+    def _fit_compact_text(self, value: object, max_chars: int, head_ratio: float = 0.55) -> str:
+        text = "" if value is None else str(value)
+        if len(text) <= max_chars:
+            return text
+        if max_chars <= 6:
+            return text[:max_chars]
+        sep = "..."
+        budget = max_chars - len(sep)
+        head_chars = max(8, min(budget - 8, int(budget * head_ratio)))
+        tail_chars = budget - head_chars
+        if tail_chars <= 0:
+            return text[:max_chars]
+        return text[:head_chars] + sep + text[-tail_chars:]
+
     def build_common_context(
         self,
         ep_num: int,
@@ -570,7 +584,7 @@ Blueprint가 다음 아이템의 사용을 설계했으나, 주인공이 현재 
         injuries = set()
         for p in injury_patterns:
             for m in re.finditer(p, manuscript):
-                injuries.add(m.group(0)[:20])
+                injuries.add(self._fit_compact_text(m.group(0), 20))
         if injuries:
             digest_parts.append(f"부상 상태: {', '.join(injuries)}")
 
@@ -621,7 +635,7 @@ Blueprint가 다음 아이템의 사용을 설계했으나, 주인공이 현재 
         relation_changes = set()
         for p in relation_patterns:
             for m in re.finditer(p, manuscript):
-                relation_changes.add(m.group(0)[:30])
+                relation_changes.add(self._fit_compact_text(m.group(0), 30))
         if relation_changes:
             digest_parts.append(f"관계 변화: {', '.join(relation_changes)}")
 
@@ -634,7 +648,7 @@ Blueprint가 다음 아이템의 사용을 설계했으나, 주인공이 현재 
         mysteries = set()
         for p in mystery_patterns:
             for m in re.finditer(p, manuscript):
-                mysteries.add(m.group(0)[:30])
+                mysteries.add(self._fit_compact_text(m.group(0), 30))
         if mysteries:
             digest_parts.append(f"미스터리/복선: {', '.join(mysteries)}")
 
@@ -655,6 +669,7 @@ Blueprint가 다음 아이템의 사용을 설계했으나, 주인공이 현재 
             # 마지막 문장 추출
             last_sentences = [s for s in re.split(r"[.!?]\s*", ending.strip()) if s.strip()]
             last_sentence = last_sentences[-1] if last_sentences else ""
+            last_sentence = self._fit_compact_text(last_sentence, 50)
             if last_sentence and len(last_sentence) > 5:
                 digest_parts.append(f'클리프행어: "{last_sentence[:50]}"')
 
@@ -668,7 +683,7 @@ Blueprint가 다음 아이템의 사용을 설계했으나, 주인공이 현재 
         capital_mentions = []
         for p in capital_patterns:
             for m in re.finditer(p, manuscript):
-                capital_mentions.append(m.group(0)[:40])
+                capital_mentions.append(self._fit_compact_text(m.group(0), 40))
         if capital_mentions:
             # 중복 제거 후 최대 3개
             unique_capitals = list(dict.fromkeys(capital_mentions))[:3]
@@ -685,7 +700,7 @@ Blueprint가 다음 아이템의 사용을 설계했으나, 주인공이 현재 
         props_state = []
         for p in prop_patterns:
             for m in re.finditer(p, manuscript):
-                snippet = m.group(0)[:50]
+                snippet = self._fit_compact_text(m.group(0), 50)
                 if snippet not in props_state:
                     props_state.append(snippet)
         if props_state:
@@ -1213,7 +1228,7 @@ Blueprint가 다음 아이템의 사용을 설계했으나, 주인공이 현재 
                 if log_data and isinstance(log_data, dict):
                     summary = log_data.get("summary", "")
                     if summary and len(summary) > 10:
-                        events.append({"ep_num": ep, "description": summary[:200], "consequence": ""})
+                        events.append({"ep_num": ep, "description": self._fit_compact_text(summary, 200), "consequence": ""})
 
                     data = log_data.get("data", {})
                     if isinstance(data, dict):
@@ -1224,8 +1239,8 @@ Blueprint가 다음 아이템의 사용을 설계했으나, 주인공이 현재 
                                     events.append(
                                         {
                                             "ep_num": ep,
-                                            "description": change.get("event", ""),
-                                            "consequence": change.get("consequence", ""),
+                                            "description": self._fit_compact_text(change.get("event", ""), 120),
+                                            "consequence": self._fit_compact_text(change.get("consequence", ""), 120),
                                         }
                                     )
         except (AttributeError, KeyError, TypeError) as e:  # [V64.P4] IMPORTANT: plot event extraction

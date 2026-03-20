@@ -15,7 +15,7 @@ SovereignApp에서 분리된 Stage 2 관련 메서드:
 import asyncio
 import logging
 
-from modules.core.constants import VolumeSettings
+from modules.core.constants import VolumeSettings, smart_truncate
 from modules.core.stage2_contracts import TACTICAL_DOC_DUPLICATE_THRESHOLD
 
 DEFAULT_EP_COUNT = VolumeSettings.EPISODES_PER_ARC
@@ -39,6 +39,13 @@ class Stage2Orchestrator:
         self._validation_pipeline = None  # [B-1-6] lazy init
         self._preflight = None  # [B-1-8] lazy init
         self._finalizer = None  # [B-1-7] lazy init
+
+    def _fit_prompt_text(self, value: object, max_chars: int, head_ratio: float = 0.55) -> str:
+        text = "" if value is None else str(value)
+        if len(text) <= max_chars:
+            return text
+        head_chars = max(200, min(max_chars - 50, int(max_chars * head_ratio)))
+        return smart_truncate(text, max_chars=max_chars, head_chars=head_chars)
 
     @property
     def ctx(self):
@@ -827,8 +834,9 @@ class Stage2Orchestrator:
                         if self.ctx.stage_rejection_history
                         else []
                     )
-                    current_constraints = (
-                        constraint_db.generate_constraint_block(global_arc_no) if constraint_db else "N/A"
+                    current_constraints = self._fit_prompt_text(
+                        constraint_db.generate_constraint_block(global_arc_no) if constraint_db else "N/A",
+                        6000,
                     )
 
                     prev_items = []

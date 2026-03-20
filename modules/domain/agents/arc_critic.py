@@ -14,6 +14,7 @@ import json
 import logging
 
 from modules.core.arc_summary_utils import generate_prev_arc_summary  # [V64.P4]
+from modules.core.constants import smart_truncate
 from modules.core.prompt_loader import SafeDict
 
 from .base_agent import BaseAgent
@@ -135,6 +136,13 @@ class ArcCritic(BaseAgent):
         super().__init__(context, client, model_tier)
         # [V60.37] 스마트 폴백 (BaseAgent에서 자동 설정)
 
+    @staticmethod
+    def _fit_critic_prompt_text(value: str, max_chars: int, head_ratio: float = 0.55) -> str:
+        text = str(value or "")
+        if len(text) <= max_chars:
+            return text
+        return smart_truncate(text, max_chars=max_chars, head_chars=max(1, int(max_chars * head_ratio)))
+
     def critique(self, generated_arc: dict, prev_arcs: list[dict], constraints: str = "") -> tuple[dict, dict]:
         """
         Arc 비평 및 자동 수정
@@ -149,12 +157,13 @@ class ArcCritic(BaseAgent):
         """
         # 이전 Arc 요약 생성
         prev_summary = self._generate_prev_summary(prev_arcs)
+        constraints = self._fit_critic_prompt_text(constraints, 9000) if constraints else "(없음)"
 
         prompt = ARC_CRITIQUE_PROMPT.format_map(
             SafeDict(
-                generated_arc=self._escape_braces(json.dumps(generated_arc, ensure_ascii=False, indent=2)[:18000]),
+                generated_arc=self._escape_braces(self._fit_critic_prompt_text(json.dumps(generated_arc, ensure_ascii=False, indent=2), 18000)),
                 prev_arc_summary=self._escape_braces(prev_summary),
-                constraints=self._escape_braces(constraints[:9000] if constraints else "(없음)"),
+                constraints=self._escape_braces(constraints if constraints else "(없음)"),
             )
         )
 

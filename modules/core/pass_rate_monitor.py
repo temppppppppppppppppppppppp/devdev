@@ -80,6 +80,36 @@ class StageStats:
     method_success_rate: dict[str, float] = field(default_factory=dict)
 
 
+def calculate_episode_rol(
+    *,
+    token_cost_usd: float,
+    duration_ms: int,
+    attempts: int,
+    quality_score: float,
+) -> dict[str, float | int]:
+    """Calculate a transparent per-episode ROL score from live-available inputs only."""
+    normalized_cost = max(0.0, float(token_cost_usd or 0.0))
+    normalized_duration_ms = max(0, int(duration_ms or 0))
+    normalized_attempts = max(0, int(attempts or 0))
+    normalized_quality = max(0.0, float(quality_score or 0.0))
+
+    duration_minutes = normalized_duration_ms / 60000.0
+    retry_penalty = max(0, normalized_attempts - 1)
+    investment_score = normalized_cost + duration_minutes + retry_penalty
+    rol_score = normalized_quality / max(0.01, investment_score)
+
+    return {
+        "quality_score": round(normalized_quality, 2),
+        "token_cost_usd": round(normalized_cost, 6),
+        "duration_ms": normalized_duration_ms,
+        "duration_minutes": round(duration_minutes, 3),
+        "attempts": normalized_attempts,
+        "retry_penalty": retry_penalty,
+        "investment_score": round(investment_score, 6),
+        "rol_score": round(rol_score, 4),
+    }
+
+
 class PassRateMonitor:
     """통과율 모니터링 시스템"""
 
@@ -369,6 +399,250 @@ class PassRateMonitor:
             ),
             "avg_prev_score": avg_prev_score,
         }
+
+    def get_episode_rol_snapshot(
+        self,
+        quality_rows: list[dict[str, Any]] | None,
+        *,
+        stage: int = 4,
+        recent_n: int = 20,
+    ) -> dict[str, Any]:
+        """Build per-episode ROL rows by joining pass monitor attempts with quality scores."""
+        payload: dict[str, Any] = {
+            "available": False,
+            "stage": stage,
+            "recent_n": recent_n,
+            "formula_version": "v1_quality_over_cost_time_retry",
+            "formula": "quality_score / max(0.01, token_cost_usd + duration_minutes + retry_penalty)",
+            "row_count": 0,
+            "latest_ep": None,
+            "avg_rol": 0.0,
+            "best_ep": None,
+            "best_rol": 0.0,
+            "rows": [],
+        }
+        if not isinstance(quality_rows, list) or not quality_rows:
+            return payload
+
+        # Keep the latest quality row per episode so stale duplicates do not override newer verdicts.
+        quality_by_episode: dict[int, dict[str, Any]] = {}
+        for row in quality_rows:
+            if not isinstance(row, dict):
+                continue
+            ep_num = int(row.get("ep_num") or 0)
+            if ep_num <= 0:
+                continue
+            quality_entry = {
+                "score": float(row.get("score") or 0.0),
+                "decision": str(row.get("decision") or "UNKNOWN"),
+            }
+            quality_by_episode.pop(ep_num, None)
+            quality_by_episode[ep_num] = quality_entry
+
+        if not quality_by_episode:
+            return payload
+
+        quality_items = list(quality_by_episode.items())
+        if recent_n > 0:
+            quality_items = quality_items[-recent_n:]
+        quality_by_episode = dict(quality_items)
+        ordered_eps = sorted(quality_by_episode)
+
+        with self._lock:
+            records = [r for r in self.records if r.stage == stage and r.episode > 0]
+        if not records:
+            return payload
+
+        records_by_episode: dict[int, list[AttemptRecord]] = {}
+        for record in records:
+            if record.episode not in quality_by_episode:
+                continue
+            records_by_episode.setdefault(record.episode, []).append(record)
+
+        rows: list[dict[str, Any]] = []
+        for ep_num in ordered_eps:
+            episode_records = records_by_episode.get(ep_num) or []
+            if not episode_records:
+                continue
+
+            max_attempt_num = max(int(getattr(record, "attempt_num", 0) or 0) for record in episode_records)
+            attempts = max(len(episode_records), max_attempt_num)
+            token_cost_usd = sum(max(0.0, float(getattr(record, "token_cost", 0.0) or 0.0)) for record in episode_records)
+            duration_ms = sum(max(0, int(getattr(record, "duration_ms", 0) or 0)) for record in episode_records)
+            quality_entry = quality_by_episode[ep_num]
+            calculation = calculate_episode_rol(
+                token_cost_usd=token_cost_usd,
+                duration_ms=duration_ms,
+                attempts=attempts,
+                quality_score=float(quality_entry.get("score") or 0.0),
+            )
+            rows.append(
+                {
+                    "ep_num": ep_num,
+                    "decision": str(quality_entry.get("decision") or "UNKNOWN"),
+                    "success": any(bool(record.success) for record in episode_records),
+                    **calculation,
+                }
+            )
+
+        if not rows:
+            return payload
+
+        best_row = max(rows, key=lambda row: float(row.get("rol_score") or 0.0))
+        payload.update(
+            {
+                "available": True,
+                "row_count": len(rows),
+                "latest_ep": rows[-1]["ep_num"],
+                "avg_rol": round(
+                    sum(float(row.get("rol_score") or 0.0) for row in rows) / len(rows),
+                    4,
+                ),
+                "best_ep": int(best_row.get("ep_num") or 0),
+                "best_rol": round(float(best_row.get("rol_score") or 0.0), 4),
+                "rows": rows,
+            }
+        )
+        return payload
+
+    def get_arc_cost_correlation(
+        self,
+        cost_rows: list[dict[str, Any]] | None,
+        *,
+        recent_n: int = 10,
+    ) -> dict[str, Any]:
+        """Join arc difficulty with aggregated arc-cost rows and compute correlation."""
+        payload: dict[str, Any] = {
+            "available": False,
+            "recent_n": recent_n,
+            "row_count": 0,
+            "latest_arc_no": None,
+            "costliest_arc_no": None,
+            "hardest_arc_no": None,
+            "correlation_coefficient": None,
+            "correlation_label": "insufficient_data",
+            "rows": [],
+        }
+        if not isinstance(cost_rows, list) or not cost_rows:
+            return payload
+
+        cost_by_arc: dict[int, dict[str, Any]] = {}
+        for row in cost_rows:
+            if not isinstance(row, dict):
+                continue
+            scope_type = str(row.get("scope_type", "") or "").strip()
+            if scope_type and scope_type != "arc":
+                continue
+            arc_no = int(row.get("scope_id") or 0)
+            if arc_no <= 0:
+                continue
+            entry = cost_by_arc.setdefault(
+                arc_no,
+                {
+                    "total_cost_usd": 0.0,
+                    "total_calls": 0,
+                    "total_tokens": 0,
+                    "snapshot_count": 0,
+                },
+            )
+            entry["total_cost_usd"] += max(0.0, float(row.get("total_cost_usd") or 0.0))
+            entry["total_calls"] += max(0, int(row.get("total_calls") or 0))
+            entry["total_tokens"] += max(0, int(row.get("total_tokens") or 0))
+            entry["snapshot_count"] += 1
+
+        if not cost_by_arc:
+            return payload
+
+        arc_numbers = sorted(cost_by_arc)
+        if recent_n > 0:
+            arc_numbers = arc_numbers[-recent_n:]
+
+        with self._lock:
+            stage4_records = [r for r in self.records if r.stage == 4 and r.arc in set(arc_numbers) and r.episode > 0]
+
+        records_by_arc: dict[int, list[AttemptRecord]] = {}
+        for record in stage4_records:
+            records_by_arc.setdefault(record.arc, []).append(record)
+
+        rows: list[dict[str, Any]] = []
+        for arc_no in arc_numbers:
+            arc_records = records_by_arc.get(arc_no) or []
+            if not arc_records:
+                continue
+            episodes: dict[int, list[AttemptRecord]] = {}
+            for record in arc_records:
+                episodes.setdefault(record.episode, []).append(record)
+            episode_count = len(episodes)
+            if episode_count <= 0:
+                continue
+
+            total_attempts = len(arc_records)
+            difficulty = self.get_arc_difficulty(arc_no)
+            cost_entry = cost_by_arc[arc_no]
+            total_cost_usd = float(cost_entry["total_cost_usd"])
+            rows.append(
+                {
+                    "arc_no": arc_no,
+                    "difficulty": str(difficulty.get("difficulty") or "unknown"),
+                    "avg_attempts": round(float(difficulty.get("avg_attempts") or 0.0), 1),
+                    "episode_count": episode_count,
+                    "total_attempts": total_attempts,
+                    "hard_episode_count": len(difficulty.get("hard_episodes") or []),
+                    "semantic_failure_count": len(difficulty.get("semantic_failures") or []),
+                    "total_cost_usd": round(total_cost_usd, 6),
+                    "total_calls": int(cost_entry["total_calls"]),
+                    "total_tokens": int(cost_entry["total_tokens"]),
+                    "snapshot_count": int(cost_entry["snapshot_count"]),
+                    "cost_per_episode_usd": round(total_cost_usd / max(1, episode_count), 6),
+                    "cost_per_attempt_usd": round(total_cost_usd / max(1, total_attempts), 6),
+                }
+            )
+
+        if not rows:
+            return payload
+
+        xs = [float(row["avg_attempts"]) for row in rows]
+        ys = [float(row["total_cost_usd"]) for row in rows]
+        correlation_coefficient = None
+        if len(rows) >= 2:
+            mean_x = sum(xs) / len(xs)
+            mean_y = sum(ys) / len(ys)
+            numerator = sum((x - mean_x) * (y - mean_y) for x, y in zip(xs, ys, strict=False))
+            denominator_x = sum((x - mean_x) ** 2 for x in xs)
+            denominator_y = sum((y - mean_y) ** 2 for y in ys)
+            if denominator_x > 0 and denominator_y > 0:
+                correlation_coefficient = numerator / ((denominator_x * denominator_y) ** 0.5)
+
+        if correlation_coefficient is None:
+            correlation_label = "insufficient_data"
+        elif correlation_coefficient >= 0.75:
+            correlation_label = "strong_positive"
+        elif correlation_coefficient >= 0.25:
+            correlation_label = "positive"
+        elif correlation_coefficient <= -0.75:
+            correlation_label = "strong_negative"
+        elif correlation_coefficient <= -0.25:
+            correlation_label = "negative"
+        else:
+            correlation_label = "flat"
+
+        costliest_row = max(rows, key=lambda row: float(row.get("total_cost_usd") or 0.0))
+        hardest_row = max(rows, key=lambda row: float(row.get("avg_attempts") or 0.0))
+        payload.update(
+            {
+                "available": True,
+                "row_count": len(rows),
+                "latest_arc_no": rows[-1]["arc_no"],
+                "costliest_arc_no": int(costliest_row.get("arc_no") or 0),
+                "hardest_arc_no": int(hardest_row.get("arc_no") or 0),
+                "correlation_coefficient": round(correlation_coefficient, 4)
+                if correlation_coefficient is not None
+                else None,
+                "correlation_label": correlation_label,
+                "rows": rows,
+            }
+        )
+        return payload
 
     def get_summary(self, recent_n: int = 100) -> str:
         """

@@ -54,11 +54,15 @@ ENSEMBLE_ARC_PROMPT: |
   ### [현재 블록 DNA]
   {curr_block}
 
+  {pacing_signal_guide}
+
   ### [블록 경계 규칙 - 절대 준수]
   - 현재 Arc는 반드시 [현재 블록 DNA]에 포함된 사건만 다뤄라.
   - 다른 블록의 핵심 사건(event_villain/solution/reward)을 선취하거나 조기 소화하지 마라.
   - 현재 블록에 없는 대규모 사건(대규모 자금 유입, 핵심 NPC 합류, 조직 붕괴)을 독자 창작하지 마라.
   - 화수가 부족하면 현재 블록 사건을 더 세분화/심화하라. 다른 블록 사건으로 채우지 마라.
+  - item, reward, solution 같은 실물 자원이 적으면 화수를 억지로 늘리지 말고 같은 화수 안에서 더 급하고 촘촘하게 전개하라.
+  - 감정 설명만 반복하거나 준비 동작만 늘어놓지 말고, 각 화마다 최소 1개의 의미 있는 변화(상태/압박/관계/회수)를 만들어라.
 
   - 블록 시작 시 이전 블록 reward를 context의 출발점으로 사용하라. "상황 재설명"은 최소화(3문장 이내)하고, 새로운 사건으로 즉시 전환하라.
 
@@ -84,9 +88,14 @@ ENSEMBLE_ARC_PROMPT: |
   ### [Output JSON Schema]
   {{
       "arc_no": {arc_no},
-      "ep_count": "3~6 중 결정 (4화 권장, 5화 이상은 사건 밀도 충분한 경우만)",
+      "ep_count": "2~6 중 최종 결정 (compressed는 2~3화, standard는 4~5화, expanded는 6화. Python suggested_ep_count는 참고만 하고 직접 결정)",
       "ep_start": {ep_start},
-      "ep_end": {ep_end},
+      "ep_end": "ep_start + ep_count - 1로 계산",
+      "pacing_decision": {{
+          "pace_mode": "compressed(2~3화) | standard(4~5화) | expanded(6화)",
+          "ep_count_reasoning": "왜 이 화수를 골랐는지 짧게 설명",
+          "density_focus": "저자원 블록에서 무엇을 압축하고 무엇을 촘촘하게 전개할지 설명"
+      }},
       "title": "Arc 제목",
       "tactical_doc": "[V60.40] 각 화마다 시작/종료 상태 체크포인트 필수. 화당 500자 이상. '제 N화:' 형식으로 화별 명확 구분",
       "beat_sequence": ["제 N화: 구체적 사건 → 행동 → 반응 (제목이 아닌 서사 내용 기술)", ...],

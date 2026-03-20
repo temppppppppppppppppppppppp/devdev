@@ -39,6 +39,30 @@ def test_calculate_adaptive_threshold_is_clamped():
     assert 60 <= threshold <= 90
 
 
+def test_episode_type_adjustment_treats_opening_as_higher_bar():
+    orch = ValidationOrchestrator(config={}, client=None, genre="wuxia", context={})
+
+    adjustment = orch._get_episode_type_adjustment_v59(1)
+
+    assert adjustment == 5
+
+
+def test_episode_type_adjustment_combines_strongest_positive_and_negative_only():
+    orch = ValidationOrchestrator(config={}, client=None, genre="wuxia", context={})
+
+    adjustment = orch._get_episode_type_adjustment_v59(5)
+
+    assert adjustment == 2
+
+
+def test_episode_type_adjustment_uses_strongest_positive_for_volume_finale():
+    orch = ValidationOrchestrator(config={}, client=None, genre="wuxia", context={})
+
+    adjustment = orch._get_episode_type_adjustment_v59(50)
+
+    assert adjustment == 7
+
+
 def test_validate_short_circuit_on_blocking_failure():
     """[TF-36] BLOCKING 실패 시 즉시 REJECT 대신 advisory 전달 + 감점."""
     orch = ValidationOrchestrator(config={"use_pre_llm": False}, client=None, genre="wuxia", context={})
@@ -63,3 +87,31 @@ def test_validate_parallel_sync_falls_back_to_sync_when_parallel_fails():
     result = orch.validate_parallel_sync_v59(1, "원고", _minimal_context())
     assert result["final_decision"] == "PASS"
     orch.validate.assert_called_once()
+
+
+def test_validate_surfaces_blocking_degraded_advisory_without_failure():
+    orch = ValidationOrchestrator(config={"use_pre_llm": False}, client=None, genre="wuxia", context={})
+    orch.continuity = MagicMock()
+    orch.consistency = MagicMock()
+    orch.blocking = MagicMock()
+    orch.continuity.validate.return_value = {"passed": True, "violations": [], "warning_count": 0}
+    orch.consistency.validate.return_value = {
+        "passed": True,
+        "unjustifiable_violations": [],
+        "justifiable_violations": [],
+        "score_penalty": 0,
+        "feedback": "",
+    }
+    orch.blocking.validate.return_value = {
+        "passed": True,
+        "failures": [],
+        "warnings": ["degraded: relationship_consistency"],
+        "degraded_checks": ["relationship_consistency"],
+    }
+
+    result = orch.validate(1, "테스트 원고", _minimal_context())
+
+    assert "_blocking_advisory" in result
+    assert result["_blocking_advisory"]["severity"] == "MEDIUM"
+    assert result["_blocking_advisory"]["warnings"] == ["degraded: relationship_consistency"]
+    assert result["_blocking_advisory"]["degraded_checks"] == ["relationship_consistency"]
