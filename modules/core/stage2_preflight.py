@@ -814,6 +814,71 @@ class Stage2PreflightAnalysis:
             "st_snapshot": _st_snapshot,
         }
 
+    def _apply_retry_focus_mode(
+        self,
+        *,
+        attempt: int,
+        current_feedback: str,
+        constraint_block: str,
+        cached_preflight_injection: str,
+        all_refined_arcs: list,
+        protagonist_name: str,
+        enhanced_context: str,
+    ) -> str:
+        is_retry = attempt > 0 and current_feedback
+        if not is_retry:
+            return enhanced_context
+
+        _preserved_constraints = ""
+        if constraint_block:
+            _preserved_constraints += constraint_block
+        if cached_preflight_injection:
+            _preserved_constraints += (
+                ("\n\n" + cached_preflight_injection) if _preserved_constraints else cached_preflight_injection
+            )
+
+        if callable(getattr(self.ctx, "build_minimal_arc_context", None)):
+            minimal_prev_context = self.ctx.build_minimal_arc_context(
+                all_refined_arcs, protagonist_name or "주인공"
+            )
+        else:
+            minimal_prev_context = smart_truncate(
+                enhanced_context, max_chars=15000, head_chars=8250
+            )  # [Phase3-B] retry fallback keeps recent tail
+
+        if _preserved_constraints:
+            enhanced_context = f"{current_feedback}\n\n{_preserved_constraints}\n\n{minimal_prev_context}"
+        else:
+            enhanced_context = f"{current_feedback}\n\n{minimal_prev_context}"
+        context_size = len(enhanced_context)
+        self.ctx.ui.log(f"      📢 [V60.21] Focus Mode 활성화 - 컨텍스트 {context_size:,}자 (제약 보존)")
+        return enhanced_context
+
+    @staticmethod
+    def _build_patch_feedback(previous_attempt: dict) -> str:
+        patch_feedback = previous_attempt.get("rejection_reason", "")
+        selection_reason = previous_attempt.get("selection_reason", "")
+        score_breakdown = previous_attempt.get("score_breakdown", {})
+        validation_warnings = previous_attempt.get("validation_warnings", [])
+
+        if selection_reason:
+            patch_feedback += f"\n[선택/거절 사유]\n{selection_reason}"
+        if isinstance(score_breakdown, dict) and score_breakdown:
+            score_summary = ", ".join(
+                f"{k}={v}" for k, v in score_breakdown.items() if isinstance(v, int | float)
+            )
+            if score_summary:
+                patch_feedback += f"\n[점수 분해]\n{score_summary}"
+        if isinstance(validation_warnings, list) and validation_warnings:
+            patch_feedback += "\n[검증 경고]\n" + "\n".join(
+                f"- {warning}" for warning in validation_warnings[:10] if isinstance(warning, str)
+            )
+
+        fix_scope_reasoning = previous_attempt.get("fix_scope_reasoning", "")
+        if fix_scope_reasoning:
+            patch_feedback += f"\n[수정 범위 근거]\n{fix_scope_reasoning}"
+        return patch_feedback
+
     def _preflight_arc_analysis(
         self,
         *,
@@ -930,9 +995,6 @@ class Stage2PreflightAnalysis:
                 if callable(getattr(self.ctx, "audit_event", None)):
                     self.ctx.audit_event("v60_25_optimizer_error", str(opt_err)[:100])
 
-        # [V60.21] Focus Mode
-        is_retry = attempt > 0 and current_feedback
-
         # [V51] Analyst 지능 향상 주입
         v51_analyst_injection = ""
         if V50_MODULES_AVAILABLE:  # [TF-39] P1-7: retry에도 거버넌스 유지
@@ -967,30 +1029,15 @@ class Stage2PreflightAnalysis:
                 self.ctx.ui.log(f"      ⚠️ [V51] Analyst 향상 실패: {v51_err}")
 
         # [V60.21] Focus Mode: 재시도 시 컨텍스트 대폭 축소
-        if is_retry:
-            # [TF-39] P0-1: retry 시에도 제약 블록 보존
-            _preserved_constraints = ""
-            if constraint_block:
-                _preserved_constraints += constraint_block
-            if cached_preflight_injection:
-                _preserved_constraints += (
-                    ("\n\n" + cached_preflight_injection) if _preserved_constraints else cached_preflight_injection
-                )
-
-            if callable(getattr(self.ctx, "build_minimal_arc_context", None)):
-                minimal_prev_context = self.ctx.build_minimal_arc_context(
-                    all_refined_arcs, protagonist_name or "주인공"
-                )
-            else:
-                minimal_prev_context = smart_truncate(
-                    enhanced_context, max_chars=15000, head_chars=8250
-                )  # [Phase3-B] retry fallback keeps recent tail
-            if _preserved_constraints:
-                enhanced_context = f"{current_feedback}\n\n{_preserved_constraints}\n\n{minimal_prev_context}"
-            else:
-                enhanced_context = f"{current_feedback}\n\n{minimal_prev_context}"
-            context_size = len(enhanced_context)
-            self.ctx.ui.log(f"      📢 [V60.21] Focus Mode 활성화 - 컨텍스트 {context_size:,}자 (제약 보존)")
+        enhanced_context = self._apply_retry_focus_mode(
+            attempt=attempt,
+            current_feedback=current_feedback,
+            constraint_block=constraint_block,
+            cached_preflight_injection=cached_preflight_injection,
+            all_refined_arcs=all_refined_arcs,
+            protagonist_name=protagonist_name,
+            enhanced_context=enhanced_context,
+        )
 
         # [V60.9] Stage 3→2 역방향 피드백 주입
         if self.ctx.stage_rejection_history:
@@ -1367,25 +1414,7 @@ class Stage2PreflightAnalysis:
                     if not four_phase_arc and _use_patch:
                         logging.info(f"[Patch Mode] Arc 패치 모드 진입 (score={_prev_score}, attempt={attempt})")
                         self.ctx.ui.log(f"   🔧 [Patch Mode] Arc 패치: score={_prev_score}, 원본 보존 수정")
-                        _patch_feedback = previous_attempt.get("rejection_reason", "")
-                        _sel_reason = previous_attempt.get("selection_reason", "")
-                        _score_breakdown = previous_attempt.get("score_breakdown", {})
-                        _val_warnings = previous_attempt.get("validation_warnings", [])
-                        if _sel_reason:
-                            _patch_feedback += f"\n[선택/거절 사유]\n{_sel_reason}"
-                        if isinstance(_score_breakdown, dict) and _score_breakdown:
-                            _sb = ", ".join(
-                                f"{k}={v}" for k, v in _score_breakdown.items() if isinstance(v, int | float)
-                            )
-                            if _sb:
-                                _patch_feedback += f"\n[점수 분해]\n{_sb}"
-                        if isinstance(_val_warnings, list) and _val_warnings:
-                            _patch_feedback += "\n[검증 경고]\n" + "\n".join(
-                                f"- {w}" for w in _val_warnings[:10] if isinstance(w, str)
-                            )
-                        _fsr = previous_attempt.get("fix_scope_reasoning", "")
-                        if _fsr:
-                            _patch_feedback += f"\n[수정 범위 근거]\n{_fsr}"
+                        _patch_feedback = self._build_patch_feedback(previous_attempt)
                         four_phase_arc, pipeline_result = self.ctx.agents["four_phase"].patch_arc_with_feedback(
                             original_arc=previous_attempt["best_arc"],
                             director_feedback=_patch_feedback,
