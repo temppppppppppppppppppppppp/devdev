@@ -601,6 +601,57 @@ class TestBuildMandatoryContext:
         assert result["mandatory_context"] == ""
         assert result["reference_anchor_prompt"] == ""
 
+    def test_load_reference_anchor_prompt_returns_generated_prompt(self):
+        cb = Stage4ContextBuilder(_make_ctx())
+        anchor_sys = MagicMock()
+        anchor_sys.get_relevant_anchors.return_value = [{"type": "item", "name": "청월검"}]
+        anchor_sys.get_critical_anchors.return_value = []
+        anchor_sys.generate_reference_prompt.return_value = "anchor prompt"
+
+        result = cb._load_reference_anchor_prompt(
+            anchor_sys=anchor_sys,
+            next_ep=5,
+            arc_tactical="전술",
+        )
+
+        assert result == "anchor prompt"
+        anchor_sys.generate_reference_prompt.assert_called_once()
+
+    def test_load_reference_anchor_prompt_logs_and_returns_empty_on_error(self):
+        ctx = _make_ctx()
+        cb = Stage4ContextBuilder(ctx)
+        anchor_sys = MagicMock()
+        anchor_sys.get_relevant_anchors.side_effect = RuntimeError("anchor boom")
+
+        result = cb._load_reference_anchor_prompt(
+            anchor_sys=anchor_sys,
+            next_ep=5,
+            arc_tactical="전술",
+        )
+
+        assert result == ""
+        ctx.ui.log.assert_called_once()
+
+    @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")
+    def test_load_base_mandatory_context_returns_writer_context_and_records_hud(self, _mock_build):
+        cb = Stage4ContextBuilder(_make_ctx())
+        cb._record_hud_anomaly_observation = MagicMock()
+
+        result = cb._load_base_mandatory_context(next_ep=5)
+
+        assert result == "writer mandatory"
+        cb._record_hud_anomaly_observation.assert_called_once()
+
+    @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", side_effect=RuntimeError("ctx boom"))
+    def test_load_base_mandatory_context_logs_and_returns_warning_on_error(self, _mock_build):
+        ctx = _make_ctx()
+        cb = Stage4ContextBuilder(ctx)
+
+        result = cb._load_base_mandatory_context(next_ep=5)
+
+        assert result.startswith("[경고] 필수 컨텍스트 로딩 실패")
+        ctx.ui.log.assert_called_once()
+
     @patch("modules.core.stage4_context_builder._build_justification", return_value="just")
     @patch("modules.core.stage4_context_builder._build_anti_trope", return_value="anti")
     @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")

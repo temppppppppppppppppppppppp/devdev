@@ -53,6 +53,14 @@ class Stage4RetrievalCoveragePayload(TypedDict):
 class Stage4AuxiliarySectionsPayload(TypedDict):
     tier1_parts: list[str]
     tier2_parts: list[str]
+
+
+class Stage4PromptInjectionsPayload(TypedDict):
+    anti_trope_prompt: str
+    justification_prompt: str
+    reflexion_prompt: str
+
+
 from modules.validation.threshold_helper import _threshold
 
 if TYPE_CHECKING:
@@ -2509,20 +2517,7 @@ class Stage4ContextBuilder:
             "tier2_parts": tier2_parts,
         }
 
-    def prepare_episode_context(self, next_ep: int, arc_data: dict, chief_writer) -> dict:
-        """에피소드별 컨텍스트 데이터 수집 (Arc 메타 + 이전 원고 + HUD + 연결고리)."""
-        arc_pos = next_ep - arc_data.get("ep_start", next_ep) + 1
-        total_ep_in_arc = arc_data.get("ep_count", Stage2Limits.DEFAULT_EP_COUNT)
-        arc_tactical = arc_data.get("tactical_doc", "")
-        if isinstance(arc_tactical, dict):  # [V70] dict 타입 방어
-            arc_tactical = json.dumps(arc_tactical, ensure_ascii=False)
-        arc_tactical = str(arc_tactical) if arc_tactical else ""
-
-        # 직전 화 원고
-        prev_ms_data = self.ctx.current_project.db.get_manuscript(next_ep - 1)
-        prev_text = (prev_ms_data.get("content") or "") if prev_ms_data else ""  # [V70] NULL content 방어
-        prev_ending = prev_text[-2500:] if prev_text else ""  # [1M-CTX: 500→2500] CW와 동일 수준
-
+    def _build_prev_manuscripts_text(self, next_ep: int) -> str:
         _db = self.ctx.current_project.db
         _prev_manuscripts_parts: list[str] = []
 
@@ -2571,7 +2566,7 @@ class Stage4ContextBuilder:
                         _ep_no = int(_row["ep_num"] or 0)
                         _summary = str(_row["summary"] or "")
                     if _summary:
-                        _tier2_parts.append(f"[EP {_ep_no} summary] {_summary[:5000]}")  # [Phase3-A: 800→5000]
+                        _tier2_parts.append(f"[EP {_ep_no} summary] {_summary[:5000]}")
             except Exception as e:
                 logging.warning(f"[SilentPass:Tier4-12] tier2 summary load failed: {e!s:.100}")
 
@@ -2618,7 +2613,7 @@ class Stage4ContextBuilder:
                     else:
                         _sum_text = str(_arc_sum)
                     if _sum_text:
-                        _tier3_parts.append(f"[Arc {_arc_no} summary] {_sum_text[:8000]}")  # [Phase3-A: 1.5K→8K]
+                        _tier3_parts.append(f"[Arc {_arc_no} summary] {_sum_text[:8000]}")
                 except Exception:
                     continue
 
@@ -2635,6 +2630,24 @@ class Stage4ContextBuilder:
                 len(_prev_manuscripts_parts),
                 len(_prev_manuscripts_text),
             )
+        return _prev_manuscripts_text
+
+    def prepare_episode_context(self, next_ep: int, arc_data: dict, chief_writer) -> dict:
+        """에피소드별 컨텍스트 데이터 수집 (Arc 메타 + 이전 원고 + HUD + 연결고리)."""
+        arc_pos = next_ep - arc_data.get("ep_start", next_ep) + 1
+        total_ep_in_arc = arc_data.get("ep_count", Stage2Limits.DEFAULT_EP_COUNT)
+        arc_tactical = arc_data.get("tactical_doc", "")
+        if isinstance(arc_tactical, dict):  # [V70] dict 타입 방어
+            arc_tactical = json.dumps(arc_tactical, ensure_ascii=False)
+        arc_tactical = str(arc_tactical) if arc_tactical else ""
+
+        # 직전 화 원고
+        prev_ms_data = self.ctx.current_project.db.get_manuscript(next_ep - 1)
+        prev_text = (prev_ms_data.get("content") or "") if prev_ms_data else ""  # [V70] NULL content 방어
+        prev_ending = prev_text[-2500:] if prev_text else ""  # [1M-CTX: 500→2500] CW와 동일 수준
+
+        _db = self.ctx.current_project.db
+        _prev_manuscripts_text = self._build_prev_manuscripts_text(next_ep)
 
         # [LongTerm] 60화 이상 시 장기 설정 앵커 주입 (세계관 법칙 + NPC origin)
         if next_ep >= 60:
@@ -2893,34 +2906,13 @@ class Stage4ContextBuilder:
                 "reflexion_prompt": reflexion_prompt,
             }
 
-        try:
-            relevant_anchors = anchor_sys.get_relevant_anchors(
-                current_ep_num=next_ep,
-                arc_context=arc_tactical or "",
-                n_anchors=5,
-            )
-            critical_anchors = anchor_sys.get_critical_anchors(
-                current_ep_num=next_ep,
-                anchor_types=["item", "injury", "power", "location"],
-            )
-            if relevant_anchors or critical_anchors:
-                reference_anchor_prompt = anchor_sys.generate_reference_prompt(
-                    relevant_anchors=relevant_anchors,
-                    critical_anchors=critical_anchors,
-                )
-        except Exception as e:
-            self.ctx.ui.log(f"   ⚠️ ReferenceAnchor 로드 실패 (비치명): {e}")
+        reference_anchor_prompt = self._load_reference_anchor_prompt(
+            anchor_sys=anchor_sys,
+            next_ep=next_ep,
+            arc_tactical=arc_tactical,
+        )
 
-        try:
-            _db = getattr(self.ctx.current_project, "db", None)
-            _bible = getattr(self.ctx.current_project, "master_bible", {})
-            mandatory_context = _build_writer_mandatory_context(_db, _bible, next_ep)
-            self._record_hud_anomaly_observation(ep_num=next_ep, db=_db)
-        except Exception as e:
-            self.ctx.ui.log(f"   ⚠️ Mandatory Context 실패 (비치명): {e}")
-            mandatory_context = (
-                "[경고] 필수 컨텍스트 로딩 실패 - 이전 에피소드 상태를 우선 참조하여 연속성을 유지하세요."
-            )
+        mandatory_context = self._load_base_mandatory_context(next_ep=next_ep)
 
         cp_entities = {"npcs": [], "items": [], "plots": [], "locations": [], "_full_text": ""}
         if blueprint:
@@ -2991,6 +2983,74 @@ class Stage4ContextBuilder:
         _coverage_warnings = _context_result["coverage_warnings"]
         _source_counts = _context_result["source_counts"]
         _tier2_parts = _context_result["tier2_parts"]
+        _prompt_injections = self._build_mandatory_prompt_injections(
+            next_ep=next_ep,
+            hud_report=hud_report,
+            genre_name=genre_name,
+            blueprint=blueprint,
+            prev_text=prev_text,
+        )
+        anti_trope_prompt = _prompt_injections["anti_trope_prompt"]
+        justification_prompt = _prompt_injections["justification_prompt"]
+        reflexion_prompt = _prompt_injections["reflexion_prompt"]
+
+        return {
+            "reference_anchor_prompt": reference_anchor_prompt,
+            "mandatory_context": mandatory_context,
+            "anti_trope_prompt": anti_trope_prompt,
+            "justification_prompt": justification_prompt,
+            "reflexion_prompt": reflexion_prompt,
+        }
+
+    def _load_reference_anchor_prompt(
+        self,
+        *,
+        anchor_sys,
+        next_ep: int,
+        arc_tactical: str,
+    ) -> str:
+        try:
+            relevant_anchors = anchor_sys.get_relevant_anchors(
+                current_ep_num=next_ep,
+                arc_context=arc_tactical or "",
+                n_anchors=5,
+            )
+            critical_anchors = anchor_sys.get_critical_anchors(
+                current_ep_num=next_ep,
+                anchor_types=["item", "injury", "power", "location"],
+            )
+            if relevant_anchors or critical_anchors:
+                return anchor_sys.generate_reference_prompt(
+                    relevant_anchors=relevant_anchors,
+                    critical_anchors=critical_anchors,
+                )
+        except Exception as e:
+            self.ctx.ui.log(f"   ⚠️ ReferenceAnchor 로드 실패 (비치명): {e}")
+        return ""
+
+    def _load_base_mandatory_context(self, *, next_ep: int) -> str:
+        try:
+            db = getattr(self.ctx.current_project, "db", None)
+            bible = getattr(self.ctx.current_project, "master_bible", {})
+            mandatory_context = _build_writer_mandatory_context(db, bible, next_ep)
+            self._record_hud_anomaly_observation(ep_num=next_ep, db=db)
+            return mandatory_context
+        except Exception as e:
+            self.ctx.ui.log(f"   ⚠️ Mandatory Context 실패 (비치명): {e}")
+            return "[경고] 필수 컨텍스트 로딩 실패 - 이전 에피소드 상태를 우선 참조하여 연속성을 유지하세요."
+
+    def _build_mandatory_prompt_injections(
+        self,
+        *,
+        next_ep: int,
+        hud_report: str,
+        genre_name: str,
+        blueprint: dict | None,
+        prev_text: str,
+    ) -> Stage4PromptInjectionsPayload:
+        anti_trope_prompt = ""
+        justification_prompt = ""
+        reflexion_prompt = ""
 
         try:
             anti_trope_prompt = _build_anti_trope(genre_name)
@@ -3035,8 +3095,6 @@ class Stage4ContextBuilder:
             self.ctx.ui.log(f"   ⚠️ Reflexion 실패 (비치명): {e}")
 
         return {
-            "reference_anchor_prompt": reference_anchor_prompt,
-            "mandatory_context": mandatory_context,
             "anti_trope_prompt": anti_trope_prompt,
             "justification_prompt": justification_prompt,
             "reflexion_prompt": reflexion_prompt,

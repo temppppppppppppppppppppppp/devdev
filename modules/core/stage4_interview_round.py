@@ -7,6 +7,7 @@ import inspect
 import json
 import logging
 import time
+from dataclasses import dataclass
 from pathlib import Path
 
 from modules.core.artifact_logging import (
@@ -21,6 +22,29 @@ from modules.core.logging_keys import build_attempt_key, resolve_logging_session
 from modules.core.soft_failure import resolve_project_log_dir
 
 _DB_ADVISORY_NOTICE = "(Python 자동 감지 — 오탐 가능, 참고용)"
+
+
+@dataclass
+class _GenerationPhaseResult:
+    candidates: list[dict]
+    director_feedback: str
+    is_patch: bool
+    is_patch_fallback: bool
+    prev_score: int
+    prev_manuscript: str
+    tot_used: bool
+    mad_used: bool
+    asp_manuscript: str | None
+    empty_result: object | None = None
+
+
+@dataclass
+class _DirectorInputPackResult:
+    mandatory_context: str
+    decision_core: str
+    candidate_evidence: str
+    reference_appendix: str
+    advisory_summary: dict[str, int]
 
 
 def _build_stage4_prompt_version() -> str | None:
@@ -1861,6 +1885,491 @@ class Stage4InterviewRound:
         }
         return mandatory_context, _common_writer_kwargs
 
+    def _build_empty_candidates_result(
+        self,
+        *,
+        next_ep: int,
+        round_num: int,
+        arc_num: int,
+        model_tier,
+        director_feedback: str,
+        previous_attempt: dict,
+        is_patch: bool,
+        prev_score: int,
+        tot_used: bool,
+        mad_used: bool,
+    ):
+        from modules.core.stage4_types import _InterviewRoundResult
+
+        logging.error(
+            f"[Stage4] 제{next_ep}화 {round_num + 1}차 면담: candidates 빈 배열 — 모든 후보 생성 실패"
+        )
+        self.ctx.ui.log(
+            f"   🚨 [V66.3] 모든 후보 생성 실패 — {'최종 실패 처리' if round_num >= 4 else '다음 면담으로 진행'}"
+        )
+        director_feedback += "\n[시스템] 모든 후보 생성 실패. 재시도 필요."
+        previous_attempt = {
+            "strategy": "none",
+            "rejection_reason": "모든 후보 생성 실패",
+            "action_items": [],
+            "score": 0,
+            "_tot_used": tot_used,
+            "_mad_used": mad_used,
+            "prior_attempts": self._inherit_attempt_history(previous_attempt),
+        }
+        self._record_s4_attempt(
+            episode=next_ep,
+            round_num=round_num,
+            success=False,
+            score=0,
+            is_patch=is_patch,
+            prev_score=prev_score,
+            patch_fallback=False,
+            arc=arc_num,
+            verdict="EMPTY",
+            reject_reason="empty_candidates",
+            model=model_tier,
+        )
+        if getattr(self.ctx, "quality_dashboard", None):
+            try:
+                self.ctx.quality_dashboard.record_validation(
+                    ep_num=next_ep,
+                    result={
+                        "decision": "REJECT",
+                        "score": 0,
+                        "violations": [{"type": "empty_candidates"}],
+                        "warnings": [],
+                    },
+                    stage=4,
+                )
+            except Exception as _qd_err:
+                logging.debug(f"[SILENT] quality_dashboard EMPTY: {_qd_err}")
+        return _InterviewRoundResult(
+            verdict="EMPTY",
+            director_feedback=director_feedback,
+            previous_attempt=previous_attempt,
+        )
+
+    def _run_generation_phase(
+        self,
+        *,
+        round_num: int,
+        director_feedback: str,
+        previous_attempt: dict,
+        round_ctx,
+        blueprint,
+        style_guide: str,
+        next_ep: int,
+        common_writer_kwargs: dict,
+    ) -> _GenerationPhaseResult:
+        try:
+            self.ctx.perf_timer.start(f"s4_ep{next_ep}_generate_r{round_num}")
+        except Exception as e:
+            logging.debug(f"[PerfTimer] start generate: {e}")
+
+        is_patch = False
+        is_patch_fallback = False
+        prev_score = 0
+        prev_manuscript = previous_attempt.get("best_manuscript", "") if previous_attempt else ""
+        tot_used = bool(previous_attempt.get("_tot_used", False)) if previous_attempt else False
+        mad_used = bool(previous_attempt.get("_mad_used", False)) if previous_attempt else False
+
+        weighted_injection = ""
+        prompt_weighter = self.ctx.get_module("prompt_weighter")
+        if prompt_weighter:
+            try:
+                weighted_injection = prompt_weighter.get_weighted_prompt("writer", 4, top_n=3)
+            except Exception as e:
+                logging.warning(f"[SilentPass:PromptWeighter] {e!s:.100}")
+        if weighted_injection:
+            director_feedback = (
+                weighted_injection + "\n\n" + director_feedback if director_feedback else weighted_injection
+            )
+
+        writer_kwargs = dict(common_writer_kwargs)
+        if director_feedback and director_feedback.strip():
+            writer_kwargs["director_feedback"] = director_feedback
+
+        candidates, is_patch, is_patch_fallback, prev_score, asp_manuscript = self._generate_candidates(
+            round_num=round_num,
+            chief_writer=round_ctx.chief_writer,
+            director_feedback=director_feedback,
+            previous_attempt=previous_attempt,
+            prev_manuscript=prev_manuscript,
+            style_guide=style_guide,
+            blueprint=blueprint,
+            common_writer_kwargs=writer_kwargs,
+        )
+
+        try:
+            self.ctx.perf_timer.stop(f"s4_ep{next_ep}_generate_r{round_num}")
+        except Exception as e:
+            logging.debug(f"[PerfTimer] stop generate: {e}")
+
+        candidates = [candidate for candidate in candidates if candidate.get("manuscript", "").strip()]
+        if not candidates:
+            empty_result = self._build_empty_candidates_result(
+                next_ep=next_ep,
+                round_num=round_num,
+                arc_num=round_ctx.arc_data.get("arc_no", 0),
+                model_tier=getattr(round_ctx.chief_writer, "model_tier", None),
+                director_feedback=director_feedback,
+                previous_attempt=previous_attempt,
+                is_patch=is_patch,
+                prev_score=prev_score,
+                tot_used=tot_used,
+                mad_used=mad_used,
+            )
+            return _GenerationPhaseResult(
+                candidates=[],
+                director_feedback=director_feedback,
+                is_patch=is_patch,
+                is_patch_fallback=is_patch_fallback,
+                prev_score=prev_score,
+                prev_manuscript=prev_manuscript,
+                tot_used=tot_used,
+                mad_used=mad_used,
+                asp_manuscript=asp_manuscript,
+                empty_result=empty_result,
+            )
+
+        return _GenerationPhaseResult(
+            candidates=candidates,
+            director_feedback=director_feedback,
+            is_patch=is_patch,
+            is_patch_fallback=is_patch_fallback,
+            prev_score=prev_score,
+            prev_manuscript=prev_manuscript,
+            tot_used=tot_used,
+            mad_used=mad_used,
+            asp_manuscript=asp_manuscript,
+        )
+
+    def _build_director_input_pack(
+        self,
+        *,
+        candidates: list[dict],
+        validation_results: list[dict],
+        round_ctx,
+        next_ep: int,
+        round_num: int,
+        genre_name: str,
+        mandatory_context,
+        writing_directive,
+        director_feedback: str,
+        preflight_advisory: str,
+    ) -> _DirectorInputPackResult:
+        arc_num = round_ctx.arc_data.get("arc_no", 0)
+        mandatory_text = mandatory_context if isinstance(mandatory_context, str) else str(mandatory_context or "")
+        decision_core_parts = [mandatory_text] if mandatory_text else []
+        candidate_evidence_parts: list[str] = []
+        reference_appendix_parts: list[str] = []
+        shared_failure_warnings = []
+
+        for validation_result in validation_results:
+            shared_failure_warnings = validation_result.get("shared_failure_warnings", [])
+            if shared_failure_warnings:
+                break
+        if shared_failure_warnings:
+            decision_core_parts.insert(0, "\n".join(shared_failure_warnings))
+
+        s3_meta = round_ctx.blueprint.get("_stage3_meta", {}) if isinstance(round_ctx.blueprint, dict) else {}
+        if s3_meta.get("quality_risk"):
+            s3_warning = (
+                f"[S3-META 경고] 이 Blueprint는 Stage 3에서 quality_risk로 판정됨 "
+                f"(verdict={s3_meta.get('final_verdict', '?')}, score={s3_meta.get('last_score', '?')}). "
+                "로직 모순·연속성 결함 가능성 높음. 원고의 논리적 일관성을 중점 검토하세요."
+            )
+            decision_core_parts.append(s3_warning)
+            logging.info("[S3-META] quality_risk=True → Director advisory 주입 (score=%s)", s3_meta.get("last_score"))
+        elif s3_meta.get("revision_required"):
+            s3_note = (
+                f"[S3-META 주의] 이 Blueprint는 Stage 3에서 추가 손질이 필요한 상태로 통과됨 "
+                f"(verdict={s3_meta.get('final_verdict', '?')}, score={s3_meta.get('last_score', '?')}). "
+                "치명 리스크로 간주할 필요는 없지만, 서술 밀도·표현 정리 필요성을 염두에 두고 검토하세요."
+            )
+            decision_core_parts.append(s3_note)
+            logging.info(
+                "[S3-META] revision_required=True → Director soft advisory 주입 (score=%s)",
+                s3_meta.get("last_score"),
+            )
+
+        if not writing_directive.is_empty():
+            writing_directive_lines = ["[WritingDirective]"]
+            if writing_directive.ending_style:
+                writing_directive_lines.append(f"- ending_style: {writing_directive.ending_style}")
+            if writing_directive.expression_ban:
+                writing_directive_lines.append(f"- expression_ban: {', '.join(writing_directive.expression_ban)}")
+            if writing_directive.emotion_required:
+                writing_directive_lines.append(f"- emotion_required: {writing_directive.emotion_required}")
+            decision_core_parts.insert(0, "\n".join(writing_directive_lines))
+
+        try:
+            master_bible = getattr(self.ctx.current_project, "master_bible", None) or {}
+            master_bible_root = master_bible.get("MasterBible", master_bible) if isinstance(master_bible, dict) else {}
+            protagonist_config = master_bible_root.get("protagonist_config", {}) or {}
+            pov = str(protagonist_config.get("pov", "") or "").strip()
+            external_policy = str(protagonist_config.get("external_pov_insert_policy", "") or "").strip()
+            if pov:
+                decision_core_parts.insert(0, f"[작품 시점]\n- 기본 POV: {pov}")
+            if external_policy:
+                decision_core_parts.insert(0, f"[타자 시점 삽입 정책]\n- policy: {external_policy}")
+        except Exception as pov_error:
+            logging.debug("[QI-POV] Director POV 주입 실패 (비치명): %s", pov_error)
+
+        advisory_parts = self._run_advisory_chain(candidates, validation_results, next_ep, genre_name)
+        advisory_parts = self._suppress_conflicting_advisories(advisory_parts or [])
+        advisory_summary: dict[str, int] = {}
+        for advisory in advisory_parts or []:
+            advisory_text = str(advisory)
+            if "[TruthGate" in advisory_text:
+                advisory_summary["truth_gate"] = 1
+            if "[LM-B]" in advisory_text or "NpcDrift" in advisory_text:
+                advisory_summary["npc_drift"] = 1
+            if "[LM-C]" in advisory_text or "NumericDrift" in advisory_text:
+                advisory_summary["numeric_drift"] = 1
+            if "[LM-D]" in advisory_text or "RelDrift" in advisory_text:
+                advisory_summary["rel_drift"] = 1
+            if "[LM-E]" in advisory_text or "Flashback" in advisory_text:
+                advisory_summary["flashback"] = 1
+            if "[LM-F]" in advisory_text or "InfoParadox" in advisory_text:
+                advisory_summary["info_paradox"] = 1
+            if "[LM-P1]" in advisory_text or "LongTerm" in advisory_text:
+                advisory_summary["long_term_rep"] = 1
+            if "StyleSignal" in advisory_text:
+                advisory_summary["style_signal"] = 1
+        self._last_advisory_summary = dict(advisory_summary)
+
+        formatted_advisory_parts: list[str] = []
+        for advisory in advisory_parts or []:
+            advisory_text = str(advisory or "").strip()
+            if not advisory_text:
+                continue
+            if "이상 없음" in advisory_text or "경고 0건" in advisory_text:
+                short_name = advisory_text.split("]")[0].replace("[", "").strip() if "]" in advisory_text else "Advisory"
+                formatted_advisory_parts.append(f"[{short_name}] 이상 없음")
+                continue
+            if "[TruthGate" in advisory_text:
+                body = (
+                    advisory_text.replace("[TruthGate Advisory — CRITICAL 경고 시 반드시 REJECT]", "")
+                    .replace("[TruthGate Advisory]", "")
+                    .replace("[TruthGate]", "")
+                    .strip()
+                )
+                formatted_advisory_parts.append(
+                    f"[CRITICAL · TruthGate] {body}" if body else "[CRITICAL · TruthGate]"
+                )
+                continue
+            if any(tag in advisory_text for tag in ("[LM-B]", "NpcDrift")):
+                formatted_advisory_parts.append(f"[MAJOR · NpcDrift] {advisory_text}")
+                continue
+            if any(tag in advisory_text for tag in ("[LM-D]", "RelDrift", "RelationshipDrift")):
+                formatted_advisory_parts.append(f"[MAJOR · RelDrift] {advisory_text}")
+                continue
+            if any(tag in advisory_text for tag in ("[LM-E]", "Flashback")):
+                formatted_advisory_parts.append(f"[MAJOR · Flashback] {advisory_text}")
+                continue
+            if any(tag in advisory_text for tag in ("[LM-F]", "InfoParadox")):
+                formatted_advisory_parts.append(f"[MAJOR · InfoParadox] {advisory_text}")
+                continue
+            if "StyleSignal" in advisory_text:
+                formatted_advisory_parts.append(f"[MAJOR · StyleSignal] {advisory_text}")
+                continue
+            formatted_advisory_parts.append(f"[INFO] {advisory_text}")
+        advisory_parts = formatted_advisory_parts
+        self._last_advisory_details = list(advisory_parts)
+        candidate_evidence_parts.extend(advisory_parts)
+        self._log_attempt_event(
+            logging.INFO,
+            next_ep=next_ep,
+            round_num=round_num,
+            arc_num=arc_num,
+            message="advisory_chain_complete warnings=%d flags=%s",
+            args=(len(advisory_parts), ",".join(sorted(advisory_summary.keys())) if advisory_summary else "-"),
+        )
+
+        try:
+            world_state = getattr(self.ctx, "world_state", None)
+            if world_state:
+                cumulative_elapsed = (
+                    getattr(world_state, "_state", {}).get("cumulative_elapsed") if hasattr(world_state, "_state") else None
+                )
+                if cumulative_elapsed:
+                    from modules.core.narrative_context_formatter import NarrativeContextFormatter
+
+                    time_string = NarrativeContextFormatter.format_cumulative_time(cumulative_elapsed)
+                    if time_string:
+                        candidate_evidence_parts.append(f"[Timeline] 현재까지 경과 시간: {time_string}")
+        except Exception as time_error:
+            logging.debug("[NC-2] cumulative_elapsed 주입 실패 (비치명): %s", time_error)
+
+        try:
+            ns4_arc_no = int(round_ctx.arc_data.get("arc_no", 0) or 0)
+            ns4_arc_idx = ns4_arc_no - 1
+            if ns4_arc_idx > 0:
+                all_arcs = getattr(self.ctx.current_project, "arcs", []) or []
+                if len(all_arcs) > ns4_arc_idx:
+                    prev_arc = all_arcs[ns4_arc_idx - 1]
+                    cur_arc = all_arcs[ns4_arc_idx]
+                    prev_markers = _ns4_extract_time_markers(prev_arc)
+                    cur_markers = _ns4_extract_time_markers(cur_arc)
+                    if prev_markers or cur_markers:
+                        ns4_lines = ["[Arc 시간 연속성 참고]"]
+                        if prev_markers:
+                            ns4_lines.append(f"이전 Arc 종료 시점 마커: {', '.join(prev_markers)}")
+                        if cur_markers:
+                            ns4_lines.append(f"현재 Arc 시간 마커: {', '.join(cur_markers)}")
+                        ns4_lines.append(
+                            "※ 원고에서 과거 사건 언급 시 '며칠 전'/'얼마 전' 같은 표현이 "
+                            "위 시간 간격과 일치하는지 확인하세요."
+                        )
+                        candidate_evidence_parts.append("\n".join(ns4_lines))
+                        logging.info(
+                            "[NS-4-S4] Arc 시간 마커 Director 주입: arc_no=%d, prev=%s, cur=%s",
+                            ns4_arc_no,
+                            prev_markers,
+                            cur_markers,
+                        )
+        except Exception as ns4_error:
+            logging.debug("[NS-4-S4] Director 시간 마커 주입 실패 (비차단): %s", ns4_error)
+
+        try:
+            recent_scene_keywords = getattr(round_ctx, "recent_scene_keywords", [])
+            if recent_scene_keywords and candidates:
+                from modules.core.stage4_context_builder import Stage4ContextBuilder
+
+                for candidate in candidates:
+                    candidate_manuscript = candidate.get("manuscript", "") if isinstance(candidate, dict) else ""
+                    if candidate_manuscript:
+                        similarity_advisory = Stage4ContextBuilder.compute_scene_similarity_advisory(
+                            candidate_manuscript,
+                            recent_scene_keywords,
+                        )
+                        if similarity_advisory:
+                            candidate_evidence_parts.append(similarity_advisory)
+                        break
+        except Exception as similarity_error:
+            logging.debug("[NC-2] 씬 유사도 advisory 실패 (비치명): %s", similarity_error)
+
+        diversity_advisory = self._build_candidate_diversity_advisory(candidates)
+        if diversity_advisory:
+            reference_appendix_parts.append(diversity_advisory)
+
+        if preflight_advisory:
+            candidate_evidence_parts.append(f"🔍 {preflight_advisory}")
+
+        validation_warnings_for_director = []
+        for validation_idx, validation_result in enumerate(validation_results):
+            validation_warnings = validation_result.get("warnings", [])
+            if validation_warnings:
+                label = ["A", "B", "C"][validation_idx] if validation_idx < 3 else f"{validation_idx + 1}"
+                validation_warnings_for_director.append(
+                    f"[후보 {label} Python 감지 경고]\n" + "\n".join(validation_warnings[:30])
+                )
+        if validation_warnings_for_director:
+            candidate_evidence_parts.append(
+                "[V66.3] Python 사전 검증 결과 (Director 참고용)\n" + "\n\n".join(validation_warnings_for_director)
+            )
+        if director_feedback and director_feedback.strip():
+            candidate_evidence_parts.append(
+                "🚨 [V69.1] Python 감지된 원고 충돌 경고 (참고용)\n" + director_feedback.strip()
+            )
+
+        db = getattr(getattr(self.ctx, "current_project", None), "db", None)
+        reference_only_parts: list[str] = []
+        for db_advisory in (
+            self._build_db_pacing_advisory(db, next_ep),
+            self._build_db_satisfaction_advisory(db, next_ep),
+            self._build_db_reveals_advisory(db, next_ep),
+            self._build_db_reflexion_advisory(next_ep),
+        ):
+            if db_advisory:
+                reference_only_parts.append(db_advisory)
+
+        try:
+            if db is not None and hasattr(db, "get_strategy_win_rates"):
+                win_rates = db.get_strategy_win_rates()
+                if win_rates and win_rates.get("total", 0) > 0:
+                    win_rate_lines = [f"[TF7-P1-04] 전략별 최근 PASS 선택 비중 (최근 {win_rates['total']}건 기준)"]
+                    for key, value in win_rates.items():
+                        if key != "total":
+                            win_rate_lines.append(f"  - {key}: {int(value * 100)}%")
+                    reference_only_parts.append("\n".join(win_rate_lines))
+        except Exception as win_rate_error:
+            logging.debug(f"[TF7-P1-04] win_rates fetch 실패 (비치명): {win_rate_error}")
+
+        try:
+            if db is not None and hasattr(db, "get_fix_scope_stats"):
+                fix_scope_stats = db.get_fix_scope_stats()
+                if fix_scope_stats and any(row.get("cnt", 0) > 0 for row in fix_scope_stats):
+                    fix_scope_lines = ["[A-3] fix_scope 전략별 합격률"]
+                    for row in fix_scope_stats:
+                        scope = row.get("fix_scope", "?")
+                        verdict = row.get("verdict", "?")
+                        count = row.get("cnt", 0)
+                        if count > 0:
+                            fix_scope_lines.append(f"  - {scope} + {verdict}: {count}건")
+                    reference_only_parts.append("\n".join(fix_scope_lines))
+        except Exception as fix_scope_error:
+            logging.debug(f"[A-3] fix_scope stats fetch 실패 (비치명): {fix_scope_error}")
+
+        reference_only_block = self._build_reference_only_block(reference_only_parts)
+        if reference_only_block:
+            reference_appendix_parts.append(reference_only_block)
+
+        try:
+            guard = getattr(getattr(self.ctx, "sys", None), "guard", None)
+            if guard and hasattr(guard, "get_director_review_advisory"):
+                work_review_advisory = str(guard.get_director_review_advisory() or "").strip()
+                if work_review_advisory:
+                    reference_appendix_parts.append(work_review_advisory)
+        except Exception as work_review_error:
+            logging.debug("[Stage4] work review advisory 주입 실패: %s", work_review_error)
+
+        decision_core = self._format_director_pack("Decision Core", decision_core_parts)
+        candidate_evidence = self._format_director_pack("Candidate Evidence", candidate_evidence_parts)
+        reference_appendix = self._format_director_pack("Reference Appendix", reference_appendix_parts)
+        director_mandatory_context = self._join_director_pack_parts(
+            [decision_core, candidate_evidence, reference_appendix]
+        )
+        return _DirectorInputPackResult(
+            mandatory_context=director_mandatory_context,
+            decision_core=decision_core,
+            candidate_evidence=candidate_evidence,
+            reference_appendix=reference_appendix,
+            advisory_summary=advisory_summary,
+        )
+
+    def _run_validation_phase(
+        self,
+        *,
+        stage4_spinner,
+        round_num: int,
+        round_ctx,
+        prev_manuscript: str,
+        candidates: list[dict],
+    ) -> tuple[list[dict], str]:
+        self._god1_stage4_spinner = stage4_spinner
+        self._god1_round_num = round_num
+        self._god1_arc_pos = round_ctx.arc_pos
+        self._god1_total_ep_in_arc = round_ctx.total_ep_in_arc
+        self._god1_arc_data = round_ctx.arc_data if isinstance(round_ctx.arc_data, dict) else {}
+        self._god1_prev_manuscript = prev_manuscript
+        self._god1_director_memory_context = ""
+        validation_results = self._run_pre_director_validation(
+            candidates=candidates,
+            next_ep=round_ctx.next_ep,
+            blueprint=round_ctx.blueprint,
+            prev_text=round_ctx.prev_text,
+            hud_report=round_ctx.hud_report,
+            genre_name=round_ctx.genre_name,
+            manuscript_validator=round_ctx.manuscript_validator,
+            consistency_validator=round_ctx.consistency_validator,
+            blocking_validator=round_ctx.blocking_validator,
+            continuity_validator=round_ctx.continuity_validator,
+        )
+        return validation_results, getattr(self, "_god1_director_memory_context", "")
+
     def run(
         self,
         *,
@@ -1871,8 +2380,6 @@ class Stage4InterviewRound:
         round_ctx,
     ):
         """[4-R1-e-1] Single interview round: generation, validation, judgment."""
-        from modules.core.stage4_types import _InterviewRoundResult
-
         self._round_start_ts = time.monotonic()
         self._last_advisory_summary = {}
         self._last_advisory_details = []
@@ -1882,37 +2389,17 @@ class Stage4InterviewRound:
 
         # [4-R2-b] Unpack round context
         chief_writer = round_ctx.chief_writer
-        manuscript_validator = round_ctx.manuscript_validator
-        consistency_validator = round_ctx.consistency_validator
-        blocking_validator = round_ctx.blocking_validator
-        continuity_validator = round_ctx.continuity_validator
         next_ep = round_ctx.next_ep
         blueprint = round_ctx.blueprint
         arc_pos = round_ctx.arc_pos
         total_ep_in_arc = round_ctx.total_ep_in_arc
-        arc_tactical = round_ctx.arc_tactical
-        prev_text = round_ctx.prev_text
         prev_ending = round_ctx.prev_ending
         _prev_manuscripts_text = round_ctx.prev_manuscripts_text
         _episode_digest = round_ctx.episode_digest
-        hud_report = round_ctx.hud_report
-        current_inventory = round_ctx.current_inventory
-        current_martial_arts = round_ctx.current_martial_arts
-        dead_npcs = round_ctx.dead_npcs
-        item_acquisition_timeline = round_ctx.item_acquisition_timeline
-        _chain_link_section = round_ctx.chain_link_section
-        _world_state_summary = round_ctx.world_state_summary
-        purism_prompt = round_ctx.purism_prompt
         genre_name = round_ctx.genre_name
-        npc_equipment_summary = round_ctx.npc_equipment_summary
-        _effective_anti_trope = round_ctx.effective_anti_trope
-        intro_dna = round_ctx.intro_dna
         story_context = round_ctx.story_context
         style_guide = round_ctx.style_guide
-        reference_anchor_prompt = round_ctx.reference_anchor_prompt
         mandatory_context = round_ctx.mandatory_context
-        justification_prompt = round_ctx.justification_prompt
-        reflexion_prompt = round_ctx.reflexion_prompt
         _preflight_advisory = round_ctx.preflight_advisory
 
         _writing_directive, _ = self._setup_writing_directive(
@@ -1966,125 +2453,36 @@ class Stage4InterviewRound:
         )
 
         # Phase 2: Chief Writer 앙상블 생성
-        # [V65] PerfTimer: 원고 생성 측정
-        try:
-            self.ctx.perf_timer.start(f"s4_ep{next_ep}_generate_r{round_num}")
-        except Exception as e:
-            logging.debug(f"[PerfTimer] start generate: {e}")
-        _is_patch = False
-        _is_patch_fallback = False
-        _prev_score = 0
-        _prev_manuscript = previous_attempt.get("best_manuscript", "") if previous_attempt else ""
-        _tot_used = bool(previous_attempt.get("_tot_used", False)) if previous_attempt else False
-        _mad_used = bool(previous_attempt.get("_mad_used", False)) if previous_attempt else False
-
-        _weighted_injection = ""
-        _pw = self.ctx.get_module("prompt_weighter")
-        if _pw:
-            try:
-                _weighted_injection = _pw.get_weighted_prompt("writer", 4, top_n=3)
-            except Exception as e:
-                logging.warning(f"[SilentPass:PromptWeighter] {e!s:.100}")
-        if _weighted_injection:
-            director_feedback = (
-                (_weighted_injection + "\n\n" + director_feedback) if director_feedback else _weighted_injection
-            )
-
-        # [TF-I] Director 피드백을 common_writer_kwargs에 명시 전달
-        if director_feedback and director_feedback.strip():
-            _common_writer_kwargs["director_feedback"] = director_feedback
-
-        candidates, _is_patch, _is_patch_fallback, _prev_score, _asp_manuscript = self._generate_candidates(
+        _generation = self._run_generation_phase(
             round_num=round_num,
-            chief_writer=chief_writer,
             director_feedback=director_feedback,
             previous_attempt=previous_attempt,
-            prev_manuscript=_prev_manuscript,
-            style_guide=style_guide,
+            round_ctx=round_ctx,
             blueprint=blueprint,
+            style_guide=style_guide,
+            next_ep=next_ep,
             common_writer_kwargs=_common_writer_kwargs,
         )
-
-        # [V65] PerfTimer: 원고 생성 종료
-        try:
-            self.ctx.perf_timer.stop(f"s4_ep{next_ep}_generate_r{round_num}")
-        except Exception as e:
-            logging.debug(f"[PerfTimer] stop generate: {e}")
-
-        # [TF-R2-S4-I01] 빈 원고 후보 필터링
-        candidates = [c for c in candidates if c.get("manuscript", "").strip()]
-
-        # [V66.3] C-3: 빈 candidates 방어 — 모든 후보 생성 실패 시 다음 면담으로 스킵
-        if not candidates:
-            logging.error(f"[Stage4] 제{next_ep}화 {round_num + 1}차 면담: candidates 빈 배열 — 모든 후보 생성 실패")
-            self.ctx.ui.log(
-                f"   🚨 [V66.3] 모든 후보 생성 실패 — {'최종 실패 처리' if round_num >= 4 else '다음 면담으로 진행'}"
-            )
-            director_feedback += "\n[시스템] 모든 후보 생성 실패. 재시도 필요."
-            previous_attempt = {
-                "strategy": "none",
-                "rejection_reason": "모든 후보 생성 실패",
-                "action_items": [],
-                "score": 0,
-                "_tot_used": _tot_used,
-                "_mad_used": _mad_used,
-                "prior_attempts": self._inherit_attempt_history(previous_attempt),
-            }
-            self._record_s4_attempt(
-                episode=next_ep,
-                round_num=round_num,
-                success=False,
-                score=0,
-                is_patch=_is_patch,
-                prev_score=_prev_score,
-                patch_fallback=_is_patch_fallback,
-                arc=round_ctx.arc_data.get("arc_no", 0),
-                verdict="EMPTY",
-                reject_reason="empty_candidates",
-                model=getattr(chief_writer, "model_tier", None),
-            )
-            # [TF-7-P0-04] EMPTY → QualityDashboard 집계
-            if getattr(self.ctx, "quality_dashboard", None):
-                try:
-                    self.ctx.quality_dashboard.record_validation(
-                        ep_num=next_ep,
-                        result={
-                            "decision": "REJECT",
-                            "score": 0,
-                            "violations": [{"type": "empty_candidates"}],
-                            "warnings": [],
-                        },
-                        stage=4,
-                    )
-                except Exception as _qd_err:
-                    logging.debug(f"[SILENT] quality_dashboard EMPTY: {_qd_err}")
-            return _InterviewRoundResult(
-                verdict="EMPTY",
-                director_feedback=director_feedback,
-                previous_attempt=previous_attempt,
-            )
+        director_feedback = _generation.director_feedback
+        _is_patch = _generation.is_patch
+        _is_patch_fallback = _generation.is_patch_fallback
+        _prev_score = _generation.prev_score
+        _prev_manuscript = _generation.prev_manuscript
+        _tot_used = _generation.tot_used
+        _mad_used = _generation.mad_used
+        _asp_manuscript = _generation.asp_manuscript
+        candidates = _generation.candidates
+        if _generation.empty_result is not None:
+            return _generation.empty_result
 
         # Phase 3: Python 사전 검증
-        self._god1_stage4_spinner = stage4_spinner
-        self._god1_round_num = round_num
-        self._god1_arc_pos = arc_pos
-        self._god1_total_ep_in_arc = total_ep_in_arc
-        self._god1_arc_data = round_ctx.arc_data if isinstance(round_ctx.arc_data, dict) else {}
-        self._god1_prev_manuscript = _prev_manuscript
-        self._god1_director_memory_context = ""
-        validation_results = self._run_pre_director_validation(
+        validation_results, _director_memory_context = self._run_validation_phase(
+            stage4_spinner=stage4_spinner,
+            round_num=round_num,
+            round_ctx=round_ctx,
+            prev_manuscript=_prev_manuscript,
             candidates=candidates,
-            next_ep=next_ep,
-            blueprint=blueprint,
-            prev_text=prev_text,
-            hud_report=hud_report,
-            genre_name=genre_name,
-            manuscript_validator=manuscript_validator,
-            consistency_validator=consistency_validator,
-            blocking_validator=blocking_validator,
-            continuity_validator=continuity_validator,
         )
-        _director_memory_context = getattr(self, "_god1_director_memory_context", "")
 
         # Phase 4: Director 면담
         stage4_spinner.update_detail(f"제{next_ep}화 · {round_num + 1}차 면담 · Director 심사")
@@ -2167,279 +2565,20 @@ class Stage4InterviewRound:
             self.ctx.perf_timer.start(f"s4_ep{next_ep}_director_r{round_num}")
         except Exception as e:
             logging.debug(f"[PerfTimer] start director: {e}")
-        # [V66.3] C-1: mandatory_context + Python 검증 경고를 Director에 전달
-        # validation_results에서 경고를 추출하여 mandatory_context에 병합
-        _mandatory_text = mandatory_context if isinstance(mandatory_context, str) else str(mandatory_context or "")
-        _decision_core_parts = [_mandatory_text] if _mandatory_text else []
-        _candidate_evidence_parts: list[str] = []
-        _reference_appendix_parts: list[str] = []
-        _shared_failure_warnings = []
-        for _vr in validation_results:
-            _shared_failure_warnings = _vr.get("shared_failure_warnings", [])
-            if _shared_failure_warnings:
-                break
-        if _shared_failure_warnings:
-            _decision_core_parts.insert(0, "\n".join(_shared_failure_warnings))
-        # [S3-META] quality_risk Blueprint → Director 사전 경고
-        _s3_meta = round_ctx.blueprint.get("_stage3_meta", {}) if isinstance(round_ctx.blueprint, dict) else {}
-        if _s3_meta.get("quality_risk"):
-            _s3_warn = (
-                f"[S3-META 경고] 이 Blueprint는 Stage 3에서 quality_risk로 판정됨 "
-                f"(verdict={_s3_meta.get('final_verdict', '?')}, score={_s3_meta.get('last_score', '?')}). "
-                "로직 모순·연속성 결함 가능성 높음. 원고의 논리적 일관성을 중점 검토하세요."
-            )
-            _decision_core_parts.append(_s3_warn)
-            logging.info("[S3-META] quality_risk=True → Director advisory 주입 (score=%s)", _s3_meta.get("last_score"))
-        elif _s3_meta.get("revision_required"):
-            _s3_note = (
-                f"[S3-META 주의] 이 Blueprint는 Stage 3에서 추가 손질이 필요한 상태로 통과됨 "
-                f"(verdict={_s3_meta.get('final_verdict', '?')}, score={_s3_meta.get('last_score', '?')}). "
-                "치명 리스크로 간주할 필요는 없지만, 서술 밀도·표현 정리 필요성을 염두에 두고 검토하세요."
-            )
-            _decision_core_parts.append(_s3_note)
-            logging.info(
-                "[S3-META] revision_required=True → Director soft advisory 주입 (score=%s)",
-                _s3_meta.get("last_score"),
-            )
-        if not _writing_directive.is_empty():
-            _wd_lines = ["[WritingDirective]"]
-            if _writing_directive.ending_style:
-                _wd_lines.append(f"- ending_style: {_writing_directive.ending_style}")
-            if _writing_directive.expression_ban:
-                _wd_lines.append(f"- expression_ban: {', '.join(_writing_directive.expression_ban)}")
-            if _writing_directive.emotion_required:
-                _wd_lines.append(f"- emotion_required: {_writing_directive.emotion_required}")
-            _decision_core_parts.insert(0, "\n".join(_wd_lines))
-        try:
-            _mb = getattr(self.ctx.current_project, "master_bible", None) or {}
-            _mb_root = _mb.get("MasterBible", _mb) if isinstance(_mb, dict) else {}
-            _protagonist_config = _mb_root.get("protagonist_config", {}) or {}
-            _pov = str(_protagonist_config.get("pov", "") or "").strip()
-            _external_policy = str(_protagonist_config.get("external_pov_insert_policy", "") or "").strip()
-            if _pov:
-                _decision_core_parts.insert(0, f"[작품 시점]\n- 기본 POV: {_pov}")
-            if _external_policy:
-                _decision_core_parts.insert(0, f"[타자 시점 삽입 정책]\n- policy: {_external_policy}")
-        except Exception as _pov_err:
-            logging.debug("[QI-POV] Director POV 주입 실패 (비치명): %s", _pov_err)
-
-        # [B-1-3b] Advisory chain (TruthGate, NpcDrift, NumericDrift, Flashback, InfoParadox, RelDrift, StyleSignal)
-        _advisory_parts = self._run_advisory_chain(candidates, validation_results, next_ep, genre_name)
-        _advisory_parts = self._suppress_conflicting_advisories(_advisory_parts or [])
-        _advisory_summary = {}
-        for _part in _advisory_parts or []:
-            _part_s = str(_part)
-            if "[TruthGate" in _part_s:
-                _advisory_summary["truth_gate"] = 1
-            if "[LM-B]" in _part_s or "NpcDrift" in _part_s:
-                _advisory_summary["npc_drift"] = 1
-            if "[LM-C]" in _part_s or "NumericDrift" in _part_s:
-                _advisory_summary["numeric_drift"] = 1
-            if "[LM-D]" in _part_s or "RelDrift" in _part_s:
-                _advisory_summary["rel_drift"] = 1
-            if "[LM-E]" in _part_s or "Flashback" in _part_s:
-                _advisory_summary["flashback"] = 1
-            if "[LM-F]" in _part_s or "InfoParadox" in _part_s:
-                _advisory_summary["info_paradox"] = 1
-            if "[LM-P1]" in _part_s or "LongTerm" in _part_s:
-                _advisory_summary["long_term_rep"] = 1
-            if "StyleSignal" in _part_s:
-                _advisory_summary["style_signal"] = 1
-        self._last_advisory_summary = dict(_advisory_summary)
-        _formatted_advisory_parts: list[str] = []
-        for _part in _advisory_parts or []:
-            _part_s = str(_part or "").strip()
-            if not _part_s:
-                continue
-            if "이상 없음" in _part_s or "경고 0건" in _part_s:
-                _short_name = _part_s.split("]")[0].replace("[", "").strip() if "]" in _part_s else "Advisory"
-                _formatted_advisory_parts.append(f"[{_short_name}] 이상 없음")
-                continue
-            if "[TruthGate" in _part_s:
-                _body = (
-                    _part_s.replace("[TruthGate Advisory — CRITICAL 경고 시 반드시 REJECT]", "")
-                    .replace("[TruthGate Advisory]", "")
-                    .replace("[TruthGate]", "")
-                    .strip()
-                )
-                _formatted_advisory_parts.append(
-                    f"[CRITICAL · TruthGate] {_body}" if _body else "[CRITICAL · TruthGate]"
-                )
-                continue
-            if any(_tag in _part_s for _tag in ("[LM-B]", "NpcDrift")):
-                _formatted_advisory_parts.append(f"[MAJOR · NpcDrift] {_part_s}")
-                continue
-            if any(_tag in _part_s for _tag in ("[LM-D]", "RelDrift", "RelationshipDrift")):
-                _formatted_advisory_parts.append(f"[MAJOR · RelDrift] {_part_s}")
-                continue
-            if any(_tag in _part_s for _tag in ("[LM-E]", "Flashback")):
-                _formatted_advisory_parts.append(f"[MAJOR · Flashback] {_part_s}")
-                continue
-            if any(_tag in _part_s for _tag in ("[LM-F]", "InfoParadox")):
-                _formatted_advisory_parts.append(f"[MAJOR · InfoParadox] {_part_s}")
-                continue
-            if "StyleSignal" in _part_s:
-                _formatted_advisory_parts.append(f"[MAJOR · StyleSignal] {_part_s}")
-                continue
-            _formatted_advisory_parts.append(f"[INFO] {_part_s}")
-        _advisory_parts = _formatted_advisory_parts
-        self._last_advisory_details = list(_advisory_parts)
-        _candidate_evidence_parts.extend(_advisory_parts)
-        self._log_attempt_event(
-            logging.INFO,
+        _director_input_pack = self._build_director_input_pack(
+            candidates=candidates,
+            validation_results=validation_results,
+            round_ctx=round_ctx,
             next_ep=next_ep,
             round_num=round_num,
-            arc_num=round_ctx.arc_data.get("arc_no", 0),
-            message="advisory_chain_complete warnings=%d flags=%s",
-            args=(len(_advisory_parts), ",".join(sorted(_advisory_summary.keys())) if _advisory_summary else "-"),
+            genre_name=genre_name,
+            mandatory_context=mandatory_context,
+            writing_directive=_writing_directive,
+            director_feedback=director_feedback,
+            preflight_advisory=_preflight_advisory,
         )
-
-        # [NC-2 GAP-5] cumulative_elapsed → Director MC 주입
-        try:
-            _ws = getattr(self.ctx, "world_state", None)
-            if _ws:
-                _cum_elapsed = getattr(_ws, "_state", {}).get("cumulative_elapsed") if hasattr(_ws, "_state") else None
-                if _cum_elapsed:
-                    from modules.core.narrative_context_formatter import NarrativeContextFormatter
-
-                    _time_str = NarrativeContextFormatter.format_cumulative_time(_cum_elapsed)
-                    if _time_str:
-                        _candidate_evidence_parts.append(f"[Timeline] 현재까지 경과 시간: {_time_str}")
-        except Exception as _te:
-            logging.debug("[NC-2] cumulative_elapsed 주입 실패 (비치명): %s", _te)
-
-        # [NS-4-S4] Arc 시간 연속성 마커 → Director mc_parts 주입 (LLM 0회)
-        try:
-            _ns4_arc_no = int(round_ctx.arc_data.get("arc_no", 0) or 0)
-            _ns4_arc_idx = _ns4_arc_no - 1  # 1-based → 0-based
-            if _ns4_arc_idx > 0:
-                _ns4_all_arcs = getattr(self.ctx.current_project, "arcs", []) or []
-                if len(_ns4_all_arcs) > _ns4_arc_idx:
-                    _ns4_prev_arc = _ns4_all_arcs[_ns4_arc_idx - 1]
-                    _ns4_cur_arc = _ns4_all_arcs[_ns4_arc_idx]
-                    _ns4_prev_m = _ns4_extract_time_markers(_ns4_prev_arc)
-                    _ns4_cur_m = _ns4_extract_time_markers(_ns4_cur_arc)
-                    if _ns4_prev_m or _ns4_cur_m:
-                        _ns4_mc_lines = ["[Arc 시간 연속성 참고]"]
-                        if _ns4_prev_m:
-                            _ns4_mc_lines.append(f"이전 Arc 종료 시점 마커: {', '.join(_ns4_prev_m)}")
-                        if _ns4_cur_m:
-                            _ns4_mc_lines.append(f"현재 Arc 시간 마커: {', '.join(_ns4_cur_m)}")
-                        _ns4_mc_lines.append(
-                            "※ 원고에서 과거 사건 언급 시 '며칠 전'/'얼마 전' 같은 표현이 "
-                            "위 시간 간격과 일치하는지 확인하세요."
-                        )
-                        _candidate_evidence_parts.append("\n".join(_ns4_mc_lines))
-                        logging.info(
-                            "[NS-4-S4] Arc 시간 마커 Director 주입: arc_no=%d, prev=%s, cur=%s",
-                            _ns4_arc_no,
-                            _ns4_prev_m,
-                            _ns4_cur_m,
-                        )
-        except Exception as _ns4_s4_err:
-            logging.debug("[NS-4-S4] Director 시간 마커 주입 실패 (비차단): %s", _ns4_s4_err)
-
-        # [NC-2 GAP-1] 씬 유사도 advisory → Director MC 주입
-        try:
-            _recent_scene_kws = getattr(round_ctx, "recent_scene_keywords", [])
-            if _recent_scene_kws and candidates:
-                from modules.core.stage4_context_builder import Stage4ContextBuilder
-
-                # 선택 최고 점수 후보의 원고로 비교
-                for _cand in candidates:
-                    _cand_ms = _cand.get("manuscript", "") if isinstance(_cand, dict) else ""
-                    if _cand_ms:
-                        _sim_adv = Stage4ContextBuilder.compute_scene_similarity_advisory(
-                            _cand_ms,
-                            _recent_scene_kws,
-                        )
-                        if _sim_adv:
-                            _candidate_evidence_parts.append(_sim_adv)
-                        break  # 첫 번째 유효 후보로 충분
-        except Exception as _sim_err:
-            logging.debug("[NC-2] 씬 유사도 advisory 실패 (비치명): %s", _sim_err)
-
-        _diversity_advisory = self._build_candidate_diversity_advisory(candidates)
-        if _diversity_advisory:
-            _reference_appendix_parts.append(_diversity_advisory)
-
-        # [TF-49b] Preflight advisory → Director에도 전달
-        if _preflight_advisory:
-            _candidate_evidence_parts.append(f"🔍 {_preflight_advisory}")
-
-        _vr_warnings_for_director = []
-        for _vr_idx, _vr in enumerate(validation_results):
-            _vr_warns = _vr.get("warnings", [])
-            if _vr_warns:
-                _label = ["A", "B", "C"][_vr_idx] if _vr_idx < 3 else f"{_vr_idx + 1}"
-                _vr_warnings_for_director.append(f"[후보 {_label} Python 감지 경고]\n" + "\n".join(_vr_warns[:30]))
-        if _vr_warnings_for_director:
-            _candidate_evidence_parts.append(
-                "[V66.3] Python 사전 검증 결과 (Director 참고용)\n" + "\n\n".join(_vr_warnings_for_director)
-            )
-        # [V69.1] V67 원고 역사 충돌 + 연속성 충돌 경고를 Director에 전달
-        if director_feedback and director_feedback.strip():
-            _candidate_evidence_parts.append("🚨 [V69.1] Python 감지된 원고 충돌 경고 (참고용)\n" + director_feedback.strip())
-        _db = getattr(getattr(self.ctx, "current_project", None), "db", None)
-        _reference_only_parts: list[str] = []
-        for _db_advisory in (
-            self._build_db_pacing_advisory(_db, next_ep),
-            self._build_db_satisfaction_advisory(_db, next_ep),
-            self._build_db_reveals_advisory(_db, next_ep),
-            self._build_db_reflexion_advisory(next_ep),
-        ):
-            if _db_advisory:
-                _reference_only_parts.append(_db_advisory)
-        # [TF7-P1-04] 전략별 최근 통과율을 Director 선택 프롬프트에 주입
-        try:
-            if _db is not None and hasattr(_db, "get_strategy_win_rates"):
-                _win_rates = _db.get_strategy_win_rates()
-                if _win_rates and _win_rates.get("total", 0) > 0:
-                    _wr_lines = [f"[TF7-P1-04] 전략별 최근 PASS 선택 비중 (최근 {_win_rates['total']}건 기준)"]
-                    for _k, _v in _win_rates.items():
-                        if _k != "total":
-                            _wr_lines.append(f"  - {_k}: {int(_v * 100)}%")
-                    _reference_only_parts.append("\n".join(_wr_lines))
-        except Exception as _wr_err:
-            logging.debug(f"[TF7-P1-04] win_rates fetch 실패 (비치명): {_wr_err}")
-        # [LM-Tier TF-C] fix_scope 전략별 합격률을 Director에 주입
-        try:
-            if _db is not None and hasattr(_db, "get_fix_scope_stats"):
-                _fs_stats = _db.get_fix_scope_stats()
-                if _fs_stats and any(r.get("cnt", 0) > 0 for r in _fs_stats):
-                    _fs_lines = ["[A-3] fix_scope 전략별 합격률"]
-                    for _row in _fs_stats:
-                        _scope = _row.get("fix_scope", "?")
-                        _verdict = _row.get("verdict", "?")
-                        _cnt = _row.get("cnt", 0)
-                        if _cnt > 0:
-                            _fs_lines.append(f"  - {_scope} + {_verdict}: {_cnt}건")
-                    _reference_only_parts.append("\n".join(_fs_lines))
-        except Exception as _fs_err:
-            logging.debug(f"[A-3] fix_scope stats fetch 실패 (비치명): {_fs_err}")
-        _reference_only_block = self._build_reference_only_block(_reference_only_parts)
-        if _reference_only_block:
-            _reference_appendix_parts.append(_reference_only_block)
-        try:
-            _guard = getattr(getattr(self.ctx, "sys", None), "guard", None)
-            if _guard and hasattr(_guard, "get_director_review_advisory"):
-                _work_review_advisory = str(_guard.get_director_review_advisory() or "").strip()
-                if _work_review_advisory:
-                    _reference_appendix_parts.append(_work_review_advisory)
-        except Exception as _e:
-            logging.debug("[Stage4] work review advisory 주입 실패: %s", _e)
-        _director_input_packs = {
-            "decision_core": self._format_director_pack("Decision Core", _decision_core_parts),
-            "candidate_evidence": self._format_director_pack("Candidate Evidence", _candidate_evidence_parts),
-            "reference_appendix": self._format_director_pack("Reference Appendix", _reference_appendix_parts),
-        }
-        _director_mandatory_context = self._join_director_pack_parts(
-            [
-                _director_input_packs["decision_core"],
-                _director_input_packs["candidate_evidence"],
-                _director_input_packs["reference_appendix"],
-            ]
-        )
+        _advisory_summary = dict(_director_input_pack.advisory_summary)
+        _director_mandatory_context = _director_input_pack.mandatory_context
 
         director_result = self.ctx.agents["director"].select_and_judge_ensemble(
             ep_num=next_ep,
@@ -2452,9 +2591,9 @@ class Stage4InterviewRound:
             retry_count=round_num,
             episode_digest=_episode_digest,
             mandatory_context=_director_mandatory_context,
-            decision_core=_director_input_packs["decision_core"],
-            candidate_evidence=_director_input_packs["candidate_evidence"],
-            reference_appendix=_director_input_packs["reference_appendix"],
+            decision_core=_director_input_pack.decision_core,
+            candidate_evidence=_director_input_pack.candidate_evidence,
+            reference_appendix=_director_input_pack.reference_appendix,
             prev_manuscripts_text=_prev_manuscripts_text,  # [V67]
             story_context=story_context,  # [V67.1]
         )
@@ -2655,186 +2794,32 @@ class Stage4InterviewRound:
         _is_patch = bool(_is_patch or _trace_patch_trace)
         _validation_warnings = self._collect_validation_warning_lines(validation_results, limit=20)
         if _pass_result is not None:
-            _attempt_artifact_meta = normalize_artifact_meta(getattr(_pass_result, "attempt_artifact_meta", {}) or {})
-            _log_artifact_meta = normalize_artifact_meta(_attempt_artifact_meta)
-            if not _log_artifact_meta["candidate_key"] and isinstance(_trace_director_result, dict):
-                _sel_candidate = _trace_director_result.get("selected_candidate") or {}
-                if not isinstance(_sel_candidate, dict):
-                    _sel_candidate = {}
-                _fallback_candidate = build_candidate_key(
-                    label=str(_trace_director_result.get("selected", "") or ""),
-                    strategy=str(_sel_candidate.get("strategy_name", "") or _sel_candidate.get("strategy", "")),
-                    fallback="stage4",
-                )
-                _log_artifact_meta = normalize_artifact_meta(
-                    snapshot_logged_artifact(
-                        getattr(self.ctx, "current_project", None),
-                        stage=4,
-                        ep_num=next_ep,
-                        arc_num=round_ctx.arc_data.get("arc_no", 0),
-                        attempt_num=round_num + 1,
-                        candidate_key=_fallback_candidate,
-                        artifact_kind="patched_after_fix" if (_is_patch or _trace_patch_trace) else "final_manuscript",
-                        payload=getattr(_pass_result, "final_manuscript", ""),
-                    )
-                )
-            _session_selection_reason = str(
-                (
-                    _trace_director_result.get("selection_reason")
-                    or director_result.get("selection_reason", "")
-                )
-                if isinstance(_trace_director_result, dict)
-                else director_result.get("selection_reason", "")
-            )
-            _session_verdict_reason = str(
-                (
-                    _trace_director_result.get("verdict_reason")
-                    or reason
-                    or _session_selection_reason
-                )
-                if isinstance(_trace_director_result, dict)
-                else (reason or _session_selection_reason)
-            )
-            _session_runtime_advisory = self._build_retry_advisory_digest()
-            _session_retry_directives = ""
-            _session_gate_semantics = self._build_gate_semantics_payload(
-                _trace_director_result if isinstance(_trace_director_result, dict) else director_result
-            )
-            _current_db = getattr(getattr(self.ctx, "current_project", None), "db", None)
-            if _current_db is not None and hasattr(_current_db, "update_director_selection_rationale"):
-                try:
-                    _current_db.update_director_selection_rationale(
-                        attempt_key=_attempt_key,
-                        selection_reason=_session_selection_reason,
-                        verdict_reason=_session_verdict_reason,
-                        fix_scope=(
-                            _trace_director_result.get("fix_scope", "")
-                            if isinstance(_trace_director_result, dict)
-                            else director_result.get("fix_scope", "")
-                        ),
-                    )
-                except Exception as _e:
-                    logging.debug("[Stage4] director rationale sync failed: %s", _e)
-            self._append_episode_log(
-                ep_num=next_ep,
-                round_num=round_num,
-                director_result=director_result,
-                initial_verdict=verdict,
-                initial_score=score,
-                final_verdict=_trace_final_verdict,
-                final_score=_trace_final_score,
-                is_patch=_is_patch,
-                patch_fallback=_is_patch_fallback,
-                tot_used=_tot_used,
-                mad_used=_mad_used,
-                asp_used=bool(_asp_manuscript),
-                model=getattr(chief_writer, "model_tier", None),
-                reject_bucket="",
-                validation_warnings=_validation_warnings,
-                final_warnings=list((_trace_director_result.get("final_warnings") or []) if isinstance(_trace_director_result, dict) else []),
-                feedback_provenance={
-                    "director_feedback": str(
-                        (_trace_director_result.get("verdict_reason") or director_feedback)
-                        if isinstance(_trace_director_result, dict)
-                        else director_feedback
-                    ),
-                    "runtime_advisory": _session_runtime_advisory,
-                    "retry_directives": _session_retry_directives,
-                },
-                patch_trace=_trace_patch_trace,
-                arc_num=round_ctx.arc_data.get("arc_no", 0),
-                attempt_key=build_attempt_key(
-                    stage=4,
-                    ep_num=next_ep,
-                    arc_num=round_ctx.arc_data.get("arc_no", 0),
-                    attempt_num=round_num + 1,
-                    session_id=resolve_logging_session_id(getattr(self.ctx, "current_project", None)),
-                ),
-                candidate_key=_log_artifact_meta["candidate_key"],
-                content_hash=_log_artifact_meta["content_hash"],
-                artifact_path=_log_artifact_meta["artifact_path"],
-                selection_candidate_key=str(_selection_artifact_meta.get("candidate_key", "") or ""),
-                selection_content_hash=str(_selection_artifact_meta.get("content_hash", "") or ""),
-                selection_artifact_path=str(_selection_artifact_meta.get("artifact_path", "") or ""),
-            )
-            self._log_round_outcome(
+            return self._finalize_pass_result(
+                pass_result=_pass_result,
                 next_ep=next_ep,
                 round_num=round_num,
-                arc_num=round_ctx.arc_data.get("arc_no", 0),
+                round_ctx=round_ctx,
+                chief_writer=chief_writer,
+                director_result=director_result,
+                trace_director_result=_trace_director_result,
+                director_feedback=director_feedback,
                 initial_verdict=verdict,
-                final_verdict=_trace_final_verdict,
                 initial_score=score,
+                final_verdict=_trace_final_verdict,
                 final_score=_trace_final_score,
-                patch_mode=bool(_is_patch),
-                patch_fallback=bool(_is_patch_fallback),
-                warning_count=len(_validation_warnings),
-                final_warning_count=len(
-                    list((_trace_director_result.get("final_warnings") or []) if isinstance(_trace_director_result, dict) else [])
-                ),
-                candidate_key=_log_artifact_meta["candidate_key"],
-                artifact_path=_log_artifact_meta["artifact_path"],
+                selected=selected,
+                reason=reason,
+                error_category=error_category,
+                attempt_key=_attempt_key,
+                selection_artifact_meta=_selection_artifact_meta,
+                validation_warnings=_validation_warnings,
+                is_patch=_is_patch,
+                is_patch_fallback=_is_patch_fallback,
+                trace_patch_trace=_trace_patch_trace,
+                tot_used=_tot_used,
+                mad_used=_mad_used,
+                asp_manuscript=_asp_manuscript,
             )
-            try:
-                self._log_session_decision(
-                    next_ep=next_ep,
-                    round_num=round_num,
-                    arc_num=round_ctx.arc_data.get("arc_no", 0),
-                    verdict=_trace_final_verdict,
-                    score=_trace_final_score,
-                    selected=selected,
-                    error_category=error_category,
-                    reason=(
-                        (_trace_director_result.get("verdict_reason") or reason)
-                        if isinstance(_trace_director_result, dict)
-                        else reason
-                    ),
-                    fix_scope=(
-                        _trace_director_result.get("fix_scope", "")
-                        if isinstance(_trace_director_result, dict)
-                        else director_result.get("fix_scope", "")
-                    ),
-                    open_review=(
-                        _trace_director_result.get("open_review", "")
-                        if isinstance(_trace_director_result, dict)
-                        else director_result.get("open_review", "")
-                    ),
-                    action_items=(
-                        _trace_director_result.get("action_items", [])
-                        if isinstance(_trace_director_result, dict)
-                        else director_result.get("action_items", [])
-                    ),
-                    attempt_key=_attempt_key,
-                    artifact_meta=_log_artifact_meta,
-                    selection_artifact_meta=_selection_artifact_meta,
-                    initial_verdict=verdict,
-                    initial_score=score,
-                    selection_reason=_session_selection_reason,
-                    verdict_reason=_session_verdict_reason,
-                    director_verdict=_session_gate_semantics.get("director_verdict", ""),
-                    gate_basis=_session_gate_semantics.get("gate_basis", ""),
-                    repair_scope=_session_gate_semantics.get("repair_scope", ""),
-                    fix_pack=self._build_fix_pack_payload(
-                        _trace_director_result if isinstance(_trace_director_result, dict) else director_result
-                    ),
-                    retry_budget_axes=dict(getattr(self, "_last_retry_budget_axes", {}) or {}),
-                    runtime_advisory=_session_runtime_advisory,
-                    retry_directives=_session_retry_directives,
-                    firewall_triggered=bool(
-                        (
-                            _trace_director_result.get("firewall_triggered")
-                            if isinstance(_trace_director_result, dict)
-                            else director_result.get("firewall_triggered")
-                        )
-                    ),
-                    firewall_reason=(
-                        _trace_director_result.get("firewall_reason", "")
-                        if isinstance(_trace_director_result, dict)
-                        else director_result.get("firewall_reason", "")
-                    ),
-                )
-            except Exception as _e:
-                logging.debug("[SilentPass:Stage4:SessionLog] %s", _e)
-            return _pass_result
         # [B-1-3b] REJECT 처리 → 위임
         _reject_result = self._handle_reject(
             director_result=_trace_director_result,
@@ -2855,42 +2840,95 @@ class Stage4InterviewRound:
             score=_trace_final_score,
             error_category=error_category,
         )
+        return self._finalize_reject_result(
+            reject_result=_reject_result,
+            next_ep=next_ep,
+            round_num=round_num,
+            round_ctx=round_ctx,
+            chief_writer=chief_writer,
+            director_result=director_result,
+            trace_director_result=_trace_director_result,
+            initial_verdict=verdict,
+            initial_score=score,
+            final_verdict=_trace_final_verdict or "REJECT",
+            final_score=_trace_final_score,
+            selected=selected,
+            reason=reason,
+            error_category=error_category,
+            attempt_key=_attempt_key,
+            selection_artifact_meta=_selection_artifact_meta,
+            validation_warnings=_validation_warnings,
+            is_patch=_is_patch,
+            is_patch_fallback=_is_patch_fallback,
+            trace_patch_trace=_trace_patch_trace,
+            tot_used=_tot_used,
+            mad_used=_mad_used,
+            asp_manuscript=_asp_manuscript,
+        )
+
+    def _finalize_reject_result(
+        self,
+        *,
+        reject_result,
+        next_ep: int,
+        round_num: int,
+        round_ctx,
+        chief_writer,
+        director_result: dict,
+        trace_director_result,
+        initial_verdict: str,
+        initial_score: int,
+        final_verdict: str,
+        final_score: int,
+        selected: str,
+        reason: str,
+        error_category: str,
+        attempt_key: str,
+        selection_artifact_meta: dict,
+        validation_warnings: list[str],
+        is_patch: bool,
+        is_patch_fallback: bool,
+        trace_patch_trace: dict,
+        tot_used: bool,
+        mad_used: bool,
+        asp_manuscript: str,
+    ):
         _log_reject_bucket = ""
-        if isinstance(getattr(_reject_result, "previous_attempt", None), dict):
-            _log_reject_bucket = str(_reject_result.previous_attempt.get("reject_bucket", "") or "")
-        _reject_artifact_meta = normalize_artifact_meta(getattr(_reject_result, "attempt_artifact_meta", {}) or {})
+        if isinstance(getattr(reject_result, "previous_attempt", None), dict):
+            _log_reject_bucket = str(reject_result.previous_attempt.get("reject_bucket", "") or "")
+        _reject_artifact_meta = normalize_artifact_meta(getattr(reject_result, "attempt_artifact_meta", {}) or {})
         _session_selection_reason = str(
             (
-                _trace_director_result.get("selection_reason")
+                trace_director_result.get("selection_reason")
                 or director_result.get("selection_reason", "")
             )
-            if isinstance(_trace_director_result, dict)
+            if isinstance(trace_director_result, dict)
             else director_result.get("selection_reason", "")
         )
         _session_verdict_reason = str(
             (
-                _trace_director_result.get("verdict_reason")
+                trace_director_result.get("verdict_reason")
                 or reason
                 or _session_selection_reason
             )
-            if isinstance(_trace_director_result, dict)
+            if isinstance(trace_director_result, dict)
             else (reason or _session_selection_reason)
         )
-        _session_runtime_advisory = str((_reject_result.previous_attempt or {}).get("runtime_advisory", "") or "")
-        _session_retry_directives = str((_reject_result.previous_attempt or {}).get("retry_directives", "") or "")
+        _session_runtime_advisory = str((reject_result.previous_attempt or {}).get("runtime_advisory", "") or "")
+        _session_retry_directives = str((reject_result.previous_attempt or {}).get("retry_directives", "") or "")
         _session_gate_semantics = self._build_gate_semantics_payload(
-            _trace_director_result if isinstance(_trace_director_result, dict) else director_result
+            trace_director_result if isinstance(trace_director_result, dict) else director_result
         )
         _current_db = getattr(getattr(self.ctx, "current_project", None), "db", None)
         if _current_db is not None and hasattr(_current_db, "update_director_selection_rationale"):
             try:
                 _current_db.update_director_selection_rationale(
-                    attempt_key=_attempt_key,
+                    attempt_key=attempt_key,
                     selection_reason=_session_selection_reason,
                     verdict_reason=_session_verdict_reason,
                     fix_scope=(
-                        _trace_director_result.get("fix_scope", "")
-                        if isinstance(_trace_director_result, dict)
+                        trace_director_result.get("fix_scope", "")
+                        if isinstance(trace_director_result, dict)
                         else director_result.get("fix_scope", "")
                     ),
                 )
@@ -2900,31 +2938,31 @@ class Stage4InterviewRound:
             ep_num=next_ep,
             round_num=round_num,
             director_result=director_result,
-            initial_verdict=verdict,
-            initial_score=score,
-            final_verdict=_trace_final_verdict or "REJECT",
-            final_score=_trace_final_score,
-            is_patch=_is_patch,
-            patch_fallback=_is_patch_fallback,
-            tot_used=_tot_used,
-            mad_used=_mad_used,
-            asp_used=bool(_asp_manuscript),
+            initial_verdict=initial_verdict,
+            initial_score=initial_score,
+            final_verdict=final_verdict,
+            final_score=final_score,
+            is_patch=is_patch,
+            patch_fallback=is_patch_fallback,
+            tot_used=tot_used,
+            mad_used=mad_used,
+            asp_used=bool(asp_manuscript),
             model=getattr(chief_writer, "model_tier", None),
             reject_bucket=_log_reject_bucket,
-            validation_warnings=_validation_warnings,
+            validation_warnings=validation_warnings,
             feedback_provenance={
-                "director_feedback": str((_reject_result.previous_attempt or {}).get("director_feedback_text", "") or ""),
+                "director_feedback": str((reject_result.previous_attempt or {}).get("director_feedback_text", "") or ""),
                 "runtime_advisory": _session_runtime_advisory,
                 "retry_directives": _session_retry_directives,
             },
-            patch_trace=_trace_patch_trace,
+            patch_trace=trace_patch_trace,
             arc_num=round_ctx.arc_data.get("arc_no", 0),
             candidate_key=_reject_artifact_meta["candidate_key"],
             content_hash=_reject_artifact_meta["content_hash"],
             artifact_path=_reject_artifact_meta["artifact_path"],
-            selection_candidate_key=_selection_artifact_meta["candidate_key"],
-            selection_content_hash=_selection_artifact_meta["content_hash"],
-            selection_artifact_path=_selection_artifact_meta["artifact_path"],
+            selection_candidate_key=selection_artifact_meta["candidate_key"],
+            selection_content_hash=selection_artifact_meta["content_hash"],
+            selection_artifact_path=selection_artifact_meta["artifact_path"],
             attempt_key=build_attempt_key(
                 stage=4,
                 ep_num=next_ep,
@@ -2937,13 +2975,13 @@ class Stage4InterviewRound:
             next_ep=next_ep,
             round_num=round_num,
             arc_num=round_ctx.arc_data.get("arc_no", 0),
-            initial_verdict=verdict,
-            final_verdict=_trace_final_verdict or "REJECT",
-            initial_score=score,
-            final_score=_trace_final_score,
-            patch_mode=bool(_is_patch),
-            patch_fallback=bool(_is_patch_fallback),
-            warning_count=len(_validation_warnings),
+            initial_verdict=initial_verdict,
+            final_verdict=final_verdict,
+            initial_score=initial_score,
+            final_score=final_score,
+            patch_mode=bool(is_patch),
+            patch_fallback=bool(is_patch_fallback),
+            warning_count=len(validation_warnings),
             final_warning_count=0,
             reject_bucket=_log_reject_bucket,
             candidate_key=_reject_artifact_meta["candidate_key"],
@@ -2954,62 +2992,271 @@ class Stage4InterviewRound:
                 next_ep=next_ep,
                 round_num=round_num,
                 arc_num=round_ctx.arc_data.get("arc_no", 0),
-                verdict=_trace_final_verdict or "REJECT",
-                score=_trace_final_score,
+                verdict=final_verdict,
+                score=final_score,
                 selected=selected,
                 error_category=error_category,
                 reason=(
-                    (_trace_director_result.get("verdict_reason") or reason)
-                    if isinstance(_trace_director_result, dict)
+                    (trace_director_result.get("verdict_reason") or reason)
+                    if isinstance(trace_director_result, dict)
                     else reason
                 ),
                 fix_scope=(
-                    _trace_director_result.get("fix_scope", "")
-                    if isinstance(_trace_director_result, dict)
+                    trace_director_result.get("fix_scope", "")
+                    if isinstance(trace_director_result, dict)
                     else director_result.get("fix_scope", "")
                 ),
                 open_review=(
-                    _trace_director_result.get("open_review", "")
-                    if isinstance(_trace_director_result, dict)
+                    trace_director_result.get("open_review", "")
+                    if isinstance(trace_director_result, dict)
                     else director_result.get("open_review", "")
                 ),
                 action_items=(
-                    _trace_director_result.get("action_items", [])
-                    if isinstance(_trace_director_result, dict)
+                    trace_director_result.get("action_items", [])
+                    if isinstance(trace_director_result, dict)
                     else director_result.get("action_items", [])
                 ),
-                attempt_key=_attempt_key,
+                attempt_key=attempt_key,
                 artifact_meta=_reject_artifact_meta,
-                selection_artifact_meta=_selection_artifact_meta,
-                initial_verdict=verdict,
-                initial_score=score,
+                selection_artifact_meta=selection_artifact_meta,
+                initial_verdict=initial_verdict,
+                initial_score=initial_score,
                 selection_reason=_session_selection_reason,
                 verdict_reason=_session_verdict_reason,
                 director_verdict=_session_gate_semantics.get("director_verdict", ""),
                 gate_basis=_session_gate_semantics.get("gate_basis", ""),
                 repair_scope=_session_gate_semantics.get("repair_scope", ""),
                 fix_pack=self._build_fix_pack_payload(
-                    _trace_director_result if isinstance(_trace_director_result, dict) else director_result
+                    trace_director_result if isinstance(trace_director_result, dict) else director_result
                 ),
                 retry_budget_axes=dict(getattr(self, "_last_retry_budget_axes", {}) or {}),
                 runtime_advisory=_session_runtime_advisory,
                 retry_directives=_session_retry_directives,
                 firewall_triggered=bool(
                     (
-                        _trace_director_result.get("firewall_triggered")
-                        if isinstance(_trace_director_result, dict)
+                        trace_director_result.get("firewall_triggered")
+                        if isinstance(trace_director_result, dict)
                         else director_result.get("firewall_triggered")
                     )
                 ),
                 firewall_reason=(
-                    _trace_director_result.get("firewall_reason", "")
-                    if isinstance(_trace_director_result, dict)
+                    trace_director_result.get("firewall_reason", "")
+                    if isinstance(trace_director_result, dict)
                     else director_result.get("firewall_reason", "")
                 ),
             )
         except Exception as _e:
             logging.debug("[SilentPass:Stage4:SessionLog] %s", _e)
-        return _reject_result
+        return reject_result
+
+    def _finalize_pass_result(
+        self,
+        *,
+        pass_result,
+        next_ep: int,
+        round_num: int,
+        round_ctx,
+        chief_writer,
+        director_result: dict,
+        trace_director_result,
+        director_feedback: str,
+        initial_verdict: str,
+        initial_score: int,
+        final_verdict: str,
+        final_score: int,
+        selected: str,
+        reason: str,
+        error_category: str,
+        attempt_key: str,
+        selection_artifact_meta: dict,
+        validation_warnings: list[str],
+        is_patch: bool,
+        is_patch_fallback: bool,
+        trace_patch_trace: dict,
+        tot_used: bool,
+        mad_used: bool,
+        asp_manuscript: str,
+    ):
+        _attempt_artifact_meta = normalize_artifact_meta(getattr(pass_result, "attempt_artifact_meta", {}) or {})
+        _log_artifact_meta = normalize_artifact_meta(_attempt_artifact_meta)
+        if not _log_artifact_meta["candidate_key"] and isinstance(trace_director_result, dict):
+            _sel_candidate = trace_director_result.get("selected_candidate") or {}
+            if not isinstance(_sel_candidate, dict):
+                _sel_candidate = {}
+            _fallback_candidate = build_candidate_key(
+                label=str(trace_director_result.get("selected", "") or ""),
+                strategy=str(_sel_candidate.get("strategy_name", "") or _sel_candidate.get("strategy", "")),
+                fallback="stage4",
+            )
+            _log_artifact_meta = normalize_artifact_meta(
+                snapshot_logged_artifact(
+                    getattr(self.ctx, "current_project", None),
+                    stage=4,
+                    ep_num=next_ep,
+                    arc_num=round_ctx.arc_data.get("arc_no", 0),
+                    attempt_num=round_num + 1,
+                    candidate_key=_fallback_candidate,
+                    artifact_kind="patched_after_fix" if (is_patch or trace_patch_trace) else "final_manuscript",
+                    payload=getattr(pass_result, "final_manuscript", ""),
+                )
+            )
+        _session_selection_reason = str(
+            (
+                trace_director_result.get("selection_reason")
+                or director_result.get("selection_reason", "")
+            )
+            if isinstance(trace_director_result, dict)
+            else director_result.get("selection_reason", "")
+        )
+        _session_verdict_reason = str(
+            (
+                trace_director_result.get("verdict_reason")
+                or reason
+                or _session_selection_reason
+            )
+            if isinstance(trace_director_result, dict)
+            else (reason or _session_selection_reason)
+        )
+        _session_runtime_advisory = self._build_retry_advisory_digest()
+        _session_retry_directives = ""
+        _session_gate_semantics = self._build_gate_semantics_payload(
+            trace_director_result if isinstance(trace_director_result, dict) else director_result
+        )
+        _current_db = getattr(getattr(self.ctx, "current_project", None), "db", None)
+        if _current_db is not None and hasattr(_current_db, "update_director_selection_rationale"):
+            try:
+                _current_db.update_director_selection_rationale(
+                    attempt_key=attempt_key,
+                    selection_reason=_session_selection_reason,
+                    verdict_reason=_session_verdict_reason,
+                    fix_scope=(
+                        trace_director_result.get("fix_scope", "")
+                        if isinstance(trace_director_result, dict)
+                        else director_result.get("fix_scope", "")
+                    ),
+                )
+            except Exception as _e:
+                logging.debug("[Stage4] director rationale sync failed: %s", _e)
+        self._append_episode_log(
+            ep_num=next_ep,
+            round_num=round_num,
+            director_result=director_result,
+            initial_verdict=initial_verdict,
+            initial_score=initial_score,
+            final_verdict=final_verdict,
+            final_score=final_score,
+            is_patch=is_patch,
+            patch_fallback=is_patch_fallback,
+            tot_used=tot_used,
+            mad_used=mad_used,
+            asp_used=bool(asp_manuscript),
+            model=getattr(chief_writer, "model_tier", None),
+            reject_bucket="",
+            validation_warnings=validation_warnings,
+            final_warnings=list((trace_director_result.get("final_warnings") or []) if isinstance(trace_director_result, dict) else []),
+            feedback_provenance={
+                "director_feedback": str(
+                    (trace_director_result.get("verdict_reason") or director_feedback)
+                    if isinstance(trace_director_result, dict)
+                    else director_feedback
+                ),
+                "runtime_advisory": _session_runtime_advisory,
+                "retry_directives": _session_retry_directives,
+            },
+            patch_trace=trace_patch_trace,
+            arc_num=round_ctx.arc_data.get("arc_no", 0),
+            attempt_key=build_attempt_key(
+                stage=4,
+                ep_num=next_ep,
+                arc_num=round_ctx.arc_data.get("arc_no", 0),
+                attempt_num=round_num + 1,
+                session_id=resolve_logging_session_id(getattr(self.ctx, "current_project", None)),
+            ),
+            candidate_key=_log_artifact_meta["candidate_key"],
+            content_hash=_log_artifact_meta["content_hash"],
+            artifact_path=_log_artifact_meta["artifact_path"],
+            selection_candidate_key=str(selection_artifact_meta.get("candidate_key", "") or ""),
+            selection_content_hash=str(selection_artifact_meta.get("content_hash", "") or ""),
+            selection_artifact_path=str(selection_artifact_meta.get("artifact_path", "") or ""),
+        )
+        self._log_round_outcome(
+            next_ep=next_ep,
+            round_num=round_num,
+            arc_num=round_ctx.arc_data.get("arc_no", 0),
+            initial_verdict=initial_verdict,
+            final_verdict=final_verdict,
+            initial_score=initial_score,
+            final_score=final_score,
+            patch_mode=bool(is_patch),
+            patch_fallback=bool(is_patch_fallback),
+            warning_count=len(validation_warnings),
+            final_warning_count=len(
+                list((trace_director_result.get("final_warnings") or []) if isinstance(trace_director_result, dict) else [])
+            ),
+            candidate_key=_log_artifact_meta["candidate_key"],
+            artifact_path=_log_artifact_meta["artifact_path"],
+        )
+        try:
+            self._log_session_decision(
+                next_ep=next_ep,
+                round_num=round_num,
+                arc_num=round_ctx.arc_data.get("arc_no", 0),
+                verdict=final_verdict,
+                score=final_score,
+                selected=selected,
+                error_category=error_category,
+                reason=(
+                    (trace_director_result.get("verdict_reason") or reason)
+                    if isinstance(trace_director_result, dict)
+                    else reason
+                ),
+                fix_scope=(
+                    trace_director_result.get("fix_scope", "")
+                    if isinstance(trace_director_result, dict)
+                    else director_result.get("fix_scope", "")
+                ),
+                open_review=(
+                    trace_director_result.get("open_review", "")
+                    if isinstance(trace_director_result, dict)
+                    else director_result.get("open_review", "")
+                ),
+                action_items=(
+                    trace_director_result.get("action_items", [])
+                    if isinstance(trace_director_result, dict)
+                    else director_result.get("action_items", [])
+                ),
+                attempt_key=attempt_key,
+                artifact_meta=_log_artifact_meta,
+                selection_artifact_meta=selection_artifact_meta,
+                initial_verdict=initial_verdict,
+                initial_score=initial_score,
+                selection_reason=_session_selection_reason,
+                verdict_reason=_session_verdict_reason,
+                director_verdict=_session_gate_semantics.get("director_verdict", ""),
+                gate_basis=_session_gate_semantics.get("gate_basis", ""),
+                repair_scope=_session_gate_semantics.get("repair_scope", ""),
+                fix_pack=self._build_fix_pack_payload(
+                    trace_director_result if isinstance(trace_director_result, dict) else director_result
+                ),
+                retry_budget_axes=dict(getattr(self, "_last_retry_budget_axes", {}) or {}),
+                runtime_advisory=_session_runtime_advisory,
+                retry_directives=_session_retry_directives,
+                firewall_triggered=bool(
+                    (
+                        trace_director_result.get("firewall_triggered")
+                        if isinstance(trace_director_result, dict)
+                        else director_result.get("firewall_triggered")
+                    )
+                ),
+                firewall_reason=(
+                    trace_director_result.get("firewall_reason", "")
+                    if isinstance(trace_director_result, dict)
+                    else director_result.get("firewall_reason", "")
+                ),
+            )
+        except Exception as _e:
+            logging.debug("[SilentPass:Stage4:SessionLog] %s", _e)
+        return pass_result
 
     def _run_pre_director_validation(
         self,

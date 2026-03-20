@@ -56,6 +56,55 @@ def _trim_mandatory_context_for_budget(mandatory_context: str, *, max_chars: int
     return smart_truncate(text, max_chars=max_chars, head_chars=head_chars)
 
 
+@dataclasses.dataclass(slots=True)
+class _MandatoryContextBudgetResult:
+    mandatory_context: str
+    removed_count: int
+    removed_chars: int
+    used_fallback: bool
+
+
+def _fit_mandatory_context_budget(mandatory_context: str, *, max_chars: int) -> _MandatoryContextBudgetResult:
+    text = str(mandatory_context or "")
+    if len(text) <= max_chars:
+        return _MandatoryContextBudgetResult(
+            mandatory_context=text,
+            removed_count=0,
+            removed_chars=0,
+            used_fallback=False,
+        )
+
+    section_pattern = re.compile(r"\n(?=\[)")
+    sections = [section for section in section_pattern.split(text) if section.strip()]
+    if len(sections) <= 1:
+        return _MandatoryContextBudgetResult(
+            mandatory_context=_trim_mandatory_context_for_budget(text, max_chars=max_chars),
+            removed_count=0,
+            removed_chars=0,
+            used_fallback=True,
+        )
+
+    removed_count = 0
+    removed_chars = 0
+    while len("\n".join(sections)) > max_chars and len(sections) > 1:
+        removed_section = sections.pop()
+        removed_count += 1
+        removed_chars += len(removed_section)
+
+    fitted = "\n".join(sections)
+    used_fallback = False
+    if len(fitted) > max_chars:
+        fitted = _trim_mandatory_context_for_budget(fitted, max_chars=max_chars)
+        used_fallback = True
+
+    return _MandatoryContextBudgetResult(
+        mandatory_context=fitted,
+        removed_count=removed_count,
+        removed_chars=removed_chars,
+        used_fallback=used_fallback,
+    )
+
+
 # ═══════════════════════════════════════════════════════════════
 # [Phase 3-5C] NPC 과잉 등장 감지 (advisory-only, pure function)
 # ═══════════════════════════════════════════════════════════════
@@ -204,6 +253,30 @@ class _RoundOutcome:
     final_title: object  # str | None
     final_state_updates: dict
     should_return: bool
+
+
+@dataclasses.dataclass(slots=True)
+class _WriterPromptSupplements:
+    """Small prompt-only payload derived before round-context assembly."""
+
+    purism_prompt: str
+    npc_equipment_summary: str
+    effective_anti_trope: str
+    intro_dna: str
+
+
+@dataclasses.dataclass(slots=True)
+class _EpisodeLoopInputs:
+    blueprint: dict
+    arc_data: dict
+    preflight_advisory: str
+
+
+@dataclasses.dataclass(slots=True)
+class _EpisodePromptBundle:
+    genre_name: str
+    ctx_prompts: dict
+    prompt_supplements: _WriterPromptSupplements
 
 
 class Stage4Orchestrator:
@@ -668,6 +741,132 @@ JSON으로 출력:
             _perf_logger.warning(f"[V68] chain_link 추출 실패 (ep={ep_num}): {str(e)[:80]}")
             return {}
 
+    def _build_writer_prompt_supplements(self, *, anti_trope_prompt: str) -> _WriterPromptSupplements:
+        purism_prompt = ""
+        _guard = getattr(getattr(self.ctx, "sys", None), "guard", None)
+        if _guard:
+            try:
+                purism_prompt = _guard.get_v20_purism_prompt()
+                if hasattr(_guard, "get_retrieval_contract_prompt"):
+                    _work_contract = str(_guard.get_retrieval_contract_prompt("manuscript") or "").strip()
+                    if _work_contract:
+                        purism_prompt = "\n\n".join(part for part in (purism_prompt, _work_contract) if part)
+            except Exception as e:
+                self.ctx.ui.log(f"   ⚠️ Guard Purism Prompt 추출 실패 (비치명): {e}")
+
+        npc_equipment_summary = ""
+        try:
+            bible_root = self.ctx.current_project.master_bible.get("MasterBible", self.ctx.current_project.master_bible)
+            assets = bible_root.get("AssetLibrary", {})
+            key_npcs = assets.get("KeyNPCs", []) or assets.get("Key_NPCs", [])
+            npc_equipment_lines = []
+            for npc in key_npcs:
+                if isinstance(npc, dict):
+                    npc_name = npc.get("name") or npc.get("Name", "알 수 없음")
+                    npc_hud = npc.get("NPC_Martial_HUD", {})
+                    if isinstance(npc_hud, dict):
+                        equip = npc_hud.get("equipment", [])
+                        if equip:
+                            npc_equipment_lines.append(f"- {npc_name}: {equip}")
+            npc_equipment_summary = "\n".join(npc_equipment_lines) if npc_equipment_lines else "NPC 장비 정보 없음"
+        except Exception as e:
+            self.ctx.ui.log(f"   ⚠️ NPC 장비 현황 추출 실패 (비차단): {e}")
+            npc_equipment_summary = ""
+
+        effective_anti_trope = anti_trope_prompt
+        diversity_engine = getattr(self.ctx, "diversity_engine", None)
+        if diversity_engine:
+            try:
+                _diversity_cot = diversity_engine.get_writer_injection()
+                if _diversity_cot:
+                    effective_anti_trope = f"{anti_trope_prompt}\n\n{_diversity_cot}"
+            except Exception as _e:
+                logging.debug("[Stage4] diversity_engine 주입 실패 (무시): %s", _e)
+
+        intro_dna = ""
+        try:
+            _bible = self.ctx.current_project.master_bible
+            _br = _bible.get("MasterBible", _bible) if isinstance(_bible, dict) else {}
+            intro_dna = _br.get("protagonist_config", {}).get("personality", "")
+        except Exception:
+            logging.debug("[Stage4] intro_dna Bible 로드 실패 (빈 문자열 폴백)")
+
+        return _WriterPromptSupplements(
+            purism_prompt=purism_prompt,
+            npc_equipment_summary=npc_equipment_summary,
+            effective_anti_trope=effective_anti_trope,
+            intro_dna=intro_dna,
+        )
+
+    def _prepare_current_episode_inputs(self, *, next_ep: int) -> _EpisodeLoopInputs | None:
+        blueprint = self.ctx.current_project.get_blueprint(next_ep)
+        if not blueprint:
+            self.ctx.ui.log(f"⚠️ 제{next_ep}화 Blueprint 없음. Stage 3 먼저 실행하세요.")
+            return None
+
+        arc_data = next(
+            (
+                arc
+                for arc in self.ctx.current_project.arcs
+                if isinstance(arc, dict) and arc.get("ep_start", 0) <= next_ep <= arc.get("ep_end", 0)
+            ),
+            None,
+        )
+        if not arc_data:
+            self.ctx.ui.log(f"⚠️ 제{next_ep}화 Arc 데이터 없음.")
+            return None
+
+        preflight = self._preflight_validate_blueprint(
+            blueprint=blueprint,
+            arc_data=arc_data,
+            ep_num=next_ep,
+        )
+        return _EpisodeLoopInputs(
+            blueprint=preflight.get("patched_blueprint") or blueprint,
+            arc_data=arc_data,
+            preflight_advisory=preflight.get("advisory", ""),
+        )
+
+    def _build_episode_prompt_bundle(
+        self,
+        *,
+        next_ep: int,
+        arc_data: dict,
+        blueprint: dict,
+        arc_tactical: str,
+        prev_text: str,
+        prev_ending: str,
+        hud_report: str,
+        anchor_sys,
+        s4_genre_type: str,
+        v50_modules_available: bool,
+    ) -> _EpisodePromptBundle:
+        genre_name = (getattr(self.ctx.current_project, "genre", None) or {}).get("name", "무협")
+        writer_agent = self.ctx.agents.get("writer") if "writer" in self.ctx.agents else None
+        ctx_prompts = self.context_builder.build_mandatory_context(
+            next_ep=next_ep,
+            arc_data=arc_data,
+            arc_tactical=arc_tactical,
+            prev_text=prev_text,
+            prev_ending=prev_ending,
+            hud_report=hud_report,
+            writer_agent=writer_agent,
+            anchor_sys=anchor_sys,
+            s4_genre_type=s4_genre_type,
+            v50_modules_available=v50_modules_available,
+            blueprint=blueprint,
+            pacing_analyzer=self.ctx.pacing_analyzer,
+        )
+        anti_trope_prompt = ctx_prompts["anti_trope_prompt"]
+        prompt_supplements = self._build_writer_prompt_supplements(
+            anti_trope_prompt=anti_trope_prompt,
+        )
+        return _EpisodePromptBundle(
+            genre_name=genre_name,
+            ctx_prompts=ctx_prompts,
+            prompt_supplements=prompt_supplements,
+        )
+
     def _run_interview_loop(self, session: _SessionConfig, *, skip_pause: bool = False) -> bool:
         """[4-R1-e-4] Run main episode production loop.
 
@@ -722,33 +921,12 @@ JSON으로 출력:
                 self.ctx.ui.log(f"🏁 목표 회차({target_ep}화) 도달. 종료합니다.")
                 break
 
-            # Blueprint 로드
-            blueprint = self.ctx.current_project.get_blueprint(next_ep)
-            if not blueprint:
-                self.ctx.ui.log(f"⚠️ 제{next_ep}화 Blueprint 없음. Stage 3 먼저 실행하세요.")
+            _episode_inputs = self._prepare_current_episode_inputs(next_ep=next_ep)
+            if _episode_inputs is None:
                 break
-
-            # Arc 데이터 검색
-            arc_data = next(
-                (
-                    a
-                    for a in self.ctx.current_project.arcs
-                    if isinstance(a, dict) and a.get("ep_start", 0) <= next_ep <= a.get("ep_end", 0)
-                ),
-                None,
-            )
-            if not arc_data:
-                self.ctx.ui.log(f"⚠️ 제{next_ep}화 Arc 데이터 없음.")
-                break
-
-            # [TF-49b] Blueprint 사전검증 — 원고 생성 전 수치/팩트 정합성 체크
-            _preflight = self._preflight_validate_blueprint(
-                blueprint=blueprint,
-                arc_data=arc_data,
-                ep_num=next_ep,
-            )
-            blueprint = _preflight.get("patched_blueprint") or blueprint
-            _preflight_advisory = _preflight.get("advisory", "")
+            blueprint = _episode_inputs.blueprint
+            arc_data = _episode_inputs.arc_data
+            _preflight_advisory = _episode_inputs.preflight_advisory
 
             # [4-R1-a] 에피소드 컨텍스트 수집 (Extract Method)
             _ep_ctx = self.context_builder.prepare_episode_context(next_ep, arc_data, chief_writer)
@@ -763,79 +941,28 @@ JSON으로 출력:
             # reserved for future use: current_inventory, current_martial_arts, dead_npcs, item_acquisition_timeline
             _chain_link_section = _ep_ctx["chain_link_section"]
             _world_state_summary = _ep_ctx["world_state_summary"]
-            # ===== [V60.80+] 기존 Writer 전달 기능 추출 =====
-            # [V60.85] 장르 Guard에서 Purism Prompt 추출
-            purism_prompt = ""
-            if hasattr(self.ctx.sys, "guard") and self.ctx.sys.guard:
-                try:
-                    purism_prompt = self.ctx.sys.guard.get_v20_purism_prompt()
-                    if hasattr(self.ctx.sys.guard, "get_retrieval_contract_prompt"):
-                        _work_contract = str(self.ctx.sys.guard.get_retrieval_contract_prompt("manuscript") or "").strip()
-                        if _work_contract:
-                            purism_prompt = "\n\n".join(part for part in (purism_prompt, _work_contract) if part)
-                except Exception as e:
-                    self.ctx.ui.log(f"   ⚠️ Guard Purism Prompt 추출 실패 (비치명): {e}")
 
-            genre_name = (getattr(self.ctx.current_project, "genre", None) or {}).get("name", "무협")
-            writer_agent = self.ctx.agents.get("writer") if "writer" in self.ctx.agents else None
-            _ctx_prompts = self.context_builder.build_mandatory_context(
+            _prompt_bundle = self._build_episode_prompt_bundle(
                 next_ep=next_ep,
                 arc_data=arc_data,
+                blueprint=blueprint,
                 arc_tactical=arc_tactical,
                 prev_text=prev_text,
                 prev_ending=prev_ending,
                 hud_report=hud_report,
-                writer_agent=writer_agent,
                 anchor_sys=_anchor_sys,
                 s4_genre_type=s4_genre_type,
                 v50_modules_available=v50_modules_available,
-                blueprint=blueprint,
-                pacing_analyzer=self.ctx.pacing_analyzer,
             )
-            # reserved for future use: reference_anchor_prompt, justification_prompt, reflexion_prompt
+            genre_name = _prompt_bundle.genre_name
+            _ctx_prompts = _prompt_bundle.ctx_prompts
             mandatory_context = _ctx_prompts["mandatory_context"]
-            anti_trope_prompt = _ctx_prompts["anti_trope_prompt"]
-
-            # [V60.81] NPC equipment summary extraction
-            npc_equipment_summary = ""
-            try:
-                bible_root = self.ctx.current_project.master_bible.get(
-                    "MasterBible", self.ctx.current_project.master_bible
-                )
-                assets = bible_root.get("AssetLibrary", {})
-                key_npcs = assets.get("KeyNPCs", []) or assets.get("Key_NPCs", [])
-                npc_equipment_lines = []
-                for npc in key_npcs:
-                    if isinstance(npc, dict):
-                        npc_name = npc.get("name") or npc.get("Name", "알 수 없음")
-                        npc_hud = npc.get("NPC_Martial_HUD", {})
-                        if isinstance(npc_hud, dict):
-                            equip = npc_hud.get("equipment", [])
-                            if equip:
-                                npc_equipment_lines.append(f"- {npc_name}: {equip}")
-                npc_equipment_summary = "\n".join(npc_equipment_lines) if npc_equipment_lines else "NPC 장비 정보 없음"
-            except Exception as e:
-                self.ctx.ui.log(f"   ⚠️ NPC 장비 현황 추출 실패 (비차단): {e}")
-                npc_equipment_summary = ""
-
-            # [V63] Contrastive CoT
-            _effective_anti_trope = anti_trope_prompt
-            if self.ctx.diversity_engine:
-                try:
-                    _diversity_cot = self.ctx.diversity_engine.get_writer_injection()
-                    if _diversity_cot:
-                        _effective_anti_trope = f"{anti_trope_prompt}\n\n{_diversity_cot}"
-                except Exception as _e:  # [V64.P4] OPTIONAL: diversity injection
-                    logging.debug("[Stage4] diversity_engine 주입 실패 (무시): %s", _e)
-
-            # [QI-1-C3] Bible protagonist_config에서 personality 동적 로드
-            intro_dna = ""
-            try:
-                _bible = self.ctx.current_project.master_bible
-                _br = _bible.get("MasterBible", _bible) if isinstance(_bible, dict) else {}
-                intro_dna = _br.get("protagonist_config", {}).get("personality", "")
-            except Exception:
-                logging.debug("[Stage4] intro_dna Bible 로드 실패 (빈 문자열 폴백)")
+            # reserved for future use: reference_anchor_prompt, justification_prompt, reflexion_prompt
+            _prompt_supplements = _prompt_bundle.prompt_supplements
+            purism_prompt = _prompt_supplements.purism_prompt
+            npc_equipment_summary = _prompt_supplements.npc_equipment_summary
+            _effective_anti_trope = _prompt_supplements.effective_anti_trope
+            intro_dna = _prompt_supplements.intro_dna
 
             self.ctx.ui.log(f"\n{'=' * 60}")
             self.ctx.ui.log(
@@ -861,39 +988,19 @@ JSON으로 출력:
                         _budget_ledger.get("dropped_chars"),
                         _budget_ledger.get("overflow_chars"),
                     )
-                # 섹션 분리: "\n[" 또는 "\n\n[" 마커 기준으로 분할
-                _section_pattern = re.compile(r"\n(?=\[)")
-                _sections = _section_pattern.split(mandatory_context)
-                # 빈 섹션 제거
-                _sections = [s for s in _sections if s.strip()]
-                if len(_sections) > 1:
-                    # 뒤에서부터 (낮은 우선순위) 하나씩 제거
-                    _removed_count = 0
-                    _removed_chars = 0
-                    while len("\n".join(_sections)) > _mc_max and len(_sections) > 1:
-                        _removed_section = _sections.pop()
-                        _removed_count += 1
-                        _removed_chars += len(_removed_section)
-                    mandatory_context = "\n".join(_sections)
-                    # [Sweep45] 첫 섹션 단독 > 50K 시 fallback truncation
-                    if len(mandatory_context) > _mc_max:
-                        mandatory_context = _trim_mandatory_context_for_budget(
-                            mandatory_context,
-                            max_chars=_mc_max,
-                        )
-                    if _removed_count > 0:
-                        _perf_logger.info(
-                            f"[V66.1] mandatory_context {_removed_count}개 섹션 제거 ({_removed_chars}자)"
-                        )
-                        self.ctx.ui.log(
-                            f"   ⚠️ [V66.1] mandatory_context {_original_len}자 → {len(mandatory_context)}자 (섹션 {_removed_count}개 제거)"
-                        )
-                else:
-                    # 섹션 분리 불가 시 기존 방식 폴백
-                    mandatory_context = _trim_mandatory_context_for_budget(
-                        mandatory_context,
-                        max_chars=_mc_max,
+                _budget_result = _fit_mandatory_context_budget(
+                    mandatory_context,
+                    max_chars=_mc_max,
+                )
+                mandatory_context = _budget_result.mandatory_context
+                if _budget_result.removed_count > 0:
+                    _perf_logger.info(
+                        f"[V66.1] mandatory_context {_budget_result.removed_count}개 섹션 제거 ({_budget_result.removed_chars}자)"
                     )
+                    self.ctx.ui.log(
+                        f"   ⚠️ [V66.1] mandatory_context {_original_len}자 → {len(mandatory_context)}자 (섹션 {_budget_result.removed_count}개 제거)"
+                    )
+                elif _budget_result.used_fallback:
                     self.ctx.ui.log(
                         f"   ⚠️ [V66.1] mandatory_context {_original_len}자 → {_mc_max:,}자로 truncate (폴백)"
                     )
