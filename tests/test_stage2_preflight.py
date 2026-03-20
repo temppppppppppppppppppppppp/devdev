@@ -259,6 +259,66 @@ class TestPreflightArcAnalysis:
         }
         assert required == set(out.keys())
 
+    def test_build_patch_feedback_merges_selection_score_warnings_and_fix_scope(self, preflight):
+        result = preflight._build_patch_feedback(
+            {
+                "rejection_reason": "keep structure, fix only local issue",
+                "selection_reason": "candidate 2 was closest",
+                "score_breakdown": {"coherence": 8, "density": 7.5, "note": "skip"},
+                "validation_warnings": ["minor drift", 123, "continuity watch"],
+                "fix_scope_reasoning": "local continuity delta only",
+            }
+        )
+
+        assert "keep structure, fix only local issue" in result
+        assert "[선택/거절 사유]" in result
+        assert "candidate 2 was closest" in result
+        assert "[점수 분해]" in result
+        assert "coherence=8" in result
+        assert "density=7.5" in result
+        assert "note=skip" not in result
+        assert "[검증 경고]" in result
+        assert "- minor drift" in result
+        assert "- continuity watch" in result
+        assert "[수정 범위 근거]" in result
+        assert "local continuity delta only" in result
+
+    def test_build_patch_feedback_defaults_to_rejection_reason_only(self, preflight):
+        result = preflight._build_patch_feedback({"rejection_reason": "retry arc"})
+
+        assert result == "retry arc"
+
+    def test_apply_retry_focus_mode_noops_for_first_attempt(self, preflight):
+        result = preflight._apply_retry_focus_mode(
+            attempt=0,
+            current_feedback="",
+            constraint_block="constraint",
+            cached_preflight_injection="cached inj",
+            all_refined_arcs=[{"arc_no": 1}],
+            protagonist_name="hero",
+            enhanced_context="base context",
+        )
+
+        assert result == "base context"
+        preflight.ctx.build_minimal_arc_context.assert_not_called()
+
+    def test_apply_retry_focus_mode_preserves_constraints_and_cached_preflight(self, preflight):
+        result = preflight._apply_retry_focus_mode(
+            attempt=1,
+            current_feedback="fix this",
+            constraint_block="constraint block",
+            cached_preflight_injection="cached inj",
+            all_refined_arcs=[{"arc_no": 1}],
+            protagonist_name="hero",
+            enhanced_context="base context",
+        )
+
+        assert result.startswith("fix this")
+        assert "constraint block" in result
+        assert "cached inj" in result
+        assert "minimal context" in result
+        preflight.ctx.build_minimal_arc_context.assert_called_once_with([{"arc_no": 1}], "hero")
+
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
     def test_focus_mode_on_retry(self, preflight):
         out = preflight._preflight_arc_analysis(

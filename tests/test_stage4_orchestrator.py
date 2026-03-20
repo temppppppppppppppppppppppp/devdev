@@ -1222,6 +1222,197 @@ class TestStage4OrchestratorImport:
         assert "HEAD-CONTEXT" in trimmed
         assert "TAIL-CONTEXT" in trimmed
 
+    def test_fit_mandatory_context_budget_drops_low_priority_sections(self):
+        from modules.core.stage4_orchestrator import _MandatoryContextBudgetResult, _fit_mandatory_context_budget
+
+        text = "[A]\n" + ("A" * 50) + "\n[B]\n" + ("B" * 50) + "\n[C]\n" + ("C" * 50)
+
+        result = _fit_mandatory_context_budget(text, max_chars=130)
+
+        assert isinstance(result, _MandatoryContextBudgetResult)
+        assert result.removed_count == 1
+        assert result.removed_chars > 0
+        assert result.used_fallback is False
+        assert "[A]" in result.mandatory_context
+        assert "[B]" in result.mandatory_context
+        assert "[C]" not in result.mandatory_context
+
+    def test_fit_mandatory_context_budget_falls_back_for_single_section(self):
+        from modules.core.stage4_orchestrator import _fit_mandatory_context_budget
+
+        text = "[MANDATORY]\nHEAD-CONTEXT\n" + ("A" * 260) + "\nTAIL-CONTEXT"
+
+        result = _fit_mandatory_context_budget(text, max_chars=180)
+
+        assert result.removed_count == 0
+        assert result.used_fallback is True
+        assert len(result.mandatory_context) <= 180
+        assert "HEAD-CONTEXT" in result.mandatory_context
+        assert "TAIL-CONTEXT" in result.mandatory_context
+
+    def test_prepare_current_episode_inputs_returns_none_when_blueprint_missing(self, mock_app):
+        from modules.core.stage4_orchestrator import Stage4Orchestrator
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.ui.log = MagicMock()
+        ctx.current_project = mock_app.current_project
+        ctx.current_project.get_blueprint = MagicMock(return_value=None)
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+
+        result = orch._prepare_current_episode_inputs(next_ep=3)
+
+        assert result is None
+        ctx.ui.log.assert_called_once()
+
+    def test_prepare_current_episode_inputs_returns_none_when_arc_missing(self, mock_app):
+        from modules.core.stage4_orchestrator import Stage4Orchestrator
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.ui.log = MagicMock()
+        ctx.current_project = mock_app.current_project
+        ctx.current_project.get_blueprint = MagicMock(return_value={"scene_breakdown": {}})
+        ctx.current_project.arcs = []
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+
+        result = orch._prepare_current_episode_inputs(next_ep=3)
+
+        assert result is None
+        ctx.ui.log.assert_called_once()
+
+    def test_prepare_current_episode_inputs_applies_preflight_patch_and_advisory(self, mock_app):
+        from modules.core.stage4_orchestrator import Stage4Orchestrator, _EpisodeLoopInputs
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.ui.log = MagicMock()
+        ctx.current_project = mock_app.current_project
+        ctx.current_project.get_blueprint = MagicMock(return_value={"scene_breakdown": {"a": 1}})
+        ctx.current_project.arcs = [{"arc_no": 1, "ep_start": 1, "ep_end": 10}]
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+        orch._preflight_validate_blueprint = MagicMock(
+            return_value={"patched_blueprint": {"scene_breakdown": {"a": 2}}, "advisory": "watch pacing"}
+        )
+
+        result = orch._prepare_current_episode_inputs(next_ep=3)
+
+        assert isinstance(result, _EpisodeLoopInputs)
+        assert result.blueprint == {"scene_breakdown": {"a": 2}}
+        assert result.arc_data == {"arc_no": 1, "ep_start": 1, "ep_end": 10}
+        assert result.preflight_advisory == "watch pacing"
+
+    def test_build_episode_prompt_bundle_delegates_context_builder_and_writer_supplements(self, mock_app):
+        from modules.core.stage4_orchestrator import (
+            Stage4Orchestrator,
+            _EpisodePromptBundle,
+            _WriterPromptSupplements,
+        )
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.ui.log = MagicMock()
+        ctx.current_project = mock_app.current_project
+        ctx.current_project.genre = {"name": "무협"}
+        ctx.agents = {"writer": MagicMock()}
+        ctx.pacing_analyzer = MagicMock()
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+        orch._context_builder = MagicMock()
+        orch._context_builder.build_mandatory_context.return_value = {
+            "mandatory_context": "mandatory",
+            "anti_trope_prompt": "anti",
+            "reference_anchor_prompt": "",
+            "justification_prompt": "",
+            "reflexion_prompt": "",
+        }
+        orch._build_writer_prompt_supplements = MagicMock(
+            return_value=_WriterPromptSupplements(
+                purism_prompt="purism",
+                npc_equipment_summary="equip",
+                effective_anti_trope="anti++",
+                intro_dna="CYNICAL",
+            )
+        )
+
+        result = orch._build_episode_prompt_bundle(
+            next_ep=5,
+            arc_data={"arc_no": 1},
+            blueprint={"scene_breakdown": {}},
+            arc_tactical="전술",
+            prev_text="prev",
+            prev_ending="ending",
+            hud_report="HUD",
+            anchor_sys=MagicMock(),
+            s4_genre_type="wuxia",
+            v50_modules_available=False,
+        )
+
+        assert isinstance(result, _EpisodePromptBundle)
+        assert result.genre_name == "무협"
+        assert result.ctx_prompts["mandatory_context"] == "mandatory"
+        assert result.prompt_supplements.purism_prompt == "purism"
+        orch._context_builder.build_mandatory_context.assert_called_once()
+        orch._build_writer_prompt_supplements.assert_called_once_with(anti_trope_prompt="anti")
+
+    def test_build_writer_prompt_supplements_combines_guard_diversity_and_bible_fields(self, mock_app):
+        from modules.core.stage4_orchestrator import Stage4Orchestrator, _WriterPromptSupplements
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.ui.log = MagicMock()
+        ctx.current_project = mock_app.current_project
+        ctx.sys = mock_app.sys
+        ctx.diversity_engine = MagicMock()
+        ctx.diversity_engine.get_writer_injection.return_value = "diversity note"
+        ctx.current_project.master_bible = {
+            "MasterBible": {
+                "AssetLibrary": {
+                    "KeyNPCs": [
+                        {"name": "노사부", "NPC_Martial_HUD": {"equipment": ["죽봉", "호리병"]}},
+                    ]
+                },
+                "protagonist_config": {"personality": "CYNICAL"},
+            }
+        }
+        ctx.sys.guard.get_v20_purism_prompt.return_value = "purism"
+        ctx.sys.guard.get_retrieval_contract_prompt.return_value = "retrieval contract"
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+
+        result = orch._build_writer_prompt_supplements(anti_trope_prompt="anti")
+
+        assert isinstance(result, _WriterPromptSupplements)
+        assert result.purism_prompt == "purism\n\nretrieval contract"
+        assert result.npc_equipment_summary == "- 노사부: ['죽봉', '호리병']"
+        assert result.effective_anti_trope == "anti\n\ndiversity note"
+        assert result.intro_dna == "CYNICAL"
+
+    def test_build_writer_prompt_supplements_handles_guard_failure_and_missing_bible_fields(self, mock_app):
+        from modules.core.stage4_orchestrator import Stage4Orchestrator
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.ui.log = MagicMock()
+        ctx.current_project = mock_app.current_project
+        ctx.current_project.master_bible = {"MasterBible": {"AssetLibrary": {}, "protagonist_config": {}}}
+        ctx.sys = mock_app.sys
+        ctx.diversity_engine = None
+        ctx.sys.guard.get_v20_purism_prompt.side_effect = RuntimeError("guard boom")
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+
+        result = orch._build_writer_prompt_supplements(anti_trope_prompt="anti")
+
+        assert result.purism_prompt == ""
+        assert result.npc_equipment_summary == "NPC 장비 정보 없음"
+        assert result.effective_anti_trope == "anti"
+        assert result.intro_dna == ""
+        ctx.ui.log.assert_called_once()
+
     def test_patch_threshold_imported(self):
         """_PATCH_REWRITE_THRESHOLD 모듈 상수 존재"""
         from modules.core.stage4_types import _PATCH_REWRITE_THRESHOLD

@@ -343,3 +343,32 @@ Fan-Out Top 10:
 - 설정/프롬프트/DB 수치는 이제 실제 존재하는 파일 기준으로만 해석해야 한다.
 
 즉, 이번 교정판은 더 이상 "대충 방향은 맞는 문서"가 아니라, **현재 dirty workspace 상태를 기준으로 재현 가능한 정적 복잡도 감리 문서**다.
+
+---
+
+## 10. Readability Refactor Tracker
+
+목표: LLM이 읽을 때 한 번에 잡아야 하는 맥락 반경을 줄이되, 회귀 위험이 낮은 tranche부터 순차 처리한다.
+
+| Status | Tranche | 대상 | 기록 |
+| --- | --- | --- | --- |
+| `v` | T1 | `Stage4InterviewRound.run` PASS/REJECT 종료 처리 추출 | 완료. `_finalize_pass_result`, `_finalize_reject_result` helper로 분리. 회귀 검증: `pytest tests/test_stage4_interview_round.py -q` → `99 passed` |
+| `v` | T2 | `Stage4InterviewRound.run` Director input-pack 조립부 추출 | 완료. `_build_director_input_pack()`로 `decision_core / candidate_evidence / reference_appendix` 조립을 분리. 검증: `python -m py_compile modules/core/stage4_interview_round.py`, `python scripts/check_utf8_hygiene.py modules/core/stage4_interview_round.py docs/2026-03-20/TF-static-complexity-audit-v2.md`, `python -m pytest tests/test_stage4_interview_round.py -q` → `99 passed` |
+| `v` | T3 | `Stage4InterviewRound.run` candidate generation / EMPTY 처리 추출 | 완료. `_run_generation_phase()`, `_build_empty_candidates_result()` helper로 generation/EMPTY early-return 경계를 분리 |
+| `v` | T4 | `Stage4InterviewRound.run` pre-director validation handoff 정리 | 완료. `_run_validation_phase()`로 `_god1_*` 임시 필드 세팅과 `_run_pre_director_validation()` 호출을 묶고, `run()`의 미사용 context unpack도 함께 제거 |
+| `v` | T5 | `Stage4ContextBuilder.build_mandatory_context` tail prompt 조립부 추출 | 완료. `_build_mandatory_prompt_injections()`로 `anti_trope / justification / writer_guidance / reflexion` 조립을 분리. 검증: `python -m py_compile modules/core/stage4_context_builder.py`, `python scripts/check_utf8_hygiene.py modules/core/stage4_context_builder.py`, `python -m pytest tests/test_stage4_context_builder.py tests/test_stage4_context.py -q` → `98 passed` |
+| `v` | T6 | `Stage4ContextBuilder.prepare_episode_context` hybrid lookback 조립부 추출 | 완료. `_build_prev_manuscripts_text()`로 Tier1 full-text, Tier2 summary, Tier3 arc-summary lookback 조립을 분리하고 long-term anchor 주입은 caller에 유지 |
+| `v` | T7 | `Stage4Orchestrator._run_interview_loop` writer prompt supplement 추출 | 완료. `_build_writer_prompt_supplements()`와 `_WriterPromptSupplements`로 `purism_prompt / npc_equipment_summary / effective_anti_trope / intro_dna` 조립을 분리. 검증: `python -m py_compile modules/core/stage4_orchestrator.py tests/test_stage4_orchestrator.py`, `python scripts/check_utf8_hygiene.py modules/core/stage4_orchestrator.py tests/test_stage4_orchestrator.py`, `python -m pytest tests/test_stage4_orchestrator.py -q` → `67 passed` |
+| `v` | T8 | `Stage2PreflightAnalysis._preflight_arc_analysis` retry focus-mode 추출 | 완료. `_apply_retry_focus_mode()`로 retry 시 `current_feedback / preserved constraints / minimal context` 조립을 분리. 검증: `python -m py_compile modules/core/stage2_preflight.py tests/test_stage2_preflight.py`, `python scripts/check_utf8_hygiene.py modules/core/stage2_preflight.py tests/test_stage2_preflight.py`, `python -m pytest tests/test_stage2_preflight.py -q` → `34 passed` |
+| `v` | T9 | `Stage2PreflightAnalysis._preflight_enrichment` patch-feedback 조립부 추출 | 완료. `_build_patch_feedback()`로 `rejection_reason / selection_reason / score_breakdown / validation_warnings / fix_scope_reasoning` 조립을 분리. 검증: `python -m py_compile modules/core/stage2_preflight.py tests/test_stage2_preflight.py`, `python scripts/check_utf8_hygiene.py modules/core/stage2_preflight.py tests/test_stage2_preflight.py`, `python -m pytest tests/test_stage2_preflight.py -q` → `36 passed` |
+| `v` | T10 | `Stage4Orchestrator._run_interview_loop` mandatory-context budget 처리 추출 | 완료. `_fit_mandatory_context_budget()`와 `_MandatoryContextBudgetResult`로 섹션 제거/폴백 절단 규칙을 분리하고 meta/UI logging은 caller에 유지. 검증: `python -m py_compile modules/core/stage4_orchestrator.py tests/test_stage4_orchestrator.py`, `python scripts/check_utf8_hygiene.py modules/core/stage4_orchestrator.py tests/test_stage4_orchestrator.py`, `python -m pytest tests/test_stage4_orchestrator.py -q` → `69 passed` |
+| `v` | T11 | `Stage4ContextBuilder.build_mandatory_context` ReferenceAnchor 로딩부 추출 | 완료. `_load_reference_anchor_prompt()`로 `relevant/critical anchor` 조회와 prompt 조립을 분리. 검증: `python -m py_compile modules/core/stage4_context_builder.py tests/test_stage4_context_builder.py`, `python scripts/check_utf8_hygiene.py modules/core/stage4_context_builder.py tests/test_stage4_context_builder.py`, `python -m pytest tests/test_stage4_context_builder.py -q` → `65 passed` |
+| `v` | T12 | `Stage4Orchestrator._run_interview_loop` current-episode 준비부 추출 | 완료. `_prepare_current_episode_inputs()`와 `_EpisodeLoopInputs`로 `blueprint / arc_data / preflight_advisory` 준비를 분리하고 caller의 `break` 제어는 유지. 검증: `python -m py_compile modules/core/stage4_orchestrator.py tests/test_stage4_orchestrator.py`, `python scripts/check_utf8_hygiene.py modules/core/stage4_orchestrator.py tests/test_stage4_orchestrator.py`, `python -m pytest tests/test_stage4_orchestrator.py -q` → `72 passed` |
+| `v` | T13 | `Stage4ContextBuilder.build_mandatory_context` base mandatory-context 로딩부 추출 | 완료. `_load_base_mandatory_context()`로 writer mandatory context 로딩과 HUD anomaly 기록을 분리. 검증: `python -m py_compile modules/core/stage4_context_builder.py tests/test_stage4_context_builder.py`, `python scripts/check_utf8_hygiene.py modules/core/stage4_context_builder.py tests/test_stage4_context_builder.py`, `python -m pytest tests/test_stage4_context_builder.py -q` → `67 passed` |
+| `v` | T14 | `Stage4Orchestrator._run_interview_loop` prompt-bundle 준비부 추출 | 완료. `_build_episode_prompt_bundle()`와 `_EpisodePromptBundle`로 `genre_name / ctx_prompts / writer prompt supplements` 준비를 분리. 검증: `python -m py_compile modules/core/stage4_orchestrator.py tests/test_stage4_orchestrator.py`, `python scripts/check_utf8_hygiene.py modules/core/stage4_orchestrator.py tests/test_stage4_orchestrator.py`, `python -m pytest tests/test_stage4_orchestrator.py -q` → `73 passed` |
+| `[ ]` | T15 | Stage4/Stage2 축 후속 핫스팟 | `stage4_context_builder.py` 잔여 orchestration, `stage4_orchestrator.py` 잔여 loop orchestration, `stage2_preflight.py` 추가 context assembly 순으로 안전 분해 예정 |
+
+운영 메모:
+- 각 tranche는 완료 후 이 표의 `Status`를 `v`로 갱신한다.
+- 회귀 검증 없이 `v` 처리하지 않는다.
+- 전량 처리가 목표지만, 한 번에 하나씩만 진행한다.
