@@ -652,6 +652,29 @@ class TestBuildMandatoryContext:
         assert result.startswith("[경고] 필수 컨텍스트 로딩 실패")
         ctx.ui.log.assert_called_once()
 
+    def test_build_mandatory_context_seed_builds_focus_tier0_and_slot_summary(self):
+        cb = Stage4ContextBuilder(_make_ctx())
+        cb._extract_blueprint_entities = MagicMock(return_value={"npcs": ["연홍"], "items": [], "plots": [], "locations": [], "_full_text": "bp"})
+        cb._resolve_work_retrieval_focus = MagicMock(return_value={"tracking_slots": ["소꿉친구 라인"]})
+        cb._build_tier0_mandatory_sections = MagicMock(return_value=["writer mandatory"])
+        cb._build_work_identity_slot_summary = MagicMock(return_value="[작품 추적 슬롯 요약]\n소꿉친구 라인")
+
+        result = cb._build_mandatory_context_seed(
+            arc_data={"arc_no": 1},
+            arc_tactical="소꿉친구 라인 재등장",
+            prev_ending="연홍과의 인연이 남았다",
+            blueprint={"scene_breakdown": {}},
+            mandatory_context="writer mandatory",
+        )
+
+        assert result["cp_entities"]["npcs"] == ["연홍"]
+        assert result["work_focus"]["tracking_slots"] == ["소꿉친구 라인"]
+        assert result["tier0_parts"] == ["writer mandatory"]
+        assert result["slot_summary"].startswith("[작품 추적 슬롯 요약]")
+        cb._resolve_work_retrieval_focus.assert_called_once()
+        cb._build_tier0_mandatory_sections.assert_called_once()
+        cb._build_work_identity_slot_summary.assert_called_once()
+
     @patch("modules.core.stage4_context_builder._build_justification", return_value="just")
     @patch("modules.core.stage4_context_builder._build_anti_trope", return_value="anti")
     @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")
