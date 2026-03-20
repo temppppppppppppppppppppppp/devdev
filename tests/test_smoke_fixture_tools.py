@@ -4,7 +4,11 @@ from pathlib import Path
 import pytest
 
 from modules.core.db_manager import DBManager
-from modules.core.smoke_fixture_tools import prepare_smoke_fixture_project
+from modules.core.smoke_fixture_tools import (
+    assert_smoke_fixture_ready,
+    prepare_smoke_fixture_project,
+    reset_stage2_smoke_state,
+)
 
 
 def _make_project_root(root: Path) -> None:
@@ -56,3 +60,71 @@ def test_prepare_smoke_fixture_project_requires_force_for_existing_target(tmp_pa
 
     with pytest.raises(FileExistsError):
         prepare_smoke_fixture_project(source, target)
+
+
+def test_assert_smoke_fixture_ready_requires_prep_marker_and_contract(tmp_path):
+    project = tmp_path / "fixture_project"
+    _make_project_root(project)
+
+    db = DBManager(project / "project_data.db")
+    try:
+        db.save_anchor("arcs", [{"arc_no": 1}, {"arc_no": 2}, {"arc_no": 3}])
+        db.save_blueprint(1, {"ep_num": 1})
+        db.save_blueprint(2, {"ep_num": 2})
+        db.save_blueprint(3, {"ep_num": 3})
+    finally:
+        db.close()
+
+    with pytest.raises(RuntimeError, match="smoke_fixture_prep.json"):
+        assert_smoke_fixture_ready(project, lane="stage3_smoke")
+
+    prep_payload = {
+        "source_project": "smoke_fixture_demo",
+        "target_project": "코덱스_테스트",
+        "fixture_contract": {
+            "arc_count": 3,
+            "latest_blueprint_number": 3,
+            "manuscript_count": 0,
+        },
+    }
+    prep_file = project / "logs" / "smoke_fixture_prep.json"
+    prep_file.parent.mkdir(parents=True, exist_ok=True)
+    prep_file.write_text(json.dumps(prep_payload, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    result = assert_smoke_fixture_ready(project, lane="stage3_smoke")
+    assert result["arc_count"] == 3
+    assert result["latest_blueprint_number"] == 3
+    assert result["manuscript_count"] == 0
+    assert result["source_project"] == "smoke_fixture_demo"
+
+
+def test_reset_stage2_smoke_state_clears_arcs_and_stage2_outputs(tmp_path):
+    project = tmp_path / "fixture_project"
+    _make_project_root(project)
+
+    db = DBManager(project / "project_data.db")
+    try:
+        db.save_anchor("arcs", [{"arc_no": 1}, {"arc_no": 2}, {"arc_no": 3}])
+    finally:
+        db.close()
+
+    (project / "plans" / "arcs" / "arc_1.json").write_text("{}", encoding="utf-8")
+    (project / "logs" / "arc_4_failure_report.txt").write_text("fail", encoding="utf-8")
+    (project / "logs" / "artifacts" / "stage2" / "arc_004").mkdir(parents=True, exist_ok=True)
+
+    result = reset_stage2_smoke_state(project)
+
+    assert result["cleared_arcs_anchor"] is True
+    assert result["removed_arc_json_count"] == 1
+    assert result["removed_failure_report_count"] == 1
+    assert result["removed_stage2_artifacts"] is True
+
+    reloaded = DBManager(project / "project_data.db")
+    try:
+        assert reloaded.load_anchor("arcs") == []
+    finally:
+        reloaded.close()
+
+    assert not (project / "plans" / "arcs" / "arc_1.json").exists()
+    assert not (project / "logs" / "arc_4_failure_report.txt").exists()
+    assert not (project / "logs" / "artifacts" / "stage2").exists()

@@ -23,6 +23,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from modules.core.db_manager import DBManager  # noqa: E402
+from modules.core.smoke_fixture_tools import assert_smoke_fixture_ready  # noqa: E402
 from modules.core.stage3_context import Stage3Context  # noqa: E402
 from modules.core.stage3_orchestrator import Stage3Orchestrator  # noqa: E402
 from modules.models.blueprint import Blueprint  # noqa: E402
@@ -189,6 +190,13 @@ def _export_blueprints(db: DBManager, episode_numbers: list[int]) -> int:
 
 def main() -> None:
     assert DB_PATH.exists(), f"DB not found: {DB_PATH}"
+    fixture_contract = assert_smoke_fixture_ready(PROJECT_DIR, lane="stage3_smoke")
+    print(
+        "[OK] smoke fixture ready: "
+        f"arcs={fixture_contract['arc_count']}, "
+        f"blueprints={fixture_contract['latest_blueprint_number']}, "
+        f"manuscripts={fixture_contract['manuscript_count']}"
+    )
 
     db = DBManager(DB_PATH)
     try:

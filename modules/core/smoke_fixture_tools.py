@@ -1,4 +1,4 @@
-"""Helpers for preparing the bounded smoke fixture project."""
+"""Helpers for preparing and validating the bounded smoke fixture project."""
 
 from __future__ import annotations
 
@@ -8,6 +8,11 @@ from datetime import datetime
 from pathlib import Path
 
 from modules.core.db_manager import DBManager
+
+
+SMOKE_FIXTURE_MIN_ARC_COUNT = 3
+SMOKE_FIXTURE_MIN_BLUEPRINT_COUNT = 3
+SMOKE_FIXTURE_MAX_BASELINE_MANUSCRIPTS = 0
 
 
 def prepare_smoke_fixture_project(
@@ -38,6 +43,94 @@ def prepare_smoke_fixture_project(
     }
     _write_json(target / "logs" / "smoke_fixture_prep.json", payload)
     return payload
+
+
+def read_smoke_fixture_prep(project_root: str | Path) -> dict | None:
+    prep_path = Path(project_root) / "logs" / "smoke_fixture_prep.json"
+    if not prep_path.exists():
+        return None
+    try:
+        return json.loads(prep_path.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+
+
+def collect_smoke_fixture_contract(project_root: str | Path) -> dict:
+    project_root = Path(project_root)
+    contract = _collect_fixture_contract(project_root)
+    contract["prep_marker_present"] = bool(read_smoke_fixture_prep(project_root))
+    return contract
+
+
+def assert_smoke_fixture_ready(project_root: str | Path, *, lane: str) -> dict:
+    contract = collect_smoke_fixture_contract(project_root)
+    prep_payload = read_smoke_fixture_prep(project_root)
+    if not prep_payload:
+        raise RuntimeError(
+            "bounded smoke fixture target is missing logs/smoke_fixture_prep.json; "
+            "run `python scripts/prepare_smoke_fixture.py --force` first"
+        )
+
+    if contract["arc_count"] < SMOKE_FIXTURE_MIN_ARC_COUNT:
+        raise RuntimeError(
+            f"bounded smoke fixture target is too shallow for {lane}: "
+            f"arcs={contract['arc_count']} < {SMOKE_FIXTURE_MIN_ARC_COUNT}; "
+            "run `python scripts/prepare_smoke_fixture.py --force` first"
+        )
+
+    if contract["latest_blueprint_number"] < SMOKE_FIXTURE_MIN_BLUEPRINT_COUNT:
+        raise RuntimeError(
+            f"bounded smoke fixture target is too shallow for {lane}: "
+            f"blueprints={contract['latest_blueprint_number']} < {SMOKE_FIXTURE_MIN_BLUEPRINT_COUNT}; "
+            "run `python scripts/prepare_smoke_fixture.py --force` first"
+        )
+
+    if contract["manuscript_count"] > SMOKE_FIXTURE_MAX_BASELINE_MANUSCRIPTS:
+        raise RuntimeError(
+            f"bounded smoke fixture target is dirty for {lane}: "
+            f"manuscripts={contract['manuscript_count']} > {SMOKE_FIXTURE_MAX_BASELINE_MANUSCRIPTS}; "
+            "run `python scripts/prepare_smoke_fixture.py --force` first"
+        )
+
+    contract["source_project"] = str(prep_payload.get("source_project", "") or "")
+    contract["target_project"] = str(prep_payload.get("target_project", "") or "")
+    return contract
+
+
+def reset_stage2_smoke_state(project_root: str | Path) -> dict:
+    """Reset bounded Stage2 smoke state inside the disposable target."""
+    project_root = Path(project_root)
+    db_path = project_root / "project_data.db"
+    if not db_path.exists():
+        raise FileNotFoundError(f"project database not found: {db_path}")
+
+    db = DBManager(db_path)
+    try:
+        db.save_anchor("arcs", [])
+    finally:
+        db.close()
+
+    removed_json = 0
+    for path in (project_root / "plans" / "arcs").glob("arc_*.json"):
+        path.unlink(missing_ok=True)
+        removed_json += 1
+
+    removed_reports = 0
+    for path in (project_root / "logs").glob("arc_*_failure_report.txt"):
+        path.unlink(missing_ok=True)
+        removed_reports += 1
+
+    stage2_artifacts = project_root / "logs" / "artifacts" / "stage2"
+    removed_stage2_artifacts = stage2_artifacts.exists()
+    if removed_stage2_artifacts:
+        shutil.rmtree(stage2_artifacts)
+
+    return {
+        "cleared_arcs_anchor": True,
+        "removed_arc_json_count": removed_json,
+        "removed_failure_report_count": removed_reports,
+        "removed_stage2_artifacts": removed_stage2_artifacts,
+    }
 
 
 def _collect_fixture_contract(project_root: Path) -> dict:

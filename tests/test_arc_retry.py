@@ -103,7 +103,7 @@ def test_finalizer_returns_retry_on_director_reject() -> None:
 
 def test_orchestrator_next_action_does_not_break_loop() -> None:
     source = Path("modules/core/stage2_orchestrator.py").read_text(encoding="utf-8")
-    marker = 'elif _fin["action"] == "next":'
+    marker = 'elif transition["action"] == "next":'
     idx = source.find(marker)
     assert idx != -1
 

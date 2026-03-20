@@ -1814,6 +1814,8 @@ class TestRecordS4Attempt:
         assert previous_attempt["selection_reason"] == "best candidate"
         assert previous_attempt["verdict_reason"] == "director pass before post-select"
         assert previous_attempt["reject_bucket"] == "post_select_conflict"
+        assert previous_attempt["retry_pathology_source"] == "post_select_conflict"
+        assert previous_attempt["provisional_pass_downgrade"] is True
 
     def test_post_select_checks_run_on_retry_rounds_too(self):
         ctx = _make_ctx()

@@ -1,6 +1,7 @@
 """[V75-B] 역류 에스컬레이션 — Blueprint 재생성 테스트."""
 
 import dataclasses
+import json
 from unittest.mock import MagicMock, patch
 
 # ── 1. director_ensemble error_category 전파 ──────────────────
@@ -180,6 +181,96 @@ def test_b_light_triggers_on_double_logic_error():
     # [V75-D] inplace 패치 호출됨, full regen 미호출
     mock_bp_agent._inplace_patch_blueprint.assert_called_once()
     orch._regenerate_blueprint.assert_not_called()
+    assert result.final_manuscript
+
+
+def test_v75d_success_persists_blueprint_artifact_and_logs_linkage(tmp_path):
+    """[V75-D] inplace 성공 시 patched blueprint snapshot과 linkage가 남는다."""
+    from modules.core.stage4_types import _InterviewRoundResult, _RoundContext
+
+    orch, ctx = _make_orch()
+    ctx.current_project.name = "proj"
+    ctx.current_project.paths = MagicMock()
+    ctx.current_project.paths.root = tmp_path
+    ctx.audit_event = MagicMock()
+
+    mock_bp_agent = MagicMock()
+    patched_bp = {"scenes": [{"description": "patched blueprint"}], "meta": {"mode": "inplace"}}
+    mock_bp_agent._inplace_patch_blueprint.return_value = patched_bp
+    ctx.agents = {"three_phase_bp": mock_bp_agent}
+
+    call_count = [0]
+
+    def mock_run(**kwargs):
+        call_count[0] += 1
+        if call_count[0] <= 2:
+            return _InterviewRoundResult(
+                verdict="REJECT",
+                director_feedback="logic error",
+                previous_attempt={},
+                error_category="LOGIC_ERROR",
+            )
+        return _InterviewRoundResult(
+            verdict="PASS",
+            director_feedback="",
+            previous_attempt={},
+            final_manuscript="patched manuscript",
+            final_title="ep2",
+            final_state_updates={},
+            error_category="",
+        )
+
+    orch._interview_round.run = mock_run
+    orch._regenerate_blueprint = MagicMock(return_value=None)
+
+    fields = {f.name: MagicMock() for f in dataclasses.fields(_RoundContext)}
+    fields["next_ep"] = 1
+    fields["blueprint"] = {"scenes": [{"description": "original blueprint"}]}
+    fields["arc_data"] = {"arc_no": 1}
+    round_ctx = _RoundContext(**fields)
+
+    with patch("modules.core.stage4_orchestrator._threshold", return_value=5):
+        from modules.core.spinners import StageSpinner
+
+        with (
+            patch.object(StageSpinner, "__init__", return_value=None),
+            patch.object(StageSpinner, "__enter__", return_value=MagicMock()),
+            patch.object(StageSpinner, "__exit__", return_value=False),
+        ):
+            result = orch._handle_round_outcome(round_ctx=round_ctx)
+
+    assert result.final_manuscript == "patched manuscript"
+    artifact_dir = tmp_path / "logs" / "artifacts" / "stage4" / "ep_0001" / "attempt_02"
+    artifact_files = list(artifact_dir.glob("patched_blueprint_after_fix__*.json"))
+    assert len(artifact_files) == 1
+    assert json.loads(artifact_files[0].read_text(encoding="utf-8")) == patched_bp
+
+    rows = [
+        json.loads(line)
+        for line in (tmp_path / "logs" / "episode_production.jsonl").read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    payload = rows[-1]
+    assert payload["event"] == "V75-D_INPLACE"
+    assert payload["success"] is True
+    assert payload["candidate_key"] == "V75-D|blueprint_inplace"
+    assert payload["content_hash"]
+    assert payload["artifact_path"] == artifact_files[0].relative_to(tmp_path).as_posix()
+
+    audit_calls = [call.args for call in ctx.audit_event.call_args_list]
+    assert any(
+        event_name == "stage4_v75d_blueprint_patch_snapshot"
+        and message == "stage4 V75-D blueprint patch snapshot persisted"
+        and meta["ep_num"] == 1
+        and meta["round_num"] == 2
+        and meta["candidate_key"] == "V75-D|blueprint_inplace"
+        and meta["content_hash"] == payload["content_hash"]
+        and meta["artifact_path"] == payload["artifact_path"]
+        and isinstance(meta.get("change_ratio"), float)
+        and meta["change_ratio"] > 0
+        for event_name, message, meta in audit_calls
+    )
+    return
     assert result.final_manuscript == "좋은 원고"
 
 

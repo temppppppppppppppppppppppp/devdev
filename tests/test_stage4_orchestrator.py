@@ -341,6 +341,9 @@ class TestStage4AuditSummary:
             fix_scope="partial",
             reason="history conflict repeated",
             contradiction_type="timeline",
+            candidate_key="V75-D|blueprint_inplace",
+            content_hash="hash-123",
+            artifact_path="logs/artifacts/stage4/ep_0005/attempt_02/patched_blueprint_after_fix__V75-D_blueprint_inplace.json",
         )
 
         expected_path = mock_app.current_project.paths.root / "logs" / "episode_production.jsonl"
@@ -351,6 +354,9 @@ class TestStage4AuditSummary:
         assert payload["fix_scope"] == "partial"
         assert payload["reason"] == "history conflict repeated"
         assert payload["contradiction_type"] == "timeline"
+        assert payload["candidate_key"] == "V75-D|blueprint_inplace"
+        assert payload["content_hash"] == "hash-123"
+        assert payload["artifact_path"].endswith("patched_blueprint_after_fix__V75-D_blueprint_inplace.json")
 
 
 class TestPrepareStage4SessionLimits:
@@ -865,10 +871,13 @@ class TestHandleRoundOutcomeErrorPaths:
         assert result == {"scene_breakdown": {}}
         assert bp_agent.generate.call_args.kwargs["external_feedback"] == "translated reverse feedback"
 
-    def test_handle_round_outcome_retries_when_cove_verify_raises(self, orch_with_ctx, minimal_round_ctx, monkeypatch):
+    def test_handle_round_outcome_keeps_pass_when_cove_verify_raises(self, orch_with_ctx, minimal_round_ctx, monkeypatch, tmp_path):
         from modules.core.stage4_types import _InterviewRoundResult
 
         orch = orch_with_ctx
+        orch._ctx.current_project.name = "cove_project"
+        orch._ctx.current_project.paths.root = tmp_path / "cove_project"
+        orch._ctx.audit_event = MagicMock()
         cove = MagicMock()
         cove.quick_verify.side_effect = [
             (False, "관계 변화 의심"),
@@ -903,11 +912,25 @@ class TestHandleRoundOutcomeErrorPaths:
         monkeypatch.setattr(modules.core.spinners, "StageSpinner", MagicMock())
 
         result = orch._handle_round_outcome(round_ctx=minimal_round_ctx)
+        log_path = tmp_path / "cove_project" / "logs" / "episode_production.jsonl"
+        rows = [json.loads(line) for line in log_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+        advisory_rows = [row for row in rows if row.get("event") == "STAGE4_COVE_RUNTIME_ADVISORY"]
+        assert result.should_return is False
+        assert result.final_manuscript == "초안 원고"
+        assert orch._interview_round.run.call_count == 1
+        assert advisory_rows
+        assert advisory_rows[-1]["source"] == "llm_verify"
+        assert advisory_rows[-1]["director_pass_preserved"] is True
+        orch._ctx.audit_event.assert_any_call(
+            "stage4_cove_runtime_advisory",
+            "stage4 CoVe runtime advisory observed",
+            ANY,
+        )
+        return
 
         assert result.should_return is False
         assert result.final_manuscript == "수정 원고"
-        assert orch._interview_round.run.call_count == 2
-        second_call = orch._interview_round.run.call_args_list[1].kwargs
+        assert orch._interview_round.run.call_count == 1
         assert second_call["director_feedback"].startswith("[CoVe 사후검증 런타임 실패]")
         assert second_call["previous_attempt"]["best_manuscript"] == "초안 원고"
 
@@ -916,6 +939,271 @@ class TestHandleRoundOutcomeErrorPaths:
 # Test: Stage4Orchestrator 초기화 + import
 # ══════════════════════════════════════════════════════════════
 
+class TestHandleRoundOutcomeRetryPathology:
+    @pytest.fixture
+    def orch_with_ctx(self, mock_app):
+        from modules.core.stage4_orchestrator import Stage4Orchestrator
+
+        orch = Stage4Orchestrator(mock_app)
+        orch._ctx = MagicMock()
+        orch._ctx.ui = MagicMock()
+        orch._ctx.ui.log = MagicMock()
+        orch._ctx.agents = {
+            "director": MagicMock(),
+            "writer": MagicMock(),
+        }
+        orch._ctx.current_project = MagicMock()
+        orch._ctx.current_project.master_bible = {"MasterBible": {}}
+        orch._ctx.get_protagonist_name = MagicMock(return_value="hero")
+        orch._ctx.get_int_input = MagicMock(return_value=1)
+        orch._ctx.get_module = MagicMock(return_value=None)
+        return orch
+
+    @pytest.fixture
+    def minimal_round_ctx(self):
+        from modules.core.stage4_orchestrator import _RoundContext
+
+        return _RoundContext(
+            chief_writer=MagicMock(),
+            manuscript_validator=MagicMock(),
+            consistency_validator=MagicMock(),
+            blocking_validator=MagicMock(),
+            continuity_validator=MagicMock(),
+            next_ep=1,
+            blueprint={"integrated_scenario": "test scenario"},
+            arc_data={"arc_no": 1},
+            arc_pos=1,
+            total_ep_in_arc=10,
+            arc_tactical="tactical doc",
+            prev_text="previous manuscript",
+            prev_ending="previous ending",
+            prev_manuscripts_text="",
+            episode_digest="",
+            hud_report="HUD",
+            current_inventory="",
+            current_martial_arts="",
+            dead_npcs=[],
+            item_acquisition_timeline="",
+            chain_link_section="",
+            world_state_summary="",
+            purism_prompt="",
+            genre_name="genre",
+            npc_equipment_summary="",
+            effective_anti_trope="",
+            intro_dna="CYNICAL",
+            story_context="",
+            style_guide="style",
+            reference_anchor_prompt="",
+            mandatory_context="",
+            justification_prompt="",
+            reflexion_prompt="",
+            preflight_advisory="",
+        )
+
+    def test_handle_round_outcome_logs_cove_runtime_advisory(self, orch_with_ctx, minimal_round_ctx, monkeypatch, tmp_path):
+        from modules.core.stage4_types import _InterviewRoundResult
+
+        orch = orch_with_ctx
+        orch._ctx.current_project.name = "cove_project"
+        orch._ctx.current_project.paths.root = tmp_path / "cove_project"
+        orch._ctx.audit_event = MagicMock()
+        cove = MagicMock()
+        cove.quick_verify.side_effect = [
+            (False, "hint"),
+            (True, ""),
+        ]
+        cove.verify.side_effect = ChainOfVerificationParseError("invalid cove json")
+        orch._ctx.get_module = MagicMock(side_effect=lambda name: cove if name == "chain_of_verification" else None)
+        orch._interview_round = MagicMock()
+        orch._interview_round.run = MagicMock(
+            return_value=_InterviewRoundResult(
+                verdict="PASS",
+                director_feedback="",
+                previous_attempt={},
+                final_manuscript="draft manuscript",
+                final_title="draft title",
+                final_state_updates={"hp": 10},
+            )
+        )
+
+        import modules.core.spinners
+
+        monkeypatch.setattr(modules.core.spinners, "StageSpinner", MagicMock())
+
+        result = orch._handle_round_outcome(round_ctx=minimal_round_ctx)
+
+        assert result.final_manuscript == "draft manuscript"
+        log_path = tmp_path / "cove_project" / "logs" / "episode_production.jsonl"
+        rows = [json.loads(line) for line in log_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+        advisory_rows = [row for row in rows if row.get("event") == "STAGE4_COVE_RUNTIME_ADVISORY"]
+        assert advisory_rows
+        assert advisory_rows[-1]["source"] == "llm_verify"
+        assert advisory_rows[-1]["director_pass_preserved"] is True
+        orch._ctx.audit_event.assert_any_call(
+            "stage4_cove_runtime_advisory",
+            "stage4 CoVe runtime advisory observed",
+            ANY,
+        )
+
+    def test_handle_round_outcome_keeps_pass_when_cove_quick_verify_raises(self, orch_with_ctx, minimal_round_ctx, monkeypatch, tmp_path):
+        from modules.core.stage4_types import _InterviewRoundResult
+
+        orch = orch_with_ctx
+        orch._ctx.current_project.name = "quick_project"
+        orch._ctx.current_project.paths.root = tmp_path / "quick_project"
+        orch._ctx.audit_event = MagicMock()
+        cove = MagicMock()
+        cove.quick_verify.side_effect = RuntimeError("quick boom")
+        orch._ctx.get_module = MagicMock(side_effect=lambda name: cove if name == "chain_of_verification" else None)
+        orch._interview_round = MagicMock()
+        orch._interview_round.run = MagicMock(
+            return_value=_InterviewRoundResult(
+                verdict="PASS",
+                director_feedback="",
+                previous_attempt={},
+                final_manuscript="draft manuscript",
+                final_title="draft title",
+                final_state_updates={"hp": 10},
+            )
+        )
+
+        import modules.core.spinners
+
+        monkeypatch.setattr(modules.core.spinners, "StageSpinner", MagicMock())
+
+        result = orch._handle_round_outcome(round_ctx=minimal_round_ctx)
+
+        assert result.final_manuscript == "draft manuscript"
+        assert orch._interview_round.run.call_count == 1
+        log_path = tmp_path / "quick_project" / "logs" / "episode_production.jsonl"
+        rows = [json.loads(line) for line in log_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+        advisory_rows = [row for row in rows if row.get("event") == "STAGE4_COVE_RUNTIME_ADVISORY"]
+        assert advisory_rows
+        assert advisory_rows[-1]["source"] == "quick_verify"
+        assert advisory_rows[-1]["director_pass_preserved"] is True
+
+    def test_handle_round_outcome_still_retries_when_cove_requests_regeneration(self, orch_with_ctx, minimal_round_ctx, monkeypatch, tmp_path):
+        from types import SimpleNamespace
+        from modules.core.stage4_types import _InterviewRoundResult
+
+        orch = orch_with_ctx
+        orch._ctx.current_project.name = "semantic_project"
+        orch._ctx.current_project.paths.root = tmp_path / "semantic_project"
+        orch._ctx.audit_event = MagicMock()
+        cove = MagicMock()
+        cove.quick_verify.side_effect = [
+            (False, "semantic warning"),
+            (True, ""),
+        ]
+        cove.verify.return_value = SimpleNamespace(
+            should_regenerate=True,
+            correction_hints="rewrite needed",
+            summary="rewrite needed",
+            issues=[],
+        )
+        orch._ctx.get_module = MagicMock(side_effect=lambda name: cove if name == "chain_of_verification" else None)
+        orch._interview_round = MagicMock()
+        orch._interview_round.run = MagicMock(
+            side_effect=[
+                _InterviewRoundResult(
+                    verdict="PASS",
+                    director_feedback="",
+                    previous_attempt={},
+                    final_manuscript="draft manuscript",
+                    final_title="draft title",
+                    final_state_updates={"hp": 10},
+                ),
+                _InterviewRoundResult(
+                    verdict="PASS",
+                    director_feedback="",
+                    previous_attempt={},
+                    final_manuscript="repaired manuscript",
+                    final_title="repaired title",
+                    final_state_updates={"hp": 10},
+                ),
+            ]
+        )
+
+        import modules.core.spinners
+
+        monkeypatch.setattr(modules.core.spinners, "StageSpinner", MagicMock())
+
+        result = orch._handle_round_outcome(round_ctx=minimal_round_ctx)
+
+        assert result.final_manuscript == "repaired manuscript"
+        assert orch._interview_round.run.call_count == 2
+        log_path = tmp_path / "semantic_project" / "logs" / "episode_production.jsonl"
+        rows = [json.loads(line) for line in log_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+        pathology_rows = [row for row in rows if row.get("event") == "STAGE4_RETRY_PATHOLOGY"]
+        assert pathology_rows
+        assert pathology_rows[-1]["pathology_source"] == "cove_fail_closed"
+        assert pathology_rows[-1]["cove_runtime_failure"] is False
+
+    def test_handle_round_outcome_emits_retry_pathology_repeat(self, orch_with_ctx, minimal_round_ctx, monkeypatch, tmp_path):
+        from modules.core.stage4_types import _InterviewRoundResult
+
+        orch = orch_with_ctx
+        orch._ctx.current_project.name = "pathology_project"
+        orch._ctx.current_project.paths.root = tmp_path / "pathology_project"
+        orch._ctx.audit_event = MagicMock()
+        orch._ctx.get_module = MagicMock(return_value=None)
+        orch._interview_round = MagicMock()
+        repeated_attempt = {
+            "score": 95,
+            "fix_scope": "partial",
+            "reject_bucket": "post_select_conflict",
+            "gate_basis": "post_select_conflict",
+            "repair_scope": "partial",
+            "fix_scope_reasoning": "Fix Pack is missing",
+            "retry_pathology_source": "post_select_conflict",
+            "provisional_pass_downgrade": True,
+        }
+        orch._interview_round.run = MagicMock(
+            side_effect=[
+                _InterviewRoundResult(
+                    verdict="REJECT",
+                    director_feedback="retry one",
+                    previous_attempt=dict(repeated_attempt),
+                    error_category="",
+                ),
+                _InterviewRoundResult(
+                    verdict="REJECT",
+                    director_feedback="retry two",
+                    previous_attempt=dict(repeated_attempt),
+                    error_category="",
+                ),
+                _InterviewRoundResult(
+                    verdict="PASS",
+                    director_feedback="done",
+                    previous_attempt={},
+                    final_manuscript="final manuscript",
+                    final_title="final title",
+                    final_state_updates={"hp": 10},
+                ),
+            ]
+        )
+
+        import modules.core.spinners
+
+        monkeypatch.setattr(modules.core.spinners, "StageSpinner", MagicMock())
+
+        result = orch._handle_round_outcome(round_ctx=minimal_round_ctx)
+
+        assert result.final_manuscript == "final manuscript"
+        log_path = tmp_path / "pathology_project" / "logs" / "episode_production.jsonl"
+        rows = [json.loads(line) for line in log_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+        pathology_rows = [row for row in rows if row.get("event") == "STAGE4_RETRY_PATHOLOGY"]
+        repeat_rows = [row for row in rows if row.get("event") == "STAGE4_RETRY_PATHOLOGY_REPEAT"]
+        assert len(pathology_rows) >= 2
+        assert len(repeat_rows) == 1
+        assert repeat_rows[0]["pathology_source"] == "post_select_conflict"
+        assert repeat_rows[0]["provisional_pass_downgrade"] is True
+        assert repeat_rows[0]["repeat_count"] == 2
+        orch._ctx.audit_event.assert_any_call(
+            "stage4_retry_pathology_repeat",
+            "stage4 retry pathology repeated",
+            ANY,
+        )
 
 class TestStage4OrchestratorImport:
     def test_import_succeeds(self):
