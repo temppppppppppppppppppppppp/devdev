@@ -1,0 +1,79 @@
+{
+  "schema": "arc_cadence_map_v1",
+  "title_id": "wuxia__title__gonryun_mahyeop",
+  "shard": "ep001-010",
+  "status": "candidate",
+  "date": "2026-03-20",
+  "arcs": [
+    {
+      "arc_id": "wuxia__title__gonryun_mahyeop__arc_001",
+      "arc_label": "sect_reformation_and_power_consolidation",
+      "episode_start": 1,
+      "episode_end_observed": 10,
+      "episode_end_estimated": "unknown — extends into ep011+",
+      "arc_complete_in_shard": false,
+      "sub_phases": [
+        {
+          "phase_label": "identity_concealment_and_entry",
+          "episode_range": "001-002",
+          "function": "Protagonist hides past identity (former Demon Sect Lord), enters orthodox sect as infant, independently cultivates to surpass expected milestones",
+          "escalation_driver": "internal_motivation (desire to leave, desire for new experiences)",
+          "payoff_in_phase": "Reaches Taecheong level by age 8, shocking elders"
+        },
+        {
+          "phase_label": "martial_arts_restoration_conflict",
+          "episode_range": "003-005",
+          "function": "Discovers Kunlun martial arts degraded due to his own past-life aggression. Proves original flashy forms are superior. Faces internal resistance, wins elder consensus",
+          "escalation_driver": "sect_internal_politics (conservative elders vs reform)",
+          "payoff_in_phase": "장문인 합의 'beautiful Kunlun' — sect-wide mandate to reform martial arts"
+        },
+        {
+          "phase_label": "resource_acquisition_and_authority",
+          "episode_range": "005-007",
+          "function": "Elders sacrifice vitality via 격체전력 → protagonist invents Taeguek Hoechun Singong, gains massive internal energy + elder rejuvenation. Gets full authority over sect training reform",
+          "escalation_driver": "resource_crisis (sect poverty, no elixirs) → creative solution",
+          "payoff_in_phase": "De facto training director at age 13. All three generations under his instruction"
+        },
+        {
+          "phase_label": "external_contact_and_reputation_seed",
+          "episode_range": "007-010",
+          "function": "Habuk Paeng family visits. Demonstrates overwhelming combat superiority vs peer-level opponent. Seeds external reputation + first outside relationship",
+          "escalation_driver": "external_pressure (rival house probing Kunlun strength)",
+          "payoff_in_phase": "Paeng Ganghwi defeated and humbled. Paeng Suwon considering alliance. Protagonist reveals insight into Ganghwi's hidden weakness → trust seed"
+        }
+      ],
+      "escalation_interval_episodes": 2,
+      "payoff_interval_episodes": 3,
+      "recovery_interval_episodes": 1,
+      "cliffhanger_pattern": "soft — episodes end on comedic beats or character reveals rather than hard danger cliffs",
+      "confidence": 72,
+      "notes": [
+        "Arc end point unknown; shard covers only the opening.",
+        "The 'sect reformation' arc may split into a 'consolidation' sub-arc and a 'departure preparation' sub-arc in ep011+.",
+        "Paeng family visit may be the start of a separate external-alliance arc or remain a sub-phase."
+      ]
+    }
+  ],
+  "suspected_carryover_seeds": [
+    {
+      "seed": "Paeng Suwon's hidden mission — 'one more thing to confirm' before backing Kunlun",
+      "introduced_at": "ep009, final paragraphs",
+      "expected_callback": "ep011+"
+    },
+    {
+      "seed": "Paeng Ganghwi's succession rivalry — half-brother Paeng Gangung as competitor",
+      "introduced_at": "ep010, paragraph ~275-283",
+      "expected_callback": "unknown"
+    },
+    {
+      "seed": "Protagonist's internal energy imbalance after Taeguek Hoechun",
+      "introduced_at": "ep006, final section",
+      "expected_callback": "ep011+ (training compensation needed)"
+    },
+    {
+      "seed": "Demon Sect (Cheonma Singyo) dormancy — elders worry about next Jincheonma",
+      "introduced_at": "ep003 (sidecomment), ep005 (elder discussion)",
+      "expected_callback": "major arc later — protagonist IS the next Jincheonma"
+    }
+  ]
+}
