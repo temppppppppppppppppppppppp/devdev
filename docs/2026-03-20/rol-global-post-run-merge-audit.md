@@ -1,120 +1,120 @@
 # ROL Global Post-Run Merge Audit
 
 Date: 2026-03-20
-Status: final
+Status: completed
 Canonical Path: `docs/2026-03-20/rol-global-post-run-merge-audit.md`
-Related Evidence Manifest: `docs/2026-03-20/rol-global-live-run-evidence-manifest.md`
-Related Survey Backbone: `docs/2026-03-20/rol-global-integrity-survey-3pass-audit.md`
-Related Watchlist: `docs/2026-03-20/rol-global-live-run-preflight-watchlist.md`
+Related Backbone: `docs/2026-03-20/rol-global-integrity-survey-3pass-audit.md`
+Related Fresh-Run Manifest: `docs/2026-03-20/rol-live-run-0_260320-evidence-manifest.md`
+Related Intake Triage: `docs/2026-03-20/rol-low-trust-mmmm-intake-triage-3pass-audit.md`
+Mode: `post-run merge`
+Commit State:
+- Baseline Commit: `7686b6c0d9795593c58e958ce068369e168d6f3f`
+- Baseline Dirty Summary: `dirty: existing project fixture churn, docs/mmmm collector docs, fresh run project 0_260320, active smoke-fixture temp mirror`
+- Resume Commit: `same-as-baseline`
+- Resume Drift Summary: `none`
 
-## 1. Scope
+## 1. Purpose
+- Merge:
+  - existing canonical survey backbone
+  - fresh run evidence from `projects/0_260320`
+  - low-trust `docs/mmmm` collector hints
+- Refresh the watchlist using actual live evidence.
+- Stop at merged judgment, not execution splitting.
 
-이번 merge audit는 bounded live-run 4-lane 결과를 static survey backbone과 합쳐서 해석한다.
+## 2. Validity Gate
+- terminal-state freeze exists
+- fresh-run evidence manifest exists
+- `docs/mmmm` intake triage exists
+- temp queue remains single-item only
 
-Covered lanes:
-- R1 desktop spike
-- R2 Stage 2 smoke
-- R3 Stage 3 smoke
-- R4 Stage 4 smoke
+Result:
+- Item D is valid
 
-## 2. Run Summary
+## 3. Authority Stack Used
+1. `projects/0_260320` fresh run evidence
+2. live code
+3. canonical ROL 2026-03-20 docs
+4. `docs/mmmm` collector hints
 
-### Stable pass
+## 4. Fresh-Run Merge Findings
 
-- `desktop spike`
-  - boot / bridge / main window idle 전환 확인
-- `Stage 4 smoke`
-  - seed-based disposable fixture에서 정상 완료
-  - manuscript outputs 3건 생성
+### 4.1 Fired
+- Stage 4 retry pathology
+  - repeated `post_select` continuity/history conflict behavior
+  - later escalation to `Contradiction Firewall`
+- blueprint inplace patch observability gap
+  - V75-D success is logged
+  - patched blueprint snapshot is not preserved as a visible artifact
+- `CoVe` fail-closed after provisional PASS
+  - temporary `PASS` does not survive final post-select/CoVe path
 
-### Partial / degraded
+### 4.2 Not fired
+- desktop preload/bridge mismatch
+  - no evidence from `0_260320` that desktop bridge caused this bounded run failure
+- broad process crash / backend death
+  - the system shut down cleanly
 
-- `Stage 2 smoke`
-  - command 자체는 완료
-  - 하지만 seed-based fixture 기준 실제 arc export는 2건만 생성
-  - 동시에 `arc_3_failure_report.txt`가 남았다
-  - 따라서 단순 PASS가 아니라 degraded completion으로 보는 게 맞다
+### 4.3 Partial / inconclusive
+- root cause placement between Stage 3 and Stage 4
+  - likely shared:
+    - upstream blueprint drift
+    - Stage 4 repair-lane limitations
+  - not yet reduced to a single cause
+- Chief Writer context insufficiency
+  - may amplify the failure
+  - current run evidence does not justify calling it the primary cause
 
-### Fixture mismatch surfaced
+## 5. Watchlist Refresh
 
-- `Stage 3 smoke`
-  - seed-based fixture에서는 `arcs >= 3` 전제를 못 맞춰 fail
-  - richer disposable clone으로 rerun했을 때는 정상 완료
+| Area | Status | Merge Interpretation |
+| --- | --- | --- |
+| smoke fixture alignment | still open | separate bounded execution item remains active |
+| Stage 4 retry pathology | fired | promoted for later action-bearing split |
+| blueprint patch observability | fired | promoted for later action-bearing split |
+| CoVe fail-closed after PASS | fired | promoted for later action-bearing split |
+| desktop bridge surface drift | not-fired in this run | keep outside this run's primary failure narrative |
+| broad config/schema drift | partial | collector hints remain secondary until focused re-check |
 
-## 3. Merged Interpretation
+## 6. Role of `docs/mmmm` After Merge
+- useful:
+  - path inventory
+  - area grouping
+  - sink/contract watchlist hints
+- not accepted:
+  - final severity
+  - closure wording
+  - sync/no-drift claims
 
-### 3.1 What static survey got right
+## 7. Updated Survey Interpretation
+- the existing global backbone remains broadly usable
+- confidence improves on the runtime failure picture because a completed bounded fresh run now exists
+- the new merged conclusion is narrower than a repo-wide quality verdict:
+  - `0_260320` is a bounded failed sample that exposes a concrete Stage 4 failure pattern
 
-- desktop/operator surface는 bounded spike로 실제 boot 확인이 가능했다
-- Stage4 smoke는 seed-based sample fixture와 정렬된다
-- smoke lanes는 real project-like disposable fixture가 필요하다는 static reading은 맞았다
+## 8. Action-Bearing Buckets for Next Step
+- likely bounded execution SSOT candidate:
+  - Stage 4 retry pathology around post-select conflict handling
+- likely bounded execution SSOT candidate:
+  - blueprint inplace patch observability/artifact snapshot gap
+- likely bounded execution SSOT candidate:
+  - CoVe fail-closed after provisional PASS
+- likely stay separate:
+  - smoke-fixture alignment
 
-### 3.2 What live run clarified
+## 9. Item-D Completion Decision
+- roadmap item:
+  - `Item D. Canonical Post-Run Merge Audit Refresh`
+- result:
+  - `completed`
+- reason:
+  - fresh run, canonical backbone, and low-trust intake are now merged into one bounded judgment
 
-- packaged/seed sample인 `investment_canary_demo`는 `desktop spike`와 `Stage4 smoke`에는 충분하지만, `Stage3 smoke` default contract에는 충분하지 않다
-- `Stage2 smoke`도 같은 seed fixture에서는 3-block proof로 읽기 어렵다
-- 따라서 현재 smoke suite는 nominally 같은 target name(`코덱스_테스트`)을 기대하지만, 실제로는 lane별 fixture richness requirement가 다르다
-
-## 4. Main Finding
-
-### F-1. Smoke fixture contract is misaligned
-
-현재 가장 분명한 action-bearing finding은 이것이다.
-
-- smoke scripts는 모두 `projects/코덱스_테스트`를 hardcoded target으로 기대한다
-- 하지만 reusable seed lineage는 현재 `investment_canary_demo`
-- 그리고 그 seed sample은 `Stage3 smoke` 전제(`arcs >= 3`)를 만족하지 않는다
-
-즉 문제는 단순히 `DB missing`이 아니라:
-
-- smoke fixture naming
-- packaged seed lineage
-- Stage2/3/4 lane별 richness expectation
-
-이 서로 완전히 정렬되어 있지 않다는 점이다.
-
-## 5. Non-Findings
-
-이번 run으로 새로 확인되지 않은 것:
-
-- desktop boot/bridge 자체의 즉시 중대 결함
-- seed-based fixture에서 Stage4 smoke를 막는 구조 결함
-- richer disposable clone으로도 Stage3 smoke가 실패하는 문제
-
-## 6. Severity / Action Map
-
-### Action-bearing
-
-- `smoke-fixture-alignment`
-  - type: focused execution candidate
-  - why:
-    same target name contract와 actual seeded sample richness가 맞지 않는다
-
-### Not yet action-bearing
-
-- desktop spike boot path
-- Stage4 smoke path 자체
-- broader runtime/control-plane authority
-
-## 7. Recommended Next Step
-
-다음 추천은 새 global survey를 더 늘리는 게 아니라 focused execution SSOT 하나로 내려가는 것이다.
-
-추천 topic:
-- `smoke-fixture-alignment`
-
-다루어야 할 질문:
-- `코덱스_테스트`를 공식 smoke fixture로 계속 유지할지
-- `investment_canary_demo`를 smoke fixture contract에 맞게 강화할지
-- Stage2/3/4 smoke가 서로 다른 fixture richness를 요구하는 현재 상태를 허용할지
-- hardcoded target name을 parameterized contract로 바꿀지
-
-## 8. Confidence
-
-현재 confidence: `0.96`
-
-근거:
-- desktop spike와 Stage2/3/4 smoke를 실제로 실행했다
-- fixture lineage와 artifact outputs를 파일시스템 기준으로 재확인했다
-- degraded completion과 fixture mismatch를 실제 terminal state와 output files로 확인했다
-- 결론을 bounded finding 하나로 제한했다
+## 10. Confidence
+- previous backbone confidence:
+  - `0.92`
+- post-run merge confidence:
+  - `0.96`
+- rationale:
+  - a completed bounded fresh run replaced several static inferences
+  - active-run ambiguity is closed
+  - `docs/mmmm` trust was reduced before merge

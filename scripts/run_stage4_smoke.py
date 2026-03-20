@@ -24,6 +24,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from modules.core.db_manager import DBManager  # noqa: E402
+from modules.core.smoke_fixture_tools import assert_smoke_fixture_ready  # noqa: E402
 from modules.core.stage4_context import Stage4Context  # noqa: E402
 from modules.core.stage4_orchestrator import Stage4Orchestrator, _RoundOutcome, _SessionConfig  # noqa: E402
 from scripts.regression_validation_tiers import FOCUSED_MUTATION  # noqa: E402
@@ -167,6 +168,13 @@ def _make_slim_process_pass_result(db: DBManager, output_dir: Path):
 def main() -> None:
     assert DB_PATH.exists(), f"DB not found: {DB_PATH}"
     MS_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    fixture_contract = assert_smoke_fixture_ready(PROJECT_DIR, lane="stage4_smoke")
+    print(
+        "[OK] smoke fixture ready: "
+        f"arcs={fixture_contract['arc_count']}, "
+        f"blueprints={fixture_contract['latest_blueprint_number']}, "
+        f"manuscripts={fixture_contract['manuscript_count']}"
+    )
 
     db = DBManager(DB_PATH)
     try:
