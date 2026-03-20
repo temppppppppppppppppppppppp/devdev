@@ -1,0 +1,39 @@
+{
+  "schema_version": "1.0",
+  "scorecard_id": "dry_run_scorecard__{genre_family}__{work_id}__v1",
+  "genre_family": "{genre_family}",
+  "work_id": "{work_id}",
+  "pack_version": "{pack_version}",
+  "operators": [
+    {
+      "operator_id": "{operator_a}",
+      "run_label": "{run_a}",
+      "source_manifest_completeness_score": 0,
+      "profile_lock_completeness_score": 0,
+      "ad_hoc_label_count": 0,
+      "missing_slot_count": 0,
+      "notes": []
+    },
+    {
+      "operator_id": "{operator_b}",
+      "run_label": "{run_b}",
+      "source_manifest_completeness_score": 0,
+      "profile_lock_completeness_score": 0,
+      "ad_hoc_label_count": 0,
+      "missing_slot_count": 0,
+      "notes": []
+    }
+  ],
+  "comparison": {
+    "cross_operator_alignment_score": 0,
+    "material_disagreement_count": 0,
+    "shared_missing_fields": [],
+    "shared_ad_hoc_labels": [],
+    "reproducibility_decision": "undecided"
+  },
+  "publication_gate": {
+    "can_support_provisional": false,
+    "can_support_canonical": false,
+    "required_remediation": []
+  }
+}

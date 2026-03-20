@@ -7,7 +7,8 @@ Rules:
 - Do real work inside the numbered folders.
 - Promote only final approved assets to `treatments/` and `bible/`.
 - Do not skip `manual_audit_pass`.
-- Use `docs/sequential_run_status.md` as the only production resume pointer.
+- Use `docs/sequential_run_status.json` as the primary production resume pointer.
+- `docs/sequential_run_status.md` may exist as a human-readable mirror, but it is not the canonical resume source.
 - Prefilled block folders or copied final drafts count as `seed_baseline_sync`, not real sequential progress.
 
 Minimal flow:

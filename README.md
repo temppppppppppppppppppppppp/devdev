@@ -296,6 +296,8 @@ python main_a.py
 
 메뉴에서 장르 선택 → 프로젝트 선택/생성 → Stage 0(초기화) → OneStop(자동 파이프라인) 순서로 진행한다.
 
+Routed narrative-family entrypoints were moved to `README.narrative-router.md` to reduce merge-conflict surface in the root README.
+
 ### 주요 메뉴
 
 | 명령 | 기능 |

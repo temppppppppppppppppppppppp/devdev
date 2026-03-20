@@ -1,0 +1,18 @@
+{
+  "ropan_style": 9,
+  "beauty": 9,
+  "polish": 9,
+  "composition_impact": 8,
+  "reference_energy_match": 1,
+  "anatomy_integrity": 8,
+  "text_cleanliness": 10,
+  "has_unwanted_text": false,
+  "issues": [
+    "Complete genre and energy mismatch with the reference image",
+    "Composition is static and generic for the genre",
+    "Hands are conveniently hidden"
+  ],
+  "summary": "A beautifully polished romance-fantasy illustration that completely fails to match the modern, dark action genre and energy of the reference.",
+  "candidate": "C:\\Users\\wjjo\\Desktop\\글도비\\visual_lab\\illustration_pipeline\\outputs\\d_ropan\\candidate_02_blonde_empress.png",
+  "score": 183
+}

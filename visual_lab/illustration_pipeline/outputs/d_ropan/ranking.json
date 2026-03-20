@@ -1,0 +1,75 @@
+[
+  {
+    "ropan_style": 9,
+    "beauty": 9,
+    "polish": 9,
+    "composition_impact": 9,
+    "reference_energy_match": 2,
+    "anatomy_integrity": 7,
+    "text_cleanliness": 10,
+    "has_unwanted_text": false,
+    "issues": [
+      "Hand anatomy is slightly off (long fingers, awkward grip).",
+      "Does not match the modern fantasy genre/energy of the reference image."
+    ],
+    "summary": "A high-quality romance-fantasy illustration with strong visual appeal and composition, but it completely misses the modern action genre of the reference and has minor hand anatomy flaws.",
+    "candidate": "C:\\Users\\wjjo\\Desktop\\글도비\\visual_lab\\illustration_pipeline\\outputs\\d_ropan\\candidate_03_villainess_rose.png",
+    "score": 187
+  },
+  {
+    "ropan_style": 9,
+    "beauty": 9,
+    "polish": 9,
+    "composition_impact": 8,
+    "reference_energy_match": 1,
+    "anatomy_integrity": 8,
+    "text_cleanliness": 10,
+    "has_unwanted_text": false,
+    "issues": [
+      "Complete genre and energy mismatch with the reference image",
+      "Composition is static and generic for the genre",
+      "Hands are conveniently hidden"
+    ],
+    "summary": "A beautifully polished romance-fantasy illustration that completely fails to match the modern, dark action genre and energy of the reference.",
+    "candidate": "C:\\Users\\wjjo\\Desktop\\글도비\\visual_lab\\illustration_pipeline\\outputs\\d_ropan\\candidate_02_blonde_empress.png",
+    "score": 183
+  },
+  {
+    "ropan_style": 9,
+    "beauty": 9,
+    "polish": 9,
+    "composition_impact": 6,
+    "reference_energy_match": 1,
+    "anatomy_integrity": 7,
+    "text_cleanliness": 10,
+    "has_unwanted_text": false,
+    "issues": [
+      "Complete genre and energy mismatch with reference",
+      "Static, centered composition lacks impact",
+      "Hands are slightly stiff and doll-like",
+      "Generic fantasy aesthetic"
+    ],
+    "summary": "A beautifully rendered but generic Ropan-style portrait that completely fails to match the modern, action-oriented energy of the reference image. The composition is too static for a compelling cover.",
+    "candidate": "C:\\Users\\wjjo\\Desktop\\글도비\\visual_lab\\illustration_pipeline\\outputs\\d_ropan\\candidate_01_duchess_corridor.png",
+    "score": 174
+  },
+  {
+    "ropan_style": 9,
+    "beauty": 8,
+    "polish": 8,
+    "composition_impact": 7,
+    "reference_energy_match": 0,
+    "anatomy_integrity": 5,
+    "text_cleanliness": 10,
+    "has_unwanted_text": false,
+    "issues": [
+      "Completely fails to match the dark, modern energy of the reference.",
+      "Hands are poorly rendered, with indistinct and malformed fingers.",
+      "Overly generic and busy high-fantasy aesthetic.",
+      "Static, symmetrical composition lacks dynamism."
+    ],
+    "summary": "A polished but generic high-fantasy illustration that completely misses the reference's tone and suffers from poorly rendered hands.",
+    "candidate": "C:\\Users\\wjjo\\Desktop\\글도비\\visual_lab\\illustration_pipeline\\outputs\\d_ropan\\candidate_04_silver_princess.png",
+    "score": 161
+  }
+]
