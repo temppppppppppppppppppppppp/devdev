@@ -1,4 +1,4 @@
-"""[Phase 4C-1a] Stage3Orchestrator 단위 테스트
+﻿"""[Phase 4C-1a] Stage3Orchestrator 단위 테스트
 
 추출 대상: _stage_3_batch_blueprinting (main_a.py → stage3_orchestrator.py)
 """
@@ -966,6 +966,9 @@ class TestGenerateBlueprint:
         assert kwargs["prev_hud"] == {"focus": "hud"}
         assert blueprint == {"integrated_scenario": "test", "scene_breakdown": {"s1": "scene"}}
         assert pipeline_result["final_verdict"] == "PASS"
+        log_texts = [call.args[0] for call in app_mock.ui.log.call_args_list if call.args]
+        assert any("Blueprint 대기: ThreePhase runtime 호출 중" in text for text in log_texts)
+        assert any("선택 전략: A" in text for text in log_texts)
 
     def test_finalize_stage3_blueprint_pipeline_result_normalizes_non_dict_result(self, orch):
         semantic_bundle = {
@@ -1056,7 +1059,7 @@ class TestProcessSingleEpisode:
         pipeline_result = {
             "final_verdict": "PASS",
             "last_score": 87,
-            "phases": {"generate": {"selected_score": 87}},
+            "phases": {"generate": {"selected_score": 87, "selected_strategy": "A"}},
             "_stage3_duration_ms": 4321,
             "_stage3_token_cost_usd": 0.123,
         }
@@ -1070,12 +1073,14 @@ class TestProcessSingleEpisode:
         assert kw["attempt_key"] == "s3:ep3:arc1:a1"
         assert kw["duration_ms"] == 4321
         assert kw["token_cost"] == 0.123
+        log_texts = [call.args[0] for call in app_mock.ui.log.call_args_list if call.args]
+        assert any("blueprint success (verdict=PASS, strategy=A, score=87)" in text for text in log_texts)
 
     def test_stage3_failure_records_pass_rate_monitor(self, orch, app_mock):
         pipeline_result = {
             "final_verdict": "REJECT",
             "last_score": 41,
-            "phases": {"generate": {"selected_score": 41}},
+            "phases": {"generate": {"selected_score": 41, "selected_strategy": "B"}},
             "_stage3_duration_ms": 987,
             "_stage3_token_cost_usd": 0.456,
         }
@@ -1089,6 +1094,9 @@ class TestProcessSingleEpisode:
         assert kw["attempt_key"] == "s3:ep4:arc2:a1"
         assert kw["duration_ms"] == 987
         assert kw["token_cost"] == 0.456
+        log_texts = [call.args[0] for call in app_mock.ui.log.call_args_list if call.args]
+        assert any("REJECT 사유:" in text for text in log_texts)
+        assert any("category=" in text and "strategy=B" in text for text in log_texts)
 
     def test_stage3_reject_cost_record_uses_metrics_session_id_when_available(self, orch, app_mock):
         app_mock.current_project.metrics_session_id = "sess_stage3_reject"
@@ -1588,3 +1596,46 @@ class TestStage3ContextDI:
         orch.stage_3_batch_blueprinting()
 
         app_mock._write_audit_summary.assert_not_called()
+
+
+def test_stage3_failure_attempt_survives_session_logger_failure(orch, app_mock, tmp_path):
+    app_mock._session_logger.log_decision.side_effect = RuntimeError("logger down")
+    app_mock.current_project.paths = MagicMock()
+    app_mock.current_project.paths.root = tmp_path
+    pipeline_result = {
+        "final_verdict": "REJECT",
+        "last_score": 44,
+        "phases": {
+            "generate": {"selected_strategy": "action_focused", "selected_score": 44},
+            "validate": {
+                "phase": "director_compare",
+                "selected_index": 0,
+                "comparison_notes": "후보 1이 상대적으로 낫지만 전면 재설계가 필요함",
+                "verdict": "REJECT",
+                "feedback": "전술 사건 재배치 필요",
+                "fix_scope": "full",
+                "contradictions": ["timeline mismatch"],
+            },
+        },
+        "_stage3_duration_ms": 987,
+        "_stage3_observability": {
+            "work_focus_present": True,
+            "semantic_ctx_chars": 222,
+            "source_counts": {"legacy_semantic_context": 1},
+            "advisor_path_used": False,
+        },
+    }
+
+    orch._handle_failure(
+        working_ep=4,
+        pipeline_result=pipeline_result,
+        success_count=0,
+        fail_count=0,
+        arc_no=2,
+        blueprint={"integrated_scenario": "candidate", "scene_breakdown": {"s1": "scene"}},
+    )
+
+    app_mock.pass_rate_monitor.record_attempt.assert_called_once()
+    app_mock.current_project.db.save_stage_attempt.assert_called_once()
+    app_mock.current_project.db.save_director_selection.assert_called_once()
+

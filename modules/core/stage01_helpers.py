@@ -60,6 +60,21 @@ class Stage01Helpers:
             pass
 
     @staticmethod
+    def _stage0_extended_available() -> bool:
+        from modules.core import spinners as _spinners_mod
+
+        if getattr(_spinners_mod, "STAGE0_AVAILABLE", False):
+            return True
+        try:
+            from modules.core.stage0 import PresetRegistry, StageZeroManager  # noqa: F401
+
+            _spinners_mod.STAGE0_AVAILABLE = True
+            return True
+        except Exception as exc:
+            logging.debug("[Stage0Helpers] Stage 0 availability probe failed: %s", exc)
+            return False
+
+    @staticmethod
     def validate_volume_boundaries(vol_data, vol_idx):
         """권 전략 문서의 미래 권 누수와 비정상 payload를 검증한다."""
         if not isinstance(vol_data, dict):
@@ -123,13 +138,13 @@ class Stage01Helpers:
             app.ui.log(f"📌 현재 장르: {app.selected_genre['name']} ({app.selected_genre['type']})")
 
         # [V60.95] Stage 0 서브메뉴
-        from modules.core.spinners import STAGE0_AVAILABLE
+        stage0_available = self._stage0_extended_available()
 
         app.ui.log("\n" + "=" * 50)
         app.ui.log("  📚 Stage 0 - 프로젝트 설정")
         app.ui.log("=" * 50)
         app.ui.log("\n  [1] 기존 방식 - Bible/Treatment 파일 선택")
-        if STAGE0_AVAILABLE:
+        if stage0_available:
             app.ui.log("  [2] 🆕 컨셉 → Bible 생성 (AI 확장)")
             app.ui.log("  [3] 🔄 역설계 - 기존 원고에서 Bible/스타일 추출")
             app.ui.log("  [4] 📥 Bible JSON 임포트")
@@ -143,7 +158,7 @@ class Stage01Helpers:
         except (EOFError, KeyboardInterrupt, ValueError):
             p0_choice = "1"
 
-        extended_mode = self._resolve_phase0_extended_mode(p0_choice, STAGE0_AVAILABLE)
+        extended_mode = self._resolve_phase0_extended_mode(p0_choice, stage0_available)
         if p0_choice == "0":
             app.ui.log("❌ Stage 0이 취소되었습니다.")
             return
@@ -485,9 +500,9 @@ class Stage01Helpers:
         """[V60.95] Stage 0 확장 기능 — dispatcher + 6 핸들러."""
         app = self.app
 
-        from modules.core.spinners import STAGE0_AVAILABLE
+        _stage0_available = self._stage0_extended_available()
 
-        if not STAGE0_AVAILABLE:
+        if not _stage0_available:
             app.ui.log("❌ Stage 0 모듈이 로드되지 않았습니다.")
             return
 

@@ -1,4 +1,4 @@
-"""[B-1-7] Unit tests for Stage2Finalizer extracted from Stage2Orchestrator."""
+﻿"""[B-1-7] Unit tests for Stage2Finalizer extracted from Stage2Orchestrator."""
 
 import asyncio
 import sys
@@ -218,6 +218,28 @@ class TestMetricsRecording:
         )
         finalizer.ctx.stage2_optimizer.failure_memory.record_failure.assert_called_once()
 
+
+class TestConstraintDbLogging:
+    def test_update_stage2_pass_constraint_db_logs_clean_message(self, finalizer):
+        constraint_db = MagicMock()
+        constraint_db.arc_states = [1]
+
+        finalizer._update_stage2_pass_constraint_db(
+            refined_arc={"arc_no": 1, "title": "Arc 1"},
+            constraint_db=constraint_db,
+        )
+
+        constraint_db.update_arc_state.assert_called_once_with({"arc_no": 1, "title": "Arc 1"})
+        finalizer.ctx.ui.log.assert_any_call(
+            "      [V49.4] ConstraintDB 업데이트 완료 (총 1개 Arc)"
+        )
+
+    def test_stage2_finalizer_source_keeps_only_single_live_duplicate_prone_defs(self):
+        src = (PROJECT_ROOT / "modules" / "core" / "stage2_finalizer.py").read_text(encoding="utf-8")
+
+        assert src.count("async def _persist_stage2_pass_arc_commit(") == 1
+        assert src.count("def _maybe_generate_stage2_volume_summaries(") == 1
+        assert "ConstraintDB 업데이트 완료" in src
     def test_reject_metric_context_persists_artifact_linkage(self, finalizer, valid_refined_arc, tmp_path):
         finalizer.ctx.current_project.paths = MagicMock()
         finalizer.ctx.current_project.paths.root = tmp_path
@@ -696,3 +718,4 @@ class TestRunFinalize:
         prompts = [call.args[0] for call in finalizer.ctx.agents["director"].ask.call_args_list]
         assert any("[인물 아크]" in prompt and "2000자 이내" in prompt for prompt in prompts)
         assert any("[미해결 복선]" in prompt and "5000자 이내" in prompt for prompt in prompts)
+

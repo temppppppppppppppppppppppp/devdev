@@ -128,6 +128,54 @@ def test_run_stage2_single_arc_attempt_delegates_to_helper_family():
     orch._finalize_stage2_single_arc_attempt.assert_awaited_once()
 
 
+def test_run_stage2_single_arc_attempt_emits_heartbeat_and_validation_progress():
+    ctx = _make_ctx()
+    orch = Stage2Orchestrator(app=MagicMock(), context=ctx)
+    kwargs = _make_attempt_kwargs()
+    orch._run_stage2_single_arc_preflight = MagicMock(
+        return_value={
+            "current_feedback": "augmented-feedback",
+            "refined_arc": {"draft": "enriched"},
+            "generation_method": "fourphase",
+            "constraint_block": "analysis-constraint",
+            "entity_registry_for_director": {"npc": "seed"},
+            "four_phase_passed": True,
+            "draft_validator_passed": True,
+            "consensus_passed": False,
+            "st_snapshot": {"snap": 2},
+            "director_feedback_for_fourphase": "fourphase-feedback",
+            "was_patch": False,
+            "patch_fallback": False,
+            "prev_score": 88,
+        }
+    )
+    orch._log_stage2_four_phase_retry = MagicMock(return_value=False)
+    orch._run_stage2_single_arc_validation = MagicMock(
+        return_value={
+            "action": "retry",
+            "payload": {
+                "action": "retry",
+                "next_attempt": 1,
+                "current_feedback": "retry-feedback",
+                "director_feedback_for_fourphase": "retry-director",
+                "st_snapshot": {"snap": 3},
+                "last_refined_context": "ctx-1",
+                "current_ep_start": 6,
+                "previous_attempt": {"score": 71},
+                "refined_arc": {"draft": "validated"},
+            },
+        }
+    )
+    orch._finalize_stage2_single_arc_attempt = AsyncMock()
+
+    result = asyncio.run(orch._run_stage2_single_arc_attempt(**kwargs))
+
+    assert result["action"] == "retry"
+    log_texts = [call.args[0] for call in ctx.ui.log.call_args_list if call.args]
+    assert any("preflight/four-phase tactical generation 대기" in text for text in log_texts)
+    assert any("validation 진입" in text for text in log_texts)
+
+
 def test_build_stage2_arc_failure_report_context_collects_prev_items_and_constraints():
     ctx = _make_ctx()
     ctx.stage_rejection_history = [

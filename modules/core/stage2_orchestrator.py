@@ -1171,6 +1171,22 @@ class Stage2Orchestrator:
         previous_attempt: dict[str, Any] | None,
     ) -> Stage2SingleArcAttemptPayload:
         """Execute one single-arc attempt and return the next loop state."""
+        # Keep a lightweight operator heartbeat ahead of the four-phase call so a
+        # long LLM wait reads as "in progress" instead of a silent stall.
+        self.ctx.ui.log(
+            f"      ⏳ [Stage 2] Arc {global_arc_no} attempt {attempt + 1}/{max_attempts}: "
+            "preflight/four-phase tactical generation 대기...",
+            stage="stage2",
+            component="single_arc_attempt",
+            ep_num=current_ep_start,
+            arc_num=global_arc_no,
+            event_kind="heartbeat",
+            meta={
+                "attempt": attempt + 1,
+                "max_attempts": max_attempts,
+                "wait_state": "preflight_four_phase_generation",
+            },
+        )
         attempt_state = self._run_stage2_single_arc_preflight(
             global_arc_no=global_arc_no,
             attempt=attempt,
@@ -1199,6 +1215,22 @@ class Stage2Orchestrator:
                 refined_arc=attempt_state["refined_arc"],
             )
 
+        self.ctx.ui.log(
+            f"      🔎 [Stage 2] Arc {global_arc_no} attempt {attempt + 1}: "
+            f"generation={attempt_state['generation_method']} · validation 진입",
+            stage="stage2",
+            component="single_arc_attempt",
+            ep_num=current_ep_start,
+            arc_num=global_arc_no,
+            event_kind="progress",
+            meta={
+                "attempt": attempt + 1,
+                "generation_method": attempt_state["generation_method"],
+                "four_phase_passed": bool(attempt_state["four_phase_passed"]),
+                "draft_validator_passed": bool(attempt_state["draft_validator_passed"]),
+                "consensus_passed": bool(attempt_state["consensus_passed"]),
+            },
+        )
         validation_state = self._run_stage2_single_arc_validation(
             global_arc_no=global_arc_no,
             attempt=attempt,
