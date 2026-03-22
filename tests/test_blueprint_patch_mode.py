@@ -143,12 +143,187 @@ class TestBlueprintInplacePatchMode:
 class TestBlueprintPatchIntegration:
     """ThreePhaseBlueprintGenerator.generate() 내 in-place 분기 테스트."""
 
+    def test_runtime_attached(self, blueprint_generator):
+        assert blueprint_generator.runtime.owner is blueprint_generator
+
+    def test_generate_delegates_to_runtime(self, blueprint_generator, sample_arc_data):
+        expected = ({"ep_num": 1}, {"final_verdict": "PASS"})
+        blueprint_generator.runtime = MagicMock()
+        blueprint_generator.runtime.generate.return_value = expected
+
+        result = blueprint_generator.generate(ep_num=1, arc_data=sample_arc_data)
+
+        assert result == expected
+        blueprint_generator.runtime.generate.assert_called_once_with(
+            ep_num=1,
+            arc_data=sample_arc_data,
+            prev_blueprint=None,
+            prev_blueprints=None,
+            max_retries=9,
+            external_feedback="",
+            director=None,
+            arc_idx=0,
+            entity_registry=None,
+            protagonist_name="주인공",
+            protagonist_config=None,
+            state_tracker=None,
+            db=None,
+            semantic_context="",
+            prev_manuscripts_text="",
+            adversarial_self_play=None,
+            prev_hud=None,
+        )
+
+    def test_resolve_constraint_block_reuses_cached_payload(self, blueprint_generator, sample_arc_data):
+        from modules.domain.agents.three_phase_blueprint_runtime import _ThreePhaseRetryState
+
+        cached = {"arc_no": 1, "arc_position": "1/5", "must_focus": {"content": "cached"}}
+        retry_state = _ThreePhaseRetryState(cached_constraint_block=cached)
+        pipeline = {"phases": {"constraint": {}}}
+
+        resolved = blueprint_generator.runtime._resolve_constraint_block(
+            retry=1,
+            ep_num=1,
+            arc_data=sample_arc_data,
+            prev_blueprint=None,
+            prev_blueprints=None,
+            genre="wuxia",
+            pipeline_result=pipeline,
+            retry_state=retry_state,
+        )
+
+        assert resolved is cached
+        blueprint_generator.constraint_compiler.compile.assert_not_called()
+        assert pipeline["phases"]["constraint"]["cached"] is True
+
+    def test_phase2_generation_failure_breaks_on_schema_incompatible(self, blueprint_generator, sample_arc_data):
+        blueprint_generator.ensemble.last_error_type = AgentErrorType.TIMEOUT
+        blueprint_generator.ensemble.last_error_types = [
+            AgentErrorType.TIMEOUT,
+            AgentErrorType.SCHEMA_INCOMPATIBLE,
+        ]
+        pipeline = {"phases": {"generate": {}}}
+
+        result = blueprint_generator.runtime._handle_phase2_generation_failure(
+            retry=0,
+            ep_num=1,
+            arc_data=sample_arc_data,
+            pipeline_result=pipeline,
+            max_retries=2,
+        )
+
+        assert result.should_break is True
+        assert result.should_continue is False
+        assert pipeline["failure_reason"] == AgentErrorType.SCHEMA_INCOMPATIBLE
+        assert pipeline["phases"]["generate"]["error_type"] == AgentErrorType.SCHEMA_INCOMPATIBLE
+
+    def test_phase3_validation_continuity_reject_short_circuits(self, blueprint_generator, sample_arc_data):
+        from modules.domain.agents.three_phase_blueprint_runtime import _ThreePhaseRetryState
+
+        director = MagicMock()
+        director.check_blueprint_continuity_with_cache.return_value = {
+            "decision": "REJECT",
+            "feedback": "continuity drift",
+        }
+        retry_state = _ThreePhaseRetryState()
+        pipeline = {"phases": {"generate": {}, "validate": {}}}
+        best_blueprint = {"ep_num": 2, "scene_list": [{"scene_no": 1, "summary": "candidate"}]}
+
+        result = blueprint_generator.runtime._run_phase3_validation(
+            ep_num=2,
+            arc_data=sample_arc_data,
+            constraint_block={},
+            prev_blueprint=None,
+            best_blueprint=best_blueprint,
+            all_candidates=[best_blueprint],
+            director=director,
+            arc_idx=0,
+            entity_registry=None,
+            state_tracker=None,
+            db=MagicMock(),
+            prev_hud=None,
+            retry_state=retry_state,
+            pipeline_result=pipeline,
+            retry=0,
+            max_retries=1,
+        )
+
+        assert result.should_continue is True
+        assert retry_state.prev_reject_feedback == "continuity drift"
+        assert retry_state.previous_best == best_blueprint
+        blueprint_generator.validator.validate.assert_not_called()
+
+    def test_record_phase3_validation_payload_truncates_candidate_advisories(self, blueprint_generator):
+        pipeline = {"phases": {"generate": {}, "validate": {}}}
+        validation_result = {
+            "issues": [{"severity": "major"}],
+            "confidence": 88,
+            "score": 91,
+            "phase": "judge",
+            "selected_index": 1,
+            "comparison_notes": "notes",
+            "selection_reason": "pick steady",
+            "verdict_reason": "best fit",
+            "fix_scope": "inplace",
+            "fix_scope_reasoning": "localized",
+            "quality_risk": True,
+            "candidate_advisories": [{"n": 1}, {"n": 2}, {"n": 3}, {"n": 4}],
+            "selected_candidate_advisory": {"focus": "keep"},
+        }
+
+        blueprint_generator.runtime._record_phase3_validation_payload(
+            pipeline_result=pipeline,
+            validation_result=validation_result,
+            verdict="PASS_WITH_FIX",
+            selected_strategy="steady",
+            all_candidates=[{"ep_num": 1}],
+            score=91,
+        )
+
+        assert pipeline["phases"]["validate"]["candidate_advisories"] == validation_result["candidate_advisories"][:3]
+        assert pipeline["phases"]["validate"]["selected_candidate_advisory"] == {"focus": "keep"}
+        assert pipeline["quality_risk"] is True
+        assert pipeline["revision_required"] is True
+        assert pipeline["phases"]["generate"]["selected_strategy"] == "steady"
+        assert pipeline["phases"]["generate"]["selected_score"] == 91
+
+    def test_apply_phase3_quality_gate_downgrades_low_score_pass(self, blueprint_generator):
+        with patch("modules.domain.agents.three_phase_blueprint_runtime._threshold", return_value=95):
+            verdict = blueprint_generator.runtime._apply_phase3_quality_gate(verdict="PASS", score=94)
+
+        assert verdict == "REJECT"
+
+    def test_finalize_terminal_failure_uses_emergency_fallback(self, blueprint_generator):
+        from modules.domain.agents.three_phase_blueprint_runtime import _ThreePhaseRetryState
+        from modules.core.constants import PatchModeThresholds
+
+        retry_state = _ThreePhaseRetryState(
+            prev_reject_score=PatchModeThresholds.REWRITE,
+            prev_reject_feedback="latest feedback",
+        )
+        best_blueprint = {"ep_num": 1, "scene_list": [{"scene_no": 1, "summary": "fallback"}]}
+        pipeline = {}
+
+        result, resolved_pipeline = blueprint_generator.runtime._finalize_terminal_failure(
+            ep_num=1,
+            max_retries=2,
+            pipeline_result=pipeline,
+            retry_state=retry_state,
+            best_blueprint=best_blueprint,
+            director=MagicMock(),
+            feedback="",
+        )
+
+        assert result is not None
+        assert resolved_pipeline["final_verdict"] == "PASS_WITH_WARNING"
+        assert resolved_pipeline["last_score"] == PatchModeThresholds.REWRITE
+
     def test_schema_incompatible_failure_breaks_retry_loop(self, blueprint_generator, sample_arc_data):
         blueprint_generator.constraint_compiler.compile.return_value = {}
         blueprint_generator.ensemble.generate_ensemble.return_value = (None, [])
         blueprint_generator.ensemble.last_error_type = AgentErrorType.SCHEMA_INCOMPATIBLE
 
-        result, pipeline = blueprint_generator.generate(
+        result, pipeline = blueprint_generator.runtime.generate(
             ep_num=1,
             arc_data=sample_arc_data,
             max_retries=9,
@@ -171,7 +346,7 @@ class TestBlueprintPatchIntegration:
             AgentErrorType.SCHEMA_INCOMPATIBLE,
         ]
 
-        result, pipeline = blueprint_generator.generate(
+        result, pipeline = blueprint_generator.runtime.generate(
             ep_num=1,
             arc_data=sample_arc_data,
             max_retries=9,
@@ -206,7 +381,7 @@ class TestBlueprintPatchIntegration:
 
         blueprint_generator.ensemble.generate_ensemble.side_effect = _set_schema_error
 
-        result, pipeline = blueprint_generator.generate(
+        result, pipeline = blueprint_generator.runtime.generate(
             ep_num=1,
             arc_data=sample_arc_data,
             max_retries=1,
@@ -236,7 +411,7 @@ class TestBlueprintPatchIntegration:
             {"score": 92, "issues": [], "confidence": 88},
         )
 
-        result, pipeline = blueprint_generator.generate(
+        result, pipeline = blueprint_generator.runtime.generate(
             ep_num=1,
             arc_data=sample_arc_data,
             max_retries=1,
@@ -273,7 +448,7 @@ class TestBlueprintPatchIntegration:
             {"score": 94, "issues": [], "confidence": 90},
         )
 
-        result, pipeline = blueprint_generator.generate(
+        result, pipeline = blueprint_generator.runtime.generate(
             ep_num=2,
             arc_data=sample_arc_data,
             max_retries=1,
@@ -305,7 +480,7 @@ class TestBlueprintPatchIntegration:
             ("PASS", {"score": 93, "issues": [], "confidence": 87}),
         ]
 
-        result, pipeline = blueprint_generator.generate(
+        result, pipeline = blueprint_generator.runtime.generate(
             ep_num=1,
             arc_data=sample_arc_data,
             max_retries=1,
@@ -333,7 +508,7 @@ class TestBlueprintPatchIntegration:
             {"score": 55, "feedback": "final reject", "issues": []},
         )
 
-        result, pipeline = blueprint_generator.generate(
+        result, pipeline = blueprint_generator.runtime.generate(
             ep_num=1,
             arc_data=sample_arc_data,
             max_retries=0,
@@ -360,7 +535,7 @@ class TestBlueprintPatchIntegration:
             ("PASS", {"score": 95, "issues": [], "confidence": 90}),
         ]
 
-        result, pipeline = blueprint_generator.generate(
+        result, pipeline = blueprint_generator.runtime.generate(
             ep_num=1,
             arc_data=sample_arc_data,
             max_retries=2,
@@ -389,7 +564,7 @@ class TestBlueprintPatchIntegration:
             ("PASS", {"score": 93, "issues": [], "confidence": 87}),
         ]
 
-        result, pipeline = blueprint_generator.generate(
+        result, pipeline = blueprint_generator.runtime.generate(
             ep_num=1,
             arc_data=sample_arc_data,
             max_retries=1,
@@ -446,7 +621,7 @@ class TestBlueprintPatchIntegration:
             },
         )
 
-        result, pipeline = blueprint_generator.generate(
+        result, pipeline = blueprint_generator.runtime.generate(
             ep_num=1,
             arc_data=sample_arc_data,
             max_retries=0,
@@ -489,7 +664,7 @@ class TestBlueprintPatchIntegration:
             },
         )
 
-        result, pipeline = blueprint_generator.generate(
+        result, pipeline = blueprint_generator.runtime.generate(
             ep_num=1,
             arc_data=sample_arc_data,
             max_retries=0,
@@ -516,7 +691,7 @@ class TestBlueprintPatchIntegration:
             ("PASS", {"score": 95, "issues": [], "confidence": 85}),
         ]
 
-        result, pipeline = blueprint_generator.generate(
+        result, pipeline = blueprint_generator.runtime.generate(
             ep_num=1,
             arc_data=sample_arc_data,
             max_retries=2,
@@ -543,7 +718,7 @@ class TestBlueprintPatchIntegration:
             ("PASS", {"score": 92, "issues": [], "confidence": 88}),
         ]
 
-        result, pipeline = blueprint_generator.generate(
+        result, pipeline = blueprint_generator.runtime.generate(
             ep_num=1,
             arc_data=sample_arc_data,
             max_retries=2,
@@ -571,7 +746,7 @@ class TestBlueprintPatchIntegration:
             ("PASS", {"score": 91, "issues": [], "confidence": 87}),
         ]
 
-        result, pipeline = blueprint_generator.generate(
+        result, pipeline = blueprint_generator.runtime.generate(
             ep_num=1,
             arc_data=sample_arc_data,
             max_retries=2,
@@ -606,7 +781,7 @@ class TestBlueprintPatchIntegration:
         ]
         blueprint_generator._inplace_patch_blueprint = MagicMock(return_value={"unexpected": True})
 
-        result, pipeline = blueprint_generator.generate(
+        result, pipeline = blueprint_generator.runtime.generate(
             ep_num=1,
             arc_data=sample_arc_data,
             max_retries=1,
@@ -644,7 +819,7 @@ class TestBlueprintPatchIntegration:
         ]
         blueprint_generator._inplace_patch_blueprint = MagicMock(return_value={"unexpected": True})
 
-        result, pipeline = blueprint_generator.generate(
+        result, pipeline = blueprint_generator.runtime.generate(
             ep_num=1,
             arc_data=sample_arc_data,
             max_retries=1,
@@ -676,7 +851,7 @@ class TestBlueprintPatchIntegration:
             patch("modules.core.constants.log_patch_diff"),
             caplog.at_level("WARNING"),
         ):
-            result, pipeline = blueprint_generator.generate(
+            result, pipeline = blueprint_generator.runtime.generate(
                 ep_num=1,
                 arc_data=sample_arc_data,
                 max_retries=0,
@@ -685,4 +860,5 @@ class TestBlueprintPatchIntegration:
         assert result is not None
         assert pipeline["final_verdict"] == "PASS"
         blueprint_generator._inplace_patch_blueprint.assert_called_once()
-        assert "[F-2] InPlace Blueprint 변경 비율 75.0% > 30%" in caplog.text
+        assert "[F-2] InPlace Blueprint" in caplog.text
+        assert "75.0% > 30%" in caplog.text

@@ -782,19 +782,19 @@ class ChiefWriter(BaseAgent):
     # ── [V62.6] 에피소드 상태 다이제스트 ──────────────────────────
 
     def _generate_episode_digest(self, *args, **kwargs):
-        return self.context_builder._generate_episode_digest(*args, **kwargs)
+        return self.context_builder.context_packets._generate_episode_digest(*args, **kwargs)
 
     def _detect_deaths_from_manuscript(self, *args, **kwargs):
-        return self.context_builder._detect_deaths_from_manuscript(*args, **kwargs)
+        return self.context_builder.context_packets._detect_deaths_from_manuscript(*args, **kwargs)
 
     def _detect_past_events_from_manuscript(self, *args, **kwargs):
-        return self.context_builder._detect_past_events_from_manuscript(*args, **kwargs)
+        return self.context_builder.context_packets._detect_past_events_from_manuscript(*args, **kwargs)
 
     def _build_past_guard_section(self, *args, **kwargs):
-        return self.context_builder._build_past_guard_section(*args, **kwargs)
+        return self.context_builder.context_packets._build_past_guard_section(*args, **kwargs)
 
     def _build_future_guard_section(self, *args, **kwargs):
-        return self.context_builder._build_future_guard_section(*args, **kwargs)
+        return self.context_builder.context_packets._build_future_guard_section(*args, **kwargs)
 
     def regenerate_with_feedback(
         self,
@@ -1960,10 +1960,10 @@ class ChiefWriter(BaseAgent):
     # =========================================================================
 
     def _get_npc_frequency(self, *args, **kwargs):
-        return self.context_builder._get_npc_frequency(*args, **kwargs)
+        return self.context_builder.context_packets._get_npc_frequency(*args, **kwargs)
 
     def _get_npc_frequency_warning(self, *args, **kwargs):
-        return self.context_builder._get_npc_frequency_warning(*args, **kwargs)
+        return self.context_builder.context_packets._get_npc_frequency_warning(*args, **kwargs)
 
     def _count_recent_cliches(self, *args, **kwargs):
         return self.quality_gate._count_recent_cliches(*args, **kwargs)
@@ -1978,17 +1978,17 @@ class ChiefWriter(BaseAgent):
         return self.context_builder._build_hud_context(*args, **kwargs)
 
     def _check_hud_anomalies(self, *args, **kwargs):
-        return self.context_builder._check_hud_anomalies(*args, **kwargs)
+        return self.context_builder.context_packets._check_hud_anomalies(*args, **kwargs)
 
     def _get_npc_equipment_summary(self, *args, **kwargs):
-        return self.context_builder._get_npc_equipment_summary(*args, **kwargs)
+        return self.context_builder.context_packets._get_npc_equipment_summary(*args, **kwargs)
 
     # =========================================================================
     # [V60.81] DNA 모드 & 1화 특수 처리
     # =========================================================================
 
     def _get_dna_instruction(self, *args, **kwargs):
-        return self.context_builder._get_dna_instruction(*args, **kwargs)
+        return self.context_builder.context_packets._get_dna_instruction(*args, **kwargs)
 
     # =========================================================================
     # [V60.81] Context Building (Writer 통합) - 독립 실행용
@@ -1998,16 +1998,16 @@ class ChiefWriter(BaseAgent):
         return self.context_builder._build_anti_trope_instructions(*args, **kwargs)
 
     def _build_mandatory_context(self, *args, **kwargs):
-        return self.context_builder._build_mandatory_context(*args, **kwargs)
+        return self.context_builder.context_packets._build_mandatory_context(*args, **kwargs)
 
     def _extract_recent_events(self, *args, **kwargs):
-        return self.context_builder._extract_recent_events(*args, **kwargs)
+        return self.context_builder.context_packets._extract_recent_events(*args, **kwargs)
 
     def _extract_npc_last_states(self, *args, **kwargs):
-        return self.context_builder._extract_npc_last_states(*args, **kwargs)
+        return self.context_builder.context_packets._extract_npc_last_states(*args, **kwargs)
 
     def _build_justification_guidance(self, *args, **kwargs):
-        return self.context_builder._build_justification_guidance(*args, **kwargs)
+        return self.context_builder.context_packets._build_justification_guidance(*args, **kwargs)
 
     # [V65] Dead Code 삭제: _self_refine (-85줄), EMOTION_STATES/GENRE_EMOTION_PATTERNS/
     # generate_emotion_skeleton/_analyze_scene_types/build_emotion_prompt_injection/

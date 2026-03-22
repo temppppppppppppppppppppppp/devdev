@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from modules.core.investment_arithmetic_checker import InvestmentArithmeticChecker
 from modules.domain.agents.four_phase_arc_generator import FourPhaseArcGenerator
+from modules.domain.agents.four_phase_arc_runtime import FourPhaseArcRuntime
 
 
 def _make_generator(*, genre: str = "investment", flash_ask=None) -> tuple[FourPhaseArcGenerator, dict]:
@@ -45,6 +46,7 @@ def _make_generator(*, genre: str = "investment", flash_ask=None) -> tuple[FourP
     gen._generate_prev_context = MagicMock(return_value="prev")
     gen._check_arc_end_state = MagicMock(side_effect=lambda arc: arc)
     gen._load_execution_state = MagicMock(return_value={})
+    gen.runtime = FourPhaseArcRuntime(gen)
     return gen, candidate
 
 
@@ -69,7 +71,7 @@ def test_investment_advisory_reaches_director():
             return_value=[{"check": "investment_math_llm", "severity": "MAJOR", "text": "[F-2] llm mismatch"}],
         ),
     ):
-        _, result = gen.generate(
+        _, result = gen.runtime.generate(
             arc_no=4,
             ep_start=1,
             vol_strategy="std",
@@ -98,7 +100,7 @@ def test_non_investment_genre_skips_codex_f():
     }
 
     with patch("modules.core.investment_arithmetic_checker.InvestmentArithmeticChecker.from_yaml") as mocked_from_yaml:
-        _, result = gen.generate(
+        _, result = gen.runtime.generate(
             arc_no=2,
             ep_start=1,
             vol_strategy="std",
@@ -160,9 +162,9 @@ def test_flash_disabled_skips_f2():
     with (
         patch("modules.core.investment_arithmetic_checker.InvestmentArithmeticChecker.from_yaml", return_value=fake_checker),
         patch("modules.core.investment_math_verifier.InvestmentMathVerifier.verify") as mocked_verify,
-        patch("modules.domain.agents.four_phase_arc_generator._threshold", side_effect=_fake_threshold),
+        patch("modules.domain.agents.four_phase_arc_runtime._threshold", side_effect=_fake_threshold),
     ):
-        _, result = gen.generate(
+        _, result = gen.runtime.generate(
             arc_no=4,
             ep_start=1,
             vol_strategy="std",
@@ -214,7 +216,7 @@ def test_investment_critical_candidate_filtered_before_director():
         "modules.core.investment_arithmetic_checker.InvestmentArithmeticChecker.from_yaml",
         return_value=fake_checker,
     ):
-        _, result = gen.generate(
+        _, result = gen.runtime.generate(
             arc_no=4,
             ep_start=1,
             vol_strategy="std",

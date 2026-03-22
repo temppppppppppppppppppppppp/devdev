@@ -390,6 +390,101 @@ def test_frontier_lag_final_close_propagates_skip_pause():
     assert result["stop_reason"] == "completed"
 
 
+def test_frontier_lag_final_close_helper_returns_payload():
+    app = _build_frontier_app(
+        total_arcs=2,
+        batch_size=1,
+        stage3_results=[{"success_count": 1, "fail_count": 0}],
+        plans=[
+            {
+                "true_final_arc_no": 2,
+                "designed_frontier_arc_no": 2,
+                "frontier_ep_start": 4,
+                "frontier_ep_end": 6,
+                "stage3_target": 6,
+                "stage4_target": 6,
+                "stage3_alignment": "aligned",
+                "stage4_alignment": "aligned",
+                "bp_max": 6,
+                "ms_max": 2,
+            }
+        ],
+        manuscripts_after=[2, 4],
+        initial_designed_arcs=2,
+    )
+
+    fake_stage3 = _make_stage_context_module("Stage3Context")
+
+    with patch.dict(sys.modules, {"modules.core.stage3_context": fake_stage3}):
+        result = SovereignApp._run_frontier_lag_final_close(
+            app,
+            total_arcs=2,
+            all_arcs=app.current_project.db.load_anchor("arcs"),
+        )
+
+    app._stage3_orch.stage_3_batch_blueprinting.assert_called_once_with(target_ep=6)
+    app._stage_4_v2_chief_writer.assert_called_once_with(target_ep=6, skip_pause=True)
+    assert result == {
+        "manuscripts_delta": 2,
+        "stop_reason": None,
+        "final_plan": {
+            "true_final_arc_no": 2,
+            "designed_frontier_arc_no": 2,
+            "frontier_ep_start": 4,
+            "frontier_ep_end": 6,
+            "stage3_target": 6,
+            "stage4_target": 6,
+            "stage3_alignment": "aligned",
+            "stage4_alignment": "aligned",
+            "bp_max": 6,
+            "ms_max": 2,
+        },
+    }
+
+
+def test_prepare_frontier_lag_batch_request_respects_override_and_requested_limit():
+    app = _build_frontier_app(
+        total_arcs=4,
+        batch_size=1,
+        stage3_results=[],
+        plans=[
+            {
+                "true_final_arc_no": 4,
+                "designed_frontier_arc_no": 1,
+                "frontier_ep_start": 1,
+                "frontier_ep_end": 3,
+                "stage3_target": 2,
+                "stage4_target": 1,
+                "stage3_alignment": "aligned",
+                "stage4_alignment": "aligned",
+                "bp_max": 2,
+                "ms_max": 1,
+            }
+        ],
+        manuscripts_after=[0],
+        initial_designed_arcs=1,
+    )
+
+    result = SovereignApp._prepare_frontier_lag_batch_request(
+        app,
+        total_arcs=4,
+        all_arcs=app.current_project.db.load_anchor("arcs"),
+        max_arc_advances=2,
+        batch_size_override=3,
+    )
+
+    app._get_int_input.assert_not_called()
+    assert result == {
+        "designed_arcs": 1,
+        "remaining_design": 3,
+        "requested_arc_limit": 2,
+        "requested_limit_hit": False,
+        "stop_reason": "completed",
+        "batch_size": 3,
+        "target_count": 2,
+    }
+
+
 def test_frontier_lag_final_close_blocks_when_stage4_backlog_makes_no_progress():
     app = _build_frontier_app(
         total_arcs=2,
@@ -426,6 +521,159 @@ def test_frontier_lag_final_close_blocks_when_stage4_backlog_makes_no_progress()
     assert result["arcs_advanced"] == 0
     assert result["total_manuscripts"] == 0
     assert result["stop_reason"] == "stage4_final_close_no_progress"
+
+
+def test_finalize_frontier_lag_result_returns_payload_without_pause():
+    app = _build_frontier_app(
+        total_arcs=2,
+        batch_size=1,
+        stage3_results=[],
+        plans=[
+            {
+                "true_final_arc_no": 2,
+                "designed_frontier_arc_no": 2,
+                "frontier_ep_start": 4,
+                "frontier_ep_end": 6,
+                "stage3_target": 6,
+                "stage4_target": 6,
+                "stage3_alignment": "aligned",
+                "stage4_alignment": "aligned",
+                "bp_max": 6,
+                "ms_max": 2,
+            }
+        ],
+        manuscripts_after=[0],
+        initial_designed_arcs=2,
+    )
+    app._pause = MagicMock()
+
+    result = SovereignApp._finalize_frontier_lag_result(
+        app,
+        total_arcs=2,
+        arcs_advanced=1,
+        total_manuscripts=3,
+        requested_arc_limit=2,
+        requested_limit_hit=False,
+        stop_reason="completed",
+        wait_for_menu_return=False,
+    )
+
+    app._pause.assert_not_called()
+    assert result == {
+        "arcs_advanced": 1,
+        "total_manuscripts": 3,
+        "requested_arc_limit": 2,
+        "requested_limit_hit": False,
+        "stop_reason": "completed",
+        "final_plan": {
+            "true_final_arc_no": 2,
+            "designed_frontier_arc_no": 2,
+            "frontier_ep_start": 4,
+            "frontier_ep_end": 6,
+            "stage3_target": 6,
+            "stage4_target": 6,
+            "stage3_alignment": "aligned",
+            "stage4_alignment": "aligned",
+            "bp_max": 6,
+            "ms_max": 2,
+        },
+    }
+
+
+def test_frontier_lag_arc_step_helper_returns_continue_on_stage3_skip():
+    app = _build_frontier_app(
+        total_arcs=2,
+        batch_size=1,
+        stage3_results=[{"success_count": 0, "fail_count": 1}],
+        plans=[
+            {
+                "true_final_arc_no": 2,
+                "designed_frontier_arc_no": 1,
+                "frontier_ep_start": 1,
+                "frontier_ep_end": 3,
+                "stage3_target": 2,
+                "stage4_target": 1,
+                "stage3_alignment": "backlog",
+                "stage4_alignment": "backlog",
+                "bp_max": 0,
+                "ms_max": 0,
+            }
+        ],
+        manuscripts_after=[0, 0],
+    )
+    app._ui_service.get_choice_input.return_value = "1"
+
+    fake_stage2 = _make_stage_context_module("Stage2Context")
+    fake_stage3 = _make_stage_context_module("Stage3Context")
+
+    with patch.dict(
+        sys.modules,
+        {"modules.core.stage2_context": fake_stage2, "modules.core.stage3_context": fake_stage3},
+    ):
+        result = SovereignApp._run_frontier_lag_arc_step(app, current_arc_no=1, total_arcs=2)
+
+    app._stage_4_v2_chief_writer.assert_not_called()
+    assert result == {
+        "arcs_advanced_delta": 1,
+        "manuscripts_delta": 0,
+        "status": "continue",
+        "stop_reason": None,
+    }
+
+
+def test_ensure_frontier_lag_arc_ready_stops_when_stage2_does_not_create_arc():
+    app = _build_frontier_app(
+        total_arcs=2,
+        batch_size=1,
+        stage3_results=[{"success_count": 1, "fail_count": 0}],
+        plans=[],
+        manuscripts_after=[0, 0],
+    )
+
+    async def _no_stage2_generation(target_arc_count=1):
+        return None
+
+    app._stage2_orch = SimpleNamespace(ctx=None, stage_2_arcs_async_logic=_no_stage2_generation)
+    fake_stage2 = _make_stage_context_module("Stage2Context")
+
+    with patch.dict(sys.modules, {"modules.core.stage2_context": fake_stage2}):
+        result = SovereignApp._ensure_frontier_lag_arc_ready(app, current_arc_no=1)
+
+    assert result == {
+        "status": "stop",
+        "payload": {
+            "arcs_advanced_delta": 0,
+            "manuscripts_delta": 0,
+            "status": "stop",
+            "stop_reason": "stage2_arc_missing_after_generation",
+        },
+    }
+
+
+def test_run_frontier_lag_stage4_sync_blocks_when_backlog_has_no_progress():
+    app = _build_frontier_app(
+        total_arcs=2,
+        batch_size=1,
+        stage3_results=[{"success_count": 1, "fail_count": 0}],
+        plans=[],
+        manuscripts_after=[0, 0],
+    )
+
+    result = SovereignApp._run_frontier_lag_stage4_sync(
+        app,
+        frontier_plan={
+            "stage4_target": 1,
+            "stage4_alignment": "backlog",
+        },
+    )
+
+    app._stage_4_v2_chief_writer.assert_called_once_with(target_ep=1, skip_pause=True)
+    assert result == {
+        "arcs_advanced_delta": 0,
+        "manuscripts_delta": 0,
+        "status": "stop",
+        "stop_reason": "stage4_no_progress_blocked",
+    }
 
 
 def test_frontier_lag_keeps_stage3_abort_prompt():

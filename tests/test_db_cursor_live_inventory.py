@@ -92,7 +92,8 @@ def test_db_cursor_live_inventory_freezes_priority_split() -> None:
 
     assert REQUIRED_MUST_MIGRATE <= must_migrate
     assert set(contract["must_migrate_priority_floor"]) <= must_migrate
-    assert "_boot_db" in allowed_temporary
+    assert "_boot_db" not in allowed_temporary
+    assert "_boot_db" not in must_migrate
     assert must_migrate.isdisjoint(allowed_temporary)
 
 

@@ -1,4 +1,4 @@
-"""
+﻿"""
 [V64 P2-1] Director EnsembleSelector — 앙상블 선택 전담 모듈
 
 Director God Object 분해의 세 번째 단계.
@@ -6,6 +6,7 @@ Blueprint/Manuscript 후보 비교, 선택, 판정을 담당.
 Director reference를 통해 BaseAgent 메서드(ask, _extract_json_robust 등) 접근.
 """
 
+from dataclasses import dataclass
 import json
 import logging
 
@@ -566,6 +567,47 @@ def _arc_compare_fallback_result(candidates: list[dict]) -> dict:
     }
 
 
+@dataclass(frozen=True)
+class _EnsembleCandidateEnvelope:
+    candidates: list[dict]
+    validation_results: list[dict]
+    qualified_indices: list[int]
+    scm_single_candidate: bool
+
+
+@dataclass(frozen=True)
+class _EnsemblePromptRequest:
+    combined_context: str
+    stable_context: str
+    variable_prompt: str | None
+    fallback_prompt: str | None
+
+
+@dataclass(frozen=True)
+class _EnsemblePromptResponse:
+    response: str
+    prompt_error: bool = False
+
+
+@dataclass
+class _EnsembleSelectionState:
+    selected_letter: str
+    selected_idx: int
+    selected_candidate: dict
+    original_verdict: str
+    score: int
+    pre_firewall_score: int
+    score_breakdown_raw: dict
+    contradiction_check: dict
+    numeric_consistency_review: list
+    consistency_checklist: dict
+    v60_97_swapped: bool
+    firewall_triggered: bool = False
+    firewall_fixable: bool = False
+    firewall_reason: str = ""
+    contradiction_details: list[dict] | None = None
+
+
 class DirectorEnsembleSelector:
     """
     [V64 P2-1] Director에서 분리된 앙상블 선택 모듈
@@ -583,6 +625,644 @@ class DirectorEnsembleSelector:
         """
         self._d = director
         self._prompt_loader = PromptLoader()
+
+    def _normalize_ensemble_candidates(
+        self,
+        candidates: list,
+        validation_results: list,
+    ) -> _EnsembleCandidateEnvelope:
+        normalized_candidates = list(candidates)
+        while len(normalized_candidates) < 3:
+            normalized_candidates.append(
+                {
+                    "strategy": f"fallback_{len(normalized_candidates)}",
+                    "strategy_name": "fallback",
+                    "manuscript": "",
+                    "title": "",
+                    "state_updates": {},
+                }
+            )
+
+        normalized_validation = list(validation_results)
+        while len(normalized_validation) < 3:
+            normalized_validation.append({"warnings": ["missing candidate"], "focus_points": ["empty candidate"]})
+
+        qualified_indices = [
+            idx
+            for idx, candidate in enumerate(normalized_candidates)
+            if len(candidate.get("manuscript") or "") >= ManuscriptLimits.MIN_LENGTH
+        ]
+        return _EnsembleCandidateEnvelope(
+            candidates=normalized_candidates,
+            validation_results=normalized_validation,
+            qualified_indices=qualified_indices,
+            scm_single_candidate=len(qualified_indices) == 1,
+        )
+
+    def _build_ensemble_length_guard_result(self, candidates: list[dict]) -> dict:
+        lengths = [len(candidate.get("manuscript", "")) for candidate in candidates]
+        best_idx = lengths.index(max(lengths))
+        return {
+            "selected": ["A", "B", "C"][best_idx],
+            "selected_candidate": candidates[best_idx],
+            "verdict": "REJECT",
+            "director_verdict": "REJECT",
+            "final_verdict": "REJECT",
+            "original_verdict": "REJECT",
+            "gate_basis": "director_primary_reject",
+            "repair_scope": "none",
+            "score": 30,
+            "feedback": {
+                "issues": [
+                    f"All candidates are below the manuscript length floor: {lengths} (minimum {ManuscriptLimits.MIN_LENGTH} required)"
+                ],
+                "action_items": [
+                    "Expand the manuscript above the minimum length floor.",
+                    "Ensure scene-level detail and dramatic beats are materially developed.",
+                ],
+            },
+            "state_updates": candidates[best_idx].get("state_updates", {}),
+            "action_items": [f"Length expansion required (minimum {ManuscriptLimits.MIN_LENGTH})."],
+            "length_violation": True,
+            "selection_reason": f"[length_guard] Chose the longest candidate as fallback ({max(lengths)})",
+            "verdict_reason": (
+                f"All candidates are below the manuscript length floor: {lengths} "
+                f"(minimum {ManuscriptLimits.MIN_LENGTH} required)"
+            ),
+            "reject_reason": (
+                f"All candidates are below the manuscript length floor: {lengths} "
+                f"(minimum {ManuscriptLimits.MIN_LENGTH} required)"
+            ),
+            "score_breakdown": _canonical_score_breakdown(length_score=30),
+        }
+
+    def _build_ensemble_prompt_request(
+        self,
+        *,
+        candidates: list[dict],
+        validation_results: list[dict],
+        blueprint: dict,
+        previous_ending: str,
+        episode_digest: str,
+        mandatory_context: str,
+        decision_core: str,
+        candidate_evidence: str,
+        reference_appendix: str,
+        prev_manuscripts_text: str,
+        story_context: str,
+    ) -> _EnsemblePromptRequest:
+        blueprint_str = json.dumps(blueprint, ensure_ascii=False, indent=2) if isinstance(blueprint, dict) else str(blueprint)
+
+        def _candidate_prompt_info(idx: int) -> dict:
+            candidate = candidates[idx] if idx < len(candidates) else {}
+            validation = validation_results[idx] if idx < len(validation_results) else {}
+            return {
+                "strategy": candidate.get("strategy_name", candidate.get("strategy", f"candidate{idx + 1}")),
+                "manuscript": candidate.get("manuscript", ""),
+                "warnings": "\n".join(validation.get("warnings", [])) or "(no warnings)",
+            }
+
+        info_a = _candidate_prompt_info(0)
+        info_b = _candidate_prompt_info(1)
+        info_c = _candidate_prompt_info(2)
+
+        prev_manuscripts = smart_truncate(
+            prev_manuscripts_text if prev_manuscripts_text else "(previous manuscripts unavailable)"
+        )
+        blueprint_esc = self._d._escape_braces(blueprint_str)
+        digest_esc = self._d._escape_braces(episode_digest) if episode_digest else "(episode digest unavailable)"
+        ending_esc = self._d._escape_braces(previous_ending if previous_ending else "")
+        prev_manuscripts_esc = self._d._escape_braces(prev_manuscripts)
+        story_context_esc = self._d._escape_braces(story_context) if story_context else "(story context unavailable)"
+
+        prompt_packs = _normalize_director_prompt_packs(
+            mandatory_context=mandatory_context,
+            decision_core=decision_core,
+            candidate_evidence=candidate_evidence,
+            reference_appendix=reference_appendix,
+        )
+        combined_context = "\n\n".join(part for part in prompt_packs.values() if part)
+        decision_core_esc = self._d._escape_braces(prompt_packs["decision_core"])
+        candidate_evidence_esc = self._d._escape_braces(prompt_packs["candidate_evidence"])
+        reference_appendix_esc = self._d._escape_braces(prompt_packs["reference_appendix"])
+
+        stable_context = self._prompt_loader.load(
+            "director",
+            "ENSEMBLE_STABLE_CONTEXT",
+            blueprint=blueprint_esc,
+            episode_digest=digest_esc,
+            previous_ending=ending_esc,
+            prev_manuscripts_text=prev_manuscripts_esc,
+            story_context=story_context_esc,
+        )
+        variable_prompt = (
+            self._prompt_loader.load(
+                "director",
+                "ENSEMBLE_VARIABLE_PROMPT",
+                strategy_a=info_a["strategy"],
+                manuscript_a=self._d._escape_braces(info_a["manuscript"]),
+                warnings_a=self._d._escape_braces(info_a["warnings"]),
+                strategy_b=info_b["strategy"],
+                manuscript_b=self._d._escape_braces(info_b["manuscript"]),
+                warnings_b=self._d._escape_braces(info_b["warnings"]),
+                strategy_c=info_c["strategy"],
+                manuscript_c=self._d._escape_braces(info_c["manuscript"]),
+                warnings_c=self._d._escape_braces(info_c["warnings"]),
+                decision_core=decision_core_esc,
+                candidate_evidence=candidate_evidence_esc,
+                reference_appendix=reference_appendix_esc,
+            )
+            if stable_context
+            else None
+        )
+
+        fallback_prompt = None
+        if not stable_context or not variable_prompt:
+            fallback_prompt = self._prompt_loader.load(
+                "director",
+                "ENSEMBLE_SELECTION_PROMPT",
+                blueprint=blueprint_esc,
+                episode_digest=digest_esc,
+                previous_ending=ending_esc,
+                prev_manuscripts_text=prev_manuscripts_esc,
+                story_context=story_context_esc,
+                strategy_a=info_a["strategy"],
+                manuscript_a=self._d._escape_braces(info_a["manuscript"]),
+                warnings_a=self._d._escape_braces(info_a["warnings"]),
+                strategy_b=info_b["strategy"],
+                manuscript_b=self._d._escape_braces(info_b["manuscript"]),
+                warnings_b=self._d._escape_braces(info_b["warnings"]),
+                strategy_c=info_c["strategy"],
+                manuscript_c=self._d._escape_braces(info_c["manuscript"]),
+                warnings_c=self._d._escape_braces(info_c["warnings"]),
+                decision_core=decision_core_esc,
+                candidate_evidence=candidate_evidence_esc,
+                reference_appendix=reference_appendix_esc,
+            )
+
+        return _EnsemblePromptRequest(
+            combined_context=combined_context,
+            stable_context=stable_context or "",
+            variable_prompt=variable_prompt,
+            fallback_prompt=fallback_prompt,
+        )
+
+    def _request_ensemble_selection_response(
+        self,
+        *,
+        ep_num: int,
+        prompt_request: _EnsemblePromptRequest,
+    ) -> _EnsemblePromptResponse:
+        if not prompt_request.stable_context or not prompt_request.variable_prompt:
+            if not prompt_request.fallback_prompt:
+                logging.warning("[Director] ENSEMBLE_SELECTION_PROMPT not found in prompt loader")
+                return _EnsemblePromptResponse(response="", prompt_error=True)
+            try:
+                response = self._d.ask(prompt_request.fallback_prompt, temperature=0.1, thinking_level="high")
+            except Exception as ask_err:
+                logging.warning("[Director] select_and_judge_ensemble ask() failed: %s", ask_err)
+                response = ""
+            return _EnsemblePromptResponse(response=response)
+
+        gate = int(getattr(self._d, "MAX_CONTEXT_CHARS", None) or ContextLimits.MAX_CONTEXT_CHARS)
+        stable_budget = max(0, gate - len(prompt_request.variable_prompt) - 2)
+        stable_for_fallback = (
+            smart_truncate(
+                prompt_request.stable_context,
+                max_chars=stable_budget,
+                head_chars=max(0, min(int(stable_budget * 0.55), stable_budget - 80)),
+            )
+            if len(prompt_request.stable_context) > stable_budget
+            else prompt_request.stable_context
+        )
+        full_fallback = stable_for_fallback + "\n\n" + prompt_request.variable_prompt
+
+        cache_name = None
+        try:
+            cache_info = self._d._get_or_create_context_cache(
+                cache_type="director_ensemble",
+                content=prompt_request.stable_context,
+                ttl_seconds=600,
+                project_name=self._d._context_cache_project_namespace("ep", ep_num),
+            )
+            cache_name = cache_info.get("cache_name")
+            was_cached = cache_info.get("cached", False)
+            logging.info(
+                f" [Director-CACHE] {'HIT' if was_cached else 'MISS(new)'}: "
+                f"stable={len(prompt_request.stable_context):,} chars / "
+                f"variable={len(prompt_request.variable_prompt):,} chars"
+            )
+        except Exception as cache_err:
+            logging.debug(f"[SILENT] director context caching: {cache_err}")
+
+        try:
+            if cache_name:
+                logging.info(
+                    f" [Director] cache route: variable_prompt only ({len(prompt_request.variable_prompt):,} chars)"
+                )
+                response = self._d._ask_with_cached_context(
+                    cache_name=cache_name,
+                    prompt=prompt_request.variable_prompt,
+                    temperature=0.1,
+                    thinking_level="high",
+                    full_prompt_fallback=full_fallback,
+                )
+            else:
+                logging.info(f" [Director] fallback route: full prompt ({len(full_fallback):,} chars)")
+                response = self._d.ask(full_fallback, temperature=0.1, thinking_level="high")
+        except Exception as ask_err:
+            logging.warning("[Director] select_and_judge_ensemble ask() failed: %s", ask_err)
+            response = ""
+        return _EnsemblePromptResponse(response=response)
+
+    def _resolve_ensemble_selection_state(
+        self,
+        *,
+        result: dict,
+        candidates: list[dict],
+        qualified_indices: list[int],
+    ) -> _EnsembleSelectionState:
+        selected_letter = str(result.get("selected", "A")).strip().upper()
+        selected_idx = {"A": 0, "B": 1, "C": 2}.get(selected_letter, 0)
+
+        v60_97_swapped = False
+        if selected_idx not in qualified_indices and qualified_indices:
+            old_selection = selected_letter
+            selected_idx = max(qualified_indices, key=lambda i: len(candidates[i].get("manuscript", "")))
+            selected_letter = ["A", "B", "C"][min(selected_idx, 2)]
+            v60_97_swapped = True
+            logging.warning(f" [V60.97] LLM 선택 {old_selection} → {selected_letter}로 교체 (분량 기준)")
+            original_reason = result.get("selection_reason", "")
+            result["selection_reason"] = f"[V60.97 자동 교체: {old_selection}→{selected_letter} (분량 기준)] {original_reason}"
+
+        selected_candidate = candidates[selected_idx] if selected_idx < len(candidates) else candidates[0]
+        original_verdict = result.get("verdict", "REJECT")
+        score = _safe_int(result.get("score", 50), 50)
+        pre_firewall_score = score
+
+        score_breakdown_raw = result.get("score_breakdown", {})
+        if isinstance(score_breakdown_raw, dict) and score_breakdown_raw:
+            breakdown_sum = sum(v for v in score_breakdown_raw.values() if isinstance(v, int | float))
+            if breakdown_sum != score and breakdown_sum > 0:
+                logging.warning(
+                    "[NC-3B] score_breakdown 합산 불일치: breakdown=%d, score=%d → breakdown 우선",
+                    breakdown_sum,
+                    score,
+                )
+                score = max(0, min(100, breakdown_sum))
+
+        if v60_97_swapped:
+            score = 50
+            original_verdict = "CONDITIONAL_PASS"
+
+        contradiction_check = result.get("contradiction_check", {})
+        if not isinstance(contradiction_check, dict):
+            contradiction_check = {}
+
+        numeric_consistency_review = result.get("numeric_consistency_review") or []
+        if not isinstance(numeric_consistency_review, list):
+            numeric_consistency_review = []
+
+        consistency_checklist = result.get("consistency_checklist") or {}
+        if not isinstance(consistency_checklist, dict):
+            consistency_checklist = {}
+
+        return _EnsembleSelectionState(
+            selected_letter=selected_letter,
+            selected_idx=selected_idx,
+            selected_candidate=selected_candidate,
+            original_verdict=str(original_verdict or "REJECT"),
+            score=score,
+            pre_firewall_score=pre_firewall_score,
+            score_breakdown_raw=score_breakdown_raw if isinstance(score_breakdown_raw, dict) else {},
+            contradiction_check=contradiction_check,
+            numeric_consistency_review=numeric_consistency_review,
+            consistency_checklist=consistency_checklist,
+            v60_97_swapped=v60_97_swapped,
+            contradiction_details=[],
+        )
+
+    def _apply_ensemble_quality_gates(
+        self,
+        *,
+        result: dict,
+        state: _EnsembleSelectionState,
+        scm_single_candidate: bool,
+        combined_context: str,
+        mandatory_context: str,
+        arc_pos: int,
+        total_eps: int,
+        retry_count: int,
+    ) -> tuple[str, dict]:
+        if scm_single_candidate and state.score >= 95:
+            scm_old = state.score
+            state.score = min(state.score, 90)
+            logging.info(f"[SCM] 단일 후보 점수 보정: {scm_old} → {state.score}")
+
+        found_contradictions = state.contradiction_check.get("found_contradictions", [])
+        if isinstance(found_contradictions, list) and found_contradictions:
+            normalized_contradictions = _normalize_contradiction_entries(found_contradictions)
+            state.contradiction_details = _compact_contradiction_details(normalized_contradictions)
+            critical_count = sum(
+                1 for item in normalized_contradictions if str(item.get("severity", "")).upper() == "CRITICAL"
+            )
+            major_count = sum(
+                1 for item in normalized_contradictions if str(item.get("severity", "")).upper() == "MAJOR"
+            )
+            selected_manuscript = (
+                str(state.selected_candidate.get("manuscript", "") or "")
+                if isinstance(state.selected_candidate, dict)
+                else ""
+            )
+            if critical_count >= 1 or major_count >= 2:
+                firewall_mode, fixable_reason = _classify_firewall_mode(
+                    contradictions=state.contradiction_details,
+                    original_verdict=str(state.original_verdict or ""),
+                    score=state.score,
+                    score_breakdown=state.score_breakdown_raw or None,
+                )
+                if firewall_mode == "pass_with_fix" and selected_manuscript:
+                    state.firewall_fixable = True
+                    state.firewall_reason = fixable_reason
+                    state.original_verdict = "PASS_WITH_FIX"
+                    state.score = min(state.score, 97)
+                    logging.warning(" [V75-C] %s → PASS_WITH_FIX", state.firewall_reason)
+                else:
+                    state.firewall_triggered = True
+                    if critical_count >= 1:
+                        state.firewall_reason = f"Contradiction Firewall: CRITICAL {critical_count}건"
+                        logging.warning(f" [V75-C] {state.firewall_reason} → REJECT 강제")
+                    else:
+                        state.firewall_reason = f"Contradiction Firewall: MAJOR {major_count}건"
+                        logging.warning(f" [V75-C] {state.firewall_reason} → REJECT 강제")
+            if state.firewall_triggered:
+                state.original_verdict = "REJECT"
+                state.pre_firewall_score = state.score
+                state.score = min(state.score, 44)
+            if state.firewall_triggered or state.firewall_fixable:
+                for line in _build_contradiction_summary_lines(state.contradiction_details or [], limit=5):
+                    logging.warning(" %s", line)
+
+        if state.numeric_consistency_review:
+            agree_count = 0
+            for review in state.numeric_consistency_review:
+                if not isinstance(review, dict):
+                    continue
+                review_verdict = str(review.get("verdict", "")).upper()
+                review_id = review.get("id", "?")
+                review_reason = str(review.get("reason", ""))[:100]
+                if review_verdict == "AGREE":
+                    agree_count += 1
+                    logging.warning("[NC-1] Director AGREE: %s — %s", review_id, review_reason)
+                elif review_verdict == "DISMISS":
+                    logging.info("[NC-1] Director DISMISS: %s — %s", review_id, review_reason)
+                else:
+                    logging.warning("[NC-1] Director 미판정: %s (verdict=%s)", review_id, review_verdict)
+            if agree_count > 0:
+                logging.warning(
+                    "[NC-1] Director가 %d건 수치 모순 인정. continuity_contradiction에 직접 반영 여부는 Director 자율.",
+                    agree_count,
+                )
+        else:
+            merged_context = combined_context or mandatory_context or ""
+            if "[NumericConsistency" in merged_context and "[NC-" in merged_context:
+                logging.debug("[NC-1] Director가 numeric_consistency_review를 생략함 (선택사항, 감점 없음)")
+
+        nc3_keys = [
+            "numeric_accuracy",
+            "arithmetic",
+            "title_consistency",
+            "scene_overlap",
+            "percent_calculation",
+            "event_ordering",
+            "space_continuity",
+            "npc_identity",
+            "time_progression",
+            "opening_diversity",
+            "timeline_arc_consistency",
+            "fiction_term_leak",
+            "scene_variety",
+            "pacing_quality",
+            "dialogue_naturalness",
+            "pov_discipline",
+            "emotional_authenticity",
+            "npc_knowledge_boundary",
+            "secret_consistency",
+            "identity_consistency",
+        ]
+        if state.consistency_checklist:
+            issue_count = sum(
+                1 for key in nc3_keys if str(state.consistency_checklist.get(key, "")).upper() == "ISSUE"
+            )
+            if issue_count > 0:
+                logging.warning(
+                    "[NC-3] consistency_checklist ISSUE %d건 감지: %s",
+                    issue_count,
+                    [key for key in nc3_keys if str(state.consistency_checklist.get(key, "")).upper() == "ISSUE"],
+                )
+            if issue_count >= 3 and isinstance(state.score_breakdown_raw, dict):
+                python_warnings = state.score_breakdown_raw.get("python_warnings", 10)
+                if isinstance(python_warnings, int | float) and python_warnings > 3:
+                    logging.info("[NC-3] python_warnings %d → 3 (ISSUE %d건)", python_warnings, issue_count)
+                    state.score_breakdown_raw["python_warnings"] = 3
+                    new_total = sum(v for v in state.score_breakdown_raw.values() if isinstance(v, int | float))
+                    if new_total < state.score:
+                        state.score = new_total
+            result["score_breakdown"] = state.score_breakdown_raw
+        else:
+            logging.info("[NC-3] Director가 consistency_checklist를 생략함 — 감점 없음 (안정화 기간)")
+
+        adaptive_result = self._d.apply_adaptive_decision(
+            score=state.score,
+            original_decision=state.original_verdict,
+            arc_pos=arc_pos,
+            total_eps=total_eps,
+            retry_count=retry_count,
+        )
+        final_verdict = adaptive_result["decision"]
+        if final_verdict == "CONDITIONAL_PASS":
+            if state.original_verdict == "REJECT":
+                final_verdict = "REJECT"
+            elif state.v60_97_swapped:
+                final_verdict = "REJECT"
+            elif adaptive_result.get("adjusted") and state.original_verdict in ("PASS", "PASS_WITH_FIX"):
+                final_verdict = state.original_verdict
+            else:
+                final_verdict = "PASS"
+
+        return final_verdict, adaptive_result
+
+    def _build_ensemble_decision_payload(
+        self,
+        *,
+        ep_num: int,
+        result: dict,
+        state: _EnsembleSelectionState,
+        final_verdict: str,
+        adaptive_result: dict,
+    ) -> dict:
+        feedback = result.get("feedback", {})
+        if isinstance(feedback, str):
+            feedback = {"issues": [feedback]}
+        elif not isinstance(feedback, dict):
+            feedback = {}
+
+        selection_reason = str(result.get("selection_reason", "") or "")
+        verdict_reason = str(result.get("verdict_reason") or result.get("reject_reason") or "").strip()
+        if not verdict_reason and (state.firewall_triggered or state.firewall_fixable) and state.firewall_reason:
+            verdict_reason = state.firewall_reason
+        if not verdict_reason and isinstance(feedback, dict):
+            feedback_issues = feedback.get("issues", []) or []
+            if feedback_issues:
+                verdict_reason = str(feedback_issues[0])
+        if not verdict_reason:
+            verdict_reason = selection_reason
+
+        fix_scope = str(result.get("fix_scope", "") or "").strip()
+        fix_scope_reasoning = str(result.get("fix_scope_reasoning", "") or "").strip()
+        fix_pack = _normalize_fix_pack(result.get("fix_pack"))
+        repair_scope = _normalize_repair_scope(fix_scope)
+        selected_manuscript = (
+            str(state.selected_candidate.get("manuscript", "") or "")
+            if isinstance(state.selected_candidate, dict)
+            else ""
+        )
+        contradiction_summary_lines = _build_contradiction_summary_lines(state.contradiction_details or [])
+        if (state.firewall_triggered or state.firewall_fixable) and selected_manuscript:
+            if fix_scope not in ("partial", "full"):
+                fix_scope = "inplace"
+            if not fix_scope_reasoning:
+                fix_scope_reasoning = state.firewall_reason
+                if contradiction_summary_lines:
+                    fix_scope_reasoning = f"{fix_scope_reasoning}\n" + "\n".join(contradiction_summary_lines)
+
+        if contradiction_summary_lines:
+            feedback_issues = [str(item).strip() for item in (feedback.get("issues") or []) if str(item).strip()]
+            for line in contradiction_summary_lines:
+                issue = f"[Contradiction] {line}"
+                if issue not in feedback_issues:
+                    feedback_issues.append(issue)
+            if feedback_issues:
+                feedback["issues"] = feedback_issues[:8]
+
+        if state.firewall_fixable:
+            action_items = [str(item).strip() for item in (feedback.get("action_items") or []) if str(item).strip()]
+            for detail in (state.contradiction_details or [])[:3]:
+                hint = str(detail.get("fix_suggestion", "") or "").strip()
+                if not hint:
+                    kind = str(detail.get("type", "") or "모순").strip()
+                    hint = f"{kind} 항목만 국소 정정하고 나머지 구조는 유지"
+                if hint and hint not in action_items:
+                    action_items.append(hint[:160])
+            if action_items:
+                feedback["action_items"] = action_items[:5]
+
+        open_review = result.get("open_review", "")
+        if state.v60_97_swapped and open_review:
+            open_review = f"[V60.97 교체 전 후보 리뷰] {open_review}"
+        if open_review and open_review not in ("특이사항 없음", "없음", "") and isinstance(feedback, dict):
+            existing_issues = feedback.get("issues", [])
+            existing_issues.append(f"[자유 리뷰] {open_review}")
+            feedback["issues"] = existing_issues
+
+        logging.info(
+            f"[Stage4 Director] 판정: {final_verdict} (점수: {state.score}) 후보{state.selected_letter} | 원래: {state.original_verdict}"
+        )
+        gate_basis = _derive_gate_basis(
+            director_verdict=state.original_verdict,
+            final_verdict=final_verdict,
+            firewall_triggered=state.firewall_triggered,
+        )
+        issues = feedback.get("issues", []) if isinstance(feedback, dict) else []
+        _log_director_frame(
+            stage="stage4",
+            ep_num=ep_num,
+            decision=final_verdict,
+            score=state.score,
+            selected_label=str(state.selected_letter),
+            director_verdict=str(state.original_verdict or ""),
+            gate_basis=gate_basis,
+            selection_reason=selection_reason,
+            verdict_reason=verdict_reason,
+            contradictions=issues,
+            fix_scope=fix_scope,
+            repair_scope=repair_scope,
+            open_review=open_review,
+            thinking=getattr(self._d, "_last_thinking", ""),
+        )
+        operator_lines = [
+            f"[Stage4 Director] 원고 앙상블 판정: {final_verdict} (점수: {state.score})",
+            f"선택: 후보 {state.selected_letter} | 원래 판정: {state.original_verdict}",
+        ]
+        if selection_reason:
+            operator_lines.append(f"선택 사유: {selection_reason[:200]}")
+        if verdict_reason and verdict_reason != selection_reason:
+            operator_lines.append(f"verdict_reason: {verdict_reason[:200]}")
+        score_breakdown = _canonical_score_breakdown(result.get("score_breakdown", {}))
+        if score_breakdown:
+            score_breakdown_str = ", ".join(
+                f"{key}={value}" for key, value in score_breakdown.items() if isinstance(value, int | float)
+            )
+            if score_breakdown_str:
+                operator_lines.append(f"점수 분해: {score_breakdown_str}")
+        if issues:
+            for issue in issues[:5]:
+                operator_lines.append(f"이슈: {str(issue)[:150]}")
+        if open_review and open_review not in ("특이사항 없음", "없음", ""):
+            operator_lines.append(f"자유 리뷰: {open_review[:200]}")
+        if adaptive_result.get("reason"):
+            operator_lines.append(f"적응형: {adaptive_result['reason']}")
+        thinking = getattr(self._d, "_last_thinking", "")
+        if thinking:
+            operator_lines.append(f"💭 [Director Thinking]\n{thinking}")
+        for line in operator_lines:
+            self._d._operator_log(
+                line,
+                meta={"component": "Director", "stage": "stage4", "ep_num": ep_num, "score": state.score},
+            )
+
+        return {
+            "selected": state.selected_letter,
+            "selected_candidate": state.selected_candidate,
+            "verdict": final_verdict,
+            "director_verdict": state.original_verdict,
+            "final_verdict": final_verdict,
+            "original_verdict": state.original_verdict,
+            "gate_basis": gate_basis,
+            "score": state.score,
+            "pre_firewall_score": state.pre_firewall_score,
+            "score_breakdown": _canonical_score_breakdown(result.get("score_breakdown", {})),
+            "selection_reason": selection_reason,
+            "verdict_reason": verdict_reason,
+            "reject_reason": verdict_reason,
+            "firewall_triggered": state.firewall_triggered,
+            "firewall_fixable": state.firewall_fixable,
+            "firewall_reason": state.firewall_reason,
+            "feedback": feedback,
+            "state_updates": result.get("state_updates") or state.selected_candidate.get("state_updates") or {},
+            "action_items": feedback.get("action_items", []) if isinstance(feedback, dict) else [],
+            "other_candidates_notes": result.get("other_candidates_notes", {}),
+            "open_review": open_review,
+            "adaptive_threshold": adaptive_result.get("threshold_used", 65),
+            "adaptive_reason": adaptive_result.get("reason", ""),
+            "repair_scope": repair_scope,
+            "error_category": result.get("error_category", ""),
+            "fix_scope": fix_scope,
+            "fix_scope_reasoning": fix_scope_reasoning,
+            "fix_pack": fix_pack,
+            "numeric_consistency_review": state.numeric_consistency_review,
+            "consistency_checklist": state.consistency_checklist,
+            "contradiction_details": state.contradiction_details or [],
+            "contradiction_types": [
+                item.get("type", "")
+                for item in (
+                    state.contradiction_check.get("found_contradictions", [])
+                    if isinstance(state.contradiction_check, dict)
+                    else []
+                )
+                if isinstance(item, dict)
+            ],
+        }
 
     def compare_and_select_blueprint(
         self,
@@ -615,237 +1295,28 @@ class DirectorEnsembleSelector:
             return single_result
 
         logging.info(f" [Director] {len(candidates)}개 후보 비교 중...")
-
-        # [TTE] 에피소드별 지능 추출 + 안전캡 6000 (기존 2000×3)
-        arc_tactical_ep = extract_episode_tactical(
-            arc_data.get("tactical_doc", ""),
-            ep_num,
-            episode_details=arc_data.get("episode_details"),
-        )[:6000]
-
-        prev_ending = ""
-        if prev_blueprint:
-            prev_ending = prev_blueprint.get("ending_hook", "")
-            prev_location = prev_blueprint.get("end_location", "")
-            if prev_location:
-                prev_ending = f"위치: {prev_location}, 훅: {prev_ending}"
-
-        candidate_summaries = []
-        for idx, bp in enumerate(candidates):
-            meta = bp.get("_ensemble_meta", {})
-            strategy = meta.get("strategy", f"후보{idx + 1}")
-            scene_count = meta.get("scene_count", len(bp.get("scene_breakdown", {})))
-            length = meta.get("length", len(bp.get("integrated_scenario", "")))
-            advisory_block = _format_compare_python_warning_block(meta)
-
-            integrated = bp.get("integrated_scenario", "")
-            if not isinstance(integrated, str):
-                integrated = str(integrated) if integrated else ""
-
-            summary = f"""
-[후보 {idx + 1}: {strategy}]
-- 씬 개수: {scene_count}개
-- 분량: {length}자
-- 시작 위치: {bp.get("start_location", "?")}
-- 종료 위치: {bp.get("end_location", "?")}
-- 시간 흐름: {bp.get("time_flow", "?")}
-- 엔딩 훅: {str(bp.get("ending_hook") or "?")[:100]}
-{
-                f'''
-
-[Python Advisory]
-{advisory_block}
-'''
-                if advisory_block
-                else ""
-            }
-
-[시나리오 전문]
-{integrated}
-"""
-            candidate_summaries.append(summary)
-
-        comparison_prompt = f"""[Blueprint 비교 선택 + 일관성·모순 판정]
-
-당신은 웹소설 시리즈의 품질 관리 감독입니다.
-제{ep_num}화 Blueprint 후보 {len(candidates)}개를 **각각 절대 기준으로 독립 평가**한 뒤, 최적 후보를 선택하고 최종 판정하세요.
-
-### Arc 전술서 (이번 화 기준)
-{arc_tactical_ep}
-
-### 이전 화 정보
-{prev_ending if prev_ending else "(1화 또는 이전 정보 없음)"}
-
-### 후보 목록
-{"".join(candidate_summaries)}
-
-### Python Advisory 해석 원칙
-- 위 Python Advisory는 구조/연속성/intent 관련 bounded factual hints다.
-- 자동 탈락 규칙이 아니며, 최종 선택/판단 권한은 Director에게 있다.
-- 다만 동급 후보라면 unresolved advisory/fidelity risk가 더 적은 후보를 우선하라.
-
-### 🔍 일관성·모순 체크 항목 (각 후보를 아래 항목으로 반드시 검사)
-1. **사망·부재 NPC 활동**: 이전 화에서 사망하거나 퇴장한 NPC가 활동하는가?
-2. **수치·사실 모순**: 금액, 지분율, 날짜, 회사명, 직함 등 확립된 수치·사실과 충돌하는가?
-3. **인물 관계·설정 모순**: 기존에 확립된 인물 관계, 직함, 성격과 다른가?
-4. **장소·시간 모순**: 이전 화 종료 위치·상황과 공간적·시간적으로 불가능한 변화가 있는가?
-5. **내부 모순**: 시나리오 내 앞뒤 내용이 서로 충돌하는가? (한 씬에서 A를 했는데 다음 씬에서 A를 안 한 것처럼 묘사 등)
-
-### 🚨 즉시 REJECT 조건 (하나라도 해당 시 해당 후보 탈락)
-- 모순 체크 항목에서 **명백한 모순이 1건 이상** 발견됨
-- Arc 전술서에서 지정한 핵심 사건이 **단 하나도** 반영되지 않음
-- 이전 화 종료 위치·상황과 **공간적·시간적 모순** 발생
-- 통합 시나리오 **1000자 미만** (서사 밀도 부족)
-- 엔딩 훅 **누락** 또는 내용 없음
-
-### 📊 점수 기준 (절대 평가 — 상대 비교 아님)
-- **90~100**: 모순 없음 + Arc 핵심 사건 전부 반영 + 연속성 완벽 + 강한 훅
-- **80~89**: 모순 없음 + Arc 주요 사건 반영 + 연속성 양호 + 훅 존재
-- **70~79**: 경미한 모순 의심 1건 또는 Arc 사건 일부 누락 또는 연속성 어색
-- **60~69**: 모순 2건 이상 또는 Arc 사건 절반 이상 누락
-- **60 미만**: 반드시 REJECT
-
-⚠️ **핵심 원칙**: 3개 후보 중 상대적으로 가장 낫더라도, **절대 점수 80점 미만이면 REJECT**하세요.
-
-🎯 **[TF-27] 100점 지향 원칙 — 절대 물러서지 마라**
-목표는 항상 **100점(모순 0건)**이다. 경미한 모순이라도 그냥 넘기지 마라.
-- 국소 수정으로 해결 가능하면 **PASS_WITH_FIX + fix_scope="inplace"** + feedback에 구체적 수정 지시.
-- 일부 씬 재구성이 필요하면 **REJECT + fix_scope="partial"**.
-- 전면 재설계가 필요하면 **REJECT + fix_scope="full"**.
-Architect가 repair loop에서 처리 가능한 범위라면 PASS_WITH_FIX를 사용하되, 그냥 PASS로 흘려보내지는 마라.
-
-### 평가 기준 (가중치)
-1. **일관성·모순 없음** (40%): 확립된 사실·수치·관계·설정과 모순이 없는가?
-2. **Arc 준수** (35%): 전술서의 이번 화 핵심 사건을 충실히 반영하는가?
-3. **연속성** (15%): 이전 화 종료 상태에서 자연스럽게 이어지는가?
-4. **다음 화 연결** (10%): 적절한 훅으로 마무리하는가?
-
-### 출력 형식 (JSON)
-{{
-    "selected_index": 0,
-    "decision": "PASS" | "PASS_WITH_FIX" | "REJECT",
-    "fix_scope": "inplace" | "partial" | "full",
-    "score": 0-100,
-    "contradictions": ["모순 설명 (구체적 — 어떤 사실과 무엇이 충돌하는지)", ...],  // 없으면 빈 배열
-    "reason": "선택/판정 이유 (50자 이내)",
-    "comparison_notes": "후보별 비교 분석 (각 후보의 장단점)",
-    "feedback": "PASS_WITH_FIX/REJECT인 경우 구체적 수정 지침",
-    "fix_scope_reasoning": "왜 이 수정 범위가 맞는지 근거"
-}}
-
-[TF-23] fix_scope: 수정 범위 판단. inplace=국소수정, partial=일부씬재작성, full=전면재설계. PASS 계열은 보통 "inplace".
-
-반드시 유효한 JSON만 출력하세요.
-"""
-
-        try:
-            response = self._d.ask(comparison_prompt, temperature=0.3, thinking_level="high")
-            result = self._d._extract_json_robust(response)
-
-            if not isinstance(result, dict):
-                logging.warning(" [Director] 비교 응답 파싱 실패")
-                return self._fallback_first_candidate(
-                    candidates, arc_data, ep_num, prev_blueprint, entity_registry, state_tracker
-                )
-
-            selected_idx = _safe_int(result.get("selected_index", 0), 0)
-            if selected_idx < 0 or selected_idx >= len(candidates):
-                selected_idx = 0
-
-            decision = result.get("decision", "PASS")
-            score = _safe_int(result.get("score", 70), 70)
-            comparison_notes = str(result.get("comparison_notes", ""))
-            reason = str(result.get("reason", ""))
-            contradictions = result.get("contradictions", [])
-            if not isinstance(contradictions, list):
-                contradictions = []
-            candidate_advisories = _collect_compare_candidate_advisories(candidates)
-            selected_candidate_advisory = (
-                candidate_advisories[selected_idx]
-                if 0 <= selected_idx < len(candidate_advisories)
-                else {"candidate_index": selected_idx, "quality_risk": False}
-            )
-            quality_risk = bool(
-                result.get("quality_risk", False) or selected_candidate_advisory.get("quality_risk", False)
-            )
-            revision_required = bool(
-                result.get("revision_required", False) or decision in ("PASS_WITH_FIX", "PASS_WITH_WARNING")
-            )
-
-            logging.info(f" [Director] 후보 {selected_idx + 1} 선택 ({decision}, 점수: {score})")
-            if contradictions:
-                logging.warning(f" [Director] 모순 {len(contradictions)}건 발견:")
-                for c in contradictions[:5]:
-                    logging.warning(f" {str(c)[:120]}")
-            else:
-                logging.info("✅ [Director] 모순·일관성 이상 없음")
-            if comparison_notes:
-                logging.info(f" 비교: {comparison_notes[:150]}{'...' if len(comparison_notes) > 150 else ''}")
-            if reason:
-                logging.info(f" 이유: {reason[:100]}{'...' if len(reason) > 100 else ''}")
-
-            logging.info(
-                f"[Stage3 Director] Blueprint {decision} (점수: {score}) 후보{selected_idx + 1} | {reason[:120] if reason else ''}"
-            )
-            _log_director_frame(
-                stage="stage3",
-                ep_num=ep_num,
-                decision=decision,
-                score=score,
-                selected_label=str(selected_idx + 1),
-                selection_reason=reason,
-                verdict_reason=reason,
-                comparison_notes=comparison_notes,
-                contradictions=contradictions,
-                fix_scope=str(result.get("fix_scope", "") or ""),
-                thinking=getattr(self._d, "_last_thinking", ""),
-            )
-            _operator_lines = [
-                f"[Stage3 Director] Blueprint {decision} (점수: {score})",
-                f"선택: 후보 {selected_idx + 1}",
-            ]
-            if reason:
-                _operator_lines.append(f"사유: {reason[:200]}")
-            if comparison_notes:
-                _operator_lines.append(f"비교: {comparison_notes[:200]}")
-            if contradictions:
-                _operator_lines.extend(f"모순: {str(c)[:150]}" for c in contradictions[:3])
-            _bp_feedback = result.get("feedback", "")
-            if decision in ("REJECT", "PASS_WITH_FIX") and _bp_feedback:
-                _operator_lines.append(f"피드백: {str(_bp_feedback)[:200]}")
-            _thinking = getattr(self._d, "_last_thinking", "")
-            if _thinking:
-                _operator_lines.append(f"💭 [Director Thinking]\n{_thinking}")
-            for _line in _operator_lines:
-                self._d._operator_log(
-                    _line,
-                    meta={"component": "Director", "stage": "stage3", "ep_num": ep_num, "score": score},
-                )
-
-            return {
-                "decision": decision,
-                "selected_index": selected_idx,
-                "selected_blueprint": candidates[selected_idx],
-                "score": score,
-                "contradictions": contradictions,
-                "reason": result.get("reason", ""),
-                "feedback": result.get("feedback", "") if decision in ("REJECT", "PASS_WITH_FIX") else "",
-                "comparison_notes": result.get("comparison_notes", ""),
-                "fix_scope": result.get("fix_scope", ""),  # [TF-23] Director 판단 수정 범위
-                "fix_scope_reasoning": result.get("fix_scope_reasoning", ""),  # [TF-35] 수정 범위 근거 전파
-                "selection_reason": result.get("selection_reason", "") or reason,
-                "verdict_reason": result.get("verdict_reason", "") or reason,
-                "quality_risk": quality_risk,
-                "revision_required": revision_required,
-                "candidate_advisories": candidate_advisories,
-                "selected_candidate_advisory": selected_candidate_advisory,
-            }
-
-        except Exception as e:
-            logging.warning(f" [Director] 비교 오류: {str(e)[:50]}")
-            return self._fallback_first_candidate(
-                candidates, arc_data, ep_num, prev_blueprint, entity_registry, state_tracker
-            )
+        comparison_prompt = self._build_blueprint_compare_prompt(
+            candidates=candidates,
+            arc_data=arc_data,
+            ep_num=ep_num,
+            prev_blueprint=prev_blueprint,
+        )
+        result = self._request_blueprint_compare_result(
+            comparison_prompt=comparison_prompt,
+            candidates=candidates,
+            arc_data=arc_data,
+            ep_num=ep_num,
+            prev_blueprint=prev_blueprint,
+            entity_registry=entity_registry,
+            state_tracker=state_tracker,
+        )
+        if result.get("selected_blueprint") in candidates:
+            return result
+        return self._build_blueprint_compare_result_payload(
+            result=result,
+            candidates=candidates,
+            ep_num=ep_num,
+        )
 
     def _evaluate_single_blueprint(
         self, blueprint: dict, arc_data: dict, ep_num: int, prev_blueprint: dict, entity_registry: dict, state_tracker
@@ -915,55 +1386,274 @@ Architect가 repair loop에서 처리 가능한 범위라면 PASS_WITH_FIX를 �
         result["comparison_notes"] = "폴백 선택 (비교 실패)"
         return result
 
+    def _build_blueprint_compare_prompt(
+        self,
+        *,
+        candidates: list[dict],
+        arc_data: dict,
+        ep_num: int,
+        prev_blueprint: dict | None,
+    ) -> str:
+        arc_tactical_ep = extract_episode_tactical(
+            arc_data.get("tactical_doc", ""),
+            ep_num,
+            episode_details=arc_data.get("episode_details"),
+        )[:6000]
+
+        prev_ending = ""
+        if prev_blueprint:
+            prev_ending = prev_blueprint.get("ending_hook", "")
+            prev_location = prev_blueprint.get("end_location", "")
+            if prev_location:
+                prev_ending = f"위치: {prev_location}, 훅: {prev_ending}"
+
+        candidate_summaries = []
+        for idx, blueprint in enumerate(candidates):
+            meta = blueprint.get("_ensemble_meta", {})
+            strategy = meta.get("strategy", f"후보{idx + 1}")
+            scene_count = meta.get("scene_count", len(blueprint.get("scene_breakdown", {})))
+            length = meta.get("length", len(blueprint.get("integrated_scenario", "")))
+            advisory_block = _format_compare_python_warning_block(meta)
+
+            integrated = blueprint.get("integrated_scenario", "")
+            if not isinstance(integrated, str):
+                integrated = str(integrated) if integrated else ""
+
+            summary = f"""
+[후보 {idx + 1}: {strategy}]
+- 씬 개수: {scene_count}개
+- 분량: {length}자
+- 시작 위치: {blueprint.get("start_location", "?")}
+- 종료 위치: {blueprint.get("end_location", "?")}
+- 시간 흐름: {blueprint.get("time_flow", "?")}
+- 엔딩 훅: {str(blueprint.get("ending_hook") or "?")[:100]}
+{
+                f'''
+
+[Python Advisory]
+{advisory_block}
+'''
+                if advisory_block
+                else ""
+            }
+
+[시나리오 전문]
+{integrated}
+"""
+            candidate_summaries.append(summary)
+
+        return f"""[Blueprint 비교 선택 + 일관성·모순 판정]
+
+당신은 웹소설 시리즈의 품질 관리 감독입니다.
+제{ep_num}화 Blueprint 후보 {len(candidates)}개를 **각각 절대 기준으로 독립 평가**한 뒤, 최적 후보를 선택하고 최종 판정하세요.
+
+### Arc 전술서 (이번 화 기준)
+{arc_tactical_ep}
+
+### 이전 화 정보
+{prev_ending if prev_ending else "(1화 또는 이전 정보 없음)"}
+
+### 후보 목록
+{"".join(candidate_summaries)}
+
+### Python Advisory 해석 원칙
+- 위 Python Advisory는 구조/연속성/intent 관련 bounded factual hints다.
+- 자동 탈락 규칙이 아니며, 최종 선택/판단 권한은 Director에게 있다.
+- 다만 동급 후보라면 unresolved advisory/fidelity risk가 더 적은 후보를 우선하라.
+
+### 🔍 일관성·모순 체크 항목 (각 후보를 아래 항목으로 반드시 검사)
+1. **사망·부재 NPC 활동**: 이전 화에서 사망하거나 퇴장한 NPC가 활동하는가?
+2. **수치·사실 모순**: 금액, 지분율, 날짜, 회사명, 직함 등 확립된 수치·사실과 충돌하는가?
+3. **인물 관계·설정 모순**: 기존에 확립된 인물 관계, 직함, 성격과 다른가?
+4. **장소·시간 모순**: 이전 화 종료 위치·상황과 공간적·시간적으로 불가능한 변화가 있는가?
+5. **내부 모순**: 시나리오 내 앞뒤 내용이 서로 충돌하는가? (한 씬에서 A를 했는데 다음 씬에서 A를 안 한 것처럼 묘사 등)
+
+### 🚨 즉시 REJECT 조건 (하나라도 해당 시 해당 후보 탈락)
+- 모순 체크 항목에서 **명백한 모순이 1건 이상** 발견됨
+- Arc 전술서에서 지정한 핵심 사건이 **단 하나도** 반영되지 않음
+- 이전 화 종료 위치·상황과 **공간적·시간적 모순** 발생
+- 통합 시나리오 **1000자 미만** (서사 밀도 부족)
+- 엔딩 훅 **누락** 또는 내용 없음
+
+### 📊 점수 기준 (절대 평가 — 상대 비교 아님)
+- **90~100**: 모순 없음 + Arc 핵심 사건 전부 반영 + 연속성 완벽 + 강한 훅
+- **80~89**: 모순 없음 + Arc 주요 사건 반영 + 연속성 양호 + 훅 존재
+- **70~79**: 경미한 모순 의심 1건 또는 Arc 사건 일부 누락 또는 연속성 어색
+- **60~69**: 모순 2건 이상 또는 Arc 사건 절반 이상 누락
+- **60 미만**: 반드시 REJECT
+
+⚠️ **핵심 원칙**: 3개 후보 중 상대적으로 가장 낫더라도, **절대 점수 80점 미만이면 REJECT**하세요.
+
+🎯 **[TF-27] 100점 지향 원칙 — 절대 물러서지 마라**
+목표는 항상 **100점(모순 0건)**이다. 경미한 모순이라도 그냥 넘기지 마라.
+- 국소 수정으로 해결 가능하면 **PASS_WITH_FIX + fix_scope="inplace"** + feedback에 구체적 수정 지시.
+- 일부 씬 재구성이 필요하면 **REJECT + fix_scope="partial"**.
+- 전면 재설계가 필요하면 **REJECT + fix_scope="full"**.
+Architect가 repair loop에서 처리 가능한 범위라면 PASS_WITH_FIX를 사용하되, 그냥 PASS로 흘려보내지는 마라.
+
+### 평가 기준 (가중치)
+1. **일관성·모순 없음** (40%): 확립된 사실·수치·관계·설정과 모순이 없는가?
+2. **Arc 준수** (35%): 전술서의 이번 화 핵심 사건을 충실히 반영하는가?
+3. **연속성** (15%): 이전 화 종료 상태에서 자연스럽게 이어지는가?
+4. **다음 화 연결** (10%): 적절한 훅으로 마무리하는가?
+
+### 출력 형식 (JSON)
+{{
+    "selected_index": 0,
+    "decision": "PASS" | "PASS_WITH_FIX" | "REJECT",
+    "fix_scope": "inplace" | "partial" | "full",
+    "score": 0-100,
+    "contradictions": ["모순 설명 (구체적 — 어떤 사실과 무엇이 충돌하는지)", ...],
+    "reason": "선택/판정 이유 (50자 이내)",
+    "comparison_notes": "후보별 비교 분석 (각 후보의 장단점)",
+    "feedback": "PASS_WITH_FIX/REJECT인 경우 구체적 수정 지침",
+    "fix_scope_reasoning": "왜 이 수정 범위가 맞는지 근거"
+}}
+
+[TF-23] fix_scope: 수정 범위 판단. inplace=국소수정, partial=일부씬재작성, full=전면재설계. PASS 계열은 보통 "inplace".
+
+반드시 유효한 JSON만 출력하세요.
+"""
+
+    def _request_blueprint_compare_result(
+        self,
+        *,
+        comparison_prompt: str,
+        candidates: list[dict],
+        arc_data: dict,
+        ep_num: int,
+        prev_blueprint: dict | None,
+        entity_registry: dict | None,
+        state_tracker,
+    ) -> dict:
+        try:
+            response = self._d.ask(comparison_prompt, temperature=0.3, thinking_level="high")
+            result = self._d._extract_json_robust(response)
+            if not isinstance(result, dict):
+                logging.warning(" [Director] 비교 응답 파싱 실패")
+                return self._fallback_first_candidate(
+                    candidates, arc_data, ep_num, prev_blueprint, entity_registry, state_tracker
+                )
+            return result
+        except Exception as exc:
+            logging.warning(f" [Director] 비교 오류: {str(exc)[:50]}")
+            return self._fallback_first_candidate(
+                candidates, arc_data, ep_num, prev_blueprint, entity_registry, state_tracker
+            )
+
+    def _build_blueprint_compare_result_payload(
+        self,
+        *,
+        result: dict,
+        candidates: list[dict],
+        ep_num: int,
+    ) -> dict:
+        selected_idx = _safe_int(result.get("selected_index", 0), 0)
+        if selected_idx < 0 or selected_idx >= len(candidates):
+            selected_idx = 0
+
+        decision = result.get("decision", "PASS")
+        score = _safe_int(result.get("score", 70), 70)
+        comparison_notes = str(result.get("comparison_notes", ""))
+        reason = str(result.get("reason", ""))
+        contradictions = result.get("contradictions", [])
+        if not isinstance(contradictions, list):
+            contradictions = []
+        candidate_advisories = _collect_compare_candidate_advisories(candidates)
+        selected_candidate_advisory = (
+            candidate_advisories[selected_idx]
+            if 0 <= selected_idx < len(candidate_advisories)
+            else {"candidate_index": selected_idx, "quality_risk": False}
+        )
+        quality_risk = bool(result.get("quality_risk", False) or selected_candidate_advisory.get("quality_risk", False))
+        revision_required = bool(
+            result.get("revision_required", False) or decision in ("PASS_WITH_FIX", "PASS_WITH_WARNING")
+        )
+
+        logging.info(f" [Director] 후보 {selected_idx + 1} 선택 ({decision}, 점수: {score})")
+        if contradictions:
+            logging.warning(f" [Director] 모순 {len(contradictions)}건 발견:")
+            for contradiction in contradictions[:5]:
+                logging.warning(f" {str(contradiction)[:120]}")
+        else:
+            logging.info("✅ [Director] 모순·일관성 이상 없음")
+        if comparison_notes:
+            logging.info(f" 비교: {comparison_notes[:150]}{'...' if len(comparison_notes) > 150 else ''}")
+        if reason:
+            logging.info(f" 이유: {reason[:100]}{'...' if len(reason) > 100 else ''}")
+
+        logging.info(
+            f"[Stage3 Director] Blueprint {decision} (점수: {score}) 후보{selected_idx + 1} | {reason[:120] if reason else ''}"
+        )
+        _log_director_frame(
+            stage="stage3",
+            ep_num=ep_num,
+            decision=decision,
+            score=score,
+            selected_label=str(selected_idx + 1),
+            selection_reason=reason,
+            verdict_reason=reason,
+            comparison_notes=comparison_notes,
+            contradictions=contradictions,
+            fix_scope=str(result.get("fix_scope", "") or ""),
+            thinking=getattr(self._d, "_last_thinking", ""),
+        )
+        operator_lines = [
+            f"[Stage3 Director] Blueprint {decision} (점수: {score})",
+            f"선택: 후보 {selected_idx + 1}",
+        ]
+        if reason:
+            operator_lines.append(f"사유: {reason[:200]}")
+        if comparison_notes:
+            operator_lines.append(f"비교: {comparison_notes[:200]}")
+        if contradictions:
+            operator_lines.extend(f"모순: {str(item)[:150]}" for item in contradictions[:3])
+        blueprint_feedback = result.get("feedback", "")
+        if decision in ("REJECT", "PASS_WITH_FIX") and blueprint_feedback:
+            operator_lines.append(f"피드백: {str(blueprint_feedback)[:200]}")
+        thinking = getattr(self._d, "_last_thinking", "")
+        if thinking:
+            operator_lines.append(f"💭 [Director Thinking]\n{thinking}")
+        if hasattr(self._d, "_operator_log"):
+            for line in operator_lines:
+                self._d._operator_log(
+                    line,
+                    meta={"component": "Director", "stage": "stage3", "ep_num": ep_num, "score": score},
+                )
+
+        return {
+            "decision": decision,
+            "selected_index": selected_idx,
+            "selected_blueprint": candidates[selected_idx],
+            "score": score,
+            "contradictions": contradictions,
+            "reason": result.get("reason", ""),
+            "feedback": result.get("feedback", "") if decision in ("REJECT", "PASS_WITH_FIX") else "",
+            "comparison_notes": result.get("comparison_notes", ""),
+            "fix_scope": result.get("fix_scope", ""),
+            "fix_scope_reasoning": result.get("fix_scope_reasoning", ""),
+            "selection_reason": result.get("selection_reason", "") or reason,
+            "verdict_reason": result.get("verdict_reason", "") or reason,
+            "quality_risk": quality_risk,
+            "revision_required": revision_required,
+            "candidate_advisories": candidate_advisories,
+            "selected_candidate_advisory": selected_candidate_advisory,
+        }
+
     # ═══════════════════════════════════════════════════════════════
     # [TF-47] Arc 후보 비교 선택 — Director LLM 비교로 전환
     # ═══════════════════════════════════════════════════════════════
 
-    def compare_and_select_arc(
+    def _build_arc_compare_prompt(
         self,
+        *,
         candidates: list[dict],
         arc_no: int,
         curr_block: dict,
         prev_arc_context: str,
-        constraint_block: str = "",
-        advisory: str = "",
-        candidate_quality_flags: list[dict] | None = None,
-    ) -> dict:
-        """[TF-47] Arc 후보 비교 선택 + PASS/REJECT/PASS_WITH_FIX 판정.
-
-        Returns:
-            {
-                "decision": "PASS" | "REJECT" | "PASS_WITH_FIX",
-                "selected_index": int,
-                "selected_arc": dict,
-                "score": int,
-                "contradictions": list,
-                "reason": str,
-                "feedback": str,
-                "comparison_notes": str,
-                "fix_scope": str,
-            }
-        """
-        _empty_result = {
-            "decision": "REJECT",
-            "selected_index": -1,
-            "selected_arc": None,
-            "score": 0,
-            "contradictions": [],
-            "reason": "후보 없음",
-            "feedback": "Arc 후보가 없습니다.",
-            "comparison_notes": "",
-            "fix_scope": "",
-        }
-
-        if not candidates:
-            return _empty_result
-
-        logging.info(
-            f" [TF-47] Director Arc {'단독 평가' if len(candidates) == 1 else '비교'}: {len(candidates)}개 후보"
-        )
-
-        # 후보별 요약 생성
+        constraint_block: str,
+        advisory: str,
+    ) -> str:
         candidate_summaries = []
         for idx, arc in enumerate(candidates):
             strategy = arc.get("_strategy", f"후보{idx + 1}")
@@ -971,17 +1661,15 @@ Architect가 repair loop에서 처리 가능한 범위라면 PASS_WITH_FIX를 �
             if not isinstance(tactical, str):
                 tactical = str(tactical) if tactical else ""
             joint = arc.get("joint_docs", {})
-            if isinstance(joint, dict):
-                joint_str = json.dumps(joint, ensure_ascii=False)
-            else:
-                joint_str = str(joint) if joint else ""
-            sc = arc.get("state_constraints", {})
-            if isinstance(sc, dict):
-                sc_str = json.dumps(sc, ensure_ascii=False)
-            else:
-                sc_str = str(sc) if sc else ""
-            sc_prompt = _prompt_snippet(
-                sc_str,
+            joint_str = json.dumps(joint, ensure_ascii=False) if isinstance(joint, dict) else str(joint) if joint else ""
+            state_constraints = arc.get("state_constraints", {})
+            state_constraints_str = (
+                json.dumps(state_constraints, ensure_ascii=False)
+                if isinstance(state_constraints, dict)
+                else str(state_constraints) if state_constraints else ""
+            )
+            state_constraints_prompt = _prompt_snippet(
+                state_constraints_str,
                 cap_name="context.director_arc_state_constraints_max",
                 default=4000,
                 head_ratio=0.55,
@@ -1001,7 +1689,7 @@ Architect가 repair loop에서 처리 가능한 범위라면 PASS_WITH_FIX를 �
                 f"[후보 {idx + 1}: {strategy}]\n"
                 f"- 화수: {ep_count}\n"
                 f"- tactical_doc 분량: {len(tactical)}자\n"
-                f"- state_constraints: {sc_prompt}\n"
+                f"- state_constraints: {state_constraints_prompt}\n"
                 f"- joint_docs: {joint_prompt}\n"
             )
             if diversity_warning:
@@ -1009,7 +1697,6 @@ Architect가 repair loop에서 처리 가능한 범위라면 PASS_WITH_FIX를 �
             summary += f"\n[tactical_doc 전문]\n{tactical}\n"
             candidate_summaries.append(summary)
 
-        # curr_block 요약
         block_summary = ""
         if isinstance(curr_block, dict):
             block_summary = _prompt_snippet(
@@ -1044,7 +1731,7 @@ Architect가 repair loop에서 처리 가능한 범위라면 PASS_WITH_FIX를 �
             len(advisory_prompt),
         )
 
-        comparison_prompt = f"""[Arc 후보 비교 선택 + 일관성·모순 판정]
+        return f"""[Arc 후보 비교 선택 + 일관성·모순 판정]
 
 당신은 웹소설 시리즈 Arc 설계 감독입니다.
 Arc {arc_no}번 후보 {len(candidates)}개를 **각각 절대 기준으로 독립 평가**한 뒤, 최적 후보를 선택하고 최종 판정하세요.
@@ -1113,95 +1800,165 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
 반드시 유효한 JSON만 출력하세요.
 """
 
+    def _request_arc_compare_result(self, *, comparison_prompt: str, candidates: list[dict]) -> dict:
         try:
             response = self._d.ask(comparison_prompt, temperature=0.3, thinking_level="high")
             result = self._d._extract_json_robust(response)
-
             if not isinstance(result, dict):
                 logging.warning(" [TF-47] Arc 비교 응답 파싱 실패 → Python 폴백")
                 return _arc_compare_fallback_result(candidates)
+            return result
+        except Exception as exc:
+            logging.warning(f" [TF-47] Arc 비교 오류: {str(exc)[:80]} → Python 폴백")
+            return _arc_compare_fallback_result(candidates)
 
-            selected_idx = _safe_int(result.get("selected_index", 0), 0)
-            if selected_idx < 0 or selected_idx >= len(candidates):
-                selected_idx = 0
+    def _build_arc_compare_result_payload(
+        self,
+        *,
+        result: dict,
+        candidates: list[dict],
+        arc_no: int,
+        candidate_quality_flags: list[dict] | None,
+    ) -> dict:
+        selected_idx = _safe_int(result.get("selected_index", 0), 0)
+        if selected_idx < 0 or selected_idx >= len(candidates):
+            selected_idx = 0
 
-            decision = result.get("decision", "REJECT")
-            if decision not in ("PASS", "REJECT", "PASS_WITH_FIX"):
-                decision = "REJECT"
-            score = _safe_int(result.get("score", 70), 70)
-            contradictions = result.get("contradictions", [])
-            if not isinstance(contradictions, list):
-                contradictions = []
-            comparison_notes = str(result.get("comparison_notes", ""))
-            reason = str(result.get("reason", ""))
-            quality_flag = None
-            if isinstance(candidate_quality_flags, list) and 0 <= selected_idx < len(candidate_quality_flags):
-                quality_flag = candidate_quality_flags[selected_idx]
+        decision = result.get("decision", "REJECT")
+        if decision not in ("PASS", "REJECT", "PASS_WITH_FIX"):
+            decision = "REJECT"
+        score = _safe_int(result.get("score", 70), 70)
+        contradictions = result.get("contradictions", [])
+        if not isinstance(contradictions, list):
+            contradictions = []
+        comparison_notes = str(result.get("comparison_notes", ""))
+        reason = str(result.get("reason", ""))
+        quality_flag = None
+        if isinstance(candidate_quality_flags, list) and 0 <= selected_idx < len(candidate_quality_flags):
+            quality_flag = candidate_quality_flags[selected_idx]
 
-            logging.info(f" [TF-47] 후보 {selected_idx + 1} 선택 ({decision}, 점수: {score})")
-            if contradictions:
-                logging.warning(f" [TF-47] 모순 {len(contradictions)}건 발견:")
-                for c in contradictions[:5]:
-                    logging.warning(f" {str(c)[:120]}")
-            else:
-                logging.info("✅ [TF-47] 모순·일관성 이상 없음")
+        logging.info(f" [TF-47] 후보 {selected_idx + 1} 선택 ({decision}, 점수: {score})")
+        if contradictions:
+            logging.warning(f" [TF-47] 모순 {len(contradictions)}건 발견:")
+            for contradiction in contradictions[:5]:
+                logging.warning(f" {str(contradiction)[:120]}")
+        else:
+            logging.info("✅ [TF-47] 모순·일관성 이상 없음")
 
-            logging.info(
-                f"[Stage2 Director] Arc {decision} (점수: {score}) 후보{selected_idx + 1} | {reason[:120] if reason else ''}"
-            )
-            _log_director_frame(
-                stage="stage2",
-                ep_num=arc_no,
-                decision=decision,
-                score=score,
-                selected_label=f"{selected_idx + 1}:{candidates[selected_idx].get('_strategy', '?')}",
-                selection_reason=reason,
-                verdict_reason=reason,
-                comparison_notes=comparison_notes,
-                contradictions=contradictions,
-                fix_scope=str(result.get("fix_scope", "") or ""),
-                thinking=getattr(self._d, "_last_thinking", ""),
-            )
-            _operator_lines = [
-                f"[Stage2 Director] Arc 비교 판정: {decision} (점수: {score})",
-                f"선택: 후보 {selected_idx + 1} ({candidates[selected_idx].get('_strategy', '?')})",
-            ]
-            if reason:
-                _operator_lines.append(f"사유: {reason[:200]}")
-            if comparison_notes:
-                _operator_lines.append(f"비교: {comparison_notes[:200]}")
-            if contradictions:
-                _operator_lines.extend(f"모순: {str(c)[:150]}" for c in contradictions[:3])
-            _fb = result.get("feedback", "")
-            if decision != "PASS" and _fb:
-                _operator_lines.append(f"피드백: {str(_fb)[:200]}")
-            _thinking = getattr(self._d, "_last_thinking", "")
-            if _thinking:
-                _operator_lines.append(f"💭 [Director Thinking]\n{_thinking}")
-            for _line in _operator_lines:
+        logging.info(
+            f"[Stage2 Director] Arc {decision} (점수: {score}) 후보{selected_idx + 1} | {reason[:120] if reason else ''}"
+        )
+        _log_director_frame(
+            stage="stage2",
+            ep_num=arc_no,
+            decision=decision,
+            score=score,
+            selected_label=f"{selected_idx + 1}:{candidates[selected_idx].get('_strategy', '?')}",
+            selection_reason=reason,
+            verdict_reason=reason,
+            comparison_notes=comparison_notes,
+            contradictions=contradictions,
+            fix_scope=str(result.get("fix_scope", "") or ""),
+            thinking=getattr(self._d, "_last_thinking", ""),
+        )
+        operator_lines = [
+            f"[Stage2 Director] Arc 비교 판정: {decision} (점수: {score})",
+            f"선택: 후보 {selected_idx + 1} ({candidates[selected_idx].get('_strategy', '?')})",
+        ]
+        if reason:
+            operator_lines.append(f"사유: {reason[:200]}")
+        if comparison_notes:
+            operator_lines.append(f"비교: {comparison_notes[:200]}")
+        if contradictions:
+            operator_lines.extend(f"모순: {str(item)[:150]}" for item in contradictions[:3])
+        feedback = result.get("feedback", "")
+        if decision != "PASS" and feedback:
+            operator_lines.append(f"피드백: {str(feedback)[:200]}")
+        thinking = getattr(self._d, "_last_thinking", "")
+        if thinking:
+            operator_lines.append(f"💭 [Director Thinking]\n{thinking}")
+        if hasattr(self._d, "_operator_log"):
+            for line in operator_lines:
                 self._d._operator_log(
-                    _line,
+                    line,
                     meta={"component": "Director", "stage": "stage2", "ep_num": arc_no, "score": score},
                 )
 
-            final_result = {
-                "decision": decision,
-                "selected_index": selected_idx,
-                "selected_arc": candidates[selected_idx],
-                "score": score,
-                "contradictions": contradictions,
-                "reason": reason,
-                "feedback": result.get("feedback", "") if decision != "PASS" else "",
-                "comparison_notes": comparison_notes,
-                "fix_scope": result.get("fix_scope", ""),
-                "quality_gate_triggered": False,
-                "quality_gate_reasons": [],
-            }
-            return _apply_candidate_quality_gate(final_result, quality_flag)
+        final_result = {
+            "decision": decision,
+            "selected_index": selected_idx,
+            "selected_arc": candidates[selected_idx],
+            "score": score,
+            "contradictions": contradictions,
+            "reason": reason,
+            "feedback": feedback if decision != "PASS" else "",
+            "comparison_notes": comparison_notes,
+            "fix_scope": result.get("fix_scope", ""),
+            "quality_gate_triggered": False,
+            "quality_gate_reasons": [],
+        }
+        return _apply_candidate_quality_gate(final_result, quality_flag)
 
-        except Exception as e:
-            logging.warning(f" [TF-47] Arc 비교 오류: {str(e)[:80]} → Python 폴백")
-            return _arc_compare_fallback_result(candidates)
+    def compare_and_select_arc(
+        self,
+        candidates: list[dict],
+        arc_no: int,
+        curr_block: dict,
+        prev_arc_context: str,
+        constraint_block: str = "",
+        advisory: str = "",
+        candidate_quality_flags: list[dict] | None = None,
+    ) -> dict:
+        """[TF-47] Arc 후보 비교 선택 + PASS/REJECT/PASS_WITH_FIX 판정.
+
+        Returns:
+            {
+                "decision": "PASS" | "REJECT" | "PASS_WITH_FIX",
+                "selected_index": int,
+                "selected_arc": dict,
+                "score": int,
+                "contradictions": list,
+                "reason": str,
+                "feedback": str,
+                "comparison_notes": str,
+                "fix_scope": str,
+            }
+        """
+        _empty_result = {
+            "decision": "REJECT",
+            "selected_index": -1,
+            "selected_arc": None,
+            "score": 0,
+            "contradictions": [],
+            "reason": "후보 없음",
+            "feedback": "Arc 후보가 없습니다.",
+            "comparison_notes": "",
+            "fix_scope": "",
+        }
+
+        if not candidates:
+            return _empty_result
+
+        logging.info(
+            f" [TF-47] Director Arc {'단독 평가' if len(candidates) == 1 else '비교'}: {len(candidates)}개 후보"
+        )
+        comparison_prompt = self._build_arc_compare_prompt(
+            candidates=candidates,
+            arc_no=arc_no,
+            curr_block=curr_block,
+            prev_arc_context=prev_arc_context,
+            constraint_block=constraint_block,
+            advisory=advisory,
+        )
+        result = self._request_arc_compare_result(comparison_prompt=comparison_prompt, candidates=candidates)
+        if result.get("selected_arc") in candidates:
+            return result
+        return self._build_arc_compare_result_payload(
+            result=result,
+            candidates=candidates,
+            arc_no=arc_no,
+            candidate_quality_flags=candidate_quality_flags,
+        )
 
     @staticmethod
     def _fallback_arc_selection(candidates: list[dict]) -> dict:
@@ -1240,251 +1997,57 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
         story_context: str = "",
     ) -> dict:
         """[V60.80] 3개 후보 중 최선 선택 + PASS/REJECT 판정"""
-        # [Sweep46] 호출자 리스트 변이 방지 — 복사본 사용
-        candidates = list(candidates)
-        while len(candidates) < 3:
-            candidates.append(
-                {
-                    "strategy": f"fallback_{len(candidates)}",
-                    "strategy_name": "폴백",
-                    "manuscript": "",
-                    "title": "",
-                    "state_updates": {},
-                }
-            )
-
-        # [Sweep59] 호출자 리스트 변이 방지 — 복사본 사용 (candidates와 동일 패턴)
-        validation_results = list(validation_results)
-        while len(validation_results) < 3:
-            validation_results.append({"warnings": ["후보 없음"], "focus_points": ["빈 후보"]})
-
-        MIN_MANUSCRIPT_LENGTH = ManuscriptLimits.MIN_LENGTH  # [V64.P4]
-        qualified_indices = []
-        for idx, c in enumerate(candidates):
-            ms_len = len(c.get("manuscript") or "")
-            if ms_len >= MIN_MANUSCRIPT_LENGTH:
-                qualified_indices.append(idx)
+        candidate_state = self._normalize_ensemble_candidates(candidates, validation_results)
+        candidates = candidate_state.candidates
+        validation_results = candidate_state.validation_results
+        qualified_indices = candidate_state.qualified_indices
+        MIN_MANUSCRIPT_LENGTH = ManuscriptLimits.MIN_LENGTH
 
         if not qualified_indices:
-            if not candidates:
-                logging.warning(" [V60.97] 빈 후보 리스트 — REJECT 반환")
-                return {
-                    "selected": "A",
-                    "selected_candidate": {"manuscript": "", "error": True},
-                    "verdict": "REJECT",
-                    "director_verdict": "REJECT",
-                    "final_verdict": "REJECT",
-                    "original_verdict": "REJECT",
-                    "gate_basis": "director_primary_reject",
-                    "repair_scope": "none",
-                    "score": 0,
-                    "feedback": {
-                        "issues": ["빈 후보 리스트: 앙상블 생성 실패"],
-                        "action_items": ["원고 생성 과정을 확인하세요"],
-                    },
-                }
-            lengths = [len(c.get("manuscript", "")) for c in candidates]
-            best_idx = lengths.index(max(lengths))
-            logging.warning(f" [V60.97] 모든 후보 분량 미달 (최대: {max(lengths)}자 < {MIN_MANUSCRIPT_LENGTH}자)")
-            return {
-                "selected": ["A", "B", "C"][best_idx],
-                "selected_candidate": candidates[best_idx],
-                "verdict": "REJECT",
-                "director_verdict": "REJECT",
-                "final_verdict": "REJECT",
-                "original_verdict": "REJECT",
-                "gate_basis": "director_primary_reject",
-                "repair_scope": "none",
-                "score": 30,
-                "feedback": {
-                    "issues": [f"모든 후보 분량 미달: {lengths}자 (최소 {MIN_MANUSCRIPT_LENGTH}자 필요)"],
-                    "action_items": ["분량을 5,000자 이상으로 확장하세요", "장면 묘사와 대사를 더 풍부하게"],
-                },
-                "state_updates": candidates[best_idx].get("state_updates", {}),
-                "action_items": ["분량 확장 필요 - 최소 5,000자"],
-                "length_violation": True,
-                "selection_reason": f"[length_guard] 최장 후보를 패치 대상으로 유지 ({max(lengths)}자)",
-                "verdict_reason": f"모든 후보 분량 미달: {lengths}자 (최소 {MIN_MANUSCRIPT_LENGTH}자 필요)",
-                "reject_reason": f"모든 후보 분량 미달: {lengths}자 (최소 {MIN_MANUSCRIPT_LENGTH}자 필요)",
-                "score_breakdown": _canonical_score_breakdown(length_score=30),
-            }
+            logging.warning(f" [V60.97] 모든 후보 분량 미달 (최소 {MIN_MANUSCRIPT_LENGTH}자 기준)")
+            return self._build_ensemble_length_guard_result(candidates)
 
         logging.info(
             f"✅ [V60.97] 분량 통과 후보: {len(qualified_indices)}개 "
             f"({[chr(65 + i) if i < len(candidates) else f'#{i}' for i in qualified_indices]})"
         )
 
-        # [NC-1 SCM] 단일 후보 독점 경고 플래그
-        _scm_single_candidate = len(qualified_indices) == 1
-
-        blueprint_str = (
-            json.dumps(blueprint, ensure_ascii=False, indent=2) if isinstance(blueprint, dict) else str(blueprint)
-        )
-
-        def get_candidate_info(idx) -> dict:
-            c = candidates[idx] if idx < len(candidates) else {}
-            v = validation_results[idx] if idx < len(validation_results) else {}
-            return {
-                "strategy": c.get("strategy_name", c.get("strategy", f"후보{idx + 1}")),
-                "manuscript": c.get("manuscript", ""),
-                "warnings": "\n".join(v.get("warnings", [])) or "(경고 없음)",
-            }
-
-        info_a = get_candidate_info(0)
-        info_b = get_candidate_info(1)
-        info_c = get_candidate_info(2)
-
-        # [V67] 이전 원고 전문 — 30+화 컨텍스트
-        _prev_ms_for_director = prev_manuscripts_text if prev_manuscripts_text else "(이전 원고 없음 — 1화)"
-        _prev_ms_for_director = smart_truncate(_prev_ms_for_director)
-
-        # [1M-CTX Phase2] stable/variable 분리 — Director 컨텍스트 캐싱
-        _blueprint_esc = self._d._escape_braces(blueprint_str)  # [1M-CTX] 슬라이스 제거 — 전체 게이트(700K) 위임
-        _digest_esc = self._d._escape_braces(episode_digest) if episode_digest else "(다이제스트 없음)"
-        _ending_esc = self._d._escape_braces(previous_ending if previous_ending else "")
-        _prev_ms_esc = self._d._escape_braces(_prev_ms_for_director)
-        _story_esc = self._d._escape_braces(story_context) if story_context else "(작품 설정 정보 없음)"
-
-        _prompt_packs = _normalize_director_prompt_packs(
+        _scm_single_candidate = candidate_state.scm_single_candidate
+        prompt_request = self._build_ensemble_prompt_request(
+            candidates=candidates,
+            validation_results=validation_results,
+            blueprint=blueprint,
+            previous_ending=previous_ending,
+            episode_digest=episode_digest,
             mandatory_context=mandatory_context,
             decision_core=decision_core,
             candidate_evidence=candidate_evidence,
             reference_appendix=reference_appendix,
+            prev_manuscripts_text=prev_manuscripts_text,
+            story_context=story_context,
         )
-        _combined_context = "\n\n".join(part for part in _prompt_packs.values() if part)
-        _decision_core_esc = self._d._escape_braces(_prompt_packs["decision_core"])
-        _candidate_evidence_esc = self._d._escape_braces(_prompt_packs["candidate_evidence"])
-        _reference_appendix_esc = self._d._escape_braces(_prompt_packs["reference_appendix"])
-
-        stable_context = self._prompt_loader.load(
-            "director",
-            "ENSEMBLE_STABLE_CONTEXT",
-            blueprint=_blueprint_esc,
-            episode_digest=_digest_esc,
-            previous_ending=_ending_esc,
-            prev_manuscripts_text=_prev_ms_esc,
-            story_context=_story_esc,
+        _combined_context = prompt_request.combined_context
+        prompt_response = self._request_ensemble_selection_response(
+            ep_num=ep_num,
+            prompt_request=prompt_request,
         )
-        variable_prompt = (
-            self._prompt_loader.load(
-                "director",
-                "ENSEMBLE_VARIABLE_PROMPT",
-                strategy_a=info_a["strategy"],
-                manuscript_a=self._d._escape_braces(info_a["manuscript"]),
-                warnings_a=self._d._escape_braces(info_a["warnings"]),
-                strategy_b=info_b["strategy"],
-                manuscript_b=self._d._escape_braces(info_b["manuscript"]),
-                warnings_b=self._d._escape_braces(info_b["warnings"]),
-                strategy_c=info_c["strategy"],
-                manuscript_c=self._d._escape_braces(info_c["manuscript"]),
-                warnings_c=self._d._escape_braces(info_c["warnings"]),
-                decision_core=_decision_core_esc,
-                candidate_evidence=_candidate_evidence_esc,
-                reference_appendix=_reference_appendix_esc,
-            )
-            if stable_context
-            else None
-        )
-
-        if not stable_context or not variable_prompt:
-            # Fallback: split 프롬프트 없음 → legacy 단일 프롬프트 사용
-            prompt = self._prompt_loader.load(
-                "director",
-                "ENSEMBLE_SELECTION_PROMPT",
-                blueprint=_blueprint_esc,
-                episode_digest=_digest_esc,
-                previous_ending=_ending_esc,
-                prev_manuscripts_text=_prev_ms_esc,
-                story_context=_story_esc,
-                strategy_a=info_a["strategy"],
-                manuscript_a=self._d._escape_braces(info_a["manuscript"]),
-                warnings_a=self._d._escape_braces(info_a["warnings"]),
-                strategy_b=info_b["strategy"],
-                manuscript_b=self._d._escape_braces(info_b["manuscript"]),
-                warnings_b=self._d._escape_braces(info_b["warnings"]),
-                strategy_c=info_c["strategy"],
-                manuscript_c=self._d._escape_braces(info_c["manuscript"]),
-                warnings_c=self._d._escape_braces(info_c["warnings"]),
-                decision_core=_decision_core_esc,
-                candidate_evidence=_candidate_evidence_esc,
-                reference_appendix=_reference_appendix_esc,
-            )
-            if not prompt:
-                logging.warning("[Director] ENSEMBLE_SELECTION_PROMPT not found in prompt loader")
-                return {
-                    "selected": "A",
-                    "selected_candidate": candidates[0] if candidates else {},
-                    "verdict": "REJECT",
-                    "director_verdict": "REJECT",
-                    "final_verdict": "REJECT",
-                    "original_verdict": "REJECT",
-                    "gate_basis": "director_primary_reject",
-                    "repair_scope": "none",
-                    "score": 50,
-                    "feedback": {"issues": ["Prompt loading failed: ENSEMBLE_SELECTION_PROMPT"]},
-                    "state_updates": (candidates[0].get("state_updates") or {})
-                    if candidates
-                    else {},  # [TF-R4] LLM null 방어
-                    "action_items": ["프롬프트 로더 설정 확인 필요"],
-                    "prompt_error": True,
-                }
-            try:
-                response = self._d.ask(prompt, temperature=0.1, thinking_level="high")
-            except Exception as _ask_err:
-                logging.warning("[Director] select_and_judge_ensemble ask() 실패: %s", _ask_err)
-                response = ""
-        else:
-            # [1M-CTX] Caching path — stable context (prev_manuscripts ~180K자) 캐시
-            # [TF-A] full_fallback 선제 절삭 — variable_prompt 보호
-            # BaseAgent 게이트 이전에도 stable_context를 budget에 맞춰 정리해
-            # variable_prompt가 fallback 프롬프트에서 밀리지 않도록 보장한다.
-            _gate = int(getattr(self._d, "MAX_CONTEXT_CHARS", None) or ContextLimits.MAX_CONTEXT_CHARS)  # [TF-25-04]
-            _stable_budget = max(0, _gate - len(variable_prompt) - 2)
-            _stable_for_fallback = (
-                smart_truncate(
-                    stable_context,
-                    max_chars=_stable_budget,
-                    head_chars=max(0, min(int(_stable_budget * 0.55), _stable_budget - 80)),
-                )
-                if len(stable_context) > _stable_budget
-                else stable_context
-            )
-            full_fallback = _stable_for_fallback + "\n\n" + variable_prompt
-
-            cache_name = None
-            try:
-                cache_info = self._d._get_or_create_context_cache(
-                    cache_type="director_ensemble",
-                    content=stable_context,
-                    ttl_seconds=600,
-                    project_name=self._d._context_cache_project_namespace("ep", ep_num),
-                )
-                cache_name = cache_info.get("cache_name")
-                _was_cached = cache_info.get("cached", False)
-                logging.info(
-                    f" [Director-CACHE] {'HIT' if _was_cached else 'MISS(신규)'}: "
-                    f"stable={len(stable_context):,}자, variable={len(variable_prompt):,}자"
-                )
-            except Exception as _cache_err:
-                logging.debug(f"[SILENT] director context caching: {_cache_err}")
-
-            try:
-                if cache_name:
-                    logging.info(f"✅ [Director] 캐시 경로: variable_prompt만 전송 ({len(variable_prompt):,}자)")
-                    response = self._d._ask_with_cached_context(
-                        cache_name=cache_name,
-                        prompt=variable_prompt,
-                        temperature=0.1,
-                        thinking_level="high",
-                        full_prompt_fallback=full_fallback,
-                    )
-                else:
-                    logging.info(f" [Director] fallback 경로: full_fallback 전송 ({len(full_fallback):,}자)")
-                    response = self._d.ask(full_fallback, temperature=0.1, thinking_level="high")
-            except Exception as _ask_err:
-                logging.warning("[Director] select_and_judge_ensemble ask() 실패: %s", _ask_err)
-                response = ""
-        result = self._d._extract_json_robust(response)
+        if prompt_response.prompt_error:
+            return {
+                "selected": "A",
+                "selected_candidate": candidates[0] if candidates else {},
+                "verdict": "REJECT",
+                "director_verdict": "REJECT",
+                "final_verdict": "REJECT",
+                "original_verdict": "REJECT",
+                "gate_basis": "director_primary_reject",
+                "repair_scope": "none",
+                "score": 50,
+                "feedback": {"issues": ["Prompt loading failed: ENSEMBLE_SELECTION_PROMPT"]},
+                "state_updates": (candidates[0].get("state_updates") or {}) if candidates else {},
+                "action_items": ["Prompt loader configuration must be fixed."],
+                "prompt_error": True,
+            }
+        result = self._d._extract_json_robust(prompt_response.response)
 
         if not result or result.get("parsing_error"):
             logging.warning(" [Director] 앙상블 선택 파싱 실패 - 첫 번째 후보 기본 선택")
@@ -1506,381 +2069,28 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
                 "repair_scope": "none",
             }
 
-        selected_letter = str(result.get("selected", "A")).strip().upper()
-        selected_idx = {"A": 0, "B": 1, "C": 2}.get(selected_letter, 0)
-
-        v60_97_swapped = False
-        if selected_idx not in qualified_indices and qualified_indices:
-            old_selection = selected_letter
-            selected_idx = max(qualified_indices, key=lambda i: len(candidates[i].get("manuscript", "")))
-            selected_letter = ["A", "B", "C"][min(selected_idx, 2)]  # [TF-25-01] IndexError 방어
-            v60_97_swapped = True
-            logging.warning(f" [V60.97] LLM 선택 {old_selection} → {selected_letter}로 교체 (분량 기준)")
-            # swap 후 selection_reason도 교체 사실 반영
-            original_reason = result.get("selection_reason", "")
-            result["selection_reason"] = (
-                f"[V60.97 자동 교체: {old_selection}→{selected_letter} (분량 기준)] {original_reason}"
-            )
-
-        selected_candidate = candidates[selected_idx] if selected_idx < len(candidates) else candidates[0]
-
-        original_verdict = result.get("verdict", "REJECT")
-        score = _safe_int(result.get("score", 50), 50)
-
-        # [TF-DIR-1] raw LLM 점수 보존 — NC-3B 교정 전 기준점 (Firewall 감사 추적용)
-        _pre_firewall_score = score
-        firewall_triggered = False
-        firewall_fixable = False
-        firewall_reason = ""
-        _contradiction_details: list[dict] = []
-
-        # ── [NC-3B] score_breakdown 합산 검증 ──────────────────
-        _sb_raw = result.get("score_breakdown", {})
-        if isinstance(_sb_raw, dict) and _sb_raw:
-            _sb_sum = sum(v for v in _sb_raw.values() if isinstance(v, int | float))
-            if _sb_sum != score and _sb_sum > 0:
-                logging.warning(
-                    "[NC-3B] score_breakdown 합산 불일치: breakdown=%d, score=%d → breakdown 우선",
-                    _sb_sum,
-                    score,
-                )
-                score = max(0, min(100, _sb_sum))
-
-        if v60_97_swapped:
-            score = 50
-            original_verdict = "CONDITIONAL_PASS"
-
-        # ── [NC-1 SCM] 단일 후보 점수 보정 ──────────────────────────
-        if _scm_single_candidate and score >= 95:
-            _scm_old = score
-            score = min(score, 90)
-            logging.info(f"[SCM] 단일 후보 점수 보정: {_scm_old} → {score}")
-
-        # ── [V75-C] Contradiction Firewall ──────────────────────────
-        # NOTE: v60_97_swapped 뒤에 배치 — 방화벽이 swap 승격보다 우선
-        _contradiction_check = result.get("contradiction_check", {})
-        if isinstance(_contradiction_check, dict):
-            _found = _contradiction_check.get("found_contradictions", [])
-            if isinstance(_found, list) and _found:
-                _normalized_contradictions = _normalize_contradiction_entries(_found)
-                _contradiction_details = _compact_contradiction_details(_normalized_contradictions)
-                _critical_count = sum(
-                    1 for c in _normalized_contradictions if str(c.get("severity", "")).upper() == "CRITICAL"
-                )
-                _major_count = sum(
-                    1 for c in _normalized_contradictions if str(c.get("severity", "")).upper() == "MAJOR"
-                )
-                firewall_triggered = False
-                firewall_fixable = False
-                _selected_manuscript = (
-                    str(selected_candidate.get("manuscript", "") or "") if isinstance(selected_candidate, dict) else ""
-                )
-                if _critical_count >= 1 or _major_count >= 2:
-                    _firewall_mode, _fixable_reason = _classify_firewall_mode(
-                        contradictions=_contradiction_details,
-                        original_verdict=str(original_verdict or ""),
-                        score=score,
-                        score_breakdown=_sb_raw if isinstance(_sb_raw, dict) else None,
-                    )
-                    if _firewall_mode == "pass_with_fix" and _selected_manuscript:
-                        firewall_fixable = True
-                        firewall_reason = _fixable_reason
-                        original_verdict = "PASS_WITH_FIX"
-                        score = min(score, 97)
-                        logging.warning(" [V75-C] %s → PASS_WITH_FIX", firewall_reason)
-                    else:
-                        firewall_triggered = True
-                        if _critical_count >= 1:
-                            firewall_reason = f"Contradiction Firewall: CRITICAL {_critical_count}건"
-                            logging.warning(
-                                f" [V75-C] Contradiction Firewall: CRITICAL {_critical_count}건 → REJECT 강제"
-                            )
-                        else:
-                            firewall_reason = f"Contradiction Firewall: MAJOR {_major_count}건"
-                            logging.warning(f" [V75-C] Contradiction Firewall: MAJOR {_major_count}건 → REJECT 강제")
-                if firewall_triggered:
-                    original_verdict = "REJECT"
-                    _pre_firewall_score = score  # [TF-22b] 패치 모드용 원본 점수 보존
-                    score = min(score, 44)  # adaptive floor=45 미만 → 승격 불가
-                if firewall_triggered or firewall_fixable:
-                    for _line in _build_contradiction_summary_lines(_contradiction_details, limit=5):
-                        logging.warning(" %s", _line)
-
-        # ── [NC-1] numeric_consistency_review 검증 ──────────────────
-        _nc_review = result.get("numeric_consistency_review") or []
-        if isinstance(_nc_review, list) and _nc_review:
-            _nc_agree_count = 0
-            for _ncr in _nc_review:
-                if not isinstance(_ncr, dict):
-                    continue
-                _ncr_verdict = str(_ncr.get("verdict", "")).upper()
-                _ncr_id = _ncr.get("id", "?")
-                _ncr_reason = str(_ncr.get("reason", ""))[:100]
-                if _ncr_verdict == "AGREE":
-                    _nc_agree_count += 1
-                    logging.warning(
-                        "[NC-1] Director AGREE: %s — %s",
-                        _ncr_id,
-                        _ncr_reason,
-                    )
-                elif _ncr_verdict == "DISMISS":
-                    logging.info(
-                        "[NC-1] Director DISMISS: %s — %s",
-                        _ncr_id,
-                        _ncr_reason,
-                    )
-                else:
-                    logging.warning(
-                        "[NC-1] Director 미판정: %s (verdict=%s)",
-                        _ncr_id,
-                        _ncr_verdict,
-                    )
-            if _nc_agree_count > 0:
-                # [TF-C] 자동감점 제거 — Director 주권 존중 (대원칙 3)
-                logging.warning(
-                    "[NC-1] Director가 %d건 수치 모순 인정. continuity_contradiction에 직접 반영 여부는 Director 자율.",
-                    _nc_agree_count,
-                )
-        else:
-            _mc = _combined_context or mandatory_context or ""
-            if "[NumericConsistency" in _mc and "[NC-" in _mc:
-                # [TF-C] 미응답 감점 제거 — Director 주권 존중 (선택사항으로 변경)
-                logging.debug("[NC-1] Director가 numeric_consistency_review를 생략함 (선택사항, 감점 없음)")
-
-        # ── [NC-3] consistency_checklist 검증 ──────────────────
-        _checklist = result.get("consistency_checklist") or {}
-        _nc3_keys = [
-            "numeric_accuracy",
-            "arithmetic",
-            "title_consistency",
-            "scene_overlap",
-            "percent_calculation",
-            "event_ordering",
-            "space_continuity",
-            "npc_identity",
-            "time_progression",
-            "opening_diversity",
-            "timeline_arc_consistency",  # [NS-4]
-            "fiction_term_leak",  # [TF-57-A]
-            "scene_variety",  # [TF-J]
-            "pacing_quality",
-            "dialogue_naturalness",
-            "pov_discipline",
-            "emotional_authenticity",
-            "npc_knowledge_boundary",
-            "secret_consistency",
-            "identity_consistency",
-        ]
-        if isinstance(_checklist, dict) and _checklist:
-            _issue_count = sum(1 for k in _nc3_keys if str(_checklist.get(k, "")).upper() == "ISSUE")
-            if _issue_count > 0:
-                logging.warning(
-                    "[NC-3] consistency_checklist ISSUE %d건 감지: %s",
-                    _issue_count,
-                    [k for k in _nc3_keys if str(_checklist.get(k, "")).upper() == "ISSUE"],
-                )
-            if _issue_count >= 3:
-                # ISSUE 3건+ → python_warnings 상한 3점
-                _sb = result.get("score_breakdown", {})
-                if isinstance(_sb, dict):
-                    _pw = _sb.get("python_warnings", 10)
-                    if isinstance(_pw, int | float) and _pw > 3:
-                        logging.info(
-                            "[NC-3] python_warnings %d → 3 (ISSUE %d건)",
-                            _pw,
-                            _issue_count,
-                        )
-                        _sb["python_warnings"] = 3
-                        _new_total = sum(v for v in _sb.values() if isinstance(v, int | float))
-                        if _new_total < score:
-                            score = _new_total
-        else:
-            # 체크리스트 누락 → 로깅만 (초기 안정화, 감점 없음)
-            logging.info("[NC-3] Director가 consistency_checklist를 생략함 — 감점 없음 (안정화 기간)")
-
-        adaptive_result = self._d.apply_adaptive_decision(
-            score=score,
-            original_decision=original_verdict,
+        selection_state = self._resolve_ensemble_selection_state(
+            result=result,
+            candidates=candidates,
+            qualified_indices=qualified_indices,
+        )
+        final_verdict, adaptive_result = self._apply_ensemble_quality_gates(
+            result=result,
+            state=selection_state,
+            scm_single_candidate=_scm_single_candidate,
+            combined_context=_combined_context,
+            mandatory_context=mandatory_context,
             arc_pos=arc_pos,
             total_eps=total_eps,
             retry_count=retry_count,
         )
-
-        final_verdict = adaptive_result["decision"]
-        if final_verdict == "CONDITIONAL_PASS":
-            if original_verdict == "REJECT":
-                # [TF-22b] 디렉터 주권: Director REJECT는 Python이 뒤집지 않음
-                final_verdict = "REJECT"
-            elif v60_97_swapped:
-                final_verdict = "REJECT"  # 스왑된 후보는 REJECT (적응형이 별도로 승격하지 않는 한)
-            elif adaptive_result.get("adjusted") and original_verdict in ("PASS", "PASS_WITH_FIX"):  # [TF-32]
-                final_verdict = original_verdict
-            else:
-                final_verdict = "PASS"
-
-        feedback = result.get("feedback", {})
-        if isinstance(feedback, str):
-            feedback = {"issues": [feedback]}
-        elif not isinstance(feedback, dict):
-            feedback = {}
-        _selection_reason = str(result.get("selection_reason", "") or "")
-        _verdict_reason = str(result.get("verdict_reason") or result.get("reject_reason") or "").strip()
-        if not _verdict_reason and (firewall_triggered or firewall_fixable) and firewall_reason:
-            _verdict_reason = firewall_reason
-        if not _verdict_reason and isinstance(feedback, dict):
-            _feedback_issues = feedback.get("issues", []) or []
-            if _feedback_issues:
-                _verdict_reason = str(_feedback_issues[0])
-        if not _verdict_reason:
-            _verdict_reason = _selection_reason
-        _fix_scope = str(result.get("fix_scope", "") or "").strip()
-        _fix_scope_reasoning = str(result.get("fix_scope_reasoning", "") or "").strip()
-        _fix_pack = _normalize_fix_pack(result.get("fix_pack"))
-        _repair_scope = _normalize_repair_scope(_fix_scope)
-        _selected_manuscript = (
-            str(selected_candidate.get("manuscript", "") or "") if isinstance(selected_candidate, dict) else ""
-        )
-        _contradiction_summary_lines = _build_contradiction_summary_lines(_contradiction_details)
-        if (firewall_triggered or firewall_fixable) and _selected_manuscript:
-            if _fix_scope not in ("partial", "full"):
-                _fix_scope = "inplace"
-            if not _fix_scope_reasoning:
-                _fix_scope_reasoning = firewall_reason
-                if _contradiction_summary_lines:
-                    _fix_scope_reasoning = f"{_fix_scope_reasoning}\n" + "\n".join(_contradiction_summary_lines)
-
-        if _contradiction_summary_lines:
-            _feedback_issues = [str(item).strip() for item in (feedback.get("issues") or []) if str(item).strip()]
-            for _line in _contradiction_summary_lines:
-                _issue = f"[Contradiction] {_line}"
-                if _issue not in _feedback_issues:
-                    _feedback_issues.append(_issue)
-            if _feedback_issues:
-                feedback["issues"] = _feedback_issues[:8]
-
-        if firewall_fixable:
-            _action_items = [str(item).strip() for item in (feedback.get("action_items") or []) if str(item).strip()]
-            for _detail in _contradiction_details[:3]:
-                _hint = str(_detail.get("fix_suggestion", "") or "").strip()
-                if not _hint:
-                    _kind = str(_detail.get("type", "") or "모순").strip()
-                    _hint = f"{_kind} 항목만 국소 정정하고 나머지 구조는 유지"
-                if _hint and _hint not in _action_items:
-                    _action_items.append(_hint[:160])
-            if _action_items:
-                feedback["action_items"] = _action_items[:5]
-
-        # [V67.2] 자유 형식 리뷰 → feedback에 병합
-        _open_review = result.get("open_review", "")
-        # [V60.97] swap 발생 시 open_review에 교체 사실 접두
-        if v60_97_swapped and _open_review:
-            _open_review = f"[V60.97 교체 전 후보 리뷰] {_open_review}"
-        if _open_review and _open_review not in ("특이사항 없음", "없음", ""):
-            if isinstance(feedback, dict):
-                _existing_issues = feedback.get("issues", [])
-                _existing_issues.append(f"[자유 리뷰] {_open_review}")
-                feedback["issues"] = _existing_issues
-
-        # --- Director 판정 상세 출력 ---
-        logging.info(
-            f"[Stage4 Director] 판정: {final_verdict} (점수: {score}) 후보{selected_letter} | 원래: {original_verdict}"
-        )
-        _gate_basis = _derive_gate_basis(
-            director_verdict=original_verdict,
-            final_verdict=final_verdict,
-            firewall_triggered=firewall_triggered,
-        )
-        _issues = feedback.get("issues", []) if isinstance(feedback, dict) else []
-        _log_director_frame(
-            stage="stage4",
+        return self._build_ensemble_decision_payload(
             ep_num=ep_num,
-            decision=final_verdict,
-            score=score,
-            selected_label=str(selected_letter),
-            director_verdict=str(original_verdict or ""),
-            gate_basis=_gate_basis,
-            selection_reason=_selection_reason,
-            verdict_reason=_verdict_reason,
-            contradictions=_issues,
-            fix_scope=_fix_scope,
-            repair_scope=_repair_scope,
-            open_review=_open_review,
-            thinking=getattr(self._d, "_last_thinking", ""),
+            result=result,
+            state=selection_state,
+            final_verdict=final_verdict,
+            adaptive_result=adaptive_result,
         )
-        _operator_lines = [
-            f"[Stage4 Director] 원고 앙상블 판정: {final_verdict} (점수: {score})",
-            f"선택: 후보 {selected_letter} | 원래 판정: {original_verdict}",
-        ]
-        _sel_reason = _selection_reason
-        if _sel_reason:
-            _operator_lines.append(f"선택 사유: {str(_sel_reason)[:200]}")
-        if _verdict_reason and _verdict_reason != _selection_reason:
-            _operator_lines.append(f"verdict_reason: {_verdict_reason[:200]}")
-        _sb = _canonical_score_breakdown(result.get("score_breakdown", {}))
-        if _sb:
-            _sb_str = ", ".join(f"{k}={v}" for k, v in _sb.items() if isinstance(v, int | float))
-            if _sb_str:
-                _operator_lines.append(f"점수 분해: {_sb_str}")
-        if _issues:
-            for _iss in _issues[:5]:
-                _operator_lines.append(f"이슈: {str(_iss)[:150]}")
-        if _open_review and _open_review not in ("특이사항 없음", "없음", ""):
-            _operator_lines.append(f"자유 리뷰: {_open_review[:200]}")
-        if adaptive_result.get("reason"):
-            _operator_lines.append(f"적응형: {adaptive_result['reason']}")
-        _thinking = getattr(self._d, "_last_thinking", "")
-        if _thinking:
-            _operator_lines.append(f"💭 [Director Thinking]\n{_thinking}")
-        for _line in _operator_lines:
-            self._d._operator_log(
-                _line,
-                meta={"component": "Director", "stage": "stage4", "ep_num": ep_num, "score": score},
-            )
-
-        return {
-            "selected": selected_letter,
-            "selected_candidate": selected_candidate,
-            "verdict": final_verdict,
-            "director_verdict": original_verdict,
-            "final_verdict": final_verdict,
-            "original_verdict": original_verdict,
-            "gate_basis": _gate_basis,
-            "score": score,
-            "pre_firewall_score": _pre_firewall_score,  # [TF-22b] 패치 모드용
-            "score_breakdown": _canonical_score_breakdown(result.get("score_breakdown", {})),
-            "selection_reason": _selection_reason,
-            "verdict_reason": _verdict_reason,
-            "reject_reason": _verdict_reason,
-            "firewall_triggered": firewall_triggered,
-            "firewall_fixable": firewall_fixable,
-            "firewall_reason": firewall_reason,
-            "feedback": feedback,
-            "state_updates": result.get("state_updates")
-            or selected_candidate.get("state_updates")
-            or {},  # [TF-R4] Director 보정값 우선 (투자 장르 capital 키 등 superset)
-            "action_items": feedback.get("action_items", []) if isinstance(feedback, dict) else [],
-            "other_candidates_notes": result.get("other_candidates_notes", {}),
-            "open_review": _open_review,  # [TF-29] 자유 리뷰 전파
-            "adaptive_threshold": adaptive_result.get("threshold_used", 65),
-            "adaptive_reason": adaptive_result.get("reason", ""),
-            "repair_scope": _repair_scope,
-            "error_category": result.get("error_category", ""),  # [V75-B] LOGIC_ERROR 전파
-            "fix_scope": _fix_scope,  # [TF-23] Director 판단 수정 범위
-            "fix_scope_reasoning": _fix_scope_reasoning,  # [TF-35] 수정 범위 근거 전파
-            "fix_pack": _fix_pack,
-            "numeric_consistency_review": _nc_review,  # [NC-1] Director 수치 판정 전파
-            "consistency_checklist": _checklist,  # [NC-3] 일관성 체크리스트 전파
-            "contradiction_details": _contradiction_details,
-            "contradiction_types": [  # [A-4] 모순 유형 전파
-                c.get("type", "")
-                for c in (
-                    _contradiction_check.get("found_contradictions", [])
-                    if isinstance(_contradiction_check, dict)
-                    else []
-                )
-                if isinstance(c, dict)
-            ],
-        }
 
     def quick_judge_single(
         self, ep_num: int, manuscript: str, blueprint: dict, previous_ending: str, retry_count: int = 0
@@ -1950,3 +2160,4 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
             "reason": result.get("reason", ""),
             "critical_issues": _issues,
         }
+

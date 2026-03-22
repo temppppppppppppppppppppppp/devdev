@@ -800,6 +800,73 @@ class TestAnalystPlanArcV20:
         assert "protagonist_name" in param_names
         assert "state_tracker" in param_names
 
+    def test_prepare_single_arc_plan_context_builds_seed_ban_and_hud(self, analyst):
+        analyst.context.sys = MagicMock()
+        analyst.context.sys.hud = MagicMock()
+        analyst.context.sys.hud.get_critical_keys.return_value = []
+
+        prev_state = MagicMock()
+        prev_state.to_dict.return_value = {
+            "location": "무림맹",
+            "hp": "80/100",
+            "status": "경계",
+            "items": ["철검", "패도령"],
+        }
+        state_tracker = MagicMock()
+        state_tracker.get_state_at_episode.return_value = prev_state
+
+        result = analyst._prepare_single_arc_plan_context(
+            arc_no="6",
+            vol_strategy="세력 재편 전략",
+            prev_block={"summary": "이전 아크"},
+            curr_block={"content": {"context": "a" * 1200}},
+            next_block={"summary": "다음 아크"},
+            ep_start=11,
+            assigned_seeds=[{"action": "회수", "seed_id": "S-1", "logic": "복선 회수"}],
+            recent_patterns=["전투", "전투"],
+            protagonist_name="청운",
+            state_tracker=state_tracker,
+        )
+
+        assert result["clean_arc_no"] == 6
+        assert result["vol_no"] == 2
+        assert result["target_ep_count"] == 5
+        assert "ABSOLUTE BAN" in result["safe_data"]["assigned_seeds_info"]
+        assert "WARNING" in result["safe_data"]["assigned_seeds_info"]
+        assert "무림맹" in result["safe_data"]["protagonist_hud_state"]
+        assert result["safe_data"]["ep_count"] == result["target_ep_count"]
+
+    def test_normalize_single_arc_draft_result_syncs_pacing_and_beats(self, analyst):
+        draft_result = {
+            "ep_count": "9화",
+            "pacing_decision": {"chosen_pacing": "Standard"},
+            "beat_sequence": ["첫 번째 비트"],
+        }
+
+        normalized, actual_ep_count = analyst._normalize_single_arc_draft_result(
+            draft_result,
+            target_ep_count=4,
+            min_ep_count=3,
+            max_ep_count=6,
+        )
+
+        assert actual_ep_count == 5
+        assert len(normalized["beat_sequence"]) == 5
+        assert normalized["beat_sequence"][0] == "첫 번째 비트"
+
+    def test_finalize_single_arc_plan_result_prefers_revised_arc(self, analyst):
+        loop_state = {"draft_result": {"arc_no": 3, "source": "draft"}, "actual_ep_count": 4}
+        result = analyst._finalize_single_arc_plan_result(
+            audit_result={"revised_arc": {"arc_no": 3, "source": "revised"}},
+            arc_loop_state=loop_state,
+            retry_success=True,
+            clean_arc_no=3,
+            target_ep_count=4,
+        )
+
+        assert result["source"] == "revised"
+        assert result["_actual_ep_count"] == 4
+
 
 # ══════════════════════════════════════════════════════════════
 # [Analyst] Test 22: enrich_raw_block_async 메서드 존재 확인

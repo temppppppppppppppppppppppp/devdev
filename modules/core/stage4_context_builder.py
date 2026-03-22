@@ -15,6 +15,7 @@ from modules.core.context_advisor import (
     build_context_observation,
 )
 from modules.core.context_compression import ContextCompressor
+from modules.core.stage4_context_packets import Stage4ContextPackets
 from modules.core.semantic_query_broker import SemanticQueryBroker
 from modules.core.tactical_utils import extract_episode_tactical
 from modules.core.writer_prompt_builders import (
@@ -66,6 +67,41 @@ class Stage4PromptInjectionsPayload(TypedDict):
     anti_trope_prompt: str
     justification_prompt: str
     reflexion_prompt: str
+
+
+class Stage4PromptBasesPayload(TypedDict):
+    anti_trope_prompt: str
+    justification_prompt: str
+
+
+class Stage4MandatoryContextPayload(TypedDict):
+    reference_anchor_prompt: str
+    mandatory_context: str
+    anti_trope_prompt: str
+    justification_prompt: str
+    reflexion_prompt: str
+
+
+class Stage4EpisodeBasePayload(TypedDict):
+    arc_pos: int
+    total_ep_in_arc: int
+    arc_tactical: str
+    prev_text: str
+    prev_ending: str
+    prev_manuscripts_text: str
+    episode_digest: str
+
+
+class Stage4EpisodeStatePayload(TypedDict):
+    hud_report: str
+    current_inventory: list[Any]
+    current_martial_arts: list[Any]
+    cumulative_bible: dict[str, Any]
+    dead_npcs: list[Any]
+    item_acquisition_timeline: str
+    chain_link_section: str
+    world_state_summary: str
+    recent_scene_keywords: list[dict[str, Any]]
 
 
 from modules.validation.threshold_helper import _threshold
@@ -136,6 +172,11 @@ class Stage4ContextBuilder:
 
     def __init__(self, ctx) -> None:
         self.ctx = ctx
+        self.context_packets = Stage4ContextPackets(
+            self,
+            fit_context_text=_fit_context_text,
+            build_canonical_facts_section=_build_canonical_facts_section,
+        )
 
     def _resolve_protagonist_name(self) -> str:
         try:
@@ -596,185 +637,6 @@ class Stage4ContextBuilder:
         lines.append("위 제약은 참고용 advisory다. 해당 NPC가 모를 정보·말투·정체 노출 여부를 점검하라.")
         return "\n".join(lines)
 
-    def _build_continuity_packet(self, entities: dict[str, list[str] | str]) -> str:
-        """이번 화 관련 엔티티의 상세 이력을 지목 조회하여 패킷으로 조립한다."""
-        if not entities:
-            return ""
-
-        parts = ["=== [Continuity Packet] 이번 화 필수 기억 ==="]
-        budget = 7000
-        used = 0
-
-        project = getattr(self.ctx, "current_project", None)
-        db = getattr(project, "db", None)
-        world_state = getattr(self.ctx, "world_state", None)
-        ws_state = getattr(world_state, "_state", {}) if world_state else {}
-        fact_ledger = getattr(self.ctx, "fact_ledger", None)
-        ledger = getattr(fact_ledger, "_ledger", {}) if fact_ledger else {}
-
-        for npc_name in (entities.get("npcs") or [])[:10]:
-            npc_block: list[str] = []
-
-            for pool in ("alive_npcs", "dead_npcs"):
-                info = (ws_state.get(pool) or {}).get(npc_name)
-                if info and isinstance(info, dict):
-                    desc = ", ".join(f"{key}={value}" for key, value in info.items() if value and key != "name")
-                    if desc:
-                        npc_block.append(f"  상태: {desc[:200]}")
-                    if pool == "dead_npcs":
-                        npc_block.append("  ⚠️ 사망 — 행동/대사 등장 금지 (회상/언급만 허용)")
-
-            char_facts = (ledger.get("characters", {}) or {}).get(npc_name, {})
-            if isinstance(char_facts, dict):
-                history = char_facts.get("history", [])
-                for entry in history[-5:]:
-                    if isinstance(entry, str):
-                        npc_block.append(f"  [이력] {entry[:100]}")
-
-            if db and hasattr(db, "get_npc_history"):
-                try:
-                    history_rows = db.get_npc_history(npc_name, limit=3)
-                    for row in history_rows or []:
-                        if isinstance(row, dict):
-                            reason = str(row.get("reason", "") or "")
-                            reason_str = f" ({reason[:30]})" if reason else ""
-                            npc_block.append(
-                                f"  [변경 {row.get('episode_no', 'unknown')}화] "
-                                f"{row.get('field_name', '')}: {str(row.get('old_value', ''))[:30]} → "
-                                f"{str(row.get('new_value', ''))[:30]}{reason_str}"
-                            )
-                except Exception as history_err:
-                    logging.debug("[CP] npc_history 조회 실패: %s", history_err)
-
-            if npc_block:
-                section = f"• {npc_name}\n" + "\n".join(npc_block)
-                if used + len(section) > budget:
-                    break
-                parts.append(section)
-                used += len(section)
-
-        for plot_name in (entities.get("plots") or [])[:5]:
-            plot_line = f"• 진행 중 플롯: {plot_name}"
-            if used + len(plot_line) > budget:
-                break
-            parts.append(plot_line)
-            used += len(plot_line)
-
-        item_names = entities.get("items") or []
-        if item_names:
-            item_line = "• 관련 아이템: " + ", ".join(item_names[:10])
-            if used + len(item_line) <= budget:
-                parts.append(item_line)
-                used += len(item_line)
-
-        location_names = entities.get("locations") or []
-        if location_names:
-            location_line = "• 현재 위치: " + ", ".join(location_names[:3])
-            if used + len(location_line) <= budget:
-                parts.append(location_line)
-                used += len(location_line)
-
-        if db and hasattr(db, "get_relationship_history") and hasattr(db, "get_npc_relationship_edges"):
-            rel_lines: list[str] = []
-            seen_pairs: set[tuple[str, str]] = set()
-            blueprint_npcs = [str(name) for name in (entities.get("npcs") or [])[:10]]
-            for npc_name in blueprint_npcs:
-                try:
-                    edges = db.get_npc_relationship_edges(npc_name)
-                    if not isinstance(edges, list):
-                        continue
-                    for edge in edges[:5]:
-                        if not isinstance(edge, dict):
-                            continue
-                        n1 = str(edge.get("npc1", "") or "").strip()
-                        n2 = str(edge.get("npc2", "") or "").strip()
-                        pair_key = tuple(sorted([n1, n2]))
-                        if not n1 or not n2 or pair_key in seen_pairs:
-                            continue
-                        seen_pairs.add(pair_key)
-
-                        other = n2 if n1 == npc_name else n1
-                        if other not in blueprint_npcs:
-                            continue
-
-                        rel_hist = db.get_relationship_history(n1, n2, limit=5)
-                        if not isinstance(rel_hist, list) or not rel_hist:
-                            cur_rel = edge.get("relation", "?")
-                            rel_lines.append(f"  {n1} ↔ {n2}: {cur_rel} (ep{edge.get('since_ep', '?')}~)")
-                            continue
-
-                        stages: list[str] = []
-                        eps: list[str] = []
-                        for hist in rel_hist:
-                            if not isinstance(hist, dict):
-                                continue
-                            new_rel = str(hist.get("new_relation", "") or "").strip()
-                            change_ep = hist.get("change_ep", "?")
-                            if new_rel:
-                                stages.append(new_rel)
-                                eps.append(str(change_ep))
-                        if stages:
-                            trajectory = "→".join(stages)
-                            ep_flow = "→".join(f"ep{ep}" for ep in eps)
-                            rel_lines.append(f"  {n1} ↔ {n2}: {trajectory} ({ep_flow})")
-                except Exception as rel_err:
-                    logging.debug("[CP] 관계 궤적 조회 실패: %s", rel_err)
-
-            if rel_lines:
-                rel_section = "• 관계 변천사\n" + "\n".join(rel_lines[:8])
-                if used + len(rel_section) <= budget:
-                    parts.append(rel_section)
-                    used += len(rel_section)
-
-        full_text = str(entities.get("_full_text", "") or "")
-        if full_text and fact_ledger:
-            nums = ledger.get("numbers", {})
-            if isinstance(nums, dict) and nums:
-                num_lines: list[str] = []
-                for num_key, num_info in nums.items():
-                    if not isinstance(num_info, dict):
-                        continue
-                    key_text = str(num_key)
-                    if key_text not in full_text:
-                        continue
-
-                    cur_val = num_info.get("value", "?")
-                    unit = num_info.get("unit", "")
-                    est_val = num_info.get("established_value", "")
-                    est_ep = num_info.get("established_ep", "?")
-                    last_ep = num_info.get("last_ep", "?")
-                    unit_str = f" {unit}" if unit else ""
-
-                    if est_val != "" and str(est_val) != str(cur_val):
-                        num_lines.append(
-                            f"  {key_text}: {est_val}{unit_str}(ep{est_ep}) → {cur_val}{unit_str}(ep{last_ep})"
-                        )
-                    else:
-                        num_lines.append(f"  {key_text}: {cur_val}{unit_str} (ep{last_ep} 기준)")
-
-                    history = num_info.get("history", [])
-                    if isinstance(history, list):
-                        for history_entry in history[-3:]:
-                            if isinstance(history_entry, str):
-                                num_lines.append(f"    └ {history_entry[:80]}")
-
-                if num_lines:
-                    num_section = "• 수치 변화 이력\n" + "\n".join(num_lines[:15])
-                    if used + len(num_section) <= budget:
-                        parts.append(num_section)
-                        used += len(num_section)
-
-        canonical_facts_section = _build_canonical_facts_section(db, full_text)
-        if canonical_facts_section and used + len(canonical_facts_section) <= budget:
-            parts.append(canonical_facts_section)
-            used += len(canonical_facts_section)
-
-        if len(parts) == 1:
-            return ""
-
-        result = "\n".join(parts)
-        return _fit_context_text(result, max_chars=budget)
-
     @staticmethod
     def _trim_summary_value(value, max_chars: int = 60) -> str:
         text = str(value or "").strip()
@@ -1113,265 +975,6 @@ class Stage4ContextBuilder:
             "[Authority precedence]\n아래 persisted canonical 레이어가 같은 영역의 arc-derived state_tracker 요약보다 우선한다.\n"
             + "\n".join(rendered[:8])
         )
-
-    def _build_condensed_world_state_summary(
-        self,
-        entities: dict[str, list[str] | str],
-        *,
-        max_chars: int = 50000,
-    ) -> str:
-        """CP가 이미 상세 주입한 엔티티는 간략 표기만 남긴 world_state 요약."""
-        world_state = getattr(self.ctx, "world_state", None)
-        if not world_state:
-            return ""
-
-        state = getattr(world_state, "_state", {}) if hasattr(world_state, "_state") else {}
-        if not isinstance(state, dict) or not state:
-            try:
-                return world_state.get_summary(max_chars=max_chars)
-            except Exception:
-                return ""
-
-        cp_npcs = {str(name).strip() for name in (entities.get("npcs") or []) if str(name).strip()}
-        cp_items = {str(name).strip() for name in (entities.get("items") or []) if str(name).strip()}
-        cp_plots = {str(name).strip() for name in (entities.get("plots") or []) if str(name).strip()}
-        cp_locations = {str(name).strip() for name in (entities.get("locations") or []) if str(name).strip()}
-
-        if not any([cp_npcs, cp_items, cp_plots, cp_locations]):
-            try:
-                return world_state.get_summary(max_chars=max_chars)
-            except Exception:
-                return ""
-
-        parts: list[str] = []
-        last_ep = state.get("last_updated_ep", 0)
-        if last_ep:
-            parts.append(f"=== 세계 상태 (제{last_ep}화 기준) ===")
-
-        protagonist = state.get("protagonist", {})
-        if isinstance(protagonist, dict):
-            prot_lines = []
-            if protagonist.get("name"):
-                prot_lines.append(f"이름: {protagonist['name']}")
-            if protagonist.get("location"):
-                prot_lines.append(f"위치: {self._trim_summary_value(protagonist['location'])}")
-            if protagonist.get("assets"):
-                prot_lines.append(f"자산: {self._trim_summary_value(protagonist['assets'], 120)}")
-            if protagonist.get("injuries") and protagonist.get("injuries") != "정상":
-                prot_lines.append(f"부상: {self._trim_summary_value(protagonist['injuries'])}")
-            if prot_lines:
-                parts.append("[주인공]\n" + "\n".join(prot_lines))
-
-        motivations = [
-            mot
-            for mot in (state.get("motivations") or [])
-            if isinstance(mot, dict) and mot.get("status") == "active" and mot.get("text")
-        ]
-        if motivations:
-            parts.append(
-                "[주인공 핵심 동기]\n"
-                + "\n".join(
-                    f"- {self._trim_summary_value(mot.get('text'), 80)}"
-                    + (f" (제{mot.get('since_ep')}화~)" if mot.get("since_ep") else "")
-                    for mot in motivations[:6]
-                )
-            )
-
-        promises = [
-            promise
-            for promise in (state.get("promises") or [])
-            if isinstance(promise, dict) and promise.get("text") and promise.get("status") in ("pending", None, "")
-        ]
-        if promises:
-            promise_lines = []
-            for promise in promises[:6]:
-                promiser = str(promise.get("promiser", "") or "").strip()
-                promisee = str(promise.get("promisee", "") or "").strip()
-                parties = "→".join(x for x in [promiser, promisee] if x)
-                text = self._trim_summary_value(promise.get("text"), 80)
-                label = f"{parties}: {text}" if parties else text
-                if promise.get("since_ep"):
-                    label += f" (제{promise.get('since_ep')}화~)"
-                promise_lines.append(f"- {label}")
-            if promise_lines:
-                parts.append("[서약/약속]\n" + "\n".join(promise_lines))
-
-        cumulative_elapsed = state.get("cumulative_elapsed", {})
-        if isinstance(cumulative_elapsed, dict) and cumulative_elapsed.get("total_days"):
-            parts.append(f"[누적 경과] 총 {cumulative_elapsed.get('total_days')}일")
-
-        alive = state.get("alive_npcs", {})
-        if isinstance(alive, dict) and alive:
-            remaining_alive = [(name, info) for name, info in alive.items() if str(name).strip() not in cp_npcs]
-            if remaining_alive:
-                lines = []
-                for name, info in remaining_alive[:12]:
-                    desc_parts = []
-                    if isinstance(info, dict):
-                        if info.get("role"):
-                            desc_parts.append(str(info["role"]))
-                        if info.get("relation"):
-                            desc_parts.append(f"관계={info['relation']}")
-                        if info.get("location"):
-                            desc_parts.append(f"위치={self._trim_summary_value(info['location'], 24)}")
-                    desc = " / ".join(desc_parts)
-                    lines.append(f"- {name}" + (f": {desc}" if desc else ""))
-                parts.append(f"[생존 NPC - CP 비포함 {len(lines)}명]\n" + "\n".join(lines))
-            if cp_npcs:
-                parts.append("[CP 상세 참조]\n- 핵심 NPC 상세는 Continuity Packet 참조")
-
-        dead = state.get("dead_npcs", {})
-        if isinstance(dead, dict) and dead:
-            remaining_dead = [(name, info) for name, info in dead.items() if str(name).strip() not in cp_npcs]
-            if remaining_dead:
-                lines = []
-                for name, info in remaining_dead[:8]:
-                    if isinstance(info, dict):
-                        lines.append(
-                            f"- {name} (제{info.get('ep', 'unknown')}화, {self._trim_summary_value(info.get('cause'), 24)})"
-                        )
-                    else:
-                        lines.append(f"- {name}")
-                parts.append(f"[사망 NPC - CP 비포함 {len(lines)}명]\n" + "\n".join(lines))
-
-        relationships = state.get("relationships", {})
-        if isinstance(relationships, dict) and relationships:
-            rel_lines = []
-            for npc, relation in list(relationships.items())[:12]:
-                if str(npc).strip() in cp_npcs:
-                    continue
-                rel_lines.append(f"- {npc}: {self._trim_summary_value(relation, 40)}")
-            if rel_lines:
-                parts.append("[주요 관계 - CP 비포함]\n" + "\n".join(rel_lines))
-
-        active_items = state.get("active_items", {})
-        if isinstance(active_items, dict) and active_items:
-            item_lines = [
-                f"- {name}" for name, info in list(active_items.items())[:20] if str(name).strip() not in cp_items
-            ]
-            if item_lines:
-                parts.append("[보유 아이템 - CP 비포함]\n" + "\n".join(item_lines[:12]))
-            if cp_items:
-                parts.append("[CP 상세 참조]\n- 관련 아이템 상세는 Continuity Packet 참조")
-
-        active_plots = state.get("active_plots", [])
-        if isinstance(active_plots, list) and active_plots:
-            plot_lines = []
-            for plot in active_plots[-10:]:
-                plot_name = plot.get("plot", "") if isinstance(plot, dict) else str(plot)
-                if str(plot_name).strip() in cp_plots:
-                    continue
-                since_ep = plot.get("since_ep", "?") if isinstance(plot, dict) else "?"
-                plot_lines.append(f"- {self._trim_summary_value(plot_name, 60)} (제{since_ep}화~)")
-            if plot_lines:
-                parts.append("[진행 중 플롯 - CP 비포함]\n" + "\n".join(plot_lines[:8]))
-            if cp_plots:
-                parts.append("[CP 상세 참조]\n- 이번 화 핵심 플롯 상세는 Continuity Packet 참조")
-
-        pressure_vectors = state.get("active_pressure_vectors", [])
-        if isinstance(pressure_vectors, list) and pressure_vectors:
-            pressure_lines = []
-            for vector in pressure_vectors[:5]:
-                if isinstance(vector, dict):
-                    text = self._trim_summary_value(vector.get("text"), 80)
-                else:
-                    text = self._trim_summary_value(vector, 80)
-                if text:
-                    pressure_lines.append(f"- {text}")
-            if pressure_lines:
-                parts.append("[지속 압박/위협]\n" + "\n".join(pressure_lines))
-
-        if cp_locations:
-            parts.append("[CP 상세 참조]\n- 이번 화 위치 맥락 상세는 Continuity Packet 참조")
-
-        result = "\n\n".join(part for part in parts if part)
-        if len(result) > max_chars:
-            result = _fit_context_text(result, max_chars=max_chars)
-        return result
-
-    def _build_condensed_fact_ledger_summary(
-        self,
-        entities: dict[str, list[str] | str],
-        *,
-        max_chars: int = 25000,
-    ) -> str:
-        """CP가 이미 상세 주입한 인물/아이템/수치는 압축한 FactLedger 요약."""
-        fact_ledger = getattr(self.ctx, "fact_ledger", None)
-        if not fact_ledger:
-            return ""
-
-        ledger = getattr(fact_ledger, "_ledger", {}) if hasattr(fact_ledger, "_ledger") else {}
-        if not isinstance(ledger, dict) or not ledger:
-            try:
-                return fact_ledger.to_summary(max_chars=max_chars)
-            except Exception:
-                return ""
-
-        cp_npcs = {str(name).strip() for name in (entities.get("npcs") or []) if str(name).strip()}
-        cp_items = {str(name).strip() for name in (entities.get("items") or []) if str(name).strip()}
-        full_text = str(entities.get("_full_text", "") or "")
-        if not any([cp_npcs, cp_items, full_text]):
-            try:
-                return fact_ledger.to_summary(max_chars=max_chars)
-            except Exception:
-                return ""
-
-        parts = []
-        last_ep = ledger.get("last_updated_ep", 0)
-        if last_ep:
-            parts.append(f"=== 팩트 원장 (제{last_ep}화 기준) ===")
-
-        characters = ledger.get("characters", {})
-        if isinstance(characters, dict) and characters:
-            alive_lines = []
-            for name, info in list(characters.items())[:40]:
-                if str(name).strip() in cp_npcs or not isinstance(info, dict) or info.get("status") != "alive":
-                    continue
-                role = self._trim_summary_value(info.get("role", "?"), 24)
-                relation = self._trim_summary_value(info.get("relationship", ""), 24)
-                rel_str = f", 관계: {relation}" if relation else ""
-                alive_lines.append(f"  - {name} ({role}{rel_str}, ep{info.get('established_ep', '?')}~)")
-            if alive_lines:
-                parts.append("[생존 인물 - CP 비포함]\n" + "\n".join(alive_lines[:12]))
-            if cp_npcs:
-                parts.append("[CP 상세 참조]\n- 핵심 인물 팩트 이력은 Continuity Packet 참조")
-
-        items = ledger.get("items", {})
-        if isinstance(items, dict) and items:
-            item_lines = []
-            for name, info in list(items.items())[:30]:
-                if str(name).strip() in cp_items or not isinstance(info, dict):
-                    continue
-                if info.get("status") in ("분실", "파괴", "소모"):
-                    continue
-                owner = self._trim_summary_value(info.get("owner", ""), 20)
-                owner_str = f", 소유: {owner}" if owner else ""
-                item_lines.append(f"  - {name} ({info.get('status', '보유')}{owner_str})")
-            if item_lines:
-                parts.append("[보유 아이템/무공 - CP 비포함]\n" + "\n".join(item_lines[:10]))
-            if cp_items:
-                parts.append("[CP 상세 참조]\n- 관련 아이템 상세는 Continuity Packet 참조")
-
-        numbers = ledger.get("numbers", {})
-        if isinstance(numbers, dict) and numbers:
-            num_lines = []
-            for key, info in list(numbers.items())[:30]:
-                if not isinstance(info, dict):
-                    continue
-                if full_text and str(key) in full_text:
-                    continue
-                unit = str(info.get("unit", "") or "").strip()
-                unit_str = f" {unit}" if unit else ""
-                num_lines.append(f"  - {key}: {info.get('value', '?')}{unit_str} (ep{info.get('last_ep', '?')} 기준)")
-            if num_lines:
-                parts.append("[주요 수치 - CP 비포함]\n" + "\n".join(num_lines[:10]))
-            if full_text:
-                parts.append("[CP 상세 참조]\n- 이번 화 관련 수치 변화 이력은 Continuity Packet 참조")
-
-        result = "\n\n".join(part for part in parts if part)
-        if len(result) > max_chars:
-            result = _fit_context_text(result, max_chars=max_chars)
-        return result
 
     def _execute_retrieval_plan(self, plan: "RetrievalPlan", arc_no: int | None = None) -> list[str]:
         """Execute retrieval plan slots and return context sections."""
@@ -2002,7 +1605,10 @@ class Stage4ContextBuilder:
         if self.ctx.world_state:
             try:
                 if cp_entities.get("npcs") or cp_entities.get("items") or cp_entities.get("plots"):
-                    world_state_summary = self._build_condensed_world_state_summary(cp_entities, max_chars=50000)
+                    world_state_summary = self.context_packets.build_condensed_world_state_summary(
+                        cp_entities,
+                        max_chars=50000,
+                    )
                     if not world_state_summary:
                         world_state_summary = self.ctx.world_state.get_summary(max_chars=50000)
                 else:
@@ -2027,7 +1633,10 @@ class Stage4ContextBuilder:
         if self.ctx.fact_ledger:
             try:
                 if cp_entities.get("npcs") or cp_entities.get("items") or cp_entities.get("_full_text"):
-                    fact_ledger_summary = self._build_condensed_fact_ledger_summary(cp_entities, max_chars=25000)
+                    fact_ledger_summary = self.context_packets.build_condensed_fact_ledger_summary(
+                        cp_entities,
+                        max_chars=25000,
+                    )
                     if not fact_ledger_summary:
                         fact_ledger_summary = self.ctx.fact_ledger.to_summary(max_chars=25000)
                 else:
@@ -2055,7 +1664,7 @@ class Stage4ContextBuilder:
 
         if blueprint:
             try:
-                continuity_packet = self._build_continuity_packet(cp_entities)
+                continuity_packet = self.context_packets.build_continuity_packet(cp_entities)
                 if continuity_packet:
                     tier0_parts.insert(0, continuity_packet)
                     logging.info(
@@ -2300,230 +1909,6 @@ class Stage4ContextBuilder:
             "tier2_parts": tier2_parts,
         }
 
-    def _build_tier12_auxiliary_sections(
-        self,
-        *,
-        next_ep: int,
-        arc_data: dict,
-        blueprint: dict | None,
-        s4_genre_type: str,
-        v50_modules_available: bool,
-        pacing_analyzer,
-        prev_text: str,
-        work_focus: str,
-        slot_summary: str,
-    ) -> Stage4AuxiliarySectionsPayload:
-        """Build tier-1/tier-2 auxiliary context sections outside the main coordinator."""
-        tier1_parts: list[str] = []
-        tier2_parts: list[str] = []
-
-        if slot_summary:
-            tier1_parts.append(slot_summary)
-            logging.info("[WorkGuard] tracking slot summary 주입 (%d자)", len(slot_summary))
-
-        stage2_failure_context = self._build_stage2_failure_context(arc_data)
-        if stage2_failure_context:
-            tier2_parts.append(stage2_failure_context)
-            logging.info("[Stage4ContextBuilder] stage2 failure context 주입 (%d자)", len(stage2_failure_context))
-
-        ambient_npc_hint = self._suggest_ambient_npcs(blueprint or {})
-        if ambient_npc_hint:
-            tier2_parts.append(ambient_npc_hint)
-
-        arc_rationale_digest = arc_data.get("rationale_digest", "") if arc_data else ""
-        if arc_rationale_digest:
-            tier1_parts.append(f"[Arc 서사 근거]\n{arc_rationale_digest}")
-
-        try:
-            series_summary = self.ctx.current_project.load_v20_anchor("series_summary")
-            if series_summary:
-                if isinstance(series_summary, dict):
-                    series_summary = series_summary.get("summary", "") or str(series_summary)
-                if series_summary and len(str(series_summary)) > 10:
-                    tier2_parts.append(f"[V68 시리즈 전체 요약]\n{series_summary}")
-
-            current_arc_no = arc_data.get("arc_no", 1) if arc_data else 1
-            current_volume = max(1, (current_arc_no - 1) // int(VolumeSettings.ARCS_PER_VOLUME) + 1)
-            volume_summaries = []
-            for volume_index in range(max(1, current_volume - 2), current_volume + 1):
-                volume_summary = self.ctx.current_project.load_v20_anchor(f"volume_summary_{volume_index}")
-                if volume_summary:
-                    if isinstance(volume_summary, dict):
-                        volume_summary = volume_summary.get("summary", "") or str(volume_summary)
-                    if volume_summary and len(str(volume_summary)) > 10:
-                        volume_summaries.append(f"[볼륨 {volume_index}] {volume_summary}")
-            if volume_summaries:
-                tier2_parts.append("[V68 볼륨 요약]\n" + "\n".join(volume_summaries))
-        except Exception as hierarchy_err:
-            self.ctx.ui.log(f"   ⚠️ [V68] 계층형 요약 로드 실패 (비치명): {str(hierarchy_err)[:60]}")
-
-        try:
-            master_bible = getattr(self.ctx.current_project, "master_bible", None) or {}
-            bible_root = master_bible.get("MasterBible", master_bible)
-            plot_roadmap = bible_root.get("plot_roadmap", [])
-            arc_no = arc_data.get("arc_no", 1) if arc_data else 1
-            arc_idx = arc_no - 1
-            if isinstance(plot_roadmap, list) and 0 <= arc_idx < len(plot_roadmap):
-                tr_block = plot_roadmap[arc_idx]
-                if isinstance(tr_block, dict):
-                    genre_ext = tr_block.get("genre_ext", {})
-                    if isinstance(genre_ext, dict) and genre_ext:
-                        genre_ext_lines = ["### [V74 Treatment] 이번 아크 장르 특화 정보"]
-                        for genre_key, genre_value in genre_ext.items():
-                            if isinstance(genre_value, dict | list):
-                                genre_ext_lines.append(f"  {genre_key}: {json.dumps(genre_value, ensure_ascii=False)}")
-                            else:
-                                genre_ext_lines.append(f"  {genre_key}: {genre_value}")
-                        genre_ext_lines.append(
-                            "⚠️ 원고의 장르 수치(금액, 수익, 레벨, 경지 등)가 위 Treatment 목표와 합리적으로 연결되어야 합니다."
-                        )
-                        tier2_parts.append("\n".join(genre_ext_lines))
-                        logging.info("[V74] Treatment genre_ext 주입 (arc_no=%d, %d필드)", arc_no, len(genre_ext))
-        except Exception as genre_ext_err:
-            logging.warning("[SilentPass:V74] Treatment genre_ext 주입 실패: %s", genre_ext_err)
-
-        state_tracker = self.ctx.state_tracker
-        if state_tracker:
-            arc_no_for_tracker = arc_data.get("arc_no", 0) if arc_data else 0
-            try:
-                all_summaries = state_tracker.get_all_summaries(
-                    arc_no=arc_no_for_tracker,
-                    genre=s4_genre_type,
-                )
-                filtered_summaries, suppressed_summaries = self._filter_state_tracker_summaries_for_authority(
-                    all_summaries
-                )
-                authority_note = self._build_state_tracker_authority_note(suppressed_summaries)
-                if authority_note:
-                    tier2_parts.append(authority_note)
-                ordered_summaries = self._prioritize_summaries_by_work_focus(
-                    list(filtered_summaries.values()),
-                    work_focus,
-                )
-                for summary in ordered_summaries:
-                    if summary:
-                        tier2_parts.append(summary)
-            except Exception as state_tracker_err:
-                logging.warning("[S4-I2] get_all_summaries 실패, 개별 폴백: %s", state_tracker_err)
-                fallback_summary_map = {
-                    "entity_destruction": state_tracker.get_entity_destruction_summary(),
-                    "resolved_plots": state_tracker.get_resolved_plots_summary(),
-                    "npc_personality": state_tracker.get_npc_personality_summary(),
-                    "npc_npc_relationship": state_tracker.get_npc_npc_relationship_summary(),
-                    "permanent_injury": state_tracker.get_permanent_injury_summary(),
-                    "time_timeline": state_tracker.get_time_timeline_summary(),
-                    "companion": state_tracker.get_companion_summary(),
-                    "commitment": state_tracker.get_commitment_summary(),
-                    "protagonist_emotion": state_tracker.get_protagonist_emotion_summary(),
-                    "item_state": state_tracker.get_item_state_summary(),
-                    "plot_suspension": state_tracker.get_plot_suspension_summary(arc_no_for_tracker),
-                    "npc_dialogue_style": state_tracker.get_npc_dialogue_style_summary(),
-                    "relationship_changes": state_tracker.get_relationship_changes_summary(),
-                    "npc_injury": state_tracker.get_npc_injury_summary(),
-                    "npc_movement": state_tracker.get_npc_movement_summary(),
-                    "protagonist_skills": state_tracker.get_protagonist_skills_summary(),
-                    "dead_npc": state_tracker.get_dead_npc_summary(),
-                }
-                if s4_genre_type == "hunter":
-                    fallback_summary_map.update(
-                        {
-                            "dungeon_clear": state_tracker.get_dungeon_clear_summary(),
-                            "skill_cooldown": state_tracker.get_skill_cooldown_summary(),
-                        }
-                    )
-                elif s4_genre_type == "fantasy":
-                    fallback_summary_map.update(
-                        {
-                            "spell_repertoire": state_tracker.get_spell_repertoire_summary(),
-                            "blessing_curse": state_tracker.get_blessing_curse_summary(),
-                        }
-                    )
-                elif s4_genre_type == "actor":
-                    fallback_summary_map["filmography"] = state_tracker.get_filmography_summary()
-
-                filtered_summaries, suppressed_summaries = self._filter_state_tracker_summaries_for_authority(
-                    fallback_summary_map
-                )
-                authority_note = self._build_state_tracker_authority_note(suppressed_summaries)
-                if authority_note:
-                    tier2_parts.append(authority_note)
-                fallback_summaries = self._prioritize_summaries_by_work_focus(
-                    list(filtered_summaries.values()),
-                    work_focus,
-                )
-                for summary in fallback_summaries:
-                    if summary:
-                        tier2_parts.append(summary)
-
-        try:
-            arc_summaries = []
-            current_arc_no = arc_data.get("arc_no", 1) if arc_data else 1
-            for prev_arc in range(max(1, current_arc_no - 3), current_arc_no):
-                arc_summary = self.ctx.current_project.load_v20_anchor(f"arc_summary_{prev_arc}")
-                if arc_summary and isinstance(arc_summary, dict):
-                    arc_summaries.append(arc_summary)
-            if arc_summaries and state_tracker:
-                arc_summary_text = state_tracker.format_arc_summary_for_prompt(arc_summaries)
-                if arc_summary_text:
-                    tier2_parts.append(arc_summary_text)
-        except Exception as arc_summary_err:
-            self.ctx.ui.log(f"   ⚠️ [V66] Arc 요약 주입 실패 (비치명): {arc_summary_err}")
-
-        try:
-            ext_lookback = self.build_extended_lookback_digest(next_ep)
-            if ext_lookback:
-                tier2_parts.append(ext_lookback)
-        except Exception as ext_lookback_err:
-            self.ctx.ui.log(f"   ⚠️ 확장 Lookback 실패 (비치명): {ext_lookback_err}")
-
-        try:
-            if v50_modules_available and self.ctx.foreshadow_tracker:
-                foreshadow_prompt = self.ctx.foreshadow_tracker.generate_writer_prompt(next_ep)
-                if foreshadow_prompt:
-                    tier2_parts.append(foreshadow_prompt)
-        except Exception as foreshadow_err:
-            self.ctx.ui.log(f"   ⚠️ ForeshadowTracker 프롬프트 실패 (비치명): {foreshadow_err}")
-
-        if self.ctx.semantic_plot_guard:
-            try:
-                tactical_text = arc_data.get("tactical_doc", "") if arc_data else ""
-                if isinstance(tactical_text, dict):
-                    tactical_text = str(tactical_text)
-                semantic_plot_guard_warnings = self.ctx.semantic_plot_guard.check_new_arc(tactical_doc=tactical_text)
-                if semantic_plot_guard_warnings:
-                    semantic_plot_guard_text = self.ctx.semantic_plot_guard.format_warnings(semantic_plot_guard_warnings)
-                    if semantic_plot_guard_text:
-                        tier2_parts.append(semantic_plot_guard_text)
-            except Exception as semantic_guard_err:
-                logging.warning(
-                    f"[SilentPass:ContextBuilder] SemanticPlotGuard 경고 주입 실패: {semantic_guard_err!s:.100}"
-                )
-
-        if pacing_analyzer and prev_text and len(prev_text) >= 100:
-            try:
-                pacing_result = pacing_analyzer.analyze(prev_text)
-                pacing_prompt = pacing_analyzer.generate_pacing_prompt(pacing_result)
-                if pacing_prompt:
-                    tier2_parts.append(pacing_prompt)
-            except Exception as pace_err:
-                self.ctx.ui.log(f"   ⚠️ [V65] 페이싱 분석 실패 (비치명): {str(pace_err)[:60]}")
-
-        try:
-            narrative_summaries = self.ctx.load_narrative_summaries()
-            if narrative_summaries:
-                tier2_parts.append(narrative_summaries)
-        except Exception as narrative_summary_err:
-            self.ctx.ui.log(f"   ⚠️ [V64.P4] 내러티브 요약 로드 실패 (비치명): {str(narrative_summary_err)[:60]}")
-
-        future_context = self._build_future_arc_context(next_ep, arc_data)
-        if future_context:
-            tier2_parts.append(future_context)
-
-        return {
-            "tier1_parts": tier1_parts,
-            "tier2_parts": tier2_parts,
-        }
-
     def _build_prev_manuscripts_text(self, next_ep: int) -> str:
         _db = self.ctx.current_project.db
         _prev_manuscripts_parts: list[str] = []
@@ -2641,6 +2026,28 @@ class Stage4ContextBuilder:
 
     def prepare_episode_context(self, next_ep: int, arc_data: dict, chief_writer) -> dict:
         """에피소드별 컨텍스트 데이터 수집 (Arc 메타 + 이전 원고 + HUD + 연결고리)."""
+        base_payload = self._build_episode_base_payload(
+            next_ep=next_ep,
+            arc_data=arc_data,
+            chief_writer=chief_writer,
+            db=self.ctx.current_project.db,
+        )
+
+        state_payload = self._build_episode_state_payload(next_ep=next_ep, db=self.ctx.current_project.db)
+
+        return {
+            **base_payload,
+            **state_payload,
+        }
+
+    def _build_episode_base_payload(
+        self,
+        *,
+        next_ep: int,
+        arc_data: dict,
+        chief_writer,
+        db,
+    ) -> Stage4EpisodeBasePayload:
         arc_pos = next_ep - arc_data.get("ep_start", next_ep) + 1
         total_ep_in_arc = arc_data.get("ep_count", Stage2Limits.DEFAULT_EP_COUNT)
         arc_tactical = arc_data.get("tactical_doc", "")
@@ -2648,126 +2055,119 @@ class Stage4ContextBuilder:
             arc_tactical = json.dumps(arc_tactical, ensure_ascii=False)
         arc_tactical = str(arc_tactical) if arc_tactical else ""
 
-        # 직전 화 원고
-        prev_ms_data = self.ctx.current_project.db.get_manuscript(next_ep - 1)
+        prev_ms_data = db.get_manuscript(next_ep - 1)
         prev_text = (prev_ms_data.get("content") or "") if prev_ms_data else ""  # [V70] NULL content 방어
         prev_ending = prev_text[-2500:] if prev_text else ""  # [1M-CTX: 500→2500] CW와 동일 수준
 
-        _db = self.ctx.current_project.db
-        _prev_manuscripts_text = self._build_prev_manuscripts_text(next_ep)
-
-        # [LongTerm] 60화 이상 시 장기 설정 앵커 주입 (세계관 법칙 + NPC origin)
+        prev_manuscripts_text = self._build_prev_manuscripts_text(next_ep)
         if next_ep >= 60:
             try:
-                _ws = getattr(self.ctx, "world_state", None)
-                if _ws and hasattr(_ws, "get_long_term_anchor"):
-                    _lt_anchor = _ws.get_long_term_anchor(current_ep=next_ep)
-                    if _lt_anchor:
-                        _prev_manuscripts_text = (
-                            _lt_anchor + "\n\n---\n\n" + _prev_manuscripts_text
-                            if _prev_manuscripts_text
-                            else _lt_anchor
+                world_state = getattr(self.ctx, "world_state", None)
+                if world_state and hasattr(world_state, "get_long_term_anchor"):
+                    long_term_anchor = world_state.get_long_term_anchor(current_ep=next_ep)
+                    if long_term_anchor:
+                        prev_manuscripts_text = (
+                            long_term_anchor + "\n\n---\n\n" + prev_manuscripts_text
+                            if prev_manuscripts_text
+                            else long_term_anchor
                         )
-                        logging.info("[LongTerm] 장기 설정 앵커 주입 (ep%d, %d자)", next_ep, len(_lt_anchor))
-            except Exception as _lt_err:
-                logging.debug("[LongTerm] 장기 설정 앵커 주입 실패 (비차단): %s", _lt_err)
+                        logging.info("[LongTerm] 장기 설정 앵커 주입 (ep%d, %d자)", next_ep, len(long_term_anchor))
+            except Exception as long_term_err:
+                logging.debug("[LongTerm] 장기 설정 앵커 주입 실패 (비차단): %s", long_term_err)
 
-        # [V62.6] 에피소드 상태 다이제스트
-        _episode_digest = ""
-        if prev_text and hasattr(chief_writer, "_generate_episode_digest"):
-            _episode_digest = chief_writer._generate_episode_digest(prev_text, next_ep - 1)
+        episode_digest = self._build_episode_digest(
+            prev_text=prev_text,
+            next_ep=next_ep,
+            chief_writer=chief_writer,
+        )
+        return Stage4EpisodeBasePayload(
+            arc_pos=arc_pos,
+            total_ep_in_arc=total_ep_in_arc,
+            arc_tactical=arc_tactical,
+            prev_text=prev_text,
+            prev_ending=prev_ending,
+            prev_manuscripts_text=prev_manuscripts_text,
+            episode_digest=episode_digest,
+        )
 
-        # [V74] HUD 자본금 스냅샷 (투자물 전용)
-        try:
-            if hasattr(self.ctx, "sys") and self.ctx.sys and hasattr(self.ctx.sys, "hud") and self.ctx.sys.hud:
-                from modules.core.genre_hud_manager import FinanceHUDManager
+    def _build_episode_state_payload(self, *, next_ep: int, db) -> Stage4EpisodeStatePayload:
+        hud = self.ctx.sys.hud if hasattr(self.ctx.sys, "hud") and self.ctx.sys.hud else None
+        hud_report = hud.get_v20_hud_report() if hud else ""
 
-                if isinstance(self.ctx.sys.hud, FinanceHUDManager):
-                    _hud_cap = self.ctx.sys.hud.pro_data.get("capital", "")
-                    _hud_total = self.ctx.sys.hud.pro_data.get("total_assets", "")
-                    _hud_parts = []
-                    if _hud_cap:
-                        _hud_parts.append(f"HUD 확정 자본: {_hud_cap}")
-                    if _hud_total:
-                        _hud_parts.append(f"HUD 총자산: {_hud_total}")
-                    if _hud_parts:
-                        _snapshot = "\n".join(f"- {p}" for p in _hud_parts)
-                        _episode_digest = (
-                            (_episode_digest + f"\n{_snapshot}")
-                            if _episode_digest
-                            else f"[HUD 금융 스냅샷]\n{_snapshot}"
-                        )
-        except Exception as _hud_err:
-            logging.warning("[SilentPass:V74] HUD 스냅샷 주입 실패: %s", _hud_err)
-
-        # HUD 리포트
-        hud_report = self.ctx.sys.hud.get_v20_hud_report() if hasattr(self.ctx.sys, "hud") and self.ctx.sys.hud else ""
-
-        # ===== [V60.80 FIX] 미래 침범 방지 데이터 추출 =====
-        current_inventory = []
-        current_martial_arts = []
-        if hasattr(self.ctx.sys, "hud") and self.ctx.sys.hud:
-            current_inventory = (
-                list(self.ctx.sys.hud.inventory)
-                if hasattr(self.ctx.sys.hud, "inventory") and self.ctx.sys.hud.inventory
-                else []
-            )
-            current_martial_arts = (
-                list(self.ctx.sys.hud.techniques)
-                if hasattr(self.ctx.sys.hud, "techniques") and self.ctx.sys.hud.techniques
-                else []
-            )
+        current_inventory: list[Any] = []
+        current_martial_arts: list[Any] = []
+        if hud:
+            current_inventory = list(hud.inventory) if hasattr(hud, "inventory") and hud.inventory else []
+            current_martial_arts = list(hud.techniques) if hasattr(hud, "techniques") and hud.techniques else []
 
         # [S4-P2-6] dead_npcs만 필요하지만 개별 쿼리 없음 — DBManager 내부 캐시(_cumulative_bible_cache)로 반복 로드 무비용
-        cumulative_bible = self.ctx.current_project.db.get_cumulative_bible(next_ep - 1)
+        cumulative_bible = db.get_cumulative_bible(next_ep - 1)
         dead_npcs = cumulative_bible.get("dead_npcs", []) if cumulative_bible else []
         if isinstance(dead_npcs, str):
             dead_npcs = [dead_npcs]  # LLM이 단일 문자열 반환 시 리스트화
 
         item_acquisition_timeline = self.ctx.build_item_acquisition_timeline(next_ep - 1)
 
-        # [V68] 직전 화 연결고리 로드
-        _chain_link_section = self.load_chain_link_section(next_ep)
-        if _chain_link_section:
-            logging.info(f"[V68] 직전 화 연결고리 로드 완료 ({len(_chain_link_section)}자)")
+        chain_link_section = self.load_chain_link_section(next_ep)
+        if chain_link_section:
+            logging.info(f"[V68] 직전 화 연결고리 로드 완료 ({len(chain_link_section)}자)")
 
-        # [V68] 세계 상태 요약 로드 (ChiefWriter 프롬프트 주입용)
-        _world_state_summary = ""
+        world_state_summary = ""
         if self.ctx.world_state:
             try:
-                _world_state_summary = self.ctx.world_state.get_summary(max_chars=50000)
+                world_state_summary = self.ctx.world_state.get_summary(max_chars=50000)
             except Exception as e:
                 logging.warning(f"[SilentPass:ContextBuilder] WorldState 요약 로드 실패: {e!s:.100}")
 
-        # [NC-2 GAP-1] 직전 3화 씬 키워드 수집 (씬 유사도 advisory용)
-        _recent_scene_keywords: list[dict] = []
+        recent_scene_keywords: list[dict[str, Any]] = []
         try:
-            _recent_scene_keywords = self._collect_recent_scene_keywords(
-                _db,
+            recent_scene_keywords = self._collect_recent_scene_keywords(
+                db,
                 next_ep,
                 lookback=3,
             )
-        except Exception as _sk_err:
-            logging.debug("[NC-2] 씬 키워드 수집 실패 (비치명): %s", _sk_err)
+        except Exception as scene_keywords_err:
+            logging.debug("[NC-2] 씬 키워드 수집 실패 (비치명): %s", scene_keywords_err)
 
-        return {
-            "arc_pos": arc_pos,
-            "total_ep_in_arc": total_ep_in_arc,
-            "arc_tactical": arc_tactical,
-            "prev_text": prev_text,
-            "prev_ending": prev_ending,
-            "prev_manuscripts_text": _prev_manuscripts_text,
-            "episode_digest": _episode_digest,
-            "hud_report": hud_report,
-            "current_inventory": current_inventory,
-            "current_martial_arts": current_martial_arts,
-            "cumulative_bible": cumulative_bible,
-            "dead_npcs": dead_npcs,
-            "item_acquisition_timeline": item_acquisition_timeline,
-            "chain_link_section": _chain_link_section,
-            "world_state_summary": _world_state_summary,
-            "recent_scene_keywords": _recent_scene_keywords,  # [NC-2 GAP-1]
-        }
+        return Stage4EpisodeStatePayload(
+            hud_report=hud_report,
+            current_inventory=current_inventory,
+            current_martial_arts=current_martial_arts,
+            cumulative_bible=cumulative_bible,
+            dead_npcs=dead_npcs,
+            item_acquisition_timeline=item_acquisition_timeline,
+            chain_link_section=chain_link_section,
+            world_state_summary=world_state_summary,
+            recent_scene_keywords=recent_scene_keywords,
+        )
+
+    def _build_episode_digest(self, *, prev_text: str, next_ep: int, chief_writer) -> str:
+        episode_digest = ""
+        if prev_text and hasattr(chief_writer, "_generate_episode_digest"):
+            episode_digest = chief_writer._generate_episode_digest(prev_text, next_ep - 1)
+
+        try:
+            if hasattr(self.ctx, "sys") and self.ctx.sys and hasattr(self.ctx.sys, "hud") and self.ctx.sys.hud:
+                from modules.core.genre_hud_manager import FinanceHUDManager
+
+                if isinstance(self.ctx.sys.hud, FinanceHUDManager):
+                    hud_cap = self.ctx.sys.hud.pro_data.get("capital", "")
+                    hud_total = self.ctx.sys.hud.pro_data.get("total_assets", "")
+                    hud_parts = []
+                    if hud_cap:
+                        hud_parts.append(f"HUD 확정 자본: {hud_cap}")
+                    if hud_total:
+                        hud_parts.append(f"HUD 총자산: {hud_total}")
+                    if hud_parts:
+                        snapshot = "\n".join(f"- {part}" for part in hud_parts)
+                        episode_digest = (
+                            (episode_digest + f"\n{snapshot}")
+                            if episode_digest
+                            else f"[HUD 금융 스냅샷]\n{snapshot}"
+                        )
+        except Exception as hud_err:
+            logging.warning("[SilentPass:V74] HUD 스냅샷 주입 실패: %s", hud_err)
+        return episode_digest
 
     # ── [NC-2 GAP-1] 씬 유사도 분석 유틸 ──────────────────────────
 
@@ -2895,24 +2295,54 @@ class Stage4ContextBuilder:
         v50_modules_available: bool,
         blueprint: dict | None = None,
         pacing_analyzer=None,
-    ) -> dict:
+    ) -> Stage4MandatoryContextPayload:
         """[4-R1-b] mandatory_context + writer prompt 조립을 분리 (동작 변화 없음)."""
-        reference_anchor_prompt = ""
-        mandatory_context = ""
-        anti_trope_prompt = ""
-        justification_prompt = ""
-        reflexion_prompt = ""
         genre_name = (getattr(self.ctx.current_project, "genre", None) or {}).get("name", "무협")
 
         if writer_agent is None:
-            return {
-                "reference_anchor_prompt": reference_anchor_prompt,
-                "mandatory_context": mandatory_context,
-                "anti_trope_prompt": anti_trope_prompt,
-                "justification_prompt": justification_prompt,
-                "reflexion_prompt": reflexion_prompt,
-            }
+            return self._build_empty_mandatory_context_payload()
 
+        return self._build_mandatory_context_payload(
+            next_ep=next_ep,
+            arc_data=arc_data,
+            arc_tactical=arc_tactical,
+            prev_ending=prev_ending,
+            prev_text=prev_text,
+            hud_report=hud_report,
+            anchor_sys=anchor_sys,
+            genre_name=genre_name,
+            blueprint=blueprint,
+            s4_genre_type=s4_genre_type,
+            v50_modules_available=v50_modules_available,
+            pacing_analyzer=pacing_analyzer,
+        )
+
+    @staticmethod
+    def _build_empty_mandatory_context_payload() -> Stage4MandatoryContextPayload:
+        return Stage4ContextBuilder._build_mandatory_context_result_payload(
+            reference_anchor_prompt="",
+            mandatory_context="",
+            anti_trope_prompt="",
+            justification_prompt="",
+            reflexion_prompt="",
+        )
+
+    def _build_mandatory_context_payload(
+        self,
+        *,
+        next_ep: int,
+        arc_data: dict,
+        arc_tactical: str,
+        prev_ending: str,
+        prev_text: str,
+        hud_report: str,
+        anchor_sys,
+        genre_name: str,
+        blueprint: dict | None,
+        s4_genre_type: str,
+        v50_modules_available: bool,
+        pacing_analyzer=None,
+    ) -> Stage4MandatoryContextPayload:
         reference_anchor_prompt = self._load_reference_anchor_prompt(
             anchor_sys=anchor_sys,
             next_ep=next_ep,
@@ -2920,18 +2350,14 @@ class Stage4ContextBuilder:
         )
 
         mandatory_context = self._load_base_mandatory_context(next_ep=next_ep)
-        _seed = self._build_mandatory_context_seed(
+        seed = self._build_mandatory_context_seed(
             arc_data=arc_data,
             arc_tactical=arc_tactical,
             prev_ending=prev_ending,
             blueprint=blueprint,
             mandatory_context=mandatory_context,
         )
-        cp_entities = _seed["cp_entities"]
-        _work_focus = _seed["work_focus"]
-        _tier0_parts = _seed["tier0_parts"]
-        _slot_summary = _seed["slot_summary"]
-        _tier_aux: Stage4AuxiliarySectionsPayload = self._build_tier12_auxiliary_sections(
+        context_result = self._build_mandatory_context_retrieval_coverage(
             next_ep=next_ep,
             arc_data=arc_data,
             blueprint=blueprint,
@@ -2939,51 +2365,37 @@ class Stage4ContextBuilder:
             v50_modules_available=v50_modules_available,
             pacing_analyzer=pacing_analyzer,
             prev_text=prev_text,
-            work_focus=_work_focus,
-            slot_summary=_slot_summary,
-        )
-        _tier1_parts = _tier_aux["tier1_parts"]
-        _tier2_parts = _tier_aux["tier2_parts"]
-
-        _retrieval_result: Stage4RetrievalContextPayload = self._collect_stage4_retrieval_context(
-            next_ep=next_ep,
-            arc_data=arc_data,
             prev_ending=prev_ending,
             arc_tactical=arc_tactical,
-            blueprint=blueprint,
-            s4_genre_type=s4_genre_type,
-            work_focus=_work_focus,
-            tier1_parts=_tier1_parts,
+            work_focus=seed["work_focus"],
+            tier0_parts=seed["tier0_parts"],
+            slot_summary=seed["slot_summary"],
         )
-        _retrieval_plan = _retrieval_result["retrieval_plan"]
-        _sc_parts = _retrieval_result["sc_parts"]
-        _tier1_parts = _retrieval_result["tier1_parts"]
-
-        _context_result: Stage4RetrievalCoveragePayload = self._compose_context_with_retrieval_coverage(
-            next_ep=next_ep,
-            work_focus=_work_focus,
-            retrieval_plan=_retrieval_plan,
-            tier0_parts=_tier0_parts,
-            tier1_parts=_tier1_parts,
-            sc_parts=_sc_parts,
-            tier2_parts=_tier2_parts,
-            slot_summary=_slot_summary,
-        )
-        mandatory_context = _context_result["mandatory_context"]
-        _coverage_warnings = _context_result["coverage_warnings"]
-        _source_counts = _context_result["source_counts"]
-        _tier2_parts = _context_result["tier2_parts"]
-        _prompt_injections = self._build_mandatory_prompt_injections(
+        prompt_injections = self._build_mandatory_prompt_injections(
             next_ep=next_ep,
             hud_report=hud_report,
             genre_name=genre_name,
             blueprint=blueprint,
             prev_text=prev_text,
         )
-        anti_trope_prompt = _prompt_injections["anti_trope_prompt"]
-        justification_prompt = _prompt_injections["justification_prompt"]
-        reflexion_prompt = _prompt_injections["reflexion_prompt"]
 
+        return self._build_mandatory_context_result_payload(
+            reference_anchor_prompt=reference_anchor_prompt,
+            mandatory_context=context_result["mandatory_context"],
+            anti_trope_prompt=prompt_injections["anti_trope_prompt"],
+            justification_prompt=prompt_injections["justification_prompt"],
+            reflexion_prompt=prompt_injections["reflexion_prompt"],
+        )
+
+    @staticmethod
+    def _build_mandatory_context_result_payload(
+        *,
+        reference_anchor_prompt: str,
+        mandatory_context: str,
+        anti_trope_prompt: str,
+        justification_prompt: str,
+        reflexion_prompt: str,
+    ) -> Stage4MandatoryContextPayload:
         return {
             "reference_anchor_prompt": reference_anchor_prompt,
             "mandatory_context": mandatory_context,
@@ -3038,12 +2450,10 @@ class Stage4ContextBuilder:
         blueprint: dict | None,
         mandatory_context: str,
     ) -> Stage4MandatoryContextSeedPayload:
-        cp_entities = {"npcs": [], "items": [], "plots": [], "locations": [], "_full_text": ""}
-        if blueprint:
-            try:
-                cp_entities = self._extract_blueprint_entities(blueprint, arc_data=arc_data)
-            except Exception as cp_entity_err:
-                logging.debug("[CP] blueprint entity 추출 실패 (비치명): %s", cp_entity_err)
+        cp_entities = self._resolve_mandatory_context_cp_entities(
+            blueprint=blueprint,
+            arc_data=arc_data,
+        )
 
         work_focus: WorkRetrievalFocusPayload = self._resolve_work_retrieval_focus(
             stage="manuscript",
@@ -3071,6 +2481,73 @@ class Stage4ContextBuilder:
             "slot_summary": slot_summary,
         }
 
+    def _resolve_mandatory_context_cp_entities(
+        self,
+        *,
+        blueprint: dict | None,
+        arc_data: dict,
+    ) -> dict:
+        cp_entities = {"npcs": [], "items": [], "plots": [], "locations": [], "_full_text": ""}
+        if not blueprint:
+            return cp_entities
+
+        try:
+            return self._extract_blueprint_entities(blueprint, arc_data=arc_data)
+        except Exception as cp_entity_err:
+            logging.debug("[CP] blueprint entity 추출 실패 (비치명): %s", cp_entity_err)
+            return cp_entities
+
+    def _build_mandatory_context_retrieval_coverage(
+        self,
+        *,
+        next_ep: int,
+        arc_data: dict,
+        blueprint: dict | None,
+        s4_genre_type: str,
+        v50_modules_available: bool,
+        pacing_analyzer,
+        prev_text: str,
+        prev_ending: str,
+        arc_tactical: str,
+        work_focus: WorkRetrievalFocusPayload,
+        tier0_parts: list[str],
+        slot_summary: str,
+    ) -> Stage4RetrievalCoveragePayload:
+        tier_aux: Stage4AuxiliarySectionsPayload = self.context_packets.build_tier12_auxiliary_sections(
+            next_ep=next_ep,
+            arc_data=arc_data,
+            blueprint=blueprint,
+            s4_genre_type=s4_genre_type,
+            v50_modules_available=v50_modules_available,
+            pacing_analyzer=pacing_analyzer,
+            prev_text=prev_text,
+            work_focus=work_focus,
+            slot_summary=slot_summary,
+        )
+        tier1_parts = tier_aux["tier1_parts"]
+        tier2_parts = tier_aux["tier2_parts"]
+
+        retrieval_result: Stage4RetrievalContextPayload = self._collect_stage4_retrieval_context(
+            next_ep=next_ep,
+            arc_data=arc_data,
+            prev_ending=prev_ending,
+            arc_tactical=arc_tactical,
+            blueprint=blueprint,
+            s4_genre_type=s4_genre_type,
+            work_focus=work_focus,
+            tier1_parts=tier1_parts,
+        )
+        return self._compose_context_with_retrieval_coverage(
+            next_ep=next_ep,
+            work_focus=work_focus,
+            retrieval_plan=retrieval_result["retrieval_plan"],
+            tier0_parts=tier0_parts,
+            tier1_parts=retrieval_result["tier1_parts"],
+            sc_parts=retrieval_result["sc_parts"],
+            tier2_parts=tier2_parts,
+            slot_summary=slot_summary,
+        )
+
     def _build_mandatory_prompt_injections(
         self,
         *,
@@ -3080,9 +2557,46 @@ class Stage4ContextBuilder:
         blueprint: dict | None,
         prev_text: str,
     ) -> Stage4PromptInjectionsPayload:
+        base_prompts = self._build_mandatory_prompt_bases(
+            hud_report=hud_report,
+            genre_name=genre_name,
+        )
+        reflexion_prompt = ""
+
+        justification_prompt = self._append_writer_guidance_prompt(
+            justification_prompt=base_prompts["justification_prompt"],
+            blueprint=blueprint,
+            prev_text=prev_text,
+        )
+        reflexion_prompt = self._load_reflexion_prompt(next_ep=next_ep)
+
+        return self._build_mandatory_prompt_payload(
+            anti_trope_prompt=base_prompts["anti_trope_prompt"],
+            justification_prompt=justification_prompt,
+            reflexion_prompt=reflexion_prompt,
+        )
+
+    @staticmethod
+    def _build_mandatory_prompt_payload(
+        *,
+        anti_trope_prompt: str,
+        justification_prompt: str,
+        reflexion_prompt: str,
+    ) -> Stage4PromptInjectionsPayload:
+        return {
+            "anti_trope_prompt": anti_trope_prompt,
+            "justification_prompt": justification_prompt,
+            "reflexion_prompt": reflexion_prompt,
+        }
+
+    def _build_mandatory_prompt_bases(
+        self,
+        *,
+        hud_report: str,
+        genre_name: str,
+    ) -> Stage4PromptBasesPayload:
         anti_trope_prompt = ""
         justification_prompt = ""
-        reflexion_prompt = ""
 
         try:
             anti_trope_prompt = _build_anti_trope(genre_name)
@@ -3094,6 +2608,18 @@ class Stage4ContextBuilder:
         except Exception as e:
             self.ctx.ui.log(f"   ⚠️ Justification 실패 (비치명): {e}")
 
+        return Stage4PromptBasesPayload(
+            anti_trope_prompt=anti_trope_prompt,
+            justification_prompt=justification_prompt,
+        )
+
+    def _append_writer_guidance_prompt(
+        self,
+        *,
+        justification_prompt: str,
+        blueprint: dict | None,
+        prev_text: str,
+    ) -> str:
         writer_guidance_callback = None
         try:
             inspect.getattr_static(self.ctx, "generate_writer_guidance_v60_8")
@@ -3101,36 +2627,38 @@ class Stage4ContextBuilder:
             writer_guidance_callback = None
         else:
             writer_guidance_callback = getattr(self.ctx, "generate_writer_guidance_v60_8", None)
-        if callable(writer_guidance_callback):
-            try:
-                writer_guidance = writer_guidance_callback(
-                    blueprint=blueprint or {},
-                    prev_manuscript=prev_text or "",
-                )
-                if writer_guidance:
-                    guidance_block = f"[Writer Guidance]\n{writer_guidance}"
-                    justification_prompt = (
-                        f"{justification_prompt}\n\n{guidance_block}".strip()
-                        if justification_prompt
-                        else guidance_block
-                    )
-            except Exception as writer_guidance_err:
-                self.ctx.ui.log(f"   ⚠️ Writer guidance 실패 (비치명): {writer_guidance_err}")
+
+        if not callable(writer_guidance_callback):
+            return justification_prompt
 
         try:
-            if next_ep >= 20:
-                from modules.core.reflexion_manager import ReflexionManager
+            writer_guidance = writer_guidance_callback(
+                blueprint=blueprint or {},
+                prev_manuscript=prev_text or "",
+            )
+            if not writer_guidance:
+                return justification_prompt
+            guidance_block = f"[Writer Guidance]\n{writer_guidance}"
+            return (
+                f"{justification_prompt}\n\n{guidance_block}".strip()
+                if justification_prompt
+                else guidance_block
+            )
+        except Exception as writer_guidance_err:
+            self.ctx.ui.log(f"   ⚠️ Writer guidance 실패 (비치명): {writer_guidance_err}")
+            return justification_prompt
 
-                reflexion = ReflexionManager(self.ctx.current_project)
-                reflexion_prompt = reflexion.get_prompt_injection(min_frequency=2)
+    def _load_reflexion_prompt(self, *, next_ep: int) -> str:
+        if next_ep < 20:
+            return ""
+        try:
+            from modules.core.reflexion_manager import ReflexionManager
+
+            reflexion = ReflexionManager(self.ctx.current_project)
+            return reflexion.get_prompt_injection(min_frequency=2)
         except Exception as e:
             self.ctx.ui.log(f"   ⚠️ Reflexion 실패 (비치명): {e}")
-
-        return {
-            "anti_trope_prompt": anti_trope_prompt,
-            "justification_prompt": justification_prompt,
-            "reflexion_prompt": reflexion_prompt,
-        }
+            return ""
 
     def build_round_context(
         self,

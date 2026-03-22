@@ -3,9 +3,11 @@
 import json
 import logging
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 from modules.core.stage4_orchestrator import Stage4Orchestrator
+from modules.core.stage4_post_pass_runtime import Stage4PostPassRuntime
 from modules.core.stage4_post_processor import Stage4PostProcessor
 
 
@@ -14,6 +16,8 @@ class TestPostProcessorInit:
         ctx = MagicMock()
         pp = Stage4PostProcessor(ctx)
         assert pp.ctx is ctx
+        assert isinstance(pp.post_pass_runtime, Stage4PostPassRuntime)
+        assert pp.post_pass_runtime.owner is pp
 
     def test_lazy_init_via_orchestrator(self):
         app = MagicMock()
@@ -212,6 +216,224 @@ class TestProcessPassResult:
         assert saved_signals["ced_score"] > 0
         assert saved_signals["ai_slop_score"] > 0
 
+    def test_save_pass_result_primary_db_returns_false_and_writes_dump(self, tmp_path):
+        pp = self._make_pp()
+        pp.ctx.current_project.db.save_manuscript.side_effect = RuntimeError("db down")
+
+        result = pp._save_pass_result_primary_db(
+            next_ep=3,
+            final_manuscript="test manuscript",
+            final_title="episode title",
+            final_state_updates={},
+            output_dir=tmp_path,
+        )
+
+        assert result is False
+        dump_path = tmp_path / "emergency_ep_0003.txt"
+        assert dump_path.exists()
+        assert "test manuscript" in dump_path.read_text(encoding="utf-8")
+
+    def test_save_pass_result_quality_sidecars_returns_signal_bundle(self):
+        pp = self._make_pp()
+
+        quality_signals = pp._save_pass_result_quality_sidecars(
+            next_ep=4,
+            final_manuscript="coherent manuscript body " * 60,
+            final_state_updates={"warnings": ["short warning"]},
+            quality_labels={
+                "score": 95,
+                "verdict": "PASS",
+                "consistency_checklist": {"scene_variety": "ISSUE"},
+            },
+        )
+
+        assert quality_signals["ced_score"] > 0
+        pp.ctx.current_project.db.save_episode_quality_label.assert_called_once()
+        pp.ctx.current_project.db.save_episode_quality_signal.assert_called_once()
+
+    def test_run_pass_result_local_side_effects_updates_hud_writes_file_and_runs_summary(self, tmp_path):
+        pp = self._make_pp()
+        pp.ctx.agents["director"].on_approve_workflow.return_value = {"applied_updates": {"hp": 77}}
+        pp._reconcile_capital = MagicMock()
+
+        pp._run_pass_result_local_side_effects(
+            next_ep=5,
+            final_manuscript="test manuscript",
+            final_title="episode title",
+            final_state_updates={"hp": 77},
+            output_dir=tmp_path,
+            v50_modules_available=False,
+        )
+
+        pp.ctx.sys.hud.bulk_update.assert_called_once_with({"hp": 77})
+        pp.ctx.generate_narrative_summary.assert_called_once_with(5)
+        pp._reconcile_capital.assert_called_once_with("test manuscript", 5, final_state_updates={"hp": 77})
+        assert (tmp_path / "ep_0005.txt").exists()
+
+    def test_run_pass_result_post_pass_pipeline_delegates_to_runtime(self):
+        pp = self._make_pp()
+        pp.post_pass_runtime._submit_manager_async = MagicMock(
+            return_value={
+                "bible_future": None,
+                "current_state": {"state": "snapshot"},
+                "lore_list": ["lore"],
+                "active_seeds": ["seed-1"],
+                "causal_history": "history",
+            }
+        )
+        pp.post_pass_runtime._memorize_and_validate = MagicMock()
+        pp.post_pass_runtime._collect_manager_and_build_delta = MagicMock(
+            return_value={
+                "bible_delta": {"relationship_changes": []},
+                "actual_truth": {"location": "gate"},
+                "meta_save_failed": True,
+            }
+        )
+        pp.post_pass_runtime._save_world_state_atomic = MagicMock()
+        pp.post_pass_runtime._run_post_pass_advisories = MagicMock()
+
+        result = pp._run_pass_result_post_pass_pipeline(
+            next_ep=6,
+            final_manuscript="test manuscript",
+            final_title="episode title",
+            final_state_updates={"hp": 10},
+            blueprint={"scene_breakdown": []},
+            arc_data={"arc_no": 2},
+            extract_chain_link_fn=lambda *_args, **_kwargs: {"cliffhanger": "next hook"},
+            quality_labels={"score": 94},
+            quality_signals={"ced_score": 0.5},
+            detect_npc_overexposure_fn=lambda *_args, **_kwargs: None,
+            detect_cross_episode_repetition_fn=lambda *_args, **_kwargs: None,
+            v50_modules_available=False,
+        )
+
+        assert result == {"actual_truth": {"location": "gate"}, "meta_save_failed": True}
+        pp.ctx.current_project.db.save_anchor.assert_called_once_with("chain_link_6", {"cliffhanger": "next hook"})
+        pp.post_pass_runtime._save_world_state_atomic.assert_called_once_with(
+            next_ep=6,
+            final_state_updates={"hp": 10},
+            bible_delta={"relationship_changes": []},
+        )
+        pp.post_pass_runtime._run_post_pass_advisories.assert_called_once()
+
+    def test_finalize_pass_result_session_saves_costs_and_flushes(self):
+        pp = self._make_pp()
+        collector = MagicMock()
+        collector.session_id = "sess_ep"
+        collector.snapshot_and_reset_scope.return_value = {
+            "total_calls": 2,
+            "total_tokens": 1800,
+            "total_cost_usd": 0.017,
+            "model_breakdown": "{\"gpt\": 2}",
+        }
+
+        with patch("modules.core.stage4_post_processor.get_metrics_collector", return_value=collector):
+            pp._finalize_pass_result_session(
+                next_ep=8,
+                final_title="episode title",
+                final_manuscript="test manuscript " * 200,
+                arc_data={"arc_no": 3},
+            )
+
+        pp.ctx.current_project.db.save_cost_record.assert_called_once()
+        pp.ctx.flush_audit_buffer.assert_called_once()
+        pp.ctx.perf_timer.log_summary.assert_called_once()
+        pp.ctx.perf_timer.reset.assert_called_once()
+
+    def test_run_post_pass_satisfaction_and_pacing_saves_sidecars(self):
+        pp = self._make_pp()
+        pp.ctx.agents["state_extractor"].extract_satisfaction_tag.return_value = {
+            "primary_tag": "immersive",
+            "satisfaction_score": 9,
+            "protagonist_agency": "high",
+        }
+        pp.ctx.pacing_analyzer = MagicMock()
+        pp.ctx.pacing_analyzer.analyze.return_value = SimpleNamespace(
+            pacing_score=88,
+            dialogue_ratio=0.32,
+            scene_break_count=4,
+            avg_sentence_length=18.4,
+            short_sentence_ratio=0.25,
+            long_sentence_ratio=0.14,
+            issues=["minor pacing dip"],
+        )
+
+        pp.post_pass_runtime._run_post_pass_satisfaction_and_pacing(
+            next_ep=10,
+            final_manuscript="test manuscript " * 120,
+        )
+
+        pp.ctx.current_project.db.save_satisfaction_tag.assert_called_once_with(
+            10,
+            {
+                "primary_tag": "immersive",
+                "satisfaction_score": 9,
+                "protagonist_agency": "high",
+            },
+        )
+        pp.ctx.current_project.db.save_pacing_record.assert_called_once()
+
+    def test_record_post_pass_quality_dashboard_records_coverage_and_regression(self):
+        pp = self._make_pp()
+        pp.ctx.quality_dashboard = MagicMock()
+        pp.ctx.quality_dashboard.detect_score_regression.return_value = {
+            "is_regression": True,
+            "delta": -4,
+            "severity": "warning",
+        }
+        pp.ctx.agents["director"]._validate_blueprint_completeness_v60.return_value = {
+            "valid": False,
+            "scene_coverage": 75.0,
+        }
+
+        pp.post_pass_runtime._record_post_pass_quality_dashboard(
+            next_ep=11,
+            final_manuscript="test manuscript " * 140,
+            blueprint={"scene_breakdown": ["a", "b", "c", "d"]},
+            final_state_updates={"director_score": 92},
+            quality_labels={"score": 94},
+            quality_signals={"ced_score": 0.7},
+        )
+
+        pp.ctx.quality_dashboard.record_blueprint_coverage.assert_called_once()
+        pp.ctx.quality_dashboard.record_validation.assert_called_once()
+        log_calls = [str(call.args[0]) for call in pp.ctx.ui.log.call_args_list if call.args]
+        assert any("품질 회귀" in text for text in log_calls)
+
+    def test_run_post_pass_npc_and_repetition_guards_logs_warnings_and_stores_hashes(self):
+        pp = self._make_pp()
+        pp.ctx.state_tracker = MagicMock()
+        pp.ctx.state_tracker.npc_registry = {"수호": {}, "세령": {}}
+        pp.ctx.current_project.master_bible = {
+            "MasterBible": {
+                "AssetLibrary": {"KeyNPCs": [{"name": "수호"}]},
+            }
+        }
+        pp.ctx.current_project.db.find_repeated_sentence_hashes.return_value = ["hash-1"]
+
+        def _threshold_side_effect(key, default=None):
+            return default
+
+        with patch("modules.validation.threshold_helper._threshold", side_effect=_threshold_side_effect):
+            with patch(
+                "modules.core.repetition_guard.RepetitionGuard.extract_sentence_fingerprints",
+                return_value=[("hash-1", "repeat sentence")],
+            ):
+                pp.post_pass_runtime._run_post_pass_npc_and_repetition_guards(
+                    next_ep=12,
+                    final_manuscript="repeat sentence",
+                    detect_npc_overexposure_fn=lambda *_args, **_kwargs: {"warning": "npc warning"},
+                    detect_cross_episode_repetition_fn=lambda *_args, **_kwargs: {"warning": "repeat warning"},
+                )
+
+        pp.ctx.current_project.db.store_sentence_hashes.assert_called_once_with(
+            12,
+            [("hash-1", "repeat sentence")],
+        )
+        log_calls = [str(call.args[0]) for call in pp.ctx.ui.log.call_args_list if call.args]
+        assert any("npc warning" in text for text in log_calls)
+        assert any("repeat warning" in text for text in log_calls)
+
     def test_chain_link_fn_called(self, tmp_path):
         pp = self._make_pp()
         pp.ctx.current_project.db.save_manuscript.return_value = True
@@ -330,6 +552,179 @@ class TestProcessPassResult:
         _args, _kwargs = pp.ctx.current_project.db.save_episode_bible.call_args
         bible_delta = _args[1]
         assert bible_delta["time_passed"] == "3일"
+
+    def test_resolve_manager_audit_retries_after_future_failure(self):
+        pp = self._make_pp()
+        future = MagicMock()
+        future.result.side_effect = RuntimeError("future boom")
+        future.cancel = MagicMock()
+        expected_audit = {"state_updates": {"location": "무당산"}}
+        pp.ctx.agents["manager"].update_state_and_lore_v20.return_value = expected_audit
+
+        result = pp.post_pass_runtime._resolve_manager_audit(
+            next_ep=7,
+            final_manuscript="후처리 테스트 원고",
+            bible_future=future,
+            current_state={"actual_truth": {}},
+            lore_list=[],
+            active_seeds=[],
+            causal_history="",
+            genre_type="wuxia",
+            critical_keys=["독", "추격"],
+        )
+
+        assert result == expected_audit
+        future.cancel.assert_called_once_with()
+        pp.ctx.agents["manager"].update_state_and_lore_v20.assert_called_once()
+        log_calls = [str(call.args[0]) for call in pp.ctx.ui.log.call_args_list if call.args]
+        assert any("Manager 동기 재시도 성공" in text for text in log_calls)
+
+    def test_prepare_manager_delta_context_normalizes_inventory_and_pressure_vectors(self):
+        pp = self._make_pp()
+        pp.ctx.current_project.latest_state = {
+            "actual_truth": {
+                "inventory_counts": {"은자": 1},
+                "active_pressure_vectors": [{"text": "추격대가 다가온다.", "source": "ending_hook"}],
+            }
+        }
+
+        result = pp.post_pass_runtime._prepare_manager_delta_context(
+            audit={
+                "state_updates": {
+                    "actual_truth": {
+                        "equipment": ["은자 3개", "독수리 비검"],
+                    }
+                }
+            },
+            genre_type="wuxia",
+        )
+
+        assert result["prev_pressure_vectors"][0]["text"] == "추격대가 다가온다."
+        assert result["curr_inventory_counts"] == {"독수리 비검": 1, "은자": 3}
+        assert result["actual_truth"]["inventory_counts"] == {"독수리 비검": 1, "은자": 3}
+        assert {"name": "은자", "from": 1, "to": 3, "delta": 2} in result["inventory_count_deltas"]
+
+    def test_merge_manager_key_npcs_into_master_bible_merges_existing_and_new_entries(self):
+        pp = self._make_pp()
+        pp.ctx.current_project.master_bible = {
+            "MasterBible": {
+                "AssetLibrary": {
+                    "KeyNPCs": [
+                        {"name": "윤호", "role": "문지기"},
+                    ]
+                }
+            }
+        }
+
+        pp.post_pass_runtime._merge_manager_key_npcs_into_master_bible(
+            next_ep=8,
+            key_npcs=[
+                {"name": "윤호", "position": "수문장"},
+                {"name": "서린", "role": "밀사"},
+            ],
+        )
+
+        merged_npcs = pp.ctx.current_project.master_bible["MasterBible"]["AssetLibrary"]["KeyNPCs"]
+        assert merged_npcs[0]["position"] == "수문장"
+        assert any(npc.get("name") == "서린" for npc in merged_npcs)
+
+    def test_build_manager_delta_collections_builds_relationships_deaths_and_reveals(self):
+        pp = self._make_pp()
+        pp.post_pass_runtime._merge_manager_key_npcs_into_master_bible = MagicMock()
+
+        result = pp.post_pass_runtime._build_manager_delta_collections(
+            next_ep=9,
+            key_npcs=[
+                {"name": "윤호", "NPC_Martial_HUD": {"current_status": "사망"}},
+                {"name": "서린", "NPC_Martial_HUD": {"current_status": "생존"}},
+            ],
+            knowledge_map={"new_witnesses": ["윤호"], "new_misled": ["서린"]},
+            state_updates_from_audit={
+                "karma_matrix": [
+                    {"target": "서린", "obsession": 80, "value": 20},
+                    {"target": "도현", "obsession": 10, "value": 70},
+                ]
+            },
+            recovered=[{"seed_id": "seed-01"}, "seed-02"],
+        )
+
+        assert result["new_npc_names"] == ["윤호", "서린"]
+        assert result["npc_deaths"] == ["윤호"]
+        assert {"npc": "윤호", "to": "목격자", "from": ""} in result["relationship_changes"]
+        assert {"npc": "서린", "to": "집착80/오해20", "from": ""} in result["relationship_changes"]
+        assert result["reveal_list"] == ["seed-01", "seed-02"]
+        pp.post_pass_runtime._merge_manager_key_npcs_into_master_bible.assert_called_once_with(
+            next_ep=9,
+            key_npcs=[
+                {"name": "윤호", "NPC_Martial_HUD": {"current_status": "사망"}},
+                {"name": "서린", "NPC_Martial_HUD": {"current_status": "생존"}},
+            ],
+        )
+
+
+    def test_apply_state_text_and_pressure_vectors_injects_pressure_vector_snapshot(self):
+        pp = self._make_pp()
+        pp.post_pass_runtime._build_active_pressure_vectors = MagicMock(
+            return_value=[{"text": "pressure vector", "source": "ending_hook"}]
+        )
+
+        result = pp.post_pass_runtime._apply_state_text_and_pressure_vectors(
+            actual_truth={"location": "gate"},
+            final_manuscript="test manuscript",
+            genre_type="wuxia",
+            critical_keys=["gate"],
+            blueprint={"ending_hook": "pressure vector"},
+            prev_pressure_vectors=[],
+        )
+
+        assert result["active_pressure_vectors"] == [{"text": "pressure vector", "source": "ending_hook"}]
+        assert result["pressure_vectors_changed"] is True
+        assert result["actual_truth"]["active_pressure_vectors"] == [{"text": "pressure vector", "source": "ending_hook"}]
+
+    def test_persist_manager_delta_outputs_saves_bible_and_delegates_side_effect_sinks(self):
+        pp = self._make_pp()
+        pp.post_pass_runtime._sync_world_state_positions = MagicMock()
+        pp.post_pass_runtime._persist_manager_causal_side_effects = MagicMock()
+        pp.post_pass_runtime._persist_manager_state_log = MagicMock()
+        pp.post_pass_runtime._persist_karma_status = MagicMock()
+        pp.post_pass_runtime._log_manager_delta_summary = MagicMock()
+
+        result = pp.post_pass_runtime._persist_manager_delta_outputs(
+            next_ep=10,
+            key_npcs=[{"name": "npc-a"}],
+            actual_truth={"location": "gate"},
+            final_state_updates={"hp": 90},
+            state_updates_from_audit={"time_passed": "3h"},
+            knowledge_map={"new_witnesses": ["npc-a"]},
+            karma_matrix=[{"target": "npc-b", "obsession": 70, "value": 10}],
+            curr_inventory_counts={"sword": 2},
+            inventory_count_deltas=[{"name": "sword", "from": 1, "to": 2, "delta": 1}],
+            relationship_changes=[{"npc": "npc-b", "to": "obsession70/misread10", "from": ""}],
+            active_pressure_vectors=[{"text": "pressure vector", "source": "ending_hook"}],
+            pressure_vectors_changed=True,
+            causal_links=[{"cause": "seed", "effect": "payoff"}],
+            all_new_items=["sword"],
+            lost_items_from_equip=[],
+            new_npc_names=["npc-a"],
+            npc_deaths=[],
+            reveal_list=["seed-01"],
+        )
+
+        assert result["meta_save_failed"] is False
+        saved_bible = pp.ctx.current_project.db.save_episode_bible.call_args.args[1]
+        assert saved_bible["active_pressure_vectors"] == [{"text": "pressure vector", "source": "ending_hook"}]
+        assert saved_bible["inventory_count_deltas"] == [{"name": "sword", "from": 1, "to": 2, "delta": 1}]
+        pp.post_pass_runtime._sync_world_state_positions.assert_called_once_with(
+            next_ep=10,
+            key_npcs=[{"name": "npc-a"}],
+        )
+        pp.post_pass_runtime._persist_manager_causal_side_effects.assert_called_once_with(
+            next_ep=10,
+            causal_links=[{"cause": "seed", "effect": "payoff"}],
+        )
+        pp.post_pass_runtime._persist_manager_state_log.assert_called_once()
+        pp.post_pass_runtime._persist_karma_status.assert_called_once()
+        pp.post_pass_runtime._log_manager_delta_summary.assert_called_once()
 
     def test_overexposure_receives_empty_protagonist_name_when_callback_returns_none(self, tmp_path):
         pp = self._make_pp()
@@ -948,7 +1343,7 @@ class TestAtomicMetadataSave:
         pp.ctx.world_state.save.return_value = True
         pp.ctx.fact_ledger.save.side_effect = RuntimeError("DB write error")
 
-        pp._save_world_state_atomic(
+        pp.post_pass_runtime._save_world_state_atomic(
             next_ep=3,
             final_state_updates={"inventory_counts": {"gold": 1}},
             bible_delta={},
@@ -960,6 +1355,99 @@ class TestAtomicMetadataSave:
         assert any("메타데이터 트랜잭션 없음: 순차 저장 복구 모드" in text for text in log_calls)
         assert any("WorldState 순차 저장 롤백 복구 완료" in text for text in log_calls)
         assert any("메타데이터 원자적 저장 실패" in text for text in log_calls)
+
+    def test_build_atomic_state_payloads_merges_inventory_relationship_and_pressure(self):
+        pp = self._make_pp_with_metadata()
+
+        result = pp.post_pass_runtime._build_atomic_state_payloads(
+            final_state_updates={"hp": 10},
+            bible_delta={
+                "inventory_counts": {"gold": 3},
+                "inventory_count_deltas": [{"name": "gold", "delta": 2}],
+                "relationship_changes": [{"npc": "수호", "to": "경계"}],
+                "state_changes": {"active_pressure_vectors": [{"text": "압박", "source": "ending_hook"}]},
+            },
+        )
+
+        assert result["world_state_changes"]["hp"] == 10
+        assert result["world_state_changes"]["inventory_counts"] == {"gold": 3}
+        assert result["world_state_changes"]["relationship_changes"] == [{"npc": "수호", "to": "경계"}]
+        assert result["world_state_changes"]["active_pressure_vectors"] == [{"text": "압박", "source": "ending_hook"}]
+        assert "active_pressure_vectors" not in result["fact_ledger_changes"]
+        assert result["fact_ledger_changes"]["inventory_count_deltas"] == [{"name": "gold", "delta": 2}]
+
+    def test_persist_atomic_world_state_updates_and_logs(self):
+        pp = self._make_pp_with_metadata()
+
+        result = pp.post_pass_runtime._persist_atomic_world_state(
+            next_ep=4,
+            world_state_changes={"hp": 20, "inventory_counts": {"gold": 2}},
+        )
+
+        assert result is True
+        pp.ctx.world_state.update_from_state_changes.assert_called_once_with(
+            4,
+            {"hp": 20, "inventory_counts": {"gold": 2}},
+        )
+        pp.ctx.world_state.update_protagonist_state.assert_called_once()
+        pp.ctx.world_state.save.assert_called_once()
+
+    def test_persist_atomic_fact_ledger_updates_delta_and_logs(self):
+        pp = self._make_pp_with_metadata()
+
+        result = pp.post_pass_runtime._persist_atomic_fact_ledger(
+            next_ep=5,
+            fact_ledger_changes={"relationship_changes": [{"npc": "수호", "to": "경계"}]},
+            bible_delta={"relationship_changes": [{"npc": "수호", "to": "경계"}]},
+        )
+
+        assert result is True
+        pp.ctx.fact_ledger.update_from_state_changes.assert_called_once_with(
+            5,
+            {"relationship_changes": [{"npc": "수호", "to": "경계"}]},
+        )
+        pp.ctx.fact_ledger.update_from_bible_delta.assert_called_once_with(
+            5,
+            {"relationship_changes": [{"npc": "수호", "to": "경계"}]},
+        )
+        pp.ctx.fact_ledger.save.assert_called_once()
+
+    def test_process_pass_result_delegates_world_state_settlement_to_runtime(self, tmp_path):
+        pp = self._make_pp_with_metadata()
+        pp.post_pass_runtime._submit_manager_async = MagicMock(
+            return_value={
+                "bible_future": None,
+                "current_state": {},
+                "lore_list": [],
+                "active_seeds": [],
+                "causal_history": "",
+            }
+        )
+        pp.post_pass_runtime._memorize_and_validate = MagicMock()
+        pp.post_pass_runtime._collect_manager_and_build_delta = MagicMock(
+            return_value={"bible_delta": {"relationship_changes": []}, "actual_truth": {}, "meta_save_failed": False}
+        )
+        pp.post_pass_runtime._save_world_state_atomic = MagicMock()
+        pp.post_pass_runtime._run_post_pass_advisories = MagicMock()
+
+        result = pp.process_pass_result(
+            next_ep=7,
+            final_manuscript="테스트 원고 " * 500,
+            final_title="테스트",
+            final_state_updates={"inventory_counts": {"gold": 2}},
+            blueprint={"scene_breakdown": []},
+            arc_data={"arc_no": 1, "state_changes": {}},
+            output_dir=tmp_path,
+            v50_modules_available=False,
+            extract_chain_link_fn=lambda *_args, **_kwargs: {},
+        )
+
+        assert result is True
+        pp.post_pass_runtime._save_world_state_atomic.assert_called_once_with(
+            next_ep=7,
+            final_state_updates={"inventory_counts": {"gold": 2}},
+            bible_delta={"relationship_changes": []},
+        )
 
     def test_world_state_save_false_surfaces_last_save_error(self, tmp_path):
         pp = self._make_pp_with_metadata()

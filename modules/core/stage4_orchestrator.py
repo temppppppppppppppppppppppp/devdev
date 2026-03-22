@@ -1,4 +1,4 @@
-"""
+﻿"""
 [V64.P3] Stage4Orchestrator — SovereignApp의 Stage 4 원고 집필 오케스트레이션 로직 캡슐화
 
 SovereignApp에서 분리된 Stage 4 관련 메서드:
@@ -20,6 +20,7 @@ from modules.core.project_support import load_style_guide_anchor, resolve_projec
 from modules.core.soft_failure import resolve_project_log_dir
 from modules.core.stage4_context_builder import Stage4ContextBuilder
 from modules.core.stage4_interview_round import Stage4InterviewRound
+from modules.core.stage4_outcome_runtime import Stage4OutcomeRuntime
 from modules.core.stage4_post_processor import Stage4PostProcessor
 from modules.core.stage4_types import _RoundContext
 from modules.validation.threshold_helper import _threshold
@@ -246,6 +247,48 @@ class _SessionConfig:
 
 
 @dataclasses.dataclass(slots=True)
+class _SessionTargetDecision:
+    target_ep: object = None
+    should_abort: bool = False
+
+
+@dataclasses.dataclass(slots=True)
+class _SessionStyleGuidePayload:
+    style_guide: str = ""
+    reference_excerpt: str = ""
+
+
+@dataclasses.dataclass(slots=True)
+class _SessionAgentBootstrap:
+    chief_writer: object
+    manuscript_validator: object
+    consistency_validator: object
+    blocking_validator: object
+    continuity_validator: object
+    s4_genre_type: str
+
+
+@dataclasses.dataclass(slots=True)
+class _SessionEnvironmentPayload:
+    output_dir: object  # Path
+    total_planned_ep: int
+    current_written: int
+
+
+@dataclasses.dataclass(slots=True)
+class _SessionRuntimeDependencies:
+    ai_models: object
+    emojis: object
+    stage0_available: bool
+    v50_modules_available: bool
+    chief_writer_cls: object
+    manuscript_validator_cls: object
+    blocking_validator_cls: object
+    consistency_validator_cls: object
+    continuity_validator_cls: object
+
+
+@dataclasses.dataclass(slots=True)
 class _RoundOutcome:
     """[4-R2-d] Result of _handle_round_outcome."""
 
@@ -253,6 +296,122 @@ class _RoundOutcome:
     final_title: object  # str | None
     final_state_updates: dict
     should_return: bool
+
+
+@dataclasses.dataclass(slots=True)
+class _PassRoundDisposition:
+    accepted: bool = False
+    should_continue: bool = False
+    final_manuscript: object = None
+    final_title: object = None
+    final_state_updates: dict = dataclasses.field(default_factory=dict)
+    director_feedback: str = ""
+    previous_attempt: dict = dataclasses.field(default_factory=dict)
+
+
+@dataclasses.dataclass(slots=True)
+class _RejectRoundDisposition:
+    director_feedback: str = ""
+    previous_attempt: dict = dataclasses.field(default_factory=dict)
+    logic_error_streak: int = 0
+    prev_reject_bucket: str = ""
+    bucket_streak: int = 0
+    prev_dominant_contradiction: str = ""
+    contradiction_type_streak: int = 0
+    score_history: list[int] = dataclasses.field(default_factory=list)
+    plateau_advisory_emitted: bool = False
+    tf29_advisory: str = ""
+    dominant_contradiction: str = ""
+
+
+@dataclasses.dataclass(slots=True)
+class _RetryEscalationDisposition:
+    round_ctx: object = None
+    director_feedback: str = ""
+    previous_attempt: dict = dataclasses.field(default_factory=dict)
+    logic_error_streak: int = 0
+    inplace_attempted: bool = False
+    blueprint_regenerated: bool = False
+
+
+@dataclasses.dataclass(slots=True)
+class _V75DArtifactPayload:
+    artifact_meta: dict = dataclasses.field(default_factory=dict)
+    change_ratio: float | None = None
+
+
+@dataclasses.dataclass(slots=True)
+class _V75DSuccessPayload:
+    round_ctx: object = None
+    director_feedback: str = ""
+    previous_attempt: dict = dataclasses.field(default_factory=dict)
+    logic_error_streak: int = 0
+
+
+@dataclasses.dataclass(slots=True)
+class _V75DPatchAttemptPayload:
+    round_ctx: object = None
+    director_feedback: str = ""
+    previous_attempt: dict = dataclasses.field(default_factory=dict)
+    logic_error_streak: int = 0
+    success: bool = False
+    artifact_payload: _V75DArtifactPayload = dataclasses.field(default_factory=_V75DArtifactPayload)
+
+
+@dataclasses.dataclass(slots=True)
+class _RejectRoundStepDisposition:
+    round_ctx: object = None
+    director_feedback: str = ""
+    previous_attempt: dict = dataclasses.field(default_factory=dict)
+    logic_error_streak: int = 0
+    inplace_attempted: bool = False
+    blueprint_regenerated: bool = False
+    prev_reject_bucket: str = ""
+    bucket_streak: int = 0
+    prev_dominant_contradiction: str = ""
+    contradiction_type_streak: int = 0
+    score_history: list[int] = dataclasses.field(default_factory=list)
+    plateau_advisory_emitted: bool = False
+
+
+@dataclasses.dataclass(slots=True)
+class _InterviewRoundLoopState:
+    final_manuscript: object = None
+    final_title: object = None
+    final_state_updates: dict = dataclasses.field(default_factory=dict)
+    director_feedback: str = ""
+    previous_attempt: dict = dataclasses.field(default_factory=dict)
+    logic_error_streak: int = 0
+    inplace_attempted: bool = False
+    blueprint_regenerated: bool = False
+    prev_reject_bucket: str = ""
+    bucket_streak: int = 0
+    prev_dominant_contradiction: str = ""
+    contradiction_type_streak: int = 0
+    score_history: list[int] = dataclasses.field(default_factory=list)
+    plateau_advisory_emitted: bool = False
+    pathology_counts: dict[str, int] = dataclasses.field(default_factory=dict)
+    pathology_repeat_emitted: set[str] = dataclasses.field(default_factory=set)
+
+
+@dataclasses.dataclass(slots=True)
+class _InterviewRoundStepDisposition:
+    round_ctx: object
+    loop_state: _InterviewRoundLoopState
+    should_continue: bool = False
+    should_break: bool = False
+
+
+@dataclasses.dataclass(slots=True)
+class _EpisodeLoopDisposition:
+    should_return: bool = False
+    should_break: bool = False
+
+
+@dataclasses.dataclass(slots=True)
+class _EpisodeLoopCheckpoint:
+    next_ep: object = None
+    should_break: bool = False
 
 
 @dataclasses.dataclass(slots=True)
@@ -273,10 +432,26 @@ class _EpisodeLoopInputs:
 
 
 @dataclasses.dataclass(slots=True)
+class _InterviewLoopRuntime:
+    chief_writer: object
+    target_ep: object = None
+    output_dir: object = None
+    v50_modules_available: bool = False
+    max_loops: int = 1
+    anchor_sys: object = None
+
+
+@dataclasses.dataclass(slots=True)
 class _EpisodePromptBundle:
     genre_name: str
     ctx_prompts: dict
     prompt_supplements: _WriterPromptSupplements
+
+
+@dataclasses.dataclass(slots=True)
+class _BlueprintPreflightRequest:
+    prompt: str
+    patched_blueprint: dict | None
 
 
 class Stage4Orchestrator:
@@ -297,6 +472,7 @@ class Stage4Orchestrator:
         self._post_processor = None  # [B-1-1] lazy init
         self._context_builder = None  # [B-1-2] lazy init
         self._interview_round = None  # [B-1-3] lazy init
+        self.outcome_runtime = Stage4OutcomeRuntime(self)
 
     @property
     def ctx(self):
@@ -495,79 +671,19 @@ class Stage4Orchestrator:
             from modules.core.response_schemas import BLUEPRINT_PREFLIGHT_SCHEMA
             from modules.core.tactical_utils import extract_episode_tactical
 
-            # 1. 데이터 수집
-            _ws_summary = ""
-            if self.ctx.world_state:
-                try:
-                    _ws_summary = self.ctx.world_state.get_summary(max_chars=8000)
-                except Exception:
-                    pass
-
-            _fl_summary = ""
-            if self.ctx.fact_ledger:
-                try:
-                    _fl_summary = self.ctx.fact_ledger.get_canonical_summary(max_chars=5000)
-                except Exception:
-                    pass
-
-            _arc_tactical = ""
-            if arc_data:
-                try:
-                    _arc_tactical = extract_episode_tactical(
-                        arc_data.get("tactical_doc", ""),
-                        ep_num,
-                        episode_details=arc_data.get("episode_details"),
-                    )[:3000]
-                except Exception:
-                    pass
-
-            _prev_published_text = ""
-            try:
-                _db = getattr(getattr(self.ctx, "current_project", None), "db", None)
-                _prev_row = _db.get_manuscript(ep_num - 1) if _db and ep_num > 1 else None
-                if isinstance(_prev_row, dict):
-                    _prev_published_text = str(
-                        _prev_row.get("content")
-                        or _prev_row.get("corrected_manuscript")
-                        or _prev_row.get("manuscript")
-                        or ""
-                    )
-                elif _prev_row:
-                    _prev_published_text = str(_prev_row)
-            except Exception:
-                _prev_published_text = ""
-
-            _pin_result = apply_continuity_pins(
-                blueprint,
-                previous_published_text=_prev_published_text,
-                arc_tactical_text=_arc_tactical,
-            )
-            _patched_blueprint = None
-            _blueprint_for_validation = blueprint
-            if _pin_result.get("changes"):
-                _patched_blueprint = _pin_result.get("blueprint", blueprint)
-                if isinstance(_patched_blueprint, dict):
-                    _patched_blueprint["_continuity_pins"] = _pin_result["changes"]
-                    _blueprint_for_validation = _patched_blueprint
-
-            _bp_json = json.dumps(_blueprint_for_validation, ensure_ascii=False, indent=2)[:15000]
-
-            # 2. 프롬프트 로드 + 포맷
             try:
                 _template = PromptLoader().load("blueprint_generator", "BLUEPRINT_PREFLIGHT_VALIDATE_PROMPT")
             except Exception as e:
                 _perf_logger.debug("[TF-49b] Preflight 프롬프트 로드 실패 (비치명): %s", e)
                 return _pass_result
 
-            def _esc(s):
-                return s.replace("{", "{{").replace("}", "}}")
-
-            _prompt = _template.format(
-                world_state_summary=_esc(_ws_summary) if _ws_summary else "(상태 정보 없음)",
-                fact_ledger_summary=_esc(_fl_summary) if _fl_summary else "(수치 기록 없음)",
-                arc_tactical_excerpt=_esc(_arc_tactical) if _arc_tactical else "(전술서 없음)",
+            _request = self._build_blueprint_preflight_request(
+                blueprint=blueprint,
+                arc_data=arc_data,
                 ep_num=ep_num,
-                blueprint_json=_esc(_bp_json),
+                prompt_template=_template,
+                apply_continuity_pins_fn=apply_continuity_pins,
+                extract_episode_tactical_fn=extract_episode_tactical,
             )
 
             # 3. Flash 모델 직접 호출
@@ -576,7 +692,7 @@ class Stage4Orchestrator:
             _response = generate_content_via_router(
                 client=self.ctx.sys.api_client,
                 model=AIModels.FLASH_ANALYSIS_MODEL,
-                contents=_prompt,
+                contents=_request.prompt,
                 config=types.GenerateContentConfig(
                     temperature=0.1,
                     response_mime_type="application/json",
@@ -584,103 +700,175 @@ class Stage4Orchestrator:
                 ),
             )
             _result = json.loads(_response.text)
-
-            _issues = _result.get("issues", [])
-            _summary = _result.get("summary", "")
-
-            # [TF-49b] 웹소설 관용 기준: 2단계 severity 필터
-            # 1단계: 가짜양성 패턴 → 무조건 low (WorldState 불완전성 등)
-            # 2단계: 1단계 비해당 + CRITICAL 패턴 미매칭 → low
-            _FALSE_POSITIVE_PATTERNS = (
-                "출처 불분명",
-                "출처가 불분명",  # WorldState에 이전 자금 미기재
-                "획득 경로",
-                "획득 경위",  # Stage 0 아이템 미추적
-                "보유 근거",
-                "기록되지 않",  # WorldState 누락
-                "갑작스러운 등장",
-                "갑자기 등장",  # 이전 화에서 확립된 것
-                "고증",
-                "시대",
-                "연도",  # 웹소설 관용
-                "해상도",
-                "모니터",
-                "컴퓨터",  # 기술 고증
+            return self._resolve_blueprint_preflight_result(
+                ep_num=ep_num,
+                result=_result,
+                patched_blueprint=_request.patched_blueprint,
             )
-            _CRITICAL_PATTERNS = (
-                "사망",
-                "deceased",  # 사망 NPC 행동
-                "시간 역행",
-                "역행",  # 타임라인 역행
-                "소진",
-                "소모된",  # 소진 아이템 재등장
-                "불가능",
-                "도달 불가",  # 수학적 불가능
-                "모순",  # 명시적 모순 언급
-            )
-            for _iss in _issues:
-                if _iss.get("severity") != "high":
-                    continue
-                _combined = f"{_iss.get('category', '')} {_iss.get('description', '')}"
-                # 1단계: 가짜양성이면 무조건 low
-                if any(fp in _combined for fp in _FALSE_POSITIVE_PATTERNS):
-                    _iss["severity"] = "low"
-                # 2단계: CRITICAL 패턴 미매칭이면 low
-                elif not any(cp in _combined for cp in _CRITICAL_PATTERNS):
-                    _iss["severity"] = "low"
-
-            # severity="high"인 이슈만 실패 판정
-            _high_issues = [i for i in _issues if i.get("severity") == "high"]
-            _truly_failed = not _result.get("passed", True) and len(_high_issues) > 0
-
-            if not _truly_failed:
-                _level = "PASS" if _result.get("passed", True) else "PASS (low/medium only)"
-                _perf_logger.info("[TF-49b] Preflight %s — 제%d화 Blueprint 정합성 확인", _level, ep_num)
-                if _issues and not _result.get("passed", True):
-                    self.ctx.ui.log(f"   ℹ️ [TF-49b] Preflight: {len(_issues)}건 참고 사항 (경미, 패치 불필요)")
-                return {
-                    "passed": True,
-                    "issues": _issues,
-                    "summary": _summary,
-                    "patched_blueprint": _patched_blueprint,
-                }
-
-            # 4. 실패 → advisory 텍스트 생성 (Blueprint 패치 대신 CW/Director에 전달)
-            _high_count = len(_high_issues)
-            _log_level = "⚠️" if _high_count > 0 else "ℹ️"
-            self.ctx.ui.log(
-                f"   {_log_level} [TF-49b] Preflight: {len(_issues)}건 발견 (high={_high_count}) → CW/Director advisory 전달"
-            )
-            for _iss in _issues[:5]:
-                self.ctx.ui.log(
-                    f"      [{_iss.get('severity', '?')}] {_iss.get('category', '?')}: "
-                    f"{_iss.get('description', '')[:80]}"
-                )
-
-            # Advisory 텍스트 포맷
-            _advisory_lines = [f"[TF-49b Preflight 발견 사항 — 제{ep_num}화]"]
-            for _iss in _issues[:10]:
-                _sev = _iss.get("severity", "?")
-                _cat = _iss.get("category", "?")
-                _desc = _iss.get("description", "")
-                _advisory_lines.append(f"  - [{_sev}] {_cat}: {_desc}")
-            _advisory_lines.append("위 사항에 주의하여 원고 작성/심사에 반영하세요.")
-            _advisory_text = "\n".join(_advisory_lines)
-
-            # 에스컬레이션 로그
-            self._log_escalation_event(ep_num, "TF49b_PREFLIGHT", len(_issues), success=True)
-
-            return {
-                "passed": True,  # advisory 전달이므로 항상 pass (블루프린트 미수정)
-                "issues": _issues,
-                "summary": _summary,
-                "patched_blueprint": _patched_blueprint,
-                "advisory": _advisory_text,
-            }
 
         except Exception as e:
             _perf_logger.debug("[TF-49b] Preflight 전체 실패 (fail-open): %s", e)
             return _pass_result
+
+    def _build_blueprint_preflight_request(
+        self,
+        *,
+        blueprint,
+        arc_data,
+        ep_num: int,
+        prompt_template: str,
+        apply_continuity_pins_fn,
+        extract_episode_tactical_fn,
+    ) -> _BlueprintPreflightRequest:
+        import json
+
+        ws_summary = ""
+        if self.ctx.world_state:
+            try:
+                ws_summary = self.ctx.world_state.get_summary(max_chars=8000)
+            except Exception:
+                pass
+
+        fl_summary = ""
+        if self.ctx.fact_ledger:
+            try:
+                fl_summary = self.ctx.fact_ledger.get_canonical_summary(max_chars=5000)
+            except Exception:
+                pass
+
+        arc_tactical = ""
+        if arc_data:
+            try:
+                arc_tactical = extract_episode_tactical_fn(
+                    arc_data.get("tactical_doc", ""),
+                    ep_num,
+                    episode_details=arc_data.get("episode_details"),
+                )[:3000]
+            except Exception:
+                pass
+
+        prev_published_text = ""
+        try:
+            db = getattr(getattr(self.ctx, "current_project", None), "db", None)
+            prev_row = db.get_manuscript(ep_num - 1) if db and ep_num > 1 else None
+            if isinstance(prev_row, dict):
+                prev_published_text = str(
+                    prev_row.get("content") or prev_row.get("corrected_manuscript") or prev_row.get("manuscript") or ""
+                )
+            elif prev_row:
+                prev_published_text = str(prev_row)
+        except Exception:
+            prev_published_text = ""
+
+        pin_result = apply_continuity_pins_fn(
+            blueprint,
+            previous_published_text=prev_published_text,
+            arc_tactical_text=arc_tactical,
+        )
+        patched_blueprint = None
+        blueprint_for_validation = blueprint
+        if pin_result.get("changes"):
+            patched_blueprint = pin_result.get("blueprint", blueprint)
+            if isinstance(patched_blueprint, dict):
+                patched_blueprint["_continuity_pins"] = pin_result["changes"]
+                blueprint_for_validation = patched_blueprint
+
+        def _esc(text: str) -> str:
+            return text.replace("{", "{{").replace("}", "}}")
+
+        bp_json = json.dumps(blueprint_for_validation, ensure_ascii=False, indent=2)[:15000]
+        prompt = prompt_template.format(
+            world_state_summary=_esc(ws_summary) if ws_summary else "(상태 정보 없음)",
+            fact_ledger_summary=_esc(fl_summary) if fl_summary else "(수치 기록 없음)",
+            arc_tactical_excerpt=_esc(arc_tactical) if arc_tactical else "(전술서 없음)",
+            ep_num=ep_num,
+            blueprint_json=_esc(bp_json),
+        )
+        return _BlueprintPreflightRequest(
+            prompt=prompt,
+            patched_blueprint=patched_blueprint,
+        )
+
+    def _resolve_blueprint_preflight_result(self, *, ep_num: int, result: dict, patched_blueprint) -> dict:
+        issues = result.get("issues", [])
+        summary = result.get("summary", "")
+
+        false_positive_patterns = (
+            "출처 불분명",
+            "출처가 불분명",
+            "획득 경로",
+            "획득 경위",
+            "보유 근거",
+            "기록되지 않",
+            "갑작스러운 등장",
+            "갑자기 등장",
+            "고증",
+            "시대",
+            "연도",
+            "해상도",
+            "모니터",
+            "컴퓨터",
+        )
+        critical_patterns = (
+            "사망",
+            "deceased",
+            "시간 역행",
+            "역행",
+            "소진",
+            "소모된",
+            "불가능",
+            "도달 불가",
+            "모순",
+        )
+        for issue in issues:
+            if issue.get("severity") != "high":
+                continue
+            combined = f"{issue.get('category', '')} {issue.get('description', '')}"
+            if any(pattern in combined for pattern in false_positive_patterns):
+                issue["severity"] = "low"
+            elif not any(pattern in combined for pattern in critical_patterns):
+                issue["severity"] = "low"
+
+        high_issues = [issue for issue in issues if issue.get("severity") == "high"]
+        truly_failed = not result.get("passed", True) and len(high_issues) > 0
+        if not truly_failed:
+            level = "PASS" if result.get("passed", True) else "PASS (low/medium only)"
+            _perf_logger.info("[TF-49b] Preflight %s — 제%d화 Blueprint 정합성 확인", level, ep_num)
+            if issues and not result.get("passed", True):
+                self.ctx.ui.log(f"   ℹ️ [TF-49b] Preflight: {len(issues)}건 참고 사항 (경미, 패치 불필요)")
+            return {
+                "passed": True,
+                "issues": issues,
+                "summary": summary,
+                "patched_blueprint": patched_blueprint,
+            }
+
+        high_count = len(high_issues)
+        log_level = "⚠️" if high_count > 0 else "ℹ️"
+        self.ctx.ui.log(f"   {log_level} [TF-49b] Preflight: {len(issues)}건 발견 (high={high_count}) → CW/Director advisory 전달")
+        for issue in issues[:5]:
+            self.ctx.ui.log(
+                f"      [{issue.get('severity', '?')}] {issue.get('category', '?')}: "
+                f"{issue.get('description', '')[:80]}"
+            )
+
+        advisory_lines = [f"[TF-49b Preflight 발견 사항 — 제{ep_num}화]"]
+        for issue in issues[:10]:
+            sev = issue.get("severity", "?")
+            cat = issue.get("category", "?")
+            desc = issue.get("description", "")
+            advisory_lines.append(f"  - [{sev}] {cat}: {desc}")
+        advisory_lines.append("위 사항에 주의하여 원고 작성/심사에 반영하세요.")
+        advisory_text = "\n".join(advisory_lines)
+
+        self._log_escalation_event(ep_num, "TF49b_PREFLIGHT", len(issues), success=True)
+        return {
+            "passed": True,
+            "issues": issues,
+            "summary": summary,
+            "patched_blueprint": patched_blueprint,
+            "advisory": advisory_text,
+        }
 
     # NOTE: _preflight_patch_blueprint 삭제됨 (TF-49b v2: advisory 전달 방식으로 전환)
     # Blueprint 자체를 수정하지 않고, CW/Director에게 advisory로 전달.
@@ -910,31 +1098,240 @@ JSON으로 출력:
             preflight_advisory=preflight_advisory,
         )
 
+    def _prepare_episode_round(
+        self,
+        *,
+        next_ep: int,
+        arc_data: dict,
+        blueprint: dict,
+        chief_writer,
+        manuscript_validator,
+        consistency_validator,
+        blocking_validator,
+        continuity_validator,
+        story_context: str,
+        style_guide: str,
+        reference_excerpt: str,
+        preflight_advisory: str,
+        anchor_sys,
+        s4_genre_type: str,
+        v50_modules_available: bool,
+    ) -> _RoundContext:
+        ep_ctx = self.context_builder.prepare_episode_context(next_ep, arc_data, chief_writer)
+        prompt_bundle = self._build_episode_prompt_bundle(
+            next_ep=next_ep,
+            arc_data=arc_data,
+            blueprint=blueprint,
+            arc_tactical=ep_ctx["arc_tactical"],
+            prev_text=ep_ctx["prev_text"],
+            prev_ending=ep_ctx["prev_ending"],
+            hud_report=ep_ctx["hud_report"],
+            anchor_sys=anchor_sys,
+            s4_genre_type=s4_genre_type,
+            v50_modules_available=v50_modules_available,
+        )
+        ctx_prompts = prompt_bundle.ctx_prompts
+
+        self.ctx.ui.log(f"\n{'=' * 60}")
+        self.ctx.ui.log(
+            f"📝 제{next_ep}화 집필 시작 (Arc {arc_data.get('arc_no', '?')}, 위치 {ep_ctx['arc_pos']}/{ep_ctx['total_ep_in_arc']})"
+        )
+        self.ctx.ui.log(f"{'=' * 60}")
+
+        ctx_prompts["mandatory_context"] = self._apply_mandatory_context_budget(
+            ctx_prompts["mandatory_context"]
+        )
+        return self._build_episode_round_context(
+            ep_ctx=ep_ctx,
+            ctx_prompts=ctx_prompts,
+            chief_writer=chief_writer,
+            manuscript_validator=manuscript_validator,
+            consistency_validator=consistency_validator,
+            blocking_validator=blocking_validator,
+            continuity_validator=continuity_validator,
+            next_ep=next_ep,
+            blueprint=blueprint,
+            arc_data=arc_data,
+            story_context=story_context,
+            style_guide=style_guide,
+            reference_excerpt=reference_excerpt,
+            preflight_advisory=preflight_advisory,
+            prompt_bundle=prompt_bundle,
+        )
+
+    def _apply_mandatory_context_budget(self, mandatory_context: str) -> str:
+        mc_max = _threshold("context.mandatory_context_max", 80000)
+        if len(mandatory_context) <= mc_max:
+            return mandatory_context
+
+        original_len = len(mandatory_context)
+        ctx_budget_meta = getattr(self.ctx, "_stage4_context_budget_meta", {}) or {}
+        if isinstance(ctx_budget_meta, dict) and ctx_budget_meta:
+            budget_ledger = ctx_budget_meta.get("budget_ledger") or {}
+            _perf_logger.info(
+                "[V66.1] mandatory_context pretrim meta sc=%s mc=%s total=%s limit=%s headroom=%s effective=%s dropped=%s overflow=%s",
+                ctx_budget_meta.get("sc_chars"),
+                ctx_budget_meta.get("mc_chars"),
+                ctx_budget_meta.get("total_chars"),
+                ctx_budget_meta.get("limit_chars"),
+                ctx_budget_meta.get("headroom_chars"),
+                budget_ledger.get("effective_cap"),
+                budget_ledger.get("dropped_chars"),
+                budget_ledger.get("overflow_chars"),
+            )
+
+        budget_result = _fit_mandatory_context_budget(
+            mandatory_context,
+            max_chars=mc_max,
+        )
+        trimmed = budget_result.mandatory_context
+        if budget_result.removed_count > 0:
+            _perf_logger.info(
+                f"[V66.1] mandatory_context {budget_result.removed_count}개 섹션 제거 ({budget_result.removed_chars}자)"
+            )
+            self.ctx.ui.log(
+                f"   ⚠️ [V66.1] mandatory_context {original_len}자 → {len(trimmed)}자 (섹션 {budget_result.removed_count}개 제거)"
+            )
+        elif budget_result.used_fallback:
+            self.ctx.ui.log(
+                f"   ⚠️ [V66.1] mandatory_context {original_len}자 → {mc_max:,}자로 truncate (폴백)"
+            )
+        return trimmed
+
+    def _process_episode_pass(
+        self,
+        *,
+        next_ep: int,
+        final_manuscript: str,
+        final_title,
+        final_state_updates: dict,
+        blueprint: dict,
+        arc_data: dict,
+        output_dir,
+        v50_modules_available: bool,
+    ) -> bool:
+        if not self.post_processor.process_pass_result(
+            next_ep=next_ep,
+            final_manuscript=final_manuscript,
+            final_title=final_title,
+            final_state_updates=final_state_updates,
+            blueprint=blueprint,
+            arc_data=arc_data,
+            output_dir=output_dir,
+            v50_modules_available=v50_modules_available,
+            extract_chain_link_fn=self._extract_chain_link,
+            detect_npc_overexposure_fn=_detect_npc_overexposure,
+            detect_cross_episode_repetition_fn=_detect_cross_episode_repetition,
+        ):
+            self.ctx.ui.log(f"   ⛔ [EP {next_ep}] DB 저장 실패. 집필 중단.")
+            return False
+
+        prm = getattr(self.ctx, "pass_rate_monitor", None)
+        if prm is not None:
+            try:
+                alerts = prm.check_alerts()
+                for alert in alerts:
+                    logging.warning(f"[PassRate 경보] {alert}")
+            except Exception as e:
+                logging.debug("[Stage4] PassRateMonitor.check_alerts 실패 (무시): %s", e)
+        return True
+
+    def _consume_episode_round_outcome(
+        self,
+        *,
+        outcome: _RoundOutcome,
+        next_ep: int,
+        blueprint: dict,
+        arc_data: dict,
+        output_dir,
+        v50_modules_available: bool,
+        skip_pause: bool,
+    ) -> _EpisodeLoopDisposition:
+        if outcome.should_return:
+            self.post_processor.run_post_episode_tasks(skip_pause=skip_pause)
+            return _EpisodeLoopDisposition(should_return=True)
+
+        if outcome.final_manuscript and not self._process_episode_pass(
+            next_ep=next_ep,
+            final_manuscript=outcome.final_manuscript,
+            final_title=outcome.final_title,
+            final_state_updates=outcome.final_state_updates,
+            blueprint=blueprint,
+            arc_data=arc_data,
+            output_dir=output_dir,
+            v50_modules_available=v50_modules_available,
+        ):
+            return _EpisodeLoopDisposition(should_break=True)
+
+        return _EpisodeLoopDisposition()
+
+    def _checkpoint_episode_loop(
+        self,
+        *,
+        loop_guard: int,
+        max_loops: int,
+        target_ep,
+        chief_writer,
+    ) -> _EpisodeLoopCheckpoint:
+        if loop_guard > max_loops:
+            self.ctx.ui.log("🚨 [Safety] 루프 상한 도달. 중단합니다.")
+            return _EpisodeLoopCheckpoint(should_break=True)
+
+        next_ep = self.ctx.current_project.get_latest_episode_number()
+        self.interview_round.time_warnings = []
+        self._set_agent_telemetry_context(ep_num=next_ep, extra_agents=[chief_writer])
+        if target_ep and next_ep > target_ep:
+            self._log_target_ep_reached(target_ep=int(target_ep), next_ep=int(next_ep))
+            self.ctx.ui.log(f"🏁 목표 회차({target_ep}화) 도달. 종료합니다.")
+            return _EpisodeLoopCheckpoint(should_break=True)
+
+        return _EpisodeLoopCheckpoint(next_ep=next_ep)
+
     def _run_interview_loop(self, session: _SessionConfig, *, skip_pause: bool = False) -> bool:
         """[4-R1-e-4] Run main episode production loop.
 
         Returns True if caller should return early.
         """
-        # [4-R2-a] Unpack session config
-        chief_writer = session.chief_writer
-        manuscript_validator = session.manuscript_validator
-        consistency_validator = session.consistency_validator
-        blocking_validator = session.blocking_validator
-        continuity_validator = session.continuity_validator
-        s4_genre_type = session.s4_genre_type
-        story_context = session.story_context
-        style_guide = session.style_guide
-        reference_excerpt = session.reference_excerpt
+        runtime = self._prepare_interview_loop_runtime(session)
+        if runtime is None:
+            return False
+
+        # 5. 원고 생산 메인 루프
+        loop_guard = 0
+        while True:
+            loop_guard += 1
+            _loop_checkpoint = self._checkpoint_episode_loop(
+                loop_guard=loop_guard,
+                max_loops=runtime.max_loops,
+                target_ep=runtime.target_ep,
+                chief_writer=runtime.chief_writer,
+            )
+            if _loop_checkpoint.should_break:
+                break
+            _loop_disposition = self._run_episode_loop_iteration(
+                session=session,
+                runtime=runtime,
+                next_ep=_loop_checkpoint.next_ep,
+                skip_pause=skip_pause,
+            )
+            if _loop_disposition.should_return:
+                return True
+            if _loop_disposition.should_break:
+                break
+
+        # [V62.3] Stage 4 루프 종료
+        self.post_processor.run_post_episode_tasks(skip_pause=skip_pause)
+
+        return False
+
+    def _prepare_interview_loop_runtime(self, session: _SessionConfig) -> _InterviewLoopRuntime | None:
         target_ep = session.target_ep
-        output_dir = session.output_dir
-        v50_modules_available = session.v50_modules_available
         total_planned_ep = session.total_planned_ep
 
-        loop_guard = 0
         # [P1-D2] total_planned_ep=0 방어 (블루프린트 없는 경우)
         if not target_ep and total_planned_ep <= 0:
             self.ctx.ui.log("⚠️ 블루프린트가 없습니다. Stage 2를 먼저 실행하세요.")
-            return False
+            return None
         # [Sweep45] max(1, ...) — latest_ep > total_planned_ep 시 음수 방지
         max_loops = max(
             1, min((target_ep or total_planned_ep) - self.ctx.current_project.get_latest_episode_number() + 5, 100)
@@ -943,167 +1340,176 @@ JSON으로 출력:
         # [V66.1] B-2: ReferenceAnchor 루프 밖 1회 생성 (내부 캐시로 DB 중복 조회 방지)
         from modules.core.reference_anchor import ReferenceAnchor
 
-        _anchor_sys = ReferenceAnchor(self.ctx.current_project)
+        anchor_sys = ReferenceAnchor(self.ctx.current_project)
 
         # [LM-A-1] Bible → world_laws 자동 등록 (최초 1회)
         if self.ctx.world_state and not self.ctx.world_state.get_world_laws():
             self._register_bible_world_laws()
 
-        # 5. 원고 생산 메인 루프
-        while True:
-            loop_guard += 1
-            if loop_guard > max_loops:
-                self.ctx.ui.log("🛑 [Safety] 루프 제한 도달. 중단합니다.")
-                break
+        return _InterviewLoopRuntime(
+            chief_writer=session.chief_writer,
+            target_ep=target_ep,
+            output_dir=session.output_dir,
+            v50_modules_available=session.v50_modules_available,
+            max_loops=max_loops,
+            anchor_sys=anchor_sys,
+        )
 
-            next_ep = self.ctx.current_project.get_latest_episode_number()
-            self.interview_round.time_warnings = []  # [V70] 에피소드마다 리셋 (누적 방지)
-            self._set_agent_telemetry_context(ep_num=next_ep, extra_agents=[chief_writer])
-            if target_ep and next_ep > target_ep:
-                self._log_target_ep_reached(target_ep=int(target_ep), next_ep=int(next_ep))
-                self.ctx.ui.log(f"🏁 목표 회차({target_ep}화) 도달. 종료합니다.")
-                break
+    def _run_episode_loop_iteration(
+        self,
+        *,
+        session: _SessionConfig,
+        runtime: _InterviewLoopRuntime,
+        next_ep: int,
+        skip_pause: bool = False,
+    ) -> _EpisodeLoopDisposition:
+        episode_inputs = self._prepare_current_episode_inputs(next_ep=next_ep)
+        if episode_inputs is None:
+            return _EpisodeLoopDisposition(should_break=True)
 
-            _episode_inputs = self._prepare_current_episode_inputs(next_ep=next_ep)
-            if _episode_inputs is None:
-                break
-            blueprint = _episode_inputs.blueprint
-            arc_data = _episode_inputs.arc_data
-            _preflight_advisory = _episode_inputs.preflight_advisory
+        round_ctx = self._prepare_episode_round(
+            next_ep=next_ep,
+            arc_data=episode_inputs.arc_data,
+            blueprint=episode_inputs.blueprint,
+            chief_writer=session.chief_writer,
+            manuscript_validator=session.manuscript_validator,
+            consistency_validator=session.consistency_validator,
+            blocking_validator=session.blocking_validator,
+            continuity_validator=session.continuity_validator,
+            story_context=session.story_context,
+            style_guide=session.style_guide,
+            reference_excerpt=session.reference_excerpt,
+            preflight_advisory=episode_inputs.preflight_advisory,
+            anchor_sys=runtime.anchor_sys,
+            s4_genre_type=session.s4_genre_type,
+            v50_modules_available=runtime.v50_modules_available,
+        )
+        outcome = self._handle_round_outcome(round_ctx=round_ctx)
+        return self._consume_episode_round_outcome(
+            outcome=outcome,
+            next_ep=next_ep,
+            blueprint=episode_inputs.blueprint,
+            arc_data=episode_inputs.arc_data,
+            output_dir=runtime.output_dir,
+            v50_modules_available=runtime.v50_modules_available,
+            skip_pause=skip_pause,
+        )
 
-            # [4-R1-a] 에피소드 컨텍스트 수집 (Extract Method)
-            _ep_ctx = self.context_builder.prepare_episode_context(next_ep, arc_data, chief_writer)
-            arc_pos = _ep_ctx["arc_pos"]
-            total_ep_in_arc = _ep_ctx["total_ep_in_arc"]
-            arc_tactical = _ep_ctx["arc_tactical"]
-            prev_text = _ep_ctx["prev_text"]
-            prev_ending = _ep_ctx["prev_ending"]
-            _prev_manuscripts_text = _ep_ctx["prev_manuscripts_text"]
-            _episode_digest = _ep_ctx["episode_digest"]
-            hud_report = _ep_ctx["hud_report"]
-            # reserved for future use: current_inventory, current_martial_arts, dead_npcs, item_acquisition_timeline
-            _chain_link_section = _ep_ctx["chain_link_section"]
-            _world_state_summary = _ep_ctx["world_state_summary"]
+    @staticmethod
+    def _build_interview_round_loop_state() -> _InterviewRoundLoopState:
+        return _InterviewRoundLoopState()
 
-            _prompt_bundle = self._build_episode_prompt_bundle(
+    def _run_interview_round_step(
+        self,
+        *,
+        round_ctx: _RoundContext,
+        loop_state: _InterviewRoundLoopState,
+        next_ep: int,
+        interview_round: int,
+        max_rounds: int,
+        stage4_spinner,
+    ) -> _InterviewRoundStepDisposition:
+        self.ctx.ui.log(
+            f"   🔄 [Round {interview_round + 1}/{max_rounds}] 원고 생성 시도...",
+            stage="stage4",
+            component="round_execution",
+            ep_num=next_ep,
+            arc_num=round_ctx.arc_data.get("arc_no", 0),
+            round_num=interview_round,
+            event_kind="progress",
+        )
+        round_result = self.interview_round.run(
+            round_num=interview_round,
+            stage4_spinner=stage4_spinner,
+            director_feedback=loop_state.director_feedback,
+            previous_attempt=loop_state.previous_attempt,
+            round_ctx=round_ctx,
+        )
+        if round_result.verdict in ("PASS", "PASS_WITH_FIX"):
+            pass_disposition = self.outcome_runtime.handle_pass_round_result(
+                round_ctx=round_ctx,
+                round_result=round_result,
                 next_ep=next_ep,
-                arc_data=arc_data,
-                blueprint=blueprint,
-                arc_tactical=arc_tactical,
-                prev_text=prev_text,
-                prev_ending=prev_ending,
-                hud_report=hud_report,
-                anchor_sys=_anchor_sys,
-                s4_genre_type=s4_genre_type,
-                v50_modules_available=v50_modules_available,
+                interview_round=interview_round,
+                max_rounds=max_rounds,
+                pathology_counts=loop_state.pathology_counts,
+                pathology_repeat_emitted=loop_state.pathology_repeat_emitted,
             )
-            _ctx_prompts = _prompt_bundle.ctx_prompts
-            mandatory_context = _ctx_prompts["mandatory_context"]
-            # reserved for future use: reference_anchor_prompt, justification_prompt, reflexion_prompt
-
-            self.ctx.ui.log(f"\n{'=' * 60}")
-            self.ctx.ui.log(
-                f"📝 제{next_ep}화 집필 시작 (Arc {arc_data.get('arc_no', '?')}, 위치 {arc_pos}/{total_ep_in_arc})"
+            _step_disposition = self._apply_pass_round_step_disposition(
+                round_ctx=round_ctx,
+                loop_state=loop_state,
+                pass_disposition=pass_disposition,
             )
-            self.ctx.ui.log(f"{'=' * 60}")
+            if _step_disposition is not None:
+                return _step_disposition
 
-            # [V67] mandatory_context 우선순위 기반 스마트 트렁케이션 (50,000자 상한)
-            _mc_max = _threshold("context.mandatory_context_max", 80000)
-            if len(mandatory_context) > _mc_max:
-                _original_len = len(mandatory_context)
-                _ctx_budget_meta = getattr(self.ctx, "_stage4_context_budget_meta", {}) or {}
-                if isinstance(_ctx_budget_meta, dict) and _ctx_budget_meta:
-                    _budget_ledger = _ctx_budget_meta.get("budget_ledger") or {}
-                    _perf_logger.info(
-                        "[V66.1] mandatory_context pretrim meta sc=%s mc=%s total=%s limit=%s headroom=%s effective=%s dropped=%s overflow=%s",
-                        _ctx_budget_meta.get("sc_chars"),
-                        _ctx_budget_meta.get("mc_chars"),
-                        _ctx_budget_meta.get("total_chars"),
-                        _ctx_budget_meta.get("limit_chars"),
-                        _ctx_budget_meta.get("headroom_chars"),
-                        _budget_ledger.get("effective_cap"),
-                        _budget_ledger.get("dropped_chars"),
-                        _budget_ledger.get("overflow_chars"),
-                    )
-                _budget_result = _fit_mandatory_context_budget(
-                    mandatory_context,
-                    max_chars=_mc_max,
-                )
-                mandatory_context = _budget_result.mandatory_context
-                if _budget_result.removed_count > 0:
-                    _perf_logger.info(
-                        f"[V66.1] mandatory_context {_budget_result.removed_count}개 섹션 제거 ({_budget_result.removed_chars}자)"
-                    )
-                    self.ctx.ui.log(
-                        f"   ⚠️ [V66.1] mandatory_context {_original_len}자 → {len(mandatory_context)}자 (섹션 {_budget_result.removed_count}개 제거)"
-                    )
-                elif _budget_result.used_fallback:
-                    self.ctx.ui.log(
-                        f"   ⚠️ [V66.1] mandatory_context {_original_len}자 → {_mc_max:,}자로 truncate (폴백)"
-                    )
+        reject_step = self.outcome_runtime.handle_reject_round_result(
+            round_ctx=round_ctx,
+            round_result=round_result,
+            next_ep=next_ep,
+            interview_round=interview_round,
+            max_rounds=max_rounds,
+            logic_error_streak=loop_state.logic_error_streak,
+            inplace_attempted=loop_state.inplace_attempted,
+            blueprint_regenerated=loop_state.blueprint_regenerated,
+            prev_reject_bucket=loop_state.prev_reject_bucket,
+            bucket_streak=loop_state.bucket_streak,
+            prev_dominant_contradiction=loop_state.prev_dominant_contradiction,
+            contradiction_type_streak=loop_state.contradiction_type_streak,
+            score_history=loop_state.score_history,
+            plateau_advisory_emitted=loop_state.plateau_advisory_emitted,
+            pathology_counts=loop_state.pathology_counts,
+            pathology_repeat_emitted=loop_state.pathology_repeat_emitted,
+        )
+        self._apply_reject_round_step_disposition(loop_state=loop_state, reject_step=reject_step)
+        return _InterviewRoundStepDisposition(
+            round_ctx=reject_step.round_ctx,
+            loop_state=loop_state,
+        )
 
-            # [V61.6] 전체 면담 루프를 스피너로 감싸기
-            _ctx_prompts["mandatory_context"] = mandatory_context
-            _round_ctx = self._build_episode_round_context(
-                ep_ctx=_ep_ctx,
-                ctx_prompts=_ctx_prompts,
-                chief_writer=chief_writer,
-                manuscript_validator=manuscript_validator,
-                consistency_validator=consistency_validator,
-                blocking_validator=blocking_validator,
-                continuity_validator=continuity_validator,
-                next_ep=next_ep,
-                blueprint=blueprint,
-                arc_data=arc_data,
-                story_context=story_context,
-                style_guide=style_guide,
-                reference_excerpt=reference_excerpt,
-                preflight_advisory=_preflight_advisory,
-                prompt_bundle=_prompt_bundle,
+    @staticmethod
+    def _apply_pass_round_step_disposition(
+        *,
+        round_ctx: _RoundContext,
+        loop_state: _InterviewRoundLoopState,
+        pass_disposition: _PassRoundDisposition,
+    ) -> _InterviewRoundStepDisposition | None:
+        loop_state.final_manuscript = pass_disposition.final_manuscript
+        loop_state.final_title = pass_disposition.final_title
+        loop_state.final_state_updates = pass_disposition.final_state_updates
+        loop_state.director_feedback = pass_disposition.director_feedback
+        loop_state.previous_attempt = pass_disposition.previous_attempt
+        if pass_disposition.should_continue:
+            return _InterviewRoundStepDisposition(
+                round_ctx=round_ctx,
+                loop_state=loop_state,
+                should_continue=True,
             )
-            # ===== Phase 4: Director 면담 (5회) =====
-            _outcome = self._handle_round_outcome(round_ctx=_round_ctx)
-            if _outcome.should_return:
-                # [Sweep45] 5회 실패 시에도 벡터 메모리 동기화 보장
-                self.post_processor.run_post_episode_tasks(skip_pause=skip_pause)
-                return True
-            final_manuscript = _outcome.final_manuscript
-            final_title = _outcome.final_title
-            final_state_updates = _outcome.final_state_updates
+        if pass_disposition.accepted:
+            return _InterviewRoundStepDisposition(
+                round_ctx=round_ctx,
+                loop_state=loop_state,
+                should_break=True,
+            )
+        return None
 
-            # ===== Phase 5: 데이터 정산 =====
-            if final_manuscript:
-                if not self.post_processor.process_pass_result(
-                    next_ep=next_ep,
-                    final_manuscript=final_manuscript,
-                    final_title=final_title,
-                    final_state_updates=final_state_updates,
-                    blueprint=blueprint,
-                    arc_data=arc_data,
-                    output_dir=output_dir,
-                    v50_modules_available=v50_modules_available,
-                    extract_chain_link_fn=self._extract_chain_link,
-                    detect_npc_overexposure_fn=_detect_npc_overexposure,
-                    detect_cross_episode_repetition_fn=_detect_cross_episode_repetition,
-                ):
-                    # [Sweep46] DB 저장 실패 시 무한 재시도 방지 — break
-                    self.ctx.ui.log(f"   ⛔ [EP {next_ep}] DB 저장 실패. 집필 중단.")
-                    break
-
-                # [TF7-P2-07] PassRateMonitor 경보 소비
-                _prm = getattr(self.ctx, "pass_rate_monitor", None)
-                if _prm is not None:
-                    try:
-                        _alerts = _prm.check_alerts()
-                        for _alert in _alerts:
-                            logging.warning(f"[PassRate 경보] {_alert}")
-                    except Exception as _e:
-                        logging.debug("[Stage4] PassRateMonitor.check_alerts 실패 (무시): %s", _e)
-
-        # [V62.3] Stage 4 루프 종료
-        self.post_processor.run_post_episode_tasks(skip_pause=skip_pause)
-
-        return False
+    @staticmethod
+    def _apply_reject_round_step_disposition(
+        *,
+        loop_state: _InterviewRoundLoopState,
+        reject_step: _RejectRoundStepDisposition,
+    ) -> None:
+        loop_state.director_feedback = reject_step.director_feedback
+        loop_state.previous_attempt = reject_step.previous_attempt
+        loop_state.logic_error_streak = reject_step.logic_error_streak
+        loop_state.inplace_attempted = reject_step.inplace_attempted
+        loop_state.blueprint_regenerated = reject_step.blueprint_regenerated
+        loop_state.prev_reject_bucket = reject_step.prev_reject_bucket
+        loop_state.bucket_streak = reject_step.bucket_streak
+        loop_state.prev_dominant_contradiction = reject_step.prev_dominant_contradiction
+        loop_state.contradiction_type_streak = reject_step.contradiction_type_streak
+        loop_state.score_history = reject_step.score_history
+        loop_state.plateau_advisory_emitted = reject_step.plateau_advisory_emitted
 
     def _handle_round_outcome(self, *, round_ctx: _RoundContext) -> _RoundOutcome:
         """[4-R1-e-3] Run N-round interview loop (N = retry.director_max_attempts).
@@ -1114,22 +1520,7 @@ JSON으로 출력:
 
         next_ep = round_ctx.next_ep
 
-        final_manuscript = None
-        final_title = None
-        final_state_updates = {}
-        director_feedback = ""
-        previous_attempt = {}
-        _logic_error_streak = 0  # [V75-B] 연속 LOGIC_ERROR 카운터
-        _inplace_attempted = False  # [V75-D] inplace 패치 1회 제한
-        _blueprint_regenerated = False  # [V75-B] 재생성 1회 제한
-        _prev_reject_bucket = ""  # [TF-29] reject_bucket 연속 패턴 감지
-        _bucket_streak = 0
-        _prev_dominant_contradiction = ""  # [A-4] contradiction type 수렴 추적
-        _contradiction_type_streak = 0
-        _score_history: list[int] = []
-        _plateau_advisory_emitted = False
-        _pathology_counts: dict[str, int] = {}
-        _pathology_repeat_emitted: set[str] = set()
+        loop_state = self._build_interview_round_loop_state()
 
         with StageSpinner(4, f"제{next_ep}화 · 앙상블 준비") as stage4_spinner:
             try:
@@ -1139,438 +1530,61 @@ JSON으로 출력:
             _max_rounds = max(1, _max_rounds)
 
             for interview_round in range(_max_rounds):
-                self.ctx.ui.log(
-                    f"   🔄 [Round {interview_round + 1}/{_max_rounds}] 원고 생성 시도...",
-                    stage="stage4",
-                    component="round_execution",
-                    ep_num=next_ep,
-                    arc_num=round_ctx.arc_data.get("arc_no", 0),
-                    round_num=interview_round,
-                    event_kind="progress",
-                )
-                _round_result = self.interview_round.run(
-                    round_num=interview_round,
-                    stage4_spinner=stage4_spinner,
-                    director_feedback=director_feedback,
-                    previous_attempt=previous_attempt,
+                _step_disposition = self._run_interview_round_step(
                     round_ctx=round_ctx,
+                    loop_state=loop_state,
+                    next_ep=next_ep,
+                    interview_round=interview_round,
+                    max_rounds=_max_rounds,
+                    stage4_spinner=stage4_spinner,
                 )
-                if _round_result.verdict in ("PASS", "PASS_WITH_FIX"):  # [TF-32]
-                    self.ctx.ui.log(
-                        f"   ✅ [Round {interview_round + 1}] {_round_result.verdict}",
-                        stage="stage4",
-                        component="round_execution",
-                        ep_num=next_ep,
-                        arc_num=round_ctx.arc_data.get("arc_no", 0),
-                        round_num=interview_round,
-                        event_kind="result",
-                        meta={"verdict": _round_result.verdict},
-                    )
-                    final_manuscript = _round_result.final_manuscript
-                    final_title = _round_result.final_title
-                    final_state_updates = _round_result.final_state_updates
-
-                    _cove = self.ctx.get_module("chain_of_verification")
-                    if _cove and final_manuscript:
-                        try:
-                            _cove_context = {}
-                            _prev_ms = round_ctx.prev_manuscripts_text or ""
-                            _bp = round_ctx.blueprint
-                            if _prev_ms:
-                                _cove_context["prev_manuscript"] = _prev_ms[-1500:]
-                            if _bp:
-                                _cove_context["blueprint"] = _bp
-
-                            # [S4-I5] CoVe 최적화: quick_verify(Python) → verify(LLM) 단일 경로
-                            # quick_verify 통과 시 LLM 호출 스킵 (기존). 실패 시 경고를 LLM 컨텍스트에 주입.
-                            _quick_ok, _quick_msg = _cove.quick_verify(final_manuscript, _cove_context)
-                            if not _quick_ok:
-                                self.ctx.ui.log(f"   ⚠️ [CoVe] 사후검증 경고: {_quick_msg[:60]}...")
-                                # [S4-I5] quick_verify 경고를 LLM verify 컨텍스트에 주입 → 집중 검증
-                                _cove_context["quick_verify_warnings"] = _quick_msg
-                                try:
-                                    _cove_result = _cove.verify(
-                                        final_manuscript, _cove_context, content_type="manuscript"
-                                    )
-                                    if _cove_result.should_regenerate:
-                                        self.ctx.ui.log("   🚨 [CoVe] 치명적 모순 감지 → REJECT 전환")
-                                        _cove_feedback = _cove_result.correction_hints or _cove_result.summary
-                                        director_feedback = f"[CoVe 사후검증 실패]\n{_cove_feedback}"
-                                        previous_attempt = {
-                                            "score": 90,
-                                            "best_manuscript": final_manuscript,
-                                            "rejection_reason": director_feedback,
-                                            "state_updates": final_state_updates,  # [TF-S4-01] CoVe REJECT 시 소실 방지
-                                            "retry_pathology_source": "cove_fail_closed",
-                                            "cove_fail_closed": True,
-                                            "cove_runtime_failure": False,
-                                            "provisional_pass_downgrade": True,
-                                        }
-                                        final_manuscript = None
-                                        final_title = None  # [S4-P1-1] CoVe REJECT 시 title도 리셋
-                                        logging.warning(  # [F2] CoVe REJECT 라운드 소모 가시화
-                                            "[Stage4] ep=%d round=%d/%d CoVe LLM REJECT → 라운드 소모",
-                                            next_ep,
-                                            interview_round + 1,
-                                            _max_rounds,
-                                        )
-                                        self._emit_retry_pathology_signal(
-                                            ep_num=next_ep,
-                                            round_num=interview_round,
-                                            previous_attempt=previous_attempt,
-                                            pathology_counts=_pathology_counts,
-                                            pathology_repeat_emitted=_pathology_repeat_emitted,
-                                        )
-                                        continue
-                                    # [S4-I5] LLM verify에서 MINOR/MAJOR 경고만 → 통과 (REJECT 안 함)
-                                    if _cove_result.issues:
-                                        _cove_warnings = "; ".join(i.description[:40] for i in _cove_result.issues[:3])
-                                        self.ctx.ui.log(f"   ℹ️ [CoVe] LLM 검증 경고 (비차단): {_cove_warnings}")
-                                except Exception as e:
-                                    logging.warning(f"[FailClosed:CoVe:LLM] {e!s:.100}")
-                                    self.ctx.ui.log("   ⚠️ [CoVe] LLM 검증 런타임 실패 → Director PASS 유지")
-                                    logging.warning(
-                                        "[Stage4] ep=%d round=%d/%d CoVe LLM 런타임 실패 → PASS 유지",
-                                        next_ep,
-                                        interview_round + 1,
-                                        _max_rounds,
-                                    )
-                                    self._log_cove_runtime_advisory(
-                                        ep_num=next_ep,
-                                        round_num=interview_round,
-                                        source="llm_verify",
-                                        error=e,
-                                        quick_warning=_quick_msg,
-                                    )
-                        except Exception as e:
-                            logging.warning(f"[FailClosed:CoVe:Quick] {e!s:.100}")
-                            self.ctx.ui.log("   ⚠️ [CoVe] Quick 검증 런타임 실패 → Director PASS 유지")
-                            logging.warning(
-                                "[Stage4] ep=%d round=%d/%d CoVe Quick 런타임 실패 → PASS 유지",
-                                next_ep,
-                                interview_round + 1,
-                                _max_rounds,
-                            )
-                            self._log_cove_runtime_advisory(
-                                ep_num=next_ep,
-                                round_num=interview_round,
-                                source="quick_verify",
-                                error=e,
-                            )
-
+                round_ctx = _step_disposition.round_ctx
+                loop_state = _step_disposition.loop_state
+                if _step_disposition.should_continue:
+                    continue
+                if _step_disposition.should_break:
                     break
-                director_feedback = _round_result.director_feedback
-                previous_attempt = _round_result.previous_attempt
-                self.ctx.ui.log(
-                    f"   ❌ [Round {interview_round + 1}/{_max_rounds}] REJECT → 다음 라운드",
-                    stage="stage4",
-                    component="round_execution",
-                    ep_num=next_ep,
-                    arc_num=round_ctx.arc_data.get("arc_no", 0),
-                    round_num=interview_round,
-                    event_kind="result",
-                    level="warning",
-                    meta={"verdict": "REJECT"},
-                )
 
-                _current_score = (previous_attempt or {}).get("score", 0)
-                try:
-                    _current_score = int(_current_score)
-                except (TypeError, ValueError):
-                    _current_score = 0
-                if _current_score > 0:
-                    _score_history.append(_current_score)
-                    if not _plateau_advisory_emitted:
-                        _plateau_advisory = ""
-                        if len(_score_history) >= 3 and (
-                            _score_history[-3] > _score_history[-2] > _score_history[-1]
-                        ):
-                            _plateau_advisory = (
-                                f"[⚠️ 점수 하락 추세] 최근 점수가 "
-                                f"{_score_history[-3]}→{_score_history[-2]}→{_score_history[-1]}로 3연속 하락했습니다. "
-                                "현재 수정 루프의 효율이 낮습니다. fix_scope를 rewrite 이상으로 넓히거나 "
-                                "Blueprint/Arc 구조를 재검토하세요."
-                            )
-                        elif len(_score_history) >= 2 and _score_history[-2] == _score_history[-1]:
-                            _plateau_advisory = (
-                                f"[⚠️ 점수 plateau] 최근 두 라운드 점수가 {_score_history[-1]}점으로 동일합니다. "
-                                "동일 수정 루프를 반복 중일 수 있습니다. fix_scope 확대 또는 Blueprint 재검토를 우선 검토하세요."
-                            )
+        return self._finalize_round_outcome_loop(
+            next_ep=next_ep,
+            max_rounds=_max_rounds,
+            final_manuscript=loop_state.final_manuscript,
+            final_title=loop_state.final_title,
+            final_state_updates=loop_state.final_state_updates,
+            previous_attempt=loop_state.previous_attempt,
+            blueprint_regenerated=loop_state.blueprint_regenerated,
+        )
 
-                        if _plateau_advisory:
-                            _plateau_advisory_emitted = True
-                            director_feedback = _plateau_advisory + "\n" + director_feedback
-                            if isinstance(previous_attempt, dict):
-                                previous_attempt["score_history"] = list(_score_history[-3:])
-                                previous_attempt["plateau_detected"] = True
-                                _existing_reasoning = str(previous_attempt.get("fix_scope_reasoning", "") or "").strip()
-                                previous_attempt["fix_scope_reasoning"] = (
-                                    f"{_existing_reasoning}\n{_plateau_advisory}".strip()
-                                    if _existing_reasoning
-                                    else _plateau_advisory
-                                )
-                            self.ctx.ui.log(f"   ⚠️ [QR-7] {str(_plateau_advisory)[:80]}")
-
-                # [V75-B] LOGIC_ERROR 연속 카운터
-                if _round_result.error_category == "LOGIC_ERROR":
-                    _logic_error_streak += 1
-                else:
-                    _logic_error_streak = 0
-
-                # [TF-29] reject_bucket 연속 패턴 감지
-                _current_bucket = (_round_result.previous_attempt or {}).get("reject_bucket", "")
-                if _current_bucket and _current_bucket == _prev_reject_bucket:
-                    _bucket_streak += 1
-                else:
-                    _bucket_streak = 1 if _current_bucket else 0
-                _prev_reject_bucket = _current_bucket
-
-                # [TF-29] 동일 reject_bucket 3연속 → 블루프린트/아크 문제 가능성 advisory
-                _tf29_advisory = ""
-                if _bucket_streak >= 3 and not _blueprint_regenerated:
-                    _bucket_label = {
-                        "quality_issue": "품질",
-                        "constraint_violation": "제약 위반",
-                        "structure_error": "구조",
-                    }.get(_prev_reject_bucket, _prev_reject_bucket)
-                    self.ctx.ui.log(
-                        f"   ⚠️ [TF-29] '{_bucket_label}' 유형 REJECT {_bucket_streak}연속"
-                        " — 블루프린트/아크 수준 문제 가능성"
-                    )
-                    _tf29_advisory = (
-                        f"[⚠️ 반복 실패 패턴 감지] '{_bucket_label}' 유형 REJECT가 {_bucket_streak}회 연속입니다. "
-                        f"원고 수준 수정으로 해결되지 않을 가능성이 높습니다. "
-                        f"블루프린트의 해당 영역을 근본적으로 재검토하세요."
-                    )
-                    director_feedback = _tf29_advisory + "\n" + director_feedback
-
-                # [A-4] Contradiction type 수렴 추적
-                _curr_ct = (_round_result.previous_attempt or {}).get("contradiction_types", [])
-                _curr_dominant_ct = ""
-                if _curr_ct:
-                    from collections import Counter
-
-                    _ct_counter = Counter(_curr_ct)
-                    _curr_dominant_ct = _ct_counter.most_common(1)[0][0] if _ct_counter else ""
-                if _curr_dominant_ct and _curr_dominant_ct == _prev_dominant_contradiction:
-                    _contradiction_type_streak += 1
-                else:
-                    _contradiction_type_streak = 1 if _curr_dominant_ct else 0
-                _prev_dominant_contradiction = _curr_dominant_ct
-
-                # [A-4] LOGIC_ERROR + 동일 모순 유형 2연속 → Arc 구조 문제 advisory
-                if _contradiction_type_streak >= 2 and _logic_error_streak >= 2 and not _blueprint_regenerated:
-                    _ct_label = {
-                        "타임라인": "시간 순서/연대기",
-                        "수치": "수치/금액 정합성",
-                        "사망": "사망/생존 상태",
-                        "고유명사": "고유명사 일관성",
-                        "아이템": "아이템/장비",
-                        "상태": "캐릭터 상태",
-                    }.get(_curr_dominant_ct, _curr_dominant_ct)
-                    _a4_advisory = (
-                        f"[⚠️ A-4 구조 진단] '{_ct_label}' 모순이 {_contradiction_type_streak}라운드 연속. "
-                        f"이는 Writer 문제가 아닌 Blueprint/Arc 설계의 구조적 결함 가능성이 높습니다. "
-                        f"해당 영역의 Arc를 재검토하세요."
-                    )
-                    director_feedback = _a4_advisory + "\n" + director_feedback
-                    self.ctx.ui.log(f"   ⚠️ [A-4] '{_ct_label}' 모순 {_contradiction_type_streak}연속 — Arc 구조 진단")
-
-                # [V75-D] Step 1: N연속 → inplace 패치 (저비용 LLM 1회)
-                # [S3-META] quality_risk Blueprint → 1연속에서 조기 트리거
-                self._emit_retry_pathology_signal(
-                    ep_num=next_ep,
-                    round_num=interview_round,
-                    previous_attempt=previous_attempt,
-                    pathology_counts=_pathology_counts,
-                    pathology_repeat_emitted=_pathology_repeat_emitted,
-                )
-                _s3_meta = round_ctx.blueprint.get("_stage3_meta", {}) if isinstance(round_ctx.blueprint, dict) else {}
-                _quality_risk = bool(_s3_meta.get("quality_risk", False))
-                _v75d_threshold = 1 if _quality_risk else 2
-                logging.info("[V75-D] quality_risk=%s → threshold=%d, streak=%d",
-                    _quality_risk,
-                    _v75d_threshold,
-                    _logic_error_streak,
-                )
-                if _logic_error_streak >= _v75d_threshold and not _inplace_attempted:
-                    _inplace_attempted = True
-                    _v75d_success = False
-                    _bp_cr = None
-                    _bp_artifact_meta = {
-                        "candidate_key": "",
-                        "content_hash": "",
-                        "artifact_path": "",
-                    }
-                    try:
-                        self.ctx.ui.log(
-                            f"   🔧 [V75-D] LOGIC_ERROR {_logic_error_streak}연속 → 블루프린트 inplace 패치 시도..."
-                        )
-                        _bp_agent = self.ctx.agents.get("three_phase_bp")
-                        if _bp_agent:
-                            _reverse_feedback_43 = self._build_stage4_to_3_reverse_feedback(
-                                director_feedback=director_feedback,
-                                previous_attempt=previous_attempt,
-                            )
-                            _blueprint_feedback = self._merge_blueprint_feedback(
-                                director_feedback,
-                                _reverse_feedback_43,
-                            )
-                            _patched_bp = _bp_agent._inplace_patch_blueprint(
-                                original_blueprint=round_ctx.blueprint,
-                                director_feedback=_blueprint_feedback,
-                                ep_num=next_ep,
-                                arc_data=round_ctx.arc_data,
-                            )
-                            if _patched_bp:
-                                # [TF-IPG GAP-4] V75-D blueprint 패치 diff 로깅 + 변경비율 체크
-                                try:
-                                    import json as _json_mod
-
-                                    from modules.core.constants import calc_patch_change_ratio, log_patch_diff
-                                    _bp_orig_j = _json_mod.dumps(round_ctx.blueprint, ensure_ascii=False, indent=2)
-                                    _bp_patch_j = _json_mod.dumps(_patched_bp, ensure_ascii=False, indent=2)
-                                    log_patch_diff("S4-V75D-Blueprint", _bp_orig_j, _bp_patch_j)
-                                    _bp_cr = calc_patch_change_ratio(
-                                        _json_mod.dumps(round_ctx.blueprint, ensure_ascii=False),
-                                        _json_mod.dumps(_patched_bp, ensure_ascii=False),
-                                    )
-                                    if _bp_cr > 0.30:
-                                        logging.warning("[TF-IPG] V75-D Blueprint 변경 비율 %.1f%% > 30%%", _bp_cr * 100)
-                                except Exception as _diff_e:
-                                    logging.debug("[TF-IPG] V75-D diff 계산 실패: %s", _diff_e)
-                                _bp_artifact_meta = snapshot_logged_artifact(
-                                    getattr(self.ctx, "current_project", None),
-                                    stage=4,
-                                    ep_num=next_ep,
-                                    attempt_num=interview_round + 1,
-                                    candidate_key=build_candidate_key(
-                                        label="V75-D",
-                                        strategy="blueprint_inplace",
-                                        fallback="v75d_blueprint_patch",
-                                    ),
-                                    artifact_kind="patched_blueprint_after_fix",
-                                    payload=_patched_bp,
-                                )
-                                _audit_event = getattr(self.ctx, "audit_event", None)
-                                if callable(_audit_event):
-                                    _audit_payload = {
-                                        "ep_num": int(next_ep),
-                                        "round_num": int(interview_round + 1),
-                                        "candidate_key": str(_bp_artifact_meta.get("candidate_key", "") or "").strip(),
-                                        "content_hash": str(_bp_artifact_meta.get("content_hash", "") or "").strip(),
-                                        "artifact_path": str(_bp_artifact_meta.get("artifact_path", "") or "").strip(),
-                                    }
-                                    if isinstance(_bp_cr, (int, float)):
-                                        _audit_payload["change_ratio"] = float(_bp_cr)
-                                    _audit_event(
-                                        "stage4_v75d_blueprint_patch_snapshot",
-                                        "stage4 V75-D blueprint patch snapshot persisted",
-                                        _audit_payload,
-                                    )
-                                _v75d_success = True
-                                round_ctx = dataclasses.replace(round_ctx, blueprint=_patched_bp)
-                                _logic_error_streak = 0
-                                director_feedback = (
-                                    "[V75-D 블루프린트 inplace 패치 완료]\n"
-                                    "지적된 논리적 결함만 수정되었습니다. "
-                                    "수정된 블루프린트 기반으로 원고를 작성하세요."
-                                )
-                                if _tf29_advisory:  # [TF-29] advisory 보존
-                                    director_feedback = _tf29_advisory + "\n" + director_feedback
-                                previous_attempt = {}
-                                self.ctx.ui.log("   ✅ [V75-D] inplace 패치 성공")
-                            else:
-                                self.ctx.ui.log("   ⚠️ [V75-D] inplace 패치 실패 — 기존 블루프린트 유지")
-                    except Exception as _patch_err:
-                        logging.warning("[FailClosed:V75-D] inplace 패치 실패: %s",
-                            _patch_err,
-                        )
-                    # [V76] 에스컬레이션 이벤트 로그
-                    self._log_escalation_event(
-                        next_ep,
-                        "V75-D_INPLACE",
-                        _logic_error_streak,
-                        success=_v75d_success,
-                        round_num=interview_round,
-                        fix_scope=(previous_attempt or {}).get("fix_scope", ""),
-                        reason=director_feedback,
-                        contradiction_type=_curr_dominant_ct,
-                        candidate_key=str(_bp_artifact_meta.get("candidate_key", "") or "").strip(),
-                        content_hash=str(_bp_artifact_meta.get("content_hash", "") or "").strip(),
-                        artifact_path=str(_bp_artifact_meta.get("artifact_path", "") or "").strip(),
-                    )
-
-                # [V75-B] Step 2: inplace 시도 후에도 계속 실패 → 전면 재생성
-                elif _logic_error_streak >= 2 and _inplace_attempted and not _blueprint_regenerated:
-                    _v75b_success = False
-                    try:
-                        self.ctx.ui.log(
-                            f"   🔄 [V75-B] LOGIC_ERROR {_logic_error_streak}연속 → 블루프린트 재생성 시도..."
-                        )
-                        _reverse_feedback_43 = self._build_stage4_to_3_reverse_feedback(
-                            director_feedback=director_feedback,
-                            previous_attempt=previous_attempt,
-                        )
-                        _new_bp = self._regenerate_blueprint(
-                            next_ep,
-                            round_ctx.arc_data,
-                            round_ctx,
-                            external_feedback=self._merge_blueprint_feedback(director_feedback, _reverse_feedback_43),
-                        )
-                        if _new_bp:
-                            _v75b_success = True
-                            round_ctx = dataclasses.replace(round_ctx, blueprint=_new_bp)
-                            _blueprint_regenerated = True
-                            _logic_error_streak = 0
-                            director_feedback = (
-                                "[V75-B 블루프린트 재생성 완료]\n"
-                                "이전 블루프린트의 논리적 결함으로 재생성되었습니다. "
-                                "새 블루프린트 기반으로 원고를 작성하세요."
-                            )
-                            if _tf29_advisory:  # [TF-29] advisory 보존
-                                director_feedback = _tf29_advisory + "\n" + director_feedback
-                            previous_attempt = {}
-                            self.ctx.ui.log("   ✅ [V75-B] 블루프린트 재생성 성공")
-                        else:
-                            _blueprint_regenerated = True
-                            self.ctx.ui.log("   ⚠️ [V75-B] 블루프린트 재생성 실패 — 기존 블루프린트 유지")
-                    except Exception as _regen_err:
-                        _blueprint_regenerated = True
-                        logging.warning("[SilentPass:V75-B] 블루프린트 재생성 실패: %s",
-                            _regen_err,
-                        )
-                    # [V76] 에스컬레이션 이벤트 로그
-                    self._log_escalation_event(
-                        next_ep,
-                        "V75-B_FULL_REGEN",
-                        _logic_error_streak,
-                        success=_v75b_success,
-                        round_num=interview_round,
-                        fix_scope=(previous_attempt or {}).get("fix_scope", ""),
-                        reason=director_feedback,
-                        contradiction_type=_curr_dominant_ct,
-                    )
-
+    def _finalize_round_outcome_loop(
+        self,
+        *,
+        next_ep: int,
+        max_rounds: int,
+        final_manuscript,
+        final_title,
+        final_state_updates: dict,
+        previous_attempt: dict,
+        blueprint_regenerated: bool,
+    ) -> _RoundOutcome:
         # ===== 설정된 라운드 수 모두 실패 =====
         # [V75-B] B-Full: 블루프린트 재생성까지 했는데도 실패 → Arc 재생성 제안
-        if not final_manuscript and _blueprint_regenerated:
+        if not final_manuscript and blueprint_regenerated:
             self.ctx.ui.log("   🚨 [V75-B] 블루프린트 재생성 후에도 실패. Arc(전술서) 자체에 문제가 있을 수 있습니다.")
             self.ctx.ui.log("   💡 Stage 2에서 Arc를 재생성하면 해결될 수 있습니다.")
         if not final_manuscript:
-            _last_best = previous_attempt.get("best_manuscript", "") if previous_attempt else ""
-            _last_score = previous_attempt.get("score", 0) if previous_attempt else 0
-            if _last_best:
+            last_best = previous_attempt.get("best_manuscript", "") if previous_attempt else ""
+            last_score = previous_attempt.get("score", 0) if previous_attempt else 0
+            if last_best:
                 self.ctx.ui.log(
-                    f"\n⚠️ [EP {next_ep}] {_max_rounds}회 소진. 마지막 최선 결과물(score={_last_score}) 존재."
+                    f"\n⚠️ [EP {next_ep}] {max_rounds}회 소진. 마지막 최선 결과물(score={last_score}) 존재."
                 )
-                _choice = 2
+                choice = 2
                 if callable(getattr(self.ctx, "get_int_input", None)):
-                    _choice = self.ctx.get_int_input(
+                    choice = self.ctx.get_int_input(
                         "  1=최선 결과물로 진행  2=건너뛰기: ", default=2, min_val=1, max_val=2
                     )
-                if _choice == 1:
-                    final_manuscript = _last_best
+                if choice == 1:
+                    final_manuscript = last_best
                     final_title = final_title or f"제{next_ep}화"
                     final_state_updates = previous_attempt.get("state_updates", {})  # [TF-R3-S4-03] 폴백 시 상태 복구
                 else:
@@ -1581,7 +1595,7 @@ JSON으로 출력:
                         should_return=True,
                     )
             else:
-                self.ctx.ui.log(f"\n⛔ [EP {next_ep}] {_max_rounds}회 면담 모두 실패. 인간 검토 필요.")
+                self.ctx.ui.log(f"\n⛔ [EP {next_ep}] {max_rounds}회 면담 모두 실패. 인간 검토 필요.")
                 return _RoundOutcome(
                     final_manuscript=None,
                     final_title=None,
@@ -1596,194 +1610,342 @@ JSON으로 출력:
             should_return=False,
         )
 
-    def _evaluate_retry_fix_pack_contract(self, previous_attempt: dict | None) -> dict[str, object]:
-        previous_attempt = previous_attempt if isinstance(previous_attempt, dict) else {}
-        try:
-            return self.interview_round._evaluate_fix_pack_contract(previous_attempt.get("fix_pack"))
-        except Exception:
-            return {"ready": False, "reason": "contract_eval_failed", "fix_pack": {}}
-
-    @staticmethod
-    def _pathology_contradiction_type(previous_attempt: dict | None) -> str:
-        previous_attempt = previous_attempt if isinstance(previous_attempt, dict) else {}
-        contradiction_types = previous_attempt.get("contradiction_types") or []
-        if not isinstance(contradiction_types, list) or not contradiction_types:
-            return ""
-        counts: dict[str, int] = {}
-        for item in contradiction_types:
-            key = str(item or "").strip()
-            if not key:
-                continue
-            counts[key] = counts.get(key, 0) + 1
-        if not counts:
-            return ""
-        return max(counts.items(), key=lambda pair: pair[1])[0]
-
-    def _build_retry_pathology_payload(
+    def _apply_v75d_inplace_repair(
         self,
         *,
-        ep_num: int,
-        round_num: int,
-        previous_attempt: dict | None,
-    ) -> dict[str, object]:
-        previous_attempt = previous_attempt if isinstance(previous_attempt, dict) else {}
-        fix_pack_contract = self._evaluate_retry_fix_pack_contract(previous_attempt)
-        reject_bucket = str(previous_attempt.get("reject_bucket", "") or "").strip()
-        contradiction_type = self._pathology_contradiction_type(previous_attempt)
-        gate_basis = str(previous_attempt.get("gate_basis", "") or "").strip()
-        fix_scope = str(previous_attempt.get("fix_scope", "") or "").strip()
-        repair_scope = str(previous_attempt.get("repair_scope", "") or "").strip()
-        error_category = str(previous_attempt.get("error_category", "") or "").strip()
-        pathology_source = str(previous_attempt.get("retry_pathology_source", "") or "").strip()
-        fix_scope_reasoning = str(previous_attempt.get("fix_scope_reasoning", "") or "").strip()
-        open_review = str(previous_attempt.get("open_review", "") or "").strip()
-        firewall_triggered = bool(previous_attempt.get("firewall_triggered", False))
-        cove_fail_closed = bool(previous_attempt.get("cove_fail_closed", False))
-        cove_runtime_failure = bool(previous_attempt.get("cove_runtime_failure", False))
-        provisional_pass_downgrade = bool(previous_attempt.get("provisional_pass_downgrade", False))
-
-        tags: list[str] = []
-        if pathology_source:
-            tags.append(pathology_source)
-        if reject_bucket:
-            tags.append(reject_bucket)
-        if contradiction_type:
-            tags.append(f"contradiction:{contradiction_type}")
-        if firewall_triggered:
-            tags.append("continuity_firewall")
-        if provisional_pass_downgrade:
-            tags.append("provisional_pass_downgrade")
-        if cove_fail_closed:
-            tags.append("cove_fail_closed")
-        if cove_runtime_failure:
-            tags.append("cove_runtime_failure")
-        tags.append(
-            "fix_pack_ready" if bool(fix_pack_contract.get("ready")) else f"fix_pack:{str(fix_pack_contract.get('reason', '') or 'not_ready')}"
+        round_ctx: _RoundContext,
+        next_ep: int,
+        interview_round: int,
+        director_feedback: str,
+        previous_attempt: dict,
+        logic_error_streak: int,
+        tf29_advisory: str,
+        dominant_contradiction: str,
+    ) -> _RetryEscalationDisposition:
+        inplace_attempted = True
+        patch_attempt = self._run_v75d_patch_attempt(
+            round_ctx=round_ctx,
+            next_ep=next_ep,
+            interview_round=interview_round,
+            director_feedback=director_feedback,
+            previous_attempt=previous_attempt,
+            logic_error_streak=logic_error_streak,
+            tf29_advisory=tf29_advisory,
         )
 
-        fingerprint = "|".join(tag for tag in tags if tag) or "unclassified_retry_pathology"
-        return {
-            "ep_num": int(ep_num),
-            "round_num": int(round_num + 1),
-            "pathology_fingerprint": fingerprint,
-            "pathology_source": pathology_source,
-            "reject_bucket": reject_bucket,
-            "gate_basis": gate_basis,
-            "fix_scope": fix_scope,
-            "repair_scope": repair_scope,
-            "error_category": error_category,
-            "contradiction_type": contradiction_type,
-            "fix_pack_ready": bool(fix_pack_contract.get("ready")),
-            "fix_pack_reason": str(fix_pack_contract.get("reason", "") or "").strip(),
-            "provisional_pass_downgrade": provisional_pass_downgrade,
-            "firewall_triggered": firewall_triggered,
-            "cove_fail_closed": cove_fail_closed,
-            "cove_runtime_failure": cove_runtime_failure,
-            "plateau_detected": bool(previous_attempt.get("plateau_detected", False)),
-            "score": int(previous_attempt.get("score", 0) or 0),
-            "fix_scope_reasoning": fix_scope_reasoning[:240],
-            "open_review": open_review[:240],
-        }
+        self._log_escalation_event(
+            next_ep,
+            "V75-D_INPLACE",
+            patch_attempt.logic_error_streak,
+            success=patch_attempt.success,
+            round_num=interview_round,
+            fix_scope=(patch_attempt.previous_attempt or {}).get("fix_scope", ""),
+            reason=patch_attempt.director_feedback,
+            contradiction_type=dominant_contradiction,
+            candidate_key=str(patch_attempt.artifact_payload.artifact_meta.get("candidate_key", "") or "").strip(),
+            content_hash=str(patch_attempt.artifact_payload.artifact_meta.get("content_hash", "") or "").strip(),
+            artifact_path=str(patch_attempt.artifact_payload.artifact_meta.get("artifact_path", "") or "").strip(),
+        )
+        return _RetryEscalationDisposition(
+            round_ctx=patch_attempt.round_ctx,
+            director_feedback=patch_attempt.director_feedback,
+            previous_attempt=patch_attempt.previous_attempt,
+            logic_error_streak=patch_attempt.logic_error_streak,
+            inplace_attempted=inplace_attempted,
+            blueprint_regenerated=False,
+        )
 
-    def _emit_retry_pathology_signal(
+    def _run_v75d_patch_attempt(
         self,
         *,
-        ep_num: int,
-        round_num: int,
-        previous_attempt: dict | None,
-        pathology_counts: dict[str, int],
-        pathology_repeat_emitted: set[str],
-    ) -> None:
-        payload = self._build_retry_pathology_payload(
-            ep_num=ep_num,
-            round_num=round_num,
+        round_ctx: _RoundContext,
+        next_ep: int,
+        interview_round: int,
+        director_feedback: str,
+        previous_attempt: dict,
+        logic_error_streak: int,
+        tf29_advisory: str,
+    ) -> _V75DPatchAttemptPayload:
+        patched_bp = self._attempt_v75d_inplace_blueprint_patch(
+            round_ctx=round_ctx,
+            next_ep=next_ep,
+            director_feedback=director_feedback,
+            previous_attempt=previous_attempt,
+            logic_error_streak=logic_error_streak,
+        )
+        if patched_bp:
+            return self._apply_v75d_patch_success(
+                round_ctx=round_ctx,
+                patched_bp=patched_bp,
+                next_ep=next_ep,
+                interview_round=interview_round,
+                director_feedback=director_feedback,
+                previous_attempt=previous_attempt,
+                logic_error_streak=logic_error_streak,
+                tf29_advisory=tf29_advisory,
+            )
+        return self._build_failed_v75d_patch_attempt_payload(
+            round_ctx=round_ctx,
+            director_feedback=director_feedback,
+            previous_attempt=previous_attempt,
+            logic_error_streak=logic_error_streak,
+        )
+
+    def _attempt_v75d_inplace_blueprint_patch(
+        self,
+        *,
+        round_ctx: _RoundContext,
+        next_ep: int,
+        director_feedback: str,
+        previous_attempt: dict,
+        logic_error_streak: int,
+    ) -> dict | None:
+        try:
+            self.ctx.ui.log(
+                f"   🔧 [V75-D] LOGIC_ERROR {logic_error_streak}연속 → 블루프린트 inplace 패치 시도..."
+            )
+            patched_bp = self._request_v75d_inplace_blueprint_patch(
+                round_ctx=round_ctx,
+                next_ep=next_ep,
+                director_feedback=director_feedback,
+                previous_attempt=previous_attempt,
+            )
+            if not patched_bp:
+                self.ctx.ui.log("   ⚠️ [V75-D] inplace 패치 실패 — 기존 블루프린트 유지")
+            return patched_bp
+        except Exception as patch_err:
+            logging.warning("[FailClosed:V75-D] inplace 패치 실패: %s", patch_err)
+            return None
+
+    def _build_failed_v75d_patch_attempt_payload(
+        self,
+        *,
+        round_ctx: _RoundContext,
+        director_feedback: str,
+        previous_attempt: dict,
+        logic_error_streak: int,
+    ) -> _V75DPatchAttemptPayload:
+        return _V75DPatchAttemptPayload(
+            round_ctx=round_ctx,
+            director_feedback=director_feedback,
+            previous_attempt=previous_attempt,
+            logic_error_streak=logic_error_streak,
+            success=False,
+            artifact_payload=_V75DArtifactPayload(
+                artifact_meta={
+                    "candidate_key": "",
+                    "content_hash": "",
+                    "artifact_path": "",
+                }
+            ),
+        )
+
+    def _request_v75d_inplace_blueprint_patch(
+        self,
+        *,
+        round_ctx: _RoundContext,
+        next_ep: int,
+        director_feedback: str,
+        previous_attempt: dict,
+    ) -> dict | None:
+        bp_agent = self.ctx.agents.get("three_phase_bp")
+        if not bp_agent:
+            return None
+        reverse_feedback_43 = self._build_stage4_to_3_reverse_feedback(
+            director_feedback=director_feedback,
             previous_attempt=previous_attempt,
         )
-        entry = {"event": "STAGE4_RETRY_PATHOLOGY", **payload}
-        current_project = getattr(self.ctx, "current_project", None)
-        logs_dir = resolve_project_log_dir(current_project)
-        if logs_dir is None:
-            project_name = getattr(current_project, "name", None)
-            if not isinstance(project_name, str) or not project_name.strip() or "MagicMock" in project_name:
-                project_name = "_unknown_project"
-            logs_dir = Path("projects") / project_name / "logs"
-        log_file = Path(logs_dir) / "episode_production.jsonl"
-        try:
-            Path(logs_dir).mkdir(parents=True, exist_ok=True)
-            append_jsonl_record(log_file, entry)
-        except Exception as exc:
-            logging.warning("[Stage4] retry pathology sink write skipped: %s", exc)
+        blueprint_feedback = self._merge_blueprint_feedback(
+            director_feedback,
+            reverse_feedback_43,
+        )
+        return bp_agent._inplace_patch_blueprint(
+            original_blueprint=round_ctx.blueprint,
+            director_feedback=blueprint_feedback,
+            ep_num=next_ep,
+            arc_data=round_ctx.arc_data,
+        )
 
-        _audit_event = getattr(self.ctx, "audit_event", None)
-        if callable(_audit_event):
-            _audit_event(
-                "stage4_retry_pathology_signal",
-                "stage4 retry pathology observed",
-                dict(payload),
-            )
-
-        fingerprint = str(payload.get("pathology_fingerprint", "") or "").strip()
-        if not fingerprint:
-            return
-        pathology_counts[fingerprint] = int(pathology_counts.get(fingerprint, 0) or 0) + 1
-        repeat_count = pathology_counts[fingerprint]
-        if repeat_count < 2 or fingerprint in pathology_repeat_emitted:
-            return
-
-        repeat_payload = dict(payload)
-        repeat_payload["repeat_count"] = repeat_count
-        repeat_payload["event"] = "STAGE4_RETRY_PATHOLOGY_REPEAT"
-        try:
-            append_jsonl_record(log_file, repeat_payload)
-        except Exception as exc:
-            logging.warning("[Stage4] retry pathology repeat sink write skipped: %s", exc)
-        if callable(_audit_event):
-            _audit_event(
-                "stage4_retry_pathology_repeat",
-                "stage4 retry pathology repeated",
-                dict(repeat_payload),
-            )
-        pathology_repeat_emitted.add(fingerprint)
-
-    def _log_cove_runtime_advisory(
+    def _apply_v75d_patch_success(
         self,
         *,
-        ep_num: int,
-        round_num: int,
-        source: str,
-        error: Exception,
-        quick_warning: str = "",
-    ) -> None:
-        current_project = getattr(self.ctx, "current_project", None)
-        logs_dir = resolve_project_log_dir(current_project)
-        if logs_dir is None:
-            project_name = getattr(current_project, "name", None)
-            if not isinstance(project_name, str) or not project_name.strip() or "MagicMock" in project_name:
-                project_name = "_unknown_project"
-            logs_dir = Path("projects") / project_name / "logs"
-        payload = {
-            "event": "STAGE4_COVE_RUNTIME_ADVISORY",
-            "ep_num": int(ep_num),
-            "round_num": int(round_num),
-            "source": str(source or "").strip(),
-            "error_type": type(error).__name__,
-            "error_message": str(error)[:240],
-            "director_pass_preserved": True,
-            "quick_warning": str(quick_warning or "").strip()[:240],
-        }
-        try:
-            Path(logs_dir).mkdir(parents=True, exist_ok=True)
-            append_jsonl_record(Path(logs_dir) / "episode_production.jsonl", payload)
-        except Exception as exc:
-            logging.warning("[Stage4] CoVe runtime advisory sink write skipped: %s", exc)
+        round_ctx: _RoundContext,
+        patched_bp: dict,
+        next_ep: int,
+        interview_round: int,
+        director_feedback: str,
+        previous_attempt: dict,
+        logic_error_streak: int,
+        tf29_advisory: str,
+    ) -> _V75DPatchAttemptPayload:
+        artifact_payload = self._capture_v75d_patch_artifact(
+            round_ctx=round_ctx,
+            patched_bp=patched_bp,
+            next_ep=next_ep,
+            interview_round=interview_round,
+        )
+        success_payload = self._build_v75d_success_payload(
+            round_ctx=round_ctx,
+            patched_bp=patched_bp,
+            tf29_advisory=tf29_advisory,
+        )
+        self.ctx.ui.log("   ✅ [V75-D] inplace 패치 성공")
+        return _V75DPatchAttemptPayload(
+            round_ctx=success_payload.round_ctx,
+            director_feedback=success_payload.director_feedback,
+            previous_attempt=success_payload.previous_attempt,
+            logic_error_streak=success_payload.logic_error_streak,
+            success=True,
+            artifact_payload=artifact_payload,
+        )
 
-        _audit_event = getattr(self.ctx, "audit_event", None)
-        if callable(_audit_event):
-            _audit_event(
-                "stage4_cove_runtime_advisory",
-                "stage4 CoVe runtime advisory observed",
-                dict(payload),
+    def _capture_v75d_patch_artifact(
+        self,
+        *,
+        round_ctx: _RoundContext,
+        patched_bp: dict,
+        next_ep: int,
+        interview_round: int,
+    ) -> _V75DArtifactPayload:
+        bp_change_ratio = None
+        try:
+            import json as _json_mod
+
+            from modules.core.constants import calc_patch_change_ratio, log_patch_diff
+
+            bp_orig_json = _json_mod.dumps(round_ctx.blueprint, ensure_ascii=False, indent=2)
+            bp_patch_json = _json_mod.dumps(patched_bp, ensure_ascii=False, indent=2)
+            log_patch_diff("S4-V75D-Blueprint", bp_orig_json, bp_patch_json)
+            bp_change_ratio = calc_patch_change_ratio(
+                _json_mod.dumps(round_ctx.blueprint, ensure_ascii=False),
+                _json_mod.dumps(patched_bp, ensure_ascii=False),
             )
+            if bp_change_ratio > 0.30:
+                logging.warning("[TF-IPG] V75-D Blueprint 변경 비율 %.1f%% > 30%%", bp_change_ratio * 100)
+        except Exception as diff_err:
+            logging.debug("[TF-IPG] V75-D diff 계산 실패: %s", diff_err)
+        bp_artifact_meta = snapshot_logged_artifact(
+            getattr(self.ctx, "current_project", None),
+            stage=4,
+            ep_num=next_ep,
+            attempt_num=interview_round + 1,
+            candidate_key=build_candidate_key(
+                label="V75-D",
+                strategy="blueprint_inplace",
+                fallback="v75d_blueprint_patch",
+            ),
+            artifact_kind="patched_blueprint_after_fix",
+            payload=patched_bp,
+        )
+        audit_event = getattr(self.ctx, "audit_event", None)
+        if callable(audit_event):
+            audit_payload = {
+                "ep_num": int(next_ep),
+                "round_num": int(interview_round + 1),
+                "candidate_key": str(bp_artifact_meta.get("candidate_key", "") or "").strip(),
+                "content_hash": str(bp_artifact_meta.get("content_hash", "") or "").strip(),
+                "artifact_path": str(bp_artifact_meta.get("artifact_path", "") or "").strip(),
+            }
+            if isinstance(bp_change_ratio, (int, float)):
+                audit_payload["change_ratio"] = float(bp_change_ratio)
+            audit_event(
+                "stage4_v75d_blueprint_patch_snapshot",
+                "stage4 V75-D blueprint patch snapshot persisted",
+                audit_payload,
+            )
+        return _V75DArtifactPayload(
+            artifact_meta=bp_artifact_meta,
+            change_ratio=float(bp_change_ratio) if isinstance(bp_change_ratio, (int, float)) else None,
+        )
+
+    @staticmethod
+    def _build_v75d_success_payload(
+        *,
+        round_ctx: _RoundContext,
+        patched_bp: dict,
+        tf29_advisory: str,
+    ) -> _V75DSuccessPayload:
+        success_feedback = (
+            "[V75-D 블루프린트 inplace 패치 완료]\n"
+            "지적된 논리적 결함만 수정되었습니다. "
+            "수정된 블루프린트 기반으로 원고를 작성하세요."
+        )
+        if tf29_advisory:
+            success_feedback = tf29_advisory + "\n" + success_feedback
+        return _V75DSuccessPayload(
+            round_ctx=dataclasses.replace(round_ctx, blueprint=patched_bp),
+            director_feedback=success_feedback,
+            previous_attempt={},
+            logic_error_streak=0,
+        )
+
+    def _apply_v75b_blueprint_regeneration(
+        self,
+        *,
+        round_ctx: _RoundContext,
+        next_ep: int,
+        interview_round: int,
+        director_feedback: str,
+        previous_attempt: dict,
+        logic_error_streak: int,
+        tf29_advisory: str,
+        dominant_contradiction: str,
+    ) -> _RetryEscalationDisposition:
+        v75b_success = False
+        blueprint_regenerated = False
+        try:
+            self.ctx.ui.log(
+                f"   🔄 [V75-B] LOGIC_ERROR {logic_error_streak}연속 → 블루프린트 재생성 시도..."
+            )
+            reverse_feedback_43 = self._build_stage4_to_3_reverse_feedback(
+                director_feedback=director_feedback,
+                previous_attempt=previous_attempt,
+            )
+            new_bp = self._regenerate_blueprint(
+                next_ep,
+                round_ctx.arc_data,
+                round_ctx,
+                external_feedback=self._merge_blueprint_feedback(director_feedback, reverse_feedback_43),
+            )
+            if new_bp:
+                v75b_success = True
+                round_ctx = dataclasses.replace(round_ctx, blueprint=new_bp)
+                blueprint_regenerated = True
+                logic_error_streak = 0
+                director_feedback = (
+                    "[V75-B 블루프린트 재생성 완료]\n"
+                    "이전 블루프린트의 논리적 결함으로 재생성되었습니다. "
+                    "새 블루프린트 기반으로 원고를 작성하세요."
+                )
+                if tf29_advisory:
+                    director_feedback = tf29_advisory + "\n" + director_feedback
+                previous_attempt = {}
+                self.ctx.ui.log("   ✅ [V75-B] 블루프린트 재생성 성공")
+            else:
+                blueprint_regenerated = True
+                self.ctx.ui.log("   ⚠️ [V75-B] 블루프린트 재생성 실패 — 기존 블루프린트 유지")
+        except Exception as regen_err:
+            blueprint_regenerated = True
+            logging.warning("[SilentPass:V75-B] 블루프린트 재생성 실패: %s", regen_err)
+
+        self._log_escalation_event(
+            next_ep,
+            "V75-B_FULL_REGEN",
+            logic_error_streak,
+            success=v75b_success,
+            round_num=interview_round,
+            fix_scope=(previous_attempt or {}).get("fix_scope", ""),
+            reason=director_feedback,
+            contradiction_type=dominant_contradiction,
+        )
+        return _RetryEscalationDisposition(
+            round_ctx=round_ctx,
+            director_feedback=director_feedback,
+            previous_attempt=previous_attempt,
+            logic_error_streak=logic_error_streak,
+            inplace_attempted=True,
+            blueprint_regenerated=blueprint_regenerated,
+        )
 
     def _log_escalation_event(
         self,
@@ -1894,132 +2056,57 @@ JSON으로 출력:
             logging.warning("[V75-B] 블루프린트 재생성 내부 실패: %s", e)
             return None
 
-    def _prepare_stage4_session(self, *, limit_mode: bool = False, target_ep: int | None = None) -> dict | None:
-        """[4-R1-f] Prepare Stage 4 session: agents, context, style guide.
-
-        Returns session config dict for _run_interview_loop, or None if data missing.
-        """
-        # [V64.P3] lazy imports
-        from modules.core.constants import AIModels, Emojis
-
-        # [V65] 스피너 & 전역 상수 → spinners 모듈에서 직접 import (순환 참조 해소)
-        from modules.core.spinners import STAGE0_AVAILABLE, V50_MODULES_AVAILABLE
-        from modules.domain.agents.chief_writer import ChiefWriter
-        from modules.domain.agents.manuscript_validator import ManuscriptValidator
-        from modules.validation.blocking_validator import BlockingValidator  # [V66.1]
-        from modules.validation.consistency_validator import ConsistencyValidator  # [V63.2]
-        from modules.validation.continuity_validator import ContinuityValidator  # [V66.1]
-
-        # 1. 기초 데이터 점검
-        if not self.ctx.current_project.master_bible or not self.ctx.current_project.arcs:
-            self.ctx.ui.log(f"{Emojis.ERROR} [System] Bible 또는 Arc 데이터가 없습니다. Stage 1-2를 먼저 실행하세요.")
-            return None
-
-        # 2. Chief Writer 및 Validator 초기화
-        chief_writer = ChiefWriter(
-            context=self.ctx.current_project,
-            client=self.ctx.sys.api_client,
-            model_tier=AIModels.STAGE4_FIXED_WRITER_MODEL,
-        )
-        _s4_genre_type = self.ctx.selected_genre.get("type", "wuxia") if self.ctx.selected_genre else "wuxia"
-        manuscript_validator = ManuscriptValidator(
-            context=self.ctx.current_project, genre_type=_s4_genre_type, llm_client=self.ctx.sys.api_client
-        )
-        consistency_validator = ConsistencyValidator(guard=getattr(self.ctx.sys, "guard", None), genre=_s4_genre_type)
-        # [V66.1] BlockingValidator/ContinuityValidator — item_states, npc_personalities, time_warnings 라우팅
-        blocking_validator = BlockingValidator(context=self.ctx.current_project)
-        continuity_validator = ContinuityValidator(context=self.ctx.current_project)
-
-        # [V67.1] story_context 조립 — Director에게 작품 설정 전달
-        _story_context = ""
-        try:
-            _bible_root = self.ctx.current_project.master_bible.get(
-                "MasterBible", self.ctx.current_project.master_bible
-            )
-            _prot_config = _bible_root.get("protagonist_config", {})
-            _sc_parts = []
-            _sc_parts.append(f"- 장르: {_s4_genre_type}")
-            if _prot_config:
-                _sc_parts.append(f"- 주인공 이름: {_prot_config.get('name', '미상')}")
-                _sc_parts.append(f"- 세계 출신: {_prot_config.get('world_origin', '미상')}")
-                _incarnation = _prot_config.get("incarnation_type", "미상")
-                _sc_parts.append(f"- 환생 유형: {_incarnation}")
-                if _incarnation == "회귀자":
-                    _sc_parts.append(
-                        "→ 주인공은 미래에서 되돌아온 회귀자입니다. 미래의 사건, 주가, 인물 등을 미리 알고 있으며, 이 지식을 활용해 현재 역사를 의도적으로 변경하려 합니다. 이것은 모순이 아닙니다."
-                    )
-                elif _incarnation == "빙의자":
-                    _sc_parts.append(
-                        "→ 주인공은 다른 인물의 몸에 빙의한 존재입니다. 원래 인물의 기억/관계와 현재 인격이 다를 수 있습니다."
-                    )
-                elif _incarnation == "환생자":
-                    _sc_parts.append(
-                        "→ 주인공은 전생의 기억을 가진 환생자입니다. 전생의 지식이 단편적으로 나타날 수 있습니다."
-                    )
-                _core_traits = _prot_config.get("core_traits", "")
-                if _core_traits:
-                    _sc_parts.append(f"- 핵심 특성: {_core_traits}")
-            _story_context = "\n".join(_sc_parts)
-            _perf_logger.info(f"📋 [V67.1] story_context 조립 완료 ({len(_story_context)}자)")
-        except Exception as _sc_err:
-            _perf_logger.warning(f"⚠️ [V67.1] story_context 조립 실패 (비차단): {str(_sc_err)[:50]}")
-            _story_context = f"- 장르: {_s4_genre_type}"
-
-        self.ctx.ui.log("🎬 [V60.80] Stage 4 V2 - Chief Writer 주권주의 아키텍처 가동")
-        self.ctx.ui.log(f"   • Chief Writer 모델: {AIModels.STAGE4_FIXED_WRITER_MODEL}")
-        self.ctx.ui.log("   • 앙상블: 3개 병렬 생성")
-        self.ctx.ui.log("   • Director 면담: 5번 기회 (패치 모드 전 라운드 적용)")
-
-        # 3. 환경 설정
-        output_dir = self.ctx.current_project.paths.drafts
-        output_dir.mkdir(exist_ok=True)
-        total_planned_ep = self.ctx.current_project.db.get_latest_blueprint_number()
-        current_written = max(0, int(self.ctx.current_project.get_latest_episode_number() or 1) - 1)
-
-        # 4. 플랫폼 스타일 선택
+    def _resolve_session_target_ep(
+        self,
+        *,
+        target_ep: int | None,
+        limit_mode: bool,
+        current_written: int,
+        total_planned_ep: int,
+    ) -> _SessionTargetDecision:
         if target_ep is not None:
             if target_ep <= current_written:
                 self.ctx.ui.log(f"✅ 이미 {current_written}화까지 완료되어 제{target_ep}화 집필은 건너뜁니다.")
-                return None
-        elif limit_mode:
-            # [TF-CX-BUG-02] 입력 범위 역전 방어: 블루프린트가 0개인 경우
-            if total_planned_ep == 0:
-                self.ctx.ui.log("⚠️ 블루프린트가 없습니다. Stage 3에서 먼저 설계도를 생성해주세요.")
-                return None
-            if current_written >= total_planned_ep:
-                self.ctx.ui.log(f"✅ 이미 {current_written}화까지 완료되어 추가 집필할 범위가 없습니다.")
-                return None
-            target_ep = self.ctx.get_int_input(
+                return _SessionTargetDecision(should_abort=True)
+            return _SessionTargetDecision(target_ep=target_ep)
+
+        if not limit_mode:
+            return _SessionTargetDecision()
+
+        if total_planned_ep == 0:
+            self.ctx.ui.log("⚠️ 블루프린트가 없습니다. Stage 3에서 먼저 설계도를 생성해주세요.")
+            return _SessionTargetDecision(should_abort=True)
+        if current_written >= total_planned_ep:
+            self.ctx.ui.log(f"✅ 이미 {current_written}화까지 완료되어 추가 집필할 범위가 없습니다.")
+            return _SessionTargetDecision(should_abort=True)
+        return _SessionTargetDecision(
+            target_ep=self.ctx.get_int_input(
                 f"\n👉 몇 화까지 집필하시겠습니까? (현재 {current_written}화 / 최대 {total_planned_ep}화): ",
                 default=total_planned_ep,
                 min_val=current_written + 1,
                 max_val=total_planned_ep,
             )
-        else:
-            target_ep = None
+        )
 
-        self.ctx.ui.console.clear()
-        self.ctx.ui.title("V60.80 CHIEF WRITER", "Director 주권주의 아키텍처")
-
-        # [V60.95] 스타일 가이드 로드
+    def _resolve_session_style_guide(self, *, stage0_available: bool) -> _SessionStyleGuidePayload:
         style_guide = ""
         reference_excerpt = ""
         saved_style = load_style_guide_anchor(self.ctx.current_project)
-        if saved_style and STAGE0_AVAILABLE:
+        if saved_style and stage0_available:
             try:
                 from modules.core.stage0 import StyleGuide
 
                 loaded_sg = StyleGuide.from_dict(saved_style)
-                # [V70] Bible의 protagonist_config.pov로 오버라이드
                 try:
-                    _bible_pov = resolve_project_bible_pov(self.ctx.current_project)
-                    if _bible_pov:
-                        if loaded_sg.pov and _bible_pov != loaded_sg.pov:  # [TF-31-2]
-                            logging.warning("[TF-31-2] StyleGuide POV(%s) ≠ Bible POV(%s) — Bible 우선 적용",
+                    bible_pov = resolve_project_bible_pov(self.ctx.current_project)
+                    if bible_pov:
+                        if loaded_sg.pov and bible_pov != loaded_sg.pov:  # [TF-31-2]
+                            logging.warning(
+                                "[TF-31-2] StyleGuide POV(%s) ≠ Bible POV(%s) — Bible 우선 적용",
                                 loaded_sg.pov,
-                                _bible_pov,
+                                bible_pov,
                             )
-                        loaded_sg.pov = _bible_pov
+                        loaded_sg.pov = bible_pov
                 except Exception as e:
                     _perf_logger.warning(f"[SilentPass:Stage4] Bible POV 오버라이드 실패: {e!s:.100}")
                 style_guide = loaded_sg.to_prompt()
@@ -2033,16 +2120,15 @@ JSON으로 출력:
 
         reference_excerpt = _clamp_reference_excerpt(reference_excerpt)
 
-        # [V70] 스타일 가이드 없어도 Bible에 POV 설정이 있으면 최소 가이드 생성
-        if not style_guide and STAGE0_AVAILABLE:
+        if not style_guide and stage0_available:
             try:
                 from modules.core.stage0 import StyleGuide as _SG
 
-                _bible_pov = resolve_project_bible_pov(self.ctx.current_project)
-                if _bible_pov:
-                    _min_sg = _SG(pov=_bible_pov)
-                    style_guide = _min_sg.to_prompt()
-                    self.ctx.ui.log(f"📖 [V70] Bible POV 기반 최소 스타일 가이드 생성 (시점: {_bible_pov})")
+                bible_pov = resolve_project_bible_pov(self.ctx.current_project)
+                if bible_pov:
+                    min_style_guide = _SG(pov=bible_pov)
+                    style_guide = min_style_guide.to_prompt()
+                    self.ctx.ui.log(f"📖 [V70] Bible POV 기반 최소 스타일 가이드 생성 (시점: {bible_pov})")
             except Exception as e:
                 _perf_logger.warning(f"[SilentPass:Stage4] Bible POV 기반 스타일 가이드 생성 실패: {e!s:.100}")
 
@@ -2056,32 +2142,220 @@ JSON으로 출력:
                 else "카카오: 사이다 전개, 절벽걸기, 4K 해상도 묘사"
             )
 
-        # [V62.5] 캐릭터 보이스 가이드 주입
-        if self.ctx.character_voice and self.ctx.character_voice.profiles:
-            try:
-                voice_prompt = self.ctx.character_voice.get_writer_injection()
-                if voice_prompt:
-                    style_guide += f"\n\n{voice_prompt}"
-                    self.ctx.ui.log(
-                        f"🎤 [V62.5] 캐릭터 보이스 가이드 주입됨 ({len(self.ctx.character_voice.profiles)}명)"
-                    )
-            except Exception as voice_err:
-                self.ctx.ui.log(f"   ⚠️ 캐릭터 보이스 주입 실패 (비차단): {voice_err}")
+        return _SessionStyleGuidePayload(
+            style_guide=style_guide,
+            reference_excerpt=reference_excerpt,
+        )
 
+    def _build_session_story_context(self, *, s4_genre_type: str) -> str:
+        story_context = ""
+        try:
+            bible_root = self.ctx.current_project.master_bible.get(
+                "MasterBible",
+                self.ctx.current_project.master_bible,
+            )
+            protagonist_config = bible_root.get("protagonist_config", {})
+            story_context_parts = [f"- 장르: {s4_genre_type}"]
+            if protagonist_config:
+                story_context_parts.append(f"- 주인공 이름: {protagonist_config.get('name', '미상')}")
+                story_context_parts.append(f"- 세계 출신: {protagonist_config.get('world_origin', '미상')}")
+                incarnation = protagonist_config.get("incarnation_type", "미상")
+                story_context_parts.append(f"- 환생 유형: {incarnation}")
+                if incarnation == "회귀자":
+                    story_context_parts.append(
+                        "→ 주인공은 미래에서 되돌아온 회귀자입니다. 미래의 사건, 주가, 인물 등을 미리 알고 있으며, 이 지식을 활용해 현재 역사를 의도적으로 변경하려 합니다. 이것은 모순이 아닙니다."
+                    )
+                elif incarnation == "빙의자":
+                    story_context_parts.append(
+                        "→ 주인공은 다른 인물의 몸에 빙의한 존재입니다. 원래 인물의 기억/관계와 현재 인격이 다를 수 있습니다."
+                    )
+                elif incarnation == "환생자":
+                    story_context_parts.append(
+                        "→ 주인공은 전생의 기억을 가진 환생자입니다. 전생의 지식이 단편적으로 나타날 수 있습니다."
+                    )
+                core_traits = protagonist_config.get("core_traits", "")
+                if core_traits:
+                    story_context_parts.append(f"- 핵심 특성: {core_traits}")
+            story_context = "\n".join(story_context_parts)
+            _perf_logger.info(f"📋 [V67.1] story_context 조립 완료 ({len(story_context)}자)")
+        except Exception as story_context_err:
+            _perf_logger.warning(f"⚠️ [V67.1] story_context 조립 실패 (비차단): {str(story_context_err)[:50]}")
+            story_context = f"- 장르: {s4_genre_type}"
+        return story_context
+
+    def _apply_character_voice_guide(self, *, style_guide: str) -> str:
+        character_voice = getattr(self.ctx, "character_voice", None)
+        if not character_voice or not character_voice.profiles:
+            return style_guide
+
+        try:
+            voice_prompt = character_voice.get_writer_injection()
+            if voice_prompt:
+                style_guide += f"\n\n{voice_prompt}"
+                self.ctx.ui.log(
+                    f"🎤 [V62.5] 캐릭터 보이스 가이드 주입됨 ({len(character_voice.profiles)}명)"
+                )
+        except Exception as voice_err:
+            self.ctx.ui.log(f"   ⚠️ 캐릭터 보이스 주입 실패 (비차단): {voice_err}")
+        return style_guide
+
+    def _initialize_session_agents(
+        self,
+        *,
+        chief_writer_cls,
+        manuscript_validator_cls,
+        consistency_validator_cls,
+        blocking_validator_cls,
+        continuity_validator_cls,
+        writer_model,
+    ) -> _SessionAgentBootstrap:
+        s4_genre_type = self.ctx.selected_genre.get("type", "wuxia") if self.ctx.selected_genre else "wuxia"
+        return _SessionAgentBootstrap(
+            chief_writer=chief_writer_cls(
+                context=self.ctx.current_project,
+                client=self.ctx.sys.api_client,
+                model_tier=writer_model,
+            ),
+            manuscript_validator=manuscript_validator_cls(
+                context=self.ctx.current_project,
+                genre_type=s4_genre_type,
+                llm_client=self.ctx.sys.api_client,
+            ),
+            consistency_validator=consistency_validator_cls(
+                guard=getattr(self.ctx.sys, "guard", None),
+                genre=s4_genre_type,
+            ),
+            blocking_validator=blocking_validator_cls(context=self.ctx.current_project),
+            continuity_validator=continuity_validator_cls(context=self.ctx.current_project),
+            s4_genre_type=s4_genre_type,
+        )
+
+    def _prepare_session_environment(self) -> _SessionEnvironmentPayload:
+        output_dir = self.ctx.current_project.paths.drafts
+        output_dir.mkdir(exist_ok=True)
+        total_planned_ep = self.ctx.current_project.db.get_latest_blueprint_number()
+        current_written = max(0, int(self.ctx.current_project.get_latest_episode_number() or 1) - 1)
+        return _SessionEnvironmentPayload(
+            output_dir=output_dir,
+            total_planned_ep=total_planned_ep,
+            current_written=current_written,
+        )
+
+    def _prepare_session_ui(self, *, writer_model: str) -> None:
+        self.ctx.ui.log("🎬 [V60.80] Stage 4 V2 - Chief Writer 주권주의 아키텍처 가동")
+        self.ctx.ui.log(f"   • Chief Writer 모델: {writer_model}")
+        self.ctx.ui.log("   • 앙상블: 3개 병렬 생성")
+        self.ctx.ui.log("   • Director 면담: 5번 기회 (패치 모드 전 라운드 적용)")
+        self.ctx.ui.console.clear()
+        self.ctx.ui.title("V60.80 CHIEF WRITER", "Director 주권주의 아키텍처")
+
+    @staticmethod
+    def _build_session_config(
+        *,
+        agent_bootstrap: _SessionAgentBootstrap,
+        story_context: str,
+        style_guide: str,
+        reference_excerpt: str,
+        target_ep,
+        session_environment: _SessionEnvironmentPayload,
+        v50_modules_available: bool,
+    ) -> _SessionConfig:
         return _SessionConfig(
-            chief_writer=chief_writer,
-            manuscript_validator=manuscript_validator,
-            consistency_validator=consistency_validator,
-            blocking_validator=blocking_validator,
-            continuity_validator=continuity_validator,
-            s4_genre_type=_s4_genre_type,
-            story_context=_story_context,
+            chief_writer=agent_bootstrap.chief_writer,
+            manuscript_validator=agent_bootstrap.manuscript_validator,
+            consistency_validator=agent_bootstrap.consistency_validator,
+            blocking_validator=agent_bootstrap.blocking_validator,
+            continuity_validator=agent_bootstrap.continuity_validator,
+            s4_genre_type=agent_bootstrap.s4_genre_type,
+            story_context=story_context,
             style_guide=style_guide,
             reference_excerpt=reference_excerpt,
             target_ep=target_ep,
-            output_dir=output_dir,
+            output_dir=session_environment.output_dir,
+            v50_modules_available=v50_modules_available,
+            total_planned_ep=session_environment.total_planned_ep,
+        )
+
+    def _validate_session_prerequisites(self, *, error_emoji: str) -> bool:
+        if self.ctx.current_project.master_bible and self.ctx.current_project.arcs:
+            return True
+        self.ctx.ui.log(f"{error_emoji} [System] Bible 또는 Arc 데이터가 없습니다. Stage 1-2를 먼저 실행하세요.")
+        return False
+
+    def _prepare_session_style_payload(self, *, stage0_available: bool) -> _SessionStyleGuidePayload:
+        style_payload = self._resolve_session_style_guide(stage0_available=stage0_available)
+        return _SessionStyleGuidePayload(
+            style_guide=self._apply_character_voice_guide(style_guide=style_payload.style_guide),
+            reference_excerpt=style_payload.reference_excerpt,
+        )
+
+    @staticmethod
+    def _load_session_runtime_dependencies() -> _SessionRuntimeDependencies:
+        from modules.core.constants import AIModels, Emojis
+        from modules.core.spinners import STAGE0_AVAILABLE, V50_MODULES_AVAILABLE
+        from modules.domain.agents.chief_writer import ChiefWriter
+        from modules.domain.agents.manuscript_validator import ManuscriptValidator
+        from modules.validation.blocking_validator import BlockingValidator
+        from modules.validation.consistency_validator import ConsistencyValidator
+        from modules.validation.continuity_validator import ContinuityValidator
+
+        return _SessionRuntimeDependencies(
+            ai_models=AIModels,
+            emojis=Emojis,
+            stage0_available=STAGE0_AVAILABLE,
             v50_modules_available=V50_MODULES_AVAILABLE,
-            total_planned_ep=total_planned_ep,
+            chief_writer_cls=ChiefWriter,
+            manuscript_validator_cls=ManuscriptValidator,
+            blocking_validator_cls=BlockingValidator,
+            consistency_validator_cls=ConsistencyValidator,
+            continuity_validator_cls=ContinuityValidator,
+        )
+
+    def _prepare_stage4_session(self, *, limit_mode: bool = False, target_ep: int | None = None) -> dict | None:
+        """[4-R1-f] Prepare Stage 4 session: agents, context, style guide.
+
+        Returns session config dict for _run_interview_loop, or None if data missing.
+        """
+        runtime_deps = self._load_session_runtime_dependencies()
+
+        # 1. 기초 데이터 점검
+        if not self._validate_session_prerequisites(error_emoji=runtime_deps.emojis.ERROR):
+            return None
+
+        agent_bootstrap = self._initialize_session_agents(
+            chief_writer_cls=runtime_deps.chief_writer_cls,
+            manuscript_validator_cls=runtime_deps.manuscript_validator_cls,
+            consistency_validator_cls=runtime_deps.consistency_validator_cls,
+            blocking_validator_cls=runtime_deps.blocking_validator_cls,
+            continuity_validator_cls=runtime_deps.continuity_validator_cls,
+            writer_model=runtime_deps.ai_models.STAGE4_FIXED_WRITER_MODEL,
+        )
+        _story_context = self._build_session_story_context(s4_genre_type=agent_bootstrap.s4_genre_type)
+        self._prepare_session_ui(writer_model=runtime_deps.ai_models.STAGE4_FIXED_WRITER_MODEL)
+
+        # 3. 환경 설정
+        session_environment = self._prepare_session_environment()
+
+        target_decision = self._resolve_session_target_ep(
+            target_ep=target_ep,
+            limit_mode=limit_mode,
+            current_written=session_environment.current_written,
+            total_planned_ep=session_environment.total_planned_ep,
+        )
+        if target_decision.should_abort:
+            return None
+        target_ep = target_decision.target_ep
+
+        style_payload = self._prepare_session_style_payload(stage0_available=runtime_deps.stage0_available)
+
+        return self._build_session_config(
+            agent_bootstrap=agent_bootstrap,
+            story_context=_story_context,
+            style_guide=style_payload.style_guide,
+            reference_excerpt=style_payload.reference_excerpt,
+            target_ep=target_ep,
+            session_environment=session_environment,
+            v50_modules_available=runtime_deps.v50_modules_available,
         )
 
     def stage_4_v2_chief_writer(self, limit_mode: bool = False, *, target_ep: int | None = None, skip_pause: bool = False) -> None:

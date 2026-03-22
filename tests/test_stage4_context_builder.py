@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 
 from modules.core.context_advisor import RetrievalPlan, RetrievalSlot, RetrievalSources
 from modules.core.stage4_context_builder import Stage4ContextBuilder
+from modules.core.stage4_context_packets import Stage4ContextPackets
 from modules.core.stage4_orchestrator import Stage4Orchestrator, _RoundContext
 
 
@@ -76,6 +77,7 @@ class TestContextBuilderInit:
         ctx = _make_ctx()
         cb = Stage4ContextBuilder(ctx)
         assert cb.ctx is ctx
+        assert isinstance(cb.context_packets, Stage4ContextPackets)
 
     def test_lazy_init_via_orchestrator(self):
         app = MagicMock()
@@ -246,6 +248,82 @@ class TestLoadChainLinkSection:
         assert cb.load_chain_link_section(5) == ""
 
 
+class TestBuildContinuityPacketHelpers:
+    def test_build_continuity_npc_sections_marks_dead_and_history(self):
+        cb = Stage4ContextBuilder(_make_ctx())
+        db = MagicMock()
+        db.get_npc_history.return_value = [
+            {
+                "episode_no": 7,
+                "field_name": "status",
+                "old_value": "alive",
+                "new_value": "dead",
+                "reason": "sacrifice",
+            }
+        ]
+
+        sections, used = cb.context_packets._build_continuity_npc_sections(
+            npc_names=["ally"],
+            ws_state={"dead_npcs": {"ally": {"cause": "duel", "name": "ally"}}},
+            ledger={"characters": {"ally": {"history": ["ep3: saved the lead"]}}},
+            db=db,
+            budget=1000,
+        )
+
+        assert len(sections) == 1
+        assert used == len(sections[0])
+        assert "⚠️ 사망" in sections[0]
+        assert "[이력] ep3: saved the lead" in sections[0]
+        assert "[변경 7화] status: alive → dead (sacrifice)" in sections[0]
+
+    def test_build_continuity_relationship_section_builds_trajectory_once(self):
+        cb = Stage4ContextBuilder(_make_ctx())
+        db = MagicMock()
+        db.get_npc_relationship_edges.side_effect = [
+            [{"npc1": "alice", "npc2": "bob", "relation": "friends", "since_ep": 2}],
+            [{"npc1": "bob", "npc2": "alice", "relation": "friends", "since_ep": 2}],
+        ]
+        db.get_relationship_history.return_value = [
+            {"new_relation": "rivals", "change_ep": 3},
+            {"new_relation": "allies", "change_ep": 5},
+        ]
+
+        section = cb.context_packets._build_continuity_relationship_section(npc_names=["alice", "bob"], db=db)
+
+        assert section.startswith("• 관계 변천사")
+        assert section.count("alice ↔ bob") == 1
+        assert "rivals→allies" in section
+        assert "(ep3→ep5)" in section
+
+    @patch("modules.core.stage4_context_builder._build_canonical_facts_section", return_value="• 정설 팩트\nfact")
+    def test_build_continuity_fact_sections_includes_numeric_and_canonical(self, _mock_canonical):
+        cb = Stage4ContextBuilder(_make_ctx())
+
+        sections = cb.context_packets._build_continuity_fact_sections(
+            full_text="score must stay stable in the report",
+            ledger={
+                "numbers": {
+                    "score": {
+                        "value": 12,
+                        "unit": "pt",
+                        "established_value": 10,
+                        "established_ep": 2,
+                        "last_ep": 7,
+                        "history": ["ep7: bonus applied"],
+                    }
+                }
+            },
+            fact_ledger=MagicMock(),
+            db=MagicMock(),
+        )
+
+        assert len(sections) == 2
+        assert sections[0].startswith("• 수치 변화 이력")
+        assert "score: 10 pt(ep2) → 12 pt(ep7)" in sections[0]
+        assert "└ ep7: bonus applied" in sections[0]
+        assert sections[1] == "• 정설 팩트\nfact"
+
+
 class TestBuildExtendedLookback:
     def test_ep3_or_less_returns_empty(self):
         cb = Stage4ContextBuilder(_make_ctx())
@@ -276,6 +354,138 @@ class TestBuildExtendedLookback:
 
 
 class TestPrepareEpisodeContext:
+    def test_build_episode_base_payload_normalizes_tactical_doc_and_prev_ending(self):
+        from modules.core.stage4_context_builder import Stage4EpisodeBasePayload
+
+        ctx = _make_ctx()
+        prev_text = "이전 화 내용 " * 300
+        ctx.current_project.db.get_manuscript.return_value = {"content": prev_text}
+        cb = Stage4ContextBuilder(ctx)
+        cb._build_prev_manuscripts_text = MagicMock(return_value="lookback")
+        cb._build_episode_digest = MagicMock(return_value="digest")
+
+        result = cb._build_episode_base_payload(
+            next_ep=5,
+            arc_data={"ep_start": 1, "ep_count": 10, "tactical_doc": {"k": "v"}},
+            chief_writer=MagicMock(),
+            db=ctx.current_project.db,
+        )
+
+        assert result == Stage4EpisodeBasePayload(
+            arc_pos=5,
+            total_ep_in_arc=10,
+            arc_tactical='{"k": "v"}',
+            prev_text=prev_text,
+            prev_ending=prev_text[-2500:],
+            prev_manuscripts_text="lookback",
+            episode_digest="digest",
+        )
+        cb._build_prev_manuscripts_text.assert_called_once_with(5)
+        cb._build_episode_digest.assert_called_once()
+
+    def test_build_episode_base_payload_injects_long_term_anchor_before_lookback(self):
+        ctx = _make_ctx()
+        ctx.current_project.db.get_manuscript.return_value = {"content": "이전 화"}
+        ctx.world_state = MagicMock()
+        ctx.world_state.get_long_term_anchor.return_value = "[LONGTERM]"
+        cb = Stage4ContextBuilder(ctx)
+        cb._build_prev_manuscripts_text = MagicMock(return_value="lookback")
+        cb._build_episode_digest = MagicMock(return_value="digest")
+
+        result = cb._build_episode_base_payload(
+            next_ep=60,
+            arc_data={"ep_start": 51, "ep_count": 10, "tactical_doc": "전술"},
+            chief_writer=MagicMock(),
+            db=ctx.current_project.db,
+        )
+
+        assert result["prev_manuscripts_text"] == "[LONGTERM]\n\n---\n\nlookback"
+        ctx.world_state.get_long_term_anchor.assert_called_once_with(current_ep=60)
+
+    def test_build_episode_state_payload_collects_hud_and_state_sections(self):
+        from modules.core.stage4_context_builder import Stage4EpisodeStatePayload
+
+        ctx = _make_ctx()
+        ctx.sys.hud.inventory = ["청룡검"]
+        ctx.sys.hud.techniques = ["비연보"]
+        ctx.current_project.db.get_cumulative_bible.return_value = {"dead_npcs": ["흑풍"]}
+        ctx.build_item_acquisition_timeline.return_value = "timeline"
+        ctx.world_state = MagicMock()
+        ctx.world_state.get_summary.return_value = "world summary"
+        cb = Stage4ContextBuilder(ctx)
+        cb.load_chain_link_section = MagicMock(return_value="chain text")
+        cb._collect_recent_scene_keywords = MagicMock(return_value=[{"ep": 4, "scenes": [{"검", "혈투"}]}])
+
+        result = cb._build_episode_state_payload(next_ep=5, db=ctx.current_project.db)
+
+        assert result == Stage4EpisodeStatePayload(
+            hud_report="HUD 리포트",
+            current_inventory=["청룡검"],
+            current_martial_arts=["비연보"],
+            cumulative_bible={"dead_npcs": ["흑풍"]},
+            dead_npcs=["흑풍"],
+            item_acquisition_timeline="timeline",
+            chain_link_section="chain text",
+            world_state_summary="world summary",
+            recent_scene_keywords=[{"ep": 4, "scenes": [{"검", "혈투"}]}],
+        )
+        cb.load_chain_link_section.assert_called_once_with(5)
+        cb._collect_recent_scene_keywords.assert_called_once_with(ctx.current_project.db, 5, lookback=3)
+
+    def test_build_episode_state_payload_normalizes_dead_npc_string_and_hud_none(self):
+        ctx = _make_ctx()
+        ctx.sys.hud = None
+        ctx.current_project.db.get_cumulative_bible.return_value = {"dead_npcs": "흑풍"}
+        cb = Stage4ContextBuilder(ctx)
+        cb.load_chain_link_section = MagicMock(return_value="")
+        cb._collect_recent_scene_keywords = MagicMock(side_effect=RuntimeError("scene fail"))
+
+        result = cb._build_episode_state_payload(next_ep=5, db=ctx.current_project.db)
+
+        assert result["hud_report"] == ""
+        assert result["current_inventory"] == []
+        assert result["current_martial_arts"] == []
+        assert result["dead_npcs"] == ["흑풍"]
+        assert result["recent_scene_keywords"] == []
+
+    def test_build_episode_digest_uses_chief_writer_generator(self):
+        ctx = _make_ctx()
+        cb = Stage4ContextBuilder(ctx)
+        chief_writer = MagicMock()
+        chief_writer._generate_episode_digest.return_value = "digest body"
+
+        result = cb._build_episode_digest(
+            prev_text="previous manuscript",
+            next_ep=5,
+            chief_writer=chief_writer,
+        )
+
+        assert result == "digest body"
+        chief_writer._generate_episode_digest.assert_called_once_with("previous manuscript", 4)
+
+    def test_build_episode_digest_appends_finance_hud_snapshot(self):
+        ctx = _make_ctx()
+
+        class DummyFinanceHUD:
+            def __init__(self):
+                self.pro_data = {"capital": "1000냥", "total_assets": "2500냥"}
+
+        ctx.sys.hud = DummyFinanceHUD()
+        cb = Stage4ContextBuilder(ctx)
+        chief_writer = MagicMock()
+        chief_writer._generate_episode_digest.return_value = "digest body"
+
+        with patch("modules.core.genre_hud_manager.FinanceHUDManager", DummyFinanceHUD):
+            result = cb._build_episode_digest(
+                prev_text="previous manuscript",
+                next_ep=5,
+                chief_writer=chief_writer,
+            )
+
+        assert result.startswith("digest body")
+        assert "1000냥" in result
+        assert "2500냥" in result
+
     def test_returns_all_keys(self):
         ctx = _make_ctx()
         ctx.current_project.db.get_manuscript.return_value = {"content": "이전 화 내용 " * 40}
@@ -582,6 +792,46 @@ class TestStructuredEntityAndNpcBoundary:
 
 
 class TestBuildMandatoryContext:
+    def test_build_empty_mandatory_context_payload_returns_blank_fields(self):
+        from modules.core.stage4_context_builder import Stage4MandatoryContextPayload
+
+        result = Stage4ContextBuilder._build_empty_mandatory_context_payload()
+
+        assert result == Stage4MandatoryContextPayload(
+            reference_anchor_prompt="",
+            mandatory_context="",
+            anti_trope_prompt="",
+            justification_prompt="",
+            reflexion_prompt="",
+        )
+
+    def test_build_empty_mandatory_context_payload_delegates_to_result_payload_builder(self):
+        from modules.core.stage4_context_builder import Stage4MandatoryContextPayload
+
+        expected = Stage4MandatoryContextPayload(
+            reference_anchor_prompt="",
+            mandatory_context="",
+            anti_trope_prompt="",
+            justification_prompt="",
+            reflexion_prompt="",
+        )
+
+        with patch.object(
+            Stage4ContextBuilder,
+            "_build_mandatory_context_result_payload",
+            return_value=expected,
+        ) as payload_builder:
+            result = Stage4ContextBuilder._build_empty_mandatory_context_payload()
+
+        assert result == expected
+        payload_builder.assert_called_once_with(
+            reference_anchor_prompt="",
+            mandatory_context="",
+            anti_trope_prompt="",
+            justification_prompt="",
+            reflexion_prompt="",
+        )
+
     def test_no_writer_agent_returns_empty(self):
         cb = Stage4ContextBuilder(_make_ctx())
 
@@ -600,6 +850,26 @@ class TestBuildMandatoryContext:
 
         assert result["mandatory_context"] == ""
         assert result["reference_anchor_prompt"] == ""
+
+    def test_no_writer_agent_short_circuits_before_payload_build(self):
+        cb = Stage4ContextBuilder(_make_ctx())
+        cb._build_mandatory_context_payload = MagicMock(side_effect=AssertionError("should not be called"))
+
+        result = cb.build_mandatory_context(
+            next_ep=5,
+            arc_data={},
+            arc_tactical="",
+            prev_text="",
+            prev_ending="",
+            hud_report="",
+            writer_agent=None,
+            anchor_sys=MagicMock(),
+            s4_genre_type="wuxia",
+            v50_modules_available=False,
+        )
+
+        assert result["mandatory_context"] == ""
+        cb._build_mandatory_context_payload.assert_not_called()
 
     def test_load_reference_anchor_prompt_returns_generated_prompt(self):
         cb = Stage4ContextBuilder(_make_ctx())
@@ -674,6 +944,300 @@ class TestBuildMandatoryContext:
         cb._resolve_work_retrieval_focus.assert_called_once()
         cb._build_tier0_mandatory_sections.assert_called_once()
         cb._build_work_identity_slot_summary.assert_called_once()
+
+    def test_resolve_mandatory_context_cp_entities_returns_extracted_blueprint_entities(self):
+        cb = Stage4ContextBuilder(_make_ctx())
+        cb._extract_blueprint_entities = MagicMock(
+            return_value={"npcs": ["연홍"], "items": ["옥패"], "plots": [], "locations": ["객잔"], "_full_text": "bp"}
+        )
+
+        result = cb._resolve_mandatory_context_cp_entities(
+            blueprint={"scene_breakdown": {}},
+            arc_data={"arc_no": 1},
+        )
+
+        assert result["npcs"] == ["연홍"]
+        assert result["items"] == ["옥패"]
+        cb._extract_blueprint_entities.assert_called_once_with(
+            {"scene_breakdown": {}},
+            arc_data={"arc_no": 1},
+        )
+
+    def test_resolve_mandatory_context_cp_entities_returns_empty_payload_on_extraction_failure(self):
+        cb = Stage4ContextBuilder(_make_ctx())
+        cb._extract_blueprint_entities = MagicMock(side_effect=RuntimeError("bp boom"))
+
+        result = cb._resolve_mandatory_context_cp_entities(
+            blueprint={"scene_breakdown": {}},
+            arc_data={"arc_no": 1},
+        )
+
+        assert result == {"npcs": [], "items": [], "plots": [], "locations": [], "_full_text": ""}
+
+    def test_build_mandatory_context_retrieval_coverage_chains_aux_retrieval_and_compose(self):
+        cb = Stage4ContextBuilder(_make_ctx())
+        cb.context_packets.build_tier12_auxiliary_sections = MagicMock(
+            return_value={"tier1_parts": ["tier1"], "tier2_parts": ["tier2"]}
+        )
+        cb._collect_stage4_retrieval_context = MagicMock(
+            return_value={"retrieval_plan": "plan", "sc_parts": ["sc"], "tier1_parts": ["tier1+"]}
+        )
+        cb._compose_context_with_retrieval_coverage = MagicMock(
+            return_value={
+                "mandatory_context": "mandatory",
+                "coverage_warnings": ["warn"],
+                "source_counts": {"sc": 1},
+                "tier2_parts": ["tier2+"],
+            }
+        )
+
+        result = cb._build_mandatory_context_retrieval_coverage(
+            next_ep=5,
+            arc_data={"arc_no": 1},
+            blueprint={"scene_breakdown": {}},
+            s4_genre_type="wuxia",
+            v50_modules_available=False,
+            pacing_analyzer=None,
+            prev_text="prev",
+            prev_ending="ending",
+            arc_tactical="전술",
+            work_focus={"tracking_slots": ["라인"]},
+            tier0_parts=["tier0"],
+            slot_summary="slot summary",
+        )
+
+        assert result["mandatory_context"] == "mandatory"
+        cb.context_packets.build_tier12_auxiliary_sections.assert_called_once()
+        cb._collect_stage4_retrieval_context.assert_called_once()
+        cb._compose_context_with_retrieval_coverage.assert_called_once()
+
+    def test_build_state_tracker_auxiliary_sections_uses_summary_path_and_arc_history(self):
+        ctx = _make_ctx()
+        state_tracker = MagicMock()
+        ctx.state_tracker = state_tracker
+        ctx.current_project.load_v20_anchor.side_effect = (
+            lambda key: {"summary": key} if key in {"arc_summary_1", "arc_summary_2"} else None
+        )
+        cb = Stage4ContextBuilder(ctx)
+        state_tracker.get_all_summaries.return_value = {"resolved_plots": "summary"}
+        state_tracker.format_arc_summary_for_prompt.return_value = "arc summary prompt"
+        cb._filter_state_tracker_summaries_for_authority = MagicMock(
+            return_value=({"resolved_plots": "filtered summary"}, {"dead_npc": "suppressed"})
+        )
+        cb._build_state_tracker_authority_note = MagicMock(return_value="authority note")
+        cb._prioritize_summaries_by_work_focus = MagicMock(return_value=["focused summary"])
+
+        result = cb.context_packets._build_state_tracker_auxiliary_sections(
+            state_tracker=state_tracker,
+            arc_data={"arc_no": 3},
+            s4_genre_type="wuxia",
+            work_focus="resolved plot",
+        )
+
+        assert result == ["authority note", "focused summary", "arc summary prompt"]
+        state_tracker.get_all_summaries.assert_called_once_with(arc_no=3, genre="wuxia")
+        state_tracker.format_arc_summary_for_prompt.assert_called_once()
+
+    def test_build_state_tracker_auxiliary_sections_falls_back_when_summary_bundle_fails(self):
+        ctx = _make_ctx()
+        state_tracker = MagicMock()
+        ctx.state_tracker = state_tracker
+        cb = Stage4ContextBuilder(ctx)
+        state_tracker.get_all_summaries.side_effect = RuntimeError("boom")
+        state_tracker.format_arc_summary_for_prompt.return_value = ""
+        cb._filter_state_tracker_summaries_for_authority = MagicMock(
+            return_value=({"dungeon_clear": "fallback summary"}, {})
+        )
+        cb._build_state_tracker_authority_note = MagicMock(return_value="")
+        cb._prioritize_summaries_by_work_focus = MagicMock(return_value=["focused fallback"])
+
+        result = cb.context_packets._build_state_tracker_auxiliary_sections(
+            state_tracker=state_tracker,
+            arc_data={"arc_no": 1},
+            s4_genre_type="hunter",
+            work_focus="dungeon clear",
+        )
+
+        assert result == ["focused fallback"]
+        state_tracker.get_dungeon_clear_summary.assert_called_once()
+        state_tracker.get_skill_cooldown_summary.assert_called_once()
+
+    def test_build_mandatory_context_payload_merges_helper_outputs(self):
+        from modules.core.stage4_context_builder import Stage4MandatoryContextPayload
+
+        cb = Stage4ContextBuilder(_make_ctx())
+        cb._load_reference_anchor_prompt = MagicMock(return_value="anchor prompt")
+        cb._load_base_mandatory_context = MagicMock(return_value="writer mandatory")
+        cb._build_mandatory_context_seed = MagicMock(
+            return_value={
+                "cp_entities": {"npcs": ["연홍"]},
+                "work_focus": {"tracking_slots": ["핵심 라인"]},
+                "tier0_parts": ["tier0"],
+                "slot_summary": "slot summary",
+            }
+        )
+        cb._build_mandatory_context_retrieval_coverage = MagicMock(
+            return_value={
+                "mandatory_context": "covered mandatory",
+                "coverage_warnings": ["warn"],
+                "source_counts": {"sc": 1},
+                "tier2_parts": ["tier2"],
+            }
+        )
+        cb._build_mandatory_prompt_injections = MagicMock(
+            return_value={
+                "anti_trope_prompt": "anti",
+                "justification_prompt": "just",
+                "reflexion_prompt": "reflect",
+            }
+        )
+
+        result = cb._build_mandatory_context_payload(
+            next_ep=5,
+            arc_data={"arc_no": 1},
+            arc_tactical="전술",
+            prev_ending="ending",
+            prev_text="prev",
+            hud_report="HUD",
+            anchor_sys=MagicMock(),
+            genre_name="무협",
+            blueprint={"scene_breakdown": {}},
+            s4_genre_type="wuxia",
+            v50_modules_available=False,
+            pacing_analyzer=None,
+        )
+
+        assert isinstance(result, dict)
+        assert result == Stage4MandatoryContextPayload(
+            reference_anchor_prompt="anchor prompt",
+            mandatory_context="covered mandatory",
+            anti_trope_prompt="anti",
+            justification_prompt="just",
+            reflexion_prompt="reflect",
+        )
+        cb._build_mandatory_context_seed.assert_called_once_with(
+            arc_data={"arc_no": 1},
+            arc_tactical="전술",
+            prev_ending="ending",
+            blueprint={"scene_breakdown": {}},
+            mandatory_context="writer mandatory",
+        )
+        cb._build_mandatory_context_retrieval_coverage.assert_called_once()
+        cb._build_mandatory_prompt_injections.assert_called_once_with(
+            next_ep=5,
+            hud_report="HUD",
+            genre_name="무협",
+            blueprint={"scene_breakdown": {}},
+            prev_text="prev",
+        )
+
+    def test_build_mandatory_context_result_payload_maps_all_fields(self):
+        from modules.core.stage4_context_builder import Stage4MandatoryContextPayload
+
+        cb = Stage4ContextBuilder(_make_ctx())
+
+        result = cb._build_mandatory_context_result_payload(
+            reference_anchor_prompt="anchor prompt",
+            mandatory_context="mandatory",
+            anti_trope_prompt="anti",
+            justification_prompt="just",
+            reflexion_prompt="reflect",
+        )
+
+        assert result == Stage4MandatoryContextPayload(
+            reference_anchor_prompt="anchor prompt",
+            mandatory_context="mandatory",
+            anti_trope_prompt="anti",
+            justification_prompt="just",
+            reflexion_prompt="reflect",
+        )
+
+    def test_append_writer_guidance_prompt_appends_block_to_existing_justification(self):
+        ctx = _make_ctx()
+        ctx.generate_writer_guidance_v60_8 = MagicMock(return_value="high impact guidance")
+        cb = Stage4ContextBuilder(ctx)
+
+        result = cb._append_writer_guidance_prompt(
+            justification_prompt="base justification",
+            blueprint={"scene_breakdown": {}},
+            prev_text="previous manuscript",
+        )
+
+        assert result == "base justification\n\n[Writer Guidance]\nhigh impact guidance"
+        ctx.generate_writer_guidance_v60_8.assert_called_once_with(
+            blueprint={"scene_breakdown": {}},
+            prev_manuscript="previous manuscript",
+        )
+
+    @patch("modules.core.stage4_context_builder._build_justification", return_value="just")
+    @patch("modules.core.stage4_context_builder._build_anti_trope", return_value="anti")
+    def test_build_mandatory_prompt_bases_returns_anti_trope_and_justification(self, *_mocks):
+        from modules.core.stage4_context_builder import Stage4PromptBasesPayload
+
+        cb = Stage4ContextBuilder(_make_ctx())
+
+        result = cb._build_mandatory_prompt_bases(
+            hud_report="HUD",
+            genre_name="무협",
+        )
+
+        assert result == Stage4PromptBasesPayload(
+            anti_trope_prompt="anti",
+            justification_prompt="just",
+        )
+
+    @patch("modules.core.stage4_context_builder._build_justification", side_effect=RuntimeError("just boom"))
+    @patch("modules.core.stage4_context_builder._build_anti_trope", side_effect=RuntimeError("anti boom"))
+    def test_build_mandatory_prompt_bases_logs_and_returns_empty_on_failure(self, *_mocks):
+        from modules.core.stage4_context_builder import Stage4PromptBasesPayload
+
+        ctx = _make_ctx()
+        cb = Stage4ContextBuilder(ctx)
+
+        result = cb._build_mandatory_prompt_bases(
+            hud_report="HUD",
+            genre_name="무협",
+        )
+
+        assert result == Stage4PromptBasesPayload(
+            anti_trope_prompt="",
+            justification_prompt="",
+        )
+        assert ctx.ui.log.call_count == 2
+
+    def test_build_mandatory_prompt_payload_maps_all_prompt_fields(self):
+        cb = Stage4ContextBuilder(_make_ctx())
+
+        result = cb._build_mandatory_prompt_payload(
+            anti_trope_prompt="anti",
+            justification_prompt="just",
+            reflexion_prompt="reflect",
+        )
+
+        assert result == {
+            "anti_trope_prompt": "anti",
+            "justification_prompt": "just",
+            "reflexion_prompt": "reflect",
+        }
+
+    def test_load_reflexion_prompt_returns_empty_before_threshold(self):
+        cb = Stage4ContextBuilder(_make_ctx())
+
+        result = cb._load_reflexion_prompt(next_ep=19)
+
+        assert result == ""
+
+    def test_load_reflexion_prompt_uses_manager_after_threshold(self):
+        ctx = _make_ctx()
+        cb = Stage4ContextBuilder(ctx)
+        reflexion_manager = MagicMock()
+        reflexion_manager.get_prompt_injection.return_value = "reflect"
+
+        with patch("modules.core.reflexion_manager.ReflexionManager", return_value=reflexion_manager):
+            result = cb._load_reflexion_prompt(next_ep=20)
+
+        assert result == "reflect"
+        reflexion_manager.get_prompt_injection.assert_called_once_with(min_frequency=2)
 
     @patch("modules.core.stage4_context_builder._build_justification", return_value="just")
     @patch("modules.core.stage4_context_builder._build_anti_trope", return_value="anti")
@@ -1105,13 +1669,99 @@ class TestBuildMandatoryContext:
         }
         cb = Stage4ContextBuilder(ctx)
 
-        summary = cb._build_condensed_world_state_summary(
+        summary = cb.context_packets.build_condensed_world_state_summary(
             {"npcs": ["장천"], "items": [], "plots": [], "locations": []},
             max_chars=180,
         )
 
         assert len(summary) <= 180
         assert "TAIL-PRESSURE" in summary
+
+    def test_build_condensed_world_state_summary_delegates_to_context_packets(self):
+        cb = Stage4ContextBuilder(_make_ctx())
+        cb.context_packets.build_condensed_world_state_summary = MagicMock(return_value="summary")
+
+        result = cb.context_packets.build_condensed_world_state_summary(
+            {"npcs": ["장천"], "items": [], "plots": [], "locations": []},
+            max_chars=180,
+        )
+
+        assert result == "summary"
+        cb.context_packets.build_condensed_world_state_summary.assert_called_once()
+
+    def test_build_condensed_world_state_header_sections_includes_core_headers(self):
+        cb = Stage4ContextBuilder(_make_ctx())
+
+        parts = cb.context_packets._build_condensed_world_state_header_sections(
+            state={
+                "last_updated_ep": 9,
+                "protagonist": {
+                    "name": "lead",
+                    "location": "seoul tower",
+                    "assets": "equity portfolio",
+                    "injuries": "arm fracture",
+                },
+                "motivations": [{"status": "active", "text": "protect the fund", "since_ep": 7}],
+                "promises": [
+                    {
+                        "promiser": "lead",
+                        "promisee": "ally",
+                        "text": "keep the secret",
+                        "status": "pending",
+                        "since_ep": 8,
+                    }
+                ],
+                "cumulative_elapsed": {"total_days": 12},
+            }
+        )
+
+        text = "\n\n".join(parts)
+        assert "=== 세계 상태 (제9화 기준) ===" in text
+        assert "[주인공]" in text
+        assert "부상: arm fracture" in text
+        assert "[주인공 핵심 동기]" in text
+        assert "lead→ally: keep the secret (제8화~)" in text
+        assert "[누적 경과] 총 12일" in text
+
+    def test_build_condensed_world_state_registry_sections_skips_cp_entities(self):
+        cb = Stage4ContextBuilder(_make_ctx())
+
+        parts = cb.context_packets._build_condensed_world_state_registry_sections(
+            state={
+                "alive_npcs": {
+                    "focus": {"role": "mentor", "relation": "ally", "location": "tower"},
+                    "side": {"role": "broker", "relation": "neutral", "location": "office"},
+                },
+                "dead_npcs": {"ghost": {"ep": 4, "cause": "duel"}},
+                "relationships": {"focus": "bond", "side": "tense"},
+                "active_items": {"ledger": {}, "seal": {}},
+                "active_plots": [{"plot": "focus plot", "since_ep": 6}, {"plot": "side plot", "since_ep": 7}],
+            },
+            cp_npcs={"focus"},
+            cp_items={"ledger"},
+            cp_plots={"focus plot"},
+        )
+
+        text = "\n\n".join(parts)
+        assert "focus" not in text or "핵심 NPC 상세는 Continuity Packet 참조" in text
+        assert "- side: broker / 관계=neutral / 위치=office" in text
+        assert "[사망 NPC - CP 비포함 1명]" in text
+        assert "- side: tense" in text
+        assert "[보유 아이템 - CP 비포함]" in text and "- seal" in text
+        assert "[진행 중 플롯 - CP 비포함]" in text and "side plot" in text
+
+    def test_build_condensed_world_state_tail_sections_includes_pressure_and_location_reference(self):
+        cb = Stage4ContextBuilder(_make_ctx())
+
+        parts = cb.context_packets._build_condensed_world_state_tail_sections(
+            state={"active_pressure_vectors": [{"text": "HEAD\n" + ("P" * 120) + "\nTAIL"}]},
+            cp_locations={"hq"},
+        )
+
+        text = "\n\n".join(parts)
+        assert "[지속 압박/위협]" in text
+        assert "TAIL" in text
+        assert "이번 화 위치 맥락 상세는 Continuity Packet 참조" in text
 
     def test_condensed_fact_ledger_summary_preserves_recent_tail(self):
         ctx = _make_ctx()
@@ -1135,7 +1785,7 @@ class TestBuildMandatoryContext:
         }
         cb = Stage4ContextBuilder(ctx)
 
-        summary = cb._build_condensed_fact_ledger_summary(
+        summary = cb.context_packets.build_condensed_fact_ledger_summary(
             {"npcs": ["dummy"], "items": [], "plots": [], "locations": [], "_full_text": ""},
             max_chars=180,
         )

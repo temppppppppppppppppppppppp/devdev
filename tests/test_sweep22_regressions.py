@@ -41,7 +41,7 @@ def test_chief_writer_context_npc_frequency_skips_non_dict_master_bible():
     host._get_cached_manuscript = lambda _ep: {"content": "", "hud_snapshot": {}}
 
     builder = ChiefWriterContextBuilder(host)
-    assert builder._get_npc_frequency(ep_num=5, window=5) == {}
+    assert builder.context_packets._get_npc_frequency(ep_num=5, window=5) == {}
 
 
 def test_world_state_uses_module_logger_for_missing_npc_name(monkeypatch):
