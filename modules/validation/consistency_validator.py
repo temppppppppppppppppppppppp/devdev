@@ -58,6 +58,237 @@ class ConsistencyValidator:
             logging.warning(f"[WARNING] Guard 로드 실패 '{genre}': {e}")
             return None
 
+    def _extract_validation_sources(self, validation_context: dict) -> dict:
+        """validate()에서 반복 참조하는 컨텍스트 소스를 정리한다."""
+        martial_hud = validation_context.get("martial_hud", {})
+        actual_truth = {}
+        if isinstance(martial_hud, dict):
+            actual_truth = martial_hud.get("actual_truth", martial_hud)
+
+        return {
+            "actual_truth": actual_truth,
+            "karma_matrix": validation_context.get("karma_matrix", {}),
+            "asset_library": validation_context.get("asset_library", {}),
+            "npc_profiles": validation_context.get("npc_profiles", {}),
+            "prev_events": validation_context.get("prev_episode_events", []),
+            "authority_context": validation_context.get("authority_context", {}),
+            "ep_num": validation_context.get("ep_num", 1),
+            "villain_context": validation_context.get("villain_context", {}),
+            "recent_events": validation_context.get("recent_events", validation_context.get("prev_episode_events", [])),
+        }
+
+    def _append_classified_violations(
+        self,
+        check_result: dict,
+        category: str,
+        violations: list,
+        justifiable: list,
+        unjustifiable: list,
+        bucket_resolver,
+    ) -> None:
+        """검사 결과를 violations/justifiable/unjustifiable 버킷에 동시에 반영한다."""
+        if check_result.get("passed", True):
+            return
+
+        for violation in check_result.get("violations", []):
+            entry = {**violation, "category": category}
+            bucket = bucket_resolver(violation)
+            if bucket == "justifiable":
+                justifiable.append(entry)
+            elif bucket == "unjustifiable":
+                unjustifiable.append(entry)
+            violations.append(entry)
+
+    def _resolve_character_rank(self, actual_truth: dict) -> tuple[str, set]:
+        """Guard hierarchy title과 actual_truth를 대조해 직위 확신도를 계산한다."""
+        character_rank = ""
+        titles_keys = set()
+        if self.guard and hasattr(self.guard, "get_hierarchy_rules"):
+            hierarchy = self.guard.get_hierarchy_rules()
+            if hierarchy:
+                titles_keys = set(hierarchy.get("titles", {}).keys())
+                for field_val in actual_truth.values():
+                    if isinstance(field_val, str) and field_val in titles_keys:
+                        character_rank = field_val
+                        break
+
+        if not character_rank:
+            character_rank = actual_truth.get("realm", actual_truth.get("rank", ""))
+        return character_rank, titles_keys
+
+    def _run_foundational_consistency_checks(
+        self,
+        manuscript: str,
+        validation_context: dict,
+        sources: dict,
+        violations: list,
+        justifiable: list,
+        unjustifiable: list,
+    ) -> None:
+        """상태/관계/직위/효능/태도 family를 한 번에 실행한다."""
+        state_check = self._check_state_action_consistency(manuscript, sources["actual_truth"])
+        self._append_classified_violations(
+            state_check,
+            "state_action",
+            violations,
+            justifiable,
+            unjustifiable,
+            lambda violation: "justifiable" if violation.get("has_justification", False) else "unjustifiable",
+        )
+
+        relation_check = self._check_relation_dynamics(manuscript, sources["karma_matrix"], validation_context)
+        self._append_classified_violations(
+            relation_check,
+            "relation_dynamics",
+            violations,
+            justifiable,
+            unjustifiable,
+            lambda violation: "justifiable" if violation.get("has_justification", False) else "unjustifiable",
+        )
+
+        character_rank, titles_keys = self._resolve_character_rank(sources["actual_truth"])
+        hierarchy_check = self._check_hierarchy_consistency(manuscript, character_rank)
+        self._append_classified_violations(
+            hierarchy_check,
+            "hierarchy",
+            violations,
+            justifiable,
+            unjustifiable,
+            lambda _violation: "unjustifiable" if character_rank in titles_keys else "justifiable",
+        )
+
+        effect_check = self._check_effect_consistency(manuscript, sources["asset_library"])
+        self._append_classified_violations(
+            effect_check,
+            "effect",
+            violations,
+            justifiable,
+            unjustifiable,
+            lambda violation: "justifiable" if violation.get("transformation_allowed", True) else "unjustifiable",
+        )
+
+        attitude_check = self._check_attitude_transition(
+            manuscript,
+            sources["npc_profiles"],
+            sources["karma_matrix"],
+            sources["prev_events"],
+        )
+        self._append_classified_violations(
+            attitude_check,
+            "attitude",
+            violations,
+            justifiable,
+            unjustifiable,
+            lambda _violation: "justifiable",
+        )
+
+    def _run_optional_guard_consistency_checks(
+        self,
+        manuscript: str,
+        sources: dict,
+        violations: list,
+        justifiable: list,
+        unjustifiable: list,
+    ) -> list[str]:
+        """권위/고구마/빌런 반응 같은 guard-context dependent checks를 실행한다."""
+        skipped_checks = []
+
+        if sources["authority_context"] and self.guard:
+            authority_check = self.guard.check_authority_delegation(manuscript, sources["authority_context"])
+            self._append_classified_violations(
+                authority_check,
+                "authority_delegation",
+                violations,
+                justifiable,
+                unjustifiable,
+                lambda violation: "justifiable" if violation.get("has_justification", False) else "unjustifiable",
+            )
+        elif not sources["authority_context"]:
+            skipped_checks.append("authority_delegation")
+
+        if sources["karma_matrix"] and self.guard:
+            conflict_check = self.guard.check_unresolved_conflict(manuscript, sources["karma_matrix"], sources["ep_num"])
+            self._append_classified_violations(
+                conflict_check,
+                "unresolved_conflict",
+                violations,
+                justifiable,
+                unjustifiable,
+                lambda _violation: "justifiable",
+            )
+            goguma_score = conflict_check.get("goguma_score", 0)
+            if goguma_score >= 5:
+                warning = {
+                    "reason": f"고구마 점수 {goguma_score}/10 - 독자 카타르시스 부족 위험",
+                    "severity": "MEDIUM",
+                    "category": "goguma_warning",
+                }
+                justifiable.append(warning)
+                violations.append(warning)
+        elif not sources["karma_matrix"]:
+            skipped_checks.append("unresolved_conflict")
+
+        if sources["villain_context"] and self.guard:
+            villain_check = self.guard.check_villain_response(
+                manuscript,
+                sources["villain_context"],
+                sources["recent_events"],
+            )
+            self._append_classified_violations(
+                villain_check,
+                "villain_response",
+                violations,
+                justifiable,
+                unjustifiable,
+                lambda _violation: "justifiable",
+            )
+        elif not sources["villain_context"]:
+            skipped_checks.append("villain_response")
+
+        return skipped_checks
+
+    def _calculate_score_penalty(self, justifiable: list) -> int:
+        """정당화 가능한 위반만 기준으로 consistency penalty를 계산한다."""
+        score_penalty = 0
+        for violation in justifiable:
+            severity = violation.get("severity", "MEDIUM")
+            if severity == "HIGH":
+                score_penalty -= 5
+            elif severity == "MEDIUM":
+                score_penalty -= 3
+            else:
+                score_penalty -= 1
+        return max(-20, score_penalty)
+
+    def _build_validation_result(
+        self,
+        violations: list,
+        justifiable: list,
+        unjustifiable: list,
+        skipped_checks: list[str],
+    ) -> dict:
+        """validate() 최종 반환 payload를 조립한다."""
+        feedback = self._generate_feedback(violations, justifiable, unjustifiable)
+        is_passed = len(unjustifiable) == 0
+
+        result = {
+            "tier": "CONSISTENCY",
+            "passed": is_passed,
+            "violations": violations,
+            "justifiable_violations": justifiable,
+            "unjustifiable_violations": unjustifiable,
+            "score_penalty": self._calculate_score_penalty(justifiable),
+            "feedback": feedback,
+            "message": "REJECT - 정당화 불가능한 일관성 위반"
+            if not is_passed
+            else f"PASS (경고 {len(justifiable)}건)"
+            if justifiable
+            else "PASS",
+        }
+        if skipped_checks:
+            result["skipped_checks"] = skipped_checks
+        return result
+
     def validate(self, manuscript: str, validation_context: dict) -> dict:
         """
         CONSISTENCY 검증 실행
@@ -87,192 +318,35 @@ class ConsistencyValidator:
         violations = []
         justifiable = []
         unjustifiable = []
-
-        # HUD 데이터 추출
-        martial_hud = validation_context.get("martial_hud", {})
-        actual_truth = {}
-        if isinstance(martial_hud, dict):
-            actual_truth = martial_hud.get("actual_truth", martial_hud)
-
-        # ═══════════════════════════════════════════════════════════════
-        # 1. 상태 vs 행동 일관성 (정당화 가능)
-        # ═══════════════════════════════════════════════════════════════
-        state_check = self._check_state_action_consistency(manuscript, actual_truth)
-        if not state_check["passed"]:
-            for v in state_check["violations"]:
-                if v.get("has_justification", False):
-                    justifiable.append({**v, "category": "state_action"})
-                else:
-                    unjustifiable.append({**v, "category": "state_action"})  # [V70] FIX: 정당화 불가 → unjustifiable
-                violations.append({**v, "category": "state_action"})
-
-        # ═══════════════════════════════════════════════════════════════
-        # 2. 관계 역학 일관성 (정당화 가능 - 트리거 이벤트)
-        # ═══════════════════════════════════════════════════════════════
-        karma_matrix = validation_context.get("karma_matrix", {})
-        relation_check = self._check_relation_dynamics(manuscript, karma_matrix, validation_context)
-        if not relation_check["passed"]:
-            for v in relation_check["violations"]:
-                if v.get("has_justification", False):
-                    justifiable.append({**v, "category": "relation_dynamics"})
-                else:
-                    unjustifiable.append({**v, "category": "relation_dynamics"})
-                violations.append({**v, "category": "relation_dynamics"})
-
-        # ═══════════════════════════════════════════════════════════════
-        # 3. 직위/호칭 일관성 (정당화 불가 - 명확한 오류)
-        # ═══════════════════════════════════════════════════════════════
-        # Guard의 hierarchy titles 키와 actual_truth 값을 매칭 (장르 무관)
-        character_rank = ""
-        titles_keys = set()
-        if self.guard and hasattr(self.guard, "get_hierarchy_rules"):
-            hierarchy = self.guard.get_hierarchy_rules()
-            if hierarchy:
-                titles_keys = set(hierarchy.get("titles", {}).keys())
-                for field_val in actual_truth.values():
-                    if isinstance(field_val, str) and field_val in titles_keys:
-                        character_rank = field_val
-                        break
-        if not character_rank:
-            character_rank = actual_truth.get("realm", actual_truth.get("rank", ""))
-        hierarchy_check = self._check_hierarchy_consistency(manuscript, character_rank)
-        if not hierarchy_check["passed"]:
-            for v in hierarchy_check["violations"]:
-                if character_rank in titles_keys:
-                    # Python이 등급을 확신 → 정당화 불가
-                    unjustifiable.append({**v, "category": "hierarchy"})
-                else:
-                    # Python이 등급을 모름 → Director 판단에 위임
-                    justifiable.append({**v, "category": "hierarchy"})
-                violations.append({**v, "category": "hierarchy"})
-
-        # ═══════════════════════════════════════════════════════════════
-        # 4. 설정 효능 일관성 (정당화 가능 - 변환 설명)
-        # ═══════════════════════════════════════════════════════════════
-        asset_library = validation_context.get("asset_library", {})
-        effect_check = self._check_effect_consistency(manuscript, asset_library)
-        if not effect_check["passed"]:
-            for v in effect_check["violations"]:
-                if v.get("transformation_allowed", True):
-                    justifiable.append({**v, "category": "effect"})
-                else:
-                    unjustifiable.append({**v, "category": "effect"})
-                violations.append({**v, "category": "effect"})
-
-        # ═══════════════════════════════════════════════════════════════
-        # 5. 태도 전환 일관성 (정당화 가능 - 트리거 이벤트)
-        # ═══════════════════════════════════════════════════════════════
-        npc_profiles = validation_context.get("npc_profiles", {})
-        prev_events = validation_context.get("prev_episode_events", [])
-        attitude_check = self._check_attitude_transition(manuscript, npc_profiles, karma_matrix, prev_events)
-        if not attitude_check["passed"]:
-            for v in attitude_check["violations"]:
-                justifiable.append({**v, "category": "attitude"})
-                violations.append({**v, "category": "attitude"})
-
-        # ═══════════════════════════════════════════════════════════════
-        # [V46.1] 6. 권위 위임 일관성 (정당화 가능 - 명분 표현)
-        # [I-04] 컨텍스트 미제공 시 skipped_checks 기록
-        # ═══════════════════════════════════════════════════════════════
-        skipped_checks = []
-        authority_context = validation_context.get("authority_context", {})
-        if authority_context and self.guard:
-            authority_check = self.guard.check_authority_delegation(manuscript, authority_context)
-            if not authority_check["passed"]:
-                for v in authority_check["violations"]:
-                    if v.get("has_justification", False):
-                        justifiable.append({**v, "category": "authority_delegation"})
-                    else:
-                        unjustifiable.append(
-                            {**v, "category": "authority_delegation"}
-                        )  # [V70] FIX: 정당화 불가 → unjustifiable
-                    violations.append({**v, "category": "authority_delegation"})
-        elif not authority_context:
-            skipped_checks.append("authority_delegation")
-
-        # ═══════════════════════════════════════════════════════════════
-        # [V46.1] 7. 미해결 갈등 (고구마 감지) - 정당화 가능
-        # ═══════════════════════════════════════════════════════════════
-        ep_num = validation_context.get("ep_num", 1)
-        if karma_matrix and self.guard:
-            conflict_check = self.guard.check_unresolved_conflict(manuscript, karma_matrix, ep_num)
-            if not conflict_check["passed"]:
-                for v in conflict_check["violations"]:
-                    justifiable.append({**v, "category": "unresolved_conflict"})
-                    violations.append({**v, "category": "unresolved_conflict"})
-
-                # 고구마 점수 기록
-                goguma_score = conflict_check.get("goguma_score", 0)
-                if goguma_score >= 5:
-                    # 고구마 점수가 높으면 추가 경고
-                    justifiable.append(
-                        {
-                            "reason": f"고구마 점수 {goguma_score}/10 - 독자 카타르시스 부족 위험",
-                            "severity": "MEDIUM",
-                            "category": "goguma_warning",
-                        }
-                    )
-        elif not karma_matrix:
-            skipped_checks.append("unresolved_conflict")
-
-        # ═══════════════════════════════════════════════════════════════
-        # [V46.1] 8. 빌런 반응 검증 - 정당화 가능
-        # ═══════════════════════════════════════════════════════════════
-        villain_context = validation_context.get("villain_context", {})
-        recent_events = validation_context.get("recent_events", prev_events)
-        if villain_context and self.guard:
-            villain_check = self.guard.check_villain_response(manuscript, villain_context, recent_events)
-            if not villain_check["passed"]:
-                for v in villain_check["violations"]:
-                    justifiable.append({**v, "category": "villain_response"})
-                    violations.append({**v, "category": "villain_response"})
-        elif not villain_context:
-            skipped_checks.append("villain_response")
+        sources = self._extract_validation_sources(validation_context)
+        self._run_foundational_consistency_checks(
+            manuscript,
+            validation_context,
+            sources,
+            violations,
+            justifiable,
+            unjustifiable,
+        )
+        skipped_checks = self._run_optional_guard_consistency_checks(
+            manuscript,
+            sources,
+            violations,
+            justifiable,
+            unjustifiable,
+        )
 
         # [I-04] 스킵된 검사 로깅
         if skipped_checks:
-            logging.warning(f"[I-04] ConsistencyValidator: {len(skipped_checks)} checks skipped (no context): {skipped_checks}"
+            logging.warning(
+                f"[I-04] ConsistencyValidator: {len(skipped_checks)} checks skipped (no context): {skipped_checks}"
             )
 
-        # ═══════════════════════════════════════════════════════════════
-        # 결과 집계
-        # ═══════════════════════════════════════════════════════════════
-        # 점수 감점 계산
-        score_penalty = 0
-        for v in justifiable:
-            severity = v.get("severity", "MEDIUM")
-            if severity == "HIGH":
-                score_penalty -= 5
-            elif severity == "MEDIUM":
-                score_penalty -= 3
-            else:
-                score_penalty -= 1
-        score_penalty = max(-20, score_penalty)
-
-        # 피드백 생성
-        feedback = self._generate_feedback(violations, justifiable, unjustifiable)
-
-        # [FIX] passed와 message 일치시키기
-        # unjustifiable이 있으면 REJECT, 없으면 PASS (justifiable 개수는 경고만)
-        is_passed = len(unjustifiable) == 0
-
-        result = {
-            "tier": "CONSISTENCY",
-            "passed": is_passed,
-            "violations": violations,
-            "justifiable_violations": justifiable,
-            "unjustifiable_violations": unjustifiable,
-            "score_penalty": score_penalty,
-            "feedback": feedback,
-            "message": "REJECT - 정당화 불가능한 일관성 위반"
-            if not is_passed
-            else f"PASS (경고 {len(justifiable)}건)"
-            if justifiable
-            else "PASS",
-        }
-        if skipped_checks:
-            result["skipped_checks"] = skipped_checks
-        return result
+        return self._build_validation_result(
+            violations,
+            justifiable,
+            unjustifiable,
+            skipped_checks,
+        )
 
     # ========================================================================
     # 개별 검증 메서드

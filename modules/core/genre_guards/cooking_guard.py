@@ -15,7 +15,11 @@ class CookingGuard(BaseGuard):
     def __init__(self) -> None:
         super().__init__()
         cfg = self._load_genre_yaml("cooking")
+        self._init_term_sets(cfg)
+        self._init_hierarchy_constraints(cfg)
+        self._init_business_requirements(cfg)
 
+    def _init_term_sets(self, cfg: dict[str, Any]) -> None:
         self.FORBIDDEN_TERMS = cfg.get(
             "forbidden_terms",
             [
@@ -114,6 +118,7 @@ class CookingGuard(BaseGuard):
             ],
         )
 
+    def _init_hierarchy_constraints(self, cfg: dict[str, Any]) -> None:
         self._chef_hierarchy = cfg.get(
             "chef_hierarchy",
             [
@@ -162,6 +167,7 @@ class CookingGuard(BaseGuard):
             },
         )
 
+    def _init_business_requirements(self, cfg: dict[str, Any]) -> None:
         self._restaurant_requirements = {
             "동네식당": {"chef_rank": "요리사", "capital": 5_000_000},
             "맛집": {"chef_rank": "수석요리사", "reputation": 40, "regulars": 50},

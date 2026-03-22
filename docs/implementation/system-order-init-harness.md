@@ -104,6 +104,21 @@ Mode C. Direct Focused Patch
 - use when the request is a narrow code change and no broader survey or active temp queue should govern it
 - still respect document-save and temp-queue rules if new execution docs are created during the work
 
+### Step 3B. Apply Complexity / Refactor Gate
+- Before substantial system-track implementation, classify the intended work as one of:
+  - complexity-regression prevention
+  - same-file long-function reduction
+  - owner-surface / boundary refactor
+  - fresh-run validation after cleanup
+- If the touched production code would introduce or preserve a new `180+ LOC` function without a bounded-shell justification, stop and restructure before proceeding.
+- If the current repo state already has `180+ = 0` or `200+ = 0`, do not keep defaulting to helper extraction. Re-check whether the higher ROI is:
+  - owner-surface reduction
+  - module/runtime boundary cleanup
+  - contract normalization
+  - fresh run plus fail-only bugfix
+- If a hot owner class is already above the live direct-method pressure line, prefer family-level module split over adding more same-file helpers unless the helper extraction clearly reduces both LOC risk and owner pressure.
+- For time-boxed work after the high-risk long-function bands are cleared, prefer `snapshot -> fresh run -> fail-only stabilization` over opening a new broad refactor wave.
+
 Bounded-loop rule:
 - do not escalate from survey-only into implementation unless the user asked for it
 - do not escalate from execution-doc production into realization unless the user asked for it

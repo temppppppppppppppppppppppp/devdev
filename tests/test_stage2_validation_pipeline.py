@@ -350,3 +350,60 @@ class TestRunValidation:
         ci_advisories = [a for a in advisories if a["source"] == "continuity_inspector"]
         assert len(ci_advisories) == 1
         assert "[STRUCTURED_FEEDBACK]" in ci_advisories[0]["message"]
+
+
+class TestExtractedHelperFamilies:
+    def test_build_invalid_refined_arc_retry_returns_retry_payload(self, pipeline):
+        result = pipeline._build_invalid_refined_arc_retry(
+            refined_arc=None,
+            global_arc_no=7,
+            consensus_passed=False,
+            current_feedback="old",
+        )
+
+        assert result is not None
+        assert result["early_return"]["action"] == "retry"
+        assert "JSON" in result["current_feedback"]
+
+    def test_collect_pre_validation_duplicates_records_suspected_duplicates(self, pipeline, valid_refined_arc):
+        constraint_db = MagicMock()
+        constraint_db.validate_arc_design.return_value = {
+            "valid": False,
+            "violations": ["중복 의심 A", "중복 의심 B", "중복 의심 C"],
+            "warnings": ["warning"],
+        }
+
+        duplicates = pipeline._collect_pre_validation_duplicates(
+            refined_arc=valid_refined_arc,
+            four_phase_passed=False,
+            constraint_db=constraint_db,
+            global_arc_no=3,
+        )
+
+        assert duplicates == ["중복 의심 A", "중복 의심 B", "중복 의심 C"]
+        pipeline.ctx.audit_event.assert_called_once()
+
+    def test_build_continuity_reject_feedback_includes_banned_items_and_intensity(self, pipeline):
+        pipeline.ctx.generate_structured_arc_feedback = MagicMock(return_value="\n[STRUCTURED_FEEDBACK]")
+        pipeline.ctx.get_adaptive_feedback_intensity = MagicMock(return_value={"guidance": "retry carefully"})
+        pipeline.ctx.build_strong_kind_feedback = MagicMock(return_value="strong-kind")
+        pipeline.ctx.build_focused_context = MagicMock(return_value="focused-context")
+
+        feedback = pipeline._build_continuity_reject_feedback(
+            continuity_result={"decision": "REJECT"},
+            violations=[
+                {
+                    "type": "duplicate_acquisition",
+                    "description": "same sword",
+                    "item_or_subject": "백근 대도",
+                }
+            ],
+            all_refined_arcs=[{"arc_no": 2, "joint_docs": {}, "status_shadow": {}}],
+            attempt=1,
+            protagonist_name="주인공",
+            global_arc_no=3,
+        )
+
+        assert "백근 대도" in feedback
+        assert "retry carefully" in feedback
+        assert "[STRUCTURED_FEEDBACK]" in feedback

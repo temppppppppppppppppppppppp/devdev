@@ -1,6 +1,7 @@
 """
 Three-phase blueprint runtime orchestration split.
 """
+# utf8-hygiene: allow-file legacy mojibake literals remain in untouched runtime strings during readability campaign
 
 import json
 import logging
@@ -84,6 +85,15 @@ class _ThreePhasePassWithFixIterationResult:
 class _ThreePhaseRejectStateResult:
     feedback: str
     issues: list
+
+
+@dataclass
+class _ThreePhaseRetryCycleResult:
+    best_blueprint: dict | None
+    feedback: str
+    should_continue: bool = False
+    should_break: bool = False
+    final_result: tuple[dict | None, dict] | None = None
 
 
 class ThreePhaseBlueprintRuntime:
@@ -1067,6 +1077,225 @@ class ThreePhaseBlueprintRuntime:
             logging.info(f"Last feedback: {final_feedback[:200]}...")
         return None, pipeline_result
 
+    def _resolve_retry_cycle_result(
+        self,
+        *,
+        ep_num: int,
+        arc_data: dict,
+        constraint_block: dict,
+        prev_blueprint: dict | None,
+        best_blueprint: dict | None,
+        validation_result: dict,
+        verdict: str,
+        score: int,
+        selected_strategy: str,
+        director,
+        arc_idx: int,
+        entity_registry: dict | None,
+        state_tracker,
+        prev_hud: dict | None,
+        initial_feedback: str,
+        feedback: str,
+        retry_state: _ThreePhaseRetryState,
+        pipeline_result: dict,
+        retry: int,
+        max_retries: int,
+    ) -> _ThreePhaseRetryCycleResult:
+        owner = self.owner
+        if verdict in ("PASS", "PASS_WITH_FIX"):
+            owner.stats["phase3_pass"] += 1
+            pipeline_result["final_verdict"] = verdict
+            pipeline_result["last_score"] = score
+            logging.info(f"[Phase 3] {verdict} - ep{ep_num} blueprint finalized")
+            owner._operator_log(
+                f"[Phase 3] {verdict} (score={score})",
+                meta={"phase": "validate", "verdict": verdict, "score": score},
+            )
+
+            if verdict == "PASS_WITH_FIX":
+                pass_fix_result = self._run_pass_with_fix_loop(
+                    ep_num=ep_num,
+                    arc_data=arc_data,
+                    constraint_block=constraint_block,
+                    prev_blueprint=prev_blueprint,
+                    best_blueprint=best_blueprint,
+                    validation_result=validation_result,
+                    score=score,
+                    quality_gate_score=int(_threshold("scoring.quality_gate_score", 90)),
+                    selected_strategy=selected_strategy,
+                    director=director,
+                    arc_idx=arc_idx,
+                    entity_registry=entity_registry,
+                    state_tracker=state_tracker,
+                    prev_hud=prev_hud,
+                    initial_feedback=initial_feedback,
+                    retry_state=retry_state,
+                    pipeline_result=pipeline_result,
+                    retry=retry,
+                    max_retries=max_retries,
+                )
+                if pass_fix_result.should_continue:
+                    return _ThreePhaseRetryCycleResult(
+                        best_blueprint=pass_fix_result.best_blueprint,
+                        feedback=feedback,
+                        should_continue=True,
+                    )
+                best_blueprint = pass_fix_result.best_blueprint
+
+            best_blueprint = validate_blueprint(best_blueprint)
+            return _ThreePhaseRetryCycleResult(
+                best_blueprint=best_blueprint,
+                feedback=feedback,
+                final_result=(best_blueprint, pipeline_result),
+            )
+
+        owner.stats["phase3_reject"] += 1
+        self._handle_validation_reject(
+            validation_result=validation_result,
+            retry_state=retry_state,
+            score=score,
+            selected_strategy=selected_strategy,
+            best_blueprint=best_blueprint,
+            ep_num=ep_num,
+            arc_data=arc_data,
+            retry=retry,
+            max_retries=max_retries,
+        )
+        return _ThreePhaseRetryCycleResult(
+            best_blueprint=best_blueprint,
+            feedback=retry_state.prev_reject_feedback or feedback,
+        )
+
+    def _run_retry_cycle(
+        self,
+        *,
+        ep_num: int,
+        arc_data: dict,
+        prev_blueprint: dict | None,
+        prev_blueprints: list[dict] | None,
+        protagonist_name: str,
+        protagonist_config: dict,
+        state_tracker,
+        db,
+        prev_manuscripts_text: str,
+        adversarial_self_play,
+        director,
+        arc_idx: int,
+        entity_registry: dict | None,
+        prev_hud: dict | None,
+        initial_feedback: str,
+        feedback: str,
+        retry_state: _ThreePhaseRetryState,
+        pipeline_result: dict,
+        genre: str,
+        current_best_blueprint: dict | None,
+        retry: int,
+        max_retries: int,
+        log_retry: bool = True,
+    ) -> _ThreePhaseRetryCycleResult:
+        owner = self.owner
+        if log_retry:
+            owner._operator_log(
+                f"[Retry {retry + 1}/{max_retries + 1}] Blueprint ?앹꽦 以?..",
+                meta={"retry_index": retry + 1, "max_retries": max_retries + 1, "ep_num": ep_num},
+            )
+        pipeline_result["retries"] = retry
+        strategy_feedback = self._build_retry_strategy_feedback(retry_state)
+        attempt_feedback = initial_feedback
+        if strategy_feedback:
+            attempt_feedback = f"{attempt_feedback}\n\n{strategy_feedback}" if attempt_feedback else strategy_feedback
+
+        constraint_block = self._resolve_constraint_block(
+            retry=retry,
+            ep_num=ep_num,
+            arc_data=arc_data,
+            prev_blueprint=prev_blueprint,
+            prev_blueprints=prev_blueprints,
+            genre=genre,
+            pipeline_result=pipeline_result,
+            retry_state=retry_state,
+        )
+
+        phase2_result = self._run_phase2_generation(
+            retry=retry,
+            ep_num=ep_num,
+            arc_data=arc_data,
+            constraint_block=constraint_block,
+            prev_blueprint=prev_blueprint,
+            prev_blueprints=prev_blueprints,
+            protagonist_name=protagonist_name,
+            protagonist_config=protagonist_config,
+            state_tracker=state_tracker,
+            prev_manuscripts_text=prev_manuscripts_text,
+            attempt_feedback=attempt_feedback,
+            strategy_feedback=strategy_feedback,
+            adversarial_self_play=adversarial_self_play,
+            pipeline_result=pipeline_result,
+            retry_state=retry_state,
+            max_retries=max_retries,
+        )
+        if phase2_result.should_break:
+            return _ThreePhaseRetryCycleResult(
+                best_blueprint=current_best_blueprint,
+                feedback=feedback,
+                should_break=True,
+            )
+        if phase2_result.should_continue:
+            return _ThreePhaseRetryCycleResult(
+                best_blueprint=current_best_blueprint,
+                feedback=feedback,
+                should_continue=True,
+            )
+
+        best_blueprint = phase2_result.best_blueprint
+        phase3_result = self._run_phase3_validation(
+            ep_num=ep_num,
+            arc_data=arc_data,
+            constraint_block=constraint_block,
+            prev_blueprint=prev_blueprint,
+            best_blueprint=best_blueprint,
+            all_candidates=phase2_result.all_candidates,
+            director=director,
+            arc_idx=arc_idx,
+            entity_registry=entity_registry,
+            state_tracker=state_tracker,
+            db=db,
+            prev_hud=prev_hud,
+            retry_state=retry_state,
+            pipeline_result=pipeline_result,
+            retry=retry,
+            max_retries=max_retries,
+        )
+        if phase3_result.should_continue:
+            return _ThreePhaseRetryCycleResult(
+                best_blueprint=phase3_result.best_blueprint,
+                feedback=feedback,
+                should_continue=True,
+            )
+
+        return self._resolve_retry_cycle_result(
+            ep_num=ep_num,
+            arc_data=arc_data,
+            constraint_block=constraint_block,
+            prev_blueprint=prev_blueprint,
+            best_blueprint=phase3_result.best_blueprint,
+            validation_result=phase3_result.validation_result,
+            verdict=phase3_result.verdict,
+            score=phase3_result.score,
+            selected_strategy=phase3_result.selected_strategy,
+            director=director,
+            arc_idx=arc_idx,
+            entity_registry=entity_registry,
+            state_tracker=state_tracker,
+            prev_hud=prev_hud,
+            initial_feedback=initial_feedback,
+            feedback=feedback,
+            retry_state=retry_state,
+            pipeline_result=pipeline_result,
+            retry=retry,
+            max_retries=max_retries,
+        )
+
     def generate(
         self,
         ep_num: int,
@@ -1108,127 +1337,39 @@ class ThreePhaseBlueprintRuntime:
                 f"[Retry {retry + 1}/{max_retries + 1}] Blueprint 생성 중...",
                 meta={"retry_index": retry + 1, "max_retries": max_retries + 1, "ep_num": ep_num},
             )
-            pipeline_result["retries"] = retry
-            strategy_feedback = self._build_retry_strategy_feedback(retry_state)
-            attempt_feedback = initial_feedback
-            if strategy_feedback:
-                attempt_feedback = f"{attempt_feedback}\n\n{strategy_feedback}" if attempt_feedback else strategy_feedback
-
-            constraint_block = self._resolve_constraint_block(
-                retry=retry,
+            retry_result = self._run_retry_cycle(
                 ep_num=ep_num,
                 arc_data=arc_data,
-                prev_blueprint=prev_blueprint,
-                prev_blueprints=prev_blueprints,
-                genre=genre,
-                pipeline_result=pipeline_result,
-                retry_state=retry_state,
-            )
-
-            phase2_result = self._run_phase2_generation(
-                retry=retry,
-                ep_num=ep_num,
-                arc_data=arc_data,
-                constraint_block=constraint_block,
                 prev_blueprint=prev_blueprint,
                 prev_blueprints=prev_blueprints,
                 protagonist_name=protagonist_name,
                 protagonist_config=protagonist_config,
                 state_tracker=state_tracker,
+                db=db,
                 prev_manuscripts_text=prev_manuscripts_text,
-                attempt_feedback=attempt_feedback,
-                strategy_feedback=strategy_feedback,
                 adversarial_self_play=adversarial_self_play,
-                pipeline_result=pipeline_result,
-                retry_state=retry_state,
-                max_retries=max_retries,
-            )
-            if phase2_result.should_break:
-                break
-            if phase2_result.should_continue:
-                continue
-
-            best_blueprint = phase2_result.best_blueprint
-            all_candidates = phase2_result.all_candidates
-            phase3_result = self._run_phase3_validation(
-                ep_num=ep_num,
-                arc_data=arc_data,
-                constraint_block=constraint_block,
-                prev_blueprint=prev_blueprint,
-                best_blueprint=best_blueprint,
-                all_candidates=all_candidates,
                 director=director,
                 arc_idx=arc_idx,
                 entity_registry=entity_registry,
-                state_tracker=state_tracker,
-                db=db,
                 prev_hud=prev_hud,
+                initial_feedback=initial_feedback,
+                feedback=feedback,
                 retry_state=retry_state,
                 pipeline_result=pipeline_result,
+                genre=genre,
+                current_best_blueprint=best_blueprint,
                 retry=retry,
                 max_retries=max_retries,
+                log_retry=False,
             )
-            if phase3_result.should_continue:
+            best_blueprint = retry_result.best_blueprint
+            feedback = retry_result.feedback
+            if retry_result.should_break:
+                break
+            if retry_result.should_continue:
                 continue
-
-            best_blueprint = phase3_result.best_blueprint
-            validation_result = phase3_result.validation_result
-            verdict = phase3_result.verdict
-            score = phase3_result.score
-            selected_strategy = phase3_result.selected_strategy
-
-            if verdict in ("PASS", "PASS_WITH_FIX"):
-                owner.stats["phase3_pass"] += 1
-                pipeline_result["final_verdict"] = verdict
-                pipeline_result["last_score"] = score
-                logging.info(f"[Phase 3] {verdict} - ep{ep_num} blueprint finalized")
-                owner._operator_log(
-                    f"[Phase 3] {verdict} (score={score})",
-                    meta={"phase": "validate", "verdict": verdict, "score": score},
-                )
-
-                if verdict == "PASS_WITH_FIX":
-                    pass_fix_result = self._run_pass_with_fix_loop(
-                        ep_num=ep_num,
-                        arc_data=arc_data,
-                        constraint_block=constraint_block,
-                        prev_blueprint=prev_blueprint,
-                        best_blueprint=best_blueprint,
-                        validation_result=validation_result,
-                        score=score,
-                        quality_gate_score=int(_threshold("scoring.quality_gate_score", 90)),
-                        selected_strategy=selected_strategy,
-                        director=director,
-                        arc_idx=arc_idx,
-                        entity_registry=entity_registry,
-                        state_tracker=state_tracker,
-                        prev_hud=prev_hud,
-                        initial_feedback=initial_feedback,
-                        retry_state=retry_state,
-                        pipeline_result=pipeline_result,
-                        retry=retry,
-                        max_retries=max_retries,
-                    )
-                    if pass_fix_result.should_continue:
-                        continue
-                    best_blueprint = pass_fix_result.best_blueprint
-
-                best_blueprint = validate_blueprint(best_blueprint)
-                return best_blueprint, pipeline_result
-
-            owner.stats["phase3_reject"] += 1
-            self._handle_validation_reject(
-                validation_result=validation_result,
-                retry_state=retry_state,
-                score=score,
-                selected_strategy=selected_strategy,
-                best_blueprint=best_blueprint,
-                ep_num=ep_num,
-                arc_data=arc_data,
-                retry=retry,
-                max_retries=max_retries,
-            )
-            feedback = retry_state.prev_reject_feedback or feedback
+            if retry_result.final_result is not None:
+                return retry_result.final_result
 
         return self._finalize_terminal_failure(
             ep_num=ep_num,

@@ -594,108 +594,56 @@ class BaseAgent:
             logging.debug("[llm_call_log] save failed: %s", _e)
 
     def ask(self, prompt, temperature=0.5, response_schema=None, thinking_level=None):
-        """
-        LLM에 질의
+        """Submit a JSON-only prompt to the configured LLM stack."""
+        prompt_state = self._prepare_ask_prompt(prompt=prompt)
+        base_prompt = prompt_state["base_prompt"]
+        full_response = prompt_state["full_response"]
+        current_prompt = prompt_state["current_prompt"]
+        self._apply_pending_key_rotation()
 
-        Args:
-            prompt: 질의 프롬프트
-            temperature: 생성 온도 (0.0-1.0)
-            response_schema: JSON 스키마 (선택). 현재 analyst.py에서만 사용 중.
-                             TODO: 다른 에이전트에도 구조화 응답이 필요하면 활용 확대 검토.
-            thinking_level: [V60.25] Gemini 3 thinking level ("minimal", "low", "medium", "high")
-        """
-        # [B4-P2-4] 이전 ask() 호출의 부분 응답이 남아있으면 새 호출에서 오염됨 — 초기화
-        self.last_partial_response = ""
-        self._reset_usage_tracking()
-        directives = self._escape_braces(getattr(self.context, "author_directives", ""))
-        base_prompt = (
-            f"### [AUTHOR'S ABSOLUTE DIRECTIVES]\n{directives}\n\n"
-            f"### [TASK]\n{prompt}\n\n"
-            f"### [FORMAT]\nRespond ONLY in valid JSON format."
-        )
-        base_prompt = self._apply_prompt_size_gate(base_prompt)
-
-        full_response = ""
-        current_prompt = base_prompt
-
-        # [V61.5] API 키 순환 체크 (이전 작업에서 429 발생 시) [V61.7] Lock 보호
-        with BaseAgent._rotation_lock:
-            pending = BaseAgent._key_rotation_pending
-        if pending:
-            new_client, rotate_reason = self._try_rotate_key()
-            if new_client:
-                self.client = new_client
-            elif rotate_reason:
-                _reason_messages = {
-                    "single_key_only": "추가 API 키가 없어 순환할 수 없음",
-                    "all_keys_exhausted": "사용 가능한 API 키 순환을 모두 소진함",
-                    "rotation_cooldown": "API 키 순환 쿨다운 중",
-                    "client_create_failed": "새 API 키 client 생성 실패",
-                }
-                _msg = _reason_messages.get(rotate_reason, f"알 수 없는 키 순환 실패 ({rotate_reason})")
-                _level = "warning" if rotate_reason != "rotation_cooldown" else "info"
-                self._operator_log(
-                    f"🔑 [KEY-ROTATE] {self._agent_name} {_msg}",
-                    level=_level,
-                    meta={"reason": rotate_reason},
-                )
-                if _level == "warning":
-                    logging.warning("[BaseAgent] key rotation unavailable: %s", rotate_reason)
-                else:
-                    logging.info("[BaseAgent] key rotation unavailable: %s", rotate_reason)
-
-        # [B-1-9:C1] 모델 스택 구성 + config 조립 + 메트릭 시작
-        _stack = self._build_model_stack(
+        stack = self._build_model_stack(
             temperature=temperature,
             response_schema=response_schema,
             thinking_level=thinking_level,
             base_prompt=base_prompt,
         )
-        model_stack = _stack["model_stack"]
-        current_model = _stack["current_model"]
-        config = _stack["config"]
-        metric_id = _stack["metric_id"]
-        current_time = time.time()  # [LOG-1] elapsed 계산용
+        model_stack = stack["model_stack"]
+        current_model = stack["current_model"]
+        config = stack["config"]
+        metric_id = stack["metric_id"]
+        current_time = time.time()
 
         try:
-            # 🔒 Circuit Breaker: 최대 5회 시도 (API 비용 폭증 방지)
-            MAX_CONTINUATIONS = 5
-            WARN_THRESHOLD = 3
-
-            # [V60.97] Rate Limit vs Quota 구분 대응
-            MAX_QUOTA_RETRIES = len(model_stack)
+            max_continuations = 5
+            warn_threshold = 3
+            max_quota_retries = len(model_stack)
             quota_retry_count = 0
-            rate_limit_retry_count = 0  # [V60.97] Rate Limit 전용 재시도 카운터
-            MAX_RATE_LIMIT_RETRIES = 3  # [V60.97] Rate Limit 최대 재시도 (같은 모델)
-            network_retry_count = 0  # [V61.2] 네트워크 오류 재시도 카운터
-
-            _thinking_text = ""  # [TF-28] LLM thinking content
+            rate_limit_retry_count = 0
+            max_rate_limit_retries = 3
+            network_retry_count = 0
+            thinking_text = ""
 
             attempt = 0
-            _ask_t0 = time.time()
-            while attempt < MAX_CONTINUATIONS:
+            ask_started_at = time.time()
+            while attempt < max_continuations:
                 try:
-                    # [V60.99] API Rate Limit 예방 딜레이
                     time.sleep(self.API_DELAY)
-                    _api_t0 = time.time()
+                    api_started_at = time.time()
                     response = self._generate_content(model=current_model, contents=current_prompt, config=config)
-                    _api_elapsed = time.time() - _api_t0
-                    if _api_elapsed > 30:
+                    api_elapsed = time.time() - api_started_at
+                    if api_elapsed > 30:
                         self._operator_log(
-                            f"⏱️ [API] {self._agent_name} model={current_model} attempt={attempt} → {_api_elapsed:.1f}s",
-                            meta={"model": current_model, "attempt": attempt, "elapsed_seconds": round(_api_elapsed, 1)},
+                            f"[API] {self._agent_name} model={current_model} attempt={attempt} took {api_elapsed:.1f}s",
+                            meta={"model": current_model, "attempt": attempt, "elapsed_seconds": round(api_elapsed, 1)},
                         )
-                    # [V60.97] 성공 시 카운터 리셋
                     rate_limit_retry_count = 0
-                    network_retry_count = 0  # [V61.2] 네트워크 카운터도 리셋
-                    # [V62.3] primary 모델 성공 시 키 순환 카운터 리셋
+                    network_retry_count = 0
                     if current_model == self.primary_model:
                         with BaseAgent._rotation_lock:
                             BaseAgent._rotation_count = 0
                 except Exception as api_error:
-                    # [Diag] API 오류 발생 시 즉시 표시
                     self._operator_log(
-                        f"⚠️ [API-ERR] {self._agent_name} model={current_model} attempt={attempt} err={type(api_error).__name__}: {str(api_error)[:120]}",
+                        f"[API-ERR] {self._agent_name} model={current_model} attempt={attempt} err={type(api_error).__name__}: {str(api_error)[:120]}",
                         level="warning",
                         meta={
                             "model": current_model,
@@ -703,8 +651,7 @@ class BaseAgent:
                             "error_type": type(api_error).__name__,
                         },
                     )
-                    # [B-1-9:C2] API 오류 처리 — 네트워크/Rate Limit/쿼터 분기
-                    _err = self._handle_api_error(
+                    error_result = self._handle_api_error(
                         api_error=api_error,
                         current_model=current_model,
                         model_stack=model_stack,
@@ -716,231 +663,310 @@ class BaseAgent:
                         network_retry_count=network_retry_count,
                         rate_limit_retry_count=rate_limit_retry_count,
                         quota_retry_count=quota_retry_count,
-                        max_rate_limit_retries=MAX_RATE_LIMIT_RETRIES,
-                        max_quota_retries=MAX_QUOTA_RETRIES,
+                        max_rate_limit_retries=max_rate_limit_retries,
+                        max_quota_retries=max_quota_retries,
                     )
-                    current_model = _err["current_model"]
-                    config = _err.get("config", config)
-                    network_retry_count = _err["network_retry_count"]
-                    rate_limit_retry_count = _err["rate_limit_retry_count"]
-                    quota_retry_count = _err["quota_retry_count"]
+                    current_model = error_result["current_model"]
+                    config = error_result.get("config", config)
+                    network_retry_count = error_result["network_retry_count"]
+                    rate_limit_retry_count = error_result["rate_limit_retry_count"]
+                    quota_retry_count = error_result["quota_retry_count"]
 
-                    if _err["action"] == "continue":
+                    if error_result["action"] == "continue":
                         self._operator_log(
-                            f"🔄 [API-ERR] {self._agent_name} → continue (retry) model={_err['current_model']}",
+                            f"[API-ERR] {self._agent_name} continue (retry) model={error_result['current_model']}",
                             level="warning",
-                            meta={"action": "continue", "model": _err["current_model"]},
+                            meta={"action": "continue", "model": error_result["current_model"]},
                         )
                         continue
-                    elif _err["action"] == "fallback_response":
-                        response = _err["response"]
+                    if error_result["action"] == "fallback_response":
+                        response = error_result["response"]
                         self._operator_log(
-                            f"🔄 [API-ERR] {self._agent_name} → fallback model={_err['current_model']}",
+                            f"[API-ERR] {self._agent_name} fallback model={error_result['current_model']}",
                             level="warning",
-                            meta={"action": "fallback_response", "model": _err["current_model"]},
+                            meta={"action": "fallback_response", "model": error_result["current_model"]},
                         )
-                        # fall through to response processing
-                    else:  # "raise"
+                    else:
                         self._operator_log(
-                            f"❌ [API-ERR] {self._agent_name} → raise (포기)",
+                            f"[API-ERR] {self._agent_name} raise",
                             level="error",
-                            meta={"action": "raise", "model": _err["current_model"]},
+                            meta={"action": "raise", "model": error_result["current_model"]},
                         )
                         raise api_error
 
-                # [B-1-9:C3] 응답 추출 + 병합 + 이어쓰기 판정
                 self._accumulate_last_llm_usage()
-                _resp = self._extract_and_merge_response(
+                response_result = self._extract_and_merge_response(
                     response=response,
                     full_response=full_response,
                     attempt=attempt,
                     thinking_level=thinking_level,
-                    _thinking_text=_thinking_text,
+                    _thinking_text=thinking_text,
                     base_prompt=base_prompt,
-                    max_continuations=MAX_CONTINUATIONS,
-                    warn_threshold=WARN_THRESHOLD,
+                    max_continuations=max_continuations,
+                    warn_threshold=warn_threshold,
                 )
-                full_response = _resp["full_response"]
-                _thinking_text = _resp["_thinking_text"]
+                full_response = response_result["full_response"]
+                thinking_text = response_result["_thinking_text"]
 
-                if _resp["action"] == "continue":
-                    current_prompt = _resp["current_prompt"]
-                    _cont_elapsed = time.time() - _ask_t0
+                if response_result["action"] == "continue":
+                    current_prompt = response_result["current_prompt"]
+                    cont_elapsed = time.time() - ask_started_at
                     self._operator_log(
-                        f"🔁 [CONT] {self._agent_name} 이어쓰기 attempt={attempt + 1} (누적 {_cont_elapsed:.1f}s, 현재 응답={len(full_response)}자)",
+                        f"[CONT] {self._agent_name} attempt={attempt + 1} elapsed={cont_elapsed:.1f}s response={len(full_response)}",
                         meta={
                             "attempt": attempt + 1,
-                            "elapsed_seconds": round(_cont_elapsed, 1),
+                            "elapsed_seconds": round(cont_elapsed, 1),
                             "response_chars": len(full_response),
                         },
                     )
                     time.sleep(1)
                     attempt += 1
                     continue
-                else:  # "break"
-                    break
+                break
 
-            _total_elapsed = time.time() - _ask_t0
-            if _total_elapsed > 15:
-                self._operator_log(
-                    f"📊 [ASK] {self._agent_name} 총 {_total_elapsed:.1f}s (model={current_model}, attempts={attempt + 1}, 응답={len(full_response)}자)",
-                    meta={
-                        "model": current_model,
-                        "attempts": attempt + 1,
-                        "elapsed_seconds": round(_total_elapsed, 1),
-                        "response_chars": len(full_response),
-                    },
-                )
-
-            # [V49.3] 비용 추적 종료 (성공) — 실측 토큰 우선, fallback 추정
-            if METRICS_ENABLED and metric_id:
-                try:
-                    collector = get_metrics_collector()
-                    metric_usage = self._build_metric_usage_payload(
-                        collector=collector,
-                        prompt_text=base_prompt,
-                        response_text=full_response,
-                        use_accumulated=True,
-                    )
-                    collector.end_call(metric_id, success=True, **metric_usage)
-                except Exception as e:  # [V64.P4] OPTIONAL: metrics end (success)
-                    logging.debug(f"[SILENT] metrics end (success): {e}")
-                    pass
-
-            # [INF-I5] API 호출 성공 구조화 로그
-            logging.debug("[SilentPass:Agent] call_success agent=%s model=%s response_len=%d",
-                self._agent_name,
-                current_model,
-                len(full_response),
-            )
-
-            # [LOG-1] LLM I/O 세션 로깅 (성공)
-            if BaseAgent._session_logger_global:
-                try:
-                    _elapsed = (time.time() - current_time) * 1000 if current_time else 0
-                    BaseAgent._session_logger_global.log_llm_call(
-                        agent_name=self._agent_name,
-                        model=current_model,
-                        prompt=base_prompt,
-                        response=full_response,
-                        temperature=temperature,
-                        duration_ms=_elapsed,
-                        success=True,
-                        thinking=_thinking_text,  # [TF-28]
-                    )
-                except Exception as e:
-                    logging.debug("[TF-26] audit_event (success) failed: %s", str(e)[:100])
-
-            try:
-                _elapsed_ms = int((time.time() - current_time) * 1000) if current_time else 0
-                self._log_llm_call_to_db(
-                    model=current_model,
-                    prompt_text=base_prompt,
-                    response_text=full_response,
-                    duration_ms=_elapsed_ms,
-                    success=True,
-                    thinking_text=_thinking_text,  # [TF-58]
-                )
-            except Exception:
-                pass
-
-            # [TF-28] thinking 캡처 debug 로그
-            if _thinking_text:
-                logging.debug("[TF-28:Thinking] agent=%s thinking_len=%d",
-                    self._agent_name,
-                    len(_thinking_text),
-                )
-
-            self._last_thinking = _thinking_text  # [TF-28c]
-            return full_response
-
-        except Exception as e:
-            _ask_error = e  # [LOG-1] 내부 except에서 e 삭제 방지용 보존
-            # [V44] 에러 타입 분류 및 적절한 복구 전략 선택
-            error_type = self._classify_error(e)
-            self.last_error_type = error_type
-            # [INF-I5] API 호출 실패 구조화 로그
-            logging.debug("[SilentPass:Agent] call_failure agent=%s model=%s error_type=%s backup=%s",
-                self._agent_name,
-                current_model,
-                error_type,
-                self.backup_model,
-            )
-            # [V60.66] 429 폴백이 인라인에서 이미 시도되었음을 표시
-            if error_type == AgentErrorType.QUOTA_EXCEEDED:
-                logging.warning(f" [V60.66] 모든 폴백 모델 할당량 초과 ({model_stack}): {str(e)[:50]}")
-            else:
-                logging.warning(f" [Warning] 모델 실패 ({error_type}), 백업 가동: {str(e)[:50]}")
-
-            # [V49.3] 비용 추적 종료 (실패, 백업 시도 전) — 실측 토큰 우선
-            if METRICS_ENABLED and metric_id:
-                try:
-                    collector = get_metrics_collector()
-                    metric_usage = self._build_metric_usage_payload(
-                        collector=collector,
-                        prompt_text=base_prompt,
-                        response_text=full_response or "",
-                        use_accumulated=True,
-                    )
-                    collector.end_call(
-                        metric_id,
-                        success=False,
-                        error_type=error_type,
-                        **metric_usage,
-                    )
-                except Exception as e:  # [V64.P4] OPTIONAL: metrics end (failure)
-                    logging.debug(f"[SILENT] metrics end (failure): {e}")
-                    pass
-
-            # [LOG-1] LLM I/O 세션 로깅 (실패)
-            if BaseAgent._session_logger_global:
-                try:
-                    _elapsed = (time.time() - current_time) * 1000 if current_time else 0
-                    BaseAgent._session_logger_global.log_llm_call(
-                        agent_name=self._agent_name,
-                        model=current_model,
-                        prompt=base_prompt,
-                        response=full_response or "",
-                        temperature=temperature,
-                        duration_ms=_elapsed,
-                        success=False,
-                        error=str(_ask_error)[:500],
-                        thinking=_thinking_text,  # [TF-28]
-                    )
-                except Exception as e:
-                    logging.debug("[TF-26] audit_event (error) failed: %s", str(e)[:100])
-
-            try:
-                _elapsed_ms = int((time.time() - current_time) * 1000) if current_time else 0
-                self._log_llm_call_to_db(
-                    model=current_model,
-                    prompt_text=base_prompt,
-                    response_text=full_response or "",
-                    duration_ms=_elapsed_ms,
-                    success=False,
-                    error=_ask_error,
-                    thinking_text=_thinking_text,  # [TF-58]
-                )
-            except Exception:
-                pass
-
-            # 부분 응답이 있으면 저장
-            if full_response:
-                self.last_partial_response = full_response
-                logging.info(f" [Recovery] 부분 응답 {len(full_response)}자 보존")
-
-            # [B-1-9:C4] 백업 모델 호출 + 부분 응답 복구
-            return self._attempt_backup_recovery(
+            return self._finalize_successful_ask(
+                current_model=current_model,
+                full_response=full_response,
+                thinking_text=thinking_text,
+                current_time=current_time,
                 base_prompt=base_prompt,
+                metric_id=metric_id,
+                temperature=temperature,
+                attempt=attempt,
+                ask_started_at=ask_started_at,
+            )
+
+        except Exception as error:
+            return self._finalize_failed_ask(
+                error=error,
+                current_model=current_model,
+                model_stack=model_stack,
+                base_prompt=base_prompt,
+                full_response=full_response,
+                metric_id=metric_id,
+                current_time=current_time,
                 temperature=temperature,
                 response_schema=response_schema,
-                full_response=full_response,
-                error_type=error_type,
+                thinking_text=thinking_text,
             )
 
-    # ──────────────────────────────────────────────────────────────────
-    # [B-1-9] ask() 서브루틴 — keyword-only, dict 반환, 동작 변경 없음
-    # ──────────────────────────────────────────────────────────────────
+    def _prepare_ask_prompt(self, *, prompt: str) -> dict:
+        """Reset per-call state and wrap the task prompt in the JSON contract."""
+        self.last_partial_response = ""
+        self._reset_usage_tracking()
+        directives = self._escape_braces(getattr(self.context, "author_directives", ""))
+        base_prompt = (
+            f"### [AUTHOR'S ABSOLUTE DIRECTIVES]\n{directives}\n\n"
+            f"### [TASK]\n{prompt}\n\n"
+            f"### [FORMAT]\nRespond ONLY in valid JSON format."
+        )
+        base_prompt = self._apply_prompt_size_gate(base_prompt)
+        return {
+            "base_prompt": base_prompt,
+            "current_prompt": base_prompt,
+            "full_response": "",
+        }
+
+    def _apply_pending_key_rotation(self) -> None:
+        """Try a queued API-key rotation before the active ask loop starts."""
+        with BaseAgent._rotation_lock:
+            pending = BaseAgent._key_rotation_pending
+        if not pending:
+            return
+
+        new_client, rotate_reason = self._try_rotate_key()
+        if new_client:
+            self.client = new_client
+            return
+        if not rotate_reason:
+            return
+
+        reason_messages = {
+            "single_key_only": "additional API key is unavailable",
+            "all_keys_exhausted": "API key rotation is exhausted",
+            "rotation_cooldown": "API key rotation cooldown is active",
+            "client_create_failed": "new API client creation failed",
+        }
+        message = reason_messages.get(rotate_reason, f"unknown key rotation failure ({rotate_reason})")
+        level = "warning" if rotate_reason != "rotation_cooldown" else "info"
+        self._operator_log(
+            f"[KEY-ROTATE] {self._agent_name} {message}",
+            level=level,
+            meta={"reason": rotate_reason},
+        )
+        if level == "warning":
+            logging.warning("[BaseAgent] key rotation unavailable: %s", rotate_reason)
+        else:
+            logging.info("[BaseAgent] key rotation unavailable: %s", rotate_reason)
+
+    def _finalize_successful_ask(
+        self,
+        *,
+        current_model: str,
+        full_response: str,
+        thinking_text: str,
+        current_time: float,
+        base_prompt: str,
+        metric_id,
+        temperature: float,
+        attempt: int,
+        ask_started_at: float,
+    ) -> str:
+        total_elapsed = time.time() - ask_started_at
+        if total_elapsed > 15:
+            self._operator_log(
+                f"[ASK] {self._agent_name} total={total_elapsed:.1f}s model={current_model} attempts={attempt + 1} response={len(full_response)}",
+                meta={
+                    "model": current_model,
+                    "attempts": attempt + 1,
+                    "elapsed_seconds": round(total_elapsed, 1),
+                    "response_chars": len(full_response),
+                },
+            )
+
+        if METRICS_ENABLED and metric_id:
+            try:
+                collector = get_metrics_collector()
+                metric_usage = self._build_metric_usage_payload(
+                    collector=collector,
+                    prompt_text=base_prompt,
+                    response_text=full_response,
+                    use_accumulated=True,
+                )
+                collector.end_call(metric_id, success=True, **metric_usage)
+            except Exception as metrics_error:
+                logging.debug(f"[SILENT] metrics end (success): {metrics_error}")
+
+        logging.debug(
+            "[SilentPass:Agent] call_success agent=%s model=%s response_len=%d",
+            self._agent_name,
+            current_model,
+            len(full_response),
+        )
+
+        if BaseAgent._session_logger_global:
+            try:
+                elapsed_ms = (time.time() - current_time) * 1000 if current_time else 0
+                BaseAgent._session_logger_global.log_llm_call(
+                    agent_name=self._agent_name,
+                    model=current_model,
+                    prompt=base_prompt,
+                    response=full_response,
+                    temperature=temperature,
+                    duration_ms=elapsed_ms,
+                    success=True,
+                    thinking=thinking_text,
+                )
+            except Exception as session_error:
+                logging.debug("[TF-26] audit_event (success) failed: %s", str(session_error)[:100])
+
+        try:
+            elapsed_ms = int((time.time() - current_time) * 1000) if current_time else 0
+            self._log_llm_call_to_db(
+                model=current_model,
+                prompt_text=base_prompt,
+                response_text=full_response,
+                duration_ms=elapsed_ms,
+                success=True,
+                thinking_text=thinking_text,
+            )
+        except Exception:
+            pass
+
+        if thinking_text:
+            logging.debug("[TF-28:Thinking] agent=%s thinking_len=%d", self._agent_name, len(thinking_text))
+
+        self._last_thinking = thinking_text
+        return full_response
+
+    def _finalize_failed_ask(
+        self,
+        *,
+        error: Exception,
+        current_model: str,
+        model_stack: list,
+        base_prompt: str,
+        full_response: str,
+        metric_id,
+        current_time: float,
+        temperature: float,
+        response_schema,
+        thinking_text: str,
+    ) -> str:
+        error_type = self._classify_error(error)
+        self.last_error_type = error_type
+        logging.debug(
+            "[SilentPass:Agent] call_failure agent=%s model=%s error_type=%s backup=%s",
+            self._agent_name,
+            current_model,
+            error_type,
+            self.backup_model,
+        )
+        if error_type == AgentErrorType.QUOTA_EXCEEDED:
+            logging.warning(f" [V60.66] all fallback models exhausted ({model_stack}): {str(error)[:50]}")
+        else:
+            logging.warning(f" [Warning] model failure ({error_type}), backup path {str(error)[:50]}")
+
+        if METRICS_ENABLED and metric_id:
+            try:
+                collector = get_metrics_collector()
+                metric_usage = self._build_metric_usage_payload(
+                    collector=collector,
+                    prompt_text=base_prompt,
+                    response_text=full_response or "",
+                    use_accumulated=True,
+                )
+                collector.end_call(
+                    metric_id,
+                    success=False,
+                    error_type=error_type,
+                    **metric_usage,
+                )
+            except Exception as metrics_error:
+                logging.debug(f"[SILENT] metrics end (failure): {metrics_error}")
+
+        if BaseAgent._session_logger_global:
+            try:
+                elapsed_ms = (time.time() - current_time) * 1000 if current_time else 0
+                BaseAgent._session_logger_global.log_llm_call(
+                    agent_name=self._agent_name,
+                    model=current_model,
+                    prompt=base_prompt,
+                    response=full_response or "",
+                    temperature=temperature,
+                    duration_ms=elapsed_ms,
+                    success=False,
+                    error=str(error)[:500],
+                    thinking=thinking_text,
+                )
+            except Exception as session_error:
+                logging.debug("[TF-26] audit_event (error) failed: %s", str(session_error)[:100])
+
+        try:
+            elapsed_ms = int((time.time() - current_time) * 1000) if current_time else 0
+            self._log_llm_call_to_db(
+                model=current_model,
+                prompt_text=base_prompt,
+                response_text=full_response or "",
+                duration_ms=elapsed_ms,
+                success=False,
+                error=error,
+                thinking_text=thinking_text,
+            )
+        except Exception:
+            pass
+
+        if full_response:
+            self.last_partial_response = full_response
+            logging.info(f" [Recovery] partial response preserved ({len(full_response)} chars)")
+
+        return self._attempt_backup_recovery(
+            base_prompt=base_prompt,
+            temperature=temperature,
+            response_schema=response_schema,
+            full_response=full_response,
+            error_type=error_type,
+        )
 
     def _build_model_stack(
         self,
@@ -1051,15 +1077,7 @@ class BaseAgent:
         max_rate_limit_retries: int,
         max_quota_retries: int,
     ) -> dict:
-        """[B-1-9:C2] API 오류 처리 — 네트워크 재시도 / Rate Limit 백오프 / 쿼터 폴백.
-
-        Returns:
-            dict with keys:
-                action: "continue" | "fallback_response" | "raise"
-                current_model, config, network_retry_count,
-                rate_limit_retry_count, quota_retry_count
-                response (only when action == "fallback_response")
-        """
+        """Handle retryable API failures without changing the public ask contract."""
         result = {
             "action": "raise",
             "current_model": current_model,
@@ -1069,181 +1087,232 @@ class BaseAgent:
             "quota_retry_count": quota_retry_count,
         }
 
-        # ═══════════════════════════════════════════════════════════════
-        # [V61.2] Case 0: 네트워크/타임아웃 오류 → 백오프 + 연결 체크 후 재시도
-        # 야간 무인 운영 시 3-5분 인터넷 끊김에도 작업 유지
-        # ═══════════════════════════════════════════════════════════════
-        if self._is_network_error(api_error) and network_retry_count < self.MAX_NETWORK_RETRIES:
-            network_retry_count += 1
-            result["network_retry_count"] = network_retry_count
-            # 백오프: 10초 → 15초 → 20초 → ... → 최대 30초
-            wait_time = min(self.NETWORK_RETRY_DELAY_BASE + (network_retry_count - 1) * 5, self.NETWORK_RETRY_DELAY_MAX)
-            total_waited = sum(
-                min(self.NETWORK_RETRY_DELAY_BASE + i * 5, self.NETWORK_RETRY_DELAY_MAX)
-                for i in range(network_retry_count)
-            )
-
-            # [V61.2] 타임스탬프 포함 출력 (하트비트 역할)
-            from datetime import datetime
-
-            timestamp = datetime.now().strftime("%H:%M:%S")
-            logging.warning(f"\n [{timestamp}] 연결 오류 → {wait_time}초 대기 ({network_retry_count}/{self.MAX_NETWORK_RETRIES}, 누적 {total_waited}초)"
-            )
-
-            # 대기 중 — 콘솔 표시
-            self._operator_log(
-                f"🌐 [NET-RETRY] {self._agent_name} 네트워크 재시도 {network_retry_count}/{self.MAX_NETWORK_RETRIES} ({wait_time}초 대기)",
-                level="warning",
-                meta={
-                    "retry_count": network_retry_count,
-                    "max_retries": self.MAX_NETWORK_RETRIES,
-                    "wait_seconds": wait_time,
-                },
-            )
-            time.sleep(wait_time)
-
-            # 연결 체크
-            if self._check_connectivity():
-                logging.info(f"✅ [{datetime.now().strftime('%H:%M:%S')}] 연결 복구! 재시도...")
-            else:
-                # 연결 안 됨 - 다음 재시도로 (루프 계속)
-                logging.info(f" [{datetime.now().strftime('%H:%M:%S')}] 연결 대기 중...")
-            result["action"] = "continue"
-            return result
-
-        # [V60.97] Rate Limit vs Quota Exhausted 구분
-        error_str = str(api_error).lower()
-
-        # Quota Exhausted: resource_exhausted 또는 quota - 일일/월간 할당량 초과
-        is_quota_exhausted = "resource_exhausted" in error_str or "quota" in error_str
-        # Rate Limit: 명시적 rate/limit 신호가 있는 429 - 분당 요청 제한
-        is_rate_limit = (
-            "429" in error_str
-            and not is_quota_exhausted
-            and ("rate" in error_str or "limit" in error_str or "too many requests" in error_str)
+        network_result = self._handle_network_retry_branch(
+            api_error=api_error,
+            network_retry_count=network_retry_count,
+            result=result,
         )
-        # 애매한 경우 (429만 있음) - 같은 모델 대기보다 즉시 폴백이 더 안전
-        is_ambiguous_429 = "429" in error_str and not is_rate_limit and not is_quota_exhausted
+        if network_result is not None:
+            return network_result
 
-        # ═══════════════════════════════════════════════════════════════
-        # [V60.97] Case A: Rate Limit → Backoff 후 재시도
-        # ═══════════════════════════════════════════════════════════════
-        is_gemini3_rate_limit = False  # [TF-MULTI] gemini-3 시리즈 폐기 — 현재 2.5-pro/flash만 사용
-        if (
-            is_rate_limit
-            and not is_gemini3_rate_limit
-            and rate_limit_retry_count < max_rate_limit_retries
-        ):
-            rate_limit_retry_count += 1
-            result["rate_limit_retry_count"] = rate_limit_retry_count
-            # Linear Backoff: 30초 → 60초 → 90초 (분당 제한 대응)
-            wait_time = 30 * rate_limit_retry_count
-            self._operator_log(
-                f"⏳ [RATE-LIMIT] {self._agent_name} {current_model} → {wait_time}초 대기 ({rate_limit_retry_count}/{max_rate_limit_retries})",
-                level="warning",
-                meta={
-                    "model": current_model,
-                    "retry_count": rate_limit_retry_count,
-                    "max_retries": max_rate_limit_retries,
-                    "wait_seconds": wait_time,
-                },
-            )
-            logging.info(f" [V60.97 Rate Limit] {current_model} 분당 제한 감지 → {wait_time}초 대기 후 재시도 ({rate_limit_retry_count}/{max_rate_limit_retries})"
-            )
-            time.sleep(wait_time)
-            # 루프 처음으로 돌아가서 try/except 안에서 재시도
-            result["action"] = "continue"
-            return result
+        error_mode = self._classify_api_error_mode(api_error)
+        rate_limit_result = self._handle_rate_limit_retry_branch(
+            current_model=current_model,
+            rate_limit_retry_count=rate_limit_retry_count,
+            max_rate_limit_retries=max_rate_limit_retries,
+            error_mode=error_mode,
+            result=result,
+        )
+        if rate_limit_result is not None:
+            return rate_limit_result
 
-        # ═══════════════════════════════════════════════════════════════
-        # [V60.97] Case B: Quota/Rate Limit 초과 → 즉시 폴백
-        # ═══════════════════════════════════════════════════════════════
-        if (
-            is_quota_exhausted
-            or is_ambiguous_429
-            or is_gemini3_rate_limit
-            or (is_rate_limit and rate_limit_retry_count >= max_rate_limit_retries)
-        ):
-            if is_gemini3_rate_limit:
-                logging.info(f" [V60.98] {current_model} Rate Limit → 즉시 폴백 (할당량 부족 모델)")
-            if quota_retry_count < max_quota_retries - 1:
-                quota_retry_count += 1
-                rate_limit_retry_count = 0  # 폴백 시 Rate Limit 카운터 리셋
+        quota_result = self._handle_quota_fallback_branch(
+            current_model=current_model,
+            model_stack=model_stack,
+            current_prompt=current_prompt,
+            temperature=temperature,
+            response_schema=response_schema,
+            thinking_level=thinking_level,
+            quota_retry_count=quota_retry_count,
+            rate_limit_retry_count=rate_limit_retry_count,
+            max_rate_limit_retries=max_rate_limit_retries,
+            max_quota_retries=max_quota_retries,
+            error_mode=error_mode,
+            result=result,
+        )
+        if quota_result is not None:
+            return quota_result
 
-                old_model = current_model
-                current_model = (
-                    model_stack[quota_retry_count] if quota_retry_count < len(model_stack) else model_stack[-1]
-                )
-
-                # [V60.68] 쿼터 소진 모델 캐시 등록 [I-18] Lock 보호
-                # [V62.3] 3-pro는 시간 단위 차단 — Rate Limit도 길게 캐싱
-                cache_duration = BaseAgent._QUOTA_CACHE_DURATION
-                with BaseAgent._quota_lock:
-                    BaseAgent._quota_exhausted_models[old_model] = time.time() + cache_duration
-
-                # [V62.3] 전체 키 시도 전까지만 순환 예약
-                with BaseAgent._rotation_lock:
-                    if BaseAgent._rotation_count < len(BaseAgent._api_keys) - 1:
-                        BaseAgent._key_rotation_pending = True
-
-                if is_quota_exhausted:
-                    error_type = "Quota 소진"
-                elif is_ambiguous_429:
-                    error_type = "Ambiguous 429"
-                else:
-                    error_type = "Rate Limit 초과"
-                self._operator_log(
-                    f"🔄 [QUOTA-FB] {self._agent_name} {old_model} {error_type} → {current_model}로 전환",
-                    level="warning",
-                    meta={"from_model": old_model, "to_model": current_model, "error_type": error_type},
-                )
-                logging.info(f" [V60.97 Fallback] {old_model} {error_type} → {current_model}로 전환")
-                # [INF-I5] 폴백 전환 구조화 로그
-                logging.debug("[SilentPass:Agent] fallback agent=%s from=%s to=%s reason=%s",
-                    self._agent_name,
-                    old_model,
-                    current_model,
-                    error_type,
-                )
-
-                # 폴백 모델용 config 재생성
-                fallback_config_params = {
-                    "temperature": temperature,
-                    "max_output_tokens": self.MAX_OUTPUT_TOKENS,
-                    "top_p": 0.95,
-                    "response_mime_type": "application/json",
-                }
-                if response_schema:
-                    fallback_config_params["response_schema"] = response_schema
-                if thinking_level:
-                    if isinstance(thinking_level, str):
-                        budget = self.THINKING_BUDGET_MAP.get(thinking_level.lower(), 8192)
-                    else:
-                        budget = int(thinking_level)
-                    fallback_config_params["thinking_config"] = types.ThinkingConfig(
-                        thinking_budget=budget, include_thoughts=True
-                    )
-                new_config = types.GenerateContentConfig(**fallback_config_params)
-
-                # [V60.99] API Rate Limit 예방 딜레이
-                time.sleep(self.API_DELAY)
-                response = self._generate_content(model=current_model, contents=current_prompt, config=new_config)
-
-                result["action"] = "fallback_response"
-                result["current_model"] = current_model
-                result["config"] = new_config
-                result["rate_limit_retry_count"] = rate_limit_retry_count
-                result["quota_retry_count"] = quota_retry_count
-                result["response"] = response
-                return result
-            else:
-                # 모든 폴백 소진
-                result["action"] = "raise"
-                return result
-
-        # 기타 에러 - 예외 재발생
         result["action"] = "raise"
         return result
+
+    def _handle_network_retry_branch(
+        self,
+        *,
+        api_error: Exception,
+        network_retry_count: int,
+        result: dict,
+    ) -> dict | None:
+        if not self._is_network_error(api_error) or network_retry_count >= self.MAX_NETWORK_RETRIES:
+            return None
+
+        from datetime import datetime
+
+        network_retry_count += 1
+        result["network_retry_count"] = network_retry_count
+        wait_time = min(self.NETWORK_RETRY_DELAY_BASE + (network_retry_count - 1) * 5, self.NETWORK_RETRY_DELAY_MAX)
+        total_waited = sum(
+            min(self.NETWORK_RETRY_DELAY_BASE + i * 5, self.NETWORK_RETRY_DELAY_MAX)
+            for i in range(network_retry_count)
+        )
+
+        timestamp = datetime.now().strftime("%H:%M:%S")
+        logging.warning(
+            f"\n [{timestamp}] network error -> wait {wait_time}s ({network_retry_count}/{self.MAX_NETWORK_RETRIES}, total {total_waited}s)"
+        )
+        self._operator_log(
+            f"[NET-RETRY] {self._agent_name} retry {network_retry_count}/{self.MAX_NETWORK_RETRIES} wait={wait_time}s",
+            level="warning",
+            meta={
+                "retry_count": network_retry_count,
+                "max_retries": self.MAX_NETWORK_RETRIES,
+                "wait_seconds": wait_time,
+            },
+        )
+        time.sleep(wait_time)
+        if self._check_connectivity():
+            logging.info(f"[{datetime.now().strftime('%H:%M:%S')}] connectivity restored; retrying")
+        else:
+            logging.info(f"[{datetime.now().strftime('%H:%M:%S')}] connectivity still pending")
+        result["action"] = "continue"
+        return result
+
+    def _classify_api_error_mode(self, api_error: Exception) -> dict:
+        error_text = str(api_error).lower()
+        is_quota_exhausted = "resource_exhausted" in error_text or "quota" in error_text
+        is_rate_limit = (
+            "429" in error_text
+            and not is_quota_exhausted
+            and ("rate" in error_text or "limit" in error_text or "too many requests" in error_text)
+        )
+        is_ambiguous_429 = "429" in error_text and not is_rate_limit and not is_quota_exhausted
+        return {
+            "is_quota_exhausted": is_quota_exhausted,
+            "is_rate_limit": is_rate_limit,
+            "is_ambiguous_429": is_ambiguous_429,
+            "is_gemini3_rate_limit": False,
+        }
+
+    def _handle_rate_limit_retry_branch(
+        self,
+        *,
+        current_model: str,
+        rate_limit_retry_count: int,
+        max_rate_limit_retries: int,
+        error_mode: dict,
+        result: dict,
+    ) -> dict | None:
+        if (
+            not error_mode["is_rate_limit"]
+            or error_mode["is_gemini3_rate_limit"]
+            or rate_limit_retry_count >= max_rate_limit_retries
+        ):
+            return None
+
+        rate_limit_retry_count += 1
+        result["rate_limit_retry_count"] = rate_limit_retry_count
+        wait_time = 30 * rate_limit_retry_count
+        self._operator_log(
+            f"[RATE-LIMIT] {self._agent_name} {current_model} wait={wait_time}s ({rate_limit_retry_count}/{max_rate_limit_retries})",
+            level="warning",
+            meta={
+                "model": current_model,
+                "retry_count": rate_limit_retry_count,
+                "max_retries": max_rate_limit_retries,
+                "wait_seconds": wait_time,
+            },
+        )
+        logging.info(
+            f" [V60.97 Rate Limit] {current_model} rate limited -> wait {wait_time}s then retry ({rate_limit_retry_count}/{max_rate_limit_retries})"
+        )
+        time.sleep(wait_time)
+        result["action"] = "continue"
+        return result
+
+    def _handle_quota_fallback_branch(
+        self,
+        *,
+        current_model: str,
+        model_stack: list,
+        current_prompt: str,
+        temperature: float,
+        response_schema,
+        thinking_level,
+        quota_retry_count: int,
+        rate_limit_retry_count: int,
+        max_rate_limit_retries: int,
+        max_quota_retries: int,
+        error_mode: dict,
+        result: dict,
+    ) -> dict | None:
+        should_fallback = (
+            error_mode["is_quota_exhausted"]
+            or error_mode["is_ambiguous_429"]
+            or error_mode["is_gemini3_rate_limit"]
+            or (error_mode["is_rate_limit"] and rate_limit_retry_count >= max_rate_limit_retries)
+        )
+        if not should_fallback:
+            return None
+        if error_mode["is_gemini3_rate_limit"]:
+            logging.info(f" [V60.98] {current_model} rate limit -> immediate fallback")
+        if quota_retry_count >= max_quota_retries - 1:
+            result["action"] = "raise"
+            return result
+
+        quota_retry_count += 1
+        next_model = model_stack[quota_retry_count] if quota_retry_count < len(model_stack) else model_stack[-1]
+        self._mark_quota_fallback_source(current_model)
+
+        if error_mode["is_quota_exhausted"]:
+            error_type = "quota_exhausted"
+        elif error_mode["is_ambiguous_429"]:
+            error_type = "ambiguous_429"
+        else:
+            error_type = "rate_limit_exhausted"
+        self._operator_log(
+            f"[QUOTA-FB] {self._agent_name} {current_model} {error_type} -> {next_model}",
+            level="warning",
+            meta={"from_model": current_model, "to_model": next_model, "error_type": error_type},
+        )
+        logging.info(f" [V60.97 Fallback] {current_model} {error_type} -> {next_model}")
+        logging.debug(
+            "[SilentPass:Agent] fallback agent=%s from=%s to=%s reason=%s",
+            self._agent_name,
+            current_model,
+            next_model,
+            error_type,
+        )
+
+        new_config = self._build_retry_generate_config(
+            temperature=temperature,
+            response_schema=response_schema,
+            thinking_level=thinking_level,
+        )
+        time.sleep(self.API_DELAY)
+        response = self._generate_content(model=next_model, contents=current_prompt, config=new_config)
+
+        result["action"] = "fallback_response"
+        result["current_model"] = next_model
+        result["config"] = new_config
+        result["rate_limit_retry_count"] = 0
+        result["quota_retry_count"] = quota_retry_count
+        result["response"] = response
+        return result
+
+    def _mark_quota_fallback_source(self, exhausted_model: str) -> None:
+        cache_duration = BaseAgent._QUOTA_CACHE_DURATION
+        with BaseAgent._quota_lock:
+            BaseAgent._quota_exhausted_models[exhausted_model] = time.time() + cache_duration
+        with BaseAgent._rotation_lock:
+            if BaseAgent._rotation_count < len(BaseAgent._api_keys) - 1:
+                BaseAgent._key_rotation_pending = True
+
+    def _build_retry_generate_config(self, *, temperature: float, response_schema, thinking_level):
+        config_params = {
+            "temperature": temperature,
+            "max_output_tokens": self.MAX_OUTPUT_TOKENS,
+            "top_p": 0.95,
+            "response_mime_type": "application/json",
+        }
+        if response_schema:
+            config_params["response_schema"] = response_schema
+        if thinking_level:
+            if isinstance(thinking_level, str):
+                budget = self.THINKING_BUDGET_MAP.get(thinking_level.lower(), 8192)
+            else:
+                budget = int(thinking_level)
+            config_params["thinking_config"] = types.ThinkingConfig(thinking_budget=budget, include_thoughts=True)
+        return types.GenerateContentConfig(**config_params)
 
     def _extract_and_merge_response(
         self,

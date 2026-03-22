@@ -145,165 +145,145 @@ class ConfidenceCalibrator:
         """원고 신뢰도 평가"""
         factors = {}
         concerns = []
+        factors["length_adequacy"] = self._score_manuscript_length(manuscript, concerns)
+        factors["structure_quality"] = self._score_manuscript_structure(manuscript, concerns)
+        factors["continuity_signals"] = self._score_manuscript_continuity(manuscript, context, concerns)
+        factors["dialogue_ratio"] = self._score_manuscript_dialogue(manuscript, concerns)
+        factors["sensory_detail"] = self._score_manuscript_sensory(manuscript, concerns)
+        factors["scene_coverage"] = self._score_manuscript_scene_coverage(manuscript, context, concerns)
+        factors["ending_hook"] = self._score_manuscript_ending_hook(manuscript, concerns)
+        return self._build_confidence_result(factors=factors, concerns=concerns)
 
-        # 1. 길이 적절성 (15점)
+    def _score_manuscript_length(self, manuscript: str, concerns: list[str]) -> int:
         length = len(manuscript)
         if ManuscriptLimits.TARGET_LENGTH <= length <= 12000:
-            factors["length_adequacy"] = 15
-        elif (
-            ManuscriptLimits.MIN_LENGTH <= length < ManuscriptLimits.TARGET_LENGTH
-            or 12000 < length <= ManuscriptLimits.MAX_LENGTH
-        ):
-            factors["length_adequacy"] = 10
+            return 15
+        if ManuscriptLimits.MIN_LENGTH <= length < ManuscriptLimits.TARGET_LENGTH or 12000 < length <= ManuscriptLimits.MAX_LENGTH:
             concerns.append(f"길이가 다소 {'짧음' if length < 5000 else '김'} ({length}자)")
-        elif 3000 <= length < ManuscriptLimits.MIN_LENGTH:
-            factors["length_adequacy"] = 5
+            return 10
+        if 3000 <= length < ManuscriptLimits.MIN_LENGTH:
             concerns.append(f"길이 부족 ({length}자)")
-        else:
-            factors["length_adequacy"] = 0
-            concerns.append(f"길이 심각하게 {'부족' if length < 3000 else '초과'} ({length}자)")
+            return 5
+        concerns.append(f"길이 심각하게 {'부족' if length < 3000 else '초과'} ({length}자)")
+        return 0
 
-        # 2. 구조적 완성도 (20점)
+    def _score_manuscript_structure(self, manuscript: str, concerns: list[str]) -> int:
         structure_score = 0
-
-        # 시작부 존재
         if len(manuscript) > 100:
             structure_score += 5
-
-        # 문단 분리
         paragraphs = manuscript.split("\n\n")
         if 5 <= len(paragraphs) <= 50:
             structure_score += 5
         elif len(paragraphs) < 5:
             concerns.append("문단 분리 부족")
-
-        # 대화와 묘사 혼합
         dialogue_count = manuscript.count('"') + manuscript.count("「")
         narration_ratio = (len(manuscript) - dialogue_count * 10) / max(len(manuscript), 1)
         if 0.3 <= narration_ratio <= 0.8:
             structure_score += 5
         else:
             concerns.append("대화/묘사 비율 불균형")
-
-        # 끝부분 존재
-        if manuscript.strip() and manuscript.strip()[-1] in '.!?"」':  # [V70] 빈 문자열 방어
+        if manuscript.strip() and manuscript.strip()[-1] in (".", "!", "?", '"', "」"):
             structure_score += 5
+        return structure_score
 
-        factors["structure_quality"] = structure_score
-
-        # 3. 연속성 신호 (20점)
-        continuity_score = 0
+    def _score_manuscript_continuity(
+        self, manuscript: str, context: dict[str, Any], concerns: list[str]
+    ) -> int:
         prev_ms = context.get("prev_manuscript", "")
+        if not prev_ms:
+            return 15
+        prev_keywords = set(re.findall(r"[\w가-힣]{3,}", prev_ms[-1000:]))
+        curr_keywords = set(re.findall(r"[\w가-힣]{3,}", manuscript[:2000]))
+        overlap = len(prev_keywords & curr_keywords)
+        if overlap >= 10:
+            return 20
+        if overlap >= 5:
+            return 15
+        if overlap >= 2:
+            concerns.append("직전 화와의 연결 신호 약함")
+            return 10
+        concerns.append("직전 화와의 연결이 거의 없음")
+        return 5
 
-        if prev_ms:
-            # 직전 화 키워드가 현재 화에 있는지
-            prev_keywords = set(re.findall(r"[\w가-힣]{3,}", prev_ms[-1000:]))
-            curr_keywords = set(re.findall(r"[\w가-힣]{3,}", manuscript[:2000]))
-            overlap = len(prev_keywords & curr_keywords)
-
-            if overlap >= 10:
-                continuity_score = 20
-            elif overlap >= 5:
-                continuity_score = 15
-            elif overlap >= 2:
-                continuity_score = 10
-                concerns.append("직전 화와의 연결 신호 약함")
-            else:
-                continuity_score = 5
-                concerns.append("직전 화와의 연결이 거의 없음")
-        else:
-            continuity_score = 15  # 이전 화 없으면 기본값
-
-        factors["continuity_signals"] = continuity_score
-
-        # 4. 대화 비율 (10점)
+    def _score_manuscript_dialogue(self, manuscript: str, concerns: list[str]) -> int:
         total_dialogue = manuscript.count('"') + manuscript.count("「")
         dialogue_ratio = total_dialogue / max(len(manuscript) / 100, 1)
-
         if 3 <= dialogue_ratio <= 15:
-            factors["dialogue_ratio"] = 10
-        elif 1 <= dialogue_ratio < 3 or 15 < dialogue_ratio <= 20:
-            factors["dialogue_ratio"] = 7
+            return 10
+        if 1 <= dialogue_ratio < 3 or 15 < dialogue_ratio <= 20:
             concerns.append(f"대화 {'부족' if dialogue_ratio < 3 else '과다'}")
-        else:
-            factors["dialogue_ratio"] = 3
-            concerns.append(f"대화 비율 문제 ({dialogue_ratio:.1f})")
+            return 7
+        concerns.append(f"대화 비율 문제 ({dialogue_ratio:.1f})")
+        return 3
 
-        # 5. 감각 묘사 (10점)
+    def _score_manuscript_sensory(self, manuscript: str, concerns: list[str]) -> int:
         sensory_words = ["보이", "들리", "느껴", "냄새", "맛", "차가", "따뜻", "뜨거", "부드", "거칠"]
-        sensory_count = sum(1 for w in sensory_words if w in manuscript)
-
+        sensory_count = sum(1 for word in sensory_words if word in manuscript)
         if sensory_count >= 10:
-            factors["sensory_detail"] = 10
-        elif sensory_count >= 5:
-            factors["sensory_detail"] = 7
-        elif sensory_count >= 2:
-            factors["sensory_detail"] = 4
+            return 10
+        if sensory_count >= 5:
+            return 7
+        if sensory_count >= 2:
             concerns.append("감각 묘사 부족")
-        else:
-            factors["sensory_detail"] = 1
-            concerns.append("감각 묘사 거의 없음")
+            return 4
+        concerns.append("감각 묘사 거의 없음")
+        return 1
 
-        # 6. 씬 반영도 (15점)
+    def _extract_blueprint_scene_keywords(self, blueprint: dict[str, Any]) -> list[str]:
+        scene_breakdown = blueprint.get("scene_breakdown", {})
+        if not scene_breakdown or not isinstance(scene_breakdown, dict):
+            return []
+        scene_keywords: list[str] = []
+        for scene_data in scene_breakdown.values():
+            if isinstance(scene_data, dict):
+                desc = scene_data.get("summary", scene_data.get("description", ""))
+                for event in scene_data.get("key_events") or []:
+                    desc += " " + str(event)
+                scene_keywords.extend(re.findall(r"[\w가-힣]{2,}", desc)[:3])
+        return scene_keywords
+
+    def _score_manuscript_scene_coverage(
+        self, manuscript: str, context: dict[str, Any], concerns: list[str]
+    ) -> int:
         blueprint = context.get("blueprint", {})
-        if blueprint and isinstance(blueprint, dict):
-            scene_breakdown = blueprint.get("scene_breakdown", {})
-            if scene_breakdown and isinstance(scene_breakdown, dict):  # [V70] list 타입 방어
-                scene_keywords = []
-                for scene_data in scene_breakdown.values():
-                    if isinstance(scene_data, dict):
-                        desc = scene_data.get("summary", scene_data.get("description", ""))
-                        for ev in scene_data.get("key_events") or []:
-                            desc += " " + str(ev)
-                        scene_keywords.extend(re.findall(r"[\w가-힣]{2,}", desc)[:3])
+        if not blueprint or not isinstance(blueprint, dict):
+            return 10
+        scene_keywords = self._extract_blueprint_scene_keywords(blueprint)
+        if not scene_keywords:
+            return 10
+        matched = sum(1 for keyword in scene_keywords if keyword in manuscript)
+        ratio = matched / max(len(scene_keywords), 1)
+        if ratio >= 0.7:
+            return 15
+        if ratio >= 0.5:
+            return 10
+        if ratio >= 0.3:
+            concerns.append("Blueprint 씬 반영 부족")
+            return 5
+        concerns.append("Blueprint 씬 대부분 미반영")
+        return 0
 
-                matched = sum(1 for kw in scene_keywords if kw in manuscript)
-                ratio = matched / max(len(scene_keywords), 1)
-
-                if ratio >= 0.7:
-                    factors["scene_coverage"] = 15
-                elif ratio >= 0.5:
-                    factors["scene_coverage"] = 10
-                elif ratio >= 0.3:
-                    factors["scene_coverage"] = 5
-                    concerns.append("Blueprint 씬 반영 부족")
-                else:
-                    factors["scene_coverage"] = 0
-                    concerns.append("Blueprint 씬 대부분 미반영")
-            else:
-                factors["scene_coverage"] = 10  # Blueprint 없으면 기본값
-        else:
-            factors["scene_coverage"] = 10
-
-        # 7. 클리프행어 (10점)
+    def _score_manuscript_ending_hook(self, manuscript: str, concerns: list[str]) -> int:
         ending = manuscript[-500:] if len(manuscript) > 500 else manuscript
         hook_signals = ["...", "!", "?", "그때", "순간", "갑자기", "하지만", "그러나"]
-        hook_count = sum(1 for h in hook_signals if h in ending)
-
+        hook_count = sum(1 for hook in hook_signals if hook in ending)
         if hook_count >= 3:
-            factors["ending_hook"] = 10
-        elif hook_count >= 1:
-            factors["ending_hook"] = 6
-        else:
-            factors["ending_hook"] = 2
-            concerns.append("클리프행어 신호 약함")
+            return 10
+        if hook_count >= 1:
+            return 6
+        concerns.append("클리프행어 신호 약함")
+        return 2
 
-        # 총점 계산
+    def _build_confidence_result(self, *, factors: dict[str, int], concerns: list[str]) -> ConfidenceResult:
         total_score = sum(factors.values())
-
-        # 결과 생성
         level = self._score_to_level(total_score)
         needs_extra = total_score < self.THRESHOLDS["extra_verification"]
-
         if total_score >= self.THRESHOLDS["fast_pass"]:
             recommendation = "pass"
-        elif total_score >= self.THRESHOLDS["extra_verification"]:
-            recommendation = "verify"
         elif total_score >= self.THRESHOLDS["regenerate"]:
             recommendation = "verify"
         else:
             recommendation = "regenerate"
-
         return ConfidenceResult(
             score=total_score,
             level=level,

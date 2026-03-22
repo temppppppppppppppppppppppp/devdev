@@ -3,6 +3,7 @@
 [V57] 완전 구현 - 일관성 검증, 권위 위계, 타임라인 검증
 조선 시대 시대고증과 정치적 개연성을 유지
 """
+# utf8-hygiene: allow-file -- legitimate Hangul/Hanja alt-history literals are part of the guard contract.
 
 from typing import Any
 
@@ -16,6 +17,12 @@ class AltHistoryGuard(BaseGuard):
         super().__init__()
         cfg = self._load_genre_yaml("alt_history")
 
+        self._init_term_sets(cfg)
+        self._init_hierarchy_constraints(cfg)
+        self._init_action_limits(cfg)
+        self._init_activity_requirements()
+
+    def _init_term_sets(self, cfg: dict[str, Any]) -> None:
         self.FORBIDDEN_TERMS = cfg.get(
             "forbidden_terms",
             [
@@ -149,6 +156,7 @@ class AltHistoryGuard(BaseGuard):
             ],
         )
 
+    def _init_hierarchy_constraints(self, cfg: dict[str, Any]) -> None:
         self._court_rank_hierarchy = cfg.get(
             "court_rank_hierarchy",
             [
@@ -175,6 +183,7 @@ class AltHistoryGuard(BaseGuard):
 
         self._social_hierarchy = cfg.get("social_hierarchy", ["천민", "상민", "중인", "양반", "왕족"])
 
+    def _init_action_limits(self, cfg: dict[str, Any]) -> None:
         self._class_action_limits = cfg.get(
             "class_action_limits",
             {
@@ -203,6 +212,7 @@ class AltHistoryGuard(BaseGuard):
             },
         )
 
+    def _init_activity_requirements(self) -> None:
         self._activity_requirements = {
             "과거 급제": {"social_class": "양반", "status": "active"},
             "관직 임명": {"social_class": "양반", "examination": True},

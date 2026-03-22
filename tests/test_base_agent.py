@@ -349,7 +349,33 @@ class TestHandleApiError:
         assert result["quota_retry_count"] == 0
         agent._generate_content.assert_not_called()
 
+    def test_network_error_retries_before_any_model_fallback(self, agent, monkeypatch):
+        monkeypatch.setattr(base_agent_module.time, "sleep", lambda *_args, **_kwargs: None)
+        agent._check_connectivity = MagicMock(return_value=True)
+        agent._generate_content = MagicMock()
 
+        result = agent._handle_api_error(
+            api_error=Exception("Connection refused by upstream"),
+            current_model="gemini-2.5-pro",
+            model_stack=["gemini-2.5-pro", "gemini-2.5-flash"],
+            config=object(),
+            current_prompt="prompt",
+            temperature=0.7,
+            response_schema=None,
+            thinking_level=None,
+            network_retry_count=0,
+            rate_limit_retry_count=0,
+            quota_retry_count=0,
+            max_rate_limit_retries=3,
+            max_quota_retries=2,
+        )
+
+        assert result["action"] == "continue"
+        assert result["network_retry_count"] == 1
+        assert result["quota_retry_count"] == 0
+        assert result["rate_limit_retry_count"] == 0
+        agent._check_connectivity.assert_called_once()
+        agent._generate_content.assert_not_called()
 class TestKeyRotationSignal:
     def test_try_rotate_key_reports_all_keys_exhausted_reason(self, monkeypatch):
         monkeypatch.setattr(BaseAgent, "_keys_initialized", True)
@@ -398,14 +424,21 @@ class TestKeyRotationSignal:
         assert result == '{"content":"ok"}'
         assert operator_log.call_count >= 1
         last_call = operator_log.call_args_list[-1]
-        assert "API 키 순환을 모두 소진함" in last_call.args[0]
+        assert "[KEY-ROTATE]" in last_call.args[0]
         assert last_call.kwargs["level"] == "warning"
         assert last_call.kwargs["meta"]["reason"] == "all_keys_exhausted"
 
 
-# ══════════════════════════════════════════════════════════════
-# Test 5: _validate_response
-# ══════════════════════════════════════════════════════════════
+class TestAskHelperSurface:
+    def test_prepare_ask_prompt_resets_partial_response_and_wraps_json_contract(self, agent):
+        agent.last_partial_response = "stale"
+        result = agent._prepare_ask_prompt(prompt="hello")
+
+        assert agent.last_partial_response == ""
+        assert result["current_prompt"] == result["base_prompt"]
+        assert result["full_response"] == ""
+        assert "AUTHOR'S ABSOLUTE DIRECTIVES" in result["base_prompt"]
+        assert "Respond ONLY in valid JSON format." in result["base_prompt"]
 
 
 class TestValidateResponse:

@@ -4,6 +4,7 @@
 [V46.1] 권위 위임, 미해결 갈등(고구마), 빌런 반응 검증 추가
 무협의 순혈성을 보존하고 현대어/게임 용어를 차단
 """
+# utf8-hygiene: allow-file -- legitimate Hangul/Hanja wuxia literals and regex ? tokens are part of the guard contract.
 
 from typing import Any
 
@@ -17,6 +18,15 @@ class WuxiaGuard(BaseGuard):
         super().__init__()
         cfg = self._load_genre_yaml("wuxia")
 
+        self._init_forbidden_terms(cfg)
+
+        self._init_mandatory_concepts(cfg)
+        self._init_realm_constraints(cfg)
+
+        self._init_injury_action_limits(cfg)
+        self._init_forbidden_modern_patterns(cfg)
+
+    def _init_forbidden_terms(self, cfg: dict[str, Any]) -> None:
         # 무협 금기어 목록 (YAML 우선, 없으면 하드코딩 폴백)
         self.FORBIDDEN_TERMS = cfg.get(
             "forbidden_terms",
@@ -154,12 +164,14 @@ class WuxiaGuard(BaseGuard):
             ],
         )
 
+    def _init_mandatory_concepts(self, cfg: dict[str, Any]) -> None:
         # 무협 필수 개념
         self.MANDATORY_CONCEPTS = cfg.get(
             "mandatory_concepts",
             ["진기(眞氣)와 내공의 운용", "초식(招式)의 형상화", "강호의 은원(恩怨)", "항렬과 예법"],
         )
 
+    def _init_realm_constraints(self, cfg: dict[str, Any]) -> None:
         # [V46] 무협 경지 위계 (낮음 → 높음)
         self._realm_hierarchy = cfg.get(
             "realm_hierarchy", ["입문", "삼류", "이류", "일류", "절정", "초절정", "화경", "현경", "귀신", "선천"]
@@ -180,6 +192,7 @@ class WuxiaGuard(BaseGuard):
             },
         )
 
+    def _init_injury_action_limits(self, cfg: dict[str, Any]) -> None:
         # [V46] 부상 상태별 불가능 행동
         self._injury_action_limits = cfg.get(
             "injury_action_limits",
@@ -191,6 +204,7 @@ class WuxiaGuard(BaseGuard):
             },
         )
 
+    def _init_forbidden_modern_patterns(self, cfg: dict[str, Any]) -> None:
         # [V49.5] 괄호 현대어 금지 패턴
         _raw_modern = cfg.get("forbidden_modern_patterns", None)
         if _raw_modern and isinstance(_raw_modern, list) and isinstance(_raw_modern[0], dict):

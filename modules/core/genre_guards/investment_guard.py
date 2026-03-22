@@ -15,7 +15,11 @@ class InvestmentGuard(BaseGuard):
     def __init__(self) -> None:
         super().__init__()
         cfg = self._load_genre_yaml("investment")
+        self._init_term_sets(cfg)
+        self._init_wealth_constraints(cfg)
+        self._init_market_constraints(cfg)
 
+    def _init_term_sets(self, cfg: dict[str, Any]) -> None:
         self.FORBIDDEN_TERMS = cfg.get(
             "forbidden_terms",
             [
@@ -111,6 +115,7 @@ class InvestmentGuard(BaseGuard):
             ],
         )
 
+    def _init_wealth_constraints(self, cfg: dict[str, Any]) -> None:
         # [V57] 자산 규모 등급
         self._wealth_hierarchy = cfg.get(
             "wealth_hierarchy", ["무일푼", "소시민", "중산층", "부유층", "거부", "재벌", "대재벌", "국가급", "글로벌급"]
@@ -140,6 +145,7 @@ class InvestmentGuard(BaseGuard):
             },
         )
 
+    def _init_market_constraints(self, cfg: dict[str, Any]) -> None:
         # [V57] 투자 유형별 최소 자본 요건
         self._investment_requirements = {
             "개인 주식": 100_000,  # 10만원
@@ -650,7 +656,7 @@ class InvestmentGuard(BaseGuard):
         result = super().run_deep_validation(manuscript, current_state or {})
 
         # 투자 규모 검증
-        amount_patterns = re.findall(r"(\d+(?:,\d{3})*)\s*(억|만)\s*(?:원|달러|불)", manuscript)  # [V70] 단위 캡처 추가
+        amount_patterns = re.findall(r"(\d+(?:,\d{3})*)\s*(억|만)\s*(?:원|달러|불)", manuscript)  # [V70] 단위 캡처 추가  # utf8-hygiene: allow-line regex
         for amount_str, unit in amount_patterns:
             try:
                 amount = int(amount_str.replace(",", ""))
@@ -679,22 +685,22 @@ class InvestmentGuard(BaseGuard):
 
         # [V-LEVA] 레버리지 수익률 공식 검증
         # 1) 레버리지 배수 추출
-        lev_match = re.search(r"(\d+(?:\.\d+)?)\s*배\s*레버리지|레버리지\s*(\d+(?:\.\d+)?)\s*배", manuscript)
+        lev_match = re.search(r"(\d+(?:\.\d+)?)\s*배\s*레버리지|레버리지\s*(\d+(?:\.\d+)?)\s*배", manuscript)  # utf8-hygiene: allow-line regex
         if lev_match:
             lev_str = lev_match.group(1) or lev_match.group(2)
             try:
                 leverage_val = float(lev_str)
                 # 2) 수익률 표기 추출 (양수/음수 모두 지원)
-                roi_m = re.search(r"수익률\s*[:\s]*([+-]?\d+(?:\.\d+)?)\s*%", manuscript)
+                roi_m = re.search(r"수익률\s*[:\s]*([+-]?\d+(?:\.\d+)?)\s*%", manuscript)  # utf8-hygiene: allow-line regex
                 if roi_m:
                     stated_roi = float(roi_m.group(1))
                     # 3) 진입가·매도가 의미론적 분리 추출 (달러 기준)
                     entry_m = re.search(
-                        r"(?:진입가|체결\s*단가|진입\s*단가)[^\d]*(\d+(?:\.\d+)?)\s*달러",
+                        r"(?:진입가|체결\s*단가|진입\s*단가)[^\d]*(\d+(?:\.\d+)?)\s*달러",  # utf8-hygiene: allow-line regex
                         manuscript,
                     )
                     exit_m = re.search(
-                        r"(?:현재가|매도가|체결가)[^\d]*(\d+(?:\.\d+)?)\s*달러",
+                        r"(?:현재가|매도가|체결가)[^\d]*(\d+(?:\.\d+)?)\s*달러",  # utf8-hygiene: allow-line regex
                         manuscript,
                     )
                     if entry_m and exit_m:

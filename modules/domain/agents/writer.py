@@ -73,11 +73,42 @@ class Writer(BaseAgent):
         entity_registry=None,
     ):
         """[V64 Slim] 냉동인간 폴백 생성"""
-        # 1. 데이터 추출
+        prompt_context = self._collect_writer_prompt_context(
+            ep_num=ep_num,
+            master_bible=master_bible,
+            hud_report=hud_report,
+            intro_dna=intro_dna,
+            feedback=feedback,
+            arc_doc=arc_doc,
+            tactical_references=tactical_references,
+            entity_registry=entity_registry,
+        )
+        dynamic_prompt = self._build_writer_dynamic_prompt(
+            ep_num=ep_num,
+            breakdown_doc=breakdown_doc,
+            hud_report=hud_report,
+            purism_prompt=purism_prompt,
+            style_mode=style_mode,
+            prev_full_manuscript=prev_full_manuscript,
+            protagonist_name=protagonist_name,
+            prompt_context=prompt_context,
+        )
+        return self._dispatch_writer_dynamic_prompt(dynamic_prompt)
+
+    def _collect_writer_prompt_context(
+        self,
+        ep_num,
+        master_bible,
+        hud_report,
+        intro_dna,
+        feedback,
+        arc_doc,
+        tactical_references,
+        entity_registry,
+    ) -> dict:
+        """동적 writer prompt에 필요한 입력을 한 번에 정규화한다."""
         focus_info = arc_doc if isinstance(arc_doc, dict) else {}
-        focus_tag = focus_info.get("MUST_FOCUS_ON", "N/A")
         pattern_profile = focus_info.get("PATTERN_PROFILE", {})
-        pattern_logic = focus_info.get("PATTERN_MIXING_LOGIC", "")
         pattern_primary = (
             pattern_profile.get("primary", "패턴 정보 없음") if isinstance(pattern_profile, dict) else "패턴 정보 없음"
         )
@@ -86,7 +117,6 @@ class Writer(BaseAgent):
         bible_root = master_bible.get("MasterBible", master_bible)
         core_identity = bible_root.get("ProjectData", {}).get("CoreIdentity", {})
         assets = bible_root.get("AssetLibrary", {})
-
         protagonist_config = bible_root.get("protagonist_config", {})
         world_origin = protagonist_config.get("world_origin", "원시인")
         incarnation_type = protagonist_config.get("incarnation_type", "회귀자")
@@ -102,38 +132,58 @@ class Writer(BaseAgent):
             protagonist_instructions.append("[빙의자] 원래 인물의 기억/관계를 의식")
         elif incarnation_type == "환생자":
             protagonist_instructions.append("[환생자] 전생의 기억이 있음")
-        protagonist_instructions_text = "\n        ".join(protagonist_instructions)
 
-        # NPC 장비
         npc_equipment_summary = []
         key_npcs = assets.get("KeyNPCs", []) or assets.get("Key_NPCs", [])
         for npc in key_npcs:
-            if isinstance(npc, dict):
-                npc_name = npc.get("name") or npc.get("Name", "알 수 없음")
-                npc_hud = npc.get("NPC_Martial_HUD", {})
-                if isinstance(npc_hud, dict):
-                    equip = npc_hud.get("equipment", [])
-                    if equip:
-                        npc_equipment_summary.append(f"- {npc_name}: {equip}")
+            if not isinstance(npc, dict):
+                continue
+            npc_name = npc.get("name") or npc.get("Name", "알 수 없음")
+            npc_hud = npc.get("NPC_Martial_HUD", {})
+            if not isinstance(npc_hud, dict):
+                continue
+            equip = npc_hud.get("equipment", [])
+            if equip:
+                npc_equipment_summary.append(f"- {npc_name}: {equip}")
 
+        genre_name = (getattr(self.context, "genre", None) or {}).get("name", "무협")
         entity_registry_text = self._format_entity_registry_for_writer(entity_registry)
-        safe_desire = self._escape_braces(core_identity.get("desire", "전설적 무인으로의 복귀"))
-        safe_assets = self._escape_braces(json.dumps(assets, ensure_ascii=False))
-        safe_npc_equipment = (
-            self._escape_braces("\n".join(npc_equipment_summary)) if npc_equipment_summary else "NPC 장비 정보 없음"
-        )
-        safe_entity_registry = self._escape_braces(entity_registry_text)
 
-        feedback_section = f"\n[REJECTION FEEDBACK]: {feedback}" if feedback else ""
-        dna_instruction = (
-            f"[제1화 특수 DNA 적용]: {intro_dna}"
-            if int(ep_num) == 1
-            else "[연속 집필 모드]: 이전 화에서 이어서 전진시켜라."
-        )
-        if not tactical_references:
-            tactical_references = "특이 사항 없음."
+        return {
+            "focus_tag": focus_info.get("MUST_FOCUS_ON", "N/A"),
+            "arc_doc": arc_doc,
+            "pattern_logic": focus_info.get("PATTERN_MIXING_LOGIC", ""),
+            "pattern_primary": pattern_primary,
+            "pattern_secondary": pattern_secondary,
+            "feedback_section": f"\n[REJECTION FEEDBACK]: {feedback}" if feedback else "",
+            "dna_instruction": (
+                f"[제1화 특수 DNA 적용]: {intro_dna}"
+                if int(ep_num) == 1
+                else "[연속 집필 모드]: 이전 화에서 이어서 전진시켜라."
+            ),
+            "tactical_references": tactical_references or "특이 사항 없음.",
+            "safe_desire": self._escape_braces(core_identity.get("desire", "전설적 무인으로의 복귀")),
+            "safe_assets": self._escape_braces(json.dumps(assets, ensure_ascii=False)),
+            "safe_npc_equipment": (
+                self._escape_braces("\n".join(npc_equipment_summary)) if npc_equipment_summary else "NPC 장비 정보 없음"
+            ),
+            "safe_entity_registry": self._escape_braces(entity_registry_text),
+            "world_origin": world_origin,
+            "incarnation_type": incarnation_type,
+            "protagonist_instructions_text": "\n        ".join(protagonist_instructions),
+            "reference_anchor_prompt": self._build_writer_reference_anchor_prompt(ep_num, arc_doc),
+            "anti_trope": _build_anti_trope_instructions_shared(genre_name),
+            "genre_rules_prompt": self.get_genre_rules_prompt(),
+            "mandatory_context": _build_mandatory_context_shared(
+                getattr(self.context, "db", None), getattr(self.context, "master_bible", {}), ep_num
+            ),
+            "justification_guidance": _build_justification_guidance_shared(hud_report, genre_name),
+            "hud_trend": _get_hud_trend_safe_shared(self.context, ep_num),
+            "npc_frequency_warning": self._get_npc_frequency_warning(ep_num),
+        }
 
-        # ReferenceAnchor
+    def _build_writer_reference_anchor_prompt(self, ep_num, arc_doc) -> str:
+        """ReferenceAnchor를 사용할 수 있을 때만 안전하게 prompt 조각을 붙인다."""
         reference_anchor_prompt = ""
         try:
             from modules.core.reference_anchor import ReferenceAnchor
@@ -149,56 +199,57 @@ class Writer(BaseAgent):
                 )
         except Exception as e:
             logging.warning("[TF-26] anchor system failed: %s", str(e)[:100])
+        return reference_anchor_prompt
 
-        anti_trope = _build_anti_trope_instructions_shared(
-            (getattr(self.context, "genre", None) or {}).get("name", "무협")
-        )
-        genre_rules_prompt = self.get_genre_rules_prompt()
-        mandatory_context = _build_mandatory_context_shared(
-            getattr(self.context, "db", None), getattr(self.context, "master_bible", {}), ep_num
-        )
-        justification_guidance = _build_justification_guidance_shared(
-            hud_report, (getattr(self.context, "genre", None) or {}).get("name", "무협")
-        )
-
-        # 2. 프롬프트 조립
-        dynamic_prompt = f"""
+    def _build_writer_dynamic_prompt(
+        self,
+        ep_num,
+        breakdown_doc,
+        hud_report,
+        purism_prompt,
+        style_mode,
+        prev_full_manuscript,
+        protagonist_name,
+        prompt_context,
+    ) -> str:
+        """정규화된 context를 기반으로 최종 writer prompt를 조립한다."""
+        return f"""
         [주인공 이름: {protagonist_name}]
-        {mandatory_context}
-        {feedback_section}
-        {reference_anchor_prompt}
-        {anti_trope}
-        {genre_rules_prompt}
-        {justification_guidance}
+        {prompt_context["mandatory_context"]}
+        {prompt_context["feedback_section"]}
+        {prompt_context["reference_anchor_prompt"]}
+        {prompt_context["anti_trope"]}
+        {prompt_context["genre_rules_prompt"]}
+        {prompt_context["justification_guidance"]}
 
         [WRITER'S FOCUS MISSION]
-        1. {focus_tag}의 내용을 바탕으로 소설 원고를 집필.
+        1. {prompt_context["focus_tag"]}의 내용을 바탕으로 소설 원고를 집필.
         2. 미래 사건을 미리 노출하지 마라.
         3. Blueprint에 명시된 장면을 하나하나 늘려 써라.
         4. 에피소드 마지막은 절벽걸기로 끝내라.
 
         [CURRENT MISSION: Ep {ep_num}]
         - 스타일: {style_mode}
-        - 전개 모드: {dna_instruction}
+        - 전개 모드: {prompt_context["dna_instruction"]}
         {purism_prompt}
 
-        - 주인공 동력: {safe_desire}
-        - 가용 자산: {safe_assets}
-        - NPC 장비: {safe_npc_equipment}
-        - Entity Registry: {safe_entity_registry}
-        - 주인공 설정: {world_origin} / {incarnation_type}
-        {protagonist_instructions_text}
+        - 주인공 동력: {prompt_context["safe_desire"]}
+        - 가용 자산: {prompt_context["safe_assets"]}
+        - NPC 장비: {prompt_context["safe_npc_equipment"]}
+        - Entity Registry: {prompt_context["safe_entity_registry"]}
+        - 주인공 설정: {prompt_context["world_origin"]} / {prompt_context["incarnation_type"]}
+        {prompt_context["protagonist_instructions_text"]}
 
         씬 설계도: {self._escape_braces(breakdown_doc)}
         실시간 상태: {self._escape_braces(hud_report)}
-        HUD 추세: {_get_hud_trend_safe_shared(self.context, ep_num)}
-        NPC 빈도: {self._get_npc_frequency_warning(ep_num)}
+        HUD 추세: {prompt_context["hud_trend"]}
+        NPC 빈도: {prompt_context["npc_frequency_warning"]}
         직전 원고 엔딩: ...{self._escape_braces(prev_full_manuscript[-1500:])}  # [TF-R2-S4-I05]
-        아크 전술: {self._escape_braces(arc_doc)}
-        {self._escape_braces(tactical_references)}
-        주 패턴: {self._escape_braces(str(pattern_primary))}
-        부 패턴: {self._escape_braces(str(pattern_secondary))}
-        조합 논리: {self._escape_braces(str(pattern_logic))}
+        아크 전술: {self._escape_braces(prompt_context["arc_doc"])}
+        {self._escape_braces(prompt_context["tactical_references"])}
+        주 패턴: {self._escape_braces(str(prompt_context["pattern_primary"]))}
+        부 패턴: {self._escape_braces(str(prompt_context["pattern_secondary"]))}
+        조합 논리: {self._escape_braces(str(prompt_context["pattern_logic"]))}
 
         출력 형식 (Strict JSON):
         {{
@@ -217,7 +268,8 @@ class Writer(BaseAgent):
         }}
         """
 
-        # 3. API 호출
+    def _dispatch_writer_dynamic_prompt(self, dynamic_prompt):
+        """cache router와 full-request fallback을 같은 계약으로 감싼다."""
         try:
             if self.cache_name:
                 from google.genai import types
@@ -234,10 +286,9 @@ class Writer(BaseAgent):
                     ),
                 )
                 return self._sanitize_leakage(response.text)
-            else:
-                return self._fallback_full_request(dynamic_prompt)
         except Exception:
-            return self._fallback_full_request(dynamic_prompt)
+            pass
+        return self._fallback_full_request(dynamic_prompt)
 
     def _fallback_full_request(self, dynamic_prompt):
         """캐시 없을 때 전체 프롬프트 구성"""

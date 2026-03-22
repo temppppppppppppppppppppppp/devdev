@@ -725,61 +725,113 @@ class FourPhaseArcGenerator(BaseAgent):
             "patch_fallback": False,
         }
 
-        # 1) YAML 프롬프트 로드
+        enhanced_feedback = self._build_patch_mode_feedback(
+            original_arc=original_arc,
+            director_feedback=director_feedback,
+            attempt_number=attempt_number,
+        )
+        preflight_result, full_constraint_block = self._build_patch_mode_constraint_block(prev_arcs)
+        best_arc = self._run_patch_mode_ensemble_generation(
+            arc_no=arc_no,
+            ep_start=ep_start,
+            vol_strategy=vol_strategy,
+            curr_block=curr_block,
+            prev_arcs=prev_arcs,
+            assets=assets,
+            protagonist_name=protagonist_name,
+            entity_registry=entity_registry,
+            vector_context=vector_context,
+            rejected_strategy=rejected_strategy,
+            preflight_result=preflight_result,
+            full_constraint_block=full_constraint_block,
+            enhanced_feedback=enhanced_feedback,
+        )
+        if best_arc is None:
+            pipeline_result["final_verdict"] = "FAILED"
+            return None, pipeline_result
+
+        verdict, validation_result = self._validate_patch_mode_candidate(
+            best_arc=best_arc,
+            prev_arcs=prev_arcs,
+            full_constraint_block=full_constraint_block,
+            state_tracker=state_tracker,
+        )
+
+        pipeline_result["phases"]["validate"] = {
+            "status": "complete",
+            "verdict": verdict,
+            "issues_count": len(validation_result.get("issues", [])),
+        }
+
+        if verdict == "PASS":
+            best_arc, asp_used = self._apply_patch_mode_asp_correction(
+                best_arc=best_arc,
+                arc_no=arc_no,
+                ep_start=ep_start,
+                director_feedback=director_feedback,
+                adversarial_self_play=adversarial_self_play,
+            )
+            if asp_used:
+                pipeline_result["asp_used"] = True
+
+            pipeline_result["final_verdict"] = "PASS"
+            logging.info(f"✅ [Patch Mode] Arc {arc_no} 패치 성공")
+            return best_arc, pipeline_result
+
+        logging.warning(f" [Patch Mode] Arc {arc_no} 패치 검증 실패 → 폴백 필요")
+        pipeline_result["final_verdict"] = "FAILED"
+        return None, pipeline_result
+
+    def _build_patch_mode_feedback(self, *, original_arc: dict, director_feedback: str, attempt_number: int) -> str:
+        """Patch-mode prompt를 구성하고 원본 Arc tail context를 보존한다."""
         try:
             from modules.core.prompt_loader import PromptLoader
 
-            _patch_template = PromptLoader().load("arc_generator", "ARC_PATCH_MODE_PROMPT")
+            patch_template = PromptLoader().load("arc_generator", "ARC_PATCH_MODE_PROMPT")
         except Exception as e:
             logging.warning(f"[SilentPass:ArcGen] ARC_PATCH_MODE_PROMPT 로드 실패: {e!s:.100}")
-            _patch_template = None
+            patch_template = None
 
-        # 2) 원본 Arc 직렬화
-        _full_json = json.dumps(original_arc, ensure_ascii=False, indent=2)
-        if len(_full_json) > 30000:
-            logging.warning("[TRUNCATION] patch_arc_with_feedback: Arc JSON %d자 → 30000자 (%.1f%% 손실)",
-                len(_full_json),
-                (1 - 30000 / len(_full_json)) * 100,
+        full_json = json.dumps(original_arc, ensure_ascii=False, indent=2)
+        if len(full_json) > 30000:
+            logging.warning(
+                "[TRUNCATION] patch_arc_with_feedback: Arc JSON %d자 → 30000자 (%.1f%% 손실)",
+                len(full_json),
+                (1 - 30000 / len(full_json)) * 100,
             )
-        _original_text = smart_truncate(_full_json, max_chars=30000, head_chars=16500)
+        original_text = smart_truncate(full_json, max_chars=30000, head_chars=16500)
 
-        # 3) 패치 프롬프트 포맷
-        if _patch_template:
-            # [Sweep55] .format()에 json.dumps의 {}가 있으면 KeyError/ValueError 크래시 방지
-            # WARNING: _esc()는 str.format() 호출 전에 반드시 적용해야 합니다.
-            # JSON 문자열 내 {/}가 format placeholder로 해석되어 KeyError 발생 방지.
-            def _esc(s):
-                """Escape braces for str.format() — {→{{ }→}}"""
-                return s.replace("{", "{{").replace("}", "}}")
+        if patch_template:
+            def _esc(value: str) -> str:
+                return value.replace("{", "{{").replace("}", "}}")
 
-            _patch_section = _patch_template.format(
+            patch_section = patch_template.format(
                 feedback_text=_esc(director_feedback),
-                original_arc=_esc(_original_text),
+                original_arc=_esc(original_text),
             )
         else:
-            _patch_section = (
+            patch_section = (
                 f"[패치 모드: Arc 원본 보존 + 지적사항만 수정]\n\n"
                 f"## Director 피드백\n{director_feedback}\n\n"
-                f"## 원본 Arc\n{_original_text}\n\n"
+                f"## 원본 Arc\n{original_text}\n\n"
                 f"전면 재설계하지 마세요. 지적된 부분만 고치세요."
             )
 
-        enhanced_feedback = (
+        return (
             f"[🔧 {attempt_number}차 수정 - 패치 모드: Arc 원본 보존 + 지적사항만 수정]\n\n"
-            f"{_patch_section}\n\n"
+            f"{patch_section}\n\n"
             f"⚠️ 원본 Arc의 전체 구조, 에피소드 배분, 서사 흐름을 보존하면서 피드백 지적사항만 수정하세요.\n"
             f"⚠️ 수정하지 않는 부분은 원본을 그대로 유지하세요."
         )
 
-        # 4) Phase 1: Constraint (generate()와 동일)
+    def _build_patch_mode_constraint_block(self, prev_arcs: list[dict]) -> tuple[dict, str]:
+        """Patch-mode에서도 generate()와 동일한 constraint envelope를 사용한다."""
         preflight_result = self.preflight.analyze(prev_arcs)
         preflight_injection = self.preflight.generate_analyst_injection(preflight_result, genre=self._genre)
         compiled_constraints = self.compiler.compile(prev_arcs)
         negative_examples = self.negative_injector.generate_injection()
         self_check = self.negative_injector.generate_self_check_prompt()
-        # [TF-39] P1-4: 제약 블록 섹션 구조화
-        # [TF-60] 비무협 장르: 정신력/내공/마나 수치 금지
-        _genre_energy_warning_p = (
+        genre_energy_warning = (
             f"⚠️ 이 작품은 {self._genre} 장르입니다. tactical_doc의 [시작 상태]/[종료 상태]에\n"
             '"내공", "정신력", "마나" 등의 수치화된 능력치를 사용하지 마세요.\n'
             "심리 상태는 서술형으로 표현하세요. (예: \"극도의 긴장 상태\", \"자신감 회복\")"
@@ -787,7 +839,7 @@ class FourPhaseArcGenerator(BaseAgent):
         full_constraint_block = "\n\n".join(
             part
             for part in [
-                _genre_energy_warning_p,
+                genre_energy_warning,
                 f"### [PREFLIGHT 분석]\n{preflight_injection}" if preflight_injection else "",
                 f"### [HARD CONSTRAINTS — 절대 금지]\n{compiled_constraints}" if compiled_constraints else "",
                 f"### [NEGATIVE EXAMPLES]\n{negative_examples}" if negative_examples else "",
@@ -795,8 +847,26 @@ class FourPhaseArcGenerator(BaseAgent):
             ]
             if part.strip()
         )
+        return preflight_result, full_constraint_block
 
-        # 5) Phase 2: Ensemble 생성 (패치 피드백 주입)
+    def _run_patch_mode_ensemble_generation(
+        self,
+        *,
+        arc_no: int,
+        ep_start: int,
+        vol_strategy: str,
+        curr_block: dict,
+        prev_arcs: list[dict],
+        assets: dict | None,
+        protagonist_name: str,
+        entity_registry: dict | None,
+        vector_context: str,
+        rejected_strategy: str,
+        preflight_result: dict,
+        full_constraint_block: str,
+        enhanced_feedback: str,
+    ) -> dict | None:
+        """Patch-mode ensemble 후보를 생성하고 후속 검증 전 상태를 보정한다."""
         ep_count_suggestion, pacing_reason = self._determine_ep_count(curr_block, arc_no, prev_arcs)
         pacing_signals = self._build_pacing_signal_payload(curr_block, ep_count_suggestion, pacing_reason)
         protagonist_config = {}
@@ -815,7 +885,7 @@ class FourPhaseArcGenerator(BaseAgent):
             prev_arc_context = f"{prev_arc_context}\n\n[과거 유사 맥락 (벡터 검색)]\n{vector_context}"
 
         try:
-            best_arc, all_candidates = self.ensemble.generate_ensemble(
+            _, all_candidates = self.ensemble.generate_ensemble(
                 arc_no=arc_no,
                 ep_start=ep_start,
                 vol_strategy=vol_strategy,
@@ -832,108 +902,111 @@ class FourPhaseArcGenerator(BaseAgent):
                 ep_count_suggestion=ep_count_suggestion,
                 pacing_signals=pacing_signals,
                 retry=0,
-                single_strategy=rejected_strategy,  # [TF-36] partial 시 1개 전략만
+                single_strategy=rejected_strategy,
             )
         except Exception as e:
             logging.warning(f"[Patch Mode] Arc ensemble 생성 실패: {e!s:.200}")
-            pipeline_result["final_verdict"] = "FAILED"
-            return None, pipeline_result
+            return None
 
         if not all_candidates:
             logging.warning("[Patch Mode] Arc ensemble 후보 없음 → 폴백 필요")
-            pipeline_result["final_verdict"] = "FAILED"
-            return None, pipeline_result
-        best_arc = all_candidates[0]
+            return None
 
-        # 6) Phase 2.5: Auto-sanitize
-        best_arc = self._check_arc_end_state(best_arc)
-
-        # [TF-22-01] arc_start_state.location 강제 주입 (Patch Mode 경로)
+        best_arc = self._check_arc_end_state(all_candidates[0])
         if prev_arcs:
-            _last_end_p = prev_arcs[-1].get("state_constraints", {}).get("arc_end_state", {})
-            _plan_loc_p = _last_end_p.get("location") if isinstance(_last_end_p, dict) else None
-            _exec_state_p = self._load_execution_state(prev_arcs[-1])
-            _forced_loc_p = (_exec_state_p.get("protagonist_location") if _exec_state_p else None) or _plan_loc_p
-            if _forced_loc_p:
-                _sc_p = best_arc.setdefault("state_constraints", {})
-                _as_p = _sc_p.setdefault("arc_start_state", {})
-                if not _as_p.get("location"):
-                    _as_p["location"] = _forced_loc_p
+            last_end = prev_arcs[-1].get("state_constraints", {}).get("arc_end_state", {})
+            plan_loc = last_end.get("location") if isinstance(last_end, dict) else None
+            exec_state = self._load_execution_state(prev_arcs[-1])
+            forced_loc = (exec_state.get("protagonist_location") if exec_state else None) or plan_loc
+            if forced_loc:
+                patched_constraints = best_arc.setdefault("state_constraints", {})
+                arc_start_state = patched_constraints.setdefault("arc_start_state", {})
+                if not arc_start_state.get("location"):
+                    arc_start_state["location"] = forced_loc
+        return best_arc
 
-        # 7) Phase 3: Validate
-        _pre_items = set()
-        _pre_grants = set()
-        for _prev in prev_arcs:
-            # [BUG-F] protagonist_items 우선 폴백
-            _psc_fp = _prev.get("state_constraints", {})
-            _acq = _psc_fp.get("protagonist_items") or _psc_fp.get("items_acquired", [])
-            if isinstance(_acq, list):
-                _pre_items.update(
-                    (i.get("name", i.get("item", "")) if isinstance(i, dict) else str(i)).strip() for i in _acq if i
+    def _validate_patch_mode_candidate(
+        self,
+        *,
+        best_arc: dict,
+        prev_arcs: list[dict],
+        full_constraint_block: str,
+        state_tracker,
+    ) -> tuple[str, dict]:
+        """Patch-mode 후보를 본 검증기에 태우기 전에 선행 상태를 평탄화한다."""
+        pre_items = set()
+        pre_grants = set()
+        for prev_arc in prev_arcs:
+            prev_constraints = prev_arc.get("state_constraints", {})
+            acquired = prev_constraints.get("protagonist_items") or prev_constraints.get("items_acquired", [])
+            if isinstance(acquired, list):
+                pre_items.update(
+                    (item.get("name", item.get("item", "")) if isinstance(item, dict) else str(item)).strip()
+                    for item in acquired
+                    if item
                 )
-            _grt = _psc_fp.get("grants_received", [])
-            if isinstance(_grt, list):
-                _pre_grants.update(
-                    (g.get("name", g.get("item", "")) if isinstance(g, dict) else str(g)).strip() for g in _grt if g
+            grants = prev_constraints.get("grants_received", [])
+            if isinstance(grants, list):
+                pre_grants.update(
+                    (grant.get("name", grant.get("item", "")) if isinstance(grant, dict) else str(grant)).strip()
+                    for grant in grants
+                    if grant
                 )
 
-        verdict, validation_result = self.validator.validate(
+        return self.validator.validate(
             arc=best_arc,
             prev_arcs=prev_arcs,
             constraints=full_constraint_block,
             state_tracker=state_tracker,
-            pre_collected_items=_pre_items,
-            pre_collected_grants=_pre_grants,
+            pre_collected_items=pre_items,
+            pre_collected_grants=pre_grants,
             genre=self._genre,
         )
 
-        pipeline_result["phases"]["validate"] = {
-            "status": "complete",
-            "verdict": verdict,
-            "issues_count": len(validation_result.get("issues", [])),
-        }
+    def _apply_patch_mode_asp_correction(
+        self,
+        *,
+        best_arc: dict,
+        arc_no: int,
+        ep_start: int,
+        director_feedback: str,
+        adversarial_self_play,
+    ) -> tuple[dict, bool]:
+        """Patch-mode PASS 결과에 한해 ASP 보정을 적용한다."""
+        if not adversarial_self_play or not best_arc:
+            return best_arc, False
 
-        if verdict == "PASS":
-            # [OpusTF] ASP 교정 — generate() L338-349 패턴 재사용
-            if adversarial_self_play and best_arc:
-                try:
-                    _asp_ctx = {
-                        "arc_no": arc_no,
-                        "ep_start": ep_start,
-                        "director_feedback": director_feedback,
-                    }
-                    _asp_input = json.dumps(best_arc, ensure_ascii=False)
-                    _asp_result = adversarial_self_play.generate_with_adversary(
-                        initial_content=_asp_input,
-                        content_type="arc",
-                        context=_asp_ctx,
-                    )
-                    _asp_output = getattr(_asp_result, "final_output", "") if _asp_result else ""
-                    if _asp_output:
-                        _asp_arc = self._extract_json_robust(_asp_output)
-                        if not isinstance(_asp_arc, dict) or not _asp_arc:
-                            try:
-                                _asp_arc = json.loads(_asp_output)
-                            except (json.JSONDecodeError, ValueError):
-                                _asp_arc = {}
-                        if isinstance(_asp_arc, dict) and _asp_arc.get("tactical_doc"):
-                            # [TF10-P2] episode_details 복원 — Patch Mode ASP 교체 시 소실 방지
-                            _orig_details = best_arc.get("episode_details")
-                            best_arc = _asp_arc
-                            if _orig_details and not best_arc.get("episode_details"):
-                                best_arc["episode_details"] = _orig_details
-                            pipeline_result["asp_used"] = True
-                            logging.info(f"✅ [Patch+ASP] Arc {arc_no} ASP 교정 적용")
-                except Exception as e:
-                    logging.warning(f"[SilentPass:PatchMode:ASP] {e!s:.120}")
+        try:
+            asp_context = {
+                "arc_no": arc_no,
+                "ep_start": ep_start,
+                "director_feedback": director_feedback,
+            }
+            asp_input = json.dumps(best_arc, ensure_ascii=False)
+            asp_result = adversarial_self_play.generate_with_adversary(
+                initial_content=asp_input,
+                content_type="arc",
+                context=asp_context,
+            )
+            asp_output = getattr(asp_result, "final_output", "") if asp_result else ""
+            if asp_output:
+                asp_arc = self._extract_json_robust(asp_output)
+                if not isinstance(asp_arc, dict) or not asp_arc:
+                    try:
+                        asp_arc = json.loads(asp_output)
+                    except (json.JSONDecodeError, ValueError):
+                        asp_arc = {}
+                if isinstance(asp_arc, dict) and asp_arc.get("tactical_doc"):
+                    original_details = best_arc.get("episode_details")
+                    best_arc = asp_arc
+                    if original_details and not best_arc.get("episode_details"):
+                        best_arc["episode_details"] = original_details
+                    logging.info(f"✅ [Patch+ASP] Arc {arc_no} ASP 교정 적용")
+                    return best_arc, True
+        except Exception as e:
+            logging.warning(f"[SilentPass:PatchMode:ASP] {e!s:.120}")
 
-            pipeline_result["final_verdict"] = "PASS"
-            logging.info(f"✅ [Patch Mode] Arc {arc_no} 패치 성공")
-            return best_arc, pipeline_result
-
-        logging.warning(f" [Patch Mode] Arc {arc_no} 패치 검증 실패 → 폴백 필요")
-        pipeline_result["final_verdict"] = "FAILED"
-        return None, pipeline_result
+        return best_arc, False
 
     def _load_execution_state(self, last_arc: dict) -> dict:
         """[TF-48] 실제 에피소드 실행 결과 로드 — Arc 계획 상태와 실행 상태 간 차이 보정.
@@ -1154,30 +1227,33 @@ class FourPhaseArcGenerator(BaseAgent):
         if not prev_arcs:
             return "서사 시작점 (첫 Arc)"
 
-        lines = []
         last_arc = prev_arcs[-1]
         last_arc_no = last_arc.get("arc_no", "?")
+        lines = []
+        lines.extend(self._build_prev_context_carryover_lines(last_arc, last_arc_no))
+        lines.extend(self._build_prev_context_execution_lines(last_arc))
+        lines.extend(self._build_prev_context_quality_lines(last_arc, last_arc_no))
+        lines.extend(self._build_prev_context_advisory_lines(prev_arcs, last_arc, last_arc_no, preflight_result))
+        return "\n".join(lines)
 
+    def _build_prev_context_carryover_lines(self, last_arc: dict, last_arc_no) -> list[str]:
+        """직전 Arc 종료 상태를 다음 Arc 강제 시작 조건으로 평탄화한다."""
+        lines = []
         state = last_arc.get("state_constraints", {})
         arc_end = state.get("arc_end_state", {})
         joint = last_arc.get("joint_docs", {})
         shadow = last_arc.get("status_shadow", {})
 
-        # 상태 추출 (arc_end_state 우선) + [V62.2] 아크 간 자연 회복
         raw_energy = arc_end.get("internal_energy")
         if raw_energy is None:
             loss_str = shadow.get("internal_energy_loss", "0%")
             try:
-                import re
-
-                _m = re.search(r"(\d+)", str(loss_str))  # [V70] None 방어
-                loss = int(_m.group(1)) if _m else 0
+                match = re.search(r"(\d+)", str(loss_str))
+                loss = int(match.group(1)) if match else 0
                 raw_energy = max(0, 100 - loss)
             except Exception:
                 raw_energy = Stage2Limits.INTERNAL_ENERGY_FALLBACK
 
-        # [TF-39] P0-2: 내공 자연 회복 — 최소 90% (100% 강제 리셋 → 자연 회복)
-        # [TF-41] P0-1: 비무협 장르는 내공 라인 자체를 출력하지 않음
         if self._genre == "wuxia":
             final_energy = max(90, int(raw_energy) if isinstance(raw_energy, (int, float)) else 100)
             if isinstance(raw_energy, (int, float)) and raw_energy < final_energy:
@@ -1185,17 +1261,15 @@ class FourPhaseArcGenerator(BaseAgent):
         else:
             final_energy = None
 
-        raw_injuries = arc_end.get("injuries") or "없음"
-        final_injuries = self._sanitize_injuries(raw_injuries)
+        final_injuries = self._sanitize_injuries(arc_end.get("injuries") or "없음")
         final_location = arc_end.get("location") or joint.get("final_location", "알 수 없음")
-        final_location = _trim_location(final_location)  # [TF-60] 과잉 복사 방지
+        final_location = _trim_location(final_location)
         final_equipment = arc_end.get("equipment")
         if final_equipment is None:
             final_equipment = joint.get("physical_inventory", [])
         if isinstance(final_equipment, str):
-            final_equipment = [i.strip() for i in final_equipment.split(",") if i.strip()]
+            final_equipment = [item.strip() for item in final_equipment.split(",") if item.strip()]
 
-        # 필수 계승 블록
         lines.append("=" * 50)
         lines.append(f"🔴 [Arc {last_arc_no} 종료 상태 → 다음 Arc 필수 시작 조건]")
         lines.append("=" * 50)
@@ -1204,314 +1278,340 @@ class FourPhaseArcGenerator(BaseAgent):
         lines.append(f"✅ 부상: {final_injuries}")
         lines.append(f"✅ 위치: {final_location}")
         lines.append(f"✅ 소지품: {final_equipment}")
-        # [TF-59] 재무 상태 계승
-        _capital = arc_end.get("capital")
-        _total_assets = arc_end.get("total_assets")
-        _portfolio = arc_end.get("portfolio_position")
-        if _capital or _total_assets or _portfolio:
-            lines.append(f"✅ 자본금: {_capital or '미기재'}")
-            lines.append(f"✅ 총자산: {_total_assets or '미기재'}")
-            lines.append(f"✅ 포지션: {_portfolio or '미기재'}")
+        capital = arc_end.get("capital")
+        total_assets = arc_end.get("total_assets")
+        portfolio = arc_end.get("portfolio_position")
+        if capital or total_assets or portfolio:
+            lines.append(f"✅ 자본금: {capital or '미기재'}")
+            lines.append(f"✅ 총자산: {total_assets or '미기재'}")
+            lines.append(f"✅ 포지션: {portfolio or '미기재'}")
         lines.append("=" * 50)
         lines.append("")
+        return lines
 
-        # [TF-48] 실제 에피소드 실행 결과 주입 — Arc 계획과 실행 간 차이 보정
-        _exec = self._load_execution_state(last_arc)
-        if _exec:
-            lines.append("=" * 50)
-            lines.append("⚠️ [TF-48] 실제 에피소드 실행 결과 (Arc 계획보다 우선)")
-            lines.append("다음 Arc 설계 시 아래 실행 결과를 반드시 참조하라.")
-            lines.append("=" * 50)
-            # 주인공 자산
-            _assets = _exec.get("protagonist_assets", {})
-            if _assets:
-                for _ak, _av in _assets.items():
-                    lines.append(f"  💰 {_ak}: {_av}")
-            _status = _exec.get("protagonist_status", {})
-            if _status:
-                for _sk, _sv in _status.items():
-                    lines.append(f"  📊 {_sk}: {_sv}")
-            _loc = _exec.get("protagonist_location")
-            if _loc:
-                lines.append(f"  📍 실제 위치: {_loc}")
-            _elapsed = _exec.get("cumulative_elapsed", {})
-            if isinstance(_elapsed, dict) and _elapsed.get("total_days"):
-                lines.append(f"  ⏱️ 누적 경과: 총 {_elapsed.get('total_days')}일")
-            _motivations = _exec.get("motivations", [])
-            if _motivations:
-                _mot_lines = []
-                for _mot in _motivations[:5]:
-                    _text = str(_mot.get("text", "") or "").strip()
-                    if not _text:
-                        continue
-                    _since_ep = _mot.get("since_ep")
-                    _mot_lines.append(f"{_text} (ep{_since_ep}~)" if _since_ep else _text)
-                if _mot_lines:
-                    lines.append(f"  🎯 핵심 동기: {'; '.join(_mot_lines)}")
-            _promises = _exec.get("promises", [])
-            if _promises:
-                _promise_lines = []
-                for _promise in _promises[:5]:
-                    _text = str(_promise.get("text", "") or "").strip()
-                    if not _text:
-                        continue
-                    _promiser = str(_promise.get("promiser", "") or "").strip()
-                    _promisee = str(_promise.get("promisee", "") or "").strip()
-                    _parties = "→".join(x for x in [_promiser, _promisee] if x)
-                    _since_ep = _promise.get("since_ep")
-                    _label = f"{_parties}: {_text}" if _parties else _text
-                    if _since_ep:
-                        _label += f" (ep{_since_ep}~)"
-                    _promise_lines.append(_label)
-                if _promise_lines:
-                    lines.append(f"  🤝 미이행 약속: {'; '.join(_promise_lines)}")
-            # 최신 에피소드 재무 상태
-            _les = _exec.get("last_episode_state", {})
-            if _les:
-                _cap = _les.get("capital")
-                _total = _les.get("total_assets")
-                _ep = _les.get("ep_num")
-                if _cap is not None or _total is not None:
-                    lines.append(f"  📋 제{_ep}화 종료 기준: 자본금={_cap}, 총자산={_total}")
-                _new_items = _les.get("new_items", [])
-                if _new_items:
-                    lines.append(f"  🆕 제{_ep}화 신규 아이템: {_new_items}")
-            # FactLedger 핵심 수치
-            _fl_summary = str(_exec.get("fact_ledger_summary", "") or "").strip()
-            if _fl_summary:
-                _fl_lines = _fl_summary.splitlines()
-                lines.append(f"  📖 {_fl_lines[0]}")
-                for _line in _fl_lines[1:]:
-                    lines.append(f"     {_line}")
-            else:
-                _fl = _exec.get("fact_ledger", {})
-                if _fl:
-                    _fl_lines = []
-                    for _fk, _fv in list(_fl.items())[:15]:
-                        _unit = str(_fv.get("unit", "") or "").strip()
-                        _unit_str = f" {_unit}" if _unit else ""
-                        _est = _fv.get("established_value")
-                        _est_ep = _fv.get("established_ep", "?")
-                        _cur = _fv.get("value")
-                        _last_ep = _fv.get("last_ep")
-                        if _est not in ("", None) and str(_est) != str(_cur):
-                            _fl_lines.append(f"{_fk}={_est}{_unit_str}(ep{_est_ep})->{_cur}{_unit_str}(ep{_last_ep})")
-                        else:
-                            _fl_lines.append(f"{_fk}={_cur}{_unit_str} (ep{_last_ep})")
-                    if _fl_lines:
-                        lines.append(f"  📖 팩트원장: {'; '.join(_fl_lines)}")
-            # 활성 아이템
-            _ai = _exec.get("active_items", {})
-            if _ai:
-                _ai_names = list(_ai.keys())[:20]
-                lines.append(f"  🎒 활성 아이템: {', '.join(_ai_names)}")
-            lines.append("=" * 50)
+    def _build_prev_context_execution_lines(self, last_arc: dict) -> list[str]:
+        """DB 실행 상태를 Arc 계획보다 높은 우선순위의 carryover block으로 붙인다."""
+        lines = []
+        execution_state = self._load_execution_state(last_arc)
+        if not execution_state:
+            return lines
+
+        lines.append("=" * 50)
+        lines.append("⚠️ [TF-48] 실제 에피소드 실행 결과 (Arc 계획보다 우선)")
+        lines.append("다음 Arc 설계 시 아래 실행 결과를 반드시 참조하라.")
+        lines.append("=" * 50)
+        assets = execution_state.get("protagonist_assets", {})
+        if assets:
+            for asset_key, asset_value in assets.items():
+                lines.append(f"  💰 {asset_key}: {asset_value}")
+        status = execution_state.get("protagonist_status", {})
+        if status:
+            for status_key, status_value in status.items():
+                lines.append(f"  📊 {status_key}: {status_value}")
+        protagonist_location = execution_state.get("protagonist_location")
+        if protagonist_location:
+            lines.append(f"  📍 실제 위치: {protagonist_location}")
+        elapsed = execution_state.get("cumulative_elapsed", {})
+        if isinstance(elapsed, dict) and elapsed.get("total_days"):
+            lines.append(f"  ⏱️ 누적 경과: 총 {elapsed.get('total_days')}일")
+
+        motivations = execution_state.get("motivations", [])
+        if motivations:
+            motivation_lines = []
+            for motivation in motivations[:5]:
+                text = str(motivation.get("text", "") or "").strip()
+                if not text:
+                    continue
+                since_ep = motivation.get("since_ep")
+                motivation_lines.append(f"{text} (ep{since_ep}~)" if since_ep else text)
+            if motivation_lines:
+                lines.append(f"  🎯 핵심 동기: {'; '.join(motivation_lines)}")
+
+        promises = execution_state.get("promises", [])
+        if promises:
+            promise_lines = []
+            for promise in promises[:5]:
+                text = str(promise.get("text", "") or "").strip()
+                if not text:
+                    continue
+                promiser = str(promise.get("promiser", "") or "").strip()
+                promisee = str(promise.get("promisee", "") or "").strip()
+                parties = "→".join(item for item in [promiser, promisee] if item)
+                since_ep = promise.get("since_ep")
+                label = f"{parties}: {text}" if parties else text
+                if since_ep:
+                    label += f" (ep{since_ep}~)"
+                promise_lines.append(label)
+            if promise_lines:
+                lines.append(f"  🤝 미이행 약속: {'; '.join(promise_lines)}")
+
+        last_episode_state = execution_state.get("last_episode_state", {})
+        if last_episode_state:
+            capital = last_episode_state.get("capital")
+            total_assets = last_episode_state.get("total_assets")
+            ep_no = last_episode_state.get("ep_num")
+            if capital is not None or total_assets is not None:
+                lines.append(f"  📋 제{ep_no}화 종료 기준: 자본금={capital}, 총자산={total_assets}")
+            new_items = last_episode_state.get("new_items", [])
+            if new_items:
+                lines.append(f"  🆕 제{ep_no}화 신규 아이템: {new_items}")
+
+        fact_ledger_summary = str(execution_state.get("fact_ledger_summary", "") or "").strip()
+        if fact_ledger_summary:
+            fact_lines = fact_ledger_summary.splitlines()
+            lines.append(f"  📖 {fact_lines[0]}")
+            for fact_line in fact_lines[1:]:
+                lines.append(f"     {fact_line}")
+        else:
+            fact_ledger = execution_state.get("fact_ledger", {})
+            if fact_ledger:
+                fact_lines = []
+                for fact_key, fact_value in list(fact_ledger.items())[:15]:
+                    unit = str(fact_value.get("unit", "") or "").strip()
+                    unit_suffix = f" {unit}" if unit else ""
+                    established_value = fact_value.get("established_value")
+                    established_ep = fact_value.get("established_ep", "?")
+                    current_value = fact_value.get("value")
+                    last_ep = fact_value.get("last_ep")
+                    if established_value not in ("", None) and str(established_value) != str(current_value):
+                        fact_lines.append(
+                            f"{fact_key}={established_value}{unit_suffix}(ep{established_ep})->"
+                            f"{current_value}{unit_suffix}(ep{last_ep})"
+                        )
+                    else:
+                        fact_lines.append(f"{fact_key}={current_value}{unit_suffix} (ep{last_ep})")
+                if fact_lines:
+                    lines.append(f"  📖 팩트원장: {'; '.join(fact_lines)}")
+
+        active_items = execution_state.get("active_items", {})
+        if active_items:
+            active_item_names = list(active_items.keys())[:20]
+            lines.append(f"  🎒 활성 아이템: {', '.join(active_item_names)}")
+        lines.append("=" * 50)
+        lines.append("")
+        return lines
+
+    def _build_prev_context_quality_lines(self, last_arc: dict, last_arc_no) -> list[str]:
+        """FailureAnalyzer/최근 reject/품질 추세를 다음 Arc prompt advisory로 압축한다."""
+        lines = []
+        before_ep = int(last_arc.get("ep_end", 0) or 0) + 1
+        forgotten_advisory, forgotten_names = self._build_forgotten_npc_advisory(before_ep=before_ep, window=10)
+        if forgotten_advisory:
+            lines.append(forgotten_advisory)
             lines.append("")
 
-        _before_ep = int(last_arc.get("ep_end", 0) or 0) + 1
-        _forgotten_advisory, _forgotten_names = self._build_forgotten_npc_advisory(before_ep=_before_ep, window=10)
-        if _forgotten_advisory:
-            lines.append(_forgotten_advisory)
+        promise_advisory = self._build_dormant_promise_advisory(forgotten_names)
+        if promise_advisory:
+            lines.append(promise_advisory)
             lines.append("")
 
-        _promise_advisory = self._build_dormant_promise_advisory(_forgotten_names)
-        if _promise_advisory:
-            lines.append(_promise_advisory)
-            lines.append("")
+        context = getattr(self, "context", None)
+        db = getattr(getattr(context, "current_project", None), "db", None)
+        if not db:
+            return lines
 
-        _ctx = getattr(self, "context", None)
-        _db = getattr(getattr(_ctx, "current_project", None), "db", None)
-        if _db:
-            try:
-                _arc_rejects = _db.get_stage_attempts_for_arc(
-                    int(last_arc_no) if str(last_arc_no).isdigit() else 0,
-                    stages=(3, 4),
-                    verdict="REJECT",
-                    limit=20,
-                )
-                if _arc_rejects:
-                    _cat_counts: dict[str, int] = {}
-                    _reason_samples: list[str] = []
-                    for _row in _arc_rejects:
-                        _cat = str(_row.get("failure_category", "") or "uncategorized").strip()
-                        _cat_counts[_cat] = _cat_counts.get(_cat, 0) + 1
-                        _reason = str(_row.get("reject_reason", "") or "").strip()
-                        if _reason and _reason not in _reason_samples:
-                            _reason_samples.append(_reason[:90])
-                    _top_cats = sorted(_cat_counts.items(), key=lambda item: item[1], reverse=True)[:3]
-                    lines.append("[직전 Arc Stage3/4 주요 실패]")
-                    if _top_cats:
-                        lines.append("실패 카테고리: " + ", ".join(f"{name}({count})" for name, count in _top_cats))
-                    if _reason_samples:
-                        lines.append("대표 reject 사유:")
-                        for _reason in _reason_samples[:3]:
-                            lines.append(f"- {_reason}")
+        try:
+            arc_rejects = db.get_stage_attempts_for_arc(
+                int(last_arc_no) if str(last_arc_no).isdigit() else 0,
+                stages=(3, 4),
+                verdict="REJECT",
+                limit=20,
+            )
+            if arc_rejects:
+                category_counts: dict[str, int] = {}
+                reason_samples: list[str] = []
+                for row in arc_rejects:
+                    category = str(row.get("failure_category", "") or "uncategorized").strip()
+                    category_counts[category] = category_counts.get(category, 0) + 1
+                    reason = str(row.get("reject_reason", "") or "").strip()
+                    if reason and reason not in reason_samples:
+                        reason_samples.append(reason[:90])
+                top_categories = sorted(category_counts.items(), key=lambda item: item[1], reverse=True)[:3]
+                lines.append("[직전 Arc Stage3/4 주요 실패]")
+                if top_categories:
+                    lines.append("실패 카테고리: " + ", ".join(f"{name}({count})" for name, count in top_categories))
+                if reason_samples:
+                    lines.append("대표 reject 사유:")
+                    for reason in reason_samples[:3]:
+                        lines.append(f"- {reason}")
+                lines.append("")
+        except Exception as reject_err:
+            logging.debug("[QI-FL-2] stage_attempts Arc 소비 실패 (비치명): %s", reject_err)
+
+        try:
+            analyzer = FailureAnalyzer(db)
+            failure_summary = analyzer.summary()
+            stage4_stats = (failure_summary.get("stage_pass_rates") or {}).get("stage_4", {})
+            top_agents = failure_summary.get("top_failed_agents") or []
+            top_failures = failure_summary.get("top_failure_categories") or []
+            quality_distribution = failure_summary.get("quality_distribution") or {}
+            if stage4_stats or top_agents or top_failures or quality_distribution:
+                lines.append("[이전 Arc 실패 분석]")
+                if stage4_stats:
+                    lines.append(
+                        f"Stage4 pass_rate={stage4_stats.get('pass_rate_pct', 0)}% "
+                        f"(시도 {stage4_stats.get('total_attempts', 0)}회)"
+                    )
+                if top_failures:
+                    lines.append(
+                        "주요 실패 원인: "
+                        + ", ".join(
+                            f"{item.get('category', '?')}({item.get('count', 0)})" for item in top_failures[:3]
+                        )
+                    )
+                if top_agents:
+                    agent = top_agents[0]
+                    lines.append(
+                        f"실패 빈도 상위 에이전트: {agent.get('agent', '?')} "
+                        f"({int(agent.get('fail_rate_pct', 0))}% 실패)"
+                    )
+                if quality_distribution:
+                    lines.append(
+                        f"최근 품질 분포: 평균 {quality_distribution.get('avg_score', 0)}점, "
+                        f"고득점 {quality_distribution.get('high_score_count', 0)}건"
+                    )
+                lines.append("")
+
+            success_patterns = failure_summary.get("top_success_patterns") or analyzer.top_success_patterns(top_n=2)
+            if success_patterns:
+                lines.append("[직전 Arc 고득점 패턴]")
+                for pattern in success_patterns[:2]:
+                    lines.append(f"- {pattern.get('description', '')}")
+                lines.append("")
+        except Exception as fa_err:
+            logging.debug("[QI-FL-3/4] FailureAnalyzer 소비 실패 (비치명): %s", fa_err)
+
+        try:
+            score_rows = db.get_recent_episode_scores(before_ep=before_ep, lookback=5)
+            scores = []
+            for row in score_rows:
+                try:
+                    scores.append(int(row.get("score", 0) or 0))
+                except (TypeError, ValueError):
+                    continue
+            if len(scores) >= 3:
+                trend_lines = []
+                if all(scores[index] > scores[index + 1] for index in range(len(scores) - 1)):
+                    trend_lines.append(f"최근 {len(scores)}화 연속 하락 ({scores[0]}→{scores[-1]})")
+                avg_score = round(sum(scores) / len(scores), 1)
+                if avg_score < 80:
+                    trend_lines.append(f"최근 평균 {avg_score}점으로 저하")
+                if trend_lines:
+                    lines.append("[품질 추세 경고]")
+                    lines.extend(f"- {line}" for line in trend_lines)
                     lines.append("")
-            except Exception as _reject_err:
-                logging.debug("[QI-FL-2] stage_attempts Arc 소비 실패 (비치명): %s", _reject_err)
+        except Exception as trend_err:
+            logging.debug("[QI-FL-5] 품질 추세 Arc 전달 실패 (비치명): %s", trend_err)
 
-            try:
-                _analyzer = FailureAnalyzer(_db)
-                _failure_summary = _analyzer.summary()
-                _stage4_stats = (_failure_summary.get("stage_pass_rates") or {}).get("stage_4", {})
-                _top_agents = _failure_summary.get("top_failed_agents") or []
-                _top_failures = _failure_summary.get("top_failure_categories") or []
-                _quality_distribution = _failure_summary.get("quality_distribution") or {}
-                if _stage4_stats or _top_agents or _top_failures or _quality_distribution:
-                    lines.append("[이전 Arc 실패 분석]")
-                    if _stage4_stats:
-                        lines.append(
-                            f"Stage4 pass_rate={_stage4_stats.get('pass_rate_pct', 0)}% "
-                            f"(시도 {_stage4_stats.get('total_attempts', 0)}회)"
-                        )
-                    if _top_failures:
-                        lines.append(
-                            "주요 실패 원인: "
-                            + ", ".join(
-                                f"{item.get('category', '?')}({item.get('count', 0)})" for item in _top_failures[:3]
-                            )
-                        )
-                    if _top_agents:
-                        _agent = _top_agents[0]
-                        lines.append(
-                            f"실패 빈도 상위 에이전트: {_agent.get('agent', '?')} "
-                            f"({int(_agent.get('fail_rate_pct', 0))}% 실패)"
-                        )
-                    if _quality_distribution:
-                        lines.append(
-                            f"최근 품질 분포: 평균 {_quality_distribution.get('avg_score', 0)}점, "
-                            f"고득점 {_quality_distribution.get('high_score_count', 0)}건"
-                        )
-                    lines.append("")
+        return lines
 
-                _success_patterns = _failure_summary.get("top_success_patterns") or _analyzer.top_success_patterns(top_n=2)
-                if _success_patterns:
-                    lines.append("[직전 Arc 고득점 패턴]")
-                    for _pattern in _success_patterns[:2]:
-                        lines.append(f"- {_pattern.get('description', '')}")
-                    lines.append("")
-            except Exception as _fa_err:
-                logging.debug("[QI-FL-3/4] FailureAnalyzer 소비 실패 (비치명): %s", _fa_err)
-
-            try:
-                _before_ep = int(last_arc.get("ep_end", 0) or 0) + 1
-                _score_rows = _db.get_recent_episode_scores(before_ep=_before_ep, lookback=5)
-                _scores = []
-                for _row in _score_rows:
-                    try:
-                        _scores.append(int(_row.get("score", 0) or 0))
-                    except (TypeError, ValueError):
-                        continue
-                if len(_scores) >= 3:
-                    _trend_lines = []
-                    if all(_scores[i] > _scores[i + 1] for i in range(len(_scores) - 1)):
-                        _trend_lines.append(f"최근 {len(_scores)}화 연속 하락 ({_scores[0]}→{_scores[-1]})")
-                    _avg_score = round(sum(_scores) / len(_scores), 1)
-                    if _avg_score < 80:
-                        _trend_lines.append(f"최근 평균 {_avg_score}점으로 저하")
-                    if _trend_lines:
-                        lines.append("[품질 추세 경고]")
-                        lines.extend(f"- {_line}" for _line in _trend_lines)
-                        lines.append("")
-            except Exception as _trend_err:
-                logging.debug("[QI-FL-5] 품질 추세 Arc 전달 실패 (비치명): %s", _trend_err)
-
-        # 보조 정보
+    def _build_prev_context_advisory_lines(
+        self,
+        prev_arcs: list[dict],
+        last_arc: dict,
+        last_arc_no,
+        preflight_result: dict,
+    ) -> list[str]:
+        """world/preflight/state_changes/tactical-doc history/time advisory를 후반부에 붙인다."""
+        lines = []
         world = preflight_result.get("world_state", {})
         conflicts = world.get("ongoing_conflicts", [])
         if conflicts:
-            lines.append(f"진행 중인 갈등: {', '.join(str(c) for c in conflicts[:3])}")
+            lines.append(f"진행 중인 갈등: {', '.join(str(conflict) for conflict in conflicts[:3])}")
 
-        # [V62.7] 완결된 갈등 (재생성 금지)
-        resolved = world.get("resolved_conflicts", [])
-        if resolved:
-            lines.append(f"완결된 갈등 (재생성 금지): {', '.join(str(r) for r in resolved[:5])}")
+        resolved_conflicts = world.get("resolved_conflicts", [])
+        if resolved_conflicts:
+            lines.append(f"완결된 갈등 (재생성 금지): {', '.join(str(item) for item in resolved_conflicts[:5])}")
 
         relationships = preflight_result.get("relationship_map", {})
         if relationships:
-            rel_summary = ", ".join([f"{k}: {v.get('current_state', '?')}" for k, v in list(relationships.items())[:5]])
-            lines.append(f"주요 관계: {rel_summary}")
+            relationship_summary = ", ".join(
+                f"{name}: {value.get('current_state', '?')}" for name, value in list(relationships.items())[:5]
+            )
+            lines.append(f"주요 관계: {relationship_summary}")
 
-        # [TF-39] P0-3: state_changes 핵심 필드 주입
-        _sc = last_arc.get("state_changes", {})
-        if isinstance(_sc, dict):
-            _deaths = _sc.get("npc_deaths", [])
-            if _deaths:
-                _names = [d.get("name", d.get("npc", str(d))) if isinstance(d, dict) else str(d) for d in _deaths[:10]]
-                lines.append(f"\n🚫 사망 NPC (부활 금지): {', '.join(_names)}")
-
-            _skills = _sc.get("skill_acquisitions", [])
-            if _skills:
-                _names = [
-                    s.get("name", s.get("skill", str(s))) if isinstance(s, dict) else str(s) for s in _skills[:10]
+        state_changes = last_arc.get("state_changes", {})
+        if isinstance(state_changes, dict):
+            deaths = state_changes.get("npc_deaths", [])
+            if deaths:
+                names = [
+                    item.get("name", item.get("npc", str(item))) if isinstance(item, dict) else str(item)
+                    for item in deaths[:10]
                 ]
-                lines.append(f"⚔️ 습득 기술: {', '.join(_names)}")
+                lines.append(f"\n🚫 사망 NPC (부활 금지): {', '.join(names)}")
 
-            _resolved = _sc.get("resolved_plots", [])
-            if _resolved:
-                _names = [
-                    r.get("plot", r.get("description", str(r))) if isinstance(r, dict) else str(r)
-                    for r in _resolved[:10]
+            skills = state_changes.get("skill_acquisitions", [])
+            if skills:
+                names = [
+                    item.get("name", item.get("skill", str(item))) if isinstance(item, dict) else str(item)
+                    for item in skills[:10]
                 ]
-                lines.append(f"🚫 완결된 플롯 (재생성 금지): {', '.join(_names)}")
+                lines.append(f"⚔️ 습득 기술: {', '.join(names)}")
 
-            _perm = _sc.get("permanent_injuries", [])
-            if _perm:
-                _descs = [
-                    str(p)[:50] if not isinstance(p, dict) else p.get("description", str(p))[:50] for p in _perm[:5]
+            resolved_plots = state_changes.get("resolved_plots", [])
+            if resolved_plots:
+                names = [
+                    item.get("plot", item.get("description", str(item))) if isinstance(item, dict) else str(item)
+                    for item in resolved_plots[:10]
                 ]
-                lines.append(f"🩹 영구 부상: {', '.join(_descs)}")
+                lines.append(f"🚫 완결된 플롯 (재생성 금지): {', '.join(names)}")
 
-            _comp = _sc.get("companion_changes", [])
-            if _comp:
-                _descs = [str(c)[:50] if not isinstance(c, dict) else c.get("name", str(c))[:30] for c in _comp[:5]]
-                lines.append(f"👥 동행자 변경: {', '.join(_descs)}")
+            permanent_injuries = state_changes.get("permanent_injuries", [])
+            if permanent_injuries:
+                descriptions = [
+                    str(item)[:50] if not isinstance(item, dict) else item.get("description", str(item))[:50]
+                    for item in permanent_injuries[:5]
+                ]
+                lines.append(f"🩹 영구 부상: {', '.join(descriptions)}")
 
-        # ── [V67] 이전 Arc tactical_doc 전문 확장 (최대 30개) ──
-        _prev_start = max(0, len(prev_arcs) - 30)
-        _arc_history_lines = []
-        for _pa in prev_arcs[_prev_start:]:
-            _pa_no = _pa.get("arc_no", "?")
-            _pa_ep_s = _pa.get("ep_start", "?")
-            _pa_ep_e = _pa.get("ep_end", "?")
-            _pa_td = _pa.get("tactical_doc", "")
-            if isinstance(_pa_td, dict):
-                import json
+            companion_changes = state_changes.get("companion_changes", [])
+            if companion_changes:
+                descriptions = [
+                    str(item)[:50] if not isinstance(item, dict) else item.get("name", str(item))[:30]
+                    for item in companion_changes[:5]
+                ]
+                lines.append(f"👥 동행자 변경: {', '.join(descriptions)}")
 
-                _pa_td = json.dumps(_pa_td, ensure_ascii=False)
-            if _pa_td:
-                _arc_history_lines.append(f"━━━ Arc {_pa_no} (제{_pa_ep_s}화~제{_pa_ep_e}화) ━━━\n{_pa_td}")
-        if _arc_history_lines:
-            _full_history = "\n\n".join(_arc_history_lines)
-            # 200K자 상한
-            if len(_full_history) > ContextLimits.MAX_CONTEXT_CHARS:
-                _full_history = _full_history[: ContextLimits.MAX_CONTEXT_CHARS] + "\n... (200K자 절삭)"
+        prev_start = max(0, len(prev_arcs) - 30)
+        arc_history_lines = []
+        for prev_arc in prev_arcs[prev_start:]:
+            prev_arc_no = prev_arc.get("arc_no", "?")
+            prev_ep_start = prev_arc.get("ep_start", "?")
+            prev_ep_end = prev_arc.get("ep_end", "?")
+            tactical_doc = prev_arc.get("tactical_doc", "")
+            if isinstance(tactical_doc, dict):
+                tactical_doc = json.dumps(tactical_doc, ensure_ascii=False)
+            if tactical_doc:
+                arc_history_lines.append(f"━━━ Arc {prev_arc_no} (제{prev_ep_start}화~제{prev_ep_end}화) ━━━\n{tactical_doc}")
+        if arc_history_lines:
+            full_history = "\n\n".join(arc_history_lines)
+            if len(full_history) > ContextLimits.MAX_CONTEXT_CHARS:
+                full_history = full_history[: ContextLimits.MAX_CONTEXT_CHARS] + "\n... (200K자 절삭)"
             lines.append("")
-            lines.append(f"[V67] ═══ 이전 Arc 전술서 전문 ({len(_arc_history_lines)}개) ═══")
-            lines.append(_full_history)
-            logging.info(f" [V67] FourPhase prev_context 확장: {len(_arc_history_lines)}개 Arc 전술서 ({len(_full_history):,}자)"
+            lines.append(f"[V67] ═══ 이전 Arc 전술서 전문 ({len(arc_history_lines)}개) ═══")
+            lines.append(full_history)
+            logging.info(
+                f" [V67] FourPhase prev_context 확장: {len(arc_history_lines)}개 Arc 전술서 ({len(full_history):,}자)"
             )
 
-        # [NS-4-S2] 이전 Arc 시간 마커 — 크로스 Arc 시간 연속성 (LLM 0회)
         try:
-            _ns4_markers = _ns4_extract_time_markers(last_arc)
-            if _ns4_markers:
+            ns4_markers = _ns4_extract_time_markers(last_arc)
+            if ns4_markers:
                 lines.append("")
                 lines.append(
-                    f"⏱️ [NS-4] 이전 Arc {last_arc_no} 시간 마커: {', '.join(_ns4_markers)}\n"
+                    f"⏱️ [NS-4] 이전 Arc {last_arc_no} 시간 마커: {', '.join(ns4_markers)}\n"
                     "※ 이번 Arc tactical_doc에 '이전 Arc 종료로부터 X달/주 후 시작'을 명시하세요."
                 )
-        except Exception as _ns4_s2_err:
-            logging.debug("[NS-4-S2] 시간 마커 주입 실패 (비차단): %s", _ns4_s2_err)
+        except Exception as ns4_err:
+            logging.debug("[NS-4-S2] 시간 마커 주입 실패 (비차단): %s", ns4_err)
 
-        _project = getattr(getattr(self, "context", None), "current_project", None)
-        _db = getattr(_project, "db", None) if _project else None
-        _timeline_lines = _build_extended_timeline_advisory(_db)
-        if _timeline_lines:
+        project = getattr(getattr(self, "context", None), "current_project", None)
+        db = getattr(project, "db", None) if project else None
+        timeline_lines = _build_extended_timeline_advisory(db)
+        if timeline_lines:
             lines.append("")
-            lines.extend(_timeline_lines)
-
-        return "\n".join(lines)
+            lines.extend(timeline_lines)
+        return lines
 
     # ──────────────────────────────────────────────
     # [V62.2] Injury Escalation Guard

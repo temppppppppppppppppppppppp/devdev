@@ -218,6 +218,41 @@ class TestMetricsRecording:
         )
         finalizer.ctx.stage2_optimizer.failure_memory.record_failure.assert_called_once()
 
+    def test_reject_metric_context_persists_artifact_linkage(self, finalizer, valid_refined_arc, tmp_path):
+        finalizer.ctx.current_project.paths = MagicMock()
+        finalizer.ctx.current_project.paths.root = tmp_path
+
+        context = finalizer._build_stage2_reject_metric_context(
+            global_arc_no=7,
+            attempt=1,
+            generation_method="analyst",
+            selected_strategy="defensive",
+            artifact_payload=valid_refined_arc,
+        )
+
+        assert context["attempt_key"] == "s2:ep7:arc7:a2"
+        assert context["candidate_key"] == "defensive"
+        assert context["artifact_meta"]["content_hash"]
+        assert context["artifact_meta"]["artifact_path"].endswith("rejected_arc__defensive.json")
+        assert (tmp_path / context["artifact_meta"]["artifact_path"]).exists()
+
+    def test_merge_stage2_pass_fix_reaudit_copies_patch_advisories(self, finalizer):
+        current_audit = {
+            "patch_pressure": {"exceeded": True, "count": 2},
+            "patch_guard_signals": {"codes": ["missing_tactical_doc"], "count": 1},
+        }
+        re_audit = {"decision": "PASS", "score": 95}
+
+        merged = finalizer._merge_stage2_pass_fix_reaudit(
+            current_audit=current_audit,
+            re_audit=re_audit,
+        )
+
+        assert merged["patch_pressure"] == current_audit["patch_pressure"]
+        assert merged["patch_guard_signals"] == current_audit["patch_guard_signals"]
+        assert merged["patch_pressure"] is not current_audit["patch_pressure"]
+        assert merged["patch_guard_signals"] is not current_audit["patch_guard_signals"]
+
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", True)
     def test_attempt_key_uses_metrics_session_id_when_available(self, finalizer):
         finalizer.ctx.current_project.metrics_session_id = "sess_stage2"

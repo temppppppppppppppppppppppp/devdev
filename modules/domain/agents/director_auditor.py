@@ -396,6 +396,473 @@ class DirectorQualityAuditor:
     # [V65 C-5] audit_manuscript — Director에서 이관
     # ═══════════════════════════════════════════════════════════════════════
 
+    @staticmethod
+    def _resolve_manuscript_audit_arc_no(arc_doc, arc_pos) -> int:
+        arc_no = 0
+        if arc_doc and isinstance(arc_doc, dict):
+            arc_no = arc_doc.get("arc_no", 0)
+        elif arc_doc and isinstance(arc_doc, str):
+            arc_match = re.search(r"[Aa]rc\s*(\d+)", arc_doc[:200])
+            if arc_match:
+                arc_no = int(arc_match.group(1))
+        if arc_no <= 0 and arc_pos:
+            arc_no = arc_pos
+        return arc_no
+
+    def _run_manuscript_pre_llm_checks(
+        self,
+        *,
+        ep_num,
+        manuscript,
+        arc_no: int,
+        validation_context,
+        entity_registry=None,
+        manuscript_history=None,
+        state_tracker=None,
+    ) -> dict:
+        pre_llm_warnings = []
+        pre_llm_advisories = []
+        pre_llm_warnings.extend(
+            self._collect_dead_npc_pre_llm_warnings(
+                manuscript=manuscript,
+                ep_num=ep_num,
+                arc_no=arc_no,
+                state_tracker=state_tracker,
+            )
+        )
+        genre_findings = self._collect_genre_pre_llm_findings(manuscript=manuscript, ep_num=ep_num)
+        pre_llm_warnings.extend(genre_findings["warnings"])
+        pre_llm_advisories.extend(genre_findings["advisories"])
+
+        history_precheck = self._apply_history_pre_llm_checks(
+            ep_num=ep_num,
+            manuscript=manuscript,
+            manuscript_history=manuscript_history,
+            validation_context=validation_context,
+        )
+        if history_precheck["early_result"] is not None:
+            return {"early_result": history_precheck["early_result"]}
+        validation_context = history_precheck["validation_context"]
+
+        protagonist_precheck = self._apply_protagonist_config_pre_llm_checks(
+            manuscript=manuscript,
+            ep_num=ep_num,
+            validation_context=validation_context,
+        )
+        validation_context = protagonist_precheck["validation_context"]
+        pre_llm_warnings.extend(protagonist_precheck["warnings"])
+
+        entity_precheck = self._apply_entity_consistency_pre_llm_checks(
+            manuscript=manuscript,
+            entity_registry=entity_registry,
+            validation_context=validation_context,
+        )
+        if entity_precheck["early_result"] is not None:
+            return {"early_result": entity_precheck["early_result"]}
+        validation_context = entity_precheck["validation_context"]
+
+        character_logic_precheck = self._apply_character_logic_pre_llm_checks(
+            ep_num=ep_num,
+            manuscript=manuscript,
+            validation_context=validation_context,
+        )
+        if character_logic_precheck["early_result"] is not None:
+            return {"early_result": character_logic_precheck["early_result"]}
+
+        return {
+            "early_result": None,
+            "validation_context": validation_context,
+            "pre_llm_warnings": pre_llm_warnings,
+            "pre_llm_advisories": pre_llm_advisories,
+        }
+
+    def _collect_dead_npc_pre_llm_warnings(self, *, manuscript, ep_num, arc_no: int, state_tracker) -> list[str]:
+        if not state_tracker:
+            return []
+        dead_npc_violations = state_tracker.check_dead_npc_in_manuscript(manuscript, ep_num, arc_no)
+        if not dead_npc_violations:
+            return []
+        violation_names = [violation["npc_name"] for violation in dead_npc_violations]
+        logging.warning(f" [V63.4] 죽은 NPC 경고 → LLM 전달: {', '.join(violation_names)}")
+        return [
+            f"[CRITICAL 경고] 죽은 NPC 등장 의심: {', '.join(violation_names)}\n"
+            + "\n".join(
+                f"  - {violation['npc_name']}: Arc {violation['death_arc']}에서 사망"
+                for violation in dead_npc_violations
+            )
+            + "\n  ※ 회상/과거 언급만 허용. 살아있는 것처럼 대화/행동하면 REJECT 필요."
+        ]
+
+    def _collect_genre_pre_llm_findings(self, *, manuscript, ep_num) -> dict:
+        findings = {"warnings": [], "advisories": []}
+        if not (self._d.genre_validation_enabled and self._d.guard):
+            return findings
+
+        genre_violations = self._run_genre_specific_validation(manuscript, ep_num)
+        if genre_violations.get("has_critical"):
+            logging.warning(f" [V63.4] 장르 위반 경고 → LLM 전달: {genre_violations.get('summary', '')}")
+            findings["warnings"].append(
+                f"[CRITICAL 경고] 장르 규칙 위반: {genre_violations.get('summary', '')}\n"
+                f"  {genre_violations.get('feedback', '')}"
+            )
+
+        warning_violations = genre_violations.get("warning_violations", [])
+        if warning_violations:
+            warning_lines = [
+                f"  - {item.get('message', str(item))}" for item in warning_violations[:5] if isinstance(item, dict)
+            ]
+            findings["advisories"].append("[Python 참고 경고] 작품별 캐릭터 제약 확인 필요\n" + "\n".join(warning_lines))
+        return findings
+
+    def _apply_history_pre_llm_checks(self, *, ep_num, manuscript, manuscript_history, validation_context) -> dict:
+        if not self._d.manuscript_history_check_enabled:
+            return {"early_result": None, "validation_context": validation_context}
+
+        history_check = None
+        if self._d._caching.manuscript_cache_name:
+            history_check = self._d.check_manuscript_history_with_cache(
+                ep_num=ep_num,
+                current_manuscript=manuscript,
+            )
+            if history_check.get("cache_used"):
+                logging.warning(" [V60.88] 캐시 참조 충돌 검사 완료")
+
+        if not history_check or history_check.get("error") or history_check.get("needs_fallback"):
+            if manuscript_history:
+                history_check = self._d.check_manuscript_history_conflicts(
+                    ep_num=ep_num,
+                    current_manuscript=manuscript,
+                    manuscript_history=manuscript_history,
+                    use_summary=True,
+                )
+            elif history_check and history_check.get("needs_fallback"):
+                logging.warning(" [V63.4] 캐시 폴백 필요하나 manuscript_history 없음 → 검증 스킵")
+
+        if history_check and history_check.get("decision") == "CONFLICT":
+            conflicts = history_check.get("conflicts", [])
+            conflict_details = "; ".join(
+                [
+                    f"[{item.get('type', '?')}] {item.get('prev_fact', '')} vs {item.get('current_violation', '')}"
+                    for item in conflicts[:3]
+                    if isinstance(item, dict)
+                ]
+            )
+            return {
+                "early_result": {
+                    "decision": "REJECT",
+                    "score": 25,
+                    "error_category": "LOGIC_ERROR",
+                    "diagnostic_report": f"원고 역사 충돌 {len(conflicts)}건 발견",
+                    "current_beat_achieved": False,
+                    "reason": f"이전 원고와 충돌: {conflict_details}",
+                    "feedback": f"[V60.88] 이전 원고에서 확립된 사실과 모순됨. {history_check.get('summary', '')}",
+                    "v60_87_history_check": history_check,
+                },
+                "validation_context": validation_context,
+            }
+        if history_check and history_check.get("conflicts"):
+            validation_context = dict(validation_context or {})
+            validation_context["v60_87_history_warnings"] = history_check.get("conflicts", [])
+
+        return {"early_result": None, "validation_context": validation_context}
+
+    def _apply_protagonist_config_pre_llm_checks(self, *, manuscript, ep_num, validation_context) -> dict:
+        findings = {"warnings": [], "validation_context": validation_context}
+        if not self._d.protagonist_config_check_enabled:
+            return findings
+
+        config_check = self.validate_protagonist_config_compliance(manuscript=manuscript, ep_num=ep_num)
+        if config_check.get("decision") == "REJECT":
+            violations = config_check.get("violations", [])
+            logging.warning(f" [V63.4] 주인공 설정 위반 경고 → LLM 전달: {len(violations)}건")
+            findings["warnings"].append(
+                f"[CRITICAL 경고] 주인공 설정 위반 {len(violations)}건\n"
+                f"  {config_check.get('feedback', '주인공 설정 위반')}"
+            )
+        elif config_check.get("decision") == "WARNING":
+            findings["validation_context"] = dict(validation_context or {})
+            findings["validation_context"]["v60_89_config_warnings"] = config_check.get("violations", [])
+            logging.warning(f" [V60.89] 주인공 설정 경고: {len(config_check.get('violations', []))}건")
+
+        return findings
+
+    def _apply_entity_consistency_pre_llm_checks(self, *, manuscript, entity_registry, validation_context) -> dict:
+        if not (entity_registry and self._d.entity_consistency_enabled):
+            return {"early_result": None, "validation_context": validation_context}
+
+        entity_check = self._d.validate_entity_consistency(
+            content=manuscript,
+            entity_registry=entity_registry,
+            content_type="manuscript",
+        )
+        if entity_check.get("decision") == "REJECT":
+            mismatches = entity_check.get("mismatches", [])
+            return {
+                "early_result": {
+                    "decision": "REJECT",
+                    "score": 40,
+                    "error_category": "LOGIC_ERROR",
+                    "diagnostic_report": f"Entity 명칭 불일치 {len(mismatches)}건 발견",
+                    "current_beat_achieved": False,
+                    "reason": entity_check.get("fix_instructions", "Entity 명칭을 통일하세요"),
+                    "feedback": f"[V61] Entity 일관성 오류: {entity_check.get('fix_instructions', '')}",
+                    "v61_entity_check": entity_check,
+                },
+                "validation_context": validation_context,
+            }
+        if entity_check.get("decision") == "WARNING":
+            validation_context = dict(validation_context or {})
+            validation_context["v61_entity_warnings"] = entity_check.get("mismatches", [])
+
+        return {"early_result": None, "validation_context": validation_context}
+
+    def _apply_character_logic_pre_llm_checks(self, *, ep_num, manuscript, validation_context) -> dict:
+        if not validation_context:
+            return {"early_result": None}
+
+        npc_profiles = validation_context.get("npc_profiles", {})
+        character_traits = validation_context.get("character_traits", {})
+        char_logic_result = self.assess_character_logic(
+            ep_num=ep_num,
+            manuscript=manuscript,
+            npc_profiles=npc_profiles,
+            character_traits=character_traits,
+        )
+        if not isinstance(char_logic_result, dict):
+            char_logic_result = char_logic_result[0] if isinstance(char_logic_result, list) and char_logic_result else {}
+        if char_logic_result.get("decision") != "REJECT":
+            return {"early_result": None}
+
+        severity = char_logic_result.get("severity", "NONE")
+        violations = char_logic_result.get("violations", [])
+        violation_count = len(violations)
+        should_reject = severity == "CRITICAL" or (severity == "MAJOR" and violation_count >= 2)
+        if should_reject:
+            logging.warning(f" [V46] 캐릭터 논리 위반 감지 ({severity}, 위반 {violation_count}개)")
+            return {
+                "early_result": {
+                    "decision": "REJECT",
+                    "score": char_logic_result.get("score", 30),
+                    "error_category": "LOGIC_ERROR",
+                    "diagnostic_report": f"캐릭터 논리 위반: {violations}",
+                    "current_beat_achieved": False,
+                    "reason": char_logic_result.get("feedback", "캐릭터 행동이 설정과 불일치"),
+                    "feedback": char_logic_result.get("feedback", ""),
+                    "v46_character_logic": char_logic_result,
+                }
+            }
+
+        logging.warning(f" [V46] 캐릭터 논리 이슈 ({severity}, 위반 {violation_count}개) - 계속 진행")
+        return {"early_result": None}
+
+    def _finalize_manuscript_validation_context(
+        self,
+        *,
+        ep_num,
+        manuscript,
+        prev_full_text,
+        validation_context,
+        pre_llm_warnings: list[str],
+        pre_llm_advisories: list[str],
+        target_len: int,
+    ) -> dict:
+        if pre_llm_warnings:
+            if validation_context is None:
+                validation_context = {}
+            validation_context["pre_llm_critical_warnings"] = (
+                "\n\n[🚨 Python 사전 검증 경고 — CRITICAL 경고가 포함된 경우 반드시 REJECT]\n"
+                + "\n---\n".join(pre_llm_warnings)
+            )
+        if pre_llm_advisories:
+            if validation_context is None:
+                validation_context = {}
+            validation_context["pre_llm_advisories"] = (
+                "\n\n[Python 사전 참고 경고 — 판단은 Director]\n" + "\n---\n".join(pre_llm_advisories)
+            )
+
+        expanded_prev = self._expand_prev_full_text(ep_num, prev_full_text)
+        if validation_context is None:
+            validation_context = {}
+        if expanded_prev:
+            validation_context["expanded_prev_full_text"] = expanded_prev
+
+        if self._d.use_v0128 and validation_context is not None:
+            return {
+                "early_result": self._audit_with_v0128(
+                    ep_num=ep_num,
+                    manuscript=manuscript,
+                    validation_context=validation_context,
+                    target_len=target_len,
+                )
+            }
+
+        return {
+            "early_result": None,
+            "validation_context": validation_context,
+            "expanded_prev": expanded_prev,
+        }
+
+    def _build_legacy_manuscript_audit_prompt(
+        self,
+        *,
+        ep_num,
+        manuscript,
+        arc_doc,
+        history_summary,
+        expanded_prev,
+        arc_pos,
+        total_eps=None,
+        target_len=ManuscriptLimits.WARNING_LENGTH,
+        retry_count=0,
+        state_tracker=None,
+        pre_llm_warnings: list[str] | None = None,
+        pre_llm_advisories: list[str] | None = None,
+    ) -> dict:
+        audit_mode = "BLUEPRINT" if target_len <= ManuscriptLimits.MIN_LENGTH else "MANUSCRIPT"
+        safe_ms = self._d._escape_braces(manuscript)
+        if isinstance(arc_doc, dict):
+            arc_doc = json.dumps(arc_doc, ensure_ascii=False)
+        safe_arc = self._d._escape_braces(arc_doc)
+        safe_history = self._d._escape_braces(history_summary)
+        safe_prev = self._d._escape_braces(expanded_prev)
+        current_len = len(manuscript)
+
+        if audit_mode == "MANUSCRIPT" and current_len < ManuscriptLimits.MIN_LENGTH:
+            return {
+                "early_result": {
+                    "decision": "REJECT",
+                    "score": 0,
+                    "error_category": "QUALITY_ISSUE",
+                    "diagnostic_report": f"분량 절대 미달: {current_len}자",
+                    "current_beat_achieved": False,
+                    "reason": (
+                        f"공백 포함 {current_len}자로 최소 기준({ManuscriptLimits.MIN_LENGTH}자) 미달. "
+                        f"목표는 {ManuscriptLimits.TARGET_LENGTH}자 이상입니다."
+                    ),
+                    "feedback": (
+                        f"장면의 밀도를 높이고, 대사와 묘사를 추가하여 "
+                        f"{ManuscriptLimits.TARGET_LENGTH}자 이상으로 확장하십시오."
+                    ),
+                }
+            }
+
+        try:
+            from modules.core.repetition_guard import RepetitionGuard
+
+            guard = RepetitionGuard(
+                window_size=_threshold("premium.repetition.window_size", 5),
+                threshold=_threshold("premium.repetition.threshold", 3),
+            )
+            prev_manuscripts = []
+            for prior_ep in range(max(1, ep_num - 5), ep_num):
+                try:
+                    manuscript_row = self._d.context.db.get_manuscript(prior_ep)
+                    if manuscript_row and "content" in manuscript_row:
+                        prev_manuscripts.append(manuscript_row["content"])
+                except Exception as e:
+                    logging.debug("[RepetitionGuard] DB 원고 조회 실패 ep=%d: %s", prior_ep, e)
+
+            if prev_manuscripts:
+                guard.build_banned_list(prev_manuscripts)
+                violations, clean_score = guard.scan_manuscript(manuscript)
+                if clean_score < _threshold("premium.repetition.clean_score_min", 0.85):
+                    correction_prompt = guard.generate_correction_prompt(violations)
+                    return {
+                        "early_result": {
+                            "decision": "REJECT",
+                            "score": int(clean_score * 100),
+                            "error_category": "QUALITY_ISSUE",
+                            "diagnostic_report": f"반복 구문 과다 사용 ({len(violations)}개 발견)",
+                            "current_beat_achieved": True,
+                            "reason": (
+                                f"최근 5화에서 반복 사용된 구문 {len(violations)}개 발견 "
+                                f"(클린 점수: {clean_score:.0%}). 어휘 다양성 확보 필요."
+                            ),
+                            "feedback": correction_prompt,
+                        }
+                    }
+        except ImportError as e:
+            logging.warning(f" [Director] RepetitionGuard 모듈 로드 실패: {e}")
+        except AttributeError as e:
+            logging.warning(f" [Director] DB 컨텍스트 오류 (RepetitionGuard): {e}")
+        except Exception as e:
+            logging.warning(f" [Director] RepetitionGuard 실행 중 예상치 못한 오류: {type(e).__name__}: {e}")
+
+        high_density_hud = self._d._build_hud_context(state_tracker, ep_num)
+        safe_hud = self._d._escape_braces(high_density_hud)
+        prompt = self._prompt_loader.load(
+            "director",
+            "DIRECTOR_AUDIT_PROMPT_V30",
+            ep_num=ep_num,
+            audit_mode=audit_mode,
+            total_eps=total_eps if total_eps else "미정",
+            arc_pos=arc_pos,
+            arc_doc=safe_arc,
+            target_len=target_len,
+            history_summary=safe_history,
+            prev_full_text=safe_prev,
+            manuscript=safe_ms,
+            retry_count=retry_count,
+            high_density_hud_context=safe_hud,
+        )
+        if not prompt:
+            return {
+                "early_result": {
+                    "decision": "REJECT",
+                    "score": 0,
+                    "reason": "Prompt loading failed: DIRECTOR_AUDIT_PROMPT_V30",
+                    "feedback": "prompt_loader 설정 확인",
+                }
+            }
+
+        if pre_llm_warnings:
+            warning_block = (
+                "\n\n[🚨 Python 사전 검증 경고 — CRITICAL 경고가 포함된 경우 반드시 REJECT]\n"
+                + "\n---\n".join(pre_llm_warnings)
+            )
+            prompt += self._d._escape_braces(warning_block)
+        if pre_llm_advisories:
+            advisory_block = "\n\n[Python 사전 참고 경고 — 판단은 Director]\n" + "\n---\n".join(pre_llm_advisories)
+            prompt += self._d._escape_braces(advisory_block)
+
+        return {"early_result": None, "audit_mode": audit_mode, "prompt": prompt}
+
+    def _log_manuscript_audit_result(self, result: dict, audit_mode: str) -> None:
+        audit_decision = result.get("decision", "?")
+        audit_score = result.get("score", 0)
+        self._d._operator_log(
+            f"[Stage4 Audit] {audit_mode} {audit_decision} (점수: {audit_score})",
+            meta={"component": "DirectorAudit", "score": audit_score, "audit_mode": audit_mode},
+        )
+        audit_breakdown = result.get("score_breakdown", {})
+        if audit_breakdown:
+            breakdown_str = ", ".join(
+                f"{key}={value}" for key, value in audit_breakdown.items() if isinstance(value, int | float)
+            )
+            if breakdown_str:
+                self._d._operator_log(
+                    f"점수 분해: {breakdown_str}",
+                    meta={"component": "DirectorAudit", "score": audit_score, "audit_mode": audit_mode},
+                )
+        audit_reason = result.get("reason", "")
+        if audit_reason:
+            self._d._operator_log(
+                f"사유: {str(audit_reason)[:200]}",
+                meta={"component": "DirectorAudit", "score": audit_score, "audit_mode": audit_mode},
+            )
+        audit_feedback = result.get("feedback", "")
+        if audit_feedback:
+            self._d._operator_log(
+                f"피드백: {str(audit_feedback)[:200]}",
+                meta={"component": "DirectorAudit", "score": audit_score, "audit_mode": audit_mode},
+            )
+        open_review = result.get("open_review", "")
+        if open_review and open_review not in ("특이사항 없음", "없음", ""):
+            self._d._operator_log(
+                f"자유 리뷰: {str(open_review)[:200]}",
+                meta={"component": "DirectorAudit", "score": audit_score, "audit_mode": audit_mode},
+            )
+
     def audit_manuscript(
         self,
         ep_num,
@@ -425,189 +892,22 @@ class DirectorQualityAuditor:
         # ═══════════════════════════════════════════════════════════════
         # [V63.4] Python 사전 검증 → 경고 수집 (최종 판단은 LLM)
         # ═══════════════════════════════════════════════════════════════
-        _pre_llm_warnings = []
-        _pre_llm_advisories = []
+        arc_no = self._resolve_manuscript_audit_arc_no(arc_doc, arc_pos)
+        preflight = self._run_manuscript_pre_llm_checks(
+            ep_num=ep_num,
+            manuscript=manuscript,
+            arc_no=arc_no,
+            validation_context=validation_context,
+            entity_registry=entity_registry,
+            manuscript_history=manuscript_history,
+            state_tracker=state_tracker,
+        )
+        if preflight["early_result"] is not None:
+            return preflight["early_result"]
 
-        # [V60.97] arc_no 추출 (타임라인 비교용)
-        arc_no = 0
-        if arc_doc and isinstance(arc_doc, dict):
-            arc_no = arc_doc.get("arc_no", 0)
-        elif arc_doc and isinstance(arc_doc, str):
-            # [V61.5] string인 경우 "Arc N" 패턴에서 추출 시도
-            arc_match = re.search(r"[Aa]rc\s*(\d+)", arc_doc[:200])
-            if arc_match:
-                arc_no = int(arc_match.group(1))
-        if arc_no <= 0 and arc_pos:
-            arc_no = arc_pos  # arc_pos가 있으면 사용
-
-        # [V63.4] 죽은 NPC → LLM 경고로 전달 (기존: 즉시 REJECT)
-        if state_tracker:
-            dead_npc_violations = state_tracker.check_dead_npc_in_manuscript(manuscript, ep_num, arc_no)
-            if dead_npc_violations:
-                violation_names = [v["npc_name"] for v in dead_npc_violations]
-                logging.warning(f" [V63.4] 죽은 NPC 경고 → LLM 전달: {', '.join(violation_names)}")
-                _pre_llm_warnings.append(
-                    f"[CRITICAL 경고] 죽은 NPC 등장 의심: {', '.join(violation_names)}\n"
-                    + "\n".join(f"  - {v['npc_name']}: Arc {v['death_arc']}에서 사망" for v in dead_npc_violations)
-                    + "\n  ※ 회상/과거 언급만 허용. 살아있는 것처럼 대화/행동하면 REJECT 필요."
-                )
-
-        # [V63.4] 장르 위반 → LLM 경고로 전달 (기존: 즉시 REJECT)
-        if self._d.genre_validation_enabled and self._d.guard:
-            genre_violations = self._run_genre_specific_validation(manuscript, ep_num)
-            if genre_violations.get("has_critical"):
-                logging.warning(f" [V63.4] 장르 위반 경고 → LLM 전달: {genre_violations.get('summary', '')}")
-                _pre_llm_warnings.append(
-                    f"[CRITICAL 경고] 장르 규칙 위반: {genre_violations.get('summary', '')}\n"
-                    f"  {genre_violations.get('feedback', '')}"
-                )
-            _genre_warning_violations = genre_violations.get("warning_violations", [])
-            if _genre_warning_violations:
-                _warning_lines = [
-                    f"  - {item.get('message', str(item))}"
-                    for item in _genre_warning_violations[:5]
-                    if isinstance(item, dict)
-                ]
-                _pre_llm_advisories.append(
-                    "[Python 참고 경고] 작품별 캐릭터 제약 확인 필요\n" + "\n".join(_warning_lines)
-                )
-
-        # ═══════════════════════════════════════════════════════════════
-        # [V60.88] 원고 역사 충돌 검사 - 캐시 우선, 폴백은 기존 방식
-        # ═══════════════════════════════════════════════════════════════
-        if self._d.manuscript_history_check_enabled:
-            history_check = None
-
-            # [V60.88] 캐시가 있으면 캐시 참조 검사 (전문 비교, 고품질)
-            if self._d._caching.manuscript_cache_name:
-                history_check = self._d.check_manuscript_history_with_cache(
-                    ep_num=ep_num, current_manuscript=manuscript
-                )
-                if history_check.get("cache_used"):
-                    logging.warning(" [V60.88] 캐시 참조 충돌 검사 완료")
-
-            # [V63.4 P0] 캐시 없거나 실패 시 기존 방식 폴백 (manuscript_history 사용)
-            if not history_check or history_check.get("error") or history_check.get("needs_fallback"):
-                if manuscript_history:
-                    history_check = self._d.check_manuscript_history_conflicts(
-                        ep_num=ep_num,
-                        current_manuscript=manuscript,
-                        manuscript_history=manuscript_history,
-                        use_summary=True,  # 토큰 절약을 위해 요약본 우선 사용
-                    )
-                elif history_check and history_check.get("needs_fallback"):
-                    logging.warning(" [V63.4] 캐시 폴백 필요하나 manuscript_history 없음 → 검증 스킵")
-
-            if history_check and history_check.get("decision") == "CONFLICT":
-                conflicts = history_check.get("conflicts", [])
-                conflict_details = "; ".join(
-                    [
-                        f"[{c.get('type', '?')}] {c.get('prev_fact', '')} vs {c.get('current_violation', '')}"
-                        for c in conflicts[:3]
-                        if isinstance(c, dict)  # [Sweep64] LLM이 문자열 반환 시 방어
-                    ]
-                )
-                return {
-                    "decision": "REJECT",
-                    "score": 25,
-                    "error_category": "LOGIC_ERROR",
-                    "diagnostic_report": f"원고 역사 충돌 {len(conflicts)}건 발견",
-                    "current_beat_achieved": False,
-                    "reason": f"이전 원고와 충돌: {conflict_details}",
-                    "feedback": f"[V60.88] 이전 원고에서 확립된 사실과 모순됨. {history_check.get('summary', '')}",
-                    "v60_87_history_check": history_check,
-                }
-            elif history_check and history_check.get("conflicts"):
-                # 경고만 있는 경우 validation_context에 기록
-                if validation_context is None:
-                    validation_context = {}
-                validation_context["v60_87_history_warnings"] = history_check.get("conflicts", [])
-
-        # ═══════════════════════════════════════════════════════════════
-        # [V60.89] 주인공 설정 준수 검증 (protagonist_config)
-        # ═══════════════════════════════════════════════════════════════
-        if self._d.protagonist_config_check_enabled:
-            config_check = self.validate_protagonist_config_compliance(manuscript=manuscript, ep_num=ep_num)
-
-            # [V63.4] Python REJECT → LLM 경고로 전달 (기존: 즉시 REJECT)
-            if config_check.get("decision") == "REJECT":
-                violations = config_check.get("violations", [])
-                logging.warning(f" [V63.4] 주인공 설정 위반 경고 → LLM 전달: {len(violations)}건")
-                _pre_llm_warnings.append(
-                    f"[CRITICAL 경고] 주인공 설정 위반 {len(violations)}건\n"
-                    f"  {config_check.get('feedback', '주인공 설정 위반')}"
-                )
-            elif config_check.get("decision") == "WARNING":
-                # WARNING은 기록만 하고 계속 진행
-                if validation_context is None:
-                    validation_context = {}
-                validation_context["v60_89_config_warnings"] = config_check.get("violations", [])
-                logging.warning(f" [V60.89] 주인공 설정 경고: {len(config_check.get('violations', []))}건")
-
-        # ═══════════════════════════════════════════════════════════════
-        # [V61] Entity 일관성 검증 - Director의 최종 방어선
-        # ═══════════════════════════════════════════════════════════════
-        if entity_registry and self._d.entity_consistency_enabled:
-            entity_check = self._d.validate_entity_consistency(
-                content=manuscript, entity_registry=entity_registry, content_type="manuscript"
-            )
-            if entity_check.get("decision") == "REJECT":
-                mismatches = entity_check.get("mismatches", [])
-                return {
-                    "decision": "REJECT",
-                    "score": 40,
-                    "error_category": "LOGIC_ERROR",
-                    "diagnostic_report": f"Entity 명칭 불일치 {len(mismatches)}건 발견",
-                    "current_beat_achieved": False,
-                    "reason": entity_check.get("fix_instructions", "Entity 명칭을 통일하세요"),
-                    "feedback": f"[V61] Entity 일관성 오류: {entity_check.get('fix_instructions', '')}",
-                    "v61_entity_check": entity_check,
-                }
-            elif entity_check.get("decision") == "WARNING":
-                # WARNING은 경고만 하고 계속 진행, 결과에 포함
-                if validation_context is None:
-                    validation_context = {}
-                validation_context["v61_entity_warnings"] = entity_check.get("mismatches", [])
-        # [V46] 캐릭터 논리성 검증 (assess_character_logic 활성화)
-        # [V66.1] NPC 프로필 비어있어도 원고 기반 검증 수행 (auto-PASS 제거)
-        if validation_context:
-            npc_profiles = validation_context.get("npc_profiles", {})
-            character_traits = validation_context.get("character_traits", {})
-
-            # [V66.1] NPC 정보 유무와 무관하게 항상 캐릭터 논리 검증 수행
-            char_logic_result = self.assess_character_logic(
-                ep_num=ep_num, manuscript=manuscript, npc_profiles=npc_profiles, character_traits=character_traits
-            )
-            if not isinstance(char_logic_result, dict):
-                char_logic_result = (
-                    char_logic_result[0] if isinstance(char_logic_result, list) and char_logic_result else {}
-                )
-
-            # [FIX] CRITICAL 1개 또는 MAJOR 2개 이상일 때만 REJECT (주석과 코드 일치)
-            if char_logic_result.get("decision") == "REJECT":
-                severity = char_logic_result.get("severity", "NONE")
-                violations = char_logic_result.get("violations", [])
-                # [Sweep42] 프롬프트가 per-item severity 미요청 → violation 개수로 판정
-                violation_count = len(violations)
-
-                # CRITICAL은 1개라도 REJECT, MAJOR는 위반 2개 이상일 때만 REJECT
-                should_reject = (severity == "CRITICAL") or (severity == "MAJOR" and violation_count >= 2)
-
-                if should_reject:
-                    logging.warning(f" [V46] 캐릭터 논리 위반 감지 ({severity}, 위반 {violation_count}개)")
-                    return {
-                        "decision": "REJECT",
-                        "score": char_logic_result.get("score", 30),
-                        "error_category": "LOGIC_ERROR",
-                        "diagnostic_report": f"캐릭터 논리 위반: {violations}",
-                        "current_beat_achieved": False,
-                        "reason": char_logic_result.get("feedback", "캐릭터 행동이 설정과 불일치"),
-                        "feedback": char_logic_result.get("feedback", ""),
-                        "v46_character_logic": char_logic_result,
-                    }
-                else:
-                    # MAJOR 1개 또는 MINOR는 경고만 하고 계속 진행
-                    logging.warning(f" [V46] 캐릭터 논리 이슈 ({severity}, 위반 {violation_count}개) - 계속 진행")
+        validation_context = preflight["validation_context"]
+        _pre_llm_warnings = preflight["pre_llm_warnings"]
+        _pre_llm_advisories = preflight["pre_llm_advisories"]
 
         # ═══════════════════════════════════════════════════════════════
         # [V60] Blueprint 완전성 검증 - main_a.py에서 사전 검증하므로 여기서는 스킵
@@ -616,193 +916,51 @@ class DirectorQualityAuditor:
         # Note: validation_context.get('bp_completeness_done', False)가 True면 이미 검증됨
         # main_a.py에서 _validate_blueprint_completeness_v60()을 먼저 호출하므로 여기서 재검증하지 않음
 
-        # [V63.4] Python 경고를 validation_context에 주입 (V0128 경로 포함)
-        if _pre_llm_warnings:
-            if validation_context is None:
-                validation_context = {}
-            validation_context["pre_llm_critical_warnings"] = (
-                "\n\n[🚨 Python 사전 검증 경고 — CRITICAL 경고가 포함된 경우 반드시 REJECT]\n"
-                + "\n---\n".join(_pre_llm_warnings)
-            )
-        if _pre_llm_advisories:
-            if validation_context is None:
-                validation_context = {}
-            validation_context["pre_llm_advisories"] = (
-                "\n\n[Python 사전 참고 경고 — 판단은 Director]\n" + "\n---\n".join(_pre_llm_advisories)
-            )
-
-        # [V66.1] prev_full_text 확대를 1회 수행 후 V0128/legacy 경로에서 공용 사용
-        expanded_prev = self._expand_prev_full_text(ep_num, prev_full_text)
-        if validation_context is None:
-            validation_context = {}
-        if expanded_prev:
-            validation_context["expanded_prev_full_text"] = expanded_prev
-
-        # [V43] V0128 검증 시스템 조건부 사용
-        # [Sweep45] {} is falsy → is not None 으로 변경
-        if self._d.use_v0128 and validation_context is not None:
-            return self._audit_with_v0128(
-                ep_num=ep_num, manuscript=manuscript, validation_context=validation_context, target_len=target_len
-            )
-
-        # 1. 검수 모드 자동 결정 (기존 로직)
-        audit_mode = "BLUEPRINT" if target_len <= ManuscriptLimits.MIN_LENGTH else "MANUSCRIPT"  # [V64.P4]
-
-        # 2. 데이터 안전 처리
-        safe_ms = self._d._escape_braces(manuscript)
-        # [V70] arc_doc dict 타입일 때 JSON 직렬화 후 이스케이프
-        if isinstance(arc_doc, dict):
-            import json as _json
-
-            arc_doc = _json.dumps(arc_doc, ensure_ascii=False)
-        safe_arc = self._d._escape_braces(arc_doc)
-        safe_history = self._d._escape_braces(history_summary)
-
-        # [V66.1] prev_full_text 확대 결과 재사용
-        safe_prev = self._d._escape_braces(expanded_prev)
-
-        current_len = len(manuscript)
-
-        # 2-1. 🔒 [V40 Fix] 분량 강제 체크 (AI 판단 이전에 Python 레벨에서 검증)
-        if audit_mode == "MANUSCRIPT" and current_len < ManuscriptLimits.MIN_LENGTH:  # [V64.P4]
-            return {
-                "decision": "REJECT",
-                "score": 0,
-                "error_category": "QUALITY_ISSUE",
-                "diagnostic_report": f"분량 절대 미달: {current_len}자",
-                "current_beat_achieved": False,
-                "reason": f"공백 포함 {current_len}자로 최소 기준({ManuscriptLimits.MIN_LENGTH}자) 미달. 목표는 {ManuscriptLimits.TARGET_LENGTH}자 이상입니다.",
-                "feedback": f"장면의 밀도를 높이고, 대사와 묘사를 추가하여 {ManuscriptLimits.TARGET_LENGTH}자 이상으로 확장하십시오.",
-            }
-
-        # 2-2. 🚫 [V40 Premium] 반복 구문 체크 (N-gram Deduplication)
-        try:
-            from modules.core.repetition_guard import RepetitionGuard
-
-            # RepetitionGuard 초기화
-            guard = RepetitionGuard(
-                window_size=_threshold("premium.repetition.window_size", 5),
-                threshold=_threshold("premium.repetition.threshold", 3),
-            )
-
-            # 이전 5화 원고 수집
-            prev_manuscripts = []
-            for i in range(max(1, ep_num - 5), ep_num):
-                try:
-                    ms = self._d.context.db.get_manuscript(i)
-                    if ms and "content" in ms:
-                        prev_manuscripts.append(ms["content"])
-                except Exception as _e:
-                    logging.debug("[RepetitionGuard] DB 원고 조회 실패 ep=%d: %s", i, _e)
-
-            # 금지 구문 목록 구축
-            if prev_manuscripts:
-                guard.build_banned_list(prev_manuscripts)
-
-                # 현재 원고 스캔
-                violations, clean_score = guard.scan_manuscript(manuscript)
-
-                # 위반 발견 시 REJECT (클린 점수 85% 미만)
-                if clean_score < _threshold("premium.repetition.clean_score_min", 0.85):
-                    correction_prompt = guard.generate_correction_prompt(violations)
-
-                    return {
-                        "decision": "REJECT",
-                        "score": int(clean_score * 100),
-                        "error_category": "QUALITY_ISSUE",
-                        "diagnostic_report": f"반복 구문 과다 사용 ({len(violations)}개 발견)",
-                        "current_beat_achieved": True,  # 내용은 맞지만 표현이 문제
-                        "reason": f"최근 5화에서 반복 사용된 구문 {len(violations)}개 발견 (클린 점수: {clean_score:.0%}). 어휘 다양성 확보 필요.",
-                        "feedback": correction_prompt,
-                    }
-        except ImportError as ie:
-            logging.warning(f" [Director] RepetitionGuard 모듈 로드 실패: {ie}")
-        except AttributeError as ae:
-            logging.warning(f" [Director] DB 컨텍스트 오류 (RepetitionGuard): {ae}")
-        except Exception as e:
-            logging.warning(f" [Director] RepetitionGuard 실행 중 예상치 못한 오류: {type(e).__name__}: {e}")
-
-        # 3. [V60.95] 고밀도 HUD 컨텍스트 구축
-        high_density_hud = self._d._build_hud_context(state_tracker, ep_num)
-        safe_hud = self._d._escape_braces(high_density_hud)
-
-        # 4. 프롬프트 조립 (모든 데이터 유실 없이 매핑)
-        prompt = self._prompt_loader.load(
-            "director",
-            "DIRECTOR_AUDIT_PROMPT_V30",
+        finalized_context = self._finalize_manuscript_validation_context(
             ep_num=ep_num,
-            audit_mode=audit_mode,
-            total_eps=total_eps if total_eps else "미정",
-            arc_pos=arc_pos,
-            arc_doc=safe_arc,
+            manuscript=manuscript,
+            prev_full_text=prev_full_text,
+            validation_context=validation_context,
+            pre_llm_warnings=_pre_llm_warnings,
+            pre_llm_advisories=_pre_llm_advisories,
             target_len=target_len,
-            history_summary=safe_history,
-            prev_full_text=safe_prev,
-            manuscript=safe_ms,
-            retry_count=retry_count,  # [V40.3 추가] 재시도 횟수 전달
-            high_density_hud_context=safe_hud,  # [V60.95] 고밀도 HUD 주입
         )
-        if not prompt:
+        if finalized_context["early_result"] is not None:
+            return finalized_context["early_result"]
+
+        validation_context = finalized_context["validation_context"]
+        expanded_prev = finalized_context["expanded_prev"]
+
+        legacy_prompt = self._build_legacy_manuscript_audit_prompt(
+            ep_num=ep_num,
+            manuscript=manuscript,
+            arc_doc=arc_doc,
+            history_summary=history_summary,
+            expanded_prev=expanded_prev,
+            arc_pos=arc_pos,
+            total_eps=total_eps,
+            target_len=target_len,
+            retry_count=retry_count,
+            state_tracker=state_tracker,
+            pre_llm_warnings=_pre_llm_warnings,
+            pre_llm_advisories=_pre_llm_advisories,
+        )
+        if legacy_prompt["early_result"] is not None:
+            return legacy_prompt["early_result"]
+
+        audit_mode = legacy_prompt["audit_mode"]
+        prompt = legacy_prompt["prompt"]
+        response = self._d.ask(prompt, temperature=0.1, thinking_level="high")
+        result = self._d._extract_json_robust(response)
+        if not isinstance(result, dict) or result.get("parsing_error"):
             return {
                 "decision": "REJECT",
                 "score": 0,
-                "reason": "Prompt loading failed: DIRECTOR_AUDIT_PROMPT_V30",
-                "feedback": "prompt_loader 설정 확인",
+                "reason": "Director 응답 파싱 실패",
+                "feedback": "재시도 필요",
             }
 
-        # [V63.4] Python 사전 경고를 LLM 프롬프트에 주입
-        if _pre_llm_warnings:
-            _warning_block = (
-                "\n\n[🚨 Python 사전 검증 경고 — CRITICAL 경고가 포함된 경우 반드시 REJECT]\n"
-                + "\n---\n".join(_pre_llm_warnings)
-            )
-            prompt += self._d._escape_braces(_warning_block)
-        if _pre_llm_advisories:
-            _advisory_block = (
-                "\n\n[Python 사전 참고 경고 — 판단은 Director]\n" + "\n---\n".join(_pre_llm_advisories)
-            )
-            prompt += self._d._escape_braces(_advisory_block)
-
-        response = self._d.ask(prompt, temperature=0.1, thinking_level="high")  # [V61.6] 원고 PASS/REJECT
-        result = self._d._extract_json_robust(response)
-        # [V70] 파싱 실패 시 안전한 REJECT 반환 (기본 PASS 방지)
-        if not isinstance(result, dict) or result.get("parsing_error"):
-            return {"decision": "REJECT", "score": 0, "reason": "Director 응답 파싱 실패", "feedback": "재시도 필요"}
-
-        # --- Director Audit 상세 출력 ---
-        _aud_decision = result.get("decision", "?")
-        _aud_score = result.get("score", 0)
-        self._d._operator_log(
-            f"[Stage4 Audit] {audit_mode} {_aud_decision} (점수: {_aud_score})",
-            meta={"component": "DirectorAudit", "score": _aud_score, "audit_mode": audit_mode},
-        )
-        _aud_sb = result.get("score_breakdown", {})
-        if _aud_sb:
-            _sb_str = ", ".join(f"{k}={v}" for k, v in _aud_sb.items() if isinstance(v, int | float))
-            if _sb_str:
-                self._d._operator_log(
-                    f"점수 분해: {_sb_str}",
-                    meta={"component": "DirectorAudit", "score": _aud_score, "audit_mode": audit_mode},
-                )
-        _aud_reason = result.get("reason", "")
-        if _aud_reason:
-            self._d._operator_log(
-                f"사유: {str(_aud_reason)[:200]}",
-                meta={"component": "DirectorAudit", "score": _aud_score, "audit_mode": audit_mode},
-            )
-        _aud_fb = result.get("feedback", "")
-        if _aud_fb:
-            self._d._operator_log(
-                f"피드백: {str(_aud_fb)[:200]}",
-                meta={"component": "DirectorAudit", "score": _aud_score, "audit_mode": audit_mode},
-            )
-        _aud_or = result.get("open_review", "")
-        if _aud_or and _aud_or not in ("특이사항 없음", "없음", ""):
-            self._d._operator_log(
-                f"자유 리뷰: {str(_aud_or)[:200]}",
-                meta={"component": "DirectorAudit", "score": _aud_score, "audit_mode": audit_mode},
-            )
-
+        self._log_manuscript_audit_result(result, audit_mode)
         return result
 
     # ═══════════════════════════════════════════════════════════════════════
@@ -970,111 +1128,65 @@ class DirectorQualityAuditor:
     # [V65 C-5] _strategic_audit_with_self_consistency — Director에서 이관
     # ═══════════════════════════════════════════════════════════════════════
 
-    def _strategic_audit_with_self_consistency(self, prompt: str, arc_no: int) -> dict:
-        """
-        [V65 C-5] [V49.3] 전략 감사에 Self-Consistency 투표 적용
+    @staticmethod
+    def _safe_int_score(value, default=50):
+        try:
+            return int(value)
+        except (ValueError, TypeError):
+            return default
 
-        Stage 2/3에서 Director가 LLM 단일 호출의 환각을 방지하기 위해:
-        1. 1차 평가 실행
-        2. 결과가 애매하면 (PASS이지만 score가 낮거나 경고 포함) 추가 2회 평가
-        3. 다수결로 최종 PASS/REJECT 결정
-
-        Returns:
-            dict: 감사 결과 (self_consistency 정보 포함)
-        """
-        # 1차 평가
-        response = self._d.ask(prompt, temperature=0.1, thinking_level="medium")  # [V61.6] SC 1차
-        first_eval = self._d._extract_json_robust(response)
-        # [TF-28c] 1차 평가 thinking 캡처 (병렬 투표 전)
-        _first_thinking = getattr(self._d, "_last_thinking", "")
-
-        if not isinstance(first_eval, dict):
-            first_eval = {"decision": "REJECT", "score": 0, "reason": "JSON 파싱 실패"}
-
-        def _safe_int_score(value, default=50):
-            try:
-                return int(value)
-            except (ValueError, TypeError):
-                return default
-
-        first_decision = first_eval.get("decision", "REJECT")
-        first_score = _safe_int_score(first_eval.get("score", 50), 50)
-
-        # 명확한 REJECT → 추가 평가 없이 반환
+    def _maybe_finalize_clear_strategic_audit(
+        self,
+        *,
+        first_eval: dict,
+        first_decision: str,
+        first_score: int,
+        first_thinking: str,
+    ) -> dict | None:
         if first_decision == "REJECT" and first_score < self._d.ambiguous_lower:
             reject_reason = first_eval.get("reason", first_eval.get("re_slice_instruction", "사유 미상"))
             logging.warning(f" [Director] REJECT (score={first_score})")
             logging.info(f" [SC-Skip] Clear REJECT (score={first_score} < ambiguous_lower={self._d.ambiguous_lower})")
             logging.warning(f" 사유: {reject_reason[:80]}{'...' if len(str(reject_reason)) > 80 else ''}")
             first_eval["self_consistency"] = {"votes": 1, "reason": "clear_reject", "pass_votes": 0}
-            first_eval["_director_thinking"] = _first_thinking  # [TF-28c]
+            first_eval["_director_thinking"] = first_thinking  # [TF-28c]
             return first_eval
 
-        # 명확한 PASS (점수가 높음) → 추가 평가 없이 반환
         if first_decision in ("PASS", "PASS_WITH_FIX") and first_score > self._d.ambiguous_upper:  # [TF-32-S2]
             pass_reason = first_eval.get("reason", first_eval.get("strengths", "판단 근거 미상"))
             logging.info(f" [Director] PASS (score={first_score})")
             logging.info(f" [SC-Skip] Clear PASS (score={first_score} > ambiguous_upper={self._d.ambiguous_upper})")
             logging.info(f" 근거: {str(pass_reason)[:80]}{'...' if len(str(pass_reason)) > 80 else ''}")
             first_eval["self_consistency"] = {"votes": 1, "reason": "clear_pass", "pass_votes": 1}
-            first_eval["_director_thinking"] = _first_thinking  # [TF-28c]
+            first_eval["_director_thinking"] = first_thinking  # [TF-28c]
             return first_eval
 
-        # 애매한 구간 → 추가 평가 진행
-        logging.info(f" [V49.3] 애매한 결과({first_decision}, score={first_score}) → Self-Consistency 활성화")
-        self._d._operator_log(
-            f"⚖️ [Director] 애매한 결과(score={first_score}) → 추가 투표 진행...",
-            meta={"component": "DirectorAudit", "score": first_score},
-        )
+        return None
 
+    def _collect_strategic_sc_parallel_votes(self, *, vote_tasks, vote_task, first_eval: dict, arc_no: int) -> list[dict]:
         evaluations = [first_eval]
 
-        # [V60.68] Self-Consistency 병렬화
-        # [V61.3] 타임아웃 임포트 추가
         from concurrent.futures import ThreadPoolExecutor, as_completed
         from concurrent.futures import TimeoutError as FutureTimeoutError
 
-        # [V61.3→TF-26] 타임아웃 — system.yaml ensemble_timeouts.director_vote 참조
         _dv_timeouts = _SYSTEM_CFG.get("ensemble_timeouts", {}).get("director_vote", {})
-        VOTE_ENSEMBLE_TIMEOUT = _dv_timeouts.get("ensemble", 150)
-        SINGLE_VOTE_TIMEOUT = _dv_timeouts.get("single", 90)
+        vote_ensemble_timeout = _dv_timeouts.get("ensemble", 150)
+        single_vote_timeout = _dv_timeouts.get("single", 90)
 
-        def _vote_task(vote_idx, temp) -> tuple:
-            """단일 투표 작업"""
-            response = self._d.ask(prompt, temperature=temp, thinking_level="medium")  # [STRUCT-1] SC 추가투표 medium 균등화
-            return vote_idx, self._d._extract_json_robust(response)
-
-        vote_tasks = [(i, 0.1 + (i * 0.05)) for i in range(1, self._d.consistency_votes)]
-
-        if not vote_tasks:
-            # [G1] 추가 투표가 없으면 첫 평가만으로 결과 반환
-            first_eval["self_consistency"] = {
-                "votes": 1,
-                "reason": "no_extra_votes",
-                "pass_votes": 1 if first_decision in ("PASS", "PASS_WITH_FIX") else 0,  # [TF-32-S2]
-            }
-            first_eval["_director_thinking"] = _first_thinking  # [TF-28c]
-            return first_eval
-
-        # [Phase 3-Obs] 에이전트 레벨 ThreadPoolExecutor 계측
         _tp_t0 = time.monotonic()
-
-        # [TF7-P1-01] 명시적 executor + finally shutdown(wait=False) — context manager의
-        # wait=True 기본값으로 인한 타임아웃 후에도 running future 무한 대기 방지
         executor = ThreadPoolExecutor(max_workers=min(3, len(vote_tasks)))
         futures: dict = {}
         try:
-            futures = {executor.submit(_vote_task, idx, temp): idx for idx, temp in vote_tasks}
+            futures = {executor.submit(vote_task, idx, temp): idx for idx, temp in vote_tasks}
 
-            # [V61.3] 타임아웃 적용 - 야간 무인 운영 시 무한 대기 방지
             try:
-                for future in as_completed(futures, timeout=VOTE_ENSEMBLE_TIMEOUT):
+                for future in as_completed(futures, timeout=vote_ensemble_timeout):
                     try:
-                        vote_idx, eval_result = future.result(timeout=SINGLE_VOTE_TIMEOUT)
+                        vote_idx, eval_result = future.result(timeout=single_vote_timeout)
                         if isinstance(eval_result, dict):
                             evaluations.append(eval_result)
                             eval_decision = eval_result.get("decision", "REJECT")
-                            eval_score = _safe_int_score(eval_result.get("score", 0), 0)
+                            eval_score = self._safe_int_score(eval_result.get("score", 0), 0)
                             logging.info(f"Vote {vote_idx + 1}: {eval_decision} (score={eval_score})")
                             self._d._operator_log(
                                 f"⚖️ [Director] 투표 {len(evaluations)}/{len(vote_tasks) + 1}: {eval_decision} (score={eval_score})",
@@ -1100,17 +1212,122 @@ class DirectorQualityAuditor:
                 f.cancel()
             executor.shutdown(wait=False, cancel_futures=True)
 
-        # [Phase 3-Obs] 병렬 구간 소요 시간 기록
         try:
             logging.info(f"[PerfTimer:DirectorAuditor] director_sc_arc{arc_no}_voting={time.monotonic() - _tp_t0:.2f}s")
         except Exception as _e:
             logging.debug("[DirectorAuditor] PerfTimer 기록 실패 (무시): %s", _e)
 
+        return evaluations
+
+    def _build_strategic_sc_result(
+        self,
+        *,
+        representative: dict,
+        final_decision: str,
+        median_score: int,
+        evaluations: list[dict],
+        pass_votes: int,
+        scores: list[int],
+        first_decision: str,
+        first_score: int,
+    ) -> dict:
+        result = representative.copy()
+        result["decision"] = final_decision
+        result["score"] = median_score
+        result["self_consistency"] = {
+            "votes": len(evaluations),
+            "pass_votes": pass_votes,
+            "scores": scores,
+            "median_score": median_score,
+            "reason": f"ambiguous_result ({first_decision}, score={first_score})",
+        }
+
+        logging.info(
+            f"✅ [V49.3] Self-Consistency 완료: {final_decision} (PASS {pass_votes}/{len(evaluations)}, median={median_score})"
+        )
+        self._d._operator_log(
+            f"✅ [Director] SC 완료: {final_decision} (PASS {pass_votes}/{len(evaluations)}, median={median_score})",
+            meta={
+                "component": "DirectorAudit",
+                "decision": final_decision,
+                "pass_votes": pass_votes,
+                "vote_total": len(evaluations),
+                "median_score": median_score,
+            },
+        )
+        return result
+
+    def _strategic_audit_with_self_consistency(self, prompt: str, arc_no: int) -> dict:
+        """
+        [V65 C-5] [V49.3] 전략 감사에 Self-Consistency 투표 적용
+
+        Stage 2/3에서 Director가 LLM 단일 호출의 환각을 방지하기 위해:
+        1. 1차 평가 실행
+        2. 결과가 애매하면 (PASS이지만 score가 낮거나 경고 포함) 추가 2회 평가
+        3. 다수결로 최종 PASS/REJECT 결정
+
+        Returns:
+            dict: 감사 결과 (self_consistency 정보 포함)
+        """
+        # 1차 평가
+        response = self._d.ask(prompt, temperature=0.1, thinking_level="medium")  # [V61.6] SC 1차
+        first_eval = self._d._extract_json_robust(response)
+        # [TF-28c] 1차 평가 thinking 캡처 (병렬 투표 전)
+        _first_thinking = getattr(self._d, "_last_thinking", "")
+
+        if not isinstance(first_eval, dict):
+            first_eval = {"decision": "REJECT", "score": 0, "reason": "JSON 파싱 실패"}
+
+        first_decision = first_eval.get("decision", "REJECT")
+        first_score = self._safe_int_score(first_eval.get("score", 50), 50)
+
+        clear_result = self._maybe_finalize_clear_strategic_audit(
+            first_eval=first_eval,
+            first_decision=first_decision,
+            first_score=first_score,
+            first_thinking=_first_thinking,
+        )
+        if clear_result is not None:
+            return clear_result
+
+        # 애매한 구간 → 추가 평가 진행
+        logging.info(f" [V49.3] 애매한 결과({first_decision}, score={first_score}) → Self-Consistency 활성화")
+        self._d._operator_log(
+            f"⚖️ [Director] 애매한 결과(score={first_score}) → 추가 투표 진행...",
+            meta={"component": "DirectorAudit", "score": first_score},
+        )
+
+        evaluations = [first_eval]
+
+        def _vote_task(vote_idx, temp) -> tuple:
+            """단일 투표 작업"""
+            response = self._d.ask(prompt, temperature=temp, thinking_level="medium")  # [STRUCT-1] SC 추가투표 medium 균등화
+            return vote_idx, self._d._extract_json_robust(response)
+
+        vote_tasks = [(i, 0.1 + (i * 0.05)) for i in range(1, self._d.consistency_votes)]
+
+        if not vote_tasks:
+            # [G1] 추가 투표가 없으면 첫 평가만으로 결과 반환
+            first_eval["self_consistency"] = {
+                "votes": 1,
+                "reason": "no_extra_votes",
+                "pass_votes": 1 if first_decision in ("PASS", "PASS_WITH_FIX") else 0,  # [TF-32-S2]
+            }
+            first_eval["_director_thinking"] = _first_thinking  # [TF-28c]
+            return first_eval
+
+        evaluations = self._collect_strategic_sc_parallel_votes(
+            vote_tasks=vote_tasks,
+            vote_task=_vote_task,
+            first_eval=first_eval,
+            arc_no=arc_no,
+        )
+
         # 점수들의 중앙값
         scores = []
         for e in evaluations:
             if isinstance(e, dict):
-                scores.append(_safe_int_score(e.get("score", 50), 50))
+                scores.append(self._safe_int_score(e.get("score", 50), 50))
         median_score = int(round(statistics.median(scores))) if scores else 50
 
         # PASS/REJECT 다수결
@@ -1123,31 +1340,20 @@ class DirectorQualityAuditor:
             final_decision = "REJECT"
 
         # 대표 결과 선택 (중앙값에 가장 가까운 것)
-        representative = min(evaluations, key=lambda e: abs(_safe_int_score(e.get("score", 50), 50) - median_score))
-
-        # 결과 병합
-        result = representative.copy()
-        result["decision"] = final_decision
-        result["score"] = median_score
-        result["self_consistency"] = {
-            "votes": len(evaluations),
-            "pass_votes": pass_votes,
-            "scores": scores,
-            "median_score": median_score,
-            "reason": f"ambiguous_result ({first_decision}, score={first_score})",
-        }
-
-        logging.info(f"✅ [V49.3] Self-Consistency 완료: {final_decision} (PASS {pass_votes}/{len(evaluations)}, median={median_score})"
+        representative = min(
+            evaluations,
+            key=lambda e: abs(self._safe_int_score(e.get("score", 50), 50) - median_score),
         )
-        self._d._operator_log(
-            f"✅ [Director] SC 완료: {final_decision} (PASS {pass_votes}/{len(evaluations)}, median={median_score})",
-            meta={
-                "component": "DirectorAudit",
-                "decision": final_decision,
-                "pass_votes": pass_votes,
-                "vote_total": len(evaluations),
-                "median_score": median_score,
-            },
+
+        result = self._build_strategic_sc_result(
+            representative=representative,
+            final_decision=final_decision,
+            median_score=median_score,
+            evaluations=evaluations,
+            pass_votes=pass_votes,
+            scores=scores,
+            first_decision=first_decision,
+            first_score=first_score,
         )
 
         result["_director_thinking"] = _first_thinking  # [TF-28c]

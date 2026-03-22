@@ -476,151 +476,171 @@ class ProjectContext:
         """
         [V35 Alpha] 트랜잭션 원자성 강화 + NPC HUD 실시간 동기화 통합 버전
         """
-        # 1. 먼저 '미동기화' 상태로 마킹 (Safety First)
         self.db.update_sync_status(ep_num, 0)
+        bible_snapshot = copy.deepcopy(self.master_bible)
 
         try:
-            # --- [Part 1: 데이터 및 복선 정규화] ---
-            normalized_seeds = []
-            if recovered_seeds and isinstance(recovered_seeds, list):
-                for rec in recovered_seeds:
-                    if isinstance(rec, dict):
-                        raw_id = rec.get("seed_id") or rec.get("id")
-                        rec["seed_id"] = self._normalize_seed_id(raw_id) if raw_id else "UNKNOWN"
-                        normalized_seeds.append(rec)
-            recovered_seeds = normalized_seeds
-
-            # --- [Part 2: 🚨 NPC HUD 변화 추적 및 성경 반영] ---
-            # [E5c-P1-2] Deep-copy bible before mutation for rollback on failure
-            _bible_snapshot = copy.deepcopy(self.master_bible)
-            if lore_data and isinstance(lore_data, dict) and "Key_NPCs" in lore_data:
-                bible_root = self.master_bible.get("MasterBible", self.master_bible)
-                bible_npcs = bible_root.get("AssetLibrary", {}).get("KeyNPCs", [])
-
-                for new_npc in lore_data["Key_NPCs"]:
-                    # [V45 Fix] new_npc 타입 검증
-                    if not isinstance(new_npc, dict):
-                        continue
-                    npc_name = new_npc.get("name") or new_npc.get("Name")
-                    npc_hud_key = self._get_npc_hud_key()
-                    for target in bible_npcs:
-                        if target.get("name") == npc_name:
-                            if npc_hud_key in new_npc:
-                                new_hud = new_npc[npc_hud_key]
-                                # [V45 Fix] new_hud가 dict가 아니면 건너뜀 (AttributeError 방지)
-                                if not isinstance(new_hud, dict):
-                                    continue
-                                old_hud = target.get(npc_hud_key, {})
-                                # [V45 Fix] old_hud도 dict 보장
-                                if not isinstance(old_hud, dict):
-                                    old_hud = {}
-
-                                # 변화량 추적 및 출력
-                                changes = []
-                                for key in ["achievement_rate", "current_status", "realm"]:
-                                    if new_hud.get(key) is not None and new_hud.get(key) != old_hud.get(key):
-                                        changes.append(f"{key}: {old_hud.get(key, 'N/A')} -> {new_hud[key]}")
-
-                                # [V45] NPC equipment 변화 추적
-                                old_equip = old_hud.get("equipment", [])
-                                new_equip = new_hud.get("equipment", [])
-                                if new_equip and new_equip != old_equip:
-                                    # 리스트 비교를 위한 정규화
-                                    old_set = set(old_equip) if isinstance(old_equip, list) else set()
-                                    new_set = set(new_equip) if isinstance(new_equip, list) else set()
-                                    added = new_set - old_set
-                                    removed = old_set - new_set
-                                    if added:
-                                        changes.append(f"equipment 획득: {list(added)}")
-                                    if removed:
-                                        changes.append(f"equipment 상실: {list(removed)}")
-
-                                if changes:
-                                    logging.info(f" [NPC Trace] {npc_name} 변화 감지: {', '.join(changes)}")
-
-                                # 데이터 병합 (성경 메모리 동기화)
-                                target.setdefault(npc_hud_key, {}).update(new_hud)
-                            break
-
-            # --- [Part 3: 원자적 저장 - Bible 먼저, DB 나중] ---
-            # [V44 Fix] Bible을 먼저 저장하여 crash 시 데이터 복구 가능하게 함
-            # 순서: Bible 저장 → DB commit → Vector sync
-            # 이유: DB commit 실패 시 Bible은 최신 상태 유지, 다음 실행에서 복구 가능
-
-            # 3-1. Bible 선행 저장 (NPC HUD 변화 포함)
-            try:
-                self.save_v20_anchor("bible", self.master_bible)
-                self.sync_and_cleanup_seeds()
-            except Exception as bible_err:
-                logging.warning(f" [Critical] Bible 선행 저장 실패: {bible_err}")
-                raise RuntimeError(f"Bible 저장 실패로 에피소드 커밋 중단: {bible_err}") from bible_err
-
-            # 3-2. SQLite 핵심 트랜잭션 (원고, HUD, 로그, 카르마, 로어)
-            try:
-                db_success = self.db.commit_episode_factory(
-                    ep_num,
-                    manuscript_data,
-                    martial_data,
-                    state_data,
-                    causal_links,
-                    karma_data,
-                    lore_data,
-                    recovered_seeds,
-                )
-            except Exception as factory_err:
-                raise RuntimeError("SQLite Episode Factory 저장 실패") from factory_err
-
-            if not db_success:
-                raise RuntimeError("SQLite Episode Factory 저장 실패")
-
-            # --- [Part 4: 벡터 동기화 (VecMemory)] ---
-            try:
-                # 벡터 기억 주입
-                # [Sweep43] state_data가 문자열일 경우 방어
-                if isinstance(state_data, str):
-                    try:
-                        state_data = json.loads(state_data)
-                    except (json.JSONDecodeError, TypeError):
-                        state_data = {}
-                summary = (
-                    state_data.get("context_audit", {}).get("summary", "요약 없음")
-                    if isinstance(state_data, dict)
-                    else "요약 없음"
-                )
-                content_text = (
-                    manuscript_data.get("content", "") if isinstance(manuscript_data, dict) else str(manuscript_data)
-                )
-
-                vector_success = memory.memorize_v20_episode(ep_num, content_text, summary, causal_links)
-
-                if vector_success:
-                    # 모든 공정 성공 시에만 최종 동기화 완료 마킹
-                    self.db.update_sync_status(ep_num, 1)
-                else:
-                    logging.warning(f" [Sync Warning] 제 {ep_num}화 벡터 주입 지연 (플래그 0 유지)")
-
-                return True
-
-            except Exception as sub_e:
-                # [V44 Fix] 부분 실패 시 경고 강화 및 sync 상태 업데이트
-                logging.warning(f" [Partial Failure] 벡터 동기화 중 오류: {sub_e}")
-                logging.warning(f" [WARNING] 에피소드 {ep_num}: DB/Bible 저장됨, Vector 동기화 불완전")
-                # sync_status를 2로 설정하여 "부분 성공" 상태 표시
-                try:
-                    self.db.update_sync_status(ep_num, 2)  # 2 = partial sync
-                except Exception as _e:
-                    logging.warning("[Sweep5-D] sync_status partial update failed (ep=%s): %s",
-                        ep_num,
-                        _e,
-                    )
-                return True  # DB는 성공했으므로 진행 (단, 경고 로깅됨)
-
+            recovered_seeds = self._normalize_recovered_seeds(recovered_seeds)
+            self._merge_lore_npc_hud_updates(lore_data)
+            self._persist_episode_bible_and_factory(
+                ep_num=ep_num,
+                manuscript_data=manuscript_data,
+                martial_data=martial_data,
+                state_data=state_data,
+                causal_links=causal_links,
+                karma_data=karma_data,
+                lore_data=lore_data,
+                recovered_seeds=recovered_seeds,
+            )
+            self._sync_episode_vector_memory(
+                ep_num=ep_num,
+                manuscript_data=manuscript_data,
+                state_data=state_data,
+                causal_links=causal_links,
+                memory=memory,
+            )
+            return True
         except Exception as e:
             logging.warning(f" [Critical Error] 제 {ep_num}화 원자적 저장 실패: {e}")
-            # [E5c-P1-2] Restore bible from snapshot on failure
-            self.master_bible = _bible_snapshot
+            self.master_bible = bible_snapshot
             self.db.update_sync_status(ep_num, 0)
             return False
+
+    def _normalize_recovered_seeds(self, recovered_seeds) -> list[dict]:
+        normalized_seeds = []
+        if recovered_seeds and isinstance(recovered_seeds, list):
+            for rec in recovered_seeds:
+                if not isinstance(rec, dict):
+                    continue
+                raw_id = rec.get("seed_id") or rec.get("id")
+                rec["seed_id"] = self._normalize_seed_id(raw_id) if raw_id else "UNKNOWN"
+                normalized_seeds.append(rec)
+        return normalized_seeds
+
+    def _merge_lore_npc_hud_updates(self, lore_data) -> None:
+        if not lore_data or not isinstance(lore_data, dict) or "Key_NPCs" not in lore_data:
+            return
+        bible_root = self.master_bible.get("MasterBible", self.master_bible)
+        bible_npcs = bible_root.get("AssetLibrary", {}).get("KeyNPCs", [])
+        npc_hud_key = self._get_npc_hud_key()
+        for new_npc in lore_data["Key_NPCs"]:
+            if not isinstance(new_npc, dict):
+                continue
+            npc_name = new_npc.get("name") or new_npc.get("Name")
+            for target in bible_npcs:
+                if target.get("name") != npc_name:
+                    continue
+                self._merge_single_npc_hud_update(target, new_npc, npc_hud_key)
+                break
+
+    def _merge_single_npc_hud_update(self, target: dict, new_npc: dict, npc_hud_key: str) -> None:
+        if npc_hud_key not in new_npc:
+            return
+        new_hud = new_npc[npc_hud_key]
+        if not isinstance(new_hud, dict):
+            return
+        old_hud = target.get(npc_hud_key, {})
+        if not isinstance(old_hud, dict):
+            old_hud = {}
+        changes = self._collect_npc_hud_changes(old_hud, new_hud)
+        if changes:
+            npc_name = new_npc.get("name") or new_npc.get("Name") or target.get("name", "UNKNOWN")
+            logging.info(f" [NPC Trace] {npc_name} 변화 감지: {', '.join(changes)}")
+        target.setdefault(npc_hud_key, {}).update(new_hud)
+
+    def _collect_npc_hud_changes(self, old_hud: dict, new_hud: dict) -> list[str]:
+        changes = []
+        for key in ["achievement_rate", "current_status", "realm"]:
+            if new_hud.get(key) is not None and new_hud.get(key) != old_hud.get(key):
+                changes.append(f"{key}: {old_hud.get(key, 'N/A')} -> {new_hud[key]}")
+        old_equip = old_hud.get("equipment", [])
+        new_equip = new_hud.get("equipment", [])
+        if new_equip and new_equip != old_equip:
+            old_set = set(old_equip) if isinstance(old_equip, list) else set()
+            new_set = set(new_equip) if isinstance(new_equip, list) else set()
+            added = new_set - old_set
+            removed = old_set - new_set
+            if added:
+                changes.append(f"equipment 획득: {list(added)}")
+            if removed:
+                changes.append(f"equipment 상실: {list(removed)}")
+        return changes
+
+    def _persist_episode_bible_and_factory(
+        self,
+        *,
+        ep_num,
+        manuscript_data,
+        martial_data,
+        state_data,
+        causal_links,
+        karma_data,
+        lore_data,
+        recovered_seeds,
+    ) -> None:
+        try:
+            self.save_v20_anchor("bible", self.master_bible)
+            self.sync_and_cleanup_seeds()
+        except Exception as bible_err:
+            logging.warning(f" [Critical] Bible 선행 저장 실패: {bible_err}")
+            raise RuntimeError(f"Bible 저장 실패로 에피소드 커밋 중단: {bible_err}") from bible_err
+
+        try:
+            db_success = self.db.commit_episode_factory(
+                ep_num,
+                manuscript_data,
+                martial_data,
+                state_data,
+                causal_links,
+                karma_data,
+                lore_data,
+                recovered_seeds,
+            )
+        except Exception as factory_err:
+            raise RuntimeError("SQLite Episode Factory 저장 실패") from factory_err
+
+        if not db_success:
+            raise RuntimeError("SQLite Episode Factory 저장 실패")
+
+    def _sync_episode_vector_memory(
+        self,
+        *,
+        ep_num,
+        manuscript_data,
+        state_data,
+        causal_links,
+        memory,
+    ) -> None:
+        try:
+            normalized_state = self._coerce_state_dict_for_vector_sync(state_data)
+            summary = (
+                normalized_state.get("context_audit", {}).get("summary", "요약 없음")
+                if isinstance(normalized_state, dict)
+                else "요약 없음"
+            )
+            content_text = (
+                manuscript_data.get("content", "") if isinstance(manuscript_data, dict) else str(manuscript_data)
+            )
+            vector_success = memory.memorize_v20_episode(ep_num, content_text, summary, causal_links)
+            if vector_success:
+                self.db.update_sync_status(ep_num, 1)
+            else:
+                logging.warning(f" [Sync Warning] 제 {ep_num}화 벡터 주입 지연 (플래그 0 유지)")
+        except Exception as sub_e:
+            logging.warning(f" [Partial Failure] 벡터 동기화 중 오류: {sub_e}")
+            logging.warning(f" [WARNING] 에피소드 {ep_num}: DB/Bible 저장됨, Vector 동기화 불완전")
+            try:
+                self.db.update_sync_status(ep_num, 2)
+            except Exception as sync_err:
+                logging.warning("[Sweep5-D] sync_status partial update failed (ep=%s): %s", ep_num, sync_err)
+
+    def _coerce_state_dict_for_vector_sync(self, state_data):
+        if isinstance(state_data, str):
+            try:
+                return json.loads(state_data)
+            except (json.JSONDecodeError, TypeError):
+                return {}
+        return state_data
 
     # --- [Getter: 하이브리드 맥락 인출] ---
     @property
@@ -893,7 +913,7 @@ class ProjectContext:
             if re.search(r"배신|동맹|화해|적대", content):
                 _bulk_events.add("relationship")
             # NPC 이름 패턴 (한글 2-4자 + "은/는/이/가/을/를")
-            for _m in re.finditer(r"([가-힣]{2,4})(?:은|는|이|가|을|를)\s", content[:8000]):
+            for _m in re.finditer(r"([가-힣]{2,4})(?:은|는|이|가|을|를)\s", content[:8000]):  # utf8-hygiene: allow-line regex pattern
                 _bulk_entities.add(_m.group(1))
             memory.memorize_v20_episode(
                 ep_num,

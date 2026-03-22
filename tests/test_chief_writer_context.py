@@ -123,6 +123,94 @@ class TestBuildCommonContext:
         assert result == "prompt"
         builder.context_packets.build_common_context_packets.assert_called_once()
 
+    def test_extract_blueprint_sections_includes_integrated_scenario_and_hook(self):
+        builder = ChiefWriterContextBuilder(_make_host())
+
+        scene_breakdown, ending_hook = builder._extract_blueprint_sections(
+            {
+                "scene_breakdown": {"scene_1": {"summary": "대치"}},
+                "integrated_scenario": "통합 흐름",
+                "ending_hook": "문이 열린다",
+            }
+        )
+
+        assert "통합 흐름" in scene_breakdown
+        assert "문이 열린다" in ending_hook
+
+    def test_build_character_voice_section_uses_stage4_fallback(self):
+        host = _make_host()
+        host.context.character_voice = None
+        stage4_voice = MagicMock()
+        stage4_voice.get_writing_guide.return_value = "연홍은 격식을 유지한다."
+        host._stage4_ctx = MagicMock(character_voice=stage4_voice)
+        builder = ChiefWriterContextBuilder(host)
+
+        section = builder._build_character_voice_section(
+            {"scene_breakdown": {"scene_1": {"npcs": ["연홍", "백운"]}}}
+        )
+
+        assert "연홍은 격식을 유지한다." in section
+        stage4_voice.get_writing_guide.assert_called_once_with(["연홍", "백운"])
+
+    def test_build_common_context_shell_uses_helper_sections_and_host_directive(self):
+        host = _make_host()
+        directive = MagicMock()
+        directive.is_empty.return_value = False
+        directive.ending_style = "절단"
+        directive.ending_avoid_phrases = ["모든 것이 끝났다"]
+        directive.expression_ban = ["빙긋"]
+        directive.metaphor_avoid = ["불꽃처럼"]
+        directive.metaphor_suggest = ["먹구름처럼"]
+        directive.emotion_required = "후회"
+        directive.npc_directives = {"연홍": "격식 유지"}
+        directive.intensity_note = "후반으로 갈수록 압박"
+        host._tf54_writing_directive = directive
+        builder = ChiefWriterContextBuilder(host)
+        builder.context_packets.build_common_context_packets = MagicMock(
+            return_value={
+                "prev_ending": "tail",
+                "prev_digest": "digest",
+                "future_guard_section": "future",
+                "past_guard_section": "past",
+                "npc_equipment_section": "equip",
+                "npc_frequency_section": "freq",
+                "hud_trend_section": "trend",
+                "hud_anomaly_section": "warn",
+                "dna_instruction": "dna",
+                "high_density_hud_section": "hd",
+                "prev_manuscripts_section": "prev-full",
+            }
+        )
+
+        with patch("modules.domain.agents.chief_writer_context.build_chief_writer_main_prompt", return_value="prompt") as mock_prompt:
+            result = builder.build_common_context(
+                ep_num=5,
+                blueprint={
+                    "scene_breakdown": {"scene_1": {"npcs": ["연홍"]}},
+                    "integrated_scenario": "통합 흐름",
+                    "ending_hook": "누군가 문을 두드린다",
+                },
+                prev_manuscript="",
+                hud_report="HUD",
+                arc_doc="arc",
+                master_bible=host.context.master_bible,
+                style_guide="",
+                director_feedback="대화 비율 보강",
+                failure_constraints="독백 과다 금지",
+                world_state_summary="문파 긴장 고조",
+                reference_excerpt="참고 문장",
+            )
+
+        assert result == "prompt"
+        kwargs = mock_prompt.call_args.kwargs
+        assert "대화 비율 보강" in kwargs["feedback_section"]
+        assert "독백 과다 금지" in kwargs["constraint_section"]
+        assert "문파 긴장 고조" in kwargs["writer_core_section"]
+        assert "절단" in kwargs["writer_core_section"]
+        assert "참고 문장" in kwargs["reference_excerpt_section"]
+        assert "누군가 문을 두드린다" in kwargs["ending_hook_section"]
+        assert "회귀자" in kwargs["incarnation_context_section"]
+
 
 class TestDigestAndGuards:
     def test_generate_episode_digest_authority_moved_to_context_packets(self):

@@ -212,6 +212,268 @@ class BlueprintEnsembleGenerator(BaseAgent):
             return non_unknown[0]
         return error_types[0]
 
+    def _resolve_blueprint_arc_focus(self, ep_num: int, arc_data: dict, constraint_block: dict) -> str:
+        arc_focus = constraint_block.get("must_focus", {}).get("content", "")
+        if not arc_focus:
+            arc_focus = extract_episode_tactical(
+                arc_data.get("tactical_doc", ""),
+                ep_num,
+                episode_details=arc_data.get("episode_details"),
+            )
+
+        episode_details = arc_data.get("episode_details") or []
+        if isinstance(episode_details, list):
+            for item in episode_details:
+                if isinstance(item, dict) and item.get("ep_num") == ep_num:
+                    details = item.get("details") or []
+                    if isinstance(details, list) and details:
+                        detail_text = "\n".join(f"  - {detail}" for detail in details if isinstance(detail, str))
+                        arc_focus = f"[{ep_num}화 추가 사건 (Arc 단계 보강)]\n{detail_text}\n\n{arc_focus}"
+                    break
+
+        return smart_truncate(
+            arc_focus,
+            max_chars=15000,
+            head_chars=max(0, min(int(15000 * 0.55), 15000 - 80)),
+        )
+
+    def _resolve_blueprint_ensemble_genre(self) -> str:
+        genre = GenreTypes.WUXIA
+        try:
+            if hasattr(self, "context") and hasattr(self.context, "db"):
+                bible = self.context.db.load_anchor("bible")
+                if bible:
+                    genre = bible.get("_genre", GenreTypes.WUXIA)
+        except Exception as exc:
+            logging.warning(f" [V61.3] genre 사전 로드 실패: {str(exc)[:50]}")
+        return genre
+
+    def _prepare_blueprint_ensemble_context(
+        self,
+        *,
+        ep_num: int,
+        arc_data: dict,
+        constraint_block: dict,
+        prev_blueprint: dict | None,
+        prev_blueprints: list[dict] | None,
+        prev_manuscripts_text: str,
+        state_tracker,
+    ) -> dict:
+        arc_focus = self._resolve_blueprint_arc_focus(ep_num, arc_data, constraint_block)
+        genre = self._resolve_blueprint_ensemble_genre()
+        constraints_str = self._format_constraints(constraint_block, genre=genre)
+        prev_info = self._format_prev_info_expanded(prev_blueprint, prev_blueprints, prev_manuscripts_text)
+        hud_context = self._build_hud_context(state_tracker, ep_num)
+
+        try:
+            guard = getattr(self.context, "guard", None)
+            if guard and hasattr(guard, "get_retrieval_contract_prompt"):
+                guard.get_retrieval_contract_prompt("blueprint")
+        except Exception as exc:
+            logging.debug("[BPEnsemble] work retrieval contract 로드 실패: %s", exc)
+
+        shared_context = f"{arc_focus or ''}\n\n{constraints_str or ''}\n\n{prev_info or ''}\n\n{hud_context or ''}"
+        cache_info = self._get_or_create_context_cache(
+            cache_type="blueprint_ensemble",
+            content=shared_context,
+            ttl_seconds=600,
+            project_name=self._context_cache_project_namespace("ep", ep_num),
+        )
+        return {
+            "arc_focus": arc_focus,
+            "genre": genre,
+            "constraints_str": constraints_str,
+            "prev_info": prev_info,
+            "hud_context": hud_context,
+            "cache_name": cache_info.get("cache_name"),
+        }
+
+    def _select_blueprint_ensemble_strategies(self, single_strategy: str) -> list[dict]:
+        if not single_strategy:
+            return self.strategies
+
+        filtered = [strategy for strategy in self.strategies if strategy.get("name") == single_strategy]
+        return filtered or self.strategies
+
+    @staticmethod
+    def _build_blueprint_strategy_feedback(
+        strategy_name: str,
+        rejected_strategy: str,
+        strategy_specific_feedback: str,
+    ) -> str:
+        if strategy_name == rejected_strategy and strategy_specific_feedback:
+            return strategy_specific_feedback
+        if strategy_specific_feedback:
+            return f"[이전 시도 문제 요약]\n{strategy_specific_feedback}"
+        return ""
+
+    def _run_blueprint_ensemble_workers(
+        self,
+        *,
+        ep_num: int,
+        active_strategies: list[dict],
+        arc_focus: str,
+        constraints_str: str,
+        prev_info: str,
+        feedback: str,
+        strategy_specific_feedback: str,
+        rejected_strategy: str,
+        protagonist_name: str,
+        protagonist_config: dict | None,
+        hud_context: str,
+        genre: str,
+        cache_name: str,
+    ) -> tuple[list[dict], list[str]]:
+        candidates: list[dict] = []
+        worker_error_types: list[str] = []
+        timer_started_at = time.monotonic()
+
+        try:
+            with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
+                futures = {}
+                for strategy in active_strategies:
+                    strategy_name = strategy["name"]
+                    future = executor.submit(
+                        self._generate_single,
+                        ep_num=ep_num,
+                        arc_focus=arc_focus,
+                        constraints_str=constraints_str,
+                        prev_info=prev_info,
+                        strategy=strategy,
+                        feedback=feedback,
+                        strategy_feedback=self._build_blueprint_strategy_feedback(
+                            strategy_name,
+                            rejected_strategy,
+                            strategy_specific_feedback,
+                        ),
+                        protagonist_name=protagonist_name,
+                        protagonist_config=protagonist_config,
+                        hud_context=hud_context,
+                        genre=genre,
+                        cache_name=cache_name,
+                    )
+                    futures[future] = strategy_name
+                    self._operator_log(
+                        f"🔡 [Blueprint] 전략 '{strategy_name}' 생성 시작",
+                        meta={"strategy": strategy_name},
+                    )
+
+                try:
+                    for future in as_completed(futures, timeout=self.ENSEMBLE_TIMEOUT):
+                        strategy_name = futures[future]
+                        try:
+                            future_output = future.result(timeout=self.SINGLE_CANDIDATE_TIMEOUT)
+                            worker_error_type = None
+                            result = future_output
+                            if (
+                                isinstance(future_output, tuple)
+                                and len(future_output) == 2
+                                and future_output[0] is None
+                                and isinstance(future_output[1], str)
+                            ):
+                                result = future_output[0]
+                                worker_error_type = future_output[1]
+                            if worker_error_type:
+                                worker_error_types.append(worker_error_type)
+                            if result and isinstance(result, dict):
+                                result["_strategy"] = strategy_name
+                                candidates.append(result)
+                                logging.info(f" {strategy_name} 생성 완료")
+                                self._operator_log(
+                                    f"✅ [Blueprint] '{strategy_name}' 생성 완료 ({time.monotonic() - timer_started_at:.0f}초)",
+                                    meta={
+                                        "strategy": strategy_name,
+                                        "elapsed_seconds": round(time.monotonic() - timer_started_at, 1),
+                                    },
+                                )
+                        except FutureTimeoutError:
+                            logging.warning(f" [V61.3] {strategy_name} 개별 타임아웃 ({self.SINGLE_CANDIDATE_TIMEOUT}초)")
+                            worker_error_types.append(AgentErrorType.TIMEOUT)
+                            self._operator_log(
+                                f"⚠️ [Blueprint] '{strategy_name}' 개별 타임아웃",
+                                level="warning",
+                                meta={"strategy": strategy_name, "timeout_seconds": self.SINGLE_CANDIDATE_TIMEOUT},
+                            )
+                        except Exception as exc:
+                            logging.warning(f" {strategy_name} 실패: {str(exc)[:50]}")
+                            worker_error_types.append(self._classify_error(exc))
+                            self._operator_log(
+                                f"⚠️ [Blueprint] '{strategy_name}' 실패",
+                                level="warning",
+                                meta={"strategy": strategy_name},
+                            )
+                except FutureTimeoutError:
+                    logging.warning(
+                        f" [V61.3] 블루프린트 전체 타임아웃 ({self.ENSEMBLE_TIMEOUT}초) - 완료된 {len(candidates)}개 후보 사용"
+                    )
+                except Exception as exc:
+                    logging.warning(f" [V61.3] 병렬 루프 예외: {str(exc)[:80]}")
+                finally:
+                    for f in futures:
+                        f.cancel()
+        except Exception as exc:
+            import traceback
+
+            logging.error(f" [V61.3] 병렬 처리 불능 방어: {str(exc)[:100]}")
+            logging.error(traceback.format_exc())
+
+        try:
+            logging.info(f"[PerfTimer:BlueprintEnsemble] bp_ep{ep_num}_ensemble={time.monotonic() - timer_started_at:.2f}s")
+        except Exception as exc:
+            logging.debug("[BlueprintEnsemble] PerfTimer 기록 실패 (무시): %s", exc)
+
+        return candidates, worker_error_types
+
+    def _qualify_blueprint_candidates(self, candidates: list[dict]) -> tuple[list[dict], list[tuple[str, int, int]]]:
+        qualified_candidates: list[dict] = []
+        disqualified: list[tuple[str, int, int]] = []
+
+        for candidate in candidates:
+            strategy_name = candidate.get("_strategy", "unknown")
+            scenes = candidate.get("scene_breakdown", {})
+            scene_count = len(scenes) if isinstance(scenes, (dict, list)) else 0
+            integrated = candidate.get("integrated_scenario", "")
+            integrated_len = len(integrated) if isinstance(integrated, str) else 0
+
+            if scene_count >= 4 and integrated_len >= 500:
+                candidate["_qualified"] = True
+                candidate["_scene_count"] = scene_count
+                candidate["_length"] = integrated_len
+                qualified_candidates.append(candidate)
+                logging.info(f" {strategy_name}: 통과 (씬 {scene_count}개, {integrated_len}자)")
+            else:
+                disqualified.append((strategy_name, scene_count, integrated_len))
+                logging.info(f" {strategy_name}: 탈락 (씬 {scene_count}개, {integrated_len}자)")
+
+        return qualified_candidates, disqualified
+
+    def _finalize_blueprint_candidates(
+        self,
+        qualified_candidates: list[dict],
+        disqualified: list[tuple[str, int, int]],
+    ) -> tuple[dict, list[dict]]:
+        self._operator_log(
+            f"🧥 [Blueprint] {len(qualified_candidates)}개 후보 통과 -> Director 선택 대기",
+            meta={"qualified_candidates": len(qualified_candidates)},
+        )
+
+        for idx, candidate in enumerate(qualified_candidates):
+            strategy_name = candidate.get("_strategy", "unknown")
+            candidate["_ensemble_meta"] = {
+                "candidate_index": idx,
+                "strategy": strategy_name,
+                "scene_count": candidate.get("_scene_count", 0),
+                "length": candidate.get("_length", 0),
+                "total_candidates": len(qualified_candidates),
+                "disqualified": disqualified,
+            }
+            candidate.pop("_strategy", None)
+            candidate.pop("_qualified", None)
+            candidate.pop("_scene_count", None)
+            candidate.pop("_length", None)
+
+        return qualified_candidates[0], qualified_candidates
+
     def generate_ensemble(
         self,
         ep_num: int,
@@ -246,189 +508,37 @@ class BlueprintEnsembleGenerator(BaseAgent):
         Returns:
             (best_blueprint, all_candidates) - 최적 Blueprint와 모든 후보 리스트
         """
-        candidates = []
-
-        # Arc 포커스 추출
-        arc_focus = constraint_block.get("must_focus", {}).get("content", "")
-        if not arc_focus:
-            # [TTE] 에피소드별 지능 추출
-            arc_focus = extract_episode_tactical(
-                arc_data.get("tactical_doc", ""),
-                ep_num,
-                episode_details=arc_data.get("episode_details"),
-            )
-
-        # [TF-46] episode_details enrichment을 절삭 전에 수행 (기존: 절삭 후 prepend → enrichment 유실)
-        _ep_details = arc_data.get("episode_details") or []
-        if isinstance(_ep_details, list):
-            for _item in _ep_details:
-                if isinstance(_item, dict) and _item.get("ep_num") == ep_num:
-                    _details = _item.get("details") or []
-                    if isinstance(_details, list) and _details:
-                        _detail_text = "\n".join(f"  - {d}" for d in _details if isinstance(d, str))
-                        arc_focus = f"[{ep_num}화 핵심 사건 (Arc 설계 원본)]\n{_detail_text}\n\n{arc_focus}"
-                    break
-        # [TF-46] enrichment 후 안전캡 (12K→15K, enrichment 포함 여유)
-        arc_focus = smart_truncate(
-            arc_focus,
-            max_chars=15000,
-            head_chars=max(0, min(int(15000 * 0.55), 15000 - 80)),
+        context_bundle = self._prepare_blueprint_ensemble_context(
+            ep_num=ep_num,
+            arc_data=arc_data,
+            constraint_block=constraint_block,
+            prev_blueprint=prev_blueprint,
+            prev_blueprints=prev_blueprints,
+            prev_manuscripts_text=prev_manuscripts_text,
+            state_tracker=state_tracker,
         )
+        # Source guard note: genre resolution still defaults through GenreTypes.WUXIA in the prep helper.
 
-        # [V61.3] 병렬 실행 전에 genre 미리 로드 (SQLite thread-safety 문제 방지)
-        genre = GenreTypes.WUXIA
-        try:
-            if hasattr(self, "context") and hasattr(self.context, "db"):
-                bible = self.context.db.load_anchor("bible")
-                if bible:
-                    genre = bible.get("_genre", GenreTypes.WUXIA)
-        except Exception as e:
-            logging.warning(f" [V61.3] genre 사전 로드 실패: {str(e)[:50]}")
-
-        # [TF-41] P1-2: genre를 _format_constraints에 전달 (내공 필터링용)
-        constraints_str = self._format_constraints(constraint_block, genre=genre)
-
-        # [V67] 이전 화 정보 확장 (이전 Blueprint 전문 + 이전 원고 전문)
-        prev_info = self._format_prev_info_expanded(prev_blueprint, prev_blueprints, prev_manuscripts_text)
-
-        # [V60.95] 고밀도 HUD 컨텍스트 구축
-        hud_context = self._build_hud_context(state_tracker, ep_num)
-        _work_retrieval_contract = ""
-        try:
-            _guard = getattr(self.context, "guard", None)
-            if _guard and hasattr(_guard, "get_retrieval_contract_prompt"):
-                _work_retrieval_contract = str(_guard.get_retrieval_contract_prompt("blueprint") or "").strip()
-        except Exception as _e:
-            logging.debug("[BPEnsemble] work retrieval contract 로드 실패: %s", _e)
-
-        # 병렬 생성
         logging.warning(f" [BPEnsemble] 3개 후보 병렬 생성 중... (주인공: {protagonist_name})")
-        _active_strategies = self.strategies
-        if single_strategy:
-            _filtered = [s for s in self.strategies if s.get("name") == single_strategy]
-            if _filtered:
-                _active_strategies = _filtered
-
-        # [Phase 3-Obs] 에이전트 레벨 ThreadPoolExecutor 계측
-        # [Tier4-11] shared context cache for ensemble fan-out
-        shared_context = f"{arc_focus or ''}\n\n{constraints_str or ''}\n\n{prev_info or ''}\n\n{hud_context or ''}"
-        cache_info = self._get_or_create_context_cache(
-            cache_type="blueprint_ensemble",
-            content=shared_context,
-            ttl_seconds=600,
-            project_name=self._context_cache_project_namespace("ep", ep_num),
-        )
-        cache_name = cache_info.get("cache_name")
+        active_strategies = self._select_blueprint_ensemble_strategies(single_strategy)
         self.last_error_type = None
         self.last_error_types = []
-        worker_error_types: list[str] = []
 
-        _tp_t0 = time.monotonic()
-
-        # [V61.3] 전체 병렬 처리 블록을 try-except로 감싸서 급사 방지
-        try:
-            with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
-                futures = {}
-                for strategy in _active_strategies:
-                    # [S3-P1-3] 모든 전략에 generic 피드백 전달, 거절된 전략에는 추가 specific 피드백
-                    if strategy.get("name") == rejected_strategy and strategy_specific_feedback:
-                        _strategy_feedback = strategy_specific_feedback
-                    elif strategy_specific_feedback:
-                        _strategy_feedback = f"[이전 시도 문제 요약]\n{strategy_specific_feedback}"
-                    else:
-                        _strategy_feedback = ""
-                    future = executor.submit(
-                        self._generate_single,
-                        ep_num=ep_num,
-                        arc_focus=arc_focus,
-                        constraints_str=constraints_str,
-                        prev_info=prev_info,
-                        strategy=strategy,
-                        feedback=feedback,
-                        strategy_feedback=_strategy_feedback,
-                        protagonist_name=protagonist_name,  # [V61] 주인공 이름 전달
-                        protagonist_config=protagonist_config,  # [V60.90] 주인공 설정 전달
-                        hud_context=hud_context,  # [V60.95] 고밀도 HUD 주입
-                        genre=genre,  # [V61.3] 미리 로드한 genre 전달 (thread-safety)
-                        cache_name=cache_name,  # [Tier4-11]
-                    )
-                    futures[future] = strategy["name"]
-                    self._operator_log(
-                        f"🎲 [Blueprint] 전략 '{strategy['name']}' 생성 시작",
-                        meta={"strategy": strategy["name"]},
-                    )
-
-                # [V61.3] 타임아웃 적용 - 야간 무인 운영 시 무한 대기 방지
-                try:
-                    for future in as_completed(futures, timeout=self.ENSEMBLE_TIMEOUT):
-                        strategy_name = futures[future]
-                        try:
-                            # [V61.3] 개별 후보에도 타임아웃 적용
-                            future_output = future.result(timeout=self.SINGLE_CANDIDATE_TIMEOUT)
-                            worker_error_type = None
-                            result = future_output
-                            if (
-                                isinstance(future_output, tuple)
-                                and len(future_output) == 2
-                                and future_output[0] is None
-                                and isinstance(future_output[1], str)
-                            ):
-                                result = future_output[0]
-                                worker_error_type = future_output[1]
-                            if worker_error_type:
-                                worker_error_types.append(worker_error_type)
-                            if result and isinstance(result, dict):
-                                result["_strategy"] = strategy_name
-                                candidates.append(result)
-                                logging.info(f" {strategy_name} 생성 완료")
-                                self._operator_log(
-                                    f"✓ [Blueprint] '{strategy_name}' 생성 완료 ({time.monotonic() - _tp_t0:.0f}초)",
-                                    meta={
-                                        "strategy": strategy_name,
-                                        "elapsed_seconds": round(time.monotonic() - _tp_t0, 1),
-                                    },
-                                )
-                        except FutureTimeoutError:
-                            logging.warning(f" [V61.3] {strategy_name} 타임아웃 ({self.SINGLE_CANDIDATE_TIMEOUT}초)")
-                            worker_error_types.append(AgentErrorType.TIMEOUT)
-                            self._operator_log(
-                                f"✗ [Blueprint] '{strategy_name}' 타임아웃",
-                                level="warning",
-                                meta={"strategy": strategy_name, "timeout_seconds": self.SINGLE_CANDIDATE_TIMEOUT},
-                            )
-                        except Exception as e:
-                            logging.warning(f" {strategy_name} 실패: {str(e)[:50]}")
-                            worker_error_types.append(self._classify_error(e))
-                            self._operator_log(
-                                f"✗ [Blueprint] '{strategy_name}' 실패",
-                                level="warning",
-                                meta={"strategy": strategy_name},
-                            )
-                except FutureTimeoutError:
-                    # 전체 앙상블 타임아웃 - 완료된 후보만 사용
-                    logging.warning(
-                        f" [V61.3] 블루프린트 앙상블 타임아웃 ({self.ENSEMBLE_TIMEOUT}초) - 완료된 {len(candidates)}개 후보 사용"
-                    )
-                except Exception as e:
-                    # [V61.3] as_completed 자체 예외 처리
-                    logging.warning(f" [V61.3] 앙상블 루프 예외: {str(e)[:80]}")
-                finally:
-                    # [Sweep34] 미완료 future 정리로 shutdown 대기 최소화
-                    for f in futures:
-                        f.cancel()
-        except Exception as e:
-            # [V61.3] ThreadPoolExecutor 전체 예외 처리 - 급사 방지
-            # stderr로 출력 (Rich 스피너가 stdout 가림)
-            import traceback
-
-            logging.error(f" [V61.3] 병렬 처리 크래시 방지: {str(e)[:100]}")
-            logging.error(traceback.format_exc())
-
-        # [Phase 3-Obs] 병렬 구간 소요 시간 기록
-        try:
-            logging.info(f"[PerfTimer:BlueprintEnsemble] bp_ep{ep_num}_ensemble={time.monotonic() - _tp_t0:.2f}s")
-        except Exception as _e:
-            logging.debug("[BlueprintEnsemble] PerfTimer 기록 실패 (무시): %s", _e)
+        candidates, worker_error_types = self._run_blueprint_ensemble_workers(
+            ep_num=ep_num,
+            active_strategies=active_strategies,
+            arc_focus=context_bundle["arc_focus"],
+            constraints_str=context_bundle["constraints_str"],
+            prev_info=context_bundle["prev_info"],
+            feedback=feedback,
+            strategy_specific_feedback=strategy_specific_feedback,
+            rejected_strategy=rejected_strategy,
+            protagonist_name=protagonist_name,
+            protagonist_config=protagonist_config,
+            hud_context=context_bundle["hud_context"],
+            genre=context_bundle["genre"],
+            cache_name=context_bundle["cache_name"],
+        )
 
         self.last_error_types = list(worker_error_types)
         self.last_error_type = self._select_generate_error_type(worker_error_types)
@@ -437,61 +547,13 @@ class BlueprintEnsembleGenerator(BaseAgent):
             logging.warning("❌ [BPEnsemble] 모든 후보 생성 실패")
             return None, []
 
-        # [V60.85] Python 최소 기준 필터링 - 씬 4개 이상만 통과
-        # 철학: Python은 "당선 불가" 후보만 걸러냄, 선택은 Director가 함
-        qualified_candidates = []
-        disqualified = []
-
-        for candidate in candidates:
-            strategy_name = candidate.get("_strategy", "unknown")
-            scenes = candidate.get("scene_breakdown", {})
-            scene_count = len(scenes) if isinstance(scenes, (dict, list)) else 0
-            integrated = candidate.get("integrated_scenario", "")
-            integrated_len = len(integrated) if isinstance(integrated, str) else 0
-
-            # 최소 기준: 씬 4개 이상, 시나리오 500자 이상
-            if scene_count >= 4 and integrated_len >= 500:
-                candidate["_qualified"] = True
-                candidate["_scene_count"] = scene_count
-                candidate["_length"] = integrated_len
-                qualified_candidates.append(candidate)
-                logging.info(f" {strategy_name}: 통과 (씬 {scene_count}개, {integrated_len}자)")
-            else:
-                disqualified.append((strategy_name, scene_count, integrated_len))
-                logging.info(f" {strategy_name}: 탈락 (씬 {scene_count}개, {integrated_len}자)")
-
+        qualified_candidates, disqualified = self._qualify_blueprint_candidates(candidates)
         if not qualified_candidates:
             logging.warning("❌ [BPEnsemble] 모든 후보 최소 기준 미달")
-            return None, []  # [P0] 미검증 원본 대신 빈 리스트 반환
+            return None, []
 
-        # [V60.85] Director가 선택할 수 있도록 후보 목록 반환
-        # Python은 선택하지 않음 - Director에게 전체 전달
         logging.info(f" [BPEnsemble] {len(qualified_candidates)}개 후보 → Director 선택 대기")
-        self._operator_log(
-            f"📋 [Blueprint] {len(qualified_candidates)}개 후보 통과 → Director 선택 대기",
-            meta={"qualified_candidates": len(qualified_candidates)},
-        )
-
-        # 메타데이터 저장 (Director 비교용)
-        for idx, candidate in enumerate(qualified_candidates):
-            strategy_name = candidate.get("_strategy", "unknown")
-            candidate["_ensemble_meta"] = {
-                "candidate_index": idx,
-                "strategy": strategy_name,
-                "scene_count": candidate.get("_scene_count", 0),
-                "length": candidate.get("_length", 0),
-                "total_candidates": len(qualified_candidates),
-                "disqualified": disqualified,
-            }
-            # 임시 필드 정리
-            candidate.pop("_strategy", None)
-            candidate.pop("_qualified", None)
-            candidate.pop("_scene_count", None)
-            candidate.pop("_length", None)
-
-        # [V60.85] 첫 번째 후보를 "대표"로 반환하되, 전체 후보 리스트도 함께 반환
-        # Validator에서 Director가 전체 비교 후 최종 선택
-        return qualified_candidates[0], qualified_candidates
+        return self._finalize_blueprint_candidates(qualified_candidates, disqualified)
 
     def _generate_single(
         self,
@@ -502,159 +564,176 @@ class BlueprintEnsembleGenerator(BaseAgent):
         strategy: dict,
         feedback: str = "",
         strategy_feedback: str = "",
-        protagonist_name: str = "주인공",  # [V61] 주인공 이름
-        protagonist_config: dict = None,  # [V60.90] 주인공 설정
-        hud_context: str = "",  # [V60.95] 고밀도 HUD 컨텍스트
-        genre: str = GenreTypes.WUXIA,  # [V61.3] 미리 로드한 genre (thread-safety)
-        cache_name: str = "",  # [Tier4-11] shared context cache name
+        protagonist_name: str = "protagonist",
+        protagonist_config: dict = None,
+        hud_context: str = "",
+        genre: str = GenreTypes.WUXIA,
+        cache_name: str = "",
     ) -> dict | tuple[None, str] | None:
-        """단일 Blueprint 생성"""
-        # [V61.3] 전체 메서드를 try-except로 감싸서 worker thread 크래시 방지
+        """Generate a single blueprint candidate."""
         try:
-            # [V60.80] 피드백 강화 주입 - Director 피드백은 반드시 반영
             extra_directive = ""
-            _merged_feedback = feedback or ""
+            merged_feedback = feedback or ""
             if strategy_feedback:
-                _merged_feedback = (
-                    f"{_merged_feedback}\n\n[전략별 보정 피드백]\n{strategy_feedback}"
-                    if _merged_feedback
-                    else f"[전략별 보정 피드백]\n{strategy_feedback}"
+                merged_feedback = (
+                    f"{merged_feedback}\n\n[Strategy feedback]\n{strategy_feedback}"
+                    if merged_feedback
+                    else f"[Strategy feedback]\n{strategy_feedback}"
                 )
-            if _merged_feedback:
-                extra_directive = f"""
+            if merged_feedback:
+                extra_directive = (
+                    "\n\n"
+                    "[CRITICAL] Director reject feedback\n"
+                    f"{merged_feedback}\n"
+                    "Apply the feedback directly. Repeating the same failure will be rejected again.\n"
+                )
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🚨 [CRITICAL] Director REJECT 피드백 - 이전 시도 실패 원인
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-{_merged_feedback}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-⚠️ 위 피드백을 반드시 반영하세요. 동일한 실수 반복 시 다시 REJECT됩니다.
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-"""
-
-            # [V60.90] protagonist_config 기반 지시사항 생성 (genre 파라미터 전달)
             protagonist_instructions = self._build_protagonist_instructions(protagonist_config, genre=genre)
-
-            # [V70] POV 제약 생성
-            _pov = protagonist_config.get("pov", "") if isinstance(protagonist_config, dict) else ""
-            _pov_constraint = ""
-            if _pov == "1인칭":
-                _pov_constraint = """### 🎯 [V70] 시점 제약: 1인칭
-⚠️ 이 작품은 1인칭 시점입니다. Blueprint 설계 시:
-- villain_scheme, omniscient_hint 프리셋 사용 금지 (주인공 부재 장면 불가)
-- 모든 씬에 주인공이 반드시 등장해야 함
-- 주인공이 모르는 정보는 씬에 직접 노출 금지 → 나중에 전해 듣거나 발견하는 구조로 설계"""
-            elif _pov == "3인칭":
-                _pov_constraint = """### 📖 [V70] 시점: 3인칭 제한적
-- villain_scheme, side_glimpse는 씬 전환(***) 후 짧게만 사용 (1-2문단)
-- omniscient_hint는 화당 1회 이내로 제한"""
-
-            # [TF-I23/I24] 독자 피드백 컨텍스트 (advisory-only)
-            _external_pov_insert_policy = (
+            pov = protagonist_config.get("pov", "") if isinstance(protagonist_config, dict) else ""
+            external_pov_insert_policy = (
                 protagonist_config.get("external_pov_insert_policy", "") if isinstance(protagonist_config, dict) else ""
             )
-            _pov_constraint = build_external_pov_policy_constraint(
-                _pov,
-                _external_pov_insert_policy,
+            pov_constraint = build_external_pov_policy_constraint(
+                pov,
+                external_pov_insert_policy,
                 genre=genre,
             )
-            _reader_fb = self._build_reader_feedback_context(ep_num)
-            _work_retrieval_contract = ""
-            try:
-                _guard = getattr(self.context, "guard", None)
-                if _guard and hasattr(_guard, "get_retrieval_contract_prompt"):
-                    _work_retrieval_contract = str(_guard.get_retrieval_contract_prompt("blueprint") or "").strip()
-            except Exception as _e:
-                logging.debug("[BPEnsemble] work retrieval contract 로드 실패: %s", _e)
-            _use_cached_context = bool(cache_name)
-            _cached_context_stub = "[context cached: refer to cached_content]"
-            prompt = self._prompt_loader.load(
+            reader_feedback = self._build_reader_feedback_context(ep_num)
+            prompt, full_prompt_fallback = self._build_blueprint_prompt_bundle(
+                ep_num=ep_num,
+                arc_focus=arc_focus,
+                constraints_str=constraints_str,
+                prev_info=prev_info,
+                strategy=strategy,
+                protagonist_name=protagonist_name,
+                protagonist_instructions=protagonist_instructions,
+                extra_directive=extra_directive,
+                hud_context=hud_context,
+                pov_constraint=pov_constraint,
+                reader_feedback=reader_feedback,
+                cache_name=cache_name,
+            )
+            if not prompt:
+                return None, AgentErrorType.UNKNOWN
+
+            strategy_name = strategy.get("name", "unknown")
+            self._operator_log(
+                f"[Blueprint] '{strategy_name}' LLM request",
+                meta={"strategy": strategy_name},
+            )
+            return self._request_blueprint_generation(
+                cache_name=cache_name,
+                prompt=prompt,
+                full_prompt_fallback=full_prompt_fallback,
+                strategy_name=strategy_name,
+            )
+        except Exception as e:
+            import traceback
+
+            logging.error("[BPEnsemble] _generate_single failed: %s", str(e)[:80])
+            logging.error(traceback.format_exc())
+            return None, self._classify_error(e)
+
+    def _build_blueprint_prompt_bundle(
+        self,
+        *,
+        ep_num: int,
+        arc_focus: str,
+        constraints_str: str,
+        prev_info: str,
+        strategy: dict,
+        protagonist_name: str,
+        protagonist_instructions: str,
+        extra_directive: str,
+        hud_context: str,
+        pov_constraint: str,
+        reader_feedback: str,
+        cache_name: str,
+    ) -> tuple[str | None, str]:
+        work_retrieval_contract = ""
+        try:
+            guard = getattr(self.context, "guard", None)
+            if guard and hasattr(guard, "get_retrieval_contract_prompt"):
+                work_retrieval_contract = str(guard.get_retrieval_contract_prompt("blueprint") or "").strip()
+        except Exception as exc:
+            logging.debug("[BPEnsemble] work retrieval contract load failed: %s", exc)
+
+        use_cached_context = bool(cache_name)
+        cached_context_stub = "[context cached: refer to cached_content]"
+        strategy_directive = self._escape_braces(
+            strategy["directive"]
+            + AI_TELL_BLUEPRINT_GUARDRAIL
+            + extra_directive
+            + (f"\n\n{work_retrieval_contract}" if work_retrieval_contract else "")
+        )
+        prompt = self._prompt_loader.load(
+            "ensemble",
+            "BLUEPRINT_GENERATION_PROMPT",
+            strategy_display=strategy["display"],
+            ep_num=ep_num,
+            protagonist_name=self._escape_braces(protagonist_name),
+            protagonist_instructions=self._escape_braces(protagonist_instructions),
+            arc_focus=self._escape_braces(cached_context_stub if use_cached_context else arc_focus),
+            constraints=self._escape_braces(cached_context_stub if use_cached_context else constraints_str),
+            strategy_directive=strategy_directive,
+            prev_info=self._escape_braces(cached_context_stub if use_cached_context else prev_info),
+            hud_context=(
+                self._escape_braces(cached_context_stub if use_cached_context else hud_context)
+                if hud_context
+                else "(no HUD context)"
+            ),
+            pov_constraint=self._escape_braces(pov_constraint),
+            reader_feedback=self._escape_braces(reader_feedback) if reader_feedback else "",
+        )
+        full_prompt_fallback = prompt
+        if use_cached_context:
+            full_prompt_fallback = self._prompt_loader.load(
                 "ensemble",
                 "BLUEPRINT_GENERATION_PROMPT",
                 strategy_display=strategy["display"],
                 ep_num=ep_num,
-                protagonist_name=self._escape_braces(protagonist_name),  # [V70] 주인공 이름 주입
-                protagonist_instructions=self._escape_braces(protagonist_instructions),  # [V70] 주인공 설정 지시
-                arc_focus=self._escape_braces(_cached_context_stub if _use_cached_context else arc_focus),
-                constraints=self._escape_braces(_cached_context_stub if _use_cached_context else constraints_str),
-                strategy_directive=self._escape_braces(
-                    strategy["directive"]
-                    + AI_TELL_BLUEPRINT_GUARDRAIL
-                    + extra_directive
-                    + (f"\n\n{_work_retrieval_contract}" if _work_retrieval_contract else "")
-                ),  # [V70] Director feedback 내 {} 방어
-                prev_info=self._escape_braces(_cached_context_stub if _use_cached_context else prev_info),
-                hud_context=(
-                    self._escape_braces(_cached_context_stub if _use_cached_context else hud_context)
-                    if hud_context
-                    else "(상태 정보 없음)"
-                ),  # [V60.95]
-                pov_constraint=self._escape_braces(_pov_constraint),  # [V70] [TF-S3-10]
-                reader_feedback=self._escape_braces(_reader_fb) if _reader_fb else "",  # [TF-I23/I24]
+                protagonist_name=self._escape_braces(protagonist_name),
+                protagonist_instructions=self._escape_braces(protagonist_instructions),
+                arc_focus=self._escape_braces(arc_focus),
+                constraints=self._escape_braces(constraints_str),
+                strategy_directive=strategy_directive,
+                prev_info=self._escape_braces(prev_info),
+                hud_context=self._escape_braces(hud_context) if hud_context else "(no HUD context)",
+                pov_constraint=self._escape_braces(pov_constraint),
+                reader_feedback=self._escape_braces(reader_feedback) if reader_feedback else "",
             )
-            full_prompt_fallback = prompt
-            if _use_cached_context:
-                full_prompt_fallback = self._prompt_loader.load(
-                    "ensemble",
-                    "BLUEPRINT_GENERATION_PROMPT",
-                    strategy_display=strategy["display"],
-                    ep_num=ep_num,
-                    protagonist_name=self._escape_braces(protagonist_name),  # [V70] 주인공 이름 주입
-                    protagonist_instructions=self._escape_braces(protagonist_instructions),  # [V70] 주인공 설정 지시
-                    arc_focus=self._escape_braces(arc_focus),
-                    constraints=self._escape_braces(constraints_str),
-                    strategy_directive=self._escape_braces(
-                        strategy["directive"]
-                        + AI_TELL_BLUEPRINT_GUARDRAIL
-                        + extra_directive
-                        + (f"\n\n{_work_retrieval_contract}" if _work_retrieval_contract else "")
-                    ),  # [V70] Director feedback 내 {} 방어
-                    prev_info=self._escape_braces(prev_info),
-                    hud_context=self._escape_braces(hud_context) if hud_context else "(상태 정보 없음)",  # [V60.95]
-                    pov_constraint=self._escape_braces(_pov_constraint),  # [V70] [TF-S3-10]
-                    reader_feedback=self._escape_braces(_reader_fb) if _reader_fb else "",  # [TF-I23/I24]
-                )
-                if not full_prompt_fallback:
-                    full_prompt_fallback = prompt
-            if not prompt:
-                logging.warning("[BPEnsemble] BLUEPRINT_GENERATION_PROMPT not found in prompt loader")
-                return None, AgentErrorType.UNKNOWN
+            if not full_prompt_fallback:
+                full_prompt_fallback = prompt
+        if not prompt:
+            logging.warning("[BPEnsemble] BLUEPRINT_GENERATION_PROMPT not found in prompt loader")
+        return prompt, full_prompt_fallback or ""
 
-            _strategy_name = strategy.get("name", "unknown")
-            self._operator_log(
-                f"⏳ [Blueprint] '{_strategy_name}' LLM 호출 중...",
-                meta={"strategy": _strategy_name},
-            )
-            response = self._ask_with_cached_context(
-                cache_name=cache_name,
-                prompt=prompt,
-                temperature=0.7,
-                thinking_level="medium",
-                full_prompt_fallback=full_prompt_fallback,
-                response_schema=BLUEPRINT_SCHEMA,
-            )
-            self._operator_log(
-                f"📝 [Blueprint] '{_strategy_name}' 응답 수신 ({len(response):,}자)",
-                meta={"strategy": _strategy_name, "response_chars": len(response)},
-            )
-            result = self._extract_json_robust(response)
-
-            if not isinstance(result, dict):
-                return None, AgentErrorType.SCHEMA_INCOMPATIBLE
-
-            # 필수 필드 확인
-            if "scene_breakdown" not in result or "integrated_scenario" not in result:
-                return None, AgentErrorType.SCHEMA_INCOMPATIBLE
-
-            return result
-
-        except Exception as e:
-            # [V61.3] stderr로 출력 (Rich 스피너가 stdout 가림)
-            import traceback
-
-            logging.error(f" [V61.3] BPEnsemble _generate_single 크래시: {str(e)[:80]}")
-            logging.error(traceback.format_exc())
-            return None, self._classify_error(e)
+    def _request_blueprint_generation(
+        self,
+        *,
+        cache_name: str,
+        prompt: str,
+        full_prompt_fallback: str,
+        strategy_name: str,
+    ) -> dict | tuple[None, str]:
+        response = self._ask_with_cached_context(
+            cache_name=cache_name,
+            prompt=prompt,
+            temperature=0.7,
+            thinking_level="medium",
+            full_prompt_fallback=full_prompt_fallback,
+            response_schema=BLUEPRINT_SCHEMA,
+        )
+        self._operator_log(
+            f"[Blueprint] '{strategy_name}' response received ({len(response):,} chars)",
+            meta={"strategy": strategy_name, "response_chars": len(response)},
+        )
+        result = self._extract_json_robust(response)
+        if not isinstance(result, dict):
+            return None, AgentErrorType.SCHEMA_INCOMPATIBLE
+        if "scene_breakdown" not in result or "integrated_scenario" not in result:
+            return None, AgentErrorType.SCHEMA_INCOMPATIBLE
+        return result
 
     def _build_protagonist_instructions(self, protagonist_config: dict, genre: str = "wuxia") -> str:
         """
