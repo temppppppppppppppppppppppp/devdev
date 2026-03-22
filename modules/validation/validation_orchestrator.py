@@ -370,106 +370,179 @@ class ValidationOrchestrator:
             self.scoring.pass_threshold = _original_threshold
 
     def _validate_sync_body(self, ep_num, manuscript, validation_context, results, adaptive_threshold):
-        """[V-I5] validate_v59 본체 — try/finally에서 호출."""
+        """[V-I5] validate_v59 body extracted from try/finally wrapper."""
+        consistency_penalty = self._run_sync_pre_scoring_validators(
+            ep_num,
+            manuscript,
+            validation_context,
+            results,
+        )
+        total_score = self._run_sync_scoring_phase(
+            ep_num,
+            manuscript,
+            validation_context,
+            results,
+            consistency_penalty,
+        )
+        total_score = self._apply_retrospective_validation(
+            ep_num,
+            manuscript,
+            validation_context,
+            results,
+            total_score,
+        )
+        total_score = self._apply_advisory_penalties(total_score, results)
+        return self._finalize_validation_result(
+            ep_num,
+            total_score,
+            results,
+            adaptive_threshold,
+            pass_threshold=self.scoring.pass_threshold,
+        )
 
-        # ═══════════════════════════════════════════════════════════════
-        # [V56] TIER 0.25: PRE-LLM (Python 기반 사전검증, 비용 0원)
-        # ═══════════════════════════════════════════════════════════════
-        if self.use_pre_llm and self.pre_llm:
-            logging.info("[V56] TIER 0.25: PRE-LLM 검증 중...")
-            pre_llm_result = self.pre_llm.validate(manuscript, validation_context)
-            results["pre_llm_result"] = pre_llm_result
+    def _run_pre_llm_validation(
+        self,
+        manuscript,
+        validation_context,
+        results,
+        *,
+        stage_prefix: str,
+        reject_on_failure: bool = False,
+    ):
+        if not self.use_pre_llm or not self.pre_llm:
+            return None
 
-            # PreLLMValidator always returns passed=True; warnings feed into score deductions
-            warning_count = len(pre_llm_result.get("warnings", []))
-            if warning_count > 0:
-                logging.warning(f" PRE-LLM 경고: {warning_count}개 (점수 -{pre_llm_result.get('score_deduction', 0)}점)"
-                )
-            else:
-                logging.info("✅ PRE-LLM 통과")
+        logging.info(f"{stage_prefix} TIER 0.25: PRE-LLM validation...")
+        pre_llm_result = self.pre_llm.validate(manuscript, validation_context)
+        results["pre_llm_result"] = pre_llm_result
 
-        # ═══════════════════════════════════════════════════════════════
-        # [V47] TIER 0.5: CONTINUITY (에피소드 간 연속성)
-        # ═══════════════════════════════════════════════════════════════
-        logging.info("[V47] TIER 0.5: CONTINUITY 검증 중...")
+        if reject_on_failure and not pre_llm_result["passed"]:
+            return self._build_reject_result_v59(
+                "PRE-LLM",
+                pre_llm_result,
+                self._generate_pre_llm_feedback(pre_llm_result),
+            )
+
+        warning_count = len(pre_llm_result.get("warnings", []))
+        if warning_count > 0:
+            logging.warning(
+                f" PRE-LLM warnings: {warning_count} (deduction {pre_llm_result.get('score_deduction', 0)})"
+            )
+        else:
+            logging.info(" PRE-LLM passed")
+        return None
+
+    def _run_continuity_validation(
+        self,
+        ep_num,
+        manuscript,
+        validation_context,
+        results,
+        *,
+        stage_prefix: str,
+        advisory_log_suffix: str = "",
+    ) -> None:
+        logging.info(f"{stage_prefix} TIER 0.5: CONTINUITY validation...")
         continuity_result = self.continuity.validate(ep_num, manuscript, validation_context)
         results["continuity_result"] = continuity_result
 
         if not continuity_result["passed"]:
-            # [TF-36] 대원칙 1: Python은 수집만, 판단은 LLM — advisory로 전환 (V70.1 패턴)
-            _cont_violations = continuity_result.get("violations", [])
-            logging.warning(f" [대원칙1] CONTINUITY {len(_cont_violations)}개 위반 — Director advisory로 전달")
-            self._record_failure_to_reflexion(ep_num, "continuity", _cont_violations)
-            # 즉시 REJECT 대신 결과를 누적하여 후속 SCORING + Director 판정에 위임
+            violations = continuity_result.get("violations", [])
+            logging.warning(
+                f" [TF-36] CONTINUITY {len(violations)} violations forwarded as Director advisory{advisory_log_suffix}"
+            )
+            self._record_failure_to_reflexion(ep_num, "continuity", violations)
             results["_continuity_advisory"] = {
                 "source": "ContinuityValidator",
-                "violations": _cont_violations,
+                "violations": violations,
                 "feedback": self._generate_continuity_feedback(continuity_result),
                 "severity": "HIGH",
             }
 
-        # 경고만 있는 경우 로그
         warning_count = continuity_result.get("warning_count", 0)
         if warning_count > 0:
-            logging.warning(f" CONTINUITY 경고: {warning_count}개 (계속 진행)")
+            logging.warning(f" CONTINUITY warnings: {warning_count} (continue)")
         else:
-            logging.info("✅ CONTINUITY 통과")
+            logging.info(" CONTINUITY passed")
 
-        # ═══════════════════════════════════════════════════════════════
-        # TIER 1: BLOCKING (필수 통과)
-        # ═══════════════════════════════════════════════════════════════
-        logging.info("[V0128] TIER 1: BLOCKING 검증 중...")
+    def _record_blocking_failure_learner_failures(
+        self,
+        ep_num,
+        validation_context,
+        failures,
+        *,
+        event_name: str,
+        message: str,
+        extra: dict,
+    ) -> None:
+        failure_learner = validation_context.get("_failure_learner") if isinstance(validation_context, dict) else None
+        if failure_learner is None or not hasattr(failure_learner, "record_failure"):
+            return
+
+        for failure in failures:
+            try:
+                failure_learner.record_failure(
+                    stage=4,
+                    failure_type=failure.get("type", "BLOCKING") if isinstance(failure, dict) else "BLOCKING",
+                    description=str(failure.get("description", failure.get("reason", "")))[:200]
+                    if isinstance(failure, dict)
+                    else str(failure)[:200],
+                )
+            except Exception as exc:
+                self._report_soft_failure(
+                    validation_context,
+                    event_name,
+                    exc,
+                    ep_num=ep_num,
+                    message=message,
+                    extra=extra,
+                )
+                logging.debug("[ValidationOrchestrator] FailureLearner record failed (ignored): %s", exc)
+
+    def _run_blocking_validation(
+        self,
+        ep_num,
+        manuscript,
+        validation_context,
+        results,
+        *,
+        stage_prefix: str,
+        advisory_log_suffix: str = "",
+        failure_event_name: str = "failure_learner_record_failure",
+        failure_message: str = "FailureLearner.record_failure failed during blocking advisory collection",
+        failure_extra: dict | None = None,
+    ) -> None:
+        logging.info(f"{stage_prefix} TIER 1: BLOCKING validation...")
         blocking_result = self.blocking.validate(manuscript, validation_context)
         results["blocking_result"] = blocking_result
 
         if not blocking_result["passed"]:
-            # [TF-36] 대원칙 1: Python은 수집만, 판단은 LLM — advisory로 전환 (V70.1 패턴)
-            _blk_failures = blocking_result.get("failures", [])
-            logging.warning(f" [대원칙1] BLOCKING {len(_blk_failures)}개 실패 — Director advisory로 전달")
-            self._record_failure_to_reflexion(ep_num, "blocking", _blk_failures)
+            failures = blocking_result.get("failures", [])
+            logging.warning(
+                f" [TF-36] BLOCKING {len(failures)} failures forwarded as Director advisory{advisory_log_suffix}"
+            )
+            self._record_failure_to_reflexion(ep_num, "blocking", failures)
+            self._record_blocking_failure_learner_failures(
+                ep_num,
+                validation_context,
+                failures,
+                event_name=failure_event_name,
+                message=failure_message,
+                extra=failure_extra or {"validator": "BlockingValidator"},
+            )
 
-            # [P6-01] FailureLearner 환류 — validation_context에서 주입된 경우에만
-            _fl = validation_context.get("_failure_learner") if isinstance(validation_context, dict) else None
-            if _fl is not None and hasattr(_fl, "record_failure"):
-                for _f in _blk_failures:
-                    try:
-                        _fl.record_failure(
-                            stage=4,
-                            failure_type=_f.get("type", "BLOCKING") if isinstance(_f, dict) else "BLOCKING",
-                            description=str(_f.get("description", _f.get("reason", "")))[:200]
-                            if isinstance(_f, dict)
-                            else str(_f)[:200],
-                        )
-                    except Exception as _e:
-                        self._report_soft_failure(
-                            validation_context,
-                            "failure_learner_record_failure",
-                            _e,
-                            ep_num=ep_num,
-                            message="FailureLearner.record_failure failed during blocking advisory collection",
-                            extra={"validator": "BlockingValidator"},
-                        )
-                        logging.debug("[ValidationOrchestrator] FailureLearner 기록 실패 (무시): %s", _e)
-
-        # 즉시 REJECT 대신 결과를 누적하여 후속 SCORING + Director 판정에 위임
-        _blocking_advisory = self._build_blocking_advisory(blocking_result)
-        if _blocking_advisory is not None:
-            results["_blocking_advisory"] = _blocking_advisory
+        blocking_advisory = self._build_blocking_advisory(blocking_result)
+        if blocking_advisory is not None:
+            results["_blocking_advisory"] = blocking_advisory
 
         if blocking_result["passed"]:
-            logging.info(f"✅ BLOCKING 통과 (0/{blocking_result.get('failure_count', 0)} 실패)")
+            logging.info(f" BLOCKING passed (0/{blocking_result.get('failure_count', 0)} failures)")
 
-        # ═══════════════════════════════════════════════════════════════
-        # [V46] TIER 1.5: CONSISTENCY (일관성 검증)
-        # ═══════════════════════════════════════════════════════════════
-        logging.info("[V46] TIER 1.5: CONSISTENCY 검증 중...")
-        consistency_result = self.consistency.validate(manuscript, validation_context)
+    def _store_consistency_result(self, results, consistency_result) -> int:
         results["consistency_result"] = consistency_result
-
-        # 정당화 불가 위반이 있으면 즉시 REJECT
         unjustifiable = consistency_result.get("unjustifiable_violations", [])
         if unjustifiable:
-            logging.warning(f"❌ CONSISTENCY 실패: {len(unjustifiable)}개 정당화 불가 위반")
+            logging.warning(f" CONSISTENCY failed: {len(unjustifiable)} unjustifiable violations")
             results["_consistency_advisory"] = {
                 "source": "ConsistencyValidator",
                 "violations": unjustifiable,
@@ -477,88 +550,83 @@ class ValidationOrchestrator:
                 "severity": "CRITICAL",
             }
 
-        # 정당화 가능 위반은 점수 감점으로 처리
         consistency_penalty = consistency_result.get("score_penalty", 0)
         justifiable_count = len(consistency_result.get("justifiable_violations", []))
-
-        if justifiable_count > 0:
-            logging.warning(f" CONSISTENCY 경고: {justifiable_count}개 (감점: {consistency_penalty}점)")
+        if unjustifiable:
+            pass
+        elif justifiable_count > 0:
+            logging.warning(f" CONSISTENCY warnings: {justifiable_count} (penalty {consistency_penalty})")
         else:
-            logging.info("✅ CONSISTENCY 통과")
+            logging.info(" CONSISTENCY passed")
+        return consistency_penalty
 
-        # ═══════════════════════════════════════════════════════════════
-        # TIER 2: SCORING (점수 기반)
-        # ═══════════════════════════════════════════════════════════════
-        logging.info("[V0128] TIER 2: SCORING 평가 중...")
+    def _run_sync_pre_scoring_validators(self, ep_num, manuscript, validation_context, results) -> int:
+        self._run_pre_llm_validation(
+            manuscript,
+            validation_context,
+            results,
+            stage_prefix="[V56]",
+        )
+        self._run_continuity_validation(
+            ep_num,
+            manuscript,
+            validation_context,
+            results,
+            stage_prefix="[V47]",
+        )
+        self._run_blocking_validation(
+            ep_num,
+            manuscript,
+            validation_context,
+            results,
+            stage_prefix="[V0128]",
+        )
+        logging.info("[V46] TIER 1.5: CONSISTENCY validation...")
+        consistency_result = self.consistency.validate(manuscript, validation_context)
+        return self._store_consistency_result(results, consistency_result)
 
-        if self.use_self_consistency and self.client:
-            # Self-Consistency: 다수결 투표
-            scoring_result = self._evaluate_with_self_consistency(manuscript, validation_context)
-            results["self_consistency_used"] = True
-        else:
-            # 단일 평가 — [TF-C02] validate_v59 장르 가중치 (±1점 캡)
-            scoring_result = self.scoring.validate_v59(manuscript, validation_context)
-            results["self_consistency_used"] = False
-
-        results["scoring_result"] = scoring_result
-
-        total_score = scoring_result.get("total_score", 0)
-        logging.info(f" SCORING: {total_score}/100점 (임계값: {self.scoring.pass_threshold})")
-
-        # ═══════════════════════════════════════════════════════════════
-        # [Phase 5.2.3] TIER 2.5: CONDITIONAL SELF-REFINE (조건부 품질 정제)
-        # ═══════════════════════════════════════════════════════════════
-        # ⚠️ 설계 노트: ValidationOrchestrator는 검증만 담당.
-        #    실제 Self-Refine 실행은 상위 레벨(main_a.py Stage 4)에서 처리.
-        #    여기서는 조건만 판단하고 플래그 반환.
+    def _apply_refine_recommendation(self, ep_num, total_score, results) -> None:
         refine_applied = False
         refine_reason = ""
 
-        # 조건 1: 아쉬운 점수 (88-90점)
         if 88 <= total_score <= 90:
             refine_applied = True
-            refine_reason = f"아쉬운 점수 ({total_score}점)"
+            refine_reason = f"edge score ({total_score})"
 
-        # 조건 2: 중요 화 (1, 25, 50, 75, 100, ...)
-        important_episodes = [1] + [i for i in range(25, 251, 25)]  # 1, 25, 50, 75, ...
+        important_episodes = [1] + [i for i in range(25, 251, 25)]
         if ep_num in important_episodes:
             refine_applied = True
-            refine_reason = f"중요 화 (제{ep_num}화)" if not refine_reason else refine_reason + " + 중요 화"
+            refine_reason = (
+                f"important episode ({ep_num})"
+                if not refine_reason
+                else refine_reason + " + important episode"
+            )
 
         if refine_applied:
-            logging.warning(f" [Self-Refine] 품질 정제 권장 ({refine_reason})")
+            logging.warning(f" [Self-Refine] recommended ({refine_reason})")
             results["refine_recommended"] = True
             results["refine_reason"] = refine_reason
-            # [V49.3] Writer._self_refine()는 main_a.py:3461-3504에서 호출됨
         else:
             results["refine_recommended"] = False
 
-        # ═══════════════════════════════════════════════════════════════
-        # TIER 3: ADVISORY (권고)
-        # ═══════════════════════════════════════════════════════════════
-        logging.info("[V0128] TIER 3: ADVISORY 생성 중...")
-        advisory_result = self.advisory.validate(manuscript, validation_context)
-        results["advisory_result"] = advisory_result
-
-        logging.info(f" ADVISORY: {len(advisory_result.get('suggestions', []))}개 제안")
-
-        # ═══════════════════════════════════════════════════════════════
-        # [V43] 추가 품질 평가: CatharsisTimer + ActionSceneEvaluator
-        # ═══════════════════════════════════════════════════════════════
-
-        # CatharsisTimer - 카타르시스 타이밍 체크
+    def _apply_base_score_adjustments(
+        self,
+        ep_num,
+        manuscript,
+        validation_context,
+        results,
+        total_score,
+        consistency_penalty,
+    ) -> int:
         catharsis_history = validation_context.get("catharsis_history", [])
         catharsis_result = self.catharsis_timer.check_catharsis_timing(ep_num, manuscript, catharsis_history)
         results["catharsis_result"] = catharsis_result
 
-        if catharsis_result.get("status") == "warning":
-            logging.warning(f" CATHARSIS: {catharsis_result.get('message')}")
-        elif catharsis_result.get("status") == "critical":
+        if catharsis_result.get("status") in {"warning", "critical"}:
             logging.warning(f" CATHARSIS: {catharsis_result.get('message')}")
         else:
-            logging.info("✅ CATHARSIS: 적절한 타이밍")
+            logging.info(" CATHARSIS steady")
 
-        # ActionSceneEvaluator - 전투/액션 씬 평가
         action_context = {
             "technique_effects": validation_context.get("technique_effects", {}),
             "martial_hud": validation_context.get("martial_hud", {}),
@@ -567,13 +635,13 @@ class ValidationOrchestrator:
         results["action_result"] = action_result
 
         if action_result.get("action_scene_count", 0) > 0:
-            logging.info(f" ACTION: {action_result.get('total_score', 0)}/10점 ({action_result['action_scene_count']}개 씬)"
+            logging.info(
+                f" ACTION: {action_result.get('total_score', 0)}/10 ({action_result['action_scene_count']} scenes)"
             )
 
-        # 추가 평가 결과를 총점에 반영 (보너스/감점)
         catharsis_adjustment = 0
         if catharsis_result.get("status") == "critical":
-            catharsis_adjustment = -5  # 심각한 카타르시스 부족 시 감점
+            catharsis_adjustment = -5
         elif catharsis_result.get("status") == "warning":
             catharsis_adjustment = -2
 
@@ -581,153 +649,277 @@ class ValidationOrchestrator:
         if action_result.get("action_scene_count", 0) > 0:
             action_score = action_result.get("total_score", 6)
             if action_score < 5:
-                action_adjustment = -3  # 액션 씬 품질 낮음
+                action_adjustment = -3
             elif action_score >= 8:
-                action_adjustment = 2  # 액션 씬 품질 우수
+                action_adjustment = 2
 
-        # [V46] CONSISTENCY 감점 적용
-        consistency_adjustment = consistency_penalty  # 이미 음수
-
-        # [TF-C01] Pre-LLM 감점: score_deduction > 0이면 1점만 차감 (대원칙 #1 존중)
         pre_llm_adjustment = 0
-        _pre_llm = results.get("pre_llm_result")
-        if _pre_llm and _pre_llm.get("score_deduction", 0) > 0:
+        pre_llm_result = results.get("pre_llm_result")
+        if pre_llm_result and pre_llm_result.get("score_deduction", 0) > 0:
             pre_llm_adjustment = -1
 
-        # 조정된 총점
         adjusted_total = (
-            total_score + catharsis_adjustment + action_adjustment + consistency_adjustment + pre_llm_adjustment
+            total_score + catharsis_adjustment + action_adjustment + consistency_penalty + pre_llm_adjustment
         )
-        adjusted_total = max(0, min(100, adjusted_total))  # 0~100 범위 제한
+        adjusted_total = max(0, min(100, adjusted_total))
 
-        adjustments_made = (
-            catharsis_adjustment != 0
-            or action_adjustment != 0
-            or consistency_adjustment != 0
-            or pre_llm_adjustment != 0
+        if catharsis_adjustment != 0 or action_adjustment != 0 or consistency_penalty != 0 or pre_llm_adjustment != 0:
+            logging.info(f" Score adjusted: {total_score} -> {adjusted_total}")
+            return adjusted_total
+
+        return total_score
+
+    def _run_sync_scoring_phase(
+        self,
+        ep_num,
+        manuscript,
+        validation_context,
+        results,
+        consistency_penalty,
+    ) -> int:
+        logging.info("[V0128] TIER 2: SCORING evaluation...")
+        if self.use_self_consistency and self.client:
+            scoring_result = self._evaluate_with_self_consistency(manuscript, validation_context)
+            results["self_consistency_used"] = True
+        else:
+            scoring_result = self.scoring.validate_v59(manuscript, validation_context)
+            results["self_consistency_used"] = False
+
+        results["scoring_result"] = scoring_result
+        total_score = scoring_result.get("total_score", 0)
+        logging.info(f" SCORING: {total_score}/100 (threshold {self.scoring.pass_threshold})")
+
+        self._apply_refine_recommendation(ep_num, total_score, results)
+
+        logging.info("[V0128] TIER 3: ADVISORY generation...")
+        advisory_result = self.advisory.validate(manuscript, validation_context)
+        results["advisory_result"] = advisory_result
+        logging.info(f" ADVISORY: {len(advisory_result.get('suggestions', []))} suggestions")
+
+        return self._apply_base_score_adjustments(
+            ep_num,
+            manuscript,
+            validation_context,
+            results,
+            total_score,
+            consistency_penalty,
         )
-        if adjustments_made:
-            adjustment_parts = []
-            if consistency_adjustment != 0:
-                adjustment_parts.append(f"일관성: {consistency_adjustment:+d}")
-            if catharsis_adjustment != 0:
-                adjustment_parts.append(f"카타르시스: {catharsis_adjustment:+d}")
-            if action_adjustment != 0:
-                adjustment_parts.append(f"액션: {action_adjustment:+d}")
-            if pre_llm_adjustment != 0:
-                adjustment_parts.append(f"Pre-LLM: {pre_llm_adjustment:+d}")
-            logging.info(f" 점수 조정: {total_score} → {adjusted_total} ({', '.join(adjustment_parts)})")
-            total_score = adjusted_total
 
-        # ═══════════════════════════════════════════════════════════════
-        # [Phase 3] Retrospective Validator (장기 일관성 검증)
-        # ═══════════════════════════════════════════════════════════════
-        if self.use_retrospective and ep_num > 3 and RETROSPECTIVE_AVAILABLE:  # 3화 이상 + 모듈 가용
-            logging.info("[Phase 3] RETROSPECTIVE: 장기 일관성 검증 중...")
+    def _apply_retrospective_validation(self, ep_num, manuscript, validation_context, results, total_score) -> int:
+        if not (self.use_retrospective and ep_num > 3 and RETROSPECTIVE_AVAILABLE):
+            return total_score
 
-            # Lazy initialization (모듈은 이미 import됨)
-            if self.retrospective is None:
-                # context는 validation_context에서 추출
-                context_obj = validation_context.get("_context")
-                if context_obj:
-                    _retro_lookback = _threshold("retrospective.lookback_episodes", 10)
-                    try:
-                        _retro_lookback = int(_retro_lookback)
-                    except (TypeError, ValueError):
-                        _retro_lookback = 10
-                    self.retrospective = RetrospectiveValidator(context_obj, lookback_episodes=_retro_lookback)
+        logging.info("[Phase 3] RETROSPECTIVE validation...")
+        if self.retrospective is None:
+            context_obj = validation_context.get("_context")
+            if context_obj:
+                retro_lookback = _threshold("retrospective.lookback_episodes", 10)
+                try:
+                    retro_lookback = int(retro_lookback)
+                except (TypeError, ValueError):
+                    retro_lookback = 10
+                self.retrospective = RetrospectiveValidator(context_obj, lookback_episodes=retro_lookback)
 
-            if self.retrospective:
-                retrospective_result = self.retrospective.validate_long_term_consistency(
-                    current_ep=ep_num, manuscript=manuscript, validation_context=validation_context
-                )
-                results["retrospective_result"] = retrospective_result
+        if not self.retrospective:
+            return total_score
 
-                if not retrospective_result["passed"]:
-                    severity = retrospective_result.get("severity_level", "NONE")
-                    violation_count = retrospective_result.get("total_violations", 0)
+        retrospective_result = self.retrospective.validate_long_term_consistency(
+            current_ep=ep_num,
+            manuscript=manuscript,
+            validation_context=validation_context,
+        )
+        results["retrospective_result"] = retrospective_result
 
-                    logging.warning(f" RETROSPECTIVE: {violation_count}개 장기 일관성 위반 ({severity})")
+        if retrospective_result["passed"]:
+            logging.info(" RETROSPECTIVE passed")
+            return total_score
 
-                    penalty = 0
-                    if severity == "CRITICAL":
-                        penalty = 15
-                    elif severity == "HIGH":
-                        penalty = 10
-                    elif severity == "MEDIUM":
-                        penalty = 5
+        severity = retrospective_result.get("severity_level", "NONE")
+        violation_count = retrospective_result.get("total_violations", 0)
+        logging.warning(f" RETROSPECTIVE: {violation_count} violations ({severity})")
 
-                    if penalty > 0:
-                        results["_retrospective_advisory"] = {
-                            "source": "RetrospectiveValidator",
-                            "violations": retrospective_result.get("violations", []),
-                            "feedback": self._format_retrospective_feedback(retrospective_result),
-                            "severity": severity,
-                        }
-                        total_score = max(0, total_score - penalty)
-                        logging.warning(f" 장기 일관성 감점: -{penalty}점 (새 총점: {total_score})")
-                else:
-                    logging.info("✅ RETROSPECTIVE: 장기 일관성 통과")
+        penalty = 0
+        if severity == "CRITICAL":
+            penalty = 15
+        elif severity == "HIGH":
+            penalty = 10
+        elif severity == "MEDIUM":
+            penalty = 5
 
-        # ═══════════════════════════════════════════════════════════════
-        # [TF-36] 대원칙 1: CONTINUITY/BLOCKING advisory 점수 반영
-        # ═══════════════════════════════════════════════════════════════
-        _cont_adv = results.get("_continuity_advisory")
-        if _cont_adv:
-            _cont_penalty = min(15, len(_cont_adv.get("violations", [])) * 5)
-            total_score = max(0, total_score - _cont_penalty)
-            logging.warning(f" [대원칙1] CONTINUITY advisory 감점: -{_cont_penalty}점 (새 총점: {total_score})")
+        if penalty <= 0:
+            return total_score
 
-        _blk_adv = results.get("_blocking_advisory")
-        if _blk_adv:
-            _blk_penalty = min(20, len(_blk_adv.get("failures", [])) * 5)
-            total_score = max(0, total_score - _blk_penalty)
-            logging.warning(f" [대원칙1] BLOCKING advisory 감점: -{_blk_penalty}점 (새 총점: {total_score})")
+        results["_retrospective_advisory"] = {
+            "source": "RetrospectiveValidator",
+            "violations": retrospective_result.get("violations", []),
+            "feedback": self._format_retrospective_feedback(retrospective_result),
+            "severity": severity,
+        }
+        total_score = max(0, total_score - penalty)
+        logging.warning(f" RETROSPECTIVE penalty: -{penalty} (new total {total_score})")
+        return total_score
 
-        # ═══════════════════════════════════════════════════════════════
-        # 최종 판정
-        # ═══════════════════════════════════════════════════════════════
+    def _apply_advisory_penalties(self, total_score, results) -> int:
+        continuity_advisory = results.get("_continuity_advisory")
+        if continuity_advisory:
+            continuity_penalty = min(15, len(continuity_advisory.get("violations", [])) * 5)
+            total_score = max(0, total_score - continuity_penalty)
+            logging.warning(f" [TF-36] CONTINUITY advisory penalty: -{continuity_penalty} (new total {total_score})")
+
+        blocking_advisory = results.get("_blocking_advisory")
+        if blocking_advisory:
+            blocking_penalty = min(20, len(blocking_advisory.get("failures", [])) * 5)
+            total_score = max(0, total_score - blocking_penalty)
+            logging.warning(f" [TF-36] BLOCKING advisory penalty: -{blocking_penalty} (new total {total_score})")
+        return total_score
+
+    def _finalize_validation_result(
+        self,
+        ep_num,
+        total_score,
+        results,
+        adaptive_threshold,
+        *,
+        pass_threshold,
+    ):
         results["total_score"] = total_score
 
-        # [Sweep64] 무조건 PASS 임계값도 adaptive threshold 반영
-        _unconditional_pass = max(_UNCONDITIONAL_PASS_FLOOR, self.scoring.pass_threshold)
-        if total_score >= _unconditional_pass:
+        unconditional_pass = max(_UNCONDITIONAL_PASS_FLOOR, pass_threshold)
+        if total_score >= unconditional_pass:
             final_decision = "PASS"
-            feedback = f"우수한 품질 ({total_score}점)"
-        elif total_score >= self.scoring.pass_threshold:
+            feedback = f"score strong ({total_score})"
+        elif total_score >= pass_threshold:
             final_decision = "CONDITIONAL_PASS"
-            feedback = f"통과 ({total_score}점) - 개선 권장사항 확인"
+            feedback = f"pass ({total_score}) - see improvement guidance"
         else:
             final_decision = "REJECT"
-            feedback = f"품질 미달 ({total_score}점) - 재작성 필요"
+            feedback = f"below threshold ({total_score}) - revision needed"
 
-        # [TF-36] advisory 피드백 병합
-        _advisory_parts = []
-        if _cont_adv:
-            _advisory_parts.append(f"[CONTINUITY] {_cont_adv['feedback']}")
-        if _blk_adv:
-            _advisory_parts.append(f"[BLOCKING] {_blk_adv['feedback']}")
-        _cons_adv = results.get("_consistency_advisory")
-        if _cons_adv:
-            _advisory_parts.append(f"[CONSISTENCY] {_cons_adv['feedback']}")
-        _retro_adv = results.get("_retrospective_advisory")
-        if _retro_adv:
-            _advisory_parts.append(f"[RETROSPECTIVE] {_retro_adv['feedback']}")
-        if _advisory_parts:
-            feedback = feedback + " | Director advisory: " + " / ".join(_advisory_parts)
+        advisory_parts = []
+        continuity_advisory = results.get("_continuity_advisory")
+        if continuity_advisory:
+            advisory_parts.append(f"[CONTINUITY] {continuity_advisory['feedback']}")
+        blocking_advisory = results.get("_blocking_advisory")
+        if blocking_advisory:
+            advisory_parts.append(f"[BLOCKING] {blocking_advisory['feedback']}")
+        consistency_advisory = results.get("_consistency_advisory")
+        if consistency_advisory:
+            advisory_parts.append(f"[CONSISTENCY] {consistency_advisory['feedback']}")
+        retrospective_advisory = results.get("_retrospective_advisory")
+        if retrospective_advisory:
+            advisory_parts.append(f"[RETROSPECTIVE] {retrospective_advisory['feedback']}")
+        if advisory_parts:
+            feedback = feedback + " | Director advisory: " + " / ".join(advisory_parts)
 
         results["final_decision"] = final_decision
         results["feedback"] = feedback
-        results["adaptive_threshold"] = adaptive_threshold  # [TF-R2-XC-01]
-
-        # 상세 피드백 생성
+        results["adaptive_threshold"] = adaptive_threshold
         results["detailed_feedback"] = self._generate_detailed_feedback(results)
 
-        # [TF-R2-XC-03] 히스토리 기록 (async validate와 동일 패턴)
         passed = final_decision in ("PASS", "CONDITIONAL_PASS")
         self._record_validation_history_v59(ep_num, total_score, passed)
-
         return results
+
+    def _run_parallel_stage1_validators(self, ep_num, manuscript, validation_context, results):
+        early_result = self._run_pre_llm_validation(
+            manuscript,
+            validation_context,
+            results,
+            stage_prefix="[V59-Parallel]",
+            reject_on_failure=True,
+        )
+        if early_result is not None:
+            return early_result
+
+        self._run_continuity_validation(
+            ep_num,
+            manuscript,
+            validation_context,
+            results,
+            stage_prefix="[V59-Parallel]",
+            advisory_log_suffix=" (parallel)",
+        )
+        self._run_blocking_validation(
+            ep_num,
+            manuscript,
+            validation_context,
+            results,
+            stage_prefix="[V59-Parallel]",
+            advisory_log_suffix=" (parallel)",
+            failure_event_name="failure_learner_record_failure_parallel",
+            failure_message="FailureLearner.record_failure failed during blocking advisory collection (parallel)",
+            failure_extra={"validator": "BlockingValidator", "mode": "parallel"},
+        )
+        logging.info(" Stage 1 passed (PRE-LLM, CONTINUITY, BLOCKING)")
+        return None
+
+    async def _run_parallel_stage2_validators(self, manuscript, validation_context, results):
+        logging.info("[V59-Parallel] Stage 2: starting parallel validators...")
+
+        loop = asyncio.get_running_loop()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_parallel_workers) as executor:
+            consistency_task = loop.run_in_executor(
+                executor,
+                partial(self.consistency.validate, manuscript, validation_context),
+            )
+            if self.use_self_consistency and self.client:
+                scoring_task = loop.run_in_executor(
+                    executor,
+                    partial(self._evaluate_with_self_consistency, manuscript, validation_context),
+                )
+            else:
+                scoring_task = loop.run_in_executor(
+                    executor,
+                    partial(self.scoring.validate_v59, manuscript, validation_context),
+                )
+            advisory_task = loop.run_in_executor(
+                executor,
+                partial(self.advisory.validate, manuscript, validation_context),
+            )
+            parallel_results = await asyncio.gather(
+                consistency_task,
+                scoring_task,
+                advisory_task,
+                return_exceptions=True,
+            )
+
+        task_names = ["consistency", "scoring", "advisory"]
+        for idx, result in enumerate(parallel_results):
+            if not isinstance(result, Exception):
+                continue
+            logging.warning("[Sweep7-A] parallel validation %s failed: %s", task_names[idx], result)
+            if idx == 0:
+                parallel_results[idx] = {
+                    "unjustifiable_violations": [
+                        {
+                            "type": "consistency_validator_runtime_error",
+                            "severity": "CRITICAL",
+                            "reason": f"consistency validator failed: {type(result).__name__}",
+                        }
+                    ],
+                    "score_penalty": 0,
+                    "feedback": f"consistency validator runtime error: {result}",
+                }
+            elif idx == 1:
+                parallel_results[idx] = {"total_score": 0, "feedback": "scoring validator failed"}
+            else:
+                parallel_results[idx] = {"suggestions": []}
+
+        consistency_result, scoring_result, advisory_result = parallel_results
+        if not isinstance(consistency_result, dict):
+            consistency_result = {"unjustifiable_violations": [], "score_penalty": 0, "feedback": ""}
+        if not isinstance(scoring_result, dict):
+            scoring_result = {"total_score": 0, "feedback": "scoring validator failed"}
+        if not isinstance(advisory_result, dict):
+            advisory_result = {"suggestions": []}
+
+        consistency_penalty = self._store_consistency_result(results, consistency_result)
+        results["scoring_result"] = scoring_result
+        results["advisory_result"] = advisory_result
+        results["self_consistency_used"] = self.use_self_consistency and self.client is not None
+
+        logging.info(" Stage 2 complete (parallel validators)")
+        return scoring_result, consistency_penalty
 
     def _evaluate_with_self_consistency(self, manuscript: str, context: dict) -> dict:
         """
@@ -1224,260 +1416,38 @@ class ValidationOrchestrator:
             self.scoring.pass_threshold = _original_threshold
 
     async def _validate_parallel_body(self, ep_num, manuscript, validation_context, results, adaptive_threshold):
-        """[V-I5] validate_parallel_v59 본체 — try/finally에서 호출."""
+        """[V-I5] validate_parallel_v59 body extracted from try/finally wrapper."""
+        early_result = self._run_parallel_stage1_validators(
+            ep_num,
+            manuscript,
+            validation_context,
+            results,
+        )
+        if early_result is not None:
+            return early_result
 
-        # PRE_LLM 검증
-        if self.use_pre_llm and self.pre_llm:
-            logging.info("[V59-Parallel] TIER 0.25: PRE-LLM 검증 중...")
-            pre_llm_result = self.pre_llm.validate(manuscript, validation_context)
-            results["pre_llm_result"] = pre_llm_result
-
-            if not pre_llm_result["passed"]:
-                return self._build_reject_result_v59(
-                    "PRE-LLM", pre_llm_result, self._generate_pre_llm_feedback(pre_llm_result)
-                )
-
-        # CONTINUITY 검증
-        logging.info("[V59-Parallel] TIER 0.5: CONTINUITY 검증 중...")
-        continuity_result = self.continuity.validate(ep_num, manuscript, validation_context)
-        results["continuity_result"] = continuity_result
-
-        if not continuity_result["passed"]:
-            _cont_violations = continuity_result.get("violations", [])
-            logging.warning(f" [대원칙1] CONTINUITY {len(_cont_violations)}개 위반 — Director advisory로 전달 (parallel)"
-            )
-            self._record_failure_to_reflexion(ep_num, "continuity", _cont_violations)
-            results["_continuity_advisory"] = {
-                "source": "ContinuityValidator",
-                "violations": _cont_violations,
-                "feedback": self._generate_continuity_feedback(continuity_result),
-                "severity": "HIGH",
-            }
-
-        # BLOCKING 검증
-        logging.info("[V59-Parallel] TIER 1: BLOCKING 검증 중...")
-        blocking_result = self.blocking.validate(manuscript, validation_context)
-        results["blocking_result"] = blocking_result
-
-        if not blocking_result["passed"]:
-            _blk_failures = blocking_result.get("failures", [])
-            logging.warning(f" [대원칙1] BLOCKING {len(_blk_failures)}개 실패 — Director advisory로 전달 (parallel)")
-            self._record_failure_to_reflexion(ep_num, "blocking", _blk_failures)
-
-            # [P6-01] FailureLearner 환류 (parallel path)
-            _fl_p = validation_context.get("_failure_learner") if isinstance(validation_context, dict) else None
-            if _fl_p is not None and hasattr(_fl_p, "record_failure"):
-                for _f in _blk_failures:
-                    try:
-                        _fl_p.record_failure(
-                            stage=4,
-                            failure_type=_f.get("type", "BLOCKING") if isinstance(_f, dict) else "BLOCKING",
-                            description=str(_f.get("description", _f.get("reason", "")))[:200]
-                            if isinstance(_f, dict)
-                            else str(_f)[:200],
-                        )
-                    except Exception as _e:
-                        self._report_soft_failure(
-                            validation_context,
-                            "failure_learner_record_failure_parallel",
-                            _e,
-                            ep_num=ep_num,
-                            message="FailureLearner.record_failure failed during blocking advisory collection (parallel)",
-                            extra={"validator": "BlockingValidator", "mode": "parallel"},
-                        )
-                        logging.debug("[ValidationOrchestrator] FailureLearner(parallel) 기록 실패 (무시): %s", _e)
-
-        _blocking_advisory = self._build_blocking_advisory(blocking_result)
-        if _blocking_advisory is not None:
-            results["_blocking_advisory"] = _blocking_advisory
-
-        logging.info("✅ Stage 1 통과 (PRE-LLM, CONTINUITY, BLOCKING)")
-
-        # ═══════════════════════════════════════════════════════════════
-        # Stage 2: 병렬 실행 (독립적인 검증)
-        # ═══════════════════════════════════════════════════════════════
-        logging.info("[V59-Parallel] Stage 2: 병렬 검증 시작...")
-
-        loop = asyncio.get_running_loop()
-        with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_parallel_workers) as executor:
-            # 병렬 실행할 검증 태스크들
-            consistency_task = loop.run_in_executor(
-                executor, partial(self.consistency.validate, manuscript, validation_context)
-            )
-
-            if self.use_self_consistency and self.client:
-                scoring_task = loop.run_in_executor(
-                    executor, partial(self._evaluate_with_self_consistency, manuscript, validation_context)
-                )
-            else:
-                scoring_task = loop.run_in_executor(
-                    executor,
-                    partial(self.scoring.validate_v59, manuscript, validation_context),  # [TF-C02]
-                )
-
-            advisory_task = loop.run_in_executor(
-                executor, partial(self.advisory.validate, manuscript, validation_context)
-            )
-
-            # 모든 태스크 완료 대기
-            parallel_results = await asyncio.gather(
-                consistency_task,
-                scoring_task,
-                advisory_task,
-                return_exceptions=True,
-            )
-
-            task_names = ["consistency", "scoring", "advisory"]
-            for idx, r in enumerate(parallel_results):
-                if isinstance(r, Exception):
-                    logging.warning("[Sweep7-A] parallel validation %s failed: %s", task_names[idx], r)
-                    if idx == 0:
-                        # [TF-15/P0] consistency validator runtime failure must fail-closed.
-                        parallel_results[idx] = {
-                            "unjustifiable_violations": [
-                                {
-                                    "type": "consistency_validator_runtime_error",
-                                    "severity": "CRITICAL",
-                                    "reason": f"consistency validator failed: {type(r).__name__}",
-                                }
-                            ],
-                            "score_penalty": 0,
-                            "feedback": f"consistency validator runtime error: {r}",
-                        }
-                    elif idx == 1:
-                        parallel_results[idx] = {"total_score": 0, "feedback": "scoring validator failed"}
-                    else:
-                        parallel_results[idx] = {"suggestions": []}
-
-        consistency_result, scoring_result, advisory_result = parallel_results
-
-        if not isinstance(consistency_result, dict):
-            consistency_result = {"unjustifiable_violations": [], "score_penalty": 0, "feedback": ""}
-        if not isinstance(scoring_result, dict):
-            scoring_result = {"total_score": 0, "feedback": "scoring validator failed"}
-        if not isinstance(advisory_result, dict):
-            advisory_result = {"suggestions": []}
-
-        results["consistency_result"] = consistency_result
-        results["scoring_result"] = scoring_result
-        results["advisory_result"] = advisory_result
-        results["self_consistency_used"] = self.use_self_consistency and self.client is not None
-
-        logging.info("✅ Stage 2 완료 (병렬 검증)")
-
-        # CONSISTENCY 결과 처리
-        unjustifiable = consistency_result.get("unjustifiable_violations", [])
-        if unjustifiable:
-            logging.warning(f"❌ CONSISTENCY 실패: {len(unjustifiable)}개 정당화 불가 위반")
-            results["_consistency_advisory"] = {
-                "source": "ConsistencyValidator",
-                "violations": unjustifiable,
-                "feedback": consistency_result.get("feedback", ""),
-                "severity": "CRITICAL",
-            }
-
-        consistency_penalty = consistency_result.get("score_penalty", 0)
-
-        # ═══════════════════════════════════════════════════════════════
-        # Stage 3: 추가 평가 (CatharsisTimer, ActionEvaluator)
-        # ═══════════════════════════════════════════════════════════════
+        scoring_result, consistency_penalty = await self._run_parallel_stage2_validators(
+            manuscript,
+            validation_context,
+            results,
+        )
         total_score = scoring_result.get("total_score", 0)
-
-        # CatharsisTimer
-        catharsis_history = validation_context.get("catharsis_history", [])
-        catharsis_result = self.catharsis_timer.check_catharsis_timing(ep_num, manuscript, catharsis_history)
-        results["catharsis_result"] = catharsis_result
-
-        # ActionSceneEvaluator
-        action_context = {
-            "technique_effects": validation_context.get("technique_effects", {}),
-            "martial_hud": validation_context.get("martial_hud", {}),
-        }
-        action_result = self.action_evaluator.evaluate(manuscript, action_context)
-        results["action_result"] = action_result
-
-        # 점수 조정
-        catharsis_adjustment = (
-            -5
-            if catharsis_result.get("status") == "critical"
-            else (-2 if catharsis_result.get("status") == "warning" else 0)
+        total_score = self._apply_base_score_adjustments(
+            ep_num,
+            manuscript,
+            validation_context,
+            results,
+            total_score,
+            consistency_penalty,
         )
-
-        action_adjustment = 0
-        if action_result.get("action_scene_count", 0) > 0:
-            action_score = action_result.get("total_score", 6)
-            if action_score < 5:
-                action_adjustment = -3
-            elif action_score >= 8:
-                action_adjustment = 2
-
-        # [P0-fix] Pre-LLM 감점 (sync 경로와 동일)
-        pre_llm_adjustment = 0
-        _pre_llm = results.get("pre_llm_result")
-        if _pre_llm and _pre_llm.get("score_deduction", 0) > 0:
-            pre_llm_adjustment = -1
-
-        adjusted_total = (
-            total_score + catharsis_adjustment + action_adjustment + consistency_penalty + pre_llm_adjustment
+        total_score = self._apply_advisory_penalties(total_score, results)
+        return self._finalize_validation_result(
+            ep_num,
+            total_score,
+            results,
+            adaptive_threshold,
+            pass_threshold=adaptive_threshold,
         )
-        adjusted_total = max(0, min(100, adjusted_total))
-
-        if catharsis_adjustment != 0 or action_adjustment != 0 or consistency_penalty != 0 or pre_llm_adjustment != 0:
-            logging.info(f" 점수 조정: {total_score} → {adjusted_total}")
-            total_score = adjusted_total
-
-        # [TF-36] 대원칙 1: CONTINUITY/BLOCKING advisory 점수 반영
-        _cont_adv = results.get("_continuity_advisory")
-        if _cont_adv:
-            _cont_penalty = min(15, len(_cont_adv.get("violations", [])) * 5)
-            total_score = max(0, total_score - _cont_penalty)
-            logging.warning(f" [대원칙1] CONTINUITY advisory 감점: -{_cont_penalty}점 (새 총점: {total_score})")
-        _blk_adv = results.get("_blocking_advisory")
-        if _blk_adv:
-            _blk_penalty = min(20, len(_blk_adv.get("failures", [])) * 5)
-            total_score = max(0, total_score - _blk_penalty)
-            logging.warning(f" [대원칙1] BLOCKING advisory 감점: -{_blk_penalty}점 (새 총점: {total_score})")
-
-        # ═══════════════════════════════════════════════════════════════
-        # 최종 판정 + 히스토리 기록
-        # ═══════════════════════════════════════════════════════════════
-        results["total_score"] = total_score
-
-        if total_score >= max(_UNCONDITIONAL_PASS_FLOOR, adaptive_threshold):
-            final_decision = "PASS"
-            feedback = f"우수한 품질 ({total_score}점)"
-            passed = True
-        elif total_score >= adaptive_threshold:
-            final_decision = "CONDITIONAL_PASS"
-            feedback = f"통과 ({total_score}점) - 개선 권장사항 확인"
-            passed = True
-        else:
-            final_decision = "REJECT"
-            feedback = f"품질 미달 ({total_score}점) - 재작성 필요"
-            passed = False
-
-        # [TF-36] advisory 피드백 병합
-        _advisory_parts = []
-        if _cont_adv:
-            _advisory_parts.append(f"[CONTINUITY] {_cont_adv['feedback']}")
-        if _blk_adv:
-            _advisory_parts.append(f"[BLOCKING] {_blk_adv['feedback']}")
-        _cons_adv = results.get("_consistency_advisory")
-        if _cons_adv:
-            _advisory_parts.append(f"[CONSISTENCY] {_cons_adv['feedback']}")
-        if _advisory_parts:
-            feedback = feedback + " | Director advisory: " + " / ".join(_advisory_parts)
-
-        results["final_decision"] = final_decision
-        results["feedback"] = feedback
-        results["detailed_feedback"] = self._generate_detailed_feedback(results)
-        results["adaptive_threshold"] = adaptive_threshold
-
-        # [V59] 히스토리 기록 + 연속 카운트 업데이트
-        self._record_validation_history_v59(ep_num, total_score, passed)
-
-        return results
-
     def validate_parallel_sync_v59(self, ep_num: int, manuscript: str, validation_context: dict) -> dict:
         """
         [V59] 병렬 검증 동기 래퍼 - 기존 동기 코드에서 호출 가능
@@ -1700,3 +1670,4 @@ class ValidationOrchestrator:
             logging.info(f"[V59] 임계값 {threshold}점으로 {duration_episodes}화 동안 고정")
         else:
             logging.info(f"[V59] 임계값 {threshold}점으로 고정 (적응형 비활성화)")
+

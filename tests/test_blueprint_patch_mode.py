@@ -146,6 +146,55 @@ class TestBlueprintPatchIntegration:
     def test_runtime_attached(self, blueprint_generator):
         assert blueprint_generator.runtime.owner is blueprint_generator
 
+    def test_runtime_generate_uses_retry_cycle_helper(self, blueprint_generator, sample_arc_data):
+        from modules.domain.agents.three_phase_blueprint_runtime import (
+            _ThreePhaseRetryCycleResult,
+            _ThreePhaseRetryState,
+            _ThreePhaseRuntimeBootstrap,
+        )
+
+        runtime = blueprint_generator.runtime
+        pipeline = {"phases": {"constraint": {}, "generate": {}, "validate": {}}}
+        best_blueprint = {"ep_num": 1, "scene_list": [{"scene_no": 1, "summary": "candidate"}]}
+        bootstrap = _ThreePhaseRuntimeBootstrap(
+            genre="wuxia",
+            protagonist_config={},
+            pipeline_result=pipeline,
+            initial_feedback="seed feedback",
+            retry_state=_ThreePhaseRetryState(),
+        )
+
+        with (
+            patch.object(runtime, "_bootstrap_runtime_context", return_value=bootstrap),
+            patch.object(
+                runtime,
+                "_run_retry_cycle",
+                side_effect=[
+                    _ThreePhaseRetryCycleResult(
+                        best_blueprint=best_blueprint,
+                        feedback="director retry feedback",
+                        should_continue=True,
+                    ),
+                    _ThreePhaseRetryCycleResult(
+                        best_blueprint=best_blueprint,
+                        feedback="director retry feedback",
+                        final_result=(best_blueprint, pipeline),
+                    ),
+                ],
+            ) as run_retry,
+            patch.object(runtime, "_finalize_terminal_failure") as finalize_failure,
+        ):
+            result = runtime.generate(ep_num=1, arc_data=sample_arc_data, max_retries=1)
+
+        assert result == (best_blueprint, pipeline)
+        assert run_retry.call_count == 2
+        assert run_retry.call_args_list[0].kwargs["current_best_blueprint"] is None
+        assert run_retry.call_args_list[0].kwargs["feedback"] == "seed feedback"
+        assert run_retry.call_args_list[0].kwargs["log_retry"] is False
+        assert run_retry.call_args_list[1].kwargs["current_best_blueprint"] == best_blueprint
+        assert run_retry.call_args_list[1].kwargs["feedback"] == "director retry feedback"
+        finalize_failure.assert_not_called()
+
     def test_generate_delegates_to_runtime(self, blueprint_generator, sample_arc_data):
         expected = ({"ep_num": 1}, {"final_verdict": "PASS"})
         blueprint_generator.runtime = MagicMock()

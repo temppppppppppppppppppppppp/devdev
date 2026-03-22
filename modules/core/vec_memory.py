@@ -734,48 +734,46 @@ class VecMemory:
         )
         return _d2_result
 
-    def retrieve_npc_context(self, npc_names: list[str], current_ep: int, max_results: int = 5) -> str:
-        """
-        Retrieve NPC-focused context by combining:
-        - episode_meta.entity_names token matching
-        - vector similarity search with NPC-aware queries
-        """
-        if not self.has_valid_memory:
-            return ""
-
+    @staticmethod
+    def _clean_npc_names(npc_names: list[str] | None) -> list[str]:
         cleaned_names: list[str] = []
         for name in npc_names or []:
             text = str(name).strip()
             if text and text not in cleaned_names:
                 cleaned_names.append(text)
-        if not cleaned_names:
-            return ""
+        return cleaned_names
 
-        safe_max = max(1, int(max_results))
-        core_cap = 5
-        core_names = cleaned_names[:core_cap]
-        overflow_names = cleaned_names[core_cap:]
+    @staticmethod
+    def _escape_like_pattern(text: str) -> str:
+        return text.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
+    def _collect_npc_entity_candidates(
+        self,
+        core_names: list[str],
+        current_ep: int,
+        row_limit: int,
+    ) -> dict[int, dict]:
         candidates: dict[int, dict] = {}
+        if not core_names:
+            return candidates
 
-        # 1) Direct entity token match from comma-separated entity_names.
         try:
             with self._db_lock():
                 like_conditions = " OR ".join(
                     "((',' || REPLACE(IFNULL(entity_names, ''), ' ', '') || ',') LIKE ? ESCAPE '\\')"
                     for _ in core_names
                 )
-
-                def _escape_like(s: str) -> str:
-                    return s.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
-
-                like_params = [f"%,{_escape_like(name.replace(' ', ''))},%" for name in core_names]
+                like_params = [
+                    f"%,{self._escape_like_pattern(name.replace(' ', ''))},%"
+                    for name in core_names
+                ]
                 rows = self._conn.execute(
                     f"""SELECT ep_num, summary, arc_no, event_types, entity_names
                         FROM episode_meta
                         WHERE ep_num < ? AND ({like_conditions})
                         ORDER BY ep_num DESC
                         LIMIT ?""",
-                    (current_ep, *like_params, safe_max * 3),
+                    (current_ep, *like_params, row_limit),
                 ).fetchall()
 
             for ep_num, summary, arc_no, event_types, entity_names in rows:
@@ -793,15 +791,29 @@ class VecMemory:
         except Exception as e:
             self._ui_log(f"[VecMemory] NPC entity match search failed: {str(e)[:60]}")
 
-        # 2) Vector search with bounded query plan.
-        # Max query count: core(<=5) + core aggregate(1) + overflow aggregate(1) = <=7.
-        vector_queries = [f"{name} 과거 행적 상태 변화 관계 사건" for name in core_names]
+        return candidates
+
+    @staticmethod
+    def _build_npc_vector_queries(core_names: list[str], overflow_names: list[str]) -> list[str]:
+        vector_queries = [f"{name} \uacfc\uac70 \ud589\uc801 \uc0c1\ud0dc \ubcc0\ud654 \uad00\uacc4 \uc0ac\uac74" for name in core_names]
         if len(core_names) > 1:
-            vector_queries.append(f"{' '.join(core_names)} 과거 관계 사건 연속성")
+            vector_queries.append(
+                f"{' '.join(core_names)} \uacfc\uac70 \uad00\uacc4 \uc0ac\uac74 \uc5f0\uc18d\uc131"
+            )
         if overflow_names:
             overflow_phrase = " ".join(overflow_names[:20])
-            vector_queries.append(f"{overflow_phrase} 외 등장 NPC 과거 관계 사건 연속성")
+            vector_queries.append(
+                f"{overflow_phrase} \uc678 \ub4f1\uc7a5 NPC \uacfc\uac70 \uad00\uacc4 \uc0ac\uac74 \uc5f0\uc18d\uc131"
+            )
+        return vector_queries
 
+    def _collect_npc_vector_candidates(
+        self,
+        candidates: dict[int, dict],
+        vector_queries: list[str],
+        current_ep: int,
+        row_limit: int,
+    ) -> None:
         for query_text in vector_queries:
             emb = self._embed_text(query_text)
             if emb is None:
@@ -812,7 +824,7 @@ class VecMemory:
                     rows = self._conn.execute(
                         """SELECT rowid, distance FROM vec_episodes
                            WHERE embedding MATCH ? ORDER BY distance LIMIT ?""",
-                        (_serialize_f32(emb), max(6, safe_max * 2)),
+                        (_serialize_f32(emb), row_limit),
                     ).fetchall()
 
                 for rowid, dist in rows:
@@ -831,24 +843,17 @@ class VecMemory:
                             "entity_hit": False,
                             "vector_hit": True,
                         }
-                    else:
-                        entry["vector_hit"] = True
-                        if float(dist) < float(entry["dist"]):
-                            entry["dist"] = float(dist)
+                        continue
+
+                    entry["vector_hit"] = True
+                    if float(dist) < float(entry["dist"]):
+                        entry["dist"] = float(dist)
             except Exception as e:
                 self._ui_log(f"[VecMemory] NPC vector search failed: {str(e)[:60]}")
 
-        if not candidates:
-            _fallback_query = " ".join(cleaned_names)
-            _fallback_result = self._keyword_fallback_search(_fallback_query, current_ep, safe_max)
-            logging.debug("[VecMem] path=npc ep<%d q=%r hits=0 fallback=true selected=[] chars=%d",
-                current_ep,
-                _fallback_query[:30],
-                len(_fallback_result),
-            )
-            return _fallback_result
-
-        def _sort_key(item):
+    @staticmethod
+    def _select_npc_candidates(candidates: dict[int, dict], safe_max: int) -> list[tuple[int, dict]]:
+        def _sort_key(item: tuple[int, dict]) -> tuple[int, float, int]:
             ep_num, info = item
             both_hit = info["entity_hit"] and info["vector_hit"]
             if both_hit:
@@ -860,8 +865,10 @@ class VecMemory:
             dist = info["dist"] if info["dist"] != float("inf") else 9.0
             return (source_rank, dist, -ep_num)
 
-        selected = sorted(candidates.items(), key=_sort_key)[:safe_max]
+        return sorted(candidates.items(), key=_sort_key)[:safe_max]
 
+    @staticmethod
+    def _render_npc_context(selected: list[tuple[int, dict]]) -> str:
         blocks: list[str] = []
         for ep_num, info in selected:
             meta = info["meta"]
@@ -887,9 +894,41 @@ class VecMemory:
             if ent:
                 block += f"\nentities: {ent}"
             blocks.append(block)
+        return "\n\n".join(blocks)
 
+    def retrieve_npc_context(self, npc_names: list[str], current_ep: int, max_results: int = 5) -> str:
+        """
+        Retrieve NPC-focused context by combining:
+        - episode_meta.entity_names token matching
+        - vector similarity search with NPC-aware queries
+        """
+        if not self.has_valid_memory:
+            return ""
+
+        cleaned_names = self._clean_npc_names(npc_names)
+        if not cleaned_names:
+            return ""
+
+        safe_max = max(1, int(max_results))
+        core_names = cleaned_names[:5]
+        overflow_names = cleaned_names[5:]
+        candidates = self._collect_npc_entity_candidates(core_names, current_ep, safe_max * 3)
+        vector_queries = self._build_npc_vector_queries(core_names, overflow_names)
+        self._collect_npc_vector_candidates(candidates, vector_queries, current_ep, max(6, safe_max * 2))
+
+        if not candidates:
+            _fallback_query = " ".join(cleaned_names)
+            _fallback_result = self._keyword_fallback_search(_fallback_query, current_ep, safe_max)
+            logging.debug("[VecMem] path=npc ep<%d q=%r hits=0 fallback=true selected=[] chars=%d",
+                current_ep,
+                _fallback_query[:30],
+                len(_fallback_result),
+            )
+            return _fallback_result
+
+        selected = self._select_npc_candidates(candidates, safe_max)
         _d2_selected = [ep_num for ep_num, _ in selected]
-        _d2_result = "\n\n".join(blocks)
+        _d2_result = self._render_npc_context(selected)
         logging.debug("[VecMem] path=npc ep<%d q=%r hits=%d fallback=false selected=%s chars=%d",
             current_ep,
             " ".join(cleaned_names)[:30],

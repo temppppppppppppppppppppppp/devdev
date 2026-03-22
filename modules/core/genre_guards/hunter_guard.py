@@ -18,7 +18,11 @@ class HunterGuard(BaseGuard):
     def __init__(self) -> None:
         super().__init__()
         cfg = self._load_genre_yaml("hunter")
+        self._init_term_sets(cfg)
+        self._init_rank_constraints(cfg)
+        self._init_awakening_rules(cfg)
 
+    def _init_term_sets(self, cfg: dict[str, Any]) -> None:
         # 헌터물에서 금지되는 용어 (YAML 우선, 없으면 하드코딩 폴백)
         self.FORBIDDEN_TERMS = cfg.get(
             "forbidden_terms",
@@ -112,6 +116,7 @@ class HunterGuard(BaseGuard):
             ],
         )
 
+    def _init_rank_constraints(self, cfg: dict[str, Any]) -> None:
         self._rank_hierarchy = cfg.get(
             "rank_hierarchy", ["E", "D", "C", "B", "A", "S", "SS", "SSS", "국가급", "세계급"]
         )
@@ -163,6 +168,7 @@ class HunterGuard(BaseGuard):
             "S급": {"max_consecutive": 1, "rest_required": 48},
         }
 
+    def _init_awakening_rules(self, cfg: dict[str, Any]) -> None:
         self._awakening_stages = [
             "미각성",
             "초기 각성",
@@ -822,7 +828,7 @@ class HunterGuard(BaseGuard):
         result = super().run_deep_validation(manuscript, current_state or {})
 
         # 던전 진입 검증
-        dungeon_patterns = re.findall(r"(\w+)\s*(?:등급|랭크|급)\s*던전", manuscript)
+        dungeon_patterns = re.findall(r"(\w+)\s*(?:등급|랭크|급)\s*던전", manuscript)  # utf8-hygiene: allow-line regex
         _cs = current_state or {}
         hunter_rank = str(_cs.get("rank", _cs.get("realm", "E")))
         for dungeon_rank in dungeon_patterns:
@@ -850,7 +856,7 @@ class HunterGuard(BaseGuard):
                 pass
 
         # 스킬 개수 제한 (미각성 → 0, 초기 → 3, ...)
-        skill_mentions = re.findall(r"스킬\s*[:\-]?\s*([가-힣]+)", manuscript)
+        skill_mentions = re.findall(r"스킬\s*[:\-]?\s*([가-힣]+)", manuscript)  # utf8-hygiene: allow-line regex
         if skill_mentions and not (current_state or {}).get("realm"):
             result["violations"].append(
                 {

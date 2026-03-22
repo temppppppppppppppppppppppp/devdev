@@ -380,6 +380,203 @@ class ArcDraftValidator:
 
         return {"penalty": penalty, "critical": critical}
 
+    def _coerce_tactical_doc_value(self, arc: dict) -> tuple[str, list[str], int]:
+        tactical = arc.get("tactical_doc", "")
+        warnings = []
+        penalty = 0
+        if isinstance(tactical, str):
+            return tactical, warnings, penalty
+
+        if isinstance(tactical, dict):
+            try:
+                tactical = "\n".join(str(value) for value in tactical.values() if value)
+                warnings.append("tactical_doc\uc774 dict \ud615\ud0dc\ub85c \ubc18\ud658\ub428 - \uc790\ub3d9 \ubcc0\ud658 \uc2dc\ub3c4")
+            except Exception:
+                tactical = str(tactical)
+        else:
+            tactical = str(tactical) if tactical else ""
+
+        if len(tactical) < 100:
+            warnings.append(
+                f"tactical_doc \ud615\uc2dd \uc624\ub958: \ubb38\uc790\uc5f4\uc774 \uc544\ub2cc {type(arc.get('tactical_doc')).__name__} \ud0c0\uc785 \ubc18\ud658"
+            )
+            penalty += 20
+        return tactical, warnings, penalty
+
+    def _resolve_tactical_doc_expectations(self, arc: dict) -> tuple[int, int, list[int], int, int]:
+        ep_start = arc.get("ep_start", 1)
+        try:
+            ep_count = int(arc.get("ep_count", Stage2Limits.DEFAULT_EP_COUNT))
+        except (TypeError, ValueError):
+            ep_count = Stage2Limits.DEFAULT_EP_COUNT
+
+        expected_eps = list(range(ep_start, ep_start + ep_count))
+        min_length = ep_count * Stage2Limits.MIN_CHARS_PER_EPISODE
+        warn_length = ep_count * 400
+        return ep_start, ep_count, expected_eps, min_length, warn_length
+
+    @staticmethod
+    def _validate_tactical_length(length: int, *, ep_count: int, min_length: int, warn_length: int) -> tuple[list[str], int]:
+        warnings = []
+        penalty = 0
+        if length < warn_length:
+            warnings.append(
+                f"tactical_doc \ubd84\ub7c9 \uc2ec\uac01 \ubbf8\ub2ec: {length}\uc790 (\ucd5c\uc18c {min_length}\uc790 = {ep_count}\ud654 \xd7 500\uc790)"
+            )
+            penalty += 25
+        elif length < min_length:
+            warnings.append(f"tactical_doc \ubd84\ub7c9 \ubd80\uc871: {length}\uc790 (\uad8c\uc7a5 {min_length}\uc790)")
+            penalty += 10
+        return warnings, penalty
+
+    def _validate_tactical_episode_layout(
+        self, episode_sections: dict[int, str], expected_eps: list[int]
+    ) -> tuple[list[str], int]:
+        warnings = []
+        penalty = 0
+
+        missing_eps = [ep_no for ep_no in expected_eps if ep_no not in episode_sections]
+        if missing_eps:
+            warnings.append(f"\ub204\ub77d\ub41c \ud654: {missing_eps} (\ud544\uc218: {expected_eps})")
+            penalty += 15
+
+        min_ep_length = 300
+        short_eps = [f"{ep_no}\ud654({len(content)}\uc790)" for ep_no, content in episode_sections.items() if len(content) < min_ep_length]
+        if short_eps:
+            warnings.append(f"\ubd84\ub7c9 \ubd80\uc871 \ud654: {', '.join(short_eps)} (\ucd5c\uc18c {min_ep_length}\uc790)")
+            penalty += len(short_eps) * 3
+
+        if len(episode_sections) >= 2:
+            lengths = [len(content) for content in episode_sections.values()]
+            max_len = max(lengths)
+            min_len = max(min(lengths), 1)
+            if max_len / min_len > 5:
+                warnings.append(
+                    f"\ud654\ubcc4 \ubd84\ub7c9 \ubd88\uade0\ud615: \ucd5c\uc18c {min_len}\uc790 vs \ucd5c\ub300 {max_len}\uc790 (5\ubc30 \ucd08\uacfc)"
+                )
+                penalty += 5
+
+        if episode_sections:
+            found_eps = sorted(episode_sections.keys())
+            if found_eps != expected_eps[: len(found_eps)]:
+                warnings.append(f"\ud654 \uc21c\uc11c \ubd88\uc77c\uce58: \ubc1c\uacac={found_eps}, \uae30\ub300={expected_eps}")
+                penalty += 5
+
+        return warnings, penalty
+
+    def _validate_tactical_episode_density(
+        self, episode_sections: dict[int, str]
+    ) -> tuple[list[str], list[str], int]:
+        warnings = []
+        suggestions = []
+        penalty = 0
+
+        sparse_eps = []
+        for ep_no, content in episode_sections.items():
+            has_dialogue = '"' in content or '"' in content
+            has_action = any(kw in content for kw in ["\ud588\ub2e4", "\ud588\ub2e4", "\ub410\ub2e4", "\uc600\ub2e4", "\ud55c\ub2e4", "\ubcf8\ub2e4", "\uac14\ub2e4", "\uc654\ub2e4"])
+            if not has_dialogue and not has_action and len(content) > 50:
+                sparse_eps.append(ep_no)
+        if sparse_eps:
+            suggestions.append(f"\ub0b4\uc6a9 \ube48\uc57d\ud55c \ud654: {sparse_eps} (\ub300\uc0ac/\ud589\ub3d9 \ucd94\uac00 \uad8c\uc7a5)")
+
+        low_beat_eps = []
+        for ep_no, content in episode_sections.items():
+            beat_count = self._count_tactical_beats(content)
+            if beat_count < 3 and len(content) > 100:
+                low_beat_eps.append(f"{ep_no}\ud654({beat_count}\ube44\ud2b8)")
+        if low_beat_eps:
+            warnings.append(f"\ube44\ud2b8 \ubd80\uc871 \ud654: {', '.join(low_beat_eps)} (\ucd5c\uc18c 3\ube44\ud2b8 \ud544\uc694)")
+            penalty += len(low_beat_eps) * 2
+
+        incomplete_eps = []
+        for ep_no, content in episode_sections.items():
+            missing_elements = self._check_structural_elements(content)
+            if missing_elements and len(content) > 200:
+                incomplete_eps.append(f"{ep_no}\ud654({','.join(missing_elements)})")
+        if incomplete_eps:
+            suggestions.append(f"\uad6c\uc870 \ubbf8\ube44 \ud654: {', '.join(incomplete_eps[:3])}")
+
+        return warnings, suggestions, penalty
+
+    def _validate_tactical_episode_metadata(
+        self, episode_sections: dict[int, str], arc: dict
+    ) -> tuple[list[str], int]:
+        warnings = []
+        penalty = 0
+
+        actual_ep_count = len(episode_sections)
+        declared_ep_count = arc.get("ep_count", Stage2Limits.DEFAULT_EP_COUNT)
+        if actual_ep_count > 0 and abs(actual_ep_count - declared_ep_count) >= 2:
+            warnings.append(f"ep_count \ubd88\uc77c\uce58: \uc120\uc5b8={declared_ep_count}, \uc2e4\uc81c={actual_ep_count}")
+            penalty += 5
+
+        checkpoint_result = self._validate_state_checkpoints(episode_sections, arc)
+        if checkpoint_result.get("missing_checkpoints"):
+            warnings.append(
+                f"\uc0c1\ud0dc \uccb4\ud06c\ud3ec\uc778\ud2b8 \ub204\ub77d: {checkpoint_result['missing_checkpoints'][:3]}"
+            )
+            penalty += len(checkpoint_result.get("missing_checkpoints", [])) * 2
+        if checkpoint_result.get("state_mismatches"):
+            warnings.append(
+                f"\ud654\uac04 \uc0c1\ud0dc \ubd88\uc77c\uce58: {checkpoint_result['state_mismatches'][:2]}"
+            )
+            penalty += len(checkpoint_result.get("state_mismatches", [])) * 3
+
+        return warnings, penalty
+
+    @staticmethod
+    def _collect_tactical_relationship_npcs(arc: dict) -> list[str]:
+        npc_names: set[str] = set()
+        state_constraints = arc.get("state_constraints") or {}
+
+        for rel in state_constraints.get("relationship_changes") or []:
+            if isinstance(rel, dict):
+                npc_name = rel.get("target") or rel.get("npc")
+                if npc_name and isinstance(npc_name, str) and len(npc_name) >= 2:
+                    npc_names.add(npc_name)
+
+        for rel in (arc.get("state_changes") or {}).get("relationship_changes") or []:
+            if isinstance(rel, dict):
+                npc_name = rel.get("target") or rel.get("npc")
+                if npc_name and isinstance(npc_name, str) and len(npc_name) >= 2:
+                    npc_names.add(npc_name)
+
+        return sorted(npc_names)
+
+    def _validate_tactical_relationship_mentions(self, tactical: str, arc: dict) -> tuple[list[str], int]:
+        warnings = []
+        penalty = 0
+        if not tactical or len(tactical) <= 500:
+            return warnings, penalty
+
+        npc_names = self._collect_tactical_relationship_npcs(arc)
+        if npc_names:
+            mentioned = sum(1 for npc_name in npc_names if npc_name in tactical)
+            if mentioned == 0:
+                warnings.append(
+                    f"tactical_doc\uc5d0 \uad00\uacc4 \ubcc0\ud654 NPC \ubbf8\uc5b8\uae09: {', '.join(npc_names[:3])}"
+                )
+                penalty += 3
+        return warnings, penalty
+
+    @staticmethod
+    def _validate_tactical_action_density(tactical: str) -> list[str]:
+        suggestions = []
+        if tactical and len(tactical) > 800:
+            action_count = len(
+                re.findall(
+                    r"[\uac00-\ud7a3]+(?:\ud588\ub2e4|\ud55c\ub2e4|\ub41c\ub2e4|\ubc1b\ub294\ub2e4|\uc5bb\ub294\ub2e4|\ubc1c\uacac\ud55c\ub2e4|\ub3c4\ucc29\ud55c\ub2e4|\ub9cc\ub09c\ub2e4|\ub5a0\ub09c\ub2e4|\uc2f8\uc6b4\ub2e4|\uc8fd\ub294\ub2e4|\uae68\ub2eb\ub294\ub2e4)",
+                    tactical,
+                )
+            )
+            sentence_approx = max(1, tactical.count("\ub2e4.") + tactical.count("\ub2e4\n"))
+            if sentence_approx >= 5 and action_count < max(2, sentence_approx // 4):
+                suggestions.append(
+                    f"tactical_doc \uad6c\uccb4\uc131 \ubd80\uc871: \ud589\ub3d9 \ud45c\ud604 {action_count}\uac1c / ~{sentence_approx}\ubb38\uc7a5"
+                )
+        return suggestions
+
     def _validate_tactical_doc(self, arc: dict) -> dict:
         """[V60.29] tactical_doc 분량 + 화별 분할 검증 강화"""
         critical = []
@@ -387,174 +584,40 @@ class ArcDraftValidator:
         suggestions = []
         penalty = 0
 
-        tactical = arc.get("tactical_doc", "")
+        tactical, coercion_warnings, coercion_penalty = self._coerce_tactical_doc_value(arc)
+        warnings.extend(coercion_warnings)
+        penalty += coercion_penalty
 
-        # [V60.37] tactical_doc 타입 안전성 검증
-        if not isinstance(tactical, str):
-            # dict나 다른 타입이면 문자열로 변환 시도
-            if isinstance(tactical, dict):
-                # dict인 경우 내용을 문자열로 합침
-                try:
-                    tactical = "\n".join(str(v) for v in tactical.values() if v)
-                    warnings.append("tactical_doc이 dict 형태로 반환됨 - 자동 변환 시도")
-                except Exception:
-                    tactical = str(tactical)
-            else:
-                tactical = str(tactical) if tactical else ""
+        ep_start, ep_count, expected_eps, min_length, warn_length = self._resolve_tactical_doc_expectations(arc)
+        length_warnings, length_penalty = self._validate_tactical_length(
+            len(tactical),
+            ep_count=ep_count,
+            min_length=min_length,
+            warn_length=warn_length,
+        )
+        warnings.extend(length_warnings)
+        penalty += length_penalty
 
-            if len(tactical) < 100:
-                # [V60.41] 형식 오류는 WARNING (재생성으로 해결 가능)
-                warnings.append(
-                    f"tactical_doc 형식 오류: 문자열이 아닌 {type(arc.get('tactical_doc')).__name__} 타입 반환"
-                )
-                penalty += 20
-        length = len(tactical)
-
-        # [V60.29] 화별 분할 검증 강화
-        ep_start = arc.get("ep_start", 1)
-        try:
-            ep_count = int(arc.get("ep_count", Stage2Limits.DEFAULT_EP_COUNT))
-        except (TypeError, ValueError):
-            ep_count = Stage2Limits.DEFAULT_EP_COUNT
-
-        # [V60.41] 분량 검증 - 모두 WARNING (재생성으로 해결 가능)
-        min_length = ep_count * Stage2Limits.MIN_CHARS_PER_EPISODE  # 최소 기준
-        warn_length = ep_count * 400  # 경고 기준 (80%)
-
-        if length < warn_length:
-            warnings.append(f"tactical_doc 분량 심각 미달: {length}자 (최소 {min_length}자 = {ep_count}화 × 500자)")
-            penalty += 25
-        elif length < min_length:
-            warnings.append(f"tactical_doc 분량 부족: {length}자 (권장 {min_length}자)")
-            penalty += 10
-        expected_eps = list(range(ep_start, ep_start + ep_count))
-
-        # 각 화 섹션 추출 및 검증
         episode_sections = self._extract_episode_sections(tactical, ep_start, ep_count)
 
-        # 1. 화 존재 여부 검사
-        missing_eps = []
-        for ep_no in expected_eps:
-            if ep_no not in episode_sections:
-                missing_eps.append(ep_no)
+        layout_warnings, layout_penalty = self._validate_tactical_episode_layout(episode_sections, expected_eps)
+        warnings.extend(layout_warnings)
+        penalty += layout_penalty
 
-        if missing_eps:
-            # [V60.41] 화 누락은 WARNING (재생성으로 해결 가능)
-            warnings.append(f"누락된 화: {missing_eps} (필수: {expected_eps})")
-            penalty += 15
+        density_warnings, density_suggestions, density_penalty = self._validate_tactical_episode_density(episode_sections)
+        warnings.extend(density_warnings)
+        suggestions.extend(density_suggestions)
+        penalty += density_penalty
 
-        # 2. 각 화 최소 분량 검사 (300자 이상)
-        MIN_EP_LENGTH = 300
-        short_eps = []
-        for ep_no, content in episode_sections.items():
-            if len(content) < MIN_EP_LENGTH:
-                short_eps.append(f"{ep_no}화({len(content)}자)")
+        metadata_warnings, metadata_penalty = self._validate_tactical_episode_metadata(episode_sections, arc)
+        warnings.extend(metadata_warnings)
+        penalty += metadata_penalty
 
-        if short_eps:
-            warnings.append(f"분량 부족 화: {', '.join(short_eps)} (최소 {MIN_EP_LENGTH}자)")
-            penalty += len(short_eps) * 3
+        relationship_warnings, relationship_penalty = self._validate_tactical_relationship_mentions(tactical, arc)
+        warnings.extend(relationship_warnings)
+        penalty += relationship_penalty
 
-        # 3. 화별 균형 검사 (최대 화가 최소 화의 5배 이상이면 경고)
-        if len(episode_sections) >= 2:
-            lengths = [len(c) for c in episode_sections.values()]
-            max_len = max(lengths)
-            min_len = max(min(lengths), 1)  # 0 방지
-
-            if max_len / min_len > 5:
-                warnings.append(f"화별 분량 불균형: 최소 {min_len}자 vs 최대 {max_len}자 (5배 초과)")
-                penalty += 5
-
-        # 4. 화 순서 검사 (숫자 순서대로인지)
-        if episode_sections:
-            found_eps = sorted(episode_sections.keys())
-            if found_eps != expected_eps[: len(found_eps)]:
-                warnings.append(f"화 순서 불일치: 발견={found_eps}, 기대={expected_eps}")
-                penalty += 5
-
-        # 5. 화별 필수 요소 검사 (대사 또는 묘사)
-        sparse_eps = []
-        for ep_no, content in episode_sections.items():
-            # 대사("") 또는 행동/감정 키워드
-            has_dialogue = '"' in content or '"' in content
-            has_action = any(kw in content for kw in ["했다", "했다", "됐다", "였다", "한다", "본다", "갔다", "왔다"])
-
-            if not has_dialogue and not has_action and len(content) > 50:
-                sparse_eps.append(ep_no)
-
-        if sparse_eps:
-            suggestions.append(f"내용 빈약한 화: {sparse_eps} (대사/행동 추가 권장)")
-
-        # [V60.30] 6. 화별 비트 수 검증 (최소 3개)
-        low_beat_eps = []
-        for ep_no, content in episode_sections.items():
-            beat_count = self._count_tactical_beats(content)
-            if beat_count < 3 and len(content) > 100:
-                low_beat_eps.append(f"{ep_no}화({beat_count}비트)")
-
-        if low_beat_eps:
-            warnings.append(f"비트 부족 화: {', '.join(low_beat_eps)} (최소 3비트 필요)")
-            penalty += len(low_beat_eps) * 2
-
-        # [V60.30] 7. 화별 구조 요소 검증 (공간/인과/상태)
-        incomplete_eps = []
-        for ep_no, content in episode_sections.items():
-            missing_elements = self._check_structural_elements(content)
-            if missing_elements and len(content) > 200:
-                incomplete_eps.append(f"{ep_no}화({','.join(missing_elements)})")
-
-        if incomplete_eps:
-            suggestions.append(f"구조 미비 화: {', '.join(incomplete_eps[:3])}")
-
-        # [V60.30] 8. ep_count와 실제 화 수 동기화 검증
-        actual_ep_count = len(episode_sections)
-        declared_ep_count = arc.get("ep_count", Stage2Limits.DEFAULT_EP_COUNT)
-        if actual_ep_count > 0 and abs(actual_ep_count - declared_ep_count) >= 2:
-            warnings.append(f"ep_count 불일치: 선언={declared_ep_count}, 실제={actual_ep_count}")
-            penalty += 5
-
-        # [V60.40] 9. 화간 상태 체크포인트 검증
-        checkpoint_result = self._validate_state_checkpoints(episode_sections, arc)
-        if checkpoint_result.get("missing_checkpoints"):
-            warnings.append(f"상태 체크포인트 누락: {checkpoint_result['missing_checkpoints'][:3]}")
-            penalty += len(checkpoint_result.get("missing_checkpoints", [])) * 2
-        if checkpoint_result.get("state_mismatches"):
-            warnings.append(f"화간 상태 불일치: {checkpoint_result['state_mismatches'][:2]}")
-            penalty += len(checkpoint_result.get("state_mismatches", [])) * 3
-
-        # [ValidationHardening] 10. Named anchor spread — Arc NPC 언급 검사
-        if tactical and len(tactical) > 500:
-            _sc = arc.get("state_constraints") or {}
-            _npc_names: set[str] = set()
-            for _r in _sc.get("relationship_changes") or []:
-                if isinstance(_r, dict):
-                    _n = _r.get("target") or _r.get("npc")
-                    if _n and isinstance(_n, str) and len(_n) >= 2:
-                        _npc_names.add(_n)
-            for _r in (arc.get("state_changes") or {}).get("relationship_changes") or []:
-                if isinstance(_r, dict):
-                    _n = _r.get("target") or _r.get("npc")
-                    if _n and isinstance(_n, str) and len(_n) >= 2:
-                        _npc_names.add(_n)
-            if _npc_names:
-                _mentioned = sum(1 for n in _npc_names if n in tactical)
-                if _mentioned == 0:
-                    warnings.append(f"tactical_doc에 관계 변화 NPC 미언급: {', '.join(list(_npc_names)[:3])}")
-                    penalty += 3
-
-        # [ValidationHardening] 11. Concrete action density proxy
-        if tactical and len(tactical) > 800:
-            import re as _re
-
-            _action_count = len(
-                _re.findall(
-                    r"[가-힣]+(?:했다|한다|된다|받는다|얻는다|발견한다|도착한다|만난다|떠난다|싸운다|죽는다|깨닫는다)",
-                    tactical,
-                )
-            )
-            _sentence_approx = max(1, tactical.count("다.") + tactical.count("다\n"))
-            if _sentence_approx >= 5 and _action_count < max(2, _sentence_approx // 4):
-                suggestions.append(f"tactical_doc 구체성 부족: 행동 표현 {_action_count}개 / ~{_sentence_approx}문장")
-
+        suggestions.extend(self._validate_tactical_action_density(tactical))
         return {"penalty": penalty, "critical": critical, "warnings": warnings, "suggestions": suggestions}
 
     def _validate_state_checkpoints(self, episode_sections: dict[int, str], arc: dict) -> dict:

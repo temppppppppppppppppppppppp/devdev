@@ -201,9 +201,21 @@ class PreDirectorChecklist:
     def _check_manuscript(self, manuscript: str, context: dict[str, Any]) -> list[CheckItem]:
         """원고 체크"""
         items = []
+        items.extend(self._check_manuscript_length(manuscript))
+        items.extend(self.manuscript_checker._check_dialogue_ratio(manuscript, context))
+        items.extend(self._check_manuscript_paragraphs(manuscript))
+        items.extend(self._check_manuscript_forbidden_patterns(manuscript))
+        items.extend(self._check_manuscript_blueprint_alignment(manuscript, context))
+        items.extend(self._check_manuscript_scope(manuscript, context))
+        items.extend(self._check_manuscript_prev_linkage(manuscript, context))
+        items.extend(self._run_manuscript_quality_checks(manuscript, context))
 
-        # 1. 길이 체크
+        return items
+
+    def _check_manuscript_length(self, manuscript: str) -> list[CheckItem]:
+        items = []
         length = len(manuscript)
+
         if length < self.MANUSCRIPT_LENGTH["min"]:
             items.append(
                 CheckItem(
@@ -256,13 +268,13 @@ class PreDirectorChecklist:
                 )
             )
 
-        # 2. 구조 체크 - 대화 (V60.5 고도화: 비율 분석 및 구체적 가이드)
-        dialogue_ratio_check = self.manuscript_checker._check_dialogue_ratio(manuscript, context)
-        items.extend(dialogue_ratio_check)
+        return items
 
-        # 3. 구조 체크 - 문단
+    def _check_manuscript_paragraphs(self, manuscript: str) -> list[CheckItem]:
+        items = []
         paragraphs = [p for p in manuscript.split("\n\n") if p.strip()]
         min_paragraphs = self.MANUSCRIPT_REQUIRED["paragraphs"][0]
+
         if len(paragraphs) < min_paragraphs:
             items.append(
                 CheckItem(
@@ -284,7 +296,11 @@ class PreDirectorChecklist:
                 )
             )
 
-        # 4. 금지 패턴 체크
+        return items
+
+    def _check_manuscript_forbidden_patterns(self, manuscript: str) -> list[CheckItem]:
+        items = []
+
         for pattern, desc in self.FORBIDDEN_PATTERNS["manuscript"]:
             if re.search(pattern, manuscript, re.IGNORECASE):
                 items.append(
@@ -297,8 +313,12 @@ class PreDirectorChecklist:
                     )
                 )
 
-        # 5. Blueprint 매칭 체크 - [V60.5] 씬별 정량 측정으로 고도화
+        return items
+
+    def _check_manuscript_blueprint_alignment(self, manuscript: str, context: dict[str, Any]) -> list[CheckItem]:
+        items = []
         blueprint = context.get("blueprint", {})
+
         if blueprint and isinstance(blueprint, dict):
             scene_breakdown = blueprint.get("scene_breakdown", {})
             if scene_breakdown and isinstance(scene_breakdown, dict):
@@ -345,7 +365,6 @@ class PreDirectorChecklist:
                 scene_density_check = self.manuscript_checker._check_scene_density_balance(manuscript, scene_breakdown)
                 items.extend(scene_density_check)
 
-            # 엔딩 훅 체크
             ending_hook = blueprint.get("ending_hook") or blueprint.get("cliffhanger", "")
             if ending_hook and isinstance(ending_hook, str) and len(ending_hook) > 5:
                 hook_keywords = re.findall(r"[\w가-힣]{2,}", ending_hook)[:3]
@@ -362,8 +381,13 @@ class PreDirectorChecklist:
                         )
                     )
 
-        # 6. 범위 초과 체크
+        return items
+
+    def _check_manuscript_scope(self, manuscript: str, context: dict[str, Any]) -> list[CheckItem]:
+        items = []
+        length = len(manuscript)
         blueprint = context.get("blueprint", {})
+
         if blueprint and isinstance(blueprint, dict):
             _sb = blueprint.get("scene_breakdown", {})
             scene_count = len(_sb) if isinstance(_sb, dict | list) else 0  # [TF-R2-S3-01]
@@ -380,8 +404,12 @@ class PreDirectorChecklist:
                         )
                     )
 
-        # 7. 연속성 기본 체크
+        return items
+
+    def _check_manuscript_prev_linkage(self, manuscript: str, context: dict[str, Any]) -> list[CheckItem]:
+        items = []
         prev_manuscript = context.get("prev_manuscript", "")
+
         if prev_manuscript and len(prev_manuscript) > 500:
             # 직전 화 마지막 500자에서 핵심 단어 추출
             prev_ending = prev_manuscript[-500:]
@@ -403,30 +431,16 @@ class PreDirectorChecklist:
                     )
                 )
 
-        # 8. [V60.4] 서사 폭주/정체 검사
-        narrative_flow_check = self.narrative_checker._check_narrative_flow(manuscript, context)
-        items.extend(narrative_flow_check)
+        return items
 
-        # 9. [V60.5] NPC 행동 급변 검사
-        npc_behavior_check = self.narrative_checker._check_npc_behavior_jump(manuscript, context)
-        items.extend(npc_behavior_check)
-
-        # 10. [V60.6] 문장 다양성 검사
-        sentence_variety_check = self.style_checker._check_sentence_variety(manuscript)
-        items.extend(sentence_variety_check)
-
-        # 11. [V60.6] 긴장-이완 리듬 검증
-        pacing_check = self.style_checker._check_pacing_rhythm(manuscript)
-        items.extend(pacing_check)
-
-        # 12. [V60.6] 설정 키워드 사전 검증
-        setting_check = self.narrative_checker._check_setting_keywords(manuscript, context)
-        items.extend(setting_check)
-
-        # 13. [V60.6] 클리셰 밀도 경고
-        cliche_check = self.manuscript_checker._check_cliche_density(manuscript)
-        items.extend(cliche_check)
-
+    def _run_manuscript_quality_checks(self, manuscript: str, context: dict[str, Any]) -> list[CheckItem]:
+        items = []
+        items.extend(self.narrative_checker._check_narrative_flow(manuscript, context))
+        items.extend(self.narrative_checker._check_npc_behavior_jump(manuscript, context))
+        items.extend(self.style_checker._check_sentence_variety(manuscript))
+        items.extend(self.style_checker._check_pacing_rhythm(manuscript))
+        items.extend(self.narrative_checker._check_setting_keywords(manuscript, context))
+        items.extend(self.manuscript_checker._check_cliche_density(manuscript))
         return items
 
     # [R5-2c] Backward-compatible thin wrappers

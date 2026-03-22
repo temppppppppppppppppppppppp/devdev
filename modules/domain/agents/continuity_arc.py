@@ -246,20 +246,55 @@ class ContinuityArcValidator:
         Returns:
             {decision, severity, violations, warnings, fix_instructions, entity_consistency}
         """
-        arc_no = current_arc.get("arc_no", 0)
-
-        # Arc 1은 이전 Arc가 없으므로 단일 Arc 내 모순만 검증
-        if arc_no <= 1 or not prev_arcs:
+        arc_context = self._normalize_arc_context(current_arc)
+        if arc_context["arc_no"] <= 1 or not prev_arcs:
             return self._inspect_intra_arc_only(current_arc)
+        if not arc_context["tactical_doc"]:
+            return self._build_missing_tactical_doc_result()
 
-        # 현재 Arc 데이터 추출
+        # ═══════════════════════════════════════════════════════════════
+        # Phase 1: Python 기반 사전 정보 수집 (Advisory Only)
+        # [V60.56] Python은 REJECT 권한 없음, 정보만 수집하여 LLM에게 전달
+        # ═══════════════════════════════════════════════════════════════
+        python_check = self._arc_python_precheck(current_arc, prev_arcs)
+        self._log_python_arc_advisory(python_check)
+        arc_context["joint_docs"], joint_docs_corrected = self._correct_arc_joint_docs(
+            tactical_doc=arc_context["tactical_doc"],
+            arc_no=arc_context["arc_no"],
+            ep_end=arc_context["ep_end"],
+            joint_docs=arc_context["joint_docs"],
+        )
+        start_state_corrected = self._correct_arc_start_state(current_arc, prev_arcs)
+
+        # ═══════════════════════════════════════════════════════════════
+        # Phase 2: LLM 기반 정밀 검증
+        # ═══════════════════════════════════════════════════════════════
+
+        prompt = self._build_arc_continuity_prompt(arc_context, prev_arcs, entity_registry)
+
+        try:
+            response = self._ci.ask(prompt, temperature=0.1)
+            result = self._normalize_arc_llm_result(self._ci._extract_json_robust(response))
+            self._merge_arc_python_warnings(result, python_check)
+            self._append_arc_correction_warnings(
+                result,
+                current_arc=current_arc,
+                joint_docs=arc_context["joint_docs"],
+                joint_docs_corrected=joint_docs_corrected,
+                start_state_corrected=start_state_corrected,
+            )
+            return self._relax_intra_arc_reject(result, start_state_corrected=start_state_corrected)
+
+        except Exception as e:
+            logging.warning(f" [ContinuityInspector] Arc LLM 검증 실패: {e}")
+            return self._build_arc_llm_fallback(python_check)
+
+    def _normalize_arc_context(self, current_arc: dict) -> dict:
         tactical_doc = current_arc.get("tactical_doc", "")
         if isinstance(tactical_doc, dict):
-            tactical_doc = "\n".join(f"{k}: {v}" for k, v in tactical_doc.items())
-        joint_docs = current_arc.get("joint_docs", {})
-        status_shadow = current_arc.get("status_shadow", {})
+            tactical_doc = "\n".join(f"{key}: {value}" for key, value in tactical_doc.items())
+
         ep_start = current_arc.get("ep_start", 1)
-        # [V60.73] ep_count 우선 참조
         try:
             ep_count = int(current_arc.get("ep_count", Stage2Limits.DEFAULT_EP_COUNT))
         except (TypeError, ValueError):
@@ -269,217 +304,226 @@ class ContinuityArcValidator:
         except (TypeError, ValueError):
             ep_end = ep_start + ep_count - 1
 
-        if not tactical_doc:
-            return {
-                "decision": "REJECT",
-                "severity": "CRITICAL",
-                "cross_arc_analysis": {},
-                "intra_arc_analysis": {},
-                "violations": [
-                    {
-                        "type": "missing_tactical_doc",
-                        "severity": "CRITICAL",
-                        "description": "Arc에 tactical_doc이 없습니다.",
-                    }
-                ],
-                "warnings": [],
-                "fix_instructions": "tactical_doc을 포함한 완전한 Arc를 설계하십시오.",
-            }
+        return {
+            "arc_no": current_arc.get("arc_no", 0),
+            "tactical_doc": tactical_doc,
+            "joint_docs": current_arc.get("joint_docs", {}),
+            "status_shadow": current_arc.get("status_shadow", {}),
+            "ep_start": ep_start,
+            "ep_count": ep_count,
+            "ep_end": ep_end,
+        }
 
-        # ═══════════════════════════════════════════════════════════════
-        # Phase 1: Python 기반 사전 정보 수집 (Advisory Only)
-        # [V60.56] Python은 REJECT 권한 없음, 정보만 수집하여 LLM에게 전달
-        # ═══════════════════════════════════════════════════════════════
-        python_check = self._arc_python_precheck(current_arc, prev_arcs)
+    def _build_missing_tactical_doc_result(self) -> dict:
+        return {
+            "decision": "REJECT",
+            "severity": "CRITICAL",
+            "cross_arc_analysis": {},
+            "intra_arc_analysis": {},
+            "violations": [
+                {
+                    "type": "missing_tactical_doc",
+                    "severity": "CRITICAL",
+                    "description": "Arc에 tactical_doc이 없습니다.",
+                }
+            ],
+            "warnings": [],
+            "fix_instructions": "tactical_doc을 포함한 완전한 Arc를 설계하십시오.",
+        }
 
-        # [V60.56] Python 검사 결과를 advisory로 변환
+    def _log_python_arc_advisory(self, python_check: dict) -> None:
         python_advisory = python_check.get("critical_violations", [])
-        if python_advisory:
-            logging.info(f" [V60.56] Python advisory 발견 {len(python_advisory)}건 - LLM에게 전달")
-            for adv in python_advisory[:3]:
-                logging.info(f"- [{adv.get('type', '?')}] {adv.get('item_or_subject', adv.get('description', '?'))[:50]}"
-                )
+        if not python_advisory:
+            return
 
-        # ═══════════════════════════════════════════════════════════════
-        # Phase 1.5: Joint Docs Auto-Correction [V49.2 NEW]
-        # ═══════════════════════════════════════════════════════════════
-        corrected_joint_docs = self._extract_accurate_joint_docs(
-            tactical_doc=tactical_doc, arc_no=arc_no, ep_end=ep_end, original_joint_docs=joint_docs
-        )
-
-        joint_docs_corrected = False
-        if corrected_joint_docs and corrected_joint_docs != joint_docs:
-            joint_docs = corrected_joint_docs
-            joint_docs_corrected = True
-            logging.info(" [V49.2] Joint Docs 자동 수정 완료")
-
-        # ═══════════════════════════════════════════════════════════════
-        # Phase 1.6: Arc Start State Auto-Correction [V60.13 NEW]
-        # ═══════════════════════════════════════════════════════════════
-        start_state_corrected = False
-        if prev_arcs:
-            last_arc = prev_arcs[-1]
-            prev_state = last_arc.get("state_constraints", {})
-            prev_end = prev_state.get("arc_end_state", {})
-            prev_joint = last_arc.get("joint_docs", {})
-            prev_shadow = last_arc.get("status_shadow", {})
-
-            correct_energy = prev_end.get("internal_energy")
-            if correct_energy is None:
-                loss_str = prev_shadow.get("internal_energy_loss", "0%")
-                try:
-                    loss = int(re.search(r"(\d+)", str(loss_str)).group(1))
-                    correct_energy = max(0, 100 - loss)
-                except (ValueError, AttributeError, TypeError):  # [V64.P4] energy parse failure
-                    logging.warning(f" [V60.73] internal_energy_loss 파싱 실패: '{loss_str}' → 50% 가정")
-                    correct_energy = 50
-
-            correct_injuries = prev_end.get("injuries") or "없음"
-            correct_location = prev_end.get("location") or prev_joint.get("final_location", "알 수 없음")
-            correct_equipment = prev_end.get("equipment")
-            if correct_equipment is None:
-                correct_equipment = prev_joint.get("physical_inventory", [])
-
-            curr_state = current_arc.get("state_constraints", {})
-            curr_start = curr_state.get("arc_start_state", {})
-
-            needs_correction = (
-                curr_start.get("internal_energy") != correct_energy
-                or curr_start.get("injuries") != correct_injuries
-                or curr_start.get("location") != correct_location
-                or curr_start.get("equipment") != correct_equipment
+        logging.info(f" [V60.56] Python advisory 발견 {len(python_advisory)}건 - LLM에게 전달")
+        for advisory in python_advisory[:3]:
+            logging.info(
+                f"- [{advisory.get('type', '?')}] {advisory.get('item_or_subject', advisory.get('description', '?'))[:50]}"
             )
 
-            if needs_correction:
-                corrected_start = {
-                    "internal_energy": correct_energy,
-                    "injuries": correct_injuries,
-                    "location": correct_location,
-                    "equipment": correct_equipment,
-                }
-                curr_state["arc_start_state"] = corrected_start
-                current_arc["state_constraints"] = curr_state
-                start_state_corrected = True
-                logging.info(f" [V60.13] Arc Start State 자동 수정 완료 (내공: {correct_energy}%, 부상: {correct_injuries})"
-                )
+    def _correct_arc_joint_docs(
+        self,
+        *,
+        tactical_doc: str,
+        arc_no: int,
+        ep_end: int,
+        joint_docs: dict,
+    ) -> tuple[dict, bool]:
+        corrected_joint_docs = self._extract_accurate_joint_docs(
+            tactical_doc=tactical_doc,
+            arc_no=arc_no,
+            ep_end=ep_end,
+            original_joint_docs=joint_docs,
+        )
+        if corrected_joint_docs and corrected_joint_docs != joint_docs:
+            logging.info(" [V49.2] Joint Docs 자동 수정 완료")
+            return corrected_joint_docs, True
+        return joint_docs, False
 
-        # ═══════════════════════════════════════════════════════════════
-        # Phase 2: LLM 기반 정밀 검증
-        # ═══════════════════════════════════════════════════════════════
+    def _resolve_prev_arc_start_state(self, prev_arc: dict) -> dict:
+        prev_state = prev_arc.get("state_constraints", {})
+        prev_end = prev_state.get("arc_end_state", {})
+        prev_joint = prev_arc.get("joint_docs", {})
+        prev_shadow = prev_arc.get("status_shadow", {})
 
+        correct_energy = prev_end.get("internal_energy")
+        if correct_energy is None:
+            loss_str = prev_shadow.get("internal_energy_loss", "0%")
+            try:
+                loss = int(re.search(r"(\d+)", str(loss_str)).group(1))
+                correct_energy = max(0, 100 - loss)
+            except (ValueError, AttributeError, TypeError):  # [V64.P4] energy parse failure
+                logging.warning(f" [V60.73] internal_energy_loss 파싱 실패: '{loss_str}' → 50% 가정")
+                correct_energy = 50
+
+        correct_equipment = prev_end.get("equipment")
+        if correct_equipment is None:
+            correct_equipment = prev_joint.get("physical_inventory", [])
+
+        return {
+            "internal_energy": correct_energy,
+            "injuries": prev_end.get("injuries") or "없음",
+            "location": prev_end.get("location") or prev_joint.get("final_location", "알 수 없음"),
+            "equipment": correct_equipment,
+        }
+
+    def _correct_arc_start_state(self, current_arc: dict, prev_arcs: list[dict]) -> bool:
+        if not prev_arcs:
+            return False
+
+        corrected_start = self._resolve_prev_arc_start_state(prev_arcs[-1])
+        curr_state = current_arc.get("state_constraints", {})
+        curr_start = curr_state.get("arc_start_state", {})
+        needs_correction = any(curr_start.get(key) != value for key, value in corrected_start.items())
+        if not needs_correction:
+            return False
+
+        curr_state["arc_start_state"] = corrected_start
+        current_arc["state_constraints"] = curr_state
+        logging.info(
+            f" [V60.13] Arc Start State 자동 수정 완료 (내공: {corrected_start['internal_energy']}%, 부상: {corrected_start['injuries']})"
+        )
+        return True
+
+    def _build_arc_continuity_prompt(self, arc_context: dict, prev_arcs: list[dict], entity_registry: dict) -> str:
         prev_arcs_summary = self._format_prev_arcs(prev_arcs)
         entity_registry_str = self._ci._format_entity_registry(entity_registry)
-
-        prompt = ARC_CONTINUITY_INSPECTION_PROMPT.format_map(
+        return ARC_CONTINUITY_INSPECTION_PROMPT.format_map(
             SafeDict(
-                current_arc_no=arc_no,
-                ep_count=ep_count,
-                ep_start=ep_start,
-                ep_end=ep_end,
-                tactical_doc=self._ci._escape_braces(self._fit_prompt_text(tactical_doc, 50000)),
-                joint_docs=self._ci._escape_braces(json.dumps(joint_docs, ensure_ascii=False)),
-                status_shadow=self._ci._escape_braces(json.dumps(status_shadow, ensure_ascii=False)),
+                current_arc_no=arc_context["arc_no"],
+                ep_count=arc_context["ep_count"],
+                ep_start=arc_context["ep_start"],
+                ep_end=arc_context["ep_end"],
+                tactical_doc=self._ci._escape_braces(self._fit_prompt_text(arc_context["tactical_doc"], 50000)),
+                joint_docs=self._ci._escape_braces(json.dumps(arc_context["joint_docs"], ensure_ascii=False)),
+                status_shadow=self._ci._escape_braces(json.dumps(arc_context["status_shadow"], ensure_ascii=False)),
                 prev_arc_count=len(prev_arcs),
                 prev_arcs_summary=self._ci._escape_braces(prev_arcs_summary),
                 entity_registry=self._ci._escape_braces(entity_registry_str),
             )
         )
 
-        try:
-            response = self._ci.ask(prompt, temperature=0.1)
-            result = self._ci._extract_json_robust(response)
-
-            if not isinstance(result, dict):
-                logging.warning(" [V60.74] JSON 파싱 실패 - 수동 검수 권장")
-                result = {
-                    "decision": "PASS",
-                    "severity": "NONE",
-                    "violations": [],
-                    "warnings": ["[V60.74] LLM 응답 파싱 실패 - 수동 검수 필요"],
-                    "confidence": 0.0,
-                    "parsing_error": True,
-                }
-
-            # Python 검증 결과 병합
-            if python_check.get("warnings"):
-                result.setdefault("warnings", [])
-                result["warnings"].extend(python_check["warnings"])
-
-            # [V70] critical_violations도 warnings로 병합 (Python은 REJECT 권한 없음, advisory만)
-            if python_check.get("critical_violations"):
-                result.setdefault("warnings", [])
-                for _cv in python_check["critical_violations"]:
-                    _cv_desc = (
-                        _cv.get("description", _cv.get("item_or_subject", "알 수 없음"))
-                        if isinstance(_cv, dict)
-                        else str(_cv)
-                    )
-                    result["warnings"].append(f"[Python advisory] {_cv_desc}")
-
-            # [V49.2] Joint Docs 자동 수정 정보 포함
-            if joint_docs_corrected:
-                result["corrected_joint_docs"] = joint_docs
-                result.setdefault("warnings", [])
-                if "[V49.2]" not in str(result.get("warnings", [])):
-                    result["warnings"].append("[V49.2] joint_docs가 tactical_doc 기반으로 자동 수정됨")
-
-            # [V60.13] Arc Start State 자동 수정 정보 포함
-            if start_state_corrected:
-                result["corrected_state_constraints"] = current_arc.get("state_constraints", {})
-                result.setdefault("warnings", [])
-                if "[V60.13]" not in str(result.get("warnings", [])):
-                    result["warnings"].append(
-                        "[V60.13] arc_start_state가 이전 Arc의 arc_end_state 기반으로 자동 수정됨"
-                    )
-
-            # [V60.13] intra_arc_contradiction은 WARNING으로 완화
-            violations = result.get("violations", [])
-            if not isinstance(violations, list):
-                violations = []
-            has_critical_cross_arc = any(
-                v.get("type") in ["duplicate_acquisition", "premature_possession", "state_discontinuity"]
-                and v.get("severity") in ["CRITICAL", "MAJOR"]
-                for v in violations
-                if isinstance(v, dict)
-            )
-
-            if result.get("decision") == "REJECT" and not has_critical_cross_arc:
-                intra_only = violations and all(
-                    isinstance(v, dict) and v.get("type") in ["intra_arc_contradiction", "setting_inconsistency"]
-                    for v in violations
-                )
-                if intra_only and start_state_corrected:
-                    result["decision"] = "PASS"
-                    result["severity"] = "MINOR"
-                    result.setdefault("warnings", [])
-                    for v in violations:
-                        if not isinstance(v, dict):
-                            continue
-                        result["warnings"].append(f"[완화됨] {v.get('type')}: {v.get('description', '')[:100]}")
-                    result["violations"] = []
-                    logging.warning(" [V60.13] intra-arc 오류 완화 → PASS (cross-arc 정상)")
-
+    def _normalize_arc_llm_result(self, result: object) -> dict:
+        if isinstance(result, dict):
             return result
 
-        except Exception as e:
-            logging.warning(f" [ContinuityInspector] Arc LLM 검증 실패: {e}")
-            if python_check.get("warnings"):
-                return {
-                    "decision": "PASS",
-                    "severity": "MINOR",
-                    "cross_arc_analysis": python_check.get("cross_arc_timeline", {}),
-                    "intra_arc_analysis": python_check.get("intra_arc_analysis", {}),
-                    "violations": [],
-                    "warnings": python_check["warnings"] + ["LLM 검증 실패 - 수동 확인 권장"],
-                    "fix_instructions": "",
-                }
+        logging.warning(" [V60.74] JSON 파싱 실패 - 수동 검수 권장")
+        return {
+            "decision": "PASS",
+            "severity": "NONE",
+            "violations": [],
+            "warnings": ["[V60.74] LLM 응답 파싱 실패 - 수동 검수 필요"],
+            "confidence": 0.0,
+            "parsing_error": True,
+        }
+
+    def _merge_arc_python_warnings(self, result: dict, python_check: dict) -> None:
+        if python_check.get("warnings"):
+            result.setdefault("warnings", [])
+            result["warnings"].extend(python_check["warnings"])
+
+        if python_check.get("critical_violations"):
+            result.setdefault("warnings", [])
+            for critical_violation in python_check["critical_violations"]:
+                critical_description = (
+                    critical_violation.get("description", critical_violation.get("item_or_subject", "알 수 없음"))
+                    if isinstance(critical_violation, dict)
+                    else str(critical_violation)
+                )
+                result["warnings"].append(f"[Python advisory] {critical_description}")
+
+    def _append_arc_correction_warnings(
+        self,
+        result: dict,
+        *,
+        current_arc: dict,
+        joint_docs: dict,
+        joint_docs_corrected: bool,
+        start_state_corrected: bool,
+    ) -> None:
+        if joint_docs_corrected:
+            result["corrected_joint_docs"] = joint_docs
+            result.setdefault("warnings", [])
+            if "[V49.2]" not in str(result.get("warnings", [])):
+                result["warnings"].append("[V49.2] joint_docs가 tactical_doc 기반으로 자동 수정됨")
+
+        if start_state_corrected:
+            result["corrected_state_constraints"] = current_arc.get("state_constraints", {})
+            result.setdefault("warnings", [])
+            if "[V60.13]" not in str(result.get("warnings", [])):
+                result["warnings"].append("[V60.13] arc_start_state가 이전 Arc의 arc_end_state 기반으로 자동 수정됨")
+
+    def _relax_intra_arc_reject(self, result: dict, *, start_state_corrected: bool) -> dict:
+        violations = result.get("violations", [])
+        if not isinstance(violations, list):
+            violations = []
+        has_critical_cross_arc = any(
+            violation.get("type") in ["duplicate_acquisition", "premature_possession", "state_discontinuity"]
+            and violation.get("severity") in ["CRITICAL", "MAJOR"]
+            for violation in violations
+            if isinstance(violation, dict)
+        )
+        if result.get("decision") != "REJECT" or has_critical_cross_arc:
+            return result
+
+        intra_only = violations and all(
+            isinstance(violation, dict)
+            and violation.get("type") in ["intra_arc_contradiction", "setting_inconsistency"]
+            for violation in violations
+        )
+        if not (intra_only and start_state_corrected):
+            return result
+
+        result["decision"] = "PASS"
+        result["severity"] = "MINOR"
+        result.setdefault("warnings", [])
+        for violation in violations:
+            if not isinstance(violation, dict):
+                continue
+            result["warnings"].append(f"[완화됨] {violation.get('type')}: {violation.get('description', '')[:100]}")
+        result["violations"] = []
+        logging.warning(" [V60.13] intra-arc 오류 완화 → PASS (cross-arc 정상)")
+        return result
+
+    def _build_arc_llm_fallback(self, python_check: dict) -> dict:
+        if python_check.get("warnings"):
             return {
                 "decision": "PASS",
-                "severity": "NONE",
+                "severity": "MINOR",
+                "cross_arc_analysis": python_check.get("cross_arc_timeline", {}),
+                "intra_arc_analysis": python_check.get("intra_arc_analysis", {}),
                 "violations": [],
-                "warnings": ["Arc LLM 검증 실패 - 수동 확인 권장"],
+                "warnings": python_check["warnings"] + ["LLM 검증 실패 - 수동 확인 권장"],
                 "fix_instructions": "",
             }
+        return {
+            "decision": "PASS",
+            "severity": "NONE",
+            "violations": [],
+            "warnings": ["Arc LLM 검증 실패 - 수동 확인 권장"],
+            "fix_instructions": "",
+        }
 
     def _inspect_intra_arc_only(self, current_arc: dict) -> dict:
         """[V49] Arc 1 또는 이전 Arc 없을 때 단일 Arc 내 모순만 검증"""
@@ -582,15 +626,71 @@ class ContinuityArcValidator:
             logging.warning(f" [V49.2] Joint Docs 추출 실패: {e}")
             return original_joint_docs
 
-    def _arc_python_precheck(self, current_arc: dict, prev_arcs: list[dict]) -> dict:
-        """[V49] Arc 수준 Python 기반 사전 검증"""
-        critical_violations = []
-        warnings = []
+    @staticmethod
+    def _arc_precheck_source_items(state_constraints: object) -> object:
+        if not isinstance(state_constraints, dict):
+            return []
+        items = state_constraints.get("protagonist_items", [])
+        return items if items else state_constraints.get("items_acquired", [])
 
-        current_arc_no = current_arc.get("arc_no", 0)
-        tactical_doc = current_arc.get("tactical_doc", "")
+    def _arc_precheck_normalize_items(self, items: object, tactical_doc: str, *, filter_distributed: bool) -> list[str]:
+        if not isinstance(items, list):
+            return []
 
-        # 이전 Arc들에서 획득한 아이템/수여물 추적
+        normalized = [item for item in items if item and isinstance(item, str) and 2 <= len(item) <= 30]
+        if not filter_distributed:
+            return normalized
+        return list(self._ci._filter_distributed_items(normalized, tactical_doc))
+
+    def _arc_precheck_grants(self, tactical_doc: str) -> list[str]:
+        granted_items = []
+        for pattern in self._ci.grant_patterns:
+            matches = re.findall(pattern, tactical_doc)
+            for item in matches:
+                item = item.strip()
+                if item and 2 <= len(item) <= 30:
+                    granted_items.append(item)
+        return granted_items
+
+    def _arc_precheck_inventory_acquisitions(self, joint_docs: dict, tactical_doc: str) -> list[str]:
+        inventory = joint_docs.get("physical_inventory", "")
+        if isinstance(inventory, list):
+            return self._arc_precheck_normalize_items(inventory, tactical_doc, filter_distributed=True)
+        if not isinstance(inventory, str) or not inventory:
+            return []
+
+        raw_items = []
+        for pattern in self._ci.acquire_patterns:
+            matches = re.findall(pattern, inventory)
+            for item in matches:
+                item = item.strip()
+                if item and 2 <= len(item) <= 30:
+                    raw_items.append(item)
+        return list(self._ci._filter_distributed_items(raw_items, tactical_doc))
+
+    @staticmethod
+    def _arc_precheck_inventory_snapshot_items(joint_docs: object) -> list[str]:
+        if not isinstance(joint_docs, dict):
+            return []
+
+        inventory = joint_docs.get("physical_inventory", [])
+        if isinstance(inventory, list):
+            return [str(item) for item in inventory if item]
+        if isinstance(inventory, str) and inventory:
+            return [inventory]
+        return []
+
+    def _arc_precheck_usage_items(self, tactical_doc: str) -> set[str]:
+        usage_items = set()
+        for pattern in self._ci.usage_patterns:
+            matches = re.findall(pattern, tactical_doc)
+            for item in matches:
+                item = item.strip() if isinstance(item, str) else str(item)
+                if item and 2 <= len(item) <= 30:
+                    usage_items.add(item)
+        return usage_items
+
+    def _collect_arc_precheck_prev_facts(self, prev_arcs: list[dict]) -> tuple[dict, dict, dict, dict]:
         acquired_items = {}
         granted_items = {}
         prev_inventory = {}
@@ -601,169 +701,129 @@ class ContinuityArcValidator:
             arc_tactical = arc.get("tactical_doc", "")
             arc_joint = arc.get("joint_docs", {})
             arc_status = arc.get("status_shadow", {})
-            arc_state_constraints = arc.get("state_constraints", {})
+            source_items = self._arc_precheck_source_items(arc.get("state_constraints", {}))
 
-            # [V49.6] protagonist_items 우선 사용
-            items_from_constraints = arc_state_constraints.get("protagonist_items", [])
-            if not items_from_constraints:
-                items_from_constraints = arc_state_constraints.get("items_acquired", [])
+            for item in self._arc_precheck_normalize_items(source_items, arc_tactical, filter_distributed=True):
+                acquired_items[item] = arc_no
+                logging.info(f" [V60.54 DEBUG] Arc {arc_no} \ud68d\ub4dd \uae30\ub85d: '{item}'")
 
-            if isinstance(items_from_constraints, list):
-                filtered_items = self._ci._filter_distributed_items(
-                    [i for i in items_from_constraints if i and isinstance(i, str) and 2 <= len(i) <= 30], arc_tactical
-                )
-                for item in filtered_items:
-                    acquired_items[item] = arc_no
-                    logging.info(f" [V60.54 DEBUG] Arc {arc_no} 획득 기록: '{item}'")
+            if not source_items:
+                logging.info(f" [V60.54 DEBUG] Arc {arc_no} state_constraints\uc5d0 \ud68d\ub4dd \uc544\uc774\ud15c \uc5c6\uc74c")
 
-            if not items_from_constraints:
-                logging.info(f" [V60.54 DEBUG] Arc {arc_no} state_constraints에 획득 아이템 없음")
-                pass
+            for item in self._arc_precheck_grants(arc_tactical):
+                granted_items[item] = arc_no
 
-            for pattern in self._ci.grant_patterns:
-                matches = re.findall(pattern, arc_tactical)
-                for item in matches:
-                    item = item.strip()
-                    if item and 2 <= len(item) <= 30:
-                        granted_items[item] = arc_no
-
-            inventory = arc_joint.get("physical_inventory", "")
-            if isinstance(inventory, list):
-                filtered_inv = self._ci._filter_distributed_items(
-                    [i for i in inventory if i and isinstance(i, str) and 2 <= len(i) <= 30], arc_tactical
-                )
-                for item in filtered_inv:
-                    acquired_items[item] = arc_no
-            elif isinstance(inventory, str) and inventory:
-                raw_inv = []
-                for pattern in self._ci.acquire_patterns:
-                    matches = re.findall(pattern, inventory)
-                    for item in matches:
-                        item = item.strip()
-                        if item and 2 <= len(item) <= 30:
-                            raw_inv.append(item)
-                for item in self._ci._filter_distributed_items(raw_inv, arc_tactical):
-                    acquired_items[item] = arc_no
+            for item in self._arc_precheck_inventory_acquisitions(arc_joint, arc_tactical):
+                acquired_items[item] = arc_no
 
             prev_inventory = arc_joint
             prev_status = arc_status
 
-        # 현재 Arc에서 획득하려는 아이템 검색
-        current_acquisitions = []
-        current_state_constraints = current_arc.get("state_constraints", {})
+        return acquired_items, granted_items, prev_inventory, prev_status
 
-        items_from_current = current_state_constraints.get("protagonist_items", [])
-        if not items_from_current:
-            items_from_current = current_state_constraints.get("items_acquired", [])
-
-        if items_from_current:
-            logging.info(f" [V60.54 DEBUG] state_constraints 획득 아이템: {items_from_current}")
-
-        if isinstance(items_from_current, list):
-            for item in items_from_current:
-                if item and isinstance(item, str) and 2 <= len(item) <= 30:
-                    current_acquisitions.append(item)
-
-        if not current_acquisitions:
-            logging.info(" [V60.54 DEBUG] state_constraints에 획득 아이템 없음 - 패턴 검색 스킵")
-            pass
-
-        # ═══════════════════════════════════════════════════════════════
-        # [V60.50] 이미 소지 중인 아이템은 중복 검사에서 제외
-        # ═══════════════════════════════════════════════════════════════
-        prev_inventory_items = []
-        if isinstance(prev_inventory, dict):
-            inv_list = prev_inventory.get("physical_inventory", [])
-            if isinstance(inv_list, list):
-                prev_inventory_items = [str(i) for i in inv_list if i]
-            elif isinstance(inv_list, str) and inv_list:
-                prev_inventory_items = [inv_list]
-
-        current_joint = current_arc.get("joint_docs", {})
-        current_inventory_items = []
-        if isinstance(current_joint, dict):
-            curr_inv = current_joint.get("physical_inventory", [])
-            if isinstance(curr_inv, list):
-                current_inventory_items = [str(i) for i in curr_inv if i]
-            elif isinstance(curr_inv, str) and curr_inv:
-                current_inventory_items = [curr_inv]
-
-        # [V60.53] 사용 패턴 필터링
-        usage_items = set()
-        for pattern in self._ci.usage_patterns:
-            matches = re.findall(pattern, tactical_doc)
-            for item in matches:
-                item = item.strip() if isinstance(item, str) else str(item)
-                if item and 2 <= len(item) <= 30:
-                    usage_items.add(item)
-
-        if usage_items:
-            logging.info(f" [V60.54 DEBUG] 사용 패턴 감지: {list(usage_items)[:5]}")
-
-        # [I-1] 현재 Arc 인벤토리는 선필터에 포함하지 않음 (중복 획득 검증 우회 방지)
-        all_existing_items = prev_inventory_items + list(usage_items)
-
-        logging.info(f" [V60.54 DEBUG] Arc {current_arc_no} 중복 검사 시작")
-        logging.info(f"- 현재 획득 후보: {current_acquisitions[:5] if current_acquisitions else '없음'}")
-        logging.info(f"- 이전 소지품: {prev_inventory_items[:3] if prev_inventory_items else '없음'}")
-        logging.info(f"- 현재 소지품: {current_inventory_items[:3] if current_inventory_items else '없음'}")
-        logging.info(f"- 이전 Arc 획득 기록: {list(acquired_items.keys())[:5] if acquired_items else '없음'}")
-
+    def _arc_precheck_filter_owned_candidates(self, current_acquisitions: list[str], owned_items: list[str]) -> list[str]:
         filtered_current_acquisitions = []
         for curr_item in current_acquisitions:
             is_already_owned = False
-            for owned_item in all_existing_items:
+            for owned_item in owned_items:
                 if self._ci._is_same_item(curr_item, owned_item):
-                    logging.info(f" 필터링: '{curr_item}' (이미 소지: '{owned_item}')")
+                    logging.info(
+                        f" \ud544\ud130\ub9c1: '{curr_item}' (\uc774\ubbf8 \uc18c\uc9c0: '{owned_item}')"
+                    )
                     is_already_owned = True
                     break
             if not is_already_owned:
                 filtered_current_acquisitions.append(curr_item)
+        return filtered_current_acquisitions
 
-        current_acquisitions = filtered_current_acquisitions
-        logging.info(f"- 필터링 후 획득 후보: {current_acquisitions if current_acquisitions else '없음'}")
-
-        # 검증 1: 중복 획득
+    def _arc_precheck_duplicate_violations(
+        self,
+        current_acquisitions: list[str],
+        acquired_items: dict[str, int],
+        current_arc_no: int,
+    ) -> list[dict]:
+        duplicate_violations = []
         for curr_item in current_acquisitions:
             for prev_item, prev_arc in acquired_items.items():
-                is_same = self._ci._is_same_item(curr_item, prev_item)
-                if is_same:
-                    logging.warning(" [V60.54] 중복 획득 감지!")
-                    logging.info(f"- 현재 Arc: {current_arc_no}, 아이템: '{curr_item}'")
-                    logging.info(f"- 이전 Arc: {prev_arc}, 아이템: '{prev_item}'")
-                    critical_violations.append(
-                        {
-                            "type": "duplicate_acquisition",
-                            "severity": "CRITICAL",
-                            "item_or_subject": curr_item,
-                            "prev_arc": prev_arc,
-                            "description": f"'{prev_item}'은(는) 이미 Arc {prev_arc}에서 획득했습니다. "
-                            f"Arc {current_arc_no}에서 다시 획득하려 합니다.",
-                            "evidence_prev": f"Arc {prev_arc}에서 획득",
-                            "evidence_curr": f"현재 Arc에서 '{curr_item}' 획득 시도",
-                        }
-                    )
-                    break
+                if not self._ci._is_same_item(curr_item, prev_item):
+                    continue
 
+                logging.warning(" [V60.54] \uc911\ubcf5 \ud68d\ub4dd \uac10\uc9c0!")
+                logging.info(f"- \ud604\uc7ac Arc: {current_arc_no}, \uc544\uc774\ud15c: '{curr_item}'")
+                logging.info(f"- \uc774\uc804 Arc: {prev_arc}, \uc544\uc774\ud15c: '{prev_item}'")
+                duplicate_violations.append(
+                    {
+                        "type": "duplicate_acquisition",
+                        "severity": "CRITICAL",
+                        "item_or_subject": curr_item,
+                        "prev_arc": prev_arc,
+                        "description": f"'{prev_item}'\uc740(\ub294) \uc774\ubbf8 Arc {prev_arc}\uc5d0\uc11c \ud68d\ub4dd\ud588\uc2b5\ub2c8\ub2e4. "
+                        f"Arc {current_arc_no}\uc5d0\uc11c \ub2e4\uc2dc \ud68d\ub4dd\ud558\ub824 \ud569\ub2c8\ub2e4.",
+                        "evidence_prev": f"Arc {prev_arc}\uc5d0\uc11c \ud68d\ub4dd",
+                        "evidence_curr": f"\ud604\uc7ac Arc\uc5d0\uc11c '{curr_item}' \ud68d\ub4dd \uc2dc\ub3c4",
+                    }
+                )
+                break
+
+        return duplicate_violations
+
+    @staticmethod
+    def _arc_precheck_injury_warnings(prev_status: dict, tactical_doc: str) -> list[str]:
+        if not prev_status:
+            return []
+
+        prev_injuries = prev_status.get("expected_injuries", "")
+        if prev_injuries and prev_injuries not in ["\uc5c6\uc74c", "\uacbd\ubbf8", ""]:
+            if "\ubd80\uc0c1" not in tactical_doc and "\ud68c\ubcf5" not in tactical_doc and "\uce58\ub8cc" not in tactical_doc:
+                return [
+                    f"\uc9c1\uc804 Arc\uc5d0\uc11c '{prev_injuries}' \ubd80\uc0c1\uc774 \uc788\uc5c8\uc73c\ub098, "
+                    f"\ud604\uc7ac Arc\uc5d0\uc11c \ubd80\uc0c1/\ud68c\ubcf5 \uad00\ub828 \uc5b8\uae09\uc774 \uc5c6\uc2b5\ub2c8\ub2e4."
+                ]
+        return []
+
+    def _arc_python_precheck(self, current_arc: dict, prev_arcs: list[dict]) -> dict:
+        """[V49] Arc \uc218\uc900 Python \uae30\ubc18 \uc0ac\uc804 \uac80\uc99d"""
+        warnings = []
+        current_arc_no = current_arc.get("arc_no", 0)
+        tactical_doc = current_arc.get("tactical_doc", "")
+        acquired_items, granted_items, prev_inventory, prev_status = self._collect_arc_precheck_prev_facts(prev_arcs)
+
+        source_items = self._arc_precheck_source_items(current_arc.get("state_constraints", {}))
+        if source_items:
+            logging.info(f" [V60.54 DEBUG] state_constraints \ud68d\ub4dd \uc544\uc774\ud15c: {source_items}")
+
+        current_acquisitions = self._arc_precheck_normalize_items(source_items, tactical_doc, filter_distributed=False)
+        if not current_acquisitions:
+            logging.info(" [V60.54 DEBUG] state_constraints\uc5d0 \ud68d\ub4dd \uc544\uc774\ud15c \uc5c6\uc74c - \ud328\ud134 \uac80\uc0c9 \uc2a4\ud0b5")
+
+        prev_inventory_items = self._arc_precheck_inventory_snapshot_items(prev_inventory)
+        current_inventory_items = self._arc_precheck_inventory_snapshot_items(current_arc.get("joint_docs", {}))
+        usage_items = self._arc_precheck_usage_items(tactical_doc)
+        if usage_items:
+            logging.info(f" [V60.54 DEBUG] \uc0ac\uc6a9 \ud328\ud134 \uac10\uc9c0: {list(usage_items)[:5]}")
+
+        all_existing_items = prev_inventory_items + list(usage_items)
+        logging.info(f" [V60.54 DEBUG] Arc {current_arc_no} \uc911\ubcf5 \uac80\uc0ac \uc2dc\uc791")
+        logging.info(f"- \ud604\uc7ac \ud68d\ub4dd \ud6c4\ubcf4: {current_acquisitions[:5] if current_acquisitions else '\uc5c6\uc74c'}")
+        logging.info(f"- \uc774\uc804 \uc18c\uc9c0\ud488: {prev_inventory_items[:3] if prev_inventory_items else '\uc5c6\uc74c'}")
+        logging.info(f"- \ud604\uc7ac \uc18c\uc9c0\ud488: {current_inventory_items[:3] if current_inventory_items else '\uc5c6\uc74c'}")
+        logging.info(f"- \uc774\uc804 Arc \ud68d\ub4dd \uae30\ub85d: {list(acquired_items.keys())[:5] if acquired_items else '\uc5c6\uc74c'}")
+
+        current_acquisitions = self._arc_precheck_filter_owned_candidates(current_acquisitions, all_existing_items)
+        logging.info(f"- \ud544\ud130\ub9c1 \ud6c4 \ud68d\ub4dd \ud6c4\ubcf4: {current_acquisitions if current_acquisitions else '\uc5c6\uc74c'}")
+
+        critical_violations = self._arc_precheck_duplicate_violations(current_acquisitions, acquired_items, current_arc_no)
         if not critical_violations:
-            logging.info(f"✅ [V60.54] Arc {current_arc_no} 중복 획득 없음")
+            logging.info(f"\u2705 [V60.54] Arc {current_arc_no} \uc911\ubcf5 \ud68d\ub4dd \uc5c6\uc74c")
 
-        # 검증 2: 단일 Arc 내 모순
         intra_violations = self._check_intra_arc_consistency(current_arc)
-        for v in intra_violations:
-            if v.get("severity") == "CRITICAL":
-                critical_violations.append(v)
+        for violation in intra_violations:
+            if violation.get("severity") == "CRITICAL":
+                critical_violations.append(violation)
             else:
-                warnings.append(v.get("description", ""))
+                warnings.append(violation.get("description", ""))
 
-        # 검증 3: 상태 연속성
-        if prev_status:
-            prev_injuries = prev_status.get("expected_injuries", "")
-            if prev_injuries and prev_injuries not in ["없음", "경미", ""]:
-                if "부상" not in tactical_doc and "회복" not in tactical_doc and "치료" not in tactical_doc:
-                    warnings.append(
-                        f"직전 Arc에서 '{prev_injuries}' 부상이 있었으나, 현재 Arc에서 부상/회복 관련 언급이 없습니다."
-                    )
+        warnings.extend(self._arc_precheck_injury_warnings(prev_status, tactical_doc))
 
         cross_arc_timeline = {
             "items_acquired_before": list(acquired_items.keys()),
@@ -834,10 +894,12 @@ class ContinuityArcValidator:
             curr_content = ep_sections[curr_ep]
             next_content = ep_sections[next_ep]
 
-            injury_pattern = r"(?:부상|상처|파열|골절|출혈|기절)"
+            injury_pattern = r"(?:부상|상처|파열|골절|출혈|기절)"  # utf8-hygiene: allow-line regex pattern
             if re.search(injury_pattern, curr_content):
-                action_pattern = r"(?:전투|격전|결투|비무|대결)"
-                if re.search(action_pattern, next_content) and not re.search(r"(?:회복|치료|휴식)", next_content):
+                action_pattern = r"(?:전투|격전|결투|비무|대결)"  # utf8-hygiene: allow-line regex pattern
+                if re.search(action_pattern, next_content) and not re.search(
+                    r"(?:회복|치료|휴식)", next_content  # utf8-hygiene: allow-line regex pattern
+                ):
                     violations.append(
                         {
                             "type": "state_discontinuity",
@@ -851,12 +913,20 @@ class ContinuityArcValidator:
                     )
 
             # [V49.2] 복장 일관성 검증
-            curr_attire_fancy = re.search(r"(?:비단|명주|화려한)\s*(?:옷|의|포|복|차림)", curr_content)
-            curr_attire_plain = re.search(r"(?:허름한|낡은|무명|삼베)\s*(?:옷|의|포|복|차림)", curr_content)
-            next_attire_fancy = re.search(r"(?:비단|명주|화려한)\s*(?:옷|의|포|복|차림)", next_content)
-            next_attire_plain = re.search(r"(?:허름한|낡은|무명|삼베)\s*(?:옷|의|포|복|차림)", next_content)
+            curr_attire_fancy = re.search(
+                r"(?:비단|명주|화려한)\s*(?:옷|의|포|복|차림)", curr_content  # utf8-hygiene: allow-line regex pattern
+            )  # utf8-hygiene: allow-line regex pattern
+            curr_attire_plain = re.search(
+                r"(?:허름한|낡은|무명|삼베)\s*(?:옷|의|포|복|차림)", curr_content  # utf8-hygiene: allow-line regex pattern
+            )  # utf8-hygiene: allow-line regex pattern
+            next_attire_fancy = re.search(
+                r"(?:비단|명주|화려한)\s*(?:옷|의|포|복|차림)", next_content  # utf8-hygiene: allow-line regex pattern
+            )  # utf8-hygiene: allow-line regex pattern
+            next_attire_plain = re.search(
+                r"(?:허름한|낡은|무명|삼베)\s*(?:옷|의|포|복|차림)", next_content  # utf8-hygiene: allow-line regex pattern
+            )  # utf8-hygiene: allow-line regex pattern
 
-            attire_change_pattern = r"(?:옷|의복|복장|차림)(?:을|를)\s*(?:갈아입|바꾸|벗)"
+            attire_change_pattern = r"(?:옷|의복|복장|차림)(?:을|를)\s*(?:갈아입|바꾸|벗)"  # utf8-hygiene: allow-line regex pattern
             has_change_scene = re.search(attire_change_pattern, next_content)
 
             if curr_attire_fancy and next_attire_plain and not has_change_scene:

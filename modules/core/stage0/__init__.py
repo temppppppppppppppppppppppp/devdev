@@ -4,6 +4,7 @@ Stage 0 Module - 프로젝트 초기화 및 역설계
 main_a.py에서 분리된 Stage 0 전용 모듈
 """
 
+# utf8-hygiene: allow-file legacy stage0 UI strings remain mojibake outside the current refactor tranche
 import logging
 
 from modules.core.constants import GenreTypes
@@ -707,52 +708,22 @@ class StageZeroManager:
     # 스타일 레퍼런스 분석
     # ============================================
 
-    def run_reference_analysis(self, genre: str = None, cache_mode: str | None = None) -> StyleGuide | None:
-        """config/style_references/{genre}/ 폴더의 참조 원고를 분석하여 StyleGuide 생성"""
-        # 장르 결정
-        if not genre:
-            genre = self.genre
-        if not genre:
-            genre = self.show_genre_menu()
-        if not genre:
-            self._ui_log("[!] 장르가 지정되지 않았습니다.", level="warning")
-            return None
+    def _resolve_reference_analysis_genre(self, genre: str | None) -> str | None:
+        if genre:
+            return genre
+        if self.genre:
+            return self.genre
+        resolved_genre = self.show_genre_menu()
+        if resolved_genre:
+            return resolved_genre
+        self._ui_log("[!] ?λⅤ媛 吏?뺣릺吏 ?딆븯?듬땲??", level="warning")
+        return None
 
-        # 레퍼런스 로드
-        prepared_refs = StyleExtractor.prepare_reference_manuscripts(genre)
-        ref_base = Path(prepared_refs["ref_dir"])
-        if prepared_refs["status"] == "packaged_sync":
-            source_dir = prepared_refs.get("source_dir")
-            self._ui_log(
-                f"[*] 투자물 레퍼런스 초기화: 패키지 기본 레퍼런스를 작업 폴더로 동기화했습니다 ({source_dir} -> {ref_base})",
-                event_kind="summary",
-                render_format="summary",
-            )
-        ref_data = prepared_refs["works"]
-        if not ref_data:
-            self._ui_log(f"[!] 레퍼런스 원고가 없습니다: {ref_base}/", level="warning")
-            self._ui_log(f"폴더 구조: config/style_references/{genre}/작품명/0001.txt", level="warning")
-            if genre == "investment":
-                self._ui_log(
-                    "[!] 투자물 스타일 레퍼런스를 찾지 못했습니다. 작업 폴더 config/style_references/investment 또는 패키지 설치본을 확인하세요.",
-                    level="warning",
-                )
-            return None
-
-        total_eps = sum(len(eps) for eps in ref_data.values())
-        works = list(ref_data.keys())
-        self._ui_log(
-            f"[*] 레퍼런스 로드 완료: {len(works)}개 작품, {total_eps}개 에피소드",
-            event_kind="summary",
-            render_format="summary",
-        )
-        for w in works:
-            self._ui_log(f"- {w}: {len(ref_data[w])}편", event_kind="summary", render_format="summary")
-
+    def _confirm_reference_analysis_start(self) -> bool:
         try:
             confirm = (
                 self._ui_prompt(
-                    "\n  분석을 시작하시겠습니까? (y/n): ",
+                    "\n  遺꾩꽍???쒖옉?섏떆寃좎뒿?덇퉴? (y/n): ",
                     prompt_id="stage0_style_analysis_confirm",
                 )
                 .strip()
@@ -760,22 +731,23 @@ class StageZeroManager:
             )
         except (EOFError, KeyboardInterrupt, ValueError):
             confirm = "n"
-        if confirm != "y":
-            return None
+        return confirm == "y"
 
+    def _resolve_reference_analysis_cache_mode(self, cache_mode: str | None) -> str:
+        """
         if cache_mode is None:
             self._ui_menu(
-                "스타일 캐시 모드",
+                "?ㅽ???罹먯떆 紐⑤뱶",
                 [
-                    "[1] 캐시 사용 (기본)",
-                    "[2] 캐시 무시하고 재분석",
-                    "[3] 장르 캐시 삭제 후 재분석",
+                    "[1] 罹먯떆 ?ъ슜 (湲곕낯)",
+                    "[2] 罹먯떆 臾댁떆?섍퀬 ?щ텇??,
+                    "[3] ?λⅤ 罹먯떆 ??젣 ???щ텇??,
                 ],
                 prompt_id="stage0_style_cache_menu",
             )
             try:
                 cache_choice = (
-                    self._ui_prompt("\n  선택 (기본: 1): ", prompt_id="stage0_style_cache_choice").strip() or "1"
+                    self._ui_prompt("\n  ?좏깮 (湲곕낯: 1): ", prompt_id="stage0_style_cache_choice").strip() or "1"
                 )
             except (EOFError, KeyboardInterrupt, ValueError):
                 cache_choice = "1"
@@ -783,17 +755,92 @@ class StageZeroManager:
         else:
             cache_mode = cache_mode if cache_mode in {"use", "refresh", "reset"} else "use"
         cache_mode_label_map = {
-            "use": "캐시 사용",
-            "refresh": "캐시 무시 후 재분석",
-            "reset": "캐시 삭제 후 재분석",
+            "use": "罹먯떆 ?ъ슜",
+            "refresh": "罹먯떆 臾댁떆 ???щ텇??,
+            "reset": "罹먯떆 ??젣 ???щ텇??,
         }
         self._ui_log(
-            f"[*] 스타일 캐시 모드: {cache_mode_label_map.get(cache_mode, '캐시 사용')}",
+            f"[*] ?ㅽ???罹먯떆 紐⑤뱶: {cache_mode_label_map.get(cache_mode, '罹먯떆 ?ъ슜')}",
             event_kind="summary",
             render_format="summary",
         )
+        return cache_mode
+        """
+        if cache_mode is None:
+            self._ui_menu(
+                "Style cache mode",
+                [
+                    "[1] Use cache (default)",
+                    "[2] Refresh from references",
+                    "[3] Reset genre cache and rebuild",
+                ],
+                prompt_id="stage0_style_cache_menu",
+            )
+            try:
+                cache_choice = (
+                    self._ui_prompt("\n  Select (default: 1): ", prompt_id="stage0_style_cache_choice").strip()
+                    or "1"
+                )
+            except (EOFError, KeyboardInterrupt, ValueError):
+                cache_choice = "1"
+            resolved_cache_mode = {"1": "use", "2": "refresh", "3": "reset"}.get(cache_choice, "use")
+        else:
+            resolved_cache_mode = cache_mode if cache_mode in {"use", "refresh", "reset"} else "use"
+        cache_mode_label_map = {
+            "use": "캐시 사용",
+            "refresh": "캐시 무시 후 재분석",
+            "reset": "캐시 초기화 후 재분석",
+        }
+        self._ui_log(
+            f"[*] 스타일 캐시 모드: {cache_mode_label_map.get(resolved_cache_mode, '캐시 사용')}",
+            event_kind="summary",
+            render_format="summary",
+        )
+        return resolved_cache_mode
 
-        # 분석 실행
+    def _load_reference_analysis_payload(self, genre: str) -> tuple[dict[str, Any], Path, dict[str, list[str]]] | None:
+        prepared_refs = StyleExtractor.prepare_reference_manuscripts(genre)
+        ref_base = Path(prepared_refs["ref_dir"])
+        if prepared_refs["status"] == "packaged_sync":
+            source_dir = prepared_refs.get("source_dir")
+            self._ui_log(
+                f"[*] 투자물 레퍼런스 초기화: 패키지 기본 레퍼런스를 작업 디렉터리로 동기화했습니다 ({source_dir} -> {ref_base})",
+                event_kind="summary",
+                render_format="summary",
+            )
+            self._ui_log(
+                f"[*] ?ъ옄臾??덊띁?곗뒪 珥덇린?? ?⑦궎吏 湲곕낯 ?덊띁?곗뒪瑜??묒뾽 ?대뜑濡??숆린?뷀뻽?듬땲??({source_dir} -> {ref_base})",
+                event_kind="summary",
+                render_format="summary",
+            )
+        ref_data = prepared_refs["works"]
+        if not ref_data:
+            self._ui_log(f"[!] ?덊띁?곗뒪 ?먭퀬媛 ?놁뒿?덈떎: {ref_base}/", level="warning")
+            self._ui_log(f"?대뜑 援ъ“: config/style_references/{genre}/?묓뭹紐?0001.txt", level="warning")
+            if genre == "investment":
+                self._ui_log(
+                    "[!] ?ъ옄臾??ㅽ????덊띁?곗뒪瑜?李얠? 紐삵뻽?듬땲?? ?묒뾽 ?대뜑 config/style_references/investment ?먮뒗 ?⑦궎吏 ?ㅼ튂蹂몄쓣 ?뺤씤?섏꽭??",
+                    level="warning",
+                )
+            return None
+        return prepared_refs, ref_base, ref_data
+
+    def _log_reference_analysis_catalog(self, ref_data: dict[str, list[str]]) -> None:
+        total_eps = sum(len(eps) for eps in ref_data.values())
+        works = list(ref_data.keys())
+        self._ui_log(
+            f"[*] ?덊띁?곗뒪 濡쒕뱶 ?꾨즺: {len(works)}媛??묓뭹, {total_eps}媛??먰뵾?뚮뱶",
+            event_kind="summary",
+            render_format="summary",
+        )
+        for work_name in works:
+            self._ui_log(
+                f"- {work_name}: {len(ref_data[work_name])}??",
+                event_kind="summary",
+                render_format="summary",
+            )
+
+    def _extract_reference_style_guide(self, *, genre: str, cache_mode: str) -> tuple[StyleGuide | None, StyleExtractor]:
         extractor = StyleExtractor(llm_client=self.client, genre=genre)
         extractor.progress_callback = lambda message, **meta: self._ui_log(
             message,
@@ -802,7 +849,7 @@ class StageZeroManager:
             meta=meta,
         )
         self._ui_log(
-            "[*] 문체 DNA 추출 중... (대량 원고 분석 - 시간 소요)", event_kind="summary", render_format="summary"
+            "[*] 臾몄껜 DNA 異붿텧 以?.. (????먭퀬 遺꾩꽍 - ?쒓컙 ?뚯슂)", event_kind="summary", render_format="summary"
         )
         selected_primary_pov = ""
         external_pov_insert_policy = ""
@@ -811,66 +858,132 @@ class StageZeroManager:
             external_pov_insert_policy = str(
                 self.protagonist_config.get("external_pov_insert_policy", "") or ""
             ).strip()
-        self.style_guide = extractor.extract_from_references(
+        style_guide = extractor.extract_from_references(
             genre,
             cache_mode=cache_mode,
             selected_primary_pov=selected_primary_pov,
             external_pov_insert_policy=external_pov_insert_policy,
         )
-        self.genre = genre
+        return style_guide, extractor
+
+    def _persist_reference_style_guide(self, style_guide: StyleGuide) -> None:
+        if not self.project_path:
+            return
+        output_dir = Path(self.project_path) / "stage0_output"
+        output_dir.mkdir(parents=True, exist_ok=True)
+        try:  # [TF-11-08] OSError 諛⑹뼱 ???붿뒪???ㅻ쪟 ??鍮꾩젙??醫낅즺 諛⑹?
+            with open(output_dir / "style_guide.json", "w", encoding="utf-8") as f:
+                f.write(style_guide.to_json())
+            self._ui_log(
+                f"- ??? {output_dir / 'style_guide.json'}", event_kind="summary", render_format="summary"
+            )
+        except OSError as _oe:
+            import logging as _log
+
+            _log.warning("[Stage0] style_guide.json ????ㅽ뙣 (怨꾩냽 吏꾪뻾): %s", _oe)
+
+    def _log_reference_analysis_result(self, *, style_guide: StyleGuide, extractor: StyleExtractor) -> None:
+        """
+        cache_status_map = {
+            "hit": "?λⅤ 罹먯떆 ?ъ궗??,
+            "refresh": "罹먯떆 臾댁떆 ???щ텇??,
+            "reset": "罹먯떆 ??젣 ???щ텇??,
+            "miss": "罹먯떆 誘몄뒪 ???щ텇??,
+        }
+        self._ui_log(
+            f"[v] 臾몄껜 DNA 異붿텧 ?꾨즺 (v{style_guide.analysis_version})",
+            event_kind="summary",
+            render_format="summary",
+        )
+        self._ui_log(
+            f"- 罹먯떆 泥섎━: {cache_status_map.get(extractor.last_cache_status, '?щ텇??)}",
+            event_kind="summary",
+            render_format="summary",
+        )
+        self._ui_log(
+            f"- 遺꾩꽍 ?먭퀬: {style_guide.source_episode_count}??/ {style_guide.source_char_count:,}??",
+            event_kind="summary",
+            render_format="summary",
+        )
+        self._ui_log(
+            f"- 李몄“ ?묓뭹: {', '.join(style_guide.reference_works or [])}",
+            event_kind="summary",
+            render_format="summary",
+        )
+        self._ui_log(
+            f"- 紐⑤쾾 臾몃떒: {len(style_guide.exemplary_passages or [])}媛?",
+            event_kind="summary",
+            render_format="summary",
+        )
+        self._ui_log(
+            f"- AI 湲덉? ?⑦꽩: {len(style_guide.anti_ai_patterns or [])}媛?",
+            event_kind="summary",
+            render_format="summary",
+        )
+        self._persist_reference_style_guide(style_guide)
+        """
+        cache_status_map = {
+            "hit": "cache hit",
+            "refresh": "refreshed from references",
+            "reset": "cache reset and rebuilt",
+            "miss": "cache miss and rebuilt",
+        }
+        self._ui_log(
+            f"[v] Style DNA extraction complete (v{style_guide.analysis_version})",
+            event_kind="summary",
+            render_format="summary",
+        )
+        self._ui_log(
+            f"- Cache status: {cache_status_map.get(extractor.last_cache_status, 'unknown')}",
+            event_kind="summary",
+            render_format="summary",
+        )
+        self._ui_log(
+            f"- Source references: {style_guide.source_episode_count} episodes / {style_guide.source_char_count:,} chars",
+            event_kind="summary",
+            render_format="summary",
+        )
+        self._ui_log(
+            f"- Reference works: {', '.join(style_guide.reference_works or [])}",
+            event_kind="summary",
+            render_format="summary",
+        )
+        self._ui_log(
+            f"- Exemplary passages: {len(style_guide.exemplary_passages or [])}",
+            event_kind="summary",
+            render_format="summary",
+        )
+        self._ui_log(
+            f"- Anti-AI patterns: {len(style_guide.anti_ai_patterns or [])}",
+            event_kind="summary",
+            render_format="summary",
+        )
+        self._persist_reference_style_guide(style_guide)
+
+    def run_reference_analysis(self, genre: str = None, cache_mode: str | None = None) -> StyleGuide | None:
+        """config/style_references/{genre}/ 폴더의 참조 원고를 분석하여 StyleGuide 생성"""
+        resolved_genre = self._resolve_reference_analysis_genre(genre)
+        if not resolved_genre:
+            return None
+
+        payload = self._load_reference_analysis_payload(resolved_genre)
+        if payload is None:
+            return None
+        _, _, ref_data = payload
+        self._log_reference_analysis_catalog(ref_data)
+
+        if not self._confirm_reference_analysis_start():
+            return None
+
+        resolved_cache_mode = self._resolve_reference_analysis_cache_mode(cache_mode)
+        self.style_guide, extractor = self._extract_reference_style_guide(
+            genre=resolved_genre,
+            cache_mode=resolved_cache_mode,
+        )
+        self.genre = resolved_genre
 
         if self.style_guide:
-            cache_status_map = {
-                "hit": "장르 캐시 재사용",
-                "refresh": "캐시 무시 후 재분석",
-                "reset": "캐시 삭제 후 재분석",
-                "miss": "캐시 미스 후 재분석",
-            }
-            self._ui_log(
-                f"[v] 문체 DNA 추출 완료 (v{self.style_guide.analysis_version})",
-                event_kind="summary",
-                render_format="summary",
-            )
-            self._ui_log(
-                f"- 캐시 처리: {cache_status_map.get(extractor.last_cache_status, '재분석')}",
-                event_kind="summary",
-                render_format="summary",
-            )
-            self._ui_log(
-                f"- 분석 원고: {self.style_guide.source_episode_count}편 / {self.style_guide.source_char_count:,}자",
-                event_kind="summary",
-                render_format="summary",
-            )
-            self._ui_log(
-                f"- 참조 작품: {', '.join(self.style_guide.reference_works or [])}",
-                event_kind="summary",
-                render_format="summary",
-            )
-            self._ui_log(
-                f"- 모범 문단: {len(self.style_guide.exemplary_passages or [])}개",
-                event_kind="summary",
-                render_format="summary",
-            )
-            self._ui_log(
-                f"- AI 금지 패턴: {len(self.style_guide.anti_ai_patterns or [])}개",
-                event_kind="summary",
-                render_format="summary",
-            )
-
-            # 저장
-            if self.project_path:
-                output_dir = Path(self.project_path) / "stage0_output"
-                output_dir.mkdir(parents=True, exist_ok=True)
-                try:  # [TF-11-08] OSError 방어 — 디스크 오류 시 비정상 종료 방지
-                    with open(output_dir / "style_guide.json", "w", encoding="utf-8") as f:
-                        f.write(self.style_guide.to_json())
-                    self._ui_log(
-                        f"- 저장: {output_dir / 'style_guide.json'}", event_kind="summary", render_format="summary"
-                    )
-                except OSError as _oe:
-                    import logging as _log
-
-                    _log.warning("[Stage0] style_guide.json 저장 실패 (계속 진행): %s", _oe)
+            self._log_reference_analysis_result(style_guide=self.style_guide, extractor=extractor)
 
         return self.style_guide
 

@@ -7,6 +7,7 @@ Entity 일관성, 원고 역사 충돌 검사, Blueprint/Manuscript 연속성 �
 
 import json
 import logging
+import re
 
 from modules.core.constants import ContextLimits, smart_truncate
 from modules.core.llm_generate import generate_content_via_router
@@ -233,6 +234,146 @@ class DirectorContinuityValidator:
 
         return "\n".join(lines)
 
+    @staticmethod
+    def _empty_blueprint_completeness_result() -> dict:
+        return {
+            "valid": True,
+            "scene_coverage": 100,
+            "expected_scenes": 0,
+            "reflected_scenes": 0,
+            "missing_scenes": [],
+            "warnings": [],
+            "reason": "",
+            "feedback": "",
+            "score": 100,
+        }
+
+    def _blueprint_completeness_scene_info(self, scene_content: object) -> dict:
+        if isinstance(scene_content, dict):
+            text_parts = []
+            if scene_content.get("summary"):
+                text_parts.append(str(scene_content["summary"]))
+            for event in scene_content.get("key_events") or []:
+                text_parts.append(str(event))
+            combined = " ".join(text_parts)
+            keywords = re.findall(r"[가-힣]{2,5}", combined)
+            return {
+                "type": scene_content.get("type", "Unknown"),
+                "keywords": keywords[:5] if keywords else [],
+                "content_sample": combined[:100],
+            }
+
+        if isinstance(scene_content, str):
+            type_match = re.search(r"\[(Core|Buffer|Cliffhanger|Climax)\]", scene_content, re.IGNORECASE)
+            scene_type = type_match.group(1) if type_match else "Unknown"
+            keywords = re.findall(r"[가-힣]{2,5}(?:하다|되다|이다)?", scene_content)
+            return {
+                "type": scene_type,
+                "keywords": keywords[:5] if keywords else [],
+                "content_sample": scene_content[:100],
+            }
+
+        return {"type": "Unknown", "keywords": [], "content_sample": str(scene_content)[:100]}
+
+    def _blueprint_completeness_scene_model(self, blueprint: dict) -> tuple[int, dict]:
+        scene_breakdown = blueprint.get("scene_breakdown", {})
+        integrated_scenario = blueprint.get("integrated_scenario", "")
+
+        if isinstance(scene_breakdown, dict):
+            scene_keys = [key for key in scene_breakdown.keys() if key.startswith("scene") or key.startswith("Scene")]
+            expected_scenes = len(scene_keys)
+            scene_keywords = {
+                scene_key: self._blueprint_completeness_scene_info(scene_breakdown.get(scene_key, ""))
+                for scene_key in scene_keys
+            }
+        elif isinstance(scene_breakdown, list):
+            expected_scenes = len(scene_breakdown)
+            scene_keywords = {
+                f"scene_{index + 1}": {"type": "Unknown", "keywords": [], "content_sample": str(item)[:100]}
+                for index, item in enumerate(scene_breakdown)
+            }
+        else:
+            scene_markers = re.findall(
+                r"\[(?:Core|Buffer|Cliffhanger|Scene)\s*\d*\]",
+                integrated_scenario,
+                re.IGNORECASE,
+            )
+            expected_scenes = len(scene_markers) if scene_markers else 6
+            scene_keywords = {}
+
+        if expected_scenes == 0:
+            expected_scenes = 6
+        return expected_scenes, scene_keywords
+
+    @staticmethod
+    def _blueprint_completeness_reflection(manuscript: str, scene_keywords: dict) -> tuple[int, list[dict]]:
+        reflected_count = 0
+        missing_scenes = []
+
+        for scene_key, scene_info in scene_keywords.items():
+            keywords = scene_info.get("keywords", [])
+            if len(keywords) == 0:
+                continue
+
+            matched_keywords = sum(1 for keyword in keywords if keyword in manuscript)
+            if matched_keywords >= len(keywords) * 0.5:
+                reflected_count += 1
+                continue
+
+            missing_scenes.append(
+                {
+                    "scene": scene_key,
+                    "type": scene_info.get("type", "Unknown"),
+                    "missing_keywords": [keyword for keyword in keywords if keyword not in manuscript][:3],
+                    "sample": scene_info.get("content_sample", "")[:50],
+                }
+            )
+
+        return reflected_count, missing_scenes
+
+    @staticmethod
+    def _blueprint_completeness_fallback_reflection(manuscript: str, expected_scenes: int) -> int:
+        estimated_scenes = len(manuscript) // 600
+        return min(estimated_scenes, expected_scenes)
+
+    @staticmethod
+    def _blueprint_completeness_cliffhanger_warnings(manuscript: str, scene_keywords: dict) -> list[str]:
+        has_cliffhanger = any(
+            "cliffhanger" in str(scene_info.get("type", "")).lower() for scene_info in scene_keywords.values()
+        )
+        if not has_cliffhanger:
+            return []
+
+        ending = manuscript[-500:] if len(manuscript) >= 500 else manuscript
+        tension_keywords = ["그때", "순간", "갑자기", "돌연", "하지만", "그러나", "예상치 못한", "충격", "긴장"]
+        if any(keyword in ending for keyword in tension_keywords):
+            return []
+        return ["Cliffhanger 엔딩 긴장감 부족 - 마지막 장면에 서스펜스 요소 추가 권장"]
+
+    @staticmethod
+    def _blueprint_completeness_failure_result(
+        *,
+        expected_scenes: int,
+        reflected_count: int,
+        scene_coverage: float,
+        missing_scenes: list[dict],
+        warnings: list[str],
+    ) -> dict:
+        return {
+            "valid": False,
+            "scene_coverage": round(scene_coverage, 1),
+            "expected_scenes": expected_scenes,
+            "reflected_scenes": reflected_count,
+            "missing_scenes": missing_scenes,
+            "warnings": warnings,
+            "reason": f"Blueprint 반영률 부족: {reflected_count}/{expected_scenes} 씬 ({scene_coverage:.1f}%)",
+            "feedback": (
+                f"설계된 {expected_scenes}개 씬 중 {reflected_count}개만 반영됨. "
+                f"누락된 씬을 추가하세요: {[scene['scene'] for scene in missing_scenes[:3]]}"
+            ),
+            "score": int(scene_coverage * 0.5),
+        }
+
     def _validate_blueprint_completeness_v60(self, manuscript: str, blueprint: dict) -> dict:
         """
         [V60] Blueprint 완전성 검증 - 원고가 설계 씬을 충분히 반영했는지 확인
@@ -254,150 +395,29 @@ class DirectorContinuityValidator:
                 "score": int
             }
         """
-        import re
-
         if not blueprint or not isinstance(blueprint, dict):
-            return {
-                "valid": True,
-                "scene_coverage": 100,
-                "expected_scenes": 0,
-                "reflected_scenes": 0,
-                "missing_scenes": [],
-                "warnings": [],
-                "reason": "",
-                "feedback": "",
-                "score": 100,
-            }
+            return self._empty_blueprint_completeness_result()
 
         warnings = []
-        missing_scenes = []
+        expected_scenes, scene_keywords = self._blueprint_completeness_scene_model(blueprint)
+        reflected_count, missing_scenes = self._blueprint_completeness_reflection(manuscript, scene_keywords)
 
-        # 1. Blueprint에서 씬 정보 추출
-        scene_breakdown = blueprint.get("scene_breakdown", {})
-        integrated_scenario = blueprint.get("integrated_scenario", "")
-
-        # scene_breakdown이 dict인 경우 씬 개수 계산
-        if isinstance(scene_breakdown, dict):
-            scene_keys = [k for k in scene_breakdown.keys() if k.startswith("scene") or k.startswith("Scene")]
-            expected_scenes = len(scene_keys)
-
-            # 각 씬의 핵심 키워드 추출
-            scene_keywords = {}
-            for scene_key in scene_keys:
-                scene_content = scene_breakdown.get(scene_key, "")
-                if isinstance(scene_content, dict):
-                    # dict 타입: summary + key_events에서 키워드 추출
-                    text_parts = []
-                    if scene_content.get("summary"):
-                        text_parts.append(str(scene_content["summary"]))
-                    for ev in scene_content.get("key_events") or []:
-                        text_parts.append(str(ev))
-                    combined = " ".join(text_parts)
-                    keywords = re.findall(r"[가-힣]{2,5}", combined)
-                    scene_keywords[scene_key] = {
-                        "type": scene_content.get("type", "Unknown"),
-                        "keywords": keywords[:5] if keywords else [],
-                        "content_sample": combined[:100],
-                    }
-                elif isinstance(scene_content, str):
-                    # 씬 타입 추출 ([Core], [Buffer], [Cliffhanger] 등)
-                    type_match = re.search(r"\[(Core|Buffer|Cliffhanger|Climax)\]", scene_content, re.IGNORECASE)
-                    scene_type = type_match.group(1) if type_match else "Unknown"
-
-                    # 핵심 키워드 추출 (명사/동사 중심)
-                    keywords = re.findall(r"[가-힣]{2,5}(?:하다|되다|이다)?", scene_content)
-                    # 상위 5개 키워드만 사용
-                    scene_keywords[scene_key] = {
-                        "type": scene_type,
-                        "keywords": keywords[:5] if keywords else [],
-                        "content_sample": scene_content[:100],
-                    }
-        elif isinstance(scene_breakdown, list):
-            expected_scenes = len(scene_breakdown)
-            scene_keywords = {
-                f"scene_{i + 1}": {"type": "Unknown", "keywords": [], "content_sample": str(item)[:100]}
-                for i, item in enumerate(scene_breakdown)
-            }
-        else:
-            # scene_breakdown이 없으면 integrated_scenario에서 추정
-            scene_markers = re.findall(
-                r"\[(?:Core|Buffer|Cliffhanger|Scene)\s*\d*\]", integrated_scenario, re.IGNORECASE
-            )
-            expected_scenes = len(scene_markers) if scene_markers else 6  # 기본 6개
-            scene_keywords = {}
-
-        if expected_scenes == 0:
-            expected_scenes = 6  # 기본값
-
-        # 2. 원고에서 씬 반영 여부 확인
-        reflected_count = 0
-
-        for scene_key, scene_info in scene_keywords.items():
-            keywords = scene_info.get("keywords", [])
-            scene_type = scene_info.get("type", "Unknown")
-
-            # 키워드 매칭
-            matched_keywords = 0
-            for keyword in keywords:
-                if keyword in manuscript:
-                    matched_keywords += 1
-
-            # 키워드의 50% 이상 매칭되면 반영된 것으로 판단 (키워드 0개 씬은 판정 불가 → 스킵)
-            if len(keywords) == 0:
-                continue
-            if matched_keywords >= len(keywords) * 0.5:
-                reflected_count += 1
-            else:
-                missing_scenes.append(
-                    {
-                        "scene": scene_key,
-                        "type": scene_type,
-                        "missing_keywords": [k for k in keywords if k not in manuscript][:3],
-                        "sample": scene_info.get("content_sample", "")[:50],
-                    }
-                )
-
-        # 키워드가 없는 경우 길이 기반 추정
         if not scene_keywords:
-            # 원고 길이 기반으로 씬 반영 추정
-            min_chars_per_scene = 600  # 씬당 최소 600자
-            estimated_scenes = len(manuscript) // min_chars_per_scene
-            reflected_count = min(estimated_scenes, expected_scenes)
+            reflected_count = self._blueprint_completeness_fallback_reflection(manuscript, expected_scenes)
 
-        # 3. 커버리지 계산
         scene_coverage = (reflected_count / expected_scenes * 100) if expected_scenes > 0 else 100
+        if scene_coverage < 65:
+            return self._blueprint_completeness_failure_result(
+                expected_scenes=expected_scenes,
+                reflected_count=reflected_count,
+                scene_coverage=scene_coverage,
+                missing_scenes=missing_scenes,
+                warnings=warnings,
+            )
 
-        # 4. 판정 [V60.24] 기준 완화
-        MIN_COVERAGE = 65  # [V60.24] 최소 65% 반영 필요 (70→65)
-
-        if scene_coverage < MIN_COVERAGE:
-            return {
-                "valid": False,
-                "scene_coverage": round(scene_coverage, 1),
-                "expected_scenes": expected_scenes,
-                "reflected_scenes": reflected_count,
-                "missing_scenes": missing_scenes,
-                "warnings": warnings,
-                "reason": f"Blueprint 반영률 부족: {reflected_count}/{expected_scenes} 씬 ({scene_coverage:.1f}%)",
-                "feedback": f"설계된 {expected_scenes}개 씬 중 {reflected_count}개만 반영됨. 누락된 씬을 추가하세요: {[m['scene'] for m in missing_scenes[:3]]}",
-                "score": int(scene_coverage * 0.5),
-            }
-
-        # [V60.24] 75% 미만이면 경고 (80→75)
         if scene_coverage < 75:
             warnings.append(f"씬 반영률 {scene_coverage:.1f}% (권장: 75% 이상)")
-
-        # Cliffhanger 씬 검증
-        has_cliffhanger = any(
-            "cliffhanger" in str(scene_info.get("type", "")).lower() for scene_info in scene_keywords.values()
-        )
-        if has_cliffhanger:
-            # 원고 마지막 500자에서 긴장감 키워드 확인
-            ending = manuscript[-500:] if len(manuscript) >= 500 else manuscript
-            tension_keywords = ["그때", "순간", "갑자기", "돌연", "하지만", "그러나", "예상치 못한", "충격", "긴장"]
-            has_tension = any(kw in ending for kw in tension_keywords)
-            if not has_tension:
-                warnings.append("Cliffhanger 엔딩 긴장감 부족 - 마지막 장면에 서스펜스 요소 추가 권장")
+        warnings.extend(self._blueprint_completeness_cliffhanger_warnings(manuscript, scene_keywords))
 
         return {
             "valid": True,

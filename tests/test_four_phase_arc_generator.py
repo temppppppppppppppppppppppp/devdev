@@ -4,7 +4,11 @@ from unittest.mock import MagicMock, patch
 
 from modules.core.response_schemas import ARC_STATE_SCHEMA
 from modules.domain.agents.four_phase_arc_generator import FourPhaseArcGenerator
-from modules.domain.agents.four_phase_arc_runtime import FourPhaseArcRuntime
+from modules.domain.agents.four_phase_arc_runtime import (
+    FourPhaseArcRuntime,
+    _FourPhaseConstraintEnvelope,
+    _FourPhaseGenerationEnvelope,
+)
 
 
 def _make_generator() -> FourPhaseArcGenerator:
@@ -101,6 +105,62 @@ def test_run_generation_phase_short_circuits_on_generate_failure():
     assert envelope.should_continue is True
     assert envelope.feedback == "[base]\nEnsemble 생성 실패. 다시 시도하세요."
     assert pipeline_result["phases"]["generate"]["status"] == "failed"
+
+
+def test_initialize_generate_state_carries_bootstrap_defaults():
+    gen = _make_generator()
+
+    state = gen.runtime._initialize_generate_state(
+        arc_no=2,
+        curr_block={"title": "block"},
+        prev_arcs=[{"state_constraints": {"items_acquired": [{"name": "천검"}]}}],
+        director_feedback="재정 수치 보강",
+    )
+
+    assert state.ep_count_suggestion == 4
+    assert state.cached_constraint_block is None
+    assert state.cached_preflight is None
+    assert "천검" in state.pre_items
+    assert "재정 수치 보강" in state.feedback
+
+
+def test_generate_returns_failed_pipeline_after_retry_exhaustion():
+    gen = _make_generator()
+    gen.runtime._resolve_constraint_phase = MagicMock(
+        return_value=_FourPhaseConstraintEnvelope(
+            full_constraint_block="constraints",
+            preflight_result={},
+            cached_constraint_block=None,
+            cached_preflight=None,
+        )
+    )
+    gen.runtime._run_generation_phase = MagicMock(
+        return_value=_FourPhaseGenerationEnvelope(
+            best_arc=None,
+            all_candidates=[],
+            prev_arc_context="",
+            feedback="retry feedback",
+            prev_rejected_arc=None,
+            prev_reject_feedback="",
+            prev_selected_strategy="",
+            spare_candidates=[],
+            should_continue=True,
+        )
+    )
+
+    arc, pipeline_result = gen.runtime.generate(
+        arc_no=1,
+        ep_start=1,
+        vol_strategy="std",
+        curr_block={},
+        prev_arcs=[],
+        max_internal_retries=1,
+    )
+
+    assert arc is None
+    assert pipeline_result["final_verdict"] == "FAILED"
+    assert pipeline_result["retries"] == 1
+    assert gen.runtime._run_generation_phase.call_count == 2
 
 
 def test_prepare_candidates_for_selection_injects_forced_location():
@@ -344,6 +404,35 @@ def test_generate_prev_context_includes_financial_fields():
     assert "10억원" in result
     assert "포지션" in result
     assert "삼성전자 1000주 보유" in result
+
+
+def test_build_prev_context_carryover_lines_direct_helper_includes_financial_fields():
+    gen = FourPhaseArcGenerator.__new__(FourPhaseArcGenerator)
+    gen._genre = "investment"
+
+    last_arc = {
+        "arc_no": 1,
+        "state_constraints": {
+            "arc_end_state": {
+                "location": "서울",
+                "equipment": [],
+                "injuries": "없음",
+                "internal_energy": 100,
+                "capital": "5억원",
+                "total_assets": "10억원",
+                "portfolio_position": "삼성전자 1000주 보유",
+            }
+        },
+        "joint_docs": {},
+        "status_shadow": {},
+    }
+
+    result = "\n".join(gen._build_prev_context_carryover_lines(last_arc, 1))
+
+    assert "자본금" in result
+    assert "5억원" in result
+    assert "총자산" in result
+    assert "포지션" in result
 
 
 def test_extract_current_state_includes_financial_keys():
@@ -621,6 +710,42 @@ def test_generate_prev_context_includes_stage_attempt_and_quality_feedback():
     assert "chief_writer" in result
     assert "[직전 Arc 고득점 패턴]" in result
     assert "blueprint_coverage 평균 18.5점" in result
+    assert "[품질 추세 경고]" in result
+
+
+def test_build_prev_context_quality_lines_direct_helper_includes_quality_warning():
+    gen = FourPhaseArcGenerator.__new__(FourPhaseArcGenerator)
+    gen.context = MagicMock()
+    gen.context.current_project = MagicMock()
+    gen._build_forgotten_npc_advisory = MagicMock(return_value=("[방치 NPC 주의]", {"노사부"}))
+    gen._build_dormant_promise_advisory = MagicMock(return_value="[방치 맹세 경고]")
+
+    db = MagicMock()
+    db.get_stage_attempts_for_arc.return_value = [
+        {"failure_category": "continuity", "reject_reason": "위치 텔레포트", "stage": 4},
+    ]
+    db.get_recent_episode_scores.return_value = [
+        {"ep_num": 8, "score": 91, "verdict": "PASS"},
+        {"ep_num": 9, "score": 84, "verdict": "PASS"},
+        {"ep_num": 10, "score": 77, "verdict": "PASS"},
+    ]
+    gen.context.current_project.db = db
+
+    with patch("modules.domain.agents.four_phase_arc_generator.FailureAnalyzer") as analyzer_cls:
+        analyzer = analyzer_cls.return_value
+        analyzer.summary.return_value = {
+            "stage_pass_rates": {"stage_4": {"pass_rate_pct": 68.0, "total_attempts": 22}},
+            "top_failed_agents": [{"agent": "chief_writer", "fail_rate_pct": 55.0}],
+            "top_failure_categories": [{"category": "continuity", "count": 5}],
+            "quality_distribution": {"avg_score": 82.3, "high_score_count": 2},
+            "top_success_patterns": [{"description": "blueprint_coverage 평균 18.5점"}],
+        }
+        result = "\n".join(gen._build_prev_context_quality_lines({"ep_end": 10}, 2))
+
+    assert "[방치 NPC 주의]" in result
+    assert "[방치 맹세 경고]" in result
+    assert "[직전 Arc Stage3/4 주요 실패]" in result
+    assert "[이전 Arc 실패 분석]" in result
     assert "[품질 추세 경고]" in result
 
 

@@ -5,6 +5,8 @@ import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+from modules.core.constants import Stage2Limits
+
 # 프로젝트 루트를 path에 추가
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
@@ -160,6 +162,117 @@ class TestContinuityArcValidatorTimeline:
         assert result["decision"] == "REJECT"
         assert result["severity"] == "CRITICAL"
         assert any(v["type"] == "missing_tactical_doc" for v in result["violations"])
+
+    def test_normalize_arc_context_coerces_tactical_dict_and_episode_defaults(self):
+        inspector = _make_mock_inspector()
+        validator = ContinuityArcValidator(inspector)
+
+        result = validator._normalize_arc_context(
+            {
+                "arc_no": 2,
+                "tactical_doc": {"scene_1": "시장 진입", "scene_2": "정보 수집"},
+                "joint_docs": {"final_location": "시장"},
+                "status_shadow": {"internal_energy_loss": "10%"},
+                "ep_start": 6,
+                "ep_count": "invalid",
+                "ep_end": "invalid",
+            }
+        )
+
+        assert "scene_1: 시장 진입" in result["tactical_doc"]
+        assert "scene_2: 정보 수집" in result["tactical_doc"]
+        assert result["ep_count"] == Stage2Limits.DEFAULT_EP_COUNT
+        assert result["ep_end"] == 6 + Stage2Limits.DEFAULT_EP_COUNT - 1
+
+    def test_correct_arc_start_state_uses_prev_shadow_and_joint_docs(self):
+        inspector = _make_mock_inspector()
+        validator = ContinuityArcValidator(inspector)
+        current_arc = {
+            "state_constraints": {
+                "arc_start_state": {
+                    "internal_energy": 5,
+                    "injuries": "중상",
+                    "location": "산문",
+                    "equipment": [],
+                }
+            }
+        }
+        prev_arcs = [
+            {
+                "joint_docs": {"final_location": "시장", "physical_inventory": ["장부"]},
+                "status_shadow": {"internal_energy_loss": "25%"},
+                "state_constraints": {"arc_end_state": {}},
+            }
+        ]
+
+        changed = validator._correct_arc_start_state(current_arc, prev_arcs)
+
+        assert changed is True
+        assert current_arc["state_constraints"]["arc_start_state"] == {
+            "internal_energy": 75,
+            "injuries": "없음",
+            "location": "시장",
+            "equipment": ["장부"],
+        }
+
+    def test_inspect_arc_surfaces_corrections_and_python_advisories(self):
+        inspector = _make_mock_inspector()
+        inspector._extract_json_robust.return_value = {
+            "decision": "PASS",
+            "severity": "NONE",
+            "violations": [],
+            "warnings": ["LLM warning"],
+        }
+        validator = ContinuityArcValidator(inspector)
+        validator._arc_python_precheck = MagicMock(
+            return_value={
+                "warnings": ["python warning"],
+                "critical_violations": [{"description": "중복 획득 의심"}],
+                "cross_arc_timeline": {},
+                "intra_arc_analysis": {},
+            }
+        )
+        validator._extract_accurate_joint_docs = MagicMock(
+            return_value={"final_location": "시장", "physical_inventory": ["장부"], "world_joint": "안정"}
+        )
+
+        prev_arcs = [
+            {
+                "arc_no": 1,
+                "tactical_doc": "이전 Arc",
+                "joint_docs": {"final_location": "시장", "physical_inventory": ["장부"]},
+                "status_shadow": {"internal_energy_loss": "10%", "expected_injuries": "없음"},
+                "state_constraints": {
+                    "arc_end_state": {
+                        "internal_energy": 90,
+                        "injuries": "없음",
+                        "location": "시장",
+                        "equipment": ["장부"],
+                    }
+                },
+                "ep_start": 1,
+                "ep_end": 5,
+            }
+        ]
+        current_arc = {
+            "arc_no": 2,
+            "tactical_doc": "현재 Arc 전술 설계" * 20,
+            "joint_docs": {"final_location": "산문", "physical_inventory": []},
+            "status_shadow": {"internal_energy_loss": "10%"},
+            "state_constraints": {"arc_start_state": {"internal_energy": 10, "injuries": "중상", "location": "산문"}},
+            "ep_start": 6,
+            "ep_end": 10,
+            "ep_count": 5,
+        }
+
+        result = validator.inspect_arc(current_arc, prev_arcs=prev_arcs)
+
+        assert result["corrected_joint_docs"]["physical_inventory"] == ["장부"]
+        assert result["corrected_state_constraints"]["arc_start_state"]["location"] == "시장"
+        assert "python warning" in result["warnings"]
+        assert any("[Python advisory]" in warning for warning in result["warnings"])
+        assert any("[V49.2]" in warning for warning in result["warnings"])
+        assert any("[V60.13]" in warning for warning in result["warnings"])
 
 
 class TestContinuityArcValidatorIntraArc:
@@ -349,6 +462,90 @@ class TestContinuityArcValidatorIntraArc:
 # ══════════════════════════════════════════════════════════════
 # ContinuityManuscriptValidator Tests
 # ══════════════════════════════════════════════════════════════
+
+
+class TestContinuityArcValidatorPrecheckHelpers:
+    def test_collect_prev_facts_batches_constraints_inventory_and_grants(self):
+        inspector = _make_mock_inspector()
+        inspector.acquire_patterns = [r"GAIN:([A-Za-z_]+)"]
+        inspector.grant_patterns = [r"GRANT:([A-Za-z_]+)"]
+        inspector._filter_distributed_items.side_effect = lambda items, _ctx: [item for item in items if item != "shared"]
+        validator = ContinuityArcValidator(inspector)
+
+        prev_arcs = [
+            {
+                "arc_no": 1,
+                "tactical_doc": "GRANT:seal",
+                "joint_docs": {"physical_inventory": "GAIN:ledger GAIN:shared"},
+                "status_shadow": {"expected_injuries": "bruise"},
+                "state_constraints": {"protagonist_items": ["sword", "shared"]},
+            },
+            {
+                "arc_no": 2,
+                "tactical_doc": "",
+                "joint_docs": {"physical_inventory": ["ring"]},
+                "status_shadow": {"expected_injuries": "scar"},
+                "state_constraints": {"items_acquired": ["cloak"]},
+            },
+        ]
+
+        acquired, granted, prev_inventory, prev_status = validator._collect_arc_precheck_prev_facts(prev_arcs)
+
+        assert acquired == {"sword": 1, "ledger": 1, "cloak": 2, "ring": 2}
+        assert granted == {"seal": 1}
+        assert prev_inventory == {"physical_inventory": ["ring"]}
+        assert prev_status == {"expected_injuries": "scar"}
+
+    def test_source_items_fall_back_to_items_acquired_and_normalize_length(self):
+        inspector = _make_mock_inspector()
+        validator = ContinuityArcValidator(inspector)
+
+        source_items = validator._arc_precheck_source_items({"items_acquired": ["map", "x", None]})
+        normalized = validator._arc_precheck_normalize_items(source_items, "", filter_distributed=False)
+
+        assert source_items == ["map", "x", None]
+        assert normalized == ["map"]
+
+    def test_inventory_snapshot_and_owned_filter_preserve_scalar_inventory_behavior(self):
+        inspector = _make_mock_inspector()
+        validator = ContinuityArcValidator(inspector)
+
+        owned_items = validator._arc_precheck_inventory_snapshot_items({"physical_inventory": "ledger"})
+        filtered = validator._arc_precheck_filter_owned_candidates(["ledger", "seal"], owned_items)
+
+        assert owned_items == ["ledger"]
+        assert filtered == ["seal"]
+
+    def test_injury_warnings_only_fire_without_recovery_terms(self):
+        inspector = _make_mock_inspector()
+        validator = ContinuityArcValidator(inspector)
+
+        warned = validator._arc_precheck_injury_warnings({"expected_injuries": "\uc911\uc0c1"}, "quiet opening")
+        recovered = validator._arc_precheck_injury_warnings(
+            {"expected_injuries": "\uc911\uc0c1"},
+            "\ud68c\ubcf5 \uc7a5\uba74",
+        )
+
+        assert len(warned) == 1
+        assert recovered == []
+
+    def test_arc_python_precheck_filters_usage_items_before_duplicate_scan(self):
+        inspector = _make_mock_inspector()
+        inspector.usage_patterns = [r"USE:([A-Za-z_]+)"]
+        validator = ContinuityArcValidator(inspector)
+
+        result = validator._arc_python_precheck(
+            current_arc={
+                "arc_no": 2,
+                "tactical_doc": "USE:knife",
+                "joint_docs": {"physical_inventory": []},
+                "state_constraints": {"protagonist_items": ["knife", "seal"]},
+            },
+            prev_arcs=[],
+        )
+
+        assert result["critical_violations"] == []
+        assert result["cross_arc_timeline"]["items_in_current_arc"] == ["seal"]
 
 
 class TestContinuityManuscriptValidatorInit:

@@ -223,9 +223,69 @@ class Stage2ValidationPipeline:
         Returns dict with refined_arc, consensus_passed, current_feedback,
         suspected_duplicates, and optional early_return.
         """
-        # ─────────────────────────────────────────────────────────────
-        # [무기 #3] DraftValidator - 정보 수집용
-        # ─────────────────────────────────────────────────────────────
+        python_advisory = self._collect_initial_draft_advisories(
+            refined_arc=refined_arc,
+            four_phase_passed=four_phase_passed,
+            all_refined_arcs=all_refined_arcs,
+        )
+        refined_arc = self._run_self_reflection_phase(
+            refined_arc=refined_arc,
+            V50_MODULES_AVAILABLE=V50_MODULES_AVAILABLE,
+            generation_method=generation_method,
+            ReflectionTarget=ReflectionTarget,
+            global_arc_no=global_arc_no,
+            current_feedback=current_feedback,
+        )
+        consensus_passed = self._run_consensus_phase(
+            refined_arc=refined_arc,
+            four_phase_passed=four_phase_passed,
+            all_refined_arcs=all_refined_arcs,
+            constraint_block=constraint_block,
+            rich_console=rich_console,
+            python_advisory=python_advisory,
+            _python_advisories=_python_advisories,
+            consensus_passed=consensus_passed,
+        )
+
+        early_return = self._build_invalid_refined_arc_retry(
+            refined_arc=refined_arc,
+            global_arc_no=global_arc_no,
+            consensus_passed=consensus_passed,
+            current_feedback=current_feedback,
+        )
+        if early_return is not None:
+            return early_return
+
+        refined_arc = self._run_arc_mapping_and_auto_correction(
+            refined_arc=refined_arc,
+            enriched_block=enriched_block,
+            global_arc_no=global_arc_no,
+            current_ep_start=current_ep_start,
+            all_refined_arcs=all_refined_arcs,
+            _auto_corrections=_auto_corrections,
+        )
+        suspected_duplicates = self._collect_pre_validation_duplicates(
+            refined_arc=refined_arc,
+            four_phase_passed=four_phase_passed,
+            constraint_db=constraint_db,
+            global_arc_no=global_arc_no,
+        )
+
+        return {
+            "refined_arc": refined_arc,
+            "consensus_passed": consensus_passed,
+            "current_feedback": current_feedback,
+            "suspected_duplicates": suspected_duplicates,
+            "early_return": None,
+        }
+
+    def _collect_initial_draft_advisories(
+        self,
+        *,
+        refined_arc,
+        four_phase_passed: bool,
+        all_refined_arcs: list,
+    ) -> list:
         python_advisory = []
         if not four_phase_passed and refined_arc and self.ctx.arc_draft_validator:
             try:
@@ -245,14 +305,20 @@ class Stage2ValidationPipeline:
                             logging.info(f"- {str(issue)[:60]}")
                     python_advisory.extend(advisory_issues)
                 logging.info("✅ [DraftValidator] 사전 검증 통과!")
-                # [S2-P1-4] draft_validator_passed는 2차 호출(L256)에서만 설정
-                # 1차 호출은 Consensus용 advisory 수집 전용
             except (RuntimeError, ValueError, OSError) as dv_err:
                 logging.warning(f" [DraftValidator] 스킵: {str(dv_err)[:50]}")
+        return python_advisory
 
-        # ─────────────────────────────────────────────────────────────
-        # [V60.36] SelfReflector
-        # ─────────────────────────────────────────────────────────────
+    def _run_self_reflection_phase(
+        self,
+        *,
+        refined_arc,
+        V50_MODULES_AVAILABLE: bool,
+        generation_method: str,
+        ReflectionTarget,
+        global_arc_no: int,
+        current_feedback: str,
+    ):
         if (
             V50_MODULES_AVAILABLE
             and self.ctx.self_reflector
@@ -265,7 +331,6 @@ class Stage2ValidationPipeline:
                 logging.info(" [SelfReflector] Analyst 자기 비판 시작...")
                 arc_str = json.dumps(refined_arc, ensure_ascii=False, indent=2)
                 context_str = f"Arc {global_arc_no} 설계. 피드백: {current_feedback or '없음'}"
-
                 reflection_result = self.ctx.self_reflector.reflect_and_improve(
                     output=arc_str, context=context_str, target=ReflectionTarget.ANALYST, force=False
                 )
@@ -273,14 +338,12 @@ class Stage2ValidationPipeline:
                 if reflection_result and reflection_result.improved != arc_str:
                     try:
                         improved_arc = json.loads(reflection_result.improved)
-                        # [Sweep55] list 반환 시 dict 보장
                         if isinstance(improved_arc, list):
-                            improved_arc = (
-                                improved_arc[0] if improved_arc and isinstance(improved_arc[0], dict) else None
-                            )
+                            improved_arc = improved_arc[0] if improved_arc and isinstance(improved_arc[0], dict) else None
                         if isinstance(improved_arc, dict):
                             refined_arc = improved_arc
-                            logging.info(f"✅ [SelfReflector] 자기 개선 완료 (점수: {getattr(reflection_result, 'improvement_score', '?')})"
+                            logging.info(
+                                f"✅ [SelfReflector] 자기 개선 완료 (점수: {getattr(reflection_result, 'improvement_score', '?')})"
                             )
                         else:
                             logging.warning(" [SelfReflector] 개선 결과가 dict가 아님, 원본 유지")
@@ -290,10 +353,20 @@ class Stage2ValidationPipeline:
                     logging.info("ℹ [SelfReflector] 개선 불필요")
             except (RuntimeError, ValueError, OSError, json.JSONDecodeError) as sr_err:
                 logging.warning(f" [SelfReflector] 스킵: {str(sr_err)[:50]}")
+        return refined_arc
 
-        # ─────────────────────────────────────────────────────────────
-        # [V60.36] Consensus 검증
-        # ─────────────────────────────────────────────────────────────
+    def _run_consensus_phase(
+        self,
+        *,
+        refined_arc,
+        four_phase_passed: bool,
+        all_refined_arcs: list,
+        constraint_block: str,
+        rich_console,
+        python_advisory: list,
+        _python_advisories: list,
+        consensus_passed: bool,
+    ) -> bool:
         if not four_phase_passed and refined_arc and "consensus" in self.ctx.agents:
             self.ctx.ui.log("      🗳️ [TF-38] Consensus 3-LLM 합의 검증 중...")
             try:
@@ -302,80 +375,87 @@ class Stage2ValidationPipeline:
                     consensus_verdict, consensus_result = self.ctx.agents["consensus"].validate_with_consensus(
                         arc=refined_arc,
                         prev_arcs=all_refined_arcs,
-                        constraints=constraint_block or "",  # [TF-39] P1-6
+                        constraints=constraint_block or "",
                         python_advisory=python_advisory,
                     )
 
                 vote_summary = consensus_result.get("vote_summary", {})
-                logging.info(f"- 투표 결과: PASS {vote_summary.get('pass', 0)} / REJECT {vote_summary.get('reject', 0)}"
+                logging.info(
+                    f"- 투표 결과: PASS {vote_summary.get('pass', 0)} / REJECT {vote_summary.get('reject', 0)}"
                 )
-
                 if consensus_verdict == "REJECT":
                     critical_issues = consensus_result.get("critical_issues", [])
-                    all_issues = consensus_result.get("all_issues", [])
-                    logging.warning("❌ [Consensus] REJECT!")
-                    logging.warning(f"- CRITICAL: {len(critical_issues)}개")
-                    logging.info(f"- 전체 이슈: {len(all_issues)}개")
                     for ci in critical_issues[:3]:
                         logging.warning(f" [{ci.get('category', '?')}] {(ci.get('issue', '?') or '?')[:80]}")
-
-                    feedback_parts = [f"[{ci.get('category')}] {ci.get('issue')}" for ci in critical_issues[:3]]
-                    _advisory_msg = "Consensus 검증 실패: " + "; ".join(feedback_parts)
-                    _python_advisories.append(
-                        {
-                            "source": "consensus",
-                            "severity": "CRITICAL",
-                            "message": _advisory_msg,
-                        }
+                    advisory_msg = "Consensus 검증 실패: " + "; ".join(
+                        f"[{ci.get('category')}] {ci.get('issue')}" for ci in critical_issues[:3]
                     )
-                    logging.info(f" [TF-25-08] Consensus REJECT → Director advisory: {_advisory_msg[:100]}...")
+                    _python_advisories.append(
+                        {"source": "consensus", "severity": "CRITICAL", "message": advisory_msg}
+                    )
+                    logging.info(f" [TF-25-08] Consensus REJECT → Director advisory: {advisory_msg[:100]}...")
                 else:
-                    logging.info("✅ [Consensus] PASS!")
                     consensus_passed = True
                     passed_checks = consensus_result.get("passed_checks", [])
                     if passed_checks:
                         logging.info(f"- 통과 항목: {passed_checks[:3]}")
             except (RuntimeError, ValueError, OSError) as cv_err:
                 logging.warning(f" [Consensus] 검증 스킵: {str(cv_err)[:50]}")
+        return consensus_passed
 
-        # [데이터 검증]
-        if not refined_arc or not isinstance(refined_arc, dict):
-            self.ctx.ui.log(f"🚨 [Analyst Error] Arc {global_arc_no} 설계 결과가 유효하지 않음: {type(refined_arc)}")
-            if callable(getattr(self.ctx, "audit_event", None)):
-                self.ctx.audit_event(
-                    "analyst_error",
-                    "invalid response type",
-                    {"arc_no": global_arc_no, "type": str(type(refined_arc))},
-                )
-            current_feedback = "Analyst가 유효한 딕셔너리를 반환하지 않았습니다. JSON 규격을 확인하라."
-            return {
-                "refined_arc": refined_arc,
-                "consensus_passed": consensus_passed,
-                "current_feedback": current_feedback,
-                "suspected_duplicates": [],
-                "early_return": {"action": "retry", "current_feedback": current_feedback},
-            }
+    def _build_invalid_refined_arc_retry(
+        self,
+        *,
+        refined_arc,
+        global_arc_no: int,
+        consensus_passed: bool,
+        current_feedback: str,
+    ) -> dict | None:
+        if refined_arc and isinstance(refined_arc, dict):
+            return None
+        self.ctx.ui.log(f"🚨 [Analyst Error] Arc {global_arc_no} 설계 결과가 유효하지 않음: {type(refined_arc)}")
+        if callable(getattr(self.ctx, "audit_event", None)):
+            self.ctx.audit_event(
+                "analyst_error",
+                "invalid response type",
+                {"arc_no": global_arc_no, "type": str(type(refined_arc))},
+            )
+        current_feedback = "Analyst가 유효한 딕셔너리를 반환하지 않았습니다. JSON 규격을 확인하라."
+        return {
+            "refined_arc": refined_arc,
+            "consensus_passed": consensus_passed,
+            "current_feedback": current_feedback,
+            "suspected_duplicates": [],
+            "early_return": {"action": "retry", "current_feedback": current_feedback},
+        }
 
-        # 🧭 [Mapping Validation]
-        _pre_mapping_arc = refined_arc
+    def _run_arc_mapping_and_auto_correction(
+        self,
+        *,
+        refined_arc,
+        enriched_block: dict,
+        global_arc_no: int,
+        current_ep_start: int,
+        all_refined_arcs: list,
+        _auto_corrections: list,
+    ):
+        pre_mapping_arc = refined_arc
         if callable(getattr(self.ctx, "validate_arc_mapping", None)):
             refined_arc = self.ctx.validate_arc_mapping(refined_arc, enriched_block, global_arc_no, current_ep_start)
-            # [B3-P1-5] validate_arc_mapping 반환값이 dict가 아니면 원본 유지
             if not isinstance(refined_arc, dict):
-                refined_arc = _pre_mapping_arc
+                refined_arc = pre_mapping_arc
 
-        # ⚡ [V60.25] Auto-Corrector
         if self.ctx.stage2_optimizer:
             try:
-                _selected_genre = getattr(self.ctx, "selected_genre", None)
-                _genre = _selected_genre.get("type", "") if isinstance(_selected_genre, dict) else ""
+                selected_genre = getattr(self.ctx, "selected_genre", None)
+                genre = selected_genre.get("type", "") if isinstance(selected_genre, dict) else ""
                 refined_arc, corrections = self.ctx.stage2_optimizer.post_process_arc(
                     arc=refined_arc,
                     prev_arcs=all_refined_arcs,
-                    genre=_genre,
+                    genre=genre,
                 )
                 if corrections:
-                    _auto_corrections.extend(corrections)  # [TF-25-09]
+                    _auto_corrections.extend(corrections)
                     if callable(getattr(self.ctx, "audit_event", None)):
                         self.ctx.audit_event(
                             "v60_25_auto_correct",
@@ -385,15 +465,23 @@ class Stage2ValidationPipeline:
             except (RuntimeError, ValueError, TypeError) as ac_err:
                 if callable(getattr(self.ctx, "audit_event", None)):
                     self.ctx.audit_event("v60_25_auto_correct_error", str(ac_err)[:100])
+        return refined_arc
 
-        # 🔒 [V49.4] Pre-Validation
+    def _collect_pre_validation_duplicates(
+        self,
+        *,
+        refined_arc,
+        four_phase_passed: bool,
+        constraint_db,
+        global_arc_no: int,
+    ) -> list:
         suspected_duplicates = []
         if not four_phase_passed:
             pre_validation = constraint_db.validate_arc_design(refined_arc)
             if not pre_validation["valid"]:
                 self.ctx.ui.log("      🔍 [V60.76] 의심 아이템 감지 (Director LLM 재검증 예정)")
-                for v in pre_validation["violations"][:2]:
-                    self.ctx.ui.log(f"         {v}")
+                for violation in pre_validation["violations"][:2]:
+                    self.ctx.ui.log(f"         {violation}")
                 suspected_duplicates = pre_validation["violations"][:3]
                 if callable(getattr(self.ctx, "audit_event", None)):
                     self.ctx.audit_event(
@@ -401,18 +489,10 @@ class Stage2ValidationPipeline:
                         "suspected duplicates for LLM review",
                         {"arc_no": global_arc_no, "suspected": suspected_duplicates},
                     )
-
             if pre_validation.get("warnings"):
-                for w in pre_validation["warnings"][:2]:
-                    self.ctx.ui.log(f"      ⚠️ [V49.4 Warning] {w}")
-
-        return {
-            "refined_arc": refined_arc,
-            "consensus_passed": consensus_passed,
-            "current_feedback": current_feedback,
-            "suspected_duplicates": suspected_duplicates,
-            "early_return": None,
-        }
+                for warning in pre_validation["warnings"][:2]:
+                    self.ctx.ui.log(f"      ⚠️ [V49.4 Warning] {warning}")
+        return suspected_duplicates
 
     def _run_flow_and_duplicate_guards(
         self,
@@ -445,8 +525,8 @@ class Stage2ValidationPipeline:
 
             if diag_type == "beat_condensed":
                 structured_parts.append(
-                    f"측정치: 평균 {diag.get('avg_words', '?')}단어/비트 "
-                    f"(최소 기준: {diag.get('min_avg_words', '?')}단어)"
+                    f"측정치: 평균 {diag.get('avg_words', 'unknown')}단어/비트 "
+                    f"(최소 기준: {diag.get('min_avg_words', 'unknown')}단어)"
                 )
                 failing = diag.get("failing_beats", [])
                 if failing:
@@ -469,14 +549,14 @@ class Stage2ValidationPipeline:
 
             elif diag_type == "beat_count":
                 structured_parts.append(
-                    f"현재 비트 수: {diag.get('beat_count', '?')}개 / "
-                    f"필요: 최소 {diag.get('min_beats', '?')}개 (에피소드 {diag.get('ep_count', '?')}화분)"
+                    f"현재 비트 수: {diag.get('beat_count', 'unknown')}개 / "
+                    f"필요: 최소 {diag.get('min_beats', 'unknown')}개 (에피소드 {diag.get('ep_count', 'unknown')}화분)"
                 )
                 structured_parts.append("[수정 지침] 각 화마다 최소 1개의 독립 비트를 배정하라.")
 
             elif diag_type == "empty_beats":
                 structured_parts.append(
-                    f"유효 비트: {diag.get('normalized_count', '?')}개 / 전체 비트: {diag.get('total_beats', '?')}개"
+                    f"유효 비트: {diag.get('normalized_count', 'unknown')}개 / 전체 비트: {diag.get('total_beats', 'unknown')}개"
                 )
                 structured_parts.append("[수정 지침] 비어 있는 비트에 구체적 사건/행동을 기술하라.")
 
@@ -554,169 +634,233 @@ class Stage2ValidationPipeline:
         Returns dict with refined_arc, draft_validator_passed.
         """
         if not four_phase_passed and self.ctx.arc_draft_validator:
-            # [G6] DraftValidator 호출 크래시 방어
-            try:
-                draft_result = self.ctx.arc_draft_validator.validate(
-                    arc=refined_arc,
-                    prev_arcs=all_refined_arcs,
-                    constraint_block=constraint_block or "",
-                    state_tracker=self.ctx.state_tracker,
+            draft_result = self._validate_draft_or_fail_closed(
+                refined_arc=refined_arc,
+                all_refined_arcs=all_refined_arcs,
+                constraint_block=constraint_block,
+            )
+            self._log_full_draft_validator_advisories(draft_result=draft_result)
+
+            if draft_result["valid"]:
+                draft_validator_passed = self._mark_full_draft_validator_passed(
+                    draft_result=draft_result,
+                    draft_validator_passed=draft_validator_passed,
                 )
-            except (RuntimeError, ValueError, OSError) as _dv_err:
-                logging.warning(f"[G6] DraftValidator 호출 실패 — fail-closed: {_dv_err!s:.100}")
-                draft_result = {
-                    "valid": False,
-                    "score": 0,
-                    "advisory_issues": [],
-                    "critical_issues": [f"DraftValidator crash: {_dv_err!s:.100}"],
-                    "warnings": [],
-                }  # [A5-P1-4] fail-closed: crash → REJECT (was synthetic PASS)
-
-            advisory_issues = draft_result.get("advisory_issues", [])
-            if advisory_issues:
-                self.ctx.ui.log(f"      📋 [V60.56 DraftValidator] Advisory {len(advisory_issues)}개 - LLM이 최종 판단")
-                for issue in advisory_issues[:3]:
-                    self.ctx.ui.log(f"         📝 {issue}")
-
-            if not draft_result["valid"]:
-                self.ctx.ui.log(f"      🚨 [V60.11 DraftValidator] 사전 검증 실패 (점수: {draft_result['score']})")
-                for issue in draft_result["critical_issues"][:3]:
-                    self.ctx.ui.log(f"         ❌ {issue}")
-
-                if callable(getattr(self.ctx, "audit_event", None)):
-                    self.ctx.audit_event(
-                        "draft_validation_reject",
-                        "draft validation failed",
-                        {
-                            "arc_no": global_arc_no,
-                            "score": draft_result["score"],
-                            "critical_count": len(draft_result["critical_issues"]),
-                        },
-                    )
-
-                # [Sweep53] ArcDraftValidator 반환 키에 맞춤 (issues→critical_issues/warnings)
-                critical_only = draft_result.get("critical_issues", [])
-                major_only = [{"message": w, "severity": "WARNING"} for w in draft_result.get("warnings", [])]
-
-                if not critical_only and major_only and self.ctx.arc_corrector and self.ctx.use_arc_corrector:
-                    self.ctx.ui.log(
-                        f"      🔧 [V60.42] CRITICAL 없음, MAJOR {len(major_only)}개 - ArcCorrector 부분 수정 시도"
-                    )
-
-                    try:
-                        can_correct, correctable_issues, uncorrectable_issues = self.ctx.arc_corrector.can_correct(
-                            major_only
-                        )
-
-                        if can_correct:
-                            corrected_arc, correction_log = self.ctx.arc_corrector.correct(
-                                arc=refined_arc, issues=major_only, prev_arcs=all_refined_arcs
-                            )
-
-                            if corrected_arc and correction_log.get("success"):
-                                refined_arc = corrected_arc
-                                corrections_made = correction_log.get("corrections_made", [])
-                                corrections_failed = correction_log.get("corrections_failed", [])
-                                _auto_corrections.extend(corrections_made)
-                                self.ctx.ui.log(
-                                    f"      ✅ [V60.42] ArcCorrector 수정 완료 ({len(corrections_made)}개 수정)"
-                                )
-                                for fix in corrections_made[:3]:
-                                    fix_summary = fix.get("change_summary", fix.get("issue", "")[:50])
-                                    self.ctx.ui.log(f"         🔨 {fix_summary}")
-
-                                if callable(getattr(self.ctx, "audit_event", None)):
-                                    self.ctx.audit_event(
-                                        "arc_corrector_success",
-                                        "arc partially corrected",
-                                        {
-                                            "arc_no": global_arc_no,
-                                            "corrections": len(corrections_made),
-                                            "failed": len(corrections_failed),
-                                        },
-                                    )
-
-                                revalidation = self.ctx.arc_draft_validator.validate(
-                                    arc=refined_arc,
-                                    prev_arcs=all_refined_arcs,
-                                    constraint_block=constraint_block or "",
-                                    state_tracker=self.ctx.state_tracker,
-                                )
-
-                                if revalidation["valid"]:
-                                    self.ctx.ui.log(
-                                        f"      ✅ [V60.42] 수정 후 재검증 통과 (점수: {revalidation['score']})"
-                                    )
-                                else:
-                                    self.ctx.ui.log("      ⚠️ [V60.42] 수정 후에도 검증 실패")
-                                    issues_str = "\n".join([f"- {i}" for i in revalidation["critical_issues"][:3]])
-                                    _python_advisories.append(
-                                        {
-                                            "source": "arc_corrector_revalidation",
-                                            "severity": "CRITICAL",
-                                            "message": f"ArcCorrector 수정 후에도 실패:\n{issues_str}",
-                                        }
-                                    )
-                            else:
-                                reason = correction_log.get("reason", "알 수 없음")
-                                self.ctx.ui.log(f"      ⚠️ [V60.42] ArcCorrector 수정 실패: {reason}")
-                                if callable(getattr(self.ctx, "audit_event", None)):
-                                    self.ctx.audit_event("arc_corrector_fail", reason, {"arc_no": global_arc_no})
-                                issues_str = "\n".join([f"- {i.get('message', str(i))}" for i in major_only[:3]])
-                                _python_advisories.append(
-                                    {
-                                        "source": "arc_corrector_fail",
-                                        "severity": "CRITICAL",
-                                        "message": f"V60.42 수정 불가:\n{issues_str}",
-                                    }
-                                )
-                        else:
-                            uncorr_msgs = [(i.get("message", "") or "")[:30] for i in uncorrectable_issues[:2]]
-                            self.ctx.ui.log(f"      ⚠️ [V60.42] 수정 불가: {', '.join(uncorr_msgs)}")
-                            issues_str = "\n".join([f"- {i.get('message', str(i))}" for i in major_only[:3]])
-                            _python_advisories.append(
-                                {
-                                    "source": "arc_corrector_uncorrectable",
-                                    "severity": "CRITICAL",
-                                    "message": f"수정 불가:\n{issues_str}",
-                                }
-                            )
-
-                    except (RuntimeError, ValueError) as corr_err:
-                        self.ctx.ui.log(f"      ⚠️ [V60.42] ArcCorrector 오류: {str(corr_err)[:50]}")
-                        if callable(getattr(self.ctx, "audit_event", None)):
-                            self.ctx.audit_event("arc_corrector_error", str(corr_err)[:100])
-                        issues_str = "\n".join([f"- {i}" for i in draft_result["critical_issues"][:5]])
-                        _python_advisories.append(
-                            {
-                                "source": "arc_corrector_error",
-                                "severity": "CRITICAL",
-                                "message": f"V60.11 검증 실패 + Corrector 오류:\n{issues_str}",
-                            }
-                        )
-                else:
-                    issues_str = "\n".join([f"- {i}" for i in draft_result["critical_issues"][:5]])
-                    _python_advisories.append(
-                        {
-                            "source": "draft_validator",
-                            "severity": "CRITICAL",
-                            "message": (
-                                f"V60.11 DraftValidator 사전 검증 실패 (점수: {draft_result['score']}/100)\n"
-                                f"문제점:\n{issues_str}"
-                            ),
-                        }
-                    )
             else:
-                self.ctx.ui.log(f"      ✅ [V60.11 DraftValidator] 사전 검증 통과 (점수: {draft_result['score']})")
-                draft_validator_passed = True  # [감리] 2차 DraftValidator 통과 시 플래그 설정
-                if draft_result["warnings"]:
-                    for w in draft_result["warnings"][:2]:
-                        self.ctx.ui.log(f"         ⚠️ {w}")
+                refined_arc = self._handle_full_draft_validator_failure(
+                    refined_arc=refined_arc,
+                    draft_result=draft_result,
+                    all_refined_arcs=all_refined_arcs,
+                    constraint_block=constraint_block,
+                    global_arc_no=global_arc_no,
+                    _python_advisories=_python_advisories,
+                    _auto_corrections=_auto_corrections,
+                )
 
         return {
             "refined_arc": refined_arc,
             "draft_validator_passed": draft_validator_passed,
         }
+
+    def _log_full_draft_validator_advisories(self, *, draft_result: dict) -> None:
+        advisory_issues = draft_result.get("advisory_issues", [])
+        if not advisory_issues:
+            return
+
+        self.ctx.ui.log(f"      📋 [V60.56 DraftValidator] Advisory {len(advisory_issues)}개 - LLM이 최종 판단")
+        for issue in advisory_issues[:3]:
+            self.ctx.ui.log(f"         📝 {issue}")
+
+    def _mark_full_draft_validator_passed(self, *, draft_result: dict, draft_validator_passed: bool) -> bool:
+        self.ctx.ui.log(f"      ✅ [V60.11 DraftValidator] 사전 검증 통과 (점수: {draft_result['score']})")
+        if draft_result["warnings"]:
+            for warning in draft_result["warnings"][:2]:
+                self.ctx.ui.log(f"         ⚠️ {warning}")
+        return True if not draft_validator_passed else draft_validator_passed
+
+    def _handle_full_draft_validator_failure(
+        self,
+        *,
+        refined_arc,
+        draft_result: dict,
+        all_refined_arcs: list,
+        constraint_block: str,
+        global_arc_no: int,
+        _python_advisories: list,
+        _auto_corrections: list,
+    ):
+        self.ctx.ui.log(f"      🚨 [V60.11 DraftValidator] 사전 검증 실패 (점수: {draft_result['score']})")
+        for issue in draft_result["critical_issues"][:3]:
+            self.ctx.ui.log(f"         ❌ {issue}")
+
+        if callable(getattr(self.ctx, "audit_event", None)):
+            self.ctx.audit_event(
+                "draft_validation_reject",
+                "draft validation failed",
+                {
+                    "arc_no": global_arc_no,
+                    "score": draft_result["score"],
+                    "critical_count": len(draft_result["critical_issues"]),
+                },
+            )
+
+        critical_only = draft_result.get("critical_issues", [])
+        major_only = [{"message": w, "severity": "WARNING"} for w in draft_result.get("warnings", [])]
+
+        if critical_only or not major_only or not self.ctx.arc_corrector or not self.ctx.use_arc_corrector:
+            self._append_full_draft_validator_failure_advisory(
+                draft_result=draft_result,
+                _python_advisories=_python_advisories,
+            )
+            return refined_arc
+
+        return self._run_partial_warning_correction(
+            refined_arc=refined_arc,
+            major_only=major_only,
+            draft_result=draft_result,
+            all_refined_arcs=all_refined_arcs,
+            constraint_block=constraint_block,
+            global_arc_no=global_arc_no,
+            _python_advisories=_python_advisories,
+            _auto_corrections=_auto_corrections,
+        )
+
+    def _append_full_draft_validator_failure_advisory(self, *, draft_result: dict, _python_advisories: list) -> None:
+        issues_str = "\n".join([f"- {i}" for i in draft_result["critical_issues"][:5]])
+        _python_advisories.append(
+            {
+                "source": "draft_validator",
+                "severity": "CRITICAL",
+                "message": (
+                    f"V60.11 DraftValidator 사전 검증 실패 (점수: {draft_result['score']}/100)\n"
+                    f"문제점:\n{issues_str}"
+                ),
+            }
+        )
+
+    def _run_partial_warning_correction(
+        self,
+        *,
+        refined_arc,
+        major_only: list,
+        draft_result: dict,
+        all_refined_arcs: list,
+        constraint_block: str,
+        global_arc_no: int,
+        _python_advisories: list,
+        _auto_corrections: list,
+    ):
+        self.ctx.ui.log(f"      🔧 [V60.42] CRITICAL 없음, MAJOR {len(major_only)}개 - ArcCorrector 부분 수정 시도")
+
+        try:
+            can_correct, _correctable_issues, uncorrectable_issues = self.ctx.arc_corrector.can_correct(major_only)
+
+            if not can_correct:
+                uncorr_msgs = [(i.get("message", "") or "")[:30] for i in uncorrectable_issues[:2]]
+                self.ctx.ui.log(f"      ⚠️ [V60.42] 수정 불가: {', '.join(uncorr_msgs)}")
+                issues_str = "\n".join([f"- {i.get('message', str(i))}" for i in major_only[:3]])
+                _python_advisories.append(
+                    {
+                        "source": "arc_corrector_uncorrectable",
+                        "severity": "CRITICAL",
+                        "message": f"수정 불가:\n{issues_str}",
+                    }
+                )
+                return refined_arc
+
+            corrected_arc, correction_log = self.ctx.arc_corrector.correct(
+                arc=refined_arc,
+                issues=major_only,
+                prev_arcs=all_refined_arcs,
+            )
+
+            if not corrected_arc or not correction_log.get("success"):
+                reason = correction_log.get("reason", "알 수 없음")
+                self.ctx.ui.log(f"      ⚠️ [V60.42] ArcCorrector 수정 실패: {reason}")
+                if callable(getattr(self.ctx, "audit_event", None)):
+                    self.ctx.audit_event("arc_corrector_fail", reason, {"arc_no": global_arc_no})
+                issues_str = "\n".join([f"- {i.get('message', str(i))}" for i in major_only[:3]])
+                _python_advisories.append(
+                    {
+                        "source": "arc_corrector_fail",
+                        "severity": "CRITICAL",
+                        "message": f"V60.42 수정 불가:\n{issues_str}",
+                    }
+                )
+                return refined_arc
+
+            refined_arc = corrected_arc
+            corrections_made = correction_log.get("corrections_made", [])
+            corrections_failed = correction_log.get("corrections_failed", [])
+            _auto_corrections.extend(corrections_made)
+            self.ctx.ui.log(f"      ✅ [V60.42] ArcCorrector 수정 완료 ({len(corrections_made)}개 수정)")
+            for fix in corrections_made[:3]:
+                fix_summary = fix.get("change_summary", fix.get("issue", "")[:50])
+                self.ctx.ui.log(f"         🔨 {fix_summary}")
+
+            if callable(getattr(self.ctx, "audit_event", None)):
+                self.ctx.audit_event(
+                    "arc_corrector_success",
+                    "arc partially corrected",
+                    {
+                        "arc_no": global_arc_no,
+                        "corrections": len(corrections_made),
+                        "failed": len(corrections_failed),
+                    },
+                )
+
+            revalidation = self.ctx.arc_draft_validator.validate(
+                arc=refined_arc,
+                prev_arcs=all_refined_arcs,
+                constraint_block=constraint_block or "",
+                state_tracker=self.ctx.state_tracker,
+            )
+            if revalidation["valid"]:
+                self.ctx.ui.log(f"      ✅ [V60.42] 수정 후 재검증 통과 (점수: {revalidation['score']})")
+            else:
+                self.ctx.ui.log("      ⚠️ [V60.42] 수정 후에도 검증 실패")
+                issues_str = "\n".join([f"- {i}" for i in revalidation["critical_issues"][:3]])
+                _python_advisories.append(
+                    {
+                        "source": "arc_corrector_revalidation",
+                        "severity": "CRITICAL",
+                        "message": f"ArcCorrector 수정 후에도 실패:\n{issues_str}",
+                    }
+                )
+            return refined_arc
+
+        except (RuntimeError, ValueError) as corr_err:
+            self.ctx.ui.log(f"      ⚠️ [V60.42] ArcCorrector 오류: {str(corr_err)[:50]}")
+            if callable(getattr(self.ctx, "audit_event", None)):
+                self.ctx.audit_event("arc_corrector_error", str(corr_err)[:100])
+            issues_str = "\n".join([f"- {i}" for i in draft_result["critical_issues"][:5]])
+            _python_advisories.append(
+                {
+                    "source": "arc_corrector_error",
+                    "severity": "CRITICAL",
+                    "message": f"V60.11 검증 실패 + Corrector 오류:\n{issues_str}",
+                }
+            )
+            return refined_arc
+
+    def _validate_draft_or_fail_closed(self, *, refined_arc, all_refined_arcs: list, constraint_block: str) -> dict:
+        """Run DraftValidator with fail-closed fallback on validator crashes."""
+        try:
+            return self.ctx.arc_draft_validator.validate(
+                arc=refined_arc,
+                prev_arcs=all_refined_arcs,
+                constraint_block=constraint_block or "",
+                state_tracker=self.ctx.state_tracker,
+            )
+        except (RuntimeError, ValueError, OSError) as draft_error:
+            logging.warning(f"[G6] DraftValidator 호출 실패 — fail-closed: {draft_error!s:.100}")
+            return {
+                "valid": False,
+                "score": 0,
+                "advisory_issues": [],
+                "critical_issues": [f"DraftValidator crash: {draft_error!s:.100}"],
+                "warnings": [],
+            }
 
     def _run_continuity_inspection(
         self,
@@ -746,209 +890,277 @@ class Stage2ValidationPipeline:
             refined_arc["joint_docs"] = enriched_block.get("joint_docs", {})
             refined_arc["status_shadow"] = enriched_block.get("status_shadow", {})
 
-            try:  # [S2-001] ContinuityInspector 예외 전파 차단 → retry 변환
-                with rich_console.status(f"[bold yellow]🔍 Arc {global_arc_no} 연속성 검증 중...[/]", spinner="dots"):
-                    continuity_result = self.ctx.agents["continuity_inspector"].inspect_arc(
-                        current_arc=refined_arc,
-                        prev_arcs=all_refined_arcs,
-                        entity_registry=entity_registry_for_director,
-                    )
-            except (RuntimeError, ValueError, OSError) as _ci_err:
-                logging.warning("[TF-39] ContinuityInspector 예외 → advisory 전환: %s", str(_ci_err)[:100])
-                _python_advisories.append(
-                    {
-                        "source": "continuity_inspector_error",
-                        "severity": "MAJOR",
-                        "message": f"연속성 검증 런타임 오류 ({type(_ci_err).__name__}). Director가 직접 연속성 검증 필요.",
-                    }
-                )
-                continuity_result = {
-                    "decision": "PASS",
-                    "severity": "UNKNOWN",
-                    "violations": [],
-                    "warnings": [f"CI runtime error: {_ci_err}"],
-                }
-
+            continuity_result = self._inspect_continuity(
+                refined_arc=refined_arc,
+                all_refined_arcs=all_refined_arcs,
+                entity_registry_for_director=entity_registry_for_director,
+                global_arc_no=global_arc_no,
+                rich_console=rich_console,
+                _python_advisories=_python_advisories,
+            )
             if continuity_result.get("decision") == "REJECT":
-                severity = continuity_result.get("severity", "UNKNOWN")
-                violations = continuity_result.get("violations", [])
-
-                self.ctx.ui.log(f"      🚨 [V49 REJECT] Arc 연속성 위반 감지 (심각도: {severity})")
-                for v in violations[:3]:
-                    self.ctx.ui.log(f"         - {v.get('type', 'unknown')}: {(v.get('description') or '')[:100]}")
-
-                if callable(getattr(self.ctx, "audit_event", None)):
-                    self.ctx.audit_event(
-                        "arc_continuity_reject",
-                        "continuity violation detected",
-                        {"arc_no": global_arc_no, "severity": severity, "violations_count": len(violations)},
-                    )
-
-                # [V51.4] 실패 기록
-                if V50_MODULES_AVAILABLE and self.ctx.failure_learner:
-                    for v in violations[:3]:
-                        self.ctx.failure_learner.record_failure(
-                            stage=2,
-                            episode=current_ep_start,
-                            arc=global_arc_no,
-                            reason=f"{v.get('type', 'unknown')}: {(v.get('description') or '')[:150]}",
-                            details={"severity": severity, "violation": v},
-                        )
-
-                # [V60.2] PassRateMonitor
-                if V50_MODULES_AVAILABLE and self.ctx.pass_rate_monitor:
-                    try:
-                        from modules.core.logging_keys import build_attempt_key, resolve_logging_session_id
-
-                        self.ctx.pass_rate_monitor.record_attempt(
-                            stage=2,
-                            episode=global_arc_no,
-                            arc=global_arc_no,
-                            attempt_num=attempt + 1,
-                            success=False,
-                            reject_reason=f"ContinuityInspector: {severity} - {violations[0].get('type', '') if violations else 'unknown'}",
-                            generation_method=generation_method,
-                            attempt_key=build_attempt_key(
-                                stage=2,
-                                ep_num=global_arc_no,
-                                arc_num=global_arc_no,
-                                attempt_num=attempt + 1,
-                                session_id=resolve_logging_session_id(getattr(self.ctx, "current_project", None)),
-                            ),
-                            final_verdict="REJECT",
-                        )
-                    except Exception as e:  # [V64.P4] OPTIONAL: metrics recording
-                        logging.debug(f"[SILENT] metrics recording: {e}")
-                        pass  # PassRateMonitor failure is non-blocking
-
-                # [V60.25] Stage2Optimizer
-                if self.ctx.stage2_optimizer:
-                    try:
-                        for v in violations[:3]:
-                            self.ctx.stage2_optimizer.failure_memory.record_failure(
-                                arc_no=global_arc_no,
-                                failure_type=v.get("type", "unknown"),
-                                details=v.get("description", "")[:200],
-                            )
-                    except Exception as e:
-                        self.ctx.ui.log(f"      ⚠️ [V60.25] 실패 기록 오류 (무시): {str(e)[:50]}")
-
-                # [V49.6] 구체적 위반 내용을 피드백에 포함
-                violation_details = []
-                banned_items = []
-
-                for v in violations[:3]:
-                    v_type = v.get("type", "unknown")
-                    v_desc = v.get("description", "")[:200]
-                    violation_details.append(f"[{v_type}] {v_desc}")
-                    if v_type == "duplicate_acquisition":
-                        item_name = v.get("item_or_subject", "")
-                        if item_name:
-                            banned_items.append(item_name)
-
-                banned_items_warning = ""
-                if banned_items:
-                    banned_list = ", ".join(banned_items)
-                    banned_items_warning = (
-                        f"\n\n🚫🚫🚫 [획득 금지 아이템 - 절대 준수] 🚫🚫🚫\n"
-                        f"다음 아이템들은 이미 이전 Arc에서 획득했습니다:\n"
-                        f"  → {banned_list}\n\n"
-                        f"[필수 조치]\n"
-                        f"1. 위 아이템을 '획득'하는 장면을 설계하지 마세요.\n"
-                        f"2. 대신 '이미 소지 중'인 상태로 시작하여 '사용'하세요.\n"
-                        f"3. 예: '허리에 찬 백근 대도를 뽑아 들었다' (O)\n"
-                        f"4. 예: '백근 대도를 새로 획득했다' (X - REJECT됨)"
-                    )
-
-                prev_state_reminder = ""
-                if all_refined_arcs:
-                    last = all_refined_arcs[-1]
-                    last_joint = last.get("joint_docs", {})
-                    last_status = last.get("status_shadow", {})
-                    _energy_loss = last_status.get("internal_energy_loss", "?")
-                    _energy_line = f"- 내공 소모: {_energy_loss}\n" if _energy_loss not in ("해당없음", "") else ""
-                    prev_state_reminder = (
-                        f"\n\n📌 [직전 Arc {last.get('arc_no', '?')} 확정 상태 - 반드시 계승할 것]:\n"
-                        f"- 위치: {last_joint.get('final_location', '?')}\n"
-                        f"- 소지품: {last_joint.get('physical_inventory', '?')}\n"
-                        f"{_energy_line}"
-                        f"- 부상: {last_status.get('expected_injuries', '?')}"
-                    )
-
-                if callable(getattr(self.ctx, "generate_structured_arc_feedback", None)):
-                    structured_feedback = self.ctx.generate_structured_arc_feedback(
-                        continuity_result=continuity_result, prev_arcs=all_refined_arcs, arc_no=global_arc_no
-                    )
-                else:
-                    structured_feedback = ""
-
-                if callable(getattr(self.ctx, "get_adaptive_feedback_intensity", None)):
-                    adaptive_intensity = self.ctx.get_adaptive_feedback_intensity(attempt, stage=2)
-                    intensity_guide = f"\n\n[V60.9 재시도 가이드 ({attempt + 1}회차)]\n{adaptive_intensity['guidance']}"
-                else:
-                    intensity_guide = ""
-
-                if callable(getattr(self.ctx, "build_strong_kind_feedback", None)):
-                    strong_kind_feedback = self.ctx.build_strong_kind_feedback(
-                        violations=violations, attempt=attempt, protagonist_name=protagonist_name or "주인공"
-                    )
-                else:
-                    strong_kind_feedback = ""
-
-                if callable(getattr(self.ctx, "build_focused_context", None)):
-                    focused_context = self.ctx.build_focused_context(
-                        violations=violations,
-                        prev_arcs=all_refined_arcs,
-                        protagonist_name=protagonist_name or "주인공",
-                    )
-                else:
-                    focused_context = ""
-
-                # [TF-25-08] ContinuityInspector REJECT → Director advisory 전환
-                _ci_feedback = (
-                    f"{strong_kind_feedback}\n\n"
-                    f"{focused_context}{structured_feedback or ''}{banned_items_warning}{prev_state_reminder}"
-                )
-
-                _python_advisories.append(
-                    {
-                        "source": "continuity_inspector",
-                        "severity": "CRITICAL",
-                        "message": _ci_feedback[:3000],
-                    }
-                )
-                self.ctx.ui.log(
-                    f"      📋 [TF-25-08] ContinuityInspector REJECT → Director advisory ({len(_ci_feedback)}자)"
+                self._handle_continuity_reject(
+                    continuity_result=continuity_result,
+                    all_refined_arcs=all_refined_arcs,
+                    global_arc_no=global_arc_no,
+                    current_ep_start=current_ep_start,
+                    generation_method=generation_method,
+                    attempt=attempt,
+                    protagonist_name=protagonist_name,
+                    V50_MODULES_AVAILABLE=V50_MODULES_AVAILABLE,
+                    _python_advisories=_python_advisories,
                 )
             else:
-                corrected_joint_docs = continuity_result.get("corrected_joint_docs")
-                if corrected_joint_docs:
-                    refined_arc["joint_docs"] = corrected_joint_docs
-                    enriched_block["joint_docs"] = corrected_joint_docs
-                    self.ctx.ui.log("      🔧 [V49.2] joint_docs 자동 수정 반영됨")
-
-                corrected_state = continuity_result.get("corrected_state_constraints")
-                if corrected_state:
-                    refined_arc["state_constraints"] = corrected_state
-                    self.ctx.ui.log("      🔧 [V60.13] state_constraints 자동 수정 반영됨")
-
-                warnings = continuity_result.get("warnings", [])
-                if warnings:
-                    self.ctx.ui.log(f"      ⚠️ [V49] Arc 연속성 경고 {len(warnings)}개 (PASS)")
-                else:
-                    self.ctx.ui.log("      ✅ [V49] Arc 연속성 검증 통과")
-
-                if self.ctx.stage2_optimizer:
-                    try:
-                        self.ctx.stage2_optimizer.example_manager.add_successful_arc(
-                            arc=refined_arc  # [V70] arc_no 불필요 kwarg 제거
-                        )
-                        self.ctx.ui.log("      📚 [V60.25] 성공 Arc 예시 저장됨")
-                    except Exception as e:  # [V64.P4] OPTIONAL: success example storage
-                        logging.debug(f"[SILENT] success example storage: {e}")
-                        pass  # Stage2Optimizer example save failure is non-blocking
+                self._apply_continuity_pass_updates(
+                    refined_arc=refined_arc,
+                    enriched_block=enriched_block,
+                    continuity_result=continuity_result,
+                )
 
         return {"refined_arc": refined_arc}
+
+    def _inspect_continuity(
+        self,
+        *,
+        refined_arc,
+        all_refined_arcs: list,
+        entity_registry_for_director,
+        global_arc_no: int,
+        rich_console,
+        _python_advisories: list,
+    ) -> dict:
+        try:
+            with rich_console.status(f"[bold yellow]🔍 Arc {global_arc_no} 연속성 검증 중...[/]", spinner="dots"):
+                return self.ctx.agents["continuity_inspector"].inspect_arc(
+                    current_arc=refined_arc,
+                    prev_arcs=all_refined_arcs,
+                    entity_registry=entity_registry_for_director,
+                )
+        except (RuntimeError, ValueError, OSError) as ci_err:
+            logging.warning("[TF-39] ContinuityInspector 예외 → advisory 전환: %s", str(ci_err)[:100])
+            _python_advisories.append(
+                {
+                    "source": "continuity_inspector_error",
+                    "severity": "MAJOR",
+                    "message": f"연속성 검증 런타임 오류 ({type(ci_err).__name__}). Director가 직접 연속성 검증 필요.",
+                }
+            )
+            return {
+                "decision": "PASS",
+                "severity": "UNKNOWN",
+                "violations": [],
+                "warnings": [f"CI runtime error: {ci_err}"],
+            }
+
+    def _handle_continuity_reject(
+        self,
+        *,
+        continuity_result: dict,
+        all_refined_arcs: list,
+        global_arc_no: int,
+        current_ep_start: int,
+        generation_method: str,
+        attempt: int,
+        protagonist_name: str,
+        V50_MODULES_AVAILABLE: bool,
+        _python_advisories: list,
+    ) -> None:
+        severity = continuity_result.get("severity", "UNKNOWN")
+        violations = continuity_result.get("violations", [])
+        self.ctx.ui.log(f"      🚨 [V49 REJECT] Arc 연속성 위반 감지 (심각도: {severity})")
+        for violation in violations[:3]:
+            self.ctx.ui.log(f"         - {violation.get('type', 'unknown')}: {(violation.get('description') or '')[:100]}")
+
+        if callable(getattr(self.ctx, "audit_event", None)):
+            self.ctx.audit_event(
+                "arc_continuity_reject",
+                "continuity violation detected",
+                {"arc_no": global_arc_no, "severity": severity, "violations_count": len(violations)},
+            )
+        self._record_continuity_reject_side_effects(
+            violations=violations,
+            severity=severity,
+            global_arc_no=global_arc_no,
+            current_ep_start=current_ep_start,
+            generation_method=generation_method,
+            attempt=attempt,
+            V50_MODULES_AVAILABLE=V50_MODULES_AVAILABLE,
+        )
+        ci_feedback = self._build_continuity_reject_feedback(
+            continuity_result=continuity_result,
+            violations=violations,
+            all_refined_arcs=all_refined_arcs,
+            attempt=attempt,
+            protagonist_name=protagonist_name,
+            global_arc_no=global_arc_no,
+        )
+        _python_advisories.append(
+            {"source": "continuity_inspector", "severity": "CRITICAL", "message": ci_feedback[:3000]}
+        )
+        self.ctx.ui.log(f"      📋 [TF-25-08] ContinuityInspector REJECT → Director advisory ({len(ci_feedback)}자)")
+
+    def _record_continuity_reject_side_effects(
+        self,
+        *,
+        violations: list,
+        severity: str,
+        global_arc_no: int,
+        current_ep_start: int,
+        generation_method: str,
+        attempt: int,
+        V50_MODULES_AVAILABLE: bool,
+    ) -> None:
+        if V50_MODULES_AVAILABLE and self.ctx.failure_learner:
+            for violation in violations[:3]:
+                self.ctx.failure_learner.record_failure(
+                    stage=2,
+                    episode=current_ep_start,
+                    arc=global_arc_no,
+                    reason=f"{violation.get('type', 'unknown')}: {(violation.get('description') or '')[:150]}",
+                    details={"severity": severity, "violation": violation},
+                )
+
+        if V50_MODULES_AVAILABLE and self.ctx.pass_rate_monitor:
+            try:
+                from modules.core.logging_keys import build_attempt_key, resolve_logging_session_id
+
+                self.ctx.pass_rate_monitor.record_attempt(
+                    stage=2,
+                    episode=global_arc_no,
+                    arc=global_arc_no,
+                    attempt_num=attempt + 1,
+                    success=False,
+                    reject_reason=f"ContinuityInspector: {severity} - {violations[0].get('type', '') if violations else 'unknown'}",
+                    generation_method=generation_method,
+                    attempt_key=build_attempt_key(
+                        stage=2,
+                        ep_num=global_arc_no,
+                        arc_num=global_arc_no,
+                        attempt_num=attempt + 1,
+                        session_id=resolve_logging_session_id(getattr(self.ctx, "current_project", None)),
+                    ),
+                    final_verdict="REJECT",
+                )
+            except Exception as exc:
+                logging.debug(f"[SILENT] metrics recording: {exc}")
+
+        if self.ctx.stage2_optimizer:
+            try:
+                for violation in violations[:3]:
+                    self.ctx.stage2_optimizer.failure_memory.record_failure(
+                        arc_no=global_arc_no,
+                        failure_type=violation.get("type", "unknown"),
+                        details=violation.get("description", "")[:200],
+                    )
+            except Exception as exc:
+                self.ctx.ui.log(f"      ⚠️ [V60.25] 실패 기록 오류 (무시): {str(exc)[:50]}")
+
+    def _build_continuity_reject_feedback(
+        self,
+        *,
+        continuity_result: dict,
+        violations: list,
+        all_refined_arcs: list,
+        attempt: int,
+        protagonist_name: str,
+        global_arc_no: int,
+    ) -> str:
+        banned_items = []
+        for violation in violations[:3]:
+            if violation.get("type", "unknown") == "duplicate_acquisition":
+                item_name = violation.get("item_or_subject", "")
+                if item_name:
+                    banned_items.append(item_name)
+
+        banned_items_warning = ""
+        if banned_items:
+            banned_list = ", ".join(banned_items)
+            banned_items_warning = (
+                f"\n\n🚫🚫🚫 [획득 금지 아이템 - 절대 준수] 🚫🚫🚫\n"
+                f"다음 아이템들은 이미 이전 Arc에서 획득했습니다:\n"
+                f"  → {banned_list}\n\n"
+                f"[필수 조치]\n"
+                f"1. 위 아이템을 '획득'하는 장면을 설계하지 마세요.\n"
+                f"2. 대신 '이미 소지 중'인 상태로 시작하여 '사용'하세요.\n"
+                f"3. 예: '허리에 찬 백근 대도를 뽑아 들었다' (O)\n"
+                f"4. 예: '백근 대도를 새로 획득했다' (X - REJECT됨)"
+            )
+
+        prev_state_reminder = ""
+        if all_refined_arcs:
+            last = all_refined_arcs[-1]
+            last_joint = last.get("joint_docs", {})
+            last_status = last.get("status_shadow", {})
+            energy_loss = last_status.get("internal_energy_loss", "?")
+            energy_line = f"- 내공 소모: {energy_loss}\n" if energy_loss not in ("해당없음", "") else ""
+            prev_state_reminder = (
+                f"\n\n📌 [직전 Arc {last.get('arc_no', '?')} 확정 상태 - 반드시 계승할 것]:\n"
+                f"- 위치: {last_joint.get('final_location', '?')}\n"
+                f"- 소지품: {last_joint.get('physical_inventory', '?')}\n"
+                f"{energy_line}"
+                f"- 부상: {last_status.get('expected_injuries', '?')}"
+            )
+
+        if callable(getattr(self.ctx, "generate_structured_arc_feedback", None)):
+            structured_feedback = self.ctx.generate_structured_arc_feedback(
+                continuity_result=continuity_result, prev_arcs=all_refined_arcs, arc_no=global_arc_no
+            )
+        else:
+            structured_feedback = ""
+
+        if callable(getattr(self.ctx, "get_adaptive_feedback_intensity", None)):
+            adaptive_intensity = self.ctx.get_adaptive_feedback_intensity(attempt, stage=2)
+            intensity_guide = f"\n\n[V60.9 재시도 가이드 ({attempt + 1}회차)]\n{adaptive_intensity['guidance']}"
+        else:
+            intensity_guide = ""
+
+        if callable(getattr(self.ctx, "build_strong_kind_feedback", None)):
+            strong_kind_feedback = self.ctx.build_strong_kind_feedback(
+                violations=violations,
+                attempt=attempt,
+                protagonist_name=protagonist_name or "주인공",
+            )
+        else:
+            strong_kind_feedback = ""
+
+        if callable(getattr(self.ctx, "build_focused_context", None)):
+            focused_context = self.ctx.build_focused_context(
+                violations=violations,
+                prev_arcs=all_refined_arcs,
+                protagonist_name=protagonist_name or "주인공",
+            )
+        else:
+            focused_context = ""
+
+        return (
+            f"{strong_kind_feedback}\n\n"
+            f"{focused_context}{structured_feedback or ''}{banned_items_warning}{prev_state_reminder}{intensity_guide}"
+        )
+
+    def _apply_continuity_pass_updates(self, *, refined_arc, enriched_block: dict, continuity_result: dict) -> None:
+        corrected_joint_docs = continuity_result.get("corrected_joint_docs")
+        if corrected_joint_docs:
+            refined_arc["joint_docs"] = corrected_joint_docs
+            enriched_block["joint_docs"] = corrected_joint_docs
+            self.ctx.ui.log("      🔧 [V49.2] joint_docs 자동 수정 반영됨")
+
+        corrected_state = continuity_result.get("corrected_state_constraints")
+        if corrected_state:
+            refined_arc["state_constraints"] = corrected_state
+            self.ctx.ui.log("      🔧 [V60.13] state_constraints 자동 수정 반영됨")
+
+        warnings = continuity_result.get("warnings", [])
+        if warnings:
+            self.ctx.ui.log(f"      ⚠️ [V49] Arc 연속성 경고 {len(warnings)}개 (PASS)")
+        else:
+            self.ctx.ui.log("      ✅ [V49] Arc 연속성 검증 통과")
+
+        if self.ctx.stage2_optimizer:
+            try:
+                self.ctx.stage2_optimizer.example_manager.add_successful_arc(arc=refined_arc)
+                self.ctx.ui.log("      📚 [V60.25] 성공 Arc 예시 저장됨")
+            except Exception as exc:
+                logging.debug(f"[SILENT] success example storage: {exc}")
 
     def _normalize_tactical_text(self, text: str) -> str:
         """[V64.P3] 전술서 텍스트 정규화"""

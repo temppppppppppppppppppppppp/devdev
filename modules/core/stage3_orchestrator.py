@@ -1010,6 +1010,530 @@ class Stage3Orchestrator:
     # ─────────────────────────────────────────────────────────────
     # Blueprint 생성 (LLM 호출)
     # ─────────────────────────────────────────────────────────────
+    def _collect_stage3_smart_retrieval_bundle(
+        self,
+        *,
+        working_ep,
+        arc_data,
+        prev_blueprints,
+        entity_registry,
+        protagonist_name,
+    ) -> dict[str, object]:
+        ctx = self.ctx
+        _bp_semantic_ctx = ""
+        _s3_work_focus: dict[str, object] = {}
+        _s3_plan = None
+
+        try:
+            _s3_memory = getattr(ctx, "memory", None)
+            _s3_advisor = getattr(ctx, "context_advisor", None)
+            _s3_genre = ""
+            if getattr(ctx, "selected_genre", None):
+                _s3_genre = ctx.selected_genre.get("type", "")
+
+            from modules.validation.threshold_helper import _threshold as _s3_th
+
+            _s3_sc_enabled = bool(_s3_th("smart_retrieval.enabled", False)) and bool(
+                _s3_th("smart_retrieval.stage3_enabled", False)
+            )
+            if _s3_sc_enabled and _s3_advisor and _s3_memory:
+                _s3_npc_roster = []
+                if entity_registry and isinstance(entity_registry, dict):
+                    for _cat_items in entity_registry.values():
+                        if isinstance(_cat_items, list):
+                            for _item in _cat_items[:10]:
+                                _name = _item.get("name", "") if isinstance(_item, dict) else str(_item)
+                                if _name and _name not in _s3_npc_roster:
+                                    _s3_npc_roster.append(_name)
+
+                _s3_work_focus = _resolve_stage3_work_focus(
+                    ctx,
+                    arc_data=arc_data,
+                    prev_blueprints=prev_blueprints,
+                    entity_registry=entity_registry,
+                )
+                _s3_plan = _s3_advisor.plan_stage3_retrieval(
+                    arc_data=arc_data,
+                    prev_blueprints=prev_blueprints,
+                    current_ep=working_ep,
+                    npc_roster=_s3_npc_roster[:10],
+                    genre=_s3_genre,
+                    work_focus=_s3_work_focus,
+                )
+                _s3_parts = []
+                _s3_max_results = int(_s3_th("context.vector_max_results_s4", 50))
+                for _slot in getattr(_s3_plan, "slots", []) or []:
+                    _slot_query = str(getattr(_slot, "query", "") or "").strip()
+                    if not _slot_query:
+                        continue
+                    _slot_source = str(getattr(_slot, "source", "vec_memory") or "vec_memory")
+                    _slot_category = str(getattr(_slot, "category", "stage3") or "stage3")
+                    _slot_max = int(getattr(_slot, "max_chars", 0) or 0) or 2000
+                    try:
+                        if _slot_source == "db_npc_history" and hasattr(_s3_memory, "retrieve_npc_context"):
+                            _s3_text = _s3_memory.retrieve_npc_context(
+                                npc_names=_s3_npc_roster[:5],
+                                current_ep=working_ep,
+                                max_results=_s3_max_results,
+                            )
+                        elif _slot_source == "db_npc_relationship":
+                            _s3_text = _build_stage3_relationship_context(
+                                getattr(ctx.current_project, "db", None),
+                                npc_names=_s3_npc_roster[:6],
+                                protagonist_name=protagonist_name,
+                            )
+                        else:
+                            _s3_text = _s3_memory.retrieve_multi_query_context(
+                                queries=[_slot_query],
+                                current_ep=working_ep,
+                                n_per_query=3,
+                                max_results=_s3_max_results,
+                            )
+                        if _s3_text:
+                            _s3_parts.append(
+                                f"[SC:{_slot_category}]\n"
+                                + smart_truncate(
+                                    str(_s3_text),
+                                    max_chars=_slot_max,
+                                    head_chars=max(0, min(int(_slot_max * 0.55), _slot_max - 80)),
+                                )
+                            )
+                    except Exception as _s3_slot_err:
+                        _logging.warning("[SilentPass:SC:Stage3] 슬롯 %s 실패: %s", _slot_category, _s3_slot_err)
+                if _s3_parts:
+                    _bp_semantic_ctx = "\n\n".join(_s3_parts)
+                    _logging.info("[S3-I1] Stage3 SC 검색 완료: %d건, %d자", len(_s3_parts), len(_bp_semantic_ctx))
+        except Exception as _s3_sc_err:
+            _logging.warning("[SilentPass:SC:Stage3] SC 검색 실패 (비차단): %s", _s3_sc_err)
+
+        return {
+            "semantic_ctx": _bp_semantic_ctx,
+            "work_focus": _s3_work_focus,
+            "plan": _s3_plan,
+        }
+
+    def _inject_stage3_treatment_block_context(self, *, semantic_ctx: str, working_ep, arc_data, arc_idx: int) -> str:
+        _bp_semantic_ctx = semantic_ctx
+        try:
+            _master_bible = getattr(self.ctx.current_project, "master_bible", None) or {}
+            _bible_root = _master_bible.get("MasterBible", _master_bible)
+            _plot_roadmap = _bible_root.get("plot_roadmap", [])
+            if isinstance(_plot_roadmap, list) and 0 <= arc_idx < len(_plot_roadmap):
+                _block = _plot_roadmap[arc_idx]
+                if isinstance(_block, dict):
+                    _ep_start = arc_data.get("ep_start", working_ep)
+                    _ep_end = arc_data.get("ep_end", working_ep)
+                    _block_fields = []
+                    for _f in (
+                        "title",
+                        "emotional_beat",
+                        "foreshadow",
+                        "power_shift",
+                        "event_villain",
+                        "solution",
+                        "reward",
+                    ):
+                        if _block.get(_f):
+                            _block_fields.append(f"  {_f}: {_block[_f]}")
+                    _content = _block.get("content", {})
+                    if isinstance(_content, dict):
+                        for _cf in ("context", "event_villain", "solution"):
+                            if _content.get(_cf):
+                                _block_fields.append(f"  content.{_cf}: {_content[_cf]}")
+                    _genre_ext = _block.get("genre_ext", {})
+                    if isinstance(_genre_ext, dict) and _genre_ext:
+                        _ge_lines = []
+                        for _gk, _gv in _genre_ext.items():
+                            if isinstance(_gv, dict | list):
+                                _ge_lines.append(f"    {_gk}: {_json.dumps(_gv, ensure_ascii=False)}")
+                            else:
+                                _ge_lines.append(f"    {_gk}: {_gv}")
+                        _block_fields.append("  genre_ext:\n" + "\n".join(_ge_lines))
+                    if _block_fields:
+                        _tb_header = (
+                            f"[원본 Treatment Block — 아크 {_ep_start}~{_ep_end}화 전체 참조용]\n"
+                            f"⚠️ 현재 화는 {working_ep}화입니다. 위의 아크 설계(arc_focus)에서 "
+                            f"{working_ep}화에 배정된 내용만 구현하세요. "
+                            f"블록의 세부 정보(특정 NPC 만남·스킬·장소 등)는 아크 설계의 현재 화 비트에 "
+                            f"맞을 때만 사용하고, 이후 화의 내용은 보류하세요."
+                        )
+                        _tb_text = _tb_header + "\n" + "\n".join(_block_fields)
+                        _bp_semantic_ctx = _tb_text + ("\n\n" + _bp_semantic_ctx if _bp_semantic_ctx else "")
+                        _logging.info(
+                            "[TF9] Treatment Block 주입 완료 (arc_idx=%d, ep=%d~%d, %d자)",
+                            arc_idx,
+                            _ep_start,
+                            _ep_end,
+                            len(_tb_text),
+                        )
+        except Exception as _tb_err:
+            _logging.warning("[SilentPass:TreatmentBlock] 추출 실패 (비차단): %s", _tb_err)
+
+        return _bp_semantic_ctx
+
+    def _inject_stage3_timeline_advisory(self, *, semantic_ctx: str, arc_idx: int, arc_data) -> str:
+        _bp_semantic_ctx = semantic_ctx
+        try:
+            if arc_idx > 0:
+                _all_arcs = getattr(self.ctx.current_project, "arcs", []) or []
+                if len(_all_arcs) >= arc_idx:
+                    _prev_arc_data = _all_arcs[arc_idx - 1]
+                    _prev_markers = self._extract_arc_time_markers(_prev_arc_data)
+                    _cur_markers = self._extract_arc_time_markers(arc_data)
+                    if _prev_markers or _cur_markers:
+                        _ta_lines = ["[Arc 시간 연속성 참고]"]
+                        if _prev_markers:
+                            _ta_lines.append(f"이전 Arc 종료 시점 마커: {', '.join(_prev_markers)}")
+                        if _cur_markers:
+                            _ta_lines.append(f"현재 Arc 시간 마커: {', '.join(_cur_markers)}")
+                        if self._timeline_start_end_raw_equal(arc_data):
+                            _ta_lines.append(
+                                "⚠️ [NS-4] 현재 Arc timeline.start와 end가 동일하게 기입됨 — "
+                                "시작/종료 시점을 분리해 서술하세요."
+                            )
+                        _prev_start, _ = self._extract_timeline_start_end(_prev_arc_data)
+                        _cur_start, _ = self._extract_timeline_start_end(arc_data)
+                        if _prev_start and _cur_start and _prev_start[0] > 0 and _cur_start[0] > 0:
+                            if _cur_start < _prev_start:
+                                _ta_lines.append(
+                                    "⚠️ [NS-4] Arc timeline 역전 감지 — 현재 Arc 시작 시점이 "
+                                    "이전 Arc 시작 시점보다 과거입니다. 시간 순서를 재점검하세요."
+                                )
+                        _ta_lines.append(
+                            "※ 현재 화에서 과거 사건 언급 시 '며칠 전'/'얼마 전' 같은 표현이 "
+                            "위 시간 간격과 일치하는지 확인하세요."
+                        )
+                        _ta_text = "\n".join(_ta_lines)
+                        _bp_semantic_ctx = _ta_text + ("\n\n" + _bp_semantic_ctx if _bp_semantic_ctx else "")
+                        _logging.info(
+                            "[NS-4] Arc 시간 마커 주입: prev=%s, cur=%s",
+                            _prev_markers,
+                            _cur_markers,
+                        )
+        except Exception as _ns4_err:
+            _logging.debug("[NS-4] 시간 마커 주입 실패 (비차단): %s", _ns4_err)
+
+        return _bp_semantic_ctx
+
+    def _finalize_stage3_blueprint_semantic_bundle(
+        self,
+        *,
+        semantic_ctx: str,
+        work_focus: dict[str, object],
+        plan,
+        working_ep,
+        arc_data,
+        entity_registry,
+        protagonist_name,
+        blueprint_window: list,
+        focus_window: list,
+    ) -> dict[str, object]:
+        ctx = self.ctx
+        _bp_semantic_ctx = semantic_ctx
+        _s3_work_focus = work_focus
+        _s3_plan = plan
+        _source_counts: dict[str, int] = {}
+        _coverage_warnings: list[str] = []
+
+        _world_state_advisory = _build_world_state_advisory(getattr(ctx, "world_state", None))
+        if _world_state_advisory:
+            _bp_semantic_ctx = _world_state_advisory + ("\n\n" + _bp_semantic_ctx if _bp_semantic_ctx else "")
+
+        _style_guide_advisory = _build_style_guide_advisory(getattr(ctx, "current_project", None))
+        if _style_guide_advisory:
+            _bp_semantic_ctx = _style_guide_advisory + ("\n\n" + _bp_semantic_ctx if _bp_semantic_ctx else "")
+
+        _fact_ledger_advisory = _build_fact_ledger_advisory(getattr(ctx.current_project, "db", None))
+        if _fact_ledger_advisory:
+            _bp_semantic_ctx = _fact_ledger_advisory + ("\n\n" + _bp_semantic_ctx if _bp_semantic_ctx else "")
+
+        _seed_advisory = _build_stale_seed_advisory(getattr(ctx.current_project, "db", None), working_ep)
+        if _seed_advisory:
+            _bp_semantic_ctx = _seed_advisory + ("\n\n" + _bp_semantic_ctx if _bp_semantic_ctx else "")
+
+        _work_focus_advisory = _build_stage3_work_focus_advisory(
+            _s3_work_focus
+            or _resolve_stage3_work_focus(
+                ctx,
+                arc_data=arc_data,
+                prev_blueprints=focus_window,
+                entity_registry=entity_registry,
+            ),
+            arc_data=arc_data,
+            entity_registry=entity_registry,
+            ctx=ctx,
+            protagonist_name=protagonist_name,
+        )
+        if _work_focus_advisory:
+            _bp_semantic_ctx = _work_focus_advisory + ("\n\n" + _bp_semantic_ctx if _bp_semantic_ctx else "")
+        _source_counts = _summarize_retrieval_sources(_s3_plan)
+        if not _source_counts and _bp_semantic_ctx:
+            _source_counts = {"legacy_semantic_context": 1}
+        if _s3_work_focus and not _work_focus_advisory:
+            _coverage_warnings.append("missing_work_slot_summary")
+        if (
+            _s3_work_focus
+            and _s3_plan
+            and not any(
+                str(getattr(_slot, "category", "")).startswith("work_")
+                for _slot in (getattr(_s3_plan, "slots", []) or [])
+            )
+        ):
+            _coverage_warnings.append("work_focus_without_slots")
+        if (
+            _source_counts.get(RetrievalSources.DB_NPC_RELATIONSHIP, 0) > 0
+            and "[관계 의미 질의]" not in _bp_semantic_ctx
+        ):
+            _coverage_warnings.append("missing_relation_slice")
+        _stage3_budget_cap = int(getattr(_s3_plan, "total_budget_chars", 0) or 0)
+        _stage3_budget_ledger = build_context_budget_ledger(
+            stage="stage3",
+            configured_cap=_stage3_budget_cap,
+            effective_cap=_stage3_budget_cap,
+            consumed_chars=len(_bp_semantic_ctx),
+            overflow_chars=max(0, len(_bp_semantic_ctx) - _stage3_budget_cap) if _stage3_budget_cap > 0 else 0,
+        )
+        _stage3_observation = build_context_observation(
+            stage="stage3",
+            work_focus=_s3_work_focus,
+            retrieval_plan=_s3_plan,
+            source_counts=_source_counts,
+            coverage_warnings=_coverage_warnings,
+            advisor_path_used=bool(_s3_plan),
+            work_slot_summary_present=bool(_work_focus_advisory),
+            work_slot_summary_included="[작품 추적 슬롯 요약]" in _bp_semantic_ctx,
+            relation_slice_included="[관계 의미 질의]" in _bp_semantic_ctx,
+            vector_context_chars=len(_bp_semantic_ctx),
+            budget_ledger=_stage3_budget_ledger,
+        )
+        _record_retrieval_observation(
+            self.app,
+            ep_num=working_ep,
+            stage="stage3",
+            observation=_stage3_observation,
+        )
+        return {
+            "semantic_ctx": _bp_semantic_ctx,
+            "work_focus": _s3_work_focus,
+            "plan": _s3_plan,
+            "source_counts": _source_counts,
+            "coverage_warnings": _coverage_warnings,
+            "observation": _stage3_observation,
+            "blueprint_window": blueprint_window,
+        }
+
+    def _build_stage3_blueprint_semantic_bundle(
+        self,
+        *,
+        working_ep,
+        arc_data,
+        arc_idx,
+        prev_blueprints,
+        entity_registry,
+        protagonist_name,
+    ) -> dict[str, object]:
+        _stage3_blueprint_window = _select_stage3_anchor_recent_window(prev_blueprints)
+        _stage3_focus_window = _stage3_blueprint_window[-5:] if _stage3_blueprint_window else []
+        _smart_bundle = self._collect_stage3_smart_retrieval_bundle(
+            working_ep=working_ep,
+            arc_data=arc_data,
+            prev_blueprints=_stage3_focus_window,
+            entity_registry=entity_registry,
+            protagonist_name=protagonist_name,
+        )
+        _bp_semantic_ctx = str(_smart_bundle.get("semantic_ctx", "") or "")
+        _s3_work_focus = dict(_smart_bundle.get("work_focus") or {})
+        _s3_plan = _smart_bundle.get("plan")
+        _bp_semantic_ctx = self._inject_stage3_treatment_block_context(
+            semantic_ctx=_bp_semantic_ctx,
+            working_ep=working_ep,
+            arc_data=arc_data,
+            arc_idx=arc_idx,
+        )
+        _bp_semantic_ctx = self._inject_stage3_timeline_advisory(
+            semantic_ctx=_bp_semantic_ctx,
+            arc_idx=arc_idx,
+            arc_data=arc_data,
+        )
+        return self._finalize_stage3_blueprint_semantic_bundle(
+            semantic_ctx=_bp_semantic_ctx,
+            work_focus=_s3_work_focus,
+            plan=_s3_plan,
+            working_ep=working_ep,
+            arc_data=arc_data,
+            entity_registry=entity_registry,
+            protagonist_name=protagonist_name,
+            blueprint_window=_stage3_blueprint_window,
+            focus_window=_stage3_focus_window,
+        )
+
+    def _legacy_stage3_blueprint_semantic_bundle_tail(
+        self,
+        *,
+        working_ep,
+        arc_data,
+        arc_idx,
+        entity_registry,
+        protagonist_name,
+        semantic_ctx: str,
+        work_focus: dict[str, object],
+        plan,
+        blueprint_window: list,
+        focus_window: list,
+    ) -> dict[str, object]:
+        _bp_semantic_ctx = self._inject_stage3_treatment_block_context(
+            semantic_ctx=semantic_ctx,
+            working_ep=working_ep,
+            arc_data=arc_data,
+            arc_idx=arc_idx,
+        )
+        _bp_semantic_ctx = self._inject_stage3_timeline_advisory(
+            semantic_ctx=_bp_semantic_ctx,
+            arc_idx=arc_idx,
+            arc_data=arc_data,
+        )
+        return self._finalize_stage3_blueprint_semantic_bundle(
+            semantic_ctx=_bp_semantic_ctx,
+            work_focus=work_focus,
+            plan=plan,
+            working_ep=working_ep,
+            arc_data=arc_data,
+            entity_registry=entity_registry,
+            protagonist_name=protagonist_name,
+            blueprint_window=blueprint_window,
+            focus_window=focus_window,
+        )
+
+    def _run_stage3_blueprint_generation_handoff(
+        self,
+        *,
+        working_ep,
+        arc_data,
+        arc_idx,
+        prev_blueprint,
+        protagonist_name,
+        protagonist_config,
+        entity_registry,
+        semantic_bundle: dict[str, object],
+    ):
+        ctx = self.ctx
+        from modules.core.spinners import StageSpinner
+
+        _blueprint_window = list(semantic_bundle.get("blueprint_window") or [])
+        _bp_semantic_ctx = str(semantic_bundle.get("semantic_ctx", "") or "")
+
+        with StageSpinner(3, f"제{working_ep}화") as _s3_spinner:
+            _prev_ms_for_bp = []
+            _recent_manuscripts = ctx.current_project.db.get_recent_manuscripts(
+                before_ep=working_ep,
+                limit=_STAGE3_HISTORY_CACHE_LIMIT,
+            )
+            _selected_manuscripts = _select_stage3_anchor_recent_window(_recent_manuscripts)
+            for _ms_row in _selected_manuscripts:
+                _ms_text = _ms_row.get("content", "")
+                _ms_ep_num = _ms_row.get("ep_num", 0)
+                if _ms_text:
+                    _prev_ms_for_bp.append(f"━━━ 제{_ms_ep_num}화 원고 ━━━\n{_ms_text}")
+            _prev_ms_text_for_bp = "\n\n".join(_prev_ms_for_bp) if _prev_ms_for_bp else ""
+            if len(_prev_ms_text_for_bp) > ContextLimits.MAX_CONTEXT_CHARS:
+                _prev_ms_text_for_bp = smart_truncate(
+                    _prev_ms_text_for_bp,
+                    max_chars=ContextLimits.MAX_CONTEXT_CHARS,
+                    head_chars=max(0, min(int(ContextLimits.MAX_CONTEXT_CHARS * 0.55), ContextLimits.MAX_CONTEXT_CHARS - 80)),
+                )
+            if _prev_ms_for_bp:
+                _logging.info(
+                    " [V67] Blueprint용 이전 원고 %d/%d개 로드 (%d자)",
+                    len(_prev_ms_for_bp),
+                    len(_recent_manuscripts),
+                    len(_prev_ms_text_for_bp),
+                )
+
+            _bp_prev_hud = None
+            if hasattr(ctx, "sys") and ctx.sys and hasattr(ctx.sys, "hud") and ctx.sys.hud:
+                try:
+                    _bp_prev_hud = ctx.sys.hud.pro_root
+                    if not isinstance(_bp_prev_hud, dict):
+                        _bp_prev_hud = None
+                except Exception:
+                    _bp_prev_hud = None
+
+            _s3_spinner.update_detail(f"제{working_ep}화 · Blueprint 생성")
+            ctx.ui.log(
+                f"      ⏳ 제{working_ep}화 Blueprint 생성 시작 (최대 10회 시도)...",
+                stage="stage3",
+                component="blueprint_generation",
+                ep_num=working_ep,
+                arc_num=arc_idx,
+                event_kind="progress",
+            )
+            blueprint, pipeline_result = ctx.agents["three_phase_bp"].generate(
+                ep_num=working_ep,
+                arc_data=arc_data,
+                prev_blueprint=prev_blueprint,
+                prev_blueprints=_blueprint_window,
+                max_retries=9,
+                director=ctx.agents["director"],
+                arc_idx=arc_idx,
+                entity_registry=entity_registry,
+                protagonist_name=protagonist_name,
+                protagonist_config=protagonist_config,
+                state_tracker=ctx.state_tracker,
+                db=ctx.current_project.db,
+                semantic_context=_bp_semantic_ctx,
+                prev_manuscripts_text=_prev_ms_text_for_bp,
+                adversarial_self_play=ctx.adversarial_self_play,
+                prev_hud=_bp_prev_hud,
+            )
+            _verdict = pipeline_result.get("final_verdict", "UNKNOWN")
+            _bp_score = pipeline_result.get(
+                "last_score", pipeline_result.get("phases", {}).get("generate", {}).get("selected_score", 0)
+            )
+            ctx.ui.log(
+                f"      📊 제{working_ep}화 Blueprint 결과: {_verdict} (score={_bp_score})",
+                stage="stage3",
+                component="blueprint_generation",
+                ep_num=working_ep,
+                arc_num=arc_idx,
+                event_kind="result",
+                meta={"verdict": _verdict, "score": _bp_score},
+            )
+            return blueprint, pipeline_result
+
+    def _finalize_stage3_blueprint_pipeline_result(
+        self,
+        *,
+        pipeline_result,
+        started_at: float,
+        started_cost_usd: float,
+        semantic_bundle: dict[str, object],
+    ) -> dict:
+        if not isinstance(pipeline_result, dict):
+            pipeline_result = {"final_verdict": "ERROR", "error": "invalid_pipeline_result"}
+
+        _stage3_observation = semantic_bundle.get("observation") or {}
+        _s3_plan = semantic_bundle.get("plan")
+        _s3_work_focus = semantic_bundle.get("work_focus") or {}
+        _source_counts = semantic_bundle.get("source_counts") or {}
+        _coverage_warnings = semantic_bundle.get("coverage_warnings") or []
+        _bp_semantic_ctx = str(semantic_bundle.get("semantic_ctx", "") or "")
+
+        pipeline_result["_stage3_duration_ms"] = max(0, int((_time.perf_counter() - started_at) * 1000))
+        pipeline_result["_stage3_token_cost_usd"] = max(
+            0.0, round(_peek_scope_total_cost_usd() - started_cost_usd, 6)
+        )
+        pipeline_result["_stage3_observability"] = {
+            "semantic_ctx_chars": len(_bp_semantic_ctx),
+            "source_counts": _normalize_semantic_source_counts(_source_counts),
+            "coverage_warnings": list(_coverage_warnings),
+            "advisor_path_used": bool(_s3_plan),
+            "planned_slots_count": len(getattr(_s3_plan, "slots", []) or []) if _s3_plan else 0,
+            "work_focus_present": bool(_s3_work_focus),
+            "provenance_ledger": dict((_stage3_observation or {}).get("provenance_ledger") or {}),
+            "budget_ledger": dict((_stage3_observation or {}).get("budget_ledger") or {}),
+        }
+        return pipeline_result
+
     def _generate_blueprint(
         self,
         working_ep,
@@ -1023,365 +1547,37 @@ class Stage3Orchestrator:
     ):
         """[V60.80] Three Phase Blueprint Generation — LLM 호출 + 스피너"""
         ctx = self.ctx
-        from modules.core.spinners import StageSpinner
 
         _started_at = _time.perf_counter()
         _started_cost_usd = _peek_scope_total_cost_usd()
+        _semantic_bundle: dict[str, object] = {
+            "semantic_ctx": "",
+            "work_focus": {},
+            "plan": None,
+            "source_counts": {},
+            "coverage_warnings": [],
+            "observation": {},
+            "blueprint_window": _select_stage3_anchor_recent_window(prev_blueprints),
+        }
         try:
-            _bp_semantic_ctx = ""
-            _s3_work_focus: dict[str, object] = {}
-            _s3_plan = None
-            _source_counts: dict[str, int] = {}
-            _coverage_warnings: list[str] = []
-            _stage3_observation: dict[str, object] = {}
-            _stage3_blueprint_window = _select_stage3_anchor_recent_window(prev_blueprints)
-            _stage3_focus_window = _stage3_blueprint_window[-5:] if _stage3_blueprint_window else []
-
-            # [S3-I1] Smart Context Retrieval — 과거 유사 Blueprint 참조
-            try:
-                _s3_memory = getattr(ctx, "memory", None)
-                _s3_advisor = getattr(ctx, "context_advisor", None)
-                _s3_genre = ""
-                if getattr(ctx, "selected_genre", None):
-                    _s3_genre = ctx.selected_genre.get("type", "")
-
-                from modules.validation.threshold_helper import _threshold as _s3_th
-
-                _s3_sc_enabled = bool(_s3_th("smart_retrieval.enabled", False)) and bool(
-                    _s3_th("smart_retrieval.stage3_enabled", False)
-                )
-                if _s3_sc_enabled and _s3_advisor and _s3_memory:
-                    _s3_npc_roster = []
-                    if entity_registry and isinstance(entity_registry, dict):
-                        for _cat_items in entity_registry.values():
-                            if isinstance(_cat_items, list):
-                                for _item in _cat_items[:10]:
-                                    _name = _item.get("name", "") if isinstance(_item, dict) else str(_item)
-                                    if _name and _name not in _s3_npc_roster:
-                                        _s3_npc_roster.append(_name)
-
-                    _s3_work_focus = _resolve_stage3_work_focus(
-                        ctx,
-                        arc_data=arc_data,
-                        prev_blueprints=_stage3_focus_window,
-                        entity_registry=entity_registry,
-                    )
-                    _s3_plan = _s3_advisor.plan_stage3_retrieval(
-                        arc_data=arc_data,
-                        prev_blueprints=_stage3_focus_window,
-                        current_ep=working_ep,
-                        npc_roster=_s3_npc_roster[:10],
-                        genre=_s3_genre,
-                        work_focus=_s3_work_focus,
-                    )
-                    _s3_parts = []
-                    # NOTE: S3 전용 키 없음 — S4의 vector_max_results_s4를 의도적으로 공유
-                    _s3_max_results = int(_s3_th("context.vector_max_results_s4", 50))
-                    for _slot in getattr(_s3_plan, "slots", []) or []:
-                        _slot_query = str(getattr(_slot, "query", "") or "").strip()
-                        if not _slot_query:
-                            continue
-                        _slot_source = str(getattr(_slot, "source", "vec_memory") or "vec_memory")
-                        _slot_category = str(getattr(_slot, "category", "stage3") or "stage3")
-                        _slot_max = int(getattr(_slot, "max_chars", 0) or 0) or 2000
-                        try:
-                            if _slot_source == "db_npc_history" and hasattr(_s3_memory, "retrieve_npc_context"):
-                                _s3_text = _s3_memory.retrieve_npc_context(
-                                    npc_names=_s3_npc_roster[:5],
-                                    current_ep=working_ep,
-                                    max_results=_s3_max_results,
-                                )
-                            elif _slot_source == "db_npc_relationship":
-                                _s3_text = _build_stage3_relationship_context(
-                                    getattr(ctx.current_project, "db", None),
-                                    npc_names=_s3_npc_roster[:6],
-                                    protagonist_name=protagonist_name,
-                                )
-                            else:
-                                _s3_text = _s3_memory.retrieve_multi_query_context(
-                                    queries=[_slot_query],
-                                    current_ep=working_ep,
-                                    n_per_query=3,
-                                    max_results=_s3_max_results,
-                                )
-                            if _s3_text:
-                                _s3_parts.append(
-                                    f"[SC:{_slot_category}]\n"
-                                    + smart_truncate(
-                                        str(_s3_text),
-                                        max_chars=_slot_max,
-                                        head_chars=max(0, min(int(_slot_max * 0.55), _slot_max - 80)),
-                                    )
-                                )
-                        except Exception as _s3_slot_err:
-                            _logging.warning("[SilentPass:SC:Stage3] 슬롯 %s 실패: %s", _slot_category, _s3_slot_err)
-                    if _s3_parts:
-                        _bp_semantic_ctx = "\n\n".join(_s3_parts)
-                        _logging.info("[S3-I1] Stage3 SC 검색 완료: %d건, %d자", len(_s3_parts), len(_bp_semantic_ctx))
-            except Exception as _s3_sc_err:
-                _logging.warning("[SilentPass:SC:Stage3] SC 검색 실패 (비차단): %s", _s3_sc_err)
-
-            # [TF9] Treatment Block 직접 주입 — arc 압축으로 인한 정보 손실 보완
-            # arc_idx = plot_roadmap의 블록 인덱스 (Arc 1→0, Arc 2→1, ...)
-            # plot_roadmap[arc_idx]가 현재 아크 전체(ep_start~ep_end)의 원본 블록
-            try:
-                _master_bible = getattr(ctx.current_project, "master_bible", None) or {}
-                _bible_root = _master_bible.get("MasterBible", _master_bible)
-                _plot_roadmap = _bible_root.get("plot_roadmap", [])
-                if isinstance(_plot_roadmap, list) and 0 <= arc_idx < len(_plot_roadmap):
-                    _block = _plot_roadmap[arc_idx]
-                    if isinstance(_block, dict):
-                        _ep_start = arc_data.get("ep_start", working_ep)
-                        _ep_end = arc_data.get("ep_end", working_ep)
-                        _block_fields = []
-                        for _f in (
-                            "title",
-                            "emotional_beat",
-                            "foreshadow",
-                            "power_shift",
-                            "event_villain",
-                            "solution",
-                            "reward",
-                        ):
-                            if _block.get(_f):
-                                _block_fields.append(f"  {_f}: {_block[_f]}")
-                        _content = _block.get("content", {})
-                        if isinstance(_content, dict):
-                            for _cf in ("context", "event_villain", "solution"):
-                                if _content.get(_cf):
-                                    _block_fields.append(f"  content.{_cf}: {_content[_cf]}")
-                        # [V74] genre_ext 주입 — 장르 특화 정보 (투자물: capital 등)
-                        _genre_ext = _block.get("genre_ext", {})
-                        if isinstance(_genre_ext, dict) and _genre_ext:
-                            _ge_lines = []
-                            for _gk, _gv in _genre_ext.items():
-                                if isinstance(_gv, dict | list):
-                                    _ge_lines.append(f"    {_gk}: {_json.dumps(_gv, ensure_ascii=False)}")
-                                else:
-                                    _ge_lines.append(f"    {_gk}: {_gv}")
-                            _block_fields.append("  genre_ext:\n" + "\n".join(_ge_lines))
-                        if _block_fields:
-                            _tb_header = (
-                                f"[원본 Treatment Block — 아크 {_ep_start}~{_ep_end}화 전체 참조용]\n"
-                                f"⚠️ 현재 화는 {working_ep}화입니다. 위의 아크 설계(arc_focus)에서 "
-                                f"{working_ep}화에 배정된 내용만 구현하세요. "
-                                f"블록의 세부 정보(특정 NPC 만남·스킬·장소 등)는 아크 설계의 현재 화 베아트에 "
-                                f"맞을 때만 사용하고, 이후 화의 내용은 보류하세요."
-                            )
-                            _tb_text = _tb_header + "\n" + "\n".join(_block_fields)
-                            _bp_semantic_ctx = _tb_text + ("\n\n" + _bp_semantic_ctx if _bp_semantic_ctx else "")
-                            _logging.info(
-                                "[TF9] Treatment Block 주입 완료 (arc_idx=%d, ep=%d~%d, %d자)",
-                                arc_idx,
-                                _ep_start,
-                                _ep_end,
-                                len(_tb_text),
-                            )
-            except Exception as _tb_err:
-                _logging.warning("[SilentPass:TreatmentBlock] 추출 실패 (비차단): %s", _tb_err)
-
-            # [NS-4] 이전 Arc 시간 마커 → Blueprint 컨텍스트 주입 (LLM 0회)
-            try:
-                if arc_idx > 0:
-                    _all_arcs = getattr(ctx.current_project, "arcs", []) or []
-                    if len(_all_arcs) >= arc_idx:
-                        _prev_arc_data = _all_arcs[arc_idx - 1]
-                        _prev_markers = self._extract_arc_time_markers(_prev_arc_data)
-                        _cur_markers = self._extract_arc_time_markers(arc_data)
-                        if _prev_markers or _cur_markers:
-                            _ta_lines = ["[Arc 시간 연속성 참고]"]
-                            if _prev_markers:
-                                _ta_lines.append(f"이전 Arc 종료 시점 마커: {', '.join(_prev_markers)}")
-                            if _cur_markers:
-                                _ta_lines.append(f"현재 Arc 시간 마커: {', '.join(_cur_markers)}")
-
-                            # [NS-4] timeline start/end 동일값 경고
-                            if self._timeline_start_end_raw_equal(arc_data):
-                                _ta_lines.append(
-                                    "⚠️ [NS-4] 현재 Arc timeline.start와 end가 동일하게 기입됨 — "
-                                    "시작/종료 시점을 분리해 서술하세요."
-                                )
-
-                            # [NS-4] Arc 시작 시점 역전 경고 (현재 시작 < 이전 시작)
-                            _prev_start, _ = self._extract_timeline_start_end(_prev_arc_data)
-                            _cur_start, _ = self._extract_timeline_start_end(arc_data)
-                            if _prev_start and _cur_start and _prev_start[0] > 0 and _cur_start[0] > 0:
-                                if _cur_start < _prev_start:
-                                    _ta_lines.append(
-                                        "⚠️ [NS-4] Arc timeline 역전 감지 — 현재 Arc 시작 시점이 "
-                                        "이전 Arc 시작 시점보다 과거입니다. 시간 순서를 재점검하세요."
-                                    )
-                            _ta_lines.append(
-                                "※ 현재 화에서 과거 사건 언급 시 '며칠 전'/'얼마 전' 같은 표현이 "
-                                "위 시간 간격과 일치하는지 확인하세요."
-                            )
-                            _ta_text = "\n".join(_ta_lines)
-                            _bp_semantic_ctx = _ta_text + ("\n\n" + _bp_semantic_ctx if _bp_semantic_ctx else "")
-                            _logging.info(
-                                "[NS-4] Arc 시간 마커 주입: prev=%s, cur=%s",
-                                _prev_markers,
-                                _cur_markers,
-                            )
-            except Exception as _ns4_err:
-                _logging.debug("[NS-4] 시간 마커 주입 실패 (비차단): %s", _ns4_err)
-
-            _world_state_advisory = _build_world_state_advisory(getattr(ctx, "world_state", None))
-            if _world_state_advisory:
-                _bp_semantic_ctx = _world_state_advisory + ("\n\n" + _bp_semantic_ctx if _bp_semantic_ctx else "")
-
-            _style_guide_advisory = _build_style_guide_advisory(getattr(ctx, "current_project", None))
-            if _style_guide_advisory:
-                _bp_semantic_ctx = _style_guide_advisory + ("\n\n" + _bp_semantic_ctx if _bp_semantic_ctx else "")
-
-            _fact_ledger_advisory = _build_fact_ledger_advisory(getattr(self.ctx.current_project, "db", None))
-            if _fact_ledger_advisory:
-                _bp_semantic_ctx = _fact_ledger_advisory + ("\n\n" + _bp_semantic_ctx if _bp_semantic_ctx else "")
-
-            _seed_advisory = _build_stale_seed_advisory(getattr(self.ctx.current_project, "db", None), working_ep)
-            if _seed_advisory:
-                _bp_semantic_ctx = _seed_advisory + ("\n\n" + _bp_semantic_ctx if _bp_semantic_ctx else "")
-
-            _work_focus_advisory = _build_stage3_work_focus_advisory(
-                _s3_work_focus
-                or _resolve_stage3_work_focus(
-                    ctx,
-                    arc_data=arc_data,
-                    prev_blueprints=_stage3_focus_window,
-                    entity_registry=entity_registry,
-                ),
+            _semantic_bundle = self._build_stage3_blueprint_semantic_bundle(
+                working_ep=working_ep,
                 arc_data=arc_data,
+                arc_idx=arc_idx,
+                prev_blueprints=prev_blueprints,
                 entity_registry=entity_registry,
-                ctx=ctx,
                 protagonist_name=protagonist_name,
             )
-            if _work_focus_advisory:
-                _bp_semantic_ctx = _work_focus_advisory + ("\n\n" + _bp_semantic_ctx if _bp_semantic_ctx else "")
-            _source_counts = _summarize_retrieval_sources(_s3_plan)
-            if not _source_counts and _bp_semantic_ctx:
-                _source_counts = {"legacy_semantic_context": 1}
-            if _s3_work_focus and not _work_focus_advisory:
-                _coverage_warnings.append("missing_work_slot_summary")
-            if (
-                _s3_work_focus
-                and _s3_plan
-                and not any(
-                    str(getattr(_slot, "category", "")).startswith("work_")
-                    for _slot in (getattr(_s3_plan, "slots", []) or [])
-                )
-            ):
-                _coverage_warnings.append("work_focus_without_slots")
-            if (
-                _source_counts.get(RetrievalSources.DB_NPC_RELATIONSHIP, 0) > 0
-                and "[관계 의미 질의]" not in _bp_semantic_ctx
-            ):
-                _coverage_warnings.append("missing_relation_slice")
-            _stage3_budget_cap = int(getattr(_s3_plan, "total_budget_chars", 0) or 0)
-            _stage3_budget_ledger = build_context_budget_ledger(
-                stage="stage3",
-                configured_cap=_stage3_budget_cap,
-                effective_cap=_stage3_budget_cap,
-                consumed_chars=len(_bp_semantic_ctx),
-                overflow_chars=max(0, len(_bp_semantic_ctx) - _stage3_budget_cap) if _stage3_budget_cap > 0 else 0,
+            blueprint, pipeline_result = self._run_stage3_blueprint_generation_handoff(
+                working_ep=working_ep,
+                arc_data=arc_data,
+                arc_idx=arc_idx,
+                prev_blueprint=prev_blueprint,
+                protagonist_name=protagonist_name,
+                protagonist_config=protagonist_config,
+                entity_registry=entity_registry,
+                semantic_bundle=_semantic_bundle,
             )
-            _stage3_observation = build_context_observation(
-                stage="stage3",
-                work_focus=_s3_work_focus,
-                retrieval_plan=_s3_plan,
-                source_counts=_source_counts,
-                coverage_warnings=_coverage_warnings,
-                advisor_path_used=bool(_s3_plan),
-                work_slot_summary_present=bool(_work_focus_advisory),
-                work_slot_summary_included="[작품 추적 슬롯 요약]" in _bp_semantic_ctx,
-                relation_slice_included="[관계 의미 질의]" in _bp_semantic_ctx,
-                vector_context_chars=len(_bp_semantic_ctx),
-                budget_ledger=_stage3_budget_ledger,
-            )
-            _record_retrieval_observation(
-                self.app,
-                ep_num=working_ep,
-                stage="stage3",
-                observation=_stage3_observation,
-            )
-
-            with StageSpinner(3, f"제{working_ep}화") as _s3_spinner:
-                # [V67][S3-I5] 이전 원고 로드 — 단일 쿼리로 최적화 (N+1 → 1)
-                _prev_ms_for_bp = []
-                _recent_manuscripts = ctx.current_project.db.get_recent_manuscripts(
-                    before_ep=working_ep,
-                    limit=_STAGE3_HISTORY_CACHE_LIMIT,
-                )
-                _selected_manuscripts = _select_stage3_anchor_recent_window(_recent_manuscripts)
-                for _ms_row in _selected_manuscripts:
-                    _ms_text = _ms_row.get("content", "")
-                    _ms_ep_num = _ms_row.get("ep_num", 0)
-                    if _ms_text:
-                        _prev_ms_for_bp.append(f"━━━ 제{_ms_ep_num}화 원고 ━━━\n{_ms_text}")
-                _prev_ms_text_for_bp = "\n\n".join(_prev_ms_for_bp) if _prev_ms_for_bp else ""
-                if len(_prev_ms_text_for_bp) > ContextLimits.MAX_CONTEXT_CHARS:
-                    _prev_ms_text_for_bp = smart_truncate(
-                        _prev_ms_text_for_bp,
-                        max_chars=ContextLimits.MAX_CONTEXT_CHARS,
-                        head_chars=max(0, min(int(ContextLimits.MAX_CONTEXT_CHARS * 0.55), ContextLimits.MAX_CONTEXT_CHARS - 80)),
-                    )
-                if _prev_ms_for_bp:
-                    _logging.info(
-                        " [V67] Blueprint용 이전 원고 %d/%d개 로드 (%d자)",
-                        len(_prev_ms_for_bp),
-                        len(_recent_manuscripts),
-                        len(_prev_ms_text_for_bp),
-                    )
-
-                # [TF-4] prev_hud 추출 — BlockingValidator consistency checks용
-                _bp_prev_hud = None
-                if hasattr(ctx, "sys") and ctx.sys and hasattr(ctx.sys, "hud") and ctx.sys.hud:
-                    try:
-                        _bp_prev_hud = ctx.sys.hud.pro_root
-                        if not isinstance(_bp_prev_hud, dict):
-                            _bp_prev_hud = None
-                    except Exception:
-                        _bp_prev_hud = None
-
-                _s3_spinner.update_detail(f"제{working_ep}화 · Blueprint 생성")
-                ctx.ui.log(
-                    f"      ⏳ 제{working_ep}화 Blueprint 생성 시작 (최대 10회 시도)...",
-                    stage="stage3",
-                    component="blueprint_generation",
-                    ep_num=working_ep,
-                    arc_num=arc_idx,
-                    event_kind="progress",
-                )
-                blueprint, pipeline_result = ctx.agents["three_phase_bp"].generate(
-                    ep_num=working_ep,
-                    arc_data=arc_data,
-                    prev_blueprint=prev_blueprint,
-                    prev_blueprints=_stage3_blueprint_window,
-                    max_retries=9,
-                    director=ctx.agents["director"],
-                    arc_idx=arc_idx,
-                    entity_registry=entity_registry,
-                    protagonist_name=protagonist_name,
-                    protagonist_config=protagonist_config,
-                    state_tracker=ctx.state_tracker,
-                    db=ctx.current_project.db,
-                    semantic_context=_bp_semantic_ctx,
-                    prev_manuscripts_text=_prev_ms_text_for_bp,
-                    adversarial_self_play=ctx.adversarial_self_play,
-                    prev_hud=_bp_prev_hud,
-                )
-                # [TF-48] Blueprint 생성 결과 요약
-                _verdict = pipeline_result.get("final_verdict", "UNKNOWN")
-                _bp_score = pipeline_result.get(
-                    "last_score", pipeline_result.get("phases", {}).get("generate", {}).get("selected_score", 0)
-                )
-                ctx.ui.log(
-                    f"      📊 제{working_ep}화 Blueprint 결과: {_verdict} (score={_bp_score})",
-                    stage="stage3",
-                    component="blueprint_generation",
-                    ep_num=working_ep,
-                    arc_num=arc_idx,
-                    event_kind="result",
-                    meta={"verdict": _verdict, "score": _bp_score},
-                )
 
         except Exception as gen_err:
             _logging.error(f" [V61.3] 제{working_ep}화 Blueprint 생성 크래시: {str(gen_err)[:100]}")
@@ -1393,20 +1589,12 @@ class Stage3Orchestrator:
             blueprint = None
             pipeline_result = {"final_verdict": "ERROR", "error": str(gen_err)[:200]}
 
-        if not isinstance(pipeline_result, dict):
-            pipeline_result = {"final_verdict": "ERROR", "error": "invalid_pipeline_result"}
-        pipeline_result["_stage3_duration_ms"] = max(0, int((_time.perf_counter() - _started_at) * 1000))
-        pipeline_result["_stage3_token_cost_usd"] = max(0.0, round(_peek_scope_total_cost_usd() - _started_cost_usd, 6))
-        pipeline_result["_stage3_observability"] = {
-            "semantic_ctx_chars": len(_bp_semantic_ctx),
-            "source_counts": _normalize_semantic_source_counts(_source_counts),
-            "coverage_warnings": list(_coverage_warnings),
-            "advisor_path_used": bool(_s3_plan),
-            "planned_slots_count": len(getattr(_s3_plan, "slots", []) or []) if _s3_plan else 0,
-            "work_focus_present": bool(_s3_work_focus),
-            "provenance_ledger": dict((_stage3_observation or {}).get("provenance_ledger") or {}),
-            "budget_ledger": dict((_stage3_observation or {}).get("budget_ledger") or {}),
-        }
+        pipeline_result = self._finalize_stage3_blueprint_pipeline_result(
+            pipeline_result=pipeline_result,
+            started_at=_started_at,
+            started_cost_usd=_started_cost_usd,
+            semantic_bundle=_semantic_bundle,
+        )
         return blueprint, pipeline_result
 
     # ─────────────────────────────────────────────────────────────
@@ -1415,220 +1603,334 @@ class Stage3Orchestrator:
     def _handle_success(
         self, working_ep, arc_no, arc_data, blueprint, pipeline_result, prev_blueprints, success_count, fail_count
     ) -> dict:
-        """Blueprint 생성 성공 시 저장 + 메트릭 기록"""
+        """Handle successful Stage 3 blueprint generation."""
         ctx = self.ctx
-        _final_verdict = pipeline_result.get("final_verdict", "PASS")
-        _quality_gate_failed = bool(pipeline_result.get("quality_gate_failed", False))
-        _quality_risk = bool(pipeline_result.get("quality_risk", False) or _quality_gate_failed)
-        _revision_required = bool(
-            pipeline_result.get("revision_required", False) or _final_verdict in ("PASS_WITH_FIX", "PASS_WITH_WARNING")
+        final_verdict = pipeline_result.get("final_verdict", "PASS")
+        quality_gate_failed = bool(pipeline_result.get("quality_gate_failed", False))
+        quality_risk = bool(pipeline_result.get("quality_risk", False) or quality_gate_failed)
+        revision_required = bool(
+            pipeline_result.get("revision_required", False) or final_verdict in ("PASS_WITH_FIX", "PASS_WITH_WARNING")
         )
-        _observability_flags = _build_stage3_observability_flags(pipeline_result.get("_stage3_observability"))
-        _pov_contract = resolve_project_pov_contract(ctx.current_project)
-        _duration_ms = int(pipeline_result.get("_stage3_duration_ms") or 0) or None
-        _token_cost = float(pipeline_result.get("_stage3_token_cost_usd") or 0.0)
+        observability_flags = _build_stage3_observability_flags(pipeline_result.get("_stage3_observability"))
+        pov_contract = resolve_project_pov_contract(ctx.current_project)
+        duration_ms = int(pipeline_result.get("_stage3_duration_ms") or 0) or None
+        token_cost = float(pipeline_result.get("_stage3_token_cost_usd") or 0.0)
 
-        # [LOG-1] 판정 경로 세션 로깅
         try:
-            _db = getattr(getattr(ctx, "current_project", None), "db", None)
-            _attempt_num = self._extract_stage3_attempt_num(pipeline_result)
-            _session_id = resolve_logging_session_id(getattr(ctx, "current_project", None))
-            _attempt_key = build_attempt_key(
+            runtime_payload = self._build_stage3_success_runtime_payload(
+                working_ep=working_ep,
+                arc_no=arc_no,
+                blueprint=blueprint,
+                pipeline_result=pipeline_result,
+                observability_flags=observability_flags,
+            )
+            self._record_stage3_success_observability(
+                working_ep=working_ep,
+                arc_no=arc_no,
+                final_verdict=final_verdict,
+                quality_risk=quality_risk,
+                duration_ms=duration_ms,
+                token_cost=token_cost,
+                observability_flags=observability_flags,
+                runtime_payload=runtime_payload,
+                pipeline_result=pipeline_result,
+                pov_contract=pov_contract,
+            )
+        except Exception as stage_attempt_err:
+            _logging.debug("[stage_attempts] Stage3 PASS record failed (non-blocking): %s", stage_attempt_err)
+
+        blueprint = self._annotate_stage3_success_blueprint(
+            working_ep=working_ep,
+            arc_data=arc_data,
+            blueprint=blueprint,
+            pipeline_result=pipeline_result,
+            final_verdict=final_verdict,
+            quality_gate_failed=quality_gate_failed,
+            quality_risk=quality_risk,
+            revision_required=revision_required,
+        )
+
+        persistence_failure = self._persist_stage3_success_blueprint(
+            working_ep=working_ep,
+            blueprint=blueprint,
+            prev_blueprints=prev_blueprints,
+            success_count=success_count,
+            fail_count=fail_count,
+        )
+        if persistence_failure:
+            return persistence_failure
+
+        self._record_stage3_success_completion(
+            working_ep=working_ep,
+            arc_no=arc_no,
+            pipeline_result=pipeline_result,
+            final_verdict=final_verdict,
+            quality_gate_failed=quality_gate_failed,
+            quality_risk=quality_risk,
+            revision_required=revision_required,
+        )
+        return {"next_ep": working_ep + 1, "success_count": success_count + 1, "fail_count": 0}
+
+    def _build_stage3_success_runtime_payload(
+        self,
+        *,
+        working_ep,
+        arc_no,
+        blueprint,
+        pipeline_result,
+        observability_flags: dict,
+    ) -> dict:
+        ctx = self.ctx
+        db = getattr(getattr(ctx, "current_project", None), "db", None)
+        attempt_num = self._extract_stage3_attempt_num(pipeline_result)
+        session_id = resolve_logging_session_id(getattr(ctx, "current_project", None))
+        attempt_key = build_attempt_key(
+            stage=3,
+            ep_num=working_ep,
+            arc_num=arc_no,
+            attempt_num=attempt_num,
+            session_id=session_id,
+        )
+        score = pipeline_result.get("last_score") or pipeline_result.get("phases", {}).get("generate", {}).get(
+            "selected_score", 0
+        )
+        selected_strategy = str(
+            pipeline_result.get("phases", {}).get("generate", {}).get("selected_strategy", "unknown") or "unknown"
+        )
+        candidate_key = build_candidate_key(strategy=selected_strategy, fallback="stage3")
+        artifact_meta = normalize_artifact_meta(
+            snapshot_logged_artifact(
+                getattr(ctx, "current_project", None),
                 stage=3,
                 ep_num=working_ep,
                 arc_num=arc_no,
-                attempt_num=_attempt_num,
-                session_id=_session_id,
-            )
-            _score = pipeline_result.get("last_score") or pipeline_result.get("phases", {}).get("generate", {}).get(
-                "selected_score", 0
-            )
-            _selected_strategy = str(
-                pipeline_result.get("phases", {}).get("generate", {}).get("selected_strategy", "unknown") or "unknown"
-            )
-            _candidate_key = build_candidate_key(strategy=_selected_strategy, fallback="stage3")
-            _artifact_meta = normalize_artifact_meta(
-                snapshot_logged_artifact(
-                    getattr(ctx, "current_project", None),
-                    stage=3,
-                    ep_num=working_ep,
-                    arc_num=arc_no,
-                    attempt_num=_attempt_num,
-                    candidate_key=_candidate_key,
-                    artifact_kind="final_blueprint",
-                    payload=blueprint if isinstance(blueprint, dict) else None,
-                ),
-                fallback_candidate_key=_candidate_key,
-            )
-            _selection_kwargs = self._build_stage3_director_selection_kwargs(
-                pipeline_result,
-                ep_num=working_ep,
-                attempt_num=_attempt_num,
-                attempt_key=_attempt_key,
-                selected_strategy=_selected_strategy,
-                score=_score,
-                candidate_key=_candidate_key,
-                advisory_flags=_observability_flags,
-                artifact_meta=_artifact_meta,
-            )
-            _sl = getattr(ctx, "session_logger", None)
-            if _sl:
-                try:
-                    self._log_stage3_session_decision(
-                        _sl,
-                        ep_num=working_ep,
-                        verdict=_final_verdict,
-                        score=pipeline_result.get("last_score", 0),
-                        arc_no=arc_no,
-                        quality_risk=_quality_risk,
-                        attempt_key=_attempt_key,
-                        candidate_key=_artifact_meta["candidate_key"],
-                        content_hash=_artifact_meta["content_hash"],
-                        artifact_path=_artifact_meta["artifact_path"],
-                        reason=str((_selection_kwargs or {}).get("verdict_reason", "") or ""),
-                        selection_reason=str((_selection_kwargs or {}).get("selection_reason", "") or ""),
-                        verdict_reason=str((_selection_kwargs or {}).get("verdict_reason", "") or ""),
-                        fix_scope=str((_selection_kwargs or {}).get("fix_scope", "") or ""),
-                    )
-                except Exception as _log_err:
-                    _logging.debug("[TF-26] session_logger.log_decision failed: %s", str(_log_err)[:100])
-            if not isinstance(_score, int):
-                try:
-                    _score = int(_score)
-                except (ValueError, TypeError):
-                    _score = 0
-            if getattr(ctx, "pass_rate_monitor", None):
-                try:
-                    ctx.pass_rate_monitor.record_attempt(
-                        stage=3,
-                        episode=working_ep,
-                        arc=arc_no,
-                        attempt_num=_attempt_num,
-                        success=_final_verdict in ("PASS", "PASS_WITH_WARNING"),
-                        generation_method="blueprint",
-                        duration_ms=_duration_ms or 0,
-                        token_cost=_token_cost,
-                        attempt_key=_attempt_key,
-                        final_verdict=str(_final_verdict),
-                        candidate_key=_candidate_key,
-                        content_hash=_artifact_meta["content_hash"],
-                        artifact_path=_artifact_meta["artifact_path"],
-                    )
-                except Exception as _prm_err:
-                    _logging.debug("[stage3_prm] Stage3 PASS 기록 실패 (비차단): %s", _prm_err)
-            if _db and hasattr(_db, "save_stage_attempt"):
-                _director = getattr(getattr(ctx, "agents", {}), "get", lambda *_: None)("director")
-                _model = getattr(_director, "primary_model", None) if _director else None
-                _prompt_version = _build_stage3_prompt_version()
-                _db.save_stage_attempt(
-                    stage=3,
-                    verdict=str(_final_verdict),
-                    attempt_num=_attempt_num,
-                    ep_num=working_ep,
-                    arc_num=arc_no,
-                    score=_score,
-                    model=str(_model) if _model else None,
-                    session_id=_session_id,
-                    attempt_key=_attempt_key,
-                    prompt_version=_prompt_version,
-                    duration_ms=_duration_ms,
-                    advisory_flags=_observability_flags or None,
-                    candidate_key=_candidate_key,
-                    content_hash=_artifact_meta["content_hash"],
-                    artifact_path=_artifact_meta["artifact_path"],
-                )
-                if hasattr(_db, "save_director_selection"):
-                    if _selection_kwargs:
-                        try:
-                            _db.save_director_selection(**_selection_kwargs)
-                        except Exception as _ds_err:
-                            _logging.debug("[director_selections] Stage3 PASS 기록 실패 (비차단): %s", _ds_err)
-            _logging.info(
-                "[STAGE3_EPISODE_SUMMARY] ep=%d arc=%d attempt_key=%s verdict=%s score=%s strategy=%s candidate_key=%s artifact=%s observability=%s primary_pov=%s external_pov_insert_policy=%s style_guide_extracted_pov=%s effective_pov=%s",
-                working_ep,
-                arc_no,
-                _attempt_key,
-                _final_verdict,
-                _score,
-                _selected_strategy,
-                _candidate_key,
-                str(_artifact_meta.get("artifact_path", "") or "-"),
-                ",".join(sorted(_observability_flags.keys())) if _observability_flags else "-",
-                _pov_contract.get("primary_pov", "") or "-",
-                _pov_contract.get("external_pov_insert_policy", "") or "-",
-                _pov_contract.get("style_guide_extracted_pov", "") or "-",
-                _pov_contract.get("effective_pov", "") or "-",
-            )
-        except Exception as _sa_err:
-            _logging.debug("[stage_attempts] Stage3 PASS 기록 실패 (비차단): %s", _sa_err)
+                attempt_num=attempt_num,
+                candidate_key=candidate_key,
+                artifact_kind="final_blueprint",
+                payload=blueprint if isinstance(blueprint, dict) else None,
+            ),
+            fallback_candidate_key=candidate_key,
+        )
+        selection_kwargs = self._build_stage3_director_selection_kwargs(
+            pipeline_result,
+            ep_num=working_ep,
+            attempt_num=attempt_num,
+            attempt_key=attempt_key,
+            selected_strategy=selected_strategy,
+            score=score,
+            candidate_key=candidate_key,
+            advisory_flags=observability_flags,
+            artifact_meta=artifact_meta,
+        )
+        try:
+            score = int(score)
+        except (ValueError, TypeError):
+            score = 0
+        return {
+            "db": db,
+            "attempt_num": attempt_num,
+            "session_id": session_id,
+            "attempt_key": attempt_key,
+            "score": score,
+            "selected_strategy": selected_strategy,
+            "candidate_key": candidate_key,
+            "artifact_meta": artifact_meta,
+            "selection_kwargs": selection_kwargs,
+        }
 
+    def _record_stage3_success_observability(
+        self,
+        *,
+        working_ep,
+        arc_no,
+        final_verdict: str,
+        quality_risk: bool,
+        duration_ms: int | None,
+        token_cost: float,
+        observability_flags: dict,
+        runtime_payload: dict,
+        pipeline_result,
+        pov_contract: dict,
+    ) -> None:
+        ctx = self.ctx
+        attempt_key = runtime_payload["attempt_key"]
+        artifact_meta = runtime_payload["artifact_meta"]
+        selection_kwargs = runtime_payload["selection_kwargs"]
+        score = runtime_payload["score"]
+        candidate_key = runtime_payload["candidate_key"]
+
+        session_logger = getattr(ctx, "session_logger", None)
+        if session_logger:
+            try:
+                self._log_stage3_session_decision(
+                    session_logger,
+                    ep_num=working_ep,
+                    verdict=final_verdict,
+                    score=pipeline_result.get("last_score", 0),
+                    arc_no=arc_no,
+                    quality_risk=quality_risk,
+                    attempt_key=attempt_key,
+                    candidate_key=artifact_meta["candidate_key"],
+                    content_hash=artifact_meta["content_hash"],
+                    artifact_path=artifact_meta["artifact_path"],
+                    reason=str((selection_kwargs or {}).get("verdict_reason", "") or ""),
+                    selection_reason=str((selection_kwargs or {}).get("selection_reason", "") or ""),
+                    verdict_reason=str((selection_kwargs or {}).get("verdict_reason", "") or ""),
+                    fix_scope=str((selection_kwargs or {}).get("fix_scope", "") or ""),
+                )
+            except Exception as log_err:
+                _logging.debug("[TF-26] session_logger.log_decision failed: %s", str(log_err)[:100])
+
+        if getattr(ctx, "pass_rate_monitor", None):
+            try:
+                ctx.pass_rate_monitor.record_attempt(
+                    stage=3,
+                    episode=working_ep,
+                    arc=arc_no,
+                    attempt_num=runtime_payload["attempt_num"],
+                    success=final_verdict in ("PASS", "PASS_WITH_WARNING"),
+                    generation_method="blueprint",
+                    duration_ms=duration_ms or 0,
+                    token_cost=token_cost,
+                    attempt_key=attempt_key,
+                    final_verdict=str(final_verdict),
+                    candidate_key=candidate_key,
+                    content_hash=artifact_meta["content_hash"],
+                    artifact_path=artifact_meta["artifact_path"],
+                )
+            except Exception as prm_err:
+                _logging.debug("[stage3_prm] Stage3 PASS record failed (non-blocking): %s", prm_err)
+
+        db = runtime_payload["db"]
+        if db and hasattr(db, "save_stage_attempt"):
+            director = getattr(getattr(ctx, "agents", {}), "get", lambda *_: None)("director")
+            model = getattr(director, "primary_model", None) if director else None
+            prompt_version = _build_stage3_prompt_version()
+            db.save_stage_attempt(
+                stage=3,
+                verdict=str(final_verdict),
+                attempt_num=runtime_payload["attempt_num"],
+                ep_num=working_ep,
+                arc_num=arc_no,
+                score=score,
+                model=str(model) if model else None,
+                session_id=runtime_payload["session_id"],
+                attempt_key=attempt_key,
+                prompt_version=prompt_version,
+                duration_ms=duration_ms,
+                advisory_flags=observability_flags or None,
+                candidate_key=candidate_key,
+                content_hash=artifact_meta["content_hash"],
+                artifact_path=artifact_meta["artifact_path"],
+            )
+            if hasattr(db, "save_director_selection") and selection_kwargs:
+                try:
+                    db.save_director_selection(**selection_kwargs)
+                except Exception as ds_err:
+                    _logging.debug("[director_selections] Stage3 PASS record failed (non-blocking): %s", ds_err)
+
+        _logging.info(
+            "[STAGE3_EPISODE_SUMMARY] ep=%d arc=%d attempt_key=%s verdict=%s score=%s strategy=%s candidate_key=%s artifact=%s observability=%s primary_pov=%s external_pov_insert_policy=%s style_guide_extracted_pov=%s effective_pov=%s",
+            working_ep,
+            arc_no,
+            attempt_key,
+            final_verdict,
+            score,
+            runtime_payload["selected_strategy"],
+            candidate_key,
+            str(artifact_meta.get("artifact_path", "") or "-"),
+            ",".join(sorted(observability_flags.keys())) if observability_flags else "-",
+            pov_contract.get("primary_pov", "") or "-",
+            pov_contract.get("external_pov_insert_policy", "") or "-",
+            pov_contract.get("style_guide_extracted_pov", "") or "-",
+            pov_contract.get("effective_pov", "") or "-",
+        )
+
+    def _annotate_stage3_success_blueprint(
+        self,
+        *,
+        working_ep,
+        arc_data,
+        blueprint,
+        pipeline_result,
+        final_verdict: str,
+        quality_gate_failed: bool,
+        quality_risk: bool,
+        revision_required: bool,
+    ):
+        ctx = self.ctx
         if isinstance(blueprint, dict):
             blueprint["_stage3_meta"] = {
-                "final_verdict": _final_verdict,
-                "quality_gate_failed": _quality_gate_failed,
-                "quality_risk": _quality_risk,
-                "revision_required": _revision_required,
+                "final_verdict": final_verdict,
+                "quality_gate_failed": quality_gate_failed,
+                "quality_risk": quality_risk,
+                "revision_required": revision_required,
                 "last_score": pipeline_result.get("last_score", 0),
             }
-            # [P0] _stage3_meta에 통합 — 최상위 중복 키 제거
 
-        # [TF-49] Blueprint 소지품 갭 어노테이션
-        if isinstance(blueprint, dict) and working_ep > 1:  # Ep 1 스킵 (초기 소지품 미확정)
-            _inv_gaps = self._detect_inventory_gaps(blueprint, arc_data)
-            if _inv_gaps:
-                blueprint["_inventory_gaps"] = _inv_gaps
-                ctx.ui.log(f"   ⚠️ [TF-49] 소지품 갭 {len(_inv_gaps)}건: {', '.join(g['item'] for g in _inv_gaps)}")
+        if isinstance(blueprint, dict) and working_ep > 1:
+            inventory_gaps = self._detect_inventory_gaps(blueprint, arc_data)
+            if inventory_gaps:
+                blueprint["_inventory_gaps"] = inventory_gaps
+                ctx.ui.log(f"   [TF-49] inventory gaps {len(inventory_gaps)}: {', '.join(g['item'] for g in inventory_gaps)}")
 
-        # 무결성 검증 후 저장
-        # [S3-N-P1-3] DI 콜백 None 방어
         if isinstance(blueprint, dict):
-            _prev_published_text = ""
+            prev_published_text = ""
             try:
-                _db = getattr(getattr(ctx, "current_project", None), "db", None)
-                _prev_row = _db.get_manuscript(working_ep - 1) if _db and working_ep > 1 else None
-                if isinstance(_prev_row, dict):
-                    _prev_published_text = str(
-                        _prev_row.get("content")
-                        or _prev_row.get("corrected_manuscript")
-                        or _prev_row.get("manuscript")
-                        or ""
+                db = getattr(getattr(ctx, "current_project", None), "db", None)
+                prev_row = db.get_manuscript(working_ep - 1) if db and working_ep > 1 else None
+                if isinstance(prev_row, dict):
+                    prev_published_text = str(
+                        prev_row.get("content") or prev_row.get("corrected_manuscript") or prev_row.get("manuscript") or ""
                     )
-                elif _prev_row:
-                    _prev_published_text = str(_prev_row)
-            except Exception as _pin_prev_err:
-                _logging.debug("[Stage3] previous manuscript lookup failed (non-blocking): %s", _pin_prev_err)
+                elif prev_row:
+                    prev_published_text = str(prev_row)
+            except Exception as pin_prev_err:
+                _logging.debug("[Stage3] previous manuscript lookup failed (non-blocking): %s", pin_prev_err)
 
-            _arc_tactical_text = ""
+            arc_tactical_text = ""
             try:
-                _arc_tactical_text = extract_episode_tactical(
+                arc_tactical_text = extract_episode_tactical(
                     arc_data.get("tactical_doc", ""),
                     working_ep,
                     episode_details=arc_data.get("episode_details"),
                 )
-            except Exception as _pin_tactical_err:
-                _logging.debug("[Stage3] arc tactical extract failed (non-blocking): %s", _pin_tactical_err)
+            except Exception as pin_tactical_err:
+                _logging.debug("[Stage3] arc tactical extract failed (non-blocking): %s", pin_tactical_err)
 
-            _pin_result = apply_continuity_pins(
+            pin_result = apply_continuity_pins(
                 blueprint,
-                previous_published_text=_prev_published_text,
-                arc_tactical_text=_arc_tactical_text,
+                previous_published_text=prev_published_text,
+                arc_tactical_text=arc_tactical_text,
             )
-            blueprint = _pin_result.get("blueprint", blueprint)
-            if _pin_result.get("changes"):
-                blueprint["_continuity_pins"] = _pin_result["changes"]
-                ctx.ui.log(f"   [PinGuard] ep {working_ep} continuity pins applied: {len(_pin_result['changes'])}")
-            if _pin_result.get("unresolved"):
-                blueprint["_continuity_pin_unresolved"] = _pin_result["unresolved"]
+            blueprint = pin_result.get("blueprint", blueprint)
+            if pin_result.get("changes"):
+                blueprint["_continuity_pins"] = pin_result["changes"]
+                ctx.ui.log(f"   [PinGuard] ep {working_ep} continuity pins applied: {len(pin_result['changes'])}")
+            if pin_result.get("unresolved"):
+                blueprint["_continuity_pin_unresolved"] = pin_result["unresolved"]
                 ctx.ui.log(f"   [PinGuard][WARN] ep {working_ep} unresolved continuity pins")
                 if callable(ctx.audit_event):
                     ctx.audit_event(
                         "continuity_pin_unresolved",
                         "stage3 continuity pin unresolved",
-                        {"ep_num": working_ep, "items": _pin_result["unresolved"][:3]},
+                        {"ep_num": working_ep, "items": pin_result["unresolved"][:3]},
                     )
 
+        return blueprint
+
+    def _persist_stage3_success_blueprint(
+        self,
+        *,
+        working_ep,
+        blueprint,
+        prev_blueprints,
+        success_count: int,
+        fail_count: int,
+    ) -> dict | None:
+        ctx = self.ctx
         if callable(ctx.validate_blueprint_integrity) and not ctx.validate_blueprint_integrity(blueprint):
-            ctx.ui.log(f"   🚨 [Integrity] 제{working_ep}화 Blueprint 무결성 실패")
+            ctx.ui.log(f"   [Integrity] ep {working_ep} blueprint integrity failed")
             if callable(ctx.audit_event):
                 ctx.audit_event("integrity_fail", "blueprint integrity check failed", {"ep_num": working_ep})
             return {
@@ -1636,13 +1938,11 @@ class Stage3Orchestrator:
                 "success_count": success_count,
                 "fail_count": fail_count + 1,
                 "break": True,
-            }  # [TF-R2-S3-08]
+            }
 
-        # DB에 저장
         ctx.current_project.save_episode_blueprint(working_ep, blueprint)
-        # [S3-N-P1-3] DI 콜백 None 방어
         if callable(ctx.safe_commit) and not ctx.safe_commit():
-            ctx.ui.log(f"   🚨 [DB] 제{working_ep}화 Blueprint 커밋 실패")
+            ctx.ui.log(f"   [DB] ep {working_ep} blueprint commit failed")
             if callable(ctx.audit_event):
                 ctx.audit_event("db_commit_error", "blueprint commit failed", {"ep_num": working_ep})
             return {
@@ -1650,67 +1950,73 @@ class Stage3Orchestrator:
                 "success_count": success_count,
                 "fail_count": fail_count + 1,
                 "break": True,
-            }  # [TF-R2-S3-08]
+            }
 
-        # prev_blueprints 업데이트
         prev_blueprints.append(blueprint)
         if len(prev_blueprints) > _STAGE3_HISTORY_CACHE_LIMIT:
             prev_blueprints[:] = prev_blueprints[-_STAGE3_HISTORY_CACHE_LIMIT:]
+        return None
 
-        # 메트릭 기록
-        # [S3-N-P1-3] DI 콜백 None 방어
+    def _record_stage3_success_completion(
+        self,
+        *,
+        working_ep,
+        arc_no,
+        pipeline_result,
+        final_verdict: str,
+        quality_gate_failed: bool,
+        quality_risk: bool,
+        revision_required: bool,
+    ) -> None:
+        ctx = self.ctx
         if callable(ctx.audit_event):
             ctx.audit_event(
                 "blueprint_success",
                 f"ep_{working_ep}_blueprint_generated",
-                    {
-                        "ep_num": working_ep,
-                        "arc_no": arc_no,
-                        "strategy": pipeline_result.get("phases", {})
-                        .get("generate", {})
-                        .get("selected_strategy", "unknown"),
-                        "score": pipeline_result.get("phases", {}).get("generate", {}).get("selected_score", 0),
-                        "final_verdict": _final_verdict,
-                        "quality_risk": _quality_risk,
-                        "revision_required": _revision_required,
-                    },
-                )
+                {
+                    "ep_num": working_ep,
+                    "arc_no": arc_no,
+                    "strategy": pipeline_result.get("phases", {}).get("generate", {}).get("selected_strategy", "unknown"),
+                    "score": pipeline_result.get("phases", {}).get("generate", {}).get("selected_score", 0),
+                    "final_verdict": final_verdict,
+                    "quality_risk": quality_risk,
+                    "revision_required": revision_required,
+                },
+            )
 
-        ctx.ui.log(f"   ✅ 제{working_ep}화 Blueprint 저장 완료")
-        # [P6-02] QualityDashboard Stage3 PASS 기록
-        _qd = getattr(self.app, "quality_dashboard", None)
-        if _qd is not None and hasattr(_qd, "record_validation"):
+        ctx.ui.log(f"   [Stage3] ep {working_ep} blueprint save completed")
+        quality_dashboard = getattr(self.app, "quality_dashboard", None)
+        if quality_dashboard is not None and hasattr(quality_dashboard, "record_validation"):
             try:
-                _bp_score = pipeline_result.get("last_score")
-                if _bp_score is None:
-                    _bp_score = pipeline_result.get("phases", {}).get("generate", {}).get("selected_score")
-                if _bp_score is None:
-                    _bp_score = 1.0
-                _qd_warnings: list[str] = []
-                if _quality_gate_failed:
-                    _qd_warnings.append("quality_gate_failed")
-                if _quality_risk:
-                    _qd_warnings.append("quality_risk")
-                if _revision_required:
-                    _qd_warnings.append("revision_required")
-                _qd.record_validation(
+                blueprint_score = pipeline_result.get("last_score")
+                if blueprint_score is None:
+                    blueprint_score = pipeline_result.get("phases", {}).get("generate", {}).get("selected_score")
+                if blueprint_score is None:
+                    blueprint_score = 1.0
+                dashboard_warnings: list[str] = []
+                if quality_gate_failed:
+                    dashboard_warnings.append("quality_gate_failed")
+                if quality_risk:
+                    dashboard_warnings.append("quality_risk")
+                if revision_required:
+                    dashboard_warnings.append("revision_required")
+                quality_dashboard.record_validation(
                     ep_num=working_ep,
                     result={
-                        "decision": _final_verdict if _final_verdict in ("PASS", "PASS_WITH_WARNING") else "PASS",
-                        "score": _bp_score,
+                        "decision": final_verdict if final_verdict in ("PASS", "PASS_WITH_WARNING") else "PASS",
+                        "score": blueprint_score,
                         "violations": [],
-                        "warnings": _qd_warnings,
+                        "warnings": dashboard_warnings,
                         "quality_signals": {
-                            "quality_gate_failed": _quality_gate_failed,
-                            "quality_risk": _quality_risk,
-                            "revision_required": _revision_required,
+                            "quality_gate_failed": quality_gate_failed,
+                            "quality_risk": quality_risk,
+                            "revision_required": revision_required,
                         },
                     },
                     stage=3,
                 )
-            except Exception as _e:
-                _logging.debug("[Stage3] QualityDashboard PASS 기록 실패 (무시): %s", _e)
-        return {"next_ep": working_ep + 1, "success_count": success_count + 1, "fail_count": 0}
+            except Exception as err:
+                _logging.debug("[Stage3] QualityDashboard PASS record failed (ignored): %s", err)
 
     @staticmethod
     def _extract_stage3_attempt_num(pipeline_result: dict) -> int:
@@ -2014,6 +2320,32 @@ class Stage3Orchestrator:
         ctx = self.ctx
 
         ctx.ui.log(f"   ❌ 제{working_ep}화 Blueprint 생성 실패")
+        self._record_stage3_failure_attempt(
+            working_ep=working_ep,
+            pipeline_result=pipeline_result,
+            arc_no=arc_no,
+            blueprint=blueprint,
+        )
+        self._append_stage3_rejection_history(pipeline_result=pipeline_result, arc_no=arc_no)
+        self._record_stage3_failure_audit_metrics(working_ep=working_ep, pipeline_result=pipeline_result)
+        new_fail_count = fail_count + 1
+        self._record_stage3_failure_quality_dashboard(working_ep=working_ep)
+        return {
+            "next_ep": working_ep,
+            "success_count": success_count,
+            "fail_count": new_fail_count,
+            "break": True,
+        }
+
+    def _record_stage3_failure_attempt(
+        self,
+        *,
+        working_ep,
+        pipeline_result,
+        arc_no: int | None = None,
+        blueprint=None,
+    ) -> None:
+        ctx = self.ctx
 
         # [LOG-1] 판정 경로 세션 로깅 (REJECT)
         try:
@@ -2163,6 +2495,7 @@ class Stage3Orchestrator:
         except Exception as _sa_err:
             _logging.debug("[stage_attempts] Stage3 REJECT 기록 실패 (비차단): %s", _sa_err)
 
+    def _append_stage3_rejection_history(self, *, pipeline_result, arc_no: int | None = None) -> None:
         # [S3-N-P1-3] DI 콜백 None 방어
         try:
             rejection_history = getattr(self.app, "stage_rejection_history", None)
@@ -2196,6 +2529,8 @@ class Stage3Orchestrator:
         except Exception as _history_err:
             _logging.debug("[stage3_history] reject history append failed: %s", _history_err)
 
+    def _record_stage3_failure_audit_metrics(self, *, working_ep, pipeline_result) -> None:
+        ctx = self.ctx
         if callable(ctx.audit_event):
             ctx.audit_event(
                 "blueprint_fail",
@@ -2229,8 +2564,8 @@ class Stage3Orchestrator:
             )
         except Exception as e:
             _logging.warning(f"[SilentPass:Stage3RejectMetric] {e!s:.120}")
-        new_fail_count = fail_count + 1
 
+    def _record_stage3_failure_quality_dashboard(self, *, working_ep) -> None:
         # [P6-02] QualityDashboard Stage3 REJECT 기록
         _qd = getattr(self.app, "quality_dashboard", None)
         if _qd is not None and hasattr(_qd, "record_validation"):
@@ -2247,11 +2582,3 @@ class Stage3Orchestrator:
                 )
             except Exception as _e:
                 _logging.debug("[Stage3] QualityDashboard REJECT 기록 실패 (무시): %s", _e)
-        # [TF-S3-02] 실패 에피소드에서 중단 (순차 의존성 보존)
-        # 후속 에피소드는 현재 에피소드 Blueprint에 의존하므로 건너뛰기 금지
-        return {
-            "next_ep": working_ep,  # [TF-S3-02] 현재 에피소드에 머무름
-            "success_count": success_count,
-            "fail_count": new_fail_count,
-            "break": True,  # 오케스트레이터 루프 종료
-        }

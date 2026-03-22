@@ -306,12 +306,8 @@ def _get_project_db_path(project_name: str) -> Path:
     return candidate
 
 
-def _quality_dashboard_defaults(project: str, lookback: int) -> dict:
+def _quality_dashboard_core_defaults(project: str, lookback: int) -> dict[str, Any]:
     return {
-        "project": project,
-        "available": False,
-        "lookback": lookback,
-        "latest_ep": None,
         "safe_ops": {
             "available": False,
             "project": project,
@@ -368,6 +364,11 @@ def _quality_dashboard_defaults(project: str, lookback: int) -> dict:
         "control_plane_authority_summary": build_control_plane_authority_summary(),
         "runtime_authority_summary": build_runtime_authority_summary(),
         "gate_repair_summary": _build_gate_repair_summary(None),
+    }
+
+
+def _quality_dashboard_trend_defaults(lookback: int) -> dict[str, Any]:
+    return {
         "episode_trend": [],
         "compare_rows": [],
         "score_trend": {
@@ -387,6 +388,11 @@ def _quality_dashboard_defaults(project: str, lookback: int) -> dict:
             "by_stage": [],
             "by_episode_range": [],
         },
+    }
+
+
+def _quality_dashboard_runtime_defaults(lookback: int) -> dict[str, Any]:
+    return {
         "runtime_health": {
             "available": False,
             "authority_role": _authority_role_for("runtime_health"),
@@ -435,6 +441,11 @@ def _quality_dashboard_defaults(project: str, lookback: int) -> dict:
             "scope_counts": {},
             "recent": [],
         },
+    }
+
+
+def _quality_dashboard_roi_defaults(lookback: int) -> dict[str, Any]:
+    return {
         "patch_effectiveness": {
             "available": False,
             "stage": 4,
@@ -497,6 +508,19 @@ def _quality_dashboard_defaults(project: str, lookback: int) -> dict:
                 "role_fit_constraints": 0,
             },
         },
+    }
+
+
+def _quality_dashboard_defaults(project: str, lookback: int) -> dict:
+    return {
+        "project": project,
+        "available": False,
+        "lookback": lookback,
+        "latest_ep": None,
+        **_quality_dashboard_core_defaults(project, lookback),
+        **_quality_dashboard_trend_defaults(lookback),
+        **_quality_dashboard_runtime_defaults(lookback),
+        **_quality_dashboard_roi_defaults(lookback),
     }
 
 
@@ -800,167 +824,177 @@ def _build_artifact_item(
     }
 
 
-def _build_artifact_ladder_payload(project: str, project_dir: Path, db_path: Path) -> dict[str, Any]:
-    payload: dict[str, Any] = {
-        "available": False,
-        "project": project,
-        "hint": "",
-        "items": [],
-        "support": [],
-    }
-
-    config_dir = project_dir / "config"
+def _collect_artifact_ladder_file_context(project_dir: Path) -> dict[str, Any]:
     plans_dir = project_dir / "plans"
     drafts_dir = project_dir / "drafts"
-    stage0_dir = project_dir / "stage0_output"
-
     support_assets = inspect_project_support_assets(project_dir)
-    author_directives = Path(support_assets["author_directives"]["path"])
-    work_guard = Path(support_assets["work_guard"]["path"])
-    style_guide = Path(support_assets["style_guide"]["path"])
     treatment_candidates = [
         project_dir / "treatment_extended.json",
         project_dir / "treatment_generated.json",
         project_dir / "treatment.json",
     ]
     latest_treatment = _latest_file(treatment_candidates)
-
-    latest_arc = _latest_file(sorted((plans_dir / "arcs").glob("arc_*.txt"))) if (plans_dir / "arcs").exists() else None
-    latest_blueprint = (
-        _latest_file(sorted((plans_dir / "blueprints").glob("blueprint_*.txt")))
-        if (plans_dir / "blueprints").exists()
-        else None
-    )
-    latest_manuscript = _latest_file(sorted(drafts_dir.glob("ep_*.txt"))) if drafts_dir.exists() else None
-
-    bible_title = ""
-    roadmap_count = 0
-    blueprint_count = 0
-    manuscript_count = 0
-    arc_count_from_anchor = 0
-
-    if db_path.exists():
-        db = DBManager(db_path)
-        try:
-            bible_anchor = db.load_anchor("bible") or {}
-            bible_root = bible_anchor.get("MasterBible", bible_anchor) if isinstance(bible_anchor, dict) else {}
-            meta_info = bible_root.get("ProjectData", {}).get("MetaInfo", {}) if isinstance(bible_root, dict) else {}
-            bible_title = str(meta_info.get("title") or "").strip()
-            plot_roadmap = bible_root.get("plot_roadmap") or []
-            roadmap_count = len(plot_roadmap) if isinstance(plot_roadmap, list) else 0
-
-            arcs_anchor = db.load_anchor("arcs") or []
-            if isinstance(arcs_anchor, list):
-                arc_count_from_anchor = len(arcs_anchor)
-            elif isinstance(arcs_anchor, dict):
-                arc_count_from_anchor = len(arcs_anchor)
-
-            blueprint_count = int(db.get_latest_blueprint_number() or 0)
-            manuscript_count = max(0, int(db.get_latest_episode_number() or 0) - 1)
-        except Exception as exc:
-            logger.debug("artifact ladder db read failed for %s: %s", project, exc)
-        finally:
-            try:
-                db.close()
-            except Exception:
-                pass
-
-    treatment_data = _safe_json_load(latest_treatment) if latest_treatment else None
-    treatment_blocks = len(treatment_data) if isinstance(treatment_data, list) else 0
     arc_files = sorted((plans_dir / "arcs").glob("arc_*.txt")) if (plans_dir / "arcs").exists() else []
     blueprint_files = sorted((plans_dir / "blueprints").glob("blueprint_*.txt")) if (plans_dir / "blueprints").exists() else []
     manuscript_files = sorted(drafts_dir.glob("ep_*.txt")) if drafts_dir.exists() else []
-    blueprint_count = max(blueprint_count, len(blueprint_files))
-    manuscript_count = max(manuscript_count, len(manuscript_files))
+    latest_arc = _latest_file(arc_files) if arc_files else None
+    latest_blueprint = _latest_file(blueprint_files) if blueprint_files else None
+    latest_manuscript = _latest_file(manuscript_files) if manuscript_files else None
+    treatment_data = _safe_json_load(latest_treatment) if latest_treatment else None
+    treatment_blocks = len(treatment_data) if isinstance(treatment_data, list) else 0
+    return {
+        "support_assets": support_assets,
+        "latest_treatment": latest_treatment,
+        "treatment_blocks": treatment_blocks,
+        "arc_files": arc_files,
+        "latest_arc": latest_arc,
+        "blueprint_files": blueprint_files,
+        "latest_blueprint": latest_blueprint,
+        "manuscript_files": manuscript_files,
+        "latest_manuscript": latest_manuscript,
+    }
 
-    bible_status = "ready" if bible_title or roadmap_count else "pending"
-    bible_meta = f"plot_roadmap {roadmap_count} blocks" if roadmap_count else "DB bible anchor 미감지"
-    bible_detail = bible_title or "MasterBible title 미확인"
-    payload["items"].append(
+
+def _load_artifact_ladder_db_snapshot(project: str, db_path: Path) -> dict[str, Any]:
+    snapshot = {
+        "bible_title": "",
+        "roadmap_count": 0,
+        "blueprint_count": 0,
+        "manuscript_count": 0,
+        "arc_count_from_anchor": 0,
+    }
+    if not db_path.exists():
+        return snapshot
+
+    db = DBManager(db_path)
+    try:
+        bible_anchor = db.load_anchor("bible") or {}
+        bible_root = bible_anchor.get("MasterBible", bible_anchor) if isinstance(bible_anchor, dict) else {}
+        meta_info = bible_root.get("ProjectData", {}).get("MetaInfo", {}) if isinstance(bible_root, dict) else {}
+        snapshot["bible_title"] = str(meta_info.get("title") or "").strip()
+        plot_roadmap = bible_root.get("plot_roadmap") or []
+        snapshot["roadmap_count"] = len(plot_roadmap) if isinstance(plot_roadmap, list) else 0
+
+        arcs_anchor = db.load_anchor("arcs") or []
+        if isinstance(arcs_anchor, (list, dict)):
+            snapshot["arc_count_from_anchor"] = len(arcs_anchor)
+
+        snapshot["blueprint_count"] = int(db.get_latest_blueprint_number() or 0)
+        snapshot["manuscript_count"] = max(0, int(db.get_latest_episode_number() or 0) - 1)
+    except Exception as exc:
+        logger.debug("artifact ladder db read failed for %s: %s", project, exc)
+    finally:
+        try:
+            db.close()
+        except Exception:
+            pass
+    return snapshot
+
+
+def _build_artifact_ladder_items(
+    project_dir: Path,
+    db_path: Path,
+    file_context: dict[str, Any],
+    db_snapshot: dict[str, Any],
+) -> list[dict[str, Any]]:
+    latest_treatment = file_context["latest_treatment"]
+    treatment_blocks = int(file_context["treatment_blocks"] or 0)
+    latest_arc = file_context["latest_arc"]
+    latest_blueprint = file_context["latest_blueprint"]
+    latest_manuscript = file_context["latest_manuscript"]
+    arc_count = len(file_context["arc_files"]) or int(db_snapshot["arc_count_from_anchor"] or 0)
+    blueprint_count = max(int(db_snapshot["blueprint_count"] or 0), len(file_context["blueprint_files"]))
+    manuscript_count = max(int(db_snapshot["manuscript_count"] or 0), len(file_context["manuscript_files"]))
+    roadmap_count = int(db_snapshot["roadmap_count"] or 0)
+    bible_title = str(db_snapshot["bible_title"] or "")
+
+    items = [
         _build_artifact_item(
             key="bible",
             short="BI",
             label="Bible",
-            status=bible_status,
-            title=bible_detail,
-            meta=bible_meta,
+            status="ready" if bible_title or roadmap_count else "pending",
+            title=bible_title or "MasterBible title 미확인",
+            meta=f"plot_roadmap {roadmap_count} blocks" if roadmap_count else "DB bible anchor 미감지",
             detail="현재 프로젝트 DB anchor 기준",
             path="project_data.db :: anchors[bible]" if db_path.exists() else "",
         )
-    )
+    ]
 
     if latest_treatment:
-        treatment_status = "ready"
-        treatment_title = latest_treatment.name
-        treatment_meta = f"{treatment_blocks} blocks" if treatment_blocks else "local treatment file"
-        treatment_detail = "project-local generated treatment"
-        treatment_path = _safe_rel_path(latest_treatment, project_dir)
-    elif roadmap_count:
-        treatment_status = "derived"
-        treatment_title = "Bible plot_roadmap로 동기화됨"
-        treatment_meta = f"{roadmap_count} blocks"
-        treatment_detail = "로컬 treatment 파일은 없지만 Bible anchor에서 블록 확인"
-        treatment_path = "project_data.db :: anchors[bible].plot_roadmap"
-    else:
-        treatment_status = "pending"
-        treatment_title = "Treatment 대기"
-        treatment_meta = "project-local treatment 없음"
-        treatment_detail = "Stage 0 생성 또는 DNA sync 전"
-        treatment_path = ""
-    payload["items"].append(
-        _build_artifact_item(
+        treatment_item = _build_artifact_item(
             key="treatment",
             short="TR",
             label="Treatment",
-            status=treatment_status,
-            title=treatment_title,
-            meta=treatment_meta,
-            detail=treatment_detail,
-            path=treatment_path,
+            status="ready",
+            title=latest_treatment.name,
+            meta=f"{treatment_blocks} blocks" if treatment_blocks else "local treatment file",
+            detail="project-local generated treatment",
+            path=_safe_rel_path(latest_treatment, project_dir),
         )
-    )
-
-    arc_count = len(arc_files) or arc_count_from_anchor
-    payload["items"].append(
-        _build_artifact_item(
-            key="arc",
-            short="ARC",
-            label="Arc Plan",
-            status="ready" if arc_count else "pending",
-            title=f"Arc {arc_count}개" if arc_count else "Arc 설계 대기",
-            meta=latest_arc.name if latest_arc else "plans/arcs 비어 있음",
-            detail="Stage 2 산출물",
-            path=_safe_rel_path(latest_arc, project_dir) if latest_arc else "",
+    elif roadmap_count:
+        treatment_item = _build_artifact_item(
+            key="treatment",
+            short="TR",
+            label="Treatment",
+            status="derived",
+            title="Bible plot_roadmap로 동기화됨",
+            meta=f"{roadmap_count} blocks",
+            detail="로컬 treatment 파일은 없지만 Bible anchor에서 블록 확인",
+            path="project_data.db :: anchors[bible].plot_roadmap",
         )
-    )
-
-    payload["items"].append(
-        _build_artifact_item(
-            key="blueprint",
-            short="BP",
-            label="Blueprint",
-            status="ready" if blueprint_count else "pending",
-            title=f"Blueprint {blueprint_count}개" if blueprint_count else "Blueprint 대기",
-            meta=latest_blueprint.name if latest_blueprint else "plans/blueprints 비어 있음",
-            detail="Stage 3 산출물",
-            path=_safe_rel_path(latest_blueprint, project_dir) if latest_blueprint else "",
+    else:
+        treatment_item = _build_artifact_item(
+            key="treatment",
+            short="TR",
+            label="Treatment",
+            status="pending",
+            title="Treatment 대기",
+            meta="project-local treatment 없음",
+            detail="Stage 0 생성 또는 DNA sync 전",
+            path="",
         )
-    )
+    items.append(treatment_item)
 
-    payload["items"].append(
-        _build_artifact_item(
-            key="manuscript",
-            short="MS",
-            label="Manuscript",
-            status="ready" if manuscript_count else "pending",
-            title=f"원고 {manuscript_count}화" if manuscript_count else "원고 대기",
-            meta=latest_manuscript.name if latest_manuscript else "drafts 비어 있음",
-            detail="Stage 4 산출물",
-            path=_safe_rel_path(latest_manuscript, project_dir) if latest_manuscript else "",
-        )
+    items.extend(
+        [
+            _build_artifact_item(
+                key="arc",
+                short="ARC",
+                label="Arc Plan",
+                status="ready" if arc_count else "pending",
+                title=f"Arc {arc_count}개" if arc_count else "Arc 설계 대기",
+                meta=latest_arc.name if latest_arc else "plans/arcs 비어 있음",
+                detail="Stage 2 산출물",
+                path=_safe_rel_path(latest_arc, project_dir) if latest_arc else "",
+            ),
+            _build_artifact_item(
+                key="blueprint",
+                short="BP",
+                label="Blueprint",
+                status="ready" if blueprint_count else "pending",
+                title=f"Blueprint {blueprint_count}개" if blueprint_count else "Blueprint 대기",
+                meta=latest_blueprint.name if latest_blueprint else "plans/blueprints 비어 있음",
+                detail="Stage 3 산출물",
+                path=_safe_rel_path(latest_blueprint, project_dir) if latest_blueprint else "",
+            ),
+            _build_artifact_item(
+                key="manuscript",
+                short="MS",
+                label="Manuscript",
+                status="ready" if manuscript_count else "pending",
+                title=f"원고 {manuscript_count}화" if manuscript_count else "원고 대기",
+                meta=latest_manuscript.name if latest_manuscript else "drafts 비어 있음",
+                detail="Stage 4 산출물",
+                path=_safe_rel_path(latest_manuscript, project_dir) if latest_manuscript else "",
+            ),
+        ]
     )
+    return items
 
-    payload["support"] = [
+
+def _build_artifact_ladder_support_items(support_assets: dict[str, Any]) -> list[dict[str, Any]]:
+    return [
         {
             "label": "Author",
             "status": "ready" if support_assets["author_directives"]["ready"] else "pending",
@@ -1004,6 +1038,9 @@ def _build_artifact_ladder_payload(project: str, project_dir: Path, db_path: Pat
             ),
         },
     ]
+
+
+def _finalize_artifact_ladder_payload(payload: dict[str, Any]) -> dict[str, Any]:
     payload["available"] = any(item["status"] != "pending" for item in payload["items"]) or any(
         chip["status"] == "ready" for chip in payload["support"]
     )
@@ -1016,6 +1053,21 @@ def _build_artifact_ladder_payload(project: str, project_dir: Path, db_path: Pat
         "manuscript": "Stage 4를 실행해서 최근 원고를 생성하세요.",
     }.get(pending_key, "현재 프로젝트는 기본 산출물이 준비되어 있습니다.")
     return payload
+
+
+def _build_artifact_ladder_payload(project: str, project_dir: Path, db_path: Path) -> dict[str, Any]:
+    payload: dict[str, Any] = {
+        "available": False,
+        "project": project,
+        "hint": "",
+        "items": [],
+        "support": [],
+    }
+    file_context = _collect_artifact_ladder_file_context(project_dir)
+    db_snapshot = _load_artifact_ladder_db_snapshot(project, db_path)
+    payload["items"] = _build_artifact_ladder_items(project_dir, db_path, file_context, db_snapshot)
+    payload["support"] = _build_artifact_ladder_support_items(file_context["support_assets"])
+    return _finalize_artifact_ladder_payload(payload)
 
 
 def _build_safe_ops_action(

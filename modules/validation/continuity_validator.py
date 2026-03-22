@@ -122,58 +122,36 @@ class ContinuityValidator:
     def validate(
         self, current_ep: int, manuscript: str, validation_context: dict, prev_hud: dict | None = None
     ) -> dict:
-        """
-        연속성 검증 실행
+        """Run continuity validation for the current episode manuscript."""
+        validation_context = validation_context if isinstance(validation_context, dict) else {}
 
-        Args:
-            current_ep: 현재 에피소드 번호
-            manuscript: 현재 원고/블루프린트
-            validation_context: 검증 컨텍스트
-            prev_hud: 직전 에피소드 HUD (없으면 context에서 조회)
-
-        Returns:
-            {
-                "tier": "CONTINUITY",
-                "passed": True/False,
-                "violations": [...],
-                "warnings": [...],
-                "message": "..."
-            }
-        """
-        violations = []
-        warnings = []
-
-        # [TF-4] skip_continuity 최상단 체크 — Blueprint 모드에서는 prev_hud 유무와 무관하게 PASS
-        skip = validation_context.get("skip_continuity", False) if isinstance(validation_context, dict) else False
-        if skip:
+        if validation_context.get("skip_continuity", False):
             return {
                 "tier": "CONTINUITY",
                 "passed": True,
                 "violations": [],
                 "warnings": [],
-                "message": "skip_continuity=True — 연속성 검증 스킵 (Blueprint 모드)",
+                "message": "skip_continuity=True -> continuity validation skipped",
             }
 
-        # 1화는 이전 에피소드가 없으므로 스킵
         if current_ep <= 1:
             return {
                 "tier": "CONTINUITY",
                 "passed": True,
                 "violations": [],
                 "warnings": [],
-                "message": "첫 번째 에피소드 - 연속성 검증 스킵",
+                "message": "episode 1 -> continuity validation skipped",
             }
 
-        # 직전 에피소드 HUD 가져오기
         if prev_hud is None:
             prev_hud = validation_context.get("prev_hud") or validation_context.get("martial_hud")
         if prev_hud is None:
             prev_hud = self._get_prev_hud(current_ep, validation_context)
 
-        # [P3-01] prev_hud 완전 누락 시 DEGRADED 조기 반환 — fail-closed (TF-15 P0-06)
         if not prev_hud:
-            logging.warning("[CONTINUITY] prev_hud 누락 — HUD 의존 연속성 검증 DEGRADED. "
-                "validation_context에 prev_hud를 주입하세요."
+            logging.warning(
+                "[CONTINUITY] prev_hud missing; continuity validation enters fail-closed degraded mode. "
+                "Inject validation_context['prev_hud'] before calling the validator."
             )
             return {
                 "tier": "CONTINUITY",
@@ -188,92 +166,31 @@ class ContinuityValidator:
                         "fix_suggestion": "inject prev_hud into validation_context before continuity validation",
                     }
                 ],
-                "warnings": ["prev_hud 누락으로 연속성 검증 DEGRADED"],
+                "warnings": ["prev_hud missing -> continuity validation degraded"],
                 "message": "prev_hud missing - continuity validation failed (degraded)",
                 "violation_count": 1,
                 "warning_count": 1,
             }
 
-        # [V66.1] prev_hud 의존 검증 (1~4): [P3-01] prev_hud 없는 경우는 위에서 조기 반환됨
-        # 직전 원고 가져오기 (선택적)
         prev_manuscript = self._get_prev_manuscript(current_ep, validation_context)
-
-        # ═══════════════════════════════════════════════════════════════
-        # 검증 1: 아이템 소지 연속성
-        # ═══════════════════════════════════════════════════════════════
-        item_check = self._check_item_continuity(current_ep, manuscript, prev_hud, prev_manuscript)
-        if not item_check["passed"]:
-            violations.extend(item_check["violations"])
-        warnings.extend(item_check.get("warnings", []))
-
-        count_check = self._check_inventory_count_continuity(current_ep, manuscript, prev_hud)
-        if not count_check["passed"]:
-            violations.extend(count_check["violations"])
-        warnings.extend(count_check.get("warnings", []))
-
-        pressure_check = self._check_active_pressure_continuity(current_ep, manuscript, prev_hud)
-        if not pressure_check["passed"]:
-            violations.extend(pressure_check["violations"])
-        warnings.extend(pressure_check.get("warnings", []))
-
-        # ═══════════════════════════════════════════════════════════════
-        # 검증 2: 무기 소지 연속성
-        # ═══════════════════════════════════════════════════════════════
-        weapon_check = self._check_weapon_continuity(current_ep, manuscript, prev_hud, prev_manuscript)
-        if not weapon_check["passed"]:
-            violations.extend(weapon_check["violations"])
-        warnings.extend(weapon_check.get("warnings", []))
-
-        # ═══════════════════════════════════════════════════════════════
-        # 검증 3: 부상 상태 연속성
-        # [WARN-2] 비전투 장르(투자물/요리/배우/작곡/의료/대체역사/스포츠)는 부상 검사 스킵
-        # ═══════════════════════════════════════════════════════════════
-        _combat_genres = {"wuxia", "hunter", "fantasy"}
-        _genre = validation_context.get("genre", "wuxia") if isinstance(validation_context, dict) else "wuxia"
-        if _genre in _combat_genres:
-            injury_check = self._check_injury_continuity(current_ep, manuscript, prev_hud, prev_manuscript)
-            if not injury_check["passed"]:
-                violations.extend(injury_check["violations"])
-            warnings.extend(injury_check.get("warnings", []))
-
-        # ═══════════════════════════════════════════════════════════════
-        # 검증 4: 위치 연속성 [V66.1] 불가능한 순간이동 BLOCKING 추가
-        # ═══════════════════════════════════════════════════════════════
-        location_check = self._check_location_continuity(
-            current_ep, manuscript, prev_hud, prev_manuscript, validation_context
+        violations, warnings = self._run_foundational_continuity_checks(
+            current_ep,
+            manuscript,
+            prev_hud,
+            prev_manuscript,
         )
-        if not location_check["passed"]:
-            violations.extend(location_check["violations"])
-        warnings.extend(location_check.get("warnings", []))
+        contextual_violations, contextual_warnings = self._run_contextual_continuity_checks(
+            current_ep,
+            manuscript,
+            validation_context,
+            prev_hud,
+            prev_manuscript,
+        )
+        violations.extend(contextual_violations)
+        warnings.extend(contextual_warnings)
 
-        # ═══════════════════════════════════════════════════════════════
-        # 검증 5: [V66.1] NPC 성격 연속성 (MAJOR WARNING)
-        # ═══════════════════════════════════════════════════════════════
-        personality_check = self._check_personality_continuity(manuscript, validation_context)
-        # [V66.2] C-2: 성격 모순 감지 결과를 명확한 경고로 전달
-        _personality_violations = personality_check.get("violations", [])
-        for _pv in _personality_violations:
-            if isinstance(_pv, dict):
-                warnings.append(f"[V66.2] 성격 모순 경고: {_pv.get('description', _pv.get('reason', str(_pv)))}")
-            else:
-                warnings.append(f"[V66.2] 성격 모순 경고: {_pv}")
-
-        # ═══════════════════════════════════════════════════════════════
-        # 검증 6: [V66.1] 시간 일관성 (BLOCKING if severe)
-        # ═══════════════════════════════════════════════════════════════
-        time_check = self._check_time_consistency(manuscript, validation_context)
-        if not time_check["passed"]:
-            violations.extend(time_check.get("violations", []))
-        warnings.extend(time_check.get("warnings", []))
-
-        # 결과 집계
         passed = len(violations) == 0
-
-        if passed:
-            message = "연속성 검증 통과"
-        else:
-            message = f"연속성 위반 {len(violations)}건 감지"
-
+        message = "continuity validation passed" if passed else f"continuity violations detected: {len(violations)}"
         return {
             "tier": "CONTINUITY",
             "passed": passed,
@@ -283,6 +200,77 @@ class ContinuityValidator:
             "violation_count": len(violations),
             "warning_count": len(warnings),
         }
+
+    def _merge_check_result(self, violations: list, warnings: list, result: dict) -> None:
+        """Fold a check-result contract into the running continuity payload."""
+        if not result.get("passed", True):
+            violations.extend(result.get("violations", []))
+        warnings.extend(result.get("warnings", []))
+
+    def _run_foundational_continuity_checks(
+        self,
+        current_ep: int,
+        manuscript: str,
+        prev_hud: dict,
+        prev_manuscript: str | None,
+    ) -> tuple[list, list]:
+        """Run the continuity families that always apply."""
+        violations = []
+        warnings = []
+        checks = (
+            self._check_item_continuity(current_ep, manuscript, prev_hud, prev_manuscript),
+            self._check_inventory_count_continuity(current_ep, manuscript, prev_hud),
+            self._check_active_pressure_continuity(current_ep, manuscript, prev_hud),
+            self._check_weapon_continuity(current_ep, manuscript, prev_hud, prev_manuscript),
+        )
+        for result in checks:
+            self._merge_check_result(violations, warnings, result)
+        return violations, warnings
+
+    def _run_contextual_continuity_checks(
+        self,
+        current_ep: int,
+        manuscript: str,
+        validation_context: dict,
+        prev_hud: dict,
+        prev_manuscript: str | None,
+    ) -> tuple[list, list]:
+        """Run the genre-sensitive and context-sensitive continuity checks."""
+        violations = []
+        warnings = []
+
+        if validation_context.get("genre", "wuxia") in {"wuxia", "hunter", "fantasy"}:
+            injury_check = self._check_injury_continuity(current_ep, manuscript, prev_hud, prev_manuscript)
+            self._merge_check_result(violations, warnings, injury_check)
+
+        location_check = self._check_location_continuity(
+            current_ep,
+            manuscript,
+            prev_hud,
+            prev_manuscript,
+            validation_context,
+        )
+        self._merge_check_result(violations, warnings, location_check)
+
+        personality_check = self._check_personality_continuity(manuscript, validation_context)
+        self._append_personality_warnings(warnings, personality_check.get("violations", []))
+
+        time_check = self._check_time_consistency(manuscript, validation_context)
+        self._merge_check_result(violations, warnings, time_check)
+        return violations, warnings
+
+    def _append_personality_warnings(self, warnings: list, personality_violations: list) -> None:
+        """Convert personality continuity findings into continuity warnings."""
+        for personality_violation in personality_violations:
+            if isinstance(personality_violation, dict):
+                description = personality_violation.get(
+                    "description",
+                    personality_violation.get("reason", str(personality_violation)),
+                )
+            else:
+                description = str(personality_violation)
+            warnings.append(f"[V66.2] personality contradiction warning: {description}")
+
 
     def _get_prev_hud(self, current_ep: int, validation_context: dict) -> dict | None:
         """직전 에피소드 HUD 가져오기"""
@@ -1010,171 +998,163 @@ class ContinuityValidator:
         return False
 
     def _check_personality_continuity(self, manuscript: str, validation_context: dict) -> dict:
-        """
-        [V66.1] NPC 성격 모순 검증
-        [Phase 3-5A-2] NPC 이력 기반 성격 급변 감지 추가
-
-        냉혹한 NPC가 따뜻한 감정을 보이거나, 자비로운 NPC가 잔인한 행동을
-        하는 경우를 감지. severity: MAJOR (BLOCKING은 아니지만 강한 WARNING).
-
-        Args:
-            manuscript: 현재 원고
-            validation_context: {
-                'npc_personalities': {NPC이름: {"traits": "냉혹한", "motivation": "복수"}},
-                'npc_history': {NPC이름: [{"field_name": ..., "old_value": ..., "new_value": ...}, ...]}
-            }
-
-        Returns:
-            {"passed": True/False, "violations": [...]}
-        """
+        """Check nearby trait contradictions and sudden history-driven personality flips."""
         npc_personalities = validation_context.get("npc_personalities", {})
-
         if not npc_personalities or not isinstance(npc_personalities, dict):
             return {"passed": True, "violations": []}
 
-        violations = []
-        # NPC 이름 근처 탐색 범위 (앞뒤 N자)
         proximity = _threshold("continuity.personality_proximity", 150)
+        growth_keywords = (
+            "?????",
+            "??????",
+            "??????",
+            "?????",
+            "??????",
+            "??????",
+            "???",
+            "????",
+        )
+        violations = self._collect_personality_proximity_violations(
+            manuscript,
+            npc_personalities,
+            proximity,
+            growth_keywords,
+        )
+        violations.extend(
+            self._collect_personality_history_violations(
+                manuscript,
+                validation_context.get("npc_history", {}),
+                {v.get("npc") for v in violations if isinstance(v, dict)},
+            )
+        )
+        return {"passed": len(violations) == 0, "violations": violations}
 
-        # [I-02] 성장/변화 키워드 — 근접 윈도우 내 존재 시 MAJOR → MINOR 다운그레이드
-        _GROWTH_KEYWORDS = ("변했다", "달라졌다", "처음으로", "비로소", "깨달았다", "결심했다", "각성", "변화")
-
+    def _collect_personality_proximity_violations(
+        self,
+        manuscript: str,
+        npc_personalities: dict,
+        proximity: int,
+        growth_keywords: tuple[str, ...],
+    ) -> list[dict]:
+        """Collect first-hit personality contradiction findings per NPC."""
+        violations = []
         for npc_name, personality_data in npc_personalities.items():
             if not npc_name or not isinstance(personality_data, dict):
                 continue
 
             traits_str = str(personality_data.get("traits", ""))
-            if not traits_str:
+            if not traits_str or npc_name not in manuscript:
                 continue
 
-            # NPC가 원고에 등장하는지 확인
-            if npc_name not in manuscript:
+            violation = self._find_first_personality_proximity_violation(
+                npc_name,
+                traits_str,
+                manuscript,
+                proximity,
+                growth_keywords,
+            )
+            if violation is not None:
+                violations.append(violation)
+        return violations
+
+    def _find_first_personality_proximity_violation(
+        self,
+        npc_name: str,
+        traits_str: str,
+        manuscript: str,
+        proximity: int,
+        growth_keywords: tuple[str, ...],
+    ) -> dict | None:
+        """Return the first proximity-based contradiction for one NPC, if any."""
+        contradiction_groups = (
+            (self._COLD_TRAITS, self._COLD_CONTRADICTIONS, "cold"),
+            (self._KIND_TRAITS, self._KIND_CONTRADICTIONS, "kind"),
+        )
+        for trait_group, contradictions, trait_family in contradiction_groups:
+            if not any(trait in traits_str for trait in trait_group):
                 continue
 
-            # 모든 등장 위치 찾기
-            npc_positions = []
             start = 0
             while True:
                 idx = manuscript.find(npc_name, start)
                 if idx == -1:
                     break
-                npc_positions.append(idx)
+                context_start = max(0, idx - proximity)
+                context_end = min(len(manuscript), idx + len(npc_name) + proximity)
+                nearby_text = manuscript[context_start:context_end]
+                for contradiction in contradictions:
+                    if contradiction not in nearby_text:
+                        continue
+                    has_growth = any(keyword in nearby_text for keyword in growth_keywords)
+                    severity = "MINOR" if has_growth else "MAJOR"
+                    return {
+                        "type": "personality_contradiction",
+                        "severity": severity,
+                        "npc": npc_name,
+                        "traits": traits_str,
+                        "contradiction": contradiction,
+                        "growth_context": has_growth,
+                        "reason": (
+                            f"{trait_family} personality contradiction near '{npc_name}': "
+                            f"'{contradiction}' conflicts with traits '{traits_str}'"
+                        ),
+                        "context": nearby_text[:200],
+                        "fix_suggestion": "align the nearby reaction with the NPC trait baseline or state the growth beat explicitly",
+                    }
                 start = idx + 1
+        return None
 
-            # 냉혹 계열 NPC → 따뜻한 표현 모순 체크
-            has_cold_trait = any(t in traits_str for t in self._COLD_TRAITS)
-            if has_cold_trait:
-                for pos in npc_positions:
-                    context_start = max(0, pos - proximity)
-                    context_end = min(len(manuscript), pos + len(npc_name) + proximity)
-                    nearby_text = manuscript[context_start:context_end]
+    def _collect_personality_history_violations(
+        self,
+        manuscript: str,
+        npc_history: dict,
+        already_reported: set[str],
+    ) -> list[dict]:
+        """Collect history-driven sudden-trait-change findings."""
+        if not npc_history or not isinstance(npc_history, dict):
+            return []
 
-                    for contradiction in self._COLD_CONTRADICTIONS:
-                        if contradiction in nearby_text:
-                            # [I-02] 성장 컨텍스트 감지 → MINOR 다운그레이드
-                            has_growth = any(gk in nearby_text for gk in _GROWTH_KEYWORDS)
-                            severity = "MINOR" if has_growth else "MAJOR"
-                            violations.append(
-                                {
-                                    "type": "personality_contradiction",
-                                    "severity": severity,
-                                    "npc": npc_name,
-                                    "traits": traits_str,
-                                    "contradiction": contradiction,
-                                    "growth_context": has_growth,
-                                    "reason": f"냉혹한 NPC '{npc_name}'(성격: {traits_str}) 근처에서 "
-                                    f"모순 표현 '{contradiction}' 감지"
-                                    + (" (성장 컨텍스트 감지)" if has_growth else ""),
-                                    "context": nearby_text[:200],
-                                    "fix_suggestion": f"'{npc_name}'의 성격({traits_str})에 맞게 "
-                                    f"'{contradiction}' 표현을 수정하거나, "
-                                    f"성격 변화의 계기를 명시하세요.",
-                                }
-                            )
-                            break  # 한 위치에서 하나만 감지
-                    if violations and violations[-1].get("npc") == npc_name:
-                        break  # NPC당 하나만 보고
+        violations = []
+        for npc_name, history_entries in npc_history.items():
+            if npc_name in already_reported or npc_name not in manuscript or not isinstance(history_entries, list):
+                continue
 
-            # 자비 계열 NPC → 잔인한 표현 모순 체크
-            has_kind_trait = any(t in traits_str for t in self._KIND_TRAITS)
-            if has_kind_trait:
-                for pos in npc_positions:
-                    context_start = max(0, pos - proximity)
-                    context_end = min(len(manuscript), pos + len(npc_name) + proximity)
-                    nearby_text = manuscript[context_start:context_end]
+            personality_changes = [
+                entry
+                for entry in history_entries
+                if isinstance(entry, dict) and entry.get("field_name") == "personality_traits"
+            ]
 
-                    for contradiction in self._KIND_CONTRADICTIONS:
-                        if contradiction in nearby_text:
-                            # [I-02] 성장 컨텍스트 감지 → MINOR 다운그레이드
-                            has_growth = any(gk in nearby_text for gk in _GROWTH_KEYWORDS)
-                            severity = "MINOR" if has_growth else "MAJOR"
-                            violations.append(
-                                {
-                                    "type": "personality_contradiction",
-                                    "severity": severity,
-                                    "npc": npc_name,
-                                    "traits": traits_str,
-                                    "contradiction": contradiction,
-                                    "growth_context": has_growth,
-                                    "reason": f"온화한 NPC '{npc_name}'(성격: {traits_str}) 근처에서 "
-                                    f"모순 표현 '{contradiction}' 감지"
-                                    + (" (성장 컨텍스트 감지)" if has_growth else ""),
-                                    "context": nearby_text[:200],
-                                    "fix_suggestion": f"'{npc_name}'의 성격({traits_str})에 맞게 "
-                                    f"'{contradiction}' 표현을 수정하거나, "
-                                    f"성격 변화의 계기를 명시하세요.",
-                                }
-                            )
-                            break
-                    if violations and violations[-1].get("npc") == npc_name:
-                        break
+            def _safe_int(value) -> int:
+                try:
+                    return int(value or 0)
+                except (TypeError, ValueError):
+                    return 0
 
-        # [Phase 3-5A-2] NPC 이력 기반 성격 급변 감지
-        npc_history = validation_context.get("npc_history", {})
-        if npc_history and isinstance(npc_history, dict):
-            already_reported = {v.get("npc") for v in violations}
-            for npc_name, history_entries in npc_history.items():
-                if npc_name in already_reported:
-                    continue
-                if npc_name not in manuscript:
-                    continue
-                if not isinstance(history_entries, list):
-                    continue
-                # [G21] personality_traits 변경 이력 필터 — 최신 2개 비교
-                personality_changes = [
-                    h for h in history_entries if isinstance(h, dict) and h.get("field_name") == "personality_traits"
-                ]
+            personality_changes.sort(key=lambda entry: (_safe_int(entry.get("episode_no")), _safe_int(entry.get("id"))))
+            if len(personality_changes) < 2:
+                continue
 
-                def _safe_int(value) -> int:
-                    try:
-                        return int(value or 0)
-                    except (TypeError, ValueError):
-                        return 0
+            prev_change = personality_changes[-2]
+            curr_change = personality_changes[-1]
+            old_val = prev_change.get("new_value", "")
+            new_val = curr_change.get("new_value", "")
+            if not self._is_contradictory_trait_change(old_val, new_val):
+                continue
 
-                personality_changes.sort(key=lambda h: (_safe_int(h.get("episode_no")), _safe_int(h.get("id"))))
-                if len(personality_changes) >= 2:
-                    prev = personality_changes[-2]  # 직전
-                    curr = personality_changes[-1]  # 최신
-                    old_val = prev.get("new_value", "")
-                    new_val = curr.get("new_value", "")
-                    if self._is_contradictory_trait_change(old_val, new_val):
-                        violations.append(
-                            {
-                                "type": "personality_sudden_change",
-                                "severity": "MAJOR",
-                                "npc": npc_name,
-                                "old_traits": old_val,
-                                "new_traits": new_val,
-                                "reason": f"NPC '{npc_name}' 성격 급변: {old_val} → {new_val}",
-                                "fix_suggestion": "성격 변화의 계기를 서사에 명시하세요.",
-                            }
-                        )
+            violations.append(
+                {
+                    "type": "personality_sudden_change",
+                    "severity": "MAJOR",
+                    "npc": npc_name,
+                    "old_traits": old_val,
+                    "new_traits": new_val,
+                    "reason": f"NPC '{npc_name}' personality whiplash: {old_val} -> {new_val}",
+                    "fix_suggestion": "show an explicit transition beat before the new personality state takes over",
+                }
+            )
+        return violations
 
-        return {"passed": len(violations) == 0, "violations": violations}
-
-    # ═══════════════════════════════════════════════════════════════════════
-    # [V66.1] 시간 일관성 검증
-    # ═══════════════════════════════════════════════════════════════════════
 
     def _check_time_consistency(self, manuscript: str, validation_context: dict) -> dict:
         """

@@ -185,22 +185,27 @@ This is optional and should follow narrative flow first.
         if not manuscript or len(manuscript) < 200:
             return ""
 
-        digest_parts = []
+        event_parts, dead_npcs = self._build_episode_event_digest_parts(manuscript)
+        digest_parts = list(event_parts)
+        digest_parts.extend(self._build_episode_state_digest_parts(manuscript))
+        digest_parts.extend(self._build_episode_continuity_digest_parts(manuscript, dead_npcs))
 
-        # 1. NPC 사망
+        if not digest_parts:
+            return ""
+
+        return self._format_episode_digest(digest_parts, ep_num)
+
+    def _build_episode_event_digest_parts(self, manuscript: str) -> tuple[list[str], set[str]]:
+        digest_parts: list[str] = []
         death_patterns = [
             r"([가-힣]{2,4})[이가은는]\s*(?:죽었다|사망했다|숨을\s*거두|최후를\s*맞|절명)",
             r"([가-힣]{2,4})[의]\s*(?:시신|주검|유해)",
             r"([가-힣]{2,4})[을를]\s*(?:죽였다|베었다|처단했다|살해했다)",
         ]
-        dead_npcs = set()
-        for pattern in death_patterns:
-            for m in re.finditer(pattern, manuscript):
-                dead_npcs.add(m.group(1))
+        dead_npcs = self._collect_named_group_matches(manuscript, death_patterns)
         if dead_npcs:
             digest_parts.append(f"사망 NPC: {', '.join(dead_npcs)}")
 
-        # 2. 아이템 획득/상실
         gain_patterns = [
             r"([가-힣]{2,6})[을를]\s*(?:획득|입수|얻었|받았|수령|전수받|건네받)",
         ]
@@ -208,138 +213,79 @@ This is optional and should follow narrative flow first.
             r"([가-힣]{2,6})[을를]\s*(?:잃어|버렸|빼앗겼|떨어뜨렸)",
             r"([가-힣]{2,6})[이가]\s*(?:부서졌|파괴되었|산산조각)",
         ]
-        gained = set()
-        for p in gain_patterns:
-            for m in re.finditer(p, manuscript):
-                name = m.group(1)
-                if len(name) >= 2:
-                    gained.add(name)
-        lost = set()
-        for p in loss_patterns:
-            for m in re.finditer(p, manuscript):
-                name = m.group(1)
-                if len(name) >= 2:
-                    lost.add(name)
+        gained = self._collect_named_group_matches(manuscript, gain_patterns, min_length=2)
+        lost = self._collect_named_group_matches(manuscript, loss_patterns, min_length=2)
         if gained:
             digest_parts.append(f"획득 아이템: {', '.join(gained)}")
         if lost:
             digest_parts.append(f"상실 아이템: {', '.join(lost)}")
 
-        # 3. 부상
+        return digest_parts, dead_npcs
+
+    def _build_episode_state_digest_parts(self, manuscript: str) -> list[str]:
+        digest_parts: list[str] = []
         injury_patterns = [
             r"(왼팔|오른팔|왼손|오른손|왼다리|오른다리|갈비뼈|어깨)[이가을를에]?\s*"
             r"(?:부러[졌져]|골절|부상|절단|찢[어겼]|관통|으스러)",
             r"(?:중상|내상|중독|출혈)[을를에]?\s*(?:입었|당했|걸렸)",
         ]
-        injuries = set()
-        for p in injury_patterns:
-            for m in re.finditer(p, manuscript):
-                injuries.add(self._fit_compact_text(m.group(0), 20))
+        injuries = self._collect_compact_matches(manuscript, injury_patterns, 20)
         if injuries:
             digest_parts.append(f"부상 상태: {', '.join(injuries)}")
 
-        # 4. 위치 (마지막 언급)
-        loc_patterns = [
-            r"([가-힣]{2,8}(?:산|성|촌|루|각|관|당|원|궁|객잔|주막|동굴|절벽|광장|채|봉))"
-            r"[에으로]?\s*(?:도착|돌아|들어|향|당도)",
-        ]
-        locations = []
-        for p in loc_patterns:
-            for m in re.finditer(p, manuscript):
-                locations.append((m.start(), m.group(1)))
-        if locations:
-            last_loc = max(locations, key=lambda x: x[0])
-            digest_parts.append(f"마지막 위치: {last_loc[1]}")
+        last_location = self._extract_last_location(manuscript)
+        if last_location:
+            digest_parts.append(f"마지막 위치: {last_location}")
 
-        # 5. 무공 습득
         skill_patterns = [
             r"([가-힣]{2,8}(?:공|법|결|식|초))[을를]\s*(?:익히|깨달|습득|전수받|터득)",
         ]
-        skills = set()
-        for p in skill_patterns:
-            for m in re.finditer(p, manuscript):
-                skills.add(m.group(1))
+        skills = self._collect_named_group_matches(manuscript, skill_patterns)
         if skills:
             digest_parts.append(f"습득 무공: {', '.join(skills)}")
 
-        # 6. NPC 쓰러짐/기절 (사망 미만)
+        return digest_parts
+
+    def _build_episode_continuity_digest_parts(self, manuscript: str, dead_npcs: set[str]) -> list[str]:
+        digest_parts: list[str] = []
         down_patterns = [
             r"([가-힣]{2,4})[이가은는]\s*(?:쓰러졌|의식을\s*잃|기절했)",
         ]
-        downed = set()
-        for p in down_patterns:
-            for m in re.finditer(p, manuscript):
-                name = m.group(1)
-                if name not in dead_npcs:
-                    downed.add(name)
+        downed = self._collect_named_group_matches(manuscript, down_patterns, excluded_names=dead_npcs)
         if downed:
             digest_parts.append(f"부상/기절 NPC: {', '.join(downed)}")
 
-        # 7. [V63.2] 관계 변화 (동맹/배신/화해)
         relation_patterns = [
             r"([가-힣]{2,4})[과와][의]?\s*(?:동맹|협력|연합)[을를]?\s*(?:맺|결성|체결)",
             r"([가-힣]{2,4})[이가은는]\s*(?:배신|배반|이탈)했",
             r"([가-힣]{2,4})[과와]\s*(?:화해|휴전|협정)[을를]?\s*(?:했|이루|맺)",
             r"([가-힣]{2,4})[이가은는]\s*(?:적이\s*되|원수가\s*되|등을\s*돌)",
         ]
-        relation_changes = set()
-        for p in relation_patterns:
-            for m in re.finditer(p, manuscript):
-                relation_changes.add(self._fit_compact_text(m.group(0), 30))
+        relation_changes = self._collect_compact_matches(manuscript, relation_patterns, 30)
         if relation_changes:
             digest_parts.append(f"관계 변화: {', '.join(relation_changes)}")
 
-        # 8. [V63.2] 미스터리/비밀/복선
         mystery_patterns = [
             r"(?:비밀|정체|진실|음모)[이가을를]\s*(?:밝혀|드러나|알게\s*되)",
             r"(?:수수께끼|의문|미스터리)[이가을를]?\s*(?:남|생겨|던져)",
             r"숨겨진\s*[가-힣]{2,6}[이가을를]?\s*(?:발견|알아)",
         ]
-        mysteries = set()
-        for p in mystery_patterns:
-            for m in re.finditer(p, manuscript):
-                mysteries.add(self._fit_compact_text(m.group(0), 30))
+        mysteries = self._collect_compact_matches(manuscript, mystery_patterns, 30)
         if mysteries:
             digest_parts.append(f"미스터리/복선: {', '.join(mysteries)}")
 
-        # 9. [V63.2] 클리프행어 (마지막 200자에서 추출)
-        ending = manuscript[-200:] if len(manuscript) > 200 else manuscript
-        cliff_patterns = [
-            r"(?:그\s*순간|갑자기|그때)[,\s]",
-            r"눈[이가]\s*(?:커졌|번뜩|휘둥)",
-            r"(?:불길한|섬뜩한|낯선)\s*(?:기운|예감|느낌)",
-            r"(?:정체|그림자|인영)[이가]\s*(?:나타|드러|모습)",
-        ]
-        cliffhanger_found = False
-        for p in cliff_patterns:
-            if re.search(p, ending):
-                cliffhanger_found = True
-                break
-        if cliffhanger_found:
-            # 마지막 문장 추출
-            last_sentences = [s for s in re.split(r"[.!?]\s*", ending.strip()) if s.strip()]
-            last_sentence = last_sentences[-1] if last_sentences else ""
-            last_sentence = self._fit_compact_text(last_sentence, 50)
-            if last_sentence and len(last_sentence) > 5:
-                digest_parts.append(f'클리프행어: "{last_sentence[:50]}"')
+        cliffhanger = self._extract_cliffhanger_tail(manuscript)
+        if cliffhanger:
+            digest_parts.append(f'클리프행어: "{cliffhanger[:50]}"')
 
-        # 10. [V73] 금융 상태 (투자물 등 자본금 추적)
         capital_patterns = [
-            # "잔고 131억", "자본금 80억", "현금 57억" 등
             r"(?:잔고|자본금?|현금|자산|실탄|예수금)[이가은는:의]?\s*(?:약?\s*)?(\d[\d,.]*)\s*(?:억|만)\s*(?:원)?",
-            # "80억의 자본", "130억 원의 잔고"
             r"(\d[\d,.]*)\s*(?:억|만)\s*(?:원)?[의이가]?\s*(?:잔고|자본|현금|자산|실탄|예수금)",
         ]
-        capital_mentions = []
-        for p in capital_patterns:
-            for m in re.finditer(p, manuscript):
-                capital_mentions.append(self._fit_compact_text(m.group(0), 40))
+        capital_mentions = self._collect_unique_compact_matches(manuscript, capital_patterns, 40, limit=3)
         if capital_mentions:
-            # 중복 제거 후 최대 3개
-            unique_capitals = list(dict.fromkeys(capital_mentions))[:3]
-            digest_parts.append(f"확정 자본: {', '.join(unique_capitals)} (직전 화 원문 기준)")
+            digest_parts.append(f"확정 자본: {', '.join(capital_mentions)} (직전 화 원문 기준)")
 
-        # 11. [V-소도구] 의상·소도구 물리 상태 추적 (소도구 연속성 보조)
         prop_patterns = [
             r"(수트|재킷|코트|상의|외투)[이가을를은는]?\s*"
             r"(?:의자|옷장|침대|소파|테이블|등받이|행거)\s*"
@@ -347,20 +293,79 @@ This is optional and should follow narrative flow first.
             r"(?:의자|옷장|침대|등받이)\s*(?:에|위에)\s*(?:걸쳐|놓인|걸린|벗어놓은)\s*(수트|재킷|코트|상의|외투)",
             r"(블룸버그|로이터|HTS|트레이딩\s*단말기)[이가을를]?\s*(?:켜|열어|접속|작동|화면|모니터)",
         ]
-        props_state = []
-        for p in prop_patterns:
-            for m in re.finditer(p, manuscript):
-                snippet = self._fit_compact_text(m.group(0), 50)
-                if snippet not in props_state:
-                    props_state.append(snippet)
+        props_state = self._collect_unique_compact_matches(manuscript, prop_patterns, 50)
         if props_state:
             digest_parts.append(f"소도구/장비 상태: {'; '.join(props_state)}")
 
-        if not digest_parts:
+        return digest_parts
+
+    def _collect_named_group_matches(
+        self,
+        manuscript: str,
+        patterns: list[str],
+        *,
+        min_length: int = 0,
+        excluded_names: set[str] | None = None,
+    ) -> set[str]:
+        collected = set()
+        blocked = excluded_names or set()
+        for pattern in patterns:
+            for match in re.finditer(pattern, manuscript):
+                name = match.group(1)
+                if len(name) >= min_length and name not in blocked:
+                    collected.add(name)
+        return collected
+
+    def _collect_compact_matches(self, manuscript: str, patterns: list[str], max_length: int) -> set[str]:
+        collected = set()
+        for pattern in patterns:
+            for match in re.finditer(pattern, manuscript):
+                collected.add(self._fit_compact_text(match.group(0), max_length))
+        return collected
+
+    def _collect_unique_compact_matches(
+        self, manuscript: str, patterns: list[str], max_length: int, limit: int | None = None
+    ) -> list[str]:
+        collected: list[str] = []
+        for pattern in patterns:
+            for match in re.finditer(pattern, manuscript):
+                snippet = self._fit_compact_text(match.group(0), max_length)
+                if snippet not in collected:
+                    collected.append(snippet)
+        return collected[:limit] if limit is not None else collected
+
+    def _extract_last_location(self, manuscript: str) -> str:
+        loc_patterns = [
+            r"([가-힣]{2,8}(?:산|성|촌|루|각|관|당|원|궁|객잔|주막|동굴|절벽|광장|채|봉))"
+            r"[에으로]?\s*(?:도착|돌아|들어|향|당도)",
+        ]
+        locations = []
+        for pattern in loc_patterns:
+            for match in re.finditer(pattern, manuscript):
+                locations.append((match.start(), match.group(1)))
+        if not locations:
+            return ""
+        return max(locations, key=lambda item: item[0])[1]
+
+    def _extract_cliffhanger_tail(self, manuscript: str) -> str:
+        ending = manuscript[-200:] if len(manuscript) > 200 else manuscript
+        cliff_patterns = [
+            r"(?:그\s*순간|갑자기|그때)[,\s]",
+            r"눈[이가]\s*(?:커졌|번뜩|휘둥)",
+            r"(?:불길한|섬뜩한|낯선)\s*(?:기운|예감|느낌)",
+            r"(?:정체|그림자|인영)[이가]\s*(?:나타|드러|모습)",
+        ]
+        if not any(re.search(pattern, ending) for pattern in cliff_patterns):
             return ""
 
+        last_sentences = [sentence for sentence in re.split(r"[.!?]\s*", ending.strip()) if sentence.strip()]
+        last_sentence = last_sentences[-1] if last_sentences else ""
+        last_sentence = self._fit_compact_text(last_sentence, 50)
+        return last_sentence if last_sentence and len(last_sentence) > 5 else ""
+
+    def _format_episode_digest(self, digest_parts: list[str], ep_num: int) -> str:
         header = f"[제{ep_num}화 상태 다이제스트]" if ep_num > 0 else "[직전 화 상태 다이제스트]"
-        return header + "\n" + "\n".join(f"- {p}" for p in digest_parts)
+        return header + "\n" + "\n".join(f"- {part}" for part in digest_parts)
 
     def _detect_deaths_from_manuscript(self, prev_manuscript: str) -> list[str]:
         """

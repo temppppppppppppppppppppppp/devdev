@@ -143,37 +143,44 @@ class Stage01Helpers:
         except (EOFError, KeyboardInterrupt, ValueError):
             p0_choice = "1"
 
+        extended_mode = self._resolve_phase0_extended_mode(p0_choice, STAGE0_AVAILABLE)
         if p0_choice == "0":
             app.ui.log("❌ Stage 0이 취소되었습니다.")
             return
-        elif p0_choice == "2" and STAGE0_AVAILABLE:
-            self.stage_0_extended(mode=1)
-            return
-        elif p0_choice == "3" and STAGE0_AVAILABLE:
-            self.stage_0_extended(mode=2)
-            return
-        elif p0_choice == "4" and STAGE0_AVAILABLE:
-            self.stage_0_extended(mode=3)
-            return
-        elif p0_choice == "5" and STAGE0_AVAILABLE:
-            self.stage_0_extended(mode=4)
-            return
-        elif p0_choice == "6" and STAGE0_AVAILABLE:
-            self.stage_0_extended(mode=5)
-            return
-        elif p0_choice == "7" and STAGE0_AVAILABLE:
-            self.stage_0_extended(mode=6)
+        if extended_mode is not None:
+            self.stage_0_extended(mode=extended_mode)
             return
 
-        # 기존 방식 계속...
-        bible_file = app._ui_select_bible()
-        treatment_file = app._ui_select_treatment()
-
+        bible_file, treatment_file = self._resolve_phase0_legacy_files(app)
         if not bible_file or not treatment_file:
             app.ui.log("❌ 파일 선택이 취소되어 중단합니다.")
             return
 
-        # [V60.10] Treatment Block 농축 옵션
+        treatment_file = self._maybe_enrich_phase0_treatment(app, treatment_file)
+        protagonist_config = self._build_phase0_protagonist_config(app)
+
+        dna_success = app.current_project.force_sync_v25_dna(bible_file, treatment_file)
+        self._handle_phase0_dna_sync_result(app, dna_success, bible_file, treatment_file, protagonist_config)
+        Stage01Helpers._pause_with_ui(app)
+
+    @staticmethod
+    def _resolve_phase0_extended_mode(choice: str, stage0_available: bool) -> int | None:
+        if not stage0_available:
+            return None
+        return {
+            "2": 1,
+            "3": 2,
+            "4": 3,
+            "5": 4,
+            "6": 5,
+            "7": 6,
+        }.get(choice)
+
+    @staticmethod
+    def _resolve_phase0_legacy_files(app):
+        return app._ui_select_bible(), app._ui_select_treatment()
+
+    def _maybe_enrich_phase0_treatment(self, app, treatment_file):
         try:
             enrich_choice = (
                 self._prompt_with_ui(
@@ -186,12 +193,29 @@ class Stage01Helpers:
             )
         except (EOFError, KeyboardInterrupt, ValueError):
             enrich_choice = "n"
-        if enrich_choice == "y":
-            treatment_file = app._enrich_treatment_blocks(treatment_file)
 
-        # [V60.87] 주인공 유형 설정
+        if enrich_choice == "y":
+            return app._enrich_treatment_blocks(treatment_file)
+        return treatment_file
+
+    def _build_phase0_protagonist_config(self, app) -> dict:
         app.ui.log("\n📌 [V60.87] 주인공 기본 설정")
 
+        world_origin = self._prompt_phase0_world_origin(app)
+        incarnation_type = self._prompt_phase0_incarnation_type(app)
+        selected_pov = self._prompt_phase0_pov(app)
+        selected_external_policy = self._prompt_phase0_external_policy(app, selected_pov)
+
+        protagonist_config = {
+            "world_origin": world_origin,
+            "incarnation_type": incarnation_type,
+            "pov": selected_pov,
+            "external_pov_insert_policy": selected_external_policy,
+        }
+        app.ui.log(f"   ✅ 설정 완료: {world_origin} / {incarnation_type} / {selected_pov}")
+        return protagonist_config
+
+    def _prompt_phase0_world_origin(self, app) -> str:
         app.ui.log("   🌍 주인공의 세계관 출신을 선택하세요:")
         app.ui.log("      [1] 현대인 - 제약 없음 (권장: 회귀/빙의물)")
         app.ui.log("      [2] 원시인 - 현대 지식/용어 사용 제한 (권장: 무협/판타지)")
@@ -201,12 +225,13 @@ class Stage01Helpers:
             ).strip()
         except (EOFError, KeyboardInterrupt, ValueError):
             world_choice = ""
-        world_origin = resolve_indexed_menu_choice(
+        return resolve_indexed_menu_choice(
             WORLD_ORIGIN_OPTIONS,
             world_choice,
             default="현대인",
         )
 
+    def _prompt_phase0_incarnation_type(self, app) -> str:
         app.ui.log("   🎭 주인공의 유형을 선택하세요:")
         app.ui.log("      [1] 회귀자 - 먼 미래에서 과거로 회귀 (기억 보존)")
         app.ui.log("      [2] 빙의자 - 다른 사람의 몸에 빙의")
@@ -218,12 +243,13 @@ class Stage01Helpers:
             ).strip()
         except (EOFError, KeyboardInterrupt, ValueError):
             type_choice = ""
-        incarnation_type = resolve_indexed_menu_choice(
+        return resolve_indexed_menu_choice(
             INCARNATION_TYPE_OPTIONS,
             type_choice,
             default="일반",
         )
 
+    def _prompt_phase0_pov(self, app) -> str:
         app.ui.log("   📖 서술 시점을 선택하세요:")
         app.ui.log("      [1] 1인칭 - 주인공 '나'의 시점 (몰입감↑, 정보 제한)")
         app.ui.log("      [2] 3인칭 - 주인공을 '그/그녀'로 지칭 (자유도↑)")
@@ -233,12 +259,13 @@ class Stage01Helpers:
             pov_choice = self._prompt_with_ui(app, "   선택 (기본: 2): ", prompt_id="stage0_pov_choice").strip()
         except (EOFError, KeyboardInterrupt, ValueError):
             pov_choice = ""
-        selected_pov = resolve_indexed_menu_choice(
+        return resolve_indexed_menu_choice(
             POV_OPTIONS,
             pov_choice,
             default="3인칭",
         )
 
+    def _prompt_phase0_external_policy(self, app, selected_pov: str) -> str:
         genre_type = ""
         if app.selected_genre:
             genre_type = str(app.selected_genre.get("type", "") or "").strip().lower()
@@ -255,72 +282,66 @@ class Stage01Helpers:
             ).strip()
         except (EOFError, KeyboardInterrupt, ValueError):
             policy_choice = ""
-        selected_external_policy = resolve_external_pov_insert_policy_choice(
+        return resolve_external_pov_insert_policy_choice(
             policy_choice,
             primary_pov=selected_pov,
             genre=genre_type,
         )
 
-        protagonist_config = {
-            "world_origin": world_origin,
-            "incarnation_type": incarnation_type,
-            "pov": selected_pov,
-            "external_pov_insert_policy": selected_external_policy,
-        }
-        app.ui.log(f"   ✅ 설정 완료: {world_origin} / {incarnation_type} / {selected_pov}")
+    @staticmethod
+    def _save_phase0_protagonist_config(app, protagonist_config: dict) -> None:
+        try:
+            master_bible = app.current_project.master_bible or {}
+            bible_root = master_bible.get("MasterBible", master_bible)
+            bible_root["protagonist_config"] = protagonist_config
+            app.current_project.master_bible = {"MasterBible": bible_root}
+            app.current_project.save_v20_anchor("bible", app.current_project.master_bible)
+            app.ui.log(f"   💾 [V60.87] 주인공 설정이 Bible에 저장됨: {protagonist_config}")
+        except Exception as pc_err:
+            logging.warning(f" [V60.87] 주인공 설정 저장 실패 (비차단): {pc_err}")
 
-        # 2. [필수] 50개 설계도 DNA 강제 이식
-        dna_success = app.current_project.force_sync_v25_dna(bible_file, treatment_file)
+    @staticmethod
+    def _sync_phase0_existing_drafts(app) -> None:
+        draft_path = app.current_project.paths.drafts
+        existing_drafts = list(draft_path.glob("*.txt"))
 
-        if dna_success:
+        if existing_drafts:
+            app.ui.log(f"📂 [Detect] 기존 원고 {len(existing_drafts)}건 발견. 역사 이식을 시작합니다...")
             try:
-                master_bible = app.current_project.master_bible or {}
-                bible_root = master_bible.get("MasterBible", master_bible)
-                bible_root["protagonist_config"] = protagonist_config
-                app.current_project.master_bible = {"MasterBible": bible_root}
-                app.current_project.save_v20_anchor("bible", app.current_project.master_bible)
-                app.ui.log(f"   💾 [V60.87] 주인공 설정이 Bible에 저장됨: {protagonist_config}")
-            except Exception as pc_err:
-                logging.warning(f" [V60.87] 주인공 설정 저장 실패 (비차단): {pc_err}")
+                sync_result = app.current_project.sync_existing_manuscripts(app.memory)
+                if sync_result:
+                    app.ui.log("✅ [History] 기존 원고의 역사가 모두 시스템에 안착되었습니다.")
+                else:
+                    app.ui.log("⚠️ [Warning] 일부 원고 동기화 실패. 로그를 확인하세요.")
+            except Exception as sync_err:
+                logging.warning(f" [Error] 원고 동기화 중 오류 발생: {sync_err}")
+                app._audit_event(
+                    "sync_error",
+                    "sync_existing_manuscripts failed",
+                    {"error": str(sync_err), "draft_count": len(existing_drafts)},
+                )
+                app.ui.log("⚠️ [Fallback] 원고 동기화를 건너뛰고 계속 진행합니다.")
+        else:
+            app.ui.log("🆕 [New Project] 기존 원고가 없습니다. 신규 프로젝트로 기동합니다.")
 
-            draft_path = app.current_project.paths.drafts
-            existing_drafts = list(draft_path.glob("*.txt"))
-
-            if existing_drafts:
-                app.ui.log(f"📂 [Detect] 기존 원고 {len(existing_drafts)}건 발견. 역사 이식을 시작합니다...")
-                try:
-                    sync_result = app.current_project.sync_existing_manuscripts(app.memory)
-                    if sync_result:
-                        app.ui.log("✅ [History] 기존 원고의 역사가 모두 시스템에 안착되었습니다.")
-                    else:
-                        app.ui.log("⚠️ [Warning] 일부 원고 동기화 실패. 로그를 확인하세요.")
-                except Exception as sync_err:
-                    logging.warning(f" [Error] 원고 동기화 중 오류 발생: {sync_err}")
-                    app._audit_event(
-                        "sync_error",
-                        "sync_existing_manuscripts failed",
-                        {"error": str(sync_err), "draft_count": len(existing_drafts)},
-                    )
-                    app.ui.log("⚠️ [Fallback] 원고 동기화를 건너뛰고 계속 진행합니다.")
-            else:
-                app.ui.log("🆕 [New Project] 기존 원고가 없습니다. 신규 프로젝트로 기동합니다.")
-
+    def _handle_phase0_dna_sync_result(self, app, dna_success: bool, bible_file, treatment_file, protagonist_config: dict):
+        if dna_success:
+            self._save_phase0_protagonist_config(app, protagonist_config)
+            self._sync_phase0_existing_drafts(app)
             app.current_project._load_from_db()
             app.ui.log("✨ [Success] 설계도(50개)와 원고 역사가 무결하게 통합되었습니다.")
+            return
 
-        else:
-            failure_payload = {
-                "bible_file": str(bible_file),
-                "treatment_file": str(treatment_file),
-                "protagonist_config": protagonist_config,
-            }
-            logging.warning("[Stage0] DNA sync failed; skipped post-processing")
-            audit_event = getattr(app, "_audit_event", None)
-            if callable(audit_event):
-                audit_event("dna_sync_failed", "force_sync_v25_dna returned False", failure_payload)
-            app.ui.log("[Warning] DNA sync failed. Stage 0 post-processing was skipped.")
-
-        Stage01Helpers._pause_with_ui(app)
+        failure_payload = {
+            "bible_file": str(bible_file),
+            "treatment_file": str(treatment_file),
+            "protagonist_config": protagonist_config,
+        }
+        logging.warning("[Stage0] DNA sync failed; skipped post-processing")
+        audit_event = getattr(app, "_audit_event", None)
+        if callable(audit_event):
+            audit_event("dna_sync_failed", "force_sync_v25_dna returned False", failure_payload)
+        app.ui.log("[Warning] DNA sync failed. Stage 0 post-processing was skipped.")
 
     # ─────────────────────────────────────────────────────────────
     # [4C-1b-a] _extend_blocks
@@ -742,183 +763,244 @@ class Stage01Helpers:
     def stage_1_volumes(self):
         """[Stage 1] 아크 기반 권별 고해상도 전략 설계 (원본 main_a.py L2210)"""
         app = self.app
+        self._log_stage1_volume_intro(app)
+        if self._should_skip_stage1_volumes(app):
+            return
 
+        app._safe_commit()
+        volume_inputs = self._load_stage1_volume_inputs(app)
+        if volume_inputs is None:
+            return
+
+        final_volumes = []
+        context_accumulator = ""
+        for vol_idx in range(1, volume_inputs["total_volumes"] + 1):
+            status, vol_data, context_accumulator = self._stage1_plan_single_volume(
+                app,
+                bible_root=volume_inputs["bible_root"],
+                arcs_source=volume_inputs["arcs_source"],
+                vol_idx=vol_idx,
+                context_accumulator=context_accumulator,
+                meta_info=volume_inputs["meta_info"],
+            )
+            if status == "skip":
+                continue
+            if status != "ok":
+                return
+            final_volumes.append(vol_data)
+
+        self._finalize_stage1_volumes(app, final_volumes)
+
+    def _log_stage1_volume_intro(self, app) -> None:
         app.ui.log("📜 [Stage 1] 권별 고해상도 순차 설계 (V41 유동 아크)")
-
-        # [V41 Patch] 스킵 옵션 제공
         app.ui.log("💡 Stage 1은 선택 사항입니다. 스킵해도 Stage 2 진행이 가능합니다.")
+
+    def _should_skip_stage1_volumes(self, app) -> bool:
         try:
             skip_choice = self._prompt_with_ui(
                 app, "   [1] 진행  [2] 스킵 (기본: 1): ", prompt_id="stage1_skip_choice"
             ).strip()
         except (EOFError, KeyboardInterrupt, ValueError):
             skip_choice = "1"
-        if skip_choice == "2":
-            app.ui.log("⏭️ Stage 1을 건너뜁니다. Stage 2에서 기본값으로 진행됩니다.")
-            self._pause_with_ui(app)
-            return
 
-        # [V38 패치] 안전한 커밋으로 변경
-        app._safe_commit()
+        if skip_choice != "2":
+            return False
 
-        # [V38 패치] 안전한 데이터 추출 [V44 강화: None 체크]
+        app.ui.log("⏭️ Stage 1을 건너뜁니다. Stage 2에서 기본값으로 진행됩니다.")
+        self._pause_with_ui(app)
+        return True
+
+    def _load_stage1_volume_inputs(self, app):
+        from modules.core.constants import VolumeSettings
+
         if not app.current_project or not hasattr(app.current_project, "master_bible"):
             app.ui.log("❌ 프로젝트가 로드되지 않았습니다.")
             self._pause_with_ui(app)
-            return
+            return None
+
         master_bible = app.current_project.master_bible or {}
         bible_root = master_bible.get("MasterBible", master_bible) if isinstance(master_bible, dict) else {}
         arcs_source = bible_root.get("plot_roadmap", []) if isinstance(bible_root, dict) else []
-
-        # [V43 패치] plot_roadmap 복구 메커니즘
-        if not arcs_source:
-            app.ui.log("⚠️ [Recovery] 메모리 내 로드맵이 없습니다. DB에서 재로드를 시도합니다...")
-            try:
-                app.current_project._load_from_db()
-                master_bible = app.current_project.master_bible or {}
-                bible_root = master_bible.get("MasterBible", master_bible) if isinstance(master_bible, dict) else {}
-                arcs_source = bible_root.get("plot_roadmap", []) if isinstance(bible_root, dict) else []
-
-                if arcs_source:
-                    app.ui.log(f"✅ [Recovery] DB에서 {len(arcs_source)}개 아크 복구 성공!")
-            except Exception as reload_err:
-                app.ui.log(f"🚨 [Recovery Failed] DB 재로드 실패: {reload_err}")
-                app._audit_event("recovery_failed", "plot_roadmap reload failed", {"error": str(reload_err)})
-
+        bible_root, arcs_source = self._recover_stage1_volume_roadmap(app, bible_root, arcs_source)
         if not arcs_source:
             app.ui.log("❌ 에러: 성경 내 로드맵 데이터가 없습니다. Phase 0을 다시 실행하세요.")
             self._pause_with_ui(app)
-            return
+            return None
 
-        from modules.core.constants import Emojis, RetryLimits, VolumeSettings
-        from modules.core.spinners import StageSpinner
-
-        # [V41 Patch] 아크 총량 유동화
         total_arcs = len(arcs_source)
         total_volumes = (total_arcs + VolumeSettings.ARCS_PER_VOLUME - 1) // VolumeSettings.ARCS_PER_VOLUME
         app.ui.log(f"📊 총 {total_arcs}개 아크 발견 → {total_volumes}권 분권 설계를 시작합니다.")
+        return {
+            "bible_root": bible_root,
+            "arcs_source": arcs_source,
+            "total_volumes": total_volumes,
+            "meta_info": self._extract_stage1_meta_info(bible_root),
+        }
 
-        final_volumes = []
-        context_accumulator = ""
-        # [V44] 안전한 중첩 dict 접근
+    def _recover_stage1_volume_roadmap(self, app, bible_root, arcs_source):
+        if arcs_source:
+            return bible_root, arcs_source
+
+        app.ui.log("⚠️ [Recovery] 메모리 내 로드맵이 없습니다. DB에서 재로드를 시도합니다...")
+        try:
+            app.current_project._load_from_db()
+            master_bible = app.current_project.master_bible or {}
+            bible_root = master_bible.get("MasterBible", master_bible) if isinstance(master_bible, dict) else {}
+            arcs_source = bible_root.get("plot_roadmap", []) if isinstance(bible_root, dict) else []
+            if arcs_source:
+                app.ui.log(f"✅ [Recovery] DB에서 {len(arcs_source)}개 아크 복구 성공!")
+        except Exception as reload_err:
+            app.ui.log(f"🚨 [Recovery Failed] DB 재로드 실패: {reload_err}")
+            app._audit_event("recovery_failed", "plot_roadmap reload failed", {"error": str(reload_err)})
+
+        return bible_root, arcs_source
+
+    @staticmethod
+    def _extract_stage1_meta_info(bible_root) -> str:
         project_data = bible_root.get("ProjectData", {}) if isinstance(bible_root, dict) else {}
         project_data = project_data if isinstance(project_data, dict) else {}
-        meta_info = json.dumps(project_data.get("MetaInfo", {}), ensure_ascii=False)
+        return json.dumps(project_data.get("MetaInfo", {}), ensure_ascii=False)
 
-        # [V41 Patch] 유동적 권 수 순차 설계 루프
-        arcs_per_vol = VolumeSettings.ARCS_PER_VOLUME
-        for vol_idx in range(1, total_volumes + 1):
-            start_idx = (vol_idx - 1) * arcs_per_vol
-            end_idx = vol_idx * arcs_per_vol
-            vol_arcs_chunk = arcs_source[start_idx:end_idx]
+    def _stage1_plan_single_volume(self, app, *, bible_root, arcs_source, vol_idx, context_accumulator, meta_info):
+        from modules.core.constants import VolumeSettings
 
-            if not vol_arcs_chunk:
-                app.ui.log(f"⚠️ [Warning] {vol_idx}권에 해당하는 데이터가 부족합니다. 스킵합니다.")
-                continue
+        start_idx = (vol_idx - 1) * VolumeSettings.ARCS_PER_VOLUME
+        end_idx = vol_idx * VolumeSettings.ARCS_PER_VOLUME
+        vol_arcs_chunk = arcs_source[start_idx:end_idx]
+        if not vol_arcs_chunk:
+            app.ui.log(f"⚠️ [Warning] {vol_idx}권에 해당하는 데이터가 부족합니다. 스킵합니다.")
+            return "skip", None, context_accumulator
 
-            treatment_slice = json.dumps(vol_arcs_chunk, ensure_ascii=False, indent=2)
+        treatment_slice = json.dumps(vol_arcs_chunk, ensure_ascii=False, indent=2)
+        vol_result, _vol_attempts, vol_passed = self._run_stage1_volume_retry(
+            app,
+            vol_idx=vol_idx,
+            treatment_slice=treatment_slice,
+            context_accumulator=context_accumulator,
+            meta_info=meta_info,
+        )
+        if not vol_passed:
+            app.ui.log(f"❌ [Critical] 제 {vol_idx}권 품질 미달로 공정 중단.")
+            return "abort", None, context_accumulator
 
-            # [V65] retry_with_feedback 래퍼로 밀도 확보 재시도 루프 표준화
-            from modules.core.adaptive_retry import retry_with_feedback
+        raw_doc = self._normalize_stage1_strategy_doc(vol_result)
+        doc_len = len(raw_doc)
+        app.ui.log(f"   ✅ [Pass] {vol_idx}권 검수 완료 (분량: {doc_len}자)")
+        return "ok", vol_result, self._append_stage1_volume_context(context_accumulator, raw_doc, vol_idx)
 
-            def _vol_attempt_func(attempt, _feedback, _vi=vol_idx, _ts=treatment_slice):
-                """[V65] 단일 권 설계 시도 로직"""
-                app.ui.log(
-                    f"   {Emojis.BRAIN} 제 {_vi}권 전략 설계 중... (시도 {attempt + 1}/{RetryLimits.DIRECTOR_MAX_ATTEMPTS})"
-                )
-                stage1_protagonist_name = app._get_protagonist_name()
-                with StageSpinner(1, f"제{_vi}권 설계"):
-                    vol_data = app.agents["analyst"].plan_single_volume_v20(
-                        _vi,
-                        app.current_project.master_bible,
-                        _ts,
-                        context_accumulator,
-                        meta_info,
-                        protagonist_name=stage1_protagonist_name,
-                    )
-                return vol_data
+    def _run_stage1_volume_retry(self, app, *, vol_idx, treatment_slice, context_accumulator, meta_info):
+        from modules.core.adaptive_retry import retry_with_feedback
+        from modules.core.constants import Emojis, RetryLimits
+        from modules.core.spinners import StageSpinner
 
-            def _vol_on_success(vol_data, _vi=vol_idx):
-                """[V65] 볼륨 설계 성공 판정"""
-                if not vol_data or not isinstance(vol_data, dict):
-                    app.ui.log(f"🚨 [Analyst Error] 제 {_vi}권 설계 결과가 유효하지 않음: {type(vol_data)}")
-                    app._audit_event(
-                        "analyst_error", "invalid volume data", {"vol_no": _vi, "type": str(type(vol_data))}
-                    )
-                    return False
+        return retry_with_feedback(
+            func=lambda attempt, feedback: self._attempt_stage1_volume_plan(
+                app,
+                vol_idx=vol_idx,
+                treatment_slice=treatment_slice,
+                context_accumulator=context_accumulator,
+                meta_info=meta_info,
+                attempt=attempt,
+                emojis=Emojis,
+                retry_limits=RetryLimits,
+                stage_spinner_cls=StageSpinner,
+            ),
+            max_attempts=RetryLimits.DIRECTOR_MAX_ATTEMPTS,
+            on_success=lambda vol_data: self._validate_stage1_volume_result(app, vol_data, vol_idx),
+            on_failure=self._stage1_volume_failure_feedback,
+            logger=lambda msg: app.ui.log(msg),
+            task_name=f"Stage1_Volume_{vol_idx}",
+        )
 
-                raw_doc = vol_data.get("strategy_doc", "")
-                if isinstance(raw_doc, dict):
-                    raw_doc = json.dumps(raw_doc, ensure_ascii=False)
-                doc_len = len(raw_doc)
-                if doc_len < 2000:
-                    app.ui.log(f"   ⚠️ [Low Density] 분량 부족({doc_len}/2000). 다시 설계합니다.")
-                    return False
-
-                boundary_check = self.validate_volume_boundaries(vol_data, _vi)
-                if boundary_check.get("status") == "REJECT":
-                    app.ui.log(f"   🚨 [Boundary Violation] {boundary_check.get('reason')}")
-                    app.ui.log(f"   📝 수정 요청: {boundary_check.get('feedback')}")
-                    app._audit_event(
-                        "volume_boundary_violation",
-                        boundary_check.get("reason"),
-                        {"vol_no": _vi, "feedback": boundary_check.get("feedback")},
-                    )
-                    return False
-
-                return True
-
-            def _vol_on_failure(vol_data, attempt):
-                """[V65] 실패 시 피드백"""
-                return ""
-
-            vol_result, _vol_attempts, vol_passed = retry_with_feedback(
-                func=_vol_attempt_func,
-                max_attempts=RetryLimits.DIRECTOR_MAX_ATTEMPTS,
-                on_success=_vol_on_success,
-                on_failure=_vol_on_failure,
-                logger=lambda msg: app.ui.log(msg),
-                task_name=f"Stage1_Volume_{vol_idx}",
+    def _attempt_stage1_volume_plan(
+        self,
+        app,
+        *,
+        vol_idx,
+        treatment_slice,
+        context_accumulator,
+        meta_info,
+        attempt,
+        emojis,
+        retry_limits,
+        stage_spinner_cls,
+    ):
+        app.ui.log(
+            f"   {emojis.BRAIN} 제 {vol_idx}권 전략 설계 중... (시도 {attempt + 1}/{retry_limits.DIRECTOR_MAX_ATTEMPTS})"
+        )
+        stage1_protagonist_name = app._get_protagonist_name()
+        with stage_spinner_cls(1, f"제{vol_idx}권 설계"):
+            return app.agents["analyst"].plan_single_volume_v20(
+                vol_idx,
+                app.current_project.master_bible,
+                treatment_slice,
+                context_accumulator,
+                meta_info,
+                protagonist_name=stage1_protagonist_name,
             )
 
-            if not vol_passed:
-                app.ui.log(f"❌ [Critical] 제 {vol_idx}권 품질 미달로 공정 중단.")
-                return
+    def _validate_stage1_volume_result(self, app, vol_data, vol_idx) -> bool:
+        if not vol_data or not isinstance(vol_data, dict):
+            app.ui.log(f"🚨 [Analyst Error] 제 {vol_idx}권 설계 결과가 유효하지 않음: {type(vol_data)}")
+            app._audit_event("analyst_error", "invalid volume data", {"vol_no": vol_idx, "type": str(type(vol_data))})
+            return False
 
-            # 성공 후처리
-            vol_data = vol_result
-            raw_doc = vol_data.get("strategy_doc", "")
-            if isinstance(raw_doc, dict):
-                raw_doc = json.dumps(raw_doc, ensure_ascii=False)
-            doc_len = len(raw_doc)
-            app.ui.log(f"   ✅ [Pass] {vol_idx}권 검수 완료 (분량: {doc_len}자)")
-            final_volumes.append(vol_data)
+        raw_doc = self._normalize_stage1_strategy_doc(vol_data)
+        doc_len = len(raw_doc)
+        if doc_len < 2000:
+            app.ui.log(f"   ⚠️ [Low Density] 분량 부족({doc_len}/2000). 다시 설계합니다.")
+            return False
 
-            # [중요] 다음 권 설계를 위해 현재 권의 요약을 누적
-            summary = raw_doc[:500]
-            context_accumulator += f"\n[제 {vol_idx}권 요약]: {summary}..."
-            MAX_CONTEXT_VOLUMES = 3
-            if vol_idx > MAX_CONTEXT_VOLUMES:
-                acc_lines = context_accumulator.split("\n")
-                compressed_lines = []
-                kept_recent = 0
-                for line in reversed(acc_lines):
-                    if line.startswith("[제 ") and "권 요약]" in line:
-                        if kept_recent < MAX_CONTEXT_VOLUMES:
-                            compressed_lines.insert(0, line)
-                            kept_recent += 1
-                        else:
-                            vol_label = line.split("]:")[0] + "]: (요약 생략)"
-                            compressed_lines.insert(0, vol_label)
-                    elif line.strip():
-                        compressed_lines.insert(0, line)
-                context_accumulator = "\n".join(compressed_lines)
+        boundary_check = self.validate_volume_boundaries(vol_data, vol_idx)
+        if boundary_check.get("status") == "REJECT":
+            app.ui.log(f"   🚨 [Boundary Violation] {boundary_check.get('reason')}")
+            app.ui.log(f"   📝 수정 요청: {boundary_check.get('feedback')}")
+            app._audit_event(
+                "volume_boundary_violation",
+                boundary_check.get("reason"),
+                {"vol_no": vol_idx, "feedback": boundary_check.get("feedback")},
+            )
+            return False
 
-        # 3. 전체 데이터 DB 박제 및 메모리 동기화
+        return True
+
+    @staticmethod
+    def _stage1_volume_failure_feedback(vol_data, attempt):
+        return ""
+
+    @staticmethod
+    def _normalize_stage1_strategy_doc(vol_data) -> str:
+        raw_doc = vol_data.get("strategy_doc", "") if isinstance(vol_data, dict) else ""
+        if isinstance(raw_doc, dict):
+            return json.dumps(raw_doc, ensure_ascii=False)
+        return raw_doc
+
+    @staticmethod
+    def _append_stage1_volume_context(context_accumulator: str, raw_doc: str, vol_idx: int) -> str:
+        summary = raw_doc[:500]
+        context_accumulator += f"\n[제 {vol_idx}권 요약]: {summary}..."
+        max_context_volumes = 3
+        if vol_idx <= max_context_volumes:
+            return context_accumulator
+
+        acc_lines = context_accumulator.split("\n")
+        compressed_lines = []
+        kept_recent = 0
+        for line in reversed(acc_lines):
+            if line.startswith("[제 ") and "권 요약]" in line:
+                if kept_recent < max_context_volumes:
+                    compressed_lines.insert(0, line)
+                    kept_recent += 1
+                else:
+                    compressed_lines.insert(0, line.split("]:")[0] + "]: (요약 생략)")
+            elif line.strip():
+                compressed_lines.insert(0, line)
+        return "\n".join(compressed_lines)
+
+    def _finalize_stage1_volumes(self, app, final_volumes) -> None:
         app.current_project.save_v20_anchor("volumes", final_volumes)
         app.current_project.volumes = final_volumes
         if hasattr(app, "_show_volume_table"):
             app._show_volume_table(final_volumes)
         app.ui.log(f"✨ [Complete] {len(final_volumes)}권 대서사시 로드맵이 DB에 최종 안착되었습니다.")
-
         self._pause_with_ui(app, "\n[Enter] 메뉴로 이동", prompt_id="stage1_return_to_menu")

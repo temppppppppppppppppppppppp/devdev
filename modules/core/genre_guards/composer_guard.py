@@ -15,7 +15,11 @@ class ComposerGuard(BaseGuard):
     def __init__(self) -> None:
         super().__init__()
         cfg = self._load_genre_yaml("composer")
+        self._init_term_sets(cfg)
+        self._init_fame_constraints(cfg)
+        self._init_activity_rules(cfg)
 
+    def _init_term_sets(self, cfg: dict[str, Any]) -> None:
         self.FORBIDDEN_TERMS = cfg.get(
             "forbidden_terms",
             [
@@ -128,6 +132,7 @@ class ComposerGuard(BaseGuard):
             ],
         )
 
+    def _init_fame_constraints(self, cfg: dict[str, Any]) -> None:
         self._fame_hierarchy = cfg.get(
             "fame_hierarchy",
             [
@@ -172,6 +177,7 @@ class ComposerGuard(BaseGuard):
             },
         )
 
+    def _init_activity_rules(self, cfg: dict[str, Any]) -> None:
         self._activity_requirements = {
             "싱글 발매": {"reputation": "신인", "contract": True},
             "정규 앨범": {"reputation": "주목받는", "tracks": 8},

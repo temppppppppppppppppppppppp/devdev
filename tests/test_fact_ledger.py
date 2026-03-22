@@ -65,6 +65,65 @@ def test_dead_character_updates_are_ignored_for_followup_state_changes():
     assert history == ["ep1: 사망 (원인: 전투)"]
 
 
+def test_same_batch_death_blocks_followup_character_phase_updates():
+    ledger = FactLedger(_EmptyStubDB())
+
+    ledger.update_from_state_changes(
+        3,
+        {
+            "npc_deaths": [{"name": "흑풍", "cause": "독살"}],
+            "npc_injuries": [{"name": "흑풍", "state": "중상"}],
+            "npc_movements": [{"name": "흑풍", "to": "남문"}],
+            "npc_personality_changes": [{"name": "흑풍", "traits": "냉정"}],
+            "npc_npc_relationships": [{"npc1": "흑풍", "npc2": "주인공", "relation": "협력"}],
+        },
+    )
+
+    assert ledger.get_character("흑풍")["history"] == ["ep3: 사망 (원인: 독살)"]
+    assert ledger.get_character("주인공") is None
+
+
+def test_update_from_state_changes_applies_all_phase_families():
+    ledger = FactLedger(_EmptyStubDB())
+
+    ledger.update_from_state_changes(
+        7,
+        {
+            "relationship_changes": [{"target": "연화", "from": "경계", "to": "동맹"}],
+            "skill_acquisitions": [{"name": "천뢰검", "source": "비급"}],
+            "major_items": [{"name": "흑룡패", "action": "획득"}],
+            "inventory_counts": {"치유단": 2},
+            "inventory_count_deltas": [{"name": "치유단", "from": 2, "to": 0}],
+            "entity_destructions": [
+                {"name": "혈맹", "type": "organization", "cause": "내분"},
+                {"name": "북문", "type": "location", "cause": "화재"},
+            ],
+            "npc_injuries": [{"npc": "연화", "state": "경상"}],
+            "npc_movements": [{"npc": "연화", "destination": "남문"}],
+            "npc_personality_changes": [{"npc": "연화", "traits": "침착", "role": "조력자"}],
+            "npc_npc_relationships": [{"npc1": "연화", "npc2": "백운", "relation": "동료"}],
+        },
+    )
+
+    assert ledger.last_updated_ep == 7
+    assert ledger.get_character("연화")["relationship"] == "동맹"
+    assert ledger.get_character("연화")["role"] == "조력자"
+    assert ledger.get_character("연화")["history"] == [
+        "ep7: 관계 변화: 경계 -> 동맹",
+        "ep7: 부상: 경상",
+        "ep7: 이동: 남문",
+        "ep7: 성격: 침착",
+        "ep7: 백운와 관계: 동료",
+    ]
+    assert ledger.get_character("백운")["history"] == ["ep7: 연화와 관계: 동료"]
+    assert ledger.get_item("천뢰검")["status"] == "습득"
+    assert ledger.get_item("흑룡패")["status"] == "획득"
+    assert ledger.get_item("치유단")["status"] == "분실"
+    assert ledger.get_item("치유단")["quantity"] == 0
+    assert ledger._ledger["organizations"]["혈맹"]["status"] == "destroyed"
+    assert ledger._ledger["locations"]["북문"]["status"] == "destroyed"
+
+
 # ══════════════════════════════════════════════════════════════
 # [TF-C07] 수치 팩트 자동 추출 테스트
 # ══════════════════════════════════════════════════════════════

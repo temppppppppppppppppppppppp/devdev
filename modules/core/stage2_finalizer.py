@@ -512,6 +512,184 @@ class Stage2Finalizer:
     def ctx(self):
         return self.host.ctx
 
+    def _prepare_stage2_finalize_audit_state(
+        self,
+        *,
+        refined_arc: dict,
+        enriched_block: dict,
+        all_refined_arcs: list,
+        global_arc_no: int,
+        last_refined_context: str,
+        bible_root: dict,
+        genre: str,
+        protagonist_name: str,
+        constraint_block: str,
+        current_feedback: str,
+        suspected_duplicates: list,
+        entity_registry_for_director,
+        draft_validator_passed: bool,
+        consensus_passed: bool,
+        attempt: int,
+        generation_method: str,
+        constraint_db,
+    ) -> dict[str, Any]:
+        """Director audit 전 snapshot, story_context, audit bundle을 준비한다."""
+        cdb_snapshot = None
+        if constraint_db and hasattr(constraint_db, "snapshot"):
+            try:
+                cdb_snapshot = constraint_db.snapshot()
+            except Exception:
+                pass
+
+        if self.ctx.semantic_plot_guard:
+            try:
+                tactical_text = refined_arc.get("tactical_doc", "")
+                if isinstance(tactical_text, dict):
+                    tactical_text = str(tactical_text)
+                spg_warnings = self.ctx.semantic_plot_guard.check_new_arc(tactical_doc=tactical_text)
+                if spg_warnings:
+                    spg_text = self.ctx.semantic_plot_guard.format_warnings(spg_warnings)
+                    logging.warning(f"⚠️ [V66] {spg_text}")
+                    current_feedback = f"{current_feedback}\n{spg_text}" if current_feedback else spg_text
+            except (AttributeError, TypeError, RuntimeError) as exc:
+                logging.warning(f"⚠️ [V64.P4-fix] 플롯 중복 감지 실패: {exc}")
+
+        expanded_prev_context, story_context = self._build_stage2_director_story_context(
+            refined_arc=refined_arc,
+            enriched_block=enriched_block,
+            all_refined_arcs=all_refined_arcs,
+            global_arc_no=global_arc_no,
+            last_refined_context=last_refined_context,
+            bible_root=bible_root,
+            genre=genre,
+            protagonist_name=protagonist_name,
+            constraint_block=constraint_block,
+        )
+
+        audit, director_duration_ms, decision, score = self._audit_stage2_director(
+            refined_arc=refined_arc,
+            expanded_prev_context=expanded_prev_context,
+            enriched_block=enriched_block,
+            protagonist_name=protagonist_name,
+            suspected_duplicates=suspected_duplicates,
+            entity_registry_for_director=entity_registry_for_director,
+            story_context=story_context,
+            global_arc_no=global_arc_no,
+            draft_validator_passed=draft_validator_passed,
+            consensus_passed=consensus_passed,
+        )
+
+        tactical_doc = refined_arc.get("tactical_doc", "")
+        tactical_doc_len = len(str(tactical_doc)) if isinstance(tactical_doc, dict) else len(tactical_doc or "")
+
+        from modules.validation.threshold_helper import _threshold
+
+        quality_gate_score = _threshold("scoring.quality_gate_score", 90)
+        self._log_stage2_session_decision(
+            audit=audit,
+            global_arc_no=global_arc_no,
+            attempt=attempt,
+            generation_method=generation_method,
+            score=score,
+        )
+        return {
+            "cdb_snapshot": cdb_snapshot,
+            "current_feedback": current_feedback,
+            "expanded_prev_context": expanded_prev_context,
+            "story_context": story_context,
+            "audit": audit,
+            "director_duration_ms": director_duration_ms,
+            "decision": decision,
+            "score": score,
+            "tactical_doc_len": tactical_doc_len,
+            "quality_gate_score": quality_gate_score,
+        }
+
+    async def _handle_stage2_finalize_pass_branch(
+        self,
+        *,
+        refined_arc: dict,
+        audit: dict,
+        decision: str,
+        score: int,
+        tactical_doc_len: int,
+        quality_gate_score: int,
+        st_snapshot,
+        generation_method: str,
+        cdb_snapshot,
+        constraint_db,
+        global_arc_no: int,
+        attempt: int,
+        is_patch: bool,
+        prev_score: float,
+        patch_fallback: bool,
+        arc_drive: dict,
+        enriched_block: dict,
+        all_refined_arcs: list,
+        current_feedback: str,
+        constraint_block: str,
+        last_refined_context: str,
+        current_ep_start: int,
+        director_feedback_for_fourphase: str,
+        director_duration_ms: int | None,
+    ) -> dict:
+        """PASS/PASS_WITH_FIX 공통 finalize tail을 처리한다."""
+        quality_gate_result = self._maybe_reject_stage2_pass_for_quality_gate(
+            refined_arc=refined_arc,
+            audit=audit,
+            decision=decision,
+            score=score,
+            tactical_doc_len=tactical_doc_len,
+            quality_gate_score=quality_gate_score,
+            st_snapshot=st_snapshot,
+            generation_method=generation_method,
+            cdb_snapshot=cdb_snapshot,
+            constraint_db=constraint_db,
+            global_arc_no=global_arc_no,
+            attempt=attempt,
+            is_patch=is_patch,
+            prev_score=prev_score,
+            patch_fallback=patch_fallback,
+        )
+        if quality_gate_result:
+            return quality_gate_result
+
+        prepared_result: Stage2PassPreparationResult = self._prepare_stage2_pass_arc_for_persistence(
+            refined_arc=refined_arc,
+            arc_drive=arc_drive,
+            enriched_block=enriched_block,
+            all_refined_arcs=all_refined_arcs,
+            global_arc_no=global_arc_no,
+            current_feedback=current_feedback,
+            generation_method=generation_method,
+            st_snapshot=st_snapshot,
+            cdb_snapshot=cdb_snapshot,
+            constraint_db=constraint_db,
+            constraint_block=constraint_block,
+        )
+        if prepared_result.get("action") == "retry":
+            return prepared_result
+
+        return await self._finalize_stage2_pass_persistence_and_tail(
+            refined_arc=prepared_result["refined_arc"],
+            all_refined_arcs=all_refined_arcs,
+            global_arc_no=global_arc_no,
+            current_feedback=current_feedback,
+            st_snapshot=st_snapshot,
+            cdb_snapshot=cdb_snapshot,
+            constraint_db=constraint_db,
+            last_refined_context=last_refined_context,
+            current_ep_start=current_ep_start,
+            director_feedback_for_fourphase=director_feedback_for_fourphase,
+            attempt=attempt,
+            generation_method=generation_method,
+            audit=audit,
+            director_duration_ms=director_duration_ms,
+            is_patch=is_patch,
+            prev_score=prev_score,
+            patch_fallback=patch_fallback,
+        )
+
     async def run_finalize(
         self,
         *,
@@ -548,35 +726,7 @@ class Stage2Finalizer:
 
         Returns dict with action='break'|'retry'|'next'.
         """
-        from modules.core.constants import ContextLimits, RecoveryLimits
-
-        # [SubstrateGate] ConstraintDB snapshot — StateTracker 대칭 rollback 안전성
-        _cdb_snapshot = None
-        if constraint_db and hasattr(constraint_db, "snapshot"):
-            try:
-                _cdb_snapshot = constraint_db.snapshot()
-            except Exception:
-                pass
-
-        # [V66] SemanticPlotGuard 중복 검사
-        if self.ctx.semantic_plot_guard:
-            try:
-                tactical_text = refined_arc.get("tactical_doc", "")
-                if isinstance(tactical_text, dict):
-                    tactical_text = str(tactical_text)
-                spg_warnings = self.ctx.semantic_plot_guard.check_new_arc(tactical_doc=tactical_text)
-                if spg_warnings:
-                    spg_text = self.ctx.semantic_plot_guard.format_warnings(spg_warnings)
-                    logging.warning(f"⚠️ [V66] {spg_text}")
-                    # Director 피드백에 추가
-                    if current_feedback:
-                        current_feedback = f"{current_feedback}\n{spg_text}"
-                    else:
-                        current_feedback = spg_text
-            except (AttributeError, TypeError, RuntimeError) as e:
-                logging.warning(f"⚠️ [V64.P4-fix] 플롯 중복 감지 실패: {e}")
-
-        _expanded_prev_context, _story_context = self._build_stage2_director_story_context(
+        audit_state = self._prepare_stage2_finalize_audit_state(
             refined_arc=refined_arc,
             enriched_block=enriched_block,
             all_refined_arcs=all_refined_arcs,
@@ -586,37 +736,27 @@ class Stage2Finalizer:
             genre=genre,
             protagonist_name=protagonist_name,
             constraint_block=constraint_block,
-        )
-
-        audit, _director_duration_ms, _d_decision, _score = self._audit_stage2_director(
-            refined_arc=refined_arc,
-            expanded_prev_context=_expanded_prev_context,
-            enriched_block=enriched_block,
-            protagonist_name=protagonist_name,
+            current_feedback=current_feedback,
             suspected_duplicates=suspected_duplicates,
             entity_registry_for_director=entity_registry_for_director,
-            story_context=_story_context,
-            global_arc_no=global_arc_no,
             draft_validator_passed=draft_validator_passed,
             consensus_passed=consensus_passed,
-        )
-
-        _td = refined_arc.get("tactical_doc", "")
-        _td_len = len(str(_td)) if isinstance(_td, dict) else len(_td or "")
-        from modules.validation.threshold_helper import _threshold
-
-        _quality_gate_score = _threshold("scoring.quality_gate_score", 90)
-
-        self._log_stage2_session_decision(
-            audit=audit,
-            global_arc_no=global_arc_no,
             attempt=attempt,
             generation_method=generation_method,
-            score=_score,
+            constraint_db=constraint_db,
         )
+        current_feedback = audit_state["current_feedback"]
+        audit = audit_state["audit"]
+        _d_decision = audit_state["decision"]
+        _score = audit_state["score"]
+        _expanded_prev_context = audit_state["expanded_prev_context"]
+        _story_context = audit_state["story_context"]
+        _director_duration_ms = audit_state["director_duration_ms"]
+        _cdb_snapshot = audit_state["cdb_snapshot"]
+        _td_len = audit_state["tactical_doc_len"]
+        _quality_gate_score = audit_state["quality_gate_score"]
 
         # [TF-32-VERIFY] PASS_WITH_FIX → patch + Director 재심사 반복 (최대 3회)
-        _d_decision = audit.get("decision", "")
         if _d_decision == "PASS_WITH_FIX":
             _pwf_result: Stage2PassWithFixLoopResult = self._run_stage2_pass_with_fix_loop(
                 refined_arc=refined_arc,
@@ -636,7 +776,7 @@ class Stage2Finalizer:
             _score = _pwf_result["score"]
 
         if _d_decision in ("PASS", "PASS_WITH_FIX"):  # [TF-R4-S2-01] [TF-32-S2] PASS/PASS_WITH_FIX 수용
-            quality_gate_result = self._maybe_reject_stage2_pass_for_quality_gate(
+            return await self._handle_stage2_finalize_pass_branch(
                 refined_arc=refined_arc,
                 audit=audit,
                 decision=_d_decision,
@@ -652,45 +792,15 @@ class Stage2Finalizer:
                 is_patch=is_patch,
                 prev_score=prev_score,
                 patch_fallback=patch_fallback,
-            )
-            if quality_gate_result:
-                return quality_gate_result
-
-            prepared_result: Stage2PassPreparationResult = self._prepare_stage2_pass_arc_for_persistence(
-                refined_arc=refined_arc,
                 arc_drive=arc_drive,
                 enriched_block=enriched_block,
                 all_refined_arcs=all_refined_arcs,
-                global_arc_no=global_arc_no,
                 current_feedback=current_feedback,
-                generation_method=generation_method,
-                st_snapshot=st_snapshot,
-                cdb_snapshot=_cdb_snapshot,
-                constraint_db=constraint_db,
                 constraint_block=constraint_block,
-            )
-            if prepared_result.get("action") == "retry":
-                return prepared_result
-            refined_arc = prepared_result["refined_arc"]
-
-            return await self._finalize_stage2_pass_persistence_and_tail(
-                refined_arc=refined_arc,
-                all_refined_arcs=all_refined_arcs,
-                global_arc_no=global_arc_no,
-                current_feedback=current_feedback,
-                st_snapshot=st_snapshot,
-                cdb_snapshot=_cdb_snapshot,
-                constraint_db=constraint_db,
                 last_refined_context=last_refined_context,
                 current_ep_start=current_ep_start,
                 director_feedback_for_fourphase=director_feedback_for_fourphase,
-                attempt=attempt,
-                generation_method=generation_method,
-                audit=audit,
                 director_duration_ms=_director_duration_ms,
-                is_patch=is_patch,
-                prev_score=prev_score,
-                patch_fallback=patch_fallback,
             )
         return self._handle_stage2_reject_path(
             refined_arc=refined_arc,
@@ -708,6 +818,46 @@ class Stage2Finalizer:
             current_feedback=current_feedback,
             director_duration_ms=_director_duration_ms,
         )
+
+    def _restore_stage2_state_snapshots(
+        self,
+        *,
+        st_snapshot,
+        cdb_snapshot,
+        constraint_db,
+        success_log: str | None = None,
+        failure_log: str | None = None,
+    ) -> None:
+        if st_snapshot:
+            try:
+                tracker = self.ctx.state_tracker
+                for key, value in st_snapshot.items():
+                    if hasattr(tracker, key):
+                        setattr(tracker, key, value)
+                if success_log:
+                    logging.info(success_log)
+            except Exception as rollback_err:
+                if failure_log:
+                    logging.warning("%s: %s", failure_log, rollback_err)
+        if cdb_snapshot and constraint_db and hasattr(constraint_db, "restore"):
+            constraint_db.restore(cdb_snapshot)
+
+    def _build_stage2_pass_retry_result(
+        self,
+        *,
+        current_feedback: str,
+        st_snapshot,
+        generation_method: str,
+        cdb_snapshot,
+        constraint_db,
+    ) -> Stage2PassPreparationResult:
+        if st_snapshot and generation_method.startswith("four_phase"):
+            self._restore_stage2_state_snapshots(
+                st_snapshot=st_snapshot,
+                cdb_snapshot=cdb_snapshot,
+                constraint_db=constraint_db,
+            )
+        return {"action": "retry", "current_feedback": current_feedback}
 
     def _prepare_stage2_pass_arc_for_persistence(
         self,
@@ -729,18 +879,51 @@ class Stage2Finalizer:
         refined_arc["arc_drive"] = arc_drive if arc_drive else {}
         refined_arc["joint_docs"] = enriched_block.get("joint_docs", {})
         refined_arc["status_shadow"] = enriched_block.get("status_shadow", {})
+        repair_result = self._repair_stage2_pass_arc_structure(
+            refined_arc=refined_arc,
+            all_refined_arcs=all_refined_arcs,
+            global_arc_no=global_arc_no,
+            current_feedback=current_feedback,
+            generation_method=generation_method,
+            st_snapshot=st_snapshot,
+            cdb_snapshot=cdb_snapshot,
+            constraint_db=constraint_db,
+        )
+        if repair_result["action"] != "continue":
+            return repair_result
+        refined_arc = repair_result["refined_arc"]
+        return self._finalize_stage2_pass_arc_preparation(
+            refined_arc=refined_arc,
+            all_refined_arcs=all_refined_arcs,
+            global_arc_no=global_arc_no,
+            constraint_block=constraint_block,
+            enriched_block=enriched_block,
+        )
 
+    def _repair_stage2_pass_arc_structure(
+        self,
+        *,
+        refined_arc: dict,
+        all_refined_arcs: list,
+        global_arc_no: int,
+        current_feedback: str,
+        generation_method: str,
+        st_snapshot,
+        cdb_snapshot,
+        constraint_db,
+    ) -> Stage2PassPreparationResult:
+        from modules.core.constants import RecoveryLimits
         if callable(getattr(self.ctx, "validate_arc_data_fields", None)):
             repaired_arc = self.ctx.validate_arc_data_fields(refined_arc, global_arc_no)
             if repaired_arc is None:
                 current_feedback = "Arc 데이터 기본 구조를 복구하지 못했습니다. 완전한 JSON 구조로 다시 설계하라."
-                if st_snapshot and generation_method.startswith("four_phase") and self.ctx.state_tracker:
-                    for key, value in st_snapshot.items():
-                        if hasattr(self.ctx.state_tracker, key):
-                            setattr(self.ctx.state_tracker, key, value)
-                    if cdb_snapshot and constraint_db and hasattr(constraint_db, "restore"):
-                        constraint_db.restore(cdb_snapshot)
-                return {"action": "retry", "current_feedback": current_feedback}
+                return self._build_stage2_pass_retry_result(
+                    current_feedback=current_feedback,
+                    st_snapshot=st_snapshot,
+                    generation_method=generation_method,
+                    cdb_snapshot=cdb_snapshot,
+                    constraint_db=constraint_db,
+                )
             refined_arc = repaired_arc
 
         critical_missing = []
@@ -857,6 +1040,17 @@ class Stage2Finalizer:
                 if cdb_snapshot and constraint_db and hasattr(constraint_db, "restore"):
                     constraint_db.restore(cdb_snapshot)
             return {"action": "retry", "current_feedback": current_feedback}
+        return {"action": "continue", "refined_arc": refined_arc}
+
+    def _finalize_stage2_pass_arc_preparation(
+        self,
+        *,
+        refined_arc: dict,
+        all_refined_arcs: list,
+        global_arc_no: int,
+        constraint_block: str,
+        enriched_block: dict,
+    ) -> Stage2PassPreparationResult:
 
         if constraint_block:
             constraint_lines = constraint_block.strip().split("\n")
@@ -933,7 +1127,7 @@ class Stage2Finalizer:
 
         return {"action": "continue", "refined_arc": refined_arc}
 
-    async def _finalize_stage2_pass_persistence_and_tail(
+    async def _persist_stage2_pass_arc_commit(
         self,
         *,
         refined_arc: dict,
@@ -943,19 +1137,8 @@ class Stage2Finalizer:
         st_snapshot,
         cdb_snapshot,
         constraint_db,
-        last_refined_context: str,
-        current_ep_start: int,
-        director_feedback_for_fourphase: str,
-        attempt: int,
-        generation_method: str,
-        audit: dict,
-        director_duration_ms: int | None,
-        is_patch: bool,
-        prev_score: float,
-        patch_fallback: bool,
-    ) -> Stage2PassFinalizeTailResult:
+    ) -> Stage2PassFinalizeTailResult | None:
         all_refined_arcs.append(refined_arc)
-
         try:
             self.ctx.current_project.save_v20_anchor("arcs", all_refined_arcs)
             if callable(getattr(self.ctx, "safe_commit_async", None)):
@@ -967,10 +1150,10 @@ class Stage2Finalizer:
                 conn = self.ctx.current_project.db.conn
                 if conn.in_transaction:
                     conn.rollback()
-                    logging.info("🔄 [TF-C09] DB rollback 완료 (Arc %d)", global_arc_no)
+                    logging.info("?봽 [TF-C09] DB rollback ?꾨즺 (Arc %d)", global_arc_no)
             except Exception as rollback_err:
-                logging.warning("⚠️ [TF-C09] DB rollback 실패: %s", rollback_err)
-            self.ctx.ui.log(f"🚨 [DB] Arc {global_arc_no} 저장 실패: {commit_err}")
+                logging.warning("?좑툘 [TF-C09] DB rollback ?ㅽ뙣: %s", rollback_err)
+            self.ctx.ui.log(f"?슚 [DB] Arc {global_arc_no} ????ㅽ뙣: {commit_err}")
             if callable(getattr(self.ctx, "audit_event", None)):
                 self.ctx.audit_event(
                     "db_commit_error",
@@ -979,68 +1162,291 @@ class Stage2Finalizer:
                 )
             all_refined_arcs.pop()
             if st_snapshot:
-                try:
-                    tracker = self.ctx.state_tracker
-                    for key, value in st_snapshot.items():
-                        if hasattr(tracker, key):
-                            setattr(tracker, key, value)
-                    logging.info("🔄 [V70] DB 실패 StateTracker 롤백 완료")
-                except Exception as rollback_err:
-                    logging.warning(f"⚠️ [V70] DB 실패 StateTracker 롤백 실패: {rollback_err}")
-                if cdb_snapshot and constraint_db and hasattr(constraint_db, "restore"):
-                    constraint_db.restore(cdb_snapshot)
-            return {"action": "retry", "current_feedback": current_feedback}
-
-        st_snapshot = None
-        cdb_snapshot = None
-        self.ctx.cumulative_state_cache = None
-        self.ctx.cumulative_state_cache_key = None
-
-        arc_no = global_arc_no
-        if arc_no > 1 and getattr(self.ctx, "current_project", None):
-            try:
-                desc = refined_arc.get("theme", "") or refined_arc.get("title", "")
-                self.ctx.current_project.db.upsert_arc_dependency(
-                    from_arc=arc_no - 1,
-                    to_arc=arc_no,
-                    dep_type="causes",
-                    description=str(desc)[:200],
+                self._restore_stage2_state_snapshots(
+                    st_snapshot=st_snapshot,
+                    cdb_snapshot=cdb_snapshot,
+                    constraint_db=constraint_db,
+                    success_log="?봽 [V70] DB ?ㅽ뙣 StateTracker 濡ㅻ갚 ?꾨즺",
+                    failure_log="?좑툘 [V70] DB ?ㅽ뙣 StateTracker 濡ㅻ갚 ?ㅽ뙣",
                 )
-                for prereq in refined_arc.get("prerequisite_arcs") or []:
-                    if isinstance(prereq, int) and prereq != arc_no:
-                        self.ctx.current_project.db.upsert_arc_dependency(prereq, arc_no, "requires", "")
-            except (AttributeError, TypeError) as dep_err:
-                logging.debug("[Stage2] arc_dependency 저장 실패 (비치명): %s", dep_err)
+            return {"action": "retry", "current_feedback": current_feedback}
+        return None
 
+    async def _persist_stage2_pass_arc_commit(
+        self,
+        *,
+        refined_arc: dict,
+        all_refined_arcs: list,
+        global_arc_no: int,
+        current_feedback: str,
+        st_snapshot,
+        cdb_snapshot,
+        constraint_db,
+    ) -> Stage2PassFinalizeTailResult | None:
+        all_refined_arcs.append(refined_arc)
+        try:
+            self.ctx.current_project.save_v20_anchor("arcs", all_refined_arcs)
+            if callable(getattr(self.ctx, "safe_commit_async", None)):
+                commit_ok = await self.ctx.safe_commit_async()
+                if not commit_ok:
+                    raise RuntimeError("safe_commit_async returned False")
+        except (OSError, RuntimeError) as commit_err:
+            try:
+                conn = self.ctx.current_project.db.conn
+                if conn.in_transaction:
+                    conn.rollback()
+                    logging.info("[TF-C09] DB rollback 완료 (Arc %d)", global_arc_no)
+            except Exception as rollback_err:
+                logging.warning("[TF-C09] DB rollback 실패: %s", rollback_err)
+            self.ctx.ui.log(f"[DB] Arc {global_arc_no} 저장 실패: {commit_err}")
+            if callable(getattr(self.ctx, "audit_event", None)):
+                self.ctx.audit_event(
+                    "db_commit_error",
+                    "arc save failed in async",
+                    {"arc_no": global_arc_no, "error": str(commit_err)},
+                )
+            all_refined_arcs.pop()
+            if st_snapshot:
+                self._restore_stage2_state_snapshots(
+                    st_snapshot=st_snapshot,
+                    cdb_snapshot=cdb_snapshot,
+                    constraint_db=constraint_db,
+                    success_log="[V70] DB 롤백 StateTracker 복원 완료",
+                    failure_log="[V70] DB 롤백 StateTracker 복원 실패",
+                )
+            return {"action": "retry", "current_feedback": current_feedback}
+        return None
+
+    def _upsert_stage2_pass_arc_dependencies(
+        self,
+        *,
+        refined_arc: dict,
+        global_arc_no: int,
+    ) -> None:
+        arc_no = global_arc_no
+        if arc_no <= 1 or not getattr(self.ctx, "current_project", None):
+            return
+        try:
+            desc = refined_arc.get("theme", "") or refined_arc.get("title", "")
+            self.ctx.current_project.db.upsert_arc_dependency(
+                from_arc=arc_no - 1,
+                to_arc=arc_no,
+                dep_type="causes",
+                description=str(desc)[:200],
+            )
+            for prereq in refined_arc.get("prerequisite_arcs") or []:
+                if isinstance(prereq, int) and prereq != arc_no:
+                    self.ctx.current_project.db.upsert_arc_dependency(prereq, arc_no, "requires", "")
+        except (AttributeError, TypeError) as dep_err:
+            logging.debug("[Stage2] arc_dependency ????ㅽ뙣 (鍮꾩튂紐?: %s", dep_err)
+
+    def _update_stage2_pass_constraint_db(self, *, refined_arc: dict, constraint_db) -> None:
         try:
             constraint_db.update_arc_state(refined_arc)
-            self.ctx.ui.log(f"      🔒 [V49.4] ConstraintDB 업데이트 완료 (총 {len(constraint_db.arc_states)}개 Arc)")
+            self.ctx.ui.log(f"      ?뵏 [V49.4] ConstraintDB ?낅뜲?댄듃 ?꾨즺 (珥?{len(constraint_db.arc_states)}媛?Arc)")
         except (AttributeError, TypeError, RuntimeError) as cdb_err:
-            logging.warning("[B4-P1-1] constraint_db.update_arc_state 실패 (비치명적): %s", cdb_err)
+            logging.warning("[B4-P1-1] constraint_db.update_arc_state ?ㅽ뙣 (鍮꾩튂紐낆쟻): %s", cdb_err)
 
+    def _maybe_generate_stage2_volume_summaries(self, *, global_arc_no: int) -> None:
+        arcs_per_volume = max(1, int(VolumeSettings.ARCS_PER_VOLUME))
+        if global_arc_no <= 0 or global_arc_no % arcs_per_volume != 0:
+            return
+        try:
+            volume_no = global_arc_no // arcs_per_volume
+            arc_summaries_for_volume = []
+            for arc_idx in range(global_arc_no - (arcs_per_volume - 1), global_arc_no + 1):
+                arc_summary = self.ctx.current_project.load_v20_anchor(f"arc_summary_{arc_idx}")
+                if arc_summary:
+                    if isinstance(arc_summary, dict):
+                        arc_summary_text = arc_summary.get("summary", "") or arc_summary.get("text", "")
+                        if not arc_summary_text:
+                            summary_parts = []
+                            if arc_summary.get("npc_status") and isinstance(arc_summary["npc_status"], dict):
+                                summary_parts.append(
+                                    "NPC: "
+                                    + ", ".join(
+                                        f"{name}({value.get('status', '')})"
+                                        for name, value in arc_summary["npc_status"].items()
+                                    )
+                                )
+                            if arc_summary.get("world_changes"):
+                                summary_parts.append(
+                                    "?멸퀎蹂?? " + "; ".join(str(item) for item in arc_summary["world_changes"][:5])
+                                )
+                            if arc_summary.get("resolved_plots"):
+                                summary_parts.append(
+                                    "?닿껐?뚮’: " + "; ".join(str(item) for item in arc_summary["resolved_plots"][:5])
+                                )
+                            if arc_summary.get("active_plots"):
+                                summary_parts.append(
+                                    "吏꾪뻾?뚮’: " + "; ".join(str(item) for item in arc_summary["active_plots"][:5])
+                                )
+                            if arc_summary.get("destroyed_entities"):
+                                summary_parts.append(
+                                    "?뚭눼: " + "; ".join(str(item) for item in arc_summary["destroyed_entities"][:3])
+                                )
+                            arc_summary_text = " | ".join(summary_parts) if summary_parts else str(arc_summary)
+                    else:
+                        arc_summary_text = str(arc_summary)
+                    if arc_summary_text:
+                        arc_summaries_for_volume.append(f"Arc {arc_idx}: {arc_summary_text}")
+
+            if not arc_summaries_for_volume:
+                return
+
+            volume_prompt = (
+                f"?꾨옒 {arcs_per_volume}媛??꾪겕 ?붿빟???섎굹??蹂쇰ⅷ ?붿빟?쇰줈 ?⑹퀜二쇱꽭??\n"
+                "?듭떖 ?ш굔, 二쇱슂 ?몃Ъ 蹂?? ?멸퀎 ?곹깭 蹂?붿뿉 吏묒쨷?섏꽭??\n"
+                "諛섎뱶???꾨옒 3媛??뱀뀡?쇰줈留??뺣━?섏꽭??\n"
+                "[?몃Ъ ?꾪겕]\n[?듭떖 媛덈벑]\n[誘명빐寃?蹂듭꽑]\n"
+                "?꾩껜 2000???대궡濡??묒꽦?섏꽭??\n\n"
+                + "\n".join(arc_summaries_for_volume)
+                + f"\n\n蹂쇰ⅷ {volume_no} ?붿빟:"
+            )
+            volume_result = self.ctx.agents["director"].ask(volume_prompt, temperature=0.2)
+            if not (volume_result and isinstance(volume_result, str) and len(volume_result) > 20):
+                logging.warning("?좑툘 [V68] 蹂쇰ⅷ ?붿빟 LLM ?묐떟 遺덉땐遺???嫄대꼫?")
+                return
+
+            volume_result = _trim_hierarchical_summary(volume_result, 2000)
+            self.ctx.current_project.save_v20_anchor(f"volume_summary_{volume_no}", volume_result)
+            logging.info(f"?뱰 [V68] 蹂쇰ⅷ {volume_no} ?붿빟 ????꾨즺 ({len(volume_result)}??)")
+
+            try:
+                existing_series = self.ctx.current_project.load_v20_anchor("series_summary") or ""
+                if isinstance(existing_series, dict):
+                    existing_series = existing_series.get("summary", "") or str(existing_series)
+                series_prompt = (
+                    "?꾨옒??湲곗〈 ?쒕━利??붿빟怨???蹂쇰ⅷ ?붿빟?낅땲??\n"
+                    "?대? ?듯빀?섏뿬 ?꾩껜 ?쒕━利??붿빟??媛깆떊?섏꽭??\n"
+                    "諛섎뱶???꾨옒 3媛??뱀뀡?쇰줈留??뺣━?섏꽭??\n"
+                    "[?몃Ъ ?꾪겕]\n[?듭떖 媛덈벑]\n[誘명빐寃?蹂듭꽑]\n"
+                    "?듭떖 ?ш굔, 二쇱슂 ?몃Ъ 蹂?? ?멸퀎 ?곹깭 蹂?붿뿉 吏묒쨷?섍퀬 ?꾩껜 5000???대궡濡??묒꽦?섏꽭??\n\n"
+                    f"湲곗〈 ?쒕━利??붿빟:\n{existing_series or '(?꾩쭅 ?놁쓬)'}\n\n"
+                    f"??蹂쇰ⅷ {volume_no} ?붿빟:\n{volume_result}\n\n"
+                    "媛깆떊???쒕━利??붿빟:"
+                )
+                series_result = self.ctx.agents["director"].ask(series_prompt, temperature=0.2)
+                if series_result and isinstance(series_result, str) and len(series_result) > 20:
+                    series_result = _trim_hierarchical_summary(series_result, 5000)
+                    self.ctx.current_project.save_v20_anchor("series_summary", series_result)
+                    logging.info(f"?뱴 [V68] ?쒕━利??붿빟 媛깆떊 ?꾨즺 ({len(series_result)}??)")
+            except Exception as series_err:
+                logging.warning(f"?좑툘 [V68] ?쒕━利??붿빟 媛깆떊 ?ㅽ뙣 (鍮꾩감??: {series_err})")
+        except Exception as volume_err:
+            logging.warning(f"?좑툘 [V68] 蹂쇰ⅷ ?붿빟 ?앹꽦 ?ㅽ뙣 (鍮꾩감??: {volume_err})")
+
+    def _maybe_generate_stage2_volume_summaries(self, *, global_arc_no: int) -> None:
+        arcs_per_volume = max(1, int(VolumeSettings.ARCS_PER_VOLUME))
+        if global_arc_no <= 0 or global_arc_no % arcs_per_volume != 0:
+            return
+        try:
+            volume_no = global_arc_no // arcs_per_volume
+            arc_summaries_for_volume = []
+            for arc_idx in range(global_arc_no - (arcs_per_volume - 1), global_arc_no + 1):
+                arc_summary = self.ctx.current_project.load_v20_anchor(f"arc_summary_{arc_idx}")
+                if not arc_summary:
+                    continue
+                if isinstance(arc_summary, dict):
+                    arc_summary_text = arc_summary.get("summary", "") or arc_summary.get("text", "")
+                    if not arc_summary_text:
+                        summary_parts = []
+                        npc_status = arc_summary.get("npc_status")
+                        if isinstance(npc_status, dict) and npc_status:
+                            summary_parts.append(
+                                "NPC: "
+                                + ", ".join(
+                                    f"{name}({value.get('status', '')})"
+                                    for name, value in npc_status.items()
+                                )
+                            )
+                        if arc_summary.get("world_changes"):
+                            summary_parts.append(
+                                "세계 변화: " + "; ".join(str(item) for item in arc_summary["world_changes"][:5])
+                            )
+                        if arc_summary.get("resolved_plots"):
+                            summary_parts.append(
+                                "해결 플롯: " + "; ".join(str(item) for item in arc_summary["resolved_plots"][:5])
+                            )
+                        if arc_summary.get("active_plots"):
+                            summary_parts.append(
+                                "진행 플롯: " + "; ".join(str(item) for item in arc_summary["active_plots"][:5])
+                            )
+                        if arc_summary.get("destroyed_entities"):
+                            summary_parts.append(
+                                "소멸 대상: " + "; ".join(str(item) for item in arc_summary["destroyed_entities"][:3])
+                            )
+                        arc_summary_text = " | ".join(summary_parts) if summary_parts else str(arc_summary)
+                else:
+                    arc_summary_text = str(arc_summary)
+                if arc_summary_text:
+                    arc_summaries_for_volume.append(f"Arc {arc_idx}: {arc_summary_text}")
+
+            if not arc_summaries_for_volume:
+                return
+
+            volume_prompt = (
+                f"아래 {arcs_per_volume}개 아크 요약을 하나의 볼륨 요약으로 압축해주세요.\n"
+                "핵심 사건, 주요 인물 변화, 세계 상태 변화에 집중해주세요.\n"
+                "반드시 아래 3개 섹션으로만 정리해주세요.\n"
+                "[인물 아크]\n[핵심 갈등]\n[미해결 복선]\n"
+                "전체 2000자 이내로 작성하세요.\n\n"
+                + "\n".join(arc_summaries_for_volume)
+                + f"\n\n볼륨 {volume_no} 요약:"
+            )
+            volume_result = self.ctx.agents["director"].ask(volume_prompt, temperature=0.2)
+            if not (volume_result and isinstance(volume_result, str) and len(volume_result) > 20):
+                logging.warning("[V68] 볼륨 요약 LLM 응답 불충분으로 건너뜀")
+                return
+
+            volume_result = _trim_hierarchical_summary(volume_result, 2000)
+            self.ctx.current_project.save_v20_anchor(f"volume_summary_{volume_no}", volume_result)
+            logging.info("[V68] 볼륨 %s 요약 저장 완료 (%s자)", volume_no, len(volume_result))
+
+            try:
+                existing_series = self.ctx.current_project.load_v20_anchor("series_summary") or ""
+                if isinstance(existing_series, dict):
+                    existing_series = existing_series.get("summary", "") or str(existing_series)
+                series_prompt = (
+                    "아래는 기존 시리즈 요약과 새 볼륨 요약입니다.\n"
+                    "이를 통합하여 전체 시리즈 요약을 갱신해주세요.\n"
+                    "반드시 아래 3개 섹션으로만 정리해주세요.\n"
+                    "[인물 아크]\n[핵심 갈등]\n[미해결 복선]\n"
+                    "핵심 사건, 주요 인물 변화, 세계 상태 변화에 집중하고 전체 5000자 이내로 작성하세요.\n\n"
+                    f"기존 시리즈 요약:\n{existing_series or '(아직 없음)'}\n\n"
+                    f"새 볼륨 {volume_no} 요약:\n{volume_result}\n\n"
+                    "갱신된 시리즈 요약:"
+                )
+                series_result = self.ctx.agents["director"].ask(series_prompt, temperature=0.2)
+                if series_result and isinstance(series_result, str) and len(series_result) > 20:
+                    series_result = _trim_hierarchical_summary(series_result, 5000)
+                    self.ctx.current_project.save_v20_anchor("series_summary", series_result)
+                    logging.info("[V68] 시리즈 요약 갱신 완료 (%s자)", len(series_result))
+            except Exception as series_err:
+                logging.warning("[V68] 시리즈 요약 갱신 실패 (비치명): %s", series_err)
+        except Exception as volume_err:
+            logging.warning("[V68] 볼륨 요약 생성 실패 (비치명): %s", volume_err)
+
+    def _advance_stage2_pass_persistence_state(
+        self,
+        *,
+        refined_arc: dict,
+        all_refined_arcs: list,
+        global_arc_no: int,
+        last_refined_context: str,
+    ) -> dict[str, Any]:
+        self._upsert_stage2_pass_arc_dependencies(
+            refined_arc=refined_arc,
+            global_arc_no=global_arc_no,
+        )
         if callable(getattr(self.ctx, "generate_arc_context_v60", None)):
             last_refined_context = self.ctx.generate_arc_context_v60(all_refined_arcs, global_arc_no + 1)
-        current_ep_start = refined_arc["ep_end"] + 1
+        return {
+            "last_refined_context": last_refined_context,
+            "current_ep_start": refined_arc["ep_end"] + 1,
+        }
 
-        self._record_s2_pass_metrics(
-            global_arc_no=global_arc_no,
-            attempt=attempt,
-            generation_method=generation_method,
-            selected_strategy=(
-                refined_arc.get("_ensemble_meta", {}).get("best_strategy")
-                or refined_arc.get("_strategy", "")
-                or generation_method
-            )
-            if isinstance(refined_arc, dict)
-            else generation_method,
-            audit=audit,
-            duration_ms=director_duration_ms,
-            is_patch=is_patch,
-            prev_score=prev_score,
-            patch_fallback=patch_fallback,
-            artifact_payload=refined_arc if isinstance(refined_arc, dict) else None,
-        )
-
+    def _persist_stage2_pass_cost_record(self, *, global_arc_no: int) -> None:
         try:
             collector = get_metrics_collector()
             if collector and self.ctx.current_project and hasattr(self.ctx.current_project, "db"):
@@ -1062,90 +1468,131 @@ class Stage2Finalizer:
         except (OSError, RuntimeError, TypeError) as cost_err:
             logging.warning("[Phase 6] Arc 비용 기록 실패 (비차단): %s", cost_err)
 
-        arcs_per_volume = max(1, int(VolumeSettings.ARCS_PER_VOLUME))
-        if global_arc_no > 0 and global_arc_no % arcs_per_volume == 0:
-            try:
-                volume_no = global_arc_no // arcs_per_volume
-                arc_summaries_for_volume = []
-                for arc_idx in range(global_arc_no - (arcs_per_volume - 1), global_arc_no + 1):
-                    arc_summary = self.ctx.current_project.load_v20_anchor(f"arc_summary_{arc_idx}")
-                    if arc_summary:
-                        if isinstance(arc_summary, dict):
-                            arc_summary_text = arc_summary.get("summary", "") or arc_summary.get("text", "")
-                            if not arc_summary_text:
-                                summary_parts = []
-                                if arc_summary.get("npc_status") and isinstance(arc_summary["npc_status"], dict):
-                                    summary_parts.append(
-                                        "NPC: "
-                                        + ", ".join(
-                                            f"{name}({value.get('status', '')})"
-                                            for name, value in arc_summary["npc_status"].items()
-                                        )
-                                    )
-                                if arc_summary.get("world_changes"):
-                                    summary_parts.append(
-                                        "세계변화: " + "; ".join(str(item) for item in arc_summary["world_changes"][:5])
-                                    )
-                                if arc_summary.get("resolved_plots"):
-                                    summary_parts.append(
-                                        "해결플롯: " + "; ".join(str(item) for item in arc_summary["resolved_plots"][:5])
-                                    )
-                                if arc_summary.get("active_plots"):
-                                    summary_parts.append(
-                                        "진행플롯: " + "; ".join(str(item) for item in arc_summary["active_plots"][:5])
-                                    )
-                                if arc_summary.get("destroyed_entities"):
-                                    summary_parts.append(
-                                        "파괴: " + "; ".join(str(item) for item in arc_summary["destroyed_entities"][:3])
-                                    )
-                                arc_summary_text = " | ".join(summary_parts) if summary_parts else str(arc_summary)
-                        else:
-                            arc_summary_text = str(arc_summary)
-                        if arc_summary_text:
-                            arc_summaries_for_volume.append(f"Arc {arc_idx}: {arc_summary_text}")
+    async def _finalize_stage2_pass_persistence_and_tail(
+        self,
+        *,
+        refined_arc: dict,
+        all_refined_arcs: list,
+        global_arc_no: int,
+        current_feedback: str,
+        st_snapshot,
+        cdb_snapshot,
+        constraint_db,
+        last_refined_context: str,
+        current_ep_start: int,
+        director_feedback_for_fourphase: str,
+        attempt: int,
+        generation_method: str,
+        audit: dict,
+        director_duration_ms: int | None,
+        is_patch: bool,
+        prev_score: float,
+        patch_fallback: bool,
+    ) -> Stage2PassFinalizeTailResult:
+        commit_result = await self._persist_stage2_pass_arc_commit(
+            refined_arc=refined_arc,
+            all_refined_arcs=all_refined_arcs,
+            global_arc_no=global_arc_no,
+            current_feedback=current_feedback,
+            st_snapshot=st_snapshot,
+            cdb_snapshot=cdb_snapshot,
+            constraint_db=constraint_db,
+        )
+        if commit_result is not None:
+            return commit_result
 
-                if arc_summaries_for_volume:
-                    volume_prompt = (
-                        f"아래 {arcs_per_volume}개 아크 요약을 하나의 볼륨 요약으로 합쳐주세요.\n"
-                        "핵심 사건, 주요 인물 변화, 세계 상태 변화에 집중하세요.\n"
-                        "반드시 아래 3개 섹션으로만 정리하세요:\n"
-                        "[인물 아크]\n[핵심 갈등]\n[미해결 복선]\n"
-                        "전체 2000자 이내로 작성하세요.\n\n"
-                        + "\n".join(arc_summaries_for_volume)
-                        + f"\n\n볼륨 {volume_no} 요약:"
-                    )
-                    volume_result = self.ctx.agents["director"].ask(volume_prompt, temperature=0.2)
-                    if volume_result and isinstance(volume_result, str) and len(volume_result) > 20:
-                        volume_result = _trim_hierarchical_summary(volume_result, 2000)
-                        self.ctx.current_project.save_v20_anchor(f"volume_summary_{volume_no}", volume_result)
-                        logging.info(f"📖 [V68] 볼륨 {volume_no} 요약 저장 완료 ({len(volume_result)}자)")
+        st_snapshot = None
+        cdb_snapshot = None
+        self.ctx.cumulative_state_cache = None
+        self.ctx.cumulative_state_cache_key = None
+        self._update_stage2_pass_constraint_db(refined_arc=refined_arc, constraint_db=constraint_db)
+        post_commit_state = self._advance_stage2_pass_persistence_state(
+            refined_arc=refined_arc,
+            all_refined_arcs=all_refined_arcs,
+            global_arc_no=global_arc_no,
+            last_refined_context=last_refined_context,
+        )
+        last_refined_context = post_commit_state["last_refined_context"]
+        current_ep_start = int(post_commit_state["current_ep_start"])
+        self._record_s2_pass_metrics(
+            global_arc_no=global_arc_no,
+            attempt=attempt,
+            generation_method=generation_method,
+            selected_strategy=(
+                refined_arc.get("_ensemble_meta", {}).get("best_strategy")
+                or refined_arc.get("_strategy", "")
+                or generation_method
+            )
+            if isinstance(refined_arc, dict)
+            else generation_method,
+            audit=audit,
+            duration_ms=director_duration_ms,
+            is_patch=is_patch,
+            prev_score=prev_score,
+            patch_fallback=patch_fallback,
+            artifact_payload=refined_arc if isinstance(refined_arc, dict) else None,
+        )
+        self._persist_stage2_pass_cost_record(global_arc_no=global_arc_no)
+        self._maybe_generate_stage2_volume_summaries(global_arc_no=global_arc_no)
+        return {
+            "action": "break",
+            "last_refined_context": last_refined_context,
+            "current_ep_start": current_ep_start,
+            "current_feedback": current_feedback,
+            "director_feedback_for_fourphase": director_feedback_for_fourphase,
+            "st_snapshot": st_snapshot,
+        }
 
-                        try:
-                            existing_series = self.ctx.current_project.load_v20_anchor("series_summary") or ""
-                            if isinstance(existing_series, dict):
-                                existing_series = existing_series.get("summary", "") or str(existing_series)
-                            series_prompt = (
-                                "아래는 기존 시리즈 요약과 새 볼륨 요약입니다.\n"
-                                "이를 통합하여 전체 시리즈 요약을 갱신하세요.\n"
-                                "반드시 아래 3개 섹션으로만 정리하세요:\n"
-                                "[인물 아크]\n[핵심 갈등]\n[미해결 복선]\n"
-                                "핵심 사건, 주요 인물 변화, 세계 상태 변화에 집중하고 전체 5000자 이내로 작성하세요.\n\n"
-                                f"기존 시리즈 요약:\n{existing_series or '(아직 없음)'}\n\n"
-                                f"새 볼륨 {volume_no} 요약:\n{volume_result}\n\n"
-                                "갱신된 시리즈 요약:"
-                            )
-                            series_result = self.ctx.agents["director"].ask(series_prompt, temperature=0.2)
-                            if series_result and isinstance(series_result, str) and len(series_result) > 20:
-                                series_result = _trim_hierarchical_summary(series_result, 5000)
-                                self.ctx.current_project.save_v20_anchor("series_summary", series_result)
-                                logging.info(f"📚 [V68] 시리즈 요약 갱신 완료 ({len(series_result)}자)")
-                        except Exception as series_err:
-                            logging.warning(f"⚠️ [V68] 시리즈 요약 갱신 실패 (비차단): {series_err}")
-                    else:
-                        logging.warning("⚠️ [V68] 볼륨 요약 LLM 응답 불충분 — 건너뜀")
-            except Exception as volume_err:
-                logging.warning(f"⚠️ [V68] 볼륨 요약 생성 실패 (비차단): {volume_err}")
-
+    async def _legacy_stage2_pass_persistence_and_tail_body(
+        self,
+        *,
+        refined_arc: dict,
+        all_refined_arcs: list,
+        global_arc_no: int,
+        current_feedback: str,
+        st_snapshot,
+        cdb_snapshot,
+        constraint_db,
+        last_refined_context: str,
+        current_ep_start: int,
+        director_feedback_for_fourphase: str,
+        attempt: int,
+        generation_method: str,
+        audit: dict,
+        director_duration_ms: int | None,
+        is_patch: bool,
+        prev_score: float,
+        patch_fallback: bool,
+    ) -> Stage2PassFinalizeTailResult:
+        self._update_stage2_pass_constraint_db(refined_arc=refined_arc, constraint_db=constraint_db)
+        post_commit_state = self._advance_stage2_pass_persistence_state(
+            refined_arc=refined_arc,
+            all_refined_arcs=all_refined_arcs,
+            global_arc_no=global_arc_no,
+            last_refined_context=last_refined_context,
+        )
+        last_refined_context = post_commit_state["last_refined_context"]
+        current_ep_start = int(post_commit_state["current_ep_start"])
+        self._record_s2_pass_metrics(
+            global_arc_no=global_arc_no,
+            attempt=attempt,
+            generation_method=generation_method,
+            selected_strategy=(
+                refined_arc.get("_ensemble_meta", {}).get("best_strategy")
+                or refined_arc.get("_strategy", "")
+                or generation_method
+            )
+            if isinstance(refined_arc, dict)
+            else generation_method,
+            audit=audit,
+            duration_ms=director_duration_ms,
+            is_patch=is_patch,
+            prev_score=prev_score,
+            patch_fallback=patch_fallback,
+            artifact_payload=refined_arc if isinstance(refined_arc, dict) else None,
+        )
+        self._persist_stage2_pass_cost_record(global_arc_no=global_arc_no)
+        self._maybe_generate_stage2_volume_summaries(global_arc_no=global_arc_no)
         return {
             "action": "break",
             "last_refined_context": last_refined_context,
@@ -1570,6 +2017,243 @@ class Stage2Finalizer:
             except (AttributeError, TypeError) as exc:
                 logging.debug("[SilentPass:S2:SessionLog] %s", exc)
 
+    def _prepare_stage2_pass_fix_iteration(
+        self,
+        *,
+        four_phase,
+        current_arc: dict,
+        current_audit: dict,
+        global_arc_no: int,
+        fix_i: int,
+        max_fix: int,
+        applied_patches: list[str],
+        patch_pressure_exceeded: bool,
+    ) -> dict[str, Any] | None:
+        from modules.validation.threshold_helper import _threshold
+
+        fix_scope = current_audit.get("fix_scope", "")
+        if not fix_scope:
+            logging.warning("[PF-1] fix_scope ?꾨씫 ??local patch authority ?놁쓬, retry 寃쎈줈 ?꾩엫")
+            self.ctx.ui.log("      ?? [PF-1] fix_scope ?꾨씫 ??inplace 沅뚰븳 ?놁쓬, retry 寃쎈줈 ?꾩엫")
+            return None
+        if fix_scope in ("partial", "full"):
+            self.ctx.ui.log(f"      ?? [TF-33] fix_scope={fix_scope!r} ??inplace 遺덇?, retry 寃쎈줈 ?꾩엫")
+            return None
+
+        fix_instr = current_audit.get("re_slice_instruction", "")
+        self.ctx.ui.log(f"      ?뵩 [TF-32-V] PASS_WITH_FIX patch #{fix_i + 1}/{max_fix} (fix: {str(fix_instr)[:80]})")
+        if not (four_phase and hasattr(four_phase, "_inplace_patch_arc")):
+            logging.warning("[TF-32-V] four_phase ?먯씠?꾪듃 誘몃벑濡???REJECT")
+            return None
+
+        try:
+            patched = four_phase._inplace_patch_arc(
+                original_arc=current_arc,
+                director_feedback=fix_instr,
+                arc_no=global_arc_no,
+            )
+        except (RuntimeError, ValueError, OSError):
+            logging.exception("[TF-32-V] inplace_patch_arc ?덉쇅")
+            return None
+        if not patched:
+            logging.warning("[TF-32-V] patch ?ㅽ뙣 ??REJECT")
+            return None
+
+        patch_guard_signals = self._collect_arc_patch_guard_signals(
+            original_arc=current_arc,
+            patched_arc=patched,
+        )
+        if patch_guard_signals:
+            signal_state = self._merge_patch_guard_signals(
+                current_audit,
+                patch_guard_signals,
+                attempt=fix_i + 1,
+            )
+            signal_codes = ", ".join(signal_state.get("codes", []))
+            logging.warning(
+                "[S2-ArcPatchSignals] attempt=%s arc=%s codes=%s",
+                fix_i + 1,
+                global_arc_no,
+                signal_codes,
+            )
+            self.ctx.ui.log(f"      ?좑툘 [S2-ArcSignals] attempt={fix_i + 1} codes={signal_codes or 'n/a'}")
+            if callable(getattr(self.ctx, "audit_event", None)):
+                self.ctx.audit_event(
+                    "patch_guard_signal",
+                    "stage2 arc patch signals observed",
+                    {
+                        "arc_no": global_arc_no,
+                        "attempt": fix_i + 1,
+                        "codes": list(signal_state.get("codes", [])),
+                        "count": int(signal_state.get("count", 0) or 0),
+                        "items": list(patch_guard_signals),
+                    },
+                )
+
+        arith_patch_ctx = ""
+        tactical_patched = patched.get("tactical_doc", "") if isinstance(patched, dict) else ""
+        if tactical_patched:
+            arithmetic_issues = _check_tactical_arithmetic(str(tactical_patched))
+            if arithmetic_issues:
+                arithmetic_warn = "\n".join(f"  - {item}" for item in arithmetic_issues)
+                logging.warning("[NS-1-P] arithmetic warning detected in inplace patch:\n%s", arithmetic_warn)
+                arith_patch_ctx = (
+                    "\n\n[NS-1-P arithmetic warning in inplace patch]\n"
+                    f"{arithmetic_warn}\n"
+                    "Please verify the patched tactical_doc arithmetic before approving."
+                )
+
+        try:
+            from modules.core.constants import calc_patch_change_ratio, log_patch_diff
+
+            orig_json = json.dumps(current_arc, ensure_ascii=False)
+            patch_json = json.dumps(patched, ensure_ascii=False)
+            log_patch_diff(
+                "S2-Arc",
+                json.dumps(current_arc, ensure_ascii=False, indent=2),
+                json.dumps(patched, ensure_ascii=False, indent=2),
+            )
+            change_ratio = calc_patch_change_ratio(orig_json, patch_json)
+            max_ratio = float(_threshold("patch_mode.inplace_max_change_ratio", 0.30))
+            if change_ratio > max_ratio:
+                patch_pressure_exceeded = True
+                patch_pressure = current_audit.setdefault("patch_pressure", {})
+                patch_pressure["exceeded"] = True
+                patch_pressure["count"] = int(patch_pressure.get("count", 0)) + 1
+                patch_pressure["change_ratio"] = round(float(change_ratio), 4)
+                patch_pressure["max_ratio"] = round(float(max_ratio), 4)
+                patch_pressure["attempt"] = fix_i + 1
+                logging.warning(
+                    "[F-2] InPlace Arc 蹂寃?鍮꾩쑉 %.1f%% > %.0f%% (S2)",
+                    change_ratio * 100,
+                    max_ratio * 100,
+                )
+        except Exception as exc:
+            logging.debug("[S2-Finalizer] change_ratio 怨꾩궛 ?ㅽ뙣: %s", exc)
+
+        if fix_instr:
+            applied_patches.append(str(fix_instr)[:200])
+
+        return {
+            "patched": patched,
+            "patch_guard_signals": patch_guard_signals,
+            "arith_patch_ctx": arith_patch_ctx,
+            "patch_pressure_exceeded": patch_pressure_exceeded,
+        }
+
+    def _build_stage2_pass_fix_story_context(
+        self,
+        *,
+        story_context: str,
+        arith_patch_ctx: str,
+        patch_guard_signals: list[dict],
+        current_audit: dict,
+        applied_patches: list[str],
+        fix_i: int,
+    ) -> str:
+        patch_ctx = arith_patch_ctx
+        if patch_guard_signals:
+            patch_ctx += self._format_patch_guard_signal_notice(
+                patch_guard_signals,
+                attempt=fix_i + 1,
+            )
+        if isinstance(current_audit.get("patch_pressure"), dict) and current_audit["patch_pressure"].get("exceeded"):
+            patch_pressure = dict(current_audit.get("patch_pressure") or {})
+            patch_ctx += (
+                "\n\n[F-2 advisory ??high Arc patch pressure]\n"
+                f"change_ratio={float(patch_pressure.get('change_ratio', 0.0)):.1%}, "
+                f"threshold={float(patch_pressure.get('max_ratio', 0.0)):.0%}, "
+                f"attempt={int(patch_pressure.get('attempt', fix_i + 1))}\n"
+                "??local Arc patch??援?냼 ?섏젙 踰붿쐞瑜??섏뼱?????덉뒿?덈떎. "
+                "援ъ“ ?쇨??깃낵 蹂寃??뺣떦?깆씠 異⑸텇?섎㈃ PASS瑜??덉슜?????덉?留? "
+                "愿묐쾾???ъ옉?깆쿂??蹂댁씠硫?PASS_WITH_FIX ?먮뒗 REJECT瑜??좎??섏꽭??"
+            )
+        if applied_patches:
+            patch_lines = "\n".join(f"- {patch}" for patch in applied_patches)
+            patch_ctx += (
+                "\n\n[PASS_WITH_FIX ?ъ떖?????대? ?곸슜???⑥튂]\n"
+                f"{patch_lines}\n"
+                "????ぉ? tactical_doc???대? 諛섏쁺?섏뿀?듬땲?? "
+                "curr_block 臾몄꽌?먯꽌 ?숈씪 ?ㅻ쪟媛 蹂댁뿬??tactical_doc?먯꽌 ?섏젙?섏뿀?쇰㈃ ?뱀씤?섏꽭??"
+            )
+        return (story_context or "") + patch_ctx
+
+    def _merge_stage2_pass_fix_reaudit(
+        self,
+        *,
+        current_audit: dict,
+        re_audit: dict,
+    ) -> dict:
+        if isinstance(current_audit.get("patch_pressure"), dict):
+            re_audit["patch_pressure"] = deepcopy(current_audit["patch_pressure"])
+        if isinstance(current_audit.get("patch_guard_signals"), dict):
+            re_audit["patch_guard_signals"] = deepcopy(current_audit["patch_guard_signals"])
+        return re_audit
+
+    def _finalize_stage2_pass_fix_success(
+        self,
+        *,
+        refined_arc: dict,
+        current_arc: dict,
+        current_audit: dict,
+        re_score: int,
+    ) -> Stage2PassWithFixLoopResult:
+        refined_arc.clear()
+        refined_arc.update(current_arc)
+        audit = current_audit
+        decision = "PASS"
+        score = re_score
+        if isinstance(audit.get("patch_pressure"), dict) and audit["patch_pressure"].get("exceeded"):
+            audit["decision"] = "PASS"
+            audit["reason"] = (
+                f"{str(audit.get('reason', '')).strip()}\n"
+                "[PatchPressure Advisory] In-place patch ratio exceeded threshold; "
+                "Director re-audit cleared this Arc with explicit warning context."
+            ).strip()
+            patch_pressure = audit.setdefault("patch_pressure", {})
+            patch_pressure["director_advisory_only"] = True
+            patch_pressure["cleared_verdict"] = "PASS"
+            self.ctx.ui.log("      ?좑툘 [TF-32-V] Patch pressure exceeded -> advisory only, PASS ?좎?")
+        else:
+            audit["decision"] = "PASS"
+            self.ctx.ui.log("      ??[TF-32-V] Arc ?섏젙 ?꾨즺 ??PASS ?뺤젙")
+        return {"refined_arc": refined_arc, "audit": audit, "decision": decision, "score": score}
+
+    def _finalize_stage2_pass_fix_reject(
+        self,
+        *,
+        refined_arc: dict,
+        current_arc: dict,
+        current_audit: dict,
+        audit: dict,
+        score: int,
+        max_fix: int,
+    ) -> Stage2PassWithFixLoopResult:
+        audit["decision"] = "REJECT"
+        decision = "REJECT"
+        last_decision = current_audit.get("decision", "")
+        if last_decision == "PASS_WITH_FIX" and current_arc != dict(refined_arc):
+            refined_arc.clear()
+            refined_arc.update(current_arc)
+            patch_fix_score = current_audit.get("score", score)
+            try:
+                patch_fix_score = int(patch_fix_score)
+            except (ValueError, TypeError):
+                patch_fix_score = score
+            audit["score"] = patch_fix_score
+            self.ctx.ui.log(f"      ?뱢 [PF-3] PASS_WITH_FIX ?뚯쭊 ???⑥튂蹂?梨꾪깮 (score={patch_fix_score})")
+            score = patch_fix_score
+        last_fix_scope = current_audit.get("fix_scope", "")
+        if last_fix_scope:
+            audit["fix_scope"] = last_fix_scope
+        last_fix_scope_reasoning = current_audit.get("fix_scope_reasoning", "")
+        if last_fix_scope_reasoning:
+            audit["fix_scope_reasoning"] = last_fix_scope_reasoning
+        audit["reason"] = (audit.get("reason", "") or "") + f"\n[TF-32-V] PASS_WITH_FIX ?섏젙 {max_fix}????誘명빐寃???REJECT"
+        audit["re_slice_instruction"] = audit.get("re_slice_instruction") or "吏?곸궗??誘명빐寃????ъ꽕怨??꾩슂"
+        self.ctx.ui.log("      ??[TF-32-V] ?섏젙 ?ㅽ뙣 ??REJECT ?꾪솚")
+        return {"refined_arc": refined_arc, "audit": audit, "decision": decision, "score": score}
+
     def _run_stage2_pass_with_fix_loop(
         self,
         *,
@@ -1594,187 +2278,429 @@ class Stage2Finalizer:
         applied_patches: list[str] = []
         patch_pressure_exceeded = False
         re_score = score
-
-        for fix_i in range(max_fix):
-            fix_scope = current_audit.get("fix_scope", "")
-            if not fix_scope:
-                logging.warning("[PF-1] fix_scope 누락 → local patch authority 없음, retry 경로 위임")
-                self.ctx.ui.log("      🔀 [PF-1] fix_scope 누락 → inplace 권한 없음, retry 경로 위임")
-                break
-            if fix_scope in ("partial", "full"):
-                self.ctx.ui.log(f"      🔀 [TF-33] fix_scope={fix_scope!r} → inplace 불가, retry 경로 위임")
-                break
-
-            fix_instr = current_audit.get("re_slice_instruction", "")
-            self.ctx.ui.log(
-                f"      🔧 [TF-32-V] PASS_WITH_FIX patch #{fix_i + 1}/{max_fix} (fix: {str(fix_instr)[:80]})"
+        loop_state = self._execute_stage2_pass_fix_iterations(
+            four_phase=four_phase,
+            current_arc=current_arc,
+            current_audit=current_audit,
+            expanded_prev_context=expanded_prev_context,
+            enriched_block=enriched_block,
+            protagonist_name=protagonist_name,
+            suspected_duplicates=suspected_duplicates,
+            entity_registry_for_director=entity_registry_for_director,
+            story_context=story_context,
+            global_arc_no=global_arc_no,
+            max_fix=max_fix,
+            fix_ok=fix_ok,
+            applied_patches=applied_patches,
+            patch_pressure_exceeded=patch_pressure_exceeded,
+            re_score=re_score,
+        )
+        current_arc = loop_state["current_arc"]
+        current_audit = loop_state["current_audit"]
+        fix_ok = bool(loop_state["fix_ok"])
+        patch_pressure_exceeded = bool(loop_state["patch_pressure_exceeded"])
+        re_score = int(loop_state["re_score"])
+        if fix_ok:
+            return self._finalize_stage2_pass_fix_success(
+                refined_arc=refined_arc,
+                current_arc=current_arc,
+                current_audit=current_audit,
+                re_score=re_score,
             )
+        return self._finalize_stage2_pass_fix_reject(
+            refined_arc=refined_arc,
+            current_arc=current_arc,
+            current_audit=current_audit,
+            audit=audit,
+            score=score,
+            max_fix=max_fix,
+        )
 
-            if not (four_phase and hasattr(four_phase, "_inplace_patch_arc")):
-                logging.warning("[TF-32-V] four_phase 에이전트 미등록 → REJECT")
-                break
+    def _resolve_stage2_pass_fix_instruction(
+        self,
+        *,
+        current_audit: dict,
+        fix_i: int,
+        max_fix: int,
+    ) -> str | None:
+        """PASS_WITH_FIX loop에서 local patch 가능 여부와 fix instruction을 정리한다."""
+        fix_scope = current_audit.get("fix_scope", "")
+        if not fix_scope:
+            logging.warning("[PF-1] fix_scope 누락 → local patch authority 없음, retry 경로 위임")
+            self.ctx.ui.log("      🔀 [PF-1] fix_scope 누락 → inplace 권한 없음, retry 경로 위임")
+            return None
+        if fix_scope in ("partial", "full"):
+            self.ctx.ui.log(f"      🔀 [TF-33] fix_scope={fix_scope!r} → inplace 불가, retry 경로 위임")
+            return None
 
-            try:
-                patched = four_phase._inplace_patch_arc(
-                    original_arc=current_arc,
-                    director_feedback=fix_instr,
-                    arc_no=global_arc_no,
-                )
-            except (RuntimeError, ValueError, OSError):
-                logging.exception("[TF-32-V] inplace_patch_arc 예외")
-                break
-            if not patched:
-                logging.warning("[TF-32-V] patch 실패 → REJECT")
-                break
+        fix_instr = current_audit.get("re_slice_instruction", "")
+        self.ctx.ui.log(
+            f"      🔧 [TF-32-V] PASS_WITH_FIX patch #{fix_i + 1}/{max_fix} (fix: {str(fix_instr)[:80]})"
+        )
+        return fix_instr
 
-            patch_guard_signals = self._collect_arc_patch_guard_signals(
+    def _apply_stage2_pass_fix_patch(
+        self,
+        *,
+        four_phase,
+        current_arc: dict,
+        fix_instr: str,
+        global_arc_no: int,
+    ) -> dict | None:
+        """inplace patch authority 호출과 예외/실패 처리를 감싼다."""
+        if not (four_phase and hasattr(four_phase, "_inplace_patch_arc")):
+            logging.warning("[TF-32-V] four_phase 에이전트 미등록 → REJECT")
+            return None
+        try:
+            patched = four_phase._inplace_patch_arc(
                 original_arc=current_arc,
-                patched_arc=patched,
+                director_feedback=fix_instr,
+                arc_no=global_arc_no,
             )
-            if patch_guard_signals:
-                signal_state = self._merge_patch_guard_signals(
-                    current_audit,
-                    patch_guard_signals,
-                    attempt=fix_i + 1,
+        except (RuntimeError, ValueError, OSError):
+            logging.exception("[TF-32-V] inplace_patch_arc 예외")
+            return None
+        if not patched:
+            logging.warning("[TF-32-V] patch 실패 → REJECT")
+            return None
+        return patched
+
+    def _analyze_stage2_pass_fix_patch(
+        self,
+        *,
+        current_arc: dict,
+        current_audit: dict,
+        patched: dict,
+        fix_instr: str,
+        global_arc_no: int,
+        fix_i: int,
+        applied_patches: list[str],
+        patch_pressure_exceeded: bool,
+    ) -> dict[str, Any]:
+        """patched arc의 guard/arithmetic/pressure signals를 수집한다."""
+        from modules.validation.threshold_helper import _threshold
+
+        patch_guard_signals = self._collect_arc_patch_guard_signals(
+            original_arc=current_arc,
+            patched_arc=patched,
+        )
+        if patch_guard_signals:
+            signal_state = self._merge_patch_guard_signals(
+                current_audit,
+                patch_guard_signals,
+                attempt=fix_i + 1,
+            )
+            signal_codes = ", ".join(signal_state.get("codes", []))
+            logging.warning(
+                "[S2-ArcPatchSignals] attempt=%s arc=%s codes=%s",
+                fix_i + 1,
+                global_arc_no,
+                signal_codes,
+            )
+            self.ctx.ui.log(f"      ⚠️ [S2-ArcSignals] attempt={fix_i + 1} codes={signal_codes or 'n/a'}")
+            if callable(getattr(self.ctx, "audit_event", None)):
+                self.ctx.audit_event(
+                    "patch_guard_signal",
+                    "stage2 arc patch signals observed",
+                    {
+                        "arc_no": global_arc_no,
+                        "attempt": fix_i + 1,
+                        "codes": list(signal_state.get("codes", [])),
+                        "count": int(signal_state.get("count", 0) or 0),
+                        "items": list(patch_guard_signals),
+                    },
                 )
-                signal_codes = ", ".join(signal_state.get("codes", []))
+
+        arith_patch_ctx = ""
+        tactical_patched = patched.get("tactical_doc", "") if isinstance(patched, dict) else ""
+        if tactical_patched:
+            arithmetic_issues = _check_tactical_arithmetic(str(tactical_patched))
+            if arithmetic_issues:
+                arithmetic_warn = "\n".join(f"  - {item}" for item in arithmetic_issues)
+                logging.warning("[NS-1-P] arithmetic warning detected in inplace patch:\n%s", arithmetic_warn)
+                arith_patch_ctx = (
+                    "\n\n[NS-1-P arithmetic warning in inplace patch]\n"
+                    f"{arithmetic_warn}\n"
+                    "Please verify the patched tactical_doc arithmetic before approving."
+                )
+
+        try:
+            from modules.core.constants import calc_patch_change_ratio, log_patch_diff
+
+            orig_json = json.dumps(current_arc, ensure_ascii=False)
+            patch_json = json.dumps(patched, ensure_ascii=False)
+            log_patch_diff(
+                "S2-Arc",
+                json.dumps(current_arc, ensure_ascii=False, indent=2),
+                json.dumps(patched, ensure_ascii=False, indent=2),
+            )
+            change_ratio = calc_patch_change_ratio(orig_json, patch_json)
+            max_ratio = float(_threshold("patch_mode.inplace_max_change_ratio", 0.30))
+            if change_ratio > max_ratio:
+                patch_pressure_exceeded = True
+                patch_pressure = current_audit.setdefault("patch_pressure", {})
+                patch_pressure["exceeded"] = True
+                patch_pressure["count"] = int(patch_pressure.get("count", 0)) + 1
+                patch_pressure["change_ratio"] = round(float(change_ratio), 4)
+                patch_pressure["max_ratio"] = round(float(max_ratio), 4)
+                patch_pressure["attempt"] = fix_i + 1
                 logging.warning(
-                    "[S2-ArcPatchSignals] attempt=%s arc=%s codes=%s",
-                    fix_i + 1,
-                    global_arc_no,
-                    signal_codes,
+                    "[F-2] InPlace Arc 변경 비율 %.1f%% > %.0f%% (S2)",
+                    change_ratio * 100,
+                    max_ratio * 100,
                 )
-                self.ctx.ui.log(f"      ⚠️ [S2-ArcSignals] attempt={fix_i + 1} codes={signal_codes or 'n/a'}")
-                if callable(getattr(self.ctx, "audit_event", None)):
-                    self.ctx.audit_event(
-                        "patch_guard_signal",
-                        "stage2 arc patch signals observed",
-                        {
-                            "arc_no": global_arc_no,
-                            "attempt": fix_i + 1,
-                            "codes": list(signal_state.get("codes", [])),
-                            "count": int(signal_state.get("count", 0) or 0),
-                            "items": list(patch_guard_signals),
-                        },
-                    )
+        except Exception as exc:
+            logging.debug("[S2-Finalizer] change_ratio 계산 실패: %s", exc)
 
-            arith_patch_ctx = ""
-            tactical_patched = patched.get("tactical_doc", "") if isinstance(patched, dict) else ""
-            if tactical_patched:
-                arithmetic_issues = _check_tactical_arithmetic(str(tactical_patched))
-                if arithmetic_issues:
-                    arithmetic_warn = "\n".join(f"  - {item}" for item in arithmetic_issues)
-                    logging.warning("[NS-1-P] arithmetic warning detected in inplace patch:\n%s", arithmetic_warn)
-                    arith_patch_ctx = (
-                        "\n\n[NS-1-P arithmetic warning in inplace patch]\n"
-                        f"{arithmetic_warn}\n"
-                        "Please verify the patched tactical_doc arithmetic before approving."
-                    )
+        if fix_instr:
+            applied_patches.append(str(fix_instr)[:200])
 
-            try:
-                from modules.core.constants import calc_patch_change_ratio, log_patch_diff
+        return {
+            "patch_guard_signals": patch_guard_signals,
+            "patch_pressure_exceeded": patch_pressure_exceeded,
+            "arith_patch_ctx": arith_patch_ctx,
+        }
 
-                orig_json = json.dumps(current_arc, ensure_ascii=False)
-                patch_json = json.dumps(patched, ensure_ascii=False)
-                log_patch_diff(
-                    "S2-Arc",
-                    json.dumps(current_arc, ensure_ascii=False, indent=2),
-                    json.dumps(patched, ensure_ascii=False, indent=2),
-                )
-                change_ratio = calc_patch_change_ratio(orig_json, patch_json)
-                max_ratio = float(_threshold("patch_mode.inplace_max_change_ratio", 0.30))
-                if change_ratio > max_ratio:
-                    patch_pressure_exceeded = True
-                    patch_pressure = current_audit.setdefault("patch_pressure", {})
-                    patch_pressure["exceeded"] = True
-                    patch_pressure["count"] = int(patch_pressure.get("count", 0)) + 1
-                    patch_pressure["change_ratio"] = round(float(change_ratio), 4)
-                    patch_pressure["max_ratio"] = round(float(max_ratio), 4)
-                    patch_pressure["attempt"] = fix_i + 1
-                    logging.warning(
-                        "[F-2] InPlace Arc 변경 비율 %.1f%% > %.0f%% (S2)",
-                        change_ratio * 100,
-                        max_ratio * 100,
-                    )
-            except Exception as exc:
-                logging.debug("[S2-Finalizer] change_ratio 계산 실패: %s", exc)
+    def _build_stage2_pass_fix_reaudit_story_context(
+        self,
+        *,
+        story_context: str,
+        arith_patch_ctx: str,
+        patch_guard_signals: list[dict],
+        patch_pressure_exceeded: bool,
+        current_audit: dict,
+        applied_patches: list[str],
+        fix_i: int,
+    ) -> str:
+        """re-audit용 story_context tail advisory를 조립한다."""
+        patch_ctx = arith_patch_ctx
+        if patch_guard_signals:
+            patch_ctx += self._format_patch_guard_signal_notice(
+                patch_guard_signals,
+                attempt=fix_i + 1,
+            )
+        if patch_pressure_exceeded and isinstance(current_audit.get("patch_pressure"), dict):
+            patch_pressure = dict(current_audit.get("patch_pressure") or {})
+            patch_ctx += (
+                "\n\n[F-2 advisory — high Arc patch pressure]\n"
+                f"change_ratio={float(patch_pressure.get('change_ratio', 0.0)):.1%}, "
+                f"threshold={float(patch_pressure.get('max_ratio', 0.0)):.0%}, "
+                f"attempt={int(patch_pressure.get('attempt', fix_i + 1))}\n"
+                "이 local Arc patch는 국소 수정 범위를 넘어설 수 있습니다. "
+                "구조 일관성과 변경 정당성이 충분하면 PASS를 허용할 수 있지만, "
+                "광범위 재작성처럼 보이면 PASS_WITH_FIX 또는 REJECT를 유지하세요."
+            )
+        if applied_patches:
+            patch_lines = "\n".join(f"- {patch}" for patch in applied_patches)
+            patch_ctx += (
+                "\n\n[PASS_WITH_FIX 재심사 — 이미 적용된 패치]\n"
+                f"{patch_lines}\n"
+                "위 항목은 tactical_doc에 이미 반영되었습니다. "
+                "curr_block 문서에서 동일 오류가 보여도 tactical_doc에서 수정되었으면 승인하세요."
+            )
+        return (story_context or "") + patch_ctx
 
-            if fix_instr:
-                applied_patches.append(str(fix_instr)[:200])
+    def _run_stage2_pass_fix_reaudit(
+        self,
+        *,
+        patched: dict,
+        expanded_prev_context: str,
+        enriched_block: dict,
+        protagonist_name: str,
+        suspected_duplicates: list,
+        entity_registry_for_director,
+        story_context: str,
+        fix_i: int,
+    ) -> dict[str, Any] | None:
+        """patched arc를 director에게 재심사시킨다."""
+        self.ctx.ui.log(f"      🔄 [TF-38] Director 재심사 #{fix_i + 1} 호출 중...")
+        try:
+            re_audit = self.ctx.agents["director"].audit_strategic_plan(
+                patched,
+                expanded_prev_context,
+                curr_block=enriched_block,
+                protagonist_name=protagonist_name,
+                suspected_duplicates=suspected_duplicates,
+                entity_registry=entity_registry_for_director,
+                story_context=story_context,
+            )
+        except (RuntimeError, ValueError, OSError):
+            logging.exception("[TF-32-V] 재심사 예외")
+            return None
 
-            self.ctx.ui.log(f"      🔄 [TF-38] Director 재심사 #{fix_i + 1} 호출 중...")
-            patch_ctx = arith_patch_ctx
-            if patch_guard_signals:
-                patch_ctx += self._format_patch_guard_signal_notice(
-                    patch_guard_signals,
-                    attempt=fix_i + 1,
+        re_decision = re_audit.get("decision", "REJECT")
+        re_score = re_audit.get("score", 0)
+        try:
+            re_score = int(re_score)
+        except (ValueError, TypeError):
+            re_score = 0
+        self.ctx.ui.log(f"      🎬 [TF-32-V] 재심사 #{fix_i + 1}: {re_decision} (score={re_score})")
+        return {
+            "audit": re_audit,
+            "decision": re_decision,
+            "score": re_score,
+        }
+
+    def _apply_stage2_pass_fix_reaudit_result(
+        self,
+        *,
+        patched: dict,
+        current_arc: dict,
+        current_audit: dict,
+        fix_ok: bool,
+        re_audit: dict,
+        re_decision: str,
+        re_score: int,
+    ) -> dict[str, Any]:
+        """re-audit verdict를 loop state로 반영한다."""
+        from modules.validation.threshold_helper import _threshold
+
+        if re_decision == "PASS":
+            quality_gate_score = _threshold("scoring.quality_gate_score", 90)
+            if re_score < quality_gate_score:
+                self.ctx.ui.log(
+                    f"      ⚠️ [TF-35] 재심사 PASS이나 score={re_score} < {quality_gate_score} → patch 종료"
                 )
-            if patch_pressure_exceeded and isinstance(current_audit.get("patch_pressure"), dict):
-                patch_pressure = dict(current_audit.get("patch_pressure") or {})
-                patch_ctx += (
-                    "\n\n[F-2 advisory — high Arc patch pressure]\n"
-                    f"change_ratio={float(patch_pressure.get('change_ratio', 0.0)):.1%}, "
-                    f"threshold={float(patch_pressure.get('max_ratio', 0.0)):.0%}, "
-                    f"attempt={int(patch_pressure.get('attempt', fix_i + 1))}\n"
-                    "이 local Arc patch는 국소 수정 범위를 넘어설 수 있습니다. "
-                    "구조 일관성과 변경 정당성이 충분하면 PASS를 허용할 수 있지만, "
-                    "광범위 재작성처럼 보이면 PASS_WITH_FIX 또는 REJECT를 유지하세요."
-                )
-            if applied_patches:
-                patch_lines = "\n".join(f"- {patch}" for patch in applied_patches)
-                patch_ctx += (
-                    "\n\n[PASS_WITH_FIX 재심사 — 이미 적용된 패치]\n"
-                    f"{patch_lines}\n"
-                    "위 항목은 tactical_doc에 이미 반영되었습니다. "
-                    "curr_block 문서에서 동일 오류가 보여도 tactical_doc에서 수정되었으면 승인하세요."
-                )
-            try:
-                re_audit = self.ctx.agents["director"].audit_strategic_plan(
-                    patched,
-                    expanded_prev_context,
-                    curr_block=enriched_block,
-                    protagonist_name=protagonist_name,
-                    suspected_duplicates=suspected_duplicates,
-                    entity_registry=entity_registry_for_director,
-                    story_context=(story_context or "") + patch_ctx,
-                )
-            except (RuntimeError, ValueError, OSError):
-                logging.exception("[TF-32-V] 재심사 예외")
+                return {
+                    "current_arc": current_arc,
+                    "current_audit": current_audit,
+                    "fix_ok": fix_ok,
+                    "re_score": re_score,
+                    "action": "break",
+                }
+            return {
+                "current_arc": patched,
+                "current_audit": self._merge_stage2_pass_fix_reaudit(
+                    current_audit=current_audit,
+                    re_audit=re_audit,
+                ),
+                "fix_ok": True,
+                "re_score": re_score,
+                "action": "break",
+            }
+        if re_decision == "PASS_WITH_FIX":
+            return {
+                "current_arc": patched,
+                "current_audit": self._merge_stage2_pass_fix_reaudit(
+                    current_audit=current_audit,
+                    re_audit=re_audit,
+                ),
+                "fix_ok": fix_ok,
+                "re_score": re_score,
+                "action": "continue",
+            }
+        return {
+            "current_arc": current_arc,
+            "current_audit": current_audit,
+            "fix_ok": fix_ok,
+            "re_score": re_score,
+            "action": "break",
+        }
+
+    def _execute_stage2_pass_fix_iterations(
+        self,
+        *,
+        four_phase,
+        current_arc: dict,
+        current_audit: dict,
+        expanded_prev_context: str,
+        enriched_block: dict,
+        protagonist_name: str,
+        suspected_duplicates: list,
+        entity_registry_for_director,
+        story_context: str,
+        global_arc_no: int,
+        max_fix: int,
+        fix_ok: bool,
+        applied_patches: list[str],
+        patch_pressure_exceeded: bool,
+        re_score: int,
+    ) -> dict[str, Any]:
+        for fix_i in range(max_fix):
+            fix_instr = self._resolve_stage2_pass_fix_instruction(
+                current_audit=current_audit,
+                fix_i=fix_i,
+                max_fix=max_fix,
+            )
+            if fix_instr is None:
                 break
-
-            re_decision = re_audit.get("decision", "REJECT")
-            re_score = re_audit.get("score", 0)
-            try:
-                re_score = int(re_score)
-            except (ValueError, TypeError):
-                re_score = 0
-            self.ctx.ui.log(f"      🎬 [TF-32-V] 재심사 #{fix_i + 1}: {re_decision} (score={re_score})")
-
-            if re_decision == "PASS":
-                quality_gate_score = _threshold("scoring.quality_gate_score", 90)
-                if re_score < quality_gate_score:
-                    self.ctx.ui.log(
-                        f"      ⚠️ [TF-35] 재심사 PASS이나 score={re_score} < {quality_gate_score} → patch 종료"
-                    )
-                    break
-                current_arc = patched
-                if patch_pressure_exceeded and isinstance(current_audit.get("patch_pressure"), dict):
-                    re_audit["patch_pressure"] = deepcopy(current_audit["patch_pressure"])
-                if isinstance(current_audit.get("patch_guard_signals"), dict):
-                    re_audit["patch_guard_signals"] = deepcopy(current_audit["patch_guard_signals"])
-                current_audit = re_audit
-                fix_ok = True
+            patched = self._apply_stage2_pass_fix_patch(
+                four_phase=four_phase,
+                current_arc=current_arc,
+                fix_instr=fix_instr,
+                global_arc_no=global_arc_no,
+            )
+            if patched is None:
                 break
-            if re_decision == "PASS_WITH_FIX":
-                current_arc = patched
-                if patch_pressure_exceeded and isinstance(current_audit.get("patch_pressure"), dict):
-                    re_audit["patch_pressure"] = deepcopy(current_audit["patch_pressure"])
-                if isinstance(current_audit.get("patch_guard_signals"), dict):
-                    re_audit["patch_guard_signals"] = deepcopy(current_audit["patch_guard_signals"])
-                current_audit = re_audit
+            patch_state = self._analyze_stage2_pass_fix_patch(
+                current_arc=current_arc,
+                current_audit=current_audit,
+                patched=patched,
+                fix_instr=fix_instr,
+                global_arc_no=global_arc_no,
+                fix_i=fix_i,
+                applied_patches=applied_patches,
+                patch_pressure_exceeded=patch_pressure_exceeded,
+            )
+            patch_pressure_exceeded = bool(patch_state["patch_pressure_exceeded"])
+            re_story_context = self._build_stage2_pass_fix_reaudit_story_context(
+                story_context=story_context,
+                arith_patch_ctx=patch_state["arith_patch_ctx"],
+                patch_guard_signals=patch_state["patch_guard_signals"],
+                patch_pressure_exceeded=patch_pressure_exceeded,
+                current_audit=current_audit,
+                applied_patches=applied_patches,
+                fix_i=fix_i,
+            )
+            re_state = self._run_stage2_pass_fix_reaudit(
+                patched=patched,
+                expanded_prev_context=expanded_prev_context,
+                enriched_block=enriched_block,
+                protagonist_name=protagonist_name,
+                suspected_duplicates=suspected_duplicates,
+                entity_registry_for_director=entity_registry_for_director,
+                story_context=re_story_context,
+                fix_i=fix_i,
+            )
+            if re_state is None:
+                break
+            loop_state = self._apply_stage2_pass_fix_reaudit_result(
+                patched=patched,
+                current_arc=current_arc,
+                current_audit=current_audit,
+                fix_ok=fix_ok,
+                re_audit=re_state["audit"],
+                re_decision=re_state["decision"],
+                re_score=int(re_state["score"]),
+            )
+            current_arc = loop_state["current_arc"]
+            current_audit = loop_state["current_audit"]
+            fix_ok = bool(loop_state["fix_ok"])
+            re_score = int(loop_state["re_score"])
+            if loop_state["action"] == "continue":
                 continue
             break
+        return {
+            "current_arc": current_arc,
+            "current_audit": current_audit,
+            "fix_ok": fix_ok,
+            "patch_pressure_exceeded": patch_pressure_exceeded,
+            "re_score": re_score,
+        }
 
+    def _legacy_stage2_pass_with_fix_loop_outcome(
+        self,
+        *,
+        refined_arc: dict,
+        audit: dict,
+        current_arc: dict,
+        current_audit: dict,
+        fix_ok: bool,
+        patch_pressure_exceeded: bool,
+        re_score: int,
+        score: int,
+        max_fix: int,
+    ) -> Stage2PassWithFixLoopResult:
         if fix_ok:
             refined_arc.clear()
             refined_arc.update(current_arc)
@@ -1970,135 +2896,132 @@ class Stage2Finalizer:
         except Exception as e:
             logging.debug(f"[PerfTimer] s2 summary/reset: {e}")
 
-    def _record_s2_reject_metrics(
+    def _build_stage2_reject_metric_context(
         self,
         *,
         global_arc_no: int,
         attempt: int,
         generation_method: str,
-        selected_strategy: str = "",
-        audit: dict,
-        duration_ms: int | None = None,
-        is_patch: bool = False,
-        prev_score: float = 0.0,
-        patch_fallback: bool = False,
-        artifact_payload: dict | None = None,
-    ) -> None:
-        """[4-R3-f] Record Stage 2 REJECT metrics (PassRateMonitor, Dashboard, History, Optimizer)."""
-        from modules.core.spinners import V50_MODULES_AVAILABLE
-
-        _session_id = resolve_logging_session_id(getattr(self.ctx, "current_project", None))
+        selected_strategy: str,
+        artifact_payload: dict | None,
+    ) -> dict[str, Any]:
+        session_id = resolve_logging_session_id(getattr(self.ctx, "current_project", None))
         attempt_key = build_attempt_key(
             stage=2,
             ep_num=global_arc_no,
             arc_num=global_arc_no,
             attempt_num=attempt + 1,
-            session_id=_session_id,
+            session_id=session_id,
         )
-        _candidate_key = build_candidate_key(strategy=selected_strategy, fallback=generation_method)
-        _artifact_meta = snapshot_logged_artifact(
+        candidate_key = build_candidate_key(strategy=selected_strategy, fallback=generation_method)
+        artifact_meta = snapshot_logged_artifact(
             getattr(self.ctx, "current_project", None),
             stage=2,
             arc_num=global_arc_no,
             attempt_num=attempt + 1,
-            candidate_key=_candidate_key,
+            candidate_key=candidate_key,
             artifact_kind="rejected_arc",
             payload=artifact_payload,
         )
-        _token_cost = _peek_scope_total_cost_usd()
+        return {
+            "session_id": session_id,
+            "attempt_key": attempt_key,
+            "candidate_key": candidate_key,
+            "artifact_meta": artifact_meta,
+            "token_cost": _peek_scope_total_cost_usd(),
+        }
 
-        if V50_MODULES_AVAILABLE and self.ctx.pass_rate_monitor:
-            try:
-                self.ctx.pass_rate_monitor.record_attempt(
-                    stage=2,
-                    episode=global_arc_no,
-                    arc=global_arc_no,
-                    attempt_num=attempt + 1,
-                    success=False,
-                    reject_reason=str(audit.get("reason", ""))[:100],
-                    generation_method=generation_method,
-                    duration_ms=duration_ms or 0,
-                    token_cost=_token_cost,
-                    is_patch=is_patch,
-                    prev_score=prev_score,
-                    patch_fallback=patch_fallback,
-                    attempt_key=attempt_key,
-                    final_verdict=str(audit.get("decision", "REJECT")),
-                    candidate_key=_candidate_key,
-                    content_hash=_artifact_meta["content_hash"],
-                    artifact_path=_artifact_meta["artifact_path"],
-                )
-            except Exception as e:  # [V64.P4] OPTIONAL: metrics
-                logging.debug(f"[SILENT] metrics (reject): {e}")
-
+    def _persist_stage2_reject_attempt_records(
+        self,
+        *,
+        global_arc_no: int,
+        attempt: int,
+        generation_method: str,
+        selected_strategy: str,
+        audit: dict,
+        duration_ms: int | None,
+        is_patch: bool,
+        metric_context: dict[str, Any],
+    ) -> None:
         try:
-            _db = getattr(getattr(self.ctx, "current_project", None), "db", None)
-            if _db and hasattr(_db, "save_stage_attempt"):
-                _score = audit.get("score", 0)
-                if not isinstance(_score, int):
-                    try:
-                        _score = int(_score)
-                    except (ValueError, TypeError):
-                        _score = 0
-                _director = getattr(getattr(self.ctx, "agents", {}), "get", lambda *_: None)("director")
-                _model = getattr(_director, "primary_model", None) if _director else None
-                _failure_category = self._extract_failure_category(audit)
-                _advisory_flags = self._extract_advisory_flags(audit)
-                _prompt_version = _build_stage2_prompt_version(
-                    generation_method=generation_method,
-                    is_patch=is_patch,
-                )
-                _db.save_stage_attempt(
-                    stage=2,
-                    verdict=str(audit.get("decision", "REJECT")),
-                    attempt_num=attempt + 1,
-                    ep_num=global_arc_no,
-                    arc_num=global_arc_no,
-                    score=_score,
-                    failure_category=_failure_category,
-                    reject_reason=str(audit.get("reason", ""))[:500],
-                    fix_scope=str(audit.get("fix_scope", "") or ""),
-                    model=str(_model) if _model else None,
-                    duration_ms=duration_ms,
-                    advisory_flags=_advisory_flags,
-                    session_id=_session_id,
-                    attempt_key=attempt_key,
-                    generation_method=generation_method,
-                    prompt_version=_prompt_version,
-                    candidate_key=_candidate_key,
-                    content_hash=_artifact_meta["content_hash"],
-                    artifact_path=_artifact_meta["artifact_path"],
-                )
-                # [TF-60] Stage 2 director_selections 기록
-                if hasattr(_db, "save_director_selection"):
-                    try:
-                        _db.save_director_selection(
-                            ep_num=global_arc_no,
-                            round_num=attempt + 1,
-                            selected_label="",
-                            selected_strategy=selected_strategy or generation_method or "",
-                            verdict=str(audit.get("decision", "REJECT")),
-                            stage=2,
-                            score=_score,
-                            selection_reason=str(audit.get("reason", ""))[:200],
-                            fix_scope=str(audit.get("fix_scope", "") or ""),
-                            attempt_key=attempt_key,
-                            candidate_key=_candidate_key,
-                            content_hash=_artifact_meta["content_hash"],
-                            artifact_path=_artifact_meta["artifact_path"],
-                        )
-                    except Exception as _ds_err:
-                        logging.debug("[director_selections] Stage2 REJECT 기록 실패: %s", _ds_err)
-        except Exception as _sa_err:
-            logging.debug("[stage_attempts] Stage2 REJECT 기록 실패 (비차단): %s", _sa_err)
+            db = getattr(getattr(self.ctx, "current_project", None), "db", None)
+            if not (db and hasattr(db, "save_stage_attempt")):
+                return
 
-        try:
-            _score = audit.get("score", 0)
-            if not isinstance(_score, int):
+            score = audit.get("score", 0)
+            if not isinstance(score, int):
                 try:
-                    _score = int(_score)
+                    score = int(score)
                 except (ValueError, TypeError):
-                    _score = 0
+                    score = 0
+            director = getattr(getattr(self.ctx, "agents", {}), "get", lambda *_: None)("director")
+            model = getattr(director, "primary_model", None) if director else None
+            failure_category = self._extract_failure_category(audit)
+            advisory_flags = self._extract_advisory_flags(audit)
+            prompt_version = _build_stage2_prompt_version(
+                generation_method=generation_method,
+                is_patch=is_patch,
+            )
+            db.save_stage_attempt(
+                stage=2,
+                verdict=str(audit.get("decision", "REJECT")),
+                attempt_num=attempt + 1,
+                ep_num=global_arc_no,
+                arc_num=global_arc_no,
+                score=score,
+                failure_category=failure_category,
+                reject_reason=str(audit.get("reason", ""))[:500],
+                fix_scope=str(audit.get("fix_scope", "") or ""),
+                model=str(model) if model else None,
+                duration_ms=duration_ms,
+                advisory_flags=advisory_flags,
+                session_id=metric_context["session_id"],
+                attempt_key=metric_context["attempt_key"],
+                generation_method=generation_method,
+                prompt_version=prompt_version,
+                candidate_key=metric_context["candidate_key"],
+                content_hash=metric_context["artifact_meta"]["content_hash"],
+                artifact_path=metric_context["artifact_meta"]["artifact_path"],
+            )
+            if hasattr(db, "save_director_selection"):
+                try:
+                    db.save_director_selection(
+                        ep_num=global_arc_no,
+                        round_num=attempt + 1,
+                        selected_label="",
+                        selected_strategy=selected_strategy or generation_method or "",
+                        verdict=str(audit.get("decision", "REJECT")),
+                        stage=2,
+                        score=score,
+                        selection_reason=str(audit.get("reason", ""))[:200],
+                        fix_scope=str(audit.get("fix_scope", "") or ""),
+                        attempt_key=metric_context["attempt_key"],
+                        candidate_key=metric_context["candidate_key"],
+                        content_hash=metric_context["artifact_meta"]["content_hash"],
+                        artifact_path=metric_context["artifact_meta"]["artifact_path"],
+                    )
+                except Exception as director_selection_err:
+                    logging.debug("[director_selections] Stage2 REJECT 湲곕줉 ?ㅽ뙣: %s", director_selection_err)
+        except Exception as stage_attempt_err:
+            logging.debug("[stage_attempts] Stage2 REJECT 湲곕줉 ?ㅽ뙣 (鍮꾩감??: %s", stage_attempt_err)
+
+    def _save_stage2_reject_cost_record(
+        self,
+        *,
+        global_arc_no: int,
+        attempt: int,
+        generation_method: str,
+        audit: dict,
+        is_patch: bool,
+        patch_fallback: bool,
+    ) -> None:
+        try:
+            score = audit.get("score", 0)
+            if not isinstance(score, int):
+                try:
+                    score = int(score)
+                except (ValueError, TypeError):
+                    score = 0
             self.ctx.current_project.db.save_cost_record(
                 session_id=resolve_logging_session_id(
                     getattr(self.ctx, "current_project", None),
@@ -2111,15 +3034,24 @@ class Stage2Finalizer:
                 total_cost_usd=0.0,
                 model_breakdown={
                     "event": "stage2_reject",
-                    "score": _score,
+                    "score": score,
                     "attempt": attempt + 1,
                     "generation_method": generation_method,
                     "is_patch": is_patch,
                     "patch_fallback": patch_fallback,
                 },
             )
-        except (OSError, RuntimeError, TypeError) as e:
-            logging.warning(f"[SilentPass:Stage2RejectMetric] {e!s:.120}")
+        except (OSError, RuntimeError, TypeError) as exc:
+            logging.warning(f"[SilentPass:Stage2RejectMetric] {exc!s:.120}")
+
+    def _record_stage2_reject_side_metrics(
+        self,
+        *,
+        global_arc_no: int,
+        attempt: int,
+        audit: dict,
+    ) -> None:
+        from modules.core.spinners import V50_MODULES_AVAILABLE
 
         if V50_MODULES_AVAILABLE and self.ctx.quality_dashboard:
             try:
@@ -2138,14 +3070,14 @@ class Stage2Finalizer:
                     },
                     stage=2,
                 )
-            except Exception as e:  # [V64.P4] OPTIONAL: dashboard metrics
-                logging.debug(f"[SILENT] dashboard metrics (REJECT): {e}")
+            except Exception as dashboard_err:
+                logging.debug(f"[SILENT] dashboard metrics (REJECT): {dashboard_err}")
 
-        if self.ctx.stage_rejection_history is not None:  # [Sweep4] None 가드
-            _failure_category = self._extract_failure_category(audit)
-            _score_breakdown = audit.get("score_breakdown", {})
-            if not isinstance(_score_breakdown, dict):
-                _score_breakdown = {}
+        if self.ctx.stage_rejection_history is not None:
+            failure_category = self._extract_failure_category(audit)
+            score_breakdown = audit.get("score_breakdown", {})
+            if not isinstance(score_breakdown, dict):
+                score_breakdown = {}
             self.ctx.stage_rejection_history.append(
                 {
                     "stage": 2,
@@ -2153,11 +3085,11 @@ class Stage2Finalizer:
                     "reason": str(audit.get("reason", ""))[:200],
                     "attempt": attempt + 1,
                     "specific_issue": str(audit.get("re_slice_instruction", "") or "")[:200],
-                    "failure_category": _failure_category or "",
+                    "failure_category": failure_category or "",
                     "fix_scope": str(audit.get("fix_scope", "") or "")[:40],
                     "score_breakdown": {
                         str(key): value
-                        for key, value in list(_score_breakdown.items())[:5]
+                        for key, value in list(score_breakdown.items())[:5]
                         if isinstance(value, int | float)
                     },
                 }
@@ -2170,8 +3102,80 @@ class Stage2Finalizer:
                     failure_type="director_reject",
                     details=str(audit.get("reason", ""))[:200],
                 )
-            except Exception as e:  # [V64.P4] OPTIONAL: optimizer failure recording
-                logging.debug(f"[SILENT] optimizer failure recording: {e}")
+            except Exception as optimizer_err:
+                logging.debug(f"[SILENT] optimizer failure recording: {optimizer_err}")
+
+    def _record_s2_reject_metrics(
+        self,
+        *,
+        global_arc_no: int,
+        attempt: int,
+        generation_method: str,
+        selected_strategy: str = "",
+        audit: dict,
+        duration_ms: int | None = None,
+        is_patch: bool = False,
+        prev_score: float = 0.0,
+        patch_fallback: bool = False,
+        artifact_payload: dict | None = None,
+    ) -> None:
+        """[4-R3-f] Record Stage 2 REJECT metrics (PassRateMonitor, Dashboard, History, Optimizer)."""
+        from modules.core.spinners import V50_MODULES_AVAILABLE
+
+        metric_context = self._build_stage2_reject_metric_context(
+            global_arc_no=global_arc_no,
+            attempt=attempt,
+            generation_method=generation_method,
+            selected_strategy=selected_strategy,
+            artifact_payload=artifact_payload,
+        )
+
+        if V50_MODULES_AVAILABLE and self.ctx.pass_rate_monitor:
+            try:
+                self.ctx.pass_rate_monitor.record_attempt(
+                    stage=2,
+                    episode=global_arc_no,
+                    arc=global_arc_no,
+                    attempt_num=attempt + 1,
+                    success=False,
+                    reject_reason=str(audit.get("reason", ""))[:100],
+                    generation_method=generation_method,
+                    duration_ms=duration_ms or 0,
+                    token_cost=metric_context["token_cost"],
+                    is_patch=is_patch,
+                    prev_score=prev_score,
+                    patch_fallback=patch_fallback,
+                    attempt_key=metric_context["attempt_key"],
+                    final_verdict=str(audit.get("decision", "REJECT")),
+                    candidate_key=metric_context["candidate_key"],
+                    content_hash=metric_context["artifact_meta"]["content_hash"],
+                    artifact_path=metric_context["artifact_meta"]["artifact_path"],
+                )
+            except Exception as e:  # [V64.P4] OPTIONAL: metrics
+                logging.debug(f"[SILENT] metrics (reject): {e}")
+        self._persist_stage2_reject_attempt_records(
+            global_arc_no=global_arc_no,
+            attempt=attempt,
+            generation_method=generation_method,
+            selected_strategy=selected_strategy,
+            audit=audit,
+            duration_ms=duration_ms,
+            is_patch=is_patch,
+            metric_context=metric_context,
+        )
+        self._save_stage2_reject_cost_record(
+            global_arc_no=global_arc_no,
+            attempt=attempt,
+            generation_method=generation_method,
+            audit=audit,
+            is_patch=is_patch,
+            patch_fallback=patch_fallback,
+        )
+        self._record_stage2_reject_side_metrics(
+            global_arc_no=global_arc_no,
+            attempt=attempt,
+            audit=audit,
+        )
 
     @staticmethod
     def _extract_failure_category(audit: dict) -> str | None:
