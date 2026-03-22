@@ -14,6 +14,7 @@ SovereignApp에서 분리된 Stage 2 관련 메서드:
 
 import asyncio
 import logging
+from pathlib import Path
 from typing import Any, Literal, NotRequired, TypedDict
 
 from modules.core.constants import VolumeSettings, smart_truncate
@@ -60,6 +61,18 @@ class Stage2ArcFailurePayload(TypedDict):
     current_ep_start: NotRequired[int]
     current_feedback: NotRequired[str]
     constraint_block: NotRequired[str]
+
+
+class Stage2SingleArcAttemptPayload(TypedDict):
+    action: str
+    next_attempt: int
+    current_feedback: str
+    director_feedback_for_fourphase: str
+    st_snapshot: Any
+    last_refined_context: str
+    current_ep_start: int
+    previous_attempt: dict[str, Any] | None
+    refined_arc: dict[str, Any] | None
 
 
 class Stage2Orchestrator:
@@ -630,6 +643,12 @@ class Stage2Orchestrator:
         current_ep_start: int,
     ) -> Stage2ArcFailurePayload:
         """Write Stage 2 failure report and handle operator recovery choice."""
+        failure_report_path = self._resolve_stage2_arc_failure_report_path(global_arc_no=global_arc_no)
+        failure_context = self._build_stage2_arc_failure_report_context(
+            global_arc_no=global_arc_no,
+            all_refined_arcs=all_refined_arcs,
+            constraint_db=constraint_db,
+        )
         self.ctx.ui.log(f"⚠ [Critical] Arc {global_arc_no} 최종 설계 실패.")
         if callable(getattr(self.ctx, "audit_event", None)):
             self.ctx.audit_event(
@@ -637,82 +656,23 @@ class Stage2Orchestrator:
                 "max retries exhausted",
                 {"arc_no": global_arc_no, "batch_start": batch_start, "batch_end": batch_end},
             )
-
-        failure_report_path = self.ctx.current_project.paths.root / "logs" / f"arc_{global_arc_no}_failure_report.txt"
-        failure_report_path.parent.mkdir(parents=True, exist_ok=True)
-
-        arc_rejects = (
-            [r for r in self.ctx.stage_rejection_history if r.get("stage") == 2 and r.get("arc_no") == global_arc_no]
-            if self.ctx.stage_rejection_history
-            else []
+        report_lines = self._build_stage2_arc_failure_report_lines(
+            global_arc_no=global_arc_no,
+            refined_arc=refined_arc,
+            arc_rejects=failure_context["arc_rejects"],
+            prev_items=failure_context["prev_items"],
+            current_constraints=failure_context["current_constraints"],
         )
-        current_constraints = self._fit_prompt_text(
-            constraint_db.generate_constraint_block(global_arc_no) if constraint_db else "N/A",
-            6000,
+        await self._write_stage2_arc_failure_report(
+            failure_report_path=failure_report_path,
+            report_lines=report_lines,
         )
-
-        prev_items = []
-        for prev_arc in all_refined_arcs:
-            state_constraints = prev_arc.get("state_constraints", {})
-            items = state_constraints.get("protagonist_items") or state_constraints.get("items_acquired", [])
-            if items:
-                prev_items.extend(items if isinstance(items, list) else [items])
-
-        report_lines = [
-            f"{'=' * 60}",
-            f"Arc {global_arc_no} 실패 리포트",
-            f"{'=' * 60}",
-            "",
-            "[REJECT 히스토리]",
-        ]
-        for idx, reject_entry in enumerate(arc_rejects, 1):
-            report_lines.append(f"  시도 {reject_entry.get('attempt', idx)}: {reject_entry.get('reason', 'N/A')}")
-
-        report_lines.extend(
-            [
-                "",
-                "[이전 Arc에서 이미 획득한 아이템 - 중복 획득 금지]",
-            ]
+        self._log_stage2_arc_failure_summary(
+            global_arc_no=global_arc_no,
+            failure_report_path=failure_report_path,
+            arc_rejects=failure_context["arc_rejects"],
+            prev_items=failure_context["prev_items"],
         )
-        for item in prev_items:
-            report_lines.append(f"  ❌ {item}")
-
-        report_lines.extend(
-            [
-                "",
-                "[현재 제약 조건]",
-                str(current_constraints)[:6000] if current_constraints else "없음",
-                "",
-                "[마지막 생성된 Arc 데이터]",
-            ]
-        )
-        if refined_arc:
-            report_lines.append(f"  tactical_doc 길이: {len(refined_arc.get('tactical_doc', ''))}자")
-            report_lines.append(
-                f"  items_acquired: {refined_arc.get('state_constraints', {}).get('protagonist_items') or refined_arc.get('state_constraints', {}).get('items_acquired', [])}"
-            )
-
-        report_content = "\n".join(report_lines)
-
-        def _write_failure_report(path, content):
-            with open(path, "w", encoding="utf-8") as file_handle:
-                file_handle.write(content)
-
-        await asyncio.to_thread(_write_failure_report, failure_report_path, report_content)
-
-        logging.info(f"\n{'=' * 60}")
-        logging.warning(f" [V60.46] Arc {global_arc_no} 실패 분석 리포트")
-        logging.info(f"{'=' * 60}")
-        logging.warning(f"\n REJECT 사유 ({len(arc_rejects)}회):")
-        for reject_entry in arc_rejects[-3:]:
-            logging.info(f"- {reject_entry.get('reason', 'N/A')[:100]}")
-        logging.info(f"\n 중복 획득 금지 아이템 ({len(prev_items)}개):")
-        for item in prev_items[:5]:
-            logging.info(f"- {item}")
-        if len(prev_items) > 5:
-            logging.info(f"... 외 {len(prev_items) - 5}개")
-        logging.info(f"\n 전체 리포트: {failure_report_path}")
-        logging.info(f"{'=' * 60}\n")
 
         if all_refined_arcs:
             self.ctx.ui.log(f"💾 [Auto-Save] 현재까지 {len(all_refined_arcs)}개 Arc 저장 완료.")
@@ -729,24 +689,19 @@ class Stage2Orchestrator:
 
             if user_choice == "1":
                 self.ctx.ui.log(f"⏭️ Arc {global_arc_no}을 건너뛰고 계속합니다.")
-                skip_ep_raw = (
-                    arcs_source[global_arc_no - 1].get("ep_count", DEFAULT_EP_COUNT)
-                    if global_arc_no <= len(arcs_source)
-                    else DEFAULT_EP_COUNT
+                return self._build_stage2_arc_failure_skip_payload(
+                    global_arc_no=global_arc_no,
+                    arcs_source=arcs_source,
+                    current_ep_start=current_ep_start,
                 )
-                try:
-                    skip_ep = int(skip_ep_raw)
-                except (TypeError, ValueError):
-                    skip_ep = DEFAULT_EP_COUNT
-                return {"action": "skip", "current_ep_start": current_ep_start + skip_ep}
 
             if user_choice == "3":
                 self.ctx.ui.log(f"🔄 Arc {global_arc_no} 다시 시도합니다...")
-                return {
-                    "action": "retry",
-                    "current_feedback": "",
-                    "constraint_block": constraint_db.generate_constraint_block(global_arc_no),
-                }
+                return self._build_stage2_arc_failure_retry_payload(
+                    global_arc_no=global_arc_no,
+                    constraint_db=constraint_db,
+                    current_feedback="",
+                )
 
             if user_choice == "4":
                 logging.info(f"\n 리포트 파일을 확인하세요: {failure_report_path}")
@@ -767,30 +722,166 @@ class Stage2Orchestrator:
 
                 if manual_input == "skip":
                     self.ctx.ui.log(f"⏭️ Arc {global_arc_no}을 건너뛰고 계속합니다.")
-                    skip_ep_raw = (
-                        arcs_source[global_arc_no - 1].get("ep_count", DEFAULT_EP_COUNT)
-                        if global_arc_no <= len(arcs_source)
-                        else DEFAULT_EP_COUNT
+                    return self._build_stage2_arc_failure_skip_payload(
+                        global_arc_no=global_arc_no,
+                        arcs_source=arcs_source,
+                        current_ep_start=current_ep_start,
                     )
-                    try:
-                        skip_ep = int(skip_ep_raw)
-                    except (TypeError, ValueError):
-                        skip_ep = DEFAULT_EP_COUNT
-                    return {"action": "skip", "current_ep_start": current_ep_start + skip_ep}
 
                 if manual_input == "quit":
                     self.ctx.ui.log("⏹️ 사용자 요청으로 공정을 중단합니다.")
                     return {"action": "abort"}
 
                 self.ctx.ui.log(f"🔄 Arc {global_arc_no} 수동 확인 후 재시도...")
-                return {
-                    "action": "retry",
-                    "current_feedback": f"[사용자 수동 확인 완료] 이전 Arc에서 획득한 아이템: {', '.join(prev_items[:5])} 등 {len(prev_items)}개. 이 아이템들은 절대 다시 획득하면 안 됩니다!",
-                    "constraint_block": constraint_db.generate_constraint_block(global_arc_no),
-                }
+                return self._build_stage2_arc_failure_retry_payload(
+                    global_arc_no=global_arc_no,
+                    constraint_db=constraint_db,
+                    current_feedback=(
+                        f"[사용자 수동 확인 완료] 이전 Arc에서 획득한 아이템: "
+                        f"{', '.join(failure_context['prev_items'][:5])} 등 {len(failure_context['prev_items'])}개. "
+                        "이 아이템들은 절대 다시 획득하면 안 됩니다!"
+                    ),
+                )
 
             self.ctx.ui.log("⏹️ 사용자 요청으로 공정을 중단합니다.")
             return {"action": "abort"}
+
+    def _resolve_stage2_arc_failure_report_path(self, *, global_arc_no: int) -> Path:
+        failure_report_path = self.ctx.current_project.paths.root / "logs" / f"arc_{global_arc_no}_failure_report.txt"
+        failure_report_path.parent.mkdir(parents=True, exist_ok=True)
+        return failure_report_path
+
+    def _build_stage2_arc_failure_report_context(
+        self,
+        *,
+        global_arc_no: int,
+        all_refined_arcs: list[Any],
+        constraint_db,
+    ) -> dict[str, Any]:
+        arc_rejects = (
+            [r for r in self.ctx.stage_rejection_history if r.get("stage") == 2 and r.get("arc_no") == global_arc_no]
+            if self.ctx.stage_rejection_history
+            else []
+        )
+        current_constraints = self._fit_prompt_text(
+            constraint_db.generate_constraint_block(global_arc_no) if constraint_db else "N/A",
+            6000,
+        )
+        prev_items: list[Any] = []
+        for prev_arc in all_refined_arcs:
+            state_constraints = prev_arc.get("state_constraints", {})
+            items = state_constraints.get("protagonist_items") or state_constraints.get("items_acquired", [])
+            if items:
+                prev_items.extend(items if isinstance(items, list) else [items])
+        return {
+            "arc_rejects": arc_rejects,
+            "current_constraints": current_constraints,
+            "prev_items": prev_items,
+        }
+
+    def _build_stage2_arc_failure_report_lines(
+        self,
+        *,
+        global_arc_no: int,
+        refined_arc: dict | None,
+        arc_rejects: list[dict[str, Any]],
+        prev_items: list[Any],
+        current_constraints: str,
+    ) -> list[str]:
+        report_lines = [
+            f"{'=' * 60}",
+            f"Arc {global_arc_no} 실패 리포트",
+            f"{'=' * 60}",
+            "",
+            "[REJECT 히스토리]",
+        ]
+        for idx, reject_entry in enumerate(arc_rejects, 1):
+            report_lines.append(f"  시도 {reject_entry.get('attempt', idx)}: {reject_entry.get('reason', 'N/A')}")
+        report_lines.extend(["", "[이전 Arc에서 이미 획득한 아이템 - 중복 획득 금지]"])
+        for item in prev_items:
+            report_lines.append(f"  ❌ {item}")
+        report_lines.extend(
+            [
+                "",
+                "[현재 제약 조건]",
+                str(current_constraints)[:6000] if current_constraints else "없음",
+                "",
+                "[마지막 생성된 Arc 데이터]",
+            ]
+        )
+        if refined_arc:
+            report_lines.append(f"  tactical_doc 길이: {len(refined_arc.get('tactical_doc', ''))}자")
+            report_lines.append(
+                f"  items_acquired: {refined_arc.get('state_constraints', {}).get('protagonist_items') or refined_arc.get('state_constraints', {}).get('items_acquired', [])}"
+            )
+        return report_lines
+
+    async def _write_stage2_arc_failure_report(
+        self,
+        *,
+        failure_report_path: Path,
+        report_lines: list[str],
+    ) -> None:
+        report_content = "\n".join(report_lines)
+
+        def _write_failure_report(path: Path, content: str) -> None:
+            with open(path, "w", encoding="utf-8") as file_handle:
+                file_handle.write(content)
+
+        await asyncio.to_thread(_write_failure_report, failure_report_path, report_content)
+
+    def _log_stage2_arc_failure_summary(
+        self,
+        *,
+        global_arc_no: int,
+        failure_report_path: Path,
+        arc_rejects: list[dict[str, Any]],
+        prev_items: list[Any],
+    ) -> None:
+        logging.info(f"\n{'=' * 60}")
+        logging.warning(f" [V60.46] Arc {global_arc_no} 실패 분석 리포트")
+        logging.info(f"{'=' * 60}")
+        logging.warning(f"\n REJECT 사유 ({len(arc_rejects)}회):")
+        for reject_entry in arc_rejects[-3:]:
+            logging.info(f"- {reject_entry.get('reason', 'N/A')[:100]}")
+        logging.info(f"\n 중복 획득 금지 아이템 ({len(prev_items)}개):")
+        for item in prev_items[:5]:
+            logging.info(f"- {item}")
+        if len(prev_items) > 5:
+            logging.info(f"... 외 {len(prev_items) - 5}개")
+        logging.info(f"\n 전체 리포트: {failure_report_path}")
+        logging.info(f"{'=' * 60}\n")
+
+    def _build_stage2_arc_failure_skip_payload(
+        self,
+        *,
+        global_arc_no: int,
+        arcs_source: list[Any],
+        current_ep_start: int,
+    ) -> Stage2ArcFailurePayload:
+        skip_ep_raw = (
+            arcs_source[global_arc_no - 1].get("ep_count", DEFAULT_EP_COUNT)
+            if global_arc_no <= len(arcs_source)
+            else DEFAULT_EP_COUNT
+        )
+        try:
+            skip_ep = int(skip_ep_raw)
+        except (TypeError, ValueError):
+            skip_ep = DEFAULT_EP_COUNT
+        return {"action": "skip", "current_ep_start": current_ep_start + skip_ep}
+
+    def _build_stage2_arc_failure_retry_payload(
+        self,
+        *,
+        global_arc_no: int,
+        constraint_db,
+        current_feedback: str,
+    ) -> Stage2ArcFailurePayload:
+        return {
+            "action": "retry",
+            "current_feedback": current_feedback,
+            "constraint_block": constraint_db.generate_constraint_block(global_arc_no),
+        }
     # ═══════════════════════════════════════════════════════════════════════
     # 메인 파이프라인
     # ═══════════════════════════════════════════════════════════════════════
@@ -801,7 +892,6 @@ class Stage2Orchestrator:
         0124 욕망 엔진(Desire Engine) 통합 파이프라인 완전판
         """
         # [V64.P3] lazy imports (main_a.py dependency split retained)
-        from modules.core.constants import VolumeSettings
         from modules.core.slack_bot import notifier
         from modules.core.spinners import StageSpinner  # [V65] spinner (cycle-safe import)
 
@@ -842,313 +932,710 @@ class Stage2Orchestrator:
             if batch_result["action"] == "stop":
                 return
 
-            ### [B. 사후 용접 및 고유 명사 앵커링]
-            with StageSpinner(2, f"Arc {batch_start + 1}~{batch_end} 인과율 용접"):
-                for i in range(len(enriched_batch) - 1):
-                    arc_a_idx, arc_a = enriched_batch[i]
-                    arc_b_idx, arc_b = enriched_batch[i + 1]
-                    try:
-                        stitch_res = self.ctx.agents["analyst"].stitch_joints(
-                            arc_a.get("joint_docs", {}),
-                            arc_b.get("joint_docs", {}),
-                            arc_b.get("content", {}).get("context", ""),
-                        )
-                    except Exception as stitch_err:
-                        self.ctx.ui.log(f"⚠️ [Analyst] Arc {arc_a_idx + 1}-{arc_b_idx + 1} 용접 실패: {stitch_err}")
-                        if callable(getattr(self.ctx, "audit_event", None)):
-                            self.ctx.audit_event(
-                                "analyst_error",
-                                "stitch_joints failed",
-                                {"arc_pair": f"{arc_a_idx + 1}-{arc_b_idx + 1}", "error": str(stitch_err)},
-                            )
-                        continue
+            self._run_stage2_joint_stitching(
+                enriched_batch=enriched_batch,
+                batch_start=batch_start,
+                batch_end=batch_end,
+                stage_spinner_cls=StageSpinner,
+            )
+            batch_design = await self._run_stage2_batch_design_loop(
+                enriched_batch=enriched_batch,
+                batch_start=batch_start,
+                batch_end=batch_end,
+                all_refined_arcs=all_refined_arcs,
+                arcs_source=arcs_source,
+                volumes_strategy=volumes_strategy,
+                protagonist_name=protagonist_name,
+                grand_obj=grand_obj,
+                bible_root=bible_root,
+                constraint_db=constraint_db,
+                genre=genre,
+                last_refined_context=last_refined_context,
+                stage_spinner_cls=StageSpinner,
+            )
+            if batch_design["action"] == "abort":
+                return
+            last_refined_context = batch_design["last_refined_context"]
 
-                    if stitch_res and isinstance(stitch_res, dict) and stitch_res.get("status") == "REPAIRED":
-                        if "content" in arc_b and isinstance(arc_b["content"], dict):  # [V70] str 타입 방어
-                            arc_b["content"]["context"] = stitch_res.get(
-                                "repaired_joint_b", arc_b["content"].get("context", "")
-                            )
-                        if stitch_res.get("entity_anchors") and getattr(self.ctx.sys, "lore", None):
-                            try:
-                                self.ctx.sys.lore.update_v20_assets({"Temporary_Anchors": stitch_res["entity_anchors"]})
-                                self.ctx.ui.log(f"      ⚓ Arc {arc_a_idx + 1}-{arc_b_idx + 1} 고유 명사 앵커링 완료.")
-                            except Exception as lore_err:
-                                self.ctx.ui.log(f"⚠️ [Lore] 앵커링 실패: {lore_err}")
-                        self.ctx.ui.log(f"   🧶 Arc {arc_a_idx + 1}-{arc_b_idx + 1} 인과율 용접 완료.")
+            self._handle_stage2_batch_completion(
+                batch_start=batch_start,
+                batch_end=batch_end,
+                batch_start_count=batch_start_count,
+                all_refined_arcs=all_refined_arcs,
+                notifier=notifier,
+            )
 
-            # C. [순차 설계 단계]
-            # [B3-P1-1] ep_end가 음수/0일 수 있으므로 max(1, ...) 경계값 방어
-            current_ep_start = 1 if not all_refined_arcs else max(1, all_refined_arcs[-1].get("ep_end", 0) + 1)
+        # EOFError/KeyboardInterrupt input tail handling remains inside the completion helper.
+        await self._complete_stage2_pipeline(target_arc_count=target_arc_count)
 
-            # [V60.45] while 루프로 변경 - "다시 하기" 지원
-            idx = 0
-            _design_total = len(enriched_batch)
-            _design_spinner = StageSpinner(2, f"Arc 순차 설계 (총 {_design_total}개)")
-            _design_spinner.__enter__()
-            while idx < len(enriched_batch):
-                _design_spinner.update_detail(f"Arc {idx + 1}/{_design_total} 설계 중...")
-                source_arc_idx, enriched_block = enriched_batch[idx]
-                global_arc_no = source_arc_idx + 1
-                vol_no = ((global_arc_no - 1) // VolumeSettings.ARCS_PER_VOLUME) + 1
-                self._set_agent_telemetry_context(ep_num=current_ep_start)
-                default_vol_strategy = {"vol_no": vol_no, "strategy_doc": ""}
-                current_vol_strategy = next(
-                    (v for v in volumes_strategy if v.get("vol_no") == vol_no),
-                    default_vol_strategy,
-                )
-
-                ### [0124 핵심 1] Analyst: 결핍 리포트 생성 (순수 Python, 즉시 완료)
+    def _run_stage2_joint_stitching(
+        self,
+        *,
+        enriched_batch: list[tuple[int, dict[str, Any]]],
+        batch_start: int,
+        batch_end: int,
+        stage_spinner_cls,
+    ) -> None:
+        """Batch post-weld 단계에서 analyst joint repair와 anchor handoff를 수행한다."""
+        with stage_spinner_cls(2, f"Arc {batch_start + 1}~{batch_end} 인과율 용접"):
+            for index in range(len(enriched_batch) - 1):
+                arc_a_idx, arc_a = enriched_batch[index]
+                arc_b_idx, arc_b = enriched_batch[index + 1]
                 try:
-                    lack_report = self.ctx.agents["analyst"].get_lack_report(self.ctx.sys.hud.pro_root)
-                except Exception as lack_err:
-                    self.ctx.ui.log(f"⚠️ [Analyst] 결핍 리포트 생성 실패: {lack_err}")
+                    stitch_res = self.ctx.agents["analyst"].stitch_joints(
+                        arc_a.get("joint_docs", {}),
+                        arc_b.get("joint_docs", {}),
+                        arc_b.get("content", {}).get("context", ""),
+                    )
+                except Exception as stitch_err:
+                    self.ctx.ui.log(f"⚠️ [Analyst] Arc {arc_a_idx + 1}-{arc_b_idx + 1} 용접 실패: {stitch_err}")
                     if callable(getattr(self.ctx, "audit_event", None)):
                         self.ctx.audit_event(
-                            "analyst_error", "get_lack_report failed", {"arc_no": global_arc_no, "error": str(lack_err)}
+                            "analyst_error",
+                            "stitch_joints failed",
+                            {"arc_pair": f"{arc_a_idx + 1}-{arc_b_idx + 1}", "error": str(stitch_err)},
                         )
-                    lack_report = {"martial_deficit": "분석 실패", "status": "error"}
+                    continue
 
-                ### [4-R3-a] Preflight 상태 초기화
-                _setup = self.preflight._preflight_state_setup(
+                if stitch_res and isinstance(stitch_res, dict) and stitch_res.get("status") == "REPAIRED":
+                    if "content" in arc_b and isinstance(arc_b["content"], dict):
+                        arc_b["content"]["context"] = stitch_res.get("repaired_joint_b", arc_b["content"].get("context", ""))
+                    if stitch_res.get("entity_anchors") and getattr(self.ctx.sys, "lore", None):
+                        try:
+                            self.ctx.sys.lore.update_v20_assets({"Temporary_Anchors": stitch_res["entity_anchors"]})
+                            self.ctx.ui.log(f"      ⚓ Arc {arc_a_idx + 1}-{arc_b_idx + 1} 고유 명사 앵커링 완료.")
+                        except Exception as lore_err:
+                            self.ctx.ui.log(f"⚠️ [Lore] 앵커링 실패: {lore_err}")
+                    self.ctx.ui.log(f"   🧶 Arc {arc_a_idx + 1}-{arc_b_idx + 1} 인과율 용접 완료.")
+
+    async def _run_stage2_batch_design_loop(
+        self,
+        *,
+        enriched_batch: list[tuple[int, dict[str, Any]]],
+        batch_start: int,
+        batch_end: int,
+        all_refined_arcs: list[Any],
+        arcs_source: list[Any],
+        volumes_strategy: list[Any],
+        protagonist_name: str | None,
+        grand_obj: str,
+        bible_root: dict[str, Any],
+        constraint_db,
+        genre: str,
+        last_refined_context: str,
+        stage_spinner_cls,
+    ) -> dict[str, Any]:
+        """배치 단위 순차 설계를 담당하고 abort/next 상태만 외부로 반환한다."""
+        current_ep_start = 1 if not all_refined_arcs else max(1, all_refined_arcs[-1].get("ep_end", 0) + 1)
+        idx = 0
+        design_total = len(enriched_batch)
+        with stage_spinner_cls(2, f"Arc 순차 설계 (총 {design_total}개)") as design_spinner:
+            while idx < len(enriched_batch):
+                design_spinner.update_detail(f"Arc {idx + 1}/{design_total} 설계 중...")
+                source_arc_idx, enriched_block = enriched_batch[idx]
+                arc_result = await self._run_stage2_single_arc_design(
+                    source_arc_idx=source_arc_idx,
+                    enriched_block=enriched_block,
+                    batch_start=batch_start,
+                    batch_end=batch_end,
                     all_refined_arcs=all_refined_arcs,
                     arcs_source=arcs_source,
-                    arc_idx=source_arc_idx,
-                    lack_report=lack_report,
+                    volumes_strategy=volumes_strategy,
+                    protagonist_name=protagonist_name,
                     grand_obj=grand_obj,
-                    global_arc_no=global_arc_no,
+                    bible_root=bible_root,
                     constraint_db=constraint_db,
-                    genre=_genre_for_tracker,
+                    genre=genre,
+                    last_refined_context=last_refined_context,
+                    current_ep_start=current_ep_start,
                 )
-                arc_drive = _setup["arc_drive"]
-                _cached_preflight_injection = _setup["cached_preflight_injection"]
-                _cached_preflight_result = _setup["cached_preflight_result"]
-                passed = _setup["passed"]
-                current_feedback = _setup["current_feedback"]
-                constraint_block = _setup["constraint_block"]
-                attempt = _setup["attempt"]
-                max_attempts = _setup["max_attempts"]
-                director_feedback_for_fourphase = _setup["director_feedback_for_fourphase"]
-                _st_snapshot = _setup["st_snapshot"]
+                if arc_result["action"] == "abort":
+                    return {"action": "abort", "last_refined_context": last_refined_context}
 
-                _previous_attempt = None  # [Patch Mode] Arc 패치 모드를 위한 이전 시도 추적
-                _base_constraint_block = constraint_block  # [TF-47] retry 간 누적 방지
-
-                while attempt < max_attempts:
-                    constraint_block = _base_constraint_block  # [TF-47] retry마다 원본으로 초기화
-                    draft_validator_passed = False
-                    consensus_passed = False
-
-                    # [V60.10] 이전 시도 REJECT 패턴 분석
-                    if attempt >= 1 and self.ctx.stage_rejection_history:
-                        arc_rejections = [
-                            r
-                            for r in self.ctx.stage_rejection_history
-                            if r.get("stage") == 2 and r.get("arc_no") == global_arc_no
-                        ]
-                        if arc_rejections:
-                            pattern_analysis = self._compose_rejection_pattern_feedback(arc_rejections, global_arc_no)
-                            if pattern_analysis:
-                                current_feedback = pattern_analysis + "\n" + current_feedback
-                                self.ctx.ui.log(f"      🔍 [V60.10] REJECT 패턴 분석 주입 ({len(arc_rejections)}건)")
-
-                    ### [4-R3-b] Arc 분석 + 무기 준비
-                    _analysis = self.preflight._preflight_arc_analysis(
-                        attempt=attempt,
-                        current_feedback=current_feedback,
-                        constraint_block=constraint_block,
-                        last_refined_context=last_refined_context,
-                        all_refined_arcs=all_refined_arcs,
-                        protagonist_name=protagonist_name,
-                        global_arc_no=global_arc_no,
-                        cached_preflight_injection=_cached_preflight_injection,
-                        cached_preflight_result=_cached_preflight_result,
-                    )
-                    refined_arc = _analysis["refined_arc"]
-                    generation_method = _analysis["generation_method"]
-                    constraint_block = _analysis["constraint_block"]
-                    entity_registry_for_director = _analysis["entity_registry_for_director"]
-
-                    ### [4-R3-c] FourPhase 생성 + 상태 보강
-                    _enrichment = self.preflight._preflight_enrichment(
-                        attempt=attempt,
-                        global_arc_no=global_arc_no,
-                        current_ep_start=current_ep_start,
-                        current_vol_strategy=current_vol_strategy,
-                        enriched_block=enriched_block,
-                        all_refined_arcs=all_refined_arcs,
-                        bible_root=bible_root,
-                        protagonist_name=protagonist_name,
-                        director_feedback_for_fourphase=director_feedback_for_fourphase,
-                        entity_registry_for_director=entity_registry_for_director,
-                        genre_for_tracker=_genre_for_tracker,
-                        previous_attempt=_previous_attempt,
-                    )
-                    four_phase_passed = _enrichment["four_phase_passed"]
-                    refined_arc = _enrichment["refined_arc"]
-                    generation_method = _enrichment["generation_method"]
-                    draft_validator_passed = _enrichment["draft_validator_passed"]
-                    consensus_passed = _enrichment["consensus_passed"]
-                    _st_snapshot = _enrichment["st_snapshot"]
-                    director_feedback_for_fourphase = _enrichment["director_feedback_for_fourphase"]
-                    _was_patch = _enrichment.get("was_patch", False)
-                    _patch_fallback = _enrichment.get("patch_fallback", False)
-                    _prev_score = _enrichment.get("prev_score", 0)
-
-                    # ─────────────────────────────────────────────────────────────
-                    # [V60.77] FourPhase 실패 시 다음 대면으로
-                    # ─────────────────────────────────────────────────────────────
-                    if refined_arc is None:
-                        self.ctx.ui.log(
-                            f"      🔄 [V60.77] FourPhase 실패 → Director 대면 {min(attempt + 2, max_attempts)}/{max_attempts} 재시도"
-                        )
-                        attempt += 1
-                        continue
-
-                    ### [4-R3-d] Pre-Director 검증 체인
-                    _val = self.validation_pipeline.run_validation(
-                        refined_arc=refined_arc,
-                        four_phase_passed=four_phase_passed,
-                        all_refined_arcs=all_refined_arcs,
-                        entity_registry_for_director=entity_registry_for_director,
-                        global_arc_no=global_arc_no,
-                        current_ep_start=current_ep_start,
-                        current_feedback=current_feedback,
-                        generation_method=generation_method,
-                        constraint_block=constraint_block,
-                        enriched_block=enriched_block,
-                        draft_validator_passed=draft_validator_passed,
-                        consensus_passed=consensus_passed,
-                        attempt=attempt,
-                        protagonist_name=protagonist_name,
-                        constraint_db=constraint_db,
-                    )
-                    if _val["action"] == "retry":
-                        current_feedback = _val["current_feedback"]
-                        # [FlowGuard→FourPhase] 검증 피드백을 FourPhase 경로에도 전달
-                        director_feedback_for_fourphase = current_feedback
-                        attempt += 1
-                        continue
-                    refined_arc = _val["refined_arc"]
-                    draft_validator_passed = _val["draft_validator_passed"]
-                    consensus_passed = _val["consensus_passed"]
-                    suspected_duplicates = _val["suspected_duplicates"]
-                    # [TF-25-09] ArcAutoCorrector 수정 내역을 Director advisory로 전달
-                    _corrections = _val.get("corrections_made", [])
-                    if _corrections:
-                        _corr_text = " / ".join(str(c)[:80] for c in _corrections[:5])
-                        constraint_block = (
-                            constraint_block or ""
-                        ) + f"\n[Python 자동 수정 {len(_corrections)}건] {_corr_text}"
-                    # [TF-25-08] Python Pre-Director advisory를 Director에 전달
-                    _advisories = _val.get("python_advisories", [])
-                    if _advisories:
-                        _adv_text = "\n".join(
-                            f"[{a['source']}:{a['severity']}] {a['message'][:200]}" for a in _advisories[:5]
-                        )
-                        constraint_block = (
-                            constraint_block or ""
-                        ) + f"\n\n[Python Pre-Director advisory {len(_advisories)}건]\n{_adv_text}"
-
-                    ### [4-R3-e] Director 심사 + 최종 처리
-                    _fin = await self.finalizer.run_finalize(
-                        refined_arc=refined_arc,
-                        enriched_block=enriched_block,
-                        arc_drive=arc_drive,
-                        all_refined_arcs=all_refined_arcs,
-                        global_arc_no=global_arc_no,
-                        current_ep_start=current_ep_start,
-                        current_feedback=current_feedback,
-                        protagonist_name=protagonist_name,
-                        suspected_duplicates=suspected_duplicates,
-                        entity_registry_for_director=entity_registry_for_director,
-                        constraint_block=constraint_block,
-                        draft_validator_passed=draft_validator_passed,
-                        consensus_passed=consensus_passed,
-                        attempt=attempt,
-                        generation_method=generation_method,
-                        is_patch=_was_patch,
-                        prev_score=_prev_score,
-                        patch_fallback=_patch_fallback,
-                        st_snapshot=_st_snapshot,
-                        director_feedback_for_fourphase=director_feedback_for_fourphase,
-                        last_refined_context=last_refined_context,
-                        bible_root=bible_root,
-                        genre=genre,
-                        constraint_db=constraint_db,
-                    )
-                    transition: Stage2FinalizeTransitionPayload = self._handle_stage2_finalize_transition(
-                        fin=_fin,
-                        global_arc_no=global_arc_no,
-                        attempt=attempt,
-                        last_refined_context=last_refined_context,
-                        current_ep_start=current_ep_start,
-                        current_feedback=current_feedback,
-                        director_feedback_for_fourphase=director_feedback_for_fourphase,
-                        st_snapshot=_st_snapshot,
-                    )
-                    last_refined_context = transition["last_refined_context"]
-                    current_ep_start = transition["current_ep_start"]
-                    current_feedback = transition["current_feedback"]
-                    director_feedback_for_fourphase = transition["director_feedback_for_fourphase"]
-                    _st_snapshot = transition["st_snapshot"]
-                    _previous_attempt = transition["previous_attempt"]
-
-                    if transition["action"] == "break":
-                        passed = True
-                        break
-                    if transition["action"] == "retry":
-                        attempt += 1
-                        continue
-                    elif transition["action"] == "next":
-                        attempt += 1
-                        continue
-
-                    attempt += 1
-
-                if not passed:
-                    failure_result: Stage2ArcFailurePayload = await self._handle_stage2_arc_failure(
-                        global_arc_no=global_arc_no,
-                        batch_start=batch_start,
-                        batch_end=batch_end,
-                        all_refined_arcs=all_refined_arcs,
-                        arcs_source=arcs_source,
-                        constraint_db=constraint_db,
-                        refined_arc=refined_arc,
-                        current_ep_start=current_ep_start,
-                    )
-                    if failure_result["action"] == "abort":
-                        _design_spinner.__exit__(None, None, None)
-                        return
-                    if failure_result["action"] == "skip":
-                        current_ep_start = failure_result["current_ep_start"]
-                    elif failure_result["action"] == "retry":
-                        attempt = 0
-                        passed = False
-                        current_feedback = failure_result["current_feedback"]
-                        constraint_block = failure_result["constraint_block"]
-                        continue
-
-                # [V60.45] 다음 Arc로
+                current_ep_start = arc_result["current_ep_start"]
+                last_refined_context = arc_result["last_refined_context"]
                 idx += 1
 
-            _design_spinner.__exit__(None, None, None)
-            self.ctx.ui.log(f"✅ 배치({batch_start + 1}~{batch_end}) 욕망 엔진 이식 및 용접 완료.")
+        return {"action": "continue", "last_refined_context": last_refined_context}
 
-            # [V40] Slack 알림 전송
-            try:
-                batch_results_count = len(all_refined_arcs) - batch_start_count
-                notifier.send_notification(
-                    title=f"✅ [Arc] 제 {batch_start + 1}~{batch_end}번 아크 설계 완료",
-                    message=f"프로젝트: {self.ctx.current_project.name}\n설계된 아크 수: {batch_results_count}개",
-                    key_metrics={"완료 구간": f"{batch_start + 1} ~ {batch_end} Arc", "생성 수": batch_results_count},
+    async def _run_stage2_single_arc_design(
+        self,
+        *,
+        source_arc_idx: int,
+        enriched_block: dict[str, Any],
+        batch_start: int,
+        batch_end: int,
+        all_refined_arcs: list[Any],
+        arcs_source: list[Any],
+        volumes_strategy: list[Any],
+        protagonist_name: str | None,
+        grand_obj: str,
+        bible_root: dict[str, Any],
+        constraint_db,
+        genre: str,
+        last_refined_context: str,
+        current_ep_start: int,
+    ) -> dict[str, Any]:
+        """단일 Arc의 preflight/generate/validate/finalize 재시도 루프를 감싼다."""
+        global_arc_no = source_arc_idx + 1
+        current_vol_strategy = self._resolve_stage2_current_vol_strategy(volumes_strategy, global_arc_no)
+        setup = self._prepare_stage2_single_arc_state(
+            source_arc_idx=source_arc_idx,
+            all_refined_arcs=all_refined_arcs,
+            arcs_source=arcs_source,
+            grand_obj=grand_obj,
+            global_arc_no=global_arc_no,
+            constraint_db=constraint_db,
+            genre=genre,
+            current_ep_start=current_ep_start,
+        )
+        passed = setup["passed"]
+        current_feedback = setup["current_feedback"]
+        attempt = setup["attempt"]
+        max_attempts = setup["max_attempts"]
+        director_feedback_for_fourphase = setup["director_feedback_for_fourphase"]
+        st_snapshot = setup["st_snapshot"]
+        previous_attempt = None
+        refined_arc = None
+
+        while attempt < max_attempts:
+            attempt_result = await self._run_stage2_single_arc_attempt(
+                global_arc_no=global_arc_no,
+                attempt=attempt,
+                max_attempts=max_attempts,
+                setup=setup,
+                enriched_block=enriched_block,
+                all_refined_arcs=all_refined_arcs,
+                current_vol_strategy=current_vol_strategy,
+                protagonist_name=protagonist_name,
+                bible_root=bible_root,
+                constraint_db=constraint_db,
+                genre=genre,
+                last_refined_context=last_refined_context,
+                current_ep_start=current_ep_start,
+                current_feedback=current_feedback,
+                director_feedback_for_fourphase=director_feedback_for_fourphase,
+                st_snapshot=st_snapshot,
+                previous_attempt=previous_attempt,
+            )
+            attempt = attempt_result["next_attempt"]
+            refined_arc = attempt_result["refined_arc"]
+            current_feedback = attempt_result["current_feedback"]
+            director_feedback_for_fourphase = attempt_result["director_feedback_for_fourphase"]
+            st_snapshot = attempt_result["st_snapshot"]
+            last_refined_context = attempt_result["last_refined_context"]
+            current_ep_start = attempt_result["current_ep_start"]
+            previous_attempt = attempt_result["previous_attempt"]
+
+            if attempt_result["action"] == "break":
+                passed = True
+                break
+
+        if not passed:
+            failure_state = await self._handle_stage2_single_arc_failure(
+                global_arc_no=global_arc_no,
+                batch_start=batch_start,
+                batch_end=batch_end,
+                all_refined_arcs=all_refined_arcs,
+                arcs_source=arcs_source,
+                constraint_db=constraint_db,
+                refined_arc=refined_arc,
+                current_ep_start=current_ep_start,
+                last_refined_context=last_refined_context,
+            )
+            if failure_state["action"] == "abort":
+                return failure_state
+            current_ep_start = failure_state["current_ep_start"]
+
+        return {"action": "next", "current_ep_start": current_ep_start, "last_refined_context": last_refined_context}
+
+    async def _run_stage2_single_arc_attempt(
+        self,
+        *,
+        global_arc_no: int,
+        attempt: int,
+        max_attempts: int,
+        setup: dict[str, Any],
+        enriched_block: dict[str, Any],
+        all_refined_arcs: list[Any],
+        current_vol_strategy: dict[str, Any],
+        protagonist_name: str | None,
+        bible_root: dict[str, Any],
+        constraint_db,
+        genre: str,
+        last_refined_context: str,
+        current_ep_start: int,
+        current_feedback: str,
+        director_feedback_for_fourphase: str,
+        st_snapshot,
+        previous_attempt: dict[str, Any] | None,
+    ) -> Stage2SingleArcAttemptPayload:
+        """Execute one single-arc attempt and return the next loop state."""
+        attempt_state = self._run_stage2_single_arc_preflight(
+            global_arc_no=global_arc_no,
+            attempt=attempt,
+            setup=setup,
+            all_refined_arcs=all_refined_arcs,
+            protagonist_name=protagonist_name,
+            last_refined_context=last_refined_context,
+            current_feedback=current_feedback,
+            current_ep_start=current_ep_start,
+            current_vol_strategy=current_vol_strategy,
+            enriched_block=enriched_block,
+            bible_root=bible_root,
+            director_feedback_for_fourphase=director_feedback_for_fourphase,
+            genre=genre,
+            previous_attempt=previous_attempt,
+        )
+        if self._log_stage2_four_phase_retry(attempt_state["refined_arc"], attempt, max_attempts):
+            return self._build_stage2_single_arc_retry_payload(
+                attempt=attempt,
+                current_feedback=attempt_state["current_feedback"],
+                director_feedback_for_fourphase=attempt_state["director_feedback_for_fourphase"],
+                st_snapshot=attempt_state["st_snapshot"],
+                last_refined_context=last_refined_context,
+                current_ep_start=current_ep_start,
+                previous_attempt=previous_attempt,
+                refined_arc=attempt_state["refined_arc"],
+            )
+
+        validation_state = self._run_stage2_single_arc_validation(
+            global_arc_no=global_arc_no,
+            attempt=attempt,
+            refined_arc=attempt_state["refined_arc"],
+            four_phase_passed=attempt_state["four_phase_passed"],
+            all_refined_arcs=all_refined_arcs,
+            entity_registry_for_director=attempt_state["entity_registry_for_director"],
+            current_ep_start=current_ep_start,
+            current_feedback=attempt_state["current_feedback"],
+            generation_method=attempt_state["generation_method"],
+            constraint_block=attempt_state["constraint_block"],
+            enriched_block=enriched_block,
+            draft_validator_passed=attempt_state["draft_validator_passed"],
+            consensus_passed=attempt_state["consensus_passed"],
+            protagonist_name=protagonist_name,
+            constraint_db=constraint_db,
+            st_snapshot=attempt_state["st_snapshot"],
+            last_refined_context=last_refined_context,
+            previous_attempt=previous_attempt,
+        )
+        if validation_state["action"] == "retry":
+            return validation_state["payload"]
+
+        return await self._finalize_stage2_single_arc_attempt(
+            global_arc_no=global_arc_no,
+            attempt=attempt,
+            setup=setup,
+            enriched_block=enriched_block,
+            all_refined_arcs=all_refined_arcs,
+            protagonist_name=protagonist_name,
+            bible_root=bible_root,
+            constraint_db=constraint_db,
+            genre=genre,
+            last_refined_context=last_refined_context,
+            current_ep_start=current_ep_start,
+            director_feedback_for_fourphase=attempt_state["director_feedback_for_fourphase"],
+            refined_arc=validation_state["refined_arc"],
+            current_feedback=attempt_state["current_feedback"],
+            suspected_duplicates=validation_state["suspected_duplicates"],
+            entity_registry_for_director=attempt_state["entity_registry_for_director"],
+            constraint_block=validation_state["constraint_block"],
+            draft_validator_passed=validation_state["draft_validator_passed"],
+            consensus_passed=validation_state["consensus_passed"],
+            generation_method=attempt_state["generation_method"],
+            was_patch=attempt_state["was_patch"],
+            prev_score=attempt_state["prev_score"],
+            patch_fallback=attempt_state["patch_fallback"],
+            st_snapshot=attempt_state["st_snapshot"],
+        )
+
+    def _run_stage2_single_arc_preflight(
+        self,
+        *,
+        global_arc_no: int,
+        attempt: int,
+        setup: dict[str, Any],
+        all_refined_arcs: list[Any],
+        protagonist_name: str | None,
+        last_refined_context: str,
+        current_feedback: str,
+        current_ep_start: int,
+        current_vol_strategy: dict[str, Any],
+        enriched_block: dict[str, Any],
+        bible_root: dict[str, Any],
+        director_feedback_for_fourphase: str,
+        genre: str,
+        previous_attempt: dict[str, Any] | None,
+    ) -> dict[str, Any]:
+        current_feedback = self._augment_stage2_feedback_from_rejections(
+            current_feedback=current_feedback,
+            attempt=attempt,
+            global_arc_no=global_arc_no,
+        )
+        analysis = self.preflight._preflight_arc_analysis(
+            attempt=attempt,
+            current_feedback=current_feedback,
+            constraint_block=setup["constraint_block"],
+            last_refined_context=last_refined_context,
+            all_refined_arcs=all_refined_arcs,
+            protagonist_name=protagonist_name,
+            global_arc_no=global_arc_no,
+            cached_preflight_injection=setup["cached_preflight_injection"],
+            cached_preflight_result=setup["cached_preflight_result"],
+        )
+        enrichment = self.preflight._preflight_enrichment(
+            attempt=attempt,
+            global_arc_no=global_arc_no,
+            current_ep_start=current_ep_start,
+            current_vol_strategy=current_vol_strategy,
+            enriched_block=enriched_block,
+            all_refined_arcs=all_refined_arcs,
+            bible_root=bible_root,
+            protagonist_name=protagonist_name,
+            director_feedback_for_fourphase=director_feedback_for_fourphase,
+            entity_registry_for_director=analysis["entity_registry_for_director"],
+            genre_for_tracker=genre,
+            previous_attempt=previous_attempt,
+        )
+        return {
+            "current_feedback": current_feedback,
+            "refined_arc": enrichment["refined_arc"],
+            "generation_method": enrichment["generation_method"],
+            "constraint_block": analysis["constraint_block"],
+            "entity_registry_for_director": analysis["entity_registry_for_director"],
+            "four_phase_passed": enrichment["four_phase_passed"],
+            "draft_validator_passed": enrichment["draft_validator_passed"],
+            "consensus_passed": enrichment["consensus_passed"],
+            "st_snapshot": enrichment["st_snapshot"],
+            "director_feedback_for_fourphase": enrichment["director_feedback_for_fourphase"],
+            "was_patch": enrichment.get("was_patch", False),
+            "patch_fallback": enrichment.get("patch_fallback", False),
+            "prev_score": enrichment.get("prev_score", 0),
+        }
+
+    def _build_stage2_single_arc_retry_payload(
+        self,
+        *,
+        attempt: int,
+        current_feedback: str,
+        director_feedback_for_fourphase: str,
+        st_snapshot,
+        last_refined_context: str,
+        current_ep_start: int,
+        previous_attempt: dict[str, Any] | None,
+        refined_arc: dict[str, Any] | None,
+    ) -> Stage2SingleArcAttemptPayload:
+        return {
+            "action": "retry",
+            "next_attempt": attempt + 1,
+            "current_feedback": current_feedback,
+            "director_feedback_for_fourphase": director_feedback_for_fourphase,
+            "st_snapshot": st_snapshot,
+            "last_refined_context": last_refined_context,
+            "current_ep_start": current_ep_start,
+            "previous_attempt": previous_attempt,
+            "refined_arc": refined_arc,
+        }
+
+    def _run_stage2_single_arc_validation(
+        self,
+        *,
+        global_arc_no: int,
+        attempt: int,
+        refined_arc: dict[str, Any] | None,
+        four_phase_passed: bool,
+        all_refined_arcs: list[Any],
+        entity_registry_for_director,
+        current_ep_start: int,
+        current_feedback: str,
+        generation_method: str,
+        constraint_block: str,
+        enriched_block: dict[str, Any],
+        draft_validator_passed: bool,
+        consensus_passed: bool,
+        protagonist_name: str | None,
+        constraint_db,
+        st_snapshot,
+        last_refined_context: str,
+        previous_attempt: dict[str, Any] | None,
+    ) -> dict[str, Any]:
+        validation = self.validation_pipeline.run_validation(
+            refined_arc=refined_arc,
+            four_phase_passed=four_phase_passed,
+            all_refined_arcs=all_refined_arcs,
+            entity_registry_for_director=entity_registry_for_director,
+            global_arc_no=global_arc_no,
+            current_ep_start=current_ep_start,
+            current_feedback=current_feedback,
+            generation_method=generation_method,
+            constraint_block=constraint_block,
+            enriched_block=enriched_block,
+            draft_validator_passed=draft_validator_passed,
+            consensus_passed=consensus_passed,
+            attempt=attempt,
+            protagonist_name=protagonist_name,
+            constraint_db=constraint_db,
+        )
+        if validation["action"] == "retry":
+            retry_feedback = validation["current_feedback"]
+            return {
+                "action": "retry",
+                "payload": self._build_stage2_single_arc_retry_payload(
+                    attempt=attempt,
+                    current_feedback=retry_feedback,
+                    director_feedback_for_fourphase=retry_feedback,
+                    st_snapshot=st_snapshot,
+                    last_refined_context=last_refined_context,
+                    current_ep_start=current_ep_start,
+                    previous_attempt=previous_attempt,
+                    refined_arc=refined_arc,
+                ),
+            }
+        return {
+            "action": "continue",
+            "refined_arc": validation["refined_arc"],
+            "draft_validator_passed": validation["draft_validator_passed"],
+            "consensus_passed": validation["consensus_passed"],
+            "suspected_duplicates": validation["suspected_duplicates"],
+            "constraint_block": self._apply_stage2_validation_advisories(
+                constraint_block=constraint_block,
+                corrections_made=validation.get("corrections_made", []),
+                python_advisories=validation.get("python_advisories", []),
+            ),
+        }
+
+    async def _finalize_stage2_single_arc_attempt(
+        self,
+        *,
+        global_arc_no: int,
+        attempt: int,
+        setup: dict[str, Any],
+        enriched_block: dict[str, Any],
+        all_refined_arcs: list[Any],
+        protagonist_name: str | None,
+        bible_root: dict[str, Any],
+        constraint_db,
+        genre: str,
+        last_refined_context: str,
+        current_ep_start: int,
+        director_feedback_for_fourphase: str,
+        refined_arc: dict[str, Any],
+        current_feedback: str,
+        suspected_duplicates: list[Any],
+        entity_registry_for_director,
+        constraint_block: str,
+        draft_validator_passed: bool,
+        consensus_passed: bool,
+        generation_method: str,
+        was_patch: bool,
+        prev_score: int | float,
+        patch_fallback: bool,
+        st_snapshot,
+    ) -> Stage2SingleArcAttemptPayload:
+        finalize_result = await self.finalizer.run_finalize(
+            refined_arc=refined_arc,
+            enriched_block=enriched_block,
+            arc_drive=setup["arc_drive"],
+            all_refined_arcs=all_refined_arcs,
+            global_arc_no=global_arc_no,
+            current_ep_start=current_ep_start,
+            current_feedback=current_feedback,
+            protagonist_name=protagonist_name,
+            suspected_duplicates=suspected_duplicates,
+            entity_registry_for_director=entity_registry_for_director,
+            constraint_block=constraint_block,
+            draft_validator_passed=draft_validator_passed,
+            consensus_passed=consensus_passed,
+            attempt=attempt,
+            generation_method=generation_method,
+            is_patch=was_patch,
+            prev_score=prev_score,
+            patch_fallback=patch_fallback,
+            st_snapshot=st_snapshot,
+            director_feedback_for_fourphase=director_feedback_for_fourphase,
+            last_refined_context=last_refined_context,
+            bible_root=bible_root,
+            genre=genre,
+            constraint_db=constraint_db,
+        )
+        transition: Stage2FinalizeTransitionPayload = self._handle_stage2_finalize_transition(
+            fin=finalize_result,
+            global_arc_no=global_arc_no,
+            attempt=attempt,
+            last_refined_context=last_refined_context,
+            current_ep_start=current_ep_start,
+            current_feedback=current_feedback,
+            director_feedback_for_fourphase=director_feedback_for_fourphase,
+            st_snapshot=st_snapshot,
+        )
+        transition_state = self._apply_stage2_finalize_transition_state(transition)
+        return {
+            "action": transition["action"],
+            "next_attempt": attempt if transition["action"] == "break" else attempt + 1,
+            "current_feedback": transition_state["current_feedback"],
+            "director_feedback_for_fourphase": transition_state["director_feedback_for_fourphase"],
+            "st_snapshot": transition_state["st_snapshot"],
+            "last_refined_context": transition_state["last_refined_context"],
+            "current_ep_start": transition_state["current_ep_start"],
+            "previous_attempt": transition_state["previous_attempt"],
+            "refined_arc": refined_arc,
+        }
+
+    def _prepare_stage2_single_arc_state(
+        self,
+        *,
+        source_arc_idx: int,
+        all_refined_arcs: list[Any],
+        arcs_source: list[Any],
+        grand_obj: str,
+        global_arc_no: int,
+        constraint_db,
+        genre: str,
+        current_ep_start: int,
+    ) -> dict[str, Any]:
+        """단일 Arc 시도 루프에 필요한 analyst lack report와 preflight setup을 준비한다."""
+        self._set_agent_telemetry_context(ep_num=current_ep_start)
+        try:
+            lack_report = self.ctx.agents["analyst"].get_lack_report(self.ctx.sys.hud.pro_root)
+        except Exception as lack_err:
+            self.ctx.ui.log(f"⚠️ [Analyst] 결핍 리포트 생성 실패: {lack_err}")
+            if callable(getattr(self.ctx, "audit_event", None)):
+                self.ctx.audit_event(
+                    "analyst_error",
+                    "get_lack_report failed",
+                    {"arc_no": global_arc_no, "error": str(lack_err)},
                 )
-            except Exception as slack_err:
-                self.ctx.ui.log(f"⚠️ [Slack] 알림 전송 실패 (무시하고 계속): {slack_err}")
+            lack_report = {"martial_deficit": "분석 실패", "status": "error"}
 
+        return self.preflight._preflight_state_setup(
+            all_refined_arcs=all_refined_arcs,
+            arcs_source=arcs_source,
+            arc_idx=source_arc_idx,
+            lack_report=lack_report,
+            grand_obj=grand_obj,
+            global_arc_no=global_arc_no,
+            constraint_db=constraint_db,
+            genre=genre,
+        )
+
+    def _resolve_stage2_current_vol_strategy(self, volumes_strategy: list[Any], global_arc_no: int) -> dict[str, Any]:
+        """현재 Arc 번호에 대응하는 권별 전략 문서를 고른다."""
+        vol_no = ((global_arc_no - 1) // VolumeSettings.ARCS_PER_VOLUME) + 1
+        default_vol_strategy = {"vol_no": vol_no, "strategy_doc": ""}
+        return next((strategy for strategy in volumes_strategy if strategy.get("vol_no") == vol_no), default_vol_strategy)
+
+    def _augment_stage2_feedback_from_rejections(
+        self, *, current_feedback: str, attempt: int, global_arc_no: int
+    ) -> str:
+        """이전 REJECT 패턴을 현재 feedback 앞단에만 덧붙인다."""
+        if attempt < 1 or not self.ctx.stage_rejection_history:
+            return current_feedback
+
+        arc_rejections = [
+            entry
+            for entry in self.ctx.stage_rejection_history
+            if entry.get("stage") == 2 and entry.get("arc_no") == global_arc_no
+        ]
+        if not arc_rejections:
+            return current_feedback
+
+        pattern_analysis = self._compose_rejection_pattern_feedback(arc_rejections, global_arc_no)
+        if not pattern_analysis:
+            return current_feedback
+
+        self.ctx.ui.log(f"      🔍 [V60.10] REJECT 패턴 분석 주입 ({len(arc_rejections)}건)")
+        return pattern_analysis + "\n" + current_feedback
+
+    def _apply_stage2_finalize_transition_state(
+        self, transition: Stage2FinalizeTransitionPayload
+    ) -> Stage2FinalizeTransitionPayload:
+        """Finalize transition payload를 현재 Arc 루프 상태 형태로 그대로 전달한다."""
+        return transition
+
+    async def _handle_stage2_single_arc_failure(
+        self,
+        *,
+        global_arc_no: int,
+        batch_start: int,
+        batch_end: int,
+        all_refined_arcs: list[Any],
+        arcs_source: list[Any],
+        constraint_db,
+        refined_arc: dict[str, Any] | None,
+        current_ep_start: int,
+        last_refined_context: str,
+    ) -> dict[str, Any]:
+        """단일 Arc 시도 소진 후 abort/skip 경계만 정리한다."""
+        failure_result: Stage2ArcFailurePayload = await self._handle_stage2_arc_failure(
+            global_arc_no=global_arc_no,
+            batch_start=batch_start,
+            batch_end=batch_end,
+            all_refined_arcs=all_refined_arcs,
+            arcs_source=arcs_source,
+            constraint_db=constraint_db,
+            refined_arc=refined_arc,
+            current_ep_start=current_ep_start,
+        )
+        if failure_result["action"] == "abort":
+            return {"action": "abort", "current_ep_start": current_ep_start, "last_refined_context": last_refined_context}
+        if failure_result["action"] == "skip":
+            current_ep_start = failure_result["current_ep_start"]
+        return {"action": "next", "current_ep_start": current_ep_start, "last_refined_context": last_refined_context}
+
+    def _apply_stage2_validation_advisories(
+        self,
+        *,
+        constraint_block: str,
+        corrections_made: list[Any],
+        python_advisories: list[dict[str, Any]],
+    ) -> str:
+        """Python-side advisory를 Director constraint block에 선형으로 병합한다."""
+        updated_constraint_block = constraint_block or ""
+        if corrections_made:
+            correction_text = " / ".join(str(correction)[:80] for correction in corrections_made[:5])
+            updated_constraint_block += f"\n[Python 자동 수정 {len(corrections_made)}건] {correction_text}"
+        if python_advisories:
+            advisory_text = "\n".join(
+                f"[{advisory['source']}:{advisory['severity']}] {advisory['message'][:200]}"
+                for advisory in python_advisories[:5]
+            )
+            updated_constraint_block += f"\n\n[Python Pre-Director advisory {len(python_advisories)}건]\n{advisory_text}"
+        return updated_constraint_block
+
+    def _log_stage2_four_phase_retry(self, refined_arc: dict[str, Any] | None, attempt: int, max_attempts: int) -> bool:
+        """FourPhase 생성 실패 시 재시도 로그를 남기고 continue 여부를 반환한다."""
+        if refined_arc is not None:
+            return False
+        self.ctx.ui.log(f"      🔄 [V60.77] FourPhase 실패 → Director 대면 {min(attempt + 2, max_attempts)}/{max_attempts} 재시도")
+        return True
+
+    def _handle_stage2_batch_completion(
+        self,
+        *,
+        batch_start: int,
+        batch_end: int,
+        batch_start_count: int,
+        all_refined_arcs: list[Any],
+        notifier,
+    ) -> None:
+        """배치 완료 로그와 Slack side effect를 한곳에 묶는다."""
+        self.ctx.ui.log(f"✅ 배치({batch_start + 1}~{batch_end}) 욕망 엔진 이식 및 용접 완료.")
+        try:
+            batch_results_count = len(all_refined_arcs) - batch_start_count
+            notifier.send_notification(
+                title=f"✅ [Arc] 제 {batch_start + 1}~{batch_end}번 아크 설계 완료",
+                message=f"프로젝트: {self.ctx.current_project.name}\n설계된 아크 수: {batch_results_count}개",
+                key_metrics={"완료 구간": f"{batch_start + 1} ~ {batch_end} Arc", "생성 수": batch_results_count},
+            )
+        except Exception as slack_err:
+            self.ctx.ui.log(f"⚠️ [Slack] 알림 전송 실패 (무시하고 계속): {slack_err}")
+
+    async def _complete_stage2_pipeline(self, *, target_arc_count: int | None) -> None:
+        """Stage 2 전체 완료 후 tail side effect를 마무리한다."""
         self.ctx.ui.log("✨ [Success] 0124 매니페스토 기반 전술 설계 전 공정 완료.")
         if callable(getattr(self.ctx, "write_audit_summary", None)):
             self.ctx.write_audit_summary("stage2_complete")
-        if target_arc_count is None:  # [OneStop] 프로그래밍 호출 시 대기 건너뛰기
+        if target_arc_count is None:
             try:
                 await asyncio.to_thread(input, "\n[Enter] 메뉴로 돌아가기")
             except (EOFError, KeyboardInterrupt, ValueError):

@@ -1458,6 +1458,129 @@ class DBManager:
 
         # --- [Sovereign Unified Transaction: 최종 박제] ---
 
+    @staticmethod
+    def _normalize_commit_episode_factory_inputs(ep_num, manuscript_data, state_data):
+        if isinstance(manuscript_data, str):
+            try:
+                manuscript_data = json.loads(manuscript_data)
+            except (json.JSONDecodeError, ValueError):
+                manuscript_data = {"title": f"\uc81c {ep_num} \ud654", "content": manuscript_data}
+
+        if isinstance(state_data, str):
+            try:
+                state_data = json.loads(state_data)
+            except (json.JSONDecodeError, ValueError):
+                state_data = {"context_audit": {"summary": "\ub370\uc774\ud130 \ud30c\uc2f1 \uc624\ub958"}}
+
+        return manuscript_data, state_data
+
+    @staticmethod
+    def _normalize_commit_episode_factory_causal_links(causal_links):
+        normalized_links = []
+        if not causal_links:
+            return normalized_links
+
+        for link in causal_links:
+            if isinstance(link, str):
+                normalized_links.append({"cause": "\uc11c\uc0ac \uc9c4\ud589", "effect": link})
+            elif isinstance(link, dict):
+                normalized_links.append(link)
+
+        return normalized_links
+
+    def _persist_commit_episode_factory_core(self, ep_num, manuscript_data, martial_data, state_data) -> None:
+        self.save_manuscript(ep_num, manuscript_data.get("title", "무제"), manuscript_data.get("content", ""))
+        if martial_data:
+            self.update_martial_tracker(ep_num, martial_data)
+
+        audit = state_data.get("context_audit", {})
+        summary = audit.get("summary", "") if isinstance(audit, dict) else str(audit)
+        self.save_state_log_with_summary(ep_num, state_data, summary)
+
+    def _persist_commit_episode_factory_causal_links(self, ep_num, causal_links) -> None:
+        normalized_links = self._normalize_commit_episode_factory_causal_links(causal_links)
+        if normalized_links:
+            self.save_causal_links(normalized_links, ep_num)
+
+    def _persist_commit_episode_factory_karma(self, ep_num, karma_data) -> None:
+        if not karma_data:
+            return
+
+        for karma_row in karma_data:
+            if not isinstance(karma_row, dict):
+                continue
+
+            npc = karma_row.get("target") or karma_row.get("npc_name") or karma_row.get("name", "Unknown")
+            misunderstanding = karma_row.get("misunderstanding")
+            if misunderstanding is None:
+                misunderstanding = karma_row.get("value")
+            if misunderstanding is None:
+                misunderstanding = karma_row.get("point", 0)
+
+            obsession = karma_row.get("obsession")
+            if obsession is None:
+                obsession = karma_row.get("point")
+            if obsession is None:
+                obsession = 0
+
+            self.update_karma(npc, misunderstanding, obsession, ep_num)
+
+    def _persist_commit_episode_factory_lore(self, lore_data) -> None:
+        if not lore_data or not isinstance(lore_data, dict):
+            return
+
+        for category, items in lore_data.items():
+            if not isinstance(items, list):
+                continue
+            for item in items:
+                if not isinstance(item, dict):
+                    continue
+                name = item.get("name") or item.get("Item")
+                description = item.get("description") or item.get("desc") or str(item)
+                if name:
+                    self.update_lore_item(category, name, description)
+
+    def _archive_commit_episode_factory_recovered_seeds(self, ep_num, recovered_seeds) -> None:
+        if not recovered_seeds or not isinstance(recovered_seeds, list):
+            return
+
+        cur = self.conn.cursor()
+        try:
+            for recovery in recovered_seeds:
+                if not isinstance(recovery, dict):
+                    continue
+                seed_id = recovery.get("seed_id") or recovery.get("id")
+                if seed_id:
+                    cur.execute(
+                        "UPDATE seeds SET status = 'archived', recovered_ep = ? WHERE seed_id = ?",
+                        (ep_num, seed_id),
+                    )
+        finally:
+            cur.close()
+
+    def _persist_commit_episode_factory_flow(
+        self,
+        ep_num,
+        manuscript_data,
+        martial_data,
+        state_data,
+        causal_links,
+        karma_data,
+        lore_data,
+        recovered_seeds,
+    ) -> None:
+        self._persist_commit_episode_factory_core(ep_num, manuscript_data, martial_data, state_data)
+        self._persist_commit_episode_factory_causal_links(ep_num, causal_links)
+        self._persist_commit_episode_factory_karma(ep_num, karma_data)
+        self._persist_commit_episode_factory_lore(lore_data)
+        self._archive_commit_episode_factory_recovered_seeds(ep_num, recovered_seeds)
+
+    def _rollback_commit_episode_factory_outer_transaction(self) -> None:
+        try:
+            self.rollback()
+        except Exception:
+            pass  # [R7-P1-2] Avoid secondary errors when the DB is already closed.
+
     def commit_episode_factory(
         self,
         ep_num,
@@ -1481,18 +1604,9 @@ class DBManager:
         self._lock.acquire()
         try:
             self._ensure_open()
-            # 1. 최상위 데이터 파싱 및 정규화 (딕셔너리 보장)
-            if isinstance(manuscript_data, str):
-                try:
-                    manuscript_data = json.loads(manuscript_data)
-                except (json.JSONDecodeError, ValueError):
-                    manuscript_data = {"title": f"제 {ep_num} 화", "content": manuscript_data}
-
-            if isinstance(state_data, str):
-                try:
-                    state_data = json.loads(state_data)
-                except (json.JSONDecodeError, ValueError):
-                    state_data = {"context_audit": {"summary": "데이터 파싱 오류"}}
+            manuscript_data, state_data = self._normalize_commit_episode_factory_inputs(
+                ep_num, manuscript_data, state_data
+            )
 
             # 트랜잭션 중첩 상태 확인 (상위 루프에서 이미 열려있는지 체크)
             nested_transaction = self.conn.in_transaction
@@ -1500,75 +1614,16 @@ class DBManager:
             if not nested_transaction:
                 self.begin()
 
-            # 3. 원고 본문 및 무학 지표(HUD) 저장
-            self.save_manuscript(ep_num, manuscript_data.get("title", "무제"), manuscript_data.get("content", ""))
-            if martial_data:
-                self.update_martial_tracker(ep_num, martial_data)
-
-            # 4. 상태 로그 저장 및 요약(Summary) 추출
-            audit = state_data.get("context_audit", {})
-            # context_audit 자체가 문자열로 들어오는 할루시네이션 방어
-            summary = audit.get("summary", "") if isinstance(audit, dict) else str(audit)
-            self.save_state_log_with_summary(ep_num, state_data, summary)
-
-            # 5. 🚨 인과관계(Causal Links) 데이터 정규화 및 저장
-            if causal_links:
-                normalized_links = []
-                for link in causal_links:
-                    # AI가 {"cause": "A", "effect": "B"} 가 아니라 "A -> B" 같은 문자열을 보냈을 때 대응
-                    if isinstance(link, str):
-                        normalized_links.append({"cause": "서사 진행", "effect": link})
-                    elif isinstance(link, dict):
-                        normalized_links.append(link)
-
-                # [수정] 인자 오류 해결: ep_num을 함께 전달하여 유실 방지
-                self.save_causal_links(normalized_links, ep_num)
-
-            # 6. 🚨 카르마(NPC 관계) 데이터 정규화 및 에피소드 번호 강제 매핑
-            if karma_data:
-                for k in karma_data:
-                    if not isinstance(k, dict):
-                        continue
-
-                    # AI의 다양한 키값 형태(target/npc_name, misunderstanding/value)를 모두 포용
-                    npc = k.get("target") or k.get("npc_name") or k.get("name", "Unknown")
-                    mis = k.get("misunderstanding")
-                    if mis is None:
-                        mis = k.get("value")
-                    if mis is None:
-                        mis = k.get("point", 0)
-                    obs = k.get("obsession")
-                    if obs is None:
-                        obs = k.get("point")
-                    if obs is None:
-                        obs = 0
-
-                    # 수동 갱신 시점(ep_num)을 현재 화수로 박제하여 데이터 오염 방지
-                    self.update_karma(npc, mis, obs, ep_num)
-
-            # 7. 로어(Encyclopedia) 데이터 정규화 및 수혈
-            if lore_data and isinstance(lore_data, dict):
-                for cat, items in lore_data.items():
-                    if not isinstance(items, list):
-                        continue
-                    for item in items:
-                        if not isinstance(item, dict):
-                            continue
-                        name = item.get("name") or item.get("Item")
-                        desc = item.get("description") or item.get("desc") or str(item)
-                        if name:
-                            self.update_lore_item(cat, name, desc)
-
-            # 8. 복선 회수(Seeds) 처리 (ID 정규화 및 상태 갱신)
-            if recovered_seeds and isinstance(recovered_seeds, list):
-                for rec in recovered_seeds:
-                    if not isinstance(rec, dict):
-                        continue
-                    sid = rec.get("seed_id") or rec.get("id")
-                    if sid:
-                        self.cursor.execute(
-                            "UPDATE seeds SET status = 'archived', recovered_ep = ? WHERE seed_id = ?", (ep_num, sid)
-                        )
+            self._persist_commit_episode_factory_flow(
+                ep_num,
+                manuscript_data,
+                martial_data,
+                state_data,
+                causal_links,
+                karma_data,
+                lore_data,
+                recovered_seeds,
+            )
 
             # 9. 트랜잭션 커밋 (최상위 트랜잭션일 때만)
             if not nested_transaction:
@@ -1580,10 +1635,7 @@ class DBManager:
         except sqlite3.IntegrityError as e:
             # 무결성 오류: 중복 키, 제약 조건 위반 등
             if not nested_transaction:
-                try:
-                    self.rollback()
-                except Exception:
-                    pass  # [R7-P1-2] closed DB 시 이차 예외 방지
+                self._rollback_commit_episode_factory_outer_transaction()
                 logging.warning(f" [{DBErrorSeverity.HIGH}] 데이터 무결성 오류(롤백 완료): {e}")
                 logging.info("→ 해결책: 중복 에피소드 번호 또는 키 확인")
                 return False
@@ -1597,10 +1649,7 @@ class DBManager:
             # 운영 오류: DB 잠금, 디스크 오류, 쿼리 오류 등
             error_str = str(e).lower()
             if not nested_transaction:
-                try:
-                    self.rollback()
-                except Exception:
-                    pass  # [R7-P1-2] closed DB 시 이차 예외 방지
+                self._rollback_commit_episode_factory_outer_transaction()
 
             if "locked" in error_str:
                 logging.warning(f" [{DBErrorSeverity.CRITICAL}] DB 잠금 상태(롤백 완료): {e}")
@@ -1621,10 +1670,7 @@ class DBManager:
         except (DBError, DBIntegrityError, DBTransactionError) as e:
             # 커스텀 DB 예외 (하위 메서드에서 발생)
             if not nested_transaction:
-                try:
-                    self.rollback()
-                except Exception:
-                    pass  # [R7-P1-2] closed DB 시 이차 예외 방지
+                self._rollback_commit_episode_factory_outer_transaction()
                 logging.warning(f" [{e.severity}] 하위 저장 오류(롤백 완료): {e}")
                 return False
             else:
@@ -1633,10 +1679,7 @@ class DBManager:
         except Exception as e:
             # 🛡️ [핵심] 기타 예외 - 롤백 및 전파 전략
             if not nested_transaction:
-                try:
-                    self.rollback()
-                except Exception:
-                    pass  # [R7-P1-2] closed DB 시 이차 예외 방지
+                self._rollback_commit_episode_factory_outer_transaction()
                 logging.warning(f" [{DBErrorSeverity.HIGH}] 트랜잭션 실패(롤백 완료): {e}")
                 logging.info(f"→ 상세: {traceback.format_exc()[:400]}")
                 return False

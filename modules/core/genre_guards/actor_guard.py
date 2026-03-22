@@ -15,7 +15,11 @@ class ActorGuard(BaseGuard):
     def __init__(self) -> None:
         super().__init__()
         cfg = self._load_genre_yaml("actor")
+        self._init_term_sets(cfg)
+        self._init_fame_constraints(cfg)
+        self._init_activity_requirements(cfg)
 
+    def _init_term_sets(self, cfg: dict[str, Any]) -> None:
         self.FORBIDDEN_TERMS = cfg.get(
             "forbidden_terms",
             [
@@ -131,6 +135,7 @@ class ActorGuard(BaseGuard):
             ],
         )
 
+    def _init_fame_constraints(self, cfg: dict[str, Any]) -> None:
         self._fame_hierarchy = cfg.get(
             "fame_hierarchy",
             [
@@ -168,6 +173,7 @@ class ActorGuard(BaseGuard):
             },
         )
 
+    def _init_activity_requirements(self, cfg: dict[str, Any]) -> None:
         self._activity_requirements = {
             "단역 출연": {"fame": "엑스트라"},
             "조연 출연": {"fame": "단역"},

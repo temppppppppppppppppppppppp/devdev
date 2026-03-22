@@ -215,6 +215,18 @@ class FactLedger:
         if not state_changes or not isinstance(state_changes, dict):
             return
 
+        # Same-batch deaths must land before later character phases.
+        self._apply_character_foundation_state_changes(ep_num, state_changes)
+        self._apply_item_state_changes(ep_num, state_changes)
+        self._apply_entity_state_changes(ep_num, state_changes)
+        self._apply_character_followup_state_changes(ep_num, state_changes)
+
+        # [TF-C07] 수치 팩트 자동 추출 — 기존 update_number() 활용
+        self._extract_numerical_facts(ep_num, state_changes)
+
+        self._ledger["last_updated_ep"] = ep_num
+
+    def _apply_character_foundation_state_changes(self, ep_num: int, state_changes: dict):
         # npc_deaths — [Sweep54] WorldState와 동일하게 str/dict 모두 처리
         for death in state_changes.get("npc_deaths") or []:  # [V70] None 방어
             if isinstance(death, dict):
@@ -242,6 +254,7 @@ class FactLedger:
                     note=f"관계 변화: {rel.get('from', '?')} -> {rel.get('to', '?')}",
                 )
 
+    def _apply_item_state_changes(self, ep_num: int, state_changes: dict):
         # skill_acquisitions — [Sweep55] WorldState와 동일하게 str/dict 모두 처리
         for skill in state_changes.get("skill_acquisitions") or []:  # [V70] None 방어
             if isinstance(skill, dict):
@@ -293,6 +306,7 @@ class FactLedger:
             note = f"수량 {delta.get('from', '?')} -> {to_count}"
             self._upsert_item(item_name, ep_num, owner="주인공", status=status, quantity=to_count, note=note)
 
+    def _apply_entity_state_changes(self, ep_num: int, state_changes: dict):
         # entity_destructions
         for dest in state_changes.get("entity_destructions") or []:  # [V70] None 방어
             if not isinstance(dest, dict):
@@ -300,54 +314,51 @@ class FactLedger:
             name = dest.get("name", "")
             dtype = dest.get("type", "unknown")
             if name:
+                note = f"파괴 (원인: {dest.get('cause', '불명')})"
                 if dtype == "organization":
-                    self._upsert_org(name, ep_num, status="destroyed", note=f"파괴 (원인: {dest.get('cause', '불명')})")
+                    self._upsert_org(name, ep_num, status="destroyed", note=note)
                 else:
-                    self._upsert_location(
-                        name, ep_num, status="destroyed", note=f"파괴 (원인: {dest.get('cause', '불명')})"
-                    )
+                    self._upsert_location(name, ep_num, status="destroyed", note=note)
 
+    def _apply_character_followup_state_changes(self, ep_num: int, state_changes: dict):
         # npc_injuries
         for injury in state_changes.get("npc_injuries") or []:  # [V70] None 방어
             if not isinstance(injury, dict):
                 continue
             name = injury.get("name", "") or injury.get("npc", "")
-            if name:
-                if self._is_dead_character(name):
-                    continue
-                # [Sweep55] LLM 스키마는 "state" 키 사용 (경상/중상/위독)
-                injury_type = injury.get("state", "") or injury.get("type", "") or injury.get("injury", "")
-                self._upsert_character(name, ep_num, note=f"부상: {injury_type}" if injury_type else "부상")
+            if not name or self._is_dead_character(name):
+                continue
+            # [Sweep55] LLM 스키마는 "state" 키 사용 (경상/중상/위독)
+            injury_type = injury.get("state", "") or injury.get("type", "") or injury.get("injury", "")
+            self._upsert_character(name, ep_num, note=f"부상: {injury_type}" if injury_type else "부상")
 
         # npc_movements
         for move in state_changes.get("npc_movements") or []:  # [V70] None 방어
             if not isinstance(move, dict):
                 continue
             name = move.get("name", "") or move.get("npc", "")
-            if name:
-                if self._is_dead_character(name):
-                    continue
-                dest = move.get("destination", "") or move.get("to", "")
-                if dest:
-                    self._upsert_character(name, ep_num, note=f"이동: {dest}")
+            if not name or self._is_dead_character(name):
+                continue
+            dest = move.get("destination", "") or move.get("to", "")
+            if dest:
+                self._upsert_character(name, ep_num, note=f"이동: {dest}")
 
         # npc_personality_changes
         for pers in state_changes.get("npc_personality_changes") or []:  # [V70] None 방어
             if not isinstance(pers, dict):
                 continue
             name = pers.get("name", "") or pers.get("npc", "")
-            if name:
-                if self._is_dead_character(name):
-                    continue
-                traits = pers.get("traits", "") or pers.get("personality_traits", "")
-                motivation = pers.get("motivation", "") or pers.get("primary_motivation", "")
-                role_val = pers.get("role", "")
-                self._upsert_character(
-                    name,
-                    ep_num,
-                    role=role_val if role_val else None,
-                    note=f"성격: {traits}" if traits else (f"동기: {motivation}" if motivation else "정보 갱신"),
-                )
+            if not name or self._is_dead_character(name):
+                continue
+            traits = pers.get("traits", "") or pers.get("personality_traits", "")
+            motivation = pers.get("motivation", "") or pers.get("primary_motivation", "")
+            role_val = pers.get("role", "")
+            self._upsert_character(
+                name,
+                ep_num,
+                role=role_val if role_val else None,
+                note=f"성격: {traits}" if traits else (f"동기: {motivation}" if motivation else "정보 갱신"),
+            )
 
         # npc_npc_relationships
         for rel in state_changes.get("npc_npc_relationships") or []:  # [V70] None 방어
@@ -361,11 +372,6 @@ class FactLedger:
             if npc1 and npc2 and relation:
                 self._upsert_character(npc1, ep_num, note=f"{npc2}와 관계: {relation}")
                 self._upsert_character(npc2, ep_num, note=f"{npc1}와 관계: {relation}")
-
-        # [TF-C07] 수치 팩트 자동 추출 — 기존 update_number() 활용
-        self._extract_numerical_facts(ep_num, state_changes)
-
-        self._ledger["last_updated_ep"] = ep_num
 
     def update_from_bible_delta(self, ep_num: int, bible_delta: dict):
         """

@@ -55,12 +55,34 @@ class _FourPhaseGenerationEnvelope:
 
 
 @dataclass
+class _FourPhaseGenerationCandidateEnvelope:
+    best_arc: dict | None
+    all_candidates: list[dict]
+    spare_candidates: list[dict]
+    feedback: str
+    should_continue: bool = False
+    patch_succeeded: bool = False
+
+
+@dataclass
+class _FourPhasePatchEnvelope:
+    best_arc: dict | None
+    patch_succeeded: bool = False
+
+
+@dataclass
 class _FourPhaseCandidateEnvelope:
     all_candidates: list[dict]
     ns3b_director_advisory: str
     investment_director_advisory: str
     investment_advisory: list[dict]
     candidate_quality_flags: list[dict]
+
+
+@dataclass
+class _FourPhaseDirectorCandidateEnvelope:
+    valid_for_director: list[dict]
+    valid_quality_flags: list[dict]
 
 
 @dataclass
@@ -83,6 +105,31 @@ class _FourPhaseValidationEnvelope:
     prev_reject_feedback: str
     prev_selected_strategy: str
     spare_candidates: list[dict]
+    should_continue: bool = False
+    should_return: bool = False
+
+
+@dataclass
+class _FourPhaseRuntimeState:
+    protagonist_config: dict
+    ep_count_suggestion: int
+    pacing_signals: dict
+    pipeline_result: dict
+    pre_items: set[str]
+    pre_grants: set[str]
+    feedback: str
+    base_director_feedback: str
+    prev_rejected_arc: dict | None
+    prev_reject_feedback: str
+    prev_selected_strategy: str
+    spare_candidates: list[dict]
+    cached_constraint_block: str | None = None
+    cached_preflight: dict | None = None
+
+
+@dataclass
+class _FourPhaseRetryCycleEnvelope:
+    best_arc: dict | None
     should_continue: bool = False
     should_return: bool = False
 
@@ -356,6 +403,197 @@ class FourPhaseArcRuntime:
     def __init__(self, owner: "FourPhaseArcGenerator") -> None:
         self.owner = owner
 
+    def _initialize_generate_state(
+        self,
+        *,
+        arc_no: int,
+        curr_block: dict,
+        prev_arcs: list[dict],
+        director_feedback: str,
+    ) -> _FourPhaseRuntimeState:
+        bootstrap = self._bootstrap_generation_state(
+            arc_no=arc_no,
+            curr_block=curr_block,
+            prev_arcs=prev_arcs,
+            director_feedback=director_feedback,
+        )
+        return _FourPhaseRuntimeState(
+            protagonist_config=bootstrap.protagonist_config,
+            ep_count_suggestion=bootstrap.ep_count_suggestion,
+            pacing_signals=bootstrap.pacing_signals,
+            pipeline_result=bootstrap.pipeline_result,
+            pre_items=bootstrap.pre_items,
+            pre_grants=bootstrap.pre_grants,
+            feedback=bootstrap.feedback,
+            base_director_feedback=bootstrap.base_director_feedback,
+            prev_rejected_arc=bootstrap.prev_rejected_arc,
+            prev_reject_feedback=bootstrap.prev_reject_feedback,
+            prev_selected_strategy=bootstrap.prev_selected_strategy,
+            spare_candidates=bootstrap.spare_candidates,
+        )
+
+    def _run_generate_retry_cycle(
+        self,
+        *,
+        retry: int,
+        arc_no: int,
+        ep_start: int,
+        vol_strategy: str,
+        curr_block: dict,
+        prev_arcs: list[dict],
+        assets: dict | None,
+        max_internal_retries: int,
+        protagonist_name: str,
+        entity_registry: dict | None,
+        state_tracker,
+        vector_context: str,
+        adversarial_self_play,
+        director,
+        state: _FourPhaseRuntimeState,
+        pipeline_result: dict,
+    ) -> _FourPhaseRetryCycleEnvelope:
+        constraint_phase = self._resolve_constraint_phase(
+            retry=retry,
+            prev_arcs=prev_arcs,
+            cached_constraint_block=state.cached_constraint_block,
+            cached_preflight=state.cached_preflight,
+            pipeline_result=pipeline_result,
+        )
+        full_constraint_block = constraint_phase.full_constraint_block
+        preflight_result = constraint_phase.preflight_result
+        state.cached_constraint_block = constraint_phase.cached_constraint_block
+        state.cached_preflight = constraint_phase.cached_preflight
+
+        generation_phase = self._run_generation_phase(
+            retry=retry,
+            arc_no=arc_no,
+            ep_start=ep_start,
+            vol_strategy=vol_strategy,
+            curr_block=curr_block,
+            prev_arcs=prev_arcs,
+            assets=assets,
+            protagonist_name=protagonist_name,
+            entity_registry=entity_registry,
+            state_tracker=state_tracker,
+            vector_context=vector_context,
+            adversarial_self_play=adversarial_self_play,
+            protagonist_config=state.protagonist_config,
+            ep_count_suggestion=state.ep_count_suggestion,
+            pacing_signals=state.pacing_signals,
+            full_constraint_block=full_constraint_block,
+            preflight_result=preflight_result,
+            feedback=state.feedback,
+            base_director_feedback=state.base_director_feedback,
+            prev_rejected_arc=state.prev_rejected_arc,
+            prev_reject_feedback=state.prev_reject_feedback,
+            prev_selected_strategy=state.prev_selected_strategy,
+            spare_candidates=state.spare_candidates,
+            pipeline_result=pipeline_result,
+        )
+        best_arc = generation_phase.best_arc
+        all_candidates = generation_phase.all_candidates
+        prev_arc_context = generation_phase.prev_arc_context
+        state.feedback = generation_phase.feedback
+        state.prev_rejected_arc = generation_phase.prev_rejected_arc
+        state.prev_reject_feedback = generation_phase.prev_reject_feedback
+        state.prev_selected_strategy = generation_phase.prev_selected_strategy
+        state.spare_candidates = generation_phase.spare_candidates
+
+        if generation_phase.patch_succeeded:
+            return _FourPhaseRetryCycleEnvelope(best_arc=best_arc, should_return=True)
+        if generation_phase.should_continue:
+            return _FourPhaseRetryCycleEnvelope(best_arc=best_arc, should_continue=True)
+
+        candidate_phase = self._prepare_candidates_for_selection(
+            arc_no=arc_no,
+            curr_block=curr_block,
+            prev_arcs=prev_arcs,
+            all_candidates=all_candidates,
+        )
+        all_candidates = candidate_phase.all_candidates
+        investment_advisory = candidate_phase.investment_advisory
+
+        director_phase = self._run_director_selection_phase(
+            director=director,
+            arc_no=arc_no,
+            curr_block=curr_block,
+            prev_arc_context=prev_arc_context,
+            full_constraint_block=full_constraint_block,
+            all_candidates=all_candidates,
+            candidate_quality_flags=candidate_phase.candidate_quality_flags,
+            ns3b_director_advisory=candidate_phase.ns3b_director_advisory,
+            investment_director_advisory=candidate_phase.investment_director_advisory,
+            investment_advisory=investment_advisory,
+            base_director_feedback=state.base_director_feedback,
+            feedback=state.feedback,
+            prev_rejected_arc=state.prev_rejected_arc,
+            prev_reject_feedback=state.prev_reject_feedback,
+            prev_selected_strategy=state.prev_selected_strategy,
+            spare_candidates=state.spare_candidates,
+            pipeline_result=pipeline_result,
+        )
+        best_arc = director_phase.best_arc
+        state.feedback = director_phase.feedback
+        state.prev_rejected_arc = director_phase.prev_rejected_arc
+        state.prev_reject_feedback = director_phase.prev_reject_feedback
+        state.prev_selected_strategy = director_phase.prev_selected_strategy
+        state.spare_candidates = director_phase.spare_candidates
+        if director_phase.should_return:
+            return _FourPhaseRetryCycleEnvelope(best_arc=best_arc, should_return=True)
+        if director_phase.should_continue:
+            return _FourPhaseRetryCycleEnvelope(best_arc=best_arc, should_continue=True)
+
+        if best_arc is None and all_candidates:
+            best_arc = all_candidates[0]
+
+        validation_phase = self._run_phase3_validation(
+            arc_no=arc_no,
+            retry=retry,
+            max_internal_retries=max_internal_retries,
+            curr_block=curr_block,
+            best_arc=best_arc,
+            all_candidates=all_candidates,
+            full_constraint_block=full_constraint_block,
+            prev_arcs=prev_arcs,
+            state_tracker=state_tracker,
+            pre_items=state.pre_items,
+            pre_grants=state.pre_grants,
+            feedback=state.feedback,
+            base_director_feedback=state.base_director_feedback,
+            investment_advisory=investment_advisory,
+            prev_rejected_arc=state.prev_rejected_arc,
+            prev_reject_feedback=state.prev_reject_feedback,
+            prev_selected_strategy=state.prev_selected_strategy,
+            spare_candidates=state.spare_candidates,
+            pipeline_result=pipeline_result,
+        )
+        best_arc = validation_phase.best_arc
+        state.feedback = validation_phase.feedback
+        state.prev_rejected_arc = validation_phase.prev_rejected_arc
+        state.prev_reject_feedback = validation_phase.prev_reject_feedback
+        state.prev_selected_strategy = validation_phase.prev_selected_strategy
+        state.spare_candidates = validation_phase.spare_candidates
+        if validation_phase.should_return:
+            return _FourPhaseRetryCycleEnvelope(best_arc=best_arc, should_return=True)
+        if validation_phase.should_continue:
+            return _FourPhaseRetryCycleEnvelope(best_arc=best_arc, should_continue=True)
+
+        return _FourPhaseRetryCycleEnvelope(best_arc=best_arc)
+
+    def _finalize_generate_failure(
+        self,
+        *,
+        arc_no: int,
+        max_internal_retries: int,
+        pipeline_result: dict,
+        feedback: str,
+    ) -> tuple[None, dict]:
+        pipeline_result["final_verdict"] = "FAILED"
+        logging.warning(f"\u274c [ThreePhase] Arc {arc_no} \ubaa8\ub4e0 \uc7ac\uc2dc\ub3c4 \uc2e4\ud328 ({max_internal_retries + 1}\ud68c)")
+        if feedback:
+            logging.info(f"\ub9c8\uc9c0\ub9c9 \ud53c\ub4dc\ubc31: {feedback[:200]}...")
+        return None, pipeline_result
+
     def _bootstrap_generation_state(
         self,
         *,
@@ -520,151 +758,67 @@ class FourPhaseArcRuntime:
         owner = self.owner
 
         logging.info(" [Phase 2] Ensemble 생성 중 (3개 후보)...")
-
-        prev_arc_context = owner._generate_prev_context(prev_arcs, preflight_result)
-        prev_equipment = _extract_prev_arc_end_equipment(prev_arcs)
-        forbidden_items = _extract_forbidden_item_names(preflight_result)
-        if vector_context:
-            prev_arc_context = f"{prev_arc_context}\n\n[과거 유사 맥락 (벡터 검색)]\n{vector_context}"
-
-        best_arc = None
-        all_candidates: list[dict] = []
-        if prev_rejected_arc and retry >= 1:
-            pipeline_result["patch_used"] = True
-            logging.info(f"[Patch Mode] FourPhase 내부 패치 시도 (retry={retry})")
-            try:
-                best_arc, patch_result = owner.patch_arc_with_feedback(
-                    original_arc=prev_rejected_arc,
-                    director_feedback=prev_reject_feedback,
-                    attempt_number=retry + 1,
-                    arc_no=arc_no,
-                    ep_start=ep_start,
-                    vol_strategy=vol_strategy,
-                    curr_block=curr_block,
-                    prev_arcs=prev_arcs,
-                    assets=assets,
-                    protagonist_name=protagonist_name,
-                    entity_registry=entity_registry,
-                    state_tracker=state_tracker,
-                    vector_context=vector_context,
-                    adversarial_self_play=adversarial_self_play,
-                )
-                if best_arc and patch_result.get("final_verdict") == "PASS":
-                    pipeline_result["phases"]["generate"] = {
-                        "status": "patch_pass",
-                        "candidates_count": 1,
-                        "selected_strategy": "patch",
-                    }
-                    pipeline_result["final_verdict"] = "PASS"
-                    pipeline_result["retries"] = retry
-                    owner.stats["phase3_pass"] += 1
-                    logging.info(f"✅ [Patch Mode] FourPhase 내부 패치 성공 (retry={retry})")
-                    return _FourPhaseGenerationEnvelope(
-                        best_arc=best_arc,
-                        all_candidates=[],
-                        prev_arc_context=prev_arc_context,
-                        feedback=feedback,
-                        prev_rejected_arc=prev_rejected_arc,
-                        prev_reject_feedback=prev_reject_feedback,
-                        prev_selected_strategy=prev_selected_strategy,
-                        spare_candidates=spare_candidates,
-                        patch_succeeded=True,
-                    )
-                if not best_arc:
-                    pipeline_result["patch_fallback"] = True
-                    logging.info("[Patch Mode] FourPhase 내부 패치 실패 → 전면 재생성 폴백")
-            except Exception as patch_err:
-                logging.warning(f"[Patch Mode] FourPhase 내부 패치 오류: {str(patch_err)[:80]}")
-                pipeline_result["patch_fallback"] = True
-                best_arc = None
-
-        if not best_arc:
-            if spare_candidates:
-                best_arc = spare_candidates.pop(0)
-                all_candidates = [best_arc]
-                logging.info(f" [SpareCandidate] 차순위 재활용 (남은 후보: {len(spare_candidates)}개)")
-            else:
-                best_arc, all_candidates = owner.ensemble.generate_ensemble(
-                    arc_no=arc_no,
-                    ep_start=ep_start,
-                    vol_strategy=vol_strategy,
-                    curr_block=curr_block,
-                    prev_arc_context=prev_arc_context,
-                    constraint_block=full_constraint_block,
-                    prev_equipment=prev_equipment,
-                    forbidden_items=forbidden_items,
-                    assets=assets,
-                    feedback=feedback,
-                    strategy_specific_feedback=prev_reject_feedback if retry > 0 else "",
-                    rejected_strategy=prev_selected_strategy if retry > 0 else "",
-                    protagonist_name=protagonist_name,
-                    protagonist_config=protagonist_config,
-                    entity_registry=entity_registry,
-                    ep_count_suggestion=ep_count_suggestion,
-                    pacing_signals=pacing_signals,
-                    retry=retry,
-                )
-                if best_arc is not None and all_candidates and len(all_candidates) > 1:
-                    for candidate in all_candidates:
-                        if candidate is not best_arc and candidate not in spare_candidates:
-                            spare_candidates.append(candidate)
-                    if spare_candidates:
-                        logging.info(f" [SpareCandidate] 차순위 {len(spare_candidates)}개 보존")
-
-        if all_candidates:
-            logging.info(f"✅ [Phase 2] Ensemble 완료 — {len(all_candidates)}개 후보 → Director 선택 대기")
-
-        if not all_candidates:
-            logging.warning("❌ [Phase 2] Ensemble 생성 실패")
-            pipeline_result["phases"]["generate"] = {"status": "failed"}
-            generate_failure = "Ensemble 생성 실패. 다시 시도하세요."
-            feedback = f"{base_director_feedback}\n{generate_failure}" if base_director_feedback else generate_failure
+        prev_arc_context, prev_equipment, forbidden_items = self._prepare_generation_context(
+            prev_arcs=prev_arcs,
+            preflight_result=preflight_result,
+            vector_context=vector_context,
+        )
+        generation_seed = self._resolve_generation_candidates(
+            retry=retry,
+            arc_no=arc_no,
+            ep_start=ep_start,
+            vol_strategy=vol_strategy,
+            curr_block=curr_block,
+            prev_arcs=prev_arcs,
+            assets=assets,
+            protagonist_name=protagonist_name,
+            entity_registry=entity_registry,
+            state_tracker=state_tracker,
+            vector_context=vector_context,
+            adversarial_self_play=adversarial_self_play,
+            protagonist_config=protagonist_config,
+            ep_count_suggestion=ep_count_suggestion,
+            pacing_signals=pacing_signals,
+            full_constraint_block=full_constraint_block,
+            prev_arc_context=prev_arc_context,
+            prev_equipment=prev_equipment,
+            forbidden_items=forbidden_items,
+            feedback=feedback,
+            base_director_feedback=base_director_feedback,
+            prev_rejected_arc=prev_rejected_arc,
+            prev_reject_feedback=prev_reject_feedback,
+            prev_selected_strategy=prev_selected_strategy,
+            spare_candidates=spare_candidates,
+            pipeline_result=pipeline_result,
+        )
+        if generation_seed.patch_succeeded or generation_seed.should_continue:
             return _FourPhaseGenerationEnvelope(
-                best_arc=None,
-                all_candidates=[],
+                best_arc=generation_seed.best_arc,
+                all_candidates=generation_seed.all_candidates,
                 prev_arc_context=prev_arc_context,
-                feedback=feedback,
+                feedback=generation_seed.feedback,
                 prev_rejected_arc=prev_rejected_arc,
                 prev_reject_feedback=prev_reject_feedback,
                 prev_selected_strategy=prev_selected_strategy,
-                spare_candidates=spare_candidates,
-                should_continue=True,
+                spare_candidates=generation_seed.spare_candidates,
+                should_continue=generation_seed.should_continue,
+                patch_succeeded=generation_seed.patch_succeeded,
             )
 
-        if retry >= 2 and adversarial_self_play and all_candidates:
-            try:
-                asp_context = {
-                    "arc_no": arc_no,
-                    "ep_start": ep_start,
-                    "director_feedback": feedback,
-                }
-                asp_target = all_candidates[0]
-                asp_input = json.dumps(asp_target, ensure_ascii=False)
-                asp_result = adversarial_self_play.generate_with_adversary(
-                    initial_content=asp_input,
-                    content_type="arc",
-                    context=asp_context,
-                )
-                asp_output = getattr(asp_result, "final_output", "") if asp_result else ""
-                if asp_output:
-                    asp_arc = owner._extract_json_robust(asp_output)
-                    if not isinstance(asp_arc, dict) or not asp_arc:
-                        try:
-                            asp_arc = json.loads(asp_output)
-                        except (json.JSONDecodeError, ValueError):
-                            asp_arc = {}
-                    if isinstance(asp_arc, dict) and asp_arc.get("tactical_doc"):
-                        original_details = asp_target.get("episode_details")
-                        if original_details and not asp_arc.get("episode_details"):
-                            asp_arc["episode_details"] = original_details
-                        all_candidates[0] = asp_arc
-                        if best_arc is None or best_arc is asp_target:
-                            best_arc = asp_arc
-                        pipeline_result["asp_used"] = True
-                        logging.info(f"✅ [ASP] Stage2 Arc 교정 적용 (retry={retry})")
-            except Exception as e:
-                logging.warning(f"[SilentPass:Stage2:ASP] {e!s:.120}")
-
+        best_arc = generation_seed.best_arc
+        all_candidates = generation_seed.all_candidates
+        spare_candidates = generation_seed.spare_candidates
+        feedback = generation_seed.feedback
+        self._maybe_apply_generation_asp(
+            retry=retry,
+            arc_no=arc_no,
+            ep_start=ep_start,
+            feedback=feedback,
+            adversarial_self_play=adversarial_self_play,
+            best_arc=best_arc,
+            all_candidates=all_candidates,
+            pipeline_result=pipeline_result,
+        )
         return _FourPhaseGenerationEnvelope(
             best_arc=best_arc,
             all_candidates=all_candidates,
@@ -675,6 +829,291 @@ class FourPhaseArcRuntime:
             prev_selected_strategy=prev_selected_strategy,
             spare_candidates=spare_candidates,
         )
+
+    def _prepare_generation_context(
+        self,
+        *,
+        prev_arcs: list[dict],
+        preflight_result: dict,
+        vector_context: str,
+    ) -> tuple[str, list[dict], set[str]]:
+        owner = self.owner
+        prev_arc_context = owner._generate_prev_context(prev_arcs, preflight_result)
+        if vector_context:
+            prev_arc_context = f"{prev_arc_context}\n\n[과거 유사 맥락 (벡터 검색)]\n{vector_context}"
+        return (
+            prev_arc_context,
+            _extract_prev_arc_end_equipment(prev_arcs),
+            _extract_forbidden_item_names(preflight_result),
+        )
+
+    def _resolve_generation_candidates(
+        self,
+        *,
+        retry: int,
+        arc_no: int,
+        ep_start: int,
+        vol_strategy: str,
+        curr_block: dict,
+        prev_arcs: list[dict],
+        assets: dict | None,
+        protagonist_name: str,
+        entity_registry: dict | None,
+        state_tracker,
+        vector_context: str,
+        adversarial_self_play,
+        protagonist_config: dict,
+        ep_count_suggestion: int,
+        pacing_signals: dict,
+        full_constraint_block: str,
+        prev_arc_context: str,
+        prev_equipment: list[dict],
+        forbidden_items: set[str],
+        feedback: str,
+        base_director_feedback: str,
+        prev_rejected_arc: dict | None,
+        prev_reject_feedback: str,
+        prev_selected_strategy: str,
+        spare_candidates: list[dict],
+        pipeline_result: dict,
+    ) -> _FourPhaseGenerationCandidateEnvelope:
+        owner = self.owner
+        best_arc = None
+        all_candidates: list[dict] = []
+        if prev_rejected_arc and retry >= 1:
+            patch_phase = self._run_generation_patch_attempt(
+                retry=retry,
+                arc_no=arc_no,
+                ep_start=ep_start,
+                vol_strategy=vol_strategy,
+                curr_block=curr_block,
+                prev_arcs=prev_arcs,
+                assets=assets,
+                protagonist_name=protagonist_name,
+                entity_registry=entity_registry,
+                state_tracker=state_tracker,
+                vector_context=vector_context,
+                adversarial_self_play=adversarial_self_play,
+                prev_rejected_arc=prev_rejected_arc,
+                prev_reject_feedback=prev_reject_feedback,
+                pipeline_result=pipeline_result,
+            )
+            best_arc = patch_phase.best_arc
+            if patch_phase.patch_succeeded:
+                owner.stats["phase3_pass"] += 1
+                return _FourPhaseGenerationCandidateEnvelope(
+                    best_arc=best_arc,
+                    all_candidates=[],
+                    spare_candidates=spare_candidates,
+                    feedback=feedback,
+                    patch_succeeded=True,
+                )
+
+        if not best_arc and spare_candidates:
+            best_arc = spare_candidates.pop(0)
+            all_candidates = [best_arc]
+            logging.info(f" [SpareCandidate] 차순위 재활용 (남은 후보: {len(spare_candidates)}개)")
+
+        if not best_arc:
+            best_arc, all_candidates = self._generate_ensemble_candidates(
+                retry=retry,
+                arc_no=arc_no,
+                ep_start=ep_start,
+                vol_strategy=vol_strategy,
+                curr_block=curr_block,
+                prev_arc_context=prev_arc_context,
+                full_constraint_block=full_constraint_block,
+                prev_equipment=prev_equipment,
+                forbidden_items=forbidden_items,
+                assets=assets,
+                feedback=feedback,
+                prev_reject_feedback=prev_reject_feedback,
+                prev_selected_strategy=prev_selected_strategy,
+                protagonist_name=protagonist_name,
+                protagonist_config=protagonist_config,
+                entity_registry=entity_registry,
+                ep_count_suggestion=ep_count_suggestion,
+                pacing_signals=pacing_signals,
+            )
+            if best_arc is not None and all_candidates and len(all_candidates) > 1:
+                for candidate in all_candidates:
+                    if candidate is not best_arc and candidate not in spare_candidates:
+                        spare_candidates.append(candidate)
+                if spare_candidates:
+                    logging.info(f" [SpareCandidate] 차순위 {len(spare_candidates)}개 보존")
+
+        if all_candidates:
+            logging.info(f"✅ [Phase 2] Ensemble 완료 — {len(all_candidates)}개 후보 → Director 선택 대기")
+            return _FourPhaseGenerationCandidateEnvelope(
+                best_arc=best_arc,
+                all_candidates=all_candidates,
+                spare_candidates=spare_candidates,
+                feedback=feedback,
+            )
+
+        logging.warning("❌ [Phase 2] Ensemble 생성 실패")
+        pipeline_result["phases"]["generate"] = {"status": "failed"}
+        generate_failure = "Ensemble 생성 실패. 다시 시도하세요."
+        failure_feedback = f"{base_director_feedback}\n{generate_failure}" if base_director_feedback else generate_failure
+        return _FourPhaseGenerationCandidateEnvelope(
+            best_arc=None,
+            all_candidates=[],
+            spare_candidates=spare_candidates,
+            feedback=failure_feedback,
+            should_continue=True,
+        )
+
+    def _generate_ensemble_candidates(
+        self,
+        *,
+        retry: int,
+        arc_no: int,
+        ep_start: int,
+        vol_strategy: str,
+        curr_block: dict,
+        prev_arc_context: str,
+        full_constraint_block: str,
+        prev_equipment: list[dict],
+        forbidden_items: set[str],
+        assets: dict | None,
+        feedback: str,
+        prev_reject_feedback: str,
+        prev_selected_strategy: str,
+        protagonist_name: str,
+        protagonist_config: dict,
+        entity_registry: dict | None,
+        ep_count_suggestion: int,
+        pacing_signals: dict,
+    ) -> tuple[dict | None, list[dict]]:
+        owner = self.owner
+        return owner.ensemble.generate_ensemble(
+            arc_no=arc_no,
+            ep_start=ep_start,
+            vol_strategy=vol_strategy,
+            curr_block=curr_block,
+            prev_arc_context=prev_arc_context,
+            constraint_block=full_constraint_block,
+            prev_equipment=prev_equipment,
+            forbidden_items=forbidden_items,
+            assets=assets,
+            feedback=feedback,
+            strategy_specific_feedback=prev_reject_feedback if retry > 0 else "",
+            rejected_strategy=prev_selected_strategy if retry > 0 else "",
+            protagonist_name=protagonist_name,
+            protagonist_config=protagonist_config,
+            entity_registry=entity_registry,
+            ep_count_suggestion=ep_count_suggestion,
+            pacing_signals=pacing_signals,
+            retry=retry,
+        )
+
+    def _maybe_apply_generation_asp(
+        self,
+        *,
+        retry: int,
+        arc_no: int,
+        ep_start: int,
+        feedback: str,
+        adversarial_self_play,
+        best_arc: dict | None,
+        all_candidates: list[dict],
+        pipeline_result: dict,
+    ) -> None:
+        owner = self.owner
+        if retry < 2 or not adversarial_self_play or not all_candidates:
+            return
+        try:
+            asp_context = {
+                "arc_no": arc_no,
+                "ep_start": ep_start,
+                "director_feedback": feedback,
+            }
+            asp_target = all_candidates[0]
+            asp_input = json.dumps(asp_target, ensure_ascii=False)
+            asp_result = adversarial_self_play.generate_with_adversary(
+                initial_content=asp_input,
+                content_type="arc",
+                context=asp_context,
+            )
+            asp_output = getattr(asp_result, "final_output", "") if asp_result else ""
+            if not asp_output:
+                return
+            asp_arc = owner._extract_json_robust(asp_output)
+            if not isinstance(asp_arc, dict) or not asp_arc:
+                try:
+                    asp_arc = json.loads(asp_output)
+                except (json.JSONDecodeError, ValueError):
+                    asp_arc = {}
+            if isinstance(asp_arc, dict) and asp_arc.get("tactical_doc"):
+                original_details = asp_target.get("episode_details")
+                if original_details and not asp_arc.get("episode_details"):
+                    asp_arc["episode_details"] = original_details
+                all_candidates[0] = asp_arc
+                if best_arc is None or best_arc is asp_target:
+                    best_arc = asp_arc
+                pipeline_result["asp_used"] = True
+                logging.info(f"✅ [ASP] Stage2 Arc 교정 적용 (retry={retry})")
+        except Exception as e:
+            logging.warning(f"[SilentPass:Stage2:ASP] {e!s:.120}")
+
+    def _run_generation_patch_attempt(
+        self,
+        *,
+        retry: int,
+        arc_no: int,
+        ep_start: int,
+        vol_strategy: str,
+        curr_block: dict,
+        prev_arcs: list[dict],
+        assets: dict | None,
+        protagonist_name: str,
+        entity_registry: dict | None,
+        state_tracker,
+        vector_context: str,
+        adversarial_self_play,
+        prev_rejected_arc: dict,
+        prev_reject_feedback: str,
+        pipeline_result: dict,
+    ) -> _FourPhasePatchEnvelope:
+        owner = self.owner
+
+        pipeline_result["patch_used"] = True
+        logging.info(f"[Patch Mode] FourPhase 내부 패치 시도 (retry={retry})")
+        try:
+            best_arc, patch_result = owner.patch_arc_with_feedback(
+                original_arc=prev_rejected_arc,
+                director_feedback=prev_reject_feedback,
+                attempt_number=retry + 1,
+                arc_no=arc_no,
+                ep_start=ep_start,
+                vol_strategy=vol_strategy,
+                curr_block=curr_block,
+                prev_arcs=prev_arcs,
+                assets=assets,
+                protagonist_name=protagonist_name,
+                entity_registry=entity_registry,
+                state_tracker=state_tracker,
+                vector_context=vector_context,
+                adversarial_self_play=adversarial_self_play,
+            )
+            if best_arc and patch_result.get("final_verdict") == "PASS":
+                pipeline_result["phases"]["generate"] = {
+                    "status": "patch_pass",
+                    "candidates_count": 1,
+                    "selected_strategy": "patch",
+                }
+                pipeline_result["final_verdict"] = "PASS"
+                pipeline_result["retries"] = retry
+                logging.info(f"✅ [Patch Mode] FourPhase 내부 패치 성공 (retry={retry})")
+                return _FourPhasePatchEnvelope(best_arc=best_arc, patch_succeeded=True)
+            if not best_arc:
+                pipeline_result["patch_fallback"] = True
+                logging.info("[Patch Mode] FourPhase 내부 패치 실패 → 전면 재생성 폴백")
+            return _FourPhasePatchEnvelope(best_arc=best_arc)
+        except Exception as patch_err:
+            logging.warning(f"[Patch Mode] FourPhase 내부 패치 오류: {str(patch_err)[:80]}")
+            pipeline_result["patch_fallback"] = True
+            return _FourPhasePatchEnvelope(best_arc=None)
 
     def _prepare_candidates_for_selection(
         self,
@@ -793,8 +1232,6 @@ class FourPhaseArcRuntime:
         spare_candidates: list[dict],
         pipeline_result: dict,
     ) -> _FourPhaseDirectorSelectionEnvelope:
-        owner = self.owner
-
         if not director or not all_candidates:
             return _FourPhaseDirectorSelectionEnvelope(
                 best_arc=None,
@@ -805,16 +1242,12 @@ class FourPhaseArcRuntime:
                 spare_candidates=spare_candidates,
             )
 
-        paired_for_director = [
-            (candidate, candidate_quality_flags[idx] if idx < len(candidate_quality_flags) else {})
-            for idx, candidate in enumerate(all_candidates)
-            if candidate.get("tactical_doc")
-        ]
-        non_reject_pairs = [pair for pair in paired_for_director if not pair[1].get("force_reject")]
-        if non_reject_pairs:
-            paired_for_director = non_reject_pairs
-        valid_for_director = [pair[0] for pair in paired_for_director]
-        valid_quality_flags = [pair[1] for pair in paired_for_director]
+        candidate_input = self._prepare_director_candidate_input(
+            all_candidates=all_candidates,
+            candidate_quality_flags=candidate_quality_flags,
+        )
+        valid_for_director = candidate_input.valid_for_director
+        valid_quality_flags = candidate_input.valid_quality_flags
         if not valid_for_director:
             return _FourPhaseDirectorSelectionEnvelope(
                 best_arc=None,
@@ -827,137 +1260,216 @@ class FourPhaseArcRuntime:
 
         logging.info(f" [TF-47] Director Arc 비교 선택 ({len(valid_for_director)}개 후보)")
         try:
-            director_advisory = ns3b_director_advisory
-            if investment_director_advisory:
-                director_advisory = (
-                    f"{director_advisory}\n\n{investment_director_advisory}"
-                    if director_advisory
-                    else investment_director_advisory
-                )
             director_result = director.compare_and_select_arc(
                 candidates=valid_for_director,
                 arc_no=arc_no,
                 curr_block=curr_block,
                 prev_arc_context=prev_arc_context,
                 constraint_block=full_constraint_block,
-                advisory=director_advisory,
+                advisory=self._build_director_advisory(
+                    ns3b_director_advisory=ns3b_director_advisory,
+                    investment_director_advisory=investment_director_advisory,
+                ),
                 candidate_quality_flags=valid_quality_flags,
             )
             director_decision = director_result.get("decision", "REJECT")
             director_arc = director_result.get("selected_arc")
-
-            if director_decision == "PASS" and director_arc:
-                best_arc = director_arc
-                current_strategy = (
-                    best_arc.get("_ensemble_meta", {}).get("best_strategy")
-                    or best_arc.get("_strategy", "unknown")
-                )
-                pipeline_result["phases"]["generate"] = {
-                    "status": "complete",
-                    "candidates_count": len(all_candidates),
-                    "selected_strategy": current_strategy,
-                }
-                pipeline_result["phases"]["director_selection"] = {
-                    "status": "pass",
-                    "score": director_result.get("score", 0),
-                    "selected_strategy": director_arc.get("_strategy", "?"),
-                    "ns3b_advisory": bool(ns3b_director_advisory),
-                    "investment_advisory": bool(investment_advisory),
-                }
-                owner.stats["phase2_complete"] += 1
-                pipeline_result["final_verdict"] = "PASS"
-                owner.stats["phase3_pass"] += 1
-                logging.info(f"✅ [TF-47] Director PASS — Arc {arc_no}")
-                return _FourPhaseDirectorSelectionEnvelope(
-                    best_arc=best_arc,
+            if director_decision in {"PASS", "PASS_WITH_FIX"} and director_arc:
+                return self._build_director_pass_envelope(
+                    arc_no=arc_no,
+                    status=director_decision,
+                    director_arc=director_arc,
+                    director_result=director_result,
+                    all_candidates=all_candidates,
                     feedback=feedback,
                     prev_rejected_arc=prev_rejected_arc,
                     prev_reject_feedback=prev_reject_feedback,
                     prev_selected_strategy=prev_selected_strategy,
                     spare_candidates=spare_candidates,
-                    should_return=True,
+                    pipeline_result=pipeline_result,
+                    ns3b_director_advisory=ns3b_director_advisory,
+                    investment_advisory=investment_advisory,
                 )
 
-            if director_decision == "PASS_WITH_FIX" and director_arc:
-                best_arc = director_arc
-                current_strategy = (
-                    best_arc.get("_ensemble_meta", {}).get("best_strategy")
-                    or best_arc.get("_strategy", "unknown")
-                )
-                pipeline_result["phases"]["generate"] = {
-                    "status": "complete",
-                    "candidates_count": len(all_candidates),
-                    "selected_strategy": current_strategy,
-                }
-                pipeline_result["phases"]["director_selection"] = {
-                    "status": "pass_with_fix",
-                    "score": director_result.get("score", 0),
-                    "feedback": director_result.get("feedback", ""),
-                    "fix_scope": director_result.get("fix_scope", "inplace"),
-                    "ns3b_advisory": bool(ns3b_director_advisory),
-                    "investment_advisory": bool(investment_advisory),
-                }
-                owner.stats["phase2_complete"] += 1
-                pipeline_result["final_verdict"] = "PASS"
-                owner.stats["phase3_pass"] += 1
-                logging.info(f"✅ [TF-47] Director PASS_WITH_FIX — Arc {arc_no}")
-                return _FourPhaseDirectorSelectionEnvelope(
-                    best_arc=best_arc,
-                    feedback=feedback,
-                    prev_rejected_arc=prev_rejected_arc,
-                    prev_reject_feedback=prev_reject_feedback,
-                    prev_selected_strategy=prev_selected_strategy,
-                    spare_candidates=spare_candidates,
-                    should_return=True,
-                )
-
-            best_arc = director_arc or valid_for_director[0]
-            director_feedback = director_result.get("feedback", "Director REJECT")
-            feedback = (
-                f"{base_director_feedback}\n[Director 비교 피드백]\n{director_feedback}"
-                if base_director_feedback
-                else director_feedback
-            )
-            pipeline_result["phases"]["director_selection"] = {
-                "status": "reject",
-                "score": director_result.get("score", 0),
-            }
-            logging.warning(f"❌ [TF-47] Director REJECT — Arc {arc_no}, retry")
-            prev_rejected_arc = best_arc
-            prev_reject_feedback = feedback
-            prev_selected_strategy = best_arc.get("_strategy", "unknown")
-            spare_candidates = [candidate for candidate in valid_for_director if candidate is not prev_rejected_arc]
-            return _FourPhaseDirectorSelectionEnvelope(
-                best_arc=best_arc,
-                feedback=feedback,
+            return self._build_director_reject_envelope(
+                arc_no=arc_no,
+                director_result=director_result,
+                valid_for_director=valid_for_director,
+                base_director_feedback=base_director_feedback,
                 prev_rejected_arc=prev_rejected_arc,
                 prev_reject_feedback=prev_reject_feedback,
                 prev_selected_strategy=prev_selected_strategy,
                 spare_candidates=spare_candidates,
-                should_continue=True,
+                pipeline_result=pipeline_result,
             )
+
         except Exception as e:
-            logging.warning(f"[TF-47] Director 비교 실패, fail-closed retry: {str(e)[:100]}")
-            director_feedback = f"Director compare failed: {str(e)[:100]}"
-            feedback = (
-                f"{base_director_feedback}\n[Director compare failure]\n{director_feedback}"
-                if base_director_feedback
-                else director_feedback
-            )
-            pipeline_result["phases"]["director_selection"] = {
-                "status": "error",
-                "score": 0,
-                "error": str(e)[:120],
-            }
-            return _FourPhaseDirectorSelectionEnvelope(
-                best_arc=None,
-                feedback=feedback,
+            return self._build_director_error_envelope(
+                error=e,
+                base_director_feedback=base_director_feedback,
                 prev_rejected_arc=prev_rejected_arc,
                 prev_reject_feedback=prev_reject_feedback,
                 prev_selected_strategy=prev_selected_strategy,
                 spare_candidates=spare_candidates,
-                should_continue=True,
+                pipeline_result=pipeline_result,
             )
+
+    def _build_director_pass_envelope(
+        self,
+        *,
+        arc_no: int,
+        status: str,
+        director_arc: dict,
+        director_result: dict,
+        all_candidates: list[dict],
+        feedback: str,
+        prev_rejected_arc: dict | None,
+        prev_reject_feedback: str,
+        prev_selected_strategy: str,
+        spare_candidates: list[dict],
+        pipeline_result: dict,
+        ns3b_director_advisory: str,
+        investment_advisory: list[dict],
+    ) -> _FourPhaseDirectorSelectionEnvelope:
+        owner = self.owner
+        current_strategy = (
+            director_arc.get("_ensemble_meta", {}).get("best_strategy")
+            or director_arc.get("_strategy", "unknown")
+        )
+        pipeline_result["phases"]["generate"] = {
+            "status": "complete",
+            "candidates_count": len(all_candidates),
+            "selected_strategy": current_strategy,
+        }
+        phase_payload = {
+            "status": "pass" if status == "PASS" else "pass_with_fix",
+            "score": director_result.get("score", 0),
+            "ns3b_advisory": bool(ns3b_director_advisory),
+            "investment_advisory": bool(investment_advisory),
+        }
+        if status == "PASS":
+            phase_payload["selected_strategy"] = director_arc.get("_strategy", "?")
+        else:
+            phase_payload["feedback"] = director_result.get("feedback", "")
+            phase_payload["fix_scope"] = director_result.get("fix_scope", "inplace")
+        pipeline_result["phases"]["director_selection"] = phase_payload
+        owner.stats["phase2_complete"] += 1
+        pipeline_result["final_verdict"] = "PASS"
+        owner.stats["phase3_pass"] += 1
+        logging.info(f"✅ [TF-47] Director {status} — Arc {arc_no}")
+        return _FourPhaseDirectorSelectionEnvelope(
+            best_arc=director_arc,
+            feedback=feedback,
+            prev_rejected_arc=prev_rejected_arc,
+            prev_reject_feedback=prev_reject_feedback,
+            prev_selected_strategy=prev_selected_strategy,
+            spare_candidates=spare_candidates,
+            should_return=True,
+        )
+
+    def _build_director_reject_envelope(
+        self,
+        *,
+        arc_no: int,
+        director_result: dict,
+        valid_for_director: list[dict],
+        base_director_feedback: str,
+        prev_rejected_arc: dict | None,
+        prev_reject_feedback: str,
+        prev_selected_strategy: str,
+        spare_candidates: list[dict],
+        pipeline_result: dict,
+    ) -> _FourPhaseDirectorSelectionEnvelope:
+        best_arc = director_result.get("selected_arc") or valid_for_director[0]
+        director_feedback = director_result.get("feedback", "Director REJECT")
+        feedback = (
+            f"{base_director_feedback}\n[Director 비교 피드백]\n{director_feedback}"
+            if base_director_feedback
+            else director_feedback
+        )
+        pipeline_result["phases"]["director_selection"] = {
+            "status": "reject",
+            "score": director_result.get("score", 0),
+        }
+        logging.warning(f"❌ [TF-47] Director REJECT — Arc {arc_no}, retry")
+        prev_rejected_arc = best_arc
+        prev_reject_feedback = feedback
+        prev_selected_strategy = best_arc.get("_strategy", "unknown")
+        spare_candidates = [candidate for candidate in valid_for_director if candidate is not prev_rejected_arc]
+        return _FourPhaseDirectorSelectionEnvelope(
+            best_arc=best_arc,
+            feedback=feedback,
+            prev_rejected_arc=prev_rejected_arc,
+            prev_reject_feedback=prev_reject_feedback,
+            prev_selected_strategy=prev_selected_strategy,
+            spare_candidates=spare_candidates,
+            should_continue=True,
+        )
+
+    def _build_director_error_envelope(
+        self,
+        *,
+        error: Exception,
+        base_director_feedback: str,
+        prev_rejected_arc: dict | None,
+        prev_reject_feedback: str,
+        prev_selected_strategy: str,
+        spare_candidates: list[dict],
+        pipeline_result: dict,
+    ) -> _FourPhaseDirectorSelectionEnvelope:
+        error_text = str(error)
+        logging.warning(f"[TF-47] Director 비교 실패, fail-closed retry: {error_text[:100]}")
+        director_feedback = f"Director compare failed: {error_text[:100]}"
+        feedback = (
+            f"{base_director_feedback}\n[Director compare failure]\n{director_feedback}"
+            if base_director_feedback
+            else director_feedback
+        )
+        pipeline_result["phases"]["director_selection"] = {
+            "status": "error",
+            "score": 0,
+            "error": error_text[:120],
+        }
+        return _FourPhaseDirectorSelectionEnvelope(
+            best_arc=None,
+            feedback=feedback,
+            prev_rejected_arc=prev_rejected_arc,
+            prev_reject_feedback=prev_reject_feedback,
+            prev_selected_strategy=prev_selected_strategy,
+            spare_candidates=spare_candidates,
+            should_continue=True,
+        )
+
+    def _prepare_director_candidate_input(
+        self,
+        *,
+        all_candidates: list[dict],
+        candidate_quality_flags: list[dict],
+    ) -> _FourPhaseDirectorCandidateEnvelope:
+        paired_for_director = [
+            (candidate, candidate_quality_flags[idx] if idx < len(candidate_quality_flags) else {})
+            for idx, candidate in enumerate(all_candidates)
+            if candidate.get("tactical_doc")
+        ]
+        non_reject_pairs = [pair for pair in paired_for_director if not pair[1].get("force_reject")]
+        if non_reject_pairs:
+            paired_for_director = non_reject_pairs
+        return _FourPhaseDirectorCandidateEnvelope(
+            valid_for_director=[pair[0] for pair in paired_for_director],
+            valid_quality_flags=[pair[1] for pair in paired_for_director],
+        )
+
+    def _build_director_advisory(
+        self,
+        *,
+        ns3b_director_advisory: str,
+        investment_director_advisory: str,
+    ) -> str:
+        if not investment_director_advisory:
+            return ns3b_director_advisory
+        if not ns3b_director_advisory:
+            return investment_director_advisory
+        return f"{ns3b_director_advisory}\\n\\n{investment_director_advisory}"
 
     def _run_phase3_validation(
         self,
@@ -1149,50 +1661,17 @@ class FourPhaseArcRuntime:
         """
         owner = self.owner
 
-        bootstrap = self._bootstrap_generation_state(
+        state = self._initialize_generate_state(
             arc_no=arc_no,
             curr_block=curr_block,
             prev_arcs=prev_arcs,
             director_feedback=director_feedback,
         )
-        protagonist_config = bootstrap.protagonist_config
-        ep_count_suggestion = bootstrap.ep_count_suggestion
-        pacing_signals = bootstrap.pacing_signals
-        pipeline_result = bootstrap.pipeline_result
-
-        pre_items = bootstrap.pre_items
-        pre_grants = bootstrap.pre_grants
-        feedback = bootstrap.feedback
-        base_director_feedback = bootstrap.base_director_feedback
-        prev_rejected_arc = bootstrap.prev_rejected_arc
-        prev_reject_feedback = bootstrap.prev_reject_feedback
-        prev_selected_strategy = bootstrap.prev_selected_strategy
-        spare_candidates = bootstrap.spare_candidates
-        cached_constraint_block = None
-        cached_preflight = None
+        pipeline_result = state.pipeline_result
 
         for retry in range(max_internal_retries + 1):
             pipeline_result["retries"] = retry
-
-            # ═══════════════════════════════════════════════════════════════
-            # PHASE 1: CONSTRAINT - 제약 수집
-            # ═══════════════════════════════════════════════════════════════
-            constraint_phase = self._resolve_constraint_phase(
-                retry=retry,
-                prev_arcs=prev_arcs,
-                cached_constraint_block=cached_constraint_block,
-                cached_preflight=cached_preflight,
-                pipeline_result=pipeline_result,
-            )
-            full_constraint_block = constraint_phase.full_constraint_block
-            preflight_result = constraint_phase.preflight_result
-            cached_constraint_block = constraint_phase.cached_constraint_block
-            cached_preflight = constraint_phase.cached_preflight
-
-            # ═══════════════════════════════════════════════════════════════
-            # PHASE 2: GENERATE - Ensemble 생성
-            # ═══════════════════════════════════════════════════════════════
-            generation_phase = self._run_generation_phase(
+            retry_cycle = self._run_generate_retry_cycle(
                 retry=retry,
                 arc_no=arc_no,
                 ep_start=ep_start,
@@ -1200,117 +1679,26 @@ class FourPhaseArcRuntime:
                 curr_block=curr_block,
                 prev_arcs=prev_arcs,
                 assets=assets,
+                max_internal_retries=max_internal_retries,
                 protagonist_name=protagonist_name,
                 entity_registry=entity_registry,
                 state_tracker=state_tracker,
                 vector_context=vector_context,
                 adversarial_self_play=adversarial_self_play,
-                protagonist_config=protagonist_config,
-                ep_count_suggestion=ep_count_suggestion,
-                pacing_signals=pacing_signals,
-                full_constraint_block=full_constraint_block,
-                preflight_result=preflight_result,
-                feedback=feedback,
-                base_director_feedback=base_director_feedback,
-                prev_rejected_arc=prev_rejected_arc,
-                prev_reject_feedback=prev_reject_feedback,
-                prev_selected_strategy=prev_selected_strategy,
-                spare_candidates=spare_candidates,
-                pipeline_result=pipeline_result,
-            )
-            best_arc = generation_phase.best_arc
-            all_candidates = generation_phase.all_candidates
-            prev_arc_context = generation_phase.prev_arc_context
-            feedback = generation_phase.feedback
-            prev_rejected_arc = generation_phase.prev_rejected_arc
-            prev_reject_feedback = generation_phase.prev_reject_feedback
-            prev_selected_strategy = generation_phase.prev_selected_strategy
-            spare_candidates = generation_phase.spare_candidates
-
-            if generation_phase.patch_succeeded:
-                return best_arc, pipeline_result
-            if generation_phase.should_continue:
-                continue
-
-            candidate_phase = self._prepare_candidates_for_selection(
-                arc_no=arc_no,
-                curr_block=curr_block,
-                prev_arcs=prev_arcs,
-                all_candidates=all_candidates,
-            )
-            all_candidates = candidate_phase.all_candidates
-            investment_advisory = candidate_phase.investment_advisory
-
-            director_phase = self._run_director_selection_phase(
                 director=director,
-                arc_no=arc_no,
-                curr_block=curr_block,
-                prev_arc_context=prev_arc_context,
-                full_constraint_block=full_constraint_block,
-                all_candidates=all_candidates,
-                candidate_quality_flags=candidate_phase.candidate_quality_flags,
-                ns3b_director_advisory=candidate_phase.ns3b_director_advisory,
-                investment_director_advisory=candidate_phase.investment_director_advisory,
-                investment_advisory=investment_advisory,
-                base_director_feedback=base_director_feedback,
-                feedback=feedback,
-                prev_rejected_arc=prev_rejected_arc,
-                prev_reject_feedback=prev_reject_feedback,
-                prev_selected_strategy=prev_selected_strategy,
-                spare_candidates=spare_candidates,
+                state=state,
                 pipeline_result=pipeline_result,
             )
-            best_arc = director_phase.best_arc
-            feedback = director_phase.feedback
-            prev_rejected_arc = director_phase.prev_rejected_arc
-            prev_reject_feedback = director_phase.prev_reject_feedback
-            prev_selected_strategy = director_phase.prev_selected_strategy
-            spare_candidates = director_phase.spare_candidates
-            if director_phase.should_return:
-                return best_arc, pipeline_result
-            if director_phase.should_continue:
-                continue
-
-            # Director 미사용/실패 시 1순위 후보 폴백
-            if best_arc is None and all_candidates:
-                best_arc = all_candidates[0]
-
-            validation_phase = self._run_phase3_validation(
-                arc_no=arc_no,
-                retry=retry,
-                max_internal_retries=max_internal_retries,
-                curr_block=curr_block,
-                best_arc=best_arc,
-                all_candidates=all_candidates,
-                full_constraint_block=full_constraint_block,
-                prev_arcs=prev_arcs,
-                state_tracker=state_tracker,
-                pre_items=pre_items,
-                pre_grants=pre_grants,
-                feedback=feedback,
-                base_director_feedback=base_director_feedback,
-                investment_advisory=investment_advisory,
-                prev_rejected_arc=prev_rejected_arc,
-                prev_reject_feedback=prev_reject_feedback,
-                prev_selected_strategy=prev_selected_strategy,
-                spare_candidates=spare_candidates,
-                pipeline_result=pipeline_result,
-            )
-            best_arc = validation_phase.best_arc
-            feedback = validation_phase.feedback
-            prev_rejected_arc = validation_phase.prev_rejected_arc
-            prev_reject_feedback = validation_phase.prev_reject_feedback
-            prev_selected_strategy = validation_phase.prev_selected_strategy
-            spare_candidates = validation_phase.spare_candidates
-            if validation_phase.should_return:
-                return best_arc, pipeline_result
-            if validation_phase.should_continue:
+            if retry_cycle.should_return:
+                return retry_cycle.best_arc, pipeline_result
+            if retry_cycle.should_continue:
                 continue
 
         # 모든 재시도 실패
-        pipeline_result["final_verdict"] = "FAILED"
-        logging.warning(f"❌ [ThreePhase] Arc {arc_no} 모든 재시도 실패 ({max_internal_retries + 1}회)")
-        if feedback:
-            logging.info(f"마지막 피드백: {feedback[:200]}...")
-        return None, pipeline_result
+        return self._finalize_generate_failure(
+            arc_no=arc_no,
+            max_internal_retries=max_internal_retries,
+            pipeline_result=pipeline_result,
+            feedback=state.feedback,
+        )
 

@@ -351,41 +351,88 @@ class ArcEnsembleGenerator(BaseAgent):
         forbidden_items: list[str] | None = None,
         assets: dict = None,
         feedback: str = "",
-        strategy_specific_feedback: str = "",  # [EnsembleFB] 특정 전략 전용 추가 피드백
-        rejected_strategy: str = "",  # [EnsembleFB] REJECT된 전략 이름
-        protagonist_name: str = "주인공",  # [V60.18] 주인공 이름 (필수!)
-        protagonist_config: dict = None,  # [V60.88] 주인공 설정 (world_origin, incarnation_type)
-        entity_registry: dict = None,  # [V60.92] Entity Registry (NPC 명칭 일관성)
-        ep_count: int = None,  # backward-compat alias for ep_count_suggestion
-        pacing_signals: dict | None = None,  # Python-collected density signals
-        ep_count_suggestion: int = None,  # LLM pacing judgment에 넘길 추천 화수
-        retry: int = 0,  # [V61.5] 재시도 횟수 (>0이면 thinking "medium"으로 다운그레이드)
-        single_strategy: str = "",  # [TF-36] partial 시 1개 전략만
+        strategy_specific_feedback: str = "",
+        rejected_strategy: str = "",
+        protagonist_name: str = "주인공",
+        protagonist_config: dict = None,
+        entity_registry: dict = None,
+        ep_count: int = None,
+        pacing_signals: dict | None = None,
+        ep_count_suggestion: int = None,
+        retry: int = 0,
+        single_strategy: str = "",
     ) -> tuple[dict | None, list[dict]]:
-        """
-        앙상블 Arc 생성
+        """Generate multiple arc candidates and return the Director-owned shortlist."""
+        ep_count_suggestion, ep_end, pacing_signal_guide = self._resolve_ensemble_generation_inputs(
+            ep_start=ep_start,
+            curr_block=curr_block,
+            ep_count=ep_count,
+            ep_count_suggestion=ep_count_suggestion,
+            pacing_signals=pacing_signals,
+        )
+        genre = self._load_ensemble_genre(GenreTypes.WUXIA)
+        cache_name = self._resolve_ensemble_cache_name(
+            arc_no=arc_no,
+            prev_arc_context=prev_arc_context,
+            constraint_block=constraint_block,
+        )
+        started_at = time.monotonic()
+        candidates = self._run_ensemble_generation_fanout(
+            arc_no=arc_no,
+            ep_start=ep_start,
+            ep_end=ep_end,
+            vol_strategy=vol_strategy,
+            curr_block=curr_block,
+            prev_arc_context=prev_arc_context,
+            constraint_block=constraint_block,
+            assets=assets,
+            feedback=feedback,
+            strategy_specific_feedback=strategy_specific_feedback,
+            rejected_strategy=rejected_strategy,
+            protagonist_name=protagonist_name,
+            protagonist_config=protagonist_config,
+            entity_registry=entity_registry,
+            genre=genre,
+            ep_count_suggestion=ep_count_suggestion,
+            pacing_signal_guide=pacing_signal_guide,
+            retry=retry,
+            single_strategy=single_strategy,
+            cache_name=cache_name,
+            started_at=started_at,
+        )
+        try:
+            logging.warning(f"[PerfTimer:ArcEnsemble] arc_{arc_no}_ensemble={time.monotonic() - started_at:.2f}s")
+        except Exception as _e:
+            logging.debug("[ArcEnsemble] PerfTimer logging failed (ignored): %s", _e)
 
-        Args:
-            arc_no: Arc 번호
-            ep_start: 시작 화수
-            vol_strategy: Volume 전략
-            curr_block: 현재 블록 DNA
-            prev_arc_context: 이전 Arc 맥락
-            constraint_block: 제약 조건 블록
-            prev_equipment: 직전 Arc 종료 소지품(구조적 주입, 선택)
-            forbidden_items: 금지 아이템 목록(구조적 주입, 선택)
-            assets: AssetLibrary
-            feedback: 이전 피드백
-            protagonist_name: [V60.18] 주인공 이름 (환각 방지)
-            protagonist_config: [V60.88] 주인공 설정 (world_origin, incarnation_type)
-            entity_registry: [V60.92] Entity Registry (NPC 명칭 일관성)
-            ep_count: backward-compat alias
-            pacing_signals: Python이 수집한 density signals
-            ep_count_suggestion: Python이 수집한 pacing suggestion (최종 판단은 LLM)
+        if not candidates:
+            return None, []
 
-        Returns:
-            (best_arc, all_candidates) - 최적 Arc와 모든 후보 리스트
-        """
+        qualified_candidates = self._qualify_candidates_by_tactical_length(candidates, ep_count_suggestion)
+        scored_candidates, director_candidates, diversity_summary = self._score_candidates_for_director(
+            qualified_candidates,
+            prev_arc_context,
+            constraint_block,
+            prev_equipment=prev_equipment,
+            forbidden_items=forbidden_items,
+        )
+        self._log_scored_candidates(
+            scored_candidates,
+            director_candidates,
+            total_candidates=len(candidates),
+        )
+        self._apply_ensemble_metadata(director_candidates, scored_candidates, diversity_summary)
+        return None, director_candidates
+
+    def _resolve_ensemble_generation_inputs(
+        self,
+        *,
+        ep_start: int,
+        curr_block: dict,
+        ep_count: int | None,
+        ep_count_suggestion: int | None,
+        pacing_signals: dict | None,
+    ) -> tuple[int, int, str]:
         if ep_count_suggestion is None:
             ep_count_suggestion = ep_count
         if ep_count_suggestion is None:
@@ -397,20 +444,20 @@ class ArcEnsembleGenerator(BaseAgent):
         ep_count_suggestion = self._coerce_ep_count(ep_count_suggestion, Stage2Limits.DEFAULT_EP_COUNT)
         ep_end = ep_start + ep_count_suggestion - 1
         pacing_signal_guide = self._build_pacing_signal_guide(curr_block, ep_count_suggestion, pacing_signals or {})
-        candidates = []
+        return ep_count_suggestion, ep_end, pacing_signal_guide
 
-        # [V61.3] 병렬 실행 전에 genre 미리 로드 (SQLite thread-safety 문제 방지)
-        genre = GenreTypes.WUXIA
+    def _load_ensemble_genre(self, default_genre: str = GenreTypes.WUXIA) -> str:
+        genre = default_genre
         try:
             if hasattr(self, "context") and hasattr(self.context, "db"):
                 bible = self.context.db.load_anchor("bible")
                 if bible:
-                    genre = bible.get("_genre", GenreTypes.WUXIA)
+                    genre = bible.get("_genre", default_genre)
         except Exception as e:
-            logging.warning(f" [V61.3] genre 사전 로드 실패: {str(e)[:50]}")
+            logging.warning(f" [V61.3] genre preload failed: {str(e)[:50]}")
+        return genre
 
-        # [Phase 3-Obs] 에이전트 레벨 ThreadPoolExecutor 계측
-        # [Tier4-11] shared context cache for ensemble fan-out
+    def _resolve_ensemble_cache_name(self, *, arc_no: int, prev_arc_context: str, constraint_block: str) -> str:
         shared_context = f"{prev_arc_context or ''}\n\n{constraint_block or ''}"
         cache_info = self._get_or_create_context_cache(
             cache_type="arc_ensemble",
@@ -418,27 +465,51 @@ class ArcEnsembleGenerator(BaseAgent):
             ttl_seconds=600,
             project_name=self._context_cache_project_namespace("arc", arc_no),
         )
-        cache_name = cache_info.get("cache_name")
+        return cache_info.get("cache_name")
 
-        _tp_t0 = time.monotonic()
-
-        # [TF-36] single_strategy 필터링 (partial 시 1개 전략만)
-        _active_strategies = self.strategies
+    def _select_active_strategies(self, single_strategy: str) -> list[dict]:
+        active_strategies = self.strategies
         if single_strategy:
-            _filtered = [s for s in self.strategies if s.get("name") == single_strategy]
-            if _filtered:
-                _active_strategies = _filtered
-        _active_strategies = self._build_strategy_execution_plan(_active_strategies)
+            filtered = [strategy for strategy in self.strategies if strategy.get("name") == single_strategy]
+            if filtered:
+                active_strategies = filtered
+        return self._build_strategy_execution_plan(active_strategies)
 
-        # [V61.3] 전체 병렬 처리 블록을 try-except로 감싸서 급사 방지
+    def _run_ensemble_generation_fanout(
+        self,
+        *,
+        arc_no: int,
+        ep_start: int,
+        ep_end: int,
+        vol_strategy: str,
+        curr_block: dict,
+        prev_arc_context: str,
+        constraint_block: str,
+        assets: dict,
+        feedback: str,
+        strategy_specific_feedback: str,
+        rejected_strategy: str,
+        protagonist_name: str,
+        protagonist_config: dict | None,
+        entity_registry: dict | None,
+        genre: str,
+        ep_count_suggestion: int,
+        pacing_signal_guide: str,
+        retry: int,
+        single_strategy: str,
+        cache_name: str,
+        started_at: float,
+    ) -> list[dict]:
+        candidates: list[dict] = []
+        active_strategies = self._select_active_strategies(single_strategy)
         try:
             with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
                 futures = {}
-                for strategy in _active_strategies:
-                    # [EnsembleFB] REJECT된 전략에만 전용 피드백 주입
-                    _strategy_fb = (
+                for strategy in active_strategies:
+                    strategy_name = str(strategy.get("name", "") or "")
+                    strategy_feedback = (
                         strategy_specific_feedback
-                        if (strategy["name"] == rejected_strategy and strategy_specific_feedback)
+                        if (strategy_name == rejected_strategy and strategy_specific_feedback)
                         else ""
                     )
                     future = executor.submit(
@@ -452,133 +523,141 @@ class ArcEnsembleGenerator(BaseAgent):
                         constraint_block=constraint_block,
                         assets=assets,
                         feedback=feedback,
-                        strategy_feedback=_strategy_fb,
+                        strategy_feedback=strategy_feedback,
                         strategy=strategy,
-                        protagonist_name=protagonist_name,  # [V60.18]
-                        protagonist_config=protagonist_config,  # [V60.88]
-                        entity_registry=entity_registry,  # [V60.92]
-                        genre=genre,  # [V61.3] 미리 로드한 genre 전달 (thread-safety)
+                        protagonist_name=protagonist_name,
+                        protagonist_config=protagonist_config,
+                        entity_registry=entity_registry,
+                        genre=genre,
                         ep_count_suggestion=ep_count_suggestion,
                         pacing_signal_guide=pacing_signal_guide,
-                        retry=retry,  # [V61.5] 재시도 횟수 전달
-                        cache_name=cache_name,  # [Tier4-11]
+                        retry=retry,
+                        cache_name=cache_name,
                     )
-                    futures[future] = strategy["name"]
+                    futures[future] = strategy_name
 
-                _strat_names = ", ".join(futures.values())
+                strategy_names = ", ".join(futures.values())
                 self._operator_log(
-                    f"🎲 [Arc] {len(futures)}개 전략 병렬 생성 중 ({_strat_names})...",
+                    f"[Arc] Generating {len(futures)} ensemble candidates ({strategy_names})...",
                     meta={"candidate_count": len(futures), "strategies": list(futures.values())},
                 )
-                # [V61.3] 타임아웃 적용 - 야간 무인 운영 시 무한 대기 방지
                 try:
                     for future in as_completed(futures, timeout=self.ENSEMBLE_TIMEOUT):
                         strategy_name = futures[future]
                         try:
-                            # [V61.3] 개별 후보에도 타임아웃 적용
                             result = future.result(timeout=self.SINGLE_CANDIDATE_TIMEOUT)
                             if result:
                                 result["_strategy"] = strategy_name
                                 candidates.append(result)
+                                elapsed = round(time.monotonic() - started_at, 1)
                                 self._operator_log(
-                                    f"✓ [Arc] '{strategy_name}' 생성 완료 ({time.monotonic() - _tp_t0:.0f}초)",
-                                    meta={"strategy": strategy_name, "elapsed_seconds": round(time.monotonic() - _tp_t0, 1)},
+                                    f"[Arc] '{strategy_name}' finished ({elapsed:.0f}s)",
+                                    meta={"strategy": strategy_name, "elapsed_seconds": elapsed},
                                 )
                         except FutureTimeoutError:
-                            logging.warning(f" [V61.3] {strategy_name} 전략 타임아웃 ({self.SINGLE_CANDIDATE_TIMEOUT}초)"
+                            logging.warning(
+                                "[V61.3] %s strategy timed out (%ss)",
+                                strategy_name,
+                                self.SINGLE_CANDIDATE_TIMEOUT,
                             )
                             self._operator_log(
-                                f"✗ [Arc] '{strategy_name}' 타임아웃",
+                                f"[Arc] '{strategy_name}' timed out",
                                 level="warning",
                                 meta={"strategy": strategy_name, "timeout_seconds": self.SINGLE_CANDIDATE_TIMEOUT},
                             )
                         except Exception as e:
-                            logging.warning(f" [Ensemble] {strategy_name} 전략 실패: {str(e)[:50]}")
+                            logging.warning("[Ensemble] %s strategy failed: %s", strategy_name, str(e)[:50])
                             self._operator_log(
-                                f"✗ [Arc] '{strategy_name}' 실패",
+                                f"[Arc] '{strategy_name}' failed",
                                 level="warning",
                                 meta={"strategy": strategy_name},
                             )
                 except FutureTimeoutError:
-                    # 전체 앙상블 타임아웃 - 완료된 후보만 사용
-                    logging.warning(f" [V61.3] 앙상블 전체 타임아웃 ({self.ENSEMBLE_TIMEOUT}초) - 완료된 {len(candidates)}개 후보 사용"
+                    logging.warning(
+                        "[V61.3] Arc ensemble timed out (%ss); using %s completed candidates",
+                        self.ENSEMBLE_TIMEOUT,
+                        len(candidates),
                     )
                 except Exception as e:
-                    # [V61.3] as_completed 자체 예외 처리
-                    logging.warning(f" [V61.3] 앙상블 루프 예외: {str(e)[:80]}")
+                    logging.warning("[V61.3] Arc ensemble loop failed: %s", str(e)[:80])
                 finally:
-                    # [Sweep34] 미완료 future 정리로 shutdown 대기 최소화
                     for f in futures:
                         f.cancel()
         except Exception as e:
-            # [V61.3] ThreadPoolExecutor 전체 예외 처리 - 급사 방지
-            # stderr로 출력 (Rich 스피너가 stdout 가림)
             import traceback
 
-            logging.error(f" [V61.3] Arc 병렬 처리 크래시 방지: {str(e)[:100]}")
+            logging.error("[V61.3] Arc ensemble fan-out failed: %s", str(e)[:100])
             logging.error(traceback.format_exc())
+        return candidates
 
-        # [Phase 3-Obs] 병렬 구간 소요 시간 기록
-        try:
-            logging.warning(f"[PerfTimer:ArcEnsemble] arc_{arc_no}_ensemble={time.monotonic() - _tp_t0:.2f}s")
-        except Exception as _e:
-            logging.debug("[ArcEnsemble] PerfTimer 기록 실패 (무시): %s", _e)
-
-        if not candidates:
-            return None, []
-
-        # [V60.73] tactical_doc 최소 길이 필터는 후보가 선택한 최종 ep_count를 기준으로 본다.
+    def _qualify_candidates_by_tactical_length(
+        self,
+        candidates: list[dict],
+        fallback_ep_count: int,
+    ) -> list[dict]:
         valid_candidates = []
         for candidate in candidates:
-            # [V60.74] tactical_doc 타입 안전 변환 (dict/list 처리)
-            tactical = candidate.get("tactical_doc", "")
-            tactical = self._safe_tactical_str(tactical)
-            candidate["tactical_doc"] = tactical  # 변환된 값으로 업데이트
+            tactical = self._safe_tactical_str(candidate.get("tactical_doc", ""))
+            candidate["tactical_doc"] = tactical
             tactical_len = len(tactical)
-            candidate_ep_count = self._resolve_candidate_ep_count(candidate, ep_count_suggestion)
+            candidate_ep_count = self._resolve_candidate_ep_count(candidate, fallback_ep_count)
             min_tactical_length = candidate_ep_count * Stage2Limits.MIN_CHARS_PER_EPISODE
             if tactical_len >= min_tactical_length:
                 valid_candidates.append(candidate)
-            else:
-                logging.info(f" [Ensemble] {candidate.get('_strategy', '?')} 제외: tactical_doc {tactical_len}자 < {min_tactical_length}자 (ep_count={candidate_ep_count})"
-                )
-                self._operator_log(
-                    f"✗ [Arc] '{candidate.get('_strategy', '?')}' 분량 미달 ({tactical_len}자 < {min_tactical_length}자)",
-                    level="warning",
-                    meta={
-                        "strategy": candidate.get("_strategy", "?"),
-                        "tactical_chars": tactical_len,
-                        "min_required_chars": min_tactical_length,
-                        "ep_count": candidate_ep_count,
-                    },
-                )
+                continue
 
-        # [V60.74] 유효한 후보가 없으면 최장 후보 선택 + 경고 레벨 판단
-        if not valid_candidates:
+            logging.info(
+                "[Ensemble] %s filtered: tactical_doc %s < %s (ep_count=%s)",
+                candidate.get("_strategy", "?"),
+                tactical_len,
+                min_tactical_length,
+                candidate_ep_count,
+            )
+            self._operator_log(
+                f"[Arc] '{candidate.get('_strategy', '?')}' tactical length below minimum",
+                level="warning",
+                meta={
+                    "strategy": candidate.get("_strategy", "?"),
+                    "tactical_chars": tactical_len,
+                    "min_required_chars": min_tactical_length,
+                    "ep_count": candidate_ep_count,
+                },
+            )
 
-            def safe_tactical_len(x):
-                t = x.get("tactical_doc", "")
-                return len(t) if isinstance(t, str) else len(str(t)) if t else 0
+        if valid_candidates:
+            return valid_candidates
 
-            candidates.sort(key=safe_tactical_len, reverse=True)
-            longest = candidates[0]
-            longest_len = safe_tactical_len(longest)
-            longest_ep_count = self._resolve_candidate_ep_count(longest, ep_count_suggestion)
-            min_required = longest_ep_count * Stage2Limits.MIN_CHARS_PER_EPISODE
+        def safe_tactical_len(candidate: dict) -> int:
+            tactical = candidate.get("tactical_doc", "")
+            return len(tactical) if isinstance(tactical, str) else len(str(tactical)) if tactical else 0
 
-            # 권장값의 60% 미만이면 경고 레벨 높임
-            if longest_len < min_required * 0.6:
-                logging.warning(f" [Ensemble] 모든 후보 심각한 분량 부족: {longest_len}자 < {int(min_required * 0.6)}자 (권장의 60%)"
-                )
-                logging.warning("→ Critic/Consensus에서 REJECT 가능성 높음")
-            else:
-                logging.warning(f" [Ensemble] 모든 후보 분량 미달, 최대 분량 후보 선택: {longest_len}자")
+        candidates.sort(key=safe_tactical_len, reverse=True)
+        longest = candidates[0]
+        longest_len = safe_tactical_len(longest)
+        longest_ep_count = self._resolve_candidate_ep_count(longest, fallback_ep_count)
+        min_required = longest_ep_count * Stage2Limits.MIN_CHARS_PER_EPISODE
+        if longest_len < min_required * 0.6:
+            logging.warning(
+                "[Ensemble] all candidates are severely short: %s < %s",
+                longest_len,
+                int(min_required * 0.6),
+            )
+            logging.warning("[Ensemble] downstream Director/Critic rejection risk is high")
+        else:
+            logging.warning("[Ensemble] all candidates were short; keeping longest tactical_doc candidate")
+        return candidates[:1]
 
-            valid_candidates = candidates[:1]
-
-        # 후보 평가 및 선택
+    def _score_candidates_for_director(
+        self,
+        candidates: list[dict],
+        prev_arc_context: str,
+        constraint_block: str,
+        *,
+        prev_equipment: list[str] | None = None,
+        forbidden_items: list[str] | None = None,
+    ) -> tuple[list[dict], list[dict], dict]:
         scored_candidates = []
-        for candidate in valid_candidates:
+        for candidate in candidates:
             score, issues = self._evaluate_candidate(
                 candidate,
                 prev_arc_context,
@@ -590,66 +669,70 @@ class ArcEnsembleGenerator(BaseAgent):
             candidate["_issues"] = issues
             scored_candidates.append(candidate)
 
-        # 점수순 정렬
-        scored_candidates.sort(key=lambda x: x.get("_score", 0), reverse=True)
+        scored_candidates.sort(key=lambda item: item.get("_score", 0), reverse=True)
+        structural_min_score = 50
+        director_candidates = [item for item in scored_candidates if item.get("_score", 0) >= structural_min_score]
+        if not director_candidates:
+            director_candidates = scored_candidates[:1]
+        diversity_summary = self._summarize_candidate_diversity(director_candidates)
+        return scored_candidates, director_candidates, diversity_summary
 
-        # [TF-S2] 구조 결함만 필터링하고 최종 선택은 Director에게 위임
-        STRUCTURAL_MIN_SCORE = 50
-        valid_candidates = [c for c in scored_candidates if c.get("_score", 0) >= STRUCTURAL_MIN_SCORE]
-        if not valid_candidates:
-            valid_candidates = scored_candidates[:1]  # 최소 1개 폴백
-        _diversity_summary = self._summarize_candidate_diversity(valid_candidates)
-
-        # [V61.3] 후보별 점수 비교 출력
-        logging.warning(" [Ensemble] 후보 비교:")
-        _filtered_count = len(candidates) - len(scored_candidates)
-        _filter_note = f" (분량미달 {_filtered_count}개 제외)" if _filtered_count > 0 else ""
+    def _log_scored_candidates(
+        self,
+        scored_candidates: list[dict],
+        director_candidates: list[dict],
+        *,
+        total_candidates: int,
+    ) -> None:
+        logging.warning("[Ensemble] candidate scores:")
+        filtered_count = total_candidates - len(scored_candidates)
+        filter_note = f" ({filtered_count} short candidates filtered)" if filtered_count > 0 else ""
         self._operator_log(
-            f"📋 [Arc] {len(scored_candidates)}/{len(candidates)}개 후보 비교{_filter_note}",
+            f"[Arc] {len(scored_candidates)}/{total_candidates} candidates scored{filter_note}",
             meta={
                 "scored_candidates": len(scored_candidates),
-                "total_candidates": len(candidates),
-                "filtered_count": _filtered_count,
+                "total_candidates": total_candidates,
+                "filtered_count": filtered_count,
             },
         )
-        for c in scored_candidates:
-            strategy = c.get("_strategy", "?")
-            score = c.get("_score", 0)
-            issues = c.get("_issues", [])
+        for candidate in scored_candidates:
+            strategy = candidate.get("_strategy", "?")
+            score = candidate.get("_score", 0)
+            issues = candidate.get("_issues", [])
             issue_summary = f" - {issues[0][:40]}..." if issues else ""
-            marker = "✓" if c in valid_candidates else "×"
-            logging.info(f"{marker} {strategy}: {score}점{issue_summary}")
+            marker = "selected" if candidate in director_candidates else "held"
+            logging.info("%s %s: %s%s", marker, strategy, score, issue_summary)
             self._operator_log(
-                f"{marker} [Arc] {strategy}: {score}점{issue_summary}",
-                meta={"strategy": strategy, "score": score, "qualified": c in valid_candidates},
+                f"[Arc] {marker} {strategy}: {score}{issue_summary}",
+                meta={"strategy": strategy, "score": score, "qualified": candidate in director_candidates},
             )
         logging.info(
-            " [TF-S2] Python은 선택하지 않음 — 유효 후보 %d개를 Director 비교 단계로 전달",
-            len(valid_candidates),
+            "[TF-S2] Python scored %d candidates and defers final selection to Director",
+            len(director_candidates),
         )
 
-        # [V60.74] 메타데이터 보존 (디버깅용) - 반환 후보 각각에 저장
-        all_scores = [(c.get("_strategy", "?"), c.get("_score", 0)) for c in scored_candidates]
-        for idx, candidate in enumerate(valid_candidates):
+    def _apply_ensemble_metadata(
+        self,
+        director_candidates: list[dict],
+        scored_candidates: list[dict],
+        diversity_summary: dict,
+    ) -> None:
+        all_scores = [(candidate.get("_strategy", "?"), candidate.get("_score", 0)) for candidate in scored_candidates]
+        for idx, candidate in enumerate(director_candidates):
             candidate["_ensemble_meta"] = {
-                "best_strategy": candidate.get("_strategy", "unknown"),  # 하위 호환 유지
-                "best_score": candidate.get("_score", 0),  # 하위 호환 유지
+                "best_strategy": candidate.get("_strategy", "unknown"),
+                "best_score": candidate.get("_score", 0),
                 "all_scores": all_scores,
-                "total_candidates": len(valid_candidates),
+                "total_candidates": len(director_candidates),
                 "candidate_index": idx,
                 "strategy": candidate.get("_strategy", "unknown"),
                 "score": candidate.get("_score", 0),
-                "diversity": _diversity_summary,
+                "diversity": diversity_summary,
             }
 
-        # 메타데이터 제거 후 반환 (단, _ensemble_meta·_strategy는 유지)
-        for c in scored_candidates:
-            # _strategy는 Director 비교용으로 보존 [TF-47]
-            c.pop("_score", None)
-            c.pop("_issues", None)
-
-        # [TF-S2] Python은 최종 후보를 고르지 않는다.
-        return None, valid_candidates
+        for candidate in scored_candidates:
+            candidate.pop("_score", None)
+            candidate.pop("_issues", None)
 
     def _coerce_ep_count(self, value: object, default: int) -> int:
         if isinstance(value, bool):
@@ -775,6 +858,256 @@ class ArcEnsembleGenerator(BaseAgent):
         result["pacing_decision"] = pacing_decision
         return result
 
+    def _merge_single_arc_feedback(self, feedback: str, strategy_feedback: str) -> str:
+        """전략별 피드백을 Arc 생성용 payload로 병합한다."""
+        merged_feedback = feedback or ""
+        if not strategy_feedback:
+            return merged_feedback
+        if merged_feedback:
+            return f"{merged_feedback}\n\n[전략별 보정 피드백]\n{strategy_feedback}"
+        return f"[전략별 보정 피드백]\n{strategy_feedback}"
+
+    def _build_single_arc_protagonist_instructions(
+        self,
+        protagonist_config: dict | None,
+        genre: str,
+    ) -> str:
+        """주인공 설정을 Arc prompt block으로 정리한다."""
+        if not protagonist_config:
+            return ""
+
+        world_origin = protagonist_config.get("world_origin", "원시인")
+        incarnation_type = protagonist_config.get("incarnation_type", "회귀자")
+        lines = [f"- 세계 출신: {world_origin}", f"- 환생 유형: {incarnation_type}"]
+
+        if world_origin == "원시인":
+            if PRIMITIVE_GUARD_AVAILABLE:
+                lines.append(
+                    get_primitive_constraint_section(
+                        protagonist_config,
+                        genre=genre,
+                        length="medium",
+                    )
+                )
+            else:
+                lines.append("⚠️ [원시인 모드] 현대 용어 절대 금지!")
+        else:
+            lines.append("📝 주인공은 현대 사회를 알고 있음")
+
+        if incarnation_type == "회귀자":
+            lines.append("🔄 미래를 알고 있음 (합리적 이유 없이는 내면 독백으로 처리)")
+        elif incarnation_type == "빙의자":
+            lines.append("👤 원래 인물의 기억/관계를 의식")
+        elif incarnation_type == "환생자":
+            lines.append("👶 전생의 기억이 있음")
+
+        return "\n[🌍 주인공 설정]\n" + "\n".join(lines)
+
+    def _build_single_arc_generation_context(
+        self,
+        curr_block: dict,
+        prev_arc_context: str,
+        constraint_block: str,
+        protagonist_config: dict | None,
+        entity_registry: dict | None,
+        genre: str,
+    ) -> dict:
+        """Arc 생성 prompt에 필요한 block/setting guide bundle을 구성한다."""
+        prompt_context = {
+            "prohibition_summary": self._generate_prohibition_summary(prev_arc_context, constraint_block),
+            "protagonist_instructions": self._build_single_arc_protagonist_instructions(
+                protagonist_config,
+                genre,
+            ),
+            "entity_registry_section": self._format_entity_registry(entity_registry) if entity_registry else "",
+            "genre_ext_guide": "",
+            "extended_block_guide": "",
+            "block_event_guard": _build_block_event_guard(curr_block),
+        }
+
+        if isinstance(curr_block, dict):
+            genre_ext = curr_block.get("genre_ext") or (curr_block.get("raw_data") or {}).get("genre_ext")
+            if genre_ext and isinstance(genre_ext, dict):
+                genre_ext_lines = [
+                    "### [장르 특화 정보 - genre_ext]",
+                    "아래 값은 Arc tactical_doc/state_constraints에 반드시 반영해야 합니다:",
+                ]
+                if genre_ext.get("capital_after"):
+                    genre_ext_lines.append(
+                        f"- [필수] arc_end_state의 capital/total_assets는 target `{genre_ext.get('capital_after')}`"
+                        "와 크게 괴리되지 않게 유지하세요 (권장 ±30%)."
+                    )
+                    genre_ext_lines.append("- [금지] 블록 DNA에 없는 대규모 자금 유입/차입으로 수치를 임의 상향하지 마세요.")
+                for key, value in genre_ext.items():
+                    genre_ext_lines.append(f"- **{key}**: {value}")
+                prompt_context["genre_ext_guide"] = "\n".join(genre_ext_lines)
+
+        block_standard_fields = {"block_id", "title", "content", "genre_ext", "regression_ext", "raw_data"}
+        if isinstance(curr_block, dict):
+            extended_block_parts = []
+            for key, value in curr_block.items():
+                if key in block_standard_fields or not value:
+                    continue
+                if isinstance(value, list):
+                    serialized = ", ".join(str(item) for item in value) if value else ""
+                elif isinstance(value, dict):
+                    serialized = json.dumps(value, ensure_ascii=False)
+                else:
+                    serialized = str(value)
+                if serialized:
+                    extended_block_parts.append(f"- **{key}**: {serialized}")
+            if extended_block_parts:
+                prompt_context["extended_block_guide"] = (
+                    "### [블록 확장 메타데이터 - 반드시 Arc에 반영]\n"
+                    "아래는 treatment 설계 시 포함된 핵심 연출 데이터입니다. "
+                    "모든 항목을 Arc tactical_doc에 반영하세요.\n"
+                    "특히 foreshadow는 tactical_doc 씬에 직접 심고, "
+                    "callback은 이전 복선이 회수되는 씬을 명시하고, "
+                    "emotional_beat/tension_level은 화별 감정 밀도 설계에 반영하세요:\n"
+                    + "\n".join(extended_block_parts)
+                )
+
+        return prompt_context
+
+    def _build_single_arc_prompt_bundle(
+        self,
+        strategy: dict,
+        prompt_context: dict,
+        constraint_block: str,
+        prev_arc_context: str,
+        curr_block: dict,
+        pacing_signal_guide: str,
+        vol_strategy: str,
+        assets: dict,
+        merged_feedback: str,
+        protagonist_name: str,
+        genre: str,
+        arc_no: int,
+        ep_start: int,
+        ep_end: int,
+        cache_name: str,
+    ) -> tuple[str | None, str]:
+        """cached prompt와 full fallback prompt를 함께 조립한다."""
+        critical_keys = []
+        try:
+            if (
+                hasattr(self, "context")
+                and hasattr(self.context, "sys")
+                and hasattr(self.context.sys, "hud")
+                and self.context.sys.hud
+            ):
+                critical_keys = self.context.sys.hud.get_critical_keys()
+        except Exception as e:
+            logging.debug("[TF-26] critical_keys lookup failed: %s", str(e)[:100])
+
+        use_cached_context = bool(cache_name)
+        cached_context_stub = "[context cached: refer to cached_content]"
+        state_constraints_genre_field = self._escape_braces(build_state_constraints_schema(genre, critical_keys))
+        status_shadow_schema = self._escape_braces(build_status_shadow_schema(genre, critical_keys))
+        vol_strategy_prompt = _fit_arc_prompt_context(vol_strategy, 6000) if vol_strategy else "(없음)"
+        assets_prompt = _fit_arc_prompt_context(json.dumps(assets, ensure_ascii=False), 6000) if assets else "{}"
+        feedback_prompt = _fit_arc_prompt_context(merged_feedback, 9000) if merged_feedback else "(없음)"
+
+        prompt_kwargs = {
+            "strategy_name": strategy["name"].upper(),
+            "strategy_focus": strategy["focus"],
+            "strategy_style": strategy["style"],
+            "prohibition_summary": self._escape_braces(prompt_context["prohibition_summary"]),
+            "protagonist_name": self._escape_braces(protagonist_name),
+            "protagonist_instructions": self._escape_braces(prompt_context["protagonist_instructions"]),
+            "curr_block": self._escape_braces(json.dumps(curr_block, ensure_ascii=False) if curr_block else "{}"),
+            "pacing_signal_guide": self._escape_braces(pacing_signal_guide or ""),
+            "block_event_guard": self._escape_braces(prompt_context["block_event_guard"]),
+            "genre_ext_guide": self._escape_braces(prompt_context["genre_ext_guide"]),
+            "extended_block_guide": self._escape_braces(prompt_context["extended_block_guide"]),
+            "vol_strategy": self._escape_braces(vol_strategy_prompt),
+            "assets": self._escape_braces(assets_prompt),
+            "feedback": self._escape_braces(feedback_prompt),
+            "entity_registry_section": self._escape_braces(prompt_context["entity_registry_section"]),
+            "energy_system_block": self._escape_braces(self._get_energy_system_block(genre, critical_keys)),
+            "state_constraints_genre_field": state_constraints_genre_field,
+            "status_shadow_schema": status_shadow_schema,
+            "arc_no": arc_no,
+            "ep_start": ep_start,
+            "ep_end": ep_end,
+        }
+
+        prompt = self._prompt_loader.load(
+            "ensemble",
+            "ENSEMBLE_ARC_PROMPT",
+            constraint_block=self._escape_braces(
+                cached_context_stub if use_cached_context else (constraint_block or "(없음)")
+            ),
+            prev_arc_context=self._escape_braces(
+                cached_context_stub if use_cached_context else (prev_arc_context or "시작점")
+            ),
+            **prompt_kwargs,
+        )
+
+        full_prompt_fallback = prompt
+        if use_cached_context:
+            full_prompt_fallback = self._prompt_loader.load(
+                "ensemble",
+                "ENSEMBLE_ARC_PROMPT",
+                constraint_block=self._escape_braces(constraint_block or "(없음)"),
+                prev_arc_context=self._escape_braces(prev_arc_context or "시작점"),
+                **prompt_kwargs,
+            )
+            if not full_prompt_fallback:
+                full_prompt_fallback = prompt
+
+        return prompt, full_prompt_fallback
+
+    def _request_single_arc_candidate(
+        self,
+        strategy: dict,
+        prompt: str | None,
+        cache_name: str,
+        full_prompt_fallback: str,
+        retry: int,
+    ) -> dict | None:
+        """LLM 요청과 JSON normalization을 담당한다."""
+        if not prompt:
+            logging.warning("[ArcEnsemble] ENSEMBLE_ARC_PROMPT not found in prompt loader")
+            return None
+
+        thinking = "high" if retry == 0 else "medium"
+        result = self._ask_with_cached_context(
+            cache_name=cache_name,
+            prompt=prompt,
+            temperature=strategy["temperature"],
+            thinking_level=thinking,
+            full_prompt_fallback=full_prompt_fallback,
+            response_schema=ARC_DESIGN_SCHEMA,
+        )
+
+        if isinstance(result, str):
+            result = self._extract_json_robust(result)
+        if not isinstance(result, dict) or result.get("parsing_error"):
+            return None
+        return result
+
+    def _finalize_single_arc_candidate(
+        self,
+        result: dict,
+        arc_no: int,
+        ep_start: int,
+        ep_end: int,
+        ep_count_suggestion: int | None,
+    ) -> dict:
+        """Arc 응답을 pacing contract와 required fields 기준으로 마감한다."""
+        normalized = self._normalize_pacing_contract(
+            result,
+            ep_start,
+            ep_count_suggestion or Stage2Limits.DEFAULT_EP_COUNT,
+        )
+        return self._ensure_required_fields(
+            normalized,
+            arc_no,
+            ep_start,
+            normalized.get("ep_end", ep_end),
+        )
+
     def _generate_single(
         self,
         arc_no: int,
@@ -799,207 +1132,48 @@ class ArcEnsembleGenerator(BaseAgent):
     ) -> dict | None:
         """단일 전략으로 Arc 생성"""
         try:
-            # [EnsembleFB] 전략별 보정 피드백 병합
-            _merged_feedback = feedback or ""
-            if strategy_feedback:
-                _merged_feedback = (
-                    f"{_merged_feedback}\n\n[전략별 보정 피드백]\n{strategy_feedback}"
-                    if _merged_feedback
-                    else f"[전략별 보정 피드백]\n{strategy_feedback}"
-                )
-
-            # [V60.13] 최우선 금지 요약 생성 - 프롬프트 최상단에 배치
-            prohibition_summary = self._generate_prohibition_summary(prev_arc_context, constraint_block)
-
-            # [V60.88] 주인공 설정 기반 지침 생성
-            protagonist_instructions = ""
-            if protagonist_config:
-                world_origin = protagonist_config.get("world_origin", "원시인")
-                incarnation_type = protagonist_config.get("incarnation_type", "회귀자")
-                lines = [f"- 세계 출신: {world_origin}", f"- 환생 유형: {incarnation_type}"]
-
-                # [V61.3] genre는 이제 파라미터로 전달받음 (DB 접근 제거 - thread-safety)
-
-                # [V60.96] 원시인 모드: 장르별 JSON 기반 PrimitiveGuard 사용
-                if world_origin == "원시인":
-                    if PRIMITIVE_GUARD_AVAILABLE:
-                        lines.append(get_primitive_constraint_section(protagonist_config, genre=genre, length="medium"))
-                    else:
-                        lines.append("⚠️ [원시인 모드] 현대 용어 절대 금지!")
-                else:
-                    lines.append("📝 주인공은 현대 사회를 알고 있음")
-
-                if incarnation_type == "회귀자":
-                    lines.append("🔄 미래를 알고 있음 (합리적 이유 없이는 내면 독백으로 처리)")
-                elif incarnation_type == "빙의자":
-                    lines.append("👤 원래 인물의 기억/관계를 의식")
-                elif incarnation_type == "환생자":
-                    lines.append("👶 전생의 기억이 있음")
-                protagonist_instructions = "\n[🌍 주인공 설정]\n" + "\n".join(lines)
-
-            # [V60.92] Entity Registry 섹션 생성
-            entity_registry_section = self._format_entity_registry(entity_registry) if entity_registry else ""
-
-            # [V62.2] genre_ext 가이드 생성 - 장르별 핵심 필드를 AI에게 명시
-            genre_ext_guide = ""
-            if isinstance(curr_block, dict):
-                ge = curr_block.get("genre_ext") or (curr_block.get("raw_data") or {}).get("genre_ext")
-                if ge and isinstance(ge, dict):
-                    lines = [
-                        "### [장르 특화 정보 - genre_ext]",
-                        "아래 값은 Arc tactical_doc/state_constraints에 반드시 반영해야 합니다:",
-                    ]
-                    if ge.get("capital_after"):
-                        lines.append(
-                            f"- [필수] arc_end_state의 capital/total_assets는 target `{ge.get('capital_after')}`"
-                            "와 크게 괴리되지 않게 유지하세요 (권장 ±30%)."
-                        )
-                        lines.append("- [금지] 블록 DNA에 없는 대규모 자금 유입/차입으로 수치를 임의 상향하지 마세요.")
-                    for k, v in ge.items():
-                        lines.append(f"- **{k}**: {v}")
-                    genre_ext_guide = "\n".join(lines)
-
-            # [TF-9] 확장 블록 메타데이터 가이드 - 범용 직렬화 (장르 불문 자동 처리)
-            # genre_ext/regression_ext/content/block_id/title/raw_data 외 나머지 필드 전체를 섹션화
-            _BLOCK_STANDARD_FIELDS = {"block_id", "title", "content", "genre_ext", "regression_ext", "raw_data"}
-            extended_block_guide = ""
-            if isinstance(curr_block, dict):
-                _ext_parts = []
-                for _key, _val in curr_block.items():
-                    if _key in _BLOCK_STANDARD_FIELDS or not _val:
-                        continue
-                    # 값 직렬화
-                    if isinstance(_val, list):
-                        _serialized = ", ".join(str(i) for i in _val) if _val else ""
-                    elif isinstance(_val, dict):
-                        _serialized = json.dumps(_val, ensure_ascii=False)
-                    else:
-                        _serialized = str(_val)
-                    if _serialized:
-                        _ext_parts.append(f"- **{_key}**: {_serialized}")
-                if _ext_parts:
-                    extended_block_guide = (
-                        "### [블록 확장 메타데이터 - 반드시 Arc에 반영]\n"
-                        "아래는 treatment 설계 시 포함된 핵심 연출 데이터입니다. "
-                        "모든 항목을 Arc tactical_doc에 반영하세요.\n"
-                        "특히 foreshadow는 tactical_doc 씬에 직접 심고, "
-                        "callback은 이전 복선이 회수되는 씬을 명시하고, "
-                        "emotional_beat/tension_level은 화별 감정 밀도 설계에 반영하세요:\n" + "\n".join(_ext_parts)
-                    )
-            block_event_guard = _build_block_event_guard(curr_block)
-
-            _use_cached_context = bool(cache_name)
-            _cached_context_stub = "[context cached: refer to cached_content]"
-
-            # [TF-45] 장르별 스키마 필드 주입
-            _ck = []
-            try:
-                if (
-                    hasattr(self, "context")
-                    and hasattr(self.context, "sys")
-                    and hasattr(self.context.sys, "hud")
-                    and self.context.sys.hud
-                ):
-                    _ck = self.context.sys.hud.get_critical_keys()
-            except Exception as e:
-                logging.debug("[TF-26] critical_keys lookup failed: %s", str(e)[:100])
-            _sc_genre_field = self._escape_braces(build_state_constraints_schema(genre, _ck))
-            _ss_schema = self._escape_braces(build_status_shadow_schema(genre, _ck))
-            _vol_strategy_prompt = _fit_arc_prompt_context(vol_strategy, 6000) if vol_strategy else "(없음)"
-            _assets_prompt = (
-                _fit_arc_prompt_context(json.dumps(assets, ensure_ascii=False), 6000) if assets else "{}"
+            merged_feedback = self._merge_single_arc_feedback(feedback, strategy_feedback)
+            prompt_context = self._build_single_arc_generation_context(
+                curr_block,
+                prev_arc_context,
+                constraint_block,
+                protagonist_config,
+                entity_registry,
+                genre,
             )
-            _feedback_prompt = _fit_arc_prompt_context(_merged_feedback, 9000) if _merged_feedback else "(없음)"
-
-            prompt = self._prompt_loader.load(
-                "ensemble",
-                "ENSEMBLE_ARC_PROMPT",
-                strategy_name=strategy["name"].upper(),
-                strategy_focus=strategy["focus"],
-                strategy_style=strategy["style"],
-                prohibition_summary=self._escape_braces(prohibition_summary),  # [V70]
-                protagonist_name=self._escape_braces(protagonist_name),  # [V70]
-                protagonist_instructions=self._escape_braces(protagonist_instructions),  # [V70]
-                constraint_block=self._escape_braces(
-                    _cached_context_stub if _use_cached_context else (constraint_block or "(없음)")
-                ),
-                prev_arc_context=self._escape_braces(
-                    _cached_context_stub if _use_cached_context else (prev_arc_context or "시작점")
-                ),
-                curr_block=self._escape_braces(json.dumps(curr_block, ensure_ascii=False) if curr_block else "{}"),
-                pacing_signal_guide=self._escape_braces(pacing_signal_guide or ""),
-                block_event_guard=self._escape_braces(block_event_guard),
-                genre_ext_guide=self._escape_braces(genre_ext_guide),
-                extended_block_guide=self._escape_braces(extended_block_guide),  # [TF-9]
-                vol_strategy=self._escape_braces(_vol_strategy_prompt),
-                assets=self._escape_braces(_assets_prompt),
-                feedback=self._escape_braces(_feedback_prompt),
-                entity_registry_section=self._escape_braces(entity_registry_section),  # [V60.92]
-                energy_system_block=self._escape_braces(self._get_energy_system_block(genre, _ck)),
-                state_constraints_genre_field=_sc_genre_field,
-                status_shadow_schema=_ss_schema,
-                arc_no=arc_no,
-                ep_start=ep_start,
-                ep_end=ep_end,
+            prompt, full_prompt_fallback = self._build_single_arc_prompt_bundle(
+                strategy,
+                prompt_context,
+                constraint_block,
+                prev_arc_context,
+                curr_block,
+                pacing_signal_guide,
+                vol_strategy,
+                assets,
+                merged_feedback,
+                protagonist_name,
+                genre,
+                arc_no,
+                ep_start,
+                ep_end,
+                cache_name,
             )
-            full_prompt_fallback = prompt
-            if _use_cached_context:
-                full_prompt_fallback = self._prompt_loader.load(
-                    "ensemble",
-                    "ENSEMBLE_ARC_PROMPT",
-                    strategy_name=strategy["name"].upper(),
-                    strategy_focus=strategy["focus"],
-                    strategy_style=strategy["style"],
-                    prohibition_summary=self._escape_braces(prohibition_summary),  # [V70]
-                    protagonist_name=self._escape_braces(protagonist_name),  # [V70]
-                    protagonist_instructions=self._escape_braces(protagonist_instructions),  # [V70]
-                    constraint_block=self._escape_braces(constraint_block or "(없음)"),
-                    prev_arc_context=self._escape_braces(prev_arc_context or "시작점"),
-                    curr_block=self._escape_braces(json.dumps(curr_block, ensure_ascii=False) if curr_block else "{}"),
-                    pacing_signal_guide=self._escape_braces(pacing_signal_guide or ""),
-                    block_event_guard=self._escape_braces(block_event_guard),
-                    genre_ext_guide=self._escape_braces(genre_ext_guide),
-                    extended_block_guide=self._escape_braces(extended_block_guide),  # [TF-9]
-                    vol_strategy=self._escape_braces(_vol_strategy_prompt),
-                    assets=self._escape_braces(_assets_prompt),
-                    feedback=self._escape_braces(_feedback_prompt),
-                    entity_registry_section=self._escape_braces(entity_registry_section),  # [V60.92]
-                    energy_system_block=self._escape_braces(self._get_energy_system_block(genre, _ck)),
-                    state_constraints_genre_field=_sc_genre_field,
-                    status_shadow_schema=_ss_schema,
-                    arc_no=arc_no,
-                    ep_start=ep_start,
-                    ep_end=ep_end,
-                )
-                if not full_prompt_fallback:
-                    full_prompt_fallback = prompt
-            if not prompt:
-                logging.warning("[ArcEnsemble] ENSEMBLE_ARC_PROMPT not found in prompt loader")
+            result = self._request_single_arc_candidate(
+                strategy,
+                prompt,
+                cache_name,
+                full_prompt_fallback,
+                retry,
+            )
+            if result is None:
                 return None
-
-            # [V60.27] Thinking Level 적용 - Arc 생성 품질 향상
-            # [V61.5] 재시도 시 "medium"으로 다운그레이드 (피드백이 사고를 보조)
-            thinking = "high" if retry == 0 else "medium"
-            result = self._ask_with_cached_context(
-                cache_name=cache_name,
-                prompt=prompt,
-                temperature=strategy["temperature"],
-                thinking_level=thinking,
-                full_prompt_fallback=full_prompt_fallback,
-                response_schema=ARC_DESIGN_SCHEMA,  # [TF11] API 레벨 스키마 강제
+            return self._finalize_single_arc_candidate(
+                result,
+                arc_no,
+                ep_start,
+                ep_end,
+                ep_count_suggestion,
             )
-
-            if isinstance(result, str):
-                result = self._extract_json_robust(result)
-            # [V70] list/파싱에러 방어
-            if not isinstance(result, dict) or result.get("parsing_error"):
-                return None
-
-            # 필수 필드 보장 전에 pacing contract를 정규화한다.
-            result = self._normalize_pacing_contract(result, ep_start, ep_count_suggestion or Stage2Limits.DEFAULT_EP_COUNT)
-            result = self._ensure_required_fields(result, arc_no, ep_start, result.get("ep_end", ep_end))
-
-            return result
 
         except Exception as e:
             # [V61.3] stderr로 출력 (Rich 스피너가 stdout 가림)

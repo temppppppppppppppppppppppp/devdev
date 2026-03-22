@@ -286,6 +286,283 @@ class ChiefWriter(BaseAgent):
             self._quality_gate = ChiefWriterQualityGate(self)
         return self._quality_gate
 
+    def _prepare_generate_ensemble_context(
+        self,
+        *,
+        ep_num: int,
+        blueprint: dict,
+        prev_manuscript: str,
+        hud_report: str,
+        arc_doc: str,
+        master_bible: dict,
+        style_guide: str,
+        reference_excerpt: str,
+        director_feedback: str,
+        failure_constraints: str,
+        current_inventory: list[str],
+        current_martial_arts: list[str],
+        dead_npcs: list[str],
+        item_acquisition_timeline: str,
+        reference_anchor_prompt: str,
+        mandatory_context: str,
+        anti_trope_prompt: str,
+        justification_prompt: str,
+        reflexion_prompt: str,
+        genre_name: str,
+        npc_equipment_summary: str,
+        intro_dna: str,
+        purism_prompt: str,
+        state_tracker,
+        prev_manuscripts_text: str,
+        world_state_summary: str,
+        chain_link_section: str,
+        emotional_beat_section: str,
+        upcoming_arc_items: list[str] | None,
+        strategy_budget: str,
+        preferred_strategy: str,
+        single_strategy: str,
+    ) -> tuple[str, str | None, list[str], dict[str, float]]:
+        self._prefetch_manuscripts(ep_num, window=10)
+        common_context = self._build_common_context(
+            ep_num=ep_num,
+            blueprint=blueprint,
+            prev_manuscript=prev_manuscript,
+            hud_report=hud_report,
+            arc_doc=arc_doc,
+            master_bible=master_bible,
+            style_guide=style_guide,
+            reference_excerpt=reference_excerpt,
+            director_feedback=director_feedback,
+            failure_constraints=failure_constraints,
+            current_inventory=current_inventory,
+            current_martial_arts=current_martial_arts,
+            dead_npcs=dead_npcs,
+            item_acquisition_timeline=item_acquisition_timeline,
+            reference_anchor_prompt=reference_anchor_prompt,
+            mandatory_context=mandatory_context,
+            anti_trope_prompt=anti_trope_prompt,
+            justification_prompt=justification_prompt,
+            reflexion_prompt=reflexion_prompt,
+            genre_name=genre_name,
+            npc_equipment_summary=npc_equipment_summary,
+            intro_dna=intro_dna,
+            purism_prompt=purism_prompt,
+            state_tracker=state_tracker,
+            prev_manuscripts_text=prev_manuscripts_text,
+            world_state_summary=world_state_summary,
+            chain_link_section=chain_link_section,
+            emotional_beat_section=emotional_beat_section,
+            upcoming_arc_items=upcoming_arc_items,
+        )
+
+        cache_name = None
+        try:
+            cache_info = self._get_or_create_context_cache(
+                cache_type="manuscript",
+                content=common_context,
+                ttl_seconds=600,
+                project_name=self._context_cache_project_namespace("ep", ep_num),
+            )
+            cache_name = cache_info.get("cache_name")
+            if cache_name:
+                logging.info(f" [V61.7] 컨텍스트 캐시 활성 (ep{ep_num}, {len(common_context)}자)")
+        except Exception as e:
+            logging.debug(f"[SILENT] context caching: {e}")
+
+        strategies, strategy_temperatures = self._select_ensemble_strategies(
+            strategy_budget=strategy_budget,
+            preferred_strategy=preferred_strategy,
+            single_strategy=single_strategy,
+        )
+        return common_context, cache_name, strategies, strategy_temperatures
+
+    @staticmethod
+    def _build_generate_ensemble_error_candidate(strategy: str, error_message: str) -> dict:
+        return {
+            "strategy": strategy,
+            "manuscript": "",
+            "title": "",
+            "state_updates": {},
+            "metadata": {"error": error_message},
+            "error": True,
+        }
+
+    def _safe_operator_log(self, message: str, **kwargs) -> None:
+        try:
+            self._operator_log(message, **kwargs)
+        except Exception as e:
+            logging.debug("[ChiefWriter] operator log skipped: %s", e)
+
+    def _run_generate_ensemble_workers(
+        self,
+        *,
+        ep_num: int,
+        strategies: list[str],
+        strategy_temperatures: dict[str, float],
+        blueprint: dict,
+        common_context: str,
+        hud_report: str,
+        master_bible: dict,
+        genre_name: str,
+        cache_name: str | None,
+        strategy_specific_feedback: str,
+        rejected_strategy: str,
+        motivations: list | None,
+        promises: list | None,
+    ) -> list[dict]:
+        candidates: list[dict] = []
+        started_at = time.monotonic()
+
+        try:
+            with ThreadPoolExecutor(max_workers=max(1, min(3, len(strategies)))) as executor:
+                futures = {}
+                for strategy in strategies:
+                    feedback = strategy_specific_feedback if (
+                        strategy == rejected_strategy and strategy_specific_feedback
+                    ) else ""
+                    future = executor.submit(
+                        self._generate_single_candidate,
+                        ep_num=ep_num,
+                        strategy=strategy,
+                        blueprint=blueprint,
+                        common_context=common_context,
+                        hud_report=hud_report,
+                        master_bible=master_bible,
+                        genre_name=genre_name,
+                        cache_name=cache_name,
+                        strategy_feedback=feedback,
+                        motivations=motivations,
+                        promises=promises,
+                        strategy_temperature=strategy_temperatures.get(strategy),
+                    )
+                    futures[future] = strategy
+
+                strategy_names = ", ".join(futures.values())
+                self._safe_operator_log(
+                    f"🎲 [Writer] {len(futures)}개 전략 병렬 생성 중 ({strategy_names})...",
+                    meta={"candidate_count": len(futures), "strategies": list(futures.values())},
+                )
+                try:
+                    for future in as_completed(futures, timeout=self.ENSEMBLE_TIMEOUT):
+                        strategy = futures[future]
+                        try:
+                            result = future.result(timeout=self.SINGLE_CANDIDATE_TIMEOUT)
+                            if result:
+                                candidates.append(result)
+                                logging.info(
+                                    f"✅ [ChiefWriter] 후보 {strategy} 생성 완료 ({len(result.get('manuscript', ''))}자)"
+                                )
+                                self._safe_operator_log(
+                                    f"✓ [Writer] '{strategy}' 완료 ({len(result.get('manuscript', ''))}자, {time.monotonic() - started_at:.0f}초)",
+                                    meta={
+                                        "strategy": strategy,
+                                        "manuscript_chars": len(result.get("manuscript", "")),
+                                        "elapsed_seconds": round(time.monotonic() - started_at, 1),
+                                    },
+                                )
+                        except FutureTimeoutError:
+                            logging.warning(f" [V61.3] 후보 {strategy} 타임아웃 ({self.SINGLE_CANDIDATE_TIMEOUT}초)")
+                            self._safe_operator_log(
+                                f"✗ [Writer] '{strategy}' 타임아웃",
+                                level="warning",
+                                meta={"strategy": strategy, "timeout_seconds": self.SINGLE_CANDIDATE_TIMEOUT},
+                            )
+                            candidates.append(self._build_generate_ensemble_error_candidate(strategy, "타임아웃"))
+                        except Exception as e:
+                            logging.warning(f" [ChiefWriter] 후보 {strategy} 생성 실패: {str(e)[:50]}")
+                            self._safe_operator_log(
+                                f"✗ [Writer] '{strategy}' 실패",
+                                level="warning",
+                                meta={"strategy": strategy},
+                            )
+                            candidates.append(self._build_generate_ensemble_error_candidate(strategy, str(e)))
+                except FutureTimeoutError:
+                    logging.warning(
+                        f" [V61.3] 원고 앙상블 타임아웃 ({self.ENSEMBLE_TIMEOUT}초) - 완료된 {len(candidates)}개 후보 사용"
+                    )
+                except Exception as e:
+                    logging.warning(f" [V61.3] 원고 앙상블 루프 예외: {str(e)[:80]}")
+                finally:
+                    for f in futures:
+                        f.cancel()
+        except Exception as e:
+            import traceback
+
+            logging.error(f" [V61.3] 원고 병렬 처리 크래시 방지: {str(e)[:100]}")
+            logging.error(traceback.format_exc())
+
+        try:
+            logging.warning(f"[PerfTimer:ChiefWriter] cw_ep{ep_num}_ensemble={time.monotonic() - started_at:.2f}s")
+        except Exception as e:
+            logging.debug("[CW] PerfTimer 기록 실패: %s", e)
+
+        return candidates
+
+    def _recover_generate_ensemble_candidates(
+        self,
+        *,
+        candidates: list[dict],
+        strategies: list[str],
+        strategy_temperatures: dict[str, float],
+        ep_num: int,
+        blueprint: dict,
+        common_context: str,
+        hud_report: str,
+        master_bible: dict,
+        genre_name: str,
+        cache_name: str | None,
+        motivations: list | None,
+        promises: list | None,
+        strategy_specific_feedback: str,
+        rejected_strategy: str,
+    ) -> list[dict]:
+        valid_candidates = [candidate for candidate in candidates if not candidate.get("error")]
+        if valid_candidates:
+            return candidates
+
+        logging.warning(" [ChiefWriter] 모든 후보 생성 실패 - 단일 재시도")
+        self._safe_operator_log("⚠️ [Writer] 전원 실패 → 단일 폴백 시도", level="warning")
+        fallback_strategy = strategies[0] if strategies else "balanced"
+        fallback = self._generate_single_candidate(
+            ep_num=ep_num,
+            strategy=fallback_strategy,
+            blueprint=blueprint,
+            common_context=common_context,
+            hud_report=hud_report,
+            master_bible=master_bible,
+            genre_name=genre_name,
+            cache_name=cache_name,
+            motivations=motivations,
+            promises=promises,
+            strategy_temperature=strategy_temperatures.get(fallback_strategy),
+            strategy_feedback=(
+                strategy_specific_feedback if (fallback_strategy == rejected_strategy and strategy_specific_feedback) else ""
+            ),
+        )
+        if fallback and not fallback.get("error"):
+            return [fallback]
+        return []
+
+    def _finalize_generate_ensemble_candidates(self, candidates: list[dict], ep_num: int) -> list[dict]:
+        if not candidates:
+            logging.error("[ChiefWriter] generate_ensemble: 앙상블 + 단일 폴백 모두 실패 — 에러 후보 반환")
+            candidates = [
+                {
+                    "strategy": "error_fallback",
+                    "strategy_name": "에러 폴백",
+                    "manuscript": "",
+                    "title": f"제{ep_num}화 (생성 실패)",
+                    "state_updates": {},
+                    "metadata": {"error": "모든 후보 생성 실패"},
+                    "error": True,
+                    "error_message": "모든 후보 생성 실패",
+                }
+            ]
+
+        candidates = [validate_manuscript_candidate(candidate) for candidate in candidates]
+        self._annotate_candidate_diversity(candidates)
+        return candidates
+
     def generate_ensemble(
         self,
         ep_num: int,
@@ -363,11 +640,7 @@ class ChiefWriter(BaseAgent):
                 "metadata": dict
             }]
         """
-        # [V60.82] DB 배치 프리페치 - 중복 쿼리 제거
-        self._prefetch_manuscripts(ep_num, window=10)
-
-        # 공통 컨텍스트 구성
-        common_context = self.context_builder.build_common_context(
+        common_context, cache_name, strategies, strategy_temperatures = self._prepare_generate_ensemble_context(
             ep_num=ep_num,
             blueprint=blueprint,
             prev_manuscript=prev_manuscript,
@@ -378,228 +651,61 @@ class ChiefWriter(BaseAgent):
             reference_excerpt=reference_excerpt,
             director_feedback=director_feedback,
             failure_constraints=failure_constraints,
-            # 미래 침범 방지
             current_inventory=current_inventory or [],
             current_martial_arts=current_martial_arts or [],
             dead_npcs=dead_npcs or [],
             item_acquisition_timeline=item_acquisition_timeline,
-            # 기존 Writer 핵심 기능
             reference_anchor_prompt=reference_anchor_prompt,
             mandatory_context=mandatory_context,
             anti_trope_prompt=anti_trope_prompt,
             justification_prompt=justification_prompt,
             reflexion_prompt=reflexion_prompt,
             genre_name=genre_name,
-            # [V60.81] 추가 파라미터
             npc_equipment_summary=npc_equipment_summary,
             intro_dna=intro_dna,
-            # [V60.85] 장르 Guard Purism Prompt
             purism_prompt=purism_prompt,
-            # [V60.95] 고밀도 HUD 전달
             state_tracker=state_tracker,
-            # [V67] 이전 원고 전문
             prev_manuscripts_text=prev_manuscripts_text,
-            # [V68] 세계 상태 요약
             world_state_summary=world_state_summary,
-            # [V68] 에피소드 연결고리
             chain_link_section=chain_link_section,
             emotional_beat_section=emotional_beat_section,
-            # [TF-49b] Arc 계획 아이템 사전 정당화
             upcoming_arc_items=upcoming_arc_items,
-        )
-
-        # [V61.7] 컨텍스트 캐싱 시도 (토큰 비용 50-67% 절감)
-        cache_name = None
-        try:
-            cache_info = self._get_or_create_context_cache(
-                cache_type="manuscript",
-                content=common_context,
-                ttl_seconds=600,  # 10분 (같은 에피소드 재시도 대비)
-                project_name=self._context_cache_project_namespace("ep", ep_num),
-            )
-            cache_name = cache_info.get("cache_name")
-            if cache_name:
-                logging.info(f" [V61.7] 컨텍스트 캐시 활성 (ep{ep_num}, {len(common_context)}자)")
-        except Exception as e:  # [V64.P4] OPTIONAL: context caching
-            logging.debug(f"[SILENT] context caching: {e}")
-            pass  # 캐싱 실패해도 기존 방식으로 진행
-
-        # 병렬 생성
-        candidates = []
-        strategies, _strategy_temperatures = self._select_ensemble_strategies(
             strategy_budget=strategy_budget,
             preferred_strategy=preferred_strategy,
             single_strategy=single_strategy,
         )
-
-        # [Phase 3-Obs] 에이전트 레벨 ThreadPoolExecutor 계측
-        _tp_t0 = time.monotonic()
-
-        # [V61.3] 전체 병렬 처리 블록을 try-except로 감싸서 급사 방지
-        try:
-            with ThreadPoolExecutor(max_workers=max(1, min(3, len(strategies)))) as executor:
-                futures = {}
-                for strategy in strategies:
-                    _feedback = (
-                        strategy_specific_feedback
-                        if (strategy == rejected_strategy and strategy_specific_feedback)
-                        else ""
-                    )
-                    future = executor.submit(
-                        self._generate_single_candidate,
-                        ep_num=ep_num,
-                        strategy=strategy,
-                        blueprint=blueprint,
-                        common_context=common_context,
-                        hud_report=hud_report,
-                        master_bible=master_bible,
-                        genre_name=genre_name,
-                        cache_name=cache_name,
-                        strategy_feedback=_feedback,
-                        motivations=motivations,
-                        promises=promises,
-                        strategy_temperature=_strategy_temperatures.get(strategy),
-                    )
-                    futures[future] = strategy
-
-                _strat_names = ", ".join(futures.values())
-                self._operator_log(
-                    f"🎲 [Writer] {len(futures)}개 전략 병렬 생성 중 ({_strat_names})...",
-                    meta={"candidate_count": len(futures), "strategies": list(futures.values())},
-                )
-                # [V61.3] 타임아웃 적용 - 야간 무인 운영 시 무한 대기 방지
-                # [Sweep300-R41] 알려진 제한: as_completed(timeout=T)는 soft bound.
-                # Python ThreadPoolExecutor는 실행 중인 스레드를 강제 중단할 수 없으므로,
-                # LLM API 호출이 T초를 초과하면 실제 대기 시간 > T가 될 수 있다.
-                # cancel()은 PENDING(미시작) future에만 유효하며, RUNNING future에는 무효.
-                try:
-                    for future in as_completed(futures, timeout=self.ENSEMBLE_TIMEOUT):
-                        strategy = futures[future]
-                        try:
-                            # [V61.3] 개별 후보에도 타임아웃 적용
-                            result = future.result(timeout=self.SINGLE_CANDIDATE_TIMEOUT)
-                            if result:
-                                candidates.append(result)
-                                logging.info(f"✅ [ChiefWriter] 후보 {strategy} 생성 완료 ({len(result.get('manuscript', ''))}자)"
-                                )
-                                self._operator_log(
-                                    f"✓ [Writer] '{strategy}' 완료 ({len(result.get('manuscript', ''))}자, {time.monotonic() - _tp_t0:.0f}초)",
-                                    meta={
-                                        "strategy": strategy,
-                                        "manuscript_chars": len(result.get("manuscript", "")),
-                                        "elapsed_seconds": round(time.monotonic() - _tp_t0, 1),
-                                    },
-                                )
-                        except FutureTimeoutError:
-                            logging.warning(f" [V61.3] 후보 {strategy} 타임아웃 ({self.SINGLE_CANDIDATE_TIMEOUT}초)")
-                            self._operator_log(
-                                f"✗ [Writer] '{strategy}' 타임아웃",
-                                level="warning",
-                                meta={"strategy": strategy, "timeout_seconds": self.SINGLE_CANDIDATE_TIMEOUT},
-                            )
-                            candidates.append(
-                                {
-                                    "strategy": strategy,
-                                    "manuscript": "",
-                                    "title": "",
-                                    "state_updates": {},
-                                    "metadata": {"error": "타임아웃"},
-                                    "error": True,
-                                }
-                            )
-                        except Exception as e:
-                            logging.warning(f" [ChiefWriter] 후보 {strategy} 생성 실패: {str(e)[:50]}")
-                            self._operator_log(
-                                f"✗ [Writer] '{strategy}' 실패",
-                                level="warning",
-                                meta={"strategy": strategy},
-                            )
-                            # 실패한 전략은 빈 결과로 대체
-                            candidates.append(
-                                {
-                                    "strategy": strategy,
-                                    "manuscript": "",
-                                    "title": "",
-                                    "state_updates": {},
-                                    "metadata": {"error": str(e)},
-                                    "error": True,
-                                }
-                            )
-                except FutureTimeoutError:
-                    # 전체 앙상블 타임아웃 - 완료된 후보만 사용
-                    logging.warning(f" [V61.3] 원고 앙상블 타임아웃 ({self.ENSEMBLE_TIMEOUT}초) - 완료된 {len(candidates)}개 후보 사용"
-                    )
-                except Exception as e:
-                    # [V61.3] as_completed 자체 예외 처리
-                    logging.warning(f" [V61.3] 원고 앙상블 루프 예외: {str(e)[:80]}")
-                finally:
-                    # [Sweep3-G2] 미완료 future 정리 — 백그라운드 실행 방지
-                    for f in futures:
-                        f.cancel()
-        except Exception as e:
-            # [V61.3] ThreadPoolExecutor 전체 예외 처리 - 급사 방지
-            # stderr로 출력 (Rich 스피너가 stdout 가림)
-            import traceback
-
-            logging.error(f" [V61.3] 원고 병렬 처리 크래시 방지: {str(e)[:100]}")
-            logging.error(traceback.format_exc())
-
-        # [Phase 3-Obs] 병렬 구간 소요 시간 기록
-        try:
-            logging.warning(f"[PerfTimer:ChiefWriter] cw_ep{ep_num}_ensemble={time.monotonic() - _tp_t0:.2f}s")
-        except Exception as _e:
-            logging.debug("[CW] PerfTimer 기록 실패: %s", _e)
-
-        # 최소 1개 후보 보장
-        valid_candidates = [c for c in candidates if not c.get("error")]
-        if not valid_candidates:
-            logging.warning(" [ChiefWriter] 모든 후보 생성 실패 - 단일 재시도")
-            self._operator_log("⚠️ [Writer] 전원 실패 → 단일 폴백 시도", level="warning")
-            _fallback_strategy = strategies[0] if strategies else "balanced"
-            fallback = self._generate_single_candidate(
-                ep_num=ep_num,
-                strategy=_fallback_strategy,
-                blueprint=blueprint,
-                common_context=common_context,
-                hud_report=hud_report,
-                master_bible=master_bible,
-                genre_name=genre_name,
-                cache_name=cache_name,
-                motivations=motivations,
-                promises=promises,
-                strategy_temperature=_strategy_temperatures.get(_fallback_strategy),
-                strategy_feedback=(
-                    strategy_specific_feedback
-                    if (_fallback_strategy == rejected_strategy and strategy_specific_feedback)
-                    else ""
-                ),
-            )
-            if fallback and not fallback.get("error"):
-                candidates = [fallback]
-            else:
-                # [Sweep45] 에러 후보만 남은 상태 → 비우고 C-4 폴백으로 전환
-                candidates = []
-
-        # [V66.3] C-4: 모든 후보 생성 실패 시 에러 dict 반환 (빈 배열 방지 → downstream IndexError 크래시 방어)
-        if not candidates:
-            logging.error("[ChiefWriter] generate_ensemble: 앙상블 + 단일 폴백 모두 실패 — 에러 후보 반환")
-            candidates = [
-                {
-                    "strategy": "error_fallback",
-                    "strategy_name": "에러 폴백",
-                    "manuscript": "",
-                    "title": f"제{ep_num}화 (생성 실패)",
-                    "state_updates": {},
-                    "metadata": {"error": "모든 후보 생성 실패"},
-                    "error": True,
-                    "error_message": "모든 후보 생성 실패",
-                }
-            ]
-
-        # [Step2] Pydantic ingress+egress — 각 후보 검증
-        candidates = [validate_manuscript_candidate(c) for c in candidates]
-        self._annotate_candidate_diversity(candidates)
-        return candidates
+        candidates = self._run_generate_ensemble_workers(
+            ep_num=ep_num,
+            strategies=strategies,
+            strategy_temperatures=strategy_temperatures,
+            blueprint=blueprint,
+            common_context=common_context,
+            hud_report=hud_report,
+            master_bible=master_bible,
+            genre_name=genre_name,
+            cache_name=cache_name,
+            strategy_specific_feedback=strategy_specific_feedback,
+            rejected_strategy=rejected_strategy,
+            motivations=motivations,
+            promises=promises,
+        )
+        candidates = self._recover_generate_ensemble_candidates(
+            candidates=candidates,
+            strategies=strategies,
+            strategy_temperatures=strategy_temperatures,
+            ep_num=ep_num,
+            blueprint=blueprint,
+            common_context=common_context,
+            hud_report=hud_report,
+            master_bible=master_bible,
+            genre_name=genre_name,
+            cache_name=cache_name,
+            motivations=motivations,
+            promises=promises,
+            strategy_specific_feedback=strategy_specific_feedback,
+            rejected_strategy=rejected_strategy,
+        )
+        return self._finalize_generate_ensemble_candidates(candidates, ep_num)
 
     def _generate_single_candidate(
         self,
@@ -631,95 +737,29 @@ class ChiefWriter(BaseAgent):
         """
         # [V61.3] 전체 메서드를 try-except로 감싸서 worker thread 크래시 방지
         try:
-            strategy_config = self.ENSEMBLE_STRATEGIES.get(strategy, self.ENSEMBLE_STRATEGIES["balanced"])
-            _temperature = (
-                float(strategy_temperature)
-                if isinstance(strategy_temperature, (int, float))
-                else float(strategy_config["temperature"])
-            )
-            _strategy_feedback_block = (
-                f"\n[Strategy-Specific Feedback]\n{strategy_feedback}\n" if strategy_feedback else ""
-            )
-
-            # [TF-45] 장르별 state_updates 스키마 주입
-            _genre_code = normalize_chief_writer_genre_code(genre_name)
-            _critical_keys = self._get_critical_keys_for_genre()
-            _su_schema = build_state_updates_schema(_genre_code, _critical_keys)
-            _output_block = self.PROMPT_TEMPLATE_OUTPUT.format(
+            request_bundle = self._prepare_single_candidate_request(
                 strategy=strategy,
-                state_updates_schema=_su_schema,
+                genre_name=genre_name,
+                strategy_feedback=strategy_feedback,
+                strategy_temperature=strategy_temperature,
             )
-
-            # [V61.7] 캐시 사용 분기
-            if cache_name:
-                # 캐시 활성: common_context는 캐시에 있으므로 전략 부분만 전송
-                strategy_prompt = f"""{strategy_config["instruction"]}
-{_strategy_feedback_block}
-{_output_block}"""
-
-                # 폴백용 전체 프롬프트 (캐시 실패 시)
-                full_prompt = f"""{common_context}
-{_strategy_feedback_block}
-{strategy_config["instruction"]}
-
-{_output_block}"""
-
-                response = self._ask_with_cached_context(
-                    cache_name=cache_name,
-                    prompt=strategy_prompt,
-                    temperature=_temperature,
-                    thinking_level="medium",
-                    full_prompt_fallback=full_prompt,
-                )
-            else:
-                # [V60.82] 기존 방식: 전체 프롬프트
-                full_prompt = f"""{common_context}
-{_strategy_feedback_block}
-{strategy_config["instruction"]}
-
-{_output_block}"""
-
-                response = self.ask(
-                    prompt=full_prompt,
-                    temperature=_temperature,
-                    thinking_level="medium",  # [V61.6] 원고 생성 추론 강화
-                )
-
-            # [V60.81] Leakage 방지 적용
+            response = self._request_single_candidate_response(
+                common_context=common_context,
+                cache_name=cache_name,
+                request_bundle=request_bundle,
+            )
             response = self.quality_gate.sanitize_leakage(response)
-
             data = self._extract_json_robust(response)
 
             if not isinstance(data, dict) or not data or data.get("parsing_error"):
                 return None
 
-            # 원고 추출 (타입 안전성 보장)
-            manuscript_content = data.get("content", "")
-            if not isinstance(manuscript_content, str):
-                # content가 리스트/딕셔너리인 경우 문자열로 변환 시도
-                if isinstance(manuscript_content, list):
-                    manuscript_content = "\n".join(str(item) for item in manuscript_content)
-                elif isinstance(manuscript_content, dict):
-                    manuscript_content = (
-                        manuscript_content.get("text", "")
-                        or manuscript_content.get("content", "")
-                        or json.dumps(manuscript_content, ensure_ascii=False)
-                    )
-                else:
-                    manuscript_content = str(manuscript_content) if manuscript_content else ""
-            manuscript_json = json.dumps(data, ensure_ascii=False)
-
-            # [V60.81] Self-Critique 적용 (NPC 정보 필요)
-            npcs = []
-            if master_bible:
-                bible_root = master_bible.get("MasterBible", master_bible) if isinstance(master_bible, dict) else {}
-                assets = bible_root.get("AssetLibrary", {})
-                npcs = assets.get("KeyNPCs", []) or assets.get("Key_NPCs", [])
+            manuscript_content, manuscript_json = self._extract_single_candidate_manuscript_payload(data)
 
             critiqued_manuscript = self.quality_gate.apply_self_critique(
                 manuscript=manuscript_json,
                 hud_report=hud_report,
-                npcs=npcs,
+                npcs=self._extract_candidate_npcs(master_bible),
                 genre_name=genre_name,
                 ep_num=ep_num,
                 motivations=motivations,
@@ -727,46 +767,20 @@ class ChiefWriter(BaseAgent):
                 blueprint=blueprint,
             )
 
-            # Self-Critique 결과에서 content 재추출
-            try:
-                critiqued_data = json.loads(critiqued_manuscript)
-                _crit_content = critiqued_data.get("content")
-                # [TypeSafety] content가 dict/list일 수 있음 → 문자열 변환
-                if isinstance(_crit_content, list):
-                    _crit_content = "\n".join(str(item) for item in _crit_content)
-                elif isinstance(_crit_content, dict):
-                    _crit_content = (
-                        _crit_content.get("text", "")
-                        or _crit_content.get("content", "")
-                        or json.dumps(_crit_content, ensure_ascii=False)
-                    )
-                final_content = _crit_content or manuscript_content
-                final_title = critiqued_data.get("title", data.get("title", f"제{ep_num}화"))
-                final_state = critiqued_data.get("state_updates", data.get("state_updates", {}))
-            except (json.JSONDecodeError, ValueError, TypeError):  # [V64.P4] IMPORTANT: critique parse, safe default
-                final_content = manuscript_content
-                final_title = data.get("title", f"제{ep_num}화")
-                final_state = data.get("state_updates", {})
-
-            # patch_state_updates JSON이 원고 끝에 누출된 경우 제거
-            final_content = re.sub(
-                r'\s*\{"patch_state_updates"\s*:.*?\}\s*$', "", final_content, flags=re.DOTALL
-            ).rstrip()
-
-            return {
-                "strategy": strategy,
-                "strategy_name": strategy_config["name"],
-                "manuscript": final_content,
-                "title": final_title,
-                "state_updates": final_state,
-                "key_scenes_covered": data.get("key_scenes_covered", []),
-                "metadata": {
-                    "temperature": _temperature,
-                    "emphasis": strategy_config["emphasis"],
-                    "length": len(final_content),
-                    "self_critique_applied": True,
-                },
-            }
+            final_content, final_title, final_state = self._finalize_single_candidate_critique(
+                critiqued_manuscript=critiqued_manuscript,
+                data=data,
+                manuscript_content=manuscript_content,
+                ep_num=ep_num,
+            )
+            return self._build_single_candidate_result(
+                strategy=strategy,
+                request_bundle=request_bundle,
+                data=data,
+                final_content=final_content,
+                final_title=final_title,
+                final_state=final_state,
+            )
 
         except Exception as e:
             # [V61.3] stderr로 출력 (Rich 스피너가 stdout 가림)
@@ -775,6 +789,139 @@ class ChiefWriter(BaseAgent):
             logging.error(f" [V61.3] ChiefWriter _generate_single_candidate 크래시: {str(e)[:80]}")
             logging.error(traceback.format_exc())
             return None
+
+    def _prepare_single_candidate_request(
+        self,
+        *,
+        strategy: str,
+        genre_name: str,
+        strategy_feedback: str,
+        strategy_temperature: float | None,
+    ) -> dict:
+        """전략 설정과 state_updates 스키마를 공통 request bundle로 정규화한다."""
+        strategy_config = self.ENSEMBLE_STRATEGIES.get(strategy, self.ENSEMBLE_STRATEGIES["balanced"])
+        temperature = (
+            float(strategy_temperature)
+            if isinstance(strategy_temperature, (int, float))
+            else float(strategy_config["temperature"])
+        )
+        strategy_feedback_block = f"\n[Strategy-Specific Feedback]\n{strategy_feedback}\n" if strategy_feedback else ""
+        genre_code = normalize_chief_writer_genre_code(genre_name)
+        critical_keys = self._get_critical_keys_for_genre()
+        state_updates_schema = build_state_updates_schema(genre_code, critical_keys)
+        output_block = self.PROMPT_TEMPLATE_OUTPUT.format(
+            strategy=strategy,
+            state_updates_schema=state_updates_schema,
+        )
+        return {
+            "strategy_config": strategy_config,
+            "temperature": temperature,
+            "strategy_feedback_block": strategy_feedback_block,
+            "output_block": output_block,
+        }
+
+    def _request_single_candidate_response(self, *, common_context: str, cache_name: str | None, request_bundle: dict):
+        """cache 사용 여부에 따라 단일 후보 prompt를 전송한다."""
+        strategy_instruction = request_bundle["strategy_config"]["instruction"]
+        strategy_feedback_block = request_bundle["strategy_feedback_block"]
+        output_block = request_bundle["output_block"]
+        full_prompt = f"""{common_context}
+{strategy_feedback_block}
+{strategy_instruction}
+
+{output_block}"""
+        if cache_name:
+            strategy_prompt = f"""{strategy_instruction}
+{strategy_feedback_block}
+{output_block}"""
+            return self._ask_with_cached_context(
+                cache_name=cache_name,
+                prompt=strategy_prompt,
+                temperature=request_bundle["temperature"],
+                thinking_level="medium",
+                full_prompt_fallback=full_prompt,
+            )
+        return self.ask(
+            prompt=full_prompt,
+            temperature=request_bundle["temperature"],
+            thinking_level="medium",  # [V61.6] 원고 생성 추론 강화
+        )
+
+    def _extract_single_candidate_manuscript_payload(self, data: dict) -> tuple[str, str]:
+        """candidate payload에서 content를 문자열 원고로 정규화한다."""
+        manuscript_content = data.get("content", "")
+        if not isinstance(manuscript_content, str):
+            if isinstance(manuscript_content, list):
+                manuscript_content = "\n".join(str(item) for item in manuscript_content)
+            elif isinstance(manuscript_content, dict):
+                manuscript_content = (
+                    manuscript_content.get("text", "")
+                    or manuscript_content.get("content", "")
+                    or json.dumps(manuscript_content, ensure_ascii=False)
+                )
+            else:
+                manuscript_content = str(manuscript_content) if manuscript_content else ""
+        return manuscript_content, json.dumps(data, ensure_ascii=False)
+
+    def _extract_candidate_npcs(self, master_bible: dict | None) -> list:
+        """self-critique용 NPC 목록을 MasterBible에서 추출한다."""
+        if not master_bible:
+            return []
+        bible_root = master_bible.get("MasterBible", master_bible) if isinstance(master_bible, dict) else {}
+        assets = bible_root.get("AssetLibrary", {})
+        return assets.get("KeyNPCs", []) or assets.get("Key_NPCs", [])
+
+    def _finalize_single_candidate_critique(
+        self,
+        *,
+        critiqued_manuscript: str,
+        data: dict,
+        manuscript_content: str,
+        ep_num: int,
+    ) -> tuple[str, str, dict]:
+        """self-critique 결과에서 최종 원고/title/state_updates를 회수한다."""
+        try:
+            critiqued_data = json.loads(critiqued_manuscript)
+            critiqued_content, _ = self._extract_single_candidate_manuscript_payload(
+                {"content": critiqued_data.get("content")}
+            )
+            final_content = critiqued_content or manuscript_content
+            final_title = critiqued_data.get("title", data.get("title", f"제{ep_num}화"))
+            final_state = critiqued_data.get("state_updates", data.get("state_updates", {}))
+        except (json.JSONDecodeError, ValueError, TypeError):  # [V64.P4] IMPORTANT: critique parse, safe default
+            final_content = manuscript_content
+            final_title = data.get("title", f"제{ep_num}화")
+            final_state = data.get("state_updates", {})
+
+        final_content = re.sub(r'\s*\{"patch_state_updates"\s*:.*?\}\s*$', "", final_content, flags=re.DOTALL).rstrip()
+        return final_content, final_title, final_state
+
+    def _build_single_candidate_result(
+        self,
+        *,
+        strategy: str,
+        request_bundle: dict,
+        data: dict,
+        final_content: str,
+        final_title: str,
+        final_state: dict,
+    ) -> dict:
+        """단일 후보 결과 payload를 공통 포맷으로 반환한다."""
+        strategy_config = request_bundle["strategy_config"]
+        return {
+            "strategy": strategy,
+            "strategy_name": strategy_config["name"],
+            "manuscript": final_content,
+            "title": final_title,
+            "state_updates": final_state,
+            "key_scenes_covered": data.get("key_scenes_covered", []),
+            "metadata": {
+                "temperature": request_bundle["temperature"],
+                "emphasis": strategy_config["emphasis"],
+                "length": len(final_content),
+                "self_critique_applied": True,
+            },
+        }
 
     def _build_common_context(self, *args, **kwargs):
         return self.context_builder.build_common_context(*args, **kwargs)
@@ -864,53 +1011,14 @@ class ChiefWriter(BaseAgent):
         Returns:
             List[Dict]: 새로운 3개 후보
         """
-        _history_feedback = self._build_retry_history_feedback(previous_attempt)
-
-        # 피드백 강화
-        enhanced_feedback = f"""
-[🚨 {attempt_number}차 재시도 - Director 피드백 필수 반영]
-
-{director_feedback}
-
-[이전 시도 분석]
-- 선택된 전략: {previous_attempt.get("strategy", "unknown")}
-- 문제점: {previous_attempt.get("rejection_reason", "unknown")}
-
-⚠️ 위 피드백을 100% 반영하지 않으면 다시 REJECT됩니다.
-"""
-
-        _sb = previous_attempt.get("score_breakdown", {})
-        if isinstance(_sb, dict) and _sb:
-            _sb_lines = [f"  - {k}: {v}" for k, v in _sb.items() if isinstance(v, int | float)]
-            if _sb_lines:
-                enhanced_feedback += "\n[세부 채점]\n" + "\n".join(_sb_lines)
-
-        _vw = previous_attempt.get("validation_warnings", [])
-        if isinstance(_vw, list) and _vw:
-            enhanced_feedback += "\n[Python 검증 경고]\n" + "\n".join(f"- {w}" for w in _vw[:10])
-
-        _fsr = previous_attempt.get("fix_scope_reasoning", "")
-        if _fsr:
-            enhanced_feedback += f"\n[수정 범위 근거]\n{_fsr}"
-
-        # [A-2] Director 서사 관찰 명시 전달
-        _open_review = previous_attempt.get("open_review", "")
-        if _open_review and _open_review not in ("특이사항 없음", "없음", ""):
-            enhanced_feedback += f"\n\n[Director 서사 관찰 — 반드시 개선할 것]\n{_open_review}"
-        if _history_feedback:
-            enhanced_feedback += f"\n\n{_history_feedback}"
-
-        # 실패 학습 제약 구성
-        failure_constraints = ""
-        if previous_attempt.get("action_items"):
-            items = previous_attempt.get("action_items", [])
-            failure_constraints = "이전 REJECT 사유:\n" + "\n".join([f"- {item}" for item in items])
-        _rejected_strategy = str(previous_attempt.get("selected_strategy_key", "") or "")
-        _strategy_feedback = previous_attempt.get("selection_reason", "")
-        if isinstance(_strategy_feedback, dict):
-            _strategy_feedback = json.dumps(_strategy_feedback, ensure_ascii=False)
-        if not isinstance(_strategy_feedback, str):
-            _strategy_feedback = str(_strategy_feedback or "")
+        enhanced_feedback = self._build_regeneration_feedback(
+            previous_attempt=previous_attempt,
+            director_feedback=director_feedback,
+            attempt_number=attempt_number,
+        )
+        failure_constraints, rejected_strategy, strategy_feedback = self._build_regeneration_strategy_hints(
+            previous_attempt
+        )
 
         return self.generate_ensemble(
             ep_num=ep_num,
@@ -922,8 +1030,8 @@ class ChiefWriter(BaseAgent):
             style_guide=style_guide,
             reference_excerpt=reference_excerpt,
             director_feedback=enhanced_feedback,
-            strategy_specific_feedback=_strategy_feedback,
-            rejected_strategy=_rejected_strategy,
+            strategy_specific_feedback=strategy_feedback,
+            rejected_strategy=rejected_strategy,
             failure_constraints=failure_constraints,
             # 미래 침범 방지 데이터 전달
             current_inventory=current_inventory,
@@ -957,6 +1065,55 @@ class ChiefWriter(BaseAgent):
             strategy_budget=strategy_budget,
             preferred_strategy=preferred_strategy,
         )
+
+    def _build_regeneration_feedback(self, *, previous_attempt: dict, director_feedback: str, attempt_number: int) -> str:
+        """Director feedback와 이전 시도 히스토리를 재시도 prompt용으로 합친다."""
+        history_feedback = self._build_retry_history_feedback(previous_attempt)
+        enhanced_feedback = f"""
+[🚨 {attempt_number}차 재시도 - Director 피드백 필수 반영]
+
+{director_feedback}
+
+[이전 시도 분석]
+- 선택된 전략: {previous_attempt.get("strategy", "unknown")}
+- 문제점: {previous_attempt.get("rejection_reason", "unknown")}
+
+⚠️ 위 피드백을 100% 반영하지 않으면 다시 REJECT됩니다.
+"""
+        score_breakdown = previous_attempt.get("score_breakdown", {})
+        if isinstance(score_breakdown, dict) and score_breakdown:
+            score_lines = [f"  - {k}: {v}" for k, v in score_breakdown.items() if isinstance(v, int | float)]
+            if score_lines:
+                enhanced_feedback += "\n[세부 채점]\n" + "\n".join(score_lines)
+
+        validation_warnings = previous_attempt.get("validation_warnings", [])
+        if isinstance(validation_warnings, list) and validation_warnings:
+            enhanced_feedback += "\n[Python 검증 경고]\n" + "\n".join(f"- {w}" for w in validation_warnings[:10])
+
+        fix_scope_reasoning = previous_attempt.get("fix_scope_reasoning", "")
+        if fix_scope_reasoning:
+            enhanced_feedback += f"\n[수정 범위 근거]\n{fix_scope_reasoning}"
+
+        open_review = previous_attempt.get("open_review", "")
+        if open_review and open_review not in ("특이사항 없음", "없음", ""):
+            enhanced_feedback += f"\n\n[Director 서사 관찰 — 반드시 개선할 것]\n{open_review}"
+        if history_feedback:
+            enhanced_feedback += f"\n\n{history_feedback}"
+        return enhanced_feedback
+
+    def _build_regeneration_strategy_hints(self, previous_attempt: dict) -> tuple[str, str, str]:
+        """재생성 시 사용할 실패 제약과 전략 힌트를 정규화한다."""
+        failure_constraints = ""
+        if previous_attempt.get("action_items"):
+            items = previous_attempt.get("action_items", [])
+            failure_constraints = "이전 REJECT 사유:\n" + "\n".join([f"- {item}" for item in items])
+        rejected_strategy = str(previous_attempt.get("selected_strategy_key", "") or "")
+        strategy_feedback = previous_attempt.get("selection_reason", "")
+        if isinstance(strategy_feedback, dict):
+            strategy_feedback = json.dumps(strategy_feedback, ensure_ascii=False)
+        if not isinstance(strategy_feedback, str):
+            strategy_feedback = str(strategy_feedback or "")
+        return failure_constraints, rejected_strategy, strategy_feedback
 
     # =========================================================================
     # [TF-23] InPlace — LLM 1회 호출로 원고 국소 수정
@@ -1404,21 +1561,15 @@ class ChiefWriter(BaseAgent):
             }
         ]
 
-    def inplace_patch(
+    def _resolve_inplace_patch_strategy(
         self,
         *,
         original_manuscript: str,
         director_feedback: str,
         attempt_number: int,
-        style_guide: str = "",  # [TF-37] 스타일 클로닝 갭 수정
-        fix_pack: dict | None = None,
-    ) -> list[dict]:
-        """[TF-23] LLM 1회 호출로 원고 in-place 수정. 실패 시 빈 리스트 → patch/rewrite 폴백."""
-        from modules.core.constants import smart_truncate
-        from modules.core.prompt_loader import PromptLoader
-
-        normalized_fix_pack = self._normalize_fix_pack(fix_pack)
-        fix_pack_guidance = self._build_fix_pack_guidance(normalized_fix_pack)
+        style_guide: str,
+        normalized_fix_pack: dict,
+    ) -> tuple[list[dict] | None, str, str, bool]:
         blueprint = getattr(self, "_inplace_patch_blueprint", None)
         genre_name = str(getattr(self, "_inplace_patch_genre_name", "") or "")
         focus = self._classify_structural_patch_focus(director_feedback)
@@ -1434,7 +1585,9 @@ class ChiefWriter(BaseAgent):
                 focus="",
                 structural_attempted=False,
             )
-        elif not isinstance(blueprint, dict):
+            return None, "", "", False
+
+        if not isinstance(blueprint, dict):
             fallback_reason = "missing_blueprint"
         elif not isinstance(scene_breakdown, dict) or len(scene_breakdown) < 2:
             fallback_reason = "missing_scene_breakdown"
@@ -1444,7 +1597,7 @@ class ChiefWriter(BaseAgent):
             fallback_reason = "global_issue"
         else:
             structural_attempted = True
-            _structural_result = self._attempt_structural_inplace_patch(
+            structural_result = self._attempt_structural_inplace_patch(
                 original_manuscript=original_manuscript,
                 director_feedback=director_feedback,
                 attempt_number=attempt_number,
@@ -1452,15 +1605,15 @@ class ChiefWriter(BaseAgent):
                 blueprint=blueprint,
                 genre_name=genre_name,
             )
-            if _structural_result:
-                return _structural_result
+            if structural_result:
+                return structural_result, focus, "", True
 
-            _existing_trace = dict(getattr(self, "_last_inplace_patch_trace", {}) or {})
-            fallback_reason = str(_existing_trace.get("fallback_reason") or "structural_patch_unusable")
-            focus = str(_existing_trace.get("focus") or focus)
+            existing_trace = dict(getattr(self, "_last_inplace_patch_trace", {}) or {})
+            fallback_reason = str(existing_trace.get("fallback_reason") or "structural_patch_unusable")
+            focus = str(existing_trace.get("focus") or focus)
             self._set_last_inplace_patch_trace(
                 patch_strategy="inplace_patch",
-                patch_targets=list(_existing_trace.get("patch_targets") or []),
+                patch_targets=list(existing_trace.get("patch_targets") or []),
                 fallback_reason=fallback_reason,
                 focus=focus,
                 structural_attempted=True,
@@ -1475,142 +1628,210 @@ class ChiefWriter(BaseAgent):
                 structural_attempted=False,
             )
 
+        return None, focus, fallback_reason, structural_attempted
+
+
+    def _build_inplace_patch_prompt(
+        self,
+        *,
+        original_manuscript: str,
+        director_feedback: str,
+        style_guide: str,
+        fix_pack_guidance: str,
+    ) -> str:
+        from modules.core.constants import smart_truncate
+        from modules.core.prompt_loader import PromptLoader
+
         try:
-            _patch_template = PromptLoader().load("chief_writer", "PATCH_MODE_PROMPT")
-        except Exception as e:
-            logging.warning(f"[TF-23] PATCH_MODE_PROMPT 로드 실패: {e!s:.100}")
-            _patch_template = None
+            patch_template = PromptLoader().load("chief_writer", "PATCH_MODE_PROMPT")
+        except Exception as exc:
+            logging.warning(f"[TF-23] PATCH_MODE_PROMPT 로드 실패: {exc!s:.100}")
+            patch_template = None
 
-        def _esc(s):
-            return s.replace("{", "{{").replace("}", "}}")
+        def _esc(text: str) -> str:
+            return str(text or "").replace("{", "{{").replace("}", "}}")
 
-        _style_text = _esc(style_guide) if style_guide else "기본 웹소설 문체"  # [TF-37]
-        _feedback_text = director_feedback
+        style_text = _esc(style_guide) if style_guide else "기본 웹소설 문체"
+        feedback_text = director_feedback
         if fix_pack_guidance:
-            _feedback_text = f"{director_feedback}\n\n{fix_pack_guidance}".strip()
+            feedback_text = f"{director_feedback}\n\n{fix_pack_guidance}".strip()
 
-        # [F-4] 트렁케이션 경고
-        _orig_len = len(original_manuscript or "")
-        if _orig_len > 150000:
-            logging.warning("[TRUNCATION] chief_writer.inplace_patch: 원고 %d자 → 150000자 (%.1f%% 손실)",
-                _orig_len,
-                (1 - 150000 / _orig_len) * 100,
+        original_length = len(original_manuscript or "")
+        if original_length > 150000:
+            logging.warning(
+                "[TRUNCATION] chief_writer.inplace_patch: 원고 %d자 → 150000자 (%.1f%% 손실)",
+                original_length,
+                (1 - 150000 / original_length) * 100,
             )
 
-        # [TF-IPG] 원본 글자수 명시 — LLM에게 구체적 목표치 제공
-        _min_char_target = int(_orig_len * 0.9)  # ±10% 하한
+        min_char_target = int(original_length * 0.9)
+        truncated_manuscript = smart_truncate(original_manuscript, max_chars=150000, head_chars=20000)
 
-        if _patch_template:
-            prompt = _patch_template.format(
-                feedback_text=_esc(_feedback_text),
-                original_manuscript=_esc(smart_truncate(original_manuscript, max_chars=150000, head_chars=20000)),
-                style_guide=_style_text,  # [TF-37]
-                original_char_count=_orig_len,
-                min_char_target=_min_char_target,
+        if patch_template:
+            return patch_template.format(
+                feedback_text=_esc(feedback_text),
+                original_manuscript=_esc(truncated_manuscript),
+                style_guide=style_text,
+                original_char_count=original_length,
+                min_char_target=min_char_target,
             )
+
+        return (
+            "[원고 원본 보존 + 지적사항만 수정]\n\n"
+            + (f"## 문체 가이드\n{style_guide}\n\n" if style_guide else "")
+            + f"## Director 피드백\n{feedback_text}\n\n"
+            + f"## 원본 원고\n{truncated_manuscript}\n\n"
+            + "전면 재작성하지 마세요. 지적된 부분만 고치세요."
+        )
+
+    def _extract_inplace_patch_payload(self, response: str) -> tuple[str, dict] | None:
+        if not response or len(response) < 2000:
+            logging.warning(f"[TF-23] InPlace 응답 길이 부족: {len(response or '')}자 < 2000자")
+            return None
+
+        state_updates = {}
+        manuscript = ""
+        working_response = response
+        stripped = response.strip()
+
+        if stripped.startswith("{") and stripped.endswith("}"):
+            try:
+                parsed = json.loads(stripped)
+                if isinstance(parsed, dict):
+                    state_updates = parsed.get("patch_state_updates", {})
+                    if not isinstance(state_updates, dict):
+                        state_updates = {}
+                    manuscript = (
+                        parsed.get("corrected_manuscript")
+                        or parsed.get("patched_text")
+                        or parsed.get("revised_manuscript")
+                        or parsed.get("content")
+                        or parsed.get("text")
+                        or parsed.get("manuscript")
+                        or parsed.get("patched_manuscript")
+                        or ""
+                    )
+            except (json.JSONDecodeError, ValueError):
+                pass
+
+        if not manuscript:
+            state_updates_marker = '"patch_state_updates"'
+            state_updates_idx = response.rfind(state_updates_marker)
+            if state_updates_idx >= 0:
+                outer_start = response.rfind("{", 0, state_updates_idx)
+                if outer_start > 0:
+                    tail = response[outer_start:]
+                    try:
+                        outer = json.loads(tail)
+                        state_updates = outer.get("patch_state_updates", {})
+                        if not isinstance(state_updates, dict):
+                            state_updates = {}
+                        working_response = response[:outer_start].rstrip()
+                    except (json.JSONDecodeError, ValueError):
+                        state_updates_match = re.search(
+                            r'\{"patch_state_updates"\s*:\s*(\{.*?\})\}',
+                            response,
+                            re.DOTALL,
+                        )
+                        if state_updates_match:
+                            try:
+                                state_updates = json.loads(state_updates_match.group(1))
+                            except (json.JSONDecodeError, ValueError):
+                                pass
+                            working_response = response[: state_updates_match.start()].rstrip()
+            manuscript = self._unwrap_manuscript_text(working_response)
+
+        end_marker = "[원고_끝]"
+        marker_idx = manuscript.rfind(end_marker)
+        if marker_idx >= 0:
+            manuscript = manuscript[:marker_idx].rstrip()
         else:
-            prompt = (
-                "[원고 원본 보존 + 지적사항만 수정]\n\n"
-                + (f"## 문체 가이드\n{style_guide}\n\n" if style_guide else "")
-                + f"## Director 피드백\n{_feedback_text}\n\n"
-                f"## 원본 원고\n{smart_truncate(original_manuscript, max_chars=150000, head_chars=20000)}\n\n"
-                f"전면 재작성하지 마세요. 지적된 부분만 고치세요."
+            logging.warning("[TF-IPG] [원고_끝] 마커 없음 — 출력이 잘렸을 수 있음 (%d자)", len(manuscript))
+
+        if not manuscript or len(manuscript) < 2000:
+            logging.warning(
+                "[TF-IPG] 추출된 manuscript 길이 부족: %d자 < 2000자 (raw 응답 %d자)",
+                len(manuscript or ""),
+                len(response or ""),
             )
+            return None
+
+        return manuscript, state_updates
+
+    def _build_inplace_patch_result(
+        self,
+        *,
+        manuscript: str,
+        state_updates: dict,
+        normalized_fix_pack: dict,
+        fallback_reason: str,
+        focus: str,
+        structural_attempted: bool,
+    ) -> list[dict]:
+        existing_trace = dict(getattr(self, "_last_inplace_patch_trace", {}) or {})
+        trace_focus = "" if normalized_fix_pack.get("patch_targets") else str(existing_trace.get("focus") or focus)
+        self._set_last_inplace_patch_trace(
+            patch_strategy="inplace_patch",
+            patch_targets=list(existing_trace.get("patch_targets") or normalized_fix_pack.get("patch_targets") or []),
+            fallback_reason=str(existing_trace.get("fallback_reason") or fallback_reason),
+            focus=trace_focus,
+            structural_attempted=bool(existing_trace.get("structural_attempted") or structural_attempted),
+        )
+        logging.info(f"✅ [TF-23] 원고 in-place 수정 완료 ({len(manuscript)}자)")
+
+        result = {
+            "manuscript": manuscript,
+            "strategy": "inplace_patch",
+            "state_updates": state_updates,
+        }
+        patch_targets = list(existing_trace.get("patch_targets") or normalized_fix_pack.get("patch_targets") or [])
+        if patch_targets:
+            result["patch_targets"] = patch_targets
+        return [result]
+
+    def inplace_patch(
+        self,
+        *,
+        original_manuscript: str,
+        director_feedback: str,
+        attempt_number: int,
+        style_guide: str = "",  # [TF-37] 스타일 클로닝 갭 수정
+        fix_pack: dict | None = None,
+    ) -> list[dict]:
+        """[TF-23] LLM 1회 호출로 원고 in-place 수정. 실패 시 빈 리스트 → patch/rewrite 폴백."""
+        normalized_fix_pack = self._normalize_fix_pack(fix_pack)
+        fix_pack_guidance = self._build_fix_pack_guidance(normalized_fix_pack)
+        structural_result, focus, fallback_reason, structural_attempted = self._resolve_inplace_patch_strategy(
+            original_manuscript=original_manuscript,
+            director_feedback=director_feedback,
+            attempt_number=attempt_number,
+            style_guide=style_guide,
+            normalized_fix_pack=normalized_fix_pack,
+        )
+        if structural_result:
+            return structural_result
+
+        prompt = self._build_inplace_patch_prompt(
+            original_manuscript=original_manuscript,
+            director_feedback=director_feedback,
+            style_guide=style_guide,
+            fix_pack_guidance=fix_pack_guidance,
+        )
 
         try:
             response = self.ask(prompt, temperature=0.3, thinking_level="medium")
-            if not response or len(response) < 2000:
-                logging.warning(f"[TF-23] InPlace 응답 길이 부족: {len(response or '')}자 < 2000자")
+            payload = self._extract_inplace_patch_payload(response)
+            if payload is None:
                 return []
-            # [TF-47] patch_state_updates + manuscript 추출
-            # ask()가 response_mime_type="application/json"을 강제하므로
-            # LLM이 {"content":"원고...", "patch_state_updates":{...}} 형태로 반환할 수 있음
-            _state_updates = {}
-            _manuscript = ""
-
-            # 1단계: 전체 JSON 파싱 시도 (ask()가 JSON 강제하는 경우)
-            _stripped = response.strip()
-            if _stripped.startswith("{") and _stripped.endswith("}"):
-                try:
-                    _parsed = json.loads(_stripped)
-                    if isinstance(_parsed, dict):
-                        _state_updates = _parsed.get("patch_state_updates", {})
-                        if not isinstance(_state_updates, dict):
-                            _state_updates = {}
-                        # 원고 텍스트 추출 (여러 키 이름 시도)
-                        _manuscript = (
-                            _parsed.get("corrected_manuscript")
-                            or _parsed.get("patched_text")
-                            or _parsed.get("revised_manuscript")
-                            or _parsed.get("content")
-                            or _parsed.get("text")
-                            or _parsed.get("manuscript")
-                            or _parsed.get("patched_manuscript")
-                            or ""
-                        )
-                except (json.JSONDecodeError, ValueError):
-                    pass  # JSON 파싱 실패 → 2단계로
-
-            # 2단계: JSON 파싱 실패 또는 원고가 빈 경우 → 기존 마커 방식 폴백
-            if not _manuscript:
-                _su_marker = '"patch_state_updates"'
-                _su_idx = response.rfind(_su_marker)
-                if _su_idx >= 0:
-                    # patch_state_updates 직전의 { 를 찾되, position 0이면 스킵 (전체 JSON wrapper)
-                    _outer_start = response.rfind("{", 0, _su_idx)
-                    if _outer_start > 0:
-                        _tail = response[_outer_start:]
-                        try:
-                            _outer = json.loads(_tail)
-                            _state_updates = _outer.get("patch_state_updates", {})
-                            if not isinstance(_state_updates, dict):
-                                _state_updates = {}
-                            response = response[:_outer_start].rstrip()
-                        except (json.JSONDecodeError, ValueError):
-                            _su_match = re.search(r'\{"patch_state_updates"\s*:\s*(\{.*?\})\}', response, re.DOTALL)
-                            if _su_match:
-                                try:
-                                    _state_updates = json.loads(_su_match.group(1))
-                                except (json.JSONDecodeError, ValueError):
-                                    pass
-                                response = response[: _su_match.start()].rstrip()
-                # [TF-36] LLM이 JSON으로 감싼 경우 텍스트 추출
-                _manuscript = self._unwrap_manuscript_text(response)
-
-            # [TF-IPG] [원고_끝] 마커 검증 — 마커가 있으면 제거, 없으면 잘림 경고
-            _end_marker = "[원고_끝]"
-            _marker_idx = _manuscript.rfind(_end_marker)
-            if _marker_idx >= 0:
-                _manuscript = _manuscript[:_marker_idx].rstrip()
-            else:
-                logging.warning("[TF-IPG] [원고_끝] 마커 없음 — 출력이 잘렸을 수 있음 (%d자)", len(_manuscript))
-
-            # [TF-IPG GAP-1] 추출된 manuscript 자체의 길이 체크 (raw 응답이 아닌 추출본 기준)
-            if not _manuscript or len(_manuscript) < 2000:
-                logging.warning(
-                    "[TF-IPG] 추출된 manuscript 길이 부족: %d자 < 2000자 (raw 응답 %d자)",
-                    len(_manuscript or ""), len(response or ""),
-                )
-                return []
-            _existing_trace = dict(getattr(self, "_last_inplace_patch_trace", {}) or {})
-            _trace_focus = "" if normalized_fix_pack.get("patch_targets") else str(_existing_trace.get("focus") or focus)
-            self._set_last_inplace_patch_trace(
-                patch_strategy="inplace_patch",
-                patch_targets=list(_existing_trace.get("patch_targets") or normalized_fix_pack.get("patch_targets") or []),
-                fallback_reason=str(_existing_trace.get("fallback_reason") or fallback_reason),
-                focus=_trace_focus,
-                structural_attempted=bool(_existing_trace.get("structural_attempted") or structural_attempted),
+            manuscript, state_updates = payload
+            return self._build_inplace_patch_result(
+                manuscript=manuscript,
+                state_updates=state_updates,
+                normalized_fix_pack=normalized_fix_pack,
+                fallback_reason=fallback_reason,
+                focus=focus,
+                structural_attempted=structural_attempted,
             )
-            logging.info(f"✅ [TF-23] 원고 in-place 수정 완료 ({len(_manuscript)}자)")
-            result = {
-                "manuscript": _manuscript,
-                "strategy": "inplace_patch",
-                "state_updates": _state_updates,
-            }
-            patch_targets = list(_existing_trace.get("patch_targets") or normalized_fix_pack.get("patch_targets") or [])
-            if patch_targets:
-                result["patch_targets"] = patch_targets
-            return [result]
         except Exception as e:
             logging.warning(f"[TF-23] 원고 in-place 패치 실패: {e!s:.200}")
             return []
@@ -1647,6 +1868,89 @@ class ChiefWriter(BaseAgent):
     # =========================================================================
     # [Phase 3-5B] 패치 모드 — 원본 보존 + 피드백 지적사항만 수정
     # =========================================================================
+
+    def _build_patch_with_feedback_section(
+        self,
+        *,
+        original_manuscript: str,
+        director_feedback: str,
+        style_guide: str,
+    ) -> str:
+        from modules.core.prompt_loader import PromptLoader
+
+        try:
+            patch_template = PromptLoader().load("chief_writer", "PATCH_MODE_PROMPT")
+        except Exception as exc:
+            logging.warning(f"[SilentPass:ChiefWriter] PATCH_MODE_PROMPT 로드 실패: {exc!s:.100}")
+            patch_template = None
+
+        original_length = len(original_manuscript or "")
+        if original_length > 150000:
+            logging.warning(
+                "[TRUNCATION] chief_writer._patch_for_fix_loop: 원고 %d자 → 150000자 (%.1f%% 손실)",
+                original_length,
+                (1 - 150000 / original_length) * 100,
+            )
+
+        def _esc(text: str) -> str:
+            return str(text or "").replace("{", "{{").replace("}", "}}")
+
+        if patch_template:
+            return patch_template.format(
+                feedback_text=_esc(director_feedback),
+                original_manuscript=_esc(smart_truncate(original_manuscript, max_chars=150000, head_chars=20000)),
+                style_guide=_esc(style_guide or ""),
+                original_char_count=original_length,
+                min_char_target=int(original_length * 0.9),
+            )
+
+        return (
+            f"[패치 모드: 원본 보존 + 지적사항만 수정]\n\n"
+            f"## Director 피드백\n{director_feedback}\n\n"
+            f"## 원본 원고\n{smart_truncate(original_manuscript, max_chars=150000, head_chars=20000)}\n\n"
+            f"전면 재작성하지 마세요. 지적된 부분만 고치세요."
+        )
+
+    def _build_patch_with_feedback_director_feedback(
+        self,
+        *,
+        patch_section: str,
+        attempt_number: int,
+        previous_attempt: dict,
+    ) -> str:
+        enhanced_feedback = f"""
+[🔧 {attempt_number}차 수정 - 패치 모드: 원본 보존 + 지적사항만 수정]
+
+{patch_section}
+
+⚠️ 원본 원고의 전체 구조, 문체, 장점을 보존하면서 피드백 지적사항만 수정하세요.
+⚠️ 수정하지 않는 부분은 원문을 그대로 유지하세요.
+"""
+        history_feedback = self._build_retry_history_feedback(previous_attempt)
+        if history_feedback:
+            enhanced_feedback += f"\n{history_feedback}"
+        fix_pack_guidance = self._build_fix_pack_guidance(previous_attempt.get("fix_pack"))
+        if fix_pack_guidance:
+            enhanced_feedback += f"\n\n{fix_pack_guidance}"
+        return enhanced_feedback
+
+    @staticmethod
+    def _build_patch_with_feedback_retry_args(previous_attempt: dict) -> tuple[str, str, str]:
+        failure_constraints = ""
+        if previous_attempt.get("action_items"):
+            items = previous_attempt.get("action_items", [])
+            failure_constraints = "이전 REJECT 사유:\n" + "\n".join(f"- {item}" for item in items)
+        fix_scope_reasoning = previous_attempt.get("fix_scope_reasoning", "")
+        if fix_scope_reasoning:
+            failure_constraints += f"\n[수정 범위 근거]\n{fix_scope_reasoning}"
+
+        rejected_strategy = str(previous_attempt.get("selected_strategy_key", "") or "")
+        strategy_feedback = previous_attempt.get("selection_reason", "")
+        if isinstance(strategy_feedback, dict):
+            strategy_feedback = json.dumps(strategy_feedback, ensure_ascii=False)
+        if not isinstance(strategy_feedback, str):
+            strategy_feedback = str(strategy_feedback or "")
+        return failure_constraints, rejected_strategy, strategy_feedback
 
     def patch_with_feedback(
         self,
@@ -1700,73 +2004,19 @@ class ChiefWriter(BaseAgent):
 
         실패 시 빈 리스트 반환 → 호출측에서 full rewrite 폴백.
         """
-        try:
-            from modules.core.prompt_loader import PromptLoader
-
-            _patch_template = PromptLoader().load("chief_writer", "PATCH_MODE_PROMPT")
-        except Exception as e:
-            logging.warning(f"[SilentPass:ChiefWriter] PATCH_MODE_PROMPT 로드 실패: {e!s:.100}")
-            _patch_template = None
-
-        # 패치 프롬프트 포맷
-        # [F-4] 트렁케이션 경고
-        _orig_len = len(original_manuscript or "")
-        if _orig_len > 150000:
-            logging.warning("[TRUNCATION] chief_writer._patch_for_fix_loop: 원고 %d자 → 150000자 (%.1f%% 손실)",
-                _orig_len,
-                (1 - 150000 / _orig_len) * 100,
-            )
-
-        if _patch_template:
-            # [Sweep55] .format()에 {}가 있으면 KeyError/ValueError 크래시 방지
-            def _esc(s):
-                return s.replace("{", "{{").replace("}", "}}")
-
-            _min_char_target = int(_orig_len * 0.9)
-            _patch_section = _patch_template.format(
-                feedback_text=_esc(director_feedback),
-                original_manuscript=_esc(smart_truncate(original_manuscript, max_chars=150000, head_chars=20000)),
-                style_guide=_esc(style_guide or ""),
-                original_char_count=_orig_len,
-                min_char_target=_min_char_target,
-            )
-        else:
-            # YAML 로드 실패 시 인라인 폴백
-            _patch_section = (
-                f"[패치 모드: 원본 보존 + 지적사항만 수정]\n\n"
-                f"## Director 피드백\n{director_feedback}\n\n"
-                f"## 원본 원고\n{smart_truncate(original_manuscript, max_chars=150000, head_chars=20000)}\n\n"
-                f"전면 재작성하지 마세요. 지적된 부분만 고치세요."
-            )
-
-        enhanced_feedback = f"""
-[🔧 {attempt_number}차 수정 - 패치 모드: 원본 보존 + 지적사항만 수정]
-
-{_patch_section}
-
-⚠️ 원본 원고의 전체 구조, 문체, 장점을 보존하면서 피드백 지적사항만 수정하세요.
-⚠️ 수정하지 않는 부분은 원문을 그대로 유지하세요.
-"""
-        _history_feedback = self._build_retry_history_feedback(previous_attempt)
-        if _history_feedback:
-            enhanced_feedback += f"\n{_history_feedback}"
-        _fix_pack_guidance = self._build_fix_pack_guidance(previous_attempt.get("fix_pack"))
-        if _fix_pack_guidance:
-            enhanced_feedback += f"\n\n{_fix_pack_guidance}"
-
-        failure_constraints = ""
-        if previous_attempt.get("action_items"):
-            items = previous_attempt.get("action_items", [])
-            failure_constraints = "이전 REJECT 사유:\n" + "\n".join([f"- {item}" for item in items])
-        _fsr = previous_attempt.get("fix_scope_reasoning", "")
-        if _fsr:
-            failure_constraints += f"\n[수정 범위 근거]\n{_fsr}"
-        _rejected_strategy = str(previous_attempt.get("selected_strategy_key", "") or "")
-        _strategy_feedback = previous_attempt.get("selection_reason", "")
-        if isinstance(_strategy_feedback, dict):
-            _strategy_feedback = json.dumps(_strategy_feedback, ensure_ascii=False)
-        if not isinstance(_strategy_feedback, str):
-            _strategy_feedback = str(_strategy_feedback or "")
+        patch_section = self._build_patch_with_feedback_section(
+            original_manuscript=original_manuscript,
+            director_feedback=director_feedback,
+            style_guide=style_guide,
+        )
+        enhanced_feedback = self._build_patch_with_feedback_director_feedback(
+            patch_section=patch_section,
+            attempt_number=attempt_number,
+            previous_attempt=previous_attempt,
+        )
+        failure_constraints, rejected_strategy, strategy_feedback = self._build_patch_with_feedback_retry_args(
+            previous_attempt
+        )
 
         try:
             return self.generate_ensemble(
@@ -1779,9 +2029,9 @@ class ChiefWriter(BaseAgent):
                 style_guide=style_guide,
                 reference_excerpt=reference_excerpt,
                 director_feedback=enhanced_feedback,
-                strategy_specific_feedback=_strategy_feedback,
-                rejected_strategy=_rejected_strategy,
-                single_strategy=_rejected_strategy,
+                strategy_specific_feedback=strategy_feedback,
+                rejected_strategy=rejected_strategy,
+                single_strategy=rejected_strategy,
                 failure_constraints=failure_constraints,
                 current_inventory=current_inventory,
                 current_martial_arts=current_martial_arts,

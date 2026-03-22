@@ -251,6 +251,40 @@ class TestArcPatchMode:
         assert "TAIL-ARC" in feedback
         assert feedback.count("A") < 35000
 
+    def test_build_patch_mode_feedback_direct_helper_preserves_tail_context(self, arc_generator, sample_arc):
+        large_arc = {
+            **sample_arc,
+            "tactical_doc": "HEAD-ARC\n" + ("A" * 35000) + "\nTAIL-ARC",
+        }
+
+        with patch("modules.core.prompt_loader.PromptLoader") as mock_loader_cls:
+            mock_loader_cls.return_value.load.side_effect = FileNotFoundError("not found")
+            feedback = arc_generator._build_patch_mode_feedback(
+                original_arc=large_arc,
+                director_feedback="keep structure",
+                attempt_number=2,
+            )
+
+        assert "HEAD-ARC" in feedback
+        assert "TAIL-ARC" in feedback
+        assert feedback.count("A") < 35000
+
+    def test_build_patch_mode_constraint_block_direct_helper_includes_non_wuxia_warning(self, arc_generator):
+        arc_generator._genre = "investment"
+        arc_generator.preflight.analyze.return_value = {"world_state": {}}
+        arc_generator.preflight.generate_analyst_injection.return_value = "preflight"
+        arc_generator.compiler.compile.return_value = "constraints"
+        arc_generator.negative_injector.generate_injection.return_value = "neg"
+        arc_generator.negative_injector.generate_self_check_prompt.return_value = "self_check"
+
+        preflight_result, constraint_block = arc_generator._build_patch_mode_constraint_block(prev_arcs=[])
+
+        assert preflight_result == {"world_state": {}}
+        assert "정신력" in constraint_block
+        assert "preflight" in constraint_block
+        assert "constraints" in constraint_block
+        assert "self_check" in constraint_block
+
     def test_patch_mode_source_has_no_legacy_original_arc_head_cut(self):
         src = Path("modules/domain/agents/four_phase_arc_generator.py").read_text(encoding="utf-8")
         assert "_full_json[:30000]" not in src

@@ -15,7 +15,11 @@ class MedicalGuard(BaseGuard):
     def __init__(self) -> None:
         super().__init__()
         cfg = self._load_genre_yaml("medical")
+        self._init_term_sets(cfg)
+        self._init_doctor_constraints(cfg)
+        self._init_surgery_requirements(cfg)
 
+    def _init_term_sets(self, cfg: dict[str, Any]) -> None:
         self.FORBIDDEN_TERMS = cfg.get(
             "forbidden_terms",
             [
@@ -131,6 +135,7 @@ class MedicalGuard(BaseGuard):
             ],
         )
 
+    def _init_doctor_constraints(self, cfg: dict[str, Any]) -> None:
         self._doctor_hierarchy = cfg.get(
             "doctor_hierarchy",
             [
@@ -166,6 +171,7 @@ class MedicalGuard(BaseGuard):
             },
         )
 
+    def _init_surgery_requirements(self, _cfg: dict[str, Any]) -> None:
         self._surgery_requirements = {
             "단순 봉합": {"doctor_rank": "인턴"},
             "충수절제술": {"doctor_rank": "레지던트"},

@@ -887,6 +887,63 @@ class TestDirectorAuditor:
         assert result["decision"] == "REJECT"
         director._auditor._expand_prev_full_text.assert_called_once_with(5, "")
 
+    def test_resolve_manuscript_audit_arc_no_prefers_arc_string_then_fallback(self, director):
+        assert director._auditor._resolve_manuscript_audit_arc_no("Arc 12 tactical note", 3) == 12
+        assert director._auditor._resolve_manuscript_audit_arc_no("", 3) == 3
+
+    def test_finalize_manuscript_validation_context_routes_v0128_with_enriched_context(self, director):
+        director.use_v0128 = True
+        director._auditor._expand_prev_full_text = MagicMock(return_value="expanded-prev")
+        director._auditor._audit_with_v0128 = MagicMock(return_value={"decision": "PASS", "score": 90})
+
+        result = director._auditor._finalize_manuscript_validation_context(
+            ep_num=5,
+            manuscript="본문",
+            prev_full_text="prev",
+            validation_context={"seed": "value"},
+            pre_llm_warnings=["critical warning"],
+            pre_llm_advisories=["advisory"],
+            target_len=5000,
+        )
+
+        assert result["early_result"]["decision"] == "PASS"
+        _, kwargs = director._auditor._audit_with_v0128.call_args
+        assert kwargs["validation_context"]["expanded_prev_full_text"] == "expanded-prev"
+        assert "pre_llm_critical_warnings" in kwargs["validation_context"]
+        assert "pre_llm_advisories" in kwargs["validation_context"]
+
+    def test_audit_manuscript_history_conflict_returns_before_llm(self, director):
+        director.use_v0128 = False
+        director.genre_validation_enabled = False
+        director.guard = None
+        director.manuscript_history_check_enabled = True
+        director.protagonist_config_check_enabled = False
+        director.entity_consistency_enabled = False
+        director._caching.manuscript_cache_name = None
+        director.check_manuscript_history_conflicts = MagicMock(
+            return_value={
+                "decision": "CONFLICT",
+                "conflicts": [{"type": "fact", "prev_fact": "A", "current_violation": "B"}],
+                "summary": "conflict summary",
+            }
+        )
+        director.ask = MagicMock()
+
+        result = director._auditor.audit_manuscript(
+            ep_num=3,
+            manuscript="충돌 본문",
+            arc_doc="Arc 3",
+            history_summary="",
+            prev_full_text="",
+            arc_pos=3,
+            target_len=5000,
+            manuscript_history=[{"ep_num": 2, "summary": "old"}],
+        )
+
+        assert result["decision"] == "REJECT"
+        assert result["error_category"] == "LOGIC_ERROR"
+        director.ask.assert_not_called()
+
 
 # ═══════════════════════════════════════════════════════════════
 # 6. Director Facade Delegation Tests

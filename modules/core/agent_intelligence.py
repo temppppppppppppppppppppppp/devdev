@@ -63,13 +63,19 @@ class AgentIntelligence:
     def _init_exemplars(self) -> None:
         """우수 예시 라이브러리 초기화"""
 
-        # Analyst 예시 (Arc 설계)
-        self.analyst_exemplars = {
+        self.analyst_exemplars = self._build_analyst_exemplars()
+        self.architect_exemplars = self._build_architect_exemplars()
+        self.writer_exemplars = self._build_writer_exemplars()
+
+    def _build_analyst_exemplars(self) -> dict[str, list[Exemplar]]:
+        """Analyst exemplar catalog by genre."""
+
+        return {
             "wuxia": [
                 Exemplar(
                     title="복수극 Arc 설계",
                     content="""
-[Arc 3: 혈채(血債)]
+[Arc 3: 혈채(\u8840\u50B5)]
 - 핵심 갈등: 과거 원수와의 재회, 복수 vs 용서의 딜레마
 - 화별 전개:
   1화: 우연한 재회, 원수가 은인으로 위장 (반전 복선)
@@ -86,10 +92,10 @@ class AgentIntelligence:
                 Exemplar(
                     title="성장 Arc 설계",
                     content="""
-[Arc 5: 파경(破境)]
-- 핵심 갈등: 경지 돌파의 관문, 내면의 마(魔)와 대면
+[Arc 5: 파경(\u7834\u5883)]
+- 핵심 갈등: 경지 돌파의 관문, 내면의 마(\u9B54)와 대면
 - 화별 전개:
-  1화: 돌파 시도 실패, 심마(心魔) 발현 조짐
+  1화: 돌파 시도 실패, 심마(\u5FC3\u9B54) 발현 조짐
   2화: 과거 트라우마 회귀, 환각 속 대면
   3화: 심마의 정체 = 자신의 그림자, 도피 vs 직면
   4화: 스승의 마지막 가르침 회상, 깨달음의 실마리
@@ -128,8 +134,10 @@ class AgentIntelligence:
             ],
         }
 
-        # Architect 예시 (Blueprint)
-        self.architect_exemplars = {
+    def _build_architect_exemplars(self) -> dict[str, list[Exemplar]]:
+        """Architect exemplar catalog by genre."""
+
+        return {
             "wuxia": [
                 Exemplar(
                     title="대결 장면 Blueprint",
@@ -170,8 +178,10 @@ Scene 5: 최종 성공, 스승의 인정, 다음 단계 암시 (클리프행어)
             ],
         }
 
-        # Writer 예시 (문장/문단)
-        self.writer_exemplars = {
+    def _build_writer_exemplars(self) -> dict[str, list[Exemplar]]:
+        """Writer exemplar catalog by genre."""
+
+        return {
             "wuxia": [
                 Exemplar(
                     title="전투 묘사",

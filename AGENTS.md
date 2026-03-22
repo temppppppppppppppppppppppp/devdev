@@ -49,6 +49,16 @@
 - 터미널 출력만 깨졌을 가능성이 있으면 출력 렌더링을 근거로 패치하지 말고, explicit UTF-8 reader로 source bytes를 재확인한 뒤 수정한다.
 - 기본 가드레일은 `.editorconfig`의 UTF-8 pin과 `scripts/check_utf8_hygiene.py` + pre-commit hook이다.
 
+## Complexity Guardrails
+
+- 이 워크스페이스의 시스템 오더는 `사후 대형 장함수 청소`보다 `사전 복잡도 회귀 방지`를 우선한다.
+- touched production 함수는 정당한 예외 없이 새로 `180+ LOC` 구간에 진입하면 안 된다.
+- touched production 함수가 `120+ LOC`에 들어가면, 구현 중 최소 한 번은 `bounded shell / semantic core / sink boundary` 중 어디에 속하는지 명시적으로 판정한다.
+- 같은 owner class 안에서 helper를 계속 추가해 direct-method pressure만 올리는 패턴을 금지한다. owner가 `50+ direct methods`이거나, 한 family 정리 때문에 새 helper가 3개 이상 늘어날 조짐이 보이면 same-file extraction 전에 `module/runtime split` 가능성을 먼저 검토한다.
+- `180+ = 0` 또는 `200+ = 0` 같은 고위험 band가 이미 제거된 상태에서는, 추가 same-file 분해보다 `module boundary`, `contract normalization`, `fresh run validation`을 우선순위로 둔다.
+- 시간 압박이 있는 구간에서 고위험 band가 이미 제거됐다면, 대규모 리팩토링보다 `snapshot commit -> fresh run -> fail-only bugfix` 순서를 우선한다.
+- substantial system-track code 변경 후에는 최소 touched area 기준 complexity recount를 수행하고, hotspot lane / roadmap / execution SSOT 작업이면 SSOT에도 현재 band 또는 hotspot delta를 반영한다.
+
 ## System Init Harness (System Track Only)
 
 시스템 오더는 먼저 `docs/implementation/system-order-init-harness.md`를 읽는다.

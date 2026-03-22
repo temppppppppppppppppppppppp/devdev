@@ -918,6 +918,90 @@ class TestGenerateBlueprint:
         assert "[관계 의미 질의]" in semantic_context
         assert "연홍" in semantic_context
 
+    def test_build_stage3_blueprint_semantic_bundle_marks_legacy_source_when_only_advisories_exist(self, orch, app_mock):
+        app_mock.quality_dashboard = MagicMock()
+        app_mock.world_state.get_summary.return_value = "진행 플롯=인수합병"
+
+        bundle = orch._build_stage3_blueprint_semantic_bundle(
+            working_ep=1,
+            arc_data=app_mock.current_project.arcs[0],
+            arc_idx=0,
+            prev_blueprints=[],
+            entity_registry={},
+            protagonist_name="장무기",
+        )
+
+        assert bundle["source_counts"] == {"legacy_semantic_context": 1}
+        assert bundle["plan"] is None
+        assert bundle["observation"]["advisor_path_used"] is False
+        app_mock.quality_dashboard.record_retrieval_observation.assert_called_once()
+
+    @patch("modules.core.spinners.StageSpinner")
+    def test_run_stage3_blueprint_generation_handoff_preserves_tail_and_prev_hud(self, MockSpinner, orch, app_mock):
+        spinner = MagicMock()
+        spinner.update_detail = MagicMock()
+        MockSpinner.return_value.__enter__.return_value = spinner
+        app_mock.current_project.db.get_recent_manuscripts.return_value = [
+            {"ep_num": ep, "title": f"제{ep}화", "content": f"원고 {ep}"} for ep in range(1, 37)
+        ]
+        app_mock.sys.hud = SimpleNamespace(pro_root={"focus": "hud"})
+        semantic_bundle = {"semantic_ctx": "[ctx]", "blueprint_window": [{"ep_num": 1}, {"ep_num": 4}]}
+
+        blueprint, pipeline_result = orch._run_stage3_blueprint_generation_handoff(
+            working_ep=40,
+            arc_data=app_mock.current_project.arcs[0],
+            arc_idx=0,
+            prev_blueprint=None,
+            protagonist_name="장무기",
+            protagonist_config={},
+            entity_registry={},
+            semantic_bundle=semantic_bundle,
+        )
+
+        kwargs = app_mock.agents["three_phase_bp"].generate.call_args.kwargs
+        assert kwargs["prev_blueprints"] == semantic_bundle["blueprint_window"]
+        assert "━━━ 제1화 원고 ━━━" in kwargs["prev_manuscripts_text"]
+        assert "━━━ 제36화 원고 ━━━" in kwargs["prev_manuscripts_text"]
+        assert "━━━ 제2화 원고 ━━━" not in kwargs["prev_manuscripts_text"]
+        assert kwargs["prev_hud"] == {"focus": "hud"}
+        assert blueprint == {"integrated_scenario": "test", "scene_breakdown": {"s1": "scene"}}
+        assert pipeline_result["final_verdict"] == "PASS"
+
+    def test_finalize_stage3_blueprint_pipeline_result_normalizes_non_dict_result(self, orch):
+        semantic_bundle = {
+            "semantic_ctx": "[ctx]",
+            "work_focus": {"tracking_slots": ["핵심 배우 라인"]},
+            "plan": SimpleNamespace(slots=["a", "b"]),
+            "source_counts": {"vec_memory": 2, "db_npc_relationship": 1, "bad": "skip"},
+            "coverage_warnings": ["missing_relation_slice"],
+            "observation": {
+                "provenance_ledger": {"source_pack": "stage3"},
+                "budget_ledger": {"budget_bucket": "smart_retrieval.stage3_total_budget"},
+            },
+        }
+
+        with (
+            patch("modules.core.stage3_orchestrator._time.perf_counter", return_value=11.5),
+            patch("modules.core.stage3_orchestrator._peek_scope_total_cost_usd", return_value=1.75),
+        ):
+            result = orch._finalize_stage3_blueprint_pipeline_result(
+                pipeline_result=None,
+                started_at=10.0,
+                started_cost_usd=1.25,
+                semantic_bundle=semantic_bundle,
+            )
+
+        assert result["final_verdict"] == "ERROR"
+        assert result["error"] == "invalid_pipeline_result"
+        assert result["_stage3_duration_ms"] == 1500
+        assert result["_stage3_token_cost_usd"] == 0.5
+        assert result["_stage3_observability"]["source_counts"] == {
+            "vec_memory": 2,
+            "db_npc_relationship": 1,
+        }
+        assert result["_stage3_observability"]["planned_slots_count"] == 2
+        assert result["_stage3_observability"]["provenance_ledger"]["source_pack"] == "stage3"
+
 
 # ── Single Episode Processing ────────────────────────────────
 

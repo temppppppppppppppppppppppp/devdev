@@ -135,6 +135,151 @@ class BlockingValidatorEntityChecks:
 
         return {"check": "dead_npc_resurrection", "passed": True}
 
+    def _extract_owned_items(self, martial_hud: dict) -> list[str]:
+        owned_items = []
+        if isinstance(martial_hud, dict):
+            actual_truth = martial_hud.get("actual_truth", {})
+            if isinstance(actual_truth, dict):
+                equipment = actual_truth.get("equipment", [])
+                if equipment is None:
+                    owned_items = []
+                elif isinstance(equipment, list):
+                    owned_items = [str(item) for item in equipment if item and len(str(item)) > 0]
+                elif isinstance(equipment, str):
+                    owned_items = [equipment] if equipment.strip() else []
+                elif isinstance(equipment, dict):
+                    owned_items = [
+                        str(k) for k, v in equipment.items() if k and v and isinstance(k, str | int) and len(str(k)) > 0
+                    ]
+                else:
+                    logging.warning(f"[WARNING] Unexpected equipment type: {type(equipment).__name__}")
+                    logging.warning(f"[WARNING] Equipment value: {repr(equipment)[:100]}")
+                    owned_items = []
+
+        if not isinstance(owned_items, list):
+            logging.warning(f"[WARNING] owned_items is not a list after processing: {type(owned_items).__name__}")
+            return []
+        return [item for item in owned_items if isinstance(item, str) and len(item) > 0]
+
+    def _build_owned_items_with_aliases(self, all_items: list, owned_items: list[str]) -> list[str]:
+        owned_items_with_aliases = list(owned_items)
+        for item in all_items:
+            if not isinstance(item, dict):
+                continue
+            item_name = item.get("name", "")
+            item_aliases = item.get("aliases", [])
+            if item_name in owned_items and isinstance(item_aliases, list):
+                owned_items_with_aliases.extend(item_aliases)
+        return owned_items_with_aliases
+
+    def _find_standalone_name_matches(self, manuscript: str, check_name: str) -> list[int]:
+        matches = []
+        start = 0
+        while True:
+            idx = manuscript.find(check_name, start)
+            if idx == -1:
+                break
+
+            prev_char = manuscript[idx - 1] if idx > 0 else ""
+            next_char = manuscript[idx + len(check_name)] if idx + len(check_name) < len(manuscript) else ""
+            is_prev_hangul = prev_char and "\uac00" <= prev_char <= "\ud7a3"
+            is_next_hangul = next_char and "\uac00" <= next_char <= "\ud7a3"
+
+            if not is_prev_hangul and not is_next_hangul:
+                matches.append(idx)
+            elif not is_prev_hangul or not is_next_hangul:
+                matches.append(idx)
+
+            start = idx + 1
+        return matches
+
+    def _find_sentence_start(self, text: str, pos: int) -> int:
+        candidates = []
+        for delim in ".!?":
+            idx = text.rfind(delim, 0, pos)
+            if idx != -1:
+                candidates.append(idx + 1)
+        return max(candidates) if candidates else 0
+
+    def _find_sentence_end(self, text: str, pos: int) -> int:
+        candidates = []
+        for delim in ".!?":
+            idx = text.find(delim, pos)
+            if idx != -1:
+                candidates.append(idx)
+        return min(candidates) if candidates else len(text)
+
+    def _check_unowned_item_name_usage(
+        self,
+        manuscript: str,
+        *,
+        item_name: str,
+        check_name: str,
+        owned_items: list[str],
+    ) -> dict | None:
+        if not check_name or len(check_name) < 2:
+            return None
+
+        matches = self._find_standalone_name_matches(manuscript, check_name)
+        if not matches:
+            return None
+
+        usage_patterns = [
+            f"{check_name}을 휘둘",
+            f"{check_name}를 휘둘",
+            f"{check_name}으로",
+            f"{check_name}를 사용",
+            f"{check_name}을 사용",
+            f"{check_name}를 꺼내",
+            f"{check_name}을 꺼내",
+            f"{check_name}를 움켜",
+            f"{check_name}을 움켜",
+            f"{check_name}를 뽑",
+            f"{check_name}을 뽑",
+        ]
+        negation_patterns = [
+            f"{check_name}을 휘두르지",
+            f"{check_name}를 휘두르지",
+            f"{check_name}을 사용하지",
+            f"{check_name}를 사용하지",
+            f"{check_name}을 꺼내지",
+            f"{check_name}를 꺼내지",
+            f"{check_name}을 보았다",
+            f"{check_name}를 보았다",
+            f"{check_name}을 보며",
+            f"{check_name}를 보며",
+            f"{check_name}을 회상",
+            f"{check_name}를 회상",
+            f"{check_name}에 대해",
+        ]
+        negation_keywords = ["않았", "못했", "없었", "아니었", "안 했", "못 했", "아직"]
+
+        for pattern in usage_patterns:
+            if pattern not in manuscript:
+                continue
+            location = manuscript.find(pattern)
+            sentence_start = self._find_sentence_start(manuscript, location)
+            sentence_end = self._find_sentence_end(manuscript, location + len(pattern))
+            context_window = manuscript[sentence_start : sentence_end + 1]
+            is_negation = any(neg in context_window for neg in negation_patterns)
+            has_direct_negation = any(keyword in context_window for keyword in negation_keywords)
+            if is_negation or has_direct_negation:
+                continue
+
+            display_name = check_name if check_name == item_name else f"{check_name} ({item_name})"
+            return {
+                "check": "unowned_item_usage",
+                "passed": False,
+                "reason": f"미획득 아이템 '{display_name}' 사용",
+                "severity": "CRITICAL",
+                "owned_items": owned_items,
+                "location": location,
+                "context": context_window,
+                "item_name": item_name,
+                "matched_alias": check_name if check_name != item_name else None,
+            }
+        return None
+
     def _check_unowned_item_usage(self, manuscript: str, context: dict) -> dict:
         """
         미획득 아이템 사용 체크 (타입 안전성 강화)
@@ -145,196 +290,31 @@ class BlockingValidatorEntityChecks:
         """
         encyclopedia = context.get("encyclopedia", {})
         martial_hud = context.get("martial_hud", {})
-
-        # HUD에서 소유 아이템 목록 (방어적 추출)
-        owned_items = []
-        owned_items_with_aliases = []  # [V55.5] 소유 아이템 + 별칭 모두 저장
-
-        if isinstance(martial_hud, dict):
-            actual_truth = martial_hud.get("actual_truth", {})
-            if isinstance(actual_truth, dict):
-                equipment = actual_truth.get("equipment", [])
-
-                # 다양한 타입 처리 (강화된 검증)
-                if equipment is None:
-                    owned_items = []
-                elif isinstance(equipment, list):
-                    # 리스트의 각 원소가 문자열인지 검증
-                    owned_items = [str(item) for item in equipment if item and len(str(item)) > 0]
-                elif isinstance(equipment, str):
-                    owned_items = [equipment] if equipment.strip() else []
-                elif isinstance(equipment, dict):
-                    # dict의 key가 문자열이고 value가 truthy인 경우만
-                    owned_items = [
-                        str(k) for k, v in equipment.items() if k and v and isinstance(k, str | int) and len(str(k)) > 0
-                    ]
-                else:
-                    # 예상치 못한 타입
-                    logging.warning(f"[WARNING] Unexpected equipment type: {type(equipment).__name__}")
-                    logging.warning(f"[WARNING] Equipment value: {repr(equipment)[:100]}")
-                    owned_items = []
-
-        # 최종 안전성 확인 (강화)
-        if not isinstance(owned_items, list):
-            logging.warning(f"[WARNING] owned_items is not a list after processing: {type(owned_items).__name__}")
-            owned_items = []
-
-        # 각 원소가 문자열이고 비어있지 않은지 확인
-        owned_items = [item for item in owned_items if isinstance(item, str) and len(item) > 0]
-
-        # [V55.5] 소유 아이템의 별칭도 추가
-        owned_items_with_aliases = list(owned_items)  # 복사
+        owned_items = self._extract_owned_items(martial_hud)
         all_items = encyclopedia.get("items", [])
-
-        for item in all_items:
-            if not isinstance(item, dict):
-                continue
-            item_name = item.get("name", "")
-            item_aliases = item.get("aliases", [])
-
-            # 소유한 아이템의 별칭도 owned로 처리
-            if item_name in owned_items:
-                if isinstance(item_aliases, list):
-                    owned_items_with_aliases.extend(item_aliases)
+        owned_items_with_aliases = self._build_owned_items_with_aliases(all_items, owned_items)
 
         for item in all_items:
             if not isinstance(item, dict):
                 continue
             item_name = item.get("name", "")
             item_aliases = item.get("aliases", []) if isinstance(item.get("aliases"), list) else []
-
             if not item_name:
                 continue
 
-            # [V55.5] 검사할 모든 이름 (primary + aliases)
             all_names = [item_name] + item_aliases
+            if any(name in owned_items_with_aliases for name in all_names):
+                continue
 
-            # 소유 여부 확인 (이름 또는 별칭 중 하나라도 소유하면 OK)
-            is_owned = any(name in owned_items_with_aliases for name in all_names)
-
-            if is_owned:
-                continue  # 소유한 아이템은 스킵
-
-            # [V55.5] word boundary 체크로 부분 매칭 방지
-            # "대도"가 "백근대도" 안에서 매칭되지 않도록
             for check_name in all_names:
-                if not check_name or len(check_name) < 2:
-                    continue
-
-                # 단순 문자열 매칭 대신 word boundary 체크
-                # 한글은 word boundary가 다르므로 앞뒤 문자 체크
-                matches = []
-                start = 0
-                while True:
-                    idx = manuscript.find(check_name, start)
-                    if idx == -1:
-                        break
-
-                    # 앞뒤 문자가 한글이면 부분 매칭 (스킵)
-                    prev_char = manuscript[idx - 1] if idx > 0 else ""
-                    next_char = manuscript[idx + len(check_name)] if idx + len(check_name) < len(manuscript) else ""
-
-                    # 한글 범위: 가-힣
-                    is_prev_hangul = prev_char and "\uac00" <= prev_char <= "\ud7a3"
-                    is_next_hangul = next_char and "\uac00" <= next_char <= "\ud7a3"
-
-                    # 앞뒤 모두 한글이 아니면 독립된 단어로 판단
-                    if not is_prev_hangul and not is_next_hangul:
-                        matches.append(idx)
-                    # 특수 케이스: "백근대도" 안의 "대도"는 부분 매칭이므로 스킵
-                    # 하지만 "대도를 휘둘렀다"는 독립 단어이므로 감지
-                    elif not is_prev_hangul or not is_next_hangul:
-                        # 앞 또는 뒤 한쪽만 한글인 경우 (예: "대도를" → 앞 없음, 뒤 "를")
-                        matches.append(idx)
-
-                    start = idx + 1
-
-                if not matches:
-                    continue
-
-                # 매칭된 위치에서 사용 패턴 체크
-                # [V55.5] check_name 기반으로 패턴 생성
-                usage_patterns = [
-                    f"{check_name}을 휘둘",
-                    f"{check_name}를 휘둘",
-                    f"{check_name}으로",
-                    f"{check_name}를 사용",
-                    f"{check_name}을 사용",
-                    f"{check_name}를 꺼내",
-                    f"{check_name}을 꺼내",
-                    f"{check_name}를 움켜",
-                    f"{check_name}을 움켜",
-                    f"{check_name}를 뽑",
-                    f"{check_name}을 뽑",
-                ]
-
-                # 부정문 패턴 (오탐 방지)
-                negation_patterns = [
-                    f"{check_name}을 휘두르지",
-                    f"{check_name}를 휘두르지",
-                    f"{check_name}을 사용하지",
-                    f"{check_name}를 사용하지",
-                    f"{check_name}을 꺼내지",
-                    f"{check_name}를 꺼내지",
-                    f"{check_name}을 보았다",
-                    f"{check_name}를 보았다",
-                    f"{check_name}을 보며",
-                    f"{check_name}를 보며",
-                    f"{check_name}을 회상",
-                    f"{check_name}를 회상",
-                    f"{check_name}에 대해",
-                ]
-
-                for pattern in usage_patterns:
-                    if pattern in manuscript:
-                        # 부정문 체크 (오탐 방지)
-                        location = manuscript.find(pattern)
-
-                        # [V44 Fix] 문장 경계 찾기 (find() -1 반환 안전 처리)
-                        def find_sentence_start(text, pos):
-                            """위치 이전의 가장 가까운 문장 끝 찾기"""
-                            candidates = []
-                            for delim in ".!?":
-                                idx = text.rfind(delim, 0, pos)
-                                if idx != -1:
-                                    candidates.append(idx + 1)
-                            return max(candidates) if candidates else 0
-
-                        def find_sentence_end(text, pos):
-                            """위치 이후의 가장 가까운 문장 끝 찾기"""
-                            candidates = []
-                            for delim in ".!?":
-                                idx = text.find(delim, pos)
-                                if idx != -1:
-                                    candidates.append(idx)
-                            return min(candidates) if candidates else len(text)
-
-                        sentence_start = find_sentence_start(manuscript, location)
-                        sentence_end = find_sentence_end(manuscript, location + len(pattern))
-
-                        context = manuscript[sentence_start : sentence_end + 1]
-
-                        # 부정문이면 pass - 같은 문장 내에 부정 표현이 있어야 함
-                        is_negation = any(neg in context for neg in negation_patterns)
-                        # [V44 Fix] 추가 부정 키워드 체크 (문장 내 직접 부정)
-                        negation_keywords = ["않았", "못했", "없었", "아니었", "안 했", "못 했", "아직"]
-                        has_direct_negation = any(nk in context for nk in negation_keywords)
-                        if is_negation or has_direct_negation:
-                            continue
-
-                        # [V55.5] 아이템 이름 표시 개선 (별칭인 경우 원본 이름도 표시)
-                        display_name = check_name if check_name == item_name else f"{check_name} ({item_name})"
-                        return {
-                            "check": "unowned_item_usage",
-                            "passed": False,
-                            "reason": f"미획득 아이템 '{display_name}' 사용",
-                            "severity": "CRITICAL",
-                            "owned_items": owned_items,
-                            "location": location,
-                            "context": context,
-                            "item_name": item_name,
-                            "matched_alias": check_name if check_name != item_name else None,
-                        }
+                result = self._check_unowned_item_name_usage(
+                    manuscript,
+                    item_name=item_name,
+                    check_name=check_name,
+                    owned_items=owned_items,
+                )
+                if result:
+                    return result
 
         return {"check": "unowned_item_usage", "passed": True}
 

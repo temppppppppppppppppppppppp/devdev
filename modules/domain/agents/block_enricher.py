@@ -8,6 +8,7 @@ Purpose:
 - 인접 Block과의 인과 연결 보장
 """
 
+import concurrent.futures
 import json
 import logging
 import re
@@ -312,6 +313,140 @@ class BlockEnricher(BaseAgent):
             },
         }
 
+    @staticmethod
+    def _neighbor_blocks(blocks: list, index: int) -> tuple[dict | None, dict | None]:
+        prev_block = blocks[index - 1] if index > 0 else None
+        next_block = blocks[index + 1] if index < len(blocks) - 1 else None
+        return prev_block, next_block
+
+    def _build_block_enrichment_prompt(
+        self,
+        current_block: dict,
+        reference_block: dict,
+        prev_block: dict | None,
+        next_block: dict | None,
+        protagonist_name: str,
+        genre: str,
+    ) -> str:
+        return BLOCK_ENRICHMENT_PROMPT.format_map(
+            SafeDict(
+                reference_block=self._escape_braces(json.dumps(reference_block, ensure_ascii=False, indent=2)),
+                current_block=self._escape_braces(json.dumps(current_block, ensure_ascii=False, indent=2)),
+                prev_block=self._escape_braces(json.dumps(prev_block, ensure_ascii=False, indent=2))
+                if prev_block
+                else "없음 (첫 번째 Block)",
+                next_block=self._escape_braces(json.dumps(next_block, ensure_ascii=False, indent=2))
+                if next_block
+                else "없음 (마지막 Block)",
+                block_id=current_block.get("block_id", "Unknown"),
+                protagonist_name=protagonist_name,
+                genre=genre,
+            )
+        )
+
+    def _parse_enrichment_response(self, result: object) -> object:
+        if isinstance(result, str):
+            return self._extract_json_robust(result)  # [V70] json.loads → robust parser
+        return result
+
+    @staticmethod
+    def _has_invalid_enrichment_payload(result: object) -> bool:
+        return (
+            not isinstance(result, dict)
+            or result.get("parsing_error")
+            or ("content" not in result and "block_id" not in result)
+        )
+
+    @staticmethod
+    def _enrichment_failure(current_block: dict, reason: str) -> dict:
+        return {"enriched": False, "reason": reason, "block": current_block}
+
+    def _build_validation_retry_prompt(self, prompt: str, result: dict, validation: dict) -> str:
+        original_text = self._fit_prompt_text(json.dumps(result, ensure_ascii=False, indent=2), 60000)
+        return (
+            prompt
+            + f"\n\n[🔧 패치 모드: 이전 농축 결과 원본 보존 + 지적사항만 수정]"
+            f"\n## 이전 농축 결과\n{original_text}"
+            f"\n\n## 검증 실패 피드백\n{json.dumps(validation.get('issues', []), ensure_ascii=False)}"
+            f"\n\n⚠️ 전면 재농축하지 마세요. 지적된 부분만 수정하세요."
+        )
+
+    def _build_director_retry_prompt(self, prompt: str, result: dict, director_audit: dict) -> str:
+        original_text = self._fit_prompt_text(json.dumps(result, ensure_ascii=False, indent=2), 60000)
+        return (
+            prompt
+            + f"""
+
+[🔧 패치 모드: 이전 농축 결과 원본 보존 + Director 지적사항만 수정]
+
+## 이전 농축 결과
+{original_text}
+
+## Director 심사 REJECT
+점수: {director_audit.get("total_score", 0)}/100
+치명적 문제: {json.dumps(director_audit.get("critical_issues", []), ensure_ascii=False)}
+수정 지시: {director_audit.get("feedback", "품질 미달")}
+
+⚠️ 전면 재농축하지 마세요. 지적된 부분만 수정하세요.
+"""
+        )
+
+    def _enrich_block_phase_generate(self, prompt: str, current_block: dict) -> tuple[dict | None, dict | None]:
+        result = self._parse_enrichment_response(self.ask(prompt, temperature=0.7))
+        if self._has_invalid_enrichment_payload(result):
+            return None, self._enrichment_failure(
+                current_block, "LLM 결과 구조 불량 (content/block_id 누락 또는 parsing_error)"
+            )
+        return result, None
+
+    def _enrich_block_phase_validate(
+        self,
+        prompt: str,
+        current_block: dict,
+        result: dict,
+        prev_block: dict | None,
+        next_block: dict | None,
+    ) -> tuple[dict | None, dict | None, dict | None]:
+        validation = self._validate_enrichment(
+            original=current_block, enriched=result, prev_block=prev_block, next_block=next_block
+        )
+        if validation.get("validation_result") != "FAIL":
+            return result, validation, None
+
+        retry_prompt = self._build_validation_retry_prompt(prompt, result, validation)
+        retried_result = self._parse_enrichment_response(self.ask(retry_prompt, temperature=0.5))
+        if self._has_invalid_enrichment_payload(retried_result):
+            return None, validation, self._enrichment_failure(current_block, "재시도 LLM 결과 구조 불량")
+
+        validation = self._validate_enrichment(
+            original=current_block, enriched=retried_result, prev_block=prev_block, next_block=next_block
+        )
+        return retried_result, validation, None
+
+    def _enrich_block_phase_director_audit(
+        self,
+        prompt: str,
+        current_block: dict,
+        result: dict,
+        prev_block: dict | None,
+        next_block: dict | None,
+    ) -> tuple[dict | None, dict | None, dict | None]:
+        director_audit = self._director_audit_block(
+            original=current_block, enriched=result, prev_block=prev_block, next_block=next_block
+        )
+        if director_audit.get("decision") != "REJECT":
+            return result, director_audit, None
+
+        retry_prompt = self._build_director_retry_prompt(prompt, result, director_audit)
+        retried_result = self._parse_enrichment_response(self.ask(retry_prompt, temperature=0.4))
+        if self._has_invalid_enrichment_payload(retried_result):
+            return None, director_audit, self._enrichment_failure(current_block, "Director 재시도 LLM 결과 구조 불량")
+
+        director_audit = self._director_audit_block(
+            original=current_block, enriched=retried_result, prev_block=prev_block, next_block=next_block
+        )
+        return retried_result, director_audit, None
+
     def enrich_block(
         self,
         current_block: dict,
@@ -346,123 +481,40 @@ class BlockEnricher(BaseAgent):
                 "block": current_block,
             }
 
-        # 프롬프트 구성
-        prompt = BLOCK_ENRICHMENT_PROMPT.format_map(
-            SafeDict(
-                reference_block=self._escape_braces(json.dumps(reference_block, ensure_ascii=False, indent=2)),
-                current_block=self._escape_braces(json.dumps(current_block, ensure_ascii=False, indent=2)),
-                prev_block=self._escape_braces(json.dumps(prev_block, ensure_ascii=False, indent=2))
-                if prev_block
-                else "없음 (첫 번째 Block)",
-                next_block=self._escape_braces(json.dumps(next_block, ensure_ascii=False, indent=2))
-                if next_block
-                else "없음 (마지막 Block)",
-                block_id=current_block.get("block_id", "Unknown"),
-                protagonist_name=protagonist_name,
-                genre=genre,
-            )
+        prompt = self._build_block_enrichment_prompt(
+            current_block=current_block,
+            reference_block=reference_block,
+            prev_block=prev_block,
+            next_block=next_block,
+            protagonist_name=protagonist_name,
+            genre=genre,
         )
 
         # LLM 호출
         try:
-            result = self.ask(prompt, temperature=0.7)
+            result, failure = self._enrich_block_phase_generate(prompt, current_block)
+            if failure:
+                return failure
 
-            if isinstance(result, str):
-                result = self._extract_json_robust(result)  # [V70] json.loads → robust parser
-
-            # [D5-P0-1] LLM 결과 구조 검증 — content/block_id 없거나 parsing_error면 원본 반환
-            if (
-                not isinstance(result, dict)
-                or result.get("parsing_error")
-                or ("content" not in result and "block_id" not in result)
-            ):
-                return {
-                    "enriched": False,
-                    "reason": "LLM 결과 구조 불량 (content/block_id 누락 또는 parsing_error)",
-                    "block": current_block,
-                }
-
-            # 검증
-            validation = self._validate_enrichment(
-                original=current_block, enriched=result, prev_block=prev_block, next_block=next_block
+            result, validation, failure = self._enrich_block_phase_validate(
+                prompt=prompt,
+                current_block=current_block,
+                result=result,
+                prev_block=prev_block,
+                next_block=next_block,
             )
+            if failure:
+                return failure
 
-            if validation.get("validation_result") == "FAIL":
-                # 1차 검증 실패 → 원본 보존 패치 모드
-                _original_text = self._fit_prompt_text(json.dumps(result, ensure_ascii=False, indent=2), 60000)
-                retry_prompt = (
-                    prompt + f"\n\n[🔧 패치 모드: 이전 농축 결과 원본 보존 + 지적사항만 수정]"
-                    f"\n## 이전 농축 결과\n{_original_text}"
-                    f"\n\n## 검증 실패 피드백\n{json.dumps(validation.get('issues', []), ensure_ascii=False)}"
-                    f"\n\n⚠️ 전면 재농축하지 마세요. 지적된 부분만 수정하세요."
-                )
-                result = self.ask(retry_prompt, temperature=0.5)
-                if isinstance(result, str):
-                    result = self._extract_json_robust(result)  # [V70]
-                # [D5-P0-1] 재시도 결과도 구조 검증
-                if (
-                    not isinstance(result, dict)
-                    or result.get("parsing_error")
-                    or ("content" not in result and "block_id" not in result)
-                ):
-                    return {
-                        "enriched": False,
-                        "reason": "재시도 LLM 결과 구조 불량",
-                        "block": current_block,
-                    }
-                # 재검증
-                validation = self._validate_enrichment(
-                    original=current_block, enriched=result, prev_block=prev_block, next_block=next_block
-                )
-
-            # [V60.10] Director 품질 심사 (2차 검증)
-            director_audit = self._director_audit_block(
-                original=current_block, enriched=result, prev_block=prev_block, next_block=next_block
+            result, director_audit, failure = self._enrich_block_phase_director_audit(
+                prompt=prompt,
+                current_block=current_block,
+                result=result,
+                prev_block=prev_block,
+                next_block=next_block,
             )
-
-            if director_audit.get("decision") == "REJECT":
-                # Director REJECT → 원본 보존 패치 모드
-                feedback = director_audit.get("feedback", "품질 미달")
-                critical_issues = director_audit.get("critical_issues", [])
-                _original_text = self._fit_prompt_text(json.dumps(result, ensure_ascii=False, indent=2), 60000)
-
-                retry_prompt = (
-                    prompt
-                    + f"""
-
-[🔧 패치 모드: 이전 농축 결과 원본 보존 + Director 지적사항만 수정]
-
-## 이전 농축 결과
-{_original_text}
-
-## Director 심사 REJECT
-점수: {director_audit.get("total_score", 0)}/100
-치명적 문제: {json.dumps(critical_issues, ensure_ascii=False)}
-수정 지시: {feedback}
-
-⚠️ 전면 재농축하지 마세요. 지적된 부분만 수정하세요.
-"""
-                )
-                result = self.ask(retry_prompt, temperature=0.4)
-                if isinstance(result, str):
-                    result = self._extract_json_robust(result)  # [V70]
-
-                # [D5-P0-1] Director 재시도 결과도 구조 검증
-                if (
-                    not isinstance(result, dict)
-                    or result.get("parsing_error")
-                    or ("content" not in result and "block_id" not in result)
-                ):
-                    return {
-                        "enriched": False,
-                        "reason": "Director 재시도 LLM 결과 구조 불량",
-                        "block": current_block,
-                    }
-
-                # 재심사
-                director_audit = self._director_audit_block(
-                    original=current_block, enriched=result, prev_block=prev_block, next_block=next_block
-                )
+            if failure:
+                return failure
 
             return {
                 "enriched": True,
@@ -647,8 +699,48 @@ class BlockEnricher(BaseAgent):
         2. 전체 인과 에러 검증 (LLM 일괄)
         3. 문제 Block만 재농축 (농축된 prev_block 참조)
         """
-        import concurrent.futures
+        reference_block, enriched_blocks, stats, enrich_targets = self._parallel_enrichment_phase_prepare(
+            treatment_blocks=treatment_blocks,
+            reference_block_index=reference_block_index,
+        )
+        if ui:
+            ui.log(f"   📊 병렬 농축 대상: {len(enrich_targets)}개 (배치 크기: {batch_size})")
 
+        self._parallel_enrichment_phase_run_batches(
+            treatment_blocks=treatment_blocks,
+            reference_block=reference_block,
+            enrich_targets=enrich_targets,
+            enriched_blocks=enriched_blocks,
+            stats=stats,
+            protagonist_name=protagonist_name,
+            genre=genre,
+            batch_size=batch_size,
+            ui=ui,
+        )
+
+        if ui:
+            ui.log("   🔍 인과 에러 검증 중...")
+        causal_issues = self._check_causal_errors(enriched_blocks)
+        self._parallel_enrichment_phase_fix_causal_issues(
+            treatment_blocks=treatment_blocks,
+            reference_block=reference_block,
+            enriched_blocks=enriched_blocks,
+            stats=stats,
+            causal_issues=causal_issues,
+            protagonist_name=protagonist_name,
+            genre=genre,
+            ui=ui,
+        )
+
+        return {
+            "enriched_blocks": enriched_blocks,
+            "statistics": stats,
+            "causal_issues_found": len(causal_issues) if causal_issues else 0,
+        }
+
+    def _parallel_enrichment_phase_prepare(
+        self, treatment_blocks: list, reference_block_index: int
+    ) -> tuple[dict, list, dict, list]:
         reference_block = treatment_blocks[reference_block_index]
         enriched_blocks = [None] * len(treatment_blocks)
         enriched_blocks[reference_block_index] = treatment_blocks[reference_block_index]
@@ -661,7 +753,6 @@ class BlockEnricher(BaseAgent):
             "causal_fixes": 0,
         }
 
-        # 농축 대상 인덱스 수집
         enrich_targets = []
         for i, block in enumerate(treatment_blocks):
             if i == reference_block_index:
@@ -673,47 +764,74 @@ class BlockEnricher(BaseAgent):
                 enriched_blocks[i] = block
                 stats["skipped_count"] += 1
 
-        if ui:
-            ui.log(f"   📊 병렬 농축 대상: {len(enrich_targets)}개 (배치 크기: {batch_size})")
+        return reference_block, enriched_blocks, stats, enrich_targets
 
-        # ─────────────────────────────────────────────────────────────────────
-        # Phase 1: 배치 병렬 농축
-        # ─────────────────────────────────────────────────────────────────────
-        def enrich_single(idx) -> tuple:
-            block = treatment_blocks[idx]
-            prev_block = treatment_blocks[idx - 1] if idx > 0 else None
-            next_block = treatment_blocks[idx + 1] if idx < len(treatment_blocks) - 1 else None
+    def _parallel_enrich_single(
+        self,
+        idx: int,
+        treatment_blocks: list,
+        reference_block: dict,
+        protagonist_name: str,
+        genre: str,
+    ) -> tuple[int, dict]:
+        block = treatment_blocks[idx]
+        prev_block, next_block = self._neighbor_blocks(treatment_blocks, idx)
+        result = self.enrich_block(
+            current_block=block,
+            reference_block=reference_block,
+            prev_block=prev_block,
+            next_block=next_block,
+            protagonist_name=protagonist_name,
+            genre=genre,
+        )
+        return idx, result
 
-            result = self.enrich_block(
-                current_block=block,
-                reference_block=reference_block,
-                prev_block=prev_block,
-                next_block=next_block,
-                protagonist_name=protagonist_name,
-                genre=genre,
-            )
-            return idx, result
+    @staticmethod
+    def _parallel_store_result(idx: int, result: dict, treatment_blocks: list, enriched_blocks: list, stats: dict) -> None:
+        if result.get("enriched") and result.get("block"):
+            enriched_blocks[idx] = result["block"]
+            stats["enriched_count"] += 1
+            return
 
-        # 배치 단위로 병렬 처리
+        enriched_blocks[idx] = treatment_blocks[idx]
+        stats["failed_count"] += 1
+
+    def _parallel_enrichment_phase_run_batches(
+        self,
+        treatment_blocks: list,
+        reference_block: dict,
+        enrich_targets: list,
+        enriched_blocks: list,
+        stats: dict,
+        protagonist_name: str,
+        genre: str,
+        batch_size: int,
+        ui,
+    ) -> None:
         for batch_start in range(0, len(enrich_targets), batch_size):
             batch = enrich_targets[batch_start : batch_start + batch_size]
             if ui:
                 ui.log(f"   🔄 배치 {batch_start // batch_size + 1}: Block {batch[0] + 1}~{batch[-1] + 1} 처리 중...")
 
             with concurrent.futures.ThreadPoolExecutor(max_workers=batch_size) as executor:
-                futures = {executor.submit(enrich_single, idx): idx for idx in batch}
+                futures = {
+                    executor.submit(
+                        self._parallel_enrich_single,
+                        idx,
+                        treatment_blocks,
+                        reference_block,
+                        protagonist_name,
+                        genre,
+                    ): idx
+                    for idx in batch
+                }
                 processed_indices = set()
                 try:
                     for future in concurrent.futures.as_completed(futures, timeout=600):
                         try:
                             idx, result = future.result(timeout=60)
                             processed_indices.add(idx)
-                            if result.get("enriched") and result.get("block"):
-                                enriched_blocks[idx] = result["block"]
-                                stats["enriched_count"] += 1
-                            else:
-                                enriched_blocks[idx] = treatment_blocks[idx]
-                                stats["failed_count"] += 1
+                            self._parallel_store_result(idx, result, treatment_blocks, enriched_blocks, stats)
                         except Exception as e:
                             idx = futures[future]
                             processed_indices.add(idx)
@@ -733,24 +851,23 @@ class BlockEnricher(BaseAgent):
                     for f in futures:
                         f.cancel()
 
-            # 배치 간 딜레이 (API Rate Limit 과부하 방지)
             time.sleep(2)
 
-        # ─────────────────────────────────────────────────────────────────────
-        # Phase 2: 인과 에러 검증
-        # ─────────────────────────────────────────────────────────────────────
-        if ui:
-            ui.log("   🔍 인과 에러 검증 중...")
-
-        causal_issues = self._check_causal_errors(enriched_blocks)
-
+    def _parallel_enrichment_phase_fix_causal_issues(
+        self,
+        treatment_blocks: list,
+        reference_block: dict,
+        enriched_blocks: list,
+        stats: dict,
+        causal_issues: list,
+        protagonist_name: str,
+        genre: str,
+        ui,
+    ) -> None:
         if causal_issues:
             if ui:
                 ui.log(f"   ⚠️ 인과 에러 {len(causal_issues)}건 발견 → 재농축 시작")
 
-            # ─────────────────────────────────────────────────────────────────
-            # Phase 3: 문제 Block 재농축 (농축된 prev_block 참조)
-            # ─────────────────────────────────────────────────────────────────
             for issue in causal_issues:
                 idx = issue.get("block_index") if isinstance(issue, dict) else None
                 if idx is None or idx <= 0 or idx >= len(enriched_blocks):
@@ -760,13 +877,11 @@ class BlockEnricher(BaseAgent):
                 if ui:
                     ui.log(f"      🔧 Block {idx + 1} 재농축 (사유: {str(issue_text)[:30]}...)")
 
-                # 농축된 prev_block 참조 (None이면 원본 사용)
                 enriched_prev = enriched_blocks[idx - 1]
                 if enriched_prev is None:
                     enriched_prev = treatment_blocks[idx - 1]
-                next_block = treatment_blocks[idx + 1] if idx < len(treatment_blocks) - 1 else None
+                _, next_block = self._neighbor_blocks(treatment_blocks, idx)
 
-                # 재농축 프롬프트에 인과 에러 피드백 포함
                 result = self._re_enrich_with_causal_fix(
                     current_block=treatment_blocks[idx],
                     enriched_prev_block=enriched_prev,
@@ -783,12 +898,6 @@ class BlockEnricher(BaseAgent):
         else:
             if ui:
                 ui.log("   ✅ 인과 에러 없음")
-
-        return {
-            "enriched_blocks": enriched_blocks,
-            "statistics": stats,
-            "causal_issues_found": len(causal_issues) if causal_issues else 0,
-        }
 
     def _check_causal_errors(self, enriched_blocks: list) -> list:
         """

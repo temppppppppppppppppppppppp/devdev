@@ -220,6 +220,43 @@ def test_arc_ensemble_tactical_length_uses_candidate_ep_count_not_python_hint():
     assert len(candidates) > 0
 
 
+def test_arc_ensemble_feedback_merge_appends_strategy_section_once():
+    ctx = _make_agent_context()
+    client = MagicMock()
+    agent = ArcEnsembleGenerator(ctx, client)
+
+    merged = agent._merge_single_arc_feedback("기존 피드백", "전략 보정")
+
+    assert merged == "기존 피드백\n\n[전략별 보정 피드백]\n전략 보정"
+
+
+def test_arc_ensemble_finalize_single_arc_candidate_normalizes_and_fills_defaults():
+    ctx = _make_agent_context()
+    client = MagicMock()
+    agent = ArcEnsembleGenerator(ctx, client)
+
+    finalized = agent._finalize_single_arc_candidate(
+        {
+            "ep_count": 6,
+            "pacing_decision": {"pace_mode": "compressed"},
+            "state_constraints": {},
+        },
+        arc_no=7,
+        ep_start=21,
+        ep_end=26,
+        ep_count_suggestion=4,
+    )
+
+    assert finalized["arc_no"] == 7
+    assert finalized["ep_start"] == 21
+    assert finalized["ep_count"] == 3
+    assert finalized["ep_end"] == 23
+    assert "joint_docs" in finalized
+    assert "state_constraints" in finalized
+    assert "status_shadow" in finalized
+    assert "state_changes" in finalized
+
+
 def test_arc_block_event_guard_preserves_recent_tail_context():
     result = _build_block_event_guard(
         {

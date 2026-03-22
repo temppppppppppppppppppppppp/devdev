@@ -30,6 +30,21 @@ class _EffectRuleGuard:
         return None
 
 
+class _VillainEventGuard:
+    def __init__(self):
+        self.seen_recent_events = None
+
+    def check_state_action_consistency(self, manuscript, current_state):
+        return {"passed": True, "violations": []}
+
+    def check_hierarchy_consistency(self, manuscript, character_rank):
+        return {"passed": True, "violations": []}
+
+    def check_villain_response(self, manuscript, villain_context, recent_events):
+        self.seen_recent_events = recent_events
+        return {"passed": True, "violations": []}
+
+
 def test_authority_delegation_uses_per_violation_justification_flag():
     validator = ConsistencyValidator(guard=_AuthorityGuard())
     result = validator.validate(
@@ -53,6 +68,40 @@ def test_effect_consistency_guard_handles_none_rule_map():
     validator = ConsistencyValidator(guard=_EffectRuleGuard())
     result = validator._check_effect_consistency("테스트 원고", asset_library=None)
     assert result == {"passed": True, "violations": []}
+
+
+def test_validate_reports_skipped_optional_checks_without_context():
+    validator = ConsistencyValidator(guard=_AuthorityGuard())
+
+    result = validator.validate(
+        manuscript="테스트 원고",
+        validation_context={"martial_hud": {}},
+    )
+
+    assert result["passed"] is True
+    assert result["skipped_checks"] == [
+        "authority_delegation",
+        "unresolved_conflict",
+        "villain_response",
+    ]
+
+
+def test_validate_uses_prev_events_as_recent_events_fallback_for_villain_check():
+    guard = _VillainEventGuard()
+    validator = ConsistencyValidator(guard=guard)
+    prev_events = [{"type": "대역전"}]
+
+    result = validator.validate(
+        manuscript="테스트 원고",
+        validation_context={
+            "martial_hud": {},
+            "prev_episode_events": prev_events,
+            "villain_context": {"villain_name": "흑막", "is_aware": True},
+        },
+    )
+
+    assert result["passed"] is True
+    assert guard.seen_recent_events == prev_events
 
 
 def test_load_guard_for_supported_nonlegacy_genre_uses_factory():

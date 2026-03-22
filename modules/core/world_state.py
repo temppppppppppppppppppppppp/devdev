@@ -830,6 +830,222 @@ class WorldStateManager:
             _logger.warning("[WorldState] get_timeline_summary 실패 (비치명): %s", e)
             return ""
 
+    def _build_summary_protagonist_sections(self) -> list[str]:
+        parts = []
+        prot = self._state.get("protagonist", {})
+        prot_lines = []
+        if prot.get("name"):
+            prot_lines.append(f"이름: {prot['name']}")
+        if prot.get("location"):
+            prot_lines.append(f"위치: {prot['location']}")
+        if prot.get("assets"):
+            prot_lines.append(f"자산: {prot['assets']}")
+        if prot.get("injuries") and prot["injuries"] != "정상":
+            prot_lines.append(f"부상: {prot['injuries']}")
+        if prot.get("skills"):
+            prot_lines.append(f"습득 무공/스킬: {', '.join(prot['skills'][-20:])}")
+        if prot_lines:
+            parts.append("[주인공]\n" + "\n".join(prot_lines))
+
+        motivations = [
+            mot
+            for mot in (self._state.get("motivations") or [])
+            if isinstance(mot, dict) and mot.get("status") == "active" and mot.get("text")
+        ]
+        if motivations:
+            mot_lines = []
+            for mot in motivations[:10]:
+                since_ep = mot.get("since_ep")
+                text = str(mot.get("text", "") or "").strip()
+                if text:
+                    mot_lines.append(f"- {text}" + (f" (제{since_ep}화~)" if since_ep else ""))
+            if mot_lines:
+                parts.append("[주인공 핵심 동기]\n" + "\n".join(mot_lines))
+
+        promises = [
+            promise
+            for promise in (self._state.get("promises") or [])
+            if isinstance(promise, dict)
+            and promise.get("text")
+            and promise.get("status") in ("pending", None, "")
+        ]
+        if promises:
+            promise_lines = []
+            for promise in promises[:10]:
+                promiser = str(promise.get("promiser", "") or "").strip()
+                promisee = str(promise.get("promisee", "") or "").strip()
+                parties = "→".join(x for x in [promiser, promisee] if x)
+                label = str(promise.get("text", "") or "").strip()
+                if not label:
+                    continue
+                since_ep = promise.get("since_ep")
+                if parties:
+                    label = f"{parties}: {label}"
+                promise_lines.append(f"- {label}" + (f" (제{since_ep}화~)" if since_ep else ""))
+            if promise_lines:
+                parts.append("[서약/약속]\n" + "\n".join(promise_lines))
+
+        cumulative_elapsed = self._state.get("cumulative_elapsed", {})
+        if isinstance(cumulative_elapsed, dict):
+            total_days = cumulative_elapsed.get("total_days", 0)
+            if total_days:
+                parts.append(f"[누적 경과] 총 {total_days}일")
+        return parts
+
+    def _npc_importance(self, item) -> int:
+        _name, info = item
+        if not isinstance(info, dict):
+            return 0
+        score = 0
+        if info.get("companion"):
+            score += 3
+        if info.get("relation"):
+            score += 2
+        if info.get("role"):
+            score += 1
+        return score
+
+    def _build_summary_npc_sections(self) -> list[str]:
+        parts = []
+        alive = self._state.get("alive_npcs", {})
+        if alive:
+            npc_lines = []
+            sorted_alive = sorted(alive.items(), key=self._npc_importance, reverse=True)
+            for name, info in sorted_alive[:30]:
+                desc_parts = []
+                if isinstance(info, dict):
+                    if info.get("role"):
+                        desc_parts.append(info["role"])
+                    if info.get("relation"):
+                        desc_parts.append(f"관계={info['relation']}")
+                    if info.get("personality"):
+                        desc_parts.append(info["personality"][:30])
+                    if info.get("location"):
+                        desc_parts.append(f"위치={info['location']}")
+                    if info.get("knowledge_era"):
+                        desc_parts.append(f"지식시대={_normalize_known_attr_value(info.get('knowledge_era'))}")
+                    if info.get("expertise_domain"):
+                        desc_parts.append(f"전문영역={_normalize_known_attr_value(info.get('expertise_domain'))}")
+                    known_attrs = info.get("known_attrs", {})
+                    if isinstance(known_attrs, dict):
+                        known_parts = []
+                        personality = _normalize_known_attr_value(known_attrs.get("personality"))
+                        if personality:
+                            known_parts.append(f"성격기록={personality}")
+                        injury = _normalize_known_attr_value(known_attrs.get("injury"))
+                        if injury:
+                            known_parts.append(f"부상={injury}")
+                        known_loc = _normalize_known_attr_value(known_attrs.get("location"))
+                        if known_loc:
+                            known_parts.append(f"위치기록={known_loc}")
+                        permanent = _normalize_known_attr_value(known_attrs.get("permanent_injuries"))
+                        if permanent:
+                            known_parts.append(f"영구부상={permanent}")
+                        knowledge_tags = _normalize_known_attr_value(known_attrs.get("knowledge_tags"))
+                        if knowledge_tags:
+                            known_parts.append(f"지식태그={knowledge_tags}")
+                        secrets_known = _normalize_known_attr_value(known_attrs.get("secrets_known"))
+                        if secrets_known:
+                            known_parts.append(f"비밀인지={secrets_known}")
+                        dual_identity = _normalize_known_attr_value(known_attrs.get("dual_identity"))
+                        if dual_identity:
+                            known_parts.append(f"이중정체={dual_identity}")
+                        if known_parts:
+                            desc_parts.append(", ".join(known_parts))
+                    if info.get("companion"):
+                        desc_parts.append("(동행중)")
+                desc = " / ".join(desc_parts) if desc_parts else ""
+                npc_lines.append(f"- {name}" + (f": {desc}" if desc else ""))
+            shown_alive = len(sorted_alive[:30])
+            alive_suffix = _build_truncation_suffix(len(alive), shown_alive, unit="명")
+            parts.append(f"[생존 NPC ({shown_alive}명){alive_suffix}]\n" + "\n".join(npc_lines))
+
+        dead = self._state.get("dead_npcs", {})
+        if dead:
+            dead_lines = []
+            shown_dead_rows = list(dead.items())[:20]
+            for name, info in shown_dead_rows:
+                if isinstance(info, dict):
+                    dead_lines.append(f"- {name} (제{info.get('ep', 'unknown')}화, {info.get('cause', '')})")
+                else:
+                    dead_lines.append(f"- {name}")
+            dead_suffix = _build_truncation_suffix(len(dead), len(shown_dead_rows), unit="명")
+            parts.append(f"[사망 NPC ({len(shown_dead_rows)}명){dead_suffix} -- 절대 등장 금지]\n" + "\n".join(dead_lines))
+        return parts
+
+    def _build_summary_relation_and_inventory_sections(self) -> list[str]:
+        parts = []
+        rels = self._state.get("relationships", {})
+        if rels:
+            shown_rels = list(rels.items())[:20]
+            rel_lines = [f"- {npc}: {rel}" for npc, rel in shown_rels]
+            rel_suffix = _build_truncation_suffix(len(rels), len(shown_rels))
+            parts.append(f"[주요 관계{rel_suffix}]\n" + "\n".join(rel_lines))
+
+        items = self._state.get("active_items", {})
+        active_items = {k: v for k, v in items.items() if isinstance(v, dict) and v.get("status", "보유") == "보유"}
+        if active_items:
+            shown_items = list(active_items.keys())[:20]
+            item_lines = []
+            for name in shown_items:
+                info = active_items.get(name, {})
+                qty = info.get("quantity") if isinstance(info, dict) else None
+                qty_suffix = f" x{qty}" if isinstance(qty, int) and qty > 1 else ""
+                item_lines.append(f"- {name}{qty_suffix}")
+            item_suffix = _build_truncation_suffix(len(active_items), len(shown_items))
+            parts.append(f"[보유 아이템{item_suffix}]\n" + "\n".join(item_lines))
+        return parts
+
+    def _build_summary_world_tail_sections(self) -> list[str]:
+        parts = []
+        destroyed = self._state.get("destroyed", [])
+        if destroyed:
+            shown_destroyed = destroyed[-10:]
+            dest_lines = [
+                f"- {entry.get('name', 'unknown')} ({entry.get('type', 'unknown')}, 제{entry.get('ep', 'unknown')}화)"
+                for entry in shown_destroyed
+            ]
+            destroyed_suffix = _build_truncation_suffix(len(destroyed), len(shown_destroyed))
+            parts.append(f"[파괴된 장소/조직{destroyed_suffix} -- 복구 불가]\n" + "\n".join(dest_lines))
+
+        plots = self._state.get("active_plots", [])
+        if plots:
+            shown_plots = plots[-10:]
+            plot_lines = [f"- {entry.get('plot', 'unknown')} (제{entry.get('since_ep', 'unknown')}화~)" for entry in shown_plots]
+            plot_suffix = _build_truncation_suffix(len(plots), len(shown_plots))
+            parts.append(f"[진행 중 플롯{plot_suffix}]\n" + "\n".join(plot_lines))
+
+        pressure_vectors = self._state.get("active_pressure_vectors", [])
+        if pressure_vectors:
+            shown_vectors = pressure_vectors[:5]
+            pressure_lines = []
+            for vector in shown_vectors:
+                text = str(vector.get("text", "") or "").strip() if isinstance(vector, dict) else str(vector or "").strip()
+                if text:
+                    pressure_lines.append(f"- {text}")
+            if pressure_lines:
+                pressure_suffix = _build_truncation_suffix(len(pressure_vectors), len(shown_vectors))
+                parts.append(f"[지속 압박/위협{pressure_suffix}]\n" + "\n".join(pressure_lines))
+
+        world_laws = self._state.get("world_laws", [])
+        if world_laws:
+            law_lines = [
+                f"- {entry.get('law', '')} (제{entry.get('established_ep', 'unknown')}화 확립)"
+                for entry in world_laws
+                if isinstance(entry, dict) and entry.get("law")
+            ]
+            if law_lines:
+                parts.append("[세계관 절대 법칙 -- 위반 금지]\n" + "\n".join(law_lines))
+
+        timeline = self._state.get("timeline") or []
+        if timeline:
+            recent = timeline[-5:]
+            t_lines = [f"- EP{entry['ep']}: {entry['description']}" for entry in recent if entry.get("description")]
+            if t_lines:
+                timeline_suffix = _build_truncation_suffix(len(timeline), len(recent))
+                parts.append(f"[시간 흐름 (최근){timeline_suffix}]\n" + "\n".join(t_lines))
+        return parts
+
     def get_summary(self, max_chars: int = 50000) -> str:  # [1M-CTX-P1: 25K→50K] ep250 NPC 150명 전량 수용
         """
         프롬프트 주입용 요약 텍스트 생성.
@@ -842,232 +1058,13 @@ class WorldStateManager:
                 return ""
 
             parts.append(f"=== 세계 상태 (제{last_ep}화 기준) ===")
-
-            # 주인공
-            prot = self._state.get("protagonist", {})
-            prot_lines = []
-            if prot.get("name"):
-                prot_lines.append(f"이름: {prot['name']}")
-            if prot.get("location"):
-                prot_lines.append(f"위치: {prot['location']}")
-            if prot.get("assets"):
-                prot_lines.append(f"자산: {prot['assets']}")
-            if prot.get("injuries") and prot["injuries"] != "정상":
-                prot_lines.append(f"부상: {prot['injuries']}")
-            if prot.get("skills"):
-                skills_str = ", ".join(prot["skills"][-20:])  # 최근 20개
-                prot_lines.append(f"습득 무공/스킬: {skills_str}")
-            if prot_lines:
-                parts.append("[주인공]\n" + "\n".join(prot_lines))
-
-            motivations = [
-                mot
-                for mot in (self._state.get("motivations") or [])
-                if isinstance(mot, dict) and mot.get("status") == "active" and mot.get("text")
-            ]
-            if motivations:
-                mot_lines = []
-                for mot in motivations[:10]:
-                    since_ep = mot.get("since_ep")
-                    text = str(mot.get("text", "") or "").strip()
-                    if not text:
-                        continue
-                    mot_lines.append(f"- {text}" + (f" (제{since_ep}화~)" if since_ep else ""))
-                if mot_lines:
-                    parts.append("[주인공 핵심 동기]\n" + "\n".join(mot_lines))
-
-            promises = [
-                promise
-                for promise in (self._state.get("promises") or [])
-                if isinstance(promise, dict)
-                and promise.get("text")
-                and promise.get("status") in ("pending", None, "")
-            ]
-            if promises:
-                promise_lines = []
-                for promise in promises[:10]:
-                    promiser = str(promise.get("promiser", "") or "").strip()
-                    promisee = str(promise.get("promisee", "") or "").strip()
-                    parties = "→".join(x for x in [promiser, promisee] if x)
-                    label = str(promise.get("text", "") or "").strip()
-                    if not label:
-                        continue
-                    since_ep = promise.get("since_ep")
-                    if parties:
-                        label = f"{parties}: {label}"
-                    promise_lines.append(f"- {label}" + (f" (제{since_ep}화~)" if since_ep else ""))
-                if promise_lines:
-                    parts.append("[서약/약속]\n" + "\n".join(promise_lines))
-
-            cumulative_elapsed = self._state.get("cumulative_elapsed", {})
-            if isinstance(cumulative_elapsed, dict):
-                total_days = cumulative_elapsed.get("total_days", 0)
-                if total_days:
-                    parts.append(f"[누적 경과] 총 {total_days}일")
-
-            # 생존 NPC — [TF-C06] 중요도 기반 정렬 후 truncation
-            alive = self._state.get("alive_npcs", {})
-            if alive:
-                npc_lines = []
-
-                # 중요도: 동행자(3) > 관계있음(2) > 역할있음(1) > 기타(0)
-                def _npc_importance(item):
-                    _name, _info = item
-                    if not isinstance(_info, dict):
-                        return 0
-                    score = 0
-                    if _info.get("companion"):
-                        score += 3
-                    if _info.get("relation"):
-                        score += 2
-                    if _info.get("role"):
-                        score += 1
-                    return score
-
-                sorted_alive = sorted(alive.items(), key=_npc_importance, reverse=True)
-                for name, info in sorted_alive[:30]:  # 최대 30명
-                    desc_parts = []
-                    if isinstance(info, dict):
-                        if info.get("role"):
-                            desc_parts.append(info["role"])
-                        if info.get("relation"):
-                            desc_parts.append(f"관계={info['relation']}")
-                        if info.get("personality"):
-                            desc_parts.append(info["personality"][:30])
-                        if info.get("location"):
-                            desc_parts.append(f"위치={info['location']}")
-                        if info.get("knowledge_era"):
-                            desc_parts.append(f"지식시대={_normalize_known_attr_value(info.get('knowledge_era'))}")
-                        if info.get("expertise_domain"):
-                            desc_parts.append(f"전문영역={_normalize_known_attr_value(info.get('expertise_domain'))}")
-                        known_attrs = info.get("known_attrs", {})
-                        if isinstance(known_attrs, dict):
-                            known_parts = []
-                            personality = _normalize_known_attr_value(known_attrs.get("personality"))
-                            if personality:
-                                known_parts.append(f"성격기록={personality}")
-                            injury = _normalize_known_attr_value(known_attrs.get("injury"))
-                            if injury:
-                                known_parts.append(f"부상={injury}")
-                            known_loc = _normalize_known_attr_value(known_attrs.get("location"))
-                            if known_loc:
-                                known_parts.append(f"위치기록={known_loc}")
-                            permanent = _normalize_known_attr_value(known_attrs.get("permanent_injuries"))
-                            if permanent:
-                                known_parts.append(f"영구부상={permanent}")
-                            knowledge_tags = _normalize_known_attr_value(known_attrs.get("knowledge_tags"))
-                            if knowledge_tags:
-                                known_parts.append(f"지식태그={knowledge_tags}")
-                            secrets_known = _normalize_known_attr_value(known_attrs.get("secrets_known"))
-                            if secrets_known:
-                                known_parts.append(f"비밀인지={secrets_known}")
-                            dual_identity = _normalize_known_attr_value(known_attrs.get("dual_identity"))
-                            if dual_identity:
-                                known_parts.append(f"이중정체={dual_identity}")
-                            if known_parts:
-                                desc_parts.append(", ".join(known_parts))
-                        if info.get("companion"):
-                            desc_parts.append("(동행중)")
-                    desc = " / ".join(desc_parts) if desc_parts else ""
-                    npc_lines.append(f"- {name}" + (f": {desc}" if desc else ""))
-                shown_alive = len(sorted_alive[:30])
-                alive_suffix = _build_truncation_suffix(len(alive), shown_alive, unit="명")
-                parts.append(f"[생존 NPC ({shown_alive}명){alive_suffix}]\n" + "\n".join(npc_lines))
-
-            # 사망 NPC
-            dead = self._state.get("dead_npcs", {})
-            if dead:
-                dead_lines = []
-                shown_dead_rows = list(dead.items())[:20]
-                for name, info in shown_dead_rows:  # 최대 20명
-                    if isinstance(info, dict):
-                        ep = info.get("ep", "?")
-                        cause = info.get("cause", "")
-                        dead_lines.append(f"- {name} (제{ep}화, {cause})")
-                    else:
-                        dead_lines.append(f"- {name}")
-                dead_suffix = _build_truncation_suffix(len(dead), len(shown_dead_rows), unit="명")
-                parts.append(f"[사망 NPC ({len(shown_dead_rows)}명){dead_suffix} -- 절대 등장 금지]\n" + "\n".join(dead_lines))
-
-            # 관계
-            rels = self._state.get("relationships", {})
-            if rels:
-                shown_rels = list(rels.items())[:20]
-                rel_lines = [f"- {npc}: {rel}" for npc, rel in shown_rels]
-                rel_suffix = _build_truncation_suffix(len(rels), len(shown_rels))
-                parts.append(f"[주요 관계{rel_suffix}]\n" + "\n".join(rel_lines))
-
-            # 활성 아이템
-            items = self._state.get("active_items", {})
-            active_items = {k: v for k, v in items.items() if isinstance(v, dict) and v.get("status", "보유") == "보유"}
-            if active_items:
-                shown_items = list(active_items.keys())[:20]
-                item_lines = []
-                for name in shown_items:
-                    info = active_items.get(name, {})
-                    qty = info.get("quantity") if isinstance(info, dict) else None
-                    qty_suffix = f" x{qty}" if isinstance(qty, int) and qty > 1 else ""
-                    item_lines.append(f"- {name}{qty_suffix}")
-                item_suffix = _build_truncation_suffix(len(active_items), len(shown_items))
-                parts.append(f"[보유 아이템{item_suffix}]\n" + "\n".join(item_lines))
-
-            # 파괴된 장소/조직
-            destroyed = self._state.get("destroyed", [])
-            if destroyed:
-                shown_destroyed = destroyed[-10:]
-                dest_lines = [
-                    f"- {d.get('name', 'unknown')} ({d.get('type', 'unknown')}, 제{d.get('ep', 'unknown')}화)"
-                    for d in shown_destroyed  # 최근 10개
-                ]
-                destroyed_suffix = _build_truncation_suffix(len(destroyed), len(shown_destroyed))
-                parts.append(f"[파괴된 장소/조직{destroyed_suffix} -- 복구 불가]\n" + "\n".join(dest_lines))
-
-            # 진행 중 플롯
-            plots = self._state.get("active_plots", [])
-            if plots:
-                shown_plots = plots[-10:]
-                plot_lines = [f"- {p.get('plot', 'unknown')} (제{p.get('since_ep', 'unknown')}화~)" for p in shown_plots]
-                plot_suffix = _build_truncation_suffix(len(plots), len(shown_plots))
-                parts.append(f"[진행 중 플롯{plot_suffix}]\n" + "\n".join(plot_lines))
-
-            pressure_vectors = self._state.get("active_pressure_vectors", [])
-            if pressure_vectors:
-                shown_vectors = pressure_vectors[:5]
-                pressure_lines = []
-                for vector in shown_vectors:
-                    if isinstance(vector, dict):
-                        text = str(vector.get("text", "") or "").strip()
-                    else:
-                        text = str(vector or "").strip()
-                    if text:
-                        pressure_lines.append(f"- {text}")
-                if pressure_lines:
-                    pressure_suffix = _build_truncation_suffix(len(pressure_vectors), len(shown_vectors))
-                    parts.append(f"[지속 압박/위협{pressure_suffix}]\n" + "\n".join(pressure_lines))
-
-            # 세계관 절대 법칙
-            world_laws = self._state.get("world_laws", [])
-            if world_laws:
-                law_lines = [
-                    f"- {e.get('law', '')} (제{e.get('established_ep', 'unknown')}화 확립)"
-                    for e in world_laws
-                    if isinstance(e, dict) and e.get("law")
-                ]
-                if law_lines:
-                    parts.append("[세계관 절대 법칙 -- 위반 금지]\n" + "\n".join(law_lines))
-
-            # 시간 흐름 (최근 5개)
-            timeline = self._state.get("timeline") or []
-            if timeline:
-                recent = timeline[-5:]
-                t_lines = [f"- EP{t['ep']}: {t['description']}" for t in recent if t.get("description")]
-                if t_lines:
-                    timeline_suffix = _build_truncation_suffix(len(timeline), len(recent))
-                    parts.append(f"[시간 흐름 (최근){timeline_suffix}]\n" + "\n".join(t_lines))
+            parts.extend(self._build_summary_protagonist_sections())
+            parts.extend(self._build_summary_npc_sections())
+            parts.extend(self._build_summary_relation_and_inventory_sections())
+            parts.extend(self._build_summary_world_tail_sections())
 
             result = "\n\n".join(parts)
 
-            # max_chars truncation
             if len(result) > max_chars:
                 result = result[: max_chars - 50] + "\n\n...(세계 상태 요약 일부 생략)"
 
