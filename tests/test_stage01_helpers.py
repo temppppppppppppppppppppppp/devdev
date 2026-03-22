@@ -51,6 +51,14 @@ class TestConstructor:
     def test_app_reference_stored(self, helpers, app_mock):
         assert helpers.app is app_mock
 
+    def test_stage0_availability_probe_recovers_from_stale_spinner_flag(self, monkeypatch):
+        import modules.core.spinners as spinners
+
+        monkeypatch.setattr(spinners, "STAGE0_AVAILABLE", False)
+
+        assert Stage01Helpers._stage0_extended_available() is True
+        assert spinners.STAGE0_AVAILABLE is True
+
 
 # ── phase_0_recovery ────────────────────────────────────────
 
@@ -141,7 +149,7 @@ class TestPhase0Recovery:
         with (
             redirect_stdout(StringIO()),
             patch("builtins.input", side_effect=["2", "N", "1", "1", "2", "2", ""]),
-            patch("modules.core.spinners.STAGE0_AVAILABLE", False),
+            patch.object(Stage01Helpers, "_stage0_extended_available", return_value=False),
         ):
             helpers.phase_0_recovery()
         # _stage_0_extended가 호출되지 않아야 함
@@ -346,7 +354,7 @@ class TestExtendBlocks:
 class TestStage0Extended:
     def test_stage0_unavailable_returns_early(self, helpers, app_mock):
         """STAGE0_AVAILABLE=False → 즉시 반환"""
-        with redirect_stdout(StringIO()), patch("modules.core.spinners.STAGE0_AVAILABLE", False):
+        with redirect_stdout(StringIO()), patch.object(Stage01Helpers, "_stage0_extended_available", return_value=False):
             helpers.stage_0_extended(mode=1)
         # StageZeroManager 초기화 안 함 (아무 project 접근 없음)
         app_mock.current_project.save_v20_anchor.assert_not_called()
@@ -497,6 +505,19 @@ class TestStage0RoadmapInjection:
         with (
             redirect_stdout(StringIO()),
             patch("modules.core.spinners.STAGE0_AVAILABLE", True),
+            patch("modules.core.stage0.StageZeroManager", return_value=mock_mgr),
+            patch("modules.core.stage0.PresetRegistry"),
+            patch("builtins.input", return_value=""),
+        ):
+            helpers.stage_0_extended(mode=5)
+        mock_mgr.run_reference_analysis.assert_called_once()
+
+    def test_mode_5_calls_reference_analysis_with_stale_spinner_flag(self, helpers, app_mock):
+        mock_mgr = MagicMock()
+        mock_mgr.run_reference_analysis.return_value = None
+        with (
+            redirect_stdout(StringIO()),
+            patch.object(Stage01Helpers, "_stage0_extended_available", return_value=True),
             patch("modules.core.stage0.StageZeroManager", return_value=mock_mgr),
             patch("modules.core.stage0.PresetRegistry"),
             patch("builtins.input", return_value=""),
