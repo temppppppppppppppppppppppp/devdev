@@ -151,59 +151,32 @@ class WorldStateManager:
             self.last_save_error = str(e)
             return False
 
-    # ═══════════════════════════════════════════════════════════════
-    # state_changes 기반 자동 갱신
-    # ═══════════════════════════════════════════════════════════════
-
-    def update_from_state_changes(self, ep_num: int, state_changes: dict, *, source: str = "episode"):
-        """
-        state_changes에서 자동 갱신 -- Python만으로.
-
-        Args:
-            ep_num: 에피소드 번호
-            state_changes: 상태 변경 dict
-            source: "episode" (기본) 또는 "arc" (아크 단위 갱신 시)
-
-        state_changes 스키마:
-            npc_deaths, skill_acquisitions, relationship_changes,
-            major_items, entity_destructions, npc_personality_changes,
-            resolved_plots, companion_changes 등
-        """
-        if not state_changes or not isinstance(state_changes, dict):
-            return
-
-        if source == "arc":
-            self._state["last_updated_ep"] = ep_num
-            self._state["last_updated_source"] = "arc"
-        else:
-            self._state["last_updated_ep"] = ep_num
-
-        def _ensure_alive_npc_entry(npc_name: str) -> dict:
-            if npc_name not in self._state["alive_npcs"]:
-                self._state["alive_npcs"][npc_name] = {
-                    "first_seen_ep": ep_num,
-                    "role_at_intro": "",
-                }
-            return self._state["alive_npcs"][npc_name]
-
-        def _sync_known_attr(npc_entry: dict, field: str, value, *, prev=None):
-            if not isinstance(npc_entry, dict) or not field:
-                return
-            _ka = npc_entry.setdefault("known_attrs", {})
-            _prev = _normalize_known_attr_value(_ka.get(field))
-            if prev is not None:
-                _prev = _normalize_known_attr_value(prev)
-            _value = _normalize_known_attr_value(value)
-            if not _value:
-                return
-            _stored_value = value if isinstance(value, (list, dict)) else _value
-            _ka[field] = {
-                "value": _stored_value,
-                "prev": _prev,
-                "changed_ep": ep_num,
+    def _ensure_alive_npc_entry(self, npc_name: str, ep_num: int) -> dict:
+        if npc_name not in self._state["alive_npcs"]:
+            self._state["alive_npcs"][npc_name] = {
+                "first_seen_ep": ep_num,
+                "role_at_intro": "",
             }
+        return self._state["alive_npcs"][npc_name]
 
-        # [TF-36] 섹션별 try/except — 1개 섹션 실패 시 나머지 섹션 처리 보장
+    def _sync_known_attr(self, npc_entry: dict, field: str, value, ep_num: int, *, prev=None):
+        if not isinstance(npc_entry, dict) or not field:
+            return
+        _ka = npc_entry.setdefault("known_attrs", {})
+        _prev = _normalize_known_attr_value(_ka.get(field))
+        if prev is not None:
+            _prev = _normalize_known_attr_value(prev)
+        _value = _normalize_known_attr_value(value)
+        if not _value:
+            return
+        _stored_value = value if isinstance(value, (list, dict)) else _value
+        _ka[field] = {
+            "value": _stored_value,
+            "prev": _prev,
+            "changed_ep": ep_num,
+        }
+
+    def _apply_actor_and_inventory_state_changes(self, ep_num: int, state_changes: dict):
         try:
             # 1. NPC 사망 처리
             for death in state_changes.get("npc_deaths") or []:
@@ -216,14 +189,11 @@ class WorldStateManager:
                 if not name:
                     _logger.warning(f"[WorldState] NPC entry missing name: {death}")
                     continue
-                # dead_npcs에 추가
                 self._state["dead_npcs"][name] = {
                     "ep": death.get("episode", ep_num) if isinstance(death, dict) else ep_num,
                     "cause": death.get("cause", "사망") if isinstance(death, dict) else "사망",
                 }
-                # alive_npcs에서 제거
                 self._state["alive_npcs"].pop(name, None)
-                # relationships 유지 (죽은 NPC와의 관계도 기록)
 
         except Exception as e:
             _logger.error("[WorldState] §1 NPC 사망 처리 실패: %s", e)
@@ -252,20 +222,14 @@ class WorldStateManager:
             for rel in state_changes.get("relationship_changes") or []:
                 if not isinstance(rel, dict):
                     continue
-                npc = rel.get("npc", "") or rel.get("target", "")  # [G16] analyst 프롬프트는 "target" 키 사용
+                npc = rel.get("npc", "") or rel.get("target", "")
                 to_rel = rel.get("to", "")
                 if npc and to_rel:
                     self._state["relationships"][npc] = to_rel
-                    # alive_npcs에 없으면 등록
                     if npc not in self._state["dead_npcs"]:
-                        if npc not in self._state["alive_npcs"]:
-                            self._state["alive_npcs"][npc] = {
-                                "first_seen_ep": ep_num,
-                                "role_at_intro": "",
-                            }
-                        self._state["alive_npcs"][npc]["relation"] = to_rel
-                        # [LM-I] known_attrs에도 반영 → NpcDriftAdvisor 검사 대상
-                        self._state["alive_npcs"][npc].setdefault("known_attrs", {})["relation_to_protag"] = {
+                        npc_entry = self._ensure_alive_npc_entry(npc, ep_num)
+                        npc_entry["relation"] = to_rel
+                        npc_entry.setdefault("known_attrs", {})["relation_to_protag"] = {
                             "value": to_rel,
                             "prev": rel.get("from", ""),
                             "changed_ep": ep_num,
@@ -343,18 +307,17 @@ class WorldStateManager:
         except Exception as e:
             _logger.error("[WorldState] §4a 수량 인벤토리 처리 실패: %s", e)
 
+    def _apply_entity_and_companion_state_changes(self, ep_num: int, state_changes: dict):
         try:
             # 5. 엔티티 파괴 (조직/장소)
             _existing_destroyed_names = {
                 d.get("name") for d in self._state["destroyed"] if isinstance(d, dict)
-            }  # [V70] 중복 방지
+            }
             for dest in state_changes.get("entity_destructions") or []:
                 if not isinstance(dest, dict):
                     continue
                 _dest_name = dest.get("name", "")
-                if not _dest_name:
-                    continue
-                if _dest_name in _existing_destroyed_names:  # [V70] 이미 등록됨
+                if not _dest_name or _dest_name in _existing_destroyed_names:
                     continue
                 self._state["destroyed"].append(
                     {
@@ -377,8 +340,7 @@ class WorldStateManager:
                 npc = personality.get("name", "") or personality.get("npc", "")
                 if not npc or npc in self._state["dead_npcs"]:
                     continue
-                _npc_entry = _ensure_alive_npc_entry(npc)
-                # [V70] 스키마 키 호환: LLM은 'traits'/'motivation' 출력, 레거시 'personality_traits'/'primary_motivation' 폴백
+                npc_entry = self._ensure_alive_npc_entry(npc, ep_num)
                 _traits = (
                     personality.get("traits", "")
                     or personality.get("personality_traits", "")
@@ -389,13 +351,13 @@ class WorldStateManager:
                     _prev_traits = (
                         personality.get("from", "")
                         or personality.get("previous", "")
-                        or _npc_entry.get("personality", "")
+                        or npc_entry.get("personality", "")
                     )
-                    _npc_entry["personality"] = _traits
-                    _sync_known_attr(_npc_entry, "personality", _traits, prev=_prev_traits)
+                    npc_entry["personality"] = _traits
+                    self._sync_known_attr(npc_entry, "personality", _traits, ep_num, prev=_prev_traits)
                 _motivation = personality.get("motivation", "") or personality.get("primary_motivation", "")
                 if _motivation:
-                    _npc_entry["motivation"] = _motivation
+                    npc_entry["motivation"] = _motivation
 
         except Exception as e:
             _logger.error("[WorldState] §6 NPC 성격 변화 처리 실패: %s", e)
@@ -410,7 +372,6 @@ class WorldStateManager:
                 else:
                     continue
                 if plot_desc:
-                    # active_plots에서 제거
                     self._state["active_plots"] = [
                         p for p in self._state["active_plots"] if p.get("plot", "") != plot_desc
                     ]
@@ -436,124 +397,15 @@ class WorldStateManager:
                     continue
                 npc = comp.get("name", "")
                 action = comp.get("action", "joined")
-                if not npc:
+                if not npc or npc in self._state["dead_npcs"]:
                     continue
-                if npc not in self._state["dead_npcs"]:
-                    if npc not in self._state["alive_npcs"]:
-                        self._state["alive_npcs"][npc] = {
-                            "first_seen_ep": ep_num,
-                            "role_at_intro": "",
-                        }
-                    self._state["alive_npcs"][npc]["companion"] = action in (
-                        "join",
-                        "joined",
-                        "합류",
-                    )  # [V70] LLM 출력값 호환
+                npc_entry = self._ensure_alive_npc_entry(npc, ep_num)
+                npc_entry["companion"] = action in ("join", "joined", "합류")
 
         except Exception as e:
             _logger.error("[WorldState] §8 동행자 변화 처리 실패: %s", e)
 
-        try:
-            # 9. NPC 속성 변경 — 의도적 직업/나이 등 변경 기록 (장기 기억 추적)
-            for attr_change in state_changes.get("npc_attribute_changes") or []:
-                if not isinstance(attr_change, dict):
-                    continue
-                _npc = attr_change.get("name", "")
-                _field = attr_change.get("field", "")
-                _raw_new_val = attr_change.get("new", "")
-                _raw_old_val = attr_change.get("old", "")
-                _new_val = _normalize_known_attr_value(_raw_new_val)
-                _old_val = _normalize_known_attr_value(_raw_old_val)
-                if not _npc or not _field or _npc in self._state["dead_npcs"]:
-                    continue
-                _npc_entry = _ensure_alive_npc_entry(_npc)
-                _sync_known_attr(_npc_entry, _field, _raw_new_val, prev=_raw_old_val)
-
-                if _field in {"personality", "knowledge_era", "knowledge_tags", "expertise_domain", "secrets_known"}:
-                    _npc_entry[_field] = _raw_new_val
-                elif _field == "dual_identity":
-                    _npc_entry["dual_identity"] = _raw_new_val
-                elif _field in {"public_facade", "secret_role"}:
-                    _dual = _npc_entry.setdefault("dual_identity", {})
-                    if isinstance(_dual, dict):
-                        _dual["public_role" if _field == "public_facade" else "secret_role"] = _raw_new_val
-                        _sync_known_attr(_npc_entry, "dual_identity", _dual)
-
-        except Exception as e:
-            _logger.error("[WorldState] §9 NPC 속성 변경 처리 실패: %s", e)
-
-        try:
-            # 10. NPC 첫 등장 초기 속성 저장 (npc_introductions)
-            for intro in state_changes.get("npc_introductions") or []:
-                if not isinstance(intro, dict):
-                    continue
-                name = intro.get("name", "")
-                if not name:
-                    continue
-                # [TF-36] 대원칙 4: 사망 NPC가 introductions에 포함된 경우 무시
-                if name in self._state.get("dead_npcs", {}):
-                    logging.warning(f" [대원칙4] 사망 NPC '{name}'가 npc_introductions에 포함됨 — 무시")
-                    continue
-                if name not in self._state["alive_npcs"]:
-                    self._state["alive_npcs"][name] = {
-                        "role": intro.get("job", ""),
-                        "relation": "",
-                        "location": "",
-                        "first_seen_ep": intro.get("episode", ep_num),
-                        "role_at_intro": intro.get("job", ""),
-                        "known_attrs": {},
-                    }
-                attrs = {k: v for k, v in intro.items() if k not in ("name", "episode")}
-                _ka = self._state["alive_npcs"][name].setdefault("known_attrs", {})
-                _ka.update(attrs)
-                _npc_entry = self._state["alive_npcs"][name]
-                # [CON-2-FIX] job/position 필드를 known_attrs.position에 구조화 저장
-                _pos = intro.get("position", "") or intro.get("job", "")
-                if _pos:
-                    _ka["position"] = {
-                        "value": _pos,
-                        "prev": "",
-                        "changed_ep": intro.get("episode", ep_num),
-                    }
-                if intro.get("personality"):
-                    _npc_entry["personality"] = intro.get("personality", "")
-                    _sync_known_attr(_npc_entry, "personality", intro.get("personality", ""))
-                for _field in ("knowledge_era", "knowledge_tags", "expertise_domain", "secrets_known"):
-                    if intro.get(_field):
-                        _npc_entry[_field] = intro.get(_field)
-                        _sync_known_attr(_npc_entry, _field, intro.get(_field))
-                _dual_identity = intro.get("dual_identity")
-                if _dual_identity:
-                    _npc_entry["dual_identity"] = _dual_identity
-                    _sync_known_attr(_npc_entry, "dual_identity", _dual_identity)
-                else:
-                    _public = intro.get("public_facade")
-                    _secret = intro.get("secret_role")
-                    if _public or _secret:
-                        _dual = {
-                            "public_role": _public,
-                            "secret_role": _secret,
-                            "known_by": intro.get("known_by") or intro.get("known_by_characters") or [],
-                        }
-                        _npc_entry["dual_identity"] = _dual
-                        _sync_known_attr(_npc_entry, "dual_identity", _dual)
-
-        except Exception as e:
-            _logger.error("[WorldState] §10 NPC 초기 속성 처리 실패: %s", e)
-
-        try:
-            # 11. 세계관 법칙 등록
-            for law_entry in state_changes.get("world_law_additions") or []:
-                if isinstance(law_entry, str) and law_entry.strip():
-                    self._add_world_law_internal(law_entry.strip(), ep_num)
-                elif isinstance(law_entry, dict):
-                    _law_text = law_entry.get("law", "")
-                    if _law_text:
-                        self._add_world_law_internal(_law_text, ep_num)
-
-        except Exception as e:
-            _logger.error("[WorldState] §11 세계관 법칙 처리 실패: %s", e)
-
+    def _apply_timeline_and_goal_state_changes(self, ep_num: int, state_changes: dict):
         try:
             # 12. 시간 마커 추적 (time_markers)
             for marker in state_changes.get("time_markers") or []:
@@ -570,7 +422,6 @@ class WorldStateManager:
                 if len(timeline) > 20:
                     self._state["timeline"] = timeline[-20:]
 
-                # [LM-Tier TF-F] 누적 경과 시간 갱신
                 _desc = entry.get("description", "")
                 _parsed_days = self._parse_elapsed_days(_desc)
                 if _parsed_days and _parsed_days > 0:
@@ -583,7 +434,6 @@ class WorldStateManager:
                 else:
                     _db_elapsed = None
 
-                # [Phase3-Timeline] DB 동기화
                 if getattr(self, "db", None) and entry.get("description"):
                     try:
                         self.db.upsert_timeline_entry(
@@ -607,7 +457,6 @@ class WorldStateManager:
                 if not text:
                     continue
                 motivations = self._state.setdefault("motivations", [])
-                # text 기반 중복 방지 — 기존 항목 status 업데이트
                 existing = next((m for m in motivations if m.get("text") == text), None)
                 if existing:
                     new_status = mot.get("status", "")
@@ -639,7 +488,6 @@ class WorldStateManager:
                 if not text:
                     continue
                 promises = self._state.setdefault("promises", [])
-                # text 기반 중복 방지
                 existing = next((p for p in promises if p.get("text") == text), None)
                 if existing:
                     new_status = promise.get("status", "")
@@ -656,7 +504,6 @@ class WorldStateManager:
                         }
                     )
                 if len(promises) > 30:
-                    # pending 우선 보존
                     pending = [p for p in promises if p.get("status") == "pending"]
                     others = [p for p in promises if p.get("status") != "pending"]
                     max_others = max(0, 30 - len(pending))
@@ -665,6 +512,7 @@ class WorldStateManager:
         except Exception as e:
             _logger.error("[WorldState] §14 약속/서약 처리 실패: %s", e)
 
+    def _apply_physical_known_attr_state_changes(self, ep_num: int, state_changes: dict):
         try:
             # 15. [LM-I] NPC 부상 상태 → known_attrs 반영 (NpcDriftAdvisor 검사 대상)
             for entry in state_changes.get("npc_injuries") or []:
@@ -673,16 +521,14 @@ class WorldStateManager:
                 npc = entry.get("name", "")
                 state = entry.get("state", "")
                 if npc and state and npc not in self._state.get("dead_npcs", {}):
-                    if npc not in self._state["alive_npcs"]:
-                        self._state["alive_npcs"][npc] = {"first_seen_ep": ep_num, "role_at_intro": ""}
-                    _npc_entry = self._state["alive_npcs"][npc]
-                    _old_injury = ""
-                    _ka = _npc_entry.get("known_attrs", {})
-                    if isinstance(_ka.get("injury"), dict):
-                        _old_injury = _ka["injury"].get("value", "")
-                    _npc_entry.setdefault("known_attrs", {})["injury"] = {
+                    npc_entry = self._ensure_alive_npc_entry(npc, ep_num)
+                    old_injury = ""
+                    known_attrs = npc_entry.get("known_attrs", {})
+                    if isinstance(known_attrs.get("injury"), dict):
+                        old_injury = known_attrs["injury"].get("value", "")
+                    npc_entry.setdefault("known_attrs", {})["injury"] = {
                         "value": state,
-                        "prev": _old_injury,
+                        "prev": old_injury,
                         "changed_ep": ep_num,
                     }
 
@@ -697,17 +543,15 @@ class WorldStateManager:
                 npc = entry.get("name", "")
                 to_loc = entry.get("to", "")
                 if npc and to_loc and npc not in self._state.get("dead_npcs", {}):
-                    if npc not in self._state["alive_npcs"]:
-                        self._state["alive_npcs"][npc] = {"first_seen_ep": ep_num, "role_at_intro": ""}
-                    _npc_entry = self._state["alive_npcs"][npc]
-                    _old_loc = entry.get("from", "")
-                    if not _old_loc:
-                        _ka = _npc_entry.get("known_attrs", {})
-                        if isinstance(_ka.get("location"), dict):
-                            _old_loc = _ka["location"].get("value", "")
-                    _npc_entry.setdefault("known_attrs", {})["location"] = {
+                    npc_entry = self._ensure_alive_npc_entry(npc, ep_num)
+                    old_loc = entry.get("from", "")
+                    if not old_loc:
+                        known_attrs = npc_entry.get("known_attrs", {})
+                        if isinstance(known_attrs.get("location"), dict):
+                            old_loc = known_attrs["location"].get("value", "")
+                    npc_entry.setdefault("known_attrs", {})["location"] = {
                         "value": to_loc,
-                        "prev": _old_loc,
+                        "prev": old_loc,
                         "changed_ep": ep_num,
                     }
 
@@ -723,23 +567,156 @@ class WorldStateManager:
                 desc = entry.get("description", "")
                 i_type = entry.get("type", "disfigurement")
                 if npc and desc and npc not in self._state.get("dead_npcs", {}):
-                    if npc not in self._state["alive_npcs"]:
-                        self._state["alive_npcs"][npc] = {"first_seen_ep": ep_num, "role_at_intro": ""}
-                    _npc_entry = self._state["alive_npcs"][npc]
-                    _ka = _npc_entry.setdefault("known_attrs", {})
-                    _existing = _ka.get("permanent_injuries", {})
-                    _old_val = _existing.get("value", "") if isinstance(_existing, dict) else ""
-                    _new_val = f"{i_type}: {desc}" if _old_val else f"{i_type}: {desc}"
-                    if _old_val:
-                        _new_val = f"{_old_val}, {i_type}: {desc}"
-                    _ka["permanent_injuries"] = {
-                        "value": _new_val,
-                        "prev": _old_val,
+                    npc_entry = self._ensure_alive_npc_entry(npc, ep_num)
+                    known_attrs = npc_entry.setdefault("known_attrs", {})
+                    existing = known_attrs.get("permanent_injuries", {})
+                    old_val = existing.get("value", "") if isinstance(existing, dict) else ""
+                    new_val = f"{i_type}: {desc}" if old_val else f"{i_type}: {desc}"
+                    if old_val:
+                        new_val = f"{old_val}, {i_type}: {desc}"
+                    known_attrs["permanent_injuries"] = {
+                        "value": new_val,
+                        "prev": old_val,
                         "changed_ep": ep_num,
                     }
 
         except Exception as e:
             _logger.error("[WorldState] §17 NPC 영구 부상 known_attrs 반영 실패: %s", e)
+
+    def _apply_npc_registry_and_law_state_changes(self, ep_num: int, state_changes: dict):
+        try:
+            # 9. NPC 속성 변경 — 의도적 직업/나이 등 변경 기록 (장기 기억 추적)
+            for attr_change in state_changes.get("npc_attribute_changes") or []:
+                if not isinstance(attr_change, dict):
+                    continue
+                _npc = attr_change.get("name", "")
+                _field = attr_change.get("field", "")
+                _raw_new_val = attr_change.get("new", "")
+                _raw_old_val = attr_change.get("old", "")
+                _new_val = _normalize_known_attr_value(_raw_new_val)
+                _old_val = _normalize_known_attr_value(_raw_old_val)
+                if not _npc or not _field or _npc in self._state["dead_npcs"]:
+                    continue
+                _npc_entry = self._ensure_alive_npc_entry(_npc, ep_num)
+                self._sync_known_attr(_npc_entry, _field, _raw_new_val, ep_num, prev=_raw_old_val)
+
+                if _field in {"personality", "knowledge_era", "knowledge_tags", "expertise_domain", "secrets_known"}:
+                    _npc_entry[_field] = _raw_new_val
+                elif _field == "dual_identity":
+                    _npc_entry["dual_identity"] = _raw_new_val
+                elif _field in {"public_facade", "secret_role"}:
+                    _dual = _npc_entry.setdefault("dual_identity", {})
+                    if isinstance(_dual, dict):
+                        _dual["public_role" if _field == "public_facade" else "secret_role"] = _raw_new_val
+                        self._sync_known_attr(_npc_entry, "dual_identity", _dual, ep_num)
+
+        except Exception as e:
+            _logger.error("[WorldState] §9 NPC 속성 변경 처리 실패: %s", e)
+
+        try:
+            # 10. NPC 첫 등장 초기 속성 저장 (npc_introductions)
+            for intro in state_changes.get("npc_introductions") or []:
+                if not isinstance(intro, dict):
+                    continue
+                name = intro.get("name", "")
+                if not name:
+                    continue
+                if name in self._state.get("dead_npcs", {}):
+                    logging.warning(f" [대원칙4] 사망 NPC '{name}'가 npc_introductions에 포함됨 — 무시")
+                    continue
+                if name not in self._state["alive_npcs"]:
+                    self._state["alive_npcs"][name] = {
+                        "role": intro.get("job", ""),
+                        "relation": "",
+                        "location": "",
+                        "first_seen_ep": intro.get("episode", ep_num),
+                        "role_at_intro": intro.get("job", ""),
+                        "known_attrs": {},
+                    }
+                attrs = {k: v for k, v in intro.items() if k not in ("name", "episode")}
+                _ka = self._state["alive_npcs"][name].setdefault("known_attrs", {})
+                _ka.update(attrs)
+                _npc_entry = self._state["alive_npcs"][name]
+                _pos = intro.get("position", "") or intro.get("job", "")
+                if _pos:
+                    _ka["position"] = {
+                        "value": _pos,
+                        "prev": "",
+                        "changed_ep": intro.get("episode", ep_num),
+                    }
+                if intro.get("personality"):
+                    _npc_entry["personality"] = intro.get("personality", "")
+                    self._sync_known_attr(_npc_entry, "personality", intro.get("personality", ""), ep_num)
+                for _field in ("knowledge_era", "knowledge_tags", "expertise_domain", "secrets_known"):
+                    if intro.get(_field):
+                        _npc_entry[_field] = intro.get(_field)
+                        self._sync_known_attr(_npc_entry, _field, intro.get(_field), ep_num)
+                _dual_identity = intro.get("dual_identity")
+                if _dual_identity:
+                    _npc_entry["dual_identity"] = _dual_identity
+                    self._sync_known_attr(_npc_entry, "dual_identity", _dual_identity, ep_num)
+                else:
+                    _public = intro.get("public_facade")
+                    _secret = intro.get("secret_role")
+                    if _public or _secret:
+                        _dual = {
+                            "public_role": _public,
+                            "secret_role": _secret,
+                            "known_by": intro.get("known_by") or intro.get("known_by_characters") or [],
+                        }
+                        _npc_entry["dual_identity"] = _dual
+                        self._sync_known_attr(_npc_entry, "dual_identity", _dual, ep_num)
+
+        except Exception as e:
+            _logger.error("[WorldState] §10 NPC 초기 속성 처리 실패: %s", e)
+
+        try:
+            # 11. 세계관 법칙 등록
+            for law_entry in state_changes.get("world_law_additions") or []:
+                if isinstance(law_entry, str) and law_entry.strip():
+                    self._add_world_law_internal(law_entry.strip(), ep_num)
+                elif isinstance(law_entry, dict):
+                    _law_text = law_entry.get("law", "")
+                    if _law_text:
+                        self._add_world_law_internal(_law_text, ep_num)
+
+        except Exception as e:
+            _logger.error("[WorldState] §11 세계관 법칙 처리 실패: %s", e)
+
+    # ═══════════════════════════════════════════════════════════════
+    # state_changes 기반 자동 갱신
+    # ═══════════════════════════════════════════════════════════════
+
+    def update_from_state_changes(self, ep_num: int, state_changes: dict, *, source: str = "episode"):
+        """
+        state_changes에서 자동 갱신 -- Python만으로.
+
+        Args:
+            ep_num: 에피소드 번호
+            state_changes: 상태 변경 dict
+            source: "episode" (기본) 또는 "arc" (아크 단위 갱신 시)
+
+        state_changes 스키마:
+            npc_deaths, skill_acquisitions, relationship_changes,
+            major_items, entity_destructions, npc_personality_changes,
+            resolved_plots, companion_changes 등
+        """
+        if not state_changes or not isinstance(state_changes, dict):
+            return
+
+        if source == "arc":
+            self._state["last_updated_ep"] = ep_num
+            self._state["last_updated_source"] = "arc"
+        else:
+            self._state["last_updated_ep"] = ep_num
+
+        # [TF-36] 섹션별 try/except — 1개 섹션 실패 시 나머지 섹션 처리 보장
+        self._apply_actor_and_inventory_state_changes(ep_num, state_changes)
+        self._apply_entity_and_companion_state_changes(ep_num, state_changes)
+
+        self._apply_npc_registry_and_law_state_changes(ep_num, state_changes)
+        self._apply_timeline_and_goal_state_changes(ep_num, state_changes)
+        self._apply_physical_known_attr_state_changes(ep_num, state_changes)
 
         # 크기 제한: destroyed 최대 100개, world_notes 최대 10개 (항상 실행)
         try:

@@ -7,11 +7,11 @@ import pathlib
 
 def test_s3_score_pass_path_sets_last_score() -> None:
     """three_phase_blueprint_generator PASS 경로에서 pipeline_result['last_score']가 세팅됨."""
-    src = pathlib.Path("modules/domain/agents/three_phase_blueprint_generator.py").read_text(encoding="utf-8")
-    assert 'pipeline_result["last_score"] = _score' in src
+    src = pathlib.Path("modules/domain/agents/three_phase_blueprint_runtime.py").read_text(encoding="utf-8")
+    assert 'pipeline_result["last_score"] = score' in src
 
     pass_block_idx = src.index('pipeline_result["final_verdict"] = verdict')
-    last_score_idx = src.index('pipeline_result["last_score"] = _score')
+    last_score_idx = src.index('pipeline_result["last_score"] = score')
     assert abs(last_score_idx - pass_block_idx) < 300, "last_score 세팅이 final_verdict와 너무 멀리 떨어짐"
 
 

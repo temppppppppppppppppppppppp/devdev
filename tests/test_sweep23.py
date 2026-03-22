@@ -20,6 +20,10 @@ def test_generate_narrative_summary_handles_none_manuscripts_without_len_crash()
     ui = SimpleNamespace(log=MagicMock())
     db = SimpleNamespace(get_recent_manuscripts=MagicMock(return_value=None))
     app = SimpleNamespace(ui=ui, current_project=SimpleNamespace(db=db))
+    app._resolve_narrative_summary_batch = lambda up_to_ep: main_a.SovereignApp._resolve_narrative_summary_batch(
+        app,
+        up_to_ep,
+    )
 
     main_a.SovereignApp._generate_narrative_summary(app, up_to_ep=10)
 
@@ -33,6 +37,7 @@ def test_select_genre_uses_default_when_int_input_returns_none(monkeypatch):
 
     app = SimpleNamespace(
         _get_int_input=MagicMock(return_value=None),
+        _pause=MagicMock(),
         ui=SimpleNamespace(
             log=MagicMock(),
             title=MagicMock(),
@@ -55,6 +60,35 @@ def test_select_genre_uses_default_when_int_input_returns_none(monkeypatch):
         "sports",
         "medical",
     }
+
+
+def test_build_genre_selection_catalog_includes_all_supported_genres():
+    app = SimpleNamespace()
+
+    genres = main_a.SovereignApp._build_genre_selection_catalog(app)
+
+    assert len(genres) == 10
+    assert genres["4"]["type"] == main_a.GenreTypes.FANTASY
+    assert genres["10"]["hud_key"] == main_a.HUDKeys.MEDICAL_HUD_ROOT
+
+
+def test_initialize_selected_genre_preset_registry_uses_selected_base_genre(monkeypatch):
+    class FakePresetRegistry:
+        def __init__(self, *, base_genre):
+            self.base_genre = base_genre
+
+    monkeypatch.setattr(main_a, "STAGE0_AVAILABLE", True)
+    monkeypatch.setattr(main_a, "_lazy_load_stage0", lambda: (FakePresetRegistry, None))
+
+    app = SimpleNamespace(ui=SimpleNamespace(log=MagicMock()))
+
+    main_a.SovereignApp._initialize_selected_genre_preset_registry(
+        app, {"type": main_a.GenreTypes.MEDICAL, "name": "medical"}
+    )
+
+    assert isinstance(app.preset_registry, FakePresetRegistry)
+    assert app.preset_registry.base_genre == "medical"
+    app.ui.log.assert_called_once()
 
 
 def test_director_auditor_v0128_block_has_no_unreachable_none_guard():

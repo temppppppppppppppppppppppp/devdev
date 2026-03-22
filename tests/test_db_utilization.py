@@ -157,7 +157,7 @@ def test_canonical_facts_in_packet():
         ]
     )
     builder = _make_builder(db=db)
-    packet = builder._build_continuity_packet(
+    packet = builder.context_packets.build_continuity_packet(
         {"npcs": [], "items": [], "plots": [], "locations": [], "_full_text": "이번 화 자본금 운용"}
     )
     assert "정규 팩트 참조" in packet
@@ -177,7 +177,7 @@ def test_canonical_facts_no_match():
         ]
     )
     builder = _make_builder(db=db)
-    packet = builder._build_continuity_packet(
+    packet = builder.context_packets.build_continuity_packet(
         {"npcs": [], "items": [], "plots": [], "locations": [], "_full_text": "이번 화 감정선 강화"}
     )
     assert packet == ""
@@ -281,7 +281,7 @@ def test_npc_history_with_reason():
         {"alive_npcs": {"장천": {"role": "검객"}}, "dead_npcs": {}, "active_items": {}, "active_plots": []}
     )
     builder = _make_builder(db=db, world_state=world_state)
-    packet = builder._build_continuity_packet(
+    packet = builder.context_packets.build_continuity_packet(
         {"npcs": ["장천"], "items": [], "plots": [], "locations": [], "_full_text": ""}
     )
     assert "(부상으로 인한 위치 이동)" in packet
@@ -304,7 +304,7 @@ def test_npc_history_no_reason():
         {"alive_npcs": {"장천": {"role": "검객"}}, "dead_npcs": {}, "active_items": {}, "active_plots": []}
     )
     builder = _make_builder(db=db, world_state=world_state)
-    packet = builder._build_continuity_packet(
+    packet = builder.context_packets.build_continuity_packet(
         {"npcs": ["장천"], "items": [], "plots": [], "locations": [], "_full_text": ""}
     )
     assert "[변경 18화] location: 한양 → 북해" in packet

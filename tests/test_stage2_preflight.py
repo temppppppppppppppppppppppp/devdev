@@ -2,6 +2,7 @@
 
 import concurrent.futures
 import sys
+import threading
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -144,6 +145,49 @@ class TestPreflightStructure:
         assert hasattr(preflight, "_preflight_enrichment")
         assert hasattr(preflight, "_build_stage3_to_2_reverse_feedback_fallback")
 
+    def test_runtime_attached(self, preflight):
+        from modules.core.stage2_preflight_runtime import Stage2PreflightRuntime
+
+        assert isinstance(preflight.runtime, Stage2PreflightRuntime)
+
+    def test_preflight_arc_analysis_wrapper_delegates_to_runtime(self, preflight):
+        expected = {
+            "refined_arc": None,
+            "generation_method": "analyst",
+            "constraint_block": "constraint block",
+            "entity_registry_for_director": {"hero": {"role": "lead"}},
+            "narrative_enriched": True,
+        }
+        preflight.runtime.preflight_arc_analysis = MagicMock(return_value=expected)
+
+        out = preflight._preflight_arc_analysis(**_arc_analysis_kwargs())
+
+        assert out == expected
+        preflight.runtime.preflight_arc_analysis.assert_called_once_with(**_arc_analysis_kwargs())
+
+    def test_preflight_enrichment_wrapper_delegates_to_runtime(self, preflight):
+        expected = {
+            "four_phase_passed": False,
+            "refined_arc": None,
+            "generation_method": "analyst",
+            "draft_validator_passed": False,
+            "consensus_passed": False,
+            "st_snapshot": None,
+            "director_feedback_for_fourphase": "retry",
+            "was_patch": False,
+            "patch_fallback": False,
+            "prev_score": 0,
+        }
+        preflight.runtime.preflight_enrichment = MagicMock(return_value=expected)
+
+        out = preflight._preflight_enrichment(**_enrichment_kwargs())
+
+        assert out == expected
+        preflight.runtime.preflight_enrichment.assert_called_once_with(
+            **_enrichment_kwargs(),
+            previous_attempt=None,
+        )
+
 
 class TestStage3To2Fallback:
     def test_stage3_reverse_feedback_fallback_includes_reasons_and_details(self, preflight):
@@ -191,6 +235,21 @@ class TestPreflightStateSetup:
         assert out["arc_drive"]["status"] == "error"
         preflight.ctx.audit_event.assert_called()
 
+    def test_compute_arc_drive_returns_error_payload_and_audit_event(self, preflight):
+        preflight.ctx.agents["weaver"].generate_arc_drive.side_effect = RuntimeError("boom")
+
+        out = preflight._compute_arc_drive(
+            arcs_source=[{"arc_no": 1}],
+            arc_idx=0,
+            lack_report={"lack": []},
+            grand_obj="goal",
+            global_arc_no=1,
+            perf_lock=threading.Lock(),
+        )
+
+        assert out["status"] == "error"
+        preflight.ctx.audit_event.assert_called()
+
     def test_constraint_compiler_integration(self, preflight):
         compiler = MagicMock()
         compiler.compile.return_value = "compiled constraints"
@@ -199,6 +258,21 @@ class TestPreflightStateSetup:
         out = preflight._preflight_state_setup(**_state_setup_kwargs(all_refined_arcs=[{"arc_no": 0}]))
         assert "compiled constraints" in out["constraint_block"]
 
+    def test_apply_constraint_compiler_block_compiles_and_indexes_resolved_plots(self, preflight):
+        compiler = MagicMock()
+        compiler.compile.return_value = "compiled constraints"
+        preflight.ctx.constraint_compiler = compiler
+        preflight.ctx.state_tracker.resolved_plots = ["plot-a", "plot-b"]
+        preflight.ctx.semantic_plot_guard = MagicMock()
+
+        out = preflight._apply_constraint_compiler_block(
+            all_refined_arcs=[{"arc_no": 0}],
+            constraint_block="block",
+        )
+
+        assert out.startswith("compiled constraints")
+        preflight.ctx.semantic_plot_guard.index_resolved_plots.assert_called_once_with(["plot-a", "plot-b"])
+
     def test_state_extractor_exception_non_propagating(self, preflight):
         preflight.ctx.constraint_compiler = MagicMock(compile=MagicMock(return_value="compiled"))
         preflight.ctx.agents["state_extractor"].extract_cumulative_state.side_effect = RuntimeError("err")
@@ -206,6 +280,15 @@ class TestPreflightStateSetup:
         out = preflight._preflight_state_setup(**_state_setup_kwargs(all_refined_arcs=[{"arc_no": 0}]))
         assert isinstance(out, dict)
         preflight.ctx.audit_event.assert_called()
+
+    def test_extract_constraint_compiler_state_reuses_cache(self, preflight):
+        preflight.ctx.cumulative_state_cache = {"cached": True}
+        preflight.ctx.cumulative_state_cache_key = 2
+
+        out = preflight._extract_constraint_compiler_state(all_refined_arcs=[{"arc_no": 0}, {"arc_no": 1}])
+
+        assert out == {"cached": True}
+        preflight.ctx.agents["state_extractor"].extract_cumulative_state.assert_not_called()
 
     def test_parallel_timeout_uses_nonblocking_shutdown(self, preflight):
         class _FakeFuture:
@@ -288,6 +371,33 @@ class TestPreflightArcAnalysis:
 
         assert result == "retry arc"
 
+    def test_resolve_patch_mode_for_inplace_scope(self, preflight):
+        result = preflight._resolve_patch_mode({"best_arc": {"arc_no": 1}, "fix_scope": "inplace", "score": 95})
+
+        assert result.fix_scope == "inplace"
+        assert result.prev_score == 95
+        assert result.has_best_arc is True
+        assert result.use_inplace is True
+        assert result.use_patch is True
+        assert result.was_patch is True
+
+    def test_resolve_patch_mode_for_partial_scope(self, preflight):
+        result = preflight._resolve_patch_mode({"best_arc": {"arc_no": 1}, "fix_scope": "partial", "score": 81})
+
+        assert result.fix_scope == "partial"
+        assert result.use_inplace is False
+        assert result.use_patch is True
+        assert result.was_patch is True
+
+    def test_resolve_patch_mode_without_scope_disables_local_patch(self, preflight):
+        result = preflight._resolve_patch_mode({"best_arc": {"arc_no": 1}, "fix_scope": "", "score": 90})
+
+        assert result.fix_scope == ""
+        assert result.has_best_arc is True
+        assert result.use_inplace is False
+        assert result.use_patch is False
+        assert result.was_patch is False
+
     def test_apply_retry_focus_mode_noops_for_first_attempt(self, preflight):
         result = preflight._apply_retry_focus_mode(
             attempt=0,
@@ -318,6 +428,113 @@ class TestPreflightArcAnalysis:
         assert "cached inj" in result
         assert "minimal context" in result
         preflight.ctx.build_minimal_arc_context.assert_called_once_with([{"arc_no": 1}], "hero")
+
+    def test_build_stage2_vector_context_legacy_path_prepends_slot_summary_and_fact_ledger(self, preflight):
+        preflight.ctx.memory = MagicMock()
+        preflight.ctx.memory.retrieve_high_res_context.return_value = "legacy vector block"
+        preflight._resolve_work_retrieval_focus = MagicMock(return_value={"tracking_slots": ["핵심 배우 라인"]})
+        preflight._build_work_identity_slot_summary = MagicMock(
+            return_value="[작품 추적 슬롯 요약]\n핵심 배우 라인"
+        )
+        preflight._build_fact_ledger_context = MagicMock(return_value="[팩트 저장 요약]\n수치")
+        preflight._record_retrieval_observation = MagicMock()
+
+        def threshold_side_effect(key, default=None):
+            if key == "smart_retrieval.enabled":
+                return False
+            if key == "smart_retrieval.stage2_enabled":
+                return False
+            if key == "context.vector_max_results_s2":
+                return 8
+            return default
+
+        with patch("modules.core.stage2_preflight._threshold", side_effect=threshold_side_effect):
+            result = preflight._build_stage2_vector_context(
+                global_arc_no=1,
+                current_ep_start=3,
+                enriched_block={"block_theme": "theme", "joint_docs": {}, "status_shadow": {}},
+                current_vol_strategy={"strategy_doc": "doc"},
+                protagonist_name="hero",
+            )
+
+        assert result.startswith("[작품 추적 슬롯 요약]")
+        assert "[팩트 저장 요약]" in result
+        assert "legacy vector block" in result
+        preflight.ctx.memory.retrieve_high_res_context.assert_called_once_with("theme", 3, n_results=8)
+        preflight._record_retrieval_observation.assert_called_once()
+        observation = preflight._record_retrieval_observation.call_args.kwargs["observation"]
+        assert observation["advisor_path_used"] is False
+        assert observation["work_slot_summary_included"] is True
+        assert observation["vector_context_chars"] == len(result)
+
+    def test_apply_postpass_state_change_fixes_merges_relationship_delta_and_timeline(self, preflight):
+        refined_arc = {
+            "state_changes": {},
+            "state_constraints": {
+                "arc_start_state": {"equipment": []},
+                "arc_end_state": {"equipment": ["청월검"]},
+            },
+        }
+        enriched_block = {
+            "relationship_delta": [
+                {
+                    "target": "연홍",
+                    "before": "동료",
+                    "after": "불신",
+                    "trigger": "오해",
+                    "justification": "거짓 보고",
+                }
+            ],
+            "time_span": {"in_story_time": "사흘 뒤"},
+        }
+
+        result = preflight._apply_postpass_state_change_fixes(
+            refined_arc=refined_arc,
+            enriched_block=enriched_block,
+        )
+
+        assert result["state_changes"]["timeline"] == {"start": "사흘 뒤", "end": "사흘 뒤"}
+        rel = result["state_changes"]["relationship_changes"][0]
+        assert rel["npc"] == "연홍"
+        assert rel["from"] == "동료"
+        assert rel["to"] == "불신"
+        assert rel["trigger"] == "오해"
+        assert rel["justification"] == "거짓 보고"
+        assert rel["episode"] is None
+
+    def test_apply_postpass_state_change_fixes_updates_existing_relationship_without_overwriting_timeline(
+        self, preflight
+    ):
+        refined_arc = {
+            "state_changes": {
+                "timeline": {"start": "당일", "end": "당일"},
+                "relationship_changes": [{"npc": "연홍", "from": "동료", "to": "불신"}],
+            },
+            "state_constraints": {},
+        }
+        enriched_block = {
+            "relationship_delta": [
+                {
+                    "target": "연홍",
+                    "before": "동료",
+                    "after": "불신",
+                    "trigger": "오해",
+                    "justification": "거짓 보고",
+                }
+            ],
+            "time_span": {"in_story_time": "사흘 뒤"},
+        }
+
+        result = preflight._apply_postpass_state_change_fixes(
+            refined_arc=refined_arc,
+            enriched_block=enriched_block,
+        )
+
+        assert result["state_changes"]["timeline"] == {"start": "당일", "end": "당일"}
+        rel = result["state_changes"]["relationship_changes"][0]
+        assert rel["trigger"] == "오해"
+        assert rel["justification"] == "거짓 보고"
+        assert len(result["state_changes"]["relationship_changes"]) == 1
 
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
     def test_focus_mode_on_retry(self, preflight):
@@ -351,6 +568,26 @@ class TestPreflightArcAnalysis:
         # [Sweep48] constraint_block은 입력값 그대로 보존 (setup에서 이미 병합됨)
         assert out["constraint_block"] == "constraint block"
         assert out["entity_registry_for_director"] == {"npc": {"role": "ally"}}
+
+    def test_prepare_analyst_weapons_combines_cached_preflight_and_constraint_payload(self, preflight):
+        from modules.core.stage2_preflight import Stage2AnalystWeaponsPayload
+
+        preflight.ctx.constraint_compiler = MagicMock(compile=MagicMock(return_value="compiled constraints"))
+
+        payload = preflight.runtime.prepare_analyst_weapons(
+            all_refined_arcs=[{"arc_no": 1}],
+            cached_preflight_result={"item_timeline": [1]},
+            protagonist_name="hero",
+        )
+
+        assert payload == Stage2AnalystWeaponsPayload(
+            analyst_weapons={
+                "preflight": {"item_timeline": [1]},
+                "constraints": "compiled constraints",
+            },
+            entity_registry_for_director={"npc": {"role": "ally"}},
+        )
+        preflight.ctx.constraint_compiler.compile.assert_called_once()
 
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
     def test_entity_registry_default_is_dict_on_exception(self, preflight):
@@ -421,6 +658,131 @@ class TestPreflightArcAnalysis:
         assert all(item["stage"] == 3 for item in call_kw["architect_failures"])
         preflight.ctx.ui.log.assert_called()
 
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    def test_build_arc_analysis_context_injects_stage3_and_stage4_reverse_feedback(self, preflight):
+        from modules.core.stage2_preflight import Stage2ArcAnalysisContextPayload
+
+        preflight.ctx.stage_rejection_history = [
+            {"stage": 3, "arc_no": 2, "reason": "continuity", "attempt": 1},
+            {"stage": 3, "arc_no": 2, "reason": "continuity", "attempt": 2},
+            {"stage": 3, "arc_no": 2, "reason": "coverage", "attempt": 3},
+        ]
+        preflight.ctx.generate_reverse_feedback_stage3_to_2 = MagicMock(return_value="stage3 reverse")
+        preflight.ctx.generate_reverse_feedback_stage4_to_2 = MagicMock(return_value="stage4 reverse")
+        preflight.ctx.pass_rate_monitor = MagicMock()
+        preflight.ctx.pass_rate_monitor.get_arc_difficulty.return_value = {"difficulty": "hard"}
+
+        payload = preflight.runtime.build_arc_analysis_context(
+            attempt=0,
+            current_feedback="",
+            constraint_block="",
+            last_refined_context="last context",
+            all_refined_arcs=[],
+            protagonist_name="hero",
+            global_arc_no=2,
+            cached_preflight_injection="cached inj",
+        )
+
+        assert isinstance(payload, Stage2ArcAnalysisContextPayload)
+        assert payload.narrative_enriched is False
+        assert "stage3 reverse" in payload.enhanced_context
+        assert "stage4 reverse" in payload.enhanced_context
+        preflight.ctx.generate_reverse_feedback_stage3_to_2.assert_called_once()
+        preflight.ctx.generate_reverse_feedback_stage4_to_2.assert_called_once_with({"difficulty": "hard"})
+        preflight.ctx.audit_event.assert_any_call(
+            "s4_to_s2_feedback",
+            "Arc difficulty feedback injected",
+            {"arc_no": 2, "prev_difficulty": {"difficulty": "hard"}},
+        )
+
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", True)
+    def test_apply_arc_analysis_support_layers_prepends_optimizer_and_v51_layers(self, preflight):
+        preflight.ctx.stage2_optimizer = MagicMock()
+        preflight.ctx.stage2_optimizer.generate_optimized_prompt.return_value = "[optimizer]"
+        preflight.ctx.quality_amplifier = MagicMock()
+        preflight.ctx.quality_amplifier.generate_analyst_constraints.return_value = "[qa]"
+        preflight.ctx.agent_intelligence = MagicMock()
+        preflight.ctx.agent_intelligence.get_analyst_enhancement.return_value = "[intel]"
+        preflight.ctx.failure_learner = MagicMock()
+        preflight.ctx.failure_learner.generate_constraint_prompt.return_value = "[learned]"
+        preflight.ctx.constitutional_checker = MagicMock()
+        preflight.ctx.constitutional_checker.get_full_injection.return_value = "[constitution]"
+
+        enhanced = preflight.runtime.apply_arc_analysis_support_layers(
+            attempt=0,
+            current_feedback="director feedback",
+            constraint_block="[constraint]",
+            enhanced_context="[base]",
+            cached_preflight_injection="[cached]",
+            all_refined_arcs=[{"arc_no": 1}],
+            protagonist_name="hero",
+            global_arc_no=2,
+        )
+
+        assert enhanced.startswith("[constitution]")
+        assert "[qa]" in enhanced
+        assert "[intel]" in enhanced
+        assert "[learned]" in enhanced
+        assert "[optimizer]" in enhanced
+        assert "[cached]" in enhanced
+        assert "[constraint]" in enhanced
+        preflight.ctx.stage2_optimizer.generate_optimized_prompt.assert_called_once_with(
+            prev_arcs=[{"arc_no": 1}],
+            protagonist_name="hero",
+            include_examples=True,
+        )
+        preflight.ctx.constitutional_checker.get_full_injection.assert_called_once_with(
+            stage=2,
+            context={"prev_arcs": [{"arc_no": 1}], "feedback": "director feedback"},
+        )
+        assert preflight.ctx.ui.log.call_count >= 2
+
+    def test_build_arc_analysis_base_context_injects_quality_headers_narrative_and_fact_ledger(self, preflight):
+        from modules.core.stage2_preflight import Stage2ArcAnalysisContextPayload
+
+        preflight.ctx.quality_dashboard = MagicMock()
+        preflight.ctx.quality_dashboard.get_score_trend_summary.return_value = {
+            "trend": "up",
+            "summary": "최근 추세 상승",
+        }
+        preflight.ctx.state_tracker.npc_registry = {
+            "ally": {"primary_motivation": "protect"},
+            "extra": {"primary_motivation": ""},
+        }
+        preflight.ctx.current_project.db.load_anchor.return_value = {"cumulative_elapsed": "3일"}
+        preflight._build_style_guide_summary = MagicMock(return_value="[문체 가이드 요약]")
+        preflight._build_protagonist_config_summary = MagicMock(return_value="[주인공 설정 요약]")
+        preflight._build_fact_ledger_context = MagicMock(return_value="[팩트 원장 핵심 수치]")
+
+        with patch(
+            "modules.core.narrative_context_formatter.NarrativeContextFormatter.format_all",
+            return_value="[서사 구조 컨텍스트]",
+        ) as format_all:
+            payload = preflight.runtime.build_arc_analysis_base_context(
+                attempt=0,
+                last_refined_context="last context",
+                all_refined_arcs=[{"arc_no": 1}],
+                protagonist_name="hero",
+                global_arc_no=2,
+            )
+
+        assert payload == Stage2ArcAnalysisContextPayload(
+            enhanced_context=(
+                "[팩트 원장 핵심 수치]\n\n"
+                "[서사 구조 컨텍스트]\n\n"
+                "[문체 가이드 요약]\n\n"
+                "[주인공 설정 요약]\n\n"
+                "\n[품질 추세 참고]\n최근 추세 상승\nlast context"
+            ),
+            narrative_enriched=True,
+        )
+        format_kwargs = format_all.call_args.kwargs
+        assert format_kwargs["npc_motivations"] == {"ally": "protect"}
+        assert format_kwargs["all_refined_arcs"] == [{"arc_no": 1}]
+        assert format_kwargs["current_arc_no"] == 2
+        assert format_kwargs["cumulative_elapsed"] == "3일"
+        preflight.ctx.ui.log.assert_called_with("      📖 [LM-G] 서사 구조 컨텍스트 주입 완료")
+
     def test_build_fact_ledger_context_reads_numbers_schema(self, preflight):
         preflight.ctx.current_project.db.load_anchor.side_effect = lambda key: (
             {
@@ -474,6 +836,1064 @@ class TestPreflightArcAnalysis:
 
 
 class TestPreflightEnrichment:
+    def test_run_auxiliary_state_tracker_extractors_dispatches_all_tail_extractors(self, preflight):
+        tracker = MagicMock()
+        refined_arc = {"tactical_doc": "arc"}
+
+        preflight._run_auxiliary_state_tracker_extractors(
+            state_tracker=tracker,
+            refined_arc=refined_arc,
+        )
+
+        tracker.extract_npc_dialogue_styles_from_arc.assert_called_once_with(refined_arc)
+        tracker.extract_time_markers_from_arc.assert_called_once_with(refined_arc)
+        tracker.extract_permanent_injuries_from_arc.assert_called_once_with(refined_arc)
+        tracker.update_companions_from_arc.assert_called_once_with(refined_arc)
+        tracker.extract_commitments_from_arc.assert_called_once_with(refined_arc)
+        tracker.extract_protagonist_emotion_from_arc.assert_called_once_with(refined_arc)
+        tracker.extract_relationship_changes_from_arc.assert_called_once_with(refined_arc)
+        tracker.extract_npc_injuries_from_arc.assert_called_once_with(refined_arc)
+        tracker.extract_npc_movements_from_arc.assert_called_once_with(refined_arc)
+
+    def test_run_auxiliary_state_tracker_extractors_keeps_going_after_failure(self, preflight):
+        tracker = MagicMock()
+        refined_arc = {"tactical_doc": "arc"}
+        tracker.extract_time_markers_from_arc.side_effect = RuntimeError("timeline fail")
+
+        preflight._run_auxiliary_state_tracker_extractors(
+            state_tracker=tracker,
+            refined_arc=refined_arc,
+        )
+
+        tracker.extract_time_markers_from_arc.assert_called_once_with(refined_arc)
+        tracker.extract_permanent_injuries_from_arc.assert_called_once_with(refined_arc)
+        tracker.extract_npc_movements_from_arc.assert_called_once_with(refined_arc)
+
+    def test_run_state_tracker_tail_tasks_dispatches_genre_semantic_summary_cleanup(self, preflight):
+        tracker = MagicMock()
+        tracker.resolved_plots = [{"plot": "회수"}]
+        tracker.export_financial_registry.return_value = {"cash": 100}
+        tracker.generate_arc_summary.return_value = {"summary": "ok"}
+        tracker.cleanup_npc_registry_with_llm.return_value = ["오탐1"]
+        tracker.check_and_expand_genre.return_value = "politics"
+        preflight.ctx.state_tracker = tracker
+        preflight.ctx.semantic_plot_guard = MagicMock()
+        preflight.ctx.semantic_plot_guard.index_resolved_plots.return_value = 2
+        refined_arc = {"tactical_doc": "정쟁 강화"}
+
+        preflight._run_state_tracker_tail_tasks(
+            refined_arc=refined_arc,
+            global_arc_no=5,
+            genre_for_tracker="investment",
+        )
+
+        tracker._populate_genre_registries_from_arc.assert_called_once_with(refined_arc)
+        tracker.extract_financial_events_from_arc.assert_called_once_with(refined_arc)
+        tracker.export_financial_registry.assert_called_once()
+        preflight.ctx.semantic_plot_guard.index_resolved_plots.assert_called_once_with(tracker.resolved_plots)
+        tracker.generate_arc_summary.assert_called_once_with(5, refined_arc)
+        tracker.cleanup_npc_registry_with_llm.assert_called_once_with(5)
+        tracker.check_and_expand_genre.assert_called_once_with("정쟁 강화")
+        preflight.ctx.current_project.save_v20_anchor.assert_any_call("financial_registry", {"cash": 100})
+        preflight.ctx.current_project.save_v20_anchor.assert_any_call("arc_summary_5", {"summary": "ok"})
+
+    def test_run_state_tracker_tail_tasks_continues_after_partial_failure(self, preflight):
+        tracker = MagicMock()
+        tracker.resolved_plots = [{"plot": "회수"}]
+        tracker._populate_genre_registries_from_arc.side_effect = RuntimeError("genre fail")
+        tracker.generate_arc_summary.return_value = {"summary": "ok"}
+        tracker.cleanup_npc_registry_with_llm.return_value = []
+        preflight.ctx.state_tracker = tracker
+        preflight.ctx.semantic_plot_guard = MagicMock()
+        preflight.ctx.semantic_plot_guard.index_resolved_plots.side_effect = RuntimeError("semantic fail")
+        refined_arc = {"tactical_doc": "무공 강화"}
+
+        preflight._run_state_tracker_tail_tasks(
+            refined_arc=refined_arc,
+            global_arc_no=5,
+            genre_for_tracker="wuxia",
+        )
+
+        tracker.generate_arc_summary.assert_called_once_with(5, refined_arc)
+        tracker.cleanup_npc_registry_with_llm.assert_called_once_with(5)
+        tracker.check_and_expand_genre.assert_called_once_with("무공 강화")
+        preflight.ctx.current_project.save_v20_anchor.assert_called_once_with("arc_summary_5", {"summary": "ok"})
+
+    def test_log_four_phase_pass_summary_logs_entities_and_generation_metadata(self, preflight, caplog):
+        with caplog.at_level("INFO"):
+            preflight._log_four_phase_pass_summary(
+                dead_npcs=["흑풍"],
+                learned_skills=["비연검"],
+                npc_info=[{"name": "연홍"}],
+                pipeline_result={"phases": {"generate": {"candidates_count": 3, "selected_strategy": "ensemble_b"}}},
+            )
+
+        assert "- 사망 NPC 기록: 흑풍" in caplog.text
+        assert "- 무공 습득 기록: 비연검" in caplog.text
+        assert "- NPC 정보 기록: 1건" in caplog.text
+        assert "- 후보 수: 3개" in caplog.text
+        assert "- 선택 전략: ensemble_b" in caplog.text
+
+    def test_finalize_four_phase_pass_snapshots_tracker_and_runs_tail_tasks(self, preflight):
+        from modules.core.stage2_preflight import Stage2FourPhasePassPayload
+
+        tracker = MagicMock()
+        tracker.npc_registry = {"npc": {"status": "alive"}}
+        tracker.resolved_plots = [{"plot": "keep"}]
+        tracker.entity_destructions = []
+        tracker.protagonist_skills = {"sword"}
+        tracker.skill_acquisitions = [{"name": "sword"}]
+        tracker.npc_npc_relationships = {"npc": {"hero": "ally"}}
+        tracker.item_state_registry = {"blade": {"owner": "hero"}}
+        tracker.active_plots = [{"plot": "keep"}]
+        tracker.npc_dialogue_profiles = {"npc": {"tone": "calm"}}
+        tracker.in_world_timeline = [{"day": 1}]
+        tracker.current_companions = ["npc"]
+        tracker.pending_commitments = [{"promise": "return"}]
+        tracker.protagonist_emotion = {"mood": "calm"}
+        tracker.dungeon_clear_registry = {"cave": True}
+        tracker.skill_cooldown_registry = {"slash": 2}
+        tracker.spell_repertoire = {"flare": 1}
+        tracker.financial_number_registry = {"cash": 10}
+        tracker.extract_npc_deaths_from_arc.return_value = ["npc1"]
+        tracker.extract_skill_acquisitions_from_arc.return_value = ["skill1"]
+        tracker.extract_npc_info_from_arc.return_value = [{"name": "npc1"}]
+        tracker.check_suspended_plots.return_value = [{"message": "watch suspended plot"}]
+        preflight.ctx.state_tracker = tracker
+        preflight.ctx.adversarial_self_play = None
+        preflight._run_auxiliary_state_tracker_extractors = MagicMock()
+        preflight._run_state_tracker_tail_tasks = MagicMock()
+        preflight._log_four_phase_pass_summary = MagicMock()
+
+        payload = preflight.runtime.finalize_four_phase_pass(
+            attempt=0,
+            global_arc_no=5,
+            director_feedback_for_fourphase="feedback",
+            refined_arc={"tactical_doc": "PASS ARC", "joint_docs": {}, "status_shadow": {}},
+            pipeline_result={"retries": 1, "phases": {"generate": {"candidates_count": 2}}},
+            enriched_block={"joint_docs": {"a": 1}, "status_shadow": {"b": 2}},
+            genre_for_tracker="wuxia",
+        )
+
+        assert isinstance(payload, Stage2FourPhasePassPayload)
+        assert payload.four_phase_passed is True
+        assert payload.generation_method == "four_phase"
+        assert payload.refined_arc["joint_docs"] == {"a": 1}
+        assert payload.refined_arc["status_shadow"] == {"b": 2}
+        assert payload.st_snapshot["npc_registry"] == {"npc": {"status": "alive"}}
+        tracker.extract_resolved_plots_from_arc.assert_called_once_with(payload.refined_arc)
+        tracker.extract_npc_deaths_from_arc.assert_called_once_with(payload.refined_arc)
+        tracker.extract_skill_acquisitions_from_arc.assert_called_once_with(payload.refined_arc)
+        tracker.extract_npc_info_from_arc.assert_called_once_with(payload.refined_arc, genre="wuxia")
+        tracker.check_suspended_plots.assert_called_once_with(5)
+        preflight._run_auxiliary_state_tracker_extractors.assert_called_once_with(
+            state_tracker=tracker,
+            refined_arc=payload.refined_arc,
+        )
+        preflight._run_state_tracker_tail_tasks.assert_called_once_with(
+            refined_arc=payload.refined_arc,
+            global_arc_no=5,
+            genre_for_tracker="wuxia",
+        )
+        preflight._log_four_phase_pass_summary.assert_called_once()
+
+    def test_apply_four_phase_pass_state_tracker_updates_snapshots_and_dispatches_tail_tasks(self, preflight):
+        from modules.core.stage2_preflight import Stage2FourPhaseTrackerPayload
+
+        tracker = MagicMock()
+        tracker.npc_registry = {"npc": {"status": "alive"}}
+        tracker.resolved_plots = [{"plot": "keep"}]
+        tracker.entity_destructions = []
+        tracker.protagonist_skills = {"sword"}
+        tracker.skill_acquisitions = [{"name": "sword"}]
+        tracker.npc_npc_relationships = {"npc": {"hero": "ally"}}
+        tracker.item_state_registry = {"blade": {"owner": "hero"}}
+        tracker.active_plots = [{"plot": "keep"}]
+        tracker.npc_dialogue_profiles = {"npc": {"tone": "calm"}}
+        tracker.in_world_timeline = [{"day": 1}]
+        tracker.current_companions = ["npc"]
+        tracker.pending_commitments = [{"promise": "return"}]
+        tracker.protagonist_emotion = {"mood": "calm"}
+        tracker.dungeon_clear_registry = {"cave": True}
+        tracker.skill_cooldown_registry = {"slash": 2}
+        tracker.spell_repertoire = {"flare": 1}
+        tracker.financial_number_registry = {"cash": 10}
+        tracker.extract_npc_deaths_from_arc.return_value = ["npc1"]
+        tracker.extract_skill_acquisitions_from_arc.return_value = ["skill1"]
+        tracker.extract_npc_info_from_arc.return_value = [{"name": "npc1"}]
+        tracker.check_suspended_plots.return_value = [{"message": "watch suspended plot"}]
+        preflight.ctx.state_tracker = tracker
+        preflight._run_auxiliary_state_tracker_extractors = MagicMock()
+        preflight._run_state_tracker_tail_tasks = MagicMock()
+        preflight._log_four_phase_pass_summary = MagicMock()
+
+        payload = preflight._apply_four_phase_pass_state_tracker_updates(
+            refined_arc={"tactical_doc": "PASS ARC"},
+            global_arc_no=5,
+            genre_for_tracker="wuxia",
+            pipeline_result={"phases": {"generate": {"candidates_count": 2}}},
+        )
+
+        assert payload == Stage2FourPhaseTrackerPayload(
+            st_snapshot=payload.st_snapshot,
+            dead_npcs=["npc1"],
+            learned_skills=["skill1"],
+            npc_info=[{"name": "npc1"}],
+        )
+        assert payload.st_snapshot["npc_registry"] == {"npc": {"status": "alive"}}
+        tracker.extract_resolved_plots_from_arc.assert_called_once_with({"tactical_doc": "PASS ARC"})
+        tracker.extract_npc_deaths_from_arc.assert_called_once_with({"tactical_doc": "PASS ARC"})
+        tracker.extract_skill_acquisitions_from_arc.assert_called_once_with({"tactical_doc": "PASS ARC"})
+        tracker.extract_npc_info_from_arc.assert_called_once_with({"tactical_doc": "PASS ARC"}, genre="wuxia")
+        tracker.check_suspended_plots.assert_called_once_with(5)
+        preflight._run_auxiliary_state_tracker_extractors.assert_called_once_with(
+            state_tracker=tracker,
+            refined_arc={"tactical_doc": "PASS ARC"},
+        )
+        preflight._run_state_tracker_tail_tasks.assert_called_once_with(
+            refined_arc={"tactical_doc": "PASS ARC"},
+            global_arc_no=5,
+            genre_for_tracker="wuxia",
+        )
+        preflight._log_four_phase_pass_summary.assert_called_once_with(
+            dead_npcs=["npc1"],
+            learned_skills=["skill1"],
+            npc_info=[{"name": "npc1"}],
+            pipeline_result={"phases": {"generate": {"candidates_count": 2}}},
+        )
+
+    def test_build_patch_mode_audit_payload_increments_attempt_and_preserves_metadata(self, preflight):
+        payload = preflight._build_patch_mode_audit_payload(
+            global_arc_no=3,
+            attempt=1,
+            prev_score=82,
+            patch_fallback=False,
+        )
+
+        assert payload == {
+            "arc_no": 3,
+            "attempt": 2,
+            "prev_score": 82,
+            "fallback": False,
+        }
+
+    def test_build_four_phase_result_payload_maps_all_result_fields(self, preflight):
+        payload = preflight._build_four_phase_result_payload(
+            four_phase_passed=True,
+            refined_arc={"arc_no": 1},
+            generation_method="four_phase",
+            draft_validator_passed=False,
+            consensus_passed=True,
+            st_snapshot={"registry": 1},
+            director_feedback_for_fourphase="feedback",
+            was_patch=True,
+            patch_fallback=False,
+            prev_score=88,
+        )
+
+        assert payload == {
+            "four_phase_passed": True,
+            "refined_arc": {"arc_no": 1},
+            "generation_method": "four_phase",
+            "draft_validator_passed": False,
+            "consensus_passed": True,
+            "st_snapshot": {"registry": 1},
+            "director_feedback_for_fourphase": "feedback",
+            "was_patch": True,
+            "patch_fallback": False,
+            "prev_score": 88,
+        }
+
+    def test_build_four_phase_prerun_state_returns_default_flags(self, preflight):
+        payload = preflight._build_four_phase_prerun_state()
+
+        assert payload == {
+            "four_phase_passed": False,
+            "refined_arc": None,
+            "generation_method": "analyst",
+            "draft_validator_passed": False,
+            "consensus_passed": False,
+            "st_snapshot": None,
+            "was_patch": False,
+            "patch_fallback": False,
+            "prev_score": 0,
+        }
+
+    def test_build_four_phase_spinner_labels_formats_attempt_and_arc_strings(self, preflight):
+        payload = preflight._build_four_phase_spinner_labels(
+            attempt=1,
+            global_arc_no=7,
+        )
+
+        assert payload == {
+            "attempt_log": "      🎯 [V60.77] FourPhase-Director 대면 2/5",
+            "spinner_title": "Arc 7",
+            "vector_detail": "Arc 7 · 벡터 검색",
+        }
+
+    def test_build_patch_mode_labels_formats_entry_and_fallback_messages(self, preflight):
+        from modules.core.stage2_preflight import Stage2PatchModeLabels
+
+        payload = preflight._build_patch_mode_labels(
+            prev_score=82,
+            attempt=1,
+        )
+
+        assert payload == Stage2PatchModeLabels(
+            enter_log="[Patch Mode] Arc 패치 모드 진입 (score=82, attempt=1)",
+            enter_ui="   🔧 [Patch Mode] Arc 패치: score=82, 원본 보존 수정",
+            fallback_log="[Patch Mode] Arc 패치 실패 → 전면 재생성 폴백",
+            fallback_ui="   ⚠️ [Patch Mode] Arc 패치 실패 → 전면 재생성 폴백",
+        )
+
+    def test_prepare_four_phase_generation_plan_warns_when_fix_scope_missing(self, preflight):
+        from modules.core.stage2_preflight import Stage2FourPhaseGenerationPlan
+
+        payload = preflight.runtime.prepare_four_phase_generation_plan(
+            {
+                "best_arc": {"arc_no": 3},
+                "fix_scope": "",
+                "score": 82,
+                "selected_strategy": "ensemble_c",
+            }
+        )
+
+        assert payload == Stage2FourPhaseGenerationPlan(
+            fix_scope="",
+            prev_score=82,
+            was_patch=False,
+            use_inplace=False,
+            use_patch=False,
+            four_phase_arc=None,
+            pipeline_result={"final_verdict": None},
+        )
+        preflight.ctx.ui.log.assert_any_call("   ⚠️ [PF-1] fix_scope 누락 -> local patch 생략, full generate로 위임")
+
+    def test_build_four_phase_generation_attempt_result_preserves_patch_flags(self, preflight):
+        from modules.core.stage2_preflight import Stage2FourPhaseAttemptResult
+
+        payload = preflight._build_four_phase_generation_attempt_result(
+            four_phase_arc={"arc_no": 3},
+            pipeline_result={"final_verdict": "PASS"},
+            prev_score=82,
+            was_patch=True,
+            patch_fallback=False,
+        )
+
+        assert payload == Stage2FourPhaseAttemptResult(
+            four_phase_arc={"arc_no": 3},
+            pipeline_result={"final_verdict": "PASS"},
+            prev_score=82,
+            was_patch=True,
+            patch_fallback=False,
+        )
+
+    def test_execute_four_phase_generation_plan_passes_inplace_result_into_patch_path(self, preflight):
+        from modules.core.stage2_preflight import (
+            Stage2FourPhaseGenerationPlan,
+            Stage2FourPhaseGenerationRequest,
+        )
+
+        preflight._run_inplace_four_phase_attempt = MagicMock(
+            return_value=({"arc_no": 3, "patched": True}, {"final_verdict": "PASS"})
+        )
+        preflight._run_patch_or_generate_four_phase_attempt = MagicMock(
+            return_value=({"arc_no": 3, "patched": True}, {"final_verdict": "PASS"}, False)
+        )
+
+        result = preflight.runtime.execute_four_phase_generation_plan(
+            request=Stage2FourPhaseGenerationRequest(
+                attempt=1,
+                global_arc_no=3,
+                current_ep_start=11,
+                current_vol_strategy={"strategy_doc": "doc"},
+                enriched_block={"block_theme": "theme"},
+                all_refined_arcs=[{"arc_no": 1}],
+                bible_root={"AssetLibrary": {}},
+                protagonist_name="hero",
+                director_feedback_for_fourphase="director feedback",
+                entity_registry_for_director={"npc": {}},
+                previous_attempt={"best_arc": {"arc_no": 3}, "rejection_reason": "fix local issue"},
+                s2_spinner=MagicMock(),
+                s2_vector_ctx="vector ctx",
+                generation_plan=Stage2FourPhaseGenerationPlan(
+                    fix_scope="inplace",
+                    prev_score=95,
+                    was_patch=True,
+                    use_inplace=True,
+                    use_patch=True,
+                    four_phase_arc=None,
+                    pipeline_result={"final_verdict": None},
+                ),
+            ),
+        )
+
+        assert result == ({"arc_no": 3, "patched": True}, {"final_verdict": "PASS"}, False)
+        preflight._run_inplace_four_phase_attempt.assert_called_once_with(
+            global_arc_no=3,
+            fix_scope="inplace",
+            prev_score=95,
+            previous_attempt={"best_arc": {"arc_no": 3}, "rejection_reason": "fix local issue"},
+        )
+        assert preflight._run_patch_or_generate_four_phase_attempt.call_args.kwargs["four_phase_arc"] == {
+            "arc_no": 3,
+            "patched": True,
+        }
+        assert preflight._run_patch_or_generate_four_phase_attempt.call_args.kwargs["pipeline_result"] == {
+            "final_verdict": "PASS",
+        }
+
+    def test_resolve_four_phase_generation_seed_uses_plan_defaults_without_inplace(self, preflight):
+        from modules.core.stage2_preflight import (
+            Stage2FourPhaseGenerationPlan,
+            Stage2FourPhaseGenerationRequest,
+        )
+
+        request = Stage2FourPhaseGenerationRequest(
+            attempt=1,
+            global_arc_no=3,
+            current_ep_start=11,
+            current_vol_strategy={"strategy_doc": "doc"},
+            enriched_block={"block_theme": "theme"},
+            all_refined_arcs=[{"arc_no": 1}],
+            bible_root={"AssetLibrary": {}},
+            protagonist_name="hero",
+            director_feedback_for_fourphase="director feedback",
+            entity_registry_for_director={"npc": {}},
+            previous_attempt={"best_arc": {"arc_no": 3}},
+            s2_spinner=MagicMock(),
+            s2_vector_ctx="vector ctx",
+            generation_plan=Stage2FourPhaseGenerationPlan(
+                prev_score=82,
+                was_patch=False,
+                use_inplace=False,
+                use_patch=True,
+                four_phase_arc={"arc_no": 3, "seeded": True},
+                pipeline_result={"final_verdict": "PASS"},
+            ),
+        )
+        preflight._run_inplace_four_phase_attempt = MagicMock()
+
+        four_phase_arc, pipeline_result = preflight._resolve_four_phase_generation_seed(request=request)
+
+        assert four_phase_arc == {"arc_no": 3, "seeded": True}
+        assert pipeline_result == {"final_verdict": "PASS"}
+        preflight._run_inplace_four_phase_attempt.assert_not_called()
+
+    def test_build_patch_or_generate_attempt_kwargs_reuses_request_and_generation_plan(self, preflight):
+        from modules.core.stage2_preflight import (
+            Stage2FourPhaseGenerationPlan,
+            Stage2FourPhaseGenerationRequest,
+        )
+
+        request = Stage2FourPhaseGenerationRequest(
+            attempt=1,
+            global_arc_no=3,
+            current_ep_start=11,
+            current_vol_strategy={"strategy_doc": "doc"},
+            enriched_block={"block_theme": "theme"},
+            all_refined_arcs=[{"arc_no": 1}],
+            bible_root={"AssetLibrary": {"sword": "iron"}},
+            protagonist_name="hero",
+            director_feedback_for_fourphase="director feedback",
+            entity_registry_for_director={"npc": {}},
+            previous_attempt={"best_arc": {"arc_no": 3}},
+            s2_spinner=MagicMock(),
+            s2_vector_ctx="vector ctx",
+            generation_plan=Stage2FourPhaseGenerationPlan(
+                prev_score=82,
+                was_patch=False,
+                use_inplace=False,
+                use_patch=True,
+                four_phase_arc={"arc_no": 3, "seeded": True},
+                pipeline_result={"final_verdict": "PASS"},
+            ),
+        )
+
+        kwargs = preflight._build_patch_or_generate_attempt_kwargs(
+            request=request,
+            four_phase_arc={"arc_no": 3, "patched": True},
+            pipeline_result={"final_verdict": "PASS"},
+        )
+
+        assert kwargs["attempt"] == 1
+        assert kwargs["global_arc_no"] == 3
+        assert kwargs["current_ep_start"] == 11
+        assert kwargs["current_vol_strategy"] == {"strategy_doc": "doc"}
+        assert kwargs["previous_attempt"] == {"best_arc": {"arc_no": 3}}
+        assert kwargs["prev_score"] == 82
+        assert kwargs["use_patch"] is True
+        assert kwargs["four_phase_arc"] == {"arc_no": 3, "patched": True}
+        assert kwargs["pipeline_result"] == {"final_verdict": "PASS"}
+
+    def test_build_patch_or_generate_request_fields_reuses_runtime_request_surface(self, preflight):
+        from modules.core.stage2_preflight import (
+            Stage2FourPhaseGenerationPlan,
+            Stage2FourPhaseGenerationRequest,
+        )
+
+        spinner = MagicMock()
+        request = Stage2FourPhaseGenerationRequest(
+            attempt=1,
+            global_arc_no=3,
+            current_ep_start=11,
+            current_vol_strategy={"strategy_doc": "doc"},
+            enriched_block={"block_theme": "theme"},
+            all_refined_arcs=[{"arc_no": 1}],
+            bible_root={"AssetLibrary": {"sword": "iron"}},
+            protagonist_name="hero",
+            director_feedback_for_fourphase="director feedback",
+            entity_registry_for_director={"npc": {}},
+            previous_attempt={"best_arc": {"arc_no": 3}},
+            s2_spinner=spinner,
+            s2_vector_ctx="vector ctx",
+            generation_plan=Stage2FourPhaseGenerationPlan(),
+        )
+
+        fields = preflight._build_patch_or_generate_request_fields(request)
+
+        assert fields == {
+            "attempt": 1,
+            "global_arc_no": 3,
+            "current_ep_start": 11,
+            "current_vol_strategy": {"strategy_doc": "doc"},
+            "enriched_block": {"block_theme": "theme"},
+            "all_refined_arcs": [{"arc_no": 1}],
+            "bible_root": {"AssetLibrary": {"sword": "iron"}},
+            "protagonist_name": "hero",
+            "director_feedback_for_fourphase": "director feedback",
+            "entity_registry_for_director": {"npc": {}},
+            "previous_attempt": {"best_arc": {"arc_no": 3}},
+            "s2_spinner": spinner,
+            "s2_vector_ctx": "vector ctx",
+        }
+
+    def test_build_patch_or_generate_episode_fields_preserves_episode_runtime_surface(self, preflight):
+        from modules.core.stage2_preflight import (
+            Stage2FourPhaseGenerationPlan,
+            Stage2FourPhaseGenerationRequest,
+        )
+
+        spinner = MagicMock()
+        request = Stage2FourPhaseGenerationRequest(
+            attempt=1,
+            global_arc_no=3,
+            current_ep_start=11,
+            current_vol_strategy={"strategy_doc": "doc"},
+            enriched_block={"block_theme": "theme"},
+            all_refined_arcs=[{"arc_no": 1}],
+            bible_root={"AssetLibrary": {"sword": "iron"}},
+            protagonist_name="hero",
+            director_feedback_for_fourphase="director feedback",
+            entity_registry_for_director={"npc": {}},
+            previous_attempt={"best_arc": {"arc_no": 3}},
+            s2_spinner=spinner,
+            s2_vector_ctx="vector ctx",
+            generation_plan=Stage2FourPhaseGenerationPlan(),
+        )
+
+        fields = preflight._build_patch_or_generate_episode_fields(request)
+
+        assert fields == {
+            "attempt": 1,
+            "global_arc_no": 3,
+            "current_ep_start": 11,
+            "s2_spinner": spinner,
+            "s2_vector_ctx": "vector ctx",
+        }
+
+    def test_build_patch_or_generate_content_fields_preserves_content_director_surface(self, preflight):
+        from modules.core.stage2_preflight import (
+            Stage2FourPhaseGenerationPlan,
+            Stage2FourPhaseGenerationRequest,
+        )
+
+        request = Stage2FourPhaseGenerationRequest(
+            attempt=1,
+            global_arc_no=3,
+            current_ep_start=11,
+            current_vol_strategy={"strategy_doc": "doc"},
+            enriched_block={"block_theme": "theme"},
+            all_refined_arcs=[{"arc_no": 1}],
+            bible_root={"AssetLibrary": {"sword": "iron"}},
+            protagonist_name="hero",
+            director_feedback_for_fourphase="director feedback",
+            entity_registry_for_director={"npc": {}},
+            previous_attempt={"best_arc": {"arc_no": 3}},
+            s2_spinner=MagicMock(),
+            s2_vector_ctx="vector ctx",
+            generation_plan=Stage2FourPhaseGenerationPlan(),
+        )
+
+        fields = preflight._build_patch_or_generate_content_fields(request)
+
+        assert fields == {
+            "current_vol_strategy": {"strategy_doc": "doc"},
+            "enriched_block": {"block_theme": "theme"},
+            "all_refined_arcs": [{"arc_no": 1}],
+            "bible_root": {"AssetLibrary": {"sword": "iron"}},
+            "protagonist_name": "hero",
+            "director_feedback_for_fourphase": "director feedback",
+            "entity_registry_for_director": {"npc": {}},
+            "previous_attempt": {"best_arc": {"arc_no": 3}},
+        }
+
+    def test_build_patch_or_generate_story_fields_preserves_story_surface(self, preflight):
+        from modules.core.stage2_preflight import (
+            Stage2FourPhaseGenerationPlan,
+            Stage2FourPhaseGenerationRequest,
+        )
+
+        request = Stage2FourPhaseGenerationRequest(
+            attempt=1,
+            global_arc_no=3,
+            current_ep_start=11,
+            current_vol_strategy={"strategy_doc": "doc"},
+            enriched_block={"block_theme": "theme"},
+            all_refined_arcs=[{"arc_no": 1}],
+            bible_root={"AssetLibrary": {"sword": "iron"}},
+            protagonist_name="hero",
+            director_feedback_for_fourphase="director feedback",
+            entity_registry_for_director={"npc": {}},
+            previous_attempt={"best_arc": {"arc_no": 3}},
+            s2_spinner=MagicMock(),
+            s2_vector_ctx="vector ctx",
+            generation_plan=Stage2FourPhaseGenerationPlan(),
+        )
+
+        fields = preflight._build_patch_or_generate_story_fields(request)
+
+        assert fields == {
+            "current_vol_strategy": {"strategy_doc": "doc"},
+            "enriched_block": {"block_theme": "theme"},
+            "all_refined_arcs": [{"arc_no": 1}],
+            "bible_root": {"AssetLibrary": {"sword": "iron"}},
+            "protagonist_name": "hero",
+        }
+
+    def test_build_patch_or_generate_director_fields_preserves_director_surface(self, preflight):
+        from modules.core.stage2_preflight import (
+            Stage2FourPhaseGenerationPlan,
+            Stage2FourPhaseGenerationRequest,
+        )
+
+        request = Stage2FourPhaseGenerationRequest(
+            attempt=1,
+            global_arc_no=3,
+            current_ep_start=11,
+            current_vol_strategy={"strategy_doc": "doc"},
+            enriched_block={"block_theme": "theme"},
+            all_refined_arcs=[{"arc_no": 1}],
+            bible_root={"AssetLibrary": {"sword": "iron"}},
+            protagonist_name="hero",
+            director_feedback_for_fourphase="director feedback",
+            entity_registry_for_director={"npc": {}},
+            previous_attempt={"best_arc": {"arc_no": 3}},
+            s2_spinner=MagicMock(),
+            s2_vector_ctx="vector ctx",
+            generation_plan=Stage2FourPhaseGenerationPlan(),
+        )
+
+        fields = preflight._build_patch_or_generate_director_fields(request)
+
+        assert fields == {
+            "director_feedback_for_fourphase": "director feedback",
+            "entity_registry_for_director": {"npc": {}},
+            "previous_attempt": {"best_arc": {"arc_no": 3}},
+        }
+
+    def test_build_patch_or_generate_plan_fields_reuses_generation_plan_flags(self, preflight):
+        from modules.core.stage2_preflight import (
+            Stage2FourPhaseGenerationPlan,
+            Stage2FourPhaseGenerationRequest,
+        )
+
+        request = Stage2FourPhaseGenerationRequest(
+            attempt=1,
+            global_arc_no=3,
+            current_ep_start=11,
+            current_vol_strategy={"strategy_doc": "doc"},
+            enriched_block={"block_theme": "theme"},
+            all_refined_arcs=[{"arc_no": 1}],
+            bible_root={"AssetLibrary": {"sword": "iron"}},
+            protagonist_name="hero",
+            director_feedback_for_fourphase="director feedback",
+            entity_registry_for_director={"npc": {}},
+            previous_attempt={"best_arc": {"arc_no": 3}},
+            s2_spinner=MagicMock(),
+            s2_vector_ctx="vector ctx",
+            generation_plan=Stage2FourPhaseGenerationPlan(
+                prev_score=82,
+                use_patch=True,
+            ),
+        )
+
+        fields = preflight._build_patch_or_generate_plan_fields(
+            request=request,
+            four_phase_arc={"arc_no": 3, "patched": True},
+            pipeline_result={"final_verdict": "PASS"},
+        )
+
+        assert fields == {
+            "prev_score": 82,
+            "use_patch": True,
+            "four_phase_arc": {"arc_no": 3, "patched": True},
+            "pipeline_result": {"final_verdict": "PASS"},
+        }
+
+    def test_log_four_phase_generation_attempt_outcome_emits_success_and_failure(self, preflight):
+        preflight._log_four_phase_generation_attempt_outcome({"arc_no": 3})
+        preflight._log_four_phase_generation_attempt_outcome(None)
+
+        preflight.ctx.ui.log.assert_any_call("      ✅ [TF-38] Arc 생성 완료")
+        preflight.ctx.ui.log.assert_any_call("      ⚠️ [TF-38] Arc 생성 실패")
+
+    def test_run_inplace_four_phase_attempt_marks_pass_after_successful_patch(self, preflight):
+        best_arc = {
+            "arc_no": 3,
+            "ep_start": 11,
+            "ep_end": 20,
+            "ep_count": 10,
+            "tactical_doc": "ORIGINAL ARC " * 30,
+            "state_changes": {},
+        }
+        patched_arc = {
+            "arc_no": 3,
+            "ep_start": 11,
+            "ep_end": 20,
+            "ep_count": 10,
+            "tactical_doc": "PATCHED ARC " * 30,
+            "state_changes": {},
+        }
+        preflight.ctx.agents["four_phase"]._inplace_patch_arc.return_value = patched_arc
+
+        with (
+            patch("modules.core.constants.calc_patch_change_ratio", return_value=0.2),
+            patch("modules.core.constants.log_patch_diff"),
+        ):
+            four_phase_arc, pipeline_result = preflight._run_inplace_four_phase_attempt(
+                global_arc_no=3,
+                fix_scope="inplace",
+                prev_score=95,
+                previous_attempt={
+                    "best_arc": best_arc,
+                    "rejection_reason": "fix local issue",
+                },
+            )
+
+        assert four_phase_arc == patched_arc
+        assert pipeline_result == {"final_verdict": "PASS"}
+        preflight.ctx.agents["four_phase"]._inplace_patch_arc.assert_called_once_with(
+            original_arc=best_arc,
+            director_feedback="fix local issue",
+            arc_no=3,
+        )
+
+    def test_run_patch_or_generate_four_phase_attempt_falls_back_to_generate_after_patch_failure(self, preflight):
+        generated_arc = {
+            "arc_no": 3,
+            "ep_start": 11,
+            "ep_end": 20,
+            "ep_count": 10,
+            "tactical_doc": "GENERATED ARC " * 40,
+            "state_changes": {},
+        }
+        spinner = MagicMock()
+        preflight.ctx.agents["four_phase"].patch_arc_with_feedback.return_value = (
+            None,
+            {"final_verdict": "REJECT"},
+        )
+        preflight.ctx.agents["four_phase"].generate.return_value = (
+            generated_arc,
+            {"final_verdict": "PASS"},
+        )
+
+        four_phase_arc, pipeline_result, patch_fallback = preflight._run_patch_or_generate_four_phase_attempt(
+            attempt=1,
+            global_arc_no=3,
+            current_ep_start=11,
+            current_vol_strategy={"strategy_doc": "doc"},
+            enriched_block={"block_theme": "theme"},
+            all_refined_arcs=[{"arc_no": 1}],
+            bible_root={"AssetLibrary": {}},
+            protagonist_name="hero",
+            director_feedback_for_fourphase="director feedback",
+            entity_registry_for_director={"npc": {}},
+            previous_attempt={
+                "best_arc": {"arc_no": 3},
+                "selected_strategy": "ensemble_c",
+            },
+            s2_spinner=spinner,
+            s2_vector_ctx="vector ctx",
+            prev_score=82,
+            use_patch=True,
+            four_phase_arc=None,
+            pipeline_result={"final_verdict": None},
+        )
+
+        assert four_phase_arc == generated_arc
+        assert pipeline_result == {"final_verdict": "PASS"}
+        assert patch_fallback is True
+        preflight.ctx.agents["four_phase"].patch_arc_with_feedback.assert_called_once()
+        preflight.ctx.agents["four_phase"].generate.assert_called_once()
+        spinner.update_detail.assert_called_once_with("Arc 3 · Arc 생성")
+
+    def test_run_four_phase_generation_attempt_falls_back_from_patch_to_generate(self, preflight):
+        from modules.core.stage2_preflight import Stage2FourPhaseAttemptResult
+
+        best_arc = {
+            "arc_no": 3,
+            "ep_start": 11,
+            "ep_end": 20,
+            "ep_count": 10,
+            "tactical_doc": "ORIGINAL ARC " * 60,
+            "state_changes": {},
+        }
+        generated_arc = {
+            "arc_no": 3,
+            "ep_start": 11,
+            "ep_end": 20,
+            "ep_count": 10,
+            "tactical_doc": "GENERATED ARC " * 80,
+            "state_changes": {},
+        }
+        previous_attempt = {
+            "best_arc": best_arc,
+            "fix_scope": "partial",
+            "score": 82,
+            "rejection_reason": "tighten continuity",
+            "selected_strategy": "ensemble_c",
+        }
+        spinner = MagicMock()
+        preflight.ctx.agents["four_phase"].patch_arc_with_feedback.return_value = (
+            None,
+            {"final_verdict": "REJECT"},
+        )
+        preflight.ctx.agents["four_phase"].generate.return_value = (
+            generated_arc,
+            {"final_verdict": "PASS"},
+        )
+
+        result = preflight.runtime.run_four_phase_generation_attempt(
+            attempt=1,
+            global_arc_no=3,
+            current_ep_start=11,
+            current_vol_strategy={"strategy_doc": "doc"},
+            enriched_block={"block_theme": "theme"},
+            all_refined_arcs=[{"arc_no": 1}],
+            bible_root={"AssetLibrary": {}},
+            protagonist_name="hero",
+            director_feedback_for_fourphase="director feedback",
+            entity_registry_for_director={"npc": {}},
+            previous_attempt=previous_attempt,
+            s2_spinner=spinner,
+            s2_vector_ctx="vector ctx",
+        )
+
+        assert result == Stage2FourPhaseAttemptResult(
+            four_phase_arc=generated_arc,
+            pipeline_result={"final_verdict": "PASS"},
+            prev_score=82,
+            was_patch=True,
+            patch_fallback=True,
+        )
+        preflight.ctx.agents["four_phase"].patch_arc_with_feedback.assert_called_once()
+        preflight.ctx.agents["four_phase"].generate.assert_called_once()
+        assert (
+            preflight.ctx.agents["four_phase"].patch_arc_with_feedback.call_args.kwargs["rejected_strategy"]
+            == "ensemble_c"
+        )
+        spinner.update_detail.assert_called_once_with("Arc 3 · Arc 생성")
+        preflight.ctx.perf_timer.start.assert_called_once_with("s2_arc_3_generate")
+        preflight.ctx.perf_timer.stop.assert_called_once_with("s2_arc_3_generate")
+
+    def test_emit_patch_mode_audit_event_dispatches_attempt_metadata(self, preflight):
+        preflight._emit_patch_mode_audit_event(
+            was_patch=True,
+            global_arc_no=3,
+            attempt=1,
+            prev_score=82,
+            patch_fallback=False,
+        )
+
+        preflight.ctx.audit_event.assert_called_once_with(
+            "stage2_patch_mode",
+            "stage2 four_phase patch mode attempted",
+            {"arc_no": 3, "attempt": 2, "prev_score": 82, "fallback": False},
+        )
+
+    def test_emit_patch_mode_audit_event_noops_when_not_patch(self, preflight):
+        preflight._emit_patch_mode_audit_event(
+            was_patch=False,
+            global_arc_no=3,
+            attempt=1,
+            prev_score=82,
+            patch_fallback=True,
+        )
+
+        preflight.ctx.audit_event.assert_not_called()
+
+    def test_build_four_phase_failure_feedback_emits_failed_audit_event(self, preflight):
+        feedback = preflight._build_four_phase_failure_feedback(
+            pipeline_result={
+                "final_verdict": "FAILED",
+                "retries": 3,
+                "phases": {"validate": {"issues_count": 2}},
+            },
+            global_arc_no=1,
+        )
+
+        assert feedback == "FourPhase 재시도 소진 실패 (final_verdict=FAILED). 구조적 문제 해결 후 재시도 필요."
+        preflight.ctx.audit_event.assert_called_once_with(
+            "four_phase_failed",
+            "retry budget exhausted",
+            {"arc_no": 1, "retries": 3, "issues_count": 2},
+        )
+
+    def test_build_four_phase_failure_feedback_returns_internal_validation_message(self, preflight):
+        feedback = preflight._build_four_phase_failure_feedback(
+            pipeline_result={"final_verdict": "REJECT", "phases": {"validate": {"issues_count": 1}}},
+            global_arc_no=1,
+        )
+
+        assert feedback == "FourPhase 내부 검증 실패. 구조적 문제 해결 필요."
+        preflight.ctx.audit_event.assert_not_called()
+
+    def test_build_four_phase_exception_feedback_emits_error_audit_event(self, preflight):
+        feedback = preflight._build_four_phase_exception_feedback(
+            fp_err=RuntimeError("four phase exploded"),
+            global_arc_no=1,
+        )
+
+        assert feedback == "FourPhase 오류 발생: four phase exploded"
+        preflight.ctx.audit_event.assert_called_once_with(
+            "four_phase_error",
+            "four phase exploded",
+            {"arc_no": 1},
+        )
+
+    def test_build_four_phase_exception_feedback_allows_missing_audit_event(self, preflight):
+        preflight.ctx.audit_event = None
+
+        feedback = preflight._build_four_phase_exception_feedback(
+            fp_err=RuntimeError("four phase exploded"),
+            global_arc_no=1,
+        )
+
+        assert feedback == "FourPhase 오류 발생: four phase exploded"
+
+    @patch("modules.core.spinners.StageSpinner", MagicMock())
+    def test_run_four_phase_enrichment_cycle_routes_non_pass_result_to_failure_feedback(self, preflight):
+        from modules.core.stage2_preflight import Stage2FourPhaseAttemptResult, Stage2FourPhaseCyclePayload
+
+        preflight._build_stage2_vector_context = MagicMock(return_value="vector context")
+        preflight.runtime.run_four_phase_generation_attempt = MagicMock(
+            return_value=Stage2FourPhaseAttemptResult(
+                four_phase_arc={"tactical_doc": "candidate"},
+                pipeline_result={"final_verdict": "REJECT"},
+                prev_score=82,
+                was_patch=True,
+                patch_fallback=True,
+            )
+        )
+        preflight._build_four_phase_failure_feedback = MagicMock(return_value="tighten continuity")
+        preflight.runtime.finalize_four_phase_pass = MagicMock()
+
+        payload = preflight.runtime.run_four_phase_enrichment_cycle(
+            attempt=1,
+            global_arc_no=3,
+            current_ep_start=21,
+            current_vol_strategy={"volume": 3},
+            enriched_block={"joint_docs": {}, "status_shadow": {}},
+            all_refined_arcs=[{"arc_no": 1}],
+            bible_root={"meta": "bible"},
+            protagonist_name="Hero",
+            director_feedback_for_fourphase="previous feedback",
+            entity_registry_for_director={"Hero": {"role": "lead"}},
+            genre_for_tracker="wuxia",
+            previous_attempt={"score": 82},
+        )
+
+        assert payload == Stage2FourPhaseCyclePayload(
+            director_feedback_for_fourphase="tighten continuity",
+            prev_score=82,
+            was_patch=True,
+            patch_fallback=True,
+        )
+        preflight._build_stage2_vector_context.assert_called_once_with(
+            global_arc_no=3,
+            current_ep_start=21,
+            enriched_block={"joint_docs": {}, "status_shadow": {}},
+            current_vol_strategy={"volume": 3},
+            protagonist_name="Hero",
+        )
+        preflight.runtime.run_four_phase_generation_attempt.assert_called_once()
+        preflight._build_four_phase_failure_feedback.assert_called_once_with(
+            pipeline_result={"final_verdict": "REJECT"},
+            global_arc_no=3,
+        )
+        preflight.runtime.finalize_four_phase_pass.assert_not_called()
+
+    def test_resolve_four_phase_attempt_cycle_payload_routes_pass_to_finalize(self, preflight):
+        from modules.core.stage2_preflight import (
+            Stage2FourPhaseAttemptResult,
+            Stage2FourPhaseCyclePayload,
+            Stage2FourPhasePassPayload,
+        )
+
+        preflight.runtime.finalize_four_phase_pass = MagicMock(
+            return_value=Stage2FourPhasePassPayload(
+                refined_arc={"tactical_doc": "PASS ARC"},
+                generation_method="four_phase",
+                four_phase_passed=True,
+                draft_validator_passed=False,
+                consensus_passed=False,
+                st_snapshot={"registry": 1},
+            )
+        )
+        preflight._build_four_phase_failure_feedback = MagicMock()
+
+        payload = preflight.runtime.resolve_four_phase_attempt_cycle_payload(
+            attempt=1,
+            global_arc_no=3,
+            enriched_block={"joint_docs": {}, "status_shadow": {}},
+            genre_for_tracker="wuxia",
+            director_feedback_for_fourphase="previous feedback",
+            base_payload=Stage2FourPhaseCyclePayload(
+                director_feedback_for_fourphase="previous feedback",
+            ),
+            attempt_result=Stage2FourPhaseAttemptResult(
+                four_phase_arc={"tactical_doc": "candidate"},
+                pipeline_result={"final_verdict": "PASS"},
+                prev_score=82,
+                was_patch=True,
+                patch_fallback=False,
+            ),
+        )
+
+        assert payload == Stage2FourPhaseCyclePayload(
+            director_feedback_for_fourphase="previous feedback",
+            four_phase_passed=True,
+            refined_arc={"tactical_doc": "PASS ARC"},
+            generation_method="four_phase",
+            draft_validator_passed=False,
+            consensus_passed=False,
+            st_snapshot={"registry": 1},
+            was_patch=True,
+            patch_fallback=False,
+            prev_score=82,
+        )
+        preflight.runtime.finalize_four_phase_pass.assert_called_once_with(
+            attempt=1,
+            global_arc_no=3,
+            director_feedback_for_fourphase="previous feedback",
+            refined_arc={"tactical_doc": "candidate"},
+            pipeline_result={"final_verdict": "PASS"},
+            enriched_block={"joint_docs": {}, "status_shadow": {}},
+            genre_for_tracker="wuxia",
+        )
+        preflight._build_four_phase_failure_feedback.assert_not_called()
+
     @patch("modules.core.spinners.StageSpinner", MagicMock())
     def test_no_fourphase_returns_defaults(self, preflight):
         preflight.ctx.agents = {}

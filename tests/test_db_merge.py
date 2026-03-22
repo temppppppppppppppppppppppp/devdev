@@ -8,7 +8,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from modules.core.db_manager import DBManager
-from modules.core.vec_memory import VecMemory
+from modules.core.vec_memory import VecMemory, _GENAI_AVAILABLE
 
 try:
     import sqlite_vec  # noqa: F401
@@ -39,10 +39,10 @@ class TestSharedMode:
         assert vm._conn is tmp_db.conn
         assert vm._lock is tmp_db._lock
 
-    @pytest.mark.skipif(not _VEC_AVAILABLE, reason="sqlite-vec not installed")
+    @pytest.mark.skipif(not (_VEC_AVAILABLE and _GENAI_AVAILABLE), reason="sqlite-vec or google-genai not installed")
     def test_shared_mode_operational(self, tmp_db):
         vm = VecMemory(
-            api_key="",
+            api_key="test-key",
             ui_log=MagicMock(),
             conn=tmp_db.conn,
             lock=tmp_db._lock,

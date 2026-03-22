@@ -133,7 +133,7 @@ class TestBuildContinuityPacket:
         )
         builder = Stage4ContextBuilder(ctx)
 
-        packet = builder._build_continuity_packet(
+        packet = builder.context_packets.build_continuity_packet(
             {
                 "npcs": ["장천", "소연"],
                 "items": ["흑검"],
@@ -166,7 +166,7 @@ class TestBuildContinuityPacket:
         )
         builder = Stage4ContextBuilder(ctx)
 
-        packet = builder._build_continuity_packet(
+        packet = builder.context_packets.build_continuity_packet(
             {"npcs": list(alive_npcs.keys()), "items": [], "plots": [], "locations": [], "_full_text": ""}
         )
 
@@ -175,7 +175,7 @@ class TestBuildContinuityPacket:
     def test_build_continuity_packet_empty_entities(self):
         builder = Stage4ContextBuilder(_make_ctx())
 
-        packet = builder._build_continuity_packet({"npcs": [], "items": [], "plots": [], "locations": []})
+        packet = builder.context_packets.build_continuity_packet({"npcs": [], "items": [], "plots": [], "locations": []})
 
         assert packet == ""
 
@@ -208,7 +208,7 @@ class TestBuildContinuityPacket:
         )
         builder = Stage4ContextBuilder(ctx)
 
-        packet = builder._build_continuity_packet(
+        packet = builder.context_packets.build_continuity_packet(
             {"npcs": ["장천"], "items": [], "plots": [], "locations": [], "_full_text": ""}
         )
 
@@ -232,7 +232,7 @@ class TestBuildContinuityPacket:
         ]
         builder = Stage4ContextBuilder(ctx)
 
-        packet = builder._build_continuity_packet(
+        packet = builder.context_packets.build_continuity_packet(
             {"npcs": ["장천"], "items": [], "plots": [], "locations": [], "_full_text": ""}
         )
 
@@ -259,7 +259,7 @@ class TestBuildContinuityPacket:
         ]
         builder = Stage4ContextBuilder(ctx)
 
-        packet = builder._build_continuity_packet(
+        packet = builder.context_packets.build_continuity_packet(
             {
                 "npcs": ["장천", "소연"],
                 "items": [],
@@ -289,7 +289,7 @@ class TestBuildContinuityPacket:
         ]
         builder = Stage4ContextBuilder(ctx)
 
-        packet = builder._build_continuity_packet(
+        packet = builder.context_packets.build_continuity_packet(
             {
                 "npcs": ["장천"],
                 "items": [],
@@ -328,7 +328,7 @@ class TestBuildContinuityPacket:
         )
         builder = Stage4ContextBuilder(ctx)
 
-        packet = builder._build_continuity_packet(
+        packet = builder.context_packets.build_continuity_packet(
             {
                 "npcs": [],
                 "items": [],
@@ -370,7 +370,7 @@ class TestBuildContinuityPacket:
         )
         builder = Stage4ContextBuilder(ctx)
 
-        packet = builder._build_continuity_packet(
+        packet = builder.context_packets.build_continuity_packet(
             {
                 "npcs": [],
                 "items": [],
@@ -428,7 +428,7 @@ class TestBuildContinuityPacket:
         ]
         builder = Stage4ContextBuilder(ctx)
 
-        packet = builder._build_continuity_packet(
+        packet = builder.context_packets.build_continuity_packet(
             {
                 "npcs": list(alive_npcs.keys()),
                 "items": ["혈옥"],
@@ -459,7 +459,7 @@ class TestCondensedSummaries:
         )
         builder = Stage4ContextBuilder(ctx)
 
-        summary = builder._build_condensed_world_state_summary(
+        summary = builder.context_packets.build_condensed_world_state_summary(
             {"npcs": ["소연"], "items": ["흑검"], "plots": ["혈교 추적"], "locations": ["한양"], "_full_text": "소연 흑검 혈교 추적"}
         )
 
@@ -490,7 +490,7 @@ class TestCondensedSummaries:
         )
         builder = Stage4ContextBuilder(ctx)
 
-        summary = builder._build_condensed_fact_ledger_summary(
+        summary = builder.context_packets.build_condensed_fact_ledger_summary(
             {"npcs": ["소연"], "items": ["흑검"], "plots": [], "locations": [], "_full_text": "소연 흑검 자본금"}
         )
 

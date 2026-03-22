@@ -4,13 +4,21 @@ import concurrent.futures
 import json
 import logging
 import time
+from dataclasses import dataclass
 from pathlib import Path
 from unittest.mock import MagicMock, mock_open, patch
 
+from modules.core import stage4_episode_logging as s4_episode_logging
 from modules.core.context_advisor import RetrievalPlan, RetrievalSlot, RetrievalSources
 from modules.core.session_logger import SessionLogger
 from modules.core.stage4_context import Stage4Context
-from modules.core.stage4_interview_round import Stage4InterviewRound
+from modules.core.stage4_director_runtime import _DirectorInputPackResult
+from modules.core.stage4_reject_runtime import _RejectLoggingPayload
+from modules.core.stage4_interview_round import (
+    Stage4InterviewRound,
+    _RoundOutcomeTracePayload,
+    _Stage4AttemptPreludePayload,
+)
 from modules.core.stage4_orchestrator import Stage4Orchestrator, _RoundContext
 
 
@@ -98,6 +106,67 @@ def _make_round_ctx():
     )
 
 
+@dataclass(slots=True)
+class _TestPassEpisodeLogRequest:
+    ep_num: int
+    round_num: int
+    chief_writer: object
+    director_result: dict
+    trace_director_result: object
+    director_feedback: str
+    initial_verdict: str
+    initial_score: int
+    final_verdict: str
+    final_score: int
+    is_patch: bool
+    is_patch_fallback: bool
+    tot_used: bool
+    mad_used: bool
+    validation_warnings: list[str]
+    final_warnings: list[str]
+    patch_trace: dict
+    logging_payload: object
+    selection_artifact_meta: dict
+    arc_num: int
+    asp_manuscript: str
+
+
+def _normalize_test_pass_episode_log_request(*, request, session_id=None):
+    trace_verdict_reason = None
+    if isinstance(request.trace_director_result, dict):
+        trace_verdict_reason = request.trace_director_result.get("verdict_reason")
+    return s4_episode_logging.Stage4PassEpisodeLogRequest(
+        ep_num=request.ep_num,
+        round_num=request.round_num,
+        arc_num=request.arc_num,
+        director_result=request.director_result,
+        director_feedback=request.director_feedback,
+        trace_verdict_reason=trace_verdict_reason,
+        initial_verdict=request.initial_verdict,
+        initial_score=request.initial_score,
+        final_verdict=request.final_verdict,
+        final_score=request.final_score,
+        is_patch=request.is_patch,
+        is_patch_fallback=request.is_patch_fallback,
+        tot_used=request.tot_used,
+        mad_used=request.mad_used,
+        asp_used=bool(request.asp_manuscript),
+        model_tier=getattr(request.chief_writer, "model_tier", None),
+        validation_warnings=request.validation_warnings,
+        final_warnings=request.final_warnings,
+        patch_trace=request.patch_trace,
+        session_runtime_advisory=request.logging_payload.session_runtime_advisory,
+        session_retry_directives=request.logging_payload.session_retry_directives,
+        log_artifact_meta=request.logging_payload.log_artifact_meta,
+        selection_artifact_meta=request.selection_artifact_meta,
+        session_id=session_id,
+    )
+
+
+def _call_pass_log_builder(builder, request, *, session_id=None):
+    return builder(request=_normalize_test_pass_episode_log_request(request=request, session_id=session_id))
+
+
 class _AppTrapInterviewRound(Stage4InterviewRound):
     @property
     def app(self):
@@ -121,6 +190,15 @@ def _local_fix_pack(*patch_targets: str, target_kind: str = "entity_ref"):
         "success_condition": "Only the listed anchors are corrected while scene semantics stay intact.",
         "target_kind": target_kind,
     }
+
+
+def _writing_directive_stub(*, ending_style="", expression_ban=None, emotion_required=""):
+    directive = MagicMock()
+    directive.ending_style = ending_style
+    directive.expression_ban = expression_ban or []
+    directive.emotion_required = emotion_required
+    directive.is_empty.return_value = not any((ending_style, directive.expression_ban, emotion_required))
+    return directive
 
 
 class TestInterviewRoundInit:
@@ -611,7 +689,7 @@ class TestPreDirectorValidation:
             patch.object(ir, "_build_director_work_focus_summary", return_value="[작품 추적 슬롯 요약]\n- 소꿉친구 라인"),
             patch.object(ir, "_build_director_relationship_context", return_value=""),
         ):
-            validation_results = ir._run_pre_director_validation(
+            validation_results = ir.director_runtime.run_pre_director_validation(
                 candidates=[_candidate()],
                 next_ep=4,
                 blueprint={"characters": ["연홍"]},
@@ -625,6 +703,120 @@ class TestPreDirectorValidation:
             )
 
         assert validation_results[0]["coverage_warnings"] == ["missing_relation_slice"]
+
+    def test_collect_director_retrieval_context_attaches_warnings_and_observation(self):
+        ctx = _make_ctx()
+        ctx.memory = MagicMock()
+        ctx.context_advisor = MagicMock()
+        ctx.quality_dashboard = MagicMock()
+        ctx.context_advisor.plan_director_retrieval.return_value = RetrievalPlan(
+            stage="director",
+            episode_num=4,
+            slots=[
+                RetrievalSlot(
+                    category="work_relationship_context",
+                    query="관계 변화 이력: 주인공, 연홍",
+                    source=RetrievalSources.DB_NPC_RELATIONSHIP,
+                    priority=1,
+                )
+            ],
+            total_budget_chars=800,
+        )
+        ir = Stage4InterviewRound(ctx)
+        validation_results = [_validation_result()]
+
+        def threshold_side_effect(key, default=None):
+            if key == "smart_retrieval.enabled":
+                return True
+            if key == "smart_retrieval.director_enabled":
+                return True
+            if key == "context.vector_max_results_s4":
+                return 16
+            return default
+
+        with (
+            patch("modules.validation.threshold_helper._threshold", side_effect=threshold_side_effect),
+            patch.object(ir, "_resolve_director_work_focus", return_value={"tracking_slots": ["소꿉친구 라인"]}),
+            patch.object(ir, "_build_director_work_focus_summary", return_value="[작품 추적 슬롯 요약]\n- 소꿉친구 라인"),
+            patch.object(ir, "_build_director_relationship_context", return_value=""),
+        ):
+            director_memory_context = ir.director_runtime.collect_director_retrieval_context(
+                validation_results=validation_results,
+                next_ep=4,
+                round_num=0,
+                blueprint={"characters": ["연홍"]},
+                prev_text="이전 원고",
+                genre_name="무협",
+                arc_pos=1,
+                total_ep_in_arc=10,
+            )
+
+        assert "[작품 추적 슬롯 요약]" in director_memory_context
+        assert validation_results[0]["coverage_warnings"] == ["missing_relation_slice"]
+        ctx.quality_dashboard.record_retrieval_observation.assert_called_once()
+        observation = ctx.quality_dashboard.record_retrieval_observation.call_args.kwargs["observation"]
+        assert observation["relation_slice_included"] is False
+        assert observation["coverage_warnings"] == ["missing_relation_slice"]
+
+    def test_build_director_retrieval_payload_collects_plan_and_memory_context(self):
+        ctx = _make_ctx()
+        ctx.memory = MagicMock()
+        ctx.context_advisor = MagicMock()
+        ctx.context_advisor.plan_director_retrieval.return_value = RetrievalPlan(
+            stage="director",
+            episode_num=4,
+            slots=[
+                RetrievalSlot(
+                    category="work_relationship_context",
+                    query="관계 변화 이력: 주인공 고한",
+                    source=RetrievalSources.DB_NPC_RELATIONSHIP,
+                    priority=1,
+                )
+            ],
+            total_budget_chars=800,
+        )
+        ir = Stage4InterviewRound(ctx)
+
+        def threshold_side_effect(key, default=None):
+            if key == "smart_retrieval.enabled":
+                return True
+            if key == "smart_retrieval.director_enabled":
+                return True
+            if key == "context.vector_max_results_s4":
+                return 16
+            return default
+
+        with (
+            patch("modules.validation.threshold_helper._threshold", side_effect=threshold_side_effect),
+            patch.object(ir, "_resolve_director_work_focus", return_value={"tracking_slots": ["guild line"]}),
+            patch.object(ir, "_build_director_work_focus_summary", return_value="[작품 추적 슬롯 요약]\n- guild line"),
+            patch.object(ir, "_build_director_relationship_context", return_value="[관계 의미 질의]\n- ally -> rival"),
+        ):
+            payload = ir.director_runtime._build_director_retrieval_payload(
+                next_ep=4,
+                round_num=0,
+                blueprint={"characters": ["고한"]},
+                prev_text="이전 원고",
+                genre_name="무협",
+                arc_pos=1,
+                total_ep_in_arc=10,
+            )
+
+        assert payload.work_focus == {"tracking_slots": ["guild line"]}
+        assert payload.work_focus_summary == "[작품 추적 슬롯 요약]\n- guild line"
+        assert payload.plan is ctx.context_advisor.plan_director_retrieval.return_value
+        assert "[작품 추적 슬롯 요약]" in payload.director_memory_context
+        assert "[관계 의미 질의]" in payload.director_memory_context
+
+    def test_resolve_director_slot_npcs_falls_back_to_query_tokens(self):
+        ir = Stage4InterviewRound(_make_ctx())
+        slot_npcs = ir.director_runtime._resolve_director_slot_npcs(
+            npc_roster=[],
+            slot_query="고한 / 청우, 장문인",
+            max_npcs_per_slot=2,
+        )
+
+        assert slot_npcs == ["고한", "청우"]
 
     def test_run_pre_director_validation_forwards_blocking_degraded_advisory(self):
         ctx = _make_ctx()
@@ -645,7 +837,7 @@ class TestPreDirectorValidation:
             "degraded_checks": ["relationship_consistency"],
         }
 
-        validation_results = ir._run_pre_director_validation(
+        validation_results = ir.director_runtime.run_pre_director_validation(
             candidates=[_candidate()],
             next_ep=4,
             blueprint={"characters": ["연홍"]},
@@ -663,6 +855,352 @@ class TestPreDirectorValidation:
         ]
         assert validation_results[0]["warning_count"] == 1
         assert validation_results[0]["focus_points"] == ["Python 검증 advisory 1건 (Director 참고)"]
+
+    def test_run_director_core_validation_modules_routes_validator_advisories(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        validation_results = [_validation_result()]
+        candidates = [{"manuscript": "candidate manuscript", "strategy_name": "balanced"}]
+
+        consistency_validator = MagicMock()
+        consistency_validator.validate.return_value = {
+            "violations": [{"reason": "canon drift", "severity": "HIGH"}],
+            "score_penalty": 3,
+        }
+        blocking_validator = MagicMock()
+        blocking_validator.validate.return_value = {
+            "failures": [{"reason": "grave issue", "severity": "CRITICAL"}],
+            "warnings": ["soft warning"],
+            "degraded_checks": ["timeline_link"],
+        }
+        continuity_validator = MagicMock()
+        continuity_validator.validate.return_value = {
+            "violations": [{"reason": "time jump"}],
+            "warnings": [{"reason": "clock drift"}],
+        }
+        continuity_validator.check_frustration_streak.return_value = ["frustration alert"]
+        ctx.state_tracker.check_destroyed_entity_in_manuscript.return_value = [{"message": "ruined gate"}]
+
+        with patch.object(ir.director_runtime, "build_cv_context", return_value={"context": "ok"}):
+            ir.director_runtime.run_director_core_validation_modules(
+                candidates=candidates,
+                validation_results=validation_results,
+                next_ep=4,
+                round_num=1,
+                genre_name="genre",
+                blueprint={"characters": ["hero"]},
+                arc_data={},
+                consistency_validator=consistency_validator,
+                blocking_validator=blocking_validator,
+                continuity_validator=continuity_validator,
+            )
+
+        warnings = validation_results[0]["warnings"]
+        assert "[V63.2] 일관성: [HIGH] canon drift" in warnings
+        assert "[Python검증-CRITICAL] grave issue" in warnings
+        assert "[Python검증-ADVISORY] soft warning" in warnings
+        assert "[Python검증-ADVISORY] degraded: timeline_link" in warnings
+        assert "[V66.1] 연속성: time jump" in warnings
+        assert "[V66.1] 연속성 경고: clock drift" in warnings
+        assert "[D Step 4] frustration alert" in warnings
+        assert "[V66.2] 파괴된 엔티티 등장: ruined gate" in warnings
+        assert validation_results[0]["warning_count"] == len(warnings)
+        assert validation_results[0]["focus_points"] == [
+            "일관성 위반 1건 (감점 3)",
+            "Python 검증 경고 1건 (Director 판단 필요)",
+            "Python 검증 advisory 2건 (Director 참고)",
+            "연속성 위반 1건",
+        ]
+
+    def test_build_cv_identity_context_injects_prev_hud_and_protagonist_fields(self):
+        ctx = _make_ctx()
+        ctx.failure_learner = MagicMock()
+        ctx.current_project.master_bible = {"MasterBible": {"protagonist_config": {"incarnation_type": "reincarnated"}}}
+        ir = Stage4InterviewRound(ctx)
+        ir.time_warnings = ["timeline risk"]
+
+        with patch.object(ir, "_resolve_prev_hud_snapshot", return_value=({"hp": 99}, "persisted")):
+            with patch("modules.core.constants.HUDKeys.get_protagonist_name", return_value="한유진"):
+                result = ir._build_cv_identity_context(next_ep=4, genre_name="무협")
+
+        assert result["prev_hud"] == {"hp": 99}
+        assert result["prev_hud_source"] == "persisted"
+        assert result["martial_hud"] == {"hp": 99}
+        assert result["incarnation_type"] == "reincarnated"
+        assert result["protagonist_name"] == "한유진"
+        assert result["time_warnings"] == ["timeline risk"]
+        assert result["_failure_learner"] is ctx.failure_learner
+
+    def test_build_cv_state_tracker_context_collects_registry_and_history(self):
+        ctx = _make_ctx()
+        ctx.state_tracker.npc_registry = {
+            "사부": {
+                "status": "alive",
+                "death_arc": None,
+                "aliases": ["스승"],
+                "personality_traits": "냉정",
+                "primary_motivation": "보호",
+            }
+        }
+        ctx.state_tracker.item_state_registry = {"검": {"condition": "파손"}}
+        ctx.state_tracker.get_npc_change_history.return_value = [{"ep": 3, "change": "injured"}]
+        ir = Stage4InterviewRound(ctx)
+
+        result = ir._build_cv_state_tracker_context()
+
+        assert result["encyclopedia"]["npcs"] == [
+            {"name": "사부", "status": "alive", "death_arc": None, "aliases": ["스승"]}
+        ]
+        assert result["item_states"] == {"검": "파손"}
+        assert result["npc_personalities"] == {"사부": {"traits": "냉정", "motivation": "보호"}}
+        assert result["npc_history"] == {"사부": [{"ep": 3, "change": "injured"}]}
+
+    def test_build_cv_role_context_builds_karma_villain_and_authority_context(self):
+        ctx = _make_ctx()
+        ctx.current_project.db.get_episode_bible.return_value = {
+            "karma_matrix": [
+                {"target": "진악", "relation": "enemy", "type": "betrayal", "description": "betrayed the sect"}
+            ]
+        }
+        ctx.current_project.master_bible = {
+            "MasterBible": {
+                "protagonist_config": {"position": "제자"},
+                "AssetLibrary": {
+                    "KeyNPCs": [
+                        {"name": "진악", "role": "악역", "position": "수장"},
+                        {"name": "사부", "role": "사부", "position": "장문인"},
+                    ]
+                },
+            }
+        }
+        ctx.world_state = MagicMock()
+        ctx.world_state._state = {"alive_npcs": {"사부": {"known_attrs": {"position": {"value": "대장로"}}}}}
+        ir = Stage4InterviewRound(ctx)
+
+        result = ir._build_cv_role_context(next_ep=3)
+
+        assert result["karma_matrix"]["진악"]["relation_type"] == "enemy"
+        assert result["villain_context"] == {"villain_name": "진악", "villain_role": "악역", "is_aware": True}
+        assert result["authority_context"] == {
+            "protagonist_position": "제자",
+            "superior_alive": True,
+            "superior_name": "사부",
+            "superior_position": "대장로",
+        }
+
+    def test_run_director_continuity_and_state_tracker_advisories_routes_outputs(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        validation_results = [_validation_result()]
+        continuity_validator = MagicMock()
+        continuity_validator.validate.return_value = {
+            "violations": [{"reason": "time jump"}],
+            "warnings": [{"reason": "clock drift"}],
+        }
+        continuity_validator.check_frustration_streak.return_value = ["frustration alert"]
+        ctx.state_tracker.check_destroyed_entity_in_manuscript.return_value = [{"message": "ruined gate"}]
+
+        ir._run_director_continuity_and_state_tracker_advisories(
+            candidates=[{"manuscript": "candidate manuscript"}],
+            validation_results=validation_results,
+            next_ep=4,
+            cv_context={"context": "ok"},
+            continuity_validator=continuity_validator,
+        )
+
+        warnings = validation_results[0]["warnings"]
+        assert any("time jump" in warning for warning in warnings)
+        assert any("clock drift" in warning for warning in warnings)
+        assert any("frustration alert" in warning for warning in warnings)
+        assert any("ruined gate" in warning for warning in warnings)
+        assert validation_results[0]["warning_count"] == len(warnings)
+        assert len(validation_results[0]["focus_points"]) == 1
+        continuity_validator.validate.assert_called_once_with(4, "candidate manuscript", {"context": "ok"})
+        continuity_validator.check_frustration_streak.assert_called_once_with(4)
+        ctx.state_tracker.check_destroyed_entity_in_manuscript.assert_called_once_with("candidate manuscript")
+
+    def test_run_blocking_validator_advisories_routes_failures_and_deduped_advisories(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        validation_results = [_validation_result()]
+        blocking_validator = MagicMock()
+        blocking_validator.validate.return_value = {
+            "failures": [{"reason": "grave issue", "severity": "CRITICAL"}],
+            "warnings": ["soft warning", "soft warning"],
+            "degraded_checks": ["timeline_link", "timeline_link"],
+        }
+
+        ir._run_blocking_validator_advisories(
+            candidates=[{"manuscript": "candidate manuscript"}],
+            validation_results=validation_results,
+            next_ep=4,
+            round_num=1,
+            cv_context={"context": "ok"},
+            blocking_validator=blocking_validator,
+        )
+
+        warnings = validation_results[0]["warnings"]
+        assert warnings == [
+            "[Python검증-CRITICAL] grave issue",
+            "[Python검증-ADVISORY] soft warning",
+            "[Python검증-ADVISORY] degraded: timeline_link",
+        ]
+        assert validation_results[0]["warning_count"] == 3
+        assert validation_results[0]["focus_points"] == [
+            "Python 검증 경고 1건 (Director 판단 필요)",
+            "Python 검증 advisory 2건 (Director 참고)",
+        ]
+
+    def test_apply_blocking_validator_result_routes_failures_and_advisories(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        validation_result = _validation_result()
+
+        ir._apply_blocking_validator_result(
+            validation_result=validation_result,
+            bv_result={
+                "failures": [{"reason": "grave issue", "severity": "CRITICAL"}],
+                "warnings": ["soft warning", "soft warning"],
+                "degraded_checks": ["timeline_link", "timeline_link"],
+            },
+            candidate_index=1,
+            next_ep=4,
+            round_num=1,
+        )
+
+        assert validation_result["warnings"] == [
+            "[Python검증-CRITICAL] grave issue",
+            "[Python검증-ADVISORY] soft warning",
+            "[Python검증-ADVISORY] degraded: timeline_link",
+        ]
+        assert validation_result["warning_count"] == 3
+        assert validation_result["focus_points"] == [
+            "Python 검증 경고 1건 (Director 판단 필요)",
+            "Python 검증 advisory 2건 (Director 참고)",
+        ]
+        assert any(
+            "Python 검증 경고 1건" in call.args[0]
+            for call in ctx.ui.log.call_args_list
+            if call.args
+        )
+        assert any(
+            "Python 검증 advisory 2건" in call.args[0]
+            for call in ctx.ui.log.call_args_list
+            if call.args
+        )
+
+    def test_apply_blocking_validator_failures_updates_focus_points_and_logs_details(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        validation_result = _validation_result()
+
+        ir._apply_blocking_validator_failures(
+            validation_result=validation_result,
+            bv_failures=[{"reason": "grave issue", "severity": "CRITICAL"}],
+            candidate_index=1,
+            next_ep=4,
+            round_num=1,
+        )
+
+        assert validation_result["warnings"] == ["[Python검증-CRITICAL] grave issue"]
+        assert validation_result["warning_count"] == 1
+        assert validation_result["focus_points"] == ["Python 검증 경고 1건 (Director 판단 필요)"]
+        assert any(
+            "Python 검증 경고 1건" in call.args[0]
+            for call in ctx.ui.log.call_args_list
+            if call.args
+        )
+        assert any(
+            "[CRITICAL] grave issue" in call.args[0]
+            for call in ctx.ui.log.call_args_list
+            if call.args
+        )
+
+    def test_apply_blocking_validator_advisories_updates_focus_points_and_logs_summary(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        validation_result = _validation_result()
+
+        ir._apply_blocking_validator_advisories(
+            validation_result=validation_result,
+            bv_advisory_warnings=["soft warning", "degraded: timeline_link"],
+            candidate_index=1,
+            next_ep=4,
+            round_num=1,
+        )
+
+        assert validation_result["warnings"] == [
+            "[Python검증-ADVISORY] soft warning",
+            "[Python검증-ADVISORY] degraded: timeline_link",
+        ]
+        assert validation_result["warning_count"] == 2
+        assert validation_result["focus_points"] == ["Python 검증 advisory 2건 (Director 참고)"]
+        assert any(
+            "Python 검증 advisory 2건" in call.args[0]
+            for call in ctx.ui.log.call_args_list
+            if call.args
+        )
+
+    def test_collect_blocking_validator_advisory_warnings_dedupes_and_formats(self):
+        warnings = Stage4InterviewRound._collect_blocking_validator_advisory_warnings(
+            {
+                "warnings": ["soft warning", "soft warning", ""],
+                "degraded_checks": ["timeline_link", "timeline_link", ""],
+            }
+        )
+
+        assert warnings == [
+            "soft warning",
+            "degraded: timeline_link",
+        ]
+
+    def test_run_director_optional_validation_modules_routes_checklist_confidence_and_crossverify(self):
+        from types import SimpleNamespace
+
+        from modules.core.cross_agent_verifier import ComplianceLevel
+
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        checklist = MagicMock()
+        checklist.check.return_value = SimpleNamespace(
+            passed=False,
+            blocking_reasons=["style drift"],
+            summary="style drift summary",
+        )
+        confidence = MagicMock()
+        confidence.assess.return_value = SimpleNamespace(
+            concerns=["uncertain causality"],
+            level=SimpleNamespace(value="LOW"),
+        )
+        cross_verifier = MagicMock()
+        cross_verifier.verify_writer_compliance.return_value = SimpleNamespace(
+            level=ComplianceLevel.VIOLATION,
+            violations=[{"reason": "timeline conflict"}],
+            warnings=[],
+        )
+        ctx.get_module.side_effect = lambda name: {
+            "pre_director_checklist": checklist,
+            "confidence_calibrator": confidence,
+            "cross_verifier": cross_verifier,
+        }.get(name)
+        validation_results = [_validation_result()]
+
+        with (
+            patch("modules.core.project_support.resolve_style_dialogue_ratio_target", return_value=0.42),
+            patch.object(ir, "_detect_shared_failure_warnings", return_value=["shared warning"]),
+        ):
+            ir.director_runtime.run_director_optional_validation_modules(
+                candidates=[_candidate()],
+                validation_results=validation_results,
+                blueprint={"characters": ["연홍"]},
+                prev_manuscript="이전 원고",
+            )
+
+        assert checklist.check.call_args.kwargs["context"]["style_dialogue_ratio_target"] == 0.42
+        assert "[PreCheck] style drift" in validation_results[0]["warnings"]
+        assert "[Confidence:LOW] uncertain causality" in validation_results[0]["warnings"]
+        assert "[CrossVerify:VIOLATION] timeline conflict" in validation_results[0]["warnings"]
+        assert validation_results[0]["shared_failure_warnings"] == ["shared warning"]
 
 
 class TestInterviewRoundRun:
@@ -707,6 +1245,57 @@ class TestInterviewRoundRun:
 
         assert result.verdict == "PASS"
         assert result.final_manuscript == "통과 원고"
+
+    def test_prepare_round_execution_builds_payload_and_generation_start_log(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        ir._log_attempt_event = MagicMock()
+        round_ctx = _make_round_ctx()
+        round_ctx.arc_pos = 1
+        stage4_spinner = MagicMock()
+
+        with (
+            patch.object(ir, "_capture_round_metrics_baseline"),
+            patch.object(ir, "_setup_writing_directive", return_value=("directive", None)),
+            patch.object(
+                ir,
+                "_build_common_writer_kwargs",
+                return_value=("merged mandatory context", {"common": "kwargs"}),
+            ) as build_common,
+        ):
+            result = ir._prepare_round_execution(
+                round_num=0,
+                stage4_spinner=stage4_spinner,
+                director_feedback=123,
+                round_ctx=round_ctx,
+            )
+
+        assert result.chief_writer is round_ctx.chief_writer
+        assert result.next_ep == round_ctx.next_ep
+        assert result.blueprint == round_ctx.blueprint
+        assert result.style_guide == round_ctx.style_guide
+        assert result.mandatory_context == "merged mandatory context"
+        assert result.writing_directive == "directive"
+        assert result.common_writer_kwargs == {"common": "kwargs"}
+        assert result.director_feedback == "123"
+        build_kwargs = build_common.call_args.kwargs
+        assert build_kwargs["mandatory_context"].startswith("[Arc 첫 화 특별 지시]")
+        stage4_spinner.update_detail.assert_called_once_with("제1화 · 1차 면담 · 앙상블 생성")
+        ir._log_attempt_event.assert_called_once()
+
+    def test_prepend_arc_first_location_note_only_for_arc_opening(self):
+        note = Stage4InterviewRound._prepend_arc_first_location_note(
+            arc_pos=1,
+            mandatory_context="base context",
+        )
+        unchanged = Stage4InterviewRound._prepend_arc_first_location_note(
+            arc_pos=2,
+            mandatory_context="base context",
+        )
+
+        assert note.startswith("[Arc 첫 화 특별 지시]")
+        assert "base context" in note
+        assert unchanged == "base context"
 
     def test_pass_writes_session_decision_row_with_join_metadata(self, tmp_path):
         ctx = _make_ctx()
@@ -1498,6 +2087,228 @@ class TestRecordS4Attempt:
         assert kw["fix_pack"]["patch_targets"] == ["opening_location_name", "ending_location_name"]
         assert kw["retry_budget_axes"] == {"round": 1, "repair": 1, "guidance": 0}
 
+    def test_build_stage4_attempt_artifact_meta_defaults_without_payload(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        meta = ir._build_stage4_attempt_artifact_meta(
+            episode=1,
+            round_num=0,
+            arc=1,
+            candidate_key="A|balanced",
+            artifact_kind="final_manuscript",
+            artifact_payload=None,
+        )
+
+        assert meta == {
+            "candidate_key": "A|balanced",
+            "content_hash": "",
+            "artifact_path": "",
+        }
+
+    def test_extract_stage4_advisory_contract_payloads_ignores_non_dict_sections(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        gate_semantics, fix_pack, retry_budget_axes = ir._extract_stage4_advisory_contract_payloads(
+            {
+                "gate_semantics": {"director_verdict": "PASS_WITH_FIX"},
+                "fix_pack": ["not-a-dict"],
+                "retry_budget_axes": {"round": 1},
+            }
+        )
+
+        assert gate_semantics == {"director_verdict": "PASS_WITH_FIX"}
+        assert fix_pack == {}
+        assert retry_budget_axes == {"round": 1}
+
+    def test_build_stage4_pass_rate_attempt_payload_extracts_gate_semantics(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        payload = ir._build_stage4_pass_rate_attempt_payload(
+            episode=2,
+            round_num=1,
+            score=61,
+            arc=1,
+            success=False,
+            reject_reason="retry needed",
+            is_patch=True,
+            patch_fallback=False,
+            duration_ms=321,
+            token_cost=0.125,
+            prev_score=55,
+            attempt_key="s4:ep2:arc1:a2",
+            verdict="REJECT",
+            advisory_flags={
+                "gate_semantics": {
+                    "director_verdict": "PASS_WITH_FIX",
+                    "gate_basis": "bounded_local_repair",
+                    "repair_scope": "inplace",
+                },
+                "fix_pack": {"must_fix": ["repair ending"]},
+                "retry_budget_axes": {"round": 1, "repair": 1, "guidance": 0},
+            },
+            patch_strategy="patch_with_feedback",
+            structural_attempted=True,
+            error_category="LOGIC_ERROR",
+            reject_bucket="post_select_conflict",
+            score_breakdown={"narrative_flow": 9},
+            artifact_meta={
+                "candidate_key": "A|balanced",
+                "content_hash": "hash123",
+                "artifact_path": "logs/final.txt",
+            },
+        )
+
+        assert payload["generation_method"] == "patch"
+        assert payload["director_verdict"] == "PASS_WITH_FIX"
+        assert payload["gate_basis"] == "bounded_local_repair"
+        assert payload["repair_scope"] == "inplace"
+        assert payload["fix_pack"] == {"must_fix": ["repair ending"]}
+        assert payload["retry_budget_axes"] == {"round": 1, "repair": 1, "guidance": 0}
+        assert payload["candidate_key"] == "A|balanced"
+        assert payload["artifact_path"] == "logs/final.txt"
+
+    def test_resolve_stage4_db_attempt_advisory_flags_uses_last_summary_fallback(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        ir._last_advisory_summary = {"continuity": ["keep timeline"]}
+
+        resolved = ir._resolve_stage4_db_attempt_advisory_flags(None)
+
+        assert resolved == {"continuity": ["keep timeline"]}
+
+    def test_resolve_stage4_db_attempt_model_uses_director_primary_model(self):
+        ctx = _make_ctx()
+        ctx.agents["director"].primary_model = "gemini-2.5-pro"
+        ir = Stage4InterviewRound(ctx)
+
+        resolved = ir._resolve_stage4_db_attempt_model(None)
+
+        assert resolved == "gemini-2.5-pro"
+
+    def test_build_stage4_db_attempt_payload_uses_fallback_advisory_and_model(self):
+        ctx = _make_ctx()
+        ctx.agents["director"].primary_model = "gemini-2.5-pro"
+        ir = Stage4InterviewRound(ctx)
+        ir._last_advisory_summary = {"continuity": ["keep timeline"]}
+
+        payload = ir._build_stage4_db_attempt_payload(
+            episode=2,
+            round_num=1,
+            success=False,
+            score=61,
+            arc=1,
+            verdict="REJECT",
+            reject_reason="retry needed",
+            fix_scope="inplace",
+            model=None,
+            duration_ms=222,
+            advisory_flags=None,
+            session_id="sess-stage4",
+            attempt_key="s4:ep2:arc1:a2:sess-stage4",
+            artifact_meta={
+                "candidate_key": "A|balanced",
+                "content_hash": "hash123",
+                "artifact_path": "logs/final.txt",
+            },
+            selection_reason="best candidate",
+            verdict_reason="conflict",
+            open_review="repeat detected",
+            fix_scope_reasoning="bounded fix",
+            runtime_advisory="keep continuity",
+            retry_directives="change ending",
+        )
+
+        assert payload["model"] == "gemini-2.5-pro"
+        assert payload["advisory_flags"] == {"continuity": ["keep timeline"]}
+        assert payload["attempt_key"] == "s4:ep2:arc1:a2:sess-stage4"
+        assert payload["selection_reason"] == "best candidate"
+        assert payload["artifact_path"] == "logs/final.txt"
+
+    def test_record_stage4_pass_rate_attempt_uses_prelude_payload(self):
+        ctx = _make_ctx()
+        ctx.pass_rate_monitor = MagicMock()
+        ir = Stage4InterviewRound(ctx)
+        prelude = _Stage4AttemptPreludePayload(
+            duration_ms=321,
+            token_cost=0.125,
+            session_id="sess-stage4",
+            attempt_key="s4:ep2:arc1:a2:sess-stage4",
+            normalized_patch_strategy="patch_with_feedback",
+            artifact_meta={
+                "candidate_key": "A|balanced",
+                "content_hash": "hash123",
+                "artifact_path": "logs/final.txt",
+            },
+        )
+
+        ir._record_stage4_pass_rate_attempt(
+            episode=2,
+            round_num=1,
+            score=61,
+            arc=1,
+            success=False,
+            reject_reason="retry needed",
+            is_patch=True,
+            patch_fallback=False,
+            prev_score=55,
+            verdict="REJECT",
+            advisory_flags=None,
+            structural_attempted=True,
+            error_category="LOGIC_ERROR",
+            reject_bucket="post_select_conflict",
+            score_breakdown={"narrative_flow": 9},
+            prelude=prelude,
+        )
+
+        kw = ctx.pass_rate_monitor.record_attempt.call_args.kwargs
+        assert kw["attempt_key"] == "s4:ep2:arc1:a2:sess-stage4"
+        assert kw["patch_strategy"] == "patch_with_feedback"
+        assert kw["artifact_path"] == "logs/final.txt"
+
+    def test_save_stage4_db_attempt_uses_prelude_payload(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        prelude = _Stage4AttemptPreludePayload(
+            duration_ms=222,
+            token_cost=0.0,
+            session_id="sess-stage4",
+            attempt_key="s4:ep2:arc1:a2:sess-stage4",
+            normalized_patch_strategy="patch_with_feedback",
+            artifact_meta={
+                "candidate_key": "A|balanced",
+                "content_hash": "hash123",
+                "artifact_path": "logs/final.txt",
+            },
+        )
+
+        ir._save_stage4_db_attempt(
+            episode=2,
+            round_num=1,
+            success=False,
+            score=61,
+            arc=1,
+            verdict="REJECT",
+            reject_reason="retry needed",
+            fix_scope="inplace",
+            model="gemini-2.5-pro",
+            advisory_flags={"continuity": ["keep timeline"]},
+            selection_reason="best candidate",
+            verdict_reason="conflict",
+            open_review="repeat detected",
+            fix_scope_reasoning="bounded fix",
+            runtime_advisory="keep continuity",
+            retry_directives="change ending",
+            prelude=prelude,
+        )
+
+        kw = ctx.current_project.db.save_stage_attempt.call_args.kwargs
+        assert kw["session_id"] == "sess-stage4"
+        assert kw["attempt_key"] == "s4:ep2:arc1:a2:sess-stage4"
+        assert kw["artifact_path"] == "logs/final.txt"
+
     def test_attempt_key_uses_metrics_session_id_when_available(self):
         ctx = _make_ctx()
         ctx.current_project.metrics_session_id = "sess_stage4"
@@ -1511,6 +2322,35 @@ class TestRecordS4Attempt:
         db_kw = ctx.current_project.db.save_stage_attempt.call_args.kwargs
         assert db_kw["attempt_key"] == "s4:ep1:arc1:a1:sess_stage4"
         assert db_kw["session_id"] == "sess_stage4"
+
+    @patch("modules.core.stage4_interview_round.time.monotonic", return_value=110.0)
+    def test_build_stage4_attempt_prelude_defaults_runtime_and_patch_strategy(self, _mock_monotonic):
+        ctx = _make_ctx()
+        ctx.current_project.metrics_session_id = "sess_stage4"
+        ir = Stage4InterviewRound(ctx)
+        ir._round_start_ts = 100.0
+        ir._get_round_metrics_delta = MagicMock(return_value={"total_cost_usd": 0.25})
+
+        prelude = ir._build_stage4_attempt_prelude(
+            episode=2,
+            round_num=1,
+            arc=3,
+            is_patch=True,
+            patch_fallback=True,
+            patch_strategy="",
+            candidate_key="A|balanced",
+            artifact_kind="final_manuscript",
+            artifact_payload=None,
+            duration_ms=None,
+            token_cost=None,
+        )
+
+        assert prelude.duration_ms == 10000
+        assert prelude.token_cost == 0.25
+        assert prelude.session_id == "sess_stage4"
+        assert prelude.attempt_key == "s4:ep2:arc3:a2:sess_stage4"
+        assert prelude.normalized_patch_strategy == "patch_fallback_rewrite"
+        assert prelude.artifact_meta["candidate_key"] == "A|balanced"
 
     def test_record_s4_attempt_defaults_patch_strategy_for_direct_patch(self):
         ctx = _make_ctx()
@@ -1691,7 +2531,12 @@ class TestRecordS4Attempt:
         assert kw["final_verdict"] == "EMPTY"
 
     def test_source_defaults_align_with_validation_yaml(self):
-        src = Path("modules/core/stage4_interview_round.py").read_text(encoding="utf-8")
+        src = "\n".join(
+            [
+                Path("modules/core/stage4_interview_round.py").read_text(encoding="utf-8"),
+                Path("modules/core/stage4_director_runtime.py").read_text(encoding="utf-8"),
+            ]
+        )
 
         assert '_threshold("smart_retrieval.enabled", True)' in src
         assert '_threshold("smart_retrieval.director_enabled", True)' in src
@@ -1888,6 +2733,162 @@ class TestRecordS4Attempt:
         round_ctx.chief_writer.inplace_patch.assert_not_called()
         round_ctx.chief_writer.patch_with_feedback.assert_called_once()
         round_ctx.chief_writer.regenerate_with_feedback.assert_not_called()
+
+    def test_resolve_retry_lane_routing_forces_patch_once_for_post_select_conflict(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        payload = ir.retry_runtime._resolve_retry_lane_routing(
+            previous_attempt={
+                "score": "98",
+                "fix_scope": "",
+                "reject_bucket": "post_select_conflict",
+                "selected_strategy_key": "tension",
+            },
+            prev_manuscript="original manuscript",
+            round_num=1,
+        )
+
+        assert payload.prev_score == 98
+        assert payload.reject_bucket == "post_select_conflict"
+        assert payload.selected_strategy_key == "tension"
+        assert payload.force_patch is True
+        assert payload.use_inplace is False
+        assert payload.use_patch is True
+
+    def test_retry_runtime_resolve_retry_lane_routing_forces_patch_once_for_post_select_conflict(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        payload = ir.retry_runtime._resolve_retry_lane_routing(
+            previous_attempt={
+                "score": "98",
+                "fix_scope": "",
+                "reject_bucket": "post_select_conflict",
+                "selected_strategy_key": "tension",
+            },
+            prev_manuscript="original manuscript",
+            round_num=1,
+        )
+
+        assert payload.prev_score == 98
+        assert payload.reject_bucket == "post_select_conflict"
+        assert payload.selected_strategy_key == "tension"
+        assert payload.force_patch is True
+        assert payload.use_inplace is False
+        assert payload.use_patch is True
+
+    def test_build_retry_regenerate_kwargs_reduces_strategy_budget_for_constraint_violation(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        common_writer_kwargs = {"state_tracker": ctx.state_tracker}
+
+        regen_kwargs, strategy_budget, strategy_count = ir._build_retry_regenerate_kwargs(
+            common_writer_kwargs=common_writer_kwargs,
+            reject_bucket="constraint_violation",
+            fix_scope="partial",
+            selected_strategy_key="tension",
+        )
+
+        assert common_writer_kwargs == {"state_tracker": ctx.state_tracker}
+        assert regen_kwargs["state_tracker"] is ctx.state_tracker
+        assert regen_kwargs["strategy_budget"] == "reduced"
+        assert regen_kwargs["preferred_strategy"] == "tension"
+        assert strategy_budget == "reduced"
+        assert strategy_count == 2
+
+    def test_run_inplace_retry_lane_returns_none_on_shrunk_patch_output(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        chief_writer = MagicMock()
+        prev_manuscript = "original " * 500
+        chief_writer.inplace_patch.return_value = [{"manuscript": "patched " * 300}]
+
+        candidates, is_patch = ir.retry_runtime._run_inplace_retry_lane(
+            chief_writer=chief_writer,
+            director_feedback="fix continuity only",
+            round_num=1,
+            prev_score=70,
+            prev_manuscript=prev_manuscript,
+            style_guide="",
+            fix_pack_contract={"fix_pack": _local_fix_pack("opening_location_name")},
+            reject_bucket="quality_issue",
+            previous_attempt={"score": 70},
+        )
+
+        assert candidates is None
+        assert is_patch is False
+        chief_writer.inplace_patch.assert_called_once()
+
+    def test_run_patch_or_rewrite_retry_lane_falls_back_to_rewrite_after_patch_failure(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        chief_writer = MagicMock()
+        chief_writer.patch_with_feedback.return_value = []
+        chief_writer.regenerate_with_feedback.return_value = [_candidate()]
+        common_writer_kwargs = {"state_tracker": ctx.state_tracker}
+
+        candidates, is_patch, is_patch_fallback = ir.retry_runtime._run_patch_or_rewrite_retry_lane(
+            chief_writer=chief_writer,
+            common_writer_kwargs=common_writer_kwargs,
+            previous_attempt={"score": 70},
+            prev_manuscript="original manuscript",
+            round_num=1,
+            prev_score=70,
+            reject_bucket="post_select_conflict",
+            fix_scope="partial",
+            selected_strategy_key="balanced",
+            use_patch=True,
+        )
+
+        assert candidates == chief_writer.regenerate_with_feedback.return_value
+        assert is_patch is True
+        assert is_patch_fallback is True
+        chief_writer.patch_with_feedback.assert_called_once()
+        chief_writer.regenerate_with_feedback.assert_called_once()
+
+    def test_run_asp_correction_builds_context_and_returns_final_output(self):
+        ctx = _make_ctx()
+        asp_module = MagicMock()
+        asp_result = MagicMock()
+        asp_result.final_output = "asp manuscript"
+        asp_result.improvement_delta = 3
+        asp_module.generate_with_adversary.return_value = asp_result
+        ctx.get_module.side_effect = lambda name: asp_module if name == "adversarial_self_play" else None
+        ir = Stage4InterviewRound(ctx)
+
+        asp_manuscript = ir.retry_runtime._run_asp_correction(
+            round_num=2,
+            previous_attempt={"score": 70},
+            prev_manuscript="previous manuscript",
+            blueprint={"episode": 1},
+            director_feedback="tighten logic",
+        )
+
+        assert asp_manuscript == "asp manuscript"
+        asp_module.generate_with_adversary.assert_called_once_with(
+            initial_content="previous manuscript",
+            content_type="manuscript",
+            context={"blueprint": {"episode": 1}, "director_feedback": "tighten logic"},
+        )
+
+    def test_apply_asp_candidate_replacement_swaps_shortest_candidate(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        candidates = [
+            {"manuscript": "A" * 400, "strategy": "a"},
+            {"manuscript": "B" * 100, "strategy": "b"},
+            {"manuscript": "C" * 250, "strategy": "c"},
+        ]
+
+        updated = ir.retry_runtime._apply_asp_candidate_replacement(
+            candidates=candidates,
+            asp_manuscript="asp manuscript",
+        )
+
+        assert updated[1] == {"manuscript": "asp manuscript", "strategy": "asp_correction"}
+        assert updated[0]["strategy"] == "a"
+        assert updated[2]["strategy"] == "c"
 
     def test_reject_retry_shrunk_inplace_patch_falls_back_to_patch(self):
         ctx = _make_ctx()
@@ -2491,6 +3492,279 @@ class TestRecordS4Attempt:
         assert trace_meta["final_verdict"] == "PASS"
         assert trace_meta["final_score"] == 98
 
+    def test_process_positive_verdict_returns_trace_only_when_post_select_downgrades_to_reject(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        ir._record_s4_attempt = MagicMock()
+        ir._run_post_select_checks = MagicMock(
+            return_value=("REJECT", "retry required", {"score": 71, "fix_scope": "partial"}, "LOGIC_ERROR")
+        )
+        round_ctx = _make_round_ctx()
+        director_result = {
+            "selected_candidate": {
+                "manuscript": "candidate manuscript",
+                "title": "제1화",
+            },
+            "state_updates": {},
+            "selection_reason": "initial pick",
+        }
+
+        payload = ir._process_positive_verdict(
+            verdict="PASS",
+            score=91,
+            director_result=director_result,
+            director_feedback="initial feedback",
+            round_ctx=round_ctx,
+            round_num=0,
+            previous_attempt={},
+            is_patch=False,
+            is_patch_fallback=False,
+            prev_score=0,
+            stage4_spinner=MagicMock(),
+            director_mandatory_context="mandatory",
+            director_memory_context="memory",
+            error_category="",
+            quality_gate_score=90,
+        )
+
+        assert payload.pass_result is None
+        assert payload.director_feedback == "retry required"
+        assert payload.previous_attempt == {"score": 71, "fix_scope": "partial"}
+        assert payload.trace_meta["final_verdict"] == "REJECT"
+        assert payload.trace_meta["final_score"] == 91
+        assert payload.trace_meta["patch_trace"] == {}
+        ir._record_s4_attempt.assert_not_called()
+
+    def test_build_positive_verdict_seed_clones_selected_candidate_and_state_updates(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.next_ep = 3
+        director_result = {
+            "selected_candidate": {
+                "manuscript": "candidate manuscript",
+                "title": "제3화",
+                "strategy_name": "balanced",
+            },
+            "state_updates": {
+                "director_score": 91,
+            },
+        }
+
+        payload = ir._build_positive_verdict_seed(
+            round_ctx=round_ctx,
+            director_result=director_result,
+        )
+
+        director_result["selected_candidate"]["strategy_name"] = "mutated"
+        director_result["state_updates"]["director_score"] = 0
+
+        assert payload.next_ep == 3
+        assert payload.initial_selected_candidate["strategy_name"] == "balanced"
+        assert payload.final_manuscript == "candidate manuscript"
+        assert payload.final_title == "제3화"
+        assert payload.final_state_updates["director_score"] == 91
+
+    def test_run_positive_verdict_transition_executes_patch_loop_and_uses_reaudit_score(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        ir._run_post_select_checks = MagicMock(
+            return_value=("PASS_WITH_FIX", "needs patch", {"score": 94}, "")
+        )
+        ir._execute_pass_with_fix_loop = MagicMock(
+            return_value=(
+                "PASS",
+                "patched manuscript",
+                {"patched": True},
+                {"score": "98", "selection_reason": "re-audited best candidate"},
+                "resolved",
+                {"patch_strategy": "inplace_patch_structural"},
+            )
+        )
+
+        payload = ir._run_positive_verdict_transition(
+            verdict="PASS",
+            director_feedback="initial feedback",
+            previous_attempt={},
+            error_category="",
+            score=91,
+            round_ctx=round_ctx,
+            round_num=0,
+            stage4_spinner=MagicMock(),
+            director_memory_context="memory",
+            director_mandatory_context="mandatory",
+            quality_gate_score=90,
+            final_manuscript="candidate manuscript",
+            final_state_updates={"seed": True},
+            director_result={"selected_candidate": {"manuscript": "candidate manuscript"}},
+        )
+
+        assert payload.verdict == "PASS"
+        assert payload.director_feedback == "resolved"
+        assert payload.previous_attempt == {"score": 94}
+        assert payload.final_manuscript == "patched manuscript"
+        assert payload.final_state_updates == {"patched": True}
+        assert payload.director_result["selection_reason"] == "re-audited best candidate"
+        assert payload.patch_trace == {"patch_strategy": "inplace_patch_structural"}
+        assert payload.final_score == 98
+        ir._execute_pass_with_fix_loop.assert_called_once()
+        assert ir._execute_pass_with_fix_loop.call_args.kwargs["quality_gate_score"] == 90
+
+    def test_build_positive_verdict_success_result_uses_annotated_state_and_payload_builder(self):
+        from modules.core.stage4_interview_round import (
+            _PositiveVerdictSeedPayload,
+            _PositiveVerdictTransitionPayload,
+            _VerdictProcessingPayload,
+        )
+
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        ir._annotate_positive_verdict_state = MagicMock(return_value={"director_score": 98})
+        expected = _VerdictProcessingPayload(
+            pass_result=MagicMock(),
+            director_feedback="resolved",
+            previous_attempt={},
+            trace_meta={"final_verdict": "PASS"},
+        )
+        ir._build_positive_verdict_payload = MagicMock(return_value=expected)
+
+        payload = ir._build_positive_verdict_success_result(
+            transition=_PositiveVerdictTransitionPayload(
+                verdict="PASS",
+                director_feedback="resolved",
+                previous_attempt={},
+                error_category="",
+                final_manuscript="patched manuscript",
+                final_state_updates={"patched": True},
+                director_result={"selection_reason": "best candidate"},
+                patch_trace={"patch_strategy": "inplace_patch_structural"},
+                final_score=98,
+            ),
+            seed_payload=_PositiveVerdictSeedPayload(
+                next_ep=1,
+                initial_selected_candidate={"strategy_name": "balanced"},
+                final_manuscript="candidate manuscript",
+                final_title="제1화",
+                final_state_updates={"seed": True},
+            ),
+            round_ctx=round_ctx,
+            round_num=0,
+            prev_score=91,
+            is_patch=True,
+            is_patch_fallback=False,
+        )
+
+        assert payload is expected
+        ir._annotate_positive_verdict_state.assert_called_once()
+        ir._build_positive_verdict_payload.assert_called_once()
+        assert ir._build_positive_verdict_payload.call_args.kwargs["final_state_updates"] == {"director_score": 98}
+        assert ir._build_positive_verdict_payload.call_args.kwargs["patch_trace"] == {
+            "patch_strategy": "inplace_patch_structural"
+        }
+
+    def test_build_positive_verdict_trace_only_payload_preserves_transition_trace(self):
+        from modules.core.stage4_interview_round import _PositiveVerdictTransitionPayload
+
+        payload = Stage4InterviewRound._build_positive_verdict_trace_only_payload(
+            transition=_PositiveVerdictTransitionPayload(
+                verdict="REJECT",
+                director_feedback="retry required",
+                previous_attempt={"score": 71, "fix_scope": "partial"},
+                error_category="LOGIC_ERROR",
+                final_manuscript="candidate manuscript",
+                final_state_updates={"patched": True},
+                director_result={"score": 71},
+                patch_trace={"patch_strategy": "inplace_patch_structural"},
+                final_score=71,
+            )
+        )
+
+        assert payload.pass_result is None
+        assert payload.director_feedback == "retry required"
+        assert payload.previous_attempt == {"score": 71, "fix_scope": "partial"}
+        assert payload.trace_meta == {
+            "final_verdict": "REJECT",
+            "final_score": 71,
+            "director_result": {"score": 71},
+            "patch_trace": {"patch_strategy": "inplace_patch_structural"},
+        }
+
+    def test_annotate_positive_verdict_state_sets_labels_and_time_warnings(self):
+        ctx = _make_ctx()
+        ctx.state_tracker.check_time_consistency.return_value = ["timeline drift"]
+        ir = Stage4InterviewRound(ctx)
+
+        state_updates = ir._annotate_positive_verdict_state(
+            final_state_updates={},
+            director_result={
+                "director_verdict": "PASS",
+                "gate_basis": "patch_reaudit_pass",
+                "repair_scope": "partial",
+                "selection_reason": "best candidate",
+                "open_review": "tightened ending",
+                "score_breakdown": {"structure": 98},
+                "consistency_checklist": {"timeline": "ok"},
+            },
+            final_score=98,
+            verdict="PASS",
+            final_manuscript="patched manuscript",
+        )
+
+        assert state_updates["director_score"] == 98
+        assert state_updates["_director_quality_labels"]["score"] == 98
+        assert state_updates["_director_quality_labels"]["selection_reason"] == "best candidate"
+        assert ir.time_warnings == ["timeline drift"]
+        ctx.ui.log.assert_any_call("   [V66.1] Time warning: timeline drift")
+
+    def test_build_positive_verdict_payload_records_attempt_and_trace_meta(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        ir._record_s4_attempt = MagicMock(return_value={"candidate_key": "stage4|A"})
+        round_ctx = _make_round_ctx()
+
+        payload = ir._build_positive_verdict_payload(
+            verdict="PASS",
+            director_feedback="resolved",
+            previous_attempt={},
+            final_manuscript="patched manuscript",
+            final_title="제1화",
+            final_state_updates={"director_score": 98},
+            director_result={
+                "selected": "A",
+                "selected_candidate": {"strategy_name": "balanced", "manuscript": "patched manuscript"},
+                "selection_reason": "best candidate",
+                "verdict_reason": "resolved by patch",
+                "open_review": "tightened ending",
+                "fix_scope_reasoning": "local patch",
+                "score_breakdown": {"structure": 98},
+            },
+            error_category="",
+            next_ep=1,
+            round_num=0,
+            round_ctx=round_ctx,
+            prev_score=91,
+            is_patch=True,
+            is_patch_fallback=False,
+            patch_trace={"patch_strategy": "inplace_patch_structural", "structural_attempted": True},
+            initial_selected_candidate={"strategy_name": "fallback"},
+            final_score=98,
+        )
+
+        assert payload.pass_result is not None
+        assert payload.pass_result.verdict == "PASS"
+        assert payload.pass_result.final_manuscript == "patched manuscript"
+        assert payload.pass_result.attempt_artifact_meta == {"candidate_key": "stage4|A"}
+        assert payload.trace_meta["final_verdict"] == "PASS"
+        assert payload.trace_meta["final_score"] == 98
+        ir._record_s4_attempt.assert_called_once()
+        record_kwargs = ir._record_s4_attempt.call_args.kwargs
+        assert record_kwargs["artifact_payload"] == "patched manuscript"
+        assert record_kwargs["patch_strategy"] == "inplace_patch_structural"
+        assert record_kwargs["structural_attempted"] is True
+        assert record_kwargs["selection_reason"] == "best candidate"
+
     def test_pass_with_fix_loop_logs_explicit_abort_when_feedback_missing(self):
         ctx = _make_ctx()
         ir = Stage4InterviewRound(ctx)
@@ -2520,6 +3794,429 @@ class TestRecordS4Attempt:
         assert "[TF-32-V] PASS_WITH_FIX 피드백 비어 있음" in director_feedback
         assert director_result["verdict_reason"].startswith("[TF-32-V] PASS_WITH_FIX 피드백 비어 있음")
         assert any("피드백 비어 있음" in call.args[0] for call in ctx.ui.log.call_args_list if call.args)
+
+    def test_prepare_pass_with_fix_iteration_gate_aborts_when_feedback_missing(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.next_ep = 2
+
+        payload = ir.retry_runtime._prepare_pass_with_fix_iteration_gate(
+            current_feedback="",
+            current_audit_result={"verdict": "PASS_WITH_FIX", "fix_scope": "inplace"},
+            director_feedback="initial feedback",
+            round_ctx=round_ctx,
+            round_num=0,
+        )
+
+        assert payload.should_abort is True
+        assert "[TF-32-V] PASS_WITH_FIX" in payload.director_feedback
+        assert payload.current_audit_result["gate_basis"] == "empty_feedback_abort"
+        assert payload.current_audit_result["verdict_reason"].startswith("[TF-32-V] PASS_WITH_FIX")
+
+    def test_retry_runtime_prepare_pass_with_fix_iteration_gate_aborts_when_feedback_missing(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.next_ep = 2
+
+        payload = ir.retry_runtime._prepare_pass_with_fix_iteration_gate(
+            current_feedback="",
+            current_audit_result={"verdict": "PASS_WITH_FIX", "fix_scope": "inplace"},
+            director_feedback="initial feedback",
+            round_ctx=round_ctx,
+            round_num=0,
+        )
+
+        assert payload.should_abort is True
+        assert "[TF-32-V] PASS_WITH_FIX" in payload.director_feedback
+        assert payload.current_audit_result["gate_basis"] == "empty_feedback_abort"
+        assert payload.current_audit_result["verdict_reason"].startswith("[TF-32-V] PASS_WITH_FIX")
+
+    def test_prepare_pass_with_fix_iteration_gate_reroutes_partial_scope_without_patch(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+
+        with patch.object(
+            ir,
+            "_evaluate_pass_with_fix_contract",
+            return_value={"eligible": True, "fix_pack": _local_fix_pack("scene_2", target_kind="local_sentence")},
+        ):
+            payload = ir.retry_runtime._prepare_pass_with_fix_iteration_gate(
+                current_feedback="tighten ending",
+                current_audit_result={
+                    "verdict": "PASS_WITH_FIX",
+                    "fix_scope": "partial",
+                    "fix_pack": _local_fix_pack("scene_2", target_kind="local_sentence"),
+                },
+                director_feedback="director feedback",
+                round_ctx=round_ctx,
+                round_num=1,
+            )
+
+        assert payload.should_abort is True
+        assert payload.fix_pack == {}
+        assert payload.director_feedback == "director feedback"
+        assert any("fix_scope='partial'" in call.args[0] for call in ctx.ui.log.call_args_list if call.args)
+
+    def test_run_pass_with_fix_patch_attempt_uses_candidate_patch_targets_and_clears_context(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.blueprint = {"scene_breakdown": {"scene_2": {"description": "ending payoff"}}}
+        round_ctx.genre_name = "무협"
+        round_ctx.chief_writer.inplace_patch.return_value = [
+            {"manuscript": "patched manuscript " * 50, "patch_targets": ["scene_2"]}
+        ]
+
+        payload = ir.retry_runtime._run_pass_with_fix_patch_attempt(
+            chief_writer=round_ctx.chief_writer,
+            round_ctx=round_ctx,
+            current_ms="original manuscript " * 50,
+            current_feedback="tighten ending",
+            fix_index=0,
+            style_guide=round_ctx.style_guide,
+            fix_pack=_local_fix_pack("scene_2", target_kind="local_sentence"),
+            current_audit_result={"verdict": "PASS_WITH_FIX", "fix_scope": "inplace"},
+            director_feedback="director feedback",
+            last_patch_trace={},
+        )
+
+        assert payload.should_abort is False
+        assert payload.patched_manuscript.startswith("patched manuscript")
+        assert payload.patch_trace["patch_strategy"] == "inplace_patch"
+        assert payload.patch_trace["patch_targets"] == ["scene_2"]
+        assert round_ctx.chief_writer._inplace_patch_blueprint is None
+        assert round_ctx.chief_writer._inplace_patch_genre_name == ""
+
+    def test_run_pass_with_fix_patch_attempt_marks_exception_fail_closed(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.chief_writer.inplace_patch.side_effect = RuntimeError("boom")
+
+        with patch.object(
+            ir,
+            "_mark_pass_with_fix_inplace_contract_fail",
+            return_value=(
+                {"gate_basis": "inplace_exception"},
+                "director feedback\nnotice",
+                {"failure_key": "inplace_exception"},
+            ),
+        ) as mocked_fail:
+            payload = ir.retry_runtime._run_pass_with_fix_patch_attempt(
+                chief_writer=round_ctx.chief_writer,
+                round_ctx=round_ctx,
+                current_ms="original manuscript " * 50,
+                current_feedback="tighten ending",
+                fix_index=0,
+                style_guide=round_ctx.style_guide,
+                fix_pack=_local_fix_pack("scene_2", target_kind="local_sentence"),
+                current_audit_result={"verdict": "PASS_WITH_FIX", "fix_scope": "inplace"},
+                director_feedback="director feedback",
+                last_patch_trace={},
+            )
+
+        assert payload.should_abort is True
+        assert payload.patched_candidates == []
+        assert payload.current_audit_result["gate_basis"] == "inplace_exception"
+        assert payload.patch_trace["failure_key"] == "inplace_exception"
+        assert round_ctx.chief_writer._inplace_patch_blueprint is None
+        assert round_ctx.chief_writer._inplace_patch_genre_name == ""
+        assert mocked_fail.call_args.kwargs["failure_key"] == "inplace_exception"
+
+    def test_run_pass_with_fix_patch_guards_rejects_short_patch_output(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        with patch.object(
+            ir,
+            "_mark_pass_with_fix_inplace_contract_fail",
+            return_value=(
+                {"gate_basis": "min_patched_length"},
+                "director feedback\nnotice",
+                {"failure_key": "min_patched_length"},
+            ),
+        ) as mocked_fail:
+            payload = ir.retry_runtime._run_pass_with_fix_patch_guards(
+                current_ms="original manuscript " * 200,
+                patched_ms="patched manuscript " * 5,
+                current_audit_result={"verdict": "PASS_WITH_FIX", "fix_scope": "inplace"},
+                director_feedback="director feedback",
+                patch_trace={"patch_strategy": "inplace_patch"},
+            )
+
+        assert payload.should_abort is True
+        assert payload.current_audit_result["gate_basis"] == "min_patched_length"
+        assert payload.patch_trace["failure_key"] == "min_patched_length"
+        assert mocked_fail.call_args.kwargs["failure_key"] == "min_patched_length"
+
+    def test_run_pass_with_fix_patch_guards_rejects_low_preserve_ratio(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        with patch.object(
+            ir,
+            "_mark_pass_with_fix_inplace_contract_fail",
+            return_value=(
+                {"gate_basis": "inplace_min_preserve_ratio"},
+                "director feedback\nnotice",
+                {"failure_key": "inplace_min_preserve_ratio"},
+            ),
+        ) as mocked_fail:
+            payload = ir.retry_runtime._run_pass_with_fix_patch_guards(
+                current_ms="original manuscript " * 400,
+                patched_ms="patched manuscript " * 120,
+                current_audit_result={"verdict": "PASS_WITH_FIX", "fix_scope": "inplace"},
+                director_feedback="director feedback",
+                patch_trace={"patch_strategy": "inplace_patch"},
+            )
+
+        assert payload.should_abort is True
+        assert payload.current_audit_result["gate_basis"] == "inplace_min_preserve_ratio"
+        assert payload.patch_trace["failure_key"] == "inplace_min_preserve_ratio"
+        assert mocked_fail.call_args.kwargs["failure_key"] == "inplace_min_preserve_ratio"
+
+    def test_capture_pass_with_fix_patch_delta_updates_trace_without_warning(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        with patch("modules.core.constants.log_patch_diff") as mocked_diff, patch(
+            "modules.core.constants.calc_patch_change_ratio",
+            return_value=0.125,
+        ):
+            payload = ir.retry_runtime._capture_pass_with_fix_patch_delta(
+                current_ms="original manuscript",
+                patched_ms="patched manuscript",
+                patch_trace={"patch_strategy": "inplace_patch"},
+                max_change_ratio=0.30,
+            )
+
+        assert payload.f2_advisory == ""
+        assert payload.patch_trace["patch_strategy"] == "inplace_patch"
+        assert payload.patch_trace["change_ratio"] == 0.125
+        assert payload.patch_trace["unchanged_ratio"] == 0.875
+        mocked_diff.assert_called_once_with("S4-Manuscript", "original manuscript", "patched manuscript")
+
+    def test_capture_pass_with_fix_patch_delta_emits_f2_warning_when_ratio_exceeds_threshold(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        with patch("modules.core.constants.log_patch_diff"), patch(
+            "modules.core.constants.calc_patch_change_ratio",
+            return_value=0.42,
+        ):
+            payload = ir.retry_runtime._capture_pass_with_fix_patch_delta(
+                current_ms="original manuscript",
+                patched_ms="patched manuscript",
+                patch_trace={"patch_strategy": "inplace_patch"},
+                max_change_ratio=0.30,
+            )
+
+        assert "[F-2 경고]" in payload.f2_advisory
+        assert payload.patch_trace["change_ratio"] == 0.42
+        assert payload.patch_trace["unchanged_ratio"] == 0.58
+
+    def test_run_pass_with_fix_reaudit_builds_request_and_appends_patch_history(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.story_context = "base story context"
+        director = MagicMock()
+        director.select_and_judge_ensemble.return_value = {"verdict": "PASS", "score": 97}
+
+        with patch.object(ir, "_summarize_patch_provenance", return_value="patch summary"):
+            payload = ir.retry_runtime._run_pass_with_fix_reaudit(
+                director=director,
+                round_ctx=round_ctx,
+                round_num=0,
+                score=92,
+                current_feedback="tighten ending",
+                current_audit_result={"verdict": "PASS_WITH_FIX", "fix_scope": "inplace"},
+                patched_candidates=[{"state_updates": {"ending": "tightened"}}],
+                patched_manuscript="patched manuscript " * 50,
+                final_state_updates={"seed": True},
+                director_mandatory_context="MANDATORY",
+                applied_patch_history=[],
+                last_patch_trace={"patch_strategy": "inplace_patch"},
+                f2_advisory="[F-2] notice",
+            )
+
+        assert payload.should_abort is False
+        assert payload.applied_patch_history == ["patch summary"]
+        assert payload.re_audit["verdict"] == "PASS"
+        kwargs = director.select_and_judge_ensemble.call_args.kwargs
+        assert kwargs["candidates"][0]["state_updates"] == {"seed": True, "ending": "tightened"}
+        assert "[F-2] notice" in kwargs["validation_results"][0]["warnings"]
+        assert "[PASS_WITH_FIX 재심사 — 이미 적용된 패치]" in kwargs["story_context"]
+
+    def test_run_pass_with_fix_reaudit_fails_closed_on_director_exception(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        director = MagicMock()
+        director.select_and_judge_ensemble.side_effect = RuntimeError("boom")
+
+        payload = ir.retry_runtime._run_pass_with_fix_reaudit(
+            director=director,
+            round_ctx=round_ctx,
+            round_num=0,
+            score=92,
+            current_feedback="tighten ending",
+            current_audit_result={"verdict": "PASS_WITH_FIX", "fix_scope": "inplace"},
+            patched_candidates=[{"state_updates": {"ending": "tightened"}}],
+            patched_manuscript="patched manuscript " * 50,
+            final_state_updates={"seed": True},
+            director_mandatory_context="MANDATORY",
+            applied_patch_history=["patch summary"],
+            last_patch_trace={"patch_strategy": "inplace_patch"},
+            f2_advisory="",
+        )
+
+        assert payload.should_abort is True
+        assert payload.re_audit == {}
+        assert payload.applied_patch_history == ["patch summary"]
+
+    def test_apply_pass_with_fix_reaudit_verdict_rejects_quality_floor_failure(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        payload = ir.retry_runtime._apply_pass_with_fix_reaudit_verdict(
+            re_audit={"verdict": "PASS", "score": 85},
+            patched_ms="patched manuscript",
+            current_ms="original manuscript",
+            current_feedback="tighten ending",
+            current_audit_result={"verdict": "PASS_WITH_FIX", "fix_scope": "inplace"},
+            final_state_updates={"seed": True},
+            director_result={"score": 92},
+            quality_gate_score=90,
+            fix_index=1,
+        )
+
+        assert payload.should_break is True
+        assert payload.fix_ok is False
+        assert payload.current_ms == "original manuscript"
+        assert payload.current_audit_result["gate_basis"] == "quality_floor_fail"
+        assert payload.current_feedback == "tighten ending"
+        assert any("score=85 < 90" in call.args[0] for call in ctx.ui.log.call_args_list if call.args)
+
+    def test_apply_pass_with_fix_reaudit_verdict_promotes_successful_pass(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        payload = ir.retry_runtime._apply_pass_with_fix_reaudit_verdict(
+            re_audit={"verdict": "PASS", "score": 97, "state_updates": {"ending": "tightened"}},
+            patched_ms="patched manuscript",
+            current_ms="original manuscript",
+            current_feedback="tighten ending",
+            current_audit_result={"verdict": "PASS_WITH_FIX", "fix_scope": "inplace"},
+            final_state_updates={"seed": True},
+            director_result={"score": 92, "selection_reason": "baseline"},
+            quality_gate_score=90,
+            fix_index=0,
+        )
+
+        assert payload.should_break is True
+        assert payload.fix_ok is True
+        assert payload.current_ms == "patched manuscript"
+        assert payload.director_result["verdict"] == "PASS"
+        assert payload.director_result["gate_basis"] == "patch_reaudit_pass"
+        assert payload.final_state_updates == {"seed": True, "ending": "tightened"}
+
+    def test_apply_pass_with_fix_reaudit_verdict_keeps_loop_for_pass_with_fix(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        with patch.object(ir, "_extract_fix_feedback", return_value="next feedback"):
+            payload = ir.retry_runtime._apply_pass_with_fix_reaudit_verdict(
+                re_audit={"verdict": "PASS_WITH_FIX", "score": 93, "state_updates": {"ending": "tightened"}},
+                patched_ms="patched manuscript",
+                current_ms="original manuscript",
+                current_feedback="tighten ending",
+                current_audit_result={"verdict": "PASS_WITH_FIX", "fix_scope": "inplace"},
+                final_state_updates={"seed": True},
+                director_result={"score": 92},
+                quality_gate_score=90,
+                fix_index=0,
+            )
+
+        assert payload.should_break is False
+        assert payload.fix_ok is False
+        assert payload.current_ms == "patched manuscript"
+        assert payload.current_audit_result["verdict"] == "PASS_WITH_FIX"
+        assert payload.final_state_updates == {"seed": True, "ending": "tightened"}
+        assert payload.current_feedback == "next feedback"
+
+    def test_apply_pass_with_fix_reaudit_verdict_rejects_failed_reaudit(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        payload = ir.retry_runtime._apply_pass_with_fix_reaudit_verdict(
+            re_audit={"verdict": "REJECT", "score": 41},
+            patched_ms="patched manuscript",
+            current_ms="original manuscript",
+            current_feedback="tighten ending",
+            current_audit_result={"verdict": "PASS_WITH_FIX", "fix_scope": "inplace"},
+            final_state_updates={"seed": True},
+            director_result={"score": 92},
+            quality_gate_score=90,
+            fix_index=0,
+        )
+
+        assert payload.should_break is True
+        assert payload.fix_ok is False
+        assert payload.current_ms == "original manuscript"
+        assert payload.current_audit_result["gate_basis"] == "patch_reaudit_fail"
+
+    def test_finalize_pass_with_fix_loop_outcome_promotes_pass(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        payload = ir.retry_runtime._finalize_pass_with_fix_loop_outcome(
+            fix_ok=True,
+            current_ms="patched manuscript",
+            current_audit_result={"verdict": "PASS"},
+            director_result={"score": 97},
+            final_manuscript="original manuscript",
+            director_feedback="tighten ending",
+            last_patched_ms=None,
+            score=92,
+        )
+
+        assert payload.verdict == "PASS"
+        assert payload.final_manuscript == "patched manuscript"
+        assert payload.director_result["verdict"] == "PASS"
+        assert payload.director_result["gate_basis"] == "patch_reaudit_pass"
+        assert payload.director_feedback == "tighten ending"
+
+    def test_finalize_pass_with_fix_loop_outcome_adopts_last_patch_for_reject_tail(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        payload = ir.retry_runtime._finalize_pass_with_fix_loop_outcome(
+            fix_ok=False,
+            current_ms="original manuscript",
+            current_audit_result={
+                "verdict": "PASS_WITH_FIX",
+                "score": "95",
+                "gate_basis": "patch_reaudit_fail",
+                "fix_scope": "inplace",
+                "selection_reason": "re-audit still incomplete",
+            },
+            director_result={"score": 92},
+            final_manuscript="original manuscript",
+            director_feedback="tighten ending",
+            last_patched_ms="patched manuscript",
+            score=92,
+        )
+
+        assert payload.verdict == "REJECT"
+        assert payload.final_manuscript == "patched manuscript"
+        assert payload.director_result["score"] == 95
+        assert payload.director_result["fix_scope"] == "inplace"
+        assert payload.director_result["gate_basis"] == "patch_reaudit_fail"
+        assert payload.director_feedback.endswith("[TF-32-V] PASS_WITH_FIX 수정 실패 → REJECT")
 
     def test_append_episode_log_includes_round_cost_and_strategy_flags(self):
         ctx = _make_ctx()
@@ -3656,6 +5353,2002 @@ class TestLane2DirectorSemantics:
         assert gate_semantics["final_verdict"] == "REJECT"
         assert gate_semantics["gate_basis"] == "quality_floor_fail"
         assert gate_semantics["repair_scope"] == "partial"
+
+    def test_build_director_decision_core_parts_injects_stage3_pov_and_writing_directive(self):
+        ctx = _make_ctx()
+        ctx.current_project.master_bible = {
+            "MasterBible": {
+                "protagonist_config": {
+                    "pov": "first_person",
+                    "external_pov_insert_policy": "limited",
+                }
+            }
+        }
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.blueprint = {
+            "_stage3_meta": {
+                "quality_risk": True,
+                "final_verdict": "REJECT",
+                "last_score": 41,
+            }
+        }
+
+        parts = ir.director_runtime._build_director_decision_core_parts(
+            round_ctx=round_ctx,
+            validation_results=[{"shared_failure_warnings": ["shared failure"]}],
+            mandatory_context="mandatory context",
+            writing_directive=_writing_directive_stub(
+                ending_style="cliffhanger",
+                expression_ban=["adverb"],
+                emotion_required="rage",
+            ),
+        )
+
+        assert parts[0] == "[타자 시점 삽입 정책]\n- policy: limited"
+        assert parts[1] == "[작품 시점]\n- 기본 POV: first_person"
+        assert "[WritingDirective]" in parts[2]
+        assert "- ending_style: cliffhanger" in parts[2]
+        assert "shared failure" == parts[3]
+        assert "mandatory context" == parts[4]
+        assert parts[5].startswith("[S3-META 경고]")
+
+    def test_build_director_candidate_evidence_parts_formats_advisories_and_feedback(self):
+        ctx = _make_ctx()
+        ctx.current_project.arcs = []
+        ctx.world_state = None
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+
+        with patch.object(
+            ir,
+            "_run_advisory_chain",
+            return_value=[
+                "[TruthGate] hard fact conflict",
+                "[LM-B] npc moved",
+                "StyleSignal drift",
+                "[Whatever] 이상 없음",
+            ],
+        ), patch.object(ir, "_suppress_conflicting_advisories", side_effect=lambda parts: parts), patch.object(
+            ir, "_log_attempt_event"
+        ):
+            payload = ir.director_runtime._build_director_candidate_evidence_parts(
+                candidates=[_candidate()],
+                validation_results=[{"warnings": ["python warning"]}],
+                round_ctx=round_ctx,
+                next_ep=1,
+                round_num=0,
+                genre_name="무협",
+                preflight_advisory="preflight note",
+                director_feedback="history conflict",
+            )
+
+        assert payload.advisory_summary == {
+            "truth_gate": 1,
+            "npc_drift": 1,
+            "style_signal": 1,
+        }
+        assert any("[CRITICAL · TruthGate] hard fact conflict" in part for part in payload.parts)
+        assert any("[MAJOR · NpcDrift] [LM-B] npc moved" == part for part in payload.parts)
+        assert any("[MAJOR · StyleSignal] StyleSignal drift" == part for part in payload.parts)
+        assert any("[Whatever] 이상 없음" == part for part in payload.parts)
+        assert any("🔍 preflight note" == part for part in payload.parts)
+        assert any("python warning" in part for part in payload.parts)
+        assert any("history conflict" in part for part in payload.parts)
+
+    def test_build_director_advisory_payload_formats_and_summarizes_tags(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        with patch.object(
+            ir,
+            "_run_advisory_chain",
+            return_value=[
+                "[TruthGate] hard fact conflict",
+                "[LM-B] npc moved",
+                "StyleSignal drift",
+                "[Whatever] 이상 없음",
+            ],
+        ), patch.object(ir, "_suppress_conflicting_advisories", side_effect=lambda parts: parts), patch.object(
+            ir, "_log_attempt_event"
+        ):
+            payload = ir.director_runtime._build_director_advisory_payload(
+                candidates=[_candidate()],
+                validation_results=[_validation_result()],
+                next_ep=1,
+                round_num=0,
+                arc_num=1,
+                genre_name="무협",
+            )
+
+        assert payload.summary == {
+            "truth_gate": 1,
+            "npc_drift": 1,
+            "style_signal": 1,
+        }
+        assert payload.parts == [
+            "[CRITICAL · TruthGate] hard fact conflict",
+            "[MAJOR · NpcDrift] [LM-B] npc moved",
+            "[MAJOR · StyleSignal] StyleSignal drift",
+            "[Whatever] 이상 없음",
+        ]
+
+    def test_run_director_review_phase_returns_payload_and_persists_selection(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        candidates = [_candidate()]
+        validation_results = [_validation_result()]
+        ctx.agents["director"].select_and_judge_ensemble.return_value = {
+            "selected": "A",
+            "verdict": "REJECT",
+            "score": "44",
+            "selection_reason": "best candidate",
+            "verdict_reason": "conflict",
+            "selected_candidate": {"manuscript": "candidate manuscript", "strategy_name": "balanced"},
+            "feedback": {"issues": ["conflict"]},
+            "action_items": ["fix ending"],
+        }
+
+        with patch.object(
+            ir.director_runtime,
+            "build_director_input_pack",
+            return_value=_DirectorInputPackResult(
+                mandatory_context="MANDATORY",
+                decision_core="DECISION",
+                candidate_evidence="EVIDENCE",
+                reference_appendix="APPENDIX",
+                advisory_summary={"shared_failure_warnings": 1},
+            ),
+        ), patch(
+            "modules.core.stage4_interview_round.snapshot_logged_artifact",
+            return_value={
+                "candidate_key": "A|balanced",
+                "content_hash": "hash123",
+                "artifact_path": "logs/artifacts/stage4/ep_001/attempt_01/rejected_best__A_balanced.txt",
+            },
+        ):
+            result = ir.director_runtime.run_director_review_phase(
+                stage4_spinner=MagicMock(),
+                round_num=0,
+                round_ctx=round_ctx,
+                candidates=candidates,
+                validation_results=validation_results,
+                mandatory_context="base context",
+                writing_directive="writing directive",
+                director_feedback="",
+                is_patch=False,
+                is_patch_fallback=False,
+                prev_score=0,
+            )
+
+        assert result.verdict == "REJECT"
+        assert result.score == 44
+        assert result.attempt_key == "s4:ep1:arc1:a1"
+        assert result.selection_artifact_meta["candidate_key"] == "A|balanced"
+        assert result.selection_artifact_meta["artifact_path"].endswith("rejected_best__A_balanced.txt")
+        db_kwargs = ctx.current_project.db.save_director_selection.call_args.kwargs
+        assert db_kwargs["attempt_key"] == result.attempt_key
+        assert db_kwargs["candidate_key"] == "A|balanced"
+        assert db_kwargs["artifact_path"].endswith("rejected_best__A_balanced.txt")
+        assert db_kwargs["advisory_warnings"]["shared_failure_warnings"] == 1
+
+    def test_run_director_decision_and_log_summary_returns_normalized_payload(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        candidates = [_candidate()]
+        validation_results = [_validation_result()]
+        ctx.agents["director"].select_and_judge_ensemble.return_value = {
+            "selected": "A",
+            "verdict": "REJECT",
+            "score": "44",
+            "selection_reason": "best candidate",
+            "verdict_reason": "conflict",
+            "action_items": ["fix ending"],
+        }
+
+        with patch.object(
+            ir.director_runtime,
+            "build_director_input_pack",
+            return_value=_DirectorInputPackResult(
+                mandatory_context="MANDATORY",
+                decision_core="DECISION",
+                candidate_evidence="EVIDENCE",
+                reference_appendix="APPENDIX",
+                advisory_summary={"shared_failure_warnings": 1},
+            ),
+        ):
+            payload = ir.director_runtime._run_director_decision_and_log_summary(
+                round_ctx=round_ctx,
+                round_num=0,
+                next_ep=round_ctx.next_ep,
+                arc_num=round_ctx.arc_data.get("arc_no", 0),
+                candidates=candidates,
+                validation_results=validation_results,
+                mandatory_context="base context",
+                writing_directive="writing directive",
+                director_feedback="",
+            )
+
+        assert payload.director_mandatory_context == "MANDATORY"
+        assert payload.advisory_summary == {"shared_failure_warnings": 1}
+        assert payload.selected == "A"
+        assert payload.verdict == "REJECT"
+        assert payload.score == 44
+        assert payload.reason == "conflict"
+        assert payload.attempt_key == "s4:ep1:arc1:a1"
+        assert any("fix ending" in call.args[0] for call in ctx.ui.log.call_args_list if call.args)
+
+    def test_build_director_decision_payload_normalizes_score_and_attempt_key(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        payload = ir.director_runtime._build_director_decision_payload(
+            director_result={
+                "selected": "B",
+                "verdict": "PASS",
+                "final_verdict": "PASS",
+                "score": "97",
+                "selection_reason": "strongest ending",
+                "verdict_reason": "clean landing",
+                "error_category": "none",
+            },
+            advisory_summary={"shared_failure_warnings": 2},
+            director_mandatory_context="MANDATORY",
+            next_ep=3,
+            round_num=1,
+            arc_num=2,
+        )
+
+        assert payload.selected == "B"
+        assert payload.verdict == "PASS"
+        assert payload.score == 97
+        assert payload.selection_reason == "strongest ending"
+        assert payload.reason == "clean landing"
+        assert payload.error_category == "none"
+        assert payload.attempt_key == "s4:ep3:arc2:a2"
+        assert payload.advisory_summary == {"shared_failure_warnings": 2}
+        assert payload.director_mandatory_context == "MANDATORY"
+
+    def test_log_director_review_prelude_emits_candidate_warning_summary(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        spinner = MagicMock()
+
+        ir.director_runtime._log_director_review_prelude(
+            stage4_spinner=spinner,
+            next_ep=1,
+            round_num=0,
+            arc_num=1,
+            candidates=[{"manuscript": "candidate manuscript"}],
+            validation_results=[{"warnings": ["timeline drift", "tone drift"]}],
+        )
+
+        spinner.update_detail.assert_called_once()
+        assert any("후보 수: 1개" in call.args[0] for call in ctx.ui.log.call_args_list if call.args)
+        assert any("timeline drift" in call.args[0] for call in ctx.ui.log.call_args_list if call.args)
+
+    def test_complete_round_after_review_routes_review_and_generation_payloads(self):
+        from types import SimpleNamespace
+
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        chief_writer = MagicMock()
+        stage4_spinner = MagicMock()
+        final_result = {"status": "done"}
+        review = SimpleNamespace(
+            director_result={"selected_candidate": {"manuscript": "candidate manuscript"}},
+            director_mandatory_context="director mandatory",
+            selected="A",
+            verdict="PASS",
+            score=91,
+            reason="good",
+            error_category="",
+            attempt_key="attempt-1",
+            selection_artifact_meta={"candidate_key": "A|balanced"},
+        )
+        generation = SimpleNamespace(
+            is_patch=True,
+            is_patch_fallback=False,
+            prev_score=77,
+            prev_manuscript="prev manuscript",
+            tot_used=True,
+            mad_used=False,
+            asp_manuscript="asp manuscript",
+        )
+        ir._maybe_enrich_director_result = MagicMock(return_value={"enriched": True})
+        ir._merge_retry_advisory_feedback = MagicMock(return_value="merged feedback")
+        ir._process_verdict = MagicMock(return_value=("pass-result", "next feedback", {"score": 80}, {"trace": True}))
+        ir._finalize_round_outcome = MagicMock(return_value=final_result)
+
+        result = ir._complete_round_after_review(
+            next_ep=1,
+            round_num=0,
+            round_ctx=round_ctx,
+            chief_writer=chief_writer,
+            review=review,
+            generation=generation,
+            director_feedback="raw feedback",
+            previous_attempt={"old": True},
+            candidates=[_candidate()],
+            validation_results=[_validation_result()],
+            director_memory_context="memory context",
+            stage4_spinner=stage4_spinner,
+        )
+
+        assert result == final_result
+        ir._maybe_enrich_director_result.assert_called_once_with(
+            {"selected_candidate": {"manuscript": "candidate manuscript"}},
+            manuscript_text="candidate manuscript",
+        )
+        ir._merge_retry_advisory_feedback.assert_called_once_with("raw feedback")
+        process_kwargs = ir._process_verdict.call_args.kwargs
+        assert process_kwargs["director_result"] == {"enriched": True}
+        assert process_kwargs["director_feedback"] == "merged feedback"
+        assert process_kwargs["verdict"] == "PASS"
+        assert process_kwargs["score"] == 91
+        assert process_kwargs["is_patch"] is True
+        assert process_kwargs["prev_score"] == 77
+        assert process_kwargs["director_mandatory_context"] == "director mandatory"
+        assert process_kwargs["director_memory_context"] == "memory context"
+        finalize_kwargs = ir._finalize_round_outcome.call_args.kwargs
+        assert finalize_kwargs["director_result"] == {"enriched": True}
+        assert finalize_kwargs["director_feedback"] == "next feedback"
+        assert finalize_kwargs["previous_attempt"] == {"score": 80}
+        assert finalize_kwargs["trace_meta"] == {"trace": True}
+        assert finalize_kwargs["selected"] == "A"
+        assert finalize_kwargs["attempt_key"] == "attempt-1"
+        assert finalize_kwargs["is_patch"] is True
+        assert finalize_kwargs["prev_manuscript"] == "prev manuscript"
+        assert finalize_kwargs["tot_used"] is True
+        assert finalize_kwargs["asp_manuscript"] == "asp manuscript"
+
+    def test_finalize_round_outcome_routes_pass_branch_with_trace_meta(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        chief_writer = MagicMock()
+        pass_result = MagicMock(name="pass_result")
+        finalized = {"status": "pass"}
+        ir._collect_validation_warning_lines = MagicMock(return_value=["warn"])
+        ir._finalize_pass_result = MagicMock(return_value=finalized)
+        ir._handle_reject = MagicMock()
+
+        result = ir._finalize_round_outcome(
+            pass_result=pass_result,
+            next_ep=1,
+            round_num=0,
+            round_ctx=round_ctx,
+            chief_writer=chief_writer,
+            director_result={"verdict": "PASS"},
+            director_feedback="feedback",
+            previous_attempt={},
+            trace_meta={
+                "director_result": {"verdict": "PASS_WITH_FIX", "trace": True},
+                "final_verdict": "PASS_WITH_FIX",
+                "final_score": 88,
+                "patch_trace": {"mode": "patch"},
+            },
+            candidates=[_candidate()],
+            validation_results=[_validation_result()],
+            initial_verdict="PASS",
+            initial_score=81,
+            selected="A",
+            reason="ok",
+            error_category="",
+            attempt_key="attempt-1",
+            selection_artifact_meta={"candidate_key": "A"},
+            is_patch=False,
+            is_patch_fallback=False,
+            prev_score=0,
+            prev_manuscript="prev",
+            tot_used=False,
+            mad_used=False,
+            asp_manuscript="",
+        )
+
+        assert result == finalized
+        ir._handle_reject.assert_not_called()
+        ir._finalize_pass_result.assert_called_once()
+        kwargs = ir._finalize_pass_result.call_args.kwargs
+        assert kwargs["trace_director_result"] == {"verdict": "PASS_WITH_FIX", "trace": True}
+        assert kwargs["final_verdict"] == "PASS_WITH_FIX"
+        assert kwargs["final_score"] == 88
+        assert kwargs["validation_warnings"] == ["warn"]
+        assert kwargs["is_patch"] is True
+        assert kwargs["trace_patch_trace"] == {"mode": "patch"}
+
+    def test_finalize_round_pass_path_delegates_trace_payload_to_finalize_pass(self):
+        from modules.core.stage4_interview_round import _RoundOutcomeTracePayload
+
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        chief_writer = MagicMock()
+        pass_result = MagicMock(name="pass_result")
+        finalized = {"status": "pass"}
+        ir._finalize_pass_result = MagicMock(return_value=finalized)
+
+        result = ir._finalize_round_pass_path(
+            pass_result=pass_result,
+            next_ep=1,
+            round_num=0,
+            round_ctx=round_ctx,
+            chief_writer=chief_writer,
+            director_result={"verdict": "PASS"},
+            director_feedback="feedback",
+            trace_payload=_RoundOutcomeTracePayload(
+                trace_director_result={"verdict": "PASS_WITH_FIX", "trace": True},
+                final_verdict="PASS_WITH_FIX",
+                final_score=88,
+                validation_warnings=["warn"],
+                is_patch=True,
+                trace_patch_trace={"mode": "patch"},
+            ),
+            initial_verdict="PASS",
+            initial_score=81,
+            selected="A",
+            reason="ok",
+            error_category="",
+            attempt_key="attempt-1",
+            selection_artifact_meta={"candidate_key": "A"},
+            is_patch_fallback=False,
+            tot_used=False,
+            mad_used=False,
+            asp_manuscript="",
+        )
+
+        assert result == finalized
+        ir._finalize_pass_result.assert_called_once()
+        kwargs = ir._finalize_pass_result.call_args.kwargs
+        assert kwargs["trace_director_result"] == {"verdict": "PASS_WITH_FIX", "trace": True}
+        assert kwargs["final_verdict"] == "PASS_WITH_FIX"
+        assert kwargs["final_score"] == 88
+        assert kwargs["validation_warnings"] == ["warn"]
+        assert kwargs["is_patch"] is True
+        assert kwargs["trace_patch_trace"] == {"mode": "patch"}
+
+    def test_build_pass_result_logging_payload_snapshots_trace_candidate_when_attempt_meta_missing(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        pass_result = MagicMock()
+        pass_result.attempt_artifact_meta = {}
+        pass_result.final_manuscript = "final manuscript"
+        ir._build_retry_advisory_digest = MagicMock(return_value="runtime digest")
+        ir._build_gate_semantics_payload = MagicMock(
+            return_value={
+                "director_verdict": "PASS_WITH_FIX",
+                "gate_basis": "trace_gate",
+                "repair_scope": "rewrite",
+            }
+        )
+
+        with patch(
+            "modules.core.stage4_interview_round.snapshot_logged_artifact",
+            return_value={
+                "candidate_key": "stage4|A",
+                "content_hash": "hash-123",
+                "artifact_path": "logs/final.json",
+            },
+        ):
+            payload = ir._build_pass_result_logging_payload(
+                pass_result=pass_result,
+                next_ep=1,
+                round_num=0,
+                round_ctx=round_ctx,
+                director_result={"selection_reason": "director selection"},
+                trace_director_result={
+                    "selected": "A",
+                    "selected_candidate": {"strategy_name": "balanced"},
+                    "selection_reason": "trace selection",
+                    "verdict_reason": "trace verdict",
+                },
+                reason="fallback reason",
+                is_patch=False,
+                trace_patch_trace={"mode": "patch"},
+            )
+
+        assert payload.log_artifact_meta["candidate_key"] == "stage4|A"
+        assert payload.log_artifact_meta["content_hash"] == "hash-123"
+        assert payload.log_artifact_meta["artifact_path"] == "logs/final.json"
+        assert payload.session_selection_reason == "trace selection"
+        assert payload.session_verdict_reason == "trace verdict"
+        assert payload.session_runtime_advisory == "runtime digest"
+        assert payload.session_retry_directives == ""
+        assert payload.session_gate_semantics["gate_basis"] == "trace_gate"
+
+    def test_sync_pass_result_selection_rationale_prefers_trace_fix_scope(self):
+        ctx = _make_ctx()
+        ctx.current_project.db = MagicMock()
+        ir = Stage4InterviewRound(ctx)
+
+        ir._sync_pass_result_selection_rationale(
+            attempt_key="attempt-1",
+            trace_director_result={"fix_scope": "rewrite"},
+            director_result={"fix_scope": "patch"},
+            selection_reason="selection",
+            verdict_reason="verdict",
+        )
+
+        ctx.current_project.db.update_director_selection_rationale.assert_called_once_with(
+            attempt_key="attempt-1",
+            selection_reason="selection",
+            verdict_reason="verdict",
+            fix_scope="rewrite",
+        )
+
+    def test_sync_reject_result_selection_rationale_prefers_trace_fix_scope(self):
+        ctx = _make_ctx()
+        ctx.current_project.db = MagicMock()
+        ir = Stage4InterviewRound(ctx)
+
+        ir.reject_runtime._sync_reject_result_selection_rationale(
+            attempt_key="attempt-1",
+            trace_director_result={"fix_scope": "partial"},
+            director_result={"fix_scope": "full"},
+            selection_reason="selection",
+            verdict_reason="verdict",
+        )
+
+        ctx.current_project.db.update_director_selection_rationale.assert_called_once_with(
+            attempt_key="attempt-1",
+            selection_reason="selection",
+            verdict_reason="verdict",
+            fix_scope="partial",
+        )
+
+    def test_build_reject_retry_snapshot_preserves_candidate_and_retry_metadata(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        ir._collect_validation_warning_lines = MagicMock(return_value=["warn-a"])
+        ir._inherit_attempt_history = MagicMock(return_value=[{"old": True}])
+        ir._set_retry_budget_axes = MagicMock(return_value={"repair": "patch_revision"})
+
+        payload = ir.reject_runtime._build_reject_retry_snapshot(
+            director_result={
+                "selected_candidate": {
+                    "manuscript": "candidate manuscript",
+                    "strategy_name": "balanced",
+                },
+                "selection_reason": "best candidate",
+                "verdict_reason": "continuity conflict",
+                "director_verdict": "REJECT",
+                "final_verdict": "REJECT",
+                "gate_basis": "consistency",
+                "repair_scope": "partial",
+                "consistency_checklist": {"rule": "keep"},
+                "state_updates": {"hud": "snapshot"},
+                "open_review": "review note",
+                "contradiction_types": ["scene_overlap"],
+                "contradiction_details": ["detail-1", "detail-2"],
+                "firewall_triggered": True,
+                "firewall_reason": "firewall",
+            },
+            selected="A",
+            director_feedback="retry with fix",
+            action_items=["fix ending"],
+            score=44,
+            validation_results=[_validation_result()],
+            reject_bucket="post_select_conflict",
+            tot_used=True,
+            mad_used=False,
+            resolved_fix_scope="partial",
+            resolved_fix_scope_reasoning="continuity replay",
+            resolved_fix_pack={"must_fix": ["ending"]},
+            error_category="LOGIC_ERROR",
+            feedback_provenance={
+                "director_feedback_text": "director note",
+                "runtime_advisory": "runtime digest",
+                "retry_directives": "retry directives",
+            },
+            previous_attempt={"old": True},
+            round_num=0,
+        )
+
+        assert payload.candidate_key == "A|balanced"
+        assert payload.previous_attempt["strategy"] == "A"
+        assert payload.previous_attempt["selected_strategy_key"] == "balanced"
+        assert payload.previous_attempt["best_manuscript"] == "candidate manuscript"
+        assert payload.previous_attempt["validation_warnings"] == ["warn-a"]
+        assert payload.previous_attempt["reject_bucket"] == "post_select_conflict"
+        assert payload.previous_attempt["_tot_used"] is True
+        assert payload.previous_attempt["_mad_used"] is False
+        assert payload.previous_attempt["fix_scope"] == "partial"
+        assert payload.previous_attempt["director_feedback_text"] == "director note"
+        assert payload.previous_attempt["runtime_advisory"] == "runtime digest"
+        assert payload.previous_attempt["retry_directives"] == "retry directives"
+        assert payload.previous_attempt["prior_attempts"] == [{"old": True}]
+        assert payload.previous_attempt["retry_budget_axes"] == {"repair": "patch_revision"}
+
+    def test_build_reject_guidance_payload_applies_inplace_gate_and_mad_hint(self):
+        ctx = _make_ctx()
+        mad_module = MagicMock()
+        mad_result = MagicMock()
+        mad_result.consensus_output = "consensus repair"
+        mad_module.deliberate.return_value = mad_result
+
+        def _get_module(name):
+            if name == "multi_agent_deliberation":
+                return mad_module
+            return None
+
+        ctx.get_module.side_effect = _get_module
+        ir = Stage4InterviewRound(ctx)
+        ir._build_retry_feedback_provenance = MagicMock(
+            return_value={
+                "merged_feedback": "merged reject feedback",
+                "director_feedback_text": "director note",
+                "runtime_advisory": "runtime digest",
+                "retry_directives": "retry directives",
+            }
+        )
+        ir._classify_reject_bucket = MagicMock(return_value="constraint_violation")
+        ir._is_continuity_replay_reject = MagicMock(return_value=False)
+        ir._evaluate_fix_pack_contract = MagicMock(return_value={"ready": False, "reason": "missing_fix_pack"})
+
+        payload = ir.reject_runtime._build_reject_guidance_payload(
+            director_result={
+                "selected_candidate": {"manuscript": "candidate manuscript"},
+                "feedback": {"issues": ["constraint drift"]},
+                "action_items": ["repair constraint"],
+                "fix_scope": "inplace",
+                "fix_scope_reasoning": "local retry",
+                "fix_pack": {"must_fix": ["anchor"]},
+            },
+            director_feedback="initial reject",
+            validation_results=[_validation_result()],
+            selected="A",
+            round_num=0,
+            blueprint={"episode": 1},
+            prev_manuscript="previous manuscript",
+            tot_used=False,
+            mad_used=False,
+            error_category="",
+        )
+
+        assert payload.reject_bucket == "constraint_violation"
+        assert payload.resolved_fix_scope == "partial"
+        assert "REJECT retry widened to partial" in payload.director_feedback
+        assert "[MAD 제약/합의 개선 지침]" in payload.director_feedback
+        assert payload.feedback_provenance["runtime_advisory"] == "runtime digest"
+        assert payload.feedback_provenance["retry_directives"] == "retry directives"
+        assert payload.mad_used is True
+        assert payload.tot_used is False
+        mad_module.deliberate.assert_called_once()
+
+    def test_record_reject_attempt_artifact_builds_reject_attempt_payload(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.chief_writer.model_tier = "writer-model"
+        ir._record_s4_attempt = MagicMock(return_value={"artifact_path": "reject.json"})
+        ir._build_gate_semantics_payload = MagicMock(return_value={"gate_basis": "consistency"})
+        ir._build_fix_pack_payload = MagicMock(return_value={"must_fix": ["anchor"]})
+        ir._last_advisory_summary = {"blocking": 1}
+        ir._last_retry_budget_axes = {"repair": "patch_revision"}
+
+        payload = ir.reject_runtime._record_reject_attempt_artifact(
+            next_ep=1,
+            round_num=0,
+            round_ctx=round_ctx,
+            score=44,
+            is_patch=False,
+            prev_score=94,
+            is_patch_fallback=False,
+            director_feedback="reject feedback",
+            resolved_fix_scope="partial",
+            resolved_fix_scope_reasoning="continuity replay",
+            director_result={
+                "selection_reason": "best candidate",
+                "verdict_reason": "contradiction",
+                "open_review": "open review",
+                "score_breakdown": {"consistency": 0},
+            },
+            candidate_key="A|balanced",
+            previous_attempt={"best_manuscript": "candidate manuscript"},
+            prev_manuscript="previous manuscript",
+            feedback_provenance={
+                "runtime_advisory": "runtime digest",
+                "retry_directives": "retry directives",
+            },
+            reject_bucket="post_select_conflict",
+            error_category="LOGIC_ERROR",
+        )
+
+        assert payload == {"artifact_path": "reject.json"}
+        kwargs = ir._record_s4_attempt.call_args.kwargs
+        assert kwargs["verdict"] == "REJECT"
+        assert kwargs["fix_scope"] == "partial"
+        assert kwargs["fix_scope_reasoning"] == "continuity replay"
+        assert kwargs["candidate_key"] == "A|balanced"
+        assert kwargs["artifact_payload"] == "candidate manuscript"
+        assert kwargs["runtime_advisory"] == "runtime digest"
+        assert kwargs["retry_directives"] == "retry directives"
+        assert kwargs["reject_bucket"] == "post_select_conflict"
+        assert kwargs["advisory_flags"]["gate_semantics"] == {"gate_basis": "consistency"}
+        assert kwargs["advisory_flags"]["fix_pack"] == {"must_fix": ["anchor"]}
+        assert kwargs["advisory_flags"]["retry_budget_axes"] == {"repair": "patch_revision"}
+
+    def test_record_reject_round_metrics_persists_cost_record_and_ui_log(self):
+        ctx = _make_ctx()
+        ctx.current_project.metrics_session_id = "sess-stage4-reject"
+        ir = Stage4InterviewRound(ctx)
+
+        ir.reject_runtime._record_reject_round_metrics(
+            next_ep=2,
+            reject_bucket="structure_error",
+            score=44,
+            round_num=1,
+            selected="B",
+            asp_manuscript="asp draft",
+            tot_used=True,
+            mad_used=False,
+            director_feedback="repair the scene boundary",
+        )
+
+        cost_kwargs = ctx.current_project.db.save_cost_record.call_args.kwargs
+        assert cost_kwargs["session_id"] == "sess-stage4-reject"
+        assert cost_kwargs["scope_id"] == 2
+        assert cost_kwargs["model_breakdown"]["event"] == "stage4_reject"
+        assert cost_kwargs["model_breakdown"]["bucket"] == "structure_error"
+        assert cost_kwargs["model_breakdown"]["strategy"] == "B"
+        assert cost_kwargs["model_breakdown"]["intelligence_used"] == {
+            "asp": True,
+            "tot": True,
+            "mad": False,
+        }
+        ctx.ui.log.assert_called_once()
+        assert "2차 면담 REJECT" in ctx.ui.log.call_args.args[0]
+
+    def test_run_reject_followup_side_effects_records_integrations_and_appends_injection(self):
+        ctx = _make_ctx()
+        ctx.failure_learner = MagicMock()
+        ctx.adaptive_manager = MagicMock()
+        ctx.adaptive_manager.get_injection_prompt.return_value = "adaptive injection"
+        ctx.quality_dashboard = MagicMock()
+        ir = Stage4InterviewRound(ctx)
+
+        updated_feedback = ir.reject_runtime._run_reject_followup_side_effects(
+            next_ep=3,
+            arc_num=4,
+            reject_bucket="post_select_conflict",
+            director_feedback="reject feedback",
+            score=52,
+            round_num=1,
+        )
+
+        assert updated_feedback == "reject feedback\nadaptive injection"
+        ctx.failure_learner.record_failure.assert_called_once_with(
+            stage=4,
+            episode=3,
+            arc=4,
+            reason="post_select_conflict: reject feedback",
+            details={"bucket": "post_select_conflict", "score": 52, "round": 1},
+        )
+        ctx.adaptive_manager.record_failure.assert_called_once_with(
+            ep_num=3,
+            agent="director",
+            error_info={"reason": "reject feedback", "bucket": "post_select_conflict"},
+            attempt=2,
+        )
+        ctx.adaptive_manager.get_injection_prompt.assert_called_once_with(
+            ep_num=3,
+            agent="director",
+            current_attempt=2,
+        )
+        dashboard_kwargs = ctx.quality_dashboard.record_validation.call_args.kwargs
+        assert dashboard_kwargs["ep_num"] == 3
+        assert dashboard_kwargs["stage"] == 4
+        assert dashboard_kwargs["result"]["decision"] == "REJECT"
+        assert "adaptive injection" in dashboard_kwargs["result"]["violations"][0]["description"]
+
+    def test_append_pass_episode_log_routes_feedback_and_artifact_meta(self):
+        from modules.core.stage4_interview_round import _PassResultLoggingPayload
+
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        chief_writer = MagicMock()
+        chief_writer.model_tier = "writer-model"
+        ir._append_episode_log = MagicMock()
+
+        ir._append_pass_episode_log(
+            ep_num=1,
+            round_num=0,
+            round_ctx=round_ctx,
+            chief_writer=chief_writer,
+            director_result={},
+            trace_director_result={"verdict_reason": "trace verdict"},
+            director_feedback="raw feedback",
+            initial_verdict="PASS",
+            initial_score=91,
+            final_verdict="PASS_WITH_FIX",
+            final_score=98,
+            is_patch=True,
+            is_patch_fallback=False,
+            selection_artifact_meta={"candidate_key": "A", "content_hash": "sel-hash", "artifact_path": "selection.json"},
+            validation_warnings=["warn-a"],
+            final_warnings=["final-warn"],
+            patch_trace={"mode": "patch"},
+            tot_used=False,
+            mad_used=True,
+            logging_payload=_PassResultLoggingPayload(
+                log_artifact_meta={"candidate_key": "stage4|A", "content_hash": "hash-123", "artifact_path": "artifact.json"},
+                session_selection_reason="selection",
+                session_verdict_reason="verdict",
+                session_runtime_advisory="runtime digest",
+                session_retry_directives="retry directives",
+                session_gate_semantics={},
+            ),
+            arc_num=1,
+            asp_manuscript="asp",
+        )
+
+        ir._append_episode_log.assert_called_once()
+        append_kwargs = ir._append_episode_log.call_args.kwargs
+        assert append_kwargs["feedback_provenance"]["director_feedback"] == "trace verdict"
+        assert append_kwargs["feedback_provenance"]["runtime_advisory"] == "runtime digest"
+        assert append_kwargs["candidate_key"] == "stage4|A"
+        assert append_kwargs["selection_candidate_key"] == "A"
+
+    def test_stage4_pass_episode_log_payload_prefers_trace_reason_and_selection_artifact_meta(self):
+        from modules.core.stage4_interview_round import _PassResultLoggingPayload
+
+        ctx = _make_ctx()
+        ctx.current_project.id = "proj-1"
+        chief_writer = MagicMock()
+        chief_writer.model_tier = "writer-model"
+
+        payload = _call_pass_log_builder(
+            s4_episode_logging.build_pass_episode_log_payload,
+            _TestPassEpisodeLogRequest(
+                ep_num=1,
+                round_num=0,
+                chief_writer=chief_writer,
+                director_result={},
+                trace_director_result={"verdict_reason": "trace verdict"},
+                director_feedback="raw feedback",
+                initial_verdict="PASS",
+                initial_score=91,
+                final_verdict="PASS_WITH_FIX",
+                final_score=98,
+                is_patch=True,
+                is_patch_fallback=False,
+                tot_used=False,
+                mad_used=True,
+                validation_warnings=["warn-a"],
+                final_warnings=["final-warn"],
+                patch_trace={"mode": "patch"},
+                logging_payload=_PassResultLoggingPayload(
+                    log_artifact_meta={"candidate_key": "stage4|A", "content_hash": "hash-123", "artifact_path": "artifact.json"},
+                    session_selection_reason="selection",
+                    session_verdict_reason="verdict",
+                    session_runtime_advisory="runtime digest",
+                    session_retry_directives="retry directives",
+                    session_gate_semantics={},
+                ),
+                selection_artifact_meta={"candidate_key": "A", "content_hash": "sel-hash", "artifact_path": "selection.json"},
+                arc_num=1,
+                asp_manuscript="asp",
+            ),
+        )
+
+        assert payload["feedback_provenance"]["director_feedback"] == "trace verdict"
+        assert payload["feedback_provenance"]["runtime_advisory"] == "runtime digest"
+        assert payload["feedback_provenance"]["retry_directives"] == "retry directives"
+        assert payload["candidate_key"] == "stage4|A"
+        assert payload["selection_candidate_key"] == "A"
+        assert payload["selection_content_hash"] == "sel-hash"
+        assert payload["selection_artifact_path"] == "selection.json"
+        assert payload["model"] == "writer-model"
+        assert payload["asp_used"] is True
+        assert payload["attempt_key"] == "s4:ep1:arc1:a1"
+
+    def test_append_pass_episode_log_delegates_to_stage4_episode_logging(self):
+        from modules.core.stage4_interview_round import _PassResultLoggingPayload
+        from modules.core import stage4_episode_logging as s4_episode_logging
+
+        ctx = _make_ctx()
+        ctx.current_project.metrics_session_id = "sess-pass-log"
+        ir = Stage4InterviewRound(ctx)
+        ir._append_episode_log = MagicMock()
+        chief_writer = MagicMock()
+        chief_writer.model_tier = "writer-model"
+        expected = {"attempt_key": "s4:ep1:arc1:a1"}
+
+        with patch.object(s4_episode_logging, "build_pass_episode_log_payload", return_value=expected) as mock_builder:
+            ir._append_pass_episode_log(
+                ep_num=1,
+                round_num=0,
+                round_ctx=_make_round_ctx(),
+                chief_writer=chief_writer,
+                director_result={},
+                trace_director_result={},
+                director_feedback="raw feedback",
+                initial_verdict="PASS",
+                initial_score=91,
+                final_verdict="PASS_WITH_FIX",
+                final_score=98,
+                is_patch=True,
+                is_patch_fallback=False,
+                tot_used=False,
+                mad_used=True,
+                validation_warnings=["warn-a"],
+                final_warnings=["final-warn"],
+                patch_trace={"mode": "patch"},
+                logging_payload=_PassResultLoggingPayload(
+                    log_artifact_meta={"candidate_key": "stage4|A", "content_hash": "hash-123", "artifact_path": "artifact.json"},
+                    session_selection_reason="selection",
+                    session_verdict_reason="verdict",
+                    session_runtime_advisory="runtime digest",
+                    session_retry_directives="retry directives",
+                    session_gate_semantics={},
+                ),
+                selection_artifact_meta={"candidate_key": "A", "content_hash": "sel-hash", "artifact_path": "selection.json"},
+                arc_num=1,
+                asp_manuscript="asp",
+            )
+
+        ir._append_episode_log.assert_called_once_with(**expected)
+        mock_builder.assert_called_once()
+        normalized_request = mock_builder.call_args.kwargs["request"]
+        assert normalized_request.model_tier == "writer-model"
+        assert normalized_request.session_id == "sess-pass-log"
+        assert normalized_request.session_runtime_advisory == "runtime digest"
+        assert normalized_request.selection_artifact_meta["candidate_key"] == "A"
+
+    def test_build_pass_episode_log_parts_collects_base_provenance_and_artifact_sections(self):
+        from modules.core.stage4_interview_round import _PassResultLoggingPayload
+
+        ctx = _make_ctx()
+        ctx.current_project.id = "proj-1"
+        chief_writer = MagicMock()
+        chief_writer.model_tier = "writer-model"
+
+        parts = _call_pass_log_builder(
+            s4_episode_logging.build_pass_episode_log_parts,
+            _TestPassEpisodeLogRequest(
+                ep_num=1,
+                round_num=0,
+                chief_writer=chief_writer,
+                director_result={"selected": "A"},
+                trace_director_result={"verdict_reason": "trace verdict"},
+                director_feedback="raw feedback",
+                initial_verdict="PASS",
+                initial_score=91,
+                final_verdict="PASS_WITH_FIX",
+                final_score=98,
+                is_patch=True,
+                is_patch_fallback=False,
+                tot_used=False,
+                mad_used=True,
+                validation_warnings=["warn-a"],
+                final_warnings=["final-warn"],
+                patch_trace={"mode": "patch"},
+                logging_payload=_PassResultLoggingPayload(
+                    log_artifact_meta={"candidate_key": "stage4|A", "content_hash": "hash-123", "artifact_path": "artifact.json"},
+                    session_selection_reason="selection",
+                    session_verdict_reason="verdict",
+                    session_runtime_advisory="runtime digest",
+                    session_retry_directives="retry directives",
+                    session_gate_semantics={},
+                ),
+                selection_artifact_meta={"candidate_key": "A", "content_hash": "sel-hash", "artifact_path": "selection.json"},
+                arc_num=1,
+                asp_manuscript="asp",
+            ),
+            session_id="sess-pass-log",
+        )
+
+        assert parts.base_fields["final_verdict"] == "PASS_WITH_FIX"
+        assert parts.base_fields["model"] == "writer-model"
+        assert parts.feedback_provenance["director_feedback"] == "trace verdict"
+        assert parts.feedback_provenance["runtime_advisory"] == "runtime digest"
+        assert parts.artifact_fields["candidate_key"] == "stage4|A"
+        assert parts.artifact_fields["selection_candidate_key"] == "A"
+
+    def test_assemble_pass_episode_log_payload_merges_base_provenance_and_artifacts(self):
+        from modules.core import stage4_episode_logging as s4_episode_logging
+
+        payload = s4_episode_logging.assemble_pass_episode_log_payload(
+            base_fields={"ep_num": 1, "final_verdict": "PASS"},
+            feedback_provenance={"director_feedback": "trace verdict"},
+            artifact_fields={"candidate_key": "stage4|A", "artifact_path": "artifact.json"},
+        )
+
+        assert payload == {
+            "ep_num": 1,
+            "final_verdict": "PASS",
+            "feedback_provenance": {"director_feedback": "trace verdict"},
+            "candidate_key": "stage4|A",
+            "artifact_path": "artifact.json",
+        }
+
+    def test_build_pass_feedback_provenance_prefers_trace_reason(self):
+        from modules.core.stage4_interview_round import _PassResultLoggingPayload
+
+        provenance = _call_pass_log_builder(
+            s4_episode_logging.build_pass_feedback_provenance,
+            _TestPassEpisodeLogRequest(
+                ep_num=1,
+                round_num=0,
+                chief_writer=MagicMock(),
+                director_result={},
+                trace_director_result={"verdict_reason": "trace verdict"},
+                director_feedback="raw feedback",
+                initial_verdict="PASS",
+                initial_score=91,
+                final_verdict="PASS_WITH_FIX",
+                final_score=98,
+                is_patch=True,
+                is_patch_fallback=False,
+                tot_used=False,
+                mad_used=True,
+                validation_warnings=["warn-a"],
+                final_warnings=["final-warn"],
+                patch_trace={"mode": "patch"},
+                logging_payload=_PassResultLoggingPayload(
+                    log_artifact_meta={"candidate_key": "stage4|A", "content_hash": "hash-123", "artifact_path": "artifact.json"},
+                    session_selection_reason="selection",
+                    session_verdict_reason="verdict",
+                    session_runtime_advisory="runtime digest",
+                    session_retry_directives="retry directives",
+                    session_gate_semantics={},
+                ),
+                selection_artifact_meta={"candidate_key": "A", "content_hash": "sel-hash", "artifact_path": "selection.json"},
+                arc_num=1,
+                asp_manuscript="asp",
+            ),
+        )
+
+        assert provenance == {
+            "director_feedback": "trace verdict",
+            "runtime_advisory": "runtime digest",
+            "retry_directives": "retry directives",
+        }
+
+    def test_build_pass_episode_log_base_fields_preserves_core_round_metadata(self):
+        from modules.core.stage4_interview_round import _PassResultLoggingPayload
+
+        chief_writer = MagicMock()
+        chief_writer.model_tier = "writer-model"
+
+        payload = _call_pass_log_builder(
+            s4_episode_logging.build_pass_episode_log_base_fields,
+            _TestPassEpisodeLogRequest(
+                ep_num=1,
+                round_num=0,
+                chief_writer=chief_writer,
+                director_result={"selected": "A"},
+                trace_director_result={},
+                director_feedback="raw feedback",
+                initial_verdict="PASS",
+                initial_score=91,
+                final_verdict="PASS_WITH_FIX",
+                final_score=98,
+                is_patch=True,
+                is_patch_fallback=False,
+                tot_used=False,
+                mad_used=True,
+                validation_warnings=["warn-a"],
+                final_warnings=["final-warn"],
+                patch_trace={"mode": "patch"},
+                logging_payload=_PassResultLoggingPayload(
+                    log_artifact_meta={"candidate_key": "stage4|A", "content_hash": "hash-123", "artifact_path": "artifact.json"},
+                    session_selection_reason="selection",
+                    session_verdict_reason="verdict",
+                    session_runtime_advisory="runtime digest",
+                    session_retry_directives="retry directives",
+                    session_gate_semantics={},
+                ),
+                selection_artifact_meta={"candidate_key": "A", "content_hash": "sel-hash", "artifact_path": "selection.json"},
+                arc_num=1,
+                asp_manuscript="asp",
+            ),
+        )
+
+        assert payload == {
+            "ep_num": 1,
+            "round_num": 0,
+            "director_result": {"selected": "A"},
+            "initial_verdict": "PASS",
+            "initial_score": 91,
+            "final_verdict": "PASS_WITH_FIX",
+            "final_score": 98,
+            "is_patch": True,
+            "patch_fallback": False,
+            "tot_used": False,
+            "mad_used": True,
+            "asp_used": True,
+            "model": "writer-model",
+            "reject_bucket": "",
+            "validation_warnings": ["warn-a"],
+            "final_warnings": ["final-warn"],
+            "patch_trace": {"mode": "patch"},
+        }
+
+    def test_build_pass_episode_log_round_fields_preserves_verdict_scores_and_selection(self):
+        from modules.core.stage4_interview_round import _PassResultLoggingPayload
+
+        payload = _call_pass_log_builder(
+            s4_episode_logging.build_pass_episode_log_round_fields,
+            _TestPassEpisodeLogRequest(
+                ep_num=1,
+                round_num=0,
+                chief_writer=MagicMock(),
+                director_result={"selected": "A"},
+                trace_director_result={},
+                director_feedback="raw feedback",
+                initial_verdict="PASS",
+                initial_score=91,
+                final_verdict="PASS_WITH_FIX",
+                final_score=98,
+                is_patch=True,
+                is_patch_fallback=False,
+                tot_used=False,
+                mad_used=True,
+                validation_warnings=["warn-a"],
+                final_warnings=["final-warn"],
+                patch_trace={"mode": "patch"},
+                logging_payload=_PassResultLoggingPayload(
+                    log_artifact_meta={"candidate_key": "stage4|A", "content_hash": "hash-123", "artifact_path": "artifact.json"},
+                    session_selection_reason="selection",
+                    session_verdict_reason="verdict",
+                    session_runtime_advisory="runtime digest",
+                    session_retry_directives="retry directives",
+                    session_gate_semantics={},
+                ),
+                selection_artifact_meta={"candidate_key": "A", "content_hash": "sel-hash", "artifact_path": "selection.json"},
+                arc_num=1,
+                asp_manuscript="asp",
+            ),
+        )
+
+        assert payload == {
+            "ep_num": 1,
+            "round_num": 0,
+            "director_result": {"selected": "A"},
+            "initial_verdict": "PASS",
+            "initial_score": 91,
+            "final_verdict": "PASS_WITH_FIX",
+            "final_score": 98,
+        }
+
+    def test_build_pass_episode_log_status_fields_preserves_usage_flags_and_model(self):
+        from modules.core.stage4_interview_round import _PassResultLoggingPayload
+
+        chief_writer = MagicMock()
+        chief_writer.model_tier = "writer-model"
+
+        payload = _call_pass_log_builder(
+            s4_episode_logging.build_pass_episode_log_status_fields,
+            _TestPassEpisodeLogRequest(
+                ep_num=1,
+                round_num=0,
+                chief_writer=chief_writer,
+                director_result={"selected": "A"},
+                trace_director_result={},
+                director_feedback="raw feedback",
+                initial_verdict="PASS",
+                initial_score=91,
+                final_verdict="PASS_WITH_FIX",
+                final_score=98,
+                is_patch=True,
+                is_patch_fallback=False,
+                tot_used=False,
+                mad_used=True,
+                validation_warnings=["warn-a"],
+                final_warnings=["final-warn"],
+                patch_trace={"mode": "patch"},
+                logging_payload=_PassResultLoggingPayload(
+                    log_artifact_meta={"candidate_key": "stage4|A", "content_hash": "hash-123", "artifact_path": "artifact.json"},
+                    session_selection_reason="selection",
+                    session_verdict_reason="verdict",
+                    session_runtime_advisory="runtime digest",
+                    session_retry_directives="retry directives",
+                    session_gate_semantics={},
+                ),
+                selection_artifact_meta={"candidate_key": "A", "content_hash": "sel-hash", "artifact_path": "selection.json"},
+                arc_num=1,
+                asp_manuscript="asp",
+            ),
+        )
+
+        assert payload == {
+            "is_patch": True,
+            "patch_fallback": False,
+            "tot_used": False,
+            "mad_used": True,
+            "asp_used": True,
+            "model": "writer-model",
+            "reject_bucket": "",
+            "validation_warnings": ["warn-a"],
+            "final_warnings": ["final-warn"],
+            "patch_trace": {"mode": "patch"},
+        }
+
+    def test_build_pass_episode_log_usage_fields_preserves_usage_flags_and_model(self):
+        from modules.core.stage4_interview_round import _PassResultLoggingPayload
+
+        chief_writer = MagicMock()
+        chief_writer.model_tier = "writer-model"
+
+        payload = _call_pass_log_builder(
+            s4_episode_logging.build_pass_episode_log_usage_fields,
+            _TestPassEpisodeLogRequest(
+                ep_num=1,
+                round_num=0,
+                chief_writer=chief_writer,
+                director_result={"selected": "A"},
+                trace_director_result={},
+                director_feedback="raw feedback",
+                initial_verdict="PASS",
+                initial_score=91,
+                final_verdict="PASS_WITH_FIX",
+                final_score=98,
+                is_patch=True,
+                is_patch_fallback=False,
+                tot_used=False,
+                mad_used=True,
+                validation_warnings=["warn-a"],
+                final_warnings=["final-warn"],
+                patch_trace={"mode": "patch"},
+                logging_payload=_PassResultLoggingPayload(
+                    log_artifact_meta={"candidate_key": "stage4|A", "content_hash": "hash-123", "artifact_path": "artifact.json"},
+                    session_selection_reason="selection",
+                    session_verdict_reason="verdict",
+                    session_runtime_advisory="runtime digest",
+                    session_retry_directives="retry directives",
+                    session_gate_semantics={},
+                ),
+                selection_artifact_meta={"candidate_key": "A", "content_hash": "sel-hash", "artifact_path": "selection.json"},
+                arc_num=1,
+                asp_manuscript="asp",
+            ),
+        )
+
+        assert payload == {
+            "is_patch": True,
+            "patch_fallback": False,
+            "tot_used": False,
+            "mad_used": True,
+            "asp_used": True,
+            "model": "writer-model",
+        }
+
+    def test_build_pass_episode_log_usage_flag_fields_preserves_patch_and_usage_flags(self):
+        from modules.core.stage4_interview_round import _PassResultLoggingPayload
+
+        chief_writer = MagicMock()
+        chief_writer.model_tier = "writer-model"
+
+        payload = _call_pass_log_builder(
+            s4_episode_logging.build_pass_episode_log_usage_flag_fields,
+            _TestPassEpisodeLogRequest(
+                ep_num=1,
+                round_num=0,
+                chief_writer=chief_writer,
+                director_result={"selected": "A"},
+                trace_director_result={},
+                director_feedback="raw feedback",
+                initial_verdict="PASS",
+                initial_score=91,
+                final_verdict="PASS_WITH_FIX",
+                final_score=98,
+                is_patch=True,
+                is_patch_fallback=False,
+                tot_used=False,
+                mad_used=True,
+                validation_warnings=["warn-a"],
+                final_warnings=["final-warn"],
+                patch_trace={"mode": "patch"},
+                logging_payload=_PassResultLoggingPayload(
+                    log_artifact_meta={"candidate_key": "stage4|A", "content_hash": "hash-123", "artifact_path": "artifact.json"},
+                    session_selection_reason="selection",
+                    session_verdict_reason="verdict",
+                    session_runtime_advisory="runtime digest",
+                    session_retry_directives="retry directives",
+                    session_gate_semantics={},
+                ),
+                selection_artifact_meta={"candidate_key": "A", "content_hash": "sel-hash", "artifact_path": "selection.json"},
+                arc_num=1,
+                asp_manuscript="asp",
+            ),
+        )
+
+        assert payload == {
+            "is_patch": True,
+            "patch_fallback": False,
+            "tot_used": False,
+            "mad_used": True,
+            "asp_used": True,
+        }
+
+    def test_build_pass_episode_log_model_field_reads_model_tier(self):
+        from modules.core.stage4_interview_round import _PassResultLoggingPayload
+
+        chief_writer = MagicMock()
+        chief_writer.model_tier = "writer-model"
+
+        payload = _call_pass_log_builder(
+            s4_episode_logging.build_pass_episode_log_model_field,
+            _TestPassEpisodeLogRequest(
+                ep_num=1,
+                round_num=0,
+                chief_writer=chief_writer,
+                director_result={"selected": "A"},
+                trace_director_result={},
+                director_feedback="raw feedback",
+                initial_verdict="PASS",
+                initial_score=91,
+                final_verdict="PASS_WITH_FIX",
+                final_score=98,
+                is_patch=True,
+                is_patch_fallback=False,
+                tot_used=False,
+                mad_used=True,
+                validation_warnings=["warn-a"],
+                final_warnings=["final-warn"],
+                patch_trace={"mode": "patch"},
+                logging_payload=_PassResultLoggingPayload(
+                    log_artifact_meta={"candidate_key": "stage4|A", "content_hash": "hash-123", "artifact_path": "artifact.json"},
+                    session_selection_reason="selection",
+                    session_verdict_reason="verdict",
+                    session_runtime_advisory="runtime digest",
+                    session_retry_directives="retry directives",
+                    session_gate_semantics={},
+                ),
+                selection_artifact_meta={"candidate_key": "A", "content_hash": "sel-hash", "artifact_path": "selection.json"},
+                arc_num=1,
+                asp_manuscript="asp",
+            ),
+        )
+
+        assert payload == {"model": "writer-model"}
+
+    def test_build_pass_episode_log_warning_fields_preserves_warning_bundle(self):
+        from modules.core.stage4_interview_round import _PassResultLoggingPayload
+
+        payload = _call_pass_log_builder(
+            s4_episode_logging.build_pass_episode_log_warning_fields,
+            _TestPassEpisodeLogRequest(
+                ep_num=1,
+                round_num=0,
+                chief_writer=MagicMock(),
+                director_result={"selected": "A"},
+                trace_director_result={},
+                director_feedback="raw feedback",
+                initial_verdict="PASS",
+                initial_score=91,
+                final_verdict="PASS_WITH_FIX",
+                final_score=98,
+                is_patch=True,
+                is_patch_fallback=False,
+                tot_used=False,
+                mad_used=True,
+                validation_warnings=["warn-a"],
+                final_warnings=["final-warn"],
+                patch_trace={"mode": "patch"},
+                logging_payload=_PassResultLoggingPayload(
+                    log_artifact_meta={"candidate_key": "stage4|A", "content_hash": "hash-123", "artifact_path": "artifact.json"},
+                    session_selection_reason="selection",
+                    session_verdict_reason="verdict",
+                    session_runtime_advisory="runtime digest",
+                    session_retry_directives="retry directives",
+                    session_gate_semantics={},
+                ),
+                selection_artifact_meta={"candidate_key": "A", "content_hash": "sel-hash", "artifact_path": "selection.json"},
+                arc_num=1,
+                asp_manuscript="asp",
+            ),
+        )
+
+        assert payload == {
+            "reject_bucket": "",
+            "validation_warnings": ["warn-a"],
+            "final_warnings": ["final-warn"],
+            "patch_trace": {"mode": "patch"},
+        }
+
+    def test_build_pass_episode_log_artifact_fields_includes_attempt_key_and_selection_meta(self):
+        from modules.core.stage4_interview_round import _PassResultLoggingPayload
+
+        payload = _call_pass_log_builder(
+            s4_episode_logging.build_pass_episode_log_artifact_fields,
+            _TestPassEpisodeLogRequest(
+                ep_num=1,
+                round_num=0,
+                chief_writer=MagicMock(),
+                director_result={},
+                trace_director_result={},
+                director_feedback="raw feedback",
+                initial_verdict="PASS",
+                initial_score=91,
+                final_verdict="PASS_WITH_FIX",
+                final_score=98,
+                is_patch=True,
+                is_patch_fallback=False,
+                tot_used=False,
+                mad_used=True,
+                validation_warnings=["warn-a"],
+                final_warnings=["final-warn"],
+                patch_trace={"mode": "patch"},
+                logging_payload=_PassResultLoggingPayload(
+                    log_artifact_meta={"candidate_key": "stage4|A", "content_hash": "hash-123", "artifact_path": "artifact.json"},
+                    session_selection_reason="selection",
+                    session_verdict_reason="verdict",
+                    session_runtime_advisory="runtime digest",
+                    session_retry_directives="retry directives",
+                    session_gate_semantics={},
+                ),
+                selection_artifact_meta={"candidate_key": "A", "content_hash": "sel-hash", "artifact_path": "selection.json"},
+                arc_num=1,
+                asp_manuscript="asp",
+            ),
+        )
+
+        assert payload == {
+            "arc_num": 1,
+            "attempt_key": "s4:ep1:arc1:a1",
+            "candidate_key": "stage4|A",
+            "content_hash": "hash-123",
+            "artifact_path": "artifact.json",
+            "selection_candidate_key": "A",
+            "selection_content_hash": "sel-hash",
+            "selection_artifact_path": "selection.json",
+        }
+
+    def test_build_pass_episode_log_artifact_core_fields_includes_attempt_key_and_logged_artifact(self):
+        from modules.core.stage4_interview_round import _PassResultLoggingPayload
+
+        payload = _call_pass_log_builder(
+            s4_episode_logging.build_pass_episode_log_artifact_core_fields,
+            _TestPassEpisodeLogRequest(
+                ep_num=1,
+                round_num=0,
+                chief_writer=MagicMock(),
+                director_result={},
+                trace_director_result={},
+                director_feedback="raw feedback",
+                initial_verdict="PASS",
+                initial_score=91,
+                final_verdict="PASS_WITH_FIX",
+                final_score=98,
+                is_patch=True,
+                is_patch_fallback=False,
+                tot_used=False,
+                mad_used=True,
+                validation_warnings=["warn-a"],
+                final_warnings=["final-warn"],
+                patch_trace={"mode": "patch"},
+                logging_payload=_PassResultLoggingPayload(
+                    log_artifact_meta={"candidate_key": "stage4|A", "content_hash": "hash-123", "artifact_path": "artifact.json"},
+                    session_selection_reason="selection",
+                    session_verdict_reason="verdict",
+                    session_runtime_advisory="runtime digest",
+                    session_retry_directives="retry directives",
+                    session_gate_semantics={},
+                ),
+                selection_artifact_meta={"candidate_key": "A", "content_hash": "sel-hash", "artifact_path": "selection.json"},
+                arc_num=1,
+                asp_manuscript="asp",
+            ),
+        )
+
+        assert payload == {
+            "arc_num": 1,
+            "attempt_key": "s4:ep1:arc1:a1",
+            "candidate_key": "stage4|A",
+            "content_hash": "hash-123",
+            "artifact_path": "artifact.json",
+        }
+
+    def test_build_pass_episode_log_attempt_fields_includes_arc_and_attempt_key(self):
+        from modules.core.stage4_interview_round import _PassResultLoggingPayload
+
+        payload = _call_pass_log_builder(
+            s4_episode_logging.build_pass_episode_log_attempt_fields,
+            _TestPassEpisodeLogRequest(
+                ep_num=1,
+                round_num=0,
+                chief_writer=MagicMock(),
+                director_result={},
+                trace_director_result={},
+                director_feedback="raw feedback",
+                initial_verdict="PASS",
+                initial_score=91,
+                final_verdict="PASS_WITH_FIX",
+                final_score=98,
+                is_patch=True,
+                is_patch_fallback=False,
+                tot_used=False,
+                mad_used=True,
+                validation_warnings=["warn-a"],
+                final_warnings=["final-warn"],
+                patch_trace={"mode": "patch"},
+                logging_payload=_PassResultLoggingPayload(
+                    log_artifact_meta={"candidate_key": "stage4|A", "content_hash": "hash-123", "artifact_path": "artifact.json"},
+                    session_selection_reason="selection",
+                    session_verdict_reason="verdict",
+                    session_runtime_advisory="runtime digest",
+                    session_retry_directives="retry directives",
+                    session_gate_semantics={},
+                ),
+                selection_artifact_meta={"candidate_key": "A", "content_hash": "sel-hash", "artifact_path": "selection.json"},
+                arc_num=1,
+                asp_manuscript="asp",
+            ),
+        )
+
+        assert payload == {
+            "arc_num": 1,
+            "attempt_key": "s4:ep1:arc1:a1",
+        }
+
+    def test_build_pass_episode_log_logged_artifact_fields_reads_logged_artifact_meta(self):
+        from modules.core.stage4_interview_round import _PassResultLoggingPayload
+
+        payload = _call_pass_log_builder(
+            s4_episode_logging.build_pass_episode_log_logged_artifact_fields,
+            _TestPassEpisodeLogRequest(
+                ep_num=1,
+                round_num=0,
+                chief_writer=MagicMock(),
+                director_result={},
+                trace_director_result={},
+                director_feedback="raw feedback",
+                initial_verdict="PASS",
+                initial_score=91,
+                final_verdict="PASS_WITH_FIX",
+                final_score=98,
+                is_patch=True,
+                is_patch_fallback=False,
+                tot_used=False,
+                mad_used=True,
+                validation_warnings=["warn-a"],
+                final_warnings=["final-warn"],
+                patch_trace={"mode": "patch"},
+                logging_payload=_PassResultLoggingPayload(
+                    log_artifact_meta={"candidate_key": "stage4|A", "content_hash": "hash-123", "artifact_path": "artifact.json"},
+                    session_selection_reason="selection",
+                    session_verdict_reason="verdict",
+                    session_runtime_advisory="runtime digest",
+                    session_retry_directives="retry directives",
+                    session_gate_semantics={},
+                ),
+                selection_artifact_meta={"candidate_key": "A", "content_hash": "sel-hash", "artifact_path": "selection.json"},
+                arc_num=1,
+                asp_manuscript="asp",
+            ),
+        )
+
+        assert payload == {
+            "candidate_key": "stage4|A",
+            "content_hash": "hash-123",
+            "artifact_path": "artifact.json",
+        }
+
+    def test_build_pass_episode_log_selection_artifact_fields_reads_selection_meta(self):
+        from modules.core.stage4_interview_round import _PassResultLoggingPayload
+
+        payload = _call_pass_log_builder(
+            s4_episode_logging.build_pass_episode_log_selection_artifact_fields,
+            _TestPassEpisodeLogRequest(
+                ep_num=1,
+                round_num=0,
+                chief_writer=MagicMock(),
+                director_result={},
+                trace_director_result={},
+                director_feedback="raw feedback",
+                initial_verdict="PASS",
+                initial_score=91,
+                final_verdict="PASS_WITH_FIX",
+                final_score=98,
+                is_patch=True,
+                is_patch_fallback=False,
+                tot_used=False,
+                mad_used=True,
+                validation_warnings=["warn-a"],
+                final_warnings=["final-warn"],
+                patch_trace={"mode": "patch"},
+                logging_payload=_PassResultLoggingPayload(
+                    log_artifact_meta={"candidate_key": "stage4|A", "content_hash": "hash-123", "artifact_path": "artifact.json"},
+                    session_selection_reason="selection",
+                    session_verdict_reason="verdict",
+                    session_runtime_advisory="runtime digest",
+                    session_retry_directives="retry directives",
+                    session_gate_semantics={},
+                ),
+                selection_artifact_meta={"candidate_key": "A", "content_hash": "sel-hash", "artifact_path": "selection.json"},
+                arc_num=1,
+                asp_manuscript="asp",
+            ),
+        )
+
+        assert payload == {
+            "selection_candidate_key": "A",
+            "selection_content_hash": "sel-hash",
+            "selection_artifact_path": "selection.json",
+        }
+
+    def test_append_pass_round_logs_delegates_episode_log_and_round_outcome(self):
+        from modules.core.stage4_interview_round import _PassResultLoggingPayload
+
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        chief_writer = MagicMock()
+        ir._append_pass_episode_log = MagicMock()
+        ir._log_round_outcome = MagicMock()
+
+        ir._append_pass_round_logs(
+            next_ep=1,
+            round_num=0,
+            round_ctx=round_ctx,
+            chief_writer=chief_writer,
+            director_result={},
+            trace_director_result={"verdict_reason": "trace verdict"},
+            director_feedback="raw feedback",
+            initial_verdict="PASS",
+            initial_score=91,
+            final_verdict="PASS_WITH_FIX",
+            final_score=98,
+            selection_artifact_meta={"candidate_key": "A", "content_hash": "sel-hash", "artifact_path": "selection.json"},
+            validation_warnings=["warn-a"],
+            is_patch=True,
+            is_patch_fallback=False,
+            trace_patch_trace={"mode": "patch"},
+            tot_used=False,
+            mad_used=True,
+            asp_manuscript="asp",
+            logging_payload=_PassResultLoggingPayload(
+                log_artifact_meta={"candidate_key": "stage4|A", "content_hash": "hash-123", "artifact_path": "artifact.json"},
+                session_selection_reason="selection",
+                session_verdict_reason="verdict",
+                session_runtime_advisory="runtime digest",
+                session_retry_directives="retry directives",
+                session_gate_semantics={},
+            ),
+            arc_num=1,
+            final_warnings=["final-warn"],
+        )
+
+        ir._append_pass_episode_log.assert_called_once()
+        ir._log_round_outcome.assert_called_once()
+        outcome_kwargs = ir._log_round_outcome.call_args.kwargs
+        assert outcome_kwargs["final_warning_count"] == 1
+        assert outcome_kwargs["artifact_path"] == "artifact.json"
+
+    def test_log_pass_session_decision_prefers_trace_fields(self):
+        from modules.core.stage4_interview_round import _PassResultLoggingPayload
+
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        ir._build_fix_pack_payload = MagicMock(return_value={"must_fix": ["anchor"]})
+        ir._log_session_decision = MagicMock()
+        ir._last_retry_budget_axes = {"repair": "patch_revision"}
+
+        ir._log_pass_session_decision(
+            next_ep=1,
+            round_num=0,
+            arc_num=1,
+            director_result={
+                "fix_scope": "partial",
+                "open_review": "director open review",
+                "action_items": ["director item"],
+                "firewall_triggered": False,
+                "firewall_reason": "",
+            },
+            trace_director_result={
+                "verdict_reason": "trace verdict",
+                "fix_scope": "rewrite",
+                "open_review": "trace open review",
+                "action_items": ["trace item"],
+                "firewall_triggered": True,
+                "firewall_reason": "trace firewall",
+            },
+            final_verdict="PASS_WITH_FIX",
+            final_score=98,
+            selected="A",
+            reason="fallback reason",
+            error_category="LOGIC_ERROR",
+            attempt_key="attempt-1",
+            selection_artifact_meta={"candidate_key": "A"},
+            initial_verdict="PASS",
+            initial_score=91,
+            logging_payload=_PassResultLoggingPayload(
+                log_artifact_meta={"candidate_key": "stage4|A", "content_hash": "hash-123", "artifact_path": "artifact.json"},
+                session_selection_reason="selection",
+                session_verdict_reason="verdict",
+                session_runtime_advisory="runtime digest",
+                session_retry_directives="retry directives",
+                session_gate_semantics={
+                    "director_verdict": "PASS_WITH_FIX",
+                    "gate_basis": "trace_gate",
+                    "repair_scope": "rewrite",
+                },
+            ),
+        )
+
+        ir._log_session_decision.assert_called_once()
+        kwargs = ir._log_session_decision.call_args.kwargs
+        assert kwargs["reason"] == "trace verdict"
+        assert kwargs["fix_scope"] == "rewrite"
+        assert kwargs["open_review"] == "trace open review"
+        assert kwargs["action_items"] == ["trace item"]
+        assert kwargs["firewall_triggered"] is True
+        assert kwargs["firewall_reason"] == "trace firewall"
+        assert kwargs["retry_budget_axes"] == {"repair": "patch_revision"}
+        assert kwargs["fix_pack"] == {"must_fix": ["anchor"]}
+
+    def test_log_reject_session_decision_prefers_trace_fields(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        ir._build_fix_pack_payload = MagicMock(return_value={"must_fix": ["anchor"]})
+        ir._log_session_decision = MagicMock()
+        ir._last_retry_budget_axes = {"repair": "patch_revision"}
+
+        ir.reject_runtime._log_reject_session_decision(
+            next_ep=1,
+            round_num=0,
+            arc_num=1,
+            director_result={
+                "fix_scope": "full",
+                "open_review": "director open review",
+                "action_items": ["director item"],
+                "firewall_triggered": False,
+                "firewall_reason": "",
+            },
+            trace_director_result={
+                "verdict_reason": "trace reject verdict",
+                "fix_scope": "partial",
+                "open_review": "trace open review",
+                "action_items": ["trace item"],
+                "firewall_triggered": True,
+                "firewall_reason": "trace firewall",
+            },
+            final_verdict="REJECT",
+            final_score=44,
+            selected="A",
+            reason="fallback reason",
+            error_category="LOGIC_ERROR",
+            attempt_key="attempt-1",
+            selection_artifact_meta={"candidate_key": "A"},
+            initial_verdict="REJECT",
+            initial_score=40,
+            reject_logging=_RejectLoggingPayload(
+                reject_bucket="continuity",
+                reject_artifact_meta={
+                    "candidate_key": "stage4|reject",
+                    "content_hash": "hash-r",
+                    "artifact_path": "reject.json",
+                },
+                session_selection_reason="selection",
+                session_verdict_reason="verdict",
+                session_runtime_advisory="runtime digest",
+                session_retry_directives="retry directives",
+                session_gate_semantics={
+                    "director_verdict": "REJECT",
+                    "gate_basis": "continuity",
+                    "repair_scope": "partial",
+                },
+                feedback_provenance={
+                    "director_feedback": "director said no",
+                    "runtime_advisory": "runtime digest",
+                    "retry_directives": "retry directives",
+                },
+            ),
+        )
+
+        ir._log_session_decision.assert_called_once()
+        kwargs = ir._log_session_decision.call_args.kwargs
+        assert kwargs["reason"] == "trace reject verdict"
+        assert kwargs["fix_scope"] == "partial"
+        assert kwargs["open_review"] == "trace open review"
+        assert kwargs["action_items"] == ["trace item"]
+        assert kwargs["artifact_meta"]["candidate_key"] == "stage4|reject"
+        assert kwargs["selection_reason"] == "selection"
+        assert kwargs["verdict_reason"] == "verdict"
+        assert kwargs["director_verdict"] == "REJECT"
+        assert kwargs["gate_basis"] == "continuity"
+        assert kwargs["repair_scope"] == "partial"
+        assert kwargs["retry_budget_axes"] == {"repair": "patch_revision"}
+        assert kwargs["fix_pack"] == {"must_fix": ["anchor"]}
+        assert kwargs["runtime_advisory"] == "runtime digest"
+        assert kwargs["retry_directives"] == "retry directives"
+        assert kwargs["firewall_triggered"] is True
+        assert kwargs["firewall_reason"] == "trace firewall"
+
+    def test_build_round_outcome_trace_payload_prefers_trace_meta_and_collects_warnings(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        ir._collect_validation_warning_lines = MagicMock(return_value=["warn-a", "warn-b"])
+
+        payload = ir._build_round_outcome_trace_payload(
+            trace_meta={
+                "director_result": {"verdict": "PASS_WITH_FIX", "trace": True},
+                "final_verdict": "PASS_WITH_FIX",
+                "final_score": 88,
+                "patch_trace": {"mode": "patch"},
+            },
+            director_result={"verdict": "PASS"},
+            initial_verdict="PASS",
+            initial_score=81,
+            validation_results=[_validation_result()],
+            is_patch=False,
+        )
+
+        assert payload.trace_director_result == {"verdict": "PASS_WITH_FIX", "trace": True}
+        assert payload.final_verdict == "PASS_WITH_FIX"
+        assert payload.final_score == 88
+        assert payload.trace_patch_trace == {"mode": "patch"}
+        assert payload.is_patch is True
+        assert payload.validation_warnings == ["warn-a", "warn-b"]
+        ir._collect_validation_warning_lines.assert_called_once_with([_validation_result()], limit=20)
+
+    def test_build_reject_logging_payload_prefers_trace_reason_and_previous_attempt_metadata(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        ir._build_gate_semantics_payload = MagicMock(
+            return_value={
+                "director_verdict": "REJECT",
+                "gate_basis": "continuity",
+                "repair_scope": "partial",
+            }
+        )
+        reject_result = MagicMock()
+        reject_result.previous_attempt = {
+            "reject_bucket": "continuity",
+            "runtime_advisory": "runtime digest",
+            "retry_directives": "retry later",
+            "director_feedback_text": "director said no",
+        }
+        reject_result.attempt_artifact_meta = {
+            "candidate_key": "stage4|reject",
+            "content_hash": "hash-r",
+            "artifact_path": "reject.json",
+        }
+
+        payload = ir.reject_runtime._build_reject_logging_payload(
+            reject_result=reject_result,
+            director_result={"selection_reason": "initial selection"},
+            trace_director_result={
+                "selection_reason": "re-audit selection",
+                "verdict_reason": "trace reject reason",
+            },
+            reason="fallback reason",
+        )
+
+        assert payload.reject_bucket == "continuity"
+        assert payload.reject_artifact_meta["candidate_key"] == "stage4|reject"
+        assert payload.session_selection_reason == "re-audit selection"
+        assert payload.session_verdict_reason == "trace reject reason"
+        assert payload.session_runtime_advisory == "runtime digest"
+        assert payload.session_retry_directives == "retry later"
+        assert payload.feedback_provenance == {
+            "director_feedback": "director said no",
+            "runtime_advisory": "runtime digest",
+            "retry_directives": "retry later",
+        }
+        assert payload.session_gate_semantics["gate_basis"] == "continuity"
+
+    def test_finalize_round_outcome_routes_reject_branch_with_trace_meta(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        chief_writer = MagicMock()
+        reject_result = MagicMock(name="reject_result")
+        finalized = {"status": "reject"}
+        ir._collect_validation_warning_lines = MagicMock(return_value=["warn"])
+        ir._handle_reject = MagicMock(return_value=reject_result)
+        ir._finalize_reject_result = MagicMock(return_value=finalized)
+
+        result = ir._finalize_round_outcome(
+            pass_result=None,
+            next_ep=1,
+            round_num=0,
+            round_ctx=round_ctx,
+            chief_writer=chief_writer,
+            director_result={"verdict": "REJECT"},
+            director_feedback="feedback",
+            previous_attempt={"attempt": 1},
+            trace_meta={
+                "director_result": {"verdict": "REJECT", "trace": True},
+                "final_verdict": "",
+                "final_score": 44,
+                "patch_trace": {"mode": "patch"},
+            },
+            candidates=[_candidate()],
+            validation_results=[_validation_result()],
+            initial_verdict="REJECT",
+            initial_score=40,
+            selected="A",
+            reason="conflict",
+            error_category="continuity",
+            attempt_key="attempt-1",
+            selection_artifact_meta={"candidate_key": "A"},
+            is_patch=False,
+            is_patch_fallback=True,
+            prev_score=33,
+            prev_manuscript="prev",
+            tot_used=True,
+            mad_used=False,
+            asp_manuscript="asp",
+        )
+
+        assert result == finalized
+        ir._handle_reject.assert_called_once()
+        reject_kwargs = ir._handle_reject.call_args.kwargs
+        assert reject_kwargs["director_result"] == {"verdict": "REJECT", "trace": True}
+        assert reject_kwargs["score"] == 44
+        assert reject_kwargs["is_patch"] is True
+        ir._finalize_reject_result.assert_called_once()
+        finalize_kwargs = ir._finalize_reject_result.call_args.kwargs
+        assert finalize_kwargs["reject_result"] is reject_result
+        assert finalize_kwargs["final_verdict"] == "REJECT"
+        assert finalize_kwargs["final_score"] == 44
+        assert finalize_kwargs["validation_warnings"] == ["warn"]
+        assert finalize_kwargs["trace_patch_trace"] == {"mode": "patch"}
+
+    def test_finalize_round_reject_path_routes_handle_reject_and_finalize(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        chief_writer = MagicMock()
+        reject_result = MagicMock(name="reject_result")
+        finalized = {"status": "reject"}
+        ir._handle_reject = MagicMock(return_value=reject_result)
+        ir._finalize_reject_result = MagicMock(return_value=finalized)
+
+        result = ir._finalize_round_reject_path(
+            next_ep=1,
+            round_num=0,
+            round_ctx=round_ctx,
+            chief_writer=chief_writer,
+            director_result={"verdict": "REJECT"},
+            director_feedback="feedback",
+            previous_attempt={"attempt": 1},
+            trace_payload=_RoundOutcomeTracePayload(
+                trace_director_result={"verdict": "REJECT", "trace": True},
+                final_verdict="",
+                final_score=44,
+                trace_patch_trace={"mode": "patch"},
+                is_patch=True,
+                validation_warnings=["warn"],
+            ),
+            candidates=[_candidate()],
+            validation_results=[_validation_result()],
+            initial_verdict="REJECT",
+            initial_score=40,
+            selected="A",
+            reason="conflict",
+            error_category="continuity",
+            attempt_key="attempt-1",
+            selection_artifact_meta={"candidate_key": "A"},
+            is_patch_fallback=True,
+            prev_score=33,
+            prev_manuscript="prev",
+            tot_used=True,
+            mad_used=False,
+            asp_manuscript="asp",
+        )
+
+        assert result == finalized
+        ir._handle_reject.assert_called_once()
+        reject_kwargs = ir._handle_reject.call_args.kwargs
+        assert reject_kwargs["director_result"] == {"verdict": "REJECT", "trace": True}
+        assert reject_kwargs["score"] == 44
+        assert reject_kwargs["is_patch"] is True
+        ir._finalize_reject_result.assert_called_once()
+        finalize_kwargs = ir._finalize_reject_result.call_args.kwargs
+        assert finalize_kwargs["reject_result"] is reject_result
+        assert finalize_kwargs["final_verdict"] == "REJECT"
+        assert finalize_kwargs["final_score"] == 44
+        assert finalize_kwargs["validation_warnings"] == ["warn"]
+        assert finalize_kwargs["trace_patch_trace"] == {"mode": "patch"}
 
     def test_append_episode_log_includes_gate_semantics(self):
         ctx = _make_ctx()

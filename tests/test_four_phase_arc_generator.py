@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from modules.core.response_schemas import ARC_STATE_SCHEMA
 from modules.domain.agents.four_phase_arc_generator import FourPhaseArcGenerator
+from modules.domain.agents.four_phase_arc_runtime import FourPhaseArcRuntime
 
 
 def _make_generator() -> FourPhaseArcGenerator:
@@ -27,6 +28,7 @@ def _make_generator() -> FourPhaseArcGenerator:
     gen.negative_injector.generate_self_check_prompt.return_value = "self_check"
     gen.negative_injector.record_rejection = MagicMock()
     gen._genre = "wuxia"
+    gen._flash_ask = None
     gen.ensemble = MagicMock()
     gen.ensemble.generate_ensemble.return_value = (
         None,
@@ -37,7 +39,172 @@ def _make_generator() -> FourPhaseArcGenerator:
     gen._determine_ep_count = MagicMock(return_value=(4, "reason"))
     gen._generate_prev_context = MagicMock(return_value="prev")
     gen._check_arc_end_state = MagicMock(side_effect=lambda arc: arc)
+    gen.runtime = FourPhaseArcRuntime(gen)
     return gen
+
+
+def test_resolve_constraint_phase_reuses_cached_block():
+    gen = _make_generator()
+    pipeline_result = {"phases": {}}
+
+    envelope = gen.runtime._resolve_constraint_phase(
+        retry=1,
+        prev_arcs=[{"arc_no": 0}],
+        cached_constraint_block="cached-block",
+        cached_preflight={"cached": True},
+        pipeline_result=pipeline_result,
+    )
+
+    assert envelope.full_constraint_block == "cached-block"
+    assert envelope.preflight_result == {"cached": True}
+    assert envelope.cached_constraint_block == "cached-block"
+    assert envelope.cached_preflight == {"cached": True}
+    assert pipeline_result["phases"]["constraint"]["status"] == "cached"
+    gen.preflight.analyze.assert_not_called()
+    gen.compiler.compile.assert_not_called()
+
+
+def test_run_generation_phase_short_circuits_on_generate_failure():
+    gen = _make_generator()
+    gen.ensemble.generate_ensemble.return_value = (None, [])
+    pipeline_result = {"phases": {}}
+
+    envelope = gen.runtime._run_generation_phase(
+        retry=0,
+        arc_no=1,
+        ep_start=1,
+        vol_strategy="std",
+        curr_block={},
+        prev_arcs=[],
+        assets=None,
+        protagonist_name="주인공",
+        entity_registry=None,
+        state_tracker=None,
+        vector_context="",
+        adversarial_self_play=None,
+        protagonist_config={},
+        ep_count_suggestion=4,
+        pacing_signals={},
+        full_constraint_block="constraints",
+        preflight_result={},
+        feedback="seed feedback",
+        base_director_feedback="[base]",
+        prev_rejected_arc=None,
+        prev_reject_feedback="",
+        prev_selected_strategy="",
+        spare_candidates=[],
+        pipeline_result=pipeline_result,
+    )
+
+    assert envelope.best_arc is None
+    assert envelope.all_candidates == []
+    assert envelope.should_continue is True
+    assert envelope.feedback == "[base]\nEnsemble 생성 실패. 다시 시도하세요."
+    assert pipeline_result["phases"]["generate"]["status"] == "failed"
+
+
+def test_prepare_candidates_for_selection_injects_forced_location():
+    gen = _make_generator()
+    gen._load_execution_state = MagicMock(return_value={"protagonist_location": "부산"})
+    candidates = [{"tactical_doc": "mock tactical", "state_constraints": {"arc_start_state": {}, "arc_end_state": {}}}]
+
+    envelope = gen.runtime._prepare_candidates_for_selection(
+        arc_no=1,
+        curr_block={},
+        prev_arcs=[{"state_constraints": {"arc_end_state": {"location": "서울"}}}],
+        all_candidates=candidates,
+    )
+
+    assert envelope.all_candidates[0]["state_constraints"]["arc_start_state"]["location"] == "부산"
+    assert envelope.ns3b_director_advisory == ""
+    assert envelope.investment_director_advisory == ""
+    assert len(envelope.candidate_quality_flags) == 1
+
+
+def test_run_director_selection_phase_reject_updates_retry_state():
+    gen = _make_generator()
+    rejected = {"_strategy": "aggressive", "tactical_doc": "reject tactical"}
+    spare = {"_strategy": "balanced", "tactical_doc": "spare tactical"}
+    director = MagicMock()
+    director.compare_and_select_arc.return_value = {
+        "decision": "REJECT",
+        "selected_arc": rejected,
+        "feedback": "구조를 다시 정리하라",
+        "score": 41,
+    }
+    pipeline_result = {"phases": {}}
+
+    envelope = gen.runtime._run_director_selection_phase(
+        director=director,
+        arc_no=1,
+        curr_block={},
+        prev_arc_context="prev",
+        full_constraint_block="constraints",
+        all_candidates=[rejected, spare],
+        candidate_quality_flags=[{}, {}],
+        ns3b_director_advisory="",
+        investment_director_advisory="",
+        investment_advisory=[],
+        base_director_feedback="[base]",
+        feedback="seed",
+        prev_rejected_arc=None,
+        prev_reject_feedback="",
+        prev_selected_strategy="",
+        spare_candidates=[],
+        pipeline_result=pipeline_result,
+    )
+
+    assert envelope.should_continue is True
+    assert envelope.best_arc is rejected
+    assert envelope.prev_rejected_arc is rejected
+    assert envelope.prev_reject_feedback == "[base]\n[Director 비교 피드백]\n구조를 다시 정리하라"
+    assert envelope.prev_selected_strategy == "aggressive"
+    assert envelope.spare_candidates == [spare]
+    assert pipeline_result["phases"]["director_selection"]["status"] == "reject"
+
+
+def test_run_phase3_validation_reject_clears_spares_on_low_confidence():
+    gen = _make_generator()
+    gen.validator.validate.return_value = (
+        "REJECT",
+        {
+            "issues": [{"severity": "MAJOR", "category": "logic", "issue": "불일치"}],
+            "confidence": 0.3,
+            "feedback": "검증 피드백",
+        },
+    )
+    best_arc = {"_strategy": "balanced", "_ensemble_meta": {"best_strategy": "balanced"}}
+    pipeline_result = {"phases": {}}
+
+    envelope = gen.runtime._run_phase3_validation(
+        arc_no=1,
+        retry=0,
+        max_internal_retries=2,
+        curr_block={},
+        best_arc=best_arc,
+        all_candidates=[best_arc],
+        full_constraint_block="constraints",
+        prev_arcs=[],
+        state_tracker=None,
+        pre_items=set(),
+        pre_grants=set(),
+        feedback="seed",
+        base_director_feedback="[base]",
+        investment_advisory=[],
+        prev_rejected_arc=None,
+        prev_reject_feedback="",
+        prev_selected_strategy="",
+        spare_candidates=[{"_strategy": "other", "tactical_doc": "other"}],
+        pipeline_result=pipeline_result,
+    )
+
+    assert envelope.should_continue is True
+    assert envelope.prev_rejected_arc is best_arc
+    assert envelope.prev_reject_feedback == "[base]\n[검증 피드백]\n검증 피드백"
+    assert envelope.prev_selected_strategy == "balanced"
+    assert envelope.spare_candidates == []
+    gen.negative_injector.record_rejection.assert_called_once()
+    assert pipeline_result["phases"]["validate"]["verdict"] == "REJECT"
 
 
 def test_pre_collected_items_normalizes_dict_item_name():
@@ -53,7 +220,7 @@ def test_pre_collected_items_normalizes_dict_item_name():
         }
     ]
 
-    arc, pipeline_result = gen.generate(
+    arc, pipeline_result = gen.runtime.generate(
         arc_no=1,
         ep_start=1,
         vol_strategy="std",
@@ -79,7 +246,7 @@ def test_generate_passes_pacing_suggestion_and_density_signals():
         "tension_level": 2,
     }
 
-    arc, pipeline_result = gen.generate(
+    arc, pipeline_result = gen.runtime.generate(
         arc_no=1,
         ep_start=1,
         vol_strategy="std",
@@ -111,7 +278,7 @@ def test_pre_collected_grants_normalizes_dict_item_name():
         }
     ]
 
-    arc, pipeline_result = gen.generate(
+    arc, pipeline_result = gen.runtime.generate(
         arc_no=1,
         ep_start=1,
         vol_strategy="std",
@@ -249,7 +416,7 @@ def test_non_wuxia_constraint_block_has_energy_warning():
     gen = _make_generator()
     gen._genre = "investment"
 
-    arc, _ = gen.generate(
+    arc, _ = gen.runtime.generate(
         arc_no=1,
         ep_start=1,
         vol_strategy="std",
@@ -269,7 +436,7 @@ def test_wuxia_constraint_block_no_energy_warning():
     gen = _make_generator()
     gen._genre = "wuxia"
 
-    gen.generate(
+    gen.runtime.generate(
         arc_no=1,
         ep_start=1,
         vol_strategy="std",

@@ -48,6 +48,57 @@ def sample_arc():
 
 
 class TestArcPatchMode:
+    def test_runtime_attached(self, arc_generator):
+        assert arc_generator.runtime.owner is arc_generator
+
+    def test_generate_delegates_to_runtime(self, arc_generator):
+        expected = ({"arc_no": 1}, {"final_verdict": "PASS"})
+        curr_block = {"block_theme": "test"}
+        prev_arcs = [{"arc_no": 0}]
+        assets = {"gear": []}
+        entity_registry = {"npc": {}}
+        state_tracker = object()
+        adversarial_self_play = object()
+        director = object()
+
+        arc_generator.runtime = MagicMock()
+        arc_generator.runtime.generate.return_value = expected
+
+        result = arc_generator.generate(
+            arc_no=1,
+            ep_start=1,
+            vol_strategy="standard",
+            curr_block=curr_block,
+            prev_arcs=prev_arcs,
+            assets=assets,
+            max_internal_retries=3,
+            protagonist_name="hero",
+            director_feedback="focus",
+            entity_registry=entity_registry,
+            state_tracker=state_tracker,
+            vector_context="vec",
+            adversarial_self_play=adversarial_self_play,
+            director=director,
+        )
+
+        assert result == expected
+        arc_generator.runtime.generate.assert_called_once_with(
+            arc_no=1,
+            ep_start=1,
+            vol_strategy="standard",
+            curr_block=curr_block,
+            prev_arcs=prev_arcs,
+            assets=assets,
+            max_internal_retries=3,
+            protagonist_name="hero",
+            director_feedback="focus",
+            entity_registry=entity_registry,
+            state_tracker=state_tracker,
+            vector_context="vec",
+            adversarial_self_play=adversarial_self_play,
+            director=director,
+        )
+
     def test_patch_success(self, arc_generator, sample_arc):
         """패치 모드 정상 동작 — ensemble이 유효한 arc를 반환하면 PASS."""
         patched_arc = {**sample_arc, "tactical_doc": "수정된 전술서"}
