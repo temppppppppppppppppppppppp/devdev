@@ -1,4 +1,4 @@
-"""
+﻿"""
 [Phase 4C-1a] Stage3Orchestrator — SovereignApp의 Stage 3 Blueprint 배치 생성 로직 캡슐화
 
 원본: main_a.py:2855-3254 (_stage_3_batch_blueprinting, 400줄)
@@ -1459,6 +1459,7 @@ class Stage3Orchestrator:
                     _bp_prev_hud = None
 
             _s3_spinner.update_detail(f"제{working_ep}화 · Blueprint 생성")
+            # This heartbeat makes long blueprint LLM waits legible during live runs.
             ctx.ui.log(
                 f"      ⏳ 제{working_ep}화 Blueprint 생성 시작 (최대 10회 시도)...",
                 stage="stage3",
@@ -1466,6 +1467,22 @@ class Stage3Orchestrator:
                 ep_num=working_ep,
                 arc_num=arc_idx,
                 event_kind="progress",
+            )
+            ctx.ui.log(
+                f"      ⏳ 제{working_ep}화 Blueprint 대기: ThreePhase runtime 호출 중 "
+                f"(anchors={len(_prev_ms_for_bp)}, window={len(_blueprint_window)}, "
+                f"semantic_ctx={len(_bp_semantic_ctx)}자)",
+                stage="stage3",
+                component="blueprint_generation",
+                ep_num=working_ep,
+                arc_num=arc_idx,
+                event_kind="heartbeat",
+                meta={
+                    "anchor_count": len(_prev_ms_for_bp),
+                    "blueprint_window_count": len(_blueprint_window),
+                    "semantic_ctx_chars": len(_bp_semantic_ctx),
+                    "wait_state": "three_phase_blueprint_runtime",
+                },
             )
             blueprint, pipeline_result = ctx.agents["three_phase_bp"].generate(
                 ep_num=working_ep,
@@ -1498,6 +1515,17 @@ class Stage3Orchestrator:
                 event_kind="result",
                 meta={"verdict": _verdict, "score": _bp_score},
             )
+            _selected_strategy = pipeline_result.get("phases", {}).get("generate", {}).get("selected_strategy")
+            if _selected_strategy:
+                ctx.ui.log(
+                    f"      └─ 선택 전략: {_selected_strategy}",
+                    stage="stage3",
+                    component="blueprint_generation",
+                    ep_num=working_ep,
+                    arc_num=arc_idx,
+                    event_kind="summary",
+                    meta={"selected_strategy": _selected_strategy},
+                )
             return blueprint, pipeline_result
 
     def _finalize_stage3_blueprint_pipeline_result(
@@ -1984,6 +2012,12 @@ class Stage3Orchestrator:
                 },
             )
 
+        ctx.ui.log(
+            "   [Stage3] blueprint success "
+            f"(verdict={final_verdict}, "
+            f"strategy={pipeline_result.get('phases', {}).get('generate', {}).get('selected_strategy', 'unknown')}, "
+            f"score={pipeline_result.get('phases', {}).get('generate', {}).get('selected_score', 0)})"
+        )
         ctx.ui.log(f"   [Stage3] ep {working_ep} blueprint save completed")
         quality_dashboard = getattr(self.app, "quality_dashboard", None)
         if quality_dashboard is not None and hasattr(quality_dashboard, "record_validation"):
@@ -2320,6 +2354,35 @@ class Stage3Orchestrator:
         ctx = self.ctx
 
         ctx.ui.log(f"   ❌ 제{working_ep}화 Blueprint 생성 실패")
+        _reject_reason = self._build_stage3_reject_reason(pipeline_result)
+        _failure_category = _classify_stage3_failure_category(pipeline_result)
+        _observability_flags = _build_stage3_observability_flags(pipeline_result.get("_stage3_observability"))
+        _selected_strategy = str(
+            pipeline_result.get("phases", {}).get("generate", {}).get("selected_strategy", "unknown") or "unknown"
+        )
+        ctx.ui.log(
+            f"      └─ REJECT 사유: {_reject_reason[:140]}",
+            stage="stage3",
+            component="blueprint_generation",
+            ep_num=working_ep,
+            arc_num=arc_no or 0,
+            event_kind="summary",
+            meta={"failure_category": _failure_category, "selected_strategy": _selected_strategy},
+        )
+        ctx.ui.log(
+            f"      판정 근거: category={_failure_category} | strategy={_selected_strategy} | "
+            f"observability={','.join(_observability_flags) if _observability_flags else '-'}",
+            stage="stage3",
+            component="blueprint_generation",
+            ep_num=working_ep,
+            arc_num=arc_no or 0,
+            event_kind="summary",
+            meta={
+                "failure_category": _failure_category,
+                "selected_strategy": _selected_strategy,
+                "observability_flags": _observability_flags,
+            },
+        )
         self._record_stage3_failure_attempt(
             working_ep=working_ep,
             pipeline_result=pipeline_result,
@@ -2347,7 +2410,7 @@ class Stage3Orchestrator:
     ) -> None:
         ctx = self.ctx
 
-        # [LOG-1] 판정 경로 세션 로깅 (REJECT)
+        # Prepare shared reject context once, then let each sink fail independently.
         try:
             _db = getattr(getattr(ctx, "current_project", None), "db", None)
             _final_verdict = str(pipeline_result.get("final_verdict", "REJECT"))
@@ -2400,57 +2463,65 @@ class Stage3Orchestrator:
                 advisory_flags=_observability_flags,
                 artifact_meta=_artifact_meta,
             )
-            _sl = getattr(ctx, "session_logger", None)
-            if _sl:
-                try:
-                    self._log_stage3_session_decision(
-                        _sl,
-                        ep_num=working_ep,
-                        verdict=_final_verdict,
-                        score=pipeline_result.get("last_score", 0),
-                        arc_no=_arc_num,
-                        quality_risk=bool(pipeline_result.get("quality_risk", False)),
-                        attempt_key=_attempt_key,
-                        candidate_key=_artifact_meta["candidate_key"],
-                        content_hash=_artifact_meta["content_hash"],
-                        artifact_path=_artifact_meta["artifact_path"],
-                        reject_reason=_reject_reason,
-                        reason=str((_selection_kwargs or {}).get("verdict_reason", _reject_reason) or ""),
-                        selection_reason=str((_selection_kwargs or {}).get("selection_reason", "") or ""),
-                        verdict_reason=str((_selection_kwargs or {}).get("verdict_reason", _reject_reason) or ""),
-                        fix_scope=str((_selection_kwargs or {}).get("fix_scope", "") or ""),
-                    )
-                except Exception as _log_err:
-                    _logging.debug("[TF-26] session_logger.log_decision failed: %s", str(_log_err)[:100])
-            if not isinstance(_score, int):
-                try:
-                    _score = int(_score)
-                except (ValueError, TypeError):
-                    _score = 0
-            if getattr(ctx, "pass_rate_monitor", None):
-                try:
-                    ctx.pass_rate_monitor.record_attempt(
-                        stage=3,
-                        episode=working_ep,
-                        arc=_arc_num,
-                        attempt_num=_attempt_num,
-                        success=False,
-                        reject_reason=_reject_reason,
-                        generation_method="blueprint",
-                        duration_ms=_duration_ms or 0,
-                        token_cost=_token_cost,
-                        attempt_key=_attempt_key,
-                        final_verdict=_final_verdict,
-                        candidate_key=_candidate_key,
-                        content_hash=_artifact_meta["content_hash"],
-                        artifact_path=_artifact_meta["artifact_path"],
-                    )
-                except Exception as _prm_err:
-                    _logging.debug("[stage3_prm] Stage3 REJECT 기록 실패 (비차단): %s", _prm_err)
-            if _db and hasattr(_db, "save_stage_attempt"):
-                _director = getattr(getattr(ctx, "agents", {}), "get", lambda *_: None)("director")
-                _model = getattr(_director, "primary_model", None) if _director else None
-                _prompt_version = _build_stage3_prompt_version()
+        except Exception as _prep_err:
+            _logging.debug("[stage_attempts] Stage3 REJECT prep failed (best-effort: %s)", _prep_err)
+            return
+
+        _sl = getattr(ctx, "session_logger", None)
+        if _sl:
+            try:
+                self._log_stage3_session_decision(
+                    _sl,
+                    ep_num=working_ep,
+                    verdict=_final_verdict,
+                    score=pipeline_result.get("last_score", 0),
+                    arc_no=_arc_num,
+                    quality_risk=bool(pipeline_result.get("quality_risk", False)),
+                    attempt_key=_attempt_key,
+                    candidate_key=_artifact_meta["candidate_key"],
+                    content_hash=_artifact_meta["content_hash"],
+                    artifact_path=_artifact_meta["artifact_path"],
+                    reject_reason=_reject_reason,
+                    reason=str((_selection_kwargs or {}).get("verdict_reason", _reject_reason) or ""),
+                    selection_reason=str((_selection_kwargs or {}).get("selection_reason", "") or ""),
+                    verdict_reason=str((_selection_kwargs or {}).get("verdict_reason", _reject_reason) or ""),
+                    fix_scope=str((_selection_kwargs or {}).get("fix_scope", "") or ""),
+                )
+            except Exception as _log_err:
+                _logging.debug("[TF-26] session_logger.log_decision failed: %s", str(_log_err)[:100])
+
+        if not isinstance(_score, int):
+            try:
+                _score = int(_score)
+            except (ValueError, TypeError):
+                _score = 0
+
+        if getattr(ctx, "pass_rate_monitor", None):
+            try:
+                ctx.pass_rate_monitor.record_attempt(
+                    stage=3,
+                    episode=working_ep,
+                    arc=_arc_num,
+                    attempt_num=_attempt_num,
+                    success=False,
+                    reject_reason=_reject_reason,
+                    generation_method="blueprint",
+                    duration_ms=_duration_ms or 0,
+                    token_cost=_token_cost,
+                    attempt_key=_attempt_key,
+                    final_verdict=_final_verdict,
+                    candidate_key=_candidate_key,
+                    content_hash=_artifact_meta["content_hash"],
+                    artifact_path=_artifact_meta["artifact_path"],
+                )
+            except Exception as _prm_err:
+                _logging.debug("[stage3_prm] Stage3 REJECT record failed (best-effort: %s)", _prm_err)
+
+        if _db and hasattr(_db, "save_stage_attempt"):
+            _director = getattr(getattr(ctx, "agents", {}), "get", lambda *_: None)("director")
+            _model = getattr(_director, "primary_model", None) if _director else None
+            _prompt_version = _build_stage3_prompt_version()
+            try:
                 _db.save_stage_attempt(
                     stage=3,
                     verdict=_final_verdict,
@@ -2470,12 +2541,15 @@ class Stage3Orchestrator:
                     content_hash=_artifact_meta["content_hash"],
                     artifact_path=_artifact_meta["artifact_path"],
                 )
-                if hasattr(_db, "save_director_selection"):
-                    if _selection_kwargs:
-                        try:
-                            _db.save_director_selection(**_selection_kwargs)
-                        except Exception as _ds_err:
-                            _logging.debug("[director_selections] Stage3 REJECT 기록 실패 (비차단): %s", _ds_err)
+            except Exception as _sa_err:
+                _logging.debug("[stage_attempts] Stage3 REJECT record failed (best-effort: %s)", _sa_err)
+            if hasattr(_db, "save_director_selection") and _selection_kwargs:
+                try:
+                    _db.save_director_selection(**_selection_kwargs)
+                except Exception as _ds_err:
+                    _logging.debug("[director_selections] Stage3 REJECT record failed (best-effort: %s)", _ds_err)
+
+        try:
             _logging.info(
                 "[STAGE3_EPISODE_SUMMARY] ep=%d arc=%d attempt_key=%s verdict=%s score=%s failure=%s candidate_key=%s reject_reason=%s observability=%s primary_pov=%s external_pov_insert_policy=%s style_guide_extracted_pov=%s effective_pov=%s",
                 working_ep,
@@ -2492,9 +2566,8 @@ class Stage3Orchestrator:
                 _pov_contract.get("style_guide_extracted_pov", "") or "-",
                 _pov_contract.get("effective_pov", "") or "-",
             )
-        except Exception as _sa_err:
-            _logging.debug("[stage_attempts] Stage3 REJECT 기록 실패 (비차단): %s", _sa_err)
-
+        except Exception as _summary_err:
+            _logging.debug("[stage3_summary] Stage3 REJECT summary failed (best-effort: %s)", _summary_err)
     def _append_stage3_rejection_history(self, *, pipeline_result, arc_no: int | None = None) -> None:
         # [S3-N-P1-3] DI 콜백 None 방어
         try:
@@ -2582,3 +2655,5 @@ class Stage3Orchestrator:
                 )
             except Exception as _e:
                 _logging.debug("[Stage3] QualityDashboard REJECT 기록 실패 (무시): %s", _e)
+
+

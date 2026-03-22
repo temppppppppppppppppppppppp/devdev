@@ -141,6 +141,32 @@ class TestProcessPassResult:
         assert "# 테스트" in dump_text
         assert manuscript[:40] in dump_text
 
+    def test_returns_false_and_logs_when_meta_save_fails(self, tmp_path):
+        pp = self._make_pp()
+        pp._save_pass_result_primary_db = MagicMock(return_value=True)
+        pp._save_pass_result_quality_sidecars = MagicMock(return_value={})
+        pp._run_pass_result_local_side_effects = MagicMock()
+        pp._run_pass_result_post_pass_pipeline = MagicMock(
+            return_value={"actual_truth": {"location": "gate"}, "meta_save_failed": True}
+        )
+        pp._finalize_pass_result_session = MagicMock()
+
+        result = pp.process_pass_result(
+            next_ep=3,
+            final_manuscript="테스트 원고 " * 500,
+            final_title="테스트",
+            final_state_updates={},
+            blueprint={"scene_breakdown": []},
+            arc_data={"arc_no": 9},
+            output_dir=tmp_path,
+            v50_modules_available=False,
+            extract_chain_link_fn=lambda *_args, **_kwargs: {},
+        )
+
+        assert result is False
+        log_texts = [call.args[0] for call in pp.ctx.ui.log.call_args_list if call.args]
+        assert any("후처리 메타 저장 실패" in text for text in log_texts)
+
     def test_hud_update_called(self, tmp_path):
         pp = self._make_pp()
         pp.ctx.current_project.db.save_manuscript.return_value = True
@@ -577,6 +603,8 @@ class TestProcessPassResult:
         future.cancel.assert_called_once_with()
         pp.ctx.agents["manager"].update_state_and_lore_v20.assert_called_once()
         log_calls = [str(call.args[0]) for call in pp.ctx.ui.log.call_args_list if call.args]
+        assert any("Manager 정산 대기" in text for text in log_calls)
+        assert any("동기 재시도 전환" in text for text in log_calls)
         assert any("Manager 동기 재시도 성공" in text for text in log_calls)
 
     def test_prepare_manager_delta_context_normalizes_inventory_and_pressure_vectors(self):

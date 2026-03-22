@@ -1,4 +1,4 @@
-"""
+﻿"""
 [V47] TIER 0.5: CONTINUITY Validator
 에피소드 간 연속성 검증 (API 호출 불필요 - 순수 Python)
 
@@ -15,6 +15,7 @@
 비용: $0 (LLM 호출 없음)
 """
 
+# utf8-hygiene: allow-file -- regex-heavy validator with legitimate optional-quantifier patterns
 import logging
 import re
 
@@ -1004,15 +1005,16 @@ class ContinuityValidator:
             return {"passed": True, "violations": []}
 
         proximity = _threshold("continuity.personality_proximity", 150)
+        # Explicit growth beats downgrade a nearby contradiction from MAJOR to MINOR.
         growth_keywords = (
-            "?????",
-            "??????",
-            "??????",
-            "?????",
-            "??????",
-            "??????",
-            "???",
-            "????",
+            "성장",
+            "변화",
+            "깨달",
+            "반성",
+            "후회",
+            "각성",
+            "결심",
+            "다짐",
         )
         violations = self._collect_personality_proximity_violations(
             manuscript,
@@ -1260,3 +1262,4 @@ class ContinuityValidator:
         elif streak >= warn_threshold:
             warnings.append(f"[Satisfaction] 좌절 {streak}화 연속 — 보상 에피소드 권장.")
         return warnings
+

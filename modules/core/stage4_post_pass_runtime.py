@@ -396,6 +396,14 @@ class Stage4PostPassRuntime:
     ) -> dict:
         try:
             if bible_future is not None:
+                self.ctx.ui.log(
+                    "      ⏳ Manager 정산 대기: 비동기 audit future 완료를 기다리는 중...",
+                    stage="stage4",
+                    component="post_pass_manager",
+                    ep_num=next_ep,
+                    event_kind="heartbeat",
+                    meta={"wait_state": "manager_future_result", "timeout_seconds": 120},
+                )
                 raw_audit = bible_future.result(timeout=120)
             else:
                 raw_audit = self.ctx.agents["manager"].update_state_and_lore_v20(
@@ -422,6 +430,15 @@ class Stage4PostPassRuntime:
             if bible_future is not None and hasattr(bible_future, "cancel"):
                 bible_future.cancel()
             self.ctx.ui.log(f"      ⚠️ Manager 호출 실패: {str(mgr_err)[:50]}")
+            if bible_future is not None:
+                self.ctx.ui.log(
+                    "      ↪ Manager future 대기 실패로 동기 재시도 전환",
+                    stage="stage4",
+                    component="post_pass_manager",
+                    ep_num=next_ep,
+                    event_kind="summary",
+                    meta={"fallback_mode": "sync_retry"},
+                )
             logging.warning("[B-1] Manager 정산 실패 — 동기 재시도: %s", mgr_err)
             try:
                 raw_audit = self.ctx.agents["manager"].update_state_and_lore_v20(

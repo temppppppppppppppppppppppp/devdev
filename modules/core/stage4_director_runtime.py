@@ -570,7 +570,24 @@ class Stage4DirectorRuntime:
         )
         advisory_summary = dict(director_input_pack.advisory_summary)
         director_mandatory_context = director_input_pack.mandatory_context
+        advisory_total = sum(int(value or 0) for value in advisory_summary.values())
 
+        # Keep the live console heartbeat separate from durable attempt/audit sinks.
+        owner.ctx.ui.log(
+            f"   ⏳ Director 판정 대기: 후보 {len(candidates)}개 / advisory {advisory_total}건 / "
+            "LLM 응답 대기 중...",
+            stage="stage4",
+            component="director_review",
+            ep_num=next_ep,
+            arc_num=round_ctx.arc_data.get("arc_no", 0),
+            round_num=round_num,
+            event_kind="heartbeat",
+            meta={
+                "candidate_count": len(candidates),
+                "advisory_total": advisory_total,
+                "wait_state": "director_llm_review",
+            },
+        )
         director_result = owner.ctx.agents["director"].select_and_judge_ensemble(
             ep_num=next_ep,
             candidates=candidates,
@@ -695,6 +712,31 @@ class Stage4DirectorRuntime:
                 "gate_basis": decision.director_result.get("gate_basis", ""),
                 "score": decision.score,
                 "selected_candidate": decision.selected,
+            },
+        )
+        if decision.selection_reason and decision.selection_reason != decision.reason:
+            owner.ctx.ui.log(
+                f"      선택 사유: {decision.selection_reason[:120]}",
+                stage="stage4",
+                component="director_review",
+                ep_num=next_ep,
+                arc_num=arc_num,
+                round_num=round_num,
+                event_kind="summary",
+                meta={"selection_reason": decision.selection_reason[:120]},
+            )
+        owner.ctx.ui.log(
+            f"      판정 근거: gate={decision.director_result.get('gate_basis', '-')} | "
+            f"error={decision.error_category or '-'}",
+            stage="stage4",
+            component="director_review",
+            ep_num=next_ep,
+            arc_num=arc_num,
+            round_num=round_num,
+            event_kind="summary",
+            meta={
+                "gate_basis": decision.director_result.get("gate_basis", ""),
+                "error_category": decision.error_category or "",
             },
         )
         owner.ctx.ui.log(

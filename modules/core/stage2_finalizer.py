@@ -1,4 +1,4 @@
-"""[B-1-7] Stage2 finalizer extracted from Stage2Orchestrator.
+﻿"""[B-1-7] Stage2 finalizer extracted from Stage2Orchestrator.
 
 utf8-hygiene: allow-file -- legacy Korean regex and prompt strings predate this patch; item 1 changes are ASCII-bounded.
 """
@@ -1150,51 +1150,6 @@ class Stage2Finalizer:
                 conn = self.ctx.current_project.db.conn
                 if conn.in_transaction:
                     conn.rollback()
-                    logging.info("?봽 [TF-C09] DB rollback ?꾨즺 (Arc %d)", global_arc_no)
-            except Exception as rollback_err:
-                logging.warning("?좑툘 [TF-C09] DB rollback ?ㅽ뙣: %s", rollback_err)
-            self.ctx.ui.log(f"?슚 [DB] Arc {global_arc_no} ????ㅽ뙣: {commit_err}")
-            if callable(getattr(self.ctx, "audit_event", None)):
-                self.ctx.audit_event(
-                    "db_commit_error",
-                    "arc save failed in async",
-                    {"arc_no": global_arc_no, "error": str(commit_err)},
-                )
-            all_refined_arcs.pop()
-            if st_snapshot:
-                self._restore_stage2_state_snapshots(
-                    st_snapshot=st_snapshot,
-                    cdb_snapshot=cdb_snapshot,
-                    constraint_db=constraint_db,
-                    success_log="?봽 [V70] DB ?ㅽ뙣 StateTracker 濡ㅻ갚 ?꾨즺",
-                    failure_log="?좑툘 [V70] DB ?ㅽ뙣 StateTracker 濡ㅻ갚 ?ㅽ뙣",
-                )
-            return {"action": "retry", "current_feedback": current_feedback}
-        return None
-
-    async def _persist_stage2_pass_arc_commit(
-        self,
-        *,
-        refined_arc: dict,
-        all_refined_arcs: list,
-        global_arc_no: int,
-        current_feedback: str,
-        st_snapshot,
-        cdb_snapshot,
-        constraint_db,
-    ) -> Stage2PassFinalizeTailResult | None:
-        all_refined_arcs.append(refined_arc)
-        try:
-            self.ctx.current_project.save_v20_anchor("arcs", all_refined_arcs)
-            if callable(getattr(self.ctx, "safe_commit_async", None)):
-                commit_ok = await self.ctx.safe_commit_async()
-                if not commit_ok:
-                    raise RuntimeError("safe_commit_async returned False")
-        except (OSError, RuntimeError) as commit_err:
-            try:
-                conn = self.ctx.current_project.db.conn
-                if conn.in_transaction:
-                    conn.rollback()
                     logging.info("[TF-C09] DB rollback 완료 (Arc %d)", global_arc_no)
             except Exception as rollback_err:
                 logging.warning("[TF-C09] DB rollback 실패: %s", rollback_err)
@@ -1216,7 +1171,6 @@ class Stage2Finalizer:
                 )
             return {"action": "retry", "current_feedback": current_feedback}
         return None
-
     def _upsert_stage2_pass_arc_dependencies(
         self,
         *,
@@ -1238,104 +1192,14 @@ class Stage2Finalizer:
                 if isinstance(prereq, int) and prereq != arc_no:
                     self.ctx.current_project.db.upsert_arc_dependency(prereq, arc_no, "requires", "")
         except (AttributeError, TypeError) as dep_err:
-            logging.debug("[Stage2] arc_dependency ????ㅽ뙣 (鍮꾩튂紐?: %s", dep_err)
+            logging.debug("[Stage2] arc_dependency 저장 실패 (비치명): %s", dep_err)
 
     def _update_stage2_pass_constraint_db(self, *, refined_arc: dict, constraint_db) -> None:
         try:
             constraint_db.update_arc_state(refined_arc)
-            self.ctx.ui.log(f"      ?뵏 [V49.4] ConstraintDB ?낅뜲?댄듃 ?꾨즺 (珥?{len(constraint_db.arc_states)}媛?Arc)")
+            self.ctx.ui.log(f"      [V49.4] ConstraintDB 업데이트 완료 (총 {len(constraint_db.arc_states)}개 Arc)")
         except (AttributeError, TypeError, RuntimeError) as cdb_err:
-            logging.warning("[B4-P1-1] constraint_db.update_arc_state ?ㅽ뙣 (鍮꾩튂紐낆쟻): %s", cdb_err)
-
-    def _maybe_generate_stage2_volume_summaries(self, *, global_arc_no: int) -> None:
-        arcs_per_volume = max(1, int(VolumeSettings.ARCS_PER_VOLUME))
-        if global_arc_no <= 0 or global_arc_no % arcs_per_volume != 0:
-            return
-        try:
-            volume_no = global_arc_no // arcs_per_volume
-            arc_summaries_for_volume = []
-            for arc_idx in range(global_arc_no - (arcs_per_volume - 1), global_arc_no + 1):
-                arc_summary = self.ctx.current_project.load_v20_anchor(f"arc_summary_{arc_idx}")
-                if arc_summary:
-                    if isinstance(arc_summary, dict):
-                        arc_summary_text = arc_summary.get("summary", "") or arc_summary.get("text", "")
-                        if not arc_summary_text:
-                            summary_parts = []
-                            if arc_summary.get("npc_status") and isinstance(arc_summary["npc_status"], dict):
-                                summary_parts.append(
-                                    "NPC: "
-                                    + ", ".join(
-                                        f"{name}({value.get('status', '')})"
-                                        for name, value in arc_summary["npc_status"].items()
-                                    )
-                                )
-                            if arc_summary.get("world_changes"):
-                                summary_parts.append(
-                                    "?멸퀎蹂?? " + "; ".join(str(item) for item in arc_summary["world_changes"][:5])
-                                )
-                            if arc_summary.get("resolved_plots"):
-                                summary_parts.append(
-                                    "?닿껐?뚮’: " + "; ".join(str(item) for item in arc_summary["resolved_plots"][:5])
-                                )
-                            if arc_summary.get("active_plots"):
-                                summary_parts.append(
-                                    "吏꾪뻾?뚮’: " + "; ".join(str(item) for item in arc_summary["active_plots"][:5])
-                                )
-                            if arc_summary.get("destroyed_entities"):
-                                summary_parts.append(
-                                    "?뚭눼: " + "; ".join(str(item) for item in arc_summary["destroyed_entities"][:3])
-                                )
-                            arc_summary_text = " | ".join(summary_parts) if summary_parts else str(arc_summary)
-                    else:
-                        arc_summary_text = str(arc_summary)
-                    if arc_summary_text:
-                        arc_summaries_for_volume.append(f"Arc {arc_idx}: {arc_summary_text}")
-
-            if not arc_summaries_for_volume:
-                return
-
-            volume_prompt = (
-                f"?꾨옒 {arcs_per_volume}媛??꾪겕 ?붿빟???섎굹??蹂쇰ⅷ ?붿빟?쇰줈 ?⑹퀜二쇱꽭??\n"
-                "?듭떖 ?ш굔, 二쇱슂 ?몃Ъ 蹂?? ?멸퀎 ?곹깭 蹂?붿뿉 吏묒쨷?섏꽭??\n"
-                "諛섎뱶???꾨옒 3媛??뱀뀡?쇰줈留??뺣━?섏꽭??\n"
-                "[?몃Ъ ?꾪겕]\n[?듭떖 媛덈벑]\n[誘명빐寃?蹂듭꽑]\n"
-                "?꾩껜 2000???대궡濡??묒꽦?섏꽭??\n\n"
-                + "\n".join(arc_summaries_for_volume)
-                + f"\n\n蹂쇰ⅷ {volume_no} ?붿빟:"
-            )
-            volume_result = self.ctx.agents["director"].ask(volume_prompt, temperature=0.2)
-            if not (volume_result and isinstance(volume_result, str) and len(volume_result) > 20):
-                logging.warning("?좑툘 [V68] 蹂쇰ⅷ ?붿빟 LLM ?묐떟 遺덉땐遺???嫄대꼫?")
-                return
-
-            volume_result = _trim_hierarchical_summary(volume_result, 2000)
-            self.ctx.current_project.save_v20_anchor(f"volume_summary_{volume_no}", volume_result)
-            logging.info(f"?뱰 [V68] 蹂쇰ⅷ {volume_no} ?붿빟 ????꾨즺 ({len(volume_result)}??)")
-
-            try:
-                existing_series = self.ctx.current_project.load_v20_anchor("series_summary") or ""
-                if isinstance(existing_series, dict):
-                    existing_series = existing_series.get("summary", "") or str(existing_series)
-                series_prompt = (
-                    "?꾨옒??湲곗〈 ?쒕━利??붿빟怨???蹂쇰ⅷ ?붿빟?낅땲??\n"
-                    "?대? ?듯빀?섏뿬 ?꾩껜 ?쒕━利??붿빟??媛깆떊?섏꽭??\n"
-                    "諛섎뱶???꾨옒 3媛??뱀뀡?쇰줈留??뺣━?섏꽭??\n"
-                    "[?몃Ъ ?꾪겕]\n[?듭떖 媛덈벑]\n[誘명빐寃?蹂듭꽑]\n"
-                    "?듭떖 ?ш굔, 二쇱슂 ?몃Ъ 蹂?? ?멸퀎 ?곹깭 蹂?붿뿉 吏묒쨷?섍퀬 ?꾩껜 5000???대궡濡??묒꽦?섏꽭??\n\n"
-                    f"湲곗〈 ?쒕━利??붿빟:\n{existing_series or '(?꾩쭅 ?놁쓬)'}\n\n"
-                    f"??蹂쇰ⅷ {volume_no} ?붿빟:\n{volume_result}\n\n"
-                    "媛깆떊???쒕━利??붿빟:"
-                )
-                series_result = self.ctx.agents["director"].ask(series_prompt, temperature=0.2)
-                if series_result and isinstance(series_result, str) and len(series_result) > 20:
-                    series_result = _trim_hierarchical_summary(series_result, 5000)
-                    self.ctx.current_project.save_v20_anchor("series_summary", series_result)
-                    logging.info(f"?뱴 [V68] ?쒕━利??붿빟 媛깆떊 ?꾨즺 ({len(series_result)}??)")
-            except Exception as series_err:
-                logging.warning(f"?좑툘 [V68] ?쒕━利??붿빟 媛깆떊 ?ㅽ뙣 (鍮꾩감??: {series_err})")
-        except Exception as volume_err:
-            logging.warning(f"?좑툘 [V68] 蹂쇰ⅷ ?붿빟 ?앹꽦 ?ㅽ뙣 (鍮꾩감??: {volume_err})")
-
+            logging.warning("[B4-P1-1] constraint_db.update_arc_state 실패 (best-effort): %s", cdb_err)
     def _maybe_generate_stage2_volume_summaries(self, *, global_arc_no: int) -> None:
         arcs_per_volume = max(1, int(VolumeSettings.ARCS_PER_VOLUME))
         if global_arc_no <= 0 or global_arc_no % arcs_per_volume != 0:
@@ -1374,7 +1238,7 @@ class Stage2Finalizer:
                             )
                         if arc_summary.get("destroyed_entities"):
                             summary_parts.append(
-                                "소멸 대상: " + "; ".join(str(item) for item in arc_summary["destroyed_entities"][:3])
+                                "파괴 대상: " + "; ".join(str(item) for item in arc_summary["destroyed_entities"][:3])
                             )
                         arc_summary_text = " | ".join(summary_parts) if summary_parts else str(arc_summary)
                 else:
@@ -1387,10 +1251,10 @@ class Stage2Finalizer:
 
             volume_prompt = (
                 f"아래 {arcs_per_volume}개 아크 요약을 하나의 볼륨 요약으로 압축해주세요.\n"
-                "핵심 사건, 주요 인물 변화, 세계 상태 변화에 집중해주세요.\n"
+                "핵심 사건, 주요 인물 변화, 관계와 상태 변화를 중심으로 정리해주세요.\n"
                 "반드시 아래 3개 섹션으로만 정리해주세요.\n"
                 "[인물 아크]\n[핵심 갈등]\n[미해결 복선]\n"
-                "전체 2000자 이내로 작성하세요.\n\n"
+                "전체 2000자 이내로 작성해주세요.\n\n"
                 + "\n".join(arc_summaries_for_volume)
                 + f"\n\n볼륨 {volume_no} 요약:"
             )
@@ -1412,7 +1276,7 @@ class Stage2Finalizer:
                     "이를 통합하여 전체 시리즈 요약을 갱신해주세요.\n"
                     "반드시 아래 3개 섹션으로만 정리해주세요.\n"
                     "[인물 아크]\n[핵심 갈등]\n[미해결 복선]\n"
-                    "핵심 사건, 주요 인물 변화, 세계 상태 변화에 집중하고 전체 5000자 이내로 작성하세요.\n\n"
+                    "핵심 사건, 주요 인물 변화, 관계와 상태 변화를 중심으로 전체 5000자 이내로 작성해주세요.\n\n"
                     f"기존 시리즈 요약:\n{existing_series or '(아직 없음)'}\n\n"
                     f"새 볼륨 {volume_no} 요약:\n{volume_result}\n\n"
                     "갱신된 시리즈 요약:"
@@ -1423,10 +1287,9 @@ class Stage2Finalizer:
                     self.ctx.current_project.save_v20_anchor("series_summary", series_result)
                     logging.info("[V68] 시리즈 요약 갱신 완료 (%s자)", len(series_result))
             except Exception as series_err:
-                logging.warning("[V68] 시리즈 요약 갱신 실패 (비치명): %s", series_err)
+                logging.warning("[V68] 시리즈 요약 갱신 실패 (best-effort: %s)", series_err)
         except Exception as volume_err:
-            logging.warning("[V68] 볼륨 요약 생성 실패 (비치명): %s", volume_err)
-
+            logging.warning("[V68] 볼륨 요약 생성 실패 (best-effort: %s)", volume_err)
     def _advance_stage2_pass_persistence_state(
         self,
         *,
@@ -3365,3 +3228,5 @@ class Stage2Finalizer:
                     flags["arc_patch_signal_codes"] = compact_codes
 
         return flags or None
+
+

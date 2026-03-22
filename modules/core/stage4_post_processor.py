@@ -952,6 +952,16 @@ class Stage4PostProcessor:
         # [S4-001] Episode Bible 저장 실패 시 오케스트레이터에 실패 신호 전달
         if _meta_save_failed:
             logging.error("[S4-001] _meta_save_failed=True → process_pass_result 반환 False")
+            self.ctx.ui.log(
+                "   ❌ 후처리 메타 저장 실패: 원고 본문은 저장됐지만 PASS 정산을 성공으로 확정하지 않습니다.",
+                stage="stage4",
+                component="post_pass_settlement",
+                ep_num=next_ep,
+                arc_num=arc_data.get("arc_no", 0) if isinstance(arc_data, dict) else 0,
+                event_kind="result",
+                level="error",
+                meta={"result": "meta_save_failed"},
+            )
             return False
 
         return True

@@ -119,6 +119,40 @@ Mode C. Direct Focused Patch
 - If a hot owner class is already above the live direct-method pressure line, prefer family-level module split over adding more same-file helpers unless the helper extraction clearly reduces both LOC risk and owner pressure.
 - For time-boxed work after the high-risk long-function bands are cleared, prefer `snapshot -> fresh run -> fail-only stabilization` over opening a new broad refactor wave.
 
+### Step 3C. Apply Orientation Pack Impact Gate
+- Use `docs/2026-03-23/llm-codebase-orientation-pack.md` as the lightweight codebase navigation map for entry flow, authority, contract, and observability understanding.
+- Before or after substantial system-track code changes, explicitly check whether the touched area changes any orientation-pack surfaces:
+  - top-level reading order or entry routing
+  - authoritative owner or runtime/module boundary
+  - verdict, persistence, or logging sink ownership
+  - shared contract field names or field meaning
+  - operator observability path across console, audit, DB, or summary sinks
+- If any of those surfaces changed, refresh the canonical orientation pack before closure and treat that refresh as a human-facing doc update under the normal 3-pass plus 95% confidence gate.
+- Do not force an orientation-pack refresh for purely local bugfixes, narrow comment-only edits, or cosmetic output changes that do not alter navigation, authority, contract, or sink topology.
+
+### Step 3D. Apply Code 3-Pass Gate For Long-Function / Boundary Work
+- For substantial same-file long-function reduction, owner-surface refactor, runtime/module split, sink relocation, or observability changes, do not treat the patch as complete until a code-side 3-pass audit finishes.
+- Use this code 3-pass sequence:
+  - Pass 1. Pre-change authority/sink audit
+    - name the authoritative owner
+    - name the touched contract or payload boundary
+    - name the touched side effects:
+      - console
+      - audit
+      - DB
+      - metrics
+      - file or artifact sinks
+  - Pass 2. Post-change diff audit
+    - confirm the same authority still owns the decision unless the change intentionally moved it
+    - confirm no sink silently disappeared, duplicated, or became unreachable
+    - confirm no dead wrapper, duplicate definition, or stale compat shell was introduced
+  - Pass 3. Verification audit
+    - run targeted compile/test validation
+    - run UTF-8 hygiene when touched files are text/code/doc/config
+    - run fresh live or operator-path verification when the change affects operator-facing flow, verdict visibility, or runtime observability
+- Reuse active survey evidence or existing hotspot/audit docs for Pass 1 when available; do not regenerate broad survey artifacts just to satisfy the gate.
+- Lightweight local bugfixes or comment-only edits may use a reduced form, but any change that touches authority, persistence, or operator-observability should use the full gate.
+
 Bounded-loop rule:
 - do not escalate from survey-only into implementation unless the user asked for it
 - do not escalate from execution-doc production into realization unless the user asked for it
