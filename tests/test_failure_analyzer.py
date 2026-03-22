@@ -211,6 +211,335 @@ def test_failure_analyzer_patch_trace_summary_uses_episode_logs(tmp_path):
         db.close()
 
 
+def test_failure_analyzer_load_stage_attempt_alignment_sink_dedupes_latest_row(tmp_path):
+    db = DBManager(tmp_path / "test_sink_alignment_stage_attempt_loader.db")
+    try:
+        attempt_key = "s4:ep81:arc8:a1:sess_loader"
+        db.save_stage_attempt(
+            stage=4,
+            verdict="REJECT",
+            attempt_num=1,
+            ep_num=81,
+            arc_num=8,
+            score=61,
+            session_id="sess_loader",
+            attempt_key=attempt_key,
+            candidate_key="old-key",
+            advisory_flags={"gate_semantics": {"director_verdict": "REJECT"}},
+        )
+        db.save_stage_attempt(
+            stage=4,
+            verdict="PASS",
+            attempt_num=2,
+            ep_num=81,
+            arc_num=8,
+            score=97,
+            session_id="sess_loader",
+            attempt_key=attempt_key,
+            candidate_key="new-key",
+            content_hash="hash-new",
+            artifact_path="logs/artifacts/stage4/ep_0081/attempt_02/final.txt",
+            advisory_flags={
+                "gate_semantics": {
+                    "director_verdict": "PASS_WITH_FIX",
+                    "gate_basis": "bounded_local_repair",
+                    "repair_scope": "inplace",
+                },
+                "fix_pack": {"target_kind": "entity_ref", "patch_targets": ["scene_2"]},
+                "retry_budget_axes": {"round": 1, "repair": 2},
+            },
+        )
+
+        analyzer = FailureAnalyzer(db)
+        result = analyzer._load_stage_attempt_alignment_sink(
+            stage=4,
+            lookback=10,
+            session_id="sess_loader",
+        )
+
+        assert result is not None
+        assert list(result) == [attempt_key]
+        assert result[attempt_key]["final_verdict"] == "PASS"
+        assert result[attempt_key]["final_score"] == 97
+        assert result[attempt_key]["candidate_key"] == "new-key"
+        assert result[attempt_key]["content_hash"] == "hash-new"
+        assert result[attempt_key]["director_verdict"] == "PASS_WITH_FIX"
+        assert result[attempt_key]["gate_basis"] == "bounded_local_repair"
+        assert result[attempt_key]["repair_scope"] == "inplace"
+        assert result[attempt_key]["fix_pack_target_kind"] == "entity_ref"
+        assert result[attempt_key]["fix_pack_patch_targets"] == ["scene_2"]
+        assert result[attempt_key]["retry_budget_axes"] == {"round": 1, "repair": 2}
+    finally:
+        db.close()
+
+
+def test_failure_analyzer_build_sink_alignment_attempt_sets_respects_optional_sinks():
+    final_union, lifecycle_union, attempts_considered = FailureAnalyzer._build_sink_alignment_attempt_sets(
+        stage=4,
+        include_session_decisions=False,
+        stage_attempts={"a": {}},
+        pass_rate_monitor={"b": {}},
+        director_selections={"c": {}},
+        session_decisions={"d": {}},
+        episode_production={"e": {}},
+    )
+
+    assert final_union == {"a", "b"}
+    assert lifecycle_union == {"c", "e"}
+    assert attempts_considered == {"a", "b", "c", "e"}
+
+
+def test_failure_analyzer_collect_sink_alignment_missing_buckets_tracks_final_and_lifecycle_gaps():
+    final_missing, lifecycle_missing, lifecycle_missing_in_final = (
+        FailureAnalyzer._collect_sink_alignment_missing_buckets(
+            include_session_decisions=True,
+            final_union={"a", "b"},
+            lifecycle_union={"b", "c"},
+            stage_attempts={"a": {}},
+            pass_rate_monitor={"b": {}},
+            director_selections={"c": {}},
+            session_decisions={"a": {}},
+            episode_production={"b": {}},
+        )
+    )
+
+    assert final_missing == {
+        "stage_attempts": {"count": 1, "examples": ["b"]},
+        "pass_rate_monitor": {"count": 1, "examples": ["a"]},
+        "session_decisions": {"count": 1, "examples": ["b"]},
+    }
+    assert lifecycle_missing == {
+        "director_selections": {"count": 1, "examples": ["b"]},
+        "episode_production": {"count": 1, "examples": ["c"]},
+    }
+    assert lifecycle_missing_in_final == {
+        "stage_attempts": {"count": 2, "examples": ["b", "c"]},
+        "pass_rate_monitor": {"count": 1, "examples": ["c"]},
+    }
+
+
+def test_failure_analyzer_build_sink_alignment_summary_payload_marks_warn_and_counts_contract_rows(tmp_path):
+    db = DBManager(tmp_path / "test_sink_alignment_summary_payload.db")
+    try:
+        analyzer = FailureAnalyzer(db)
+        attempt_key = "s4:ep81:arc8:a1:sess_payload"
+        consistency_results = {
+            key: []
+            for key in (
+                "final_verdict_mismatches",
+                "final_score_mismatches",
+                "initial_verdict_mismatches",
+                "director_verdict_mismatches",
+                "gate_basis_mismatches",
+                "repair_scope_mismatches",
+                "fix_pack_target_kind_mismatches",
+                "fix_pack_patch_targets_mismatches",
+                "retry_budget_axes_mismatches",
+                "patch_strategy_mismatches",
+                "candidate_key_mismatches",
+                "selection_candidate_key_mismatches",
+                "content_hash_mismatches",
+                "artifact_path_mismatches",
+                "artifact_metadata_missing",
+                "selection_reason_mismatches",
+                "verdict_reason_mismatches",
+                "fix_scope_mismatches",
+                "gate_repair_metadata_missing",
+                "rationale_metadata_missing",
+                "artifact_missing_files",
+                "selection_companion_pre_final_rows",
+                "selection_companion_missing_rows",
+            )
+        }
+        consistency_results["patch_strategy_mismatches"] = [
+            {"attempt_key": attempt_key, "pass_rate_monitor": "inplace_patch", "episode_production": "rewrite"}
+        ]
+        consistency_results["selection_companion_pre_final_rows"] = [{"attempt_key": attempt_key}]
+        consistency_results["selection_companion_missing_rows"] = [{"attempt_key": "s4:ep82:arc8:a1:sess_payload"}]
+
+        result = analyzer._build_sink_alignment_summary_payload(
+            stage=4,
+            session_id="sess_payload",
+            attempts_considered={attempt_key, "legacy-key"},
+            final_union={attempt_key},
+            lifecycle_union={attempt_key},
+            stage_attempts={attempt_key: {}},
+            pass_rate_monitor={attempt_key: {}},
+            director_selections={attempt_key: {}},
+            session_decisions={},
+            episode_production={attempt_key: {}},
+            final_missing={},
+            lifecycle_missing={},
+            lifecycle_missing_in_final={},
+            session_decision_rows_without_attempt_key=0,
+            final_authority_rows=[
+                {"selection_companion_status": "same_as_final"},
+                {"selection_companion_status": "pre_final_candidate"},
+                {"selection_companion_status": "missing"},
+            ],
+            consistency_results=consistency_results,
+        )
+
+        assert result["status"] == "warn"
+        assert result["attempts_considered"] == 2
+        assert result["complete_final_attempts"] == 1
+        assert result["director_lifecycle_attempts"] == 1
+        assert result["complete_lifecycle_attempts"] == 1
+        assert result["session_scoped_attempts"] == 1
+        assert result["legacy_key_attempts"] == 1
+        assert result["final_authority_contract"] == {
+            "status": "ok",
+            "final_authority_sink": "stage_attempts",
+            "selection_role": "historical_companion",
+            "rows_considered": 3,
+            "aligned_selection_rows": 1,
+            "pre_final_selection_rows": 1,
+            "missing_selection_rows": 1,
+            "note": (
+                "Stage 4 final authority resolves from stage_attempts. "
+                "director_selections remains companion review history and may point to pre-final artifacts."
+            ),
+        }
+        assert result["patch_strategy_mismatches"] == consistency_results["patch_strategy_mismatches"]
+    finally:
+        db.close()
+
+
+def test_failure_analyzer_collect_sink_alignment_verdict_results_detects_core_mismatches():
+    attempt_key = "s4:ep91:arc9:a1:sess_verdict"
+    result = FailureAnalyzer._collect_sink_alignment_verdict_results(
+        attempt_key=attempt_key,
+        stage_attempts={attempt_key: {"final_verdict": "REJECT", "final_score": 61}},
+        pass_rate_monitor={attempt_key: {"final_verdict": "PASS", "patch_strategy": "inplace_patch"}},
+        director_selections={attempt_key: {"initial_verdict": "PASS_WITH_FIX"}},
+        session_decisions={attempt_key: {"final_verdict": "PASS", "final_score": 95}},
+        episode_production={
+            attempt_key: {
+                "final_verdict": "PASS",
+                "final_score": 98,
+                "initial_verdict": "REJECT",
+                "patch_strategy": "rewrite",
+            }
+        },
+    )
+
+    assert result == {
+        "final_verdict_mismatches": [
+            {
+                "attempt_key": attempt_key,
+                "stage_attempts": "REJECT",
+                "pass_rate_monitor": "PASS",
+                "session_decisions": "PASS",
+                "episode_production": "PASS",
+            }
+        ],
+        "final_score_mismatches": [
+            {
+                "attempt_key": attempt_key,
+                "stage_attempts": 61,
+                "session_decisions": 95,
+                "episode_production": 98,
+            }
+        ],
+        "initial_verdict_mismatches": [
+            {
+                "attempt_key": attempt_key,
+                "director_selections": "PASS_WITH_FIX",
+                "episode_production": "REJECT",
+            }
+        ],
+        "patch_strategy_mismatches": [
+            {
+                "attempt_key": attempt_key,
+                "pass_rate_monitor": "inplace_patch",
+                "episode_production": "rewrite",
+            }
+        ],
+    }
+
+
+def test_failure_analyzer_collect_sink_alignment_artifact_results_detects_mismatch_and_missing_file(tmp_path):
+    db = DBManager(tmp_path / "test_sink_alignment_artifact_helper.db")
+    try:
+        analyzer = FailureAnalyzer(db, project_path=tmp_path)
+        attempt_key = "s4:ep92:arc9:a1:sess_artifact"
+        existing_path = "logs/artifacts/stage4/ep_0092/attempt_01/final.txt"
+        missing_path = "logs/artifacts/stage4/ep_0092/attempt_01/missing.txt"
+        existing_file = tmp_path / existing_path
+        existing_file.parent.mkdir(parents=True, exist_ok=True)
+        existing_file.write_text("artifact", encoding="utf-8")
+
+        result = analyzer._collect_sink_alignment_artifact_results(
+            attempt_key=attempt_key,
+            stage_attempts={
+                attempt_key: {
+                    "candidate_key": "A|final",
+                    "content_hash": "hash-a",
+                    "artifact_path": existing_path,
+                }
+            },
+            pass_rate_monitor={
+                attempt_key: {
+                    "candidate_key": "B|final",
+                    "content_hash": "hash-b",
+                    "artifact_path": missing_path,
+                }
+            },
+            director_selections={attempt_key: {"candidate_key": "C|selected"}},
+            session_decisions={},
+            episode_production={
+                attempt_key: {
+                    "candidate_key": "A|final",
+                    "selection_candidate_key": "D|selected",
+                    "content_hash": "hash-a",
+                    "artifact_path": existing_path,
+                }
+            },
+        )
+
+        assert result["candidate_key_mismatches"] == [
+            {
+                "attempt_key": attempt_key,
+                "stage_attempts": "A|final",
+                "pass_rate_monitor": "B|final",
+                "episode_production": "A|final",
+            }
+        ]
+        assert result["content_hash_mismatches"] == [
+            {
+                "attempt_key": attempt_key,
+                "stage_attempts": "hash-a",
+                "pass_rate_monitor": "hash-b",
+                "episode_production": "hash-a",
+            }
+        ]
+        assert result["artifact_path_mismatches"] == [
+            {
+                "attempt_key": attempt_key,
+                "stage_attempts": existing_path,
+                "pass_rate_monitor": missing_path,
+                "episode_production": existing_path,
+            }
+        ]
+        assert result["selection_candidate_key_mismatches"] == [
+            {
+                "attempt_key": attempt_key,
+                "director_selections": "C|selected",
+                "episode_production": "D|selected",
+            }
+        ]
+        assert result["artifact_metadata_missing"] == []
+        assert result["artifact_missing_files"] == [
+            {
+                "attempt_key": attempt_key,
+                "sink": "pass_rate_monitor",
+                "artifact_path": missing_path,
+            }
+        ]
+    finally:
+        db.close()
+
+
 def test_failure_analyzer_sink_alignment_summary_detects_missing_and_mismatch(tmp_path):
     db = DBManager(tmp_path / "test_sink_alignment_summary.db")
     try:

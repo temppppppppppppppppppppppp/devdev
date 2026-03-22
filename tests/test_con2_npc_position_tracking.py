@@ -253,7 +253,7 @@ class TestCWNpcStateWorldStatePriority:
         host.context.world_state = ws
 
         builder = ChiefWriterContextBuilder(host)
-        result = builder._extract_npc_last_states(current_ep=14)
+        result = builder.context_packets._extract_npc_last_states(current_ep=14)
 
         assert "박성호" in result
         assert result["박성호"]["position"] == "팀장"
@@ -276,7 +276,7 @@ class TestCWNpcStateWorldStatePriority:
         host.context.world_state = None
 
         builder = ChiefWriterContextBuilder(host)
-        result = builder._extract_npc_last_states(current_ep=14)
+        result = builder.context_packets._extract_npc_last_states(current_ep=14)
         assert result["박성호"]["position"] == "PB"
 
 

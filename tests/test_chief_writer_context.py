@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 from modules.domain.agents.chief_writer_context import ChiefWriterContextBuilder
+from modules.domain.agents.chief_writer_context_packets import ChiefWriterContextPackets
 
 
 def _make_host():
@@ -40,6 +41,7 @@ class TestInitAndContext:
         host = _make_host()
         builder = ChiefWriterContextBuilder(host)
         assert builder.host is host
+        assert isinstance(builder.context_packets, ChiefWriterContextPackets)
 
     def test_context_property(self):
         host = _make_host()
@@ -86,7 +88,48 @@ class TestBuildCommonContext:
         assert "Director 피드백" in result
 
 
+    def test_build_common_context_delegates_packet_bundle(self):
+        host = _make_host()
+        builder = ChiefWriterContextBuilder(host)
+        builder.context_packets.build_common_context_packets = MagicMock(
+            return_value={
+                "prev_ending": "tail",
+                "prev_digest": "digest",
+                "future_guard_section": "future",
+                "past_guard_section": "past",
+                "npc_equipment_section": "equip",
+                "npc_frequency_section": "freq",
+                "hud_trend_section": "trend",
+                "hud_anomaly_section": "warn",
+                "dna_instruction": "dna",
+                "high_density_hud_section": "hd",
+                "prev_manuscripts_section": "prev-full",
+            }
+        )
+
+        with patch("modules.domain.agents.chief_writer_context.build_chief_writer_main_prompt", return_value="prompt"):
+            result = builder.build_common_context(
+                ep_num=5,
+                blueprint={"scene_breakdown": {}, "integrated_scenario": ""},
+                prev_manuscript="",
+                hud_report="HUD",
+                arc_doc="arc",
+                master_bible=host.context.master_bible,
+                style_guide="",
+                director_feedback="",
+                failure_constraints="",
+            )
+
+        assert result == "prompt"
+        builder.context_packets.build_common_context_packets.assert_called_once()
+
+
 class TestDigestAndGuards:
+    def test_generate_episode_digest_authority_moved_to_context_packets(self):
+        builder = ChiefWriterContextBuilder(_make_host())
+        assert not hasattr(builder, "_generate_episode_digest")
+        assert hasattr(builder.context_packets, "_generate_episode_digest")
+
     def test_fit_compact_text_preserves_tail_context(self):
         builder = ChiefWriterContextBuilder(_make_host())
 
@@ -98,20 +141,20 @@ class TestDigestAndGuards:
 
     def test_generate_episode_digest_empty(self):
         builder = ChiefWriterContextBuilder(_make_host())
-        assert builder._generate_episode_digest("", ep_num=5) == ""
+        assert builder.context_packets._generate_episode_digest("", ep_num=5) == ""
 
     def test_generate_episode_digest_extracts_death(self):
         builder = ChiefWriterContextBuilder(_make_host())
         manuscript = "가" * 220 + "철무련주가 숨을 거두었다. 시신이 식어갔다."
-        digest = builder._generate_episode_digest(manuscript, ep_num=5)
+        digest = builder.context_packets._generate_episode_digest(manuscript, ep_num=5)
         assert "사망 NPC" in digest
 
     def test_generate_episode_digest_preserves_cliffhanger_tail_context(self):
         builder = ChiefWriterContextBuilder(_make_host())
         manuscript = "媛" * 220 + ("A" * 120) + " TAIL-CLIFF"
 
-        with patch("modules.domain.agents.chief_writer_context.re.search", return_value=True):
-            digest = builder._generate_episode_digest(manuscript, ep_num=5)
+        with patch("modules.domain.agents.chief_writer_context_packets.re.search", return_value=True):
+            digest = builder.context_packets._generate_episode_digest(manuscript, ep_num=5)
 
         assert "TAIL-CLIFF" in digest
         assert "..." in digest
@@ -119,25 +162,25 @@ class TestDigestAndGuards:
     def test_detect_deaths_from_manuscript(self):
         builder = ChiefWriterContextBuilder(_make_host())
         text = "철무련주가 최후를 맞았다. 흑도를 죽였다."
-        deaths = builder._detect_deaths_from_manuscript(text)
+        deaths = builder.context_packets._detect_deaths_from_manuscript(text)
         assert isinstance(deaths, list)
         assert len(deaths) >= 1
 
     def test_detect_past_events_from_manuscript(self):
         builder = ChiefWriterContextBuilder(_make_host())
         text = "중상을 입었다. 용린검을 획득했다. 회춘단을 잃었다."
-        result = builder._detect_past_events_from_manuscript(text)
+        result = builder.context_packets._detect_past_events_from_manuscript(text)
         assert set(result.keys()) == {"injuries", "items_gained", "items_lost", "relationship_changes"}
 
     def test_build_past_guard_section(self):
         builder = ChiefWriterContextBuilder(_make_host())
         text = "철무련주가 숨을 거두었다. 왼팔이 부러졌다."
-        section = builder._build_past_guard_section(text, existing_dead_npcs=["흑도"])
+        section = builder.context_packets._build_past_guard_section(text, existing_dead_npcs=["흑도"])
         assert "PAST CONSTRAINT" in section
 
     def test_build_future_guard_section(self):
         builder = ChiefWriterContextBuilder(_make_host())
-        section = builder._build_future_guard_section(
+        section = builder.context_packets._build_future_guard_section(
             current_inventory=["용린검"],
             current_martial_arts=["태극검법"],
             dead_npcs=["철무련주"],
@@ -148,7 +191,7 @@ class TestDigestAndGuards:
 
     def test_build_future_guard_section_empty(self):
         builder = ChiefWriterContextBuilder(_make_host())
-        section = builder._build_future_guard_section([], [], [], "")
+        section = builder.context_packets._build_future_guard_section([], [], [], "")
         assert "HARD CONSTRAINT" in section
 
 
@@ -167,7 +210,7 @@ class TestHudMethods:
 
     def test_check_hud_anomalies_no_data(self):
         builder = ChiefWriterContextBuilder(_make_host())
-        result = builder._check_hud_anomalies(10)
+        result = builder.context_packets._check_hud_anomalies(10)
         assert result["has_anomalies"] is False
 
     def test_check_hud_anomalies_energy_spike(self):
@@ -182,14 +225,14 @@ class TestHudMethods:
 
         host._get_cached_manuscript = _cached
         builder = ChiefWriterContextBuilder(host)
-        result = builder._check_hud_anomalies(10)
+        result = builder.context_packets._check_hud_anomalies(10)
         assert result["has_anomalies"] is True
 
 
 class TestNpcAndDna:
     def test_get_npc_equipment_summary(self):
         builder = ChiefWriterContextBuilder(_make_host())
-        result = builder._get_npc_equipment_summary(builder.context.master_bible)
+        result = builder.context_packets._get_npc_equipment_summary(builder.context.master_bible)
         assert "연홍" in result
         assert "비연검" in result
 
@@ -202,7 +245,7 @@ class TestNpcAndDna:
 
         host._get_cached_manuscript = _cached
         builder = ChiefWriterContextBuilder(host)
-        freq = builder._get_npc_frequency(5, window=5)
+        freq = builder.context_packets._get_npc_frequency(5, window=5)
         assert freq["연홍"] >= 2
 
     def test_get_npc_frequency_warning(self):
@@ -210,18 +253,18 @@ class TestNpcAndDna:
         host.context.master_bible["MasterBible"]["AssetLibrary"]["KeyNPCs"] = [{"name": "연홍"}]
         host._get_cached_manuscript = lambda _ep: {"content": "", "hud_snapshot": {}}
         builder = ChiefWriterContextBuilder(host)
-        warning = builder._get_npc_frequency_warning(5)
+        warning = builder.context_packets._get_npc_frequency_warning(5)
         assert "연홍" in warning
 
     def test_get_dna_instruction_ep1(self):
         builder = ChiefWriterContextBuilder(_make_host())
-        result = builder._get_dna_instruction(ep_num=1, intro_dna="CYNICAL")
+        result = builder.context_packets._get_dna_instruction(ep_num=1, intro_dna="CYNICAL")
         assert "제1화" in result
         assert "CYNICAL" in result
 
     def test_get_dna_instruction_ep5(self):
         builder = ChiefWriterContextBuilder(_make_host())
-        result = builder._get_dna_instruction(ep_num=5, intro_dna="CYNICAL")
+        result = builder.context_packets._get_dna_instruction(ep_num=5, intro_dna="CYNICAL")
         assert "연속 집필 모드" in result
 
 
@@ -234,7 +277,7 @@ class TestMandatoryAndHelpers:
 
     def test_build_mandatory_context(self):
         builder = ChiefWriterContextBuilder(_make_host())
-        result = builder._build_mandatory_context(current_ep=1)
+        result = builder.context_packets._build_mandatory_context(current_ep=1)
         assert "MANDATORY CONTEXT" in result
 
     def test_extract_recent_events(self):
@@ -245,7 +288,7 @@ class TestMandatoryAndHelpers:
             None,
         ]
         builder = ChiefWriterContextBuilder(host)
-        result = builder._extract_recent_events(current_ep=4, n_episodes=3)
+        result = builder.context_packets._extract_recent_events(current_ep=4, n_episodes=3)
         assert isinstance(result, list)
         assert len(result) >= 1
 
@@ -260,7 +303,7 @@ class TestMandatoryAndHelpers:
             None,
         ]
         builder = ChiefWriterContextBuilder(host)
-        result = builder._extract_recent_events(current_ep=4, n_episodes=3)
+        result = builder.context_packets._extract_recent_events(current_ep=4, n_episodes=3)
         assert any("TAIL-RECENT-EVENT" in item["description"] for item in result)
         assert any("..." in item["description"] for item in result)
 
@@ -282,25 +325,25 @@ class TestMandatoryAndHelpers:
             None,
         ]
         builder = ChiefWriterContextBuilder(host)
-        result = builder._extract_recent_events(current_ep=4, n_episodes=3)
+        result = builder.context_packets._extract_recent_events(current_ep=4, n_episodes=3)
         assert any("TAIL-MAJOR-EVENT" in item["description"] for item in result)
         assert any("TAIL-MAJOR-CONSEQ" in item["consequence"] for item in result)
         assert any("..." in item["description"] for item in result)
 
     def test_extract_npc_last_states(self):
         builder = ChiefWriterContextBuilder(_make_host())
-        states = builder._extract_npc_last_states(current_ep=10)
+        states = builder.context_packets._extract_npc_last_states(current_ep=10)
         assert "연홍" in states
         assert "relationship" in states["연홍"]
 
     def test_build_justification_guidance_physical(self):
         builder = ChiefWriterContextBuilder(_make_host())
-        result = builder._build_justification_guidance("중상 상태, 기력고갈", "무협")
+        result = builder.context_packets._build_justification_guidance("중상 상태, 기력고갈", "무협")
         assert "신체 제약 감지" in result
 
     def test_build_justification_guidance_none(self):
         builder = ChiefWriterContextBuilder(_make_host())
-        result = builder._build_justification_guidance("현재 상태: 정상", "무협")
+        result = builder.context_packets._build_justification_guidance("현재 상태: 정상", "무협")
         assert result == ""
 
 
@@ -310,26 +353,26 @@ class TestFinancialDigest:
     def test_digest_extracts_arabic_capital(self):
         builder = ChiefWriterContextBuilder(_make_host())
         manuscript = "가" * 220 + "잔고 131억 원의 잔고 증명서를 꺼내 보였다."
-        digest = builder._generate_episode_digest(manuscript, ep_num=10)
+        digest = builder.context_packets._generate_episode_digest(manuscript, ep_num=10)
         assert "확정 자본" in digest
         assert "131억" in digest
 
     def test_digest_extracts_multiple_capitals(self):
         builder = ChiefWriterContextBuilder(_make_host())
         manuscript = "가" * 220 + "자본금 80억에서 현금 57억으로 줄어들었다."
-        digest = builder._generate_episode_digest(manuscript, ep_num=11)
+        digest = builder.context_packets._generate_episode_digest(manuscript, ep_num=11)
         assert "확정 자본" in digest
 
     def test_digest_no_capital_for_non_financial(self):
         builder = ChiefWriterContextBuilder(_make_host())
         manuscript = "가" * 220 + "검을 뽑아들었다. 내공이 폭발했다."
-        digest = builder._generate_episode_digest(manuscript, ep_num=5)
+        digest = builder.context_packets._generate_episode_digest(manuscript, ep_num=5)
         assert "확정 자본" not in digest
 
     def test_digest_capital_with_comma_number(self):
         builder = ChiefWriterContextBuilder(_make_host())
         manuscript = "가" * 220 + "예수금 1,500만 원이 남았다."
-        digest = builder._generate_episode_digest(manuscript, ep_num=3)
+        digest = builder.context_packets._generate_episode_digest(manuscript, ep_num=3)
         assert "확정 자본" in digest
         assert "1,500만" in digest
 
@@ -337,5 +380,5 @@ class TestFinancialDigest:
         """'80억의 자본' 같은 역순 패턴 테스트"""
         builder = ChiefWriterContextBuilder(_make_host())
         manuscript = "가" * 220 + "80억의 자본을 투입했다."
-        digest = builder._generate_episode_digest(manuscript, ep_num=7)
+        digest = builder.context_packets._generate_episode_digest(manuscript, ep_num=7)
         assert "확정 자본" in digest

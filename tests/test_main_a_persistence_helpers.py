@@ -13,6 +13,18 @@ from modules.core.stage4_context import Stage4Context
 
 def _bind_episode_label_helper(app):
     app._format_episode_coverage_label = lambda episodes: main_a.SovereignApp._format_episode_coverage_label(app, episodes)
+    app._resolve_narrative_summary_batch = (
+        lambda up_to_ep: main_a.SovereignApp._resolve_narrative_summary_batch(app, up_to_ep)
+    )
+    app._build_narrative_summary_combined_text = (
+        lambda **kwargs: main_a.SovereignApp._build_narrative_summary_combined_text(app, **kwargs)
+    )
+    app._build_narrative_summary_prompt = (
+        lambda **kwargs: main_a.SovereignApp._build_narrative_summary_prompt(app, **kwargs)
+    )
+    app._persist_narrative_summary_anchor = (
+        lambda **kwargs: main_a.SovereignApp._persist_narrative_summary_anchor(app, **kwargs)
+    )
     return app
 
 
@@ -102,6 +114,73 @@ def _make_cache_app(tmp_path: Path, *, save_ok: bool, commit_ok: bool):
     )
     app.ui.log = MagicMock()
     return app
+
+
+def test_load_quad_cache_contexts_reads_prompt_sources(tmp_path):
+    prompts_dir = tmp_path / "prompts"
+    prompts_dir.mkdir(parents=True)
+    (prompts_dir / "writer_rules.json").write_text(
+        '{"common_manifesto": ["rule one", "rule two"]}',
+        encoding="utf-8",
+    )
+    (prompts_dir / "analyst_libraries.json").write_text('{"library":"analyst"}', encoding="utf-8")
+    (prompts_dir / "weaver_rules.json").write_text('{"rule":"weaver"}', encoding="utf-8")
+
+    app = SimpleNamespace(current_project=SimpleNamespace(paths=SimpleNamespace(config=tmp_path)))
+
+    contexts = main_a.SovereignApp._load_quad_cache_contexts(app)
+
+    assert "rule one" in contexts["writer"]
+    assert '{"library":"analyst"}' in contexts["analyst"]
+    assert '{"rule":"weaver"}' in contexts["weaver"]
+
+
+def test_ensure_quad_agent_cache_skips_short_context_without_api_create():
+    cache_info = {}
+    create_mock = MagicMock()
+    app = SimpleNamespace(
+        _is_cache_alive=lambda _name: False,
+        ui=SimpleNamespace(log=MagicMock()),
+        sys=SimpleNamespace(api_client=SimpleNamespace(caches=SimpleNamespace(create=create_mock))),
+    )
+
+    main_a.SovereignApp._ensure_quad_agent_cache(
+        app,
+        cache_info=cache_info,
+        cache_key="writer_cache",
+        agent_label="Writer",
+        context_text="too short",
+        model_id="gemini-2.5-flash",
+        display_name="WRITER_V31",
+        system_instruction="소설가",
+    )
+
+    assert cache_info["writer_cache"] is None
+    create_mock.assert_not_called()
+
+
+def test_inject_quad_cache_names_assigns_existing_handles():
+    app = SimpleNamespace(
+        agents={
+            "writer": SimpleNamespace(),
+            "analyst": SimpleNamespace(),
+            "weaver": SimpleNamespace(),
+        },
+        ui=SimpleNamespace(log=MagicMock()),
+    )
+
+    main_a.SovereignApp._inject_quad_cache_names(
+        app,
+        {
+            "writer_cache": "writer-cache",
+            "analyst_cache": "analyst-cache",
+            "weaver_cache": "weaver-cache",
+        },
+    )
+
+    assert app.agents["writer"].cache_name == "writer-cache"
+    assert app.agents["analyst"].cache_name == "analyst-cache"
+    assert app.agents["weaver"].cache_name == "weaver-cache"
 
 
 @pytest.mark.parametrize(

@@ -8,7 +8,10 @@ from modules.core.stage4_post_processor import Stage4PostProcessor
 
 ROOT = Path(__file__).resolve().parents[1]
 CONTRACT_PATH = ROOT / "docs/2026-03-13/stage4-pass-artifact-contract.json"
-SOURCE_PATH = ROOT / "modules/core/stage4_post_processor.py"
+SOURCE_PATHS = (
+    ROOT / "modules/core/stage4_post_processor.py",
+    ROOT / "modules/core/stage4_post_pass_runtime.py",
+)
 
 
 def _load_contract() -> dict:
@@ -129,7 +132,7 @@ def _run_pass(pp: Stage4PostProcessor, tmp_path: Path) -> bool:
 
 def test_stage4_pass_artifact_contract_matches_source_markers() -> None:
     contract = _load_contract()
-    source = SOURCE_PATH.read_text(encoding="utf-8")
+    source = "\n".join(path.read_text(encoding="utf-8") for path in SOURCE_PATHS)
 
     assert contract["contract_id"] == "stage4-pass-artifact-contract-v1"
     assert "save_manuscript(" in source

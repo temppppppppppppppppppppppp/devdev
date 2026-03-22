@@ -1,5 +1,7 @@
 """Focused persistence contract tests for WorldStateManager."""
 
+from unittest.mock import MagicMock
+
 from modules.core.world_state import WorldStateManager
 
 
@@ -36,3 +38,129 @@ def test_save_clears_degraded_contract_on_success():
     assert result is True
     assert manager.last_save_ok is True
     assert manager.last_save_error is None
+
+
+def test_apply_actor_and_inventory_state_changes_updates_front_family_contract():
+    manager = WorldStateManager(_WorldStateDB())
+    manager._state["alive_npcs"]["노사부"] = {"first_seen_ep": 1, "role_at_intro": "", "known_attrs": {}}
+
+    manager._apply_actor_and_inventory_state_changes(
+        7,
+        {
+            "npc_deaths": [{"name": "흑풍", "cause": "전투 패배"}],
+            "skill_acquisitions": ["천뢰검식"],
+            "relationship_changes": [{"npc": "노사부", "from": "사제", "to": "동지"}],
+            "major_items": [{"name": "청풍검", "action": "획득"}],
+            "inventory_counts": {"청풍검": 2},
+            "inventory_count_deltas": [{"name": "청풍검", "from": 1, "to": 2, "delta": 1}],
+        },
+    )
+
+    assert manager._state["dead_npcs"]["흑풍"]["cause"] == "전투 패배"
+    assert "천뢰검식" in manager._state["protagonist"]["skills"]
+    relation = manager._state["alive_npcs"]["노사부"]["known_attrs"]["relation_to_protag"]
+    assert relation["value"] == "동지"
+    assert relation["prev"] == "사제"
+    assert manager._state["active_items"]["청풍검"]["quantity"] == 2
+    assert manager._state["active_items"]["청풍검"]["status"] == "보유"
+
+
+def test_apply_entity_and_companion_state_changes_updates_mid_family_contract():
+    manager = WorldStateManager(_WorldStateDB())
+    manager._state["active_plots"] = [{"plot": "천마 부활", "since_ep": 3}]
+    manager._state["alive_npcs"]["노사부"] = {"first_seen_ep": 1, "role_at_intro": "", "known_attrs": {}}
+
+    manager._apply_entity_and_companion_state_changes(
+        9,
+        {
+            "entity_destructions": [{"name": "흑풍채", "type": "조직", "cause": "소탕"}],
+            "npc_personality_changes": [{"name": "노사부", "from": "엄격함", "to": "유연함"}],
+            "resolved_plots": [{"plot": "천마 부활"}],
+            "active_pressure_vectors": [{"text": "추격대가 북문을 포위했다.", "source": "ending_hook"}],
+            "companion_changes": [{"name": "연홍", "action": "joined"}],
+        },
+    )
+
+    assert manager._state["destroyed"][0]["name"] == "흑풍채"
+    assert manager._state["alive_npcs"]["노사부"]["personality"] == "유연함"
+    assert manager._state["alive_npcs"]["노사부"]["known_attrs"]["personality"]["prev"] == "엄격함"
+    assert manager._state["active_plots"] == []
+    assert manager._state["active_pressure_vectors"][0]["text"] == "추격대가 북문을 포위했다."
+    assert manager._state["alive_npcs"]["연홍"]["companion"] is True
+
+
+def test_apply_timeline_and_goal_state_changes_updates_timeline_motivation_and_promises():
+    manager = WorldStateManager(_WorldStateDB())
+    manager.db = MagicMock()
+
+    manager._apply_timeline_and_goal_state_changes(
+        11,
+        {
+            "time_markers": [{"episode": 11, "type": "elapsed", "description": "3일 후"}],
+            "protagonist_motivations": [{"text": "천마를 막는다", "status": "active"}],
+            "promises": [{"text": "사부를 지킨다", "promiser": "이청풍", "promisee": "노사부"}],
+        },
+    )
+
+    assert manager._state["timeline"][0]["description"] == "3일 후"
+    assert manager._state["cumulative_elapsed"]["total_days"] == 3
+    assert manager._state["motivations"][0]["text"] == "천마를 막는다"
+    assert manager._state["promises"][0]["promiser"] == "이청풍"
+    manager.db.upsert_timeline_entry.assert_called_once()
+
+
+def test_apply_physical_known_attr_state_changes_updates_lmi_contracts():
+    manager = WorldStateManager(_WorldStateDB())
+    manager._state["alive_npcs"]["흑풍"] = {
+        "first_seen_ep": 1,
+        "role_at_intro": "",
+        "known_attrs": {"location": {"value": "흑풍곡"}},
+    }
+
+    manager._apply_physical_known_attr_state_changes(
+        12,
+        {
+            "npc_injuries": [{"name": "흑풍", "state": "중상"}],
+            "npc_movements": [{"name": "흑풍", "to": "소림사"}],
+            "permanent_injuries": [{"name": "흑풍", "type": "scar", "description": "얼굴 흉터"}],
+        },
+    )
+
+    known_attrs = manager._state["alive_npcs"]["흑풍"]["known_attrs"]
+    assert known_attrs["injury"]["value"] == "중상"
+    assert known_attrs["location"]["value"] == "소림사"
+    assert known_attrs["location"]["prev"] == "흑풍곡"
+    assert "scar: 얼굴 흉터" in known_attrs["permanent_injuries"]["value"]
+
+
+def test_apply_npc_registry_and_law_state_changes_updates_registry_contracts():
+    manager = WorldStateManager(_WorldStateDB())
+
+    manager._apply_npc_registry_and_law_state_changes(
+        6,
+        {
+            "npc_introductions": [
+                {
+                    "name": "박성호",
+                    "job": "차장",
+                    "personality": "냉정함",
+                    "knowledge_era": "현대",
+                    "secret_role": "감사실 내통자",
+                }
+            ],
+            "world_law_additions": ["사망자는 회상/언급만 허용"],
+        },
+    )
+    manager._apply_npc_registry_and_law_state_changes(
+        13,
+        {
+            "npc_attribute_changes": [{"name": "박성호", "field": "position", "old": "차장", "new": "팀장"}],
+        },
+    )
+
+    npc_entry = manager._state["alive_npcs"]["박성호"]
+    assert npc_entry["known_attrs"]["position"]["value"] == "팀장"
+    assert npc_entry["known_attrs"]["position"]["prev"] == "차장"
+    assert npc_entry["known_attrs"]["personality"]["value"] == "냉정함"
+    assert npc_entry["known_attrs"]["dual_identity"]["value"]["secret_role"] == "감사실 내통자"
+    assert manager._state["world_laws"][0]["law"] == "사망자는 회상/언급만 허용"

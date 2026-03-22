@@ -360,6 +360,512 @@ class TestStage4AuditSummary:
 
 
 class TestPrepareStage4SessionLimits:
+    def test_initialize_session_agents_builds_all_agents_with_selected_genre(self, mock_app):
+        from modules.core.stage4_orchestrator import Stage4Orchestrator, _SessionAgentBootstrap
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.ui.log = MagicMock()
+        ctx.current_project = mock_app.current_project
+        ctx.sys = mock_app.sys
+        ctx.selected_genre = {"type": "investment"}
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+        chief_writer_cls = MagicMock(return_value="chief")
+        manuscript_validator_cls = MagicMock(return_value="validator")
+        consistency_validator_cls = MagicMock(return_value="consistency")
+        blocking_validator_cls = MagicMock(return_value="blocking")
+        continuity_validator_cls = MagicMock(return_value="continuity")
+
+        result = orch._initialize_session_agents(
+            chief_writer_cls=chief_writer_cls,
+            manuscript_validator_cls=manuscript_validator_cls,
+            consistency_validator_cls=consistency_validator_cls,
+            blocking_validator_cls=blocking_validator_cls,
+            continuity_validator_cls=continuity_validator_cls,
+            writer_model="writer-model",
+        )
+
+        assert isinstance(result, _SessionAgentBootstrap)
+        assert result.s4_genre_type == "investment"
+        assert result.chief_writer == "chief"
+        assert result.manuscript_validator == "validator"
+        assert result.consistency_validator == "consistency"
+        assert result.blocking_validator == "blocking"
+        assert result.continuity_validator == "continuity"
+        chief_writer_cls.assert_called_once_with(
+            context=ctx.current_project,
+            client=ctx.sys.api_client,
+            model_tier="writer-model",
+        )
+        manuscript_validator_cls.assert_called_once_with(
+            context=ctx.current_project,
+            genre_type="investment",
+            llm_client=ctx.sys.api_client,
+        )
+        consistency_validator_cls.assert_called_once_with(
+            guard=ctx.sys.guard,
+            genre="investment",
+        )
+        blocking_validator_cls.assert_called_once_with(context=ctx.current_project)
+        continuity_validator_cls.assert_called_once_with(context=ctx.current_project)
+
+    def test_initialize_session_agents_falls_back_to_wuxia_without_selected_genre(self, mock_app):
+        from modules.core.stage4_orchestrator import Stage4Orchestrator, _SessionAgentBootstrap
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.ui.log = MagicMock()
+        ctx.current_project = mock_app.current_project
+        ctx.sys = mock_app.sys
+        ctx.selected_genre = None
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+
+        result = orch._initialize_session_agents(
+            chief_writer_cls=MagicMock(return_value="chief"),
+            manuscript_validator_cls=MagicMock(return_value="validator"),
+            consistency_validator_cls=MagicMock(return_value="consistency"),
+            blocking_validator_cls=MagicMock(return_value="blocking"),
+            continuity_validator_cls=MagicMock(return_value="continuity"),
+            writer_model="writer-model",
+        )
+
+        assert isinstance(result, _SessionAgentBootstrap)
+        assert result.s4_genre_type == "wuxia"
+
+    def test_prepare_session_environment_creates_output_dir_and_reads_episode_counters(self, mock_app, tmp_path):
+        from modules.core.stage4_orchestrator import Stage4Orchestrator, _SessionEnvironmentPayload
+
+        drafts_dir = tmp_path / "drafts"
+        mock_app.current_project.paths.drafts = drafts_dir
+        mock_app.current_project.db.get_latest_blueprint_number.return_value = 7
+        mock_app.current_project.get_latest_episode_number.return_value = 5
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.ui.log = MagicMock()
+        ctx.current_project = mock_app.current_project
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+
+        result = orch._prepare_session_environment()
+
+        assert isinstance(result, _SessionEnvironmentPayload)
+        assert result.output_dir == drafts_dir
+        assert result.total_planned_ep == 7
+        assert result.current_written == 4
+        assert drafts_dir.exists()
+
+    def test_prepare_session_environment_clamps_current_written_to_zero(self, mock_app, tmp_path):
+        from modules.core.stage4_orchestrator import Stage4Orchestrator, _SessionEnvironmentPayload
+
+        drafts_dir = tmp_path / "drafts"
+        mock_app.current_project.paths.drafts = drafts_dir
+        mock_app.current_project.db.get_latest_blueprint_number.return_value = 0
+        mock_app.current_project.get_latest_episode_number.return_value = 0
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.ui.log = MagicMock()
+        ctx.current_project = mock_app.current_project
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+
+        result = orch._prepare_session_environment()
+
+        assert isinstance(result, _SessionEnvironmentPayload)
+        assert result.output_dir == drafts_dir
+        assert result.total_planned_ep == 0
+        assert result.current_written == 0
+
+    def test_prepare_session_ui_logs_banner_and_clears_console(self, mock_app):
+        from modules.core.stage4_orchestrator import Stage4Orchestrator
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.ui.log = MagicMock()
+        ctx.ui.console = MagicMock()
+        ctx.ui.title = MagicMock()
+        ctx.current_project = mock_app.current_project
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+
+        orch._prepare_session_ui(writer_model="writer-model")
+
+        assert ctx.ui.log.call_count == 4
+        ctx.ui.log.assert_any_call("🎬 [V60.80] Stage 4 V2 - Chief Writer 주권주의 아키텍처 가동")
+        ctx.ui.log.assert_any_call("   • Chief Writer 모델: writer-model")
+        ctx.ui.console.clear.assert_called_once()
+        ctx.ui.title.assert_called_once_with("V60.80 CHIEF WRITER", "Director 주권주의 아키텍처")
+
+    def test_build_session_config_maps_bootstrap_environment_and_prompt_fields(self, mock_app):
+        from modules.core.stage4_orchestrator import (
+            Stage4Orchestrator,
+            _SessionAgentBootstrap,
+            _SessionConfig,
+            _SessionEnvironmentPayload,
+        )
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.ui.log = MagicMock()
+        ctx.current_project = mock_app.current_project
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+        agent_bootstrap = _SessionAgentBootstrap(
+            chief_writer="chief",
+            manuscript_validator="validator",
+            consistency_validator="consistency",
+            blocking_validator="blocking",
+            continuity_validator="continuity",
+            s4_genre_type="investment",
+        )
+        session_environment = _SessionEnvironmentPayload(
+            output_dir=Path("/tmp/session-drafts"),
+            total_planned_ep=12,
+            current_written=4,
+        )
+
+        result = orch._build_session_config(
+            agent_bootstrap=agent_bootstrap,
+            story_context="story",
+            style_guide="style",
+            reference_excerpt="reference",
+            target_ep=8,
+            session_environment=session_environment,
+            v50_modules_available=True,
+        )
+
+        assert isinstance(result, _SessionConfig)
+        assert result.chief_writer == "chief"
+        assert result.manuscript_validator == "validator"
+        assert result.consistency_validator == "consistency"
+        assert result.blocking_validator == "blocking"
+        assert result.continuity_validator == "continuity"
+        assert result.s4_genre_type == "investment"
+        assert result.story_context == "story"
+        assert result.style_guide == "style"
+        assert result.reference_excerpt == "reference"
+        assert result.target_ep == 8
+        assert result.output_dir == Path("/tmp/session-drafts")
+        assert result.v50_modules_available is True
+        assert result.total_planned_ep == 12
+
+    def test_validate_session_prerequisites_accepts_project_with_bible_and_arcs(self, mock_app):
+        from modules.core.stage4_orchestrator import Stage4Orchestrator
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.ui.log = MagicMock()
+        ctx.current_project = mock_app.current_project
+        ctx.current_project.master_bible = {"MasterBible": {}}
+        ctx.current_project.arcs = [{"arc_no": 1}]
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+
+        assert orch._validate_session_prerequisites(error_emoji="ERR") is True
+        ctx.ui.log.assert_not_called()
+
+    def test_validate_session_prerequisites_logs_when_project_data_is_missing(self, mock_app):
+        from modules.core.stage4_orchestrator import Stage4Orchestrator
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.ui.log = MagicMock()
+        ctx.current_project = mock_app.current_project
+        ctx.current_project.master_bible = {}
+        ctx.current_project.arcs = []
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+
+        assert orch._validate_session_prerequisites(error_emoji="ERR") is False
+        ctx.ui.log.assert_called_once_with("ERR [System] Bible 또는 Arc 데이터가 없습니다. Stage 1-2를 먼저 실행하세요.")
+
+    def test_prepare_session_style_payload_applies_character_voice_to_resolved_style(self, mock_app):
+        from modules.core.stage4_orchestrator import Stage4Orchestrator, _SessionStyleGuidePayload
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.ui.log = MagicMock()
+        ctx.current_project = mock_app.current_project
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+        orch._resolve_session_style_guide = MagicMock(
+            return_value=_SessionStyleGuidePayload(style_guide="base style", reference_excerpt="ref excerpt")
+        )
+        orch._apply_character_voice_guide = MagicMock(return_value="voice-applied style")
+
+        result = orch._prepare_session_style_payload(stage0_available=True)
+
+        assert isinstance(result, _SessionStyleGuidePayload)
+        assert result.style_guide == "voice-applied style"
+        assert result.reference_excerpt == "ref excerpt"
+        orch._resolve_session_style_guide.assert_called_once_with(stage0_available=True)
+        orch._apply_character_voice_guide.assert_called_once_with(style_guide="base style")
+
+    def test_load_session_runtime_dependencies_returns_expected_runtime_bundle(self, mock_app):
+        from modules.core.constants import AIModels, Emojis
+        from modules.core.spinners import STAGE0_AVAILABLE, V50_MODULES_AVAILABLE
+        from modules.core.stage4_orchestrator import Stage4Orchestrator, _SessionRuntimeDependencies
+        from modules.domain.agents.chief_writer import ChiefWriter
+        from modules.domain.agents.manuscript_validator import ManuscriptValidator
+        from modules.validation.blocking_validator import BlockingValidator
+        from modules.validation.consistency_validator import ConsistencyValidator
+        from modules.validation.continuity_validator import ContinuityValidator
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.ui.log = MagicMock()
+        ctx.current_project = mock_app.current_project
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+        result = orch._load_session_runtime_dependencies()
+
+        assert isinstance(result, _SessionRuntimeDependencies)
+        assert result.ai_models is AIModels
+        assert result.emojis is Emojis
+        assert result.stage0_available is STAGE0_AVAILABLE
+        assert result.v50_modules_available is V50_MODULES_AVAILABLE
+        assert result.chief_writer_cls is ChiefWriter
+        assert result.manuscript_validator_cls is ManuscriptValidator
+        assert result.blocking_validator_cls is BlockingValidator
+        assert result.consistency_validator_cls is ConsistencyValidator
+        assert result.continuity_validator_cls is ContinuityValidator
+
+    def test_build_session_story_context_includes_incarnation_guidance_and_core_traits(self, mock_app):
+        from modules.core.stage4_orchestrator import Stage4Orchestrator
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.ui.log = MagicMock()
+        ctx.current_project = mock_app.current_project
+        ctx.current_project.master_bible = {
+            "MasterBible": {
+                "protagonist_config": {
+                    "name": "진우",
+                    "world_origin": "현대 한국",
+                    "incarnation_type": "회귀자",
+                    "core_traits": "냉정, 집요",
+                }
+            }
+        }
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+
+        result = orch._build_session_story_context(s4_genre_type="investment")
+
+        assert "- 장르: investment" in result
+        assert "- 주인공 이름: 진우" in result
+        assert "- 세계 출신: 현대 한국" in result
+        assert "- 환생 유형: 회귀자" in result
+        assert "현재 역사를 의도적으로 변경" in result
+        assert "- 핵심 특성: 냉정, 집요" in result
+
+    def test_build_session_story_context_falls_back_to_genre_line_on_malformed_bible(self, mock_app):
+        from modules.core.stage4_orchestrator import Stage4Orchestrator
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.ui.log = MagicMock()
+        ctx.current_project = mock_app.current_project
+        ctx.current_project.master_bible = object()
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+
+        result = orch._build_session_story_context(s4_genre_type="wuxia")
+
+        assert result == "- 장르: wuxia"
+
+    def test_apply_character_voice_guide_appends_prompt_and_logs(self, mock_app):
+        from modules.core.stage4_orchestrator import Stage4Orchestrator
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.ui.log = MagicMock()
+        ctx.current_project = mock_app.current_project
+        ctx.character_voice = MagicMock()
+        ctx.character_voice.profiles = [{"name": "진우"}, {"name": "연홍"}]
+        ctx.character_voice.get_writer_injection.return_value = "voice guidance"
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+
+        result = orch._apply_character_voice_guide(style_guide="base style")
+
+        assert result == "base style\n\nvoice guidance"
+        ctx.character_voice.get_writer_injection.assert_called_once()
+        ctx.ui.log.assert_called_once()
+
+    def test_apply_character_voice_guide_noops_when_profiles_missing(self, mock_app):
+        from modules.core.stage4_orchestrator import Stage4Orchestrator
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.ui.log = MagicMock()
+        ctx.current_project = mock_app.current_project
+        ctx.character_voice = MagicMock()
+        ctx.character_voice.profiles = []
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+
+        result = orch._apply_character_voice_guide(style_guide="base style")
+
+        assert result == "base style"
+        ctx.character_voice.get_writer_injection.assert_not_called()
+        ctx.ui.log.assert_not_called()
+
+    def test_resolve_session_style_guide_uses_saved_style_with_bible_pov_override(self, mock_app):
+        from modules.core.stage4_orchestrator import Stage4Orchestrator, _SessionStyleGuidePayload
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.ui.log = MagicMock()
+        ctx.get_int_input = MagicMock()
+        ctx.current_project = mock_app.current_project
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+        loaded_sg = MagicMock()
+        loaded_sg.pov = "3인칭"
+        loaded_sg.tone = "냉소적"
+        loaded_sg.reference_excerpt = "참고 발췌"
+        loaded_sg.to_prompt.return_value = "saved style prompt"
+        fake_stage0 = MagicMock()
+        fake_stage0.StyleGuide.from_dict.return_value = loaded_sg
+
+        with (
+            patch.dict(sys.modules, {"modules.core.stage0": fake_stage0}),
+            patch("modules.core.stage4_orchestrator.load_style_guide_anchor", return_value={"tone": "냉소적"}),
+            patch("modules.core.stage4_orchestrator.resolve_project_bible_pov", return_value="1인칭"),
+        ):
+            result = orch._resolve_session_style_guide(stage0_available=True)
+
+        assert isinstance(result, _SessionStyleGuidePayload)
+        assert result.style_guide == "saved style prompt"
+        assert result.reference_excerpt == "참고 발췌"
+        assert loaded_sg.pov == "1인칭"
+        ctx.get_int_input.assert_not_called()
+        ctx.ui.log.assert_called_once()
+
+    def test_resolve_session_style_guide_builds_minimal_guide_from_bible_pov(self, mock_app):
+        from modules.core.stage4_orchestrator import Stage4Orchestrator, _SessionStyleGuidePayload
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.ui.log = MagicMock()
+        ctx.get_int_input = MagicMock()
+        ctx.current_project = mock_app.current_project
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+        fake_stage0 = MagicMock()
+        fake_stage0.StyleGuide.return_value.to_prompt.return_value = "minimal style prompt"
+
+        with (
+            patch.dict(sys.modules, {"modules.core.stage0": fake_stage0}),
+            patch("modules.core.stage4_orchestrator.load_style_guide_anchor", return_value=None),
+            patch("modules.core.stage4_orchestrator.resolve_project_bible_pov", return_value="1인칭"),
+        ):
+            result = orch._resolve_session_style_guide(stage0_available=True)
+
+        assert isinstance(result, _SessionStyleGuidePayload)
+        assert result.style_guide == "minimal style prompt"
+        assert result.reference_excerpt == ""
+        fake_stage0.StyleGuide.assert_called_once_with(pov="1인칭")
+        ctx.get_int_input.assert_not_called()
+
+    def test_resolve_session_style_guide_prompts_when_no_stage0_style_is_available(self, mock_app):
+        from modules.core.stage4_orchestrator import Stage4Orchestrator, _SessionStyleGuidePayload
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.ui.log = MagicMock()
+        ctx.get_int_input = MagicMock(return_value=2)
+        ctx.current_project = mock_app.current_project
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+
+        with patch("modules.core.stage4_orchestrator.load_style_guide_anchor", return_value=None):
+            result = orch._resolve_session_style_guide(stage0_available=False)
+
+        assert isinstance(result, _SessionStyleGuidePayload)
+        assert "네이버" in result.style_guide
+        assert result.reference_excerpt == ""
+        ctx.get_int_input.assert_called_once()
+
+    def test_resolve_session_target_ep_skips_when_explicit_target_already_written(self, mock_app):
+        from modules.core.stage4_orchestrator import Stage4Orchestrator, _SessionTargetDecision
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.ui.log = MagicMock()
+        ctx.get_int_input = MagicMock()
+        ctx.current_project = mock_app.current_project
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+
+        result = orch._resolve_session_target_ep(
+            target_ep=3,
+            limit_mode=False,
+            current_written=4,
+            total_planned_ep=6,
+        )
+
+        assert isinstance(result, _SessionTargetDecision)
+        assert result.should_abort is True
+        assert result.target_ep is None
+        ctx.ui.log.assert_called_once()
+        ctx.get_int_input.assert_not_called()
+
+    def test_resolve_session_target_ep_prompts_in_limit_mode(self, mock_app):
+        from modules.core.stage4_orchestrator import Stage4Orchestrator, _SessionTargetDecision
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.ui.log = MagicMock()
+        ctx.get_int_input = MagicMock(return_value=6)
+        ctx.current_project = mock_app.current_project
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+
+        result = orch._resolve_session_target_ep(
+            target_ep=None,
+            limit_mode=True,
+            current_written=3,
+            total_planned_ep=6,
+        )
+
+        assert isinstance(result, _SessionTargetDecision)
+        assert result.should_abort is False
+        assert result.target_ep == 6
+        prompt_call = ctx.get_int_input.call_args
+        assert "현재 3화" in prompt_call.args[0]
+        assert prompt_call.kwargs["default"] == 6
+        assert prompt_call.kwargs["min_val"] == 4
+        assert prompt_call.kwargs["max_val"] == 6
+
+    def test_resolve_session_target_ep_aborts_when_limit_mode_has_no_blueprints(self, mock_app):
+        from modules.core.stage4_orchestrator import Stage4Orchestrator, _SessionTargetDecision
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.ui.log = MagicMock()
+        ctx.get_int_input = MagicMock()
+        ctx.current_project = mock_app.current_project
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+
+        result = orch._resolve_session_target_ep(
+            target_ep=None,
+            limit_mode=True,
+            current_written=0,
+            total_planned_ep=0,
+        )
+
+        assert isinstance(result, _SessionTargetDecision)
+        assert result.should_abort is True
+        assert result.target_ep is None
+        ctx.ui.log.assert_called_once()
+        ctx.get_int_input.assert_not_called()
+
     def test_limit_mode_prompt_uses_current_written_floor(self, mock_app, tmp_path):
         from modules.core.stage4_context import Stage4Context
         from modules.core.stage4_orchestrator import Stage4Orchestrator
@@ -1139,6 +1645,991 @@ class TestHandleRoundOutcomeRetryPathology:
         assert pathology_rows[-1]["pathology_source"] == "cove_fail_closed"
         assert pathology_rows[-1]["cove_runtime_failure"] is False
 
+    def test_handle_pass_round_result_requests_retry_on_cove_regeneration(self, orch_with_ctx, minimal_round_ctx):
+        from types import SimpleNamespace
+
+        orch = orch_with_ctx
+        runtime = orch.outcome_runtime
+        cove = MagicMock()
+        cove.quick_verify.return_value = (False, "semantic warning")
+        cove.verify.return_value = SimpleNamespace(
+            should_regenerate=True,
+            correction_hints="rewrite needed",
+            summary="rewrite needed",
+            issues=[],
+        )
+        orch._ctx.get_module = MagicMock(side_effect=lambda name: cove if name == "chain_of_verification" else None)
+        runtime.emit_retry_pathology_signal = MagicMock()
+        round_result = SimpleNamespace(
+            verdict="PASS",
+            final_manuscript="draft manuscript",
+            final_title="draft title",
+            final_state_updates={"hp": 10},
+        )
+        pathology_counts = {}
+        pathology_repeat_emitted = set()
+        minimal_round_ctx = dataclasses.replace(
+            minimal_round_ctx,
+            prev_manuscripts_text="x" * 2001,
+            blueprint={"integrated_scenario": "patched blueprint"},
+        )
+
+        result = runtime.handle_pass_round_result(
+            round_ctx=minimal_round_ctx,
+            round_result=round_result,
+            next_ep=1,
+            interview_round=0,
+            max_rounds=5,
+            pathology_counts=pathology_counts,
+            pathology_repeat_emitted=pathology_repeat_emitted,
+        )
+
+        assert result.accepted is False
+        assert result.should_continue is True
+        assert result.final_manuscript is None
+        assert result.final_title is None
+        assert result.final_state_updates == {"hp": 10}
+        assert result.director_feedback.startswith("[CoVe")
+        assert result.previous_attempt["best_manuscript"] == "draft manuscript"
+        assert result.previous_attempt["cove_fail_closed"] is True
+        assert result.previous_attempt["cove_runtime_failure"] is False
+        assert result.previous_attempt["provisional_pass_downgrade"] is True
+        cove.quick_verify.assert_called_once()
+        _, cove_context = cove.quick_verify.call_args.args
+        assert cove_context["prev_manuscript"] == ("x" * 1500)
+        assert cove_context["blueprint"] == {"integrated_scenario": "patched blueprint"}
+        runtime.emit_retry_pathology_signal.assert_called_once_with(
+            ep_num=1,
+            round_num=0,
+            previous_attempt=result.previous_attempt,
+            pathology_counts=pathology_counts,
+            pathology_repeat_emitted=pathology_repeat_emitted,
+        )
+
+    def test_build_cove_pass_context_clamps_previous_manuscript(self, orch_with_ctx):
+        runtime = orch_with_ctx.outcome_runtime
+
+        cove_context = runtime._build_cove_pass_context(
+            prev_manuscripts_text="x" * 2001,
+            blueprint={"integrated_scenario": "patched blueprint"},
+        )
+
+        assert cove_context["prev_manuscript"] == ("x" * 1500)
+        assert cove_context["blueprint"] == {"integrated_scenario": "patched blueprint"}
+
+    def test_run_cove_llm_verification_logs_non_blocking_issue_summary(self, orch_with_ctx):
+        from types import SimpleNamespace
+
+        orch = orch_with_ctx
+        runtime = orch.outcome_runtime
+        cove = MagicMock()
+        cove.verify.return_value = SimpleNamespace(
+            should_regenerate=False,
+            issues=[
+                SimpleNamespace(description="first issue " * 5),
+                SimpleNamespace(description="second issue " * 5),
+            ],
+        )
+
+        result = runtime.run_cove_llm_verification(
+            request=runtime._build_cove_llm_request(
+                cove=cove,
+                final_manuscript="draft manuscript",
+                final_state_updates={"hp": 10},
+                cove_context={"quick_verify_warnings": "hint"},
+                quick_msg="hint",
+                next_ep=1,
+                interview_round=0,
+                max_rounds=5,
+                pathology_counts={},
+                pathology_repeat_emitted=set(),
+            ),
+        )
+
+        assert result is None
+        cove.verify.assert_called_once_with("draft manuscript", {"quick_verify_warnings": "hint"}, content_type="manuscript")
+        assert any(
+            "LLM 검증 경고 (비차단)" in call.args[0] and "first issue" in call.args[0] and "second issue" in call.args[0]
+            for call in orch._ctx.ui.log.call_args_list
+            if call.args
+        )
+
+    def test_handle_cove_llm_verification_result_requests_retry_when_regeneration_needed(self, orch_with_ctx):
+        from types import SimpleNamespace
+
+        orch = orch_with_ctx
+        runtime = orch.outcome_runtime
+        runtime._build_cove_retry_disposition = MagicMock(return_value=SimpleNamespace(should_continue=True))
+
+        request = runtime._build_cove_llm_request(
+            cove=MagicMock(),
+            final_manuscript="draft manuscript",
+            final_state_updates={"hp": 10},
+            cove_context={"quick_verify_warnings": "hint"},
+            quick_msg="hint",
+            next_ep=1,
+            interview_round=0,
+            max_rounds=5,
+            pathology_counts={"cove_fail_closed": 1},
+            pathology_repeat_emitted={"bucket"},
+        )
+        cove_result = SimpleNamespace(should_regenerate=True, issues=[])
+
+        result = runtime._handle_cove_llm_verification_result(
+            request=request,
+            cove_result=cove_result,
+        )
+
+        assert result.should_continue is True
+        runtime._build_cove_retry_disposition.assert_called_once_with(
+            final_manuscript="draft manuscript",
+            final_state_updates={"hp": 10},
+            cove_result=cove_result,
+            next_ep=1,
+            interview_round=0,
+            max_rounds=5,
+            pathology_counts={"cove_fail_closed": 1},
+            pathology_repeat_emitted={"bucket"},
+        )
+
+    def test_build_cove_retry_kwargs_returns_payload_only_when_regeneration_needed(self, orch_with_ctx):
+        from types import SimpleNamespace
+
+        runtime = orch_with_ctx.outcome_runtime
+        request = runtime._build_cove_llm_request(
+            cove=MagicMock(),
+            final_manuscript="draft manuscript",
+            final_state_updates={"hp": 10},
+            cove_context={"quick_verify_warnings": "hint"},
+            quick_msg="hint",
+            next_ep=1,
+            interview_round=0,
+            max_rounds=5,
+            pathology_counts={"cove_fail_closed": 1},
+            pathology_repeat_emitted={"bucket"},
+        )
+
+        retry_kwargs = runtime._build_cove_retry_kwargs(
+            request=request,
+            cove_result=SimpleNamespace(should_regenerate=True, issues=[]),
+        )
+        no_retry_kwargs = runtime._build_cove_retry_kwargs(
+            request=request,
+            cove_result=SimpleNamespace(should_regenerate=False, issues=[]),
+        )
+
+        assert retry_kwargs == {
+            "final_manuscript": "draft manuscript",
+            "final_state_updates": {"hp": 10},
+            "cove_result": ANY,
+            "next_ep": 1,
+            "interview_round": 0,
+            "max_rounds": 5,
+            "pathology_counts": {"cove_fail_closed": 1},
+            "pathology_repeat_emitted": {"bucket"},
+        }
+        assert no_retry_kwargs is None
+
+    def test_build_cove_retry_request_fields_preserves_manuscript_and_state_updates(self, orch_with_ctx):
+        runtime = orch_with_ctx.outcome_runtime
+
+        request = runtime._build_cove_llm_request(
+            cove=MagicMock(),
+            final_manuscript="draft manuscript",
+            final_state_updates={"hp": 10},
+            cove_context={"quick_verify_warnings": "hint"},
+            quick_msg="hint",
+            next_ep=1,
+            interview_round=0,
+            max_rounds=5,
+            pathology_counts={"cove_fail_closed": 1},
+            pathology_repeat_emitted={"bucket"},
+        )
+
+        fields = runtime._build_cove_retry_request_fields(request=request)
+
+        assert fields == {
+            "final_manuscript": "draft manuscript",
+            "final_state_updates": {"hp": 10},
+        }
+
+    def test_build_cove_retry_state_fields_preserves_episode_and_pathology_state(self, orch_with_ctx):
+        runtime = orch_with_ctx.outcome_runtime
+
+        request = runtime._build_cove_llm_request(
+            cove=MagicMock(),
+            final_manuscript="draft manuscript",
+            final_state_updates={"hp": 10},
+            cove_context={"quick_verify_warnings": "hint"},
+            quick_msg="hint",
+            next_ep=1,
+            interview_round=0,
+            max_rounds=5,
+            pathology_counts={"cove_fail_closed": 1},
+            pathology_repeat_emitted={"bucket"},
+        )
+
+        fields = runtime._build_cove_retry_state_fields(request=request)
+
+        assert fields == {
+            "next_ep": 1,
+            "interview_round": 0,
+            "max_rounds": 5,
+            "pathology_counts": {"cove_fail_closed": 1},
+            "pathology_repeat_emitted": {"bucket"},
+        }
+
+    def test_build_cove_retry_episode_state_fields_preserves_episode_range(self, orch_with_ctx):
+        runtime = orch_with_ctx.outcome_runtime
+
+        request = runtime._build_cove_llm_request(
+            cove=MagicMock(),
+            final_manuscript="draft manuscript",
+            final_state_updates={"hp": 10},
+            cove_context={"quick_verify_warnings": "hint"},
+            quick_msg="hint",
+            next_ep=1,
+            interview_round=0,
+            max_rounds=5,
+            pathology_counts={"cove_fail_closed": 1},
+            pathology_repeat_emitted={"bucket"},
+        )
+
+        fields = runtime._build_cove_retry_episode_state_fields(request=request)
+
+        assert fields == {
+            "next_ep": 1,
+            "interview_round": 0,
+            "max_rounds": 5,
+        }
+
+    def test_build_cove_retry_pathology_fields_preserves_pathology_state(self, orch_with_ctx):
+        runtime = orch_with_ctx.outcome_runtime
+
+        request = runtime._build_cove_llm_request(
+            cove=MagicMock(),
+            final_manuscript="draft manuscript",
+            final_state_updates={"hp": 10},
+            cove_context={"quick_verify_warnings": "hint"},
+            quick_msg="hint",
+            next_ep=1,
+            interview_round=0,
+            max_rounds=5,
+            pathology_counts={"cove_fail_closed": 1},
+            pathology_repeat_emitted={"bucket"},
+        )
+
+        fields = runtime._build_cove_retry_pathology_fields(request=request)
+
+        assert fields == {
+            "pathology_counts": {"cove_fail_closed": 1},
+            "pathology_repeat_emitted": {"bucket"},
+        }
+
+    def test_handle_cove_runtime_failure_logs_and_emits_advisory(self, orch_with_ctx):
+        orch = orch_with_ctx
+        runtime = orch.outcome_runtime
+        runtime._log_cove_runtime_advisory = MagicMock()
+
+        runtime.handle_cove_runtime_failure(
+            source="llm_verify",
+            exc=RuntimeError("boom"),
+            next_ep=2,
+            interview_round=1,
+            max_rounds=5,
+            quick_warning="hint",
+        )
+
+        orch._ctx.ui.log.assert_any_call("   ⚠️ [CoVe] LLM 검증 런타임 실패 → Director PASS 유지")
+        runtime._log_cove_runtime_advisory.assert_called_once_with(
+            ep_num=2,
+            round_num=1,
+            source="llm_verify",
+            error=ANY,
+            quick_warning="hint",
+        )
+
+    def test_emit_cove_runtime_failure_logs_uses_quick_label(self, orch_with_ctx):
+        orch = orch_with_ctx
+        runtime = orch.outcome_runtime
+
+        with patch("modules.core.stage4_outcome_runtime.logging.warning") as mock_warning:
+            runtime._emit_cove_runtime_failure_logs(
+                source_label="Quick",
+                exc=RuntimeError("boom"),
+                next_ep=2,
+                interview_round=1,
+                max_rounds=5,
+            )
+
+        orch._ctx.ui.log.assert_any_call("   ⚠️ [CoVe] Quick 검증 런타임 실패 → Director PASS 유지")
+        assert mock_warning.call_count == 2
+
+    def test_build_cove_runtime_failure_messages_returns_failclosed_and_ui_text(self, orch_with_ctx):
+        fail_closed_warning, ui_message = orch_with_ctx.outcome_runtime._build_cove_runtime_failure_messages(
+            source_label="Quick",
+            exc=RuntimeError("boom"),
+        )
+
+        assert fail_closed_warning == "[FailClosed:CoVe:Quick] boom"
+        assert ui_message == "   ⚠️ [CoVe] Quick 검증 런타임 실패 → Director PASS 유지"
+
+    def test_build_cove_runtime_stage_warning_args_increments_round_number(self, orch_with_ctx):
+        args = orch_with_ctx.outcome_runtime._build_cove_runtime_stage_warning_args(
+            source_label="Quick",
+            next_ep=2,
+            interview_round=1,
+            max_rounds=5,
+        )
+
+        assert args == (2, 2, 5, "Quick")
+
+    def test_build_cove_runtime_round_fields_increments_round_number(self, orch_with_ctx):
+        fields = orch_with_ctx.outcome_runtime._build_cove_runtime_round_fields(
+            next_ep=2,
+            interview_round=1,
+            max_rounds=5,
+        )
+
+        assert fields == (2, 2, 5)
+
+    def test_build_cove_runtime_source_field_preserves_source_label(self, orch_with_ctx):
+        field = orch_with_ctx.outcome_runtime._build_cove_runtime_source_field(source_label="Quick")
+
+        assert field == "Quick"
+
+    def test_run_interview_round_step_breaks_on_accepted_pass(self, orch_with_ctx, minimal_round_ctx):
+        from types import SimpleNamespace
+
+        orch = orch_with_ctx
+        orch._interview_round = MagicMock()
+        orch._interview_round.run = MagicMock(return_value=SimpleNamespace(verdict="PASS"))
+        orch.outcome_runtime.handle_pass_round_result = MagicMock(
+            return_value=SimpleNamespace(
+                accepted=True,
+                should_continue=False,
+                final_manuscript="accepted manuscript",
+                final_title="accepted title",
+                final_state_updates={"hp": 10},
+                director_feedback="accepted feedback",
+                previous_attempt={"score": 91},
+            )
+        )
+        orch.outcome_runtime.handle_reject_round_result = MagicMock()
+        loop_state = orch._build_interview_round_loop_state()
+
+        result = orch._run_interview_round_step(
+            round_ctx=minimal_round_ctx,
+            loop_state=loop_state,
+            next_ep=1,
+            interview_round=0,
+            max_rounds=5,
+            stage4_spinner=MagicMock(),
+        )
+
+        assert result.should_break is True
+        assert result.should_continue is False
+        assert result.round_ctx == minimal_round_ctx
+        assert result.loop_state.final_manuscript == "accepted manuscript"
+        assert result.loop_state.final_title == "accepted title"
+        assert result.loop_state.final_state_updates == {"hp": 10}
+        assert result.loop_state.director_feedback == "accepted feedback"
+        assert result.loop_state.previous_attempt == {"score": 91}
+        orch.outcome_runtime.handle_pass_round_result.assert_called_once()
+        orch.outcome_runtime.handle_reject_round_result.assert_not_called()
+
+    def test_apply_pass_round_step_disposition_returns_continue(self, orch_with_ctx, minimal_round_ctx):
+        from modules.core.stage4_orchestrator import _PassRoundDisposition
+
+        orch = orch_with_ctx
+        loop_state = orch._build_interview_round_loop_state()
+        pass_disposition = _PassRoundDisposition(
+            should_continue=True,
+            final_manuscript="retry manuscript",
+            final_title="retry title",
+            final_state_updates={"hp": 10},
+            director_feedback="keep going",
+            previous_attempt={"score": 81},
+        )
+
+        result = orch._apply_pass_round_step_disposition(
+            round_ctx=minimal_round_ctx,
+            loop_state=loop_state,
+            pass_disposition=pass_disposition,
+        )
+
+        assert result is not None
+        assert result.should_continue is True
+        assert result.should_break is False
+        assert result.loop_state.final_manuscript == "retry manuscript"
+        assert result.loop_state.final_title == "retry title"
+        assert result.loop_state.final_state_updates == {"hp": 10}
+        assert result.loop_state.director_feedback == "keep going"
+        assert result.loop_state.previous_attempt == {"score": 81}
+
+    def test_handle_reject_round_result_chains_analysis_and_escalation(self, orch_with_ctx, minimal_round_ctx):
+        from types import SimpleNamespace
+
+        orch = orch_with_ctx
+        runtime = orch.outcome_runtime
+        round_result = SimpleNamespace(
+            director_feedback="retry feedback",
+            previous_attempt={"score": 77},
+        )
+        runtime.analyze_reject_round = MagicMock(
+            return_value=SimpleNamespace(
+                director_feedback="analyzed feedback",
+                previous_attempt={"score": 66, "reject_bucket": "quality_issue"},
+                logic_error_streak=2,
+                prev_reject_bucket="quality_issue",
+                bucket_streak=3,
+                prev_dominant_contradiction="timeline",
+                contradiction_type_streak=2,
+                score_history=[91, 88, 66],
+                plateau_advisory_emitted=True,
+                tf29_advisory="[bucket]",
+                dominant_contradiction="timeline",
+            )
+        )
+        escalated_round_ctx = dataclasses.replace(minimal_round_ctx, blueprint={"patched": True})
+        runtime.apply_retry_repair_escalation = MagicMock(
+            return_value=SimpleNamespace(
+                round_ctx=escalated_round_ctx,
+                director_feedback="escalated feedback",
+                previous_attempt={"score": 66, "reject_bucket": "quality_issue", "escalated": True},
+                logic_error_streak=3,
+                inplace_attempted=True,
+                blueprint_regenerated=True,
+            )
+        )
+
+        result = runtime.handle_reject_round_result(
+            round_ctx=minimal_round_ctx,
+            round_result=round_result,
+            next_ep=1,
+            interview_round=0,
+            max_rounds=5,
+            logic_error_streak=1,
+            inplace_attempted=False,
+            blueprint_regenerated=False,
+            prev_reject_bucket="quality_issue",
+            bucket_streak=2,
+            prev_dominant_contradiction="timeline",
+            contradiction_type_streak=1,
+            score_history=[91, 88],
+            plateau_advisory_emitted=False,
+            pathology_counts={},
+            pathology_repeat_emitted=set(),
+        )
+
+        assert result.round_ctx == escalated_round_ctx
+        assert result.director_feedback == "escalated feedback"
+        assert result.previous_attempt["escalated"] is True
+        assert result.logic_error_streak == 3
+        assert result.inplace_attempted is True
+        assert result.blueprint_regenerated is True
+        assert result.prev_reject_bucket == "quality_issue"
+        assert result.bucket_streak == 3
+        assert result.prev_dominant_contradiction == "timeline"
+        assert result.contradiction_type_streak == 2
+        assert result.score_history == [91, 88, 66]
+        assert result.plateau_advisory_emitted is True
+        runtime.analyze_reject_round.assert_called_once()
+        runtime.apply_retry_repair_escalation.assert_called_once()
+        escalation_kwargs = runtime.apply_retry_repair_escalation.call_args.kwargs
+        assert escalation_kwargs["director_feedback"] == "analyzed feedback"
+        assert escalation_kwargs["previous_attempt"]["reject_bucket"] == "quality_issue"
+        assert escalation_kwargs["tf29_advisory"] == "[bucket]"
+        assert escalation_kwargs["dominant_contradiction"] == "timeline"
+
+    def test_run_interview_round_step_updates_loop_state_from_reject_path(self, orch_with_ctx, minimal_round_ctx):
+        from types import SimpleNamespace
+
+        orch = orch_with_ctx
+        next_round_ctx = dataclasses.replace(minimal_round_ctx, blueprint={"patched": True})
+        orch._interview_round = MagicMock()
+        orch._interview_round.run = MagicMock(
+            return_value=SimpleNamespace(
+                verdict="REJECT",
+                director_feedback="retry feedback",
+                previous_attempt={"score": 77},
+            )
+        )
+        orch.outcome_runtime.handle_pass_round_result = MagicMock()
+        orch.outcome_runtime.handle_reject_round_result = MagicMock(
+            return_value=SimpleNamespace(
+                round_ctx=next_round_ctx,
+                director_feedback="escalated feedback",
+                previous_attempt={"score": 66, "reject_bucket": "quality_issue"},
+                logic_error_streak=3,
+                inplace_attempted=True,
+                blueprint_regenerated=True,
+                prev_reject_bucket="quality_issue",
+                bucket_streak=3,
+                prev_dominant_contradiction="timeline",
+                contradiction_type_streak=2,
+                score_history=[91, 88, 66],
+                plateau_advisory_emitted=True,
+            )
+        )
+        loop_state = orch._build_interview_round_loop_state()
+
+        result = orch._run_interview_round_step(
+            round_ctx=minimal_round_ctx,
+            loop_state=loop_state,
+            next_ep=1,
+            interview_round=0,
+            max_rounds=5,
+            stage4_spinner=MagicMock(),
+        )
+
+        assert result.should_break is False
+        assert result.should_continue is False
+        assert result.round_ctx == next_round_ctx
+        assert result.loop_state.director_feedback == "escalated feedback"
+        assert result.loop_state.previous_attempt == {"score": 66, "reject_bucket": "quality_issue"}
+        assert result.loop_state.logic_error_streak == 3
+        assert result.loop_state.inplace_attempted is True
+        assert result.loop_state.blueprint_regenerated is True
+        assert result.loop_state.prev_reject_bucket == "quality_issue"
+        assert result.loop_state.bucket_streak == 3
+        assert result.loop_state.prev_dominant_contradiction == "timeline"
+        assert result.loop_state.contradiction_type_streak == 2
+        assert result.loop_state.score_history == [91, 88, 66]
+        assert result.loop_state.plateau_advisory_emitted is True
+        orch.outcome_runtime.handle_pass_round_result.assert_not_called()
+        orch.outcome_runtime.handle_reject_round_result.assert_called_once()
+
+    def test_finalize_round_outcome_loop_accepts_last_best_when_user_chooses_continue(
+        self, orch_with_ctx
+    ):
+        orch = orch_with_ctx
+        orch._ctx.get_int_input = MagicMock(return_value=1)
+
+        result = orch._finalize_round_outcome_loop(
+            next_ep=3,
+            max_rounds=5,
+            final_manuscript=None,
+            final_title=None,
+            final_state_updates={},
+            previous_attempt={
+                "best_manuscript": "best manuscript",
+                "score": 77,
+                "state_updates": {"hp": 10},
+            },
+            blueprint_regenerated=False,
+        )
+
+        assert result.should_return is False
+        assert result.final_manuscript == "best manuscript"
+        assert result.final_title == "제3화"
+        assert result.final_state_updates == {"hp": 10}
+        orch._ctx.get_int_input.assert_called_once()
+
+    def test_finalize_round_outcome_loop_requests_human_review_when_no_best(self, orch_with_ctx):
+        orch = orch_with_ctx
+
+        result = orch._finalize_round_outcome_loop(
+            next_ep=3,
+            max_rounds=5,
+            final_manuscript=None,
+            final_title=None,
+            final_state_updates={},
+            previous_attempt={},
+            blueprint_regenerated=True,
+        )
+
+        assert result.should_return is True
+        assert result.final_manuscript is None
+        assert result.final_title is None
+        assert result.final_state_updates == {}
+        orch._ctx.get_int_input.assert_not_called()
+
+    def test_analyze_reject_round_emits_plateau_bucket_and_contradiction_advisories(
+        self,
+        orch_with_ctx,
+    ):
+        from types import SimpleNamespace
+
+        runtime = orch_with_ctx.outcome_runtime
+        previous_attempt = {
+            "score": 88,
+            "fix_scope_reasoning": "narrow patch",
+            "reject_bucket": "quality_issue",
+            "contradiction_types": ["타임라인", "타임라인"],
+        }
+        round_result = SimpleNamespace(
+            error_category="LOGIC_ERROR",
+        )
+
+        result = runtime.analyze_reject_round(
+            round_result=round_result,
+            director_feedback="base feedback",
+            previous_attempt=previous_attempt,
+            logic_error_streak=1,
+            prev_reject_bucket="quality_issue",
+            bucket_streak=2,
+            prev_dominant_contradiction="타임라인",
+            contradiction_type_streak=1,
+            score_history=[95, 92],
+            plateau_advisory_emitted=False,
+            blueprint_regenerated=False,
+        )
+
+        assert result.logic_error_streak == 2
+        assert result.bucket_streak == 3
+        assert result.prev_reject_bucket == "quality_issue"
+        assert result.contradiction_type_streak == 2
+        assert result.prev_dominant_contradiction == "타임라인"
+        assert result.dominant_contradiction == "타임라인"
+        assert result.plateau_advisory_emitted is True
+        assert result.score_history == [95, 92, 88]
+        assert result.previous_attempt["plateau_detected"] is True
+        assert result.previous_attempt["score_history"] == [95, 92, 88]
+        assert "narrow patch" in result.previous_attempt["fix_scope_reasoning"]
+        assert "[⚠️ 점수 하락 추세]" in result.director_feedback
+        assert "[⚠️ 반복 실패 패턴 감지]" in result.director_feedback
+        assert "[⚠️ A-4 구조 진단]" in result.director_feedback
+        assert result.tf29_advisory.startswith("[⚠️ 반복 실패 패턴 감지]")
+
+    def test_apply_reject_score_trend_advisory_marks_plateau_and_reasoning(self, orch_with_ctx):
+        runtime = orch_with_ctx.outcome_runtime
+        previous_attempt = {
+            "score": 88,
+            "fix_scope_reasoning": "narrow patch",
+        }
+
+        result = runtime._apply_reject_score_trend_advisory(
+            previous_attempt=previous_attempt,
+            director_feedback="base feedback",
+            score_history=[95, 92],
+            plateau_advisory_emitted=False,
+        )
+
+        assert result.plateau_advisory_emitted is True
+        assert result.score_history == [95, 92, 88]
+        assert previous_attempt["plateau_detected"] is True
+        assert previous_attempt["score_history"] == [95, 92, 88]
+        assert "narrow patch" in previous_attempt["fix_scope_reasoning"]
+        assert "[⚠️ 점수 하락 추세]" in result.director_feedback
+
+    def test_apply_v75d_inplace_repair_resets_attempt_state_and_logs_snapshot(
+        self,
+        orch_with_ctx,
+        minimal_round_ctx,
+    ):
+        orch = orch_with_ctx
+        bp_agent = MagicMock()
+        bp_agent._inplace_patch_blueprint.return_value = {"patched": True}
+        orch._ctx.agents["three_phase_bp"] = bp_agent
+        orch._ctx.audit_event = MagicMock()
+        orch._build_stage4_to_3_reverse_feedback = MagicMock(return_value="[S4->S3] hint")
+        orch._merge_blueprint_feedback = MagicMock(return_value="merged blueprint feedback")
+        orch._log_escalation_event = MagicMock()
+
+        with (
+            patch(
+                "modules.core.stage4_orchestrator.snapshot_logged_artifact",
+                return_value={
+                    "candidate_key": "V75-D|blueprint_inplace",
+                    "content_hash": "hash-123",
+                    "artifact_path": "logs/artifacts/stage4/ep_0001/patched.json",
+                },
+            ),
+            patch("modules.core.constants.calc_patch_change_ratio", return_value=0.2),
+            patch("modules.core.constants.log_patch_diff"),
+        ):
+            result = orch._apply_v75d_inplace_repair(
+                round_ctx=minimal_round_ctx,
+                next_ep=1,
+                interview_round=0,
+                director_feedback="director feedback",
+                previous_attempt={"fix_scope": "patch", "score": 72},
+                logic_error_streak=2,
+                tf29_advisory="[bucket]",
+                dominant_contradiction="timeline",
+            )
+
+        assert result.inplace_attempted is True
+        assert result.blueprint_regenerated is False
+        assert result.logic_error_streak == 0
+        assert result.previous_attempt == {}
+        assert result.round_ctx.blueprint == {"patched": True}
+        assert result.director_feedback.startswith("[bucket]\n[V75-D 블루프린트 inplace 패치 완료]")
+        bp_agent._inplace_patch_blueprint.assert_called_once()
+        assert bp_agent._inplace_patch_blueprint.call_args.kwargs["director_feedback"] == "merged blueprint feedback"
+        orch._ctx.audit_event.assert_called_once()
+        orch._log_escalation_event.assert_called_once()
+        escalation_args = orch._log_escalation_event.call_args.args
+        escalation_kwargs = orch._log_escalation_event.call_args.kwargs
+        assert escalation_args[:3] == (1, "V75-D_INPLACE", 0)
+        assert escalation_kwargs["candidate_key"] == "V75-D|blueprint_inplace"
+        assert escalation_kwargs["content_hash"] == "hash-123"
+        assert escalation_kwargs["artifact_path"].endswith("patched.json")
+
+    def test_run_v75d_patch_attempt_keeps_state_when_patch_returns_empty(
+        self,
+        orch_with_ctx,
+        minimal_round_ctx,
+    ):
+        orch = orch_with_ctx
+        bp_agent = MagicMock()
+        bp_agent._inplace_patch_blueprint.return_value = None
+        orch._ctx.agents["three_phase_bp"] = bp_agent
+        orch._build_stage4_to_3_reverse_feedback = MagicMock(return_value="[S4->S3] hint")
+        orch._merge_blueprint_feedback = MagicMock(return_value="merged blueprint feedback")
+
+        payload = orch._run_v75d_patch_attempt(
+            round_ctx=minimal_round_ctx,
+            next_ep=1,
+            interview_round=0,
+            director_feedback="director feedback",
+            previous_attempt={"fix_scope": "patch", "score": 72},
+            logic_error_streak=2,
+            tf29_advisory="[bucket]",
+        )
+
+        assert payload.success is False
+        assert payload.round_ctx is minimal_round_ctx
+        assert payload.director_feedback == "director feedback"
+        assert payload.previous_attempt == {"fix_scope": "patch", "score": 72}
+        assert payload.logic_error_streak == 2
+        assert payload.artifact_payload.artifact_meta["candidate_key"] == ""
+        orch._build_stage4_to_3_reverse_feedback.assert_called_once_with(
+            director_feedback="director feedback",
+            previous_attempt={"fix_scope": "patch", "score": 72},
+        )
+        orch._merge_blueprint_feedback.assert_called_once_with("director feedback", "[S4->S3] hint")
+        bp_agent._inplace_patch_blueprint.assert_called_once()
+        assert any(
+            "inplace 패치 실패" in call.args[0]
+            for call in orch._ctx.ui.log.call_args_list
+            if call.args
+        )
+
+    def test_attempt_v75d_inplace_blueprint_patch_returns_none_on_exception(
+        self,
+        orch_with_ctx,
+        minimal_round_ctx,
+    ):
+        orch = orch_with_ctx
+        orch._request_v75d_inplace_blueprint_patch = MagicMock(side_effect=RuntimeError("boom"))
+
+        with patch("modules.core.stage4_orchestrator.logging.warning") as mock_warning:
+            patched_bp = orch._attempt_v75d_inplace_blueprint_patch(
+                round_ctx=minimal_round_ctx,
+                next_ep=1,
+                director_feedback="director feedback",
+                previous_attempt={"fix_scope": "patch", "score": 72},
+                logic_error_streak=2,
+            )
+
+        assert patched_bp is None
+        orch._request_v75d_inplace_blueprint_patch.assert_called_once_with(
+            round_ctx=minimal_round_ctx,
+            next_ep=1,
+            director_feedback="director feedback",
+            previous_attempt={"fix_scope": "patch", "score": 72},
+        )
+        mock_warning.assert_called_once()
+
+    def test_build_failed_v75d_patch_attempt_payload_preserves_state_and_blank_artifact(
+        self,
+        orch_with_ctx,
+        minimal_round_ctx,
+    ):
+        orch = orch_with_ctx
+
+        payload = orch._build_failed_v75d_patch_attempt_payload(
+            round_ctx=minimal_round_ctx,
+            director_feedback="director feedback",
+            previous_attempt={"fix_scope": "patch", "score": 72},
+            logic_error_streak=2,
+        )
+
+        assert payload.success is False
+        assert payload.round_ctx is minimal_round_ctx
+        assert payload.director_feedback == "director feedback"
+        assert payload.previous_attempt == {"fix_scope": "patch", "score": 72}
+        assert payload.logic_error_streak == 2
+        assert payload.artifact_payload.artifact_meta == {
+            "candidate_key": "",
+            "content_hash": "",
+            "artifact_path": "",
+        }
+
+    def test_request_v75d_inplace_blueprint_patch_merges_feedback_before_agent_call(
+        self,
+        orch_with_ctx,
+        minimal_round_ctx,
+    ):
+        orch = orch_with_ctx
+        bp_agent = MagicMock()
+        bp_agent._inplace_patch_blueprint.return_value = {"patched": True}
+        orch._ctx.agents["three_phase_bp"] = bp_agent
+        orch._build_stage4_to_3_reverse_feedback = MagicMock(return_value="[S4->S3] hint")
+        orch._merge_blueprint_feedback = MagicMock(return_value="merged blueprint feedback")
+
+        patched_bp = orch._request_v75d_inplace_blueprint_patch(
+            round_ctx=minimal_round_ctx,
+            next_ep=1,
+            director_feedback="director feedback",
+            previous_attempt={"fix_scope": "patch", "score": 72},
+        )
+
+        assert patched_bp == {"patched": True}
+        orch._build_stage4_to_3_reverse_feedback.assert_called_once_with(
+            director_feedback="director feedback",
+            previous_attempt={"fix_scope": "patch", "score": 72},
+        )
+        orch._merge_blueprint_feedback.assert_called_once_with("director feedback", "[S4->S3] hint")
+        bp_agent._inplace_patch_blueprint.assert_called_once_with(
+            original_blueprint=minimal_round_ctx.blueprint,
+            director_feedback="merged blueprint feedback",
+            ep_num=1,
+            arc_data=minimal_round_ctx.arc_data,
+        )
+
+    def test_apply_v75d_patch_success_captures_artifact_and_returns_reset_payload(
+        self,
+        orch_with_ctx,
+        minimal_round_ctx,
+    ):
+        orch = orch_with_ctx
+        orch._capture_v75d_patch_artifact = MagicMock(
+            return_value=MagicMock(artifact_meta={"candidate_key": "V75-D|blueprint_inplace"})
+        )
+        orch._build_v75d_success_payload = MagicMock(
+            return_value=MagicMock(
+                round_ctx=dataclasses.replace(minimal_round_ctx, blueprint={"patched": True}),
+                director_feedback="[bucket]\n[V75-D 블루프린트 inplace 패치 완료]",
+                previous_attempt={},
+                logic_error_streak=0,
+            )
+        )
+
+        payload = orch._apply_v75d_patch_success(
+            round_ctx=minimal_round_ctx,
+            patched_bp={"patched": True},
+            next_ep=1,
+            interview_round=0,
+            director_feedback="director feedback",
+            previous_attempt={"fix_scope": "patch", "score": 72},
+            logic_error_streak=2,
+            tf29_advisory="[bucket]",
+        )
+
+        assert payload.success is True
+        assert payload.round_ctx.blueprint == {"patched": True}
+        assert payload.director_feedback.startswith("[bucket]")
+        assert payload.previous_attempt == {}
+        assert payload.logic_error_streak == 0
+        orch._capture_v75d_patch_artifact.assert_called_once_with(
+            round_ctx=minimal_round_ctx,
+            patched_bp={"patched": True},
+            next_ep=1,
+            interview_round=0,
+        )
+        orch._build_v75d_success_payload.assert_called_once_with(
+            round_ctx=minimal_round_ctx,
+            patched_bp={"patched": True},
+            tf29_advisory="[bucket]",
+        )
+
+    def test_capture_v75d_patch_artifact_emits_audit_with_change_ratio(
+        self,
+        orch_with_ctx,
+        minimal_round_ctx,
+    ):
+        orch = orch_with_ctx
+        orch._ctx.audit_event = MagicMock()
+
+        with (
+            patch(
+                "modules.core.stage4_orchestrator.snapshot_logged_artifact",
+                return_value={
+                    "candidate_key": "V75-D|blueprint_inplace",
+                    "content_hash": "hash-123",
+                    "artifact_path": "logs/artifacts/stage4/ep_0001/patched.json",
+                },
+            ),
+            patch("modules.core.constants.calc_patch_change_ratio", return_value=0.25),
+            patch("modules.core.constants.log_patch_diff"),
+        ):
+            payload = orch._capture_v75d_patch_artifact(
+                round_ctx=minimal_round_ctx,
+                patched_bp={"patched": True},
+                next_ep=1,
+                interview_round=0,
+            )
+
+        assert payload.artifact_meta["candidate_key"] == "V75-D|blueprint_inplace"
+        assert payload.change_ratio == 0.25
+        orch._ctx.audit_event.assert_called_once_with(
+            "stage4_v75d_blueprint_patch_snapshot",
+            "stage4 V75-D blueprint patch snapshot persisted",
+            {
+                "ep_num": 1,
+                "round_num": 1,
+                "candidate_key": "V75-D|blueprint_inplace",
+                "content_hash": "hash-123",
+                "artifact_path": "logs/artifacts/stage4/ep_0001/patched.json",
+                "change_ratio": 0.25,
+            },
+        )
+
+    def test_build_v75d_success_payload_resets_state_and_prepends_tf29(self, orch_with_ctx, minimal_round_ctx):
+        orch = orch_with_ctx
+
+        payload = orch._build_v75d_success_payload(
+            round_ctx=minimal_round_ctx,
+            patched_bp={"patched": True},
+            tf29_advisory="[bucket]",
+        )
+
+        assert payload.round_ctx.blueprint == {"patched": True}
+        assert payload.logic_error_streak == 0
+        assert payload.previous_attempt == {}
+        assert payload.director_feedback.startswith("[bucket]\n[V75-D 블루프린트 inplace 패치 완료]")
+
+    def test_apply_v75b_blueprint_regeneration_resets_attempt_state_on_success(
+        self,
+        orch_with_ctx,
+        minimal_round_ctx,
+    ):
+        orch = orch_with_ctx
+        orch._build_stage4_to_3_reverse_feedback = MagicMock(return_value="[S4->S3] hint")
+        orch._merge_blueprint_feedback = MagicMock(return_value="merged blueprint feedback")
+        orch._regenerate_blueprint = MagicMock(return_value={"regenerated": True})
+        orch._log_escalation_event = MagicMock()
+
+        result = orch._apply_v75b_blueprint_regeneration(
+            round_ctx=minimal_round_ctx,
+            next_ep=2,
+            interview_round=1,
+            director_feedback="director feedback",
+            previous_attempt={"fix_scope": "rewrite", "score": 63},
+            logic_error_streak=3,
+            tf29_advisory="[bucket]",
+            dominant_contradiction="timeline",
+        )
+
+        assert result.inplace_attempted is True
+        assert result.blueprint_regenerated is True
+        assert result.logic_error_streak == 0
+        assert result.previous_attempt == {}
+        assert result.round_ctx.blueprint == {"regenerated": True}
+        assert result.director_feedback.startswith("[bucket]\n[V75-B 블루프린트 재생성 완료]")
+        orch._regenerate_blueprint.assert_called_once_with(
+            2,
+            minimal_round_ctx.arc_data,
+            minimal_round_ctx,
+            external_feedback="merged blueprint feedback",
+        )
+        orch._log_escalation_event.assert_called_once()
+        escalation_args = orch._log_escalation_event.call_args.args
+        assert escalation_args[:3] == (2, "V75-B_FULL_REGEN", 0)
+
     def test_handle_round_outcome_emits_retry_pathology_repeat(self, orch_with_ctx, minimal_round_ctx, monkeypatch, tmp_path):
         from modules.core.stage4_types import _InterviewRoundResult
 
@@ -1250,6 +2741,230 @@ class TestStage4OrchestratorImport:
         assert "HEAD-CONTEXT" in result.mandatory_context
         assert "TAIL-CONTEXT" in result.mandatory_context
 
+    def test_apply_mandatory_context_budget_logs_section_removal(self, mock_app):
+        from modules.core.stage4_orchestrator import Stage4Orchestrator
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.ui.log = MagicMock()
+        ctx.current_project = mock_app.current_project
+        ctx._stage4_context_budget_meta = {
+            "budget_ledger": {"effective_cap": 130, "dropped_chars": 0, "overflow_chars": 10}
+        }
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+        text = "[A]\n" + ("A" * 50) + "\n[B]\n" + ("B" * 50) + "\n[C]\n" + ("C" * 50)
+
+        with patch("modules.core.stage4_orchestrator._threshold", return_value=130):
+            result = orch._apply_mandatory_context_budget(text)
+
+        assert "[C]" not in result
+        ctx.ui.log.assert_called_once()
+
+    def test_apply_mandatory_context_budget_logs_fallback_truncation(self, mock_app):
+        from modules.core.stage4_orchestrator import Stage4Orchestrator
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.ui.log = MagicMock()
+        ctx.current_project = mock_app.current_project
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+        text = "[MANDATORY]\nHEAD-CONTEXT\n" + ("A" * 260) + "\nTAIL-CONTEXT"
+
+        with patch("modules.core.stage4_orchestrator._threshold", return_value=180):
+            result = orch._apply_mandatory_context_budget(text)
+
+        assert len(result) <= 180
+        assert "TAIL-CONTEXT" in result
+        ctx.ui.log.assert_called_once()
+
+    def test_consume_episode_round_outcome_runs_post_tasks_on_return(self, mock_app):
+        from modules.core.stage4_orchestrator import (
+            Stage4Orchestrator,
+            _EpisodeLoopDisposition,
+            _RoundOutcome,
+        )
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.ui.log = MagicMock()
+        ctx.current_project = mock_app.current_project
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+        orch._post_processor = MagicMock()
+
+        result = orch._consume_episode_round_outcome(
+            outcome=_RoundOutcome(
+                final_manuscript=None,
+                final_title=None,
+                final_state_updates={},
+                should_return=True,
+            ),
+            next_ep=5,
+            blueprint={"scene_breakdown": {}},
+            arc_data={"arc_no": 1},
+            output_dir=Path("."),
+            v50_modules_available=False,
+            skip_pause=True,
+        )
+
+        assert isinstance(result, _EpisodeLoopDisposition)
+        assert result.should_return is True
+        assert result.should_break is False
+        orch.post_processor.run_post_episode_tasks.assert_called_once_with(skip_pause=True)
+
+    def test_consume_episode_round_outcome_delegates_pass_processing(self, mock_app, tmp_path):
+        from modules.core.stage4_orchestrator import (
+            Stage4Orchestrator,
+            _EpisodeLoopDisposition,
+            _RoundOutcome,
+        )
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.ui.log = MagicMock()
+        ctx.current_project = mock_app.current_project
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+        orch._process_episode_pass = MagicMock(return_value=True)
+
+        result = orch._consume_episode_round_outcome(
+            outcome=_RoundOutcome(
+                final_manuscript="final manuscript",
+                final_title="episode title",
+                final_state_updates={"k": "v"},
+                should_return=False,
+            ),
+            next_ep=7,
+            blueprint={"scene_breakdown": {"a": 1}},
+            arc_data={"arc_no": 2},
+            output_dir=tmp_path,
+            v50_modules_available=True,
+            skip_pause=False,
+        )
+
+        assert isinstance(result, _EpisodeLoopDisposition)
+        assert result.should_return is False
+        assert result.should_break is False
+        orch._process_episode_pass.assert_called_once_with(
+            next_ep=7,
+            final_manuscript="final manuscript",
+            final_title="episode title",
+            final_state_updates={"k": "v"},
+            blueprint={"scene_breakdown": {"a": 1}},
+            arc_data={"arc_no": 2},
+            output_dir=tmp_path,
+            v50_modules_available=True,
+        )
+
+    def test_consume_episode_round_outcome_returns_break_on_pass_save_failure(self, mock_app, tmp_path):
+        from modules.core.stage4_orchestrator import Stage4Orchestrator, _RoundOutcome
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.ui.log = MagicMock()
+        ctx.current_project = mock_app.current_project
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+        orch._process_episode_pass = MagicMock(return_value=False)
+
+        result = orch._consume_episode_round_outcome(
+            outcome=_RoundOutcome(
+                final_manuscript="final manuscript",
+                final_title=None,
+                final_state_updates={},
+                should_return=False,
+            ),
+            next_ep=9,
+            blueprint={"scene_breakdown": {"b": 2}},
+            arc_data={"arc_no": 3},
+            output_dir=tmp_path,
+            v50_modules_available=False,
+            skip_pause=False,
+        )
+
+        assert result.should_return is False
+        assert result.should_break is True
+
+    def test_checkpoint_episode_loop_breaks_on_safety_limit(self, mock_app):
+        from modules.core.stage4_orchestrator import Stage4Orchestrator, _EpisodeLoopCheckpoint
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.ui.log = MagicMock()
+        ctx.current_project = mock_app.current_project
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+
+        result = orch._checkpoint_episode_loop(
+            loop_guard=6,
+            max_loops=5,
+            target_ep=None,
+            chief_writer=MagicMock(),
+        )
+
+        assert isinstance(result, _EpisodeLoopCheckpoint)
+        assert result.should_break is True
+        assert result.next_ep is None
+        ctx.ui.log.assert_called_once()
+
+    def test_checkpoint_episode_loop_breaks_on_target_ep_reached(self, mock_app):
+        from modules.core.stage4_orchestrator import Stage4Orchestrator, _EpisodeLoopCheckpoint
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.ui.log = MagicMock()
+        ctx.current_project = mock_app.current_project
+        ctx.current_project.get_latest_episode_number = MagicMock(return_value=6)
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+        orch._interview_round = MagicMock()
+        orch._set_agent_telemetry_context = MagicMock()
+        orch._log_target_ep_reached = MagicMock()
+
+        result = orch._checkpoint_episode_loop(
+            loop_guard=1,
+            max_loops=5,
+            target_ep=5,
+            chief_writer=MagicMock(),
+        )
+
+        assert isinstance(result, _EpisodeLoopCheckpoint)
+        assert result.should_break is True
+        assert result.next_ep is None
+        orch._set_agent_telemetry_context.assert_called_once_with(ep_num=6, extra_agents=[ANY])
+        orch._log_target_ep_reached.assert_called_once_with(target_ep=5, next_ep=6)
+        ctx.ui.log.assert_called_once()
+
+    def test_checkpoint_episode_loop_returns_next_ep_and_resets_warnings(self, mock_app):
+        from modules.core.stage4_orchestrator import Stage4Orchestrator, _EpisodeLoopCheckpoint
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.ui.log = MagicMock()
+        ctx.current_project = mock_app.current_project
+        ctx.current_project.get_latest_episode_number = MagicMock(return_value=4)
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+        orch._interview_round = MagicMock()
+        orch._interview_round.time_warnings = ["stale"]
+        orch._set_agent_telemetry_context = MagicMock()
+
+        result = orch._checkpoint_episode_loop(
+            loop_guard=1,
+            max_loops=5,
+            target_ep=5,
+            chief_writer=MagicMock(),
+        )
+
+        assert isinstance(result, _EpisodeLoopCheckpoint)
+        assert result.should_break is False
+        assert result.next_ep == 4
+        assert orch.interview_round.time_warnings == []
+        orch._set_agent_telemetry_context.assert_called_once_with(ep_num=4, extra_agents=[ANY])
+        ctx.ui.log.assert_not_called()
+
     def test_prepare_current_episode_inputs_returns_none_when_blueprint_missing(self, mock_app):
         from modules.core.stage4_orchestrator import Stage4Orchestrator
 
@@ -1304,6 +3019,194 @@ class TestStage4OrchestratorImport:
         assert result.blueprint == {"scene_breakdown": {"a": 2}}
         assert result.arc_data == {"arc_no": 1, "ep_start": 1, "ep_end": 10}
         assert result.preflight_advisory == "watch pacing"
+
+    def test_build_blueprint_preflight_request_applies_pins_and_formats_prompt(self, mock_app):
+        from modules.core.stage4_orchestrator import Stage4Orchestrator, _BlueprintPreflightRequest
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.ui.log = MagicMock()
+        ctx.current_project = mock_app.current_project
+        ctx.current_project.db.get_manuscript.return_value = {"content": "prev manuscript"}
+        ctx.world_state = MagicMock()
+        ctx.world_state.get_summary.return_value = "world {state}"
+        ctx.fact_ledger = MagicMock()
+        ctx.fact_ledger.get_canonical_summary.return_value = "facts {ledger}"
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+        apply_pins = MagicMock(
+            return_value={"changes": ["pin-a"], "blueprint": {"scene_breakdown": {"a": 1}}}
+        )
+        extract_tactical = MagicMock(return_value="tactical {note}")
+
+        result = orch._build_blueprint_preflight_request(
+            blueprint={"scene_breakdown": {"a": 0}},
+            arc_data={"tactical_doc": "doc", "episode_details": {"beats": []}},
+            ep_num=4,
+            prompt_template="WS={world_state_summary}\nFL={fact_ledger_summary}\nARC={arc_tactical_excerpt}\nEP={ep_num}\nBP={blueprint_json}",
+            apply_continuity_pins_fn=apply_pins,
+            extract_episode_tactical_fn=extract_tactical,
+        )
+
+        assert isinstance(result, _BlueprintPreflightRequest)
+        assert result.patched_blueprint["_continuity_pins"] == ["pin-a"]
+        assert "world {{state}}" in result.prompt
+        assert "facts {{ledger}}" in result.prompt
+        assert "tactical {{note}}" in result.prompt
+        apply_pins.assert_called_once_with(
+            {"scene_breakdown": {"a": 0}},
+            previous_published_text="prev manuscript",
+            arc_tactical_text="tactical {note}",
+        )
+
+    def test_resolve_blueprint_preflight_result_demotes_false_positive_and_emits_advisory(self, mock_app):
+        from modules.core.stage4_orchestrator import Stage4Orchestrator
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.ui.log = MagicMock()
+        ctx.current_project = mock_app.current_project
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+        orch._log_escalation_event = MagicMock()
+
+        result = orch._resolve_blueprint_preflight_result(
+            ep_num=4,
+            result={
+                "passed": False,
+                "summary": "summary",
+                "issues": [
+                    {"severity": "high", "category": "출처 불분명", "description": "출처가 불분명한 근거"},
+                    {"severity": "high", "category": "사망 NPC", "description": "deceased NPC acts in scene"},
+                ],
+            },
+            patched_blueprint={"scene_breakdown": {"a": 1}},
+        )
+
+        assert result["passed"] is True
+        assert result["issues"][0]["severity"] == "low"
+        assert result["issues"][1]["severity"] == "high"
+        assert "advisory" in result
+        orch._log_escalation_event.assert_called_once_with(4, "TF49b_PREFLIGHT", 2, success=True)
+        assert ctx.ui.log.call_count >= 2
+
+    def test_prepare_interview_loop_runtime_builds_anchor_and_budget(self, mock_app):
+        from modules.core.stage4_orchestrator import Stage4Orchestrator, _InterviewLoopRuntime, _SessionConfig
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.ui.log = MagicMock()
+        ctx.current_project = mock_app.current_project
+        ctx.current_project.get_latest_episode_number = MagicMock(return_value=2)
+        ctx.world_state = MagicMock()
+        ctx.world_state.get_world_laws.return_value = []
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+        orch._register_bible_world_laws = MagicMock()
+        session = _SessionConfig(
+            chief_writer=MagicMock(),
+            manuscript_validator=MagicMock(),
+            consistency_validator=MagicMock(),
+            blocking_validator=MagicMock(),
+            continuity_validator=MagicMock(),
+            s4_genre_type="wuxia",
+            story_context="story",
+            style_guide="style",
+            target_ep=None,
+            output_dir=Path("/tmp/stage4"),
+            v50_modules_available=True,
+            total_planned_ep=10,
+            reference_excerpt="ref",
+        )
+
+        with patch("modules.core.reference_anchor.ReferenceAnchor", return_value="anchor") as anchor_cls:
+            result = orch._prepare_interview_loop_runtime(session)
+
+        assert isinstance(result, _InterviewLoopRuntime)
+        assert result.chief_writer is session.chief_writer
+        assert result.max_loops == 13
+        assert result.anchor_sys == "anchor"
+        assert result.output_dir == Path("/tmp/stage4")
+        assert result.v50_modules_available is True
+        anchor_cls.assert_called_once_with(ctx.current_project)
+        orch._register_bible_world_laws.assert_called_once()
+
+    def test_run_episode_loop_iteration_chains_round_preparation_and_outcome(self, mock_app):
+        from modules.core.stage4_orchestrator import (
+            Stage4Orchestrator,
+            _EpisodeLoopDisposition,
+            _EpisodeLoopInputs,
+            _InterviewLoopRuntime,
+            _SessionConfig,
+        )
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.ui.log = MagicMock()
+        ctx.current_project = mock_app.current_project
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+        orch._prepare_current_episode_inputs = MagicMock(
+            return_value=_EpisodeLoopInputs(
+                blueprint={"scene_breakdown": {"a": 1}},
+                arc_data={"arc_no": 1},
+                preflight_advisory="watch pacing",
+            )
+        )
+        round_ctx = MagicMock()
+        outcome = MagicMock()
+        disposition = _EpisodeLoopDisposition(should_break=True)
+        orch._prepare_episode_round = MagicMock(return_value=round_ctx)
+        orch._handle_round_outcome = MagicMock(return_value=outcome)
+        orch._consume_episode_round_outcome = MagicMock(return_value=disposition)
+        session = _SessionConfig(
+            chief_writer=MagicMock(),
+            manuscript_validator=MagicMock(),
+            consistency_validator=MagicMock(),
+            blocking_validator=MagicMock(),
+            continuity_validator=MagicMock(),
+            s4_genre_type="wuxia",
+            story_context="story",
+            style_guide="style",
+            target_ep=None,
+            output_dir=Path("/tmp/stage4"),
+            v50_modules_available=True,
+            total_planned_ep=10,
+            reference_excerpt="ref",
+        )
+        runtime = _InterviewLoopRuntime(
+            chief_writer=session.chief_writer,
+            output_dir=session.output_dir,
+            v50_modules_available=True,
+            max_loops=10,
+            anchor_sys="anchor",
+        )
+
+        result = orch._run_episode_loop_iteration(
+            session=session,
+            runtime=runtime,
+            next_ep=5,
+            skip_pause=True,
+        )
+
+        assert result == disposition
+        orch._prepare_current_episode_inputs.assert_called_once_with(next_ep=5)
+        orch._prepare_episode_round.assert_called_once()
+        round_kwargs = orch._prepare_episode_round.call_args.kwargs
+        assert round_kwargs["next_ep"] == 5
+        assert round_kwargs["blueprint"] == {"scene_breakdown": {"a": 1}}
+        assert round_kwargs["arc_data"] == {"arc_no": 1}
+        assert round_kwargs["anchor_sys"] == "anchor"
+        orch._handle_round_outcome.assert_called_once_with(round_ctx=round_ctx)
+        orch._consume_episode_round_outcome.assert_called_once_with(
+            outcome=outcome,
+            next_ep=5,
+            blueprint={"scene_breakdown": {"a": 1}},
+            arc_data={"arc_no": 1},
+            output_dir=Path("/tmp/stage4"),
+            v50_modules_available=True,
+            skip_pause=True,
+        )
 
     def test_build_episode_prompt_bundle_delegates_context_builder_and_writer_supplements(self, mock_app):
         from modules.core.stage4_orchestrator import (
@@ -1413,6 +3316,90 @@ class TestStage4OrchestratorImport:
         assert call_kwargs["mandatory_context"] == "mandatory"
         assert call_kwargs["preflight_advisory"] == "watch pacing"
 
+    def test_prepare_episode_round_chains_context_prompt_budget_and_round_context(self, mock_app):
+        from modules.core.stage4_orchestrator import (
+            Stage4Orchestrator,
+            _EpisodePromptBundle,
+            _RoundContext,
+            _WriterPromptSupplements,
+        )
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.ui.log = MagicMock()
+        ctx.current_project = mock_app.current_project
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+        orch._context_builder = MagicMock()
+        orch._context_builder.prepare_episode_context.return_value = {
+            "arc_pos": 2,
+            "total_ep_in_arc": 10,
+            "arc_tactical": "전술",
+            "prev_text": "prev",
+            "prev_ending": "ending",
+            "prev_manuscripts_text": "",
+            "episode_digest": "",
+            "hud_report": "HUD",
+            "current_inventory": [],
+            "current_martial_arts": [],
+            "dead_npcs": [],
+            "item_acquisition_timeline": "",
+            "chain_link_section": "",
+            "world_state_summary": "",
+        }
+        prompt_bundle = _EpisodePromptBundle(
+            genre_name="무협",
+            ctx_prompts={"mandatory_context": "mandatory", "anti_trope_prompt": "anti"},
+            prompt_supplements=_WriterPromptSupplements(
+                purism_prompt="purism",
+                npc_equipment_summary="equip",
+                effective_anti_trope="anti++",
+                intro_dna="CYNICAL",
+            ),
+        )
+        orch._build_episode_prompt_bundle = MagicMock(return_value=prompt_bundle)
+        orch._apply_mandatory_context_budget = MagicMock(return_value="trimmed mandatory")
+        orch._build_episode_round_context = MagicMock(return_value=MagicMock(spec=_RoundContext))
+
+        result = orch._prepare_episode_round(
+            next_ep=5,
+            arc_data={"arc_no": 1},
+            blueprint={"scene_breakdown": {}},
+            chief_writer=MagicMock(),
+            manuscript_validator=MagicMock(),
+            consistency_validator=MagicMock(),
+            blocking_validator=MagicMock(),
+            continuity_validator=MagicMock(),
+            story_context="story",
+            style_guide="style",
+            reference_excerpt="ref",
+            preflight_advisory="watch pacing",
+            anchor_sys=MagicMock(),
+            s4_genre_type="wuxia",
+            v50_modules_available=False,
+        )
+
+        assert isinstance(result, MagicMock)
+        orch._build_episode_prompt_bundle.assert_called_once_with(
+            next_ep=5,
+            arc_data={"arc_no": 1},
+            blueprint={"scene_breakdown": {}},
+            arc_tactical="전술",
+            prev_text="prev",
+            prev_ending="ending",
+            hud_report="HUD",
+            anchor_sys=ANY,
+            s4_genre_type="wuxia",
+            v50_modules_available=False,
+        )
+        orch._apply_mandatory_context_budget.assert_called_once_with("mandatory")
+        call_kwargs = orch._build_episode_round_context.call_args.kwargs
+        assert call_kwargs["ep_ctx"]["arc_pos"] == 2
+        assert call_kwargs["ctx_prompts"]["mandatory_context"] == "trimmed mandatory"
+        assert call_kwargs["prompt_bundle"] is prompt_bundle
+        assert call_kwargs["preflight_advisory"] == "watch pacing"
+        assert ctx.ui.log.call_count == 3
+
     def test_build_writer_prompt_supplements_combines_guard_diversity_and_bible_fields(self, mock_app):
         from modules.core.stage4_orchestrator import Stage4Orchestrator, _WriterPromptSupplements
 
@@ -1480,6 +3467,14 @@ class TestStage4OrchestratorImport:
 
         orch = Stage4Orchestrator(mock_app)
         assert orch.app is mock_app
+
+    def test_outcome_runtime_attached(self, mock_app):
+        from modules.core.stage4_orchestrator import Stage4Orchestrator
+        from modules.core.stage4_outcome_runtime import Stage4OutcomeRuntime
+
+        orch = Stage4Orchestrator(mock_app)
+
+        assert isinstance(orch.outcome_runtime, Stage4OutcomeRuntime)
 
 
 # ══════════════════════════════════════════════════════════════

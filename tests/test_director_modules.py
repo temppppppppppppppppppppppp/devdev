@@ -370,6 +370,79 @@ class TestDirectorEnsemble:
         assert result["selected_index"] == 1
         assert result["selected_blueprint"] == candidates[1]
 
+    def test_build_blueprint_compare_prompt_includes_prev_ending_and_advisory_block(self, director):
+        prompt = director._ensemble._build_blueprint_compare_prompt(
+            candidates=[
+                {
+                    "integrated_scenario": "A" * 1200,
+                    "scene_breakdown": {"scene1": "x", "scene2": "y", "scene3": "z", "scene4": "w"},
+                    "start_location": "서울",
+                    "end_location": "부산",
+                    "time_flow": "하루",
+                    "ending_hook": "다음 화 떡밥",
+                    "_ensemble_meta": {
+                        "strategy": "steady",
+                        "python_warnings": [
+                            {
+                                "severity": "MINOR",
+                                "category": "fidelity",
+                                "message": "Need stronger carry-over",
+                            }
+                        ],
+                    },
+                }
+            ],
+            arc_data={"tactical_doc": "전술서 본문"},
+            ep_num=2,
+            prev_blueprint={"end_location": "인천", "ending_hook": "이전 훅"},
+        )
+
+        assert "전술서 본문" in prompt
+        assert "위치: 인천, 훅: 이전 훅" in prompt
+        assert "[Python Advisory]" in prompt
+        assert "Need stronger carry-over" in prompt
+        assert "[시나리오 전문]" in prompt
+
+    def test_build_blueprint_compare_result_payload_normalizes_advisories_and_revision_required(self, director):
+        candidates = [
+            {
+                "integrated_scenario": "A" * 1000,
+                "scene_breakdown": {"scene1": "x", "scene2": "y", "scene3": "z", "scene4": "w"},
+                "_ensemble_meta": {"strategy": "steady", "python_warnings": [], "quality_risk": False},
+            },
+            {
+                "integrated_scenario": "B" * 1000,
+                "scene_breakdown": {"scene1": "x", "scene2": "y", "scene3": "z", "scene4": "w"},
+                "_ensemble_meta": {
+                    "strategy": "sharp",
+                    "python_warnings": [{"severity": "MINOR", "message": "flag"}],
+                    "quality_risk": True,
+                },
+            },
+        ]
+
+        payload = director._ensemble._build_blueprint_compare_result_payload(
+            result={
+                "selected_index": 9,
+                "decision": "PASS_WITH_WARNING",
+                "score": 82,
+                "reason": "usable",
+                "comparison_notes": "notes",
+                "feedback": "surface advisory",
+                "contradictions": "not-a-list",
+            },
+            candidates=candidates,
+            ep_num=2,
+        )
+
+        assert payload["selected_index"] == 0
+        assert payload["selected_blueprint"] is candidates[0]
+        assert payload["contradictions"] == []
+        assert payload["decision"] == "PASS_WITH_WARNING"
+        assert payload["revision_required"] is True
+        assert payload["quality_risk"] is False
+        assert len(payload["candidate_advisories"]) == 2
+
     def test_compare_and_select_multi_candidate_pass_with_fix_preserves_advisory(self, director):
         candidates = [
             {
@@ -1244,6 +1317,33 @@ class TestDirectorEnsembleCaching:
             f"full_fallback이 variable_prompt로 끝나야 함. actual tail: {full_fb[-len(variable) - 5 :]!r}"
         )
 
+    def test_normalize_ensemble_candidates_pads_and_marks_qualified(self, ensemble):
+        envelope = ensemble._normalize_ensemble_candidates(
+            candidates=[{"strategy": "A", "manuscript": _LONG_MANUSCRIPT, "state_updates": {}}],
+            validation_results=[{"warnings": ["warn-a"]}],
+        )
+
+        assert len(envelope.candidates) == 3
+        assert len(envelope.validation_results) == 3
+        assert envelope.qualified_indices == [0]
+        assert envelope.scm_single_candidate is True
+
+    def test_request_ensemble_selection_response_returns_prompt_error_without_fallback(self, ensemble):
+        from modules.domain.agents.director_ensemble import _EnsemblePromptRequest
+
+        response = ensemble._request_ensemble_selection_response(
+            ep_num=1,
+            prompt_request=_EnsemblePromptRequest(
+                combined_context="",
+                stable_context="",
+                variable_prompt=None,
+                fallback_prompt=None,
+            ),
+        )
+
+        assert response.prompt_error is True
+        assert response.response == ""
+
 
 # ═══════════════════════════════════════════════════════════════
 # [TF-47] Arc 후보 Director 비교 선택 테스트
@@ -1323,6 +1423,69 @@ class TestDirectorArcComparison:
         assert result["selected_index"] == 1
         assert result["selected_arc"] is arcs[1]
         assert result["score"] == 92
+
+    def test_build_arc_compare_prompt_includes_ctx_and_diversity_warning(self, director):
+        prompt = director._ensemble._build_arc_compare_prompt(
+            candidates=[
+                {
+                    "tactical_doc": "A" * 1200,
+                    "ep_count": 4,
+                    "_strategy": "balanced",
+                    "joint_docs": {"joint": "doc"},
+                    "state_constraints": {"rule": "keep order"},
+                    "_ensemble_meta": {"diversity": {"warning": "avoid repetitive openings"}},
+                }
+            ],
+            arc_no=2,
+            curr_block={"title": "block"},
+            prev_arc_context="previous arc context",
+            constraint_block="constraint text",
+            advisory="advisory text",
+        )
+
+        assert "Arc 2번 후보 1개" in prompt
+        assert "previous arc context" in prompt
+        assert "constraint text" in prompt
+        assert "advisory text" in prompt
+        assert "다양성 경고: avoid repetitive openings" in prompt
+        assert "[tactical_doc 전문]" in prompt
+
+    def test_build_arc_compare_result_payload_normalizes_index_and_applies_quality_gate(self, director):
+        arcs = [
+            {"tactical_doc": "A" * 3000, "_strategy": "conservative", "joint_docs": {}, "state_constraints": {}},
+            {"tactical_doc": "B" * 3000, "_strategy": "balanced", "joint_docs": {}, "state_constraints": {}},
+        ]
+        result = director._ensemble._build_arc_compare_result_payload(
+            result={
+                "selected_index": 9,
+                "decision": "PASS",
+                "score": 96,
+                "contradictions": "not-a-list",
+                "reason": "picked",
+                "comparison_notes": "notes",
+                "feedback": "",
+                "fix_scope": "inplace",
+            },
+            candidates=arcs,
+            arc_no=1,
+            candidate_quality_flags=[
+                {
+                    "force_pass_with_fix": True,
+                    "score_cap": 88,
+                    "reasons": ["arc-major:mismatch"],
+                    "feedback": "Major advisory requires PASS_WITH_FIX.",
+                },
+                {},
+            ],
+        )
+
+        assert result["selected_index"] == 0
+        assert result["selected_arc"] is arcs[0]
+        assert result["decision"] == "PASS_WITH_FIX"
+        assert result["score"] == 88
+        assert result["contradictions"] == []
+        assert result["quality_gate_triggered"] is True
+        assert result["quality_gate_reasons"] == ["arc-major:mismatch"]
 
     def test_compare_and_select_arc_preserves_director_pass_with_fix_when_adaptive_adjusts(self, director):
         director.ask = MagicMock(return_value="json")
@@ -1655,6 +1818,83 @@ class TestLane2DirectorEnsembleSemantics:
         assert result["final_verdict"] == "PASS"
         assert "TAIL-STABLE" in captured["prompt"]
         assert "VARIABLE-ANCHOR" in captured["prompt"]
+
+    def test_resolve_ensemble_selection_state_swaps_unqualified_choice(self, ensemble):
+        candidates = [
+            {"strategy": "A", "manuscript": _LONG_MANUSCRIPT, "state_updates": {"lane": "a"}},
+            {"strategy": "B", "manuscript": "short", "state_updates": {}},
+            {"strategy": "C", "manuscript": "", "state_updates": {}},
+        ]
+        result = {
+            "selected": "B",
+            "verdict": "PASS",
+            "score": 88,
+            "selection_reason": "picked B",
+        }
+
+        state = ensemble._resolve_ensemble_selection_state(
+            result=result,
+            candidates=candidates,
+            qualified_indices=[0],
+        )
+
+        assert state.selected_letter == "A"
+        assert state.selected_idx == 0
+        assert state.selected_candidate is candidates[0]
+        assert state.v60_97_swapped is True
+        assert state.original_verdict == "CONDITIONAL_PASS"
+        assert state.score == 50
+        assert "[V60.97 자동 교체: B→A" in result["selection_reason"]
+
+    def test_apply_ensemble_quality_gates_rejects_critical_contradiction(self, ensemble):
+        from modules.domain.agents.director_ensemble import _EnsembleSelectionState
+
+        ensemble._d.apply_adaptive_decision = MagicMock(
+            return_value={"decision": "CONDITIONAL_PASS", "adjusted": True, "threshold_used": 65, "reason": "adaptive"}
+        )
+        state = _EnsembleSelectionState(
+            selected_letter="A",
+            selected_idx=0,
+            selected_candidate={"manuscript": _LONG_MANUSCRIPT, "state_updates": {}},
+            original_verdict="PASS",
+            score=92,
+            pre_firewall_score=92,
+            score_breakdown_raw={"story": 50, "python_warnings": 10},
+            contradiction_check={
+                "found_contradictions": [
+                    {
+                        "type": "timeline",
+                        "severity": "CRITICAL",
+                        "reason": "sequence mismatch",
+                        "fix_suggestion": "repair the timeline only",
+                    }
+                ]
+            },
+            numeric_consistency_review=[],
+            consistency_checklist={},
+            v60_97_swapped=False,
+            contradiction_details=[],
+        )
+
+        final_verdict, adaptive_result = ensemble._apply_ensemble_quality_gates(
+            result={"score_breakdown": state.score_breakdown_raw.copy()},
+            state=state,
+            scm_single_candidate=False,
+            combined_context="",
+            mandatory_context="",
+            arc_pos=1,
+            total_eps=5,
+            retry_count=0,
+        )
+
+        assert state.firewall_triggered is True
+        assert state.firewall_fixable is False
+        assert state.original_verdict == "REJECT"
+        assert state.pre_firewall_score == 92
+        assert state.score == 44
+        assert state.firewall_reason.startswith("Contradiction Firewall:")
+        assert final_verdict == "REJECT"
+        assert adaptive_result["decision"] == "CONDITIONAL_PASS"
 
     def test_compare_and_select_arc_ask_exception_fallback(self, director):
         """LLM ask() 예외 → _fallback_arc_selection으로 PASS 폴백."""

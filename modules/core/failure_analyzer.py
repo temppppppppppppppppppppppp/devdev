@@ -376,19 +376,13 @@ class FailureAnalyzer:
             return "REJECT"
         return ""
 
-    def sink_alignment_summary(
+    def _load_stage_attempt_alignment_sink(
         self,
-        stage: int = 4,
-        lookback: int = 100,
         *,
-        include_session_decisions: bool = False,
-        session_id: str | None = None,
-    ) -> dict:
-        """Cross-check attempt-key alignment across DB and JSON sinks."""
-        stage = max(1, int(stage or 4))
-        lookback = max(1, int(lookback or 100))
-        session_id = str(session_id or "").strip()
-
+        stage: int,
+        lookback: int,
+        session_id: str,
+    ) -> dict[str, dict] | None:
         try:
             if session_id:
                 stage_attempt_rows = self.db.conn.execute(
@@ -422,7 +416,7 @@ class FailureAnalyzer:
                 extra={"stage": stage, "session_id": session_id},
             )
             logging.debug("[FailureAnalyzer] sink_alignment stage_attempts failed: %s", _e)
-            return {}
+            return None
 
         stage_attempts: dict[str, dict] = {}
         for row in stage_attempt_rows:
@@ -444,7 +438,15 @@ class FailureAnalyzer:
                         retry_budget_axes=advisory_flags.get("retry_budget_axes"),
                     ),
                 }
+        return stage_attempts
 
+    def _load_pass_rate_monitor_alignment_sink(
+        self,
+        *,
+        stage: int,
+        lookback: int,
+        session_id: str,
+    ) -> dict[str, dict]:
         pass_rate_monitor: dict[str, dict] = {}
         for row in self._load_pass_rate_monitor_entries(stage=stage)[-lookback:]:
             attempt_key = str(row.get("attempt_key", "") or "").strip()
@@ -467,427 +469,675 @@ class FailureAnalyzer:
                     retry_budget_axes=row.get("retry_budget_axes"),
                 ),
             }
+        return pass_rate_monitor
 
+    def _load_director_selection_alignment_sink(
+        self,
+        *,
+        stage: int,
+        lookback: int,
+        session_id: str,
+    ) -> dict[str, dict]:
         director_selections: dict[str, dict] = {}
-        if stage in (2, 3, 4):
-            try:
-                director_rows = self.db.conn.execute(
-                    """
-                    SELECT id, attempt_key, verdict, score, candidate_key, content_hash, artifact_path,
-                           selection_reason, verdict_reason, fix_scope, advisory_warnings
-                    FROM director_selections
-                    WHERE COALESCE(stage, CASE WHEN ? = 3 THEN 3 ELSE 4 END) = ? AND COALESCE(attempt_key, '') != ''
-                    ORDER BY id DESC
-                    LIMIT ?
-                    """,
-                    (stage, stage, lookback),
-                ).fetchall()
-            except Exception as _e:
-                self._report_soft_failure(
-                    "sink_alignment_director_selections",
-                    _e,
-                    message="director_selections load for sink_alignment_summary failed",
-                    extra={"stage": stage, "session_id": session_id},
+        if stage not in (2, 3, 4):
+            return director_selections
+        try:
+            director_rows = self.db.conn.execute(
+                """
+                SELECT id, attempt_key, verdict, score, candidate_key, content_hash, artifact_path,
+                       selection_reason, verdict_reason, fix_scope, advisory_warnings
+                FROM director_selections
+                WHERE COALESCE(stage, CASE WHEN ? = 3 THEN 3 ELSE 4 END) = ? AND COALESCE(attempt_key, '') != ''
+                ORDER BY id DESC
+                LIMIT ?
+                """,
+                (stage, stage, lookback),
+            ).fetchall()
+        except Exception as _e:
+            self._report_soft_failure(
+                "sink_alignment_director_selections",
+                _e,
+                message="director_selections load for sink_alignment_summary failed",
+                extra={"stage": stage, "session_id": session_id},
+            )
+            logging.debug("[FailureAnalyzer] sink_alignment director_selections failed: %s", _e)
+            director_rows = []
+        for row in director_rows:
+            attempt_key = str(row["attempt_key"] or "").strip()
+            if session_id and not self._attempt_key_matches_session_id(attempt_key, session_id):
+                continue
+            if attempt_key and attempt_key not in director_selections:
+                advisory_warnings = self._safe_json_loads(row["advisory_warnings"], "{}")
+                if not isinstance(advisory_warnings, dict):
+                    advisory_warnings = {}
+                has_explicit_gate_repair = bool(
+                    advisory_warnings.get("gate_semantics")
+                    or advisory_warnings.get("fix_pack")
+                    or advisory_warnings.get("retry_budget_axes")
+                    or str(row["fix_scope"] or "").strip()
                 )
-                logging.debug("[FailureAnalyzer] sink_alignment director_selections failed: %s", _e)
-                director_rows = []
-            for row in director_rows:
-                attempt_key = str(row["attempt_key"] or "").strip()
-                if session_id and not self._attempt_key_matches_session_id(attempt_key, session_id):
-                    continue
-                if attempt_key and attempt_key not in director_selections:
-                    advisory_warnings = self._safe_json_loads(row["advisory_warnings"], "{}")
-                    if not isinstance(advisory_warnings, dict):
-                        advisory_warnings = {}
-                    has_explicit_gate_repair = bool(
-                        advisory_warnings.get("gate_semantics")
-                        or advisory_warnings.get("fix_pack")
-                        or advisory_warnings.get("retry_budget_axes")
-                        or str(row["fix_scope"] or "").strip()
-                    )
-                    director_selections[attempt_key] = {
-                        "initial_verdict": str(row["verdict"] or ""),
-                        "initial_score": self._coerce_int(row["score"]),
-                        "candidate_key": str(row["candidate_key"] or "").strip(),
-                        "content_hash": str(row["content_hash"] or "").strip(),
-                        "artifact_path": str(row["artifact_path"] or "").strip(),
-                        "selection_reason": str(row["selection_reason"] or "").strip(),
-                        "verdict_reason": str(row["verdict_reason"] or "").strip(),
-                        "fix_scope": str(row["fix_scope"] or "").strip(),
-                        **self._extract_gate_repair_bundle(
-                            gate_semantics=advisory_warnings.get("gate_semantics"),
-                            fix_pack=advisory_warnings.get("fix_pack"),
-                            retry_budget_axes=advisory_warnings.get("retry_budget_axes"),
-                            director_verdict=row["verdict"] if has_explicit_gate_repair else "",
-                            repair_scope=row["fix_scope"] if has_explicit_gate_repair else "",
-                        ),
-                    }
-
-        session_decisions: dict[str, dict] = {}
-        session_decision_rows_without_attempt_key = 0
-        if include_session_decisions:
-            for row in self._load_session_decision_entries(stage=stage)[-lookback:]:
-                attempt_key = str(row.get("attempt_key", "") or "").strip()
-                if not attempt_key:
-                    session_decision_rows_without_attempt_key += 1
-                    continue
-                if session_id and not self._attempt_key_matches_session_id(attempt_key, session_id):
-                    continue
-                if attempt_key not in session_decisions:
-                    session_decisions[attempt_key] = row
-
-        episode_production: dict[str, dict] = {}
-        if stage == 4:
-            for row in self._load_episode_production_entries(min_score=0)[-lookback:]:
-                attempt_key = str(row.get("attempt_key", "") or "").strip()
-                if not attempt_key:
-                    continue
-                if session_id and not self._attempt_key_matches_session_id(attempt_key, session_id):
-                    continue
-                patch_trace = row.get("patch_trace", {}) or {}
-                if not isinstance(patch_trace, dict):
-                    patch_trace = {}
-                episode_production[attempt_key] = {
-                    "initial_verdict": str(row.get("initial_verdict", row.get("verdict", "")) or ""),
-                    "final_verdict": str(row.get("final_verdict", row.get("verdict", "")) or ""),
-                    "final_score": self._coerce_int(row.get("final_score", row.get("score", 0))),
-                    "patch_strategy": str(patch_trace.get("patch_strategy", "") or ""),
-                    "candidate_key": str(row.get("candidate_key", "") or "").strip(),
-                    "content_hash": str(row.get("content_hash", "") or "").strip(),
-                    "artifact_path": str(row.get("artifact_path", "") or "").strip(),
-                    "selection_reason": str(row.get("selection_reason", row.get("reason", "")) or "").strip(),
-                    "verdict_reason": str(
-                        row.get("verdict_reason", row.get("reason", row.get("selection_reason", ""))) or ""
-                    ).strip(),
-                    "selection_candidate_key": str(
-                        row.get("selection_candidate_key", row.get("candidate_key", "")) or ""
-                    ).strip(),
+                director_selections[attempt_key] = {
+                    "initial_verdict": str(row["verdict"] or ""),
+                    "initial_score": self._coerce_int(row["score"]),
+                    "candidate_key": str(row["candidate_key"] or "").strip(),
+                    "content_hash": str(row["content_hash"] or "").strip(),
+                    "artifact_path": str(row["artifact_path"] or "").strip(),
+                    "selection_reason": str(row["selection_reason"] or "").strip(),
+                    "verdict_reason": str(row["verdict_reason"] or "").strip(),
+                    "fix_scope": str(row["fix_scope"] or "").strip(),
                     **self._extract_gate_repair_bundle(
-                        director_verdict=row.get("director_verdict"),
-                        gate_basis=row.get("gate_basis"),
-                        repair_scope=row.get("repair_scope"),
-                        fix_pack=row.get("fix_pack"),
-                        retry_budget_axes=(row.get("flags") or {}).get("retry_budget_axes")
-                        if isinstance(row.get("flags"), dict)
-                        else {},
+                        gate_semantics=advisory_warnings.get("gate_semantics"),
+                        fix_pack=advisory_warnings.get("fix_pack"),
+                        retry_budget_axes=advisory_warnings.get("retry_budget_axes"),
+                        director_verdict=row["verdict"] if has_explicit_gate_repair else "",
+                        repair_scope=row["fix_scope"] if has_explicit_gate_repair else "",
                     ),
                 }
+        return director_selections
 
-        final_authority_rows: list[dict] = []
-        final_authority_by_attempt: dict[str, dict] = {}
-        if stage == 4:
-            try:
-                final_authority_rows = self.db.get_stage4_final_authority_rows(
-                    limit=lookback,
-                    session_id=session_id or None,
-                )
-                final_authority_by_attempt = {
-                    str(row.get("attempt_key") or "").strip(): row
-                    for row in final_authority_rows
-                    if str(row.get("attempt_key") or "").strip()
-                }
-            except Exception as _e:
-                self._report_soft_failure(
-                    "sink_alignment_final_authority_contract",
-                    _e,
-                    message="stage4 final authority projection failed",
-                    extra={"stage": stage, "session_id": session_id},
-                )
-                logging.debug("[FailureAnalyzer] sink_alignment final authority projection failed: %s", _e)
+    def _load_session_decision_alignment_sink(
+        self,
+        *,
+        stage: int,
+        lookback: int,
+        include_session_decisions: bool,
+        session_id: str,
+    ) -> tuple[dict[str, dict], int]:
+        session_decisions: dict[str, dict] = {}
+        session_decision_rows_without_attempt_key = 0
+        if not include_session_decisions:
+            return session_decisions, session_decision_rows_without_attempt_key
+        for row in self._load_session_decision_entries(stage=stage)[-lookback:]:
+            attempt_key = str(row.get("attempt_key", "") or "").strip()
+            if not attempt_key:
+                session_decision_rows_without_attempt_key += 1
+                continue
+            if session_id and not self._attempt_key_matches_session_id(attempt_key, session_id):
+                continue
+            if attempt_key not in session_decisions:
+                session_decisions[attempt_key] = row
+        return session_decisions, session_decision_rows_without_attempt_key
 
+    def _load_episode_production_alignment_sink(
+        self,
+        *,
+        stage: int,
+        lookback: int,
+        session_id: str,
+    ) -> dict[str, dict]:
+        episode_production: dict[str, dict] = {}
+        if stage != 4:
+            return episode_production
+        for row in self._load_episode_production_entries(min_score=0)[-lookback:]:
+            attempt_key = str(row.get("attempt_key", "") or "").strip()
+            if not attempt_key:
+                continue
+            if session_id and not self._attempt_key_matches_session_id(attempt_key, session_id):
+                continue
+            patch_trace = row.get("patch_trace", {}) or {}
+            if not isinstance(patch_trace, dict):
+                patch_trace = {}
+            episode_production[attempt_key] = {
+                "initial_verdict": str(row.get("initial_verdict", row.get("verdict", "")) or ""),
+                "final_verdict": str(row.get("final_verdict", row.get("verdict", "")) or ""),
+                "final_score": self._coerce_int(row.get("final_score", row.get("score", 0))),
+                "patch_strategy": str(patch_trace.get("patch_strategy", "") or ""),
+                "candidate_key": str(row.get("candidate_key", "") or "").strip(),
+                "content_hash": str(row.get("content_hash", "") or "").strip(),
+                "artifact_path": str(row.get("artifact_path", "") or "").strip(),
+                "selection_reason": str(row.get("selection_reason", row.get("reason", "")) or "").strip(),
+                "verdict_reason": str(
+                    row.get("verdict_reason", row.get("reason", row.get("selection_reason", ""))) or ""
+                ).strip(),
+                "selection_candidate_key": str(
+                    row.get("selection_candidate_key", row.get("candidate_key", "")) or ""
+                ).strip(),
+                **self._extract_gate_repair_bundle(
+                    director_verdict=row.get("director_verdict"),
+                    gate_basis=row.get("gate_basis"),
+                    repair_scope=row.get("repair_scope"),
+                    fix_pack=row.get("fix_pack"),
+                    retry_budget_axes=(row.get("flags") or {}).get("retry_budget_axes")
+                    if isinstance(row.get("flags"), dict)
+                    else {},
+                ),
+            }
+        return episode_production
+
+    def _load_final_authority_alignment_sink(
+        self,
+        *,
+        stage: int,
+        lookback: int,
+        session_id: str,
+    ) -> tuple[list[dict], dict[str, dict]]:
+        if stage != 4:
+            return [], {}
+        try:
+            final_authority_rows = self.db.get_stage4_final_authority_rows(
+                limit=lookback,
+                session_id=session_id or None,
+            )
+            final_authority_by_attempt = {
+                str(row.get("attempt_key") or "").strip(): row
+                for row in final_authority_rows
+                if str(row.get("attempt_key") or "").strip()
+            }
+            return final_authority_rows, final_authority_by_attempt
+        except Exception as _e:
+            self._report_soft_failure(
+                "sink_alignment_final_authority_contract",
+                _e,
+                message="stage4 final authority projection failed",
+                extra={"stage": stage, "session_id": session_id},
+            )
+            logging.debug("[FailureAnalyzer] sink_alignment final authority projection failed: %s", _e)
+            return [], {}
+
+    @staticmethod
+    def _build_sink_alignment_attempt_sets(
+        *,
+        stage: int,
+        include_session_decisions: bool,
+        stage_attempts: dict[str, dict],
+        pass_rate_monitor: dict[str, dict],
+        director_selections: dict[str, dict],
+        session_decisions: dict[str, dict],
+        episode_production: dict[str, dict],
+    ) -> tuple[set[str], set[str], set[str]]:
         final_union = set(stage_attempts) | set(pass_rate_monitor)
         if include_session_decisions:
             final_union |= set(session_decisions)
-        lifecycle_union = set()
+        lifecycle_union: set[str] = set()
         if stage == 4:
             lifecycle_union = set(director_selections) | set(episode_production)
         attempts_considered = final_union | lifecycle_union
-        if not attempts_considered and session_decision_rows_without_attempt_key <= 0:
-            return {}
+        return final_union, lifecycle_union, attempts_considered
 
+    @staticmethod
+    def _collect_sink_alignment_missing_buckets(
+        *,
+        include_session_decisions: bool,
+        final_union: set[str],
+        lifecycle_union: set[str],
+        stage_attempts: dict[str, dict],
+        pass_rate_monitor: dict[str, dict],
+        director_selections: dict[str, dict],
+        session_decisions: dict[str, dict],
+        episode_production: dict[str, dict],
+    ) -> tuple[dict[str, dict], dict[str, dict], dict[str, dict]]:
         final_missing = {
-            "stage_attempts": self._compact_examples(list(final_union - set(stage_attempts))),
-            "pass_rate_monitor": self._compact_examples(list(final_union - set(pass_rate_monitor))),
+            "stage_attempts": FailureAnalyzer._compact_examples(list(final_union - set(stage_attempts))),
+            "pass_rate_monitor": FailureAnalyzer._compact_examples(list(final_union - set(pass_rate_monitor))),
         }
         if include_session_decisions:
-            final_missing["session_decisions"] = self._compact_examples(list(final_union - set(session_decisions)))
+            final_missing["session_decisions"] = FailureAnalyzer._compact_examples(
+                list(final_union - set(session_decisions))
+            )
         final_missing = {key: value for key, value in final_missing.items() if value}
 
         lifecycle_missing: dict[str, dict] = {}
         lifecycle_missing_in_final: dict[str, dict] = {}
         if lifecycle_union:
             lifecycle_missing = {
-                "director_selections": self._compact_examples(list(lifecycle_union - set(director_selections))),
-                "episode_production": self._compact_examples(list(lifecycle_union - set(episode_production))),
+                "director_selections": FailureAnalyzer._compact_examples(
+                    list(lifecycle_union - set(director_selections))
+                ),
+                "episode_production": FailureAnalyzer._compact_examples(
+                    list(lifecycle_union - set(episode_production))
+                ),
             }
             lifecycle_missing = {key: value for key, value in lifecycle_missing.items() if value}
             lifecycle_missing_in_final = {
-                "stage_attempts": self._compact_examples(list(lifecycle_union - set(stage_attempts))),
-                "pass_rate_monitor": self._compact_examples(list(lifecycle_union - set(pass_rate_monitor))),
+                "stage_attempts": FailureAnalyzer._compact_examples(list(lifecycle_union - set(stage_attempts))),
+                "pass_rate_monitor": FailureAnalyzer._compact_examples(
+                    list(lifecycle_union - set(pass_rate_monitor))
+                ),
             }
             lifecycle_missing_in_final = {
                 key: value for key, value in lifecycle_missing_in_final.items() if value
             }
+        return final_missing, lifecycle_missing, lifecycle_missing_in_final
 
-        final_verdict_mismatches: list[dict] = []
-        final_score_mismatches: list[dict] = []
-        initial_verdict_mismatches: list[dict] = []
-        director_verdict_mismatches: list[dict] = []
-        gate_basis_mismatches: list[dict] = []
-        repair_scope_mismatches: list[dict] = []
-        fix_pack_target_kind_mismatches: list[dict] = []
-        fix_pack_patch_targets_mismatches: list[dict] = []
-        retry_budget_axes_mismatches: list[dict] = []
-        patch_strategy_mismatches: list[dict] = []
-        candidate_key_mismatches: list[dict] = []
-        selection_candidate_key_mismatches: list[dict] = []
-        content_hash_mismatches: list[dict] = []
-        artifact_path_mismatches: list[dict] = []
-        artifact_metadata_missing: list[dict] = []
-        selection_reason_mismatches: list[dict] = []
-        verdict_reason_mismatches: list[dict] = []
-        fix_scope_mismatches: list[dict] = []
-        gate_repair_metadata_missing: list[dict] = []
-        rationale_metadata_missing: list[dict] = []
-        artifact_missing_files: list[dict] = []
-        selection_companion_pre_final_rows: list[dict] = []
-        selection_companion_missing_rows: list[dict] = []
+    @staticmethod
+    def _collect_sink_alignment_companion_rows(
+        *,
+        attempt_key: str,
+        authority_row: dict[str, object] | None,
+    ) -> dict[str, list[dict]]:
+        results = {
+            "selection_companion_pre_final_rows": [],
+            "selection_companion_missing_rows": [],
+        }
+        if not authority_row:
+            return results
+
+        companion_status = str(authority_row.get("selection_companion_status") or "").strip()
+        if companion_status == "pre_final_candidate":
+            results["selection_companion_pre_final_rows"].append(
+                {
+                    "attempt_key": attempt_key,
+                    "ep_num": authority_row.get("ep_num"),
+                    "attempt_num": authority_row.get("attempt_num"),
+                    "selection_artifact_path": authority_row.get("selection_artifact_path", ""),
+                    "final_artifact_path": authority_row.get("final_artifact_path", ""),
+                    "selection_content_hash": authority_row.get("selection_content_hash", ""),
+                    "final_content_hash": authority_row.get("final_content_hash", ""),
+                    "diff_fields": list(authority_row.get("selection_companion_diff_fields") or []),
+                }
+            )
+        elif companion_status == "missing":
+            results["selection_companion_missing_rows"].append(
+                {
+                    "attempt_key": attempt_key,
+                    "ep_num": authority_row.get("ep_num"),
+                    "attempt_num": authority_row.get("attempt_num"),
+                }
+            )
+        return results
+
+    @staticmethod
+    def _collect_sink_alignment_verdict_results(
+        *,
+        attempt_key: str,
+        stage_attempts: dict[str, dict],
+        pass_rate_monitor: dict[str, dict],
+        director_selections: dict[str, dict],
+        session_decisions: dict[str, dict],
+        episode_production: dict[str, dict],
+    ) -> dict[str, list[dict]]:
+        results = {
+            "final_verdict_mismatches": [],
+            "final_score_mismatches": [],
+            "initial_verdict_mismatches": [],
+            "patch_strategy_mismatches": [],
+        }
+
+        final_verdicts = {}
+        if attempt_key in stage_attempts:
+            final_verdicts["stage_attempts"] = stage_attempts[attempt_key]["final_verdict"]
+        if attempt_key in pass_rate_monitor:
+            final_verdicts["pass_rate_monitor"] = pass_rate_monitor[attempt_key]["final_verdict"]
+        if attempt_key in session_decisions:
+            final_verdicts["session_decisions"] = session_decisions[attempt_key]["final_verdict"]
+        if attempt_key in episode_production:
+            final_verdicts["episode_production"] = episode_production[attempt_key]["final_verdict"]
+        final_verdicts = {key: value for key, value in final_verdicts.items() if value}
+        if len(set(final_verdicts.values())) > 1:
+            results["final_verdict_mismatches"].append({"attempt_key": attempt_key, **final_verdicts})
+
+        final_scores = {}
+        if attempt_key in stage_attempts and stage_attempts[attempt_key]["final_score"] is not None:
+            final_scores["stage_attempts"] = stage_attempts[attempt_key]["final_score"]
+        if attempt_key in session_decisions and session_decisions[attempt_key]["final_score"] is not None:
+            final_scores["session_decisions"] = session_decisions[attempt_key]["final_score"]
+        if attempt_key in episode_production and episode_production[attempt_key]["final_score"] is not None:
+            final_scores["episode_production"] = episode_production[attempt_key]["final_score"]
+        if len(set(final_scores.values())) > 1:
+            results["final_score_mismatches"].append({"attempt_key": attempt_key, **final_scores})
+
+        if attempt_key in director_selections and attempt_key in episode_production:
+            ds_verdict = director_selections[attempt_key]["initial_verdict"]
+            ep_verdict = episode_production[attempt_key]["initial_verdict"]
+            if ds_verdict and ep_verdict and ds_verdict != ep_verdict:
+                results["initial_verdict_mismatches"].append(
+                    {
+                        "attempt_key": attempt_key,
+                        "director_selections": ds_verdict,
+                        "episode_production": ep_verdict,
+                    }
+                )
+
+        if attempt_key in pass_rate_monitor and attempt_key in episode_production:
+            prm_strategy = pass_rate_monitor[attempt_key]["patch_strategy"]
+            ep_strategy = episode_production[attempt_key]["patch_strategy"]
+            if prm_strategy != ep_strategy:
+                results["patch_strategy_mismatches"].append(
+                    {
+                        "attempt_key": attempt_key,
+                        "pass_rate_monitor": prm_strategy,
+                        "episode_production": ep_strategy,
+                    }
+                )
+        return results
+
+    def _collect_sink_alignment_gate_repair_results(
+        self,
+        *,
+        stage: int,
+        attempt_key: str,
+        stage_attempts: dict[str, dict],
+        pass_rate_monitor: dict[str, dict],
+        director_selections: dict[str, dict],
+        session_decisions: dict[str, dict],
+        episode_production: dict[str, dict],
+    ) -> dict[str, list[dict]]:
+        results = {
+            "director_verdict_mismatches": [],
+            "gate_basis_mismatches": [],
+            "repair_scope_mismatches": [],
+            "fix_pack_target_kind_mismatches": [],
+            "fix_pack_patch_targets_mismatches": [],
+            "retry_budget_axes_mismatches": [],
+            "gate_repair_metadata_missing": [],
+        }
+        if stage != 4:
+            return results
+
+        gate_repair_sinks: dict[str, dict[str, object]] = {}
+        if attempt_key in stage_attempts:
+            gate_repair_sinks["stage_attempts"] = stage_attempts[attempt_key]
+        if attempt_key in pass_rate_monitor:
+            gate_repair_sinks["pass_rate_monitor"] = pass_rate_monitor[attempt_key]
+        if attempt_key in session_decisions:
+            gate_repair_sinks["session_decisions"] = session_decisions[attempt_key]
+        if attempt_key in episode_production:
+            gate_repair_sinks["episode_production"] = episode_production[attempt_key]
+        if attempt_key in director_selections:
+            gate_repair_sinks["director_selections"] = director_selections[attempt_key]
+
+        for field_name, result_key, sinks in (
+            (
+                "director_verdict",
+                "director_verdict_mismatches",
+                ("stage_attempts", "pass_rate_monitor", "session_decisions", "episode_production", "director_selections"),
+            ),
+            (
+                "gate_basis",
+                "gate_basis_mismatches",
+                ("stage_attempts", "pass_rate_monitor", "session_decisions", "episode_production", "director_selections"),
+            ),
+            (
+                "repair_scope",
+                "repair_scope_mismatches",
+                ("stage_attempts", "pass_rate_monitor", "session_decisions", "episode_production", "director_selections"),
+            ),
+            (
+                "fix_pack_target_kind",
+                "fix_pack_target_kind_mismatches",
+                ("stage_attempts", "pass_rate_monitor", "session_decisions", "episode_production", "director_selections"),
+            ),
+            (
+                "fix_pack_patch_targets",
+                "fix_pack_patch_targets_mismatches",
+                ("stage_attempts", "pass_rate_monitor", "session_decisions", "episode_production", "director_selections"),
+            ),
+            (
+                "retry_budget_axes",
+                "retry_budget_axes_mismatches",
+                ("stage_attempts", "pass_rate_monitor", "session_decisions", "episode_production"),
+            ),
+        ):
+            values_by_sink = {
+                sink: gate_repair_sinks[sink].get(field_name)
+                for sink in sinks
+                if sink in gate_repair_sinks
+            }
+            nonempty_values = self._nonempty_value_map(values_by_sink)
+            if len(set(nonempty_values.values())) > 1:
+                results[result_key].append({"attempt_key": attempt_key, **nonempty_values})
+            missing_sinks = self._missing_value_sinks(values_by_sink)
+            if nonempty_values and missing_sinks:
+                results["gate_repair_metadata_missing"].append(
+                    {"attempt_key": attempt_key, "field": field_name, "sinks": missing_sinks}
+                )
+        return results
+
+    def _collect_sink_alignment_artifact_results(
+        self,
+        *,
+        attempt_key: str,
+        stage_attempts: dict[str, dict],
+        pass_rate_monitor: dict[str, dict],
+        director_selections: dict[str, dict],
+        session_decisions: dict[str, dict],
+        episode_production: dict[str, dict],
+    ) -> dict[str, list[dict]]:
+        results = {
+            "candidate_key_mismatches": [],
+            "selection_candidate_key_mismatches": [],
+            "content_hash_mismatches": [],
+            "artifact_path_mismatches": [],
+            "artifact_metadata_missing": [],
+            "artifact_missing_files": [],
+        }
+
+        final_artifact_fields: dict[str, dict[str, str]] = {}
+        if attempt_key in stage_attempts:
+            final_artifact_fields["stage_attempts"] = {
+                "candidate_key": stage_attempts[attempt_key]["candidate_key"],
+                "content_hash": stage_attempts[attempt_key]["content_hash"],
+                "artifact_path": stage_attempts[attempt_key]["artifact_path"],
+            }
+        if attempt_key in pass_rate_monitor:
+            final_artifact_fields["pass_rate_monitor"] = {
+                "candidate_key": pass_rate_monitor[attempt_key]["candidate_key"],
+                "content_hash": pass_rate_monitor[attempt_key]["content_hash"],
+                "artifact_path": pass_rate_monitor[attempt_key]["artifact_path"],
+            }
+        if attempt_key in session_decisions:
+            final_artifact_fields["session_decisions"] = {
+                "candidate_key": session_decisions[attempt_key]["candidate_key"],
+                "content_hash": session_decisions[attempt_key]["content_hash"],
+                "artifact_path": session_decisions[attempt_key]["artifact_path"],
+            }
+        if attempt_key in episode_production:
+            final_artifact_fields["episode_production"] = {
+                "candidate_key": episode_production[attempt_key]["candidate_key"],
+                "content_hash": episode_production[attempt_key]["content_hash"],
+                "artifact_path": episode_production[attempt_key]["artifact_path"],
+            }
+
+        if final_artifact_fields:
+            for field_name, result_key in (
+                ("candidate_key", "candidate_key_mismatches"),
+                ("content_hash", "content_hash_mismatches"),
+                ("artifact_path", "artifact_path_mismatches"),
+            ):
+                values_by_sink = {
+                    sink: payload.get(field_name, "") for sink, payload in final_artifact_fields.items()
+                }
+                nonempty_values = self._nonempty_value_map(values_by_sink)
+                if len(set(nonempty_values.values())) > 1:
+                    results[result_key].append({"attempt_key": attempt_key, **nonempty_values})
+                missing_sinks = self._missing_value_sinks(values_by_sink)
+                if missing_sinks:
+                    results["artifact_metadata_missing"].append(
+                        {"attempt_key": attempt_key, "field": field_name, "sinks": missing_sinks}
+                    )
+
+            for sink_name, payload in final_artifact_fields.items():
+                artifact_path = str(payload.get("artifact_path", "") or "").strip()
+                if not artifact_path:
+                    continue
+                file_exists = self._artifact_file_exists(artifact_path)
+                if file_exists is False:
+                    results["artifact_missing_files"].append(
+                        {"attempt_key": attempt_key, "sink": sink_name, "artifact_path": artifact_path}
+                    )
+
+        if attempt_key in director_selections and attempt_key in episode_production:
+            ds_candidate_key = str(director_selections[attempt_key]["candidate_key"] or "").strip()
+            ep_candidate_key = str(episode_production[attempt_key]["selection_candidate_key"] or "").strip()
+            if ds_candidate_key and ep_candidate_key and ds_candidate_key != ep_candidate_key:
+                results["selection_candidate_key_mismatches"].append(
+                    {
+                        "attempt_key": attempt_key,
+                        "director_selections": ds_candidate_key,
+                        "episode_production": ep_candidate_key,
+                    }
+                )
+        return results
+
+    def _collect_sink_alignment_rationale_results(
+        self,
+        *,
+        include_session_decisions: bool,
+        attempt_key: str,
+        director_selections: dict[str, dict],
+        session_decisions: dict[str, dict],
+        episode_production: dict[str, dict],
+    ) -> dict[str, list[dict]]:
+        results = {
+            "selection_reason_mismatches": [],
+            "verdict_reason_mismatches": [],
+            "fix_scope_mismatches": [],
+            "rationale_metadata_missing": [],
+        }
+        if not include_session_decisions:
+            return results
+
+        rationale_values_by_field: dict[str, dict[str, str]] = {}
+        if attempt_key in director_selections:
+            rationale_values_by_field.setdefault("selection_reason", {})["director_selections"] = (
+                director_selections[attempt_key]["selection_reason"]
+            )
+            rationale_values_by_field.setdefault("verdict_reason", {})["director_selections"] = (
+                director_selections[attempt_key]["verdict_reason"]
+            )
+            rationale_values_by_field.setdefault("fix_scope", {})["director_selections"] = (
+                director_selections[attempt_key]["fix_scope"]
+            )
+        if attempt_key in session_decisions:
+            rationale_values_by_field.setdefault("selection_reason", {})["session_decisions"] = str(
+                session_decisions[attempt_key].get("selection_reason", "") or ""
+            ).strip()
+            rationale_values_by_field.setdefault("verdict_reason", {})["session_decisions"] = str(
+                session_decisions[attempt_key].get("verdict_reason", "") or ""
+            ).strip()
+            rationale_values_by_field.setdefault("fix_scope", {})["session_decisions"] = str(
+                session_decisions[attempt_key].get("fix_scope", "") or ""
+            ).strip()
+        if attempt_key in episode_production:
+            rationale_values_by_field.setdefault("selection_reason", {})["episode_production"] = str(
+                episode_production[attempt_key].get("selection_reason", "") or ""
+            ).strip()
+            rationale_values_by_field.setdefault("verdict_reason", {})["episode_production"] = str(
+                episode_production[attempt_key].get("verdict_reason", "") or ""
+            ).strip()
+
+        for field_name, result_key in (
+            ("selection_reason", "selection_reason_mismatches"),
+            ("verdict_reason", "verdict_reason_mismatches"),
+            ("fix_scope", "fix_scope_mismatches"),
+        ):
+            values_by_sink = rationale_values_by_field.get(field_name, {})
+            if len(values_by_sink) < 2:
+                continue
+            nonempty_values = self._nonempty_value_map(values_by_sink)
+            if len(set(nonempty_values.values())) > 1:
+                results[result_key].append({"attempt_key": attempt_key, **nonempty_values})
+            missing_sinks = self._missing_value_sinks(values_by_sink)
+            if missing_sinks and nonempty_values:
+                results["rationale_metadata_missing"].append(
+                    {"attempt_key": attempt_key, "field": field_name, "sinks": missing_sinks}
+                )
+        return results
+
+    def _collect_sink_alignment_consistency_results(
+        self,
+        *,
+        stage: int,
+        include_session_decisions: bool,
+        attempts_considered: set[str],
+        stage_attempts: dict[str, dict],
+        pass_rate_monitor: dict[str, dict],
+        director_selections: dict[str, dict],
+        session_decisions: dict[str, dict],
+        episode_production: dict[str, dict],
+        final_authority_by_attempt: dict[str, dict],
+    ) -> dict[str, object]:
+        results = {
+            "final_verdict_mismatches": [],
+            "final_score_mismatches": [],
+            "initial_verdict_mismatches": [],
+            "director_verdict_mismatches": [],
+            "gate_basis_mismatches": [],
+            "repair_scope_mismatches": [],
+            "fix_pack_target_kind_mismatches": [],
+            "fix_pack_patch_targets_mismatches": [],
+            "retry_budget_axes_mismatches": [],
+            "patch_strategy_mismatches": [],
+            "candidate_key_mismatches": [],
+            "selection_candidate_key_mismatches": [],
+            "content_hash_mismatches": [],
+            "artifact_path_mismatches": [],
+            "artifact_metadata_missing": [],
+            "selection_reason_mismatches": [],
+            "verdict_reason_mismatches": [],
+            "fix_scope_mismatches": [],
+            "gate_repair_metadata_missing": [],
+            "rationale_metadata_missing": [],
+            "artifact_missing_files": [],
+            "selection_companion_pre_final_rows": [],
+            "selection_companion_missing_rows": [],
+        }
 
         for attempt_key in sorted(attempts_considered):
-            authority_row = final_authority_by_attempt.get(attempt_key)
-            if authority_row:
-                companion_status = str(authority_row.get("selection_companion_status") or "").strip()
-                if companion_status == "pre_final_candidate":
-                    selection_companion_pre_final_rows.append(
-                        {
-                            "attempt_key": attempt_key,
-                            "ep_num": authority_row.get("ep_num"),
-                            "attempt_num": authority_row.get("attempt_num"),
-                            "selection_artifact_path": authority_row.get("selection_artifact_path", ""),
-                            "final_artifact_path": authority_row.get("final_artifact_path", ""),
-                            "selection_content_hash": authority_row.get("selection_content_hash", ""),
-                            "final_content_hash": authority_row.get("final_content_hash", ""),
-                            "diff_fields": list(authority_row.get("selection_companion_diff_fields") or []),
-                        }
-                    )
-                elif companion_status == "missing":
-                    selection_companion_missing_rows.append(
-                        {
-                            "attempt_key": attempt_key,
-                            "ep_num": authority_row.get("ep_num"),
-                            "attempt_num": authority_row.get("attempt_num"),
-                        }
-                    )
+            for partial in (
+                self._collect_sink_alignment_companion_rows(
+                    attempt_key=attempt_key,
+                    authority_row=final_authority_by_attempt.get(attempt_key),
+                ),
+                self._collect_sink_alignment_verdict_results(
+                    attempt_key=attempt_key,
+                    stage_attempts=stage_attempts,
+                    pass_rate_monitor=pass_rate_monitor,
+                    director_selections=director_selections,
+                    session_decisions=session_decisions,
+                    episode_production=episode_production,
+                ),
+                self._collect_sink_alignment_gate_repair_results(
+                    stage=stage,
+                    attempt_key=attempt_key,
+                    stage_attempts=stage_attempts,
+                    pass_rate_monitor=pass_rate_monitor,
+                    director_selections=director_selections,
+                    session_decisions=session_decisions,
+                    episode_production=episode_production,
+                ),
+                self._collect_sink_alignment_artifact_results(
+                    attempt_key=attempt_key,
+                    stage_attempts=stage_attempts,
+                    pass_rate_monitor=pass_rate_monitor,
+                    director_selections=director_selections,
+                    session_decisions=session_decisions,
+                    episode_production=episode_production,
+                ),
+                self._collect_sink_alignment_rationale_results(
+                    include_session_decisions=include_session_decisions,
+                    attempt_key=attempt_key,
+                    director_selections=director_selections,
+                    session_decisions=session_decisions,
+                    episode_production=episode_production,
+                ),
+            ):
+                for key, rows in partial.items():
+                    if rows:
+                        results[key].extend(rows)
 
-            final_verdicts = {}
-            if attempt_key in stage_attempts:
-                final_verdicts["stage_attempts"] = stage_attempts[attempt_key]["final_verdict"]
-            if attempt_key in pass_rate_monitor:
-                final_verdicts["pass_rate_monitor"] = pass_rate_monitor[attempt_key]["final_verdict"]
-            if attempt_key in session_decisions:
-                final_verdicts["session_decisions"] = session_decisions[attempt_key]["final_verdict"]
-            if attempt_key in episode_production:
-                final_verdicts["episode_production"] = episode_production[attempt_key]["final_verdict"]
-            final_verdicts = {key: value for key, value in final_verdicts.items() if value}
-            if len(set(final_verdicts.values())) > 1:
-                final_verdict_mismatches.append({"attempt_key": attempt_key, **final_verdicts})
+        return results
 
-            final_scores = {}
-            if attempt_key in stage_attempts and stage_attempts[attempt_key]["final_score"] is not None:
-                final_scores["stage_attempts"] = stage_attempts[attempt_key]["final_score"]
-            if attempt_key in session_decisions and session_decisions[attempt_key]["final_score"] is not None:
-                final_scores["session_decisions"] = session_decisions[attempt_key]["final_score"]
-            if attempt_key in episode_production and episode_production[attempt_key]["final_score"] is not None:
-                final_scores["episode_production"] = episode_production[attempt_key]["final_score"]
-            if len(set(final_scores.values())) > 1:
-                final_score_mismatches.append({"attempt_key": attempt_key, **final_scores})
-
-            if attempt_key in director_selections and attempt_key in episode_production:
-                ds_verdict = director_selections[attempt_key]["initial_verdict"]
-                ep_verdict = episode_production[attempt_key]["initial_verdict"]
-                if ds_verdict and ep_verdict and ds_verdict != ep_verdict:
-                    initial_verdict_mismatches.append(
-                        {
-                            "attempt_key": attempt_key,
-                            "director_selections": ds_verdict,
-                            "episode_production": ep_verdict,
-                        }
-                    )
-
-            if stage == 4:
-                gate_repair_sinks: dict[str, dict[str, object]] = {}
-                if attempt_key in stage_attempts:
-                    gate_repair_sinks["stage_attempts"] = stage_attempts[attempt_key]
-                if attempt_key in pass_rate_monitor:
-                    gate_repair_sinks["pass_rate_monitor"] = pass_rate_monitor[attempt_key]
-                if attempt_key in session_decisions:
-                    gate_repair_sinks["session_decisions"] = session_decisions[attempt_key]
-                if attempt_key in episode_production:
-                    gate_repair_sinks["episode_production"] = episode_production[attempt_key]
-                if attempt_key in director_selections:
-                    gate_repair_sinks["director_selections"] = director_selections[attempt_key]
-
-                for field_name, collector, sinks in (
-                    ("director_verdict", director_verdict_mismatches, ("stage_attempts", "pass_rate_monitor", "session_decisions", "episode_production", "director_selections")),
-                    ("gate_basis", gate_basis_mismatches, ("stage_attempts", "pass_rate_monitor", "session_decisions", "episode_production", "director_selections")),
-                    ("repair_scope", repair_scope_mismatches, ("stage_attempts", "pass_rate_monitor", "session_decisions", "episode_production", "director_selections")),
-                    ("fix_pack_target_kind", fix_pack_target_kind_mismatches, ("stage_attempts", "pass_rate_monitor", "session_decisions", "episode_production", "director_selections")),
-                    ("fix_pack_patch_targets", fix_pack_patch_targets_mismatches, ("stage_attempts", "pass_rate_monitor", "session_decisions", "episode_production", "director_selections")),
-                    ("retry_budget_axes", retry_budget_axes_mismatches, ("stage_attempts", "pass_rate_monitor", "session_decisions", "episode_production")),
-                ):
-                    values_by_sink = {
-                        sink: gate_repair_sinks[sink].get(field_name)
-                        for sink in sinks
-                        if sink in gate_repair_sinks
-                    }
-                    nonempty_values = self._nonempty_value_map(values_by_sink)
-                    if len(set(nonempty_values.values())) > 1:
-                        collector.append({"attempt_key": attempt_key, **nonempty_values})
-                    missing_sinks = self._missing_value_sinks(values_by_sink)
-                    if nonempty_values and missing_sinks:
-                        gate_repair_metadata_missing.append(
-                            {
-                                "attempt_key": attempt_key,
-                                "field": field_name,
-                                "sinks": missing_sinks,
-                            }
-                        )
-
-            if attempt_key in pass_rate_monitor and attempt_key in episode_production:
-                prm_strategy = pass_rate_monitor[attempt_key]["patch_strategy"]
-                ep_strategy = episode_production[attempt_key]["patch_strategy"]
-                if prm_strategy != ep_strategy:
-                    patch_strategy_mismatches.append(
-                        {
-                            "attempt_key": attempt_key,
-                            "pass_rate_monitor": prm_strategy,
-                            "episode_production": ep_strategy,
-                        }
-                    )
-
-            final_artifact_fields: dict[str, dict[str, str]] = {}
-            if attempt_key in stage_attempts:
-                final_artifact_fields["stage_attempts"] = {
-                    "candidate_key": stage_attempts[attempt_key]["candidate_key"],
-                    "content_hash": stage_attempts[attempt_key]["content_hash"],
-                    "artifact_path": stage_attempts[attempt_key]["artifact_path"],
-                }
-            if attempt_key in pass_rate_monitor:
-                final_artifact_fields["pass_rate_monitor"] = {
-                    "candidate_key": pass_rate_monitor[attempt_key]["candidate_key"],
-                    "content_hash": pass_rate_monitor[attempt_key]["content_hash"],
-                    "artifact_path": pass_rate_monitor[attempt_key]["artifact_path"],
-                }
-            if attempt_key in session_decisions:
-                final_artifact_fields["session_decisions"] = {
-                    "candidate_key": session_decisions[attempt_key]["candidate_key"],
-                    "content_hash": session_decisions[attempt_key]["content_hash"],
-                    "artifact_path": session_decisions[attempt_key]["artifact_path"],
-                }
-            if attempt_key in episode_production:
-                final_artifact_fields["episode_production"] = {
-                    "candidate_key": episode_production[attempt_key]["candidate_key"],
-                    "content_hash": episode_production[attempt_key]["content_hash"],
-                    "artifact_path": episode_production[attempt_key]["artifact_path"],
-                }
-
-            if final_artifact_fields:
-                for field_name, collector in (
-                    ("candidate_key", candidate_key_mismatches),
-                    ("content_hash", content_hash_mismatches),
-                    ("artifact_path", artifact_path_mismatches),
-                ):
-                    values_by_sink = {sink: payload.get(field_name, "") for sink, payload in final_artifact_fields.items()}
-                    nonempty_values = self._nonempty_value_map(values_by_sink)
-                    if len(set(nonempty_values.values())) > 1:
-                        collector.append({"attempt_key": attempt_key, **nonempty_values})
-                    missing_sinks = self._missing_value_sinks(values_by_sink)
-                    if missing_sinks:
-                        artifact_metadata_missing.append(
-                            {
-                                "attempt_key": attempt_key,
-                                "field": field_name,
-                                "sinks": missing_sinks,
-                            }
-                        )
-
-                for sink_name, payload in final_artifact_fields.items():
-                    artifact_path = str(payload.get("artifact_path", "") or "").strip()
-                    if not artifact_path:
-                        continue
-                    file_exists = self._artifact_file_exists(artifact_path)
-                    if file_exists is False:
-                        artifact_missing_files.append(
-                            {
-                                "attempt_key": attempt_key,
-                                "sink": sink_name,
-                                "artifact_path": artifact_path,
-                            }
-                        )
-
-            if attempt_key in director_selections and attempt_key in episode_production:
-                ds_candidate_key = str(director_selections[attempt_key]["candidate_key"] or "").strip()
-                ep_candidate_key = str(episode_production[attempt_key]["selection_candidate_key"] or "").strip()
-                if ds_candidate_key and ep_candidate_key and ds_candidate_key != ep_candidate_key:
-                    selection_candidate_key_mismatches.append(
-                        {
-                            "attempt_key": attempt_key,
-                            "director_selections": ds_candidate_key,
-                            "episode_production": ep_candidate_key,
-                        }
-                    )
-
-            if include_session_decisions:
-                rationale_values_by_field: dict[str, dict[str, str]] = {}
-                if attempt_key in director_selections:
-                    rationale_values_by_field.setdefault("selection_reason", {})[
-                        "director_selections"
-                    ] = director_selections[attempt_key]["selection_reason"]
-                    rationale_values_by_field.setdefault("verdict_reason", {})[
-                        "director_selections"
-                    ] = director_selections[attempt_key]["verdict_reason"]
-                    rationale_values_by_field.setdefault("fix_scope", {})[
-                        "director_selections"
-                    ] = director_selections[attempt_key]["fix_scope"]
-                if attempt_key in session_decisions:
-                    rationale_values_by_field.setdefault("selection_reason", {})[
-                        "session_decisions"
-                    ] = str(session_decisions[attempt_key].get("selection_reason", "") or "").strip()
-                    rationale_values_by_field.setdefault("verdict_reason", {})[
-                        "session_decisions"
-                    ] = str(session_decisions[attempt_key].get("verdict_reason", "") or "").strip()
-                    rationale_values_by_field.setdefault("fix_scope", {})[
-                        "session_decisions"
-                    ] = str(session_decisions[attempt_key].get("fix_scope", "") or "").strip()
-                if attempt_key in episode_production:
-                    rationale_values_by_field.setdefault("selection_reason", {})[
-                        "episode_production"
-                    ] = str(episode_production[attempt_key].get("selection_reason", "") or "").strip()
-                    rationale_values_by_field.setdefault("verdict_reason", {})[
-                        "episode_production"
-                    ] = str(episode_production[attempt_key].get("verdict_reason", "") or "").strip()
-
-                for field_name, collector in (
-                    ("selection_reason", selection_reason_mismatches),
-                    ("verdict_reason", verdict_reason_mismatches),
-                    ("fix_scope", fix_scope_mismatches),
-                ):
-                    values_by_sink = rationale_values_by_field.get(field_name, {})
-                    if len(values_by_sink) < 2:
-                        continue
-                    nonempty_values = self._nonempty_value_map(values_by_sink)
-                    if len(set(nonempty_values.values())) > 1:
-                        collector.append({"attempt_key": attempt_key, **nonempty_values})
-                    missing_sinks = self._missing_value_sinks(values_by_sink)
-                    if missing_sinks and nonempty_values:
-                        rationale_metadata_missing.append(
-                            {
-                                "attempt_key": attempt_key,
-                                "field": field_name,
-                                "sinks": missing_sinks,
-                            }
-                        )
-
+    def _build_sink_alignment_summary_payload(
+        self,
+        *,
+        stage: int,
+        session_id: str,
+        attempts_considered: set[str],
+        final_union: set[str],
+        lifecycle_union: set[str],
+        stage_attempts: dict[str, dict],
+        pass_rate_monitor: dict[str, dict],
+        director_selections: dict[str, dict],
+        session_decisions: dict[str, dict],
+        episode_production: dict[str, dict],
+        final_missing: dict[str, dict],
+        lifecycle_missing: dict[str, dict],
+        lifecycle_missing_in_final: dict[str, dict],
+        session_decision_rows_without_attempt_key: int,
+        final_authority_rows: list[dict],
+        consistency_results: dict[str, object],
+    ) -> dict[str, object]:
         session_scoped_attempts = sum(
             1 for attempt_key in attempts_considered if self._attempt_key_has_session_scope(attempt_key)
         )
@@ -912,7 +1162,9 @@ class FailureAnalyzer:
                 if str(row.get("selection_companion_status") or "").strip() == "pre_final_candidate"
             )
             missing_selection_rows = sum(
-                1 for row in final_authority_rows if str(row.get("selection_companion_status") or "").strip() == "missing"
+                1
+                for row in final_authority_rows
+                if str(row.get("selection_companion_status") or "").strip() == "missing"
             )
             final_authority_contract = {
                 "status": "ok" if final_authority_rows else "missing",
@@ -933,27 +1185,27 @@ class FailureAnalyzer:
                 final_missing,
                 lifecycle_missing,
                 lifecycle_missing_in_final,
-                final_verdict_mismatches,
-                final_score_mismatches,
-                initial_verdict_mismatches,
-                director_verdict_mismatches,
-                gate_basis_mismatches,
-                repair_scope_mismatches,
-                fix_pack_target_kind_mismatches,
-                fix_pack_patch_targets_mismatches,
-                retry_budget_axes_mismatches,
-                patch_strategy_mismatches,
-                candidate_key_mismatches,
-                selection_candidate_key_mismatches,
-                content_hash_mismatches,
-                artifact_path_mismatches,
-                artifact_metadata_missing,
-                selection_reason_mismatches,
-                verdict_reason_mismatches,
-                fix_scope_mismatches,
-                gate_repair_metadata_missing,
-                rationale_metadata_missing,
-                artifact_missing_files,
+                consistency_results["final_verdict_mismatches"],
+                consistency_results["final_score_mismatches"],
+                consistency_results["initial_verdict_mismatches"],
+                consistency_results["director_verdict_mismatches"],
+                consistency_results["gate_basis_mismatches"],
+                consistency_results["repair_scope_mismatches"],
+                consistency_results["fix_pack_target_kind_mismatches"],
+                consistency_results["fix_pack_patch_targets_mismatches"],
+                consistency_results["retry_budget_axes_mismatches"],
+                consistency_results["patch_strategy_mismatches"],
+                consistency_results["candidate_key_mismatches"],
+                consistency_results["selection_candidate_key_mismatches"],
+                consistency_results["content_hash_mismatches"],
+                consistency_results["artifact_path_mismatches"],
+                consistency_results["artifact_metadata_missing"],
+                consistency_results["selection_reason_mismatches"],
+                consistency_results["verdict_reason_mismatches"],
+                consistency_results["fix_scope_mismatches"],
+                consistency_results["gate_repair_metadata_missing"],
+                consistency_results["rationale_metadata_missing"],
+                consistency_results["artifact_missing_files"],
                 session_decision_rows_without_attempt_key > 0,
             )
         )
@@ -975,35 +1227,133 @@ class FailureAnalyzer:
             "final_sink_missing": final_missing,
             "lifecycle_sink_missing": lifecycle_missing,
             "lifecycle_missing_in_final_sinks": lifecycle_missing_in_final,
-            "final_verdict_mismatches": final_verdict_mismatches[:10],
-            "final_score_mismatches": final_score_mismatches[:10],
-            "initial_verdict_mismatches": initial_verdict_mismatches[:10],
-            "director_verdict_mismatches": director_verdict_mismatches[:10],
-            "gate_basis_mismatches": gate_basis_mismatches[:10],
-            "repair_scope_mismatches": repair_scope_mismatches[:10],
-            "fix_pack_target_kind_mismatches": fix_pack_target_kind_mismatches[:10],
-            "fix_pack_patch_targets_mismatches": fix_pack_patch_targets_mismatches[:10],
-            "retry_budget_axes_mismatches": retry_budget_axes_mismatches[:10],
-            "patch_strategy_mismatches": patch_strategy_mismatches[:10],
-            "candidate_key_mismatches": candidate_key_mismatches[:10],
-            "selection_candidate_key_mismatches": selection_candidate_key_mismatches[:10],
-            "content_hash_mismatches": content_hash_mismatches[:10],
-            "artifact_path_mismatches": artifact_path_mismatches[:10],
-            "artifact_metadata_missing": artifact_metadata_missing[:10],
-            "selection_reason_mismatches": selection_reason_mismatches[:10],
-            "verdict_reason_mismatches": verdict_reason_mismatches[:10],
-            "fix_scope_mismatches": fix_scope_mismatches[:10],
-            "gate_repair_metadata_missing": gate_repair_metadata_missing[:10],
-            "rationale_metadata_missing": rationale_metadata_missing[:10],
-            "artifact_missing_files": artifact_missing_files[:10],
-            "selection_companion_pre_final_rows": selection_companion_pre_final_rows[:10],
-            "selection_companion_missing_rows": selection_companion_missing_rows[:10],
+            "final_verdict_mismatches": consistency_results["final_verdict_mismatches"][:10],
+            "final_score_mismatches": consistency_results["final_score_mismatches"][:10],
+            "initial_verdict_mismatches": consistency_results["initial_verdict_mismatches"][:10],
+            "director_verdict_mismatches": consistency_results["director_verdict_mismatches"][:10],
+            "gate_basis_mismatches": consistency_results["gate_basis_mismatches"][:10],
+            "repair_scope_mismatches": consistency_results["repair_scope_mismatches"][:10],
+            "fix_pack_target_kind_mismatches": consistency_results["fix_pack_target_kind_mismatches"][:10],
+            "fix_pack_patch_targets_mismatches": consistency_results["fix_pack_patch_targets_mismatches"][:10],
+            "retry_budget_axes_mismatches": consistency_results["retry_budget_axes_mismatches"][:10],
+            "patch_strategy_mismatches": consistency_results["patch_strategy_mismatches"][:10],
+            "candidate_key_mismatches": consistency_results["candidate_key_mismatches"][:10],
+            "selection_candidate_key_mismatches": consistency_results["selection_candidate_key_mismatches"][:10],
+            "content_hash_mismatches": consistency_results["content_hash_mismatches"][:10],
+            "artifact_path_mismatches": consistency_results["artifact_path_mismatches"][:10],
+            "artifact_metadata_missing": consistency_results["artifact_metadata_missing"][:10],
+            "selection_reason_mismatches": consistency_results["selection_reason_mismatches"][:10],
+            "verdict_reason_mismatches": consistency_results["verdict_reason_mismatches"][:10],
+            "fix_scope_mismatches": consistency_results["fix_scope_mismatches"][:10],
+            "gate_repair_metadata_missing": consistency_results["gate_repair_metadata_missing"][:10],
+            "rationale_metadata_missing": consistency_results["rationale_metadata_missing"][:10],
+            "artifact_missing_files": consistency_results["artifact_missing_files"][:10],
+            "selection_companion_pre_final_rows": consistency_results["selection_companion_pre_final_rows"][:10],
+            "selection_companion_missing_rows": consistency_results["selection_companion_missing_rows"][:10],
             "final_authority_contract": final_authority_contract,
             "session_scoped_attempts": session_scoped_attempts,
             "legacy_key_attempts": len(attempts_considered) - session_scoped_attempts,
             "session_decision_rows_without_attempt_key": session_decision_rows_without_attempt_key,
             "status": "warn" if has_issues else "ok",
         }
+
+    def sink_alignment_summary(
+        self,
+        stage: int = 4,
+        lookback: int = 100,
+        *,
+        include_session_decisions: bool = False,
+        session_id: str | None = None,
+    ) -> dict:
+        """Cross-check attempt-key alignment across DB and JSON sinks."""
+        stage = max(1, int(stage or 4))
+        lookback = max(1, int(lookback or 100))
+        session_id = str(session_id or "").strip()
+
+        stage_attempts = self._load_stage_attempt_alignment_sink(
+            stage=stage,
+            lookback=lookback,
+            session_id=session_id,
+        )
+        if stage_attempts is None:
+            return {}
+        pass_rate_monitor = self._load_pass_rate_monitor_alignment_sink(
+            stage=stage,
+            lookback=lookback,
+            session_id=session_id,
+        )
+        director_selections = self._load_director_selection_alignment_sink(
+            stage=stage,
+            lookback=lookback,
+            session_id=session_id,
+        )
+        session_decisions, session_decision_rows_without_attempt_key = self._load_session_decision_alignment_sink(
+            stage=stage,
+            lookback=lookback,
+            include_session_decisions=include_session_decisions,
+            session_id=session_id,
+        )
+        episode_production = self._load_episode_production_alignment_sink(
+            stage=stage,
+            lookback=lookback,
+            session_id=session_id,
+        )
+        final_authority_rows, final_authority_by_attempt = self._load_final_authority_alignment_sink(
+            stage=stage,
+            lookback=lookback,
+            session_id=session_id,
+        )
+        final_union, lifecycle_union, attempts_considered = self._build_sink_alignment_attempt_sets(
+            stage=stage,
+            include_session_decisions=include_session_decisions,
+            stage_attempts=stage_attempts,
+            pass_rate_monitor=pass_rate_monitor,
+            director_selections=director_selections,
+            session_decisions=session_decisions,
+            episode_production=episode_production,
+        )
+        if not attempts_considered and session_decision_rows_without_attempt_key <= 0:
+            return {}
+
+        final_missing, lifecycle_missing, lifecycle_missing_in_final = self._collect_sink_alignment_missing_buckets(
+            include_session_decisions=include_session_decisions,
+            final_union=final_union,
+            lifecycle_union=lifecycle_union,
+            stage_attempts=stage_attempts,
+            pass_rate_monitor=pass_rate_monitor,
+            director_selections=director_selections,
+            session_decisions=session_decisions,
+            episode_production=episode_production,
+        )
+        consistency_results = self._collect_sink_alignment_consistency_results(
+            stage=stage,
+            include_session_decisions=include_session_decisions,
+            attempts_considered=attempts_considered,
+            stage_attempts=stage_attempts,
+            pass_rate_monitor=pass_rate_monitor,
+            director_selections=director_selections,
+            session_decisions=session_decisions,
+            episode_production=episode_production,
+            final_authority_by_attempt=final_authority_by_attempt,
+        )
+        return self._build_sink_alignment_summary_payload(
+            stage=stage,
+            session_id=session_id,
+            attempts_considered=attempts_considered,
+            final_union=final_union,
+            lifecycle_union=lifecycle_union,
+            stage_attempts=stage_attempts,
+            pass_rate_monitor=pass_rate_monitor,
+            director_selections=director_selections,
+            session_decisions=session_decisions,
+            episode_production=episode_production,
+            final_missing=final_missing,
+            lifecycle_missing=lifecycle_missing,
+            lifecycle_missing_in_final=lifecycle_missing_in_final,
+            session_decision_rows_without_attempt_key=session_decision_rows_without_attempt_key,
+            final_authority_rows=final_authority_rows,
+            consistency_results=consistency_results,
+        )
 
     def top_success_patterns(self, top_n: int = 5, min_score: int = 90) -> list[dict]:
         """고득점 에피소드의 공통 품질 패턴 요약."""

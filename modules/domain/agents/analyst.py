@@ -12,6 +12,7 @@ plan_single_arc_v20은 독립 API로 유지 (오케스트레이터 fallback 호�
 
 #레거시 태그: Arc 생성 관련 코드
 """
+# utf8-hygiene: allow-file -- legacy Korean regex and prompt literals are intentional in this analyst module; the current planner-helper tranche preserves that bounded surface.
 
 import asyncio
 import json
@@ -660,6 +661,372 @@ class Analyst(BaseAgent):
 
         return arc_data
 
+    def _prepare_single_arc_plan_context(
+        self,
+        *,
+        arc_no,
+        vol_strategy,
+        prev_block,
+        curr_block,
+        next_block,
+        ep_start,
+        prev_arc_context="",
+        assets=None,
+        full_roadmap="",
+        assigned_seeds=None,
+        feedback="",
+        recent_patterns=None,
+        protagonist_name=None,
+        state_tracker=None,
+    ) -> dict:
+        banned_msg = ""
+        if recent_patterns:
+            last_pattern = recent_patterns[-1]
+            banned_msg = (
+                f"\n[🚨 ABSOLUTE BAN]: 직전에 사용된 서사 패턴 '{last_pattern}'의 재사용을 절대 금지한다. "
+                "반드시 다른 아키타입을 선택하여 서사의 변주를 주어라."
+            )
+            if len(recent_patterns) >= 2 and recent_patterns[-1] == recent_patterns[-2]:
+                banned_msg += (
+                    "\n[🚨 WARNING]: 유사한 전개가 반복되고 있다. 이번 아크에서는 '전투'보다는 "
+                    "'정치', '미스터리', '기연' 등 완전히 다른 장르적 해법을 제시하라."
+                )
+
+        if assigned_seeds:
+            mission_list = [
+                f"- [{s.get('action', '지정')}] ID: {s.get('seed_id', 'N/A')} | 논리: {s.get('logic', 'N/A')}"
+                for s in assigned_seeds
+            ]
+            seeds_info = "### 🎯 이번 아크 서사 미션:\n" + "\n".join(mission_list) + banned_msg
+        else:
+            seeds_info = f"### 🎯 이번 아크 서사 미션:\n- 특이사항 없음 (순수 줄거리 전개 집중){banned_msg}"
+
+        try:
+            clean_arc_no = int(arc_no)
+            vol_no = ((clean_arc_no - 1) // 5) + 1
+        except (ValueError, TypeError):
+            clean_arc_no, vol_no = arc_no, "Unknown"
+
+        min_ep_count = VolumeSettings.MIN_EPISODES_PER_ARC
+        max_ep_count = VolumeSettings.MAX_EPISODES_PER_ARC
+        ep_count_range_text = f"{min_ep_count}~{max_ep_count}"
+        original_guess = 5
+        content_len = 0
+        if isinstance(curr_block, dict):
+            _content_parts, content_len = self._extract_content_parts(curr_block)
+            if content_len < 500:
+                original_guess = 4
+            elif content_len < 1000:
+                original_guess = 5
+            elif content_len < 1500:
+                original_guess = 6
+            else:
+                original_guess = max_ep_count + 1
+
+        target_ep_count = max(min_ep_count, min(max_ep_count, original_guess - 1))
+        if isinstance(curr_block, dict) and content_len < target_ep_count * 200:
+            logging.warning(
+                f" [V60.31] Block 빈약 경고: {content_len}자 / {target_ep_count}화 = 화당 "
+                f"{content_len // target_ep_count}자 (권장 200자+)"
+            )
+
+        current_genre = self._get_current_genre()
+        libs = self._load_genre_libraries(current_genre)
+
+        final_protagonist_name = protagonist_name
+        if not final_protagonist_name or final_protagonist_name == "주인공":
+            try:
+                bible_data = self.context.db.load_anchor("bible")
+                if bible_data:
+                    mb = bible_data.get("MasterBible", bible_data)
+                    genre = getattr(self.context, "genre", "") or ""
+                    name = HUDKeys.get_protagonist_name(mb, genre)
+                    if name and name != "주인공":
+                        final_protagonist_name = name
+            except Exception as e:
+                logging.warning(f" [Analyst] 주인공 이름 추출 실패, 기본값 사용: {e}")
+        if not final_protagonist_name:
+            final_protagonist_name = "주인공"
+
+        hud_context = ""
+        if state_tracker and ep_start > 1:
+            try:
+                prev_ep = ep_start - 1
+                prev_state = (
+                    state_tracker.get_state_at_episode(prev_ep)
+                    if hasattr(state_tracker, "get_state_at_episode")
+                    else None
+                )
+                if prev_state:
+                    state_dict = prev_state.to_dict() if hasattr(prev_state, "to_dict") else {}
+                    hud_lines = [f"[Arc 시작 전 주인공 상태 - 제{prev_ep}화 종료 시점]"]
+                    for key in ["location", "hp", "mp", "martial_level", "status", "injuries"]:
+                        if key in state_dict and state_dict[key]:
+                            hud_lines.append(f"  {key}: {state_dict[key]}")
+                    items = state_dict.get("items", [])
+                    if items:
+                        hud_lines.append(f"  보유 아이템: {', '.join(items[:8])}")
+                    hud_context = "\n".join(hud_lines)
+            except Exception as e:
+                logging.warning(f"[Analyst] HUD 로드 오류: {e}")
+                hud_context = f"(HUD 로드 오류: {str(e)[:50]})"
+
+        critical_keys: list[str] = []
+        try:
+            if hasattr(self.context, "sys") and hasattr(self.context.sys, "hud") and self.context.sys.hud:
+                critical_keys = self.context.sys.hud.get_critical_keys()
+        except Exception as e:
+            logging.debug("[SilentPass:Analyst] get_critical_keys failed: %s", e)
+
+        safe_data = {
+            "genre_prompt": self._compose_guard_prompt("arc"),
+            "protagonist_name": final_protagonist_name,
+            "strategic_compass": self._escape_braces(vol_strategy),
+            "prev_arc_context": self._escape_braces(prev_arc_context) or "시작점",
+            "prev_block": self._escape_braces(json.dumps(prev_block, ensure_ascii=False)) if prev_block else "시작점",
+            "curr_block": self._escape_braces(json.dumps(curr_block, ensure_ascii=False)),
+            "next_block": self._escape_braces(json.dumps(next_block, ensure_ascii=False)),
+            "assigned_seeds_info": self._escape_braces(seeds_info),
+            "arc_no": clean_arc_no,
+            "vol_no": vol_no,
+            "ep_start": ep_start,
+            "ep_end": ep_start + target_ep_count - 1,
+            "ep_count": target_ep_count,
+            "ep_count_suggestion": str(target_ep_count),
+            "assets": self._escape_braces(json.dumps(assets, ensure_ascii=False)) if assets else "{}",
+            "full_roadmap": self._escape_braces(full_roadmap),
+            "protagonist_hud_state": self._escape_braces(hud_context) if hud_context else "",
+            **self._build_genre_placeholders(current_genre, critical_keys),
+        }
+        pacing_guide = (
+            f"시스템 권장: {target_ep_count}화 (Blitz:2-3 / Standard:3-4 / Epic:5-6, 실제 허용 범위: {ep_count_range_text})"
+        )
+
+        return {
+            "clean_arc_no": clean_arc_no,
+            "vol_no": vol_no,
+            "target_ep_count": target_ep_count,
+            "ep_count_range_text": ep_count_range_text,
+            "min_ep_count": min_ep_count,
+            "max_ep_count": max_ep_count,
+            "safe_data": safe_data,
+            "initial_feedback": feedback if feedback else pacing_guide,
+            "intro_lib_full": libs["intro"],
+            "dev_lib_full": libs["dev"],
+            "ending_lib_full": libs["ending"],
+            "trans_lib_full": libs["trans"],
+            "archetype_lib_full": libs["archetype"],
+        }
+
+    def _request_single_arc_draft(
+        self,
+        *,
+        plan_context: dict,
+        attempt: int,
+        current_feedback: str,
+        feedback_provided: bool,
+    ) -> dict:
+        from google.genai import types
+
+        adjusted_prompt_tpl = get_plan_arc_prompt_v25()
+        target_ep_count = plan_context["target_ep_count"]
+        ep_count_range_text = plan_context["ep_count_range_text"]
+        include_feedback = attempt > 0 or feedback_provided
+
+        try:
+            if self.cache_name:
+                cache_safe_data = plan_context["safe_data"].copy()
+                placeholder = "[CACHED: Narrative Patterns Library Active - Refer to system memory]"
+                cache_safe_data.update(
+                    {
+                        "intro_library": placeholder,
+                        "dev_library": placeholder,
+                        "ending_library": placeholder,
+                        "trans_library": placeholder,
+                        "archetype_library": placeholder,
+                        "special_instructions": (
+                            f"\n[🚨 PACING GUIDE]: 권장 {target_ep_count}화 "
+                            f"(사건 밀도에 따라 {ep_count_range_text}화 범위 내 조정 가능)"
+                        ),
+                    }
+                )
+                prompt = adjusted_prompt_tpl.format_map(_SafeDict(**cache_safe_data))
+                if include_feedback:
+                    prompt += f"\n\n🚨 [FEEDBACK]: {current_feedback}"
+
+                config_params = {
+                    "cached_content": self.cache_name,
+                    "temperature": 0.5,
+                    "max_output_tokens": 8192,
+                    "response_mime_type": "application/json",
+                }
+                if SCHEMA_ENABLED and ARC_DESIGN_SCHEMA:
+                    config_params["response_schema"] = ARC_DESIGN_SCHEMA
+
+                response = generate_content_via_router(
+                    client=self.client,
+                    model=self.primary_model,
+                    contents=prompt,
+                    config=types.GenerateContentConfig(**config_params),
+                )
+                return self._extract_json_robust(response.text)
+            raise LookupError("No Cache Found")
+        except Exception as e:
+            if self.cache_name:
+                logging.warning(f" [Analyst] 캐시 호출 실패. 일반 모드 전환: {str(e)[:50]}")
+
+            full_safe_data = plan_context["safe_data"].copy()
+            full_safe_data.update(
+                {
+                    "intro_library": self._escape_braces(plan_context["intro_lib_full"]),
+                    "dev_library": self._escape_braces(plan_context["dev_lib_full"]),
+                    "ending_library": self._escape_braces(plan_context["ending_lib_full"]),
+                    "trans_library": self._escape_braces(plan_context["trans_lib_full"]),
+                    "archetype_library": self._escape_braces(plan_context["archetype_lib_full"]),
+                    "special_instructions": (
+                        f"\n[🚨 PACING GUIDE]: 권장 {target_ep_count}화 "
+                        f"(사건 밀도에 따라 {ep_count_range_text}화 범위 내 조정 가능)"
+                    ),
+                }
+            )
+            stable_prompt = adjusted_prompt_tpl.format_map(_SafeDict(**full_safe_data))
+            prompt = stable_prompt
+            if include_feedback:
+                prompt += f"\n\n🚨 [FEEDBACK]: {current_feedback}"
+
+            schema = ARC_DESIGN_SCHEMA if SCHEMA_ENABLED else None
+            temperature = 0.5 if attempt == 0 else (0.6 if attempt == 1 else 0.7)
+            return self._extract_json_robust(
+                self._ask_with_analyst_cache(
+                    cache_type="plan_arc",
+                    stable_context=stable_prompt,
+                    variable_prompt=(f"🚨 [FEEDBACK]: {current_feedback}" if include_feedback else ""),
+                    full_prompt_fallback=prompt,
+                    temperature=temperature,
+                    thinking_level="medium",
+                    response_schema=schema,
+                    task_label="단일 Arc 설계",
+                )
+            )
+
+    def _normalize_single_arc_draft_result(
+        self,
+        draft_result,
+        *,
+        target_ep_count: int,
+        min_ep_count: int,
+        max_ep_count: int,
+    ) -> tuple[dict, int]:
+        if not isinstance(draft_result, dict):
+            draft_result = {}
+
+        llm_ep_count = draft_result.get("ep_count")
+        if isinstance(llm_ep_count, str):
+            match = re.search(r"(\d+)", str(llm_ep_count))
+            llm_ep_count = int(match.group(1)) if match else target_ep_count
+        elif not isinstance(llm_ep_count, int):
+            llm_ep_count = target_ep_count
+
+        pacing_decision = draft_result.get("pacing_decision", {})
+        chosen_pacing = pacing_decision.get("chosen_pacing", "") if isinstance(pacing_decision, dict) else ""
+        chosen_pacing_lower = chosen_pacing.lower() if isinstance(chosen_pacing, str) else ""
+
+        if "epic" in chosen_pacing_lower:
+            pacing_min, pacing_max = 5, max_ep_count
+        elif "standard" in chosen_pacing_lower:
+            pacing_min, pacing_max = 4, 5
+        elif "blitz" in chosen_pacing_lower:
+            pacing_min, pacing_max = 3, 4
+        else:
+            pacing_min, pacing_max = min_ep_count, max_ep_count
+
+        if llm_ep_count < pacing_min or llm_ep_count > pacing_max:
+            corrected_ep_count = max(pacing_min, min(pacing_max, llm_ep_count))
+            logging.warning(
+                f" [V60.70] 자기모순 교정: chosen_pacing={chosen_pacing} 인데 ep_count={llm_ep_count} "
+                f"→ {corrected_ep_count}화로 강제 조정"
+            )
+            llm_ep_count = corrected_ep_count
+
+        actual_ep_count = max(min_ep_count, min(max_ep_count, llm_ep_count))
+        if actual_ep_count != target_ep_count:
+            logging.info(f" [V60.31] 가변 페이싱: 권장 {target_ep_count}화 → LLM 결정 {actual_ep_count}화")
+
+        beats = draft_result.get("beat_sequence", [])
+        if not isinstance(beats, list):
+            beats = []
+        if len(beats) != actual_ep_count:
+            if len(beats) > actual_ep_count:
+                combined = " / ".join(str(beat) for beat in beats[actual_ep_count - 1 :])
+                beats = beats[: actual_ep_count - 1] + [f"[통합 전개]: {combined}"]
+            else:
+                original_count = len(beats)
+                fallback_beats = [
+                    "서사적 긴장감 고조 및 빌드업 수행",
+                    "캐릭터 내면 갈등 심화 및 선택의 기로",
+                    "예상치 못한 전환점 발생",
+                    "이해관계자 간 대립 격화",
+                    "결정적 사건을 향한 수렴",
+                ]
+                while len(beats) < actual_ep_count:
+                    idx = len(beats) % len(fallback_beats)
+                    beats.append(fallback_beats[idx])
+                logging.warning(
+                    "[Analyst] beat_sequence 부족 (%d/%d) — 폴백 비트 %d개 추가",
+                    original_count,
+                    actual_ep_count,
+                    actual_ep_count - original_count,
+                )
+            draft_result["beat_sequence"] = beats
+
+        return draft_result, actual_ep_count
+
+    def _run_single_arc_self_critic(self, draft_result: dict, curr_block) -> dict:
+        critic_block_ctx = _format_block_numeric_targets(curr_block)
+        critic_stable = f"{get_analyst_self_critic_prompt()}" + (
+            f"\n\n{critic_block_ctx}" if critic_block_ctx else ""
+        )
+        critic_variable = f"[Draft to Review]: {json.dumps(draft_result, ensure_ascii=False)}"
+        critic_input = critic_stable + f"\n{critic_variable}"
+        return self._extract_json_robust(
+            self._ask_with_analyst_cache(
+                cache_type="arc_self_critic",
+                stable_context=critic_stable,
+                variable_prompt=critic_variable,
+                full_prompt_fallback=critic_input,
+                temperature=0.2,
+                thinking_level="low",
+                task_label="Arc self-critique",
+            )
+        )
+
+    def _finalize_single_arc_plan_result(
+        self,
+        *,
+        audit_result,
+        arc_loop_state: dict,
+        retry_success: bool,
+        clean_arc_no,
+        target_ep_count: int,
+    ) -> dict:
+        draft_result = arc_loop_state["draft_result"]
+        actual_ep_count = arc_loop_state["actual_ep_count"]
+        final_arc_data = None
+        if retry_success:
+            revised_arc = audit_result.get("revised_arc") if isinstance(audit_result, dict) else None
+            final_arc_data = revised_arc if revised_arc and isinstance(revised_arc, dict) else draft_result
+            final_arc_data["_actual_ep_count"] = actual_ep_count
+
+        if not final_arc_data:
+            if draft_result is None:
+                draft_result = {"arc_no": clean_arc_no, "ep_count": target_ep_count}
+                actual_ep_count = target_ep_count
+                logging.warning("[Analyst] 전체 재시도 실패 — 최소 폴백 Arc 데이터 사용")
+            final_arc_data = draft_result
+            final_arc_data["_actual_ep_count"] = actual_ep_count
+
+        return final_arc_data
+
     def plan_single_arc_v20(
         self,
         arc_no,
@@ -686,345 +1053,43 @@ class Analyst(BaseAgent):
         - 호출 실패 시: 즉시 Full-Text로 자동 복구하여 서사 밀도 보존 (Fallback Safety)
         [V60] Arc 상태 계승 검증 + 화 간 모순 탐지 + Joint Docs 자동 보정
         """
-        import json
-
-        from google.genai import types
-
-        # 1. [V38] 패턴 고착화 방지 (Negative Constraints)
-        # "2번 이상 연속 사용 금지" -> 직전 패턴(Last Pattern) 재사용 원천 차단
-        banned_msg = ""
-        if recent_patterns and len(recent_patterns) > 0:
-            last_pattern = recent_patterns[-1]  # 가장 최근 사용한 패턴
-            banned_msg = f"\n[🚨 ABSOLUTE BAN]: 직전에 사용된 서사 패턴 '{last_pattern}'의 재사용을 절대 금지한다. 반드시 다른 아키타입을 선택하여 서사의 변주를 주어라."
-
-            # 만약 3회 이상 같은 계열(예: 전투)이 반복되었다면 추가 경고
-            if len(recent_patterns) >= 2 and recent_patterns[-1] == recent_patterns[-2]:
-                banned_msg += "\n[🚨 WARNING]: 유사한 전개가 반복되고 있다. 이번 아크에서는 '전투'보다는 '정치', '미스터리', '기연' 등 완전히 다른 장르적 해법을 제시하라."
-
-        # 2. 복선 데이터를 연출 미션 텍스트로 변환 (+ Ban Msg 통합)
-        if assigned_seeds:
-            mission_list = [
-                f"- [{s.get('action', '지정')}] ID: {s.get('seed_id', 'N/A')} | 논리: {s.get('logic', 'N/A')}"
-                for s in assigned_seeds
-            ]
-            seeds_info = "### 🎯 이번 아크 서사 미션:\n" + "\n".join(mission_list) + banned_msg
-        else:
-            seeds_info = f"### 🎯 이번 아크 서사 미션:\n- 특이사항 없음 (순수 줄거리 전개 집중){banned_msg}"
-
-        # 2. 페이싱 계산 (Pre-Compression 로직 유지)
-        try:
-            clean_arc_no = int(arc_no)
-            vol_no = ((clean_arc_no - 1) // 5) + 1
-        except (ValueError, TypeError):
-            clean_arc_no, vol_no = arc_no, "Unknown"
-
-        # [V60.31] 페이싱 계산 - Block 구조에 맞게 수정
-        # [V60.62] 3가지 구조 모두 대응: flatten, nested content, plot_roadmap
-        min_ep_count = VolumeSettings.MIN_EPISODES_PER_ARC
-        max_ep_count = VolumeSettings.MAX_EPISODES_PER_ARC
-        ep_count_range_text = f"{min_ep_count}~{max_ep_count}"
-        original_guess = 5
-        if isinstance(curr_block, dict):
-            _content_parts, content_len = self._extract_content_parts(curr_block)
-
-            # 내용 길이/복잡도에 따라 화수 추정
-            # - 500자 미만: 간단한 블록 → 3화
-            # - 500~1000자: 표준 블록 → 4화
-            # - 1000~1500자: 복잡한 블록 → 5화
-            # - 1500자 이상: 매우 복잡 → 6화
-            if content_len < 500:
-                original_guess = 4  # → 3화
-            elif content_len < 1000:
-                original_guess = 5  # → 4화
-            elif content_len < 1500:
-                original_guess = 6  # → 5화
-            else:
-                original_guess = max_ep_count + 1  # → 최대 화수
-
-        # 실제 타겟 화수는 추정치보다 1화 적게 잡아 긴장감 유도 (설정 범위 제한)
-        target_ep_count = max(min_ep_count, min(max_ep_count, original_guess - 1))
-
-        # [V60.31] Block 빈약 경고 - 화당 200자 이상 권장
-        min_content_per_ep = 200
-        if isinstance(curr_block, dict):
-            _warn_parts, content_len = self._extract_content_parts(curr_block)
-
-            if content_len < target_ep_count * min_content_per_ep:
-                logging.warning(
-                    f" [V60.31] Block 빈약 경고: {content_len}자 / {target_ep_count}화 = 화당 {content_len // target_ep_count}자 (권장 200자+)"
-                )
-
-        # 3. [V43] 장르별 라이브러리 로드 - 장르에 맞는 서사 패턴 사용
-        current_genre = self._get_current_genre()
-        libs = self._load_genre_libraries(current_genre)
-        intro_lib_full = libs["intro"]
-        dev_lib_full = libs["dev"]
-        ending_lib_full = libs["ending"]
-        trans_lib_full = libs["trans"]
-        archetype_lib_full = libs["archetype"]
-
-        # 3-1. [V42 + V60.32] 주인공 이름 결정 (파라미터 우선, 없으면 Bible 추출)
-        final_protagonist_name = protagonist_name  # 파라미터로 받은 값 우선
-        if not final_protagonist_name or final_protagonist_name == "주인공":
-            try:
-                bible_data = self.context.db.load_anchor("bible")
-                if bible_data:
-                    mb = bible_data.get("MasterBible", bible_data)
-                    # [V61.2 Fix] 장르별 HUD 탐색
-                    genre = getattr(self.context, "genre", "") or ""
-                    name = HUDKeys.get_protagonist_name(mb, genre)
-                    if name and name != "주인공":
-                        final_protagonist_name = name
-            except Exception as e:
-                logging.warning(f" [Analyst] 주인공 이름 추출 실패, 기본값 사용: {e}")
-        if not final_protagonist_name:
-            final_protagonist_name = "주인공"
-        protagonist_name = final_protagonist_name  # 이후 코드 호환
-
-        # [V60.95] 고밀도 HUD 컨텍스트 구축
-        hud_context = ""
-        if state_tracker and ep_start > 1:
-            try:
-                prev_ep = ep_start - 1
-                prev_state = (
-                    state_tracker.get_state_at_episode(prev_ep)
-                    if hasattr(state_tracker, "get_state_at_episode")
-                    else None
-                )
-                if prev_state:
-                    state_dict = prev_state.to_dict() if hasattr(prev_state, "to_dict") else {}
-                    hud_lines = [f"[Arc 시작 전 주인공 상태 - 제{prev_ep}화 종료 시점]"]
-                    for k in ["location", "hp", "mp", "martial_level", "status", "injuries"]:
-                        if k in state_dict and state_dict[k]:
-                            hud_lines.append(f"  {k}: {state_dict[k]}")
-                    items = state_dict.get("items", [])
-                    if items:
-                        hud_lines.append(f"  보유 아이템: {', '.join(items[:8])}")
-                    hud_context = "\n".join(hud_lines)
-            except Exception as e:
-                logging.warning(f"[Analyst] HUD 로드 오류: {e}")
-                hud_context = f"(HUD 로드 오류: {str(e)[:50]})"
-
-        # 4. 공통 데이터셋 조립 (데이터 이스케이프 적용)
-        # 장르별 에너지/상태 플레이스홀더 생성
-        _ck_analyst: list[str] = []
-        try:
-            if hasattr(self.context, "sys") and hasattr(self.context.sys, "hud") and self.context.sys.hud:
-                _ck_analyst = self.context.sys.hud.get_critical_keys()
-        except Exception as e:
-            logging.debug("[SilentPass:Analyst] get_critical_keys failed: %s", e)
-        _genre_placeholders = self._build_genre_placeholders(current_genre, _ck_analyst)
-        safe_data = {
-            "genre_prompt": self._compose_guard_prompt("arc"),
-            "protagonist_name": protagonist_name,  # V42 LOCK
-            "strategic_compass": self._escape_braces(vol_strategy),
-            "prev_arc_context": self._escape_braces(prev_arc_context) or "시작점",
-            "prev_block": self._escape_braces(json.dumps(prev_block, ensure_ascii=False)) if prev_block else "시작점",
-            "curr_block": self._escape_braces(json.dumps(curr_block, ensure_ascii=False)),
-            "next_block": self._escape_braces(json.dumps(next_block, ensure_ascii=False)),
-            "assigned_seeds_info": self._escape_braces(seeds_info),
-            "arc_no": clean_arc_no,
-            "vol_no": vol_no,
-            "ep_start": ep_start,
-            "ep_end": ep_start + target_ep_count - 1,
-            "ep_count": target_ep_count,  # [V60.36 FIX] 템플릿에서 사용하는 ep_count 추가
-            "ep_count_suggestion": str(target_ep_count),
-            "assets": self._escape_braces(json.dumps(assets, ensure_ascii=False)) if assets else "{}",
-            "full_roadmap": self._escape_braces(full_roadmap),
-            "protagonist_hud_state": self._escape_braces(hud_context) if hud_context else "",  # [V60.95] 고밀도 HUD
-            **_genre_placeholders,
-        }
-
-        # 5. [V65] 설계 및 자기 비판 루프 — retry_with_feedback 래퍼 적용
-        max_retries = RetryLimits.ANALYST_MAX_ATTEMPTS
-        # [V60.31] 가변 페이싱: 권장값만 제시, LLM이 사건 밀도로 최종 결정
-        pacing_guide = (
-            f"시스템 권장: {target_ep_count}화 (Blitz:2-3 / Standard:3-4 / Epic:5-6, 실제 허용 범위: {ep_count_range_text})"
+        plan_context = self._prepare_single_arc_plan_context(
+            arc_no=arc_no,
+            vol_strategy=vol_strategy,
+            prev_block=prev_block,
+            curr_block=curr_block,
+            next_block=next_block,
+            ep_start=ep_start,
+            prev_arc_context=prev_arc_context,
+            assets=assets,
+            full_roadmap=full_roadmap,
+            assigned_seeds=assigned_seeds,
+            feedback=feedback,
+            recent_patterns=recent_patterns,
+            protagonist_name=protagonist_name,
+            state_tracker=state_tracker,
         )
-        initial_feedback = feedback if feedback else pacing_guide
-        final_arc_data = None
-        # [V65] 루프 간 공유 상태를 dict로 관리 (클로저 캡처용)
-        _arc_loop_state = {"draft_result": None, "actual_ep_count": target_ep_count}
+        max_retries = RetryLimits.ANALYST_MAX_ATTEMPTS
+        feedback_provided = bool(feedback)
+        arc_loop_state = {"draft_result": None, "actual_ep_count": plan_context["target_ep_count"]}
 
         def _arc_attempt_func(attempt, retry_feedback):
-            """[V65] 단일 시도 로직 — retry_with_feedback에 전달"""
-            current_feedback = retry_feedback if retry_feedback else initial_feedback
-            # [V60.31] 템플릿의 ep_count_suggestion 변수를 동적으로 치환
-            adjusted_prompt_tpl = get_plan_arc_prompt_v25()
-
-            # 6. [API 호출 분기 로직]
-            try:
-                if self.cache_name:
-                    # Case A: 캐시 활성 시에만 지침을 치환하여 전송 (토큰 절약 핵심)
-                    cache_safe_data = safe_data.copy()
-                    placeholder = "[CACHED: Narrative Patterns Library Active - Refer to system memory]"
-                    cache_safe_data.update(
-                        {
-                            "intro_library": placeholder,
-                            "dev_library": placeholder,
-                            "ending_library": placeholder,
-                            "trans_library": placeholder,
-                            "archetype_library": placeholder,
-                            "special_instructions": (
-                                f"\n[🚨 PACING GUIDE]: 권장 {target_ep_count}화 "
-                                f"(사건 밀도에 따라 {ep_count_range_text}화 범위 내 조정 가능)"
-                            ),
-                        }
-                    )
-                    prompt = adjusted_prompt_tpl.format_map(_SafeDict(**cache_safe_data))
-                    if attempt > 0 or feedback:
-                        prompt += f"\n\n🚨 [FEEDBACK]: {current_feedback}"
-
-                    # [V49.4] Structured Output Schema 적용
-                    # [V49.6] 온도 상향: 0.4 → 0.5 (추론력 강화)
-                    config_params = {
-                        "cached_content": self.cache_name,
-                        "temperature": 0.5,
-                        "max_output_tokens": 8192,
-                        "response_mime_type": "application/json",
-                    }
-                    if SCHEMA_ENABLED and ARC_DESIGN_SCHEMA:
-                        config_params["response_schema"] = ARC_DESIGN_SCHEMA
-
-                    response = generate_content_via_router(
-                        client=self.client,
-                        model=self.primary_model,
-                        contents=prompt,
-                        config=types.GenerateContentConfig(**config_params),
-                    )
-                    draft_result = self._extract_json_robust(response.text)
-                else:
-                    raise LookupError("No Cache Found")
-
-            except Exception as e:
-                # Case B: 캐시가 없거나 호출 실패 시 즉시 Full-Text로 복구 (품질 보존)
-                if self.cache_name:
-                    logging.warning(f" [Analyst] 캐시 호출 실패. 일반 모드 전환: {str(e)[:50]}")
-
-                full_safe_data = safe_data.copy()
-                full_safe_data.update(
-                    {
-                        "intro_library": self._escape_braces(intro_lib_full),
-                        "dev_library": self._escape_braces(dev_lib_full),
-                        "ending_library": self._escape_braces(ending_lib_full),
-                        "trans_library": self._escape_braces(trans_lib_full),
-                        "archetype_library": self._escape_braces(archetype_lib_full),
-                        "special_instructions": (
-                            f"\n[🚨 PACING GUIDE]: 권장 {target_ep_count}화 "
-                            f"(사건 밀도에 따라 {ep_count_range_text}화 범위 내 조정 가능)"
-                        ),
-                    }
-                )
-                stable_prompt = adjusted_prompt_tpl.format_map(_SafeDict(**full_safe_data))
-                prompt = stable_prompt
-                # [Sweep47] 캐시 경로와 동일하게 — attempt 0에서도 caller feedback 포함
-                if attempt > 0 or feedback:
-                    prompt += f"\n\n🚨 [FEEDBACK]: {current_feedback}"
-
-                # [V49.4] 일반 API 호출 (Structured Schema 적용)
-                # [V49.7] 온도 점진적 상향: 0.5 → 0.6 → 0.7 (재시도 시 창의적 접근 유도)
-                schema = ARC_DESIGN_SCHEMA if SCHEMA_ENABLED else None
-                temp = 0.5 if attempt == 0 else (0.6 if attempt == 1 else 0.7)
-                draft_result = self._extract_json_robust(
-                    self._ask_with_analyst_cache(
-                        cache_type="plan_arc",
-                        stable_context=stable_prompt,
-                        variable_prompt=(
-                            f"🚨 [FEEDBACK]: {current_feedback}"
-                            if (attempt > 0 or feedback) and current_feedback
-                            else ""
-                        ),
-                        full_prompt_fallback=prompt,
-                        temperature=temp,
-                        thinking_level="medium",
-                        response_schema=schema,
-                        task_label="단일 Arc 설계",
-                    )
-                )
-
-            # 7. [V60.31] 가변 페이싱: LLM이 결정한 ep_count 존중 (설정 범위 내)
-            llm_ep_count = draft_result.get("ep_count")
-            if isinstance(llm_ep_count, str):
-                match = re.search(r"(\d+)", str(llm_ep_count))
-                llm_ep_count = int(match.group(1)) if match else target_ep_count
-            elif not isinstance(llm_ep_count, int):
-                llm_ep_count = target_ep_count
-
-            # [V60.70] chosen_pacing과 ep_count 강제 동기화 (자기모순 방지)
-            pacing_decision = draft_result.get("pacing_decision", {})
-            chosen_pacing = pacing_decision.get("chosen_pacing", "") if isinstance(pacing_decision, dict) else ""
-            chosen_pacing_lower = chosen_pacing.lower() if isinstance(chosen_pacing, str) else ""
-
-            if "epic" in chosen_pacing_lower:
-                pacing_min, pacing_max = 5, max_ep_count
-            elif "standard" in chosen_pacing_lower:
-                pacing_min, pacing_max = 4, 5
-            elif "blitz" in chosen_pacing_lower:
-                pacing_min, pacing_max = 3, 4
-            else:
-                pacing_min, pacing_max = min_ep_count, max_ep_count
-
-            if llm_ep_count < pacing_min or llm_ep_count > pacing_max:
-                corrected_ep_count = max(pacing_min, min(pacing_max, llm_ep_count))
-                logging.warning(
-                    f" [V60.70] 자기모순 교정: chosen_pacing={chosen_pacing} 인데 ep_count={llm_ep_count} → {corrected_ep_count}화로 강제 조정"
-                )
-                llm_ep_count = corrected_ep_count
-
-            actual_ep_count = max(min_ep_count, min(max_ep_count, llm_ep_count))
-            if actual_ep_count != target_ep_count:
-                logging.info(f" [V60.31] 가변 페이싱: 권장 {target_ep_count}화 → LLM 결정 {actual_ep_count}화")
-
-            beats = draft_result.get("beat_sequence", [])
-            if not isinstance(beats, list):
-                beats = []
-            if len(beats) != actual_ep_count:
-                if len(beats) > actual_ep_count:
-                    combined = " / ".join(str(b) for b in beats[actual_ep_count - 1 :])
-                    beats = beats[: actual_ep_count - 1] + [f"[통합 전개]: {combined}"]
-                else:
-                    original_count = len(beats)
-                    fallback_beats = [
-                        "서사적 긴장감 고조 및 빌드업 수행",
-                        "캐릭터 내면 갈등 심화 및 선택의 기로",
-                        "예상치 못한 전환점 발생",
-                        "이해관계자 간 대립 격화",
-                        "결정적 사건을 향한 수렴",
-                    ]
-                    while len(beats) < actual_ep_count:
-                        idx = len(beats) % len(fallback_beats)
-                        beats.append(fallback_beats[idx])
-                    logging.warning(
-                        "[Analyst] beat_sequence 부족 (%d/%d) — 폴백 비트 %d개 추가",
-                        original_count,
-                        actual_ep_count,
-                        actual_ep_count - original_count,
-                    )
-                draft_result["beat_sequence"] = beats
-
-            # 공유 상태 업데이트
-            _arc_loop_state["draft_result"] = draft_result
-            _arc_loop_state["actual_ep_count"] = actual_ep_count
-
-            # 자기 비판 감사 (Self-Critic) 호출
-            _critic_block_ctx = _format_block_numeric_targets(curr_block)
-            critic_stable = f"{get_analyst_self_critic_prompt()}" + (
-                f"\n\n{_critic_block_ctx}" if _critic_block_ctx else ""
+            current_feedback = retry_feedback if retry_feedback else plan_context["initial_feedback"]
+            draft_result = self._request_single_arc_draft(
+                plan_context=plan_context,
+                attempt=attempt,
+                current_feedback=current_feedback,
+                feedback_provided=feedback_provided,
             )
-            critic_variable = f"[Draft to Review]: {json.dumps(draft_result, ensure_ascii=False)}"
-            critic_input = critic_stable + f"\n{critic_variable}"
-            audit_result = self._extract_json_robust(
-                self._ask_with_analyst_cache(
-                    cache_type="arc_self_critic",
-                    stable_context=critic_stable,
-                    variable_prompt=critic_variable,
-                    full_prompt_fallback=critic_input,
-                    temperature=0.2,
-                    thinking_level="low",
-                    task_label="Arc self-critique",
-                )
+            draft_result, actual_ep_count = self._normalize_single_arc_draft_result(
+                draft_result,
+                target_ep_count=plan_context["target_ep_count"],
+                min_ep_count=plan_context["min_ep_count"],
+                max_ep_count=plan_context["max_ep_count"],
             )
-            return audit_result
+            arc_loop_state["draft_result"] = draft_result
+            arc_loop_state["actual_ep_count"] = actual_ep_count
+            return self._run_single_arc_self_critic(draft_result, curr_block)
 
         def _arc_on_success(audit_result) -> bool:
             """[V65] Self-Critic PASS 판정"""
@@ -1036,38 +1101,26 @@ class Analyst(BaseAgent):
 
         from modules.core.adaptive_retry import retry_with_feedback
 
-        audit_result, _arc_attempts, _arc_success = retry_with_feedback(
+        audit_result, _arc_attempts, arc_success = retry_with_feedback(
             func=_arc_attempt_func,
             max_attempts=max_retries,
             on_success=_arc_on_success,
             on_failure=_arc_on_failure,
-            task_name=f"plan_single_arc(arc={clean_arc_no})",
+            task_name=f"plan_single_arc(arc={plan_context['clean_arc_no']})",
         )
-
-        # [V65] 루프 결과 반영 — 기존 동작 보존
-        draft_result = _arc_loop_state["draft_result"]
-        actual_ep_count = _arc_loop_state["actual_ep_count"]
-        if _arc_success:
-            # [TF-S01-03] self-critic이 revised_arc를 반환했으면 draft 대신 사용
-            _revised = audit_result.get("revised_arc") if isinstance(audit_result, dict) else None
-            final_arc_data = _revised if _revised and isinstance(_revised, dict) else draft_result
-            final_arc_data["_actual_ep_count"] = actual_ep_count
-
-        # 8. 메타데이터 동기화 + 상태 검증 + Joint Docs 보정
-        if not final_arc_data:
-            if draft_result is None:
-                draft_result = {"arc_no": clean_arc_no, "ep_count": target_ep_count}
-                actual_ep_count = target_ep_count
-                logging.warning("[Analyst] 전체 재시도 실패 — 최소 폴백 Arc 데이터 사용")
-            final_arc_data = draft_result
-            final_arc_data["_actual_ep_count"] = actual_ep_count
-
+        final_arc_data = self._finalize_single_arc_plan_result(
+            audit_result=audit_result,
+            arc_loop_state=arc_loop_state,
+            retry_success=arc_success,
+            clean_arc_no=plan_context["clean_arc_no"],
+            target_ep_count=plan_context["target_ep_count"],
+        )
         return self._post_process_arc(
             final_arc_data,
-            clean_arc_no,
-            vol_no,
+            plan_context["clean_arc_no"],
+            plan_context["vol_no"],
             ep_start,
-            target_ep_count,
+            plan_context["target_ep_count"],
         )
 
     # endregion

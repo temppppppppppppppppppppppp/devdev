@@ -2,9 +2,11 @@
 
 import json
 import sqlite3
+from unittest.mock import MagicMock
 
 import pytest
 
+from modules.core.db_bootstrap_runtime import DBBootstrapRuntime
 from modules.core.db_manager import DBConnectionError, DBError, DBManager
 
 
@@ -98,6 +100,86 @@ def test_close_then_query_raises_connection_error(tmp_path):
     manager.close()
     with pytest.raises(DBConnectionError):
         manager.execute_query("SELECT 1")
+
+
+def test_db_manager_attaches_bootstrap_runtime(db):
+    assert db.bootstrap_runtime is not None
+    assert db.bootstrap_runtime.owner is db
+
+
+def test_boot_db_delegates_to_bootstrap_runtime_and_owner_migrations():
+    manager = DBManager.__new__(DBManager)
+    manager.bootstrap_runtime = MagicMock()
+    manager._migrate_vec_memory_db = MagicMock()
+    manager._migrate_world_state_timeline_if_needed = MagicMock()
+
+    DBManager._boot_db(manager)
+
+    manager.bootstrap_runtime.boot.assert_called_once_with()
+    manager._migrate_vec_memory_db.assert_called_once_with()
+    manager._migrate_world_state_timeline_if_needed.assert_called_once_with()
+
+
+def test_create_foundation_tables_delegates_to_family_helpers():
+    runtime = DBBootstrapRuntime.__new__(DBBootstrapRuntime)
+    runtime.owner = MagicMock()
+    runtime._create_sync_and_anchor_tables = MagicMock()
+    runtime._create_story_state_tables = MagicMock()
+    runtime._create_reflexion_and_martial_tables = MagicMock()
+    runtime._create_seed_and_reference_tables = MagicMock()
+    runtime._create_bible_and_history_tables = MagicMock()
+    runtime._create_sentence_and_selection_tables = MagicMock()
+
+    DBBootstrapRuntime._create_foundation_tables(runtime)
+
+    runtime._create_sync_and_anchor_tables.assert_called_once_with()
+    runtime._create_story_state_tables.assert_called_once_with()
+    runtime._create_reflexion_and_martial_tables.assert_called_once_with()
+    runtime._create_seed_and_reference_tables.assert_called_once_with()
+    runtime._create_bible_and_history_tables.assert_called_once_with()
+    runtime._create_sentence_and_selection_tables.assert_called_once_with()
+
+
+def test_resolve_validated_martial_metrics_filters_invalid_names(monkeypatch):
+    runtime = DBBootstrapRuntime.__new__(DBBootstrapRuntime)
+    monkeypatch.setattr(
+        "modules.core.db_bootstrap_runtime.MARTIAL_METRICS",
+        ["qi_flow", "bad metric", "123bad", "sword_intent"],
+    )
+
+    metrics = DBBootstrapRuntime._resolve_validated_martial_metrics(runtime)
+
+    assert metrics == ["qi_flow", "sword_intent"]
+
+
+def test_create_selection_and_logging_tables_delegates_to_family_helpers():
+    runtime = DBBootstrapRuntime.__new__(DBBootstrapRuntime)
+    runtime._create_llm_call_tables = MagicMock()
+    runtime._create_stage_attempt_tables = MagicMock()
+    runtime._create_ui_event_tables = MagicMock()
+    runtime._create_cost_log_tables = MagicMock()
+
+    DBBootstrapRuntime._create_selection_and_logging_tables(runtime)
+
+    runtime._create_llm_call_tables.assert_called_once_with()
+    runtime._create_stage_attempt_tables.assert_called_once_with()
+    runtime._create_ui_event_tables.assert_called_once_with()
+    runtime._create_cost_log_tables.assert_called_once_with()
+
+
+def test_create_retrieval_and_quality_tables_delegates_to_family_helpers():
+    runtime = DBBootstrapRuntime.__new__(DBBootstrapRuntime)
+    runtime._create_episode_retrieval_tables = MagicMock()
+    runtime._create_episode_quality_tables = MagicMock()
+    runtime._create_reference_world_tables = MagicMock()
+    runtime._create_relationship_dependency_tables = MagicMock()
+
+    DBBootstrapRuntime._create_retrieval_and_quality_tables(runtime)
+
+    runtime._create_episode_retrieval_tables.assert_called_once_with()
+    runtime._create_episode_quality_tables.assert_called_once_with()
+    runtime._create_reference_world_tables.assert_called_once_with()
+    runtime._create_relationship_dependency_tables.assert_called_once_with()
 
 
 def test_get_all_episode_bibles_handles_malformed_json(db):
