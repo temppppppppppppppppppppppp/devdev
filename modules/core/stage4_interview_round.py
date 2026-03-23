@@ -396,12 +396,12 @@ class Stage4InterviewRound:
             selected=str(selected or ""),
             arc_no=int(arc_num or 0),
             error_category=str(error_category or ""),
-            reason=self._compact_text(reason, limit=500),
-            selection_reason=self._compact_text(selection_reason, limit=500),
-            verdict_reason=self._compact_text(verdict_reason, limit=500),
+            reason=self._compact_text(reason, limit=None),
+            selection_reason=self._compact_text(selection_reason, limit=None),
+            verdict_reason=self._compact_text(verdict_reason, limit=None),
             fix_scope=str(fix_scope or ""),
-            open_review=self._compact_text(open_review, limit=300),
-            action_items=list(action_items or [])[:20],
+            open_review=self._compact_text(open_review, limit=None),
+            action_items=list(action_items or []),
             attempt_key=str(attempt_key or ""),
             candidate_key=_artifact["candidate_key"],
             content_hash=_artifact["content_hash"],
@@ -416,10 +416,10 @@ class Stage4InterviewRound:
             repair_scope=str(repair_scope or ""),
             fix_pack=dict(fix_pack or {}),
             retry_budget_axes=dict(retry_budget_axes or {}),
-            runtime_advisory=self._compact_text(runtime_advisory, limit=500),
-            retry_directives=self._compact_text(retry_directives, limit=500),
+            runtime_advisory=self._compact_text(runtime_advisory, limit=None),
+            retry_directives=self._compact_text(retry_directives, limit=None),
             firewall_triggered=bool(firewall_triggered),
-            firewall_reason=self._compact_text(firewall_reason, limit=500),
+            firewall_reason=self._compact_text(firewall_reason, limit=None),
         )
 
     def _get_round_metrics_delta(self) -> dict:
@@ -545,7 +545,7 @@ class Stage4InterviewRound:
                 continue
 
             for warning in validation_result.get("warnings", []) or []:
-                text = self._compact_text(warning, 180)
+                text = self._compact_text(warning, None)
                 if text and text not in seen:
                     seen.add(text)
                     merged.append(text)
@@ -554,7 +554,7 @@ class Stage4InterviewRound:
             for line in self._structured_validation_evidence_lines(
                 validation_result,
                 candidate_label=label,
-                limit_per_key=2,
+                limit_per_key=None,
             ):
                 if line not in seen:
                     seen.add(line)
@@ -646,7 +646,17 @@ class Stage4InterviewRound:
         runtime_advisory = self._build_retry_advisory_digest()
         retry_directives = ""
         if prev_general_lines and round_num > 0:
-            retry_directives = " / ".join(prev_general_lines)
+            # [TF-R3] dedup + bounded cap — 최신 지시만 유지하여 stale backlog 방지
+            _MAX_RETRY_DIRECTIVE_LINES = 20
+            _seen: set[str] = set()
+            _deduped: list[str] = []
+            for _line in prev_general_lines:
+                _stripped = _line.strip()
+                if _stripped and _stripped not in _seen:
+                    _seen.add(_stripped)
+                    _deduped.append(_stripped)
+            # 최신 N줄만 유지 (뒤쪽이 최신)
+            retry_directives = "\n".join(_deduped[-_MAX_RETRY_DIRECTIVE_LINES:])
 
         system_feedback = self._join_unique_lines(prev_system_lines)
         director_feedback_text = self._join_unique_lines(director_lines)
@@ -1153,6 +1163,7 @@ class Stage4InterviewRound:
             "open_review": str(previous_attempt.get("open_review", "") or ""),
             "reject_bucket": previous_attempt.get("reject_bucket", ""),
             "error_category": previous_attempt.get("error_category", ""),
+            "fix_pack_reason": previous_attempt.get("fix_pack_reason", ""),  # [TF-4]
             "rejection_reason": str(previous_attempt.get("rejection_reason", "") or ""),
             "action_items": list(previous_attempt.get("action_items", []) or []),
             "contradiction_types": list(previous_attempt.get("contradiction_types", []) or []),
@@ -2166,7 +2177,21 @@ class Stage4InterviewRound:
         except Exception as e:
             logging.debug(f"[PerfTimer] stop generate: {e}")
 
-        candidates = [candidate for candidate in candidates if candidate.get("manuscript", "").strip()]
+        # [TF-1] None/non-list guard + 후보별 탈락 사유 관측
+        if not candidates:
+            logging.warning("[Stage4] R%d 후보 생성 결과 None/empty — candidates=[]", round_num)
+            candidates = []
+        _pre_filter_count = len(candidates)
+        candidates = [
+            c for c in candidates
+            if isinstance(c, dict) and c.get("manuscript", "").strip()
+        ]
+        if _pre_filter_count > 0 and not candidates:
+            logging.warning(
+                "[Stage4] R%d 후보 %d건 전량 필터링 탈락 (manuscript 누락/빈 문자열)",
+                round_num,
+                _pre_filter_count,
+            )
         if not candidates:
             empty_result = self._build_empty_candidates_result(
                 next_ep=next_ep,
@@ -3540,15 +3565,16 @@ class Stage4InterviewRound:
         validation_result["focus_points"].append(
             f"Python 검증 advisory {len(bv_advisory_warnings)}건 (Director 참고)"
         )
+        _bv_detail_lines = "\n".join(f"    - {w}" for w in bv_advisory_warnings)
         self.ctx.ui.log(
-            f"      ⚠️ 후보{candidate_index} Python 검증 advisory {len(bv_advisory_warnings)}건 → Director에 전달",
+            f"      ⚠️ 후보{candidate_index} Python 검증 advisory {len(bv_advisory_warnings)}건 → Director에 전달\n{_bv_detail_lines}",
             stage="stage4",
             component="python_prevalidation",
             ep_num=next_ep,
             round_num=round_num,
             event_kind="warning",
             level="warning",
-            meta={"candidate_index": candidate_index, "advisory_count": len(bv_advisory_warnings)},
+            meta={"candidate_index": candidate_index, "advisory_count": len(bv_advisory_warnings), "advisory_details": bv_advisory_warnings},
         )
 
     @staticmethod
@@ -3665,10 +3691,19 @@ class Stage4InterviewRound:
                             f"[History Check Error] 검증 실패 (fail-closed): {_hist_err!s}"
                         )
 
-        # (c) Downgrade PASS to REJECT if post-select validation found conflicts
+        # (c) Downgrade provisional PASS to REJECT if post-select validation found conflicts
         if _post_select_conflicts:
+            _conflict_types = []
+            for _c in _post_select_conflicts:
+                if "Continuity" in _c:
+                    _conflict_types.append("continuity")
+                elif "History" in _c:
+                    _conflict_types.append("history")
+                else:
+                    _conflict_types.append("check_error")
             self.ctx.ui.log(
-                f"   [A-3] {len(_post_select_conflicts)} post-select conflicts detected -> downgrade to REJECT"
+                f"   [TF-3] Provisional PASS → REJECT downgrade: "
+                f"{len(_post_select_conflicts)} post-select conflicts ({', '.join(_conflict_types)})"
             )
             verdict = "REJECT"
             director_result = self._apply_director_gate_update(
@@ -3677,9 +3712,18 @@ class Stage4InterviewRound:
                 gate_basis="post_select_conflict",
                 repair_scope="partial" if (director_result or {}).get("fix_scope") != "full" else "full",
             )
-            # [TF-49] A-3 다운그레이드 시 error_category를 LOGIC_ERROR로 설정
+            # [TF-49/TF-3] A-3 다운그레이드 시 error_category를 구체적으로 설정
             # → V75-D/V75-B 에스컬레이션 체인 트리거 (Blueprint 자동 수정)
-            error_category = "LOGIC_ERROR"
+            _has_continuity = any("Continuity" in c for c in _post_select_conflicts)
+            _has_history = any("History" in c for c in _post_select_conflicts)
+            if _has_continuity and _has_history:
+                error_category = "POST_SELECT_CONTINUITY_AND_HISTORY"
+            elif _has_continuity:
+                error_category = "POST_SELECT_CONTINUITY_CONFLICT"
+            elif _has_history:
+                error_category = "POST_SELECT_HISTORY_CONFLICT"
+            else:
+                error_category = "POST_SELECT_CHECK_ERROR"
             director_feedback += "\n" + "\n".join(_post_select_conflicts)
             # [P0-D3] 다운그레이드 시 previous_attempt 갱신 — 다음 라운드 패치 모드용
             _fix_scope = director_result.get("fix_scope", "") if isinstance(director_result, dict) else ""
@@ -3716,6 +3760,11 @@ class Stage4InterviewRound:
                 "open_review": director_result.get("open_review", "")
                 if isinstance(director_result, dict)
                 else "",  # [TF-29]
+                # [TF-R2] fix_pack/action_items 보존 — 다음 retry lane에서 patch_targets 참조 가능
+                "fix_pack": self._build_fix_pack_payload(director_result) if isinstance(director_result, dict) else {},
+                "action_items": list(director_result.get("action_items", []) or [])
+                if isinstance(director_result, dict)
+                else [],
                 "prior_attempts": self._inherit_attempt_history(previous_attempt),
             }
 
@@ -3773,6 +3822,7 @@ class Stage4InterviewRound:
         if verdict == "PASS" and score < _quality_gate_score:
             self.ctx.ui.log(f"   [QualityGate] PASS -> score={score} < {_quality_gate_score}; downgrade to REJECT")
             verdict = "REJECT"
+            error_category = error_category or "QUALITY_FLOOR_FAIL"  # [TF-5]
             director_result = self._apply_director_gate_update(
                 director_result,
                 final_verdict="REJECT",
@@ -3782,6 +3832,11 @@ class Stage4InterviewRound:
                 f"\n[Quality Gate] Director PASS but score {score} is below {_quality_gate_score}. "
                 "Retry after improvement."
             )
+
+        # [TF-R4] CONDITIONAL_PASS가 upstream에서 미해소된 채 도달하면 PASS로 정규화
+        if verdict == "CONDITIONAL_PASS":
+            logging.info("[Stage4] _process_verdict: CONDITIONAL_PASS → PASS 정규화")
+            verdict = "PASS"
 
         if verdict in ("PASS", "PASS_WITH_FIX"):
             processed = self._process_positive_verdict(
@@ -3856,7 +3911,7 @@ class Stage4InterviewRound:
         )
         is_patch = bool(is_patch or transition.patch_trace)
 
-        if transition.verdict in ("PASS", "PASS_WITH_FIX"):
+        if transition.verdict in ("PASS", "PASS_WITH_FIX", "CONDITIONAL_PASS"):
             return self._build_positive_verdict_success_result(
                 transition=transition,
                 seed_payload=seed_payload,
@@ -4640,7 +4695,7 @@ class Stage4InterviewRound:
                     _tg_warnings_all.extend(_tg_result["structured_warnings"])
             if _tg_warnings_all:
                 _tg_lines = ["[TruthGate Advisory \u2014 CRITICAL \uacbd\uace0 \uc2dc \ubc18\ub4dc\uc2dc REJECT]"]
-                for _w in _tg_warnings_all[:10]:
+                for _w in _tg_warnings_all:
                     _tg_lines.append(f"- [{_w.get('severity', '?')}] {_w.get('text', '')}")
                 logging.info("[TruthGate\u2192Director] %d\uac1c \uacbd\uace0 \uc804\ub2ec", len(_tg_warnings_all))
                 return ["\n".join(_tg_lines)]
@@ -4679,7 +4734,7 @@ class Stage4InterviewRound:
                         _drift_lines = [
                             "[NpcDriftAdvisor \u2014 NPC \uc18d\uc131 \ud45c\ub958 \uac10\uc9c0, \ucc38\uace0\uc6a9 advisory \u2014 \ucd5c\uc885 \ud310\ub2e8\uc740 Director]"
                         ]
-                        for _d in _drift_all[:8]:
+                        for _d in _drift_all:
                             _cl = (
                                 ["A", "B", "C"][_d.get("_cand_idx", 0)]
                                 if _d.get("_cand_idx", 0) < 3
@@ -4687,7 +4742,7 @@ class Stage4InterviewRound:
                             )
                             _drift_lines.append(
                                 f"- [\ud6c4\ubcf4 {_cl}][MAJOR] NPC '{_d.get('npc', '')}' {_d.get('field', '')}: "
-                                f"\uae30\ub300='{_d.get('expected', '')}' \u2192 \uc6d0\uace0='{_d.get('found_in_ms', '')[:40]}'"
+                                f"\uae30\ub300='{_d.get('expected', '')}' \u2192 \uc6d0\uace0='{_d.get('found_in_ms', '')}'"
                             )
                         logging.info(
                             "[NpcDriftAdvisor\u2192Director] %d\uac74 \ud45c\ub958 \uac10\uc9c0 \uc804\ub2ec",
@@ -4715,8 +4770,8 @@ class Stage4InterviewRound:
                         _nd_lines = [
                             "[NumericDriftAdvisor \u2014 \uc218\uce58 \ub204\uc801 \ud45c\ub958 \uac10\uc9c0, \ucc38\uace0\uc6a9 advisory \u2014 \ucd5c\uc885 \ud310\ub2e8\uc740 Director]"
                         ]
-                        for _nd in _num_drifts[:6]:
-                            _nd_lines.append(f"- [MAJOR] '{_nd.get('key', '')}': {_nd.get('issue', '')[:60]}")
+                        for _nd in _num_drifts:
+                            _nd_lines.append(f"- [MAJOR] '{_nd.get('key', '')}': {_nd.get('issue', '')}")
                         logging.info(
                             "[NumericDriftAdvisor\u2192Director] %d\uac74 \uc218\uce58 \ud45c\ub958 \uac10\uc9c0",
                             len(_num_drifts),
@@ -4776,14 +4831,14 @@ class Stage4InterviewRound:
                 _fb_lines = [
                     "[FlashbackVerifier \u2014 \ud68c\uc0c1 \uc624\uc5fc \uac10\uc9c0, \ucc38\uace0\uc6a9 advisory \u2014 \ucd5c\uc885 \ud310\ub2e8\uc740 Director]"
                 ]
-                for _fw in _fb_all[:6]:
+                for _fw in _fb_all:
                     _cl = (
                         ["A", "B", "C"][_fw.get("_cand_idx", 0)]
                         if _fw.get("_cand_idx", 0) < 3
                         else str(_fw.get("_cand_idx", 0) + 1)
                     )
                     _fb_lines.append(
-                        f"- [\ud6c4\ubcf4 {_cl}][MAJOR] '{_fw.get('marker', '')}': {_fw.get('issue', '')[:60]}"
+                        f"- [\ud6c4\ubcf4 {_cl}][MAJOR] '{_fw.get('marker', '')}': {_fw.get('issue', '')}"
                     )
                 logging.info(
                     "[FlashbackVerifier\u2192Director] %d\uac74 \ud68c\uc0c1 \uc624\uc5fc \uac10\uc9c0", len(_fb_all)
@@ -4834,14 +4889,14 @@ class Stage4InterviewRound:
                             _ip_lines = [
                                 "[InfoParadoxChecker \u2014 \uc815\ubcf4 \uc5ed\uc124 \uac10\uc9c0, \ucc38\uace0\uc6a9 advisory \u2014 \ucd5c\uc885 \ud310\ub2e8\uc740 Director]"
                             ]
-                            for _ip in _ip_all[:6]:
+                            for _ip in _ip_all:
                                 _cl = (
                                     ["A", "B", "C"][_ip.get("_cand_idx", 0)]
                                     if _ip.get("_cand_idx", 0) < 3
                                     else str(_ip.get("_cand_idx", 0) + 1)
                                 )
                                 _ip_lines.append(
-                                    f"- [\ud6c4\ubcf4 {_cl}][MAJOR] '{_ip.get('info_used', '')[:40]}': {_ip.get('why_paradox', '')[:60]}"
+                                    f"- [\ud6c4\ubcf4 {_cl}][MAJOR] '{_ip.get('info_used', '')}': {_ip.get('why_paradox', '')}"
                                 )
                             logging.info(
                                 "[InfoParadoxChecker\u2192Director] %d\uac74 \uc815\ubcf4 \uc5ed\uc124 \uac10\uc9c0",
@@ -4882,14 +4937,14 @@ class Stage4InterviewRound:
                         _rd_lines = [
                             "[RelationshipDriftAdvisor \u2014 \uad00\uacc4\ub3c4 \ud45c\ub958 \uac10\uc9c0, \ucc38\uace0\uc6a9 advisory \u2014 \ucd5c\uc885 \ud310\ub2e8\uc740 Director]"
                         ]
-                        for _rd in _rd_all[:6]:
+                        for _rd in _rd_all:
                             _cl = (
                                 ["A", "B", "C"][_rd.get("_cand_idx", 0)]
                                 if _rd.get("_cand_idx", 0) < 3
                                 else str(_rd.get("_cand_idx", 0) + 1)
                             )
                             _rd_lines.append(
-                                f"- [\ud6c4\ubcf4 {_cl}][MAJOR] '{_rd.get('npc_pair', '')[:30]}': {_rd.get('why_drift', '')[:60]}"
+                                f"- [\ud6c4\ubcf4 {_cl}][MAJOR] '{_rd.get('npc_pair', '')}': {_rd.get('why_drift', '')}"
                             )
                         logging.info(
                             "[RelationshipDriftAdvisor\u2192Director] %d\uac74 \uad00\uacc4 \ud45c\ub958 \uac10\uc9c0",
@@ -4924,14 +4979,14 @@ class Stage4InterviewRound:
                         _ltr_lines = [
                             f"[P1-5 \uc7a5\uae30 \ubc18\ubcf5 \uac10\uc9c0 \u2014 {len(_ltr_all)}\uac74, \ucc38\uace0\uc6a9 advisory \u2014 \ucd5c\uc885 \ud310\ub2e8\uc740 Director]"
                         ]
-                        for _lr in _ltr_all[:6]:
+                        for _lr in _ltr_all:
                             _cl = (
                                 ["A", "B", "C"][_lr.get("_cand_idx", 0)]
                                 if _lr.get("_cand_idx", 0) < 3
                                 else str(_lr.get("_cand_idx", 0) + 1)
                             )
                             _ltr_lines.append(
-                                f"- [\ud6c4\ubcf4 {_cl}][MAJOR] '{_lr.get('pattern', '')[:30]}': {_lr.get('issue', '')[:60]}"
+                                f"- [\ud6c4\ubcf4 {_cl}][MAJOR] '{_lr.get('pattern', '')}': {_lr.get('issue', '')}"
                             )
                         logging.info(
                             "[LongTermRepetitionAdvisor\u2192Director] %d\uac74 \uc7a5\uae30 \ubc18\ubcf5 \uac10\uc9c0",
@@ -4991,14 +5046,14 @@ class Stage4InterviewRound:
                 _nc_lines = [
                     "[NumericConsistency — Python 수치 검증 결과. 각 항목에 대해 numeric_consistency_review에서 AGREE/DISMISS 판정 필수]"
                 ]
-                for _wi, _w in enumerate(_nc_all[:10], 1):
+                for _wi, _w in enumerate(_nc_all, 1):
                     _cl = (
                         ["A", "B", "C"][_w.get("_cand_idx", 0)]
                         if _w.get("_cand_idx", 0) < 3
                         else str(_w.get("_cand_idx", 0) + 1)
                     )
                     _sev = _w.get("severity", "MAJOR")
-                    _nc_lines.append(f"- [NC-{_wi}][후보 {_cl}][{_sev}] {_w.get('text', '')[:120]}")
+                    _nc_lines.append(f"- [NC-{_wi}][후보 {_cl}][{_sev}] {_w.get('text', '')}")
                 logging.info(
                     "[NumericConsistency→Director] %d건 수치 정합성 경고",
                     len(_nc_all),
@@ -5195,7 +5250,7 @@ class Stage4InterviewRound:
         if not patch_targets:
             patch_targets = [str(item).strip() for item in (fix_pack.get("patch_targets") or []) if str(item).strip()]
         if patch_targets:
-            summary_parts.append(f"targets={' / '.join(patch_targets[:3])}")
+            summary_parts.append(f"targets={' / '.join(patch_targets)}")
         patch_strategy = str(patch_trace.get("patch_strategy", "") or "").strip()
         if patch_strategy:
             summary_parts.append(f"strategy={patch_strategy}")
@@ -5204,7 +5259,7 @@ class Stage4InterviewRound:
                 summary_parts.append(f"change_ratio={float(patch_trace['change_ratio']):.1%}")
             except (TypeError, ValueError):
                 pass
-        return " | ".join(summary_parts[:6])
+        return " | ".join(summary_parts)
 
     @staticmethod
     def _build_reaudit_story_context(base_story_context: str, applied_patches: list[str]) -> str:
@@ -5364,8 +5419,8 @@ class Stage4InterviewRound:
             _candidate_warnings = list(validation_warnings or [])
             _final_warnings = list(final_warnings or [])
             _round_metrics = self._get_round_metrics_delta()
-            _selection_reason = (director_result.get("selection_reason") or "")[:500]
-            _verdict_reason = (director_result.get("verdict_reason") or _selection_reason)[:500]
+            _selection_reason = director_result.get("selection_reason") or ""
+            _verdict_reason = director_result.get("verdict_reason") or _selection_reason
             _gate_semantics = self._build_gate_semantics_payload(director_result)
             _fix_pack = self._build_fix_pack_payload(director_result)
             _patch_trace = dict(patch_trace or {})
@@ -5430,9 +5485,9 @@ class Stage4InterviewRound:
                 "reason": _selection_reason,
                 "selection_reason": _selection_reason,
                 "verdict_reason": _verdict_reason,
-                "action_items": (director_result.get("action_items") or [])[:5],
+                "action_items": list(director_result.get("action_items") or []),
                 "score_breakdown": director_result.get("score_breakdown", {}),
-                "open_review": (director_result.get("open_review") or "")[:300],
+                "open_review": str(director_result.get("open_review") or ""),
                 "flags": {
                     "patch_mode": bool(is_patch or _patch_trace),
                     "patch_fallback": patch_fallback,
@@ -5453,13 +5508,13 @@ class Stage4InterviewRound:
                     "structural_attempted": bool(_patch_trace.get("structural_attempted", False)),
                 },
                 "fix_pack": _fix_pack,
-                "warnings": (_final_warnings[:20] if _final_verdict in ("PASS", "PASS_WITH_FIX") else _candidate_warnings[:20]),
-                "final_warnings": _final_warnings[:20],
-                "candidate_warnings": _candidate_warnings[:20],
+                "warnings": (_final_warnings if _final_verdict in ("PASS", "PASS_WITH_FIX") else _candidate_warnings),
+                "final_warnings": _final_warnings,
+                "candidate_warnings": _candidate_warnings,
                 "feedback_provenance": {
-                    "director_feedback": self._compact_text(_feedback_provenance.get("director_feedback", ""), 500),
-                    "runtime_advisory": self._compact_text(_feedback_provenance.get("runtime_advisory", ""), 500),
-                    "retry_directives": self._compact_text(_feedback_provenance.get("retry_directives", ""), 500),
+                    "director_feedback": self._compact_text(_feedback_provenance.get("director_feedback", ""), None),
+                    "runtime_advisory": self._compact_text(_feedback_provenance.get("runtime_advisory", ""), None),
+                    "retry_directives": self._compact_text(_feedback_provenance.get("retry_directives", ""), None),
                 },
             }
             log_path = Path(logs_dir) / "episode_production.jsonl"

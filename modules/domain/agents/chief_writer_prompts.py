@@ -79,6 +79,7 @@ def build_chief_writer_main_prompt(
     ending_hook_section: str = "",  # [ending_hook] 현재 화 마무리 훅
     emotional_beat_section: str = "",  # [emotional_beat] 감정 정점
     satisfaction_guide_section: str = "",  # [D-Step2] 독자 대리만족 사전 주입
+    opening_anchor_section: str = "",  # [TF-2] 시작 장소/시간 불변 계약
 ) -> str:
     """[V65] _build_common_context() 메인 프롬프트 템플릿.
 
@@ -123,14 +124,23 @@ def build_chief_writer_main_prompt(
 ### [STEP 1: Blueprint 분석]
 아래 Blueprint의 모든 씬을 파악하고, 누락 없이 반영하라.
 
+⚠️ 필수: 각 씬의 시작 부분에 반드시 '### 씬 N: 제목' 형식의 마크다운 헤더를 삽입하라.
+   예: ### 씬 1: 호텔 라운지의 만남
+   씬 헤더 없이 하나의 산문 블록으로 쓰면 불합격이다.
+   모든 씬을 빠짐없이 헤더로 구분하여 순서대로 작성하라.
+
 {scene_breakdown}
 
 {emotional_beat_section}
 
 ### [STEP 2: 연속성 확인]
+
+{opening_anchor_section}
+
 {prev_digest}
 
 직전 화 엔딩에서 자연스럽게 이어져야 한다. 위 다이제스트의 상태를 반드시 준수하라.
+단, 위 Opening Anchor가 있으면 Blueprint의 시작 장소/시간이 직전 화 종료 상태보다 우선한다.
 
 ⛔ [V69.1] 중복 서술 금지: 직전 화의 마지막 장면을 다시 서술하지 마라.
    직전 화가 끝난 바로 그 다음 순간부터 시작하라.
@@ -198,7 +208,7 @@ def get_fix_issues_prompt(
 {manuscript_escaped}
 
 ### 출력 형식
-수정된 JSON 원고만 출력하라. 설명 없이 JSON만.
+수정된 JSON 원고만 출력하라. 설명 없이 단일 JSON 객체({{ }}) 하나만. 배열([...])로 감싸지 마라.
 """
 
 
@@ -230,7 +240,7 @@ def get_expand_length_prompt(
 {manuscript_escaped}
 
 ### 출력 형식
-확장된 JSON 원고만 출력하라. 설명 없이 JSON만.
+확장된 JSON 원고만 출력하라. 설명 없이 단일 JSON 객체({{ }}) 하나만. 배열([...])로 감싸지 마라.
 """
 
 

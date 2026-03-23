@@ -174,7 +174,7 @@ class ChiefWriterContextBuilder:
         current_martial_arts = current_martial_arts or []
         dead_npcs = dead_npcs or []
 
-        scene_breakdown, ending_hook = self._extract_blueprint_sections(blueprint)
+        scene_breakdown, ending_hook, opening_anchor_section = self._extract_blueprint_sections(blueprint)
         (
             bible_root,
             core_identity,
@@ -248,13 +248,15 @@ class ChiefWriterContextBuilder:
             ending_hook_section=self.host._escape_braces(ending_hook) if ending_hook else "",
             emotional_beat_section=self.host._escape_braces(emotional_beat_section) if emotional_beat_section else "",
             satisfaction_guide_section=get_satisfaction_guide_section(),  # [D-Step2]
+            opening_anchor_section=self.host._escape_braces(opening_anchor_section) if opening_anchor_section else "",  # [TF-2]
         )
 
-    def _extract_blueprint_sections(self, blueprint: dict) -> tuple[str, str]:
+    def _extract_blueprint_sections(self, blueprint: dict) -> tuple[str, str, str]:
         scene_breakdown = ""
         ending_hook = ""
+        opening_anchor_section = ""
         if not isinstance(blueprint, dict):
-            return scene_breakdown, ending_hook
+            return scene_breakdown, ending_hook, opening_anchor_section
 
         scenes = blueprint.get("scene_breakdown", {})
         if isinstance(scenes, dict):
@@ -265,7 +267,36 @@ class ChiefWriterContextBuilder:
         hook = blueprint.get("ending_hook", "")
         if hook:
             ending_hook = f"### 이 화의 마무리 훅\n{hook}"
-        return scene_breakdown, ending_hook
+
+        # [TF-2] Opening-Anchor Packet — blueprint에서 첫 씬 불변 계약 추출
+        _start_loc = blueprint.get("start_location", "")
+        _time_flow = blueprint.get("time_flow", "")
+        _scene_1 = {}
+        if isinstance(scenes, dict):
+            _scene_1 = scenes.get("scene_1") or next(iter(scenes.values()), {})
+            if not isinstance(_scene_1, dict):
+                _scene_1 = {}
+        _s1_title = _scene_1.get("title", "")
+        _s1_summary = _scene_1.get("summary", "") or _scene_1.get("goal", "")
+        _s1_location = _scene_1.get("location", "")
+
+        if _start_loc or _time_flow or _s1_title:
+            anchor_parts = ["### ⚓ [TF-2] 이 화의 시작 계약 (불변)"]
+            anchor_parts.append("이 화의 첫 씬은 아래 조건을 반드시 지켜야 한다. 임의로 바꾸면 불합격이다.")
+            if _start_loc:
+                anchor_parts.append(f"- 시작 장소: {_start_loc}")
+            if _s1_location and _s1_location != _start_loc:
+                anchor_parts.append(f"- 첫 씬 세부 장소: {_s1_location}")
+            if _time_flow:
+                anchor_parts.append(f"- 시간대: {_time_flow}")
+            if _s1_title:
+                anchor_parts.append(f"- 첫 씬 제목/목표: {_s1_title}")
+            if _s1_summary:
+                anchor_parts.append(f"- 첫 씬 요약: {_s1_summary[:200]}")
+            anchor_parts.append("⛔ 위 장소와 시간대를 변경하거나 다른 장소/시간에서 시작하면 즉시 불합격 처리된다.")
+            opening_anchor_section = "\n".join(anchor_parts)
+
+        return scene_breakdown, ending_hook, opening_anchor_section
 
     def _extract_bible_context(self, master_bible: dict) -> tuple[dict, dict, dict, str, str]:
         bible_root = master_bible.get("MasterBible", master_bible) if isinstance(master_bible, dict) else {}

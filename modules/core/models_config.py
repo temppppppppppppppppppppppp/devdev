@@ -5,6 +5,43 @@ from pathlib import Path
 import yaml
 
 
+# Runtime fallback SSOT.
+# `config/models.yaml` is authoritative when present, and these defaults are the
+# only inline mirrors code should rely on when the YAML is absent or incomplete.
+DEFAULT_PRO_MODEL = "gemini-3.1-pro-preview"
+DEFAULT_PRO_FALLBACK_MODEL = "gemini-2.5-pro"
+DEFAULT_FLASH_MODEL = "gemini-2.5-flash"
+
+DEFAULT_AGENT_MODELS = {
+    "analyst": DEFAULT_PRO_MODEL,
+    "manager": DEFAULT_FLASH_MODEL,
+    "chief_writer": DEFAULT_PRO_MODEL,
+    "blueprint_ensemble": DEFAULT_PRO_MODEL,
+    "three_phase_blueprint_generator": DEFAULT_PRO_MODEL,
+    "state_locked_arc_generator": DEFAULT_PRO_MODEL,
+    "block_enricher": DEFAULT_FLASH_MODEL,
+    "preflight_checker": DEFAULT_FLASH_MODEL,
+    "state_extractor": DEFAULT_FLASH_MODEL,
+    "four_phase_arc_generator": DEFAULT_PRO_MODEL,
+    "continuity_inspector": DEFAULT_PRO_MODEL,
+    "director": DEFAULT_PRO_MODEL,
+    "arc_corrector": DEFAULT_FLASH_MODEL,
+    "arc_critic": DEFAULT_FLASH_MODEL,
+    "consensus_validator": DEFAULT_FLASH_MODEL,
+    "unified_arc_validator": DEFAULT_FLASH_MODEL,
+    "unified_blueprint_validator": DEFAULT_FLASH_MODEL,
+    "critic": DEFAULT_FLASH_MODEL,
+    "weaver": DEFAULT_FLASH_MODEL,
+    "writer": DEFAULT_FLASH_MODEL,
+}
+
+DEFAULT_MODEL_FALLBACK_CHAIN = {
+    DEFAULT_PRO_MODEL: DEFAULT_PRO_FALLBACK_MODEL,
+    DEFAULT_PRO_FALLBACK_MODEL: DEFAULT_FLASH_MODEL,
+    DEFAULT_FLASH_MODEL: DEFAULT_FLASH_MODEL,
+}
+
+
 def resolve_models_yaml_path() -> Path:
     """Return the repo-root `config/models.yaml` path."""
 

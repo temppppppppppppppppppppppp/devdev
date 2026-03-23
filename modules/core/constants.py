@@ -5,7 +5,7 @@
 
 import logging
 
-from modules.core.models_config import load_model_name
+from modules.core.models_config import DEFAULT_FLASH_MODEL, DEFAULT_PRO_MODEL, load_model_name
 
 
 def _load_model_from_yaml(section: str, key: str, fallback: str) -> str:
@@ -256,35 +256,35 @@ class AIModels:
     """AI 모델 이름 상수 — [SSOT] config/models.yaml role_constants/agents 참조."""
 
     # ── 경량/보조 모델 ────────────────────────────────────────────────────────
-    V50_MODULE_MODEL = _load_model_from_yaml("role_constants", "flash_main", "gemini-2.5-flash")
-    FLASH_ANALYSIS_MODEL = _load_model_from_yaml("role_constants", "flash_main", "gemini-2.5-flash")
-    SUMMARY_MODEL = _load_model_from_yaml("role_constants", "flash_main", "gemini-2.5-flash")
+    V50_MODULE_MODEL = _load_model_from_yaml("role_constants", "flash_main", DEFAULT_FLASH_MODEL)
+    FLASH_ANALYSIS_MODEL = _load_model_from_yaml("role_constants", "flash_main", DEFAULT_FLASH_MODEL)
+    SUMMARY_MODEL = _load_model_from_yaml("role_constants", "flash_main", DEFAULT_FLASH_MODEL)
 
     # ── Architect 티어 ────────────────────────────────────────────────────────
-    TIER_1_ARCHITECT = _load_model_from_yaml("role_constants", "pro_main", "gemini-2.5-pro")
-    TIER_2_ARCHITECT = _load_model_from_yaml("role_constants", "pro_main", "gemini-2.5-pro")
-    TIER_3_ARCHITECT = _load_model_from_yaml("role_constants", "pro_main", "gemini-2.5-pro")
+    TIER_1_ARCHITECT = _load_model_from_yaml("role_constants", "pro_main", DEFAULT_PRO_MODEL)
+    TIER_2_ARCHITECT = _load_model_from_yaml("role_constants", "pro_main", DEFAULT_PRO_MODEL)
+    TIER_3_ARCHITECT = _load_model_from_yaml("role_constants", "pro_main", DEFAULT_PRO_MODEL)
 
     # ── Writer 티어 ──────────────────────────────────────────────────────────
-    TIER_1_WRITER = _load_model_from_yaml("role_constants", "pro_main", "gemini-2.5-pro")
-    TIER_2_WRITER = _load_model_from_yaml("role_constants", "pro_main", "gemini-2.5-pro")
-    TIER_3_WRITER = _load_model_from_yaml("role_constants", "pro_main", "gemini-2.5-pro")
+    TIER_1_WRITER = _load_model_from_yaml("role_constants", "pro_main", DEFAULT_PRO_MODEL)
+    TIER_2_WRITER = _load_model_from_yaml("role_constants", "pro_main", DEFAULT_PRO_MODEL)
+    TIER_3_WRITER = _load_model_from_yaml("role_constants", "pro_main", DEFAULT_PRO_MODEL)
 
     # ── 폴백 ─────────────────────────────────────────────────────────────────
-    EMERGENCY_FALLBACK = _load_model_from_yaml("role_constants", "emergency", "gemini-2.5-pro")
-    QUOTA_FALLBACK = _load_model_from_yaml("role_constants", "emergency", "gemini-2.5-pro")
+    EMERGENCY_FALLBACK = _load_model_from_yaml("role_constants", "emergency", DEFAULT_PRO_MODEL)
+    QUOTA_FALLBACK = _load_model_from_yaml("role_constants", "emergency", DEFAULT_PRO_MODEL)
 
     # ── 기본값 ────────────────────────────────────────────────────────────────
-    DEFAULT_WRITER = _load_model_from_yaml("role_constants", "pro_main", "gemini-2.5-pro")
-    DEFAULT_ARCHITECT = _load_model_from_yaml("role_constants", "pro_main", "gemini-2.5-pro")
-    DEFAULT_ANALYST = _load_model_from_yaml("role_constants", "pro_main", "gemini-2.5-pro")
-    DEFAULT_REVIEWER = _load_model_from_yaml("role_constants", "pro_main", "gemini-2.5-pro")
+    DEFAULT_WRITER = _load_model_from_yaml("role_constants", "pro_main", DEFAULT_PRO_MODEL)
+    DEFAULT_ARCHITECT = _load_model_from_yaml("role_constants", "pro_main", DEFAULT_PRO_MODEL)
+    DEFAULT_ANALYST = _load_model_from_yaml("role_constants", "pro_main", DEFAULT_PRO_MODEL)
+    DEFAULT_REVIEWER = _load_model_from_yaml("role_constants", "pro_main", DEFAULT_PRO_MODEL)
 
     # ── Stage 전용 ───────────────────────────────────────────────────────────
-    STAGE4_FIXED_WRITER_MODEL = _load_model_from_yaml("agents", "chief_writer", "gemini-2.5-pro")
-    STAGE2_MAIN_MODEL = _load_model_from_yaml("agents", "four_phase_arc_generator", "gemini-2.5-pro")
-    STAGE2_EXTRACTION_MODEL = _load_model_from_yaml("agents", "state_locked_arc_generator", "gemini-2.5-pro")
-    STAGE2_VALIDATION_MODEL = _load_model_from_yaml("role_constants", "pro_main", "gemini-2.5-pro")
+    STAGE4_FIXED_WRITER_MODEL = _load_model_from_yaml("agents", "chief_writer", DEFAULT_PRO_MODEL)
+    STAGE2_MAIN_MODEL = _load_model_from_yaml("agents", "four_phase_arc_generator", DEFAULT_PRO_MODEL)
+    STAGE2_EXTRACTION_MODEL = _load_model_from_yaml("agents", "state_locked_arc_generator", DEFAULT_PRO_MODEL)
+    STAGE2_VALIDATION_MODEL = _load_model_from_yaml("role_constants", "pro_main", DEFAULT_PRO_MODEL)
 
 
 class BatchSizes:

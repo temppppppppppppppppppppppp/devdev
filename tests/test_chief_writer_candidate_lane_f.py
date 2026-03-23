@@ -73,6 +73,45 @@ def test_generate_single_candidate_shell_coordinates_helper_family():
     writer._build_single_candidate_result.assert_called_once()
 
 
+def test_generate_single_candidate_normalizes_list_payload_from_extract_json():
+    writer = _make_writer()
+    request_bundle = {
+        "strategy_config": {"name": "Balanced", "emphasis": "steady"},
+        "temperature": 0.7,
+        "strategy_feedback_block": "",
+        "output_block": "schema",
+    }
+    parsed = [{"content": "body", "title": "title", "state_updates": {}, "key_scenes_covered": ["s1"]}]
+
+    writer._prepare_single_candidate_request = MagicMock(return_value=request_bundle)
+    writer._request_single_candidate_response = MagicMock(return_value='[{"content":"body"}]')
+    writer.quality_gate.sanitize_leakage.return_value = '[{"content":"body"}]'
+    writer._extract_json_robust.return_value = parsed
+    writer._extract_single_candidate_manuscript_payload = MagicMock(return_value=("body", '{"content":"body"}'))
+    writer._extract_candidate_npcs = MagicMock(return_value=[{"name": "npc"}])
+    writer.quality_gate.apply_self_critique.return_value = '{"content":"body revised"}'
+    writer._finalize_single_candidate_critique = MagicMock(return_value=("body revised", "title", {"hp": 10}))
+    writer._build_single_candidate_result = MagicMock(return_value={"strategy": "balanced", "manuscript": "body revised"})
+
+    result = writer._generate_single_candidate(
+        ep_num=7,
+        strategy="balanced",
+        blueprint={"scene": 1},
+        common_context="ctx",
+        hud_report="hud",
+        master_bible={"MasterBible": {"AssetLibrary": {"KeyNPCs": [{"name": "npc"}]}}},
+        genre_name="wuxia",
+        cache_name="cache/x",
+        strategy_feedback="fix focus",
+        motivations=["goal"],
+        promises=["promise"],
+        strategy_temperature=0.9,
+    )
+
+    assert result == {"strategy": "balanced", "manuscript": "body revised"}
+    writer._extract_single_candidate_manuscript_payload.assert_called_once_with(parsed[0])
+
+
 def test_prepare_single_candidate_request_uses_strategy_temperature_and_schema():
     writer = _make_writer()
     writer._get_critical_keys_for_genre = MagicMock(return_value=["hp", "wealth"])

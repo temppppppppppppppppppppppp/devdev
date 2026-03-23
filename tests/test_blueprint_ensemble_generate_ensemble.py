@@ -168,3 +168,53 @@ def test_request_blueprint_generation_rejects_missing_required_fields():
     )
 
     assert result == (None, AgentErrorType.SCHEMA_INCOMPATIBLE)
+
+
+class TestBlueprintTemporalCarryover:
+    """[pre-rerun] Blueprint 시간 진실 소스가 원고 기준으로 전달되는지 검증."""
+
+    def test_format_prev_info_expanded_includes_manuscript_ending_truth(self):
+        """prev_manuscripts_text가 있으면 '원고 기준 종료 상황' 섹션이 포함."""
+        agent = _make_agent()
+        prev_bp = {
+            "ending_hook": "적의 습격",
+            "end_location": "객잔",
+            "time_flow": "2006-01-17 저녁",
+            "ending_state": {"timeline": {"expression": "2006-01-17 Evening"}},
+        }
+        manuscript_text = "주인공은 저녁 8시에 아버지를 만났다. [2006년 1월 18일, 저녁]"
+
+        result = agent._format_prev_info_expanded(prev_bp, None, manuscript_text)
+
+        assert "원고 기준" in result
+        assert "2006년 1월 18일" in result
+
+    def test_format_prev_info_expanded_without_manuscript_omits_truth_section(self):
+        """prev_manuscripts_text가 없으면 원고 기준 섹션 없음."""
+        agent = _make_agent()
+        prev_bp = {"time_flow": "2006-01-17 저녁"}
+
+        result = agent._format_prev_info_expanded(prev_bp, None, "")
+
+        assert "원고 기준" not in result
+
+    def test_constraint_compiler_prefers_manuscript_ending(self):
+        """원고 말미가 있으면 time_context에 원고 기준 정보가 포함."""
+        from modules.domain.agents.blueprint_constraint_compiler import BlueprintConstraintCompiler
+
+        compiler = BlueprintConstraintCompiler()
+        prev_bp = {"time_flow": "2006-01-17 저녁", "ending_hook": "습격"}
+        continuity = compiler._extract_continuity(prev_bp, prev_manuscript_ending="저녁 8시, 1월 18일의 밤하늘")
+
+        assert "원고 기준" in continuity["time_context"]
+        assert "1월 18일" in continuity["time_context"]
+
+    def test_constraint_compiler_falls_back_to_blueprint_without_manuscript(self):
+        """원고 말미 없으면 blueprint time_flow 사용."""
+        from modules.domain.agents.blueprint_constraint_compiler import BlueprintConstraintCompiler
+
+        compiler = BlueprintConstraintCompiler()
+        prev_bp = {"time_flow": "2006-01-17 저녁", "ending_hook": "습격"}
+        continuity = compiler._extract_continuity(prev_bp)
+
+        assert continuity["time_context"] == "2006-01-17 저녁"

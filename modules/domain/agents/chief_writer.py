@@ -751,6 +751,15 @@ class ChiefWriter(BaseAgent):
             response = self.quality_gate.sanitize_leakage(response)
             data = self._extract_json_robust(response)
 
+            # [TF-1] list payload normalization — LLM이 [{}] 형태로 응답할 때 단일 dict로 정규화
+            if isinstance(data, list):
+                if data and isinstance(data[0], dict):
+                    logging.info("[CW] _generate_single_candidate: list payload → first dict로 정규화")
+                    data = data[0]
+                else:
+                    logging.warning("[CW] _generate_single_candidate: empty/non-dict list payload")
+                    return None
+
             if not isinstance(data, dict) or not data or data.get("parsing_error"):
                 return None
 

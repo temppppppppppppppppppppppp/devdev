@@ -84,6 +84,26 @@ class ChecklistResult:
 class PreDirectorChecklist:
     """사전 체크리스트 시스템"""
 
+    _GENERIC_LOCATION_TOKENS = {
+        "호텔",
+        "라운지",
+        "카페",
+        "룸",
+        "방",
+        "실",
+        "로비",
+        "홀",
+        "건물",
+        "내부",
+        "외부",
+        "입구",
+        "출구",
+        "복도",
+        "통로",
+        "스위트룸",
+        "프라이빗",
+    }
+
     # [V64.P4] 원고 최소/최대 길이 — ManuscriptLimits 참조
     MANUSCRIPT_LENGTH = {
         "min": ManuscriptLimits.MIN_LENGTH,
@@ -322,6 +342,9 @@ class PreDirectorChecklist:
         if blueprint and isinstance(blueprint, dict):
             scene_breakdown = blueprint.get("scene_breakdown", {})
             if scene_breakdown and isinstance(scene_breakdown, dict):
+                # [Gap-2] 씬 헤더 계약 검증
+                items.extend(self.manuscript_checker._check_scene_header_contract(manuscript, scene_breakdown))
+
                 # [V60.5] 씬별 반영률 정량 측정
                 scene_metrics = self.manuscript_checker._measure_scene_reflection(manuscript, scene_breakdown)
                 items.extend(scene_metrics["check_items"])
@@ -364,6 +387,52 @@ class PreDirectorChecklist:
                 # [V60.4] 씬 밀도 균등성 검사
                 scene_density_check = self.manuscript_checker._check_scene_density_balance(manuscript, scene_breakdown)
                 items.extend(scene_density_check)
+
+            # [TF-2] Opening-Anchor 대조 — blueprint 시작 장소/시간과 원고 첫 600자 비교
+            _start_loc = blueprint.get("start_location", "")
+            if _start_loc and isinstance(_start_loc, str) and len(_start_loc) >= 2:
+                _opening_text = manuscript[:600] if len(manuscript) > 600 else manuscript
+                _loc_keywords = re.findall(r"[\w가-힣]{2,}", _start_loc)[:5]
+                _loc_matched = [kw for kw in _loc_keywords if kw in _opening_text]
+                _specific_keywords = [
+                    kw for kw in _loc_keywords if kw not in self._GENERIC_LOCATION_TOKENS
+                ]
+                _specific_matched = [kw for kw in _specific_keywords if kw in _opening_text]
+                if _loc_keywords and (
+                    len(_loc_matched) == 0 or (_specific_keywords and len(_specific_matched) == 0)
+                ):
+                    # [Gap-1] 일반 장소명만 겹치고 핵심 앵커가 전부 사라진 경우도 hard fail
+                    _fail_basis = (
+                        f"핵심 위치 토큰 0/{len(_specific_keywords)}개"
+                        if _specific_keywords and len(_specific_matched) == 0
+                        else f"0/{len(_loc_keywords)}개"
+                    )
+                    items.append(
+                        CheckItem(
+                            category=CheckCategory.BLUEPRINT_MATCH,
+                            name="시작 장소 불일치",
+                            passed=False,
+                            severity=CheckSeverity.FAIL,
+                            message=(
+                                f"Blueprint 시작 장소 '{_start_loc[:60]}' 키워드가 원고 첫 600자에서 "
+                                f"{_fail_basis} 발견됨 — 시작 계약 완전 위반"
+                            ),
+                        )
+                    )
+                elif len(_loc_matched) < max(1, len(_loc_keywords) // 2):
+                    # 부분 불일치 → WARNING (Director 판단 위임)
+                    items.append(
+                        CheckItem(
+                            category=CheckCategory.BLUEPRINT_MATCH,
+                            name="시작 장소 불일치",
+                            passed=True,
+                            severity=CheckSeverity.WARNING,
+                            message=(
+                                f"Blueprint 시작 장소 '{_start_loc[:60]}' 키워드가 원고 첫 600자에서 "
+                                f"{len(_loc_matched)}/{len(_loc_keywords)}개만 발견됨 (Director 판단 위임)"
+                            ),
+                        )
+                    )
 
             ending_hook = blueprint.get("ending_hook") or blueprint.get("cliffhanger", "")
             if ending_hook and isinstance(ending_hook, str) and len(ending_hook) > 5:

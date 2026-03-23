@@ -14,7 +14,12 @@ from google.genai import types
 from modules.core.constants import ContextLimits, smart_truncate  # [TF-25-04] validation.yaml SSOT
 from modules.core.llm_provider import LLMRequest, LLMResponse
 from modules.core.llm_router import get_shared_llm_router
-from modules.core.models_config import load_models_yaml, resolve_models_yaml_path
+from modules.core.models_config import (
+    DEFAULT_FLASH_MODEL,
+    DEFAULT_MODEL_FALLBACK_CHAIN as _MODELS_CONFIG_FALLBACK_CHAIN,
+    load_models_yaml,
+    resolve_models_yaml_path,
+)
 from modules.validation.threshold_helper import _threshold
 
 # [V44] 에스케이프 유틸리티 임포트
@@ -46,12 +51,9 @@ class AgentErrorType:
     UNKNOWN = "unknown"
 
 
-DEFAULT_MODEL_TIER = "gemini-2.5-flash"
+DEFAULT_MODEL_TIER = DEFAULT_FLASH_MODEL
 # [SSOT] models.yaml fallback_chain 로드 실패 시 하드코딩 fallback — 변경 불필요(yaml 우선)
-DEFAULT_MODEL_FALLBACK_CHAIN = {
-    "gemini-2.5-pro": "gemini-2.5-flash",
-    "gemini-2.5-flash": "gemini-2.5-flash",
-}
+DEFAULT_MODEL_FALLBACK_CHAIN = _MODELS_CONFIG_FALLBACK_CHAIN.copy()
 
 _PROVIDER_PREFIXES = ("vertexai:", "vertex:", "vertex/")
 

@@ -272,7 +272,9 @@ class WriterTemplate:
 
         lines.append("\n" + "=" * 60)
         lines.append("⚠️ 각 씬을 순서대로 빠짐없이 작성하세요.")
-        lines.append("⚠️ 씬 번호 표시 없이 자연스럽게 연결하세요.")
+        lines.append("⚠️ 각 씬의 시작 부분에 반드시 '### 씬 N: 제목' 형식의 헤더를 삽입하세요.")
+        lines.append("   예: ### 씬 1: 호텔 라운지의 만남")
+        lines.append("   씬 헤더 없이 하나의 산문 블록으로 작성하면 불합격 처리됩니다.")
         lines.append("=" * 60)
 
         return "\n".join(lines)

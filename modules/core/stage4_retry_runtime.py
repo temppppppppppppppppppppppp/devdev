@@ -847,29 +847,50 @@ class Stage4RetryRuntime:
             else ""
         )
         patch_enabled = bool(_threshold("feature_flags.enable_patch_mode", True))
+        # [TF-4] missing_patch_targets 연속 시 patch 강제 해제 → full rewrite로 escalation
+        _prior_attempts = previous_attempt.get("prior_attempts", []) if isinstance(previous_attempt, dict) else []
+        _consecutive_empty_patch = (
+            not fix_pack_contract.get("ready")
+            and fix_pack_contract.get("reason") == "missing_patch_targets"
+            and any(
+                isinstance(pa, dict) and pa.get("fix_pack_reason") == "missing_patch_targets"
+                for pa in _prior_attempts[-2:]
+            )
+        )
+        if _consecutive_empty_patch:
+            logging.warning(
+                "[TF-4] missing_patch_targets 연속 감지 → patch 해제, full rewrite escalation"
+            )
+            owner.ctx.ui.log("   [TF-4] patch_targets 연속 부재 → full rewrite로 전환")
+
         force_patch = (
             patch_enabled
             and prev_manuscript
             and reject_bucket == "post_select_conflict"
             and fix_scope != "full"
             and round_num <= 1
+            and not _consecutive_empty_patch  # [TF-4]
         )
 
         use_inplace = (
             patch_enabled
             and prev_manuscript
             and not force_patch
+            and not _consecutive_empty_patch  # [TF-4]
             and fix_scope == "inplace"
             and bool(fix_pack_contract.get("ready"))
         )
         use_patch = (
-            force_patch
-            or (
-                patch_enabled
-                and prev_manuscript
-                and (
-                    fix_scope in ("inplace", "partial")
-                    or (reject_bucket == "post_select_conflict" and fix_scope != "full")
+            not _consecutive_empty_patch  # [TF-4]
+            and (
+                force_patch
+                or (
+                    patch_enabled
+                    and prev_manuscript
+                    and (
+                        fix_scope in ("inplace", "partial")
+                        or (reject_bucket == "post_select_conflict" and fix_scope != "full")
+                    )
                 )
             )
         )

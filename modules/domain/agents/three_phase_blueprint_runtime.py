@@ -102,6 +102,63 @@ class ThreePhaseBlueprintRuntime:
     def __init__(self, owner: "ThreePhaseBlueprintGenerator") -> None:
         self.owner = owner
 
+    @staticmethod
+    def _preview_feedback_lines(feedback: str, *, max_items: int = 3) -> list[str]:
+        lines: list[str] = []
+        seen: set[str] = set()
+        for raw_line in str(feedback or "").splitlines():
+            line = raw_line.strip().lstrip("-").strip()
+            if not line or line in seen:
+                continue
+            seen.add(line)
+            lines.append(line)
+            if len(lines) >= max_items:
+                break
+        return lines
+
+    @staticmethod
+    def _preview_issue_lines(issues, *, max_items: int = 3) -> list[str]:
+        if not isinstance(issues, list):
+            return []
+        lines: list[str] = []
+        seen: set[str] = set()
+        for issue in issues:
+            if isinstance(issue, dict):
+                severity = str(issue.get("severity", "") or "").strip()
+                category = str(issue.get("category", "") or "").strip()
+                text = str(issue.get("issue", "") or "").strip()
+                parts = [part for part in (severity, category, text) if part]
+                line = " | ".join(parts)
+            else:
+                line = str(issue or "").strip()
+            if not line or line in seen:
+                continue
+            seen.add(line)
+            lines.append(line)
+            if len(lines) >= max_items:
+                break
+        return lines
+
+    def _log_operator_retry_context(
+        self,
+        *,
+        title: str,
+        level: str = "info",
+        meta: dict | None = None,
+        feedback: str = "",
+        issues=None,
+        fix_scope: str = "",
+    ) -> None:
+        owner = self.owner
+        payload = meta or {}
+        owner._operator_log(title, level=level, meta=payload)
+        if fix_scope:
+            owner._operator_log(f"      fix_scope: {fix_scope}", level=level, meta=payload)
+        for line in self._preview_feedback_lines(feedback):
+            owner._operator_log(f"      사유: {line}", level=level, meta=payload)
+        for line in self._preview_issue_lines(issues):
+            owner._operator_log(f"      이슈: {line}", level=level, meta=payload)
+
     def _bootstrap_runtime_context(
         self,
         *,
@@ -183,8 +240,7 @@ class ThreePhaseBlueprintRuntime:
             parts.append(f"[이전 검증 경고]\n{warning_lines}")
         if retry_state.prev_score_breakdown:
             parts.append(
-                "[이전 점수 분해]\n"
-                + json.dumps(retry_state.prev_score_breakdown, ensure_ascii=False, indent=2)[:1200]
+                "[이전 점수 분해]\n" + json.dumps(retry_state.prev_score_breakdown, ensure_ascii=False, indent=2)[:1200]
             )
         return "\n\n".join(part for part in parts if part)
 
@@ -199,18 +255,24 @@ class ThreePhaseBlueprintRuntime:
         genre: str,
         pipeline_result: dict,
         retry_state: _ThreePhaseRetryState,
+        prev_manuscripts_text: str = "",
     ) -> dict:
         owner = self.owner
         reused_cache = retry > 0 and retry_state.cached_constraint_block is not None
         if reused_cache:
             constraint_block = retry_state.cached_constraint_block or {}
         else:
+            # [pre-rerun] 직전 원고 말미 500자를 시간 진실 소스로 전달
+            prev_manuscript_ending = ""
+            if prev_manuscripts_text:
+                prev_manuscript_ending = prev_manuscripts_text.strip()[-500:]
             constraint_block = owner.constraint_compiler.compile(
                 arc_data=arc_data,
                 ep_num=ep_num,
                 prev_blueprint=prev_blueprint,
                 prev_blueprints=prev_blueprints,
                 genre=genre,
+                prev_manuscript_ending=prev_manuscript_ending,
             )
             retry_state.cached_constraint_block = constraint_block
 
@@ -293,6 +355,19 @@ class ThreePhaseBlueprintRuntime:
             pipeline_result["failure_reason"] = error_type
 
         logging.warning("❌ [Phase 2] Ensemble 생성 실패")
+        self._log_operator_retry_context(
+            title=f"[Phase 2] 후보 생성 실패 - retry {retry + 1}/{max_retries + 1}",
+            level="warning",
+            meta={
+                "phase": "generate",
+                "retry_index": retry + 1,
+                "max_retries": max_retries + 1,
+                "error_category": str(error_type or "generate_failed"),
+            },
+            feedback="Ensemble 생성 실패. 다시 시도합니다."
+            if error_type != AgentErrorType.SCHEMA_INCOMPATIBLE
+            else "schema_incompatible로 즉시 중단합니다.",
+        )
         if error_type == AgentErrorType.SCHEMA_INCOMPATIBLE:
             return _ThreePhasePhase2Result(None, [], should_break=True)
 
@@ -419,6 +494,14 @@ class ThreePhaseBlueprintRuntime:
         }
         owner.stats["phase2_complete"] += 1
         logging.info("✅ [Phase 2] Ensemble 완료 — %d개 후보 → Director 선택 대기", len(all_candidates))
+        owner._operator_log(
+            f"[Phase 2] 후보 생성 완료 ({len(all_candidates)}개, strategy={current_strategy or 'unknown'})",
+            meta={
+                "phase": "generate",
+                "candidates_count": len(all_candidates),
+                "selected_strategy": current_strategy or "unknown",
+            },
+        )
         return _ThreePhasePhase2Result(best_blueprint, all_candidates)
 
     def _run_phase3_validation(
@@ -488,6 +571,20 @@ class ThreePhaseBlueprintRuntime:
             verdict=validation.verdict,
             score=validation.score,
         )
+        if validation.verdict == "PASS" and verdict == "REJECT":
+            self._log_operator_retry_context(
+                title=f"[QualityGate] score={validation.score} < threshold -> REJECT",
+                level="warning",
+                meta={
+                    "phase": "validate",
+                    "score": validation.score,
+                    "error_category": "quality_gate",
+                },
+                feedback=validation.validation_result.get("verdict_reason", "")
+                or validation.validation_result.get("feedback", ""),
+                issues=validation.validation_result.get("issues", []),
+                fix_scope=str(validation.validation_result.get("fix_scope", "") or ""),
+            )
 
         return _ThreePhasePhase3ValidationResult(
             best_blueprint=validation.best_blueprint,
@@ -532,6 +629,18 @@ class ThreePhaseBlueprintRuntime:
         if best_blueprint:
             retry_state.previous_best = best_blueprint
         logging.warning("[V61.5] Continuity check reject")
+        self._log_operator_retry_context(
+            title=f"[Phase 3] 연속성 검증 REJECT - retry {retry + 1}/{max_retries + 1}",
+            level="warning",
+            meta={
+                "phase": "validate",
+                "score": 0,
+                "retry_index": retry + 1,
+                "max_retries": max_retries + 1,
+                "error_category": "continuity_reject",
+            },
+            feedback=continuity_feedback,
+        )
         owner._record_intermediate_reject(
             ep_num=ep_num,
             arc_data=arc_data,
@@ -834,9 +943,11 @@ class ThreePhaseBlueprintRuntime:
 
         fix_feedback = current_validation.get("re_slice_instruction", "") or current_validation.get("feedback", "")
         logging.info(f"[TF-32-V] Blueprint patch #{fix_index + 1}/{max_fix}")
-        owner._operator_log(
-            f"[TF-32-V] Blueprint patch #{fix_index + 1}/{max_fix}",
+        self._log_operator_retry_context(
+            title=f"[TF-32-V] Blueprint patch #{fix_index + 1}/{max_fix}",
             meta={"phase": "validate", "patch_round": fix_index + 1, "patch_max": max_fix},
+            feedback=fix_feedback,
+            fix_scope=str(fix_scope or ""),
         )
         try:
             patched_blueprint = owner._inplace_patch_blueprint(
@@ -854,6 +965,13 @@ class ThreePhaseBlueprintRuntime:
             )
         if not patched_blueprint:
             logging.warning("[TF-32-V] patch failed")
+            self._log_operator_retry_context(
+                title=f"[TF-32-V] patch #{fix_index + 1} failed",
+                level="warning",
+                meta={"phase": "validate", "patch_round": fix_index + 1, "patch_max": max_fix},
+                feedback=fix_feedback,
+                fix_scope=str(fix_scope or ""),
+            )
             return _ThreePhasePassWithFixIterationResult(
                 current_blueprint=current_blueprint,
                 current_validation=current_validation,
@@ -921,6 +1039,20 @@ class ThreePhaseBlueprintRuntime:
                 re_score = 0
             if re_score < quality_gate_score:
                 logging.warning(f"[TF-35] re-audit PASS but score={re_score} < {quality_gate_score}; stop patch loop")
+                self._log_operator_retry_context(
+                    title=f"[TF-35] re-audit PASS but score={re_score} < {quality_gate_score}",
+                    level="warning",
+                    meta={
+                        "phase": "validate",
+                        "patch_round": fix_index + 1,
+                        "verdict": re_verdict,
+                        "score": re_score,
+                        "error_category": "quality_gate",
+                    },
+                    feedback=re_validation.get("verdict_reason", "") or re_validation.get("feedback", ""),
+                    issues=re_validation.get("issues", []),
+                    fix_scope=str(re_validation.get("fix_scope", "") or ""),
+                )
                 return _ThreePhasePassWithFixIterationResult(
                     current_blueprint=current_blueprint,
                     current_validation=current_validation,
@@ -973,6 +1105,20 @@ class ThreePhaseBlueprintRuntime:
             logging.info("[PF-3] PASS_WITH_FIX exhausted -> adopt latest patched blueprint (score=%d)", pass_fix_score)
 
         logging.warning("[TF-32-V] Blueprint patch failed -> REJECT")
+        self._log_operator_retry_context(
+            title=f"[TF-32-V] PASS_WITH_FIX unresolved after {max_fix} patch attempts -> REJECT",
+            level="warning",
+            meta={
+                "phase": "validate",
+                "score": score,
+                "retry_index": retry + 1,
+                "max_retries": max_retries + 1,
+                "error_category": "patch_retry_reject",
+            },
+            feedback=current_validation.get("verdict_reason", "") or current_validation.get("feedback", ""),
+            issues=current_validation.get("issues", []),
+            fix_scope=str(current_validation.get("fix_scope", "") or ""),
+        )
         owner.stats["phase3_reject"] += 1
         feedback = initial_feedback + f"\n[TF-32-V] PASS_WITH_FIX unresolved after {max_fix} patch attempts -> REJECT"
         self._apply_validation_reject_state(
@@ -1025,10 +1171,13 @@ class ThreePhaseBlueprintRuntime:
                 logging.info(f"[{severity}][{category}] {text}")
 
         logging.warning(f"[Phase 3] REJECT - retry {retry + 1}/{max_retries + 1}")
-        owner._operator_log(
-            f"[Phase 3] REJECT (score={score}) - retry {retry + 1}/{max_retries + 1}",
+        self._log_operator_retry_context(
+            title=f"[Phase 3] REJECT (score={score}) - retry {retry + 1}/{max_retries + 1}",
             level="warning",
             meta={"phase": "validate", "score": score, "retry_index": retry + 1, "max_retries": max_retries + 1},
+            feedback=reject_state.feedback,
+            issues=reject_state.issues,
+            fix_scope=str(validation_result.get("fix_scope", "") or ""),
         )
         owner._record_intermediate_reject(
             ep_num=ep_num,
@@ -1214,6 +1363,7 @@ class ThreePhaseBlueprintRuntime:
             genre=genre,
             pipeline_result=pipeline_result,
             retry_state=retry_state,
+            prev_manuscripts_text=prev_manuscripts_text,
         )
 
         phase2_result = self._run_phase2_generation(

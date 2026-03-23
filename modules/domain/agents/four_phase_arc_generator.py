@@ -20,7 +20,7 @@ import logging
 import re
 from collections.abc import Callable
 
-from modules.core.constants import ContextLimits, Stage2Limits, smart_truncate
+from modules.core.constants import AIModels, ContextLimits, Stage2Limits, smart_truncate
 from modules.core.fact_ledger import summarize_fact_ledger_numbers_block
 from modules.core.failure_analyzer import FailureAnalyzer
 from modules.validation.threshold_helper import _threshold
@@ -421,7 +421,7 @@ class FourPhaseArcGenerator(BaseAgent):
         # 서브 모듈
         sub_models = _get_sub_component_models("four_phase_arc_generator")
         self.preflight = PreflightChecker(context, client, sub_models.get("preflight", "gemini-2.5-flash"))
-        self.ensemble = ArcEnsembleGenerator(context, client, sub_models.get("ensemble", "gemini-2.5-pro"))
+        self.ensemble = ArcEnsembleGenerator(context, client, sub_models.get("ensemble", AIModels.DEFAULT_ARCHITECT))
         self.validator = UnifiedArcValidator(context, client, sub_models.get("validator", "gemini-2.5-flash"))
         self.compiler = None
         # [S2#1] 장르 Guard에서 장르 감지 → NegativeExampleInjector에 전달
@@ -1706,7 +1706,7 @@ class FourPhaseArcGenerator(BaseAgent):
 def create_four_phase_generator(
     context,
     client,
-    model_tier: str = "gemini-2.5-pro",
+    model_tier: str = AIModels.DEFAULT_ARCHITECT,
     flash_ask: Callable[[str], str] | None = None,
 ):
     """FourPhaseArcGenerator 생성 헬퍼 (호환성 유지)"""

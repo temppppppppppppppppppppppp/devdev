@@ -269,10 +269,13 @@ class ChiefWriterQualityGate:
                 "severity": "low" | "medium" | "high"
             }
         """
-        # JSON 파싱
+        # JSON 파싱 — [TF-1] list payload 내성 강화
         try:
             data = json.loads(manuscript)
-            content = data.get("content", "")
+            if isinstance(data, list):
+                data = data[0] if data and isinstance(data[0], dict) else {}
+                logging.info("[CW] _self_critique: list payload → dict 정규화")
+            content = data.get("content", "") if isinstance(data, dict) else manuscript
         except (json.JSONDecodeError, ValueError, TypeError):  # [V64.P4] JSON parse with safe default
             content = manuscript
 
@@ -498,9 +501,9 @@ class ChiefWriterQualityGate:
                 return f"{value / 1e8:.1f}" + "억"
             return f"{value:.4g}"
 
-        num_with_unit = r"[\d,]+(?:\.[\d]+)?(?:조|억|만)?"
-        mul_op = r"(?:[xX×*]|곱)"
-        eq_op = r"(?:=|는|은|:)"
+        num_with_unit = r"[\d,]+(?:\.[\d]+)?(?:조|억|만)?"  # utf8-hygiene: allow-line false-positive regex alias set
+        mul_op = r"(?:[xX×*]|곱)"  # utf8-hygiene: allow-line false-positive regex alias set
+        eq_op = r"(?:=|는|은|:)"  # utf8-hygiene: allow-line false-positive regex alias set
         bae = "배"
 
         mult_pattern = re.compile(
@@ -860,7 +863,7 @@ class ChiefWriterQualityGate:
 
         starters: dict[str, int] = {}
         first_tokens: dict[str, int] = {}
-        sentences = [chunk.strip(" \"'“”‘’") for chunk in re.split(r"(?<=[.!?…])\s+|\n+", content) if chunk.strip()]
+        sentences = [chunk.strip(" \"'“”‘’") for chunk in re.split(r"(?<=[.!?…])\s+|\n+", content) if chunk.strip()]  # utf8-hygiene: allow-line false-positive regex alias set
         for sentence in sentences:
             tokens = re.findall(r"[가-힣A-Za-z]{2,}", sentence)
             if not tokens:
@@ -984,7 +987,7 @@ class ChiefWriterQualityGate:
             return []
 
         for paragraph in paragraphs:
-            sentence_count = len([s for s in re.split(r"[.!?\n]|[다요]\s", paragraph) if s.strip()])
+            sentence_count = len([s for s in re.split(r"[.!?\n]|[다요]\s", paragraph) if s.strip()])  # utf8-hygiene: allow-line false-positive regex alias set
             if len(paragraph) >= 1000 and sentence_count >= 12:
                 return [
                     {
@@ -1147,9 +1150,18 @@ class ChiefWriterQualityGate:
             fixed = self.host.ask(prompt, temperature=0.5, thinking_level=_thinking)
             fixed = self.sanitize_leakage(fixed)
 
-            # JSON 유효성 검증
+            # JSON 유효성 검증 — [TF-1] list payload 정규화
             try:
                 _fixed_parsed = json.loads(fixed)
+                # [TF-1] LLM이 [{...}] 형태로 응답하면 첫 dict로 정규화
+                if isinstance(_fixed_parsed, list):
+                    if _fixed_parsed and isinstance(_fixed_parsed[0], dict):
+                        _fixed_parsed = _fixed_parsed[0]
+                        fixed = json.dumps(_fixed_parsed, ensure_ascii=False)
+                        logging.info("[CW] _fix_manuscript_issues: list payload → dict 정규화")
+                    else:
+                        logging.warning("[CW] _fix_manuscript_issues: empty/non-dict list — 원본 유지")
+                        return manuscript
                 _fixed_content = _fixed_parsed.get("content", "") if isinstance(_fixed_parsed, dict) else ""
                 if isinstance(_fixed_content, str):
                     _fc_len = len(_fixed_content)

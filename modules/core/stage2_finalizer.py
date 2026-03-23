@@ -2707,6 +2707,12 @@ class Stage2Finalizer:
                     candidate_key=_candidate_key,
                     content_hash=_artifact_meta["content_hash"],
                     artifact_path=_artifact_meta["artifact_path"],
+                    selection_reason=str(audit.get("selection_reason", "") or ""),
+                    verdict_reason=str(audit.get("verdict_reason", "") or ""),
+                    fix_scope_reasoning=str(audit.get("fix_scope_reasoning", "") or ""),
+                    open_review=str(audit.get("open_review", "") or ""),
+                    runtime_advisory="",
+                    retry_directives="",
                 )
                 # [TF-60] Stage 2 director_selections 기록
                 if hasattr(_db, "save_director_selection"):
@@ -2834,8 +2840,14 @@ class Stage2Finalizer:
                 arc_num=global_arc_no,
                 score=score,
                 failure_category=failure_category,
-                reject_reason=str(audit.get("reason", ""))[:500],
+                reject_reason=str(audit.get("reason", "")),
                 fix_scope=str(audit.get("fix_scope", "") or ""),
+                selection_reason=str(audit.get("selection_reason", "") or ""),
+                verdict_reason=str(audit.get("verdict_reason", "") or audit.get("reason", "")),
+                fix_scope_reasoning=str(audit.get("fix_scope_reasoning", "") or ""),
+                open_review=str(audit.get("open_review", "") or ""),
+                runtime_advisory="",
+                retry_directives="",
                 model=str(model) if model else None,
                 duration_ms=duration_ms,
                 advisory_flags=advisory_flags,
