@@ -945,6 +945,22 @@ class TestGenerateBlueprint:
             {"ep_num": ep, "title": f"제{ep}화", "content": f"원고 {ep}"} for ep in range(1, 37)
         ]
         app_mock.sys.hud = SimpleNamespace(pro_root={"focus": "hud"})
+        app_mock.agents["three_phase_bp"].generate.return_value = (
+            {"integrated_scenario": "test", "scene_breakdown": {"s1": "scene"}},
+            {
+                "final_verdict": "PASS",
+                "last_score": 85,
+                "phases": {
+                    "generate": {"selected_strategy": "A", "selected_score": 85},
+                    "validate": {
+                        "verdict": "PASS",
+                        "selection_reason": "후보 A가 감정선과 장면 연결이 가장 안정적",
+                        "verdict_reason": "서사 리스크 없이 바로 사용 가능",
+                        "open_review": "감정 여운을 한 템포 더 눌러주면 완성도가 올라간다",
+                    },
+                },
+            },
+        )
         semantic_bundle = {"semantic_ctx": "[ctx]", "blueprint_window": [{"ep_num": 1}, {"ep_num": 4}]}
 
         blueprint, pipeline_result = orch._run_stage3_blueprint_generation_handoff(
@@ -969,6 +985,36 @@ class TestGenerateBlueprint:
         log_texts = [call.args[0] for call in app_mock.ui.log.call_args_list if call.args]
         assert any("Blueprint 대기: ThreePhase runtime 호출 중" in text for text in log_texts)
         assert any("선택 전략: A" in text for text in log_texts)
+        assert any("Director 판정: 서사 리스크 없이 바로 사용 가능" in text for text in log_texts)
+        assert any("선택 근거: 후보 A가 감정선과 장면 연결이 가장 안정적" in text for text in log_texts)
+        assert any("자유 리뷰: 감정 여운을 한 템포 더 눌러주면 완성도가 올라간다" in text for text in log_texts)
+
+    def test_build_stage3_success_operator_lines_includes_advisory_without_caps(self):
+        lines = Stage3Orchestrator._build_stage3_success_operator_lines(
+            {
+                "final_verdict": "PASS",
+                "phases": {
+                    "validate": {
+                        "verdict": "PASS",
+                        "selection_reason": "후보 B가 감정선 연결과 액션 템포를 가장 안정적으로 살린다",
+                        "verdict_reason": "구조 리스크 없이 바로 채택 가능",
+                        "comparison_notes": "후보 C보다 감정 전이가 자연스럽다",
+                        "fix_scope_reasoning": "마지막 비트의 여운만 후속 원고에서 더 밀어주면 된다",
+                        "selected_candidate_advisory": {
+                            "python_warnings": [
+                                {"message": "Arc NPC 언급 밀도가 낮아 후반 회상 씬에서 보강 권장"}
+                            ]
+                        },
+                    }
+                },
+            }
+        )
+
+        assert "      └─ Director 판정: 구조 리스크 없이 바로 채택 가능" in lines
+        assert "      선택 근거: 후보 B가 감정선 연결과 액션 템포를 가장 안정적으로 살린다" in lines
+        assert "      비교 메모: 후보 C보다 감정 전이가 자연스럽다" in lines
+        assert "      보완 포인트: 마지막 비트의 여운만 후속 원고에서 더 밀어주면 된다" in lines
+        assert "      주의: Arc NPC 언급 밀도가 낮아 후반 회상 씬에서 보강 권장" in lines
 
     def test_finalize_stage3_blueprint_pipeline_result_normalizes_non_dict_result(self, orch):
         semantic_bundle = {

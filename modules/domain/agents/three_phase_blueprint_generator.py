@@ -273,6 +273,6 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
         logging.info(f"최종 통과율: {stats.get('pass_rate', 'N/A')}")
 
 
-def create_three_phase_blueprint_generator(context, client, model_tier: str = "gemini-2.5-pro"):
+def create_three_phase_blueprint_generator(context, client, model_tier: str = AIModels.DEFAULT_ARCHITECT):
     """ThreePhaseBlueprintGenerator 생성 헬퍼"""
     return ThreePhaseBlueprintGenerator(context, client, model_tier)

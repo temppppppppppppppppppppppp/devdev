@@ -54,7 +54,7 @@ class PreDirectorManuscriptChecker:
 
         dialogue_patterns = [
             r'"[^"]+?"',
-            r"「[^」]+?」",
+            r"\u300c[^\u300d]+?\u300d",
             r"'[^']{5,}'",
         ]
 
@@ -199,6 +199,23 @@ class PreDirectorManuscriptChecker:
         result["overall_ratio"] = total_matched / total_keywords if total_keywords > 0 else 0
         result["weak_scenes"] = weak_scenes
 
+        # [TF-1] 전체 씬 미반영(0/N) — 구조적 실패로 hard fail
+        if len(weak_scenes) == len(scene_breakdown) and len(scene_breakdown) >= 3:
+            result["check_items"].append(
+                CheckItem(
+                    category=CheckCategory.BLUEPRINT_MATCH,
+                    name="전체 씬 미반영",
+                    passed=False,
+                    severity=CheckSeverity.FAIL,
+                    message=(
+                        f"전체 씬 미반영: {len(weak_scenes)}/{len(scene_breakdown)} 씬 반영률 30% 미만. "
+                        "Blueprint 씬 구조가 원고에 전혀 반영되지 않았습니다. "
+                        "각 씬을 '### 씬 N: 제목' 헤더로 구분하여 빠짐없이 작성하세요."
+                    ),
+                )
+            )
+            return result
+
         if weak_scenes:
             scene_keys = list(scene_breakdown.keys())
             high_impact_scenes = scene_keys[-2:] if len(scene_keys) >= 2 else scene_keys
@@ -241,6 +258,63 @@ class PreDirectorManuscriptChecker:
                 )
 
         return result
+
+    # ──────────────────────────────────────────────
+    # [Gap-2] 씬 헤더 계약 검증
+    # ──────────────────────────────────────────────
+
+    _SCENE_HEADER_RE = re.compile(
+        r"^#{1,3}\s+씬\s*(\d+)\s*[:\-]",
+        re.MULTILINE,
+    )
+
+    def _check_scene_header_contract(self, manuscript: str, scene_breakdown: dict[str, Any]) -> list[CheckItem]:
+        """[Gap-2] Blueprint 씬 3개 이상일 때 원고에 씬 헤더가 최소 절반 이상 존재하는지 검증."""
+        items: list[CheckItem] = []
+        if not scene_breakdown or not isinstance(scene_breakdown, dict):
+            return items
+
+        expected_count = len(scene_breakdown)
+        if expected_count < 3:
+            return items
+
+        header_matches = list(self._SCENE_HEADER_RE.finditer(manuscript))
+        found_headers = {
+            int(match.group(1))
+            for match in header_matches
+            if match.group(1).isdigit()
+        }
+        found_count = len(found_headers)
+        min_required_headers = (expected_count + 1) // 2
+
+        if found_count == 0:
+            items.append(
+                CheckItem(
+                    category=CheckCategory.BLUEPRINT_MATCH,
+                    name="씬 헤더 부재",
+                    passed=False,
+                    severity=CheckSeverity.FAIL,
+                    message=(
+                        f"Blueprint {expected_count}개 씬 중 원고에 '### 씬 N: 제목' 헤더가 0개 발견됨. "
+                        "모든 씬을 헤더로 구분하여 작성해야 합니다."
+                    ),
+                )
+            )
+        elif found_count < min_required_headers:
+            items.append(
+                CheckItem(
+                    category=CheckCategory.BLUEPRINT_MATCH,
+                    name="씬 헤더 부족",
+                    passed=True,
+                    severity=CheckSeverity.WARNING,
+                    message=(
+                        f"Blueprint {expected_count}개 씬 중 원고에 '### 씬 N:' 헤더가 {found_count}개만 발견됨. "
+                        f"최소 {min_required_headers}개 이상 필요. 누락된 씬 헤더 보충 권장."
+                    ),
+                )
+            )
+
+        return items
 
     # ──────────────────────────────────────────────
     # 씬 밀도 균등성 + High Impact Zone

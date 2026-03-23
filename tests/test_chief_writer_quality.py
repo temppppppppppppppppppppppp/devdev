@@ -184,6 +184,28 @@ class TestApplyAndCritique:
             out = gate._self_critique(manuscript, "", {"npcs": []}, "genre", ep_num=1)
         assert not any(i.get("type") == "manuscript_length" for i in out["issues"])
 
+    def test_self_critique_accepts_list_payload_with_first_dict(self):
+        gate = ChiefWriterQualityGate(_make_host())
+        manuscript = json.dumps(
+            [{"content": "가" * (int(ManuscriptLimits.TARGET_LENGTH) + 500)}],
+            ensure_ascii=False,
+        )
+        with (
+            patch.object(gate, "_check_hud_consistency", return_value=[]),
+            patch.object(gate, "_check_cliche_overuse", return_value=[]),
+            patch.object(gate, "_check_justification_gaps", return_value=[]),
+            patch.object(gate, "_check_npc_relationship", return_value=[]),
+            patch.object(gate, "_check_writing_directive", return_value=[]),
+            patch.object(gate, "_check_expression_freshness", return_value=[]),
+            patch.object(gate, "_check_ending_hook_presence", return_value=[]),
+            patch.object(gate, "_check_arithmetic_consistency", return_value=[]),
+            patch.object(gate, "_check_system_term_exposure", return_value=[]),
+        ):
+            out = gate._self_critique(manuscript, "", {"npcs": []}, "genre", ep_num=1)
+        assert out["has_issues"] is False
+        assert out["severity"] == "low"
+        assert not any(i.get("type") == "manuscript_length" for i in out["issues"])
+
     def test_severity_high_issue_promotes_to_medium(self):
         gate = ChiefWriterQualityGate(_make_host())
         manuscript = json.dumps({"content": "가" * (int(ManuscriptLimits.TARGET_LENGTH) + 500)}, ensure_ascii=False)
@@ -405,6 +427,26 @@ class TestFixAndRubric:
             )
         assert json.loads(result)["content"] == "짧음"
         assert any("[TF-H] 수정 후 분량 여전히 부족" in rec.message for rec in caplog.records)
+
+    def test_fix_manuscript_normalizes_list_payload_to_single_dict_json(self):
+        host = _make_host()
+        host.ask.return_value = json.dumps(
+            [{"content": "fixed", "title": "title", "state_updates": {"hp": 10}}],
+            ensure_ascii=False,
+        )
+        gate = ChiefWriterQualityGate(host)
+
+        result = gate._fix_manuscript_issues(
+            '{"content":"orig"}',
+            {"issues": [{"type": "x", "description": "desc"}]},
+            "hud",
+        )
+
+        parsed = json.loads(result)
+        assert isinstance(parsed, dict)
+        assert parsed["content"] == "fixed"
+        assert parsed["title"] == "title"
+        assert parsed["state_updates"] == {"hp": 10}
 
     def test_fix_uses_expand_prompt_for_length_issue(self):
         host = _make_host()

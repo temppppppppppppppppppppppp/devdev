@@ -578,6 +578,6 @@ class StateLockedArcGenerator(BaseAgent):
         return text.replace("{", "{{").replace("}", "}}")
 
 
-def create_state_locked_generator(context, client, model_tier: str = "gemini-2.5-pro"):
+def create_state_locked_generator(context, client, model_tier: str = AIModels.DEFAULT_ARCHITECT):
     """[V60.24] StateLockedArcGenerator 생성 헬퍼 - Gemini 3 사용"""
     return StateLockedArcGenerator(context, client, model_tier)

@@ -50,6 +50,29 @@ _CANONICAL_SCORE_KEYS = (
     "python_warnings",
 )
 
+_NC3_CHECKLIST_KEYS = (
+    "numeric_accuracy",
+    "arithmetic",
+    "title_consistency",
+    "scene_overlap",
+    "percent_calculation",
+    "event_ordering",
+    "space_continuity",
+    "npc_identity",
+    "time_progression",
+    "opening_diversity",
+    "timeline_arc_consistency",
+    "fiction_term_leak",
+    "scene_variety",
+    "pacing_quality",
+    "dialogue_naturalness",
+    "pov_discipline",
+    "emotional_authenticity",
+    "npc_knowledge_boundary",
+    "secret_consistency",
+    "identity_consistency",
+)
+
 
 def _canonical_score_breakdown(raw: dict | None = None, *, length_score: int = 0) -> dict[str, int]:
     base = {key: 0 for key in _CANONICAL_SCORE_KEYS}
@@ -963,74 +986,115 @@ class DirectorEnsembleSelector:
         retry_count: int,
         ep_type: str = "normal",
     ) -> tuple[str, dict]:
-        if scm_single_candidate and state.score >= 95:
-            scm_old = state.score
-            state.score = min(state.score, 90)
-            logging.info(f"[SCM] 단일 후보 점수 보정: {scm_old} → {state.score}")
-            if hasattr(self._d, "_operator_log"):
-                self._d._operator_log(
-                    f"[SCM] 단일 후보 점수 보정: {scm_old}→{state.score}",
-                    meta={"component": "Director", "event_kind": "score_provenance"},
-                )
+        self._apply_scm_single_candidate_cap(state=state, scm_single_candidate=scm_single_candidate)
+        self._apply_contradiction_firewall_gate(state=state)
+        self._log_numeric_consistency_gate(
+            state=state,
+            combined_context=combined_context,
+            mandatory_context=mandatory_context,
+        )
+        self._apply_nc3_consistency_penalty(result=result, state=state)
+        return self._resolve_adaptive_ensemble_verdict(
+            state=state,
+            arc_pos=arc_pos,
+            total_eps=total_eps,
+            retry_count=retry_count,
+            ep_type=ep_type,
+        )
 
-        found_contradictions = state.contradiction_check.get("found_contradictions", [])
-        if isinstance(found_contradictions, list) and found_contradictions:
-            normalized_contradictions = _normalize_contradiction_entries(found_contradictions)
-            state.contradiction_details = _compact_contradiction_details(normalized_contradictions)
-            critical_count = sum(
-                1 for item in normalized_contradictions if str(item.get("severity", "")).upper() == "CRITICAL"
+    def _apply_scm_single_candidate_cap(
+        self,
+        *,
+        state: _EnsembleSelectionState,
+        scm_single_candidate: bool,
+    ) -> None:
+        if not (scm_single_candidate and state.score >= 95):
+            return
+
+        scm_old = state.score
+        state.score = min(state.score, 90)
+        logging.info(f"[SCM] 단일 후보 점수 보정: {scm_old} → {state.score}")
+        if hasattr(self._d, "_operator_log"):
+            self._d._operator_log(
+                f"[SCM] 단일 후보 점수 보정: {scm_old}→{state.score}",
+                meta={"component": "Director", "event_kind": "score_provenance"},
             )
-            major_count = sum(
-                1 for item in normalized_contradictions if str(item.get("severity", "")).upper() == "MAJOR"
+
+    def _apply_contradiction_firewall_gate(
+        self,
+        *,
+        state: _EnsembleSelectionState,
+    ) -> None:
+        found_contradictions = state.contradiction_check.get("found_contradictions", [])
+        if not isinstance(found_contradictions, list) or not found_contradictions:
+            return
+
+        normalized_contradictions = _normalize_contradiction_entries(found_contradictions)
+        state.contradiction_details = _compact_contradiction_details(normalized_contradictions)
+        critical_count = sum(
+            1 for item in normalized_contradictions if str(item.get("severity", "")).upper() == "CRITICAL"
+        )
+        major_count = sum(
+            1 for item in normalized_contradictions if str(item.get("severity", "")).upper() == "MAJOR"
+        )
+
+        if critical_count >= 1 or major_count >= 2:
+            firewall_mode, fixable_reason = _classify_firewall_mode(
+                contradictions=state.contradiction_details,
+                original_verdict=str(state.original_verdict or ""),
+                score=state.score,
+                score_breakdown=state.score_breakdown_raw or None,
             )
             selected_manuscript = (
                 str(state.selected_candidate.get("manuscript", "") or "")
                 if isinstance(state.selected_candidate, dict)
                 else ""
             )
-            if critical_count >= 1 or major_count >= 2:
-                firewall_mode, fixable_reason = _classify_firewall_mode(
-                    contradictions=state.contradiction_details,
-                    original_verdict=str(state.original_verdict or ""),
-                    score=state.score,
-                    score_breakdown=state.score_breakdown_raw or None,
-                )
-                if firewall_mode == "pass_with_fix" and selected_manuscript:
-                    _pre_fw = state.score
-                    state.firewall_fixable = True
-                    state.firewall_reason = fixable_reason
-                    state.original_verdict = "PASS_WITH_FIX"
-                    state.score = min(state.score, 97)
-                    logging.warning(" [V75-C] %s → PASS_WITH_FIX", state.firewall_reason)
-                    if hasattr(self._d, "_operator_log"):
-                        self._d._operator_log(
-                            f"[V75-C Firewall] {state.firewall_reason} → PASS_WITH_FIX (점수: {_pre_fw}→{state.score})",
-                            meta={"component": "Director", "event_kind": "score_provenance"},
-                        )
-                else:
-                    state.firewall_triggered = True
-                    if critical_count >= 1:
-                        state.firewall_reason = f"Contradiction Firewall: CRITICAL {critical_count}건"
-                        logging.warning(f" [V75-C] {state.firewall_reason} → REJECT 강제")
-                    else:
-                        state.firewall_reason = f"Contradiction Firewall: MAJOR {major_count}건"
-                        logging.warning(f" [V75-C] {state.firewall_reason} → REJECT 강제")
-            if state.firewall_triggered:
-                state.original_verdict = "REJECT"
-                state.pre_firewall_score = state.score
-                state.score = min(state.score, 44)
+            if firewall_mode == "pass_with_fix" and selected_manuscript:
+                _pre_fw = state.score
+                state.firewall_fixable = True
+                state.firewall_reason = fixable_reason
+                state.original_verdict = "PASS_WITH_FIX"
+                state.score = min(state.score, 97)
+                logging.warning(" [V75-C] %s → PASS_WITH_FIX", state.firewall_reason)
                 if hasattr(self._d, "_operator_log"):
                     self._d._operator_log(
-                        f"[V75-C Firewall] {state.firewall_reason} → REJECT 강제 (점수: {state.pre_firewall_score}→{state.score})",
+                        f"[V75-C Firewall] {state.firewall_reason} → PASS_WITH_FIX (점수: {_pre_fw}→{state.score})",
                         meta={"component": "Director", "event_kind": "score_provenance"},
                     )
-            if state.firewall_triggered or state.firewall_fixable:
-                for line in _build_contradiction_summary_lines(
-                    state.contradiction_details or [],
-                    limit=len(state.contradiction_details or []),
-                ):
-                    logging.warning(" %s", line)
+            else:
+                state.firewall_triggered = True
+                if critical_count >= 1:
+                    state.firewall_reason = f"Contradiction Firewall: CRITICAL {critical_count}건"
+                    logging.warning(f" [V75-C] {state.firewall_reason} → REJECT 강제")
+                else:
+                    state.firewall_reason = f"Contradiction Firewall: MAJOR {major_count}건"
+                    logging.warning(f" [V75-C] {state.firewall_reason} → REJECT 강제")
 
+        if state.firewall_triggered:
+            state.original_verdict = "REJECT"
+            state.pre_firewall_score = state.score
+            state.score = min(state.score, 44)
+            if hasattr(self._d, "_operator_log"):
+                self._d._operator_log(
+                    f"[V75-C Firewall] {state.firewall_reason} → REJECT 강제 (점수: {state.pre_firewall_score}→{state.score})",
+                    meta={"component": "Director", "event_kind": "score_provenance"},
+                )
+
+        if state.firewall_triggered or state.firewall_fixable:
+            for line in _build_contradiction_summary_lines(
+                state.contradiction_details or [],
+                limit=len(state.contradiction_details or []),
+            ):
+                logging.warning(" %s", line)
+
+    def _log_numeric_consistency_gate(
+        self,
+        *,
+        state: _EnsembleSelectionState,
+        combined_context: str,
+        mandatory_context: str,
+    ) -> None:
         if state.numeric_consistency_review:
             agree_count = 0
             for review in state.numeric_consistency_review:
@@ -1051,42 +1115,27 @@ class DirectorEnsembleSelector:
                     "[NC-1] Director가 %d건 수치 모순 인정. continuity_contradiction에 직접 반영 여부는 Director 자율.",
                     agree_count,
                 )
-        else:
-            merged_context = combined_context or mandatory_context or ""
-            if "[NumericConsistency" in merged_context and "[NC-" in merged_context:
-                logging.debug("[NC-1] Director가 numeric_consistency_review를 생략함 (선택사항, 감점 없음)")
+            return
 
-        nc3_keys = [
-            "numeric_accuracy",
-            "arithmetic",
-            "title_consistency",
-            "scene_overlap",
-            "percent_calculation",
-            "event_ordering",
-            "space_continuity",
-            "npc_identity",
-            "time_progression",
-            "opening_diversity",
-            "timeline_arc_consistency",
-            "fiction_term_leak",
-            "scene_variety",
-            "pacing_quality",
-            "dialogue_naturalness",
-            "pov_discipline",
-            "emotional_authenticity",
-            "npc_knowledge_boundary",
-            "secret_consistency",
-            "identity_consistency",
-        ]
+        merged_context = combined_context or mandatory_context or ""
+        if "[NumericConsistency" in merged_context and "[NC-" in merged_context:
+            logging.debug("[NC-1] Director가 numeric_consistency_review를 생략함 (선택사항, 감점 없음)")
+
+    def _apply_nc3_consistency_penalty(
+        self,
+        *,
+        result: dict,
+        state: _EnsembleSelectionState,
+    ) -> None:
         if state.consistency_checklist:
             issue_count = sum(
-                1 for key in nc3_keys if str(state.consistency_checklist.get(key, "")).upper() == "ISSUE"
+                1 for key in _NC3_CHECKLIST_KEYS if str(state.consistency_checklist.get(key, "")).upper() == "ISSUE"
             )
             if issue_count > 0:
                 logging.warning(
                     "[NC-3] consistency_checklist ISSUE %d건 감지: %s",
                     issue_count,
-                    [key for key in nc3_keys if str(state.consistency_checklist.get(key, "")).upper() == "ISSUE"],
+                    [key for key in _NC3_CHECKLIST_KEYS if str(state.consistency_checklist.get(key, "")).upper() == "ISSUE"],
                 )
             if issue_count >= 3 and isinstance(state.score_breakdown_raw, dict):
                 python_warnings = state.score_breakdown_raw.get("python_warnings", 10)
@@ -1103,10 +1152,19 @@ class DirectorEnsembleSelector:
                                 meta={"component": "Director", "event_kind": "score_provenance"},
                             )
             result["score_breakdown"] = state.score_breakdown_raw
-        else:
-            logging.info("[NC-3] Director가 consistency_checklist를 생략함 — 감점 없음 (안정화 기간)")
+            return
 
-        # [Q3-T1] fail-closed guard + ep_type forwarding
+        logging.info("[NC-3] Director가 consistency_checklist를 생략함 — 감점 없음 (안정화 기간)")
+
+    def _resolve_adaptive_ensemble_verdict(
+        self,
+        *,
+        state: _EnsembleSelectionState,
+        arc_pos: int,
+        total_eps: int,
+        retry_count: int,
+        ep_type: str,
+    ) -> tuple[str, dict]:
         try:
             adaptive_result = self._d.apply_adaptive_decision(
                 score=state.score,
@@ -1118,7 +1176,12 @@ class DirectorEnsembleSelector:
             )
         except Exception as _adp_exc:
             logging.warning("[Q3-T1] apply_adaptive_decision 예외 → 원본 verdict 유지: %s", _adp_exc)
-            adaptive_result = {"decision": state.original_verdict, "adjusted": False, "reason": f"grading_error: {_adp_exc}"}
+            adaptive_result = {
+                "decision": state.original_verdict,
+                "adjusted": False,
+                "reason": f"grading_error: {_adp_exc}",
+            }
+
         final_verdict = adaptive_result["decision"]
         _adaptive_branch = ""
         if final_verdict == "CONDITIONAL_PASS":
@@ -1126,11 +1189,10 @@ class DirectorEnsembleSelector:
                 final_verdict = "REJECT"
                 _adaptive_branch = "CONDITIONAL_PASS→REJECT (original=REJECT)"
             elif state.v60_97_swapped:
-                # [Q3-T1] V60.97 swap 후보가 adaptive threshold 이상이면 CONDITIONAL_PASS 유지
                 _v97_threshold = adaptive_result.get("threshold_used", 60)
                 if state.score >= _v97_threshold:
-                    final_verdict = "CONDITIONAL_PASS"
-                    _adaptive_branch = f"CONDITIONAL_PASS 유지 (V60.97 swap, score={state.score}≥threshold={_v97_threshold})"
+                    final_verdict = "PASS"
+                    _adaptive_branch = f"CONDITIONAL_PASS→PASS (V60.97 swap, score={state.score}≥threshold={_v97_threshold})"
                 else:
                     final_verdict = "REJECT"
                     _adaptive_branch = f"CONDITIONAL_PASS→REJECT (V60.97 swap, score={state.score}<threshold={_v97_threshold})"
@@ -1140,6 +1202,7 @@ class DirectorEnsembleSelector:
             else:
                 final_verdict = "PASS"
                 _adaptive_branch = "CONDITIONAL_PASS→PASS (fallback)"
+
         if _adaptive_branch and hasattr(self._d, "_operator_log"):
             self._d._operator_log(
                 f"[Adaptive] {_adaptive_branch}",

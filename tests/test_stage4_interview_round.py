@@ -6,6 +6,7 @@ import logging
 import time
 from dataclasses import dataclass
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import MagicMock, mock_open, patch
 
 from modules.core import stage4_episode_logging as s4_episode_logging
@@ -391,6 +392,41 @@ class TestInterviewRoundHelpers:
         assert merged_feedback.count("[NPC]") == 4
         assert merged_feedback.count("[FACT]") == 4
         assert merged_feedback.count("[COVERAGE]") == 4
+
+    def test_retry_directives_preserve_newline_structure(self):
+        """[pre-rerun] retry_directives가 줄바꿈 구조를 유지하는지 검증 (이전: ' / ' 평탄화)."""
+        ir = Stage4InterviewRound(_make_ctx())
+
+        provenance = ir._build_retry_feedback_provenance(
+            director_result={"feedback": {}},
+            director_feedback="첫 번째 지시사항입니다\n두 번째 지시사항입니다\n세 번째 지시사항입니다",
+            selected_validation={},
+            round_num=2,
+        )
+
+        directives = provenance["retry_directives"]
+        assert " / " not in directives, "retry_directives는 ' / '로 평탄화되면 안 됩니다"
+        assert "\n" in directives, "retry_directives는 줄바꿈 구조를 유지해야 합니다"
+        assert "첫 번째 지시사항입니다" in directives
+        assert "두 번째 지시사항입니다" in directives
+        assert "세 번째 지시사항입니다" in directives
+
+    def test_retry_directives_dedup_and_keep_latest_20_lines(self):
+        ir = Stage4InterviewRound(_make_ctx())
+        backlog = [f"line-{idx}" for idx in range(25)] + ["line-24", "line-23"]
+
+        provenance = ir._build_retry_feedback_provenance(
+            director_result={"feedback": {}},
+            director_feedback="\n".join(backlog),
+            selected_validation={},
+            round_num=3,
+        )
+
+        directives = provenance["retry_directives"].splitlines()
+        assert len(directives) == 20
+        assert directives[0] == "line-5"
+        assert directives[-1] == "line-24"
+        assert directives.count("line-23") == 1
 
     def test_compact_attempt_snapshot_preserves_full_feedback_lists(self):
         snapshot = Stage4InterviewRound._compact_attempt_snapshot(
@@ -1310,6 +1346,28 @@ class TestInterviewRoundRun:
         )
 
         assert result.verdict == "EMPTY"
+
+    def test_non_dict_or_blank_candidates_filter_to_empty(self, caplog):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.chief_writer.generate_ensemble.return_value = [
+            "bad-candidate",
+            {"manuscript": "   "},
+            {"title": "missing manuscript"},
+        ]
+
+        with caplog.at_level(logging.WARNING):
+            result = ir.run(
+                round_num=0,
+                stage4_spinner=MagicMock(),
+                director_feedback="",
+                previous_attempt={},
+                round_ctx=round_ctx,
+            )
+
+        assert result.verdict == "EMPTY"
+        assert "후보 3건 전량 필터링 탈락" in caplog.text
 
     def test_pass_returns_pass(self):
         ctx = _make_ctx()
@@ -2404,6 +2462,12 @@ class TestRecordS4Attempt:
             fix_scope_reasoning="bounded fix",
             runtime_advisory="keep continuity",
             retry_directives="change ending",
+            error_category="LOGIC_ERROR",
+            initial_verdict="PASS_WITH_FIX",
+            score_breakdown={"continuity": 0},
+            is_patch=True,
+            is_patch_fallback=False,
+            patch_strategy="patch_with_feedback",
             prelude=prelude,
         )
 
@@ -2411,6 +2475,12 @@ class TestRecordS4Attempt:
         assert kw["session_id"] == "sess-stage4"
         assert kw["attempt_key"] == "s4:ep2:arc1:a2:sess-stage4"
         assert kw["artifact_path"] == "logs/final.txt"
+        assert kw["failure_category"] == "LOGIC_ERROR"
+        assert kw["initial_verdict"] == "PASS_WITH_FIX"
+        assert kw["score_breakdown"] == {"continuity": 0}
+        assert kw["is_patch"] is True
+        assert kw["is_patch_fallback"] is False
+        assert kw["patch_strategy"] == "patch_with_feedback"
 
     def test_attempt_key_uses_metrics_session_id_when_available(self):
         ctx = _make_ctx()
@@ -2745,6 +2815,8 @@ class TestRecordS4Attempt:
                 "verdict_reason": "director pass before post-select",
                 "fix_scope": "",
                 "open_review": "",
+                "fix_pack": _local_fix_pack("opening_location_name", target_kind="entity_ref"),
+                "action_items": ["fix the opening location"],
             },
             director_feedback="initial feedback",
             score=95,
@@ -2755,7 +2827,7 @@ class TestRecordS4Attempt:
         )
 
         assert verdict == "REJECT"
-        assert error_category == "LOGIC_ERROR"
+        assert error_category == "POST_SELECT_CONTINUITY_CONFLICT"
         assert "[Continuity Conflict]" in director_feedback
         assert previous_attempt["fix_scope"] == "partial"
         assert previous_attempt["selected_strategy_key"] == "tension"
@@ -2764,6 +2836,8 @@ class TestRecordS4Attempt:
         assert previous_attempt["reject_bucket"] == "post_select_conflict"
         assert previous_attempt["retry_pathology_source"] == "post_select_conflict"
         assert previous_attempt["provisional_pass_downgrade"] is True
+        assert previous_attempt["fix_pack"]["patch_targets"] == ["opening_location_name"]
+        assert previous_attempt["action_items"] == ["fix the opening location"]
 
     def test_post_select_checks_run_on_retry_rounds_too(self):
         ctx = _make_ctx()
@@ -3345,7 +3419,8 @@ class TestRecordS4Attempt:
 
         assert result.previous_attempt["reject_bucket"] != "post_select_conflict"
         assert result.previous_attempt["fix_scope"] == "inplace"
-        assert result.error_category == ""
+        # [TF-5] error_category는 reject_bucket에서 유도됨 (NULL 방지)
+        assert result.error_category in ("", "QUALITY_ISSUE", "CONSTRAINT_VIOLATION", "STRUCTURE_ERROR")
 
     def test_retry_regenerate_uses_reduced_strategy_budget_for_constraint_violation(self):
         ctx = _make_ctx()
@@ -3637,6 +3712,42 @@ class TestRecordS4Attempt:
         assert payload.trace_meta["final_score"] == 91
         assert payload.trace_meta["patch_trace"] == {}
         ir._record_s4_attempt.assert_not_called()
+
+    def test_process_verdict_normalizes_conditional_pass_to_positive_path(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        ir._process_positive_verdict = MagicMock(
+            return_value=SimpleNamespace(
+                pass_result={"verdict": "PASS"},
+                director_feedback="normalized feedback",
+                previous_attempt={"score": 95},
+                trace_meta={"final_verdict": "PASS"},
+            )
+        )
+
+        result, director_feedback, previous_attempt, trace_meta = ir._process_verdict(
+            director_result={"selected_candidate": {"manuscript": "candidate manuscript"}},
+            director_feedback="initial",
+            verdict="CONDITIONAL_PASS",
+            score=95,
+            round_ctx=_make_round_ctx(),
+            round_num=0,
+            previous_attempt={},
+            is_patch=False,
+            is_patch_fallback=False,
+            prev_score=0,
+            stage4_spinner=MagicMock(),
+            director_mandatory_context="",
+            director_memory_context="",
+            error_category="",
+        )
+
+        ir._process_positive_verdict.assert_called_once()
+        assert ir._process_positive_verdict.call_args.kwargs["verdict"] == "PASS"
+        assert result == {"verdict": "PASS"}
+        assert director_feedback == "normalized feedback"
+        assert previous_attempt == {"score": 95}
+        assert trace_meta["final_verdict"] == "PASS"
 
     def test_build_positive_verdict_seed_clones_selected_candidate_and_state_updates(self):
         ctx = _make_ctx()
@@ -6227,6 +6338,7 @@ class TestLane2DirectorSemantics:
         assert kwargs["artifact_payload"] == "candidate manuscript"
         assert kwargs["runtime_advisory"] == "runtime digest"
         assert kwargs["retry_directives"] == "retry directives"
+        assert kwargs["error_category"] == "LOGIC_ERROR"
         assert kwargs["reject_bucket"] == "post_select_conflict"
         assert kwargs["advisory_flags"]["gate_semantics"] == {"gate_basis": "consistency"}
         assert kwargs["advisory_flags"]["fix_pack"] == {"must_fix": ["anchor"]}
@@ -7624,3 +7736,334 @@ def test_director_sc5_budget_preserves_recent_tail_context():
     continuity_ctx = ctx.agents["director"].check_manuscript_continuity_with_cache.call_args.kwargs["memory_context"]
     assert len(continuity_ctx) <= 180
     assert "TAIL-NPC" in continuity_ctx
+
+
+# ═══════════════════════════════════════════════════════════════
+# Operator Parity Tests — console-log-max-display residual
+# ═══════════════════════════════════════════════════════════════
+
+
+class TestOperatorParitySessionLogger:
+    """Session logger must receive untruncated provenance fields."""
+
+    def test_session_logger_receives_full_reason_fields(self):
+        ctx = _make_ctx()
+        sl = MagicMock()
+        ctx.session_logger = sl
+        ir = Stage4InterviewRound(ctx)
+
+        long_reason = "판정 사유입니다 " * 200  # well over 500 chars
+        long_advisory = "advisory 내용 " * 200
+        long_directives = "지시사항 " * 200
+        long_open_review = "리뷰 " * 200
+
+        ir._log_session_decision(
+            next_ep=1,
+            round_num=0,
+            arc_num=1,
+            verdict="PASS",
+            score=85,
+            selected="A",
+            error_category="",
+            reason=long_reason,
+            fix_scope="",
+            open_review=long_open_review,
+            action_items=list(range(30)),
+            attempt_key="test",
+            selection_reason=long_reason,
+            verdict_reason=long_reason,
+            runtime_advisory=long_advisory,
+            retry_directives=long_directives,
+            firewall_reason=long_reason,
+        )
+
+        assert sl.log_decision.called
+        call_kwargs = sl.log_decision.call_args.kwargs
+
+        assert call_kwargs["reason"] == long_reason.strip()
+        assert len(call_kwargs["reason"]) > 500
+        assert call_kwargs["selection_reason"] == long_reason.strip()
+        assert call_kwargs["verdict_reason"] == long_reason.strip()
+        assert call_kwargs["open_review"] == long_open_review.strip()
+        assert len(call_kwargs["open_review"]) > 300
+        assert call_kwargs["runtime_advisory"] == long_advisory.strip()
+        assert call_kwargs["retry_directives"] == long_directives.strip()
+        assert call_kwargs["firewall_reason"] == long_reason.strip()
+        assert len(call_kwargs["action_items"]) == 30
+
+
+class TestOperatorParityAdvisoryFullSurface:
+    """Advisory methods must return all items without truncation."""
+
+    def test_truth_gate_returns_all_warnings(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        warnings = [{"severity": "CRITICAL", "text": f"경고_{i}"} for i in range(25)]
+        tg_mock = MagicMock()
+        tg_mock.validate.return_value = {"structured_warnings": warnings}
+        ctx.state_tracker.check_destroyed_entity_in_manuscript.return_value = []
+
+        with patch("modules.core.truth_gate.TruthGate", return_value=tg_mock):
+            result = ir._advisory_truth_gate(
+                candidates=[{"manuscript": "원고내용", "state_updates": {}}],
+                validation_results=[{}],
+                next_ep=1,
+            )
+
+        assert result
+        joined = result[0]
+        for i in range(25):
+            assert f"경고_{i}" in joined
+
+    def test_npc_drift_returns_all_items_without_truncation(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        long_found = "이것은 아주 긴 원고 내 발견된 NPC 속성 값입니다 " * 5  # >40 chars
+
+        drift_mock = MagicMock()
+        drift_items = [
+            {"npc": f"NPC_{i}", "field": "성격", "expected": "냉정", "found_in_ms": long_found}
+            for i in range(15)
+        ]
+        drift_mock.check.return_value = drift_items
+
+        ws_mock = MagicMock()
+        ws_mock.get_npc_role_snapshot.return_value = {"npc1": {}}
+        ctx.world_state = ws_mock
+
+        with patch(
+            "modules.core.npc_drift_advisor.NpcDriftAdvisor",
+            return_value=drift_mock,
+        ):
+            result = ir._advisory_npc_drift(
+                candidates=[{"manuscript": "원고"}],
+                validation_results=[{}],
+                next_ep=1,
+            )
+
+        assert result
+        joined = result[0]
+        for i in range(15):
+            assert f"NPC_{i}" in joined
+        # Verify no truncation on found_in_ms
+        assert long_found in joined
+
+    def test_numeric_consistency_returns_all_items_full_text(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        long_text = "수치 불일치 상세 설명입니다 " * 20  # >120 chars
+
+        nc_mock = MagicMock()
+        nc_items = [{"severity": "MAJOR", "text": long_text} for _ in range(15)]
+        nc_mock.check.return_value = nc_items
+
+        with patch(
+            "modules.core.numeric_consistency_checker.NumericConsistencyChecker",
+            return_value=nc_mock,
+        ):
+            result = ir._advisory_numeric_consistency(
+                candidates=[{"manuscript": "원고", "state_updates": {}}],
+                validation_results=[{}],
+                next_ep=1,
+            )
+
+        assert result
+        joined = result[0]
+        assert joined.count("[NC-") == 15
+        assert long_text in joined
+
+    def test_relationship_drift_returns_all_items_full_text(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        long_pair = "소림파_장문인_과_화산파_장로" * 3  # >30 chars
+        long_why = "관계도 변경이 원고와 일치하지 않습니다. 상세 사유: " * 3  # >60 chars
+
+        rd_mock = MagicMock()
+        rd_items = [{"npc_pair": long_pair, "why_drift": long_why} for _ in range(10)]
+        rd_mock.check.return_value = rd_items
+
+        ws_mock = MagicMock()
+        ws_mock.get_relationship_snapshot.return_value = {"pair1": {}}
+        ctx.world_state = ws_mock
+
+        with patch(
+            "modules.core.relationship_drift_advisor.RelationshipDriftAdvisor",
+            return_value=rd_mock,
+        ):
+            result = ir._advisory_rel_drift(
+                candidates=[{"manuscript": "원고"}],
+                next_ep=5,
+            )
+
+        assert result
+        joined = result[0]
+        assert joined.count("[MAJOR]") == 10
+        assert long_pair in joined
+        assert long_why in joined
+
+    def test_flashback_returns_all_items_full_text(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        long_issue = "회상 전환 표지가 현재 원고 맥락과 충돌합니다. " * 6
+        fb_mock = MagicMock()
+        fb_mock.detect_flashbacks.return_value = [{"text": f"flashback_{i}"} for i in range(2)]
+        fb_items = [{"marker": f"marker_{i}", "issue": long_issue} for i in range(8)]
+        fb_mock.check.return_value = fb_items
+
+        memory_mock = MagicMock()
+        memory_mock.retrieve_high_res_context.return_value = "[제 1화] context"
+        memory_mock.fetch_manuscript_snippet.return_value = "snippet"
+        ctx.memory = memory_mock
+
+        with patch(
+            "modules.core.flashback_verifier.FlashbackVerifier",
+            return_value=fb_mock,
+        ):
+            result = ir._advisory_flashback(
+                candidates=[{"manuscript": "원고"}],
+                next_ep=6,
+            )
+
+        assert result
+        joined = result[0]
+        assert joined.count("[MAJOR]") == 8
+        assert "marker_7" in joined
+        assert long_issue in joined
+
+    def test_info_paradox_returns_all_items_full_text(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        long_info = "주인공만 알 수 없는 기밀 정보"
+        long_why = "시점상 접근할 수 없는 정보인데 현재 내면 독백에서 단정적으로 사용되었습니다. " * 4
+
+        ctx.current_project.master_bible = {
+            "MasterBible": {"protagonist_config": {"pov": "1인칭", "incarnation_type": "회귀자"}}
+        }
+        ctx.current_project.db = MagicMock()
+
+        ip_mock = MagicMock()
+        ip_items = [{"info_used": long_info, "why_paradox": long_why} for _ in range(9)]
+        ip_mock.check.return_value = ip_items
+
+        with patch("modules.core.constants.HUDKeys.get_protagonist_name", return_value="한시우"), patch(
+            "modules.core.info_paradox_checker.InfoParadoxChecker.build_knowledge_summary",
+            return_value="knowledge",
+        ), patch(
+            "modules.core.info_paradox_checker.InfoParadoxChecker",
+            return_value=ip_mock,
+        ):
+            result = ir._advisory_info_paradox(
+                candidates=[{"manuscript": "원고"}],
+                next_ep=6,
+                genre_name="investment",
+            )
+
+        assert result
+        joined = result[0]
+        assert joined.count("[MAJOR]") == 9
+        assert long_info in joined
+        assert long_why in joined
+
+    def test_long_term_repetition_returns_all_items_full_text(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        ctx.current_project.db = MagicMock()
+        long_pattern = "유사한 장면 구성 패턴"
+        long_issue = "최근 장기 구간에서 같은 감정 전개와 연출이 반복되고 있습니다. " * 4
+
+        ltr_mock = MagicMock()
+        ltr_items = [{"pattern": long_pattern, "issue": long_issue} for _ in range(7)]
+        ltr_mock.check.return_value = ltr_items
+
+        with patch(
+            "modules.core.long_term_repetition_advisor.LongTermRepetitionAdvisor.build_pattern_summary",
+            return_value="summary",
+        ), patch(
+            "modules.core.long_term_repetition_advisor.LongTermRepetitionAdvisor",
+            return_value=ltr_mock,
+        ):
+            result = ir._advisory_long_term_rep(
+                candidates=[{"manuscript": "원고"}],
+                next_ep=20,
+            )
+
+        assert result
+        joined = result[0]
+        assert joined.count("[MAJOR]") == 7
+        assert long_pattern in joined
+        assert long_issue in joined
+
+    def test_python_validation_advisory_logs_detail_lines(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        validation_result = {"warnings": [], "warning_count": 0, "focus_points": []}
+        bv_warnings = ["degraded: check_a", "경고: NPC 이름 불일치", "경고: 시간선 오류"]
+        ir._apply_blocking_validator_advisories(
+            validation_result=validation_result,
+            bv_advisory_warnings=bv_warnings,
+            candidate_index=0,
+            next_ep=1,
+            round_num=0,
+        )
+
+        ctx.ui.log.assert_called_once()
+        log_msg = ctx.ui.log.call_args.args[0]
+        assert "3건" in log_msg
+        for w in bv_warnings:
+            assert w in log_msg
+        call_kwargs = ctx.ui.log.call_args.kwargs
+        assert call_kwargs["meta"]["advisory_details"] == bv_warnings
+
+
+class TestOperatorParityCompactTextNone:
+    """_compact_text with limit=None must not truncate."""
+
+    def test_compact_text_none_preserves_full_string(self):
+        long_text = "판정 사유 " * 500
+        result = Stage4InterviewRound._compact_text(long_text, limit=None)
+        assert result == long_text.strip()
+        assert len(result) > 500
+
+    def test_compact_text_none_still_strips(self):
+        result = Stage4InterviewRound._compact_text("  hello  ", limit=None)
+        assert result == "hello"
+
+    def test_compact_text_none_on_empty(self):
+        assert Stage4InterviewRound._compact_text("", limit=None) == ""
+        assert Stage4InterviewRound._compact_text(None, limit=None) == ""
+
+    def test_summarize_patch_provenance_preserves_all_targets_and_fields(self):
+        director_result = {
+            "fix_scope": "full",
+            "fix_scope_reasoning": "reason-text",
+            "open_review": "review-text",
+            "fix_pack": {"patch_targets": [f"target_{i}" for i in range(8)]},
+        }
+        patch_trace = {
+            "patch_targets": [f"trace_target_{i}" for i in range(8)],
+            "patch_strategy": "line_patch",
+            "change_ratio": 0.375,
+        }
+
+        summary = Stage4InterviewRound._summarize_patch_provenance(
+            director_result,
+            "feedback-text",
+            patch_trace,
+        )
+
+        for i in range(8):
+            assert f"trace_target_{i}" in summary
+        assert "scope=full" in summary
+        assert "reason=reason-text" in summary
+        assert "review=review-text" in summary
+        assert "feedback=feedback-text" in summary
+        assert "strategy=line_patch" in summary
+        assert "change_ratio=37.5%" in summary

@@ -2088,6 +2088,49 @@ class TestLane2DirectorEnsembleSemantics:
         assert final_verdict == "REJECT"
         assert adaptive_result["decision"] == "CONDITIONAL_PASS"
 
+    def test_apply_ensemble_quality_gates_applies_nc3_penalty_and_preserves_breakdown(self, ensemble):
+        from modules.domain.agents.director_ensemble import _EnsembleSelectionState
+
+        ensemble._d.apply_adaptive_decision = MagicMock(
+            return_value={"decision": "PASS", "adjusted": False, "threshold_used": 60, "reason": "stable"}
+        )
+        state = _EnsembleSelectionState(
+            selected_letter="A",
+            selected_idx=0,
+            selected_candidate={"manuscript": _LONG_MANUSCRIPT, "state_updates": {}},
+            original_verdict="PASS",
+            score=90,
+            pre_firewall_score=90,
+            score_breakdown_raw={"story": 40, "python_warnings": 10},
+            contradiction_check={},
+            numeric_consistency_review=[],
+            consistency_checklist={
+                "numeric_accuracy": "ISSUE",
+                "arithmetic": "ISSUE",
+                "title_consistency": "ISSUE",
+            },
+            v60_97_swapped=False,
+            contradiction_details=[],
+        )
+        result = {"score_breakdown": state.score_breakdown_raw.copy()}
+
+        final_verdict, adaptive_result = ensemble._apply_ensemble_quality_gates(
+            result=result,
+            state=state,
+            scm_single_candidate=False,
+            combined_context="",
+            mandatory_context="",
+            arc_pos=1,
+            total_eps=5,
+            retry_count=0,
+        )
+
+        assert state.score_breakdown_raw["python_warnings"] == 3
+        assert result["score_breakdown"]["python_warnings"] == 3
+        assert state.score == 43
+        assert final_verdict == "PASS"
+        assert adaptive_result["decision"] == "PASS"
+
     def test_compare_and_select_arc_ask_exception_fallback(self, director):
         """LLM ask() 예외 → _fallback_arc_selection으로 PASS 폴백."""
         director.ask = MagicMock(side_effect=RuntimeError("API 장애"))
@@ -2129,3 +2172,116 @@ class TestLane2DirectorEnsembleSemantics:
         result = director.compare_and_select_arc(candidates=arcs, arc_no=1, curr_block={}, prev_arc_context="")
         assert result["selected_index"] == 0  # 99 → 0으로 클램프
         assert result["selected_arc"] is arcs[0]
+
+
+# ═══════════════════════════════════════════════════════════════
+# Operator Parity Tests — director_auditor residual
+# ═══════════════════════════════════════════════════════════════
+
+
+class TestDirectorAuditorOperatorParity:
+    """Director auditor must show full violations, not capped subsets."""
+
+    def test_protagonist_config_shows_all_critical_violations(self, director):
+        """All critical violations appear in feedback, not just first 3."""
+        bible = director.context.master_bible
+        bible["MasterBible"]["protagonist_config"] = {
+            "world_origin": "원시인",
+            "incarnation_type": "기타",
+        }
+        director.invalidate_caches()
+        director.protagonist_config_check_enabled = True
+
+        manuscript = (
+            "그는 핸드폰을 꺼내 시스템을 확인했다. "
+            "인터넷으로 검색해보니 컴퓨터가 나왔고 "
+            "TV에서 자동차 광고가 나오고 있었다. "
+            "엘리베이터를 타고 올라가 에어컨을 켰다."
+        )
+
+        result = director.validate_protagonist_config_compliance(
+            manuscript=manuscript, ep_num=1
+        )
+
+        critical_violations = [
+            v for v in result["violations"] if v.get("severity") == "CRITICAL"
+        ]
+        feedback = result.get("feedback", "")
+
+        if len(critical_violations) > 3:
+            for v in critical_violations:
+                msg = v.get("message", "")
+                if msg:
+                    assert msg in feedback, f"Violation '{msg}' missing from feedback"
+
+    def test_protagonist_config_shows_all_warning_violations(self, director):
+        """All warning violations appear in feedback, not just first 2."""
+        bible = director.context.master_bible
+        bible["MasterBible"]["protagonist_config"] = {
+            "world_origin": "현대인",
+            "incarnation_type": "회귀자",
+        }
+        director.invalidate_caches()
+        director.protagonist_config_check_enabled = True
+
+        manuscript = (
+            "곧 그 남자가 죽을 것이다. "
+            "전생에서 알고 있었다. "
+            "미래에서의 기억이 떠올랐다. "
+            "얼마 후면 멸망할 것이다. "
+            "회귀에서 경험한 일이었다."
+        )
+
+        result = director.validate_protagonist_config_compliance(
+            manuscript=manuscript, ep_num=1
+        )
+
+        warning_violations = [
+            v for v in result["violations"] if v.get("severity") == "WARNING"
+        ]
+        feedback = result.get("feedback", "")
+
+        if len(warning_violations) > 2:
+            for v in warning_violations:
+                msg = v.get("message", "")
+                if msg:
+                    assert msg in feedback, f"Warning '{msg}' missing from feedback"
+
+    def test_genre_validation_error_message_not_truncated(self, director):
+        """Genre validation error message must not be truncated."""
+        long_error_msg = "장르 검증에서 발생한 상세한 오류 메시지 " * 10
+
+        guard_mock = MagicMock()
+        guard_mock.run_deep_validation.side_effect = ValueError(long_error_msg)
+        director._auditor._d.guard = guard_mock
+
+        result = director._auditor._run_genre_specific_validation(
+            manuscript="원고", ep_num=1
+        )
+
+        assert result["summary"] == f"장르 검증 실패: {long_error_msg}"
+
+    def test_warning_violations_not_capped_at_5(self, director):
+        """Warning violations list must show all items, not first 5."""
+        auditor = director._auditor
+
+        genre_violations = {
+            "has_critical": False,
+            "warning_violations": [
+                {"message": f"warning_{i}"} for i in range(10)
+            ],
+            "violations": [],
+        }
+
+        director.genre_validation_enabled = True
+        director.guard = MagicMock()
+
+        with patch.object(auditor, "_run_genre_specific_validation", return_value=genre_violations):
+            result = auditor._collect_genre_pre_llm_findings(
+                manuscript="원고" * 100,
+                ep_num=1,
+            )
+
+        advisory_text = "\n".join(result.get("advisories", []))
+        for i in range(10):
+            assert f"warning_{i}" in advisory_text

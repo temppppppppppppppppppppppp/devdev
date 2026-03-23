@@ -120,6 +120,82 @@ class TestSceneReflection:
         assert len(result["weak_scenes"]) >= 1
 
 
+# ─── [Gap-2] _check_scene_header_contract ──────────
+
+
+class TestSceneHeaderContract:
+    def test_few_scenes_skipped(self, checker):
+        """씬 2개 이하면 빈 리스트 (검사 불필요)."""
+        breakdown = {"s1": {"title": "A"}, "s2": {"title": "B"}}
+        result = checker._check_scene_header_contract("원고 텍스트", breakdown)
+        assert result == []
+
+    def test_headers_present_pass(self, checker):
+        """씬 헤더가 모두 있으면 빈 리스트 (통과)."""
+        breakdown = {f"scene_{i}": {"title": f"씬 {i}"} for i in range(1, 4)}
+        ms = "### 씬 1: 시작\n본문\n### 씬 2: 전개\n본문\n### 씬 3: 결말\n본문"
+        result = checker._check_scene_header_contract(ms, breakdown)
+        assert result == []
+
+    def test_zero_headers_fail(self, checker):
+        """씬 헤더 0개면 FAIL."""
+        breakdown = {f"scene_{i}": {"title": f"씬 {i}"} for i in range(1, 6)}
+        ms = "그냥 긴 산문 블록입니다. " * 100
+        result = checker._check_scene_header_contract(ms, breakdown)
+        assert len(result) == 1
+        assert result[0].passed is False
+        assert result[0].severity == CheckSeverity.FAIL
+        assert "0개 발견" in result[0].message
+
+    def test_partial_headers_warning(self, checker):
+        """씬 헤더가 절반 미만이면 WARNING."""
+        breakdown = {f"scene_{i}": {"title": f"씬 {i}"} for i in range(1, 6)}
+        ms = "### 씬 1: 시작\n본문 " * 50
+        result = checker._check_scene_header_contract(ms, breakdown)
+        assert len(result) == 1
+        assert result[0].passed is True
+        assert result[0].severity == CheckSeverity.WARNING
+
+    def test_two_of_five_headers_warning(self, checker):
+        """홀수 씬 개수에서는 2/5도 WARNING이어야 한다."""
+        breakdown = {f"scene_{i}": {"title": f"씬 {i}"} for i in range(1, 6)}
+        ms = "### 씬 1: 시작\n본문\n### 씬 2: 전개\n본문"
+        result = checker._check_scene_header_contract(ms, breakdown)
+        assert len(result) == 1
+        assert result[0].severity == CheckSeverity.WARNING
+        assert "최소 3개 이상 필요" in result[0].message
+
+    def test_duplicate_headers_do_not_count_as_distinct(self, checker):
+        """같은 씬 번호 반복은 고유 헤더 수를 늘리지 않아야 한다."""
+        breakdown = {f"scene_{i}": {"title": f"씬 {i}"} for i in range(1, 6)}
+        ms = "### 씬 1: 시작\n본문\n### 씬 1: 반복\n본문\n### 씬 1: 반복2\n본문"
+        result = checker._check_scene_header_contract(ms, breakdown)
+        assert len(result) == 1
+        assert result[0].severity == CheckSeverity.WARNING
+        assert "1개만 발견" in result[0].message
+
+
+class TestOpeningAnchorGate:
+    def test_opening_anchor_total_miss_fails(self):
+        cl = PreDirectorChecklist()
+        blueprint = {
+            "scene_breakdown": {
+                "scene_1": {"title": "시작", "description": "도입"},
+                "scene_2": {"title": "전개", "description": "전개"},
+                "scene_3": {"title": "결말", "description": "결말"},
+            },
+            "start_location": "강남 5성급 호텔 라운지 카페 프라이빗 룸",
+        }
+        manuscript = "[오후 2시 15분, 여의도 콘래드 호텔 스위트룸]\n본문"
+
+        items = cl._check_manuscript_blueprint_alignment(manuscript, {"blueprint": blueprint})
+        opening_item = next(item for item in items if item.name == "시작 장소 불일치")
+
+        assert opening_item.passed is False
+        assert opening_item.severity == CheckSeverity.FAIL
+        assert "핵심 위치 토큰 0/" in opening_item.message
+
+
 # ─── _check_scene_density_balance ───────────────────
 
 

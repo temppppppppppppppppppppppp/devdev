@@ -679,8 +679,10 @@ class Stage4DirectorRuntime:
             "director_verdict",
             decision.director_result.get("original_verdict", "REJECT"),
         )
+        # [TF-3] PASS/PASS_WITH_FIX는 post-select 전까지 provisional 표시
+        _provisional_tag = " [provisional — post-select 미완료]" if decision.verdict in ("PASS", "PASS_WITH_FIX") else ""
         owner.ctx.ui.log(
-            f"   📊 Director 판정: {decision.verdict} (초기: {director_verdict}, 점수: {decision.score}, 선택: 후보 {decision.selected})"
+            f"   📊 Director 판정: {decision.verdict}{_provisional_tag} (초기: {director_verdict}, 점수: {decision.score}, 선택: 후보 {decision.selected})"
         )
         owner.ctx.ui.log(f"      └─ 사유: {decision.reason[:80]}...")
         owner._log_attempt_event(

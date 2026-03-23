@@ -536,6 +536,9 @@ class TestErrorResponse:
 
 
 class TestModelFallbackChain:
+    def test_31preview_falls_to_25pro(self):
+        assert BaseAgent.MODEL_FALLBACK_CHAIN["gemini-3.1-pro-preview"] == "gemini-2.5-pro"
+
     def test_25pro_falls_to_flash(self):
         """gemini-2.5-pro → gemini-2.5-flash 폴백"""
         assert BaseAgent.MODEL_FALLBACK_CHAIN["gemini-2.5-pro"] == "gemini-2.5-flash"
@@ -547,11 +550,11 @@ class TestModelFallbackChain:
     def test_flash_chain(self):
         """Flash 계열 폴백 — 현재 chain에 gemini-3.x 없음"""
         assert "gemini-3-flash-preview" not in BaseAgent.MODEL_FALLBACK_CHAIN
-        assert "gemini-3.1-pro-preview" not in BaseAgent.MODEL_FALLBACK_CHAIN
+        assert BaseAgent.MODEL_FALLBACK_CHAIN["gemini-3.1-pro-preview"] == "gemini-2.5-pro"
 
     def test_vertex_prefixed_pro_preserves_provider_on_fallback(self):
-        agent = BaseAgent(context=MagicMock(), client=MagicMock(), model_tier="vertexai:gemini-2.5-pro")
-        assert agent.backup_model == "vertexai:gemini-2.5-flash"
+        agent = BaseAgent(context=MagicMock(), client=MagicMock(), model_tier="vertexai:gemini-3.1-pro-preview")
+        assert agent.backup_model == "vertexai:gemini-2.5-pro"
 
 
 # ══════════════════════════════════════════════════════════════

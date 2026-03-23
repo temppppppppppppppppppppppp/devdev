@@ -3,6 +3,7 @@ _version: "2026-03-10-opt3"
 
 PROMPT_TEMPLATE_OUTPUT: |
   ### 📌 출력 형식 (Strict JSON)
+  ⚠️ 반드시 단일 JSON 객체 하나만 출력하라. JSON 배열([...])로 감싸지 마라.
   {{
       "title": "에피소드 제목 (한글만)",
       "content": "5,000자 이상의 소설 본문 (줄바꿈은 \\n)",

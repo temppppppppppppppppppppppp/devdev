@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from modules.domain.agents.chief_writer_context import ChiefWriterContextBuilder
 from modules.domain.agents.chief_writer_context_packets import ChiefWriterContextPackets
+from modules.domain.agents.chief_writer_prompts import build_chief_writer_main_prompt
 
 
 def _make_host():
@@ -126,7 +127,7 @@ class TestBuildCommonContext:
     def test_extract_blueprint_sections_includes_integrated_scenario_and_hook(self):
         builder = ChiefWriterContextBuilder(_make_host())
 
-        scene_breakdown, ending_hook = builder._extract_blueprint_sections(
+        scene_breakdown, ending_hook, opening_anchor = builder._extract_blueprint_sections(
             {
                 "scene_breakdown": {"scene_1": {"summary": "대치"}},
                 "integrated_scenario": "통합 흐름",
@@ -210,6 +211,37 @@ class TestBuildCommonContext:
         assert "참고 문장" in kwargs["reference_excerpt_section"]
         assert "누군가 문을 두드린다" in kwargs["ending_hook_section"]
         assert "회귀자" in kwargs["incarnation_context_section"]
+
+    def test_main_prompt_places_opening_anchor_before_prev_digest(self):
+        prompt = build_chief_writer_main_prompt(
+            ep_num=5,
+            dna_instruction="dna",
+            purism_section="purism",
+            world_origin_constraint_section="origin",
+            feedback_section="feedback",
+            constraint_section="constraint",
+            future_guard_section="future",
+            past_guard_section="past",
+            writer_core_section="writer-core",
+            hud_anomaly_section="hud-anomaly",
+            scene_breakdown="scene-breakdown",
+            prev_digest="PREV-DIGEST",
+            prev_ending="PREV-ENDING",
+            hud_report="HUD",
+            high_density_hud_section="hd-hud",
+            hud_trend_section="hud-trend",
+            npc_equipment_section="npc-equip",
+            npc_frequency_section="npc-freq",
+            arc_doc="arc",
+            core_identity_desire="desire",
+            style_guide="style",
+            common_rules="common-rules",
+            writing_guidelines="guidelines",
+            opening_anchor_section="OPENING-ANCHOR",
+        )
+
+        assert prompt.index("OPENING-ANCHOR") < prompt.index("PREV-DIGEST")
+        assert "Blueprint의 시작 장소/시간이 직전 화 종료 상태보다 우선한다." in prompt
 
 
 class TestDigestAndGuards:

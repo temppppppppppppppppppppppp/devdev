@@ -24,6 +24,7 @@ import threading
 from functools import partial
 
 from modules.core.soft_failure import report_soft_failure, resolve_db_log_dir, resolve_logs_dir, resolve_project_log_dir
+from modules.core.models_config import DEFAULT_FLASH_MODEL, DEFAULT_PRO_MODEL
 
 from .action_scene_evaluator import ActionSceneEvaluator
 from .advisory_validator import AdvisoryValidator
@@ -224,7 +225,7 @@ class ValidationOrchestrator:
         self.consistency = ConsistencyValidator(genre=genre)
 
         # TIER 2: SCORING
-        scoring_model = config.get("scoring_model", "gemini-2.5-pro")
+        scoring_model = config.get("scoring_model", DEFAULT_PRO_MODEL)
         self.scoring = ScoringValidator(client=client, model=scoring_model, constitution=self.constitution, genre=genre)
         self.scoring.pass_threshold = config.get(
             "scoring_threshold",
@@ -232,7 +233,7 @@ class ValidationOrchestrator:
         )
 
         # TIER 3: ADVISORY
-        advisory_model = config.get("advisory_model", "gemini-2.5-flash")
+        advisory_model = config.get("advisory_model", DEFAULT_FLASH_MODEL)
         self.advisory = AdvisoryValidator(client=client, model=advisory_model)
 
         # Self-Consistency 설정
