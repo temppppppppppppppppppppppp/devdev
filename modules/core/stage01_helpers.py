@@ -528,6 +528,8 @@ class Stage01Helpers:
 
         if mode == 0:
             choice = stage0_manager.show_menu(is_new_project=True)
+            # Menu remap: show_menu returns 4 (style analysis) / 5 (work guard),
+            # but handler table uses 5 / 6 because slot 4 = block extension.
             if choice == 4:
                 choice = 5
             elif choice == 5:

@@ -1748,6 +1748,8 @@ class Stage4ContextBuilder:
                     use_advisor_path = True
 
                 mq_queries = [] if use_advisor_path else [prev_ending]
+                if not use_advisor_path:
+                    logging.warning("[Q6-T3] advisor plan 미사용 → 레거시 벡터 검색 폴백 (ep=%d)", next_ep)
                 if (not use_advisor_path) and arc_data and arc_data.get("state_changes"):
                     state_changes = arc_data["state_changes"]
                     npc_names = []

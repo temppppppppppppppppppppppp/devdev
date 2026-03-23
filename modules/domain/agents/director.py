@@ -86,10 +86,11 @@ class Director(BaseAgent):
         return self._grading.get_adaptive_threshold(arc_pos, total_eps, ep_type, retry_count)
 
     def apply_adaptive_decision(
-        self, score: int, original_decision: str, arc_pos: int = 1, total_eps: int = 5, retry_count: int = 0
+        self, score: int, original_decision: str, arc_pos: int = 1, total_eps: int = 5, retry_count: int = 0,
+        ep_type: str = "normal",
     ) -> dict:
         """[V65 C-5] 위임 → DirectorGradingSystem"""
-        return self._grading.apply_adaptive_decision(score, original_decision, arc_pos, total_eps, retry_count)
+        return self._grading.apply_adaptive_decision(score, original_decision, arc_pos, total_eps, retry_count, ep_type=ep_type)
 
     def set_genre(self, genre: str):
         """장르 설정 (main_a.py에서 boot 시 호출)"""

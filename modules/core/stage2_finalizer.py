@@ -1070,18 +1070,18 @@ class Stage2Finalizer:
                 justification = relation_change.get("justification", "")
                 if trigger or justification:
                     npc = relation_change.get("target") or relation_change.get("npc") or "?"
-                    rationale_parts.append(f"관계({npc}): {(trigger or justification)[:120]}")
+                    rationale_parts.append(f"관계({npc}): {trigger or justification}")
         rationale_pc = rationale_sc.get("power_changes", {})
         if isinstance(rationale_pc, dict) and rationale_pc.get("growth_justification"):
-            rationale_parts.append(f"성장근거: {rationale_pc['growth_justification'][:120]}")
+            rationale_parts.append(f"성장근거: {rationale_pc['growth_justification']}")
         rationale_fs = rationale_sc.get("foreshadowings", [])
         if isinstance(rationale_fs, list):
-            for foreshadow in rationale_fs[:3]:
+            for foreshadow in rationale_fs:
                 if isinstance(foreshadow, dict) and foreshadow.get("description"):
-                    rationale_parts.append(f"복선: {foreshadow['description'][:120]}")
+                    rationale_parts.append(f"복선: {foreshadow['description']}")
         rationale_cc = rationale_sc.get("continuity_checkpoints", [])
         if isinstance(rationale_cc, list) and rationale_cc:
-            rationale_parts.append(f"연속성: {'; '.join(str(item)[:60] for item in rationale_cc[:3])}")
+            rationale_parts.append(f"연속성: {'; '.join(str(item) for item in rationale_cc)}")
         refined_arc["rationale_digest"] = "\n".join(rationale_parts[:8]) if rationale_parts else ""
 
         semantic_carryover = _build_semantic_carryover(
@@ -1570,8 +1570,8 @@ class Stage2Finalizer:
         else:
             intensity_guide = ""
 
-        self.ctx.ui.log(f"      🎬 [Director REJECT] {reject_reason[:100]}")
-        self.ctx.ui.log(f"      📋 피드백: {base_feedback[:100]}")
+        self.ctx.ui.log(f"      🎬 [Director REJECT] {reject_reason}")
+        self.ctx.ui.log(f"      📋 피드백: {base_feedback}")
 
         if st_snapshot and generation_method.startswith("four_phase"):
             try:
@@ -1823,10 +1823,10 @@ class Stage2Finalizer:
             contradictions = [contradictions] if contradictions else []
         if contradictions:
             self.ctx.ui.log(f"         📌 모순 {len(contradictions)}건:")
-            for contradiction in contradictions[:5]:
-                self.ctx.ui.log(f"            ▸ {str(contradiction)[:120]}")
+            for contradiction in contradictions:
+                self.ctx.ui.log(f"            ▸ {contradiction!s}")
         if decision == "REJECT" and audit.get("re_slice_instruction"):
-            self.ctx.ui.log(f"         🔧 수정지시: {str(audit['re_slice_instruction'])[:150]}")
+            self.ctx.ui.log(f"         🔧 수정지시: {audit['re_slice_instruction']!s}")
         director_thinking = audit.get("_director_thinking", "")
         if director_thinking:
             self.ctx.ui.log("      💭 [Director Thinking]")
@@ -1904,7 +1904,7 @@ class Stage2Finalizer:
             return None
 
         fix_instr = current_audit.get("re_slice_instruction", "")
-        self.ctx.ui.log(f"      ?뵩 [TF-32-V] PASS_WITH_FIX patch #{fix_i + 1}/{max_fix} (fix: {str(fix_instr)[:80]})")
+        self.ctx.ui.log(f"      🔧 [TF-32-V] PASS_WITH_FIX patch #{fix_i + 1}/{max_fix} (fix: {fix_instr!s})")
         if not (four_phase and hasattr(four_phase, "_inplace_patch_arc")):
             logging.warning("[TF-32-V] four_phase ?먯씠?꾪듃 誘몃벑濡???REJECT")
             return None
@@ -1995,7 +1995,7 @@ class Stage2Finalizer:
             logging.debug("[S2-Finalizer] change_ratio 怨꾩궛 ?ㅽ뙣: %s", exc)
 
         if fix_instr:
-            applied_patches.append(str(fix_instr)[:200])
+            applied_patches.append(str(fix_instr))
 
         return {
             "patched": patched,
@@ -2198,7 +2198,7 @@ class Stage2Finalizer:
 
         fix_instr = current_audit.get("re_slice_instruction", "")
         self.ctx.ui.log(
-            f"      🔧 [TF-32-V] PASS_WITH_FIX patch #{fix_i + 1}/{max_fix} (fix: {str(fix_instr)[:80]})"
+            f"      🔧 [TF-32-V] PASS_WITH_FIX patch #{fix_i + 1}/{max_fix} (fix: {fix_instr!s})"
         )
         return fix_instr
 
@@ -2316,7 +2316,7 @@ class Stage2Finalizer:
             logging.debug("[S2-Finalizer] change_ratio 계산 실패: %s", exc)
 
         if fix_instr:
-            applied_patches.append(str(fix_instr)[:200])
+            applied_patches.append(str(fix_instr))
 
         return {
             "patch_guard_signals": patch_guard_signals,
@@ -2719,12 +2719,13 @@ class Stage2Finalizer:
                             verdict=str(audit.get("decision", "PASS")),
                             stage=2,
                             score=_score,
-                            selection_reason=str(audit.get("reason", ""))[:200],
+                            selection_reason=str(audit.get("reason", "")),
                             fix_scope=str(audit.get("fix_scope", "") or ""),
                             attempt_key=attempt_key,
                             candidate_key=_candidate_key,
                             content_hash=_artifact_meta["content_hash"],
                             artifact_path=_artifact_meta["artifact_path"],
+                            director_thinking=str(audit.get("_director_thinking", "") or ""),
                         )
                     except Exception as _ds_err:
                         logging.debug("[director_selections] Stage2 PASS 기록 실패: %s", _ds_err)
@@ -2856,12 +2857,13 @@ class Stage2Finalizer:
                         verdict=str(audit.get("decision", "REJECT")),
                         stage=2,
                         score=score,
-                        selection_reason=str(audit.get("reason", ""))[:200],
+                        selection_reason=str(audit.get("reason", "")),
                         fix_scope=str(audit.get("fix_scope", "") or ""),
                         attempt_key=metric_context["attempt_key"],
                         candidate_key=metric_context["candidate_key"],
                         content_hash=metric_context["artifact_meta"]["content_hash"],
                         artifact_path=metric_context["artifact_meta"]["artifact_path"],
+                        director_thinking=str(audit.get("_director_thinking", "") or ""),
                     )
                 except Exception as director_selection_err:
                     logging.debug("[director_selections] Stage2 REJECT 湲곕줉 ?ㅽ뙣: %s", director_selection_err)
@@ -2945,11 +2947,11 @@ class Stage2Finalizer:
                 {
                     "stage": 2,
                     "arc_no": global_arc_no,
-                    "reason": str(audit.get("reason", ""))[:200],
+                    "reason": str(audit.get("reason", "")),
                     "attempt": attempt + 1,
-                    "specific_issue": str(audit.get("re_slice_instruction", "") or "")[:200],
+                    "specific_issue": str(audit.get("re_slice_instruction", "") or ""),
                     "failure_category": failure_category or "",
-                    "fix_scope": str(audit.get("fix_scope", "") or "")[:40],
+                    "fix_scope": str(audit.get("fix_scope", "") or ""),
                     "score_breakdown": {
                         str(key): value
                         for key, value in list(score_breakdown.items())[:5]
@@ -2963,7 +2965,7 @@ class Stage2Finalizer:
                 self.ctx.stage2_optimizer.failure_memory.record_failure(
                     arc_no=global_arc_no,
                     failure_type="director_reject",
-                    details=str(audit.get("reason", ""))[:200],
+                    details=str(audit.get("reason", "")),
                 )
             except Exception as optimizer_err:
                 logging.debug(f"[SILENT] optimizer failure recording: {optimizer_err}")

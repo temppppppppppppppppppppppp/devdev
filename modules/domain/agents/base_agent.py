@@ -159,6 +159,7 @@ class BaseAgent:
     # [V62.1] 2.5-pro가 최종 폴백 (2.5-flash 폴백 제거 - 품질 하한선 보장)
     MODEL_FALLBACK_CHAIN = _get_model_fallback_chain()
 
+    # --- Session-scoped singleton (class-level) ---
     # [LOG-1] SessionLogger 싱글톤 (MetricsCollector와 동일 패턴)
     _session_logger_global = None
 
@@ -167,11 +168,13 @@ class BaseAgent:
         """[LOG-1] SessionLogger 주입 (main_a.py에서 1회 호출)."""
         cls._session_logger_global = logger
 
+    # --- Quota cache (protected by _quota_lock) ---
     # [V60.68] 쿼터 소진 모델 캐싱 (클래스 변수 - 세션 전체 공유)
     _quota_exhausted_models = {}  # {model_name: exhausted_until_timestamp}
     _quota_lock = threading.Lock()  # [I-18] 쿼터 캐시 읽기/쓰기 경쟁 방지
     _QUOTA_CACHE_DURATION = _SYSTEM_CFG.get("api", {}).get("quota_cache_duration", 3600)
 
+    # --- API constants ---
     # [S-02] max_output_tokens 클래스 상수
     MAX_OUTPUT_TOKENS = _SYSTEM_CFG.get("api", {}).get("max_output_tokens", 8192)
 
@@ -181,6 +184,7 @@ class BaseAgent:
     # [TF3-H7] 프롬프트 총량 사전 게이트 (API 호출 전)
     MAX_CONTEXT_CHARS = ContextLimits.MAX_CONTEXT_CHARS  # [TF-25-04] validation.yaml SSOT
 
+    # --- Key rotation state (protected by _rotation_lock) ---
     # [V61.5] API 키 순환 (429 방어)
     _api_keys = []
     _current_key_idx = 0
@@ -549,7 +553,7 @@ class BaseAgent:
             _total_cost_usd = None
 
             # [TF-58] thinking_text는 성공 호출에서도 저장 (Director 추론 분석용)
-            _thinking_snippet = str(thinking_text)[:5000] if thinking_text else None
+            _thinking_snippet = str(thinking_text) if thinking_text else None
             if METRICS_ENABLED:
                 try:
                     collector = get_metrics_collector()
@@ -576,7 +580,7 @@ class BaseAgent:
                 duration_ms=max(0, int(duration_ms)),
                 success=success,
                 error_type=type(error).__name__ if error else None,
-                error_msg=(str(error)[:80] if error else None),
+                error_msg=(str(error) if error else None),
                 stage=stage,
                 ep_num=ep_num,
                 verdict=_verdict,

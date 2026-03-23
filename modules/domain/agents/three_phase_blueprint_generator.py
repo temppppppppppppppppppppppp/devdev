@@ -253,11 +253,13 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
 
     def get_stats(self) -> dict:
         """통계 반환"""
-        total = self.stats["total_attempts"]
-        if total == 0:
+        # denominator = terminal outcomes (pass + reject), not generate() calls
+        terminal = self.stats["phase3_pass"] + self.stats["phase3_reject"]
+        if terminal == 0:
             return self.stats
 
-        return {**self.stats, "pass_rate": f"{(self.stats['phase3_pass'] / total * 100):.1f}%" if total > 0 else "N/A"}
+        rate = self.stats["phase3_pass"] / terminal * 100
+        return {**self.stats, "pass_rate": f"{rate:.1f}%"}
 
     def print_stats(self) -> None:
         """통계 출력"""

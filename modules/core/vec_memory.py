@@ -264,7 +264,9 @@ class VecMemory:
             row = cur.execute("SELECT value FROM vec_metadata WHERE key = 'embed_model'").fetchone()
             if row:
                 if row[0] != EMBED_MODEL:
-                    logging.warning(f"[VecMemory] 임베딩 모델 불일치: DB={row[0]}, 현재={EMBED_MODEL} — 재색인 권장")
+                    logging.warning(f"[VecMemory] 임베딩 모델 불일치: DB={row[0]}, 현재={EMBED_MODEL} — 재색인 권장, 캐시 초기화")
+                    if hasattr(self, "_embed_cache") and self._embed_cache is not None:
+                        self._embed_cache.clear()
 
             # 메타데이터 갱신
             cur.execute(
@@ -565,6 +567,7 @@ class VecMemory:
 
         if not seen:
             # [OpusTF-P0-2] 모든 임베딩 실패 시 LIKE 키워드 폴백
+            logging.warning("[VecMem] 멀티쿼리 전체 임베딩 실패 → 키워드 폴백 (queries=%d, ep<%d)", len(queries), current_ep)
             for q in queries:
                 if not q or not str(q).strip():
                     continue

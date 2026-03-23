@@ -44,8 +44,27 @@ def test_save_llm_call_failure_with_snippet(tmp_db):
     )
     row = tmp_db.conn.execute("SELECT prompt_snippet, response_snippet FROM llm_calls WHERE success=0").fetchone()
     assert row is not None
-    assert len(row["prompt_snippet"]) == 3000
+    assert len(row["prompt_snippet"]) == 5000
     assert row["response_snippet"] == "malformed json response"
+
+
+def test_save_llm_call_failure_persists_full_error_msg(tmp_db):
+    long_error = "traceback:" + ("X" * 512)
+    tmp_db.save_llm_call(
+        agent_name="director",
+        model="gemini-2.5-pro",
+        prompt_chars=100,
+        response_chars=0,
+        duration_ms=800,
+        success=False,
+        error_type="RuntimeError",
+        error_msg=long_error,
+    )
+
+    row = tmp_db.conn.execute("SELECT error_msg FROM llm_calls WHERE error_type='RuntimeError'").fetchone()
+
+    assert row is not None
+    assert row["error_msg"] == long_error
 
 
 def test_save_llm_call_success_no_snippet(tmp_db):

@@ -589,6 +589,8 @@ class ContextAdvisor:
             slots = []
 
         slots = self._dedupe_slots(slots)
+        # [Q6-T3] priority 기준 정렬 후 cap 적용 (낮은 priority = 높은 우선순위)
+        slots.sort(key=lambda s: s.priority)
         slots = slots[: self._stage_query_cap(stage)]
         self._assign_slot_budgets(stage, slots)
         return RetrievalPlan(stage=stage, episode_num=int(context_data.get("current_ep", 0)), slots=slots)

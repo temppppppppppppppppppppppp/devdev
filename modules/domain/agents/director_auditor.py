@@ -847,19 +847,19 @@ class DirectorQualityAuditor:
         audit_reason = result.get("reason", "")
         if audit_reason:
             self._d._operator_log(
-                f"사유: {str(audit_reason)[:200]}",
+                f"사유: {str(audit_reason)}",
                 meta={"component": "DirectorAudit", "score": audit_score, "audit_mode": audit_mode},
             )
         audit_feedback = result.get("feedback", "")
         if audit_feedback:
             self._d._operator_log(
-                f"피드백: {str(audit_feedback)[:200]}",
+                f"피드백: {str(audit_feedback)}",
                 meta={"component": "DirectorAudit", "score": audit_score, "audit_mode": audit_mode},
             )
         open_review = result.get("open_review", "")
         if open_review and open_review not in ("특이사항 없음", "없음", ""):
             self._d._operator_log(
-                f"자유 리뷰: {str(open_review)[:200]}",
+                f"자유 리뷰: {str(open_review)}",
                 meta={"component": "DirectorAudit", "score": audit_score, "audit_mode": audit_mode},
             )
 
@@ -1085,8 +1085,8 @@ class DirectorQualityAuditor:
             _contradictions = []
         if _contradictions:
             logging.warning(f" [Director/Arc] 모순 {len(_contradictions)}건 발견:")
-            for _c in _contradictions[:5]:
-                logging.warning(f" {str(_c)[:150]}")
+            for _c in _contradictions:
+                logging.warning(f" {str(_c)}")
         else:
             logging.info("✅ [Director/Arc] 모순·일관성 이상 없음")
 
@@ -1115,11 +1115,11 @@ class DirectorQualityAuditor:
                         result["score"] = min(_old_score, 44)
                     else:
                         result["score"] = 44
-                    for _c in _found[:5]:
+                    for _c in _found:
                         if isinstance(_c, dict):
                             logging.warning(
                                 f"   [{_c.get('severity', '?')}] {str(_c.get('type', ''))}: "
-                                f"{str(_c.get('current_violation', ''))[:100]}"
+                                f"{str(_c.get('current_violation', ''))}"
                             )
 
         return result
@@ -1147,7 +1147,7 @@ class DirectorQualityAuditor:
             reject_reason = first_eval.get("reason", first_eval.get("re_slice_instruction", "사유 미상"))
             logging.warning(f" [Director] REJECT (score={first_score})")
             logging.info(f" [SC-Skip] Clear REJECT (score={first_score} < ambiguous_lower={self._d.ambiguous_lower})")
-            logging.warning(f" 사유: {reject_reason[:80]}{'...' if len(str(reject_reason)) > 80 else ''}")
+            logging.warning(f" 사유: {reject_reason}")
             first_eval["self_consistency"] = {"votes": 1, "reason": "clear_reject", "pass_votes": 0}
             first_eval["_director_thinking"] = first_thinking  # [TF-28c]
             return first_eval
@@ -1156,7 +1156,7 @@ class DirectorQualityAuditor:
             pass_reason = first_eval.get("reason", first_eval.get("strengths", "판단 근거 미상"))
             logging.info(f" [Director] PASS (score={first_score})")
             logging.info(f" [SC-Skip] Clear PASS (score={first_score} > ambiguous_upper={self._d.ambiguous_upper})")
-            logging.info(f" 근거: {str(pass_reason)[:80]}{'...' if len(str(pass_reason)) > 80 else ''}")
+            logging.info(f" 근거: {str(pass_reason)}")
             first_eval["self_consistency"] = {"votes": 1, "reason": "clear_pass", "pass_votes": 1}
             first_eval["_director_thinking"] = first_thinking  # [TF-28c]
             return first_eval

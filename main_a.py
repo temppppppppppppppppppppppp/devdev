@@ -615,21 +615,21 @@ class SovereignApp:
             return error_category
 
         logic_error_keywords = [
-            "\uc778\uacfc",
-            "\uc124\uc815 \uc624\ub958",
-            "\uc8fd\uc740",
-            "\uc21c\uac04\uc774\ub3d9",
-            "\ubb34\uae30 \uc804\ud658",
-            "\uce90\ub9ad\ud130 \ubd95\uad34",
-            "\ud0c0\uc784\ub77c\uc778",
+            "인과",
+            "설정 오류",
+            "죽은",
+            "순간이동",
+            "무기 전환",
+            "캐릭터 붕괴",
+            "타임라인",
         ]
         quality_issue_keywords = [
-            "\ubd84\ub7c9",
-            "\ubc00\ub3c4",
-            "\ubb18\uc0ac",
-            "\ubb38\uccb4",
-            "\uac74\uc870",
-            "\uc7ac\ubbf8",
+            "분량",
+            "밀도",
+            "묘사",
+            "문체",
+            "건조",
+            "재미",
         ]
         if any(keyword in reason for keyword in logic_error_keywords):
             return "LOGIC_ERROR"
@@ -2353,8 +2353,8 @@ class SovereignApp:
                     )
                     SovereignApp._shutdown_log(
                         self,
-                        f"💾 [CostDB] Session 비용 저장: ${scope.get('total_cost_usd', 0.0):.4f} "
-                        f"({scope.get('total_tokens', 0):,} tokens)",
+                        f"💾 [CostDB] Session 잔여 스코프 비용 저장: ${scope.get('total_cost_usd', 0.0):.4f} "
+                        f"({scope.get('total_tokens', 0):,} tokens, 누적 총비용은 arc/episode 레코드 합산 참조)",
                         component="cost_db",
                         event_kind="result",
                         meta={
@@ -2756,11 +2756,13 @@ class SovereignApp:
         """[V27 Safe Shutdown] 앱 종료 시에만 DB 연결을 완전히 해제"""
         SovereignApp._shutdown_log(self, "\n🛑 [System] 시스템 종료 시퀀스 가동...", event_kind="progress")
         sys.stdout.flush()
+        # Phase 1: persist metrics / cost / advisory / trackers / project state
         SovereignApp._persist_shutdown_metrics(self)
         SovereignApp._persist_shutdown_cost_scope(self)
         SovereignApp._persist_shutdown_advisory_state(self)
         SovereignApp._persist_shutdown_trackers(self)
         SovereignApp._persist_shutdown_project_state(self)
+        # Phase 2: signal session logger and DB to begin orderly shutdown
         session_logger = getattr(self, "_session_logger", None)
         if session_logger is not None and hasattr(session_logger, "begin_shutdown"):
             session_logger.begin_shutdown()
@@ -2768,8 +2770,10 @@ class SovereignApp:
         db = getattr(current_project, "db", None)
         if db is not None and hasattr(db, "begin_shutdown"):
             db.begin_shutdown()
+        # Phase 3: final audit summary
         if hasattr(self, "_write_audit_summary"):
             self._write_audit_summary("shutdown_final")
+        # Phase 4: close resources (DB connections, file handles)
         SovereignApp._close_shutdown_resources(self)
         SovereignApp._shutdown_log(self, "✅ [System] 종료 완료", event_kind="result")
 
@@ -2917,7 +2921,7 @@ class SovereignApp:
     # -- [V64.P3] Stage 2 helpers -> Stage2Orchestrator delegation stubs ------
 
     def _normalize_tactical_text(self, text):
-        """[V64.P3] -> Stage2Orchestrator"""
+        """[V64.P3][COMPAT] thin delegate — authority is Stage2Orchestrator"""
         return self._stage2_orch._normalize_tactical_text(text)
 
     def _is_tactical_doc_duplicate(
@@ -2926,19 +2930,19 @@ class SovereignApp:
         reference_texts,
         threshold=TACTICAL_DOC_DUPLICATE_THRESHOLD,
     ):
-        """[V64.P3] -> Stage2Orchestrator"""
+        """[V64.P3][COMPAT] thin delegate — authority is Stage2Orchestrator"""
         return self._stage2_orch._is_tactical_doc_duplicate(candidate_text, reference_texts, threshold)
 
     def _normalize_flow_text(self, text):
-        """[V64.P3] -> Stage2Orchestrator"""
+        """[V64.P3][COMPAT] thin delegate — authority is Stage2Orchestrator"""
         return self._stage2_orch._normalize_flow_text(text)
 
     def _stage2_flow_guard(self, refined_arc):
-        """[V64.P3] -> Stage2Orchestrator"""
+        """[V64.P3][COMPAT] thin delegate — authority is Stage2Orchestrator"""
         return self._stage2_orch._stage2_flow_guard(refined_arc)
 
     def _stage2_flow_guard_legacy(self, normalized):
-        """[V64.P3] -> Stage2Orchestrator"""
+        """[V64.P3][COMPAT] thin delegate — authority is Stage2Orchestrator"""
         return self._stage2_orch._stage2_flow_guard_legacy(normalized)
 
     def _validate_volume_boundaries(self, vol_data, vol_idx):

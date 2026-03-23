@@ -118,6 +118,9 @@ Use this map for “who is final”.
   - [stage4_post_processor.py](/c:/Users/User/Desktop/글도비/modules/core/stage4_post_processor.py)
 - Post-pass world-state / manager / advisory runtime:
   - [stage4_post_pass_runtime.py](/c:/Users/User/Desktop/글도비/modules/core/stage4_post_pass_runtime.py)
+- `_god1_*` authority channel:
+  - 7 round-local attributes smuggled via instance mutation from [stage4_interview_round.py](/c:/Users/User/Desktop/글도비/modules/core/stage4_interview_round.py) `_run_validation_phase()` (producer) to [stage4_director_runtime.py](/c:/Users/User/Desktop/글도비/modules/core/stage4_director_runtime.py) `run_pre_director_validation()` (consumer)
+  - predates the runtime split; both sides carry ownership comments
 
 ### 4.6 Final PASS/REJECT Truth
 - Stage 2:
@@ -151,6 +154,7 @@ Practical rule:
 - `final_verdict` is the durable adjudication field
 - `director_verdict` is the raw upstream director result when post-gates or contract normalization may have changed the final outcome
 - `gate_basis` explains which post-gate or contract rule produced the final outcome
+- Internal validation tier results use tier-specific schemas (`passed`/`failures`/`violations`/`warnings` vs `unjustifiable_violations`/`score_penalty`); see [validation_orchestrator.py](/c:/Users/User/Desktop/글도비/modules/validation/validation_orchestrator.py) L82-181 for per-tier shapes
 
 ### 5.3 Attempt/Persistence Contracts
 - attempt-key identity:
@@ -253,6 +257,7 @@ Avoid:
 - This pack is intentionally compressed. It does not enumerate every helper family.
 - `100+` bounded semantic cores still exist; they are no longer emergency hotspots, but they still require local reading.
 - Historical docs may describe older ownership; current live workspace and current canonical dated docs win.
+- Post-survey resolved items (2026-03-23): comment/doc/observability follow-ups from the merged LLM-friendliness post-survey have been realized; see `docs/2026-03-23/llm-friendliness-post-survey-execution-ssot.md` for the full scope.
 
 ## 11. 3-Pass Audit Record
 Pass 1. Structure and Coverage

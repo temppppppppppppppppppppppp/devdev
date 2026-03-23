@@ -553,10 +553,11 @@ class DirectorGradingSystem:
         }
 
     def apply_adaptive_decision(
-        self, score: int, original_decision: str, arc_pos: int = 1, total_eps: int = 5, retry_count: int = 0
+        self, score: int, original_decision: str, arc_pos: int = 1, total_eps: int = 5, retry_count: int = 0,
+        ep_type: str = "normal",
     ) -> dict:
         """[V65 C-5] 적응형 기준에 따라 PASS/REJECT 재결정"""
-        threshold_info = self.get_adaptive_threshold(arc_pos=arc_pos, total_eps=total_eps, retry_count=retry_count)
+        threshold_info = self.get_adaptive_threshold(arc_pos=arc_pos, total_eps=total_eps, ep_type=ep_type, retry_count=retry_count)
 
         threshold = threshold_info["pass_threshold"]
         adjusted = False

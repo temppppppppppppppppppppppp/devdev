@@ -57,6 +57,7 @@ def _trim_mandatory_context_for_budget(mandatory_context: str, *, max_chars: int
     return smart_truncate(text, max_chars=max_chars, head_chars=head_chars)
 
 
+# ── Dataclass family: budget helpers ──────────────────────────
 @dataclasses.dataclass(slots=True)
 class _MandatoryContextBudgetResult:
     mandatory_context: str
@@ -222,6 +223,7 @@ def _detect_cross_episode_repetition(
     }
 
 
+# ── Dataclass family: session setup payloads ─────────────────
 @dataclasses.dataclass(slots=True)
 class _SessionConfig:
     """[4-R2-a] Session-level config for Stage 4 interview loop.
@@ -288,6 +290,7 @@ class _SessionRuntimeDependencies:
     continuity_validator_cls: object
 
 
+# ── Dataclass family: round/interview outcome dispositions ───
 @dataclasses.dataclass(slots=True)
 class _RoundOutcome:
     """[4-R2-d] Result of _handle_round_outcome."""
@@ -394,6 +397,7 @@ class _InterviewRoundLoopState:
     pathology_repeat_emitted: set[str] = dataclasses.field(default_factory=set)
 
 
+# ── Dataclass family: episode loop payloads ──────────────────
 @dataclasses.dataclass(slots=True)
 class _InterviewRoundStepDisposition:
     round_ctx: object
