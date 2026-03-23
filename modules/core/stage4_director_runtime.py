@@ -99,6 +99,9 @@ class Stage4DirectorRuntime:
     ) -> list[dict]:
         owner = self.owner
 
+        # _god1_* channel consumer: reads round-local metadata set by
+        # Stage4InterviewRound._run_validation_phase(). See the producer
+        # comment there for migration intent.
         stage4_spinner = getattr(owner, "_god1_stage4_spinner", None)
         round_num = getattr(owner, "_god1_round_num", 0)
         arc_pos = getattr(owner, "_god1_arc_pos", 0)
@@ -235,6 +238,8 @@ class Stage4DirectorRuntime:
     ) -> None:
         owner = self.owner
         pdcl = owner.ctx.get_module("pre_director_checklist")
+        if pdcl is None:
+            logging.debug("get_module('pre_director_checklist') returned None, skipping")
         if pdcl:
             try:
                 checklist_ctx = {}
@@ -266,6 +271,8 @@ class Stage4DirectorRuntime:
                 logging.warning(f"[SilentPass:PreDirectorChecklist] {exc!s:.100}")
 
         confidence_calibrator = owner.ctx.get_module("confidence_calibrator")
+        if confidence_calibrator is None:
+            logging.debug("get_module('confidence_calibrator') returned None, skipping")
         if confidence_calibrator:
             try:
                 for candidate_index, candidate in enumerate(candidates):
@@ -287,6 +294,8 @@ class Stage4DirectorRuntime:
                 logging.warning(f"[SilentPass:ConfidenceCalibrator] {exc!s:.100}")
 
         cross_verifier = owner.ctx.get_module("cross_verifier")
+        if cross_verifier is None:
+            logging.debug("get_module('cross_verifier') returned None, skipping")
         if cross_verifier and blueprint:
             try:
                 from modules.core.cross_agent_verifier import ComplianceLevel
@@ -388,6 +397,7 @@ class Stage4DirectorRuntime:
             next_ep=next_ep,
             round_num=round_num,
             candidates=candidates,
+            validation_results=validation_results,
             director_result=decision.director_result,
             advisory_summary=decision.advisory_summary,
             selected=decision.selected,

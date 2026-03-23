@@ -950,6 +950,7 @@ class Stage4PostProcessor:
         )
 
         # [S4-001] Episode Bible 저장 실패 시 오케스트레이터에 실패 신호 전달
+        # WARNING: early return below skips remaining sinks. Manuscript is already persisted.
         if _meta_save_failed:
             logging.error("[S4-001] _meta_save_failed=True → process_pass_result 반환 False")
             self.ctx.ui.log(

@@ -944,6 +944,28 @@ class TestDirectorAuditor:
         assert result["error_category"] == "LOGIC_ERROR"
         director.ask.assert_not_called()
 
+    def test_log_manuscript_audit_result_preserves_full_operator_reasoning(self, director):
+        long_reason = "reason " * 40
+        long_feedback = "feedback " * 35
+        long_review = "open review " * 32
+        director._operator_log = MagicMock()
+
+        director._auditor._log_manuscript_audit_result(
+            {
+                "decision": "REJECT",
+                "score": 41,
+                "reason": long_reason,
+                "feedback": long_feedback,
+                "open_review": long_review,
+            },
+            "legacy",
+        )
+
+        operator_lines = [call.args[0] for call in director._operator_log.call_args_list]
+        assert any(long_reason.strip() in line for line in operator_lines)
+        assert any(long_feedback.strip() in line for line in operator_lines)
+        assert any(long_review.strip() in line for line in operator_lines)
+
 
 # ═══════════════════════════════════════════════════════════════
 # 6. Director Facade Delegation Tests
@@ -1820,6 +1842,119 @@ class TestLane2DirectorEnsembleSemantics:
         assert result["fix_pack"]["target_kind"] == "entity_ref"
         assert result["fix_pack"]["patch_targets"] == ["opening_location_name", "ending_location_name"]
         assert result["fix_pack"]["must_fix"] == ["replace both labels with the approved venue"]
+
+    def test_build_ensemble_decision_payload_preserves_full_firewall_lists(self, ensemble):
+        from modules.domain.agents.director_ensemble import _EnsembleSelectionState
+
+        state = _EnsembleSelectionState(
+            selected_letter="A",
+            selected_idx=0,
+            selected_candidate={"manuscript": _LONG_MANUSCRIPT, "state_updates": {}},
+            original_verdict="PASS_WITH_FIX",
+            score=58,
+            pre_firewall_score=58,
+            score_breakdown_raw={"story": 40},
+            contradiction_check={},
+            numeric_consistency_review=[],
+            consistency_checklist={},
+            v60_97_swapped=False,
+            contradiction_details=[
+                {
+                    "severity": "MAJOR",
+                    "type": f"kind-{idx}",
+                    "current_violation": f"violation-{idx}",
+                    "fix_suggestion": f"repair-{idx}",
+                }
+                for idx in range(6)
+            ],
+        )
+        state.firewall_fixable = True
+        state.firewall_reason = "fixable contradiction cluster"
+
+        payload = ensemble._build_ensemble_decision_payload(
+            ep_num=7,
+            result={
+                "selection_reason": "picked",
+                "feedback": {"issues": ["seed-issue"], "action_items": ["seed-action"]},
+                "fix_scope": "partial",
+            },
+            state=state,
+            final_verdict="PASS_WITH_FIX",
+            adaptive_result={"decision": "PASS_WITH_FIX"},
+        )
+
+        assert len(payload["feedback"]["action_items"]) == 7
+        assert "repair-5" in payload["feedback"]["action_items"]
+        assert any("repair-5" in item for item in payload["feedback"]["issues"])
+
+    def test_log_director_frame_preserves_full_reasoning_and_all_contradictions(self, caplog):
+        from modules.domain.agents.director_ensemble import _log_director_frame
+
+        long_selection_reason = "selection reason " * 24
+        long_thinking = "thinking trail " * 30
+
+        with caplog.at_level(logging.DEBUG):
+            _log_director_frame(
+                stage="stage4",
+                ep_num=8,
+                decision="PASS_WITH_FIX",
+                score=71,
+                selected_label="A",
+                director_verdict="PASS_WITH_FIX",
+                gate_basis="firewall_fixable",
+                selection_reason=long_selection_reason,
+                verdict_reason="verdict reason",
+                comparison_notes="comparison notes",
+                contradictions=["contradiction-1", "contradiction-2", "contradiction-3"],
+                fix_scope="partial",
+                repair_scope="partial",
+                open_review="review note",
+                thinking=long_thinking,
+            )
+
+        messages = [record.getMessage() for record in caplog.records]
+        assert any(long_selection_reason.strip() in message for message in messages)
+        assert any("contradiction_3=contradiction-3" in message for message in messages)
+        assert any(long_thinking.strip() in message for message in messages)
+
+    def test_select_and_judge_ensemble_forwards_ep_type_to_adaptive_decision(self, ensemble):
+        ensemble._d._get_or_create_context_cache = MagicMock(side_effect=RuntimeError("cache error"))
+        ensemble._d._ask_with_cached_context = MagicMock()
+        ensemble._d.ask = MagicMock(return_value='{"selected":"A","verdict":"PASS","score":88}')
+        ensemble._d._extract_json_robust = MagicMock(
+            return_value={
+                "selected": "A",
+                "verdict": "PASS",
+                "score": 88,
+                "selection_reason": "picked",
+                "feedback": {"issues": [], "action_items": []},
+                "fix_scope": "none",
+            }
+        )
+        ensemble._d.apply_adaptive_decision = MagicMock(
+            return_value={"decision": "PASS", "adjusted": False, "threshold_used": 60, "reason": ""}
+        )
+        ensemble._prompt_loader = MagicMock()
+        ensemble._prompt_loader.load = MagicMock(return_value="prompt")
+
+        candidates = [
+            {"strategy": "A", "manuscript": _LONG_MANUSCRIPT, "warnings": "", "state_updates": {}},
+            {"strategy": "B", "manuscript": _LONG_MANUSCRIPT, "warnings": "", "state_updates": {}},
+            {"strategy": "C", "manuscript": _LONG_MANUSCRIPT, "warnings": "", "state_updates": {}},
+        ]
+
+        result = ensemble.select_and_judge_ensemble(
+            ep_num=4,
+            candidates=candidates,
+            validation_results=[{}, {}, {}],
+            blueprint={},
+            previous_ending="",
+            ep_type="climax",
+        )
+
+        assert result["final_verdict"] == "PASS"
+        ensemble._d.apply_adaptive_decision.assert_called_once()
+        assert ensemble._d.apply_adaptive_decision.call_args.kwargs["ep_type"] == "climax"
 
     def test_fallback_prompt_preserves_stable_context_tail(self, ensemble):
         captured = {}

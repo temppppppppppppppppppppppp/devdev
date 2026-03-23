@@ -58,6 +58,26 @@ class DBManager:
     This avoids shared-cursor race conditions across threads.
     """
 
+    # ── Method-Group ToC ──────────────────────────────────────────
+    # __init__ / lifecycle:        __init__, _boot_db, initialize_db, close, begin_shutdown
+    # transaction helpers:         begin, commit, rollback, resolve_pending_transaction, transaction()
+    # generic CRUD:                execute_query, execute_update
+    # manuscript / blueprint:      save_manuscript, get_manuscript, save_blueprint, get_blueprint, get_previous_blueprint
+    # episode bible:               save_episode_bible, get_episode_bible, get_cumulative_bible, get_all_episode_bibles, get_episode_bibles_before, delete_episode_bibles_after
+    # seeds / lore / anchor:       delete_orphaned_seeds, sync_seeds, archive_seed, update_lore_item(s), get_lore_list_by_category, save_anchor, load_anchor, load_all_anchors
+    # canonical facts / timeline:  upsert_canonical_fact, get_canonical_facts, upsert_timeline_entry, get_timeline_range
+    # NPC relationships:           upsert_npc_relationship_edge, get_npc_relationship_edges, get_relationship_history, get_all_relationship_pairs_with_history
+    # state log / causal:          save_state_log(_with_summary), get_latest_state, load_state_log, get_causal_summary_chain, get_recent_causal_links, get_causal_links_by_entities, save_causal_links
+    # karma:                       update_karma, get_all_karma
+    # commit episode factory:      commit_episode_factory (+ internal _persist/_normalize/_rollback helpers)
+    # episode context queries:     get_latest_episode_number, get_latest_blueprint_number, get_context_manuscripts, reset_after, get_rollback_impact, get_sync_status, update_sync_status
+    # director / quality:          save_director_selection, update_director_selection_rationale, save/get_episode_quality_label/signal/observation, get_quality_signal_summary
+    # stage attempt analytics:     get_stage_attempts_for_arc, get_stage4_final_authority_rows, get_latest_stage4_gate_repair_snapshot
+    # telemetry sinks:             save_llm_call, save_stage_attempt, save_ui_event, save_cost_record
+    # operational queries:         get_fix_scope_stats, get_strategy_win_rates, get_selection_analysis, get_cost_summary, get_recent_selections
+    # sentence hash / satisfaction / pacing: store_sentence_hashes, find_repeated_sentence_hashes, get_sentence_hashes, save/get_satisfaction_tag, save/get_pacing_record
+    # ───────────────────────────────────────────────────────────────
+
     def __init__(self, db_path: Path):
         self.db_path = db_path
         self.conn = None
@@ -2150,6 +2170,7 @@ class DBManager:
         candidate_key: str = "",
         content_hash: str = "",
         artifact_path: str = "",
+        director_thinking: str = "",
     ) -> None:
         """Persist director selection result."""
         if not self.accepts_runtime_telemetry_writes:
@@ -2164,8 +2185,8 @@ class DBManager:
                 "(stage, ep_num, round_num, selected_label, selected_strategy, verdict, score, "
                 "selection_reason, candidate_count, fix_scope, advisory_warnings, verdict_reason, "
                 "pre_firewall_score, firewall_triggered, firewall_reason, attempt_key, "
-                "candidate_key, content_hash, artifact_path) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                "candidate_key, content_hash, artifact_path, director_thinking) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (
                     stage,
                     ep_num,
@@ -2174,18 +2195,19 @@ class DBManager:
                     selected_strategy,
                     verdict,
                     score,
-                    selection_reason[:500] if selection_reason else "",
+                    selection_reason or "",
                     candidate_count,
                     fix_scope or "",
                     _adv_json,
-                    verdict_reason[:500] if verdict_reason else "",
+                    verdict_reason or "",
                     int(pre_firewall_score or 0),
                     1 if firewall_triggered else 0,
-                    firewall_reason[:500] if firewall_reason else "",
+                    firewall_reason or "",
                     str(attempt_key or ""),
                     str(candidate_key or ""),
                     str(content_hash or ""),
                     str(artifact_path or ""),
+                    director_thinking or "",
                 ),
             )
             if not nested:
@@ -2217,8 +2239,8 @@ class DBManager:
                 )
                 """,
                 (
-                    selection_reason[:500] if selection_reason else "",
-                    verdict_reason[:500] if verdict_reason else "",
+                    selection_reason or "",
+                    verdict_reason or "",
                     fix_scope or "",
                     str(attempt_key),
                 ),
@@ -2242,8 +2264,8 @@ class DBManager:
                     ep_num,
                     int(labels.get("score", 0) or 0),
                     str(labels.get("verdict", "") or ""),
-                    str(labels.get("selection_reason", "") or "")[:300],
-                    str(labels.get("open_review", "") or "")[:500],
+                    str(labels.get("selection_reason", "") or ""),
+                    str(labels.get("open_review", "") or ""),
                     json.dumps(labels.get("score_breakdown", {}) or {}, ensure_ascii=False),
                     json.dumps(labels.get("consistency_checklist", {}) or {}, ensure_ascii=False),
                 ),
@@ -2330,7 +2352,7 @@ class DBManager:
                     note = excluded.note,
                     updated_at = datetime('now')
                 """,
-                (ep_num, label[:40], note[:500]),
+                (ep_num, label[:40], note),
             )
             if not nested:
                 self.commit()
@@ -2808,11 +2830,11 @@ class DBManager:
             if not self.accepts_runtime_telemetry_writes:
                 return
             ts = datetime.now().isoformat(timespec="seconds")
-            # [Log-Phase2] Keep DB size bounded: snippets only for failed calls.
-            _prompt_snip = str(prompt_snippet)[:3000] if (not success and prompt_snippet) else None
+            # [Log-Phase2] prompt/response snippets: failure-only retention
+            _prompt_snip = str(prompt_snippet) if (not success and prompt_snippet) else None
             _response_snip = str(response_snippet) if (not success and response_snippet) else None
-            # [TF-58] thinking은 성공 호출에서도 저장 (Director 구조 결함 분석용), 5000자 제한
-            _thinking_snip = str(thinking_snippet)[:5000] if thinking_snippet else None
+            # [TF-58] thinking: max-retention, no truncation
+            _thinking_snip = str(thinking_snippet) if thinking_snippet else None
             with self._lock:
                 if not self.accepts_runtime_telemetry_writes:
                     return
@@ -2836,7 +2858,7 @@ class DBManager:
                         duration_ms,
                         1 if success else 0,
                         error_type,
-                        (error_msg or "")[:80],
+                        error_msg or "",
                         verdict,
                         context_tag,
                         int(input_tokens or 0) if input_tokens is not None else None,
@@ -2880,6 +2902,11 @@ class DBManager:
         fix_scope_reasoning: str | None = None,
         runtime_advisory: str | None = None,
         retry_directives: str | None = None,
+        initial_verdict: str | None = None,
+        score_breakdown: dict | str | None = None,
+        is_patch: bool = False,
+        is_patch_fallback: bool = False,
+        patch_strategy: str | None = None,
     ) -> bool:
         """[Log-2] Save one stage attempt record in non-blocking mode."""
         nested = False
@@ -2888,6 +2915,11 @@ class DBManager:
                 return False
             ts = datetime.now().isoformat(timespec="seconds")
             _advisory_json = json.dumps(advisory_flags, ensure_ascii=False) if advisory_flags else None
+            _sb_json = (
+                json.dumps(score_breakdown, ensure_ascii=False)
+                if isinstance(score_breakdown, dict)
+                else (score_breakdown or None)
+            )
             with self._lock:
                 if not self.accepts_runtime_telemetry_writes:
                     return False
@@ -2898,8 +2930,9 @@ class DBManager:
                         verdict, score, failure_category, reject_reason,
                         fix_scope, model, duration_ms, advisory_flags, attempt_key, generation_method, prompt_version,
                         candidate_key, content_hash, artifact_path, selection_reason, verdict_reason, open_review,
-                        fix_scope_reasoning, runtime_advisory, retry_directives)
-                       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                        fix_scope_reasoning, runtime_advisory, retry_directives,
+                        initial_verdict, score_breakdown, is_patch, is_patch_fallback, patch_strategy)
+                       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                     (
                         session_id,
                         ts,
@@ -2910,7 +2943,7 @@ class DBManager:
                         verdict,
                         score,
                         failure_category,
-                        (reject_reason or "")[:500],
+                        reject_reason or "",
                         fix_scope,
                         model,
                         duration_ms,
@@ -2921,12 +2954,17 @@ class DBManager:
                         str(candidate_key or ""),
                         str(content_hash or ""),
                         str(artifact_path or ""),
-                        (selection_reason or "")[:500],
-                        (verdict_reason or "")[:500],
-                        (open_review or "")[:500],
-                        (fix_scope_reasoning or "")[:500],
-                        (runtime_advisory or "")[:500],
-                        (retry_directives or "")[:500],
+                        selection_reason or "",
+                        verdict_reason or "",
+                        open_review or "",
+                        fix_scope_reasoning or "",
+                        runtime_advisory or "",
+                        retry_directives or "",
+                        initial_verdict,
+                        _sb_json,
+                        1 if is_patch else 0,
+                        1 if is_patch_fallback else 0,
+                        patch_strategy,
                     ),
                 )
                 if not nested:
@@ -2941,6 +2979,57 @@ class DBManager:
                         pass
             logging.debug("[stage_attempts] save_stage_attempt failed (non-blocking): %s", _e)
             return False
+
+    def save_attempt_raw_rationale(
+        self,
+        *,
+        attempt_key: str,
+        stage: int | None = None,
+        ep_num: int | None = None,
+        payload_kind: str,
+        payload: str,
+    ) -> bool:
+        """Persist a raw adjunct payload linked to an attempt_key."""
+        if not self.accepts_runtime_telemetry_writes:
+            return False
+        if not attempt_key or not payload:
+            return False
+        try:
+            with self._lock:
+                if not self.accepts_runtime_telemetry_writes:
+                    return False
+                nested = self.conn.in_transaction
+                self.cursor.execute(
+                    """INSERT INTO attempt_raw_rationale
+                       (attempt_key, stage, ep_num, payload_kind, payload)
+                       VALUES (?, ?, ?, ?, ?)""",
+                    (attempt_key, stage, ep_num, payload_kind, payload),
+                )
+                if not nested:
+                    self.conn.commit()
+            return True
+        except Exception as _e:
+            logging.debug("[attempt_raw_rationale] save failed (non-blocking): %s", _e)
+            return False
+
+    def get_attempt_raw_rationale(
+        self,
+        attempt_key: str,
+        payload_kind: str | None = None,
+    ) -> list[dict]:
+        """Retrieve raw adjunct payloads for an attempt_key."""
+        with self._lock:
+            if payload_kind:
+                cur = self.cursor.execute(
+                    "SELECT * FROM attempt_raw_rationale WHERE attempt_key = ? AND payload_kind = ? ORDER BY id",
+                    (attempt_key, payload_kind),
+                )
+            else:
+                cur = self.cursor.execute(
+                    "SELECT * FROM attempt_raw_rationale WHERE attempt_key = ? ORDER BY id",
+                    (attempt_key,),
+                )
+            return [dict(row) for row in cur.fetchall()]
 
     def save_ui_event(
         self,
@@ -2998,7 +3087,7 @@ class DBManager:
                         str(render_format or "text"),
                         str(message or "")[:4000],
                         1 if visible else 0,
-                        str(selection_value or "")[:500] if selection_value is not None else None,
+                        str(selection_value or "") if selection_value is not None else None,
                         str(prompt_id or "")[:200] if prompt_id is not None else None,
                         str(artifact_path or "")[:1000] if artifact_path is not None else None,
                         meta_json,

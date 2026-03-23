@@ -1588,6 +1588,44 @@ class TestHandleRoundOutcomeRetryPathology:
         assert advisory_rows[-1]["source"] == "quick_verify"
         assert advisory_rows[-1]["director_pass_preserved"] is True
 
+    def test_handle_round_outcome_persists_full_cove_runtime_advisory_detail(self, orch_with_ctx, minimal_round_ctx, monkeypatch, tmp_path):
+        from modules.core.stage4_types import _InterviewRoundResult
+
+        orch = orch_with_ctx
+        orch._ctx.current_project.name = "cove_detail_project"
+        orch._ctx.current_project.paths.root = tmp_path / "cove_detail_project"
+        orch._ctx.audit_event = MagicMock()
+        cove = MagicMock()
+        long_hint = "semantic warning " * 24
+        cove.quick_verify.side_effect = [
+            (False, long_hint),
+            (True, ""),
+        ]
+        cove.verify.side_effect = ChainOfVerificationParseError("invalid cove json")
+        orch._ctx.get_module = MagicMock(side_effect=lambda name: cove if name == "chain_of_verification" else None)
+        orch._interview_round = MagicMock()
+        orch._interview_round.run = MagicMock(
+            return_value=_InterviewRoundResult(
+                verdict="PASS",
+                director_feedback="",
+                previous_attempt={},
+                final_manuscript="draft manuscript",
+                final_title="draft title",
+                final_state_updates={"hp": 10},
+            )
+        )
+
+        import modules.core.spinners
+
+        monkeypatch.setattr(modules.core.spinners, "StageSpinner", MagicMock())
+
+        orch._handle_round_outcome(round_ctx=minimal_round_ctx)
+
+        log_path = tmp_path / "cove_detail_project" / "logs" / "episode_production.jsonl"
+        rows = [json.loads(line) for line in log_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+        advisory_rows = [row for row in rows if row.get("event") == "STAGE4_COVE_RUNTIME_ADVISORY"]
+        assert advisory_rows[-1]["quick_warning"] == long_hint.strip()
+
     def test_handle_round_outcome_still_retries_when_cove_requests_regeneration(self, orch_with_ctx, minimal_round_ctx, monkeypatch, tmp_path):
         from types import SimpleNamespace
         from modules.core.stage4_types import _InterviewRoundResult
@@ -1750,6 +1788,43 @@ class TestHandleRoundOutcomeRetryPathology:
         cove.verify.assert_called_once_with("draft manuscript", {"quick_verify_warnings": "hint"}, content_type="manuscript")
         assert any(
             "LLM 검증 경고 (비차단)" in call.args[0] and "first issue" in call.args[0] and "second issue" in call.args[0]
+            for call in orch._ctx.ui.log.call_args_list
+            if call.args
+        )
+
+    def test_run_cove_llm_verification_logs_all_issue_descriptions_without_caps(self, orch_with_ctx):
+        from types import SimpleNamespace
+
+        orch = orch_with_ctx
+        runtime = orch.outcome_runtime
+        cove = MagicMock()
+        third_issue = "third issue " * 14
+        cove.verify.return_value = SimpleNamespace(
+            should_regenerate=False,
+            issues=[
+                SimpleNamespace(description="first issue " * 5),
+                SimpleNamespace(description="second issue " * 5),
+                SimpleNamespace(description=third_issue),
+            ],
+        )
+
+        runtime.run_cove_llm_verification(
+            request=runtime._build_cove_llm_request(
+                cove=cove,
+                final_manuscript="draft manuscript",
+                final_state_updates={"hp": 10},
+                cove_context={"quick_verify_warnings": "hint"},
+                quick_msg="hint",
+                next_ep=1,
+                interview_round=0,
+                max_rounds=5,
+                pathology_counts={},
+                pathology_repeat_emitted=set(),
+            ),
+        )
+
+        assert any(
+            "third issue" in call.args[0] and third_issue.strip() in call.args[0]
             for call in orch._ctx.ui.log.call_args_list
             if call.args
         )

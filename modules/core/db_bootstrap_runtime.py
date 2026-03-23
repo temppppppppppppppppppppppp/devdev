@@ -365,6 +365,13 @@ class DBBootstrapRuntime:
                 cursor.execute(f"ALTER TABLE director_selections ADD COLUMN {col} TEXT DEFAULT ''")
             except sqlite3.OperationalError:
                 pass
+        self.owner._ensure_columns_exist(
+            "director_selections",
+            self.owner._column_def_pairs(
+                ("director_thinking", "TEXT"),
+            ),
+            log_label="director_selections",
+        )
         cursor.execute(
             "CREATE INDEX IF NOT EXISTS idx_director_selections_stage_ep ON director_selections(stage, ep_num)"
         )
@@ -372,7 +379,34 @@ class DBBootstrapRuntime:
             "CREATE INDEX IF NOT EXISTS idx_director_selections_attempt_key ON director_selections(attempt_key)"
         )
 
+    def _create_adjunct_retention_tables(self) -> None:
+        """Adjunct raw-payload retention for max-retention policy."""
+        cursor = self.owner.cursor
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS attempt_raw_rationale (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                attempt_key TEXT NOT NULL,
+                stage INTEGER,
+                ep_num INTEGER,
+                payload_kind TEXT NOT NULL,
+                payload TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+            """
+        )
+        cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_arr_attempt_key ON attempt_raw_rationale(attempt_key)"
+        )
+        cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_arr_kind ON attempt_raw_rationale(payload_kind)"
+        )
+        cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_arr_stage_ep ON attempt_raw_rationale(stage, ep_num)"
+        )
+
     def _create_selection_and_logging_tables(self) -> None:
+        self._create_adjunct_retention_tables()
         self._create_llm_call_tables()
         self._create_stage_attempt_tables()
         self._create_ui_event_tables()
@@ -484,6 +518,11 @@ class DBBootstrapRuntime:
                 ("fix_scope_reasoning", "TEXT"),
                 ("runtime_advisory", "TEXT"),
                 ("retry_directives", "TEXT"),
+                ("initial_verdict", "TEXT"),
+                ("score_breakdown", "TEXT"),
+                ("is_patch", "INTEGER DEFAULT 0"),
+                ("is_patch_fallback", "INTEGER DEFAULT 0"),
+                ("patch_strategy", "TEXT"),
             ),
             log_label="stage_attempts",
         )

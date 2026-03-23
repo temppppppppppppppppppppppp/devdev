@@ -339,7 +339,8 @@ class Stage4RejectRuntime:
         reject_attempt = {
             "strategy": selected,
             "selected_strategy_key": selected_strategy_key,
-            "rejection_reason": director_feedback,
+            "rejection_reason": director_result.get("verdict_reason") or director_feedback,
+            "merged_director_feedback": director_feedback,
             "action_items": action_items,
             "score": director_result.get("pre_firewall_score", score),
             "best_manuscript": selected_candidate.get("manuscript", ""),
@@ -362,7 +363,7 @@ class Stage4RejectRuntime:
             "open_review": director_result.get("open_review", ""),
             "error_category": error_category or director_result.get("error_category", ""),
             "contradiction_types": director_result.get("contradiction_types", []),
-            "contradiction_details": list(director_result.get("contradiction_details", []) or [])[:3],
+            "contradiction_details": list(director_result.get("contradiction_details", []) or [])[:5],
             "firewall_triggered": bool(director_result.get("firewall_triggered")),
             "firewall_reason": director_result.get("firewall_reason", ""),
             "director_feedback_text": feedback_provenance["director_feedback_text"],

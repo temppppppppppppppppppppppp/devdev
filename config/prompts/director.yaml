@@ -260,13 +260,13 @@ ENSEMBLE_VARIABLE_PROMPT: |
       "verdict": "PASS" | "PASS_WITH_FIX" | "REJECT",
       "fix_scope": "inplace" | "partial" | "full",
       "fix_scope_reasoning": "이 수정 범위를 요구하는 문제 조합을 한 문장으로 설명",
-      "fix_pack": {
+      "fix_pack": {{
           "patch_targets": ["semantic_anchor_1", "semantic_anchor_2"],
           "must_fix": ["정확히 무엇을 고쳐야 하는지"],
           "do_not_regress": ["분위기/동선/타임라인/감정톤 등 유지 조건"],
           "success_condition": "어떻게 고쳐지면 완료인지",
           "target_kind": "entity_ref" | "local_phrase" | "local_sentence" | "scene_model"
-      },
+      }},
       "score": 0-100,
       "score_breakdown": {{
           "continuity_contradiction": 0-40,
@@ -589,13 +589,13 @@ ENSEMBLE_SELECTION_PROMPT: |
       "verdict": "PASS" | "PASS_WITH_FIX" | "REJECT",
       "fix_scope": "inplace" | "partial" | "full",
       "fix_scope_reasoning": "이 수정 범위를 요구하는 문제 조합을 한 문장으로 설명",
-      "fix_pack": {
+      "fix_pack": {{
           "patch_targets": ["semantic_anchor_1", "semantic_anchor_2"],
           "must_fix": ["정확히 무엇을 고쳐야 하는지"],
           "do_not_regress": ["분위기/동선/타임라인/감정톤 등 유지 조건"],
           "success_condition": "어떻게 고쳐지면 완료인지",
           "target_kind": "entity_ref" | "local_phrase" | "local_sentence" | "scene_model"
-      },
+      }},
       "score": 0-100,
       "score_breakdown": {{
           "continuity_contradiction": 0-40,

@@ -1068,7 +1068,11 @@ class Stage4PostPassRuntime:
         self.ctx.ui.log(f"   ⚠️ [TF-C10] 메타데이터 원자적 저장 실패 (비차단): {str(meta_err)[:60]}")
 
     def _save_world_state_atomic(self, *, next_ep, final_state_updates, bible_delta):
-        """[B-1-9a:A4] WorldState + FactLedger 원자적 갱신 + 롤백."""
+        """[B-1-9a:A4] WorldState + FactLedger 원자적 갱신 + 롤백.
+
+        Void return. On failure raises → caught by caller's
+        _handle_atomic_metadata_failure which sets meta_save_failed.
+        """
         meta_db = getattr(self.ctx.current_project, "db", None)
         payloads = self._build_atomic_state_payloads(
             final_state_updates=final_state_updates,

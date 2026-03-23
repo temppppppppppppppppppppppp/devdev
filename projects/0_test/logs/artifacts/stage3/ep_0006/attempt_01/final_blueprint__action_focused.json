@@ -1,0 +1,112 @@
+{
+  "_ensemble_meta": {
+    "candidate_index": 0,
+    "disqualified": [],
+    "length": 1149,
+    "prevalidation_issue_count": 2,
+    "python_warnings": [
+      {
+        "category": "structure",
+        "focus": "각 씬에 goal/summary를 명시하여 intent를 보존",
+        "message": "씬 구조 미비: 4/4개 씬에 goal/summary 없음",
+        "severity": "MINOR",
+        "source": "python_prevalidate"
+      },
+      {
+        "category": "fidelity",
+        "focus": "Arc 관계 변화 NPC가 blueprint 시나리오에 등장해야 함",
+        "message": "intent 불일치: Arc 관계 변화 NPC 1명 blueprint 미언급",
+        "severity": "MINOR",
+        "source": "python_prevalidate"
+      }
+    ],
+    "quality_risk": true,
+    "scene_count": 4,
+    "strategy": "action_focused",
+    "total_candidates": 3
+  },
+  "core_tension": "정체불명의 세력에게 쫓기는 물리적 위협 속에서, 15억 원이라는 거액을 미래 정보에 베팅하는 금융 스릴러적 긴장감.",
+  "end_location": "여의도 한미증권 본사 VIP 라운지",
+  "ending_hook": "도장이 계약서에 붉은 흔적을 남기는 바로 그 순간, 쾅! 라운지 전체가 울리는 굉음과 함께 통유리 벽이 거미줄처럼 갈라지며 파편이 쏟아져 내렸다.",
+  "ending_state": {
+    "location": "여의도 한미증권 본사 VIP 라운지",
+    "protagonist_status": "15억 원 투자 계약을 막 체결한 직후, 정체불명의 외부 공격으로 인해 다시 한번 신변의 위협을 받는 상황.",
+    "timeline": {
+      "expression": "Afternoon, the day after the car chase in January 2006",
+      "표현": "2006년 1월, 차량 추격전 다음 날 오후"
+    }
+  },
+  "ep_num": 6,
+  "episode_number": 6,
+  "expected_ending": "15억 원 투자 계약이 체결되는 결정적인 순간, 또 다른 외부의 물리적 공격이 발생하며 한시우가 새로운 위기에 직면한다.",
+  "integrated_scenario": "5화의 엔딩, 금속이 찢어지는 굉음과 함께 두 번째 충돌을 예고하며 검은 세단이 가속하는 그 순간에서 이야기는 시작된다. 한시우는 패닉에 빠지는 대신, 찰나의 순간에 조수석으로 몸을 날리며 기어를 후진으로 바꿨다. 굉음과 함께 두 차량이 다시 한번 격돌했고, 그 반동을 이용해 한시우는 부서진 문을 박차고 튀어나갔다. 추격자들이 잠시 혼란에 빠진 틈을 타, 한시우는 여의도의 어두운 빌딩 숲 사이로 그림자처럼 사라졌다. 지난밤의 죽음의 위협이 거짓말이었다는 듯, 다음 날 오후 한시우는 상처 하나 없는 말끔한 모습으로 여의도 한미증권 본사 VIP 라운지에 나타난다. 담당 PB 박성호는 한시우의 젊은 외모와 신생 법인 대표라는 타이틀을 보며 속으로 혀를 찼다. '어디 재벌가 막내 도련님이 용돈으로 주식 놀이나 하러 왔군.' 그는 한시우를 완벽하게 얕보며, 가장 안전하고 수익률도 보잘것없는 채권형 펀드 자료를 테이블 위에 펼쳐놓았다. 박성호의 입에서 온갖 미사여구가 섞인 상품 설명이 흘러나오는 동안, 한시우는 창밖을 볼 뿐 아무런 반응도 보이지 않았다. 박성호의 설명이 마침내 끝났을 때, 한시우가 처음으로 입을 열었다. 그의 목소리는 얼음장처럼 차가웠다. '그런 쓰레기는 됐고.' 순간 라운지의 공기가 얼어붙었다. 박성호의 얼굴에서 영업용 미소가 사라졌다. 한시우는 박성호를 똑바로 응시하며 말했다. 'WTI 6월물. 3배 레버리지. 15억, 매수.' 박성호는 자신의 귀를 의심했다. 15억 원, 그것도 현물도 아닌 3배 레버리지 원유 선물에? 이건 투자가 아니라 도박이었다. '고, 고객님. 원유 선물은 변동성이 너무 커서… 전 재산을 잃으실 수도 있습니다.' 그의 목소리가 떨렸다. 한시우는 그런 박성호를 비웃듯 입꼬리를 올렸다. '내 돈이야. 책임은 내가 져. 대신, 수익이 나면 수수료는 두 배로 챙겨주지.' 돈. 그 한마디에 박성호의 동공이 격렬하게 흔들렸다. 리스크에 대한 경고와 눈앞의 막대한 수수료 사이에서 그의 이성은 마비되었다. 결국 탐욕이 이성을 집어삼켰다. 그는 떨리는 손으로 계약서를 내밀었고, 한시우는 품에서 꺼낸 'SW인베스트먼트' 법인 인감도장을 망설임 없이 찍었다. 도장이 계약서에 붉은 흔적을 남기는 바로 그 순간, 쾅! 라운지 전체가 울리는 굉음과 함께 통유리 벽 한쪽이 거미줄처럼 갈라지며 파편이 쏟아져 내렸다.",
+  "location": "",
+  "pacing_notes": "초반부의 물리적 액션과 중후반부의 금융 심리전을 대비시켜 템포를 조절한다. 대화를 통해 긴장감을 끌어올리다 마지막에 다시 물리적 충격으로 폭발시키며 에피소드를 마무리한다.",
+  "protagonist_state": {
+    "equipment": [
+      "SW인베스트먼트 법인 인감도장",
+      "암호화된 USB 메모리",
+      "새로 개통한 스마트폰"
+    ],
+    "injuries": "없음 (전날 밤의 차량 충돌에서 경미한 타박상만 입고 완벽히 은폐)",
+    "mood": "목표에 집중, 냉철한 판단력, 조용한 자신감"
+  },
+  "relationship_changes": [
+    {
+      "from_state": "한시우를 철없는 재벌 3세로 여기며 무시하고 얕봄",
+      "justification": "15억 원 규모의 3배 레버리지 원유 선물 매수라는, 일반적인 VIP 고객의 상상을 초월하는 거래를 눈앞에서 지시하고 계약을 체결시켰기 때문.",
+      "target": "박성호",
+      "to_state": "한시우의 상식을 벗어난 베팅 규모와 냉철함에 압도되어 경외심과 두려움을 느낌"
+    }
+  ],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [],
+      "content": "",
+      "goal": "",
+      "key_events": [],
+      "location": "여의도 도로 위, 충돌한 차 안",
+      "summary": "",
+      "tension_level": 9,
+      "title": "죽음의 가속페달",
+      "type": "action_peak"
+    },
+    "scene_2": {
+      "characters": [],
+      "content": "",
+      "goal": "",
+      "key_events": [],
+      "location": "여의도 한미증권 본사 VIP 라운지",
+      "summary": "",
+      "tension_level": 4,
+      "title": "재벌가의 돈놀이",
+      "type": "side_glimpse"
+    },
+    "scene_3": {
+      "characters": [],
+      "content": "",
+      "goal": "",
+      "key_events": [],
+      "location": "여의도 한미증권 본사 VIP 라운지",
+      "summary": "",
+      "tension_level": 8,
+      "title": "숫자의 포식자",
+      "type": "dialogue_duel"
+    },
+    "scene_4": {
+      "characters": [],
+      "content": "",
+      "goal": "",
+      "key_events": [],
+      "location": "여의도 한미증권 본사 VIP 라운지",
+      "summary": "",
+      "tension_level": 10,
+      "title": "피 묻은 계약서",
+      "type": "cliffhanger"
+    }
+  },
+  "start_location": "여의도 도로 위, 한시우의 차 안",
+  "target_beat": "한시우가 미래 정보를 바탕으로 첫 번째 거대 베팅을 실행하며, 금융 시스템의 게이트키퍼인 PB를 압도하고 자신의 계획을 현실화하는 첫 단계를 성공시킨다.",
+  "time_flow": "전날 밤 → 다음 날 오후",
+  "title": "15억의 무게"
+}
