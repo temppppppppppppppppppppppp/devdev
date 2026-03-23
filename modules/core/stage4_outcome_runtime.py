@@ -91,7 +91,7 @@ class Stage4OutcomeRuntime:
             )
             quick_ok, quick_msg = cove.quick_verify(final_manuscript, cove_context)
             if not quick_ok:
-                owner.ctx.ui.log(f"   ⚠️ [CoVe] 사후검증 경고: {quick_msg[:60]}...")
+                owner.ctx.ui.log(f"   ⚠️ [CoVe] 사후검증 경고: {quick_msg}")
                 cove_context["quick_verify_warnings"] = quick_msg
                 return self.run_cove_llm_verification(
                     request=self._build_cove_llm_request(
@@ -219,7 +219,9 @@ class Stage4OutcomeRuntime:
     def _log_cove_llm_issue_summary(self, cove_result) -> None:
         if not cove_result.issues:
             return
-        cove_warnings = "; ".join(i.description[:40] for i in cove_result.issues[:3])
+        cove_warnings = "; ".join(
+            str(i.description).strip() for i in cove_result.issues if str(getattr(i, "description", "")).strip()
+        )
         self.owner.ctx.ui.log(f"   ⚠️ [CoVe] LLM 검증 경고 (비차단): {cove_warnings}")
 
     def handle_cove_runtime_failure(
@@ -281,7 +283,7 @@ class Stage4OutcomeRuntime:
         exc: Exception,
     ) -> tuple[str, str]:
         return (
-            f"[FailClosed:CoVe:{source_label}] {exc!s:.100}",
+            f"[FailClosed:CoVe:{source_label}] {exc!s}",
             f"   ⚠️ [CoVe] {source_label} 검증 런타임 실패 → Director PASS 유지",
         )
 
@@ -414,9 +416,9 @@ class Stage4OutcomeRuntime:
             "round_num": int(round_num),
             "source": str(source or "").strip(),
             "error_type": type(error).__name__,
-            "error_message": str(error)[:240],
+            "error_message": str(error),
             "director_pass_preserved": True,
-            "quick_warning": str(quick_warning or "").strip()[:240],
+            "quick_warning": str(quick_warning or "").strip(),
         }
         try:
             Path(logs_dir).mkdir(parents=True, exist_ok=True)
@@ -619,7 +621,7 @@ class Stage4OutcomeRuntime:
                         if existing_reasoning
                         else plateau_advisory
                     )
-                    owner.ctx.ui.log(f"   ⚠️ [QR-7] {str(plateau_advisory)[:80]}")
+                    owner.ctx.ui.log(f"   ⚠️ [QR-7] {str(plateau_advisory)}")
         return SimpleNamespace(
             director_feedback=director_feedback,
             score_history=score_history,
@@ -851,8 +853,8 @@ class Stage4OutcomeRuntime:
             "cove_runtime_failure": cove_runtime_failure,
             "plateau_detected": bool(previous_attempt.get("plateau_detected", False)),
             "score": int(previous_attempt.get("score", 0) or 0),
-            "fix_scope_reasoning": fix_scope_reasoning[:240],
-            "open_review": open_review[:240],
+            "fix_scope_reasoning": fix_scope_reasoning,
+            "open_review": open_review,
         }
 
     def emit_retry_pathology_signal(

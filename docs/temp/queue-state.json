@@ -1,14 +1,27 @@
 {
   "version": "temp-queue-state-v1",
-  "generated_at": "2026-03-22T23:49:29.521452+00:00",
-  "queue_mode": "single",
-  "active_item_count": 1,
-  "roadmap": null,
+  "generated_at": "2026-03-23T03:33:16.520156+00:00",
+  "queue_mode": "aggregate",
+  "active_item_count": 2,
+  "roadmap": {
+    "temp_path": "docs/temp/execution-roadmap.md",
+    "canonical_path": "docs/2026-03-23/max-retention-observability-execution-roadmap.md",
+    "status": "active"
+  },
   "items": [
     {
-      "topic": "weekend-long-function-post-audit",
-      "temp_path": "docs/temp/weekend-long-function-post-audit-execution-ssot.md",
-      "canonical_path": "docs/2026-03-23/weekend-long-function-post-audit-execution-ssot.md",
+      "topic": "console-log-max-display-post-audit",
+      "temp_path": "docs/temp/console-log-max-display-post-audit-execution-ssot.md",
+      "canonical_path": "docs/2026-03-23/console-log-max-display-post-audit-execution-ssot.md",
+      "status": "pending",
+      "depends_on": [],
+      "mirror_present": true,
+      "canonical_present": true
+    },
+    {
+      "topic": "db-logging-integrity-post-audit",
+      "temp_path": "docs/temp/db-logging-integrity-post-audit-execution-ssot.md",
+      "canonical_path": "docs/2026-03-23/db-logging-integrity-post-audit-execution-ssot.md",
       "status": "pending",
       "depends_on": [],
       "mirror_present": true,

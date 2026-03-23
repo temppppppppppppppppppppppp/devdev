@@ -195,4 +195,15 @@ class DBRepositoryProtocol(Protocol):
         candidate_key: str | None = None,
         content_hash: str | None = None,
         artifact_path: str | None = None,
-    ) -> None: ...
+        selection_reason: str | None = None,
+        verdict_reason: str | None = None,
+        open_review: str | None = None,
+        fix_scope_reasoning: str | None = None,
+        runtime_advisory: str | None = None,
+        retry_directives: str | None = None,
+        initial_verdict: str | None = None,
+        score_breakdown: dict | str | None = None,
+        is_patch: bool = False,
+        is_patch_fallback: bool = False,
+        patch_strategy: str | None = None,
+    ) -> bool: ...

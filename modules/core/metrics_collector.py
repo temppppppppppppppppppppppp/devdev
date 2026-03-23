@@ -490,7 +490,11 @@ class MetricsCollector:
             return self._build_scope_summary_locked()
 
     def snapshot_and_reset_scope(self) -> dict[str, Any]:
-        """현재 스코프 집계를 반환하고 스코프 카운터를 리셋."""
+        """현재 스코프 잔여 집계를 반환하고 스코프 카운터를 리셋.
+
+        Note: 각 Stage 완료 시 이미 리셋되므로, 세션 종료 시 호출하면
+        마지막 Stage 이후 잔여분만 반환됨. 누적 총비용은 cost_log 합산 참조.
+        """
         with self._lock:
             summary = self._build_scope_summary_locked()
             summary["model_breakdown"] = json.dumps(summary["model_breakdown"], ensure_ascii=False)

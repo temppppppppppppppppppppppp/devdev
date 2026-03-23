@@ -2,12 +2,14 @@
 
 import json
 import sqlite3
+from inspect import signature
 from unittest.mock import MagicMock
 
 import pytest
 
 from modules.core.db_bootstrap_runtime import DBBootstrapRuntime
 from modules.core.db_manager import DBConnectionError, DBError, DBManager
+from modules.protocols.db_repository import DBRepositoryProtocol
 
 
 @pytest.fixture
@@ -154,6 +156,7 @@ def test_resolve_validated_martial_metrics_filters_invalid_names(monkeypatch):
 
 def test_create_selection_and_logging_tables_delegates_to_family_helpers():
     runtime = DBBootstrapRuntime.__new__(DBBootstrapRuntime)
+    runtime._create_adjunct_retention_tables = MagicMock()
     runtime._create_llm_call_tables = MagicMock()
     runtime._create_stage_attempt_tables = MagicMock()
     runtime._create_ui_event_tables = MagicMock()
@@ -161,6 +164,7 @@ def test_create_selection_and_logging_tables_delegates_to_family_helpers():
 
     DBBootstrapRuntime._create_selection_and_logging_tables(runtime)
 
+    runtime._create_adjunct_retention_tables.assert_called_once_with()
     runtime._create_llm_call_tables.assert_called_once_with()
     runtime._create_stage_attempt_tables.assert_called_once_with()
     runtime._create_ui_event_tables.assert_called_once_with()
@@ -642,6 +646,116 @@ def test_save_stage_attempt_persists_rationale_fields(db):
     assert row["fix_scope_reasoning"] == "frontier conflict"
     assert "Advisory digest" in row["runtime_advisory"]
     assert row["retry_directives"] == "keep the ending distinct"
+
+
+def test_save_director_selection_persists_director_thinking(db):
+    db.save_director_selection(
+        7,
+        1,
+        "A",
+        "balanced",
+        "PASS",
+        score=95,
+        selection_reason="selection rationale",
+        verdict_reason="verdict rationale",
+        attempt_key="s4:ep7:arc1:a1",
+        stage=4,
+        director_thinking="full director thinking payload",
+    )
+
+    row = db.conn.execute(
+        """
+        SELECT selection_reason, verdict_reason, director_thinking
+        FROM director_selections
+        WHERE attempt_key = 's4:ep7:arc1:a1'
+        """
+    ).fetchone()
+
+    assert row is not None
+    assert row["selection_reason"] == "selection rationale"
+    assert row["verdict_reason"] == "verdict rationale"
+    assert row["director_thinking"] == "full director thinking payload"
+
+
+def test_save_stage_attempt_persists_max_retention_stage4_fields(db):
+    db.save_stage_attempt(
+        stage=4,
+        verdict="PASS",
+        attempt_num=3,
+        ep_num=7,
+        arc_num=1,
+        score=97,
+        failure_category="LOGIC_ERROR",
+        attempt_key="s4:ep7:arc1:a3",
+        selection_reason="very long selection rationale " * 20,
+        verdict_reason="very long verdict rationale " * 20,
+        open_review="review notes " * 20,
+        fix_scope_reasoning="scope reasoning " * 20,
+        runtime_advisory="runtime advisory " * 20,
+        retry_directives="retry directives " * 20,
+        initial_verdict="PASS_WITH_FIX",
+        score_breakdown={"continuity": 91, "pacing": 88},
+        is_patch=True,
+        is_patch_fallback=False,
+        patch_strategy="inplace_patch_structural",
+    )
+
+    row = db.conn.execute(
+        """
+        SELECT failure_category, selection_reason, verdict_reason, open_review,
+               fix_scope_reasoning, runtime_advisory, retry_directives,
+               initial_verdict, score_breakdown, is_patch, is_patch_fallback, patch_strategy
+        FROM stage_attempts
+        WHERE attempt_key = 's4:ep7:arc1:a3'
+        """
+    ).fetchone()
+
+    assert row is not None
+    assert row["failure_category"] == "LOGIC_ERROR"
+    assert row["selection_reason"].startswith("very long selection rationale")
+    assert row["verdict_reason"].startswith("very long verdict rationale")
+    assert row["open_review"].startswith("review notes")
+    assert row["fix_scope_reasoning"].startswith("scope reasoning")
+    assert row["runtime_advisory"].startswith("runtime advisory")
+    assert row["retry_directives"].startswith("retry directives")
+    assert row["initial_verdict"] == "PASS_WITH_FIX"
+    assert json.loads(row["score_breakdown"]) == {"continuity": 91, "pacing": 88}
+    assert row["is_patch"] == 1
+    assert row["is_patch_fallback"] == 0
+    assert row["patch_strategy"] == "inplace_patch_structural"
+
+
+def test_attempt_raw_rationale_round_trip(db):
+    saved = db.save_attempt_raw_rationale(
+        attempt_key="s4:ep8:arc2:a1",
+        stage=4,
+        ep_num=8,
+        payload_kind="director_thinking",
+        payload="full raw rationale payload",
+    )
+
+    rows = db.get_attempt_raw_rationale("s4:ep8:arc2:a1")
+    director_rows = db.get_attempt_raw_rationale("s4:ep8:arc2:a1", payload_kind="director_thinking")
+
+    assert saved is True
+    assert len(rows) == 1
+    assert rows[0]["payload"] == "full raw rationale payload"
+    assert rows[0]["payload_kind"] == "director_thinking"
+    assert len(director_rows) == 1
+    assert director_rows[0]["payload"] == "full raw rationale payload"
+
+
+def test_db_repository_protocol_stage_attempt_matches_stage4_detail_fields():
+    params = signature(DBRepositoryProtocol.save_stage_attempt).parameters
+
+    for field in (
+        "initial_verdict",
+        "score_breakdown",
+        "is_patch",
+        "is_patch_fallback",
+        "patch_strategy",
+    ):
+        assert field in params
 
 
 def test_save_ui_event_persists_meta_json(db):

@@ -689,7 +689,7 @@ class Stage3Orchestrator:
                     key_metrics={"성공": f"{success_count}개", "실패": f"{fail_count}개"},
                 )
             except Exception as slack_err:
-                ctx.ui.log(f"⚠️ [Slack] 알림 전송 실패: {str(slack_err)[:50]}")
+                ctx.ui.log(f"⚠️ [Slack] 알림 전송 실패: {slack_err}")
 
         return {"success_count": success_count, "fail_count": fail_count}
 
@@ -718,7 +718,7 @@ class Stage3Orchestrator:
                     )
             except Exception as _st_err:
                 # [Sweep54] sister 메서드(WorldState, FactLedger)와 동일한 비차단 패턴
-                app.ui.log(f"      ⚠️ [V60.96] StateTracker 초기화 실패 (비차단): {str(_st_err)[:60]}")
+                app.ui.log(f"      ⚠️ [V60.96] StateTracker 초기화 실패 (비차단): {str(_st_err)}")
                 app.state_tracker = None
 
     def _init_world_state_if_needed(self) -> None:
@@ -735,7 +735,7 @@ class Stage3Orchestrator:
                 else:
                     app.ui.log("      🌍 [V68] WorldStateManager 초기화 (신규)")
             except Exception as _ws_err:
-                app.ui.log(f"      ⚠️ [V68] WorldStateManager 초기화 실패 (비차단): {str(_ws_err)[:60]}")
+                app.ui.log(f"      ⚠️ [V68] WorldStateManager 초기화 실패 (비차단): {str(_ws_err)}")
                 app.world_state = None
 
     def _init_fact_ledger_if_needed(self) -> None:
@@ -755,7 +755,7 @@ class Stage3Orchestrator:
                 else:
                     app.ui.log("      📋 [V68] 팩트 원장 초기화 (신규)")
             except Exception as _fl_err:
-                app.ui.log(f"      ⚠️ [V68] 팩트 원장 초기화 실패 (비차단): {str(_fl_err)[:60]}")
+                app.ui.log(f"      ⚠️ [V68] 팩트 원장 초기화 실패 (비차단): {str(_fl_err)}")
                 app.fact_ledger = None
 
     # ─────────────────────────────────────────────────────────────
@@ -907,7 +907,7 @@ class Stage3Orchestrator:
                     self._cached_entity_registry = None
                 self._entity_cache_arc_idx = arc_idx
             except Exception as entity_err:
-                ctx.ui.log(f"      ⚠️ [V61] Entity Registry 추출 실패: {str(entity_err)[:50]}")
+                ctx.ui.log(f"      ⚠️ [V61] Entity Registry 추출 실패: {str(entity_err)}")
                 self._cached_entity_registry = None
                 # [P0] 실패한 arc_idx 캐싱 — 동일 arc 무한 재시도 방지
                 self._entity_cache_arc_idx = arc_idx
@@ -922,7 +922,7 @@ class Stage3Orchestrator:
         try:
             prev_blueprint = self.ctx.current_project.get_blueprint(working_ep - 1) if working_ep > 1 else None
         except Exception as prev_bp_err:
-            _logging.error(f" [V61.3] prev_blueprint 로드 크래시: {str(prev_bp_err)[:100]}")
+            _logging.error(f" [V61.3] prev_blueprint 로드 크래시: {str(prev_bp_err)}")
             _logging.error(_traceback.format_exc())
             self.ctx.ui.log("      ⚠️ 직전 Blueprint 로드 실패, None으로 진행")
         # [C3-P1-5] prev_blueprint 미존재 시 경고 강화
@@ -938,7 +938,7 @@ class Stage3Orchestrator:
             try:
                 protagonist_name = self.ctx.get_protagonist_name()
             except Exception as protag_err:
-                _logging.error(f" [V61.3] protagonist_name 추출 크래시: {str(protag_err)[:100]}")
+                _logging.error(f" [V61.3] protagonist_name 추출 크래시: {str(protag_err)}")
                 _logging.error(_traceback.format_exc())
                 self.ctx.ui.log("      ⚠️ 주인공 이름 추출 실패, 기본값 사용")
         else:
@@ -1608,14 +1608,14 @@ class Stage3Orchestrator:
             )
 
         except Exception as gen_err:
-            _logging.error(f" [V61.3] 제{working_ep}화 Blueprint 생성 크래시: {str(gen_err)[:100]}")
+            _logging.error(f" [V61.3] 제{working_ep}화 Blueprint 생성 크래시: {str(gen_err)}")
             _logging.error(_traceback.format_exc())
 
-            ctx.ui.log(f"❌ [V60.80] 제{working_ep}화 생성 실패: {str(gen_err)[:100]}")
+            ctx.ui.log(f"❌ [V60.80] 제{working_ep}화 생성 실패: {gen_err!s}")
             if callable(ctx.audit_event):
-                ctx.audit_event("blueprint_gen_error", str(gen_err)[:200], {"ep_num": working_ep})
+                ctx.audit_event("blueprint_gen_error", str(gen_err), {"ep_num": working_ep})
             blueprint = None
-            pipeline_result = {"final_verdict": "ERROR", "error": str(gen_err)[:200]}
+            pipeline_result = {"final_verdict": "ERROR", "error": str(gen_err)}
 
         pipeline_result = self._finalize_stage3_blueprint_pipeline_result(
             pipeline_result=pipeline_result,
@@ -1811,6 +1811,12 @@ class Stage3Orchestrator:
 
         if getattr(ctx, "pass_rate_monitor", None):
             try:
+                _s3_pass_breakdown = {}
+                _validate = (pipeline_result.get("phases") or {}).get("validate", {}) if isinstance(pipeline_result, dict) else {}
+                if isinstance(_validate, dict):
+                    _raw_bd = _validate.get("score_breakdown", {})
+                    if isinstance(_raw_bd, dict):
+                        _s3_pass_breakdown = {str(k): v for k, v in list(_raw_bd.items())[:5] if isinstance(v, int | float)}
                 ctx.pass_rate_monitor.record_attempt(
                     stage=3,
                     episode=working_ep,
@@ -1825,6 +1831,7 @@ class Stage3Orchestrator:
                     candidate_key=candidate_key,
                     content_hash=artifact_meta["content_hash"],
                     artifact_path=artifact_meta["artifact_path"],
+                    score_breakdown=_s3_pass_breakdown or None,
                 )
             except Exception as prm_err:
                 _logging.debug("[stage3_prm] Stage3 PASS record failed (non-blocking): %s", prm_err)
@@ -2087,7 +2094,7 @@ class Stage3Orchestrator:
         parts: list[str] = []
         error_text = str(pipeline_result.get("error", "") or "").strip()
         if error_text:
-            parts.append(error_text[:240])
+            parts.append(error_text)
 
         score = pipeline_result.get("last_score")
         if isinstance(score, int | float):
@@ -2114,10 +2121,10 @@ class Stage3Orchestrator:
                     parts.append(f"issues={issues_count}")
                 notes = str(validate.get("comparison_notes", "") or "").strip()
                 if notes:
-                    parts.append(f"notes={notes[:160]}")
+                    parts.append(f"notes={notes}")
                 contradictions = validate.get("contradictions")
                 if isinstance(contradictions, list) and contradictions:
-                    _contr = "; ".join(str(c)[:60] for c in contradictions[:2])
+                    _contr = "; ".join(str(c) for c in contradictions)
                     if _contr:
                         parts.append(f"contradictions={_contr}")
 
@@ -2125,7 +2132,7 @@ class Stage3Orchestrator:
             verdict = str(pipeline_result.get("final_verdict", "REJECT") or "REJECT")
             parts.append(f"final_verdict={verdict[:20]}")
 
-        return " | ".join(parts)[:500]
+        return " | ".join(parts)
 
     @staticmethod
     def _stage3_selected_label(selected_index: object) -> str:
@@ -2226,10 +2233,10 @@ class Stage3Orchestrator:
         _advisory = dict(advisory_flags or {})
         contradictions = validate.get("contradictions")
         if isinstance(contradictions, list) and contradictions:
-            _advisory["contradictions"] = [str(item)[:160] for item in contradictions[:5]]
+            _advisory["contradictions"] = [str(item) for item in contradictions]
         fix_scope_reasoning = str(validate.get("fix_scope_reasoning", "") or "").strip()
         if fix_scope_reasoning:
-            _advisory["fix_scope_reasoning"] = fix_scope_reasoning[:300]
+            _advisory["fix_scope_reasoning"] = fix_scope_reasoning
         if fix_scope:
             _advisory["fix_scope"] = fix_scope
         if bool(validate.get("quality_risk", False) or pipeline_result.get("quality_risk", False)):
@@ -2239,13 +2246,13 @@ class Stage3Orchestrator:
         selected_candidate_advisory = validate.get("selected_candidate_advisory", {})
         if isinstance(selected_candidate_advisory, dict) and selected_candidate_advisory:
             _warning_messages: list[str] = []
-            for item in selected_candidate_advisory.get("python_warnings", [])[:3]:
+            for item in selected_candidate_advisory.get("python_warnings", []):
                 if isinstance(item, dict):
                     _message = str(item.get("message", "") or "").strip()
                 else:
                     _message = str(item or "").strip()
                 if _message:
-                    _warning_messages.append(_message[:160])
+                    _warning_messages.append(_message)
             if _warning_messages:
                 _advisory["selected_candidate_advisory"] = _warning_messages
 
@@ -2269,15 +2276,16 @@ class Stage3Orchestrator:
             "verdict": verdict,
             "stage": 3,
             "score": int(score or 0),
-            "selection_reason": selection_reason[:500],
+            "selection_reason": selection_reason,
             "candidate_count": max(1, int(candidate_count or 1)),
             "fix_scope": fix_scope,
             "advisory_warnings": _advisory or None,
-            "verdict_reason": verdict_reason[:500],
+            "verdict_reason": verdict_reason,
             "attempt_key": str(attempt_key or ""),
             "candidate_key": _artifact["candidate_key"],
             "content_hash": _artifact["content_hash"],
             "artifact_path": _artifact["artifact_path"],
+            "director_thinking": str(validate.get("_director_thinking", "") or ""),
         }
 
     def _detect_inventory_gaps(self, blueprint: dict, arc_data: dict) -> list[dict]:
@@ -2361,7 +2369,7 @@ class Stage3Orchestrator:
             pipeline_result.get("phases", {}).get("generate", {}).get("selected_strategy", "unknown") or "unknown"
         )
         ctx.ui.log(
-            f"      └─ REJECT 사유: {_reject_reason[:140]}",
+            f"      └─ REJECT 사유: {_reject_reason}",
             stage="stage3",
             component="blueprint_generation",
             ep_num=working_ep,
@@ -2498,6 +2506,12 @@ class Stage3Orchestrator:
 
         if getattr(ctx, "pass_rate_monitor", None):
             try:
+                _s3_rej_breakdown = {}
+                _rej_validate = (pipeline_result.get("phases") or {}).get("validate", {}) if isinstance(pipeline_result, dict) else {}
+                if isinstance(_rej_validate, dict):
+                    _rej_raw_bd = _rej_validate.get("score_breakdown", {})
+                    if isinstance(_rej_raw_bd, dict):
+                        _s3_rej_breakdown = {str(k): v for k, v in list(_rej_raw_bd.items())[:5] if isinstance(v, int | float)}
                 ctx.pass_rate_monitor.record_attempt(
                     stage=3,
                     episode=working_ep,
@@ -2513,6 +2527,7 @@ class Stage3Orchestrator:
                     candidate_key=_candidate_key,
                     content_hash=_artifact_meta["content_hash"],
                     artifact_path=_artifact_meta["artifact_path"],
+                    score_breakdown=_s3_rej_breakdown or None,
                 )
             except Exception as _prm_err:
                 _logging.debug("[stage3_prm] Stage3 REJECT record failed (best-effort: %s)", _prm_err)
@@ -2559,7 +2574,7 @@ class Stage3Orchestrator:
                 _score,
                 _failure_category or "-",
                 _candidate_key,
-                _reject_reason[:160],
+                _reject_reason,
                 ",".join(sorted(_observability_flags.keys())) if _observability_flags else "-",
                 _pov_contract.get("primary_pov", "") or "-",
                 _pov_contract.get("external_pov_insert_policy", "") or "-",

@@ -147,7 +147,30 @@ def _ns4_extract_time_markers(arc_data: dict) -> list:
 
 
 class Stage4InterviewRound:
-    """[B-1-3] Stage4 단일 면담 라운드 실행 모듈."""
+    """[B-1-3] Stage4 단일 면담 라운드 실행 모듈.
+
+    Section Map (navigation aid):
+        L152   __init__ + utility helpers
+        L529   retry feedback / failure signature helpers
+        L792   director context builders (work focus, relationship, retrieval)
+        L1160  director result enrichment + gate normalization
+        L1656  fix-pack / pass-with-fix contract helpers
+        L1802  writer directive + common kwargs
+        L1958  generation phase + validation phase
+        L2148  director selection persistence
+        L2248  ═══ run() — main entry ═══
+        L2334  round execution + outcome finalization
+        L2749  PASS / REJECT result builders
+        L3041  PASS logging + session decision
+        L3244  post-select advisories (continuity, blocking validator)
+        L3448  post-select checks
+        L3600  pass-with-fix loop + verdict processing
+        L4018  reject handling + candidate generation
+        L4097  NPC / HUD / CV context helpers
+        L4363  ═══ advisory chain (parallel, 8 advisories) ═══
+        L4959  fix feedback + patch provenance
+        L5152  episode log + attempt recording
+    """
 
     def __init__(self, ctx) -> None:
         self.ctx = ctx
@@ -159,7 +182,7 @@ class Stage4InterviewRound:
         self.reject_runtime = Stage4RejectRuntime(self)
         self.retry_runtime = Stage4RetryRuntime(self)
 
-    def _build_retry_advisory_digest(self, *, max_items: int = 5) -> str:
+    def _build_retry_advisory_digest(self, *, max_items: int | None = None) -> str:
         """Condense current-round advisory findings for CW retry feedback."""
         details = []
         for item in self._last_advisory_details:
@@ -172,8 +195,9 @@ class Stage4InterviewRound:
             return ""
 
         lines = ["[Advisory 핵심 요약 - 재시도 시 반영]"]
-        for text in details[:max_items]:
-            lines.append(f"- {text[:240]}")
+        selected_details = details if max_items is None else details[:max_items]
+        for text in selected_details:
+            lines.append(f"- {text}")
         return "\n".join(lines)
 
     def _merge_retry_advisory_feedback(self, director_feedback: str) -> str:
@@ -432,11 +456,14 @@ class Stage4InterviewRound:
         return "quality_issue"
 
     @staticmethod
-    def _compact_text(value, limit: int = 500) -> str:
-        return str(value or "").strip()[:limit]
+    def _compact_text(value, limit: int | None = 500) -> str:
+        text = str(value or "").strip()
+        if limit is None:
+            return text
+        return text[:limit]
 
     @staticmethod
-    def _join_unique_lines(lines: list[str] | tuple[str, ...] | None, *, limit: int = 500) -> str:
+    def _join_unique_lines(lines: list[str] | tuple[str, ...] | None, *, limit: int | None = None) -> str:
         unique: list[str] = []
         seen: set[str] = set()
         for line in lines or []:
@@ -445,7 +472,10 @@ class Stage4InterviewRound:
                 continue
             seen.add(text)
             unique.append(text)
-        return "\n".join(unique)[:limit]
+        merged = "\n".join(unique)
+        if limit is None:
+            return merged
+        return merged[:limit]
 
     @staticmethod
     def _describe_coverage_warning(code: str) -> str:
@@ -462,7 +492,7 @@ class Stage4InterviewRound:
         validation_result: dict | None,
         *,
         candidate_label: str = "",
-        limit_per_key: int = 3,
+        limit_per_key: int | None = None,
     ) -> list[str]:
         if not isinstance(validation_result, dict):
             return []
@@ -470,28 +500,37 @@ class Stage4InterviewRound:
         prefix = f"[후보 {candidate_label}] " if candidate_label else ""
         lines: list[str] = []
 
-        for warning in (validation_result.get("npc_drift_warnings") or [])[:limit_per_key]:
+        npc_drift_warnings = list(validation_result.get("npc_drift_warnings") or [])
+        if limit_per_key is not None:
+            npc_drift_warnings = npc_drift_warnings[:limit_per_key]
+        for warning in npc_drift_warnings:
             if not isinstance(warning, dict):
                 continue
-            npc = self._compact_text(warning.get("npc", ""), 40)
-            field = self._compact_text(warning.get("field", ""), 40)
-            expected = self._compact_text(warning.get("expected", ""), 60)
-            found = self._compact_text(warning.get("found_in_ms", ""), 60)
+            npc = str(warning.get("npc", "") or "").strip()
+            field = str(warning.get("field", "") or "").strip()
+            expected = str(warning.get("expected", "") or "").strip()
+            found = str(warning.get("found_in_ms", "") or "").strip()
             body = f"{npc} {field}: 기대='{expected}' → 원고='{found}'".strip()
             body = " ".join(part for part in body.split() if part)
             if body:
                 lines.append(f"{prefix}[NPC] {body}")
 
-        for warning in (validation_result.get("numeric_consistency_warnings") or [])[:limit_per_key]:
+        numeric_consistency_warnings = list(validation_result.get("numeric_consistency_warnings") or [])
+        if limit_per_key is not None:
+            numeric_consistency_warnings = numeric_consistency_warnings[:limit_per_key]
+        for warning in numeric_consistency_warnings:
             if isinstance(warning, dict):
-                text = self._compact_text(warning.get("text", ""), 160)
+                text = str(warning.get("text", "") or "").strip()
             else:
-                text = self._compact_text(warning, 160)
+                text = str(warning or "").strip()
             if text:
                 lines.append(f"{prefix}[FACT] {text}")
 
-        for warning in (validation_result.get("coverage_warnings") or [])[:limit_per_key]:
-            text = self._compact_text(self._describe_coverage_warning(str(warning or "")), 160)
+        coverage_warnings = list(validation_result.get("coverage_warnings") or [])
+        if limit_per_key is not None:
+            coverage_warnings = coverage_warnings[:limit_per_key]
+        for warning in coverage_warnings:
+            text = self._describe_coverage_warning(str(warning or ""))
             if text:
                 lines.append(f"{prefix}[COVERAGE] {text}")
 
@@ -525,6 +564,10 @@ class Stage4InterviewRound:
                 break
 
         return merged[:limit]
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # Retry feedback / failure signature helpers
+    # ═══════════════════════════════════════════════════════════════════════
 
     def _build_retry_feedback_provenance(
         self,
@@ -572,7 +615,7 @@ class Stage4InterviewRound:
             director_lines.extend(open_review_lines)
         contradiction_detail_lines = self._compact_contradiction_detail_lines(
             director_result.get("contradiction_details"),
-            max_items=3,
+            max_items=None,
             line_limit=180,
         )
         if contradiction_detail_lines:
@@ -583,22 +626,18 @@ class Stage4InterviewRound:
 
         evidence_lines: list[str] = []
         if isinstance(selected_validation, dict):
-            for warning in (selected_validation.get("truth_gate_warnings") or [])[:3]:
+            for warning in (selected_validation.get("truth_gate_warnings") or []):
                 if isinstance(warning, dict):
-                    evidence_lines.append(
-                        f"[{warning.get('severity', '?')}] {self._compact_text(warning.get('text', ''), 160)}"
-                    )
-            for violation in (selected_validation.get("structured_violations") or [])[:3]:
+                    evidence_lines.append(f"[{warning.get('severity', '?')}] {str(warning.get('text', '') or '').strip()}")
+            for violation in (selected_validation.get("structured_violations") or []):
                 if isinstance(violation, dict):
-                    evidence_lines.append(
-                        f"[VIOLATION] {self._compact_text(violation.get('reason', ''), 160)}"
-                    )
-            for warning in (selected_validation.get("quality_signal_warnings") or [])[:3]:
-                text = self._compact_text(warning, 160)
+                    evidence_lines.append(f"[VIOLATION] {str(violation.get('reason', '') or '').strip()}")
+            for warning in (selected_validation.get("quality_signal_warnings") or []):
+                text = str(warning or "").strip()
                 if text:
                     evidence_lines.append(f"[STYLE] {text}")
             evidence_lines.extend(
-                self._structured_validation_evidence_lines(selected_validation, limit_per_key=3)
+                self._structured_validation_evidence_lines(selected_validation, limit_per_key=None)
             )
         evidence_summary = ""
         if evidence_lines:
@@ -607,7 +646,7 @@ class Stage4InterviewRound:
         runtime_advisory = self._build_retry_advisory_digest()
         retry_directives = ""
         if prev_general_lines and round_num > 0:
-            retry_directives = " / ".join(prev_general_lines)[:500]
+            retry_directives = " / ".join(prev_general_lines)
 
         system_feedback = self._join_unique_lines(prev_system_lines)
         director_feedback_text = self._join_unique_lines(director_lines)
@@ -634,14 +673,15 @@ class Stage4InterviewRound:
     def _compact_contradiction_detail_lines(
         details: object,
         *,
-        max_items: int = 3,
+        max_items: int | None = None,
         line_limit: int = 160,
     ) -> list[str]:
         if not isinstance(details, list):
             return []
 
         lines: list[str] = []
-        for item in details[:max_items]:
+        selected_details = details if max_items is None else details[:max_items]
+        for item in selected_details:
             if isinstance(item, dict):
                 severity = str(item.get("severity", "") or "").strip().upper() or "ISSUE"
                 kind = str(item.get("type", "") or "모순").strip()
@@ -651,13 +691,13 @@ class Stage4InterviewRound:
                     or str(item.get("expected_truth", "") or "").strip()
                 )
                 fix = str(item.get("fix_suggestion", "") or "").strip()
-                line = f"[{severity}] {kind}: {body[:line_limit]}".strip()
+                line = f"[{severity}] {kind}: {body}".strip()
                 if fix:
-                    line = f"{line} -> {fix[:120]}"
+                    line = f"{line} -> {fix}"
             else:
                 line = str(item or "").strip()
             if line:
-                lines.append(line[: max(line_limit, 80)])
+                lines.append(line)
         return lines
 
     def _is_continuity_replay_reject(self, *, director_result: dict, director_feedback: str) -> bool:
@@ -788,6 +828,10 @@ class Stage4InterviewRound:
             logging.debug("[Stage4] Director work_focus 선택 실패 (비치명): %s", exc)
             return {}
         return focus if isinstance(focus, dict) else {}
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # Director context builders (work focus, relationship, retrieval)
+    # ═══════════════════════════════════════════════════════════════════════
 
     def _build_director_work_focus_summary(
         self,
@@ -1105,17 +1149,17 @@ class Stage4InterviewRound:
             "strategy": previous_attempt.get("strategy", ""),
             "score": previous_attempt.get("score", 0),
             "fix_scope": previous_attempt.get("fix_scope", ""),
-            "fix_scope_reasoning": str(previous_attempt.get("fix_scope_reasoning", "") or "")[:200],
-            "open_review": str(previous_attempt.get("open_review", "") or "")[:200],
+            "fix_scope_reasoning": str(previous_attempt.get("fix_scope_reasoning", "") or ""),
+            "open_review": str(previous_attempt.get("open_review", "") or ""),
             "reject_bucket": previous_attempt.get("reject_bucket", ""),
             "error_category": previous_attempt.get("error_category", ""),
-            "rejection_reason": str(previous_attempt.get("rejection_reason", "") or "")[:240],
-            "action_items": list(previous_attempt.get("action_items", []) or [])[:3],
-            "contradiction_types": list(previous_attempt.get("contradiction_types", []) or [])[:5],
+            "rejection_reason": str(previous_attempt.get("rejection_reason", "") or ""),
+            "action_items": list(previous_attempt.get("action_items", []) or []),
+            "contradiction_types": list(previous_attempt.get("contradiction_types", []) or []),
         }
         contradiction_details = Stage4InterviewRound._compact_contradiction_detail_lines(
             previous_attempt.get("contradiction_details"),
-            max_items=2,
+            max_items=None,
             line_limit=120,
         )
         if contradiction_details:
@@ -1345,6 +1389,46 @@ class Stage4InterviewRound:
                     target_results[idx][key] = copy.deepcopy(value)
 
     @staticmethod
+    def _build_raw_advisory_payload(
+        validation_results: list[dict],
+        *,
+        selection_summary: dict | None = None,
+    ) -> dict | None:
+        tracked_keys = (
+            "truth_gate_warnings",
+            "npc_drift_warnings",
+            "numeric_consistency_warnings",
+            "quality_signal_warnings",
+            "coverage_warnings",
+            "shared_failure_warnings",
+            "structured_violations",
+            "warnings",
+        )
+        candidate_payloads: list[dict] = []
+        for idx, validation_result in enumerate(validation_results or []):
+            if not isinstance(validation_result, dict):
+                continue
+            payload: dict[str, object] = {}
+            for key in tracked_keys:
+                value = validation_result.get(key)
+                if value:
+                    payload[key] = copy.deepcopy(value)
+            warning_count = validation_result.get("warning_count")
+            if warning_count:
+                payload["warning_count"] = int(warning_count)
+            if not payload:
+                continue
+            payload["candidate_index"] = idx
+            payload["candidate_label"] = ["A", "B", "C"][idx] if idx < 3 else str(idx + 1)
+            candidate_payloads.append(payload)
+        if not candidate_payloads:
+            return None
+        raw_payload = {"candidate_validation_payloads": candidate_payloads}
+        if isinstance(selection_summary, dict) and selection_summary:
+            raw_payload["selection_summary"] = copy.deepcopy(selection_summary)
+        return raw_payload
+
+    @staticmethod
     def _classify_advisory_tier(advisory_text: str) -> tuple[int, str]:
         text = str(advisory_text or "")
         if "[TruthGate" in text:
@@ -1512,7 +1596,12 @@ class Stage4InterviewRound:
         return "entity_ref"
 
     @staticmethod
-    def _normalize_fix_pack_list(raw: object, *, limit: int = 5, item_limit: int = 160) -> list[str]:
+    def _normalize_fix_pack_list(
+        raw: object,
+        *,
+        limit: int | None = None,
+        item_limit: int | None = None,
+    ) -> list[str]:
         if isinstance(raw, str):
             candidates = [raw]
         elif isinstance(raw, list):
@@ -1525,23 +1614,24 @@ class Stage4InterviewRound:
             text = " ".join(str(item or "").split()).strip()
             if not text:
                 continue
-            text = text[:item_limit]
+            if item_limit is not None:
+                text = text[:item_limit]
             if text in seen:
                 continue
             seen.add(text)
             cleaned.append(text)
-            if len(cleaned) >= limit:
+            if limit is not None and len(cleaned) >= limit:
                 break
         return cleaned
 
     @classmethod
     def _normalize_fix_pack(cls, raw: object) -> dict:
         payload = raw if isinstance(raw, dict) else {}
-        patch_targets = cls._normalize_fix_pack_list(payload.get("patch_targets"), limit=6, item_limit=80)
-        must_fix = cls._normalize_fix_pack_list(payload.get("must_fix"), limit=6, item_limit=180)
-        do_not_regress = cls._normalize_fix_pack_list(payload.get("do_not_regress"), limit=6, item_limit=180)
-        success_condition = " ".join(str(payload.get("success_condition", "") or "").split()).strip()[:220]
-        evidence_summary = " ".join(str(payload.get("evidence_summary", "") or "").split()).strip()[:220]
+        patch_targets = cls._normalize_fix_pack_list(payload.get("patch_targets"), limit=None, item_limit=None)
+        must_fix = cls._normalize_fix_pack_list(payload.get("must_fix"), limit=None, item_limit=None)
+        do_not_regress = cls._normalize_fix_pack_list(payload.get("do_not_regress"), limit=None, item_limit=None)
+        success_condition = " ".join(str(payload.get("success_condition", "") or "").split()).strip()
+        evidence_summary = " ".join(str(payload.get("evidence_summary", "") or "").split()).strip()
 
         raw_kinds = payload.get("target_kinds")
         if isinstance(raw_kinds, str):
@@ -2124,6 +2214,10 @@ class Stage4InterviewRound:
         prev_manuscript: str,
         candidates: list[dict],
     ) -> tuple[list[dict], str]:
+        # _god1_* channel: temporary owner→runtime context bridge.
+        # Stage4DirectorRuntime reads these via getattr(owner, "_god1_*", None)
+        # because they carry round-local metadata that predates the runtime split.
+        # TODO: migrate to explicit parameters when the runtime contract stabilizes.
         self._god1_stage4_spinner = stage4_spinner
         self._god1_round_num = round_num
         self._god1_arc_pos = round_ctx.arc_pos
@@ -2152,6 +2246,7 @@ class Stage4InterviewRound:
         next_ep: int,
         round_num: int,
         candidates: list[dict],
+        validation_results: list[dict],
         director_result: dict,
         advisory_summary: dict[str, int],
         selected: str,
@@ -2165,6 +2260,7 @@ class Stage4InterviewRound:
         prev_score: int,
     ) -> dict[str, str]:
         selection_artifact_meta = normalize_artifact_meta(None)
+        raw_advisory_payload = None
         try:
             selection_advisory = dict(advisory_summary or {})
             gate_semantics = self._build_gate_semantics_payload(director_result)
@@ -2179,6 +2275,10 @@ class Stage4InterviewRound:
                     "tag": tag,
                     "score": prev_score,
                 }
+            raw_advisory_payload = self._build_raw_advisory_payload(
+                validation_results,
+                selection_summary=selection_advisory,
+            )
             selected_candidate = director_result.get("selected_candidate", {})
             if not isinstance(selected_candidate, dict):
                 selected_candidate = {}
@@ -2221,9 +2321,29 @@ class Stage4InterviewRound:
                 candidate_key=selection_artifact_meta["candidate_key"],
                 content_hash=selection_artifact_meta["content_hash"],
                 artifact_path=selection_artifact_meta["artifact_path"],
+                director_thinking=director_result.get("_director_thinking", ""),
             )
         except Exception as exc:
             logging.warning(f"[D-4] Director 선택 기록 실패 (비차단): {exc!s:.100}")
+        # adjunct raw rationale: director thinking + advisory warnings
+        try:
+            _db_adj = getattr(self.ctx.current_project, "db", None)
+            if _db_adj and hasattr(_db_adj, "save_attempt_raw_rationale") and attempt_key:
+                _dt = director_result.get("_director_thinking", "") if isinstance(director_result, dict) else ""
+                if _dt:
+                    _db_adj.save_attempt_raw_rationale(
+                        attempt_key=attempt_key, stage=4, ep_num=next_ep,
+                        payload_kind="director_thinking", payload=_dt,
+                    )
+                if isinstance(raw_advisory_payload, dict) and raw_advisory_payload:
+                    import json as _json
+                    _db_adj.save_attempt_raw_rationale(
+                        attempt_key=attempt_key, stage=4, ep_num=next_ep,
+                        payload_kind="advisory_warnings_raw",
+                        payload=_json.dumps(raw_advisory_payload, ensure_ascii=False),
+                    )
+        except Exception:
+            pass
         return selection_artifact_meta
 
     @staticmethod
@@ -2244,6 +2364,10 @@ class Stage4InterviewRound:
                 if name and name not in npc_roster:
                     npc_roster.append(name)
         return npc_roster
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # run() — MAIN ENTRY POINT
+    # ═══════════════════════════════════════════════════════════════════════
 
     def run(
         self,
@@ -3271,7 +3395,7 @@ class Stage4InterviewRound:
                             validation_results[ci]["warnings"].append(f"[V66.1] 연속성 경고: {w_msg}")
                         validation_results[ci]["warning_count"] = len(validation_results[ci]["warnings"])
         except Exception as _ct_err:
-            self.ctx.ui.log(f"      ⚠️ [V66.1] ContinuityValidator 실행 실패: {str(_ct_err)[:60]}")
+            self.ctx.ui.log(f"      ⚠️ [V66.1] ContinuityValidator 실행 실패: {str(_ct_err)}")
 
         # [D Step 4] 좌절-보상 타이머 — Director에 advisory 전달
         try:
@@ -3328,7 +3452,7 @@ class Stage4InterviewRound:
                     round_num=round_num,
                 )
         except Exception as bv_err:
-            self.ctx.ui.log(f"      ⚠️ [V66.1] BlockingValidator 실행 실패: {str(bv_err)[:60]}")
+            self.ctx.ui.log(f"      ⚠️ [V66.1] BlockingValidator 실행 실패: {str(bv_err)}")
 
     def _apply_blocking_validator_result(
         self,
@@ -3520,11 +3644,11 @@ class Stage4InterviewRound:
                         if continuity_check.get("decision") == "CONFLICT":
                             _conflict_msg = continuity_check.get("summary", "Continuity conflict detected")
                             _post_select_conflicts.append(f"[Continuity Conflict] {_conflict_msg}")
-                            self.ctx.ui.log(f"   [A-3] Post-select continuity conflict: {_conflict_msg[:80]}")
+                            self.ctx.ui.log(f"   [A-3] Post-select continuity conflict: {_conflict_msg}")
                     except Exception as _cont_err:
                         logging.warning(f"[FailClosed:SC:PostSelectContinuity] {_cont_err!s:.100}")
                         _post_select_conflicts.append(
-                            f"[Continuity Check Error] 검증 실패 (fail-closed): {str(_cont_err)[:80]}"
+                            f"[Continuity Check Error] 검증 실패 (fail-closed): {_cont_err!s}"
                         )
 
                 # (b) History conflict check result
@@ -3534,11 +3658,11 @@ class Stage4InterviewRound:
                         if _conflict_result.get("decision") == "CONFLICT":
                             _conflict_msg = _conflict_result.get("summary", "History conflict detected")
                             _post_select_conflicts.append(f"[V67] History Conflict: {_conflict_msg}")
-                            self.ctx.ui.log(f"   [A-3] Post-select history conflict: {_conflict_msg[:80]}")
+                            self.ctx.ui.log(f"   [A-3] Post-select history conflict: {_conflict_msg}")
                     except Exception as _hist_err:
                         logging.warning(f"[FailClosed:SC:PostSelectHistory] {_hist_err!s:.100}")
                         _post_select_conflicts.append(
-                            f"[History Check Error] 검증 실패 (fail-closed): {str(_hist_err)[:80]}"
+                            f"[History Check Error] 검증 실패 (fail-closed): {_hist_err!s}"
                         )
 
         # (c) Downgrade PASS to REJECT if post-select validation found conflicts
@@ -3993,6 +4117,7 @@ class Stage4InterviewRound:
             runtime_advisory=self._build_retry_advisory_digest(),
             error_category=error_category or director_result.get("error_category", ""),
             score_breakdown=director_result.get("score_breakdown", {}),
+            initial_verdict=director_result.get("director_verdict", "") or director_result.get("original_verdict", ""),
         )
         return _VerdictProcessingPayload(
             pass_result=_InterviewRoundResult(
@@ -4360,6 +4485,10 @@ class Stage4InterviewRound:
             logging.warning(f"[SilentPass:InterviewRound] role context 조립 실패: {role_ctx_err!s:.100}")
         return cv_context
 
+    # ═══════════════════════════════════════════════════════════════════════
+    # Advisory chain (8 advisories, parallel ThreadPoolExecutor)
+    # ═══════════════════════════════════════════════════════════════════════
+
     def _run_advisory_chain(
         self,
         candidates: list[dict],
@@ -4386,6 +4515,7 @@ class Stage4InterviewRound:
 
         futures = {}
         _advisory_parts: list[str] = []
+        _advisory_per_type: dict[str, list[str]] = {}
         executor = ThreadPoolExecutor(max_workers=9, thread_name_prefix="advisory")
         try:
             _truth_gate_results = self._clone_validation_results_for_advisory(validation_results)
@@ -4432,6 +4562,7 @@ class Stage4InterviewRound:
                         self._merge_advisory_validation_results(validation_results, _local_results)
                     if result:
                         _advisory_parts.extend(result)
+                        _advisory_per_type[_name] = list(result)
                         logging.debug("[Advisory] %s 완료 (%d건)", _name, len(result))
                 except Exception as e:
                     logging.warning("[Advisory] %s 실패 (비치명): %s", _name, e)
@@ -4445,7 +4576,7 @@ class Stage4InterviewRound:
 
         if _advisory_parts:
             self.ctx.ui.log(
-                f"      \u2705 Advisory 체인 완료 — {len(_advisory_parts)}건 경고",
+                f"      ✅ Advisory 체인 완료 — {len(_advisory_parts)}건 경고",
                 stage="stage4",
                 component="advisory_chain",
                 ep_num=next_ep,
@@ -4453,9 +4584,21 @@ class Stage4InterviewRound:
                 event_kind="result",
                 meta={"warning_count": len(_advisory_parts)},
             )
+            for _adv_type, _adv_lines in sorted(_advisory_per_type.items()):
+                self.ctx.ui.log(
+                    f"         [{_adv_type}] {len(_adv_lines)}건",
+                    stage="stage4", component="advisory_chain", ep_num=next_ep,
+                    round_num=_round_num, event_kind="detail",
+                )
+                for _adv_line in _adv_lines:
+                    self.ctx.ui.log(
+                        f"            {_adv_line}",
+                        stage="stage4", component="advisory_chain", ep_num=next_ep,
+                        round_num=_round_num, event_kind="detail",
+                    )
         else:
             self.ctx.ui.log(
-                "      \u2705 Advisory 체인 완료 — 경고 없음",
+                "      ✅ Advisory 체인 완료 — 경고 없음",
                 stage="stage4",
                 component="advisory_chain",
                 ep_num=next_ep,
@@ -4943,9 +5086,9 @@ class Stage4InterviewRound:
 
                 if _candidate_lines:
                     _hit_count += len(_candidate_lines)
-                    _advisory_lines.extend(f"- [후보 {_candidate_label}] {line}" for line in _candidate_lines[:3])
+                    _advisory_lines.extend(f"- [후보 {_candidate_label}] {line}" for line in _candidate_lines)
                     if isinstance(_vr, dict):
-                        _vr["quality_signal_warnings"] = list(_candidate_lines[:3])
+                        _vr["quality_signal_warnings"] = list(_candidate_lines)
 
             if _hit_count:
                 logging.info("[StyleSignalAdvisor→Director] %d건 style/core 경고 전달", _hit_count)
@@ -4970,43 +5113,43 @@ class Stage4InterviewRound:
                 fix_pack_lines.append(f"target_kind={target_kind}")
             patch_targets = [str(item).strip() for item in (fix_pack.get("patch_targets") or []) if str(item).strip()]
             if patch_targets:
-                fix_pack_lines.append("patch_targets=" + ", ".join(patch_targets[:6]))
+                fix_pack_lines.append("patch_targets=" + ", ".join(patch_targets))
             must_fix = [str(item).strip() for item in (fix_pack.get("must_fix") or []) if str(item).strip()]
             if must_fix:
-                fix_pack_lines.append("must_fix:\n" + "\n".join(f"- {item}" for item in must_fix[:5]))
+                fix_pack_lines.append("must_fix:\n" + "\n".join(f"- {item}" for item in must_fix))
             do_not_regress = [str(item).strip() for item in (fix_pack.get("do_not_regress") or []) if str(item).strip()]
             if do_not_regress:
-                fix_pack_lines.append("do_not_regress:\n" + "\n".join(f"- {item}" for item in do_not_regress[:5]))
+                fix_pack_lines.append("do_not_regress:\n" + "\n".join(f"- {item}" for item in do_not_regress))
             success_condition = str(fix_pack.get("success_condition", "") or "").strip()
             if success_condition:
-                fix_pack_lines.append("success_condition=" + success_condition[:220])
+                fix_pack_lines.append("success_condition=" + success_condition)
             evidence_summary = str(fix_pack.get("evidence_summary", "") or "").strip()
             if evidence_summary:
-                fix_pack_lines.append("evidence_summary=" + evidence_summary[:220])
+                fix_pack_lines.append("evidence_summary=" + evidence_summary)
             if fix_pack_lines:
                 parts.append("[Fix Pack]\n" + "\n".join(fix_pack_lines))
 
         action_items = [str(a).strip() for a in (director_result.get("action_items") or []) if str(a).strip()]
         if action_items:
-            parts.append("[핵심 수정 지시]\n" + "\n".join(action_items[:5]))
+            parts.append("[핵심 수정 지시]\n" + "\n".join(action_items))
 
         fix_scope_reasoning = str(director_result.get("fix_scope_reasoning", "") or "").strip()
         if fix_scope_reasoning:
-            parts.append("[수정 범위 근거]\n" + fix_scope_reasoning[:300])
+            parts.append("[수정 범위 근거]\n" + fix_scope_reasoning)
 
         feedback = director_result.get("feedback") or {}
         if isinstance(feedback, dict):
             issues = [str(i).strip() for i in (feedback.get("issues") or []) if str(i).strip()]
             non_review_issues = [item for item in issues if "[자유 리뷰]" not in item]
             if non_review_issues:
-                parts.append("[보조 이슈]\n" + "\n".join(non_review_issues[:5]))
+                parts.append("[보조 이슈]\n" + "\n".join(non_review_issues))
 
         open_review = str(director_result.get("open_review", "") or "").strip()
         if open_review and open_review not in ("특이사항 없음", "없음"):
-            parts.append("[Director 자유 리뷰]\n" + open_review[:300])
+            parts.append("[Director 자유 리뷰]\n" + open_review)
         contradiction_detail_lines = self._compact_contradiction_detail_lines(
             director_result.get("contradiction_details"),
-            max_items=3,
+            max_items=None,
             line_limit=180,
         )
         if contradiction_detail_lines:
@@ -5041,13 +5184,13 @@ class Stage4InterviewRound:
             summary_parts.append(f"target_kind={target_kind}")
         fix_scope_reasoning = str(director_result.get("fix_scope_reasoning", "") or "").strip()
         if fix_scope_reasoning:
-            summary_parts.append(f"reason={fix_scope_reasoning[:120]}")
+            summary_parts.append(f"reason={fix_scope_reasoning}")
         open_review = str(director_result.get("open_review", "") or "").strip()
         if open_review and open_review not in ("특이사항 없음", "없음"):
-            summary_parts.append(f"review={open_review[:120]}")
+            summary_parts.append(f"review={open_review}")
         compact_feedback = " ".join(str(feedback_text or "").split())
         if compact_feedback:
-            summary_parts.append(f"feedback={compact_feedback[:140]}")
+            summary_parts.append(f"feedback={compact_feedback}")
         patch_targets = [str(item).strip() for item in (patch_trace.get("patch_targets") or []) if str(item).strip()]
         if not patch_targets:
             patch_targets = [str(item).strip() for item in (fix_pack.get("patch_targets") or []) if str(item).strip()]
@@ -5148,6 +5291,10 @@ class Stage4InterviewRound:
                     logging.warning(f"[SilentPass:InterviewRound] ep{_prev_ep} history load failed: {e!s:.100}")
 
         return _ms_history_for_check
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # Episode log + attempt recording (DB, pass_rate_monitor, JSONL)
+    # ═══════════════════════════════════════════════════════════════════════
 
     def _append_episode_log(
         self,
@@ -5459,6 +5606,12 @@ class Stage4InterviewRound:
         fix_scope_reasoning: str,
         runtime_advisory: str,
         retry_directives: str,
+        failure_category: str = "",
+        initial_verdict: str = "",
+        score_breakdown: dict | None = None,
+        is_patch: bool = False,
+        is_patch_fallback: bool = False,
+        patch_strategy: str = "",
     ) -> dict:
         _adv = self._resolve_stage4_db_attempt_advisory_flags(advisory_flags)
         _model = self._resolve_stage4_db_attempt_model(model)
@@ -5469,6 +5622,7 @@ class Stage4InterviewRound:
             "ep_num": episode,
             "arc_num": arc,
             "score": score,
+            "failure_category": failure_category or None,
             "reject_reason": "" if success else (reject_reason or f"score={score}"),
             "fix_scope": fix_scope,
             "model": _model,
@@ -5486,6 +5640,11 @@ class Stage4InterviewRound:
             "fix_scope_reasoning": fix_scope_reasoning,
             "runtime_advisory": runtime_advisory,
             "retry_directives": retry_directives,
+            "initial_verdict": initial_verdict or None,
+            "score_breakdown": score_breakdown,
+            "is_patch": is_patch,
+            "is_patch_fallback": is_patch_fallback,
+            "patch_strategy": patch_strategy or None,
         }
 
     def _build_stage4_attempt_prelude(
@@ -5610,6 +5769,12 @@ class Stage4InterviewRound:
         fix_scope_reasoning: str,
         runtime_advisory: str,
         retry_directives: str,
+        error_category: str = "",
+        initial_verdict: str = "",
+        score_breakdown: dict | None = None,
+        is_patch: bool = False,
+        is_patch_fallback: bool = False,
+        patch_strategy: str = "",
         prelude: _Stage4AttemptPreludePayload,
     ) -> None:
         try:
@@ -5638,6 +5803,12 @@ class Stage4InterviewRound:
                     fix_scope_reasoning=fix_scope_reasoning,
                     runtime_advisory=runtime_advisory,
                     retry_directives=retry_directives,
+                    failure_category=error_category,
+                    initial_verdict=initial_verdict,
+                    score_breakdown=score_breakdown,
+                    is_patch=is_patch,
+                    is_patch_fallback=is_patch_fallback,
+                    patch_strategy=patch_strategy,
                 )
             )
         except Exception as _sa_err:
@@ -5684,6 +5855,7 @@ class Stage4InterviewRound:
         error_category: str = "",
         reject_bucket: str = "",
         score_breakdown: dict | None = None,
+        initial_verdict: str = "",
     ) -> dict:
         """Stage 4 시도 결과를 stage_attempts DB에 저장한다."""
         prelude = self._build_stage4_attempt_prelude(
@@ -5734,6 +5906,12 @@ class Stage4InterviewRound:
             fix_scope_reasoning=fix_scope_reasoning,
             runtime_advisory=runtime_advisory,
             retry_directives=retry_directives,
+            error_category=error_category,
+            initial_verdict=initial_verdict,
+            score_breakdown=score_breakdown,
+            is_patch=is_patch,
+            is_patch_fallback=patch_fallback,
+            patch_strategy=patch_strategy,
             prelude=prelude,
         )
         return self._build_stage4_attempt_return_payload(prelude)

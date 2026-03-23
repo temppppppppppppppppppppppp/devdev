@@ -64,7 +64,7 @@ def _canonical_score_breakdown(raw: dict | None = None, *, length_score: int = 0
 def _normalize_quality_gate_reasons(raw: object) -> list[str]:
     if not isinstance(raw, list):
         return []
-    return [str(item)[:160] for item in raw if str(item).strip()]
+    return [str(item) for item in raw if str(item).strip()]
 
 
 def _short_text(value: object, limit: int = 200) -> str:
@@ -416,9 +416,9 @@ def _build_contradiction_summary_lines(details: list[dict], *, limit: int = 3) -
             or str(detail.get("expected_truth", "") or "").strip()
         )
         fix = str(detail.get("fix_suggestion", "") or "").strip()
-        line = f"[{severity}] {kind}: {body[:160]}".strip()
+        line = f"[{severity}] {kind}: {body}".strip()
         if fix:
-            line = f"{line} -> {fix[:120]}"
+            line = f"{line} -> {fix}"
         lines.append(line)
     return lines
 
@@ -470,13 +470,13 @@ def _log_director_frame(
     open_review: str = "",
     thinking: str = "",
 ) -> None:
-    _director_verdict = _short_text(director_verdict, 120)
-    _gate_basis = _short_text(gate_basis, 120)
-    _selection_reason = _short_text(selection_reason, 240)
-    _verdict_reason = _short_text(verdict_reason, 240)
-    _comparison_notes = _short_text(comparison_notes, 240)
-    _open_review = _short_text(open_review, 240)
-    _thinking = _short_text(thinking, 1200)
+    _director_verdict = str(director_verdict or "").strip()
+    _gate_basis = str(gate_basis or "").strip()
+    _selection_reason = str(selection_reason or "").strip()
+    _verdict_reason = str(verdict_reason or "").strip()
+    _comparison_notes = str(comparison_notes or "").strip()
+    _open_review = str(open_review or "").strip()
+    _thinking = str(thinking or "").strip()
     _contradictions = list(contradictions or [])
 
     logging.info(
@@ -501,13 +501,9 @@ def _log_director_frame(
     if _open_review:
         logging.info("[DirectorFrame] stage=%s ep=%s open_review=%s", stage, ep_num, _open_review)
     if _contradictions:
-        logging.warning(
-            "[DirectorFrame] stage=%s ep=%s contradiction_count=%d first=%s",
-            stage,
-            ep_num,
-            len(_contradictions),
-            _short_text(_contradictions[0], 200),
-        )
+        logging.warning("[DirectorFrame] stage=%s ep=%s contradiction_count=%d", stage, ep_num, len(_contradictions))
+        for idx, contradiction in enumerate(_contradictions, 1):
+            logging.warning("[DirectorFrame] stage=%s ep=%s contradiction_%d=%s", stage, ep_num, idx, contradiction)
     if _thinking:
         logging.debug("[DirectorThinking] stage=%s ep=%s %s", stage, ep_num, _thinking)
 
@@ -904,16 +900,28 @@ class DirectorEnsembleSelector:
         if isinstance(score_breakdown_raw, dict) and score_breakdown_raw:
             breakdown_sum = sum(v for v in score_breakdown_raw.values() if isinstance(v, int | float))
             if breakdown_sum != score and breakdown_sum > 0:
+                _pre_nc3b = score
                 logging.warning(
                     "[NC-3B] score_breakdown 합산 불일치: breakdown=%d, score=%d → breakdown 우선",
                     breakdown_sum,
                     score,
                 )
                 score = max(0, min(100, breakdown_sum))
+                if hasattr(self._d, "_operator_log"):
+                    self._d._operator_log(
+                        f"[NC-3B] 점수 조정: {_pre_nc3b}→{score} (breakdown 합산 우선)",
+                        meta={"component": "Director", "event_kind": "score_provenance"},
+                    )
 
         if v60_97_swapped:
+            _pre_swap = score
             score = 50
             original_verdict = "CONDITIONAL_PASS"
+            if hasattr(self._d, "_operator_log"):
+                self._d._operator_log(
+                    f"[V60.97] 후보 교체 → 점수 리셋: {_pre_swap}→50, verdict→CONDITIONAL_PASS",
+                    meta={"component": "Director", "event_kind": "score_provenance"},
+                )
 
         contradiction_check = result.get("contradiction_check", {})
         if not isinstance(contradiction_check, dict):
@@ -953,11 +961,17 @@ class DirectorEnsembleSelector:
         arc_pos: int,
         total_eps: int,
         retry_count: int,
+        ep_type: str = "normal",
     ) -> tuple[str, dict]:
         if scm_single_candidate and state.score >= 95:
             scm_old = state.score
             state.score = min(state.score, 90)
             logging.info(f"[SCM] 단일 후보 점수 보정: {scm_old} → {state.score}")
+            if hasattr(self._d, "_operator_log"):
+                self._d._operator_log(
+                    f"[SCM] 단일 후보 점수 보정: {scm_old}→{state.score}",
+                    meta={"component": "Director", "event_kind": "score_provenance"},
+                )
 
         found_contradictions = state.contradiction_check.get("found_contradictions", [])
         if isinstance(found_contradictions, list) and found_contradictions:
@@ -982,11 +996,17 @@ class DirectorEnsembleSelector:
                     score_breakdown=state.score_breakdown_raw or None,
                 )
                 if firewall_mode == "pass_with_fix" and selected_manuscript:
+                    _pre_fw = state.score
                     state.firewall_fixable = True
                     state.firewall_reason = fixable_reason
                     state.original_verdict = "PASS_WITH_FIX"
                     state.score = min(state.score, 97)
                     logging.warning(" [V75-C] %s → PASS_WITH_FIX", state.firewall_reason)
+                    if hasattr(self._d, "_operator_log"):
+                        self._d._operator_log(
+                            f"[V75-C Firewall] {state.firewall_reason} → PASS_WITH_FIX (점수: {_pre_fw}→{state.score})",
+                            meta={"component": "Director", "event_kind": "score_provenance"},
+                        )
                 else:
                     state.firewall_triggered = True
                     if critical_count >= 1:
@@ -999,8 +1019,16 @@ class DirectorEnsembleSelector:
                 state.original_verdict = "REJECT"
                 state.pre_firewall_score = state.score
                 state.score = min(state.score, 44)
+                if hasattr(self._d, "_operator_log"):
+                    self._d._operator_log(
+                        f"[V75-C Firewall] {state.firewall_reason} → REJECT 강제 (점수: {state.pre_firewall_score}→{state.score})",
+                        meta={"component": "Director", "event_kind": "score_provenance"},
+                    )
             if state.firewall_triggered or state.firewall_fixable:
-                for line in _build_contradiction_summary_lines(state.contradiction_details or [], limit=5):
+                for line in _build_contradiction_summary_lines(
+                    state.contradiction_details or [],
+                    limit=len(state.contradiction_details or []),
+                ):
                     logging.warning(" %s", line)
 
         if state.numeric_consistency_review:
@@ -1010,7 +1038,7 @@ class DirectorEnsembleSelector:
                     continue
                 review_verdict = str(review.get("verdict", "")).upper()
                 review_id = review.get("id", "?")
-                review_reason = str(review.get("reason", ""))[:100]
+                review_reason = str(review.get("reason", ""))
                 if review_verdict == "AGREE":
                     agree_count += 1
                     logging.warning("[NC-1] Director AGREE: %s — %s", review_id, review_reason)
@@ -1063,32 +1091,60 @@ class DirectorEnsembleSelector:
             if issue_count >= 3 and isinstance(state.score_breakdown_raw, dict):
                 python_warnings = state.score_breakdown_raw.get("python_warnings", 10)
                 if isinstance(python_warnings, int | float) and python_warnings > 3:
+                    _pre_nc3 = state.score
                     logging.info("[NC-3] python_warnings %d → 3 (ISSUE %d건)", python_warnings, issue_count)
                     state.score_breakdown_raw["python_warnings"] = 3
                     new_total = sum(v for v in state.score_breakdown_raw.values() if isinstance(v, int | float))
                     if new_total < state.score:
                         state.score = new_total
+                        if hasattr(self._d, "_operator_log"):
+                            self._d._operator_log(
+                                f"[NC-3] ISSUE {issue_count}건 → python_warnings 감점: {_pre_nc3}→{state.score}",
+                                meta={"component": "Director", "event_kind": "score_provenance"},
+                            )
             result["score_breakdown"] = state.score_breakdown_raw
         else:
             logging.info("[NC-3] Director가 consistency_checklist를 생략함 — 감점 없음 (안정화 기간)")
 
-        adaptive_result = self._d.apply_adaptive_decision(
-            score=state.score,
-            original_decision=state.original_verdict,
-            arc_pos=arc_pos,
-            total_eps=total_eps,
-            retry_count=retry_count,
-        )
+        # [Q3-T1] fail-closed guard + ep_type forwarding
+        try:
+            adaptive_result = self._d.apply_adaptive_decision(
+                score=state.score,
+                original_decision=state.original_verdict,
+                arc_pos=arc_pos,
+                total_eps=total_eps,
+                retry_count=retry_count,
+                ep_type=ep_type,
+            )
+        except Exception as _adp_exc:
+            logging.warning("[Q3-T1] apply_adaptive_decision 예외 → 원본 verdict 유지: %s", _adp_exc)
+            adaptive_result = {"decision": state.original_verdict, "adjusted": False, "reason": f"grading_error: {_adp_exc}"}
         final_verdict = adaptive_result["decision"]
+        _adaptive_branch = ""
         if final_verdict == "CONDITIONAL_PASS":
             if state.original_verdict == "REJECT":
                 final_verdict = "REJECT"
+                _adaptive_branch = "CONDITIONAL_PASS→REJECT (original=REJECT)"
             elif state.v60_97_swapped:
-                final_verdict = "REJECT"
+                # [Q3-T1] V60.97 swap 후보가 adaptive threshold 이상이면 CONDITIONAL_PASS 유지
+                _v97_threshold = adaptive_result.get("threshold_used", 60)
+                if state.score >= _v97_threshold:
+                    final_verdict = "CONDITIONAL_PASS"
+                    _adaptive_branch = f"CONDITIONAL_PASS 유지 (V60.97 swap, score={state.score}≥threshold={_v97_threshold})"
+                else:
+                    final_verdict = "REJECT"
+                    _adaptive_branch = f"CONDITIONAL_PASS→REJECT (V60.97 swap, score={state.score}<threshold={_v97_threshold})"
             elif adaptive_result.get("adjusted") and state.original_verdict in ("PASS", "PASS_WITH_FIX"):
                 final_verdict = state.original_verdict
+                _adaptive_branch = f"CONDITIONAL_PASS→{final_verdict} (adjusted pass-through)"
             else:
                 final_verdict = "PASS"
+                _adaptive_branch = "CONDITIONAL_PASS→PASS (fallback)"
+        if _adaptive_branch and hasattr(self._d, "_operator_log"):
+            self._d._operator_log(
+                f"[Adaptive] {_adaptive_branch}",
+                meta={"component": "Director", "event_kind": "verdict_provenance"},
+            )
 
         return final_verdict, adaptive_result
 
@@ -1127,7 +1183,10 @@ class DirectorEnsembleSelector:
             if isinstance(state.selected_candidate, dict)
             else ""
         )
-        contradiction_summary_lines = _build_contradiction_summary_lines(state.contradiction_details or [])
+        contradiction_summary_lines = _build_contradiction_summary_lines(
+            state.contradiction_details or [],
+            limit=len(state.contradiction_details or []),
+        )
         if (state.firewall_triggered or state.firewall_fixable) and selected_manuscript:
             if fix_scope not in ("partial", "full"):
                 fix_scope = "inplace"
@@ -1143,19 +1202,19 @@ class DirectorEnsembleSelector:
                 if issue not in feedback_issues:
                     feedback_issues.append(issue)
             if feedback_issues:
-                feedback["issues"] = feedback_issues[:8]
+                feedback["issues"] = feedback_issues
 
         if state.firewall_fixable:
             action_items = [str(item).strip() for item in (feedback.get("action_items") or []) if str(item).strip()]
-            for detail in (state.contradiction_details or [])[:3]:
+            for detail in (state.contradiction_details or []):
                 hint = str(detail.get("fix_suggestion", "") or "").strip()
                 if not hint:
                     kind = str(detail.get("type", "") or "모순").strip()
                     hint = f"{kind} 항목만 국소 정정하고 나머지 구조는 유지"
                 if hint and hint not in action_items:
-                    action_items.append(hint[:160])
+                    action_items.append(hint)
             if action_items:
-                feedback["action_items"] = action_items[:5]
+                feedback["action_items"] = action_items
 
         open_review = result.get("open_review", "")
         if state.v60_97_swapped and open_review:
@@ -1195,9 +1254,9 @@ class DirectorEnsembleSelector:
             f"선택: 후보 {state.selected_letter} | 원래 판정: {state.original_verdict}",
         ]
         if selection_reason:
-            operator_lines.append(f"선택 사유: {selection_reason[:200]}")
+            operator_lines.append(f"선택 사유: {selection_reason}")
         if verdict_reason and verdict_reason != selection_reason:
-            operator_lines.append(f"verdict_reason: {verdict_reason[:200]}")
+            operator_lines.append(f"verdict_reason: {verdict_reason}")
         score_breakdown = _canonical_score_breakdown(result.get("score_breakdown", {}))
         if score_breakdown:
             score_breakdown_str = ", ".join(
@@ -1206,10 +1265,10 @@ class DirectorEnsembleSelector:
             if score_breakdown_str:
                 operator_lines.append(f"점수 분해: {score_breakdown_str}")
         if issues:
-            for issue in issues[:5]:
-                operator_lines.append(f"이슈: {str(issue)[:150]}")
+            for issue in issues:
+                operator_lines.append(f"이슈: {issue!s}")
         if open_review and open_review not in ("특이사항 없음", "없음", ""):
-            operator_lines.append(f"자유 리뷰: {open_review[:200]}")
+            operator_lines.append(f"자유 리뷰: {open_review}")
         if adaptive_result.get("reason"):
             operator_lines.append(f"적응형: {adaptive_result['reason']}")
         thinking = getattr(self._d, "_last_thinking", "")
@@ -1262,6 +1321,7 @@ class DirectorEnsembleSelector:
                 )
                 if isinstance(item, dict)
             ],
+            "_director_thinking": thinking,
         }
 
     def compare_and_select_blueprint(
@@ -1573,17 +1633,17 @@ Architect가 repair loop에서 처리 가능한 범위라면 PASS_WITH_FIX를 �
         logging.info(f" [Director] 후보 {selected_idx + 1} 선택 ({decision}, 점수: {score})")
         if contradictions:
             logging.warning(f" [Director] 모순 {len(contradictions)}건 발견:")
-            for contradiction in contradictions[:5]:
-                logging.warning(f" {str(contradiction)[:120]}")
+            for contradiction in contradictions:
+                logging.warning(f" {str(contradiction)}")
         else:
             logging.info("✅ [Director] 모순·일관성 이상 없음")
         if comparison_notes:
-            logging.info(f" 비교: {comparison_notes[:150]}{'...' if len(comparison_notes) > 150 else ''}")
+            logging.info(f" 비교: {comparison_notes}{'...' if len(comparison_notes) > 150 else ''}")
         if reason:
-            logging.info(f" 이유: {reason[:100]}{'...' if len(reason) > 100 else ''}")
+            logging.info(f" 이유: {reason}")
 
         logging.info(
-            f"[Stage3 Director] Blueprint {decision} (점수: {score}) 후보{selected_idx + 1} | {reason[:120] if reason else ''}"
+            f"[Stage3 Director] Blueprint {decision} (점수: {score}) 후보{selected_idx + 1} | {reason if reason else ''}"
         )
         _log_director_frame(
             stage="stage3",
@@ -1603,14 +1663,14 @@ Architect가 repair loop에서 처리 가능한 범위라면 PASS_WITH_FIX를 �
             f"선택: 후보 {selected_idx + 1}",
         ]
         if reason:
-            operator_lines.append(f"사유: {reason[:200]}")
+            operator_lines.append(f"사유: {reason}")
         if comparison_notes:
-            operator_lines.append(f"비교: {comparison_notes[:200]}")
+            operator_lines.append(f"비교: {comparison_notes}")
         if contradictions:
-            operator_lines.extend(f"모순: {str(item)[:150]}" for item in contradictions[:3])
+            operator_lines.extend(f"모순: {item!s}" for item in contradictions)
         blueprint_feedback = result.get("feedback", "")
         if decision in ("REJECT", "PASS_WITH_FIX") and blueprint_feedback:
-            operator_lines.append(f"피드백: {str(blueprint_feedback)[:200]}")
+            operator_lines.append(f"피드백: {blueprint_feedback!s}")
         thinking = getattr(self._d, "_last_thinking", "")
         if thinking:
             operator_lines.append(f"💭 [Director Thinking]\n{thinking}")
@@ -1638,6 +1698,7 @@ Architect가 repair loop에서 처리 가능한 범위라면 PASS_WITH_FIX를 �
             "revision_required": revision_required,
             "candidate_advisories": candidate_advisories,
             "selected_candidate_advisory": selected_candidate_advisory,
+            "_director_thinking": thinking,
         }
 
     # ═══════════════════════════════════════════════════════════════
@@ -1840,13 +1901,13 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
         logging.info(f" [TF-47] 후보 {selected_idx + 1} 선택 ({decision}, 점수: {score})")
         if contradictions:
             logging.warning(f" [TF-47] 모순 {len(contradictions)}건 발견:")
-            for contradiction in contradictions[:5]:
-                logging.warning(f" {str(contradiction)[:120]}")
+            for contradiction in contradictions:
+                logging.warning(f" {str(contradiction)}")
         else:
             logging.info("✅ [TF-47] 모순·일관성 이상 없음")
 
         logging.info(
-            f"[Stage2 Director] Arc {decision} (점수: {score}) 후보{selected_idx + 1} | {reason[:120] if reason else ''}"
+            f"[Stage2 Director] Arc {decision} (점수: {score}) 후보{selected_idx + 1} | {reason if reason else ''}"
         )
         _log_director_frame(
             stage="stage2",
@@ -1866,14 +1927,14 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
             f"선택: 후보 {selected_idx + 1} ({candidates[selected_idx].get('_strategy', '?')})",
         ]
         if reason:
-            operator_lines.append(f"사유: {reason[:200]}")
+            operator_lines.append(f"사유: {reason}")
         if comparison_notes:
-            operator_lines.append(f"비교: {comparison_notes[:200]}")
+            operator_lines.append(f"비교: {comparison_notes}")
         if contradictions:
-            operator_lines.extend(f"모순: {str(item)[:150]}" for item in contradictions[:3])
+            operator_lines.extend(f"모순: {item!s}" for item in contradictions)
         feedback = result.get("feedback", "")
         if decision != "PASS" and feedback:
-            operator_lines.append(f"피드백: {str(feedback)[:200]}")
+            operator_lines.append(f"피드백: {feedback!s}")
         thinking = getattr(self._d, "_last_thinking", "")
         if thinking:
             operator_lines.append(f"💭 [Director Thinking]\n{thinking}")
@@ -1896,6 +1957,7 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
             "fix_scope": result.get("fix_scope", ""),
             "quality_gate_triggered": False,
             "quality_gate_reasons": [],
+            "_director_thinking": thinking,
         }
         return _apply_candidate_quality_gate(final_result, quality_flag)
 
@@ -1995,6 +2057,7 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
         reference_appendix: str = "",
         prev_manuscripts_text: str = "",
         story_context: str = "",
+        ep_type: str = "normal",
     ) -> dict:
         """[V60.80] 3개 후보 중 최선 선택 + PASS/REJECT 판정"""
         candidate_state = self._normalize_ensemble_candidates(candidates, validation_results)
@@ -2083,6 +2146,7 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
             arc_pos=arc_pos,
             total_eps=total_eps,
             retry_count=retry_count,
+            ep_type=ep_type,
         )
         return self._build_ensemble_decision_payload(
             ep_num=ep_num,
@@ -2160,4 +2224,3 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
             "reason": result.get("reason", ""),
             "critical_issues": _issues,
         }
-

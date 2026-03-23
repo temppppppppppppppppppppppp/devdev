@@ -350,6 +350,97 @@ class TestInterviewRoundHelpers:
         assert "[FACT] [수치 불일치]" in provenance["merged_feedback"]
         assert "[COVERAGE] 관계 의미 질의가 빠졌다." in provenance["merged_feedback"]
 
+    def test_retry_feedback_provenance_preserves_full_validation_detail_without_caps(self):
+        ir = Stage4InterviewRound(_make_ctx())
+        long_truth_warning = "timeline mismatch " * 18
+        long_violation = "structural contradiction " * 16
+
+        provenance = ir._build_retry_feedback_provenance(
+            director_result={"feedback": {}},
+            director_feedback="",
+            selected_validation={
+                "truth_gate_warnings": [{"severity": "MAJOR", "text": long_truth_warning}],
+                "structured_violations": [{"reason": long_violation}],
+                "quality_signal_warnings": ["style-a", "style-b", "style-c", "style-d"],
+                "npc_drift_warnings": [
+                    {"npc": "npc1", "field": "tone", "expected": "warm", "found_in_ms": "cold"},
+                    {"npc": "npc2", "field": "title", "expected": "chief", "found_in_ms": "intern"},
+                    {"npc": "npc3", "field": "goal", "expected": "launch", "found_in_ms": "stall"},
+                    {"npc": "npc4", "field": "status", "expected": "ready", "found_in_ms": "blocked"},
+                ],
+                "numeric_consistency_warnings": [
+                    {"text": "num-one"},
+                    {"text": "num-two"},
+                    {"text": "num-three"},
+                    {"text": "num-four"},
+                ],
+                "coverage_warnings": [
+                    "missing_relation_slice",
+                    "trimmed_work_slot_summary",
+                    "missing_work_slot_summary",
+                    "work_focus_without_slots",
+                ],
+            },
+            round_num=1,
+        )
+
+        merged_feedback = provenance["merged_feedback"]
+        assert long_truth_warning.strip() in merged_feedback
+        assert long_violation.strip() in merged_feedback
+        assert "[STYLE] style-d" in merged_feedback
+        assert merged_feedback.count("[NPC]") == 4
+        assert merged_feedback.count("[FACT]") == 4
+        assert merged_feedback.count("[COVERAGE]") == 4
+
+    def test_compact_attempt_snapshot_preserves_full_feedback_lists(self):
+        snapshot = Stage4InterviewRound._compact_attempt_snapshot(
+            {
+                "strategy": "repair",
+                "score": 44,
+                "fix_scope_reasoning": "keep all details",
+                "open_review": "review",
+                "rejection_reason": "reason",
+                "action_items": [f"fix-step-{idx}" for idx in range(10)],
+                "contradiction_types": [f"type-{idx}" for idx in range(6)],
+                "contradiction_details": [
+                    {
+                        "severity": "MAJOR",
+                        "type": f"kind-{idx}",
+                        "current_violation": f"violation-{idx}",
+                        "fix_suggestion": f"repair-{idx}",
+                    }
+                    for idx in range(4)
+                ],
+            }
+        )
+
+        assert len(snapshot["action_items"]) == 10
+        assert len(snapshot["contradiction_types"]) == 6
+        assert len(snapshot["contradiction_details"]) == 4
+        assert "repair-3" in snapshot["contradiction_details"][-1]
+
+    def test_extract_fix_feedback_preserves_full_fix_pack_and_issue_lists(self):
+        ir = Stage4InterviewRound(_make_ctx())
+        feedback = ir._extract_fix_feedback(
+            {
+                "fix_pack": {
+                    "patch_targets": [f"slot_{idx}" for idx in range(7)],
+                    "must_fix": [f"must-fix-{idx}" for idx in range(6)],
+                    "do_not_regress": [f"guard-{idx}" for idx in range(6)],
+                    "success_condition": "success-condition " * 20,
+                    "evidence_summary": "evidence-summary " * 18,
+                },
+                "action_items": [f"action-{idx}" for idx in range(7)],
+                "feedback": {"issues": [f"issue-{idx}" for idx in range(6)]},
+            }
+        )
+
+        assert "slot_6" in feedback
+        assert "must-fix-5" in feedback
+        assert "guard-5" in feedback
+        assert "action-6" in feedback
+        assert "issue-5" in feedback
+
     def test_advisory_style_signals_reports_runtime_core_gaps(self):
         ctx = _make_ctx()
         ctx.current_project.db.get_quality_signal_summary.return_value = {
@@ -2219,6 +2310,12 @@ class TestRecordS4Attempt:
             fix_scope_reasoning="bounded fix",
             runtime_advisory="keep continuity",
             retry_directives="change ending",
+            failure_category="LOGIC_ERROR",
+            initial_verdict="PASS_WITH_FIX",
+            score_breakdown={"narrative_flow": 9},
+            is_patch=True,
+            is_patch_fallback=False,
+            patch_strategy="patch_with_feedback",
         )
 
         assert payload["model"] == "gemini-2.5-pro"
@@ -2226,6 +2323,12 @@ class TestRecordS4Attempt:
         assert payload["attempt_key"] == "s4:ep2:arc1:a2:sess-stage4"
         assert payload["selection_reason"] == "best candidate"
         assert payload["artifact_path"] == "logs/final.txt"
+        assert payload["failure_category"] == "LOGIC_ERROR"
+        assert payload["initial_verdict"] == "PASS_WITH_FIX"
+        assert payload["score_breakdown"] == {"narrative_flow": 9}
+        assert payload["is_patch"] is True
+        assert payload["is_patch_fallback"] is False
+        assert payload["patch_strategy"] == "patch_with_feedback"
 
     def test_record_stage4_pass_rate_attempt_uses_prelude_payload(self):
         ctx = _make_ctx()
@@ -5353,6 +5456,63 @@ class TestLane2DirectorSemantics:
         assert gate_semantics["final_verdict"] == "REJECT"
         assert gate_semantics["gate_basis"] == "quality_floor_fail"
         assert gate_semantics["repair_scope"] == "partial"
+
+    def test_save_director_selection_persists_raw_advisory_payload_bundle(self):
+        ctx = _make_ctx()
+        ctx.current_project.db.save_director_selection = MagicMock()
+        ctx.current_project.db.save_attempt_raw_rationale = MagicMock()
+        ir = Stage4InterviewRound(ctx)
+
+        with patch(
+            "modules.core.stage4_interview_round.snapshot_logged_artifact",
+            return_value={
+                "candidate_key": "A|balanced",
+                "content_hash": "hash123",
+                "artifact_path": "logs/artifacts/stage4/ep_0001/rejected_best__A_balanced.txt",
+            },
+        ):
+            ir._persist_director_selection(
+                round_ctx=_make_round_ctx(),
+                next_ep=1,
+                round_num=0,
+                candidates=[_candidate()],
+                validation_results=[
+                    {
+                        "truth_gate_warnings": [{"severity": "CRITICAL", "text": "사망 NPC 등장"}],
+                        "structured_violations": [{"reason": "연속성 위반"}],
+                        "quality_signal_warnings": ["style drift"],
+                        "warnings": ["[Python검증-HIGH] timeline drift"],
+                        "warning_count": 4,
+                    }
+                ],
+                director_result={
+                    "selected_candidate": {"manuscript": "candidate manuscript", "strategy_name": "balanced"},
+                    "_director_thinking": "full director thinking payload",
+                },
+                advisory_summary={"truth_gate": 1},
+                selected="A",
+                verdict="REJECT",
+                score=44,
+                selection_reason="best candidate",
+                verdict_reason="conflict",
+                attempt_key="s4:ep1:arc1:a1",
+                is_patch=False,
+                is_patch_fallback=False,
+                prev_score=0,
+            )
+
+        raw_calls = ctx.current_project.db.save_attempt_raw_rationale.call_args_list
+        payload_calls = [call.kwargs for call in raw_calls if call.kwargs["payload_kind"] == "advisory_warnings_raw"]
+        assert len(payload_calls) == 1
+        payload = json.loads(payload_calls[0]["payload"])
+        assert payload["selection_summary"]["truth_gate"] == 1
+        candidate_payload = payload["candidate_validation_payloads"][0]
+        assert candidate_payload["candidate_label"] == "A"
+        assert candidate_payload["truth_gate_warnings"][0]["severity"] == "CRITICAL"
+        assert candidate_payload["structured_violations"][0]["reason"] == "연속성 위반"
+        assert candidate_payload["quality_signal_warnings"] == ["style drift"]
+        assert candidate_payload["warnings"] == ["[Python검증-HIGH] timeline drift"]
+        assert candidate_payload["warning_count"] == 4
 
     def test_build_director_decision_core_parts_injects_stage3_pov_and_writing_directive(self):
         ctx = _make_ctx()

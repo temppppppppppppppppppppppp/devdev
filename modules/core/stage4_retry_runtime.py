@@ -597,9 +597,9 @@ class Stage4RetryRuntime:
                 "warnings": [
                     f"[TF-35 재심사] InPlace 패치 수정본입니다. 원본 점수: {score}점.",
                     "[TF-35 재심사] 수정 범위: inplace (국소 수정). 전면 재평가가 아닌 수정 부분 중심으로 평가하세요.",
-                    f"[TF-35 재심사] 이전 피드백: {current_feedback[:500]}",
+                    f"[TF-35 재심사] 이전 피드백: {current_feedback[:2000]}",
                 ],
-                "focus_points": [f"[TF-35 재심사] 이전 피드백: {current_feedback[:300]}"],
+                "focus_points": [f"[TF-35 재심사] 이전 피드백: {current_feedback[:1000]}"],
             }
             if f2_advisory:
                 re_val_ctx["warnings"].append(f2_advisory)
