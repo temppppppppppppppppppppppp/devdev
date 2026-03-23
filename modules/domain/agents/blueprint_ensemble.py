@@ -1125,6 +1125,16 @@ class BlueprintEnsembleGenerator(BaseAgent):
                 )
             sections.append(bp_full)
 
+        # ── [pre-rerun] 직전 원고 말미 → 시간 진실 소스 ──
+        if prev_manuscripts_text:
+            ending_excerpt = prev_manuscripts_text.strip()[-800:]
+            sections.append(
+                "\n[pre-rerun] ═══ 직전 원고 실제 종료 상황 (원고 기준 — Blueprint 메타데이터보다 우선) ═══\n"
+                "⚠️ 아래 원고 말미가 실제 종료 시점/위치/상황의 진실 소스입니다.\n"
+                "Blueprint의 time_flow나 ending_state.timeline과 다를 경우, 원고 내용을 따르세요.\n\n"
+                f"{ending_excerpt}"
+            )
+
         # ── [V67] 이전 원고 전문 ──
         if prev_manuscripts_text:
             ms_section = (

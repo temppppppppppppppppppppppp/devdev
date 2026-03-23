@@ -13,6 +13,7 @@ from collections import Counter
 
 from modules.core.constants import ManuscriptLimits
 from modules.core.llm_generate import generate_content_via_router
+from modules.core.models_config import DEFAULT_PRO_MODEL
 from modules.validation.dialogue_utils import count_dialogue_segments
 from modules.validation.threshold_helper import _threshold  # [Phase 5-B-2c]
 
@@ -59,7 +60,7 @@ class ScoringValidator:
     }
 
     def __init__(
-        self, client=None, model="gemini-2.5-pro", constitution="", pass_threshold: int = None, genre: str = None
+        self, client=None, model=DEFAULT_PRO_MODEL, constitution="", pass_threshold: int = None, genre: str = None
     ):
         self.client = client
         self.model = model

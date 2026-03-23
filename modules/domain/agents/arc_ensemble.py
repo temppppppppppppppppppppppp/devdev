@@ -18,7 +18,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from concurrent.futures import TimeoutError as FutureTimeoutError
 
-from modules.core.constants import GenreTypes, Stage2Limits, smart_truncate
+from modules.core.constants import AIModels, GenreTypes, Stage2Limits, smart_truncate
 from modules.core.genre_schema_builder import (
     build_state_constraints_schema,
     build_status_shadow_schema,
@@ -201,7 +201,7 @@ class ArcEnsembleGenerator(BaseAgent):
     SINGLE_CANDIDATE_TIMEOUT = _TIMEOUTS.get("single", 240)
 
     def __init__(
-        self, context, client, model_tier: str = "gemini-2.5-pro"
+        self, context, client, model_tier: str = AIModels.DEFAULT_ARCHITECT
     ):  # [SSOT-P2] 호출부(main_a.py:L1513)가 model_tier 인자를 명시 전달
         # [V62.4] gemini-2.5-pro로 변경 - 3-pro 쿼터 소진 문제 방지
         super().__init__(context, client, model_tier)
@@ -1521,7 +1521,7 @@ class ArcEnsembleGenerator(BaseAgent):
 
 
 def create_ensemble_generator(
-    context, client, model_tier: str = "gemini-2.5-pro"
+    context, client, model_tier: str = AIModels.DEFAULT_ARCHITECT
 ):  # [SSOT-P2] 호출부(main_a.py:L1513)가 model_tier 인자를 명시 전달
     """[V62.4] ArcEnsembleGenerator 생성 헬퍼 - gemini-2.5-pro 사용"""
     return ArcEnsembleGenerator(context, client, model_tier)

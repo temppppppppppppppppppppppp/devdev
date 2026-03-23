@@ -245,6 +245,32 @@ class TestBlueprintPatchIntegration:
         blueprint_generator.constraint_compiler.compile.assert_not_called()
         assert pipeline["phases"]["constraint"]["cached"] is True
 
+    def test_resolve_constraint_block_forwards_prev_manuscript_ending(self, blueprint_generator, sample_arc_data):
+        from modules.domain.agents.three_phase_blueprint_runtime import _ThreePhaseRetryState
+
+        compiled = {"arc_no": 1, "arc_position": "1/5"}
+        retry_state = _ThreePhaseRetryState()
+        pipeline = {"phases": {"constraint": {}}}
+        manuscript_tail = "직전 원고 실제 종료 상황 " + ("가" * 600)
+        blueprint_generator.constraint_compiler.compile.return_value = compiled
+
+        resolved = blueprint_generator.runtime._resolve_constraint_block(
+            retry=0,
+            ep_num=1,
+            arc_data=sample_arc_data,
+            prev_blueprint=None,
+            prev_blueprints=None,
+            genre="wuxia",
+            pipeline_result=pipeline,
+            retry_state=retry_state,
+            prev_manuscripts_text=manuscript_tail,
+        )
+
+        assert resolved == compiled
+        call_kwargs = blueprint_generator.constraint_compiler.compile.call_args.kwargs
+        assert call_kwargs["prev_manuscript_ending"] == manuscript_tail[-500:]
+        assert pipeline["phases"]["constraint"]["cached"] is False
+
     def test_phase2_generation_failure_breaks_on_schema_incompatible(self, blueprint_generator, sample_arc_data):
         blueprint_generator.ensemble.last_error_type = AgentErrorType.TIMEOUT
         blueprint_generator.ensemble.last_error_types = [
@@ -341,6 +367,56 @@ class TestBlueprintPatchIntegration:
             verdict = blueprint_generator.runtime._apply_phase3_quality_gate(verdict="PASS", score=94)
 
         assert verdict == "REJECT"
+
+    def test_run_phase3_validation_logs_quality_gate_reason(self, blueprint_generator, sample_arc_data):
+        from modules.domain.agents.three_phase_blueprint_runtime import _ThreePhaseRetryState, _ThreePhaseValidationEnvelope
+
+        blueprint_generator._operator_log = MagicMock()
+        pipeline_result = {"phases": {"generate": {}, "validate": {}}}
+        validation = _ThreePhaseValidationEnvelope(
+            best_blueprint={"ep_num": 1},
+            validation_result={
+                "verdict_reason": "score는 통과선 아래라 재수정 필요",
+                "issues": [{"severity": "HIGH", "category": "quality_gate", "issue": "score floor miss"}],
+                "fix_scope": "inplace",
+            },
+            verdict="PASS",
+            selected_strategy="balanced",
+            score=89,
+        )
+
+        with (
+            patch.object(blueprint_generator.runtime, "_maybe_reject_phase3_continuity", return_value=None),
+            patch.object(blueprint_generator.runtime, "_run_phase3_validation_envelope", return_value=validation),
+            patch.object(blueprint_generator.runtime, "_record_phase3_validation_payload"),
+            patch.object(blueprint_generator.runtime, "_record_phase3_contradictions"),
+            patch("modules.domain.agents.three_phase_blueprint_runtime._threshold", return_value=90),
+        ):
+            result = blueprint_generator.runtime._run_phase3_validation(
+                ep_num=1,
+                arc_data=sample_arc_data,
+                constraint_block={},
+                prev_blueprint=None,
+                best_blueprint={"ep_num": 1},
+                all_candidates=[{"ep_num": 1}],
+                director=MagicMock(),
+                arc_idx=0,
+                entity_registry=None,
+                state_tracker=None,
+                db=None,
+                prev_hud=None,
+                retry_state=_ThreePhaseRetryState(),
+                pipeline_result=pipeline_result,
+                retry=0,
+                max_retries=1,
+            )
+
+        log_texts = [call.args[0] for call in blueprint_generator._operator_log.call_args_list]
+        assert result.verdict == "REJECT"
+        assert any("QualityGate" in text for text in log_texts)
+        assert any("사유: score는 통과선 아래라 재수정 필요" in text for text in log_texts)
+        assert any("fix_scope: inplace" in text for text in log_texts)
+        assert any("이슈: HIGH | quality_gate | score floor miss" in text for text in log_texts)
 
     def test_finalize_terminal_failure_uses_emergency_fallback(self, blueprint_generator):
         from modules.domain.agents.three_phase_blueprint_runtime import _ThreePhaseRetryState
@@ -512,6 +588,33 @@ class TestBlueprintPatchIntegration:
         assert kw["reject_reason"] == "continuity drift"
         assert kw["attempt_key"] == "s3:ep2:arc1:a1:sess_stage3_mid:intermediate:continuity_reject"
 
+    def test_continuity_reject_logs_operator_reason(self, blueprint_generator, sample_arc_data):
+        from modules.domain.agents.three_phase_blueprint_runtime import _ThreePhaseRetryState
+
+        blueprint_generator._operator_log = MagicMock()
+        director = MagicMock()
+        director.check_blueprint_continuity_with_cache.return_value = {
+            "decision": "REJECT",
+            "feedback": "opening continuity drift\nscene 1 location mismatch",
+        }
+
+        result = blueprint_generator.runtime._maybe_reject_phase3_continuity(
+            ep_num=2,
+            arc_data=sample_arc_data,
+            best_blueprint={"ep_num": 2},
+            director=director,
+            db=MagicMock(),
+            retry_state=_ThreePhaseRetryState(),
+            retry=0,
+            max_retries=1,
+        )
+
+        log_texts = [call.args[0] for call in blueprint_generator._operator_log.call_args_list]
+        assert result is not None and result.should_continue is True
+        assert any("연속성 검증 REJECT" in text for text in log_texts)
+        assert any("사유: opening continuity drift" in text for text in log_texts)
+        assert any("사유: scene 1 location mismatch" in text for text in log_texts)
+
     def test_validation_reject_retry_records_intermediate_stage3_reject(
         self, blueprint_generator, sample_arc_data
     ):
@@ -542,6 +645,63 @@ class TestBlueprintPatchIntegration:
         assert kw["reject_reason"] == "director reject"
         assert kw["candidate_key"] == ""
         assert kw["attempt_key"] == "s3:ep1:arc1:a1:sess_stage3_mid:intermediate:validation_reject"
+
+    def test_validation_reject_logs_reason_issue_and_fix_scope(self, blueprint_generator, sample_arc_data):
+        from modules.domain.agents.three_phase_blueprint_runtime import _ThreePhaseRetryState
+
+        blueprint_generator._operator_log = MagicMock()
+        blueprint_generator.runtime._handle_validation_reject(
+            validation_result={
+                "feedback": "director reject\nscene density too low",
+                "issues": [{"severity": "HIGH", "category": "density", "issue": "scene 2 lacks action"}],
+                "fix_scope": "inplace",
+            },
+            retry_state=_ThreePhaseRetryState(),
+            score=55,
+            selected_strategy="balanced",
+            best_blueprint={"ep_num": 1},
+            ep_num=1,
+            arc_data=sample_arc_data,
+            retry=0,
+            max_retries=1,
+        )
+
+        log_texts = [call.args[0] for call in blueprint_generator._operator_log.call_args_list]
+        assert any("[Phase 3] REJECT (score=55) - retry 1/2" in text for text in log_texts)
+        assert any("fix_scope: inplace" in text for text in log_texts)
+        assert any("사유: director reject" in text for text in log_texts)
+        assert any("사유: scene density too low" in text for text in log_texts)
+        assert any("이슈: HIGH | density | scene 2 lacks action" in text for text in log_texts)
+
+    def test_pass_with_fix_patch_failure_logs_patch_context(self, blueprint_generator, sample_arc_data):
+        blueprint_generator._operator_log = MagicMock()
+        blueprint_generator._inplace_patch_blueprint = MagicMock(return_value=None)
+
+        result = blueprint_generator.runtime._run_pass_with_fix_iteration(
+            ep_num=1,
+            arc_data=sample_arc_data,
+            constraint_block={},
+            prev_blueprint=None,
+            current_blueprint={"ep_num": 1},
+            current_validation={"fix_scope": "inplace", "feedback": "scene 3 tension up\nrestore anchor"},
+            score=82,
+            quality_gate_score=90,
+            director=MagicMock(),
+            arc_idx=0,
+            entity_registry=None,
+            state_tracker=None,
+            prev_hud=None,
+            fix_index=0,
+            max_fix=3,
+        )
+
+        log_texts = [call.args[0] for call in blueprint_generator._operator_log.call_args_list]
+        assert result.should_break is True
+        assert any("[TF-32-V] Blueprint patch #1/3" in text for text in log_texts)
+        assert any("fix_scope: inplace" in text for text in log_texts)
+        assert any("사유: scene 3 tension up" in text for text in log_texts)
+        assert any("사유: restore anchor" in text for text in log_texts)
+        assert any("[TF-32-V] patch #1 failed" in text for text in log_texts)
 
     def test_terminal_stage3_reject_does_not_record_intermediate_observability(
         self, blueprint_generator, sample_arc_data

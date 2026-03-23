@@ -116,6 +116,15 @@ class Stage4RejectRuntime:
             _resolved_fix_pack = reject_guidance.resolved_fix_pack
             _feedback_provenance = reject_guidance.feedback_provenance
             error_category = reject_guidance.error_category
+            # [TF-5] error_category가 비어 있으면 reject_bucket에서 유도
+            if not error_category and _reject_bucket:
+                _bucket_to_category = {
+                    "post_select_conflict": "POST_SELECT_CONFLICT",
+                    "constraint_violation": "CONSTRAINT_VIOLATION",
+                    "structure_error": "STRUCTURE_ERROR",
+                    "quality_issue": "QUALITY_ISSUE",
+                }
+                error_category = _bucket_to_category.get(_reject_bucket, _reject_bucket.upper())
             _tot_used = reject_guidance.tot_used
             _mad_used = reject_guidance.mad_used
 
@@ -351,7 +360,8 @@ class Stage4RejectRuntime:
             "final_verdict": director_result.get("final_verdict", "REJECT"),
             "gate_basis": director_result.get("gate_basis", ""),
             "repair_scope": director_result.get("repair_scope", "none"),
-            "validation_warnings": owner._collect_validation_warning_lines(validation_results, limit=20),
+            # [pre-rerun] 검증 경고 상한 완화 (이전: 20건 → 50건)
+            "validation_warnings": owner._collect_validation_warning_lines(validation_results, limit=50),
             "reject_bucket": reject_bucket,
             "consistency_checklist": director_result.get("consistency_checklist", {}),
             "_tot_used": tot_used,
@@ -360,10 +370,12 @@ class Stage4RejectRuntime:
             "fix_scope": resolved_fix_scope,
             "fix_scope_reasoning": resolved_fix_scope_reasoning,
             "fix_pack": resolved_fix_pack,
+            "fix_pack_reason": str(owner._evaluate_fix_pack_contract(resolved_fix_pack).get("reason", "") or ""),  # [TF-4]
             "open_review": director_result.get("open_review", ""),
             "error_category": error_category or director_result.get("error_category", ""),
             "contradiction_types": director_result.get("contradiction_types", []),
-            "contradiction_details": list(director_result.get("contradiction_details", []) or [])[:5],
+            # [pre-rerun] 모순 세부사항 전량 보존 (이전: [:5] 상한으로 진단 손실)
+            "contradiction_details": list(director_result.get("contradiction_details", []) or []),
             "firewall_triggered": bool(director_result.get("firewall_triggered")),
             "firewall_reason": director_result.get("firewall_reason", ""),
             "director_feedback_text": feedback_provenance["director_feedback_text"],
@@ -543,7 +555,7 @@ class Stage4RejectRuntime:
             )
         except Exception as exc:
             logging.warning(f"[SilentPass:Stage4RejectMetric] {exc!s:.120}")
-        owner.ctx.ui.log(f"   ❌ {round_num + 1}차 면담 REJECT. 피드백: {director_feedback[:100]}...")
+        owner.ctx.ui.log(f"   ❌ {round_num + 1}차 면담 REJECT. 피드백: {director_feedback}")
 
     def _run_reject_followup_side_effects(
         self,
@@ -563,7 +575,7 @@ class Stage4RejectRuntime:
                     stage=4,
                     episode=next_ep,
                     arc=arc_num,
-                    reason=f"{reject_bucket}: {director_feedback[:150]}",
+                    reason=f"{reject_bucket}: {director_feedback}",
                     details={"bucket": reject_bucket, "score": score, "round": round_num},
                 )
         except Exception as failure_err:
@@ -575,7 +587,7 @@ class Stage4RejectRuntime:
                 adaptive_mgr.record_failure(
                     ep_num=next_ep,
                     agent="director",
-                    error_info={"reason": director_feedback[:200], "bucket": reject_bucket},
+                    error_info={"reason": director_feedback, "bucket": reject_bucket},
                     attempt=round_num + 1,
                 )
                 if hasattr(adaptive_mgr, "get_injection_prompt"):
@@ -599,7 +611,7 @@ class Stage4RejectRuntime:
                         "violations": [
                             {
                                 "type": "director_reject",
-                                "description": str(director_feedback)[:200],
+                                "description": str(director_feedback),
                             }
                         ],
                         "warnings": [],

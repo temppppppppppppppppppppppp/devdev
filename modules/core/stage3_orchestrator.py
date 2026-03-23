@@ -1526,6 +1526,20 @@ class Stage3Orchestrator:
                     event_kind="summary",
                     meta={"selected_strategy": _selected_strategy},
                 )
+            for _line in self._build_stage3_success_operator_lines(pipeline_result):
+                ctx.ui.log(
+                    _line,
+                    stage="stage3",
+                    component="blueprint_generation",
+                    ep_num=working_ep,
+                    arc_num=arc_idx,
+                    event_kind="summary",
+                    meta={
+                        "verdict": _verdict,
+                        "score": _bp_score,
+                        "selected_strategy": _selected_strategy or "",
+                    },
+                )
             return blueprint, pipeline_result
 
     def _finalize_stage3_blueprint_pipeline_result(
@@ -1841,6 +1855,8 @@ class Stage3Orchestrator:
             director = getattr(getattr(ctx, "agents", {}), "get", lambda *_: None)("director")
             model = getattr(director, "primary_model", None) if director else None
             prompt_version = _build_stage3_prompt_version()
+            _sk = selection_kwargs or {}
+            _s3_validate = (pipeline_result.get("phases") or {}).get("validate", {}) if isinstance(pipeline_result, dict) else {}
             db.save_stage_attempt(
                 stage=3,
                 verdict=str(final_verdict),
@@ -1857,6 +1873,13 @@ class Stage3Orchestrator:
                 candidate_key=candidate_key,
                 content_hash=artifact_meta["content_hash"],
                 artifact_path=artifact_meta["artifact_path"],
+                selection_reason=str(_sk.get("selection_reason", "") or ""),
+                verdict_reason=str(_sk.get("verdict_reason", "") or ""),
+                fix_scope=str(_sk.get("fix_scope", "") or ""),
+                fix_scope_reasoning=str(_sk.get("fix_scope_reasoning", "") or ""),
+                open_review=str(_s3_validate.get("open_review", "") or "") if isinstance(_s3_validate, dict) else "",
+                runtime_advisory="",
+                retry_directives="",
             )
             if hasattr(db, "save_director_selection") and selection_kwargs:
                 try:
@@ -2135,6 +2158,76 @@ class Stage3Orchestrator:
         return " | ".join(parts)
 
     @staticmethod
+    def _build_stage3_success_operator_lines(pipeline_result: dict) -> list[str]:
+        """Expose Director reasoning for successful blueprint selection to the live operator surface."""
+        if not isinstance(pipeline_result, dict):
+            return []
+
+        phases = pipeline_result.get("phases", {})
+        if not isinstance(phases, dict):
+            return []
+
+        validate = phases.get("validate", {})
+        if not isinstance(validate, dict) or not validate:
+            return []
+
+        lines: list[str] = []
+        seen: set[tuple[str, str]] = set()
+
+        def _append(label: str, value: object) -> None:
+            text = str(value or "").strip()
+            if not text or text in {"없음", "특이사항 없음"}:
+                return
+            marker = (label, text)
+            if marker in seen:
+                return
+            seen.add(marker)
+            lines.append(f"      {label}: {text}")
+
+        selection_reason = str(
+            validate.get("selection_reason")
+            or validate.get("comparison_notes")
+            or validate.get("feedback")
+            or validate.get("summary")
+            or ""
+        ).strip()
+        verdict_reason = str(
+            validate.get("verdict_reason")
+            or validate.get("feedback")
+            or pipeline_result.get("error")
+            or selection_reason
+            or ""
+        ).strip()
+        comparison_notes = str(validate.get("comparison_notes", "") or "").strip()
+        open_review = str(validate.get("open_review", "") or "").strip()
+        fix_scope_reasoning = str(validate.get("fix_scope_reasoning", "") or "").strip()
+
+        _append("└─ Director 판정", verdict_reason)
+        if selection_reason and selection_reason != verdict_reason:
+            _append("선택 근거", selection_reason)
+        if comparison_notes and comparison_notes not in {selection_reason, verdict_reason}:
+            _append("비교 메모", comparison_notes)
+        if fix_scope_reasoning and fix_scope_reasoning not in {selection_reason, verdict_reason, comparison_notes}:
+            _append("보완 포인트", fix_scope_reasoning)
+        if open_review and open_review not in {selection_reason, verdict_reason, comparison_notes, fix_scope_reasoning}:
+            _append("자유 리뷰", open_review)
+
+        contradictions = validate.get("contradictions")
+        if isinstance(contradictions, list):
+            for item in contradictions:
+                _append("모순 메모", item)
+
+        selected_candidate_advisory = validate.get("selected_candidate_advisory", {})
+        if isinstance(selected_candidate_advisory, dict):
+            for item in selected_candidate_advisory.get("python_warnings", []):
+                if isinstance(item, dict):
+                    _append("주의", item.get("message", ""))
+                else:
+                    _append("주의", item)
+
+        return lines
+
+    @staticmethod
     def _stage3_selected_label(selected_index: object) -> str:
         try:
             idx = int(selected_index)
@@ -2173,11 +2266,11 @@ class Stage3Orchestrator:
             score=int(score or 0),
             arc_no=arc_no,
             quality_risk=bool(quality_risk),
-            reject_reason=str(reject_reason or "")[:500],
-            reason=str(reason or "")[:500],
-            selection_reason=str(selection_reason or "")[:500],
-            verdict_reason=str(verdict_reason or "")[:500],
-            fix_scope=str(fix_scope or "")[:40],
+            reject_reason=str(reject_reason or ""),
+            reason=str(reason or ""),
+            selection_reason=str(selection_reason or ""),
+            verdict_reason=str(verdict_reason or ""),
+            fix_scope=str(fix_scope or ""),
             attempt_key=str(attempt_key or ""),
             candidate_key=str(candidate_key or ""),
             content_hash=str(content_hash or ""),
@@ -2537,6 +2630,8 @@ class Stage3Orchestrator:
             _model = getattr(_director, "primary_model", None) if _director else None
             _prompt_version = _build_stage3_prompt_version()
             try:
+                _rsk = _selection_kwargs or {}
+                _s3r_validate = (pipeline_result.get("phases") or {}).get("validate", {}) if isinstance(pipeline_result, dict) else {}
                 _db.save_stage_attempt(
                     stage=3,
                     verdict=_final_verdict,
@@ -2555,6 +2650,13 @@ class Stage3Orchestrator:
                     candidate_key=_candidate_key,
                     content_hash=_artifact_meta["content_hash"],
                     artifact_path=_artifact_meta["artifact_path"],
+                    selection_reason=str(_rsk.get("selection_reason", "") or ""),
+                    verdict_reason=str(_rsk.get("verdict_reason", "") or ""),
+                    fix_scope=str(_rsk.get("fix_scope", "") or ""),
+                    fix_scope_reasoning=str(_rsk.get("fix_scope_reasoning", "") or ""),
+                    open_review=str(_s3r_validate.get("open_review", "") or "") if isinstance(_s3r_validate, dict) else "",
+                    runtime_advisory="",
+                    retry_directives="",
                 )
             except Exception as _sa_err:
                 _logging.debug("[stage_attempts] Stage3 REJECT record failed (best-effort: %s)", _sa_err)
@@ -2606,11 +2708,11 @@ class Stage3Orchestrator:
                     {
                         "stage": 3,
                         "arc_no": history_arc_no,
-                        "reason": str(history_reason or "")[:200],
+                        "reason": str(history_reason or ""),
                         "attempt": history_attempt,
-                        "specific_issue": str(pipeline_result.get("specific_issue", "") or "")[:200],
+                        "specific_issue": str(pipeline_result.get("specific_issue", "") or ""),
                         "failure_category": history_failure_category,
-                        "fix_scope": str(pipeline_result.get("fix_scope", "") or "")[:40],
+                        "fix_scope": str(pipeline_result.get("fix_scope", "") or ""),
                         "score_breakdown": score_breakdown,
                     }
                 )
@@ -2670,5 +2772,3 @@ class Stage3Orchestrator:
                 )
             except Exception as _e:
                 _logging.debug("[Stage3] QualityDashboard REJECT 기록 실패 (무시): %s", _e)
-
-

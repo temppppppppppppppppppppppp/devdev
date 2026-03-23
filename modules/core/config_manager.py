@@ -6,7 +6,7 @@ from typing import Any
 
 import yaml
 
-from modules.core.models_config import load_model_contract
+from modules.core.models_config import DEFAULT_AGENT_MODELS, load_model_contract
 
 
 class ConfigManager:
@@ -30,28 +30,7 @@ class ConfigManager:
         logging.info(" [System] required paths ready: %s", self.logs_dir)
 
         models_from_yaml = self._load_agents_from_yaml()
-        self._default_models = {
-            "analyst": "gemini-2.5-pro",
-            "manager": "gemini-2.5-flash",
-            "chief_writer": "gemini-2.5-pro",
-            "blueprint_ensemble": "gemini-2.5-pro",
-            "three_phase_blueprint_generator": "gemini-2.5-pro",
-            "state_locked_arc_generator": "gemini-2.5-pro",
-            "block_enricher": "gemini-2.5-flash",
-            "preflight_checker": "gemini-2.5-flash",
-            "state_extractor": "gemini-2.5-flash",
-            "four_phase_arc_generator": "gemini-2.5-pro",
-            "continuity_inspector": "gemini-2.5-pro",
-            "director": "gemini-2.5-pro",
-            "arc_corrector": "gemini-2.5-flash",
-            "arc_critic": "gemini-2.5-flash",
-            "consensus_validator": "gemini-2.5-flash",
-            "unified_arc_validator": "gemini-2.5-flash",
-            "unified_blueprint_validator": "gemini-2.5-flash",
-            "critic": "gemini-2.5-flash",
-            "weaver": "gemini-2.5-flash",
-            "writer": "gemini-2.5-flash",
-        }
+        self._default_models = dict(DEFAULT_AGENT_MODELS)
         self._yaml_models = dict(models_from_yaml or {})
 
         self.settings = {

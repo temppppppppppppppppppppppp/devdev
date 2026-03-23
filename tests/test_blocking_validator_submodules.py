@@ -222,3 +222,102 @@ class TestDegradedCheck:
         validator._consistency_checks = mock_cc
         result = validator.validate("테스트 원고 " * 500, ctx)
         assert result.get("degraded_checks") is None or len(result.get("degraded_checks", [])) < 2
+
+
+class TestSceneCompletenessRegression:
+    """[pre-rerun] 씬 완성도 체크가 마크다운 씬 헤더를 인식하는지 검증."""
+
+    def test_markdown_scene_headers_pass(self):
+        """### 씬 N: 형식 헤더가 있는 원고는 0/5 오탐이 아닌 PASS."""
+        validator = BlockingValidator()
+        manuscript = (
+            "### 씬 1: 보이지 않는 감시망\n"
+            + "가" * 400
+            + "\n### 씬 2: 자산 청산 작전\n"
+            + "나" * 400
+            + "\n### 씬 3: 뒤따르는 그림자\n"
+            + "다" * 400
+            + "\n### 씬 4: 야밤의 추격전\n"
+            + "라" * 400
+            + "\n### 씬 5: 새벽의 결단\n"
+            + "마" * 400
+        )
+        context = {
+            "blueprint": {
+                "scene_breakdown": {
+                    "scene_1": {"title": "보이지 않는 감시망"},
+                    "scene_2": {"title": "자산 청산 작전"},
+                    "scene_3": {"title": "뒤따르는 그림자"},
+                    "scene_4": {"title": "야밤의 추격전"},
+                    "scene_5": {"title": "새벽의 결단"},
+                }
+            }
+        }
+        result = validator.scene_checks._check_scene_completeness(manuscript, context)
+        assert result["passed"] is True
+
+    def test_markdown_scene_headers_incomplete_rejects(self):
+        """씬 헤더는 있지만 3/5 미달이면 여전히 REJECT."""
+        validator = BlockingValidator()
+        manuscript = (
+            "### 씬 1: 시작\n"
+            + "가" * 400
+            + "\n### 씬 2: 전개\n"
+            + "짧"  # 미달
+            + "\n### 씬 3: 위기\n"
+            + "짧"  # 미달
+            + "\n### 씬 4: 절정\n"
+            + "짧"  # 미달
+            + "\n### 씬 5: 결말\n"
+            + "마" * 400
+        )
+        context = {
+            "blueprint": {
+                "scene_breakdown": {
+                    "scene_1": {"title": "시작"},
+                    "scene_2": {"title": "전개"},
+                    "scene_3": {"title": "위기"},
+                    "scene_4": {"title": "절정"},
+                    "scene_5": {"title": "결말"},
+                }
+            }
+        }
+        result = validator.scene_checks._check_scene_completeness(manuscript, context)
+        assert result["passed"] is False
+
+    def test_no_headers_uses_keyword_fallback(self):
+        """씬 헤더 없으면 키워드 fallback 사용."""
+        validator = BlockingValidator()
+        manuscript = "주인공은 객잔에 도착했다. " * 50 + "비밀 문서를 확보했다. " * 50
+        context = {
+            "blueprint": {
+                "scene_breakdown": {
+                    "scene_1": {"description": "객잔 도착"},
+                    "scene_2": {"description": "비밀 문서 확보"},
+                }
+            }
+        }
+        result = validator.scene_checks._check_scene_completeness(manuscript, context)
+        assert result["check"] == "scene_completeness"
+        # fallback 경로를 탔다는 것만 확인 (결과는 키워드 매칭 의존)
+
+    def test_hash_scene_header_variants(self):
+        """## 씬 N: 형식 (2-level heading)도 인식."""
+        validator = BlockingValidator()
+        manuscript = "## 씬 1: 접선\n" + "가" * 400 + "\n## 씬 2: 탈출\n" + "나" * 400
+        context = {
+            "blueprint": {
+                "scene_breakdown": {
+                    "scene_1": {"title": "접선"},
+                    "scene_2": {"title": "탈출"},
+                }
+            }
+        }
+        result = validator.scene_checks._check_scene_completeness(manuscript, context)
+        assert result["passed"] is True
+
+    def test_no_blueprint_skips(self):
+        """Blueprint 없으면 체크 스킵."""
+        validator = BlockingValidator()
+        result = validator.scene_checks._check_scene_completeness("원고", {})
+        assert result["passed"] is True

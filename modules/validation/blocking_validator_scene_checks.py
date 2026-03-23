@@ -126,14 +126,18 @@ class BlockingValidatorSceneChecks:
 
         return {"check": "scope_overflow", "passed": True}
 
+    # [pre-rerun] 마크다운 씬 헤더 패턴 (### 씬 1: ..., ## 씬 2: ..., # 씬 N ... 등)
+    _SCENE_HEADER_RE = re.compile(
+        r"^#{1,3}\s+씬\s*(\d+)\s*[:\-]" r"?\s*(.*)",
+        re.MULTILINE,
+    )
+
     def _check_scene_completeness(self, manuscript: str, context: dict) -> dict:
         """
         [V59] 씬별 완성도 체크 - 각 씬이 최소 분량을 충족하는지 검증
 
-        Blueprint의 각 씬에 대해:
-        - 최소 300자 이상의 내용이 있어야 함
-        - 너무 짧게 넘어가는 씬이 있으면 WARNING
-        - 반 이상의 씬이 미달이면 REJECT
+        1차: 원고 내 마크다운 씬 헤더(### 씬 N:)로 실제 씬 영역 측정
+        2차(fallback): 씬 헤더 없을 때만 키워드-윈도우 휴리스틱 사용
         """
         # [TF-7-P0-05] blueprint=None/비정규 입력 fail-safe
         blueprint = context.get("blueprint")
@@ -148,29 +152,23 @@ class BlockingValidatorSceneChecks:
         if scene_count == 0:
             return {"check": "scene_completeness", "passed": True}
 
-        # 씬 키워드별로 원고 분할 시도
-        scene_analysis = []
         min_scene_length = _threshold("scene.min_scene_length", 300)
 
-        for scene_name, scene_desc in scene_breakdown.items():
-            if isinstance(scene_desc, dict):  # [V70] dict 타입 방어
-                scene_desc = scene_desc.get("description", scene_desc.get("content", str(scene_desc)))
-            keywords = self.host.consistency_checks._extract_keywords(str(scene_desc), max_keywords=5)
-
-            # 키워드 주변 텍스트 분량 측정
-            found_length = 0
-            for kw in keywords:
-                if kw and kw in manuscript:
-                    # 키워드 위치 찾기
-                    idx = manuscript.find(kw)
-                    if idx != -1:
-                        # 키워드 전후 500자 범위를 해당 씬으로 간주
-                        start = max(0, idx - 250)
-                        end = min(len(manuscript), idx + 250)
-                        found_length = max(found_length, end - start)
-
-            scene_analysis.append(
-                {"scene": scene_name, "found_length": found_length, "is_complete": found_length >= min_scene_length}
+        # ── 1차: 마크다운 씬 헤더 기반 감지 ──
+        header_matches = list(self._SCENE_HEADER_RE.finditer(manuscript))
+        if header_matches:
+            scene_analysis = self._analyze_scenes_by_headers(
+                manuscript,
+                header_matches,
+                scene_count,
+                min_scene_length,
+            )
+        else:
+            # ── 2차 fallback: 키워드-윈도우 휴리스틱 ──
+            scene_analysis = self._analyze_scenes_by_keywords(
+                manuscript,
+                scene_breakdown,
+                min_scene_length,
             )
 
         # 완성된 씬 비율 계산
@@ -204,6 +202,58 @@ class BlockingValidatorSceneChecks:
             }
 
         return {"check": "scene_completeness", "passed": True}
+
+    def _analyze_scenes_by_headers(
+        self,
+        manuscript: str,
+        header_matches: list[re.Match],
+        blueprint_scene_count: int,
+        min_scene_length: int,
+    ) -> list[dict]:
+        """[pre-rerun] 마크다운 씬 헤더 사이 텍스트 길이로 씬 완성도 측정."""
+        scene_analysis = []
+        for i, match in enumerate(header_matches):
+            scene_start = match.end()
+            scene_end = header_matches[i + 1].start() if i + 1 < len(header_matches) else len(manuscript)
+            content_length = len(manuscript[scene_start:scene_end].strip())
+            scene_label = match.group(0).strip()[:60]
+            scene_analysis.append(
+                {
+                    "scene": scene_label,
+                    "found_length": content_length,
+                    "is_complete": content_length >= min_scene_length,
+                }
+            )
+        # 헤더 수가 blueprint 씬 수보다 적으면 누락분을 complete로 채우지 않음 (보수적)
+        # 헤더 수가 blueprint 씬 수보다 많으면 실제 헤더 수 기준으로 판정
+        return scene_analysis
+
+    def _analyze_scenes_by_keywords(
+        self,
+        manuscript: str,
+        scene_breakdown: dict,
+        min_scene_length: int,
+    ) -> list[dict]:
+        """[pre-rerun] 키워드-윈도우 fallback (헤더 없는 원고용)."""
+        scene_analysis = []
+        for scene_name, scene_desc in scene_breakdown.items():
+            if isinstance(scene_desc, dict):  # [V70] dict 타입 방어
+                scene_desc = scene_desc.get("description", scene_desc.get("content", str(scene_desc)))
+            keywords = self.host.consistency_checks._extract_keywords(str(scene_desc), max_keywords=5)
+
+            found_length = 0
+            for kw in keywords:
+                if kw and kw in manuscript:
+                    idx = manuscript.find(kw)
+                    if idx != -1:
+                        start = max(0, idx - 250)
+                        end = min(len(manuscript), idx + 250)
+                        found_length = max(found_length, end - start)
+
+            scene_analysis.append(
+                {"scene": scene_name, "found_length": found_length, "is_complete": found_length >= min_scene_length}
+            )
+        return scene_analysis
 
     def _check_cliffhanger_ending(self, manuscript: str, context: dict) -> dict:
         """
@@ -242,13 +292,13 @@ class BlockingValidatorSceneChecks:
 
             # 평이한 엔딩 패턴 (문제가 될 수 있음)
             flat_ending_patterns = [
-                r"잠들었다[.。]?\s*$",
-                r"잠이 들었다[.。]?\s*$",
-                r"평화로웠다[.。]?\s*$",
-                r"아무 일 없이[.。]?\s*$",
-                r"무사히 끝났다[.。]?\s*$",
-                r"돌아갔다[.。]?\s*$",
-                r"끝이었다[.。]?\s*$",
+                r"잠들었다[.。]" r"?\s*$",
+                r"잠이 들었다[.。]" r"?\s*$",
+                r"평화로웠다[.。]" r"?\s*$",
+                r"아무 일 없이[.。]" r"?\s*$",
+                r"무사히 끝났다[.。]" r"?\s*$",
+                r"돌아갔다[.。]" r"?\s*$",
+                r"끝이었다[.。]" r"?\s*$",
             ]
 
             for pattern in flat_ending_patterns:
@@ -276,8 +326,8 @@ class BlockingValidatorSceneChecks:
         # 클리프행어 긍정 패턴 (있어야 함)
         cliffhanger_patterns = [
             # 위기/긴장
-            r"그때[,]?\s",
-            r"순간[,]?\s",
+            r"그때[,]" r"?\s",
+            r"순간[,]" r"?\s",
             r"갑자기",
             r"돌연",
             r"느닷없이",
@@ -296,7 +346,7 @@ class BlockingValidatorSceneChecks:
             r"왜[?]",
             # 긴박함
             r"다가오고\s+있",
-            r"시작이[었]?다",
+            r"(시작이다|시작이었다)",
             r"끝이\s+아니",
             r"시작에\s+불과",
             r"이제부터",
@@ -304,7 +354,7 @@ class BlockingValidatorSceneChecks:
             r"그러나",
             r"하지만",
             r"그런데",
-            r"예상[과]?\s+달리",
+            r"(예상과|예상)\s+달리",
             r"뜻밖에[도]?",
             # 대화 긴장
             r"말을\s+끊",

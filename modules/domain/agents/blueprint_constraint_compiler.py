@@ -47,6 +47,8 @@ class BlueprintConstraintCompiler:
         prev_blueprint: dict | None = None,
         prev_blueprints: list[dict] | None = None,
         genre: str = "wuxia",
+        *,
+        prev_manuscript_ending: str = "",
     ) -> dict:
         """
         Blueprint 제약 조건 컴파일
@@ -56,6 +58,7 @@ class BlueprintConstraintCompiler:
             ep_num: 현재 에피소드 번호
             prev_blueprint: 직전 Blueprint (있으면)
             prev_blueprints: 이전 Blueprint 리스트 (연속성 검증용)
+            prev_manuscript_ending: [pre-rerun] 직전 원고 말미 텍스트 (시간 진실 소스)
 
         Returns:
             constraint_block: 구조화된 제약 블록
@@ -75,7 +78,11 @@ class BlueprintConstraintCompiler:
         stop_line = self._extract_stop_line(arc_data, ep_num, arc_position, ep_count)
 
         # 3. 연속성 정보 수집
-        continuity = self._extract_continuity(prev_blueprint, prev_blueprints)
+        continuity = self._extract_continuity(
+            prev_blueprint,
+            prev_blueprints,
+            prev_manuscript_ending=prev_manuscript_ending,
+        )
 
         # 4. 계승 상태 추출
         inherited_state = self._extract_inherited_state(arc_data, prev_blueprint, genre=genre)
@@ -325,8 +332,18 @@ class BlueprintConstraintCompiler:
 
         return {"content": content if content else None, "is_arc_finale": False, "next_ep": next_ep}
 
-    def _extract_continuity(self, prev_blueprint: dict | None, prev_blueprints: list[dict] | None = None) -> dict:
-        """연속성 정보 추출"""
+    def _extract_continuity(
+        self,
+        prev_blueprint: dict | None,
+        prev_blueprints: list[dict] | None = None,
+        *,
+        prev_manuscript_ending: str = "",
+    ) -> dict:
+        """연속성 정보 추출
+
+        Args:
+            prev_manuscript_ending: [pre-rerun] 직전 원고 말미 텍스트 (있으면 blueprint metadata보다 우선)
+        """
         continuity = {
             "prev_ending": None,
             "location": None,
@@ -338,10 +355,20 @@ class BlueprintConstraintCompiler:
         if not prev_blueprint:
             return continuity
 
-        # 직전 Blueprint에서 추출
+        # 직전 Blueprint에서 추출 (기본값)
         continuity["prev_ending"] = prev_blueprint.get("ending_hook", "")
         continuity["location"] = prev_blueprint.get("end_location", prev_blueprint.get("location", ""))
-        continuity["time_context"] = prev_blueprint.get("time_flow", "")
+        bp_time_flow = prev_blueprint.get("time_flow", "")
+
+        # [pre-rerun] 원고 말미가 있으면 시간 컨텍스트를 보강
+        if prev_manuscript_ending:
+            continuity["time_context"] = (
+                f"[원고 기준 종료 상황]\n{prev_manuscript_ending}\n[Blueprint 기록] {bp_time_flow}"
+                if bp_time_flow
+                else f"[원고 기준 종료 상황]\n{prev_manuscript_ending}"
+            )
+        else:
+            continuity["time_context"] = bp_time_flow
 
         # scene_breakdown에서 마지막 씬 정보
         scenes = prev_blueprint.get("scene_breakdown", {})

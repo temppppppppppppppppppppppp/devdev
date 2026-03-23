@@ -95,17 +95,22 @@ class DirectorQualityAuditor:
             result = self._d.guard.run_deep_validation(manuscript, current_state)
 
             genre_name = self._d.guard.get_genre_name() if hasattr(self._d.guard, "get_genre_name") else self._d.genre
-            v_count = len(result.get("violations", []))
-            logging.warning(f" [V66] {genre_name} Guard 심층 검증: {v_count}개 이슈")
+            _violations = result.get("violations", [])
+            v_count = len(_violations)
+            if _violations:
+                _v_detail = "\n".join(f"  - {v.get('message', str(v))}" for v in _violations if isinstance(v, dict))
+                logging.warning(f" [V66] {genre_name} Guard 심층 검증: {v_count}개 이슈\n{_v_detail}")
+            else:
+                logging.warning(f" [V66] {genre_name} Guard 심층 검증: 0개 이슈")
 
             return result
 
         except (ValueError, KeyError, IndexError) as e:
-            logging.warning(f" [V66] 장르 검증 오류: {str(e)[:50]}")
+            logging.warning(f" [V66] 장르 검증 오류: {e!s}")
             return {
                 "has_critical": False,
                 "violations": [],
-                "summary": f"장르 검증 실패: {str(e)[:100]}",
+                "summary": f"장르 검증 실패: {e!s}",
                 "feedback": "장르 검증 중 오류 발생 - 수동 확인 권장",
                 "degraded": True,
             }
@@ -509,7 +514,7 @@ class DirectorQualityAuditor:
         warning_violations = genre_violations.get("warning_violations", [])
         if warning_violations:
             warning_lines = [
-                f"  - {item.get('message', str(item))}" for item in warning_violations[:5] if isinstance(item, dict)
+                f"  - {item.get('message', str(item))}" for item in warning_violations if isinstance(item, dict)
             ]
             findings["advisories"].append("[Python 참고 경고] 작품별 캐릭터 제약 확인 필요\n" + "\n".join(warning_lines))
         return findings
@@ -1431,8 +1436,8 @@ class DirectorQualityAuditor:
                                 "type": "MODERN_TERM",
                                 "severity": "CRITICAL",
                                 "category": category,
-                                "found": list(set(matches))[:5],
-                                "message": f"[원시인 모드] {category} 사용 금지: {matches[:3]}",
+                                "found": list(set(matches)),
+                                "message": f"[원시인 모드] {category} 사용 금지: {matches}",
                             }
                         )
                         decision = "REJECT"
@@ -1456,7 +1461,7 @@ class DirectorQualityAuditor:
                             "type": "FUTURE_KNOWLEDGE",
                             "severity": "WARNING",
                             "category": category,
-                            "found": [str(m) for m in matches[:3]],
+                            "found": [str(m) for m in matches],
                             "message": f"[회귀자] {category} 감지 - 합리적 이유 확인 필요",
                         }
                     )
@@ -1471,12 +1476,12 @@ class DirectorQualityAuditor:
 
             if critical_violations:
                 feedback = f"[V60.89 CRITICAL] 주인공 설정 위반 {len(critical_violations)}건:\n"
-                for v in critical_violations[:3]:
+                for v in critical_violations:
                     feedback += f"  - {v.get('message', '')}\n"
 
             if warning_violations:
                 feedback += f"[V60.89 WARNING] 확인 필요 {len(warning_violations)}건:\n"
-                for v in warning_violations[:2]:
+                for v in warning_violations:
                     feedback += f"  - {v.get('message', '')}\n"
 
         return {
