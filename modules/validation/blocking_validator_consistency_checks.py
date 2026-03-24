@@ -40,7 +40,7 @@ class BlockingValidatorConsistencyChecks:
             return {"check": "physical_capability", "passed": True}
 
         martial_hud = context.get("martial_hud", {})
-        genre = context.get("genre", "wuxia")
+        genre = context.get("genre") or ""
         # [V67.1] incarnation_type 추출
         incarnation_type = context.get("incarnation_type", "")
 
@@ -147,7 +147,7 @@ class BlockingValidatorConsistencyChecks:
             return {"check": "authority_exercise", "passed": True}
 
         martial_hud = context.get("martial_hud", {})
-        genre = context.get("genre", "wuxia")
+        genre = context.get("genre") or ""
         # [V67.1] incarnation_type 추출
         incarnation_type = context.get("incarnation_type", "")
 

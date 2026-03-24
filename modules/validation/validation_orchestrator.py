@@ -152,6 +152,13 @@ GENRE_THRESHOLD_PROFILES = {
         "emotion_weight": 1.2,  # 환자·의사 감정선
         "commercial_weight": 0.9,
     },
+    "_default": {
+        "base_threshold": 70,
+        "action_weight": 1.0,
+        "dialogue_weight": 1.0,
+        "emotion_weight": 1.0,
+        "commercial_weight": 1.0,
+    },
 }
 
 # [V59] 에피소드 유형별 임계값 조정
@@ -191,11 +198,13 @@ class ValidationOrchestrator:
     Self-Consistency (다수결 투표) 적용 가능.
     """
 
-    def __init__(self, config: dict, client=None, genre="wuxia", context=None):
+    def __init__(self, config: dict, client=None, genre=None, context=None):
         self.config = config
         self.client = client
         self.genre = genre
         self.context = context  # [Phase 5.2.2] Reflexion용 context
+        if not genre:
+            logging.warning("[genre-guardrail] ValidationOrchestrator: genre unresolved, using neutral defaults")
 
         # [V44] Constitution 로드 (캐싱 + 장르별 fallback 강화)
         self.constitution = self._load_constitution_cached(genre)
@@ -275,8 +284,8 @@ class ValidationOrchestrator:
             _threshold("scoring.default_pass_threshold", 60),
         )
 
-        # 장르별 프로파일 로드
-        self.threshold_profile = GENRE_THRESHOLD_PROFILES.get(genre, GENRE_THRESHOLD_PROFILES["wuxia"])
+        # 장르별 프로파일 로드 — 미결정 장르는 _default 프로파일 사용
+        self.threshold_profile = GENRE_THRESHOLD_PROFILES.get(genre or "", GENRE_THRESHOLD_PROFILES["_default"])
 
     def _report_soft_failure(
         self,
@@ -328,7 +337,7 @@ class ValidationOrchestrator:
 
     def validate(self, ep_num: int, manuscript: str, validation_context: dict) -> dict:
         """
-        전체 검증 실행
+        전체 검증 실행 (5-Tier sequential).
 
         Args:
             ep_num: 에피소드 번호
@@ -343,15 +352,27 @@ class ValidationOrchestrator:
             }
 
         Returns:
-            {
-                "final_decision": "PASS" | "CONDITIONAL_PASS" | "REJECT",
-                "blocking_result": {...},
-                "scoring_result": {...},
-                "advisory_result": {...},
-                "total_score": float,
-                "feedback": str,
-                "self_consistency_used": bool
-            }
+            Public surface (authoritative):
+                final_decision : "PASS" | "CONDITIONAL_PASS" | "REJECT"
+                blocking_result : dict   — TIER 1 blocking validator output
+                scoring_result  : dict   — TIER 2 scoring validator output
+                advisory_result : dict   — TIER 3 advisory summary
+                continuity_result : dict — TIER 0.5 continuity output
+                total_score     : int
+                feedback        : str    — human-readable composite feedback
+                detailed_feedback : str  — per-tier breakdown
+                adaptive_threshold : int
+                self_consistency_used : bool
+
+            Advisory side-channel keys (underscore-prefixed, consumed by
+            Director for context enrichment — NOT adjudication truth):
+                _continuity_advisory  : dict | absent
+                _blocking_advisory    : dict | absent
+                _consistency_advisory : dict | absent
+                _retrospective_advisory : dict | absent
+            These keys carry source, violations/failures, feedback, and
+            severity. They feed Director thinking but do not override
+            the authoritative final_decision.
         """
         results = {}
 

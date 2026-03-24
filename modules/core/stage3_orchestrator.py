@@ -1124,20 +1124,18 @@ class Stage3Orchestrator:
                     _ep_start = arc_data.get("ep_start", working_ep)
                     _ep_end = arc_data.get("ep_end", working_ep)
                     _block_fields = []
+                    # [W1] Arc 개요 필드만 허용 — per-episode 이벤트 필드 제거
                     for _f in (
                         "title",
                         "emotional_beat",
                         "foreshadow",
-                        "power_shift",
-                        "event_villain",
-                        "solution",
-                        "reward",
                     ):
                         if _block.get(_f):
                             _block_fields.append(f"  {_f}: {_block[_f]}")
                     _content = _block.get("content", {})
                     if isinstance(_content, dict):
-                        for _cf in ("context", "event_villain", "solution"):
+                        # [W1] content.context만 허용, event_villain/solution 제거
+                        for _cf in ("context",):
                             if _content.get(_cf):
                                 _block_fields.append(f"  content.{_cf}: {_content[_cf]}")
                     _genre_ext = _block.get("genre_ext", {})
@@ -1150,12 +1148,13 @@ class Stage3Orchestrator:
                                 _ge_lines.append(f"    {_gk}: {_gv}")
                         _block_fields.append("  genre_ext:\n" + "\n".join(_ge_lines))
                     if _block_fields:
+                        # [W1] 강화된 구조적 가드 — 이벤트 필드 제거 후 방향성만 주입
                         _tb_header = (
-                            f"[원본 Treatment Block — 아크 {_ep_start}~{_ep_end}화 전체 참조용]\n"
-                            f"⚠️ 현재 화는 {working_ep}화입니다. 위의 아크 설계(arc_focus)에서 "
-                            f"{working_ep}화에 배정된 내용만 구현하세요. "
-                            f"블록의 세부 정보(특정 NPC 만남·스킬·장소 등)는 아크 설계의 현재 화 비트에 "
-                            f"맞을 때만 사용하고, 이후 화의 내용은 보류하세요."
+                            f"[Arc 개요 — 아크 {_ep_start}~{_ep_end}화 방향성 참조]\n"
+                            f"⚠️ 현재 화는 {working_ep}화입니다. "
+                            f"아래는 아크 전체의 제목·감정선·복선만 제공합니다. "
+                            f"구체적 사건(빌런 등장, 해결책, 보상, 전력 변화)은 제거되었습니다. "
+                            f"현재 화의 구체적 내용은 arc_focus와 MUST_FOCUS를 기준으로 작성하세요."
                         )
                         _tb_text = _tb_header + "\n" + "\n".join(_block_fields)
                         _bp_semantic_ctx = _tb_text + ("\n\n" + _bp_semantic_ctx if _bp_semantic_ctx else "")

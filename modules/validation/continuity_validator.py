@@ -240,7 +240,7 @@ class ContinuityValidator:
         violations = []
         warnings = []
 
-        if validation_context.get("genre", "wuxia") in {"wuxia", "hunter", "fantasy"}:
+        if validation_context.get("genre") in {"wuxia", "hunter", "fantasy"}:
             injury_check = self._check_injury_continuity(current_ep, manuscript, prev_hud, prev_manuscript)
             self._merge_check_result(violations, warnings, injury_check)
 

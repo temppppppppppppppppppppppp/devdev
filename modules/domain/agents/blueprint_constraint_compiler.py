@@ -6,11 +6,11 @@ Arc에서 해당 화의 제약 조건을 구조화된 블록으로 컴파일
 목적:
 - tactical_doc에서 해당 화 섹션 추출
 - 이전 Blueprint와의 연속성 정보 수집
-- 정지선(다음 화 내용) 설정
+- 정지선(현재 화 이후 모든 미래 화 내용) 설정
 
 출력 형식:
 - MUST_FOCUS (이번 화 핵심 내용)
-- STOP_LINE (다음 화 내용 - 절대 침범 금지)
+- STOP_LINE (현재 화 이후 모든 미래 화 내용 - 절대 침범 금지)
 - CONTINUITY (이전 화 연속성)
 - INHERITED_STATE (계승해야 할 상태)
 """
@@ -93,10 +93,13 @@ class BlueprintConstraintCompiler:
             logging.info(f" [V63.4 P1] Arc {arc_no}에 constraint_summary 필드 없음 → Stage 2 제약 전달 누락 가능")
 
         # 6. [V63.2] Arc state_changes 요약 (Stage 2 → Stage 3 직접 전달)
-        state_changes_summary = self._summarize_state_changes(arc_data.get("state_changes", {}))
+        state_changes_summary = self._summarize_state_changes(arc_data.get("state_changes", {}), ep_num)
         semantic_carryover = self._normalize_semantic_carryover(arc_data.get("semantic_carryover"))
 
-        # 7. 제약 블록 생성
+        # 7. [IFC] Immutable fact carryover from prior arc — [W2] ep_num 전달
+        immutable_fact_carryover = self._extract_immutable_fact_carryover(arc_data, arc_position, ep_num=ep_num)
+
+        # 8. 제약 블록 생성
         constraint_block = {
             "ep_num": ep_num,
             "arc_no": arc_no,
@@ -108,6 +111,7 @@ class BlueprintConstraintCompiler:
             "arc_constraint_summary": arc_constraint_summary,  # [V63]
             "state_changes_summary": state_changes_summary,  # [V63.2]
             "semantic_carryover": semantic_carryover,
+            "immutable_fact_carryover": immutable_fact_carryover,  # [IFC]
         }
 
         return constraint_block
@@ -149,18 +153,25 @@ class BlueprintConstraintCompiler:
                 lines.append(f"  - {event}")
         lines.append("")
 
-        # STOP LINE
-        lines.append("### 🚨 STOP_LINE (다음 화 내용 - 절대 침범 금지)")
+        # STOP LINE — [W1] 모든 미래 에피소드 포괄
+        lines.append("### 🚨 STOP_LINE (현재 화 이후 모든 사건 — 절대 침범 금지)")
         stop_line = constraint_block.get("stop_line", {})
-        if stop_line.get("content"):
-            _sl_raw = stop_line["content"]
-            _sl_display = self._fit_prompt_text(_sl_raw, 500)
-            lines.append(f"다음 화 예고: {_sl_display}")
-            if len(_sl_raw) > 500:
-                lines.append(f"  (원본 {len(_sl_raw)}자 중 500자 표시 — 잔여분 생략)")
-            lines.append("⚠️ 위 내용을 이번 화에서 다루면 즉시 REJECT")
-        else:
+        if stop_line.get("is_arc_finale"):
             lines.append("(Arc 마지막 화 - 정지선 없음)")
+        else:
+            if stop_line.get("content"):
+                _sl_raw = stop_line["content"]
+                _sl_display = self._fit_prompt_text(_sl_raw, 500)
+                lines.append(f"[제{stop_line.get('next_ep', '?')}화]: {_sl_display}")
+                if len(_sl_raw) > 500:
+                    lines.append(f"  (원본 {len(_sl_raw)}자 중 500자 표시 — 잔여분 생략)")
+            for _fe in stop_line.get("future_eps", []):
+                lines.append(f"[제{_fe['ep']}화]: {self._fit_prompt_text(_fe['content'], 300)}")
+            _cur_ep = constraint_block.get("ep_num", "?")
+            lines.append(
+                f"⚠️ 현재 화(제{_cur_ep}화) 이후의 모든 에피소드 사건·NPC·전개를 "
+                f"이번 화에서 소비하거나 언급하면 즉시 REJECT"
+            )
         lines.append("")
 
         # CONTINUITY
@@ -199,8 +210,17 @@ class BlueprintConstraintCompiler:
         # [V63.2] Arc state_changes 요약 (Stage 2 → Stage 3 직접 전달)
         sc_summary = constraint_block.get("state_changes_summary", "")
         if sc_summary:
-            lines.append("### 📊 ARC 상태 변화 (이 Arc에서 발생한/발생할 이벤트)")
+            lines.append("### 📊 상태 변화 (현재 화까지 확정된 이벤트)")
             lines.append(sc_summary)
+            lines.append("")
+
+        # [IFC] Immutable fact carryover — prior-arc recovery obligations
+        ifc_carryover = constraint_block.get("immutable_fact_carryover", "")
+        if ifc_carryover:
+            lines.append("### 🔒 [IFC] 불변 사실 계승 (Prior-Arc Carryover)")
+            lines.append("아래 사실은 이전 Arc에서 확정된 불변 조건입니다.")
+            lines.append("전술 설계에서 이 사실을 연화하거나 생략하면 안 됩니다.")
+            lines.append(ifc_carryover)
             lines.append("")
 
         lines.append("=" * 60)
@@ -290,7 +310,7 @@ class BlueprintConstraintCompiler:
         return str(arc_data.get("title", "") or "").strip()
 
     def _extract_stop_line(self, arc_data: dict, ep_num: int, arc_position: int, ep_count: int) -> dict:
-        """정지선 추출 (다음 화 내용)"""
+        """정지선 추출 (현재 화 이후 모든 미래 화 내용)."""
         # Arc 마지막 화면 정지선 없음
         if arc_position >= ep_count:
             return {"content": None, "is_arc_finale": True}
@@ -330,7 +350,27 @@ class BlueprintConstraintCompiler:
                 beat = beats[arc_position]
                 content = str(beat) if not isinstance(beat, str) else beat
 
-        return {"content": content if content else None, "is_arc_finale": False, "next_ep": next_ep}
+        # [W1] 모든 미래 에피소드 정지선 수집 (ep+2 이후)
+        future_eps: list[dict] = []
+        if isinstance(_ep_details, list):
+            for _item in _ep_details:
+                if isinstance(_item, dict):
+                    _fep = _item.get("ep_num")
+                    if isinstance(_fep, int) and _fep > next_ep:
+                        _fdetails = _item.get("details") or []
+                        if isinstance(_fdetails, list) and _fdetails:
+                            _brief = self._fit_prompt_text(
+                                "; ".join(d for d in _fdetails if isinstance(d, str)), 300
+                            )
+                            if _brief:
+                                future_eps.append({"ep": _fep, "content": _brief})
+
+        return {
+            "content": content if content else None,
+            "is_arc_finale": False,
+            "next_ep": next_ep,
+            "future_eps": future_eps,
+        }
 
     def _extract_continuity(
         self,
@@ -462,9 +502,73 @@ class BlueprintConstraintCompiler:
 
         return inherited
 
-    def _summarize_state_changes(self, state_changes: dict) -> str:
+    @staticmethod
+    def _extract_immutable_fact_carryover(arc_data: dict, arc_position: int, ep_num: int = 0) -> str:
+        """[IFC] Extract immutable fact carryover from prior-arc state.
+
+        For arc_position > 1, prior episode state_changes contain facts that
+        must not be silently softened in tactical planning.
+
+        [W2] ep_num > 0 이면 해당 화 이하 에피소드 이벤트만 포함.
+        """
+        if arc_position <= 1:
+            return ""
+
+        state_changes = arc_data.get("state_changes", {})
+        if not isinstance(state_changes, dict):
+            return ""
+
+        # [W2] episode boundary filter — reuse _within_ep() logic
+        def _ifc_within_ep(entry: object) -> bool:
+            if ep_num <= 0:
+                return True
+            if not isinstance(entry, dict):
+                return True
+            ep_val = entry.get("episode")
+            if ep_val is None:
+                return True
+            try:
+                return int(ep_val) <= ep_num
+            except (TypeError, ValueError):
+                return True
+
+        carryover_lines: list[str] = []
+
+        # NPC deaths are absolute — cannot be undone
+        deaths = [d for d in (state_changes.get("npc_deaths") or []) if _ifc_within_ep(d)]
+        for d in deaths[:5]:
+            name = d.get("name", d) if isinstance(d, dict) else str(d)
+            if name:
+                carryover_lines.append(f"- 사망 확정: {name} (회상/언급만 가능)")
+
+        # Relationship changes are committed
+        for rel in [r for r in (state_changes.get("relationship_changes") or []) if _ifc_within_ep(r)][:5]:
+            if isinstance(rel, dict):
+                npc = rel.get("npc") or rel.get("target") or ""
+                to_rel = rel.get("to", "")
+                if npc and to_rel:
+                    carryover_lines.append(f"- 관계 확정: {npc} → {to_rel}")
+
+        # Major items acquired/lost are committed
+        for item in [it for it in (state_changes.get("major_items") or []) if _ifc_within_ep(it)][:5]:
+            if isinstance(item, dict):
+                name = item.get("name", "")
+                action = item.get("action", "획득")
+                if name:
+                    carryover_lines.append(f"- 아이템 확정: {name} ({action})")
+
+        # Skill acquisitions are committed
+        for skill in [s for s in (state_changes.get("skill_acquisitions") or []) if _ifc_within_ep(s)][:3]:
+            name = skill.get("name", skill) if isinstance(skill, dict) else str(skill)
+            if name:
+                carryover_lines.append(f"- 무공 확정: {name}")
+
+        return "\n".join(carryover_lines)
+
+    def _summarize_state_changes(self, state_changes: dict, ep_num: int = 0) -> str:
         """
         [V63.2] Arc state_changes를 Blueprint 제약용 요약 문자열로 변환.
+        [W1] ep_num > 0이면 해당 화 이하 에피소드 이벤트만 포함, 미래 화 이벤트 제외.
 
         Stage 2에서 생성된 state_changes의 핵심 이벤트를 추출하여
         Blueprint 생성 시 참조할 수 있도록 한다.
@@ -472,10 +576,24 @@ class BlueprintConstraintCompiler:
         if not state_changes or not isinstance(state_changes, dict):
             return ""
 
+        # [W1] 현재 화 이하 에피소드만 허용하는 필터
+        def _within_ep(entry: object) -> bool:
+            if ep_num <= 0:
+                return True
+            if not isinstance(entry, dict):
+                return True
+            ep_val = entry.get("episode")
+            if ep_val is None:
+                return True
+            try:
+                return int(ep_val) <= ep_num
+            except (TypeError, ValueError):
+                return True
+
         lines = []
 
         # NPC 사망
-        deaths = state_changes.get("npc_deaths", [])
+        deaths = [d for d in (state_changes.get("npc_deaths") or []) if _within_ep(d)]
         if deaths:
             death_descs = []
             for d in deaths[:5]:
@@ -494,7 +612,7 @@ class BlueprintConstraintCompiler:
                 lines.append(f"⚠️ 사망 NPC: {', '.join(death_descs)} → 이후 등장 금지")
 
         # 무공/스킬 습득
-        skills = state_changes.get("skill_acquisitions", [])
+        skills = [s for s in (state_changes.get("skill_acquisitions") or []) if _within_ep(s)]
         if skills:
             names = []
             for s in skills[:5]:
@@ -506,21 +624,21 @@ class BlueprintConstraintCompiler:
                 lines.append(f"🗡️ 습득 무공: {', '.join(names)}")
 
         # 관계 변화
-        relations = state_changes.get("relationship_changes", [])
+        relations = [r for r in (state_changes.get("relationship_changes") or []) if _within_ep(r)]
         if relations:
             for r in relations[:3]:
                 if isinstance(r, dict):
                     lines.append(f"🤝 관계변화: {r.get('npc', '?')} {r.get('from', '?')}→{r.get('to', '?')}")
 
         # 주요 아이템
-        items = state_changes.get("major_items", [])
+        items = [it for it in (state_changes.get("major_items") or []) if _within_ep(it)]
         if items:
             for it in items[:3]:
                 if isinstance(it, dict):
                     lines.append(f"📦 아이템: {it.get('name', '?')} ({it.get('action', '?')})")
 
         # NPC 부상
-        injuries = state_changes.get("npc_injuries", [])
+        injuries = [inj for inj in (state_changes.get("npc_injuries") or []) if _within_ep(inj)]
         if injuries:
             for inj in injuries[:3]:
                 if isinstance(inj, dict):
@@ -529,7 +647,7 @@ class BlueprintConstraintCompiler:
                     )
 
         # NPC 이동
-        movements = state_changes.get("npc_movements", [])
+        movements = [mv for mv in (state_changes.get("npc_movements") or []) if _within_ep(mv)]
         if movements:
             for mv in movements[:3]:
                 if isinstance(mv, dict):
@@ -538,7 +656,7 @@ class BlueprintConstraintCompiler:
                     )
 
         # [V66] 완결된 플롯
-        resolved = state_changes.get("resolved_plots", [])
+        resolved = [rp for rp in (state_changes.get("resolved_plots") or []) if _within_ep(rp)]
         if resolved:
             for rp in resolved[:5]:
                 if isinstance(rp, dict):
@@ -578,9 +696,8 @@ class BlueprintConstraintCompiler:
             if rel_rows:
                 normalized["relationship_rationale"] = rel_rows
 
-        growth = str(payload.get("growth_justification", "") or "").strip()[:140]
-        if growth:
-            normalized["growth_justification"] = growth
+        # [W2] growth_justification: suppressed — encodes future achievement
+        # that reads as current-episode progress fuel.
 
         foreshadow = payload.get("foreshadow_anchors") or []
         if isinstance(foreshadow, list):
@@ -588,11 +705,8 @@ class BlueprintConstraintCompiler:
             if anchors:
                 normalized["foreshadow_anchors"] = anchors
 
-        checkpoints = payload.get("continuity_checkpoints") or []
-        if isinstance(checkpoints, list):
-            normalized_points = [str(item).strip()[:80] for item in checkpoints[:4] if str(item).strip()]
-            if normalized_points:
-                normalized["continuity_checkpoints"] = normalized_points
+        # [W2] continuity_checkpoints: suppressed — describes arc-end
+        # completion state that reads as current-episode obligation.
 
         return normalized
 
@@ -610,19 +724,13 @@ class BlueprintConstraintCompiler:
             if cue:
                 lines.append(f"- relationship {npc}: {cue[:120]}")
 
-        growth = str(payload.get("growth_justification", "") or "").strip()
-        if growth:
-            lines.append(f"- growth_justification: {growth[:140]}")
+        # [W2] growth_justification: suppressed (arc-end achievement fuel)
+        # [W2] continuity_checkpoints: suppressed (arc-end completion state)
 
         for anchor in (payload.get("foreshadow_anchors", []) or [])[:3]:
             text = str(anchor or "").strip()
             if text:
-                lines.append(f"- foreshadow: {text[:120]}")
-
-        checkpoints = [str(item or "").strip()[:80] for item in (payload.get("continuity_checkpoints", []) or [])[:3]]
-        checkpoints = [item for item in checkpoints if item]
-        if checkpoints:
-            lines.append(f"- continuity: {'; '.join(checkpoints)}")
+                lines.append(f"- [미래 복선 참고용] foreshadow: {text[:120]}")
 
         return lines
 

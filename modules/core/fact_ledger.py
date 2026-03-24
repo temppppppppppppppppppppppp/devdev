@@ -246,6 +246,10 @@ class FactLedger:
             if not isinstance(rel, dict):
                 continue
             npc = rel.get("npc", "") or rel.get("target", "")  # [G17] analyst 프롬프트는 "target" 키 사용
+            # [IFC] Sink-side guard: scalarize dict actor refs to prevent unhashable-type errors
+            if isinstance(npc, dict):
+                npc = str(npc.get("name") or npc.get("npc") or next((v for v in npc.values() if isinstance(v, str)), str(npc)))
+            npc = str(npc).strip()
             if npc:
                 self._upsert_character(
                     npc,

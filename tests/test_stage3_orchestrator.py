@@ -677,10 +677,12 @@ class TestGenerateBlueprint:
         )
 
         semantic_context = app_mock.agents["three_phase_bp"].generate.call_args.kwargs["semantic_context"]
-        assert "[원본 Treatment Block" in semantic_context
-        assert "시장 선점" in semantic_context
-        assert "기관 매도 공세" in semantic_context
-        assert "유동성 위기" in semantic_context
+        # [W1] header changed from "원본 Treatment Block" to "Arc 개요"
+        assert "[Arc 개요" in semantic_context
+        assert "시장 선점" in semantic_context  # title: safe arc-framing field
+        assert "기관 매도 공세" in semantic_context  # content.context: safe field
+        # [W1] event_villain is now quarantined — must NOT appear
+        assert "유동성 위기" not in semantic_context
 
     @patch("modules.core.spinners.StageSpinner")
     def test_style_guide_advisory_included_in_semantic_context(self, MockSpinner, orch, app_mock):

@@ -344,6 +344,20 @@ _APP_ROOT = Path(__file__).resolve().parent
 
 
 class SovereignApp:
+    """Operator-facing owner and entry routing shell.
+
+    Navigation ToC (major regions):
+      __init__ / _init_*          — bootstrap: runtime state, services, optional modules
+      run() / _main_menu()        — operator entry loop
+      _run_stage_0/2/3/4          — stage entry routing (delegates to *_orchestrator)
+      _stage_4_v2_chief_writer()  — Stage 4 lazy-init gateway (NOT a thin delegate;
+                                    initializes StateTracker/WorldState/FactLedger/
+                                    Stage4Context before delegating to Stage4Orchestrator)
+      _build_* / _get_*           — context and keyword helpers
+      _audit_event / _flush_*     — observability sinks
+      shutdown / atexit           — teardown
+    """
+
     _PROJECTS_DIR = "projects"
 
     def __init__(self):
@@ -1165,9 +1179,9 @@ class SovereignApp:
             return False
 
         try:
-            genre_type = "wuxia"
-            if self.selected_genre:
-                genre_type = self.selected_genre.get("type", "wuxia")
+            genre_type = self.selected_genre.get("type", "") if self.selected_genre else ""
+            if not genre_type:
+                logging.warning("[genre-guardrail] _init_diversity_engine: genre type unresolved, using empty default")
 
             self.diversity_engine = NarrativeDiversityEngine(
                 context=self.current_project, genre=genre_type, window_size=window_size
@@ -1262,7 +1276,9 @@ class SovereignApp:
         if callable(reload_env):
             reload_env(project_name)
 
-        genre_type = self.selected_genre.get("type", "wuxia") if isinstance(self.selected_genre, dict) else "wuxia"
+        genre_type = self.selected_genre.get("type", "") if isinstance(self.selected_genre, dict) else ""
+        if not genre_type:
+            logging.warning("[genre-guardrail] _bind_selected_project: genre type unresolved")
         projects_root_fn = getattr(self, "_get_projects_root", None)
         projects_root = projects_root_fn() if callable(projects_root_fn) else None
         self.sys.boot_v20_project(project_name, genre=genre_type, projects_root=projects_root)
@@ -1619,7 +1635,7 @@ class SovereignApp:
         return needs_enrichment
 
     def _resolve_treatment_enrichment_context(self) -> tuple[str, str]:
-        genre = self.selected_genre.get("type", "wuxia") if self.selected_genre else "wuxia"
+        genre = self.selected_genre.get("type", "") if self.selected_genre else ""
         protagonist_name = "주인공"
         try:
             bible_path = Path("bible")
@@ -3371,7 +3387,10 @@ class SovereignApp:
                 GenreTypes.SPORTS: "sports",
                 GenreTypes.MEDICAL: "medical",
             }
-            base_genre = genre_map.get(selected["type"], "wuxia")
+            base_genre = genre_map.get(selected["type"])
+            if base_genre is None:
+                base_genre = str(selected.get("type", "")).lower() or "unknown"
+                logging.warning("[genre-guardrail] _initialize_selected_genre_preset_registry: unmapped genre type %s", selected.get("type"))
             self.preset_registry = _PresetRegistry(base_genre=base_genre)
             self.ui.log(f"   📦 프리셋 초기화: {base_genre}")
 
@@ -3775,8 +3794,16 @@ class SovereignApp:
     def _stage_4_v2_chief_writer(
         self, limit_mode: bool = False, *, target_ep: int | None = None, skip_pause: bool = False
     ) -> None:
-        """[V64.P3] Stage 4 V2 Chief Writer -> Stage4Orchestrator 위임
-        [V69.1] Stage 4 진입 시 StateTracker/WorldState/FactLedger lazy init
+        """[V64.P3] Stage 4 lazy-init gateway (not a thin delegate).
+
+        Responsibilities before delegation to Stage4Orchestrator:
+          1. StateTracker lazy init (NPC registry, arc extraction)
+          2. WorldStateManager lazy init (DB-backed world state)
+          3. WorldState→StateTracker binding
+          4. FactLedger lazy init (cumulative fact accumulation)
+          5. Stage4Context DI injection via Stage4Context.from_app(self)
+        All init failures are non-blocking; Stage4Orchestrator receives
+        whatever was successfully initialized.
         """
         self._show_resume_status()
 

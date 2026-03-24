@@ -2142,7 +2142,16 @@ class ChiefWriter(BaseAgent):
         return "\n".join(lines)
 
     # =========================================================================
-    # [V60.81] Writer 핵심 기능 통합 - Self-Critique & Quality Assurance
+    # =========================================================================
+    # [V60.81] Delegation band — Quality Assurance & Context forwarding
+    #
+    # The methods below are thin delegates to sub-modules:
+    #   quality_gate    → ChiefWriterQualityGate (self-critique, rubric, cliche, HUD)
+    #   context_builder → ChiefWriterContextBuilder → ChiefWriterContextPackets
+    # They exist so that callers inside Stage4InterviewRound and
+    # Stage4ContextBuilder can reach sub-module logic through the
+    # ChiefWriter facade without knowing the internal split.
+    # Do NOT add business logic here; keep these as pure forwards.
     # =========================================================================
 
     def _sanitize_leakage(self, *args, **kwargs):

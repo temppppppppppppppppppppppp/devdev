@@ -80,6 +80,9 @@ def build_chief_writer_main_prompt(
     emotional_beat_section: str = "",  # [emotional_beat] 감정 정점
     satisfaction_guide_section: str = "",  # [D-Step2] 독자 대리만족 사전 주입
     opening_anchor_section: str = "",  # [TF-2] 시작 장소/시간 불변 계약
+    immutable_fact_section: str = "",  # [IFC] 불변 사실 계약 패킷
+    integrated_scenario_advisory_section: str = "",  # [S4] advisory-only long-form blueprint prose
+    carryover_ceiling_section: str = "",  # [S4] prior/current authority ceiling
 ) -> str:
     """[V65] _build_common_context() 메인 프롬프트 템플릿.
 
@@ -97,6 +100,8 @@ def build_chief_writer_main_prompt(
 ### [V67] 모순 절대 금지
 이전 원고에서 확립된 사실(고유명사, 수치, 상태)을 반드시 준수하세요.
 변경이 필요한 경우 작중에서 명확한 이유를 설명해야 합니다.
+
+{immutable_fact_section}
 
 {incarnation_context_section}
 
@@ -121,8 +126,15 @@ def build_chief_writer_main_prompt(
 
 {hud_anomaly_section}
 
+### [STEP 0.5: 권위 우선순위]
+아래 우선순위를 반드시 지켜라. 하위 블록이 상위 권위와 충돌하면 하위를 버린다.
+1. Opening Anchor
+2. Immutable Facts / prior manuscript facts / prev digest
+3. Structured scene breakdown
+4. Advisory integrated scenario prose
+
 ### [STEP 1: Blueprint 분석]
-아래 Blueprint의 모든 씬을 파악하고, 누락 없이 반영하라.
+아래 Blueprint의 structured scene contract를 먼저 파악하고, 누락 없이 반영하라.
 
 ⚠️ 필수: 각 씬의 시작 부분에 반드시 '### 씬 N: 제목' 형식의 마크다운 헤더를 삽입하라.
    예: ### 씬 1: 호텔 라운지의 만남
@@ -131,6 +143,8 @@ def build_chief_writer_main_prompt(
 
 {scene_breakdown}
 
+{integrated_scenario_advisory_section}
+
 {emotional_beat_section}
 
 ### [STEP 2: 연속성 확인]
@@ -138,6 +152,8 @@ def build_chief_writer_main_prompt(
 {opening_anchor_section}
 
 {prev_digest}
+
+{carryover_ceiling_section}
 
 직전 화 엔딩에서 자연스럽게 이어져야 한다. 위 다이제스트의 상태를 반드시 준수하라.
 단, 위 Opening Anchor가 있으면 Blueprint의 시작 장소/시간이 직전 화 종료 상태보다 우선한다.

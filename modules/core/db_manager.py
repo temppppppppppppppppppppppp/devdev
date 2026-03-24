@@ -2801,6 +2801,20 @@ class DBManager:
 
         return payload
 
+    # ═══════════════════════════════════════════════════════════════
+    # Runtime telemetry sinks (non-authoritative convenience records)
+    #
+    # The methods below (save_llm_call, save_stage_attempt,
+    # save_attempt_raw_rationale, save_director_selection) write
+    # OPTIONAL telemetry into the project DB. They are:
+    #   - guarded by accepts_runtime_telemetry_writes
+    #   - non-blocking (failures are logged at DEBUG, never raised)
+    #   - NOT authoritative truth for verdict adjudication
+    # Authoritative verdict truth lives in the Director/Orchestrator
+    # return path and in the episode_production JSONL written by
+    # stage4_post_processor / stage4_post_pass_runtime.
+    # ═══════════════════════════════════════════════════════════════
+
     def save_llm_call(
         self,
         agent_name: str,

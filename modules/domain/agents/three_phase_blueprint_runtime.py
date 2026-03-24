@@ -555,6 +555,10 @@ class ThreePhaseBlueprintRuntime:
             state_tracker=state_tracker,
             prev_hud=prev_hud,
         )
+        # [IFC] Scene obligation metadata completeness — affects handoff quality
+        ifc_penalty = self._enforce_scene_obligation_completeness(validation.best_blueprint)
+        effective_score = max(0, validation.score - ifc_penalty)
+
         self._record_phase3_validation_payload(
             pipeline_result=pipeline_result,
             validation_result=validation.validation_result,
@@ -563,21 +567,31 @@ class ThreePhaseBlueprintRuntime:
             all_candidates=all_candidates,
             score=validation.score,
         )
+        validate_phase = pipeline_result.setdefault("phases", {}).setdefault("validate", {})
+        validate_phase["raw_score"] = validation.score
+        validate_phase["ifc_penalty"] = ifc_penalty
+        validate_phase["effective_score"] = effective_score
         self._record_phase3_contradictions(
             pipeline_result=pipeline_result,
             validation_result=validation.validation_result,
         )
+
         verdict = self._apply_phase3_quality_gate(
             verdict=validation.verdict,
-            score=validation.score,
+            score=effective_score,
         )
         if validation.verdict == "PASS" and verdict == "REJECT":
             self._log_operator_retry_context(
-                title=f"[QualityGate] score={validation.score} < threshold -> REJECT",
+                title=(
+                    f"[QualityGate] effective_score={effective_score} "
+                    f"(raw={validation.score}, ifc_penalty={ifc_penalty}) < threshold -> REJECT"
+                ),
                 level="warning",
                 meta={
                     "phase": "validate",
-                    "score": validation.score,
+                    "score": effective_score,
+                    "raw_score": validation.score,
+                    "ifc_penalty": ifc_penalty,
                     "error_category": "quality_gate",
                 },
                 feedback=validation.validation_result.get("verdict_reason", "")
@@ -590,9 +604,63 @@ class ThreePhaseBlueprintRuntime:
             best_blueprint=validation.best_blueprint,
             validation_result=validation.validation_result,
             verdict=verdict,
-            score=validation.score,
+            score=effective_score,
             selected_strategy=validation.selected_strategy,
         )
+
+    def _enforce_scene_obligation_completeness(self, blueprint: dict | None) -> int:
+        """[IFC] Enforce blueprint scene obligation metadata completeness.
+
+        Returns a bounded score penalty (0-15) that the quality gate applies.
+        When more than half of scenes lack goal/summary, the penalty is large
+        enough to push borderline-PASS blueprints into REJECT/retry.
+
+        This is bounded and pragmatic:
+        - 0 missing → 0 penalty
+        - 1 missing out of many → 3 penalty (warning-level)
+        - majority missing → up to 15 penalty (material handoff impact)
+        """
+        if not isinstance(blueprint, dict):
+            return 0
+        scenes = blueprint.get("scene_breakdown", {})
+        if not isinstance(scenes, dict) or not scenes:
+            return 0
+
+        total = 0
+        missing_count = 0
+        missing_keys: list[str] = []
+        for key, scene in scenes.items():
+            if not isinstance(scene, dict):
+                continue
+            total += 1
+            has_goal = bool(scene.get("goal") or scene.get("summary"))
+            if not has_goal:
+                missing_count += 1
+                missing_keys.append(str(key))
+
+        if missing_count == 0 or total == 0:
+            return 0
+
+        missing_ratio = missing_count / total
+
+        # Bounded penalty: 3 per missing scene, capped at 15
+        penalty = min(15, missing_count * 3)
+
+        level = "warning" if missing_ratio < 0.5 else "error"
+        logging.warning(
+            "[IFC] Blueprint scene obligation metadata incomplete: %d/%d scenes missing goal/summary (%s) → penalty=%d",
+            missing_count,
+            total,
+            ", ".join(missing_keys[:5]),
+            penalty,
+        )
+        self.owner._operator_log(
+            f"   {'⚠️' if level == 'warning' else '❌'} [IFC] 씬 메타데이터 불완전: "
+            f"{missing_count}/{total} 씬에 goal/summary 없음 ({', '.join(missing_keys[:5])}) → 점수 -{penalty}",
+            level=level,
+            meta={"phase": "validate", "ifc_incomplete_scenes": missing_count, "ifc_penalty": penalty},
+        )
+        return penalty
 
     def _maybe_reject_phase3_continuity(
         self,

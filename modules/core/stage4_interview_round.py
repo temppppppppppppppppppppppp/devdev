@@ -178,6 +178,7 @@ class Stage4InterviewRound:
         self._last_advisory_summary = {}
         self._last_advisory_details: list[str] = []
         self._last_retry_budget_axes: dict[str, str] = {}
+        self._consecutive_empty_patches: int = 0  # [IFC] track consecutive empty patch rounds
         self.director_runtime = Stage4DirectorRuntime(self)
         self.reject_runtime = Stage4RejectRuntime(self)
         self.retry_runtime = Stage4RetryRuntime(self)
@@ -812,6 +813,23 @@ class Stage4InterviewRound:
                 head_chars=max(0, min(int(max_chars * 0.55), max_chars - 80)),
             )
         return combined
+
+    @staticmethod
+    def _normalize_writer_blueprint(blueprint: dict | None) -> dict:
+        """Keep writer-facing blueprint authority narrow without mutating the original."""
+        if not isinstance(blueprint, dict):
+            return {}
+
+        writer_blueprint = copy.deepcopy(blueprint)
+        advisory = str(writer_blueprint.get("integrated_scenario_advisory", "") or "").strip()
+        integrated = str(writer_blueprint.get("integrated_scenario", "") or "").strip()
+        if integrated and not advisory:
+            advisory = integrated
+        if advisory:
+            writer_blueprint["integrated_scenario_advisory"] = advisory
+        if integrated:
+            writer_blueprint["integrated_scenario"] = ""
+        return writer_blueprint
 
     def _resolve_director_work_focus(
         self,
@@ -1771,6 +1789,11 @@ class Stage4InterviewRound:
             return normalized
 
         reason = str(contract.get("reason", "") or "missing_fix_pack")
+        # [IFC] Track consecutive empty-patch rounds for rewrite escalation
+        if reason == "missing_patch_targets":
+            self._consecutive_empty_patches += 1
+        else:
+            self._consecutive_empty_patches = 0
         note = f"[Lane3 Gate] PASS_WITH_FIX downgraded: {self._pass_with_fix_contract_message(reason)}"
         fallback_fix_scope = str(normalized.get("fix_scope", "") or "").strip().lower()
         if fallback_fix_scope not in {"partial", "full"}:
@@ -1962,13 +1985,18 @@ class Stage4InterviewRound:
         round_ctx,
         next_ep: int,
         mandatory_context: str,
+        writer_blueprint: dict | None = None,
     ) -> tuple:
         """[God-1] mandatory_context 정규화 + common_writer_kwargs dict 조립.
 
         Returns:
             (str, dict): (mandatory_context_str, common_writer_kwargs)
         """
-        blueprint = round_ctx.blueprint
+        blueprint = (
+            writer_blueprint
+            if isinstance(writer_blueprint, dict)
+            else self._normalize_writer_blueprint(round_ctx.blueprint)
+        )
         prev_text = round_ctx.prev_text
         _prev_manuscripts_text = round_ctx.prev_manuscripts_text
         hud_report = round_ctx.hud_report
@@ -2498,6 +2526,7 @@ class Stage4InterviewRound:
         chief_writer = round_ctx.chief_writer
         next_ep = round_ctx.next_ep
         blueprint = round_ctx.blueprint
+        writer_blueprint = self._normalize_writer_blueprint(blueprint)
         arc_pos = round_ctx.arc_pos
         genre_name = round_ctx.genre_name
         style_guide = round_ctx.style_guide
@@ -2505,7 +2534,7 @@ class Stage4InterviewRound:
 
         writing_directive, _ = self._setup_writing_directive(
             chief_writer=chief_writer,
-            blueprint=blueprint,
+            blueprint=writer_blueprint,
             genre_name=genre_name,
             next_ep=next_ep,
         )
@@ -2522,6 +2551,7 @@ class Stage4InterviewRound:
             round_ctx=round_ctx,
             next_ep=next_ep,
             mandatory_context=mandatory_context,
+            writer_blueprint=writer_blueprint,
         )
 
         self._log_round_generation_start(
@@ -2787,6 +2817,13 @@ class Stage4InterviewRound:
         mad_used: bool,
         asp_manuscript: str,
     ):
+        # ── Parameter / envelope relationship ──
+        # director_result  : raw dict from DirectorEnsemble.compare_and_select()
+        # initial_verdict  : director_result["final_verdict"] BEFORE post-gates
+        # pass_result      : None when REJECT; populated dict when PASS/PASS_WITH_FIX
+        # trace_meta       : round-level audit trace (verdict, score, patch info)
+        # This method merges the above into the episode-level outcome and
+        # persists to DB / JSONL / artifact sinks via _build_round_outcome_trace_payload.
         trace_payload = self._build_round_outcome_trace_payload(
             trace_meta=trace_meta,
             director_result=director_result,
@@ -3710,7 +3747,7 @@ class Stage4InterviewRound:
                 director_result,
                 final_verdict="REJECT",
                 gate_basis="post_select_conflict",
-                repair_scope="partial" if (director_result or {}).get("fix_scope") != "full" else "full",
+                repair_scope="full",
             )
             # [TF-49/TF-3] A-3 다운그레이드 시 error_category를 구체적으로 설정
             # → V75-D/V75-B 에스컬레이션 체인 트리거 (Blueprint 자동 수정)
@@ -3733,7 +3770,7 @@ class Stage4InterviewRound:
             _sel_strategy_key = _sel_candidate.get("strategy", "") or _sel_candidate.get("strategy_name", "")
             _selection_reason = director_result.get("selection_reason", "") if isinstance(director_result, dict) else ""
             _verdict_reason = director_result.get("verdict_reason", "") if isinstance(director_result, dict) else ""
-            _post_select_fix_scope = _fix_scope if _fix_scope == "full" else "partial"
+            _post_select_fix_scope = "full"
             previous_attempt = {
                 "best_manuscript": final_manuscript,
                 "state_updates": final_state_updates,
@@ -3815,7 +3852,16 @@ class Stage4InterviewRound:
         director_memory_context: str,
         error_category: str,
     ):
-        """[B-1-3b] PASS/PASS_WITH_FIX 결과를 후처리한다. Returns (result|None, director_feedback, previous_attempt, trace_meta)."""
+        """[B-1-3b] PASS/PASS_WITH_FIX 결과를 후처리한다.
+
+        Returns (result|None, director_feedback, previous_attempt, trace_meta).
+
+        Post-gate chain applied here (in order):
+          1. Quality-floor gate — PASS with score < quality_gate_score → REJECT
+          2. CONDITIONAL_PASS normalization → PASS
+        After gates, positive verdicts delegate to _process_positive_verdict;
+        negative verdicts return None with a trace_meta snapshot.
+        """
         from modules.validation.threshold_helper import _threshold
 
         _quality_gate_score = _threshold("scoring.quality_gate_score", 90)
@@ -3839,6 +3885,7 @@ class Stage4InterviewRound:
             verdict = "PASS"
 
         if verdict in ("PASS", "PASS_WITH_FIX"):
+            self._consecutive_empty_patches = 0  # [IFC] reset on positive verdict
             processed = self._process_positive_verdict(
                 director_result=director_result,
                 director_feedback=director_feedback,
