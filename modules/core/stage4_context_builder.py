@@ -1,5 +1,21 @@
 """
 [B-1-2] Stage4 Context Builder — 에피소드 컨텍스트 수집 및 프롬프트 조립.
+
+Navigation ToC (major sections):
+  TypedDict payload definitions  — typed envelopes for inter-method data
+  Stage4ContextBuilder class     — owner shell
+    build_episode_context()      — top-level orchestrator entry point
+    _build_retrieval_*           — retrieval plan and coverage assembly
+    _build_prompt_*              — prompt injection assembly
+    _build_auxiliary_*           — HUD, anti-trope, justification helpers
+    _build_mandatory_context     — mandatory context seed assembly
+    context_packets              — delegation to Stage4ContextPackets
+
+Delegation chain:
+  Stage4Orchestrator → Stage4InterviewRound → Stage4ContextBuilder
+    → Stage4ContextPackets (modules/core/stage4_context_packets.py)
+    → ChiefWriterContextPackets (modules/domain/agents/chief_writer_context_packets.py)
+    → writer_prompt_builders (modules/core/writer_prompt_builders.py)
 """
 
 import inspect
@@ -2299,7 +2315,10 @@ class Stage4ContextBuilder:
         pacing_analyzer=None,
     ) -> Stage4MandatoryContextPayload:
         """[4-R1-b] mandatory_context + writer prompt 조립을 분리 (동작 변화 없음)."""
-        genre_name = (getattr(self.ctx.current_project, "genre", None) or {}).get("name", "무협")
+        genre_name = (getattr(self.ctx.current_project, "genre", None) or {}).get("name", "")
+        if not genre_name:
+            genre_name = s4_genre_type or "unknown"
+            logging.warning("[genre-guardrail] _assemble_mandatory_context: genre display name unresolved, using %r", genre_name)
 
         if writer_agent is None:
             return self._build_empty_mandatory_context_payload()

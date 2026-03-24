@@ -892,6 +892,18 @@ Step 6: Article 7 (독자 대리만족) 분석
             "pattern_diversity": 1.0,
             "reader_satisfaction": 1.0,
         },
+        "_default": {
+            "prose_rhythm": 1.0,
+            "vocabulary_diversity": 1.0,
+            "sensory_balance": 1.0,
+            "show_dont_tell": 1.0,
+            "character_consistency": 1.0,
+            "emotion_arc": 1.0,
+            "dialogue_quality": 1.0,
+            "commercial_appeal": 1.0,
+            "pattern_diversity": 1.0,
+            "reader_satisfaction": 1.0,
+        },
     }
 
     def validate_v59(self, manuscript: str, validation_context: dict) -> dict:
@@ -913,8 +925,8 @@ Step 6: Article 7 (독자 대리만족) 분석
         base_result = self.validate(manuscript, validation_context)
 
         # [V59] 장르별 가중치 적용
-        genre = self.genre or validation_context.get("genre", "wuxia")
-        weights = self.GENRE_WEIGHTS.get(genre, self.GENRE_WEIGHTS["wuxia"])
+        genre = self.genre or validation_context.get("genre") or ""
+        weights = self.GENRE_WEIGHTS.get(genre, self.GENRE_WEIGHTS["_default"])
 
         weighted_breakdown = {}
         weighted_total = 0
@@ -1257,7 +1269,7 @@ Step 6: Article 7 (독자 대리만족) 분석
         """[V59] 우선 개선 항목 도출 (가중치 × 부족분 기준)"""
         priorities = []
 
-        weights = self.GENRE_WEIGHTS.get(genre, self.GENRE_WEIGHTS["wuxia"])
+        weights = self.GENRE_WEIGHTS.get(genre, self.GENRE_WEIGHTS["_default"])
 
         for item_name, item_data in breakdown.items():
             if not isinstance(item_data, dict):

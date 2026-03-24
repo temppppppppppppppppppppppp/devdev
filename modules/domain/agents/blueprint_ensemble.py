@@ -862,9 +862,22 @@ class BlueprintEnsembleGenerator(BaseAgent):
                 lines.append(f"  {_fit_compact_context(content, 500)}")
 
         stop_line = constraint_block.get("stop_line", {})
-        if isinstance(stop_line, dict) and stop_line.get("content"):
-            lines.append("\n[Stop Line]")
-            lines.append(f"  다음 화 내용 금지: {_fit_compact_context(stop_line['content'], 150)}")
+        if isinstance(stop_line, dict) and not stop_line.get("is_arc_finale"):
+            if stop_line.get("content"):
+                lines.append("\n[Stop Line]")
+                _next_ep = stop_line.get("next_ep", "?")
+                lines.append(f"  [제{_next_ep}화] 다음 화 내용 금지: {_fit_compact_context(stop_line['content'], 150)}")
+                # [W2] future_eps — all-future episode prohibition
+                for _fe in stop_line.get("future_eps") or []:
+                    if isinstance(_fe, dict) and _fe.get("content"):
+                        lines.append(
+                            f"  [제{_fe.get('ep', '?')}화] 금지: {_fit_compact_context(_fe['content'], 150)}"
+                        )
+                _cur_ep = constraint_block.get("ep_num", "?")
+                lines.append(
+                    f"  *** 제{_cur_ep}화 이후 모든 에피소드 사건/NPC/전개를 "
+                    f"이번 화에서 소비하거나 언급하면 즉시 REJECT ***"
+                )
 
         continuity = constraint_block.get("continuity", {})
         if isinstance(continuity, dict):
@@ -970,20 +983,12 @@ class BlueprintEnsembleGenerator(BaseAgent):
                 cue = str(entry.get("trigger", "") or entry.get("justification", "") or "").strip()
                 if cue:
                     lines.append(f"  relationship {npc}: {_fit_compact_context(cue, 120)}")
-            growth = str(semantic_carryover.get("growth_justification", "") or "").strip()
-            if growth:
-                lines.append(f"  growth_justification: {_fit_compact_context(growth, 140)}")
+            # [W2] growth_justification: suppressed (arc-end achievement fuel)
+            # [W2] continuity_checkpoints: suppressed (arc-end completion state)
             for anchor in (semantic_carryover.get("foreshadow_anchors", []) or [])[:3]:
                 text = str(anchor or "").strip()
                 if text:
-                    lines.append(f"  foreshadow: {_fit_compact_context(text, 120)}")
-            checkpoints = [
-                _fit_compact_context(str(item or "").strip(), 80)
-                for item in (semantic_carryover.get("continuity_checkpoints", []) or [])[:3]
-            ]
-            checkpoints = [item for item in checkpoints if item]
-            if checkpoints:
-                lines.append(f"  continuity: {'; '.join(checkpoints)}")
+                    lines.append(f"  [미래 복선 참고용] foreshadow: {_fit_compact_context(text, 120)}")
 
         return "\n".join(lines) if lines else "(constraints unavailable)"
 

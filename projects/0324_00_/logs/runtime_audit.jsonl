@@ -1,0 +1,12 @@
+{"timestamp": "2026-03-24 16:45:26", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 1, "corrections": ["arc_end_state 위치 동기화: '알 수 없음' → '서울 여의도, 이제 막 임대 계약을 마친 SW인베스트먼트의 소형 오피스'"]}}
+{"timestamp": "2026-03-24 16:45:52", "type": "field_repair", "message": "hybrid_composition missing", "data": {"arc_idx": 1}}
+{"timestamp": "2026-03-24 16:45:52", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-03-24 16:46:41", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 1, "target_arc_no": 2, "items_tracked": 4}}
+{"timestamp": "2026-03-24 16:48:17", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-03-24 16:48:17", "type": "blueprint_success", "message": "ep_1_blueprint_generated", "data": {"ep_num": 1, "arc_no": 1, "strategy": "emotion_focused", "score": 95, "final_verdict": "PASS", "quality_risk": false, "revision_required": false}}
+{"timestamp": "2026-03-24 16:53:48", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-03-24 16:53:48", "type": "blueprint_success", "message": "ep_2_blueprint_generated", "data": {"ep_num": 2, "arc_no": 1, "strategy": "dialogue_focused", "score": 96, "final_verdict": "PASS", "quality_risk": false, "revision_required": true}}
+{"timestamp": "2026-03-24 16:57:52", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-03-24 16:57:52", "type": "blueprint_success", "message": "ep_3_blueprint_generated", "data": {"ep_num": 3, "arc_no": 1, "strategy": "emotion_focused", "score": 95, "final_verdict": "PASS", "quality_risk": true, "revision_required": true}}
+{"timestamp": "2026-03-24 17:02:23", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-03-24 17:02:23", "type": "blueprint_success", "message": "ep_4_blueprint_generated", "data": {"ep_num": 4, "arc_no": 1, "strategy": "emotion_focused", "score": 92, "final_verdict": "PASS", "quality_risk": false, "revision_required": true}}

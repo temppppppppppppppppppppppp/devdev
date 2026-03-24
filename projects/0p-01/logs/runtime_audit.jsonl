@@ -1,9 +1,0 @@
-{"timestamp": "2026-03-23 20:57:57", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 1, "corrections": ["arc_start_state에서 무협 전용 필드 제거: ['internal_energy']", "arc_end_state에서 무협 전용 필드 제거: ['internal_energy']", "items_consumed 추상 개념 2건 제거: [\"과거의 안락했던 '재벌가 막내'라는 사회적 방패\", '할아버지 명의 신탁 자산 증서']"]}}
-{"timestamp": "2026-03-23 21:00:07", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-03-23 21:00:38", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 1, "target_arc_no": 2, "items_tracked": 3}}
-{"timestamp": "2026-03-23 21:15:02", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-03-23 21:15:02", "type": "blueprint_success", "message": "ep_1_blueprint_generated", "data": {"ep_num": 1, "arc_no": 1, "strategy": "action_focused", "score": 85, "final_verdict": "PASS", "quality_risk": true, "revision_required": true}}
-{"timestamp": "2026-03-23 21:21:47", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-03-23 21:21:47", "type": "blueprint_success", "message": "ep_2_blueprint_generated", "data": {"ep_num": 2, "arc_no": 1, "strategy": "action_focused", "score": 91, "final_verdict": "PASS", "quality_risk": true, "revision_required": true}}
-{"timestamp": "2026-03-23 21:31:48", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-03-23 21:31:48", "type": "blueprint_success", "message": "ep_3_blueprint_generated", "data": {"ep_num": 3, "arc_no": 1, "strategy": "dialogue_focused", "score": 95, "final_verdict": "PASS", "quality_risk": true, "revision_required": true}}

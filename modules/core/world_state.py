@@ -224,6 +224,13 @@ class WorldStateManager:
                     continue
                 npc = rel.get("npc", "") or rel.get("target", "")
                 to_rel = rel.get("to", "")
+                # [IFC] Sink-side guard: scalarize dict actor refs
+                if isinstance(npc, dict):
+                    npc = str(npc.get("name") or npc.get("npc") or next((v for v in npc.values() if isinstance(v, str)), str(npc)))
+                if isinstance(to_rel, dict):
+                    to_rel = str(to_rel.get("status") or to_rel.get("value") or next((v for v in to_rel.values() if isinstance(v, str)), str(to_rel)))
+                npc = str(npc).strip()
+                to_rel = str(to_rel).strip()
                 if npc and to_rel:
                     self._state["relationships"][npc] = to_rel
                     if npc not in self._state["dead_npcs"]:

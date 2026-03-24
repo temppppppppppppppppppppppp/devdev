@@ -1149,10 +1149,12 @@ class TestDirectorCoreMethods:
 
     def test_on_approve_workflow_rejects_excessive_increase(self, director):
         """60. on_approve_workflow rejects internal_energy increase beyond max."""
+        director.set_genre("wuxia")  # internal_energy limits are wuxia-specific
         result = director.on_approve_workflow(ep_num=1, state_updates={"internal_energy": "+999"}, current_hud={})
         assert "internal_energy" in result["rejected_updates"]
 
     def test_on_approve_workflow_mixed_updates_fail_closed(self, director):
+        director.set_genre("wuxia")  # internal_energy limits are wuxia-specific
         result = director.on_approve_workflow(
             ep_num=1,
             state_updates={"realm": "새 경지", "internal_energy": "+999"},

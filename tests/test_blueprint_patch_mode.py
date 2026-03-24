@@ -418,6 +418,63 @@ class TestBlueprintPatchIntegration:
         assert any("fix_scope: inplace" in text for text in log_texts)
         assert any("이슈: HIGH | quality_gate | score floor miss" in text for text in log_texts)
 
+    def test_run_phase3_validation_records_effective_score_after_ifc_penalty(self, blueprint_generator, sample_arc_data):
+        from modules.domain.agents.three_phase_blueprint_runtime import _ThreePhaseRetryState, _ThreePhaseValidationEnvelope
+
+        blueprint_generator._operator_log = MagicMock()
+        pipeline_result = {"phases": {"generate": {}, "validate": {}}}
+        validation = _ThreePhaseValidationEnvelope(
+            best_blueprint={
+                "ep_num": 1,
+                "scene_breakdown": {
+                    "scene_1": {"title": "도입", "goal": "상황 제시"},
+                    "scene_2": {"title": "전개"},
+                },
+            },
+            validation_result={
+                "verdict_reason": "씬 메타가 부족해 handoff quality가 약함",
+                "issues": [{"severity": "HIGH", "category": "ifc", "issue": "scene metadata incomplete"}],
+                "fix_scope": "rewrite",
+                "score": 91,
+            },
+            verdict="PASS",
+            selected_strategy="balanced",
+            score=91,
+        )
+
+        with (
+            patch.object(blueprint_generator.runtime, "_maybe_reject_phase3_continuity", return_value=None),
+            patch.object(blueprint_generator.runtime, "_run_phase3_validation_envelope", return_value=validation),
+            patch.object(blueprint_generator.runtime, "_record_phase3_contradictions"),
+            patch("modules.domain.agents.three_phase_blueprint_runtime._threshold", return_value=90),
+        ):
+            result = blueprint_generator.runtime._run_phase3_validation(
+                ep_num=1,
+                arc_data=sample_arc_data,
+                constraint_block={},
+                prev_blueprint=None,
+                best_blueprint={"ep_num": 1},
+                all_candidates=[{"ep_num": 1}],
+                director=MagicMock(),
+                arc_idx=0,
+                entity_registry=None,
+                state_tracker=None,
+                db=None,
+                prev_hud=None,
+                retry_state=_ThreePhaseRetryState(),
+                pipeline_result=pipeline_result,
+                retry=0,
+                max_retries=1,
+            )
+
+        assert result.verdict == "REJECT"
+        assert result.score == 88
+        assert pipeline_result["phases"]["validate"]["raw_score"] == 91
+        assert pipeline_result["phases"]["validate"]["ifc_penalty"] == 3
+        assert pipeline_result["phases"]["validate"]["effective_score"] == 88
+        log_texts = [call.args[0] for call in blueprint_generator._operator_log.call_args_list]
+        assert any("effective_score=88" in text for text in log_texts)
+
     def test_finalize_terminal_failure_uses_emergency_fallback(self, blueprint_generator):
         from modules.domain.agents.three_phase_blueprint_runtime import _ThreePhaseRetryState
         from modules.core.constants import PatchModeThresholds
@@ -1071,3 +1128,35 @@ class TestBlueprintPatchIntegration:
         blueprint_generator._inplace_patch_blueprint.assert_called_once()
         assert "[F-2] InPlace Blueprint" in caplog.text
         assert "75.0% > 30%" in caplog.text
+
+    # ── [IFC] Scene obligation completeness enforcement ──
+
+    def test_enforce_scene_obligation_completeness_zero_missing(self, blueprint_generator):
+        bp = {"scene_breakdown": {"scene_1": {"title": "A", "goal": "G1"}, "scene_2": {"title": "B", "summary": "S2"}}}
+        penalty = blueprint_generator.runtime._enforce_scene_obligation_completeness(bp)
+        assert penalty == 0
+
+    def test_enforce_scene_obligation_completeness_one_missing(self, blueprint_generator):
+        bp = {"scene_breakdown": {"scene_1": {"title": "A", "goal": "G1"}, "scene_2": {"title": "B"}}}
+        blueprint_generator._operator_log = MagicMock()
+        penalty = blueprint_generator.runtime._enforce_scene_obligation_completeness(bp)
+        assert penalty == 3
+        blueprint_generator._operator_log.assert_called_once()
+
+    def test_enforce_scene_obligation_completeness_majority_missing(self, blueprint_generator):
+        bp = {"scene_breakdown": {"scene_1": {"title": "A"}, "scene_2": {"title": "B"}, "scene_3": {"title": "C"}}}
+        blueprint_generator._operator_log = MagicMock()
+        penalty = blueprint_generator.runtime._enforce_scene_obligation_completeness(bp)
+        assert penalty == 9  # 3 * 3
+
+    def test_enforce_scene_obligation_completeness_cap_at_15(self, blueprint_generator):
+        bp = {"scene_breakdown": {f"scene_{i}": {"title": f"S{i}"} for i in range(10)}}
+        blueprint_generator._operator_log = MagicMock()
+        penalty = blueprint_generator.runtime._enforce_scene_obligation_completeness(bp)
+        assert penalty == 15  # capped
+
+    def test_enforce_scene_obligation_completeness_none_blueprint(self, blueprint_generator):
+        assert blueprint_generator.runtime._enforce_scene_obligation_completeness(None) == 0
+
+    def test_enforce_scene_obligation_completeness_empty_scenes(self, blueprint_generator):
+        assert blueprint_generator.runtime._enforce_scene_obligation_completeness({"scene_breakdown": {}}) == 0

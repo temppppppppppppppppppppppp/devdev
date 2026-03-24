@@ -12,6 +12,15 @@
 
 비용: $0 (로컬 JSON 저장)
 
+Operator-truth classification:
+    - pass_rate_monitor.json is a NON-AUTHORITATIVE convenience cache.
+    - It is rebuilt from in-memory records on each save cycle.
+    - Authoritative attempt/verdict truth lives in db_manager
+      (stage_attempts / director_selections tables) and in
+      episode_production.jsonl written by stage4_post_processor.
+    - If pass_rate_monitor.json is lost or corrupt, the next session
+      starts with an empty record list; no durable truth is lost.
+
 사용:
     monitor = PassRateMonitor(project_path)
     monitor.record_attempt(stage=4, success=True, attempt_num=1)

@@ -1343,6 +1343,15 @@ class DirectorEnsembleSelector:
                 meta={"component": "Director", "stage": "stage4", "ep_num": ep_num, "score": state.score},
             )
 
+        # ── Verdict-field precedence contract (authoritative return boundary) ──
+        # Consumers MUST use these fields in this precedence order:
+        #   1. final_verdict  — the durable adjudication after all post-gates
+        #   2. verdict        — alias of final_verdict (backward compat)
+        #   3. director_verdict / original_verdict — raw upstream Director
+        #      result BEFORE post-gates (quality floor, firewall, etc.)
+        #   4. gate_basis     — explains WHICH post-gate produced the delta
+        #      between original_verdict and final_verdict (empty when equal)
+        # All other fields are supplementary context, not adjudication truth.
         return {
             "selected": state.selected_letter,
             "selected_candidate": state.selected_candidate,
