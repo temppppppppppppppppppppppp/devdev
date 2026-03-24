@@ -2829,7 +2829,7 @@ class TestRecordS4Attempt:
         assert verdict == "REJECT"
         assert error_category == "POST_SELECT_CONTINUITY_CONFLICT"
         assert "[Continuity Conflict]" in director_feedback
-        assert previous_attempt["fix_scope"] == "partial"
+        assert previous_attempt["fix_scope"] == "full"
         assert previous_attempt["selected_strategy_key"] == "tension"
         assert previous_attempt["selection_reason"] == "best candidate"
         assert previous_attempt["verdict_reason"] == "director pass before post-select"
@@ -2877,7 +2877,7 @@ class TestRecordS4Attempt:
         ctx.agents["director"].check_manuscript_continuity_with_cache.assert_called_once()
         ctx.agents["director"].check_manuscript_history_conflicts.assert_called_once()
 
-    def test_post_select_conflict_prefers_patch_before_inplace(self):
+    def test_post_select_conflict_prefers_regenerate_over_patch(self):
         ctx = _make_ctx()
         ir = Stage4InterviewRound(ctx)
         round_ctx = _make_round_ctx()
@@ -2892,7 +2892,7 @@ class TestRecordS4Attempt:
             previous_attempt={
                 "score": 98,
                 "best_manuscript": "original manuscript",
-                "fix_scope": "",
+                "fix_scope": "full",
                 "reject_bucket": "post_select_conflict",
                 "selected_strategy_key": "tension",
             },
@@ -2902,23 +2902,23 @@ class TestRecordS4Attempt:
             common_writer_kwargs={},
         )
 
-        assert candidates == round_ctx.chief_writer.patch_with_feedback.return_value
-        assert is_patch is True
+        assert candidates == round_ctx.chief_writer.regenerate_with_feedback.return_value
+        assert is_patch is False
         assert patch_fallback is False
         assert prev_score == 98
         assert asp_manuscript is None
         round_ctx.chief_writer.inplace_patch.assert_not_called()
-        round_ctx.chief_writer.patch_with_feedback.assert_called_once()
-        round_ctx.chief_writer.regenerate_with_feedback.assert_not_called()
+        round_ctx.chief_writer.patch_with_feedback.assert_not_called()
+        round_ctx.chief_writer.regenerate_with_feedback.assert_called_once()
 
-    def test_resolve_retry_lane_routing_forces_patch_once_for_post_select_conflict(self):
+    def test_resolve_retry_lane_routing_avoids_patch_for_full_post_select_conflict(self):
         ctx = _make_ctx()
         ir = Stage4InterviewRound(ctx)
 
         payload = ir.retry_runtime._resolve_retry_lane_routing(
             previous_attempt={
                 "score": "98",
-                "fix_scope": "",
+                "fix_scope": "full",
                 "reject_bucket": "post_select_conflict",
                 "selected_strategy_key": "tension",
             },
@@ -2929,18 +2929,18 @@ class TestRecordS4Attempt:
         assert payload.prev_score == 98
         assert payload.reject_bucket == "post_select_conflict"
         assert payload.selected_strategy_key == "tension"
-        assert payload.force_patch is True
+        assert payload.force_patch is False
         assert payload.use_inplace is False
-        assert payload.use_patch is True
+        assert payload.use_patch is False
 
-    def test_retry_runtime_resolve_retry_lane_routing_forces_patch_once_for_post_select_conflict(self):
+    def test_retry_runtime_resolve_retry_lane_routing_avoids_patch_for_full_post_select_conflict(self):
         ctx = _make_ctx()
         ir = Stage4InterviewRound(ctx)
 
         payload = ir.retry_runtime._resolve_retry_lane_routing(
             previous_attempt={
                 "score": "98",
-                "fix_scope": "",
+                "fix_scope": "full",
                 "reject_bucket": "post_select_conflict",
                 "selected_strategy_key": "tension",
             },
@@ -2951,9 +2951,9 @@ class TestRecordS4Attempt:
         assert payload.prev_score == 98
         assert payload.reject_bucket == "post_select_conflict"
         assert payload.selected_strategy_key == "tension"
-        assert payload.force_patch is True
+        assert payload.force_patch is False
         assert payload.use_inplace is False
-        assert payload.use_patch is True
+        assert payload.use_patch is False
 
     def test_build_retry_regenerate_kwargs_reduces_strategy_budget_for_constraint_violation(self):
         ctx = _make_ctx()
@@ -3137,11 +3137,12 @@ class TestRecordS4Attempt:
 
         assert result.verdict == "EMPTY"
 
-    def test_post_select_conflict_force_patch_only_once(self):
+    def test_post_select_conflict_uses_regenerate_on_later_retry(self):
         ctx = _make_ctx()
         ir = Stage4InterviewRound(ctx)
         round_ctx = _make_round_ctx()
         round_ctx.chief_writer.patch_with_feedback.return_value = [_candidate()]
+        round_ctx.chief_writer.regenerate_with_feedback.return_value = [_candidate()]
 
         candidates, is_patch, patch_fallback, prev_score, asp_manuscript = ir._generate_candidates(
             round_num=2,
@@ -3150,7 +3151,7 @@ class TestRecordS4Attempt:
             previous_attempt={
                 "score": 98,
                 "best_manuscript": "original manuscript",
-                "fix_scope": "",
+                "fix_scope": "full",
                 "reject_bucket": "post_select_conflict",
                 "selected_strategy_key": "tension",
             },
@@ -3160,13 +3161,13 @@ class TestRecordS4Attempt:
             common_writer_kwargs={},
         )
 
-        assert candidates == round_ctx.chief_writer.patch_with_feedback.return_value
-        assert is_patch is True
+        assert candidates == round_ctx.chief_writer.regenerate_with_feedback.return_value
+        assert is_patch is False
         assert patch_fallback is False
         assert prev_score == 98
         assert asp_manuscript is None
-        round_ctx.chief_writer.patch_with_feedback.assert_called_once()
-        round_ctx.chief_writer.regenerate_with_feedback.assert_not_called()
+        round_ctx.chief_writer.patch_with_feedback.assert_not_called()
+        round_ctx.chief_writer.regenerate_with_feedback.assert_called_once()
         round_ctx.chief_writer.inplace_patch.assert_not_called()
 
     def test_pass_with_fix_without_fix_pack_downgrades_before_inplace(self):
@@ -3289,9 +3290,12 @@ class TestRecordS4Attempt:
 
         assert result.error_category == "LOGIC_ERROR"
         assert result.previous_attempt["reject_bucket"] == "post_select_conflict"
-        assert result.previous_attempt["fix_scope"] == "partial"
+        assert result.previous_attempt["fix_scope"] == "full"
         assert result.previous_attempt["firewall_triggered"] is True
         assert "continuity replay" in result.director_feedback
+        assert result.previous_attempt["selection_reason"] == ""
+        assert result.previous_attempt["open_review"] == ""
+        assert result.previous_attempt["fix_pack"] == {}
 
     def test_firewall_numeric_reject_does_not_promote_patch_path(self):
         ctx = _make_ctx()
@@ -3375,9 +3379,12 @@ class TestRecordS4Attempt:
 
         assert result.error_category == "LOGIC_ERROR"
         assert result.previous_attempt["reject_bucket"] == "post_select_conflict"
-        assert result.previous_attempt["fix_scope"] == "partial"
+        assert result.previous_attempt["fix_scope"] == "full"
         assert result.previous_attempt["firewall_triggered"] is True
         assert "continuity replay" in result.director_feedback
+        assert result.previous_attempt["selection_reason"] == ""
+        assert result.previous_attempt["open_review"] == ""
+        assert result.previous_attempt["fix_pack"] == {}
 
     def test_firewall_numeric_reject_does_not_promote_patch_path(self):
         ctx = _make_ctx()
@@ -6203,7 +6210,7 @@ class TestLane2DirectorSemantics:
             action_items=["fix ending"],
             score=44,
             validation_results=[_validation_result()],
-            reject_bucket="post_select_conflict",
+            reject_bucket="constraint_violation",
             tot_used=True,
             mad_used=False,
             resolved_fix_scope="partial",
@@ -6224,7 +6231,7 @@ class TestLane2DirectorSemantics:
         assert payload.previous_attempt["selected_strategy_key"] == "balanced"
         assert payload.previous_attempt["best_manuscript"] == "candidate manuscript"
         assert payload.previous_attempt["validation_warnings"] == ["warn-a"]
-        assert payload.previous_attempt["reject_bucket"] == "post_select_conflict"
+        assert payload.previous_attempt["reject_bucket"] == "constraint_violation"
         assert payload.previous_attempt["_tot_used"] is True
         assert payload.previous_attempt["_mad_used"] is False
         assert payload.previous_attempt["fix_scope"] == "partial"

@@ -229,6 +229,8 @@ class PreDirectorChecklist:
         items.extend(self._check_manuscript_scope(manuscript, context))
         items.extend(self._check_manuscript_prev_linkage(manuscript, context))
         items.extend(self._run_manuscript_quality_checks(manuscript, context))
+        # [IFC] Immutable fact packet-aware opening anchor check
+        items.extend(self._check_immutable_fact_opening(manuscript, context))
 
         return items
 
@@ -499,6 +501,43 @@ class PreDirectorChecklist:
                         message="직전 화 엔딩과의 연결이 약함",
                     )
                 )
+
+        return items
+
+    def _check_immutable_fact_opening(self, manuscript: str, context: dict[str, Any]) -> list[CheckItem]:
+        """[IFC] Check manuscript opening against immutable fact packet anchors.
+
+        If the blueprint specifies a start_location, verify the manuscript's
+        first 600 chars contain a related keyword. This catches the most
+        common hard-fact drift (e.g., Gangnam blueprint → Yeouido manuscript).
+        """
+        items: list[CheckItem] = []
+        blueprint = context.get("blueprint")
+        if not isinstance(blueprint, dict):
+            return items
+
+        start_loc = str(blueprint.get("start_location", "") or "").strip()
+        if not start_loc or len(start_loc) < 2:
+            return items
+
+        ms_head = manuscript[:600]
+        # Extract location keywords (2+ char Korean substrings from start_loc)
+        loc_keywords = re.findall(r"[가-힣]{2,}", start_loc)
+        if not loc_keywords:
+            return items
+
+        # Check if any significant location keyword appears in the opening
+        found = any(kw in ms_head for kw in loc_keywords if len(kw) >= 2)
+        if not found:
+            items.append(
+                CheckItem(
+                    category=CheckCategory.CONTINUITY,
+                    name="시작 장소 불변 계약",
+                    passed=True,  # WARNING only — Director is final judge
+                    severity=CheckSeverity.WARNING,
+                    message=f"[IFC] 원고 시작부가 Blueprint 시작 장소({start_loc})와 불일치 가능",
+                )
+            )
 
         return items
 

@@ -56,6 +56,28 @@ When entering the codebase cold, use this order.
    - [world_state.py](/c:/Users/User/Desktop/글도비/modules/core/world_state.py)
    - [fact_ledger.py](/c:/Users/User/Desktop/글도비/modules/core/fact_ledger.py)
    - [pass_rate_monitor.py](/c:/Users/User/Desktop/글도비/modules/core/pass_rate_monitor.py)
+8. API and control-plane layer
+   - [modules/api/bridge_server.py](/c:/Users/User/Desktop/글도비/modules/api/bridge_server.py) — HTTP bridge for desktop/external callers
+   - [modules/api/process_runner.py](/c:/Users/User/Desktop/글도비/modules/api/process_runner.py) — subprocess lifecycle
+   - [modules/api/prompt_broker.py](/c:/Users/User/Desktop/글도비/modules/api/prompt_broker.py) — prompt routing
+   - [modules/api/prompt_classifier.py](/c:/Users/User/Desktop/글도비/modules/api/prompt_classifier.py) — intent classification
+   - [modules/api/risk_approval.py](/c:/Users/User/Desktop/글도비/modules/api/risk_approval.py) — risk-gate approvals
+   - [modules/api/run_validator.py](/c:/Users/User/Desktop/글도비/modules/api/run_validator.py) — run-level validation
+   - [modules/api/control_plane_contract.py](/c:/Users/User/Desktop/글도비/modules/api/control_plane_contract.py) — shared contract types
+9. Writer-context pipeline map
+   - Two parallel context pipelines feed the Chief Writer:
+     a. **Stage4ContextBuilder** (`modules/core/stage4_context_builder.py`)
+        → assembles retrieval plan, mandatory context, HUD, anti-trope,
+          justification, reflexion, and prompt injections
+        → delegates packet assembly to **Stage4ContextPackets** and
+          **ChiefWriterContextPackets**
+     b. **ChiefWriterContext** (`modules/domain/agents/chief_writer_context.py`)
+        → assembles config-level context (system prompt, constitution,
+          style guide, work guard, genre guard)
+        → delegates bounded packet work to **ChiefWriterContextPackets**
+          (`modules/domain/agents/chief_writer_context_packets.py`)
+   - Both pipelines produce string/dict outputs consumed by ChiefWriter's
+     prompt assembly step; they do not call the LLM directly.
 
 ## 3. Topology
 The production pipeline is still best understood as:

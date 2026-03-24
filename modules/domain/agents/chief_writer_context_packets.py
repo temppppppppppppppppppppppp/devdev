@@ -1,4 +1,14 @@
-"""Chief Writer context packet assembly support runtime."""
+"""Chief Writer context packet assembly support runtime.
+
+Delegation chain:
+  ChiefWriter → ChiefWriterContextBuilder (owner) → ChiefWriterContextPackets (this module)
+  Also reached from: Stage4ContextBuilder → Stage4ContextPackets → here
+
+This module owns bounded packet-assembly helpers (NPC frequency, HUD
+anomalies, DNA instructions, mandatory context, justification guidance,
+recent events, NPC last-states, equipment summary). It accesses DB and
+state via self.owner (ChiefWriterContextBuilder) properties.
+"""
 # utf8-hygiene: allow-file -- Korean regex and prompt literals were moved verbatim from ChiefWriterContextBuilder during the bounded context-packets split.
 
 from __future__ import annotations
@@ -15,6 +25,19 @@ if TYPE_CHECKING:
 
 class ChiefWriterContextPackets:
     """Bounded packet-assembly support module for Chief Writer context composition."""
+
+    _COVERT_INFRASTRUCTURE_TERMS = (
+        "대포폰",
+        "버너폰",
+        "해외 브로커",
+        "브로커",
+        "딜러",
+        "스위스 계좌",
+        "페이퍼컴퍼니",
+        "차명 법인",
+        "해외 법인",
+        "offshore",
+    )
 
     def __init__(self, owner: "ChiefWriterContextBuilder") -> None:
         self.owner = owner
@@ -158,6 +181,12 @@ This is optional and should follow narrative flow first.
 {self.host._escape_braces(smart_truncate(prev_manuscripts_text))}
 """
 
+        carryover_ceiling_section = self._build_stage4_carryover_ceiling_section(
+            blueprint=blueprint,
+            prev_manuscript=prev_manuscript,
+            prev_digest=prev_digest,
+        )
+
         return {
             "prev_ending": prev_ending,
             "prev_digest": prev_digest,
@@ -170,7 +199,116 @@ This is optional and should follow narrative flow first.
             "dna_instruction": dna_instruction,
             "high_density_hud_section": high_density_hud_section,
             "prev_manuscripts_section": prev_manuscripts_section,
+            "carryover_ceiling_section": carryover_ceiling_section,
         }
+
+    def _build_stage4_carryover_ceiling_section(
+        self,
+        *,
+        blueprint: dict,
+        prev_manuscript: str,
+        prev_digest: str,
+    ) -> str:
+        if not prev_manuscript and not prev_digest:
+            return ""
+
+        lines = [
+            "### [Stage4 Carryover Ceiling — prior/current authority only]",
+            "아래 ceiling은 직전 원고/다이제스트/현재 structured blueprint에서 확인된 범위만 정리한 것이다.",
+        ]
+
+        opening_evidence = self._collect_recent_sentence_evidence(
+            prev_manuscript,
+            keywords=("창가", "침대", "책상", "서 있었다", "앉아", "몸을 일으켰", "침실"),
+            limit=2,
+        )
+        if opening_evidence:
+            lines.append("- 직전 화 종료 위치/자세 단서:")
+            lines.extend(f"  - {item}" for item in opening_evidence)
+            lines.append("  - 위 단서를 무시하고 전혀 다른 자세/위치에서 다시 시작하지 마라.")
+
+        note_evidence = self._collect_recent_sentence_evidence(
+            prev_manuscript,
+            keywords=("노트", "가죽 양장", "만년필", "절반", "빼곡", "숫자", "메모"),
+            limit=2,
+        )
+        if note_evidence:
+            lines.append("- 직전 화 key item / note 상태 단서:")
+            lines.extend(f"  - {item}" for item in note_evidence)
+            lines.append("  - 위 노트/아이템을 빈 상태나 미작성 상태로 되돌리지 마라.")
+
+        planning_evidence = self._collect_recent_sentence_evidence(
+            prev_manuscript,
+            keywords=("WTI", "원유", "청산", "시드머니", "수익", "달러", "배럴", "타임라인", "계산"),
+            limit=2,
+        )
+        planning_lines = list(planning_evidence)
+        if prev_digest:
+            digest_hits = [
+                line.strip()
+                for line in str(prev_digest or "").splitlines()
+                if any(token in line for token in ("확정 자본", "WTI", "원유", "계산", "타임라인", "소도구/장비 상태"))
+            ]
+            planning_lines.extend(item for item in digest_hits[:2] if item not in planning_lines)
+        if planning_lines:
+            lines.append("- 이미 on-page로 끝난 계획/계산/메모 단서:")
+            lines.extend(f"  - {item}" for item in planning_lines[:3])
+            lines.append("  - 위 계산·계획·메모를 이번 화에서 처음 완성한 것처럼 다시 쓰지 마라.")
+
+        if not self._authority_mentions_any_term(
+            blueprint=blueprint,
+            prev_manuscript=prev_manuscript,
+            terms=self._COVERT_INFRASTRUCTURE_TERMS,
+        ):
+            lines.append("- 현재 authority에 없는 covert infrastructure 범주:")
+            lines.append("  - 대포폰 / 숨겨둔 브로커 / 해외 법인 / offshore 계좌")
+            lines.append(
+                "  - 위 범주의 연락망·도구·법인·계좌를 새 사실처럼 발명하지 마라. 필요하면 탐색/구상 수준으로만 다뤄라."
+            )
+
+        return "\n".join(lines) if len(lines) > 2 else ""
+
+    def _collect_recent_sentence_evidence(
+        self,
+        text: str,
+        *,
+        keywords: tuple[str, ...],
+        limit: int = 2,
+    ) -> list[str]:
+        if not text:
+            return []
+        tail = str(text)[-2500:]
+        sentences = [item.strip() for item in re.split(r"(?<=[.!?…])\s+|\n+", tail) if item.strip()]
+        hits: list[str] = []
+        for sentence in sentences:
+            if not any(keyword.lower() in sentence.lower() for keyword in keywords):
+                continue
+            compact = self._fit_compact_text(sentence, 160)
+            if compact not in hits:
+                hits.append(compact)
+            if len(hits) >= limit:
+                break
+        return hits
+
+    def _authority_mentions_any_term(
+        self,
+        *,
+        blueprint: dict,
+        prev_manuscript: str,
+        terms: tuple[str, ...],
+    ) -> bool:
+        blueprint_text = ""
+        if isinstance(blueprint, dict):
+            try:
+                blueprint_text = smart_truncate(
+                    re.sub(r"\s+", " ", str(blueprint.get("scene_breakdown", "")) + " " + str(blueprint)),
+                    max_chars=4000,
+                    head_chars=1800,
+                )
+            except Exception:
+                blueprint_text = str(blueprint)
+        authority_text = f"{prev_manuscript or ''}\n{blueprint_text}".lower()
+        return any(term.lower() in authority_text for term in terms)
 
     def _generate_episode_digest(self, manuscript: str, ep_num: int = 0) -> str:
         """

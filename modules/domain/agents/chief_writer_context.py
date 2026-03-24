@@ -174,7 +174,9 @@ class ChiefWriterContextBuilder:
         current_martial_arts = current_martial_arts or []
         dead_npcs = dead_npcs or []
 
-        scene_breakdown, ending_hook, opening_anchor_section = self._extract_blueprint_sections(blueprint)
+        scene_breakdown, integrated_scenario_advisory, ending_hook, opening_anchor_section = (
+            self._extract_blueprint_sections(blueprint)
+        )
         (
             bible_root,
             core_identity,
@@ -183,6 +185,7 @@ class ChiefWriterContextBuilder:
             incarnation_type,
         ) = self._extract_bible_context(master_bible)
         genre_code = self._resolve_genre_code(genre_name, bible_root)
+
         packet_sections = self.context_packets.build_common_context_packets(
             ep_num=ep_num,
             blueprint=blueprint,
@@ -198,6 +201,16 @@ class ChiefWriterContextBuilder:
             prev_manuscripts_text=prev_manuscripts_text,
             upcoming_arc_items=upcoming_arc_items,
         )
+
+        # [IFC] Build immutable fact packet — after packet_sections so prev_digest is available
+        immutable_fact_section = self._build_immutable_fact_section(
+            blueprint=blueprint,
+            prev_manuscript=prev_manuscript,
+            world_state_summary=world_state_summary,
+            chain_link_section=chain_link_section,
+            prev_digest=packet_sections.get("prev_digest", ""),
+        )
+
         writing_directive = self._resolve_writing_directive(writing_directive)
         writer_core_section = self._build_writer_core_section(
             blueprint=blueprint,
@@ -249,21 +262,33 @@ class ChiefWriterContextBuilder:
             emotional_beat_section=self.host._escape_braces(emotional_beat_section) if emotional_beat_section else "",
             satisfaction_guide_section=get_satisfaction_guide_section(),  # [D-Step2]
             opening_anchor_section=self.host._escape_braces(opening_anchor_section) if opening_anchor_section else "",  # [TF-2]
+            immutable_fact_section=self.host._escape_braces(immutable_fact_section) if immutable_fact_section else "",  # [IFC]
+            integrated_scenario_advisory_section=self.host._escape_braces(integrated_scenario_advisory)
+            if integrated_scenario_advisory
+            else "",
+            carryover_ceiling_section=self.host._escape_braces(packet_sections.get("carryover_ceiling_section", ""))
+            if packet_sections.get("carryover_ceiling_section", "")
+            else "",
         )
 
-    def _extract_blueprint_sections(self, blueprint: dict) -> tuple[str, str, str]:
+    def _extract_blueprint_sections(self, blueprint: dict) -> tuple[str, str, str, str]:
         scene_breakdown = ""
+        integrated_scenario_advisory = ""
         ending_hook = ""
         opening_anchor_section = ""
         if not isinstance(blueprint, dict):
-            return scene_breakdown, ending_hook, opening_anchor_section
+            return scene_breakdown, integrated_scenario_advisory, ending_hook, opening_anchor_section
 
         scenes = blueprint.get("scene_breakdown", {})
         if isinstance(scenes, dict):
             scene_breakdown = json.dumps(scenes, ensure_ascii=False, indent=2)
-        integrated = blueprint.get("integrated_scenario", "")
+        integrated = blueprint.get("integrated_scenario_advisory", "") or blueprint.get("integrated_scenario", "")
         if integrated:
-            scene_breakdown += f"\n\n통합 시나리오:\n{integrated}"
+            integrated_scenario_advisory = (
+                "### [Advisory] 통합 시나리오 초안 (낮은 우선순위)\n"
+                "이 블록은 흐름 참고용이다. Opening Anchor / Immutable Facts / prev digest / structured scene contract와 "
+                f"충돌하면 아래 prose는 버려라.\n{integrated}"
+            )
         hook = blueprint.get("ending_hook", "")
         if hook:
             ending_hook = f"### 이 화의 마무리 훅\n{hook}"
@@ -296,7 +321,7 @@ class ChiefWriterContextBuilder:
             anchor_parts.append("⛔ 위 장소와 시간대를 변경하거나 다른 장소/시간에서 시작하면 즉시 불합격 처리된다.")
             opening_anchor_section = "\n".join(anchor_parts)
 
-        return scene_breakdown, ending_hook, opening_anchor_section
+        return scene_breakdown, integrated_scenario_advisory, ending_hook, opening_anchor_section
 
     def _extract_bible_context(self, master_bible: dict) -> tuple[dict, dict, dict, str, str]:
         bible_root = master_bible.get("MasterBible", master_bible) if isinstance(master_bible, dict) else {}
@@ -497,6 +522,32 @@ class ChiefWriterContextBuilder:
                 writer_core_section += f"\n{section}\n"
         return writer_core_section
 
+    def _build_immutable_fact_section(
+        self,
+        *,
+        blueprint: dict,
+        prev_manuscript: str,
+        world_state_summary: str,
+        chain_link_section: str,
+        prev_digest: str = "",
+    ) -> str:
+        """[IFC] Build immutable fact contract section for CW prompt."""
+        try:
+            from modules.core.stage4_immutable_fact_contract import build_packet, render_packet_for_cw
+
+            packet = build_packet(
+                blueprint=blueprint,
+                prev_manuscript_ending=prev_manuscript[-2500:] if prev_manuscript else "",
+                world_state_summary=world_state_summary,
+                fact_ledger_summary=world_state_summary,  # world_state carries fact-ledger-grade state facts
+                chain_link_section=chain_link_section,
+                prev_digest=prev_digest,
+            )
+            return render_packet_for_cw(packet)
+        except Exception as e:
+            logging.debug("[IFC] immutable fact section build failed (non-blocking): %s", e)
+            return ""
+
     def _build_purism_section(self, purism_prompt: str) -> str:
         if not purism_prompt:
             return ""
@@ -538,5 +589,4 @@ class ChiefWriterContextBuilder:
         [V65] 프롬프트 본문 함수 래핑 호출
         """
         return get_anti_trope_instructions(genre_name=genre_name)
-
 

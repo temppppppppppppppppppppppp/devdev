@@ -1,5 +1,30 @@
 """
 Four-phase arc runtime orchestration split.
+
+Envelope dataclass pipeline (data flows top-to-bottom):
+
+  _FourPhaseRuntimeBootstrap
+    └─ initial state from caller (protagonist, pacing, pipeline result)
+  _FourPhaseRuntimeState
+    └─ mutable runtime snapshot carried across retry cycles
+  _FourPhaseConstraintEnvelope
+    └─ constraint-compilation phase output
+  _FourPhaseGenerationEnvelope
+    └─ generation phase output (best arc + all candidates + retry signals)
+    ├─ _FourPhaseGenerationCandidateEnvelope  (candidate sub-step)
+    ├─ _FourPhasePatchEnvelope                (patch sub-step)
+    ├─ _FourPhaseCandidateEnvelope            (pre-director filtering)
+    └─ _FourPhaseDirectorCandidateEnvelope    (director-valid subset)
+  _FourPhaseDirectorSelectionEnvelope
+    └─ director selection output
+  _FourPhaseValidationEnvelope
+    └─ validation phase output
+  _FourPhaseRetryCycleEnvelope
+    └─ retry-loop control signals (best_arc, should_continue, should_return)
+
+Each dataclass is consumed and produced within a single phase method.
+No envelope crosses more than one phase boundary without being unpacked
+into the next phase's parameters.
 """
 
 import json
@@ -742,11 +767,14 @@ class FourPhaseArcRuntime:
         state_tracker,
         vector_context: str,
         adversarial_self_play,
+        # ── from _FourPhaseRuntimeState (unpacked by caller) ──
         protagonist_config: dict,
         ep_count_suggestion: int,
         pacing_signals: dict,
+        # ── from _FourPhaseConstraintEnvelope ──
         full_constraint_block: str,
         preflight_result: dict,
+        # ── retry-cycle carry-forward ──
         feedback: str,
         base_director_feedback: str,
         prev_rejected_arc: dict | None,

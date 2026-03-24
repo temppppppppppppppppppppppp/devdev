@@ -127,7 +127,7 @@ class TestBuildCommonContext:
     def test_extract_blueprint_sections_includes_integrated_scenario_and_hook(self):
         builder = ChiefWriterContextBuilder(_make_host())
 
-        scene_breakdown, ending_hook, opening_anchor = builder._extract_blueprint_sections(
+        scene_breakdown, integrated_advisory, ending_hook, opening_anchor = builder._extract_blueprint_sections(
             {
                 "scene_breakdown": {"scene_1": {"summary": "대치"}},
                 "integrated_scenario": "통합 흐름",
@@ -135,7 +135,9 @@ class TestBuildCommonContext:
             }
         )
 
-        assert "통합 흐름" in scene_breakdown
+        assert "통합 흐름" not in scene_breakdown
+        assert "낮은 우선순위" in integrated_advisory
+        assert "통합 흐름" in integrated_advisory
         assert "문이 열린다" in ending_hook
 
     def test_build_character_voice_section_uses_stage4_fallback(self):
@@ -211,6 +213,7 @@ class TestBuildCommonContext:
         assert "참고 문장" in kwargs["reference_excerpt_section"]
         assert "누군가 문을 두드린다" in kwargs["ending_hook_section"]
         assert "회귀자" in kwargs["incarnation_context_section"]
+        assert "통합 시나리오 초안" in kwargs["integrated_scenario_advisory_section"]
 
     def test_main_prompt_places_opening_anchor_before_prev_digest(self):
         prompt = build_chief_writer_main_prompt(
@@ -242,6 +245,41 @@ class TestBuildCommonContext:
 
         assert prompt.index("OPENING-ANCHOR") < prompt.index("PREV-DIGEST")
         assert "Blueprint의 시작 장소/시간이 직전 화 종료 상태보다 우선한다." in prompt
+
+    def test_main_prompt_marks_integrated_scenario_as_advisory_and_applies_precedence(self):
+        prompt = build_chief_writer_main_prompt(
+            ep_num=5,
+            dna_instruction="dna",
+            purism_section="purism",
+            world_origin_constraint_section="origin",
+            feedback_section="feedback",
+            constraint_section="constraint",
+            future_guard_section="future",
+            past_guard_section="past",
+            writer_core_section="writer-core",
+            hud_anomaly_section="hud-anomaly",
+            scene_breakdown="scene-breakdown",
+            prev_digest="PREV-DIGEST",
+            prev_ending="PREV-ENDING",
+            hud_report="HUD",
+            high_density_hud_section="hd-hud",
+            hud_trend_section="hud-trend",
+            npc_equipment_section="npc-equip",
+            npc_frequency_section="npc-freq",
+            arc_doc="arc",
+            core_identity_desire="desire",
+            style_guide="style",
+            common_rules="common-rules",
+            writing_guidelines="guidelines",
+            integrated_scenario_advisory_section="ADVISORY-INTEGRATED",
+            carryover_ceiling_section="CARRYOVER-CEILING",
+        )
+
+        assert "권위 우선순위" in prompt
+        assert "Structured scene breakdown" in prompt
+        assert "Advisory integrated scenario prose" in prompt
+        assert prompt.index("scene-breakdown") < prompt.index("ADVISORY-INTEGRATED")
+        assert "CARRYOVER-CEILING" in prompt
 
 
 class TestDigestAndGuards:
@@ -502,3 +540,64 @@ class TestFinancialDigest:
         manuscript = "가" * 220 + "80억의 자본을 투입했다."
         digest = builder.context_packets._generate_episode_digest(manuscript, ep_num=7)
         assert "확정 자본" in digest
+
+
+class TestIFCPacketInputWiring:
+    """[IFC] Verify that _build_immutable_fact_section receives all supported inputs."""
+
+    def test_prev_digest_flows_into_ifc_packet(self):
+        """prev_digest from packet_sections must reach build_packet for completed-event extraction."""
+        builder = ChiefWriterContextBuilder(_make_host())
+        # prev_manuscript with a death event generates a digest containing "사망"
+        prev_ms = "가" * 220 + "적장군이 사망했다. 전투는 완료됐다."
+        section = builder._build_immutable_fact_section(
+            blueprint={"start_location": "호텔", "scene_breakdown": {}},
+            prev_manuscript=prev_ms,
+            world_state_summary="- 적장군: 사망(deceased)",
+            chain_link_section="",
+            prev_digest="- 적장군 처단 완료\n- 전투 종결",
+        )
+        # completed-event facts should contain the event from prev_digest
+        assert "처단" in section or "종결" in section
+
+    def test_world_state_summary_feeds_committed_state_facts(self):
+        """world_state_summary with financial facts must populate committed_state_facts."""
+        builder = ChiefWriterContextBuilder(_make_host())
+        section = builder._build_immutable_fact_section(
+            blueprint={"start_location": "사무실"},
+            prev_manuscript="",
+            world_state_summary="- 자본금: 38억\n- 직원 수: 5명",
+            chain_link_section="",
+            prev_digest="",
+        )
+        assert "38억" in section
+
+    def test_ifc_section_empty_when_no_inputs(self):
+        """Empty inputs should produce empty section."""
+        builder = ChiefWriterContextBuilder(_make_host())
+        section = builder._build_immutable_fact_section(
+            blueprint={},
+            prev_manuscript="",
+            world_state_summary="",
+            chain_link_section="",
+            prev_digest="",
+        )
+        assert section == ""
+
+    def test_stage4_carryover_ceiling_blocks_unestablished_infrastructure_and_replay(self):
+        builder = ChiefWriterContextBuilder(_make_host())
+        prev_ms = (
+            "창가에 선 채 가죽 양장 노트의 절반을 숫자로 채웠다. "
+            "WTI 진입 시점과 청산 가격 계산도 이미 끝냈다."
+        )
+        section = builder.context_packets._build_stage4_carryover_ceiling_section(
+            blueprint={"scene_breakdown": {"scene_1": {"goal": "다음 행동 결정"}}},
+            prev_manuscript=prev_ms,
+            prev_digest="- 확정 자본: 20억\n- 소도구/장비 상태: 가죽 양장 노트",
+        )
+
+        assert "Stage4 Carryover Ceiling" in section
+        assert "창가" in section
+        assert "노트" in section
+        assert "다시 쓰지 마라" in section
+        assert "대포폰" in section

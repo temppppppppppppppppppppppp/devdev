@@ -611,6 +611,14 @@ class Stage4PostPassRuntime:
                 else:
                     reveal_list.append(str(seed))
 
+        # [IFC] Producer-side normalization: scalarize actor references before persistence
+        try:
+            from modules.core.stage4_immutable_fact_contract import normalize_relationship_changes
+
+            relationship_changes = normalize_relationship_changes(relationship_changes)
+        except Exception as _exc:
+            logging.debug("[IFC] relationship normalization non-blocking: %s", _exc)
+
         return {
             "new_npc_names": new_npc_names,
             "npc_deaths": npc_deaths,

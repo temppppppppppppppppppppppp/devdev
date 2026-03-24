@@ -7,6 +7,15 @@ audit_service(경량 감사)와 독립: LLM 풀덤프(100K+자/건) 혼입 방�
   - llm_io.jsonl       — BaseAgent.ask() 호출 원문
   - decisions.jsonl     — Director 판정 경로
   - state_changes.jsonl — WorldState/FactLedger 변경
+  - ui_events.jsonl     — operator UI 이벤트 (optional)
+
+Operator-truth classification:
+  - Session JSONL files are OPTIONAL best-effort telemetry.
+  - They are NOT authoritative truth for verdict adjudication.
+  - Authoritative truth lives in db_manager (stage_attempts,
+    director_selections) and episode_production.jsonl.
+  - If JSONL files are lost, no durable pipeline truth is lost.
+  - enabled=False by default; activated via validation.yaml.
 """
 
 import json
@@ -61,6 +70,19 @@ class SessionLogger:
     @property
     def enabled(self) -> bool:
         return self._enabled
+
+    def log_startup_state(self) -> None:
+        """Log one bounded startup-state record for operator diagnostics."""
+        if not self._enabled:
+            return
+        self._write("llm_io", {
+            "type": "session_startup",
+            "enabled": self._enabled,
+            "log_dir": str(self._log_dir),
+            "max_file_mb": self._max_file_bytes // (1024 * 1024),
+            "max_prompt_chars": self._max_prompt_chars,
+            "max_rotations": self._max_rotations,
+        })
 
     def set_log_dir(self, new_dir) -> None:
         """프로젝트 선택 후 경로 갱신."""

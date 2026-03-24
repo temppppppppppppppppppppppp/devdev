@@ -51,6 +51,13 @@ class Stage4RejectRuntime:
     def __init__(self, owner: "Stage4InterviewRound") -> None:
         self.owner = owner
 
+    @staticmethod
+    def _conflict_first_retry_notice() -> str:
+        return (
+            "[Conflict-first retry] post-select hard conflict invalidated the provisional PASS. "
+            "다음 라운드는 local patch가 아니라 authoritative carryover 기준 재작성으로 처리하세요."
+        )
+
     def handle_reject(
         self,
         *,
@@ -340,6 +347,17 @@ class Stage4RejectRuntime:
         if not isinstance(selected_candidate, dict):
             selected_candidate = {}
         selected_strategy_key = selected_candidate.get("strategy", "") or selected_candidate.get("strategy_name", "")
+        snapshot_selection_reason = director_result.get("selection_reason", "")
+        snapshot_verdict_reason = director_result.get("verdict_reason", "")
+        snapshot_open_review = director_result.get("open_review", "")
+        snapshot_fix_pack = resolved_fix_pack
+        snapshot_rejection_reason = director_result.get("verdict_reason") or director_feedback
+        if reject_bucket == "post_select_conflict" and resolved_fix_scope == "full":
+            snapshot_selection_reason = ""
+            snapshot_open_review = ""
+            snapshot_verdict_reason = director_feedback
+            snapshot_rejection_reason = director_feedback
+            snapshot_fix_pack = {}
         candidate_key = build_candidate_key(
             label=str(selected or ""),
             strategy=str(selected_strategy_key or ""),
@@ -348,14 +366,14 @@ class Stage4RejectRuntime:
         reject_attempt = {
             "strategy": selected,
             "selected_strategy_key": selected_strategy_key,
-            "rejection_reason": director_result.get("verdict_reason") or director_feedback,
+            "rejection_reason": snapshot_rejection_reason,
             "merged_director_feedback": director_feedback,
             "action_items": action_items,
             "score": director_result.get("pre_firewall_score", score),
             "best_manuscript": selected_candidate.get("manuscript", ""),
             "score_breakdown": director_result.get("score_breakdown", {}),
-            "selection_reason": director_result.get("selection_reason", ""),
-            "verdict_reason": director_result.get("verdict_reason", ""),
+            "selection_reason": snapshot_selection_reason,
+            "verdict_reason": snapshot_verdict_reason,
             "director_verdict": director_result.get("director_verdict", ""),
             "final_verdict": director_result.get("final_verdict", "REJECT"),
             "gate_basis": director_result.get("gate_basis", ""),
@@ -369,10 +387,11 @@ class Stage4RejectRuntime:
             "state_updates": director_result.get("state_updates", {}),
             "fix_scope": resolved_fix_scope,
             "fix_scope_reasoning": resolved_fix_scope_reasoning,
-            "fix_pack": resolved_fix_pack,
-            "fix_pack_reason": str(owner._evaluate_fix_pack_contract(resolved_fix_pack).get("reason", "") or ""),  # [TF-4]
-            "open_review": director_result.get("open_review", ""),
+            "fix_pack": snapshot_fix_pack,
+            "fix_pack_reason": str(owner._evaluate_fix_pack_contract(snapshot_fix_pack).get("reason", "") or ""),  # [TF-4]
+            "open_review": snapshot_open_review,
             "error_category": error_category or director_result.get("error_category", ""),
+            "violation_families": self._classify_current_violation_families(director_feedback, snapshot_fix_pack),
             "contradiction_types": director_result.get("contradiction_types", []),
             # [pre-rerun] 모순 세부사항 전량 보존 (이전: [:5] 상한으로 진단 손실)
             "contradiction_details": list(director_result.get("contradiction_details", []) or []),
@@ -440,8 +459,8 @@ class Stage4RejectRuntime:
         ):
             error_category = "LOGIC_ERROR"
             reject_bucket = "post_select_conflict" if resolved_fix_scope != "full" else "structure_error"
-            if resolved_fix_scope in ("", "inplace"):
-                resolved_fix_scope = "partial"
+            if resolved_fix_scope != "full":
+                resolved_fix_scope = "full"
             continuity_notice = (
                 "[A-4 continuity replay] 직전 화와 충돌하는 frontier/연속성 신호가 방화벽 REJECT로 재발했습니다. "
                 "다음 라운드는 국소 문장 보정이 아니라 blueprint/frontier 교정 우선으로 처리하세요."
@@ -452,6 +471,56 @@ class Stage4RejectRuntime:
                 f"{resolved_fix_scope_reasoning}\n{continuity_notice}".strip()
                 if resolved_fix_scope_reasoning
                 else continuity_notice
+            )
+
+        # [IFC] Classify violation families and check rewrite escalation
+        try:
+            from modules.core.stage4_immutable_fact_contract import (
+                classify_violation_family,
+                render_violation_summary,
+                should_escalate_to_rewrite,
+            )
+
+            patch_targets_empty = not (resolved_fix_pack.get("patch_targets") if resolved_fix_pack else False)
+            violation_families = classify_violation_family(
+                rejection_reason=director_feedback,
+                fix_pack=resolved_fix_pack,
+                patch_targets_empty=patch_targets_empty,
+            )
+            if violation_families:
+                vf_summary = render_violation_summary(violation_families)
+                logging.info("[IFC] Violation families: %s", vf_summary)
+                if should_escalate_to_rewrite(
+                    violation_families=violation_families,
+                    patch_targets_empty=patch_targets_empty,
+                    consecutive_empty_patches=getattr(owner, "_consecutive_empty_patches", 0),
+                ):
+                    if resolved_fix_scope in ("", "inplace"):
+                        resolved_fix_scope = "partial"
+                    escalation_notice = (
+                        f"[IFC] 불변사실 위반 감지 ({vf_summary}). "
+                        "국소 패치 대신 재작성 우선 처리가 필요합니다."
+                    )
+                    if escalation_notice not in director_feedback:
+                        director_feedback = escalation_notice + "\n" + director_feedback
+                    resolved_fix_scope_reasoning = (
+                        f"{resolved_fix_scope_reasoning}\n{escalation_notice}".strip()
+                        if resolved_fix_scope_reasoning
+                        else escalation_notice
+                    )
+        except Exception as exc:
+            logging.debug("[IFC] violation classification non-blocking error: %s", exc)
+
+        if reject_bucket == "post_select_conflict":
+            resolved_fix_scope = "full"
+            resolved_fix_pack = {}
+            conflict_notice = self._conflict_first_retry_notice()
+            if conflict_notice not in director_feedback:
+                director_feedback = conflict_notice + "\n" + director_feedback
+            resolved_fix_scope_reasoning = (
+                f"{resolved_fix_scope_reasoning}\n{conflict_notice}".strip()
+                if resolved_fix_scope_reasoning
+                else conflict_notice
             )
 
         if resolved_fix_scope == "inplace":
@@ -513,6 +582,21 @@ class Stage4RejectRuntime:
             tot_used=tot_used,
             mad_used=mad_used,
         )
+
+    @staticmethod
+    def _classify_current_violation_families(director_feedback: str, fix_pack: dict | None) -> list[str]:
+        """[IFC] Classify violation families for observability."""
+        try:
+            from modules.core.stage4_immutable_fact_contract import classify_violation_family
+
+            patch_targets_empty = not (fix_pack.get("patch_targets") if isinstance(fix_pack, dict) else False)
+            return classify_violation_family(
+                rejection_reason=director_feedback,
+                fix_pack=fix_pack,
+                patch_targets_empty=patch_targets_empty,
+            )
+        except Exception:
+            return []
 
     def _record_reject_round_metrics(
         self,

@@ -1,3 +1,5 @@
+import logging
+
 from modules.core.constants import ManuscriptLimits
 from modules.core.hud_utils import build_hud_context as _build_hud_context_shared
 from modules.validation.threshold_helper import _threshold
@@ -37,7 +39,7 @@ class Director(BaseAgent):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.v0128_orchestrator = None  # Lazy initialization
-        self.genre = "wuxia"  # 기본값, set_genre()로 변경 가능
+        self.genre = None  # set_genre()로 설정; None이면 장르 미결정 상태
         self.use_v0128 = False  # V0128 검증 시스템 사용 여부
 
         # [V49.3] Self-Consistency 설정 (Stage 1-3 감사에 적용)
@@ -94,6 +96,8 @@ class Director(BaseAgent):
 
     def set_genre(self, genre: str):
         """장르 설정 (main_a.py에서 boot 시 호출)"""
+        if not genre:
+            logging.warning("[genre-guardrail] Director.set_genre called with empty/None genre")
         self.genre = genre
         # [Sweep46] auditor의 v0128_orchestrator도 리셋 (장르 변경 시 재초기화 필요)
         self.v0128_orchestrator = None
