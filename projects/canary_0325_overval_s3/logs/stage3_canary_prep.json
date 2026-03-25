@@ -1,0 +1,19 @@
+{
+  "prepared_at": "2026-03-25T12:01:32",
+  "source_project": "000000",
+  "target_project": "canary_0325_overval_s3",
+  "from_ep": 1,
+  "cleanup": {
+    "from_ep": 1,
+    "db_impact": {
+      "blueprints": 8,
+      "stage3_attempts": 8,
+      "stage3_director_selections": 8
+    },
+    "file_cleanup": {
+      "blueprint_files_removed": 8,
+      "stage3_artifact_dirs_removed": 8,
+      "log_entries_removed": 9
+    }
+  }
+}

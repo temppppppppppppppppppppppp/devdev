@@ -512,9 +512,10 @@ def test_blueprint_ensemble_constraint_summary_preserves_recent_tail_context():
         "TAIL-ARC",
         "TAIL-STATE",
         "TAIL-REL",
-        "TAIL-GROWTH",
+        # [W2] growth_justification and continuity_checkpoints are suppressed
+        # "TAIL-GROWTH",
         "TAIL-ANCHOR",
-        "TAIL-CHK",
+        # "TAIL-CHK",
     ]:
         assert marker in result
 

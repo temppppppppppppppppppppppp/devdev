@@ -99,7 +99,23 @@ class BlueprintConstraintCompiler:
         # 7. [IFC] Immutable fact carryover from prior arc — [W2] ep_num 전달
         immutable_fact_carryover = self._extract_immutable_fact_carryover(arc_data, arc_position, ep_num=ep_num)
 
-        # 8. 제약 블록 생성
+        # 8. [S3-FL] Fact-Lock Packet — settled prior canon outranks arc pressure
+        fact_lock_packet = self._build_fact_lock_packet(
+            prev_blueprint=prev_blueprint,
+            prev_manuscript_ending=prev_manuscript_ending,
+            arc_data=arc_data,
+            ep_num=ep_num,
+        )
+
+        # 9. [S3-CC] Capital-State Continuity Packet — investment-genre only
+        capital_continuity_packet = self._build_capital_continuity_packet(
+            prev_blueprint=prev_blueprint,
+            prev_manuscript_ending=prev_manuscript_ending,
+            arc_data=arc_data,
+            genre=genre,
+        )
+
+        # 10. 제약 블록 생성
         constraint_block = {
             "ep_num": ep_num,
             "arc_no": arc_no,
@@ -112,6 +128,8 @@ class BlueprintConstraintCompiler:
             "state_changes_summary": state_changes_summary,  # [V63.2]
             "semantic_carryover": semantic_carryover,
             "immutable_fact_carryover": immutable_fact_carryover,  # [IFC]
+            "fact_lock_packet": fact_lock_packet,  # [S3-FL]
+            "capital_continuity_packet": capital_continuity_packet,  # [S3-CC]
         }
 
         return constraint_block
@@ -140,6 +158,35 @@ class BlueprintConstraintCompiler:
         lines.append(f"Arc {constraint_block['arc_no']} - 위치: {constraint_block['arc_position']}")
         lines.append("=" * 60)
         lines.append("")
+
+        # [S3-FL] FACT-LOCK PACKET — highest priority, before all other constraints
+        fact_lock = constraint_block.get("fact_lock_packet", {})
+        if isinstance(fact_lock, dict) and fact_lock.get("anchors"):
+            lines.append("### 🔐 [FACT-LOCK] 확정 사실 (이전 원고에서 확정 — 변경 금지)")
+            lines.append("아래 사항은 이미 독자에게 공개된 확정 사실입니다.")
+            lines.append("Blueprint에서 이 사실을 번복·연화·생략하면 즉시 모순이 됩니다.")
+            for anchor in fact_lock["anchors"]:
+                if isinstance(anchor, dict):
+                    category = anchor.get("category", "")
+                    fact = anchor.get("fact", "")
+                    if fact:
+                        prefix = f"[{category}] " if category else ""
+                        lines.append(f"  - {prefix}{fact}")
+            lines.append("")
+
+        # [S3-CC] CAPITAL CONTINUITY PACKET — investment-genre contract
+        capital_pkt = constraint_block.get("capital_continuity_packet", {})
+        if isinstance(capital_pkt, dict) and capital_pkt.get("fields"):
+            lines.append("### 💰 [CAPITAL-LOCK] 자본/투자 상태 연속성 (변경 금지)")
+            lines.append("아래 자본 상태는 이전 에피소드에서 확정된 수치입니다.")
+            lines.append("'아직 여유 자금', '새로 투입' 등 모순 표현을 사용하면 즉시 REJECT.")
+            for field in capital_pkt["fields"]:
+                if isinstance(field, dict):
+                    label = field.get("label", "")
+                    value = field.get("value", "")
+                    if label and value:
+                        lines.append(f"  - {label}: {value}")
+            lines.append("")
 
         # MUST FOCUS
         lines.append("### 🎯 MUST_FOCUS (이번 화 핵심 - 반드시 포함)")
@@ -359,9 +406,7 @@ class BlueprintConstraintCompiler:
                     if isinstance(_fep, int) and _fep > next_ep:
                         _fdetails = _item.get("details") or []
                         if isinstance(_fdetails, list) and _fdetails:
-                            _brief = self._fit_prompt_text(
-                                "; ".join(d for d in _fdetails if isinstance(d, str)), 300
-                            )
+                            _brief = self._fit_prompt_text("; ".join(d for d in _fdetails if isinstance(d, str)), 300)
                             if _brief:
                                 future_eps.append({"ep": _fep, "content": _brief})
 
@@ -501,6 +546,300 @@ class BlueprintConstraintCompiler:
                     inherited["mood"] = protag["mood"]
 
         return inherited
+
+    @staticmethod
+    def _build_fact_lock_packet(
+        *,
+        prev_blueprint: dict | None,
+        prev_manuscript_ending: str,
+        arc_data: dict,
+        ep_num: int,
+    ) -> dict:
+        """[S3-FL] Build compact fact-lock packet from already-accepted prior canon.
+
+        Extracts settled facts that must not be rewritten by the next blueprint:
+        - provenance/source-of-funds anchors
+        - key item location/state anchors
+        - immediate time/day carryover anchors
+        - already-completed action/planning anchors
+        """
+        anchors: list[dict] = []
+        ms_text = str(prev_manuscript_ending or "").strip()
+        bp = prev_blueprint if isinstance(prev_blueprint, dict) else {}
+
+        if not ms_text and not bp:
+            return {}
+
+        # ── 1. Location anchor ──
+        end_loc = bp.get("end_location", "")
+        if not end_loc:
+            scenes = bp.get("scene_breakdown", {})
+            if isinstance(scenes, dict) and scenes:
+                scene_keys = sorted(
+                    scenes.keys(),
+                    key=lambda x: int(re.search(r"\d+", x).group()) if re.search(r"\d+", x) else 0,
+                )
+                if scene_keys:
+                    last = scenes.get(scene_keys[-1], {})
+                    if isinstance(last, dict):
+                        end_loc = last.get("location", "")
+        if end_loc:
+            anchors.append({"category": "위치", "fact": f"직전 종료 위치: {str(end_loc)[:120]}"})
+
+        # ── 2. Time/day anchor ──
+        time_flow = bp.get("time_flow", "")
+        ending_state = bp.get("ending_state", {})
+        if isinstance(ending_state, dict) and ending_state.get("timeline"):
+            tl = ending_state["timeline"]
+            tl_str = ", ".join(f"{k}:{v}" for k, v in tl.items()) if isinstance(tl, dict) else str(tl)
+            anchors.append({"category": "시간", "fact": f"직전 종료 시점: {str(tl_str)[:120]}"})
+        elif time_flow:
+            anchors.append({"category": "시간", "fact": f"직전 시간 흐름: {str(time_flow)[:120]}"})
+
+        # ── 3. Ending hook anchor (prevents rewrite of how the previous ep ended) ──
+        ending_hook = bp.get("ending_hook", "")
+        if ending_hook:
+            anchors.append({"category": "엔딩훅", "fact": f"직전 화 엔딩: {str(ending_hook)[:200]}"})
+
+        # ── 4. Protagonist state anchor ──
+        protag = bp.get("protagonist_state", {})
+        if isinstance(protag, dict):
+            equip = protag.get("equipment", [])
+            if isinstance(equip, list) and equip:
+                equip_str = ", ".join(str(x.get("name", x) if isinstance(x, dict) else x) for x in equip[:5])
+                anchors.append({"category": "소지품", "fact": f"확정 소지품: {equip_str[:150]}"})
+            injuries = protag.get("injuries", "")
+            if injuries and str(injuries).strip() not in ("없음", "", "None"):
+                anchors.append({"category": "부상", "fact": f"확정 부상: {str(injuries)[:120]}"})
+
+        # ── 5. Manuscript-derived provenance anchors ──
+        # Extract compact facts from the manuscript tail that indicate settled actions
+        if ms_text:
+            # Item storage/placement patterns (e.g., "금고에 넣었다", "품에 간직했다")
+            _item_storage_re = re.compile(
+                r"([\w가-힣]{2,10})(?:을|를|이|가)\s+"
+                r"([\w가-힣]{2,10})(?:에|속에|안에|위에)\s*"
+                r"(?:넣|보관|숨기|간직|감추|두|놓)"
+            )
+            for m in _item_storage_re.finditer(ms_text):
+                item_name, location = m.group(1), m.group(2)
+                anchors.append(
+                    {
+                        "category": "아이템위치",
+                        "fact": f"원고 확정: '{item_name}' → '{location}'에 보관/배치",
+                    }
+                )
+                if len(anchors) >= 12:
+                    break
+
+        # ── 6. NPC/Institution authority anchor [NPC-CF] ──
+        # Prevent downstream blueprints from rewriting canonical institution/venue names
+        _inst_suffixes_ordered = (
+            "투자증권", "자산운용", "인베스트먼트", "PB센터",
+            "증권", "은행", "캐피탈", "보험", "병원",
+            "센터", "그룹", "재단", "협회", "연구소",
+            "본사", "지점", "사무실",
+        )
+        _inst_re = re.compile(
+            r"([\w가-힣A-Za-z]{2,15}(?:" + "|".join(re.escape(s) for s in _inst_suffixes_ordered) + r"))"
+        )
+        institution_names: set[str] = set()
+
+        # 6a. From manuscript text
+        if ms_text:
+            for m in _inst_re.finditer(ms_text):
+                name = m.group(1).strip()
+                if len(name) >= 4:
+                    institution_names.add(name)
+
+        # 6b. From prev_blueprint scene locations + end_location + ending_state
+        _bp_texts_for_inst: list[str] = []
+        if bp:
+            bp_scenes = bp.get("scene_breakdown", {})
+            if isinstance(bp_scenes, dict):
+                for sc in bp_scenes.values():
+                    if isinstance(sc, dict):
+                        _bp_texts_for_inst.append(str(sc.get("location", "") or ""))
+            _bp_texts_for_inst.append(str(bp.get("end_location", "") or ""))
+            bp_es = bp.get("ending_state", {})
+            if isinstance(bp_es, dict):
+                for val in bp_es.values():
+                    _bp_texts_for_inst.append(str(val or ""))
+
+        for text_chunk in _bp_texts_for_inst:
+            for m in _inst_re.finditer(text_chunk):
+                name = m.group(1).strip()
+                if len(name) >= 4:
+                    institution_names.add(name)
+
+        for inst_name in sorted(institution_names)[:4]:
+            anchors.append({
+                "category": "기관",
+                "fact": f"확정 기관/장소: {inst_name}",
+            })
+            if len(anchors) >= 16:
+                break
+
+        if not anchors:
+            return {}
+
+        return {"anchors": anchors[:16], "source": "prev_manuscript+blueprint"}
+
+    @staticmethod
+    def _build_capital_continuity_packet(
+        *,
+        prev_blueprint: dict | None,
+        prev_manuscript_ending: str,
+        arc_data: dict,
+        genre: str,
+    ) -> dict:
+        """[S3-CC] Build capital-state continuity packet for investment-genre runs.
+
+        Extracts entering balance class, deployed/available status, pending expenditure,
+        and active position status from prior accepted authority.
+        Only active for investment genre.
+        """
+        if genre != "investment":
+            return {}
+
+        fields: list[dict] = []
+        bp = prev_blueprint if isinstance(prev_blueprint, dict) else {}
+        ms_text = str(prev_manuscript_ending or "").strip()
+
+        # ── From blueprint ending state ──
+        ending_state = bp.get("ending_state", {})
+        if isinstance(ending_state, dict):
+            for key, label in [
+                ("balance", "잔고/자본"),
+                ("capital", "자본 상태"),
+                ("deployed", "투입 상태"),
+                ("position", "포지션"),
+                ("investment_status", "투자 현황"),
+            ]:
+                val = ending_state.get(key)
+                if val:
+                    fields.append({"label": label, "value": str(val)[:150]})
+
+        # ── From protagonist_state ──
+        protag = bp.get("protagonist_state", {})
+        if isinstance(protag, dict):
+            for key, label in [
+                ("balance", "잔고"),
+                ("capital", "자본"),
+                ("portfolio", "포트폴리오"),
+            ]:
+                val = protag.get(key)
+                if val:
+                    fields.append({"label": label, "value": str(val)[:150]})
+
+        # ── Fallback: From equipment free-text [NPC-CF-B] ──
+        if isinstance(protag, dict):
+            equip_list = protag.get("equipment", [])
+            if isinstance(equip_list, list):
+                _money_in_equip_re = re.compile(
+                    r"(\d[\d,.]*\s*억(?:\s*\d[\d,.]*\s*(?:천만|백만|만))?\s*(?:원|달러)"
+                    r"|\d[\d,.]*\s*(?:천만|백만|만)?\s*(?:원|달러|만원|만\s*원))"
+                )
+                for item in equip_list[:10]:
+                    item_str = str(
+                        item.get("name", item) if isinstance(item, dict) else item or ""
+                    )
+                    money_m = _money_in_equip_re.search(item_str)
+                    if money_m:
+                        amount = money_m.group(1).strip()
+                        if any(kw in item_str for kw in ("예치", "잔고", "잔액", "보유", "가용")):
+                            fields.append({"label": "보유 자본", "value": f"{amount} (예치/보유 상태)"})
+                        elif any(kw in item_str for kw in ("투입", "매수", "투자", "배치", "체결")):
+                            fields.append({"label": "투입 확정", "value": f"{amount} (투입/체결 완료 — 가용 아님)"})
+                        else:
+                            fields.append({"label": "자본 관련", "value": f"{amount}: {item_str[:80]}"})
+                        if len(fields) >= 8:
+                            break
+
+        # ── Fallback: Protagonist status free-text [NPC-CF-B] ──
+        protag_status = ""
+        if isinstance(protag, dict):
+            protag_status = str(protag.get("status", "") or "").strip()
+        if not protag_status and isinstance(ending_state, dict):
+            protag_status = str(ending_state.get("protagonist_status", "") or "").strip()
+        if protag_status and len(fields) < 8:
+            _money_in_status_re = re.compile(
+                r"(\d[\d,.]*\s*(?:억|만|천만|백만)?\s*(?:원|달러|만원|만\s*원))"
+            )
+            for m in _money_in_status_re.finditer(protag_status):
+                amount = m.group(1).strip()
+                if any(kw in protag_status for kw in ("투입", "매수", "배치", "체결")):
+                    fields.append({"label": "투입 확정", "value": f"{amount} (상태 기록 — 투입 완료)"})
+                else:
+                    fields.append({"label": "상태 기록 자본", "value": f"{amount} (상태 기록)"})
+                if len(fields) >= 8:
+                    break
+
+        # ── Fallback: Deployment-state markers from manuscript tail [NPC-CF-B] ──
+        if ms_text and len(fields) < 8:
+            _deploy_complete_re = re.compile(
+                r"(\d[\d,.]*\s*(?:억|만|천만|백만)?\s*(?:원|달러|만원))"
+                r".{0,40}?"
+                r"(?:을|를)?\s*(?:전액\s*)?(?:투입|투자|매수|배치|사용)"
+            )
+            for m in _deploy_complete_re.finditer(ms_text[-2000:]):
+                amount = m.group(1).strip()
+                if amount and not any(
+                    amount in str(f.get("value", "")) for f in fields
+                ):
+                    fields.append({
+                        "label": "투입 확정",
+                        "value": f"{amount} 투입/매수 — 가용 자본 아님",
+                    })
+                    if len(fields) >= 8:
+                        break
+
+        # ── From state_changes ──
+        state_changes = arc_data.get("state_changes", {}) if isinstance(arc_data, dict) else {}
+        if isinstance(state_changes, dict):
+            capital_events = state_changes.get("capital_changes") or state_changes.get("financial_events") or []
+            if isinstance(capital_events, list):
+                for event in capital_events[:3]:
+                    if isinstance(event, dict):
+                        desc = event.get("description") or event.get("event") or ""
+                        amount = event.get("amount") or ""
+                        if desc:
+                            val = f"{desc}"
+                            if amount:
+                                val += f" ({amount})"
+                            fields.append({"label": "자본 이벤트", "value": str(val)[:150]})
+
+        # ── From manuscript tail — explicit money/capital mentions ──
+        if ms_text:
+            _capital_re = re.compile(
+                r"([\d,]+\s*(?:원|만원|억|만|달러|골드|냥|전|관))"
+                r"(?:을|를|이|가|의|은|는)?\s*"
+                r"(투자|투입|매수|매도|배치|사용|지출|입금|출금|결제|지불|소비)"
+            )
+            for m in _capital_re.finditer(ms_text):
+                amount_str, action = m.group(1), m.group(2)
+                fields.append(
+                    {
+                        "label": f"원고 확정 {action}",
+                        "value": f"{amount_str} {action} 완료",
+                    }
+                )
+                if len(fields) >= 8:
+                    break
+
+        if not fields:
+            return {}
+
+        # Deduplicate by label
+        seen_labels: set[str] = set()
+        unique_fields: list[dict] = []
+        for f in fields:
+            label = f.get("label", "")
+            if label not in seen_labels:
+                seen_labels.add(label)
+                unique_fields.append(f)
+
+        return {"fields": unique_fields[:8], "source": "prev_authority"}
 
     @staticmethod
     def _extract_immutable_fact_carryover(arc_data: dict, arc_position: int, ep_num: int = 0) -> str:

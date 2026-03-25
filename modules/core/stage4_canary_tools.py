@@ -44,6 +44,281 @@ def _normalize_from_ep(from_ep: int) -> int:
     return normalized
 
 
+# ─────────────────────────────────────────────────────────────
+# Stage 3-only canary helpers
+# ─────────────────────────────────────────────────────────────
+
+
+def prepare_stage3_canary_project(
+    source_root: str | Path,
+    target_root: str | Path,
+    *,
+    from_ep: int = 1,
+    force: bool = False,
+) -> dict:
+    """Copy a baseline project and reset only Stage 3 outputs on the copy.
+
+    Stage 2 arcs and anchors are preserved.  Stage 4 outputs are also preserved
+    (though they will be stale after Stage 3 reruns).
+    """
+    source = Path(source_root)
+    target = Path(target_root)
+    from_ep = _normalize_from_ep(from_ep)
+    if not source.exists():
+        raise FileNotFoundError(f"source project not found: {source}")
+    if source.resolve() == target.resolve():
+        raise ValueError("source and target project must be different for stage3 canary prep")
+    if target.exists():
+        if not force:
+            raise FileExistsError(f"target project already exists: {target}")
+        shutil.rmtree(target)
+
+    shutil.copytree(source, target)
+    cleanup = reset_stage3_outputs(target, from_ep=from_ep)
+    payload = {
+        "prepared_at": datetime.now().isoformat(timespec="seconds"),
+        "source_project": source.name,
+        "target_project": target.name,
+        "from_ep": int(from_ep),
+        "cleanup": cleanup,
+    }
+    _write_json(target / "logs" / "stage3_canary_prep.json", payload)
+    return payload
+
+
+def reset_stage3_outputs(project_root: str | Path, *, from_ep: int = 1) -> dict:
+    """Delete Stage 3 outputs while preserving Stage 2 arcs/anchors and Stage 4 outputs."""
+    root = Path(project_root)
+    from_ep = _normalize_from_ep(from_ep)
+    db_path = root / "project_data.db"
+    if not db_path.exists():
+        raise FileNotFoundError(f"project database not found: {db_path}")
+
+    db = DBManager(db_path)
+    try:
+        impact = _collect_stage3_cleanup_impact(db, from_ep=from_ep)
+        _delete_stage3_db_outputs(db, from_ep=from_ep)
+    finally:
+        db.close()
+
+    files = _clear_stage3_files(root, from_ep=from_ep)
+    return {
+        "from_ep": from_ep,
+        "db_impact": impact,
+        "file_cleanup": files,
+    }
+
+
+def build_stage3_canary_summary(project_root: str | Path, *, target_ep: int | None = None) -> dict:
+    """Summarize a prepared or completed Stage 3-only canary project."""
+    root = Path(project_root)
+    db_path = root / "project_data.db"
+    if not db_path.exists():
+        raise FileNotFoundError(f"project database not found: {db_path}")
+    project_locator = _build_project_locator(root)
+
+    db = DBManager(db_path)
+    try:
+        stage3_attempt_rows = db.conn.execute(
+            """
+            SELECT id, ep_num, attempt_num, verdict, score, session_id, attempt_key
+            FROM stage_attempts
+            WHERE stage = 3
+            ORDER BY id ASC
+            """
+        ).fetchall()
+        latest_session_id = latest_session_id_from_rows(stage3_attempt_rows)
+
+        blueprint_rows = db.conn.execute(
+            "SELECT ep_num FROM blueprints ORDER BY ep_num ASC"
+        ).fetchall()
+
+        analyzer = FailureAnalyzer(db, project_path=root)
+        sink_alignment_summary = analyzer.sink_alignment_summary(
+            stage=3,
+            include_session_decisions=True,
+            session_id=latest_session_id,
+        )
+    finally:
+        db.close()
+
+    blueprint_ep_nums = sorted({int(row["ep_num"]) for row in blueprint_rows})
+    blueprint_files = sorted(root.glob("plans/blueprints/blueprint_*.txt"))
+    canary_prep = _read_json(root / "logs" / "stage3_canary_prep.json")
+
+    attempt_detail = _build_stage3_attempt_detail(stage3_attempt_rows)
+    hard_gates = _evaluate_stage3_canary_gates(
+        target_ep=target_ep,
+        blueprint_db_count=len(blueprint_ep_nums),
+        blueprint_file_count=len(blueprint_files),
+        attempt_detail=attempt_detail,
+        sink_alignment_summary=sink_alignment_summary,
+    )
+
+    return {
+        "summary_role": "stage3_only_canary",
+        "project": root.name,
+        "project_locator": project_locator,
+        "project_root": str(root),
+        "target_ep": int(target_ep) if target_ep is not None else None,
+        "prepared_from": canary_prep.get("source_project"),
+        "latest_session_id": latest_session_id,
+        "stage3_attempts": len(stage3_attempt_rows),
+        "blueprint_db_count": len(blueprint_ep_nums),
+        "blueprint_ep_nums": blueprint_ep_nums,
+        "blueprint_file_count": len(blueprint_files),
+        "blueprint_files": [p.name for p in blueprint_files],
+        "attempt_detail": attempt_detail,
+        "sink_alignment_summary": sink_alignment_summary,
+        "hard_gates": hard_gates,
+    }
+
+
+def _build_stage3_attempt_detail(rows) -> list[dict]:
+    """Build per-episode attempt summary from stage_attempts rows."""
+    episodes: dict[int, list[dict]] = {}
+    for row in rows:
+        ep = int(row["ep_num"] or 0)
+        episodes.setdefault(ep, []).append({
+            "attempt_num": int(row["attempt_num"] or 0),
+            "verdict": str(row["verdict"] or "").strip(),
+            "score": row["score"],
+        })
+    result = []
+    for ep in sorted(episodes):
+        attempts = episodes[ep]
+        final = attempts[-1]
+        result.append({
+            "ep_num": ep,
+            "attempt_count": len(attempts),
+            "final_verdict": final["verdict"],
+            "final_score": final["score"],
+            "all_verdicts": [a["verdict"] for a in attempts],
+        })
+    return result
+
+
+def _evaluate_stage3_canary_gates(
+    *,
+    target_ep: int | None,
+    blueprint_db_count: int,
+    blueprint_file_count: int,
+    attempt_detail: list[dict],
+    sink_alignment_summary: dict,
+) -> dict:
+    errors: list[str] = []
+    warnings: list[str] = []
+
+    if target_ep is not None:
+        if blueprint_db_count < int(target_ep):
+            errors.append(f"blueprint_db_count_short:{blueprint_db_count}<{int(target_ep)}")
+        if blueprint_file_count < int(target_ep):
+            errors.append(f"blueprint_file_count_short:{blueprint_file_count}<{int(target_ep)}")
+    if not attempt_detail:
+        errors.append("no_stage3_attempts")
+    else:
+        failed_eps = [d for d in attempt_detail if d["final_verdict"] != "PASS"]
+        if failed_eps:
+            for d in failed_eps:
+                errors.append(f"ep{d['ep_num']}_final_verdict:{d['final_verdict']}")
+
+    if sink_alignment_summary:
+        status = str(sink_alignment_summary.get("status", "") or "").strip()
+        if status and status != "ok":
+            warnings.append(f"sink_alignment_status:{status}")
+    else:
+        warnings.append("sink_alignment_summary_empty")
+
+    status = "fail" if errors else ("warn" if warnings else "pass")
+    return {
+        "status": status,
+        "errors": errors,
+        "warnings": warnings,
+    }
+
+
+def _collect_stage3_cleanup_impact(db: DBManager, *, from_ep: int) -> dict[str, int]:
+    cur = db.cursor
+    impact = {}
+    impact["blueprints"] = int(
+        cur.execute("SELECT COUNT(*) AS c FROM blueprints WHERE ep_num >= ?", (from_ep,)).fetchone()["c"]
+    )
+    impact["stage3_attempts"] = int(
+        cur.execute(
+            "SELECT COUNT(*) AS c FROM stage_attempts WHERE stage = 3 AND ep_num >= ?", (from_ep,)
+        ).fetchone()["c"]
+    )
+    impact["stage3_director_selections"] = int(
+        cur.execute(
+            "SELECT COUNT(*) AS c FROM director_selections WHERE ep_num >= ? AND "
+            + DBManager._director_stage_predicate(3),
+            (from_ep,),
+        ).fetchone()["c"]
+    )
+    return impact
+
+
+def _delete_stage3_db_outputs(db: DBManager, *, from_ep: int) -> None:
+    cur = db.cursor
+    started_tx = not db.conn.in_transaction
+    if started_tx:
+        cur.execute("BEGIN")
+    try:
+        cur.execute("DELETE FROM blueprints WHERE ep_num >= ?", (from_ep,))
+        cur.execute(
+            "DELETE FROM director_selections WHERE ep_num >= ? AND "
+            + DBManager._director_stage_predicate(3),
+            (from_ep,),
+        )
+        cur.execute("DELETE FROM stage_attempts WHERE stage = 3 AND ep_num >= ?", (from_ep,))
+        db.conn.commit()
+    except Exception:
+        db.conn.rollback()
+        raise
+    try:
+        db.conn.execute("VACUUM")
+    except Exception:
+        pass
+
+
+def _clear_stage3_files(project_root: Path, *, from_ep: int) -> dict[str, int]:
+    blueprints_removed = 0
+    blueprints_dir = project_root / "plans" / "blueprints"
+    if blueprints_dir.exists():
+        for blueprint in blueprints_dir.glob("blueprint_*.txt"):
+            ep_num = _extract_ep_num(blueprint.name)
+            if ep_num is not None and ep_num >= from_ep:
+                blueprint.unlink(missing_ok=True)
+                blueprints_removed += 1
+
+    stage3_artifacts_removed = 0
+    stage3_artifacts_dir = project_root / "logs" / "artifacts" / "stage3"
+    if stage3_artifacts_dir.exists():
+        for child in list(stage3_artifacts_dir.iterdir()):
+            ep_num = _extract_ep_num(child.name)
+            if ep_num is not None and ep_num >= from_ep:
+                _remove_path(child)
+                stage3_artifacts_removed += 1
+
+    logs_removed = 0
+    logs_dir = project_root / "logs"
+    if logs_dir.exists():
+        for log_name in _LOG_FILE_NAMES:
+            log_path = logs_dir / log_name
+            if log_path.exists():
+                log_path.unlink(missing_ok=True)
+                logs_removed += 1
+        for session_file in (logs_dir / "session").glob("*") if (logs_dir / "session").exists() else []:
+            session_file.unlink(missing_ok=True)
+            logs_removed += 1
+
+    return {
+        "blueprint_files_removed": blueprints_removed,
+        "stage3_artifact_dirs_removed": stage3_artifacts_removed,
+        "log_entries_removed": logs_removed,
+    }
+
+
 def prepare_stage4_canary_project(
     source_root: str | Path,
     target_root: str | Path,

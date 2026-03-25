@@ -1,7 +1,7 @@
 # EP1 -> EP2 Stage4 Carryover Expansion Execution SSOT
 
 Date: 2026-03-24
-Status: execution-ready
+Status: closed (closure-audited)
 Canonical Path: `docs/2026-03-24/ep1-ep2-stage4-carryover-expansion-execution-ssot.md`
 Temp Mirror Path: `docs/temp/ep1-ep2-stage4-carryover-expansion-execution-ssot.md`
 Baseline Commit: `529869adddb35c93c3ec557aeaed665de168daef`
@@ -345,3 +345,30 @@ Output requirements:
 - explicitly confirm that Stage 2, Stage 3 generation, and Director redesign were not opened
 - do not claim closure; Codex will audit and close it
 ```
+
+## 15. Closure Audit Note
+
+Closure audit completed on 2026-03-24 after the fresh `projects/0324_00_` live run and the post-run 10-terminal merge audit.
+
+Closure basis:
+
+- the intended Stage 4 seam in this wave was materially reduced:
+  - the earlier covert-infrastructure expansion family is no longer the dominant live-run culprit
+  - validator and post-select conflict detection remained accurate
+  - retry / `PASS_WITH_FIX` semantics did not become the new primary fault line
+- the merged residual family is now upstream of this wave:
+  - `docs/2026-03-24/ep1-ep8-live-run-residual-10terminal-merge-audit.md`
+  - `docs/2026-03-24/opus-live-run-residual/t7-retry-passwithfix-semantics.md`
+  - `docs/2026-03-24/opus-live-run-residual/t8-validator-signal-quality.md`
+  - `docs/2026-03-24/opus-live-run-residual/t10-cleared-non-culprits.md`
+
+Closure interpretation:
+
+- this wave is considered realized and closure-worthy
+- it is not treated as a full elimination of all carryover issues
+- the next active item should target Stage 3 blueprint state precision rather than reopen this Stage 4 wave
+
+Residual note:
+
+- Stage 4 still amplifies stale or under-specified blueprint state in some episodes
+- that residual is tracked as a downstream secondary seam under the next Stage 3 reconciliation wave, not as an open failure of this closed Stage 4 item

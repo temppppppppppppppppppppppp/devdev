@@ -25,7 +25,7 @@ from modules.core.prompt_loader import PromptLoader
 from modules.core.response_schemas import BLUEPRINT_SCHEMA
 from modules.core.tactical_utils import extract_episode_tactical
 
-from .base_agent import AgentErrorType, _SYSTEM_CFG, BaseAgent
+from .base_agent import _SYSTEM_CFG, AgentErrorType, BaseAgent
 
 # [V60.95] 원시인 모드 금지어 Guard (JSON 기반)
 try:
@@ -387,7 +387,9 @@ class BlueprintEnsembleGenerator(BaseAgent):
                                     },
                                 )
                         except FutureTimeoutError:
-                            logging.warning(f" [V61.3] {strategy_name} 개별 타임아웃 ({self.SINGLE_CANDIDATE_TIMEOUT}초)")
+                            logging.warning(
+                                f" [V61.3] {strategy_name} 개별 타임아웃 ({self.SINGLE_CANDIDATE_TIMEOUT}초)"
+                            )
                             worker_error_types.append(AgentErrorType.TIMEOUT)
                             self._operator_log(
                                 f"⚠️ [Blueprint] '{strategy_name}' 개별 타임아웃",
@@ -418,7 +420,9 @@ class BlueprintEnsembleGenerator(BaseAgent):
             logging.error(traceback.format_exc())
 
         try:
-            logging.info(f"[PerfTimer:BlueprintEnsemble] bp_ep{ep_num}_ensemble={time.monotonic() - timer_started_at:.2f}s")
+            logging.info(
+                f"[PerfTimer:BlueprintEnsemble] bp_ep{ep_num}_ensemble={time.monotonic() - timer_started_at:.2f}s"
+            )
         except Exception as exc:
             logging.debug("[BlueprintEnsemble] PerfTimer 기록 실패 (무시): %s", exc)
 
@@ -840,129 +844,156 @@ class BlueprintEnsembleGenerator(BaseAgent):
         return "\n".join(parts) if parts else ""
 
     def _format_constraints(self, constraint_block: dict, *, genre: str = "wuxia") -> str:
-        """Format compact blueprint constraints for the generation prompt."""
-        lines: list[str] = []
+        """Format blueprint constraints with explicit 4-tier authority banding.
+
+        Band hierarchy (conflict resolution order):
+          IMMUTABLE > HARD CONSTRAINT > EXPECTED CONTINUITY > ADVISORY
+        """
+        # ── Band 1: IMMUTABLE (확정 사실, 변경 불가) ──
+        immutable_lines: list[str] = []
+
+        fact_lock = constraint_block.get("fact_lock_packet", {})
+        if isinstance(fact_lock, dict) and fact_lock.get("anchors"):
+            immutable_lines.append("[FACT-LOCK: 확정 사실 — 변경 금지]")
+            for anchor in fact_lock["anchors"]:
+                if isinstance(anchor, dict) and anchor.get("fact"):
+                    cat = anchor.get("category", "")
+                    prefix = f"[{cat}] " if cat else ""
+                    immutable_lines.append(f"  - {prefix}{anchor['fact']}")
+
+        capital_pkt = constraint_block.get("capital_continuity_packet", {})
+        if isinstance(capital_pkt, dict) and capital_pkt.get("fields"):
+            immutable_lines.append("[CAPITAL-LOCK: 자본 상태 연속성 — 변경 금지]")
+            for field in capital_pkt["fields"]:
+                if isinstance(field, dict) and field.get("label") and field.get("value"):
+                    immutable_lines.append(f"  - {field['label']}: {field['value']}")
+
+        # ── Band 2: HARD CONSTRAINT (필수 준수, 위반 시 REJECT) ──
+        hard_lines: list[str] = []
 
         must_focus = constraint_block.get("must_focus", {})
         if isinstance(must_focus, dict):
             arc_title = str(must_focus.get("arc_title", "") or "").strip()
             if arc_title:
-                lines.append("[이번 화 제목]")
-                lines.append(f"  {_fit_compact_context(arc_title, 120)}")
+                hard_lines.append("[이번 화 제목]")
+                hard_lines.append(f"  {_fit_compact_context(arc_title, 120)}")
             key_events = must_focus.get("key_events") or []
             if isinstance(key_events, list) and key_events:
-                lines.append("[이번 화 필수 이벤트]")
+                hard_lines.append("[이번 화 필수 이벤트]")
                 for event in key_events[:5]:
                     text = str(event or "").strip()
                     if text:
-                        lines.append(f"  - {_fit_compact_context(text, 120)}")
+                        hard_lines.append(f"  - {_fit_compact_context(text, 120)}")
             content = str(must_focus.get("content", "") or "").strip()
             if content and not key_events:
-                lines.append("[이번 화 핵심 초점]")
-                lines.append(f"  {_fit_compact_context(content, 500)}")
+                hard_lines.append("[이번 화 핵심 초점]")
+                hard_lines.append(f"  {_fit_compact_context(content, 500)}")
 
         stop_line = constraint_block.get("stop_line", {})
         if isinstance(stop_line, dict) and not stop_line.get("is_arc_finale"):
             if stop_line.get("content"):
-                lines.append("\n[Stop Line]")
+                hard_lines.append("[Stop Line]")
                 _next_ep = stop_line.get("next_ep", "?")
-                lines.append(f"  [제{_next_ep}화] 다음 화 내용 금지: {_fit_compact_context(stop_line['content'], 150)}")
-                # [W2] future_eps — all-future episode prohibition
+                hard_lines.append(f"  [제{_next_ep}화] 다음 화 내용 금지: {_fit_compact_context(stop_line['content'], 150)}")
                 for _fe in stop_line.get("future_eps") or []:
                     if isinstance(_fe, dict) and _fe.get("content"):
-                        lines.append(
-                            f"  [제{_fe.get('ep', '?')}화] 금지: {_fit_compact_context(_fe['content'], 150)}"
-                        )
+                        hard_lines.append(f"  [제{_fe.get('ep', '?')}화] 금지: {_fit_compact_context(_fe['content'], 150)}")
                 _cur_ep = constraint_block.get("ep_num", "?")
-                lines.append(
+                hard_lines.append(
                     f"  *** 제{_cur_ep}화 이후 모든 에피소드 사건/NPC/전개를 "
                     f"이번 화에서 소비하거나 언급하면 즉시 REJECT ***"
                 )
 
+        # ── Band 3: EXPECTED CONTINUITY (계승 필수, 불일치 시 경고) ──
+        continuity_lines: list[str] = []
+
         continuity = constraint_block.get("continuity", {})
         if isinstance(continuity, dict):
-            continuity_lines: list[str] = []
+            _cont_items: list[str] = []
             if continuity.get("location"):
-                continuity_lines.append(f"  이전 종료 위치: {_fit_compact_context(continuity['location'], 120)}")
+                _cont_items.append(f"  이전 종료 위치: {_fit_compact_context(continuity['location'], 120)}")
             if continuity.get("time_context"):
-                continuity_lines.append(f"  시간 맥락: {_fit_compact_context(continuity['time_context'], 100)}")
+                _cont_items.append(f"  시간 맥락: {_fit_compact_context(continuity['time_context'], 100)}")
             conflicts = continuity.get("ongoing_conflicts") or []
             if isinstance(conflicts, list):
                 for item in conflicts[:5]:
                     text = str(item or "").strip()
                     if text:
-                        continuity_lines.append(f"  - 진행 중 갈등: {_fit_compact_context(text, 80)}")
+                        _cont_items.append(f"  - 진행 중 갈등: {_fit_compact_context(text, 80)}")
             elif conflicts:
-                continuity_lines.append(f"  - 진행 중 갈등: {_fit_compact_context(conflicts, 200)}")
+                _cont_items.append(f"  - 진행 중 갈등: {_fit_compact_context(conflicts, 200)}")
             active = continuity.get("active_characters") or []
             if isinstance(active, list) and active:
-                names = [_fit_compact_context(str(item or "").strip(), 20) for item in active[:10] if str(item or "").strip()]
+                names = [
+                    _fit_compact_context(str(item or "").strip(), 20) for item in active[:10] if str(item or "").strip()
+                ]
                 if names:
-                    continuity_lines.append(f"  등장 캐릭터: {', '.join(names)}")
+                    _cont_items.append(f"  등장 캐릭터: {', '.join(names)}")
             elif active:
-                continuity_lines.append(f"  등장 캐릭터: {_fit_compact_context(active, 200)}")
-            if continuity_lines:
-                lines.append("\n[연속성]")
-                lines.extend(continuity_lines)
+                _cont_items.append(f"  등장 캐릭터: {_fit_compact_context(active, 200)}")
+            if _cont_items:
+                continuity_lines.append("[연속성]")
+                continuity_lines.extend(_cont_items)
 
         inherited = constraint_block.get("inherited_state", {})
         if isinstance(inherited, dict):
-            inherited_lines: list[str] = []
+            inherited_items: list[str] = []
             equip = inherited.get("equipment")
             if equip:
                 if isinstance(equip, list):
                     equip = ", ".join(str(x) if not isinstance(x, dict) else str(x.get("name", x)) for x in equip[:5])
-                inherited_lines.append(f"  장비: {_fit_compact_context(equip, 200)}")
+                inherited_items.append(f"  장비: {_fit_compact_context(equip, 200)}")
             injuries = inherited.get("injuries")
             if injuries:
                 if isinstance(injuries, list):
-                    inherited_lines.append(
-                        f"  부상: {', '.join(_fit_compact_context(i, 40) for i in injuries[:5])}"
-                    )
+                    inherited_items.append(f"  부상: {', '.join(_fit_compact_context(i, 40) for i in injuries[:5])}")
                 else:
-                    inherited_lines.append(f"  부상: {_fit_compact_context(injuries, 200)}")
+                    inherited_items.append(f"  부상: {_fit_compact_context(injuries, 200)}")
             if genre == "wuxia" and inherited.get("internal_energy") is not None:
-                inherited_lines.append(f"  내공/에너지: {_fit_compact_context(inherited['internal_energy'], 80)}")
+                inherited_items.append(f"  내공/에너지: {_fit_compact_context(inherited['internal_energy'], 80)}")
             if inherited.get("mood"):
-                inherited_lines.append(f"  심리 상태: {_fit_compact_context(inherited['mood'], 100)}")
-            if inherited_lines:
-                lines.append("\n[계승 상태]")
-                lines.extend(inherited_lines)
+                inherited_items.append(f"  심리 상태: {_fit_compact_context(inherited['mood'], 100)}")
+            if inherited_items:
+                continuity_lines.append("[계승 상태]")
+                continuity_lines.extend(inherited_items)
+
+        # ── Band 4: ADVISORY (참고용, 필수 아님) ──
+        advisory_lines: list[str] = []
 
         arc_summary = constraint_block.get("arc_constraint_summary")
         if arc_summary:
-            lines.append("\n[Arc 제약 요약]")
+            advisory_lines.append("[Arc 제약 요약]")
             if isinstance(arc_summary, str):
-                lines.append(f"  {_fit_compact_context(arc_summary, 500)}")
+                advisory_lines.append(f"  {_fit_compact_context(arc_summary, 500)}")
             elif isinstance(arc_summary, dict):
                 for key, value in list(arc_summary.items())[:10]:
-                    lines.append(f"  {key}: {_fit_compact_context(value, 100)}")
+                    advisory_lines.append(f"  {key}: {_fit_compact_context(value, 100)}")
 
         sc_summary = constraint_block.get("state_changes_summary")
         if sc_summary:
-            lines.append("\n[상태 변경 요약]")
+            advisory_lines.append("[상태 변경 요약]")
             if isinstance(sc_summary, str):
-                lines.append(f"  {_fit_compact_context(sc_summary, 800)}")
+                advisory_lines.append(f"  {_fit_compact_context(sc_summary, 800)}")
             elif isinstance(sc_summary, dict):
                 deaths = sc_summary.get("npc_deaths", [])
                 if deaths:
                     names = [
                         d.get("name", d.get("npc", str(d))) if isinstance(d, dict) else str(d) for d in deaths[:10]
                     ]
-                    lines.append(f"  사망 NPC: {', '.join(names)}")
+                    advisory_lines.append(f"  사망 NPC: {', '.join(names)}")
                 skills = sc_summary.get("skill_acquisitions", [])
                 if skills:
                     names = [
                         s.get("name", s.get("skill", str(s))) if isinstance(s, dict) else str(s) for s in skills[:10]
                     ]
-                    lines.append(f"  획득 기술: {', '.join(names)}")
+                    advisory_lines.append(f"  획득 기술: {', '.join(names)}")
                 resolved = sc_summary.get("resolved_plots", [])
                 if resolved:
                     names = [
                         r.get("plot", r.get("description", str(r))) if isinstance(r, dict) else str(r)
                         for r in resolved[:10]
                     ]
-                    lines.append(f"  해결 플롯: {', '.join(names)}")
+                    advisory_lines.append(f"  해결 플롯: {', '.join(names)}")
                 permanent = sc_summary.get("permanent_injuries", [])
                 if permanent:
                     descs = [
@@ -971,24 +1002,50 @@ class BlueprintEnsembleGenerator(BaseAgent):
                         else _fit_compact_context(p.get("description", str(p)), 50)
                         for p in permanent[:5]
                     ]
-                    lines.append(f"  영구 부상: {', '.join(descs)}")
+                    advisory_lines.append(f"  영구 부상: {', '.join(descs)}")
 
         semantic_carryover = constraint_block.get("semantic_carryover")
         if isinstance(semantic_carryover, dict) and semantic_carryover:
-            lines.append("\n[Arc Semantic Carryover]")
+            advisory_lines.append("[Arc Semantic Carryover]")
             for entry in semantic_carryover.get("relationship_rationale", []) or []:
                 if not isinstance(entry, dict):
                     continue
                 npc = str(entry.get("npc", "") or "").strip() or "?"
                 cue = str(entry.get("trigger", "") or entry.get("justification", "") or "").strip()
                 if cue:
-                    lines.append(f"  relationship {npc}: {_fit_compact_context(cue, 120)}")
+                    advisory_lines.append(f"  relationship {npc}: {_fit_compact_context(cue, 120)}")
             # [W2] growth_justification: suppressed (arc-end achievement fuel)
             # [W2] continuity_checkpoints: suppressed (arc-end completion state)
             for anchor in (semantic_carryover.get("foreshadow_anchors", []) or [])[:3]:
                 text = str(anchor or "").strip()
                 if text:
-                    lines.append(f"  [미래 복선 참고용] foreshadow: {_fit_compact_context(text, 120)}")
+                    advisory_lines.append(f"  [미래 복선 참고용] foreshadow: {_fit_compact_context(text, 120)}")
+
+        # ── Assemble with explicit band headers and priority preamble ──
+        lines: list[str] = []
+
+        lines.append("[제약 우선순위: IMMUTABLE > HARD CONSTRAINT > EXPECTED CONTINUITY > ADVISORY]")
+        lines.append("충돌 시 상위 등급이 하위 등급을 무조건 우선합니다.")
+        lines.append("")
+
+        if immutable_lines:
+            lines.append("═══ IMMUTABLE (확정 사실 — 절대 변경 금지) ═══")
+            lines.extend(immutable_lines)
+            lines.append("")
+
+        if hard_lines:
+            lines.append("─── HARD CONSTRAINT (필수 준수 — 위반 시 REJECT) ───")
+            lines.extend(hard_lines)
+            lines.append("")
+
+        if continuity_lines:
+            lines.append("─── EXPECTED CONTINUITY (계승 기대 — 불일치 시 경고) ───")
+            lines.extend(continuity_lines)
+            lines.append("")
+
+        if advisory_lines:
+            lines.append("··· ADVISORY (참고용 — 필수 아님) ···")
+            lines.extend(advisory_lines)
 
         return "\n".join(lines) if lines else "(constraints unavailable)"
 

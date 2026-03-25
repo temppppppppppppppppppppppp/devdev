@@ -353,7 +353,7 @@ class TestStopLineLivePromptParity:
         }
         result = ensemble._format_constraints(constraint_block)
         assert "Stop Line" not in result
-        assert "REJECT" not in result
+        assert "즉시 REJECT ***" not in result  # stop-line REJECT warning absent
 
     def test_format_constraints_no_growth_no_checkpoints(self, ensemble):
         """[W2] _format_constraints must not render growth or checkpoints."""

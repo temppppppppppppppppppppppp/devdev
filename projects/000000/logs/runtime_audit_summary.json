@@ -1,0 +1,131 @@
+{
+  "tag": "stage4_complete",
+  "timestamp": "2026-03-24 23:12:27",
+  "summary_role": "runtime_heartbeat_with_proof_digest",
+  "total_events": 36,
+  "counts": {
+    "v60_25_auto_correct": 2,
+    "field_repair": 2,
+    "db_commit": 10,
+    "v60_10_state_extracted": 3,
+    "blueprint_success": 8,
+    "stage4_cove_runtime_advisory": 2,
+    "target_ep_reached": 2,
+    "stage4_complete": 2,
+    "stage4_retry_pathology_signal": 5
+  },
+  "latest_event_type": "stage4_complete",
+  "recent_events": [
+    {
+      "type": "db_commit",
+      "message": "데이터베이스 저장 완료"
+    },
+    {
+      "type": "blueprint_success",
+      "message": "ep_8_blueprint_generated"
+    },
+    {
+      "type": "stage4_retry_pathology_signal",
+      "message": "stage4 retry pathology observed"
+    },
+    {
+      "type": "stage4_retry_pathology_signal",
+      "message": "stage4 retry pathology observed"
+    },
+    {
+      "type": "stage4_retry_pathology_signal",
+      "message": "stage4 retry pathology observed"
+    },
+    {
+      "type": "stage4_cove_runtime_advisory",
+      "message": "stage4 CoVe runtime advisory observed"
+    },
+    {
+      "type": "stage4_retry_pathology_signal",
+      "message": "stage4 retry pathology observed"
+    },
+    {
+      "type": "stage4_retry_pathology_signal",
+      "message": "stage4 retry pathology observed"
+    },
+    {
+      "type": "target_ep_reached",
+      "message": "stage4 target episode reached"
+    },
+    {
+      "type": "stage4_complete",
+      "message": "stage4 production completed"
+    }
+  ],
+  "contract": {
+    "summary_scope": "runtime_heartbeat_plus_compact_proof_digest",
+    "attempt_truth_authoritative": false,
+    "authoritative_attempt_sinks": [
+      "stage_attempts",
+      "pass_rate_monitor",
+      "session_decisions",
+      "episode_production",
+      "director_selections"
+    ],
+    "proof_digest_truth_scope": "committed_persistence_only",
+    "authoritative_attempt_truth_note": "Use DB/JSONL/artifact sink join for authoritative attempt truth."
+  },
+  "proof_digest": {
+    "available": true,
+    "status": "warn",
+    "artifacts": {
+      "db_available": true,
+      "session_decisions_exists": true,
+      "ui_events_jsonl_exists": true,
+      "pass_rate_monitor_exists": true,
+      "episode_production_exists": true,
+      "runtime_audit_jsonl_exists": true,
+      "ui_events_db_available": true,
+      "ui_events_count": 1226,
+      "ui_event_coverage_status": "ok"
+    },
+    "stages": {
+      "stage3": {
+        "status": "ok",
+        "attempts_considered": 8,
+        "complete_final_attempts": 8,
+        "complete_lifecycle_attempts": 0,
+        "legacy_key_attempts": 0,
+        "session_scoped_attempts": 8,
+        "coverage": {
+          "stage_attempts": 8,
+          "pass_rate_monitor": 8,
+          "director_selections": 8,
+          "episode_production": 0,
+          "session_decisions": 8
+        },
+        "issue_counts": {}
+      },
+      "stage4": {
+        "status": "warn",
+        "attempts_considered": 12,
+        "complete_final_attempts": 12,
+        "complete_lifecycle_attempts": 12,
+        "legacy_key_attempts": 0,
+        "session_scoped_attempts": 12,
+        "coverage": {
+          "stage_attempts": 12,
+          "pass_rate_monitor": 12,
+          "director_selections": 12,
+          "episode_production": 12,
+          "session_decisions": 12
+        },
+        "issue_counts": {
+          "patch_strategy_mismatches": 5,
+          "selection_reason_mismatches": 1,
+          "verdict_reason_mismatches": 1
+        }
+      }
+    },
+    "session_lineage": {
+      "plain_log_token": "20260324_210604",
+      "structured_session_id": "20260324_210609",
+      "status": "split_mapped"
+    }
+  }
+}

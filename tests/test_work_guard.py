@@ -616,6 +616,123 @@ class TestWorkIdentity:
         assert "직업 적합성" in advisory
         assert "한지수(PB)" in advisory
 
+    def test_protagonist_evaluation_surfaces_in_identity_prompt(self, tmp_path):
+        from modules.core.genre_guards.work_guard import WorkGuard
+
+        p = _write_yaml(
+            tmp_path,
+            """\
+            work_identity:
+              work_type: "무협 성장물"
+              protagonist_evaluation:
+                admiration_axes:
+                  - "method_quality"
+                  - "hierarchy_shock"
+                forbidden_praise_patterns:
+                  - "big_number_wow"
+                  - "uniform_reaction"
+                observer_tiers:
+                  - "초보 관찰자"
+                  - "동료 고수"
+                  - "적대 전문가"
+                evaluation_thresholds:
+                  - "3화 이상 빌드업 후 감탄 허용"
+        """,
+        )
+        guard = WorkGuard(MockBaseGuard(), p)
+        prompt = guard.get_v20_purism_prompt()
+
+        assert "[작품 정체성 SSOT]" in prompt
+        assert "주인공 감탄 축: method_quality, hierarchy_shock" in prompt
+        assert "칭찬 금지 패턴: big_number_wow, uniform_reaction" in prompt
+        assert "관찰자 계층: 초보 관찰자, 동료 고수, 적대 전문가" in prompt
+        assert "평가 임계값: 3화 이상 빌드업 후 감탄 허용" in prompt
+
+    def test_protagonist_evaluation_absent_preserves_base_prompt(self, tmp_path):
+        from modules.core.genre_guards.work_guard import WorkGuard
+
+        p = _write_yaml(tmp_path, "")
+        guard = WorkGuard(MockBaseGuard(), p)
+        prompt = guard.get_v20_purism_prompt()
+        assert "주인공 감탄 축" not in prompt
+
+    def test_protagonist_evaluation_partial_fields(self, tmp_path):
+        from modules.core.genre_guards.work_guard import WorkGuard
+
+        p = _write_yaml(
+            tmp_path,
+            """\
+            work_identity:
+              protagonist_evaluation:
+                admiration_axes:
+                  - "conditional_reversal"
+        """,
+        )
+        guard = WorkGuard(MockBaseGuard(), p)
+        prompt = guard.get_v20_purism_prompt()
+        assert "주인공 감탄 축: conditional_reversal" in prompt
+        assert "칭찬 금지 패턴" not in prompt
+
+    def test_protagonist_evaluation_in_blueprint_retrieval_contract(self, tmp_path):
+        from modules.core.genre_guards.work_guard import WorkGuard
+
+        p = _write_yaml(
+            tmp_path,
+            """\
+            work_identity:
+              tracking_slots:
+                - "핵심 배우 라인"
+              protagonist_evaluation:
+                admiration_axes:
+                  - "information_asymmetry"
+                forbidden_praise_patterns:
+                  - "narrator_hype"
+                observer_tiers:
+                  - "일반인"
+                  - "전문가"
+                evaluation_thresholds:
+                  - "즉시 감탄 금지"
+        """,
+        )
+        guard = WorkGuard(MockBaseGuard(), p)
+        contract = guard.get_retrieval_contract_prompt("blueprint")
+
+        assert "주인공 감탄 축: information_asymmetry" in contract
+        assert "칭찬 금지 패턴: narrator_hype" in contract
+        assert "관찰자 계층: 일반인, 전문가" in contract
+        assert "평가 임계값: 즉시 감탄 금지" in contract
+
+    def test_protagonist_evaluation_not_in_arc_retrieval_contract(self, tmp_path):
+        from modules.core.genre_guards.work_guard import WorkGuard
+
+        p = _write_yaml(
+            tmp_path,
+            """\
+            work_identity:
+              tracking_slots:
+                - "핵심 배우 라인"
+              protagonist_evaluation:
+                admiration_axes:
+                  - "information_asymmetry"
+        """,
+        )
+        guard = WorkGuard(MockBaseGuard(), p)
+        contract = guard.get_retrieval_contract_prompt("arc")
+        assert "주인공 감탄 축" not in contract
+
+    def test_protagonist_evaluation_invalid_shape_raises_config_error(self, tmp_path):
+        from modules.core.genre_guards.work_guard import WorkGuard, WorkGuardConfigError
+
+        p = _write_yaml(
+            tmp_path,
+            """\
+            work_identity:
+              protagonist_evaluation: "not a mapping"
+        """,
+        )
+        with pytest.raises(WorkGuardConfigError, match="protagonist_evaluation"):
+            WorkGuard(MockBaseGuard(), p)
+
 
 # ── character_constraints → purism prompt ────────────────────
 

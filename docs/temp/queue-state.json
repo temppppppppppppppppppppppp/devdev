@@ -1,18 +1,8 @@
 {
   "version": "temp-queue-state-v1",
-  "generated_at": "2026-03-24T07:38:04.288375+00:00",
-  "queue_mode": "single",
-  "active_item_count": 1,
+  "generated_at": "2026-03-25T02:58:35.284601+00:00",
+  "queue_mode": "empty",
+  "active_item_count": 0,
   "roadmap": null,
-  "items": [
-    {
-      "topic": "ep1-ep2-stage4-carryover-expansion",
-      "temp_path": "docs/temp/ep1-ep2-stage4-carryover-expansion-execution-ssot.md",
-      "canonical_path": "docs/2026-03-24/ep1-ep2-stage4-carryover-expansion-execution-ssot.md",
-      "status": "pending",
-      "depends_on": [],
-      "mirror_present": true,
-      "canonical_present": true
-    }
-  ]
+  "items": []
 }
