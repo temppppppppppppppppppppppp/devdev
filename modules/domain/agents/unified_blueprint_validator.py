@@ -1,4 +1,5 @@
 """
+utf8-hygiene: allow-file -- Korean regex patterns in S3-FL/CC/TC prevalidation checks; bounded additions.
 [V60.80] Unified Blueprint Validator
 Stage 3 사전검사기 + Director 최종 판정
 
@@ -358,7 +359,9 @@ class UnifiedBlueprintValidator:
         }
 
         status = "PASS" if verdict in ("PASS", "PASS_WITH_FIX", "PASS_WITH_WARNING") else "REJECT"
-        logging.info(f"[{status}] Director selected candidate {selected_idx + 1} with score {compare_result.get('score', 0)}")
+        logging.info(
+            f"[{status}] Director selected candidate {selected_idx + 1} with score {compare_result.get('score', 0)}"
+        )
         return verdict, result
 
     def _run_python_prevalidation_phase(
@@ -561,9 +564,7 @@ class UnifiedBlueprintValidator:
             "issues": pre_result["issues"],
             "summary": "Director validation error - retry required",
             "feedback": (
-                "[Director error triggered retry]\n"
-                f"error: {str(exc)[:100]}\n"
-                "please regenerate and review again"
+                f"[Director error triggered retry]\nerror: {str(exc)[:100]}\nplease regenerate and review again"
             ),
         }
 
@@ -877,7 +878,434 @@ class UnifiedBlueprintValidator:
                 prev_blueprint=prev_blueprint,
             )
         )
+        # [S3-FL] Fact reconciliation checks against fact-lock and capital-continuity packets
+        issues.extend(
+            self._collect_fact_lock_drift_issues(
+                blueprint=blueprint,
+                integrated=integrated,
+                constraint_block=constraint_block,
+            )
+        )
+        issues.extend(
+            self._collect_capital_state_drift_issues(
+                integrated=integrated,
+                constraint_block=constraint_block,
+            )
+        )
+        issues.extend(
+            self._collect_temporal_deictic_drift_issues(
+                blueprint=blueprint,
+            )
+        )
+        # [Wave1-B] Scene-specificity and scenario-density prevalidation
+        issues.extend(
+            self._collect_scene_specificity_issues(
+                scenes=scenes,
+                scene_count=scene_count,
+            )
+        )
+        issues.extend(
+            self._collect_scenario_density_issues(
+                integrated=integrated,
+                scenes=scenes,
+                scene_count=scene_count,
+            )
+        )
         return self._build_python_prevalidation_result(issues)
+
+    # ── [S3-FL] Fact-Lock Drift Detection ──
+
+    @staticmethod
+    def _collect_fact_lock_drift_issues(
+        *,
+        blueprint: dict,
+        integrated: str,
+        constraint_block: dict,
+    ) -> list[dict]:
+        """Detect provenance drift and item-state drift against the fact-lock packet."""
+        if not isinstance(constraint_block, dict):
+            return []
+        fact_lock = constraint_block.get("fact_lock_packet", {})
+        if not isinstance(fact_lock, dict) or not fact_lock.get("anchors"):
+            return []
+
+        issues: list[dict] = []
+        integrated_lower = integrated.lower() if integrated else ""
+
+        for anchor in fact_lock["anchors"]:
+            if not isinstance(anchor, dict):
+                continue
+            category = anchor.get("category", "")
+            fact = anchor.get("fact", "")
+            if not fact:
+                continue
+
+            # ── Location drift: blueprint start_location contradicts prev end_location ──
+            if category == "위치":
+                prev_loc = ""
+                # Extract location from the fact text
+                if "직전 종료 위치:" in fact:
+                    prev_loc = fact.split("직전 종료 위치:")[-1].strip()[:60]
+                if prev_loc:
+                    bp_start = str(blueprint.get("start_location", blueprint.get("location", "")) or "").strip()
+                    if bp_start and prev_loc and prev_loc not in bp_start and bp_start not in prev_loc:
+                        # Check if the areas share a common prefix
+                        prev_area = prev_loc[:3] if len(prev_loc) >= 3 else prev_loc
+                        bp_area = bp_start[:3] if len(bp_start) >= 3 else bp_start
+                        if prev_area != bp_area:
+                            issues.append(
+                                {
+                                    "severity": "MAJOR",
+                                    "category": "fact_lock_location",
+                                    "issue": f"위치 사실잠금 위반: 확정 위치 '{prev_loc}' → blueprint 시작 '{bp_start}'",
+                                    "evidence": fact,
+                                    "fix_hint": "이전 화 종료 위치에서 시작하거나 이동 경위를 명시",
+                                }
+                            )
+
+            # ── Item storage drift: item placed in location X, blueprint moves it ──
+            if category == "아이템위치":
+                # Extract item name and location from fact
+                if "'" in fact:
+                    parts = fact.split("'")
+                    if len(parts) >= 4:
+                        item_name = parts[1]
+                        stored_loc = parts[3]
+                        if item_name and stored_loc and integrated_lower:
+                            # Check if blueprint mentions the item in a different location
+                            item_lower = item_name.lower()
+                            if item_lower in integrated_lower:
+                                stored_lower = stored_loc.lower()
+                                # If the stored location is NOT mentioned near the item, flag it
+                                idx = integrated_lower.find(item_lower)
+                                context_window = integrated_lower[max(0, idx - 80) : idx + len(item_lower) + 80]
+                                if stored_lower not in context_window:
+                                    issues.append(
+                                        {
+                                            "severity": "MAJOR",
+                                            "category": "fact_lock_item",
+                                            "issue": f"아이템 위치 사실잠금 위반: '{item_name}'은 '{stored_loc}'에 확정, blueprint에서 다른 위치 언급",
+                                            "evidence": fact,
+                                            "fix_hint": f"'{item_name}'의 위치를 '{stored_loc}'로 유지하거나 이동 장면 포함",
+                                        }
+                                    )
+
+            # ── Ending hook provenance drift ──
+            if category == "엔딩훅":
+                # The ending hook describes how the prev ep ended; if the blueprint's
+                # opening scenario contradicts the emotional/physical state, flag it
+                if "직전 화 엔딩:" in fact:
+                    hook_text = fact.split("직전 화 엔딩:")[-1].strip()[:150]
+                    if hook_text and integrated_lower:
+                        # Check for trust/provenance keywords in the hook that are negated in blueprint
+                        _trust_keywords = ["신뢰", "믿", "의심", "배신", "경계", "불신"]
+                        for keyword in _trust_keywords:
+                            if keyword in hook_text:
+                                # Check if the opposite sentiment appears in early blueprint
+                                early_text = integrated_lower[:500]
+                                opposites = {
+                                    "신뢰": ["불신", "의심", "배신"],
+                                    "믿": ["불신", "의심"],
+                                    "의심": ["신뢰", "깊은 믿음"],
+                                    "배신": ["신뢰", "충성"],
+                                    "경계": ["안심", "마음을 놓"],
+                                    "불신": ["신뢰", "믿"],
+                                }
+                                for opp in opposites.get(keyword, []):
+                                    if opp in early_text:
+                                        issues.append(
+                                            {
+                                                "severity": "CRITICAL",
+                                                "category": "fact_lock_provenance",
+                                                "issue": f"출처 사실잠금 위반: 직전 엔딩 '{keyword}' 맥락 → blueprint 초반 '{opp}' 반전",
+                                                "evidence": f"엔딩훅: ...{hook_text[:80]}... / blueprint: ...{early_text[:80]}...",
+                                                "fix_hint": "이전 화 엔딩 감정/신뢰 맥락을 이어받아 시작",
+                                            }
+                                        )
+                                        break
+                                break  # one keyword check per anchor
+
+            # ── Institution/venue authority drift [NPC-CF-C] ──
+            if category == "기관":
+                if "확정 기관/장소:" in fact:
+                    inst_name = fact.split("확정 기관/장소:")[-1].strip()
+                    if inst_name and len(inst_name) >= 4 and integrated:
+                        # Check if the locked institution appears in the blueprint
+                        if inst_name not in integrated:
+                            # Find the SHORTEST matching suffix for broad drift detection
+                            # e.g. HMC투자증권 → shortest suffix is 증권, not 투자증권
+                            # so competing 한미증권 (also ends with 증권) is caught
+                            _inst_suffixes = (
+                                "투자증권", "자산운용", "인베스트먼트", "PB센터",
+                                "증권", "은행", "캐피탈", "보험", "병원",
+                                "센터", "그룹", "재단", "협회", "연구소",
+                                "본사", "지점", "사무실",
+                            )
+                            _matching = [s for s in _inst_suffixes if inst_name.endswith(s)]
+                            _matched_suffix = min(_matching, key=len) if _matching else ""
+                            if _matched_suffix:
+                                # Check if a competing institution with the same suffix appears
+                                _competing_re = re.compile(
+                                    r"([\w가-힣A-Za-z]{2,15}" + re.escape(_matched_suffix) + r")"
+                                )
+                                competing = set()
+                                for cm in _competing_re.finditer(integrated):
+                                    cname = cm.group(1).strip()
+                                    if cname != inst_name and len(cname) >= 4:
+                                        competing.add(cname)
+                                if competing:
+                                    issues.append(
+                                        {
+                                            "severity": "CRITICAL",
+                                            "category": "fact_lock_institution",
+                                            "issue": (
+                                                f"기관 사실잠금 위반: 확정 '{inst_name}'"
+                                                f" → blueprint '{', '.join(sorted(competing)[:2])}' 사용"
+                                            ),
+                                            "evidence": fact,
+                                            "fix_hint": f"'{inst_name}' 명칭을 유지하거나 정당한 변경 경위를 명시",
+                                        }
+                                    )
+
+        return issues[:6]  # bounded output
+
+    @staticmethod
+    def _collect_capital_state_drift_issues(
+        *,
+        integrated: str,
+        constraint_block: dict,
+    ) -> list[dict]:
+        """Detect capital/deployment contradictions against capital-continuity packet."""
+        if not isinstance(constraint_block, dict):
+            return []
+        capital_pkt = constraint_block.get("capital_continuity_packet", {})
+        if not isinstance(capital_pkt, dict) or not capital_pkt.get("fields"):
+            return []
+
+        if not integrated:
+            return []
+
+        issues: list[dict] = []
+        integrated_lower = integrated.lower()
+
+        # Contradiction patterns: "still available" / "freshly deploy" after already committed
+        _contradiction_patterns = [
+            (re.compile(r"아직\s*(?:여유|남은|잔여)\s*(?:자금|자본|돈|금액)"), "아직 여유 자금 언급"),
+            (re.compile(r"새로\s*(?:투입|투자|매수|배치)"), "신규 투입 언급"),
+            (re.compile(r"전액\s*(?:투입|투자|매수|배치)"), "전액 투입 언급"),
+            (re.compile(r"(?:모든|전부|전체)\s*(?:자금|자본|돈)\s*(?:을|를)?\s*(?:투입|투자)"), "전체 자본 투입 언급"),
+        ]
+
+        for pattern, desc in _contradiction_patterns:
+            if pattern.search(integrated_lower):
+                issues.append(
+                    {
+                        "severity": "CRITICAL",
+                        "category": "capital_state",
+                        "issue": f"자본 상태 모순: {desc} (이전 화에서 이미 확정된 자본 상태 존재)",
+                        "evidence": f"blueprint에서 '{desc}' 패턴 감지",
+                        "fix_hint": "이전 화 확정 자본 상태를 기준으로 수정",
+                    }
+                )
+
+        # ── Phantom capital drift: deployed capital reappearing as available [NPC-CF-C] ──
+        _deployed_amounts: list[str] = []
+        for field in capital_pkt["fields"]:
+            if not isinstance(field, dict):
+                continue
+            label = str(field.get("label", ""))
+            value = str(field.get("value", ""))
+            if any(kw in label or kw in value for kw in ("투입 확정", "투입/체결", "투입 완료", "가용 아님", "매수")):
+                _amount_re = re.compile(r"(\d[\d,.]*\s*(?:억|만|천만|백만)?\s*(?:원|달러|만원))")
+                am = _amount_re.search(value)
+                if am:
+                    _deployed_amounts.append(am.group(1).strip())
+
+        if _deployed_amounts:
+            _avail_ctx_re = re.compile(r"(?:예치|보유|잔고|잔액|가용|여유|남은)")
+            normalized_integrated = integrated.replace(",", "").replace(" ", "")
+            for amount in _deployed_amounts:
+                amount_norm = amount.replace(",", "").replace(" ", "")
+                # Use first 4+ significant digits for fuzzy matching
+                search_key = amount_norm[:6] if len(amount_norm) >= 6 else amount_norm
+                if search_key and search_key in normalized_integrated:
+                    # Check surrounding context for "available" language
+                    idx = normalized_integrated.find(search_key)
+                    ctx_start = max(0, idx - 40)
+                    ctx_end = min(len(normalized_integrated), idx + len(search_key) + 40)
+                    context_window = integrated[ctx_start:ctx_end] if ctx_end <= len(integrated) else ""
+                    if not context_window:
+                        context_window = normalized_integrated[ctx_start:ctx_end]
+                    if _avail_ctx_re.search(context_window):
+                        issues.append(
+                            {
+                                "severity": "MAJOR",
+                                "category": "phantom_capital",
+                                "issue": f"유령 자본: 투입 확정 '{amount}'이 가용/예치 상태로 재등장",
+                                "evidence": "capital packet에서 투입 확정, blueprint에서 예치/보유 맥락 감지",
+                                "fix_hint": "이미 투입/체결된 자본은 가용 자본에서 제외",
+                            }
+                        )
+                        break  # one phantom issue is enough signal
+
+        return issues[:3]
+
+    @staticmethod
+    def _collect_temporal_deictic_drift_issues(
+        *,
+        blueprint: dict,
+    ) -> list[dict]:
+        """Detect temporal-deictic ending-hook drift (e.g., '18년 전' class errors)."""
+        if not isinstance(blueprint, dict):
+            return []
+
+        issues: list[dict] = []
+        ending_hook = str(blueprint.get("ending_hook", "") or "")
+
+        # Temporal-deictic patterns that should not appear in ending hooks
+        # These indicate the blueprint is using absolute past references that will
+        # become incorrect as episodes progress
+        _temporal_deictic_re = re.compile(r"(\d+)\s*(?:년|개월|달|주|일)\s*(?:전|후|뒤)")
+        matches = _temporal_deictic_re.findall(ending_hook) if ending_hook else []
+        if matches:
+            for num_str in matches[:2]:
+                try:
+                    num = int(num_str)
+                    if num >= 5:  # large temporal offsets are high-risk
+                        issues.append(
+                            {
+                                "severity": "MAJOR",
+                                "category": "temporal_deictic",
+                                "issue": f"시간 지시어 위험: ending_hook에 '{num_str}년 전' 등 절대 과거 참조",
+                                "evidence": f"ending_hook: {ending_hook[:120]}",
+                                "fix_hint": "ending_hook에서 절대 시간 참조 대신 상대적 표현 사용 또는 제거",
+                            }
+                        )
+                except (ValueError, TypeError):
+                    pass
+
+        # Also check integrated_scenario ending portion for deictic issues
+        integrated = str(blueprint.get("integrated_scenario", "") or "")
+        if integrated:
+            # Check only the last 500 chars (ending portion)
+            tail = integrated[-500:]
+            _future_memory_re = re.compile(
+                r"(\d+)\s*(?:년|개월)\s*(?:전|후)"
+                r".{0,20}"
+                r"(?:기억|회상|추억|떠올리|떠올렸|생각나)"
+            )
+            for m in _future_memory_re.finditer(tail):
+                num = int(m.group(1))
+                if num >= 5:
+                    issues.append(
+                        {
+                            "severity": "MAJOR",
+                            "category": "temporal_deictic",
+                            "issue": f"시간 지시어 위험: 시나리오 말미에 '{num}년 전' 회상/기억 패턴 감지",
+                            "evidence": f"...{tail[max(0, m.start() - 30) : m.end() + 30]}...",
+                            "fix_hint": "미래-기억 맥락의 절대 시간 참조를 제거하거나 상대적 표현으로 교체",
+                        }
+                    )
+                    break
+
+        return issues[:2]
+
+    # ── [Wave1-B] Scene-Specificity + Scenario-Density Prevalidation ──
+
+    def _collect_scene_specificity_issues(
+        self,
+        *,
+        scenes,
+        scene_count: int,
+    ) -> list[dict]:
+        """Detect structurally present but narratively thin scenes."""
+        if scene_count <= 0:
+            return []
+        issues: list[dict] = []
+        thin_goal_count = 0
+        no_events_count = 0
+        _GOAL_MIN_CHARS = 8
+        for scene_value in self._iter_scene_entries(scenes):
+            if not isinstance(scene_value, dict):
+                continue
+            goal = str(scene_value.get("goal", "") or scene_value.get("목표", "") or "").strip()
+            summary = str(scene_value.get("summary", "") or scene_value.get("요약", "") or "").strip()
+            if max(len(goal), len(summary)) < _GOAL_MIN_CHARS:
+                thin_goal_count += 1
+            key_events = scene_value.get("key_events") or []
+            if isinstance(key_events, list) and len(key_events) == 0:
+                no_events_count += 1
+        if thin_goal_count >= 2:
+            issues.append(
+                {
+                    "severity": "MAJOR",
+                    "category": "scene_specificity",
+                    "issue": f"씬 목표 미흡: {thin_goal_count}/{scene_count}개 씬의 goal/summary가 {_GOAL_MIN_CHARS}자 미만",
+                    "evidence": f"thin_goal_count={thin_goal_count}",
+                    "fix_hint": "각 씬의 goal/summary에 구체적 사건·행동·장소를 명시",
+                }
+            )
+        if no_events_count >= 2:
+            issues.append(
+                {
+                    "severity": "MINOR",
+                    "category": "scene_specificity",
+                    "issue": f"씬 이벤트 부재: {no_events_count}/{scene_count}개 씬에 key_events가 비어 있음",
+                    "evidence": f"no_events_count={no_events_count}",
+                    "fix_hint": "각 씬에 최소 1개의 key_event를 명시",
+                }
+            )
+        return issues[:2]
+
+    def _collect_scenario_density_issues(
+        self,
+        *,
+        integrated: str,
+        scenes,
+        scene_count: int,
+    ) -> list[dict]:
+        """Detect low-density integrated_scenario that clears char floor but lacks substance."""
+        if not integrated or scene_count <= 0:
+            return []
+        issues: list[dict] = []
+        # Check 1: Per-scene proportional coverage — flag if scenario is long enough
+        # but too thin relative to scene count
+        avg_chars_per_scene = len(integrated) / scene_count if scene_count > 0 else 0
+        _AVG_MIN = 200
+        if len(integrated) >= self.min_chars and avg_chars_per_scene < _AVG_MIN:
+            issues.append(
+                {
+                    "severity": "MINOR",
+                    "category": "scenario_density",
+                    "issue": (
+                        f"시나리오 밀도 부족: 평균 {avg_chars_per_scene:.0f}자/씬 "
+                        f"< {_AVG_MIN}자/씬 ({scene_count}개 씬, 총 {len(integrated)}자)"
+                    ),
+                    "evidence": f"avg_chars_per_scene={avg_chars_per_scene:.0f}",
+                    "fix_hint": "각 씬의 내용을 integrated_scenario에 구체적으로 전개",
+                }
+            )
+        # Check 2: Concrete anchor density — count location/institution/number tokens
+        _anchor_re = re.compile(
+            r"[가-힣]{2,6}(?:증권|은행|투자|회관|사무실|저택|공원|거리|빌딩|호텔|병원|학교|본부|본점|객잔|약방|산장|무관)"
+            r"|\d[\d,.]*\s*(?:억|만|천만|백만|원|달러|골드|냥|전|관|kg|km|명|세|층|동|호)"
+        )
+        anchors = _anchor_re.findall(integrated)
+        _ANCHOR_MIN = 5
+        if len(integrated) >= self.min_chars and len(anchors) < _ANCHOR_MIN:
+            issues.append(
+                {
+                    "severity": "MINOR",
+                    "category": "scenario_density",
+                    "issue": (
+                        f"시나리오 구체성 부족: 구체적 앵커(기관/인물/수치) {len(anchors)}개 "
+                        f"< {_ANCHOR_MIN}개 ({len(integrated)}자 중)"
+                    ),
+                    "evidence": f"anchor_count={len(anchors)}",
+                    "fix_hint": "구체적 기관명, 인물명, 수치를 포함하여 시나리오 밀도 향상",
+                }
+            )
+        return issues[:2]
 
     def _is_location_transition_valid(self, prev_loc: str, curr_loc: str) -> bool:
         """위치 전환이 유효한지 체크"""

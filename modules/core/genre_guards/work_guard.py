@@ -38,6 +38,12 @@ _WORK_IDENTITY_SCALAR_LIST_FIELDS = (
     "business_axes",
     "control_axes",
 )
+_PROTAGONIST_EVAL_SCALAR_LIST_FIELDS = (
+    "admiration_axes",
+    "forbidden_praise_patterns",
+    "observer_tiers",
+    "evaluation_thresholds",
+)
 
 
 def _raise_config_error(path: Path, message: str) -> None:
@@ -107,6 +113,17 @@ def validate_work_guard_config(data: Any, yaml_path: Path | str) -> dict[str, An
             path=path,
             field_name="work_identity.role_fit_constraints",
         )
+
+        protagonist_eval = work_identity.get("protagonist_evaluation")
+        if protagonist_eval is not None:
+            if not isinstance(protagonist_eval, dict):
+                _raise_config_error(path, "'work_identity.protagonist_evaluation' must be a mapping")
+            for field_name in _PROTAGONIST_EVAL_SCALAR_LIST_FIELDS:
+                _validate_scalar_list_field(
+                    protagonist_eval.get(field_name),
+                    path=path,
+                    field_name=f"work_identity.protagonist_evaluation.{field_name}",
+                )
 
     return data
 
@@ -244,7 +261,7 @@ class WorkGuard(BaseGuard):
         if not text:
             return set()
         tokens: set[str] = set()
-        for token in re.split(r"[\s,|/:;()\[\]{}<>\"'`~!@#$%^&*+=?!.…-]+", text):
+        for token in re.split(r"[\s,|/:;()\[\]{}<>\"'`~!@#$%^&*+=?!.…-]+", text):  # utf8-hygiene: allow-line regex quantifier
             token = token.strip()
             if len(token) < 2:
                 continue
@@ -396,6 +413,18 @@ class WorkGuard(BaseGuard):
             self._work_identity.get("role_fit_constraints", [])
         )
 
+        # protagonist_evaluation (optional compact mini bible note)
+        _raw_protag_eval = self._work_identity.get("protagonist_evaluation")
+        if isinstance(_raw_protag_eval, dict):
+            self._protagonist_evaluation = {
+                "admiration_axes": self._normalize_str_list(_raw_protag_eval.get("admiration_axes", [])),
+                "forbidden_praise_patterns": self._normalize_str_list(_raw_protag_eval.get("forbidden_praise_patterns", [])),
+                "observer_tiers": self._normalize_str_list(_raw_protag_eval.get("observer_tiers", [])),
+                "evaluation_thresholds": self._normalize_str_list(_raw_protag_eval.get("evaluation_thresholds", [])),
+            }
+        else:
+            self._protagonist_evaluation: dict[str, list[str]] = {}
+
         _logger.info(
             "[WorkGuard] 초기화: +forbidden=%d, +allowed=%d, +patterns=%d, custom_rules=%d, char_constraints=%d, tracking_slots=%d, registry_profiles=%d, role_fit=%d",
             len(extra_forbidden),
@@ -516,6 +545,17 @@ class WorkGuard(BaseGuard):
             if self._mandatory_lexicon:
                 identity_lines.append(f"- 작품 핵심 어휘: {', '.join(self._mandatory_lexicon)}")
 
+            if self._protagonist_evaluation:
+                pe = self._protagonist_evaluation
+                if pe.get("admiration_axes"):
+                    identity_lines.append(f"- 주인공 감탄 축: {', '.join(pe['admiration_axes'])}")
+                if pe.get("forbidden_praise_patterns"):
+                    identity_lines.append(f"- 칭찬 금지 패턴: {', '.join(pe['forbidden_praise_patterns'])}")
+                if pe.get("observer_tiers"):
+                    identity_lines.append(f"- 관찰자 계층: {', '.join(pe['observer_tiers'])}")
+                if pe.get("evaluation_thresholds"):
+                    identity_lines.append(f"- 평가 임계값: {', '.join(pe['evaluation_thresholds'])}")
+
             if identity_lines:
                 sections.append("[작품 정체성 SSOT]\n" + "\n".join(identity_lines))
 
@@ -598,6 +638,16 @@ class WorkGuard(BaseGuard):
             lines.append("- 이번 Arc는 어떤 tracking_slots가 실제로 움직이는지 먼저 고르고, 각 화가 그 슬롯 변화에 기여하도록 설계하세요.")
         elif stage == "blueprint":
             lines.append("- 각 씬은 mandatory_scene_engines 중 최소 하나와 연결되게 설계하고, 추적 슬롯이 씬 단위로 어떻게 드러나는지 명시하세요.")
+            if self._protagonist_evaluation:
+                pe = self._protagonist_evaluation
+                if pe.get("admiration_axes"):
+                    lines.append(f"- 주인공 감탄 축: {', '.join(pe['admiration_axes'])}. 씬에서 감탄을 유발할 때 이 축 중 하나를 선택하세요.")
+                if pe.get("forbidden_praise_patterns"):
+                    lines.append(f"- 칭찬 금지 패턴: {', '.join(pe['forbidden_praise_patterns'])}. 이 패턴은 Blueprint에서 배치하지 마세요.")
+                if pe.get("observer_tiers"):
+                    lines.append(f"- 관찰자 계층: {', '.join(pe['observer_tiers'])}. 씬별 관찰자를 이 계층에서 골라 배치하세요.")
+                if pe.get("evaluation_thresholds"):
+                    lines.append(f"- 평가 임계값: {', '.join(pe['evaluation_thresholds'])}. 감탄 반응의 강도와 빈도를 이 기준으로 조절하세요.")
         elif stage == "block":
             lines.append("- 블록 농축 시 현재 블록과 직접 연결되는 tracking_slots와 scene engine만 증폭하고, 관련 없는 registry는 끌어오지 마세요.")
         elif stage == "manuscript":
@@ -676,8 +726,8 @@ class WorkGuard(BaseGuard):
     @staticmethod
     def _find_character_ages(manuscript: str, char_name: str) -> list[int]:
         patterns = [
-            rf"{re.escape(char_name)}[^\n]{{0,24}}?(\d{{1,2}})세",
-            rf"(\d{{1,2}})세[^\n]{{0,24}}?{re.escape(char_name)}",
+            rf"{re.escape(char_name)}[^\n]{{0,24}}?(\d{{1,2}})세",  # utf8-hygiene: allow-line regex optional quantifier
+            rf"(\d{{1,2}})세[^\n]{{0,24}}?{re.escape(char_name)}",  # utf8-hygiene: allow-line regex optional quantifier
         ]
         ages: list[int] = []
         for pattern in patterns:
