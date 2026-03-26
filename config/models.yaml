@@ -12,11 +12,13 @@ providers:
     sdk: "openai"
     api_key_env: "OPENAI_API_KEY"
   vertex_ai:
-    enabled: false
+    enabled: true
     sdk: "google-genai"
+    api_key_env: "VERTEX_API_KEY"
     project_id_env: "VERTEX_PROJECT_ID"
     location_env: "VERTEX_LOCATION"
     credentials_env: "GOOGLE_APPLICATION_CREDENTIALS"
+    # Auth priority: api_key_env → project_id_env+location_env+credentials_env
     # Use explicit model prefixes to keep Gemini Developer API and Vertex AI side by side.
     # Example opt-in models:
     # - "vertexai:gemini-3.1-flash-lite-preview"

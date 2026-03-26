@@ -19,6 +19,9 @@ class LLMResponse:
 
     `raw` keeps the provider-native response so Gemini-first call sites can
     migrate incrementally without rewriting downstream parsing in the same batch.
+
+    `backend` / `family` carry the multi-provider spine identity so downstream
+    code never needs to parse model-name strings to decide behaviour.
     """
 
     text: str = ""
@@ -26,6 +29,8 @@ class LLMResponse:
     usage: dict[str, Any] | None = None
     raw: Any | None = None
     provider: str = "unknown"
+    backend: str = "unknown"
+    family: str = "unknown"
 
 
 class LLMProvider(Protocol):

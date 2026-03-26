@@ -46,4 +46,6 @@ class GeminiProvider:
             usage=usage,
             raw=raw,
             provider=self.provider_name,
+            backend="google_direct",
+            family="gemini",
         )

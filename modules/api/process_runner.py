@@ -805,4 +805,15 @@ class ProcessRunner:
         if inputs.get("slack_webhook"):
             env["SLACK_WEBHOOK_URL"] = inputs["slack_webhook"]
 
+        # Vertex AI runtime env vars (inputs dict override → os.environ fallthrough)
+        for env_key, input_key in (
+            ("VERTEX_API_KEY", "vertex_api_key"),
+            ("VERTEX_PROJECT_ID", "vertex_project_id"),
+            ("VERTEX_LOCATION", "vertex_location"),
+            ("GOOGLE_APPLICATION_CREDENTIALS", "google_credentials_path"),
+        ):
+            value = inputs.get(input_key)
+            if value:
+                env[env_key] = str(value)
+
         return env
