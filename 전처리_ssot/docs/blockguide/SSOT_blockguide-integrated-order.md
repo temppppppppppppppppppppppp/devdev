@@ -339,7 +339,7 @@ run class는 아래 둘만 허용한다.
 정지 게이트:
 
 - UTF-8 파싱 실패
-- `???`, `�` 탐지
+- `???`, `�` 탐지 <!-- utf8-hygiene: allow-line rationale: literal mojibake tokens are documented here as stop-gate examples. -->
 - P0 또는 감리 FAIL
 - 직전 SSOT 부재
 - 직전 단위 수동 감리 메모 부재
@@ -350,12 +350,12 @@ run class는 아래 둘만 허용한다.
 **정지 게이트가 아닌 것 (멈추면 안 되는 것):**
 
 - **단계 전환**: Stage 0→Planning, Planning→Production, Production→BI는 정지 게이트가 아니다. 직전 단계가 정상 완료되었으면 §2 판정표에 따라 다음 단계로 **멈추지 않고** 자동 진행한다.
-- **큰 마일스톤 도달**: Phase 0 JSON 완성, TR 70블록 완성, BI 스켈레톤 완성 등 큰 산출물 생성 직후에 사용자에게 "계속할까요?"를 묻는 것은 금지한다. 정지 게이트가 발동하지 않았으면 §2 판정표로 다음 단계를 결정하고 바로 실행한다.
+- **큰 마일스톤 도달**: Phase 0 JSON 완성, TR 70블록 완성, BI 스켈레톤 완성 등 큰 산출물 생성 직후에 사용자에게 "계속할까요?"를 묻는 것은 금지한다. 다만 Production은 같은 운영 오더에서 최대 5블록까지만, BI는 handoff 1사이클까지만 자동 진행한다. <!-- utf8-hygiene: allow-line rationale: literal quoted operator question is documented here as a prohibited example. -->
 - **확인 질문 자체**: 정지 게이트에 해당하지 않는 상황에서 사용자에게 진행 여부를 묻는 행위는 auto-run 위반이다.
 
 **컨텍스트 열화 방지 (전 모델 공통):**
 
-- **하드캡**: 한 세션에서 블록 7개 초과 생산 금지. 7블록 도달 시 `{work_id}_production_state.json` 저장 후 정지. 컨텍스트가 남아 있어도 멈춘다.
+- **하드캡**: 같은 운영 오더에서 블록 5개 초과 생산 금지. `Block 005/010/015...` 경계에 도달하면 `{work_id}_production_state.json` 저장 후 정지한다.
 - **품질 저하 감지**: 매 블록 생산 후, 이번 블록의 `deal_type`이 직전 3블록 중 하나와 동일하면 즉시 정지. "품질 저하 감지. state 저장 완료. 새 세션에서 재개 필요." 출력. 요약하여 이어 쓰지 않는다.
 - **상세 규약**: `TF-LCP-long-context-persistence.md`, `TF-OBP-output-boundary-protocol.md`
 
@@ -379,8 +379,8 @@ run class는 아래 둘만 허용한다.
 12. weakness는 이름 치환이 아니라 구조 차이로 확인한다.
 13. `auto-run`은 순서 자동 진행이지, 스크립트 자동 실행이 아니다.
 14. Production은 항상 블록 1개씩 쌓고, 각 블록마다 수동 감리를 남긴다.
-15. **단계 전환은 정지 게이트가 아니다.** Phase 0 끝나면 멈추지 말고 Production으로, TR 끝나면 멈추지 말고 BI로 바로 넘어간다. "계속할까요?"를 묻지 않는다.
-16. **블록 7개 넘기지 마라.** 한 세션에서 7블록 생산하면 무조건 멈추고 state 저장. 요약해서 이어 쓰지 마라.
+15. **단계 전환은 정지 게이트가 아니다.** Phase 0 끝나면 Production으로 넘어갈 수 있고, TR 끝나면 BI handoff 1사이클까지는 바로 넘어갈 수 있다. "계속할까요?"를 묻지 않는다. <!-- utf8-hygiene: allow-line rationale: literal quoted operator question is documented here as a prohibited example. -->
+16. **블록 5개 넘기지 마라.** 같은 운영 오더에서 5블록 생산하면 무조건 멈추고 state 저장 후 새 오더를 기다린다.
 17. **deal_type이 겹치면 멈춰라.** 이번 블록 deal_type이 직전 3블록과 같으면 품질 저하다. 즉시 멈추고 새 세션에서 다시 시작.
 
 ---

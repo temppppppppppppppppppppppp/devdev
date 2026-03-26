@@ -23,6 +23,8 @@
 7. `Phase 0`가 없으면 이 문서를 실행하지 말고 planning 단계로 되돌린다.
 8. 생산 단계가 맞으면 출력 단위는 항상 **블록 1개**로 잡는다.
    - `auto-run`은 블록을 순서대로 이어서 쌓는다는 뜻이다.
+   - 같은 운영 오더에서 자동 연속 가능한 최대치는 **5블록**이다.
+   - `Block 005`, `010`, `015` ... 경계에 도달하면 새 오더 전까지 반드시 멈춘다.
    - 10블록은 대단원 구조/감리 창(window)일 뿐, 출력 단위가 아니다.
    - 70블록 일괄 생성이나 10블록 일괄 생성은 금지한다.
 9. 각 블록에서 해야 할 일은 항상 같다.
@@ -39,6 +41,7 @@
 
 - `Phase 0` 없이 블록부터 쓰기
 - 안정성 확인 없이 여러 블록을 한꺼번에 밀어붙이기
+- 같은 운영 오더로 6블록 이상 무정지 진행하기
 - 감리 전 `draft`를 완성본으로 선언하기
 - 기억에 의존해 직전 배치 상태를 재구성하기
 
@@ -209,7 +212,7 @@ preprocess 작업공간에는 이미 block 디렉터리나 final draft가 채워
 
 재개 규칙:
 
-1. Production 재개 전 `treatments/preprocess/{work_id}/docs/sequential_run_status.md`를 먼저 읽는다.
+1. Production 재개 전 상태 파일을 읽는다: `sequential_run_status.json` (primary) → `.md` (deprecated fallback, 유예 기간 내만).
 2. `run_class = sequential_production`이고 `last_sequential_block_pass = N`이며 `manual_audit_ready = true`면 다음 단위는 `Block {N+1}`이다.
 3. `run_class = seed_baseline_sync`면 `03_tr_blocks/`에 블록이 이미 많이 있어도 진행률은 0 또는 기록된 실제 순차 PASS 수로 본다.
 4. `04_tr_final/` 존재, 최고 번호 block 디렉터리, final draft 존재만으로는 다음 블록을 정하지 않는다.
@@ -231,9 +234,22 @@ preprocess 작업공간에는 이미 block 디렉터리나 final draft가 채워
 
 - 사용자가 명시적으로 방향을 바꾸는 경우
 - 필수 SSOT(`Phase 0`, 직전 `draft`)가 없거나 손상된 경우
-- `sequential_run_status.md`와 실제 수동 감리 기록이 충돌하는 경우
+- `sequential_run_status.json` (또는 .md fallback)와 실제 수동 감리 기록이 충돌하는 경우
 - `seed_baseline_sync`를 진짜 순차 production 완료처럼 취급하려는 경우
 - 감리에서 P0가 떠서 다음 배치로 넘어갈 수 없는 경우
+
+### 1.1B TR auto-run window (5-block cap)
+
+이 절은 **TR production 오더에만** 적용한다.
+Stage 0, Planning, BI handoff에는 그대로 확장하지 않는다.
+
+규칙:
+
+1. 내부 실행 단위는 항상 `Block 1개`다.
+2. 사용자가 `알아서 계속`, `정지 게이트 전까지 계속`처럼 연속 진행을 허용해도, 같은 운영 오더에서 자동 연속 가능한 최대치는 **5블록**이다.
+3. `Block 005`, `010`, `015` ... 처럼 5의 배수 경계에 도달하면 품질 이상이 없어도 반드시 멈추고 새 오더/재정렬을 기다린다.
+4. P0, UTF-8, 수동 감리, continuity, compaction 경고가 먼저 오면 5블록 이전에도 즉시 멈춘다.
+5. BI handoff는 별도 단계다. TR의 5블록 cap을 BI 감리 생략 허가로 해석하지 않는다.
 
 ### 1.2 연속 진행 허용 모드 (Quality-First)
 
@@ -253,11 +269,11 @@ preprocess 작업공간에는 이미 block 디렉터리나 final draft가 채워
     - 직전 감리 또는 검증 통과
     - 다음 단위에 필요한 SSOT 존재
 4. `auto-run`의 의미는 **다음 블록으로 순차 진행**이지, Python 스크립트를 전량 실행하라는 뜻이 아니다.
-5. 1~3이 모두 참이고 수동 감리 메모가 있으면 사용자 입력 없이 다음 단위로 진행한다.
-5. 1개라도 거짓이면 즉시 정지하고 실패 지점을 보고한다.
-6. 컨텍스트 compaction이 발생해도 같은 원칙을 유지한다. 이 경우 `Phase 0` -> `sequential_run_status.md` -> 직전 수동 감리 -> 직전 `candidate/fixed` 순으로 다시 연다.
-7. `sequential_run_status.md`가 `seed_baseline_sync`면 자동 재개 시작점은 `Block 001`이다.
-8. candidate/fixed/draft/check/merge 산출물과 모든 감리 보고서는 **UTF-8 only**로 저장한다. 한글 오염은 P0다.
+5. 1~3이 모두 참이고 수동 감리 메모가 있으며, 현재 운영 오더의 자동 연속 창이 5블록을 넘지 않았으면 사용자 입력 없이 다음 단위로 진행한다.
+6. 1개라도 거짓이면 즉시 정지하고 실패 지점을 보고한다.
+7. 컨텍스트 compaction이 발생해도 같은 원칙을 유지한다. 이 경우 `Phase 0` -> `sequential_run_status.json` (또는 .md fallback) -> 직전 수동 감리 -> 직전 `candidate/fixed` 순으로 다시 연다.
+8. 상태 파일의 `run_class`가 `seed_baseline_sync`면 자동 재개 시작점은 `Block 001`이다.
+9. candidate/fixed/draft/check/merge 산출물과 모든 감리 보고서는 **UTF-8 only**로 저장한다. 한글 오염은 P0다.
 
 권장 연속 진행 순서:
 
@@ -268,10 +284,11 @@ preprocess 작업공간에는 이미 block 디렉터리나 final draft가 채워
 - P0 위반 발생
 - candidate/fixed/draft 간 title 또는 capital 연속성 불일치
 - UTF-8 파싱 실패
-- `???`, `�`, 인코딩 오염 탐지
+- `???`, `�`, 인코딩 오염 탐지 <!-- utf8-hygiene: allow-line rationale: literal mojibake tokens are documented here as stop-gate examples. -->
 - 직전 블록 수동 감리 메모 없음
-- `sequential_run_status.md`와 실제 audit history 불일치
+- `sequential_run_status.json` (또는 .md deprecated fallback)와 실제 audit history 불일치
 - `seed_baseline_sync`를 순차 production 완료처럼 취급
+- 같은 운영 오더에서 5블록 창 소진 (새 오더 필요)
 - 사용자가 검토/수정/중단을 명시
 - 정리 삭제처럼 되돌리기 어려운 후처리가 필요한 경우
 
@@ -822,15 +839,15 @@ def parse_capital(text: str) -> float:
 
     total = 0.0
     # 조
-    m = re.search(r'(\d+(?:\.\d+)?)\s*조', text)
+    m = re.search(r'(\d+(?:\.\d+)?)\s*조', text)  # utf8-hygiene: allow-line rationale: literal Hangul unit regex example.
     if m:
         total += float(m.group(1)) * 10000
     # 억
-    m = re.search(r'(\d+(?:\.\d+)?)\s*억', text)
+    m = re.search(r'(\d+(?:\.\d+)?)\s*억', text)  # utf8-hygiene: allow-line rationale: literal Hangul unit regex example.
     if m:
         total += float(m.group(1))
     # 만
-    m = re.search(r'(\d+(?:\.\d+)?)\s*만', text)
+    m = re.search(r'(\d+(?:\.\d+)?)\s*만', text)  # utf8-hygiene: allow-line rationale: literal Hangul unit regex example.
     if m:
         total += float(m.group(1)) * 0.0001
 
@@ -2079,24 +2096,28 @@ Treatment 필드가 파이프라인 어디서 소비되는지. 이 필드가 부
 1. 블록 생산 완료 시마다 즉시 tr_block_070_draft.json에 머지하고 저장한다. "나중에 한꺼번에" 금지.
 2. 블록 저장 후 sequential_run_status.json을 업데이트한다:
    - last_sequential_block_pass = 완료된 블록 번호
-   - next_block = 다음 블록 번호
+   - next_unit_type = 다음 단위 (`block` | `merge` | `bi_handoff`)
+   - next_block_id = 다음 단위가 block이면 다음 블록 번호, 아니면 null
    - run_class = sequential_production
-3. 5블록마다 중간 정합성 체크를 수행한다:
+3. 같은 운영 오더 안에서는 최대 5블록까지만 자동 연속 진행한다.
+   - Block 1~4 종료: continuity check 통과 시 다음 블록으로 진행 가능
+   - Block 5 종료: continuity check 후 반드시 정지하고 새 오더를 기다린다
+4. 5블록마다 중간 정합성 체크를 수행한다:
    - python scripts/block_continuity_checker.py --work-id {work_id} --family {family}
    - 불일치 발견 시 즉시 수정 후 다음 블록 진행
 
 ### 세션 종료 시
-4. context window 한계가 가까워지면 (압축 경고 발생 시):
+5. context window 한계가 가까워지면 (압축 경고 발생 시):
    - 현재 진행 중인 블록을 완료하고 저장
    - sequential_run_status.json 업데이트
    - "세션 종료. python scripts/generate_resume_prompt.py --work-id {work_id} 실행하여 다음 세션 프롬프트를 생성하세요." 출력
-5. 비정상 종료 대비: 블록 단위 즉시 저장이 이미 되어 있으므로, 다음 세션에서 generate_resume_prompt.py가 정확한 재개 지점을 알려준다.
+6. 비정상 종료 대비: 블록 단위 즉시 저장이 이미 되어 있으므로, 다음 세션에서 generate_resume_prompt.py가 정확한 재개 지점을 알려준다.
 
 ### 자동 진행 규칙
-6. Stage 0 완료 → Planning 자동 진입 (Go 조건 충족 시 묻지 않고 넘어감)
-7. Planning 완료 → Production 자동 진입
-8. Production Block 70 완료 → BI 자동 진입
-9. 각 전환 시 "다음 단계로 갈까요?" 질문 금지. 게이트 통과하면 바로 간다.
+7. 이 절의 auto-run은 **TR production 범위에만** 적용한다. Stage 0/Planning 전이는 각 전용 하네스가 따로 판정한다.
+8. Production auto-run은 `1블록씩 + 최대 5블록`까지만 허용한다.
+9. `Block 70` 완료 후 source TR gate가 정상이면 BI 하네스로 handoff할 수 있다.
+10. 5블록 창 소진, 강제 정지 게이트, compaction 경고 중 하나라도 오면 새 오더 전까지 재개하지 않는다.
 
 ---
 

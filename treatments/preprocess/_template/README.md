@@ -7,7 +7,7 @@ Rules:
 - Do real work inside the numbered folders.
 - Promote only final approved assets to `treatments/` and `bible/`.
 - Do not skip `manual_audit_pass`.
-- Use `docs/sequential_run_status.json` as the primary production resume pointer.
+- Use `sequential_run_status.json` as the primary production resume pointer.
 - `docs/sequential_run_status.md` may exist as a human-readable mirror, but it is not the canonical resume source.
 - Prefilled block folders or copied final drafts count as `seed_baseline_sync`, not real sequential progress.
 
@@ -18,7 +18,8 @@ Minimal flow:
 4. Build `phase0_design`.
 5. Produce TR one block at a time.
 6. Build BI after TR gate pass.
+7. TR auto-run still moves one block at a time and must stop for a fresh order every 5 blocks.
 
 Resume rule:
-- `run_class = sequential_production` and `last_sequential_block_pass = N` -> continue at `Block {N+1}`.
+- `run_class = sequential_production`, `next_unit_type = block`, `next_block_id = Block {N+1}` -> continue at that block.
 - `run_class = seed_baseline_sync` or missing status -> restart at `Block 001`.

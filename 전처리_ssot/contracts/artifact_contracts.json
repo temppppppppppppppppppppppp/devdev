@@ -187,7 +187,8 @@
       "required_fields": [
         "run_class",
         "last_sequential_block_pass",
-        "next_block",
+        "next_unit_type",
+        "next_block_id",
         "manual_audit_ready",
         "notes"
       ],
