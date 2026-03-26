@@ -14,10 +14,19 @@ DEFAULT_PROVIDER_CONFIGS = {
     "vertex_ai": {
         "enabled": False,
         "sdk": "google-genai",
+        "api_key_env": "VERTEX_API_KEY",
         "project_id_env": "VERTEX_PROJECT_ID",
         "location_env": "VERTEX_LOCATION",
         "credentials_env": "GOOGLE_APPLICATION_CREDENTIALS",
     },
+}
+
+# Multi-provider spine identity map: provider_name → (backend, family)
+BACKEND_FAMILY_MAP: dict[str, tuple[str, str]] = {
+    "gemini": ("google_direct", "gemini"),
+    "vertex_ai": ("google_vertex", "gemini"),
+    "anthropic": ("anthropic_direct", "claude"),
+    "openai": ("openai_direct", "gpt"),
 }
 
 
@@ -50,6 +59,7 @@ def _build_provider(provider_name: str, config: dict) -> LLMProvider:
         return OpenAIProvider(api_key_env=config.get("api_key_env", "OPENAI_API_KEY"))
     if provider_name == "vertex_ai":
         return VertexAIProvider(
+            api_key_env=config.get("api_key_env", "VERTEX_API_KEY"),
             project_id_env=config.get("project_id_env", "VERTEX_PROJECT_ID"),
             location_env=config.get("location_env", "VERTEX_LOCATION"),
             credentials_env=config.get("credentials_env", "GOOGLE_APPLICATION_CREDENTIALS"),

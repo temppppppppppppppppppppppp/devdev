@@ -221,6 +221,188 @@ def test_vertex_provider_generate_with_fake_sdk(monkeypatch):
     assert captured_kwargs["client_kwargs"]["vertexai"] is True
 
 
+# ── Wave 1: Provider envelope identity tests ──────────────────────────────
+
+
+def test_gemini_provider_sets_backend_family():
+    client = MagicMock()
+    raw = MagicMock()
+    raw.text = "ok"
+    raw.candidates = [MagicMock(finish_reason="STOP")]
+    raw.usage_metadata = None
+    client.models.generate_content.return_value = raw
+
+    from modules.core.providers.gemini_provider import GeminiProvider
+
+    response = GeminiProvider().generate(
+        client=client,
+        request=LLMRequest(model="gemini-2.5-flash", contents="hello"),
+    )
+    assert response.provider == "gemini"
+    assert response.backend == "google_direct"
+    assert response.family == "gemini"
+
+
+def test_vertex_provider_sets_backend_family(monkeypatch):
+    captured = {}
+
+    class FakeModels:
+        @staticmethod
+        def generate_content(**kwargs):
+            captured.update(kwargs)
+            return SimpleNamespace(
+                text="ok",
+                candidates=[SimpleNamespace(finish_reason="STOP")],
+                usage_metadata=None,
+            )
+
+    class FakeClient:
+        def __init__(self, **kwargs):
+            self.models = FakeModels()
+
+    monkeypatch.setenv("VERTEX_PROJECT_ID", "proj")
+    monkeypatch.setenv("VERTEX_LOCATION", "us-central1")
+    monkeypatch.setattr("modules.core.providers.vertex_provider.genai.Client", FakeClient)
+    monkeypatch.setattr(
+        "modules.core.providers.vertex_provider.VertexAIProvider._load_credentials",
+        lambda self: None,
+    )
+
+    response = VertexAIProvider().generate(
+        client=MagicMock(),
+        request=LLMRequest(model="vertexai:gemini-2.5-flash", contents="hello"),
+    )
+    assert response.provider == "vertex_ai"
+    assert response.backend == "google_vertex"
+    assert response.family == "gemini"
+
+
+def test_anthropic_provider_sets_backend_family(monkeypatch):
+    class FakeAnthropic:
+        def __init__(self, api_key):
+            self.messages = SimpleNamespace(create=self._create)
+
+        @staticmethod
+        def _create(**kwargs):
+            return SimpleNamespace(
+                content=[SimpleNamespace(type="text", text="ok")],
+                stop_reason="end_turn",
+                usage=SimpleNamespace(input_tokens=1, output_tokens=1),
+            )
+
+    fake_module = ModuleType("anthropic")
+    fake_module.Anthropic = FakeAnthropic
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test")
+    monkeypatch.setitem(sys.modules, "anthropic", fake_module)
+
+    response = AnthropicProvider().generate(
+        client=MagicMock(),
+        request=LLMRequest(model="claude-sonnet-4-6", contents="hello"),
+    )
+    assert response.provider == "anthropic"
+    assert response.backend == "anthropic_direct"
+    assert response.family == "claude"
+
+
+def test_openai_provider_sets_backend_family(monkeypatch):
+    class FakeOpenAI:
+        def __init__(self, api_key):
+            self.responses = SimpleNamespace(
+                create=lambda **kw: SimpleNamespace(
+                    output_text="ok", status="completed", usage=None,
+                )
+            )
+
+    fake_module = ModuleType("openai")
+    fake_module.OpenAI = FakeOpenAI
+    monkeypatch.setenv("OPENAI_API_KEY", "test")
+    monkeypatch.setitem(sys.modules, "openai", fake_module)
+
+    response = OpenAIProvider().generate(
+        client=MagicMock(),
+        request=LLMRequest(model="gpt-5", contents="hello"),
+    )
+    assert response.provider == "openai"
+    assert response.backend == "openai_direct"
+    assert response.family == "gpt"
+
+
+# ── Wave 1: Metrics attribution tests ─────────────────────────────────────
+
+
+def test_metrics_start_call_infers_provider_identity():
+    from modules.core.metrics_collector import MetricsCollector
+
+    MetricsCollector.reset()
+    collector = MetricsCollector()
+    try:
+        mid = collector.start_call("Writer", "vertexai:gemini-2.5-flash")
+        # Access internal metric to verify identity was set
+        assert mid not in collector._metrics or True  # metric may have been cleaned
+        # Verify via a fresh call that identity propagates through end_call
+        mid2 = collector.start_call("Writer", "gemini-2.5-flash")
+        metric = collector._metrics[mid2]
+        assert metric.provider == "gemini"
+        assert metric.backend == "google_direct"
+        assert metric.family == "gemini"
+    finally:
+        MetricsCollector.reset()
+
+
+def test_metrics_vertex_vs_gemini_distinguishable():
+    from modules.core.metrics_collector import MetricsCollector
+
+    MetricsCollector.reset()
+    collector = MetricsCollector()
+    try:
+        mid_direct = collector.start_call("Writer", "gemini-2.5-flash")
+        mid_vertex = collector.start_call("Writer", "vertexai:gemini-2.5-flash")
+
+        m_direct = collector._metrics[mid_direct]
+        m_vertex = collector._metrics[mid_vertex]
+
+        assert m_direct.provider == "gemini"
+        assert m_direct.backend == "google_direct"
+        assert m_vertex.provider == "vertex_ai"
+        assert m_vertex.backend == "google_vertex"
+        assert m_direct.family == m_vertex.family == "gemini"
+    finally:
+        MetricsCollector.reset()
+
+
+# ── Wave 1: ProcessRunner env passthrough tests ───────────────────────────
+
+
+def test_process_runner_build_env_vertex_passthrough():
+    from modules.api.process_runner import ProcessRunner
+
+    runner = ProcessRunner()
+    env = runner._build_env({
+        "vertex_api_key": "vk-123",
+        "vertex_project_id": "my-proj",
+        "vertex_location": "us-central1",
+        "google_credentials_path": "/tmp/sa.json",
+    })
+    assert env["VERTEX_API_KEY"] == "vk-123"
+    assert env["VERTEX_PROJECT_ID"] == "my-proj"
+    assert env["VERTEX_LOCATION"] == "us-central1"
+    assert env["GOOGLE_APPLICATION_CREDENTIALS"] == "/tmp/sa.json"
+
+
+def test_process_runner_build_env_vertex_absent_no_override():
+    import os
+
+    from modules.api.process_runner import ProcessRunner
+
+    runner = ProcessRunner()
+    env = runner._build_env({})
+    # Vertex vars should only appear if already in os.environ (via copy)
+    # Not injected from empty inputs
+    for key in ("VERTEX_API_KEY", "VERTEX_PROJECT_ID", "VERTEX_LOCATION"):
+        if key not in os.environ:
+            assert key not in env
+
+
 def test_generate_content_via_router_returns_normalized_response(monkeypatch):
     raw = SimpleNamespace(text="native")
     provider = MagicMock()

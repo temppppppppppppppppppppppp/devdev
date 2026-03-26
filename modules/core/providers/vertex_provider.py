@@ -15,10 +15,12 @@ class VertexAIProvider:
     def __init__(
         self,
         *,
+        api_key_env: str = "VERTEX_API_KEY",
         project_id_env: str = "VERTEX_PROJECT_ID",
         location_env: str = "VERTEX_LOCATION",
         credentials_env: str = "GOOGLE_APPLICATION_CREDENTIALS",
     ) -> None:
+        self.api_key_env = api_key_env
         self.project_id_env = project_id_env
         self.location_env = location_env
         self.credentials_env = credentials_env
@@ -55,15 +57,32 @@ class VertexAIProvider:
         if self._client is not None:
             return self._client
 
+        # Priority 1: API key (Vertex AI Express mode)
+        api_key = os.getenv(self.api_key_env)
+        if api_key:
+            client_kwargs: dict[str, Any] = {
+                "vertexai": True,
+                "api_key": api_key,
+            }
+            project = os.getenv(self.project_id_env) or os.getenv("GOOGLE_CLOUD_PROJECT")
+            location = os.getenv(self.location_env) or os.getenv("GOOGLE_CLOUD_LOCATION")
+            if project:
+                client_kwargs["project"] = project
+            if location:
+                client_kwargs["location"] = location
+            self._client = genai.Client(**client_kwargs)
+            return self._client
+
+        # Priority 2: Service account credentials + project/location
         project = os.getenv(self.project_id_env) or os.getenv("GOOGLE_CLOUD_PROJECT")
         location = os.getenv(self.location_env) or os.getenv("GOOGLE_CLOUD_LOCATION")
         if not project or not location:
             raise RuntimeError(
-                f"Vertex AI requires {self.project_id_env}/{self.location_env} "
-                "or GOOGLE_CLOUD_PROJECT/GOOGLE_CLOUD_LOCATION."
+                f"Vertex AI requires {self.api_key_env} (Express mode) "
+                f"or {self.project_id_env}/{self.location_env} with credentials."
             )
 
-        client_kwargs: dict[str, Any] = {
+        client_kwargs = {
             "vertexai": True,
             "project": project,
             "location": location,
@@ -115,4 +134,6 @@ class VertexAIProvider:
             usage=usage,
             raw=raw,
             provider=self.provider_name,
+            backend="google_vertex",
+            family="gemini",
         )
