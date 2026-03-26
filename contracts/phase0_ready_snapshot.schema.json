@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "phase0_ready_snapshot.schema.json",
+  "title": "Phase 0 Ready Snapshot",
+  "description": "Stage 0 readiness gate: all four booleans must be true for Planning entry.",
+  "type": "object",
+  "required": [
+    "identity_locked",
+    "profile_locked",
+    "material_sufficient",
+    "manual_audit_pass",
+    "remaining_risks"
+  ],
+  "properties": {
+    "identity_locked": {
+      "type": "boolean",
+      "description": "True if work_identity in source_manifest is locked."
+    },
+    "profile_locked": {
+      "type": "boolean",
+      "description": "True if profile_lock.json is finalized."
+    },
+    "material_sufficient": {
+      "type": "boolean",
+      "description": "True if material_bundle_summary has actionable content."
+    },
+    "manual_audit_pass": {
+      "type": "boolean",
+      "description": "True if a human auditor approved Stage 0 output."
+    },
+    "remaining_risks": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Known risks or gaps carried forward into Planning."
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,358 @@
+{
+  "_schema_version": "2.0",
+  "_schema_description": "삼류문파장문인 무협 BI - MartialHUD 구조 예시",
+  "_last_updated": "2026-03-24",
+  "_genre": "wuxia",
+  "MasterBible": {
+    "ProjectData": {
+      "MetaInfo": {
+        "title": "삼류문파의 장문인이 되었다 (가제)",
+        "grand_objective": "무림 최하위 삼류 문파 청풍장의 장문인으로 빙의한 주인공이 몰락 직전의 문파를 일으켜 세우고, 강호 패권 다툼 속에서 살아남아 삼류에서 일류로, 일류에서 천하를 바라보는 장문인이 되는 것.",
+        "genre_archetype": "무협 + 빙의 + 문파경영 + 강호정치",
+        "logline": "죽다 살아난 삼류 문파 장문인 한결은 쓰러져가는 청풍장 제자 일곱 명과 빈 곳간으로 시작한다. 그는 잊힌 비급과 강호의 빈틈을 이용해 문파를 키우고, 끝내 구파일방이 그의 이름을 기억하게 만든다.",
+        "total_episodes": 350,
+        "episodes_per_arc": 5,
+        "arcs_per_volume": 5
+      },
+      "CoreIdentity": {
+        "protagonist": "한결",
+        "protagonist_faction": "청풍장 (삼류문파) → 청풍세가 (일류세력)",
+        "edge": "현대인의 경영 감각 + 잊힌 비급 해독 능력 + 강호 정세를 읽는 판단력",
+        "desire": "무림 최하위 문파를 일류로 끌어올려 누구에게도 짓밟히지 않는 세력을 만든다.",
+        "crisis": "빙의 직후 문파는 해산 직전이고 적대 세력이 영지를 노리며, 제자들의 무공은 삼류 수준에 머물러 있다."
+      },
+      "CommercialCode": {
+        "cider_point": "무시당하던 삼류 문파가 강호의 판도를 뒤흔드는 세력으로 성장하는 과정, 그리고 삼류라 불렸던 장문인이 구파일방 장문인들 앞에 서는 순간.",
+        "success_device": "문파 경영, 비급 발굴, 제자 육성, 강호 외교, 전략적 동맹과 배신.",
+        "attitude": "약자의 생존술과 강호 정치를 동시에 구사하는 현실적 장문인."
+      }
+    },
+    "protagonist_config": {
+      "world_origin": "현대인 (빙의 전 직장인)",
+      "incarnation_type": "빙의",
+      "transmigration_point": {
+        "original_death_context": "과로사 후 눈을 뜨니 삼류 문파 청풍장의 장문인 몸",
+        "arrival_age": 28,
+        "arrival_context": "청풍장 장문인 한결의 몸에 빙의. 장문인이 병으로 쓰러진 직후, 제자 7명과 빈 곳간만 남은 상태.",
+        "realm_at_arrival": "후천초기",
+        "internal_energy_at_arrival": "삼류 수준의 미약한 내공. 정식 무공 수련 경험 거의 없음."
+      },
+      "realm_progression": [
+        {"block": 1, "realm": "후천초기", "event": "빙의 시점. 삼류 장문인의 미약한 내공"},
+        {"block": 10, "realm": "후천중기", "event": "청풍검결 습득 후 내공 축적 시작"},
+        {"block": 20, "realm": "후천후기", "event": "잊힌 비급 해독. 청풍장 고유 내공심법 복원"},
+        {"block": 35, "realm": "일류초입", "event": "사파 습격 생사결전에서 돌파"},
+        {"block": 50, "realm": "절정", "event": "무림맹 비무대회에서 절정 고수와 대결 중 돌파"},
+        {"block": 65, "realm": "초절정", "event": "마교 침공 결전에서 한계 돌파"},
+        {"block": 70, "realm": "초절정(안정)", "event": "천하 세력 재편 후 경지 안정화"}
+      ],
+      "martial_arts_progression": [
+        {"name": "청풍검결", "block_acquired": 3, "origin": "청풍장 기본 검법", "final_proficiency": "대성"},
+        {"name": "청풍심법", "block_acquired": 20, "origin": "잊힌 비급 해독", "final_proficiency": "대성"},
+        {"name": "파산검식", "block_acquired": 35, "origin": "사파 고수 비급 탈취", "final_proficiency": "소성"},
+        {"name": "태허진기", "block_acquired": 50, "origin": "무림맹 장로 전수", "final_proficiency": "화경"}
+      ],
+      "faction_progression": [
+        {"block": 1, "faction": "청풍장", "role": "장문인", "event": "빙의 시점"},
+        {"block": 30, "faction": "청풍장 + 무림맹 가맹", "role": "장문인 / 무림맹 말석", "event": "무림맹 정식 가입"},
+        {"block": 55, "faction": "청풍세가", "role": "가주 겸 장문인", "event": "청풍장에서 세가로 격상"},
+        {"block": 70, "faction": "청풍세가", "role": "가주 / 무림맹 핵심 세력", "event": "천하 세력 재편 후 입지 확립"}
+      ]
+    },
+    "MartialHUD": {
+      "_description": "무협 전용 HUD - 경지, 내공, 무공, 세력, 장비를 추적",
+      "Protagonist": {
+        "actual_truth": {
+          "name": "한결",
+          "alias": "청풍검객 / 삼류의 기적",
+          "age": 33,
+          "rank": "청풍세가 가주 / 무림맹 핵심 세력 장문인",
+          "martial_status": {
+            "realm": "초절정(안정)",
+            "realm_history": [
+              {"block": 1, "realm": "후천초기", "event": "빙의 시점"},
+              {"block": 10, "realm": "후천중기", "event": "청풍검결 습득 후 내공 축적"},
+              {"block": 20, "realm": "후천후기", "event": "잊힌 비급 해독"},
+              {"block": 35, "realm": "일류초입", "event": "사파 습격 생사결전 돌파"},
+              {"block": 50, "realm": "절정", "event": "무림맹 비무대회 중 돌파"},
+              {"block": 65, "realm": "초절정", "event": "마교 침공 결전 한계 돌파"},
+              {"block": 70, "realm": "초절정(안정)", "event": "경지 안정화"}
+            ],
+            "internal_energy": "태허진기를 근간으로 한 초절정 수준의 내력. 청풍심법과 융합하여 음양조화의 내공 체계를 이룸. 내공 총량은 구파일방 장문인급.",
+            "martial_arts": [
+              {
+                "name": "청풍검결",
+                "origin": "청풍장 기본 검법",
+                "proficiency": "대성"
+              },
+              {
+                "name": "청풍심법",
+                "origin": "잊힌 비급 해독 (청풍장 창시자 유물)",
+                "proficiency": "대성"
+              },
+              {
+                "name": "파산검식",
+                "origin": "사파 고수 비급 탈취",
+                "proficiency": "소성"
+              },
+              {
+                "name": "태허진기",
+                "origin": "무림맹 장로 전수",
+                "proficiency": "화경"
+              }
+            ],
+            "injury_log": [
+              {
+                "block": 15,
+                "injury": "사파 기습으로 좌측 어깨 검상. 내공 순환 일시 차단.",
+                "recovery_block": 18
+              },
+              {
+                "block": 35,
+                "injury": "사파 두목과 결전 중 내상. 경맥 3곳 손상.",
+                "recovery_block": 38
+              },
+              {
+                "block": 65,
+                "injury": "마교 장로급 고수와 사투 중 중상. 단전에 균열.",
+                "recovery_block": 68
+              }
+            ],
+            "kill_log": [
+              {
+                "block": 35,
+                "target": "흑사도 도주 마검룡",
+                "method": "청풍검결 절초 + 파산검식 연계"
+              },
+              {
+                "block": 52,
+                "target": "독수리채 채주 독고명",
+                "method": "비무 중 급소 가격 (정당방위)"
+              },
+              {
+                "block": 65,
+                "target": "마교 좌호법왕 염라",
+                "method": "태허진기 전력 일격"
+              }
+            ]
+          },
+          "faction_status": {
+            "current_faction": "청풍세가",
+            "faction_history": [
+              {
+                "block": 1,
+                "faction": "청풍장",
+                "role": "장문인",
+                "event": "빙의 시점. 삼류 문파 장문인 계승."
+              },
+              {
+                "block": 30,
+                "faction": "청풍장 + 무림맹",
+                "role": "장문인 / 무림맹 말석 가맹",
+                "event": "무림맹 가입 심사 통과"
+              },
+              {
+                "block": 55,
+                "faction": "청풍세가",
+                "role": "가주 겸 장문인",
+                "event": "세력 격상. 무림맹 내 발언권 확보."
+              }
+            ],
+            "ally_factions": [
+              "무림맹",
+              "종남파",
+              "점창파"
+            ],
+            "enemy_factions": [
+              "마교 잔당",
+              "흑풍채 (흑사도 잔존 세력)"
+            ]
+          },
+          "equipment": {
+            "weapons": [
+              {
+                "name": "청풍검",
+                "grade": "보병",
+                "origin": "청풍장 창시자 유물. 비급과 함께 발견."
+              },
+              {
+                "name": "파사단검",
+                "grade": "범철(개량)",
+                "origin": "마교 좌호법왕 전리품. 사기 억제 후 보조 무기로 사용."
+              }
+            ],
+            "artifacts": [
+              {
+                "name": "청풍장 창시자 비급 원본",
+                "description": "청풍심법과 고급 검결이 기록된 옥간. 해독 완료 후 문파 수련 체계의 근간이 됨."
+              },
+              {
+                "name": "소환혈단",
+                "description": "무림맹 비장 영단. 블록 68에서 단전 균열 치료에 사용."
+              }
+            ]
+          },
+          "jianghu_reputation": {
+            "jianghu_title": "청풍검객",
+            "feared_by": ["사파 잔존 세력", "마교 잔당"],
+            "trusted_by": ["무림맹 맹주", "종남파 장문인", "점창파 장로회"],
+            "rumor_state": "삼류 문파 장문인에서 초절정 고수로 성장한 강호의 기적. 구파일방 일부는 경계하고, 일부는 동맹을 원한다."
+          },
+          "current_objective": "마교 잔당 소탕 후 청풍세가 내부 안정화. 차세대 제자 양성 체계 정비.",
+          "mid_term_goal": "청풍세가를 구파일방에 준하는 항구적 세력으로 안착시키고, 무림맹 내 핵심 발언권을 유지한다.",
+          "final_goal": "누구도 다시 삼류라 부를 수 없는 세력을 만들고, 강호의 질서가 청풍세가를 거치지 않고는 움직이기 어렵게 만든다.",
+          "causal_injuries": "현대에서의 과로사 기억. 약자로서 짓밟히는 것에 대한 본능적 거부. 빙의 초기 제자들이 무시당하는 모습이 전생의 자신과 겹침."
+        },
+        "public_reputation": {
+          "identity": "삼류 문파 출신 장문인에서 일류 세가 가주로 올라선 강호의 신성",
+          "perceived_strength": "초절정. 구파일방 장문인급으로 인식.",
+          "perceived_faction": "청풍세가 가주 / 무림맹 핵심 세력",
+          "jianghu_credit": "높음. 사파 소탕과 마교 침공 저지 공로로 강호 전체의 신뢰를 얻음."
+        }
+      }
+    },
+    "WorldState": {
+      "CurrentEra": "가상 무림 시대 (명 중기 모티프)",
+      "CurrentLocation": "청풍세가 본거지 (이전 청풍장 영지 확장)",
+      "era_window": "블록 1~70 (약 5년간의 강호 변동)",
+      "group_background": "구파일방과 마교의 세력 균형이 흔들리는 시기. 사파가 틈을 노리고, 중소 문파들은 흡수되거나 소멸 위기에 처해 있다. 이 혼란 속에서 삼류 문파가 성장할 빈틈이 존재한다.",
+      "martial_world_rules": "무공 체계는 후천-일류-절정-초절정-화경-선천 순서. 경지 돌파에는 내공 축적, 깨달음, 생사결전 중 하나 이상의 계기가 필요하다."
+    },
+    "FactionMap": {
+      "protagonist_faction": {
+        "name": "청풍세가 (구 청풍장)",
+        "strength": "일류 세력",
+        "members": 120,
+        "key_figures": ["한결 (가주)", "도현 (수석제자)", "서린 (부장문인)"]
+      },
+      "ally_factions": [
+        {"name": "무림맹", "relation": "정식 가맹 / 핵심 세력"},
+        {"name": "종남파", "relation": "우호 동맹"},
+        {"name": "점창파", "relation": "우호 동맹"}
+      ],
+      "enemy_factions": [
+        {"name": "마교 잔당", "relation": "적대. 좌호법왕 사망 후 잔존 세력 보복 위협."},
+        {"name": "흑풍채", "relation": "적대. 흑사도 잔존 세력 재편."}
+      ],
+      "neutral_factions": [
+        {"name": "소림사", "relation": "중립 관망"},
+        {"name": "무당파", "relation": "중립. 교류 희망."},
+        {"name": "개방", "relation": "중립. 정보 거래 관계."}
+      ]
+    },
+    "plot_roadmap": [
+      {
+        "block": 1,
+        "title": "삼류의 아침",
+        "realm_before": null,
+        "realm_after": "후천초기",
+        "martial_event": "빙의. 삼류 문파 장문인의 몸에 눈을 뜬다.",
+        "foreshadow": ["청풍장 창시자 유물의 존재 암시"],
+        "callback": []
+      },
+      {
+        "block": 2,
+        "title": "빈 곳간과 일곱 제자",
+        "realm_before": "후천초기",
+        "realm_after": "후천초기",
+        "martial_event": "문파 현황 파악. 제자 7명의 무공 수준 점검.",
+        "foreshadow": ["인근 사파 세력의 영지 야욕 암시"],
+        "callback": []
+      },
+      {
+        "block": 3,
+        "title": "낡은 검결",
+        "realm_before": "후천초기",
+        "realm_after": "후천초기",
+        "martial_event": "청풍검결 수련 시작. 기본기부터 다시 쌓는다.",
+        "foreshadow": [],
+        "callback": ["블록 1의 유물 암시 → 검결 속 숨은 초식 발견 단서"]
+      }
+    ],
+    "AssetLibrary": {
+      "KeyNPCs": [
+        {
+          "name": "도현",
+          "role": "수석제자",
+          "faction": "청풍세가",
+          "status": "alive",
+          "description": "청풍장 시절부터 함께한 최고참 제자. 충직하고 무골이나 실력은 일류 초입."
+        },
+        {
+          "name": "서린",
+          "role": "부장문인",
+          "faction": "청풍세가",
+          "status": "alive",
+          "description": "블록 25에서 영입. 종남파 파문 제자 출신. 전략과 외교에 능하다."
+        },
+        {
+          "name": "마검룡",
+          "role": "흑사도 도주",
+          "faction": "흑사도",
+          "status": "deceased",
+          "death_block": 35,
+          "description": "청풍장 영지를 노린 사파 두목. 블록 35에서 한결에게 사망."
+        },
+        {
+          "name": "독고명",
+          "role": "독수리채 채주",
+          "faction": "독수리채",
+          "status": "deceased",
+          "death_block": 52,
+          "description": "무림맹 비무대회에서 한결과 대결. 비무 중 사망."
+        },
+        {
+          "name": "염라",
+          "role": "마교 좌호법왕",
+          "faction": "마교",
+          "status": "deceased",
+          "death_block": 65,
+          "description": "마교 침공 결전의 핵심 적수. 블록 65에서 한결에게 사망."
+        }
+      ]
+    },
+    "Treasures": [
+      {
+        "name": "청풍장 창시자 비급 원본",
+        "type": "비급",
+        "discovery_block": 18,
+        "description": "청풍심법과 상급 검결이 기록된 옥간. 문파 수련 체계의 근간."
+      },
+      {
+        "name": "청풍검",
+        "type": "보병급 무기",
+        "discovery_block": 18,
+        "description": "비급과 함께 발견된 창시자 유물검."
+      },
+      {
+        "name": "소환혈단",
+        "type": "영단",
+        "discovery_block": 67,
+        "description": "무림맹 비장 영단. 단전 균열 치료에 사용."
+      }
+    ],
+    "Seeds": [
+      {
+        "seed_id": "S01",
+        "description": "청풍장 창시자의 정체. 과거 절정 고수였으나 은거한 사연.",
+        "foreshadow_block": 1,
+        "callback_block": 45,
+        "status": "resolved"
+      },
+      {
+        "seed_id": "S02",
+        "description": "마교와 구파일방의 과거 밀약. 강호 질서의 이면.",
+        "foreshadow_block": 12,
+        "callback_block": 60,
+        "status": "resolved"
+      },
+      {
+        "seed_id": "S03",
+        "description": "한결의 빙의 원인. 현대와 무림 세계의 연결 고리.",
+        "foreshadow_block": 5,
+        "callback_block": null,
+        "status": "open"
+      }
+    ]
+  }
+}

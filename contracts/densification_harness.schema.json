@@ -1,0 +1,120 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Densification Harness Contract v2",
+  "description": "Schema for enriching skeleton blocks with high-density narrative content while locking structural data. Family-agnostic: blockguide uses genre_ext, wuxguide uses martial_ext.",
+  "type": "object",
+  "required": ["block_id", "title", "content", "stakes", "power_shift", "relationship_delta", "foreshadow", "callback", "emotional_beat", "tension_level", "location"],
+  "properties": {
+    "block_id": { "type": "string" },
+    "title": { "type": "string" },
+    "content": {
+      "type": "object",
+      "required": ["context", "event_villain", "solution", "reward"],
+      "properties": {
+        "context": { "type": "string", "minLength": 50 },
+        "event_villain": { "type": "string", "minLength": 100 },
+        "solution": { "type": "string", "minLength": 100 },
+        "reward": { "type": "string", "minLength": 50 }
+      }
+    },
+    "stakes": { "type": "string", "minLength": 35 },
+    "power_shift": {
+      "type": "object",
+      "required": ["protagonist", "antagonist"],
+      "properties": {
+        "protagonist": { "type": "string" },
+        "antagonist": { "type": "string" }
+      }
+    },
+    "relationship_delta": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": ["target", "before", "after"],
+        "properties": {
+          "target": { "type": "string" },
+          "before": { "type": "string" },
+          "after": { "type": "string" }
+        }
+      }
+    },
+    "foreshadow": {
+      "type": "array",
+      "items": { "type": "object" }
+    },
+    "callback": {
+      "type": "array",
+      "items": { "type": "object" }
+    },
+    "emotional_beat": {
+      "type": "object",
+      "required": ["type", "intensity"],
+      "properties": {
+        "type": { "type": "string" },
+        "intensity": { "type": "integer", "minimum": 1, "maximum": 10 }
+      }
+    },
+    "tension_level": { "type": "integer", "minimum": 1, "maximum": 10 },
+    "location": {
+      "type": "object",
+      "required": ["place", "detail"],
+      "properties": {
+        "place": { "type": "string" },
+        "detail": { "type": "string" }
+      }
+    },
+    "genre_ext": {
+      "description": "Blockguide (현판) family — FinanceHUD 호환 필드",
+      "type": "object",
+      "properties": {
+        "capital_before": { "type": "string" },
+        "capital_after": { "type": "string" },
+        "capital_delta": { "type": "string" },
+        "method": { "type": "string" },
+        "deal_type": { "type": "string" },
+        "leverage_used": { "type": "array", "items": { "type": "string" } },
+        "opponent": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "weakness_exploited": { "type": "string" }
+          }
+        },
+        "historical_event": { "type": "object" },
+        "success_pattern": { "type": "string" },
+        "risk_level": { "type": "string" }
+      }
+    },
+    "martial_ext": {
+      "description": "Wuxguide (무협) family — MartialHUD 호환 필드",
+      "type": "object",
+      "properties": {
+        "strategy": { "type": "string" },
+        "action_type": { "type": "string" },
+        "technique_used": { "type": "array", "items": { "type": "string" } },
+        "opponent": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "weakness_exploited": { "type": "string" }
+          }
+        },
+        "terrain_advantage": { "type": "string" },
+        "injury": { "type": "object" },
+        "breakthrough": { "type": "object" },
+        "leverage_used": { "type": "array", "items": { "type": "string" } },
+        "risk_level": { "type": "string" },
+        "success_pattern": { "type": "string" }
+      }
+    },
+    "density_metrics": {
+      "type": "object",
+      "properties": {
+        "bundle_chars": { "type": "integer", "minimum": 350 },
+        "density_score": { "type": "number", "minimum": 0, "maximum": 100 },
+        "template_similarity_score": { "type": "number", "maximum": 0.3 }
+      }
+    }
+  }
+}

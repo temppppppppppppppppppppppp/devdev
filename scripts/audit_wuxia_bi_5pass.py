@@ -135,15 +135,23 @@ def report_lines(
     seeds = master.get("Seeds", [])
     key_npcs = master.get("AssetLibrary", {}).get("KeyNPCs", [])
 
-    expected_title = phase0["project"]["title_ko"]
+    expected_title = phase0["project"].get("title_ko") or phase0["project"].get("title", "")
     expected_protagonist = phase0["protagonist"]["name"]
     expected_npcs = [expected_protagonist, *[npc["name"] for npc in phase0["phase0_design"]["npc_timeline"]]]
     source_metrics = compute_treatment_metrics(draft)
     last_block = draft[-1] if draft else {}
-    expected_realm = as_text(last_block.get("genre_ext", {}).get("realm_after"))
-    expected_energy = parse_int(last_block.get("genre_ext", {}).get("internal_energy_after"))
-    expected_reputation = as_text(last_block.get("genre_ext", {}).get("jianghu_reputation"))
-    expected_enemy_pressure = as_text(last_block.get("genre_ext", {}).get("enemy_pressure"))
+    # Support both genre_ext (blockguide) and martial_ext (wuxguide) keys
+    ext_key = "martial_ext" if "martial_ext" in last_block else "genre_ext"
+    ext_data = last_block.get(ext_key, {})
+    expected_realm = as_text(ext_data.get("realm_after"))
+    expected_energy = parse_int(ext_data.get("internal_energy_after"))
+    # jianghu_reputation may be a dict {before, after} — extract the 'after' value for comparison
+    rep_raw = ext_data.get("jianghu_reputation")
+    if isinstance(rep_raw, dict):
+        expected_reputation = as_text(rep_raw.get("after")) or as_text(rep_raw.get("before"))
+    else:
+        expected_reputation = as_text(rep_raw)
+    expected_enemy_pressure = as_text(ext_data.get("enemy_pressure"))
 
     serialized = json.dumps(bi, ensure_ascii=False)
     title_seq_match = [block["title"] for block in roadmap] == [block["title"] for block in draft]
@@ -268,7 +276,9 @@ def main() -> int:
     args = parser.parse_args()
 
     phase0 = load_json(args.phase0)
-    draft = load_json(args.draft)
+    draft_raw = load_json(args.draft)
+    # Support both wrapped {"blocks": [...]} and plain list formats
+    draft = draft_raw["blocks"] if isinstance(draft_raw, dict) and "blocks" in draft_raw else draft_raw
     bi = load_json(args.bi)
     draft_valid, draft_errors, draft_warnings = validate_treatment_structure(draft)
     bi_valid, bi_errors, bi_warnings = validate_bible_structure(bi)

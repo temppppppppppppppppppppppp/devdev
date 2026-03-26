@@ -1,0 +1,656 @@
+{
+  "project": {
+    "title_ko": "제국의 막내: 모든 섹터를 먹는 남자",
+    "core_premise": "2045년 제국그룹 파산·추락사 직후 2025년으로 회귀한 재벌 3세 막내 이준서가, 20년치 미래 데이터를 무기로 코인→반도체→바이오→AI부터 금융·방산·우주까지 항상 3개 섹터를 동시에 굴려, 0원에서 200조 J제국홀딩스를 혼자 짓고 썩어가던 제국그룹을 통째로 먹는다.",
+    "format": "현대 한국 회귀·재벌경영 전섹터 투자물",
+    "logline": "형들이 싸우고 아버지가 무너지고 제국이 썩는 걸 20년간 봤다. 이번엔 혼자서 짓는다 — 반도체, 바이오, AI, 금융, 방산, 우주까지. 항상 세 개씩. 쉬지 않고.",
+    "start_year": 2025,
+    "end_year": 2045
+  },
+  "setting": {
+    "group_background": "제국그룹은 섬유·중공업·건설로 시작해 유통·금융·미디어까지 거느린 재계 6위 재벌이다. 겉은 거대하지만 반도체·AI 대응 10년 지연, 형제 경영권 분쟁으로 M&A 마비, 부동산 PF 38조 부실이 겹쳐 2045년 법정관리로 해체된다.",
+    "execution_doctrine": "전 섹터를 3개씩 동시에 굴려 기득권이 대응할 수 없는 속도로 먹는다. 한 섹터 완성이 다음 섹터 진입 자본이 되며, 최종적으로 제국그룹을 흡수해 J제국홀딩스로 재건한다.",
+    "starter_company": {
+      "name": "JSR인베스트먼트",
+      "state": "Block 3 설립. 초기 자본은 비트코인·주식 수익으로 확보한 현금",
+      "assets": [
+        "20년치 섹터별 승자·패자 데이터",
+        "정책·규제 변화 타이밍",
+        "전 섹터 산업 지식",
+        "감정 없는 효율 극대화 의사결정"
+      ],
+      "liabilities": [
+        "시작 자본 0원 (신용카드 한도 3,000만)",
+        "부모 돈 절대 미사용",
+        "가문 내 무시당하는 막내",
+        "건강 무시 (과로 체질)",
+        "미래 타이밍 오차 (자기 행동이 변수를 만듦)"
+      ]
+    },
+    "company_growth_stages": [
+      {
+        "stage": 1,
+        "name": "JSR인베스트먼트",
+        "block": 3,
+        "asset_scale": "~2,000억"
+      },
+      {
+        "stage": 2,
+        "name": "J캐피탈파트너스",
+        "block": 38,
+        "asset_scale": "~60조"
+      },
+      {
+        "stage": 3,
+        "name": "J제국홀딩스",
+        "block": 68,
+        "asset_scale": "200조+"
+      }
+    ]
+  },
+  "protagonist": {
+    "name": "이준서",
+    "name_hanja": "李峻序",
+    "status": "제국그룹 3세 막내. 회귀 전 전략기획실 상무(무시당함)",
+    "age_at_start": 25,
+    "mental_age": 37,
+    "public_image": "재벌 막내지만 실권 없고 주목받지 않는 투명인간. 형들 싸움 뒤에서 숫자만 봤던 사람",
+    "true_strength": "20년치 미래 데이터(섹터 승자·패자·정책·규제 타이밍) + 전 섹터 연결 그림을 혼자 보는 유일한 인간 + 감정 없는 효율 극대화 의사결정",
+    "true_weakness": "건강 무시(수면 4시간, 과로 입원 2회), 미래 타이밍 오차(자기 행동이 변수를 만들기 시작), 사람을 변수로 봐서 깊은 관계 형성이 어려움",
+    "pov_character": true,
+    "initial_goal": "0원에서 시작해 코인/주식으로 시드 머니 2,000억 확보",
+    "mid_goal": "전 섹터(반도체·바이오·AI·이커머스·게임·엔터·금융·에너지·방산) 3개씩 동시 구조화하며 60조 규모 J캐피탈파트너스 구축",
+    "final_goal": "제국그룹 경영권 확보(지분 51.3%) 후 부실 22개사 정리, 핵심 26개 통합, J제국홀딩스 200조+ 출범",
+    "character_devices": {
+      "sleep_4h": "알람으로 정확히 4시간 컷. 조수들은 퇴근 시간을 모름",
+      "triple_files": "현재 섹터 + 다음 섹터 + 그다음 탐색 자료 항상 3개 동시 오픈",
+      "convenience_meals": "편의점 삼각김밥·이동 중 에너지바. 정식은 협상 테이블뿐",
+      "collapse_twice": "Block 50(1차 입원, 72시간 과로), Block 62(2차 입원, 자금 소진+과로)",
+      "next_declaration": "섹터 완성마다 독백 또는 혼잣말 한 단어: '다음.'",
+      "emotional_crack": "오승아, 최다은만 표정 변화를 알아채는 장면 5회+"
+    }
+  },
+  "phase0_design": {
+    "core_structure": {
+      "triple_rolling_system": "항상 3개 섹터가 동시에 돌아간다. 섹터 하나가 완성(구조화)되면 즉시 다음 섹터가 추가된다. 이 리듬이 전 70블록 반복.",
+      "one_pattern_5step": "진입→업계 반응(타자 POV)→압박→돌파(사이다)→완성('다음.'). 매 섹터 반복하되 변주 포인트(타자 발화자, 돌파 각도)는 매번 다르게.",
+      "sector_sequence": ["코인/주식", "반도체", "바이오", "부동산/DC", "AI/클라우드", "이커머스", "게임/IP", "엔터/OTT", "금융/PE", "패션", "식품/푸드테크", "에너지/SMR", "방산/우주", "EV/배터리", "해운/물류"]
+    },
+    "opponent_transition_plan": {
+      "phase1": {
+        "title": "가문 내 견제",
+        "block_range": "1-20",
+        "primary_opponent": "이준혁 (장남) + 제국그룹 기획조정실",
+        "secondary_opponent": "이철호 (부친, 무관심이 견제로 작용)",
+        "goal": "막내가 외부 자본 쌓는 것 통제. 가문 체면 유지",
+        "information_state": "기획조정실은 준서의 초기 코인/주식 수익만 탐지. 반도체·바이오 진입 계획은 모름",
+        "why_loses": "준서의 움직임이 가문 바깥이라 기획조정실 통제권 밖. 자산 5조 뉴스가 나왔을 때 이미 구조화 진행 중",
+        "defeat_climax": "Block 20 — 준서 자산 5조 뉴스 후 가문이 먼저 연락",
+        "weakness_pool": [
+          "기획조정실은 그룹 내부 자산 추적에 최적화되어 외부 법인·해외 지분을 포착하지 못한다",
+          "장남 이준혁은 '막내=무해'라는 인지 편향으로 2,000억 규모까지도 경계하지 않는다",
+          "제국그룹 자체가 반도체·AI 투자에 무관심하여, 준서가 해당 섹터에서 움직여도 전장이 겹치지 않는다"
+        ]
+      },
+      "phase2": {
+        "title": "기득권 산업 연합",
+        "block_range": "21-48",
+        "primary_opponent": "국내 대형 재벌 연합",
+        "secondary_opponent": "정치권 + 이준민 (차남, 반준서 연합)",
+        "goal": "J캐피탈의 섹터 잠식 저지. 기존 산업 지배 질서 유지",
+        "information_state": "재벌 연합은 준서의 공개 자산과 M&A만 추적. 동시 3개 롤링 전략과 미래 타이밍 데이터는 모름",
+        "why_loses": "연합 내 이해관계 불일치(반도체 재벌과 바이오 재벌의 우선순위 다름). 준서의 속도가 연합 의사결정보다 빠름. Block 48에서 이탈자 발생",
+        "defeat_climax": "Block 48 — 재벌 연합 내 이탈자 발생. 준서에게 붙는 게 유리한 쪽이 먼저 손 내밈",
+        "weakness_pool": [
+          "재벌 연합은 의사결정에 합의가 필요하여 준서의 3개 동시 진행 속도를 따라가지 못한다",
+          "각 재벌의 이해관계가 상충하여(반도체 vs 바이오 vs AI) 공동 방어선이 구멍 난다",
+          "정치권 연결은 규제 카드에만 의존하므로, 인허가가 통과되면 더 이상 쓸 수 있는 무기가 없다",
+          "이준민은 분식회계 리스크를 안고 있어, 반준서 연합이 언제든 내부 스캔들로 붕괴할 수 있다"
+        ]
+      },
+      "phase3": {
+        "title": "글로벌 헤지펀드 + 제국그룹 채권단",
+        "block_range": "49-70",
+        "primary_opponent": "글로벌 PEF (헤지펀드)",
+        "secondary_opponent": "이준민 (분식회계 퇴장 전까지) + 제국홀딩스 채권단",
+        "goal": "제국그룹 헐값 인수 → 핵심 계열사 해체 매각",
+        "information_state": "헤지펀드는 준서의 공개 재무만 분석. '현금 부족으로 제국 구할 수 없다'고 판단. 준서의 역공 포지션(사전 지분 취득, 스퀴즈 설계)을 모름",
+        "why_loses": "준서가 3달 전 역공 포지션을 잡아둠. 레이첼 권+야마모토의 긴급 10조 조달. 채권단 직접 협상으로 헤지펀드 공개 매수 무력화",
+        "defeat_climax": "Block 65~66 — 역공 스퀴즈로 헤지펀드 제압 + 제국홀딩스 경영권 확보 지분 51.3%",
+        "weakness_pool": [
+          "글로벌 헤지펀드는 공개 재무 데이터에만 의존하여, 준서의 비공개 지분 선취매와 역공 포지션을 탐지하지 못한다",
+          "채권단은 헐값 매각을 원하지만, 준서가 직접 협상으로 정상 가격 + 구조조정 계획을 제시하면 헤지펀드보다 매력적인 옵션이 된다",
+          "이준민의 분식회계 구속(Block 61)으로 반준서 전선이 무너지며, 헤지펀드의 내부 협력자가 사라진다"
+        ]
+      }
+    },
+    "arcs": [
+      {
+        "arc_id": "ARC-01",
+        "title": "코인/주식 — 시드 머니",
+        "block_range": "1-10",
+        "time_window": "2025년 3월~2025년 12월",
+        "capital_target": "0원 → 2,000억",
+        "active_sectors": {
+          "main": "코인/주식",
+          "sub_a": null,
+          "sub_b": null
+        },
+        "front_sectors": ["비트코인", "나스닥 주식", "HBM 수혜주", "코인 공매도"],
+        "main_opponents": ["이준혁 (장남, 동향 파악 지시)", "기획조정실"],
+        "new_npcs": ["정하윤 (Block 3~, CFO)", "이철호 (Block 5~, 부친)", "오승아 (Block 7~, 적대 변호사)"],
+        "emotion_curve": "비극 회귀 → 즉시 행동 → 첫 패배(-80억) → 회복 → 먹튀(-3억) → 공매도 사이다(300억) → '다음.'",
+        "defeat_blocks": [5, 7],
+        "quiet_blocks": [6],
+        "block_slots": [
+          {
+            "block": 1,
+            "title": "옥상에서 강의실로",
+            "function": "2045년 추락 → 2025년 3월 2일 서울대 경영대학원 입학식. 스마트폰 날짜 확인. 비트코인 8만 달러. 첫 매수 주문 입력.",
+            "deal_type": "코인 전액 매수",
+            "action_purpose": {
+              "immediate": "시드 머니 확보 시작",
+              "mid_term": "코인 수익 → 주식 → 법인 설립 자본",
+              "long_term": "전 섹터 제국 건설의 첫 자본",
+              "cost": "전액 투입 — 실패 시 3,000만 한도 소진"
+            }
+          },
+          {
+            "block": 2,
+            "title": "16만 달러 매도",
+            "function": "BTC 16만 달러 도달. 전량 매도. 약 6억 확보. 증권사 PB가 먼저 전화.",
+            "deal_type": "코인 전량 매도 + 주식 전환",
+            "action_purpose": {
+              "immediate": "6억 현금 확보",
+              "mid_term": "나스닥·HBM 투자 자본",
+              "long_term": "JSR인베스트먼트 설립 자금",
+              "cost": "추가 상승분 포기 (타이밍 리스크)"
+            }
+          },
+          {
+            "block": 3,
+            "title": "JSR인베스트먼트 설립",
+            "function": "법인 설립. 정하윤 영입(CFO). 나스닥 테슬라 콜옵션 FSD 직전 매수.",
+            "deal_type": "법인 설립 + 콜옵션 매수",
+            "action_purpose": {
+              "immediate": "법인 명의 투자 시작. 콜옵션 수익",
+              "mid_term": "법인 실적으로 레버리지 가능",
+              "long_term": "J캐피탈→J제국 법인 성장의 기점",
+              "cost": "콜옵션 프리미엄. 정하윤 연봉"
+            }
+          },
+          {
+            "block": 4,
+            "title": "HBM 수혜주 저점 집중",
+            "function": "HBM 수혜주 3종 저점 집중 매수. AI 서버 수요 사이클 직전.",
+            "deal_type": "HBM 수혜주 집중 매수",
+            "action_purpose": {
+              "immediate": "저가 매수 포지션 확보",
+              "mid_term": "반도체 사이클 정점에서 매도 수익",
+              "long_term": "반도체 섹터 지식·네트워크 축적(다음 섹터 진입 포석)",
+              "cost": "자금 집중 → 분산 리스크"
+            }
+          },
+          {
+            "block": 5,
+            "title": "레버리지 파생 -80억",
+            "function": "레버리지 파생 타이밍 오차 → 전액 청산 -80억. 미래 기억의 한계(자기 행동이 변수를 만듦) 첫 노출.",
+            "deal_type": "파생 손실",
+            "failure_design": {
+              "failure_type": "희망 연결",
+              "visible_loss": "80억 순손실. 법인 자산 급감",
+              "hidden_gain": "미래 타이밍 오차를 인지 → 이후 헷지 전략 강화. '내 행동이 변수를 만든다'는 핵심 약점 인식",
+              "hope_hook": "Block 9 공매도 300억 수익으로 10배 이상 회복",
+              "reader_emotion": "충격 → '그래도 20년치 데이터가 있으니 회복하겠지' 기대"
+            }
+          },
+          {
+            "block": 6,
+            "title": "AI 스타트업 엔젤 3억",
+            "function": "AI 스타트업 시리즈A 엔젤 투자 3억. 반도체 섹터 진입 전초.",
+            "deal_type": "엔젤 투자",
+            "action_purpose": {
+              "immediate": "AI 스타트업 지분 확보",
+              "mid_term": "반도체·AI 섹터 네트워크 진입",
+              "long_term": "AI 섹터 본격 진입의 인적·기술 교두보",
+              "cost": "3억 투자금"
+            }
+          },
+          {
+            "block": 7,
+            "title": "스타트업 먹튀 -3억",
+            "function": "스타트업 대표 먹튀. -3억 손실. 오승아 첫 만남(적대 측 변호사로 등장).",
+            "deal_type": "투자 사기 피해",
+            "failure_design": {
+              "failure_type": "희망 연결",
+              "visible_loss": "3억 손실 + 투자 판단 실패 굴욕",
+              "hidden_gain": "오승아 영입 트리거. 손실이 인재를 데려옴. 법률 리스크 관리 필요성 인식",
+              "hope_hook": "오승아가 Block 7 이후 적대→중립→법무 총괄로 전환",
+              "reader_emotion": "분노(먹튀) → 기대(오승아라는 인재 발견)"
+            }
+          },
+          {
+            "block": 8,
+            "title": "반도체 사이클 정점 전량 청산",
+            "function": "2025 반도체 사이클 정점 예측. 주식 전량 청산. 현금 극대화.",
+            "deal_type": "주식 전량 매도",
+            "action_purpose": {
+              "immediate": "현금 극대화",
+              "mid_term": "공매도 + 반도체 실물 인수 자본",
+              "long_term": "주식 투자 졸업 → 실물 섹터 전환의 자금 기반",
+              "cost": "추가 상승분 포기"
+            }
+          },
+          {
+            "block": 9,
+            "title": "코인 규제 공매도 300억",
+            "function": "코인 규제 뉴스 사전 인지. 공매도 포지션 → 수익 300억. 전 직장 동기가 계좌 잔고 보고 굳어버림.",
+            "deal_type": "공매도",
+            "action_purpose": {
+              "immediate": "300억 수익. 총 자산 2,000억 근접",
+              "mid_term": "반도체 팹리스 인수 자본 확보",
+              "long_term": "코인/주식 섹터 완성 자본",
+              "cost": "규제 리스크(공매도 조사 가능성)"
+            }
+          },
+          {
+            "block": 10,
+            "title": "코인 완성. '다음.'",
+            "function": "자산 2,000억. 코인/주식 섹터 구조화 완료. 반도체 진입 + 바이오 탐색 동시 개시. '다음.'",
+            "deal_type": "섹터 완성 선언 + 듀얼 섹터 진입",
+            "action_purpose": {
+              "immediate": "코인/주식 졸업. 2,000억 실탄 확보",
+              "mid_term": "반도체 + 바이오 동시 진입",
+              "long_term": "3개 동시 롤링 시스템 본격 가동",
+              "cost": "2개 섹터 동시 진입의 집중력 분산"
+            }
+          }
+        ],
+        "entry_function": "2045년 추락 → 2025년 3월 회귀. 비트코인 전액 매수로 시작.",
+        "exit_function": "자산 2,000억. 코인/주식 완성. 반도체 진입 + 바이오 탐색 개시. '다음.'"
+      },
+      {
+        "arc_id": "ARC-02",
+        "title": "반도체 + 바이오 투트랙",
+        "block_range": "11-20",
+        "time_window": "2026년 1월~2027년 6월",
+        "capital_target": "2,000억 → 4조",
+        "active_sectors": {
+          "main": "반도체",
+          "sub_a": "바이오",
+          "sub_b": "부동산 (Block 15~ 진입)"
+        },
+        "front_sectors": ["HBM4 팹리스 인수", "반도체 설계 코스닥 상장", "항암ADC 임상 기업 탐색", "부동산 DC 부지 선취매"],
+        "main_opponents": ["이준혁 (장남, 동향 파악 본격화)", "기획조정실", "대형 재벌 기획조정실 (타자 POV)"],
+        "new_npcs": ["김태석 (Block 12~, CTO)"],
+        "emotion_curve": "팹리스 인수 → CTO 스카우트 → 납품 사이다 → 형 첫 대면 → 엔지니어 이탈 패배 → 코스닥 상장 → 가문 연락",
+        "defeat_blocks": [18],
+        "quiet_blocks": [13],
+        "block_slots": [
+          {
+            "block": 11,
+            "title": "HBM4 팹리스 인수",
+            "function": "시총 800억 저평가 HBM4 팹리스 인수. 원천특허 확보.",
+            "deal_type": "기업 인수"
+          },
+          {
+            "block": 12,
+            "title": "김태석 스카우트",
+            "function": "前 삼성전자 반도체 수석 김태석을 CTO로 스카우트.",
+            "deal_type": "핵심 인재 영입"
+          },
+          {
+            "block": 13,
+            "title": "TSMC 2.5D 패키징 협력사",
+            "function": "TSMC 2.5D 패키징 협력사 지분 취득. 후공정 생태계 포석.",
+            "deal_type": "지분 취득"
+          },
+          {
+            "block": 14,
+            "title": "HBM4 대량 납품 계약",
+            "function": "AI 서버 수요 폭발 맞춰 HBM4 대량 납품 계약. 형 이준혁이 먼저 전화.",
+            "deal_type": "대량 납품 계약"
+          },
+          {
+            "block": 15,
+            "title": "타자 POV: '반도체 다 먹었다'",
+            "function": "대형 재벌 기획조정실 긴급 회의: '이준서가 반도체 납품 계약 다 먹었다. 어떻게 막지?' → 준서는 이미 납품 완료. 부동산 섹터 진입 개시.",
+            "deal_type": "타자 시점 위기 연출"
+          },
+          {
+            "block": 16,
+            "title": "항암ADC 임상 기업 M&A",
+            "function": "항암ADC 임상 3상 직전 기업 인수. 바이오 섹터 본격 진입.",
+            "deal_type": "바이오 기업 인수"
+          },
+          {
+            "block": 17,
+            "title": "반도체 설계 코스닥 상장",
+            "function": "반도체 설계 자회사 코스닥 상장 → 기업가치 3조 인정.",
+            "deal_type": "IPO"
+          },
+          {
+            "block": 18,
+            "title": "엔지니어 3명 이탈",
+            "function": "핵심 엔지니어 3명 이탈. 설계 6개월 지연.",
+            "deal_type": "인재 이탈",
+            "failure_design": {
+              "failure_type": "희망 연결",
+              "visible_loss": "설계 6개월 지연. 반도체 로드맵 차질",
+              "hidden_gain": "이탈자 공백 → 외부 파트너(TSMC 협력사)로 보완. 결과적으로 네트워크가 더 넓어짐",
+              "hope_hook": "Block 20 반도체 완성 시점에 더 넓은 생태계 확보로 귀결",
+              "reader_emotion": "안타까움 → '외부로 넓히는 게 오히려 더 강해지는 거구나'"
+            }
+          },
+          {
+            "block": 19,
+            "title": "형 이준혁 첫 대면",
+            "function": "이준혁이 준서 동향 파악 지시. 첫 직접 대면.",
+            "deal_type": "가문 내 견제 본격화"
+          },
+          {
+            "block": 20,
+            "title": "반도체 완성. 자산 4조",
+            "function": "반도체 섹터 구조화 완료. 자산 4조. 가문이 먼저 연락. '다음.'",
+            "deal_type": "섹터 완성"
+          }
+        ],
+        "entry_function": "HBM4 팹리스 인수로 반도체 섹터 진입.",
+        "exit_function": "반도체 완성. 자산 4조. 가문 먼저 연락. '다음.'"
+      },
+      {
+        "arc_id": "ARC-03",
+        "title": "바이오/부동산/AI 쓰리트랙",
+        "block_range": "21-30",
+        "time_window": "2027년 7월~2029년 6월",
+        "capital_target": "4조 → 12조",
+        "active_sectors": {
+          "main": "바이오",
+          "sub_a": "부동산/DC",
+          "sub_b": "AI/클라우드"
+        },
+        "front_sectors": ["항암ADC 라이선스 아웃", "J-DC리츠 설립·상장", "LLM 스타트업 투자", "AI 엣지칩 인수"],
+        "main_opponents": ["재벌 연합 (긴급 회의 시작)"],
+        "new_npcs": ["레이첼 권 (Block 22~, 글로벌 PE 파트너)"],
+        "emotion_curve": "3개 동시 돌리기 시작 → 임상 성공 사이다 → 리츠 상장 → 재벌 연합 충격 → PF 역발상 -1.5조 패배 → '다음.'",
+        "defeat_blocks": [29],
+        "quiet_blocks": [24],
+        "block_slots": [
+          {"block": 21, "title": "서울 동북권 재개발 선취매", "function": "서울 동북권 재개발 토지 5,000억 선취매. 부동산 섹터 본격 진입.", "deal_type": "부동산 선취매"},
+          {"block": 22, "title": "항암ADC 임상 3상 성공", "function": "항암ADC 임상 3상 성공 → 글로벌 라이선스 아웃 2조. 레이첼 권 합류.", "deal_type": "라이선스 아웃"},
+          {"block": 23, "title": "J-DC리츠 설립", "function": "J-DC리츠 설립. 수도권 DC 부지 3곳 편입.", "deal_type": "리츠 설립"},
+          {"block": 24, "title": "LLM 시리즈A 선점", "function": "산업특화 LLM 스타트업 시리즈A 선점 투자. AI 섹터 진입.", "deal_type": "선점 투자"},
+          {"block": 25, "title": "타자 POV: '동시에 세 개?'", "function": "재벌 연합 긴급 회의: '바이오에 부동산에 AI까지? 동시에? 말이 돼?' → 준서는 이미 3개 동시 구조화 진행 중.", "deal_type": "타자 시점 위기 연출"},
+          {"block": 26, "title": "AI 엣지칩 인수", "function": "AI 엣지칩 개발사 인수. 온디바이스 특허 400건 취득.", "deal_type": "기업 인수"},
+          {"block": 27, "title": "J-DC리츠 코스피 상장", "function": "J-DC리츠 코스피 상장 → 기관 자금 2조 유치.", "deal_type": "IPO"},
+          {"block": 28, "title": "실리콘밸리 AI 펀드", "function": "레이첼 권과 실리콘밸리 AI 펀드 공동 운용 설립.", "deal_type": "펀드 공동 운용"},
+          {
+            "block": 29, "title": "PF 역발상 -1.5조", "function": "PF 위기 중 부실 자산 역발상 매입 → 단기 장부 손실 1.5조.",
+            "deal_type": "역발상 매입",
+            "failure_design": {
+              "failure_type": "의도된 실패",
+              "visible_loss": "장부 손실 1.5조. 언론에 '준서 PF 실패' 보도",
+              "hidden_gain": "3년 뒤 3배 반등. 대단원 4에서 회수. 부동산 포트폴리오 확대",
+              "hope_hook": "Block 43 시점 PF 자산 3배 → 부동산 섹터 완성의 결정타",
+              "reader_emotion": "불안 → '역발상이니까 나중에 터지겠지' 기대"
+            }
+          },
+          {"block": 30, "title": "바이오+부동산 완성. 자산 12조", "function": "바이오·부동산 동시 구조화 완료. 자산 12조. '다음.'", "deal_type": "듀얼 섹터 완성"}
+        ],
+        "entry_function": "부동산 선취매로 3개 동시 돌리기 본격 시작.",
+        "exit_function": "바이오+부동산 완성. 자산 12조. '다음.'"
+      },
+      {
+        "arc_id": "ARC-04",
+        "title": "AI/이커머스/게임/엔터 롤링",
+        "block_range": "31-43",
+        "time_window": "2029년 7월~2032년 6월",
+        "capital_target": "12조 → 35조",
+        "active_sectors": {
+          "main": "AI → 이커머스",
+          "sub_a": "이커머스 → 게임/IP",
+          "sub_b": "게임/IP → 엔터/OTT"
+        },
+        "front_sectors": ["B2B SaaS 플랫폼", "일본 게임사 IP 800개", "K-pop 기획사 인수", "OTT 플랫폼"],
+        "main_opponents": ["기존 게임 대기업", "이준민 반준서 연합", "공정위"],
+        "new_npcs": ["권도준 (Block 35~, 방산 게이트키퍼)", "야마모토 히로시 (Block 40~, 일본 VC)"],
+        "emotion_curve": "커머스 인수 → 게임 IP 대량 확보 → 개발팀 퇴사 패배 → 방산 포석 → 반준서 공매도 → 공정위 동결 패배 → 무혐의 사이다",
+        "defeat_blocks": [34, 42],
+        "quiet_blocks": [35],
+        "block_slots": [
+          {"block": 31, "title": "버티컬 패션 커머스 인수", "function": "버티컬 패션 커머스 인수. 이커머스 섹터 진입.", "deal_type": "기업 인수"},
+          {"block": 32, "title": "B2B SaaS 통합 클라우드", "function": "B2B SaaS 3개 통합 → 클라우드 플랫폼 구축.", "deal_type": "사업 통합"},
+          {"block": 33, "title": "일본 게임사 IP 800개", "function": "일본 중형 게임사 인수. IP 800개 확보.", "deal_type": "해외 기업 인수"},
+          {
+            "block": 34, "title": "게임 개발팀 집단 퇴사", "function": "게임사 핵심 개발팀 집단 퇴사. 플래그십 게임 취소.",
+            "deal_type": "인재 이탈",
+            "failure_design": {
+              "failure_type": "희망 연결",
+              "visible_loss": "플래그십 게임 취소. 인수가 손상",
+              "hidden_gain": "IP 자체 가치로 수익화. 사람 없어도 IP는 남음. 라이선싱 모델로 전환",
+              "hope_hook": "Block 49 글로벌 콘텐츠 IP 라이선싱 계약 다수로 회수",
+              "reader_emotion": "안타까움 → '게임 안 만들어도 IP가 돈이 되는구나'"
+            }
+          },
+          {"block": 35, "title": "권도준 영입, 방산 포석", "function": "前 국정원 산업보안 권도준 영입. 방산 섹터 사전 정지.", "deal_type": "인재 영입 + 섹터 포석"},
+          {"block": 36, "title": "타자 POV: 'IP까지 쓸어담고 있다'", "function": "기존 게임 대기업: 'IP 800개를 한 번에? 막아야 해' → 준서 국내 게임사 2위 지분 15% 이미 취득.", "deal_type": "타자 시점 위기 연출"},
+          {"block": 37, "title": "AI 완성. 자산 20조", "function": "LLM 자회사 B2B 독점 계약 다수. AI 섹터 구조화 완료. 자산 20조. '다음.'", "deal_type": "섹터 완성"},
+          {"block": 38, "title": "K-pop 기획사 인수", "function": "K-pop 중견 기획사 인수. J캐피탈파트너스 체제 출범. 엔터/OTT 진입.", "deal_type": "기업 인수 + 법인 전환"},
+          {"block": 39, "title": "OTT 플랫폼 설립", "function": "OTT 스트리밍 플랫폼 설립. 글로벌 배급권 계약.", "deal_type": "사업 설립"},
+          {"block": 40, "title": "아시아 공동 투자 펀드 2조", "function": "야마모토 히로시와 아시아 공동 투자 펀드 2조 결성.", "deal_type": "펀드 결성"},
+          {"block": 41, "title": "이준민 공매도 연합", "function": "이준민 반준서 연합 결성 → 공매도 개시 → 준서 이미 역공 포지션.", "deal_type": "적대적 M&A 방어"},
+          {
+            "block": 42, "title": "공정위 M&A 3개월 동결", "function": "공정위 조사 개시 → 신규 M&A 3개월 동결.",
+            "deal_type": "규제 리스크",
+            "failure_design": {
+              "failure_type": "예측-전환",
+              "visible_loss": "3개월 M&A 동결. 기회비용 발생",
+              "hidden_gain": "동결 기간 중 오승아가 인허가 사전 준비 완료. 무혐의 직후 즉시 SMR 인수 가능",
+              "hope_hook": "Block 43 무혐의 종결 직후 즉시 다음 M&A 실행",
+              "reader_emotion": "답답함 → '오승아가 이미 준비 다 했구나' 통쾌"
+            }
+          },
+          {"block": 43, "title": "이커머스+게임 완성. 무혐의. 자산 35조", "function": "공정위 무혐의. 이커머스+게임/IP 구조화 완료. 자산 35조. 기자회견 '다음 질문.'", "deal_type": "듀얼 섹터 완성 + 규제 클리어"}
+        ],
+        "entry_function": "버티컬 커머스 인수로 이커머스 섹터 진입.",
+        "exit_function": "이커머스+게임 완성. 공정위 무혐의. 자산 35조."
+      },
+      {
+        "arc_id": "ARC-05",
+        "title": "엔터/금융/패션/식품 롤링",
+        "block_range": "44-54",
+        "time_window": "2032년 7월~2035년 12월",
+        "capital_target": "35조 → 60조",
+        "active_sectors": {
+          "main": "엔터/OTT → 금융/PE",
+          "sub_a": "금융/PE → 패션",
+          "sub_b": "패션 → 식품/푸드테크"
+        },
+        "front_sectors": ["PE 1호 펀드 5조", "저축은행 인수", "K-럭셔리 브랜드", "대체육 스타트업", "SMR 진입"],
+        "main_opponents": ["금융당국", "재벌 연합 (이탈 시작)", "글로벌 헤지펀드 (정찰 시작)"],
+        "new_npcs": [],
+        "emotion_curve": "PE 설립 → 금융당국 타자 POV → 재벌 이탈 사이다 → 입원 패배 → 입원실 태블릿 → '다음.'",
+        "defeat_blocks": [50],
+        "quiet_blocks": [47],
+        "block_slots": [
+          {"block": 44, "title": "PE 1호 펀드 5조", "function": "J캐피탈파트너스 PE 설립. 1호 펀드 5조 모집.", "deal_type": "PE 펀드 설립"},
+          {"block": 45, "title": "저축은행 인수·핀테크", "function": "저축은행 인수. 핀테크 자회사 설립.", "deal_type": "금융업 인수"},
+          {"block": 46, "title": "타자 POV: '선례가 없다'", "function": "금융당국: 'PE가 저축은행까지? 선례가 없다' → 오승아 이미 인허가 완료.", "deal_type": "타자 시점 위기 연출"},
+          {"block": 47, "title": "K-럭셔리 브랜드 인수", "function": "K-럭셔리 브랜드 2개 인수. 해외 패션위크 데뷔.", "deal_type": "브랜드 인수"},
+          {"block": 48, "title": "재벌 연합 이탈 시작", "function": "재벌 연합 이탈 시작: '이준서 쪽으로 가는 게 낫겠다.'", "deal_type": "적대 세력 와해"},
+          {"block": 49, "title": "글로벌 콘텐츠 IP 라이선싱", "function": "글로벌 콘텐츠 IP 라이선싱 계약 다수 체결.", "deal_type": "IP 라이선싱"},
+          {
+            "block": 50, "title": "1차 입원. 엔터 완성. 자산 45조", "function": "72시간 연속 과로 → 1차 입원. 입원실 태블릿으로 계약 마감. 엔터/OTT 완성. 자산 45조.",
+            "deal_type": "섹터 완성 + 캐릭터 한계",
+            "failure_design": {
+              "failure_type": "피로스 승리",
+              "visible_loss": "계약 2건 손실. 입원 (물리적 한계 노출)",
+              "hidden_gain": "입원 중에도 계약 마감 → 일 중독 캐릭터 극단 연출. 독자 몰입 극대화",
+              "hope_hook": "섹터 완성은 달성. 건강 약점이 Block 62 2차 입원으로 연결",
+              "reader_emotion": "안타까움 + 존경 → '이 사람 진짜 멈추지 않는구나'"
+            }
+          },
+          {"block": 51, "title": "대체육·F&B 글로벌", "function": "대체육 스타트업 인수. F&B 프랜차이즈 글로벌 확장. 식품 섹터 진입.", "deal_type": "식품 섹터 진입"},
+          {"block": 52, "title": "타자 POV: '현금 부족할 거야'", "function": "글로벌 헤지펀드: '제국 구하려면 현금 부족' → 준서 제국홀딩스 지분 3% 조용히 취득 완료.", "deal_type": "타자 시점 위기 연출"},
+          {"block": 53, "title": "SMR 개발사 인수", "function": "SMR 개발사 인수. 에너지 섹터 본격 진입.", "deal_type": "에너지 섹터 진입"},
+          {"block": 54, "title": "금융+패션 완성. 자산 60조", "function": "금융/PE + 패션 구조화 완료. 사모펀드 운용규모 15조. 자산 60조. '다음.'", "deal_type": "듀얼 섹터 완성"}
+        ],
+        "entry_function": "PE 1호 펀드로 금융 섹터 본격화.",
+        "exit_function": "금융+패션 완성. 자산 60조. '다음.'"
+      },
+      {
+        "arc_id": "ARC-06",
+        "title": "에너지/방산/EV + 제국그룹 위기",
+        "block_range": "55-63",
+        "time_window": "2036년 1월~2040년 6월",
+        "capital_target": "60조 → 110조",
+        "active_sectors": {
+          "main": "식품 → 에너지/SMR",
+          "sub_a": "에너지/SMR → 방산/우주",
+          "sub_b": "방산/우주 → EV/배터리"
+        },
+        "front_sectors": ["방산 드론 납품", "해상풍력 개발권", "SMR 인허가", "전고체 배터리", "제국그룹 위기 대응"],
+        "main_opponents": ["글로벌 헤지펀드 (공개 매수 경쟁)", "이준민 (분식회계 → 퇴장)"],
+        "new_npcs": [],
+        "emotion_curve": "방산 진입 → SMR 지연 패배 → 형 접촉 → J제국 선언 → EV 진입 → 이준민 구속 → 2차 입원 패배 → 채권단 협상",
+        "defeat_blocks": [57, 62],
+        "quiet_blocks": [58],
+        "block_slots": [
+          {"block": 55, "title": "방산 드론 납품 1호", "function": "드론 방산 스타트업 인수. 방위사업청 납품 1호 달성.", "deal_type": "방산 진입"},
+          {"block": 56, "title": "해상풍력 개발권", "function": "해상풍력 개발권 낙찰. 글로벌 터빈사 JV 체결.", "deal_type": "에너지 JV"},
+          {
+            "block": 57, "title": "SMR 인허가 18개월 지연", "function": "SMR 인허가 반대 시위 → 18개월 지연.",
+            "deal_type": "규제 지연",
+            "failure_design": {
+              "failure_type": "예측-전환",
+              "visible_loss": "18개월 지연. 에너지 로드맵 차질",
+              "hidden_gain": "지연 기간에 방산/EV 선진입 → 오히려 더 빠르게 굴러감",
+              "hope_hook": "Block 63 에너지 완성 시점에 SMR 인허가 통과",
+              "reader_emotion": "답답함 → '대기 중에 다른 섹터 먹고 있었구나'"
+            }
+          },
+          {"block": 58, "title": "이준혁 접촉", "function": "이준혁이 준서에게 접촉. 제국그룹 상황 공유. 형제 관계 전환.", "deal_type": "가문 내 동맹 전환"},
+          {"block": 59, "title": "J제국홀딩스 설립 선언", "function": "식품 완성. '먹는다. 내 방식으로.' J제국홀딩스 설립 선언.", "deal_type": "섹터 완성 + 법인 전환 선언"},
+          {"block": 60, "title": "전고체 배터리 인수", "function": "전고체 배터리 원천특허 기업 인수. EV/배터리 섹터 진입.", "deal_type": "기업 인수"},
+          {"block": 61, "title": "이준민 구속", "function": "이준민 분식회계 구속. 제국그룹 경영 공백 발생.", "deal_type": "적대 세력 퇴장"},
+          {
+            "block": 62, "title": "헤지펀드 공개 매수 + 2차 입원", "function": "헤지펀드 공개 매수 경쟁 → 자금 소진. 준서 2차 입원.",
+            "deal_type": "적대적 M&A + 캐릭터 한계",
+            "failure_design": {
+              "failure_type": "희망 연결",
+              "visible_loss": "현금 -5조. 2차 입원. 물리적·재무적 동시 위기",
+              "hidden_gain": "레이첼 권 + 야마모토 긴급 10조 조달 루트 확보. 글로벌 동맹의 진짜 가치 증명",
+              "hope_hook": "Block 64 긴급 10조 조달 → Block 65 역공 스퀴즈",
+              "reader_emotion": "절망 → '동맹들이 움직인다' 희망"
+            }
+          },
+          {"block": 63, "title": "에너지 완성. 자산 90조. 채권단 협상", "function": "에너지/SMR 구조화 완료. 자산 90조. 글로벌 채권단 직접 협상 개시.", "deal_type": "섹터 완성 + 협상 개시"}
+        ],
+        "entry_function": "방산 드론 납품으로 방산/우주 진입.",
+        "exit_function": "에너지 완성. 자산 90조. 채권단 직접 협상."
+      },
+      {
+        "arc_id": "ARC-07",
+        "title": "제국그룹 통합 + 전 섹터 완성",
+        "block_range": "64-70",
+        "time_window": "2040년 7월~2045년",
+        "capital_target": "110조 → 200조+",
+        "active_sectors": {
+          "main": "방산/우주 → EV/배터리",
+          "sub_a": "EV/배터리 → 해운/물류",
+          "sub_b": "제국그룹 통합"
+        },
+        "front_sectors": ["긴급 자금 조달", "역공 스퀴즈", "경영권 확보 51.3%", "구조조정", "J제국홀딩스 출범"],
+        "main_opponents": ["글로벌 헤지펀드 (최종전)", "제국홀딩스 채권단"],
+        "new_npcs": [],
+        "emotion_curve": "긴급 조달 → 스퀴즈 사이다 → 이사회 첫 발언 → 구조조정 → 출범 → AAA → '다음 섹터.'",
+        "defeat_blocks": [65],
+        "quiet_blocks": [],
+        "block_slots": [
+          {"block": 64, "title": "긴급 10조 조달", "function": "레이첼 권 + 야마모토 긴급 자금 10조 조달. 해운/물류 섹터 진입.", "deal_type": "긴급 자금 조달"},
+          {
+            "block": 65, "title": "역공 스퀴즈", "function": "헤지펀드: '스퀴즈 당했다. 어떻게?' → 준서가 3달 전 역공 포지션 잡아둔 것.",
+            "deal_type": "역공 스퀴즈",
+            "failure_design": {
+              "failure_type": "피로스 승리",
+              "visible_loss": "변동성 중 추가 손실 -1.5조",
+              "hidden_gain": "헤지펀드 포지션 전량 청산. 공개 매수 위협 영구 제거",
+              "hope_hook": "Block 66 제국홀딩스 경영권 확보로 직결",
+              "reader_emotion": "긴장 → 통쾌 → '이겼다...!'"
+            }
+          },
+          {"block": 66, "title": "경영권 확보. 이사회 첫 발언", "function": "제국홀딩스 경영권 확보 (지분 51.3%). 이사회 첫 발언: '정리하겠습니다.' 이사 전원 침묵.", "deal_type": "경영권 확보"},
+          {"block": 67, "title": "방산 완성. 구조조정", "function": "방산/우주 완성. 제국그룹 부실 22개사 정리, 핵심 26개 통합.", "deal_type": "섹터 완성 + 구조조정"},
+          {"block": 68, "title": "J제국홀딩스 출범", "function": "EV/배터리 완성. J제국홀딩스 출범 선언. 준서 대표이사 취임.", "deal_type": "법인 출범 + 섹터 완성"},
+          {"block": 69, "title": "글로벌 AAA", "function": "해운/물류 완성. 글로벌 신용등급 AAA. 회사채 발행. 최종 재무 정상화.", "deal_type": "섹터 완성 + 재무 정상화"},
+          {"block": 70, "title": "다음 섹터.", "function": "빈 집무실. 혼자 커피 한 잔. '다음 섹터.'", "deal_type": "완결 + 연재 훅"}
+        ],
+        "entry_function": "긴급 10조 조달로 최종전 시작.",
+        "exit_function": "전 섹터 통합. J제국홀딩스 200조+. '다음 섹터.'"
+      }
+    ],
+    "capital_curve": {
+      "arc01": {"start": "0원", "end": "2,000억", "defeats": ["Block 5: -80억", "Block 7: -3억"], "key_sida": "Block 9 공매도 300억"},
+      "arc02": {"start": "2,000억", "end": "4조", "defeats": ["Block 18: 엔지니어 이탈 6개월 지연"], "key_sida": "Block 17 코스닥 상장 3조"},
+      "arc03": {"start": "4조", "end": "12조", "defeats": ["Block 29: PF 장부 -1.5조"], "key_sida": "Block 22 라이선스아웃 2조, Block 27 리츠 상장"},
+      "arc04": {"start": "12조", "end": "35조", "defeats": ["Block 34: 게임팀 퇴사", "Block 42: 공정위 동결"], "key_sida": "Block 43 무혐의"},
+      "arc05": {"start": "35조", "end": "60조", "defeats": ["Block 50: 1차 입원"], "key_sida": "Block 50 입원실 태블릿"},
+      "arc06": {"start": "60조", "end": "110조", "defeats": ["Block 57: SMR 18개월 지연", "Block 62: 2차 입원 -5조"], "key_sida": "Block 59 '먹는다. 내 방식으로.'"},
+      "arc07": {"start": "110조", "end": "200조+", "defeats": ["Block 65: 스퀴즈 -1.5조"], "key_sida": "Block 66 이사회 '정리하겠습니다.'"}
+    },
+    "information_ledger": [
+      {"id": "INFO-01", "content": "20년치 전 섹터 승자·패자 데이터", "acquired": "회귀 시점", "source": "미래 기억", "used_blocks": "전 블록", "residual_value": "점진 감소(자기 행동이 변수)", "status": "ACTIVE_DEGRADING"},
+      {"id": "INFO-02", "content": "비트코인 8→16만 달러 사이클", "acquired": "회귀 시점", "source": "미래 기억", "used_blocks": "Block 1-2", "residual_value": "소멸", "status": "CONSUMED"},
+      {"id": "INFO-03", "content": "2025 반도체 사이클 정점 시점", "acquired": "회귀 시점", "source": "미래 기억", "used_blocks": "Block 4-8", "residual_value": "소멸", "status": "CONSUMED"},
+      {"id": "INFO-04", "content": "코인 규제 뉴스 발생 시점", "acquired": "회귀 시점", "source": "미래 기억", "used_blocks": "Block 9", "residual_value": "소멸", "status": "CONSUMED"},
+      {"id": "INFO-05", "content": "이준민 분식회계 증거 존재", "acquired": "회귀 시점", "source": "미래 기억", "used_blocks": "Block 61", "residual_value": "상", "status": "RESERVED"},
+      {"id": "INFO-06", "content": "제국그룹 패인 3축(반도체 지연, 형제 분쟁, PF 부실)", "acquired": "회귀 시점", "source": "미래 기억", "used_blocks": "Block 55-70", "residual_value": "상", "status": "RESERVED"},
+      {"id": "INFO-07", "content": "글로벌 헤지펀드의 제국 공개 매수 시점", "acquired": "회귀 시점", "source": "미래 기억", "used_blocks": "Block 52-65", "residual_value": "상", "status": "RESERVED"}
+    ],
+    "catharsis_arcs": [
+      {
+        "humiliation": "재벌 막내 무시. 가문 내 투명인간 취급",
+        "perpetrator": "이준혁, 이철호, 제국그룹 전체",
+        "humiliation_block": "1-10",
+        "payback_method": "자산 5조 뉴스로 가문이 먼저 연락",
+        "payback_block": "20",
+        "multiplier": "5배+",
+        "reminder_blocks": ["14 (형 먼저 전화)", "19 (형 첫 대면)"]
+      },
+      {
+        "humiliation": "재벌 연합 적대 세력 등재. '말이 돼?' 조롱",
+        "perpetrator": "재벌 연합",
+        "humiliation_block": "20-25",
+        "payback_method": "연합 내 이탈자 발생. 준서 쪽으로 손 내밈",
+        "payback_block": "48",
+        "multiplier": "10배+",
+        "reminder_blocks": ["36 (게임 대기업 경고)", "41 (이준민 공매도)"]
+      },
+      {
+        "humiliation": "헤지펀드 '현금 부족할 거야' + 공매도 + 공개 매수",
+        "perpetrator": "글로벌 PEF",
+        "humiliation_block": "52-62",
+        "payback_method": "역공 스퀴즈 → 헤지펀드 전량 청산 → 경영권 확보",
+        "payback_block": "65-66",
+        "multiplier": "20배+",
+        "reminder_blocks": ["62 (2차 입원 중 위기)", "64 (긴급 조달)"]
+      }
+    ],
+    "npc_credit_ledger": [
+      {"npc": "정하윤", "initial_balance": 0, "trajectory": "의심→분석→감탄→충성", "key_deposits": ["Block 3 CFO 합류", "Block 9 공매도 재무 설계"], "key_withdrawals": ["Block 50 입원 시 단독 운영"], "why_follows": "준서의 재무 판단 정확도가 경력 전체를 건 만큼의 기대수익을 줌"},
+      {"npc": "김태석", "initial_balance": 0, "trajectory": "스카우트→동료→CTO", "key_deposits": ["Block 12 스카우트 조건"], "key_withdrawals": ["Block 18 엔지니어 이탈 수습 책임"], "why_follows": "준서가 반도체 비전의 실행력(자본+타이밍)을 실제로 보여줌"},
+      {"npc": "오승아", "initial_balance": -2, "trajectory": "적대→중립→법무 총괄", "key_deposits": ["Block 7 먹튀 사건 정당 해결", "Block 42 공정위 무혐의 공동 승리"], "key_withdrawals": ["Block 46 금융 인허가 전담"], "why_follows": "준서의 법적 리스크 관리가 자신의 법률가 평판을 올려줌"},
+      {"npc": "레이첼 권", "initial_balance": 0, "trajectory": "파트너→글로벌 동맹", "key_deposits": ["Block 22 공동 딜 성사", "Block 28 펀드 공동 운용"], "key_withdrawals": ["Block 64 긴급 10조 조달"], "why_follows": "준서의 딜 성공률이 자신의 PE 성과를 직접 올려줌"},
+      {"npc": "이준혁", "initial_balance": -3, "trajectory": "무관심→경계→압박→손 내밀기", "key_deposits": ["Block 58 제국 상황 공유 (신뢰 시작)"], "key_withdrawals": ["Block 66 경영권 확보 시 형 동의"], "why_follows": "제국그룹이 실제로 망하고 있고, 준서만이 구할 능력이 있다는 현실 인식"}
+    ],
+    "do_not_fake": [
+      "투자 구조를 단순 돈 놀음으로 뭉개지 말 것 — 공매도·스퀴즈·파생·지분 구조의 실제 금융 메커니즘 필수",
+      "반도체 기술을 추상 과학으로 때우지 말 것 — HBM4·2.5D 패키징·EUV·NPU의 구체적 기술 단위 필수",
+      "바이오 임상을 '약이 성공했다'로 축약하지 말 것 — 임상 3상·ADC·라이선스 아웃의 신약 현장 용어 필수",
+      "M&A를 '돈으로 삼'으로 단순화하지 말 것 — 실사·인허가·공정위·채권단 협상의 절차 필수",
+      "재벌 가문 권력전을 추상 감정으로 쓰지 말 것 — 기획조정실·이사회·지분율·경영권 분쟁의 실체 필수",
+      "방산/우주를 SF처럼 쓰지 말 것 — 방위사업청·보안인가·MRO의 현행 체계 필수",
+      "자본 곡선 수치를 기획안 표와 정합시킬 것"
+    ]
+  }
+}

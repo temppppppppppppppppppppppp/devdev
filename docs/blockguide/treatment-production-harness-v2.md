@@ -549,26 +549,30 @@ Phase 0 완료 시 아래를 기준으로 정리한다.
     블록별 최소 2항목은 고유해야 한다.
 15. is_regressor 정합성: regression_type이 "빙의" 또는 "회귀"이면
     is_regressor=true 필수.
-16. 복선 실제 회수 의무: foreshadow에서 "Block N" 지목 시,
-    해당 Block N의 callback에 명시적으로 회수 문장 포함 필수.
-17. 페이즈 내 NPC 변화 의무: 동일 NPC가 5블록 이상 등장하면,
+16. 블록 번호 본문 노출 금지: TR 블록의 **모든 텍스트 필드**에 "B숫자", "Block 숫자", "블록 숫자" 패턴 금지.
+    대상: content.*, stakes, power_shift.*, relationship_delta[].before/after,
+    foreshadow[].event, callback[].event, genre_ext.*/regression_ext.* 내 텍스트 필드.
+    foreshadow/callback의 블록 참조는 ref 필드에만 기입한다.
+    이유: TR의 모든 텍스트가 downstream 원고 생성에 흐르므로 메타 번호의 작중 오염을 방지.
+17. 복선 실제 회수 의무: foreshadow에서 ref로 지목한 블록의 callback에 명시적으로 회수 문장 포함 필수.
+18. 페이즈 내 NPC 변화 의무: 동일 NPC가 5블록 이상 등장하면,
     before≠after인 블록이 최소 3개 있어야 한다.
-18. 장소 순환 주기 최소 15블록: 동일 장소가 15블록 이내에 재등장하면 위반.
-19. 파트너 축 분화 의무:
+19. 장소 순환 주기 최소 15블록: 동일 장소가 15블록 이내에 재등장하면 위반.
+20. 파트너 축 분화 의무:
     - 투자/글로벌 서브모드면 70블록에 최소 3개 해외 파트너 등장.
     - 기업 운영/재벌/회사원형이면 해외 파트너 강제 금지.
       대신 국내 핵심 파트너/부서/계열사/현장 축이 최소 3개 이상 분화되어야 한다.
-20. execution_doctrine 진화 의무: 20블록 이상 동일 문장이면 재작성.
-21. `reward` 재진술 금지: `context`를 시제만 바꿔 반복하거나 같은 문장을 축약하는 수준이면 무효.
+21. execution_doctrine 진화 의무: 20블록 이상 동일 문장이면 재작성.
+22. `reward` 재진술 금지: `context`를 시제만 바꿔 반복하거나 같은 문장을 축약하는 수준이면 무효.
     `reward`에는 반드시 "새로 생긴 결과/손실/지배력 변화"가 1개 이상 포함되어야 한다.
-22. `relationship_delta.after` 복제 금지: 동일 문장이 다른 블록/다른 NPC에 3회 이상 반복되면 재작성.
-23. 대단원 슬롯 반복 금지: 10블록 패턴을 다음 대단원에서 같은 순서로 재사용하면 무효.
+23. `relationship_delta.after` 복제 금지: 동일 문장이 다른 블록/다른 NPC에 3회 이상 반복되면 재작성.
+24. 대단원 슬롯 반복 금지: 10블록 패턴을 다음 대단원에서 같은 순서로 재사용하면 무효.
     특히 `deal_type`, `method`, `success_pattern` 3종이 같은 인덱스에서 반복되면 재작성.
-24. skeleton draft 금지: Phase 0의 block slot 문장을 `context/reward`에 얕게 풀어쓴 수준이면 무효.
+25. skeleton draft 금지: Phase 0의 block slot 문장을 `context/reward`에 얕게 풀어쓴 수준이면 무효.
     블록마다 최소 1개의 "구체 장면", 1개의 "구체 손익/권력 변화"가 새로 생겨야 한다.
-25. 복선 저밀도 금지: 10블록 창(window)에서 `foreshadow + callback` 합계가 8 미만이면 재설계.
-26. 저밀도 관계망 금지: 10블록 창(window) 평균 `relationship_delta` 대상 수가 2 미만이면 재설계.
-27. 핵심 서술 번들 저밀도 금지:
+26. 복선 저밀도 금지: 10블록 창(window)에서 `foreshadow + callback` 합계가 8 미만이면 재설계.
+27. 저밀도 관계망 금지: 10블록 창(window) 평균 `relationship_delta` 대상 수가 2 미만이면 재설계.
+28. 핵심 서술 번들 저밀도 금지:
     - `context + event_villain + solution + reward + stakes` 평균(`avg_bundle_chars`)이 350자 미만이면
       해당 draft를 `skeleton draft`로 분류한다.
     - 300자 미만 블록이 1개라도 있으면 P0 재생성.
@@ -890,8 +894,8 @@ Phase 2 자동 교정은 수치·연속성만 다룬다. 서사 필드는 Python
 |------|-----------|
 | `content.*` | 사건, 적대 행동, 해결, 보상은 서사 재작성 대상 |
 | `stakes` | 손실 규모와 긴장도는 문맥 의존적 |
-| `foreshadow` | 장기 복선 구조 판단이 필요 |
-| `callback` | 구체 사건 회수 문장을 다시 써야 함 |
+| `foreshadow` | 객체 배열 (ref+event). 장기 복선 구조 판단이 필요. event 텍스트에 블록번호 노출 금지 |
+| `callback` | 객체 배열 (ref+event). 구체 사건 회수 문장을 다시 써야 함. event 텍스트에 블록번호 노출 금지 |
 | `deal_type` | 배치 차별화와 거래 구조 설계에 직접 영향 |
 | `location` | 순환 패턴 회피와 장면 설계가 함께 필요 |
 | `leverage_used` | 반복 여부만으로 대체 항목을 결정할 수 없음 |
@@ -1045,20 +1049,26 @@ def validate_v2(blocks: list[dict]) -> list[dict]:
                                       "msg": f"relationship_delta.{field} 영문 포함"})
                     break
         for fs in b.get("foreshadow", []):
-            if ENGLISH_RE.search(fs):
+            fs_event = fs.get("event", "") if isinstance(fs, dict) else fs
+            if ENGLISH_RE.search(fs_event):
                 violations.append({"block": i+1, "pattern": "I", "severity": "P1",
-                                  "msg": f"foreshadow 영문: '{fs[:40]}...'"})
+                                  "msg": f"foreshadow 영문: '{fs_event[:40]}...'"})
         for cb in b.get("callback", []):
-            if ENGLISH_RE.search(cb):
+            cb_event = cb.get("event", "") if isinstance(cb, dict) else cb
+            if ENGLISH_RE.search(cb_event):
                 violations.append({"block": i+1, "pattern": "I", "severity": "P1",
-                                  "msg": f"callback 영문: '{cb[:40]}...'"})
+                                  "msg": f"callback 영문: '{cb_event[:40]}...'"})
         reward = b.get("content", {}).get("reward", "")
         if ENGLISH_RE.search(reward):
             violations.append({"block": i+1, "pattern": "I", "severity": "P1",
                               "msg": f"reward 영문: '{reward[:40]}...'"})
         # 금지 템플릿
+        fs_events = [fs.get("event", "") if isinstance(fs, dict) else fs
+                     for fs in b.get("foreshadow", [])]
+        cb_events = [cb.get("event", "") if isinstance(cb, dict) else cb
+                     for cb in b.get("callback", [])]
         for tmpl in BANNED_TEMPLATES:
-            for field_val in [reward] + b.get("foreshadow", []) + b.get("callback", []):
+            for field_val in [reward] + fs_events + cb_events:
                 if tmpl in str(field_val):
                     violations.append({"block": i+1, "pattern": "I-TPL", "severity": "P1",
                                       "msg": f"금지 템플릿: '{tmpl}'"})
@@ -1135,17 +1145,26 @@ def validate_v2(blocks: list[dict]) -> list[dict]:
             break
 
     # Pattern N: 복선-회수 단절
-    BLOCK_REF_RE = re.compile(r'Block\s*(\d+)', re.IGNORECASE)
+    # foreshadow[]가 {"ref": N, "event": "..."} 객체 배열이므로 ref 필드를 직접 읽는다.
     plant_targets: dict[int, list[str]] = {}
     for i, b in enumerate(blocks):
         for fs in b.get("foreshadow", []):
-            for m in BLOCK_REF_RE.finditer(fs):
-                plant_targets.setdefault(int(m.group(1)), []).append(fs)
+            if isinstance(fs, dict):
+                ref = fs.get("ref")
+                event = fs.get("event", "")
+                if isinstance(ref, int):
+                    plant_targets.setdefault(ref, []).append(event)
+            else:
+                # 구형 string 형식 호환 (마이그레이션 기간)
+                BLOCK_REF_RE = re.compile(r'Block\s*(\d+)', re.IGNORECASE)
+                for m in BLOCK_REF_RE.finditer(str(fs)):
+                    plant_targets.setdefault(int(m.group(1)), []).append(str(fs))
     disconnected = 0
     for target, foreshadows in plant_targets.items():
         if 1 <= target <= len(blocks):
             tb = blocks[target - 1]
-            cbs = tb.get("callback", [])
+            cbs = [cb.get("event", "") if isinstance(cb, dict) else cb
+                   for cb in tb.get("callback", [])]
             resolved = any(
                 len(set(fs.split()) & set(cb.split())) >= 3
                 for cb in cbs for fs in foreshadows
@@ -1743,12 +1762,12 @@ python -X utf8 scripts/tr_batch_harness.py merge `
     }
   ],
   "foreshadow": [
-    "동남아 정부와의 신뢰가 Block 31에서 독점 입찰 수주로 연결될 것",
-    "최부장의 퇴출 소식을 들은 다른 임원 중 한 명이 동요하기 시작할 것 (Block 26)"
+    {"ref": 31, "event": "동남아 정부와의 신뢰가 독점 입찰 수주로 연결될 것"},
+    {"ref": 26, "event": "최부장의 퇴출 소식을 들은 다른 임원 중 한 명이 동요하기 시작할 것"}
   ],
   "callback": [
-    "Block 15에서 '최부장에게 너무 많은 권한을 줬다'고 독백한 것이 이번 배신으로 현실화",
-    "Block 18에서 선제 확보한 방역 물자 500억 분이 이번 위기의 핵심 카드로 활용"
+    {"ref": 15, "event": "'최부장에게 너무 많은 권한을 줬다'고 독백한 것이 이번 배신으로 현실화"},
+    {"ref": 18, "event": "선제 확보한 방역 물자 500억 분이 이번 위기의 핵심 카드로 활용"}
   ],
   "emotional_beat": { "type": "pyrrhic_victory", "intensity": 7 },
   "genre_ext": {
@@ -1815,8 +1834,8 @@ python -X utf8 scripts/tr_batch_harness.py merge `
 | `emotional_beat.intensity` | 3블록 연속 동일 금지, 1~10 전구간 |
 | `opponent.name` | 70블록에 최소 3세력 |
 | NPC 수 | 전체 최소 8명 |
-| `foreshadow` | 장기 복선 5개+ (10블록+ 지연) |
-| `callback` | 구체적 사건/블록 참조 (템플릿 금지) |
+| `foreshadow` | 객체 배열. ref=대상블록번호, event=서사적 서술(블록번호 노출 금지). 장기 복선 5개+ (10블록+ 지연) |
+| `callback` | 객체 배열. ref=원복선블록번호, event=서사적 회수 서술(블록번호 노출 금지). 구체적 사건 참조 (템플릿 금지) |
 | `deal_type` | 3블록 이내 재등장 금지, 10종+ |
 | `success_pattern` | 4종+ (실패/부분성공/피로스 포함), 동일 3회 금지 |
 | `leverage_used` | 동일 세트 3회 미만, 블록별 최소 2항목 고유 |
@@ -2049,6 +2068,35 @@ Treatment 필드가 파이프라인 어디서 소비되는지. 이 필드가 부
     ↓
 13. 사용자가 `다음 스텝` 입력 시 `bi-production-harness-v1.md`로 인계
 ```
+
+---
+
+---
+
+## 컨텍스트 윈도우 대응 — 자동 체크포인트
+
+### 자동 저장 규칙
+1. 블록 생산 완료 시마다 즉시 tr_block_070_draft.json에 머지하고 저장한다. "나중에 한꺼번에" 금지.
+2. 블록 저장 후 sequential_run_status.json을 업데이트한다:
+   - last_sequential_block_pass = 완료된 블록 번호
+   - next_block = 다음 블록 번호
+   - run_class = sequential_production
+3. 5블록마다 중간 정합성 체크를 수행한다:
+   - python scripts/block_continuity_checker.py --work-id {work_id} --family {family}
+   - 불일치 발견 시 즉시 수정 후 다음 블록 진행
+
+### 세션 종료 시
+4. context window 한계가 가까워지면 (압축 경고 발생 시):
+   - 현재 진행 중인 블록을 완료하고 저장
+   - sequential_run_status.json 업데이트
+   - "세션 종료. python scripts/generate_resume_prompt.py --work-id {work_id} 실행하여 다음 세션 프롬프트를 생성하세요." 출력
+5. 비정상 종료 대비: 블록 단위 즉시 저장이 이미 되어 있으므로, 다음 세션에서 generate_resume_prompt.py가 정확한 재개 지점을 알려준다.
+
+### 자동 진행 규칙
+6. Stage 0 완료 → Planning 자동 진입 (Go 조건 충족 시 묻지 않고 넘어감)
+7. Planning 완료 → Production 자동 진입
+8. Production Block 70 완료 → BI 자동 진입
+9. 각 전환 시 "다음 단계로 갈까요?" 질문 금지. 게이트 통과하면 바로 간다.
 
 ---
 

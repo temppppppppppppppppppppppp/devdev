@@ -103,12 +103,17 @@ Planning 시작 전 필수 입력:
 - `treatments/preprocess/{work_id}/material_bundle_summary.json`
 - `treatments/preprocess/{work_id}/phase0_ready_snapshot.json`
 
+Planning 진입 전 자동 검증:
+
+- Planning 진입 전 반드시 `python scripts/stage0_handoff_validator.py --work-id {work_id}`를 실행한다. exit code 0이 아니면 Planning 진입 금지.
+
 Planning 진입 금지 조건:
 
 - 위 4개 파일 중 하나라도 없음
 - `phase0_ready_snapshot.manual_audit_pass != true`
 - `source_manifest.manual_audit_note` 없음
 - `profile_lock.primary_profile` 없음
+- `stage0_handoff_validator.py` exit code ≠ 0
 
 좋은 handoff 예:
 

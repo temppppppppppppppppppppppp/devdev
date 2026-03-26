@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "profile_lock.schema.json",
+  "title": "Profile Lock",
+  "description": "Stage 0 profile lock: genre profile selection and axis interpretation for a work.",
+  "type": "object",
+  "required": [
+    "primary_profile",
+    "secondary_profile",
+    "resource_axis",
+    "power_axis",
+    "control_axis",
+    "payoff_axis",
+    "failure_axis",
+    "hud_interpretation"
+  ],
+  "properties": {
+    "primary_profile": {
+      "type": "string",
+      "enum": [
+        "business_growth_profile",
+        "investment_market_profile",
+        "entertainment_media_profile",
+        "medical_professional_profile",
+        "office_power_profile",
+        "tech_startup_profile",
+        "urban_power_profile",
+        "wuxia"
+      ],
+      "description": "Primary genre profile."
+    },
+    "secondary_profile": {
+      "type": "string",
+      "description": "Secondary genre profile (empty string if none)."
+    },
+    "resource_axis": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "What the protagonist accumulates."
+    },
+    "power_axis": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "How power is measured and projected."
+    },
+    "control_axis": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Chokepoints and structural levers."
+    },
+    "payoff_axis": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "What success looks like at each stage."
+    },
+    "failure_axis": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "What failure looks like at each stage."
+    },
+    "hud_interpretation": {
+      "type": "object",
+      "description": "How HUD/dashboard fields map to this work's domain.",
+      "properties": {
+        "capital": { "type": "string" },
+        "deal_type": { "type": "string" },
+        "resource_power_hud": { "type": "string" },
+        "business_lines": { "type": "string" },
+        "company_state": { "type": "string" }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}

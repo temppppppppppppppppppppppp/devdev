@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "source_manifest.schema.json",
+  "title": "Source Manifest",
+  "description": "Stage 0 source manifest: canonical sources, materials, constraints for a work_id.",
+  "type": "object",
+  "required": [
+    "work_identity",
+    "canonical_sources",
+    "reference_only_sources",
+    "core_materials",
+    "npc_pool",
+    "crisis_pool",
+    "hard_constraints",
+    "do_not_fake",
+    "manual_audit_note"
+  ],
+  "properties": {
+    "work_identity": {
+      "type": "object",
+      "required": ["work_id", "title", "primary_profile", "secondary_profile"],
+      "properties": {
+        "work_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Canonical work identifier (snake_case)."
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Human-readable title of the work."
+        },
+        "primary_profile": {
+          "type": "string",
+          "enum": [
+            "business_growth_profile",
+            "investment_market_profile",
+            "entertainment_media_profile",
+            "medical_professional_profile",
+            "office_power_profile",
+            "tech_startup_profile",
+            "urban_power_profile",
+            "wuxia"
+          ],
+          "description": "Primary blockguide profile or wuxia."
+        },
+        "secondary_profile": {
+          "type": "string",
+          "description": "Secondary profile (empty string if none)."
+        }
+      },
+      "additionalProperties": false
+    },
+    "canonical_sources": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1,
+      "description": "Authoritative source file paths."
+    },
+    "reference_only_sources": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Reference-only file paths (not canonical)."
+    },
+    "core_materials": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Key materials and domain details for the work."
+    },
+    "npc_pool": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Named NPC candidates with role descriptions."
+    },
+    "crisis_pool": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Crisis/conflict candidates tied to the work battlefield."
+    },
+    "hard_constraints": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Non-negotiable story and genre constraints."
+    },
+    "do_not_fake": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Domain details that must not be fabricated."
+    },
+    "manual_audit_note": {
+      "type": "string",
+      "description": "Human auditor note confirming source review."
+    }
+  },
+  "additionalProperties": false
+}

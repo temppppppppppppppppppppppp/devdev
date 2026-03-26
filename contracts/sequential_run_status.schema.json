@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "sequential_run_status.schema.json",
+  "title": "Sequential Run Status",
+  "description": "Production handoff status: distinguishes seed sync from actual sequential production progress.",
+  "type": "object",
+  "required": [
+    "run_class",
+    "last_sequential_block_pass",
+    "next_block",
+    "manual_audit_ready",
+    "notes"
+  ],
+  "properties": {
+    "run_class": {
+      "type": "string",
+      "enum": ["seed_baseline_sync", "sequential_production"],
+      "description": "seed_baseline_sync = reference copy only; sequential_production = real progress."
+    },
+    "last_sequential_block_pass": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 70,
+      "description": "Last block number that passed sequential production (0-70)."
+    },
+    "next_block": {
+      "type": "string",
+      "description": "Next block to process (e.g. 'Block 001', 'merge', 'BI_handoff')."
+    },
+    "manual_audit_ready": {
+      "type": "boolean",
+      "description": "True if ready for manual audit."
+    },
+    "notes": {
+      "type": "string",
+      "description": "Free-text production notes."
+    }
+  },
+  "additionalProperties": false
+}
