@@ -26,7 +26,7 @@
 | `munpa_profile` (문파물) | 문파 등급, 제자 육성, 문파 재건 | 삼류문파 장문인, 소림 입문기, 문파 중흥기 |
 | `rebirth_wuxia_profile` (환생/회귀물) | 전생 기억 활용, 경지 재돌파, 인과 회수 | 무림 회귀, 전생 검성, 환생 의선 |
 | `merchant_wuxia_profile` (상업무협) | 상단 규모, 거래 영향력, 무림 경제 장악 | 상단 막내딸, 무림 재벌, 표국 운영기 |
-| `medical_wuxia_profile` (의술무협) | 의술 경지, 치료 범위, 의명(醫名) | 침의무쌍, 독의, 의선 성장기 |
+| `medical_wuxia_profile` (의술무협) | 의술 경지, 치료 범위, 의명(醫名) | 침의무쌍, 독의, 의선 성장기 | <!-- utf8-hygiene: allow-line rationale: intentional Hangul+CJK term for wuxia naming. -->
 | `training_wuxia_profile` (육성무협) | 교육 경지, 제자 경지, 문파 위상 | 스승 시점물, 제자 군단, 교육 먼치킨 |
 
 핵심 해석:
@@ -144,7 +144,7 @@ Block 42: "스승의 가르침을 세상에 알리기 위해" 비무에 나선�
 2. 내공 인과 없는 돌파 금지: 경지 상승에는 반드시 선행 조건(수련, 비급 습득, 실전 깨달음,
    영약 복용 등)이 content.solution 또는 content.context에 서술되어야 한다.
 3. 죽은 NPC 행동 금지: 사망 처리된 NPC가 이후 블록에서 행동하면 REJECT.
-   부활/환생/가사(假死)는 반드시 foreshadow에서 사전 심기가 있어야 한다.
+   부활/환생/가사(假死)는 반드시 foreshadow에서 사전 심기가 있어야 한다. <!-- utf8-hygiene: allow-line rationale: intentional Hangul+CJK term for wuxia naming. -->
 4. 3블록 연속 동일 경지 금지: realm_before = realm_after가 3블록 연속이면 REJECT.
    경지 변화가 없더라도 내공량 변동, 무공 습득, 깨달음 중 최소 1개가 있어야 한다.
 5. 무공 무근거 사용 금지: martial_arts_acquired에 없고 이전 블록에서도 습득하지 않은
@@ -299,6 +299,8 @@ Block 42: "스승의 가르침을 세상에 알리기 위해" 비무에 나선�
 이 하네스의 생산 단위는 항상 **블록 1개**다.
 
 - `auto-run`은 블록을 순서대로 이어서 쌓는다는 뜻이다.
+- 같은 운영 오더에서 자동 연속 가능한 최대치는 **5블록**이다.
+- `Block 005`, `010`, `015` ... 경계에 도달하면 새 오더 전까지 반드시 멈춘다.
 - 10블록은 대단원 구조/감리 창(window)일 뿐, 출력 단위가 아니다.
 - 70블록 일괄 생성이나 10블록 일괄 생성은 금지한다.
 
@@ -334,6 +336,21 @@ Block 42: "스승의 가르침을 세상에 알리기 위해" 비무에 나선�
 | `다음 스텝` (블록 완료 후) | 다음 블록 1개 생성 | 다음 candidate |
 | `다음 스텝` (70 완료 후) | 전량 merge/최종 draft 정리 | `tr_block_070_draft.json` |
 | `다음 스텝` (draft 확정 후) | BI 하네스로 handoff | `0_bi_{work_id}.json` |
+
+- `알아서 계속`도 이 표를 무제한 확장하는 뜻이 아니다. 같은 운영 오더에서는 최대 5블록까지만 연속 진행한다.
+
+### 1.4A TR auto-run window (5-block cap)
+
+이 절은 **TR production 오더에만** 적용한다.
+Planning, BI handoff, 감리 단계에는 그대로 확장하지 않는다.
+
+규칙:
+
+1. 내부 실행 단위는 항상 `Block 1개`다.
+2. 사용자가 `알아서 계속`, `정지 게이트 전까지 계속`처럼 연속 진행을 허용해도, 같은 운영 오더에서 자동 연속 가능한 최대치는 **5블록**이다.
+3. `Block 005`, `010`, `015` ... 처럼 5의 배수 경계에 도달하면 품질 이상이 없어도 반드시 멈추고 새 오더/재정렬을 기다린다.
+4. P0, UTF-8, 수동 감리, continuity, compaction 경고가 먼저 오면 5블록 이전에도 즉시 멈춘다.
+5. BI handoff는 별도 단계다. TR의 5블록 cap을 BI 감리 생략 허가로 해석하지 않는다.
 
 ### 1.5 사전 선언 프로토콜 (블록마다 JSON 앞에 필수)
 
@@ -403,7 +420,7 @@ Block 42: "스승의 가르침을 세상에 알리기 위해" 비무에 나선�
   "title": "산골 문파의 불꽃 — 첫 번째 제자",
   "content": {
     "context": "청풍문 3대 장문인 한서진은 문도 다섯, 실력 삼류의 허름한 산골 문파를 이끌고 있다. 선대 장문인의 유언 '청풍문을 세상에 알려다오'가 어깨를 짓누른다. 문파 운영비조차 빠듯한 상황에서 산 아래 마을로 약초를 팔러 내려간다.",
-    "event_villain": "마을에서 쫓겨난 거지 소년 진무혁을 발견한다. 마을 건달 3명이 소년을 때리고 있고, 주변 문파 제자들은 구경만 한다. 한서진이 삼류 무공으로 건달들을 겨우 쫓아낸다. 이 과정에서 소년의 근골에서 금색 빛(감재안 발동)을 목격 — 검(劍)의 천재 그릇임을 직감한다.",
+    "event_villain": "마을에서 쫓겨난 거지 소년 진무혁을 발견한다. 마을 건달 3명이 소년을 때리고 있고, 주변 문파 제자들은 구경만 한다. 한서진이 삼류 무공으로 건달들을 겨우 쫓아낸다. 이 과정에서 소년의 근골에서 금색 빛(감재안 발동)을 목격 — 검(劍)의 천재 그릇임을 직감한다.", <!-- utf8-hygiene: allow-line rationale: intentional Hangul+CJK term inside literal JSON example. -->
     "solution": "소년에게 기초 검결 하나를 가르친다. 소년이 세 번 만에 숙달하는 것을 보고 확신한다. '이 아이, 검성의 그릇이다.' 소년을 청풍문 1호 제자로 영입하겠다고 선언하지만, 소년은 어른에 대한 불신이 깊어 쉽게 따르지 않는다. 한서진은 강요 대신 매일 밥을 갖다 주며 신뢰를 쌓기 시작한다.",
     "reward": "진무혁을 1호 제자로 영입하는 데 성공한다. 청풍문 문도가 6명으로 늘어난다. 그러나 소년은 아직 기초 검결 1개뿐이고, 문파 경제 사정은 제자 한 명 더 먹여 살리기 어려운 수준. 한서진의 교육 경지는 사범 입문 단계(5/100)에서 시작."
   },
@@ -602,7 +619,7 @@ def auto_correct_martial(blocks: list[dict], npc_tracker: dict) -> list[dict]:
   "title": "산골의 불꽃 — 검성의 그릇을 발견하다",
   "content": {
     "context": "청풍문 3대 장문인 한서진(22세)은 선대 장문인의 유언 '청풍문을 세상에 알려다오'를 안고 허름한 산골 문파를 이끌고 있다. 문도 5명, 실력 삼류. 문파 운영비도 빠듯하여 직접 약초를 캐어 마을에 팔러 내려간다.",
-    "event_villain": "마을 변두리에서 건달 3명에게 맞고 있는 거지 소년 진무혁을 발견한다. 주변의 이류 문파 '청운문' 제자들은 구경만 하며 비웃는다. 한서진이 삼류 권법으로 간신히 건달을 물리치지만, 청운문 제자들이 '삼류 장문인이 건달이나 잡는군'이라며 조롱. 이 과정에서 감재안이 발동하여 소년의 근골에서 금색 빛이 보임 — 검(劍)의 천재, 검성급 그릇이다.",
+    "event_villain": "마을 변두리에서 건달 3명에게 맞고 있는 거지 소년 진무혁을 발견한다. 주변의 이류 문파 '청운문' 제자들은 구경만 하며 비웃는다. 한서진이 삼류 권법으로 간신히 건달을 물리치지만, 청운문 제자들이 '삼류 장문인이 건달이나 잡는군'이라며 조롱. 이 과정에서 감재안이 발동하여 소년의 근골에서 금색 빛이 보임 — 검(劍)의 천재, 검성급 그릇이다.", <!-- utf8-hygiene: allow-line rationale: intentional Hangul+CJK term inside literal JSON example. -->
     "solution": "소년에게 청풍검법 기초 검결을 가르치자 세 번 만에 숙달한다. 천재임을 확신하고 '내 제자가 되어라'고 제안하지만 소년은 거부한다. 어른에 대한 불신이 너무 깊다. 한서진은 강요 대신 매일 밥을 갖다 주며, 검결을 혼자 시연하다 돌아가기를 7일간 반복한다. 7일째 소년이 '그 검법... 좀 더 알려주시오'라 말한다.",
     "reward": "진무혁을 1호 제자로 영입. 청풍문 문도 6명. 교육 경지 사범 입문(5→7). 그러나 문파 살림은 더 어려워짐 — 입 하나 더 늘었고 약초 밭은 그대로. 백운노인 장로가 '오래간만에 좋은 소식'이라며 한서진을 처음으로 칭찬."
   },
@@ -1126,7 +1143,7 @@ python -X utf8 scripts/narrative_tr_batch.py --genre wuxia merge \
 ### 10.3 인코딩
 
 - 모든 산출물은 **UTF-8 only**로 저장한다.
-- `???`, `�`, 인코딩 오염은 P0다.
+- `???`, `�`, 인코딩 오염은 P0다. <!-- utf8-hygiene: allow-line rationale: literal mojibake tokens are documented here as stop-gate examples. -->
 
 ---
 
@@ -1228,24 +1245,28 @@ python -X utf8 scripts/narrative_tr_batch.py --genre wuxia merge \
 1. 블록 생산 완료 시마다 즉시 tr_block_070_draft.json에 머지하고 저장한다. "나중에 한꺼번에" 금지.
 2. 블록 저장 후 sequential_run_status.json을 업데이트한다:
    - last_sequential_block_pass = 완료된 블록 번호
-   - next_block = 다음 블록 번호
+   - next_unit_type = 다음 단위 (`block` | `merge` | `bi_handoff`)
+   - next_block_id = 다음 단위가 block이면 다음 블록 번호, 아니면 null
    - run_class = sequential_production
-3. 5블록마다 중간 정합성 체크를 수행한다:
+3. 같은 운영 오더 안에서는 최대 5블록까지만 자동 연속 진행한다.
+   - Block 1~4 종료: continuity check 통과 시 다음 블록으로 진행 가능
+   - Block 5 종료: continuity check 후 반드시 정지하고 새 오더를 기다린다
+4. 5블록마다 중간 정합성 체크를 수행한다:
    - python scripts/block_continuity_checker.py --work-id {work_id} --family {family}
    - 불일치 발견 시 즉시 수정 후 다음 블록 진행
 
 ### 세션 종료 시
-4. context window 한계가 가까워지면 (압축 경고 발생 시):
+5. context window 한계가 가까워지면 (압축 경고 발생 시):
    - 현재 진행 중인 블록을 완료하고 저장
    - sequential_run_status.json 업데이트
    - "세션 종료. python scripts/generate_resume_prompt.py --work-id {work_id} 실행하여 다음 세션 프롬프트를 생성하세요." 출력
-5. 비정상 종료 대비: 블록 단위 즉시 저장이 이미 되어 있으므로, 다음 세션에서 generate_resume_prompt.py가 정확한 재개 지점을 알려준다.
+6. 비정상 종료 대비: 블록 단위 즉시 저장이 이미 되어 있으므로, 다음 세션에서 generate_resume_prompt.py가 정확한 재개 지점을 알려준다.
 
 ### 자동 진행 규칙
-6. Stage 0 완료 → Planning 자동 진입 (Go 조건 충족 시 묻지 않고 넘어감)
-7. Planning 완료 → Production 자동 진입
-8. Production Block 70 완료 → BI 자동 진입
-9. 각 전환 시 "다음 단계로 갈까요?" 질문 금지. 게이트 통과하면 바로 간다.
+7. 이 절의 auto-run은 **TR production 범위에만** 적용한다. Stage 0/Planning 전이는 각 전용 하네스가 따로 판정한다.
+8. Production auto-run은 `1블록씩 + 최대 5블록`까지만 허용한다.
+9. `Block 70` 완료 후 source TR gate가 정상이면 BI 하네스로 handoff할 수 있다.
+10. 5블록 창 소진, 강제 정지 게이트, compaction 경고 중 하나라도 오면 새 오더 전까지 재개하지 않는다.
 
 ---
 

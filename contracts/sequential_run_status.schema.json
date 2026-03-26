@@ -5,13 +5,27 @@
   "description": "Production handoff status: distinguishes seed sync from actual sequential production progress.",
   "type": "object",
   "required": [
+    "work_id",
     "run_class",
     "last_sequential_block_pass",
-    "next_block",
     "manual_audit_ready",
+    "resume_basis",
+    "updated_at",
     "notes"
   ],
+  "anyOf": [
+    {
+      "required": ["next_unit_type", "next_block_id"]
+    },
+    {
+      "required": ["next_block"]
+    }
+  ],
   "properties": {
+    "work_id": {
+      "type": "string",
+      "description": "Canonical work identifier."
+    },
     "run_class": {
       "type": "string",
       "enum": ["seed_baseline_sync", "sequential_production"],
@@ -23,18 +37,74 @@
       "maximum": 70,
       "description": "Last block number that passed sequential production (0-70)."
     },
+    "next_unit_type": {
+      "type": "string",
+      "enum": ["block", "merge", "bi_handoff"],
+      "description": "Canonical next unit type."
+    },
+    "next_block_id": {
+      "type": ["string", "null"],
+      "description": "Canonical next block label when next_unit_type == 'block', otherwise null."
+    },
     "next_block": {
       "type": "string",
-      "description": "Next block to process (e.g. 'Block 001', 'merge', 'BI_handoff')."
+      "description": "Legacy fallback field for older status instances.",
+      "deprecated": true
     },
     "manual_audit_ready": {
       "type": "boolean",
       "description": "True if ready for manual audit."
+    },
+    "resume_basis": {
+      "type": "string",
+      "enum": ["manual_audit_pass", "seed_baseline_sync", "status_recovery", "restart_default"],
+      "description": "Why this resume pointer is trusted."
+    },
+    "updated_at": {
+      "type": "string",
+      "description": "Status file update timestamp."
     },
     "notes": {
       "type": "string",
       "description": "Free-text production notes."
     }
   },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "next_unit_type": {
+            "const": "block"
+          }
+        },
+        "required": ["next_unit_type"]
+      },
+      "then": {
+        "properties": {
+          "next_block_id": {
+            "type": "string"
+          }
+        },
+        "required": ["next_block_id"]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "next_unit_type": {
+            "enum": ["merge", "bi_handoff"]
+          }
+        },
+        "required": ["next_unit_type"]
+      },
+      "then": {
+        "properties": {
+          "next_block_id": {
+            "type": "null"
+          }
+        }
+      }
+    }
+  ],
   "additionalProperties": false
 }

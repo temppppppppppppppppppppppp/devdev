@@ -40,7 +40,7 @@
 - `Phase 0` 없이 TR 금지
 - `TR draft` 없이 BI 금지
 - 감리 PASS 전 완료 선언 금지
-- UTF-8 only. `???`, `�`가 보이면 즉시 중단
+- UTF-8 only. `???`, `�`가 보이면 즉시 중단 <!-- utf8-hygiene: allow-line rationale: literal mojibake tokens are documented here as stop-gate examples. -->
 
 ## 2. 전처리 SSOT 표면 구조
 
@@ -255,7 +255,8 @@ treatments/preprocess/{work_id}/
   - 실제 순차 production 진행률은 0 또는 명시된 값으로 본다.
 - `run_class = sequential_production`
   - `last_sequential_block_pass = N`까지는 진짜 수동 감리 PASS로 쌓인 블록이다.
-  - 다음 시작점은 `next_block`이다.
+  - 다음 시작점은 `next_unit_type` / `next_block_id` 조합이다.
+  - TR auto-run은 여전히 1블록씩만 움직이며, 같은 오더에서 최대 5블록 후 새 오더를 기다린다.
 
 즉, **최고 번호 block 디렉터리나 `04_tr_final/` 존재만으로는 진행률을 판정하지 않는다.**
 

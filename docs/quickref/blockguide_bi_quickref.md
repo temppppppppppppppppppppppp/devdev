@@ -5,6 +5,12 @@
 ### TR Gate Pass
 - **TR gate pass 필수**. TR 감리를 통과하지 않은 작품은 BI 생성 불가.
 - TR 통과 증빙: audit_status.json의 audit_pass == true.
+- TR이 70블록 완료 전이거나, TR 5블록 창 중간 정지 상태면 BI 진입 금지.
+
+### Auto-Handoff 경계
+- TR의 **5블록 cap은 upstream 전용**. BI는 block count로 계산하지 않는다.
+- BI auto-run은 `스켈레톤 -> 동기화 -> UTF-8 저장 -> 5-Pass 감리` 1사이클까지만 허용.
+- PASS/FAIL 보고가 나오면 새 오더 전까지 재생성 루프 금지.
 
 ### plot_roadmap 규칙
 - **plot_roadmap = TR에서 그대로 복사**. 재작성 절대 금지.

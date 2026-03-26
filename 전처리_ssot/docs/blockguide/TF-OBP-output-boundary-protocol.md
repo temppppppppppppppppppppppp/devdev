@@ -1,5 +1,7 @@
 # TF-OBP: 출력 경계 프로토콜 (Output Boundary Protocol)
 
+<!-- utf8-hygiene: allow-file rationale: this protocol intentionally documents literal mojibake tokens and quoted operator prompts such as "계속할까요?" as prohibited examples. -->
+
 > 상태: **CONFIRMED** (3-Pass 감리 완료 2026-03-12)
 > 감리 결과: P1 4건 수정, P2 3건 수정, MINOR 4건 수용
 > 작성일: 2026-03-12
@@ -14,8 +16,9 @@
 이 프로젝트는 웹소설 자동 생성 시스템이다. Treatment(시놉시스)는 70개 블록으로 구성되며, SSOT 문서(`SSOT_blockguide-integrated-order.md`, `treatment-production-harness-v2.md`)에 따라 LLM이 블록을 1개씩 순차 생산한다.
 
 **SSOT의 핵심 규칙:**
-- `auto-run`: 정지 게이트가 아닌 한, 순차 진행을 멈추지 않는다
+- `auto-run`: 정지 게이트가 아닌 한, 현재 운영 오더 안에서만 순차 진행을 이어 간다
 - `1턴 1단위`: Production에서 1단위 = 블록 1개 + 감리 1회
+- `운영 오더 하드캡`: 같은 운영 오더에서 최대 5블록까지만 연속 진행, `Block 005/010/015...` 경계마다 새 오더 필요
 - `정지 게이트 7개`: UTF-8 실패, `???`/`�` 탐지, P0 위반, candidate/fixed/draft 연속성 불일치, 직전 감리 부재, seed/sequential 혼동, 사용자 방향수정·수동검토 명시
 - `정지 게이트가 아닌 것`: 단계 전환, 큰 마일스톤, 확인 질문 자체
 
@@ -92,7 +95,7 @@
 > 연속 응답은 새로운 턴이 아니다.
 >
 > - **CLI 환경** (Claude Code 등 도구 자동 실행 가능): 사용자 추가 입력 없이 자동 재개
-> - **채팅 환경** (웹 UI 등): 사용자가 아무 입력(빈 엔터, "ㅇ" 등)을 보내면 즉시 재개. "계속할까요?"를 묻지 않으며, 상태 저장 후 대기할 뿐이다.
+> - **채팅 환경** (웹 UI 등): 사용자가 아무 입력(빈 엔터, "ㅇ" 등)을 보내면 즉시 재개. 다만 같은 운영 오더의 5블록 창이 소진됐으면 새 오더 없이는 재개하지 않는다.
 
 ---
 
@@ -225,9 +228,9 @@ ARC-01 종합 차이 행렬, NPC 추적표, 복선 원장, 자본 곡선, 적대
 | Claude Opus | ~32K 토큰 | ~10블록 | ~18블록 | ~14블록 |
 
 따라서:
-- Gemini Flash: 약 23회 출력 경계 → 23회 자동 재개
-- Claude Opus: 약 5회 출력 경계 → 5회 자동 재개
-- **어느 모델이든 사용자 개입 0회** (출력 경계 프로토콜이 있으면)
+- Gemini Flash: 5블록 창 안에서도 출력 경계가 발생할 수 있으므로 state 저장 후 자동 재개가 필요하다
+- Claude Opus: 보통 5블록 창을 한 세션에 담을 수 있지만, 경계가 오면 같은 방식으로 재개한다
+- 출력 경계 프로토콜은 **같은 운영 오더의 5블록 창 안에서만** 무승인 재개를 보장한다
 
 ---
 
