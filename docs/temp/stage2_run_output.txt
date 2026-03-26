@@ -1,0 +1,257 @@
+[V61.3] Faulthandler 활성화 → crash_dump.log
+      ✅ [TF7-P0-03] preset_registry DB에서 복원 완료
+      ✅ [Wuxia] HUD 시스템 초기화 완료
+      🔍 [V61.3] HUD 호환성 체크: MartialManager
+         ✅ 필수 속성 모두 존재
+         ⚠️ 선택적 속성 누락 (정상): snapshot (method), bulk_update (method)
+   🛡️ [Wuxia] Guard 시스템 초기화 완료
+   ✅ [System] Vector DB integrity check complete.
+   ✅ [VecMemory] sqlite-vec 벡터 엔진 초기화 완료
+      🔧 [V60.11] Stage 2 고도화 모듈 초기화 (Ensemble + DraftValidator + 
+ConstraintCompiler)
+      🚀 [V60.12] Stage 2 초기통과율 극대화 모듈 초기화 (FourPhase + Preflight 
++ Critic + Consensus)
+      🔧 [V60.42] Arc Corrector 초기화 (MAJOR 이슈 부분 수정: 활성화)
+      ⚡ [V60.25] Stage 2 Optimizer 활성화 (StateSnapshot + AutoCorrector + 
+ConstraintAmplifier)
+      🎭 Director 장르 설정: wuxia
+      🛡️ Director Guard 연결 완료
+      ✍️ Writer Guard/Genre 연결 완료
+      ✅ V0128 검증 시스템 활성화
+      🔩 [V49.7] 트래커 대기 (Arc 데이터 없음)
+      📊 [V66] SemanticPlotGuard 초기화 완료 (임베딩 모드)
+      💓 [V60.26] 감정선 추적기 활성화
+      ⚡ [V60.26] 파워 스케일링 추적기 활성화
+      📊 [V60.26] 상태 변화 추적기 활성화
+      📦 [V60.26] 의미적 아이템 레지스트리 활성화
+      🎭 [V60.26] 캐릭터 음성 프로파일러 활성화
+      🔄 [V52.1] Self-Reflection Chain 활성화
+      🎯 [V52.3] Expert Mixture 활성화 (wuxia)
+      🔗 [V52.4] Cross-Agent Verifier 활성화
+      ⚖️ [V53.1] Dynamic Prompt Weighter 활성화
+      🔍 [V53.2] Chain-of-Verification 활성화
+      📊 [V53.3] Confidence Calibrator 활성화
+      ✅ [V53.4] Pre-Director Checklist 활성화
+      🌳 [V53.5] Tree of Thoughts 활성화 (Gemini 3)
+      ⚔️ [V53.6] Adversarial Self-Play 활성화
+      🗣️ [V53.7] Multi-Agent Deliberation 활성화
+      🔄 [V54.3] Adaptive Retry Manager 활성화 (FailureLearner 연동)
+      📜 [V55.2] Constitutional Checker 활성화
+      📝 [V55.3] Writer Template 활성화
+      📊 [V55.3] Pass Rate Monitor 활성화
+      📊 [V60] Quality Dashboard 활성화
+      🧭 [SC] Context Advisor 활성화
+      📊 [V50~V60] 서사 품질 모듈 초기화 완료 (장르: wuxia)
+   ✅ [System] 모든 에이전트 안전하게 초기화 완료
+INIT OK - starting Stage 2
+   🔞 [Stage 2] 0124 매니페스트 정합 엔진 및 멀티 공정 기동...
+   ⚠️ [Notice] Volume 전략이 없습니다. 기본값으로 Arc 단계를 진행합니다.
+   📝 [V42] 주인공 이름 락: 진소백(陳小白)
+   📤 현재 단계 완료: 0 / 70 아크
+   🔕 Tip: 결과를 직접 보기 위해 1~10개(권장 2개 내외) 진행을 권장합니다.
+  [auto-input] 🎛 몇 번 아크까지 단계하시겠습니까? (현재 1 ~ 최대 70): -> 2
+   📝 [V49.4] ConstraintDB 초기화 완료 (기존 Arc: 0개)
+   [Batch] 1~2 range enrich start
+         [Enrich] Block 1 task start
+         [Enrich] Block 2 task start
+         [Enrich] Block 2 task done (1/2)
+         [Enrich] Block 1 task done (2/2)
+         [Enrich Phase] Batch 1~2 completed: 54.7s (2 items)
+         ⚓ Arc 1-2 고유 명사 앵커링 완료.
+      🧶 Arc 1-2 인과율 용접 완료.
+         ⏳ [Preflight] 병렬 분석 시작 (arc_drive + preflight + constraint)...
+         ✅ [Preflight] arc_drive 완료
+         ✅ [Preflight] preflight 완료
+         ✅ [Preflight] constraint 완료
+         ⏳ [Stage 2] Arc 1 attempt 1/10: preflight/four-phase tactical 
+generation 대기...
+      🧠 [Arc 1] 전술 설계 중 (시도 1/10)...
+         ⚡ [V60.25] Stage 2 Optimizer 프롬프트 주입 완료
+         🧠 [V51+V55.2] Analyst 지능 향상 + Constitutional 주입 완료
+         🎯 [V60.77] FourPhase-Director 대면 1/5
+         ✅ [TF-38] Arc 생성 완료
+         🔎 [Stage 2] Arc 1 attempt 1: generation=four_phase · validation 진입
+         🔍 [TF-38] Pre-Director 검증 체인 시작
+         ✅ [TF-38] Pre-Director 검증 완료 → Director 심사 대기
+         🤔 [Director] 전략적 무결성 검수 중 (LLM 호출, 1~3분 소요)...
+   
+      🎬 [Director] PASS (score=100)
+            각 화의 서사적 목표와 인과 관계가 명확하게 설정되어 있으며, 
+주인공의 능력 각성 과정과 주변 인물들의 반응이 자연스럽게 이어집니다. 단일 공간
+            (의료 천막)에서 진행되지만, 치료라는 긴박한 상황과 내면적/외면적 
+갈등이 밀도 있게 다루어져 공간적 단조로움을 상쇄합니다. 상태 변동(내공 소
+            모 및 회복, 아이템 소모)도 일관성 있게 추적되었습니다.
+         💭 [Director Thinking]
+   **Pragmatic Plot Audit: Arc 1 Strategy Plan - Wuxia Story**
+
+Alright, let's get down to brass tacks. I've been tasked to analyze this Arc 1 
+strategy plan for a wuxia story, acting as a 'Pragmatic Plot Auditor'. My job 
+is to ensure the logical integrity of this arc, given the initial directives.
+
+The setup is straightforward: a five-episode arc focusing on Jin Sobaek, a 
+17-year-old with medical knowledge in a world of martial arts. The central 
+event revolves around Sobaek treating his injured brother using a combination 
+of modern medicine and acupuncture, which unexpectedly awakens an innate 
+internal energy – a "Medical-Martial Unity." We have clear conflicts: the 
+eldest brother's suspicion of dark arts, the father's complex recognition of a 
+lost technique, and the mysterious observation of an old man.
+
+Let's break this down systematically. First, the temporal slicing: Episodes 1 
+through 5 present a clear, progressive narrative. Episode 1 establishes the 
+injury; Sobaek diagnoses it. Episode 2 deals with preparing the treatment. 
+Episode 3 is the core: the acupuncture, the energy awakening, the collapse. 
+Episode 4 focuses on the aftermath and reactions, and in Episode 5, we see the 
+father's recognition and the old man's watchful presence. The structure is 
+sound.
+
+Zero-Overlap is a non-issue since this is Arc 1. We are starting fresh.
+
+Pacing seems perfectly reasonable. Five episodes effectively cover the 
+introduction of the protagonist, the critical injury, the groundbreaking 
+treatment, the energy awakening, and the immediate aftermath and reactions. 
+This is a nice introductory setup for the world and the conflict.
+
+The future contamination seems negligible. The items and abilities introduced 
+(silver needles, herb pouch, acupuncture, basic internal energy) don't create 
+any immediate problems in future story planning. It's a clean slate.
+
+There's no state from a previous arc to check for the Cross-Arc State 
+Continuity, so that's a pass.
+
+The lack of space or character diversity is justified. The arc focuses on 
+treating a critical injury over three days. The medical tent is appropriate as 
+the primary location for the intense scene.
+
+I have checked the internal consistency. The character's energy levels seem to 
+make sense given the events. The Python Advisory did not present any issues. I 
+also confirmed with a thorough checklist.
+
+From what I can tell, the arc's continuity is excellent; the plan covers the 
+essential aspects; the quality is acceptable; and the length is perfect for an 
+introductory arc. No Python warnings. The score calculation indicates an 
+overall PASS.
+
+Now, let me put this into a proper JSON format for the output.
+
+
+
+      ⚠️ [V43] Arc 1: hybrid_composition 누락 → 기본값 주입
+      🔧 [V43] Arc 1 데이터 복구 완료
+         [V49.4] ConstraintDB 업데이트 완료 (총 1개 Arc)
+         ✨ [V60.25] Arc 1 최종 성공 - 실패 메모리 클리어
+         ⏳ [Preflight] 병렬 분석 시작 (arc_drive + preflight + constraint)...
+         ✅ [Preflight] arc_drive 완료
+         ✅ [Preflight] preflight 완료
+         ✅ [Preflight] constraint 완료
+         🔒 [V49.4] Arc 2 제약 조건 주입됨
+         ⏳ [StateExtractor] 누적 상태 추출 중...
+         ✅ [StateExtractor] 누적 상태 추출 완료
+         📋 [V60.11] ConstraintCompiler 체크리스트 생성 완료
+         ⏳ [Stage 2] Arc 2 attempt 1/10: preflight/four-phase tactical 
+generation 대기...
+      🧠 [Arc 2] 전술 설계 중 (시도 1/10)...
+         ⚡ [V60.25] Stage 2 Optimizer 프롬프트 주입 완료
+         🧠 [V51+V55.2] Analyst 지능 향상 + Constitutional 주입 완료
+         🎯 [V60.77] FourPhase-Director 대면 1/5
+         ✅ [TF-38] Arc 생성 완료
+         🔎 [Stage 2] Arc 2 attempt 1: generation=four_phase · validation 진입
+         🔍 [TF-38] Pre-Director 검증 체인 시작
+         ✅ [TF-38] Pre-Director 검증 완료 → Director 심사 대기
+         🤔 [Director] 전략적 무결성 검수 중 (LLM 호출, 1~3분 소요)...
+   
+      🎬 [Director] PASS_WITH_FIX (score=95)
+            전체적인 서사 흐름과 인과율, Block 2의 요구사항을 훌륭하게 반영하고
+있으나, 이전 아크에서 확립된 소지품 상태(은침 3개 결손)가 상태 
+            요약에 정확히 반영되지 않았으며, 제6화 본문 묘사에서 약간의 논리적 
+충돌이 발견됨.
+            📌 모순 2건:
+               ▸ 제6화 본문에서 '극천혈을 꿰맬 때 사용했던 은침'을 들고 있다고 
+묘사했으나, Arc 1 제3화 설정상 해당 은침 3개는 소풍의 극천혈에 고정되어 결손된 
+상태임.
+               ▸ 각 화의 상태 요약에서 State Lock에 명시된 '은침 한 벌 (3개 
+결손)' 중 '(3개 결손)' 표기가 누락됨.
+         💭 [Director Thinking]
+   **Pragmatic Plot Audit: Arc 2 - Episodes 6-10 Review**
+
+Okay, so I've been tasked with auditing the logical consistency of this 'Arc 
+Tactical Document' (Arc 2) covering Episodes 6-10. My job as V30 Sovereign is 
+to ensure this plan, crafted by an Analyst, holds up against the established 
+foundation of Arc 1 and the current block context. No contradictions, no future
+contamination, and seamless state continuity – that's the goal. Let's get to 
+work.
+
+First, I need to understand the documents. I have Arc 2 (Episodes 6-10) laying 
+out the events, the Arc 1 summary providing the initial conditions, and a State
+Lock (V60.10) defining the required states. Finally, the 'Current Block 
+Context' gives the current situation. I'll analyze everything.
+
+**Arc 2 Breakdown:** We start with Xiaobai in the medical tent, energy at 100%,
+no injuries, and a few items. Over the course of five episodes, he faces 
+interrogation, gets a vital manuscript, receives aid from allies, and 
+ultimately emerges with a new resolve. The core plot beats seem solid – 
+pressure, intervention, resolution, and setup.
+
+**Arc 1 Recall:** Arc 1 left us with Xiaobai at 100% energy, no injuries, and a
+couple of items.
+
+**State Lock Adherence:** The State Lock demands: no recovery needed, 100% 
+energy. It expects 'three silver needles missing' and an empty herb pouch. We 
+are also told what the *next* Arc Must involve.
+
+**Contradiction Check:**
+
+*   **Items:** This is where the minutiae matter. In Arc 1, we *knew* three 
+silver needles were missing. Arc 2 Episode 6 says Xiaobai has "faded silver 
+needles," but doesn't *explicitly* reference the "missing" three. This is a 
+potential state mismatch. The herb pouch lines up with the state lock, starting
+empty. We are instructed to add in the text to correctly indicate which needles
+are *missing*.
+*   **Energy/Injuries:** Arc 2 maintains a consistent state of 100% energy, no 
+injuries. This checks out.
+*   **Plot/Pacing:** The pacing seems acceptable. The structure and plot are 
+sound; though the interrogation takes up a lot of time.
+*   **Future Contamination:** No red flags here. No new, unknown variables that
+weren't hinted at previously. 'Medical-Martial Unity' was mentioned in Arc 1.
+*   **State Lock:** As mentioned, that silver needle detail needs to be 
+precisely captured.
+
+Okay, let's zoom in on those item details and the State Lock. In Arc 2 Episode 
+6, it says: "Items: faded silver needles, empty herb pouch." The State Lock 
+requires "silver needles (3 missing)." Therefore, in episode 6, we *must* 
+change the wording of the state to `Items: faded silver needles (3 missing), 
+empty herb pouch` to match the state lock exactly.
+
+There's one more minor thing here: the text says he's holding the needle that 
+was used to sew the acupoint. This doesn't jive, as the needles should be *in* 
+the person at that point. We can *fix this* as well: We should change the text,
+for safety, to state that it is the set he used in the past, some of which were
+left in the patient.
+
+**Decision:** I'm giving this a **PASS_WITH_FIX**. The score is a 95. The fix 
+scope is very narrow and confined to in-place textual adjustments. The fix is 
+strictly to add the missing "(3 missing)" text in all item listings, and also 
+fix a small sentence that describes how the needle was used. That ensures a 
+perfect state match.
+
+
+
+         🔧 [TF-32-V] PASS_WITH_FIX patch #1/3 (fix: 1. 제6화~제10화의 [시작 
+상태] 및 [종료 상태] 소지품 목록에서 '은침 한 벌'을 '은침 한 벌(3개 결손)'으로 
+수정하여 State Lock 조건을 완벽히 충족시킬 것.
+2. 제6화 본문 중 '극천혈을 꿰맬 때 사용했던... 은침 한 벌'이라는 묘사는 이전 
+아크에서 은침 3개를 소풍의 몸에 고정해둔 설정과 충돌하므로, '극천혈 시술에 
+사용하고 남은... 은침 한 벌'로 자연스럽게 수정할 것.)
+         🔄 [TF-38] Director 재심사 #1 호출 중...
+         🎬 [TF-32-V] 재심사 #1: PASS (score=100)
+         ?좑툘 [TF-32-V] Patch pressure exceeded -> advisory only, PASS ?좎?
+         🔧 [Equipment Sync] Arc 2 시작 소지품 → 이전 Arc 종료 소지품으로 
+동기화 (0개 아이템)
+         [V49.4] ConstraintDB 업데이트 완료 (총 2개 Arc)
+         ✨ [V60.25] Arc 2 최종 성공 - 실패 메모리 클리어
+   ✅ 배치(1~2) 욕망 엔진 이식 및 용접 완료.
+   ✨ [Success] 0124 매니페스토 기반 전술 설계 전 공정 완료.
+  [auto-input] [Enter] 메뉴로 돌아가기 -> y
+Stage 2 complete: 2 arcs
+  Arc 1: ep 1-5 (5 eps) - 비무대 아래의 의원 — 의무일체의 첫 발현
+  Arc 2: ep 6-10 (5 eps) - 가문의 시선 — 사술인가, 재능인가
+DONE

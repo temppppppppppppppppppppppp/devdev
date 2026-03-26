@@ -1,0 +1,131 @@
+[V61.3] Faulthandler 활성화 → crash_dump.log
+      ✅ [TF7-P0-03] preset_registry DB에서 복원 완료
+      ✅ [Wuxia] HUD 시스템 초기화 완료
+      🔍 [V61.3] HUD 호환성 체크: MartialManager
+         ✅ 필수 속성 모두 존재
+         ⚠️ 선택적 속성 누락 (정상): snapshot (method), bulk_update (method)
+   🛡️ [Wuxia] Guard 시스템 초기화 완료
+   ✅ [System] Vector DB integrity check complete.
+   ✅ [VecMemory] sqlite-vec 벡터 엔진 초기화 완료
+      🔧 [V60.11] Stage 2 고도화 모듈 초기화 (Ensemble + DraftValidator + 
+ConstraintCompiler)
+      🚀 [V60.12] Stage 2 초기통과율 극대화 모듈 초기화 (FourPhase + Preflight 
++ Critic + Consensus)
+      🔧 [V60.42] Arc Corrector 초기화 (MAJOR 이슈 부분 수정: 활성화)
+      ⚡ [V60.25] Stage 2 Optimizer 활성화 (StateSnapshot + AutoCorrector + 
+ConstraintAmplifier)
+      🎭 Director 장르 설정: wuxia
+      🛡️ Director Guard 연결 완료
+      ✍️ Writer Guard/Genre 연결 완료
+      ✅ V0128 검증 시스템 활성화
+      🔩 [V49.7] 트래커 초기화 완료: 복선 0개 관계 0개 파워 0개
+      📊 [V66] SemanticPlotGuard 초기화 완료 (임베딩 모드)
+      💓 [V60.26] 감정선 추적기 활성화
+      ⚡ [V60.26] 파워 스케일링 추적기 활성화
+      📊 [V60.26] 상태 변화 추적기 활성화
+      📦 [V60.26] 의미적 아이템 레지스트리 활성화
+      🎭 [V60.26] 캐릭터 음성 프로파일러 활성화
+      🔄 [V52.1] Self-Reflection Chain 활성화
+      🎯 [V52.3] Expert Mixture 활성화 (wuxia)
+      🔗 [V52.4] Cross-Agent Verifier 활성화
+      ⚖️ [V53.1] Dynamic Prompt Weighter 활성화
+      🔍 [V53.2] Chain-of-Verification 활성화
+      📊 [V53.3] Confidence Calibrator 활성화
+      ✅ [V53.4] Pre-Director Checklist 활성화
+      🌳 [V53.5] Tree of Thoughts 활성화 (Gemini 3)
+      ⚔️ [V53.6] Adversarial Self-Play 활성화
+      🗣️ [V53.7] Multi-Agent Deliberation 활성화
+      🔄 [V54.3] Adaptive Retry Manager 활성화 (FailureLearner 연동)
+      📜 [V55.2] Constitutional Checker 활성화
+      📝 [V55.3] Writer Template 활성화
+      📊 [V55.3] Pass Rate Monitor 활성화
+      📊 [V60] Quality Dashboard 활성화
+      🧭 [SC] Context Advisor 활성화
+      📊 [V50~V60] 서사 품질 모듈 초기화 완료 (장르: wuxia)
+   ✅ [System] 모든 에이전트 안전하게 초기화 완료
+INIT OK - starting Stage 3
+         👤 [V60.96] StateTracker 초기화: NPC 1명 (사망: 0명)
+         🌍 [V68] WorldStateManager 초기화 (신규)
+         📋 [V68] 팩트 원장 초기화 (신규)
+   📂 [Fresh Start] 기존 데이터 없음 - 1화부터 시작
+   📊 [V60.80] 현재 총 10화까지 설계가 가능합니다.
+   
+════════════════════════════════════════════════════════════
+   🎯 [V60.80] Three Phase Blueprint Generator 시작
+      범위: 제1화 ~ 제3화 (3개)
+   ════════════════════════════════════════════════════════════
+
+         ⏳ Entity Registry 추출 중... (Arc 0, 첫 호출)
+         📋 [V61] Entity Registry 추출: 39개 엔티티
+   
+   📐 제1화 Blueprint 생성 중... (Arc 1, 주인공: 진소백(陳小白))
+         ⏳ 제1화 Blueprint 생성 시작 (최대 10회 시도)...
+         ⏳ 제1화 Blueprint 대기: ThreePhase runtime 호출 중 (anchors=0, 
+window=0, semantic_ctx=884자)
+         📊 제1화 Blueprint 결과: PASS (score=90)
+         └─ 선택 전략: action_focused
+         └─ Director 판정: Arc 핵심 사건 완벽 반영 및 주인공의 주도적인 엔딩 훅
+우수
+         비교 메모: 후보 1은 긴장감 있는 전개와 주인공이 적극적으로 나서는 엔딩
+훅이 웹소설 1화 마무리에 가장 적합합니다. 후보 2는 대화를 통해 인물 관계를 잘 
+보여주나 엔딩이 다소 수동적이고 절망적으로 끝납니다. 후보 3은 불필요한 한자 
+병기가 반복되어 가독성이 떨어집니다.
+         보완 포인트: 전체적인 서사 구조와 흐름, 캐릭터의 행동이 훌륭하게 잡혀 
+있으므로, 국소적인 수치 데이터 추가(inplace)만으로도 충분히 품질을 극대화할 수 
+있습니다.
+         주의: 시나리오 구체성 부족: 구체적 앵커(기관/인물/수치) 0개 < 5개 
+(1284자 중)
+      [Stage3] blueprint success (verdict=PASS, strategy=action_focused, 
+score=90)
+      [Stage3] ep 1 blueprint save completed
+         ♻️ [V61.6] Entity Registry 캐시 재사용 (Arc 0)
+   
+   📐 제2화 Blueprint 생성 중... (Arc 1, 주인공: 진소백(陳小白))
+         ⏳ 제2화 Blueprint 생성 시작 (최대 10회 시도)...
+         ⏳ 제2화 Blueprint 대기: ThreePhase runtime 호출 중 (anchors=0, 
+window=1, semantic_ctx=884자)
+         📊 제2화 Blueprint 결과: PASS (score=91)
+         └─ 선택 전략: action_focused
+         └─ Director 판정: score strong (91.0)
+      [TF-49] inventory gaps 4: 은침 주머니, 소독용 천, 지혈용 약초 (일부 
+소모), 직접 그린 시술 도면
+      [Stage3] blueprint success (verdict=PASS, strategy=action_focused, 
+score=91)
+      [Stage3] ep 2 blueprint save completed
+         ♻️ [V61.6] Entity Registry 캐시 재사용 (Arc 0)
+   
+   📐 제3화 Blueprint 생성 중... (Arc 1, 주인공: 진소백(陳小白))
+         ⏳ 제3화 Blueprint 생성 시작 (최대 10회 시도)...
+         ⏳ 제3화 Blueprint 대기: ThreePhase runtime 호출 중 (anchors=0, 
+window=2, semantic_ctx=884자)
+         📊 제3화 Blueprint 결과: PASS (score=90)
+         └─ 선택 전략: action_focused
+         └─ Director 판정: 긴박한 액션 묘사와 Arc 전술서의 완벽한 이행
+         비교 메모: 후보 1은 긴박한 상황 묘사와 기운의 충돌을 시각적으로 
+훌륭하게 표현하며 이전 화의 훅과 자연스럽게 이어집니다. 후보 2는 '현대 
+의학'이라는 단어가 등장하여 사전 설정이 없다면 심각한 세계관 충돌을 일으킬 
+위험이 있습니다. 후보 3은 피보라가 치는 초응급 상황에서 천막 밖의 인물과 긴 
+대화를 나누어 씬의 긴장감과 개연성을 크게 떨어뜨립니다.
+         보완 포인트: 전체적인 서사 흐름, 씬의 배치, Arc 전술서 반영 비율이 
+매우 우수하므로 씬을 재작성할 필요 없이 문장 내에 구체적인 앵커(수치, 명칭)만 
+덧붙이는 국소 수정(inplace)으로 충분히 품질을 극대화할 수 있습니다.
+         주의: 시나리오 구체성 부족: 구체적 앵커(기관/인물/수치) 1개 < 5개 
+(1556자 중)
+      [TF-49] inventory gaps 4: 은침 주머니, 소독용 천, 지혈용 약초, 직접 그린 
+시술 도면
+      [Stage3] blueprint success (verdict=PASS, strategy=action_focused, 
+score=90)
+      [Stage3] ep 3 blueprint save completed
+   
+════════════════════════════════════════════════════════════
+   📊 [V60.80] Stage 3 완료 통계
+      성공: 3개 | 실패: 0개
+      통과율: 80.0%
+   ════════════════════════════════════════════════════════════
+
+Stage 3 result: {"success_count": 3, "fail_count": 0}
+Blueprint files: 3
+  blueprint_0001.txt (8,101 bytes)
+  blueprint_0002.txt (12,019 bytes)
+  blueprint_0003.txt (10,189 bytes)
+STAGE 3 DONE
