@@ -25,7 +25,7 @@ fi
 **Run health validation:**
 
 ```bash
-node "C:/Users/User/Desktop/글도비/.claude/get-shit-done/bin/gsd-tools.cjs" validate health $REPAIR_FLAG
+node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" validate health $REPAIR_FLAG
 ```
 
 Parse JSON output:
@@ -112,7 +112,7 @@ If yes, re-run with --repair flag and display results.
 Re-run health check without --repair to confirm issues are resolved:
 
 ```bash
-node "C:/Users/User/Desktop/글도비/.claude/get-shit-done/bin/gsd-tools.cjs" validate health
+node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" validate health
 ```
 
 Report final status.
@@ -166,13 +166,13 @@ When `--repair` is active, detect and clean up:
 
 ```bash
 # Check for stale task directories (older than 24 hours)
-TASKS_DIR="C:/Users/User/Desktop/글도비/.claude/tasks"
+TASKS_DIR="$HOME/.claude/tasks"
 if [ -d "$TASKS_DIR" ]; then
-  STALE_COUNT=$(find "$TASKS_DIR" -maxdepth 1 -type d -mtime +1 2>/dev/null | wc -l)
+  STALE_COUNT=$( (find "$TASKS_DIR" -maxdepth 1 -type d -mtime +1 2>/dev/null || true) | wc -l )
   if [ "$STALE_COUNT" -gt 0 ]; then
-    echo "⚠️  Found $STALE_COUNT stale task directories in C:/Users/User/Desktop/글도비/.claude/tasks/"
+    echo "⚠️  Found $STALE_COUNT stale task directories in ~/.claude/tasks/"
     echo "   These are leftover from crashed subagent sessions."
-    echo "   Run: rm -rf C:/Users/User/Desktop/글도비/.claude/tasks/*  (safe — only affects dead sessions)"
+    echo "   Run: rm -rf ~/.claude/tasks/*  (safe — only affects dead sessions)"
   fi
 fi
 ```

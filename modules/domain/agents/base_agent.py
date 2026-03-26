@@ -457,6 +457,36 @@ class BaseAgent:
             "thinking_tokens": thinking_tokens,
         }
 
+    def _session_token_cost_kwargs(self) -> dict:
+        """Build optional token/cost kwargs for SessionLogger.log_llm_call()."""
+        usage = getattr(self, "_call_usage_totals", None)
+        if not isinstance(usage, dict):
+            return {}
+        result: dict = {}
+        for src_key, dst_key in (
+            ("prompt_token_count", "input_tokens"),
+            ("candidates_token_count", "output_tokens"),
+            ("cached_content_token_count", "cached_tokens"),
+            ("thoughts_token_count", "thinking_tokens"),
+        ):
+            val = self._coerce_usage_int(usage.get(src_key))
+            if val > 0:
+                result[dst_key] = val
+        if result and METRICS_ENABLED:
+            try:
+                collector = get_metrics_collector()
+                cost = collector.calculate_cost(
+                    getattr(self, "primary_model", "") or "",
+                    result.get("input_tokens", 0),
+                    result.get("output_tokens", 0),
+                    cached_tokens=result.get("cached_tokens", 0),
+                )
+                if cost is not None and cost > 0:
+                    result["total_cost_usd"] = cost
+            except Exception:
+                pass
+        return result
+
     # 📂 modules/domain/agents/base_agent.py
 
     def _resolve_logging_db(self):
@@ -853,6 +883,7 @@ class BaseAgent:
         if BaseAgent._session_logger_global:
             try:
                 elapsed_ms = (time.time() - current_time) * 1000 if current_time else 0
+                _session_usage = self._session_token_cost_kwargs()
                 BaseAgent._session_logger_global.log_llm_call(
                     agent_name=self._agent_name,
                     model=current_model,
@@ -862,6 +893,7 @@ class BaseAgent:
                     duration_ms=elapsed_ms,
                     success=True,
                     thinking=thinking_text,
+                    **_session_usage,
                 )
             except Exception as session_error:
                 logging.debug("[TF-26] audit_event (success) failed: %s", str(session_error)[:100])
@@ -934,6 +966,7 @@ class BaseAgent:
         if BaseAgent._session_logger_global:
             try:
                 elapsed_ms = (time.time() - current_time) * 1000 if current_time else 0
+                _session_usage = self._session_token_cost_kwargs()
                 BaseAgent._session_logger_global.log_llm_call(
                     agent_name=self._agent_name,
                     model=current_model,
@@ -944,6 +977,7 @@ class BaseAgent:
                     success=False,
                     error=str(error)[:500],
                     thinking=thinking_text,
+                    **_session_usage,
                 )
             except Exception as session_error:
                 logging.debug("[TF-26] audit_event (error) failed: %s", str(session_error)[:100])

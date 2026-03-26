@@ -374,6 +374,78 @@ class TestThinkingField:
         assert "TRUNCATED" in record["thinking"]
 
 
+class TestTokenCostFields:
+    """Token/cost telemetry completeness (Tranche A)."""
+
+    def test_token_cost_fields_persisted(self, logger, log_dir):
+        logger.log_llm_call(
+            agent_name="chief_writer",
+            model="gemini-2.5-pro",
+            prompt="write episode",
+            response='{"text":"ok"}',
+            input_tokens=1500,
+            output_tokens=800,
+            cached_tokens=200,
+            thinking_tokens=50,
+            total_cost_usd=0.0042,
+        )
+        filepath = log_dir / "llm_io.jsonl"
+        record = json.loads(filepath.read_text(encoding="utf-8").strip())
+        assert record["input_tokens"] == 1500
+        assert record["output_tokens"] == 800
+        assert record["cached_tokens"] == 200
+        assert record["thinking_tokens"] == 50
+        assert record["total_cost_usd"] == 0.0042
+
+    def test_token_cost_fields_omitted_when_none(self, logger, log_dir):
+        logger.log_llm_call(
+            agent_name="director",
+            model="gemini-2.5-pro",
+            prompt="evaluate",
+            response='{"verdict":"PASS"}',
+        )
+        filepath = log_dir / "llm_io.jsonl"
+        record = json.loads(filepath.read_text(encoding="utf-8").strip())
+        assert "input_tokens" not in record
+        assert "output_tokens" not in record
+        assert "total_cost_usd" not in record
+
+    def test_token_cost_backward_compatible(self, logger, log_dir):
+        """Existing callers without token/cost kwargs still work."""
+        logger.log_llm_call(
+            agent_name="test",
+            model="test",
+            prompt="p",
+            response="r",
+            temperature=0.5,
+            duration_ms=100,
+            success=True,
+        )
+        filepath = log_dir / "llm_io.jsonl"
+        record = json.loads(filepath.read_text(encoding="utf-8").strip())
+        assert record["agent"] == "test"
+        assert record["success"] is True
+        assert "input_tokens" not in record
+
+    def test_partial_token_fields(self, logger, log_dir):
+        """Only provided token fields appear."""
+        logger.log_llm_call(
+            agent_name="analyst",
+            model="gemini-2.5-flash",
+            prompt="analyze",
+            response="{}",
+            input_tokens=500,
+            output_tokens=100,
+        )
+        filepath = log_dir / "llm_io.jsonl"
+        record = json.loads(filepath.read_text(encoding="utf-8").strip())
+        assert record["input_tokens"] == 500
+        assert record["output_tokens"] == 100
+        assert "cached_tokens" not in record
+        assert "thinking_tokens" not in record
+        assert "total_cost_usd" not in record
+
+
 class TestLoggerHealth:
     def test_health_snapshot_tracks_soft_failures(self, tmp_path):
         log_dir = tmp_path / "session"

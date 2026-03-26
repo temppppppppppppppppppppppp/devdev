@@ -569,3 +569,43 @@ def test_build_stage4_branch_inventory_tracks_pass_patch_and_retry_coverage(tmp_
     assert "same-session sink alignment is ok" in inventory["branch_coverage"]["patch_path_current_basis"]["note"]
     assert inventory["branch_coverage"]["retry_path_current_basis"]["status"] == "missing"
     assert "stage4_retry_contract_not_exercised_live" in inventory["unresolved_runtime_only"]
+
+
+def test_build_stage3_canary_summary_includes_episode_telemetry(tmp_path):
+    """Tranche B: canary summary includes compact per-episode telemetry."""
+    from modules.core.stage4_canary_tools import build_stage3_canary_summary
+
+    root = tmp_path / "stage3_telem"
+    _make_project_root(root)
+    db = DBManager(root / "project_data.db")
+    try:
+        db.save_anchor("genre_info", {"type": "wuxia", "name": "wuxia"})
+        db.save_blueprint(1, {"ep_num": 1, "scene_list": [{"scene_no": 1, "summary": "bp"}]})
+        db.save_stage_attempt(
+            stage=3, verdict="PASS", ep_num=1, attempt_num=1,
+            score=90, session_id="sess", attempt_key="s3:1:1:1:sess",
+        )
+        db.save_llm_call(
+            session_id="sess", stage=3, ep_num=1,
+            agent_name="ChiefWriter", model="gemini-2.5-pro",
+            prompt_chars=5000, response_chars=3000, duration_ms=12000,
+            success=True, input_tokens=1000, output_tokens=500,
+            total_cost_usd=0.005,
+        )
+    finally:
+        db.close()
+    (root / "logs" / "stage3_canary_prep.json").write_text(
+        '{"source_project": "base"}', encoding="utf-8",
+    )
+
+    summary = build_stage3_canary_summary(root, target_ep=1)
+
+    assert "episode_telemetry" in summary
+    telem = summary["episode_telemetry"]
+    assert len(telem) == 1
+    assert telem[0]["ep_num"] == 1
+    assert telem[0]["attempt_count"] == 1
+    assert telem[0]["final_verdict"] == "PASS"
+    assert telem[0]["llm_call_count"] == 1
+    assert telem[0]["total_duration_ms"] == 12000
+    assert telem[0]["total_cost_usd"] == 0.005

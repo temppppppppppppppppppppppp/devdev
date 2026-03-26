@@ -1,0 +1,29 @@
+{
+  "prepared_at": "2026-03-26T06:54:42",
+  "source_project": "00_0000001",
+  "target_project": "canary_0326_stage3_telemetry",
+  "from_ep": 1,
+  "cleanup": {
+    "from_ep": 1,
+    "db_impact": {
+      "manuscripts": 4,
+      "state_logs": 4,
+      "episode_bibles": 4,
+      "causal_graph": 21,
+      "episode_meta": 4,
+      "episode_quality_labels": 4,
+      "stage4_attempts": 15,
+      "stage4_director_selections": 15,
+      "blueprints_kept": 8,
+      "blueprints_removed": 8,
+      "stage3_attempts": 8,
+      "stage3_director_selections": 8
+    },
+    "file_cleanup": {
+      "draft_files_removed": 4,
+      "log_entries_removed": 9,
+      "memory_entries_removed": 0,
+      "blueprint_files_removed": 0
+    }
+  }
+}
