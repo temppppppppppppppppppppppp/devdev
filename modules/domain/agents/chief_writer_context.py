@@ -535,11 +535,23 @@ class ChiefWriterContextBuilder:
         try:
             from modules.core.stage4_immutable_fact_contract import build_packet, render_packet_for_cw
 
+            # [Wave1-A] Derive actual fact-ledger summary from context
+            fact_ledger_text = ""
+            try:
+                fl = getattr(self.context, "fact_ledger", None)
+                if fl is None:
+                    _s4ctx = getattr(self.host, "_stage4_ctx", None)
+                    fl = getattr(_s4ctx, "fact_ledger", None) if _s4ctx else None
+                if fl is not None and hasattr(fl, "to_summary"):
+                    fact_ledger_text = fl.to_summary(max_chars=25000) or ""
+            except Exception:
+                pass
+
             packet = build_packet(
                 blueprint=blueprint,
                 prev_manuscript_ending=prev_manuscript[-2500:] if prev_manuscript else "",
                 world_state_summary=world_state_summary,
-                fact_ledger_summary=world_state_summary,  # world_state carries fact-ledger-grade state facts
+                fact_ledger_summary=fact_ledger_text,
                 chain_link_section=chain_link_section,
                 prev_digest=prev_digest,
             )

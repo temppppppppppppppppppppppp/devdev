@@ -112,6 +112,11 @@ class SessionLogger:
         success: bool = True,
         error: str = "",
         thinking: str = "",  # [TF-28] LLM thinking content
+        input_tokens: int | None = None,
+        output_tokens: int | None = None,
+        cached_tokens: int | None = None,
+        thinking_tokens: int | None = None,
+        total_cost_usd: float | None = None,
         **meta,
     ) -> None:
         """LLM 호출 원문 기록."""
@@ -130,6 +135,16 @@ class SessionLogger:
             data["error"] = str(error)[:2000]
         if thinking:  # [TF-28] non-empty만 기록
             data["thinking"] = self._truncate(thinking)
+        if input_tokens is not None:
+            data["input_tokens"] = int(input_tokens)
+        if output_tokens is not None:
+            data["output_tokens"] = int(output_tokens)
+        if cached_tokens is not None:
+            data["cached_tokens"] = int(cached_tokens)
+        if thinking_tokens is not None:
+            data["thinking_tokens"] = int(thinking_tokens)
+        if total_cost_usd is not None:
+            data["total_cost_usd"] = round(float(total_cost_usd), 6)
         if meta:
             data["meta"] = meta
         self._write("llm_io", data)

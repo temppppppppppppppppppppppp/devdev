@@ -93,6 +93,90 @@ class TestBuildPacket:
         packet = build_packet(prev_manuscript_ending=long_text)
         assert len(packet.prev_ending_bridge) == 500
 
+    def test_committed_state_english_capital_won(self):
+        """[Wave1-B] English-form 'capital ... won' must yield committed-state facts."""
+        ledger = "- capital: 2000000000.0 won\n- misc note"
+        packet = build_packet(fact_ledger_summary=ledger)
+        assert any("capital" in f for f in packet.committed_state_facts)
+
+    def test_committed_state_english_balance_account_fund(self):
+        """[Wave1-B] English labels balance/account/fund must be recognized."""
+        ledger = (
+            "- account balance: 500000 won\n"
+            "- fund allocation: 30%\n"
+            "- unrelated note"
+        )
+        packet = build_packet(fact_ledger_summary=ledger)
+        assert len(packet.committed_state_facts) >= 2
+
+    def test_committed_state_korean_still_works(self):
+        """[Wave1-B] Existing Korean keywords must not regress."""
+        ledger = "- 자본금: 38억\n- 계좌 잔고: 10억\n- 기타 정보"
+        packet = build_packet(fact_ledger_summary=ledger)
+        assert any("38억" in f for f in packet.committed_state_facts)
+        assert any("잔고" in f for f in packet.committed_state_facts)
+
+    def test_completed_events_investment_verbs(self):
+        """[Wave1-C] Investment-fiction verbs must yield completed-event facts."""
+        digest = "- 증권 계좌 개설\n- 인프라 구축\n- 2억 이체\n- 투자 계약 체결"
+        packet = build_packet(prev_digest=digest)
+        assert len(packet.completed_event_facts) >= 4
+
+    def test_completed_events_wuxia_no_regression(self):
+        """[Wave1-C] Existing wuxia/action verbs must not regress."""
+        digest = "- 적장군 처단 성공\n- 비급 습득\n- 관문 돌파"
+        packet = build_packet(prev_digest=digest)
+        assert len(packet.completed_event_facts) >= 3
+
+    def test_committed_state_ownership_keywords(self):
+        """[Wave2-A] Entity-ownership lines must yield committed-state facts."""
+        ledger = (
+            "- OTP 발생기 (보유, 소유: 주인공, ep3)\n"
+            "- SW인베스트먼트 법인 인감 (획득, 소유: 주인공, ep4)\n"
+            "- 일반 메모"
+        )
+        packet = build_packet(fact_ledger_summary=ledger)
+        assert len(packet.committed_state_facts) >= 2
+        assert any("소유" in f for f in packet.committed_state_facts)
+        assert any("법인" in f for f in packet.committed_state_facts)
+
+    def test_committed_state_personal_entity_keywords(self):
+        """[Wave2-A] Personal/entity attribution lines must be recognized."""
+        ledger = "- 개인 명의 파생 계좌 (보유, ep3)\n- SW인베스트먼트 (활동중, 수장: 한시윤)"
+        packet = build_packet(fact_ledger_summary=ledger)
+        assert len(packet.committed_state_facts) >= 2
+
+    def test_committed_state_wave1_monetary_no_regression(self):
+        """[Wave2-A] Wave 1 monetary keywords must not regress."""
+        ledger = "- capital: 2000000000.0 won\n- 자본금: 38억\n- 계좌 잔고: 10억"
+        packet = build_packet(fact_ledger_summary=ledger)
+        assert len(packet.committed_state_facts) >= 3
+
+    def test_completed_events_procedural_keywords(self):
+        """[Wave2-B] Procedural-completion verbs must yield completed-event facts."""
+        digest = (
+            "- 계좌 세팅 완료\n"
+            "- OTP 수령\n"
+            "- 법인 인감 발급\n"
+            "- 법인 설립 완료\n"
+            "- 사무실 입주\n"
+            "- HTS 접속 확인"
+        )
+        packet = build_packet(prev_digest=digest)
+        assert len(packet.completed_event_facts) >= 6
+
+    def test_completed_events_procedural_from_chain_link(self):
+        """[Wave2-B] Chain-link procedural lines must also be extracted."""
+        chain = "- 계좌 세팅 완료 (ep3)\n- OTP 수령 (ep3)\n- 일반 정보"
+        packet = build_packet(chain_link_section=chain)
+        assert len(packet.completed_event_facts) >= 2
+
+    def test_completed_events_wave1_investment_no_regression(self):
+        """[Wave2-B] Wave 1 investment verbs must not regress."""
+        digest = "- 증권 계좌 개설\n- 인프라 구축\n- 2억 이체\n- 투자 계약 체결"
+        packet = build_packet(prev_digest=digest)
+        assert len(packet.completed_event_facts) >= 4
+
 
 # ── classify_violation_family ────────────────────────────────────
 

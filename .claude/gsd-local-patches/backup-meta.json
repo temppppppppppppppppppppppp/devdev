@@ -1,0 +1,24 @@
+{
+  "backed_up_at": "2026-03-26T00:28:04.601Z",
+  "from_version": "1.28.0",
+  "files": [
+    "get-shit-done/bin/gsd-tools.cjs",
+    "get-shit-done/bin/lib/commands.cjs",
+    "get-shit-done/bin/lib/config.cjs",
+    "get-shit-done/bin/lib/core.cjs",
+    "get-shit-done/bin/lib/frontmatter.cjs",
+    "get-shit-done/bin/lib/init.cjs",
+    "get-shit-done/bin/lib/milestone.cjs",
+    "get-shit-done/bin/lib/model-profiles.cjs",
+    "get-shit-done/bin/lib/phase.cjs",
+    "get-shit-done/bin/lib/profile-output.cjs",
+    "get-shit-done/bin/lib/profile-pipeline.cjs",
+    "get-shit-done/bin/lib/roadmap.cjs",
+    "get-shit-done/bin/lib/security.cjs",
+    "get-shit-done/bin/lib/state.cjs",
+    "get-shit-done/bin/lib/template.cjs",
+    "get-shit-done/bin/lib/uat.cjs",
+    "get-shit-done/bin/lib/verify.cjs",
+    "get-shit-done/bin/lib/workstream.cjs"
+  ]
+}

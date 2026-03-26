@@ -15,6 +15,7 @@ def _make_host():
     host.context.db.get_manuscript.return_value = None
     host.context.db.load_state_log.return_value = None
     host.context.db.load_anchor.return_value = {"_genre": "wuxia"}
+    host.context.fact_ledger = None
     host.context.master_bible = {
         "MasterBible": {
             "ProjectData": {"CoreIdentity": {"desire": "천하제일"}},
@@ -561,16 +562,16 @@ class TestIFCPacketInputWiring:
         assert "처단" in section or "종결" in section
 
     def test_world_state_summary_feeds_committed_state_facts(self):
-        """world_state_summary with financial facts must populate committed_state_facts."""
+        """world_state_summary with death/status facts must populate committed_state_facts."""
         builder = ChiefWriterContextBuilder(_make_host())
         section = builder._build_immutable_fact_section(
             blueprint={"start_location": "사무실"},
             prev_manuscript="",
-            world_state_summary="- 자본금: 38억\n- 직원 수: 5명",
+            world_state_summary="- 철무련주: 사망(deceased)\n- 주인공 소지품: 비연검",
             chain_link_section="",
             prev_digest="",
         )
-        assert "38억" in section
+        assert "사망" in section or "소지품" in section
 
     def test_ifc_section_empty_when_no_inputs(self):
         """Empty inputs should produce empty section."""
@@ -583,6 +584,61 @@ class TestIFCPacketInputWiring:
             prev_digest="",
         )
         assert section == ""
+
+    def test_ifc_uses_fact_ledger_not_world_state(self):
+        """[Wave1-A] IFC packet must receive fact_ledger.to_summary(), not world_state_summary."""
+        host = _make_host()
+        mock_fl = MagicMock()
+        mock_fl.to_summary.return_value = "- 자본금: 20억\n- capital: 2000000000.0 won"
+        host.context.fact_ledger = mock_fl
+
+        builder = ChiefWriterContextBuilder(host)
+        section = builder._build_immutable_fact_section(
+            blueprint={"start_location": "사무실"},
+            prev_manuscript="",
+            world_state_summary="- 문파 긴장도: 높음",
+            chain_link_section="",
+            prev_digest="",
+        )
+        # fact-ledger data must appear in committed-state facts
+        assert "20억" in section or "capital" in section
+        mock_fl.to_summary.assert_called_once_with(max_chars=25000)
+
+    def test_ifc_falls_back_when_no_fact_ledger(self):
+        """[Wave1-A] When fact_ledger is absent, fact_ledger_summary should be empty (not world_state)."""
+        host = _make_host()
+        host.context.fact_ledger = None
+
+        builder = ChiefWriterContextBuilder(host)
+        section = builder._build_immutable_fact_section(
+            blueprint={"start_location": "사무실"},
+            prev_manuscript="",
+            world_state_summary="- 문파 긴장도: 높음",
+            chain_link_section="",
+            prev_digest="",
+        )
+        # world_state_summary should not contaminate the fact_ledger lane
+        # "문파 긴장도" is not a committed-state keyword, so no committed facts
+        assert "문파 긴장도" not in section or "확정 상태" not in section
+
+    def test_ifc_uses_stage4_ctx_fallback(self):
+        """[Wave1-A] Falls back to host._stage4_ctx.fact_ledger when context has none."""
+        host = _make_host()
+        host.context.fact_ledger = None
+        mock_fl = MagicMock()
+        mock_fl.to_summary.return_value = "- 잔고: 5억"
+        host._stage4_ctx = MagicMock(fact_ledger=mock_fl)
+
+        builder = ChiefWriterContextBuilder(host)
+        section = builder._build_immutable_fact_section(
+            blueprint={"start_location": "사무실"},
+            prev_manuscript="",
+            world_state_summary="",
+            chain_link_section="",
+            prev_digest="",
+        )
+        assert "5억" in section
+        mock_fl.to_summary.assert_called_once()
 
     def test_stage4_carryover_ceiling_blocks_unestablished_infrastructure_and_replay(self):
         builder = ChiefWriterContextBuilder(_make_host())

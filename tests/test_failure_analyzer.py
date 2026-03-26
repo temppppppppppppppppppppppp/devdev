@@ -1505,3 +1505,81 @@ def test_failure_analyzer_sink_alignment_summary_aligns_stage3_session_rationale
         assert result["status"] == "ok"
     finally:
         db.close()
+
+
+def test_rescue_effectiveness_basic(tmp_path):
+    """Tranche C: rescue effectiveness helper returns bounded metrics."""
+    db = DBManager(tmp_path / "test_rescue.db")
+    try:
+        # patch attempt that succeeded
+        db.save_stage_attempt(
+            stage=3, verdict="PASS", ep_num=1, attempt_num=2, score=88,
+            is_patch=True, patch_strategy="targeted_fix",
+            initial_verdict="REJECT",
+        )
+        # patch attempt that failed
+        db.save_stage_attempt(
+            stage=3, verdict="REJECT", ep_num=2, attempt_num=2, score=55,
+            is_patch=True, patch_strategy="full_rewrite",
+            initial_verdict="REJECT",
+        )
+        # patch fallback (no strategy)
+        db.save_stage_attempt(
+            stage=4, verdict="PASS_WITH_WARNING", ep_num=3, attempt_num=3, score=82,
+            is_patch_fallback=True, initial_verdict="REJECT",
+        )
+        # normal attempt (should be excluded)
+        db.save_stage_attempt(
+            stage=3, verdict="PASS", ep_num=4, attempt_num=1, score=95,
+        )
+
+        analyzer = FailureAnalyzer(db)
+        result = analyzer.rescue_effectiveness()
+
+        assert result["rescue_attempted_count"] == 3
+        assert result["rescue_succeeded_count"] == 2  # PASS + PASS_WITH_WARNING
+        assert result["rescue_success_rate_pct"] == 66.7
+        assert result["asp_used_count"] == 0
+        assert result["avg_score_delta"] is not None
+        assert result["avg_score_delta"] > 0
+    finally:
+        db.close()
+
+
+def test_rescue_effectiveness_empty(tmp_path):
+    """Tranche C: rescue effectiveness returns zeros when no rescue attempts."""
+    db = DBManager(tmp_path / "test_rescue_empty.db")
+    try:
+        db.save_stage_attempt(
+            stage=3, verdict="PASS", ep_num=1, attempt_num=1, score=90,
+        )
+        analyzer = FailureAnalyzer(db)
+        result = analyzer.rescue_effectiveness()
+        assert result["rescue_attempted_count"] == 0
+        assert result["rescue_succeeded_count"] == 0
+        assert result["rescue_success_rate_pct"] == 0.0
+        assert result["avg_score_delta"] is None
+        assert result["asp_used_count"] == 0
+    finally:
+        db.close()
+
+
+def test_rescue_effectiveness_counts_only_explicit_asp_strategy(tmp_path):
+    """Only explicit ASP evidence should increment asp_used_count."""
+    db = DBManager(tmp_path / "test_rescue_asp.db")
+    try:
+        db.save_stage_attempt(
+            stage=4, verdict="PASS", ep_num=1, attempt_num=3, score=91,
+            is_patch=True, patch_strategy="asp_correction",
+            initial_verdict="REJECT",
+        )
+        db.save_stage_attempt(
+            stage=4, verdict="PASS", ep_num=2, attempt_num=2, score=89,
+            is_patch=True, patch_strategy="patch_with_feedback",
+            initial_verdict="REJECT",
+        )
+        analyzer = FailureAnalyzer(db)
+        result = analyzer.rescue_effectiveness()
+        assert result["asp_used_count"] == 1
+    finally:
+        db.close()

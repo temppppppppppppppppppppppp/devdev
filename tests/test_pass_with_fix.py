@@ -2535,3 +2535,181 @@ class TestS3MetaQualityRisk:
 
         assert _quality_risk is False
         assert _v75d_threshold == 2
+
+
+# ── [PF-EE] Score-stall early-exit guard tests ─────────────────────
+
+
+class TestPFEEScoreStallEarlyExit:
+    """[PF-EE] PWF score-stall early-exit guard — 점수 정체/하락 시 조기 중단."""
+
+    @staticmethod
+    def _make_runtime_and_kwargs(score=60):
+        from modules.domain.agents.three_phase_blueprint_runtime import (
+            ThreePhaseBlueprintRuntime,
+            _ThreePhasePassWithFixResult,
+            _ThreePhaseRetryState,
+        )
+
+        owner = MagicMock()
+        owner.stats = {"phase3_reject": 0}
+        runtime = ThreePhaseBlueprintRuntime(owner)
+        runtime._finalize_pass_with_fix_failure = MagicMock(
+            return_value=_ThreePhasePassWithFixResult(
+                best_blueprint={"scenario": "original"}, should_continue=True
+            )
+        )
+        kwargs = dict(
+            ep_num=1,
+            arc_data={"arc_no": 1},
+            constraint_block={},
+            prev_blueprint=None,
+            best_blueprint={"scenario": "original"},
+            validation_result={"verdict": "PASS_WITH_FIX", "score": score},
+            score=score,
+            quality_gate_score=90,
+            selected_strategy="balanced",
+            director=MagicMock(),
+            arc_idx=0,
+            entity_registry=None,
+            state_tracker=MagicMock(),
+            prev_hud=None,
+            initial_feedback="fix needed",
+            retry_state=_ThreePhaseRetryState(),
+            pipeline_result={"final_verdict": None},
+            retry=0,
+            max_retries=9,
+        )
+        return runtime, kwargs
+
+    @staticmethod
+    def _iter_result(score, *, fix_ok=False, should_break=False):
+        from modules.domain.agents.three_phase_blueprint_runtime import (
+            _ThreePhasePassWithFixIterationResult,
+        )
+
+        validation = {"verdict": "PASS_WITH_FIX", "score": score} if score is not None else {"verdict": "PASS_WITH_FIX"}
+        return _ThreePhasePassWithFixIterationResult(
+            current_blueprint={"scenario": "patched"},
+            current_validation=validation,
+            fix_ok=fix_ok,
+            should_break=should_break,
+        )
+
+    def test_pfee_score_improving_continues_all_rounds(self):
+        """점수 개선 중이면 max_fix까지 모든 라운드 실행."""
+        runtime, kwargs = self._make_runtime_and_kwargs(score=60)
+        with patch.object(
+            runtime,
+            "_run_pass_with_fix_iteration",
+            side_effect=[
+                self._iter_result(70),
+                self._iter_result(80),
+                self._iter_result(85),
+            ],
+        ) as mock_iter:
+            runtime._run_pass_with_fix_loop(**kwargs)
+            assert mock_iter.call_count == 3
+
+    def test_pfee_score_stalled_breaks_early(self):
+        """점수 정체 (동일 점수) → 1회 후 조기 중단."""
+        runtime, kwargs = self._make_runtime_and_kwargs(score=60)
+        with patch.object(
+            runtime,
+            "_run_pass_with_fix_iteration",
+            side_effect=[
+                self._iter_result(60),  # same as prior → break
+                self._iter_result(70),  # should not be reached
+                self._iter_result(80),
+            ],
+        ) as mock_iter:
+            runtime._run_pass_with_fix_loop(**kwargs)
+            assert mock_iter.call_count == 1
+
+    def test_pfee_score_regressing_breaks_early(self):
+        """점수 하락 → 1회 후 조기 중단."""
+        runtime, kwargs = self._make_runtime_and_kwargs(score=60)
+        with patch.object(
+            runtime,
+            "_run_pass_with_fix_iteration",
+            side_effect=[
+                self._iter_result(50),  # regressed → break
+                self._iter_result(70),
+                self._iter_result(80),
+            ],
+        ) as mock_iter:
+            runtime._run_pass_with_fix_loop(**kwargs)
+            assert mock_iter.call_count == 1
+
+    def test_pfee_missing_score_preserves_legacy(self):
+        """score 키 없으면 가드 미작동 → 레거시 동작 유지 (전 라운드 실행)."""
+        runtime, kwargs = self._make_runtime_and_kwargs(score=60)
+        with patch.object(
+            runtime,
+            "_run_pass_with_fix_iteration",
+            side_effect=[
+                self._iter_result(None),  # no score key
+                self._iter_result(None),
+                self._iter_result(None),
+            ],
+        ) as mock_iter:
+            runtime._run_pass_with_fix_loop(**kwargs)
+            assert mock_iter.call_count == 3
+
+    def test_pfee_unparsable_score_preserves_legacy(self):
+        """score 파싱 불가 → 가드 미작동 → 레거시 동작 유지."""
+        runtime, kwargs = self._make_runtime_and_kwargs(score=60)
+        with patch.object(
+            runtime,
+            "_run_pass_with_fix_iteration",
+            side_effect=[
+                self._iter_result("invalid"),
+                self._iter_result("N/A"),
+                self._iter_result("??"),
+            ],
+        ) as mock_iter:
+            runtime._run_pass_with_fix_loop(**kwargs)
+            assert mock_iter.call_count == 3
+
+    def test_pfee_fix_ok_bypasses_guard(self):
+        """fix_ok=True (PASS 해결) → 가드 이전에 즉시 반환."""
+        runtime, kwargs = self._make_runtime_and_kwargs(score=60)
+        with patch.object(
+            runtime,
+            "_run_pass_with_fix_iteration",
+            side_effect=[
+                self._iter_result(50, fix_ok=True),  # PASS resolved
+            ],
+        ) as mock_iter:
+            result = runtime._run_pass_with_fix_loop(**kwargs)
+            assert mock_iter.call_count == 1
+            assert result.best_blueprint == {"scenario": "patched"}
+
+    def test_pfee_should_break_bypasses_guard(self):
+        """should_break=True (partial/full) → 가드 이전에 break."""
+        runtime, kwargs = self._make_runtime_and_kwargs(score=60)
+        with patch.object(
+            runtime,
+            "_run_pass_with_fix_iteration",
+            side_effect=[
+                self._iter_result(50, should_break=True),  # partial/full
+            ],
+        ) as mock_iter:
+            runtime._run_pass_with_fix_loop(**kwargs)
+            assert mock_iter.call_count == 1
+            runtime._finalize_pass_with_fix_failure.assert_called_once()
+
+    def test_pfee_stall_after_improvement_breaks_at_round_2(self):
+        """1회차 개선 → 2회차 정체 → 2회에서 조기 중단."""
+        runtime, kwargs = self._make_runtime_and_kwargs(score=60)
+        with patch.object(
+            runtime,
+            "_run_pass_with_fix_iteration",
+            side_effect=[
+                self._iter_result(70),  # improved: 60→70
+                self._iter_result(70),  # stalled: 70→70 → break
+                self._iter_result(80),  # not reached
+            ],
+        ) as mock_iter:
+            runtime._run_pass_with_fix_loop(**kwargs)
+            assert mock_iter.call_count == 2
