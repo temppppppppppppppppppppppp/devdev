@@ -170,7 +170,12 @@ def _extract_committed_state_facts(
         for line in fact_ledger_summary.split("\n"):
             line = line.strip()
             if line.startswith("-") and any(
-                kw in line for kw in ("억", "만원", "원", "달러", "$", "계좌", "자본", "잔고", "자산")
+                kw in line
+                for kw in (
+                    "억", "만원", "원", "달러", "$", "계좌", "자본", "잔고", "자산",
+                    "capital", "won", "balance", "account", "fund",
+                    "소유", "법인", "개인", "명의", "보유", "활동중",
+                )
             ):
                 facts.append(line.lstrip("- ").strip())
 
@@ -211,6 +216,16 @@ def _extract_completed_event_facts(
                     "성공",
                     "해결",
                     "종결",
+                    "개설",
+                    "구축",
+                    "이체",
+                    "계약",
+                    "세팅",
+                    "수령",
+                    "발급",
+                    "설립",
+                    "입주",
+                    "확인",
                 )
             ):
                 events.append(line.lstrip("- ").strip())

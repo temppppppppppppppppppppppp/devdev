@@ -932,6 +932,7 @@ class ThreePhaseBlueprintRuntime:
         max_fix = 3
         current_blueprint = best_blueprint
         current_validation = validation_result
+        prior_score = score  # [PF-EE] track for score-stall early-exit
 
         for fix_index in range(max_fix):
             iteration_result = self._run_pass_with_fix_iteration(
@@ -959,6 +960,24 @@ class ThreePhaseBlueprintRuntime:
                 return _ThreePhasePassWithFixResult(best_blueprint=current_blueprint)
             if iteration_result.should_break:
                 break
+
+            # ── [PF-EE] Score-stall early-exit guard ──
+            new_score = current_validation.get("score")
+            if new_score is not None:
+                try:
+                    new_score = int(new_score)
+                except (ValueError, TypeError):
+                    new_score = None
+            if new_score is not None and new_score <= prior_score:
+                logging.warning(
+                    "[PF-EE] PWF score-stall early-exit: prior=%d current=%d; "
+                    "skipping remaining fix rounds",
+                    prior_score,
+                    new_score,
+                )
+                break
+            if new_score is not None:
+                prior_score = new_score
 
         return self._finalize_pass_with_fix_failure(
             best_blueprint=best_blueprint,

@@ -118,6 +118,11 @@ Mode C. Direct Focused Patch
   - fresh run plus fail-only bugfix
 - If a hot owner class is already above the live direct-method pressure line, prefer family-level module split over adding more same-file helpers unless the helper extraction clearly reduces both LOC risk and owner pressure.
 - For time-boxed work after the high-risk long-function bands are cleared, prefer `snapshot -> fresh run -> fail-only stabilization` over opening a new broad refactor wave.
+- **LLM 가독성 원칙** — 프로덕션 코드는 LLM이 읽고 추론하기 편하도록 최대한 배려한다.
+  - 함수·메서드는 단일 책임, 명확한 이름, 짧은 본문을 유지한다.
+  - 암묵적 부작용, 깊은 중첩, 먼 거리의 상태 변이를 피한다.
+  - 분기·조건이 많을수록 early return·guard clause로 평탄화한다.
+  - 이 원칙은 사람 가독성과 상충하지 않는다 — LLM이 읽기 쉬운 코드는 사람도 읽기 쉽다.
 
 ### Step 3C. Apply Orientation Pack Impact Gate
 - Use `docs/2026-03-23/llm-codebase-orientation-pack.md` as the lightweight codebase navigation map for entry flow, authority, contract, and observability understanding.

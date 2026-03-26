@@ -1787,6 +1787,67 @@ class FailureAnalyzer:
             logging.debug("[FailureAnalyzer] avg_attempts_by_stage: %s", _e)
             return {}
 
+    def rescue_effectiveness(self) -> dict:
+        """Read-only summary of rescue (patch) attempt outcomes.
+
+        Returns bounded metrics:
+          - rescue_attempted_count
+          - rescue_succeeded_count
+          - rescue_success_rate_pct
+          - avg_score_delta (final score minus pre-rescue score where derivable)
+          - asp_used_count (only when explicit ASP strategy evidence is present)
+        """
+        try:
+            rows = self.db.conn.execute(
+                """SELECT verdict, score, initial_verdict, is_patch,
+                          is_patch_fallback, patch_strategy
+                   FROM stage_attempts
+                   WHERE is_patch = 1 OR is_patch_fallback = 1"""
+            ).fetchall()
+            if not rows:
+                return {
+                    "rescue_attempted_count": 0,
+                    "rescue_succeeded_count": 0,
+                    "rescue_success_rate_pct": 0.0,
+                    "avg_score_delta": None,
+                    "asp_used_count": 0,
+                }
+
+            attempted = len(rows)
+            succeeded = 0
+            score_deltas: list[float] = []
+            asp_count = 0
+
+            for r in rows:
+                verdict = str(r["verdict"] or "").strip()
+                if verdict in ("PASS", "PASS_WITH_WARNING", "PASS_WITH_FIX"):
+                    succeeded += 1
+                strategy = str(r["patch_strategy"] or "").strip().lower()
+                if "asp" in strategy:
+                    asp_count += 1
+                # score delta: derive from initial_verdict mapping
+                # if initial_verdict was REJECT and score exists, treat as improvement
+                try:
+                    score = int(r["score"] or 0)
+                except (TypeError, ValueError):
+                    score = 0
+                initial = str(r["initial_verdict"] or "").strip()
+                if initial == "REJECT" and score > 0:
+                    score_deltas.append(float(score))
+
+            avg_delta = round(sum(score_deltas) / len(score_deltas), 2) if score_deltas else None
+
+            return {
+                "rescue_attempted_count": attempted,
+                "rescue_succeeded_count": succeeded,
+                "rescue_success_rate_pct": round(succeeded / attempted * 100, 1) if attempted else 0.0,
+                "avg_score_delta": avg_delta,
+                "asp_used_count": asp_count,
+            }
+        except Exception as _e:
+            logging.debug("[FailureAnalyzer] rescue_effectiveness: %s", _e)
+            return {}
+
     def most_failed_agents(self, top_n: int = 10) -> list[dict]:
         """Top agents by absolute failure counts."""
         try:

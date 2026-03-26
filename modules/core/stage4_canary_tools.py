@@ -139,6 +139,7 @@ def build_stage3_canary_summary(project_root: str | Path, *, target_ep: int | No
             include_session_decisions=True,
             session_id=latest_session_id,
         )
+        episode_telemetry = _build_stage3_episode_telemetry(db, stage3_attempt_rows)
     finally:
         db.close()
 
@@ -169,6 +170,7 @@ def build_stage3_canary_summary(project_root: str | Path, *, target_ep: int | No
         "blueprint_file_count": len(blueprint_files),
         "blueprint_files": [p.name for p in blueprint_files],
         "attempt_detail": attempt_detail,
+        "episode_telemetry": episode_telemetry,
         "sink_alignment_summary": sink_alignment_summary,
         "hard_gates": hard_gates,
     }
@@ -195,6 +197,60 @@ def _build_stage3_attempt_detail(rows) -> list[dict]:
             "final_score": final["score"],
             "all_verdicts": [a["verdict"] for a in attempts],
         })
+    return result
+
+
+def _build_stage3_episode_telemetry(db, attempt_rows) -> list[dict]:
+    """Compact per-episode telemetry from existing DB sinks (read-only)."""
+    if not attempt_rows:
+        return []
+    ep_nums = sorted({int(row["ep_num"] or 0) for row in attempt_rows})
+    if not ep_nums:
+        return []
+    try:
+        placeholders = ",".join("?" for _ in ep_nums)
+        cost_rows = db.conn.execute(
+            f"""
+            SELECT ep_num,
+                   COUNT(*) as call_count,
+                   SUM(duration_ms) as total_duration_ms,
+                   SUM(COALESCE(total_cost_usd, 0)) as total_cost_usd
+            FROM llm_calls
+            WHERE stage = 3 AND ep_num IN ({placeholders})
+            GROUP BY ep_num
+            """,
+            tuple(ep_nums),
+        ).fetchall()
+    except Exception:
+        return []
+
+    cost_by_ep: dict[int, dict] = {}
+    for row in cost_rows:
+        ep = int(row["ep_num"] or 0)
+        cost_by_ep[ep] = {
+            "llm_call_count": int(row["call_count"] or 0),
+            "total_duration_ms": int(row["total_duration_ms"] or 0),
+            "total_cost_usd": round(float(row["total_cost_usd"] or 0), 6),
+        }
+
+    ep_attempts: dict[int, list] = {}
+    for row in attempt_rows:
+        ep = int(row["ep_num"] or 0)
+        ep_attempts.setdefault(ep, []).append(row)
+
+    result: list[dict] = []
+    for ep in ep_nums:
+        attempts = ep_attempts.get(ep, [])
+        final = attempts[-1] if attempts else None
+        cost = cost_by_ep.get(ep, {})
+        entry: dict = {
+            "ep_num": ep,
+            "attempt_count": len(attempts),
+            "final_verdict": str(final["verdict"] or "").strip() if final else "",
+            "final_score": final["score"] if final else None,
+        }
+        entry.update(cost)
+        result.append(entry)
     return result
 
 
