@@ -128,8 +128,9 @@
 3. `treatment-planning-harness.md`
 4. `treatment-production-harness-v2.md`
 5. `bi-production-harness-v1.md`
-6. 구 경로를 참조하는 오래된 오더가 있으면 `modern_fantasy_material_harness.md`
-7. 장르가 `alt_history`이거나 역사 재료 DB 조회가 필요하면 `alt_history_db_harness.md`
+6. `treatment-densification-harness-v1.md` — TR 밀도 부족 판정 시에만 진입 (§0C 진입 게이트 참조)
+7. 구 경로를 참조하는 오래된 오더가 있으면 `modern_fantasy_material_harness.md`
+8. 장르가 `alt_history`이거나 역사 재료 DB 조회가 필요하면 `alt_history_db_harness.md`
 
 읽기 규칙:
 
@@ -162,6 +163,16 @@
 - `phase0_design`이 없으면 아직 생산 단계가 아니다.
 - `tr_block_070_draft`가 없으면 아직 BI 단계가 아니다.
 - `BI`가 있어도 감리 FAIL이면 완료가 아니다.
+
+중간 산출물 격리 규칙:
+
+- `phase0_design`은 중간 산출물이다. TR과 BI가 모두 존재하고 5-Pass 감리 PASS를 받으면,
+  `phase0_design`은 `treatments/_quarantine/`로 이동한다.
+- 이유: `phase0_design`의 역할은 TR/BI 생성의 입력이다. TR/BI가 완성되면 정본은 TR+BI이며,
+  `phase0_design`은 더 이상 SSOT가 아니다. 격리하지 않으면 `phase0_design`과 TR/BI 사이에
+  드리프트가 생길 때 어느 쪽이 정본인지 혼란이 발생한다.
+- 격리 후에도 `phase0_design`은 삭제하지 않는다 — 디버깅/감리 이력 추적용으로 보존.
+- 단계 판정에서 `phase0_design`이 `_quarantine`에 있고 TR+BI가 존재하면 **감리/재검토** 단계로 판정한다.
 
 ---
 
@@ -277,6 +288,28 @@ run class는 아래 둘만 허용한다.
 7. `phase0_design`이 없으면 planning 문서로 진입
 8. 한 번에 설계 단위 1개만 출력
 
+### 5.1A candidate→fixed→draft 상태 머신
+
+Production과 BI 산출물은 아래 상태 머신을 따른다.
+
+```
+candidate → (self-check PASS + Python validation PASS) → fixed
+fixed → (manual audit PASS) → production baseline
+draft = ongoing work, not yet validated
+```
+
+상태 전이 규칙:
+
+- `candidate`: 생성 직후 상태. self-check와 Python validation을 모두 통과해야 `fixed`로 승격한다.
+- `fixed`: 자동 검증은 통과했으나 아직 수동 감리(manual audit)를 받지 않은 상태. 수동 감리 PASS 시 `production baseline`으로 확정한다.
+- `draft`: 작업 중인 상태이며 아직 어떤 검증도 통과하지 않았다.
+
+Rollback 규칙:
+
+- `fixed`에서 오류 발견 시 `candidate`로 되돌리고 재생산한다. `fixed`를 직접 수정하지 않는다.
+- `candidate`에서 오류 발견 시 해당 단위를 폐기하고 재생성한다.
+- 어떤 상태에서든 직접 수정(in-place edit)보다 재생성을 우선한다.
+
 ### 5.2 Production 시작 전
 
 1. `phase0_design` UTF-8 파싱 확인
@@ -366,3 +399,23 @@ run class는 아래 둘만 허용한다.
 2. 이번에 읽은 SSOT
 3. 이번에 끝낸 단위
 4. 다음 단위 또는 정지 사유
+
+---
+
+## 9. 자동 진행 정책
+
+단계 전환은 정지 게이트가 아니다. Go 조건이 충족되면 멈추지 않고 다음 단계로 넘어간다.
+
+금지:
+- "Stage 0 끝났습니다. Planning으로 갈까요?"
+- "Phase 0 설계 완료했습니다. Production 시작할까요?"
+- "TR 70블록 완료했습니다. BI 만들까요?"
+
+허용:
+- "Stage 0 완료. Planning 진입." (1줄 상태 보고 후 즉시 진행)
+- "Block 10 완료. Block 11 시작." (보고와 동시에 진행)
+
+유일한 정지 조건:
+- manual_audit_pass 필요 시 (Stage 0 → Planning 전환)
+- context window 한계 도달
+- 사용자의 명시적 정지 지시

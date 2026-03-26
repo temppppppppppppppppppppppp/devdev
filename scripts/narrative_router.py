@@ -1,110 +1,179 @@
+# -*- coding: utf-8 -*-
+"""Narrative Router CLI.
+
+Determines the current pipeline stage and family for a given work_id
+by checking filesystem artifacts. Outputs JSON status.
+
+Usage:
+    python -X utf8 scripts/narrative_router.py --work-id chaebol_allowance_zero
+    python -X utf8 scripts/narrative_router.py --work-id my_wuxia_novel --genre wuxia
+"""
 from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
 
-from modules.narrative_router import resolve_route
-from modules.narrative_router.families import get_builtin_families
+# ---------------------------------------------------------------------------
+# Profile enum used for family detection
+# ---------------------------------------------------------------------------
+BLOCKGUIDE_PROFILES = frozenset([
+    "business_growth_profile",
+    "investment_market_profile",
+    "entertainment_media_profile",
+    "medical_professional_profile",
+    "office_power_profile",
+    "tech_startup_profile",
+    "urban_power_profile",
+])
+
+WUXIA_GENRES = frozenset(["wuxia", "muhyeop", "seonhyeop", "gangho"])
+
+# ---------------------------------------------------------------------------
+# Harness path constants (relative to ROOT)
+# ---------------------------------------------------------------------------
+BLOCKGUIDE_HARNESSES = {
+    "stage0": "전처리_ssot/docs/SSOT_stage0_preprocess_integrated_order.md",
+    "planning": "docs/blockguide/treatment-planning-harness.md",
+    "production": "docs/blockguide/treatment-production-harness-v2.md",
+    "bi": "docs/blockguide/bi-production-harness-v1.md",
+}
+WUXGUIDE_HARNESSES = {
+    "stage0": "전처리_ssot/docs/SSOT_stage0_preprocess_integrated_order.md",
+    "planning": "docs/wuxguide/wuxia-planning-harness.md",
+    "production": "docs/wuxguide/wuxia-production-harness.md",
+    "bi": "docs/wuxguide/wuxia-bi-production-harness.md",
+}
 
 
-def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Resolve narrative family routing without touching family-specific harnesses.")
-    parser.add_argument("--genre", help="Genre label such as wuxia, 무협, hunter, investment, alt_history.")
-    parser.add_argument("--family", help="Explicit family hint such as blockguide or wuxguide.")
-    parser.add_argument("--work-id", help="Canonical work_id for filesystem-based stage detection.")
-    parser.add_argument("--phase0-exists", action="store_true", help="Treat phase0_design as already existing.")
-    parser.add_argument("--tr-exists", action="store_true", help="Treat tr_block_070_draft as already existing.")
-    parser.add_argument("--bi-exists", action="store_true", help="Treat BI JSON as already existing.")
-    parser.add_argument("--json", action="store_true", help="Print JSON output.")
-    parser.add_argument("--list-families", action="store_true", help="List built-in family plugins.")
-    return parser
+def _safe_load_json(path: Path) -> dict | None:
+    """Load a JSON file with UTF-8, returning None on any failure."""
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            return json.load(fh)
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
+        return None
 
 
-def _print_families(as_json: bool) -> int:
-    payload = [
-        {
-            "family": family.key,
-            "display_name": family.display_name,
-            "description": family.description,
-            "integrated_order_path": family.integrated_order_path,
-            "planning_required_preprocess_files": family.contract.planning.required_preprocess_files,
-            "planning_readiness_flag_file": family.contract.planning.readiness_flag_file,
-            "phase0_output_pattern": family.contract.planning.phase0_output_pattern,
-            "tr_harness_script": family.contract.tr.harness_script,
-            "hud_root": family.contract.bi.hud_root,
-            "bi_builder_script": family.contract.bi.builder_script,
-            "bi_audit_script": family.contract.bi.audit_script,
-        }
-        for family in get_builtin_families()
-    ]
-    if as_json:
-        print(json.dumps(payload, ensure_ascii=False, indent=2))
-        return 0
+def _detect_family(genre: str | None, work_id: str) -> str:
+    """Resolve family to 'blockguide' or 'wuxguide'."""
+    # 1. Explicit genre hint
+    if genre:
+        genre_lower = genre.lower().replace(" ", "").replace("-", "")
+        if genre_lower in WUXIA_GENRES or "무협" in genre or "선협" in genre or "강호" in genre:
+            return "wuxguide"
+        return "blockguide"
 
-    for item in payload:
-        print(f"{item['family']}: {item['display_name']}")
-        print(f"  - {item['description']}")
-        print(f"  - {item['integrated_order_path']}")
-        print(f"  - preprocess_required: {', '.join(item['planning_required_preprocess_files'])}")
-        print(f"  - readiness_flag: {item['planning_readiness_flag_file']}")
-        print(f"  - phase0_output: {item['phase0_output_pattern']}")
-        print(f"  - tr_harness: {item['tr_harness_script']}")
-        print(f"  - hud_root: {item['hud_root']}")
-        print(f"  - bi_builder: {item['bi_builder_script']}")
-        print(f"  - bi_audit: {item['bi_audit_script']}")
-    return 0
+    # 2. Check profile_lock.json if it exists
+    profile_lock_path = ROOT / "treatments" / "preprocess" / work_id / "profile_lock.json"
+    data = _safe_load_json(profile_lock_path)
+    if data:
+        primary = data.get("primary_profile", "")
+        if primary == "wuxia":
+            return "wuxguide"
+        if primary in BLOCKGUIDE_PROFILES:
+            return "blockguide"
+
+    # 3. Default
+    return "blockguide"
+
+
+def _check_stage0_artifacts(work_id: str) -> dict[str, bool]:
+    """Check existence and UTF-8 parsability of all 4 Stage 0 files."""
+    base = ROOT / "treatments" / "preprocess" / work_id
+    files = {
+        "source_manifest": base / "source_manifest.json",
+        "profile_lock": base / "profile_lock.json",
+        "material_bundle_summary": base / "material_bundle_summary.json",
+        "phase0_ready_snapshot": base / "phase0_ready_snapshot.json",
+    }
+    result = {}
+    for key, path in files.items():
+        result[key] = _safe_load_json(path) is not None
+    return result
+
+
+def _get_manual_audit_pass(work_id: str) -> bool:
+    """Read phase0_ready_snapshot and return manual_audit_pass value."""
+    path = ROOT / "treatments" / "preprocess" / work_id / "phase0_ready_snapshot.json"
+    data = _safe_load_json(path)
+    if data and isinstance(data.get("manual_audit_pass"), bool):
+        return data["manual_audit_pass"]
+    return False
+
+
+def _determine_stage(work_id: str, stage0_status: dict[str, bool]) -> str:
+    """Determine current pipeline stage per SSOT stage detection table."""
+    # Stage 0: any artifact missing or manual_audit_pass != true
+    all_present = all(stage0_status.values())
+    if not all_present:
+        return "stage0"
+    if not _get_manual_audit_pass(work_id):
+        return "stage0"
+
+    # Check downstream artifacts
+    phase0_path = ROOT / "treatments" / f"{work_id}_phase0_design.json"
+    tr_path = ROOT / "treatments" / f"{work_id}_tr_block_070_draft.json"
+    bi_path = ROOT / "bible" / f"0_bi_{work_id}.json"
+
+    phase0_exists = phase0_path.is_file()
+    tr_exists = tr_path.is_file()
+    bi_exists = bi_path.is_file()
+
+    if not phase0_exists:
+        return "planning"
+    if not tr_exists:
+        return "production"
+    if not bi_exists:
+        return "bi"
+    return "complete"
+
+
+def route(work_id: str, genre: str | None = None) -> dict:
+    """Build the full routing result dict."""
+    family = _detect_family(genre, work_id)
+    stage0_status = _check_stage0_artifacts(work_id)
+    current_stage = _determine_stage(work_id, stage0_status)
+
+    # Artifact existence flags
+    phase0_exists = (ROOT / "treatments" / f"{work_id}_phase0_design.json").is_file()
+    tr_exists = (ROOT / "treatments" / f"{work_id}_tr_block_070_draft.json").is_file()
+    bi_exists = (ROOT / "bible" / f"0_bi_{work_id}.json").is_file()
+
+    harnesses = WUXGUIDE_HARNESSES if family == "wuxguide" else BLOCKGUIDE_HARNESSES
+    next_harness = harnesses.get(current_stage, "")
+
+    return {
+        "work_id": work_id,
+        "family": family,
+        "current_stage": current_stage,
+        "next_harness": next_harness,
+        "artifacts": {
+            "stage0": all(stage0_status.values()),
+            "phase0": phase0_exists,
+            "tr": tr_exists,
+            "bi": bi_exists,
+        },
+        "stage0_detail": stage0_status,
+        "manual_audit_pass": _get_manual_audit_pass(work_id),
+    }
 
 
 def main() -> int:
-    parser = build_parser()
+    parser = argparse.ArgumentParser(
+        description="Narrative pipeline router: detect family and current stage for a work_id."
+    )
+    parser.add_argument("--work-id", required=True, help="Canonical work_id (snake_case).")
+    parser.add_argument("--genre", default=None, help="Genre hint (e.g. wuxia, hunter, investment).")
+    parser.add_argument("--json", action="store_true", help="Print JSON output (default is JSON anyway).")
     args = parser.parse_args()
 
-    if args.list_families:
-        return _print_families(args.json)
-
-    route = resolve_route(
-        genre=args.genre,
-        family_hint=args.family,
-        work_id=args.work_id,
-        phase0_exists=args.phase0_exists,
-        tr_exists=args.tr_exists,
-        bi_exists=args.bi_exists,
-    )
-
-    if args.json:
-        print(json.dumps(route.to_dict(), ensure_ascii=False, indent=2))
-        return 0
-
-    print(f"family: {route.family}")
-    print(f"display_name: {route.display_name}")
-    if route.stage:
-        print(f"stage: {route.stage}")
-    print(f"integrated_order: {route.integrated_order_path}")
-    print(f"planning: {route.planning_path}")
-    print(f"production: {route.production_path}")
-    print(f"bi: {route.bi_path}")
-    print(f"preprocess_required: {', '.join(route.contract.planning.required_preprocess_files)}")
-    print(f"readiness_flag: {route.contract.planning.readiness_flag_file}")
-    print(f"phase0_output: {route.contract.planning.phase0_output_pattern}")
-    print(f"tr_harness: {route.contract.tr.harness_script}")
-    print(f"hud_root: {route.contract.bi.hud_root}")
-    print(f"bi_builder: {route.contract.bi.builder_script}")
-    print(f"bi_audit: {route.contract.bi.audit_script}")
-    if route.artifact_state:
-        print(f"work_id: {route.artifact_state.work_id}")
-        print(f"preprocess_ready: {route.artifact_state.preprocess_ready}")
-        print(f"manual_audit_pass: {route.artifact_state.manual_audit_pass}")
-        print(f"phase0_path: {route.artifact_state.phase0_path}")
-        print(f"tr_path: {route.artifact_state.tr_path}")
-        print(f"bi_path: {route.artifact_state.bi_path}")
-    for extra_path in route.extra_paths:
-        print(f"extra: {extra_path}")
+    result = route(args.work_id, args.genre)
+    print(json.dumps(result, ensure_ascii=False, indent=2))
     return 0
 
 

@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "material_bundle_summary.schema.json",
+  "title": "Material Bundle Summary",
+  "description": "Stage 0 material collection summary: events, NPCs, crises, terms, scenes.",
+  "type": "object",
+  "required": [
+    "events",
+    "npc_candidates",
+    "crisis_candidates",
+    "terms",
+    "scene_details",
+    "notes"
+  ],
+  "properties": {
+    "events": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Key plot events extracted from source materials."
+    },
+    "npc_candidates": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "NPC candidates with role summaries."
+    },
+    "crisis_candidates": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Crisis/conflict candidates from materials."
+    },
+    "terms": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Domain-specific terminology collected."
+    },
+    "scene_details": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Scene-level details ready for Phase 0 transfer."
+    },
+    "notes": {
+      "type": "string",
+      "description": "Free-text notes on material collection status."
+    }
+  },
+  "additionalProperties": false
+}

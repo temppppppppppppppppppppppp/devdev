@@ -1,0 +1,59 @@
+{
+  "arc_densification_rules": [
+    {
+      "arc_id": "ARC-01/02",
+      "blocks": [7, 15],
+      "historical_injection": "2018 최저임금 인상 및 주52시간 근무제 도입",
+      "tactical_focus": "장례식장 및 호텔 후방 지원(세탁/청소)의 정산권 장악"
+    },
+    {
+      "arc_id": "ARC-02",
+      "blocks": [16, 25],
+      "phase": "호텔 지분 전쟁 및 PF 금리 폭탄",
+      "historical_injection": "미중 무역분쟁 및 미 연준 금리 인상 쇼크",
+      "bigshot_injection": "외국계 사모펀드 파트너 및 시중 은행 여신 본부장",
+      "item_injection": "PF 연대보증 약정서 및 지분 희석용 신주인수권부사채(BW)",
+      "tactical_focus": "금리 쇼크를 이용해 서도윤의 무리한 리모델링 PF를 파산시키고, 제3자 배정 유상증자로 호텔 지분을 강탈함"
+    },
+    {
+      "arc_id": "ARC-03",
+      "blocks": [26, 35],
+      "phase": "중소 제조사(소부장) 인수 및 국산화 테마",
+      "historical_injection": "2019 일본 수출 규제(화이트리스트 배제) 및 소재 국산화 열풍",
+      "bigshot_injection": "일본계 부품 공급사 한국 지사장 및 산자부 국장",
+      "item_injection": "핵심 소재 성분 분석표 및 국책 과제 선정 통지서",
+      "tactical_focus": "공급망 마비 리스크를 미리 읽고 국산화 기술을 가진 중소기업을 선제 매집. 가문의 메인 제조 계열사를 공급망으로 압박함"
+    },
+    {
+      "arc_id": "ARC-04/05",
+      "blocks": [36, 50],
+      "phase": "코로나19 팬데믹 및 디지털 정산망 장악",
+      "historical_injection": "2020 코로나19 팬데믹 발발 및 비대면 결제 폭증",
+      "bigshot_injection": "대형 병원 재단 이사장 및 유통 재벌가 서자",
+      "item_injection": "비대면 정산 시스템 특허 및 백신 수송 콜드체인 계약서",
+      "tactical_focus": "병원의 복잡한 미수금 정산 시스템을 디지털화하여 현금흐름의 목줄을 쥐고, 배달/물류 인프라를 가문의 유통망보다 먼저 구축함"
+    },
+    {
+      "arc_id": "ARC-06",
+      "blocks": [51, 65],
+      "phase": "자본 시장 버블 및 상속세 전쟁",
+      "historical_injection": "2021 가상화폐 열풍, NFT, 주식 시장 과열 및 금리 반등 조짐",
+      "bigshot_injection": "가상화폐 거래소 대표 및 국세청 조사국장",
+      "item_injection": "해외 자산 은닉 리스트 및 상속세 절세용 공익재단 기부 명세서",
+      "tactical_focus": "가문 내부의 자산 세탁 경로를 파악하여 역으로 신고 위협. 상속세 재원 마련을 위해 본가 지분을 매각해야 하는 시점에 주가를 폭락시켜 지배력을 흔듦"
+    },
+    {
+      "arc_id": "ARC-07",
+      "blocks": [66, 70],
+      "phase": "최종 가문 장악 및 포스트-회장 체제",
+      "historical_injection": "2022 글로벌 고금리(킹달러) 및 우크라이나 전쟁 쇼크",
+      "bigshot_injection": "윤성그룹 최종 결정권자 (회장 윤석진)",
+      "item_injection": "수정된 최종 유언장 및 그룹 지주사 회장직 임명장",
+      "tactical_focus": "모든 계열사의 '정산망'과 '공급망'을 쥔 상태에서 글로벌 경제 위기를 방패 삼아 회장을 압박. 서도윤을 영구 퇴출시키고 가문의 새로운 주인이 됨"
+    }
+  ],
+  "special_fixes": [
+    { "block_id": 13, "fix_note": "C-02 오류 수정: 노점 상조회장 갈등으로 변경" },
+    { "block_id": 30, "fix_note": "C-03 오류 수정: 9개월 시간 점프를 코로나 대비 선제적 물류 확보 기간으로 서술" }
+  ]
+}

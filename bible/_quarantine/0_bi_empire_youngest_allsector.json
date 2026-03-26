@@ -1,0 +1,235 @@
+{
+  "_schema_version": "v1",
+  "_schema_description": "Blockguide-generated BI for empire_youngest_allsector",
+  "_last_updated": "2026-03-24",
+  "_genre": "현대 한국 회귀·재벌경영 전섹터 투자물",
+  "MasterBible": {
+    "ProjectData": {
+      "MetaInfo": {
+        "title": "제국의 막내: 모든 섹터를 먹는 남자",
+        "grand_objective": "2045년 파산·추락한 재벌 3세 막내 이준서가 2025년으로 회귀해, 코인→반도체→바이오→AI부터 금융·방산·우주까지 항상 3개 섹터를 동시에 굴려, 0원에서 200조 J제국홀딩스를 혼자 짓고 썩어가던 제국그룹을 통째로 먹는다.",
+        "genre_archetype": "현대 한국 회귀·재벌경영 전섹터 투자물",
+        "logline": "형들이 싸우고 아버지가 무너지고 제국이 썩는 걸 20년간 봤다. 이번엔 혼자서 짓는다 — 반도체, 바이오, AI, 금융, 방산, 우주까지. 항상 세 개씩. 쉬지 않고.",
+        "total_episodes": 350,
+        "episodes_per_arc": 5,
+        "arcs_per_volume": 5
+      },
+      "CoreIdentity": {
+        "protagonist": "이준서",
+        "protagonist_faction": "JSR인베스트먼트(초기) → J캐피탈파트너스(중기) → J제국홀딩스(최종)",
+        "edge": "20년치 섹터별 승자·패자 데이터 + 전 섹터 연결 그림을 혼자 보는 유일한 인간 + 감정 없는 효율 극대화 의사결정",
+        "desire": "썩어가는 제국그룹을 혼자서 재건하되, 가문 돈은 한 푼도 쓰지 않고 자력으로 0원에서 200조 제국을 짓는다.",
+        "crisis": "시작 자본 0원(신용카드 3,000만). 재벌 막내이지만 실권 없고 무시당함. 미래 타이밍이 점점 오차를 만들고 건강이 한계에 도달한다."
+      },
+      "CommercialCode": {
+        "cider_point": "재벌 연합·헤지펀드·규제 당국이 '어떻게 막지?'라고 외칠 때마다 이미 늦었다는 것이 드러나는 반복 사이다. 3개 섹터를 동시에 굴려 기득권이 대응할 수 없는 속도.",
+        "success_device": "3개 동시 롤링 시스템, 원 패턴 5스텝(진입→업계반응→압박→돌파→완성), 미래 기억 기반 타이밍 투자, 인재 선점, 역발상 매입",
+        "attitude": "감정 표현 거의 없음. 효율 최우선. 섹터 완성마다 '다음.' 한 단어. 캔커피. 편의점 삼각김밥. 수면 4시간. 멈추지 않는다."
+      }
+    },
+    "protagonist_config": {
+      "is_regressor": true,
+      "regression_origin": "2045년 제국그룹 파산 선고 직후 42층 옥상에서 추락. 2025년 3월 대학원 입학식으로 회귀.",
+      "single_heir_policy": "부모 돈 절대 미사용. 가문 밖에서 독립 자산을 쌓아 제국을 구한다.",
+      "execution_doctrine": "세 개씩. 쉬지 않고. — 항상 3개 섹터를 동시에 굴려 기득권이 대응할 수 없는 속도로 먹는다."
+    },
+    "FinanceHUD": {
+      "_description": "주인공의 실질 재무 상태와 성장 자원 이력 (Resource-Power HUD)",
+      "Protagonist": {
+        "actual_truth": {
+          "name": "이준서",
+          "alias": "제국그룹 투명인간 막내 (초기) → 한국 산업계가 인지하는 전섹터 플레이어 (중기) → J제국홀딩스 200조 대표이사 (최종)",
+          "age": 25,
+          "rank": "제국그룹 3세 막내 / JSR인베스트먼트 대표 (초기) → J캐피탈파트너스 대표 (중기) → J제국홀딩스 대표이사 (최종)",
+          "current_objective": "전 섹터(코인→반도체→바이오→AI→이커머스→게임→엔터→금융→패션→식품→에너지→방산→EV→해운)를 3개씩 동시에 구조화하며 제국그룹을 통합.",
+          "final_goal": "제국홀딩스 경영권 확보(51.3%) + 부실 22개사 정리 + 핵심 26개 통합 + J제국홀딩스 200조+ 출범.",
+          "financial_status": {
+            "mobilizable_capital": "200조+",
+            "total_assets": "200조+",
+            "max_assets": "200조+",
+            "company": "J제국홀딩스",
+            "company_state": "연결 자산 200조+. 글로벌 AAA. 15개 섹터 통합 지주회사. 제국그룹 핵심 26개사 편입. 반도체(넥스칩 6조+) + 바이오(온코젠 3조+) + 부동산(J-DC리츠 3조+) + AI(코그니션/EdgeMind/J-클라우드 5조+) + 엔터(스타빌드/J-Stream) + 금융(PE 15조+/J-핀테크) + 에너지(SMR/풍력) + 방산(스카이포스) + EV(솔리드파워) + 해운(싱가포르JV)",
+            "business_lines": [
+              "반도체·HBM (넥스칩디자인)",
+              "바이오·항암ADC (온코젠바이오)",
+              "부동산·데이터센터 (J-DC리츠)",
+              "AI·LLM·SaaS (코그니션AI/J-클라우드)",
+              "AI·NPU (EdgeMind)",
+              "이커머스 (MODERA)",
+              "게임·IP (사무라이엔터)",
+              "엔터·K-pop (스타빌드엔터)",
+              "OTT (J-Stream)",
+              "금융·PE (J캐피탈 PE)",
+              "핀테크 (J-핀테크/새한저축은행)",
+              "패션·럭셔리 (아틀리에서울/한복모던)",
+              "식품·대체육 (그린프로틴/밥심)",
+              "에너지·SMR (코리아뉴클리어)",
+              "에너지·풍력 (해상풍력500MW)",
+              "방산·드론 (스카이포스)",
+              "EV·배터리 (솔리드파워코리아)",
+              "해운·물류 (싱가포르JV)"
+            ]
+          },
+          "portfolio_history": [
+            {"block": 1, "event": "비트코인 전액 매수", "capital": "0원 → BTC 0.36"},
+            {"block": 10, "event": "코인/주식 완성", "capital": "2,000억"},
+            {"block": 20, "event": "반도체 완성. 가문 연락.", "capital": "4조"},
+            {"block": 30, "event": "바이오+부동산 완성", "capital": "12조"},
+            {"block": 37, "event": "AI 완성", "capital": "20조"},
+            {"block": 43, "event": "이커머스+게임 완성. 공정위 무혐의.", "capital": "35조"},
+            {"block": 50, "event": "엔터 완성. 1차 입원.", "capital": "45조"},
+            {"block": 54, "event": "금융+패션 완성", "capital": "60조"},
+            {"block": 63, "event": "에너지 완성. 채권단 협상.", "capital": "90조"},
+            {"block": 66, "event": "제국 경영권 확보 51.3%", "capital": "110조"},
+            {"block": 68, "event": "J제국홀딩스 출범", "capital": "180조"},
+            {"block": 69, "event": "글로벌 AAA", "capital": "200조+"}
+          ]
+        }
+      }
+    },
+    "GenreRules": {
+      "triple_rolling": "항상 3개 섹터가 동시에 돌아간다. 섹터 하나가 완성되면 즉시 다음 섹터가 추가된다.",
+      "one_pattern": "진입→업계 반응(타자 POV)→압박→돌파(사이다)→완성('다음.'). 매 섹터 반복.",
+      "do_not_fake": [
+        "투자 구조: 공매도·스퀴즈·파생·지분 구조의 실제 금융 메커니즘",
+        "반도체 기술: HBM4·2.5D 패키징·EUV·NPU의 구체적 기술 단위",
+        "바이오 임상: ADC·3상·라이선스아웃의 신약 현장 용어",
+        "M&A 절차: 실사·인허가·공정위·채권단 협상의 절차",
+        "방산 조달: 방위사업청·보안인가·MRO의 현행 체계"
+      ]
+    },
+    "WorldState": {
+      "group_background": "제국그룹: 재계 6위. 섬유·중공업→건설·유통·금융·미디어. 패인 3축: 반도체·AI 10년 지연, 형제 경영권 분쟁, 부동산 PF 38조 부실. 2045년 법정관리.",
+      "era": "2025년~2038년",
+      "key_locations": [
+        "서울 여의도 JSR인베스트먼트 (Block 3~)",
+        "서울 강남 J캐피탈파트너스 타워 (Block 38~)",
+        "판교 반도체·AI R&D 허브",
+        "인천 송도 J제국홀딩스 신사옥 (Block 68~)",
+        "실리콘밸리 (AI투자)",
+        "뉴욕 월스트리트 (PE·채권)",
+        "도쿄 (게임IP·야마모토)",
+        "파리 (패션위크)",
+        "타이베이 (얼라이드 OSAT)"
+      ]
+    },
+    "Seeds": {
+      "foreshadow_map": [
+        {"seed": "미래 타이밍 오차", "planted": 1, "harvested": [5, 18, 29, 62], "status": "반복 활성"},
+        {"seed": "부모 돈 미사용 원칙", "planted": 1, "harvested": [10, 20, 54, 70], "status": "완수"},
+        {"seed": "제국 패인 3축", "planted": 1, "harvested": [58, 66, 67], "status": "완수"},
+        {"seed": "헷지 없는 레버리지 금지", "planted": 5, "harvested": [9, 29, 65], "status": "완수"},
+        {"seed": "정하윤 의문 '왜 아는가'", "planted": 3, "harvested": [8, 50], "status": "묻지 않기로"},
+        {"seed": "오승아 '뭘 하려는 건지'", "planted": 7, "harvested": [42, 45], "status": "법무 총괄로 합류"},
+        {"seed": "김태석 어드바이저 발견", "planted": 6, "harvested": [12], "status": "CTO 합류"},
+        {"seed": "재벌 연합 내부 이견", "planted": 25, "harvested": [48], "status": "연합 와해"},
+        {"seed": "J제국홀딩스 선언", "planted": 59, "harvested": [68], "status": "출범"},
+        {"seed": "빈 스프레드시트", "planted": 70, "harvested": [], "status": "연재 훅"}
+      ]
+    },
+    "HistoricalEvents": [
+      {"year": 2025, "event": "비트코인 8→16만 달러 사이클", "blocks": [1, 2]},
+      {"year": 2025, "event": "테슬라 FSD v13 발표", "blocks": [3]},
+      {"year": 2026, "event": "HBM4 양산 발표", "blocks": [4, 8, 11]},
+      {"year": 2026, "event": "G7+중국 암호화폐 규제", "blocks": [9]},
+      {"year": 2027, "event": "바이오 임상 3상 성공", "blocks": [22]},
+      {"year": 2028, "event": "넥스칩디자인 코스닥 상장", "blocks": [17]},
+      {"year": 2029, "event": "J-DC리츠 코스피 상장", "blocks": [27]},
+      {"year": 2029, "event": "PF 위기", "blocks": [29]},
+      {"year": 2032, "event": "공정위 M&A 심사", "blocks": [42]},
+      {"year": 2035, "event": "SMR 인허가 18개월 유예", "blocks": [57]},
+      {"year": 2036, "event": "이준민 분식회계 구속", "blocks": [61]},
+      {"year": 2036, "event": "헤지펀드 공개매수", "blocks": [62, 65]},
+      {"year": 2037, "event": "제국홀딩스 경영권 확보", "blocks": [66]}
+    ],
+    "NPC_Timeline": [
+      {"name": "정하윤", "role": "CFO→CIO", "entry": 3, "arc": "의심→분석→감탄→충성", "key_blocks": [3, 5, 8, 10, 50]},
+      {"name": "김태석", "role": "반도체/AI CTO", "entry": 12, "arc": "스카우트→동료", "key_blocks": [12, 14, 18, 20]},
+      {"name": "오승아", "role": "법무 총괄", "entry": 7, "arc": "적대→중립→합류", "key_blocks": [7, 11, 42, 45]},
+      {"name": "이준혁", "role": "장남 형", "entry": 8, "arc": "무관심→경계→압박→손내밀기", "key_blocks": [14, 19, 54, 58, 66]},
+      {"name": "이준민", "role": "차남 형", "entry": 15, "arc": "관망→적대→구속퇴장", "key_blocks": [41, 61]},
+      {"name": "이철호", "role": "부친", "entry": 5, "arc": "무관심→불편→충격→인정", "key_blocks": [20, 54, 66]},
+      {"name": "레이첼 권", "role": "글로벌 PE 파트너", "entry": 22, "arc": "파트너→동맹", "key_blocks": [22, 28, 62, 64]},
+      {"name": "야마모토 히로시", "role": "일본 VC/아시아 동맹", "entry": 33, "arc": "경쟁자→공동투자→동맹", "key_blocks": [33, 40, 62, 64]},
+      {"name": "권도준", "role": "방산 게이트키퍼", "entry": 35, "arc": "고문→핵심파트너", "key_blocks": [35, 53, 55]},
+      {"name": "최다은", "role": "유일한 일상 연결고리", "entry": 50, "arc": "대학동기→감정접점", "key_blocks": [50, 51, 54, 58]}
+    ],
+    "OpponentTransitionPlan": {
+      "phase1": {"title": "가문 내 견제", "blocks": "1-20", "primary": "이준혁+기획조정실", "secondary": "이철호(무관심=간접견제)"},
+      "phase2": {"title": "기득권 산업 연합", "blocks": "21-48", "primary": "재벌 3사 연합(S/H/D)", "secondary": "이준민+정치권"},
+      "phase3": {"title": "글로벌 헤지펀드+채권단", "blocks": "49-70", "primary": "Citadel Capital", "secondary": "이준민(퇴장)+채권단"}
+    }
+  },
+  "plot_roadmap": [
+    {"block": 1, "title": "옥상에서 강의실로"},
+    {"block": 2, "title": "16만 달러 매도"},
+    {"block": 3, "title": "JSR인베스트먼트"},
+    {"block": 4, "title": "HBM 수혜주 저점 집중"},
+    {"block": 5, "title": "레버리지 파생 -80억"},
+    {"block": 6, "title": "AI 스타트업 엔젤 3억"},
+    {"block": 7, "title": "스타트업 먹튀 -3억"},
+    {"block": 8, "title": "반도체 사이클 정점 전량 청산"},
+    {"block": 9, "title": "코인 규제 공매도 300억"},
+    {"block": 10, "title": "코인 완성. '다음.'"},
+    {"block": 11, "title": "HBM4 팹리스 인수"},
+    {"block": 12, "title": "김태석 스카우트"},
+    {"block": 13, "title": "TSMC 2.5D 패키징 협력사"},
+    {"block": 14, "title": "HBM4 대량 납품 계약"},
+    {"block": 15, "title": "타자 POV: '반도체 다 먹었다'"},
+    {"block": 16, "title": "항암ADC 임상 기업 M&A"},
+    {"block": 17, "title": "반도체 설계 코스닥 상장"},
+    {"block": 18, "title": "엔지니어 3명 이탈"},
+    {"block": 19, "title": "형 이준혁 첫 대면"},
+    {"block": 20, "title": "반도체 완성. 자산 4조. '다음.'"},
+    {"block": 21, "title": "서울 동북권 재개발 선취매"},
+    {"block": 22, "title": "항암ADC 임상 3상 성공"},
+    {"block": 23, "title": "J-DC리츠 설립"},
+    {"block": 24, "title": "LLM 시리즈A 선점"},
+    {"block": 25, "title": "타자 POV: '동시에 세 개?'"},
+    {"block": 26, "title": "AI 엣지칩 인수"},
+    {"block": 27, "title": "J-DC리츠 코스피 상장"},
+    {"block": 28, "title": "실리콘밸리 AI 펀드"},
+    {"block": 29, "title": "PF 역발상 -1.5조"},
+    {"block": 30, "title": "바이오+부동산 완성. 자산 12조. '다음.'"},
+    {"block": 31, "title": "버티컬 패션 커머스 인수"},
+    {"block": 32, "title": "B2B SaaS 통합 클라우드"},
+    {"block": 33, "title": "일본 게임사 IP 800개"},
+    {"block": 34, "title": "게임 개발팀 집단 퇴사"},
+    {"block": 35, "title": "권도준 영입, 방산 포석"},
+    {"block": 36, "title": "타자 POV: 'IP까지 쓸어담고 있다'"},
+    {"block": 37, "title": "AI 완성. 자산 20조. '다음.'"},
+    {"block": 38, "title": "K-pop 기획사 인수. J캐피탈파트너스"},
+    {"block": 39, "title": "OTT 플랫폼 설립"},
+    {"block": 40, "title": "아시아 공동 투자 펀드 2조"},
+    {"block": 41, "title": "이준민 공매도 연합"},
+    {"block": 42, "title": "공정위 M&A 3개월 동결"},
+    {"block": 43, "title": "이커머스+게임 완성. 무혐의. 자산 35조. '다음.'"},
+    {"block": 44, "title": "PE 1호 펀드 5조"},
+    {"block": 45, "title": "저축은행 인수·핀테크"},
+    {"block": 46, "title": "타자 POV: '선례가 없다'"},
+    {"block": 47, "title": "K-럭셔리 브랜드 인수"},
+    {"block": 48, "title": "재벌 연합 이탈 시작"},
+    {"block": 49, "title": "글로벌 콘텐츠 IP 라이선싱"},
+    {"block": 50, "title": "1차 입원. 엔터 완성. 자산 45조"},
+    {"block": 51, "title": "대체육·F&B 글로벌"},
+    {"block": 52, "title": "타자 POV: '현금 부족할 거야'"},
+    {"block": 53, "title": "SMR 개발사 인수"},
+    {"block": 54, "title": "금융+패션 완성. 자산 60조. '다음.'"},
+    {"block": 55, "title": "방산 드론 납품 1호"},
+    {"block": 56, "title": "해상풍력 개발권"},
+    {"block": 57, "title": "SMR 인허가 18개월 지연"},
+    {"block": 58, "title": "이준혁 접촉"},
+    {"block": 59, "title": "J제국홀딩스 설립 선언. '먹는다. 내 방식으로.'"},
+    {"block": 60, "title": "전고체 배터리 인수"},
+    {"block": 61, "title": "이준민 구속"},
+    {"block": 62, "title": "헤지펀드 공개 매수 + 2차 입원"},
+    {"block": 63, "title": "에너지 완성. 자산 90조. 채권단 협상"},
+    {"block": 64, "title": "긴급 10조 조달"},
+    {"block": 65, "title": "역공 스퀴즈"},
+    {"block": 66, "title": "경영권 확보. 이사회 첫 발언"},
+    {"block": 67, "title": "방산 완성. 구조조정"},
+    {"block": 68, "title": "J제국홀딩스 출범"},
+    {"block": 69, "title": "글로벌 AAA"},
+    {"block": 70, "title": "다음 섹터."}
+  ]
+}

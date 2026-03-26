@@ -1,0 +1,28 @@
+{
+  "work_id": "wuxia_third_rate_sect_master",
+  "snapshot_date": "2026-03-24",
+  "stage0_artifacts": {
+    "source_manifest": true,
+    "profile_lock": true,
+    "material_bundle_summary": true,
+    "phase0_ready_snapshot": true
+  },
+  "profile_summary": {
+    "primary_profile": "wuxia",
+    "primary_subgenre": "training_wuxia_profile",
+    "secondary_profile": null
+  },
+  "go_checklist": {
+    "canonical_sources_present": true,
+    "canonical_vs_reference_separated": true,
+    "core_materials_concrete": true,
+    "do_not_fake_defined": true,
+    "manual_audit_note_present": true,
+    "npc_pool_linked_to_arena": true,
+    "crisis_pool_linked_to_arena": true,
+    "profile_locked": true,
+    "utf8_parseable": true
+  },
+  "manual_audit_note": "기획안(컨셉기획_048)이 70블록 전수 아크 구조표, NPC 10인 등퇴장표, 복선 7개 심기-회수 쌍, 패배 9개, 교육 경지 100점 성장곡선을 완비하고 있음. Phase 0에 바로 투입 가능한 재료가 풍부. 비어 있는 항목(재정 구체치, 등급제 세부, 비무 규칙)은 TR 단계에서 상세화 가능한 수준. 감재안 한계/교육 인과관계/문파 운영 현실을 do_not_fake로 잠금 완료.",
+  "manual_audit_pass": true
+}

@@ -1,0 +1,151 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bi_blockguide.schema.json",
+  "title": "글도비 BI BlockGuide Schema",
+  "description": "투자물/현판/대체역사 등 blockguide 계열 BI 스키마. FinanceHUD 기반.",
+  "type": "object",
+  "required": ["MasterBible"],
+  "additionalProperties": true,
+  "properties": {
+    "_schema_version": { "type": "string" },
+    "_schema_description": { "type": "string" },
+    "_last_updated": { "type": "string", "format": "date" },
+    "_genre": { "type": "string" },
+    "MasterBible": {
+      "type": "object",
+      "required": ["ProjectData", "protagonist_config", "FinanceHUD", "plot_roadmap"],
+      "additionalProperties": true,
+      "properties": {
+        "ProjectData": {
+          "type": "object",
+          "required": ["MetaInfo", "CoreIdentity", "CommercialCode"],
+          "additionalProperties": true,
+          "properties": {
+            "MetaInfo": {
+              "type": "object",
+              "required": ["title"],
+              "additionalProperties": true,
+              "properties": {
+                "title": { "type": "string", "minLength": 1 },
+                "grand_objective": { "type": "string" },
+                "genre_archetype": { "type": "string" },
+                "logline": { "type": "string" },
+                "total_episodes": { "type": "integer", "minimum": 1 },
+                "episodes_per_arc": { "type": "integer", "minimum": 1 },
+                "arcs_per_volume": { "type": "integer", "minimum": 1 }
+              }
+            },
+            "CoreIdentity": {
+              "type": "object",
+              "required": ["protagonist"],
+              "additionalProperties": true,
+              "properties": {
+                "protagonist": { "type": "string", "minLength": 1 },
+                "protagonist_faction": { "type": "string" },
+                "edge": { "type": "string" },
+                "desire": { "type": "string" },
+                "crisis": { "type": "string" }
+              }
+            },
+            "CommercialCode": {
+              "type": "object",
+              "additionalProperties": true,
+              "properties": {
+                "cider_point": { "type": "string" },
+                "success_device": { "type": "string" },
+                "attitude": { "type": "string" }
+              }
+            }
+          }
+        },
+        "protagonist_config": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "world_origin": { "type": "string" },
+            "incarnation_type": { "type": "string" },
+            "execution_doctrine": { "type": "string" },
+            "governance_doctrine": { "type": "string" },
+            "secrecy_rule": { "type": "string" }
+          }
+        },
+        "FinanceHUD": {
+          "type": "object",
+          "required": ["Protagonist"],
+          "additionalProperties": true,
+          "properties": {
+            "_description": { "type": "string" },
+            "Protagonist": {
+              "type": "object",
+              "required": ["actual_truth"],
+              "additionalProperties": true,
+              "properties": {
+                "actual_truth": {
+                  "type": "object",
+                  "required": ["name", "financial_status"],
+                  "additionalProperties": true,
+                  "properties": {
+                    "name": { "type": "string", "minLength": 1 },
+                    "alias": { "type": "string" },
+                    "age": { "type": "integer" },
+                    "rank": { "type": "string" },
+                    "financial_status": {
+                      "type": "object",
+                      "additionalProperties": true,
+                      "properties": {
+                        "mobilizable_capital": { "type": "string" },
+                        "total_assets": { "type": "string" },
+                        "max_assets": { "type": "string" },
+                        "liquid_cash": { "type": "string" },
+                        "stocks": { "type": "array", "items": { "type": "string" } },
+                        "real_estate": { "type": "array", "items": { "type": "string" } },
+                        "foreign_currency": { "type": "object", "additionalProperties": { "type": "string" } },
+                        "derivatives": { "type": "object", "additionalProperties": true },
+                        "company": { "type": "string" },
+                        "company_state": { "type": "string" },
+                        "business_lines": { "type": "array", "items": { "type": "string" } },
+                        "debt": { "type": "string" }
+                      }
+                    },
+                    "portfolio_history": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": true,
+                        "properties": {
+                          "episode": { "type": "integer" },
+                          "block": { "type": "integer" },
+                          "month": { "type": "string" },
+                          "total_assets": { "type": "string" },
+                          "event": { "type": "string" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "plot_roadmap": {
+          "type": "array",
+          "minItems": 70,
+          "maxItems": 70,
+          "items": {
+            "type": "object",
+            "additionalProperties": true,
+            "required": ["block"],
+            "properties": {
+              "block": { "type": "integer", "minimum": 1, "maximum": 70 },
+              "arc": { "type": "string" },
+              "summary": { "type": "string" },
+              "capital_before": { "type": "string" },
+              "capital_after": { "type": "string" },
+              "deal_type": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

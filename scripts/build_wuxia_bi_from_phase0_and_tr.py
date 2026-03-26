@@ -185,33 +185,217 @@ def build_treasures(protagonist: dict[str, Any], setting: dict[str, Any]) -> lis
     return treasures
 
 
+def _ext_text(block: dict[str, Any], field: str, default: str = "") -> str:
+    """Resolve a field from martial_ext (wuxguide) or genre_ext (blockguide)."""
+    return first_text(block, f"martial_ext.{field}", f"genre_ext.{field}", default=default)
+
+
+def _ext_nested(block: dict[str, Any], field: str, default: Any = "") -> Any:
+    """Resolve a nested field from martial_ext or genre_ext."""
+    val = get_nested(block, f"martial_ext.{field}")
+    if val not in (None, ""):
+        return val
+    return get_nested(block, f"genre_ext.{field}", default)
+
+
+def _resolve_reputation(raw: Any) -> str:
+    """Handle jianghu_reputation that may be a dict {before, after} or a plain string."""
+    if isinstance(raw, dict):
+        return as_text(raw.get("after")) or as_text(raw.get("before")) or ""
+    return as_text(raw)
+
+
+def _resolve_faction_position(raw: Any) -> str:
+    """Handle faction_status that may be a dict {affiliation, rank, ...} or a plain string."""
+    if isinstance(raw, dict):
+        rank = as_text(raw.get("rank"))
+        affiliation = as_text(raw.get("affiliation"))
+        if rank and affiliation:
+            return f"{rank} ({affiliation})"
+        return rank or affiliation or ""
+    return as_text(raw)
+
+
 def build_treatment_snapshot(treatment_blocks: list[dict[str, Any]]) -> dict[str, Any]:
     last_block = treatment_blocks[-1]
-    recent_martial_gains = unique(
-        [
-            as_text(get_nested(block, "genre_ext.martial_art_gain"))
-            for block in treatment_blocks
-            if not is_blankish(get_nested(block, "genre_ext.martial_art_gain"))
-        ]
-    )
-    recent_artifact_gains = unique(
-        [
-            as_text(get_nested(block, "genre_ext.artifact_or_manual_gain"))
-            for block in treatment_blocks
-            if not is_blankish(get_nested(block, "genre_ext.artifact_or_manual_gain"))
-            and as_text(get_nested(block, "genre_ext.artifact_or_manual_gain")).lower() not in {"none", "no", "none."}
-        ]
-    )
+
+    # Collect martial art gains across all blocks (wuxguide: martial_arts_acquired, blockguide: martial_art_gain)
+    recent_martial_gains: list[str] = []
+    recent_artifact_gains: list[str] = []
+    for block in treatment_blocks:
+        # martial_arts_acquired may be a list of strings
+        acq = _ext_nested(block, "martial_arts_acquired") or _ext_nested(block, "martial_art_gain")
+        if isinstance(acq, list):
+            recent_martial_gains.extend(as_text(item) for item in acq if not is_blankish(item))
+        elif not is_blankish(acq):
+            recent_martial_gains.append(as_text(acq))
+        art = _ext_nested(block, "artifact_or_manual_gain")
+        if not is_blankish(art) and as_text(art).lower() not in {"none", "no", "none."}:
+            if isinstance(art, list):
+                recent_artifact_gains.extend(as_text(item) for item in art if not is_blankish(item))
+            else:
+                recent_artifact_gains.append(as_text(art))
+
+    recent_martial_gains = unique(recent_martial_gains)
+    recent_artifact_gains = unique(recent_artifact_gains)
+
+    rep_raw = _ext_nested(last_block, "jianghu_reputation", default="unknown")
+    faction_raw = _ext_nested(last_block, "faction_status") or _ext_nested(last_block, "faction_position")
+
     return {
-        "current_realm": first_text(last_block, "genre_ext.realm_after", "genre_ext.realm_before", default="novice"),
-        "internal_energy": parse_int(get_nested(last_block, "genre_ext.internal_energy_after"), default=10),
-        "jianghu_reputation": first_text(last_block, "genre_ext.jianghu_reputation", default="unknown"),
-        "faction_position": first_text(last_block, "genre_ext.faction_position", default="unsettled"),
-        "enemy_pressure": first_text(last_block, "genre_ext.enemy_pressure", default="active"),
-        "current_opponent": first_text(last_block, "genre_ext.opponent.name", default=""),
+        "current_realm": _ext_text(last_block, "realm_after", default="") or _ext_text(last_block, "realm_before", default="novice"),
+        "internal_energy": _ext_text(last_block, "internal_energy_after", default="10"),
+        "jianghu_reputation": _resolve_reputation(rep_raw),
+        "faction_position": _resolve_faction_position(faction_raw) or "unsettled",
+        "enemy_pressure": _ext_text(last_block, "enemy_pressure", default="active"),
+        "current_opponent": _ext_text(last_block, "opponent.name", default=""),
         "recent_martial_gains": recent_martial_gains,
         "recent_artifact_gains": recent_artifact_gains,
         "last_confirmed_block": len(treatment_blocks),
+    }
+
+
+def extract_realm_history(treatment_blocks: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Extract realm transition history from TR blocks (harness §2.2 realm_history)."""
+    history: list[dict[str, Any]] = []
+    prev_realm = ""
+    for i, block in enumerate(treatment_blocks):
+        realm_after = _ext_text(block, "realm_after")
+        if realm_after and realm_after != prev_realm:
+            event = as_text(block.get("title", ""))
+            history.append({"block": i + 1, "realm": realm_after, "event": event})
+            prev_realm = realm_after
+    return history
+
+
+def extract_injury_log(treatment_blocks: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Extract injury log from TR blocks (harness §2.2 injury_log)."""
+    log: list[dict[str, Any]] = []
+    for i, block in enumerate(treatment_blocks):
+        inj = _ext_nested(block, "injury_status")
+        if isinstance(inj, dict):
+            change = as_text(inj.get("change", ""))
+            if change and change not in ("변동 없음", "없음", ""):
+                current = as_text(inj.get("current", ""))
+                log.append({"block": i + 1, "injury": current, "change": change, "recovery_block": None})
+    # Try to link recoveries: if a later block says "정상" or "완전 회복", mark previous injury's recovery_block
+    for idx, entry in enumerate(log):
+        if "정상" in entry.get("change", "") or "회복" in entry.get("change", ""):
+            # Find the most recent non-recovered injury before this
+            for prev_idx in range(idx - 1, -1, -1):
+                if log[prev_idx]["recovery_block"] is None and "정상" not in log[prev_idx].get("change", ""):
+                    log[prev_idx]["recovery_block"] = entry["block"]
+                    break
+    return log
+
+
+def extract_kill_log(treatment_blocks: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Extract kill log from TR blocks (harness §2.2 kill_log)."""
+    log: list[dict[str, Any]] = []
+    for i, block in enumerate(treatment_blocks):
+        kc = _ext_nested(block, "kill_count")
+        if isinstance(kc, int) and kc > 0:
+            target = _ext_text(block, "opponent.name", default="불명")
+            method = _ext_text(block, "strategy", default="불명")
+            log.append({"block": i + 1, "target": target, "method": method})
+    return log
+
+
+def extract_martial_arts_final(treatment_blocks: list[dict[str, Any]]) -> list[dict[str, str]]:
+    """Extract final martial arts inventory from all TR blocks."""
+    arts: list[dict[str, str]] = []
+    seen: set[str] = set()
+    for i, block in enumerate(treatment_blocks):
+        acq = _ext_nested(block, "martial_arts_acquired") or _ext_nested(block, "martial_art_gain")
+        items: list[str] = []
+        if isinstance(acq, list):
+            items = [as_text(a) for a in acq if not is_blankish(a)]
+        elif not is_blankish(acq):
+            items = [as_text(acq)]
+        for art_name in items:
+            # Normalize: take the part before any parenthetical for dedup
+            key = art_name.split("(")[0].strip()
+            if key not in seen:
+                seen.add(key)
+                arts.append({
+                    "name": art_name,
+                    "origin": f"Block {i + 1}",
+                    "proficiency": "습득",
+                })
+    return arts
+
+
+def extract_faction_history(treatment_blocks: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Extract faction changes from TR blocks."""
+    history: list[dict[str, Any]] = []
+    prev_affiliation = ""
+    for i, block in enumerate(treatment_blocks):
+        fs = _ext_nested(block, "faction_status")
+        if isinstance(fs, dict):
+            aff = as_text(fs.get("affiliation", ""))
+            if aff and aff != prev_affiliation:
+                history.append({
+                    "block": i + 1,
+                    "faction": aff,
+                    "role": as_text(fs.get("rank", "")),
+                    "event": as_text(fs.get("change", "")),
+                })
+                prev_affiliation = aff
+    return history
+
+
+def _build_martial_status(
+    realm: str, snapshot: dict[str, Any], treatment_blocks: list[dict[str, Any]]
+) -> dict[str, Any]:
+    """Harness §2.1 martial_status nested structure."""
+    return {
+        "realm": realm,
+        "realm_history": extract_realm_history(treatment_blocks),
+        "internal_energy": as_text(snapshot.get("internal_energy")) or "10",
+        "martial_arts": extract_martial_arts_final(treatment_blocks),
+        "injury_log": extract_injury_log(treatment_blocks),
+        "kill_log": extract_kill_log(treatment_blocks),
+    }
+
+
+def _build_faction_status(
+    faction_map: dict[str, Any], snapshot: dict[str, Any], treatment_blocks: list[dict[str, Any]]
+) -> dict[str, Any]:
+    """Harness §2.1 faction_status nested structure."""
+    return {
+        "current_faction": as_text(snapshot.get("faction_position")) or faction_map["protagonist_faction"],
+        "faction_history": extract_faction_history(treatment_blocks),
+        "ally_factions": faction_map.get("allies", []),
+        "enemy_factions": faction_map.get("enemies", []),
+    }
+
+
+def _build_equipment(treasures: list[dict[str, str]], snapshot: dict[str, Any]) -> dict[str, Any]:
+    """Harness §2.1 equipment nested structure."""
+    weapons = [
+        {"name": item["name"], "grade": "범철", "origin": item.get("role", "")}
+        for item in treasures
+        if item.get("role") in {"inventory", "equipment"}
+    ]
+    artifacts = [
+        {"name": item["name"], "origin": item.get("role", "")}
+        for item in treasures
+        if item.get("role") in {"starter_asset", "martial_art"}
+    ]
+    for art_name in ensure_list(snapshot.get("recent_artifact_gains")):
+        if art_name:
+            artifacts.append({"name": art_name, "origin": "TR 습득"})
+    return {"weapons": weapons, "artifacts": artifacts}
+
+
+def _build_jianghu_reputation(snapshot: dict[str, Any], protagonist: dict[str, Any]) -> dict[str, Any]:
+    """Harness §2.1 jianghu_reputation nested structure."""
+    rep = as_text(snapshot.get("jianghu_reputation")) or first_text(protagonist, "reputation", default="무명")
+    return {
+        "jianghu_title": rep,
+        "feared_by": [],
+        "trusted_by": [],
+        "rumor_state": rep,
     }
 
 
@@ -221,6 +405,7 @@ def build_martial_hud(
     faction_map: dict[str, Any],
     treasures: list[dict[str, str]],
     snapshot: dict[str, Any],
+    treatment_blocks: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     name = first_text(protagonist, "name", default="주인공")
     alias = first_text(protagonist, "public_image", "alias", default=name)
@@ -252,7 +437,7 @@ def build_martial_hud(
                 "rank": first_text(protagonist, "status", default=realm),
                 "realm": realm,
                 "current_realm": realm,
-                "internal_energy": parse_int(snapshot.get("internal_energy"), default=first_number(protagonist, "internal_energy", "energy", "qi", default=10)),
+                "internal_energy": as_text(snapshot.get("internal_energy")) or str(first_number(protagonist, "internal_energy", "energy", "qi", default=10)),
                 "mental_method": first_text(protagonist, "mental_method", "core_art", "signature_art", default="기본 심법"),
                 "reputation": as_text(snapshot.get("jianghu_reputation")) or first_text(protagonist, "reputation", default="무명"),
                 "public_image": alias,
@@ -285,6 +470,11 @@ def build_martial_hud(
                 "status_tags": status_tags,
                 "physical_tags": physical_tags,
                 "last_confirmed_block": snapshot.get("last_confirmed_block", 0),
+                # Harness §2.1 nested structures
+                "martial_status": _build_martial_status(realm, snapshot, treatment_blocks or []),
+                "faction_status": _build_faction_status(faction_map, snapshot, treatment_blocks or []),
+                "equipment": _build_equipment(treasures, snapshot),
+                "jianghu_reputation": _build_jianghu_reputation(snapshot, protagonist),
             },
             "public_reputation": {
                 "identity": alias,
@@ -383,7 +573,7 @@ def build_bible(phase0: dict[str, Any], treatment_blocks: list[dict[str, Any]]) 
                 "attitude": first_text(setting, "attitude", default="강호의 질서와 정면 충돌하는 무협 서사"),
             },
         },
-        "MartialHUD": build_martial_hud(protagonist, setting, faction_map, treasures, snapshot),
+        "MartialHUD": build_martial_hud(protagonist, setting, faction_map, treasures, snapshot, treatment_blocks),
         "WorldState": {
             "CurrentEra": first_text(treatment_blocks[0], "time_span.in_story_time", default="작중 초반"),
             "CurrentLocation": first_text(treatment_blocks[0], "location.place", default="강호"),
@@ -436,7 +626,9 @@ def main() -> int:
     args = parser.parse_args()
 
     phase0 = load_json(args.phase0)
-    treatment_blocks = load_json(args.draft)
+    draft_raw = load_json(args.draft)
+    # Support both wrapped {"blocks": [...]} and plain list formats
+    treatment_blocks = draft_raw["blocks"] if isinstance(draft_raw, dict) and "blocks" in draft_raw else draft_raw
     tr_valid, tr_errors, _tr_warnings = validate_treatment_structure(treatment_blocks)
     require(tr_valid, f"Treatment draft validation failed: {tr_errors}")
     require(isinstance(treatment_blocks, list) and len(treatment_blocks) == 70, "Treatment draft must contain 70 blocks")
