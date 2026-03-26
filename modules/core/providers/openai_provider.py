@@ -103,4 +103,6 @@ class OpenAIProvider:
             usage=usage,
             raw=raw,
             provider=self.provider_name,
+            backend="openai_direct",
+            family="gpt",
         )

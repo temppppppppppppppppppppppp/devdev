@@ -85,4 +85,6 @@ class AnthropicProvider:
             usage=usage,
             raw=raw,
             provider=self.provider_name,
+            backend="anthropic_direct",
+            family="claude",
         )

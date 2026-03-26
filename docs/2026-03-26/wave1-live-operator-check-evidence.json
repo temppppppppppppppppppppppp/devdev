@@ -1,0 +1,66 @@
+{
+  "auth": {
+    "gemini_ready": true,
+    "vertex_mode": "api_key",
+    "vertex_ready": true,
+    "credentials": {
+      "GOOGLE_API_KEY": "present",
+      "VERTEX_API_KEY": "present",
+      "VERTEX_PROJECT_ID": "ABSENT",
+      "VERTEX_LOCATION": "ABSENT",
+      "GOOGLE_APPLICATION_CREDENTIALS": "ABSENT"
+    }
+  },
+  "gemini_direct": {
+    "status": "PASS",
+    "text": "canary-",
+    "provider": "gemini",
+    "backend": "google_direct",
+    "family": "gemini",
+    "finish_reason": "FinishReason.MAX_TOKENS",
+    "usage": {
+      "prompt_token_count": 10,
+      "candidates_token_count": 3,
+      "total_token_count": 36,
+      "thoughts_token_count": 23,
+      "cached_content_token_count": null
+    },
+    "elapsed_s": 1.37
+  },
+  "vertex": {
+    "status": "PASS",
+    "text": "can",
+    "provider": "vertex_ai",
+    "backend": "google_vertex",
+    "family": "gemini",
+    "finish_reason": "FinishReason.MAX_TOKENS",
+    "usage": {
+      "prompt_token_count": 9,
+      "candidates_token_count": 1,
+      "total_token_count": 35,
+      "thoughts_token_count": 25,
+      "cached_content_token_count": null
+    },
+    "elapsed_s": 12.14
+  },
+  "distinguishable": true,
+  "metrics_scope": {
+    "total_calls": 2,
+    "total_tokens": 23,
+    "total_cost_usd": 1.6e-05,
+    "model_breakdown": {
+      "gemini-2.5-flash": {
+        "tokens": 13,
+        "cost": 1.1e-05,
+        "cached_tokens": 0,
+        "thinking_tokens": 0
+      },
+      "vertexai:gemini-2.5-flash": {
+        "tokens": 10,
+        "cost": 5e-06,
+        "cached_tokens": 0,
+        "thinking_tokens": 0
+      }
+    }
+  }
+}

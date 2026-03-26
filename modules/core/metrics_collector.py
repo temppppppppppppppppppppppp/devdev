@@ -38,6 +38,9 @@ class AgentMetric:
     cached_tokens: int = 0
     thinking_tokens: int = 0
     error_type: str | None = None
+    provider: str = "unknown"
+    backend: str = "unknown"
+    family: str = "unknown"
 
     @property
     def duration_ms(self) -> float:
@@ -69,6 +72,11 @@ class SessionStats:
 
 
 # 모델별 토큰 비용 (USD per 1M tokens, Google 공식 2026-03 기준, ≤200K context)
+#
+# Vertex AI billing: Vertex AI uses the same per-token pricing as the Gemini
+# Developer API for equivalent models. _normalize_billable_model() strips the
+# "vertexai:"/"vertex:" prefix so Vertex calls resolve to the same cost entries.
+# If Vertex pricing diverges in the future, add explicit "vertex:*" keys here.
 MODEL_COSTS = {
     "gemini-2.5-flash": {
         "input": 0.30, "output": 2.50,
@@ -80,6 +88,20 @@ MODEL_COSTS = {
     },
     "default": {"input": 1.25, "output": 10.00, "cache_read": 0.125},
 }
+
+
+def _infer_provider_identity(model: str) -> tuple[str, str, str]:
+    """Return (provider, backend, family) from model name prefix."""
+    lowered = (model or "").strip().lower()
+    if lowered.startswith(("vertexai:", "vertex:", "vertex/")):
+        return ("vertex_ai", "google_vertex", "gemini")
+    if lowered.startswith("gemini"):
+        return ("gemini", "google_direct", "gemini")
+    if lowered.startswith("claude"):
+        return ("anthropic", "anthropic_direct", "claude")
+    if lowered.startswith(("gpt", "o1", "o3", "o4")):
+        return ("openai", "openai_direct", "gpt")
+    return ("unknown", "unknown", "unknown")
 
 
 def _normalize_billable_model(model: str) -> str:
@@ -198,7 +220,11 @@ class MetricsCollector:
                 for mid in stale_ids:
                     del self._metrics[mid]
 
-            metric = AgentMetric(agent_name=agent_name, model=model, start_time=time.time())
+            provider, backend, family = _infer_provider_identity(model)
+            metric = AgentMetric(
+                agent_name=agent_name, model=model, start_time=time.time(),
+                provider=provider, backend=backend, family=family,
+            )
             self._metrics[metric_id] = metric
             self._agent_calls[agent_name] += 1
 
@@ -214,6 +240,9 @@ class MetricsCollector:
         cached_tokens: int = 0,
         thinking_tokens: int = 0,
         error_type: str | None = None,
+        provider: str | None = None,
+        backend: str | None = None,
+        family: str | None = None,
     ):
         """
         에이전트 호출 종료 기록
@@ -225,6 +254,9 @@ class MetricsCollector:
             input_tokens: 입력 토큰 수
             output_tokens: 출력 토큰 수
             error_type: 에러 타입 (실패 시)
+            provider: provider 이름 override (start_call 추론값 우선)
+            backend: backend override
+            family: family override
         """
         with self._lock:
             if metric_id not in self._metrics:
@@ -239,6 +271,12 @@ class MetricsCollector:
             metric.cached_tokens = max(0, min(int(cached_tokens or 0), int(input_tokens or 0)))
             metric.thinking_tokens = max(0, int(thinking_tokens or 0))
             metric.error_type = error_type
+            if provider:
+                metric.provider = provider
+            if backend:
+                metric.backend = backend
+            if family:
+                metric.family = family
 
             # 집계 업데이트
             agent = metric.agent_name
