@@ -215,6 +215,48 @@ class TestPhase0Recovery:
         assert saved["pov"] == "3인칭"
         assert saved["external_pov_insert_policy"] == "제한적 허용"
 
+    def test_save_phase0_protagonist_config_merges_existing_family_fields(self, app_mock):
+        app_mock.current_project.master_bible = {
+            "MasterBible": {
+                "protagonist_config": {
+                    "name": "진무",
+                    "martial_lineage": "화산파",
+                    "pov": "1인칭",
+                }
+            }
+        }
+
+        Stage01Helpers._save_phase0_protagonist_config(
+            app_mock,
+            {
+                "world_origin": "현대인",
+                "incarnation_type": "환생자",
+                "pov": "3인칭",
+                "external_pov_insert_policy": "제한적 허용",
+            },
+        )
+
+        saved = app_mock.current_project.master_bible["MasterBible"]["protagonist_config"]
+        assert saved["name"] == "진무"
+        assert saved["martial_lineage"] == "화산파"
+        assert saved["world_origin"] == "현대인"
+        assert saved["incarnation_type"] == "환생자"
+        assert saved["pov"] == "3인칭"
+
+    def test_save_phase0_protagonist_config_handles_non_dict_existing_config(self, app_mock):
+        app_mock.current_project.master_bible = {"MasterBible": {"protagonist_config": "legacy"}}
+
+        Stage01Helpers._save_phase0_protagonist_config(
+            app_mock,
+            {
+                "world_origin": "원시인",
+                "incarnation_type": "회귀자",
+            },
+        )
+
+        saved = app_mock.current_project.master_bible["MasterBible"]["protagonist_config"]
+        assert saved == {"world_origin": "원시인", "incarnation_type": "회귀자"}
+
     def test_no_bible_file_aborts(self, helpers, app_mock):
         """Bible 파일 없으면 중단"""
         app_mock._ui_select_bible.return_value = None

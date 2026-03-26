@@ -1,0 +1,92 @@
+[V61.3] Faulthandler 활성화 → crash_dump.log
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                          🎹 V40 SOVEREIGN COCKPIT                           │
+│                       Multi-Genre Production Factory                        │
+└─────────────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                            🎹 V40 GENRE SELECTOR                            │
+│                            장르별 전문 공정 선택                            │
+└─────────────────────────────────────────────────────────────────────────────┘
+   
+📚 [V40 Multi-Genre Factory] 장르를 선택하십시오:
+
+      1. 무협 (Wuxia)
+         → 강호 배경, 내공/경지 시스템, 무림 세력
+
+      2. 헌터 (Hunter Fantasy)
+         → 현대 배경, 각성/던전 시스템, 길드
+
+      3. 투자 (Investment Fiction)
+         → 금융 배경, 자본/투자 시스템, 기업/시장
+
+      4. 판타지 (Fantasy)
+         → 이세계 배경, 마법/마나 시스템, 종족/길드
+
+      5. 작곡가 (Composer Fiction)
+         → 현대 배경, 음악 창작/산업 시스템, 작곡/프로듀싱
+
+      6. 요리 (Cooking Fiction)
+         → 현대 배경, 셰프 성장/식당 경영 시스템, 요리/미식
+
+      7. 대체역사 (Alt History)
+         → 조선 시대 배경, 관직/당파/신분 시스템, 궁중 정치
+
+      8. 배우물 (Actor Fiction)
+         → 현대 배경, 연예계/배우 성장 시스템, 오디션/촬영/시상식
+
+      9. 스포츠 (Sports Fiction)
+         → 현대 배경, 선수 성장/팀 스포츠 시스템, 경기/훈련
+
+      10. 의학 (Medical Fiction)
+         → 현대 배경, 의사 성장/병원 시스템, 수술/진료
+
+✏️ Choice (1.무협 / 2.헌터 / 3.투자 / 4.판타지 / 5.작곡가 / 6.요리 / 7.대체역사
+/ 8.배우물 / 9.스포츠 / 10.의학):    ✅ [무협 (Wuxia)] 전문 공정이 선택되었습니다.
+      📌 HUD 시스템: WUXIA
+      📦 프리셋 초기화: wuxia
+
+[Enter] 프로젝트 선택으로 이동    1. 000000
+    2. 00_0000001
+    3. 00_001
+    4. 00_0324
+    5. 00_0324_2
+    6. 0324_00_
+    7. 0_00000_1
+    8. 0_test
+    9. MagicMock
+    10. _unknown_project
+    11. canary_0325
+    12. canary_0325_overval_s3
+    13. canary_0325_post
+    14. canary_0325_stage4_fix
+    15. canary_0325_stage4_wave2
+    16. canary_0326_arc_boundary
+    17. canary_0326_lookback_boundary
+    18. canary_0326_stage3_pfee
+    19. canary_0326_stage3_telemetry
+    20. projects
+    21. smoke_fixture_demo
+    22. test_project
+    23. wuxia_probe_combat
+    24. 기록용
+    25. 코덱스_테스트
+    26. 코덱스_테스트__pre_live_merge_backup_20260320_092815
+    27. 코덱스_테스트__seed_live_run_capture_20260320_092956
+
+👉 Choice:       ✅ [TF7-P0-03] preset_registry DB에서 복원 완료
+      ✅ [무협 (Wuxia)] HUD 시스템 초기화 완료
+      🔍 [V61.3] HUD 호환성 체크: MartialManager
+         ✅ 필수 속성 모두 존재
+         ⚠️ 선택적 속성 누락 (정상): snapshot (method), bulk_update (method)
+   🛡️ [무협 (Wuxia)] Guard 시스템 초기화 완료
+   ✅ [System] Vector DB integrity check complete.
+   ✅ [VecMemory] sqlite-vec 벡터 엔진 초기화 완료
+[V61.3] Faulthandler 활성화 → crash_dump.log
+
+=== STDERR ===
+object address  : 000001F013A2B0A0
+object refcount : 3
+object type     : 00007FFA4F7411B0
+object type name: ValueError
+object repr     : ValueError('I/O operation on closed file.')
+lost sys.stderr

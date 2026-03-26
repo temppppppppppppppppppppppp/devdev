@@ -799,6 +799,8 @@ class ProjectContext:
             with open(treatment_path, encoding="utf-8") as f:
                 treatment_data = json.load(f)
 
+            from modules.core.stage0_handoff import build_plot_roadmap_from_treatment
+
             # [V49.3] Phase 0 JSON 스키마 검증
             try:
                 from modules.core.response_schemas import validate_phase0_files
@@ -838,11 +840,10 @@ class ProjectContext:
 
             # 3. 트리트먼트 블록을 plot_roadmap 규격으로 변환하여 주입
             # [V62.2] flat 구조: block_no + 원본 필드 전체 (중복 래핑 제거)
-            refined_roadmap = []
-            for i, block in enumerate(treatment_data):
-                entry = {"block_no": i + 1}
-                entry.update(block)
-                refined_roadmap.append(entry)
+            refined_roadmap = build_plot_roadmap_from_treatment(treatment_data)
+            if not refined_roadmap:
+                logging.warning(" [DNA Sync Error] canonical treatment normalization produced no roadmap entries")
+                return False
 
             # 4. 성경 객체에 최종 로드맵 결합
             master_bible["plot_roadmap"] = refined_roadmap
