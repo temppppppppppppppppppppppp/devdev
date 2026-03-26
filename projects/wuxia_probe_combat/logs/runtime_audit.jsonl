@@ -1,0 +1,13 @@
+{"timestamp": "2026-03-26 15:21:02", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 1, "corrections": ["arc_end_state 위치 동기화: '알 수 없음' → '하남성 진가장 본산, 비무대 아래 임시 치료용 천막 안 소풍의 병상 곁'"]}}
+{"timestamp": "2026-03-26 15:21:25", "type": "field_repair", "message": "hybrid_composition missing", "data": {"arc_idx": 1}}
+{"timestamp": "2026-03-26 15:21:25", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-03-26 15:21:56", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 1, "target_arc_no": 2, "items_tracked": 2}}
+{"timestamp": "2026-03-26 15:25:27", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 2, "corrections": ["[C-1] tactical_doc 메타 용어 'Arc'를 서사 용어로 치환"]}}
+{"timestamp": "2026-03-26 15:28:43", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-03-26 15:29:14", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 2, "target_arc_no": 3, "items_tracked": 3}}
+{"timestamp": "2026-03-26 15:34:03", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-03-26 15:34:03", "type": "blueprint_success", "message": "ep_1_blueprint_generated", "data": {"ep_num": 1, "arc_no": 1, "strategy": "action_focused", "score": 90, "final_verdict": "PASS", "quality_risk": true, "revision_required": true}}
+{"timestamp": "2026-03-26 15:40:00", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-03-26 15:40:00", "type": "blueprint_success", "message": "ep_2_blueprint_generated", "data": {"ep_num": 2, "arc_no": 1, "strategy": "action_focused", "score": 91, "final_verdict": "PASS", "quality_risk": true, "revision_required": true}}
+{"timestamp": "2026-03-26 15:44:10", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-03-26 15:44:10", "type": "blueprint_success", "message": "ep_3_blueprint_generated", "data": {"ep_num": 3, "arc_no": 1, "strategy": "action_focused", "score": 90, "final_verdict": "PASS", "quality_risk": true, "revision_required": true}}

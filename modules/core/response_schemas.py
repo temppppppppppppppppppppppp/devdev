@@ -10,6 +10,7 @@ from copy import deepcopy
 
 from google.genai import types
 
+from modules.core.stage0_handoff import resolve_treatment_block_sequence
 from modules.core.llm_schema import schema_to_dict, to_gemini_schema
 
 # =================================================================
@@ -811,7 +812,7 @@ def validate_bible_structure(bible_data: dict) -> tuple:
     return is_valid, errors, warnings
 
 
-def validate_treatment_structure(treatment_data: list) -> tuple:
+def validate_treatment_structure(treatment_data) -> tuple:
     """
     [V49.3] Treatment 파일 구조 검증
 
@@ -824,14 +825,15 @@ def validate_treatment_structure(treatment_data: list) -> tuple:
     errors = []
     warnings = []
 
-    if not isinstance(treatment_data, list):
-        return False, ["Treatment 데이터가 list 형식이 아닙니다"], []
+    raw_blocks = resolve_treatment_block_sequence(treatment_data)
+    if raw_blocks is None:
+        return False, ["Treatment 데이터가 list/dict.blocks/dict.treatments 형식이 아닙니다"], []
 
-    if len(treatment_data) == 0:
+    if len(raw_blocks) == 0:
         return False, ["Treatment 데이터가 비어있습니다"], []
 
     # 각 블록 검증
-    for i, block in enumerate(treatment_data):
+    for i, block in enumerate(raw_blocks):
         block_idx = i + 1
 
         if not isinstance(block, dict):
@@ -869,6 +871,7 @@ def validate_phase0_files(bible_data: dict, treatment_data: list) -> tuple:
     """
     bible_valid, bible_errors, bible_warnings = validate_bible_structure(bible_data)
     treatment_valid, treatment_errors, treatment_warnings = validate_treatment_structure(treatment_data)
+    raw_blocks = resolve_treatment_block_sequence(treatment_data) or []
 
     report = {
         "bible": {"valid": bible_valid, "errors": bible_errors, "warnings": bible_warnings},
@@ -876,7 +879,7 @@ def validate_phase0_files(bible_data: dict, treatment_data: list) -> tuple:
             "valid": treatment_valid,
             "errors": treatment_errors,
             "warnings": treatment_warnings,
-            "block_count": len(treatment_data) if isinstance(treatment_data, list) else 0,
+            "block_count": len(raw_blocks),
         },
         "overall_valid": bible_valid and treatment_valid,
     }

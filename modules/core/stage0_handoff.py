@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import re
 from typing import Any
 
 
@@ -17,21 +18,69 @@ class PlotRoadmapStatus:
         return bool(self.roadmap) and not self.warnings
 
 
-def build_plot_roadmap_from_treatment(treatment: Any) -> list[dict[str, Any]]:
-    """Normalize Stage 0 treatment blocks into the flat roadmap shape Stage 2 reads."""
-    if isinstance(treatment, dict):
-        treatment = treatment.get("treatments", [])
-    if not isinstance(treatment, list):
+def _extract_block_no(value: Any) -> int | None:
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        return value if value > 0 else None
+    if isinstance(value, float):
+        if value.is_integer() and value > 0:
+            return int(value)
+        return None
+    if not isinstance(value, str):
+        return None
+
+    text = value.strip()
+    if not text:
+        return None
+    if text.isdigit():
+        return int(text)
+    match = re.search(r"(\d+)", text)
+    if match:
+        return int(match.group(1))
+    return None
+
+
+def resolve_treatment_block_sequence(treatment: Any) -> list[Any] | None:
+    if isinstance(treatment, list):
+        return treatment
+    if not isinstance(treatment, dict):
+        return None
+
+    candidate_lists: list[list[Any]] = []
+    for key in ("blocks", "treatments"):
+        value = treatment.get(key)
+        if isinstance(value, list):
+            candidate_lists.append(value)
+    if not candidate_lists:
+        return None
+    return next((blocks for blocks in candidate_lists if blocks), candidate_lists[0])
+
+
+def normalize_treatment_blocks(treatment: Any) -> list[dict[str, Any]]:
+    blocks = resolve_treatment_block_sequence(treatment)
+    if blocks is None:
         return []
 
-    roadmap: list[dict[str, Any]] = []
-    for i, block in enumerate(treatment):
+    normalized: list[dict[str, Any]] = []
+    for index, block in enumerate(blocks, start=1):
         if not isinstance(block, dict):
             continue
-        entry = {"block_no": i + 1}
-        entry.update(block)
-        roadmap.append(entry)
-    return roadmap
+
+        entry = dict(block)
+        entry["block_no"] = (
+            _extract_block_no(entry.get("block_no"))
+            or _extract_block_no(entry.get("block"))
+            or _extract_block_no(entry.get("block_id"))
+            or index
+        )
+        normalized.append(entry)
+    return normalized
+
+
+def build_plot_roadmap_from_treatment(treatment: Any) -> list[dict[str, Any]]:
+    """Normalize Stage 0 treatment blocks into the flat roadmap shape Stage 2 reads."""
+    return normalize_treatment_blocks(treatment)
 
 
 def build_plot_roadmap_from_saved_arcs(app: Any) -> list[dict[str, Any]]:

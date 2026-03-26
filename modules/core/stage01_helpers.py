@@ -308,10 +308,16 @@ class Stage01Helpers:
         try:
             master_bible = app.current_project.master_bible or {}
             bible_root = master_bible.get("MasterBible", master_bible)
-            bible_root["protagonist_config"] = protagonist_config
+            existing_config = bible_root.get("protagonist_config", {})
+            if not isinstance(existing_config, dict):
+                existing_config = {}
+            merged_config = dict(existing_config)
+            if isinstance(protagonist_config, dict):
+                merged_config.update(protagonist_config)
+            bible_root["protagonist_config"] = merged_config
             app.current_project.master_bible = {"MasterBible": bible_root}
             app.current_project.save_v20_anchor("bible", app.current_project.master_bible)
-            app.ui.log(f"   💾 [V60.87] 주인공 설정이 Bible에 저장됨: {protagonist_config}")
+            app.ui.log(f"   💾 [V60.87] 주인공 설정이 Bible에 저장됨: {merged_config}")
         except Exception as pc_err:
             logging.warning(f" [V60.87] 주인공 설정 저장 실패 (비차단): {pc_err}")
 
