@@ -1,0 +1,195 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bi_wuxguide.schema.json",
+  "title": "글도비 BI WuxGuide Schema",
+  "description": "무협 계열 BI 스키마. MartialHUD 기반.",
+  "type": "object",
+  "required": ["MasterBible"],
+  "additionalProperties": true,
+  "properties": {
+    "_schema_version": { "type": "string" },
+    "_schema_description": { "type": "string" },
+    "_last_updated": { "type": "string", "format": "date" },
+    "_genre": { "type": "string" },
+    "MasterBible": {
+      "type": "object",
+      "required": ["ProjectData", "protagonist_config", "MartialHUD", "plot_roadmap"],
+      "additionalProperties": true,
+      "properties": {
+        "ProjectData": {
+          "type": "object",
+          "required": ["MetaInfo", "CoreIdentity", "CommercialCode"],
+          "additionalProperties": true,
+          "properties": {
+            "MetaInfo": {
+              "type": "object",
+              "required": ["title"],
+              "additionalProperties": true,
+              "properties": {
+                "title": { "type": "string", "minLength": 1 },
+                "grand_objective": { "type": "string" },
+                "genre_archetype": { "type": "string" },
+                "logline": { "type": "string" },
+                "total_episodes": { "type": "integer", "minimum": 1 },
+                "episodes_per_arc": { "type": "integer", "minimum": 1 },
+                "arcs_per_volume": { "type": "integer", "minimum": 1 }
+              }
+            },
+            "CoreIdentity": {
+              "type": "object",
+              "required": ["protagonist"],
+              "additionalProperties": true,
+              "properties": {
+                "protagonist": { "type": "string", "minLength": 1 },
+                "protagonist_faction": { "type": "string" },
+                "edge": { "type": "string" },
+                "desire": { "type": "string" },
+                "crisis": { "type": "string" }
+              }
+            },
+            "CommercialCode": {
+              "type": "object",
+              "additionalProperties": true,
+              "properties": {
+                "cider_point": { "type": "string" },
+                "success_device": { "type": "string" },
+                "attitude": { "type": "string" }
+              }
+            }
+          }
+        },
+        "protagonist_config": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "world_origin": { "type": "string" },
+            "incarnation_type": { "type": "string" },
+            "realm_progression": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": true,
+                "properties": {
+                  "block": { "type": "integer" },
+                  "realm": { "type": "string" },
+                  "event": { "type": "string" }
+                }
+              }
+            },
+            "martial_arts_progression": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": true,
+                "properties": {
+                  "name": { "type": "string" },
+                  "block_acquired": { "type": "integer" },
+                  "origin": { "type": "string" },
+                  "final_proficiency": { "type": "string" }
+                }
+              }
+            },
+            "faction_progression": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": true,
+                "properties": {
+                  "block": { "type": "integer" },
+                  "faction": { "type": "string" },
+                  "role": { "type": "string" },
+                  "event": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "MartialHUD": {
+          "type": "object",
+          "required": ["Protagonist"],
+          "additionalProperties": true,
+          "properties": {
+            "_description": { "type": "string" },
+            "Protagonist": {
+              "type": "object",
+              "required": ["actual_truth"],
+              "additionalProperties": true,
+              "properties": {
+                "actual_truth": {
+                  "type": "object",
+                  "required": ["name", "martial_status"],
+                  "additionalProperties": true,
+                  "properties": {
+                    "name": { "type": "string", "minLength": 1 },
+                    "alias": { "type": "string" },
+                    "age": { "type": "integer" },
+                    "rank": { "type": "string" },
+                    "martial_status": {
+                      "type": "object",
+                      "required": ["realm"],
+                      "additionalProperties": true,
+                      "properties": {
+                        "realm": { "type": "string", "minLength": 1 },
+                        "realm_history": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "additionalProperties": true,
+                            "properties": {
+                              "block": { "type": "integer" },
+                              "realm": { "type": "string" },
+                              "event": { "type": "string" }
+                            }
+                          }
+                        },
+                        "internal_energy": { "type": "string" },
+                        "martial_arts": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "additionalProperties": true,
+                            "properties": {
+                              "name": { "type": "string" },
+                              "origin": { "type": "string" },
+                              "proficiency": { "type": "string" }
+                            }
+                          }
+                        },
+                        "faction": { "type": "string" },
+                        "faction_role": { "type": "string" },
+                        "equipment": { "type": "object", "additionalProperties": true },
+                        "injuries": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+                        "allies": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+                        "enemies": { "type": "array", "items": { "type": "object", "additionalProperties": true } }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "plot_roadmap": {
+          "type": "array",
+          "minItems": 70,
+          "maxItems": 70,
+          "items": {
+            "type": "object",
+            "additionalProperties": true,
+            "required": ["block"],
+            "properties": {
+              "block": { "type": "integer", "minimum": 1, "maximum": 70 },
+              "arc": { "type": "string" },
+              "summary": { "type": "string" },
+              "realm_before": { "type": "string" },
+              "realm_after": { "type": "string" },
+              "internal_energy_before": { "type": "string" },
+              "internal_energy_after": { "type": "string" },
+              "martial_event": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

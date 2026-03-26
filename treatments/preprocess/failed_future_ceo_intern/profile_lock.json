@@ -1,0 +1,17 @@
+{
+  "primary_profile": "office_power_profile",
+  "secondary_profile": "business_growth_profile",
+  "resource_axis": "KPI 재설계권, 예산 전용 코드, 결재선 장악력, 프로젝트 오너십, 인사권 — 인턴에서 시작하여 승진마다 굴릴 수 있는 조직 자원이 확대됨. 후반부에는 시총(기업 가치), 지분, 스톡옵션이 성장 자원에 합류",
+  "power_axis": "직급 권한(인턴 zero → CEO full). 초반에는 정보 비대칭(전생 기억)을 우회 수단으로 활용하여 의사결정자를 움직이고, 중반 이후 직접 의사결정권과 조직 재배치 권한으로 전환",
+  "control_axis": "수혁 없이는 한라테크의 핵심 전략 전환(반도체→AI→배터리)이 굴러가지 않는 상태. 전생 기억 기반의 위기 예측 능력이 조직 내 불가결성을 만들고, 이것이 지분과 승진으로 고착됨",
+  "payoff_axis": "승진(직급 상승 + 권한 확대), 시총 증가(기업 성장의 가시적 수치), 적대자 퇴출/무력화(사이다), 전생의 실패를 뒤집는 분기점 통과(자기 증명)",
+  "failure_axis": "해고/좌천(직급 상실), 시총 급락(기업 위기 = 수혁의 기반 위기), 핵심 인재 이탈(조직력 손실), 전생과 동일 결정 반복(자기 판단 불신 심화), 빙의 정체 노출 위험",
+  "hud_interpretation": "Resource-Power HUD로 읽는다. capital = 시총 + 개인 지분가치 + 조직 내 권한 레벨. FinanceHUD는 돈만이 아니라 직급·프로젝트 통제권·파벌 세력 균형을 함께 표시. business_lines = 사업부(반도체/AI/배터리) + 사내 파벌 라인. company_state = 한라테크 현재 지배구조·파벌 균형·외부 위협 상태",
+  "domain_lines_interpretation": "business_lines는 한라테크의 사업부 라인(반도체 소재/장비, AI 데이터센터, 전기차 배터리)과 사내 조직 라인(경영전략실, 신사업팀, 연구소, 한라캐피탈)을 함께 담는다",
+  "arena_state_interpretation": "company_state는 한라테크의 지배구조 균형(한가 31% vs 외국인 28% vs 국민연금 9%), 이사회 권력 구도, 외부 위협(행동주의 펀드/기술 탈취/규제) 상태를 담는다",
+  "selection_rationale": [
+    "주 전장은 조직 권력전: 인턴에서 CEO까지의 승진 라인이 서사 엔진이며, KPI/예산/결재선/인사권/프로젝트 오너십이 매 블록의 핵심 자원 → office_power_profile",
+    "부 전장은 기업 성장/M&A/자본시장: 시총 15조→85조 성장 곡선, 적대적 M&A 방어, JV, 기술 라이선싱, 지분 매집 등 기업 운영·자본 전략이 중후반의 핵심 → business_growth_profile",
+    "investment_market_profile을 secondary로 두지 않은 이유: 이 작품은 금융 시장 자체가 전장이 아니라, 기업 내부 권력+사업 운영이 전장이므로 business_growth가 더 정확"
+  ]
+}

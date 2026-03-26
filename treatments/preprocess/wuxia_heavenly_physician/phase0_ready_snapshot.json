@@ -1,0 +1,12 @@
+{
+  "identity_locked": true,
+  "profile_locked": true,
+  "material_sufficient": true,
+  "manual_audit_pass": true,
+  "remaining_risks": [
+    "실제 경혈 기반 침법 상세 묘사 컨벤션 미확정 — TR 단계에서 합곡/족삼리 등 변형 규칙 정립 필요",
+    "약재 배합 구체 레시피 체계 미확정 — TR 단계에서 상세화",
+    "독역의 의학적 메커니즘 상세(전파 경로, 잠복기, 증상 진행) 미확정 — TR 초반부에서 확립",
+    "의술 비무(醫鬪) 세부 규칙 미확정 — TR 첫 의술 비무 블록(B07)에서 컨벤션 정립"
+  ]
+}

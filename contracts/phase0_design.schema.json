@@ -1,0 +1,345 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "phase0_design.schema.json",
+  "title": "Phase 0 Design",
+  "description": "Phase 0 narrative design document. Covers both blockguide and wuxguide families. Genre-specific extensions use additionalProperties.",
+  "type": "object",
+  "required": ["project", "protagonist", "setting", "phase0_design"],
+  "properties": {
+    "project": {
+      "type": "object",
+      "required": ["title_ko", "core_premise", "format", "logline"],
+      "properties": {
+        "title_ko": {
+          "type": "string",
+          "description": "Korean title of the work."
+        },
+        "core_premise": {
+          "type": "string",
+          "description": "One-paragraph premise summarizing the entire story engine."
+        },
+        "format": {
+          "type": "string",
+          "description": "Genre/format label (e.g. '현대 한국 재벌 하청 캐시플로우 장악물')."
+        },
+        "logline": {
+          "type": "string",
+          "description": "One-sentence hook for the story."
+        },
+        "start_year": {
+          "type": "integer",
+          "description": "In-story start year."
+        },
+        "end_year": {
+          "type": "integer",
+          "description": "In-story end year."
+        }
+      },
+      "additionalProperties": true
+    },
+    "setting": {
+      "type": "object",
+      "required": ["group_background", "execution_doctrine"],
+      "properties": {
+        "group_background": {
+          "type": "string",
+          "description": "World/group backdrop the protagonist operates within."
+        },
+        "execution_doctrine": {
+          "type": "string",
+          "description": "Core strategic doctrine the protagonist follows."
+        },
+        "starter_company": {
+          "type": "object",
+          "description": "Initial vehicle/organization (blockguide). Optional for wuxguide.",
+          "properties": {
+            "name": { "type": "string" },
+            "state": { "type": "string" },
+            "assets": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "liabilities": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "protagonist": {
+      "type": "object",
+      "required": ["name", "initial_goal", "mid_goal", "final_goal", "true_strength", "true_weakness"],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "description": "Social/organizational position at story start."
+        },
+        "public_image": {
+          "type": "string"
+        },
+        "true_strength": {
+          "type": "string"
+        },
+        "true_weakness": {
+          "type": "string"
+        },
+        "initial_goal": {
+          "type": "string"
+        },
+        "mid_goal": {
+          "type": "string"
+        },
+        "final_goal": {
+          "type": "string"
+        },
+        "age_at_start": {
+          "type": "integer"
+        }
+      },
+      "additionalProperties": true
+    },
+    "phase0_design": {
+      "type": "object",
+      "required": ["arcs"],
+      "properties": {
+        "arcs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["arc_id", "title", "block_range", "main_opponents", "emotion_curve"],
+            "properties": {
+              "arc_id": {
+                "type": "string",
+                "pattern": "^ARC-\\d{2}$",
+                "description": "Arc identifier, e.g. ARC-01."
+              },
+              "title": {
+                "type": "string"
+              },
+              "block_range": {
+                "type": "string",
+                "pattern": "^\\d+-\\d+$",
+                "description": "Block range, e.g. '1-10'."
+              },
+              "time_window": {
+                "type": "string",
+                "description": "In-story time span for this arc."
+              },
+              "capital_target": {
+                "type": "string",
+                "description": "Capital growth target (blockguide). Optional for wuxguide."
+              },
+              "front_sectors": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "Primary domain sectors active in this arc."
+              },
+              "support_sectors": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "Secondary/support sectors."
+              },
+              "main_opponents": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "Key antagonists for this arc."
+              },
+              "new_npcs": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "NPCs introduced in this arc."
+              },
+              "emotion_curve": {
+                "type": "string",
+                "description": "Emotional trajectory shorthand."
+              },
+              "quiet_blocks": {
+                "type": "array",
+                "items": { "type": "integer" },
+                "description": "Blocks designated as low-tension pacing slots."
+              },
+              "defeat_blocks": {
+                "type": "array",
+                "items": { "type": "integer" },
+                "description": "Blocks where the protagonist suffers setbacks."
+              },
+              "block_slots": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["block", "title", "function"],
+                  "properties": {
+                    "block": { "type": "integer" },
+                    "title": { "type": "string" },
+                    "function": {
+                      "type": "string",
+                      "description": "One-sentence narrative function of this block."
+                    }
+                  },
+                  "additionalProperties": true
+                },
+                "description": "Per-block slot descriptions. Optional; some works use entry/exit_function only."
+              },
+              "entry_function": {
+                "type": "string",
+                "description": "Narrative function at arc entry."
+              },
+              "exit_function": {
+                "type": "string",
+                "description": "Narrative function at arc exit."
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "npc_timeline": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "role", "summary", "first_block"],
+            "properties": {
+              "name": { "type": "string" },
+              "role": { "type": "string" },
+              "summary": { "type": "string" },
+              "first_block": { "type": "integer" },
+              "final_status": { "type": "string" },
+              "key_turning_points": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["block", "event"],
+                  "properties": {
+                    "block": { "type": "integer" },
+                    "event": { "type": "string" }
+                  },
+                  "additionalProperties": true
+                }
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "foreshadow_map": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "name", "seed_block", "payoff_block", "payoff_meaning"],
+            "properties": {
+              "id": { "type": "string" },
+              "name": { "type": "string" },
+              "seed_block": { "type": "integer" },
+              "hint_blocks": {
+                "type": "array",
+                "items": { "type": "integer" }
+              },
+              "payoff_block": { "type": "integer" },
+              "payoff_meaning": { "type": "string" }
+            },
+            "additionalProperties": true
+          }
+        },
+        "opponent_transition_plan": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["faction", "phase", "block_range", "main_actors", "goal"],
+            "properties": {
+              "faction": { "type": "string" },
+              "phase": { "type": "string" },
+              "block_range": { "type": "string" },
+              "entry_block": { "type": "integer" },
+              "main_actors": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "goal": { "type": "string" },
+              "methods": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "weakness": { "type": "string" },
+              "transition_block": { "type": "integer" }
+            },
+            "additionalProperties": true
+          }
+        },
+        "capital_curve": {
+          "type": "array",
+          "description": "Capital progression checkpoints (blockguide). Optional for wuxguide.",
+          "items": {
+            "type": "object",
+            "required": ["block", "event"],
+            "properties": {
+              "block": { "type": "integer" },
+              "total_assets": { "type": "string" },
+              "event": { "type": "string" }
+            },
+            "additionalProperties": true
+          }
+        },
+        "realm_path": {
+          "type": "array",
+          "description": "Realm/cultivation progression checkpoints (wuxguide). Optional for blockguide.",
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "internal_energy_curve": {
+          "type": "array",
+          "description": "Internal energy progression (wuxguide). Optional for blockguide.",
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "martial_art_path": {
+          "type": "array",
+          "description": "Martial art acquisition plan (wuxguide). Optional for blockguide.",
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "faction_map": {
+          "type": "array",
+          "description": "Sect/clan/faction layout (wuxguide). Optional for blockguide.",
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "treasure_path": {
+          "type": "array",
+          "description": "Treasure/manual/elixir acquisition plan (wuxguide). Optional for blockguide.",
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "taboo_rules": {
+          "type": "array",
+          "description": "Irreversible costs and forbidden actions (wuxguide). Optional for blockguide.",
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "do_not_fake": {
+          "type": "array",
+          "description": "Elements that must never be fabricated or handwaved.",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}

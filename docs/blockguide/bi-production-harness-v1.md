@@ -525,6 +525,37 @@ rg -n "�" bible\0_bi_chaebol_ent_empire.json
 
 ## 8. 5-Pass 감리
 
+### 8.0 5-Pass 감리 체크리스트
+
+아래 5개 Pass를 **순서대로** 실행한다. 앞 Pass가 FAIL이면 뒤 Pass로 넘어가지 않는다.
+
+| Pass | 검증 대상 | 통과 조건 요약 |
+| ---- | --------- | -------------- |
+| 1 | UTF-8 + JSON 파싱 | UTF-8 읽기 성공, JSON 파싱 성공, `???`/`�` 0건 |
+| 2 | plot_roadmap 70개 일치 | `plot_roadmap` 길이 = 70, 제목 = source TR 제목, `MasterBible.ProjectData.MetaInfo.title` 정상 한글 |
+| 3 | 주인공 최종 자산 | `FinanceHUD.Protagonist.actual_truth.financial_status`의 최종 자본 = TR 마지막 블록 `genre_ext.capital_after` |
+| 4 | NPC deceased 정합성 | `deceased=True`인 NPC가 후속 블록에서 행동 주체로 등장하지 않는지 검증 |
+| 5 | 복선 심기/회수 블록 번호 | BI의 복선 심기/회수 블록 = TR `foreshadow`/`callback` 블록 번호 일치 |
+
+감리 결과 형식:
+
+```text
+=== BI 5-Pass Audit ===
+Work: {work_id}
+Date: {date}
+
+PASS 1 (UTF-8 + JSON 파싱): OK / FAIL
+PASS 2 (plot_roadmap 70개 일치): OK / FAIL
+PASS 3 (주인공 최종 자산): OK / FAIL
+PASS 4 (NPC deceased 정합성): OK / FAIL
+PASS 5 (복선 심기/회수 블록 번호): OK / FAIL
+
+Final Verdict: PASS / FAIL
+Notes: ...
+```
+
+---
+
 ### PASS 1: 인코딩/파싱
 
 통과 조건:
@@ -538,47 +569,49 @@ rg -n "�" bible\0_bi_chaebol_ent_empire.json
 - 손상 필드가 넓으면 부분 수정 금지
 - `phase0_design + TR draft` 기준으로 BI 재생성
 
-### PASS 2: 최소 스키마
+### PASS 2: 최소 스키마 + plot_roadmap 70개 일치
 
 통과 조건:
 
 - `validate_bible_structure` 통과
-- `MasterBible.ProjectData.MetaInfo.title` 존재
-- `plot_roadmap` 길이 70
+- `MasterBible.ProjectData.MetaInfo.title` 존재하고 정상 한글
+- `plot_roadmap` 길이 = 70
+- `plot_roadmap` title sequence가 source `TR draft`와 **전수 일치** (제목 = source TR 제목)
 
-### PASS 3: 내부 정합성
+### PASS 3: 주인공 최종 자산 동기화
 
 통과 조건:
 
 - `CoreIdentity.protagonist == FinanceHUD.Protagonist.actual_truth.name`
 - `MetaInfo.title` 정상 한글
+- 주인공 최종 자산 = TR 마지막 블록 `genre_ext.capital_after`
 - `financial_status.total_assets`와 `financial_status.mobilizable_capital`이 source TR 최종 `capital_after`와 충돌 없음
 - `portfolio_history`가 있으면 증가 흐름과 `TR draft` 주요 자본 이력 충돌 없음
 - `portfolio_history`가 비어 있거나 생략된 경우, P0 실패가 아니라 P1 미충족 또는 경고로 분리
 
-### PASS 4: TR↔BI 동기화
+### PASS 4: NPC deceased 정합성
 
 통과 조건:
 
-- `BI.plot_roadmap` 길이 = 70
-- 첫/마지막 title 일치
-- 전 title 리스트 순서 일치
-- 가능하면 `title/capital_before/capital_after` 기준 비교 통과
-- `financial_status.total_assets` 또는 `mobilizable_capital`이 source TR 최종 자본과 동기화
-- `portfolio_history`가 있으면 source TR milestone 자본 이력과 충돌 없음
-- source TR audit snapshot 존재
-- source TR snapshot에 아래 항목이 재인용됨
-  - `production_density_gate`
-  - `avg_bundle_chars` 또는 `avg_chars`
-  - `deal_top_repetition`
-  - `method_top_repetition`
-  - `opponent_unique` 또는 동등 diversity metric
-  - `pattern_feedback_snapshot` 또는 동등 반복 경고 요약
+- `deceased=True`인 NPC가 해당 사망 블록 이후의 `plot_roadmap` 블록에서 **행동 주체로 등장하지 않음**
+- 사망 NPC가 회상/언급으로만 등장하는 것은 허용
+- `npc_timeline`에서 해당 NPC의 `status`가 `deceased`로 표시됨
+- 사망 블록 번호가 `npc_timeline`과 `plot_roadmap` 간 일치
 
-### PASS 5: 품질 감리
+검증 방법:
+
+1. `npc_timeline`에서 `deceased=True`인 NPC와 사망 블록을 모두 추출한다.
+2. `plot_roadmap`에서 해당 NPC가 사망 블록 이후에 행동 주체로 나오는지 확인한다.
+3. 불일치 시 P0 FAIL.
+
+### PASS 5: 복선 심기/회수 블록 번호 정합성
 
 통과 조건:
 
+- BI의 `Seeds` 또는 `foreshadow_map`에 기록된 복선 심기 블록 번호가 TR의 `foreshadow` 기록과 일치
+- BI의 복선 회수 블록 번호가 TR의 `callback` 기록과 일치
+- 심어진 복선 중 미회수 항목은 `status: open`으로 명시
+- 회수된 복선의 `callback_block`이 `foreshadow_block`보다 후순위
 - 한국어 필드에 `??`, `???` 없음
 - 다른 작품 흔적 없음
 - arc 명칭, NPC 이름, 회사명 일치
@@ -589,6 +622,7 @@ rg -n "�" bible\0_bi_chaebol_ent_empire.json
 
 - source TR이 `skeleton draft`, 반복 FAIL, density FAIL이면
   BI 구조 정합성과 무관하게 `final_verdict = FAIL`
+- 복선 블록 번호가 1건이라도 어긋나면 해당 항목 수정 후 재감리
 
 권장:
 

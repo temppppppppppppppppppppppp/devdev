@@ -19,7 +19,7 @@
 - `글도비 시스템 오더`
   - 코드베이스 조사/수정, `main_a.py`, `modules/`, `scripts/`, `tests/`, `UI/`, `geuldobi-desktop/`, 런타임, DB, 회귀, 리팩터, 성능, 로깅, control plane, persistence, process runner, desktop/app 연결, `docs/20xx-xx-xx/` 아래 시스템 감사 오더
   - 이 경우 **블록가이드 문서를 먼저 읽지 않는다.**
-  - `phase0_design`, `tr_block_070_draft`, `BI` 파일 존재로 단계를 판정하지 않는다.
+  - `phase0_design`, `tr_block_070_draft`, `BI` 파일 존재로 단계를 판정하지 않는다. (이 규칙은 시스템 오더 트랙에만 적용. 서사 파이프라인 오더에서는 SSOT_stage0_preprocess_integrated_order.md §3의 파일 존재 기반 단계 판정을 따른다.)
 - `서사 파이프라인 오더`
   - 작품 기획, `work_id` 기반 `Treatment/BI`, `Phase 0`, `TR draft`, `BI`, 감리, 정합성, 밀도 점검, 전처리 handoff, 작품 기준 `다음 스텝/계속/승인`
   - 이 경우에만 아래 `Narrative Router First` 규칙과 `AGENTS.narrative-router.md`를 적용한다.

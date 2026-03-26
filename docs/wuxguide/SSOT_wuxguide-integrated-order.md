@@ -18,6 +18,7 @@ Entry Point: `docs/narrative-router/SSOT_narrative-router-integrated-order.md`
 3. `docs/wuxguide/wuxia-planning-harness.md`
 4. `docs/wuxguide/wuxia-production-harness.md`
 5. `docs/wuxguide/wuxia-bi-production-harness.md`
+6. `docs/wuxguide/treatment-densification-harness-v1.md` — TR 밀도 부족 판정 시에만 진입 (§0C 진입 게이트 참조)
 
 ## 3. Family Identity
 
@@ -37,6 +38,15 @@ Do not choose `wuxguide` just because the story contains action scenes.
 - `phase0_design` exists and `tr_block_070_draft` missing: production
 - `tr_block_070_draft` exists and `0_bi_{work_id}.json` missing: BI
 - existing BI still requires audit PASS before completion
+
+Intermediate artifact quarantine:
+
+- `phase0_design` is an intermediate artifact. Once TR and BI both exist and pass 5-Pass audit,
+  move `phase0_design` to `treatments/_quarantine/`.
+- Rationale: after TR+BI are complete, the canonical truth is TR+BI, not `phase0_design`.
+  Keeping `phase0_design` active creates ambiguity when it drifts from TR/BI.
+- Do not delete — preserve in `_quarantine/` for debug/audit trail.
+- Stage detection: if `phase0_design` is in `_quarantine/` and TR+BI exist, stage = audit/review.
 
 ## 5. Shared Artifact Paths
 
@@ -101,3 +111,59 @@ python -X utf8 scripts/audit_narrative_bi.py --genre wuxia --phase0 treatments/<
 - Do not force `capital_before/after` into wuxia validation.
 - Do not reuse `deal_type`, `business_lines`, `company_state`, or `starter_company` as primary martial-family anchors.
 - Do not pass BI while `MartialHUD` is incomplete or out of sync with the final TR block.
+
+## 10. Failure Triage (실패 분류)
+
+TR/BI 감리 중 발견되는 무협 특화 실패 유형과 대응 절차.
+
+| 실패 유형 | 증상 | 대응 |
+|-----------|------|------|
+| `realm_continuity_failure` | 경지가 이전 블록과 불일치 (예: Block 15에서 선천인데 Block 16에서 후천으로 회귀) | 해당 블록 재생산 |
+| `martial_art_logic_failure` | 미습득 무공 사용, 봉인된 무공 사용 (예: 아직 배우지 않은 검법으로 전투) | 해당 블록 재생산 |
+| `injury_tracking_failure` | 부상 상태 무시하고 전투 (예: 직전 블록에서 단전에 중상인데 다음 블록에서 전력 전투) | 해당 블록 + 직전 블록 재검토 |
+| `npc_deceased_violation` | 사망 NPC가 행동/대사 (예: Block 20에서 사망한 NPC가 Block 25에서 대화) | 해당 블록 재생산 |
+| `faction_drift` | 문파 소속이 설명 없이 변경 (예: 화산파 제자가 갑자기 무당파 소속으로 표기) | Phase 0 재검토 후 블록 재생산 |
+| `foreshadow_orphan` | 심은 복선이 회수 없이 종료 (예: Block 5에서 심은 비급 단서가 Block 70까지 언급 없음) | BI 감리에서 포착, TR 보충 블록 필요 |
+| `density_failure` | 같은 적대자/무공 3블록 연속 (예: Block 11~13 모두 동일 적대자와 동일 무공으로 전투) | 밀도 게이트 재적용 후 재생산 |
+| `handoff_false_pass` | Stage 0 산출물 부실인데 통과됨 (예: profile_lock에 경지축이 없는데 Planning을 통과) | Stage 0 재진입 |
+
+### 10.1 실패 분류 절차
+
+1. 감리 중 위 유형에 해당하는 결함을 발견하면 `failure_type` 태그를 붙인다.
+2. 대응 열의 지시에 따라 재작업 범위를 결정한다.
+3. 재생산 시 해당 블록의 `MartialHUD` 상태를 직전 블록과 대조하여 연속성을 확인한다.
+4. Phase 0 재검토가 필요한 유형(`faction_drift`, `foreshadow_orphan`)은 Phase 0 수정 후 영향받는 모든 블록을 재검토한다.
+5. `handoff_false_pass`는 Stage 0부터 재진입하므로 가장 비용이 크다. `stage0_handoff_validator.py`를 반드시 재실행한다.
+
+### 10.2 실패 우선순위
+
+재작업 비용이 낮은 순서대로 처리한다:
+
+1. `npc_deceased_violation` — 단일 블록 수정
+2. `realm_continuity_failure` — 단일 블록 수정
+3. `martial_art_logic_failure` — 단일 블록 수정
+4. `injury_tracking_failure` — 2블록 재검토
+5. `density_failure` — 밀도 재조정 후 재생산
+6. `foreshadow_orphan` — BI 단계 보충
+7. `faction_drift` — Phase 0 + 블록 재생산
+8. `handoff_false_pass` — Stage 0 재진입
+
+---
+
+## 11. 자동 진행 정책
+
+단계 전환은 정지 게이트가 아니다. Go 조건이 충족되면 멈추지 않고 다음 단계로 넘어간다.
+
+금지:
+- "Stage 0 끝났습니다. Planning으로 갈까요?"
+- "Phase 0 설계 완료했습니다. Production 시작할까요?"
+- "TR 70블록 완료했습니다. BI 만들까요?"
+
+허용:
+- "Stage 0 완료. Planning 진입." (1줄 상태 보고 후 즉시 진행)
+- "Block 10 완료. Block 11 시작." (보고와 동시에 진행)
+
+유일한 정지 조건:
+- manual_audit_pass 필요 시 (Stage 0 → Planning 전환)
+- context window 한계 도달
+- 사용자의 명시적 정지 지시

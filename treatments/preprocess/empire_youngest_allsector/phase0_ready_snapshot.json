@@ -1,0 +1,45 @@
+{
+  "work_id": "empire_youngest_allsector",
+  "snapshot_date": "2026-03-24",
+  "stage0_artifacts": {
+    "source_manifest": "treatments/preprocess/empire_youngest_allsector/source_manifest.json",
+    "profile_lock": "treatments/preprocess/empire_youngest_allsector/profile_lock.json",
+    "material_bundle_summary": "treatments/preprocess/empire_youngest_allsector/material_bundle_summary.json",
+    "phase0_ready_snapshot": "treatments/preprocess/empire_youngest_allsector/phase0_ready_snapshot.json"
+  },
+  "stage0_checklist": {
+    "canonical_sources_registered": true,
+    "primary_profile_locked": true,
+    "secondary_profile_locked": true,
+    "profile_count_within_limit": true,
+    "resource_axis_concrete": true,
+    "power_axis_concrete": true,
+    "control_axis_concrete": true,
+    "payoff_axis_concrete": true,
+    "failure_axis_concrete": true,
+    "hud_interpretation_locked": true,
+    "core_materials_actionable": true,
+    "npc_pool_work_connected": true,
+    "crisis_pool_work_connected": true,
+    "do_not_fake_populated": true,
+    "manual_audit_note_populated": true,
+    "utf8_all_artifacts": true
+  },
+  "stop_conditions_clear": {
+    "primary_profile_set": true,
+    "canonical_sources_present": true,
+    "core_materials_not_abstract": true,
+    "npc_crisis_work_connected": true,
+    "do_not_fake_not_empty": true,
+    "manual_audit_note_not_empty": true
+  },
+  "go_conditions_met": {
+    "artifacts_4_utf8_parseable": true,
+    "profile_lock_clear": true,
+    "source_manifest_canonical_ref_split": true,
+    "material_bundle_transferable": true,
+    "manual_audit_pass": true
+  },
+  "manual_audit_pass": true,
+  "manual_audit_note": "Stage 0 산출물 4개 작성 완료. 사용자 승인 완료(2026-03-24). 기획안이 70블록 전수 구조표·14섹터 핵심 아이템·NPC 10명·패배 10개·사이다 11개·자본 곡선 전 구간을 상세히 담고 있어 재료 밀도가 높음. 금융·반도체·바이오·M&A·방산 5축 do_not_fake 엄수 필요. Planning 진입 승인."
+}

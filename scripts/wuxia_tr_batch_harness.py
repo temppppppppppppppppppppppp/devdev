@@ -466,7 +466,7 @@ def compute_treatment_metrics(blocks: list[dict[str, Any]]) -> dict[str, Any]:
     callback_total = 0
 
     for block_no, block in enumerate(blocks, start=1):
-        genre = block.get("genre_ext", {}) if isinstance(block, dict) else {}
+        genre = (block.get("martial_ext") or block.get("genre_ext") or {}) if isinstance(block, dict) else {}
         content = block.get("content", {}) if isinstance(block, dict) else {}
         opponent = genre.get("opponent", {}) if isinstance(genre.get("opponent", {}), dict) else {}
         regression = block.get("regression_ext", {}) if isinstance(block.get("regression_ext"), dict) else {}
@@ -493,11 +493,26 @@ def compute_treatment_metrics(blocks: list[dict[str, Any]]) -> dict[str, Any]:
 
         if len(as_text(block.get("stakes"))) < 35:
             short_stakes_blocks.append(block_no)
-        if is_blankish(genre.get("faction_position")):
+        # Support both blockguide (faction_position) and wuxguide (faction_status) field names
+        faction_val = genre.get("faction_position") or genre.get("faction_status")
+        if isinstance(faction_val, dict):
+            faction_val = faction_val.get("affiliation") or faction_val.get("rank")
+        if is_blankish(faction_val):
             faction_position_missing += 1
-        if is_blankish(genre.get("jianghu_reputation")):
+        rep_val = genre.get("jianghu_reputation")
+        if isinstance(rep_val, dict):
+            rep_val = rep_val.get("after") or rep_val.get("before")
+        if is_blankish(rep_val):
             jianghu_reputation_missing += 1
-        if is_blankish(genre.get("enemy_pressure")):
+        # enemy_pressure: blockguide uses direct field; wuxguide infers from opponent presence
+        enemy_pressure_val = genre.get("enemy_pressure")
+        if enemy_pressure_val is None:
+            # Wuxia fallback: opponent dict with a non-blank name implies active pressure
+            opp = genre.get("opponent")
+            if isinstance(opp, dict):
+                opp_name = as_text(opp.get("name"))
+                enemy_pressure_val = "active" if (opp_name and opp_name.lower() not in {"없음", "n/a", "none", ""}) else ""
+        if is_blankish(enemy_pressure_val):
             enemy_pressure_missing += 1
 
         foreshadow_total += len([text for text in ensure_list(block.get("foreshadow")) if as_text(text)])
@@ -508,10 +523,17 @@ def compute_treatment_metrics(blocks: list[dict[str, Any]]) -> dict[str, Any]:
         energy_before = parse_energy(genre.get("internal_energy_before"))
         energy_after = parse_energy(genre.get("internal_energy_after"))
         artifact_gain = as_text(genre.get("artifact_or_manual_gain"))
+        # Support both blockguide (martial_art_gain) and wuxguide (martial_arts_acquired) field names
+        martial_art_gain_raw = genre.get("martial_art_gain") or genre.get("martial_arts_acquired")
+        has_martial_art_gain = False
+        if isinstance(martial_art_gain_raw, list):
+            has_martial_art_gain = any(not is_blankish(item) for item in martial_art_gain_raw)
+        else:
+            has_martial_art_gain = not is_blankish(martial_art_gain_raw)
         martial_progress = (
             (realm_before and realm_after and realm_before != realm_after)
             or (energy_before is not None and energy_after is not None and energy_after > energy_before)
-            or not is_blankish(genre.get("martial_art_gain"))
+            or has_martial_art_gain
             or (artifact_gain and not is_blankish(artifact_gain) and artifact_gain.lower() not in {"none", "no", "none."})
         )
         if martial_progress:
