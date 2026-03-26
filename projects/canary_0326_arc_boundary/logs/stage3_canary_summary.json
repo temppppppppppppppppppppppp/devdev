@@ -1,0 +1,173 @@
+{
+  "summary_role": "stage3_only_canary",
+  "project": "canary_0326_arc_boundary",
+  "project_locator": "projects/canary_0326_arc_boundary",
+  "project_root": "C:\\Users\\User\\Desktop\\글도비\\projects\\canary_0326_arc_boundary",
+  "target_ep": 5,
+  "prepared_from": null,
+  "latest_session_id": "20260326_121654",
+  "stage3_attempts": 5,
+  "blueprint_db_count": 5,
+  "blueprint_ep_nums": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "blueprint_file_count": 5,
+  "blueprint_files": [
+    "blueprint_0001.txt",
+    "blueprint_0002.txt",
+    "blueprint_0003.txt",
+    "blueprint_0004.txt",
+    "blueprint_0005.txt"
+  ],
+  "attempt_detail": [
+    {
+      "ep_num": 1,
+      "attempt_count": 1,
+      "final_verdict": "PASS",
+      "final_score": 93,
+      "all_verdicts": [
+        "PASS"
+      ]
+    },
+    {
+      "ep_num": 2,
+      "attempt_count": 1,
+      "final_verdict": "PASS",
+      "final_score": 95,
+      "all_verdicts": [
+        "PASS"
+      ]
+    },
+    {
+      "ep_num": 3,
+      "attempt_count": 1,
+      "final_verdict": "PASS",
+      "final_score": 95,
+      "all_verdicts": [
+        "PASS"
+      ]
+    },
+    {
+      "ep_num": 4,
+      "attempt_count": 1,
+      "final_verdict": "PASS_WITH_WARNING",
+      "final_score": 85,
+      "all_verdicts": [
+        "PASS_WITH_WARNING"
+      ]
+    },
+    {
+      "ep_num": 5,
+      "attempt_count": 1,
+      "final_verdict": "PASS",
+      "final_score": 92,
+      "all_verdicts": [
+        "PASS"
+      ]
+    }
+  ],
+  "episode_telemetry": [
+    {
+      "ep_num": 1,
+      "attempt_count": 1,
+      "final_verdict": "PASS",
+      "final_score": 93,
+      "llm_call_count": 18,
+      "total_duration_ms": 869264,
+      "total_cost_usd": 0.644646
+    },
+    {
+      "ep_num": 2,
+      "attempt_count": 1,
+      "final_verdict": "PASS",
+      "final_score": 95,
+      "llm_call_count": 7,
+      "total_duration_ms": 300422,
+      "total_cost_usd": 0.264607
+    },
+    {
+      "ep_num": 3,
+      "attempt_count": 1,
+      "final_verdict": "PASS",
+      "final_score": 95,
+      "llm_call_count": 17,
+      "total_duration_ms": 1079320,
+      "total_cost_usd": 0.572695
+    },
+    {
+      "ep_num": 4,
+      "attempt_count": 1,
+      "final_verdict": "PASS_WITH_WARNING",
+      "final_score": 85,
+      "llm_call_count": 31,
+      "total_duration_ms": 1389917,
+      "total_cost_usd": 0.715114
+    },
+    {
+      "ep_num": 5,
+      "attempt_count": 1,
+      "final_verdict": "PASS",
+      "final_score": 92,
+      "llm_call_count": 17,
+      "total_duration_ms": 868150,
+      "total_cost_usd": 1.162722
+    }
+  ],
+  "sink_alignment_summary": {
+    "stage": 3,
+    "session_filter": "20260326_121654",
+    "attempts_considered": 1,
+    "coverage": {
+      "stage_attempts": 1,
+      "pass_rate_monitor": 1,
+      "director_selections": 1,
+      "episode_production": 0,
+      "session_decisions": 1
+    },
+    "complete_final_attempts": 1,
+    "director_lifecycle_attempts": 0,
+    "complete_lifecycle_attempts": 0,
+    "final_sink_missing": {},
+    "lifecycle_sink_missing": {},
+    "lifecycle_missing_in_final_sinks": {},
+    "final_verdict_mismatches": [],
+    "final_score_mismatches": [],
+    "initial_verdict_mismatches": [],
+    "director_verdict_mismatches": [],
+    "gate_basis_mismatches": [],
+    "repair_scope_mismatches": [],
+    "fix_pack_target_kind_mismatches": [],
+    "fix_pack_patch_targets_mismatches": [],
+    "retry_budget_axes_mismatches": [],
+    "patch_strategy_mismatches": [],
+    "candidate_key_mismatches": [],
+    "selection_candidate_key_mismatches": [],
+    "content_hash_mismatches": [],
+    "artifact_path_mismatches": [],
+    "artifact_metadata_missing": [],
+    "selection_reason_mismatches": [],
+    "verdict_reason_mismatches": [],
+    "fix_scope_mismatches": [],
+    "gate_repair_metadata_missing": [],
+    "rationale_metadata_missing": [],
+    "artifact_missing_files": [],
+    "selection_companion_pre_final_rows": [],
+    "selection_companion_missing_rows": [],
+    "final_authority_contract": {},
+    "session_scoped_attempts": 1,
+    "legacy_key_attempts": 0,
+    "session_decision_rows_without_attempt_key": 0,
+    "status": "ok"
+  },
+  "hard_gates": {
+    "status": "fail",
+    "errors": [
+      "ep4_final_verdict:PASS_WITH_WARNING"
+    ],
+    "warnings": []
+  }
+}
